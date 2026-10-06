@@ -1,0 +1,7 @@
+# Arquivos do jogo e de terceiros: nunca vao para o git.
+/jogo/
+/original/
+/referencias/
+
+__pycache__/
+*.pyc
