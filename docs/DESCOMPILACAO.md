@@ -90,4 +90,6 @@ O exe importa `DirectDrawCreate` da `ddraw.dll`, e o Windows procura a DLL prime
 - em tela cheia, as mensagens de mouse são convertidas de volta para coordenadas 800×600 (subclasse do procedimento da janela);
 - `ChangeDisplaySettingsA` é desviado na IAT do exe (primeiro desvio no executável) e não faz nada.
 
+Em janela, a janela fica **redimensionável** (borda e maximizar): o quadro acompanha com escala proporcional (vizinho mais próximo em fator inteiro, suavizada em fator fracionário) e o mouse é convertido. O tamanho escolhido (fim de arrastar a borda, maximizar/restaurar) fica em `jogo/janela.cfg` (`largura altura maximizada`) e é reaplicado na abertura e sempre que o jogo reinicia o vídeo. Isso acontece, por exemplo, ao entrar em "Iniciar Novo Jogo", quando ele mesmo devolve a janela a 800×600.
+
 Medido com `escuta_tela.py`: nenhuma reconfiguração de tela em janela, em tela cheia, nem na troca entre os dois. Só vale para `cm0102.exe`/`cm0102-portatil.exe`; a versão GDI não usa DirectDraw.

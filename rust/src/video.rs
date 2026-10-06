@@ -173,7 +173,7 @@ unsafe extern "system" fn dd_set_cooperative_level(this: *mut DirectDraw, hwnd: 
     (*this).hwnd = hwnd;
     (*this).tela_cheia = flags & DDSCL_FULLSCREEN != 0;
     linha(&format!("video: SetCooperativeLevel(hwnd={:#x}, flags={:#x}) tela cheia={}", hwnd, flags, (*this).tela_cheia));
-    apresentacao::definir_janela(hwnd as _);
+    apresentacao::definir_janela(hwnd as _, (*this).tela_cheia);
     DD_OK
 }
 

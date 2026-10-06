@@ -8,7 +8,7 @@ pub type HWND = *mut c_void;
 pub type HDC = *mut c_void;
 
 #[repr(C)]
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, Debug)]
 pub struct RECT {
     pub left: i32,
     pub top: i32,
@@ -35,7 +35,16 @@ pub const SRCCOPY: u32 = 0x00CC_0020;
 pub const BLACKNESS: u32 = 0x0000_0042;
 pub const DIB_RGB_COLORS: u32 = 0;
 pub const COLORONCOLOR: i32 = 3;
+pub const HALFTONE: i32 = 4;
 pub const GWL_WNDPROC: i32 = -4;
+pub const GWL_STYLE: i32 = -16;
+pub const GWL_EXSTYLE: i32 = -20;
+pub const WS_THICKFRAME: u32 = 0x0004_0000;
+pub const WS_MAXIMIZEBOX: u32 = 0x0001_0000;
+pub const SW_MAXIMIZE: i32 = 3;
+pub const SWP_NOZORDER: u32 = 0x0004;
+pub const SWP_NOACTIVATE: u32 = 0x0010;
+pub const SWP_FRAMECHANGED: u32 = 0x0020;
 pub const PAGE_READWRITE: u32 = 0x04;
 
 #[link(name = "user32")]
@@ -46,6 +55,13 @@ extern "system" {
     pub fn GetSystemMetrics(i: i32) -> i32;
     pub fn SetWindowLongA(hwnd: HWND, i: i32, v: isize) -> isize;
     pub fn CallWindowProcA(anterior: isize, hwnd: HWND, msg: u32, wp: usize, lp: isize) -> isize;
+    pub fn DefWindowProcA(hwnd: HWND, msg: u32, wp: usize, lp: isize) -> isize;
+    pub fn GetWindowLongA(hwnd: HWND, i: i32) -> isize;
+    pub fn GetWindowRect(hwnd: HWND, r: *mut RECT) -> i32;
+    pub fn AdjustWindowRectEx(r: *mut RECT, estilo: u32, menu: i32, estilo_ex: u32) -> i32;
+    pub fn IsZoomed(hwnd: HWND) -> i32;
+    pub fn ShowWindow(hwnd: HWND, modo: i32) -> i32;
+    pub fn SetWindowPos(hwnd: HWND, depois: HWND, x: i32, y: i32, w: i32, h: i32, flags: u32) -> i32;
 }
 
 #[link(name = "gdi32")]
@@ -55,6 +71,7 @@ extern "system" {
         bits: *const c_void, info: *const BITMAPINFOHEADER, uso: u32, rop: u32,
     ) -> i32;
     pub fn SetStretchBltMode(hdc: HDC, modo: i32) -> i32;
+    pub fn SetBrushOrgEx(hdc: HDC, x: i32, y: i32, anterior: *mut c_void) -> i32;
     pub fn PatBlt(hdc: HDC, x: i32, y: i32, w: i32, h: i32, rop: u32) -> i32;
 }
 

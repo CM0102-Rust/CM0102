@@ -1,8 +1,11 @@
 //! Mostra o quadro de 16 bits do jogo na janela, sem trocar o modo de video do Windows.
 //!
-//! - Janela com area cliente do tamanho do quadro (800x600): copia 1:1, pixel a pixel.
-//! - Area cliente maior (tela cheia sem bordas): escala proporcional, com faixas pretas; as
-//!   mensagens de mouse sao convertidas de volta para coordenadas do quadro.
+//! - O quadro e desenhado com escala proporcional na area cliente, com faixas pretas se sobrar
+//!   espaco; 1:1 (pixel a pixel) quando a area cliente tem o tamanho do quadro.
+//! - Em janela, a janela fica redimensionavel (borda e maximizar); o ultimo quadro e redesenhado
+//!   durante o redimensionamento. Em tela cheia, a janela do jogo ja cobre a tela.
+//! - As mensagens de mouse sao convertidas da area cliente para coordenadas do quadro.
+//! - Escala: vizinho mais proximo quando o fator e inteiro (nitido); suavizada (HALFTONE) quando nao e.
 //!
 //! RGB565 -> 8 bits por canal com replicacao de bits (31 -> 255, 63 -> 255).
 
@@ -10,6 +13,9 @@ use std::sync::Mutex;
 
 use crate::registro::linha;
 use crate::win::{self, HWND, RECT};
+
+/// Menor area cliente permitida ao redimensionar.
+const CLIENTE_MINIMO: (i32, i32) = (400, 300);
 
 struct Tela {
     hwnd: usize,
@@ -43,15 +49,97 @@ pub fn rgb565_para_32(p: u16) -> u32 {
     ((r << 3 | r >> 2) << 16) | ((g << 2 | g >> 4) << 8) | (b << 3 | b >> 2)
 }
 
-/// Registra a janela do jogo e passa a filtrar as mensagens de mouse dela.
-pub unsafe fn definir_janela(hwnd: HWND) {
-    let mut t = tela();
-    if t.hwnd == hwnd as usize {
-        return;
+/// Registra a janela do jogo (filtra as mensagens dela) e, em janela, a torna redimensionavel.
+pub unsafe fn definir_janela(hwnd: HWND, tela_cheia: bool) {
+    {
+        let mut t = tela();
+        if t.hwnd != hwnd as usize {
+            t.hwnd = hwnd as usize;
+            t.proc_original = win::SetWindowLongA(hwnd, win::GWL_WNDPROC, proc_janela as *const () as isize);
+            linha(&format!("apresentacao: janela {:p}, procedimento original {:#x}", hwnd, t.proc_original));
+        }
     }
-    t.hwnd = hwnd as usize;
-    t.proc_original = win::SetWindowLongA(hwnd, win::GWL_WNDPROC, proc_janela as *const () as isize);
-    linha(&format!("apresentacao: janela {:p}, procedimento original {:#x}", hwnd, t.proc_original));
+    if !tela_cheia {
+        tornar_redimensionavel(hwnd);
+    }
+}
+
+/// Acrescenta borda redimensionavel e botao maximizar e aplica o tamanho escolhido pelo jogador.
+///
+/// O jogo chama isto de novo sempre que reinicia o video (ex.: ao entrar em "Iniciar Novo Jogo"),
+/// e nessa hora ele mesmo devolve a janela a 800x600; por isso o tamanho do jogador e reaplicado.
+unsafe fn tornar_redimensionavel(hwnd: HWND) {
+    let estilo = win::GetWindowLongA(hwnd, win::GWL_STYLE) as u32;
+    let novo = estilo | win::WS_THICKFRAME | win::WS_MAXIMIZEBOX;
+    let mut cliente = RECT::default();
+    win::GetClientRect(hwnd, &mut cliente);
+    let preferido = preferencia::ler();
+    let (cw, ch) = preferido.map_or((cliente.right, cliente.bottom), |p| (p.largura, p.altura));
+    let mut janela = RECT::default();
+    win::GetWindowRect(hwnd, &mut janela);
+    win::SetWindowLongA(hwnd, win::GWL_STYLE, novo as isize);
+    let mut r = RECT { left: 0, top: 0, right: cw, bottom: ch };
+    win::AdjustWindowRectEx(&mut r, novo, 0, win::GetWindowLongA(hwnd, win::GWL_EXSTYLE) as u32);
+    win::SetWindowPos(
+        hwnd, core::ptr::null_mut(), janela.left, janela.top, r.right - r.left, r.bottom - r.top,
+        win::SWP_NOZORDER | win::SWP_NOACTIVATE | win::SWP_FRAMECHANGED,
+    );
+    if preferido.is_some_and(|p| p.maximizada) {
+        win::ShowWindow(hwnd, win::SW_MAXIMIZE);
+    }
+    linha(&format!("apresentacao: janela redimensionavel, area cliente {}x{}{}", cw, ch,
+        if preferido.is_some_and(|p| p.maximizada) { " (maximizada)" } else { "" }));
+}
+
+/// Guarda o tamanho atual da janela como escolha do jogador (fim de arrastar a borda, maximizar, restaurar).
+unsafe fn guardar_tamanho(hwnd: HWND) {
+    let mut cliente = RECT::default();
+    win::GetClientRect(hwnd, &mut cliente);
+    let maximizada = win::IsZoomed(hwnd) != 0;
+    let atual = preferencia::Janela { largura: cliente.right, altura: cliente.bottom, maximizada };
+    if atual.largura < CLIENTE_MINIMO.0 || atual.altura < CLIENTE_MINIMO.1 {
+        return; // minimizada ou no meio de uma troca de modo
+    }
+    // Maximizada: guarda so o estado; o tamanho de "restaurar" continua o anterior.
+    let gravar = match (maximizada, preferencia::ler()) {
+        (true, Some(p)) => preferencia::Janela { maximizada: true, ..p },
+        (true, None) => preferencia::Janela { largura: 800, altura: 600, maximizada: true },
+        (false, _) => atual,
+    };
+    if preferencia::ler() != Some(gravar) {
+        preferencia::gravar(gravar);
+        linha(&format!("apresentacao: tamanho escolhido {}x{}{}", gravar.largura, gravar.altura,
+            if gravar.maximizada { " (maximizada)" } else { "" }));
+    }
+}
+
+/// Tamanho da janela escolhido pelo jogador, em `janela.cfg` ao lado do exe ("largura altura maximizada").
+mod preferencia {
+    #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+    pub struct Janela {
+        pub largura: i32,
+        pub altura: i32,
+        pub maximizada: bool,
+    }
+
+    fn caminho() -> std::path::PathBuf {
+        std::env::current_exe().map(|p| p.with_file_name("janela.cfg")).unwrap_or_else(|_| "janela.cfg".into())
+    }
+
+    pub fn interpretar(texto: &str) -> Option<Janela> {
+        let mut v = texto.split_whitespace().map(|s| s.parse::<i32>().ok());
+        let (largura, altura, maximizada) = (v.next()??, v.next()??, v.next().flatten().unwrap_or(0));
+        (largura >= super::CLIENTE_MINIMO.0 && altura >= super::CLIENTE_MINIMO.1 && largura <= 16384 && altura <= 16384)
+            .then_some(Janela { largura, altura, maximizada: maximizada != 0 })
+    }
+
+    pub fn ler() -> Option<Janela> {
+        interpretar(&std::fs::read_to_string(caminho()).ok()?)
+    }
+
+    pub fn gravar(j: Janela) {
+        let _ = std::fs::write(caminho(), format!("{} {} {}\n", j.largura, j.altura, j.maximizada as i32));
+    }
 }
 
 /// Converte a regiao `suja` do quadro e mostra o quadro inteiro na janela.
@@ -77,7 +165,22 @@ pub unsafe fn apresentar(pixels: &[u16], largura: i32, altura: i32, suja: RECT) 
             dest[x] = rgb565_para_32(orig[x]);
         }
     }
+    desenhar(&mut t);
+}
 
+/// Onde o quadro cabe na area cliente: escala proporcional, centralizado.
+fn encaixe(cw: i32, ch: i32, largura: i32, altura: i32) -> RECT {
+    let (dw, dh) = if cw * altura <= ch * largura { (cw, (cw * altura) / largura) } else { ((ch * largura) / altura, ch) };
+    let (ox, oy) = ((cw - dw) / 2, (ch - dh) / 2);
+    RECT { left: ox, top: oy, right: ox + dw, bottom: oy + dh }
+}
+
+/// Desenha o ultimo quadro convertido na area cliente atual.
+unsafe fn desenhar(t: &mut Tela) {
+    let (largura, altura) = (t.largura, t.altura);
+    if t.hwnd == 0 || t.convertido.is_empty() {
+        return;
+    }
     let hwnd = t.hwnd as HWND;
     let mut cliente = RECT::default();
     win::GetClientRect(hwnd, &mut cliente);
@@ -85,14 +188,9 @@ pub unsafe fn apresentar(pixels: &[u16], largura: i32, altura: i32, suja: RECT) 
     if cw <= 0 || ch <= 0 {
         return;
     }
-    // Escala proporcional; 1:1 quando a area cliente tem o tamanho do quadro.
-    let (dw, dh) = if cw * altura <= ch * largura {
-        (cw, (cw * altura) / largura)
-    } else {
-        ((ch * largura) / altura, ch)
-    };
-    let (ox, oy) = ((cw - dw) / 2, (ch - dh) / 2);
-    t.destino = RECT { left: ox, top: oy, right: ox + dw, bottom: oy + dh };
+    let d = encaixe(cw, ch, largura, altura);
+    t.destino = d;
+    let (ox, oy, dw, dh) = (d.left, d.top, d.right - d.left, d.bottom - d.top);
 
     let info = win::BITMAPINFOHEADER {
         biSize: core::mem::size_of::<win::BITMAPINFOHEADER>() as u32,
@@ -117,7 +215,9 @@ pub unsafe fn apresentar(pixels: &[u16], largura: i32, altura: i32, suja: RECT) 
         win::PatBlt(hdc, 0, oy, ox, dh, win::BLACKNESS);
         win::PatBlt(hdc, ox + dw, oy, cw - ox - dw, dh, win::BLACKNESS);
     }
-    win::SetStretchBltMode(hdc, win::COLORONCOLOR);
+    let inteiro = dw % largura == 0 && dh % altura == 0;
+    win::SetStretchBltMode(hdc, if inteiro { win::COLORONCOLOR } else { win::HALFTONE });
+    win::SetBrushOrgEx(hdc, 0, 0, core::ptr::null_mut());
     win::StretchDIBits(
         hdc, ox, oy, dw, dh, 0, 0, largura, altura,
         t.convertido.as_ptr() as *const _, &info, win::DIB_RGB_COLORS, win::SRCCOPY,
@@ -139,7 +239,40 @@ fn converter_mouse(t: &Tela, lp: isize) -> isize {
     ((qy as isize) << 16) | (qx as isize & 0xffff)
 }
 
+const WM_SIZE: u32 = 0x05;
+const WM_PAINT: u32 = 0x0f;
+const WM_ERASEBKGND: u32 = 0x14;
+const WM_SETCURSOR: u32 = 0x20;
+const WM_GETMINMAXINFO: u32 = 0x24;
+const WM_NCHITTEST: u32 = 0x84;
+const WM_SYSCOMMAND: u32 = 0x112;
+const WM_EXITSIZEMOVE: u32 = 0x232;
+const HTCLIENT: isize = 1;
+const SC_MAXIMIZE: usize = 0xf030;
+const SC_RESTORE: usize = 0xf120;
+
 unsafe extern "system" fn proc_janela(hwnd: HWND, msg: u32, wp: usize, lp: isize) -> isize {
+    match msg {
+        // Bordas e cursores de redimensionar ficam com o Windows (o jogo nao conhece borda).
+        WM_NCHITTEST => return win::DefWindowProcA(hwnd, msg, wp, lp),
+        WM_SETCURSOR if (lp & 0xffff) != HTCLIENT => return win::DefWindowProcA(hwnd, msg, wp, lp),
+        WM_ERASEBKGND => return 1, // o quadro cobre tudo; apagar antes so faria piscar
+        WM_GETMINMAXINFO => {
+            let r = win::DefWindowProcA(hwnd, msg, wp, lp);
+            let mut m = RECT { left: 0, top: 0, right: CLIENTE_MINIMO.0, bottom: CLIENTE_MINIMO.1 };
+            win::AdjustWindowRectEx(
+                &mut m,
+                win::GetWindowLongA(hwnd, win::GWL_STYLE) as u32,
+                0,
+                win::GetWindowLongA(hwnd, win::GWL_EXSTYLE) as u32,
+            );
+            let minimo = (lp as *mut i32).add(6); // MINMAXINFO.ptMinTrackSize
+            *minimo = m.right - m.left;
+            *minimo.add(1) = m.bottom - m.top;
+            return r;
+        }
+        _ => {}
+    }
     let (original, lp) = {
         let t = tela();
         // WM_MOUSEMOVE..WM_MBUTTONDBLCLK e WM_XBUTTON*: coordenadas da area cliente.
@@ -147,7 +280,18 @@ unsafe extern "system" fn proc_janela(hwnd: HWND, msg: u32, wp: usize, lp: isize
         let mouse = (0x200..=0x209).contains(&msg) || (0x20b..=0x20d).contains(&msg);
         (t.proc_original, if mouse { converter_mouse(&t, lp) } else { lp })
     };
-    win::CallWindowProcA(original, hwnd, msg, wp, lp)
+    // Escolha do jogador: fim de arrastar a borda (WM_EXITSIZEMOVE) ou maximizar/restaurar pelo menu de
+    // sistema, botao ou duplo clique (WM_SYSCOMMAND). Os WM_SIZE vindos do proprio jogo (ele impoe
+    // 800x600 ao reiniciar o video) nao contam.
+    let escolha = msg == WM_EXITSIZEMOVE || (msg == WM_SYSCOMMAND && matches!(wp & 0xfff0, SC_MAXIMIZE | SC_RESTORE));
+    let r = win::CallWindowProcA(original, hwnd, msg, wp, lp);
+    if msg == WM_SIZE || msg == WM_PAINT {
+        desenhar(&mut tela());
+    }
+    if escolha {
+        guardar_tamanho(hwnd);
+    }
+    r
 }
 
 #[cfg(test)]
@@ -162,6 +306,24 @@ mod testes {
         assert_eq!(rgb565_para_32(0x07e0), 0x00ff00);
         assert_eq!(rgb565_para_32(0x001f), 0x0000ff);
         assert_eq!(rgb565_para_32(0x8410), 0x848284); // meio-cinza: 16/31, 32/63, 16/31
+    }
+
+    #[test]
+    fn preferencia_da_janela() {
+        use preferencia::{interpretar, Janela};
+        assert_eq!(interpretar("1200 900 0\n"), Some(Janela { largura: 1200, altura: 900, maximizada: false }));
+        assert_eq!(interpretar("1200 900 1"), Some(Janela { largura: 1200, altura: 900, maximizada: true }));
+        assert_eq!(interpretar("1200 900"), Some(Janela { largura: 1200, altura: 900, maximizada: false }));
+        assert_eq!(interpretar("100 900 0"), None); // menor que o minimo
+        assert_eq!(interpretar("lixo"), None);
+        assert_eq!(interpretar(""), None);
+    }
+
+    #[test]
+    fn encaixe_proporcional() {
+        assert_eq!(encaixe(800, 600, 800, 600), RECT { left: 0, top: 0, right: 800, bottom: 600 });
+        assert_eq!(encaixe(1920, 1080, 800, 600), RECT { left: 240, top: 0, right: 1680, bottom: 1080 });
+        assert_eq!(encaixe(1600, 1400, 800, 600), RECT { left: 0, top: 100, right: 1600, bottom: 1300 });
     }
 
     #[test]

@@ -33,5 +33,6 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 - Endereços sempre como VA (base 0x400000). Em `.text`, `.rdata` e `.data` o deslocamento no arquivo é VA − 0x400000.
 - Rust: `cd rust && cargo build --release` (sai em `target/i686-pc-windows-msvc/release/ddraw.dll`; copiar para `jogo/`), `cargo test --release`.
 - Métodos COM são stdcall: cada método da vtable precisa do número exato de argumentos, mesmo os não suportados.
-- Para testar tela cheia sem mexer nas preferências do Lucas: cópia temporária de `jogo/` com hard links, sem `game.cfg` (o jogo abre nas definições; escolher "Full").
+- **Sempre em janela (`-windowed`)**, no atalho e nos testes; nunca testar em tela cheia nem maximizar (cobre a tela do Lucas enquanto ele usa o PC). O que só der para ver em tela cheia, pedir para ele testar.
+- O Lucas às vezes mexe na janela durante os testes: mudança inesperada de tamanho pode ser ele.
 - Para testar o jogo sem atrapalhar o Lucas: abra com `-windowed` e mande cliques por `PostMessage` (não mexe no mouse dele).
