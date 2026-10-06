@@ -49,8 +49,12 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6bce20, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x4c, 0x24, 0x08] },
     // 0x6f4920: mov dl, byte ptr [esp + 0x10]; push ebx
     Prologo { endereco: 0x6f4920, bytes: &[0x8a, 0x54, 0x24, 0x10, 0x53] },
+    // 0x6f56c0: mov ax, word ptr [esp + 8]
+    Prologo { endereco: 0x6f56c0, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x08] },
+    // 0x6fa140: mov al, byte ptr [esp + 4]; mov dl, byte ptr [ecx + 0x102]
+    Prologo { endereco: 0x6fa140, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x8a, 0x91, 0x02, 0x01, 0x00, 0x00] },
 ];
-const N: usize = 16;
+const N: usize = 18;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -239,6 +243,82 @@ unsafe extern "thiscall" fn apontar(this: usize, a: i8, b: i8, c: i8, d: i8) {
     }
 }
 
+// ---------- ponto flutuante ----------
+//
+// O x87 do jogo roda em precisao dupla (padrao do Windows): cada operacao arredonda para 53 bits,
+// como f64 em SSE2. O que importa reproduzir e onde o original arredonda para float (32 bits):
+// `fstp`+`fld` compara o valor ja arredondado; `fst` seguido de comparacao compara o de 53 bits.
+// As constantes sao lidas do proprio .rdata do jogo.
+
+unsafe fn f32_em(a: usize) -> f32 {
+    *(a as *const f32)
+}
+unsafe fn f64_em(a: usize) -> f64 {
+    *(a as *const f64)
+}
+
+/// { 0x6f56c0 } (match_pl.cpp): desgaste do jogador, float em 0x4d (nunca abaixo de zero).
+/// codigo -1: `x` x (12, 10, 8 ou 6 pela faixa do valor atual: acima de 9500, 8750, 7750) / 11.
+/// Outros codigos: (200 - 8,5 x float de 0xd5) x fator do codigo (switch do original).
+unsafe extern "thiscall" fn desgastar(this: usize, x: f32, codigo: i16) {
+    let campo = (this + 0x4d) as *mut f32;
+    let v = *campo;
+    let zero = f32_em(0x968970) as f64;
+    if codigo == -1 {
+        let k = if v > f32_em(0x96d78c) {
+            0x96d690
+        } else if v > f32_em(0x96d788) {
+            0x968a78
+        } else if v > f32_em(0x96b040) {
+            0x96d784
+        } else {
+            0x969084
+        };
+        let t = x as f64 * f32_em(k) as f64 * f32_em(0x96d780) as f64;
+        *campo = (v as f64 - t) as f32;
+        if (*campo as f64) < zero {
+            *campo = 0.0; // mov dword ptr [ecx + 0x4d], 0
+        }
+    } else {
+        let fator = match codigo {
+            19 | 33 => 0x96d770,
+            21 | 36 | 46 => 0x96d778,
+            _ => 0x96d768,
+        };
+        let t = (f64_em(0x96a648) - f32_em(this + 0xd5) as f64 * f64_em(0x96a790)) * f64_em(fator);
+        let r = v as f64 - t;
+        *campo = r as f32;
+        if r < zero {
+            *campo = 0.0;
+        }
+    }
+}
+
+/// `_ftol` { 0x945640 }: trunca para inteiro (64 bits; o jogo usa a parte baixa).
+fn ftol(x: f64) -> i32 {
+    x as i64 as i32
+}
+
+/// { 0x6fa140 } (match_pl.cpp): o jogador esta virado para (a, b)? Compara a direcao dele (0x19a)
+/// com o angulo da tabela, com tolerancia de 0x10c x 2,25 + 45 graus.
+unsafe extern "thiscall" fn virado_para(this: usize, a: i8, b: i8) -> u8 {
+    let (dl, dc) = (a.wrapping_sub(byte(this, 0x102)), b.wrapping_sub(byte(this, 0x103)));
+    if dl == 0 && dc == 0 {
+        return 0;
+    }
+    let dir = *((this + 0x19a) as *const i16);
+    let alvo = *((TABELA_GLOBAL as isize + 2 * (dl as isize * 24 + dc as isize)) as *const i16);
+    if dir == alvo {
+        return 1;
+    }
+    let tolerancia = ftol(byte(this, 0x10c) as f64 * f64_em(0x968ec8) + f64_em(0x968d68)) as i16;
+    let mut d = (dir as i32 - alvo as i32).abs();
+    if d as i16 > 0xb4 {
+        d = 0x168 - d;
+    }
+    ((d as i16) < tolerancia) as u8
+}
+
 // ---------- comparacao ----------
 
 static mut ORIGINAIS: [usize; N] = [0; N];
@@ -353,6 +433,19 @@ unsafe extern "thiscall" fn comparar_apontar(this: usize, a: i8, b: i8, c: i8, d
     PLACAR.registrar(igual, || format!("apontar({}, {}, {}, {}) original={:x?} rust={:x?}", a, b, c, d, mo, mr));
 }
 
+unsafe extern "thiscall" fn comparar_desgastar(this: usize, x: f32, codigo: i16) {
+    let f = orig::<unsafe extern "thiscall" fn(usize, f32, i16)>(16);
+    let regioes = [(this + 0x4d, 4)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || f(this, x, codigo), || desgastar(this, x, codigo));
+    PLACAR.registrar(igual, || format!("desgastar({}, {}, 0xd5={}) original={:x?} rust={:x?}", x, codigo, f32_em(this + 0xd5), mo, mr));
+}
+unsafe extern "thiscall" fn comparar_virado_para(this: usize, a: i8, b: i8) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, i8, i8) -> u8>(17)(this, a, b);
+    let n = virado_para(this, a, b);
+    PLACAR.registrar(r == n, || format!("virado_para({}, {}, dir {}, 0x10c {}) original={} rust={}", a, b, *((this + 0x19a) as *const i16), byte(this, 0x10c), r, n));
+    r
+}
+
 pub unsafe fn instalar(comparando: bool) {
     let rust: [usize; N] = [
         tabela_a as *const () as usize,
@@ -371,6 +464,8 @@ pub unsafe fn instalar(comparando: bool) {
         campo_pela_posicao as *const () as usize,
         pode_escolher as *const () as usize,
         apontar as *const () as usize,
+        desgastar as *const () as usize,
+        virado_para as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -389,12 +484,14 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_campo_pela_posicao as *const () as usize,
         comparar_pode_escolher as *const () as usize,
         comparar_apontar as *const () as usize,
+        comparar_desgastar as *const () as usize,
+        comparar_virado_para as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
         "motor_condicao_jogador", "motor_tabela_do_jogador", "motor_diferenca_jogador", "motor_byte_do_lado",
         "motor_limite_jogador", "motor_faixa_jogador", "motor_byte_da_posicao", "motor_campo_pela_posicao",
-        "motor_pode_escolher", "motor_apontar",
+        "motor_pode_escolher", "motor_apontar", "motor_desgastar", "motor_virado_para",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -514,6 +611,18 @@ pub unsafe fn autoteste(casos: u64) {
             };
             let (a, b) = if v % 3 == 1 { (c, d) } else { (a, b) };
             comparar_apontar(j, a, b, c, d);
+            // quarta leva (ponto flutuante): valores em volta das faixas, negativos e zero
+            let q = s.proximo();
+            let faixas = [9500.0f32, 8750.0, 7750.0, 0.0, 10000.0, 100.0];
+            let base = faixas[(q % 6) as usize];
+            *((j + 0x4d) as *mut f32) = base + ((q >> 8) % 2001) as f32 / 10.0 - 100.0;
+            *((j + 0xd5) as *mut f32) = ((q >> 20) % 400) as f32 / 10.0 - 5.0;
+            let x = ((q >> 30) % 5000) as f32 / 7.0;
+            let codigo = [-1i16, 19, 21, 33, 36, 46, 20, 47, 18, 0, -2, 1000][((q >> 44) % 12) as usize];
+            comparar_desgastar(j, x, codigo);
+            *((j + 0x10c) as *mut i8) = ((q >> 50) % 25) as i8 - 2;
+            *((j + 0x19a) as *mut i16) = ((q >> 54) % 400) as i16 - 20;
+            comparar_virado_para(j, byte(j, 0x102).wrapping_add(((q >> 58) % 11) as i8 - 5), byte(j, 0x103).wrapping_add(((q >> 61) % 7) as i8 - 3));
         }
     });
 }
