@@ -100,6 +100,28 @@ pub const PASSAGEM: usize = 0;
 
 /// Desvia `p.endereco` para `destino`. Devolve o trampolim (a rotina original), ou None se recusou.
 pub unsafe fn desviar(nome: &str, p: &Prologo, destino: usize) -> Option<usize> {
+    desviar_para(nome, p, |tramp| {
+        let destino = if destino == PASSAGEM { tramp } else { destino };
+        if ISOLAR.load(std::sync::atomic::Ordering::Relaxed) { isolar(destino) } else { destino }
+    })
+}
+
+/// Contador de chamadas (cobertura): `inc dword [contador]; jmp original`. Nao toca pilha nem
+/// registradores (so os flags, que nao sobrevivem a um call), entao a carreira nao muda.
+pub unsafe fn contar(nome: &str, p: &Prologo, contador: *mut u32) -> bool {
+    desviar_para(nome, p, |tramp| {
+        let c = win::VirtualAlloc(core::ptr::null_mut(), 16, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as *mut u8;
+        *c = 0xff;
+        *c.add(1) = 0x05;
+        core::ptr::write_unaligned(c.add(2) as *mut u32, contador as u32);
+        escrever_jmp(c.add(6), tramp);
+        c as usize
+    })
+    .is_some()
+}
+
+/// Miolo dos desvios: confere os bytes, monta o trampolim e salta para `destino(trampolim)`.
+unsafe fn desviar_para(nome: &str, p: &Prologo, destino: impl FnOnce(usize) -> usize) -> Option<usize> {
     let atual = core::slice::from_raw_parts(p.endereco as *const u8, p.bytes.len());
     if atual != p.bytes {
         linha(&format!("desvio {} recusado: bytes em {:#x} sao {:02x?}, esperava {:02x?}", nome, p.endereco, atual, p.bytes));
@@ -113,8 +135,7 @@ pub unsafe fn desviar(nome: &str, p: &Prologo, destino: usize) -> Option<usize> 
     }
     core::ptr::copy_nonoverlapping(p.bytes.as_ptr(), tramp, n);
     escrever_jmp(tramp.add(n), p.endereco + n);
-    let destino = if destino == PASSAGEM { tramp as usize } else { destino };
-    let destino = if ISOLAR.load(std::sync::atomic::Ordering::Relaxed) { isolar(destino) } else { destino };
+    let destino = destino(tramp as usize);
 
     let mut antiga = 0u32;
     win::VirtualProtect(p.endereco as *mut c_void, n, win::PAGE_EXECUTE_READWRITE, &mut antiga);
@@ -148,6 +169,7 @@ pub unsafe fn instalar() {
         aleatorio::instalar(aleatorio::Modo::Observar);
         if ISOLAR.load(std::sync::atomic::Ordering::Relaxed) {
             data::instalar_passagem();
+            crate::motor::instalar_passagem();
         }
         return;
     }
@@ -155,6 +177,7 @@ pub unsafe fn instalar() {
     let comparar = win::ambiente("CM_COMPARAR") || win::ambiente("CM_AUTOTESTE");
     aleatorio::instalar(if comparar { aleatorio::Modo::Comparar } else { aleatorio::Modo::Rust });
     data::instalar(comparar);
+    crate::motor::instalar(comparar);
 }
 
 /// CM_AUTOTESTE=1: cada rotina reescrita se compara com a original em entradas sinteticas
@@ -167,4 +190,5 @@ pub unsafe fn autotestes() {
     }
     aleatorio::autoteste(5_000_000);
     data::autoteste();
+    crate::motor::autoteste(2_000_000);
 }

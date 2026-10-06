@@ -135,6 +135,7 @@ pub unsafe fn sorteio(pedido: i32, ponteiro: u32, deslocamento: i32, rand: u32) 
         a, d, n, ponteiro, deslocamento, rand
     ));
     linha(&format!("alocador: pico {} MB", crate::alocador::pico() >> 20));
+    despejar_cobertura();
     fechar_rastro();
     // Encerra sem rodar finalizacoes do jogo (nada de gravar preferencias).
     crate::win::TerminateProcess(crate::win::GetCurrentProcess(), 0);
@@ -256,12 +257,72 @@ unsafe extern "C" fn qsort_rastreado(base: *mut u8, n: usize, largura: usize, cm
     }
 }
 
+// ---------- cobertura ----------
+
+/// (endereco, arquivo, contador) de cada funcao contada (`CM_COBERTURA=1`, lista em cobertura.txt).
+static COBERTURA: std::sync::Mutex<Vec<(usize, String, &'static mut u32)>> = std::sync::Mutex::new(Vec::new());
+
+/// Le jogo\cobertura.txt (gerado por engenharia-reversa\cobertura.py) e poe um contador em cada funcao.
+unsafe fn instalar_cobertura() {
+    let caminho = std::env::current_exe().map(|p| p.with_file_name("cobertura.txt")).unwrap_or_default();
+    let Ok(texto) = std::fs::read_to_string(&caminho) else {
+        linha("cobertura: AVISO cobertura.txt nao encontrado (rode cobertura.py)");
+        return;
+    };
+    let mut lista = COBERTURA.lock().unwrap_or_else(|e| e.into_inner());
+    for l in texto.lines() {
+        let mut c = l.split_whitespace();
+        let (Some(end), Some(hex), arq) = (c.next(), c.next(), c.next().unwrap_or("")) else { continue };
+        let Ok(endereco) = usize::from_str_radix(end, 16) else { continue };
+        let bytes: Vec<u8> = (0..hex.len() / 2).filter_map(|i| u8::from_str_radix(&hex[2 * i..2 * i + 2], 16).ok()).collect();
+        let p = crate::desvios::Prologo { endereco, bytes: Box::leak(bytes.into_boxed_slice()) };
+        let contador: &'static mut u32 = Box::leak(Box::new(0));
+        if crate::desvios::contar(&format!("cobertura {:#x}", endereco), &p, contador) {
+            lista.push((endereco, arq.to_string(), contador));
+        }
+    }
+    linha(&format!("cobertura: {} funcoes com contador", lista.len()));
+}
+
+fn despejar_cobertura() {
+    for (e, arq, n) in COBERTURA.lock().unwrap_or_else(|e| e.into_inner()).iter() {
+        linha(&format!("cobertura {:x} {} {}", e, arq, n));
+    }
+}
+
+// ---------- excecoes ----------
+
+/// Registra no ddraw.log as excecoes do processo (codigo, endereco, registradores, pilha) e deixa
+/// o tratamento seguir normal. Na simulacao o jogo roda oculto e o Windows nem sempre registra a
+/// queda; assim o endereco fica sempre a mao. So as 8 primeiras (excecoes tratadas tambem passam aqui).
+unsafe extern "system" fn registrar_excecao(info: *const [usize; 2]) -> i32 {
+    static VISTAS: AtomicU64 = AtomicU64::new(0);
+    if VISTAS.fetch_add(1, Ordering::Relaxed) < 8 {
+        let (reg, ctx) = ((*info)[0], (*info)[1]);
+        let codigo = *(reg as *const u32);
+        let endereco = *((reg + 12) as *const usize);
+        // CONTEXT x86: edi 0x9c, esi 0xa0, ebx 0xa4, edx 0xa8, ecx 0xac, eax 0xb0, ebp 0xb4, eip 0xb8, esp 0xc4
+        let r = |o: usize| *((ctx + o) as *const u32);
+        let esp = r(0xc4) as usize;
+        let pilha: Vec<String> = (0..12).map(|i| format!("{:x}", *((esp + 4 * i) as *const u32))).collect();
+        linha(&format!(
+            "EXCECAO {:#x} em {:#x} (data {:?}) eax={:x} ebx={:x} ecx={:x} edx={:x} esi={:x} edi={:x} ebp={:x} esp={:x} pilha: {}",
+            codigo, endereco, *DATA_ATUAL, r(0xb0), r(0xa4), r(0xac), r(0xa8), r(0xa0), r(0x9c), r(0xb4), esp, pilha.join(" ")
+        ));
+    }
+    0 // EXCEPTION_CONTINUE_SEARCH
+}
+
 /// Chamado no carregamento da DLL: so age em modo simulacao (CM_PARAR_EM definido).
 pub unsafe fn instalar() {
     if alvo().is_some() {
         // Toda rotina desviada daqui em diante roda na pilha particular e grava quem chamou.
         crate::desvios::ISOLAR.store(true, Ordering::Relaxed);
+        crate::win::AddVectoredExceptionHandler(1, registrar_excecao);
         crate::alocador::instalar();
+        if crate::win::ambiente("CM_COBERTURA") {
+            instalar_cobertura();
+        }
         if rastro().is_some() {
             if let Some(t) = crate::desvios::desviar("qsort (rastro)", &PROLOGO_QSORT, qsort_rastreado as *const () as usize) {
                 QSORT_ORIGINAL = t;

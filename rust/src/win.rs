@@ -88,6 +88,7 @@ extern "system" {
     pub fn GetCurrentProcess() -> *mut c_void;
     pub fn TerminateProcess(processo: *mut c_void, codigo: u32) -> i32;
     pub fn GetCurrentThreadId() -> u32;
+    pub fn AddVectoredExceptionHandler(primeiro: u32, f: unsafe extern "system" fn(*const [usize; 2]) -> i32) -> *mut c_void;
     pub fn GetEnvironmentVariableW(nome: *const u16, buf: *mut u16, tam: u32) -> u32;
 }
 

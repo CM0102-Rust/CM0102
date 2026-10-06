@@ -68,6 +68,7 @@ def rodar(args, semente):
         'CM_ORIGINAL': '1' if args.modo == 'original' else '0',
         'CM_COMPARAR': '1' if args.modo == 'comparar' else '0',
         'CM_RASTRO': os.environ.get('CM_RASTRO', '0000-00-00'),
+        'CM_COBERTURA': '1' if args.cobertura else '0',
     }
     if len(ambiente['CM_RASTRO']) != 10:
         falha('CM_RASTRO tem de ser AAAA-MM-DD')
@@ -88,7 +89,8 @@ def rodar(args, semente):
     info = {'data': m.group(1), 'sorteios': int(m.group(2)), 'impressao': impressao,
             'comparacoes': re.findall(r'^(\w+): (\d+) comparacoes, (\d+) divergencias', texto, re.M),
             'divergencias': len(re.findall(r'DIVERGENCIA', texto)),
-            'avisos': re.findall(r'^alocador: AVISO.*', texto, re.M)}
+            'avisos': re.findall(r'^(?:alocador|cobertura): AVISO.*', texto, re.M),
+            'cobertura': [(e, a, int(n)) for e, a, n in re.findall(r'^cobertura ([0-9a-f]+) (\S*) (\d+)$', texto, re.M)]}
     return info, segundos, None
 
 
@@ -104,6 +106,7 @@ def main():
     ap.add_argument('--visivel', action='store_true', help='mostra a janela (por padrao fica fora da tela)')
     ap.add_argument('--limite', type=int, default=900, help='segundos maximos por execucao')
     ap.add_argument('--exe', default='cm0102-1080.exe')
+    ap.add_argument('--cobertura', action='store_true', help='conta as chamadas das funcoes de jogo/cobertura.txt (gerado por cobertura.py)')
     ap.add_argument('--sem-trava', action='store_true', help='nao espera a trava do laboratorio (o vigia de memoria continua)')
     args = ap.parse_args()
 
@@ -153,6 +156,16 @@ def main():
                 i + 1, info['data'], info['sorteios'], info['impressao'], seg))
             for aviso in info['avisos']:
                 print('    ' + aviso)
+            if info['cobertura']:
+                usadas = [c for c in info['cobertura'] if c[2]]
+                print('    cobertura: %d de %d funcoes chamadas (lista completa no ddraw.log)' % (len(usadas), len(info['cobertura'])))
+                por_arquivo = {}
+                for e, a, n in info['cobertura']:
+                    t = por_arquivo.setdefault(a, [0, 0])
+                    t[0] += 1
+                    t[1] += n > 0
+                for a, (total, usadas_a) in sorted(por_arquivo.items()):
+                    print('      %-24s %3d de %3d' % (a, usadas_a, total))
             if args.modo == 'comparar':
                 for rotina, total, div in info['comparacoes'][-4:]:
                     pass

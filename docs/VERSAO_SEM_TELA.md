@@ -79,3 +79,10 @@ O exe importa 144 funções. Tudo o que ele sabe do mundo entra por elas, pela m
 | Mensagens: `PeekMessageA`, `GetMessageA` | laço principal | sem efeito medido (relógio por rotina) |
 | Rede (`WSOCK32`), impressão, `CreateProcessA`, `WinExec`, `MessageBoxA` | jogo em rede, imprimir, abrir programas, erros | fora do caminho da simulação |
 | `GetVersionExA`, `GetSystemInfo`, `GetKeyboardLayout`, `GetACP`/`GetOEMCP` | partida, os.cpp | constantes na máquina |
+
+### Ferramentas de diagnóstico
+
+- **Cobertura:** `cobertura.py <módulos>` grava `jogo\cobertura.txt` (só inícios comprovados de rotina: fronteira de instrução na varredura linear do `.text` e destino de `call` real ou ponteiro nos dados; o mapa tem pedaços desalinhados e um contador no meio de uma instrução derruba o jogo). `simular.py --cobertura` conta as chamadas (`inc [contador]; jmp original`, não muda a carreira) e resume por arquivo; a lista completa sai no `ddraw.log`. Motor ligado, 2 meses: 210 de 229 funções do motor exercitadas.
+- **Exceções:** na simulação, toda exceção vai para o `ddraw.log` (código, endereço, registradores, pilha), porque o Windows nem sempre registra a queda de um jogo oculto.
+- **Impressão e ambiente:** a impressão digital depende do conjunto exato de variáveis de ambiente (a CRT as copia para a heap). Uma variável nova no `simular.py` muda as impressões; compare sempre execuções da mesma versão do `simular.py` e da DLL.
+- **Motor ligado:** `--motor sim` também é determinístico e Rust = original; dois meses de temporada em ~40 s (600 milhões de sorteios).

@@ -24,6 +24,7 @@ mod desvios;
 mod espiao;
 mod ganchos;
 mod jogo;
+mod motor;
 mod reducao;
 mod registro;
 mod simulacao;
