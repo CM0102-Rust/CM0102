@@ -7,3 +7,7 @@ __pycache__/
 *.pyc
 
 /rust/target/
+
+# Patch de base de dados do jogo (nao versionar)
+CLZ Leagues Patch*/
+CLZ Leagues Patch*.rar

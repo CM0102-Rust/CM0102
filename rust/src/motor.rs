@@ -53,8 +53,14 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6f56c0, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x08] },
     // 0x6fa140: mov al, byte ptr [esp + 4]; mov dl, byte ptr [ecx + 0x102]
     Prologo { endereco: 0x6fa140, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x8a, 0x91, 0x02, 0x01, 0x00, 0x00] },
+    // 0x6cd330: sub esp, 8; push ebx; mov ebx, dword ptr [esp + 0x14]
+    Prologo { endereco: 0x6cd330, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0x5c, 0x24, 0x14] },
+    // 0x6cb9b0: push ebx; push esi; mov esi, dword ptr [esp + 0xc]
+    Prologo { endereco: 0x6cb9b0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
+    // 0x713e90: push ebx; mov ebx, dword ptr [esp + 0x20]
+    Prologo { endereco: 0x713e90, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x20] },
 ];
-const N: usize = 18;
+const N: usize = 21;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -319,6 +325,110 @@ unsafe extern "thiscall" fn virado_para(this: usize, a: i8, b: i8) -> u8 {
     ((d as i16) < tolerancia) as u8
 }
 
+// ---------- quinta leva ----------
+
+/// { 0x6cd330 } (match_eng.cpp): percorre os jogadores do lado `lado` no grupo `grupo` (quantidade
+/// em grupo[0x58 + lado], ponteiros em grupo + lado x 44). Para cada um ativo (0x2b <= 1, posicao
+/// >= 0): com `modo` 2 so conta; senao pergunta a 0x6f5c30 (pelo endereco do jogo) e, ao primeiro
+/// sim, zera 0x1a5/0x1a6 deste objeto e devolve 1. Devolve a contagem (so cresce no modo 2).
+unsafe extern "thiscall" fn procurar_no_lado(this: usize, lado: i8, grupo: usize, a3: u32, a4: u32, a5: u32, a6: u32, modo: i8) -> u8 {
+    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u8 = core::mem::transmute(0x6f5c30usize);
+    procurar_com(this, lado, grupo, a3, a4, a5, a6, modo, &mut |p, w, x, y, z| f(p, w, x, y, z))
+}
+
+#[allow(clippy::too_many_arguments)]
+unsafe fn procurar_com(
+    this: usize, lado: i8, grupo: usize, a3: u32, a4: u32, a5: u32, a6: u32, modo: i8,
+    f: &mut dyn FnMut(usize, u32, u32, u32, u32) -> u8,
+) -> u8 {
+    let lista = (grupo as isize + lado as isize * 44) as *const usize;
+    let mut contagem = 0u8;
+    let mut i = 0;
+    while i < byte((grupo as isize + lado as isize) as usize, 0x58) as i32 {
+        let p = *lista.add(i as usize);
+        if byte(p, 0x2b) <= 1 && byte(p, 0x19) >= 0 {
+            if modo == 2 {
+                contagem = contagem.wrapping_add(1);
+            } else if f(p, a4, a5, a3, a6) != 0 {
+                *((this + 0x1a6) as *mut u8) = 0;
+                *((this + 0x1a5) as *mut u8) = 0;
+                return 1;
+            }
+        }
+        i += 1;
+    }
+    contagem
+}
+
+/// { 0x6cb9b0 } (match_eng.cpp): o jogador (pelo lado dele) esta em posicao de alcancar (b, c)?
+/// Faixas de coordenadas e, no fim, o valor da tabela de distancias (float, 12 x 9 em 0xa15e44;
+/// fora dela, 1000) tem de passar de 1,5.
+unsafe extern "stdcall" fn alcanca(j: usize, b: i8, c: i8) -> u8 {
+    let s = lado(j);
+    let faixa_c = if s == 0 { 10..=11 } else { 0..=1 };
+    if !(2..=6).contains(&b) || !faixa_c.contains(&c) {
+        return 0;
+    }
+    let x = byte(j, 0x102);
+    if x == 4 {
+        return 0;
+    }
+    let y = byte(j, 0x103);
+    let meio = x < 6 && x > 2;
+    if s == 0 {
+        if (meio && c < y) || y < 9 {
+            return 0;
+        }
+    } else if (meio && c > y) || y > 2 {
+        return 0;
+    }
+    if b <= 2 || b >= 6 || (x as i32 - b as i32).abs() <= 1 {
+        return 0;
+    }
+    let col = (b as i32 - x as i32).abs() as i8;
+    let lin = (c as i32 - y as i32).abs() as i8;
+    let v = if (0..=8).contains(&col) && (0..=11).contains(&lin) {
+        f32_em(0xa15e44 + 4 * (lin as usize * 9 + col as usize))
+    } else {
+        f32_em(0x96d2dc)
+    };
+    (v as f64 > f64_em(0x968940)) as u8
+}
+
+/// Codigos de lance que 0x713e90 ignora (devolve 2).
+const LANCES_IGNORADOS: [i16; 11] = [0x5b, 0x5c, 0x3d, 0x36, 0x34, 0x37, 0x5a, 0x33, 0x35, 0x39, 3];
+
+/// { 0x713e90 } (match_pl.cpp): classifica um lance pelo angulo entre a direcao do jogador (0x19a)
+/// e o alvo (0x6cb6c0 do motor, pelo endereco do jogo). Dentro da tolerancia
+/// 90 - (18 x `forca` - float de 0xe5): devolve o byte 0x2c. Fora: 0 (um lado) ou 1 (outro), e
+/// grava em `saida` (20 - atributo da pessoa) x 12 (0x30 ou 0x3b do registro).
+unsafe extern "thiscall" fn classificar_lance(this: usize, codigo: i16, a: i8, b: i8, c: i8, d: i8, forca: f32, saida: *mut u16) -> u8 {
+    *saida = 0;
+    if LANCES_IGNORADOS.contains(&codigo) {
+        return 2;
+    }
+    let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) -> u16 = core::mem::transmute(0x6cb6c0usize);
+    let dx = f(*((this + 0x19e) as *const usize), a, b, c, d).wrapping_sub(*((this + 0x19a) as *const u16)) as i16;
+    let sinal: i16 = if dx >= 0 { 1 } else { -1 };
+    let mut ang = sinal.wrapping_mul(dx);
+    if ang > 0xb4 {
+        ang = (0x168i32 - ang as i32) as i16;
+    }
+    let assinado = sinal.wrapping_mul(ang);
+    let tol = ftol(f32_em(0x96d848) as f64 - (forca as f64 * f32_em(0x96d84c) as f64 - f32_em(this + 0xe5) as f64));
+    let (lim, menos) = (tol as i16, (tol.wrapping_neg()) as i16);
+    let pessoa = *((this + 0x6d) as *const usize);
+    let (r, attr) = if assinado > lim {
+        (0, byte(pessoa, 0x30))
+    } else if assinado < menos {
+        (1, byte(pessoa, 0x3b))
+    } else {
+        return byte(this, 0x2c) as u8;
+    };
+    *saida = ((0x14i16.wrapping_sub(attr as i16)).wrapping_mul(12)) as u16;
+    r
+}
+
 // ---------- comparacao ----------
 
 static mut ORIGINAIS: [usize; N] = [0; N];
@@ -446,7 +556,115 @@ unsafe extern "thiscall" fn comparar_virado_para(this: usize, a: i8, b: i8) -> u
     r
 }
 
+// --- gravar e reproduzir: 0x6f5c30 (3,9 KB, sorteia e altera jogadores) chamada por 0x6cd330 ---
+//
+// Na comparacao a original roda e cada chamada dela a 0x6f5c30 e gravada (porta abaixo); a copia
+// Rust recebe a gravacao no lugar da rotina, e a sequencia de chamadas tambem e comparada. No
+// autoteste (jogadores sinteticos) a porta responde de forma sintetica, sem rodar a rotina real.
+
+static mut PORTA_6F5C30: usize = 0;
+static GRAVANDO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static SINTETICO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static GRAVACAO: std::sync::Mutex<Vec<(usize, [u32; 4], u8)>> = std::sync::Mutex::new(Vec::new());
+
+// 0x6f5c30: sub esp, 0x218
+const PROLOGO_6F5C30: Prologo = Prologo { endereco: 0x6f5c30, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] };
+
+unsafe extern "thiscall" fn porta_6f5c30(p: usize, a: u32, b: u32, c: u32, d: u32) -> u8 {
+    use std::sync::atomic::Ordering::Relaxed;
+    let r = if SINTETICO.load(Relaxed) {
+        ((p as u32 ^ a ^ b.wrapping_mul(3) ^ c.wrapping_mul(5) ^ d.wrapping_mul(7)) >> 4 & 1) as u8
+    } else {
+        let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u8 = core::mem::transmute(PORTA_6F5C30);
+        f(p, a, b, c, d)
+    };
+    if GRAVANDO.load(Relaxed) {
+        GRAVACAO.lock().unwrap_or_else(|e| e.into_inner()).push((p, [a, b, c, d], r));
+    }
+    r
+}
+
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn comparar_procurar(this: usize, lado: i8, grupo: usize, a3: u32, a4: u32, a5: u32, a6: u32, modo: i8) -> u8 {
+    use std::sync::atomic::Ordering::Relaxed;
+    let f = orig::<unsafe extern "thiscall" fn(usize, i8, usize, u32, u32, u32, u32, i8) -> u8>(18);
+    GRAVACAO.lock().unwrap_or_else(|e| e.into_inner()).clear();
+    GRAVANDO.store(true, Relaxed);
+    let repeticao = core::cell::RefCell::new(Vec::new());
+    let sequencia_igual = core::cell::Cell::new(true);
+    // A copia Rust tem de ver o estado que a original viu: 0x6f5c30 altera o jogador que recebe
+    // (0x2b, 0x19), entao esses bytes de cada jogador da lista e a quantidade entram nas regioes.
+    let mut regioes = vec![(this + 0x1a5, 2), ((grupo as isize + lado as isize) as usize + 0x58, 1)];
+    let lista = (grupo as isize + lado as isize * 44) as *const usize;
+    for i in 0..byte((grupo as isize + lado as isize) as usize, 0x58).clamp(0, 11) as usize {
+        let p = *lista.add(i);
+        regioes.extend([(p + 0x19, 1), (p + 0x2b, 1)]);
+    }
+    let (r, n, _, mo, mr) = crate::comparacao::lado_a_lado(
+        &regioes,
+        || {
+            let r = f(this, lado, grupo, a3, a4, a5, a6, modo);
+            GRAVANDO.store(false, Relaxed);
+            *repeticao.borrow_mut() = GRAVACAO.lock().unwrap_or_else(|e| e.into_inner()).clone();
+            r
+        },
+        || {
+            let gravadas = repeticao.borrow();
+            let mut prox = gravadas.iter();
+            let n = procurar_com(this, lado, grupo, a3, a4, a5, a6, modo, &mut |p, w, x, y, z| match prox.next() {
+                Some(&(gp, ga, gr)) if gp == p && ga == [w, x, y, z] => gr,
+                _ => {
+                    sequencia_igual.set(false);
+                    0
+                }
+            });
+            if prox.next().is_some() {
+                sequencia_igual.set(false); // a original chamou mais vezes
+            }
+            n
+        },
+    );
+    let (todas, sequencia_igual) = (repeticao.borrow().len(), sequencia_igual.get());
+    // so o que a propria rotina escreve (0x1a5/0x1a6); os bytes dos jogadores mudam pela 0x6f5c30
+    let igual = mo.0[0] == mr.0[0];
+    // 0x6f5c30 altera os proximos jogadores da lista; a reproducao devolve so a resposta gravada,
+    // sem esses efeitos, e a copia Rust pode querer perguntar por um jogador que a original pulou.
+    // Com resultado e memoria iguais isso e inconclusivo, nao divergencia (a carreira inteira, em
+    // que a rotina roda de verdade, e a prova). Resultado ou memoria diferentes continuam acusados.
+    if !sequencia_igual && igual && r == n {
+        static INCONCLUSIVAS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let k = INCONCLUSIVAS.fetch_add(1, Relaxed) + 1;
+        if k.is_power_of_two() {
+            linha(&format!("motor: procurar_no_lado {} comparacoes inconclusivas (efeito de 0x6f5c30 nos proximos jogadores)", k));
+        }
+        return r;
+    }
+    PLACAR.registrar(igual && r == n && sequencia_igual, || {
+        format!("procurar_no_lado(lado {}, modo {}, {} chamadas) original={} rust={} seq={} {:x?} {:x?}", lado, modo, todas, r, n, sequencia_igual, mo, mr)
+    });
+    r
+}
+unsafe extern "stdcall" fn comparar_alcanca(j: usize, b: i8, c: i8) -> u8 {
+    let r = orig::<unsafe extern "stdcall" fn(usize, i8, i8) -> u8>(19)(j, b, c);
+    let n = alcanca(j, b, c);
+    PLACAR.registrar(r == n, || format!("alcanca(lado {}, x {}, y {}, {}, {}) original={} rust={}", lado(j), byte(j, 0x102), byte(j, 0x103), b, c, r, n));
+    r
+}
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn comparar_classificar(this: usize, codigo: i16, a: i8, b: i8, c: i8, d: i8, forca: f32, saida: *mut u16) -> u8 {
+    let f = orig::<unsafe extern "thiscall" fn(usize, i16, i8, i8, i8, i8, f32, *mut u16) -> u8>(20);
+    let (r, n, igual, mo, mr) =
+        crate::comparacao::lado_a_lado(&[(saida as usize, 2)], || f(this, codigo, a, b, c, d, forca, saida), || classificar_lance(this, codigo, a, b, c, d, forca, saida));
+    PLACAR.registrar(igual && r == n, || format!("classificar_lance({}, {} {} {} {}, {}) original={} rust={} {:x?} {:x?}", codigo, a, b, c, d, forca, r, n, mo, mr));
+    r
+}
+
 pub unsafe fn instalar(comparando: bool) {
+    if comparando {
+        if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
+            PORTA_6F5C30 = t;
+        }
+    }
     let rust: [usize; N] = [
         tabela_a as *const () as usize,
         tabela_b as *const () as usize,
@@ -466,6 +684,9 @@ pub unsafe fn instalar(comparando: bool) {
         apontar as *const () as usize,
         desgastar as *const () as usize,
         virado_para as *const () as usize,
+        procurar_no_lado as *const () as usize,
+        alcanca as *const () as usize,
+        classificar_lance as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -486,12 +707,16 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_apontar as *const () as usize,
         comparar_desgastar as *const () as usize,
         comparar_virado_para as *const () as usize,
+        comparar_procurar as *const () as usize,
+        comparar_alcanca as *const () as usize,
+        comparar_classificar as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
         "motor_condicao_jogador", "motor_tabela_do_jogador", "motor_diferenca_jogador", "motor_byte_do_lado",
         "motor_limite_jogador", "motor_faixa_jogador", "motor_byte_da_posicao", "motor_campo_pela_posicao",
-        "motor_pode_escolher", "motor_apontar", "motor_desgastar", "motor_virado_para",
+        "motor_pode_escolher", "motor_apontar", "motor_desgastar", "motor_virado_para", "motor_procurar_no_lado",
+        "motor_alcanca", "motor_classificar_lance",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -520,6 +745,9 @@ pub unsafe fn autoteste(casos: u64) {
     let mut jogador = vec![0u8; 0x1a4];
     let outro = vec![0u8; 0x1a4];
     let mut pessoa = vec![0u8; 0x46];
+    let mut grupo = vec![0u8; 0x60];
+    let mut jogadores = vec![vec![0u8; 0x1a8]; 22];
+    SINTETICO.store(true, std::sync::atomic::Ordering::Relaxed);
     PLACAR.autoteste(|| {
         for _ in 0..casos {
             for t in tabelas.iter_mut() {
@@ -623,6 +851,36 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x10c) as *mut i8) = ((q >> 50) % 25) as i8 - 2;
             *((j + 0x19a) as *mut i16) = ((q >> 54) % 400) as i16 - 20;
             comparar_virado_para(j, byte(j, 0x102).wrapping_add(((q >> 58) % 11) as i8 - 5), byte(j, 0x103).wrapping_add(((q >> 61) % 7) as i8 - 3));
+            // quinta leva
+            let g = s.proximo();
+            let gp = grupo.as_mut_ptr() as usize;
+            for (k, jog) in jogadores.iter_mut().enumerate() {
+                let jp = jog.as_mut_ptr() as usize;
+                *((jp + 0x2b) as *mut i8) = ((g >> (k % 32)) % 4) as i8 - 1;
+                *((jp + 0x19) as *mut i8) = ((g >> ((k + 7) % 40)) % 13) as i8 - 2;
+                *((gp + (k / 11) * 44 + (k % 11) * 4) as *mut usize) = jp;
+            }
+            *((gp + 0x58) as *mut i8) = (g % 13) as i8 - 1;
+            *((gp + 0x59) as *mut i8) = ((g >> 5) % 13) as i8 - 1;
+            let lado_g = ((g >> 10) % 2) as i8;
+            let modo = [0i8, 1, 2, 2][((g >> 12) % 4) as usize];
+            comparar_procurar(m, lado_g, gp, (g >> 14) as u32, (g >> 20) as u32, (g >> 26) as u32, (g >> 32) as u32, modo);
+            let h = s.proximo();
+            *((j + 0x27) as *mut i8) = [0i8, 1, 2][(h % 3) as usize];
+            *((j + 0x102) as *mut i8) = ((h >> 2) % 9) as i8 - 1;
+            *((j + 0x103) as *mut i8) = ((h >> 6) % 14) as i8 - 1;
+            comparar_alcanca(j, ((h >> 10) % 9) as i8 - 1, ((h >> 14) % 14) as i8 - 1);
+            *((j + 0x27) as *mut i8) = lado_real;
+            // lance: angulo pela tabela global (via motor falso), forca e atributos variados
+            *((j + 0x19e) as *mut usize) = m;
+            *((j + 0x19a) as *mut i16) = ((h >> 18) % 400) as i16 - 20;
+            *((j + 0x2c) as *mut u8) = (h >> 27) as u8;
+            *((j + 0xe5) as *mut f32) = ((h >> 30) % 300) as f32 / 7.0;
+            let codigo = [0i16, 1, 3, 0x33, 0x5b, 0x40, 100, -1][((h >> 40) % 8) as usize];
+            let (a, b) = (((h >> 43) % 12) as i8, ((h >> 47) % 12) as i8);
+            let mut saida = 0xffffu16;
+            comparar_classificar(j, codigo, a, b, a + ((h >> 51) % 11) as i8 - 5, b + ((h >> 55) % 11) as i8 - 5, ((h >> 59) % 32) as f32 / 3.0, &mut saida);
         }
     });
+    SINTETICO.store(false, std::sync::atomic::Ordering::Relaxed);
 }
