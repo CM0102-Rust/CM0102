@@ -59,8 +59,14 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6cb9b0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
     // 0x713e90: push ebx; mov ebx, dword ptr [esp + 0x20]
     Prologo { endereco: 0x713e90, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x20] },
+    // 0x6f09b0: movsx eax, byte ptr [ecx + 0x103]
+    Prologo { endereco: 0x6f09b0, bytes: &[0x0f, 0xbe, 0x81, 0x03, 0x01, 0x00, 0x00] },
+    // 0x6fa1e0: mov al, byte ptr [ecx + 0x27]; push esi; test al, al
+    Prologo { endereco: 0x6fa1e0, bytes: &[0x8a, 0x41, 0x27, 0x56, 0x84, 0xc0] },
+    // 0x6cb780: push ebx; push ebp; push esi; push edi; mov edi, dword ptr [esp + 0x14]
+    Prologo { endereco: 0x6cb780, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] },
 ];
-const N: usize = 21;
+const N: usize = 24;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -429,6 +435,73 @@ unsafe extern "thiscall" fn classificar_lance(this: usize, codigo: i16, a: i8, b
     r
 }
 
+// ---------- sexta leva: distancias ----------
+
+/// Celula da tabela de distancias (0xa15e44, 9 por linha). Diferencas com o mesmo calculo do
+/// original: valor absoluto em 32 bits e depois o byte baixo com sinal.
+unsafe fn distancia_tabela(dl: i32, dc: i32) -> f32 {
+    let lin = dl.abs() as i8 as isize;
+    let col = dc.abs() as i8 as isize;
+    *((0xa15e44 + 4 * (lin * 9 + col)) as *const f32)
+}
+
+/// { 0x6f09b0 } (match_pl.cpp): distancia (tabela) do jogador ao ponto (a, b).
+unsafe extern "thiscall" fn distancia_ao_ponto(this: usize, a: i8, b: i8) -> f32 {
+    distancia_tabela(byte(this, 0x103) as i32 - b as i32, byte(this, 0x102) as i32 - a as i32)
+}
+
+/// { 0x6fa1e0 } (match_pl.cpp): distancia ao gol que o jogador ataca (coluna 4; linha 11 do lado 0, 0 do outro).
+unsafe extern "thiscall" fn distancia_ao_gol(this: usize) -> f32 {
+    let alvo = if lado(this) == 0 { 0xb } else { 0 };
+    distancia_tabela(byte(this, 0x103) as i32 - alvo, byte(this, 0x102) as i32 - 4)
+}
+
+/// { 0x6cb780 } (match_eng.cpp): 0 se o jogador esta impedido de seguir (0x70dfa0, marca do
+/// motor na casa dele) ou se algum adversario ativo esta a distancia do gol <= limite; 2 se algum
+/// colega ativo esta estritamente mais perto; senao 1. Limite: distancia dele ao gol + 0,5, e mais
+/// 1,0 fora da area (arredondado para float a cada passo, como o `fstp` do original). Os blocos
+/// de 20 jogadores de cada lado ficam em motor + 0x4796 + 8920 x lado, de 0x1be em 0x1be.
+unsafe extern "thiscall" fn mais_perto_do_gol(this: usize, j: usize) -> u8 {
+    let f: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x6f4650usize);
+    mais_perto_com(this, j, &mut |p| f(p))
+}
+
+/// 0x6f4650 (na area; consulta 0x6f9f90, que sorteia) entra como parametro: na comparacao, gravacao.
+unsafe fn mais_perto_com(this: usize, j: usize, f6f4650: &mut dyn FnMut(usize) -> u8) -> u8 {
+    let f70dfa0: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x70dfa0usize);
+    let f6fa1e0: unsafe extern "thiscall" fn(usize) -> f32 = core::mem::transmute(0x6fa1e0usize);
+    let f717410: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    let f6f09b0: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(0x6f09b0usize);
+    if f70dfa0(j) != 0 {
+        return 0;
+    }
+    let s = lado(j);
+    let outro = (s == 0) as isize;
+    let casa = this as isize + outro + 2 * 45 * (byte(j, 0x103) as isize + 12 * byte(j, 0x102) as isize) + 0x21b6;
+    if *(casa as *const u8) != 0 {
+        return 0;
+    }
+    let mut limite = (f6fa1e0(j) as f64 + f64_em(0x968968)) as f32;
+    if f6f4650(j) == 0 {
+        limite = (limite as f64 + f64_em(0x967890)) as f32;
+    }
+    let linha: i8 = if s == 0 { 0xb } else { 0 };
+    let bloco = |l: isize| (this as isize + 8920 * l + 0x4796) as usize;
+    for k in 0..20 {
+        let p = bloco(outro) + k * 0x1be;
+        if byte(p, 0x19) >= 0 && f717410(p) != 1 && !(f6f09b0(p, 4, linha) > limite) {
+            return 0; // C0|C3: menor, igual ou sem ordem
+        }
+    }
+    for k in 0..20 {
+        let p = bloco(s as isize) + k * 0x1be;
+        if byte(p, 0x19) >= 0 && f717410(p) != 1 && !(f6f09b0(p, 4, linha) >= limite) {
+            return 2; // C0: menor ou sem ordem
+        }
+    }
+    1
+}
+
 // ---------- comparacao ----------
 
 static mut ORIGINAIS: [usize; N] = [0; N];
@@ -565,7 +638,7 @@ unsafe extern "thiscall" fn comparar_virado_para(this: usize, a: i8, b: i8) -> u
 static mut PORTA_6F5C30: usize = 0;
 static GRAVANDO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 static SINTETICO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-static GRAVACAO: std::sync::Mutex<Vec<(usize, [u32; 4], u8)>> = std::sync::Mutex::new(Vec::new());
+static GRAVACAO: std::sync::Mutex<Vec<(u32, usize, [u32; 4], u8)>> = std::sync::Mutex::new(Vec::new()); // (rotina, this, args, resposta)
 
 // 0x6f5c30: sub esp, 0x218
 const PROLOGO_6F5C30: Prologo = Prologo { endereco: 0x6f5c30, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] };
@@ -579,7 +652,7 @@ unsafe extern "thiscall" fn porta_6f5c30(p: usize, a: u32, b: u32, c: u32, d: u3
         f(p, a, b, c, d)
     };
     if GRAVANDO.load(Relaxed) {
-        GRAVACAO.lock().unwrap_or_else(|e| e.into_inner()).push((p, [a, b, c, d], r));
+        GRAVACAO.lock().unwrap_or_else(|e| e.into_inner()).push((0x6f5c30, p, [a, b, c, d], r));
     }
     r
 }
@@ -612,7 +685,7 @@ unsafe extern "thiscall" fn comparar_procurar(this: usize, lado: i8, grupo: usiz
             let gravadas = repeticao.borrow();
             let mut prox = gravadas.iter();
             let n = procurar_com(this, lado, grupo, a3, a4, a5, a6, modo, &mut |p, w, x, y, z| match prox.next() {
-                Some(&(gp, ga, gr)) if gp == p && ga == [w, x, y, z] => gr,
+                Some(&(0x6f5c30, gp, ga, gr)) if gp == p && ga == [w, x, y, z] => gr,
                 _ => {
                     sequencia_igual.set(false);
                     0
@@ -659,8 +732,64 @@ unsafe extern "thiscall" fn comparar_classificar(this: usize, codigo: i16, a: i8
     r
 }
 
+// 0x6f4650: mov al, byte ptr [ecx + 0x27]; test al, al
+const PROLOGO_6F4650: Prologo = Prologo { endereco: 0x6f4650, bytes: &[0x8a, 0x41, 0x27, 0x84, 0xc0] };
+static mut PORTA_6F4650: usize = 0;
+
+/// Porta de gravacao em 0x6f4650 (na area; chama 0x6f9f90, que sorteia), para 0x6cb780.
+unsafe extern "thiscall" fn porta_6f4650(p: usize) -> u8 {
+    use std::sync::atomic::Ordering::Relaxed;
+    let r = if SINTETICO.load(Relaxed) {
+        ((p >> 4) as u32 ^ byte(p, 0x102) as u32 ^ byte(p, 0x103) as u32 * 3) as u8 & 1
+    } else {
+        let f: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(PORTA_6F4650);
+        f(p)
+    };
+    if GRAVANDO.load(Relaxed) {
+        GRAVACAO.lock().unwrap_or_else(|e| e.into_inner()).push((0x6f4650, p, [0; 4], r));
+    }
+    r
+}
+
+unsafe extern "thiscall" fn comparar_distancia_ao_ponto(this: usize, a: i8, b: i8) -> f32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, i8, i8) -> f32>(21)(this, a, b);
+    let n = distancia_ao_ponto(this, a, b);
+    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("distancia_ao_ponto({}, {}) original={} rust={}", a, b, r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_distancia_ao_gol(this: usize) -> f32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> f32>(22)(this);
+    let n = distancia_ao_gol(this);
+    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("distancia_ao_gol(lado {}) original={} rust={}", lado(this), r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_mais_perto(this: usize, j: usize) -> u8 {
+    use std::sync::atomic::Ordering::Relaxed;
+    let f = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(23);
+    GRAVACAO.lock().unwrap_or_else(|e| e.into_inner()).clear();
+    GRAVANDO.store(true, Relaxed);
+    let r = f(this, j);
+    GRAVANDO.store(false, Relaxed);
+    let gravadas: Vec<_> = GRAVACAO.lock().unwrap_or_else(|e| e.into_inner()).iter().filter(|g| g.0 == 0x6f4650).cloned().collect();
+    let mut prox = gravadas.iter();
+    let mut seq = true;
+    let n = mais_perto_com(this, j, &mut |p| match prox.next() {
+        Some(&(_, gp, _, gr)) if gp == p => gr,
+        _ => {
+            seq = false;
+            0
+        }
+    });
+    let seq = seq && prox.next().is_none();
+    PLACAR.registrar(r == n && seq, || format!("mais_perto_do_gol(lado {}) original={} rust={} seq={}", lado(j), r, n, seq));
+    r
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
+        if let Some(t) = desvios::desviar("motor_porta_6f4650 (gravacao)", &PROLOGO_6F4650, porta_6f4650 as *const () as usize) {
+            PORTA_6F4650 = t;
+        }
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
             PORTA_6F5C30 = t;
         }
@@ -687,6 +816,9 @@ pub unsafe fn instalar(comparando: bool) {
         procurar_no_lado as *const () as usize,
         alcanca as *const () as usize,
         classificar_lance as *const () as usize,
+        distancia_ao_ponto as *const () as usize,
+        distancia_ao_gol as *const () as usize,
+        mais_perto_do_gol as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -710,13 +842,17 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_procurar as *const () as usize,
         comparar_alcanca as *const () as usize,
         comparar_classificar as *const () as usize,
+        comparar_distancia_ao_ponto as *const () as usize,
+        comparar_distancia_ao_gol as *const () as usize,
+        comparar_mais_perto as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
         "motor_condicao_jogador", "motor_tabela_do_jogador", "motor_diferenca_jogador", "motor_byte_do_lado",
         "motor_limite_jogador", "motor_faixa_jogador", "motor_byte_da_posicao", "motor_campo_pela_posicao",
         "motor_pode_escolher", "motor_apontar", "motor_desgastar", "motor_virado_para", "motor_procurar_no_lado",
-        "motor_alcanca", "motor_classificar_lance",
+        "motor_alcanca", "motor_classificar_lance", "motor_distancia_ao_ponto", "motor_distancia_ao_gol",
+        "motor_mais_perto_do_gol",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -880,6 +1016,26 @@ pub unsafe fn autoteste(casos: u64) {
             let (a, b) = (((h >> 43) % 12) as i8, ((h >> 47) % 12) as i8);
             let mut saida = 0xffffu16;
             comparar_classificar(j, codigo, a, b, a + ((h >> 51) % 11) as i8 - 5, b + ((h >> 55) % 11) as i8 - 5, ((h >> 59) % 32) as f32 / 3.0, &mut saida);
+            // sexta leva: distancias e os dois blocos de 20 jogadores no motor
+            let e = s.proximo();
+            for k in 0..40usize {
+                let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
+                let z = e.rotate_left(k as u32 * 3);
+                *((p + 0x19) as *mut i8) = (z % 13) as i8 - 2;
+                *((p + 0x27) as *mut i8) = (k / 20) as i8;
+                *((p + 0x102) as *mut i8) = ((z >> 4) % 9) as i8;
+                *((p + 0x103) as *mut i8) = ((z >> 8) % 12) as i8;
+                *((p + 0x19e) as *mut usize) = m;
+            }
+            for k in 0..8usize {
+                let casa = m + 0x21b6 + ((e >> (k * 7)) % 9700) as usize;
+                *(casa as *mut u8) = ((e >> (k * 5)) % 3 == 0) as u8;
+            }
+            let jj = m + 0x4796 + 8920 * ((e >> 50) % 2) as usize + ((e >> 52) % 20) as usize * 0x1be;
+            *((jj + 0x19) as *mut i8) = 3;
+            comparar_distancia_ao_ponto(jj, ((e >> 40) % 9) as i8, ((e >> 44) % 12) as i8);
+            comparar_distancia_ao_gol(jj);
+            comparar_mais_perto(m, jj);
         }
     });
     SINTETICO.store(false, std::sync::atomic::Ordering::Relaxed);
