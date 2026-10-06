@@ -67,6 +67,12 @@ pub fn rgb565_para_32(p: u16) -> u32 {
     ((r << 3 | r >> 2) << 16) | ((g << 2 | g >> 4) << 8) | (b << 3 | b >> 2)
 }
 
+/// `CM_OCULTO=1` (simulacao em lote): janela fora da tela e nada e desenhado.
+pub fn oculto() -> bool {
+    static OCULTO: OnceLock<bool> = OnceLock::new();
+    *OCULTO.get_or_init(|| win::ambiente("CM_OCULTO"))
+}
+
 /// Registra a janela do jogo (filtra as mensagens dela) e, em janela, a torna redimensionavel.
 pub unsafe fn definir_janela(hwnd: HWND, tela_cheia: bool) {
     {
@@ -76,6 +82,11 @@ pub unsafe fn definir_janela(hwnd: HWND, tela_cheia: bool) {
             t.proc_original = win::SetWindowLongA(hwnd, win::GWL_WNDPROC, proc_janela as *const () as isize);
             linha(&format!("apresentacao: janela {:p}, procedimento original {:#x}", hwnd, t.proc_original));
         }
+    }
+    if oculto() {
+        // O jogo recoloca a janela no centro sempre que reinicia o video; ela volta para fora da tela.
+        win::SetWindowPos(hwnd, core::ptr::null_mut(), -32000, -32000, 0, 0, win::SWP_NOSIZE | win::SWP_NOZORDER | win::SWP_NOACTIVATE);
+        return;
     }
     if !tela_cheia {
         tornar_redimensionavel(hwnd);
@@ -205,6 +216,9 @@ mod preferencia {
 
 /// Converte a regiao `suja` do quadro e mostra o quadro inteiro na janela.
 pub unsafe fn apresentar(pixels: &[u16], largura: i32, altura: i32, suja: RECT) {
+    if oculto() {
+        return;
+    }
     let mut t = tela();
     if t.hwnd == 0 {
         return;

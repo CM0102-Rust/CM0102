@@ -22,6 +22,7 @@ mod ganchos;
 mod jogo;
 mod reducao;
 mod registro;
+mod simulacao;
 mod video;
 mod win;
 
@@ -62,6 +63,7 @@ unsafe fn ddraw_do_sistema() -> Option<FnDirectDrawCreate> {
 pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reservado: *mut c_void) -> i32 {
     const DLL_PROCESS_ATTACH: u32 = 1;
     if motivo == DLL_PROCESS_ATTACH && !win::ambiente("CM_ESPIAO") {
+        ganchos::instalar_cedo();
         desvios::instalar();
     }
     1

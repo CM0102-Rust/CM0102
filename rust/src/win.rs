@@ -42,6 +42,7 @@ pub const GWL_EXSTYLE: i32 = -20;
 pub const WS_THICKFRAME: u32 = 0x0004_0000;
 pub const WS_MAXIMIZEBOX: u32 = 0x0001_0000;
 pub const SW_MAXIMIZE: i32 = 3;
+pub const SWP_NOSIZE: u32 = 0x0001;
 pub const SWP_NOZORDER: u32 = 0x0004;
 pub const SWP_NOACTIVATE: u32 = 0x0010;
 pub const SWP_FRAMECHANGED: u32 = 0x0020;
@@ -85,6 +86,7 @@ extern "system" {
     pub fn VirtualAlloc(end: *mut c_void, tam: usize, tipo: u32, protecao: u32) -> *mut c_void;
     pub fn FlushInstructionCache(processo: *mut c_void, end: *const c_void, tam: usize) -> i32;
     pub fn GetCurrentProcess() -> *mut c_void;
+    pub fn TerminateProcess(processo: *mut c_void, codigo: u32) -> i32;
     pub fn GetEnvironmentVariableW(nome: *const u16, buf: *mut u16, tam: u32) -> u32;
 }
 

@@ -16,6 +16,7 @@ use core::cell::Cell;
 use crate::comparacao::{Placar, Sorteio};
 use crate::desvios::{self, Prologo};
 use crate::registro::linha;
+use crate::simulacao;
 
 const PONTEIRO: *mut u32 = 0xde1f60 as *mut u32;
 const DESLOCAMENTO: *mut i32 = 0xde1f5c as *mut i32;
@@ -37,8 +38,21 @@ unsafe fn rand_crt() -> i32 {
     f()
 }
 
+thread_local! {
+    /// Desligado durante a replica Rust do modo comparacao, para a contagem de sorteios da
+    /// simulacao ser a mesma nos tres modos (entradas na rotina, recursao incluida).
+    static CONTAR: Cell<bool> = const { Cell::new(true) };
+}
+
+unsafe fn contar() {
+    if CONTAR.with(|c| c.get()) {
+        simulacao::sorteio(*PONTEIRO, *DESLOCAMENTO, *ESTADO_RAND);
+    }
+}
+
 /// Versao Rust de { 0x90cfc0 }.
 pub unsafe extern "C" fn aleatorio(n: i32) -> i32 {
+    contar();
     if n == 0 {
         return 0;
     }
@@ -118,6 +132,7 @@ unsafe fn original(n: i32) -> i32 {
 /// Roda a original e a versao Rust a partir do mesmo estado e compara resultado e estado final.
 /// O jogo segue com o resultado e o estado da original.
 unsafe extern "C" fn comparar(n: i32) -> i32 {
+    contar();
     // A original chama a si mesma (recursao para n grande) passando por este desvio.
     if RODANDO.with(|r| r.get()) == Rodando::Original {
         return original(n);
@@ -129,7 +144,9 @@ unsafe extern "C" fn comparar(n: i32) -> i32 {
     let depois_orig = Estado::ler();
 
     antes.escrever();
+    CONTAR.with(|c| c.set(false));
     let r_rust = aleatorio(n);
+    CONTAR.with(|c| c.set(true));
     let depois_rust = Estado::ler();
     depois_orig.escrever();
 
@@ -142,12 +159,31 @@ unsafe extern "C" fn comparar(n: i32) -> i32 {
     r_orig
 }
 
-pub unsafe fn instalar(comparando: bool) {
-    let destino = if comparando { comparar as *const () as usize } else { aleatorio as *const () as usize };
+/// Modo observador (`CM_ORIGINAL=1`): roda a original e so conta/verifica a parada da simulacao.
+unsafe extern "C" fn observar(n: i32) -> i32 {
+    contar();
+    original(n)
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Modo {
+    Rust,
+    Comparar,
+    Observar,
+}
+
+pub unsafe fn instalar(modo: Modo) {
+    let destino = match modo {
+        Modo::Rust => aleatorio as *const () as usize,
+        Modo::Comparar => comparar as *const () as usize,
+        Modo::Observar => observar as *const () as usize,
+    };
     if let Some(t) = desvios::desviar("aleatorio", &PROLOGO, destino) {
         ORIGINAL = t;
-        if comparando {
-            linha("aleatorio: modo comparacao (original x Rust)");
+        match modo {
+            Modo::Comparar => linha("aleatorio: modo comparacao (original x Rust)"),
+            Modo::Observar => linha("aleatorio: modo observador (so a original roda)"),
+            Modo::Rust => {}
         }
     }
 }

@@ -67,3 +67,21 @@ unsafe extern "system" fn change_display_settings_a(modo: *const c_void, flags: 
 pub unsafe fn instalar() {
     trocar_importacao("USER32.dll", "ChangeDisplaySettingsA", change_display_settings_a as *const () as usize);
 }
+
+static mut SHOW_WINDOW_ORIGINAL: usize = 0;
+
+/// Modo oculto: o jogo mostra a janela com SW_SHOW (5), que rouba o foco de quem esta usando o PC.
+/// Troca por SW_SHOWNA (8): mostra sem ativar. A janela vai para fora da tela logo depois.
+unsafe extern "system" fn show_window(hwnd: *mut c_void, modo: i32) -> i32 {
+    let f: unsafe extern "system" fn(*mut c_void, i32) -> i32 = core::mem::transmute(SHOW_WINDOW_ORIGINAL);
+    f(hwnd, if modo == 5 || modo == 1 { 8 } else { modo })
+}
+
+/// Chamado no carregamento da DLL (antes de o jogo criar a janela).
+pub unsafe fn instalar_cedo() {
+    if crate::apresentacao::oculto() {
+        if let Some(a) = trocar_importacao("USER32.dll", "ShowWindow", show_window as *const () as usize) {
+            SHOW_WINDOW_ORIGINAL = a;
+        }
+    }
+}

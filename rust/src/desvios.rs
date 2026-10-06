@@ -59,9 +59,17 @@ pub unsafe fn instalar() {
         linha("desvios: desligados (CM_SEM_DESVIOS)");
         return;
     }
+    // Simulacao em lote (CM_PARAR_EM): relogio fixo, para a simulacao ser reproduzivel.
+    crate::simulacao::instalar();
+    // CM_ORIGINAL=1: nenhuma rotina substituida; o sorteio so e observado (contagem e parada da
+    // simulacao), para comparar uma simulacao so com as originais contra outra com o Rust.
+    if win::ambiente("CM_ORIGINAL") {
+        aleatorio::instalar(aleatorio::Modo::Observar);
+        return;
+    }
     // CM_AUTOTESTE=1 liga o modo comparacao; os autotestes em si rodam depois (ver `autotestes`).
     let comparar = win::ambiente("CM_COMPARAR") || win::ambiente("CM_AUTOTESTE");
-    aleatorio::instalar(comparar);
+    aleatorio::instalar(if comparar { aleatorio::Modo::Comparar } else { aleatorio::Modo::Rust });
     data::instalar(comparar);
 }
 
