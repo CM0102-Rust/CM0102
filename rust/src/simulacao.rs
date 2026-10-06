@@ -201,6 +201,24 @@ const PROLOGO_RAM_TOTAL: crate::desvios::Prologo =
 const PROLOGO_RAM_LIVRE: crate::desvios::Prologo =
     crate::desvios::Prologo { endereco: 0x7a1710, bytes: &[0x83, 0xec, 0x20, 0xb8, 0x20, 0x00, 0x00, 0x00] };
 
+// 0x7a1820 (os.cpp, espaco livre em disco em MB, saturado em 4096; 136 chamadas): sub esp, 0x2bc
+const PROLOGO_DISCO: crate::desvios::Prologo =
+    crate::desvios::Prologo { endereco: 0x7a1820, bytes: &[0x81, 0xec, 0xbc, 0x02, 0x00, 0x00] };
+
+unsafe extern "C" fn disco_fixo(_unidade: usize) -> i32 {
+    4096
+}
+
+/// Unidades vistas pelas 33 checagens de CD: so C:\ (pen drives e afins nao mudam nada).
+unsafe extern "system" fn unidades_fixas(tam: u32, buf: *mut u8) -> u32 {
+    let s = b"C:\\\0\0";
+    if (tam as usize) < s.len() {
+        return s.len() as u32;
+    }
+    core::ptr::copy_nonoverlapping(s.as_ptr(), buf, s.len());
+    (s.len() - 1) as u32
+}
+
 /// Memoria vista pelo jogo na simulacao: fixa (o teto do GlobalMemoryStatus), para nao depender da maquina.
 unsafe extern "C" fn memoria_fixa() -> i32 {
     2047
@@ -251,6 +269,8 @@ pub unsafe fn instalar() {
         }
         crate::desvios::desviar("time (relogio fixo da simulacao)", &PROLOGO_TIME, time_fixo as *const () as usize);
         crate::desvios::desviar("clock (relogio da simulacao)", &PROLOGO_CLOCK, clock_fixo as *const () as usize);
+        crate::desvios::desviar("disco livre (fixo na simulacao)", &PROLOGO_DISCO, disco_fixo as *const () as usize);
+        crate::ganchos::trocar_importacao("KERNEL32.dll", "GetLogicalDriveStringsA", unidades_fixas as *const () as usize);
         crate::desvios::desviar("RAM total (fixa na simulacao)", &PROLOGO_RAM_TOTAL, memoria_fixa as *const () as usize);
         crate::desvios::desviar("RAM livre (fixa na simulacao)", &PROLOGO_RAM_LIVRE, memoria_fixa as *const () as usize);
         if let Some(t) = crate::desvios::desviar("rand (observado na simulacao)", &PROLOGO_RAND, rand_observado as *const () as usize) {

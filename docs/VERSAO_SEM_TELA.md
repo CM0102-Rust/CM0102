@@ -59,3 +59,23 @@ Com semente fixa o jogo ainda variava entre execuções. Fontes acidentais, toda
 Também fixos: memória total/livre informada ao jogo (0x7a16d0, 0x7a1710). Janela: nasce e fica fora da tela (`CreateWindowExA`/`MoveWindow`/`ShowWindow` na IAT), sem piscar a tela de quem usa o PC.
 
 Diagnóstico de divergência: `CM_RASTRO=AAAA-MM-DD` grava em `jogo\rastro.log` cada sorteio do dia (pedido, endereço de quem chamou, estado do gerador), cada `qsort` (comparador, hash da entrada e da saída) e cada consulta ao relógio (o endereço de quem chamou vem do trecho de entrada da pilha particular); o diário do `ddraw.log` tem uma linha por dia (sorteios, gerador, hash da tabela de pessoas, relógios). Método: achar o primeiro dia diferente no diário, rastrear o dia, achar a primeira linha diferente e subir pelo código.
+
+### Auditoria das importações (o que entra de fora no jogo)
+
+O exe importa 144 funções. Tudo o que ele sabe do mundo entra por elas, pela memória (endereços, lixo na pilha) ou pelos arquivos. Classificação para a simulação:
+
+| Entrada | Onde | Situação |
+|---|---|---|
+| Relógio: `GetLocalTime`, `GetSystemTime`, `GetSystemTimeAsFileTime` | só em `time()` e `clock()` da CRT | fixo |
+| `GlobalMemoryStatus` | 0x7a16d0, 0x7a1710 | fixo |
+| Espaço em disco: `GetDiskFreeSpaceA` (e `…ExA` por `GetProcAddress`) | os.cpp 0x7a1820, 136 chamadas (menus, dia, Setup) | fixo em 4096 MB (o máximo que a rotina devolve) |
+| Unidades: `GetLogicalDriveStringsA`, `GetDriveTypeA` | as 33 checagens de CD (35 chamadas) | lista fixa `C:\` |
+| Ambiente, `GetCommandLineA` | CRT na partida | fixos pelo `simular.py` |
+| Memória: `Heap*`, `GlobalAlloc`, `VirtualAlloc` | CRT, Database.cpp | regiões fixas |
+| Listagem de pastas: `FindFirstFileA` + datas de arquivo | utils.cpp 0x90bf90 (tela de arquivos, configuração, menus, Setup) | **não fixado**: o conteúdo das pastas do jogo entra na carreira; um save novo pode mudar a impressão. Comparar execuções feitas com a pasta no mesmo estado |
+| Caminhos: `GetCurrentDirectoryA`, `GetFullPathNameA`, `GetModuleFileNameA` | CRT, Setup | constantes enquanto o jogo não mudar de pasta |
+| Registro: `RegQueryValueExA` | main.cpp 0x68d370 (partida) | constante na máquina |
+| Tela e fontes: `GetSystemMetrics`, `GetDeviceCaps`, `GetTextMetricsA` | game_config.cpp, display.cpp | constantes na máquina (mudar a resolução do Windows pode mudar a impressão) |
+| Mensagens: `PeekMessageA`, `GetMessageA` | laço principal | sem efeito medido (relógio por rotina) |
+| Rede (`WSOCK32`), impressão, `CreateProcessA`, `WinExec`, `MessageBoxA` | jogo em rede, imprimir, abrir programas, erros | fora do caminho da simulação |
+| `GetVersionExA`, `GetSystemInfo`, `GetKeyboardLayout`, `GetACP`/`GetOEMCP` | partida, os.cpp | constantes na máquina |
