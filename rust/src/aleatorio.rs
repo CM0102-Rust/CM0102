@@ -12,8 +12,8 @@
 //! A semente (0x90d0a0, opcao `-seed`) faz srand e escolhe o ponto inicial da tabela.
 
 use core::cell::Cell;
-use std::sync::atomic::{AtomicU64, Ordering};
 
+use crate::comparacao::{Placar, Sorteio};
 use crate::desvios::{self, Prologo};
 use crate::registro::linha;
 
@@ -108,8 +108,7 @@ thread_local! {
     static RODANDO: Cell<Rodando> = const { Cell::new(Rodando::Nada) };
 }
 
-static COMPARACOES: AtomicU64 = AtomicU64::new(0);
-static DIVERGENCIAS: AtomicU64 = AtomicU64::new(0);
+static PLACAR: Placar = Placar::novo("aleatorio");
 
 unsafe fn original(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(ORIGINAL);
@@ -134,19 +133,12 @@ unsafe extern "C" fn comparar(n: i32) -> i32 {
     let depois_rust = Estado::ler();
     depois_orig.escrever();
 
-    let total = COMPARACOES.fetch_add(1, Ordering::Relaxed) + 1;
-    if r_orig != r_rust || depois_orig != depois_rust {
-        let d = DIVERGENCIAS.fetch_add(1, Ordering::Relaxed) + 1;
-        if d <= 20 {
-            linha(&format!(
-                "aleatorio: DIVERGENCIA n={} original={} rust={} estado antes={:x?} original={:x?} rust={:x?}",
-                n, r_orig, r_rust, antes, depois_orig, depois_rust
-            ));
-        }
-    }
-    if total >= 10 && 10u64.pow(total.ilog10()) == total {
-        linha(&format!("aleatorio: {} comparacoes, {} divergencias", total, DIVERGENCIAS.load(Ordering::Relaxed)));
-    }
+    PLACAR.registrar(r_orig == r_rust && depois_orig == depois_rust, || {
+        format!(
+            "n={} original={} rust={} estado antes={:x?} original={:x?} rust={:x?}",
+            n, r_orig, r_rust, antes, depois_orig, depois_rust
+        )
+    });
     r_orig
 }
 
@@ -171,17 +163,11 @@ unsafe fn rodar_autoteste(casos: u64) {
     const FIM_REAL: u32 = 0xad4130; // o que a semente (0x90d0a0) grava em [0xde2798]
     let fim = FIM_DA_TABELA as *mut u32;
     let (guardado, fim_guardado) = (Estado::ler(), *fim);
-    let (c0, d0) = (COMPARACOES.load(Ordering::Relaxed), DIVERGENCIAS.load(Ordering::Relaxed));
-    let mut x: u64 = 0x9e37_79b9_7f4a_7c15;
-    let mut sorteio = || {
-        x ^= x << 13;
-        x ^= x >> 7;
-        x ^= x << 17;
-        x
-    };
+    let mut s = Sorteio(0x9e37_79b9_7f4a_7c15);
+    let mut sorteio = || s.proximo();
     let entradas = ((FIM_REAL - INICIO_DA_TABELA) / 4 + 1) as u64;
     let bordas = [1, 2, 3, 7, 10, 100, 0xfffe, 0xffff, 0x10000, 0x10001, 100_000, 1_000_000, i32::MAX];
-    for i in 0..casos {
+    PLACAR.autoteste(|| for i in 0..casos {
         let a = sorteio();
         // Ponteiro: qualquer entrada; um em cada oito perto do fim, para exercitar a volta.
         let entrada = if a % 8 == 0 { entradas - 1 - (a >> 3) % 3 } else { (a >> 3) % entradas };
@@ -205,14 +191,9 @@ unsafe fn rodar_autoteste(casos: u64) {
         if i % 1_000_000 == 999_999 {
             linha(&format!("aleatorio: autoteste {} casos...", i + 1));
         }
-    }
+    });
     guardado.escrever();
     *fim = fim_guardado;
-    linha(&format!(
-        "aleatorio: AUTOTESTE {} casos, {} divergencias",
-        COMPARACOES.load(Ordering::Relaxed) - c0,
-        DIVERGENCIAS.load(Ordering::Relaxed) - d0
-    ));
 }
 
 #[cfg(test)]

@@ -12,7 +12,7 @@
 use core::ffi::c_void;
 
 use crate::registro::linha;
-use crate::{aleatorio, win};
+use crate::{aleatorio, data, win};
 
 pub struct Prologo {
     pub endereco: usize,
@@ -62,6 +62,7 @@ pub unsafe fn instalar() {
     let comparar = win::ambiente("CM_COMPARAR");
     // CM_AUTOTESTE=1: cada rotina reescrita se compara com a original em entradas sinteticas
     // antes do jogo comecar (resultado em ddraw.log).
-    let autoteste = win::ambiente("CM_AUTOTESTE").then_some(5_000_000);
-    aleatorio::instalar(comparar, autoteste);
+    let autoteste = win::ambiente("CM_AUTOTESTE");
+    aleatorio::instalar(comparar, autoteste.then_some(5_000_000));
+    data::instalar(comparar, autoteste);
 }

@@ -14,6 +14,8 @@
 
 mod aleatorio;
 mod apresentacao;
+mod comparacao;
+mod data;
 mod desvios;
 mod espiao;
 mod ganchos;
