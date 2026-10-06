@@ -81,8 +81,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6c2be0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
     // 0x6c3aa0: push ebx; push esi; push edi; mov edi, ecx
     Prologo { endereco: 0x6c3aa0, bytes: &[0x53, 0x56, 0x57, 0x8b, 0xf9] },
+    // 0x6f4aa0: sub esp, 0x10; push ebx; push esi
+    Prologo { endereco: 0x6f4aa0, bytes: &[0x83, 0xec, 0x10, 0x53, 0x56] },
 ];
-const N: usize = 32;
+const N: usize = 33;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -826,6 +828,343 @@ unsafe extern "thiscall" fn linhas_defensivas(this: usize) {
     *((this + 0x8eb0) as *mut i8) = menor.wrapping_sub(1);
 }
 
+// ---------- decima leva: atualizacao do jogador a cada lance ----------
+
+/// { 0x6f4aa0 } (match_pl.cpp): atualiza, a cada lance, o contador 0x2b (decresce ate 0), o float
+/// 0x1a2 (x 0,85, com piso 2 x (25 - atributo 0x5d da pessoa) e teto 100) e a palavra 0x35
+/// (disposicao): faixas pelos atributos e, pelo papel tatico (bits de `tabela_a`), sorteios de
+/// 1/75 a 1/1000, razoes em ponto flutuante entre atributos e o estado do lado (0xf5bd/0xf5f3).
+/// Transcrita bloco a bloco (enderecos do original nos comentarios); os finais compartilhados
+/// viram as funcoes locais `ate`.
+unsafe extern "thiscall" fn atualizar_jogador(this: usize) {
+    let u = |o: usize| *((this + o) as *const u8);
+    let i = |o: usize| *((this + o) as *const i8);
+    let w35 = (this + 0x35) as *mut i16;
+    // 0x6f4aa8: contador 0x2b
+    let c = i(0x2b);
+    if c > 0 {
+        *((this + 0x2b) as *mut i8) = c - 1;
+    } else if c < 0 {
+        *((this + 0x2b) as *mut i8) = 0;
+    }
+    // 0x6f4abc: float 0x1a2
+    let f1a2 = (this + 0x1a2) as *mut f32;
+    let mut st = *f1a2 as f64 * f32_em(0x96d364) as f64;
+    *f1a2 = st as f32;
+    let pessoa = *((this + 0x69) as *const usize);
+    let piso = ((0x19 - *((pessoa + 0x5d) as *const i8) as i32) * 2) as f32;
+    if !(st > piso as f64) {
+        st = piso as f64;
+    }
+    *f1a2 = st as f32;
+    if st > f64_em(0x9688a8) {
+        *f1a2 = f32::from_bits(0x42c80000);
+    }
+    // 0x6f4b18
+    if (u(0x10) as i32 + u(0xc) as i32) < 2 && u(6) < 7 && u(3) < 4 && u(0x11) < 6 {
+        let edi = *w35 as i32;
+        if edi > sortear(0x5dc) + 0x203a {
+            *w35 = ftol((edi - 0x203a) as f64 * f64_em(0x96d5c0) + f64_em(0x96d760)) as i16;
+        }
+    }
+    // 0x6f4b78
+    let a1 = u(1) as i32;
+    if a1 > 0x32 {
+        let mut cx = (*w35 as i32).max((a1 + 20 * u(3) as i32 + 0x113) * 20) as i16;
+        *w35 = cx;
+        let a2 = u(2) as i32;
+        if a2 != 0 {
+            let razao = a1 as f64 / a2 as f64;
+            if razao > f64_em(0x969040) && razao * f32_em(0x96d2dc) as f64 + f32_em(0x96d75c) as f64 > cx as f64 {
+                cx = cx.wrapping_add(5);
+                *w35 = cx;
+            }
+        }
+    }
+    // 0x6f4bfd / 0x6f4c2b
+    let d10 = u(0x10) as i32;
+    if d10 != 0 {
+        *w35 = (425 * d10 + 0x1770).max(*w35 as i32) as i16;
+    }
+    let dc = u(0xc) as i32;
+    if dc != 0 && dc + d10 > 1 {
+        *w35 = (375 * (dc + d10) + 0x1964).max(*w35 as i32) as i16;
+    }
+    // finais compartilhados
+    let ate = move |lim: i16, passo: i16| {
+        let ax = *w35;
+        if ax < lim {
+            *w35 = ax + passo;
+        }
+    };
+    let acima = move |lim: i16, passo: i16| {
+        let ax = *w35;
+        if ax > lim {
+            *w35 = ax - passo;
+        }
+    };
+    let mais5_ou_1 = move || {
+        let ax = *w35;
+        if ax >= 0x1676 {
+            if ax < 0x1a5e {
+                *w35 = ax + 1;
+            }
+        } else {
+            *w35 = ax + 5;
+        }
+    };
+    let soma_5c = move |c: i32| {
+        if (*w35 as i32) < c * 500 + 0x1a5e {
+            *w35 = (*w35).wrapping_add((5 * c) as i16);
+        }
+    };
+    let quieto = || u(6) == 0 && u(9) == 0 && u(3) == 0 && u(0x10) == 0;
+    let motor = *((this + 0x19e) as *const usize);
+    let f6c38c0: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+    let papel = if motor != 0 { f6c38c0(motor, this) as u8 } else { 0 };
+    let estado_lado = || {
+        if lado(this) != 0 { *((motor + 0xf5bd) as *const i8) } else { *((motor + 0xf5f3) as *const i8) }
+    };
+    let byte_lado = |motor: usize| *((motor + 54 * (lado(this) == 0) as usize + 0xf5bf) as *const u8) as i32;
+    if papel & 1 != 0 {
+        // 0x6f4c7e
+        let f = u(0xf) as i32;
+        if sortear(f * f) == 0 && *w35 < 0x1cb6 {
+            *w35 += 1;
+        }
+        let a1f = i(0x1f);
+        if a1f != -1 && a1f > 0x1e {
+            if u(0xf) == 0 {
+                ate(0x1b58, 1);
+            }
+            return;
+        }
+        // 0x6f4cc7
+        let b = byte_lado(motor);
+        *w35 = ((b + 0xe) * 500).min(*w35 as i32) as i16;
+        let cf = u(0xf);
+        if cf == 0 {
+            *w35 = ((b + 0x14) * 300).max(*w35 as i32) as i16;
+            let lim = (if (b as u8) < 2 { b } else { 2 } + 0x1c) * 0xfa;
+            if (*w35 as i32) < lim {
+                *w35 += 1;
+            }
+            return;
+        }
+        // 0x6f4d5f
+        if *w35 <= 0x109a {
+            return;
+        }
+        if cf > 1 && sortear(cf as i32) != 0 {
+            if u(0xf) > 2 && *w35 > 0x1e46 {
+                *w35 = 0x1e46;
+                return;
+            }
+            let ax = *w35;
+            *w35 = if ax > 0x222e {
+                ax - 0x19
+            } else if ax > 0x1c52 {
+                ax - u(0xf) as i16
+            } else {
+                ax - 1
+            };
+            return;
+        }
+        // 0x6f4dcc
+        if (*w35 as i32) <= (byte_lado(motor) + 0x19) * 0xfa {
+            return;
+        }
+        let q = *((motor + 0x8ed0) as *const i16) as i32 / 11;
+        if sortear(0x5a - q) == 0 {
+            *w35 -= 1;
+        }
+        return;
+    }
+    if papel & 2 != 0 {
+        // 0x6f4e53
+        if sortear(0x4b) == 0 {
+            *w35 -= 1;
+        }
+        if quieto() {
+            acima(0x1d4c, 10);
+        }
+        if estado_lado() != 0 {
+            return;
+        }
+        ate(0x1676, 1);
+        return;
+    }
+    if papel & 4 != 0 {
+        // 0x6f4ee4
+        if sortear(0x4b) == 0 {
+            *w35 -= 1;
+        }
+        let (a4, a7) = (u(4) as i32, u(7) as i32);
+        if a4 + a7 > 9 {
+            let mut aa = ((u(5) as i32 + u(8) as i32) as f64 / (a4 + a7) as f64) as f32;
+            let s96 = u(9) as i32 + u(6) as i32;
+            if s96 != 0 {
+                aa = (s96 as f64 * f64_em(0x967878) + aa as f64) as f32;
+            }
+            let ajustar = |aa: f32, num: i32, den: i32, fator_forte: usize| -> f32 {
+                let st = num as f64 / den as f64;
+                let guardado = st as f32;
+                if st < f64_em(0x96a5d0) || st.is_nan() {
+                    let k = if papel_word(motor, this) & 0x880 != 0 { fator_forte } else { 0x9689e0 };
+                    (aa as f64 - (guardado as f64 - f64_em(0x96a5d0)) * f64_em(k)) as f32
+                } else {
+                    aa
+                }
+            };
+            if a4 > 4 {
+                aa = ajustar(aa, u(5) as i32, a4, 0x968918);
+            }
+            if a7 > 4 {
+                aa = ajustar(aa, u(8) as i32, a7, 0x967880);
+            }
+            // 0x6f502a
+            let v = estado_lado() as i16;
+            let mut cx = 0x1di16.wrapping_sub(v).wrapping_mul(0xfa);
+            if u(0xc) != 0 {
+                cx = cx.wrapping_add((u(0xc) as i16).wrapping_mul(0x1f4));
+            }
+            if u(0x10) != 0 {
+                cx = cx.wrapping_add((u(0x10) as i16).wrapping_mul(0xfa));
+            }
+            let a = aa as f64;
+            if a < f64_em(0x968fe0) || a.is_nan() {
+                if *w35 > cx {
+                    *w35 = cx;
+                }
+            } else if a > f64_em(0x96afb8) && *w35 < cx {
+                *w35 = cx;
+            }
+        }
+        // 0x6f50b7
+        let parado6 = u(6) == 0;
+        if quieto() {
+            acima(0x1d4c, 10);
+        }
+        let v = estado_lado();
+        let sem_nada = parado6 && u(9) == 0 && u(3) == 0 && u(0x10) == 0 && u(0xc) == 0;
+        if v == 0 {
+            if sem_nada {
+                let a2 = u(2) as i32;
+                if a2 <= 0x14 {
+                    ate(0x1676, 1);
+                    return;
+                }
+                let r = u(1) as i32 as f64 / a2 as f64;
+                if !(r > f64_em(0x969040)) {
+                    ate(0x1676, 1);
+                    return;
+                }
+            }
+            mais5_ou_1();
+            return;
+        }
+        // 0x6f5195
+        if v == 1 {
+            if sem_nada {
+                acima(0x1c52, 1);
+            } else {
+                ate(0x186a, 1);
+            }
+            return;
+        }
+        // 0x6f51f9
+        let lim = (0x1fi16.wrapping_sub(v as i16).wrapping_mul(0xfa)).max(0x1a5e);
+        if *w35 <= lim {
+            return;
+        }
+        let forte = papel_word(motor, this) & 0x880 != 0;
+        if forte && !sem_nada {
+            *w35 -= 1;
+        } else if forte || !sem_nada {
+            *w35 = (*w35).wrapping_sub(v as i16);
+        } else {
+            *w35 = (*w35).wrapping_sub((v as i16).wrapping_mul(5));
+        }
+        return;
+    }
+    if papel & 8 != 0 {
+        // 0x6f5332
+        if sortear(0x1f4) == 0 {
+            *w35 -= 1;
+        }
+        let tres = u(6) == 0 && u(9) == 0 && u(3) == 0;
+        if tres {
+            acima(0x1d4c, 10);
+        }
+        if estado_lado() != 0 {
+            return;
+        }
+        if tres && u(0x10) == 0 {
+            ate(0x186a, 1);
+        } else {
+            mais5_ou_1();
+        }
+        return;
+    }
+    if papel & 0x10 != 0 {
+        // 0x6f540f
+        if sortear(0x3e8) == 0 {
+            *w35 -= 1;
+        }
+        if u(0xc) != 0 || u(0x10) != 0 {
+            return;
+        }
+        if u(3) != 0 || u(0xb) != 0 {
+            acima(0x1c52, 5);
+        } else {
+            acima(0x1c52, 10);
+        }
+        return;
+    }
+    if papel & 0x20 != 0 {
+        // 0x6f5469
+        if sortear(0x1f4) == 0 {
+            *w35 -= 1;
+        }
+        let c = u(0xc);
+        if c != 0 {
+            soma_5c(c as i32);
+        } else if u(0x10) != 0 {
+            // 0x6f54ba: al = 0
+        } else if u(3) != 0 || u(0xb) != 0 {
+            acima(0x1c52, 5);
+        } else {
+            acima(0x1c52, 10);
+        }
+        return;
+    }
+    if papel & 0x40 != 0 {
+        // 0x6f5515
+        if sortear(0x96) == 0 {
+            *w35 -= 1;
+        }
+        let c = u(0xc);
+        if c != 0 {
+            soma_5c(c as i32);
+        } else if u(0x10) != 0 || u(0xb) != 0 {
+            // 0x6f557d: al = 0
+        } else if u(3) != 0 || u(9) != 0 {
+            acima(0x1e46, 5);
+        } else {
+            acima(0x1c52, 10);
+        }
+    }
+}
+
+/// `tabela_a` do motor do jogador (0 sem motor), pelo endereco do jogo: os bits do papel tatico.
+unsafe fn papel_word(motor: usize, j: usize) -> u16 {
+    if motor == 0 {
+        return 0;
+    }
+    let f: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+    f(motor, j)
+}
+
 unsafe fn papel_por_endereco(endereco: usize, j: usize) -> u8 {
     let f: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(endereco);
     f(j)
@@ -1141,6 +1480,16 @@ unsafe extern "thiscall" fn comparar_linhas(this: usize) {
     PLACAR.registrar(igual, || format!("linhas_defensivas original={:x?} rust={:x?}", mo, mr));
 }
 
+/// Sorteia e grava (0x2b, 0x1a2, 0x35): mesmo estado do gerador, o jogo segue com o da original.
+unsafe extern "thiscall" fn comparar_atualizar(this: usize) {
+    let f = orig::<unsafe extern "thiscall" fn(usize)>(32);
+    let mut regioes = vec![(this + 0x2b, 1), (this + 0x1a2, 4), (this + 0x35, 2)];
+    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (_, _, igual, mo, mr) =
+        crate::comparacao::lado_a_lado(&regioes, || f(this), || crate::aleatorio::sem_contar(|| atualizar_jogador(this)));
+    PLACAR.registrar(igual, || format!("atualizar_jogador(papel {:#x}) original={:x?} rust={:x?}", papel_word(*((this + 0x19e) as *const usize), this), mo, mr));
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -1180,6 +1529,7 @@ pub unsafe fn instalar(comparando: bool) {
         papel_na_defesa as *const () as usize,
         posicionar as *const () as usize,
         linhas_defensivas as *const () as usize,
+        atualizar_jogador as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -1214,6 +1564,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_papel_defesa as *const () as usize,
         comparar_posicionar as *const () as usize,
         comparar_linhas as *const () as usize,
+        comparar_atualizar as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -1223,7 +1574,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_alcanca", "motor_classificar_lance", "motor_distancia_ao_ponto", "motor_distancia_ao_gol",
         "motor_mais_perto_do_gol", "motor_jogadores_na_linha", "motor_consegue_jogar", "motor_na_area",
         "motor_marcas_da_posicao", "motor_papel_no_ataque", "motor_papel_na_defesa", "motor_posicionar",
-        "motor_linhas_defensivas",
+        "motor_linhas_defensivas", "motor_atualizar_jogador",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -1481,6 +1832,37 @@ pub unsafe fn autoteste(casos: u64) {
                 *((p + 0x19) as *mut i8) = (y2.rotate_left(k as u32 * 3 + 1) % 13) as i8 - 2;
             }
             comparar_linhas(m);
+            // decima leva: atualizacao do jogador (todos os papeis, atributos e faixas variados)
+            let z = s.proximo();
+            let z2 = s.proximo();
+            // cada campo: zero com chance 1/2 (combinacoes "tudo parado"), senao 1..=24; 1 e 2 ate 100
+            for (k, o) in [1usize, 2, 3, 4, 5, 6, 7, 8, 9, 0xb, 0xc, 0xf, 0x10, 0x11].iter().enumerate() {
+                let v = z.rotate_left(k as u32 * 5);
+                let teto = if *o <= 2 { 100 } else { 24 };
+                *((j + o) as *mut u8) = if v & 1 == 0 { 0 } else { (1 + (v >> 1) % teto) as u8 };
+            }
+            *((j + 0x1f) as *mut i8) = [-1i8, 10, 30, 31, 50][((z2 >> 2) % 5) as usize];
+            *((j + 0x2b) as *mut i8) = ((z2 >> 5) % 5) as i8 - 2;
+            *((j + 0x1a2) as *mut f32) = ((z2 >> 8) % 140) as f32 + 0.25;
+            // palavra 0x35: metade das vezes exatamente num limiar do codigo (ou vizinho)
+            const LIMIARES: [i16; 14] = [0x1cb5, 0x1cb6, 0x1b57, 0x1676, 0x1675, 0x1a5d, 0x186a, 0x1c52, 0x1c53, 0x1d4c, 0x1d4d, 0x1e46, 0x222e, 0x109a];
+            *((j + 0x35) as *mut i16) = if (z2 >> 15) & 1 == 0 {
+                LIMIARES[((z2 >> 16) % 14) as usize] + ((z2 >> 20) % 3) as i16 - 1
+            } else {
+                3500 + ((z2 >> 16) % 6500) as i16
+            };
+            *((pp + 0x5d) as *mut i8) = ((z2 >> 30) % 25) as i8;
+            *((j + 0x69) as *mut usize) = pp;
+            *((j + 0x27) as *mut i8) = ((z2 >> 35) % 2) as i8;
+            *((j + 0x19) as *mut i8) = ((z2 >> 36) % 11) as i8;
+            *((j + 0x19e) as *mut usize) = if (z2 >> 40) % 9 == 0 { 0 } else { m };
+            *((m + 0xf5bd) as *mut i8) = ((z2 >> 42) % 5) as i8 - 1;
+            *((m + 0xf5f3) as *mut i8) = ((z2 >> 45) % 5) as i8 - 1;
+            *((m + 0xf5bf) as *mut u8) = ((z2 >> 48) % 4) as u8;
+            *((m + 0xf5bf + 54) as *mut u8) = ((z2 >> 50) % 4) as u8;
+            *((m + 0x8ed0) as *mut i16) = ((z2 >> 52) % 900) as i16 - 100;
+            comparar_atualizar(j);
+            *((j + 0x19e) as *mut usize) = m;
         }
     });
     SINTETICO.store(false, std::sync::atomic::Ordering::Relaxed);
