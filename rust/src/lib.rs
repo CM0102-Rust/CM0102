@@ -12,7 +12,9 @@
 
 #![allow(linker_messages)]
 
+mod aleatorio;
 mod apresentacao;
+mod desvios;
 mod espiao;
 mod ganchos;
 mod reducao;
@@ -49,6 +51,17 @@ unsafe fn ddraw_do_sistema() -> Option<FnDirectDrawCreate> {
     }
     let f = GetProcAddress(modulo, b"DirectDrawCreate\0".as_ptr());
     (!f.is_null()).then(|| core::mem::transmute::<*mut c_void, FnDirectDrawCreate>(f))
+}
+
+/// Carregamento da DLL: o Windows carrega a ddraw.dll junto com o exe, antes do WinMain do jogo.
+/// E aqui que os desvios nas rotinas do jogo sao instalados.
+#[no_mangle]
+pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reservado: *mut c_void) -> i32 {
+    const DLL_PROCESS_ATTACH: u32 = 1;
+    if motivo == DLL_PROCESS_ATTACH && !win::ambiente("CM_ESPIAO") {
+        desvios::instalar();
+    }
+    1
 }
 
 #[no_mangle]

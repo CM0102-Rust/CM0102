@@ -1,0 +1,173 @@
+//! Gerador de numeros aleatorios do jogo: `aleatorio(n)` { 0x90cfc0 }, cdecl, chamado de milhares
+//! de pontos (partidas, regens, transferencias, lesoes...).
+//!
+//! Como funciona (listagem original):
+//! - ha uma tabela fixa de numeros no exe (0xaa2454..=0xad4130, dwords); `[0xde1f60]` aponta para a
+//!   entrada atual e `[0xde1f5c]` guarda um deslocamento de 16 bits;
+//! - cada chamada avanca o ponteiro uma entrada; passando do fim (`[0xde2798]`), volta ao inicio e
+//!   sorteia um deslocamento novo com o `rand()` da CRT (0x946a04) & 0xffff;
+//! - |n| <= 0xffff: (deslocamento + entrada) % n (divisao com sinal; n negativo inverte o sinal);
+//! - |n| > 0xffff: parte em ponto flutuante ((s % 0xffff) * (n * 1/65535), truncado) mais uma
+//!   chamada recursiva com n*10/65535 para os digitos de baixo, limitado a n-1.
+//! A semente (0x90d0a0, opcao `-seed`) faz srand e escolhe o ponto inicial da tabela.
+
+use core::cell::Cell;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+use crate::desvios::{self, Prologo};
+use crate::registro::linha;
+
+const PONTEIRO: *mut u32 = 0xde1f60 as *mut u32;
+const DESLOCAMENTO: *mut i32 = 0xde1f5c as *mut i32;
+const FIM_DA_TABELA: *const u32 = 0xde2798 as *const u32;
+const INICIO_DA_TABELA: u32 = 0xaa2454;
+/// Estado do rand() da CRT (versao de uma thread so do Visual C++ 6).
+const ESTADO_RAND: *mut u32 = 0xad6c30 as *mut u32;
+/// 1/65535, double em 0x970a70.
+const UM_SOBRE_65535: f64 = 1.0 / 65535.0;
+
+// 0x90cfc0: push ecx; push esi; mov esi, dword ptr [esp + 0xc]
+const PROLOGO: Prologo = Prologo { endereco: 0x90cfc0, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] };
+
+static mut ORIGINAL: usize = 0;
+
+/// rand() da CRT do proprio jogo (mesmo estado que o jogo usa).
+unsafe fn rand_crt() -> i32 {
+    let f: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x946a04usize);
+    f()
+}
+
+/// Versao Rust de { 0x90cfc0 }.
+pub unsafe extern "C" fn aleatorio(n: i32) -> i32 {
+    if n == 0 {
+        return 0;
+    }
+    let mut p = (*PONTEIRO).wrapping_add(4);
+    *PONTEIRO = p;
+    let desloc = if p > *FIM_DA_TABELA {
+        *PONTEIRO = INICIO_DA_TABELA;
+        p = INICIO_DA_TABELA;
+        let d = rand_crt() & 0xffff;
+        *DESLOCAMENTO = d;
+        d
+    } else {
+        *DESLOCAMENTO
+    };
+    let entrada = *(p as *const i32);
+    if (-0xffff..=0xffff).contains(&n) {
+        let r = desloc.wrapping_add(entrada).wrapping_rem(n);
+        return if n > 0 { r } else { r.wrapping_neg() };
+    }
+    // n fora de 16 bits: parte alta em ponto flutuante (x87 em precisao dupla, como o Windows
+    // configura), truncada como o _ftol; parte baixa por recursao.
+    let s = desloc.wrapping_add(entrada).wrapping_rem(0xffff);
+    let alta = (s as f64 * (n as f64 * UM_SOBRE_65535)) as i64 as i32;
+    let dez_n = n.wrapping_mul(10);
+    let baixa = aleatorio(dividir_por_65535(dez_n));
+    let mut r = alta.wrapping_add(baixa.wrapping_add(5) / 10);
+    if r > n - 1 {
+        r = n - 1;
+    }
+    r
+}
+
+/// O que o compilador gerou para `x / 65535` (com sinal): imul 0x80008001, add, sar 15, + sinal.
+fn dividir_por_65535(x: i32) -> i32 {
+    let alto = ((x as i64 * 0x8000_8001u32 as i32 as i64) >> 32) as i32;
+    let t = alto.wrapping_add(x) >> 15;
+    t + ((t as u32) >> 31) as i32
+}
+
+// ---------- comparacao com a original ----------
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+struct Estado {
+    ponteiro: u32,
+    deslocamento: i32,
+    rand: u32,
+}
+
+impl Estado {
+    unsafe fn ler() -> Estado {
+        Estado { ponteiro: *PONTEIRO, deslocamento: *DESLOCAMENTO, rand: *ESTADO_RAND }
+    }
+    unsafe fn escrever(self) {
+        *PONTEIRO = self.ponteiro;
+        *DESLOCAMENTO = self.deslocamento;
+        *ESTADO_RAND = self.rand;
+    }
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum Rodando {
+    Nada,
+    Original,
+}
+
+thread_local! {
+    static RODANDO: Cell<Rodando> = const { Cell::new(Rodando::Nada) };
+}
+
+static COMPARACOES: AtomicU64 = AtomicU64::new(0);
+static DIVERGENCIAS: AtomicU64 = AtomicU64::new(0);
+
+unsafe fn original(n: i32) -> i32 {
+    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(ORIGINAL);
+    f(n)
+}
+
+/// Roda a original e a versao Rust a partir do mesmo estado e compara resultado e estado final.
+/// O jogo segue com o resultado e o estado da original.
+unsafe extern "C" fn comparar(n: i32) -> i32 {
+    // A original chama a si mesma (recursao para n grande) passando por este desvio.
+    if RODANDO.with(|r| r.get()) == Rodando::Original {
+        return original(n);
+    }
+    let antes = Estado::ler();
+    RODANDO.with(|r| r.set(Rodando::Original));
+    let r_orig = original(n);
+    RODANDO.with(|r| r.set(Rodando::Nada));
+    let depois_orig = Estado::ler();
+
+    antes.escrever();
+    let r_rust = aleatorio(n);
+    let depois_rust = Estado::ler();
+    depois_orig.escrever();
+
+    let total = COMPARACOES.fetch_add(1, Ordering::Relaxed) + 1;
+    if r_orig != r_rust || depois_orig != depois_rust {
+        let d = DIVERGENCIAS.fetch_add(1, Ordering::Relaxed) + 1;
+        if d <= 20 {
+            linha(&format!(
+                "aleatorio: DIVERGENCIA n={} original={} rust={} estado antes={:x?} original={:x?} rust={:x?}",
+                n, r_orig, r_rust, antes, depois_orig, depois_rust
+            ));
+        }
+    }
+    if total >= 10 && 10u64.pow(total.ilog10()) == total {
+        linha(&format!("aleatorio: {} comparacoes, {} divergencias", total, DIVERGENCIAS.load(Ordering::Relaxed)));
+    }
+    r_orig
+}
+
+pub unsafe fn instalar(comparando: bool) {
+    let destino = if comparando { comparar as *const () as usize } else { aleatorio as *const () as usize };
+    if let Some(t) = desvios::desviar("aleatorio", &PROLOGO, destino) {
+        ORIGINAL = t;
+        if comparando {
+            linha("aleatorio: modo comparacao (original x Rust)");
+        }
+    }
+}
+
+#[cfg(test)]
+mod testes {
+    use super::*;
+
+    #[test]
+    fn divisao_por_65535_igual_a_do_compilador() {
+        for x in [0, 1, 65534, 65535, 65536, 655350, -1, -65535, -65536, i32::MAX, i32::MIN, 123456789, -987654321] {
+            assert_eq!(dividir_por_65535(x), x / 65535, "x={}", x);
+        }
+    }
+}

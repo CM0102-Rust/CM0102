@@ -46,6 +46,9 @@ pub const SWP_NOZORDER: u32 = 0x0004;
 pub const SWP_NOACTIVATE: u32 = 0x0010;
 pub const SWP_FRAMECHANGED: u32 = 0x0020;
 pub const PAGE_READWRITE: u32 = 0x04;
+pub const PAGE_EXECUTE_READWRITE: u32 = 0x40;
+pub const MEM_COMMIT: u32 = 0x1000;
+pub const MEM_RESERVE: u32 = 0x2000;
 
 #[link(name = "user32")]
 extern "system" {
@@ -79,6 +82,9 @@ extern "system" {
 extern "system" {
     pub fn GetModuleHandleW(nome: *const u16) -> *mut c_void;
     pub fn VirtualProtect(end: *mut c_void, tam: usize, nova: u32, antiga: *mut u32) -> i32;
+    pub fn VirtualAlloc(end: *mut c_void, tam: usize, tipo: u32, protecao: u32) -> *mut c_void;
+    pub fn FlushInstructionCache(processo: *mut c_void, end: *const c_void, tam: usize) -> i32;
+    pub fn GetCurrentProcess() -> *mut c_void;
     pub fn GetEnvironmentVariableW(nome: *const u16, buf: *mut u16, tam: u32) -> u32;
 }
 
