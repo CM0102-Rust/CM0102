@@ -23,6 +23,7 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 | `original/` | downloads e exe 3.9.68 intocados (não versionado) |
 | `referencias/` | projetos de terceiros (não versionado) |
 | `engenharia-reversa/` | `pe_info.py`, `textos.py`, `refs.py`, `desmonta.py`, `escuta_tela.py`, `patch_portatil.py` |
+| `rust/` | núcleo em Rust = `ddraw.dll` (i686, CRT estática, sem crates externos): `video.rs` (DirectDraw próprio), `apresentacao.rs` (quadro → janela, mouse), `ganchos.rs` (desvios no exe), `espiao.rs` (diagnóstico, `CM_ESPIAO=1`) |
 | `docs/` | `DESCOMPILACAO.md` |
 | `wiki/` | `index.md` (estado e próximos passos), `log.md` |
 
@@ -30,4 +31,7 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 
 - Python 3 com `pefile`, `capstone`, `psutil`, `Pillow` (instalados no Python do usuário).
 - Endereços sempre como VA (base 0x400000). Em `.text`, `.rdata` e `.data` o deslocamento no arquivo é VA − 0x400000.
+- Rust: `cd rust && cargo build --release` (sai em `target/i686-pc-windows-msvc/release/ddraw.dll`; copiar para `jogo/`), `cargo test --release`.
+- Métodos COM são stdcall: cada método da vtable precisa do número exato de argumentos, mesmo os não suportados.
+- Para testar tela cheia sem mexer nas preferências do Lucas: cópia temporária de `jogo/` com hard links, sem `game.cfg` (o jogo abre nas definições; escolher "Full").
 - Para testar o jogo sem atrapalhar o Lucas: abra com `-windowed` e mande cliques por `PostMessage` (não mexe no mouse dele).

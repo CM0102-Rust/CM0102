@@ -5,7 +5,8 @@ Este repositório o mantém jogável no Windows 11 e prepara a reescrita do jogo
 
 | Onde | O que é | No git? |
 |---|---|---|
-| `JOGAR.bat` | Abre o jogo em janela, sem CD e sem piscar a tela. | sim |
+| `JOGAR.bat` | Abre o jogo sem CD e sem trocar a resolução do Windows (janela ou tela cheia, pela opção do jogo). | sim |
+| `rust/` | Núcleo em Rust, compilado como `ddraw.dll` (camada de vídeo própria; ponto de entrada dos desvios). | sim |
 | `jogo/` | Instalação jogável: originais `cm0102.exe` / `cm0102_GDI.exe` e as cópias corrigidas `*-portatil.exe`. | não |
 | `original/` | Downloads intocados (ISO, zips, patch 3.9.68) e cópia de segurança dos dois exe 3.9.68. | não |
 | `referencias/` | Projetos de terceiros consultados (ex.: `CM0102Patcher` do nckstwrt). | não |
@@ -25,6 +26,14 @@ Os arquivos do jogo não entram no git: o jogo é gratuito para baixar, mas o c�
    python patch_portatil.py ..\jogo\cm0102.exe ..\jogo\cm0102-portatil.exe
    python patch_portatil.py ..\jogo\cm0102_GDI.exe ..\jogo\cm0102_GDI-portatil.exe
    ```
-3. Dê dois cliques em `JOGAR.bat`.
+3. Compile o núcleo em Rust (alvo `i686-pc-windows-msvc`, já configurado em `rust/.cargo/config.toml`) e copie a DLL para o jogo:
+   ```
+   cd rust
+   cargo build --release
+   copy target\i686-pc-windows-msvc\release\ddraw.dll ..\jogo\
+   ```
+4. Dê dois cliques em `JOGAR.bat`.
+
+Diagnóstico: com `set CM_ESPIAO=1` antes de abrir o jogo, a DLL repassa tudo ao DirectDraw do Windows e registra cada chamada em `jogo\ddraw.log`.
 
 O que os exe portáteis corrigem, e por quê: [`docs/DESCOMPILACAO.md`](docs/DESCOMPILACAO.md), seção 3.

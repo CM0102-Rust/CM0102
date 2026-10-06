@@ -1,0 +1,16 @@
+[package]
+name = "cm0102-nucleo"
+version = "0.1.0"
+edition = "2021"
+description = "Nucleo em Rust do CM 01/02: carregado pelo cm0102.exe como ddraw.dll"
+publish = false
+
+[lib]
+name = "ddraw"
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+debug = 1

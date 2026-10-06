@@ -60,9 +60,34 @@ Testado sem a ISO montada e com o jogo aberto a partir de outra pasta: chega ao 
 ## 4. Vídeo e a "piscada" da tela
 
 - O desenho do jogo é todo em **16 bits por pixel** (RGB565).
+Comportamento **original** (sem a nossa `ddraw.dll`):
+
 - **DirectDraw em janela:** `SetCooperativeLevel(DDSCL_NORMAL)` e em seguida `SetDisplayMode(largura_da_área_de_trabalho, altura, 16)` (0x5e2a53–0x5e2a83). No Windows 11 a área de trabalho continua em 32 bits (o modo é emulado), mas a chamada dispara uma reconfiguração da tela (`WM_DISPLAYCHANGE`) ao abrir e outra ao fechar: é a piscada. Sem essa chamada, as superfícies ficam em 32 bits e o jogo desenha errado (cores trocadas, imagem espremida). Testado.
 - **DirectDraw em tela cheia:** 800×600×16 real (`SetDisplayMode` exclusivo); a piscada é inevitável nesse caminho.
 - **GDI em janela:** monta a imagem em memória e copia com `StretchDIBits`, que converte para qualquer profundidade de cor. **Nenhuma reconfiguração de tela** (medido com `engenharia-reversa/escuta_tela.py`). Detalhe estético: sobra uma faixa branca no rodapé da janela.
 - **GDI em tela cheia:** `ChangeDisplaySettingsA` para 800×600×16; também pisca.
 
-Solução definitiva prevista: uma camada de vídeo própria (na DLL em Rust) que recebe o quadro de 16 bits, converte e apresenta numa janela comum, ou em tela cheia sem bordas e com escala, sem trocar o modo de vídeo.
+### Uso real do DirectDraw (levantado com o espião, `CM_ESPIAO=1`)
+
+| Método | Uso |
+|---|---|
+| `DirectDrawCreate`, `SetCooperativeLevel` | janela: `DDSCL_NORMAL` (0x8); tela cheia: `EXCLUSIVE|FULLSCREEN|ALLOWREBOOT` (0x13) |
+| `SetDisplayMode` | janela: (largura da área de trabalho, altura, 16); tela cheia: (800, 600, 16) |
+| `CreateSurface` ×2 | primária (`caps 0x200`) e quadro 800×600 na memória do sistema (`caps 0x840`) |
+| `GetSurfaceDesc` (primária) | lê o formato de pixel: RGB565 |
+| `CreateClipper`, `SetHWnd`, `SetClipper` | só em janela |
+| `Lock`/`Unlock` (quadro) | o jogo desenha os pixels sozinho; com retângulo, o ponteiro aponta para o canto dele |
+| `Blt` com `COLORFILL` (quadro) | pinta áreas de uma cor (`DDBLTFX.dwFillColor`, deslocamento 0x50) |
+| `Blt` quadro → primária | apresentação; destino em coordenadas de tela |
+
+Fora isso, o procedimento da janela chama `USER32!ChangeDisplaySettingsA` direto ao ganhar/perder o foco em tela cheia.
+
+### Camada de vídeo própria (`rust/`, `jogo/ddraw.dll`)
+
+O exe importa `DirectDrawCreate` da `ddraw.dll`, e o Windows procura a DLL primeiro na pasta do exe (`ddraw.dll` não é KnownDLL). A nossa `ddraw.dll` implementa só o que está acima:
+- o quadro é um buffer nosso; `SetDisplayMode` é ignorado (**o modo do Windows nunca muda**);
+- a apresentação converte RGB565 → 32 bits (replicação de bits) e desenha na janela com `StretchDIBits`: 1:1 em janela, escala proporcional com faixas pretas em tela cheia (a janela do jogo já cobre a tela inteira);
+- em tela cheia, as mensagens de mouse são convertidas de volta para coordenadas 800×600 (subclasse do procedimento da janela);
+- `ChangeDisplaySettingsA` é desviado na IAT do exe (primeiro desvio no executável) e não faz nada.
+
+Medido com `escuta_tela.py`: nenhuma reconfiguração de tela em janela, em tela cheia, nem na troca entre os dois. Só vale para `cm0102.exe`/`cm0102-portatil.exe`; a versão GDI não usa DirectDraw.
