@@ -121,8 +121,13 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6c3010, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] },
     Prologo { endereco: 0x6c3a00, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
     Prologo { endereco: 0x6c3950, bytes: &[0x51, 0x0f, 0xbe, 0x54, 0x24, 0x08] },
+    // decima quarta leva
+    Prologo { endereco: 0x6c06b0, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
+    Prologo { endereco: 0x6c07a0, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
+    Prologo { endereco: 0x6c0a70, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
+    Prologo { endereco: 0x6c2750, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] },
 ];
-const N: usize = 62;
+const N: usize = 66;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -1577,6 +1582,94 @@ unsafe extern "thiscall" fn menor_distancia(this: usize, lado_b: i8, a: i8, b: i
     menor
 }
 
+// ---------- decima quarta leva: disposicao repartida pelo papel ----------
+
+/// O que cada bit do papel faz com o delta: nada (pula o jogador), soma ftol(delta x fator) ou soma o delta.
+#[derive(Clone, Copy)]
+enum Parte {
+    Pula,
+    Fator(usize),
+    Inteiro,
+}
+
+/// Soma a cada jogador ativo do lado uma parte de `delta` na palavra 0x35 (disposicao), pelo
+/// primeiro bit do papel (`tabela`, ordem 1, 2, 4, 8, 0x10, 0x20, 0x40); sem bit, nada.
+unsafe fn repartir(this: usize, lado_b: i8, delta: i16, partes: [Parte; 7]) {
+    for k in 0..20 {
+        let p = jogador_do_bloco(this, lado_b, k);
+        if byte(p, 0x19) < 0 {
+            continue;
+        }
+        let papel = f717410(p) as u8;
+        let Some(i) = (0..7).find(|&i| papel & (1 << i) != 0) else { continue };
+        let w = (p + 0x35) as *mut i16;
+        match partes[i] {
+            Parte::Pula => {}
+            Parte::Fator(k) => *w = (*w).wrapping_add(ftol(delta as f64 * f64_em(k)) as i16),
+            Parte::Inteiro => *w = (*w).wrapping_add(delta),
+        }
+    }
+}
+
+/// { 0x6c06b0 } (match_eng.cpp): reparte a disposicao (papel 1 fica de fora).
+unsafe extern "thiscall" fn repartir_a(this: usize, lado_b: i8, delta: i16) {
+    use Parte::*;
+    repartir(this, lado_b, delta, [Pula, Fator(0x968918), Fator(0x968f20), Fator(0x96d328), Fator(0x969040), Fator(0x968978), Fator(0x968f88)]);
+}
+
+/// { 0x6c07a0 } (match_eng.cpp): reparte a disposicao (papel 4 recebe o delta inteiro).
+unsafe extern "thiscall" fn repartir_b(this: usize, lado_b: i8, delta: i16) {
+    use Parte::*;
+    repartir(this, lado_b, delta, [Fator(0x96d330), Fator(0x9689b8), Inteiro, Fator(0x969520), Fator(0x968e00), Fator(0x968f20), Fator(0x967888)]);
+}
+
+/// { 0x6c0a70 } (match_eng.cpp): reparte a disposicao (terceira tabela de fatores).
+unsafe extern "thiscall" fn repartir_c(this: usize, lado_b: i8, delta: i16) {
+    use Parte::*;
+    repartir(this, lado_b, delta, [Fator(0x96d330), Fator(0x968968), Fator(0x968968), Fator(0x968968), Fator(0x968968), Fator(0x969510), Fator(0x968918)]);
+}
+
+/// { 0x6c2750 } (match_eng.cpp): escolhe um jogador do lado (indice 0..19, -1 sem candidato) por
+/// sorteio ponderado pelo papel: maior sorteio(25) x fator (0,1 / 0,1 / 0,2 / 0,5 / 0,75 / 1,05 ou
+/// 1,0). O original guarda o fator no lugar do argumento na pilha: jogador sem bit de papel usa o
+/// fator anterior, e o primeiro, os bits da palavra inteira empilhada pelo chamador (por isso u32).
+unsafe extern "thiscall" fn escolher_por_papel(this: usize, argumento: u32) -> u8 {
+    let lado_b = argumento as i8;
+    let mut fator = f32::from_bits(argumento);
+    let mut melhor = 0.0f32;
+    let mut escolhido: i8 = -1;
+    for k in 0..20u8 {
+        let p = jogador_do_bloco(this, lado_b, k as usize);
+        if byte(p, 0x19) < 0 {
+            continue;
+        }
+        let papel = f717410(p);
+        if papel & 1 != 0 {
+            continue;
+        }
+        let bits: u32 = if papel & 2 != 0 || papel & 4 != 0 {
+            0x3dcccccd
+        } else if papel & 8 != 0 {
+            0x3e4ccccd
+        } else if papel & 0x10 != 0 {
+            0x3f000000
+        } else if papel & 0x20 != 0 {
+            0x3f400000
+        } else if papel & 0x40 != 0 {
+            if papel & 0x700 != 0 { 0x3f866666 } else { 0x3f800000 }
+        } else {
+            fator.to_bits()
+        };
+        fator = f32::from_bits(bits);
+        let v = sortear(0x19) as f64 * fator as f64;
+        if escolhido == -1 || v > melhor as f64 {
+            melhor = v as f32;
+            escolhido = k as i8;
+        }
+    }
+    escolhido as u8
+}
+
 /// `tabela_a` do motor do jogador (0 sem motor), pelo endereco do jogo: os bits do papel tatico.
 unsafe fn papel_word(motor: usize, j: usize) -> u16 {
     if motor == 0 {
@@ -2063,6 +2156,27 @@ unsafe extern "thiscall" fn comparar_menor_distancia(this: usize, l: i8, a: i8, 
     r
 }
 
+macro_rules! comparar_repartir {
+    ($nome:ident, $rust:ident, $i:expr) => {
+        unsafe extern "thiscall" fn $nome(this: usize, l: i8, delta: i16) {
+            let f = orig::<unsafe extern "thiscall" fn(usize, i8, i16)>($i);
+            let reg: Vec<(usize, usize)> = (0..20).map(|k| (jogador_do_bloco(this, l, k) + 0x35, 2)).collect();
+            let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || f(this, l, delta), || $rust(this, l, delta));
+            PLACAR.registrar(igual, || format!("{}({}, {}) original={:x?} rust={:x?}", stringify!($rust), l, delta, mo, mr));
+        }
+    };
+}
+comparar_repartir!(comparar_repartir_a, repartir_a, 62);
+comparar_repartir!(comparar_repartir_b, repartir_b, 63);
+comparar_repartir!(comparar_repartir_c, repartir_c, 64);
+unsafe extern "thiscall" fn comparar_escolher(this: usize, arg: u32) -> u8 {
+    let f = orig::<unsafe extern "thiscall" fn(usize, u32) -> u8>(65);
+    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || f(this, arg), || crate::aleatorio::sem_contar(|| escolher_por_papel(this, arg)));
+    PLACAR.registrar(igual && r == n, || format!("escolher_por_papel({:#x}) original={} rust={}", arg, r as i8, n as i8));
+    r
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -2132,6 +2246,10 @@ pub unsafe fn instalar(comparando: bool) {
         mais_proximo_do_ponto as *const () as usize,
         pressao_no_ponto as *const () as usize,
         menor_distancia as *const () as usize,
+        repartir_a as *const () as usize,
+        repartir_b as *const () as usize,
+        repartir_c as *const () as usize,
+        escolher_por_papel as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -2196,6 +2314,10 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_mais_proximo as *const () as usize,
         comparar_pressao_ponto as *const () as usize,
         comparar_menor_distancia as *const () as usize,
+        comparar_repartir_a as *const () as usize,
+        comparar_repartir_b as *const () as usize,
+        comparar_repartir_c as *const () as usize,
+        comparar_escolher as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -2213,6 +2335,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_registrar_posse", "motor_na_lista", "motor_guardar_extremos",
         "motor_contar_ativos", "motor_codigo_especial", "motor_atras_do_extremo", "motor_sem_partida",
         "motor_pressao_na_area", "motor_mais_proximo_do_ponto", "motor_pressao_no_ponto", "motor_menor_distancia",
+        "motor_repartir_a", "motor_repartir_b", "motor_repartir_c", "motor_escolher_por_papel",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -2590,6 +2713,20 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_mais_proximo(m, jj3, byte(jj3, 0x102), byte(jj3, 0x103));
             comparar_pressao_ponto(m, ((h3 >> 28) % 2) as i8, a3, b3, ((h3 >> 29) & 1) as i8);
             comparar_menor_distancia(m, ((h3 >> 30) % 2) as i8, a3, b3, ((h3 >> 31) & 1) as i8);
+            // decima quarta leva (tabelas com bits de papel variados, inclusive sem nenhum e 0x700)
+            let h4 = s.proximo();
+            for t in tabelas.iter_mut() {
+                for (k, v) in t.iter_mut().enumerate() {
+                    let r = h4.rotate_left(k as u32 * 7) as u16;
+                    *v = [0u16, 1, 2, 4, 8, 0x10, 0x20, 0x40, 0x140, 0x240, 0x440, 0x46, r][(r % 13) as usize];
+                }
+            }
+            let delta = ((h4 >> 20) % 4000) as i16 - 2000;
+            comparar_repartir_a(m, ((h4 >> 32) % 2) as i8, delta);
+            comparar_repartir_b(m, ((h4 >> 33) % 2) as i8, delta);
+            comparar_repartir_c(m, ((h4 >> 34) % 2) as i8, delta);
+            let alto = [0u32, 0x3f800000, 0x40000000, 0x12345600, 0xffffff00][((h4 >> 36) % 5) as usize];
+            comparar_escolher(m, (alto & !0xff) | ((h4 >> 40) % 2) as u32);
             comparar_distancia_entre(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
         }
     });
