@@ -150,14 +150,69 @@ unsafe extern "C" fn comparar(n: i32) -> i32 {
     r_orig
 }
 
-pub unsafe fn instalar(comparando: bool) {
+/// `autoteste`: antes do jogo comecar, compara original e Rust em `casos` entradas sinteticas
+/// (estado e n sorteados, cobrindo n pequeno, grande, negativo, bordas e a volta da tabela).
+/// Exige o modo comparacao (a recursao da original tem de cair na original).
+pub unsafe fn instalar(comparando: bool, autoteste: Option<u64>) {
+    let comparando = comparando || autoteste.is_some();
     let destino = if comparando { comparar as *const () as usize } else { aleatorio as *const () as usize };
     if let Some(t) = desvios::desviar("aleatorio", &PROLOGO, destino) {
         ORIGINAL = t;
         if comparando {
             linha("aleatorio: modo comparacao (original x Rust)");
         }
+        if let Some(casos) = autoteste {
+            rodar_autoteste(casos);
+        }
     }
+}
+
+unsafe fn rodar_autoteste(casos: u64) {
+    const FIM_REAL: u32 = 0xad4130; // o que a semente (0x90d0a0) grava em [0xde2798]
+    let fim = FIM_DA_TABELA as *mut u32;
+    let (guardado, fim_guardado) = (Estado::ler(), *fim);
+    let (c0, d0) = (COMPARACOES.load(Ordering::Relaxed), DIVERGENCIAS.load(Ordering::Relaxed));
+    let mut x: u64 = 0x9e37_79b9_7f4a_7c15;
+    let mut sorteio = || {
+        x ^= x << 13;
+        x ^= x >> 7;
+        x ^= x << 17;
+        x
+    };
+    let entradas = ((FIM_REAL - INICIO_DA_TABELA) / 4 + 1) as u64;
+    let bordas = [1, 2, 3, 7, 10, 100, 0xfffe, 0xffff, 0x10000, 0x10001, 100_000, 1_000_000, i32::MAX];
+    for i in 0..casos {
+        let a = sorteio();
+        // Ponteiro: qualquer entrada; um em cada oito perto do fim, para exercitar a volta.
+        let entrada = if a % 8 == 0 { entradas - 1 - (a >> 3) % 3 } else { (a >> 3) % entradas };
+        *fim = if a % 97 == 0 { 0 } else { FIM_REAL }; // antes da semente o fim ainda vale 0
+        Estado {
+            ponteiro: INICIO_DA_TABELA + entrada as u32 * 4,
+            deslocamento: ((a >> 20) & 0xffff) as i32,
+            rand: (a >> 32) as u32,
+        }
+        .escrever();
+        let b = sorteio();
+        let n = match b % 6 {
+            0 => (b >> 8) as i32 % 100 + 1,
+            1 => ((b >> 8) % 0xffff) as i32 + 1,
+            2 => -(((b >> 8) % 0xffff) as i32 + 1),
+            3 => (b >> 8) as u32 as i32, // qualquer, inclusive enormes e negativos
+            4 => bordas[(b >> 8) as usize % bordas.len()],
+            _ => -bordas[(b >> 8) as usize % (bordas.len() - 1)],
+        };
+        comparar(n);
+        if i % 1_000_000 == 999_999 {
+            linha(&format!("aleatorio: autoteste {} casos...", i + 1));
+        }
+    }
+    guardado.escrever();
+    *fim = fim_guardado;
+    linha(&format!(
+        "aleatorio: AUTOTESTE {} casos, {} divergencias",
+        COMPARACOES.load(Ordering::Relaxed) - c0,
+        DIVERGENCIAS.load(Ordering::Relaxed) - d0
+    ));
 }
 
 #[cfg(test)]

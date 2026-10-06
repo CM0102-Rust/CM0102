@@ -60,5 +60,8 @@ pub unsafe fn instalar() {
         return;
     }
     let comparar = win::ambiente("CM_COMPARAR");
-    aleatorio::instalar(comparar);
+    // CM_AUTOTESTE=1: cada rotina reescrita se compara com a original em entradas sinteticas
+    // antes do jogo comecar (resultado em ddraw.log).
+    let autoteste = win::ambiente("CM_AUTOTESTE").then_some(5_000_000);
+    aleatorio::instalar(comparar, autoteste);
 }

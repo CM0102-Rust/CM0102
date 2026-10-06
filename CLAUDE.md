@@ -34,6 +34,8 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 - Python 3 com `pefile`, `capstone`, `psutil`, `Pillow` (instalados no Python do usuário).
 - Endereços sempre como VA (base 0x400000). Em `.text`, `.rdata` e `.data` o deslocamento no arquivo é VA − 0x400000.
 - Rust: `cd rust && cargo build --release` (sai em `target/i686-pc-windows-msvc/release/ddraw.dll`; copiar para `jogo/`), `cargo test --release`.
+- **Armadilha:** restaurar um `.rs` com `Copy-Item` mantém a data antiga e o cargo não recompila (a DLL fica velha). Depois de restaurar, atualizar a data (`(Get-Item f).LastWriteTime = Get-Date`) ou conferir se apareceu "Compiling".
+- Validação de rotina reescrita: `CM_AUTOTESTE=1` (entradas sintéticas no início do jogo, sem cliques) e `CM_COMPARAR=1` (durante o jogo real). Provar que o teste discrimina com uma mutação proposital antes de confiar no "zero divergências".
 - Métodos COM são stdcall: cada método da vtable precisa do número exato de argumentos, mesmo os não suportados.
 - **Sempre em janela (`-windowed`)**, no atalho e nos testes; nunca testar em tela cheia nem maximizar (cobre a tela do Lucas enquanto ele usa o PC). O que só der para ver em tela cheia, pedir para ele testar.
 - O Lucas às vezes mexe na janela durante os testes: mudança inesperada de tamanho pode ser ele.
