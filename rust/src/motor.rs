@@ -79,8 +79,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x716310, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x8e, 0x9e, 0x01, 0x00, 0x00] },
     // 0x6c2be0: sub esp, 8; push ebx; push ebp
     Prologo { endereco: 0x6c2be0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
+    // 0x6c3aa0: push ebx; push esi; push edi; mov edi, ecx
+    Prologo { endereco: 0x6c3aa0, bytes: &[0x53, 0x56, 0x57, 0x8b, 0xf9] },
 ];
-const N: usize = 31;
+const N: usize = 32;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -809,6 +811,21 @@ unsafe extern "thiscall" fn posicionar(this: usize, j: usize, saida_x: *mut i8, 
     *saida_y = v;
 }
 
+/// { 0x6c3aa0 } (match_eng.cpp): as duas linhas defensivas (impedimento). Lado 1: maior y (0x103)
+/// entre os ativos, partindo de 6, mais 1, em 0x8eaf. Lado 0: menor y, partindo de 5, menos 1, em
+/// 0x8eb0. Ativo: posicao >= 0 e `tabela_do_jogador` (pelo endereco) diferente de 1. O original tem
+/// os dois lacos de 20 jogadores desenrolados.
+unsafe extern "thiscall" fn linhas_defensivas(this: usize) {
+    let f717410: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    let ativos = |lado: usize| {
+        (0..20).map(move |k| (this + 0x4796 + 8920 * lado + k * 0x1be) as usize).filter(move |&p| byte(p, 0x19) >= 0 && f717410(p) != 1)
+    };
+    let maior = ativos(1).fold(6i8, |m, p| m.max(byte(p, 0x103)));
+    *((this + 0x8eaf) as *mut i8) = maior.wrapping_add(1);
+    let menor = ativos(0).fold(5i8, |m, p| m.min(byte(p, 0x103)));
+    *((this + 0x8eb0) as *mut i8) = menor.wrapping_sub(1);
+}
+
 unsafe fn papel_por_endereco(endereco: usize, j: usize) -> u8 {
     let f: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(endereco);
     f(j)
@@ -1117,6 +1134,13 @@ unsafe extern "thiscall" fn comparar_posicionar(this: usize, j: usize, sx: *mut 
     PLACAR.registrar(igual, || format!("posicionar(lado {}, pos {}, bola {} {}) original={:x?} rust={:x?}", lado(j), byte(j, 0x19), byte(this, 0x8ea7), byte(this, 0x8ea8), mo, mr));
 }
 
+unsafe extern "thiscall" fn comparar_linhas(this: usize) {
+    let f = orig::<unsafe extern "thiscall" fn(usize)>(31);
+    let regioes = [(this + 0x8eaf, 2)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || f(this), || linhas_defensivas(this));
+    PLACAR.registrar(igual, || format!("linhas_defensivas original={:x?} rust={:x?}", mo, mr));
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -1155,6 +1179,7 @@ pub unsafe fn instalar(comparando: bool) {
         papel_no_ataque as *const () as usize,
         papel_na_defesa as *const () as usize,
         posicionar as *const () as usize,
+        linhas_defensivas as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -1188,6 +1213,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_papel_ataque as *const () as usize,
         comparar_papel_defesa as *const () as usize,
         comparar_posicionar as *const () as usize,
+        comparar_linhas as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -1197,6 +1223,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_alcanca", "motor_classificar_lance", "motor_distancia_ao_ponto", "motor_distancia_ao_gol",
         "motor_mais_perto_do_gol", "motor_jogadores_na_linha", "motor_consegue_jogar", "motor_na_area",
         "motor_marcas_da_posicao", "motor_papel_no_ataque", "motor_papel_na_defesa", "motor_posicionar",
+        "motor_linhas_defensivas",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -1446,6 +1473,14 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_papel_defesa(j);
             let (mut sx, mut sy) = (0x55i8, 0x55i8);
             comparar_posicionar(m, j, &mut sx, &mut sy, 0);
+            // nona leva: linhas defensivas sobre os dois blocos de 20 (ja preenchidos acima), y variado
+            let y2 = s.proximo();
+            for k in 0..40usize {
+                let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
+                *((p + 0x103) as *mut i8) = (y2.rotate_left(k as u32 * 2) % 16) as i8 - 2;
+                *((p + 0x19) as *mut i8) = (y2.rotate_left(k as u32 * 3 + 1) % 13) as i8 - 2;
+            }
+            comparar_linhas(m);
         }
     });
     SINTETICO.store(false, std::sync::atomic::Ordering::Relaxed);
