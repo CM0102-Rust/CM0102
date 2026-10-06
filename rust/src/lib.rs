@@ -15,6 +15,7 @@
 mod apresentacao;
 mod espiao;
 mod ganchos;
+mod reducao;
 mod registro;
 mod video;
 mod win;

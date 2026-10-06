@@ -5,14 +5,29 @@
 //! - Em janela, a janela fica redimensionavel (borda e maximizar); o ultimo quadro e redesenhado
 //!   durante o redimensionamento. Em tela cheia, a janela do jogo ja cobre a tela.
 //! - As mensagens de mouse sao convertidas da area cliente para coordenadas do quadro.
-//! - Escala: vizinho mais proximo quando o fator e inteiro (nitido); suavizada (HALFTONE) quando nao e.
+//! - Escala: vizinho mais proximo quando o fator e inteiro (nitido); reducao por media de area
+//!   (`reducao.rs`) quando a janela e menor que o quadro; HALFTONE do Windows para ampliar em fator
+//!   fracionario. `CM_REDUCAO=windows` volta a reducao para o HALFTONE (para comparar).
 //!
 //! RGB565 -> 8 bits por canal com replicacao de bits (31 -> 255, 63 -> 255).
 
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 
+use crate::reducao::Reducao;
 use crate::registro::linha;
 use crate::win::{self, HWND, RECT};
+
+fn reducao_propria() -> bool {
+    static PROPRIA: OnceLock<bool> = OnceLock::new();
+    *PROPRIA.get_or_init(|| {
+        let n: Vec<u16> = "CM_REDUCAO".encode_utf16().chain([0]).collect();
+        let mut buf = [0u16; 16];
+        let k = unsafe { win::GetEnvironmentVariableW(n.as_ptr(), buf.as_mut_ptr(), buf.len() as u32) } as usize;
+        let propria = String::from_utf16_lossy(&buf[..k.min(16)]).to_lowercase() != "windows";
+        linha(&format!("apresentacao: reducao {}", if propria { "por media de area" } else { "HALFTONE do Windows" }));
+        propria
+    })
+}
 
 /// Menor area cliente permitida ao redimensionar.
 const CLIENTE_MINIMO: (i32, i32) = (400, 300);
@@ -26,6 +41,8 @@ struct Tela {
     /// Onde o quadro foi desenhado na area cliente na ultima apresentacao.
     destino: RECT,
     proc_original: isize,
+    /// Quadro reduzido ao tamanho da janela (quando ela e menor que o quadro).
+    reduzido: Option<Reducao>,
 }
 
 static TELA: Mutex<Tela> = Mutex::new(Tela {
@@ -35,6 +52,7 @@ static TELA: Mutex<Tela> = Mutex::new(Tela {
     altura: 0,
     destino: RECT { left: 0, top: 0, right: 0, bottom: 0 },
     proc_original: 0,
+    reduzido: None,
 });
 
 fn tela() -> std::sync::MutexGuard<'static, Tela> {
@@ -194,7 +212,7 @@ pub unsafe fn apresentar(pixels: &[u16], largura: i32, altura: i32, suja: RECT) 
             dest[x] = rgb565_para_32(orig[x]);
         }
     }
-    desenhar(&mut t);
+    desenhar(&mut t, Some(RECT { left: x0, top: y0, right: x1, bottom: y1 }));
 }
 
 /// Onde o quadro cabe na area cliente: escala proporcional, centralizado.
@@ -204,8 +222,9 @@ fn encaixe(cw: i32, ch: i32, largura: i32, altura: i32) -> RECT {
     RECT { left: ox, top: oy, right: ox + dw, bottom: oy + dh }
 }
 
-/// Desenha o ultimo quadro convertido na area cliente atual.
-unsafe fn desenhar(t: &mut Tela) {
+/// Desenha o ultimo quadro convertido na area cliente atual. `suja`: regiao do quadro que mudou
+/// desde o ultimo desenho (None = tudo).
+unsafe fn desenhar(t: &mut Tela, suja: Option<RECT>) {
     let (largura, altura) = (t.largura, t.altura);
     if t.hwnd == 0 || t.convertido.is_empty() {
         return;
@@ -244,13 +263,30 @@ unsafe fn desenhar(t: &mut Tela) {
         win::PatBlt(hdc, 0, oy, ox, dh, win::BLACKNESS);
         win::PatBlt(hdc, ox + dw, oy, cw - ox - dw, dh, win::BLACKNESS);
     }
-    let inteiro = dw % largura == 0 && dh % altura == 0;
-    win::SetStretchBltMode(hdc, if inteiro { win::COLORONCOLOR } else { win::HALFTONE });
-    win::SetBrushOrgEx(hdc, 0, 0, core::ptr::null_mut());
-    win::StretchDIBits(
-        hdc, ox, oy, dw, dh, 0, 0, largura, altura,
-        t.convertido.as_ptr() as *const _, &info, win::DIB_RGB_COLORS, win::SRCCOPY,
-    );
+    if dw < largura && dh < altura && reducao_propria() {
+        let (lw, lh, rw, rh) = (largura as usize, altura as usize, dw as usize, dh as usize);
+        let mut regiao = suja.unwrap_or(RECT { left: 0, top: 0, right: largura, bottom: altura });
+        if t.reduzido.as_ref().map_or(true, |r| r.origem != (lw, lh) || r.destino != (rw, rh)) {
+            t.reduzido = Some(Reducao::nova(lw, lh, rw, rh));
+            regiao = RECT { left: 0, top: 0, right: largura, bottom: altura };
+        }
+        let Tela { reduzido, convertido, .. } = t;
+        let r = reduzido.as_mut().unwrap();
+        r.atualizar(convertido, regiao.left as usize, regiao.top as usize, regiao.right as usize, regiao.bottom as usize);
+        let info_r = win::BITMAPINFOHEADER { biWidth: dw, biHeight: -dh, ..info };
+        win::StretchDIBits(
+            hdc, ox, oy, dw, dh, 0, 0, dw, dh,
+            r.saida.as_ptr() as *const _, &info_r, win::DIB_RGB_COLORS, win::SRCCOPY,
+        );
+    } else {
+        let inteiro = dw % largura == 0 && dh % altura == 0;
+        win::SetStretchBltMode(hdc, if inteiro { win::COLORONCOLOR } else { win::HALFTONE });
+        win::SetBrushOrgEx(hdc, 0, 0, core::ptr::null_mut());
+        win::StretchDIBits(
+            hdc, ox, oy, dw, dh, 0, 0, largura, altura,
+            t.convertido.as_ptr() as *const _, &info, win::DIB_RGB_COLORS, win::SRCCOPY,
+        );
+    }
     win::ReleaseDC(hwnd, hdc);
 }
 
@@ -315,7 +351,7 @@ unsafe extern "system" fn proc_janela(hwnd: HWND, msg: u32, wp: usize, lp: isize
     let escolha = msg == WM_EXITSIZEMOVE || (msg == WM_SYSCOMMAND && matches!(wp & 0xfff0, SC_MAXIMIZE | SC_RESTORE));
     let r = win::CallWindowProcA(original, hwnd, msg, wp, lp);
     if msg == WM_SIZE || msg == WM_PAINT {
-        desenhar(&mut tela());
+        desenhar(&mut tela(), None);
     }
     if escolha {
         guardar_tamanho(hwnd);
@@ -365,6 +401,7 @@ mod testes {
             altura: 600,
             destino: RECT { left: 240, top: 0, right: 1680, bottom: 1080 },
             proc_original: 0,
+            reduzido: None,
         };
         assert_eq!(converter_mouse(&t, (540 << 16) | 960), (300 << 16) | 400); // centro
         assert_eq!(converter_mouse(&t, 100), 0); // faixa preta: fica na borda do quadro
