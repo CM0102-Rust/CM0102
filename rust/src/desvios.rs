@@ -59,10 +59,20 @@ pub unsafe fn instalar() {
         linha("desvios: desligados (CM_SEM_DESVIOS)");
         return;
     }
-    let comparar = win::ambiente("CM_COMPARAR");
-    // CM_AUTOTESTE=1: cada rotina reescrita se compara com a original em entradas sinteticas
-    // antes do jogo comecar (resultado em ddraw.log).
-    let autoteste = win::ambiente("CM_AUTOTESTE");
-    aleatorio::instalar(comparar, autoteste.then_some(5_000_000));
-    data::instalar(comparar, autoteste);
+    // CM_AUTOTESTE=1 liga o modo comparacao; os autotestes em si rodam depois (ver `autotestes`).
+    let comparar = win::ambiente("CM_COMPARAR") || win::ambiente("CM_AUTOTESTE");
+    aleatorio::instalar(comparar);
+    data::instalar(comparar);
+}
+
+/// CM_AUTOTESTE=1: cada rotina reescrita se compara com a original em entradas sinteticas
+/// (resultado em ddraw.log). Chamado na primeira DirectDrawCreate: a essa altura o WinMain ja
+/// esta rodando e a CRT do jogo esta inicializada (algumas rotinas chamam atexit, malloc...).
+pub unsafe fn autotestes() {
+    static FEITO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    if !win::ambiente("CM_AUTOTESTE") || FEITO.swap(true, std::sync::atomic::Ordering::Relaxed) {
+        return;
+    }
+    aleatorio::autoteste(5_000_000);
+    data::autoteste();
 }

@@ -19,6 +19,7 @@ mod data;
 mod desvios;
 mod espiao;
 mod ganchos;
+mod jogo;
 mod reducao;
 mod registro;
 mod video;
@@ -85,5 +86,6 @@ pub unsafe extern "system" fn DirectDrawCreate(guid: *mut c_void, saida: *mut *m
     }
     ganchos::instalar();
     *saida = video::criar();
+    desvios::autotestes();
     0
 }

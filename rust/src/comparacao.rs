@@ -46,6 +46,35 @@ impl Placar {
     }
 }
 
+/// Copia de regioes de memoria (endereco, tamanho).
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Memoria(pub Vec<(usize, Vec<u8>)>);
+
+impl Memoria {
+    pub unsafe fn ler(regioes: &[(usize, usize)]) -> Memoria {
+        Memoria(regioes.iter().map(|&(a, n)| (a, core::slice::from_raw_parts(a as *const u8, n).to_vec())).collect())
+    }
+    pub unsafe fn escrever(&self) {
+        for (a, b) in &self.0 {
+            core::ptr::copy_nonoverlapping(b.as_ptr(), *a as *mut u8, b.len());
+        }
+    }
+}
+
+/// Roda a original e a versao Rust a partir do mesmo estado das `regioes` e devolve
+/// (resultado original, resultado Rust, memoria igual?). Ao sair, a memoria fica como a original deixou.
+pub unsafe fn lado_a_lado<R>(regioes: &[(usize, usize)], original: impl FnOnce() -> R, rust: impl FnOnce() -> R) -> (R, R, bool, Memoria, Memoria) {
+    let antes = Memoria::ler(regioes);
+    let r_orig = original();
+    let depois_orig = Memoria::ler(regioes);
+    antes.escrever();
+    let r_rust = rust();
+    let depois_rust = Memoria::ler(regioes);
+    depois_orig.escrever();
+    let igual = depois_orig == depois_rust;
+    (r_orig, r_rust, igual, depois_orig, depois_rust)
+}
+
 /// Gerador simples para os autotestes (xorshift64); nao tem relacao com o sorteio do jogo.
 pub struct Sorteio(pub u64);
 

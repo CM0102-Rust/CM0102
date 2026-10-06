@@ -142,24 +142,23 @@ unsafe extern "C" fn comparar(n: i32) -> i32 {
     r_orig
 }
 
-/// `autoteste`: antes do jogo comecar, compara original e Rust em `casos` entradas sinteticas
-/// (estado e n sorteados, cobrindo n pequeno, grande, negativo, bordas e a volta da tabela).
-/// Exige o modo comparacao (a recursao da original tem de cair na original).
-pub unsafe fn instalar(comparando: bool, autoteste: Option<u64>) {
-    let comparando = comparando || autoteste.is_some();
+pub unsafe fn instalar(comparando: bool) {
     let destino = if comparando { comparar as *const () as usize } else { aleatorio as *const () as usize };
     if let Some(t) = desvios::desviar("aleatorio", &PROLOGO, destino) {
         ORIGINAL = t;
         if comparando {
             linha("aleatorio: modo comparacao (original x Rust)");
         }
-        if let Some(casos) = autoteste {
-            rodar_autoteste(casos);
-        }
     }
 }
 
-unsafe fn rodar_autoteste(casos: u64) {
+/// Compara original e Rust em `casos` entradas sinteticas (estado e n sorteados, cobrindo n
+/// pequeno, grande, negativo, bordas e a volta da tabela). Exige o modo comparacao instalado
+/// (a recursao da original tem de cair na original).
+pub unsafe fn autoteste(casos: u64) {
+    if ORIGINAL == 0 {
+        return;
+    }
     const FIM_REAL: u32 = 0xad4130; // o que a semente (0x90d0a0) grava em [0xde2798]
     let fim = FIM_DA_TABELA as *mut u32;
     let (guardado, fim_guardado) = (Estado::ler(), *fim);

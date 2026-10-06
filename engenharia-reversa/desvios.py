@@ -10,6 +10,8 @@ Para cada rotina:
 Imprime a entrada da tabela `rust/src/desvios.rs` (endereco + bytes esperados). Na abertura do jogo
 o nucleo confere esses bytes antes de desviar e recusa se nao baterem.
 """
+import csv
+import os
 import struct
 import sys
 
@@ -30,6 +32,8 @@ def main():
     md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
     md.detail = True
     ini, fim = TEXTO
+    mapa = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'docs', 'mapa_funcoes.csv')
+    inicios = sorted(int(r['endereco'], 16) for r in csv.DictReader(open(mapa))) if os.path.exists(mapa) else []
     for va in (int(x, 16) for x in sys.argv[2:]):
         o = va - BASE
         prologo = []
@@ -51,10 +55,16 @@ def main():
                     if p + 5 <= fim and struct.unpack_from('<i', d, p + 1)[0] + p + 5 + BASE == alvo:
                         dentro.append('%#x' % (p + BASE))
                     p = d.find(op, p + 1, fim)
-            for p in range(max(ini, o - 130), min(fim, o + 130)):  # saltos curtos (rel8) por perto
-                b = d[p]
-                if (b == 0xeb or 0x70 <= b <= 0x7f) and p + 2 + struct.unpack_from('<b', d, p + 1)[0] + BASE == alvo:
-                    dentro.append('curto %#x' % (p + BASE))
+        # Saltos curtos (rel8) por perto: desmonta linearmente a partir do inicio de funcao anterior
+        # (pelo mapa), para so contar instrucoes de verdade e nao bytes soltos que parecem jcc.
+        partida = max([f for f in inicios if f <= va - 130] or [va - 130])
+        for x in md.disasm(d[partida - BASE:va - BASE + tam + 130], partida):
+            if x.address >= va + tam + 130:
+                break
+            if x.size == 2 and (x.bytes[0] == 0xeb or 0x70 <= x.bytes[0] <= 0x7f):
+                t = int(x.op_str, 16)
+                if va < t < va + tam:
+                    dentro.append('curto %#x' % x.address)
         if dentro:
             falha('%#x: ha saltos para dentro do prologo: %s' % (va, ', '.join(dentro)))
         texto = '; '.join('%s %s' % (i.mnemonic, i.op_str) for i in prologo)
