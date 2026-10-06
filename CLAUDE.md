@@ -38,5 +38,7 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 - Validação de rotina reescrita: `CM_AUTOTESTE=1` (entradas sintéticas no início do jogo, sem cliques) e `CM_COMPARAR=1` (durante o jogo real). Provar que o teste discrimina com uma mutação proposital antes de confiar no "zero divergências".
 - Métodos COM são stdcall: cada método da vtable precisa do número exato de argumentos, mesmo os não suportados.
 - **Sempre em janela (`-windowed`)**, no atalho e nos testes; nunca testar em tela cheia nem maximizar (cobre a tela do Lucas enquanto ele usa o PC). O que só der para ver em tela cheia, pedir para ele testar.
+- **Experimentos que possam alterar preferências** (configuração automática, mudança de idioma...): copiar `jogo/game.cfg` antes e restaurar depois. Não deixar `auto_setup.cfg`/`quick_start.cfg` na pasta do jogo. Ver `docs/VERSAO_SEM_TELA.md`.
+- A janela abre no tamanho/estado do `jogo/janela.cfg` do Lucas (pode estar maximizada e cobrir a tela dele). **Nos testes, usar `CM_JANELA=960x540`**: tamanho fixo, sem maximizar e sem gravar no `janela.cfg`.
 - O Lucas às vezes mexe na janela durante os testes: mudança inesperada de tamanho pode ser ele.
 - Para testar o jogo sem atrapalhar o Lucas: abra com `-windowed` e mande cliques por `PostMessage` (não mexe no mouse dele).

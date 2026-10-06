@@ -176,11 +176,25 @@ mod preferencia {
             .then_some(Janela { largura, altura, maximizada: maximizada != 0, posicao })
     }
 
+    /// `CM_JANELA=LxA` (testes automatizados): tamanho fixo, sem maximizar e sem gravar nada,
+    /// para nao mexer na janela do jogador nem cobrir a tela dele.
+    fn de_teste() -> Option<Janela> {
+        let n: Vec<u16> = "CM_JANELA".encode_utf16().chain([0]).collect();
+        let mut buf = [0u16; 32];
+        let k = unsafe { crate::win::GetEnvironmentVariableW(n.as_ptr(), buf.as_mut_ptr(), buf.len() as u32) } as usize;
+        let s = String::from_utf16_lossy(&buf[..k.min(32)]);
+        let (l, a) = s.split_once(['x', 'X'])?;
+        interpretar(&format!("{} {} 0 40 40", l.trim(), a.trim()))
+    }
+
     pub fn ler() -> Option<Janela> {
-        interpretar(&std::fs::read_to_string(caminho()).ok()?)
+        de_teste().or_else(|| interpretar(&std::fs::read_to_string(caminho()).ok()?))
     }
 
     pub fn gravar(j: Janela) {
+        if de_teste().is_some() {
+            return;
+        }
         let mut s = format!("{} {} {}", j.largura, j.altura, j.maximizada as i32);
         if let Some((x, y)) = j.posicao {
             s += &format!(" {} {}", x, y);
