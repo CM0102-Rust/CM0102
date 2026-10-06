@@ -13,7 +13,9 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 - **Base de trabalho: `cm0102.exe` (DirectDraw).** É nele que estão os endereços mapeados pela comunidade. O `cm0102_GDI.exe` é a referência para o caminho de vídeo por GDI.
 - **Os exe originais nunca são alterados.** Correções vão para cópias geradas por ferramenta (`*-portatil.exe`), que confere o MD5 do original e falha se um padrão esperado não bater.
 - **Nada do jogo no git:** nem exe, nem `Data/`, nem código descompilado em bruto. O repositório `lucastmpacheco/CM0102` é privado.
-- `referencias/CM0102Patcher` é fonte de endereços e formatos; não copiar o código dele.
+- `referencias/CM0102Patcher` é fonte de endereços e formatos; não copiar o código dele (as ferramentas leem os dados de lá).
+- **Versão de trabalho: 1920×1080 nativo** (`cm0102-1080.exe`, gerado por `resolucao.py`). Fotos de fundo desligadas nas definições do jogo ("trocar = não") até a camada de vídeo ajustar as fotos à resolução.
+- **Os cliques no jogo são do Lucas.** Eu abro o jogo e ele conduz; diagnóstico pelo código (desmontagem, registro de falhas do Windows, `ddraw.log`), não por tentativa e erro clicando.
 
 ## Estrutura
 
@@ -22,7 +24,7 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 | `jogo/` | instalação jogável (não versionada) |
 | `original/` | downloads e exe 3.9.68 intocados (não versionado) |
 | `referencias/` | projetos de terceiros (não versionado) |
-| `engenharia-reversa/` | `pe_info.py`, `textos.py`, `refs.py`, `desmonta.py`, `escuta_tela.py`, `patch_portatil.py` |
+| `engenharia-reversa/` | `pe_info.py`, `textos.py`, `refs.py`, `desmonta.py`, `escuta_tela.py`, `patch_portatil.py`, `resolucao.py` |
 | `rust/` | núcleo em Rust = `ddraw.dll` (i686, CRT estática, sem crates externos): `video.rs` (DirectDraw próprio), `apresentacao.rs` (quadro → janela, mouse), `ganchos.rs` (desvios no exe), `espiao.rs` (diagnóstico, `CM_ESPIAO=1`) |
 | `docs/` | `DESCOMPILACAO.md` |
 | `wiki/` | `index.md` (estado e próximos passos), `log.md` |

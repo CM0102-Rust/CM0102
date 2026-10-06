@@ -66,8 +66,9 @@ pub unsafe fn definir_janela(hwnd: HWND, tela_cheia: bool) {
 
 /// Acrescenta borda redimensionavel e botao maximizar e aplica o tamanho escolhido pelo jogador.
 ///
-/// O jogo chama isto de novo sempre que reinicia o video (ex.: ao entrar em "Iniciar Novo Jogo"),
-/// e nessa hora ele mesmo devolve a janela a 800x600; por isso o tamanho do jogador e reaplicado.
+/// O jogo chama isto de novo sempre que reinicia o video ("Iniciar Novo Jogo", salvar o jogo...),
+/// e nessa hora ele mesmo devolve a janela a 800x600 no centro da tela; por isso o tamanho e a
+/// posicao escolhidos pelo jogador sao reaplicados.
 unsafe fn tornar_redimensionavel(hwnd: HWND) {
     let estilo = win::GetWindowLongA(hwnd, win::GWL_STYLE) as u32;
     let novo = estilo | win::WS_THICKFRAME | win::WS_MAXIMIZEBOX;
@@ -80,8 +81,12 @@ unsafe fn tornar_redimensionavel(hwnd: HWND) {
     win::SetWindowLongA(hwnd, win::GWL_STYLE, novo as isize);
     let mut r = RECT { left: 0, top: 0, right: cw, bottom: ch };
     win::AdjustWindowRectEx(&mut r, novo, 0, win::GetWindowLongA(hwnd, win::GWL_EXSTYLE) as u32);
+    let (x, y) = preferido
+        .and_then(|p| p.posicao)
+        .filter(|&(x, y)| posicao_visivel(x, y))
+        .unwrap_or((janela.left, janela.top));
     win::SetWindowPos(
-        hwnd, core::ptr::null_mut(), janela.left, janela.top, r.right - r.left, r.bottom - r.top,
+        hwnd, core::ptr::null_mut(), x, y, r.right - r.left, r.bottom - r.top,
         win::SWP_NOZORDER | win::SWP_NOACTIVATE | win::SWP_FRAMECHANGED,
     );
     if preferido.is_some_and(|p| p.maximizada) {
@@ -91,19 +96,33 @@ unsafe fn tornar_redimensionavel(hwnd: HWND) {
         if preferido.is_some_and(|p| p.maximizada) { " (maximizada)" } else { "" }));
 }
 
-/// Guarda o tamanho atual da janela como escolha do jogador (fim de arrastar a borda, maximizar, restaurar).
+/// O canto superior esquerdo da janela cai numa area visivel (algum monitor ligado)?
+unsafe fn posicao_visivel(x: i32, y: i32) -> bool {
+    let (vx, vy) = (win::GetSystemMetrics(76), win::GetSystemMetrics(77)); // SM_X/YVIRTUALSCREEN
+    let (vw, vh) = (win::GetSystemMetrics(78), win::GetSystemMetrics(79)); // SM_CX/CYVIRTUALSCREEN
+    x >= vx - 50 && y >= vy - 10 && x < vx + vw - 100 && y < vy + vh - 50
+}
+
+/// Guarda tamanho e posicao atuais como escolha do jogador (fim de arrastar/mover, maximizar, restaurar).
 unsafe fn guardar_tamanho(hwnd: HWND) {
     let mut cliente = RECT::default();
     win::GetClientRect(hwnd, &mut cliente);
+    let mut janela = RECT::default();
+    win::GetWindowRect(hwnd, &mut janela);
     let maximizada = win::IsZoomed(hwnd) != 0;
-    let atual = preferencia::Janela { largura: cliente.right, altura: cliente.bottom, maximizada };
+    let atual = preferencia::Janela {
+        largura: cliente.right,
+        altura: cliente.bottom,
+        maximizada,
+        posicao: Some((janela.left, janela.top)),
+    };
     if atual.largura < CLIENTE_MINIMO.0 || atual.altura < CLIENTE_MINIMO.1 {
         return; // minimizada ou no meio de uma troca de modo
     }
-    // Maximizada: guarda so o estado; o tamanho de "restaurar" continua o anterior.
+    // Maximizada: guarda so o estado; tamanho e posicao de "restaurar" continuam os anteriores.
     let gravar = match (maximizada, preferencia::ler()) {
         (true, Some(p)) => preferencia::Janela { maximizada: true, ..p },
-        (true, None) => preferencia::Janela { largura: 800, altura: 600, maximizada: true },
+        (true, None) => preferencia::Janela { largura: 800, altura: 600, maximizada: true, posicao: None },
         (false, _) => atual,
     };
     if preferencia::ler() != Some(gravar) {
@@ -113,13 +132,15 @@ unsafe fn guardar_tamanho(hwnd: HWND) {
     }
 }
 
-/// Tamanho da janela escolhido pelo jogador, em `janela.cfg` ao lado do exe ("largura altura maximizada").
+/// Janela escolhida pelo jogador, em `janela.cfg` ao lado do exe: "largura altura maximizada [x y]"
+/// (tamanho da area cliente; x y = canto da janela na tela).
 mod preferencia {
     #[derive(Clone, Copy, PartialEq, Eq, Debug)]
     pub struct Janela {
         pub largura: i32,
         pub altura: i32,
         pub maximizada: bool,
+        pub posicao: Option<(i32, i32)>,
     }
 
     fn caminho() -> std::path::PathBuf {
@@ -129,8 +150,12 @@ mod preferencia {
     pub fn interpretar(texto: &str) -> Option<Janela> {
         let mut v = texto.split_whitespace().map(|s| s.parse::<i32>().ok());
         let (largura, altura, maximizada) = (v.next()??, v.next()??, v.next().flatten().unwrap_or(0));
+        let posicao = match (v.next().flatten(), v.next().flatten()) {
+            (Some(x), Some(y)) => Some((x, y)),
+            _ => None,
+        };
         (largura >= super::CLIENTE_MINIMO.0 && altura >= super::CLIENTE_MINIMO.1 && largura <= 16384 && altura <= 16384)
-            .then_some(Janela { largura, altura, maximizada: maximizada != 0 })
+            .then_some(Janela { largura, altura, maximizada: maximizada != 0, posicao })
     }
 
     pub fn ler() -> Option<Janela> {
@@ -138,7 +163,11 @@ mod preferencia {
     }
 
     pub fn gravar(j: Janela) {
-        let _ = std::fs::write(caminho(), format!("{} {} {}\n", j.largura, j.altura, j.maximizada as i32));
+        let mut s = format!("{} {} {}", j.largura, j.altura, j.maximizada as i32);
+        if let Some((x, y)) = j.posicao {
+            s += &format!(" {} {}", x, y);
+        }
+        let _ = std::fs::write(caminho(), s + "\n");
     }
 }
 
@@ -311,9 +340,10 @@ mod testes {
     #[test]
     fn preferencia_da_janela() {
         use preferencia::{interpretar, Janela};
-        assert_eq!(interpretar("1200 900 0\n"), Some(Janela { largura: 1200, altura: 900, maximizada: false }));
-        assert_eq!(interpretar("1200 900 1"), Some(Janela { largura: 1200, altura: 900, maximizada: true }));
-        assert_eq!(interpretar("1200 900"), Some(Janela { largura: 1200, altura: 900, maximizada: false }));
+        assert_eq!(interpretar("1200 900 0\n"), Some(Janela { largura: 1200, altura: 900, maximizada: false, posicao: None }));
+        assert_eq!(interpretar("1200 900 1"), Some(Janela { largura: 1200, altura: 900, maximizada: true, posicao: None }));
+        assert_eq!(interpretar("1200 900"), Some(Janela { largura: 1200, altura: 900, maximizada: false, posicao: None }));
+        assert_eq!(interpretar("1199 699 0 -8 120"), Some(Janela { largura: 1199, altura: 699, maximizada: false, posicao: Some((-8, 120)) }));
         assert_eq!(interpretar("100 900 0"), None); // menor que o minimo
         assert_eq!(interpretar("lixo"), None);
         assert_eq!(interpretar(""), None);

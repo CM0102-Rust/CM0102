@@ -4,7 +4,9 @@ Tres correcoes, todas localizadas por padrao e conferidas antes de escrever:
 
 1. CD: o exe tem 33 copias da mesma checagem (procura <unidade de CD>\\cm0102.exe
    e, se nao acha, mostra "Please insert the CM01/02 CD" e repete).
-   Em cada copia, o inicio do laco vira um salto direto para o caminho de sucesso.
+   Em cada copia o laco roda inteiro, mas a primeira unidade conta como CD (jne -> nops) e o
+   _findfirst conta como achado (test eax,eax -> xor eax,eax). Saltar direto para o caminho de
+   sucesso (versao anterior) deixava registradores do laco sem preparar e corrompia dados.
 2. Pasta: o WinMain le HKLM\\Software\\Sports Interactive Ltd\\Championship Manager 01-02
    \\Location e faz chdir para la. Passa a fazer chdir para a pasta do proprio exe.
 3. game.cfg: guarda o caminho absoluto da pasta do usuario (saves). Se a pasta antiga
@@ -99,17 +101,16 @@ def corrigir_cd(exe):
             falha('nao achei o inicio do laco perto de %#x' % push_msg)
 
         corpo = exe.instrucoes(laco, push_msg - laco)
-        alvos_internos = {alvo_salto(i) for i in corpo if i.mnemonic.startswith('j') and i.op_str.startswith('0x')}
-        if any(laco < a < laco + 5 for a in alvos_internos):
-            falha('ha salto para dentro dos 5 bytes do laco em %#x' % laco)
         # O laco abre com GetLogicalDriveStringsA(0xc8, buf), direto pela IAT ou por um
-        # registrador carregado antes ("call ebp"), e testa GetDriveTypeA == 5 (CD-ROM).
+        # registrador carregado antes ("call ebp").
         abre = [(a, b) for a, b in zip(corpo, corpo[1:])
                 if (a.mnemonic, a.op_str) == ('push', '0xc8') and b.mnemonic == 'call']
-        if len(abre) != 1 or abre[0][0].address - laco > 0x10 or \
-                not any((i.mnemonic, i.op_str) == ('cmp', 'eax, 5') for i in corpo):
+        if len(abre) != 1 or abre[0][0].address - laco > 0x10:
             falha('laco em %#x nao tem a forma da checagem de CD' % laco)
-        sucesso = None
+        # GetDriveTypeA(unidade) == 5 (CD-ROM)? Se nao, pula a unidade.
+        tipo = [b for a, b in zip(corpo, corpo[1:]) if (a.mnemonic, a.op_str) == ('cmp', 'eax, 5') and b.mnemonic == 'jne']
+        # _findfirst("<unidade>cm0102.exe") == 0? Se sim, segue para o caminho de sucesso.
+        achou = []
         for a, b, c, d in zip(corpo, corpo[1:], corpo[2:], corpo[3:]):
             if a.mnemonic == 'call' and (b.mnemonic, b.op_str) == ('add', 'esp, 0x40') \
                     and (c.mnemonic, c.op_str) == ('test', 'eax, eax') and d.mnemonic == 'je':
@@ -117,10 +118,14 @@ def corrigir_cd(exe):
                     achar_primeiro = a.op_str
                 elif a.op_str != achar_primeiro:
                     falha('_findfirst diferente em %#x' % a.address)
-                sucesso = alvo_salto(d)
-        if sucesso is None or sucesso <= push_msg:
-            falha('nao achei o caminho de sucesso do laco em %#x' % laco)
-        exe.escrever(laco, jmp_rel32(laco, sucesso))
+                achou.append(c)
+        if len(tipo) != 1 or len(achou) != 1 or not (tipo[0].address < achou[0].address):
+            falha('laco em %#x nao tem a forma da checagem de CD' % laco)
+        # Nao se salta por cima do laco: o caminho de sucesso pode usar registradores preparados
+        # dentro dele (em 0x62a6f8 o laco zera esi, que o sucesso usa como 0). O laco roda
+        # inteiro e so o resultado muda: a primeira unidade conta como CD e o arquivo "existe".
+        exe.escrever(tipo[0].address, b'\x90' * tipo[0].size)  # jne -> nops
+        exe.escrever(achou[0].address, b'\x31\xc0')            # test eax,eax -> xor eax,eax
     return len(sitios)
 
 

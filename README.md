@@ -5,7 +5,7 @@ Este repositório o mantém jogável no Windows 11 e prepara a reescrita do jogo
 
 | Onde | O que é | No git? |
 |---|---|---|
-| `JOGAR.bat` | Abre o jogo em janela redimensionável, sem CD e sem trocar a resolução do Windows. | sim |
+| `JOGAR.bat` | Abre o jogo em 1920×1080 nativo, em janela redimensionável, sem CD e sem trocar a resolução do Windows. | sim |
 | `rust/` | Núcleo em Rust, compilado como `ddraw.dll` (camada de vídeo própria; ponto de entrada dos desvios). | sim |
 | `jogo/` | Instalação jogável: originais `cm0102.exe` / `cm0102_GDI.exe` e as cópias corrigidas `*-portatil.exe`. | não |
 | `original/` | Downloads intocados (ISO, zips, patch 3.9.68) e cópia de segurança dos dois exe 3.9.68. | não |
@@ -25,6 +25,10 @@ Os arquivos do jogo não entram no git: o jogo é gratuito para baixar, mas o c�
    cd engenharia-reversa
    python patch_portatil.py ..\jogo\cm0102.exe ..\jogo\cm0102-portatil.exe
    python patch_portatil.py ..\jogo\cm0102_GDI.exe ..\jogo\cm0102_GDI-portatil.exe
+   ```
+   E a versão em 1920×1080 (também converte as imagens de fundo; as fotos originais ficam em `jogo\Pictures-800x600`):
+   ```
+   python resolucao.py ..\jogo\cm0102-portatil.exe ..\jogo\cm0102-1080.exe 1920 1080 ..\jogo
    ```
 3. Compile o núcleo em Rust (alvo `i686-pc-windows-msvc`, já configurado em `rust/.cargo/config.toml`) e copie a DLL para o jogo:
    ```

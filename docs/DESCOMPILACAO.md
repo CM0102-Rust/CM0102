@@ -51,11 +51,25 @@ Lista completa: `python engenharia-reversa\textos.py jogo\cm0102.exe "dev\\CM3\\
 
 Geradas por `engenharia-reversa/patch_portatil.py`, que confere o MD5 e localiza tudo por padrão (serve aos dois exe).
 
-1. **CD.** A checagem foi copiada em **33 lugares** do código. Cada cópia percorre as unidades (`GetLogicalDriveStringsA`), procura `<unidade de CD>\cm0102.exe` (`_findfirst`) e, se não acha, mostra "Please insert the CM01/02 CD" e repete. Correção: o início de cada laço vira um salto para o caminho de "achou". Outras duas cópias, ligadas ao `auto_setup.cfg`, só mostram "CD Not Required" quando o CD está presente; ficaram como estão.
+1. **CD.** A checagem foi copiada em **33 lugares** do código. Cada cópia percorre as unidades (`GetLogicalDriveStringsA`), procura `<unidade de CD>\cm0102.exe` (`_findfirst`) e, se não acha, mostra "Please insert the CM01/02 CD" e repete. Correção: o laço roda inteiro, mas a primeira unidade conta como CD (o `jne` após `cmp eax, 5` vira NOPs) e o `_findfirst` conta como achado (`test eax, eax` → `xor eax, eax`).
+   - **Lição:** a primeira versão saltava do início do laço direto para o caminho de "achou". Em 0x62a680 (histórico de lesões, `injury.cpp`) esse caminho usa `esi` como 0, e quem zera `esi` é o próprio laço (0x62a6f8). Com o salto, o objeto era montado com lixo e o jogo travava depois, ao carregar os dados de um jogo novo (0x62d471). Regra: num desvio, não pular código cujo efeito colateral o resto da rotina usa; preferir mudar só o resultado. Outras duas cópias, ligadas ao `auto_setup.cfg`, só mostram "CD Not Required" quando o CD está presente; ficaram como estão.
 2. **Pasta.** O `WinMain` abre `HKLM\Software\Sports Interactive Ltd\Championship Manager 01-02` pedindo **acesso total** (`KEY_ALL_ACCESS`) e faz `chdir` para o valor `Location`. Sem administrador o Windows nega, o `chdir` não acontece e, fora da pasta do jogo, ele para em `Langlib.cpp 479` (o antigo "erro do registro"). Correção: `chdir` para a pasta do próprio exe (`GetModuleFileNameA`).
 3. **`game.cfg`.** Guarda o caminho absoluto da pasta do usuário. Se a pasta antiga ainda existir, os saves vão para ela. Correção: o caminho gravado é ignorado e vale sempre a pasta do jogo.
 
-Testado sem a ISO montada e com o jogo aberto a partir de outra pasta: chega ao menu e à escolha de campeonatos.
+Testado sem a ISO montada e com o jogo aberto a partir de outra pasta; com a correção do CD acima, o Lucas iniciou uma temporada e salvou o jogo sem erro.
+
+## 3a. Resolução nativa (`engenharia-reversa/resolucao.py`)
+
+O layout das telas é fixo no exe. O `CM0102Patcher` mapeou como mudá-lo; a ferramenta lê os dados de `referencias/CM0102Patcher` (não os copia):
+1. patch `to1280x800` (192 trechos: prepara o exe para telas maiores e troca os nomes dos fundos para `Data\bkg1280_800.rgn`, `Data\g800.mbr`, `Data\m800.mbr`);
+2. patch `tapanispacemaker` (5 trechos);
+3. constantes de largura/altura (74) e 11 valores de layout calibrados por resolução (`ResolutionChanger.cs`; existem para 720×480 até 1920×1080).
+
+Antes de escrever, confere que cada trecho ainda tem os bytes originais do 3.9.68 (nenhum colide com as correções do exe portátil). As imagens são convertidas preservando o formato de cor de cada arquivo (os `.rgn` são RGB565; os `.mbr` das barras laterais são **RGB555**), com recorte central para não distorcer.
+
+**1920×1080 funciona** (`cm0102-1080.exe`): o Lucas iniciou uma temporada e salvou. Os elementos da interface mantêm o tamanho em pixels de 2001; a resolução maior dá mais área útil, não letras maiores.
+
+Pendência: as fotos de fundo (`Pictures\`) ficam numa pasta só, e cada resolução precisa das suas. Por ora o jogo roda com a troca de fundos desligada nas definições; a ideia é a camada de vídeo ajustar a foto à resolução sozinha.
 
 ## 4. Vídeo e a "piscada" da tela
 
@@ -90,6 +104,6 @@ O exe importa `DirectDrawCreate` da `ddraw.dll`, e o Windows procura a DLL prime
 - em tela cheia, as mensagens de mouse são convertidas de volta para coordenadas 800×600 (subclasse do procedimento da janela);
 - `ChangeDisplaySettingsA` é desviado na IAT do exe (primeiro desvio no executável) e não faz nada.
 
-Em janela, a janela fica **redimensionável** (borda e maximizar): o quadro acompanha com escala proporcional (vizinho mais próximo em fator inteiro, suavizada em fator fracionário) e o mouse é convertido. O tamanho escolhido (fim de arrastar a borda, maximizar/restaurar) fica em `jogo/janela.cfg` (`largura altura maximizada`) e é reaplicado na abertura e sempre que o jogo reinicia o vídeo. Isso acontece, por exemplo, ao entrar em "Iniciar Novo Jogo", quando ele mesmo devolve a janela a 800×600.
+Em janela, a janela fica **redimensionável** (borda e maximizar): o quadro acompanha com escala proporcional (vizinho mais próximo em fator inteiro, suavizada em fator fracionário) e o mouse é convertido. O tamanho e a posição escolhidos (fim de arrastar ou mover, maximizar/restaurar) ficam em `jogo/janela.cfg` (`largura altura maximizada x y`) e são reaplicados na abertura e sempre que o jogo reinicia o vídeo. Isso acontece ao entrar em "Iniciar Novo Jogo" e ao salvar, quando ele mesmo devolve a janela ao tamanho nativo, no centro da tela.
 
 Medido com `escuta_tela.py`: nenhuma reconfiguração de tela em janela, em tela cheia, nem na troca entre os dois. Só vale para `cm0102.exe`/`cm0102-portatil.exe`; a versão GDI não usa DirectDraw.
