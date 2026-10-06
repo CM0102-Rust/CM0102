@@ -65,6 +65,9 @@ extern "system" {
     pub fn AdjustWindowRectEx(r: *mut RECT, estilo: u32, menu: i32, estilo_ex: u32) -> i32;
     pub fn IsZoomed(hwnd: HWND) -> i32;
     pub fn ShowWindow(hwnd: HWND, modo: i32) -> i32;
+    pub fn PeekMessageA(msg: *mut [u32; 7], hwnd: HWND, min: u32, max: u32, remover: u32) -> i32;
+    pub fn TranslateMessage(msg: *const [u32; 7]) -> i32;
+    pub fn DispatchMessageA(msg: *const [u32; 7]) -> isize;
     pub fn SetWindowPos(hwnd: HWND, depois: HWND, x: i32, y: i32, w: i32, h: i32, flags: u32) -> i32;
 }
 

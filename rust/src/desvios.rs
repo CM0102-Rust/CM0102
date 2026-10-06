@@ -39,7 +39,7 @@ pub static ISOLAR: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool
 /// Trecho de entrada: grava o retorno; se ja estiver na pilha particular (chamada aninhada), so
 /// salta; senao troca de pilha, copia os argumentos, chama `destino` e volta descontando os
 /// argumentos que a rotina retirou (vale para cdecl, stdcall e thiscall; ecx = this e preservado).
-unsafe fn isolar(destino: usize) -> usize {
+pub unsafe fn isolar(destino: usize) -> usize {
     static TOPO: std::sync::OnceLock<u32> = std::sync::OnceLock::new();
     let topo = *TOPO.get_or_init(|| {
         // Endereco fixo, logo abaixo das regioes do alocador: enderecos de pilha nao podem variar.
@@ -174,6 +174,10 @@ pub unsafe fn instalar() {
         return;
     }
     // CM_AUTOTESTE=1 liga o modo comparacao; os autotestes em si rodam depois (ver `autotestes`).
+    // Uma queda no autoteste fica registrada no ddraw.log (endereco e registradores).
+    if win::ambiente("CM_AUTOTESTE") {
+        win::AddVectoredExceptionHandler(1, crate::simulacao::registrar_excecao);
+    }
     let comparar = win::ambiente("CM_COMPARAR") || win::ambiente("CM_AUTOTESTE");
     aleatorio::instalar(if comparar { aleatorio::Modo::Comparar } else { aleatorio::Modo::Rust });
     data::instalar(comparar);

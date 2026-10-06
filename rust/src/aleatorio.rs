@@ -44,6 +44,17 @@ thread_local! {
     static CONTAR: Cell<bool> = const { Cell::new(true) };
 }
 
+/// Roda `f` sem contar os sorteios dela (replica Rust de rotinas que sorteiam, no modo comparacao).
+pub fn sem_contar<R>(f: impl FnOnce() -> R) -> R {
+    let antes = CONTAR.with(|c| c.replace(false));
+    let r = f();
+    CONTAR.with(|c| c.set(antes));
+    r
+}
+
+/// Estado do gerador (deslocamento e ponteiro da tabela, rand da CRT): regioes para `lado_a_lado`.
+pub const REGIOES_DO_ESTADO: [(usize, usize); 2] = [(0xde1f5c, 8), (0xad6c30, 4)];
+
 unsafe fn contar(n: i32) {
     if CONTAR.with(|c| c.get()) {
         simulacao::sorteio(n, *PONTEIRO, *DESLOCAMENTO, *ESTADO_RAND);

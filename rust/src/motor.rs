@@ -16,7 +16,7 @@ use crate::comparacao::{Placar, Sorteio};
 use crate::desvios::{self, Prologo};
 use crate::registro::linha;
 
-const PROLOGOS: [Prologo; 7] = [
+const PROLOGOS: [Prologo; N] = [
     // 0x6c38c0: mov edx, dword ptr [esp + 4]; mov al, byte ptr [edx + 0x19]
     Prologo { endereco: 0x6c38c0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x8a, 0x42, 0x19] },
     // 0x6c38f0: mov edx, dword ptr [esp + 4]; mov al, byte ptr [edx + 0x19]
@@ -31,7 +31,26 @@ const PROLOGOS: [Prologo; 7] = [
     Prologo { endereco: 0x6cb930, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x01] },
     // 0x70dfa0: mov al, byte ptr [ecx + 0x27]; mov dl, 6
     Prologo { endereco: 0x70dfa0, bytes: &[0x8a, 0x41, 0x27, 0xb2, 0x06] },
+    // 0x717410: mov eax, ecx; mov ecx, dword ptr [eax + 0x19e]
+    Prologo { endereco: 0x717410, bytes: &[0x8b, 0xc1, 0x8b, 0x88, 0x9e, 0x01, 0x00, 0x00] },
+    // 0x6c4130: push ebx; push esi; mov esi, ecx; mov ecx, dword ptr [esp + 0xc]
+    Prologo { endereco: 0x6c4130, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x4c, 0x24, 0x0c] },
+    // 0x6cfda0: push esi; mov esi, dword ptr [esp + 8]
+    Prologo { endereco: 0x6cfda0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
+    // 0x70df40: mov al, byte ptr [ecx + 0x27]; cmp al, 1
+    Prologo { endereco: 0x70df40, bytes: &[0x8a, 0x41, 0x27, 0x3c, 0x01] },
+    // 0x6f5b20: mov al, byte ptr [esp + 4]; cmp al, 1
+    Prologo { endereco: 0x6f5b20, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x01] },
+    // 0x5b57c0: movsx eax, byte ptr [esp + 4]
+    Prologo { endereco: 0x5b57c0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
+    // 0x6f4600: push esi; mov esi, ecx; mov al, byte ptr [esi + 0x19]
+    Prologo { endereco: 0x6f4600, bytes: &[0x56, 0x8b, 0xf1, 0x8a, 0x46, 0x19] },
+    // 0x6bce20: push esi; mov esi, ecx; mov ecx, dword ptr [esp + 8]
+    Prologo { endereco: 0x6bce20, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x4c, 0x24, 0x08] },
+    // 0x6f4920: mov dl, byte ptr [esp + 0x10]; push ebx
+    Prologo { endereco: 0x6f4920, bytes: &[0x8a, 0x54, 0x24, 0x10, 0x53] },
 ];
+const N: usize = 16;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -95,9 +114,134 @@ unsafe extern "thiscall" fn condicao_jogador(this: usize) -> u8 {
     (if lado == 1 && v >= 6 { true } else { lado == 0 && v < 6 }) as u8
 }
 
+/// { 0x714d30 } (match_pl.cpp, 4 bytes, nao desviavel): lado do jogador. Lido direto.
+unsafe fn lado(jogador: usize) -> i8 {
+    byte(jogador, 0x27)
+}
+
+/// { 0x717410 } (match_pl.cpp): `tabela_a` do motor do jogador (campo 0x19e), ou 0 sem motor.
+/// Chama 0x6c38c0 pelo endereco do jogo (Rust ou original, conforme o modo).
+unsafe extern "thiscall" fn tabela_do_jogador(jogador: usize) -> u16 {
+    let motor = *((jogador + 0x19e) as *const usize);
+    if motor == 0 {
+        return 0;
+    }
+    let f: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+    f(motor, jogador)
+}
+
+/// { 0x6c4130 } (match_eng.cpp): como `diferenca_lado`, com o valor e o lado tirados do jogador;
+/// 0 se o jogador for o guardado em 0xf582.
+unsafe extern "thiscall" fn diferenca_jogador(this: usize, jogador: usize) -> u8 {
+    if jogador == *((this + 0xf582) as *const usize) {
+        return 0;
+    }
+    let v = byte(jogador, 0x103) as u8;
+    if lado(jogador) == 1 {
+        (byte(this, 0x8eb0) as u8).wrapping_sub(v)
+    } else {
+        v.wrapping_sub(byte(this, 0x8eaf) as u8)
+    }
+}
+
+/// { 0x6cfda0 } (match_eng.cpp)
+unsafe extern "thiscall" fn byte_do_lado(this: usize, jogador: usize) -> u8 {
+    let s = lado(jogador);
+    let f: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    if f(jogador) == 1 {
+        if s == 1 {
+            return byte(this, 0x8ead) as u8;
+        }
+        if s == 0 {
+            return byte(this, 0x8eac) as u8;
+        }
+    }
+    let guardado = *((this + if s == 1 { 0xf58a } else { 0xf586 }) as *const usize);
+    (jogador == guardado) as u8
+}
+
+/// { 0x70df40 } (match_pl.cpp): como `limite`, com o lado e o valor do proprio jogador.
+unsafe extern "thiscall" fn limite_jogador(this: usize) -> u8 {
+    let (s, v) = (byte(this, 0x27), byte(this, 0x103));
+    (if s == 1 && v < 3 { true } else { s == 0 && v > 8 }) as u8
+}
+
+/// { 0x6f5b20 } (match_pl.cpp): como `faixa`, com os campos 0x102/0x103 do jogador. Devolve eax inteiro.
+unsafe extern "thiscall" fn faixa_jogador(this: usize, lado: u8) -> u32 {
+    let (b, c) = (byte(this, 0x102), byte(this, 0x103));
+    let alvo = if lado == 1 { 10..=11 } else { 0..=1 };
+    ((2..=6).contains(&b) && alvo.contains(&c)) as u32
+}
+
+/// { 0x5b57c0 }: byte `i` de uma tabela em +0x5b4 (por posicao; ver 0x6f4600).
+unsafe extern "thiscall" fn byte_da_posicao(this: usize, i: i8) -> u8 {
+    *((this as isize + 0x5b4 + i as isize) as *const u8)
+}
+
+/// { 0x6f4600 } (match_pl.cpp): pela marca da posicao do jogador (bit 2 do byte de 0x5b57c0 no
+/// bloco do lado dele dentro do motor: 0x91e2 + 6371 x lado), devolve o campo 0x10a ou o 0x108.
+unsafe extern "thiscall" fn campo_pela_posicao(this: usize) -> u8 {
+    let motor = *((this + 0x19e) as *const usize);
+    let bloco = (motor as isize + 0x91e2 + 6371 * lado(this) as isize) as usize;
+    let f: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x5b57c0usize);
+    if f(bloco, byte(this, 0x19)) & 2 != 0 { byte(this, 0x10a) as u8 } else { byte(this, 0x108) as u8 }
+}
+
+/// { 0x6bce20 } (match_eng.cpp): 1 se o jogador pode ser escolhido (fora do ponto (b, c), campo
+/// 0x2b abaixo de 2, nao e um dos guardados em 0xf582/0xf57a, 0x6f4600 nao zero e 0x8eb2 zerado).
+/// Devolve eax inteiro.
+unsafe extern "thiscall" fn pode_escolher(this: usize, j: usize, b: i8, c: i8) -> u32 {
+    if j == 0 || (byte(j, 0x102) == b && byte(j, 0x103) == c) || byte(j, 0x2b) >= 2 {
+        return 0;
+    }
+    if j == *((this + 0xf582) as *const usize) || j == *((this + 0xf57a) as *const usize) {
+        return 0;
+    }
+    let f: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x6f4600usize);
+    (f(j) != 0 && byte(this, 0x8eb2) == 0) as u32
+}
+
+unsafe fn sortear(n: i32) -> i32 {
+    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    f(n)
+}
+
+/// { 0x6f4920 } (match_pl.cpp): direcao do jogador em graus, campo 0x19a (0..=359), de (a, b)
+/// para (c, d). Mesmo ponto: sorteia 0..359 (salvo dois casos fixos: 0 e 180 graus). Depois
+/// um desvio sorteado (+-30) quando 0x10c x 0x105 < sorteio(120), e a diferenca de dois
+/// atributos do registro da pessoa (0x3b - 0x30, vezes 2).
+unsafe extern "thiscall" fn apontar(this: usize, a: i8, b: i8, c: i8, d: i8) {
+    let dir = (this + 0x19a) as *mut u16;
+    let (dl, dc) = (c.wrapping_sub(a), d.wrapping_sub(b));
+    *dir = if dl == 0 && dc == 0 {
+        match (d, c) {
+            (11, 4) => 0,
+            (0, 4) => 180,
+            _ => sortear(0x168) as u16,
+        }
+    } else {
+        *((TABELA_GLOBAL as isize + 2 * (dl as isize * 24 + dc as isize)) as *const u16)
+    };
+    let (x, y) = (byte(this, 0x10c) as i32, byte(this, 0x105) as i32);
+    if x * y < sortear(0x78) {
+        let p = sortear(0x1e);
+        let q = sortear(0x1e);
+        *dir = dir.read().wrapping_add(p.wrapping_sub(q) as u16);
+    }
+    let pessoa = *((this + 0x6d) as *const usize);
+    let ajuste = (byte(pessoa, 0x3b) as i16).wrapping_sub(byte(pessoa, 0x30) as i16).wrapping_mul(2);
+    *dir = dir.read().wrapping_add(ajuste as u16);
+    let v = *dir as i16;
+    if v < 0 {
+        *dir = v.wrapping_add(0x168) as u16;
+    } else if v > 0x167 {
+        *dir = v.wrapping_sub(0x168) as u16;
+    }
+}
+
 // ---------- comparacao ----------
 
-static mut ORIGINAIS: [usize; 7] = [0; 7];
+static mut ORIGINAIS: [usize; N] = [0; N];
 static PLACAR: Placar = Placar::novo("motor");
 
 unsafe fn orig<F: Copy>(i: usize) -> F {
@@ -147,8 +291,70 @@ unsafe extern "thiscall" fn comparar_condicao(this: usize) -> u8 {
     r
 }
 
+unsafe extern "thiscall" fn comparar_tabela_do_jogador(j: usize) -> u16 {
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u16>(7)(j);
+    let n = tabela_do_jogador(j);
+    PLACAR.registrar(r == n, || format!("tabela_do_jogador(motor {:#x}) original={} rust={}", *((j + 0x19e) as *const usize), r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_diferenca_jogador(this: usize, j: usize) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(8)(this, j);
+    let n = diferenca_jogador(this, j);
+    PLACAR.registrar(r == n, || format!("diferenca_jogador(lado {}, v {}) original={} rust={}", lado(j), byte(j, 0x103), r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_byte_do_lado(this: usize, j: usize) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(9)(this, j);
+    let n = byte_do_lado(this, j);
+    PLACAR.registrar(r == n, || format!("byte_do_lado(lado {}) original={} rust={}", lado(j), r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_limite_jogador(this: usize) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u8>(10)(this);
+    let n = limite_jogador(this);
+    PLACAR.registrar(r == n, || format!("limite_jogador(lado {}, v {}) original={} rust={}", lado(this), byte(this, 0x103), r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_faixa_jogador(this: usize, l: u8) -> u32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, u8) -> u32>(11)(this, l);
+    let n = faixa_jogador(this, l);
+    PLACAR.registrar(r == n, || format!("faixa_jogador({}, {}, {}) original={} rust={}", l, byte(this, 0x102), byte(this, 0x103), r, n));
+    r
+}
+
+unsafe extern "thiscall" fn comparar_byte_da_posicao(this: usize, i: i8) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, i8) -> u8>(12)(this, i);
+    let n = byte_da_posicao(this, i);
+    PLACAR.registrar(r == n, || format!("byte_da_posicao({}) original={} rust={}", i, r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_campo_pela_posicao(this: usize) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u8>(13)(this);
+    let n = campo_pela_posicao(this);
+    PLACAR.registrar(r == n, || format!("campo_pela_posicao(lado {}, pos {}) original={} rust={}", lado(this), byte(this, 0x19), r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_pode_escolher(this: usize, j: usize, b: i8, c: i8) -> u32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, i8, i8) -> u32>(14)(this, j, b, c);
+    let n = pode_escolher(this, j, b, c);
+    PLACAR.registrar(r == n, || format!("pode_escolher({}, {}) original={} rust={}", b, c, r, n));
+    r
+}
+/// Sorteia: original e Rust partem do mesmo estado do gerador e o jogo segue com o da original.
+unsafe extern "thiscall" fn comparar_apontar(this: usize, a: i8, b: i8, c: i8, d: i8) {
+    let f = orig::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8)>(15);
+    let mut regioes = vec![(this + 0x19a, 2)];
+    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(
+        &regioes,
+        || f(this, a, b, c, d),
+        || crate::aleatorio::sem_contar(|| apontar(this, a, b, c, d)),
+    );
+    PLACAR.registrar(igual, || format!("apontar({}, {}, {}, {}) original={:x?} rust={:x?}", a, b, c, d, mo, mr));
+}
+
 pub unsafe fn instalar(comparando: bool) {
-    let rust: [usize; 7] = [
+    let rust: [usize; N] = [
         tabela_a as *const () as usize,
         tabela_b as *const () as usize,
         diferenca_lado as *const () as usize,
@@ -156,8 +362,17 @@ pub unsafe fn instalar(comparando: bool) {
         por_diferenca as *const () as usize,
         limite as *const () as usize,
         condicao_jogador as *const () as usize,
+        tabela_do_jogador as *const () as usize,
+        diferenca_jogador as *const () as usize,
+        byte_do_lado as *const () as usize,
+        limite_jogador as *const () as usize,
+        faixa_jogador as *const () as usize,
+        byte_da_posicao as *const () as usize,
+        campo_pela_posicao as *const () as usize,
+        pode_escolher as *const () as usize,
+        apontar as *const () as usize,
     ];
-    let comp: [usize; 7] = [
+    let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
         comparar_tabela_b as *const () as usize,
         comparar_diferenca as *const () as usize,
@@ -165,9 +380,23 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_por_diferenca as *const () as usize,
         comparar_limite as *const () as usize,
         comparar_condicao as *const () as usize,
+        comparar_tabela_do_jogador as *const () as usize,
+        comparar_diferenca_jogador as *const () as usize,
+        comparar_byte_do_lado as *const () as usize,
+        comparar_limite_jogador as *const () as usize,
+        comparar_faixa_jogador as *const () as usize,
+        comparar_byte_da_posicao as *const () as usize,
+        comparar_campo_pela_posicao as *const () as usize,
+        comparar_pode_escolher as *const () as usize,
+        comparar_apontar as *const () as usize,
     ];
-    let nomes = ["motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite", "motor_condicao_jogador"];
-    for i in 0..7 {
+    let nomes = [
+        "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
+        "motor_condicao_jogador", "motor_tabela_do_jogador", "motor_diferenca_jogador", "motor_byte_do_lado",
+        "motor_limite_jogador", "motor_faixa_jogador", "motor_byte_da_posicao", "motor_campo_pela_posicao",
+        "motor_pode_escolher", "motor_apontar",
+    ];
+    for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
             ORIGINAIS[i] = t;
         }
@@ -189,9 +418,11 @@ pub unsafe fn instalar_passagem() {
 /// comparacao, que chamam a original e a versao Rust com as mesmas entradas.
 pub unsafe fn autoteste(casos: u64) {
     let mut s = Sorteio(0x4d4f544f52);
-    let mut motor = vec![0u8; 0x8ee0];
+    let mut motor = vec![0u8; 0xf590];
     let mut tabelas = vec![vec![0u16; 11]; 4];
-    let mut jogador = vec![0u8; 0x110];
+    let mut jogador = vec![0u8; 0x1a4];
+    let outro = vec![0u8; 0x1a4];
+    let mut pessoa = vec![0u8; 0x46];
     PLACAR.autoteste(|| {
         for _ in 0..casos {
             for t in tabelas.iter_mut() {
@@ -226,6 +457,63 @@ pub unsafe fn autoteste(casos: u64) {
             let (a, b) = ((z % 20) as i8, ((z >> 8) % 20) as i8);
             let (c, d) = (a + ((z >> 16) % 11) as i8 - 5, b + ((z >> 24) % 11) as i8 - 5);
             comparar_por_diferenca(m, a, b, c, d);
+            // rotinas que tiram lado e valores do proprio jogador
+            let w = s.proximo();
+            *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][(w % 4) as usize];
+            *((j + 0x19) as *mut i8) = ((w >> 4) % 15) as i8 - 2;
+            *((j + 0x102) as *mut i8) = ((w >> 8) % 10) as i8 - 1;
+            *((j + 0x103) as *mut i8) = ((w >> 12) % 15) as i8 - 2;
+            let o = outro.as_ptr() as usize;
+            for (campo, bit) in [(0xf582usize, 20), (0xf586, 22), (0xf58a, 24)] {
+                *((m + campo) as *mut usize) = if (w >> bit) & 1 == 1 { j } else { o };
+            }
+            *((j + 0x19e) as *mut usize) = if (w >> 26) % 4 == 0 { 0 } else { m };
+            *((m + 0x8eac) as *mut u8) = (w >> 32) as u8;
+            *((m + 0x8ead) as *mut u8) = (w >> 40) as u8;
+            comparar_diferenca_jogador(m, j);
+            comparar_limite_jogador(j);
+            comparar_faixa_jogador(j, lado);
+            // as que passam por 0x6c38c0 so recebem lado 0 ou 1 (indice da tabela do lado)
+            let lado_real = *((j + 0x27) as *const i8);
+            *((j + 0x27) as *mut i8) = ((w >> 16) % 2) as i8;
+            comparar_tabela_do_jogador(j);
+            comparar_byte_do_lado(m, j);
+            // terceira leva (com o lado 0 ou 1 ainda valendo: 0x6f4600 indexa o bloco do lado).
+            // 0x6f4600 sempre tem motor (com 0x19e zerado a original le o endereco 0 e cai).
+            *((j + 0x19e) as *mut usize) = m;
+            let u = s.proximo();
+            for k in 0..16 {
+                *((m + 0x91e2 + 6371 * ((j + 0x27) as *const u8).read() as usize + 0x5b4 + k) as *mut u8) = (u >> (k * 4)) as u8;
+            }
+            *((j + 0x108) as *mut u8) = (u >> 3) as u8;
+            *((j + 0x10a) as *mut u8) = (u >> 11) as u8;
+            *((j + 0x2b) as *mut i8) = ((u >> 19) % 5) as i8 - 1;
+            *((m + 0x8eb2) as *mut u8) = ((u >> 22) % 3 == 0) as u8;
+            *((m + 0xf57a) as *mut usize) = if (u >> 24) % 5 == 0 { j } else { o };
+            *((j + 0x19) as *mut i8) = ((u >> 27) % 11) as i8;
+            comparar_byte_da_posicao(m + 0x91e2, ((u >> 31) % 16) as i8);
+            comparar_campo_pela_posicao(j);
+            comparar_pode_escolher(m, if (u >> 33) % 8 == 0 { 0 } else { j }, ((u >> 36) % 10) as i8 - 1, ((u >> 40) % 15) as i8 - 2);
+            *((j + 0x27) as *mut i8) = lado_real;
+            // direcao: coordenadas vizinhas (inclusive o mesmo ponto e os casos fixos), atributos
+            let v = s.proximo();
+            let pp = pessoa.as_mut_ptr() as usize;
+            *((j + 0x6d) as *mut usize) = pp;
+            *((pp + 0x30) as *mut i8) = ((v >> 4) % 21) as i8;
+            *((pp + 0x3b) as *mut i8) = ((v >> 9) % 21) as i8;
+            *((j + 0x10c) as *mut i8) = ((v >> 14) % 21) as i8;
+            *((j + 0x105) as *mut i8) = ((v >> 19) % 21) as i8;
+            *((j + 0x19a) as *mut u16) = (v >> 24) as u16;
+            let (a, b) = (((v >> 40) % 12) as i8, ((v >> 44) % 12) as i8);
+            let (c, d) = if v % 3 == 0 {
+                (a, b) // mesmo ponto
+            } else if v % 3 == 1 {
+                ([4i8, 4, 3][((v >> 48) % 3) as usize], [0i8, 11, 5][((v >> 50) % 3) as usize])
+            } else {
+                (a + ((v >> 52) % 11) as i8 - 5, b + ((v >> 56) % 11) as i8 - 5)
+            };
+            let (a, b) = if v % 3 == 1 { (c, d) } else { (a, b) };
+            comparar_apontar(j, a, b, c, d);
         }
     });
 }

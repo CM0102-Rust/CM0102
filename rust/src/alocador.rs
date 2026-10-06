@@ -190,6 +190,12 @@ unsafe extern "system" fn heap_destroy(h: usize) -> i32 {
     1
 }
 
+/// Parte usada da regiao do jogo (inicio, topo), para o hash diario da simulacao.
+pub fn regiao_do_jogo() -> (usize, usize) {
+    let a = HEAP.lock().unwrap_or_else(|e| e.into_inner());
+    (a.inicio, a.topo)
+}
+
 /// Pico de uso da regiao (bytes), para o registro da simulacao.
 pub fn pico() -> usize {
     HEAP.lock().unwrap_or_else(|e| e.into_inner()).pico

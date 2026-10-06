@@ -108,12 +108,70 @@ unsafe fn hash_pessoas() -> u64 {
         .fold(0xcbf29ce484222325u64, |h, &b| (h ^ b as u64).wrapping_mul(0x100000001b3))
 }
 
+/// Mapa diario da memoria em jogo\memoria.log (com o rastro ligado): uma linha por dia com o hash
+/// de cada bloco de 4 KB da .data e de 64 KB da heap. Comparando execucoes, separa o ruido (blocos
+/// que variam ate entre execucoes iguais) do primeiro dado que diverge de verdade.
+unsafe fn mapa_da_memoria() {
+    use std::io::Write;
+    static ARQ: std::sync::Mutex<Option<std::io::BufWriter<std::fs::File>>> = std::sync::Mutex::new(None);
+    let mut g = ARQ.lock().unwrap_or_else(|e| e.into_inner());
+    if g.is_none() {
+        let caminho = std::env::current_exe().map(|p| p.with_file_name("memoria.log")).unwrap_or_default();
+        *g = std::fs::File::create(caminho).ok().map(std::io::BufWriter::new);
+    }
+    let Some(f) = g.as_mut() else { return };
+    let [d, a] = *DATA_ATUAL;
+    let mut linha = format!("{}-{:03}", a, d);
+    let mut b = 0x987000;
+    while b < 0xde4000 {
+        linha.push_str(&format!(" d{:x}:{:x}", b, hash_memoria(b, b + 0x1000) as u32));
+        b += 0x1000;
+    }
+    let (ini, topo) = crate::alocador::regiao_do_jogo();
+    let mut b = ini;
+    while ini != 0 && b + 0x10000 <= topo {
+        linha.push_str(&format!(" h{:x}:{:x}", b, hash_memoria(b, b + 0x10000) as u32));
+        b += 0x10000;
+    }
+    let _ = writeln!(f, "{}", linha);
+    let _ = f.flush();
+}
+
+/// Hash rapido de um trecho de memoria (palavras de 8 bytes).
+unsafe fn hash_memoria(inicio: usize, fim: usize) -> u64 {
+    core::slice::from_raw_parts(inicio as *const u64, (fim - inicio) / 8)
+        .iter()
+        .fold(0xcbf29ce484222325u64, |h, &w| (h ^ w).wrapping_mul(0x100000001b3).rotate_left(17))
+}
+
+/// Com o rastro ligado, o diario ganha o hash de toda a memoria do jogo (heap fixa e .data do exe,
+/// 0x987000..0xde463c): acha o primeiro dia em que qualquer dado diverge, antes de chegar ao sorteio.
+unsafe fn hash_do_jogo() -> String {
+    if rastro().is_none() {
+        return String::new();
+    }
+    mapa_da_memoria();
+    let (ini, topo) = crate::alocador::regiao_do_jogo();
+    format!(" heap={:016x} dados={:016x}", if ini == 0 { 0 } else { hash_memoria(ini, topo & !7) }, hash_memoria(0x987000, 0xde4638))
+}
+
 pub unsafe fn sorteio(pedido: i32, ponteiro: u32, deslocamento: i32, rand: u32) {
     let n = SORTEIOS.fetch_add(1, Ordering::Relaxed);
     let Some((ano, dia)) = alvo() else { return };
     conferir_thread("aleatorio");
     let [d, a] = *DATA_ATUAL;
     if let Some((ra, rd)) = rastro() {
+        // Primeira chamada do dia do rastro: retrato da memoria (.data inteira e hash por bloco da heap).
+        static RETRATO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+        if (a, d) == (ra, rd) && !RETRATO.swap(true, Ordering::Relaxed) {
+            let pasta = std::env::current_exe().map(|p| p.with_file_name("dados.bin")).unwrap_or_default();
+            let _ = std::fs::write(pasta, core::slice::from_raw_parts(0x987000 as *const u8, 0xde4638 - 0x987000));
+            let (ini, topo) = crate::alocador::regiao_do_jogo();
+            if ini != 0 {
+                let heap = std::env::current_exe().map(|p| p.with_file_name("heap.bin")).unwrap_or_default();
+                let _ = std::fs::write(heap, core::slice::from_raw_parts(ini as *const u8, topo - ini));
+            }
+        }
         if (a, d) == (ra, rd) {
             escrever_rastro(&format!("{} n={} chamador={:#x} ponteiro={:#x} deslocamento={:#x} rand={:#x}", n, pedido, { crate::desvios::RETORNO }, ponteiro, deslocamento, rand));
         } else if (a, d) > (ra, rd) {
@@ -124,8 +182,8 @@ pub unsafe fn sorteio(pedido: i32, ponteiro: u32, deslocamento: i32, rand: u32) 
     static ULTIMO_DIA: AtomicU64 = AtomicU64::new(0);
     let hoje = (a as u64) << 16 | d as u64;
     if ULTIMO_DIA.swap(hoje, Ordering::Relaxed) != hoje {
-        linha(&format!("dia {}-{:03} sorteios={} ponteiro={:#x} deslocamento={:#x} rand={:#x} pessoas={:016x} relogios={:?}", a, d, n, ponteiro, deslocamento, rand, hash_pessoas(),
-            RELOGIOS.iter().map(|r| r.load(Ordering::Relaxed)).collect::<Vec<_>>()));
+        linha(&format!("dia {}-{:03} sorteios={} ponteiro={:#x} deslocamento={:#x} rand={:#x} pessoas={:016x} relogios={:?}{}", a, d, n, ponteiro, deslocamento, rand, hash_pessoas(),
+            RELOGIOS.iter().map(|r| r.load(Ordering::Relaxed)).collect::<Vec<_>>(), hash_do_jogo()));
     }
     if (a, d) < (ano, dia) || a < 1900 {
         return;
@@ -290,12 +348,47 @@ fn despejar_cobertura() {
     }
 }
 
+// ---------- mensagens ----------
+
+/// PeekMessageA do jogo na simulacao: esvazia a fila de verdade (a janela segue respondendo ao
+/// Windows, inclusive a mensagens enviadas por outros programas) e responde sempre "nenhuma".
+/// Roda na pilha particular (instalada pela IAT atras de `desvios::isolar`): o codigo do Windows
+/// que trata as mensagens deixava lixo na pilha do jogo em momentos que dependem do relogio, e o
+/// jogo le variaveis nao inicializadas (26/12/2001, treino: carreira mudava em 1 de cada 4-6
+/// execucoes com o gerador identico ate o ponto da divergencia).
+unsafe extern "system" fn peek_isolado(_msg: *mut [u32; 7], _hwnd: usize, _min: u32, _max: u32, _remover: u32) -> i32 {
+    let mut m = [0u32; 7];
+    while crate::win::PeekMessageA(&mut m, core::ptr::null_mut(), 0, 0, 1) != 0 {
+        crate::win::TranslateMessage(&m);
+        crate::win::DispatchMessageA(&m);
+    }
+    0
+}
+
+/// Toda funcao do Windows chamada pelo jogo roda na pilha particular (`desvios::isolar` em cada
+/// entrada da IAT, inclusive as ja trocadas acima). O codigo do Windows deixava na pilha do jogo
+/// valores que mudam a cada execucao (enderecos da heap do processo, alcas) e o jogo le variaveis
+/// nao inicializadas: a carreira com o motor ligado mudava em metade das execucoes (26/12/2001,
+/// treino). Assim a pilha do jogo so ve o que o proprio jogo escreve. Ficam de fora as funcoes de
+/// excecao e de encerramento, que precisam da pilha real.
+unsafe fn isolar_importacoes() {
+    const FORA: [&str; 6] = ["RaiseException", "RtlUnwind", "ExitProcess", "TerminateProcess", "UnhandledExceptionFilter", "SetUnhandledExceptionFilter"];
+    let n = crate::ganchos::para_cada_importacao(|_dll, nome, atual| {
+        if nome.is_some_and(|n| FORA.contains(&n)) {
+            None
+        } else {
+            Some(crate::desvios::isolar(atual))
+        }
+    });
+    linha(&format!("simulacao: {} funcoes do Windows isoladas na pilha particular", n));
+}
+
 // ---------- excecoes ----------
 
 /// Registra no ddraw.log as excecoes do processo (codigo, endereco, registradores, pilha) e deixa
 /// o tratamento seguir normal. Na simulacao o jogo roda oculto e o Windows nem sempre registra a
 /// queda; assim o endereco fica sempre a mao. So as 8 primeiras (excecoes tratadas tambem passam aqui).
-unsafe extern "system" fn registrar_excecao(info: *const [usize; 2]) -> i32 {
+pub unsafe extern "system" fn registrar_excecao(info: *const [usize; 2]) -> i32 {
     static VISTAS: AtomicU64 = AtomicU64::new(0);
     if VISTAS.fetch_add(1, Ordering::Relaxed) < 8 {
         let (reg, ctx) = ((*info)[0], (*info)[1]);
@@ -319,6 +412,7 @@ pub unsafe fn instalar() {
         // Toda rotina desviada daqui em diante roda na pilha particular e grava quem chamou.
         crate::desvios::ISOLAR.store(true, Ordering::Relaxed);
         crate::win::AddVectoredExceptionHandler(1, registrar_excecao);
+        crate::ganchos::trocar_importacao("USER32.dll", "PeekMessageA", peek_isolado as *const () as usize);
         crate::alocador::instalar();
         if crate::win::ambiente("CM_COBERTURA") {
             instalar_cobertura();
@@ -337,6 +431,7 @@ pub unsafe fn instalar() {
         if let Some(t) = crate::desvios::desviar("rand (observado na simulacao)", &PROLOGO_RAND, rand_observado as *const () as usize) {
             RAND_ORIGINAL = t;
         }
+        isolar_importacoes();
     }
 }
 

@@ -49,6 +49,40 @@ pub unsafe fn trocar_importacao(dll: &str, funcao: &str, nova: usize) -> Option<
     None
 }
 
+/// Visita todas as entradas da IAT do exe: `f(dll, nome ou None se por numero, endereco atual)`;
+/// se devolver Some(novo), a entrada passa a apontar para `novo`. Devolve quantas trocou.
+pub unsafe fn para_cada_importacao(mut f: impl FnMut(&str, Option<&str>, usize) -> Option<usize>) -> usize {
+    let base = win::GetModuleHandleW(core::ptr::null()) as usize;
+    let rd = |off: usize| *((base + off) as *const u32) as usize;
+    let pe = rd(0x3c);
+    let mut desc = base + rd(pe + 0x80);
+    let mut trocadas = 0;
+    while *((desc + 12) as *const u32) != 0 {
+        let dll = cstr(base + *((desc + 12) as *const u32) as usize);
+        let orig = *(desc as *const u32) as usize;
+        let iat = *((desc + 16) as *const u32) as usize;
+        let mut i = 0;
+        loop {
+            let thunk = *((base + orig + i * 4) as *const u32) as usize;
+            if thunk == 0 {
+                break;
+            }
+            let nome = if thunk & 0x8000_0000 == 0 { Some(cstr(base + thunk + 2)) } else { None };
+            let slot = (base + iat + i * 4) as *mut usize;
+            if let Some(novo) = f(dll, nome, *slot) {
+                let mut antiga = 0u32;
+                win::VirtualProtect(slot as *mut c_void, 4, win::PAGE_READWRITE, &mut antiga);
+                *slot = novo;
+                win::VirtualProtect(slot as *mut c_void, 4, antiga, &mut antiga);
+                trocadas += 1;
+            }
+            i += 1;
+        }
+        desc += 20;
+    }
+    trocadas
+}
+
 unsafe fn cstr(p: usize) -> &'static str {
     let mut n = 0;
     while *((p + n) as *const u8) != 0 {
