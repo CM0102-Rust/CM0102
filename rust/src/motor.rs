@@ -112,8 +112,17 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x7003b0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x80, 0xfa, 0xff] },
     Prologo { endereco: 0x714c60, bytes: &[0x8a, 0x91, 0x01, 0x01, 0x00, 0x00] },
     Prologo { endereco: 0x6cd660, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] },
+    // decima terceira leva
+    Prologo { endereco: 0x6cbbb0, bytes: &[0x56, 0x0f, 0xbe, 0x74, 0x24, 0x08] },
+    Prologo { endereco: 0x6cb650, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
+    Prologo { endereco: 0x6cd5f0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
+    Prologo { endereco: 0x6d4280, bytes: &[0x8b, 0x81, 0x92, 0x47, 0x00, 0x00] },
+    Prologo { endereco: 0x6bd6b0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x53] },
+    Prologo { endereco: 0x6c3010, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] },
+    Prologo { endereco: 0x6c3a00, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
+    Prologo { endereco: 0x6c3950, bytes: &[0x51, 0x0f, 0xbe, 0x54, 0x24, 0x08] },
 ];
-const N: usize = 54;
+const N: usize = 62;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -1421,6 +1430,153 @@ unsafe extern "thiscall" fn guardar_extremos(this: usize) {
     }
 }
 
+// ---------- decima terceira leva ----------
+
+/// Bloco de 20 jogadores do lado no motor (0x4796 + 8920 x lado), de 0x1be em 0x1be.
+fn jogador_do_bloco(motor: usize, lado_b: i8, k: usize) -> usize {
+    (motor as isize + 0x4796 + 8920 * lado_b as isize) as usize + k * 0x1be
+}
+
+unsafe fn f717410(p: usize) -> u16 {
+    let f: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    f(p)
+}
+
+unsafe fn f6f09b0(p: usize, a: i8, b: i8) -> f32 {
+    let f: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(0x6f09b0usize);
+    f(p, a, b)
+}
+
+/// { 0x6cbbb0 } (match_eng.cpp): quantos ativos (posicao >= 0) o lado tem; guarda em motor[4 + lado].
+unsafe extern "thiscall" fn contar_ativos(this: usize, lado_b: i8) -> u8 {
+    let n = (0..20).filter(|&k| byte(jogador_do_bloco(this, lado_b, k), 0x19) >= 0).count() as u8;
+    *((this as isize + 4 + lado_b as isize) as *mut u8) = n;
+    n
+}
+
+/// { 0x6cb650 } (match_eng.cpp): 1 para alguns codigos de lance (37, 42..=50, 96, 97), pelo switch
+/// do original (tabelas lidas do exe: indices em 0x6cb680, destinos em 0x6cb678).
+unsafe extern "stdcall" fn codigo_especial(codigo: i8) -> u8 {
+    let i = codigo as i32 - 0x25;
+    if !(0..=0x3c).contains(&i) {
+        return 0;
+    }
+    let caso = *((0x6cb680 + i as usize) as *const u8) as usize;
+    (*((0x6cb678 + 4 * caso) as *const u32) == 0x6cb66c) as u8
+}
+
+/// { 0x6cd5f0 } (match_eng.cpp): o jogador esta atras do extremo guardado do lado dele?
+/// Lado 0: y <= y do menor (0xf58e; sem ele, 12). Outros: y >= y do maior (0xf592; sem ele, -1).
+unsafe extern "thiscall" fn atras_do_extremo(this: usize, j: usize) -> u8 {
+    let y = byte(j, 0x103);
+    if lado(j) == 0 {
+        let p = *((this + 0xf58e) as *const usize);
+        (y <= if p != 0 { byte(p, 0x103) } else { 0xc }) as u8
+    } else {
+        let p = *((this + 0xf592) as *const usize);
+        (y >= if p != 0 { byte(p, 0x103) } else { -1 }) as u8
+    }
+}
+
+/// { 0x6d4280 } (match_eng.cpp): o ponteiro em 0x4792 aponta para -2?
+unsafe extern "thiscall" fn sem_partida(this: usize) -> u8 {
+    (**((this + 0x4792) as *const *const i32) == -2) as u8
+}
+
+/// { 0x6bd6b0 } (match_eng.cpp): pressao sobre a area do lado. Soma os adversarios nas linhas
+/// perto do gol (grade de contagem, lado oposto), pesando mais as mais proximas (6..1), e marca
+/// motor[6 + lado] se a soma (16 bits) passar de sorteio(15) + 30.
+unsafe extern "thiscall" fn pressao_na_area(this: usize, lado_b: i8) {
+    let marca = (this as isize + 6 + lado_b as isize) as *mut u8;
+    *marca = 0;
+    let mut soma: i32 = 0;
+    let celula = |base: usize, coluna: usize| *((base + coluna * 0x438) as *const i8) as i16 as i32;
+    if lado_b == 0 {
+        for linha in (0..=5i32).rev() {
+            let base = this + 0x2379 - (5 - linha) as usize * 0x5a;
+            for c in 0..9 {
+                soma = soma.wrapping_add((celula(base, c) * (6 - linha)) as i16 as i32);
+            }
+        }
+    } else {
+        for linha in 6..12i32 {
+            let base = this + 0x23d2 + (linha - 6) as usize * 0x5a;
+            for c in 0..9 {
+                soma = soma.wrapping_add((celula(base, c) * (linha - 5)) as i16 as i32);
+            }
+        }
+    }
+    let limite = sortear(0xf) + 0x1e;
+    if soma as i16 as i32 > limite {
+        *marca = 1;
+    }
+}
+
+/// { 0x6c3010 } (match_eng.cpp): o jogador e o mais proximo de (a, b) entre os colegas disponiveis
+/// (ativos, diferentes dele, 0x2b = 0)? 0 se algum estiver estritamente mais perto (ou na mesma
+/// distancia, quando ele tem `tabela` 1). Na propria casa (distancia 0) e sem `tabela` 1: 1 direto.
+unsafe extern "thiscall" fn mais_proximo_do_ponto(this: usize, j: usize, a: i8, b: i8) -> u8 {
+    let d = f6f09b0(j, a, b);
+    let zero = f64_em(0x9689a0);
+    if (d as f64 == zero || (d as f64).is_nan()) && f717410(j) != 1 {
+        return 1;
+    }
+    let s = lado(j);
+    for k in 0..20 {
+        let p = jogador_do_bloco(this, s, k);
+        if byte(p, 0x19) < 0 || p == j || byte(p, 0x2b) != 0 {
+            continue;
+        }
+        let dp = f6f09b0(p, a, b);
+        if !(dp >= d) {
+            return 0; // C0: menor ou sem ordem
+        }
+        if f717410(j) == 1 && (dp == d || dp.is_nan()) {
+            return 0;
+        }
+    }
+    1
+}
+
+/// { 0x6c3a00 } (match_eng.cpp): pressao no ponto (a, b): para cada jogador ativo do lado (sem
+/// `tabela` 1; 0x2b = 0 salvo `todos`), +3 na propria casa (distancia 0), +1 a distancia <= 1,5.
+unsafe extern "thiscall" fn pressao_no_ponto(this: usize, lado_b: i8, a: i8, b: i8, todos: i8) -> u8 {
+    let mut n = 0u8;
+    for k in 0..20 {
+        let p = jogador_do_bloco(this, lado_b, k);
+        if byte(p, 0x19) < 0 || f717410(p) == 1 || (todos == 0 && byte(p, 0x2b) != 0) {
+            continue;
+        }
+        let d = f6f09b0(p, a, b) as f64;
+        if d == f64_em(0x9689a0) || d.is_nan() {
+            n = n.wrapping_add(3);
+        } else if !(d > f64_em(0x968940)) {
+            n = n.wrapping_add(1);
+        }
+    }
+    n
+}
+
+/// { 0x6c3950 } (match_eng.cpp): menor distancia ao ponto (a, b) entre os jogadores do lado (bit 0
+/// de `tabela` zerado; 0x2b = 0 salvo `todos`), partindo de 5000; 0 se algum estiver na casa.
+unsafe extern "thiscall" fn menor_distancia(this: usize, lado_b: i8, a: i8, b: i8, todos: i8) -> f32 {
+    let mut menor = f32::from_bits(0x459c4000);
+    for k in 0..20 {
+        let p = jogador_do_bloco(this, lado_b, k);
+        if byte(p, 0x19) < 0 || f717410(p) & 1 != 0 || (todos == 0 && byte(p, 0x2b) != 0) {
+            continue;
+        }
+        let d = f6f09b0(p, a, b);
+        if d as f64 == f64_em(0x9689a0) || d.is_nan() {
+            return f32_em(0x968970);
+        }
+        if d < menor {
+            menor = d;
+        }
+    }
+    menor
+}
+
 /// `tabela_a` do motor do jogador (0 sem motor), pelo endereco do jogo: os bits do papel tatico.
 unsafe fn papel_word(motor: usize, j: usize) -> u16 {
     if motor == 0 {
@@ -1856,6 +2012,57 @@ unsafe extern "thiscall" fn comparar_extremos(this: usize) {
     PLACAR.registrar(igual, || format!("guardar_extremos original={:x?} rust={:x?}", mo, mr));
 }
 
+unsafe extern "thiscall" fn comparar_contar_ativos(this: usize, l: i8) -> u8 {
+    let f = orig::<unsafe extern "thiscall" fn(usize, i8) -> u8>(54);
+    let reg = [((this as isize + 4 + l as isize) as usize, 1)];
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || f(this, l), || contar_ativos(this, l));
+    PLACAR.registrar(igual && r == n, || format!("contar_ativos({}) original={} rust={}", l, r, n));
+    r
+}
+unsafe extern "stdcall" fn comparar_codigo_especial(c: i8) -> u8 {
+    let r = orig::<unsafe extern "stdcall" fn(i8) -> u8>(55)(c);
+    let n = codigo_especial(c);
+    PLACAR.registrar(r == n, || format!("codigo_especial({}) original={} rust={}", c, r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_atras(this: usize, j: usize) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(56)(this, j);
+    let n = atras_do_extremo(this, j);
+    PLACAR.registrar(r == n, || format!("atras_do_extremo(lado {}, y {}) original={} rust={}", lado(j), byte(j, 0x103), r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_sem_partida(this: usize) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u8>(57)(this);
+    let n = sem_partida(this);
+    PLACAR.registrar(r == n, || format!("sem_partida original={} rust={}", r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_pressao_area(this: usize, l: i8) {
+    let f = orig::<unsafe extern "thiscall" fn(usize, i8)>(58);
+    let mut reg = vec![((this as isize + 6 + l as isize) as usize, 1)];
+    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || f(this, l), || crate::aleatorio::sem_contar(|| pressao_na_area(this, l)));
+    PLACAR.registrar(igual, || format!("pressao_na_area({}) original={:x?} rust={:x?}", l, mo, mr));
+}
+unsafe extern "thiscall" fn comparar_mais_proximo(this: usize, j: usize, a: i8, b: i8) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, i8, i8) -> u8>(59)(this, j, a, b);
+    let n = mais_proximo_do_ponto(this, j, a, b);
+    PLACAR.registrar(r == n, || format!("mais_proximo_do_ponto({}, {}) original={} rust={}", a, b, r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_pressao_ponto(this: usize, l: i8, a: i8, b: i8, t: i8) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) -> u8>(60)(this, l, a, b, t);
+    let n = pressao_no_ponto(this, l, a, b, t);
+    PLACAR.registrar(r == n, || format!("pressao_no_ponto({}, {}, {}, {}) original={} rust={}", l, a, b, t, r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_menor_distancia(this: usize, l: i8, a: i8, b: i8, t: i8) -> f32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) -> f32>(61)(this, l, a, b, t);
+    let n = menor_distancia(this, l, a, b, t);
+    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("menor_distancia({}, {}, {}, {}) original={} rust={}", l, a, b, t, r, n));
+    r
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -1917,6 +2124,14 @@ pub unsafe fn instalar(comparando: bool) {
         registrar_posse as *const () as usize,
         na_lista as *const () as usize,
         guardar_extremos as *const () as usize,
+        contar_ativos as *const () as usize,
+        codigo_especial as *const () as usize,
+        atras_do_extremo as *const () as usize,
+        sem_partida as *const () as usize,
+        pressao_na_area as *const () as usize,
+        mais_proximo_do_ponto as *const () as usize,
+        pressao_no_ponto as *const () as usize,
+        menor_distancia as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -1973,6 +2188,14 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_posse as *const () as usize,
         comparar_na_lista as *const () as usize,
         comparar_extremos as *const () as usize,
+        comparar_contar_ativos as *const () as usize,
+        comparar_codigo_especial as *const () as usize,
+        comparar_atras as *const () as usize,
+        comparar_sem_partida as *const () as usize,
+        comparar_pressao_area as *const () as usize,
+        comparar_mais_proximo as *const () as usize,
+        comparar_pressao_ponto as *const () as usize,
+        comparar_menor_distancia as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -1988,6 +2211,8 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_ler_8ea7", "motor_ler_8ea8", "motor_ler_8ea9", "motor_ler_8eaa", "motor_ler_8eb2", "motor_gravar_8ea9",
         "motor_gravar_8ea7", "motor_gravar_8ea8", "motor_gravar_8eaa", "motor_gravar_8ed8", "motor_ler_8f7a",
         "motor_registrar_posse", "motor_na_lista", "motor_guardar_extremos",
+        "motor_contar_ativos", "motor_codigo_especial", "motor_atras_do_extremo", "motor_sem_partida",
+        "motor_pressao_na_area", "motor_mais_proximo_do_ponto", "motor_pressao_no_ponto", "motor_menor_distancia",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -2011,7 +2236,7 @@ pub unsafe fn instalar_passagem() {
 /// comparacao, que chamam a original e a versao Rust com as mesmas entradas.
 pub unsafe fn autoteste(casos: u64) {
     let mut s = Sorteio(0x4d4f544f52);
-    let mut motor = vec![0u8; 0xf590];
+    let mut motor = vec![0u8; 0x10000]; // campos ate 0xf5f5 (estado do lado)
     let mut tabelas = vec![vec![0u16; 11]; 4];
     let mut jogador = vec![0u8; 0x200];
     let outro = vec![0u8; 0x1a4];
@@ -2334,9 +2559,37 @@ pub unsafe fn autoteste(casos: u64) {
             }
             comparar_na_lista(j, ((g2 >> 56) % 6) as usize);
             for k in 0..4usize {
-                *((m + 0xf58e + 4 * k) as *mut usize) = 0xdead0000 + k;
+                *((m + 0xf58e + 4 * k) as *mut usize) = jogadores[k].as_ptr() as usize;
             }
             comparar_extremos(m);
+            // decima terceira leva (blocos ja preenchidos; alguns 0x2b zerados; grade com contagens)
+            let h3 = s.proximo();
+            for k in 0..40usize {
+                let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
+                if (h3 >> (k % 60)) & 1 == 0 {
+                    *((p + 0x2b) as *mut i8) = 0;
+                }
+            }
+            for cel in 0..108usize {
+                for l in 0..2usize {
+                    // quase vazia (1 em 8), para a soma da pressao cair perto do limiar (30..44)
+                    let v = h3.rotate_left((cel * 2 + l) as u32);
+                    *((m + 0x21b6 + 90 * cel + l) as *mut i8) = if v % 8 == 0 { 1 + ((v >> 3) % 2) as i8 } else if v % 31 == 1 { -1 } else { 0 };
+                }
+            }
+            comparar_contar_ativos(m, ((h3 >> 3) % 2) as i8);
+            comparar_codigo_especial(((h3 >> 5) % 110) as i8 - 5);
+            let jj3 = m + 0x4796 + 8920 * ((h3 >> 12) % 2) as usize + ((h3 >> 13) % 20) as usize * 0x1be;
+            comparar_atras(m, jj3);
+            let mut alvo = -2i32;
+            *((m + 0x4792) as *mut usize) = if (h3 >> 18) & 1 == 0 { &mut alvo as *mut i32 as usize } else { m + 0x10 };
+            comparar_sem_partida(m);
+            comparar_pressao_area(m, ((h3 >> 19) % 2) as i8);
+            let (a3, b3) = (((h3 >> 20) % 10) as i8 - 1, ((h3 >> 24) % 13) as i8 - 1);
+            comparar_mais_proximo(m, jj3, a3, b3);
+            comparar_mais_proximo(m, jj3, byte(jj3, 0x102), byte(jj3, 0x103));
+            comparar_pressao_ponto(m, ((h3 >> 28) % 2) as i8, a3, b3, ((h3 >> 29) & 1) as i8);
+            comparar_menor_distancia(m, ((h3 >> 30) % 2) as i8, a3, b3, ((h3 >> 31) & 1) as i8);
             comparar_distancia_entre(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
         }
     });
