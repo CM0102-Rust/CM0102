@@ -19,6 +19,85 @@ pub struct Prologo {
     pub bytes: &'static [u8],
 }
 
+// ---------- pilha particular (so na simulacao) ----------
+//
+// O jogo le variaveis locais nao inicializadas: herda o que a rotina chamada antes deixou abaixo
+// do topo da pilha. A original deixa os rascunhos dela, a versao Rust outros, as sondas outros
+// ainda; com o mesmo jogo e a mesma semente a carreira mudava conforme o modo (dia 2001-093,
+// identica com o rastro ligado e diferente sem ele). Na simulacao toda rotina desviada roda numa
+// pilha nossa: a pilha do jogo fica intocada e o lixo que ele encontra e o mesmo em todos os modos.
+
+/// Endereco de retorno da ultima chamada do jogo a uma rotina desviada (gravado na entrada).
+pub static mut RETORNO: u32 = 0;
+static mut ESP_DO_JOGO: u32 = 0;
+const PILHA: usize = 1 << 20;
+const ARGUMENTOS: u32 = 16; // dwords copiados da pilha do jogo (sobra para qualquer rotina desviada)
+
+/// Liga a pilha particular para os desvios instalados daqui em diante.
+pub static ISOLAR: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Trecho de entrada: grava o retorno; se ja estiver na pilha particular (chamada aninhada), so
+/// salta; senao troca de pilha, copia os argumentos, chama `destino` e volta descontando os
+/// argumentos que a rotina retirou (vale para cdecl, stdcall e thiscall; ecx = this e preservado).
+unsafe fn isolar(destino: usize) -> usize {
+    static TOPO: std::sync::OnceLock<u32> = std::sync::OnceLock::new();
+    let topo = *TOPO.get_or_init(|| {
+        // Endereco fixo, logo abaixo das regioes do alocador: enderecos de pilha nao podem variar.
+        let p = win::VirtualAlloc(0x0ff0_0000 as *mut c_void, PILHA, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_READWRITE) as usize;
+        if p == 0 { 0 } else { (p + PILHA - 16) as u32 }
+    });
+    let codigo = win::VirtualAlloc(core::ptr::null_mut(), 256, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as usize;
+    if topo == 0 || codigo == 0 {
+        linha("desvios: AVISO sem pilha particular");
+        return destino;
+    }
+    let base = topo + 16 - PILHA as u32;
+    let le = |v: u32| v.to_le_bytes();
+    let (retorno, esp_jogo) = (&raw mut RETORNO as u32, &raw mut ESP_DO_JOGO as u32);
+    let mut c: Vec<u8> = Vec::new();
+    let rel = |c: &Vec<u8>, alvo: usize| ((alvo as isize - (codigo + c.len() + 4) as isize) as i32).to_le_bytes();
+    c.extend([0x8b, 0x04, 0x24, 0xa3]); // mov eax, [esp]; mov [RETORNO], eax
+    c.extend(le(retorno));
+    c.extend([0x81, 0xfc]); // cmp esp, base
+    c.extend(le(base));
+    c.extend([0x72, 0x00]); // jb fora
+    let jb = c.len() - 1;
+    c.extend([0x81, 0xfc]); // cmp esp, topo
+    c.extend(le(topo + 16));
+    c.extend([0x73, 0x00]); // jae fora
+    let jae = c.len() - 1;
+    c.push(0xe9); // jmp destino (aninhada)
+    let r = rel(&c, destino);
+    c.extend(r);
+    let fora = c.len();
+    c[jb] = (fora - jb - 1) as u8;
+    c[jae] = (fora - jae - 1) as u8;
+    c.extend([0x89, 0xe0, 0xa3]); // mov eax, esp; mov [ESP_DO_JOGO], eax
+    c.extend(le(esp_jogo));
+    c.push(0xbc); // mov esp, topo
+    c.extend(le(topo));
+    for i in (1..=ARGUMENTOS).rev() {
+        c.extend([0xff, 0x70, (4 * i) as u8]); // push dword [eax + 4i]
+    }
+    c.push(0xe8); // call destino
+    let r = rel(&c, destino);
+    c.extend(r);
+    c.extend([0x89, 0xe1, 0x81, 0xe9]); // mov ecx, esp; sub ecx, topo - 4*ARGUMENTOS  (= bytes retirados)
+    c.extend(le(topo - 4 * ARGUMENTOS));
+    c.extend([0x03, 0x0d]); // add ecx, [ESP_DO_JOGO]
+    c.extend(le(esp_jogo));
+    c.extend([0x89, 0xcc, 0x8b, 0x0d]); // mov esp, ecx; mov ecx, [ESP_DO_JOGO]
+    c.extend(le(esp_jogo));
+    c.extend([0x8b, 0x09, 0x89, 0x0c, 0x24, 0xc3]); // mov ecx, [ecx]; mov [esp], ecx; ret
+    assert!(c.len() <= 256);
+    core::ptr::copy_nonoverlapping(c.as_ptr(), codigo as *mut u8, c.len());
+    codigo
+}
+
+/// `destino` especial: a propria rotina original (so faz sentido com a pilha particular, para a
+/// original rodar isolada como as reescritas e os modos da simulacao serem comparaveis).
+pub const PASSAGEM: usize = 0;
+
 /// Desvia `p.endereco` para `destino`. Devolve o trampolim (a rotina original), ou None se recusou.
 pub unsafe fn desviar(nome: &str, p: &Prologo, destino: usize) -> Option<usize> {
     let atual = core::slice::from_raw_parts(p.endereco as *const u8, p.bytes.len());
@@ -34,6 +113,8 @@ pub unsafe fn desviar(nome: &str, p: &Prologo, destino: usize) -> Option<usize> 
     }
     core::ptr::copy_nonoverlapping(p.bytes.as_ptr(), tramp, n);
     escrever_jmp(tramp.add(n), p.endereco + n);
+    let destino = if destino == PASSAGEM { tramp as usize } else { destino };
+    let destino = if ISOLAR.load(std::sync::atomic::Ordering::Relaxed) { isolar(destino) } else { destino };
 
     let mut antiga = 0u32;
     win::VirtualProtect(p.endereco as *mut c_void, n, win::PAGE_EXECUTE_READWRITE, &mut antiga);
@@ -65,6 +146,9 @@ pub unsafe fn instalar() {
     // simulacao), para comparar uma simulacao so com as originais contra outra com o Rust.
     if win::ambiente("CM_ORIGINAL") {
         aleatorio::instalar(aleatorio::Modo::Observar);
+        if ISOLAR.load(std::sync::atomic::Ordering::Relaxed) {
+            data::instalar_passagem();
+        }
         return;
     }
     // CM_AUTOTESTE=1 liga o modo comparacao; os autotestes em si rodam depois (ver `autotestes`).

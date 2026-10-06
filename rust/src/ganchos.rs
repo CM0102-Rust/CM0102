@@ -77,9 +77,36 @@ unsafe extern "system" fn show_window(hwnd: *mut c_void, modo: i32) -> i32 {
     f(hwnd, if modo == 5 || modo == 1 { 8 } else { modo })
 }
 
+static mut CREATE_WINDOW_ORIGINAL: usize = 0;
+
+/// Modo oculto: a janela ja nasce fora da tela (antes ela aparecia por um instante e piscava).
+unsafe extern "system" fn create_window_ex_a(
+    ex: u32, classe: *const u8, titulo: *const u8, estilo: u32, _x: i32, _y: i32, w: i32, h: i32,
+    pai: *mut c_void, menu: *mut c_void, inst: *mut c_void, param: *mut c_void,
+) -> *mut c_void {
+    type F = unsafe extern "system" fn(u32, *const u8, *const u8, u32, i32, i32, i32, i32, *mut c_void, *mut c_void, *mut c_void, *mut c_void) -> *mut c_void;
+    let f: F = core::mem::transmute(CREATE_WINDOW_ORIGINAL);
+    f(ex, classe, titulo, estilo, -32000, -32000, w, h, pai, menu, inst, param)
+}
+
+static mut MOVE_WINDOW_ORIGINAL: usize = 0;
+
+/// Modo oculto: o jogo centraliza a janela no tamanho do video (1920x1080) sempre que reinicia o
+/// video, cobrindo a tela de quem usa o PC por um instante (a "piscada"). Mantem fora da tela.
+unsafe extern "system" fn move_window(hwnd: *mut c_void, _x: i32, _y: i32, w: i32, h: i32, redesenhar: i32) -> i32 {
+    let f: unsafe extern "system" fn(*mut c_void, i32, i32, i32, i32, i32) -> i32 = core::mem::transmute(MOVE_WINDOW_ORIGINAL);
+    f(hwnd, -32000, -32000, w, h, redesenhar)
+}
+
 /// Chamado no carregamento da DLL (antes de o jogo criar a janela).
 pub unsafe fn instalar_cedo() {
     if crate::apresentacao::oculto() {
+        if let Some(a) = trocar_importacao("USER32.dll", "MoveWindow", move_window as *const () as usize) {
+            MOVE_WINDOW_ORIGINAL = a;
+        }
+        if let Some(a) = trocar_importacao("USER32.dll", "CreateWindowExA", create_window_ex_a as *const () as usize) {
+            CREATE_WINDOW_ORIGINAL = a;
+        }
         if let Some(a) = trocar_importacao("USER32.dll", "ShowWindow", show_window as *const () as usize) {
             SHOW_WINDOW_ORIGINAL = a;
         }

@@ -430,6 +430,14 @@ pub unsafe fn instalar(comparando: bool) {
     }
 }
 
+/// Simulacao no modo original: as mesmas rotinas desviadas para a propria original, que assim roda
+/// na pilha particular como a versao Rust (ver `desvios::isolar`).
+pub unsafe fn instalar_passagem() {
+    for (i, p) in PROLOGOS.iter().enumerate() {
+        desvios::desviar(&format!("data {} (original isolada)", i), p, desvios::PASSAGEM);
+    }
+}
+
 #[cfg(test)]
 mod testes {
     use super::*;

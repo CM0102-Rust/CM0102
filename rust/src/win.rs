@@ -87,12 +87,16 @@ extern "system" {
     pub fn FlushInstructionCache(processo: *mut c_void, end: *const c_void, tam: usize) -> i32;
     pub fn GetCurrentProcess() -> *mut c_void;
     pub fn TerminateProcess(processo: *mut c_void, codigo: u32) -> i32;
+    pub fn GetCurrentThreadId() -> u32;
     pub fn GetEnvironmentVariableW(nome: *const u16, buf: *mut u16, tam: u32) -> u32;
 }
 
-/// Variavel de ambiente definida e nao vazia?
+/// Variavel de ambiente ligada: definida, nao vazia e diferente de "0". (A simulacao passa todas
+/// as variaveis CM_* sempre, com 0 ou 1: o ambiente vai para a heap do jogo e tem de ter o mesmo
+/// tamanho em todos os modos.)
 pub fn ambiente(nome: &str) -> bool {
     let n: Vec<u16> = nome.encode_utf16().chain([0]).collect();
     let mut buf = [0u16; 8];
-    unsafe { GetEnvironmentVariableW(n.as_ptr(), buf.as_mut_ptr(), buf.len() as u32) > 0 }
+    let k = unsafe { GetEnvironmentVariableW(n.as_ptr(), buf.as_mut_ptr(), buf.len() as u32) } as usize;
+    k > 0 && !(k == 1 && buf[0] == '0' as u16)
 }

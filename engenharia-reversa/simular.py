@@ -20,10 +20,12 @@ simulacao (so um teste pesado por vez entre as sessoes) e nao inicia execucao se
 paginado do kernel passar de 3 GB ou a RAM livre ficar abaixo de 4 GB; mostra a variacao do pool.
 
 Seguranca para a instalacao do Lucas: recusa se ja houver auto_setup.cfg/quick_start.cfg na pasta;
-copia o game.cfg antes e restaura depois; apaga o auto_setup.cfg; a janela fica fora da tela e
+copia o game.cfg antes e restaura depois; apaga o auto_setup.cfg; guarda os *.tmp que houver
+e os devolve no fim (cada execucao comeca sem eles: sobras de uma execucao mudam a seguinte); a janela fica fora da tela e
 nao rouba o foco; nao grava no janela.cfg (CM_JANELA).
 """
 import argparse
+import glob
 import hashlib
 import os
 import re
@@ -43,19 +45,32 @@ def falha(msg):
     sys.exit('ERRO: ' + msg)
 
 
+def limpar_temporarios():
+    """Apaga os arquivos de trabalho do jogo (*.tmp: historicos, estatisticas de partidas...).
+    A simulacao encerra o jogo a forca e eles ficam; a execucao seguinte os reaproveita e a
+    carreira muda (mesma semente dava resultados diferentes conforme a execucao anterior)."""
+    for nome in glob.glob(os.path.join(JOGO, '*.tmp')):
+        os.remove(nome)
+
+
 def rodar(args, semente):
+    limpar_temporarios()
     log = os.path.join(JOGO, 'ddraw.log')
-    ambiente = dict(os.environ)
-    for k in ('CM_COMPARAR', 'CM_ORIGINAL', 'CM_AUTOTESTE', 'CM_SEM_DESVIOS', 'CM_ESPIAO'):
-        ambiente.pop(k, None)
-    ambiente['CM_PARAR_EM'] = args.ate
-    ambiente['CM_JANELA'] = '960x540'
-    if not args.visivel:
-        ambiente['CM_OCULTO'] = '1'
-    if args.modo == 'original':
-        ambiente['CM_ORIGINAL'] = '1'
-    elif args.modo == 'comparar':
-        ambiente['CM_COMPARAR'] = '1'
+    # Ambiente minimo e fixo: a CRT do jogo copia cada variavel para a heap logo no inicio, e
+    # variaveis diferentes (do terminal, ou CM_ORIGINAL presente so num modo) deslocavam a heap
+    # e mudavam a carreira. Todas as CM_* vao sempre, com valores do mesmo tamanho.
+    raiz = os.environ.get('SystemRoot', r'C:\Windows')
+    ambiente = {
+        'SystemRoot': raiz, 'windir': raiz, 'PATH': raiz + r'\system32;' + raiz,
+        'TEMP': tempfile.gettempdir(), 'TMP': tempfile.gettempdir(),
+        'CM_PARAR_EM': args.ate, 'CM_JANELA': '960x540',
+        'CM_OCULTO': '0' if args.visivel else '1',
+        'CM_ORIGINAL': '1' if args.modo == 'original' else '0',
+        'CM_COMPARAR': '1' if args.modo == 'comparar' else '0',
+        'CM_RASTRO': os.environ.get('CM_RASTRO', '0000-00-00'),
+    }
+    if len(ambiente['CM_RASTRO']) != 10:
+        falha('CM_RASTRO tem de ser AAAA-MM-DD')
     t0 = time.time()
     p = subprocess.Popen([os.path.join(JOGO, args.exe), '-windowed', '-seed', str(semente)], cwd=JOGO, env=ambiente)
     try:
@@ -72,7 +87,8 @@ def rodar(args, semente):
     impressao = hashlib.sha1(' '.join(m.groups()[1:]).encode()).hexdigest()[:16]
     info = {'data': m.group(1), 'sorteios': int(m.group(2)), 'impressao': impressao,
             'comparacoes': re.findall(r'^(\w+): (\d+) comparacoes, (\d+) divergencias', texto, re.M),
-            'divergencias': len(re.findall(r'DIVERGENCIA', texto))}
+            'divergencias': len(re.findall(r'DIVERGENCIA', texto)),
+            'avisos': re.findall(r'^alocador: AVISO.*', texto, re.M)}
     return info, segundos, None
 
 
@@ -88,6 +104,7 @@ def main():
     ap.add_argument('--visivel', action='store_true', help='mostra a janela (por padrao fica fora da tela)')
     ap.add_argument('--limite', type=int, default=900, help='segundos maximos por execucao')
     ap.add_argument('--exe', default='cm0102-1080.exe')
+    ap.add_argument('--sem-trava', action='store_true', help='nao espera a trava do laboratorio (o vigia de memoria continua)')
     args = ap.parse_args()
 
     for nome in ('auto_setup.cfg', 'quick_start.cfg'):
@@ -102,10 +119,19 @@ def main():
     linhas = ['LANGUAGE=POR', 'DATABASE=MINIMUM', 'MATCH_STATS=NORMAL', 'FOREGROUND_LEAGUES=' + args.ligas,
               'BACKGROUND_LEAGUES=' + args.fundo, 'ENABLE_MATCH_ENGINE=' + ('YES' if args.motor == 'sim' else 'NO'),
               'ENABLE_COMPUTER_BIDS=YES', 'ON_HOLIDAY=YES']
+    # Arquivos de trabalho que ja estavam na pasta: guardados e devolvidos no fim.
+    guarda_tmp = os.path.join(tempfile.gettempdir(), 'cm0102_tmp_guardados')
+    shutil.rmtree(guarda_tmp, ignore_errors=True)
+    os.makedirs(guarda_tmp)
+    for nome in glob.glob(os.path.join(JOGO, '*.tmp')):
+        shutil.move(nome, guarda_tmp)
     resultados = []
     trava = laboratorio.Trava('CM0102 simular.py')
     try:
-        trava.__enter__()
+        if args.sem_trava:
+            print('rodando SEM a trava do laboratorio (--sem-trava)')
+        else:
+            trava.__enter__()
         with open(auto, 'w', newline='\r\n') as f:
             f.write('\n'.join(linhas) + '\n')
         for i in range(args.repetir):
@@ -125,6 +151,8 @@ def main():
                 continue
             print('execucao %d: parou em %s, %d sorteios, impressao %s, %.0f s' % (
                 i + 1, info['data'], info['sorteios'], info['impressao'], seg))
+            for aviso in info['avisos']:
+                print('    ' + aviso)
             if args.modo == 'comparar':
                 for rotina, total, div in info['comparacoes'][-4:]:
                     pass
@@ -137,6 +165,9 @@ def main():
     finally:
         if os.path.exists(auto):
             os.remove(auto)
+        limpar_temporarios()
+        for nome in glob.glob(os.path.join(guarda_tmp, '*.tmp')):
+            shutil.move(nome, JOGO)
         if tem_cfg:
             shutil.copy2(copia, cfg)
         if trava.f and not trava.f.closed:

@@ -18,20 +18,50 @@ const DATA_ATUAL: *const [u16; 2] = 0xae2c90 as *const [u16; 2]; // (dia do ano,
 
 static SORTEIOS: AtomicU64 = AtomicU64::new(0);
 
+fn data_do_ambiente(nome: &str) -> Option<(u16, u16)> {
+    let n: Vec<u16> = nome.encode_utf16().chain([0]).collect();
+    let mut buf = [0u16; 32];
+    let k = unsafe { crate::win::GetEnvironmentVariableW(n.as_ptr(), buf.as_mut_ptr(), buf.len() as u32) } as usize;
+    let s = String::from_utf16_lossy(&buf[..k.min(32)]);
+    let a = interpretar(&s);
+    if let Some((ano, dia)) = a {
+        linha(&format!("simulacao: {} = {} (ano {}, dia {})", nome, s, ano, dia));
+    }
+    a
+}
+
 /// Alvo (ano, dia do ano a partir de 0) lido de CM_PARAR_EM.
 fn alvo() -> Option<(u16, u16)> {
     static ALVO: OnceLock<Option<(u16, u16)>> = OnceLock::new();
-    *ALVO.get_or_init(|| {
-        let n: Vec<u16> = "CM_PARAR_EM".encode_utf16().chain([0]).collect();
-        let mut buf = [0u16; 32];
-        let k = unsafe { crate::win::GetEnvironmentVariableW(n.as_ptr(), buf.as_mut_ptr(), buf.len() as u32) } as usize;
-        let s = String::from_utf16_lossy(&buf[..k.min(32)]);
-        let a = interpretar(&s);
-        if let Some((ano, dia)) = a {
-            linha(&format!("simulacao: parar em {} (ano {}, dia {})", s, ano, dia));
-        }
-        a
-    })
+    *ALVO.get_or_init(|| data_do_ambiente("CM_PARAR_EM"))
+}
+
+/// `CM_RASTRO=AAAA-MM-DD`: cada sorteio desse dia vai para `rastro.log` (n, quem chamou, estado do
+/// gerador), para achar a primeira chamada em que duas execucoes divergem.
+pub fn rastro() -> Option<(u16, u16)> {
+    static RASTRO: OnceLock<Option<(u16, u16)>> = OnceLock::new();
+    *RASTRO.get_or_init(|| data_do_ambiente("CM_RASTRO"))
+}
+
+static ARQ_RASTRO: std::sync::Mutex<Option<std::io::BufWriter<std::fs::File>>> = std::sync::Mutex::new(None);
+
+fn escrever_rastro(texto: &str) {
+    use std::io::Write;
+    let mut g = ARQ_RASTRO.lock().unwrap_or_else(|e| e.into_inner());
+    if g.is_none() {
+        let caminho = std::env::current_exe().map(|p| p.with_file_name("rastro.log")).unwrap_or_else(|_| "rastro.log".into());
+        *g = std::fs::File::create(caminho).ok().map(std::io::BufWriter::new);
+    }
+    if let Some(f) = g.as_mut() {
+        let _ = writeln!(f, "{}", texto);
+    }
+}
+
+fn fechar_rastro() {
+    use std::io::Write;
+    if let Some(f) = ARQ_RASTRO.lock().unwrap_or_else(|e| e.into_inner()).as_mut() {
+        let _ = f.flush();
+    }
 }
 
 /// "AAAA-MM-DD" -> (ano, dia do ano a partir de 0), com a regra de bissexto do jogo.
@@ -47,15 +77,55 @@ pub fn interpretar(s: &str) -> Option<(u16, u16)> {
 }
 
 /// Chamado no inicio de cada sorteio (versao Rust e modo comparacao), com o estado do gerador antes da chamada.
-pub unsafe fn sorteio(ponteiro: u32, deslocamento: i32, rand: u32) {
+/// Thread que fez o primeiro sorteio; sorteios de outras threads tornam a simulacao dependente
+/// do agendamento do Windows e sao registrados.
+static THREAD_PRINCIPAL: AtomicU64 = AtomicU64::new(0);
+static OUTRAS_THREADS: AtomicU64 = AtomicU64::new(0);
+
+unsafe fn conferir_thread(origem: &str) {
+    let t = crate::win::GetCurrentThreadId() as u64;
+    let p = match THREAD_PRINCIPAL.compare_exchange(0, t, Ordering::Relaxed, Ordering::Relaxed) {
+        Ok(_) => t,
+        Err(p) => p,
+    };
+    if t != p {
+        let n = OUTRAS_THREADS.fetch_add(1, Ordering::Relaxed);
+        if n < 20 || (n + 1).is_power_of_two() {
+            let [d, a] = *DATA_ATUAL;
+            linha(&format!("simulacao: {} na thread {} (principal {}), data {}-{:03}, {} vezes", origem, t, p, a, d, n + 1));
+        }
+    }
+}
+
+/// FNV-1a da tabela de pessoas (registros de 70 bytes em [0xae23c4], quantidade em [0xae236c]).
+unsafe fn hash_pessoas() -> u64 {
+    let (base, qtd) = (*(0xae23c4 as *const usize), *(0xae236c as *const i32));
+    if base == 0 || qtd <= 0 {
+        return 0;
+    }
+    core::slice::from_raw_parts(base as *const u8, qtd as usize * 70)
+        .iter()
+        .fold(0xcbf29ce484222325u64, |h, &b| (h ^ b as u64).wrapping_mul(0x100000001b3))
+}
+
+pub unsafe fn sorteio(pedido: i32, ponteiro: u32, deslocamento: i32, rand: u32) {
     let n = SORTEIOS.fetch_add(1, Ordering::Relaxed);
     let Some((ano, dia)) = alvo() else { return };
+    conferir_thread("aleatorio");
     let [d, a] = *DATA_ATUAL;
+    if let Some((ra, rd)) = rastro() {
+        if (a, d) == (ra, rd) {
+            escrever_rastro(&format!("{} n={} chamador={:#x} ponteiro={:#x} deslocamento={:#x} rand={:#x}", n, pedido, { crate::desvios::RETORNO }, ponteiro, deslocamento, rand));
+        } else if (a, d) > (ra, rd) {
+            fechar_rastro();
+        }
+    }
     // Diario: uma linha por dia do jogo, para achar onde duas execucoes comecam a divergir.
     static ULTIMO_DIA: AtomicU64 = AtomicU64::new(0);
     let hoje = (a as u64) << 16 | d as u64;
     if ULTIMO_DIA.swap(hoje, Ordering::Relaxed) != hoje {
-        linha(&format!("dia {}-{:03} sorteios={} ponteiro={:#x} deslocamento={:#x} rand={:#x}", a, d, n, ponteiro, deslocamento, rand));
+        linha(&format!("dia {}-{:03} sorteios={} ponteiro={:#x} deslocamento={:#x} rand={:#x} pessoas={:016x} relogios={:?}", a, d, n, ponteiro, deslocamento, rand, hash_pessoas(),
+            RELOGIOS.iter().map(|r| r.load(Ordering::Relaxed)).collect::<Vec<_>>()));
     }
     if (a, d) < (ano, dia) || a < 1900 {
         return;
@@ -64,6 +134,8 @@ pub unsafe fn sorteio(ponteiro: u32, deslocamento: i32, rand: u32) {
         "SIMULACAO parou em {}-{:03} sorteios={} ponteiro={:#x} deslocamento={:#x} rand={:#x}",
         a, d, n, ponteiro, deslocamento, rand
     ));
+    linha(&format!("alocador: pico {} MB", crate::alocador::pico() >> 20));
+    fechar_rastro();
     // Encerra sem rodar finalizacoes do jogo (nada de gravar preferencias).
     crate::win::TerminateProcess(crate::win::GetCurrentProcess(), 0);
 }
@@ -86,10 +158,104 @@ unsafe extern "C" fn time_fixo(saida: *mut u32) -> u32 {
     RELOGIO_FIXO
 }
 
+// 0x946a04: mov eax, dword ptr [0xad6c30]
+const PROLOGO_RAND: crate::desvios::Prologo =
+    crate::desvios::Prologo { endereco: 0x946a04, bytes: &[0xa1, 0x30, 0x6c, 0xad, 0x00] };
+static mut RAND_ORIGINAL: usize = 0;
+
+/// rand() da CRT observado na simulacao: so confere de que thread vem e chama o original.
+unsafe extern "C" fn rand_observado() -> i32 {
+    conferir_thread("rand");
+    let f: unsafe extern "C" fn() -> i32 = core::mem::transmute(RAND_ORIGINAL);
+    f()
+}
+
+// 0x947299: push ebp; mov ebp, esp; push ecx; push ecx
+const PROLOGO_CLOCK: crate::desvios::Prologo =
+    crate::desvios::Prologo { endereco: 0x947299, bytes: &[0x55, 0x8b, 0xec, 0x51, 0x51] };
+/// Funcoes do jogo que chamam clock() (via 0x90c510; enderecos de retorno conferidos com refs.py).
+const ROTINAS_COM_RELOGIO: [u32; 13] = [
+    0x497050, 0x569610, 0x5cccd0, 0x68d520, 0x6b55c0, 0x6d7b00, 0x6d8c70, 0x71b1b0, 0x724b53, 0x725860,
+    0x75db00, 0x7615d0, 0x81b890,
+];
+static RELOGIOS: [AtomicU64; 14] = [const { AtomicU64::new(0) }; 14];
+
+/// clock() da CRT { 0x947299 } na simulacao: um relogio por rotina chamadora, que avanca 1 ms a
+/// cada consulta dela. Um relogio unico (ou o real) faz as esperas do dia de jogo (match_day.cpp,
+/// "volta quando clock() passar de X") dependerem de quantas vezes a barra de menus e as telas
+/// consultaram o relogio, o que varia com as mensagens do Windows.
+unsafe extern "C" fn clock_fixo() -> i32 {
+    let r = crate::desvios::RETORNO;
+    let i = ROTINAS_COM_RELOGIO.iter().rposition(|&f| f <= r).unwrap_or(13);
+    let v = RELOGIOS[i].fetch_add(1, Ordering::Relaxed) as i32;
+    let [d, a] = *DATA_ATUAL;
+    if rastro() == Some((a, d)) {
+        escrever_rastro(&format!("clock de {:#x} (rotina {:#x}) = {}", r, ROTINAS_COM_RELOGIO.get(i).copied().unwrap_or(0), v));
+    }
+    v
+}
+
+// 0x7a16d0 (RAM total, MB) e 0x7a1710 (memoria livre, MB): sub esp, 0x20; mov eax, 0x20
+const PROLOGO_RAM_TOTAL: crate::desvios::Prologo =
+    crate::desvios::Prologo { endereco: 0x7a16d0, bytes: &[0x83, 0xec, 0x20, 0xb8, 0x20, 0x00, 0x00, 0x00] };
+const PROLOGO_RAM_LIVRE: crate::desvios::Prologo =
+    crate::desvios::Prologo { endereco: 0x7a1710, bytes: &[0x83, 0xec, 0x20, 0xb8, 0x20, 0x00, 0x00, 0x00] };
+
+/// Memoria vista pelo jogo na simulacao: fixa (o teto do GlobalMemoryStatus), para nao depender da maquina.
+unsafe extern "C" fn memoria_fixa() -> i32 {
+    2047
+}
+
+// ---------- qsort no rastro ----------
+
+const PROLOGO_QSORT: crate::desvios::Prologo =
+    crate::desvios::Prologo { endereco: 0x945333, bytes: &[0x55, 0x8b, 0xec, 0x81, 0xec, 0xf8, 0x00, 0x00, 0x00] };
+static mut QSORT_ORIGINAL: usize = 0;
+
+/// Hash do vetor com ponteiros para a tabela de pessoas trocados pelo indice (o endereco da tabela varia).
+unsafe fn hash_vetor(base: *const u8, bytes: usize) -> u64 {
+    let (pessoas, qtd) = (*(0xae23c4 as *const u32), *(0xae236c as *const i32) as u32);
+    let fim = pessoas.wrapping_add(qtd.wrapping_mul(70));
+    let mut h = 0xcbf29ce484222325u64;
+    for i in 0..bytes / 4 {
+        let mut v = *(base as *const u32).add(i);
+        if v >= pessoas && v < fim {
+            v = 0x8000_0000 | (v - pessoas);
+        }
+        h = (h ^ v as u64).wrapping_mul(0x100000001b3);
+    }
+    h
+}
+
+unsafe extern "C" fn qsort_rastreado(base: *mut u8, n: usize, largura: usize, cmp: usize) {
+    let f: unsafe extern "C" fn(*mut u8, usize, usize, usize) = core::mem::transmute(QSORT_ORIGINAL);
+    let [d, a] = *DATA_ATUAL;
+    let no_dia = rastro() == Some((a, d));
+    let antes = if no_dia { hash_vetor(base, n * largura) } else { 0 };
+    f(base, n, largura, cmp);
+    if no_dia {
+        escrever_rastro(&format!("qsort cmp={:#x} n={} largura={} entrada={:016x} saida={:016x}", cmp, n, largura, antes, hash_vetor(base, n * largura)));
+    }
+}
+
 /// Chamado no carregamento da DLL: so age em modo simulacao (CM_PARAR_EM definido).
 pub unsafe fn instalar() {
     if alvo().is_some() {
+        // Toda rotina desviada daqui em diante roda na pilha particular e grava quem chamou.
+        crate::desvios::ISOLAR.store(true, Ordering::Relaxed);
+        crate::alocador::instalar();
+        if rastro().is_some() {
+            if let Some(t) = crate::desvios::desviar("qsort (rastro)", &PROLOGO_QSORT, qsort_rastreado as *const () as usize) {
+                QSORT_ORIGINAL = t;
+            }
+        }
         crate::desvios::desviar("time (relogio fixo da simulacao)", &PROLOGO_TIME, time_fixo as *const () as usize);
+        crate::desvios::desviar("clock (relogio da simulacao)", &PROLOGO_CLOCK, clock_fixo as *const () as usize);
+        crate::desvios::desviar("RAM total (fixa na simulacao)", &PROLOGO_RAM_TOTAL, memoria_fixa as *const () as usize);
+        crate::desvios::desviar("RAM livre (fixa na simulacao)", &PROLOGO_RAM_LIVRE, memoria_fixa as *const () as usize);
+        if let Some(t) = crate::desvios::desviar("rand (observado na simulacao)", &PROLOGO_RAND, rand_observado as *const () as usize) {
+            RAND_ORIGINAL = t;
+        }
     }
 }
 

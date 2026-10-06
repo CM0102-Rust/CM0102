@@ -39,3 +39,23 @@ Os `.qst` têm o mesmo contêiner dos saves (`.sav`): indicador de compressão, 
 1. **Já disponível:** carreira automática + férias + motor de lances desligado = simulação em lote. Falta controlar quando parar e ler os resultados (pelos saves, cujo formato o `CM0102Patcher` já descreve, ou pela memória do processo).
 2. **Com a nossa DLL:** esconder a janela e não desenhar nada (a camada de vídeo é nossa), fixar a semente (`-seed`) para simulações reproduzíveis, e definir pela linha de comando a data de parada e o save de saída.
 3. **Com o motor em Rust:** à medida que as rotinas migram, a simulação deixa de depender do exe original.
+
+## 5. Simulação reproduzível (`simular.py`)
+
+`engenharia-reversa/simular.py --ate AAAA-MM-DD [--semente N] [--repetir N] [--modo rust|original|comparar]` monta a carreira automática, abre o jogo fora da tela com `-seed N` e a DLL encerra o processo na primeira chamada do sorteio depois da data pedida, gravando a impressão digital (quantidade de sorteios + estado completo do gerador). Mesma semente ⇒ mesma impressão: é o gabarito para provar rotinas reescritas na carreira inteira.
+
+Com semente fixa o jogo ainda variava entre execuções. Fontes acidentais, todas neutralizadas **só no modo simulação** (`CM_PARAR_EM`); o jogo normal não muda:
+
+| Fonte | Sintoma | Neutralização (`simulacao.rs`, `alocador.rs`) |
+|---|---|---|
+| `time()` | `srand(time)` em manager_manager.cpp (0x696d4b) | instante fixo |
+| `clock()` (31 chamadas, 13 rotinas) | esperas do dia de jogo (match_day.cpp 0x6b55c0) dependiam de quantas vezes menus e telas consultavam o relógio | um relógio por rotina, +1 ms por consulta dela |
+| Heap do Windows (LFH, endereço aleatório) | desempates por ordem de ponteiro: escalação diferente em 04/04/2001 com o gerador idêntico | `Heap*` do exe (IAT) num alocador determinístico em região fixa (0x18000000, 1 GB) |
+| Memória fora da heap | ponteiros para o banco de dados (`GlobalAlloc` em Database.cpp 0x529cdf) e para memória da DLL (superfícies) | `GlobalAlloc`/`GlobalFree` no mesmo alocador; objetos e pixels da camada de vídeo em região própria (0x10000000); `VirtualAlloc(NULL)` do exe em faixa fixa |
+| Lixo na pilha | o jogo lê variáveis locais não inicializadas, herdando o que a rotina chamada antes deixou; original, Rust e sondas deixam rascunhos diferentes (carreira mudava com o modo e até com o rastro ligado) | toda rotina desviada roda numa pilha particular de endereço fixo (`desvios::isolar`); no modo original as mesmas rotinas são desviadas para a própria original (`PASSAGEM`) |
+| Variáveis de ambiente | a CRT copia o ambiente para a heap na partida; tamanhos diferentes deslocavam tudo | `simular.py` passa um ambiente mínimo fixo; as `CM_*` vão sempre, com `0`/`1` do mesmo tamanho |
+| Arquivos `*.tmp` | o jogo reaproveita os arquivos de trabalho deixados pela execução anterior (encerrada à força) | `simular.py` apaga antes de cada execução (e devolve os que já estavam na pasta) |
+
+Também fixos: memória total/livre informada ao jogo (0x7a16d0, 0x7a1710). Janela: nasce e fica fora da tela (`CreateWindowExA`/`MoveWindow`/`ShowWindow` na IAT), sem piscar a tela de quem usa o PC.
+
+Diagnóstico de divergência: `CM_RASTRO=AAAA-MM-DD` grava em `jogo\rastro.log` cada sorteio do dia (pedido, endereço de quem chamou, estado do gerador), cada `qsort` (comparador, hash da entrada e da saída) e cada consulta ao relógio (o endereço de quem chamou vem do trecho de entrada da pilha particular); o diário do `ddraw.log` tem uma linha por dia (sorteios, gerador, hash da tabela de pessoas, relógios). Método: achar o primeiro dia diferente no diário, rastrear o dia, achar a primeira linha diferente e subir pelo código.

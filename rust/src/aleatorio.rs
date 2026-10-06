@@ -44,15 +44,15 @@ thread_local! {
     static CONTAR: Cell<bool> = const { Cell::new(true) };
 }
 
-unsafe fn contar() {
+unsafe fn contar(n: i32) {
     if CONTAR.with(|c| c.get()) {
-        simulacao::sorteio(*PONTEIRO, *DESLOCAMENTO, *ESTADO_RAND);
+        simulacao::sorteio(n, *PONTEIRO, *DESLOCAMENTO, *ESTADO_RAND);
     }
 }
 
 /// Versao Rust de { 0x90cfc0 }.
 pub unsafe extern "C" fn aleatorio(n: i32) -> i32 {
-    contar();
+    contar(n);
     if n == 0 {
         return 0;
     }
@@ -132,7 +132,7 @@ unsafe fn original(n: i32) -> i32 {
 /// Roda a original e a versao Rust a partir do mesmo estado e compara resultado e estado final.
 /// O jogo segue com o resultado e o estado da original.
 unsafe extern "C" fn comparar(n: i32) -> i32 {
-    contar();
+    contar(n);
     // A original chama a si mesma (recursao para n grande) passando por este desvio.
     if RODANDO.with(|r| r.get()) == Rodando::Original {
         return original(n);
@@ -161,7 +161,7 @@ unsafe extern "C" fn comparar(n: i32) -> i32 {
 
 /// Modo observador (`CM_ORIGINAL=1`): roda a original e so conta/verifica a parada da simulacao.
 unsafe extern "C" fn observar(n: i32) -> i32 {
-    contar();
+    contar(n);
     original(n)
 }
 

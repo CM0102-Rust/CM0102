@@ -84,7 +84,8 @@ macro_rules! aceita {
 
 pub unsafe fn criar() -> *mut c_void {
     linha("video: camada propria ativa");
-    Box::into_raw(Box::new(DirectDraw { vtbl: vtable(0), refs: 1, hwnd: 0, tela_cheia: false })) as *mut c_void
+    // Objetos e pixels que o jogo guarda: regiao fixa na simulacao (ver alocador.rs).
+    crate::alocador::visivel(|| Box::into_raw(Box::new(DirectDraw { vtbl: vtable(0), refs: 1, hwnd: 0, tela_cheia: false }))) as *mut c_void
 }
 
 // ---------- IUnknown ----------
@@ -145,7 +146,7 @@ unsafe extern "system" fn dd_create_clipper(_this: *mut DirectDraw, _flags: usiz
     if saida.is_null() {
         return DDERR_INVALIDPARAMS;
     }
-    *saida = Box::into_raw(Box::new(Clipper { vtbl: vtable(2), refs: 1, hwnd: 0 })) as *mut c_void;
+    *saida = crate::alocador::visivel(|| Box::into_raw(Box::new(Clipper { vtbl: vtable(2), refs: 1, hwnd: 0 }))) as *mut c_void;
     DD_OK
 }
 
@@ -163,9 +164,9 @@ unsafe extern "system" fn dd_create_surface(_this: *mut DirectDraw, desc: usize,
     } else {
         return DDERR_INVALIDPARAMS;
     };
-    let pixels = if primaria { Vec::new() } else { vec![0u16; (largura * altura) as usize] };
+    let pixels = crate::alocador::visivel(|| if primaria { Vec::new() } else { vec![0u16; (largura * altura) as usize] });
     linha(&format!("video: superficie {} {}x{}", if primaria { "primaria" } else { "quadro" }, largura, altura));
-    *saida = Box::into_raw(Box::new(Superficie { vtbl: vtable(1), refs: 1, primaria, largura, altura, pixels })) as *mut c_void;
+    *saida = crate::alocador::visivel(|| Box::into_raw(Box::new(Superficie { vtbl: vtable(1), refs: 1, primaria, largura, altura, pixels }))) as *mut c_void;
     DD_OK
 }
 

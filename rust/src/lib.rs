@@ -12,6 +12,10 @@
 
 #![allow(linker_messages)]
 
+mod alocador;
+
+#[global_allocator]
+static GLOBAL: alocador::Global = alocador::Global;
 mod aleatorio;
 mod apresentacao;
 mod comparacao;
