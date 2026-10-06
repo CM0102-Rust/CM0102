@@ -5,7 +5,7 @@ Este repositório o mantém jogável no Windows 11 e prepara a reescrita do jogo
 
 | Onde | O que é | No git? |
 |---|---|---|
-| `JOGAR.bat` | Abre o jogo sem CD e sem trocar a resolução do Windows (janela ou tela cheia, pela opção do jogo). | sim |
+| `JOGAR.bat` | Abre o jogo em janela redimensionável, sem CD e sem trocar a resolução do Windows. | sim |
 | `rust/` | Núcleo em Rust, compilado como `ddraw.dll` (camada de vídeo própria; ponto de entrada dos desvios). | sim |
 | `jogo/` | Instalação jogável: originais `cm0102.exe` / `cm0102_GDI.exe` e as cópias corrigidas `*-portatil.exe`. | não |
 | `original/` | Downloads intocados (ISO, zips, patch 3.9.68) e cópia de segurança dos dois exe 3.9.68. | não |
