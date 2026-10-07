@@ -410,3 +410,13 @@ Segundo degrau da prova de viabilidade: integradora grande, com chamadas interna
 
 A lógica bateu na primeira tentativa: 5,1 bilhões de casos e 0 divergências. O autoteste escreve ids distintos nas competições do jogo durante o teste (no início do jogo podem estar vazias) e os restaura. Mutações: 22/22.
 Jogo real: 10 bilhões de comparações, 0 divergências. Carreira até 01/06/2002: Rust ×2 = original.
+
+### Motor de partidas, 43ª leva — pontapé inicial (oficial em 07/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `pontape_inicial()` | 0x6c51e0 | thiscall | match_eng.cpp: quem sai jogando (0x8eae; fora de 0..=1, o lado 0), bola no centro (4, 5 ou 6); todos os ativos vão para a casa da formação (tabela 0xf56e + 0x9e do lado 0 ou 0xf572 + 0xa6 do lado 1, 216 bytes por posição; nibble baixo x, alto y, limitado ao próprio campo) por 0x6f46b0 e olham para a frente (0x6f4920). Do lado que sai, o mais perto da bola (posição > 10 vira −1) pega a bola (0x6f0630) e olha para a casa calculada com a última casa da formação usada (mesmo ponto: o byte baixo de 0x8ed8, com sinal). Sem ninguém, marca o byte 0 do motor |
+
+No original, x e y começam com lixo da pilha, mas só são lidos depois de algum jogador ativo (sem ativo, a rotina sai antes). A comparação confere o objeto do motor inteiro (jogadores, grade e bola), mais o sorteio.
+
+Autoteste: 5,5 bilhões de casos, 0 divergências, com a grade do campo consistente (cada jogador na lista da casa dele) e formações com casas distintas. Mutações: 11/13. As duas que passam são equivalentes: o limite de y (no máximo 5 no lado 0, no mínimo 6 no lado 1) torna sempre verdadeiros os testes `y < 9` e `y > 3` da direção. Uma lacuna encontrada e corrigida: o gerador nunca deixava sem ativos o lado que sai, e a mutação do "sem ninguém" passava. Jogo real: 1 bilhão de comparações, 0 divergências. Carreira até 01/06/2002: Rust ×2 = original.

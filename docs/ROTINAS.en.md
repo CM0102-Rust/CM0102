@@ -412,3 +412,13 @@ Second step of the feasibility proof: a large integrating routine, with internal
 
 The logic matched on the first attempt: 5.1 billion cases and 0 divergences. The self-test writes distinct ids into the game's competitions during the test (at the start of the game they may be empty) and restores them. Mutations: 22/22.
 Real game: 10 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original.
+
+### Match engine, 43rd batch — kick-off (official on 2026-10-07)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `pontape_inicial()` | 0x6c51e0 | thiscall | match_eng.cpp: who kicks off (0x8eae; outside 0..=1, side 0), ball at the centre (4, 5 or 6); every active player goes to their formation square (table 0xf56e + 0x9e for side 0 or 0xf572 + 0xa6 for side 1, 216 bytes per position; low nibble x, high nibble y, clamped to their own half) through 0x6f46b0 and faces forward (0x6f4920). On the kicking side, the player closest to the ball (a position > 10 becomes −1) takes the ball (0x6f0630) and faces the square computed from the last formation square used (same point: the low byte of 0x8ed8, sign-extended). With nobody available, it sets byte 0 of the engine |
+
+In the original, x and y start as stack garbage, but they are only read after some active player (with no active player, the routine exits first). The comparison checks the whole engine object (players, grid and ball), plus the random draw.
+
+Self-test: 5.5 billion cases, 0 divergences, with a consistent pitch grid (each player in the list of their square) and formations with distinct squares. Mutations: 11/13. The two that pass are equivalent: the clamp on y (at most 5 on side 0, at least 6 on side 1) makes the direction tests `y < 9` and `y > 3` always true. One gap found and fixed: the generator never left the kicking side without active players, and the "nobody available" mutation passed. Real game: 1 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original.

@@ -233,8 +233,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x700bd0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
     // quadragesima segunda leva (integradora grande)
     Prologo { endereco: 0x6c0c60, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
+    // quadragesima terceira leva
+    Prologo { endereco: 0x6c51e0, bytes: &[0x83, 0xec, 0x24, 0x53, 0x55, 0x8b, 0xe9] },
 ];
-const N: usize = 145;
+const N: usize = 146;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3909,6 +3911,89 @@ unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 {
     bola_fora_com(this, lado_b, &mut |t, a| comentar(t, a))
 }
 
+// ---------- quadragesima terceira leva: pontape inicial ----------
+
+/// { 0x6c51e0 } (match_eng.cpp): pontape inicial. Quem sai jogando: 0x8eae (fora de 0..=1, o lado
+/// 0); bola no centro (4, 5 ou 6). Todos os ativos vao para a casa da formacao (tabela 0xf56e + 0x9e
+/// do lado 0 ou 0xf572 + 0xa6 do lado 1, 216 bytes por posicao; nibble baixo x, alto y, cada um no
+/// seu campo) e olham para a frente. Do lado que sai, o mais perto da bola (posicao > 10 vira -1)
+/// pega a bola e olha para a casa calculada com a ultima casa da formacao usada (mesmo ponto: o
+/// byte baixo de 0x8ed8). Sem ninguem, marca o byte 0 do motor.
+unsafe extern "thiscall" fn pontape_inicial(this: usize) {
+    let mut sai = byte(this, 0x8eae);
+    if !(0..=1).contains(&sai) {
+        sai = 0;
+    }
+    *((this + 0x8eae) as *mut i8) = -1;
+    *((this + 0x8ea7) as *mut i8) = 4;
+    *((this + 0x8ea8) as *mut i8) = if sai == 0 { 5 } else { 6 };
+    let mover: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(0x6f46b0usize);
+    let apontar_para: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) = core::mem::transmute(0x6f4920usize);
+    // ponytail: no original x e y comecam com lixo da pilha; so sao lidos depois de algum ativo
+    let (mut x, mut y) = (0i8, 0i8);
+    for l in 0..2i8 {
+        for k in 0..20 {
+            let p = jogador_do_bloco(this, l, k);
+            let pos = byte(p, 0x19) as isize;
+            if pos < 0 {
+                continue;
+            }
+            let (tabela, campo) = if byte(p, 0x27) == 1 { (0xf572, 0xa6) } else { (0xf56e, 0x9e) };
+            let casa = *((*((this + tabela) as *const usize) as isize + 216 * pos + campo) as *const u8);
+            x = (casa & 0xf) as i8;
+            y = (casa >> 4) as i8;
+            if byte(p, 0x27) == 1 {
+                if y < 6 {
+                    y = 6;
+                }
+            } else if y >= 6 {
+                y = 5;
+            }
+            mover(p, x, y);
+            if l == 0 {
+                apontar_para(p, x, y, 4, if y < 9 { y + 3 } else { 11 });
+            } else {
+                apontar_para(p, x, y, 4, if y > 3 { y - 3 } else { 0 });
+            }
+        }
+    }
+    let mut melhor = f32::from_bits(0x461c4000); // 10000
+    let mut escolhido = 0usize;
+    for k in 0..20 {
+        let p = jogador_do_bloco(this, sai, k);
+        let pos = byte(p, 0x19);
+        if pos < 0 {
+            continue;
+        }
+        if pos > 10 {
+            *((p + 0x19) as *mut i8) = -1;
+            continue;
+        }
+        if *((p + 0x19e) as *const usize) == 0 {
+            continue;
+        }
+        let d = f6f09b0(p, byte(this, 0x8ea7), byte(this, 0x8ea8));
+        if d < melhor {
+            melhor = d;
+            escolhido = p;
+        }
+    }
+    if escolhido == 0 {
+        *(this as *mut u8) = 1;
+        return;
+    }
+    let pegar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6f0630usize);
+    pegar(escolhido);
+    let dx = 4i8.wrapping_sub(x);
+    let dy = if sai == 0 { 11i8.wrapping_sub(y) } else { y.wrapping_neg() };
+    let v = if dx == 0 && dy == 0 {
+        *((this + 0x8ed8) as *const u16)
+    } else {
+        *((TABELA_GLOBAL as isize + 2 * (dx as isize * 24 + dy as isize)) as *const u16)
+    };
+    *((escolhido + 0x19a) as *mut i16) = v as u8 as i8 as i16;
+}
+
 // ---------- quadragesima segunda leva: forca do time (0x6c0c60, 5 KB) ----------
 
 /// Degrau de multiplicadores pelo atributo `x` (byte com sinal): a primeira regra que vale
@@ -5676,6 +5761,19 @@ unsafe extern "thiscall" fn comparar_forca_do_time(this: usize, l: i8) {
     PLACAR.registrar(igual, || format!("forca_do_time({}) original={:x?} rust={:x?}", l, mo, mr));
 }
 
+/// O pontape inicial mexe em todo o motor (jogadores, grade, bola): compara o objeto inteiro.
+unsafe extern "thiscall" fn comparar_pontape_inicial(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(145);
+    let mut reg = vec![(this, 0xf5f8)];
+    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| pontape_inicial(this)));
+    PLACAR.registrar(igual, || {
+        let (a, b) = (&mo.0, &mr.0);
+        let dif: Vec<usize> = (0..a.len()).flat_map(|r| (0..a[r].1.len()).filter(move |&i| a[r].1[i] != b[r].1[i]).map(move |i| a[r].0 + i)).take(16).collect();
+        format!("pontape_inicial() diferencas em {:x?}", dif)
+    });
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -5831,6 +5929,7 @@ pub unsafe fn instalar(comparando: bool) {
         bola_fora as *const () as usize,
         valor_do_chute as *const () as usize,
         forca_do_time as *const () as usize,
+        pontape_inicial as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -5978,6 +6077,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_bola_fora as *const () as usize,
         comparar_valor_chute as *const () as usize,
         comparar_forca_do_time as *const () as usize,
+        comparar_pontape_inicial as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -6024,6 +6124,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_bola_fora",
         "motor_valor_do_chute",
         "motor_forca_do_time",
+        "motor_pontape_inicial",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -7107,6 +7208,51 @@ pub unsafe fn autoteste(casos: u64) {
                 *((m + 0x1d8 + 2 * o) as *mut u16) = (h49 >> (o * 3)) as u16;
             }
             comparar_forca_do_time(m, l42);
+            // quadragesima terceira leva: pontape inicial (grade consistente, formacoes com casas distintas)
+            let h50 = s.proximo();
+            let h51 = s.proximo();
+            core::ptr::write_bytes((m + 0x215e) as *mut u8, 0, 90 * 108);
+            for (l, f) in formacoes.iter_mut().enumerate() {
+                let base = f.as_mut_ptr() as usize + 1200 + if l == 1 { 0xa6 } else { 0x9e };
+                for pos in 0..13usize {
+                    let c = (h50.rotate_left((pos * 5 + l * 3) as u32) % 108) as u8;
+                    *((base + 216 * pos) as *mut u8) = ((c / 9 + pos as u8) % 12) << 4 | ((c % 9 + 2 * pos as u8) % 9);
+                }
+            }
+            let desloc = (h50 % 13) as usize;
+            for k in 0..40usize {
+                let l = k / 20;
+                let p = m + 0x4796 + 8920 * l + (k % 20) * 0x1be;
+                let r = h51.rotate_left(k as u32 * 3) ^ h50.rotate_right(k as u32);
+                *((p + 0x27) as *mut i8) = l as i8;
+                *((p + 0x19) as *mut i8) = if r % 6 == 0 { -1 } else { ((k + desloc) % 13) as i8 };
+                *((p + 0x19e) as *mut usize) = m; // 0 so cairia no original (a grade e lida pelo motor do jogador)
+                *((p + 0x6d) as *mut usize) = pessoas[k % 4].as_ptr() as usize;
+                *((p + 0x10c) as *mut i8) = ((r >> 8) % 21) as i8;
+                *((p + 0x105) as *mut i8) = ((r >> 13) % 21) as i8;
+                let (rx, ry) = (((r >> 18) % 9) as i8, ((r >> 22) % 12) as i8);
+                *((p + 0x102) as *mut i8) = rx;
+                *((p + 0x103) as *mut i8) = ry;
+                let casa = casa_da_grade(m, rx, ry) as usize;
+                let n = byte(casa, 0x58 + l);
+                *((casa as isize + 4 * (11 * l as isize + n as isize)) as *mut usize) = p;
+                *((casa + 0x58 + l) as *mut i8) = n + 1;
+                *((p + 0x28) as *mut i8) = n;
+            }
+            // as vezes um lado sem ninguem nas posicoes 0..=10 (o pontape sem jogador: byte 0 do motor)
+            if (h51 >> 58) % 4 == 0 {
+                let lv = ((h51 >> 60) % 2) as usize;
+                for k in 0..20usize {
+                    *((m + 0x4796 + 8920 * lv + k * 0x1be + 0x19) as *mut i8) = [-1i8, 11, 12][(k + (h51 >> 62) as usize) % 3];
+                }
+            }
+            let bloco = |x: u64| m + 0x4796 + 8920 * (x % 2) as usize + ((x >> 1) % 20) as usize * 0x1be;
+            *((m + 0xf582) as *mut usize) = if (h51 >> 40) % 3 == 0 { 0 } else { bloco(h51 >> 42) };
+            *((m + 0xf576) as *mut usize) = if (h51 >> 48) % 3 == 0 { 0 } else { bloco(h51 >> 50) };
+            *((m + 0x8eae) as *mut i8) = [0i8, 1, -1, 2][((h51 >> 56) % 4) as usize];
+            *((m + 0x8ed8) as *mut u16) = (h51 >> 20) as u16;
+            *(m as *mut u8) = 0;
+            comparar_pontape_inicial(m);
             for (i, &a) in ids.iter().enumerate() {
                 *(a as *mut u32) = ids_antes[i];
             }
