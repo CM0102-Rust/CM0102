@@ -186,8 +186,15 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x7172d0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8a, 0x5c, 0x24, 0x10] },
     // vigesima terceira leva
     Prologo { endereco: 0x6f0630, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xdb] },
+    // vigesima quarta leva
+    Prologo { endereco: 0x6e9470, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
+    Prologo { endereco: 0x6bab90, bytes: &[0x8a, 0x81, 0x5a, 0x47, 0x00, 0x00] },
+    Prologo { endereco: 0x6e9540, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
+    // vigesima quinta leva
+    Prologo { endereco: 0x6e9630, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x10] },
+    Prologo { endereco: 0x6ea4e0, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x10] },
 ];
-const N: usize = 117;
+const N: usize = 122;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -2568,6 +2575,214 @@ unsafe extern "thiscall" fn pegar_bola(this: usize) {
     *((this + 0x19c) as *mut u16) = 0;
 }
 
+// ---------- vigesima quarta leva: lances de bola parada / arbitragem ----------
+
+/// { 0x6e9470 }: inicia o objeto (motor, pessoa, valor): sem pessoa, 5000; senao o primeiro de
+/// 7750, 7250, 6750, 6250, 5750 cuja palavra 0x1e da pessoa passa de sorteio(350, 300, ...), ou 5250.
+unsafe extern "thiscall" fn iniciar_rigor(this: usize, motor: u32, pessoa: usize) {
+    *(this as *mut u32) = motor;
+    *((this + 4) as *mut u32) = pessoa as u32;
+    let v = (this + 8) as *mut u16;
+    if pessoa == 0 {
+        *v = 0x1388;
+        return;
+    }
+    for (n, valor) in [(0x15e, 0x1e46u16), (0x12c, 0x1c52), (0xfa, 0x1a5e), (0xc8, 0x186a), (0x96, 0x1676)] {
+        let r = sortear(n);
+        if *((pessoa + 0x1e) as *const i16) as i32 > r {
+            *v = valor;
+            return;
+        }
+    }
+    *v = 0x1482;
+}
+
+/// { 0x6bab90 } (match_eng.cpp): o lance registrado continua valendo? 0 sem lance; com o dono da
+/// bola (0xf582) do outro lado que o jogador do lance, a bola passando a linha do lance (0x475c)
+/// encerra o lance (limpa e da 0); nos demais casos, 1.
+unsafe extern "thiscall" fn lance_valendo(this: usize) -> u8 {
+    let p = *((this + 0x4761) as *const usize);
+    if byte(this, 0x475a) == 0 || p == 0 {
+        return 0;
+    }
+    let l = byte(p, 0x27);
+    let dono = *((this + 0xf582) as *const usize);
+    if dono == 0 || byte(dono, 0x27) as i32 != (l == 0) as i32 {
+        return 1;
+    }
+    let (y, linha) = (byte(this, 0x8ea8), byte(this, 0x475c));
+    if (y > linha && l == 1) || (y < linha && l == 0) {
+        limpar_lance(this);
+        return 0;
+    }
+    1
+}
+
+/// { 0x6e9540 }: decide se o lance vira falta (ou similar) para o jogador: nao com lance valendo, nem
+/// com papel 1 na area; a pessoa (0x4) pode anular (sorteio(0x28 + 15) == 0, -250 no valor 0x8);
+/// na area, 3 em 4 anula; senao +175 e, pelo codigo (0x25: 1 em 20; outros: 1 em 155 com 0x8ea9 > 1),
+/// grava 4 e sorteio(0x14 do jogador) + 1 nas saidas.
+unsafe extern "thiscall" fn decidir_falta(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
+    let motor = *(this as *const usize);
+    let valendo: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x6bab90usize);
+    if valendo(motor) != 0 {
+        return 0;
+    }
+    let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+    let na_area: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(0x6f5b20usize);
+    if tabela(motor, j) & 1 != 0 && na_area(j, lado(j) as u8) as u8 != 0 {
+        return 0;
+    }
+    let pessoa = *((this + 4) as *const usize);
+    let v = (this + 8) as *mut u16;
+    if pessoa != 0 && sortear(byte(pessoa, 0x28) as i32 + 0xf) == 0 {
+        *v = (*v).wrapping_add(0xff06);
+        return 0;
+    }
+    if na_area(j, lado(j) as u8) as u8 != 0 && sortear(4) != 0 {
+        return 0;
+    }
+    *v = (*v).wrapping_add(0xaf);
+    let marca = if codigo == 0x25 { sortear(0x14) != 0 } else { sortear(0x9b) == 0 && byte(motor, 0x8ea9) > 1 };
+    if !marca {
+        return 0;
+    }
+    let r = sortear(byte(j, 0x14) as u8 as i32);
+    *valor = (r as u8).wrapping_add(1);
+    *tipo = 4;
+    1
+}
+
+// ---------- vigesima quinta leva: cartoes ----------
+
+/// Cartao amarelo: o primeiro grava `x` em 0x25 (0x24 = 1, tipo 2, peso 2,0); o segundo, em 0x26
+/// (0x24 + 1, tipo 3, peso 3,5).
+unsafe fn amarelo(j: usize, tipo: *mut u8, x: i8, peso: *mut f32) {
+    let n = (j + 0x24) as *mut u8;
+    if *n != 0 {
+        *n = (*n).wrapping_add(1);
+        *tipo = 3;
+        *peso = 3.5;
+        *((j + 0x26) as *mut i8) = x;
+    } else {
+        *n = 1;
+        *tipo = 2;
+        *peso = 2.0;
+        *((j + 0x25) as *mut i8) = x;
+    }
+}
+
+/// Desconto na disposicao pelo cartao: ftol(c x c') ou, com 0x8ed0 / 11 acima de 45, ftol(c'' / (0x8ed0 / 11) x c').
+unsafe fn desconto_do_cartao(motor: usize, j: usize) {
+    let q = (*((motor + 0x8ed0) as *const i16) as i32 / 11) as i16;
+    let base = if q > 0x2d { f32_em(0x96d64c) as f64 / q as f64 } else { f32_em(0x968e70) as f64 };
+    let d = (j + 0x35) as *mut i16;
+    *d = (*d).wrapping_add(ftol(base * f32_em(0x96d648) as f64) as i16);
+}
+
+/// Contador de faltas do lado no motor (0xf5c9 + 54 x lado).
+unsafe fn contar_falta(motor: usize, j: usize) {
+    let c = (motor as isize + 0xf5c9 + 54 * lado(j) as isize) as *mut u8;
+    *c = (*c).wrapping_add(1);
+}
+
+unsafe fn na_area_do_jogador(j: usize) -> bool {
+    let f: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(0x6f5b20usize);
+    f(j, lado(j) as u8) as u8 != 0
+}
+
+/// { 0x6e9630 }: punicao da falta (tipo 1): vermelho direto (-1000, tipo 4), amarelo pela
+/// severidade contra sorteios, ou so -25; com `flag` (ou papel 1), sorteio(3000): acima de 475
+/// vermelho (-750, tipo 6, 9 no registro), acima de 50 (ou na area) amarelo com -375.
+unsafe extern "thiscall" fn punir_falta(this: usize, j: usize, tipo: *mut u8, x: i8, severidade: i8, flag: u8, peso: *mut f32) {
+    *peso = 1.5;
+    let motor = *(this as *const usize);
+    contar_falta(motor, j);
+    *((j + 0x14) as *mut u8) = (*((j + 0x14) as *const u8)).wrapping_add(1);
+    if *tipo != 1 || byte(motor, 0x8eb3) != 0 {
+        return;
+    }
+    let d = (j + 0x35) as *mut i16;
+    let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+    if flag == 0 && tabela(motor, j) & 1 == 0 {
+        if severidade as i32 > sortear(0xf) + 9 {
+            *d = (*d).wrapping_add(-1000);
+            *tipo = 4;
+            *peso = 5.0;
+        } else if severidade as i32 > sortear(5) + 3 {
+            desconto_do_cartao(motor, j);
+            amarelo(j, tipo, x, peso);
+        } else {
+            *d = (*d).wrapping_add(-25);
+        }
+        return;
+    }
+    let r = sortear(0xbb8) as i16;
+    if r > 0x1db {
+        *d = (*d).wrapping_add(-750);
+        *tipo = 6;
+        *peso = 5.0;
+        *((j + if byte(j, 0x24) != 0 { 0x26 } else { 0x25 }) as *mut u8) = 9;
+        return;
+    }
+    if r <= 0x32 && !na_area_do_jogador(j) {
+        return;
+    }
+    *d = (*d).wrapping_add(-375);
+    amarelo(j, tipo, x, peso);
+}
+
+/// { 0x6ea4e0 }: como `punir_falta`, para outro tipo de lance: inativo, peso 10; tipo 7, peso
+/// 1,25; com `flag`, sorteio(3000) acima de 375 e vermelho (tipo 5), senao amarelo com desconto
+/// (acima de 50, ou na area); sem `flag`, vermelho pela severidade (marca 0x16 com `expulsar`),
+/// amarelo contra sorteio(6) ou -25. Conta a falta no jogador e 0x15 no outro.
+unsafe extern "thiscall" fn punir_lance(this: usize, j: usize, outro: usize, tipo: *mut u8, x: i8, severidade: i8, flag: u8, peso: *mut f32, expulsar: u8) {
+    *peso = 1.5;
+    if byte(j, 0x19) < 0 {
+        *peso = 10.0;
+        return;
+    }
+    let motor = *(this as *const usize);
+    let d = (j + 0x35) as *mut i16;
+    match *tipo {
+        7 => {
+            *peso = 1.25;
+            contar_falta(motor, j);
+        }
+        1 if byte(motor, 0x8eb3) == 0 => {
+            contar_falta(motor, j);
+            if flag != 0 {
+                let r = sortear(0xbb8) as i16;
+                if r > 0x177 {
+                    *d = (*d).wrapping_add(-750);
+                    *tipo = 5;
+                    *peso = 5.0;
+                    *((j + if byte(j, 0x24) != 0 { 0x26 } else { 0x25 }) as *mut u8) = 9;
+                } else if r > 0x32 || na_area_do_jogador(j) {
+                    desconto_do_cartao(motor, j);
+                    amarelo(j, tipo, x, peso);
+                }
+            } else if severidade as i32 > sortear(0xf) + 7 {
+                *d = (*d).wrapping_add(-1000);
+                *tipo = 4;
+                *peso = 5.0;
+                *((j + if byte(j, 0x24) != 0 { 0x26 } else { 0x25 }) as *mut i8) = x;
+                if expulsar != 0 {
+                    *((j + 0x16) as *mut u8) = 1;
+                }
+            } else if severidade as i32 > sortear(6) {
+                desconto_do_cartao(motor, j);
+                amarelo(j, tipo, x, peso);
+            } else {
+                *d = (*d).wrapping_add(-25);
+            }
+        }
+        _ => return,
+    }
+    *((j + 0x14) as *mut u8) = (*((j + 0x14) as *const u8)).wrapping_add(1);
+    *((outro + 0x15) as *mut u8) = (*((outro + 0x15) as *const u8)).wrapping_add(1);
+}
+
 /// `tabela_a` do motor do jogador (0 sem motor), pelo endereco do jogo: os bits do papel tatico.
 unsafe fn papel_word(motor: usize, j: usize) -> u16 {
     if motor == 0 {
@@ -3295,6 +3510,50 @@ unsafe extern "thiscall" fn comparar_pegar_bola(this: usize) {
     PLACAR.registrar(igual, || format!("pegar_bola(lado {}, {} {}) original={:x?} rust={:x?}", lado(this), byte(this, 0x102), byte(this, 0x103), mo, mr));
 }
 
+unsafe extern "thiscall" fn comparar_iniciar_rigor(this: usize, motor: u32, pessoa: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize)>(117);
+    let mut reg = vec![(this, 10)];
+    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, motor, pessoa), || crate::aleatorio::sem_contar(|| iniciar_rigor(this, motor, pessoa)));
+    PLACAR.registrar(igual, || format!("iniciar_rigor original={:x?} rust={:x?}", mo, mr));
+}
+unsafe extern "thiscall" fn comparar_lance_valendo(this: usize) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u8>(118);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x475a, 16)], || o(this), || lance_valendo(this));
+    PLACAR.registrar(igual && r == n, || format!("lance_valendo original={} {:x?} rust={} {:x?}", r, mo, n, mr));
+    r
+}
+unsafe extern "thiscall" fn comparar_decidir_falta(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8>(119);
+    let motor = *(this as *const usize);
+    let mut reg = vec![(this + 8, 2), (tipo as usize, 1), (valor as usize, 1), (motor + 0x475a, 16)];
+    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, j, codigo, tipo, valor), || crate::aleatorio::sem_contar(|| decidir_falta(this, j, codigo, tipo, valor)));
+    PLACAR.registrar(igual && r == n, || format!("decidir_falta({:#x}) original={} {:x?} rust={} {:x?}", codigo, r, mo, n, mr));
+    r
+}
+
+unsafe fn regioes_do_cartao(motor: usize, j: usize, tipo: *mut u8, peso: *mut f32) -> Vec<(usize, usize)> {
+    let mut reg = vec![(j, 0x40), (tipo as usize, 1), (peso as usize, 4), ((motor as isize + 0xf5c9 + 54 * lado(j) as isize) as usize, 1)];
+    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    reg
+}
+unsafe extern "thiscall" fn comparar_punir_falta(this: usize, j: usize, tipo: *mut u8, x: i8, sev: i8, flag: u8, peso: *mut f32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u8, i8, i8, u8, *mut f32)>(120);
+    let reg = regioes_do_cartao(*(this as *const usize), j, tipo, peso);
+    let t0 = *tipo;
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, j, tipo, x, sev, flag, peso), || crate::aleatorio::sem_contar(|| punir_falta(this, j, tipo, x, sev, flag, peso)));
+    PLACAR.registrar(igual, || format!("punir_falta(tipo {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
+}
+unsafe extern "thiscall" fn comparar_punir_lance(this: usize, j: usize, outro: usize, tipo: *mut u8, x: i8, sev: i8, flag: u8, peso: *mut f32, expulsar: u8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8)>(121);
+    let mut reg = regioes_do_cartao(*(this as *const usize), j, tipo, peso);
+    reg.push((outro + 0x15, 1));
+    let t0 = *tipo;
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, j, outro, tipo, x, sev, flag, peso, expulsar), || crate::aleatorio::sem_contar(|| punir_lance(this, j, outro, tipo, x, sev, flag, peso, expulsar)));
+    PLACAR.registrar(igual, || format!("punir_lance(tipo {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -3419,6 +3678,11 @@ pub unsafe fn instalar(comparando: bool) {
         nota_ajustada as *const () as usize,
         ajustar_17 as *const () as usize,
         pegar_bola as *const () as usize,
+        iniciar_rigor as *const () as usize,
+        lance_valendo as *const () as usize,
+        decidir_falta as *const () as usize,
+        punir_falta as *const () as usize,
+        punir_lance as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -3538,6 +3802,11 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_nota_ajustada as *const () as usize,
         comparar_ajustar_17 as *const () as usize,
         comparar_pegar_bola as *const () as usize,
+        comparar_iniciar_rigor as *const () as usize,
+        comparar_lance_valendo as *const () as usize,
+        comparar_decidir_falta as *const () as usize,
+        comparar_punir_falta as *const () as usize,
+        comparar_punir_lance as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -3565,6 +3834,8 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_ler_1bc", "motor_somar_2b", "motor_gravar_2b", "motor_tabela_a_1a_do_jogador", "motor_tabela_b_do_jogador", "motor_diferenca_do_jogador", "motor_marcas_do_jogador_rot", "motor_marca_800000", "motor_perto_do_proprio_gol", "motor_papel_880", "motor_soltar_bola", "motor_jogador_pela_ficha", "motor_byte_do_codigo",
         "motor_nota_ajustada", "motor_ajustar_17",
         "motor_pegar_bola",
+        "motor_iniciar_rigor", "motor_lance_valendo", "motor_decidir_falta",
+        "motor_punir_falta", "motor_punir_lance",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -4245,6 +4516,51 @@ pub unsafe fn autoteste(casos: u64) {
             }
             *((m + 0x4782) as *mut u32) = (h22 >> 13) as u32;
             comparar_pegar_bola(j);
+            // vigesima quarta leva
+            let h23 = s.proximo();
+            let h24 = s.proximo();
+            let arb = jogadores[2].as_mut_ptr() as usize;
+            let pe24 = pessoas[1].as_mut_ptr();
+            *(pe24.add(0x1e) as *mut i16) = [0i16, 151, 150, 349, 350, -3, ((h23 >> 8) % 420) as i16][(h23 % 7) as usize];
+            *pe24.add(0x28) = [0u8, 0xf1, 0xf0, 2, (h23 >> 16) as u8 % 20][((h23 >> 24) % 5) as usize];
+            comparar_iniciar_rigor(arb, m as u32, if (h23 >> 27) % 4 == 0 { 0 } else { pe24 as usize });
+            *((arb + 4) as *mut usize) = if (h23 >> 29) % 4 == 0 { 0 } else { pe24 as usize };
+            // lance: jogador do lance, dono da bola e a linha
+            let jl = jogador_do_bloco(m, ((h23 >> 31) % 2) as i8, ((h23 >> 32) % 20) as usize);
+            let dn = jogador_do_bloco(m, ((h23 >> 37) % 2) as i8, ((h23 >> 38) % 20) as usize);
+            *((m + 0x475a) as *mut u8) = if (h23 >> 43) % 5 == 0 { 0 } else { 3 };
+            *((m + 0x4761) as *mut usize) = if (h23 >> 45) % 6 == 0 { 0 } else { jl };
+            *((m + 0xf582) as *mut usize) = if (h23 >> 47) % 6 == 0 { 0 } else { dn };
+            *((m + 0x8ea8) as *mut i8) = ((h23 >> 49) % 13) as i8 - 1;
+            *((m + 0x475c) as *mut i8) = ((h23 >> 53) % 13) as i8 - 1;
+            comparar_lance_valendo(m);
+            *((m + 0x475a) as *mut u8) = if (h24 >> 3) % 3 == 0 { 3 } else { 0 };
+            *((m + 0x8ea9) as *mut i8) = ((h24 >> 5) % 5) as i8 - 1;
+            let jf = if (h24 >> 8) % 2 == 0 { jl } else { dn };
+            *((jf + 0x14) as *mut u8) = [(h24 >> 9) as u8 % 25, 200, 255][((h24 >> 60) % 3) as usize];
+            *((jf + 0x102) as *mut i8) = ((h24 >> 17) % 10) as i8 - 1;
+            *((jf + 0x103) as *mut i8) = [0i8, 1, 10, 11, ((h24 >> 21) % 12) as i8][((h24 >> 25) % 5) as usize];
+            *((arb + 8) as *mut u16) = (h24 >> 28) as u16;
+            let (mut t24, mut v24) = (0u8, 0u8);
+            comparar_decidir_falta(arb, jf, if (h24 >> 44) % 2 == 0 { 0x25 } else { (h24 >> 45) as u16 % 64 }, &mut t24, &mut v24);
+            // vigesima quinta leva: cartoes (tipo 1 na maioria; 7 e outros tambem)
+            let h25 = s.proximo();
+            let h26 = s.proximo();
+            let jc = jogador_do_bloco(m, ((h25 >> 1) % 2) as i8, ((h25 >> 2) % 20) as usize);
+            let oc = jogador_do_bloco(m, ((h25 >> 7) % 2) as i8, ((h25 >> 8) % 20) as usize);
+            *((jc + 0x24) as *mut u8) = [0u8, 0, 1, 2][((h25 >> 13) % 4) as usize];
+            *((jc + 0x102) as *mut i8) = ((h25 >> 15) % 10) as i8 - 1;
+            *((jc + 0x103) as *mut i8) = [0i8, 1, 10, 11, ((h25 >> 19) % 12) as i8][((h25 >> 23) % 5) as usize];
+            *((m + 0x8eb3) as *mut u8) = ((h25 >> 26) % 6 == 0) as u8;
+            *((m + 0x8ed0) as *mut i16) = [0i16, 495, 496, 506, 1000, -600, (h26 >> 3) as i16][((h25 >> 29) % 7) as usize];
+            let mut tc = [1u8, 1, 1, 7, 2, 0][((h25 >> 32) % 6) as usize];
+            let mut pc = 0f32;
+            let sev = ((h25 >> 35) % 30) as i8 - 5;
+            let flag = ((h25 >> 40) % 3 == 0) as u8 | (((h25 >> 41) as u8) & 0xfe & if (h25 >> 49) % 5 == 0 { 0xff } else { 0 });
+            comparar_punir_falta(arb, jc, &mut tc, ((h25 >> 42) % 90) as i8, sev, flag, &mut pc);
+            let mut tc2 = [1u8, 1, 1, 7, 2, 0][((h26 >> 32) % 6) as usize];
+            *((jc + 0x19) as *mut i8) = if (h26 >> 36) % 7 == 0 { -1 } else { ((h26 >> 37) % 11) as i8 };
+            comparar_punir_lance(arb, jc, oc, &mut tc2, ((h26 >> 41) % 90) as i8, ((h26 >> 48) % 30) as i8 - 5, ((h26 >> 54) % 3 == 0) as u8, &mut pc, ((h26 >> 56) % 2) as u8);
             comparar_escolher_c(m, (alto13 & !0xff) | ((h13 >> 53) % 2) as u32, if (h13 >> 54) % 3 == 0 { 0x100 | ((h13 >> 56) as u32 & 0xfe00) } else { (h13 >> 57) as u32 & 0xff });
             comparar_distancia_entre(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
         }
