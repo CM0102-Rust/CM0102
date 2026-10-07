@@ -4,6 +4,7 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 
 - **Responda sempre em português (Brasil).**
 - **Wiki primeiro:** leia `wiki/index.md` antes de trabalhar; ao fim da sessão, atualize `wiki/index.md` (estado) e registre em `wiki/log.md`.
+- **Documentação bilíngue:** todo `.md` do projeto tem a versão em inglês ao lado (`.en.md`). Ao criar ou mudar um, atualize o par no mesmo commit. O português é o original; o código e os comentários no código seguem em português.
 - Leitura obrigatória: `docs/DESCOMPILACAO.md` (tudo o que se sabe do binário) e `docs/COMO_CONTINUAR.md` (o ciclo de uma leva do motor).
 
 ## Decisões em vigor (não mudar sem o Lucas)

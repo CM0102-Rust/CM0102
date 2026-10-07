@@ -1,3 +1,5 @@
+*[English version](README.en.md). Toda a documentação tem versão em inglês (`.en.md`).*
+
 # Championship Manager 01/02: reconstrução
 
 Championship Manager: Season 01/02 (Sports Interactive / Eidos, 2001), versão 3.9.68, liberado gratuitamente pela Eidos e pela SI.
