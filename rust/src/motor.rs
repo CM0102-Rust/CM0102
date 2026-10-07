@@ -231,8 +231,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6cd490, bytes: &[0x56, 0x8b, 0xf1, 0x8a, 0x86, 0xb2, 0x8e, 0x00, 0x00] },
     // quadragesima primeira leva (prova de rotina grande)
     Prologo { endereco: 0x700bd0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
+    // quadragesima segunda leva (integradora grande)
+    Prologo { endereco: 0x6c0c60, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 144;
+const N: usize = 145;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3907,6 +3909,297 @@ unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 {
     bola_fora_com(this, lado_b, &mut |t, a| comentar(t, a))
 }
 
+// ---------- quadragesima segunda leva: forca do time (0x6c0c60, 5 KB) ----------
+
+/// Degrau de multiplicadores pelo atributo `x` (byte com sinal): a primeira regra que vale
+/// multiplica pela constante float `k` (0: nenhuma). Regras: ('>', limite), ('<', limite) ou
+/// ('*', _) (sempre). `arredondar`: o original guarda em float a cada passo (fld/fmul/fstp).
+unsafe fn degrau(v: f64, x: i8, regras: &[(char, i8, usize)], arredondar: bool) -> f64 {
+    for &(op, lim, k) in regras {
+        let vale = match op {
+            '>' => x > lim,
+            '<' => x < lim,
+            _ => true,
+        };
+        if vale {
+            if k == 0 {
+                return v;
+            }
+            let n = v * f32_em(k) as f64;
+            return if arredondar { n as f32 as f64 } else { n };
+        }
+    }
+    v
+}
+
+/// sorteio(atributo 0x21 da pessoa) < sorteio(20): multiplica por 0x96d248.
+unsafe fn sorte_do_dia(v: f64, pessoa: usize) -> f64 {
+    let a = sortear(byte(pessoa, 0x21) as i32);
+    if a < sortear(0x14) {
+        (v * f32_em(0x96d248) as f64) as f32 as f64
+    } else {
+        v
+    }
+}
+
+/// Palavra do motor (com sinal) vezes `k`, truncada de volta na palavra `destino`.
+unsafe fn palavra_vezes(this: usize, origem: usize, k: f64, destino: usize) {
+    let v = *((this + origem) as *const i16) as f64;
+    *((this + destino) as *mut i16) = ftol(v * k) as i16;
+}
+
+/// { 0x6c0c60 } (match_eng.cpp): forca do time por lado em sete palavras (0x1da, 0x1de ... 0x1f2,
+/// de 4 em 4, + 2 x lado), somando os 20 jogadores do bloco. Por jogador ativo: desgaste,
+/// componentes (combinacoes dos floats do jogador, ajustadas pelos atributos da pessoa e por
+/// sorteios) e, pelo papel tatico (bits 1..0x40), ajuste da palavra 0x35 e as parcelas.
+/// Depois, ajustes pela competicao, pela reputacao dos clubes e pelo lado.
+/// Jogador sem ficha (0x69): o original mostra uma caixa de erro e zera 0xb67a34 (aqui, so isso).
+unsafe extern "thiscall" fn forca_do_time(this: usize, lado_b: i8) {
+    let w = |o: usize| (this as isize + o as isize + 2 * lado_b as isize) as *mut i16;
+    for o in (0x1da..=0x1f2).step_by(4) {
+        *w(o) = 0;
+    }
+    let f = |p: usize, o: usize| f32_em(p + o) as f64;
+    let (k898, k8a8) = (f64_em(0x967898), f64_em(0x9688a8));
+    let (cinquenta, meio) = (f32_em(0x969560) as f64, f32_em(0x968f18) as f64);
+    for k in 0..20 {
+        let p = jogador_do_bloco(this, lado_b, k);
+        if byte(p, 0x19) < 0 {
+            continue;
+        }
+        if *((p + 0x69) as *const usize) == 0 {
+            *(0xb67a34 as *mut u32) = 0;
+            return;
+        }
+        let pessoa = *((p + 0x6d) as *const usize);
+        let desgastar: unsafe extern "thiscall" fn(usize, f32, i16) = core::mem::transmute(0x6f56c0usize);
+        desgastar(p, (30 - byte(pessoa, 0x3c) as i32) as f32, -1);
+        let papel = f717410(p) as u8;
+        let palavra5 = |pe: usize| *((pe + 5) as *const i16) as f64;
+        // S: chute e finalizacao
+        let mut s = ((((((f(p, 0xdd) + f(p, 0xcd)) + f(p, 0xc1)) + f(p, 0x7d)) + cinquenta) * meio + f32_em(0x96d3c8) as f64)
+            + f(p, 0x4d) * k898
+            - k8a8) as f32 as f64;
+        if pessoa != 0 {
+            let t = (byte(pessoa, 0x2f) >> 2) as f64 + s;
+            let kw = if papel & 4 != 0 || papel & 2 != 0 {
+                0x967880
+            } else if papel & 8 != 0 {
+                0x96d3c0
+            } else {
+                0x967898
+            };
+            s = (palavra5(pessoa) * f64_em(kw) + t) as f32 as f64;
+            let padrao = [('>', 15, 0x96d3b8), ('<', 6, 0x96b014), ('<', 10, 0x96d3b4)];
+            let forte = [('>', 15, 0x96d3b0), ('<', 6, 0x96b014), ('<', 10, 0x96d3b4)];
+            s = degrau(s, byte(pessoa, 0x32), &padrao, true);
+            s = degrau(s, byte(pessoa, 0x3c), &[('>', 15, 0x96d3b8), ('<', 6, 0x96a32c), ('<', 10, 0x96b014)], true);
+            s = degrau(s, byte(pessoa, 0x44), &forte, true);
+            s = degrau(s, byte(pessoa, 0x3e), &padrao, true);
+            s = degrau(s, byte(pessoa, 0x1e), &padrao, true);
+            s = degrau(s, byte(pessoa, 0x2e), &forte, true);
+            s = degrau(s, byte(pessoa, 0x2b), &forte, true);
+            let soma = byte(pessoa, 0x36).wrapping_add(byte(pessoa, 0x1b));
+            s = degrau(s, soma, &[('>', 0x23, 0x96d3b0), ('<', 10, 0x96a32c), ('<', 0x14, 0x96d3b4)], true);
+            s = sorte_do_dia(s, pessoa);
+        }
+        // T2
+        let mut t2 = ((((((f(p, 0xf1) * 2.0 + f(p, 0xc5) * 2.0) + f(p, 0x9d)) + f(p, 0xa9)) + f(p, 0x8d) * f64_em(0x968940)) + f64_em(0x968ff8))
+            * f64_em(0x968968)
+            + f(p, 0x4d) * k898
+            + f64_em(0x96d3a8)
+            - k8a8) as f32 as f64;
+        if pessoa != 0 {
+            let kw = if papel & 0x40 != 0 {
+                0x967880
+            } else if papel & 0x20 != 0 {
+                0x96d3a0
+            } else if papel & 0x10 != 0 {
+                0x96d398
+            } else if papel & 8 != 0 {
+                0x96a740
+            } else {
+                0x967898
+            };
+            t2 = (palavra5(pessoa) * f64_em(kw) + t2) as f32 as f64;
+            t2 = degrau(t2, byte(pessoa, 0x44), &[('>', 15, 0x96d3b8), ('<', 6, 0x96d394)], true);
+            t2 = degrau(t2, byte(pessoa, 0x3c), &[('>', 15, 0x96d3b0), ('<', 6, 0x96b014)], true);
+            t2 = degrau(t2, byte(pessoa, 0x35), &[('>', 15, 0x96a33c), ('<', 6, 0x96a32c)], true);
+            let tres = [('>', 15, 0x96d390), ('<', 6, 0x96d38c), ('<', 10, 0x96d394)];
+            t2 = degrau(t2, byte(pessoa, 0x37), &tres, true);
+            t2 = degrau(t2, byte(pessoa, 0x43), &tres, true);
+            let soma = byte(pessoa, 0x40).wrapping_add(byte(pessoa, 0x36)).wrapping_add(byte(pessoa, 0x26)).wrapping_add(byte(pessoa, 0x1b));
+            t2 = degrau(t2, soma, &[('>', 0x4b, 0x96d388), ('>', 0x41, 0x96d3b8), ('>', 0x32, 0x96d3b0), ('>', 0x23, 0), ('>', 0x19, 0x96d3b4), ('*', 0, 0x96d394)], true);
+            t2 = degrau(t2, byte(pessoa, 0x1e), &[('>', 15, 0x96a33c), ('<', 10, 0x96b014), ('<', 6, 0x96a32c)], true);
+            t2 = degrau(t2, byte(pessoa, 0x33), &[('>', 15, 0x96d3b8), ('<', 6, 0x96b014), ('<', 10, 0x96d3b4)], true);
+            t2 = degrau(t2, byte(pessoa, 0x3f), &[('>', 15, 0x96d3b0), ('<', 10, 0x96b014), ('<', 5, 0x96a32c)], true);
+            t2 = sorte_do_dia(t2, pessoa);
+        }
+        // T3
+        let k940 = f64_em(0x968940);
+        let soma3 = (((f(p, 0x95) + f(p, 0x71)) + f(p, 0xb9) * k940) + f(p, 0x99) * 2.0) + f(p, 0x7d) * k940;
+        let mut t3 = ((((soma3 + f(p, 0xa9)) + f(p, 0xc1)) + f64_em(0x968ff8)) * f64_em(0x968968)
+            + f(p, 0x4d) * k898
+            + f64_em(0x96d380)
+            - k8a8) as f32 as f64;
+        if pessoa != 0 {
+            let kw = if papel & 0x40 != 0 {
+                0x968918
+            } else if papel & 0x20 != 0 {
+                0x96d378
+            } else if papel & 0x10 != 0 {
+                0x96d1e0
+            } else if papel & 8 != 0 {
+                0x96d370
+            } else {
+                0x967898
+            };
+            // em st0, sem guardar em float entre os degraus
+            let mut v = palavra5(pessoa) * f64_em(kw) + t3;
+            let forte = [('>', 15, 0x96d3b0), ('<', 6, 0x96b014), ('<', 10, 0x96d3b4)];
+            v = degrau(v, byte(pessoa, 0x44), &forte, false);
+            v = degrau(v, byte(pessoa, 0x3c), &forte, false);
+            v = degrau(v, byte(pessoa, 0x35), &[('>', 15, 0x96d3b8), ('>', 10, 0x96d3b0), ('<', 6, 0x96d394)], false);
+            v = degrau(v, byte(pessoa, 0x31), &[('>', 15, 0x96d368), ('>', 10, 0x96d3b0), ('<', 6, 0x96d3b4)], false);
+            let soma = byte(pessoa, 0x36).wrapping_add(byte(pessoa, 0x26)).wrapping_add(byte(pessoa, 0x1b)).wrapping_add(byte(pessoa, 0x40));
+            v = degrau(v, soma, &[('>', 0x4b, 0x96d388), ('>', 0x41, 0x96d3b8), ('>', 0x32, 0x96d3b0), ('<', 10, 0x96d320), ('<', 0x19, 0x96d364), ('*', 0, 0x96b014)], false);
+            t3 = v as f32 as f64;
+            t3 = degrau(t3, byte(pessoa, 0x1e), &[('>', 15, 0x96d388), ('<', 6, 0x96a32c), ('<', 10, 0x96d360)], true);
+            t3 = degrau(t3, byte(pessoa, 0x33), &[('>', 15, 0x96d388), ('>', 10, 0x96d3b0), ('<', 6, 0x96d394)], true);
+            t3 = degrau(t3, byte(pessoa, 0x40), &[('>', 15, 0x96d3b8)], true);
+            t3 = sorte_do_dia(t3, pessoa);
+        }
+        // C1, C4 (fica no x87, sem arredondar), C5, C6
+        let c1 = ((((f(p, 0xd1) + f(p, 0xcd)) + f(p, 0xa5)) + cinquenta) * meio + cinquenta + f(p, 0x4d) * k898 - k8a8) as f32 as f64;
+        let v4d = f(p, 0x4d);
+        let condicao: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(0x7165b0usize);
+        let c = condicao(p, 0) as i8 as f64;
+        let c4 = ((c + f(p, 0x75)) + cinquenta) * meio + cinquenta + v4d * k898 - k8a8;
+        let a = f(p, 0xad) + f(p, 0xcd);
+        let dd = v4d * k898;
+        let c5 = (((a + f(p, 0xa9)) + cinquenta) * meio + cinquenta + dd - k8a8) as f32 as f64;
+        let c6 = (((a + f(p, 0xa5)) + cinquenta) * meio + cinquenta + dd - k8a8) as f32 as f64;
+        // papel: (desconto em 0x35, limiar, fatores de S, T2, T3, C1, C4, C5, C6; 0 = parcela ausente)
+        let (desconto, limiar, ks): (i16, usize, [usize; 7]) = if papel & 1 != 0 {
+            (3, 0x96d35c, [0x96d330, 0, 0, 1, 0x967880, 0, 0x96d330])
+        } else if papel & 2 != 0 {
+            (13, 0x96d358, [0x9689b8, 0x968918, 0x967880, 0x9689e0, 0x968968, 0x969040, 0x968968])
+        } else if papel & 4 != 0 {
+            (13, 0x96d358, [1, 0x968f20, 0x967880, 0x968918, 0x968968, 0x969040, 0x968968])
+        } else if papel & 8 != 0 {
+            (12, 0x96d354, [0x969520, 0x96d328, 0x96d340, 0x968f20, 0x968968, 0x969040, 0x968968])
+        } else if papel & 0x10 != 0 {
+            (8, 0x96d350, [0x968e00, 0x969040, 0x96d338, 0x967888, 0x968968, 0x969040, 0x968968])
+        } else if papel & 0x20 != 0 {
+            (11, 0x96d34c, [0x968f20, 0x968978, 0x9689d0, 0x968a98, 0x968968, 0x969040, 0x969510])
+        } else if papel & 0x40 != 0 {
+            (0x19, 0x96d348, [0x967888, 0x968f88, 0x968940, 0x968a98, 0x968968, 0x968940, 0x968918])
+        } else {
+            continue;
+        };
+        let p35 = (p + 0x35) as *mut i16;
+        let v = (*p35).wrapping_sub(desconto);
+        *p35 = if v as f64 <= f32_em(limiar) as f64 { v.wrapping_add(5) } else { v.wrapping_sub(5) };
+        let parcelas = [s, t2, t3, c1, c4, c5, c6];
+        for (i, &kk) in ks.iter().enumerate() {
+            if kk == 0 {
+                continue;
+            }
+            // 1: sem fator (S do papel 4); C1 do papel 1 entra dobrado
+            let x = match (kk, i) {
+                (1, 3) => parcelas[3] + parcelas[3],
+                (1, _) => parcelas[i],
+                _ => parcelas[i] * f64_em(kk),
+            };
+            *w(0x1da + 4 * i) = (*w(0x1da + 4 * i)).wrapping_add(ftol(x) as i16);
+        }
+    }
+    let partida = *((this + 0x4792) as *const usize);
+    // pela competicao (le a palavra do lado 0, grava na do lado)
+    if partida != 0 {
+        let clube = *((partida + 0x1c) as *const usize);
+        let jogo = *((partida + 0x14) as *const usize);
+        if clube != 0 && jogo != 0 {
+            let comp = *((clube + 0x53) as *const usize);
+            if *((jogo + 0x5d) as *const usize) == comp && comp != 0 {
+                let id = *(comp as *const u32);
+                let g = |a: usize| *(a as *const u32);
+                let k = if id == g(0x9cf314) || id == g(0x9cf45c) || id == g(0x9cf244) {
+                    0x96d390
+                } else if id == g(0x9cf4a8) {
+                    0x96b010
+                } else if id == g(0x9cf408) || id == g(0x9cf2e4) {
+                    0x96d3b8
+                } else if id == g(0x9cf338) || id == g(0x9cf2c0) || id == g(0x9cf434) || id == g(0x9cf300) {
+                    0x96a33c
+                } else {
+                    0
+                };
+                if k != 0 {
+                    *w(0x1de) = ftol(*((this + 0x1de) as *const i16) as f64 * f32_em(k) as f64) as i16;
+                }
+            }
+        }
+    }
+    *w(0x1de) = ftol(*w(0x1de) as f64 * f32_em(0x96d3b8) as f64) as i16;
+    *w(0x1e2) = ftol(*w(0x1e2) as f64 * f32_em(0x96d3b0) as f64) as i16;
+    let jogo = *((partida + 0x14) as *const usize);
+    let aplica = if jogo == 0 {
+        true
+    } else {
+        let quem = *(0xae2c74 as *const usize);
+        if quem == 0 {
+            false
+        } else {
+            let f: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(0x5c6710usize);
+            f(quem, jogo) != 0
+        }
+    };
+    if aplica {
+        *w(0x1de) = ftol(*((this + 0x1de) as *const i16) as f64 * f32_em(0x96a33c) as f64) as i16;
+    }
+    let (casa, fora) = (*((partida + 0x1c) as *const usize), *((partida + 0x20) as *const usize));
+    if casa != 0 && fora != 0 && *((casa + 0x80) as *const i16) < 0x9c4 {
+        *w(0x1de) = ftol(*w(0x1de) as f64 * f32_em(0x96d368) as f64) as i16;
+        *w(0x1e2) = ftol(*w(0x1e2) as f64 * f32_em(0x96d390) as f64) as i16;
+    }
+    if partida == 0 || casa == 0 || fora == 0 {
+        return;
+    }
+    let dif = (*((casa + 0x80) as *const i16)).wrapping_sub(*((fora + 0x80) as *const i16));
+    let (kf88, kafa8) = (f64_em(0x968f88), f64_em(0x96afa8));
+    if lado_b == 0 {
+        if dif > 1000 {
+            palavra_vezes(this, 0x1de, kf88, 0x1de);
+            palavra_vezes(this, 0x1e2, kf88, 0x1e2);
+            palavra_vezes(this, 0x1da, kf88, 0x1da);
+        } else if dif > -250 {
+            palavra_vezes(this, 0x1de, kf88, 0x1de);
+            palavra_vezes(this, 0x1e2, kafa8, 0x1e2);
+            palavra_vezes(this, 0x1da, kafa8, 0x1da);
+        } else {
+            palavra_vezes(this, 0x1da, kf88, 0x1da);
+            palavra_vezes(this, 0x1de, f64_em(0x96a6d8), 0x1de);
+        }
+        let (k1e2, k1da) = if dif > 0x4e2 {
+            (kf88, f64_em(0x9689b8))
+        } else if dif > 0x2ee {
+            (kf88, f64_em(0x969098))
+        } else if dif > 0xfa {
+            (kafa8, kf88)
+        } else {
+            return;
+        };
+        if byte(this, 0xf5bd) == 0 {
+            palavra_vezes(this, 0x1e2, k1e2, 0x1e2);
+        }
+        palavra_vezes(this, 0x1da, k1da, 0x1da);
+    } else if lado_b == 1 && dif < -750 && byte(this, 0xf5f3) == 0 {
+        palavra_vezes(this, 0x1e4, kf88, 0x1e4);
+        palavra_vezes(this, 0x1dc, kafa8, 0x1dc);
+    }
+}
+
 // ---------- quadragesima primeira leva: valor do chute (0x700bd0, 5,2 KB) ----------
 
 /// pow da CRT do jogo (0x945ff0, `_CIpow`: base em st1, expoente em st0), para o resultado ser
@@ -5371,6 +5664,18 @@ unsafe extern "thiscall" fn comparar_valor_chute(this: usize, tipo: *mut i8, som
     r
 }
 
+unsafe extern "thiscall" fn comparar_forca_do_time(this: usize, l: i8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8)>(144);
+    let mut reg = vec![(this + 0x1d8, 0x20), (0xb67a34, 4)];
+    for k in 0..20 {
+        let p = jogador_do_bloco(this, l, k);
+        reg.extend([(p + 0x35, 2), (p + 0x4d, 4)]);
+    }
+    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, l), || crate::aleatorio::sem_contar(|| forca_do_time(this, l)));
+    PLACAR.registrar(igual, || format!("forca_do_time({}) original={:x?} rust={:x?}", l, mo, mr));
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -5525,6 +5830,7 @@ pub unsafe fn instalar(comparando: bool) {
         comentario_b as *const () as usize,
         bola_fora as *const () as usize,
         valor_do_chute as *const () as usize,
+        forca_do_time as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -5671,6 +5977,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_comentario_b as *const () as usize,
         comparar_bola_fora as *const () as usize,
         comparar_valor_chute as *const () as usize,
+        comparar_forca_do_time as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -5716,6 +6023,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_comentario_a", "motor_comentario_b",
         "motor_bola_fora",
         "motor_valor_do_chute",
+        "motor_forca_do_time",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -5750,6 +6058,10 @@ pub unsafe fn autoteste(casos: u64) {
     let mut fichas = vec![0u32; 40];
     let mut pessoas = vec![vec![0u8; 0x80]; 4];
     let mut jogos = vec![0u8; 0x69 * 12 + 0x80];
+    let mut partida42 = vec![0u8; 0x40];
+    let mut clube42 = vec![vec![0u8; 0x90]; 2];
+    let mut jogo42 = vec![0u8; 0x70];
+    let mut comp42 = vec![0u8; 0x10];
     SINTETICO.store(true, std::sync::atomic::Ordering::Relaxed);
     PLACAR.autoteste(|| {
         for _ in 0..casos {
@@ -6735,6 +7047,69 @@ pub unsafe fn autoteste(casos: u64) {
             let mut tc41 = [-1i8, -1, -1, -1, 0x33, 0x35, 3, 5, 0x16, 0x39, 0x3a, 0x1b][((h47 >> 53) % 12) as usize];
             let mut som41 = 0u16;
             comparar_valor_chute(j, &mut tc41, &mut som41);
+            // quadragesima segunda leva: forca do time (papeis, atributos nas bordas, competicao, reputacoes)
+            let h48 = s.proximo();
+            let h49 = s.proximo();
+            let l42 = (h48 % 2) as i8;
+            for t in tabelas.iter_mut() {
+                for (k, v) in t.iter_mut().enumerate() {
+                    let r = h49.rotate_left(k as u32 * 5);
+                    *v = [1u16, 2, 4, 8, 0x10, 0x20, 0x40, 0, 0x80, (r >> 8) as u16][(r % 10) as usize];
+                }
+            }
+            for (k, pe) in pessoas.iter_mut().enumerate() {
+                for o in 0x1busize..0x46 {
+                    let r = h48.rotate_left((k * 37 + o) as u32 % 64) ^ h49.rotate_right(o as u32);
+                    pe[o] = match r % 9 {
+                        0 => (r >> 8) as u8,
+                        1 => [5u8, 6, 9, 10, 15, 16][((r >> 8) % 6) as usize],
+                        _ => ((r >> 8) % 21) as u8,
+                    };
+                }
+                pe[0x21] = (h49.rotate_left(k as u32 * 7) % 25) as u8;
+                let r = h48.rotate_left(k as u32 * 13);
+                pe[5..7].copy_from_slice(&(((r >> 3) % 300) as i16 - 20).to_le_bytes());
+            }
+            for k in 0..20usize {
+                let p = jogador_do_bloco(m, l42, k);
+                let r = h48.rotate_left(k as u32 * 3) ^ h49.rotate_right(k as u32 * 7);
+                *((p + 0x19) as *mut i8) = if r % 7 == 0 { -1 } else { ((r >> 3) % 11) as i8 };
+                *((p + 0x69) as *mut usize) = fichas.as_ptr().add(k) as usize;
+                *((p + 0x6d) as *mut usize) = pessoas[(r >> 7) as usize % 4].as_ptr() as usize;
+                *((p + 0x35) as *mut i16) = [7920i16, 7923, 5940, 5953, 5610, 5622, 6270, 6278, 6930, 6941, 7590, 7615, ((r >> 10) % 9000) as i16][((r >> 24) % 13) as usize];
+                *((p + 0x4d) as *mut f32) = ((r >> 30) % 10001) as f32;
+                for (n, o) in [0xddusize, 0xcd, 0xc1, 0x7d, 0xf1, 0xc5, 0x9d, 0xa9, 0x8d, 0x95, 0x71, 0xb9, 0x99, 0xd1, 0xa5, 0x75, 0xad].iter().enumerate() {
+                    let z = h49.rotate_left((k * 17 + n) as u32 % 64) ^ r;
+                    *((p + o) as *mut f32) = (z % 4000) as f32 / 100.0 - if z % 13 == 0 { 15.0 } else { 0.0 };
+                }
+            }
+            let pa = partida42.as_mut_ptr() as usize;
+            let (c42, f42, j42, x42) = (clube42[0].as_mut_ptr() as usize, clube42[1].as_mut_ptr() as usize, jogo42.as_mut_ptr() as usize, comp42.as_mut_ptr() as usize);
+            *((pa + 0x14) as *mut usize) = if (h48 >> 40) % 6 == 0 { 0 } else { j42 };
+            *((pa + 0x1c) as *mut usize) = if (h48 >> 43) % 8 == 0 { 0 } else { c42 };
+            *((pa + 0x20) as *mut usize) = if (h48 >> 46) % 8 == 0 { 0 } else { f42 };
+            *((c42 + 0x53) as *mut usize) = if (h48 >> 49) % 8 == 0 { 0 } else { x42 };
+            *((j42 + 0x5d) as *mut usize) = if (h48 >> 52) % 4 == 0 { 0 } else { x42 };
+            let ids = [0x9cf314usize, 0x9cf45c, 0x9cf244, 0x9cf4a8, 0x9cf408, 0x9cf2e4, 0x9cf338, 0x9cf2c0, 0x9cf434, 0x9cf300];
+            // as competicoes do jogo podem estar vazias no inicio: valores distintos durante o teste
+            let ids_antes: Vec<u32> = ids.iter().map(|&a| *(a as *const u32)).collect();
+            for (i, &a) in ids.iter().enumerate() {
+                *(a as *mut u32) = 0x7000 + i as u32;
+            }
+            *(x42 as *mut u32) = if (h48 >> 55) % 11 == 10 { 0x1234 } else { 0x7000 + ((h48 >> 55) % 11) as u32 };
+            let reps = [1000i16, 1001, 1251, 751, 251, 0, -250, -249, -751, -750, 2500, 2499, 30000, -30000];
+            *((c42 + 0x80) as *mut i16) = reps[((h49 >> 40) % 14) as usize];
+            *((f42 + 0x80) as *mut i16) = if (h49 >> 44) % 3 == 0 { 0 } else { reps[((h49 >> 46) % 14) as usize] };
+            *((m + 0x4792) as *mut usize) = pa;
+            *((m + 0xf5bd) as *mut u8) = ((h49 >> 50) % 2) as u8;
+            *((m + 0xf5f3) as *mut u8) = ((h49 >> 51) % 2) as u8;
+            for o in 0..0x10usize {
+                *((m + 0x1d8 + 2 * o) as *mut u16) = (h49 >> (o * 3)) as u16;
+            }
+            comparar_forca_do_time(m, l42);
+            for (i, &a) in ids.iter().enumerate() {
+                *(a as *mut u32) = ids_antes[i];
+            }
             comparar_escolher_c(m, (alto13 & !0xff) | ((h13 >> 53) % 2) as u32, if (h13 >> 54) % 3 == 0 { 0x100 | ((h13 >> 56) as u32 & 0xfe00) } else { (h13 >> 57) as u32 & 0xff });
             comparar_distancia_entre(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
         }

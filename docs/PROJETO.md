@@ -66,7 +66,7 @@ Rotinas que chamam outras com efeitos colaterais (por exemplo, a narração da p
 - As primeiras rotinas em Rust: o gerador de sorteios e as datas do jogo.
 
 ### Etapa 3: motor de partidas, em andamento (06 e 07/10/2026)
-- **41 levas, 145 rotinas** reescritas, de baixo para cima: dos acessores e cálculos às decisões táticas, posse de bola, arbitragem (faltas, cartões, impedimento), estatísticas, movimento dos jogadores, domínio da bola, narração e, como prova de viabilidade, o **valor do chute a gol** (uma rotina de 5,2 KB).
+- **42 levas, 145 rotinas** reescritas, de baixo para cima: dos acessores e cálculos às decisões táticas, posse de bola, arbitragem (faltas, cartões, impedimento), estatísticas, movimento dos jogadores, domínio da bola, narração e, como provas de viabilidade, o **valor do chute a gol** e a **força do time** (rotinas de 5 KB).
 - Infraestrutura nova: verificação dos desvios (`prologos.py`), porta de gravação para a narração e reprodução de chamadas internas.
 
 ## 6. Aonde vamos
@@ -83,4 +83,4 @@ Rotinas que chamam outras com efeitos colaterais (por exemplo, a narração da p
 - **Ritmo:** de 2 a 10 rotinas por leva e de 30 a 60 minutos de testes por leva. O motor sai em mais algumas dezenas de levas; o jogo inteiro, no mesmo método, é trabalho de meses.
 - **Máquina compartilhada:** os testes pesados respeitam uma trava entre sessões e um vigia de memória (houve um vazamento de driver que travou o PC).
 - **Interface:** traduzir ou reescrever (seção 6.3), a decidir quando o motor terminar.
-- **Rotinas grandes:** o teste com o valor do chute (5,2 KB) mostra se o método escala; o resultado entra aqui.
+- **Rotinas grandes:** o método escala. O valor do chute (5,2 KB) e a força do time (5,1 KB, cheia de chamadas internas com efeito) bateram com a original na primeira tentativa; os problemas foram só de infraestrutura de teste.
