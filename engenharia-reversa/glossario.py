@@ -5,7 +5,7 @@ Uso: python glossario.py   (depois de cada leva: rotina nova sem traducao no dic
 import os
 import re
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-s = open(RAIZ + r'\rust\src\motor.rs', encoding='utf-8').read()
+s = open(os.path.join(RAIZ, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
 i = s.index('let rust: [usize; N] = [')
 rust = re.findall(r'(\w+) as \*const', s[i:s.index('];', i)])
 pro = re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+)', s[:s.index('const N')])
