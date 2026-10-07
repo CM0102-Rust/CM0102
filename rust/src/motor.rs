@@ -221,8 +221,14 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x70d690, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
     // trigesima setima leva
     Prologo { endereco: 0x6ccb60, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x14] },
+    // trigesima oitava leva (match_day.cpp)
+    Prologo { endereco: 0x6b59a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x6b7cf0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    // trigesima nona leva (comentarios: invólucros de 0x6d6f70)
+    Prologo { endereco: 0x7002f0, bytes: &[0x8b, 0x44, 0x24, 0x14, 0x8b, 0x54, 0x24, 0x10] },
+    Prologo { endereco: 0x70a860, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] },
 ];
-const N: usize = 138;
+const N: usize = 142;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3782,6 +3788,80 @@ unsafe extern "thiscall" fn tracar_lance(this: usize, x0: i8, y0: i8, x1: i8, y1
     tracar_com(this, x0, y0, x1, y1, codigo, a6, a7, &mut |l, c, d, a, t, b| f(this, l, c, d, a, t, b, 1))
 }
 
+// ---------- trigesima oitava leva: jogos do dia (match_day.cpp) ----------
+
+/// { 0x6b59a0 } (match_day.cpp): o clube tem jogo na lista do dia ([this + 0x19], quantidade em
+/// 0x21, 0x69 bytes por jogo; mandante em 0x20, visitante em 0x24)? Com `so_marcados`, so os jogos
+/// com 0x5b preenchido. Clube nulo: o original mostra uma caixa de erro e devolve 0 (aqui, so 0).
+unsafe extern "thiscall" fn tem_jogo(this: usize, clube: u32, so_marcados: u32) -> u32 {
+    if clube == 0 {
+        return 0;
+    }
+    let n = *((this + 0x21) as *const i32);
+    let base = *((this + 0x19) as *const usize) + 0x20;
+    for k in 0..n.max(0) as usize {
+        let jogo = base + 0x69 * k;
+        if so_marcados != 0 && *((jogo + 0x3b) as *const u32) == 0 {
+            continue;
+        }
+        if *(jogo as *const u32) == clube || *((jogo + 4) as *const u32) == clube {
+            return 1;
+        }
+    }
+    0
+}
+
+/// { 0x6b7cf0 } (match_day.cpp, cdecl): o clube venceu o jogo? Decide pelos penaltis (0x49/0x4a),
+/// senao pela prorrogacao (0x47/0x48), senao pelo tempo normal (0x43/0x44); placar -1 nao conta.
+/// Jogo ou clube nulo, ou clube fora do jogo: o original mostra uma caixa de erro e devolve 0.
+unsafe extern "C" fn venceu_o_jogo(jogo: usize, clube: u32) -> u8 {
+    if jogo == 0 || clube == 0 {
+        return 0;
+    }
+    let mandante = *((jogo + 0x1c) as *const u32) == clube;
+    if !mandante && *((jogo + 0x20) as *const u32) != clube {
+        return 0;
+    }
+    for (a, b) in [(0x49, 0x4a), (0x47, 0x48), (0x43, 0x44)] {
+        let (pa, pb) = (byte(jogo, a), byte(jogo, b));
+        if pa > -1 {
+            return (if mandante { pa > pb } else { pa < pb }) as u8;
+        }
+    }
+    0
+}
+
+// ---------- trigesima nona leva: comentarios (0x6d6f70) ----------
+
+/// Chamada a 0x6d6f70 (enfileirar um evento de comentario): (this, 7 argumentos).
+type ChamarComentario<'a> = &'a mut dyn FnMut(usize, [u32; 7]);
+
+/// 0x6d6f70 pelo endereco do jogo.
+unsafe fn comentar(this: usize, a: [u32; 7]) {
+    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) = core::mem::transmute(0x6d6f70usize);
+    f(this, a[0], a[1], a[2], a[3], a[4], a[5], a[6])
+}
+
+/// { 0x7002f0 } (match_pl.cpp) com a chamada injetada: comentario com dois campos -1.
+unsafe fn comentario_a_com(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, chamar: ChamarComentario) {
+    chamar(this, [a1, a2, a3, a4, u32::MAX, u32::MAX, a5]);
+}
+
+/// { 0x7002f0 } (match_pl.cpp): enfileira um comentario (0x6d6f70) com dois campos -1.
+unsafe extern "thiscall" fn comentario_a(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) {
+    comentario_a_com(this, a1, a2, a3, a4, a5, &mut |t, a| comentar(t, a))
+}
+
+/// { 0x70a860 } (match_pl.cpp) com a chamada injetada: comentario com tres campos -1.
+unsafe fn comentario_b_com(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, chamar: ChamarComentario) {
+    chamar(this, [a1, a2, u32::MAX, a3, u32::MAX, u32::MAX, a4]);
+}
+
+/// { 0x70a860 } (match_pl.cpp): enfileira um comentario (0x6d6f70) com tres campos -1.
+unsafe extern "thiscall" fn comentario_b(this: usize, a1: u32, a2: u32, a3: u32, a4: u32) {
+    comentario_b_com(this, a1, a2, a3, a4, &mut |t, a| comentar(t, a))
+}
+
 /// `tabela_a` do motor do jogador (0 sem motor), pelo endereco do jogo: os bits do papel tatico.
 unsafe fn papel_word(motor: usize, j: usize) -> u16 {
     if motor == 0 {
@@ -4741,10 +4821,88 @@ unsafe extern "thiscall" fn comparar_tracar(this: usize, x0: i8, y0: i8, x1: i8,
     r
 }
 
+comparar_valor!(comparar_tem_jogo, tem_jogo, 138, (clube: u32, so: u32) -> u32);
+unsafe extern "C" fn comparar_venceu(jogo: usize, clube: u32) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize, u32) -> u8>(139)(jogo, clube);
+    let n = venceu_o_jogo(jogo, clube);
+    PLACAR.registrar(r == n, || format!("venceu_o_jogo original={} rust={}", r, n));
+    r
+}
+
+// Porta de 0x6d6f70 (comentarios): na comparacao, grava as chamadas feitas pela original de uma
+// rotina portada (com o estado do sorteio depois); a copia Rust confere a sequencia e nao roda o
+// comentario de novo (evita eventos em dobro). Fora da gravacao, so passa adiante.
+static mut PORTA_6D6F70: usize = 0;
+static GRAVANDO_6D6F70: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static FITA_6D6F70: std::sync::Mutex<Vec<(usize, [u32; 7], crate::comparacao::Memoria)>> = std::sync::Mutex::new(Vec::new());
+const PROLOGO_6D6F70: Prologo = Prologo { endereco: 0x6d6f70, bytes: &[0x8a, 0x44, 0x24, 0x10, 0x83, 0xec, 0x20] };
+
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn porta_6d6f70(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32, a7: u32) {
+    use std::sync::atomic::{AtomicU32, Ordering::Relaxed};
+    // 0x6d6f70 pode chamar a si mesma (um comentario puxa outro): so a chamada de fora e gravada
+    static PROFUNDIDADE: AtomicU32 = AtomicU32::new(0);
+    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) = core::mem::transmute(PORTA_6D6F70);
+    let nivel = PROFUNDIDADE.fetch_add(1, Relaxed);
+    f(this, a1, a2, a3, a4, a5, a6, a7);
+    PROFUNDIDADE.fetch_sub(1, Relaxed);
+    if nivel == 0 && GRAVANDO_6D6F70.load(Relaxed) {
+        let depois = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
+        FITA_6D6F70.lock().unwrap_or_else(|e| e.into_inner()).push((this, [a1, a2, a3, a4, a5, a6, a7], depois));
+    }
+}
+
+/// Roda a original gravando os comentarios e a copia Rust reproduzindo-os; devolve (igual, quantos).
+unsafe fn comparar_com_comentarios(original: impl FnOnce(), rust: impl FnOnce(ChamarComentario)) -> (bool, usize) {
+    use std::sync::atomic::Ordering::Relaxed;
+    FITA_6D6F70.lock().unwrap_or_else(|e| e.into_inner()).clear();
+    let fita = core::cell::RefCell::new(Vec::new());
+    let sequencia = core::cell::Cell::new(true);
+    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(
+        &reg,
+        || {
+            GRAVANDO_6D6F70.store(true, Relaxed);
+            original();
+            GRAVANDO_6D6F70.store(false, Relaxed);
+            *fita.borrow_mut() = core::mem::take(&mut *FITA_6D6F70.lock().unwrap_or_else(|e| e.into_inner()));
+        },
+        || {
+            let gravadas = fita.borrow();
+            let mut prox = gravadas.iter();
+            crate::aleatorio::sem_contar(|| {
+                rust(&mut |t, a| match prox.next() {
+                    Some((gt, ga, depois)) if *gt == t && *ga == a => depois.escrever(),
+                    _ => sequencia.set(false),
+                })
+            });
+            if prox.next().is_some() {
+                sequencia.set(false);
+            }
+        },
+    );
+    let n = fita.borrow().len();
+    (igual && sequencia.get(), n)
+}
+
+unsafe extern "thiscall" fn comparar_comentario_a(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32)>(140);
+    let (igual, n) = comparar_com_comentarios(|| o(this, a1, a2, a3, a4, a5), |c| comentario_a_com(this, a1, a2, a3, a4, a5, c));
+    PLACAR.registrar(igual, || format!("comentario_a({:#x} {:#x} {:#x} {:#x} {:#x}) {} chamadas", a1, a2, a3, a4, a5, n));
+}
+unsafe extern "thiscall" fn comparar_comentario_b(this: usize, a1: u32, a2: u32, a3: u32, a4: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32)>(141);
+    let (igual, n) = comparar_com_comentarios(|| o(this, a1, a2, a3, a4), |c| comentario_b_com(this, a1, a2, a3, a4, c));
+    PLACAR.registrar(igual, || format!("comentario_b({:#x} {:#x} {:#x} {:#x}) {} chamadas", a1, a2, a3, a4, n));
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
             PORTA_6F5C30 = t;
+        }
+        if let Some(t) = desvios::desviar("motor_porta_6d6f70 (gravacao)", &PROLOGO_6D6F70, porta_6d6f70 as *const () as usize) {
+            PORTA_6D6F70 = t;
         }
     }
     let rust: [usize; N] = [
@@ -4886,6 +5044,10 @@ pub unsafe fn instalar(comparando: bool) {
         escolher_casa as *const () as usize,
         dominio_do_lance as *const () as usize,
         tracar_lance as *const () as usize,
+        tem_jogo as *const () as usize,
+        venceu_o_jogo as *const () as usize,
+        comentario_a as *const () as usize,
+        comentario_b as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -5026,6 +5188,10 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_escolher_casa as *const () as usize,
         comparar_dominio as *const () as usize,
         comparar_tracar as *const () as usize,
+        comparar_tem_jogo as *const () as usize,
+        comparar_venceu as *const () as usize,
+        comparar_comentario_a as *const () as usize,
+        comparar_comentario_b as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -5067,6 +5233,8 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_escolher_casa",
         "motor_dominio_do_lance",
         "motor_tracar_lance",
+        "motor_tem_jogo", "motor_venceu_o_jogo",
+        "motor_comentario_a", "motor_comentario_b",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -5100,6 +5268,7 @@ pub unsafe fn autoteste(casos: u64) {
     let mut jogadores = vec![vec![0u8; 0x1a8]; 22];
     let mut fichas = vec![0u32; 40];
     let mut pessoas = vec![vec![0u8; 0x80]; 4];
+    let mut jogos = vec![0u8; 0x69 * 12 + 0x80];
     SINTETICO.store(true, std::sync::atomic::Ordering::Relaxed);
     PLACAR.autoteste(|| {
         for _ in 0..casos {
@@ -6031,6 +6200,27 @@ pub unsafe fn autoteste(casos: u64) {
                 }
             }
             comparar_tracar(m, tx0, ty0, tx1, ty1, cod37, (h43 >> 26) as u32 & 0x1ff | 0xabcd0000, (h43 >> 40) as u32 & 0x7);
+            // trigesima oitava leva: lista de jogos do dia e placares (normal, prorrogacao, penaltis)
+            let h44 = s.proximo();
+            let clubes = [0x1000u32, 0x2000, 0x3000, 0x4000];
+            for k in 0..10usize {
+                let jg = jogos.as_mut_ptr() as usize + 0x69 * k + 0x20;
+                let r = h44.rotate_left(k as u32 * 6);
+                *(jg as *mut u32) = clubes[(r % 4) as usize];
+                *((jg + 4) as *mut u32) = clubes[((r >> 2) % 4) as usize];
+                *((jg + 0x3b) as *mut u32) = if (r >> 4) % 3 == 0 { 0 } else { 7 };
+            }
+            let dia = jogadores[4].as_mut_ptr() as usize;
+            *((dia + 0x19) as *mut usize) = jogos.as_ptr() as usize;
+            *((dia + 0x21) as *mut i32) = ((h44 >> 10) % 12) as i32 - 1;
+            comparar_tem_jogo(dia, [0x1000u32, 0x3000, 0x5000][((h44 >> 14) % 3) as usize], ((h44 >> 16) % 2) as u32);
+            let jogo44 = jogadores[3].as_mut_ptr() as usize;
+            *((jogo44 + 0x1c) as *mut u32) = 0x1000;
+            *((jogo44 + 0x20) as *mut u32) = 0x2000;
+            for (k, o) in [0x43usize, 0x44, 0x47, 0x48, 0x49, 0x4a].iter().enumerate() {
+                *((jogo44 + o) as *mut i8) = [-1i8, 0, 1, 2, 3][((h44 >> (20 + k * 3)) % 5) as usize];
+            }
+            comparar_venceu(jogo44, [0x1000u32, 0x2000][((h44 >> 40) % 2) as usize]);
             comparar_escolher_c(m, (alto13 & !0xff) | ((h13 >> 53) % 2) as u32, if (h13 >> 54) % 3 == 0 { 0x100 | ((h13 >> 56) as u32 & 0xfe00) } else { (h13 >> 57) as u32 & 0xff });
             comparar_distancia_entre(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
         }
