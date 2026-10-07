@@ -203,8 +203,14 @@ const PROLOGOS: [Prologo; N] = [
     // vigesima oitava leva
     Prologo { endereco: 0x6eab60, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
     Prologo { endereco: 0x6cfd40, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] },
+    // vigesima nona leva
+    Prologo { endereco: 0x6c23f0, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] },
+    // trigesima leva
+    Prologo { endereco: 0x6cf750, bytes: &[0x66, 0x8b, 0x81, 0xd4, 0x8e, 0x00, 0x00] },
+    // trigesima primeira leva
+    Prologo { endereco: 0x6ce460, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55, 0x56, 0x57] },
 ];
-const N: usize = 129;
+const N: usize = 132;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -2967,6 +2973,239 @@ unsafe extern "thiscall" fn motor_cartao_pela_gravidade(this: usize, j: usize, t
     f(this + 0xf5b2, j, tipo, gravidade, flag)
 }
 
+// ---------- vigesima nona leva ----------
+
+/// { 0x6c23f0 } (match_eng.cpp): quinta escolha ponderada pelo papel (0,15 / 0,2 / 0,5 ou 0,3 /
+/// 0,65 ou 0,8 / 1,05 / 0,95 ou 0,85), ajustada pela pessoa (palavra 5, bytes 0x37 e 0x43; sem
+/// `modo`, a soma 0x40 + 0x36 + 0x26 + 0x1b; sorteio contra 0x21). Sorteio base: com `modo`,
+/// 0xa1 - 0x99 - 0xad + c (sem fator); senao 4 em 5, 0xf1 + 0xc5 + 0x8d + c, ou 0xa9 + c. No fim,
+/// 1 em 5 descarta a escolha (0xff). O fator fica no argumento e passa adiante.
+unsafe extern "thiscall" fn escolher_por_papel_e(this: usize, argumento: u32, modo: u32) -> u8 {
+    let lado_b = argumento as i8;
+    let mut fator = f32::from_bits(argumento);
+    let mut melhor = 0.0f32;
+    let mut escolhido: u8 = 0xff;
+    for k in 0..20u8 {
+        let p = jogador_do_bloco(this, lado_b, k as usize);
+        if byte(p, 0x19) < 0 {
+            continue;
+        }
+        let papel = f717410(p);
+        if papel & 1 != 0 {
+            continue;
+        }
+        let forte = papel & 0x880 != 0;
+        let bits = if papel & 2 != 0 {
+            Some(0x3e19999a)
+        } else if papel & 4 != 0 {
+            Some(0x3e4ccccd)
+        } else if papel & 8 != 0 {
+            Some(if forte { 0x3f000000 } else { 0x3e99999a })
+        } else if papel & 0x10 != 0 {
+            Some(if forte { 0x3f266666 } else { 0x3f4ccccd })
+        } else if papel & 0x20 != 0 {
+            Some(0x3f866666)
+        } else if papel & 0x40 != 0 {
+            Some(if papel & 0x700 != 0 { 0x3f733333 } else { 0x3f59999a })
+        } else {
+            None
+        };
+        if let Some(b) = bits {
+            fator = f32::from_bits(b);
+        }
+        let pessoa = *((p + 0x6d) as *const usize);
+        if pessoa != 0 {
+            let w = *((pessoa + 5) as *const i16);
+            fator = if w > 0x8c {
+                fator * f32_em(0x96d3d4)
+            } else if w < 0x3c {
+                fator * f32_em(0x96d3d0)
+            } else {
+                (w as f64 * f64_em(0x967898) * fator as f64) as f32
+            };
+            for o in [0x37, 0x43] {
+                let a = byte(pessoa, o);
+                if a > 15 {
+                    fator *= f32_em(0x96a33c);
+                } else if a < 6 {
+                    fator *= f32_em(0x96d38c);
+                } else if a < 10 {
+                    fator *= f32_em(0x96b014);
+                }
+            }
+            if modo as u8 == 0 {
+                let t = [0x40, 0x36, 0x26, 0x1b].iter().fold(0u8, |t, &o| t.wrapping_add(byte(pessoa, o) as u8)) as i8;
+                if t > 0x4b {
+                    fator *= f32_em(0x96b010);
+                } else if t > 0x3c {
+                    fator *= f32_em(0x96d3b8);
+                } else if t < 0x19 {
+                    fator = (fator as f64 * f64_em(0x969040)) as f32;
+                } else if t < 0x28 {
+                    fator *= f32_em(0x96b014);
+                }
+            }
+            let r = sortear(byte(pessoa, 0x21) as i32);
+            if r < sortear(0x14) {
+                fator *= f32_em(0x96d248);
+            }
+        }
+        let f = |o: usize| f32_em(p + o) as f64;
+        let v = if modo as u8 != 0 {
+            sortear(ftol(f(0xa1) - f(0x99) - f(0xad) + f32_em(0x969560) as f64)) as f64
+        } else if sortear(5) != 0 {
+            sortear(ftol(f(0xf1) + f(0xc5) + f(0x8d) + f32_em(0x968990) as f64)) as f64 * fator as f64
+        } else {
+            sortear(ftol(f(0xa9) + f32_em(0x968990) as f64)) as f64 * fator as f64
+        };
+        if escolhido == 0xff || v > melhor as f64 {
+            melhor = v as f32;
+            escolhido = k;
+        }
+    }
+    if sortear(5) != 0 { escolhido } else { 0xff }
+}
+
+// ---------- trigesima leva: estatistica de posse por zona ----------
+
+/// Por zona da bola (y <= 3, < 8, o resto): contadores do lado 0 e do lado 1 (por periodo, total,
+/// total da janela, janela de bytes) e as palavras da zona (por periodo, total, total da janela).
+const ZONAS_DE_POSSE: [([usize; 4], [usize; 4], [usize; 3]); 3] = [
+    ([0x8f52, 0x8f5e, 0x8f62, 0x8e2d], [0x8f16, 0x8f22, 0x8f26, 0x8d88], [0x1f6, 0x1fc, 0x1fe]),
+    ([0x8f2a, 0x8f36, 0x8f3a, 0x8dbf], [0x8f3e, 0x8f4a, 0x8f4e, 0x8df6], [0x200, 0x206, 0x208]),
+    ([0x8f02, 0x8f0e, 0x8f12, 0x8d51], [0x8f66, 0x8f72, 0x8f76, 0x8e64], [0x20a, 0x210, 0x212]),
+];
+
+/// { 0x6cf750 } (match_eng.cpp): conta um instante de posse do `lado` na zona da bola, por periodo
+/// (0x8ed4: 0x1ef, 0x3de ou outro). Com `janela`, mantem tambem os totais dos ultimos 55 instantes
+/// (janela circular em 0x8e9b): tira o que sai, poe o que entra. Sem janela, lado -1 nao conta.
+unsafe extern "thiscall" fn estatistica_de_posse(this: usize, lado_b: i8, janela: u8) {
+    let w16 = |o: isize| (this as isize + o) as *mut u16;
+    let w32 = |o: isize| (this as isize + o) as *mut i32;
+    let b8 = |o: isize| (this as isize + o) as *mut i8;
+    let mais16 = |o: isize| *w16(o) = (*w16(o)).wrapping_add(1);
+    let mais32 = |o: isize| *w32(o) = (*w32(o)).wrapping_add(1);
+    let per = match *w16(0x8ed4) {
+        0x1ef => 0,
+        0x3de => 1,
+        _ => 2,
+    };
+    mais16(0x214 + 2 * per);
+    mais16(0x21a);
+    let y = byte(this, 0x8ea8);
+    let z = if y <= 3 { 0 } else if y < 8 { 1 } else { 2 };
+    let (l0, l1, pal) = ZONAS_DE_POSSE[z];
+    let contadores = match lado_b {
+        0 => Some(l0),
+        1 => Some(l1),
+        _ => None,
+    };
+    if janela == 0 {
+        if lado_b == -1 {
+            return;
+        }
+        if let Some(c) = contadores {
+            mais32(c[0] as isize + 4 * per);
+            mais32(c[1] as isize);
+        }
+        mais16(pal[0] as isize + 2 * per);
+        mais16(pal[1] as isize);
+        return;
+    }
+    let i = byte(this, 0x8e9b) as isize;
+    for (o, b) in [(0x1fe, 0xa), (0x208, 0x41), (0x212, 0x78)] {
+        *w16(o) = (*w16(o)).wrapping_sub(*b8(b + i) as i16 as u16);
+    }
+    let jan = [(0x8f12, 0x8d51), (0x8f26, 0x8d88), (0x8f3a, 0x8dbf), (0x8f4e, 0x8df6), (0x8f62, 0x8e2d), (0x8f76, 0x8e64)];
+    for (o, b) in jan {
+        *w32(o) = (*w32(o)).wrapping_sub(*b8(b + i) as i32);
+    }
+    for (_, b) in jan {
+        *b8(b + i) = 0;
+    }
+    if let Some(c) = contadores {
+        mais32(c[0] as isize + 4 * per);
+        mais32(c[1] as isize);
+        mais32(c[2] as isize);
+        *b8(c[3] as isize + i) = 1;
+    }
+    mais16(pal[0] as isize + 2 * per);
+    mais16(pal[1] as isize);
+    mais16(pal[2] as isize);
+    for (k, b) in [0xa, 0x41, 0x78].into_iter().enumerate() {
+        *b8(b + i) = (k == z) as i8;
+    }
+    let n = (i as u8).wrapping_add(1) as i8;
+    *b8(0x8e9b) = if n >= 0x37 { 0 } else { n };
+}
+
+// ---------- trigesima primeira leva: resumo dos lados ----------
+
+/// Resumo de cada lado (0xf5c0 + 0x36 x lado): nota de cada um dos 20 jogadores do bloco
+/// (0x1b = (disposicao + 500) / 1000, em 1..=10) e somas de atributos (bytes e palavras).
+unsafe fn resumir_lados(motor: usize) {
+    for lado_b in 0..2usize {
+        let c = motor + 0xf5c0 + 0x36 * lado_b;
+        let b8 = |o: isize| (c as isize + o) as *mut u8;
+        let w16 = |o: usize| (c + o) as *mut u16;
+        for o in [2, 0, 1, -2, -1] {
+            *b8(o) = 0;
+        }
+        for o in (0x22..=0x30).step_by(2) {
+            *w16(o) = 0;
+        }
+        *b8(0xb) = 0;
+        *b8(0xc) = 0;
+        for k in 0..20 {
+            let p = motor + 0x4796 + 0x22d8 * lado_b + 0x1be * k;
+            let nota = (p + 0x1b) as *mut i8;
+            *nota = ((*((p + 0x35) as *const i16) as i32 + 500) / 1000) as i8;
+            if *nota > 10 {
+                *nota = 10;
+            }
+            if *nota < 1 {
+                *nota = 1;
+            }
+            let u = |o: usize| *((p + o) as *const u8);
+            for (dst, src) in [(2isize, 0xf), (0, 0xd), (1, 0xe), (-2, 0xa), (-1, 0xb)] {
+                *b8(dst) = (*b8(dst)).wrapping_add(u(src));
+            }
+            for (dst, src) in [(0x22, 1), (0x24, 2), (0x26, 4), (0x28, 5), (0x2a, 7), (0x2c, 8), (0x2e, 9), (0x30, 0x12)] {
+                *w16(dst) = (*w16(dst)).wrapping_add(u(src) as u16);
+            }
+            *b8(0xb) = (*b8(0xb)).wrapping_add(u(0x23));
+            *b8(0xc) = (*b8(0xc)).wrapping_add(u(0x24));
+        }
+    }
+}
+
+/// { 0x6ce460 } (match_eng.cpp): resumo da partida no `momento`: 0 e 1 sorteiam o ritmo (0xf628 e
+/// 0xf62c: 3..=9; 0xf630: sorteio(5) + estados dos lados, minimo 10, senao novo sorteio) e
+/// resumem os lados; 0x3de so resume. Sempre recalcula os percentuais do periodo (0x8ed4).
+unsafe extern "thiscall" fn resumo_da_partida(this: usize, momento: i16) {
+    let per = match *((this + 0x8ed4) as *const u16) {
+        0x1ef => 0i8,
+        0x3de => 1,
+        _ => 2,
+    };
+    match momento {
+        0 | 1 => {
+            let f = |o: usize| (this + o) as *mut f32;
+            *f(0xf628) = ((sortear(7) as u8).wrapping_add(3) as i8) as f32;
+            *f(0xf62c) = ((sortear(7) as u8).wrapping_add(3) as i8) as f32;
+            let estados = |r: i32| r + *((this + 0xf5bd) as *const u8) as i32 + *((this + 0xf5f3) as *const u8) as i32;
+            let t = estados(sortear(5));
+            let t = if t < 10 { 10 } else { estados(sortear(5)) };
+            *f(0xf630) = (t as u8 as i8) as f32;
+            resumir_lados(this);
+        }
+        0x3de => resumir_lados(this),
+        _ => {}
+    }
+    let percentuais: unsafe extern "thiscall" fn(usize, i8) = core::mem::transmute(0x6ce9c0usize);
+    percentuais(this, per);
+}
+
 /// `tabela_a` do motor do jogador (0 sem motor), pelo endereco do jogo: os bits do papel tatico.
 unsafe fn papel_word(motor: usize, j: usize) -> u16 {
     if motor == 0 {
@@ -3794,6 +4033,29 @@ unsafe extern "thiscall" fn comparar_motor_cartao(this: usize, j: usize, tipo: *
     PLACAR.registrar(igual, || format!("motor_cartao_pela_gravidade original={:x?} rust={:x?}", mo, mr));
 }
 
+unsafe extern "thiscall" fn comparar_escolher_e(this: usize, arg: u32, modo: u32) -> u8 {
+    let f = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(129);
+    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || f(this, arg, modo), || crate::aleatorio::sem_contar(|| escolher_por_papel_e(this, arg, modo)));
+    PLACAR.registrar(igual && r == n, || format!("escolher_por_papel_e({:#x}, {}) original={} rust={}", arg, modo as u8, r as i8, n as i8));
+    r
+}
+
+unsafe extern "thiscall" fn comparar_estatistica_posse(this: usize, l: i8, janela: u8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8, u8)>(130);
+    let reg = [(this, 0x230), (this + 0x8d40, 0x260)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, l, janela), || estatistica_de_posse(this, l, janela));
+    PLACAR.registrar(igual, || format!("estatistica_de_posse({}, {}) original={:x?} rust={:x?}", l, janela, mo, mr));
+}
+
+unsafe extern "thiscall" fn comparar_resumo(this: usize, momento: i16) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i16)>(131);
+    let mut reg = vec![(this + 0x4796, 40 * 0x1be), (this + 0xf5b0, 0x90)];
+    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, momento), || crate::aleatorio::sem_contar(|| resumo_da_partida(this, momento)));
+    PLACAR.registrar(igual, || format!("resumo_da_partida({}) original={:x?} rust={:x?}", momento, mo, mr));
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -3930,6 +4192,9 @@ pub unsafe fn instalar(comparando: bool) {
         motor_procurar_impedimento as *const () as usize,
         cartao_pela_gravidade as *const () as usize,
         motor_cartao_pela_gravidade as *const () as usize,
+        escolher_por_papel_e as *const () as usize,
+        estatistica_de_posse as *const () as usize,
+        resumo_da_partida as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -4061,6 +4326,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_motor_impedimento as *const () as usize,
         comparar_cartao_gravidade as *const () as usize,
         comparar_motor_cartao as *const () as usize,
+        comparar_escolher_e as *const () as usize,
+        comparar_estatistica_posse as *const () as usize,
+        comparar_resumo as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -4093,6 +4361,9 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_motor_decidir_falta", "motor_motor_punir_lance", "motor_motor_punir_falta",
         "motor_procurar_impedimento", "motor_motor_procurar_impedimento",
         "motor_cartao_pela_gravidade", "motor_motor_cartao_pela_gravidade",
+        "motor_escolher_por_papel_e",
+        "motor_estatistica_de_posse",
+        "motor_resumo_da_partida",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -4871,6 +5142,51 @@ pub unsafe fn autoteste(casos: u64) {
                 comparar_motor_cartao(m, jg, &mut tg, gv, fg);
             }
             let _ = h31;
+            // vigesima nona leva: atributos da pessoa nos limiares (0x37, 0x43, soma de quatro)
+            let h32 = s.proximo();
+            for (k, pe) in pessoas.iter_mut().enumerate() {
+                let r = h32.rotate_left(k as u32 * 13);
+                pe[0x37] = [15u8, 16, 5, 6, 9, 10, (r >> 8) as u8 % 21][(r % 7) as usize];
+                pe[0x43] = [15u8, 16, 5, 6, 9, 10, (r >> 16) as u8 % 21][((r >> 3) % 7) as usize];
+                for (n, o) in [0x40usize, 0x36, 0x26, 0x1b].iter().enumerate() {
+                    pe[*o] = ((r >> (24 + n * 6)) % 26) as u8;
+                }
+            }
+            for t in tabelas.iter_mut() {
+                for (k, v) in t.iter_mut().enumerate() {
+                    *v = [2u16, 4, 8, 0x88, 0x808, 0x10, 0x90, 0x20, 0x40, 0x140, 0, (h32 >> k) as u16][((h32 >> (k * 4)) % 12) as usize];
+                }
+            }
+            let alto32 = [0u32, 0x3f800000, 0x40000000, 0x12345600, 0xffffff00][((h32 >> 50) % 5) as usize];
+            comparar_escolher_e(m, (alto32 & !0xff) | ((h32 >> 53) % 2) as u32, if (h32 >> 54) % 3 == 0 { 0x100 } else { (h32 >> 56) as u32 & 0xff });
+            // trigesima leva: janela de 55 instantes (indice perto do fim), zonas, periodos
+            let h33 = s.proximo();
+            *((m + 0x8ed4) as *mut u16) = [0x1efu16, 0x3de, 0x100, (h33 >> 4) as u16][(h33 % 4) as usize];
+            *((m + 0x8ea8) as *mut i8) = [3i8, 4, 7, 8, -1, 11, ((h33 >> 20) % 14) as i8][((h33 >> 2) % 7) as usize];
+            *((m + 0x8e9b) as *mut i8) = [0i8, 53, 54, ((h33 >> 24) % 55) as i8][((h33 >> 6) % 4) as usize];
+            for k in 0..0x30usize {
+                *((m + 0x1f0 + k) as *mut u8) = (h33.rotate_left(k as u32)) as u8;
+            }
+            for k in 0..55isize {
+                for b in [0xa, 0x41, 0x78, 0x8d51, 0x8d88, 0x8dbf, 0x8df6, 0x8e2d, 0x8e64] {
+                    *((m as isize + b + k) as *mut u8) = [0u8, 1, 0, 0xff][(h33.rotate_left((k as u32 + b as u32) % 64) % 4) as usize];
+                }
+            }
+            comparar_estatistica_posse(m, [0i8, 1, 2, -1, -2][((h33 >> 30) % 5) as usize], [0u8, 1, 0x80][((h33 >> 32) % 3) as usize]);
+            // trigesima primeira leva: resumo (notas nos limites 1 e 10, somas que transbordam)
+            let h34 = s.proximo();
+            for k in 0..40usize {
+                let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
+                let r = h34.rotate_left(k as u32 * 7);
+                *((p + 0x35) as *mut i16) = [-600i16, 499, 500, 1499, 1500, 10499, 10500, 12000, (r >> 8) as i16][(r % 9) as usize];
+                for o in [1usize, 2, 4, 5, 7, 8, 9, 0xa, 0xb, 0xd, 0xe, 0xf, 0x12, 0x23, 0x24] {
+                    *((p + o) as *mut u8) = (r >> (o % 50)) as u8;
+                }
+            }
+            *((m + 0xf5bd) as *mut u8) = [0u8, 3, 200, (h34 >> 10) as u8][((h34 >> 2) % 4) as usize];
+            *((m + 0xf5f3) as *mut u8) = [0u8, 2, 100, (h34 >> 18) as u8][((h34 >> 4) % 4) as usize];
+            *((m + 0x8ed4) as *mut u16) = [0x1efu16, 0x3de, 7][((h34 >> 6) % 3) as usize];
+            comparar_resumo(m, [0i16, 1, 0x3de, 2, -1][((h34 >> 8) % 5) as usize]);
             comparar_escolher_c(m, (alto13 & !0xff) | ((h13 >> 53) % 2) as u32, if (h13 >> 54) % 3 == 0 { 0x100 | ((h13 >> 56) as u32 & 0xfe00) } else { (h13 >> 57) as u32 & 0xff });
             comparar_distancia_entre(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
         }
