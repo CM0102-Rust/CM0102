@@ -229,8 +229,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x70a860, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] },
     // quadragesima leva
     Prologo { endereco: 0x6cd490, bytes: &[0x56, 0x8b, 0xf1, 0x8a, 0x86, 0xb2, 0x8e, 0x00, 0x00] },
+    // quadragesima primeira leva (prova de rotina grande)
+    Prologo { endereco: 0x700bd0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 143;
+const N: usize = 144;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3905,6 +3907,400 @@ unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 {
     bola_fora_com(this, lado_b, &mut |t, a| comentar(t, a))
 }
 
+// ---------- quadragesima primeira leva: valor do chute (0x700bd0, 5,2 KB) ----------
+
+/// pow da CRT do jogo (0x945ff0, `_CIpow`: base em st1, expoente em st0), para o resultado ser
+/// identico bit a bit ao do original.
+unsafe fn pow_do_jogo(base: f64, expoente: f64) -> f64 {
+    let mut v = [base, expoente, 0.0];
+    core::arch::asm!(
+        "fld qword ptr [edi]",
+        "fld qword ptr [edi + 8]",
+        "call {f}",
+        "fstp qword ptr [edi + 16]",
+        // edi: a chamada preserva (eax/ecx/edx nao)
+        in("edi") v.as_mut_ptr(),
+        f = in(reg) 0x945ff0usize,
+        clobber_abi("C"),
+    );
+    v[2]
+}
+
+/// Valor da tabela 12 x 9 (0xa15e44) para as distancias |dy| e |dx| (cada uma truncada a byte).
+unsafe fn tabela_12x9(dy: i32, dx: i32) -> f32 {
+    f32_em((0xa15e44 + 4 * ((dy.abs() as i8 as isize) * 9 + dx.abs() as i8 as isize)) as usize)
+}
+
+/// O jogador pode bater dali (0x6f9f90 para o centro do gol, salvo na pequena area central)?
+unsafe fn pode_bater(j: usize) -> bool {
+    let (x, y) = (byte(j, 0x102), byte(j, 0x103));
+    let fundo: i8 = if lado(j) == 0 { 0xb } else { 0 };
+    if y == fundo && (3..=5).contains(&x) {
+        return true;
+    }
+    let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, f32, f32, *mut u8) -> u8 = core::mem::transmute(0x6f9f90usize);
+    f(j, 4, fundo, 0, 0.0, 0.0, core::ptr::null_mut()) != 0
+}
+
+/// `tabela_a` do jogador por 0x6c38c0 (o motor do proprio jogador; sem motor, None).
+unsafe fn papel_do(j: usize) -> Option<u16> {
+    pelo_motor::<u16>(j, 0x6c38c0)
+}
+
+/// { 0x700bd0 } (match_pl.cpp, `MATCH_PLAYER::get_shot_score`): escolhe o tipo do chute (quando
+/// `tipo` < 0) pela situacao e pelos atributos (palavras 0x146..0x154), calcula o valor (palavras
+/// por tipo em 0x11a + 2 x tipo, condicao fisica, goleiro adversario, angulo, distancia ao gol com
+/// pow 8 e 7) e grava em 0x39 a parte "de qualidade" e em `som` o comentario. Devolve o valor.
+unsafe extern "thiscall" fn valor_do_chute(this: usize, tipo: *mut i8, som: *mut u16) -> u16 {
+    let j = this;
+    let w = |o: usize| *((j + o) as *const i16);
+    let q39 = (j + 0x39) as *mut u16;
+    let menos_mil = |tipo: *mut i8, som: *mut u16| {
+        *tipo = 0x16;
+        *som = 0x1f81;
+        0xfc18u16
+    };
+    let manter: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(0x6ce110usize);
+    let gk = manter(*((j + 0x19e) as *const usize), (lado(j) == 0) as i8);
+    let mut b13 = 0xfbu8.wrapping_sub(byte(j, 0x10b) as u8).wrapping_mul(2) as i8;
+    let mut angulo_fechado = false;
+    let gy = byte(gk, 0x103);
+    if gy != 0xb && gy != 0 && papel_do(gk) == Some(1) {
+        b13 = (byte(j, 0x10b) as u8).wrapping_add(5).wrapping_mul(2) as i8;
+    }
+    let dgk = tabela_12x9(byte(j, 0x103) as i32 - gy as i32, byte(j, 0x102) as i32 - byte(gk, 0x102) as i32);
+    if !(dgk >= f32_em(0x968e70)) && papel_do(gk) == Some(1) {
+        b13 = (b13 as u8).wrapping_sub(byte(j, 0x10b) as u8) as i8;
+    }
+    let (x, y) = (byte(j, 0x102) as i32, byte(j, 0x103) as i32);
+    let dist = if lado(j) == 0 { tabela_12x9(y - 0xb, x - 4) } else { tabela_12x9(y, x - 4) } as f64;
+    if *tipo == 0x33 {
+        *som = 0x1f7f;
+        return (sortear(w(0x180) as i32 * 5) + 0x96) as u16;
+    }
+    // escolha do tipo
+    'escolha: {
+        if *tipo == 0x35 {
+            break 'escolha;
+        }
+        if w(0x198) == 0x3b {
+            *tipo = 0x39;
+            break 'escolha;
+        }
+        let motor = *((j + 0x19e) as *const usize);
+        if pode_bater(j) && byte(motor, 0x8ea9) < 3 {
+            let r = sortear(3);
+            let l = lado(j);
+            let alcance = byte(j, 0x10b) as i32 > r
+                || (l == 0 && byte(j, 0x103) > byte(gk, 0x103))
+                || (l == 1 && byte(j, 0x103) < byte(gk, 0x103));
+            if alcance {
+                let na_area = {
+                    let (x, y) = (byte(j, 0x102), byte(j, 0x103));
+                    let area = if l == 0 { 10..=11 } else { 0..=1 };
+                    (2..=6).contains(&x) && area.contains(&y)
+                };
+                let cobertura = if byte(gk, 0x2b) > 1 && na_area {
+                    true
+                } else if papel_do(gk) != Some(1) {
+                    true
+                } else {
+                    let (gy, gx) = (byte(gk, 0x103) as i32, byte(gk, 0x102) as i32);
+                    let t1 = if lado(gk) == 1 { tabela_12x9(gy - 0xb, gx - 4) } else { tabela_12x9(gy, gx - 4) };
+                    // goleiro longe da propria meta (>= 2) e do atacante (>= 1): cobertura direta;
+                    // senao, sorteio(0x29) contra sorteio(2000) e distancia ao gol < 1,5
+                    let longe_da_meta = t1 as f64 >= f64_em(0x968950);
+                    let direta = longe_da_meta && {
+                        let t2 = tabela_12x9(gy - byte(j, 0x103) as i32, gx - byte(j, 0x102) as i32);
+                        t2 as f64 >= f64_em(0x967890)
+                    };
+                    direta || {
+                        let r1 = sortear(w(0x29) as i32);
+                        r1 > sortear(0x7d0) && !(dist >= f64_em(0x968940))
+                    }
+                };
+                if cobertura {
+                    *tipo = 0x3a;
+                    break 'escolha;
+                }
+            }
+        }
+        if *tipo > -1 {
+            break 'escolha;
+        }
+        let maior = |v: &mut i16, r: i32, t: i8, tipo: *mut i8| {
+            if r as i16 > *v {
+                *v = r as i16;
+                *tipo = t;
+            }
+        };
+        match byte(motor, 0x8ea9) {
+            0 => {
+                if !pode_bater(j) {
+                    return menos_mil(tipo, som);
+                }
+                let mut v = sortear(w(0x146) as i32) as i16;
+                *tipo = 0x16;
+                maior(&mut v, sortear(w(0x14e) as i32 + 20 * b13 as i32), 0x1a, tipo);
+                if dist >= f64_em(0x968940) {
+                    maior(&mut v, sortear(w(0x152) as i32), 0x1c, tipo);
+                }
+                let a = sortear(0x1f4);
+                let b = sortear(0x96);
+                maior(&mut v, sortear(w(0x154) as i32 - a + b), 0x1d, tipo);
+                if sortear(w(0x148) as i32) as i16 > v {
+                    *tipo = 0x17;
+                }
+            }
+            1 => {
+                if !pode_bater(j) {
+                    return menos_mil(tipo, som);
+                }
+                let mut v = sortear(w(0x150) as i32 + 22 * b13 as i32) as i16;
+                *tipo = 0x1b;
+                let a = sortear(0x1f4);
+                let b = sortear(0x96);
+                maior(&mut v, sortear(w(0x154) as i32 - a + b), 0x1d, tipo);
+                maior(&mut v, sortear(w(0x146) as i32), 0x16, tipo);
+                if sortear(w(0x14c) as i32) as i16 > v {
+                    *tipo = 0x19;
+                }
+            }
+            2 | 3 => {
+                if !pode_bater(j) {
+                    if byte(*((j + 0x19e) as *const usize), 0x8ea9) != 3 {
+                        return menos_mil(tipo, som);
+                    }
+                    *tipo = 5;
+                    break 'escolha;
+                }
+                let v = sortear(w(0x150) as i32 + 22 * b13 as i32) as i16;
+                *tipo = 0x1b;
+                if sortear(w(0x14a) as i32) as i16 > v {
+                    *tipo = 0x18;
+                }
+            }
+            4 => {
+                *tipo = if pode_bater(j) { 3 } else { 5 };
+            }
+            _ => return menos_mil(tipo, som),
+        }
+    }
+    // valor
+    let t = *tipo;
+    let mut e: i32;
+    let condicao = || {
+        let q = ftol(f32_em(j + 0x4d) as f64) as i16 as i32;
+        let c = 10000 - q;
+        sortear(c.wrapping_mul(c) / 50000)
+    };
+    if t == -1 {
+        // tipo desconhecido: o original mostra um erro antes
+        e = sortear(0x32);
+        *q39 = 0;
+    } else if t == 0x3a {
+        let r0 = condicao() as i16 as i32;
+        let rr = r0 / 5;
+        let r1 = sortear(rr);
+        let base = w(0x29) as i32 / 2 - r1;
+        let r2 = sortear(w(0x19c) as i32 / 5);
+        *q39 = (base + r2 + 0xd2) as u16;
+        let mut v = *((j + 0x11a + 2 * t as usize) as *const u16);
+        v = v.wrapping_add((w(0x19c) as i32 / 5) as u16).wrapping_sub(rr as u16).wrapping_add(w(0x29) as u16);
+        let a = sortear(10);
+        let b = sortear(10);
+        e = v as i32 + (a - b);
+    } else {
+        let r0 = condicao();
+        if *tipo == 0x35 {
+            *q39 = 0;
+        } else {
+            *q39 = ((w(0x29) as i32 / 2) as u16).wrapping_add(w(0x19c) as u16).wrapping_sub(r0 as u16);
+        }
+        let t = *tipo;
+        let mut bp = *((j + 0x11a + 2 * t as isize as usize) as *const u16);
+        bp = bp.wrapping_sub(sortear(r0 as i16 as i32) as u16);
+        bp = bp.wrapping_add(sortear(w(0x19c) as i32) as u16);
+        let motor = *((j + 0x19e) as *const usize);
+        let c = byte(motor, 0x8ea9);
+        let atributos = |bp: &mut u16| {
+            for o in [0x79, 0x81, 0xe5] {
+                let a = f32_em(j + o);
+                if !(a >= f32_em(0x96b020)) {
+                    let v = ftol(a as f64 * f32_em(0x96d7e0) as f64 - f32_em(0x96d1b0) as f64);
+                    *bp = bp.wrapping_add(sortear(v) as u16);
+                }
+            }
+        };
+        if t == 5 && c == 4 {
+            *q39 = (*q39).wrapping_add(0xfed4);
+            atributos(&mut bp);
+            bp = bp.wrapping_add((byte(j, 0x109) as i16 as u16).wrapping_mul(30)).wrapping_sub(400);
+        } else if t == 5 && c == 3 {
+            *q39 = (*q39).wrapping_add(0xff06);
+            atributos(&mut bp);
+            bp = bp.wrapping_add((byte(j, 0x109) as i16 as u16).wrapping_sub(15).wrapping_mul(20));
+        } else if t == 0x39 {
+            let v = (f64_em(0x96a648) - f32_em(j + 0x79) as f64 * f64_em(0x968eb0)) * (3 - c as i32) as f64;
+            let r = sortear(ftol(v));
+            bp = bp.wrapping_sub(r as u16);
+            *q39 = (*q39).wrapping_sub(r as u16);
+        } else if c == 3 {
+            let r = sortear(0x190);
+            bp = bp.wrapping_sub(r as u16);
+            *q39 = (*q39).wrapping_sub(r as u16);
+        }
+        let r1 = sortear(w(0x29) as i32);
+        e = r1 + sortear(bp as i16 as i32);
+    }
+    // angulo (fora das colunas centrais)
+    let x = byte(j, 0x102);
+    if !(3..=5).contains(&x) {
+        let l = lado(j);
+        let mut a = if l == 0 {
+            (12 - byte(j, 0x103) as i32) as f64 / ((4 - x as i32) as f64).abs()
+        } else if l == 1 {
+            (byte(j, 0x103) as i32 + 1) as f64 / ((4 - x as i32) as f64).abs()
+        } else {
+            f32_em(0x968970) as f64
+        };
+        a *= a;
+        if a < f64_em(0x968e80) {
+            angulo_fechado = true;
+        }
+        a = f32_em(0x96d7d8) as f64 - a * f32_em(0x96d7dc) as f64;
+        let minimo = f32_em(0x96af88) as f64;
+        if minimo > a {
+            a = minimo;
+        }
+        let mut k = ftol(a) as u16;
+        if *tipo == 0x3a {
+            k = (k as i16 as i32 / 3) as u16;
+        }
+        let e5 = f32_em(j + 0xe5) as f64;
+        let f = if !(e5 >= 1.0) { 1.0 } else { e5 };
+        let m = k as i16 as i32;
+        e -= sortear(ftol(m as f64 * f64_em(0x9688a0) / f));
+        *q39 = (*q39).wrapping_add((-(m / 2)) as u16);
+    }
+    // chute de longe (fora da area, distancia > 2,2): variacao pelo vento/gramado do motor
+    let mut longe = false;
+    if dist > f64_em(0x96d7d0) {
+        let (x, y) = (byte(j, 0x102), byte(j, 0x103));
+        let area = if lado(j) == 0 { 10..=11 } else { 0..=1 };
+        if !((2..=6).contains(&x) && area.contains(&y)) {
+            longe = true;
+            let motor = *((j + 0x19e) as *const usize);
+            if motor != 0 {
+                match *tipo {
+                    0x17 | 0x1a | 0x1b | 0x1d => match byte(motor, 0x4756) {
+                        2 => {
+                            let a = sortear(5);
+                            e += sortear(2) - a;
+                        }
+                        3 => {
+                            let a = sortear(10);
+                            e += sortear(5) - a;
+                        }
+                        4 => {
+                            let a = sortear(15);
+                            e += sortear(10) - a;
+                        }
+                        _ => {}
+                    },
+                    0x16 => match byte(motor, 1) {
+                        2 => e += sortear(4),
+                        0x20 => {
+                            let a = sortear(5);
+                            e += a - sortear(5);
+                        }
+                        _ => {}
+                    },
+                    _ => {}
+                }
+            }
+        }
+    }
+    if papel_do(gk) != Some(1) {
+        e += sortear(0x1f4);
+        *q39 = (*q39).wrapping_add(0xfa);
+    }
+    // distancia ao gol
+    let t = *tipo;
+    let x = byte(j, 0x102);
+    let canto = (byte(j, 0x103) == 0 || byte(j, 0x103) == 0xb) && (x as i32 - 4).abs() == 1;
+    if (t == 3 || t == 0x39) && dist >= f64_em(0x967890) && !canto {
+        let mut v = ftol(pow_do_jogo(dist + f64_em(0x968950), f64_em(0x968f10)) * f64_em(0x968a80));
+        if v > 0x3a98 {
+            v = 0x3a98;
+        }
+        if (v as i16) < 0 {
+            v = 0x3a98;
+        }
+        if *tipo == 0x3a {
+            v = (v as i16 as i32) / 8;
+        }
+        let m = v as i16 as i32;
+        e -= sortear(m);
+        *q39 = (*q39).wrapping_add((-(m / 2)) as u16);
+    } else if dist == 0.0 {
+        e += 0xc8;
+        *q39 = (*q39).wrapping_add(0xc8);
+    } else if dist == 1.0 {
+        e += 0x64;
+        *q39 = (*q39).wrapping_add(0x64);
+    } else if dist > f64_em(0x968940) {
+        let mut c = ftol(pow_do_jogo(dist * f64_em(0x968e48) + f64_em(0x968940), f64_em(0x968988)));
+        if c > 0x7530 {
+            c = 0x7530;
+        }
+        let (k, mut f) = match *tipo {
+            0x3a => (c / 20, (byte(j, 0x109) as f64 + f32_em(j + 0xb1) as f64) * f64_em(0x967878)),
+            0x35 => (c / 15, f32_em(j + 0xa1) as f64 * f64_em(0x967888)),
+            _ => (c / 2, (byte(j, 0x109) as f64 + f32_em(j + 0xb1) as f64) * f64_em(0x967878)),
+        };
+        f = f64_em(0x967890) - f;
+        if f < f64_em(0x968918) {
+            f = f64_em(0x968918);
+        }
+        *q39 = (*q39).wrapping_add((-(k / 2)) as u16);
+        let mut r = ftol(k as f64 * f);
+        if r > 0x7530 {
+            r = 0x7530;
+        }
+        e -= sortear(r);
+    }
+    // comentario
+    let fl = longe as u16;
+    *som = match *tipo {
+        3 => if angulo_fechado { 0x1fb8 } else { 0x1f92 + 0x18 * fl },
+        5 => if angulo_fechado { 0x1fb7 } else { 0x1f91 + 0x18 * fl },
+        0x16 => if angulo_fechado { 0x1fb0 } else { 0x1f86 + 0x1c * fl },
+        0x17 => if angulo_fechado { 0x1fbb } else { 0x1f99 + 0x14 * fl },
+        0x18 => if angulo_fechado { 0x1fb9 } else { 0x1f93 + 0x18 * fl },
+        0x19 => if angulo_fechado { 0x1fba } else { 0x1f96 + 0x16 * fl },
+        0x1a => if angulo_fechado { 0x1fb1 } else { 0x1f89 + 0x1a * fl },
+        0x1b => if angulo_fechado { 0x1fb3 } else { 0x1f8b + 0x1a * fl },
+        0x1c => if angulo_fechado { 0x1fb5 } else { 0x1f8d + 0x1a * fl },
+        0x1d => if angulo_fechado { 0x1fb6 } else { 0x1f8e + 0x1a * fl },
+        0x35 => {
+            if angulo_fechado {
+                0x1fbd
+            } else if longe {
+                0x1faf
+            } else if sortear(3) != 0 {
+                0x1fbe
+            } else {
+                0x21bd
+            }
+        }
+        0x39 => if angulo_fechado { 0x1fbc } else { 0x1f9c + 0x12 * fl },
+        0x3a => 0x1f9d,
+        _ => 0x1f81,
+    };
+    e as u16
+}
+
 /// `tabela_a` do motor do jogador (0 sem motor), pelo endereco do jogo: os bits do papel tatico.
 unsafe fn papel_word(motor: usize, j: usize) -> u16 {
     if motor == 0 {
@@ -4965,6 +5361,16 @@ unsafe extern "thiscall" fn comparar_bola_fora(this: usize, l: u8) -> u8 {
     r.get()
 }
 
+unsafe extern "thiscall" fn comparar_valor_chute(this: usize, tipo: *mut i8, som: *mut u16) -> u16 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, *mut i8, *mut u16) -> u16>(143);
+    let mut reg = vec![(tipo as usize, 1), (som as usize, 2), (this + 0x39, 2)];
+    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let t0 = *tipo;
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, tipo, som), || crate::aleatorio::sem_contar(|| valor_do_chute(this, tipo, som)));
+    PLACAR.registrar(igual && r == n, || format!("valor_do_chute(tipo {}) original={} {:x?} rust={} {:x?}", t0, r as i16, mo, n as i16, mr));
+    r
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -5118,6 +5524,7 @@ pub unsafe fn instalar(comparando: bool) {
         comentario_a as *const () as usize,
         comentario_b as *const () as usize,
         bola_fora as *const () as usize,
+        valor_do_chute as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -5263,6 +5670,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_comentario_a as *const () as usize,
         comparar_comentario_b as *const () as usize,
         comparar_bola_fora as *const () as usize,
+        comparar_valor_chute as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -5307,6 +5715,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_tem_jogo", "motor_venceu_o_jogo",
         "motor_comentario_a", "motor_comentario_b",
         "motor_bola_fora",
+        "motor_valor_do_chute",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -6293,6 +6702,39 @@ pub unsafe fn autoteste(casos: u64) {
                 *((jogo44 + o) as *mut i8) = [-1i8, 0, 1, 2, 3][((h44 >> (20 + k * 3)) % 5) as usize];
             }
             comparar_venceu(jogo44, [0x1000u32, 0x2000][((h44 >> 40) % 2) as usize]);
+            // quadragesima primeira leva: valor do chute (tipos dados e escolhidos, zonas, goleiro)
+            let h45 = s.proximo();
+            let h46 = s.proximo();
+            let h47 = s.proximo();
+            *((j + 0x19e) as *mut usize) = m;
+            *((j + 0x27) as *mut i8) = (h45 % 2) as i8;
+            *((j + 0x19) as *mut i8) = ((h45 >> 1) % 11) as i8;
+            *((j + 0x102) as *mut i8) = ((h45 >> 5) % 9) as i8;
+            *((j + 0x103) as *mut i8) = [0i8, 1, 2, 9, 10, 11, ((h45 >> 9) % 12) as i8][((h45 >> 13) % 7) as usize];
+            *((j + 0x10b) as *mut i8) = ((h45 >> 16) % 22) as i8;
+            *((j + 0x109) as *mut i8) = ((h45 >> 21) % 26) as i8 - 5;
+            // palavras por tipo de chute (0x11a + 2 x tipo, ate 0x3a); depois vem 0x19e (motor)
+            for k in 0..0x3busize {
+                *((j + 0x11a + 2 * k) as *mut i16) = (h46.rotate_left(k as u32 % 64) % 700) as i16;
+            }
+            *((j + 0x29) as *mut i16) = ((h45 >> 26) % 400) as i16;
+            *((j + 0x19c) as *mut i16) = ((h45 >> 35) % 300) as i16 - 50;
+            *((j + 0x198) as *mut i16) = if (h45 >> 44) % 9 == 0 { 0x3b } else { 7 };
+            *((j + 0x4d) as *mut f32) = ((h47 >> 1) % 10001) as f32;
+            for (o, sh) in [(0x79usize, 15), (0x81, 21), (0xe5, 27), (0xa1, 33), (0xb1, 39)] {
+                *((j + o) as *mut f32) = ((h47 >> sh) % 120) as f32 / 4.0;
+            }
+            *((m + 0x8ea9) as *mut i8) = [0i8, 0, 1, 2, 3, 4, 5, -1][((h47 >> 45) % 8) as usize];
+            *((m + 0x4756) as *mut i8) = ((h47 >> 48) % 6) as i8;
+            *((m + 1) as *mut i8) = [2i8, 0x20, 0, 5][((h47 >> 51) % 4) as usize];
+            for t in tabelas.iter_mut() {
+                for (k, v) in t.iter_mut().enumerate() {
+                    *v = if (h46 >> k) % 3 == 0 { 1 } else { 2 };
+                }
+            }
+            let mut tc41 = [-1i8, -1, -1, -1, 0x33, 0x35, 3, 5, 0x16, 0x39, 0x3a, 0x1b][((h47 >> 53) % 12) as usize];
+            let mut som41 = 0u16;
+            comparar_valor_chute(j, &mut tc41, &mut som41);
             comparar_escolher_c(m, (alto13 & !0xff) | ((h13 >> 53) % 2) as u32, if (h13 >> 54) % 3 == 0 { 0x100 | ((h13 >> 56) as u32 & 0xfe00) } else { (h13 >> 57) as u32 & 0xff });
             comparar_distancia_entre(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
         }
