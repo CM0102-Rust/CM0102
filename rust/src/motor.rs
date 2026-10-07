@@ -167,8 +167,27 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6bb8d0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
     Prologo { endereco: 0x6bb950, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
     Prologo { endereco: 0x6c2310, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] },
+    // vigesima primeira leva (rotinas sem arquivo no mapa, chamadas pelo motor)
+    Prologo { endereco: 0x717400, bytes: &[0x66, 0x8b, 0x81, 0xbc, 0x01, 0x00, 0x00] },
+    Prologo { endereco: 0x7160d0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x8a, 0x51, 0x2b] },
+    Prologo { endereco: 0x7160e0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x88, 0x41, 0x2b] },
+    Prologo { endereco: 0x717430, bytes: &[0x8b, 0xc1, 0x8b, 0x88, 0x9e, 0x01, 0x00, 0x00] },
+    Prologo { endereco: 0x717450, bytes: &[0x8b, 0xc1, 0x8b, 0x88, 0x9e, 0x01, 0x00, 0x00] },
+    Prologo { endereco: 0x715f30, bytes: &[0x8b, 0xc1, 0x8b, 0x88, 0x9e, 0x01, 0x00, 0x00] },
+    Prologo { endereco: 0x7163c0, bytes: &[0x8a, 0x41, 0x19, 0x50, 0x0f, 0xbe, 0x41, 0x27] },
+    Prologo { endereco: 0x7163f0, bytes: &[0x0f, 0xbe, 0x41, 0x27, 0x56] },
+    Prologo { endereco: 0x70def0, bytes: &[0x8a, 0x41, 0x27, 0x84, 0xc0] },
+    Prologo { endereco: 0x717c70, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x8e, 0x9e, 0x01, 0x00, 0x00] },
+    Prologo { endereco: 0x6f0970, bytes: &[0x8b, 0x91, 0x9e, 0x01, 0x00, 0x00] },
+    Prologo { endereco: 0x6e1cd0, bytes: &[0x8b, 0x41, 0x23, 0x8b, 0x54, 0x24, 0x04] },
+    Prologo { endereco: 0x6d5cd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x25, 0xff, 0x7f, 0x00, 0x00] },
+    // vigesima segunda leva
+    Prologo { endereco: 0x715f50, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x8e, 0x9e, 0x01, 0x00, 0x00] },
+    Prologo { endereco: 0x7172d0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8a, 0x5c, 0x24, 0x10] },
+    // vigesima terceira leva
+    Prologo { endereco: 0x6f0630, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xdb] },
 ];
-const N: usize = 101;
+const N: usize = 117;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -2291,6 +2310,264 @@ unsafe extern "thiscall" fn escolher_pela_condicao(this: usize, lado_b: i8, modo
     escolhido
 }
 
+// ---------- vigesima primeira leva: rotinas sem arquivo no mapa ----------
+
+/// { 0x717400 }: palavra 0x1bc do jogador.
+unsafe extern "thiscall" fn ler_1bc(this: usize) -> u16 {
+    *((this + 0x1bc) as *const u16)
+}
+
+/// { 0x7160d0 }: soma ao byte 0x2b do jogador.
+unsafe extern "thiscall" fn somar_2b(this: usize, v: u8) {
+    let b = (this + 0x2b) as *mut u8;
+    *b = (*b).wrapping_add(v);
+}
+
+/// { 0x7160e0 }: grava o byte 0x2b do jogador.
+unsafe extern "thiscall" fn gravar_2b(this: usize, v: u8) {
+    *((this + 0x2b) as *mut u8) = v;
+}
+
+/// Chama uma rotina (motor, jogador) do motor do jogador pelo endereco do jogo; sem motor, None.
+unsafe fn pelo_motor<R>(j: usize, rotina: usize) -> Option<R> {
+    let motor = *((j + 0x19e) as *const usize);
+    if motor == 0 {
+        return None;
+    }
+    let f: unsafe extern "thiscall" fn(usize, usize) -> R = core::mem::transmute(rotina);
+    Some(f(motor, j))
+}
+
+/// { 0x717430 }: `tabela_a_1a` (0x6c3920) do motor do jogador, ou 0.
+unsafe extern "thiscall" fn tabela_a_1a_do_jogador(this: usize) -> u16 {
+    pelo_motor(this, 0x6c3920).unwrap_or(0)
+}
+
+/// { 0x717450 }: `tabela_b` (0x6c38f0) do motor do jogador, ou 0.
+unsafe extern "thiscall" fn tabela_b_do_jogador(this: usize) -> u16 {
+    pelo_motor(this, 0x6c38f0).unwrap_or(0)
+}
+
+/// { 0x715f30 }: `diferenca_jogador` (0x6c4130) do motor do jogador, ou 0xff.
+unsafe extern "thiscall" fn diferenca_do_jogador(this: usize) -> u8 {
+    pelo_motor(this, 0x6c4130).unwrap_or(0xff)
+}
+
+/// { 0x714d00 } (sem desvio: o prologo curto inclui um jne relativo): bola (y em 0x8ea8) no campo de ataque do lado (lado 1: y >= 6; outros: y < 6).
+#[allow(dead_code)]
+unsafe extern "thiscall" fn bola_no_ataque(this: usize) -> u8 {
+    let y = byte(*((this + 0x19e) as *const usize), 0x8ea8);
+    (if lado(this) == 1 { y >= 6 } else { y < 6 }) as u8
+}
+
+/// { 0x7163c0 }: marcas taticas (0x5b5270) da posicao do jogador. Devolve edx:eax inteiro.
+unsafe extern "thiscall" fn marcas_do_jogador_rot(this: usize) -> u64 {
+    marcas_do_jogador(this)
+}
+
+/// { 0x7163f0 }: com o bit 0x1000 do bloco do lado (0x9766), o byte 6 + lado do motor; senao, o
+/// bit 0x800000 das marcas da posicao.
+unsafe extern "thiscall" fn marca_800000(this: usize) -> u8 {
+    let l = lado(this) as isize;
+    let motor = *((this + 0x19e) as *const usize) as isize;
+    let bloco = motor + 6371 * l;
+    if *((bloco + 0x9766) as *const u32) & 0x1000 != 0 {
+        return *((motor + 6 + l) as *const u8);
+    }
+    (marcas_do_jogador(this) as u32 & 0x800000 != 0) as u8
+}
+
+/// { 0x70def0 }: perto do proprio gol (lado 0: y < 3; lado 1: y > 8).
+unsafe extern "thiscall" fn perto_do_proprio_gol(this: usize) -> u8 {
+    let (l, y) = (lado(this), byte(this, 0x103));
+    ((l == 0 && y < 3) || (l == 1 && y > 8)) as u8
+}
+
+/// { 0x717c70 }: papel 0x880 em `tabela_a` e em `tabela_b` do jogador (sem motor, 0).
+unsafe extern "thiscall" fn papel_880(this: usize) -> u8 {
+    let a: u16 = pelo_motor(this, 0x6c38c0).unwrap_or(0);
+    if a & 0x880 == 0 {
+        return 0;
+    }
+    let b: u16 = pelo_motor(this, 0x6c38f0).unwrap_or(0);
+    (b & 0x880 != 0) as u8
+}
+
+/// { 0x6f0970 }: solta a bola: zera 0x4786, 0xf582 e 0x1a7 do motor (0x8eae = 0xff) e as palavras
+/// 0x29 e 0x19c do jogador. O motor e relido a cada gravacao.
+unsafe extern "thiscall" fn soltar_bola(this: usize) {
+    let motor = || *((this + 0x19e) as *const usize);
+    *((motor() + 0x4786) as *mut u32) = 0;
+    *((motor() + 0x8eae) as *mut u8) = 0xff;
+    *((motor() + 0xf582) as *mut u32) = 0;
+    *((motor() + 0x1a7) as *mut u8) = 0;
+    *((this + 0x29) as *mut u16) = 0;
+    *((this + 0x19c) as *mut u16) = 0;
+}
+
+/// { 0x6e1cd0 }: o jogador (dos 20 a partir de [this + 0x23]) com a ficha dada, ou 0.
+unsafe extern "thiscall" fn jogador_pela_ficha(this: usize, ficha: usize) -> usize {
+    let base = *((this + 0x23) as *const usize);
+    (0..20).map(|k| base + 0x1be * k).find(|&p| *((p + 0x69) as *const usize) == ficha).unwrap_or(0)
+}
+
+/// { 0x6d5cd0 } (sem `this`): byte da tabela de 18 bytes por codigo em 0xb68788 (codigos
+/// 0x1f40..0x21e4, bit 15 ignorado); fora, 0.
+unsafe extern "stdcall" fn byte_do_codigo(c: u32) -> i32 {
+    let i = ((c & 0x7fff) as i32 - 0x1f40) as i16;
+    if !(0..0x2a5).contains(&i) {
+        return 0;
+    }
+    *((0xb68788 + 18 * i as usize) as *const i8) as i32
+}
+
+// ---------- vigesima segunda leva ----------
+
+/// { 0x715f50 }: valor ajustado pelo papel e pela pessoa (0x6d). Papel 1, ou 2 x 0x10a >=
+/// sorteio(21): o proprio `base`. Senao soma tres parcelas (cada uma `base`, ou um valor fixo por
+/// lado quando o atributo da pessoa vence sorteio(41) e o papel nao o impede) e divide por 3.
+unsafe extern "thiscall" fn nota_ajustada(this: usize, base: i8) -> i32 {
+    let papel = || pelo_motor::<u16>(this, 0x6c38c0).unwrap_or(0);
+    if papel() & 1 != 0 {
+        return base as u8 as i32;
+    }
+    if (byte(this, 0x10a) as i32) * 2 >= sortear(0x15) {
+        return base as u8 as i32;
+    }
+    let pessoa = *((this + 0x6d) as *const usize);
+    let vence = |o: usize| {
+        let r = sortear(byte(pessoa, o) as i32);
+        r > sortear(0x29)
+    };
+    let lado0 = lado(this) == 0;
+    let mut v: i8 = if papel() & 0x80 == 0 && vence(0x18) { if lado0 { 1 } else { 7 } } else { base };
+    v = v.wrapping_add(if papel() & 0x700 == 0 && vence(0x19) { 4 } else { base });
+    v = v.wrapping_add(if papel() & 0x800 == 0 && vence(0x17) { if lado0 { 7 } else { 1 } } else { base });
+    v as i32 / 3
+}
+
+/// { 0x7172d0 }: ajusta o byte 0x17 do jogador por `delta` (com sorteios perto do limite 10), com
+/// piso pela disposicao (0x35 >= 7500) e faixa 1..=20; devolve se mudou. Com `delta` 0 e 0x477a
+/// do motor em -1, so age se a disposicao passar de 7500 e o byte estiver abaixo de 10.
+unsafe extern "thiscall" fn ajustar_17(this: usize, delta: i8) -> u8 {
+    let disp = *((this + 0x35) as *const i16);
+    if delta == 0 {
+        let motor = *((this + 0x19e) as *const usize);
+        if *((motor + 0x477a) as *const i32) == -1 && !(disp > 0x1d4c && byte(this, 0x17) < 10) {
+            return 0;
+        }
+    }
+    let v = byte(this, 0x17);
+    let t = v as i32 + delta as i32;
+    let mut a = if delta > 0 {
+        if t <= 10 || sortear(0x15) >= t { v.wrapping_add(delta) } else { (sortear(delta as i32 + 1) as i8).wrapping_add(v) }
+    } else if delta < 0 {
+        if t >= 10 || sortear(0xb) <= t { v.wrapping_add(delta) } else { (sortear(delta as i32 - 1) as i8).wrapping_add(v) }
+    } else {
+        v
+    };
+    let disp = *((this + 0x35) as *const i16);
+    if disp >= 0x1d4c {
+        let x = a as f64;
+        let y = disp as f64 * f64_em(0x968d60) - f64_em(0x96d868);
+        a = ftol(if x > y { x } else { y }) as i8;
+    }
+    let a = a.clamp(1, 20);
+    *((this + 0x17) as *mut i8) = a;
+    (a != v) as u8
+}
+
+// ---------- vigesima terceira leva: posse de bola ----------
+
+/// { 0x6f0630 } (match_pl.cpp): o jogador pega a bola. Solta a do dono anterior (0xf582, mesmas
+/// gravacoes de `soltar_bola`), limpa o estado do lance, credita o passe (0xf576, do mesmo lado:
+/// contador 0x2 e disposicao + 0x6c/0x60/0x96/0x78 conforme papel e zona), registra o novo dono,
+/// a bola na casa dele, o lado com a posse (0x1a5 + lado) e a contagem de posse (0x8d46 + lado).
+/// O motor e relido a cada acesso, como no original.
+unsafe extern "thiscall" fn pegar_bola(this: usize) {
+    let m = || *((this + 0x19e) as *const usize);
+    let b = |o: usize| (m() + o) as *mut u8;
+    let w = |o: usize| (m() + o) as *mut u32;
+    if m() == 0 {
+        return;
+    }
+    let antigo = *w(0xf582) as usize;
+    if antigo != 0 {
+        soltar_bola(antigo);
+    }
+    *b(0x1a4) = 0;
+    *b(0x1a7) = 0;
+    *b(0x1cd) = 0;
+    *w(0x4786) = 0;
+    let tabela_a = || {
+        let f: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+        f(m(), this)
+    };
+    let passe = *w(0xf576) as usize;
+    if passe != 0 && lado(this) == lado(passe) {
+        *((passe + 2) as *mut u8) = (*((passe + 2) as *const u8)).wrapping_add(1);
+        let (l, y) = (lado(this), byte(this, 0x103));
+        let soma: i16 = if tabela_a() == 1 {
+            0x6c
+        } else if (l == 1 && y >= 6) || (l == 0 && y < 6) {
+            0x60
+        } else if (l == 1 && y < 3) || (l == 0 && y > 8) {
+            0x96
+        } else {
+            0x78
+        };
+        let disp = (*w(0xf576) as usize + 0x35) as *mut i16;
+        *disp = (*disp).wrapping_add(soma);
+        *w(0x4782) = (*w(0x4782)).wrapping_add(0xf0);
+        let anterior = *w(0xf576);
+        *w(0xf5aa) = this as u32;
+        *w(0xf5a6) = anterior;
+    }
+    *w(0xf576) = 0;
+    *w(0xf57a) = 0;
+    *w(0x477e) = 0;
+    if tabela_a() == 1 {
+        let (l, x, y) = (lado(this), byte(this, 0x102), byte(this, 0x103));
+        let area = if l == 1 { 10..=11 } else { 0..=1 };
+        if (2..=6).contains(&x) && area.contains(&y) {
+            let mm = m() as isize;
+            if *((mm + 0x1a5 + l as isize) as *const u8) == 0 {
+                *((this + 0x19a) as *mut u16) = if l != 0 { 0xb4 } else { 0 };
+                *((mm + 0x8ea9) as *mut u8) = 0xff;
+            }
+        }
+    }
+    let (l, y) = (lado(this), byte(this, 0x103));
+    if (l == 1 && y >= 6) || (l == 0 && y < 6) {
+        *b(0x8eb1) = 0;
+    }
+    *((m() as isize + 0x1a5 + lado(this) as isize) as *mut u8) = 1;
+    *((m() + 0x1a5 + (lado(this) == 0) as usize) as *mut u8) = 0;
+    *b(0x8ea7) = byte(this, 0x102) as u8;
+    *b(0x8ea8) = byte(this, 0x103) as u8;
+    *b(0x8eae) = lado(this) as u8;
+    *w(0xf582) = this as u32;
+    *((m() + 0x8ed8) as *mut u16) = *((this + 0x19a) as *const u16);
+    *b(0x8eaa) = 0;
+    let mm = m();
+    if byte(mm, 0x8eab) != lado(this) {
+        *((mm + 0x4782) as *mut u32) = 0;
+    }
+    let l = lado(this);
+    let mm = m();
+    *((mm + 0x8eab) as *mut i8) = l;
+    if l != -1 {
+        let c = (mm as isize + 0x8d46 + l as isize) as *mut u8;
+        *c = (*c).wrapping_add(1);
+        let o = (mm + 0x8d46 + (l == 0) as usize) as *mut i8;
+        if *o > 0 {
+            *o -= 10;
+        }
+    }
+    *((this + 0x29) as *mut u16) = 0;
+    *((this + 0x19c) as *mut u16) = 0;
+}
+
 /// `tabela_a` do motor do jogador (0 sem motor), pelo endereco do jogo: os bits do papel tatico.
 unsafe fn papel_word(motor: usize, j: usize) -> u16 {
     if motor == 0 {
@@ -2942,6 +3219,82 @@ unsafe extern "thiscall" fn comparar_escolher_d(this: usize, l: i8, modo: u32) -
     r
 }
 
+comparar_valor!(comparar_ler_1bc, ler_1bc, 101, () -> u16);
+unsafe extern "thiscall" fn comparar_somar_2b(this: usize, v: u8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u8)>(102);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x2b, 1)], || o(this, v), || somar_2b(this, v));
+    PLACAR.registrar(igual, || format!("somar_2b({}) original={:x?} rust={:x?}", v, mo, mr));
+}
+unsafe extern "thiscall" fn comparar_gravar_2b(this: usize, v: u8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u8)>(103);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x2b, 1)], || o(this, v), || gravar_2b(this, v));
+    PLACAR.registrar(igual, || format!("gravar_2b({}) original={:x?} rust={:x?}", v, mo, mr));
+}
+comparar_valor!(comparar_tabela_a_1a_j, tabela_a_1a_do_jogador, 104, () -> u16);
+comparar_valor!(comparar_tabela_b_j, tabela_b_do_jogador, 105, () -> u16);
+comparar_valor!(comparar_diferenca_j, diferenca_do_jogador, 106, () -> u8);
+comparar_valor!(comparar_marcas_rot, marcas_do_jogador_rot, 107, () -> u64);
+comparar_valor!(comparar_marca_800000, marca_800000, 108, () -> u8);
+comparar_valor!(comparar_perto_proprio, perto_do_proprio_gol, 109, () -> u8);
+comparar_valor!(comparar_papel_880, papel_880, 110, () -> u8);
+unsafe extern "thiscall" fn comparar_soltar_bola(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(111);
+    let m = *((this + 0x19e) as *const usize);
+    let reg = [(m + 0x4786, 4), (m + 0x8eae, 1), (m + 0xf582, 4), (m + 0x1a7, 1), (this + 0x29, 2), (this + 0x19c, 2)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || soltar_bola(this));
+    PLACAR.registrar(igual, || format!("soltar_bola original={:x?} rust={:x?}", mo, mr));
+}
+comparar_valor!(comparar_pela_ficha, jogador_pela_ficha, 112, (ficha: usize) -> usize);
+unsafe extern "stdcall" fn comparar_byte_do_codigo(c: u32) -> i32 {
+    let r = orig::<unsafe extern "stdcall" fn(u32) -> i32>(113)(c);
+    let n = byte_do_codigo(c);
+    PLACAR.registrar(r == n, || format!("byte_do_codigo({:#x}) original={} rust={}", c, r, n));
+    r
+}
+
+unsafe extern "thiscall" fn comparar_nota_ajustada(this: usize, base: i8) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8) -> i32>(114);
+    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, base), || crate::aleatorio::sem_contar(|| nota_ajustada(this, base)));
+    PLACAR.registrar(igual && r as u8 == n as u8, || format!("nota_ajustada({}) original={} rust={}", base, r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_ajustar_17(this: usize, delta: i8) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8) -> u8>(115);
+    let mut reg = vec![(this + 0x17, 1)];
+    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, delta), || crate::aleatorio::sem_contar(|| ajustar_17(this, delta)));
+    PLACAR.registrar(igual && r == n, || format!("ajustar_17({}) original={} {:x?} rust={} {:x?}", delta, r, mo, n, mr));
+    r
+}
+
+unsafe extern "thiscall" fn comparar_pegar_bola(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(116);
+    let m = *((this + 0x19e) as *const usize);
+    let mut reg = vec![(this, 0x1be)];
+    let motor = |mm: usize, reg: &mut Vec<(usize, usize)>| {
+        for (a, n) in [(0x1a0usize, 0x30usize), (0x4780, 0x10), (0x8d40, 0x10), (0x8ea0, 0x40), (0xf570, 0x40)] {
+            reg.push((mm + a, n));
+        }
+    };
+    if m != 0 {
+        motor(m, &mut reg);
+        for campo in [0xf582usize, 0xf576] {
+            let p = *((m + campo) as *const usize);
+            if p != 0 && p != this {
+                reg.push((p, 0x40));
+                reg.push((p + 0x190, 0x10));
+                let mp = *((p + 0x19e) as *const usize);
+                if mp != 0 && mp != m {
+                    motor(mp, &mut reg);
+                }
+            }
+        }
+    }
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || pegar_bola(this));
+    PLACAR.registrar(igual, || format!("pegar_bola(lado {}, {} {}) original={:x?} rust={:x?}", lado(this), byte(this, 0x102), byte(this, 0x103), mo, mr));
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -3050,6 +3403,22 @@ pub unsafe fn instalar(comparando: bool) {
         aplicar_ao_time as *const () as usize,
         aplicar_ao_lado as *const () as usize,
         escolher_pela_condicao as *const () as usize,
+        ler_1bc as *const () as usize,
+        somar_2b as *const () as usize,
+        gravar_2b as *const () as usize,
+        tabela_a_1a_do_jogador as *const () as usize,
+        tabela_b_do_jogador as *const () as usize,
+        diferenca_do_jogador as *const () as usize,
+        marcas_do_jogador_rot as *const () as usize,
+        marca_800000 as *const () as usize,
+        perto_do_proprio_gol as *const () as usize,
+        papel_880 as *const () as usize,
+        soltar_bola as *const () as usize,
+        jogador_pela_ficha as *const () as usize,
+        byte_do_codigo as *const () as usize,
+        nota_ajustada as *const () as usize,
+        ajustar_17 as *const () as usize,
+        pegar_bola as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -3153,6 +3522,22 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_aplicar_time as *const () as usize,
         comparar_aplicar_lado as *const () as usize,
         comparar_escolher_d as *const () as usize,
+        comparar_ler_1bc as *const () as usize,
+        comparar_somar_2b as *const () as usize,
+        comparar_gravar_2b as *const () as usize,
+        comparar_tabela_a_1a_j as *const () as usize,
+        comparar_tabela_b_j as *const () as usize,
+        comparar_diferenca_j as *const () as usize,
+        comparar_marcas_rot as *const () as usize,
+        comparar_marca_800000 as *const () as usize,
+        comparar_perto_proprio as *const () as usize,
+        comparar_papel_880 as *const () as usize,
+        comparar_soltar_bola as *const () as usize,
+        comparar_pela_ficha as *const () as usize,
+        comparar_byte_do_codigo as *const () as usize,
+        comparar_nota_ajustada as *const () as usize,
+        comparar_ajustar_17 as *const () as usize,
+        comparar_pegar_bola as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -3177,6 +3562,9 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_escolher_destaque", "motor_escolher_por_papel_b", "motor_casa_da_formacao",
         "motor_calcular_percentuais", "motor_escolher_por_papel_c",
         "motor_aplicar_fator", "motor_valor_pela_condicao", "motor_aplicar_ao_time", "motor_aplicar_ao_lado", "motor_escolher_pela_condicao",
+        "motor_ler_1bc", "motor_somar_2b", "motor_gravar_2b", "motor_tabela_a_1a_do_jogador", "motor_tabela_b_do_jogador", "motor_diferenca_do_jogador", "motor_marcas_do_jogador_rot", "motor_marca_800000", "motor_perto_do_proprio_gol", "motor_papel_880", "motor_soltar_bola", "motor_jogador_pela_ficha", "motor_byte_do_codigo",
+        "motor_nota_ajustada", "motor_ajustar_17",
+        "motor_pegar_bola",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -3758,6 +4146,105 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_aplicar_time(m, jt, fat);
             comparar_aplicar_lado(m, ((h16 >> 38) % 2) as i8, fat);
             comparar_escolher_d(m, ((h16 >> 39) % 2) as i8, [2u32, 0, 1, 0x102, (h16 >> 40) as u32][((h16 >> 44) % 5) as usize]);
+            // vigesima primeira leva
+            let h17 = s.proximo();
+            let h18 = s.proximo();
+            *((j + 0x1bc) as *mut u16) = h17 as u16;
+            comparar_ler_1bc(j);
+            *((j + 0x2b) as *mut u8) = (h17 >> 16) as u8;
+            comparar_somar_2b(j, (h17 >> 24) as u8);
+            comparar_gravar_2b(j, (h17 >> 32) as u8);
+            *((j + 0x27) as *mut i8) = ((h17 >> 40) % 2) as i8;
+            *((j + 0x19) as *mut i8) = ((h17 >> 41) % 15) as i8 - 2;
+            *((j + 0x1a) as *mut i8) = ((h17 >> 45) % 15) as i8 - 2;
+            *((j + 0x103) as *mut i8) = ((h17 >> 49) % 13) as i8 - 1;
+            *((m + 0xf582) as *mut usize) = if (h17 >> 53) & 1 == 0 { j } else { o };
+            *((j + 0x19e) as *mut usize) = if (h17 >> 54) % 4 == 0 { 0 } else { m };
+            comparar_tabela_a_1a_j(j);
+            comparar_tabela_b_j(j);
+            comparar_diferenca_j(j);
+            comparar_papel_880(j);
+            *((j + 0x19e) as *mut usize) = m;
+            for t in tabelas.iter_mut() {
+                for (k, v) in t.iter_mut().enumerate() {
+                    *v = [0x80u16, 0x800, 0x880, 0, (h18 >> k) as u16][((h18 >> (k * 3)) % 5) as usize];
+                }
+            }
+            comparar_papel_880(j);
+            *((j + 0x19) as *mut i8) = ((h17 >> 56) % 14) as i8 - 1;
+            *((m + 0x9766 + 6371 * byte(j, 0x27) as usize) as *mut u32) = (h18 as u32) & 0x1801000;
+            *((m + 6 + byte(j, 0x27) as usize) as *mut u8) = (h18 >> 32) as u8;
+            comparar_marcas_rot(j);
+            comparar_marca_800000(j);
+            *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((h18 >> 40) % 4) as usize];
+            *((m + 0x8ea8) as *mut i8) = ((h18 >> 42) % 14) as i8 - 1;
+            comparar_perto_proprio(j);
+            *((m + 0x1a7) as *mut u8) = (h18 >> 8) as u8 | 1;
+            comparar_soltar_bola(j);
+            let dono = jogadores[1].as_mut_ptr() as usize;
+            *((dono + 0x23) as *mut usize) = m + 0x4796 + 8920 * ((h18 >> 46) % 2) as usize;
+            let alvo21 = if (h18 >> 47) % 4 == 0 { 0x1234 } else { *((jogador_do_bloco(m, ((h18 >> 46) % 2) as i8, ((h18 >> 49) % 20) as usize) + 0x69) as *const usize) };
+            comparar_pela_ficha(dono, alvo21);
+            let cod = [0x1f40u32 - 1, 0x1f40, 0x1f40 + 0x2a4, 0x1f40 + 0x2a5, 0x1f40 + ((h18 >> 52) % 0x2a5) as u32, (h18 >> 20) as u32][((h18 >> 61) % 6) as usize];
+            // a tabela (0xb68788) fica na area nao inicializada e esta zerada no inicio: valores temporarios
+            let ic = ((cod & 0x7fff) as i32 - 0x1f40) as i16;
+            let alvo_t = (0xb68788 + 18 * ic.clamp(0, 0x2a5) as usize) as *mut u8;
+            let antes = *alvo_t;
+            *alvo_t = (h17 >> 8) as u8 | 1;
+            comparar_byte_do_codigo(cod | (((h18 >> 15) as u32 & 1) << 15) | ((h17 as u32) & 0xffff0000));
+            *alvo_t = antes;
+            // vigesima segunda leva
+            let h19 = s.proximo();
+            let h20 = s.proximo();
+            for t in tabelas.iter_mut() {
+                for (k, v) in t.iter_mut().enumerate() {
+                    *v = [0u16, 1, 0x80, 0x100, 0x200, 0x400, 0x800, 0x880, (h20 >> k) as u16][((h20 >> (k * 4)) % 9) as usize];
+                }
+            }
+            *((j + 0x19e) as *mut usize) = if (h19 >> 60) % 6 == 0 { 0 } else { m };
+            *((j + 0x27) as *mut i8) = ((h19 >> 2) % 2) as i8;
+            *((j + 0x19) as *mut i8) = ((h19 >> 3) % 11) as i8;
+            *((j + 0x10a) as *mut i8) = ((h19 >> 7) % 14) as i8 - 2;
+            let pe22 = pessoas[0].as_mut_ptr();
+            *((j + 0x6d) as *mut usize) = pe22 as usize;
+            for (o, sh) in [(0x17usize, 11), (0x18, 16), (0x19, 21)] {
+                *pe22.add(o) = ((h19 >> sh) % 45) as u8;
+            }
+            comparar_nota_ajustada(j, ((h19 >> 26) % 30) as i8 - 10);
+            *((j + 0x19e) as *mut usize) = m;
+            *((m + 0x477a) as *mut i32) = if (h19 >> 31) % 2 == 0 { -1 } else { (h19 >> 32) as i32 & 0xffff };
+            *((j + 0x35) as *mut i16) = [7500i16, 7501, 7499, 9000, 3000, -5, (h20 >> 20) as i16][((h19 >> 34) % 7) as usize];
+            *((j + 0x17) as *mut i8) = ((h19 >> 37) % 26) as i8 - 3;
+            comparar_ajustar_17(j, if (h19 >> 42) % 4 == 0 { 0 } else { ((h19 >> 44) % 25) as i8 - 12 });
+            // vigesima terceira leva: posse (dono anterior, passe do mesmo lado ou nao, zonas, papel 1)
+            let h21 = s.proximo();
+            let h22 = s.proximo();
+            for t in tabelas.iter_mut() {
+                for (k, v) in t.iter_mut().enumerate() {
+                    *v = if (h22 >> k) & 1 == 0 { 1 } else { (h22 >> (k + 11)) as u16 & 0xfe };
+                }
+            }
+            let o23 = outro.as_ptr() as usize;
+            *((o23 + 0x19e) as *mut usize) = m;
+            *((j + 0x19e) as *mut usize) = m;
+            // lado so 0, 1 ou 2: com -1 a tabela de papeis do original le antes do motor e cai
+            *((j + 0x27) as *mut i8) = [0i8, 1, 0, 1, 2][((h21 >> 1) % 5) as usize];
+            *((j + 0x19) as *mut i8) = ((h21 >> 4) % 11) as i8;
+            *((j + 0x102) as *mut i8) = ((h21 >> 8) % 10) as i8 - 1;
+            *((j + 0x103) as *mut i8) = ((h21 >> 12) % 14) as i8 - 1;
+            *((j + 0x19a) as *mut u16) = (h21 >> 16) as u16;
+            let pb = jogador_do_bloco(m, ((h21 >> 32) % 2) as i8, ((h21 >> 33) % 20) as usize);
+            *((m + 0xf582) as *mut usize) = [0, o23, pb, j][((h21 >> 38) % 4) as usize];
+            let ps = jogador_do_bloco(m, ((h21 >> 40) % 2) as i8, ((h21 >> 41) % 20) as usize);
+            *((ps + 0x19e) as *mut usize) = m;
+            *((pb + 0x19e) as *mut usize) = m;
+            *((m + 0xf576) as *mut usize) = if (h21 >> 46) % 4 == 0 { 0 } else { ps };
+            for (k, v) in [0x1a4usize, 0x1a5, 0x1a6, 0x1a7, 0x1cd, 0x8ea9, 0x8eab, 0x8eb1, 0x8eaa, 0x8d46, 0x8d47].iter().enumerate() {
+                let r = (h22 >> (k * 5)) as u8;
+                *((m + v) as *mut u8) = match r % 4 { 0 => 0, 1 => 1, 2 => 0xff, _ => r };
+            }
+            *((m + 0x4782) as *mut u32) = (h22 >> 13) as u32;
+            comparar_pegar_bola(j);
             comparar_escolher_c(m, (alto13 & !0xff) | ((h13 >> 53) % 2) as u32, if (h13 >> 54) % 3 == 0 { 0x100 | ((h13 >> 56) as u32 & 0xfe00) } else { (h13 >> 57) as u32 & 0xff });
             comparar_distancia_entre(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
         }
