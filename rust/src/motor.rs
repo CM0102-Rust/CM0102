@@ -154,8 +154,21 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6bba80, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xdb] },
     Prologo { endereco: 0x6c41b0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x53] },
     Prologo { endereco: 0x713d90, bytes: &[0x51, 0x53, 0x8b, 0x5c, 0x24, 0x0c] },
+    // decima oitava leva
+    Prologo { endereco: 0x6d0f80, bytes: &[0x83, 0xec, 0x20, 0x8b, 0x81, 0x92, 0x47, 0x00, 0x00] },
+    Prologo { endereco: 0x6c2880, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] },
+    Prologo { endereco: 0x6c2a40, bytes: &[0x8a, 0x81, 0xae, 0x8e, 0x00, 0x00] },
+    // decima nona leva
+    Prologo { endereco: 0x6ce9c0, bytes: &[0x83, 0xec, 0x10, 0x8a, 0x44, 0x24, 0x14] },
+    Prologo { endereco: 0x6c2050, bytes: &[0x83, 0xec, 0x10, 0x0f, 0xbe, 0x54, 0x24, 0x14] },
+    // vigesima leva
+    Prologo { endereco: 0x716450, bytes: &[0xd9, 0x44, 0x24, 0x04, 0xd8, 0x89, 0xa2, 0x01, 0x00, 0x00] },
+    Prologo { endereco: 0x7165b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
+    Prologo { endereco: 0x6bb8d0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
+    Prologo { endereco: 0x6bb950, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
+    Prologo { endereco: 0x6c2310, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] },
 ];
-const N: usize = 91;
+const N: usize = 101;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -1971,6 +1984,313 @@ unsafe extern "thiscall" fn alcanca_o_ponto(this: usize, x: i8, y: i8) -> u8 {
     (de(x, y, 4, fundo) >= t) as u8
 }
 
+// ---------- decima oitava leva ----------
+
+/// { 0x6d0f80 } (match_eng.cpp): o destaque entre os (byte 0x4d da partida & 0xf) + 11 primeiros
+/// de cada lado (inativos com 0x20 = 0xff de fora): pontuacao (16 bits) = disposicao 0x35 +
+/// 125 x (0x10 + 2 x 0x0c) + 50 x 0x03 + 35 x 0x06; troca so com pontuacao maior e
+/// ftol(disposicao x fator) nao menor. Guarda o primeiro dword da ficha (0x69) em 0x477a.
+unsafe extern "thiscall" fn escolher_destaque(this: usize) {
+    let partida = *((this + 0x4792) as *const usize);
+    let n = (byte(partida, 0x4d) & 0xf) + 0xb;
+    let (mut melhor, mut pontos, mut valor) = (0usize, 0i16, 0i16);
+    for l in 0..2usize {
+        for k in 0..n.max(0) as usize {
+            let p = this + 0x4796 + 0x22d8 * l + 0x1be * k;
+            if byte(p, 0x19) < 0 && byte(p, 0x20) == -1 {
+                continue;
+            }
+            let disp = *((p + 0x35) as *const i16);
+            let v = ftol(disp as f64 * f64_em(0x96a350)) as i16;
+            let u = |o: usize| byte(p, o) as u8 as i16;
+            let pt = disp
+                .wrapping_add(125i16.wrapping_mul(u(0x10).wrapping_add(2 * u(0x0c))))
+                .wrapping_add(50i16.wrapping_mul(u(0x03)))
+                .wrapping_add(35i16.wrapping_mul(u(0x06)));
+            if melhor == 0 || (pt > pontos && v >= valor) {
+                melhor = p;
+                pontos = pt;
+                valor = v;
+            }
+        }
+    }
+    if melhor != 0 {
+        *((this + 0x477a) as *mut u32) = **((melhor + 0x69) as *const *const u32);
+    }
+}
+
+/// { 0x6c2880 } (match_eng.cpp): como `escolher_por_papel`, com outros fatores (1,2 / 1,2 / 0,65 /
+/// 0,5 / 0,35; papel 0x40: 0,25 com 0x700, senao 0,15) ajustados pelos atributos da pessoa (0x6d:
+/// 0x44, 0x39 e 0x3e). O fator, inclusive os ajustes, fica no lugar do argumento e passa adiante.
+unsafe extern "thiscall" fn escolher_por_papel_b(this: usize, argumento: u32) -> u8 {
+    let lado_b = argumento as i8;
+    let mut fator = f32::from_bits(argumento);
+    let mut melhor = 0.0f32;
+    let mut escolhido: u8 = 0xff;
+    for k in 0..20u8 {
+        let p = jogador_do_bloco(this, lado_b, k as usize);
+        if byte(p, 0x19) < 0 {
+            continue;
+        }
+        let papel = f717410(p);
+        if papel & 1 != 0 {
+            continue;
+        }
+        let bits = if papel & 6 != 0 {
+            Some(0x3f99999a)
+        } else if papel & 8 != 0 {
+            Some(0x3f266666)
+        } else if papel & 0x10 != 0 {
+            Some(0x3f000000)
+        } else if papel & 0x20 != 0 {
+            Some(0x3eb33333)
+        } else if papel & 0x40 != 0 {
+            Some(if papel & 0x700 != 0 { 0x3e800000 } else { 0x3e19999a })
+        } else {
+            None
+        };
+        if let Some(b) = bits {
+            fator = f32::from_bits(b);
+        }
+        let pessoa = *((p + 0x6d) as *const usize);
+        if pessoa != 0 {
+            let a = byte(pessoa, 0x44);
+            if a > 15 {
+                fator *= f32_em(0x96a33c);
+            } else if a > 10 {
+                fator *= f32_em(0x96d3b8);
+            } else if a < 5 {
+                fator *= f32_em(0x96b014);
+            }
+            for o in [0x39, 0x3e] {
+                let a = byte(pessoa, o);
+                if a > 15 {
+                    fator *= f32_em(0x96a33c);
+                } else if a < 5 {
+                    fator *= f32_em(0x96b014);
+                }
+            }
+        }
+        let v = sortear(0x19) as f64 * fator as f64;
+        if escolhido == 0xff || v > melhor as f64 {
+            melhor = v as f32;
+            escolhido = k;
+        }
+    }
+    escolhido
+}
+
+/// { 0x6c2a40 } (match_eng.cpp): casa (x, y) da formacao do jogador (tabela 0xf56e do lado, 216
+/// bytes por posicao; nibble baixo e alto de um byte): campo 0x9f/0xa4 quando o lado em 0x8eae
+/// (0 ou 1) e o do jogador; 0x30/0x3b quando e o outro; 0x35 com 0x8eae fora de 0/1. O byte e
+/// relido para o segundo nibble, depois de gravar o primeiro.
+unsafe extern "thiscall" fn casa_da_formacao(this: usize, jogador: usize, x: *mut u8, y: *mut u8) {
+    let l = byte(this, 0x8eae);
+    let jl = byte(jogador, 0x27);
+    let campo = match l {
+        0 if jl == 0 => 0x9f,
+        0 => 0x30,
+        1 if jl == 1 => 0xa4,
+        1 => 0x3b,
+        _ => 0x35,
+    };
+    let ler = || {
+        let tabela = *((this as isize + 0xf56e + 4 * byte(jogador, 0x27) as isize) as *const isize);
+        *((tabela + 216 * byte(jogador, 0x19) as isize + campo) as *const u8)
+    };
+    *x = ler() & 0xf;
+    *y = ler() >> 4;
+}
+
+// ---------- decima nona leva ----------
+
+/// Grava ftol(a / (a + b) x 100) e o complemento a 100 nos bytes `pa` e `pb`; 50 e 50 sem total positivo.
+unsafe fn percentual(this: usize, a: i32, total: i32, pa: isize, pb: isize) {
+    let (x, y) = if total > 0 {
+        let v = ftol(a as f64 / total as f64 * f32_em(0x968960) as f64) as u8;
+        (v, 100u8.wrapping_sub(v))
+    } else {
+        (50, 50)
+    };
+    *((this as isize + pa) as *mut u8) = x;
+    *((this as isize + pb) as *mut u8) = y;
+}
+
+/// { 0x6ce9c0 } (match_eng.cpp): percentuais da partida (posse e afins) para os indices `i`, 3 e 4,
+/// a partir das contagens em 0x8f02..0x8f66 (seis tabelas de dwords).
+unsafe extern "thiscall" fn calcular_percentuais(this: usize, i: i8) {
+    for s in [i as isize, 3, 4] {
+        let c = |o: isize| *((this as isize + o + 4 * s) as *const i32);
+        percentual(this, c(0x8f52), c(0x8f52).wrapping_add(c(0x8f16)), 0xf5dd + s, 0xf609 + s);
+        percentual(this, c(0x8f2a), c(0x8f2a).wrapping_add(c(0x8f3e)), 0xf5d8 + s, 0xf60e + s);
+        percentual(this, c(0x8f66), c(0x8f66).wrapping_add(c(0x8f02)), 0xf613 + s, 0xf5d3 + s);
+        let a = c(0x8f02).wrapping_add(c(0x8f2a)).wrapping_add(c(0x8f52));
+        let total = a.wrapping_add(c(0x8f66)).wrapping_add(c(0x8f3e)).wrapping_add(c(0x8f16));
+        percentual(this, a, total, 0xf5ce + s, 0xf604 + s);
+    }
+}
+
+/// { 0x6c2050 } (match_eng.cpp): terceira escolha ponderada pelo papel (0,4 / 0,45 / 0,5 / 0,75 /
+/// 0,85; papel 0x40: 1,1 com 0x700, senao 1,0), ajustada pela pessoa (palavra 5 e sorteio contra o
+/// byte 0x21). O sorteio base vem de atributos em float do jogador: com `modo`, 0xc9; senao, 1 em
+/// 7, 0xa1 + c; 2 em 3 (dos restantes), uma soma ponderada de cinco; o resto, de tres. Nos dois
+/// primeiros o fator nao entra. Acima de um limite, perde sorteio(5). O fator fica no argumento.
+unsafe extern "thiscall" fn escolher_por_papel_c(this: usize, argumento: u32, modo: u32) -> u8 {
+    let lado_b = argumento as i8;
+    let mut fator = f32::from_bits(argumento);
+    let mut melhor = 0.0f32;
+    let mut escolhido: u8 = 0xff;
+    for k in 0..20u8 {
+        let p = jogador_do_bloco(this, lado_b, k as usize);
+        if byte(p, 0x19) < 0 {
+            continue;
+        }
+        let papel = f717410(p);
+        if papel & 1 != 0 {
+            continue;
+        }
+        let bits = if papel & 2 != 0 {
+            Some(0x3ecccccd)
+        } else if papel & 4 != 0 {
+            Some(0x3ee66666)
+        } else if papel & 8 != 0 {
+            Some(0x3f000000)
+        } else if papel & 0x10 != 0 {
+            Some(0x3f400000)
+        } else if papel & 0x20 != 0 {
+            Some(0x3f59999a)
+        } else if papel & 0x40 != 0 {
+            Some(if papel & 0x700 != 0 { 0x3f8ccccd } else { 0x3f800000 })
+        } else {
+            None
+        };
+        if let Some(b) = bits {
+            fator = f32::from_bits(b);
+        }
+        let pessoa = *((p + 0x6d) as *const usize);
+        if pessoa != 0 {
+            let w = *((pessoa + 5) as *const i16);
+            fator = if w > 0x8c {
+                fator * f32_em(0x96d3d4)
+            } else if w < 0x3c {
+                fator * f32_em(0x96d3d0)
+            } else {
+                (w as f64 * f64_em(0x967898) * fator as f64) as f32
+            };
+            let r = sortear(byte(pessoa, 0x21) as i32);
+            if r < sortear(0x14) {
+                fator *= f32_em(0x96d3cc);
+            }
+        }
+        let f = |o: usize| f32_em(p + o) as f64;
+        let mut v = if modo as u8 != 0 {
+            sortear(ftol(f(0xc9))) as f64
+        } else if sortear(7) == 0 {
+            sortear(ftol(f(0xa1) + f32_em(0x96b020) as f64)) as f64
+        } else if sortear(3) != 0 {
+            let x = f(0x9d) * f64_em(0x967880) + f(0x95) * f64_em(0x96a6a8) + f(0xb1) * f64_em(0x969510) + f(0x7d) * f64_em(0x969510) + f(0x99) + f64_em(0x969550);
+            sortear(ftol(x)) as f64 * fator as f64
+        } else {
+            let x = f(0xd9) * f64_em(0x9689e0) + f(0xad) * f64_em(0x969040) + f(0xa9) + f32_em(0x968a78) as f64;
+            sortear(ftol(x)) as f64 * fator as f64
+        };
+        if v > f32_em(0x96af88) as f64 {
+            let v32 = v as f32;
+            v = v32 as f64 - sortear(5) as f64;
+        }
+        if escolhido == 0xff || v > melhor as f64 {
+            melhor = v as f32;
+            escolhido = k;
+        }
+    }
+    escolhido
+}
+
+// ---------- vigesima leva: condicao fisica (0x1a2) ----------
+
+/// { 0x716450 } (match_pl.cpp): multiplica a condicao (0x1a2) pelo fator; o produto (em double) fica
+/// no minimo em 2 x (25 - byte 0x5d da ficha 0x69) e, passando de um teto, vira 100.
+unsafe extern "thiscall" fn aplicar_fator(this: usize, fator: f32) {
+    let c = (this + 0x1a2) as *mut f32;
+    let produto = fator as f64 * *c as f64;
+    *c = produto as f32;
+    let minimo = ((25 - byte(*((this + 0x69) as *const usize), 0x5d) as i32) * 2) as f32;
+    let v = if produto > minimo as f64 { produto } else { minimo as f64 };
+    *c = v as f32;
+    if v > f64_em(0x9688a8) {
+        *c = 100.0;
+    }
+}
+
+/// { 0x716450 } pelo endereco do jogo (Rust ou original, conforme o modo).
+unsafe fn f716450(p: usize, fator: f32) {
+    let f: unsafe extern "thiscall" fn(usize, f32) = core::mem::transmute(0x716450usize);
+    f(p, fator)
+}
+
+/// { 0x7165b0 } (match_pl.cpp): valor pela condicao e pelo byte 0xff; com `alvo` igual ao guardado
+/// em 0x1a6, formula propria (0xff + 5).
+unsafe extern "thiscall" fn valor_pela_condicao(this: usize, alvo: usize) -> i32 {
+    let base = f32_em(this + 0x1a2) as f64 * f64_em(0x967898) + f64_em(0x969040);
+    let b = byte(this, 0xff) as i32;
+    if alvo != 0 && alvo == *((this + 0x1a6) as *const usize) {
+        ftol(base * (b + 5) as f64 * f64_em(0x968e18))
+    } else {
+        ftol((base * b as f64 + f64_em(0x9688a0)) * f64_em(0x968968))
+    }
+}
+
+/// { 0x6bb8d0 } (match_eng.cpp): aplica o fator ao jogador e um derivado aos colegas com ficha
+/// (ativos: (f + c) x c'; inativos: f x c + c').
+unsafe extern "thiscall" fn aplicar_ao_time(this: usize, jogador: usize, fator: f32) {
+    for k in 0..20 {
+        let p = jogador_do_bloco(this, lado(jogador), k);
+        if *((p + 0x69) as *const usize) == 0 {
+            continue;
+        }
+        let f = if p == jogador {
+            fator
+        } else if byte(p, 0x19) >= 0 {
+            ((fator as f64 + f64_em(0x967890)) * f64_em(0x968968)) as f32
+        } else {
+            (fator as f64 * f64_em(0x96a7a8) + f64_em(0x96d0e8)) as f32
+        };
+        f716450(p, f);
+    }
+}
+
+/// { 0x6bb950 } (match_eng.cpp): aplica o fator a todos os jogadores com ficha do lado.
+unsafe extern "thiscall" fn aplicar_ao_lado(this: usize, lado_b: i8, fator: f32) {
+    for k in 0..20 {
+        let p = jogador_do_bloco(this, lado_b, k);
+        if *((p + 0x69) as *const usize) != 0 {
+            f716450(p, fator);
+        }
+    }
+}
+
+/// { 0x6c2310 } (match_eng.cpp): escolha pelo valor da condicao: maior sorteio(valor + 5, ou + 25
+/// no modo 2) x fator (0,2 com papel 1, senao 1,0).
+unsafe extern "thiscall" fn escolher_pela_condicao(this: usize, lado_b: i8, modo: u32) -> u8 {
+    let f: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(0x7165b0usize);
+    let mut melhor = 0.0f32;
+    let mut escolhido: u8 = 0xff;
+    for k in 0..20u8 {
+        let p = jogador_do_bloco(this, lado_b, k as usize);
+        if byte(p, 0x19) < 0 {
+            continue;
+        }
+        let fator = if f717410(p) & 1 != 0 { f32::from_bits(0x3e4ccccd) } else { 1.0 };
+        let v = f(p, 0) as i8 as i32 + if modo as u8 == 2 { 0x19 } else { 5 };
+        let v = sortear(v) as f64 * fator as f64;
+        if escolhido == 0xff || v > melhor as f64 {
+            melhor = v as f32;
+            escolhido = k;
+        }
+    }
+    escolhido
+}
+
 /// `tabela_a` do motor do jogador (0 sem motor), pelo endereco do jogo: os bits do papel tatico.
 unsafe fn papel_word(motor: usize, j: usize) -> u16 {
     if motor == 0 {
@@ -2559,6 +2879,69 @@ unsafe extern "thiscall" fn comparar_conferir_lance(this: usize) -> u8 {
 comparar_valor!(comparar_caminho_livre, caminho_livre_ate, 89, (l: i8, x: i8, y: i8) -> u8);
 comparar_valor!(comparar_alcanca_ponto, alcanca_o_ponto, 90, (x: i8, y: i8) -> u8);
 
+unsafe extern "thiscall" fn comparar_destaque(this: usize) {
+    let f = orig::<unsafe extern "thiscall" fn(usize)>(91);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x477a, 4)], || f(this), || escolher_destaque(this));
+    PLACAR.registrar(igual, || format!("escolher_destaque original={:x?} rust={:x?}", mo, mr));
+}
+unsafe extern "thiscall" fn comparar_escolher_b(this: usize, arg: u32) -> u8 {
+    let f = orig::<unsafe extern "thiscall" fn(usize, u32) -> u8>(92);
+    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || f(this, arg), || crate::aleatorio::sem_contar(|| escolher_por_papel_b(this, arg)));
+    PLACAR.registrar(igual && r == n, || format!("escolher_por_papel_b({:#x}) original={} rust={}", arg, r as i8, n as i8));
+    r
+}
+unsafe extern "thiscall" fn comparar_casa_formacao(this: usize, j: usize, x: *mut u8, y: *mut u8) {
+    let f = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(93);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(x as usize, 1), (y as usize, 1)], || f(this, j, x, y), || casa_da_formacao(this, j, x, y));
+    PLACAR.registrar(igual, || format!("casa_da_formacao(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", byte(this, 0x8eae), byte(j, 0x27), byte(j, 0x19), mo, mr));
+}
+
+unsafe extern "thiscall" fn comparar_percentuais(this: usize, i: i8) {
+    let f = orig::<unsafe extern "thiscall" fn(usize, i8)>(94);
+    let mut reg = Vec::new();
+    for s in [i as isize, 3, 4] {
+        for o in [0xf5dd, 0xf609, 0xf5d8, 0xf60e, 0xf613, 0xf5d3, 0xf5ce, 0xf604] {
+            reg.push(((this as isize + o + s) as usize, 1));
+        }
+    }
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || f(this, i), || calcular_percentuais(this, i));
+    PLACAR.registrar(igual, || format!("calcular_percentuais({}) original={:x?} rust={:x?}", i, mo, mr));
+}
+unsafe extern "thiscall" fn comparar_escolher_c(this: usize, arg: u32, modo: u32) -> u8 {
+    let f = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(95);
+    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || f(this, arg, modo), || crate::aleatorio::sem_contar(|| escolher_por_papel_c(this, arg, modo)));
+    PLACAR.registrar(igual && r == n, || format!("escolher_por_papel_c({:#x}, {}) original={} rust={}", arg, modo as u8, r as i8, n as i8));
+    r
+}
+
+unsafe extern "thiscall" fn comparar_aplicar_fator(this: usize, f: f32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, f32)>(96);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x1a2, 4)], || o(this, f), || aplicar_fator(this, f));
+    PLACAR.registrar(igual, || format!("aplicar_fator({}) original={:x?} rust={:x?}", f, mo, mr));
+}
+comparar_valor!(comparar_valor_condicao, valor_pela_condicao, 97, (alvo: usize) -> i32);
+unsafe extern "thiscall" fn comparar_aplicar_time(this: usize, j: usize, f: f32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, f32)>(98);
+    let reg: Vec<(usize, usize)> = (0..20).map(|k| (jogador_do_bloco(this, lado(j), k) + 0x1a2, 4)).collect();
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, j, f), || aplicar_ao_time(this, j, f));
+    PLACAR.registrar(igual, || format!("aplicar_ao_time({}) original={:x?} rust={:x?}", f, mo, mr));
+}
+unsafe extern "thiscall" fn comparar_aplicar_lado(this: usize, l: i8, f: f32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8, f32)>(99);
+    let reg: Vec<(usize, usize)> = (0..20).map(|k| (jogador_do_bloco(this, l, k) + 0x1a2, 4)).collect();
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, l, f), || aplicar_ao_lado(this, l, f));
+    PLACAR.registrar(igual, || format!("aplicar_ao_lado({}, {}) original={:x?} rust={:x?}", l, f, mo, mr));
+}
+unsafe extern "thiscall" fn comparar_escolher_d(this: usize, l: i8, modo: u32) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u8>(100);
+    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, l, modo), || crate::aleatorio::sem_contar(|| escolher_pela_condicao(this, l, modo)));
+    PLACAR.registrar(igual && r == n, || format!("escolher_pela_condicao({}, {}) original={} rust={}", l, modo as u8, r as i8, n as i8));
+    r
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -2657,6 +3040,16 @@ pub unsafe fn instalar(comparando: bool) {
         conferir_lance as *const () as usize,
         caminho_livre_ate as *const () as usize,
         alcanca_o_ponto as *const () as usize,
+        escolher_destaque as *const () as usize,
+        escolher_por_papel_b as *const () as usize,
+        casa_da_formacao as *const () as usize,
+        calcular_percentuais as *const () as usize,
+        escolher_por_papel_c as *const () as usize,
+        aplicar_fator as *const () as usize,
+        valor_pela_condicao as *const () as usize,
+        aplicar_ao_time as *const () as usize,
+        aplicar_ao_lado as *const () as usize,
+        escolher_pela_condicao as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -2750,6 +3143,16 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_conferir_lance as *const () as usize,
         comparar_caminho_livre as *const () as usize,
         comparar_alcanca_ponto as *const () as usize,
+        comparar_destaque as *const () as usize,
+        comparar_escolher_b as *const () as usize,
+        comparar_casa_formacao as *const () as usize,
+        comparar_percentuais as *const () as usize,
+        comparar_escolher_c as *const () as usize,
+        comparar_aplicar_fator as *const () as usize,
+        comparar_valor_condicao as *const () as usize,
+        comparar_aplicar_time as *const () as usize,
+        comparar_aplicar_lado as *const () as usize,
+        comparar_escolher_d as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -2771,6 +3174,9 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_direcao", "motor_zerar_guardado", "motor_x_fora_do_meio", "motor_e_o_guardado", "motor_lado_do_lance", "motor_jogador_no_bloco", "motor_tabela_a_1a", "motor_momento_marcado", "motor_estado_do_lado", "motor_estado_do_adversario", "motor_gravar_19c", "motor_codigo_de_bola_parada", "motor_perto_do_gol", "motor_limpar_lance", "motor_somar_disposicao",
         "motor_repartir_d", "motor_repartir_e", "motor_repartir_f", "motor_registrar_lance", "motor_remover_da_lista", "motor_entrar_em_campo", "motor_em_perigo",
         "motor_conferir_lance", "motor_caminho_livre_ate", "motor_alcanca_o_ponto",
+        "motor_escolher_destaque", "motor_escolher_por_papel_b", "motor_casa_da_formacao",
+        "motor_calcular_percentuais", "motor_escolher_por_papel_c",
+        "motor_aplicar_fator", "motor_valor_pela_condicao", "motor_aplicar_ao_time", "motor_aplicar_ao_lado", "motor_escolher_pela_condicao",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -2802,6 +3208,8 @@ pub unsafe fn autoteste(casos: u64) {
     let mut formacoes = vec![vec![0u8; 4800]; 2];
     let mut grupo = vec![0u8; 0x60];
     let mut jogadores = vec![vec![0u8; 0x1a8]; 22];
+    let mut fichas = vec![0u32; 40];
+    let mut pessoas = vec![vec![0u8; 0x80]; 4];
     SINTETICO.store(true, std::sync::atomic::Ordering::Relaxed);
     PLACAR.autoteste(|| {
         for _ in 0..casos {
@@ -3263,6 +3671,94 @@ pub unsafe fn autoteste(casos: u64) {
                 }
             }
             comparar_alcanca_ponto(j, xa, ya);
+            // decima oitava leva (fichas e pessoas proprias; 0x69 e 0x6d sempre validos no bloco)
+            let h11 = s.proximo();
+            let h12 = s.proximo();
+            for (k, f) in fichas.iter_mut().enumerate() {
+                *f = (h11.rotate_left(k as u32) as u32) ^ k as u32;
+            }
+            for (k, pe) in pessoas.iter_mut().enumerate() {
+                for o in [0x39usize, 0x3e, 0x44] {
+                    pe[o] = (h12.rotate_left((k * 3 + o) as u32) % 23) as u8;
+                }
+            }
+            for k in 0..40usize {
+                let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
+                let r = h11.rotate_left(k as u32 * 3) ^ h12.rotate_right(k as u32);
+                *((p + 0x19) as *mut i8) = (r % 13) as i8 - 2;
+                *((p + 0x20) as *mut u8) = if (r >> 4) % 3 == 0 { 0xff } else { (r >> 6) as u8 };
+                *((p + 0x35) as *mut i16) = if (r >> 9) % 4 == 0 { (r >> 12) as i16 } else { ((r >> 12) % 400) as i16 - 100 };
+                for (o, sh) in [(0x03usize, 28), (0x06, 33), (0x0c, 38), (0x10, 43)] {
+                    *((p + o) as *mut u8) = if (r >> 48) % 4 == 0 { (r >> sh) as u8 } else { ((r >> sh) % 21) as u8 };
+                }
+                *((p + 0x69) as *mut usize) = fichas.as_ptr().add(k) as usize;
+                *((p + 0x6d) as *mut usize) = if (r >> 50) % 5 == 0 { 0 } else { pessoas[k % 4].as_ptr() as usize };
+            }
+            let partida11 = jogadores[0].as_mut_ptr() as usize;
+            *((partida11 + 0x4d) as *mut u8) = (((h11 >> 40) % 10) as u8) | (((h11 >> 44) as u8) & 0xf0);
+            *((m + 0x4792) as *mut usize) = partida11;
+            comparar_destaque(m);
+            let alto11 = [0u32, 0x3f800000, 0x40000000, 0x12345600, 0xffffff00][((h11 >> 50) % 5) as usize];
+            comparar_escolher_b(m, (alto11 & !0xff) | ((h11 >> 53) % 2) as u32);
+            *((m + 0x8eae) as *mut i8) = [0i8, 1, 2, -1][((h12 >> 54) % 4) as usize];
+            *((j + 0x27) as *mut i8) = ((h12 >> 56) % 2) as i8;
+            *((j + 0x19) as *mut i8) = ((h12 >> 57) % 17) as i8 - 2;
+            let (mut fx, mut fy) = (0u8, 0u8);
+            comparar_casa_formacao(m, j, &mut fx, &mut fy);
+            // decima nona leva: contagens (zeros, negativas e somas que transbordam) e atributos
+            let h13 = s.proximo();
+            let h14 = s.proximo();
+            for k in 0..30usize {
+                let r = h13.rotate_left(k as u32 * 2) ^ h14.rotate_right(k as u32);
+                let v = match r % 6 {
+                    0 => 0,
+                    1 => -(((r >> 8) % 50) as i32),
+                    2 => (r >> 8) as i32,
+                    _ => ((r >> 8) % 300) as i32,
+                };
+                *((m + 0x8f02 + 4 * k) as *mut i32) = v;
+            }
+            comparar_percentuais(m, ((h13 >> 3) % 6) as i8 - 1);
+            for k in 0..40usize {
+                let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
+                for (n, o) in [0xc9usize, 0xa1, 0x9d, 0x95, 0xb1, 0x7d, 0x99, 0xd9, 0xad, 0xa9].iter().enumerate() {
+                    let r = h14.rotate_left((k * 10 + n) as u32 % 64);
+                    *((p + o) as *mut f32) = (r % 3000) as f32 / 100.0 - if r % 17 == 0 { 40.0 } else { 0.0 };
+                }
+            }
+            for (k, pe) in pessoas.iter_mut().enumerate() {
+                let r = h13.rotate_left(k as u32 * 9);
+                let w = [0x8c, 0x8d, 0x3c, 0x3b, (r >> 8) % 200, (r >> 16) % 400][(r % 6) as usize] as i16;
+                pe[5..7].copy_from_slice(&w.to_le_bytes());
+                pe[0x21] = ((r >> 24) % 25) as u8;
+            }
+            let alto13 = [0u32, 0x3f800000, 0x40000000, 0x12345600, 0xffffff00][((h13 >> 50) % 5) as usize];
+            // vigesima leva: condicao 0x1a2, ficha 0x69 (pessoa com 0x5d) ou nenhuma, byte 0xff, 0x1a6
+            let h15 = s.proximo();
+            let h16 = s.proximo();
+            for (k, pe) in pessoas.iter_mut().enumerate() {
+                pe[0x5d] = (h15.rotate_left(k as u32 * 11) % 34) as u8;
+            }
+            for k in 0..40usize {
+                let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
+                let r = h15.rotate_left(k as u32 * 3) ^ h16.rotate_right(k as u32 * 5);
+                *((p + 0x1a2) as *mut f32) = [100.0f32, 0.0, 50.0, 99.5][(r % 4) as usize] + ((r >> 2) % 400) as f32 / 8.0 - 25.0;
+                *((p + 0x69) as *mut usize) = if (r >> 12) % 5 == 0 { 0 } else { pessoas[k % 4].as_ptr() as usize };
+                *((p + 0xff) as *mut i8) = ((r >> 15) % 40) as i8 - 8;
+                *((p + 0x1a6) as *mut usize) = if (r >> 21) % 2 == 0 { j } else { 0 };
+            }
+            let pk = m + 0x4796 + 8920 * ((h16 >> 30) % 2) as usize + ((h16 >> 31) % 20) as usize * 0x1be;
+            *((pk + 0x69) as *mut usize) = pessoas[0].as_ptr() as usize;
+            let fat = [1.0f32, 0.0, 0.5, 1.5, 2.0, 0.95][((h15 >> 40) % 6) as usize] + ((h15 >> 43) % 9) as f32 / 64.0;
+            comparar_aplicar_fator(pk, fat);
+            comparar_valor_condicao(pk, [0usize, j, o][((h15 >> 47) % 3) as usize]);
+            comparar_valor_condicao(pk, *((pk + 0x1a6) as *const usize));
+            let jt = if (h16 >> 36) % 2 == 0 { pk } else { j };
+            *((j + 0x27) as *mut i8) = ((h16 >> 37) % 2) as i8;
+            comparar_aplicar_time(m, jt, fat);
+            comparar_aplicar_lado(m, ((h16 >> 38) % 2) as i8, fat);
+            comparar_escolher_d(m, ((h16 >> 39) % 2) as i8, [2u32, 0, 1, 0x102, (h16 >> 40) as u32][((h16 >> 44) % 5) as usize]);
+            comparar_escolher_c(m, (alto13 & !0xff) | ((h13 >> 53) % 2) as u32, if (h13 >> 54) % 3 == 0 { 0x100 | ((h13 >> 56) as u32 & 0xfe00) } else { (h13 >> 57) as u32 & 0xff });
             comparar_distancia_entre(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
         }
     });
