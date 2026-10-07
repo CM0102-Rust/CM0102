@@ -4,7 +4,7 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 
 - **Responda sempre em português (Brasil).**
 - **Wiki primeiro:** leia `wiki/index.md` antes de trabalhar; ao fim da sessão, atualize `wiki/index.md` (estado) e registre em `wiki/log.md`.
-- Leitura obrigatória: `docs/DESCOMPILACAO.md` (tudo o que se sabe do binário).
+- Leitura obrigatória: `docs/DESCOMPILACAO.md` (tudo o que se sabe do binário) e `docs/COMO_CONTINUAR.md` (o ciclo de uma leva do motor).
 
 ## Decisões em vigor (não mudar sem o Lucas)
 
@@ -24,9 +24,9 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 | `jogo/` | instalação jogável (não versionada) |
 | `original/` | downloads e exe 3.9.68 intocados (não versionado) |
 | `referencias/` | projetos de terceiros (não versionado) |
-| `engenharia-reversa/` | `pe_info.py`, `textos.py`, `refs.py`, `desmonta.py`, `desvios.py`, `escuta_tela.py`, `patch_portatil.py`, `resolucao.py`, `simular.py` (banco de provas), `cobertura.py`, `laboratorio.py` |
+| `engenharia-reversa/` | `pe_info.py`, `textos.py`, `refs.py`, `desmonta.py`, `desvios.py`, `escuta_tela.py`, `patch_portatil.py`, `resolucao.py`, `simular.py` (banco de provas), `cobertura.py`, `laboratorio.py`, `prologos.py`, `candidatos.py` (próximas rotinas), `mutacoes.py` + `mutacoes/` (autoteste com mutações) |
 | `rust/` | núcleo em Rust = `ddraw.dll` (i686, CRT estática, sem crates externos): `video.rs` (DirectDraw próprio), `apresentacao.rs` (quadro → janela, mouse), `ganchos.rs` (IAT), `desvios.rs` (desvios no exe, pilha particular), `simulacao.rs` + `alocador.rs` (simulação reproduzível), `aleatorio.rs`, `data.rs`, `motor.rs` (rotinas portadas), `espiao.rs` (diagnóstico, `CM_ESPIAO=1`) |
-| `docs/` | `DESCOMPILACAO.md` |
+| `docs/` | `DESCOMPILACAO.md`, `COMO_CONTINUAR.md`, `ROTINAS.md`, `PROJETO.md`, `VERSAO_SEM_TELA.md`, `mapa_funcoes.csv`, `cobertura_motor.txt` |
 | `wiki/` | `index.md` (estado e próximos passos), `log.md` |
 
 ## Ambiente

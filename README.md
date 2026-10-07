@@ -11,7 +11,7 @@ Este repositório o mantém jogável no Windows 11 e prepara a reescrita do jogo
 | `original/` | Downloads intocados (ISO, zips, patch 3.9.68) e cópia de segurança dos dois exe 3.9.68. | não |
 | `referencias/` | Projetos de terceiros consultados (ex.: `CM0102Patcher` do nckstwrt). | não |
 | `engenharia-reversa/` | Ferramentas de análise (Python) e o gerador dos exe portáteis. | sim |
-| `docs/` | Documentação técnica; comece por [`DESCOMPILACAO.md`](docs/DESCOMPILACAO.md). | sim |
+| `docs/` | Documentação técnica; comece por [`DESCOMPILACAO.md`](docs/DESCOMPILACAO.md). Para continuar a reescrita: [`COMO_CONTINUAR.md`](docs/COMO_CONTINUAR.md). | sim |
 | `wiki/` | Estado do projeto, decisões e histórico. | sim |
 | `CLAUDE.md` | Instruções para continuar o trabalho no Claude Code. | sim |
 
