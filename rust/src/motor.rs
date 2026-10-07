@@ -227,8 +227,10 @@ const PROLOGOS: [Prologo; N] = [
     // trigesima nona leva (comentarios: invólucros de 0x6d6f70)
     Prologo { endereco: 0x7002f0, bytes: &[0x8b, 0x44, 0x24, 0x14, 0x8b, 0x54, 0x24, 0x10] },
     Prologo { endereco: 0x70a860, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] },
+    // quadragesima leva
+    Prologo { endereco: 0x6cd490, bytes: &[0x56, 0x8b, 0xf1, 0x8a, 0x86, 0xb2, 0x8e, 0x00, 0x00] },
 ];
-const N: usize = 142;
+const N: usize = 143;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3862,6 +3864,47 @@ unsafe extern "thiscall" fn comentario_b(this: usize, a1: u32, a2: u32, a3: u32,
     comentario_b_com(this, a1, a2, a3, a4, &mut |t, a| comentar(t, a))
 }
 
+// ---------- quadragesima leva: bola fora do campo ----------
+
+/// { 0x6cd490 } (match_eng.cpp) com o comentario injetado: com o lance ja parado (0x8eb2), 1.
+/// Solta a bola do dono e, com a bola fora do campo, marca a reposicao (0x8eb2: 2 lateral, 3 ou
+/// 4 conforme a linha de fundo e o lado que tocou por ultimo; 0x8eae: o lado que repoe), narra
+/// (0x1f76/0x1f75/0x1f77) e devolve 1. Bola em campo, 0.
+unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8 {
+    if byte(this, 0x8eb2) != 0 {
+        return 1;
+    }
+    if byte(this, 0x8eae) != -1 {
+        *((this + 0x8eae) as *mut i8) = -1;
+    }
+    let dono = *((this + 0xf582) as *const usize);
+    if dono != 0 {
+        let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6f0970usize);
+        soltar(dono);
+    }
+    let (x, y) = (byte(this, 0x8ea7), byte(this, 0x8ea8));
+    let narrador = *((this + 0x8f7a) as *const usize);
+    let (parada, quem, codigo): (u8, u8, u32) = if !(0..9).contains(&x) {
+        let r = (lado_b == 0) as u8;
+        (2, r, 0x1f76)
+    } else if y < 0 {
+        if lado_b == 1 { (4, 0, 0x1f77) } else { (3, 1, 0x1f75) }
+    } else if y >= 0xc {
+        if lado_b == 1 { (3, 0, 0x1f75) } else { (4, 1, 0x1f77) }
+    } else {
+        return 0;
+    };
+    *((this + 0x8eb2) as *mut u8) = parada;
+    *((this + 0x8eae) as *mut u8) = quem;
+    chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
+    1
+}
+
+/// { 0x6cd490 } (match_eng.cpp): bola fora do campo (ver `bola_fora_com`).
+unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 {
+    bola_fora_com(this, lado_b, &mut |t, a| comentar(t, a))
+}
+
 /// `tabela_a` do motor do jogador (0 sem motor), pelo endereco do jogo: os bits do papel tatico.
 unsafe fn papel_word(motor: usize, j: usize) -> u16 {
     if motor == 0 {
@@ -4854,11 +4897,24 @@ unsafe extern "thiscall" fn porta_6d6f70(this: usize, a1: u32, a2: u32, a3: u32,
 
 /// Roda a original gravando os comentarios e a copia Rust reproduzindo-os; devolve (igual, quantos).
 unsafe fn comparar_com_comentarios(original: impl FnOnce(), rust: impl FnOnce(ChamarComentario)) -> (bool, usize) {
+    comparar_com_comentarios_em(&[], original, rust)
+}
+
+/// 0x6d6f70 le o 1o argumento como palavra e o 3o ao 6o como bytes: o resto e lixo da pilha.
+const MASCARA_6D6F70: [u32; 7] = [0xffff, u32::MAX, 0xff, 0xff, 0xff, 0xff, u32::MAX];
+
+fn mesmos_argumentos(a: &[u32; 7], b: &[u32; 7]) -> bool {
+    (0..7).all(|i| a[i] & MASCARA_6D6F70[i] == b[i] & MASCARA_6D6F70[i])
+}
+
+/// Como `comparar_com_comentarios`, comparando tambem as `extra` (alem do estado do sorteio).
+unsafe fn comparar_com_comentarios_em(extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce(ChamarComentario)) -> (bool, usize) {
     use std::sync::atomic::Ordering::Relaxed;
     FITA_6D6F70.lock().unwrap_or_else(|e| e.into_inner()).clear();
     let fita = core::cell::RefCell::new(Vec::new());
     let sequencia = core::cell::Cell::new(true);
-    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend_from_slice(extra);
     let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(
         &reg,
         || {
@@ -4872,7 +4928,7 @@ unsafe fn comparar_com_comentarios(original: impl FnOnce(), rust: impl FnOnce(Ch
             let mut prox = gravadas.iter();
             crate::aleatorio::sem_contar(|| {
                 rust(&mut |t, a| match prox.next() {
-                    Some((gt, ga, depois)) if *gt == t && *ga == a => depois.escrever(),
+                    Some((gt, ga, depois)) if *gt == t && mesmos_argumentos(ga, &a) => depois.escrever(),
                     _ => sequencia.set(false),
                 })
             });
@@ -4894,6 +4950,19 @@ unsafe extern "thiscall" fn comparar_comentario_b(this: usize, a1: u32, a2: u32,
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32)>(141);
     let (igual, n) = comparar_com_comentarios(|| o(this, a1, a2, a3, a4), |c| comentario_b_com(this, a1, a2, a3, a4, c));
     PLACAR.registrar(igual, || format!("comentario_b({:#x} {:#x} {:#x} {:#x}) {} chamadas", a1, a2, a3, a4, n));
+}
+
+unsafe extern "thiscall" fn comparar_bola_fora(this: usize, l: u8) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u8) -> u8>(142);
+    let mut extra = vec![(this + 0x8ea0, 0x20), (this + 0x4780, 0x10), (this + 0xf570, 0x20), (this + 0x1a0, 0x10)];
+    let dono = *((this + 0xf582) as *const usize);
+    if dono != 0 {
+        extra.extend([(dono + 0x29, 2), (dono + 0x19c, 2)]);
+    }
+    let (r, n) = (core::cell::Cell::new(0u8), core::cell::Cell::new(0u8));
+    let (igual, k) = comparar_com_comentarios_em(&extra, || r.set(o(this, l)), |c| n.set(bola_fora_com(this, l, c)));
+    PLACAR.registrar(igual && r.get() == n.get(), || format!("bola_fora({}) original={} rust={} ({} comentarios)", l, r.get(), n.get(), k));
+    r.get()
 }
 
 pub unsafe fn instalar(comparando: bool) {
@@ -5048,6 +5117,7 @@ pub unsafe fn instalar(comparando: bool) {
         venceu_o_jogo as *const () as usize,
         comentario_a as *const () as usize,
         comentario_b as *const () as usize,
+        bola_fora as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -5192,6 +5262,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_venceu as *const () as usize,
         comparar_comentario_a as *const () as usize,
         comparar_comentario_b as *const () as usize,
+        comparar_bola_fora as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -5235,6 +5306,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_tracar_lance",
         "motor_tem_jogo", "motor_venceu_o_jogo",
         "motor_comentario_a", "motor_comentario_b",
+        "motor_bola_fora",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
