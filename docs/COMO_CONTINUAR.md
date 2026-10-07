@@ -25,7 +25,7 @@ Uma leva tem de 1 a 10 rotinas do motor de partidas (`match_eng.cpp`, `match_pl.
    1. Autoteste com mutações: escreva a lista em `mutacoes/levaNN.py` (veja os exemplos) e rode `python mutacoes.py mutacoes\levaNN.py`. A base tem de dar 0 divergências e cada mutação tem de ser acusada (divergência ou exceção). A que passar ou é lacuna do teste (corrigir o gerador) ou é equivalente pelos valores possíveis (documentar por quê).
    2. Jogo real: `python simular.py --ate 2002-06-01 --motor sim --modo comparar --limite 900` (0 divergências no `jogo\ddraw.log`).
    3. Carreira: `python simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2`. A impressão digital tem de ser igual à do original (`--modo original`); hoje, `7866d02de7578a90` com 2.356.606.166 sorteios.
-5. **Registrar.** Seção da leva em `ROTINAS.md`, estado em `wiki/index.md`, uma linha em `wiki/log.md`, commit e push.
+5. **Registrar.** Seção da leva em `ROTINAS.md` e no `ROTINAS.en.md`, tradução dos nomes novos em `glossario.py` (gera `GLOSSARIO.md` e `.en.md`), estado em `wiki/index.md`, uma linha em `wiki/log.md`, commit e push.
 
 ## Armadilhas já conhecidas
 
