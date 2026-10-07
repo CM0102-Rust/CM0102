@@ -213,8 +213,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6c30e0, bytes: &[0x51, 0x0f, 0xbe, 0x54, 0x24, 0x08] },
     // trigesima terceira leva
     Prologo { endereco: 0x700420, bytes: &[0x8b, 0x44, 0x24, 0x18, 0x83, 0xec, 0x08] },
+    // trigesima quarta leva
+    Prologo { endereco: 0x6f46b0, bytes: &[0x8a, 0x81, 0x02, 0x01, 0x00, 0x00] },
 ];
-const N: usize = 134;
+const N: usize = 135;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3324,6 +3326,65 @@ unsafe extern "thiscall" fn defesa_do_goleiro(this: usize, a: i8, b: i8, a3: u8,
     ftol((w as i32 / 6) as f64 + v as f64 * f64_em(0x96d698) + f64_em(0x968ea8)) as u16
 }
 
+// ---------- trigesima quarta leva: mover o jogador na grade ----------
+
+/// Casa (x, y) da grade de ocupacao do motor: 90 bytes por casa, a partir de 0x215e; por lado,
+/// lista de 11 ponteiros (44 bytes) e a quantidade em 0x58 + lado.
+fn casa_da_grade(motor: usize, x: i8, y: i8) -> isize {
+    motor as isize + 0x215e + 90 * (12 * x as isize + y as isize)
+}
+
+/// { 0x6f46b0 } (match_pl.cpp): move o jogador para (x, y): tira da lista do lado na casa antiga
+/// (o ultimo da lista ocupa a vaga dele, 0x28) e poe no fim da lista da casa nova; atualiza a bola
+/// se ele for o dono. Na mesma casa, nada. Estados impossiveis do original (lista vazia ao tirar,
+/// mais de 11 ao por) mostram erro (e, no segundo, encerram); aqui, o primeiro so volta e o segundo
+/// encerra como o original.
+unsafe extern "thiscall" fn mover_para(this: usize, x: i8, y: i8) {
+    if x == byte(this, 0x102) && y == byte(this, 0x103) {
+        return;
+    }
+    let motor = *((this + 0x19e) as *const usize);
+    let lista = |casa: isize, l: i8, i: isize| (casa + 4 * (11 * l as isize + i)) as *mut usize;
+    let quantos = |casa: isize, l: i8| (casa + 0x58 + l as isize) as *mut i8;
+    let vaga = (this + 0x28) as *mut i8;
+    let nova = casa_da_grade(motor, x, y);
+    if *vaga > -1 {
+        let antiga = casa_da_grade(motor, byte(this, 0x102), byte(this, 0x103));
+        let l = lado(this);
+        let n = *quantos(antiga, l);
+        if n == 0 {
+            return;
+        }
+        *lista(antiga, l, *vaga as isize) = *lista(antiga, l, n as isize - 1);
+        *quantos(antiga, l) = n.wrapping_sub(1);
+        let v = *vaga;
+        let movido = *lista(antiga, l, v as isize);
+        if movido != 0 {
+            *((movido + 0x28) as *mut i8) = v;
+        }
+        let l = lado(this);
+        *vaga = *quantos(nova, l);
+        *quantos(nova, l) = (*quantos(nova, l)).wrapping_add(1);
+        *lista(nova, lado(this), *vaga as isize) = this;
+    } else {
+        let l = lado(this);
+        *vaga = *quantos(nova, l);
+        *quantos(nova, l) = (*quantos(nova, l)).wrapping_add(1);
+        if *quantos(nova, lado(this)) > 11 {
+            let sair: unsafe extern "C" fn(i32) = core::mem::transmute(0x945934usize);
+            sair(-1);
+        }
+        *lista(nova, l, *vaga as isize) = this;
+    }
+    *((this + 0x102) as *mut i8) = x;
+    *((this + 0x103) as *mut i8) = y;
+    let motor = *((this + 0x19e) as *const usize);
+    if this == *((motor + 0xf582) as *const usize) {
+        *((motor + 0x8ea7) as *mut i8) = x;
+        *((*((this + 0x19e) as *const usize) + 0x8ea8) as *mut i8) = byte(this, 0x103);
+    }
+}
+
 /// `tabela_a` do motor do jogador (0 sem motor), pelo endereco do jogo: os bits do papel tatico.
 unsafe fn papel_word(motor: usize, j: usize) -> u16 {
     if motor == 0 {
@@ -4186,6 +4247,24 @@ unsafe extern "thiscall" fn comparar_defesa(this: usize, a: i8, b: i8, a3: u8, c
     r
 }
 
+unsafe extern "thiscall" fn comparar_mover_para(this: usize, x: i8, y: i8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8, i8)>(134);
+    let motor = *((this + 0x19e) as *const usize);
+    let antiga = casa_da_grade(motor, byte(this, 0x102), byte(this, 0x103)) as usize;
+    let nova = casa_da_grade(motor, x, y) as usize;
+    let mut reg = vec![(this + 0x28, 1), (this + 0x102, 2), (antiga, 90), (nova, 90), (motor + 0x8ea7, 2)];
+    let (l, v) = (lado(this), byte(this, 0x28));
+    let n = byte(antiga, 0x58 + l as usize);
+    if v >= 0 && n > 0 {
+        let movido = *((antiga as isize + 4 * (11 * l as isize + n as isize - 1)) as *const usize);
+        if movido != 0 {
+            reg.push((movido + 0x28, 1));
+        }
+    }
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, x, y), || mover_para(this, x, y));
+    PLACAR.registrar(igual, || format!("mover_para({}, {}) original={:x?} rust={:x?}", x, y, mo, mr));
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -4327,6 +4406,7 @@ pub unsafe fn instalar(comparando: bool) {
         resumo_da_partida as *const () as usize,
         mais_perto_no_lado as *const () as usize,
         defesa_do_goleiro as *const () as usize,
+        mover_para as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -4463,6 +4543,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_resumo as *const () as usize,
         comparar_mais_perto_no_lado as *const () as usize,
         comparar_defesa as *const () as usize,
+        comparar_mover_para as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -4500,6 +4581,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_resumo_da_partida",
         "motor_mais_perto_no_lado",
         "motor_defesa_do_goleiro",
+        "motor_mover_para",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -5361,6 +5443,30 @@ pub unsafe fn autoteste(casos: u64) {
             let cod = [3i8, 4, 5, 26, 27, 0x33, 1, -2, ((h37 >> 52) % 60) as i8][((h37 >> 56) % 9) as usize];
             let alvo_y = yg + ((h37 >> 20) % 5) as i8 - 2;
             comparar_defesa(j, ((h37 >> 24) % 9) as i8, alvo_y, ((h37 >> 28) % 2) as u8, cod, &mut sd, &mut rb);
+            // trigesima quarta leva: grade consistente nas duas casas (listas com jogadores validos)
+            let h38 = s.proximo();
+            let lj = ((h38 >> 1) % 2) as i8;
+            let jm = jogador_do_bloco(m, lj, ((h38 >> 2) % 20) as usize);
+            let (ox, oy) = (((h38 >> 7) % 9) as i8, ((h38 >> 11) % 12) as i8);
+            let (nx, ny) = if (h38 >> 15) % 6 == 0 { (ox, oy) } else { (((h38 >> 18) % 9) as i8, ((h38 >> 22) % 12) as i8) };
+            *((jm + 0x102) as *mut i8) = ox;
+            *((jm + 0x103) as *mut i8) = oy;
+            let ca = casa_da_grade(m, ox, oy) as usize;
+            let cn = casa_da_grade(m, nx, ny) as usize;
+            let n_ant = 1 + ((h38 >> 26) % 11) as i8;
+            *((ca + 0x58 + lj as usize) as *mut i8) = n_ant;
+            for i in 0..11usize {
+                let outro_j = jogador_do_bloco(m, lj, ((h38 >> (30 + i % 20)) % 20) as usize);
+                *((ca as isize + 4 * (11 * lj as isize + i as isize)) as *mut usize) = if i % 5 == 4 { 0 } else { outro_j };
+            }
+            *((jm + 0x28) as *mut i8) = if (h38 >> 40) % 4 == 0 { -1 } else { ((h38 >> 42) % n_ant as u64) as i8 };
+            if cn != ca {
+                *((cn + 0x58 + lj as usize) as *mut i8) = ((h38 >> 46) % 11) as i8;
+            } else if byte(jm, 0x28) < 0 {
+                *((cn + 0x58 + lj as usize) as *mut i8) = ((h38 >> 46) % 11) as i8;
+            }
+            *((m + 0xf582) as *mut usize) = if (h38 >> 50) % 2 == 0 { jm } else { o };
+            comparar_mover_para(jm, nx, ny);
             comparar_escolher_c(m, (alto13 & !0xff) | ((h13 >> 53) % 2) as u32, if (h13 >> 54) % 3 == 0 { 0x100 | ((h13 >> 56) as u32 & 0xfe00) } else { (h13 >> 57) as u32 & 0xff });
             comparar_distancia_entre(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
         }
