@@ -219,8 +219,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6bce80, bytes: &[0x83, 0xec, 0x2c, 0x55, 0x8b, 0x6c, 0x24, 0x34] },
     // trigesima sexta leva
     Prologo { endereco: 0x70d690, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
+    // trigesima setima leva
+    Prologo { endereco: 0x6ccb60, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x14] },
 ];
-const N: usize = 137;
+const N: usize = 138;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3700,6 +3702,86 @@ unsafe extern "thiscall" fn dominio_do_lance(this: usize, codigo: *mut i8, a: *m
     si
 }
 
+// ---------- trigesima setima leva: tracado do lance (com chamadas internas gravadas) ----------
+
+/// Chamada a `procurar_no_lado` (0x6cd330) feita pelo tracado: (lado, casa, distancia, a4, tipo, a6).
+type ChamarProcurar<'a> = &'a mut dyn FnMut(i8, usize, u32, u32, u32, u32) -> u8;
+
+/// { 0x6ccb60 } com a chamada a 0x6cd330 injetada: percorre as casas da linha de (x0, y0) a
+/// (x1, y1) (eixo maior, erro acumulado como Bresenham; a casa final so entra se a linha for um
+/// ponto) e, em cada uma, pergunta a `procurar_no_lado` por um jogador de um lado sorteado e
+/// depois do outro, com a distancia desde a origem (tabela 12 x 9; fora, 1000). Primeiro que
+/// achar, 1; sair do campo ou chegar ao fim, 0. O tipo (por `codigo`) vai junto.
+#[allow(clippy::too_many_arguments)]
+unsafe fn tracar_com(motor: usize, x0: i8, y0: i8, x1: i8, y1: i8, codigo: i8, a6: u32, a7: u32, chamar: ChamarProcurar) -> u8 {
+    let tipo: u8 = match codigo {
+        9 | 62 | 90 => {
+            let r = sortear(*(&a6 as *const u32 as *const i16) as i32 + 0xbb8);
+            (r != 0) as u8 + 4
+        }
+        31 | 54 | 60 | 61 => sortear(4) as u8 + 1,
+        6 | 8 | 30 | 52 | 55 | 91 | 92 | 94 => 4,
+        _ => 0,
+    };
+    let ddx = (x1 as i32 - x0 as i32).abs() as i8;
+    let ddy = (y1 as i32 - y0 as i32).abs() as i8;
+    let sinal = |v: i32| if v >= 0 { 1i8 } else { -1 };
+    // (eixo x e o maior?, passo do eixo maior, passo do menor, delta maior, delta menor)
+    let (eixo_x, passo, passo_menor) = if ddx >= ddy {
+        if x0 < x1 { (true, 1i8, sinal(y1 as i32 - y0 as i32)) } else { (true, -1, sinal(y1 as i32 - y0 as i32)) }
+    } else if y0 < y1 {
+        (false, 1, sinal(x1 as i32 - x0 as i32))
+    } else {
+        (false, -1, sinal(x1 as i32 - x0 as i32))
+    };
+    let (dmaior, dmenor) = if eixo_x { (ddx, ddy) } else { (ddy, ddx) };
+    let (mut x, mut y) = (x0, y0);
+    let mut erro: i8 = 0;
+    let fora = |x: i8, y: i8| !(0..=8).contains(&x) || !(0..=11).contains(&y);
+    loop {
+        if fora(x, y) {
+            return 0;
+        }
+        if erro >= dmaior {
+            erro = erro.wrapping_sub(dmaior);
+            if eixo_x { y = y.wrapping_add(passo_menor) } else { x = x.wrapping_add(passo_menor) }
+        }
+        let alvo = x == x1 && y == y1 && (ddx != 0 || ddy != 0);
+        if !alvo {
+            if fora(x, y) {
+                return 0;
+            }
+            let casa = casa_da_grade(motor, x, y) as usize;
+            let r = sortear(2) as i8;
+            let ex = (x as i32 - x0 as i32).abs() as i8;
+            let ey = (y as i32 - y0 as i32).abs() as i8;
+            let dist = if (0..=8).contains(&ex) && (0..=11).contains(&ey) { *((0xa15e44 + 4 * (ey as usize * 9 + ex as usize)) as *const u32) } else { 0x447a0000 };
+            if chamar(r, casa, dist, a6, tipo as u32, a7) != 0 || chamar((r == 0) as i8, casa, dist, a6, tipo as u32, a7) != 0 {
+                return 1;
+            }
+        }
+        erro = erro.wrapping_add(dmenor);
+        if eixo_x {
+            x = x.wrapping_add(passo);
+            if (passo > 0 && x > x1) || (passo < 0 && x < x1) {
+                return 0;
+            }
+        } else {
+            y = y.wrapping_add(passo);
+            if (passo > 0 && y > y1) || (passo < 0 && y < y1) {
+                return 0;
+            }
+        }
+    }
+}
+
+/// { 0x6ccb60 } (match_eng.cpp): tracado do lance de (x0, y0) a (x1, y1).
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn tracar_lance(this: usize, x0: i8, y0: i8, x1: i8, y1: i8, codigo: i8, a6: u32, a7: u32) -> u8 {
+    let f: unsafe extern "thiscall" fn(usize, i8, usize, u32, u32, u32, u32, i8) -> u8 = core::mem::transmute(0x6cd330usize);
+    tracar_com(this, x0, y0, x1, y1, codigo, a6, a7, &mut |l, c, d, a, t, b| f(this, l, c, d, a, t, b, 1))
+}
+
 /// `tabela_a` do motor do jogador (0 sem motor), pelo endereco do jogo: os bits do papel tatico.
 unsafe fn papel_word(motor: usize, j: usize) -> u16 {
     if motor == 0 {
@@ -4599,6 +4681,66 @@ unsafe extern "thiscall" fn comparar_dominio(this: usize, codigo: *mut i8, a: *m
     r
 }
 
+// Gravacao das chamadas a 0x6cd330 feitas pela original de `tracar_lance`: argumentos, resposta e
+// o estado do sorteio depois de cada uma. A copia Rust recebe as respostas gravadas (sem rodar a
+// rotina, que tem efeitos nos jogadores) e o sorteio volta ao estado gravado a cada chamada.
+static GRAVANDO_6CD330: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+#[allow(clippy::type_complexity)]
+static FITA_6CD330: std::sync::Mutex<Vec<((i8, usize, u32, u32, u32, u32, i8), u8, crate::comparacao::Memoria)>> = std::sync::Mutex::new(Vec::new());
+
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn comparar_procurar_gravando(this: usize, lado: i8, grupo: usize, a3: u32, a4: u32, a5: u32, a6: u32, modo: i8) -> u8 {
+    let r = comparar_procurar(this, lado, grupo, a3, a4, a5, a6, modo);
+    if GRAVANDO_6CD330.load(std::sync::atomic::Ordering::Relaxed) {
+        let depois = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
+        FITA_6CD330.lock().unwrap_or_else(|e| e.into_inner()).push(((lado, grupo, a3, a4, a5, a6, modo), r, depois));
+    }
+    r
+}
+
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn comparar_tracar(this: usize, x0: i8, y0: i8, x1: i8, y1: i8, codigo: i8, a6: u32, a7: u32) -> u8 {
+    use std::sync::atomic::Ordering::Relaxed;
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8, i8, u32, u32) -> u8>(137);
+    FITA_6CD330.lock().unwrap_or_else(|e| e.into_inner()).clear();
+    let fita = core::cell::RefCell::new(Vec::new());
+    let sequencia = core::cell::Cell::new(true);
+    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
+        &reg,
+        || {
+            GRAVANDO_6CD330.store(true, Relaxed);
+            let r = o(this, x0, y0, x1, y1, codigo, a6, a7);
+            GRAVANDO_6CD330.store(false, Relaxed);
+            *fita.borrow_mut() = core::mem::take(&mut *FITA_6CD330.lock().unwrap_or_else(|e| e.into_inner()));
+            r
+        },
+        || {
+            let gravadas = fita.borrow();
+            let mut prox = gravadas.iter();
+            let n = crate::aleatorio::sem_contar(|| {
+                tracar_com(this, x0, y0, x1, y1, codigo, a6, a7, &mut |l, c, dd, a, t, b| match prox.next() {
+                    // o tipo e a6/a7 so tem o byte baixo (o resto e lixo da pilha no original)
+                    Some(((gl, gc, gd, ga, gt, gb, 1), gr, depois)) if *gl == l && *gc == c && *gd == dd && *ga as u16 == a as u16 && *gt as u8 == t as u8 && *gb as u8 == b as u8 => {
+                        depois.escrever();
+                        *gr
+                    }
+                    _ => {
+                        sequencia.set(false);
+                        0
+                    }
+                })
+            });
+            if prox.next().is_some() {
+                sequencia.set(false);
+            }
+            n
+        },
+    );
+    PLACAR.registrar(igual && r == n && sequencia.get(), || format!("tracar_lance({} {} -> {} {}, cod {}) original={} rust={} seq={} {:x?} {:x?}", x0, y0, x1, y1, codigo, r, n, sequencia.get(), mo, mr));
+    r
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -4743,6 +4885,7 @@ pub unsafe fn instalar(comparando: bool) {
         mover_para as *const () as usize,
         escolher_casa as *const () as usize,
         dominio_do_lance as *const () as usize,
+        tracar_lance as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -4763,7 +4906,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_apontar as *const () as usize,
         comparar_desgastar as *const () as usize,
         comparar_virado_para as *const () as usize,
-        comparar_procurar as *const () as usize,
+        comparar_procurar_gravando as *const () as usize,
         comparar_alcanca as *const () as usize,
         comparar_classificar as *const () as usize,
         comparar_distancia_ao_ponto as *const () as usize,
@@ -4882,6 +5025,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_mover_para as *const () as usize,
         comparar_escolher_casa as *const () as usize,
         comparar_dominio as *const () as usize,
+        comparar_tracar as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -4922,6 +5066,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_mover_para",
         "motor_escolher_casa",
         "motor_dominio_do_lance",
+        "motor_tracar_lance",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -5871,6 +6016,21 @@ pub unsafe fn autoteste(casos: u64) {
             let mut cod36 = if dono36 == 0 { especiais[((h42 >> 24) % especiais.len() as u64) as usize] } else { todos[((h42 >> 24) % todos.len() as u64) as usize] };
             let (mut a36, mut b36) = (7u8, 7u8);
             comparar_dominio(j, &mut cod36, &mut a36, &mut b36);
+            // trigesima setima leva: tracado (linhas nos quatro sentidos, pontos, saidas do campo)
+            let h43 = s.proximo();
+            let (tx0, ty0) = (((h43 >> 1) % 11) as i8 - 1, ((h43 >> 5) % 14) as i8 - 1);
+            let (tx1, ty1) = if (h43 >> 9) % 8 == 0 { (tx0, ty0) } else { (((h43 >> 12) % 11) as i8 - 1, ((h43 >> 16) % 14) as i8 - 1) };
+            let cods = [6i8, 8, 9, 30, 31, 52, 54, 55, 60, 61, 62, 90, 91, 92, 94, 7, 0, 100];
+            let cod37 = cods[((h43 >> 20) % cods.len() as u64) as usize];
+            for cel in 0..108usize {
+                for l in 0..2usize {
+                    let r = h43.rotate_left((cel * 3 + l) as u32 % 64);
+                    let casa = m + 0x215e + 90 * cel;
+                    *((casa + 0x58 + l) as *mut i8) = if r % 4 == 0 { 1 } else { 0 };
+                    *((casa + 44 * l) as *mut usize) = jogador_do_bloco(m, l as i8, ((r >> 5) % 20) as usize);
+                }
+            }
+            comparar_tracar(m, tx0, ty0, tx1, ty1, cod37, (h43 >> 26) as u32 & 0x1ff | 0xabcd0000, (h43 >> 40) as u32 & 0x7);
             comparar_escolher_c(m, (alto13 & !0xff) | ((h13 >> 53) % 2) as u32, if (h13 >> 54) % 3 == 0 { 0x100 | ((h13 >> 56) as u32 & 0xfe00) } else { (h13 >> 57) as u32 & 0xff });
             comparar_distancia_entre(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
         }
