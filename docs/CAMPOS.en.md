@@ -272,3 +272,9 @@ Map published by the author of the modern European competitions patch. The marke
 |---|---|
 | "v3.9.68 file.cpp N" | N is the source line, in decimal; in the exe it shows up as `push N` in hex right before the build with the format "v%s %s.%s %d" (0x9870E8) into the text 0xAE24D0, shown by the box 0x5E8290; then 0 is written to 0xB67A34. E.g. index.cpp 5809 = `push 0x16B1` at 0x60D7C3. The detail ("Unable to find the %s index") is at 0xDE1F64. Checked |
 | 0x8E7BEC | reads the player data (+0x61) of a person with a club without a null check; a database with a person lacking that data crashes the game here (community guard patch). Checked |
+
+## Kit colours (topic 2376)
+
+| Where | What it is |
+|---|---|
+| 0x540490 | do two colours clash? (cdecl, 2 colours; 1 = clash). Uses each one's primary colour (0x540520; groups from `database.h`: 6 blue, 7 purple, 8 red, 9 orange): same primary, or the pairs 8–9, 8–7 and 6–7 (the latter also when the colour is the one with id [0x9CF1DC]). Entry and the read of 0x9CF1DC checked |

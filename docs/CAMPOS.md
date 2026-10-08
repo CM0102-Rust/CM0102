@@ -272,3 +272,9 @@ Mapa publicado por quem fez o patch das competições europeias modernas. Os pon
 |---|---|
 | "v3.9.68 arquivo.cpp N" | N é a linha do fonte, em decimal; no exe aparece como `push N` em hexadecimal logo antes da montagem com o formato "v%s %s.%s %d" (0x9870E8) no texto 0xAE24D0, mostrado pela caixa 0x5E8290; depois grava 0 em 0xB67A34. Ex.: index.cpp 5809 = `push 0x16B1` em 0x60D7C3. O detalhe ("Unable to find the %s index") fica em 0xDE1F64. Conferido |
 | 0x8E7BEC | lê os dados de jogador (+0x61) de uma pessoa com clube sem testar nulo; banco com pessoa sem esses dados derruba o jogo aqui (proteção da comunidade). Conferido |
+
+## Cores dos uniformes (tópico 2376)
+
+| Onde | O que é |
+|---|---|
+| 0x540490 | duas cores colidem? (cdecl, 2 cores; 1 = colidem). Usa a cor primária de cada uma (0x540520; grupos do `database.h`: 6 azul, 7 roxo, 8 vermelho, 9 laranja): mesma primária, ou os pares 8–9, 8–7 e 6–7 (este último também quando a cor é a de id [0x9CF1DC]). Conferido o início e a leitura de 0x9CF1DC |
