@@ -73,11 +73,24 @@ No objeto de arbitragem da partida (`match_official.cpp`), o ponteiro em **+0x04
 | 0xDE4400 | *handle* do `HeapCreate` do jogo | substituído pelo alocador fixo da simulação (`alocador.rs`) |
 | 0xDE4404 | 1 se o jogo reconheceu a versão do Windows | — |
 
+## Partida (objeto da partida, `MATCH_DATA`)
+
+No motor, o ponteiro em **+0x4792**. Campos pela estrutura que davdav publicou no tópico 10794 (os desconhecidos ficaram de fora), conferidos com o que `forca_do_time` lê:
+
+| Desloc. | Campo | Rotinas |
+|---|---|---|
+| +0x00 | id da competição | — |
+| +0x0C / +0x10 | ids do mandante / visitante | — |
+| +0x14 | competição (ponteiro) | `forca_do_time` (nação da competição em +0x5d; 0x5c6710) |
+| +0x1C / +0x20 | mandante / visitante (ponteiros de clube) | `forca_do_time` (nação e reputação; o lado 0 é o mandante) |
+
+O mesmo objeto guarda as datas (ano/dia em palavras), as fases e o placar; segundo o tópico, também o estádio, e o motor o consulta bastante.
+
 ## Nações (constantes em 0x9CF200..)
 
 Cada nação da base tem um ponteiro global fixo nesta área (0x9CF200 Afeganistão ... 0x9CF4A8 Suécia; continentes em 0x9CFA08..). Fonte: `Helpers/9cf_constants` do NickDLL, mantido por davdav (dm-carmo, <https://github.com/dm-carmo/NickDLL>; o nome vem de Nick+Co, de quem foi a ideia inicial, outra pessoa; sem licença declarada: só os fatos, nada de código copiado).
 
-Em `forca_do_time`, quando o clube joga no próprio país (a nação do jogo, +0x5d, é a nação do clube, +0x53), a palavra 0x1de da força é multiplicada pelo estilo da liga nacional:
+Em `forca_do_time`, numa competição nacional (a nação da competição, +0x5d, é a nação do mandante, +0x53), a palavra 0x1de da força é multiplicada pelo estilo da liga nacional:
 
 | Nações | Fator |
 |---|---|
@@ -99,5 +112,7 @@ Ainda não usados por rotinas reescritas; registrados para a etapa 2 (competiç�
 | fase +0xDD | fase concluída |
 | 0x6827D0 | ordena a tabela da fase com os desempates dela |
 | 0x51C410 / 0x522610 | montagem de rodada de copa / sorteio com cabeças de chave |
-| 0x9086E0 | partidas montadas à mão (MLS); 0x85C260 e 0x5AA680 registram cada partida |
+| 0x6844B0 | gera o plano de jogos de uma fase em rodízio: por time e rodada, um código com sinal (adversário 1..N; positivo em casa, negativo fora) |
+| 0x683AD3 / 0x683E20 | número de rodadas derivado da quantidade de times (N − 1) |
+| 0x9086E0 | partidas montadas à mão (MLS); 0x68B100 cria a fase, 0x85C260 e 0x5AA680 registram cada partida |
 | 0xADADFC | competição por id (id × 4) |

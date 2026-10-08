@@ -73,11 +73,24 @@ In the match refereeing object (`match_official.cpp`), the pointer at **+0x04**.
 | 0xDE4400 | the game's `HeapCreate` handle | replaced by the simulation's fixed allocator (`alocador.rs`) |
 | 0xDE4404 | 1 if the game recognised the Windows version | — |
 
+## Match (match object, `MATCH_DATA`)
+
+In the engine, the pointer at **+0x4792**. Fields from the structure davdav published in topic 10794 (the unknown ones left out), checked against what `forca_do_time` reads:
+
+| Offset | Field | Routines |
+|---|---|---|
+| +0x00 | competition id | — |
+| +0x0C / +0x10 | home / away ids | — |
+| +0x14 | competition (pointer) | `forca_do_time` (competition nation at +0x5d; 0x5c6710) |
+| +0x1C / +0x20 | home / away (club pointers) | `forca_do_time` (nation and reputation; side 0 is the home team) |
+
+The same object holds the dates (year/day words), the stages and the score; according to the topic, also the stadium, and the engine reads it a lot.
+
 ## Nations (constants at 0x9CF200..)
 
 Each nation in the database has a fixed global pointer in this area (0x9CF200 Afghanistan ... 0x9CF4A8 Sweden; continents at 0x9CFA08..). Source: NickDLL's `Helpers/9cf_constants`, maintained by davdav (dm-carmo, <https://github.com/dm-carmo/NickDLL>; the name comes from Nick+Co, who had the initial idea, a different person; no license declared: facts only, no code copied).
 
-In `forca_do_time`, when the club plays in its own country (the match's nation, +0x5d, is the club's nation, +0x53), word 0x1de of the strength is multiplied by the national league's style:
+In `forca_do_time`, in a domestic competition (the competition's nation, +0x5d, is the home club's nation, +0x53), word 0x1de of the strength is multiplied by the national league's style:
 
 | Nations | Factor |
 |---|---|
@@ -99,5 +112,7 @@ Not yet used by rewritten routines; recorded for stage 2 (competitions, tables, 
 | stage +0xDD | stage complete |
 | 0x6827D0 | sorts the stage table with its tiebreakers |
 | 0x51C410 / 0x522610 | cup round setup / seeded draw |
-| 0x9086E0 | hand-built fixtures (MLS); 0x85C260 and 0x5AA680 register each match |
+| 0x6844B0 | builds the fixture plan of a round-robin stage: per team and matchday, a signed code (opponent 1..N; positive at home, negative away) |
+| 0x683AD3 / 0x683E20 | number of matchdays derived from the team count (N − 1) |
+| 0x9086E0 | hand-built fixtures (MLS); 0x68B100 creates the stage, 0x85C260 and 0x5AA680 register each match |
 | 0xADADFC | competition by id (id × 4) |
