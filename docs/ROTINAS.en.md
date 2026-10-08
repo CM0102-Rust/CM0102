@@ -580,3 +580,11 @@ Mutations: 9/9. **Two traps.** (1) A hook on 0x714d30 (the player's side, 4 byte
 | `selecao_b(nacao)` | 0x53b4f0 | cdecl | Database.cpp: the B team club; index = id − nations + clubs |
 
 Mutations: 5/5, with the full base (2 million cases, 0 divergences). Heavily called (over 600 call sites); 0 divergences in the real game in comparison mode.
+
+### Match engine, 61st batch — who to mark (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `quem_marcar(jogador)` | 0x6bc030 | thiscall, ret 4 | match_eng.cpp, 3 KB (about 920 instructions): the opponent the player will mark, or 0. No marking with mark 1 on his square; an active designated marked player (0x7160f0) comes first. From the square (x, y) where he should be (0x6c2be0), evaluates the ball carrier (0xf582, if close: 0x968950) and the opponents in squares y−1..y+1 × x−1..x+1 (lists at engine + 0x215e, 90 bytes per square). Score: draws, surrounding opponents, distance to goal, attributes 0x0a/0x0b/0x10/0x35/0x101, role in the formation (0x8ebc/0x8ec4), reputation (home, current or world). The highest 16-bit score wins; the one kept at 0x1aa may be picked at once |
+
+Mutations in the real game (`--jogo`): 11/11. The original `q_reput` added 1 to every score and does not change the pick (equivalent mutation); its replacement (`leva61b.py`) was caught. **Two traps.** (1) The comparison did not restore the RNG state between the original and Rust runs (`REGIOES_DO_ESTADO` missing from `lado_a_lado`): 50 thousand false divergences. (2) In the ball-carrier part, the original reads `[esp+0x1c]` with the draw's argument still on the stack: it is the distance to goal, not the distance to the player. Found by logging each candidate's score on divergences.

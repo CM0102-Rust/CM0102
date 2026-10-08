@@ -192,6 +192,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cd330 | `procurar_no_lado` | search_on_side |
 | 0x6e9630 | `punir_falta` | punish_foul |
 | 0x6ea4e0 | `punir_lance` | punish_move |
+| 0x6bc030 | `quem_marcar` | who_to_mark |
 | 0x6bb9a0 | `registrar_lance` | record_move |
 | 0x7003b0 | `registrar_posse` | record_possession |
 | 0x714ca0 | `remover_da_lista` | remove_from_list |

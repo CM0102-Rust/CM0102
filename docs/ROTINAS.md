@@ -578,3 +578,11 @@ Mutações: 9/9. **Duas armadilhas.** (1) Um desvio na 0x714d30 (o lado do jogad
 | `selecao_b(nacao)` | 0x53b4f0 | cdecl | Database.cpp: o clube da seleção B; índice = id − nações + clubes |
 
 Mutações: 5/5, com a base completa (2 milhões de casos, 0 divergências). Muito chamadas (mais de 600 pontos do exe); no jogo real em comparação, 0 divergências.
+
+### Motor de partidas, 61ª leva — quem marcar (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `quem_marcar(jogador)` | 0x6bc030 | thiscall, ret 4 | match_eng.cpp, 3 KB (cerca de 920 instruções): o adversário que o jogador vai marcar, ou 0. Não marca com a marca 1 na casa dele; o marcado designado (0x7160f0) ativo vem antes. Pela casa (x, y) onde ele deve estar (0x6c2be0), avalia quem está com a bola (0xf582, se perto: 0x968950) e os adversários das casas y−1..y+1 × x−1..x+1 (listas em motor + 0x215e, 90 bytes por casa). Nota: sorteios, cerco de adversários, distância ao gol, atributos 0x0a/0x0b/0x10/0x35/0x101, papel na formação (0x8ebc/0x8ec4), reputação (casa, atual ou mundial). Fica a maior nota em 16 bits; o guardado em 0x1aa pode ser escolhido na hora |
+
+Mutações no jogo real (`--jogo`): 11/11. A `q_reput` original somava 1 a todas as notas e não muda o escolhido (mutação equivalente); a substituta (`leva61b.py`) foi pega. **Duas armadilhas.** (1) A comparação não restaurava o estado do sorteio entre a original e a Rust (faltava `REGIOES_DO_ESTADO` no `lado_a_lado`): 50 mil divergências falsas. (2) No trecho de quem está com a bola, o original lê `[esp+0x1c]` com o argumento do sorteio ainda na pilha: é a distância ao gol, não a distância ao jogador. Achado registrando as notas de cada candidato nas divergências.

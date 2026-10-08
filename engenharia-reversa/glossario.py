@@ -69,6 +69,7 @@ EN = {
  'gravar_casa': 'set_square', 'marcar_craques': 'mark_stars',
  'designado_da_posicao': 'designated_for_position', 'marcado_designado': 'designated_marked',
  'selecao_principal': 'main_national_team', 'selecao_b': 'b_national_team',
+ 'quem_marcar': 'who_to_mark', 'distancia_do_gol': 'distance_to_goal', 'cerco': 'surrounding_count', 'bonus_do_gol': 'goal_bonus', 'reputacao_do_alvo': 'target_reputation',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:
