@@ -79,6 +79,12 @@ Routines that call others with side effects (for example, the match commentary) 
 4. **Independence from the executable.** With the whole simulation in Rust, the core becomes a library of its own (64-bit), which runs without `cm0102.exe`.
 5. **Modernization.** Resolution and fonts, pictures fitted to the screen and, on top of the faithful base, changes to rules and realism.
 6. **New ways of seeing the game.** The engine already computes the match on a board (positions of each player and of the ball at each play); with it in Rust, it becomes possible to draw the match (2D, "button football") in a modern interface (Unity, Godot or another), reading the engine.
+7. **Challenge mode (Lucas's idea, 2026-10-08).** Several players, each at home, play the same career (e.g. "Flamengo on seed 1") and compare results; whoever does best, in theory, plays best. The simulation is already reproducible (same seed and same decisions give the same result), but the same seed only guarantees the same starting world: the game uses a single queue of draws, and any different decision changes how many draws are spent, shifting all the luck from then on (including other clubs' matches). To compare skill fairly, with the engine fully in Rust:
+   - **a seed per event**, derived from seed + date + home + away (and the same for injuries, transfers, youth players): other matches come out the same for everyone and the player's own match starts with the same luck, so the difference comes from the decisions;
+   - **against save reloading**: the player sends the seed and the decision log, and a verifier replays the career and confirms the result (possible precisely because the simulation is deterministic);
+   - **same conditions**: same database (`Data/`), same version and same options (loaded leagues, match detail);
+   - only with the engine 100% in Rust: in the original exe, stack garbage influences the results (see ROTINAS, note on the career fingerprint).
+   It is a separate mode: it breaks fidelity to the original on purpose and does not replace the identical game.
 
 ## 7. Risks and open decisions
 

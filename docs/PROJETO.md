@@ -77,6 +77,12 @@ Rotinas que chamam outras com efeitos colaterais (por exemplo, a narração da p
 4. **Independência do executável.** Com a simulação inteira em Rust, o núcleo vira uma biblioteca própria (64 bits), que roda sem o `cm0102.exe`.
 5. **Modernização.** Resolução e fontes, fotos ajustadas à tela e, sobre a base fiel, mudanças de regras e realismo.
 6. **Novas formas de ver o jogo.** O motor já calcula a partida num tabuleiro (posições de cada jogador e da bola a cada lance); com ele em Rust, dá para desenhar a partida (2D, "jogo de botão") numa interface moderna (Unity, Godot ou outra), lendo o motor.
+7. **Modo desafio (ideia do Lucas, 08/10/2026).** Vários jogadores, cada um em casa, jogam a mesma carreira (ex.: "Flamengo na semente 1") e comparam os resultados; quem vai melhor, em tese, joga melhor. A simulação já é reproduzível (mesma semente e mesmas decisões dão o mesmo resultado), mas a mesma semente só garante o mesmo mundo inicial: o jogo usa uma fila única de sorteios, e qualquer decisão diferente muda quantos sorteios são gastos, deslocando toda a sorte dali em diante (inclusive nos jogos dos outros clubes). Para comparar habilidade com justiça, com o motor todo em Rust:
+   - **semente por evento**, derivada de semente + data + mandante + visitante (e o mesmo para lesões, mercado, juvenis): os jogos alheios saem iguais para todos e o do jogador começa com a mesma sorte, ficando a diferença por conta das decisões;
+   - **contra recarregar o save**: o jogador envia a semente e o registro das decisões, e um verificador refaz a carreira e confirma o resultado (possível justamente porque a simulação é determinística);
+   - **mesmas condições**: mesma base (`Data/`), mesma versão e mesmas opções (ligas carregadas, detalhe da partida);
+   - só com o motor 100% em Rust: no exe original o lixo de pilha influencia os resultados (ver ROTINAS, nota sobre a impressão digital da carreira).
+   É um modo à parte: quebra a fidelidade ao original de propósito e não substitui o jogo idêntico.
 
 ## 7. Riscos e decisões em aberto
 
