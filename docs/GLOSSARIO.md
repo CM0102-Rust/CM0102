@@ -148,6 +148,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c3010 | `mais_proximo_do_ponto` | nearest_to_point |
 | 0x6ce110 | `manter_posicao_um` | hold_position_one |
 | 0x7163f0 | `marca_800000` | mark_800000 |
+| 0x6bbf60 | `marcacao_individual` | individual_marking |
 | 0x6d4330 | `marcador_direto` | direct_marker |
 | 0x5b5910 | `marcar_posicao` | mark_position |
 | 0x5b5270 | `marcas_da_posicao` | position_marks |
@@ -164,6 +165,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x714c60 | `na_lista` | in_list |
 | 0x547840 | `nao_gosta_de` | dislikes |
 | 0x715f50 | `nota_ajustada` | adjusted_rating |
+| 0x6d3de0 | `nova_reputacao` | new_reputation |
 | 0x717c70 | `papel_880` | role_880 |
 | 0x716310 | `papel_na_defesa` | defending_role |
 | 0x716270 | `papel_no_ataque` | attacking_role |

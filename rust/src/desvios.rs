@@ -185,11 +185,17 @@ pub unsafe fn instalar() {
 }
 
 /// CM_AUTOTESTE=1: cada rotina reescrita se compara com a original em entradas sinteticas
-/// (resultado em ddraw.log). Chamado na primeira DirectDrawCreate: a essa altura o WinMain ja
+/// (resultado em ddraw.log). `CM_AUTOTESTE=motor:N` roda so o motor, com N casos (as mutacoes de
+/// uma leva do motor nao mexem no aleatorio nem na data). Chamado na primeira DirectDrawCreate: a essa altura o WinMain ja
 /// esta rodando e a CRT do jogo esta inicializada (algumas rotinas chamam atexit, malloc...).
 pub unsafe fn autotestes() {
     static FEITO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
     if !win::ambiente("CM_AUTOTESTE") || FEITO.swap(true, std::sync::atomic::Ordering::Relaxed) {
+        return;
+    }
+    let valor = win::texto_ambiente("CM_AUTOTESTE");
+    if let Some(n) = valor.strip_prefix("motor:") {
+        crate::motor::autoteste(n.parse().unwrap_or(2_000_000));
         return;
     }
     aleatorio::autoteste(5_000_000);

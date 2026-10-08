@@ -262,8 +262,12 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6d4330, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x8a, 0x5c, 0x24, 0x14] },
     // quinquagesima segunda leva
     Prologo { endereco: 0x6cdd50, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
+    // quinquagesima terceira leva
+    Prologo { endereco: 0x6bbf60, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] },
+    // quinquagesima quarta leva
+    Prologo { endereco: 0x6d3de0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x0c] },
 ];
-const N: usize = 164;
+const N: usize = 166;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3943,6 +3947,121 @@ unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 {
     bola_fora_com(this, lado_b, &mut |t, a| comentar(t, a))
 }
 
+// ---------- quinquagesima quarta leva: nova reputacao ----------
+
+/// Razao das estatisticas globais (0xb74350): +0x20/+0x28 ou +0x10/+0x18; divisor zero da 6,8.
+unsafe fn razao_global(alt: bool) -> f64 {
+    let g = *(0xb74350 as *const usize);
+    let (a, b) = if alt { (0x20, 0x28) } else { (0x10, 0x18) };
+    if f64_em(g + b) == f64_em(0x9689a0) {
+        f64_em(0x968998)
+    } else {
+        f64_em(g + a) / f64_em(g + b)
+    }
+}
+
+/// { 0x6d3de0 } (match_eng.cpp): reputacao do clube do lado depois da partida, gravada em
+/// 0x1d6 + 2 x lado (1..=10000). `nivel` (ate 20) vem da competicao (+0x69), media com a reputacao
+/// do adversario /500 quando a partida tem +0x40; 5 na partida -2. O peso `n` da media movel: 202 -
+/// 10 x nivel, ou, para selecao (e certos codigos de competicao internacional, tipo 8), reputacao/1000
+/// + 16 (no minimo 21) - nivel. `valor` contra a razao global da o ganho (negativo ao quadrado).
+unsafe extern "C" fn nova_reputacao(this: usize, lado: i8, valor: f32, alt: u8, bonus: u8) {
+    let partida = *((this + 0x4792) as *const usize);
+    let (meu, outro) = if lado != 0 {
+        (*((partida + 0x20) as *const usize), *((partida + 0x1c) as *const usize))
+    } else {
+        (*((partida + 0x1c) as *const usize), *((partida + 0x20) as *const usize))
+    };
+    let comp = *((partida + 0x14) as *const usize);
+    let rep_de = |c: usize| *((c + 0x80) as *const i16) as i32;
+    let mut nivel: i8 = if *(partida as *const i32) == -2 {
+        5
+    } else {
+        let v = if byte(partida, 0x40) != 0 {
+            ((rep_de(outro) / 500 + *((comp + 0x69) as *const i16) as i32) / 2) as i8
+        } else {
+            byte(comp, 0x69)
+        };
+        v.min(20)
+    };
+    let teto = || ((rep_de(meu) / 1000) as i8).wrapping_add(16).max(21) as i16;
+    let w30 = *((partida + 0x30) as *const u16);
+    let w32 = *((partida + 0x32) as *const u16);
+    let n: i16 = if e_selecao(meu) != 0 {
+        teto().wrapping_sub(nivel as i16)
+    } else if byte(partida, 0x3a) == 8 && (0x41f..=0x426).contains(&w32) {
+        teto().wrapping_sub(nivel as i16).wrapping_add(1)
+    } else if byte(partida, 0x3a) == 8 && matches!(w30, 0x78..=0x7c | 0x82..=0x87 | 0x96..=0x9b) {
+        nivel = byte(comp, 0x69);
+        teto().wrapping_sub(nivel as i16)
+    } else {
+        (0xca - 10 * nivel as i32) as i16
+    };
+    let mut f = (valor as f64 - razao_global(alt != 0)) as f32;
+    let zero = f32_em(0x968970) as f64;
+    if (f as f64) < zero {
+        f = (f.abs() as f64 * f as f64) as f32;
+    }
+    let rep = rep_de(meu);
+    let nv = nivel as i32;
+    let mut novo = ftol((nv as f64 * f64_em(0x968968) + f64_em(0x9688a0)) * f as f64 * f64_em(0x968ff8) + rep as f64) as i16;
+    if bonus != 0 {
+        let mut t = ftol((nv * 250) as f64 * valor as f64 / razao_global(alt != 0));
+        if (f as f64) < zero {
+            t = ftol(t as i16 as f64 * valor as f64 / razao_global(alt != 0));
+        }
+        if t as i16 > novo {
+            novo = t as i16;
+        }
+    }
+    let k = f64_em(0x968950) - rep as f64 * f64_em(0x96a5c0);
+    let nn = n as i32;
+    let mut media = (((nn - 1).wrapping_mul(rep)).wrapping_add(novo as i32) / nn) as i16;
+    let limite = (nv * 300 + 4000) as i16;
+    let maximo = limite.max(rep as i16);
+    if media >= maximo {
+        media = maximo;
+    }
+    let delta = ((nv * 5) as f64 * k) as f32;
+    let rf = rep as f32;
+    let mf = media as f32;
+    let baixo = rf as f64 - delta as f64;
+    let v = if baixo > mf as f64 {
+        baixo
+    } else {
+        let alto = delta as f64 + rf as f64;
+        if alto < mf as f64 { alto } else { mf as f64 }
+    };
+    let r = (ftol(v) as i16).clamp(1, 10000);
+    *((this as isize + 0x1d6 + 2 * lado as isize) as *mut i16) = r;
+}
+
+// ---------- quinquagesima terceira leva: marcacao individual ----------
+
+/// { 0x6bbf60 } (match_eng.cpp): marcacao individual. Para cada lado e jogador ativo cuja posicao
+/// tem as marcas 0x10 e 4 na tabela do lado (0x5b57c0), acha o marcador direto (0x6d4330) e grava
+/// a ficha dele (0x69) na tabela por posicao (0x5b5910). Marcador -1 le o "jogador" anterior ao
+/// bloco, como o original.
+unsafe extern "thiscall" fn marcacao_individual(this: usize) {
+    let marca: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x5b57c0usize);
+    let marcador: unsafe extern "thiscall" fn(usize, i8, i8) -> u8 = core::mem::transmute(0x6d4330usize);
+    let marcar: unsafe extern "thiscall" fn(usize, i8, *const u32) -> u32 = core::mem::transmute(0x5b5910usize);
+    for l in 0..2i8 {
+        let tabela = this + 0x91e2 + 0x18e3 * l as usize;
+        for k in 0..20i8 {
+            let p = jogador_do_bloco(this, l, k as usize);
+            let pos = byte(p, 0x19);
+            if pos < 0 || marca(tabela, pos) & 0x10 == 0 || marca(tabela, byte(p, 0x19)) & 4 == 0 {
+                continue;
+            }
+            let mk = marcador(this, l, k) as i8;
+            let outro = (l == 0) as isize;
+            let q = (this as isize + 0x4796 + 0x1be * (20 * outro + mk as isize)) as usize;
+            marcar(tabela, byte(p, 0x19), *((q + 0x69) as *const usize) as *const u32);
+        }
+    }
+}
+
 // ---------- quinquagesima segunda leva: tirar de campo ----------
 
 /// { 0x6cdd50 } (match_eng.cpp): tira o jogador de campo (expulsao ou substituicao). Sai da lista
@@ -6538,6 +6657,27 @@ unsafe extern "thiscall" fn comparar_tirar_de_campo(this: usize, j: usize, modo:
 /// ambiente do jogo, que desloca a heap). Vazio no uso normal.
 const SEM_ROTINAS: &[&str] = &[];
 
+unsafe extern "thiscall" fn comparar_marcacao_individual(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(164);
+    let reg = [(this, 0xf5f8)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || marcacao_individual(this));
+    PLACAR.registrar(igual, || {
+        let (a, b) = (&mo.0, &mr.0);
+        let dif: Vec<usize> = (0..a.len()).flat_map(|r| (0..a[r].1.len()).filter(move |&i| a[r].1[i] != b[r].1[i]).map(move |i| a[r].0 + i)).take(16).collect();
+        format!("marcacao_individual diferencas em {:x?}", dif)
+    });
+}
+
+unsafe extern "C" fn comparar_nova_reputacao(this: usize, lado: i8, valor: f32, alt: u8, bonus: u8) {
+    let o = orig::<unsafe extern "C" fn(usize, i8, f32, u8, u8)>(165);
+    let reg = [(this, 0x200)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, lado, valor, alt, bonus), || nova_reputacao(this, lado, valor, alt, bonus));
+    PLACAR.registrar(igual, || {
+        let (a, b) = (&mo.0[0].1, &mr.0[0].1);
+        format!("nova_reputacao lado {} valor {} alt {} bonus {}: {:?} x {:?}", lado, valor, alt, bonus, &a[0x1d6..0x1da], &b[0x1d6..0x1da])
+    });
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -6712,6 +6852,8 @@ pub unsafe fn instalar(comparando: bool) {
         placar_agregado as *const () as usize,
         marcador_direto as *const () as usize,
         tirar_de_campo as *const () as usize,
+        marcacao_individual as *const () as usize,
+        nova_reputacao as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -6878,6 +7020,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_placar_agregado as *const () as usize,
         comparar_marcador_direto as *const () as usize,
         comparar_tirar_de_campo as *const () as usize,
+        comparar_marcacao_individual as *const () as usize,
+        comparar_nova_reputacao as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -6934,6 +7078,8 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_e_segunda_selecao", "motor_placar_agregado",
         "motor_marcador_direto",
         "motor_tirar_de_campo",
+        "motor_marcacao_individual",
+        "motor_nova_reputacao",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -8348,6 +8494,65 @@ pub unsafe fn autoteste(casos: u64) {
             for i in 0..10u32 {
                 let k = ((h58 >> (i * 6)) % 40) as i8;
                 comparar_marcador_direto(m, k / 20, k % 20);
+            }
+            // quinquagesima terceira leva: marcacao individual (marcas por posicao nos dois lados, fichas)
+            for l in 0..2usize {
+                for pos in 0..16usize {
+                    let r = s.proximo();
+                    *((m + 0x91e2 + 6371 * l + 0x5b4 + pos) as *mut u8) = [0x14u8, 0x10, 4, 0x15, 0, (r >> 8) as u8][(r % 6) as usize];
+                }
+            }
+            for k in 0..40usize {
+                let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
+                let r = s.proximo();
+                *((p + 0x69) as *mut usize) = if r % 5 == 0 { 0 } else { fichas.as_ptr().add(k) as usize };
+            }
+            for (k, f) in fichas.iter_mut().enumerate() {
+                *f = 0x1000 + k as u32;
+            }
+            comparar_marcacao_individual(m);
+            // quinquagesima quarta leva: nova reputacao (selecao, tipo 8 com os codigos, partida -2, razao zero)
+            {
+                let globais = [0xae235cusize, 0xae2350, 0xb74350];
+                let antes: Vec<u32> = globais.iter().map(|&a| *(a as *const u32)).collect();
+                let mut est = [0f64; 6];
+                let mut pa = vec![0u8; 0x60];
+                let mut cl = vec![vec![0u8; 0x90]; 2];
+                let mut cp = vec![0u8; 0x70];
+                *(0xae235c as *mut i32) = 5000;
+                *(0xae2350 as *mut i32) = 200;
+                *(0xb74350 as *mut usize) = est.as_mut_ptr() as usize;
+                let antes_m = *((m + 0x4792) as *const usize);
+                for _ in 0..6 {
+                    let r: Vec<u64> = (0..12).map(|_| s.proximo()).collect();
+                    for (i, e) in est.iter_mut().enumerate() {
+                        *e = if r[i] % 5 == 0 { 0.0 } else { (r[i] >> 8) as f64 % 4000.0 / 100.0 };
+                    }
+                    let pp = pa.as_mut_ptr() as usize;
+                    *(pp as *mut i32) = if r[6] % 6 == 0 { -2 } else { 1 };
+                    *((pp + 0x14) as *mut usize) = cp.as_mut_ptr() as usize;
+                    *((pp + 0x1c) as *mut usize) = cl[0].as_mut_ptr() as usize;
+                    *((pp + 0x20) as *mut usize) = cl[1].as_mut_ptr() as usize;
+                    *((pp + 0x40) as *mut u8) = (r[6] >> 4) as u8 % 2;
+                    *((pp + 0x3a) as *mut u8) = [8u8, 8, 8, 0, 7][((r[6] >> 8) % 5) as usize];
+                    *((pp + 0x32) as *mut u16) = [0x41eu16, 0x41f, 0x423, 0x426, 0x427, (r[7] >> 16) as u16][(r[7] % 6) as usize];
+                    *((pp + 0x30) as *mut u16) = [0x77u16, 0x78, 0x7c, 0x7d, 0x81, 0x82, 0x87, 0x88, 0x95, 0x96, 0x9b, 0x9c][((r[7] >> 8) % 12) as usize];
+                    *((cp.as_mut_ptr() as usize + 0x69) as *mut i16) = [0i16, 5, 10, 19, 20, 35, 30, -3, ((r[8] >> 8) % 21) as i16][(r[8] % 9) as usize];
+                    for (i, c) in cl.iter_mut().enumerate() {
+                        let z = r[9 + i];
+                        *(c.as_mut_ptr() as *mut i32) = [4600i32, 4599, 4800, 0][(z % 4) as usize];
+                        *((c.as_mut_ptr() as usize + 0x80) as *mut i16) = [0i16, 499, 500, 999, 1000, 4999, 5000, 9999, 10000, ((z >> 8) % 12000) as i16][((z >> 4) % 10) as usize];
+                    }
+                    // nivel 21..=28 com os codigos 0x78.. daria peso 0 (divisao por zero no original): fora do teste
+                    *((m + 0x4792) as *mut usize) = pp;
+                    *((m + 0x1d6) as *mut u32) = 0x55555555;
+                    let valor = [0f32, 6.8, 1.0, 3.5, 10.0, 40.0][(r[11] % 6) as usize] + ((r[11] >> 8) % 1000) as f32 / 300.0 - 1.5;
+                    comparar_nova_reputacao(m, ((r[11] >> 20) % 2) as i8, valor, ((r[11] >> 21) % 2) as u8, ((r[11] >> 22) % 2) as u8);
+                }
+                *((m + 0x4792) as *mut usize) = antes_m;
+                for (i, &a) in globais.iter().enumerate() {
+                    *(a as *mut u32) = antes[i];
+                }
             }
             comparar_bit_da_casa(match (h56 >> 56) % 4 { 0 => c56 + 1, 1 => c56 - 1, 2 => (h56 >> 30) as i16, _ => c56 });
             let setor56 = [1u32, 2, 4, 8, 0x10, 0x20, 0x40, 0x41, 0x7f][((h56 >> 33) % 9) as usize];

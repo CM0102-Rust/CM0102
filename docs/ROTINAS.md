@@ -505,3 +505,21 @@ Mutações: 11/11.
 **Queda intermitente explicada.** As quedas raras dentro da DLL (em `memcpy`, copiando 1 byte de um endereço inválido) vinham do comparador de 0x6f46b0: ele guarda o byte +0x28 do jogador "movido", lido da lista da casa; com mais de 11 jogadores numa casa (gerador da 43ª leva), esse jogador era lixo. O gerador agora põe cada posição numa casa distinta (no máximo 4 por casa com o limite de y). Mutações da 43ª refeitas com o gerador novo: as mesmas. Mutações da 52ª: 13/14 (15 mil × 20 mil para o papel 0x10 é equivalente: só a ordem das pontuações importa). Jogo real (levas 50 a 52): 1 bilhão de comparações, 0 divergências. Carreira até 01/06/2002: Rust ×2 = original.
 
 **A impressão de referência mudou (nas levas 50 a 52).** A carreira em Rust deu c76ad0ff6ce3daa6 (2.357.335.216 sorteios), diferente do 7866d02de7578a90 de antes; a bisseção (`SEM_ROTINAS` em `motor.rs`) apontou `e_segunda_selecao`, que devolve sempre o mesmo valor que a original (conferido em toda a temporada). A causa é a pilha: na simulação todo desvio roda na pilha particular, inclusive no modo "original" (a original passa por ela isolada), e a original de 0x5409b0 deixa o `esi` do chamador 0x204 bytes abaixo da pilha do jogo, lixo que alguma rotina adiante lê. O modo "original" da mesma compilação também dá c76ad0ff6ce3daa6: **a carreira se compara sempre com o modo original da mesma compilação**, nunca com um número memorizado. Com clube nulo, a versão Rust chama a própria original (o caminho de erro tem efeitos).
+
+### Motor de partidas, 53ª leva — marcação individual (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `marcacao_individual()` | 0x6bbf60 | thiscall | match_eng.cpp: para cada lado e jogador ativo cuja posição tem as marcas 0x10 e 4 na tabela do lado (0x5b57c0), acha o marcador direto (0x6d4330) e grava a ficha dele (+0x69) na tabela por posição (0x5b5910). Marcador −1 lê o "jogador" anterior ao bloco, como o original |
+
+Mutações: 5/5.
+
+### Motor de partidas, 54ª leva — nova reputação (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `nova_reputacao(motor, lado, valor, alt, bonus)` | 0x6d3de0 | cdecl | match_eng.cpp, chamada no fim da partida para cada lado (exceto seleção): grava em +0x1d6 + 2 × lado a reputação nova do clube (1..=10000), média móvel com peso `n` entre a reputação atual (+0x80 do clube) e um alvo. Nível (até 20): a reputação da competição (+0x69), ou a média dela com a reputação do adversário / 500 quando a partida tem +0x40; 5 na partida −2. Peso: 202 − 10 × nível; seleção, e competição tipo 8 com certos códigos (+0x32 em 0x41f..0x426, com +1; +0x30 em 0x78..0x7c, 0x82..0x87, 0x96..0x9b, com o nível sem teto), reputação/1000 + 16 (mínimo 21) − nível. Alvo: (nível × 0,5 + 5) × 50 × (valor − razão), com a diferença negativa elevada ao quadrado (com sinal); a razão vem das estatísticas globais (0xb74350: +0x20/+0x28 ou +0x10/+0x18, 6,8 se o divisor for zero). Com `bonus`, o alvo vale no mínimo 250 × nível × valor / razão. O resultado não passa de max(300 × nível + 4000, reputação) nem se afasta da reputação mais que 5 × nível × (2 − reputação/10000) |
+
+Mutações: 13/13 (`n_21` acusada por queda: a versão mutada divide por zero). Nível 21..=28 com os códigos 0x78.. daria peso zero também no original (divisão por zero); o gerador não produz esse caso.
+
+**Testes mais rápidos.** `CM_AUTOTESTE=motor:N` roda só o autoteste do motor, com N casos. O `mutacoes.py` roda a base completa (cerca de 30 minutos) e depois cada mutação com `motor:200000` (`--casos` muda): na 54ª leva, cada mutação foi acusada em cerca de 1 segundo depois de abrir o jogo, contra alguns minutos antes. Jogo real (levas 53 e 54): mais de 1 bilhão comparações, 0 divergências. Carreira até 01/06/2002: Rust ×2 = original (c76ad0ff6ce3daa6, 2.357.335.216 sorteios).

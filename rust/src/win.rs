@@ -98,6 +98,14 @@ extern "system" {
 /// Variavel de ambiente ligada: definida, nao vazia e diferente de "0". (A simulacao passa todas
 /// as variaveis CM_* sempre, com 0 ou 1: o ambiente vai para a heap do jogo e tem de ter o mesmo
 /// tamanho em todos os modos.)
+/// Valor de uma variavel de ambiente (ate 63 caracteres); vazio se nao existe.
+pub fn texto_ambiente(nome: &str) -> String {
+    let n: Vec<u16> = nome.encode_utf16().chain([0]).collect();
+    let mut buf = [0u16; 64];
+    let k = unsafe { GetEnvironmentVariableW(n.as_ptr(), buf.as_mut_ptr(), buf.len() as u32) } as usize;
+    String::from_utf16_lossy(&buf[..k.min(buf.len())])
+}
+
 pub fn ambiente(nome: &str) -> bool {
     let n: Vec<u16> = nome.encode_utf16().chain([0]).collect();
     let mut buf = [0u16; 8];

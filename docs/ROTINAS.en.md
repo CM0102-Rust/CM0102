@@ -507,3 +507,21 @@ Mutations: 11/11.
 **Intermittent crash explained.** The rare crashes inside the DLL (in `memcpy`, copying 1 byte from an invalid address) came from the 0x6f46b0 comparator: it saves byte +0x28 of the "moved" player, read from the square's list; with more than 11 players in a square (43rd batch generator), that player was garbage. The generator now puts each position in a distinct square (at most 4 per square with the y clamp). 43rd batch mutations redone with the new generator: the same. 52nd batch mutations: 13/14 (15 mil × 20 mil para o papel 0x10 é equivalente: só a ordem das pontuações importa). Real game (batches 50 to 52): 1 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original.
 
 **The reference fingerprint changed (in batches 50 to 52).** The Rust career gave c76ad0ff6ce3daa6 (2,357,335,216 draws), different from the earlier 7866d02de7578a90; bisection (`SEM_ROTINAS` in `motor.rs`) pointed to `e_segunda_selecao`, which always returns the same value as the original (checked over the whole season). The cause is the stack: in the simulation every hook runs on the private stack, including in "original" mode (the original goes through it in isolation), and the original 0x5409b0 leaves the caller's `esi` 0x204 bytes below the game's stack, garbage that some later routine reads. The "original" mode of the same build also gives c76ad0ff6ce3daa6: **the career is always compared with the original mode of the same build**, never with a remembered number. With a null club, the Rust version calls the original itself (the error path has effects).
+
+### Match engine, 53rd batch — individual marking (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `marcacao_individual()` | 0x6bbf60 | thiscall | match_eng.cpp: for each side and active player whose position has marks 0x10 and 4 in the side's table (0x5b57c0), finds the direct marker (0x6d4330) and stores his record (+0x69) in the per-position table (0x5b5910). Marker −1 reads the "player" before the block, like the original |
+
+Mutations: 5/5.
+
+### Match engine, 54th batch — new reputation (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `nova_reputacao(motor, lado, valor, alt, bonus)` | 0x6d3de0 | cdecl | match_eng.cpp, called at the end of the match for each side (except national teams): stores at +0x1d6 + 2 × side the club's new reputation (1..=10000), a moving average with weight `n` between the current reputation (club +0x80) and a target. Level (up to 20): the competition's reputation (+0x69), or its average with the opponent's reputation / 500 when the match has +0x40; 5 in match −2. Weight: 202 − 10 × level; national team, and competition type 8 with certain codes (+0x32 in 0x41f..0x426, with +1; +0x30 in 0x78..0x7c, 0x82..0x87, 0x96..0x9b, with the level uncapped), reputation/1000 + 16 (minimum 21) − level. Target: (level × 0.5 + 5) × 50 × (value − ratio), with a negative difference squared (keeping the sign); the ratio comes from the global statistics (0xb74350: +0x20/+0x28 or +0x10/+0x18, 6.8 if the divisor is zero). With `bonus`, the target is at least 250 × level × value / ratio. The result does not exceed max(300 × level + 4000, reputation) nor move away from the reputation by more than 5 × level × (2 − reputation/10000) |
+
+Mutations: 13/13 (`n_21` flagged by a crash: the mutated version divides by zero). Level 21..=28 with codes 0x78.. would give weight zero in the original too (division by zero); the generator does not produce that case.
+
+**Faster tests.** `CM_AUTOTESTE=motor:N` runs only the match-engine self-test, with N cases. `mutacoes.py` runs the full base (about 30 minutes) and then each mutation with `motor:200000` (`--casos` changes it): in the 54th batch, each mutation was flagged about 1 second after the game opened, against a few minutes before. Real game (batches 53 and 54): over 1 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original (c76ad0ff6ce3daa6, 2,357,335,216 draws).
