@@ -181,6 +181,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c0980 | `repartir_e` | split_e |
 | 0x6c0b70 | `repartir_f` | split_f |
 | 0x6ce460 | `resumo_da_partida` | match_summary |
+| 0x6bbe40 | `rolar_bola` | roll_ball |
 | 0x6d4280 | `sem_partida` | no_match |
 | 0x6f0970 | `soltar_bola` | release_ball |
 | 0x7160d0 | `somar_2b` | add_2b |

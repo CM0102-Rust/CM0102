@@ -25,7 +25,7 @@ SRC = os.path.join(RAIZ, 'rust', 'src', 'motor.rs')
 DLL = os.path.join(RAIZ, 'rust', 'target', 'i686-pc-windows-msvc', 'release', 'ddraw.dll')
 JOGO = os.path.join(RAIZ, 'jogo')
 LOG = os.path.join(JOGO, 'ddraw.log')
-LIMITE = 1500  # segundos; o autoteste completo passa de 10 minutos
+LIMITE = 2400  # segundos; o autoteste completo passa de 20 minutos (cresce a cada leva)
 
 
 def compilar():

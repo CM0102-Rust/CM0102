@@ -57,7 +57,8 @@ EN = {
  'defesa_do_goleiro': 'goalkeeper_save', 'mover_para': 'move_to', 'escolher_casa': 'choose_square',
  'dominio_do_lance': 'control_of_move', 'tracar_lance': 'trace_move', 'tem_jogo': 'has_match', 'venceu_o_jogo': 'won_the_match',
  'comentario_a': 'commentary_a', 'comentario_b': 'commentary_b', 'bola_fora': 'ball_out', 'valor_do_chute': 'shot_value',
- 'forca_do_time': 'team_strength', 'pontape_inicial': 'kick_off',
+ 'forca_do_time': 'team_strength', 'pontape_inicial': 'kick_off', 'rolar_bola': 'roll_ball',
+ 'teste_de_condicao': 'condition_test',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

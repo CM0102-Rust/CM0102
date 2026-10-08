@@ -235,8 +235,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6c0c60, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
     // quadragesima terceira leva
     Prologo { endereco: 0x6c51e0, bytes: &[0x83, 0xec, 0x24, 0x53, 0x55, 0x8b, 0xe9] },
+    // quadragesima quarta leva
+    Prologo { endereco: 0x6bbe40, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x86, 0x82, 0xf5, 0x00, 0x00] },
 ];
-const N: usize = 146;
+const N: usize = 147;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3911,6 +3913,60 @@ unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 {
     bola_fora_com(this, lado_b, &mut |t, a| comentar(t, a))
 }
 
+// ---------- quadragesima quarta leva: bola rolando ----------
+
+/// { 0x6bbe40 } (match_eng.cpp) com o comentario injetado: bola solta rolando. So sem dono
+/// (0xf582), sem 0xf57a e com impulso (0x8eaa). Lance parado (0x8eb2): zera o impulso e 0x8ea9.
+/// Senao, com impulso 1 a bola so anda se sorteio(1) >= sorteio(2); impulso <= 0 nao anda. Ao andar,
+/// gasta um de impulso (e um de 0x8ea9, se houver) e da um passo pela direcao (0x8ed8, graus):
+/// (220, 320) x - 1; (40, 140) x + 1; (130, 230) y - 1; abaixo de 50 ou acima de 310, y + 1.
+/// Fora do campo (x fora de 0..9 ou y fora de 0..12): bola fora (0x6cd490) pelo lado de 0x8eab.
+unsafe fn rolar_bola_com(this: usize, chamar: ChamarComentario) {
+    let b = |o: usize| (this + o) as *mut i8;
+    if *((this + 0xf582) as *const usize) != 0 || *((this + 0xf57a) as *const usize) != 0 || *b(0x8eaa) == 0 {
+        return;
+    }
+    if *b(0x8eb2) != 0 {
+        *b(0x8eaa) = 0;
+        *b(0x8ea9) = 0;
+        return;
+    }
+    let v = *b(0x8eaa);
+    let anda = if v >= 2 {
+        true
+    } else if v <= 0 {
+        false
+    } else {
+        let a = sortear(v as i32 * v as i32);
+        a >= sortear(2)
+    };
+    if anda {
+        *b(0x8eaa) = v.wrapping_sub(1);
+        if *b(0x8ea9) != 0 {
+            *b(0x8ea9) = (*b(0x8ea9)).wrapping_sub(1);
+        }
+        let dir = *((this + 0x8ed8) as *const i16);
+        if dir > 0xdc && dir < 0x140 {
+            *b(0x8ea7) = (*b(0x8ea7)).wrapping_sub(1);
+        } else if dir > 0x28 && dir < 0x8c {
+            *b(0x8ea7) = (*b(0x8ea7)).wrapping_add(1);
+        } else if dir > 0x82 && dir < 0xe6 {
+            *b(0x8ea8) = (*b(0x8ea8)).wrapping_sub(1);
+        } else if dir < 0x32 || dir > 0x136 {
+            *b(0x8ea8) = (*b(0x8ea8)).wrapping_add(1);
+        }
+    }
+    let (x, y) = (*b(0x8ea7), *b(0x8ea8));
+    if x < 0 || y < 0 || x >= 9 || y >= 12 {
+        bola_fora_com(this, *b(0x8eab) as u8, chamar);
+    }
+}
+
+/// { 0x6bbe40 } (match_eng.cpp): bola rolando (ver `rolar_bola_com`).
+unsafe extern "thiscall" fn rolar_bola(this: usize) {
+    rolar_bola_com(this, &mut |t, a| comentar(t, a))
+}
+
 // ---------- quadragesima terceira leva: pontape inicial ----------
 
 /// { 0x6c51e0 } (match_eng.cpp): pontape inicial. Quem sai jogando: 0x8eae (fora de 0..=1, o lado
@@ -5661,7 +5717,10 @@ unsafe extern "thiscall" fn porta_6d6f70(this: usize, a1: u32, a2: u32, a3: u32,
     static PROFUNDIDADE: AtomicU32 = AtomicU32::new(0);
     let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) = core::mem::transmute(PORTA_6D6F70);
     let nivel = PROFUNDIDADE.fetch_add(1, Relaxed);
-    f(this, a1, a2, a3, a4, a5, a6, a7);
+    // no autoteste o narrador e falso: a chamada so e gravada
+    if !SINTETICO.load(Relaxed) {
+        f(this, a1, a2, a3, a4, a5, a6, a7);
+    }
     PROFUNDIDADE.fetch_sub(1, Relaxed);
     if nivel == 0 && GRAVANDO_6D6F70.load(Relaxed) {
         let depois = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
@@ -5684,6 +5743,12 @@ fn mesmos_argumentos(a: &[u32; 7], b: &[u32; 7]) -> bool {
 /// Como `comparar_com_comentarios`, comparando tambem as `extra` (alem do estado do sorteio).
 unsafe fn comparar_com_comentarios_em(extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce(ChamarComentario)) -> (bool, usize) {
     use std::sync::atomic::Ordering::Relaxed;
+    // dentro de outra comparacao que esta gravando (uma rotina portada chama outra que narra): so a
+    // original roda, e os comentarios dela entram na gravacao de fora
+    if GRAVANDO_6D6F70.load(Relaxed) {
+        original();
+        return (true, 0);
+    }
     FITA_6D6F70.lock().unwrap_or_else(|e| e.into_inner()).clear();
     let fita = core::cell::RefCell::new(Vec::new());
     let sequencia = core::cell::Cell::new(true);
@@ -5728,6 +5793,10 @@ unsafe extern "thiscall" fn comparar_comentario_b(this: usize, a1: u32, a2: u32,
 
 unsafe extern "thiscall" fn comparar_bola_fora(this: usize, l: u8) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u8) -> u8>(142);
+    // chamada de dentro de outra comparacao que grava os comentarios: so a original (ver porta)
+    if GRAVANDO_6D6F70.load(std::sync::atomic::Ordering::Relaxed) {
+        return o(this, l);
+    }
     let mut extra = vec![(this + 0x8ea0, 0x20), (this + 0x4780, 0x10), (this + 0xf570, 0x20), (this + 0x1a0, 0x10)];
     let dono = *((this + 0xf582) as *const usize);
     if dono != 0 {
@@ -5772,6 +5841,13 @@ unsafe extern "thiscall" fn comparar_pontape_inicial(this: usize) {
         let dif: Vec<usize> = (0..a.len()).flat_map(|r| (0..a[r].1.len()).filter(move |&i| a[r].1[i] != b[r].1[i]).map(move |i| a[r].0 + i)).take(16).collect();
         format!("pontape_inicial() diferencas em {:x?}", dif)
     });
+}
+
+unsafe extern "thiscall" fn comparar_rolar_bola(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(146);
+    let extra = [(this + 0x8ea0, 0x40), (this + 0x4780, 0x10), (this + 0xf570, 0x20), (this + 0x1a0, 0x10)];
+    let (igual, k) = comparar_com_comentarios_em(&extra, || o(this), |c| rolar_bola_com(this, c));
+    PLACAR.registrar(igual, || format!("rolar_bola ({} comentarios)", k));
 }
 
 pub unsafe fn instalar(comparando: bool) {
@@ -5930,6 +6006,7 @@ pub unsafe fn instalar(comparando: bool) {
         valor_do_chute as *const () as usize,
         forca_do_time as *const () as usize,
         pontape_inicial as *const () as usize,
+        rolar_bola as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -6078,6 +6155,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_valor_chute as *const () as usize,
         comparar_forca_do_time as *const () as usize,
         comparar_pontape_inicial as *const () as usize,
+        comparar_rolar_bola as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -6125,6 +6203,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_valor_do_chute",
         "motor_forca_do_time",
         "motor_pontape_inicial",
+        "motor_rolar_bola",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -7253,6 +7332,20 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x8ed8) as *mut u16) = (h51 >> 20) as u16;
             *(m as *mut u8) = 0;
             comparar_pontape_inicial(m);
+            // quadragesima quarta leva: bola rolando (impulso, direcoes nas bordas, saidas do campo)
+            let h52 = s.proximo();
+            *((m + 0xf582) as *mut usize) = if h52 % 9 == 0 { j } else { 0 };
+            *((m + 0xf57a) as *mut usize) = if (h52 >> 4) % 9 == 0 { o } else { 0 };
+            *((m + 0x8eaa) as *mut i8) = [0i8, 1, 1, 1, 2, 3, 5, -1][((h52 >> 8) % 8) as usize];
+            *((m + 0x8eb2) as *mut u8) = if (h52 >> 11) % 6 == 0 { [1u8, 2, 3][((h52 >> 14) % 3) as usize] } else { 0 };
+            *((m + 0x8ea9) as *mut i8) = [0i8, 1, 2, 7, -1][((h52 >> 16) % 5) as usize];
+            let dirs = [0i16, 359, 40, 41, 49, 50, 130, 131, 139, 140, 220, 221, 229, 230, 310, 311, 319, 320, -10, 400];
+            *((m + 0x8ed8) as *mut i16) = if (h52 >> 20) % 4 == 0 { ((h52 >> 24) % 420) as i16 - 30 } else { dirs[((h52 >> 33) % 20) as usize] };
+            *((m + 0x8ea7) as *mut i8) = [0i8, 8, 4, 1, 7, -1, 9][((h52 >> 38) % 7) as usize];
+            *((m + 0x8ea8) as *mut i8) = [0i8, 11, 5, 1, 10, -1, 12][((h52 >> 41) % 7) as usize];
+            *((m + 0x8eab) as *mut i8) = [0i8, 1, 2][((h52 >> 44) % 3) as usize];
+            *((m + 0x8eae) as *mut i8) = [0i8, 1, -1][((h52 >> 46) % 3) as usize];
+            comparar_rolar_bola(m);
             for (i, &a) in ids.iter().enumerate() {
                 *(a as *mut u32) = ids_antes[i];
             }

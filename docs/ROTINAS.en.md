@@ -422,3 +422,13 @@ Real game: 10 billion comparisons, 0 divergences. Career until 2002-06-01: Rust 
 In the original, x and y start as stack garbage, but they are only read after some active player (with no active player, the routine exits first). The comparison checks the whole engine object (players, grid and ball), plus the random draw.
 
 Self-test: 5.5 billion cases, 0 divergences, with a consistent pitch grid (each player in the list of their square) and formations with distinct squares. Mutations: 11/13. The two that pass are equivalent: the clamp on y (at most 5 on side 0, at least 6 on side 1) makes the direction tests `y < 9` and `y > 3` always true. One gap found and fixed: the generator never left the kicking side without active players, and the "nobody available" mutation passed. Real game: 1 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original.
+
+### Match engine, 44th batch — rolling ball (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `rolar_bola()` | 0x6bbe40 | thiscall | match_eng.cpp: loose ball (no owner at 0xf582, no 0xf57a) with momentum (0x8eaa). Play stopped: clears the momentum and 0x8ea9. Momentum 1 only moves if draw(1) ≥ draw(2); momentum ≤ 0 does not move. When it moves, it spends one momentum (and one of 0x8ea9) and takes a step along direction 0x8ed8: (220, 320) x − 1, (40, 140) x + 1, (130, 230) y − 1, below 50 or above 310 y + 1. Out of the pitch: ball out (0x6cd490) for the side in 0x8eab |
+
+**Commentary gate in the self-test.** In the self-test, the 0x6d6f70 gate only records the calls (the commentator is fake) instead of running the commentary: routines that narrate now have a synthetic self-test (before, only the real game). **Nested comparisons:** when a compared routine calls another one that also narrates (the rolling ball calls ball out), the inner comparison just passes the call on, and its commentary goes into the outer recording (the first version compared the inner original against an empty value).
+
+Self-test: 5.5 billion cases, 0 divergences (directions at the band edges, exits through all four sides, with commentary). Mutations: 9/12; the 3 that pass are equivalent: `v <= 0` × `v < 0` (momentum 0 already returned earlier), the lower limit 130 and the 50 (the earlier bands, 40 to 140, already catch those values). Real game: 1 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original.

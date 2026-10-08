@@ -420,3 +420,13 @@ Jogo real: 10 bilhões de comparações, 0 divergências. Carreira até 01/06/20
 No original, x e y começam com lixo da pilha, mas só são lidos depois de algum jogador ativo (sem ativo, a rotina sai antes). A comparação confere o objeto do motor inteiro (jogadores, grade e bola), mais o sorteio.
 
 Autoteste: 5,5 bilhões de casos, 0 divergências, com a grade do campo consistente (cada jogador na lista da casa dele) e formações com casas distintas. Mutações: 11/13. As duas que passam são equivalentes: o limite de y (no máximo 5 no lado 0, no mínimo 6 no lado 1) torna sempre verdadeiros os testes `y < 9` e `y > 3` da direção. Uma lacuna encontrada e corrigida: o gerador nunca deixava sem ativos o lado que sai, e a mutação do "sem ninguém" passava. Jogo real: 1 bilhão de comparações, 0 divergências. Carreira até 01/06/2002: Rust ×2 = original.
+
+### Motor de partidas, 44ª leva — bola rolando (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `rolar_bola()` | 0x6bbe40 | thiscall | match_eng.cpp: bola solta (sem dono em 0xf582, sem 0xf57a) com impulso (0x8eaa). Lance parado: zera o impulso e 0x8ea9. Impulso 1 só anda se sorteio(1) ≥ sorteio(2); impulso ≤ 0 não anda. Ao andar, gasta um de impulso (e um de 0x8ea9) e dá um passo pela direção 0x8ed8: (220, 320) x − 1, (40, 140) x + 1, (130, 230) y − 1, abaixo de 50 ou acima de 310 y + 1. Fora do campo: bola fora (0x6cd490) pelo lado de 0x8eab |
+
+**Porta de narração no autoteste.** No autoteste, a porta de 0x6d6f70 só grava as chamadas (o narrador é falso) em vez de rodar o comentário: as rotinas que narram passam a ter autoteste sintético (antes, só jogo real). **Comparações aninhadas:** quando uma rotina comparada chama outra que também narra (a bola rolando chama a bola fora), a comparação de dentro só passa a chamada adiante, e os comentários entram na gravação de fora (a primeira versão comparava a original de dentro com um valor vazio).
+
+Autoteste: 5,5 bilhões de casos, 0 divergências (direções nas bordas das faixas, saídas pelos quatro lados, com narração). Mutações: 9/12; as 3 que passam são equivalentes: `v <= 0` × `v < 0` (impulso 0 já saiu antes), o limite inferior 130 e o 50 (as faixas anteriores, de 40 a 140, já pegam esses valores). Jogo real: 1 bilhão de comparações, 0 divergências. Carreira até 01/06/2002: Rust ×2 = original.
