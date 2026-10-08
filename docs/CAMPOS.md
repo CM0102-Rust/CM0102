@@ -147,6 +147,7 @@ Ainda não usados por rotinas reescritas; registrados para a etapa 2 (competiç�
 | 0x683AD3 / 0x683E20 | número de rodadas derivado da quantidade de times (N − 1) |
 | 0x9086E0 | partidas montadas à mão (MLS); 0x68B100 cria a fase, 0x85C260 e 0x5AA680 registram cada partida |
 | 0xADADFC | competição por id (id × 4) |
+| fase +0x52 | marcas da fase; o bit 2 liga a numeração fixa do elenco (testado em squad_manager.cpp, 0x859DF4); cada competição grava o seu valor ao ser montada (ex.: 2 no Brasileiro, 0x42A621). Fonte: tópico 1540, página 2 |
 
 ## Finanças e estrutura do clube (para etapas futuras)
 

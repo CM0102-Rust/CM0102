@@ -147,6 +147,7 @@ Not yet used by rewritten routines; recorded for stage 2 (competitions, tables, 
 | 0x683AD3 / 0x683E20 | number of matchdays derived from the team count (N − 1) |
 | 0x9086E0 | hand-built fixtures (MLS); 0x68B100 creates the stage, 0x85C260 and 0x5AA680 register each match |
 | 0xADADFC | competition by id (id × 4) |
+| stage +0x52 | stage flags; bit 2 turns on fixed squad numbers (tested in squad_manager.cpp, 0x859DF4); each competition stores its value when it is built (e.g. 2 for the Brazilian league, 0x42A621). Source: topic 1540, page 2 |
 
 ## Finances and club facilities (for future stages)
 
