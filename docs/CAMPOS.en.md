@@ -189,6 +189,8 @@ Source: topic 1540, page 5 (Xeno, giovanisantana29 and others). Checked in 3.9.6
 | 0x54CEDB | leap year (divisible by 4, except centuries not divisible by 400) |
 | 0x642A70.. | real first-season fixtures for the Italian divisions (A 0x642A70, B 0x647230, C1 and C2 up to 0x65C8E0) |
 | 0x43F7F0 | currencies: per currency, the rate against the pound (double at 0xAD9CB8), the transfer fee list multiplier (0xAD9DA0) and the +/− button step (0xAD9CC0) |
+| 0x5999A0 / 0x5A0590 | gives money to a club (thiscall on the club's finances, argument the amount); 0x5A0590 finds the club's finances (e.g. 1,800,000 for reaching the Champions League group stage, 0x585803) |
+| [0xDE1F58] | UEFA coefficients: per nation, pointer, coefficient (float) and the Champions League, UEFA Cup and Intertoto places (page 28) |
 | 0x54AC4F | weekday from the year (0xAE2C92), the day of the year (0xAE2C90) and the leap year flag (0xAE2C94) |
 | 0x8CFA1E | limit of non-EU players in a match (the jump that applies it) |
 | 0x8C34E0 | carries out a transfer: in the record received, +8 buying club id, +0xC player id; club table at 0xAE23B4 and person table at 0xAE23BC (page 23) |

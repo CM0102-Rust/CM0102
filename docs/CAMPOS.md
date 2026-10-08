@@ -189,6 +189,8 @@ Fonte: tópico 1540, página 5 (Xeno, giovanisantana29 e outros). Conferidos no 
 | 0x54CEDB | ano bissexto (divisível por 4, exceto séculos não divisíveis por 400) |
 | 0x642A70.. | jogos reais da primeira temporada nas séries italianas (A 0x642A70, B 0x647230, C1 e C2 até 0x65C8E0) |
 | 0x43F7F0 | moedas: por moeda, a cotação em libras (double em 0xAD9CB8), o multiplicador da lista de valores de transferência (0xAD9DA0) e o passo dos botões +/− (0xAD9CC0) |
+| 0x5999A0 / 0x5A0590 | dá dinheiro a um clube (thiscall nas finanças do clube, argumento o valor); 0x5A0590 acha as finanças do clube (ex.: 1 800 000 por entrar na fase de grupos da Liga dos Campeões, 0x585803) |
+| [0xDE1F58] | coeficientes da UEFA: por nação, ponteiro, coeficiente (float) e as vagas na Liga dos Campeões, Copa da UEFA e Intertoto (página 28) |
 | 0x54AC4F | dia da semana a partir do ano (0xAE2C92), do dia do ano (0xAE2C90) e da marca de ano bissexto (0xAE2C94) |
 | 0x8CFA1E | limite de jogadores de fora da UE numa partida (o salto que o aplica) |
 | 0x8C34E0 | executa uma transferência: no registro recebido, +8 id do clube comprador, +0xC id do jogador; tabelas de clubes em 0xAE23B4 e de pessoas em 0xAE23BC (página 23) |
