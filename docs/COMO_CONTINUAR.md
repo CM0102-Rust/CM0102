@@ -29,6 +29,7 @@ Uma leva tem de 1 a 10 rotinas do motor de partidas (`match_eng.cpp`, `match_pl.
 
 ## Armadilhas já conhecidas
 
+- Estado do autoteste que vale para o caso inteiro (tabelas A/B, globais, blocos de jogadores): guardar e restaurar na própria seção. Valores inválidos podem abrir a caixa de erro de uma rotina original; com o jogo oculto, o teste para sem gastar processador (o `mutacoes.py` espera o limite). Não desviar getters de 4 bytes (0x714d30 travou o jogo).
 - O que depende do banco carregado (tática do clube em 0xde1d08, pessoas reais) não roda no autoteste sintético, que acontece antes do banco. Para essas rotinas: `mutacoes.py --jogo AAAA-MM-DD` (mutações no jogo real em comparação). Mutar um caminho que o jogo real quase não usa (cobrador designado dos clubes do computador) não prova nada: mirar o caminho comum.
 - Gerador do autoteste: um sorteio (`s.proximo()`) por valor. Rotações de um mesmo número (`rotate_left`) saem correlacionadas e podem nunca produzir alguns casos (mutações passam por isso, não por equivalência). E manter a grade consistente: mais de 11 jogadores numa casa corrompe as listas, e um comparador que lê ponteiros delas (0x6f46b0) cai dentro da DLL.
 - O cargo não recompila um `.rs` restaurado com data antiga: `mutacoes.py` atualiza a data; à mão, conferir se apareceu "Compiling" e se a DLL foi copiada para `jogo/`.

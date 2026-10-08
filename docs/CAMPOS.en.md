@@ -289,3 +289,7 @@ Map published by the author of the modern European competitions patch. The marke
 | — | according to the community, always loaded: negative PA, capped player, future transfer; clubless players follow these cut-offs |
 
 All five points checked. Relevant for the database-load stage: the rewritten version must pick exactly the same players.
+
+## Promotion and relegation between leagues (topic 3189)
+
+When each league is built (e.g. Greece, 1st division at 0x5EAEF1..0x5EAF23 and 2nd at 0x5EBE3B..0x5EBE47): +0xC1 automatic relegation places, +0xBE automatic promotion places, +0x20 the league teams drop to and +0x1C the league teams go up to (ids at 0x9CF870, 0x9CF86C). Changing only one side (zeroing the places without adjusting the neighbouring league) gives the gre_second.cpp 483 error (`push 0x1E3` at 0x5EBF5F) or a freeze: linked leagues must stay consistent. Checked.

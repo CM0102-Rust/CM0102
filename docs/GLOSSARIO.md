@@ -88,6 +88,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6e9540 | `decidir_falta` | decide_foul |
 | 0x700420 | `defesa_do_goleiro` | goalkeeper_save |
 | 0x6f56c0 | `desgastar` | tire (fatigue) |
+| 0x5b58e0 | `designado_da_posicao` | designated_for_position |
 | 0x715f30 | `diferenca_do_jogador` | difference_of_player |
 | 0x6c4130 | `diferenca_jogador` | player_difference |
 | 0x6c4180 | `diferenca_lado` | side_difference |
@@ -153,6 +154,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6ce110 | `manter_posicao_um` | hold_position_one |
 | 0x7163f0 | `marca_800000` | mark_800000 |
 | 0x6bbf60 | `marcacao_individual` | individual_marking |
+| 0x7160f0 | `marcado_designado` | designated_marked |
 | 0x6d4330 | `marcador_direto` | direct_marker |
 | 0x6d10a0 | `marcar_craques` | mark_stars |
 | 0x5b5910 | `marcar_posicao` | mark_position |

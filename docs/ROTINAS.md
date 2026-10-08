@@ -560,3 +560,12 @@ Sem autoteste sintético: as três arrumam os 40 jogadores na grade (um gerador 
 | `marcar_craques(lado)` | 0x6d10a0 | thiscall, ret 4 | match_eng.cpp: liga o bit 0x800000 na formação do lado para os jogadores ativos com nota acima de 8500: 10 × (+0x43 + +0x33 + +0x27 da pessoa) + forma (+0x4d), pelo papel (0x717410): goleiro fora; 2 +500; 4 −1000 (−500 com 0x800 ou 0x80); 8 −300 (sem 0x800 e 0x80); 0x10 +1000; 0x20 +2000 |
 
 Mutações: 12/12 (o caso de erro de `gravar_casa` abre a caixa do jogo e fica fora do autoteste). Primeira leva com a base de 200 mil casos (194 s). Jogo real: 10 bilhões de comparações, 0 divergências. Carreira até 01/06/2002: Rust ×2 = original (c76ad0ff6ce3daa6).
+
+### Motor de partidas, 59ª leva — marcação designada (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `designado_da_posicao(posicao)` | 0x5b58e0 | thiscall, ret 4 | formation.cpp: a pessoa designada para a posição (índice em +0x5bf + 4 × posição, no vetor de pessoas de 0xae23bc, 110 bytes cada); índice negativo: 0 |
+| `marcado_designado()` | 0x7160f0 | thiscall | match_pl.cpp: o adversário que o jogador marca individualmente, ou 0. Precisa da marca 4 na casa da posição; procura entre os adversários ativos a ficha designada para a posição. Com a marca 0x10: se a formação adversária tem centroavante pelo meio (bit 0x10000000 de +0x187b) ou o byte +0xaf do outro lado passa de 1, o jogador com 0x106 não marca; e, se o marcado tem as tabelas A e B diferentes (seta para outra casa) e a B sem a marca de ataque 0x40, o jogador com 0x106 também não marca |
+
+Mutações: 9/9. **Duas armadilhas.** (1) Um desvio na 0x714d30 (o lado do jogador, 4 bytes: lê +0x27 e retorna) travou o jogo no início; um getter assim não vale desvio e ficou de fora. (2) O teste mexia nas tabelas A e B, que valem para o caso inteiro, e uma seção seguinte do autoteste parava sem gastar processador (provavelmente a caixa de erro de uma rotina original, invisível com o jogo oculto); o teste agora guarda e restaura as tabelas.

@@ -289,3 +289,7 @@ Mapa publicado por quem fez o patch das competições europeias modernas. Os pon
 | — | segundo a comunidade, sempre entram: PA negativo, jogador com convocação pela seleção, transferência futura; jogadores sem clube seguem esses cortes |
 
 Os cinco pontos foram conferidos. Vale para a etapa da carga do banco: a versão reescrita precisa escolher exatamente os mesmos jogadores.
+
+## Promoção e rebaixamento entre ligas (tópico 3189)
+
+Na montagem de cada liga (ex.: Grécia, 1ª divisão em 0x5EAEF1..0x5EAF23 e 2ª em 0x5EBE3B..0x5EBE47): +0xC1 vagas de rebaixamento direto, +0xBE de acesso direto, +0x20 a liga para onde se cai e +0x1C a liga para onde se sobe (ids em 0x9CF870, 0x9CF86C). Mudar só um lado (zerar as vagas sem ajustar a liga vizinha) dá o erro gre_second.cpp 483 (`push 0x1E3` em 0x5EBF5F) ou trava: as ligas ligadas precisam ficar coerentes. Conferido.

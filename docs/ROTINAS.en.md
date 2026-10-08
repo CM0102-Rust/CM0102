@@ -562,3 +562,12 @@ No synthetic self-test: the three arrange the 40 players on the grid (a syntheti
 | `marcar_craques(lado)` | 0x6d10a0 | thiscall, ret 4 | match_eng.cpp: sets bit 0x800000 in the side's formation for active players rated above 8500: 10 × (person +0x43 + +0x33 + +0x27) + form (+0x4d), by role (0x717410): goalkeeper out; 2 +500; 4 −1000 (−500 with 0x800 or 0x80); 8 −300 (without 0x800 and 0x80); 0x10 +1000; 0x20 +2000 |
 
 Mutations: 12/12 (the error case of `gravar_casa` opens the game's box and stays out of the self-test). First batch with the 200-thousand-case base (194 s). Real game: 10 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original (c76ad0ff6ce3daa6).
+
+### Match engine, 59th batch — designated marking (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `designado_da_posicao(posicao)` | 0x5b58e0 | thiscall, ret 4 | formation.cpp: the person designated for the position (index at +0x5bf + 4 × position, in the person array at 0xae23bc, 110 bytes each); negative index: 0 |
+| `marcado_designado()` | 0x7160f0 | thiscall | match_pl.cpp: the opponent the player man-marks, or 0. Needs mark 4 on the position's square; looks among the active opponents for the record designated for the position. With mark 0x10: if the opposing formation has a centre forward (bit 0x10000000 of +0x187b) or the other side's byte +0xaf is above 1, a player with 0x106 does not mark; and, if the marked player has tables A and B different (arrow to another square) and B without the attack mark 0x40, a player with 0x106 does not mark either |
+
+Mutations: 9/9. **Two traps.** (1) A hook on 0x714d30 (the player's side, 4 bytes: reads +0x27 and returns) froze the game at startup; such a getter is not worth a hook and was left out. (2) The test changed tables A and B, which are shared by the whole case, and a later section of the self-test stopped without using the CPU (probably an original routine's error box, invisible with the game hidden); the test now saves and restores the tables.
