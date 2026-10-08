@@ -141,7 +141,7 @@ Not yet used by rewritten routines; recorded for stage 2 (competitions, tables, 
 
 | Where | What it is |
 |---|---|
-| stage +0xB1 | league table: one 0x3B-byte row per team (+0x00 club, +0x04 position, +0x11 played, +0x15/+0x17 goals for/against, +0x19 points, +0x37 fate, +0x39/+0x3A best and worst reachable position) |
+| stage +0xB1 | league table: one 0x3B-byte row per team (+0x00 club, +0x04 position, +0x11 played, +0x12/+0x13/+0x14 won/drawn/lost, +0x15/+0x17 goals for/against, +0x19 points; the same columns home-only from +0x1F and away-only from +0x2D, summed at 0x686458 after each game; +0x37 destination, +0x39/+0x3A best and worst possible position) |
 | stage +0xA7 [2] | games needed per team (computed once and stored in the save) |
 | stage +0xC5..+0xC8 | tiebreak rules |
 | stage +0xC9 | stage end date (the stage ends by date, compared with 0xAE2C90/0xAE2C92) |
@@ -183,6 +183,7 @@ Source: topic 1540, page 5 (Xeno, giovanisantana29 and others). Checked in 3.9.6
 | 0x96D808 | constant 71.0 (float) compared in match_pl.cpp (0x706D1B, 0x706DEE, routine not yet rewritten); according to the community, the percentage of shots on target that do not go in (the more-goals patch changes it to 65); topic 1540, pages 21 and 22 |
 | 0x708A31 | the goal goes into the score: adds 1 to the side's goals byte (motor + 0xF5BD + 54 × side, the same one `placar_agregado` reads); page 24. The community also mentions a "brake" after 5 goals, not located yet |
 | 0x6BD98F | length of the first half on the engine clock (0x8ED4): 0x1EF = 495; the match ends at 0x3DE = 990 (the two limits `momento_marcado` and `placar_agregado` test); topic 1540, page 25 |
+| 0x6BA74C | in the human player's match, the jump back into the play-by-play loop with screen and commentary; making it unconditional runs the match like the computer's ones (page 30). 0x6B9ECA: adjustment of the screen percentages in the last 5 minutes. 0x71A3C0: commentary delay by speed (table at +0xBA9A6) |
 | 0x6B5B41.. | the match day looks for the next match in the list at [0xB67A50] + 0x19 (0x69-byte records; the match object starts at +4) |
 | 0x4CF5F0 | 80-byte (person, club) record, by the index at [0xAE2D0C] + 79 × person id, in [0xAE1050]; used by the engine (e.g. the captain's influence) |
 | stage +0xA7 (cups) | list of entering teams, 6-byte slots (+0 club, +4, +5); the Northern Irish Cup setup (0x78AC90) first places 20 first- and second-division teams and then 12 from the lower ones (page 26) |
