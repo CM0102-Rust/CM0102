@@ -611,3 +611,12 @@ Mutações: 8/8 no autoteste (clube, seleção e segunda seleção que volta à 
 | `lado_sob_controle(lado)` | 0x6d42a0 | thiscall, ret 4 | match_eng.cpp: não nas partidas de tipo +0x3a 1 ou 9. Clube do lado dirigido por humano (0x600a50, `qualquer` = byte +0x40 da partida): pela marca 0x4000 do bloco do lado (0x9766 + 6371 × lado). Senão: o modo do lado em +0x1ab é 3 ou 4 |
 
 Mutações: 5/5 no autoteste (montado sobre o da 63ª leva). Junto: nos testes (jogo oculto), a DLL recusa o `DirectSoundCreate` (DSOUND, importado pelo número 1) com DSERR_NODRIVER; o jogo segue sem som e a carreira dá a mesma impressão.
+
+### Motor de partidas, 65ª leva — tabela tática do clube (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `linha_tatica(clube, humano)` | 0x8982b0 | stdcall, ret 8 (o `this` não é usado) | tactics.cpp: a linha do clube na tabela tática. Clube dirigido por humano (0x600a50 com 1, 1) e `humano` ligado: segunda seleção, −1; senão a linha do técnico depois dos clubes (0xae235c): pessoas (0xae2364) − id do técnico (+0xcf) − 1, ou + 15 numa seleção. Fora da faixa ou sem técnico: a original (caixa de erro). Nos outros casos, o id do clube |
+| `byte_tatico(clube, pos, humano)` | 0x898040 | thiscall, ret 0xc | tactics.cpp: byte `pos` (0..=10) da linha tática na tabela em +0x601 (0x91 bytes por linha, a partir de +0x86); linha −1: 0 |
+
+Mutações: 6/6 no autoteste. Junto: `simular.py --som` mantém o som do jogo (`CM_OCULTO=2`; uma variável de ambiente a mais mudaria a heap e a carreira).

@@ -613,3 +613,12 @@ Mutations: 8/8 in the self-test (club, national team and second national team go
 | `lado_sob_controle(lado)` | 0x6d42a0 | thiscall, ret 4 | match_eng.cpp: not in matches of type +0x3a 1 or 9. The side's club run by a human (0x600a50, `qualquer` = byte +0x40 of the match): by mark 0x4000 of the side's block (0x9766 + 6371 × side). Otherwise: the side's mode at +0x1ab is 3 or 4 |
 
 Mutations: 5/5 in the self-test (built on the 63rd batch's). Also: in the tests (hidden game), the DLL refuses `DirectSoundCreate` (DSOUND, imported by ordinal 1) with DSERR_NODRIVER; the game runs without sound and the career gives the same fingerprint.
+
+### Match engine, 65th batch — club tactics table (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `linha_tatica(clube, humano)` | 0x8982b0 | stdcall, ret 8 (`this` unused) | tactics.cpp: the club's row in the tactics table. Club run by a human (0x600a50 with 1, 1) and `humano` set: second national team, −1; otherwise the manager's row after the clubs (0xae235c): people (0xae2364) − manager id (+0xcf) − 1, or + 15 for a national team. Out of range or no manager: the original (error box). Otherwise, the club id |
+| `byte_tatico(clube, pos, humano)` | 0x898040 | thiscall, ret 0xc | tactics.cpp: byte `pos` (0..=10) of the tactics row in the table at +0x601 (0x91 bytes per row, from +0x86); row −1: 0 |
+
+Mutations: 6/6 in the self-test. Also: `simular.py --som` keeps the game's sound (`CM_OCULTO=2`; one more environment variable would shift the heap and the career).

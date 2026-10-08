@@ -69,6 +69,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5b57c0 | `byte_da_posicao` | position_byte |
 | 0x6d5cd0 | `byte_do_codigo` | code_byte |
 | 0x6cfda0 | `byte_do_lado` | side_byte |
+| 0x898040 | `byte_tatico` | tactics_byte |
 | 0x6ce9c0 | `calcular_percentuais` | compute_percentages |
 | 0x6bd5b0 | `caminho_livre` | clear_path |
 | 0x6c41b0 | `caminho_livre_ate` | clear_path_to |
@@ -149,6 +150,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cb930 | `limite` | limit |
 | 0x70df40 | `limite_jogador` | player_limit |
 | 0x6bba10 | `limpar_lance` | clear_move |
+| 0x8982b0 | `linha_tatica` | tactics_row |
 | 0x6c3aa0 | `linhas_defensivas` | defensive_lines |
 | 0x6cb780 | `mais_perto_do_gol` | closest_to_goal |
 | 0x6c30e0 | `mais_perto_no_lado` | closest_on_side |

@@ -73,6 +73,7 @@ EN = {
  'tecnico_9ace': 'manager_9ace', 'tecnico_9a06': 'manager_9a06', 'pessoa_e_registro': 'person_and_record',
  'clube_humano': 'human_club',
  'lado_sob_controle': 'side_under_control',
+ 'linha_tatica': 'tactics_row', 'byte_tatico': 'tactics_byte',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

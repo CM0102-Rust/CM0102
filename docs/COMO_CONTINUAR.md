@@ -29,6 +29,7 @@ Uma leva tem de 1 a 10 rotinas do motor de partidas (`match_eng.cpp`, `match_pl.
 
 ## Armadilhas já conhecidas
 
+- A impressão do modo de comparação (`--modo comparar`) não é critério e muda entre levas: a original e a Rust rodam as duas, e uma Rust que chama rotinas com desvio passa pelos comparadores delas. O critério é zero divergências e a mesma impressão nas carreiras Rust e original. Variável de ambiente nova no `simular.py` muda a heap e a impressão de referência: reaproveitar uma CM_* com valor do mesmo tamanho (ex.: `CM_OCULTO=2` para o som).
 - Não editar o `motor.rs` enquanto o `mutacoes.py` roda: no fim ele regrava o arquivo como estava no começo. Rotina de técnico humano: a carreira automática quase não passa por ela; as mutações precisam do autoteste sintético.
 - Rotina que devolve os casos de erro à original: uma mutação no caminho que decide "é erro" pode sumir, porque a original acerta o resultado. No autoteste, deixar o caminho errado cair num caso válido diferente (ex.: outra pessoa válida na vaga que a mutação leria).
 - Comparador de rotina que sorteia: passar `crate::aleatorio::REGIOES_DO_ESTADO` ao `lado_a_lado` e rodar a Rust dentro de `sem_contar`; senão a Rust sorteia a partir do estado que a original deixou. Variáveis de pilha lidas logo depois de um `call` cujo argumento ainda não foi retirado (`add esp, 4` depois): o deslocamento é 4 a menos. Mutação que soma a mesma constante a todos os candidatos não muda o escolhido (equivalente): trocar por uma que mude a ordem.

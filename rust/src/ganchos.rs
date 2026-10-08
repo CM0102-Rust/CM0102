@@ -133,7 +133,8 @@ unsafe extern "system" fn move_window(hwnd: *mut c_void, _x: i32, _y: i32, w: i3
 }
 
 /// `DirectSoundCreate` (DSOUND, importado so pelo numero 1) nos testes: sem placa de som
-/// (DSERR_NODRIVER). O jogo segue sem som, e o PC de quem usa fica em silencio.
+/// (DSERR_NODRIVER). O jogo segue sem som, e o PC de quem usa fica em silencio. `simular.py --som`
+/// mantem o som.
 unsafe extern "system" fn direct_sound_create(_guid: *const c_void, saida: *mut *mut c_void, _externo: *mut c_void) -> u32 {
     if !saida.is_null() {
         *saida = core::ptr::null_mut();
@@ -143,7 +144,8 @@ unsafe extern "system" fn direct_sound_create(_guid: *const c_void, saida: *mut 
 
 /// Chamado no carregamento da DLL (antes de o jogo criar a janela).
 pub unsafe fn instalar_cedo() {
-    if crate::apresentacao::oculto() {
+    // CM_OCULTO=2: oculto com som (o valor tem o mesmo tamanho; uma variavel a mais mudaria a heap)
+    if crate::apresentacao::oculto() && win::texto_ambiente("CM_OCULTO") != "2" {
         let n = para_cada_importacao(|dll, nome, _| {
             (dll.eq_ignore_ascii_case("DSOUND.dll") && nome.is_none()).then(|| direct_sound_create as *const () as usize)
         });

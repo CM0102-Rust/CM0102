@@ -31,6 +31,7 @@ A batch has from 1 to 10 match engine routines (`match_eng.cpp`, `match_pl.cpp`,
 
 ## Known traps
 
+- The comparison-mode fingerprint (`--modo comparar`) is not a criterion and changes between batches: both the original and the Rust version run, and a Rust version that calls hooked routines goes through their comparators. The criterion is zero divergences and the same fingerprint in the Rust and original careers. A new environment variable in `simular.py` shifts the heap and the reference fingerprint: reuse a CM_* with a value of the same length (e.g. `CM_OCULTO=2` for sound).
 - Do not edit `motor.rs` while `mutacoes.py` runs: at the end it rewrites the file as it was at the start. Human-manager routines: the automatic career barely goes through them; the mutations need the synthetic self-test.
 - A routine that hands error cases to the original: a mutation in the path that decides "it is an error" may vanish, because the original gets the result right. In the self-test, make the wrong path land on a different valid case (e.g. another valid person in the slot the mutation would read).
 - Comparator of a routine that draws numbers: pass `crate::aleatorio::REGIOES_DO_ESTADO` to `lado_a_lado` and run the Rust side inside `sem_contar`; otherwise Rust draws from the state the original left. Stack variables read right after a `call` whose argument has not been popped yet (`add esp, 4` later): the offset is 4 less. A mutation that adds the same constant to every candidate does not change the pick (equivalent): replace it with one that changes the order.

@@ -64,7 +64,7 @@ def rodar(args, semente):
         'SystemRoot': raiz, 'windir': raiz, 'PATH': raiz + r'\system32;' + raiz,
         'TEMP': tempfile.gettempdir(), 'TMP': tempfile.gettempdir(),
         'CM_PARAR_EM': args.ate, 'CM_JANELA': '960x540',
-        'CM_OCULTO': '0' if args.visivel else '1',
+        'CM_OCULTO': '0' if args.visivel else ('2' if args.som else '1'),
         'CM_ORIGINAL': '1' if args.modo == 'original' else '0',
         'CM_COMPARAR': '1' if args.modo == 'comparar' else '0',
         'CM_RASTRO': os.environ.get('CM_RASTRO', '0000-00-00'),
@@ -104,6 +104,7 @@ def main():
     ap.add_argument('--modo', choices=['rust', 'original', 'comparar'], default='rust')
     ap.add_argument('--repetir', type=int, default=1)
     ap.add_argument('--visivel', action='store_true', help='mostra a janela (por padrao fica fora da tela)')
+    ap.add_argument('--som', action='store_true', help='mantem o som do jogo (por padrao os testes ocultos ficam mudos)')
     ap.add_argument('--limite', type=int, default=900, help='segundos maximos por execucao')
     ap.add_argument('--exe', default='cm0102-1080.exe')
     ap.add_argument('--cobertura', action='store_true', help='conta as chamadas das funcoes de jogo/cobertura.txt (gerado por cobertura.py)')
