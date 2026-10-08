@@ -285,8 +285,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6bc030, bytes: &[0x83, 0xec, 0x54, 0x53, 0x55] },
     Prologo { endereco: 0x5fe040, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x5fd6b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x600a50, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 180;
+const N: usize = 181;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3961,6 +3962,52 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     1
 }
 
+// ---------- sexagesima terceira leva: clube controlado por humano ----------
+
+/// { 0x600a50 } (human_manager.cpp): o clube e dirigido por um tecnico humano que decide por ele?
+/// O tecnico (`pessoa`, ou o do clube em +0xcf) tem de ser o do clube e um dos 16 humanos. Sem
+/// `sem_tatica`: ficam de fora os que tem 0x9ace (0x5fe040) ou +0x9a01 no registro. Com `forcar` ou
+/// `qualquer`: sim. Senao, selecao: 0x5fd6b0; clube: 0x5fd480. Se nao, e o clube e do segundo
+/// conjunto de selecoes (0x5409b0), repete com a selecao principal da nacao dele (0x53b3d0),
+/// ja sem `qualquer`. Clube nulo: a original (caixa de erro, zera 0xb67a34, 0).
+unsafe extern "C" fn clube_humano(clube: usize, sem_tatica: u32, qualquer: u8, pessoa: usize, forcar: u32) -> u32 {
+    let h = *(0xb63c98 as *const usize);
+    let (mut clube, mut qualquer, mut pessoa) = (clube, qualquer, pessoa);
+    let t9ace: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fe040usize);
+    let t9a06: unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8 = core::mem::transmute(0x5fd6b0usize);
+    let t9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd480usize);
+    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
+    loop {
+        if clube == 0 {
+            return orig::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(180)(0, sem_tatica, qualquer, pessoa, forcar);
+        }
+        if pessoa == 0 {
+            pessoa = *((clube + 0xcf) as *const usize);
+        }
+        let tecnico = *((clube + 0xcf) as *const usize);
+        if tecnico != 0 && pessoa == tecnico && *(pessoa as *const i32) >= (*(0xae2364 as *const i32)).wrapping_sub(16) {
+            let tatica = sem_tatica == 0
+                && (t9ace(h, pessoa) != 0 || matches!(tecnico_humano(h, pessoa), Ok(r) if *((r + 0x9a01) as *const u32) != 0));
+            if !tatica {
+                if forcar != 0 || qualquer != 0 {
+                    return 1;
+                }
+                let sim = if e_selecao(clube) != 0 { t9a06(h, pessoa, core::ptr::null_mut()) as u32 } else { t9a05(h, pessoa) };
+                if sim != 0 {
+                    return 1;
+                }
+            }
+        }
+        if segunda(clube) == 0 {
+            return 0;
+        }
+        qualquer = 0;
+        clube = principal(*((clube + 0x53) as *const usize));
+    }
+}
+
 // ---------- sexagesima segunda leva: tecnico humano (0x9ace, 0x9a06) ----------
 
 /// A pessoa (ou, sem ela, o tecnico humano atual) e o registro dela; `None` nos casos de erro do
@@ -7522,6 +7569,12 @@ unsafe extern "C" fn comparar_separar_mascara(m: u32, setor: *mut u16, lado: *mu
 }
 
 comparar_valor!(comparar_tecnico_9ace, tecnico_9ace, 178, (pessoa: usize) -> u32);
+unsafe extern "C" fn comparar_clube_humano(clube: usize, a: u32, b: u8, pessoa: usize, c: u32) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(180)(clube, a, b, pessoa, c);
+    let v = clube_humano(clube, a, b, pessoa, c);
+    PLACAR.registrar(r == v, || format!("clube_humano({:#x}, {}, {}, {:#x}, {}) original={} rust={}", clube, a, b, pessoa, c, r, v));
+    r
+}
 unsafe extern "thiscall" fn comparar_tecnico_9a06(this: usize, pessoa: usize, saida: *mut u32) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8>(179);
     let reg: Vec<(usize, usize)> = if saida.is_null() { vec![] } else { vec![(saida as usize, 4)] };
@@ -7874,6 +7927,7 @@ pub unsafe fn instalar(comparando: bool) {
         quem_marcar as *const () as usize,
         tecnico_9ace as *const () as usize,
         tecnico_9a06 as *const () as usize,
+        clube_humano as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -8056,6 +8110,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_quem_marcar as *const () as usize,
         comparar_tecnico_9ace as *const () as usize,
         comparar_tecnico_9a06 as *const () as usize,
+        comparar_clube_humano as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -8126,6 +8181,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_selecao_principal", "motor_selecao_b",
         "motor_quem_marcar",
         "motor_tecnico_9ace", "motor_tecnico_9a06",
+        "motor_clube_humano",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -9595,6 +9651,44 @@ pub unsafe fn autoteste(casos: u64) {
                 let mut saida62 = 7u32;
                 let sp = if (h56 >> 55) % 2 == 0 { core::ptr::null_mut() } else { &mut saida62 as *mut u32 };
                 comparar_tecnico_9a06(obj56.as_ptr() as usize, quem62, sp);
+                // sexagesima terceira leva: clube controlado por humano (clube, selecao e segunda selecao
+                // que volta para a principal; tecnico do clube, outro ou nenhum; com e sem tatica)
+                let h63 = s.proximo();
+                let globais63 = [0xb63c98usize, 0xae235c, 0xae2350, 0xae23b4, 0xae23a8];
+                let antes63: Vec<u32> = globais63.iter().map(|&a| *(a as *const u32)).collect();
+                *(0xb63c98 as *mut usize) = obj56.as_ptr() as usize;
+                *(0xae235c as *mut i32) = 5000;
+                *(0xae2350 as *mut i32) = 200;
+                for k in 0..16usize {
+                    let r = regs56 + 42735 * k;
+                    if (h63 >> k) & 1 == 0 {
+                        *((r + 0x9ace) as *mut u32) = 0;
+                    }
+                    if (h63 >> (k + 16)) & 1 == 0 {
+                        *((r + 0x9a01) as *mut u32) = 0;
+                    }
+                }
+                let tecnicos63 = [0usize, pessoa62.as_ptr() as usize, outra62.as_ptr() as usize];
+                let mut clube_b63 = [0u8; 0x100];
+                *(clube_b63.as_mut_ptr() as *mut i32) = 100;
+                *(clube_b63.as_mut_ptr().add(0xcf) as *mut usize) = tecnicos63[((h63 >> 34) % 3) as usize];
+                let nacao63 = [0i32; 4];
+                *(0xae23b4 as *mut usize) = (clube_b63.as_ptr() as usize).wrapping_sub(581 * 4600);
+                *(0xae23a8 as *mut u32) = 1;
+                let mut clube_a63 = [0u8; 0x100];
+                *(clube_a63.as_mut_ptr() as *mut i32) = [100i32, 4650, 4850][((h63 >> 36) % 3) as usize];
+                *(clube_a63.as_mut_ptr().add(0xcf) as *mut usize) = tecnicos63[((h63 >> 38) % 3) as usize];
+                *(clube_a63.as_mut_ptr().add(0x53) as *mut usize) = nacao63.as_ptr() as usize;
+                comparar_clube_humano(
+                    clube_a63.as_ptr() as usize,
+                    ((h63 >> 40) & 1) as u32,
+                    ((h63 >> 41) & 1) as u8,
+                    tecnicos63[((h63 >> 42) % 3) as usize],
+                    ((h63 >> 44) % 3 == 0) as u32,
+                );
+                for (i, &a) in globais63.iter().enumerate() {
+                    *(a as *mut u32) = antes63[i];
+                }
                 *(0xb74c26 as *mut u32) = antes_vaga0;
                 *(tab56 as *mut usize) = id56.as_ptr() as usize;
                 comparar_tecnico_9a05(obj56.as_ptr() as usize, quem56);

@@ -595,3 +595,11 @@ Mutações no jogo real (`--jogo`): 11/11. A `q_reput` original somava 1 a todas
 | `tecnico_9a06(pessoa, saida)` | 0x5fd6b0 | thiscall, ret 8 | human_manager.cpp: byte +0x9a06 ≠ 0? Com clube (+0x24) de nação com +0x88 < 400: falso e `saida` = 1; `saida` começa em 0 |
 
 Primeira leva lida a partir do pseudocódigo do Ghidra (`descompilar.py`). Mutações: 6/6. A `t_atual` (pegar a vaga 0 em vez da do técnico atual) passou na primeira rodada: quando a pessoa errada não resolve, a rotina devolve o caso à original, que acerta, e o erro some. O autoteste agora põe na vaga 0 outra pessoa válida, e a mutação é pega.
+
+### Motor de partidas, 63ª leva — clube controlado por humano (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `clube_humano(clube, sem_tatica, qualquer, pessoa, forcar)` | 0x600a50 | cdecl | human_manager.cpp: o clube é dirigido por um técnico humano que decide por ele? O técnico (`pessoa`, ou o do clube em +0xcf) tem de ser o do clube e um dos 16 humanos. Sem `sem_tatica`, ficam de fora os que têm 0x9ace (0x5fe040) ou +0x9a01. Com `forcar` ou `qualquer`: sim. Senão, seleção: 0x5fd6b0; clube: 0x5fd480. Se não, e o clube é do segundo conjunto de seleções (0x5409b0), repete com a seleção principal da nação (0x53b3d0), sem `qualquer`. Clube nulo: a original (caixa de erro) |
+
+Mutações: 8/8 no autoteste (clube, seleção e segunda seleção que volta à principal; técnico do clube, outro ou nenhum; com e sem tática). No jogo real só 2/8 apareciam: a carreira automática usa pouco essa rotina. **Armadilha:** editar o `motor.rs` enquanto o `mutacoes.py` roda perde a edição, porque no fim ele regrava o arquivo inteiro como estava no começo.

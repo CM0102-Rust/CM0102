@@ -597,3 +597,11 @@ Mutations in the real game (`--jogo`): 11/11. The original `q_reput` added 1 to 
 | `tecnico_9a06(pessoa, saida)` | 0x5fd6b0 | thiscall, ret 8 | human_manager.cpp: byte +0x9a06 ≠ 0? With a club (+0x24) whose nation has +0x88 < 400: false and `saida` = 1; `saida` starts at 0 |
 
 First batch read from Ghidra's pseudocode (`descompilar.py`). Mutations: 6/6. `t_atual` (taking slot 0 instead of the current manager's) passed in the first round: when the wrong person does not resolve, the routine hands the case to the original, which gets it right, hiding the error. The self-test now puts another valid person in slot 0, and the mutation is caught.
+
+### Match engine, 63rd batch — club controlled by a human (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `clube_humano(clube, sem_tatica, qualquer, pessoa, forcar)` | 0x600a50 | cdecl | human_manager.cpp: is the club run by a human manager who decides for it? The manager (`pessoa`, or the club's at +0xcf) must be the club's and one of the 16 humans. Without `sem_tatica`, those with 0x9ace (0x5fe040) or +0x9a01 are excluded. With `forcar` or `qualquer`: yes. Otherwise, national team: 0x5fd6b0; club: 0x5fd480. If not, and the club is in the second set of national teams (0x5409b0), repeat with the nation's main national team (0x53b3d0), without `qualquer`. Null club: the original (error box) |
+
+Mutations: 8/8 in the self-test (club, national team and second national team going back to the main one; the club's manager, another or none; with and without tactics). In the real game only 2/8 showed: the automatic career uses this routine little. **Trap:** editing `motor.rs` while `mutacoes.py` runs loses the edit, because at the end it rewrites the whole file as it was at the start.
