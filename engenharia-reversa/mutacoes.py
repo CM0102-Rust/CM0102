@@ -59,6 +59,10 @@ def autoteste():
 def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
+    import psutil
+    abertos = [q.pid for q in psutil.process_iter(['name']) if (q.info['name'] or '').lower().startswith('cm0102')]
+    if abertos:
+        sys.exit('ja ha um jogo aberto (pid %s): um teste por vez (outra rodada ainda rodando?)' % abertos)
     lista = {}
     exec(open(sys.argv[1], encoding='utf-8').read(), lista)
     mutacoes = lista['MUTACOES']

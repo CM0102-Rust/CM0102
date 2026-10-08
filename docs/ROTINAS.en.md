@@ -480,3 +480,30 @@ First routines outside `match_*.cpp`: they unlock engine integrators that depend
 | `separar_mascara(m, &setor, &lado)` | 0x5b73a0 | cdecl | formation.cpp: the first sector bit (1..0x40) and side bit (0x80, 0x100, 0x200 also with bit 1, 0x400, 0x800) |
 
 Mutations: 11/11. Real game (batches 45 to 49 together): 1 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original.
+
+### Match engine, 50th batch — second national team and aggregate score (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `e_segunda_selecao(clube)` | 0x5409b0 | cdecl | Database.cpp: the id is at or after total clubs − nations (0xae235c − 0xae2350) |
+| `placar_agregado(lado, &casa, &fora, &classificado, &ida, &fase3, bonus)` | 0x6ce310 | thiscall, ret 0x1c, `al` | match_eng.cpp: goals of this match (0xf5bd/0xf5f3, swapped for side 1) plus the first leg's stored in the match object (+0x4b/+0x4c; 0xff = no first leg); `fase3` from the units digit of +0x30; with the aggregate level (plus the bonus), without bit 4 of +0x38 and, with bit 0x4000, only after time 0x3de, it decides on away goals. Returns 1 if through, else home − away |
+
+Mutations: 11/11.
+
+### Match engine, 51st batch — direct marker (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `marcador_direto(lado, k)` | 0x6d4330 | thiscall, ret 8, `al` | match_eng.cpp: the opponent with the mirrored role (sector: 2/4 ↔ 0x40, 8 ↔ 0x20, 0x10 ↔ 0x10; side: 0x80 ↔ 0x800, 0x100 ↔ 0x400, 0x200 ↔ 0x200); with nobody, the nearest by the distance table with the mirrored formation (0x5b73a0). −1 for a goalkeeper or a player off |
+
+**Correlated generator.** The test's role tables came from rotations of the same number (`rotate_left` in steps of 3 bits): the remainder by 9 was so correlated that some sectors almost never appeared, and two mutations passed. Each entry now has its own draw. Mutations: 10/10.
+
+### Match engine, 52nd batch — take off the pitch (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `tirar_de_campo(jogador, modo)` | 0x6cdd50 | thiscall, ret 8 | match_eng.cpp: takes the player out of his square's list (the last one fills the gap) and undoes the markings (0x1aa and list 0x1ae). With mode −3, or being the stored goalkeeper (0xf59e/0xf5a2), and not a forward: picks who takes over the position, by the highest role score (forward 70 thousand, attacking midfielder 50 thousand, 0x10 15 thousand, others −5 thousand; +5 thousand for the flanks); the first candidate enters unfiltered, the next ones cannot be a goalkeeper or role 2 or 4. A human manager's team only picks on its own with mark 0x904b, not being a national team and without 0x5fd480 |
+
+**Intermittent crash explained.** The rare crashes inside the DLL (in `memcpy`, copying 1 byte from an invalid address) came from the 0x6f46b0 comparator: it saves byte +0x28 of the "moved" player, read from the square's list; with more than 11 players in a square (43rd batch generator), that player was garbage. The generator now puts each position in a distinct square (at most 4 per square with the y clamp). 43rd batch mutations redone with the new generator: the same. 52nd batch mutations: 13/14 (15 mil × 20 mil para o papel 0x10 é equivalente: só a ordem das pontuações importa). Real game (batches 50 to 52): 1 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original.
+
+**The reference fingerprint changed (in batches 50 to 52).** The Rust career gave c76ad0ff6ce3daa6 (2,357,335,216 draws), different from the earlier 7866d02de7578a90; bisection (`SEM_ROTINAS` in `motor.rs`) pointed to `e_segunda_selecao`, which always returns the same value as the original (checked over the whole season). The cause is the stack: in the simulation every hook runs on the private stack, including in "original" mode (the original goes through it in isolation), and the original 0x5409b0 leaves the caller's `esi` 0x204 bytes below the game's stack, garbage that some later routine reads. The "original" mode of the same build also gives c76ad0ff6ce3daa6: **the career is always compared with the original mode of the same build**, never with a remembered number. With a null club, the Rust version calls the original itself (the error path has effects).

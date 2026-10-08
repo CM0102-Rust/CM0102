@@ -24,11 +24,12 @@ Uma leva tem de 1 a 10 rotinas do motor de partidas (`match_eng.cpp`, `match_pl.
 4. **Provar** (os quatro critérios de `ROTINAS.md`):
    1. Autoteste com mutações: escreva a lista em `mutacoes/levaNN.py` (veja os exemplos) e rode `python mutacoes.py mutacoes\levaNN.py`. A base tem de dar 0 divergências e cada mutação tem de ser acusada (divergência ou exceção). A que passar ou é lacuna do teste (corrigir o gerador) ou é equivalente pelos valores possíveis (documentar por quê).
    2. Jogo real: `python simular.py --ate 2002-06-01 --motor sim --modo comparar --limite 900` (0 divergências no `jogo\ddraw.log`).
-   3. Carreira: `python simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2`. A impressão digital tem de ser igual à do original (`--modo original`); hoje, `7866d02de7578a90` com 2.356.606.166 sorteios.
+   3. Carreira: `python simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2`. A impressão digital tem de ser igual à do modo original **da mesma compilação** (`--modo original`; o conjunto de desvios muda o lixo de pilha nos dois modos, e o número de referência muda com ele). Nas levas 50 a 52, `c76ad0ff6ce3daa6` com 2.357.335.216 sorteios.
 5. **Registrar.** Seção da leva em `ROTINAS.md` e no `ROTINAS.en.md`, tradução dos nomes novos em `glossario.py` (gera `GLOSSARIO.md` e `.en.md`), estado em `wiki/index.md`, uma linha em `wiki/log.md`, commit e push.
 
 ## Armadilhas já conhecidas
 
+- Gerador do autoteste: um sorteio (`s.proximo()`) por valor. Rotações de um mesmo número (`rotate_left`) saem correlacionadas e podem nunca produzir alguns casos (mutações passam por isso, não por equivalência). E manter a grade consistente: mais de 11 jogadores numa casa corrompe as listas, e um comparador que lê ponteiros delas (0x6f46b0) cai dentro da DLL.
 - O cargo não recompila um `.rs` restaurado com data antiga: `mutacoes.py` atualiza a data; à mão, conferir se apareceu "Compiling" e se a DLL foi copiada para `jogo/`.
 - Em `asm!`, ponteiros que precisam sobreviver a uma chamada vão em registrador preservado (`edi`, `esi`), não em `eax`.
 - O gerador do autoteste pode sobrescrever campos de que outras rotinas dependem (por exemplo, o ponteiro do motor em 0x19e do jogador). Uma queda no autoteste se localiza pelo mapa do linker: `cargo rustc --release --lib -- -C link-arg=/MAP:target/ddraw.map`.

@@ -31,6 +31,7 @@ A batch has from 1 to 10 match engine routines (`match_eng.cpp`, `match_pl.cpp`,
 
 ## Known traps
 
+- Self-test generator: one draw (`s.proximo()`) per value. Rotations of the same number (`rotate_left`) come out correlated and may never produce some cases (mutations pass because of that, not because they are equivalent). And keep the grid consistent: more than 11 players in a square corrupts the lists, and a comparator that reads pointers from them (0x6f46b0) crashes inside the DLL.
 - Cargo does not recompile a `.rs` restored with an old timestamp: `mutacoes.py` updates the timestamp; by hand, check that "Compiling" appeared and that the DLL was copied to `jogo/`.
 - In `asm!`, pointers that need to survive a call go in a preserved register (`edi`, `esi`), not in `eax`.
 - The self-test generator may overwrite fields that other routines depend on (for example, the engine pointer at 0x19e of the player). A crash in the self-test is located through the linker map: `cargo rustc --release --lib -- -C link-arg=/MAP:target/ddraw.map`.

@@ -478,3 +478,30 @@ Primeiras rotinas fora de `match_*.cpp`: liberam integradoras do motor que depen
 | `separar_mascara(m, &setor, &lado)` | 0x5b73a0 | cdecl | formation.cpp: o primeiro bit de setor (1..0x40) e o de lado (0x80, 0x100, 0x200 também com o bit 1, 0x400, 0x800) |
 
 Mutações: 11/11. Jogo real (levas 45 a 49 juntas): 1 bilhão de comparações, 0 divergências. Carreira até 01/06/2002: Rust ×2 = original.
+
+### Motor de partidas, 50ª leva — segunda seleção e placar agregado (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `e_segunda_selecao(clube)` | 0x5409b0 | cdecl | Database.cpp: o id está a partir de total de clubes − nações (0xae235c − 0xae2350) |
+| `placar_agregado(lado, &casa, &fora, &classificado, &ida, &fase3, bonus)` | 0x6ce310 | thiscall, ret 0x1c, `al` | match_eng.cpp: gols desta partida (0xf5bd/0xf5f3, trocados com lado 1) somados aos da ida guardados no objeto da partida (+0x4b/+0x4c; 0xff = sem ida); `fase3` pelo algarismo das unidades de +0x30; com o agregado empatado (mais o bônus), sem o bit 4 de +0x38 e, com o bit 0x4000, só depois do tempo 0x3de, decide pelos gols fora. Devolve 1 classificado, senão casa − fora |
+
+Mutações: 11/11.
+
+### Motor de partidas, 51ª leva — marcador direto (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `marcador_direto(lado, k)` | 0x6d4330 | thiscall, ret 8, `al` | match_eng.cpp: o adversário com o papel espelhado (setor: 2/4 ↔ 0x40, 8 ↔ 0x20, 0x10 ↔ 0x10; lado: 0x80 ↔ 0x800, 0x100 ↔ 0x400, 0x200 ↔ 0x200); sem ninguém, o mais perto pela tabela de distâncias com a formação espelhada (0x5b73a0). −1 para goleiro ou jogador fora |
+
+**Gerador correlacionado.** As tabelas de papéis do teste vinham de rotações de um mesmo número (`rotate_left` de 3 em 3 bits): o resto por 9 saía tão correlacionado que alguns setores quase nunca apareciam, e duas mutações passavam. Agora cada entrada tem o seu sorteio. Mutações: 10/10.
+
+### Motor de partidas, 52ª leva — tirar de campo (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `tirar_de_campo(jogador, modo)` | 0x6cdd50 | thiscall, ret 8 | match_eng.cpp: tira o jogador da lista da casa (o último ocupa a vaga) e desfaz as marcações (0x1aa e a lista 0x1ae). Com modo −3, ou sendo o goleiro guardado (0xf59e/0xf5a2), e não sendo atacante: escolhe quem assume a posição, pela maior pontuação de papel (atacante 70 mil, meia ofensivo 50 mil, 0x10 15 mil, outros −5 mil; +5 mil pelos lados); o primeiro candidato entra sem filtro, os seguintes não podem ser goleiro nem papel 2 ou 4. Time de técnico humano só escolhe sozinho com a marca 0x904b, sem ser seleção e sem 0x5fd480 |
+
+**Queda intermitente explicada.** As quedas raras dentro da DLL (em `memcpy`, copiando 1 byte de um endereço inválido) vinham do comparador de 0x6f46b0: ele guarda o byte +0x28 do jogador "movido", lido da lista da casa; com mais de 11 jogadores numa casa (gerador da 43ª leva), esse jogador era lixo. O gerador agora põe cada posição numa casa distinta (no máximo 4 por casa com o limite de y). Mutações da 43ª refeitas com o gerador novo: as mesmas. Mutações da 52ª: 13/14 (15 mil × 20 mil para o papel 0x10 é equivalente: só a ordem das pontuações importa). Jogo real (levas 50 a 52): 1 bilhão de comparações, 0 divergências. Carreira até 01/06/2002: Rust ×2 = original.
+
+**A impressão de referência mudou (nas levas 50 a 52).** A carreira em Rust deu c76ad0ff6ce3daa6 (2.357.335.216 sorteios), diferente do 7866d02de7578a90 de antes; a bisseção (`SEM_ROTINAS` em `motor.rs`) apontou `e_segunda_selecao`, que devolve sempre o mesmo valor que a original (conferido em toda a temporada). A causa é a pilha: na simulação todo desvio roda na pilha particular, inclusive no modo "original" (a original passa por ela isolada), e a original de 0x5409b0 deixa o `esi` do chamador 0x204 bytes abaixo da pilha do jogo, lixo que alguma rotina adiante lê. O modo "original" da mesma compilação também dá c76ad0ff6ce3daa6: **a carreira se compara sempre com o modo original da mesma compilação**, nunca com um número memorizado. Com clube nulo, a versão Rust chama a própria original (o caminho de erro tem efeitos).

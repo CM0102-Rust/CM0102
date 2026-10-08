@@ -98,6 +98,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x70d690 | `dominio_do_lance` | control_of_move |
 | 0x5c6710 | `e_amistoso` | is_friendly |
 | 0x7103c0 | `e_o_guardado` | is_the_stored |
+| 0x5409b0 | `e_segunda_selecao` | is_second_national_team |
 | 0x53b900 | `e_selecao` | is_national_team |
 | 0x70d630 | `em_perigo` | in_danger |
 | 0x6cdd00 | `entrar_em_campo` | take_the_field |
@@ -147,6 +148,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c3010 | `mais_proximo_do_ponto` | nearest_to_point |
 | 0x6ce110 | `manter_posicao_um` | hold_position_one |
 | 0x7163f0 | `marca_800000` | mark_800000 |
+| 0x6d4330 | `marcador_direto` | direct_marker |
 | 0x5b5910 | `marcar_posicao` | mark_position |
 | 0x5b5270 | `marcas_da_posicao` | position_marks |
 | 0x7163c0 | `marcas_do_jogador_rot` | player_marks_rot |
@@ -168,6 +170,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f0630 | `pegar_bola` | take_ball |
 | 0x70df70 | `perto_do_gol` | near_goal |
 | 0x70def0 | `perto_do_proprio_gol` | near_own_goal |
+| 0x6ce310 | `placar_agregado` | aggregate_score |
 | 0x6bce20 | `pode_escolher` | can_choose |
 | 0x6c51e0 | `pontape_inicial` | kick_off |
 | 0x6cb6c0 | `por_diferenca` | by_difference |
@@ -206,6 +209,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5fd480 | `tecnico_9a05` | manager_9a05 |
 | 0x6b59a0 | `tem_jogo` | has_match |
 | 0x7164b0 | `teste_de_condicao` | condition_test |
+| 0x6cdd50 | `tirar_de_campo` | take_off_pitch |
 | 0x6ccb60 | `tracar_lance` | trace_move |
 | 0x4b0850 | `unidades` | units_digit |
 | 0x700bd0 | `valor_do_chute` | shot_value |

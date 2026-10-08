@@ -255,8 +255,15 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x5fd480, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x5b5a60, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x04, 0x3d, 0x08, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x5b73a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    // quinquagesima leva
+    Prologo { endereco: 0x5409b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x6ce310, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x0c] },
+    // quinquagesima primeira leva
+    Prologo { endereco: 0x6d4330, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x8a, 0x5c, 0x24, 0x14] },
+    // quinquagesima segunda leva
+    Prologo { endereco: 0x6cdd50, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 160;
+const N: usize = 164;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3936,6 +3943,297 @@ unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 {
     bola_fora_com(this, lado_b, &mut |t, a| comentar(t, a))
 }
 
+// ---------- quinquagesima segunda leva: tirar de campo ----------
+
+/// { 0x6cdd50 } (match_eng.cpp): tira o jogador de campo (expulsao ou substituicao). Sai da lista
+/// da casa dele na grade (o ultimo ocupa a vaga), desfaz as marcacoes (o marcado em 0x1aa e a lista
+/// 0x1ae dos que o marcam). Com `modo` = -1, so isso. Senao, se `modo` = -3 ou se ele e o guardado
+/// em 0xf59e/0xf5a2, e nao e atacante (0x40/0x20): escolhe quem assume a posicao dele (0x19), pela
+/// maior pontuacao (atacante 70 mil, meia ofensivo 50 mil, 0x10 15 mil, outros -5 mil; +5 mil pelos
+/// lados 0x80/0x800); o primeiro candidato entra sem filtro, os seguintes nao podem ser goleiro nem
+/// papel 2 ou 4. Goleiro tirado: o escolhido vira o guardado do lado. Time de tecnico humano (pessoa
+/// em 0x904d + 208 x lado entre os 16 tecnicos humanos, com classificacao em 0x5f e 0x5fd210 = 0) so
+/// escolhe sozinho com a marca 0x904b, sem ser selecao e sem 0x5fd480.
+/// Sem candidato: o original mostra uma caixa de erro e encerra o jogo (aqui, o mesmo encerramento).
+unsafe extern "thiscall" fn tirar_de_campo(this: usize, j: usize, modo: i8) {
+    let posicao = byte(j, 0x19);
+    if posicao < 0 {
+        return;
+    }
+    let casa = casa_da_grade(this, byte(j, 0x102), byte(j, 0x103)) as usize;
+    let l = byte(j, 0x27) as isize;
+    let lista = |i: isize| (casa as isize + 4 * (11 * l + i)) as *mut usize;
+    let n = (casa as isize + 0x58 + l) as *mut i8;
+    *lista(byte(j, 0x28) as isize) = *lista(*n as isize - 1);
+    *n = (*n).wrapping_sub(1);
+    let idx = byte(j, 0x28);
+    let movido = *lista(idx as isize);
+    if movido != 0 {
+        *((movido + 0x28) as *mut i8) = idx;
+    }
+    let marcado = (j + 0x1aa) as *mut usize;
+    if *marcado != 0 {
+        let na: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x714c60usize);
+        if na(*marcado, j) != 0 {
+            let tirar: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x714ca0usize);
+            tirar(*marcado, j);
+        }
+        *marcado = 0;
+    }
+    if byte(j, 0x101) != 0 {
+        let mut i: i8 = 0;
+        while i < byte(j, 0x101) {
+            let q = *((j + 0x1ae + 4 * i as usize) as *const usize);
+            if *((q + 0x1aa) as *const usize) == j {
+                *((q + 0x1aa) as *mut usize) = 0;
+            }
+            i += 1;
+        }
+        *((j + 0x101) as *mut i8) = 0;
+    }
+    if modo == -1 {
+        return;
+    }
+    if modo != -3 && j != *((this + 0xf5a2) as *const usize) && j != *((this + 0xf59e) as *const usize) {
+        return;
+    }
+    if f717410(j) & 0x40 != 0 || f717410(j) & 0x20 != 0 {
+        return;
+    }
+    let lado_j = byte(j, 0x27);
+    let bloco_tec = this as isize + 208 * lado_j as isize;
+    let tec = *((bloco_tec + 0x904d) as *const usize);
+    if tec != 0 {
+        let npes = *(0xae2364 as *const i32);
+        let id = *(tec as *const i32);
+        let gerente = *(0xb63c98 as *const usize);
+        let t9a01: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd210usize);
+        if id >= npes - 16 && id < npes && byte(tec, 0x5f) != 0 && t9a01(gerente, tec) == 0 {
+            if *((bloco_tec + 0x904b) as *const u8) == 0 {
+                return;
+            }
+            let partida = *((this + 0x4792) as *const usize);
+            let clube = *((partida + if lado_j == 0 { 0x1c } else { 0x20 }) as *const usize);
+            let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+            if selecao(clube) != 0 {
+                return;
+            }
+            let t9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd480usize);
+            if t9a05(gerente, *((bloco_tec + 0x904d) as *const usize)) != 0 {
+                return;
+            }
+        }
+    }
+    let mut melhor: i32 = -10000;
+    let mut escolhido = 0usize;
+    for k in 0..20usize {
+        let q = jogador_do_bloco(this, lado_j, k);
+        if byte(q, 0x19) < 0 || q == j {
+            continue;
+        }
+        if escolhido != 0 && (f717410(q) & 1 != 0 || f717410(q) & 4 != 0 || f717410(q) & 2 != 0) {
+            continue;
+        }
+        let r = f717410(q);
+        let mut v: i32 = if r & 0x40 != 0 {
+            70000
+        } else if r & 0x20 != 0 {
+            50000
+        } else if r & 0x10 != 0 {
+            15000
+        } else {
+            -5000
+        };
+        if r & 0x80 != 0 || r & 0x800 != 0 {
+            v += 5000;
+        }
+        if v > melhor || escolhido == 0 {
+            melhor = v;
+            escolhido = q;
+        }
+    }
+    if escolhido == 0 {
+        // o original mostra a caixa de erro e encerra (0x5cc7d0, 0x5a8f60, exit(-1))
+        *(0xb67a34 as *mut u32) = 0;
+        let a: unsafe extern "C" fn() = core::mem::transmute(0x5cc7d0usize);
+        let b: unsafe extern "C" fn() = core::mem::transmute(0x5a8f60usize);
+        let sair: unsafe extern "C" fn(i32) = core::mem::transmute(0x945934usize);
+        a();
+        b();
+        sair(-1);
+    }
+    *((escolhido + 0x19) as *mut i8) = posicao;
+    if f717410(j) == 1 {
+        let campo = if lado_j == 0 { 0xf59e } else { 0xf5a2 };
+        *((this + campo) as *mut usize) = escolhido;
+    }
+}
+
+// ---------- quinquagesima primeira leva: marcador direto ----------
+
+/// { 0x6d4330 } (match_eng.cpp): o marcador direto do jogador `k` do lado (indice no bloco do outro
+/// lado; -1 para goleiro ou jogador fora). Primeiro procura o papel espelhado: cada setor do jogador
+/// exige o oposto (2 ou 4 -> 0x40, 8 -> 0x20, 0x10 -> 0x10, 0x20 -> 8, 0x40 -> 4 ou 2) e um lado
+/// espelhado (0x80 <-> 0x800, 0x100 <-> 0x400, 0x200 <-> 0x200). Sem ninguem, o mais perto pela
+/// tabela de distancias, com a formacao espelhada (linha e coluna pela mascara, 0x5b73a0).
+unsafe extern "thiscall" fn marcador_direto(this: usize, lado_b: i8, k: i8) -> u8 {
+    let p = (this as isize + 0x4796 + 0x1be * (20 * lado_b as isize + k as isize)) as usize;
+    if byte(p, 0x19) < 0 || f717410(p) & 1 != 0 {
+        return 0xff;
+    }
+    let outro = (lado_b == 0) as i8;
+    let rp = f717410(p);
+    let rpl = rp as u8;
+    for k2 in 0..20usize {
+        let q = jogador_do_bloco(this, outro, k2);
+        if byte(q, 0x19) < 0 {
+            continue;
+        }
+        let rq = f717410(q);
+        let rql = rq as u8;
+        if (rpl & 6 != 0 && rql & 0x40 == 0)
+            || (rpl & 8 != 0 && rql & 0x20 == 0)
+            || (rpl & 0x10 != 0 && rql & 0x10 == 0)
+            || (rpl & 0x20 != 0 && rql & 8 == 0)
+            || (rpl & 0x40 != 0 && rql & 6 == 0)
+        {
+            continue;
+        }
+        let pares = [(0x80u16, 0x800u16), (0x100, 0x400), (0x200, 0x200), (0x400, 0x100), (0x800, 0x80)];
+        if pares.iter().any(|&(a, b)| rp & a != 0 && rq & b != 0) {
+            return k2 as u8;
+        }
+    }
+    let separar: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(0x5b73a0usize);
+    // ponytail: no original setor e lado comecam com lixo da pilha; so ficam sem valor com mascara invalida
+    let (mut setor, mut lado_m) = (0u16, 0u16);
+    separar(rp as u32, &mut setor, &mut lado_m);
+    let linha_p: i8 = match setor {
+        2 => 0,
+        4 => 1,
+        8 => 2,
+        0x10 => 3,
+        0x20 => 4,
+        0x40 => 5,
+        _ => lado_b,
+    };
+    let coluna_p: i8 = match lado_m {
+        0x80 => 1,
+        0x100 => 3,
+        0x200 => 4,
+        0x400 => 5,
+        0x800 => 7,
+        _ => 0,
+    };
+    let (mut linha_q, mut coluna_q) = (linha_p, k);
+    let mut melhor = f32::from_bits(0x447a0000); // 1000
+    let mut escolhido: i8 = -1;
+    for k2 in 0..20usize {
+        let q = jogador_do_bloco(this, outro, k2);
+        if byte(q, 0x19) < 0 || f717410(q) & 1 != 0 {
+            continue;
+        }
+        separar(f717410(q) as u32, &mut setor, &mut lado_m);
+        linha_q = match setor {
+            2 => 6,
+            4 => 5,
+            8 => 4,
+            0x10 => 3,
+            0x20 => 2,
+            0x40 => 1,
+            _ => linha_q,
+        };
+        coluna_q = match lado_m {
+            0x100 => 5,
+            0x80 => 7,
+            0x200 => 4,
+            0x800 => 1,
+            0x400 => 3,
+            _ => coluna_q,
+        };
+        let dc = (coluna_p as i32 - coluna_q as i32).abs() as i8;
+        let dr = (linha_p as i32 - linha_q as i32).abs() as i8;
+        let dist = if (0..=8).contains(&dc) && (0..=11).contains(&dr) {
+            f32_em(0xa15e44 + 4 * (dr as usize * 9 + dc as usize))
+        } else {
+            f32_em(0x96d2dc)
+        };
+        if escolhido == -1 || dist < melhor {
+            melhor = dist;
+            escolhido = k2 as i8;
+        }
+    }
+    escolhido as u8
+}
+
+// ---------- quinquagesima leva: segunda selecao e placar agregado ----------
+
+/// { 0x5409b0 } (Database.cpp): o clube e do segundo conjunto de selecoes (id a partir de total de
+/// clubes 0xae235c menos nacoes 0xae2350)? Clube nulo: o original mostra uma caixa de erro e zera
+/// 0xb67a34 (aqui, sem a caixa).
+unsafe extern "C" fn e_segunda_selecao(clube: usize) -> u32 {
+    if clube == 0 {
+        // o caminho de erro do original (mensagem e caixa) tem efeitos que mudam a carreira: o jogo
+        // real chama com clube nulo. Usa a propria original nesse caso.
+        return orig::<unsafe extern "C" fn(usize) -> u32>(160)(0);
+    }
+    let limite = (*(0xae235c as *const i32)).wrapping_sub(*(0xae2350 as *const i32));
+    (*(clube as *const i32) >= limite) as u32
+}
+
+/// { 0x6ce310 } (match_eng.cpp): placar agregado de um mata-mata. `casa`/`fora` recebem os gols
+/// desta partida (0xf5bd do lado 0, 0xf5f3 do lado 1; trocados com `lado` = 1), somados aos do jogo
+/// de ida guardados no objeto da partida (+0x4b, +0x4c; 0xff = sem ida, e `ida` fica 1 com ida).
+/// `fase3`: o algarismo das unidades de +0x30 e 3. Com o agregado empatado (mais 1 de bonus para o
+/// lado de `bonus`), sem o bit 4 de +0x38 e (com o bit 0x4000) so depois do tempo 0x3de: decide pelos
+/// gols fora (`classificado`). Devolve 1 classificado, senao casa - fora (byte).
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn placar_agregado(this: usize, lado_b: i8, casa: *mut i8, fora: *mut i8, classificado: *mut u8, ida: *mut u8, fase3: *mut u8, bonus: u8) -> u8 {
+    *casa = 0;
+    *fora = 0;
+    *classificado = 0;
+    *ida = 0;
+    *fase3 = 0;
+    let (este, outro) = if lado_b == 0 { (casa, fora) } else { (fora, casa) };
+    let (bonus_este, bonus_outro): (i8, i8) = match (lado_b == 0, bonus != 0) {
+        (true, true) => (1, 0),
+        (false, true) => (0, 1),
+        _ => (0, 0),
+    };
+    *este = byte(this, 0xf5bd);
+    *outro = byte(this, 0xf5f3);
+    let partida = *((this + 0x4792) as *const usize);
+    let unidades_: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(0x4b0850usize);
+    if unidades_(*((partida + 0x30) as *const i16) as i32) == 3 {
+        *fase3 = 1;
+    }
+    let ida_casa = byte(partida, 0x4b);
+    if ida_casa != -1 {
+        *este = (*este).wrapping_add(ida_casa);
+        *outro = (*outro).wrapping_add(byte(partida, 0x4c));
+        *ida = 1;
+        if *este as i32 + bonus_este as i32 == *outro as i32 + bonus_outro as i32 {
+            let f = *((partida + 0x38) as *const u16);
+            let tempo_ok = f & 0x4000 == 0 || *((this + 0x8ed4) as *const i16) > 0x3de;
+            if f & 4 == 0 && tempo_ok {
+                let gols_fora = *((this + 0xf5f3) as *const u8) as i32;
+                if lado_b == 0 {
+                    if gols_fora + (bonus_este as i32) < ida_casa as i32 {
+                        *classificado = 1;
+                    }
+                } else if gols_fora + (bonus_outro as i32) > ida_casa as i32 {
+                    *classificado = 1;
+                }
+            }
+        }
+    }
+    if *classificado != 0 {
+        1
+    } else {
+        (*casa as u8).wrapping_sub(*fora as u8)
+    }
+}
+
 // ---------- quadragesima nona leva: tecnico humano e mascaras de formacao ----------
 
 /// Registro do tecnico humano da pessoa (human_manager.cpp): os 16 tecnicos humanos sao as 16
@@ -6208,6 +6506,38 @@ unsafe extern "C" fn comparar_separar_mascara(m: u32, setor: *mut u16, lado: *mu
     r
 }
 
+unsafe extern "C" fn comparar_e_segunda_selecao(clube: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(160)(clube);
+    let v = e_segunda_selecao(clube);
+    PLACAR.registrar(r == v, || format!("e_segunda_selecao original={} rust={}", r, v));
+    r
+}
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn comparar_placar_agregado(this: usize, l: i8, casa: *mut i8, fora: *mut i8, cl: *mut u8, ida: *mut u8, f3: *mut u8, bonus: u8) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8, *mut i8, *mut i8, *mut u8, *mut u8, *mut u8, u8) -> u8>(161);
+    let reg = [(casa as usize, 1), (fora as usize, 1), (cl as usize, 1), (ida as usize, 1), (f3 as usize, 1)];
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, l, casa, fora, cl, ida, f3, bonus), || placar_agregado(this, l, casa, fora, cl, ida, f3, bonus));
+    PLACAR.registrar(igual && r == n, || format!("placar_agregado({}, {}) original={} {:x?} rust={} {:x?}", l, bonus, r, mo, n, mr));
+    r
+}
+
+comparar_valor!(comparar_marcador_direto, marcador_direto, 162, (l: i8, k: i8) -> u8);
+
+unsafe extern "thiscall" fn comparar_tirar_de_campo(this: usize, j: usize, modo: i8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i8)>(163);
+    let reg = [(this, 0xf5f8), (0xb67a34, 4)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, j, modo), || tirar_de_campo(this, j, modo));
+    PLACAR.registrar(igual, || {
+        let (a, b) = (&mo.0, &mr.0);
+        let dif: Vec<usize> = (0..a.len()).flat_map(|r| (0..a[r].1.len()).filter(move |&i| a[r].1[i] != b[r].1[i]).map(move |i| a[r].0 + i)).take(16).collect();
+        format!("tirar_de_campo({}) diferencas em {:x?}", modo, dif)
+    });
+}
+
+/// Diagnostico: rotinas que ficam no original (para isolar uma diferenca de carreira sem mexer no
+/// ambiente do jogo, que desloca a heap). Vazio no uso normal.
+const SEM_ROTINAS: &[&str] = &[];
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -6378,6 +6708,10 @@ pub unsafe fn instalar(comparando: bool) {
         tecnico_9a05 as *const () as usize,
         bit_da_casa as *const () as usize,
         separar_mascara as *const () as usize,
+        e_segunda_selecao as *const () as usize,
+        placar_agregado as *const () as usize,
+        marcador_direto as *const () as usize,
+        tirar_de_campo as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -6540,6 +6874,10 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_tecnico_9a05 as *const () as usize,
         comparar_bit_da_casa as *const () as usize,
         comparar_separar_mascara as *const () as usize,
+        comparar_e_segunda_selecao as *const () as usize,
+        comparar_placar_agregado as *const () as usize,
+        comparar_marcador_direto as *const () as usize,
+        comparar_tirar_de_campo as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -6593,8 +6931,15 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_posicoes_finas",
         "motor_unidades", "motor_e_amistoso", "motor_contrato_de", "motor_e_selecao",
         "motor_tecnico_9a01", "motor_tecnico_9a05", "motor_bit_da_casa", "motor_separar_mascara",
+        "motor_e_segunda_selecao", "motor_placar_agregado",
+        "motor_marcador_direto",
+        "motor_tirar_de_campo",
     ];
     for i in 0..N {
+        if SEM_ROTINAS.contains(&nomes[i]) {
+            linha(&format!("motor: {} fica no original (SEM_ROTINAS)", nomes[i]));
+            continue;
+        }
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
             ORIGINAIS[i] = t;
         }
@@ -6662,6 +7007,7 @@ pub unsafe fn autoteste(casos: u64) {
     let mut pessoa46 = vec![0u8; 0x80];
     let mut tabela55 = vec![0u8; 79 * 80 + 8];
     let mut tecnicos56 = vec![0u8; 42735 * 16 + 16];
+    let mut partida50 = vec![0u8; 0x60];
     SINTETICO.store(true, std::sync::atomic::Ordering::Relaxed);
     PLACAR.autoteste(|| {
         for _ in 0..casos {
@@ -7717,8 +8063,12 @@ pub unsafe fn autoteste(casos: u64) {
                     let c = (h50.rotate_left((pos * 5 + l * 3) as u32) % 108) as u8;
                     // casas distintas por posicao no proprio campo (lado 0: y 0..=5; lado 1: 6..=11) e, de
                     // vez em quando, fora dele (exercita o limite de y sem passar de 11 por casa)
-                    let x = (c % 9 + pos as u8) % 9;
-                    let mut y = (pos as u8 / 9) * 3 + (c / 9) % 3;
+                    // casa distinta por posicao (com o limite de y, no maximo 4 por casa): uma casa
+                    // com mais de 11 jogadores corrompe as listas e o comparador de 0x6f46b0 le lixo
+                    let _ = c;
+                    let x = ((h50 >> 8) % 9) as u8 + pos as u8;
+                    let x = x % 9;
+                    let mut y = (pos as u8 / 9) * 3 + ((h50 >> 12) % 3) as u8;
                     if (h50 >> ((pos + 13 * l) % 64)) % 4 == 0 {
                         y += 6;
                     }
@@ -7787,6 +8137,69 @@ pub unsafe fn autoteste(casos: u64) {
             let mut saida47 = [0xa5u8; 0x100];
             if grade47.is_none() {
                 comparar_posicoes_finas(m, saida47.as_mut_ptr());
+            }
+            // quinquagesima segunda leva: tirar de campo (grade consistente do pontape, marcacoes, modos,
+            // goleiro guardado, tecnico humano com as globais trocadas durante o teste)
+            if grade47.is_none() {
+                let h60 = s.proximo();
+                let h61 = s.proximo();
+                let lj = ((h60 >> 1) % 2) as usize;
+                let jt = m + 0x4796 + 8920 * lj + ((h60 >> 2) % 20) as usize * 0x1be;
+                for k in 0..40usize {
+                    let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
+                    *((p + 0x1aa) as *mut usize) = 0;
+                    *((p + 0x101) as *mut i8) = 0;
+                }
+                // jt marca alguem (que o tem na lista) e e marcado por ate 3
+                let alvo = m + 0x4796 + 8920 * (1 - lj) + ((h60 >> 8) % 20) as usize * 0x1be;
+                if (h60 >> 13) % 3 != 0 {
+                    *((jt + 0x1aa) as *mut usize) = alvo;
+                    *((alvo + 0x101) as *mut i8) = 1;
+                    *((alvo + 0x1ae) as *mut usize) = if (h60 >> 15) % 4 == 0 { m } else { jt };
+                }
+                let nm = ((h60 >> 17) % 4) as i8;
+                *((jt + 0x101) as *mut i8) = nm;
+                for i in 0..nm as usize {
+                    let q = m + 0x4796 + 8920 * (1 - lj) + ((h60 >> (20 + 3 * i)) % 20) as usize * 0x1be;
+                    *((jt + 0x1ae + 4 * i) as *mut usize) = q;
+                    *((q + 0x1aa) as *mut usize) = [jt, 0, alvo][((h60 >> (30 + 2 * i)) % 3) as usize];
+                }
+                *((m + 0xf59e) as *mut usize) = if (h60 >> 34) % 3 == 0 { jt } else { 0 };
+                *((m + 0xf5a2) as *mut usize) = if (h60 >> 36) % 3 == 0 { jt } else { 0 };
+                // tecnico humano
+                let globais60 = [0xae2364usize, 0xb63c98];
+                let antes60: Vec<u32> = globais60.iter().map(|&a| *(a as *const u32)).collect();
+                *(0xae2364 as *mut i32) = 1000;
+                let regs60 = tecnicos56.as_mut_ptr() as usize;
+                for k in 0..16usize {
+                    *((regs60 + 42735 * k + 0x9a01) as *mut u32) = if (h61 >> k) % 2 == 0 { 0 } else { 7 };
+                    *((regs60 + 42735 * k + 0x9a05) as *mut u8) = ((h61 >> (k + 16)) % 2) as u8;
+                }
+                let gerente60 = [regs60, 16usize];
+                *(0xb63c98 as *mut usize) = gerente60.as_ptr() as usize;
+                let mut tec60 = [0u8; 0x60];
+                *(tec60.as_mut_ptr() as *mut i32) = [1000 - 16, 999, 1000, 983, 5][((h61 >> 32) % 5) as usize];
+                tec60[0x5f] = ((h61 >> 35) % 3) as u8;
+                for l in 0..2usize {
+                    *((m + 0x904d + 208 * l) as *mut usize) = if (h61 >> (37 + l)) % 3 == 0 { 0 } else { tec60.as_ptr() as usize };
+                    *((m + 0x904b + 208 * l) as *mut u8) = ((h61 >> (40 + l)) % 2) as u8;
+                }
+                let globais_sel = [0xae235cusize, 0xae2350];
+                let antes_sel: Vec<u32> = globais_sel.iter().map(|&a| *(a as *const u32)).collect();
+                *(0xae235c as *mut i32) = 5000;
+                *(0xae2350 as *mut i32) = 200;
+                let clubes60 = [[4500i32 + ((h61 >> 42) % 2) as i32 * 200], [4500i32 + ((h61 >> 43) % 2) as i32 * 200]];
+                let pa60 = partida50.as_mut_ptr() as usize;
+                *((pa60 + 0x1c) as *mut usize) = clubes60[0].as_ptr() as usize;
+                *((pa60 + 0x20) as *mut usize) = clubes60[1].as_ptr() as usize;
+                *((m + 0x4792) as *mut usize) = pa60;
+                comparar_tirar_de_campo(m, jt, [-1i8, -3, 0, 1, -2][((h61 >> 44) % 5) as usize]);
+                for (i, &a) in globais60.iter().enumerate() {
+                    *(a as *mut u32) = antes60[i];
+                }
+                for (i, &a) in globais_sel.iter().enumerate() {
+                    *(a as *mut u32) = antes_sel[i];
+                }
             }
             // quadragesima quarta leva: bola rolando (impulso, direcoes nas bordas, saidas do campo)
             let h52 = s.proximo();
@@ -7890,6 +8303,52 @@ pub unsafe fn autoteste(casos: u64) {
             let codigos56 = [1i16, 0x82, 0x84, 0x88, 0x90, 0xa0, 0xc0, 0x102, 0x104, 0x108, 0x110, 0x120, 0x140, 0x202, 0x204, 0x208, 0x210, 0x220, 0x240,
                 0x402, 0x404, 0x408, 0x410, 0x420, 0x440, 0x802, 0x804, 0x808, 0x810, 0x820, 0x840];
             let c56 = codigos56[((h56 >> 50) % 31) as usize];
+            // quinquagesima leva: segunda selecao e placar agregado (empates, gols fora, sem ida, bits de +0x38)
+            let h57 = s.proximo();
+            let globais57 = [0xae235cusize, 0xae2350];
+            let antes57: Vec<u32> = globais57.iter().map(|&a| *(a as *const u32)).collect();
+            *(0xae235c as *mut i32) = 5000;
+            *(0xae2350 as *mut i32) = 200;
+            let clube57 = [[4800i32, 4799, 4801, 0, 4900][((h57 >> 2) % 5) as usize]];
+            comparar_e_segunda_selecao(clube57.as_ptr() as usize);
+            for (i, &a) in globais57.iter().enumerate() {
+                *(a as *mut u32) = antes57[i];
+            }
+            let pa57 = partida50.as_mut_ptr() as usize;
+            *((pa57 + 0x30) as *mut i16) = [3i16, 13, 23, 4, 1003, 993, ((h57 >> 6) % 2000) as i16 - 500][((h57 >> 17) % 7) as usize];
+            *((pa57 + 0x38) as *mut u16) = [0u16, 4, 0x4000, 0x4004, (h57 >> 20) as u16][((h57 >> 36) % 5) as usize];
+            *((pa57 + 0x4b) as *mut i8) = [-1i8, 0, 1, 2, 3, 5][((h57 >> 39) % 6) as usize];
+            *((pa57 + 0x4c) as *mut i8) = [0i8, 1, 2, 3, 4][((h57 >> 42) % 5) as usize];
+            *((m + 0x4792) as *mut usize) = pa57;
+            *((m + 0xf5bd) as *mut u8) = ((h57 >> 45) % 5) as u8;
+            *((m + 0xf5f3) as *mut u8) = ((h57 >> 48) % 5) as u8;
+            *((m + 0x8ed4) as *mut i16) = [0x3dei16, 0x3df, 0, 2000, -5][((h57 >> 51) % 5) as usize];
+            let mut saidas57 = [0x77u8; 5];
+            let sp = saidas57.as_mut_ptr();
+            comparar_placar_agregado(m, ((h57 >> 54) % 2) as i8, sp as *mut i8, sp.add(1) as *mut i8, sp.add(2), sp.add(3), sp.add(4), [0u8, 1, 0x80][((h57 >> 56) % 3) as usize]);
+            // quinquagesima primeira leva: marcador direto (papeis com setor e lado, goleiros, fora, distancias)
+            let h58 = s.proximo();
+            let h59 = s.proximo();
+            for (ti, t) in tabelas.iter_mut().enumerate() {
+                for (i, v) in t.iter_mut().enumerate() {
+                    let _ = (h59, ti, i);
+                    let r = s.proximo(); // um sorteio por entrada: rotacoes do mesmo numero saem correlacionadas
+                    let setor = [1u16, 2, 4, 8, 0x10, 0x20, 0x40, 6, 0x48][(r % 9) as usize];
+                    let lado_r = [0x80u16, 0x100, 0x200, 0x400, 0x800, 0x180, 0xa00][((r >> 4) % 7) as usize];
+                    *v = setor | lado_r;
+                }
+            }
+            for k in 0..40usize {
+                let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
+                let r = h58.rotate_left(k as u32 * 5);
+                *((p + 0x19) as *mut i8) = if r % 5 == 0 { -1 } else { ((r >> 3) % 11) as i8 };
+                *((p + 0x27) as *mut i8) = (k / 20) as i8;
+                *((p + 0x19e) as *mut usize) = m;
+            }
+            for i in 0..10u32 {
+                let k = ((h58 >> (i * 6)) % 40) as i8;
+                comparar_marcador_direto(m, k / 20, k % 20);
+            }
             comparar_bit_da_casa(match (h56 >> 56) % 4 { 0 => c56 + 1, 1 => c56 - 1, 2 => (h56 >> 30) as i16, _ => c56 });
             let setor56 = [1u32, 2, 4, 8, 0x10, 0x20, 0x40, 0x41, 0x7f][((h56 >> 33) % 9) as usize];
             let lado56 = [0x80u32, 0x100, 0x200, 0x400, 0x800, 0xf80, 0xc00, 0x0][((h56 >> 37) % 8) as usize];
