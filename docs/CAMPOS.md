@@ -236,3 +236,32 @@ Reproduzidos de propósito enquanto a meta é a fidelidade; candidatos a correç
 |---|---|
 | 0x411D82 (liga australiana) | a competição não é zerada no fim da temporada (falta gravar −1 em +0x30 da fase): o mesmo campeão todo ano. E a divisão abertura/encerramento sai 36/5 jogos em vez de 24/10 (+0x3C da fase) |
 | 0x797474, 0x40AEDE, 0x40CFCE | Liga dos Campeões da Oceania, da Ásia e da África (ou Recopa asiática) com disputa de terceiro lugar (3 rodadas finais), às vezes marcada depois da final, o que pode travar a competição |
+
+## Motor das competições (tópico 1540, página 31; tópicos 10790 e 10877)
+
+Mapa publicado por quem fez o patch das competições europeias modernas. Os pontos marcados foram conferidos no 3.9.68; o resto fica como guia para a etapa das competições.
+
+| Onde | O que é |
+|---|---|
+| 0x6826D0 | linha N da tabela da fase: `[this+0xB1] + 0x3B·N` (thiscall, ret 4). Conferido |
+| 0x6827D0 | ordena fisicamente a tabela da fase com os critérios de desempate dela (4 códigos em +0xC5..+0xC8); argumento 0 = a tabela da própria fase; a posição +0x04 da linha é gravada em 0x682AEE. Comparação em 0x682B30. Chamada no fim dos grupos em 0x684D14. Conferido. A ordem do vetor não é a ordem da tabela |
+| fase +0x3C, +0x3E, +0xA7, +0xC9, +0xDD | turnos (quantas vezes os times se enfrentam), times, jogos necessários em cache = (times − 1) × turnos (0x689B27, gravado no save), data de fim (8 bytes), fase concluída (gravada em 0x689C06). Conferido |
+| 0x689AD0, 0x684946 | as duas formas de terminar um grupo: por jogos (0x689AD0) e por data (tique diário que chama a vtable +0x94 = 0x684CD0, que ordena, marca o destino +0x37 e grava a classificação europeia em 0xAE2D14) |
+| 0x6844B0 | gerador de turno e returno; 0x683AD3/0x683E20 multiplicam times por turnos |
+| 0x5851D0 | vtable +0x28 da copa europeia: avança a fase atual (+0x30) quando as anteriores terminam; a fase 8 monta a 2ª fase de grupos (0x585AB0), a fase 12 o mata-mata (0x586330). Posições nulas no vetor de fases contam como concluídas |
+| vtable 0x96A1D0 | copa europeia: +0x38 nome da rodada (0x586FA0), +0x3C fábrica de rodadas (0x583C50; índice FF = plano das eliminatórias, 0–7 grupos da 1ª fase, 8–B da 2ª, C em diante mata-mata), +0x44 datas |
+| 0x583EDE, 0x58409D | rodadas por grupo (6) da 1ª e da 2ª fase de grupos. Conferido |
+| 0x4B01D0 | código do evento → nome: 0x43D..0x444 (grupos) viram 0x449; 0x445..0x448 viram 0x44A ("Phase 2 Group Stage"). Conferido |
+| 0x68A160 | registra a data de uma rodada; a 2ª fase de grupos chama seis vezes entre 0x584146 e 0x584257 |
+| copa +0x14, +0x36, +0x38, +0xA7, +0x3E | livro de inscritos (6 bytes: clube, classe de entrada, marca), usados, capacidade, participantes (copiados em 0x584A4F, conferido) e quantos. Três pontos acrescentam inscritos no meio da temporada sem conferir a capacidade: 0x585A5A (conferido), 0x5862A4, 0x633E03 |
+| 0x585290, 0x586F60 | monta a fase de grupos; ordena os candidatos por classe e reputação (ordem dos potes) |
+| copa +0xAD | rodadas do mata-mata: confrontos de 0x35B bytes (+0x00/+0x02 times, +0x06/+0x08/+0x12 para onde vai o vencedor, +0x0A..+0x10 de onde vêm) |
+| 0x51C410 | rodada diária de cada copa: espera as origens e então sorteia. Bit 4 de +0x0B = sorteio com potes (0x51D9F0); bit 0x200 de +0x0D = confrontos prontos; senão 0x51E220 (único chamador em 0x51C5F1); depois 0x51E870 e, com dois jogos (+0x21 = 2), o returno em 0x522610. Conferido |
+| 0x586396 | sorteio do mata-mata da Liga dos Campeões com o gerador 0x90CFC0. Conferido |
+| 0xDE1F58 | distribuição anual das vagas europeias: trava por ano em 0x9036B6 (conferido); linhas por país (0x903B50: coeficiente, cotas); candidatos (0x904040, zera a marca +0x1DB dos clubes); `euro.cfg` (0x9059E0); distribuidores 0x904210/0x904580/0x904E30; seletor 0x9050D0. A ordenação por coeficiente não tem desempate (0x905CB0, conferido) |
+| [0xB74C26 + 300·i], com i em [0xB77C7A] | treinador humano; o time é dele quando `[time+0xCF]` aponta para esse objeto |
+| 0x79D098 | gera os nomes dos árbitros chamando duas vezes a função do primeiro nome (0x539C60) em vez da do sobrenome (0x53A1B0): é o defeito dos sobrenomes trocados. Conferido |
+| 0x911C4D, 0x911C88, 0x911CA4, 0x911CB8, 0x9182DC, 0x92036E | anos de início das eliminatórias da Copa (Ásia, Europa, América do Sul; 2000/2004 no original). Em bancos com início antecipado a Ásia sorteia antes da Europa e 0x91DF0E lê um grupo vazio (tópico 10790). Conferido que são as constantes de ano |
+| 0xA161CC | texto "Key" da coluna das estatísticas da partida (a tradução portuguesa deixa vazio). Conferido |
+| 0x59DBD0..0x59DD25 | dividendos do clube (tópico 10877, pág. 2): limiar por reputação (+0x80, cortes em 4000 em 0x59DC66/0x59DCC9), escala do limiar em 0x59DCBB (`shl eax, 3`), proteções de caixa em 0x59DCC1/0x59DCC7, decisão aleatória do presidente em 0x59DB0C. Conferidos 0x59DCBB e 0x59DB0C |
+| 0x8EDB66 | teto do percentual da próxima venda (`cmp al, 0x19` = 25%). Conferido |

@@ -236,3 +236,32 @@ Reproduced on purpose while the goal is fidelity; candidates for fixing in the m
 |---|---|
 | 0x411D82 (Australian league) | the competition is not reset at the end of the season (−1 is never written to stage +0x30): the same champion every year. And the opening/closing split comes out 36/5 games instead of 24/10 (stage +0x3C) |
 | 0x797474, 0x40AEDE, 0x40CFCE | Oceania, Asian and African Champions League (or Asian Cup Winners' Cup) with a third-place playoff (3 final rounds), sometimes scheduled after the final, which can stall the competition |
+
+## Competition engine (topic 1540, page 31; topics 10790 and 10877)
+
+Map published by the author of the modern European competitions patch. The marked points were checked in 3.9.68; the rest stays as a guide for the competitions stage.
+
+| Where | What it is |
+|---|---|
+| 0x6826D0 | row N of the stage's table: `[this+0xB1] + 0x3B·N` (thiscall, ret 4). Checked |
+| 0x6827D0 | physically sorts the stage's table with its own tiebreakers (4 codes at +0xC5..+0xC8); argument 0 = the stage's own table; the row's position +0x04 is written at 0x682AEE. Compare function at 0x682B30. Called at the end of the groups at 0x684D14. Checked. Array order is not table order |
+| stage +0x3C, +0x3E, +0xA7, +0xC9, +0xDD | meetings (how often the teams meet), teams, cached games needed = (teams − 1) × meetings (0x689B27, saved), end date (8 bytes), stage complete (stored at 0x689C06). Checked |
+| 0x689AD0, 0x684946 | the two ways a group ends: by games (0x689AD0) and by date (a daily tick calling vtable +0x94 = 0x684CD0, which sorts, marks the destination +0x37 and writes the European qualification at 0xAE2D14) |
+| 0x6844B0 | round-robin generator; 0x683AD3/0x683E20 multiply teams by meetings |
+| 0x5851D0 | European cup vtable +0x28: advances the current stage (+0x30) when the previous ones are done; stage 8 builds the 2nd group stage (0x585AB0), stage 12 the knockout (0x586330). Null slots in the stages array count as complete |
+| vtable 0x96A1D0 | European cup: +0x38 round name (0x586FA0), +0x3C round factory (0x583C50; index FF = qualifying plan, 0–7 1st-stage groups, 8–B 2nd stage, C and above knockout), +0x44 dates |
+| 0x583EDE, 0x58409D | matchdays per group (6) of the 1st and 2nd group stages. Checked |
+| 0x4B01D0 | event code → name: 0x43D..0x444 (groups) become 0x449; 0x445..0x448 become 0x44A ("Phase 2 Group Stage"). Checked |
+| 0x68A160 | registers a round date; the 2nd group stage calls it six times between 0x584146 and 0x584257 |
+| cup +0x14, +0x36, +0x38, +0xA7, +0x3E | entry book (6 bytes: club, entry class, flag), used, capacity, participants (copied at 0x584A4F, checked) and their count. Three places append entrants mid-season without checking capacity: 0x585A5A (checked), 0x5862A4, 0x633E03 |
+| 0x585290, 0x586F60 | builds the group stage; sorts the candidates by class and reputation (pot order) |
+| cup +0xAD | knockout rounds: 0x35B-byte ties (+0x00/+0x02 teams, +0x06/+0x08/+0x12 where the winner goes, +0x0A..+0x10 where they come from) |
+| 0x51C410 | daily round of each cup: waits for the sources, then draws. Bit 4 of +0x0B = potted draw (0x51D9F0); bit 0x200 of +0x0D = pre-paired; otherwise 0x51E220 (only caller at 0x51C5F1); then 0x51E870 and, for two legs (+0x21 = 2), the second legs at 0x522610. Checked |
+| 0x586396 | Champions League knockout draw with the RNG 0x90CFC0. Checked |
+| 0xDE1F58 | yearly European places: year gate at 0x9036B6 (checked); country rows (0x903B50: coefficient, quotas); candidates (0x904040, resets the clubs' +0x1DB stamp); `euro.cfg` (0x9059E0); distributors 0x904210/0x904580/0x904E30; selector 0x9050D0. The coefficient sort has no tiebreaker (0x905CB0, checked) |
+| [0xB74C26 + 300·i], with i at [0xB77C7A] | human manager; the team is theirs when `[team+0xCF]` points to that object |
+| 0x79D098 | builds referee names by calling the first-name function (0x539C60) twice instead of the surname one (0x53A1B0): this is the mixed-up surnames defect. Checked |
+| 0x911C4D, 0x911C88, 0x911CA4, 0x911CB8, 0x9182DC, 0x92036E | World Cup qualifying start years (Asia, Europe, South America; 2000/2004 in the original). With early-start databases Asia draws before Europe and 0x91DF0E reads an empty group (topic 10790). Checked that they are the year constants |
+| 0xA161CC | "Key" text of the match stats column (left empty by the Portuguese translation). Checked |
+| 0x59DBD0..0x59DD25 | club dividends (topic 10877, page 2): threshold by reputation (+0x80, cut-offs at 4000 at 0x59DC66/0x59DCC9), threshold scale at 0x59DCBB (`shl eax, 3`), cash guards at 0x59DCC1/0x59DCC7, chairman's random decision at 0x59DB0C. 0x59DCBB and 0x59DB0C checked |
+| 0x8EDB66 | cap on the next-sale percentage (`cmp al, 0x19` = 25%). Checked |
