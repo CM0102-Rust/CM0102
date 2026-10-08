@@ -136,6 +136,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6e1cd0 | `jogador_pela_ficha` | player_by_record |
 | 0x6cbc00 | `jogadores_na_linha` | players_in_line |
 | 0x6bba50 | `lado_do_lance` | side_of_move |
+| 0x6d42a0 | `lado_sob_controle` | side_under_control |
 | 0x6bab90 | `lance_valendo` | move_counts |
 | 0x6c4290 | `lateral` | throw_in |
 | 0x717400 | `ler_1bc` | read_1bc |

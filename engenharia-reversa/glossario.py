@@ -72,6 +72,7 @@ EN = {
  'quem_marcar': 'who_to_mark', 'distancia_do_gol': 'distance_to_goal', 'cerco': 'surrounding_count', 'bonus_do_gol': 'goal_bonus', 'reputacao_do_alvo': 'target_reputation',
  'tecnico_9ace': 'manager_9ace', 'tecnico_9a06': 'manager_9a06', 'pessoa_e_registro': 'person_and_record',
  'clube_humano': 'human_club',
+ 'lado_sob_controle': 'side_under_control',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

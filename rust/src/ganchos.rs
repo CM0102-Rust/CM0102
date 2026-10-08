@@ -132,9 +132,22 @@ unsafe extern "system" fn move_window(hwnd: *mut c_void, _x: i32, _y: i32, w: i3
     f(hwnd, -32000, -32000, w, h, redesenhar)
 }
 
+/// `DirectSoundCreate` (DSOUND, importado so pelo numero 1) nos testes: sem placa de som
+/// (DSERR_NODRIVER). O jogo segue sem som, e o PC de quem usa fica em silencio.
+unsafe extern "system" fn direct_sound_create(_guid: *const c_void, saida: *mut *mut c_void, _externo: *mut c_void) -> u32 {
+    if !saida.is_null() {
+        *saida = core::ptr::null_mut();
+    }
+    0x8878_0078
+}
+
 /// Chamado no carregamento da DLL (antes de o jogo criar a janela).
 pub unsafe fn instalar_cedo() {
     if crate::apresentacao::oculto() {
+        let n = para_cada_importacao(|dll, nome, _| {
+            (dll.eq_ignore_ascii_case("DSOUND.dll") && nome.is_none()).then(|| direct_sound_create as *const () as usize)
+        });
+        linha(&format!("gancho: DSOUND sem som nos testes ({} entrada)", n));
         if let Some(a) = trocar_importacao("USER32.dll", "MoveWindow", move_window as *const () as usize) {
             MOVE_WINDOW_ORIGINAL = a;
         }

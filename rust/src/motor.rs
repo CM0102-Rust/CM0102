@@ -286,8 +286,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x5fe040, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x5fd6b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x600a50, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x6d42a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x86, 0x92, 0x47, 0x00, 0x00] },
 ];
-const N: usize = 181;
+const N: usize = 182;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3962,6 +3963,29 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     1
 }
 
+// ---------- sexagesima quarta leva: lado sob controle ----------
+
+/// { 0x6d42a0 } (match_eng.cpp): o lado esta sob controle de quem decide por ele? Nao nas
+/// partidas de tipo +0x3a 1 ou 9. Clube do lado dirigido por humano (0x600a50, `qualquer` = byte
+/// +0x40 da partida): pela marca 0x4000 do bloco do lado (0x9766 + 6371 x lado). Senao: o modo do
+/// lado em +0x1ab e 3 ou 4.
+unsafe extern "thiscall" fn lado_sob_controle(m: usize, lado: i8) -> u8 {
+    let partida = *((m + 0x4792) as *const usize);
+    let tipo = byte(partida, 0x3a);
+    if tipo == 1 || tipo == 9 {
+        return 0;
+    }
+    let clube = *((partida + if lado != 0 { 0x20 } else { 0x1c }) as *const usize);
+    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let l = lado as isize;
+    if humano(clube, 0, byte(partida, 0x40) as u8, 0, 0) != 0 {
+        (*((m as isize + 6371 * l + 0x9766) as *const u32) & 0x4000 != 0) as u8
+    } else {
+        let modo = *((m as isize + l + 0x1ab) as *const i8);
+        (modo == 3 || modo == 4) as u8
+    }
+}
+
 // ---------- sexagesima terceira leva: clube controlado por humano ----------
 
 /// { 0x600a50 } (human_manager.cpp): o clube e dirigido por um tecnico humano que decide por ele?
@@ -7569,6 +7593,7 @@ unsafe extern "C" fn comparar_separar_mascara(m: u32, setor: *mut u16, lado: *mu
 }
 
 comparar_valor!(comparar_tecnico_9ace, tecnico_9ace, 178, (pessoa: usize) -> u32);
+comparar_valor!(comparar_lado_sob_controle, lado_sob_controle, 181, (lado: i8) -> u8);
 unsafe extern "C" fn comparar_clube_humano(clube: usize, a: u32, b: u8, pessoa: usize, c: u32) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(180)(clube, a, b, pessoa, c);
     let v = clube_humano(clube, a, b, pessoa, c);
@@ -7928,6 +7953,7 @@ pub unsafe fn instalar(comparando: bool) {
         tecnico_9ace as *const () as usize,
         tecnico_9a06 as *const () as usize,
         clube_humano as *const () as usize,
+        lado_sob_controle as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -8111,6 +8137,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_tecnico_9ace as *const () as usize,
         comparar_tecnico_9a06 as *const () as usize,
         comparar_clube_humano as *const () as usize,
+        comparar_lado_sob_controle as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -8182,6 +8209,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_quem_marcar",
         "motor_tecnico_9ace", "motor_tecnico_9a06",
         "motor_clube_humano",
+        "motor_lado_sob_controle",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -9686,6 +9714,23 @@ pub unsafe fn autoteste(casos: u64) {
                     tecnicos63[((h63 >> 42) % 3) as usize],
                     ((h63 >> 44) % 3 == 0) as u32,
                 );
+                // sexagesima quarta leva: lado sob controle (tipos 1 e 9, clube humano ou nao, modos 2..5)
+                let mut partida64 = [0u8; 0x48];
+                partida64[0x3a] = [0u8, 1, 9, 2][((h63 >> 46) % 4) as usize];
+                partida64[0x40] = ((h63 >> 48) & 1) as u8;
+                *(partida64.as_mut_ptr().add(0x1c) as *mut usize) = clube_a63.as_ptr() as usize;
+                *(partida64.as_mut_ptr().add(0x20) as *mut usize) = clube_b63.as_ptr() as usize;
+                let antes64 = (*((m + 0x4792) as *const usize), *((m + 0x1ab) as *const u16), *((m + 0x9766) as *const u32), *((m + 0x9766 + 6371) as *const u32));
+                *((m + 0x4792) as *mut usize) = partida64.as_ptr() as usize;
+                *((m + 0x1ab) as *mut u8) = 2 + ((h63 >> 49) % 4) as u8;
+                *((m + 0x1ac) as *mut u8) = 2 + ((h63 >> 51) % 4) as u8;
+                *((m + 0x9766) as *mut u32) = (h63 >> 20) as u32 & 0x4400;
+                *((m + 0x9766 + 6371) as *mut u32) = (h63 >> 30) as u32 & 0x4400;
+                comparar_lado_sob_controle(m, ((h63 >> 53) & 1) as i8);
+                *((m + 0x4792) as *mut usize) = antes64.0;
+                *((m + 0x1ab) as *mut u16) = antes64.1;
+                *((m + 0x9766) as *mut u32) = antes64.2;
+                *((m + 0x9766 + 6371) as *mut u32) = antes64.3;
                 for (i, &a) in globais63.iter().enumerate() {
                     *(a as *mut u32) = antes63[i];
                 }

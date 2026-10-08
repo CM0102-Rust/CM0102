@@ -605,3 +605,11 @@ First batch read from Ghidra's pseudocode (`descompilar.py`). Mutations: 6/6. `t
 | `clube_humano(clube, sem_tatica, qualquer, pessoa, forcar)` | 0x600a50 | cdecl | human_manager.cpp: is the club run by a human manager who decides for it? The manager (`pessoa`, or the club's at +0xcf) must be the club's and one of the 16 humans. Without `sem_tatica`, those with 0x9ace (0x5fe040) or +0x9a01 are excluded. With `forcar` or `qualquer`: yes. Otherwise, national team: 0x5fd6b0; club: 0x5fd480. If not, and the club is in the second set of national teams (0x5409b0), repeat with the nation's main national team (0x53b3d0), without `qualquer`. Null club: the original (error box) |
 
 Mutations: 8/8 in the self-test (club, national team and second national team going back to the main one; the club's manager, another or none; with and without tactics). In the real game only 2/8 showed: the automatic career uses this routine little. **Trap:** editing `motor.rs` while `mutacoes.py` runs loses the edit, because at the end it rewrites the whole file as it was at the start.
+
+### Match engine, 64th batch — side under control (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `lado_sob_controle(lado)` | 0x6d42a0 | thiscall, ret 4 | match_eng.cpp: not in matches of type +0x3a 1 or 9. The side's club run by a human (0x600a50, `qualquer` = byte +0x40 of the match): by mark 0x4000 of the side's block (0x9766 + 6371 × side). Otherwise: the side's mode at +0x1ab is 3 or 4 |
+
+Mutations: 5/5 in the self-test (built on the 63rd batch's). Also: in the tests (hidden game), the DLL refuses `DirectSoundCreate` (DSOUND, imported by ordinal 1) with DSERR_NODRIVER; the game runs without sound and the career gives the same fingerprint.

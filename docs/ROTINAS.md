@@ -603,3 +603,11 @@ Primeira leva lida a partir do pseudocódigo do Ghidra (`descompilar.py`). Muta�
 | `clube_humano(clube, sem_tatica, qualquer, pessoa, forcar)` | 0x600a50 | cdecl | human_manager.cpp: o clube é dirigido por um técnico humano que decide por ele? O técnico (`pessoa`, ou o do clube em +0xcf) tem de ser o do clube e um dos 16 humanos. Sem `sem_tatica`, ficam de fora os que têm 0x9ace (0x5fe040) ou +0x9a01. Com `forcar` ou `qualquer`: sim. Senão, seleção: 0x5fd6b0; clube: 0x5fd480. Se não, e o clube é do segundo conjunto de seleções (0x5409b0), repete com a seleção principal da nação (0x53b3d0), sem `qualquer`. Clube nulo: a original (caixa de erro) |
 
 Mutações: 8/8 no autoteste (clube, seleção e segunda seleção que volta à principal; técnico do clube, outro ou nenhum; com e sem tática). No jogo real só 2/8 apareciam: a carreira automática usa pouco essa rotina. **Armadilha:** editar o `motor.rs` enquanto o `mutacoes.py` roda perde a edição, porque no fim ele regrava o arquivo inteiro como estava no começo.
+
+### Motor de partidas, 64ª leva — lado sob controle (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `lado_sob_controle(lado)` | 0x6d42a0 | thiscall, ret 4 | match_eng.cpp: não nas partidas de tipo +0x3a 1 ou 9. Clube do lado dirigido por humano (0x600a50, `qualquer` = byte +0x40 da partida): pela marca 0x4000 do bloco do lado (0x9766 + 6371 × lado). Senão: o modo do lado em +0x1ab é 3 ou 4 |
+
+Mutações: 5/5 no autoteste (montado sobre o da 63ª leva). Junto: nos testes (jogo oculto), a DLL recusa o `DirectSoundCreate` (DSOUND, importado pelo número 1) com DSERR_NODRIVER; o jogo segue sem som e a carreira dá a mesma impressão.
