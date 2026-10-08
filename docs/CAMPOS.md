@@ -87,6 +87,8 @@ No motor, o ponteiro em **+0x4792**. Campos pela estrutura que davdav publicou n
 | +0x0C / +0x10 | ids do mandante / visitante | — |
 | +0x14 | competição (ponteiro) | `forca_do_time` (nação da competição em +0x5d; 0x5c6710) |
 | +0x1C / +0x20 | mandante / visitante (ponteiros de clube) | `forca_do_time` (nação e reputação; o lado 0 é o mandante) |
+| +0x04 | estádio (id; ponteiro em +0x18) | — |
+| +0x43 / +0x44 | gols do mandante / visitante no fim (0x6BDA86 copia de 0xF5BD/0xF5F3 do motor) | — |
 | +0x30 / +0x32 | nome da rodada / prefixo (códigos da tabela de nomes de comp_util.cpp, 0x4B4850) | `placar_agregado` (algarismo das unidades de +0x30), `nova_reputacao` e `reputacao_do_jogador` (pesos maiores em quartas, semi e final e nos grupos A a H) |
 
 O mesmo objeto guarda as datas (ano/dia em palavras), as fases e o placar; segundo o tópico, também o estádio, e o motor o consulta bastante.
@@ -180,6 +182,10 @@ Fonte: tópico 1540, página 5 (Xeno, giovanisantana29 e outros). Conferidos no 
 | 0x579C63 | limite de 3 estrangeiros de fora da UE na Inglaterra (`mov byte [edx+5], 3`) |
 | 0x96D808 | constante 71,0 (float) comparada em match_pl.cpp (0x706D1B, 0x706DEE, rotina ainda não reescrita); segundo a comunidade, a porcentagem de chutes a gol que não entram (o patch de mais gols troca por 65); tópico 1540, páginas 21 e 22 |
 | 0x708A31 | o gol entra no placar: soma 1 ao byte de gols do lado (motor + 0xF5BD + 54 × lado, o mesmo que `placar_agregado` lê); página 24. A comunidade fala também de um "freio" depois de 5 gols, ainda não localizado |
+| 0x6BD98F | duração do primeiro tempo no relógio do motor (0x8ED4): 0x1EF = 495; o jogo acaba em 0x3DE = 990 (os dois limites que `momento_marcado` e `placar_agregado` testam); tópico 1540, página 25 |
+| 0x6B5B41.. | o dia de jogos procura a próxima partida na lista de [0xB67A50] + 0x19 (registros de 0x69 bytes; o objeto da partida começa em +4) |
+| 0x4CF5F0 | registro (pessoa, clube) de 80 bytes, pelo índice em [0xAE2D0C] + 79 × id da pessoa, em [0xAE1050]; usado pelo motor (ex.: influência do capitão) |
+| fase +0xA7 (copas) | lista dos times que entram, vagas de 6 bytes (+0 clube, +4, +5); a montagem da Copa da Irlanda do Norte (0x78AC90) põe primeiro 20 times da 1ª e 2ª divisões e depois 12 das inferiores (página 26) |
 | 0x54CEDB | ano bissexto (divisível por 4, exceto séculos não divisíveis por 400) |
 | 0x642A70.. | jogos reais da primeira temporada nas séries italianas (A 0x642A70, B 0x647230, C1 e C2 até 0x65C8E0) |
 | 0x43F7F0 | moedas: por moeda, a cotação em libras (double em 0xAD9CB8), o multiplicador da lista de valores de transferência (0xAD9DA0) e o passo dos botões +/− (0xAD9CC0) |

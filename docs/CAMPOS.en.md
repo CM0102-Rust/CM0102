@@ -87,6 +87,8 @@ In the engine, the pointer at **+0x4792**. Fields from the structure davdav publ
 | +0x0C / +0x10 | home / away ids | — |
 | +0x14 | competition (pointer) | `forca_do_time` (competition nation at +0x5d; 0x5c6710) |
 | +0x1C / +0x20 | home / away (club pointers) | `forca_do_time` (nation and reputation; side 0 is the home team) |
+| +0x04 | stadium (id; pointer at +0x18) | — |
+| +0x43 / +0x44 | home / away goals at the end (0x6BDA86 copies them from the engine's 0xF5BD/0xF5F3) | — |
 | +0x30 / +0x32 | round name / prefix (codes of comp_util.cpp's name table, 0x4B4850) | `placar_agregado` (units digit of +0x30), `nova_reputacao` and `reputacao_do_jogador` (larger weights in quarter finals, semi finals, finals and groups A to H) |
 
 The same object holds the dates (year/day words), the stages and the score; according to the topic, also the stadium, and the engine reads it a lot.
@@ -180,6 +182,10 @@ Source: topic 1540, page 5 (Xeno, giovanisantana29 and others). Checked in 3.9.6
 | 0x579C63 | limit of 3 non-EU foreigners in England (`mov byte [edx+5], 3`) |
 | 0x96D808 | constant 71.0 (float) compared in match_pl.cpp (0x706D1B, 0x706DEE, routine not yet rewritten); according to the community, the percentage of shots on target that do not go in (the more-goals patch changes it to 65); topic 1540, pages 21 and 22 |
 | 0x708A31 | the goal goes into the score: adds 1 to the side's goals byte (motor + 0xF5BD + 54 × side, the same one `placar_agregado` reads); page 24. The community also mentions a "brake" after 5 goals, not located yet |
+| 0x6BD98F | length of the first half on the engine clock (0x8ED4): 0x1EF = 495; the match ends at 0x3DE = 990 (the two limits `momento_marcado` and `placar_agregado` test); topic 1540, page 25 |
+| 0x6B5B41.. | the match day looks for the next match in the list at [0xB67A50] + 0x19 (0x69-byte records; the match object starts at +4) |
+| 0x4CF5F0 | 80-byte (person, club) record, by the index at [0xAE2D0C] + 79 × person id, in [0xAE1050]; used by the engine (e.g. the captain's influence) |
+| stage +0xA7 (cups) | list of entering teams, 6-byte slots (+0 club, +4, +5); the Northern Irish Cup setup (0x78AC90) first places 20 first- and second-division teams and then 12 from the lower ones (page 26) |
 | 0x54CEDB | leap year (divisible by 4, except centuries not divisible by 400) |
 | 0x642A70.. | real first-season fixtures for the Italian divisions (A 0x642A70, B 0x647230, C1 and C2 up to 0x65C8E0) |
 | 0x43F7F0 | currencies: per currency, the rate against the pound (double at 0xAD9CB8), the transfer fee list multiplier (0xAD9DA0) and the +/− button step (0xAD9CC0) |
