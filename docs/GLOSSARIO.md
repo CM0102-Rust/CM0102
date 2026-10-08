@@ -204,6 +204,8 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6d3610 | `reputacao_do_jogador` | player_reputation |
 | 0x6ce460 | `resumo_da_partida` | match_summary |
 | 0x6bbe40 | `rolar_bola` | roll_ball |
+| 0x53b4f0 | `selecao_b` | b_national_team |
+| 0x53b3d0 | `selecao_principal` | main_national_team |
 | 0x6d4280 | `sem_partida` | no_match |
 | 0x5b73a0 | `separar_mascara` | split_mask |
 | 0x6f0970 | `soltar_bola` | release_ball |

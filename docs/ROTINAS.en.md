@@ -571,3 +571,12 @@ Mutations: 12/12 (the error case of `gravar_casa` opens the game's box and stays
 | `marcado_designado()` | 0x7160f0 | thiscall | match_pl.cpp: the opponent the player man-marks, or 0. Needs mark 4 on the position's square; looks among the active opponents for the record designated for the position. With mark 0x10: if the opposing formation has a centre forward (bit 0x10000000 of +0x187b) or the other side's byte +0xaf is above 1, a player with 0x106 does not mark; and, if the marked player has tables A and B different (arrow to another square) and B without the attack mark 0x40, a player with 0x106 does not mark either |
 
 Mutations: 9/9. **Two traps.** (1) A hook on 0x714d30 (the player's side, 4 bytes: reads +0x27 and returns) froze the game at startup; such a getter is not worth a hook and was left out. (2) The test changed tables A and B, which are shared by the whole case, and a later section of the self-test stopped without using the CPU (probably an original routine's error box, invisible with the game hidden); the test now saves and restores the tables.
+
+### Match engine, 60th batch — national team club (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `selecao_principal(nacao)` | 0x53b3d0 | cdecl | Database.cpp: the nation's main national team club. National teams sit at the end of the club array (0xae23b4, 581 bytes each): index = nation id − 2 × nations (0xae2350) + clubs (0xae235c). Without a nation, clubs or 0xae23a8: left to the original (error box) |
+| `selecao_b(nacao)` | 0x53b4f0 | cdecl | Database.cpp: the B team club; index = id − nations + clubs |
+
+Mutations: 5/5, with the full base (2 million cases, 0 divergences). Heavily called (over 600 call sites); 0 divergences in the real game in comparison mode.

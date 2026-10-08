@@ -280,8 +280,10 @@ const PROLOGOS: [Prologo; N] = [
     // quinquagesima nona leva
     Prologo { endereco: 0x5b58e0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
     Prologo { endereco: 0x7160f0, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] },
+    Prologo { endereco: 0x53b3d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x53b4f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 175;
+const N: usize = 177;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3956,6 +3958,33 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     1
 }
 
+// ---------- sexagesima leva: clube da selecao ----------
+
+/// Clube da selecao da nacao: as selecoes ficam no fim do vetor de clubes (0xae23b4, 581 bytes
+/// cada), a principal `deslocamento` = 2 nacoes antes do fim e a B uma nacao antes. Sem nacao,
+/// sem clubes ou sem 0xae23a8: o original mostra a caixa de erro (Database.cpp) e zera 0xb67a34;
+/// esse caminho fica com ele.
+unsafe fn clube_da_selecao(nacao: usize, nacoes_antes: i32, idx: usize) -> usize {
+    let base = *(0xae23b4 as *const usize);
+    if nacao == 0 || base == 0 || *(0xae23a8 as *const usize) == 0 {
+        return orig::<unsafe extern "C" fn(usize) -> usize>(idx)(nacao);
+    }
+    let i = (*(nacao as *const i32))
+        .wrapping_sub(nacoes_antes.wrapping_mul(*(0xae2350 as *const i32)))
+        .wrapping_add(*(0xae235c as *const i32));
+    base.wrapping_add((i as usize).wrapping_mul(581))
+}
+
+/// { 0x53b3d0 } (Database.cpp): o clube da selecao principal da nacao.
+unsafe extern "C" fn selecao_principal(nacao: usize) -> usize {
+    clube_da_selecao(nacao, 2, 175)
+}
+
+/// { 0x53b4f0 } (Database.cpp): o clube da selecao B da nacao.
+unsafe extern "C" fn selecao_b(nacao: usize) -> usize {
+    clube_da_selecao(nacao, 1, 176)
+}
+
 /// { 0x6cd490 } (match_eng.cpp): bola fora do campo (ver `bola_fora_com`).
 unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 {
     bola_fora_com(this, lado_b, &mut |t, a| comentar(t, a))
@@ -7218,6 +7247,20 @@ unsafe extern "C" fn comparar_separar_mascara(m: u32, setor: *mut u16, lado: *mu
     r
 }
 
+unsafe extern "C" fn comparar_selecao_principal(nacao: usize) -> usize {
+    let r = orig::<unsafe extern "C" fn(usize) -> usize>(175)(nacao);
+    let v = selecao_principal(nacao);
+    PLACAR.registrar(r == v, || format!("selecao_principal original={:x} rust={:x}", r, v));
+    r
+}
+
+unsafe extern "C" fn comparar_selecao_b(nacao: usize) -> usize {
+    let r = orig::<unsafe extern "C" fn(usize) -> usize>(176)(nacao);
+    let v = selecao_b(nacao);
+    PLACAR.registrar(r == v, || format!("selecao_b original={:x} rust={:x}", r, v));
+    r
+}
+
 unsafe extern "C" fn comparar_e_segunda_selecao(clube: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize) -> u32>(160)(clube);
     let v = e_segunda_selecao(clube);
@@ -7532,6 +7575,8 @@ pub unsafe fn instalar(comparando: bool) {
         marcar_craques as *const () as usize,
         designado_da_posicao as *const () as usize,
         marcado_designado as *const () as usize,
+        selecao_principal as *const () as usize,
+        selecao_b as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -7709,6 +7754,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_marcar_craques as *const () as usize,
         comparar_designado_da_posicao as *const () as usize,
         comparar_marcado_designado as *const () as usize,
+        comparar_selecao_principal as *const () as usize,
+        comparar_selecao_b as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -7776,6 +7823,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_marcar_craques",
         "motor_designado_da_posicao",
         "motor_marcado_designado",
+        "motor_selecao_principal", "motor_selecao_b",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -9236,6 +9284,17 @@ pub unsafe fn autoteste(casos: u64) {
             *(0xae2350 as *mut i32) = 200;
             let clube57 = [[4800i32, 4799, 4801, 0, 4900][((h57 >> 2) % 5) as usize]];
             comparar_e_segunda_selecao(clube57.as_ptr() as usize);
+            // sexagesima leva: clube da selecao (so aritmetica; base e 0xae23a8 falsos)
+            let globais60 = [0xae23b4usize, 0xae23a8];
+            let antes60: Vec<u32> = globais60.iter().map(|&a| *(a as *const u32)).collect();
+            *(0xae23b4 as *mut u32) = 0x0100_0000 + ((h57 >> 53) as u32 & 0xfff) * 4;
+            *(0xae23a8 as *mut u32) = 0x0200_0000;
+            let nacao60 = [[0i32, 1, 199, 200, -3, 7000][((h57 >> 30) % 6) as usize]];
+            comparar_selecao_principal(nacao60.as_ptr() as usize);
+            comparar_selecao_b(nacao60.as_ptr() as usize);
+            for (i, &a) in globais60.iter().enumerate() {
+                *(a as *mut u32) = antes60[i];
+            }
             for (i, &a) in globais57.iter().enumerate() {
                 *(a as *mut u32) = antes57[i];
             }
