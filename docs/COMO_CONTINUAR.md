@@ -29,6 +29,7 @@ Uma leva tem de 1 a 10 rotinas do motor de partidas (`match_eng.cpp`, `match_pl.
 
 ## Armadilhas já conhecidas
 
+- Rotina que devolve os casos de erro à original: uma mutação no caminho que decide "é erro" pode sumir, porque a original acerta o resultado. No autoteste, deixar o caminho errado cair num caso válido diferente (ex.: outra pessoa válida na vaga que a mutação leria).
 - Comparador de rotina que sorteia: passar `crate::aleatorio::REGIOES_DO_ESTADO` ao `lado_a_lado` e rodar a Rust dentro de `sem_contar`; senão a Rust sorteia a partir do estado que a original deixou. Variáveis de pilha lidas logo depois de um `call` cujo argumento ainda não foi retirado (`add esp, 4` depois): o deslocamento é 4 a menos. Mutação que soma a mesma constante a todos os candidatos não muda o escolhido (equivalente): trocar por uma que mude a ordem.
 - Estado do autoteste que vale para o caso inteiro (tabelas A/B, globais, blocos de jogadores): guardar e restaurar na própria seção. Valores inválidos podem abrir a caixa de erro de uma rotina original; com o jogo oculto, o teste para sem gastar processador (o `mutacoes.py` espera o limite). Não desviar getters de 4 bytes (0x714d30 travou o jogo).
 - O que depende do banco carregado (tática do clube em 0xde1d08, pessoas reais) não roda no autoteste sintético, que acontece antes do banco. Para essas rotinas: `mutacoes.py --jogo AAAA-MM-DD` (mutações no jogo real em comparação). Mutar um caminho que o jogo real quase não usa (cobrador designado dos clubes do computador) não prova nada: mirar o caminho comum.

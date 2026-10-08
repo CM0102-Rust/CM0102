@@ -221,6 +221,8 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x717410 | `tabela_do_jogador` | player_table |
 | 0x5fd210 | `tecnico_9a01` | manager_9a01 |
 | 0x5fd480 | `tecnico_9a05` | manager_9a05 |
+| 0x5fd6b0 | `tecnico_9a06` | manager_9a06 |
+| 0x5fe040 | `tecnico_9ace` | manager_9ace |
 | 0x6b59a0 | `tem_jogo` | has_match |
 | 0x7164b0 | `teste_de_condicao` | condition_test |
 | 0x6cdd50 | `tirar_de_campo` | take_off_pitch |

@@ -588,3 +588,12 @@ Mutations: 5/5, with the full base (2 million cases, 0 divergences). Heavily cal
 | `quem_marcar(jogador)` | 0x6bc030 | thiscall, ret 4 | match_eng.cpp, 3 KB (about 920 instructions): the opponent the player will mark, or 0. No marking with mark 1 on his square; an active designated marked player (0x7160f0) comes first. From the square (x, y) where he should be (0x6c2be0), evaluates the ball carrier (0xf582, if close: 0x968950) and the opponents in squares y−1..y+1 × x−1..x+1 (lists at engine + 0x215e, 90 bytes per square). Score: draws, surrounding opponents, distance to goal, attributes 0x0a/0x0b/0x10/0x35/0x101, role in the formation (0x8ebc/0x8ec4), reputation (home, current or world). The highest 16-bit score wins; the one kept at 0x1aa may be picked at once |
 
 Mutations in the real game (`--jogo`): 11/11. The original `q_reput` added 1 to every score and does not change the pick (equivalent mutation); its replacement (`leva61b.py`) was caught. **Two traps.** (1) The comparison did not restore the RNG state between the original and Rust runs (`REGIOES_DO_ESTADO` missing from `lado_a_lado`): 50 thousand false divergences. (2) In the ball-carrier part, the original reads `[esp+0x1c]` with the draw's argument still on the stack: it is the distance to goal, not the distance to the player. Found by logging each candidate's score on divergences.
+
+### Match engine, 62nd batch — human manager (0x9ace, 0x9a06) (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `tecnico_9ace(pessoa)` | 0x5fe040 | thiscall, ret 4 | human_manager.cpp: dword +0x9ace of the person's human manager record (or the current manager's, 0xb74c26 + 768 × [0xb77c7a]). No person or out of range: the original (error box) |
+| `tecnico_9a06(pessoa, saida)` | 0x5fd6b0 | thiscall, ret 8 | human_manager.cpp: byte +0x9a06 ≠ 0? With a club (+0x24) whose nation has +0x88 < 400: false and `saida` = 1; `saida` starts at 0 |
+
+First batch read from Ghidra's pseudocode (`descompilar.py`). Mutations: 6/6. `t_atual` (taking slot 0 instead of the current manager's) passed in the first round: when the wrong person does not resolve, the routine hands the case to the original, which gets it right, hiding the error. The self-test now puts another valid person in slot 0, and the mutation is caught.

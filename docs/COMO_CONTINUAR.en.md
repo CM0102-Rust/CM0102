@@ -31,6 +31,7 @@ A batch has from 1 to 10 match engine routines (`match_eng.cpp`, `match_pl.cpp`,
 
 ## Known traps
 
+- A routine that hands error cases to the original: a mutation in the path that decides "it is an error" may vanish, because the original gets the result right. In the self-test, make the wrong path land on a different valid case (e.g. another valid person in the slot the mutation would read).
 - Comparator of a routine that draws numbers: pass `crate::aleatorio::REGIOES_DO_ESTADO` to `lado_a_lado` and run the Rust side inside `sem_contar`; otherwise Rust draws from the state the original left. Stack variables read right after a `call` whose argument has not been popped yet (`add esp, 4` later): the offset is 4 less. A mutation that adds the same constant to every candidate does not change the pick (equivalent): replace it with one that changes the order.
 - Self-test state shared by the whole case (tables A/B, globals, player blocks): save and restore it in the section itself. Invalid values may open an original routine's error box; with the game hidden, the test stops without using the CPU (`mutacoes.py` waits for the limit). Do not hook 4-byte getters (0x714d30 froze the game).
 - What depends on the loaded database (club tactics at 0xde1d08, real people) does not run in the synthetic self-test, which happens before the database. For those routines: `mutacoes.py --jogo YYYY-MM-DD` (mutations in the real game in comparison mode). Mutating a path the real game hardly uses (the computer clubs' designated taker) proves nothing: aim at the common path.

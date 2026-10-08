@@ -283,8 +283,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x53b3d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x53b4f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6bc030, bytes: &[0x83, 0xec, 0x54, 0x53, 0x55] },
+    Prologo { endereco: 0x5fe040, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x5fd6b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 178;
+const N: usize = 180;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3959,6 +3961,49 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     1
 }
 
+// ---------- sexagesima segunda leva: tecnico humano (0x9ace, 0x9a06) ----------
+
+/// A pessoa (ou, sem ela, o tecnico humano atual) e o registro dela; `None` nos casos de erro do
+/// original (caixa de mensagem), que ficam com ele.
+unsafe fn pessoa_e_registro(this: usize, pessoa: usize) -> Option<(usize, usize)> {
+    let p = if pessoa != 0 { pessoa } else { *((0xb74c26 + 768 * *(0xb77c7a as *const i16) as isize) as *const usize) };
+    if p == 0 {
+        return None;
+    }
+    tecnico_humano(this, p).ok().map(|r| (p, r))
+}
+
+/// { 0x5fe040 } (human_manager.cpp): campo +0x9ace do registro do tecnico humano da pessoa.
+/// Sem pessoa nenhuma ou fora da faixa: a original (caixa de erro, zera 0xb67a34, 0).
+unsafe extern "thiscall" fn tecnico_9ace(this: usize, pessoa: usize) -> u32 {
+    match pessoa_e_registro(this, pessoa) {
+        Some((_, r)) => *((r + 0x9ace) as *const u32),
+        None => orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(178)(this, pessoa),
+    }
+}
+
+/// { 0x5fd6b0 } (human_manager.cpp): byte +0x9a06 do registro do tecnico humano e diferente de
+/// zero? Se a pessoa tem clube (+0x24) de nacao com +0x88 abaixo de 400: falso, e `saida` = 1.
+/// `saida` (se houver) comeca em 0. Erros como em `tecnico_9ace`.
+unsafe extern "thiscall" fn tecnico_9a06(this: usize, pessoa: usize, saida: *mut u32) -> u8 {
+    if !saida.is_null() {
+        *saida = 0;
+    }
+    match pessoa_e_registro(this, pessoa) {
+        Some((p, r)) => {
+            let clube = *((p + 0x24) as *const usize);
+            if clube != 0 && *((*((clube + 0x53) as *const usize) + 0x88) as *const i32) < 400 {
+                if !saida.is_null() {
+                    *saida = 1;
+                }
+                return 0;
+            }
+            (*((r + 0x9a06) as *const u8) != 0) as u8
+        }
+        None => orig::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8>(179)(this, pessoa, saida),
+    }
+}
+
 // ---------- sexagesima primeira leva: quem marcar (0x6bc030, 3 KB) ----------
 
 /// Distancia (mais o ajuste 0x968990) do ponto (x, y) ao gol que o lado do jogador `j` ataca
@@ -7476,6 +7521,15 @@ unsafe extern "C" fn comparar_separar_mascara(m: u32, setor: *mut u16, lado: *mu
     r
 }
 
+comparar_valor!(comparar_tecnico_9ace, tecnico_9ace, 178, (pessoa: usize) -> u32);
+unsafe extern "thiscall" fn comparar_tecnico_9a06(this: usize, pessoa: usize, saida: *mut u32) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8>(179);
+    let reg: Vec<(usize, usize)> = if saida.is_null() { vec![] } else { vec![(saida as usize, 4)] };
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, saida), || tecnico_9a06(this, pessoa, saida));
+    PLACAR.registrar(igual && r == v, || format!("tecnico_9a06 original={} {:x?} rust={} {:x?}", r, mo, v, mr));
+    r
+}
+
 unsafe extern "thiscall" fn comparar_quem_marcar(m: usize, j: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(177);
     let (r, v, igual, _, _) = crate::comparacao::lado_a_lado(
@@ -7818,6 +7872,8 @@ pub unsafe fn instalar(comparando: bool) {
         selecao_principal as *const () as usize,
         selecao_b as *const () as usize,
         quem_marcar as *const () as usize,
+        tecnico_9ace as *const () as usize,
+        tecnico_9a06 as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -7998,6 +8054,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_selecao_principal as *const () as usize,
         comparar_selecao_b as *const () as usize,
         comparar_quem_marcar as *const () as usize,
+        comparar_tecnico_9ace as *const () as usize,
+        comparar_tecnico_9a06 as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -8067,6 +8125,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_marcado_designado",
         "motor_selecao_principal", "motor_selecao_b",
         "motor_quem_marcar",
+        "motor_tecnico_9ace", "motor_tecnico_9a06",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -9510,6 +9569,34 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_tecnico_9a01(obj56.as_ptr() as usize, quem56);
             let dentro56 = id56[0] - npes56 + 16;
             if (0..ntec).contains(&dentro56) {
+                // sexagesima segunda leva: 0x9ace e 0x9a06 (pessoa com clube e nacao de +0x88 nas bordas)
+                let mut nacao62 = [0u8; 0x90];
+                *(nacao62.as_mut_ptr().add(0x88) as *mut i32) = [399, 400, 0, -1, 401, 5000][((h56 >> 50) % 6) as usize];
+                let mut clube62 = [0u8; 0x60];
+                *(clube62.as_mut_ptr().add(0x53) as *mut usize) = nacao62.as_ptr() as usize;
+                let mut pessoa62 = [0u32; 16];
+                pessoa62[0] = id56[0] as u32;
+                pessoa62[9] = if (h56 >> 53) % 3 == 0 { 0 } else { clube62.as_ptr() as u32 };
+                for k in 0..16usize {
+                    let r = regs56 + 42735 * k;
+                    *((r + 0x9ace) as *mut u32) = (h56 as u32).rotate_right(k as u32);
+                    *((r + 0x9a06) as *mut u8) = if (h56 >> (k + 24)) % 3 == 0 { 0 } else { 0x80 | k as u8 };
+                }
+                *(tab56 as *mut usize) = pessoa62.as_ptr() as usize;
+                // o tecnico 0 com outra pessoa valida: pegar a vaga errada aparece
+                let mut outra62 = [0u32; 16];
+                outra62[0] = (npes56 - 16 + (dentro56 + 1) % ntec) as u32;
+                let antes_vaga0 = *(0xb74c26 as *const u32);
+                if atual56 != 0 {
+                    *(0xb74c26 as *mut usize) = outra62.as_ptr() as usize;
+                }
+                let quem62 = if (h56 >> 47) % 4 == 0 { 0 } else { pessoa62.as_ptr() as usize };
+                comparar_tecnico_9ace(obj56.as_ptr() as usize, quem62);
+                let mut saida62 = 7u32;
+                let sp = if (h56 >> 55) % 2 == 0 { core::ptr::null_mut() } else { &mut saida62 as *mut u32 };
+                comparar_tecnico_9a06(obj56.as_ptr() as usize, quem62, sp);
+                *(0xb74c26 as *mut u32) = antes_vaga0;
+                *(tab56 as *mut usize) = id56.as_ptr() as usize;
                 comparar_tecnico_9a05(obj56.as_ptr() as usize, quem56);
             }
             *(tab56 as *mut u32) = antes_tab56;
