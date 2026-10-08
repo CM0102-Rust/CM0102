@@ -178,6 +178,10 @@ Fonte: tópico 1540, página 5 (Xeno, giovanisantana29 e outros). Conferidos no 
 | 0x8C31D2 | visto de trabalho no Reino Unido: 18 + sorteio dias (`add al, 0x12`, 18 a 25) |
 | 0x8C7BE4.. | regra do visto de trabalho no Reino Unido (tópico 1540, página 10; conferida): concede com reputação mundial do jogador (+0x0D) acima de 8500, salário semanal do contrato (+0x0C) acima de 34 999, menos de 24 anos (pessoa +0x18) com potencial (+0x07) acima de 190, mais de 20 jogos pela seleção (pessoa +0x22) com a nação (pessoa +0x1A) de reputação (+0x8E) acima de 3000 e menos de 32 anos, ou mais de 70% dos jogos (0x8C7D9E); para quem não é jogador, reputação mundial acima de 160 (0x8C7A94) |
 | 0x579C63 | limite de 3 estrangeiros de fora da UE na Inglaterra (`mov byte [edx+5], 3`) |
+| 0x96D808 | constante 71,0 (float) comparada em match_pl.cpp (0x706D1B, 0x706DEE, rotina ainda não reescrita); segundo a comunidade, a porcentagem de chutes a gol que não entram (o patch de mais gols troca por 65); tópico 1540, páginas 21 e 22 |
+| 0x54AC4F | dia da semana a partir do ano (0xAE2C92), do dia do ano (0xAE2C90) e da marca de ano bissexto (0xAE2C94) |
+| 0x8CFA1E | limite de jogadores de fora da UE numa partida (o salto que o aplica) |
+| 0x8C34E0 | executa uma transferência: no registro recebido, +8 id do clube comprador, +0xC id do jogador; tabelas de clubes em 0xAE23B4 e de pessoas em 0xAE23BC (página 23) |
 | 0x43F2C8 | estrangeiros no Brasileiro: 2 por jogo (`mov byte [edx+2], 2`; tópico 1540, página 18) |
 | 0x533080 | sem nomes reais, os jogadores trocam de clube em pares sorteados (16 × a quantidade, fator em 0x969508); alguns ficam onde estavam (página 19) |
 | fase +0x3E | quantidade de times da liga (ex.: 18 na liga galesa, 0x925B42; 14 na grega, 0x5EAD72, que reserva 59 bytes por time, a linha da tabela; páginas 19 e 20) |

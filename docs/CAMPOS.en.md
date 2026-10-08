@@ -178,6 +178,10 @@ Source: topic 1540, page 5 (Xeno, giovanisantana29 and others). Checked in 3.9.6
 | 0x8C31D2 | UK work permit: 18 + a draw of days (`add al, 0x12`, 18 to 25) |
 | 0x8C7BE4.. | UK work permit rule (topic 1540, page 10; checked): granted with the player's world reputation (+0x0D) above 8500, the contract's weekly wage (+0x0C) above 34,999, under 24 (person +0x18) with potential (+0x07) above 190, more than 20 caps (person +0x22) with the nation (person +0x1A) of reputation (+0x8E) above 3000 and under 32, or more than 70% of the games (0x8C7D9E); for non-players, world reputation above 160 (0x8C7A94) |
 | 0x579C63 | limit of 3 non-EU foreigners in England (`mov byte [edx+5], 3`) |
+| 0x96D808 | constant 71.0 (float) compared in match_pl.cpp (0x706D1B, 0x706DEE, routine not yet rewritten); according to the community, the percentage of shots on target that do not go in (the more-goals patch changes it to 65); topic 1540, pages 21 and 22 |
+| 0x54AC4F | weekday from the year (0xAE2C92), the day of the year (0xAE2C90) and the leap year flag (0xAE2C94) |
+| 0x8CFA1E | limit of non-EU players in a match (the jump that applies it) |
+| 0x8C34E0 | carries out a transfer: in the record received, +8 buying club id, +0xC player id; club table at 0xAE23B4 and person table at 0xAE23BC (page 23) |
 | 0x43F2C8 | foreigners in the Brazilian league: 2 per game (`mov byte [edx+2], 2`; topic 1540, page 18) |
 | 0x533080 | without real names, players swap clubs in drawn pairs (16 × the count, factor at 0x969508); some stay where they were (page 19) |
 | stage +0x3E | number of teams in the league (e.g. 18 in the Welsh league, 0x925B42; 14 in the Greek one, 0x5EAD72, which reserves 59 bytes per team, the table row; pages 19 and 20) |
