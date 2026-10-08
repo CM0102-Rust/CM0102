@@ -189,7 +189,9 @@ Checked in 3.9.68 where stated:
 
 | Where | What it is |
 |---|---|
-| competition/stage +0x49, +0x4A | named substitutes and substitutions allowed (4 bits each); a competition method (around 0x48F2FA, with a competition-specific version in vtable +0x7C) copies both into word +0x4D of the object it receives (probably the match). The French Cup stores its own at 0x5BA19B. Checked |
+| competition/stage +0x49, +0x4A | named substitutes and substitutions allowed (4 bits each); a competition method (around 0x48F2FA, with a competition-specific version in vtable +0x7C) copies both into word +0x4D of the object it receives (probably the match). The French Cup stores its own at 0x5BA19B; the Italian Serie A, 7 and 3 (0x6416D6); topic 1540, page 11, lists these values for each competition. Checked |
+| transfer rules (e.g. italy_rules.cpp, 0x6613F0) | windows in 6-byte records: type (0x0E), ?, day of the week (0xFF = the date itself), day, month (0 = January), ?; topic 1540, page 11 |
+| 0xA158B0 | text "Only %d home players" of match_eng.cpp (lines 612 and 652): the match flags a team short of players |
 | 0x68A160, 0x68A1C0 | build the rounds of the league calendar (called with the week and the round parameters; e.g. Italian Serie B at 0x646574). Checked |
 | 0x5836C4, 0x632E30 | start year (2001, `cmp ax, 0x7D1`) for the previous year's international and European awards. Checked |
 | 0x5E4800 | builds an interface colour from three components (blue, green, red pushed before the call); the interface has dozens of these calls. Checked |

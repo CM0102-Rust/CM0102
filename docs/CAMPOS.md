@@ -189,7 +189,9 @@ Conferidos no 3.9.68 quando indicado:
 
 | Onde | O que é |
 |---|---|
-| competição/fase +0x49, +0x4A | reservas relacionados e substituições permitidas (4 bits cada); um método da competição (por volta de 0x48F2FA, com versão própria por competição na vtable +0x7C) copia os dois para a palavra +0x4D do objeto recebido (provavelmente a partida). A Copa da França grava os seus em 0x5BA19B. Conferido |
+| competição/fase +0x49, +0x4A | reservas relacionados e substituições permitidas (4 bits cada); um método da competição (por volta de 0x48F2FA, com versão própria por competição na vtable +0x7C) copia os dois para a palavra +0x4D do objeto recebido (provavelmente a partida). A Copa da França grava os seus em 0x5BA19B; a Série A italiana, 7 e 3 (0x6416D6); o tópico 1540, página 11, lista esses valores de cada competição. Conferido |
+| regras de transferência (ex.: italy_rules.cpp, 0x6613F0) | janelas em registros de 6 bytes: tipo (0x0E), ?, dia da semana (0xFF = a própria data), dia, mês (0 = janeiro), ?; tópico 1540, página 11 |
+| 0xA158B0 | texto "Only %d home players" de match_eng.cpp (linhas 612 e 652): a partida acusa time com jogadores de menos |
 | 0x68A160, 0x68A1C0 | montam as rodadas do calendário das ligas (chamadas com a semana e os parâmetros da rodada; ex.: Série B italiana em 0x646574). Conferido |
 | 0x5836C4, 0x632E30 | ano inicial (2001, `cmp ax, 0x7D1`) para os prêmios internacionais e europeus do ano anterior. Conferido |
 | 0x5E4800 | monta uma cor da interface a partir de três componentes (azul, verde, vermelho empilhados antes da chamada); a interface tem dezenas dessas chamadas. Conferido |
