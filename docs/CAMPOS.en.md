@@ -75,7 +75,7 @@ In the match refereeing object (`match_official.cpp`), the pointer at **+0x04**.
 
 ## Nations (constants at 0x9CF200..)
 
-Each nation in the database has a fixed global pointer in this area (0x9CF200 Afghanistan ... 0x9CF4A8 Sweden; continents at 0x9CFA08..). Source: NickDLL's `Helpers/9cf_constants` (davdav, <https://github.com/dm-carmo/NickDLL>; no license declared: facts only, no code copied).
+Each nation in the database has a fixed global pointer in this area (0x9CF200 Afghanistan ... 0x9CF4A8 Sweden; continents at 0x9CFA08..). Source: NickDLL's `Helpers/9cf_constants`, maintained by davdav (dm-carmo, <https://github.com/dm-carmo/NickDLL>; the name comes from Nick+Co, who had the initial idea, a different person; no license declared: facts only, no code copied).
 
 In `forca_do_time`, when the club plays in its own country (the match's nation, +0x5d, is the club's nation, +0x53), word 0x1de of the strength is multiplied by the national league's style:
 

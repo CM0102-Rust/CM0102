@@ -75,7 +75,7 @@ No objeto de arbitragem da partida (`match_official.cpp`), o ponteiro em **+0x04
 
 ## Nações (constantes em 0x9CF200..)
 
-Cada nação da base tem um ponteiro global fixo nesta área (0x9CF200 Afeganistão ... 0x9CF4A8 Suécia; continentes em 0x9CFA08..). Fonte: `Helpers/9cf_constants` do NickDLL (davdav, <https://github.com/dm-carmo/NickDLL>; sem licença declarada: só os fatos, nada de código copiado).
+Cada nação da base tem um ponteiro global fixo nesta área (0x9CF200 Afeganistão ... 0x9CF4A8 Suécia; continentes em 0x9CFA08..). Fonte: `Helpers/9cf_constants` do NickDLL, mantido por davdav (dm-carmo, <https://github.com/dm-carmo/NickDLL>; o nome vem de Nick+Co, de quem foi a ideia inicial, outra pessoa; sem licença declarada: só os fatos, nada de código copiado).
 
 Em `forca_do_time`, quando o clube joga no próprio país (a nação do jogo, +0x5d, é a nação do clube, +0x53), a palavra 0x1de da força é multiplicada pelo estilo da liga nacional:
 
