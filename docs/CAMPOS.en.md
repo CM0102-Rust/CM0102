@@ -87,8 +87,11 @@ In the engine, the pointer at **+0x4792**. Fields from the structure davdav publ
 | +0x0C / +0x10 | home / away ids | — |
 | +0x14 | competition (pointer) | `forca_do_time` (competition nation at +0x5d; 0x5c6710) |
 | +0x1C / +0x20 | home / away (club pointers) | `forca_do_time` (nation and reputation; side 0 is the home team) |
+| +0x30 / +0x32 | round name / prefix (codes of comp_util.cpp's name table, 0x4B4850) | `placar_agregado` (units digit of +0x30), `nova_reputacao` and `reputacao_do_jogador` (larger weights in quarter finals, semi finals, finals and groups A to H) |
 
 The same object holds the dates (year/day words), the stages and the score; according to the topic, also the stadium, and the engine reads it a lot.
+
+**Round codes** (topic 1540, page 3, Saturn's explanation of the cups' round blocks; checked in the name table 0x4B4850). Each cup round has a 0x68-byte record (+0x07 name, +0x09 number, +0x0B draw type, +0x0D/+0x0F/+0x11 tiebreak of game 1/2/3, +0x18 teams, +0x1A ties, +0x1C new teams, +0x20 replays, +0x21 legs, +0x22 days between them, +0x5C/+0x60/+0x64 prize money). The name is base + variant: base 0x0A first round, 0x14 second... 0x78 quarter final, 0x82 semi final, 0x8C third place, 0x96 final, 0xA0 playoff, 0xDC qualifying round; variant 0 single game, 1 replay, 2 second replay, 3 first leg, 4 second leg, 5 decider. Prefixes: 0x41F..0x426 = groups A to H (0x418..0x41E: playoff groups, autumn and spring seasons, "Group Stage", northern and southern sections).
 
 ## Nations (constants at 0x9CF200..)
 
@@ -164,3 +167,14 @@ Source: topic "Miscellaneous CM0102 Patches & Fixes by melanzalko" (champman0102
 **Competition prize and TV money** (topic "Offsets", champman0102.co.uk forum, topic 1540, 2020): the amounts in pounds are immediate constants in each competition's code; the topic lists the file offsets (VA = offset + 0x400000) for leagues, cups and European tournaments. Checked: Brazilian first division, TV 1,000,000 at 0x42A461; second division, TV 500,000 at 0x42CA51; Premier League, prize 250,000 at 0x574B1D and TV 12,000,000 at 0x574B40; Champions League, winner 4,000,000 at 0x584539.
 
 Not used yet: the match engine does not touch finances. They are for the stage of the simulation outside the match.
+
+## Rules (for future stages)
+
+Source: topic 1540, page 5 (Xeno, giovanisantana29 and others). Checked in 3.9.68:
+
+| VA | Rule |
+|---|---|
+| 0x7DD212 (and 0x7DF766, 0x7DB019) | a suspension starts 14 days later (`push 0xE`): England, Ireland and obscene gestures |
+| 0x8C31D2 | UK work permit: 18 + a draw of days (`add al, 0x12`, 18 to 25) |
+| 0x579C63 | limit of 3 non-EU foreigners in England (`mov byte [edx+5], 3`) |
+| 0x868307 | a contract becomes unprotected after 2 years (+1 under 28) (`add ebx, 2`) |

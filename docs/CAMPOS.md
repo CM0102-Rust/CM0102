@@ -87,8 +87,11 @@ No motor, o ponteiro em **+0x4792**. Campos pela estrutura que davdav publicou n
 | +0x0C / +0x10 | ids do mandante / visitante | — |
 | +0x14 | competição (ponteiro) | `forca_do_time` (nação da competição em +0x5d; 0x5c6710) |
 | +0x1C / +0x20 | mandante / visitante (ponteiros de clube) | `forca_do_time` (nação e reputação; o lado 0 é o mandante) |
+| +0x30 / +0x32 | nome da rodada / prefixo (códigos da tabela de nomes de comp_util.cpp, 0x4B4850) | `placar_agregado` (algarismo das unidades de +0x30), `nova_reputacao` e `reputacao_do_jogador` (pesos maiores em quartas, semi e final e nos grupos A a H) |
 
 O mesmo objeto guarda as datas (ano/dia em palavras), as fases e o placar; segundo o tópico, também o estádio, e o motor o consulta bastante.
+
+**Códigos de rodada** (tópico 1540, página 3, explicação de Saturn sobre os blocos de rodada das copas; conferidos na tabela de nomes 0x4B4850). Cada rodada da copa tem um registro de 0x68 bytes (+0x07 nome, +0x09 número, +0x0B tipo de sorteio, +0x0D/+0x0F/+0x11 desempate do jogo 1/2/3, +0x18 times, +0x1A confrontos, +0x1C times novos, +0x20 jogos extras, +0x21 jogos (ida e volta), +0x22 dias entre eles, +0x5C/+0x60/+0x64 prêmios). O nome é base + variante: base 0x0A primeira fase, 0x14 segunda... 0x78 quartas, 0x82 semifinal, 0x8C terceiro lugar, 0x96 final, 0xA0 repescagem, 0xDC eliminatória; variante 0 jogo único, 1 jogo extra, 2 segundo jogo extra, 3 ida, 4 volta, 5 desempate. Prefixos: 0x41F..0x426 = grupos A a H (0x418..0x41E: grupos de repescagem, temporadas de outono e primavera, "Group Stage", seções norte e sul).
 
 ## Nações (constantes em 0x9CF200..)
 
@@ -164,3 +167,14 @@ Fonte: tópico "Miscellaneous CM0102 Patches & Fixes by melanzalko" (fórum cham
 **Prêmios e cotas de TV das competições** (tópico "Offsets", fórum champman0102.co.uk, tópico 1540, 2020): os valores em libras estão como constantes imediatas no código de cada competição; o tópico lista os deslocamentos no arquivo (VA = deslocamento + 0x400000) de ligas, copas e torneios europeus. Conferidos: Brasileiro série A, TV 1 000 000 em 0x42A461; série B, TV 500 000 em 0x42CA51; Premier League, prêmio 250 000 em 0x574B1D e TV 12 000 000 em 0x574B40; Liga dos Campeões, campeão 4 000 000 em 0x584539.
 
 Ainda não usados: o motor não toca em finanças. Ficam para a etapa da simulação fora da partida.
+
+## Regras (para etapas futuras)
+
+Fonte: tópico 1540, página 5 (Xeno, giovanisantana29 e outros). Conferidos no 3.9.68:
+
+| VA | Regra |
+|---|---|
+| 0x7DD212 (e 0x7DF766, 0x7DB019) | suspensão começa 14 dias depois (`push 0xE`): Inglaterra, Irlanda e gestos obscenos |
+| 0x8C31D2 | visto de trabalho no Reino Unido: 18 + sorteio dias (`add al, 0x12`, 18 a 25) |
+| 0x579C63 | limite de 3 estrangeiros de fora da UE na Inglaterra (`mov byte [edx+5], 3`) |
+| 0x868307 | contrato fica desprotegido depois de 2 anos (+1 abaixo de 28 anos) (`add ebx, 2`) |
