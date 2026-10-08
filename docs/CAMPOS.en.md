@@ -265,3 +265,10 @@ Map published by the author of the modern European competitions patch. The marke
 | 0xA161CC | "Key" text of the match stats column (left empty by the Portuguese translation). Checked |
 | 0x59DBD0..0x59DD25 | club dividends (topic 10877, page 2): threshold by reputation (+0x80, cut-offs at 4000 at 0x59DC66/0x59DCC9), threshold scale at 0x59DCBB (`shl eax, 3`), cash guards at 0x59DCC1/0x59DCC7, chairman's random decision at 0x59DB0C. 0x59DCBB and 0x59DB0C checked |
 | 0x8EDB66 | cap on the next-sale percentage (`cmp al, 0x19` = 25%). Checked |
+
+## Error messages and guards (topic 3473)
+
+| Where | What it is |
+|---|---|
+| "v3.9.68 file.cpp N" | N is the source line, in decimal; in the exe it shows up as `push N` in hex right before the build with the format "v%s %s.%s %d" (0x9870E8) into the text 0xAE24D0, shown by the box 0x5E8290; then 0 is written to 0xB67A34. E.g. index.cpp 5809 = `push 0x16B1` at 0x60D7C3. The detail ("Unable to find the %s index") is at 0xDE1F64. Checked |
+| 0x8E7BEC | reads the player data (+0x61) of a person with a club without a null check; a database with a person lacking that data crashes the game here (community guard patch). Checked |

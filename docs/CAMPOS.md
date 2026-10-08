@@ -265,3 +265,10 @@ Mapa publicado por quem fez o patch das competições europeias modernas. Os pon
 | 0xA161CC | texto "Key" da coluna das estatísticas da partida (a tradução portuguesa deixa vazio). Conferido |
 | 0x59DBD0..0x59DD25 | dividendos do clube (tópico 10877, pág. 2): limiar por reputação (+0x80, cortes em 4000 em 0x59DC66/0x59DCC9), escala do limiar em 0x59DCBB (`shl eax, 3`), proteções de caixa em 0x59DCC1/0x59DCC7, decisão aleatória do presidente em 0x59DB0C. Conferidos 0x59DCBB e 0x59DB0C |
 | 0x8EDB66 | teto do percentual da próxima venda (`cmp al, 0x19` = 25%). Conferido |
+
+## Mensagens de erro e proteções (tópico 3473)
+
+| Onde | O que é |
+|---|---|
+| "v3.9.68 arquivo.cpp N" | N é a linha do fonte, em decimal; no exe aparece como `push N` em hexadecimal logo antes da montagem com o formato "v%s %s.%s %d" (0x9870E8) no texto 0xAE24D0, mostrado pela caixa 0x5E8290; depois grava 0 em 0xB67A34. Ex.: index.cpp 5809 = `push 0x16B1` em 0x60D7C3. O detalhe ("Unable to find the %s index") fica em 0xDE1F64. Conferido |
+| 0x8E7BEC | lê os dados de jogador (+0x61) de uma pessoa com clube sem testar nulo; banco com pessoa sem esses dados derruba o jogo aqui (proteção da comunidade). Conferido |
