@@ -523,3 +523,21 @@ Mutações: 5/5.
 Mutações: 13/13 (`n_21` acusada por queda: a versão mutada divide por zero). Nível 21..=28 com os códigos 0x78.. daria peso zero também no original (divisão por zero); o gerador não produz esse caso.
 
 **Testes mais rápidos.** `CM_AUTOTESTE=motor:N` roda só o autoteste do motor, com N casos. O `mutacoes.py` roda a base completa (cerca de 30 minutos) e depois cada mutação com `motor:200000` (`--casos` muda): na 54ª leva, cada mutação foi acusada em cerca de 1 segundo depois de abrir o jogo, contra alguns minutos antes. Jogo real (levas 53 e 54): mais de 1 bilhão comparações, 0 divergências. Carreira até 01/06/2002: Rust ×2 = original (c76ad0ff6ce3daa6, 2.357.335.216 sorteios).
+
+### Motor de partidas, 55ª leva — reputação do jogador (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `reputacao_do_jogador(reg, meu, outro, partida, valor, alt, bonus)` | 0x6d3610 | cdecl | match_eng.cpp, no fim da partida para cada jogador (registro em motor + 0x9032, jogador em +0x1b): a mesma conta da reputação do clube (54ª) para as três reputações da ficha (+0x69 do jogador): atual (+8), em casa (+0xa) e mundial (+0xc); grava (casa, atual, mundial) no registro. Pesos: casa = (reputação/1000 + 16, mínimo 22) − nível; atual = o mesmo se o clube é seleção ou o clube do jogador (+0x1a) é o do clube (+0x53) ou o da competição (+0x5d), senão a média disso com 202 − 10 × nível (mínimo 4); mundial como a do clube (mínimo 21). Alvo: (nível × 0,5 + 5) × 50 × 1,3 × (valor − razão), sem o quadrado do clube. Faixa por partida (× 2 − reputação/10000): casa −250/+300, atual −250/+375, mundial −500/+100 × nível. Teto: 400 × nível (÷ 2 sem o caso especial, para atual e mundial) entre 5000 (mundial 3000) e 10000, nunca abaixo da reputação atual |
+
+Mutações: 13/13.
+
+### Motor de partidas, 56ª leva — escolher o cobrador (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `escolher_cobrador(lado, tipo, excluidos)` | 0x6ceb90 | thiscall, ret 0xc | match_eng.cpp: o cobrador do lado para a bola parada `tipo` (1..=8), pela maior pontuação entre os 20 do bloco (o primeiro empate fica). Fora: posição < 0 ou marcado em `excluidos` (tipo 5); posição > 10 ou sem pessoa (+0x6d): a posição vira −1. O goleiro guardado não cobra 1, 2, 3, 8, nem 6/7 longe da área. 1 e 2: atributo (0xdd, 0xe9) − 2 × distância à bola; 3 (escanteio): o designado na tática do clube (0x897990 sobre 0xde1d08; 10000/9000, com sorteio do lado contrário) ou 0x89 − 0xad/2, × 0,75 (1,25 se negativo) com a marca 0x40; 4: 100 com a tabela = 1; 5 (pênalti): a lista do técnico humano (10000 − ordem, 0x601070) ou 0xc9 pela idade, sorteio de +0x5a e +0xb da pessoa; 6/7 (falta): perto do gol, o designado ou bola parada (+0x29 da pessoa, 0x109); longe, 0xa1 − distâncias; 8: 100 − distância. Sem ninguém: 0 com `excluidos`, senão erro fatal |
+
+**Mutações no jogo real.** A tática do clube (0xde1d08) só existe com o banco carregado; no autoteste sintético o escanteio e a falta perto do gol não rodam (o gerador troca para o tipo 8). `mutacoes.py --jogo AAAA-MM-DD` roda cada mutação no jogo real em comparação até a data (cerca de 95 s até 15/08/2001). Os clubes do computador quase nunca têm cobrador designado: mutações só no designado passam (equivalentes na prática); as da pontuação do escanteio e da falta são acusadas. Mutações: 18/18 no autoteste (uma lacuna fechada: a lista de pênaltis do técnico humano agora tem fichas dos jogadores), 4/4 no jogo real. Jogo real (levas 55 e 56): 10 bilhões de comparações, 0 divergências. Carreira até 01/06/2002: Rust ×2 = original (c76ad0ff6ce3daa6).
+
+**Base mais curta.** A partir da 57ª leva, a base das mutações roda com 200 mil casos (cerca de 3 minutos); a base completa (2 milhões, cerca de 35 minutos, `--base-completa`) fica para cada 5 levas.

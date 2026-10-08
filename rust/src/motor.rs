@@ -266,8 +266,12 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6bbf60, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] },
     // quinquagesima quarta leva
     Prologo { endereco: 0x6d3de0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x0c] },
+    // quinquagesima quinta leva
+    Prologo { endereco: 0x6d3610, bytes: &[0x83, 0xec, 0x3c, 0xb8, 0x02, 0x00, 0x00, 0x00] },
+    // quinquagesima sexta leva
+    Prologo { endereco: 0x6ceb90, bytes: &[0x81, 0xec, 0x24, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 166;
+const N: usize = 168;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3947,6 +3951,304 @@ unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 {
     bola_fora_com(this, lado_b, &mut |t, a| comentar(t, a))
 }
 
+// ---------- quinquagesima sexta leva: escolher o cobrador ----------
+
+/// Caixa de erro do original (match_eng.cpp, linha) sem a mensagem: zera 0xb67a34, 0x5cc7d0,
+/// 0x5a8f60 e exit(-1).
+unsafe fn erro_fatal() -> ! {
+    *(0xb67a34 as *mut u32) = 0;
+    let a: unsafe extern "C" fn() = core::mem::transmute(0x5cc7d0usize);
+    let b: unsafe extern "C" fn() = core::mem::transmute(0x5a8f60usize);
+    let sair: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(0x945934usize);
+    a();
+    b();
+    sair(-1)
+}
+
+/// { 0x6ceb90 } (match_eng.cpp): escolhe o cobrador do lado para a bola parada `tipo` (1..=8),
+/// pela maior pontuacao entre os 20 do bloco (o primeiro empate fica). Fora: posicao < 0, ou
+/// marcado em `excluidos` (tipo 5). Posicao > 10 ou sem pessoa (+0x6d): posicao vira -1. O goleiro
+/// guardado (0xf59e/0xf5a2) nao cobra 1, 2, 3, 8, nem 6/7 longe da area adversaria. Pontuacoes:
+/// 1 e 2: atributo (0xdd, 0xe9) - 2 x distancia a bola; 3 (escanteio): o cobrador designado na tatica
+/// (0x897990 sobre 0xde1d08; 10000/9000, com sorteio no lado contrario) ou 0x89 - 0xad/2, x 0,75
+/// (1,25 se negativo) com a marca 0x40 da tabela; 4: 100 com a tabela = 1; 5 (penalti): a lista do
+/// tecnico humano (10000 - ordem, 0x601070) ou 0xc9 pela idade, sorteio de +0x5a e +0xb da pessoa;
+/// 6/7 (falta): perto do gol, o designado ou bola parada da pessoa (+0x29) e 0x109; longe,
+/// 0xa1 - distancias; 8: 100 - distancia. Sem ninguem: 0 com `excluidos`, senao erro fatal.
+unsafe extern "thiscall" fn escolher_cobrador(this: usize, lado: i8, tipo: i8, excluidos: usize) -> usize {
+    let dist: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(0x6f09b0usize);
+    let tatica: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32) -> usize = core::mem::transmute(0x897990usize);
+    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let f5fd210: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd210usize);
+    let f5fd480: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd480usize);
+    let f601070: unsafe extern "thiscall" fn(usize, i32, usize) -> usize = core::mem::transmute(0x601070usize);
+    let d32 = |p: usize, o: usize| *((p + o) as *const usize);
+    let f = |p: usize, o: usize| f32_em(p + o) as f64;
+    let partida = d32(this, 0x4792);
+    let (mut melhor, mut melhor_v) = (0usize, -1i16);
+    for k in 0..20isize {
+        let i = lado as isize * 20 + k;
+        let j = (this as isize + 0x4796 + 0x1be * i) as usize;
+        let (a7, a8) = (byte(this, 0x8ea7), byte(this, 0x8ea8));
+        if tipo == 5 && excluidos != 0 && *((excluidos as isize + i) as *const u8) != 0 {
+            continue;
+        }
+        if byte(j, 0x19) < 0 {
+            continue;
+        }
+        let guardado = (lado == 0 && j == d32(this, 0xf59e)) || (lado == 1 && j == d32(this, 0xf5a2));
+        if guardado {
+            match tipo {
+                1 | 2 | 3 | 8 => continue,
+                6 | 7 => {
+                    let linha = if lado == 1 { (10..=11).contains(&a8) } else { (0..=1).contains(&a8) };
+                    if !((2..=6).contains(&a7) && linha) {
+                        continue;
+                    }
+                }
+                _ => {}
+            }
+        }
+        if byte(j, 0x19) > 10 || d32(j, 0x6d) == 0 {
+            *((j + 0x19) as *mut i8) = -1;
+            continue;
+        }
+        // cobrador designado na tatica do clube do jogador
+        let designado = |a: i32, b: i32| {
+            let fora = byte(j, 0x27) != 0;
+            let reserva = (byte(partida, if fora { 0x41 } else { 0x40 }) == 0) as i32;
+            let clube = d32(partida, if fora { 0x20 } else { 0x1c });
+            tatica(*(0xde1d08 as *const usize), clube, a, b, reserva) == d32(j, 0x69)
+        };
+        // perto do gol: tabela de distancias da bola (|a7 - 4|, |a8 - linha do gol|)
+        let tabela_bola = || {
+            let cx = (a7 as i32 - 4).abs() as i8;
+            let ax = (a8 as i32 - if lado != 0 { 0 } else { 11 }).abs() as i8;
+            if (0..=8).contains(&cx) && (0..=11).contains(&ax) {
+                distancia_tabela(ax as i32, cx as i32) as f64
+            } else {
+                f32_em(0x96d2dc) as f64
+            }
+        };
+        let ataque = if lado == 0 { a7 < 4 } else { lado == 1 && a7 > 4 };
+        let bola_parada = || {
+            let pd = d32(j, 0x6d);
+            let mut s = (byte(pd, 0x29) as i16).wrapping_mul(5).wrapping_add((byte(j, 0x109) as i16).wrapping_mul(2));
+            if s <= 0 {
+                return s;
+            }
+            let idade = byte(d32(j, 0x69), 0x18);
+            if idade < 20 {
+                s = ftol(s as f64 * f64_em(0x969520)) as i16;
+            } else if idade < 24 {
+                s = ftol(s as f64 * f64_em(0x9689d0)) as i16;
+            }
+            ftol((*((pd + 0xb) as *const i16) as f64 * f64_em(0x96d240) + f64_em(0x969040)) * s as f64) as i16
+        };
+        let longe = || {
+            let g1 = dist(j, a7, a8);
+            let g2 = dist(j, a7, a8);
+            ftol(f(j, 0xa1) - g2 as f64 * g1 as f64) as i16
+        };
+        let v: i16 = match tipo {
+            1 | 2 => ftol(f(j, if tipo == 1 { 0xdd } else { 0xe9 }) - 2.0 * dist(j, a7, a8) as f64) as i16,
+            3 => {
+                let pontos = || {
+                    let s = ftol(f(j, 0x89) - f(j, 0xad) * f32_em(0x968f18) as f64) as i16;
+                    if tabela_a(this, j) & 0x40 == 0 {
+                        s
+                    } else if s > 0 {
+                        ftol(s as f64 * f64_em(0x969040)) as i16
+                    } else {
+                        ftol(s as f64 * f64_em(0x968928)) as i16
+                    }
+                };
+                if ataque {
+                    if designado(2, 0) { 10000 } else if designado(2, 1) { 9000 } else { pontos() }
+                } else if designado(3, 0) {
+                    (10000 - sorteio(1000)) as i16
+                } else if designado(3, 1) {
+                    (sorteio(500) + 9000) as i16
+                } else {
+                    pontos()
+                }
+            }
+            4 => if tabela_a(this, j) == 1 { 100 } else { 0 },
+            5 => {
+                let bloco = (this as isize + 0xd0 * lado as isize) as usize;
+                let tec = d32(bloco, 0x904d);
+                let n = *(0xae2364 as *const i32);
+                let lista = tec != 0
+                    && (n - 16..n).contains(&*(tec as *const i32))
+                    && byte(tec, 0x5f) != 0
+                    && f5fd210(*(0xb63c98 as *const usize), tec) == 0
+                    && (byte(bloco, 0x904b) == 0
+                        || e_selecao(d32(partida, if lado == 0 { 0x1c } else { 0x20 })) != 0
+                        || f5fd480(*(0xb63c98 as *const usize), d32(bloco, 0x904d)) != 0)
+                    && excluidos == 0;
+                if lista {
+                    let mut v = ftol(f(j, 0xc9) - (byte(d32(j, 0x6d), 0xf) as i32 * 20 - 20) as f64) as i16;
+                    for b in 0..50i32 {
+                        if f601070(*(0xb63c98 as *const usize), b, d32(bloco, 0x904d)) == d32(j, 0x69) {
+                            v = 10000 - b as i16;
+                            break;
+                        }
+                    }
+                    v
+                } else if j == d32(this, 0xf59e) || j == d32(this, 0xf5a2) {
+                    -10000
+                } else {
+                    let mut s = ftol(f(j, 0xc9)) as i16;
+                    if s > 0 {
+                        let ficha = d32(j, 0x69);
+                        let idade = byte(ficha, 0x18);
+                        if idade < 20 {
+                            s = ftol(s as f64 * f64_em(0x969510)) as i16;
+                        } else if idade < 24 {
+                            s = ftol(s as f64 * f64_em(0x969040)) as i16;
+                        }
+                        let b5a = byte(ficha, 0x5a);
+                        if b5a != 0 && sorteio(b5a as i32) == 0 {
+                            s = ftol(s as f64 * f64_em(0x969510)) as i16;
+                        }
+                        s = ftol((*((d32(j, 0x6d) + 0xb) as *const i16) as f64 * f64_em(0x96d240) + f64_em(0x969040)) * s as f64) as i16;
+                    }
+                    s
+                }
+            }
+            6 | 7 => {
+                if (2..=6).contains(&a7) {
+                    if tabela_bola() < f64_em(0x96d428) {
+                        let a = if ataque { 0 } else { 1 };
+                        if designado(a, 0) { 10000 } else if designado(a, 1) { 9000 } else { bola_parada() }
+                    } else {
+                        longe()
+                    }
+                } else if tabela_bola() < f64_em(0x96d310) {
+                    ftol(f(j, 0xa1) * 2.0 - f(j, 0xad) * f32_em(0x968f18) as f64) as i16
+                } else {
+                    longe()
+                }
+            }
+            8 => ftol(f32_em(0x968960) as f64 - dist(j, a7, a8) as f64) as i16,
+            _ => erro_fatal(),
+        };
+        if melhor == 0 || v > melhor_v {
+            melhor_v = v;
+            melhor = j;
+        }
+    }
+    if melhor == 0 && excluidos == 0 {
+        erro_fatal();
+    }
+    melhor
+}
+
+// ---------- quinquagesima quinta leva: reputacao do jogador ----------
+
+/// { 0x6d3610 } (match_eng.cpp): reputacoes do jogador depois da partida, na mesma conta da do
+/// clube (0x6d3de0), para as tres da ficha (+0x69 do jogador): atual (+8), em casa (+0xa) e mundial
+/// (+0xc). Grava em `reg` (casa, atual, mundial). Pesos: casa = (reputacao/1000 + 16, minimo 22) -
+/// nivel; atual = o mesmo, se o clube e selecao ou o do jogador (+0x1a) e o do clube (+0x53) ou o da
+/// competicao (+0x5d), senao a media disso com 202 - 10 x nivel (minimo 4); mundial como a do clube
+/// (minimo 21). Faixas por partida: casa -250/+300, atual -250/+375, mundial -500/+100 x nivel (x
+/// 2 - reputacao/10000). Tetos: 400 x nivel (/2 sem o caso especial), entre 5000 (mundial 3000) e 10000.
+unsafe extern "C" fn reputacao_do_jogador(reg: usize, meu: usize, outro: usize, partida: usize, valor: f32, alt: u8, bonus: u8) {
+    let p = *((reg + 0x1b) as *const usize);
+    if p == 0 {
+        return;
+    }
+    let st = *((p + 0x69) as *const usize);
+    if st == 0 {
+        return;
+    }
+    let w = |c: usize, o: usize| *((c + o) as *const i16) as i32;
+    let comp = *((partida + 0x14) as *const usize);
+    let mut nivel: i8 = if *(partida as *const i32) == -2 {
+        5
+    } else {
+        let v = if byte(partida, 0x40) != 0 {
+            ((w(outro, 0x80) / 500 + w(comp, 0x69)) / 2) as i8
+        } else {
+            byte(comp, 0x69)
+        };
+        v.min(20)
+    };
+    let teto = |rep: i32, minimo: i8| ((rep / 1000) as i8).wrapping_add(16).max(minimo) as i16;
+    let (atual, casa, mundo) = (w(st, 8), w(st, 0xa), w(st, 0xc));
+    let n_casa = teto(casa, 22).wrapping_sub(nivel as i16);
+    let selecao = e_selecao(meu) != 0;
+    let clube_p = *((p + 0x1a) as *const usize);
+    let (mut f_atual, mut f_mundo) = (2i32, 2i32);
+    // ponytail: o original tambem testa partida -2 com +0x53 nao nulo; o ultimo teste (+0x53 igual) ja cobre
+    let n_atual: i16 = if selecao || (comp != 0 && *((comp + 0x5d) as *const usize) == clube_p) || *((meu + 0x53) as *const usize) == clube_p {
+        f_atual = 1;
+        teto(atual, 22).wrapping_sub(nivel as i16)
+    } else {
+        let x = ((0xca - 10 * nivel as i32) as i16 as i32 + teto(atual, 22).wrapping_sub(nivel as i16) as i32) / 2;
+        if (x as i16) < 4 { 4 } else { x as i16 }
+    };
+    let w30 = *((partida + 0x30) as *const u16);
+    let w32 = *((partida + 0x32) as *const u16);
+    let n_mundo: i16 = if selecao {
+        f_mundo = 1;
+        teto(mundo, 21).wrapping_sub(nivel as i16)
+    } else if byte(partida, 0x3a) == 8 {
+        f_mundo = 1;
+        if (0x41f..=0x426).contains(&w32) {
+            teto(mundo, 21).wrapping_sub(nivel as i16).wrapping_add(1)
+        } else if matches!(w30, 0x78..=0x7c | 0x82..=0x87 | 0x96..=0x9b) {
+            nivel = byte(comp, 0x69);
+            teto(mundo, 21).wrapping_sub(nivel as i16)
+        } else {
+            (0xca - 10 * nivel as i32) as i16
+        }
+    } else {
+        (0xca - 10 * nivel as i32) as i16
+    };
+    let nv = nivel as i32;
+    let dif = (valor as f64 - razao_global(alt != 0)) * f32_em(0x96d490) as f64;
+    let g = (nv as f64 * f64_em(0x968968) + f64_em(0x9688a0)) * dif * f64_em(0x968ff8);
+    let mut novo_atual = ftol(atual as f64 + g) as i16;
+    let mut novo_casa = ftol(casa as f64 + g) as i16;
+    let mut novo_mundo = ftol(mundo as f64 + g) as i16;
+    if bonus != 0 {
+        let mut t = ftol((nv * 250) as f64 * valor as f64 / razao_global(alt != 0));
+        if g < f32_em(0x968970) as f64 {
+            t = ftol(t as i16 as f64 * valor as f64 / razao_global(alt != 0));
+        }
+        let t = t as i16;
+        novo_casa = novo_casa.max(t);
+        novo_atual = novo_atual.max(t);
+        novo_mundo = novo_mundo.max(t);
+    }
+    let limite = (nv * 300 + 4000) as i16;
+    let k = |r: i32| (f64_em(0x968950) - r as f64 * f64_em(0x96a5c0)) as f32;
+    let media = |n: i16, r: i32, novo: i16| {
+        let n = n as i32;
+        (((n - 1).wrapping_mul(r).wrapping_add(novo as i32) / n) as i16).min(limite.max(r as i16))
+    };
+    let faixa = |r: i32, baixo: f64, alto: f64, m: i16| {
+        let (rf, mf, k) = (r as f32 as f64, m as f32 as f64, k(r) as f64);
+        let lo = rf - k * baixo;
+        let v = if lo > mf {
+            lo
+        } else {
+            let hi = k * alto + rf;
+            if hi < mf { hi } else { mf }
+        };
+        ftol(v) as i16
+    };
+    let r_casa = faixa(casa, f32_em(0x96d210) as f64, f32_em(0x96d20c) as f64, media(n_casa, casa, novo_casa));
+    let r_atual = faixa(atual, f32_em(0x96d210) as f64, f32_em(0x96d208) as f64, media(n_atual, atual, novo_atual));
+    let r_mundo = faixa(mundo, f32_em(0x96d1a8) as f64, (nv * 100) as f64, media(n_mundo, mundo, novo_mundo));
+    let c = nv.wrapping_mul(400);
+    let cap = |x: i32, piso: i32, r: i32| (x.clamp(piso, 10000) as i16).max(r as i16);
+    *(reg as *mut i16) = r_casa.min(cap(c, 5000, casa)).max(1);
+    *((reg + 2) as *mut i16) = r_atual.min(cap(c / f_atual, 5000, atual)).max(1);
+    *((reg + 4) as *mut i16) = r_mundo.min(cap(c / f_mundo, 3000, mundo)).max(1);
+}
+
 // ---------- quinquagesima quarta leva: nova reputacao ----------
 
 /// Razao das estatisticas globais (0xb74350): +0x20/+0x28 ou +0x10/+0x18; divisor zero da 6,8.
@@ -6678,6 +6980,30 @@ unsafe extern "C" fn comparar_nova_reputacao(this: usize, lado: i8, valor: f32, 
     });
 }
 
+unsafe extern "C" fn comparar_reputacao_do_jogador(reg: usize, meu: usize, outro: usize, partida: usize, valor: f32, alt: u8, bonus: u8) {
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize, usize, f32, u8, u8)>(166);
+    let regioes = [(reg, 6)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(reg, meu, outro, partida, valor, alt, bonus), || reputacao_do_jogador(reg, meu, outro, partida, valor, alt, bonus));
+    PLACAR.registrar(igual, || format!("reputacao_do_jogador valor {} alt {} bonus {}: {:?} x {:?}", valor, alt, bonus, mo.0[0].1, mr.0[0].1));
+}
+
+unsafe extern "thiscall" fn comparar_escolher_cobrador(this: usize, lado: i8, tipo: i8, excluidos: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize>(167);
+    let mut regioes = vec![(this, 0xf5f8)];
+    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
+        &regioes,
+        || o(this, lado, tipo, excluidos),
+        || crate::aleatorio::sem_contar(|| escolher_cobrador(this, lado, tipo, excluidos)),
+    );
+    PLACAR.registrar(igual && r == n, || {
+        let (a, b) = (&mo.0, &mr.0);
+        let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
+        format!("escolher_cobrador(lado {}, tipo {}) original={:x} rust={:x}, diferencas em {:x?}", lado, tipo, r, n, dif)
+    });
+    r
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -6854,6 +7180,8 @@ pub unsafe fn instalar(comparando: bool) {
         tirar_de_campo as *const () as usize,
         marcacao_individual as *const () as usize,
         nova_reputacao as *const () as usize,
+        reputacao_do_jogador as *const () as usize,
+        escolher_cobrador as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -7022,6 +7350,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_tirar_de_campo as *const () as usize,
         comparar_marcacao_individual as *const () as usize,
         comparar_nova_reputacao as *const () as usize,
+        comparar_reputacao_do_jogador as *const () as usize,
+        comparar_escolher_cobrador as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -7080,6 +7410,8 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_tirar_de_campo",
         "motor_marcacao_individual",
         "motor_nova_reputacao",
+        "motor_reputacao_do_jogador",
+        "motor_escolher_cobrador",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -8340,6 +8672,89 @@ pub unsafe fn autoteste(casos: u64) {
                 *((pa60 + 0x20) as *mut usize) = clubes60[1].as_ptr() as usize;
                 *((m + 0x4792) as *mut usize) = pa60;
                 comparar_tirar_de_campo(m, jt, [-1i8, -3, 0, 1, -2][((h61 >> 44) % 5) as usize]);
+                // quinquagesima sexta leva: escolher o cobrador (tipos sem a tatica do clube: o objeto de
+                // 0xde1d08 so existe com o banco carregado; escanteio e falta perto do gol ficam para o jogo real)
+                {
+                    // fichas contiguas, como o vetor de pessoas do jogo (0xae23bc, 110 bytes cada): a lista de
+                    // penaltis do tecnico humano guarda indices nele
+                    let mut fichas56 = vec![0u8; 110 * 20];
+                    let pessoas_antes = *(0xae23bc as *const usize);
+                    *(0xae23bc as *mut usize) = fichas56.as_mut_ptr() as usize;
+                    let mut pessoas56 = vec![[0u8; 0x30]; 20];
+                    let mut excl56 = [0u8; 40];
+                    let r0 = s.proximo();
+                    let lado56 = (r0 % 2) as i8;
+                    // os blocos do lado voltam como estavam no fim (fichas e pessoas daqui sao locais;
+                    // as coordenadas nao mudam, para nao desfazer a grade)
+                    let bloco56 = jogador_do_bloco(m, lado56, 0);
+                    let antes_bloco56 = core::slice::from_raw_parts(bloco56 as *const u8, 20 * 0x1be).to_vec();
+                    let tab = *((m + 0x8ebc + 4 * lado56 as usize) as *const usize) as *mut u16;
+                    for i in 0..11 {
+                        let z = s.proximo();
+                        *tab.add(i) = [1u16, 0x40, 0x41, 0, 2, z as u16][(z % 6) as usize];
+                    }
+                    for k in 0..20usize {
+                        let q = jogador_do_bloco(m, lado56, k);
+                        let z = s.proximo();
+                        let z2 = s.proximo();
+                        *((q + 0x19) as *mut i8) = [0i8, 3, 7, 10, 11, 12, -1, 5][(z % 8) as usize];
+                        *((q + 0x27) as *mut i8) = lado56;
+                        *((q + 0x69) as *mut usize) = fichas56.as_mut_ptr() as usize + 110 * k;
+                        *((q + 0x6d) as *mut usize) = if (z >> 3) % 9 == 0 { 0 } else { pessoas56[k].as_mut_ptr() as usize };
+                        for (n, o) in [0xddusize, 0xe9, 0x89, 0xad, 0xc9, 0xa1].iter().enumerate() {
+                            let y = z2.rotate_left(n as u32 * 11) ^ z;
+                            *((q + o) as *mut f32) = [0.0f32, 1.0, 10.5, 20.0, -3.0, ((y >> 8) % 4000) as f32 / 100.0][(y % 6) as usize];
+                        }
+                        *((q + 0x109) as *mut i8) = ((z >> 16) % 21) as i8 - 1;
+                        fichas56[110 * k + 0x18] = [17u8, 19, 20, 23, 24, 30][((z >> 21) % 6) as usize];
+                        fichas56[110 * k + 0x5a] = [0u8, 0, 1, 2, 5][((z >> 24) % 5) as usize];
+                        pessoas56[k][0xf] = ((z >> 27) % 21) as u8;
+                        *(pessoas56[k].as_mut_ptr().add(0xb) as *mut i16) = [0i16, 100, 10000, 20000, -50][((z >> 32) % 5) as usize];
+                        pessoas56[k][0x29] = [0u8, 1, 10, 20, 0xf0][((z >> 36) % 5) as usize];
+                        excl56[20 * lado56 as usize + k] = ((z >> 40) % 3 == 0) as u8;
+                    }
+                    // sempre um candidato valido (sem tatica e sem excluir: o original da erro fatal sem ninguem)
+                    let q0 = jogador_do_bloco(m, lado56, (r0 >> 1) as usize % 20);
+                    *((q0 + 0x19) as *mut i8) = 4;
+                    *((q0 + 0x6d) as *mut usize) = pessoas56[0].as_mut_ptr() as usize;
+                    let gq = jogador_do_bloco(m, lado56, (r0 >> 6) as usize % 20);
+                    *((m + 0xf59e) as *mut usize) = if (r0 >> 11) % 3 == 0 { gq } else { 0 };
+                    *((m + 0xf5a2) as *mut usize) = if (r0 >> 13) % 3 == 0 { gq } else { 0 };
+                    if gq == q0 {
+                        *((m + 0xf59e) as *mut usize) = 0;
+                        *((m + 0xf5a2) as *mut usize) = 0;
+                    }
+                    let a7 = [-1i8, 0, 1, 2, 4, 6, 7, 8, 9][((r0 >> 15) % 9) as usize];
+                    let a8 = [-1i8, 0, 1, 2, 5, 9, 10, 11, 12][((r0 >> 19) % 9) as usize];
+                    *((m + 0x8ea7) as *mut i8) = a7;
+                    *((m + 0x8ea8) as *mut i8) = a8;
+                    let mut tipo = [1i8, 2, 4, 5, 5, 5, 6, 7, 8][((r0 >> 23) % 9) as usize];
+                    let ofs = if lado56 != 0 { 0 } else { 11 };
+                    let (cx, ax) = ((a7 as i32 - 4).abs(), (a8 as i32 - ofs).abs());
+                    if (tipo == 6 || tipo == 7) && (2..=6).contains(&a7) && cx <= 8 && ax <= 11 && (distancia_tabela(ax, cx) as f64) < f64_em(0x96d428) {
+                        tipo = 8; // perto do gol a falta consulta a tatica
+                    }
+                    let excl = if tipo == 5 && (r0 >> 27) % 3 == 0 { excl56.as_ptr() as usize } else { 0 };
+                    // lista de cobradores de penalti do tecnico humano (0x601070: registro + 0x1e05 com 0x9a69 = 0):
+                    // fichas dos jogadores em algumas das 50 vagas
+                    let i56 = *(tec60.as_ptr() as *const i32) - 1000 + 16;
+                    if (0..16).contains(&i56) {
+                        let reg = regs60 + 42735 * i56 as usize;
+                        if tipo == 5 && (r0 >> 30) % 2 == 0 {
+                            // metade dos penaltis pelo caminho da lista (tecnico com a marca 0x5f, sem 0x9a01)
+                            tec60[0x5f] = 1;
+                            *((reg + 0x9a01) as *mut u32) = 0;
+                            *((m + 0x904d + 208 * lado56 as usize) as *mut usize) = tec60.as_ptr() as usize;
+                        }
+                        for b in 0..50usize {
+                            let z = s.proximo();
+                            *((reg + 0x1e05 + 4 * b) as *mut i32) = if z % 4 == 0 { ((z >> 8) % 20) as i32 } else { -1 };
+                        }
+                    }
+                    comparar_escolher_cobrador(m, lado56, tipo, excl);
+                    core::ptr::copy_nonoverlapping(antes_bloco56.as_ptr(), bloco56 as *mut u8, antes_bloco56.len());
+                    *(0xae23bc as *mut usize) = pessoas_antes;
+                }
                 for (i, &a) in globais60.iter().enumerate() {
                     *(a as *mut u32) = antes60[i];
                 }
@@ -8548,6 +8963,25 @@ pub unsafe fn autoteste(casos: u64) {
                     *((m + 0x1d6) as *mut u32) = 0x55555555;
                     let valor = [0f32, 6.8, 1.0, 3.5, 10.0, 40.0][(r[11] % 6) as usize] + ((r[11] >> 8) % 1000) as f32 / 300.0 - 1.5;
                     comparar_nova_reputacao(m, ((r[11] >> 20) % 2) as i8, valor, ((r[11] >> 21) % 2) as u8, ((r[11] >> 22) % 2) as u8);
+                    // quinquagesima quinta leva: reputacao do jogador (mesma partida; ficha, clube do jogador)
+                    let mut reg = [0u8; 0x20];
+                    let mut jog = [0u8; 0x70];
+                    let mut ficha = [0u8; 0x10];
+                    let rr = s.proximo();
+                    let (rp, jp, fp) = (reg.as_mut_ptr() as usize, jog.as_mut_ptr() as usize, ficha.as_mut_ptr() as usize);
+                    *((rp + 0x1b) as *mut usize) = if rr % 23 == 0 { 0 } else { jp };
+                    *((jp + 0x69) as *mut usize) = if rr % 19 == 1 { 0 } else { fp };
+                    for (i, o) in [8usize, 0xa, 0xc].iter().enumerate() {
+                        let z = s.proximo();
+                        *((fp + o) as *mut i16) = [0i16, 1, 999, 1000, 3000, 4999, 5000, 9999, 10000, ((z >> 8) % 12000) as i16][((z >> (i * 4)) % 10) as usize];
+                    }
+                    let alvo = cl[1].as_mut_ptr() as usize;
+                    *((jp + 0x1a) as *mut usize) = [alvo, 0x1234, 0][((rr >> 8) % 3) as usize];
+                    *((cl[0].as_mut_ptr() as usize + 0x53) as *mut usize) = [alvo, 0x4321, 0][((rr >> 10) % 3) as usize];
+                    *((cl[1].as_mut_ptr() as usize + 0x53) as *mut usize) = [alvo, 0x4321, 0][((rr >> 12) % 3) as usize];
+                    *((cp.as_mut_ptr() as usize + 0x5d) as *mut usize) = [alvo, 0x5678, 0][((rr >> 14) % 3) as usize];
+                    let lado55 = ((rr >> 16) % 2) as usize;
+                    comparar_reputacao_do_jogador(rp, cl[lado55].as_mut_ptr() as usize, cl[1 - lado55].as_mut_ptr() as usize, pp, valor, ((rr >> 17) % 2) as u8, ((rr >> 18) % 2) as u8);
                 }
                 *((m + 0x4792) as *mut usize) = antes_m;
                 for (i, &a) in globais.iter().enumerate() {

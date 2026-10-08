@@ -1,14 +1,19 @@
 r"""Autoteste do motor (CM_AUTOTESTE) com mutacoes propositais: cada mutacao tem de ser acusada.
 
-Uso: python mutacoes.py <lista.py> [--sem-base] [--so-base] [--casos N]
+Uso: python mutacoes.py <lista.py> [--sem-base] [--so-base] [--base-completa] [--casos N] [--jogo AAAA-MM-DD]
      ex.: python mutacoes.py mutacoes\leva43.py
 
 A lista e um arquivo Python com MUTACOES = [(nome, trecho_original, trecho_mutado), ...]; cada
 trecho original tem de aparecer uma unica vez em rust/src/motor.rs (conferido antes de comecar).
-Primeiro roda o autoteste completo sem mutacao (a base tem de dar 0 divergencias); depois, para
+Primeiro roda o autoteste sem mutacao com --casos casos (a base tem de dar 0 divergencias; com
+--base-completa, todos os autotestes com 2 milhoes de casos no motor, a cada 5 levas); depois, para
 cada mutacao, troca o trecho, recompila, copia a DLL para jogo/ e roda so o autoteste do motor
 com --casos casos (padrao 200 mil; CM_AUTOTESTE=motor:N), que para na primeira divergencia. Uma
-mutacao que passa com poucos casos pode precisar de mais: refazer so ela com --casos 2000000. No fim (inclusive com erro ou Ctrl+C) restaura o motor.rs e recompila.
+mutacao que passa com poucos casos pode precisar de mais: refazer so ela com --casos 2000000.
+
+--jogo AAAA-MM-DD: em vez do autoteste, cada mutacao (e a base) roda o jogo real em modo de
+comparacao ate a data (simular.py, com a trava do laboratorio). Para caminhos que o autoteste
+sintetico nao alcanca (o que depende do banco carregado, como a tatica do clube). No fim (inclusive com erro ou Ctrl+C) restaura o motor.rs e recompila.
 
 Uma mutacao que passa sem divergencia e uma lacuna do teste (melhorar o gerador de casos) ou uma
 mutacao equivalente pelos valores possiveis (documentar em docs/ROTINAS.md por que).
@@ -57,6 +62,14 @@ def autoteste(valor='1'):
     return [l for l in texto.splitlines() if l.startswith('motor: AUTOTESTE') or 'motor: DIVERGENCIA' in l or 'EXCECAO' in l]
 
 
+def jogo(data):
+    subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'comparar', '--limite', '900'],
+                   cwd=AQUI, capture_output=True)
+    texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
+    achados = [l for l in texto.splitlines() if 'DIVERGENCIA' in l or 'EXCECAO' in l]
+    return achados[:1] or [l for l in texto.splitlines() if l.startswith('motor: ') and 'comparacoes' in l][-1:]
+
+
 def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
@@ -68,6 +81,7 @@ def main():
     exec(open(sys.argv[1], encoding='utf-8').read(), lista)
     mutacoes = lista['MUTACOES']
     casos = int(sys.argv[sys.argv.index('--casos') + 1]) if '--casos' in sys.argv else 200000
+    data = sys.argv[sys.argv.index('--jogo') + 1] if '--jogo' in sys.argv else None
     original = open(SRC, encoding='utf-8').read()
     ruins = [(n, original.count(a)) for n, a, _ in mutacoes if original.count(a) != 1]
     if ruins:
@@ -76,7 +90,7 @@ def main():
         compilar()
         if '--sem-base' not in sys.argv:
             t0 = time.time()
-            r = autoteste()
+            r = jogo(data) if data else autoteste('1' if '--base-completa' in sys.argv else 'motor:%d' % casos)
             print('sem mutacao (%.0fs):' % (time.time() - t0), r, flush=True)
         if '--so-base' in sys.argv:
             return
@@ -84,7 +98,7 @@ def main():
             open(SRC, 'w', encoding='utf-8').write(original.replace(velho, novo))
             compilar()
             t0 = time.time()
-            r = autoteste('motor:%d' % casos)
+            r = jogo(data) if data else autoteste('motor:%d' % casos)
             print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, r[0][:150] if r else 'SEM RESULTADO'), flush=True)
     finally:
         open(SRC, 'w', encoding='utf-8').write(original)

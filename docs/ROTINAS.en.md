@@ -525,3 +525,21 @@ Mutations: 5/5.
 Mutations: 13/13 (`n_21` flagged by a crash: the mutated version divides by zero). Level 21..=28 with codes 0x78.. would give weight zero in the original too (division by zero); the generator does not produce that case.
 
 **Faster tests.** `CM_AUTOTESTE=motor:N` runs only the match-engine self-test, with N cases. `mutacoes.py` runs the full base (about 30 minutes) and then each mutation with `motor:200000` (`--casos` changes it): in the 54th batch, each mutation was flagged about 1 second after the game opened, against a few minutes before. Real game (batches 53 and 54): over 1 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original (c76ad0ff6ce3daa6, 2,357,335,216 draws).
+
+### Match engine, 55th batch — player reputation (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `reputacao_do_jogador(reg, meu, outro, partida, valor, alt, bonus)` | 0x6d3610 | cdecl | match_eng.cpp, at the end of the match for each player (record at motor + 0x9032, player at +0x1b): the same computation as the club's reputation (54th) for the three reputations of the record (+0x69 of the player): current (+8), home (+0xa) and world (+0xc); stores (home, current, world) in the record. Weights: home = (reputation/1000 + 16, minimum 22) − level; current = the same if the club is a national team or the player's club (+0x1a) is the club's (+0x53) or the competition's (+0x5d), else the average of that with 202 − 10 × level (minimum 4); world like the club's (minimum 21). Target: (level × 0.5 + 5) × 50 × 1.3 × (value − ratio), without the club's square. Range per match (× 2 − reputation/10000): home −250/+300, current −250/+375, world −500/+100 × level. Cap: 400 × level (÷ 2 without the special case, for current and world) between 5000 (world 3000) and 10000, never below the current reputation |
+
+Mutations: 13/13.
+
+### Match engine, 56th batch — choose the taker (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `escolher_cobrador(lado, tipo, excluidos)` | 0x6ceb90 | thiscall, ret 0xc | match_eng.cpp: the side's taker for set piece `tipo` (1..=8), by the highest score among the 20 of the block (the first tie stays). Out: position < 0 or marked in `excluidos` (type 5); position > 10 or no person (+0x6d): the position becomes −1. The stored goalkeeper does not take 1, 2, 3, 8, nor 6/7 far from the box. 1 and 2: attribute (0xdd, 0xe9) − 2 × distance to the ball; 3 (corner): the one designated in the club's tactics (0x897990 on 0xde1d08; 10000/9000, with a draw on the opposite side) or 0x89 − 0xad/2, × 0.75 (1.25 if negative) with mark 0x40; 4: 100 with the table = 1; 5 (penalty): the human manager's list (10000 − order, 0x601070) or 0xc9 by age, a draw on +0x5a and the person's +0xb; 6/7 (free kick): near the goal, the designated one or set piece (person +0x29, 0x109); far, 0xa1 − distances; 8: 100 − distance. Nobody: 0 with `excluidos`, else a fatal error |
+
+**Mutations in the real game.** The club's tactics (0xde1d08) only exist with the database loaded; in the synthetic self-test the corner and the free kick near the goal do not run (the generator switches to type 8). `mutacoes.py --jogo YYYY-MM-DD` runs each mutation in the real game in comparison mode up to the date (about 95 s until 2001-08-15). The computer's clubs almost never have a designated taker: mutations only in the designated path pass (equivalent in practice); those in the corner and free-kick scores are flagged. Mutations: 18/18 in the self-test (one gap closed: the human manager's penalty list now holds the players' records), 4/4 in the real game. Real game (batches 55 and 56): 10 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original (c76ad0ff6ce3daa6).
+
+**Shorter base.** From the 57th batch on, the mutation base runs with 200 thousand cases (about 3 minutes); the full base (2 million, about 35 minutes, `--base-completa`) is kept for every 5 batches.

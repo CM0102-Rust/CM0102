@@ -103,6 +103,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x70d630 | `em_perigo` | in_danger |
 | 0x6cdd00 | `entrar_em_campo` | take_the_field |
 | 0x6bce80 | `escolher_casa` | choose_square |
+| 0x6ceb90 | `escolher_cobrador` | choose_taker |
 | 0x6d0f80 | `escolher_destaque` | choose_standout |
 | 0x6c2310 | `escolher_pela_condicao` | choose_by_condition |
 | 0x6c2750 | `escolher_por_papel` | choose_by_role |
@@ -193,6 +194,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c0890 | `repartir_d` | split_d |
 | 0x6c0980 | `repartir_e` | split_e |
 | 0x6c0b70 | `repartir_f` | split_f |
+| 0x6d3610 | `reputacao_do_jogador` | player_reputation |
 | 0x6ce460 | `resumo_da_partida` | match_summary |
 | 0x6bbe40 | `rolar_bola` | roll_ball |
 | 0x6d4280 | `sem_partida` | no_match |
