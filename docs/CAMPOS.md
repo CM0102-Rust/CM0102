@@ -179,6 +179,10 @@ Fonte: tópico 1540, página 5 (Xeno, giovanisantana29 e outros). Conferidos no 
 | 0x8C7BE4.. | regra do visto de trabalho no Reino Unido (tópico 1540, página 10; conferida): concede com reputação mundial do jogador (+0x0D) acima de 8500, salário semanal do contrato (+0x0C) acima de 34 999, menos de 24 anos (pessoa +0x18) com potencial (+0x07) acima de 190, mais de 20 jogos pela seleção (pessoa +0x22) com a nação (pessoa +0x1A) de reputação (+0x8E) acima de 3000 e menos de 32 anos, ou mais de 70% dos jogos (0x8C7D9E); para quem não é jogador, reputação mundial acima de 160 (0x8C7A94) |
 | 0x579C63 | limite de 3 estrangeiros de fora da UE na Inglaterra (`mov byte [edx+5], 3`) |
 | 0x96D808 | constante 71,0 (float) comparada em match_pl.cpp (0x706D1B, 0x706DEE, rotina ainda não reescrita); segundo a comunidade, a porcentagem de chutes a gol que não entram (o patch de mais gols troca por 65); tópico 1540, páginas 21 e 22 |
+| 0x708A31 | o gol entra no placar: soma 1 ao byte de gols do lado (motor + 0xF5BD + 54 × lado, o mesmo que `placar_agregado` lê); página 24. A comunidade fala também de um "freio" depois de 5 gols, ainda não localizado |
+| 0x54CEDB | ano bissexto (divisível por 4, exceto séculos não divisíveis por 400) |
+| 0x642A70.. | jogos reais da primeira temporada nas séries italianas (A 0x642A70, B 0x647230, C1 e C2 até 0x65C8E0) |
+| 0x43F7F0 | moedas: por moeda, a cotação em libras (double em 0xAD9CB8), o multiplicador da lista de valores de transferência (0xAD9DA0) e o passo dos botões +/− (0xAD9CC0) |
 | 0x54AC4F | dia da semana a partir do ano (0xAE2C92), do dia do ano (0xAE2C90) e da marca de ano bissexto (0xAE2C94) |
 | 0x8CFA1E | limite de jogadores de fora da UE numa partida (o salto que o aplica) |
 | 0x8C34E0 | executa uma transferência: no registro recebido, +8 id do clube comprador, +0xC id do jogador; tabelas de clubes em 0xAE23B4 e de pessoas em 0xAE23BC (página 23) |
