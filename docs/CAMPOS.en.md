@@ -178,6 +178,9 @@ Source: topic 1540, page 5 (Xeno, giovanisantana29 and others). Checked in 3.9.6
 | 0x8C31D2 | UK work permit: 18 + a draw of days (`add al, 0x12`, 18 to 25) |
 | 0x579C63 | limit of 3 non-EU foreigners in England (`mov byte [edx+5], 3`) |
 | 0x868307 | a contract becomes unprotected after 2 years (+1 under 28) (`add ebx, 2`) |
+| 0x53D7F0 / 0x8CEBB5 | does the club only sign Basques? / the nation used in that restriction (0x9CF424, Basque Country); topic 1540, page 8 |
+| 0x83A1D5 | computer clubs' shortlists at the start of the game (skipping the jump, none until the season update) |
+| 0x5E069A | Copa América in even years counted from 1996; the year of the next edition is at competition +0x40 |
 
 ## Other points (topic 1540, pages 6 and 7)
 
