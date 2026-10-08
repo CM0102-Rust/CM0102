@@ -120,6 +120,16 @@ The same topic lists the decimal competition ids (0 = Belgian First Division ...
 
 Use already seen in the match engine, not yet rewritten: 0x6c6a30 (match_eng.cpp) compares the nation linked to the ball holder's record (+0x69, +0x1a) and picks a float factor: 1.0 for England, Scotland, Wales, Northern Ireland, Ireland and Norway; 0.6 for Sweden, Denmark and Germany; 0.2 for the others.
 
+## Tactics: squares, formation and preferences (topic 2799)
+
+Source: topic "About AI Manager preferred formations & AI tactic selection" (champman0102.co.uk forum, topic 2799, Xeno, MadScientist and John Locke, 2021). Checked against what we have already rewritten.
+
+**Match-engine tables A and B** (`tabela_a` 0x6C38C0 and `tabela_b` 0x6C38F0, by tactical position 0..10 at motor + 0x8EBC/0x8EC4 + 4 × side): A tells the player's square in the tactic, B where his arrow points (same as A with no arrow). Bits: sector 1 goalkeeper, 2 sweeper, 4 defence, 8 defensive midfield, 0x10 midfield, 0x20 attacking midfield, 0x40 attack; side 0x80 left, 0x100 centre-left, 0x200 centre, 0x400 centre-right, 0x800 right. It matches what we already use (`marcador_direto` mirrors sector and side; `escolher_cobrador` tests 0x40; `marcado_designado` compares A with B).
+
+**Formation mask** (side's formation + 0x187B, 32 bits): one bit per square of the pitch, 31 squares: 0 goalkeeper; 1..5 sweeper line; 6..10 defence; 11..15 defensive midfield; 16..20 midfield; 21..25 attacking midfield; 26..30 attack (in each row, right to left, seen from the own goal). E.g. 0x281B06C1 = 4-4-2. In `marcado_designado`, bit 0x10000000 (square 28: centre forward) of the opposing formation is one of the tests. 0x5B59A0 (formation.cpp) builds the mask from the 11 squares (0x5B5A60, `bit_da_casa`) and replaces some masks with the nearest preferred formation's (4-5-1, 3-4-3, 5-3-2, 3-5-2).
+
+**Managers' preferred formations** (0x896184..0x8961BC, nine constants in the order of the editor's list): 5-3-2 with sweeper 0x280E8A89, 5-3-2 0x280E8B81, 4-4-2 0x281B06C1 (also the default), 4-3-3 0x381506C1, 4-2-4 0x2A2A06C1, 3-5-2 0x281B2381, 4-1-2-1-2 0x288A26C1, 4-5-1 0x101F06C1, 3-4-3 0x381B0381. The computer's tactic `.pct` files are loaded at 0x893DC0 (28 plus 17, six repeated).
+
 ## Competitions (for the competitions stage)
 
 Not yet used by rewritten routines; recorded for stage 2 (competitions, tables, calendar). Source: the "Modern Champions League format for CM 01/02" topic (champman0102.co.uk forum, topic 10794, tafo and davdav, July 2026); check each one against our own disassembly before use.
@@ -137,3 +147,17 @@ Not yet used by rewritten routines; recorded for stage 2 (competitions, tables, 
 | 0x683AD3 / 0x683E20 | number of matchdays derived from the team count (N − 1) |
 | 0x9086E0 | hand-built fixtures (MLS); 0x68B100 creates the stage, 0x85C260 and 0x5AA680 register each match |
 | 0xADADFC | competition by id (id × 4) |
+
+## Finances and club facilities (for future stages)
+
+Source: topic "Miscellaneous CM0102 Patches & Fixes by melanzalko" (champman0102.co.uk forum, topic 10877, melanzalko and davdav, August 2026). The topic mixes file offsets and VAs; below, everything is a VA, checked in our 3.9.68 disassembly.
+
+| VA | What it is (original) |
+|---|---|
+| 0x461531, 0x461551, 0x461571, 0x461591 | thresholds of the training facilities text: 400, 600, 800, 1000 ("Good facilities" up to 400, then "Adequate", "Need some", "Need major investment") |
+| 0x5986B0 | financial status for the board: "Rich" if the balance exceeds (25 × rep + 50,000) × 100 (lea with 6000 and 2000 at 0x5986EB/0x5986F2); "Secure" with 10,500 instead of 6000 (0x598713) |
+| 0x59714D, 0x597A8E | "Dividends" brackets (in practice a tax on revenue): 7750 (0x1E46) and 7250 (0x1C52), compared with word +0xB |
+| 0x8EDB67 | cap of the next-sale percentage in negotiations: 25 (byte 0x19) |
+| 0x98F9B0 | text "  Dividends" on the finance screen |
+
+Not used yet: the match engine does not touch finances. They are for the stage of the simulation outside the match.

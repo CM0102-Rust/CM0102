@@ -120,6 +120,16 @@ O mesmo tópico lista os ids decimais das competições (0 = Belgian First Divis
 
 Uso já visto no motor, ainda não reescrito: 0x6c6a30 (match_eng.cpp) compara a nação ligada à ficha do dono da bola (+0x69, +0x1a) e escolhe um fator float: 1,0 para Inglaterra, Escócia, País de Gales, Irlanda do Norte, Irlanda e Noruega; 0,6 para Suécia, Dinamarca e Alemanha; 0,2 para as demais.
 
+## Tática: casas, formação e preferências (tópico 2799)
+
+Fonte: tópico "About AI Manager preferred formations & AI tactic selection" (fórum champman0102.co.uk, tópico 2799, Xeno, MadScientist e John Locke, 2021). Conferido com o que já reescrevemos.
+
+**Tabelas A e B do motor** (`tabela_a` 0x6C38C0 e `tabela_b` 0x6C38F0, por posição tática 0..10 em motor + 0x8EBC/0x8EC4 + 4 × lado): a A diz a casa do jogador na tática, a B para onde aponta a seta dele (igual à A sem seta). Bits: setor 1 goleiro, 2 líbero, 4 defesa, 8 volante, 0x10 meio, 0x20 meia ofensivo, 0x40 ataque; lado 0x80 esquerda, 0x100 centro-esquerda, 0x200 centro, 0x400 centro-direita, 0x800 direita. Bate com o que já usamos (`marcador_direto` espelha setor e lado; `escolher_cobrador` testa 0x40; `marcado_designado` compara A com B).
+
+**Máscara da formação** (formação do lado + 0x187B, 32 bits): um bit por casa do campo, 31 casas: 0 goleiro; 1..5 linha do líbero; 6..10 defesa; 11..15 volantes; 16..20 meio; 21..25 meias; 26..30 ataque (em cada linha, da direita para a esquerda, olhando do próprio gol). Ex.: 0x281B06C1 = 4-4-2. Em `marcado_designado`, o bit 0x10000000 (casa 28: centroavante pelo meio) da formação adversária é um dos testes. 0x5B59A0 (formation.cpp) monta a máscara pelas 11 casas (0x5B5A60, `bit_da_casa`) e troca algumas máscaras pela da formação preferida mais próxima (4-5-1, 3-4-3, 5-3-2, 3-5-2).
+
+**Formações preferidas dos técnicos** (0x896184..0x8961BC, nove constantes na ordem da lista do editor): 5-3-2 com líbero 0x280E8A89, 5-3-2 0x280E8B81, 4-4-2 0x281B06C1 (também o padrão), 4-3-3 0x381506C1, 4-2-4 0x2A2A06C1, 3-5-2 0x281B2381, 4-1-2-1-2 0x288A26C1, 4-5-1 0x101F06C1, 3-4-3 0x381B0381. Os arquivos `.pct` das táticas do computador são carregados em 0x893DC0 (28 e mais 17, seis repetidos).
+
 ## Competições (para a etapa de competições)
 
 Ainda não usados por rotinas reescritas; registrados para a etapa 2 (competições, tabelas, calendário). Fonte: tópico "Modern Champions League format for CM 01/02" (fórum champman0102.co.uk, tópico 10794, tafo e davdav, julho de 2026), conferir cada um na nossa desmontagem antes de usar.
@@ -137,3 +147,17 @@ Ainda não usados por rotinas reescritas; registrados para a etapa 2 (competiç�
 | 0x683AD3 / 0x683E20 | número de rodadas derivado da quantidade de times (N − 1) |
 | 0x9086E0 | partidas montadas à mão (MLS); 0x68B100 cria a fase, 0x85C260 e 0x5AA680 registram cada partida |
 | 0xADADFC | competição por id (id × 4) |
+
+## Finanças e estrutura do clube (para etapas futuras)
+
+Fonte: tópico "Miscellaneous CM0102 Patches & Fixes by melanzalko" (fórum champman0102.co.uk, tópico 10877, melanzalko e davdav, agosto de 2026). O tópico mistura deslocamento no arquivo e VA; abaixo, tudo em VA, conferido na nossa desmontagem do 3.9.68.
+
+| VA | O que é (original) |
+|---|---|
+| 0x461531, 0x461551, 0x461571, 0x461591 | limites do texto das instalações de treino: 400, 600, 800, 1000 ("Good facilities" até 400, depois "Adequate", "Need some", "Need major investment") |
+| 0x5986B0 | situação financeira para a diretoria: "Rich" se o saldo passa de (25 × rep + 50 000) × 100 (lea com 6000 e 2000 em 0x5986EB/0x5986F2); "Secure" com 10 500 no lugar de 6000 (0x598713) |
+| 0x59714D, 0x597A8E | faixas do "Dividends" (na prática um imposto sobre a receita): 7750 (0x1E46) e 7250 (0x1C52), comparadas com a palavra +0xB |
+| 0x8EDB67 | teto da porcentagem da próxima venda nas negociações: 25 (byte 0x19) |
+| 0x98F9B0 | texto "  Dividends" da tela de finanças |
+
+Ainda não usados: o motor não toca em finanças. Ficam para a etapa da simulação fora da partida.
