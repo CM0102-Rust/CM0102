@@ -178,6 +178,9 @@ Source: topic 1540, page 5 (Xeno, giovanisantana29 and others). Checked in 3.9.6
 | 0x8C31D2 | UK work permit: 18 + a draw of days (`add al, 0x12`, 18 to 25) |
 | 0x8C7BE4.. | UK work permit rule (topic 1540, page 10; checked): granted with the player's world reputation (+0x0D) above 8500, the contract's weekly wage (+0x0C) above 34,999, under 24 (person +0x18) with potential (+0x07) above 190, more than 20 caps (person +0x22) with the nation (person +0x1A) of reputation (+0x8E) above 3000 and under 32, or more than 70% of the games (0x8C7D9E); for non-players, world reputation above 160 (0x8C7A94) |
 | 0x579C63 | limit of 3 non-EU foreigners in England (`mov byte [edx+5], 3`) |
+| 0x43F2C8 | foreigners in the Brazilian league: 2 per game (`mov byte [edx+2], 2`; topic 1540, page 18) |
+| 0x533080 | without real names, players swap clubs in drawn pairs (16 × the count, factor at 0x969508); some stay where they were (page 19) |
+| stage +0x3E | number of teams in the league (e.g. 18 in the Welsh league, 0x925B42; page 19) |
 | 0x868307 | a contract becomes unprotected after 2 years (+1 under 28) (`add ebx, 2`) |
 | 0x76D4B0.. | national team squads: up to 23 in official tournaments (senior and under-21), 26/22 in the other case, 26 and minimum 22 in friendlies and qualifiers (topic 1540, page 16) |
 | 0x85EB91 | cap on a contract wage (the topic gives the file offset, 0x45EB91): topic 1540, page 13, speaks of current reputation × 750; the code compares with a value × 15 at 0x85EB84 (another scale, to be checked). The same page shows swapping Northern Ireland for Austria: dozens of places in the code with the nation pointer (0x9CF3E4) and each league id written by hand, an example of why competitions are changed by patch today |

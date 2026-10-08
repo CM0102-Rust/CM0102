@@ -178,6 +178,9 @@ Fonte: tópico 1540, página 5 (Xeno, giovanisantana29 e outros). Conferidos no 
 | 0x8C31D2 | visto de trabalho no Reino Unido: 18 + sorteio dias (`add al, 0x12`, 18 a 25) |
 | 0x8C7BE4.. | regra do visto de trabalho no Reino Unido (tópico 1540, página 10; conferida): concede com reputação mundial do jogador (+0x0D) acima de 8500, salário semanal do contrato (+0x0C) acima de 34 999, menos de 24 anos (pessoa +0x18) com potencial (+0x07) acima de 190, mais de 20 jogos pela seleção (pessoa +0x22) com a nação (pessoa +0x1A) de reputação (+0x8E) acima de 3000 e menos de 32 anos, ou mais de 70% dos jogos (0x8C7D9E); para quem não é jogador, reputação mundial acima de 160 (0x8C7A94) |
 | 0x579C63 | limite de 3 estrangeiros de fora da UE na Inglaterra (`mov byte [edx+5], 3`) |
+| 0x43F2C8 | estrangeiros no Brasileiro: 2 por jogo (`mov byte [edx+2], 2`; tópico 1540, página 18) |
+| 0x533080 | sem nomes reais, os jogadores trocam de clube em pares sorteados (16 × a quantidade, fator em 0x969508); alguns ficam onde estavam (página 19) |
+| fase +0x3E | quantidade de times da liga (ex.: 18 na liga galesa, 0x925B42; página 19) |
 | 0x868307 | contrato fica desprotegido depois de 2 anos (+1 abaixo de 28 anos) (`add ebx, 2`) |
 | 0x76D4B0.. | convocação das seleções: até 23 em torneio oficial (seleção principal e sub-21), 26/22 no outro caso, 26 e mínimo 22 em amistosos e eliminatórias (tópico 1540, página 16) |
 | 0x85EB91 | teto do salário num contrato (o tópico dá o deslocamento no arquivo, 0x45EB91): o tópico 1540, página 13, fala em reputação atual × 750; o código compara com um valor × 15 em 0x85EB84 (outra escala, a conferir). A mesma página mostra a troca da Irlanda do Norte pela Áustria: dezenas de pontos do código com o ponteiro da nação (0x9CF3E4) e o id de cada liga gravados à mão, exemplo de por que as competições hoje se mudam por patch |
