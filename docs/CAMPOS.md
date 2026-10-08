@@ -278,3 +278,14 @@ Mapa publicado por quem fez o patch das competições europeias modernas. Os pon
 | Onde | O que é |
 |---|---|
 | 0x540490 | duas cores colidem? (cdecl, 2 cores; 1 = colidem). Usa a cor primária de cada uma (0x540520; grupos do `database.h`: 6 azul, 7 roxo, 8 vermelho, 9 laranja): mesma primária, ou os pares 8–9, 8–7 e 6–7 (este último também quando a cor é a de id [0x9CF1DC]). Conferido o início e a leitura de 0x9CF1DC |
+
+## Carga do banco: quais jogadores entram (tópico 2554)
+
+| Onde | O que é |
+|---|---|
+| 0x5255FF, 0x525637 | corte de reputação do clube (+0x80 ≥ 7500, `0x1D4C`) para carregar o elenco |
+| 0x52562E, 0x525887 | corte pelo nível da liga da nação (+0x85 ≥ 10 e ≥ 6) |
+| 0x5269EF | salto que deixa de carregar clubes fora das ligas escolhidas |
+| — | segundo a comunidade, sempre entram: PA negativo, jogador com convocação pela seleção, transferência futura; jogadores sem clube seguem esses cortes |
+
+Os cinco pontos foram conferidos. Vale para a etapa da carga do banco: a versão reescrita precisa escolher exatamente os mesmos jogadores.

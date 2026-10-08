@@ -278,3 +278,14 @@ Map published by the author of the modern European competitions patch. The marke
 | Where | What it is |
 |---|---|
 | 0x540490 | do two colours clash? (cdecl, 2 colours; 1 = clash). Uses each one's primary colour (0x540520; groups from `database.h`: 6 blue, 7 purple, 8 red, 9 orange): same primary, or the pairs 8–9, 8–7 and 6–7 (the latter also when the colour is the one with id [0x9CF1DC]). Entry and the read of 0x9CF1DC checked |
+
+## Database load: which players get in (topic 2554)
+
+| Where | What it is |
+|---|---|
+| 0x5255FF, 0x525637 | club reputation cut-off (+0x80 ≥ 7500, `0x1D4C`) to load the squad |
+| 0x52562E, 0x525887 | cut-off by the nation's league standard (+0x85 ≥ 10 and ≥ 6) |
+| 0x5269EF | jump that skips loading clubs outside the chosen leagues |
+| — | according to the community, always loaded: negative PA, capped player, future transfer; clubless players follow these cut-offs |
+
+All five points checked. Relevant for the database-load stage: the rewritten version must pick exactly the same players.
