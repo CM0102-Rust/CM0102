@@ -193,3 +193,12 @@ Conferidos no 3.9.68 quando indicado:
 | 0x5836C4, 0x632E30 | ano inicial (2001, `cmp ax, 0x7D1`) para os prêmios internacionais e europeus do ano anterior. Conferido |
 | 0x5E4800 | monta uma cor da interface a partir de três componentes (azul, verde, vermelho empilhados antes da chamada); a interface tem dezenas dessas chamadas. Conferido |
 | nação +0x11C | liga selecionada (`NationLeagueSelected` do `database.h`); 0xAE2D04 parece ser a quantidade de ligas selecionadas (não conferido) |
+
+## Defeitos conhecidos do original (tópico 1540, página 9)
+
+Reproduzidos de propósito enquanto a meta é a fidelidade; candidatos a correção na fase de modernização. Conferidos no 3.9.68:
+
+| Onde | Defeito |
+|---|---|
+| 0x411D82 (liga australiana) | a competição não é zerada no fim da temporada (falta gravar −1 em +0x30 da fase): o mesmo campeão todo ano. E a divisão abertura/encerramento sai 36/5 jogos em vez de 24/10 (+0x3C da fase) |
+| 0x797474, 0x40AEDE, 0x40CFCE | Liga dos Campeões da Oceania, da Ásia e da África (ou Recopa asiática) com disputa de terceiro lugar (3 rodadas finais), às vezes marcada depois da final, o que pode travar a competição |

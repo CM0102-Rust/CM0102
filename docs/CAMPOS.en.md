@@ -193,3 +193,12 @@ Checked in 3.9.68 where stated:
 | 0x5836C4, 0x632E30 | start year (2001, `cmp ax, 0x7D1`) for the previous year's international and European awards. Checked |
 | 0x5E4800 | builds an interface colour from three components (blue, green, red pushed before the call); the interface has dozens of these calls. Checked |
 | nation +0x11C | league selected (`NationLeagueSelected` in `database.h`); 0xAE2D04 seems to be the number of selected leagues (not checked) |
+
+## Known defects of the original (topic 1540, page 9)
+
+Reproduced on purpose while the goal is fidelity; candidates for fixing in the modernization stage. Checked in 3.9.68:
+
+| Where | Defect |
+|---|---|
+| 0x411D82 (Australian league) | the competition is not reset at the end of the season (−1 is never written to stage +0x30): the same champion every year. And the opening/closing split comes out 36/5 games instead of 24/10 (stage +0x3C) |
+| 0x797474, 0x40AEDE, 0x40CFCE | Oceania, Asian and African Champions League (or Asian Cup Winners' Cup) with a third-place playoff (3 final rounds), sometimes scheduled after the final, which can stall the competition |
