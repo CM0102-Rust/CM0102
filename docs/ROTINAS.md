@@ -541,3 +541,13 @@ Mutações: 13/13.
 **Mutações no jogo real.** A tática do clube (0xde1d08) só existe com o banco carregado; no autoteste sintético o escanteio e a falta perto do gol não rodam (o gerador troca para o tipo 8). `mutacoes.py --jogo AAAA-MM-DD` roda cada mutação no jogo real em comparação até a data (cerca de 95 s até 15/08/2001). Os clubes do computador quase nunca têm cobrador designado: mutações só no designado passam (equivalentes na prática); as da pontuação do escanteio e da falta são acusadas. Mutações: 18/18 no autoteste (uma lacuna fechada: a lista de pênaltis do técnico humano agora tem fichas dos jogadores), 4/4 no jogo real. Jogo real (levas 55 e 56): 10 bilhões de comparações, 0 divergências. Carreira até 01/06/2002: Rust ×2 = original (c76ad0ff6ce3daa6).
 
 **Base mais curta.** A partir da 57ª leva, a base das mutações roda com 200 mil casos (cerca de 3 minutos); a base completa (2 milhões, cerca de 35 minutos, `--base-completa`) fica para cada 5 levas.
+
+### Motor de partidas, 57ª leva — lateral, escanteio e pênalti (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `lateral()` | 0x6c4290 | thiscall | match_eng.cpp: lateral do lado 0x8eae. Conta (0xf5c8 + 54 × lado), põe a bola (0x8ea7, 0x8ea8) dentro do campo, escolhe o cobrador (tipo 2), arruma os 40 jogadores pela tabela da formação (0xf56e/0xf572 pelo lado do jogador; índice: do lado que cobra?, posição, coluna e linha da bola; byte = coluna + 16 × linha) e põe o cobrador na bola, virado para dentro (90 ou 270). Sem cobrador o original mostra uma caixa de erro (aqui sem a caixa) e marca o motor (+0 = 1) |
+| `escanteio()` | 0x6c4470 | thiscall | match_eng.cpp: conta (0xf5c7 + 54 × lado), marca o lance (0x8eb1 = 3, 0x8eae = −1) e arruma os 40: pelo papel no ataque (0x716270, do lado que cobra) ou na defesa (0x716310), alguns vão para casas sorteadas na área (coluna 4 ± 1; linha 5/6, ou 0..1/10..11 sorteada), os outros pela tabela da formação (+0x3b ou +0x30). Fora do campo: erro fatal. Cobrador (tipo 3) na bandeira (coluna 0 ou 8 pelo sorteio contra 0x8ea7; linha 0 ou 11) |
+| `penalti()` | 0x6c50d0 | thiscall | match_eng.cpp: cobrador (tipo 5) com a bola na marca (coluna 4; linha 1 ou 10, também em 0x8ea7/0x8ea8); os goleiros guardados vão para o gol, quem está nas linhas 0..1 vai para a 2 e quem está nas 10..11 para a 9 |
+
+Sem autoteste sintético: as três arrumam os 40 jogadores na grade (um gerador sintético teria de manter a grade consistente) e o escanteio consulta a tática do clube. Prova pelo jogo real: mutações 8/8 com `--jogo 2001-08-15`; jogo real 10 bilhões de comparações, 0 divergências; carreira até 01/06/2002: Rust ×2 = original (c76ad0ff6ce3daa6).

@@ -102,6 +102,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x53b900 | `e_selecao` | is_national_team |
 | 0x70d630 | `em_perigo` | in_danger |
 | 0x6cdd00 | `entrar_em_campo` | take_the_field |
+| 0x6c4470 | `escanteio` | corner |
 | 0x6bce80 | `escolher_casa` | choose_square |
 | 0x6ceb90 | `escolher_cobrador` | choose_taker |
 | 0x6d0f80 | `escolher_destaque` | choose_standout |
@@ -133,6 +134,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cbc00 | `jogadores_na_linha` | players_in_line |
 | 0x6bba50 | `lado_do_lance` | side_of_move |
 | 0x6bab90 | `lance_valendo` | move_counts |
+| 0x6c4290 | `lateral` | throw_in |
 | 0x717400 | `ler_1bc` | read_1bc |
 | 0x700320 | `ler_8ea7` | read_8ea7 |
 | 0x700330 | `ler_8ea8` | read_8ea8 |
@@ -171,6 +173,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x716310 | `papel_na_defesa` | defending_role |
 | 0x716270 | `papel_no_ataque` | attacking_role |
 | 0x6f0630 | `pegar_bola` | take_ball |
+| 0x6c50d0 | `penalti` | penalty |
 | 0x70df70 | `perto_do_gol` | near_goal |
 | 0x70def0 | `perto_do_proprio_gol` | near_own_goal |
 | 0x6ce310 | `placar_agregado` | aggregate_score |

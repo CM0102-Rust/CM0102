@@ -65,6 +65,7 @@ EN = {
  'e_segunda_selecao': 'is_second_national_team', 'placar_agregado': 'aggregate_score', 'marcador_direto': 'direct_marker', 'tirar_de_campo': 'take_off_pitch',
  'marcacao_individual': 'individual_marking', 'nova_reputacao': 'new_reputation', 'razao_global': 'global_ratio',
  'reputacao_do_jogador': 'player_reputation', 'escolher_cobrador': 'choose_taker', 'erro_fatal': 'fatal_error',
+ 'lateral': 'throw_in', 'escanteio': 'corner', 'penalti': 'penalty', 'cobrador': 'taker', 'mover': 'move', 'marcar_2b': 'mark_2b', 'pega_bola': 'take_ball', 'comparar_reinicio': 'compare_restart',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

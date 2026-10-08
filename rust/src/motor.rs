@@ -270,8 +270,12 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6d3610, bytes: &[0x83, 0xec, 0x3c, 0xb8, 0x02, 0x00, 0x00, 0x00] },
     // quinquagesima sexta leva
     Prologo { endereco: 0x6ceb90, bytes: &[0x81, 0xec, 0x24, 0x02, 0x00, 0x00] },
+    // quinquagesima setima leva
+    Prologo { endereco: 0x6c4290, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x6c4470, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x6c50d0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
 ];
-const N: usize = 168;
+const N: usize = 171;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3951,6 +3955,164 @@ unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 {
     bola_fora_com(this, lado_b, &mut |t, a| comentar(t, a))
 }
 
+// ---------- quinquagesima setima leva: lateral, escanteio e penalti ----------
+
+unsafe fn mover(j: usize, x: i8, y: i8) {
+    let f: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(0x6f46b0usize);
+    f(j, x, y);
+}
+unsafe fn marcar_2b(j: usize) {
+    let f: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(0x7160e0usize);
+    f(j, 0);
+}
+unsafe fn pega_bola(j: usize) {
+    let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6f0630usize);
+    f(j);
+}
+unsafe fn cobrador(this: usize, lado: i8, tipo: i8) -> usize {
+    let f: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(0x6ceb90usize);
+    f(this, lado, tipo, 0)
+}
+
+/// { 0x6c4290 } (match_eng.cpp): lateral do lado 0x8eae. Conta (0xf5c8 + 54 x lado), poe a bola
+/// (0x8ea7, 0x8ea8) dentro do campo, escolhe o cobrador (tipo 2), arruma os 40 jogadores pela tabela
+/// da formacao (0xf56e/0xf572 pelo lado do jogador; indice: do lado que cobra?, posicao, coluna e
+/// linha da bola; byte = coluna | linha << 4) e poe o cobrador na bola, virado para dentro (90 ou 270).
+/// Sem cobrador o original mostra uma caixa de erro (sem a caixa aqui) e marca o motor (+0 = 1).
+unsafe extern "thiscall" fn lateral(this: usize) {
+    let t = byte(this, 0x8eae);
+    let conta = (this as isize + 54 * t as isize + 0xf5c8) as *mut u8;
+    *conta = (*conta).wrapping_add(1);
+    let a7 = (this + 0x8ea7) as *mut i8;
+    let a8 = (this + 0x8ea8) as *mut i8;
+    *a7 = (*a7).max(0).min(8);
+    *a8 = (*a8).max(0).min(11);
+    let c = cobrador(this, t, 2);
+    for l in 0..2i8 {
+        let proprio = (t as i32 == l as i32) as isize;
+        for k in 0..20 {
+            let j = jogador_do_bloco(this, l, k);
+            let pos = byte(j, 0x19);
+            if pos < 0 {
+                continue;
+            }
+            let tabela = *((this + 0xf56e + 4 * (byte(j, 0x27) == 1) as usize) as *const usize);
+            let casa = *((tabela as isize + 12 * ((proprio + 2 * pos as isize) * 9 + *a7 as isize) + *a8 as isize) as *const u8);
+            mover(j, (casa & 0xf) as i8, (casa >> 4) as i8);
+            marcar_2b(j);
+        }
+    }
+    if c == 0 {
+        *(0xb67a34 as *mut u32) = 0;
+        *(this as *mut u8) = 1;
+        return;
+    }
+    mover(c, *a7, *a8);
+    pega_bola(c);
+    *((c + 0x19c) as *mut i16) = 200;
+    *((c + 0x19a) as *mut i16) = if *a7 != 0 { 270 } else { 90 };
+}
+
+/// { 0x6c4470 } (match_eng.cpp): escanteio do lado 0x8eae. Conta (0xf5c7 + 54 x lado), marca o
+/// lance (0x8eb1 = 3, 0x8eae = -1) e arruma os 40 jogadores: pelo papel no ataque (0x716270, do lado
+/// que cobra) ou na defesa (0x716310), alguns vao para casas sorteadas na area (coluna 4 +- 1; linha
+/// 5/6, ou 0..1/10..11 sorteada), os outros pela tabela da formacao (0xf56e lado 0, 0xf572 lado 1;
+/// +0x3b ou +0x30). Fora do campo: erro fatal. Depois escolhe o cobrador (tipo 3) e o poe na
+/// bandeira (coluna 0 ou 8 pelo sorteio contra 0x8ea7; linha 0 ou 11).
+unsafe extern "thiscall" fn escanteio(this: usize) {
+    let ataque: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x716270usize);
+    let defesa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x716310usize);
+    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let t = byte(this, 0x8eae);
+    let conta = (this as isize + 54 * t as isize + 0xf5c7) as *mut u8;
+    *conta = (*conta).wrapping_add(1);
+    *((this + 0x8eb1) as *mut u8) = 3;
+    *((this + 0x8eae) as *mut i8) = -1;
+    for l in 0..2i8 {
+        let proprio = t as i32 == l as i32;
+        for k in 0..20 {
+            let j = jogador_do_bloco(this, l, k);
+            let pos = byte(j, 0x19);
+            if pos < 0 {
+                continue;
+            }
+            // casas da area: 'a' linha sorteada 0..1, 'b' 10..11, 'c' 6, 'd' 5
+            let r = if proprio { ataque(j) } else { defesa(j) };
+            let area = match (proprio, l == 1, r) {
+                (true, true, 1) | (false, false, 4) => Some('a'),
+                (true, false, 1) | (false, true, 4) => Some('b'),
+                (true, true, 2) | (false, true, 3) => Some('c'),
+                (true, false, 2) | (false, false, 3) => Some('d'),
+                _ => None,
+            };
+            let (x, y) = match area {
+                Some(z) => {
+                    let mut x = 4i8.wrapping_sub(sorteio(2) as i8);
+                    x = x.wrapping_add(sorteio(2) as i8);
+                    let y = match z {
+                        'a' => sorteio(2) as i8,
+                        'b' => 11i8.wrapping_sub(sorteio(2) as i8),
+                        'c' => 6,
+                        _ => 5,
+                    };
+                    (x, y)
+                }
+                None => {
+                    let tabela = *((this + if l == 0 { 0xf56e } else { 0xf572 }) as *const usize);
+                    let desl = if proprio == (l == 0) { 0x3b } else { 0x30 };
+                    let casa = *((tabela as isize + 4 * 27 * (proprio as isize + 2 * pos as isize) + desl) as *const u8);
+                    ((casa & 0xf) as i8, (casa >> 4) as i8)
+                }
+            };
+            if !(0..9).contains(&x) || !(0..12).contains(&y) {
+                erro_fatal();
+            }
+            mover(j, x, y);
+            marcar_2b(j);
+        }
+    }
+    let c = cobrador(this, t, 3);
+    let r = sorteio(2);
+    let x = if byte(this, 0x8ea7) as i32 > 4 - r { 0 } else { 8 };
+    mover(c, x, if t != 0 { 0 } else { 11 });
+    pega_bola(c);
+    *((c + 0x19c) as *mut i16) = 200;
+    if t == 0 {
+        *((c + 0x19a) as *mut i16) = if byte(this, 0x8ea7) != 0 { 90 } else { 270 };
+    }
+}
+
+/// { 0x6c50d0 } (match_eng.cpp): penalti do lado 0x8eae. Escolhe o cobrador (tipo 5), da a bola a
+/// ele na marca (coluna 4; linha 1 ou 10, tambem em 0x8ea7/0x8ea8) e tira os outros da area: os
+/// goleiros guardados (0xf59e, 0xf5a2) vao para o gol (linha 0 / 11), quem esta nas linhas 0..1 vai
+/// para a 2 e quem esta nas 10..11 para a 9, na mesma coluna.
+unsafe extern "thiscall" fn penalti(this: usize) {
+    let t = byte(this, 0x8eae);
+    let c = cobrador(this, t, 5);
+    pega_bola(c);
+    let linha: i8 = if t != 0 { 1 } else { 10 };
+    *((this + 0x8ea7) as *mut i8) = 4;
+    *((this + 0x8ea8) as *mut i8) = linha;
+    mover(c, 4, linha);
+    for k in 0..20 {
+        for l in 0..2i8 {
+            let j = jogador_do_bloco(this, l, k);
+            if byte(j, 0x19) >= 0 && j != c {
+                let goleiro = *((this + if l == 0 { 0xf59e } else { 0xf5a2 }) as *const usize);
+                let y = byte(j, 0x103);
+                if j == goleiro {
+                    mover(j, 4, if l == 0 { 0 } else { 11 });
+                } else if y < 2 {
+                    mover(j, byte(j, 0x102), 2);
+                } else if y > 9 {
+                    mover(j, byte(j, 0x102), 9);
+                }
+            }
+            marcar_2b(j);
+        }
+    }
+}
+
 // ---------- quinquagesima sexta leva: escolher o cobrador ----------
 
 /// Caixa de erro do original (match_eng.cpp, linha) sem a mensagem: zera 0xb67a34, 0x5cc7d0,
@@ -7004,6 +7166,27 @@ unsafe extern "thiscall" fn comparar_escolher_cobrador(this: usize, lado: i8, ti
     r
 }
 
+/// Comparacao das bolas paradas da 57a leva: motor inteiro e sorteio.
+unsafe fn comparar_reinicio(nome: &str, this: usize, o: unsafe extern "thiscall" fn(usize), r: unsafe extern "thiscall" fn(usize)) {
+    let mut regioes = vec![(this, 0xf5f8), (0xb67a34, 4)];
+    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this), || crate::aleatorio::sem_contar(|| r(this)));
+    PLACAR.registrar(igual, || {
+        let (a, b) = (&mo.0, &mr.0);
+        let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
+        format!("{} diferencas em {:x?}", nome, dif)
+    });
+}
+unsafe extern "thiscall" fn comparar_lateral(this: usize) {
+    comparar_reinicio("lateral", this, orig::<unsafe extern "thiscall" fn(usize)>(168), lateral);
+}
+unsafe extern "thiscall" fn comparar_escanteio(this: usize) {
+    comparar_reinicio("escanteio", this, orig::<unsafe extern "thiscall" fn(usize)>(169), escanteio);
+}
+unsafe extern "thiscall" fn comparar_penalti(this: usize) {
+    comparar_reinicio("penalti", this, orig::<unsafe extern "thiscall" fn(usize)>(170), penalti);
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -7182,6 +7365,9 @@ pub unsafe fn instalar(comparando: bool) {
         nova_reputacao as *const () as usize,
         reputacao_do_jogador as *const () as usize,
         escolher_cobrador as *const () as usize,
+        lateral as *const () as usize,
+        escanteio as *const () as usize,
+        penalti as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -7352,6 +7538,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_nova_reputacao as *const () as usize,
         comparar_reputacao_do_jogador as *const () as usize,
         comparar_escolher_cobrador as *const () as usize,
+        comparar_lateral as *const () as usize,
+        comparar_escanteio as *const () as usize,
+        comparar_penalti as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -7412,6 +7601,9 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_nova_reputacao",
         "motor_reputacao_do_jogador",
         "motor_escolher_cobrador",
+        "motor_lateral",
+        "motor_escanteio",
+        "motor_penalti",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

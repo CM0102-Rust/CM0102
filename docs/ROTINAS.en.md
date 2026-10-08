@@ -543,3 +543,13 @@ Mutations: 13/13.
 **Mutations in the real game.** The club's tactics (0xde1d08) only exist with the database loaded; in the synthetic self-test the corner and the free kick near the goal do not run (the generator switches to type 8). `mutacoes.py --jogo YYYY-MM-DD` runs each mutation in the real game in comparison mode up to the date (about 95 s until 2001-08-15). The computer's clubs almost never have a designated taker: mutations only in the designated path pass (equivalent in practice); those in the corner and free-kick scores are flagged. Mutations: 18/18 in the self-test (one gap closed: the human manager's penalty list now holds the players' records), 4/4 in the real game. Real game (batches 55 and 56): 10 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original (c76ad0ff6ce3daa6).
 
 **Shorter base.** From the 57th batch on, the mutation base runs with 200 thousand cases (about 3 minutes); the full base (2 million, about 35 minutes, `--base-completa`) is kept for every 5 batches.
+
+### Match engine, 57th batch — throw-in, corner and penalty (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `lateral()` | 0x6c4290 | thiscall | match_eng.cpp: throw-in for side 0x8eae. Counts (0xf5c8 + 54 × side), puts the ball (0x8ea7, 0x8ea8) inside the pitch, picks the taker (type 2), arranges the 40 players by the formation table (0xf56e/0xf572 by the player's side; index: of the side taking?, position, ball column and row; byte = column + 16 × row) and puts the taker on the ball, facing inwards (90 or 270). With no taker the original shows an error box (no box here) and marks the engine (+0 = 1) |
+| `escanteio()` | 0x6c4470 | thiscall | match_eng.cpp: counts (0xf5c7 + 54 × side), marks the play (0x8eb1 = 3, 0x8eae = −1) and arranges the 40: by the attacking role (0x716270, side taking) or defending role (0x716310), some go to drawn squares in the box (column 4 ± 1; row 5/6, or drawn 0..1/10..11), the others by the formation table (+0x3b or +0x30). Off the pitch: fatal error. Taker (type 3) at the flag (column 0 or 8 by a draw against 0x8ea7; row 0 or 11) |
+| `penalti()` | 0x6c50d0 | thiscall | match_eng.cpp: taker (type 5) with the ball on the spot (column 4; row 1 or 10, also in 0x8ea7/0x8ea8); the stored goalkeepers go to goal, those on rows 0..1 go to row 2 and those on 10..11 to row 9 |
+
+No synthetic self-test: the three arrange the 40 players on the grid (a synthetic generator would have to keep the grid consistent) and the corner looks up the club's tactics. Proof by the real game: mutations 8/8 with `--jogo 2001-08-15`; real game 10 billion comparisons, 0 divergences; career until 2002-06-01: Rust ×2 = original (c76ad0ff6ce3daa6).
