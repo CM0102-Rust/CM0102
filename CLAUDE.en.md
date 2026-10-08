@@ -27,7 +27,7 @@ Lucas's personal project: Championship Manager 01/02 (3.9.68) reverse-engineered
 | `jogo/` | playable installation (not versioned) |
 | `original/` | untouched downloads and 3.9.68 exes (not versioned) |
 | `referencias/` | third-party projects (not versioned) |
-| `engenharia-reversa/` | `pe_info.py`, `textos.py`, `refs.py`, `desmonta.py`, `desvios.py`, `escuta_tela.py`, `patch_portatil.py`, `resolucao.py`, `simular.py` (test bench), `cobertura.py`, `laboratorio.py`, `prologos.py`, `candidatos.py` (next routines), `mutacoes.py` + `mutacoes/` (self-test with mutations) |
+| `engenharia-reversa/` | `pe_info.py`, `textos.py`, `refs.py`, `desmonta.py`, `descompilar.py` (Ghidra pseudocode, portable in `referencias/ferramentas`), `desvios.py`, `escuta_tela.py`, `patch_portatil.py`, `resolucao.py`, `simular.py` (test bench), `cobertura.py`, `laboratorio.py`, `prologos.py`, `candidatos.py` (next routines), `mutacoes.py` + `mutacoes/` (self-test with mutations) |
 | `rust/` | Rust core = `ddraw.dll` (i686, static CRT, no external crates): `video.rs` (our own DirectDraw), `apresentacao.rs` (frame → window, mouse), `ganchos.rs` (IAT), `desvios.rs` (hooks in the exe, private stack), `simulacao.rs` + `alocador.rs` (reproducible simulation), `aleatorio.rs`, `data.rs`, `motor.rs` (ported routines), `espiao.rs` (diagnostics, `CM_ESPIAO=1`) |
 | `docs/` | `DESCOMPILACAO.md`, `COMO_CONTINUAR.md`, `ROTINAS.md`, `PROJETO.md`, `VERSAO_SEM_TELA.md`, `mapa_funcoes.csv`, `cobertura_motor.txt` |
 | `wiki/` | `index.md` (state and next steps), `log.md` |
