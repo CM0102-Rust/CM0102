@@ -178,3 +178,15 @@ Source: topic 1540, page 5 (Xeno, giovanisantana29 and others). Checked in 3.9.6
 | 0x8C31D2 | UK work permit: 18 + a draw of days (`add al, 0x12`, 18 to 25) |
 | 0x579C63 | limit of 3 non-EU foreigners in England (`mov byte [edx+5], 3`) |
 | 0x868307 | a contract becomes unprotected after 2 years (+1 under 28) (`add ebx, 2`) |
+
+## Other points (topic 1540, pages 6 and 7)
+
+Checked in 3.9.68 where stated:
+
+| Where | What it is |
+|---|---|
+| competition/stage +0x49, +0x4A | named substitutes and substitutions allowed (4 bits each); a competition method (around 0x48F2FA, with a competition-specific version in vtable +0x7C) copies both into word +0x4D of the object it receives (probably the match). The French Cup stores its own at 0x5BA19B. Checked |
+| 0x68A160, 0x68A1C0 | build the rounds of the league calendar (called with the week and the round parameters; e.g. Italian Serie B at 0x646574). Checked |
+| 0x5836C4, 0x632E30 | start year (2001, `cmp ax, 0x7D1`) for the previous year's international and European awards. Checked |
+| 0x5E4800 | builds an interface colour from three components (blue, green, red pushed before the call); the interface has dozens of these calls. Checked |
+| nation +0x11C | league selected (`NationLeagueSelected` in `database.h`); 0xAE2D04 seems to be the number of selected leagues (not checked) |

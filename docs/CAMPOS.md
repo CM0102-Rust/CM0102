@@ -178,3 +178,15 @@ Fonte: tópico 1540, página 5 (Xeno, giovanisantana29 e outros). Conferidos no 
 | 0x8C31D2 | visto de trabalho no Reino Unido: 18 + sorteio dias (`add al, 0x12`, 18 a 25) |
 | 0x579C63 | limite de 3 estrangeiros de fora da UE na Inglaterra (`mov byte [edx+5], 3`) |
 | 0x868307 | contrato fica desprotegido depois de 2 anos (+1 abaixo de 28 anos) (`add ebx, 2`) |
+
+## Outros pontos (tópico 1540, páginas 6 e 7)
+
+Conferidos no 3.9.68 quando indicado:
+
+| Onde | O que é |
+|---|---|
+| competição/fase +0x49, +0x4A | reservas relacionados e substituições permitidas (4 bits cada); um método da competição (por volta de 0x48F2FA, com versão própria por competição na vtable +0x7C) copia os dois para a palavra +0x4D do objeto recebido (provavelmente a partida). A Copa da França grava os seus em 0x5BA19B. Conferido |
+| 0x68A160, 0x68A1C0 | montam as rodadas do calendário das ligas (chamadas com a semana e os parâmetros da rodada; ex.: Série B italiana em 0x646574). Conferido |
+| 0x5836C4, 0x632E30 | ano inicial (2001, `cmp ax, 0x7D1`) para os prêmios internacionais e europeus do ano anterior. Conferido |
+| 0x5E4800 | monta uma cor da interface a partir de três componentes (azul, verde, vermelho empilhados antes da chamada); a interface tem dezenas dessas chamadas. Conferido |
+| nação +0x11C | liga selecionada (`NationLeagueSelected` do `database.h`); 0xAE2D04 parece ser a quantidade de ligas selecionadas (não conferido) |
