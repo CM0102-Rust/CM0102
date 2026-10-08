@@ -180,7 +180,8 @@ Fonte: tópico 1540, página 5 (Xeno, giovanisantana29 e outros). Conferidos no 
 | 0x579C63 | limite de 3 estrangeiros de fora da UE na Inglaterra (`mov byte [edx+5], 3`) |
 | 0x43F2C8 | estrangeiros no Brasileiro: 2 por jogo (`mov byte [edx+2], 2`; tópico 1540, página 18) |
 | 0x533080 | sem nomes reais, os jogadores trocam de clube em pares sorteados (16 × a quantidade, fator em 0x969508); alguns ficam onde estavam (página 19) |
-| fase +0x3E | quantidade de times da liga (ex.: 18 na liga galesa, 0x925B42; página 19) |
+| fase +0x3E | quantidade de times da liga (ex.: 18 na liga galesa, 0x925B42; 14 na grega, 0x5EAD72, que reserva 59 bytes por time, a linha da tabela; páginas 19 e 20) |
+| 0x53D900 | as nações que entram nas copas da Oceania (Nova Zelândia, Papua-Nova Guiné, Fiji, Ilhas Salomão, Vanuatu; Austrália e Nova Zelândia são incluídas à parte); página 20 |
 | 0x868307 | contrato fica desprotegido depois de 2 anos (+1 abaixo de 28 anos) (`add ebx, 2`) |
 | 0x76D4B0.. | convocação das seleções: até 23 em torneio oficial (seleção principal e sub-21), 26/22 no outro caso, 26 e mínimo 22 em amistosos e eliminatórias (tópico 1540, página 16) |
 | 0x85EB91 | teto do salário num contrato (o tópico dá o deslocamento no arquivo, 0x45EB91): o tópico 1540, página 13, fala em reputação atual × 750; o código compara com um valor × 15 em 0x85EB84 (outra escala, a conferir). A mesma página mostra a troca da Irlanda do Norte pela Áustria: dezenas de pontos do código com o ponteiro da nação (0x9CF3E4) e o id de cada liga gravados à mão, exemplo de por que as competições hoje se mudam por patch |

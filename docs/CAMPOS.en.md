@@ -180,7 +180,8 @@ Source: topic 1540, page 5 (Xeno, giovanisantana29 and others). Checked in 3.9.6
 | 0x579C63 | limit of 3 non-EU foreigners in England (`mov byte [edx+5], 3`) |
 | 0x43F2C8 | foreigners in the Brazilian league: 2 per game (`mov byte [edx+2], 2`; topic 1540, page 18) |
 | 0x533080 | without real names, players swap clubs in drawn pairs (16 × the count, factor at 0x969508); some stay where they were (page 19) |
-| stage +0x3E | number of teams in the league (e.g. 18 in the Welsh league, 0x925B42; page 19) |
+| stage +0x3E | number of teams in the league (e.g. 18 in the Welsh league, 0x925B42; 14 in the Greek one, 0x5EAD72, which reserves 59 bytes per team, the table row; pages 19 and 20) |
+| 0x53D900 | the nations that enter the Oceania cups (New Zealand, Papua New Guinea, Fiji, Solomon Islands, Vanuatu; Australia and New Zealand are added separately); page 20 |
 | 0x868307 | a contract becomes unprotected after 2 years (+1 under 28) (`add ebx, 2`) |
 | 0x76D4B0.. | national team squads: up to 23 in official tournaments (senior and under-21), 26/22 in the other case, 26 and minimum 22 in friendlies and qualifiers (topic 1540, page 16) |
 | 0x85EB91 | cap on a contract wage (the topic gives the file offset, 0x45EB91): topic 1540, page 13, speaks of current reputation × 750; the code compares with a value × 15 at 0x85EB84 (another scale, to be checked). The same page shows swapping Northern Ireland for Austria: dozens of places in the code with the nation pointer (0x9CF3E4) and each league id written by hand, an example of why competitions are changed by patch today |
