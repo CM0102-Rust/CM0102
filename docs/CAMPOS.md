@@ -179,6 +179,8 @@ Fonte: tópico 1540, página 5 (Xeno, giovanisantana29 e outros). Conferidos no 
 | 0x8C7BE4.. | regra do visto de trabalho no Reino Unido (tópico 1540, página 10; conferida): concede com reputação mundial do jogador (+0x0D) acima de 8500, salário semanal do contrato (+0x0C) acima de 34 999, menos de 24 anos (pessoa +0x18) com potencial (+0x07) acima de 190, mais de 20 jogos pela seleção (pessoa +0x22) com a nação (pessoa +0x1A) de reputação (+0x8E) acima de 3000 e menos de 32 anos, ou mais de 70% dos jogos (0x8C7D9E); para quem não é jogador, reputação mundial acima de 160 (0x8C7A94) |
 | 0x579C63 | limite de 3 estrangeiros de fora da UE na Inglaterra (`mov byte [edx+5], 3`) |
 | 0x868307 | contrato fica desprotegido depois de 2 anos (+1 abaixo de 28 anos) (`add ebx, 2`) |
+| 0x7ABCDF | jogador gerado (regen): 1 chance em 4 de trocar de nacionalidade, sorteando entre as nações (quantidade em 0xAE2350, vetor em 0xAE23A8, registros de 290 bytes) e só aceitando a sorteada se ela tiver menos de 100 pessoas (+0x88 da nação); tópico 1540, página 12 |
+| 0x5265F8 / 0x536A1D | jogador novo vira "promessa" com 1 chance em 100 (potencial −2, 0xFFFE em +0x07); o potencial −2 (e −1) é resolvido em 0x536A1D na criação do jogo |
 | 0x53D7F0 / 0x8CEBB5 | o clube só contrata bascos? / a nação usada nessa restrição (0x9CF424, País Basco); tópico 1540, página 8 |
 | 0x83A1D5 | listas de observação dos clubes do computador no início do jogo (pulando o salto, nenhuma até a virada de temporada) |
 | 0x5E069A | Copa América pela paridade de (ano − 1996); o ano da próxima edição fica em +0x40 da competição |
