@@ -58,7 +58,7 @@ In the match refereeing object (`match_official.cpp`), the pointer at **+0x04**.
 
 | Offset | Field | Routines |
 |---|---|---|
-| +0x53 | nation (pointer) | `forca_do_time` (adjustment by competition) |
+| +0x53 | nation (pointer) | `forca_do_time` (national league style, see Nations) |
 | +0x80 [2] | reputation | `forca_do_time` (home × away and the 2500 limit) |
 
 ## Global variables
@@ -72,3 +72,32 @@ In the match refereeing object (`match_official.cpp`), the pointer at **+0x04**.
 | 0xDE1F58 | pointer to the UEFA country rankings | next to the random generator state (0xDE1F5C, 8 bytes), which the comparison checks |
 | 0xDE4400 | the game's `HeapCreate` handle | replaced by the simulation's fixed allocator (`alocador.rs`) |
 | 0xDE4404 | 1 if the game recognised the Windows version | — |
+
+## Nations (constants at 0x9CF200..)
+
+Each nation in the database has a fixed global pointer in this area (0x9CF200 Afghanistan ... 0x9CF4A8 Sweden; continents at 0x9CFA08..). Source: NickDLL's `Helpers/9cf_constants` (davdav, <https://github.com/dm-carmo/NickDLL>; no license declared: facts only, no code copied).
+
+In `forca_do_time`, when the club plays in its own country (the match's nation, +0x5d, is the club's nation, +0x53), word 0x1de of the strength is multiplied by the national league's style:
+
+| Nations | Factor |
+|---|---|
+| Germany (0x9CF314), Scotland (0x9CF45C), Belgium (0x9CF244) | 1.15 |
+| Sweden (0x9CF4A8) | 1.25 |
+| Norway (0x9CF408), England (0x9CF2E4) | 1.05 |
+| Netherlands (0x9CF338), Denmark (0x9CF2C0), Portugal (0x9CF434), France (0x9CF300) | 1.10 |
+
+## Competitions (for the competitions stage)
+
+Not yet used by rewritten routines; recorded for stage 2 (competitions, tables, calendar). Source: the "Modern Champions League format for CM 01/02" topic (champman0102.co.uk forum, topic 10794, tafo and davdav, July 2026); check each one against our own disassembly before use.
+
+| Where | What it is |
+|---|---|
+| stage +0xB1 | league table: one 0x3B-byte row per team (+0x00 club, +0x04 position, +0x11 played, +0x15/+0x17 goals for/against, +0x19 points, +0x37 fate, +0x39/+0x3A best and worst reachable position) |
+| stage +0xA7 [2] | games needed per team (computed once and stored in the save) |
+| stage +0xC5..+0xC8 | tiebreak rules |
+| stage +0xC9 | stage end date (the stage ends by date, compared with 0xAE2C90/0xAE2C92) |
+| stage +0xDD | stage complete |
+| 0x6827D0 | sorts the stage table with its tiebreakers |
+| 0x51C410 / 0x522610 | cup round setup / seeded draw |
+| 0x9086E0 | hand-built fixtures (MLS); 0x85C260 and 0x5AA680 register each match |
+| 0xADADFC | competition by id (id × 4) |
