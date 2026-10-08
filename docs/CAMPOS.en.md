@@ -176,6 +176,7 @@ Source: topic 1540, page 5 (Xeno, giovanisantana29 and others). Checked in 3.9.6
 |---|---|
 | 0x7DD212 (and 0x7DF766, 0x7DB019) | a suspension starts 14 days later (`push 0xE`): England, Ireland and obscene gestures |
 | 0x8C31D2 | UK work permit: 18 + a draw of days (`add al, 0x12`, 18 to 25) |
+| 0x8C7BE4.. | UK work permit rule (topic 1540, page 10; checked): granted with the player's world reputation (+0x0D) above 8500, the contract's weekly wage (+0x0C) above 34,999, under 24 (person +0x18) with potential (+0x07) above 190, more than 20 caps (person +0x22) with the nation (person +0x1A) of reputation (+0x8E) above 3000 and under 32, or more than 70% of the games (0x8C7D9E); for non-players, world reputation above 160 (0x8C7A94) |
 | 0x579C63 | limit of 3 non-EU foreigners in England (`mov byte [edx+5], 3`) |
 | 0x868307 | a contract becomes unprotected after 2 years (+1 under 28) (`add ebx, 2`) |
 | 0x53D7F0 / 0x8CEBB5 | does the club only sign Basques? / the nation used in that restriction (0x9CF424, Basque Country); topic 1540, page 8 |
