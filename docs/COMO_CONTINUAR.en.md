@@ -26,7 +26,7 @@ A batch has from 1 to 10 match engine routines (`match_eng.cpp`, `match_pl.cpp`,
 4. **Prove** (the four criteria of `ROTINAS.md`):
    1. Self-test with mutations: write the list in `mutacoes/levaNN.py` (see the examples) and run `python mutacoes.py mutacoes\levaNN.py`. The base must give 0 divergences and each mutation must be flagged (divergence or exception). One that passes is either a gap in the test (fix the generator) or equivalent for the possible values (document why).
    2. Real game: `python simular.py --ate 2002-06-01 --motor sim --modo comparar --limite 900` (0 divergences in `jogo\ddraw.log`).
-   3. Career: `python simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2`. The fingerprint must equal the original's (`--modo original`); today, `7866d02de7578a90` with 2,356,606,166 random draws.
+   3. Career: `python simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2`. The fingerprint must equal that of the original mode **of the same build** (`--modo original`; the set of hooks changes the stack garbage in both modes, and the reference number changes with it). In batches 50 to 52, `c76ad0ff6ce3daa6` with 2,357,335,216 random draws.
 5. **Record.** Section for the batch in `ROTINAS.md` and in `ROTINAS.en.md`, translation of the new names in `glossario.py` (generates `GLOSSARIO.md` and `.en.md`), state in `wiki/index.md`, a line in `wiki/log.md`, commit and push.
 
 ## Known traps
