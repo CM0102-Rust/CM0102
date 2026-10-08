@@ -103,6 +103,23 @@ In `forca_do_time`, in a domestic competition (the competition's nation, +0x5d, 
 | Norway (0x9CF408), England (0x9CF2E4) | 1.05 |
 | Netherlands (0x9CF338), Denmark (0x9CF2C0), Portugal (0x9CF434), France (0x9CF300) | 1.10 |
 
+### The whole 0x9CF*** area (topic 2801)
+
+The topic "[DOCUMENTATION] The [9CF***] Thread" (champman0102.co.uk forum, topic 2801, John Locke and contributors, updated on 2022-01-15) lists the whole area of fixed pointers the game fills in when it loads the database. Ranges (check each address in our disassembly before using it):
+
+| Range | What it is |
+|---|---|
+| 0x9CF178..0x9CF1FC | colours (34) |
+| 0x9CF200..0x9CF544 | nations (Brazil 0x9CF260, Argentina 0x9CF218, England 0x9CF2E4...) |
+| 0x9CF548..0x9CFA04 | competitions (e.g. Brazilian first division 0x9CF9EC, Libertadores 0x9CF63C, friendly 0x9CF668, World Cup 0x9CF79C) |
+| 0x9CFA08..0x9CFA1C | continents |
+| 0x9CFA20..0x9D00A0 | awards |
+| 0x9D00A4..0x9D0524 and 0xB63C9C..0xB63D00 | clubs named in the code (e.g. Flamengo 0x9D0358); outside the area: Falkirk 0xA8EB48 and four Irish clubs at 0x9E9FC0..0x9E9FF4 |
+
+The same topic lists the decimal competition ids (0 = Belgian First Division ... 432 = Belgian Fourth Division D); sometimes the executable uses the id instead of the pointer.
+
+Use already seen in the match engine, not yet rewritten: 0x6c6a30 (match_eng.cpp) compares the nation linked to the ball holder's record (+0x69, +0x1a) and picks a float factor: 1.0 for England, Scotland, Wales, Northern Ireland, Ireland and Norway; 0.6 for Sweden, Denmark and Germany; 0.2 for the others.
+
 ## Competitions (for the competitions stage)
 
 Not yet used by rewritten routines; recorded for stage 2 (competitions, tables, calendar). Source: the "Modern Champions League format for CM 01/02" topic (champman0102.co.uk forum, topic 10794, tafo and davdav, July 2026); check each one against our own disassembly before use.

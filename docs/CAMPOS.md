@@ -103,6 +103,23 @@ Em `forca_do_time`, numa competição nacional (a nação da competição, +0x5d
 | Noruega (0x9CF408), Inglaterra (0x9CF2E4) | 1,05 |
 | Holanda (0x9CF338), Dinamarca (0x9CF2C0), Portugal (0x9CF434), França (0x9CF300) | 1,10 |
 
+### A área 0x9CF*** inteira (tópico 2801)
+
+O tópico "[DOCUMENTATION] The [9CF***] Thread" (fórum champman0102.co.uk, tópico 2801, John Locke e colaboradores, atualizado em 15/01/2022) lista toda a área de ponteiros fixos que o jogo preenche ao carregar a base. Faixas (conferir cada endereço na nossa desmontagem antes de usar):
+
+| Faixa | O que é |
+|---|---|
+| 0x9CF178..0x9CF1FC | cores (34) |
+| 0x9CF200..0x9CF544 | nações (Brasil 0x9CF260, Argentina 0x9CF218, Inglaterra 0x9CF2E4...) |
+| 0x9CF548..0x9CFA04 | competições (ex.: Brasileiro série A 0x9CF9EC, Libertadores 0x9CF63C, amistoso 0x9CF668, Copa do Mundo 0x9CF79C) |
+| 0x9CFA08..0x9CFA1C | continentes |
+| 0x9CFA20..0x9D00A0 | prêmios |
+| 0x9D00A4..0x9D0524 e 0xB63C9C..0xB63D00 | clubes citados no código (ex.: Flamengo 0x9D0358); fora da área: Falkirk 0xA8EB48 e quatro clubes irlandeses em 0x9E9FC0..0x9E9FF4 |
+
+O mesmo tópico lista os ids decimais das competições (0 = Belgian First Division ... 432 = Belgian Fourth Division D); às vezes o executável usa o id em vez do ponteiro.
+
+Uso já visto no motor, ainda não reescrito: 0x6c6a30 (match_eng.cpp) compara a nação ligada à ficha do dono da bola (+0x69, +0x1a) e escolhe um fator float: 1,0 para Inglaterra, Escócia, País de Gales, Irlanda do Norte, Irlanda e Noruega; 0,6 para Suécia, Dinamarca e Alemanha; 0,2 para as demais.
+
 ## Competições (para a etapa de competições)
 
 Ainda não usados por rotinas reescritas; registrados para a etapa 2 (competições, tabelas, calendário). Fonte: tópico "Modern Champions League format for CM 01/02" (fórum champman0102.co.uk, tópico 10794, tafo e davdav, julho de 2026), conferir cada um na nossa desmontagem antes de usar.
