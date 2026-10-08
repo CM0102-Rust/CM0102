@@ -180,7 +180,7 @@ Fonte: tópico 1540, página 5 (Xeno, giovanisantana29 e outros). Conferidos no 
 | 0x868307 | contrato fica desprotegido depois de 2 anos (+1 abaixo de 28 anos) (`add ebx, 2`) |
 | 0x53D7F0 / 0x8CEBB5 | o clube só contrata bascos? / a nação usada nessa restrição (0x9CF424, País Basco); tópico 1540, página 8 |
 | 0x83A1D5 | listas de observação dos clubes do computador no início do jogo (pulando o salto, nenhuma até a virada de temporada) |
-| 0x5E069A | Copa América nos anos pares contados a partir de 1996; o ano da próxima edição fica em +0x40 da competição |
+| 0x5E069A | Copa América pela paridade de (ano − 1996); o ano da próxima edição fica em +0x40 da competição |
 
 ## Outros pontos (tópico 1540, páginas 6 e 7)
 

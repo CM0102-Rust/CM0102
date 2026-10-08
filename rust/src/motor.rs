@@ -277,8 +277,11 @@ const PROLOGOS: [Prologo; N] = [
     // quinquagesima oitava leva
     Prologo { endereco: 0x5b5290, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6d10a0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
+    // quinquagesima nona leva
+    Prologo { endereco: 0x5b58e0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
+    Prologo { endereco: 0x7160f0, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] },
 ];
-const N: usize = 173;
+const N: usize = 175;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3958,6 +3961,58 @@ unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 {
     bola_fora_com(this, lado_b, &mut |t, a| comentar(t, a))
 }
 
+// ---------- quinquagesima nona leva: marcado designado ----------
+
+/// { 0x5b58e0 } (formation.cpp): a pessoa designada para a posicao (indice em +0x5bf + 4 x posicao,
+/// no vetor de pessoas de 0xae23bc, 110 bytes cada); indice negativo: 0.
+unsafe extern "thiscall" fn designado_da_posicao(this: usize, posicao: i8) -> usize {
+    let i = *((this as isize + 0x5bf + 4 * posicao as isize) as *const i32);
+    if i > -1 {
+        (*(0xae23bc as *const usize)).wrapping_add(110 * i as usize)
+    } else {
+        0
+    }
+}
+
+/// { 0x7160f0 } (match_pl.cpp): o adversario que o jogador marca individualmente, ou 0. Precisa
+/// da marca 4 na casa da posicao (0x5b57c0, formacao do lado em motor + 0x91e2); procura entre os
+/// adversarios ativos a ficha designada para a posicao (0x5b58e0). Com a marca 0x10 ainda: se a
+/// formacao adversaria tem o bit 0x10000000 em +0x187b ou o byte +0xaf do outro lado passa de 1, o
+/// jogador com 0x106 nao marca; e, se o marcado tem as tabelas A e B diferentes e sem a marca 0x40
+/// na B, o jogador com 0x106 tambem nao marca.
+unsafe extern "thiscall" fn marcado_designado(this: usize) -> usize {
+    let marca: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x5b57c0usize);
+    let designado: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(0x5b58e0usize);
+    let motor = *((this + 0x19e) as *const usize);
+    let lado = byte(this, 0x27);
+    let formacao = (motor as isize + 0x91e2 + 0x18e3 * lado as isize) as usize;
+    if marca(formacao, byte(this, 0x19)) & 4 == 0 {
+        return 0;
+    }
+    let ficha = designado(formacao, byte(this, 0x19));
+    let outro = (lado == 0) as i8;
+    let alvo = match (0..20).map(|k| jogador_do_bloco(motor, outro, k)).find(|&q| byte(q, 0x19) >= 0 && *((q + 0x69) as *const usize) == ficha) {
+        Some(q) => q,
+        None => return 0,
+    };
+    if marca(formacao, byte(this, 0x19)) & 0x10 == 0 {
+        return alvo;
+    }
+    let o = outro as usize;
+    let fechada = *((motor + 0xaa5d + 0x18e3 * o) as *const u32) & 0x1000_0000 != 0 || byte(motor + o, 0xaf) > 1;
+    if fechada && byte(this, 0x106) != 0 {
+        return 0;
+    }
+    let m_alvo = *((alvo + 0x19e) as *const usize);
+    let b = if m_alvo != 0 { tabela_b(m_alvo, alvo) } else { 0 };
+    let a = if m_alvo != 0 { tabela_a(m_alvo, alvo) } else { 0 };
+    if b == a || b & 0x40 != 0 || byte(this, 0x106) == 0 {
+        alvo
+    } else {
+        0
+    }
+}
+
 // ---------- quinquagesima oitava leva: casas da formacao e craques ----------
 
 /// { 0x5b5290 } (formation.cpp): liga o bit `mascara` (um so) na mascara de casas da posicao
@@ -7279,6 +7334,19 @@ unsafe extern "thiscall" fn comparar_marcar_craques(this: usize, lado: i8) {
     });
 }
 
+unsafe extern "thiscall" fn comparar_designado_da_posicao(this: usize, posicao: i8) -> usize {
+    let r = orig::<unsafe extern "thiscall" fn(usize, i8) -> usize>(173)(this, posicao);
+    let n = designado_da_posicao(this, posicao);
+    PLACAR.registrar(r == n, || format!("designado_da_posicao({}) original={:x} rust={:x}", posicao, r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_marcado_designado(this: usize) -> usize {
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> usize>(174)(this);
+    let n = marcado_designado(this);
+    PLACAR.registrar(r == n, || format!("marcado_designado original={:x} rust={:x}", r, n));
+    r
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -7462,6 +7530,8 @@ pub unsafe fn instalar(comparando: bool) {
         penalti as *const () as usize,
         gravar_casa as *const () as usize,
         marcar_craques as *const () as usize,
+        designado_da_posicao as *const () as usize,
+        marcado_designado as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -7637,6 +7707,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_penalti as *const () as usize,
         comparar_gravar_casa as *const () as usize,
         comparar_marcar_craques as *const () as usize,
+        comparar_designado_da_posicao as *const () as usize,
+        comparar_marcado_designado as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -7702,6 +7774,8 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_penalti",
         "motor_gravar_casa",
         "motor_marcar_craques",
+        "motor_designado_da_posicao",
+        "motor_marcado_designado",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -9199,6 +9273,66 @@ pub unsafe fn autoteste(casos: u64) {
             for i in 0..10u32 {
                 let k = ((h58 >> (i * 6)) % 40) as i8;
                 comparar_marcador_direto(m, k / 20, k % 20);
+            }
+            // quinquagesima nona leva: marcado designado (marcas 4 e 0x10, indices no vetor de pessoas falso,
+            // formacao adversaria fechada, 0x106, tabelas A/B do marcado)
+            {
+                let mut pessoas59 = vec![0u8; 110 * 24];
+                let pessoas_antes = *(0xae23bc as *const usize);
+                *(0xae23bc as *mut usize) = pessoas59.as_mut_ptr() as usize;
+                let r0 = s.proximo();
+                let l59 = (r0 % 2) as usize;
+                let o59 = 1 - l59;
+                let blocos = [jogador_do_bloco(m, 0, 0), jogador_do_bloco(m, 1, 0)];
+                let antes59: Vec<Vec<u8>> = blocos.iter().map(|&b| core::slice::from_raw_parts(b as *const u8, 20 * 0x1be).to_vec()).collect();
+                let form = m + 0x91e2 + 6371 * l59;
+                let antes_form = core::slice::from_raw_parts(form as *const u8, 6371).to_vec();
+                let form_o = m + 0x91e2 + 6371 * o59;
+                let antes_fo = *((form_o + 0x187b) as *const u32);
+                let antes_af = *((m + 0xaf + o59) as *const u8);
+                for k in 0..20usize {
+                    let z = s.proximo();
+                    let q = jogador_do_bloco(m, o59 as i8, k);
+                    *((q + 0x19) as *mut i8) = if z % 5 == 0 { -1 } else { (k % 11) as i8 };
+                    *((q + 0x69) as *mut usize) = pessoas59.as_ptr() as usize + 110 * ((z >> 4) % 24) as usize;
+                    *((q + 0x27) as *mut i8) = o59 as i8;
+                    *((q + 0x19e) as *mut usize) = if (z >> 9) % 7 == 0 { 0 } else { m };
+                }
+                for pos in 0..11usize {
+                    let z = s.proximo();
+                    *((form + 0x5b4 + pos) as *mut u8) = [4u8, 0x14, 0x10, 0, 0x15, 5][(z % 6) as usize];
+                    *((form + 0x5bf + 4 * pos) as *mut i32) = if z % 7 == 3 { -1 } else { ((z >> 4) % 24) as i32 };
+                }
+                *((form_o + 0x187b) as *mut u32) = if (r0 >> 2) % 3 == 0 { 0x1000_0000 } else { (r0 >> 8) as u32 & 0xefff_ffff };
+                *((m + 0xaf + o59) as *mut u8) = [0u8, 1, 2, 5][((r0 >> 5) % 4) as usize];
+                // as tabelas A/B sao do caso inteiro: voltam no fim (valores daqui travam secoes seguintes)
+                let antes_tabelas: Vec<Vec<u16>> = tabelas.clone();
+                for (ti, t) in tabelas.iter_mut().enumerate() {
+                    for (i, v) in t.iter_mut().enumerate() {
+                        let z = (r0 >> ((ti * 11 + i) % 50)) as u16;
+                        *v = [0u16, 0x40, 0x41, 1, z][(z % 5) as usize];
+                    }
+                }
+                for _ in 0..4 {
+                    let z = s.proximo();
+                    let j = jogador_do_bloco(m, l59 as i8, (z % 20) as usize);
+                    *((j + 0x19e) as *mut usize) = m;
+                    *((j + 0x27) as *mut i8) = l59 as i8;
+                    *((j + 0x19) as *mut i8) = ((z >> 5) % 11) as i8;
+                    *((j + 0x106) as *mut u8) = ((z >> 9) % 2) as u8;
+                    comparar_marcado_designado(j);
+                    comparar_designado_da_posicao(form, [-1i8, 0, 5, 10][((z >> 12) % 4) as usize]);
+                }
+                for (i, &b) in blocos.iter().enumerate() {
+                    core::ptr::copy_nonoverlapping(antes59[i].as_ptr(), b as *mut u8, antes59[i].len());
+                }
+                core::ptr::copy_nonoverlapping(antes_form.as_ptr(), form as *mut u8, antes_form.len());
+                *((form_o + 0x187b) as *mut u32) = antes_fo;
+                *((m + 0xaf + o59) as *mut u8) = antes_af;
+                *(0xae23bc as *mut usize) = pessoas_antes;
+                for (t, a) in tabelas.iter_mut().zip(antes_tabelas.iter()) {
+                    t.copy_from_slice(a);
+                }
             }
             // quinquagesima oitava leva: casas da formacao (todos os bits validos, posicoes 0..=10; o caso de
             // erro abre a caixa do jogo, fora do teste) e craques (atributos nas faixas, papeis)
