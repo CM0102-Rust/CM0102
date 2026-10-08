@@ -430,3 +430,51 @@ Autoteste: 5,5 bilhões de casos, 0 divergências, com a grade do campo consiste
 **Porta de narração no autoteste.** No autoteste, a porta de 0x6d6f70 só grava as chamadas (o narrador é falso) em vez de rodar o comentário: as rotinas que narram passam a ter autoteste sintético (antes, só jogo real). **Comparações aninhadas:** quando uma rotina comparada chama outra que também narra (a bola rolando chama a bola fora), a comparação de dentro só passa a chamada adiante, e os comentários entram na gravação de fora (a primeira versão comparava a original de dentro com um valor vazio).
 
 Autoteste: 5,5 bilhões de casos, 0 divergências (direções nas bordas das faixas, saídas pelos quatro lados, com narração). Mutações: 9/12; as 3 que passam são equivalentes: `v <= 0` × `v < 0` (impulso 0 já saiu antes), o limite inferior 130 e o 50 (as faixas anteriores, de 40 a 140, já pegam esses valores). Jogo real: 1 bilhão de comparações, 0 divergências. Carreira até 01/06/2002: Rust ×2 = original.
+
+### Motor de partidas, 45ª leva — teste de condição (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `teste_de_condicao(codigo, alvo)` | 0x7164b0 | thiscall, ret 8, `al` | match_pl.cpp: v = condição² (0x1a2, potência pela CRT do jogo); limite 8 se `alvo` for o guardado em 0x1a6, senão 1. Código 1: sorteio(110 − condição) < limite; 2 a 5: sorteio(K / v) < limite, K = 400 mil, 2, 4 e 8 milhões; outros: 0 |
+
+**`_ftol` fora da faixa.** Com condição abaixo de 1, v = 0 e K / v é infinito: o `fistp` do x87 grava o inteiro indefinido (parte baixa 0), enquanto o `as` do Rust satura (−1). O `ftol` em Rust passou a devolver 0 fora da faixa (só muda valores que o original já tratava assim). Mutações: 9/10 (a conversão para byte com sinal da condição é equivalente: a condição vai até 100).
+
+### Motor de partidas, 46ª leva — preferências da pessoa e marca por posição (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `gosta_de(alvo, pessoa)` | 0x547810 | cdecl, `eax` | `alvo` está entre as pessoas de que `pessoa` gosta (preferências em +0x65; vagas +0x1c, +0x20, +0x24) |
+| `nao_gosta_de(alvo, pessoa)` | 0x547840 | cdecl, `eax` | idem, das que ela não gosta (+0x28, +0x2c, +0x30) |
+| `marcar_posicao(posicao, ficha)` | 0x5b5910 | thiscall, ret 8 | grava na tabela por posição (+0x5bf + 4 × posição) o valor da ficha (−1 sem ficha), zera +0x187f, devolve 1 |
+
+Mutações: 8/8, depois de fechar duas lacunas do gerador (vagas vazias nas preferências, e +0x187f já zerado no motor falso).
+
+### Motor de partidas, 47ª leva — posições finas para desenhar a partida (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `posicoes_finas(saida)` | 0x6d1770 | thiscall, ret 4 | match_eng.cpp: posição fina (grade 27 × 36) de cada jogador para desenhar a partida. Cada casa vira 3 × 3 subcasas; quem tem a bola fica no centro; os outros sorteiam uma subcasa (nunca o centro da casa de quem tem a bola), aceitando uma já ocupada só depois de 50 tentativas por ocupante; o lado que começa em cada casa é sorteado. Saída: bola (x, y) e, por lado e posição tática, 6 bytes (x e y finos, byte 0 do jogador, papel, marca 1) |
+
+É a base de uma futura visão 2D da partida. O "aliasing de pilha" que tinha adiado esta rotina não existia: era o deslocamento de um `push` não contado na leitura. **Gerador do teste corrigido:** as formações da 43ª leva empilhavam mais de 11 jogadores numa casa (y fora do campo rebaixado para a mesma linha), corrompendo as listas da grade; o pontapé passava no teste (original e Rust corrompem igual), mas a nova rotina lê as listas e o original caía. Agora as formações têm casas distintas por posição, e um diagnóstico confere a grade antes e depois do pontapé. Mutações: 8/9 (marcar o centro como ocupado por quem tem a bola é equivalente: o centro da casa dele já é vetado aos outros).
+
+### Motor de partidas, 48ª leva — folhas de outros módulos (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `unidades(n)` | 0x4b0850 | cdecl, `al` | comp_util.cpp: algarismo das unidades de n (abaixo de 1000; senão 0) |
+| `e_amistoso(comp)` | 0x5c6710 | thiscall, ret 4 | friendly.cpp: a competição é a guardada em +4 ou está entre as 127 últimas competições de clubes (0xae2378) |
+| `contrato_de(pessoa)` | 0x4cf5a0 | thiscall, ret 4 | contract_manager.cpp: contrato (80 bytes) pelo índice na tabela 0xae2d0c (79 bytes por pessoa; quantidade em 0xae2364) |
+| `e_selecao(clube)` | 0x53b900 | cdecl | Database.cpp: o id está depois dos clubes nacionais (0xae235c − 2 × 0xae2350) |
+
+Primeiras rotinas fora de `match_*.cpp`: liberam integradoras do motor que dependiam delas. O autoteste troca as globais do jogo durante o teste e as restaura. Mutações: 9/10 (`n <= 1000` é equivalente: para 1000 os dois dão 0). Uma rodada de mutação caiu dentro da DLL; repetida com o mapa do linker, não se reproduziu (6 bilhões de casos, 0 divergências).
+
+### Motor de partidas, 49ª leva — técnico humano e máscaras de formação (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `tecnico_9a01(pessoa)` | 0x5fd210 | thiscall, ret 4 | human_manager.cpp: campo +0x9a01 do registro do técnico humano da pessoa (as 16 últimas pessoas, registros de 42.735 bytes; sem pessoa, o técnico atual da tabela 0xb74c26) |
+| `tecnico_9a05(pessoa)` | 0x5fd480 | thiscall, ret 4 | idem, o byte +0x9a05 é diferente de zero? |
+| `bit_da_casa(codigo)` | 0x5b5a60 | stdcall, ret 4 | formation.cpp: bit da máscara de formação pelo código da casa tática (31 códigos, tirados do próprio jogo; 0x802 e 0x804 dão o mesmo bit no original) |
+| `separar_mascara(m, &setor, &lado)` | 0x5b73a0 | cdecl | formation.cpp: o primeiro bit de setor (1..0x40) e o de lado (0x80, 0x100, 0x200 também com o bit 1, 0x400, 0x800) |
+
+Mutações: 11/11. Jogo real (levas 45 a 49 juntas): 1 bilhão de comparações, 0 divergências. Carreira até 01/06/2002: Rust ×2 = original.

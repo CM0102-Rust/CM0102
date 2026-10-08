@@ -42,6 +42,7 @@ No objeto do jogador na partida, o ponteiro em **+0x69** (a "ficha").
 | Desloc. | Campo | Rotinas |
 |---|---|---|
 | +0x5d | temperamento (temperament) | `aplicar_fator` e `atualizar_jogador`: a condição (+0x1a2) não cai abaixo de 2 × (25 − temperamento) |
+| +0x65 | preferências (ponteiro): +0x1c, +0x20, +0x24 pessoas de que gosta; +0x28, +0x2c, +0x30 de que não gosta | `gosta_de`, `nao_gosta_de` |
 
 ## Árbitro (registro de árbitro, `CM3_OFFICIALS`)
 
@@ -66,7 +67,10 @@ No objeto de arbitragem da partida (`match_official.cpp`), o ponteiro em **+0x04
 | Endereço | O que é | Onde aparece |
 |---|---|---|
 | 0xAE234C..0xAE2394 | quantidades de cada tabela (continentes, nações, cidades, estádios, clubes, pessoas, jogadores, competições...) | — |
-| 0xAE2378 | quantidade de competições de clubes | 0x5c6710, chamada por `forca_do_time` |
+| 0xAE2378 | quantidade de competições de clubes (as 127 últimas são amistosos) | `e_amistoso` (0x5c6710), chamada por `forca_do_time` |
+| 0xAE235C / 0xAE2350 | total de clubes (nacionais + 2 × nações) / nações | `e_selecao`, `e_segunda_selecao` |
+| 0xAE2364 | quantidade de pessoas (os 16 últimos ids são os técnicos humanos) | `contrato_de`, `tecnico_9a01`, `tecnico_9a05` |
+| 0xAE2D0C | tabela de índices de contrato por pessoa (79 bytes por pessoa) | `contrato_de` |
 | 0xAE23A4..0xAE23EC | ponteiros para o início de cada tabela (clubes em 0xAE23B4, pessoas em 0xAE23BC, jogadores em 0xAE23C4...) | — |
 | 0xAE2C90 / 0xAE2C92 [2] | dia do ano e ano atuais | a simulação para na data pedida lendo daqui (`simulacao.rs`) |
 | 0xDE1F58 | ponteiro para o ranking de países da UEFA | vizinho do estado do sorteio (0xDE1F5C, 8 bytes), que a comparação confere |

@@ -64,6 +64,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6f4920 | `apontar` | aim (set facing direction) |
 | 0x6cd5f0 | `atras_do_extremo` | behind_the_extreme |
 | 0x6f4aa0 | `atualizar_jogador` | update_player |
+| 0x5b5a60 | `bit_da_casa` | square_bit |
 | 0x6cd490 | `bola_fora` | ball_out |
 | 0x5b57c0 | `byte_da_posicao` | position_byte |
 | 0x6d5cd0 | `byte_do_codigo` | code_byte |
@@ -83,6 +84,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6bba80 | `conferir_lance` | check_move |
 | 0x6f9f90 | `consegue_jogar` | can_play |
 | 0x6cbbb0 | `contar_ativos` | count_active |
+| 0x4cf5a0 | `contrato_de` | contract_of |
 | 0x6e9540 | `decidir_falta` | decide_foul |
 | 0x700420 | `defesa_do_goleiro` | goalkeeper_save |
 | 0x6f56c0 | `desgastar` | tire (fatigue) |
@@ -94,7 +96,9 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6f09b0 | `distancia_ao_ponto` | distance_to_point |
 | 0x6cc4e0 | `distancia_entre` | distance_between |
 | 0x70d690 | `dominio_do_lance` | control_of_move |
+| 0x5c6710 | `e_amistoso` | is_friendly |
 | 0x7103c0 | `e_o_guardado` | is_the_stored |
+| 0x53b900 | `e_selecao` | is_national_team |
 | 0x70d630 | `em_perigo` | in_danger |
 | 0x6cdd00 | `entrar_em_campo` | take_the_field |
 | 0x6bce80 | `escolher_casa` | choose_square |
@@ -112,6 +116,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6f5b20 | `faixa_jogador` | player_band |
 | 0x6cb910 | `fora_do_meio` | off_centre |
 | 0x6c0c60 | `forca_do_time` | team_strength |
+| 0x547810 | `gosta_de` | likes |
 | 0x70a890 | `gravar_19c` | write_19c |
 | 0x7160e0 | `gravar_2b` | write_2b |
 | 0x700360 | `gravar_8ea7` | write_8ea7 |
@@ -142,6 +147,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c3010 | `mais_proximo_do_ponto` | nearest_to_point |
 | 0x6ce110 | `manter_posicao_um` | hold_position_one |
 | 0x7163f0 | `marca_800000` | mark_800000 |
+| 0x5b5910 | `marcar_posicao` | mark_position |
 | 0x5b5270 | `marcas_da_posicao` | position_marks |
 | 0x7163c0 | `marcas_do_jogador_rot` | player_marks_rot |
 | 0x6c3950 | `menor_distancia` | smallest_distance |
@@ -154,6 +160,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6f46b0 | `mover_para` | move_to |
 | 0x6f4650 | `na_area` | in_the_box |
 | 0x714c60 | `na_lista` | in_list |
+| 0x547840 | `nao_gosta_de` | dislikes |
 | 0x715f50 | `nota_ajustada` | adjusted_rating |
 | 0x717c70 | `papel_880` | role_880 |
 | 0x716310 | `papel_na_defesa` | defending_role |
@@ -165,6 +172,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c51e0 | `pontape_inicial` | kick_off |
 | 0x6cb6c0 | `por_diferenca` | by_difference |
 | 0x6c2be0 | `posicionar` | position (place players) |
+| 0x6d1770 | `posicoes_finas` | fine_positions |
 | 0x6bd6b0 | `pressao_na_area` | pressure_in_box |
 | 0x6c3a00 | `pressao_no_ponto` | pressure_at_point |
 | 0x6ea760 | `procurar_impedimento` | look_for_offside |
@@ -183,6 +191,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6ce460 | `resumo_da_partida` | match_summary |
 | 0x6bbe40 | `rolar_bola` | roll_ball |
 | 0x6d4280 | `sem_partida` | no_match |
+| 0x5b73a0 | `separar_mascara` | split_mask |
 | 0x6f0970 | `soltar_bola` | release_ball |
 | 0x7160d0 | `somar_2b` | add_2b |
 | 0x6cf710 | `somar_disposicao` | add_disposition |
@@ -193,8 +202,12 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c38f0 | `tabela_b` | table_b |
 | 0x717450 | `tabela_b_do_jogador` | player_table_b |
 | 0x717410 | `tabela_do_jogador` | player_table |
+| 0x5fd210 | `tecnico_9a01` | manager_9a01 |
+| 0x5fd480 | `tecnico_9a05` | manager_9a05 |
 | 0x6b59a0 | `tem_jogo` | has_match |
+| 0x7164b0 | `teste_de_condicao` | condition_test |
 | 0x6ccb60 | `tracar_lance` | trace_move |
+| 0x4b0850 | `unidades` | units_digit |
 | 0x700bd0 | `valor_do_chute` | shot_value |
 | 0x7165b0 | `valor_pela_condicao` | value_by_condition |
 | 0x6b7cf0 | `venceu_o_jogo` | won_the_match |

@@ -42,6 +42,7 @@ In the in-match player object, the pointer at **+0x69** (the "ficha", record).
 | Offset | Field | Routines |
 |---|---|---|
 | +0x5d | temperament | `aplicar_fator` and `atualizar_jogador`: condition (+0x1a2) does not drop below 2 × (25 − temperament) |
+| +0x65 | preferences (pointer): +0x1c, +0x20, +0x24 people liked; +0x28, +0x2c, +0x30 people disliked | `gosta_de`, `nao_gosta_de` |
 
 ## Referee (official record, `CM3_OFFICIALS`)
 
@@ -66,7 +67,10 @@ In the match refereeing object (`match_official.cpp`), the pointer at **+0x04**.
 | Address | What it is | Where it appears |
 |---|---|---|
 | 0xAE234C..0xAE2394 | counts of each table (continents, nations, cities, stadiums, clubs, people, players, competitions...) | — |
-| 0xAE2378 | number of club competitions | 0x5c6710, called by `forca_do_time` |
+| 0xAE2378 | number of club competitions (the last 127 are friendlies) | `e_amistoso` (0x5c6710), called by `forca_do_time` |
+| 0xAE235C / 0xAE2350 | total clubs (domestic + 2 × nations) / nations | `e_selecao`, `e_segunda_selecao` |
+| 0xAE2364 | number of people (the last 16 ids are the human managers) | `contrato_de`, `tecnico_9a01`, `tecnico_9a05` |
+| 0xAE2D0C | contract index table per person (79 bytes per person) | `contrato_de` |
 | 0xAE23A4..0xAE23EC | pointers to the start of each table (clubs at 0xAE23B4, people at 0xAE23BC, players at 0xAE23C4...) | — |
 | 0xAE2C90 / 0xAE2C92 [2] | current day of the year and year | the simulation stops at the requested date by reading it here (`simulacao.rs`) |
 | 0xDE1F58 | pointer to the UEFA country rankings | next to the random generator state (0xDE1F5C, 8 bytes), which the comparison checks |

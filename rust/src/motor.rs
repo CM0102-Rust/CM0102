@@ -237,8 +237,26 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6c51e0, bytes: &[0x83, 0xec, 0x24, 0x53, 0x55, 0x8b, 0xe9] },
     // quadragesima quarta leva
     Prologo { endereco: 0x6bbe40, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x86, 0x82, 0xf5, 0x00, 0x00] },
+    // quadragesima quinta leva
+    Prologo { endereco: 0x7164b0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53] },
+    // quadragesima sexta leva
+    Prologo { endereco: 0x547810, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] },
+    Prologo { endereco: 0x547840, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] },
+    Prologo { endereco: 0x5b5910, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x33, 0xd2] },
+    // quadragesima setima leva
+    Prologo { endereco: 0x6d1770, bytes: &[0x81, 0xec, 0x34, 0x04, 0x00, 0x00] },
+    // quadragesima oitava leva (folhas de outros modulos chamadas pelo motor)
+    Prologo { endereco: 0x4b0850, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x3d, 0xe8, 0x03, 0x00, 0x00] },
+    Prologo { endereco: 0x5c6710, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x51, 0x04] },
+    Prologo { endereco: 0x4cf5a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
+    Prologo { endereco: 0x53b900, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    // quadragesima nona leva (human_manager.cpp e formation.cpp)
+    Prologo { endereco: 0x5fd210, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x5fd480, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x5b5a60, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x04, 0x3d, 0x08, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x5b73a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 147;
+const N: usize = 160;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -478,9 +496,14 @@ unsafe extern "thiscall" fn desgastar(this: usize, x: f32, codigo: i16) {
     }
 }
 
-/// `_ftol` { 0x945640 }: trunca para inteiro (64 bits; o jogo usa a parte baixa).
+/// `_ftol` { 0x945640 }: trunca para inteiro (64 bits; o jogo usa a parte baixa). Fora da faixa
+/// (infinito, NaN, |x| >= 2^63) o `fistp` do x87 grava o inteiro indefinido, de parte baixa 0.
 fn ftol(x: f64) -> i32 {
-    x as i64 as i32
+    if x.is_finite() && x.abs() < 9.223372036854775808e18 {
+        x as i64 as i32
+    } else {
+        0
+    }
 }
 
 /// { 0x6fa140 } (match_pl.cpp): o jogador esta virado para (a, b)? Compara a direcao dele (0x19a)
@@ -3913,6 +3936,274 @@ unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 {
     bola_fora_com(this, lado_b, &mut |t, a| comentar(t, a))
 }
 
+// ---------- quadragesima nona leva: tecnico humano e mascaras de formacao ----------
+
+/// Registro do tecnico humano da pessoa (human_manager.cpp): os 16 tecnicos humanos sao as 16
+/// ultimas pessoas (indice = id - quantidade de pessoas em 0xae2364 + 16), registros de 42.735
+/// bytes a partir de +0 do objeto, quantidade em +4. Sem pessoa, usa a do tecnico atual (tabela
+/// 0xb74c26, 768 bytes por tecnico, indice na palavra 0xb77c7a). `None`: sem pessoa nenhuma, ou
+/// indice fora da faixa (o bool diz qual).
+unsafe fn tecnico_humano(this: usize, pessoa: usize) -> Result<usize, bool> {
+    let mut pessoa = pessoa;
+    if pessoa == 0 {
+        let atual = *(0xb77c7a as *const i16) as isize;
+        pessoa = *((0xb74c26 + 768 * atual) as *const usize);
+        if pessoa == 0 {
+            return Err(true);
+        }
+    }
+    let i = (*(pessoa as *const i32)).wrapping_sub(*(0xae2364 as *const i32)).wrapping_add(16);
+    if i < 0 || i > (*((this + 4) as *const i32)).wrapping_sub(1) {
+        return Err(false);
+    }
+    Ok((*(this as *const usize)).wrapping_add((42735 * i) as usize))
+}
+
+/// { 0x5fd210 } (human_manager.cpp): campo +0x9a01 do registro do tecnico humano da pessoa (0 fora
+/// da faixa). Sem pessoa nenhuma: o original mostra uma caixa de erro e zera 0xb67a34.
+unsafe extern "thiscall" fn tecnico_9a01(this: usize, pessoa: usize) -> u32 {
+    match tecnico_humano(this, pessoa) {
+        Ok(r) => *((r + 0x9a01) as *const u32),
+        Err(sem_pessoa) => {
+            if sem_pessoa {
+                *(0xb67a34 as *mut u32) = 0;
+            }
+            0
+        }
+    }
+}
+
+/// { 0x5fd480 } (human_manager.cpp): byte +0x9a05 do registro do tecnico humano da pessoa e diferente
+/// de zero? Sem pessoa nenhuma ou fora da faixa: o original mostra uma caixa de erro e zera 0xb67a34.
+unsafe extern "thiscall" fn tecnico_9a05(this: usize, pessoa: usize) -> u32 {
+    match tecnico_humano(this, pessoa) {
+        Ok(r) => (*((r + 0x9a05) as *const u8) != 0) as u32,
+        Err(_) => {
+            *(0xb67a34 as *mut u32) = 0;
+            0
+        }
+    }
+}
+
+/// { 0x5b5a60 } (formation.cpp): bit da mascara de formacao pelo codigo da casa tatica (byte alto:
+/// linha 1, 2, 4, 8; byte baixo: coluna). Tabela tirada do proprio jogo; 0x802 e 0x804 dao o mesmo
+/// bit no original. Codigo desconhecido: 0.
+unsafe extern "stdcall" fn bit_da_casa(codigo: i16) -> u32 {
+    match codigo {
+        0x1 => 0x1, 0x82 => 0x2, 0x84 => 0x40, 0x88 => 0x800, 0x90 => 0x10000, 0xa0 => 0x200000, 0xc0 => 0x4000000,
+        0x102 => 0x4, 0x104 => 0x80, 0x108 => 0x1000, 0x110 => 0x20000, 0x120 => 0x400000, 0x140 => 0x8000000,
+        0x202 => 0x8, 0x204 => 0x100, 0x208 => 0x2000, 0x210 => 0x40000, 0x220 => 0x800000, 0x240 => 0x10000000,
+        0x402 => 0x10, 0x404 => 0x200, 0x408 => 0x4000, 0x410 => 0x80000, 0x420 => 0x1000000, 0x440 => 0x20000000,
+        0x802 | 0x804 => 0x400, 0x808 => 0x8000, 0x810 => 0x100000, 0x820 => 0x2000000, 0x840 => 0x40000000,
+        _ => 0,
+    }
+}
+
+/// { 0x5b73a0 } (formation.cpp): separa a mascara em setor (o primeiro de 1, 2, 4 ... 0x40, em
+/// `setor`) e lado (0x80, 0x100, 0x200 (tambem com o bit 1), 0x400, 0x800, nessa ordem, em `lado`).
+/// Sem uma das partes: o original mostra uma caixa de erro, zera 0xb67a34 e devolve 0.
+unsafe extern "C" fn separar_mascara(m: u32, setor: *mut u16, lado: *mut u16) -> u32 {
+    match [1u16, 2, 4, 8, 0x10, 0x20, 0x40].iter().find(|&&b| m & b as u32 != 0) {
+        Some(&b) => *setor = b,
+        None => {
+            *(0xb67a34 as *mut u32) = 0;
+            return 0;
+        }
+    }
+    let v = if m & 0x80 != 0 {
+        0x80
+    } else if m & 0x100 != 0 {
+        0x100
+    } else if m & 0x200 != 0 || m & 1 != 0 {
+        0x200
+    } else if m & 0x400 != 0 {
+        0x400
+    } else if m & 0x800 != 0 {
+        0x800
+    } else {
+        *(0xb67a34 as *mut u32) = 0;
+        return 0;
+    };
+    *lado = v;
+    1
+}
+
+// ---------- quadragesima oitava leva: folhas de outros modulos ----------
+
+/// { 0x4b0850 } (comp_util.cpp): algarismo das unidades de `n` (abaixo de 1000; senao 0).
+unsafe extern "C" fn unidades(n: i32) -> u8 {
+    if n < 1000 {
+        (n % 10) as u8
+    } else {
+        0
+    }
+}
+
+/// { 0x5c6710 } (friendly.cpp): a competicao e amistosa? E a guardada em +4 do objeto, ou o id dela
+/// (+0) esta entre as 127 ultimas competicoes de clubes (quantidade em 0xae2378).
+unsafe extern "thiscall" fn e_amistoso(this: usize, comp: usize) -> u32 {
+    if comp == *((this + 4) as *const usize) {
+        return 1;
+    }
+    (*(comp as *const i32) >= (*(0xae2378 as *const i32)).wrapping_sub(0x7f)) as u32
+}
+
+/// { 0x4cf5a0 } (contract_manager.cpp): contrato da pessoa (registros de 80 bytes a partir de +0
+/// do objeto), pelo indice na tabela 0xae2d0c (79 bytes por pessoa; quantidade em 0xae2364).
+/// Sem pessoa, id fora da tabela ou indice negativo: 0.
+unsafe extern "thiscall" fn contrato_de(this: usize, pessoa: usize) -> usize {
+    if pessoa == 0 {
+        return 0;
+    }
+    let id = *(pessoa as *const i32);
+    if id >= *(0xae2364 as *const i32) {
+        return 0;
+    }
+    let tabela = *(0xae2d0c as *const usize);
+    let i = *((tabela as isize + 79 * id as isize) as *const i32);
+    if i < 0 {
+        return 0;
+    }
+    (*(this as *const usize)).wrapping_add((80 * i) as usize)
+}
+
+/// { 0x53b900 } (Database.cpp): o clube e uma selecao? Os ids das selecoes vem depois dos clubes
+/// (total de clubes em 0xae235c menos 2 x nacoes em 0xae2350). Clube nulo: o original mostra uma
+/// caixa de erro, zera 0xb67a34 e devolve 0 (aqui, sem a caixa).
+unsafe extern "C" fn e_selecao(clube: usize) -> u32 {
+    if clube == 0 {
+        *(0xb67a34 as *mut u32) = 0;
+        return 0;
+    }
+    let limite = (*(0xae235c as *const i32)).wrapping_sub((*(0xae2350 as *const i32)).wrapping_mul(2));
+    (*(clube as *const i32) >= limite) as u32
+}
+
+// ---------- quadragesima setima leva: posicoes finas para desenhar a partida ----------
+
+/// { 0x6d1770 } (match_eng.cpp): posicoes finas (grade 27 x 36) de cada jogador para desenhar a
+/// partida. `saida`: bola (x, y) e, para cada lado e posicao tatica (6 bytes a partir de
+/// saida + 2 + 6 x (posicao + 11 x lado)): x e y finos, byte 0 do jogador, papel (0x717410) e
+/// a marca 1. Cada casa da grade vira 3 x 3 subcasas: quem tem a bola fica no centro; os outros
+/// sorteiam uma subcasa (nunca o centro da casa de quem tem a bola), aceitando uma ja ocupada
+/// so depois de 50 tentativas por ocupante. O lado que comeca em cada casa e sorteado.
+/// Saida nula ou jogador sem posicao: o original mostra uma caixa de erro e zera 0xb67a34 (aqui,
+/// so zera; nunca ocorre em jogo).
+unsafe extern "thiscall" fn posicoes_finas(this: usize, saida: *mut u8) {
+    if saida.is_null() {
+        *(0xb67a34 as *mut u32) = 0;
+    }
+    *saida = byte(this, 0x8ea7) as u8;
+    *saida.add(1) = byte(this, 0x8ea8) as u8;
+    for i in 0..22 {
+        *saida.add(7 + 6 * i) = 0;
+    }
+    for x in 0..9i8 {
+        for y in 0..12i8 {
+            let (bx, by) = (3 * x + 1, 3 * y + 1);
+            let casa = casa_da_grade(this, x, y) as usize;
+            let mut ocupada = [0i8; 9];
+            let primeiro = sortear(2) as i8;
+            for lado in [primeiro, (primeiro == 0) as i8] {
+                let mut k: i8 = 0;
+                while k < byte(casa, 0x58 + lado as usize) {
+                    let p = *((casa as isize + 4 * (k as isize + 11 * lado as isize)) as *const usize);
+                    let pos = byte(p, 0x19);
+                    if pos < 0 {
+                        *(0xb67a34 as *mut u32) = 0;
+                        k += 1;
+                        continue;
+                    }
+                    let dono = *((this + 0xf582) as *const usize);
+                    let (fx, fy) = if p == dono {
+                        ocupada[4] = 1;
+                        (bx, by)
+                    } else {
+                        let mut tentativas: i32 = 0;
+                        loop {
+                            let r = sortear(3) as i8;
+                            let c = sortear(3) as i8;
+                            tentativas += 1;
+                            let dono = *((this + 0xf582) as *const usize);
+                            if dono != 0 && byte(dono, 0x102) == x && byte(dono, 0x103) == y && r == 1 && c == 1 {
+                                continue;
+                            }
+                            let i = (3 * r + c) as usize;
+                            if ocupada[i] as i32 > (tentativas as i16 as i32) / 50 {
+                                continue;
+                            }
+                            ocupada[i] = 1;
+                            break (r + bx - 1, c + by - 1);
+                        }
+                    };
+                    let e = saida.offset(6 * (pos as isize + 11 * lado as isize));
+                    *e.add(2) = fx as u8;
+                    *e.add(3) = fy as u8;
+                    *e.add(4) = *(p as *const u8);
+                    (e.add(5) as *mut u16).write_unaligned(f717410(p));
+                    *e.add(7) = 1;
+                    k += 1;
+                }
+            }
+        }
+    }
+}
+
+// ---------- quadragesima sexta leva: preferencias da pessoa e marca por posicao ----------
+
+/// Preferencias (`CM3_STAFF_PREFERENCES`, ponteiro em +0x65 da pessoa): `alvo` esta entre as tres
+/// pessoas em `base`, +4, +8? (0 com qualquer ponteiro nulo.)
+unsafe fn nas_preferencias(alvo: usize, pessoa: usize, base: usize) -> u32 {
+    if alvo == 0 || pessoa == 0 {
+        return 0;
+    }
+    let pref = *((pessoa + 0x65) as *const usize);
+    if pref == 0 {
+        return 0;
+    }
+    (0..3).any(|k| *((pref + base + 4 * k) as *const usize) == alvo) as u32
+}
+
+/// { 0x547810 }: `pessoa` gosta de `alvo` (preferencias +0x1c, +0x20, +0x24)?
+unsafe extern "C" fn gosta_de(alvo: usize, pessoa: usize) -> u32 {
+    nas_preferencias(alvo, pessoa, 0x1c)
+}
+
+/// { 0x547840 }: `pessoa` nao gosta de `alvo` (preferencias +0x28, +0x2c, +0x30)?
+unsafe extern "C" fn nao_gosta_de(alvo: usize, pessoa: usize) -> u32 {
+    nas_preferencias(alvo, pessoa, 0x28)
+}
+
+/// { 0x5b5910 }: grava na tabela por posicao (+0x5bf + 4 x posicao) o valor apontado por `ficha`
+/// (-1 sem ficha) e zera +0x187f. Devolve 1.
+unsafe extern "thiscall" fn marcar_posicao(this: usize, posicao: i8, ficha: *const u32) -> u32 {
+    let destino = (this as isize + 0x5bf + 4 * posicao as isize) as *mut u32;
+    *destino = if ficha.is_null() { u32::MAX } else { *ficha };
+    *((this + 0x187f) as *mut u32) = 0;
+    1
+}
+
+// ---------- quadragesima quinta leva: teste de condicao ----------
+
+/// { 0x7164b0 } (match_pl.cpp): teste pela condicao fisica (0x1a2). v = condicao^2 (truncado);
+/// limite 8 se `alvo` for o guardado em 0x1a6, senao 1. Codigo 1: sorteio(110 - condicao) < limite;
+/// 2 a 5: sorteio(K / v) < limite, K = 400 mil, 2, 4 e 8 milhoes (mais condicao, mais chance).
+/// Outros codigos: 0.
+unsafe extern "thiscall" fn teste_de_condicao(this: usize, codigo: i8, alvo: usize) -> u8 {
+    let limite: i32 = if alvo != 0 && alvo == *((this + 0x1a6) as *const usize) { 8 } else { 1 };
+    let c = f32_em(this + 0x1a2) as f64;
+    let v = ftol(pow_do_jogo(c, f64_em(0x968950))) as f64;
+    let n = match codigo {
+        1 => 0x6e - ftol(c) as i8 as i32,
+        2 => ftol(f64_em(0x96d860) / v),
+        3 => ftol(f64_em(0x96aff8) / v),
+        4 => ftol(f64_em(0x96d858) / v),
+        5 => ftol(f64_em(0x96d850) / v),
+        _ => return 0,
+    };
+    (sortear(n) < limite) as u8
+}
+
 // ---------- quadragesima quarta leva: bola rolando ----------
 
 /// { 0x6bbe40 } (match_eng.cpp) com o comentario injetado: bola solta rolando. So sem dono
@@ -5850,6 +6141,73 @@ unsafe extern "thiscall" fn comparar_rolar_bola(this: usize) {
     PLACAR.registrar(igual, || format!("rolar_bola ({} comentarios)", k));
 }
 
+unsafe extern "thiscall" fn comparar_teste_de_condicao(this: usize, codigo: i8, alvo: usize) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8, usize) -> u8>(147);
+    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, codigo, alvo), || crate::aleatorio::sem_contar(|| teste_de_condicao(this, codigo, alvo)));
+    PLACAR.registrar(igual && r == n, || format!("teste_de_condicao({}) condicao {} original={} rust={}", codigo, f32_em(this + 0x1a2), r, n));
+    r
+}
+
+unsafe extern "C" fn comparar_gosta_de(alvo: usize, pessoa: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(148)(alvo, pessoa);
+    let n = gosta_de(alvo, pessoa);
+    PLACAR.registrar(r == n, || format!("gosta_de original={} rust={}", r, n));
+    r
+}
+unsafe extern "C" fn comparar_nao_gosta_de(alvo: usize, pessoa: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(149)(alvo, pessoa);
+    let n = nao_gosta_de(alvo, pessoa);
+    PLACAR.registrar(r == n, || format!("nao_gosta_de original={} rust={}", r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_marcar_posicao(this: usize, posicao: i8, ficha: *const u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8, *const u32) -> u32>(150);
+    let reg = [((this as isize + 0x5bf + 4 * posicao as isize) as usize, 4), (this + 0x187f, 4)];
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, posicao, ficha), || marcar_posicao(this, posicao, ficha));
+    PLACAR.registrar(igual && r == n, || format!("marcar_posicao({}) original={:x?} rust={:x?}", posicao, mo, mr));
+    r
+}
+
+unsafe extern "thiscall" fn comparar_posicoes_finas(this: usize, saida: *mut u8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, *mut u8)>(151);
+    let mut reg = vec![(saida as usize, 2 + 6 * 22), (0xb67a34, 4)];
+    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, saida), || crate::aleatorio::sem_contar(|| posicoes_finas(this, saida)));
+    PLACAR.registrar(igual, || format!("posicoes_finas original={:x?} rust={:x?}", mo, mr));
+}
+
+unsafe extern "C" fn comparar_unidades(n: i32) -> u8 {
+    let r = orig::<unsafe extern "C" fn(i32) -> u8>(152)(n);
+    let v = unidades(n);
+    PLACAR.registrar(r == v, || format!("unidades({}) original={} rust={}", n, r, v));
+    r
+}
+comparar_valor!(comparar_e_amistoso, e_amistoso, 153, (comp: usize) -> u32);
+comparar_valor!(comparar_contrato_de, contrato_de, 154, (pessoa: usize) -> usize);
+unsafe extern "C" fn comparar_e_selecao(clube: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(155)(clube);
+    let v = e_selecao(clube);
+    PLACAR.registrar(r == v, || format!("e_selecao original={} rust={}", r, v));
+    r
+}
+
+comparar_valor!(comparar_tecnico_9a01, tecnico_9a01, 156, (pessoa: usize) -> u32);
+comparar_valor!(comparar_tecnico_9a05, tecnico_9a05, 157, (pessoa: usize) -> u32);
+unsafe extern "stdcall" fn comparar_bit_da_casa(codigo: i16) -> u32 {
+    let r = orig::<unsafe extern "stdcall" fn(i16) -> u32>(158)(codigo);
+    let v = bit_da_casa(codigo);
+    PLACAR.registrar(r == v, || format!("bit_da_casa({:#x}) original={:#x} rust={:#x}", codigo, r, v));
+    r
+}
+unsafe extern "C" fn comparar_separar_mascara(m: u32, setor: *mut u16, lado: *mut u16) -> u32 {
+    let o = orig::<unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32>(159);
+    let reg = [(setor as usize, 2), (lado as usize, 2)];
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(m, setor, lado), || separar_mascara(m, setor, lado));
+    PLACAR.registrar(igual && r == v, || format!("separar_mascara({:#x}) original={} {:x?} rust={} {:x?}", m, r, mo, v, mr));
+    r
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -6007,6 +6365,19 @@ pub unsafe fn instalar(comparando: bool) {
         forca_do_time as *const () as usize,
         pontape_inicial as *const () as usize,
         rolar_bola as *const () as usize,
+        teste_de_condicao as *const () as usize,
+        gosta_de as *const () as usize,
+        nao_gosta_de as *const () as usize,
+        marcar_posicao as *const () as usize,
+        posicoes_finas as *const () as usize,
+        unidades as *const () as usize,
+        e_amistoso as *const () as usize,
+        contrato_de as *const () as usize,
+        e_selecao as *const () as usize,
+        tecnico_9a01 as *const () as usize,
+        tecnico_9a05 as *const () as usize,
+        bit_da_casa as *const () as usize,
+        separar_mascara as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -6156,6 +6527,19 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_forca_do_time as *const () as usize,
         comparar_pontape_inicial as *const () as usize,
         comparar_rolar_bola as *const () as usize,
+        comparar_teste_de_condicao as *const () as usize,
+        comparar_gosta_de as *const () as usize,
+        comparar_nao_gosta_de as *const () as usize,
+        comparar_marcar_posicao as *const () as usize,
+        comparar_posicoes_finas as *const () as usize,
+        comparar_unidades as *const () as usize,
+        comparar_e_amistoso as *const () as usize,
+        comparar_contrato_de as *const () as usize,
+        comparar_e_selecao as *const () as usize,
+        comparar_tecnico_9a01 as *const () as usize,
+        comparar_tecnico_9a05 as *const () as usize,
+        comparar_bit_da_casa as *const () as usize,
+        comparar_separar_mascara as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -6204,6 +6588,11 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_forca_do_time",
         "motor_pontape_inicial",
         "motor_rolar_bola",
+        "motor_teste_de_condicao",
+        "motor_gosta_de", "motor_nao_gosta_de", "motor_marcar_posicao",
+        "motor_posicoes_finas",
+        "motor_unidades", "motor_e_amistoso", "motor_contrato_de", "motor_e_selecao",
+        "motor_tecnico_9a01", "motor_tecnico_9a05", "motor_bit_da_casa", "motor_separar_mascara",
     ];
     for i in 0..N {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
@@ -6225,6 +6614,33 @@ pub unsafe fn instalar_passagem() {
 /// Entradas sinteticas: um objeto do motor e um jogador falsos, com tabelas proprias; posicoes,
 /// lados e coordenadas variando, inclusive fora das faixas validas. Roda pelas funcoes de
 /// comparacao, que chamam a original e a versao Rust com as mesmas entradas.
+/// Diagnostico do autoteste: a grade do motor falso esta consistente (contagens 0..=11, cada
+/// entrada um jogador do bloco do lado, na casa certa e com o indice certo em 0x28)?
+unsafe fn grade_inconsistente(m: usize) -> Option<String> {
+    for x in 0..9i8 {
+        for y in 0..12i8 {
+            let casa = casa_da_grade(m, x, y) as usize;
+            for l in 0..2usize {
+                let n = byte(casa, 0x58 + l);
+                if !(0..=11).contains(&n) {
+                    return Some(format!("casa ({},{}) lado {} contagem {}", x, y, l, n));
+                }
+                for i in 0..n as usize {
+                    let p = *((casa + 4 * (11 * l + i)) as *const usize);
+                    let base = m + 0x4796 + 8920 * l;
+                    if p < base || p >= base + 20 * 0x1be || (p - base) % 0x1be != 0 {
+                        return Some(format!("casa ({},{}) lado {} entrada {}/{} = {:#x}", x, y, l, i, n, p));
+                    }
+                    if byte(p, 0x102) != x || byte(p, 0x103) != y || byte(p, 0x28) != i as i8 {
+                        return Some(format!("casa ({},{}) lado {} entrada {}: jogador em ({},{}) indice {}", x, y, l, i, byte(p, 0x102), byte(p, 0x103), byte(p, 0x28)));
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
 pub unsafe fn autoteste(casos: u64) {
     let mut s = Sorteio(0x4d4f544f52);
     let mut motor = vec![0u8; 0x10000]; // campos ate 0xf5f5 (estado do lado)
@@ -6242,6 +6658,10 @@ pub unsafe fn autoteste(casos: u64) {
     let mut clube42 = vec![vec![0u8; 0x90]; 2];
     let mut jogo42 = vec![0u8; 0x70];
     let mut comp42 = vec![0u8; 0x10];
+    let mut prefs46 = vec![0u8; 0x40];
+    let mut pessoa46 = vec![0u8; 0x80];
+    let mut tabela55 = vec![0u8; 79 * 80 + 8];
+    let mut tecnicos56 = vec![0u8; 42735 * 16 + 16];
     SINTETICO.store(true, std::sync::atomic::Ordering::Relaxed);
     PLACAR.autoteste(|| {
         for _ in 0..casos {
@@ -7295,7 +7715,17 @@ pub unsafe fn autoteste(casos: u64) {
                 let base = f.as_mut_ptr() as usize + 1200 + if l == 1 { 0xa6 } else { 0x9e };
                 for pos in 0..13usize {
                     let c = (h50.rotate_left((pos * 5 + l * 3) as u32) % 108) as u8;
-                    *((base + 216 * pos) as *mut u8) = ((c / 9 + pos as u8) % 12) << 4 | ((c % 9 + 2 * pos as u8) % 9);
+                    // casas distintas por posicao no proprio campo (lado 0: y 0..=5; lado 1: 6..=11) e, de
+                    // vez em quando, fora dele (exercita o limite de y sem passar de 11 por casa)
+                    let x = (c % 9 + pos as u8) % 9;
+                    let mut y = (pos as u8 / 9) * 3 + (c / 9) % 3;
+                    if (h50 >> ((pos + 13 * l) % 64)) % 4 == 0 {
+                        y += 6;
+                    }
+                    if l == 1 {
+                        y = (y + 6) % 12;
+                    }
+                    *((base + 216 * pos) as *mut u8) = y << 4 | x;
                 }
             }
             let desloc = (h50 % 13) as usize;
@@ -7331,7 +7761,33 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x8eae) as *mut i8) = [0i8, 1, -1, 2][((h51 >> 56) % 4) as usize];
             *((m + 0x8ed8) as *mut u16) = (h51 >> 20) as u16;
             *(m as *mut u8) = 0;
+            static AVISOS47: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+            let avisar = || AVISOS47.fetch_add(1, std::sync::atomic::Ordering::Relaxed) < 6;
+            if let Some(e) = grade_inconsistente(m) {
+                if avisar() {
+                    linha(&format!("motor: grade inconsistente antes do pontape: {}", e));
+                }
+            }
             comparar_pontape_inicial(m);
+            let grade47 = grade_inconsistente(m);
+            if let Some(e) = &grade47 {
+                if avisar() {
+                    linha(&format!("motor: grade inconsistente depois do pontape: {}", e));
+                }
+            }
+            // quadragesima setima leva: posicoes finas (a grade do pontape continua consistente; posicoes 0..=10)
+            for k in 0..40usize {
+                let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
+                let v = byte(p, 0x19);
+                if !(0..=10).contains(&v) {
+                    *((p + 0x19) as *mut i8) = (k % 11) as i8;
+                }
+                *(p as *mut u8) = (h51 >> (k % 50)) as u8;
+            }
+            let mut saida47 = [0xa5u8; 0x100];
+            if grade47.is_none() {
+                comparar_posicoes_finas(m, saida47.as_mut_ptr());
+            }
             // quadragesima quarta leva: bola rolando (impulso, direcoes nas bordas, saidas do campo)
             let h52 = s.proximo();
             *((m + 0xf582) as *mut usize) = if h52 % 9 == 0 { j } else { 0 };
@@ -7346,6 +7802,102 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x8eab) as *mut i8) = [0i8, 1, 2][((h52 >> 44) % 3) as usize];
             *((m + 0x8eae) as *mut i8) = [0i8, 1, -1][((h52 >> 46) % 3) as usize];
             comparar_rolar_bola(m);
+            // quadragesima quinta leva: teste de condicao (condicao 0..100, abaixo de 1 divide por zero)
+            let h53 = s.proximo();
+            let cond = [0.0f32, 0.5, 0.999, 1.0, 1.5, 100.0, 99.99, 10.0, 31.62, ((h53 >> 8) % 100_001) as f32 / 1000.0][((h53 >> 4) % 10) as usize];
+            *((j + 0x1a2) as *mut f32) = cond;
+            *((j + 0x1a6) as *mut usize) = if (h53 >> 30) % 2 == 0 { o } else { 0 };
+            let alvo53 = [0usize, o, j][((h53 >> 32) % 3) as usize];
+            let cod53 = [1i8, 2, 3, 4, 5, 0, 6, -1, 1, 2, 5][((h53 >> 35) % 11) as usize];
+            comparar_teste_de_condicao(j, cod53, alvo53);
+            // quadragesima sexta leva: preferencias (nulos, cada uma das 3 vagas, ausente) e marca por posicao
+            let h54 = s.proximo();
+            let pf = prefs46.as_mut_ptr() as usize;
+            let pe46 = pessoa46.as_mut_ptr() as usize;
+            let cand = [j, o, 0, 0x1234usize]; // 0: vaga vazia (o alvo nulo nao pode casar com ela)
+            for k in 0..6usize {
+                *((pf + 0x1c + 4 * k) as *mut usize) = cand[((h54 >> (k * 2)) % 4) as usize];
+            }
+            *((pe46 + 0x65) as *mut usize) = if (h54 >> 12) % 6 == 0 { 0 } else { pf };
+            let alvo54 = [0usize, j, o, 0, 0x1234][((h54 >> 15) % 5) as usize];
+            let quem54 = if (h54 >> 18) % 7 == 0 { 0 } else { pe46 };
+            comparar_gosta_de(alvo54, quem54);
+            comparar_nao_gosta_de(alvo54, quem54);
+            let base54 = m + 0x91e2; // lado 0: +0x187f ainda dentro do motor falso
+            *((base54 + 0x187f) as *mut u32) = (h54 >> 8) as u32 | 1;
+            let v54 = (h54 >> 20) as u32;
+            let ficha54: *const u32 = if (h54 >> 52) % 4 == 0 { core::ptr::null() } else { &v54 };
+            comparar_marcar_posicao(base54, ((h54 >> 54) % 17) as i8 - 1, ficha54);
+            // quadragesima oitava leva: folhas de outros modulos (globais do jogo trocadas durante o teste)
+            let h55 = s.proximo();
+            let globais = [0xae2378usize, 0xae2364, 0xae2d0c, 0xae235c, 0xae2350];
+            let antes55: Vec<u32> = globais.iter().map(|&a| *(a as *const u32)).collect();
+            comparar_unidades([0i32, 9, 10, 999, 1000, 1001, -1, -10, -999, i32::MIN, ((h55 >> 3) % 3000) as i32 - 1000][((h55 >> 60) % 11) as usize]);
+            let ncomp = 200 + ((h55 >> 8) % 100) as i32;
+            *(0xae2378 as *mut i32) = ncomp;
+            let mut comp55 = [0i32; 2];
+            comp55[0] = [ncomp - 0x7f, ncomp - 0x80, ncomp, 0, -5, ((h55 >> 16) % 400) as i32][((h55 >> 24) % 6) as usize];
+            let obj55 = [0usize, if (h55 >> 27) % 4 == 0 { comp55.as_ptr() as usize } else { 0x4321 }];
+            comparar_e_amistoso(obj55.as_ptr() as usize, comp55.as_ptr() as usize);
+            let npes = 50 + ((h55 >> 30) % 20) as i32;
+            *(0xae2364 as *mut i32) = npes;
+            for k in 0..80usize {
+                *((tabela55.as_mut_ptr() as usize + 79 * k) as *mut i32) = if (h55 >> (k % 40)) % 5 == 0 { -1 - (k as i32 % 3) } else { (k * 3) as i32 };
+            }
+            *(0xae2d0c as *mut usize) = tabela55.as_mut_ptr() as usize;
+            let pessoa55 = [[0i32, 1, npes - 1, npes, npes + 3, 2, ((h55 >> 36) % 70) as i32][((h55 >> 40) % 7) as usize]];
+            let contratos55 = [0x10000usize, 0];
+            comparar_contrato_de(contratos55.as_ptr() as usize, if (h55 >> 43) % 6 == 0 { 0 } else { pessoa55.as_ptr() as usize });
+            *(0xae235c as *mut i32) = 5000 + ((h55 >> 46) % 100) as i32;
+            *(0xae2350 as *mut i32) = 200 + ((h55 >> 50) % 50) as i32;
+            let limite55 = *(0xae235c as *const i32) - 2 * *(0xae2350 as *const i32);
+            let clube55 = [[limite55, limite55 - 1, limite55 + 1, 0, 9999, -3][((h55 >> 54) % 6) as usize]];
+            comparar_e_selecao(clube55.as_ptr() as usize);
+            for (i, &a) in globais.iter().enumerate() {
+                *(a as *mut u32) = antes55[i];
+            }
+            // quadragesima nona leva: tecnico humano (indices nas bordas, sem pessoa pelo tecnico atual),
+            // codigos de casa (todos os validos e vizinhos) e mascaras de formacao
+            let h56 = s.proximo();
+            let globais56 = [0xae2364usize, 0xb77c7a];
+            let antes56: Vec<u32> = globais56.iter().map(|&a| *(a as *const u32)).collect();
+            let npes56 = 1000 + ((h56 >> 2) % 50) as i32;
+            *(0xae2364 as *mut i32) = npes56;
+            let atual56 = ((h56 >> 8) % 4) as i16;
+            *(0xb77c7a as *mut i16) = atual56;
+            let tab56 = 0xb74c26 + 768 * atual56 as usize;
+            let antes_tab56 = *(tab56 as *const u32);
+            let ntec = 1 + ((h56 >> 12) % 16) as i32;
+            let regs56 = tecnicos56.as_mut_ptr() as usize;
+            for k in 0..16usize {
+                let r = regs56 + 42735 * k;
+                *((r + 0x9a01) as *mut u32) = (h56 as u32).rotate_left(k as u32);
+                *((r + 0x9a05) as *mut u8) = if (h56 >> (k + 20)) % 3 == 0 { 0 } else { (k as u8) | 0x40 };
+            }
+            let obj56 = [regs56, ntec as usize];
+            let id56 = [[npes56 - 16, npes56 - 17, npes56 - 16 + ntec - 1, npes56 - 16 + ntec, npes56 - 1, npes56 - 20 + ((h56 >> 40) % 30) as i32][((h56 >> 44) % 6) as usize]];
+            *(tab56 as *mut usize) = id56.as_ptr() as usize;
+            let quem56 = if (h56 >> 47) % 4 == 0 { 0 } else { id56.as_ptr() as usize };
+            comparar_tecnico_9a01(obj56.as_ptr() as usize, quem56);
+            let dentro56 = id56[0] - npes56 + 16;
+            if (0..ntec).contains(&dentro56) {
+                comparar_tecnico_9a05(obj56.as_ptr() as usize, quem56);
+            }
+            *(tab56 as *mut u32) = antes_tab56;
+            for (i, &a) in globais56.iter().enumerate() {
+                *(a as *mut u32) = antes56[i];
+            }
+            let codigos56 = [1i16, 0x82, 0x84, 0x88, 0x90, 0xa0, 0xc0, 0x102, 0x104, 0x108, 0x110, 0x120, 0x140, 0x202, 0x204, 0x208, 0x210, 0x220, 0x240,
+                0x402, 0x404, 0x408, 0x410, 0x420, 0x440, 0x802, 0x804, 0x808, 0x810, 0x820, 0x840];
+            let c56 = codigos56[((h56 >> 50) % 31) as usize];
+            comparar_bit_da_casa(match (h56 >> 56) % 4 { 0 => c56 + 1, 1 => c56 - 1, 2 => (h56 >> 30) as i16, _ => c56 });
+            let setor56 = [1u32, 2, 4, 8, 0x10, 0x20, 0x40, 0x41, 0x7f][((h56 >> 33) % 9) as usize];
+            let lado56 = [0x80u32, 0x100, 0x200, 0x400, 0x800, 0xf80, 0xc00, 0x0][((h56 >> 37) % 8) as usize];
+            let m56 = setor56 | lado56 | (((h56 >> 18) as u32) & 0xfffff000);
+            if m56 & 0x7f != 0 && (m56 & 0xf80 != 0 || m56 & 1 != 0) {
+                let (mut st56, mut ld56) = (0x5555u16, 0xaaaau16);
+                comparar_separar_mascara(m56, &mut st56, &mut ld56);
+            }
             for (i, &a) in ids.iter().enumerate() {
                 *(a as *mut u32) = ids_antes[i];
             }

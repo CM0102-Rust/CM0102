@@ -432,3 +432,51 @@ Self-test: 5.5 billion cases, 0 divergences, with a consistent pitch grid (each 
 **Commentary gate in the self-test.** In the self-test, the 0x6d6f70 gate only records the calls (the commentator is fake) instead of running the commentary: routines that narrate now have a synthetic self-test (before, only the real game). **Nested comparisons:** when a compared routine calls another one that also narrates (the rolling ball calls ball out), the inner comparison just passes the call on, and its commentary goes into the outer recording (the first version compared the inner original against an empty value).
 
 Self-test: 5.5 billion cases, 0 divergences (directions at the band edges, exits through all four sides, with commentary). Mutations: 9/12; the 3 that pass are equivalent: `v <= 0` × `v < 0` (momentum 0 already returned earlier), the lower limit 130 and the 50 (the earlier bands, 40 to 140, already catch those values). Real game: 1 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original.
+
+### Match engine, 45th batch — condition test (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `teste_de_condicao(codigo, alvo)` | 0x7164b0 | thiscall, ret 8, `al` | match_pl.cpp: v = condition² (0x1a2, power through the game's CRT); limit 8 if `alvo` is the one stored at 0x1a6, else 1. Code 1: draw(110 − condition) < limit; 2 to 5: draw(K / v) < limit, K = 400 thousand, 2, 4 and 8 million; others: 0 |
+
+**`_ftol` out of range.** With condition below 1, v = 0 and K / v is infinite: the x87 `fistp` stores the indefinite integer (low part 0), while Rust's `as` saturates (−1). The Rust `ftol` now returns 0 out of range (it only changes values the original already handled that way). Mutations: 9/10 (the signed-byte conversion of the condition is equivalent: the condition goes up to 100).
+
+### Match engine, 46th batch — person preferences and mark by position (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `gosta_de(alvo, pessoa)` | 0x547810 | cdecl, `eax` | `alvo` is among the people `pessoa` likes (preferences at +0x65; slots +0x1c, +0x20, +0x24) |
+| `nao_gosta_de(alvo, pessoa)` | 0x547840 | cdecl, `eax` | same, among those disliked (+0x28, +0x2c, +0x30) |
+| `marcar_posicao(posicao, ficha)` | 0x5b5910 | thiscall, ret 8 | writes into the per-position table (+0x5bf + 4 × position) the record's value (−1 without a record), clears +0x187f, returns 1 |
+
+Mutations: 8/8, after closing two generator gaps (empty preference slots, and +0x187f already zero in the fake engine).
+
+### Match engine, 47th batch — fine positions to draw the match (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `posicoes_finas(saida)` | 0x6d1770 | thiscall, ret 4 | match_eng.cpp: fine position (27 × 36 grid) of each player to draw the match. Each square becomes 3 × 3 sub-squares; the ball holder takes the centre; the others draw a sub-square (never the centre of the ball holder's square), accepting an occupied one only after 50 attempts per occupant; the side that starts in each square is drawn. Output: ball (x, y) and, per side and tactical position, 6 bytes (fine x and y, player byte 0, role, mark 1) |
+
+It is the basis of a future 2D view of the match. The "stack aliasing" that had postponed this routine did not exist: it was a `push` offset not counted while reading. **Test generator fixed:** the 43rd batch formations piled more than 11 players into one square (out-of-half y clamped to the same row), corrupting the grid lists; the kick-off passed its test (original and Rust corrupt alike), but the new routine reads the lists and the original crashed. Formations now have distinct squares per position, and a diagnostic checks the grid before and after the kick-off. Mutations: 8/9 (marking the centre as taken by the ball holder is equivalent: the centre of his square is already barred to the others).
+
+### Match engine, 48th batch — leaves from other modules (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `unidades(n)` | 0x4b0850 | cdecl, `al` | comp_util.cpp: units digit of n (below 1000; else 0) |
+| `e_amistoso(comp)` | 0x5c6710 | thiscall, ret 4 | friendly.cpp: the competition is the one stored at +4 or among the last 127 club competitions (0xae2378) |
+| `contrato_de(pessoa)` | 0x4cf5a0 | thiscall, ret 4 | contract_manager.cpp: contract (80 bytes) by the index in table 0xae2d0c (79 bytes per person; count at 0xae2364) |
+| `e_selecao(clube)` | 0x53b900 | cdecl | Database.cpp: the id comes after the domestic clubs (0xae235c − 2 × 0xae2350) |
+
+First routines outside `match_*.cpp`: they unlock engine integrators that depended on them. The self-test swaps the game's globals during the test and restores them. Mutations: 9/10 (`n <= 1000` is equivalent: for 1000 both give 0). One mutation run crashed inside the DLL; repeated with the linker map, it did not reproduce (6 billion cases, 0 divergences).
+
+### Match engine, 49th batch — human manager and formation masks (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `tecnico_9a01(pessoa)` | 0x5fd210 | thiscall, ret 4 | human_manager.cpp: field +0x9a01 of the person's human-manager record (the last 16 people, 42,735-byte records; without a person, the current manager from table 0xb74c26) |
+| `tecnico_9a05(pessoa)` | 0x5fd480 | thiscall, ret 4 | same, is byte +0x9a05 non-zero? |
+| `bit_da_casa(codigo)` | 0x5b5a60 | stdcall, ret 4 | formation.cpp: formation-mask bit by tactical square code (31 codes, taken from the game itself; 0x802 and 0x804 give the same bit in the original) |
+| `separar_mascara(m, &setor, &lado)` | 0x5b73a0 | cdecl | formation.cpp: the first sector bit (1..0x40) and side bit (0x80, 0x100, 0x200 also with bit 1, 0x400, 0x800) |
+
+Mutations: 11/11. Real game (batches 45 to 49 together): 1 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original.

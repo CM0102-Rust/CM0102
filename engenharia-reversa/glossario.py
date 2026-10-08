@@ -59,6 +59,9 @@ EN = {
  'comentario_a': 'commentary_a', 'comentario_b': 'commentary_b', 'bola_fora': 'ball_out', 'valor_do_chute': 'shot_value',
  'forca_do_time': 'team_strength', 'pontape_inicial': 'kick_off', 'rolar_bola': 'roll_ball',
  'teste_de_condicao': 'condition_test',
+ 'gosta_de': 'likes', 'nao_gosta_de': 'dislikes', 'marcar_posicao': 'mark_position', 'posicoes_finas': 'fine_positions',
+ 'unidades': 'units_digit', 'e_amistoso': 'is_friendly', 'contrato_de': 'contract_of', 'e_selecao': 'is_national_team',
+ 'tecnico_9a01': 'manager_9a01', 'tecnico_9a05': 'manager_9a05', 'bit_da_casa': 'square_bit', 'separar_mascara': 'split_mask',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:
