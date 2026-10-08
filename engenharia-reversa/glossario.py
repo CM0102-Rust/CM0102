@@ -66,6 +66,7 @@ EN = {
  'marcacao_individual': 'individual_marking', 'nova_reputacao': 'new_reputation', 'razao_global': 'global_ratio',
  'reputacao_do_jogador': 'player_reputation', 'escolher_cobrador': 'choose_taker', 'erro_fatal': 'fatal_error',
  'lateral': 'throw_in', 'escanteio': 'corner', 'penalti': 'penalty', 'cobrador': 'taker', 'mover': 'move', 'marcar_2b': 'mark_2b', 'pega_bola': 'take_ball', 'comparar_reinicio': 'compare_restart',
+ 'gravar_casa': 'set_square', 'marcar_craques': 'mark_stars',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

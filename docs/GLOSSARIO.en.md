@@ -127,6 +127,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x700350 | `gravar_8ea9` | write_8ea9 |
 | 0x700390 | `gravar_8eaa` | write_8eaa |
 | 0x7003a0 | `gravar_8ed8` | write_8ed8 |
+| 0x5b5290 | `gravar_casa` | set_square |
 | 0x6cd660 | `guardar_extremos` | store_extremes |
 | 0x6e9470 | `iniciar_rigor` | init_strictness |
 | 0x6c2fe0 | `jogador_no_bloco` | player_in_block |
@@ -153,6 +154,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x7163f0 | `marca_800000` | mark_800000 |
 | 0x6bbf60 | `marcacao_individual` | individual_marking |
 | 0x6d4330 | `marcador_direto` | direct_marker |
+| 0x6d10a0 | `marcar_craques` | mark_stars |
 | 0x5b5910 | `marcar_posicao` | mark_position |
 | 0x5b5270 | `marcas_da_posicao` | position_marks |
 | 0x7163c0 | `marcas_do_jogador_rot` | player_marks_rot |

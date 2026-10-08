@@ -274,8 +274,11 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6c4290, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6c4470, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6c50d0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
+    // quinquagesima oitava leva
+    Prologo { endereco: 0x5b5290, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x6d10a0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
 ];
-const N: usize = 171;
+const N: usize = 173;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3955,6 +3958,77 @@ unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 {
     bola_fora_com(this, lado_b, &mut |t, a| comentar(t, a))
 }
 
+// ---------- quinquagesima oitava leva: casas da formacao e craques ----------
+
+/// { 0x5b5290 } (formation.cpp): liga o bit `mascara` (um so) na mascara de casas da posicao
+/// (+0x188b + 8 x posicao, 64 bits), apagando antes o grupo dele (bits que se excluem), e zera
+/// +0x187f. Posicao fora de 0..=10 ou bit desconhecido: o original mostra uma caixa de erro (sem a
+/// caixa aqui), zera 0xb67a34 e devolve 0.
+unsafe extern "thiscall" fn gravar_casa(this: usize, posicao: i8, mascara: u64) -> u32 {
+    let grupo: u64 = match mascara {
+        0x1 | 0x2 | 0x4 | 0x8 | 0x10 => 0x1f,
+        0x20 | 0x40 | 0x80 | 0x100 => 0x1e0,
+        0x200 | 0x400 | 0x800 | 0x1000 => 0x1e00,
+        0x2000 | 0x4000 | 0x8000 => 0xe000,
+        0x10000 | 0x20000 | 0x4000_0000 => 0x4003_0000,
+        0x40000 | 0x80000 | 0x8000_0000 => 0x800c_0000,
+        0x10_0000 | 0x20_0000 => 0x30_0000,
+        0x40_0000 | 0x80_0000 => 0xc0_0000,
+        0x100_0000 | 0x200_0000 => 0x300_0000,
+        0x400_0000 | 0x800_0000 => 0xc00_0000,
+        0x1000_0000 | 0x2000_0000 => 0x3000_0000,
+        0x1_0000_0000 | 0x2_0000_0000 => 0x3_0000_0000,
+        0x4_0000_0000 | 0x8_0000_0000 => 0xc_0000_0000,
+        _ => 0,
+    };
+    if !(0..=10).contains(&posicao) || grupo == 0 {
+        *(0xb67a34 as *mut u32) = 0;
+        return 0;
+    }
+    let casa = (this + 0x188b + 8 * posicao as usize) as *mut u64;
+    *casa = (*casa & !grupo) | mascara;
+    *((this + 0x187f) as *mut u32) = 0;
+    1
+}
+
+/// { 0x6d10a0 } (match_eng.cpp): marca (bit 0x800000 da formacao do lado, 0x5b5290) os jogadores
+/// ativos cuja nota passa de 8500: 10 x (+0x43 + +0x33 + +0x27 da pessoa) + forma (+0x4d), com o
+/// papel (0x717410): goleiro fica de fora; 2 +500; 4 -1000 (-500 com 0x800 ou 0x80); 8 -300 (sem
+/// 0x800 e 0x80); 0x10 +1000; 0x20 +2000.
+unsafe extern "thiscall" fn marcar_craques(this: usize, lado: i8) {
+    for k in 0..20 {
+        let j = jogador_do_bloco(this, lado, k);
+        if byte(j, 0x19) < 0 {
+            continue;
+        }
+        let pd = *((j + 0x6d) as *const usize);
+        let soma = 10 * (byte(pd, 0x43) as i32 + byte(pd, 0x33) as i32 + byte(pd, 0x27) as i32);
+        let mut v = ftol(soma as f64 + f32_em(j + 0x4d) as f64);
+        // ponytail: o original chama 0x717410 a cada teste; ela so le o jogador
+        let r = f717410(j);
+        if r & 1 != 0 {
+            continue;
+        }
+        if r & 2 != 0 {
+            v += 500;
+        } else if r & 4 != 0 {
+            v -= if r & 0x800 != 0 || r & 0x80 != 0 { 500 } else { 1000 };
+        } else if r & 8 != 0 {
+            if r & 0x800 == 0 && r & 0x80 == 0 {
+                v -= 300;
+            }
+        } else if r & 0x10 != 0 {
+            v += 1000;
+        } else if r & 0x20 != 0 {
+            v += 2000;
+        }
+        if v as i16 > 8500 {
+            let gravar: unsafe extern "thiscall" fn(usize, i8, u64) -> u32 = core::mem::transmute(0x5b5290usize);
+            gravar((this as isize + 0x91e2 + 0x18e3 * lado as isize) as usize, byte(j, 0x19), 0x80_0000);
+        }
+    }
+}
+
 // ---------- quinquagesima setima leva: lateral, escanteio e penalti ----------
 
 unsafe fn mover(j: usize, x: i8, y: i8) {
@@ -7187,6 +7261,24 @@ unsafe extern "thiscall" fn comparar_penalti(this: usize) {
     comparar_reinicio("penalti", this, orig::<unsafe extern "thiscall" fn(usize)>(170), penalti);
 }
 
+unsafe extern "thiscall" fn comparar_gravar_casa(this: usize, posicao: i8, mascara: u64) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8, u64) -> u32>(171);
+    let regioes = [(this + 0x187f, 0x64), (0xb67a34, 4)];
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, posicao, mascara), || gravar_casa(this, posicao, mascara));
+    PLACAR.registrar(igual && r == n, || format!("gravar_casa({}, {:x}) original={} rust={} {:x?} x {:x?}", posicao, mascara, r, n, mo, mr));
+    r
+}
+unsafe extern "thiscall" fn comparar_marcar_craques(this: usize, lado: i8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8)>(172);
+    let regioes = [(this, 0xf5f8), (0xb67a34, 4)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, lado), || marcar_craques(this, lado));
+    PLACAR.registrar(igual, || {
+        let (a, b) = (&mo.0, &mr.0);
+        let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
+        format!("marcar_craques({}) diferencas em {:x?}", lado, dif)
+    });
+}
+
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
@@ -7368,6 +7460,8 @@ pub unsafe fn instalar(comparando: bool) {
         lateral as *const () as usize,
         escanteio as *const () as usize,
         penalti as *const () as usize,
+        gravar_casa as *const () as usize,
+        marcar_craques as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -7541,6 +7635,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_lateral as *const () as usize,
         comparar_escanteio as *const () as usize,
         comparar_penalti as *const () as usize,
+        comparar_gravar_casa as *const () as usize,
+        comparar_marcar_craques as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -7604,6 +7700,8 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_lateral",
         "motor_escanteio",
         "motor_penalti",
+        "motor_gravar_casa",
+        "motor_marcar_craques",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -9101,6 +9199,41 @@ pub unsafe fn autoteste(casos: u64) {
             for i in 0..10u32 {
                 let k = ((h58 >> (i * 6)) % 40) as i8;
                 comparar_marcador_direto(m, k / 20, k % 20);
+            }
+            // quinquagesima oitava leva: casas da formacao (todos os bits validos, posicoes 0..=10; o caso de
+            // erro abre a caixa do jogo, fora do teste) e craques (atributos nas faixas, papeis)
+            {
+                let bits: [u64; 34] = [1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80, 0x100, 0x200, 0x400, 0x800, 0x1000, 0x2000, 0x4000, 0x8000,
+                    0x10000, 0x20000, 0x40000, 0x80000, 0x10_0000, 0x20_0000, 0x40_0000, 0x80_0000, 0x100_0000, 0x200_0000,
+                    0x400_0000, 0x800_0000, 0x1000_0000, 0x2000_0000, 0x4000_0000, 0x8000_0000, 1 << 32, 2 << 32];
+                let mais: [u64; 2] = [4 << 32, 8 << 32];
+                let lado58 = (s.proximo() % 2) as usize;
+                let tabela58 = m + 0x91e2 + 6371 * lado58;
+                for _ in 0..3 {
+                    let z = s.proximo();
+                    let b = if z % 18 == 0 { mais[((z >> 8) % 2) as usize] } else { bits[((z >> 8) % 34) as usize] };
+                    *((tabela58 + 0x188b + 8 * ((z >> 16) % 11) as usize) as *mut u64) = s.proximo();
+                    *((tabela58 + 0x187f) as *mut u32) = 0x5555;
+                    comparar_gravar_casa(tabela58, ((z >> 16) % 11) as i8, b);
+                }
+                let bloco58 = jogador_do_bloco(m, lado58 as i8, 0);
+                let antes58 = core::slice::from_raw_parts(bloco58 as *const u8, 20 * 0x1be).to_vec();
+                for k in 0..20usize {
+                    let q = bloco58 + k * 0x1be;
+                    let z = s.proximo();
+                    *((q + 0x19) as *mut i8) = if z % 6 == 0 { -1 } else { ((z >> 3) % 11) as i8 };
+                    let pd = pessoas[k % 4].as_ptr() as usize;
+                    *((q + 0x6d) as *mut usize) = pd;
+                    *((q + 0x4d) as *mut f32) = [0.0f32, 5000.0, 7000.5, 8000.0, 8500.0, 9999.9, ((z >> 8) % 10000) as f32][((z >> 24) % 7) as usize];
+                }
+                for pd in pessoas.iter_mut() {
+                    let z = s.proximo();
+                    pd[0x43] = (z % 21) as u8;
+                    pd[0x33] = ((z >> 8) % 21) as u8;
+                    pd[0x27] = ((z >> 16) % 21) as u8;
+                }
+                comparar_marcar_craques(m, lado58 as i8);
+                core::ptr::copy_nonoverlapping(antes58.as_ptr(), bloco58 as *mut u8, antes58.len());
             }
             // quinquagesima terceira leva: marcacao individual (marcas por posicao nos dois lados, fichas)
             for l in 0..2usize {

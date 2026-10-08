@@ -553,3 +553,12 @@ Mutations: 13/13.
 | `penalti()` | 0x6c50d0 | thiscall | match_eng.cpp: taker (type 5) with the ball on the spot (column 4; row 1 or 10, also in 0x8ea7/0x8ea8); the stored goalkeepers go to goal, those on rows 0..1 go to row 2 and those on 10..11 to row 9 |
 
 No synthetic self-test: the three arrange the 40 players on the grid (a synthetic generator would have to keep the grid consistent) and the corner looks up the club's tactics. Proof by the real game: mutations 8/8 with `--jogo 2001-08-15`; real game 10 billion comparisons, 0 divergences; career until 2002-06-01: Rust ×2 = original (c76ad0ff6ce3daa6).
+
+### Match engine, 58th batch — formation squares and stars (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `gravar_casa(posicao, mascara)` | 0x5b5290 | thiscall, ret 0xc | formation.cpp: sets bit `mascara` (64-bit, a single one) in the position's square mask (+0x188b + 8 × position), first clearing its group (13 groups of mutually exclusive bits; two in the high dword), and zeroes +0x187f; returns 1. Position outside 0..=10 or unknown bit: the original shows an error box (no box here), zeroes 0xb67a34 and returns 0 |
+| `marcar_craques(lado)` | 0x6d10a0 | thiscall, ret 4 | match_eng.cpp: sets bit 0x800000 in the side's formation for active players rated above 8500: 10 × (person +0x43 + +0x33 + +0x27) + form (+0x4d), by role (0x717410): goalkeeper out; 2 +500; 4 −1000 (−500 with 0x800 or 0x80); 8 −300 (without 0x800 and 0x80); 0x10 +1000; 0x20 +2000 |
+
+Mutations: 12/12 (the error case of `gravar_casa` opens the game's box and stays out of the self-test). First batch with the 200-thousand-case base (194 s). Real game: 10 billion comparisons, 0 divergences. Career until 2002-06-01: Rust ×2 = original (c76ad0ff6ce3daa6).
