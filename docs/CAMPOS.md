@@ -160,4 +160,6 @@ Fonte: tópico "Miscellaneous CM0102 Patches & Fixes by melanzalko" (fórum cham
 | 0x8EDB67 | teto da porcentagem da próxima venda nas negociações: 25 (byte 0x19) |
 | 0x98F9B0 | texto "  Dividends" da tela de finanças |
 
+**Prêmios e cotas de TV das competições** (tópico "Offsets", fórum champman0102.co.uk, tópico 1540, 2020): os valores em libras estão como constantes imediatas no código de cada competição; o tópico lista os deslocamentos no arquivo (VA = deslocamento + 0x400000) de ligas, copas e torneios europeus. Conferidos: Brasileiro série A, TV 1 000 000 em 0x42A461; série B, TV 500 000 em 0x42CA51; Premier League, prêmio 250 000 em 0x574B1D e TV 12 000 000 em 0x574B40; Liga dos Campeões, campeão 4 000 000 em 0x584539.
+
 Ainda não usados: o motor não toca em finanças. Ficam para a etapa da simulação fora da partida.

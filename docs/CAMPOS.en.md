@@ -160,4 +160,6 @@ Source: topic "Miscellaneous CM0102 Patches & Fixes by melanzalko" (champman0102
 | 0x8EDB67 | cap of the next-sale percentage in negotiations: 25 (byte 0x19) |
 | 0x98F9B0 | text "  Dividends" on the finance screen |
 
+**Competition prize and TV money** (topic "Offsets", champman0102.co.uk forum, topic 1540, 2020): the amounts in pounds are immediate constants in each competition's code; the topic lists the file offsets (VA = offset + 0x400000) for leagues, cups and European tournaments. Checked: Brazilian first division, TV 1,000,000 at 0x42A461; second division, TV 500,000 at 0x42CA51; Premier League, prize 250,000 at 0x574B1D and TV 12,000,000 at 0x574B40; Champions League, winner 4,000,000 at 0x584539.
+
 Not used yet: the match engine does not touch finances. They are for the stage of the simulation outside the match.
