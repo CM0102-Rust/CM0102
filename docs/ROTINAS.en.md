@@ -788,3 +788,15 @@ Mutations: 5/5 (the one on the word of `a` crashes 0x4ba8f0 without configuratio
 | `registro_livre()` | 0x53a5b0 | cdecl | Database.cpp: the first record with +0 zero in table 0xae23f8 (60 bytes, 0xae23a0 records), cached at 0x9b59b4; with none, a random one |
 
 Mutations: 9/9.
+
+### Match engine, 83rd batch — more per-person fields (national_teams.cpp), global 0x9b5984 (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `ligar_44_da_pessoa(pessoa, k)` | 0x76c0f0 | thiscall, ret 8 | writes 1 to byte +0x44 of the person's block k ([this+4] + id × 110 + k × 20) |
+| `byte_44_da_pessoa(pessoa, k)` | 0x76e010 | thiscall, ret 8 | the same byte, signed |
+| `campo_3a_da_pessoa(pessoa, k)` | 0x76e040 | thiscall, ret 8 | the address of field +0x3a of the block |
+| `classe_pela_selecao(pessoa)` | 0x76e070 | stdcall | no national side (+0x24), 0xff; second national side (0x5409b0), 2; otherwise bit 3 of byte +0x5e; returns only `al` |
+| `global_9b5984()` | 0x535920 | cdecl | Database.cpp: reads global 0x9b5984 |
+
+Mutations: 8/8.

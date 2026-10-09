@@ -337,8 +337,13 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x76d7b0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
     Prologo { endereco: 0x76d7e0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
     Prologo { endereco: 0x53a5b0, bytes: &[0xa1, 0xb4, 0x59, 0x9b, 0x00] },
+    Prologo { endereco: 0x76c0f0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
+    Prologo { endereco: 0x76e010, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
+    Prologo { endereco: 0x76e040, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
+    Prologo { endereco: 0x76e070, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
+    Prologo { endereco: 0x535920, bytes: &[0xa1, 0x84, 0x59, 0x9b, 0x00] },
 ];
-const N: usize = 231;
+const N: usize = 236;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4011,6 +4016,49 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- octogesima terceira leva: mais campos por pessoa (national_teams.cpp), global 0x9b5984 ----------
+
+/// O bloco `k` da pessoa nos registros de [this+4]: id x 110 + k x 20.
+unsafe fn bloco_da_pessoa(this: usize, pessoa: usize, k: i8) -> usize {
+    (*((this + 4) as *const usize))
+        .wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(110))
+        .wrapping_add((k as isize * 20) as usize)
+}
+
+/// { 0x76c0f0 } (ret 8): liga (1) o byte +0x44 do bloco `k` da pessoa.
+unsafe extern "thiscall" fn ligar_44_da_pessoa(this: usize, pessoa: usize, k: i8) {
+    *((bloco_da_pessoa(this, pessoa, k) + 0x44) as *mut u8) = 1;
+}
+
+/// { 0x76e010 } (ret 8): o byte +0x44 do bloco `k` da pessoa, com sinal.
+unsafe extern "thiscall" fn byte_44_da_pessoa(this: usize, pessoa: usize, k: i8) -> i32 {
+    *((bloco_da_pessoa(this, pessoa, k) + 0x44) as *const i8) as i32
+}
+
+/// { 0x76e040 } (ret 8): o endereco do campo +0x3a do bloco `k` da pessoa.
+unsafe extern "thiscall" fn campo_3a_da_pessoa(this: usize, pessoa: usize, k: i8) -> usize {
+    bloco_da_pessoa(this, pessoa, k) + 0x3a
+}
+
+/// { 0x76e070 } (stdcall): sem selecao (+0x24), 0xff; segunda selecao (0x5409b0), 2; senao o bit 3
+/// do byte +0x5e. Devolve so `al`.
+unsafe extern "stdcall" fn classe_pela_selecao(pessoa: usize) -> u8 {
+    let selecao = *((pessoa + 0x24) as *const usize);
+    if selecao == 0 {
+        return 0xff;
+    }
+    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
+    if segunda(selecao) != 0 {
+        return 2;
+    }
+    (*((pessoa + 0x5e) as *const u8) >> 3) & 1
+}
+
+/// { 0x535920 } (Database.cpp): a global 0x9b5984.
+unsafe extern "C" fn global_9b5984() -> u32 {
+    *(0x9b5984 as *const u32)
 }
 
 // ---------- octogesima segunda leva: tipos de pessoa, selecao B, marcas por pessoa, registro livre ----------
@@ -9568,6 +9616,26 @@ unsafe extern "C" fn comparar_registro_livre() -> usize {
     PLACAR.registrar(igual && r == v, || format!("registro_livre original={:#x} {:x?} rust={:#x} {:x?}", r, mo, v, mr));
     r
 }
+unsafe extern "thiscall" fn comparar_ligar_44_da_pessoa(this: usize, pessoa: usize, k: i8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i8)>(231);
+    let reg = [(bloco_da_pessoa(this, pessoa, k) + 0x44, 1)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, k), || ligar_44_da_pessoa(this, pessoa, k));
+    PLACAR.registrar(igual, || format!("ligar_44_da_pessoa original={:x?} rust={:x?}", mo, mr));
+}
+comparar_valor!(comparar_byte_44_da_pessoa, byte_44_da_pessoa, 232, (pessoa: usize, k: i8) -> i32);
+comparar_valor!(comparar_campo_3a_da_pessoa, campo_3a_da_pessoa, 233, (pessoa: usize, k: i8) -> usize);
+unsafe extern "stdcall" fn comparar_classe_pela_selecao(pessoa: usize) -> u8 {
+    let r = orig::<unsafe extern "stdcall" fn(usize) -> u8>(234)(pessoa);
+    let v = classe_pela_selecao(pessoa);
+    PLACAR.registrar(r == v, || format!("classe_pela_selecao({:#x}) original={} rust={}", pessoa, r, v));
+    r
+}
+unsafe extern "C" fn comparar_global_9b5984() -> u32 {
+    let r = orig::<unsafe extern "C" fn() -> u32>(235)();
+    let v = global_9b5984();
+    PLACAR.registrar(r == v, || format!("global_9b5984 original={:#x} rust={:#x}", r, v));
+    r
+}
 unsafe extern "thiscall" fn comparar_mascara_da_formacao(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(222);
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x187b, 4)], || o(this), || mascara_da_formacao(this));
@@ -10139,6 +10207,11 @@ pub unsafe fn instalar(comparando: bool) {
         ler_marca_da_pessoa as *const () as usize,
         zerar_marca_da_pessoa as *const () as usize,
         registro_livre as *const () as usize,
+        ligar_44_da_pessoa as *const () as usize,
+        byte_44_da_pessoa as *const () as usize,
+        campo_3a_da_pessoa as *const () as usize,
+        classe_pela_selecao as *const () as usize,
+        global_9b5984 as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -10372,6 +10445,11 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_ler_marca_da_pessoa as *const () as usize,
         comparar_zerar_marca_da_pessoa as *const () as usize,
         comparar_registro_livre as *const () as usize,
+        comparar_ligar_44_da_pessoa as *const () as usize,
+        comparar_byte_44_da_pessoa as *const () as usize,
+        comparar_campo_3a_da_pessoa as *const () as usize,
+        comparar_classe_pela_selecao as *const () as usize,
+        comparar_global_9b5984 as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -10465,6 +10543,8 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_casa_da_vaga", "motor_criterio_da_competicao",
         "motor_tipo_nao_11", "motor_tipo_11_a_15", "motor_classe_da_selecao", "motor_ler_marca_da_pessoa",
         "motor_zerar_marca_da_pessoa", "motor_registro_livre",
+        "motor_ligar_44_da_pessoa", "motor_byte_44_da_pessoa", "motor_campo_3a_da_pessoa", "motor_classe_pela_selecao",
+        "motor_global_9b5984",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -11993,6 +12073,11 @@ pub unsafe fn autoteste(casos: u64) {
                 );
                 // octogesima segunda leva: classe da selecao (o clube_a63 passa pela 0x5409b0 como no 63)
                 comparar_classe_da_selecao(clube_a63.as_ptr() as usize, ((h63 >> 45) & 1) as u32);
+                // octogesima terceira leva: classe pela selecao da pessoa (sem selecao ou com o clube_a63)
+                let mut pessoa83 = [0u8; 0x60];
+                *(pessoa83.as_mut_ptr().add(0x24) as *mut usize) = if (h63 >> 47) % 4 == 0 { 0 } else { clube_a63.as_ptr() as usize };
+                pessoa83[0x5e] = (h63 >> 50) as u8;
+                comparar_classe_pela_selecao(pessoa83.as_ptr() as usize);
                 // septuagesima quinta leva: nevoa de guerra (data de hoje, quadro de conhecimento,
                 // pessoas sinteticas; os dois lados com o clube humano sintetico)
                 {
@@ -12236,6 +12321,19 @@ pub unsafe fn autoteste(casos: u64) {
                     let k82 = ((h82 >> 15) % 9) as i8 - 2;
                     comparar_ler_marca_da_pessoa(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, k82);
                     comparar_zerar_marca_da_pessoa(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, ((h82 >> 19) % 9) as i8 - 2);
+                    // octogesima terceira leva: +0x44 (ligar e ler, com sinal) e o endereco do +0x3a
+                    let h83 = s.proximo();
+                    for (k, b) in marcas82.iter_mut().enumerate() {
+                        *b = (h83.rotate_left(k as u32 % 64) as u8) ^ (k as u8);
+                    }
+                    let k83 = ((h83 >> 3) % 9) as i8 - 2;
+                    comparar_byte_44_da_pessoa(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, k83);
+                    comparar_ligar_44_da_pessoa(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, ((h83 >> 7) % 9) as i8 - 2);
+                    comparar_campo_3a_da_pessoa(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, ((h83 >> 11) % 9) as i8 - 2);
+                    let antes83 = *(0x9b5984 as *const u32);
+                    *(0x9b5984 as *mut u32) = (h83 >> 20) as u32;
+                    comparar_global_9b5984();
+                    *(0x9b5984 as *mut u32) = antes83;
                     let globais82 = [0x9b59b4usize, 0xae23a0, 0xae23f8];
                     let antes82: Vec<u32> = globais82.iter().map(|&a| *(a as *const u32)).collect();
                     let n82 = 1 + ((h82 >> 23) % 8) as i32;

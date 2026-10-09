@@ -68,6 +68,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x8676f0 | `bandeiras_do_contrato` | contract_flags |
 | 0x5b5a60 | `bit_da_casa` | square_bit |
 | 0x6cd490 | `bola_fora` | ball_out |
+| 0x76e010 | `byte_44_da_pessoa` | person_byte_44 |
 | 0x5b57c0 | `byte_da_posicao` | position_byte |
 | 0x6d5cd0 | `byte_do_codigo` | code_byte |
 | 0x6cfda0 | `byte_do_lado` | side_byte |
@@ -75,6 +76,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6ce9c0 | `calcular_percentuais` | compute_percentages |
 | 0x6bd5b0 | `caminho_livre` | clear_path |
 | 0x6c41b0 | `caminho_livre_ate` | clear_path_to |
+| 0x76e040 | `campo_3a_da_pessoa` | person_field_3a |
 | 0x6f4600 | `campo_pela_posicao` | field_by_position |
 | 0x6eab60 | `cartao_pela_gravidade` | card_by_severity |
 | 0x6c2a40 | `casa_da_formacao` | formation_square |
@@ -82,6 +84,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5b2e80 | `casa_do_setor_ocupada` | sector_slot_taken |
 | 0x544410 | `chance_de_conhecer` | chance_to_know |
 | 0x76d780 | `classe_da_selecao` | national_side_class |
+| 0x76e070 | `classe_pela_selecao` | class_by_national_side |
 | 0x713e90 | `classificar_lance` | classify_move |
 | 0x76d940 | `clube_especial` | special_club |
 | 0x600a50 | `clube_humano` | human_club |
@@ -140,6 +143,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cfc60 | `falta_no_motor` | foul_in_engine |
 | 0x6cb910 | `fora_do_meio` | off_centre |
 | 0x6c0c60 | `forca_do_time` | team_strength |
+| 0x535920 | `global_9b5984` | global_9b5984 |
 | 0x547810 | `gosta_de` | likes |
 | 0x547d60 | `gosta_do_clube` | likes_club |
 | 0x70a890 | `gravar_19c` | write_19c |
@@ -167,6 +171,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x700400 | `ler_8eb2` | read_8eb2 |
 | 0x700410 | `ler_8f7a` | read_8f7a |
 | 0x76d7b0 | `ler_marca_da_pessoa` | read_person_mark |
+| 0x76c0f0 | `ligar_44_da_pessoa` | set_person_44 |
 | 0x6cb930 | `limite` | limit |
 | 0x70df40 | `limite_jogador` | player_limit |
 | 0x5b5960 | `limpar_designados` | clear_assigned |

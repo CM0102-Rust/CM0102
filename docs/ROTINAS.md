@@ -786,3 +786,15 @@ Mutações: 5/5 (a da palavra de `a` derruba a 0x4ba8f0 sem configuração, o qu
 | `registro_livre()` | 0x53a5b0 | cdecl | Database.cpp: o primeiro registro com +0 zero na tabela 0xae23f8 (60 bytes, 0xae23a0 registros), guardado em 0x9b59b4; sem nenhum, um sorteado |
 
 Mutações: 9/9.
+
+### Motor de partidas, 83ª leva — mais campos por pessoa (national_teams.cpp), global 0x9b5984 (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `ligar_44_da_pessoa(pessoa, k)` | 0x76c0f0 | thiscall, ret 8 | grava 1 no byte +0x44 do bloco k da pessoa ([this+4] + id × 110 + k × 20) |
+| `byte_44_da_pessoa(pessoa, k)` | 0x76e010 | thiscall, ret 8 | o mesmo byte, com sinal |
+| `campo_3a_da_pessoa(pessoa, k)` | 0x76e040 | thiscall, ret 8 | o endereço do campo +0x3a do bloco |
+| `classe_pela_selecao(pessoa)` | 0x76e070 | stdcall | sem seleção (+0x24), 0xff; segunda seleção (0x5409b0), 2; senão o bit 3 do byte +0x5e; devolve só `al` |
+| `global_9b5984()` | 0x535920 | cdecl | Database.cpp: lê a global 0x9b5984 |
+
+Mutações: 8/8.
