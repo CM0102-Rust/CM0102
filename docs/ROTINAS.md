@@ -811,3 +811,11 @@ Mutações: 8/8.
 | `copiar_data_e_marca(origem)` | 0x777590 | thiscall, ret 4 | copia a data (0x417c10) e o byte +8; devolve `this` |
 
 Mutações: 8/8 (a do 0x9d00a8 só depois de o autoteste pôr nele um id que não é de seleção; com 4850, o teste de seleção respondia antes).
+
+### Motor de partidas, 85ª leva — atributos do jogador na partida (0x6ec010, ~11 KB) (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `atualizar_atributos()` | 0x6ec010 | thiscall | match_pl.cpp: recalcula a palavra +0x3b e os 34 campos f32 de +0x71 a +0xf5 do jogador: nota do designado (0x6ebd70, vaga 0x897590), idade, dias de vida, contrato (0x4cf5f0, bits +0x45, histórico +0x10/+0x14), moral, tabelas táticas A/B (0x6c38c0/0x6c38f0), formação (0x6d5b20/0x6d5af0), técnicos e preferências (0x547810/0x547840/0x547d30/0x547d60), potências (0x945ff0) e sorteios. Só o registro do jogador muda |
+
+Mutações: 10/12 no jogo real (9 até 20/08/2001; a do bit 0x40000 do contrato só até 2002-01-01). Duas não alcançadas nem até 2002-01-01: a posição 5 da tática (só o bit 0x40) e o limite do byte +0x1b nos tipos de partida 1/8/32; ficam para a carreira real do Lucas.

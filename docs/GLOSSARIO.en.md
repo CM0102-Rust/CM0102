@@ -64,6 +64,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f4920 | `apontar` | aim (set facing direction) |
 | 0x4b0870 | `arredondar_abaixo_de_1000` | round_below_1000 |
 | 0x6cd5f0 | `atras_do_extremo` | behind_the_extreme |
+| 0x6ec010 | `atualizar_atributos` | update_attributes |
 | 0x6f4aa0 | `atualizar_jogador` | update_player |
 | 0x8676f0 | `bandeiras_do_contrato` | contract_flags |
 | 0x5b5a60 | `bit_da_casa` | square_bit |

@@ -813,3 +813,11 @@ Mutations: 8/8.
 | `copiar_data_e_marca(origem)` | 0x777590 | thiscall, ret 4 | copies the date (0x417c10) and byte +8; returns `this` |
 
 Mutations: 8/8 (the 0x9d00a8 one only after the self-test put a non-national-side id there; with 4850, the national side test answered first).
+
+### Match engine, 85th batch — player attributes in the match (0x6ec010, ~11 KB) (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `atualizar_atributos()` | 0x6ec010 | thiscall | match_pl.cpp: recomputes word +0x3b and the 34 f32 fields from +0x71 to +0xf5 of the player: the designated player's rating (0x6ebd70, slot 0x897590), age, days alive, contract (0x4cf5f0, +0x45 bits, +0x10/+0x14 history), morale, tactical tables A/B (0x6c38c0/0x6c38f0), formation (0x6d5b20/0x6d5af0), managers and preferences (0x547810/0x547840/0x547d30/0x547d60), powers (0x945ff0) and random draws. Only the player record changes |
+
+Mutations: 10/12 in the real game (9 up to 2001-08-20; the contract bit 0x40000 one only by 2002-01-01). Two not reached even by 2002-01-01: tactic position 5 (bit 0x40 only) and the byte +0x1b cap for match types 1/8/32; left for Lucas's real career.
