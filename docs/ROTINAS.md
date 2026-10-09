@@ -798,3 +798,16 @@ Mutações: 9/9.
 | `global_9b5984()` | 0x535920 | cdecl | Database.cpp: lê a global 0x9b5984 |
 
 Mutações: 8/8.
+
+### Motor de partidas, 84ª leva — competição da pessoa, bytes do bloco da seleção, seleções especiais, data com marca (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `competicao_da_pessoa(pessoa)` | 0x7751e0 | thiscall, ret 4 | national_teams.cpp: a competição (0xae23d0, 107 bytes) do índice +4 do registro da pessoa ([this+4], 110 bytes); sem pessoa ou índice negativo, 0 |
+| `byte_42_da_selecao(clube, flag)` | 0x7754c0 | thiscall, ret 8 | o byte +0x42 do bloco da classe (como 0x76d780) da nação do clube (+0x53); a original chama 0x5409b0 duas vezes |
+| `byte_43_da_selecao(clube, flag)` | 0x775520 | thiscall, ret 8 | idem, byte +0x43 |
+| `selecao_ou_especial(clube)` | 0x775790 | stdcall | seleção (0x53b900) ou um dos clubes de 0x9d00a4/0x9d00a8 |
+| `nao_gosta_da_selecao(pessoa)` | 0x776380 | stdcall | a pessoa não gosta (0x547d30) da seleção principal (0x53b3d0) da nação +0x1a? |
+| `copiar_data_e_marca(origem)` | 0x777590 | thiscall, ret 4 | copia a data (0x417c10) e o byte +8; devolve `this` |
+
+Mutações: 8/8 (a do 0x9d00a8 só depois de o autoteste pôr nele um id que não é de seleção; com 4850, o teste de seleção respondia antes).

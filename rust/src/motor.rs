@@ -342,8 +342,14 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x76e040, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
     Prologo { endereco: 0x76e070, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
     Prologo { endereco: 0x535920, bytes: &[0xa1, 0x84, 0x59, 0x9b, 0x00] },
+    Prologo { endereco: 0x7751e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
+    Prologo { endereco: 0x7754c0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
+    Prologo { endereco: 0x775520, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
+    Prologo { endereco: 0x775790, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
+    Prologo { endereco: 0x776380, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
+    Prologo { endereco: 0x777590, bytes: &[0x83, 0xec, 0x08, 0x8d, 0x44, 0x24, 0x00] },
 ];
-const N: usize = 236;
+const N: usize = 242;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4016,6 +4022,75 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- octogesima quarta leva: competicao da pessoa, bytes da selecao, selecoes especiais, data com marca ----------
+
+/// { 0x7751e0 } (ret 4, national_teams.cpp): a competicao (0xae23d0, 107 bytes) do indice +4 do
+/// registro da pessoa em [this+4] (110 bytes); sem pessoa ou indice negativo, 0.
+unsafe extern "thiscall" fn competicao_da_pessoa(this: usize, pessoa: usize) -> usize {
+    if pessoa == 0 {
+        return 0;
+    }
+    let reg = (*((this + 4) as *const usize)).wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(110));
+    let i = *((reg + 4) as *const i32);
+    if i < 0 {
+        return 0;
+    }
+    (*(0xae23d0 as *const usize)).wrapping_add((i as usize).wrapping_mul(107))
+}
+
+/// O byte `o` do bloco da classe (0x76d780: 1 com `flag`, 2 para a segunda selecao, senao 0) da
+/// nacao do clube (+0x53) nos registros de [this+4]. A original chama 0x5409b0 duas vezes.
+unsafe fn byte_da_selecao(this: usize, clube: usize, flag: u32, o: usize) -> u8 {
+    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
+    let classe: usize = if segunda(clube) == 0 {
+        if flag == 0 { 0 } else { 1 }
+    } else if flag == 0 {
+        2
+    } else {
+        1
+    };
+    segunda(clube);
+    let nacao = *(*((clube + 0x53) as *const usize) as *const i32);
+    *((*((this + 4) as *const usize)).wrapping_add((nacao as usize).wrapping_mul(110)).wrapping_add(classe * 20 + o) as *const u8)
+}
+
+/// { 0x7754c0 } (ret 8): o byte +0x42 do bloco da selecao do clube.
+unsafe extern "thiscall" fn byte_42_da_selecao(this: usize, clube: usize, flag: u32) -> u8 {
+    byte_da_selecao(this, clube, flag, 0x42)
+}
+
+/// { 0x775520 } (ret 8): o byte +0x43 do bloco da selecao do clube.
+unsafe extern "thiscall" fn byte_43_da_selecao(this: usize, clube: usize, flag: u32) -> u8 {
+    byte_da_selecao(this, clube, flag, 0x43)
+}
+
+/// { 0x775790 } (stdcall): selecao (0x53b900) ou um dos clubes de 0x9d00a4 e 0x9d00a8?
+unsafe extern "stdcall" fn selecao_ou_especial(clube: usize) -> u32 {
+    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    if e_selecao(clube) != 0 {
+        return 1;
+    }
+    let id = *(clube as *const u32);
+    (id == *(0x9d00a4 as *const u32) || id == *(0x9d00a8 as *const u32)) as u32
+}
+
+/// { 0x776380 } (stdcall): a pessoa nao gosta (0x547d30) da selecao principal (0x53b3d0) da nacao +0x1a?
+unsafe extern "stdcall" fn nao_gosta_da_selecao(pessoa: usize) -> u32 {
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
+    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d30usize);
+    let s = principal(*((pessoa + 0x1a) as *const usize));
+    (nao_gosta(pessoa, s) != 0) as u32
+}
+
+/// { 0x777590 } (ret 4): copia a data (0x417c10) e o byte +8 de `origem`; devolve `this`.
+unsafe extern "thiscall" fn copiar_data_e_marca(this: usize, origem: usize) -> usize {
+    let mut tmp = [0u8; 8];
+    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
+    copiar(this, tmp.as_mut_ptr() as usize, origem);
+    *((this + 8) as *mut u8) = *((origem + 8) as *const u8);
+    this
 }
 
 // ---------- octogesima terceira leva: mais campos por pessoa (national_teams.cpp), global 0x9b5984 ----------
@@ -9636,6 +9711,27 @@ unsafe extern "C" fn comparar_global_9b5984() -> u32 {
     PLACAR.registrar(r == v, || format!("global_9b5984 original={:#x} rust={:#x}", r, v));
     r
 }
+comparar_valor!(comparar_competicao_da_pessoa, competicao_da_pessoa, 236, (pessoa: usize) -> usize);
+comparar_valor!(comparar_byte_42_da_selecao, byte_42_da_selecao, 237, (clube: usize, flag: u32) -> u8);
+comparar_valor!(comparar_byte_43_da_selecao, byte_43_da_selecao, 238, (clube: usize, flag: u32) -> u8);
+unsafe extern "stdcall" fn comparar_selecao_ou_especial(clube: usize) -> u32 {
+    let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(239)(clube);
+    let v = selecao_ou_especial(clube);
+    PLACAR.registrar(r == v, || format!("selecao_ou_especial({:#x}) original={} rust={}", clube, r, v));
+    r
+}
+unsafe extern "stdcall" fn comparar_nao_gosta_da_selecao(pessoa: usize) -> u32 {
+    let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(240)(pessoa);
+    let v = nao_gosta_da_selecao(pessoa);
+    PLACAR.registrar(r == v, || format!("nao_gosta_da_selecao({:#x}) original={} rust={}", pessoa, r, v));
+    r
+}
+unsafe extern "thiscall" fn comparar_copiar_data_e_marca(this: usize, origem: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(241);
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 9)], || o(this, origem), || copiar_data_e_marca(this, origem));
+    PLACAR.registrar(igual && r == v, || format!("copiar_data_e_marca original={:#x} {:x?} rust={:#x} {:x?}", r, mo, v, mr));
+    r
+}
 unsafe extern "thiscall" fn comparar_mascara_da_formacao(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(222);
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x187b, 4)], || o(this), || mascara_da_formacao(this));
@@ -10212,6 +10308,12 @@ pub unsafe fn instalar(comparando: bool) {
         campo_3a_da_pessoa as *const () as usize,
         classe_pela_selecao as *const () as usize,
         global_9b5984 as *const () as usize,
+        competicao_da_pessoa as *const () as usize,
+        byte_42_da_selecao as *const () as usize,
+        byte_43_da_selecao as *const () as usize,
+        selecao_ou_especial as *const () as usize,
+        nao_gosta_da_selecao as *const () as usize,
+        copiar_data_e_marca as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -10450,6 +10552,12 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_campo_3a_da_pessoa as *const () as usize,
         comparar_classe_pela_selecao as *const () as usize,
         comparar_global_9b5984 as *const () as usize,
+        comparar_competicao_da_pessoa as *const () as usize,
+        comparar_byte_42_da_selecao as *const () as usize,
+        comparar_byte_43_da_selecao as *const () as usize,
+        comparar_selecao_ou_especial as *const () as usize,
+        comparar_nao_gosta_da_selecao as *const () as usize,
+        comparar_copiar_data_e_marca as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -10545,6 +10653,8 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_zerar_marca_da_pessoa", "motor_registro_livre",
         "motor_ligar_44_da_pessoa", "motor_byte_44_da_pessoa", "motor_campo_3a_da_pessoa", "motor_classe_pela_selecao",
         "motor_global_9b5984",
+        "motor_competicao_da_pessoa", "motor_byte_42_da_selecao", "motor_byte_43_da_selecao", "motor_selecao_ou_especial",
+        "motor_nao_gosta_da_selecao", "motor_copiar_data_e_marca",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -12078,6 +12188,27 @@ pub unsafe fn autoteste(casos: u64) {
                 *(pessoa83.as_mut_ptr().add(0x24) as *mut usize) = if (h63 >> 47) % 4 == 0 { 0 } else { clube_a63.as_ptr() as usize };
                 pessoa83[0x5e] = (h63 >> 50) as u8;
                 comparar_classe_pela_selecao(pessoa83.as_ptr() as usize);
+                // octogesima quarta leva: bytes do bloco da selecao, selecoes especiais (0x9d00a4/a8 com os
+                // ids do clube_a63; o 100 nao e selecao, so ele separa o 0x9d00a8) e a pessoa que nao gosta da selecao principal (o clube_b63)
+                let mut blocos84 = vec![0u8; 110 * 2];
+                for (k, b) in blocos84.iter_mut().enumerate() {
+                    *b = (h63.rotate_left(k as u32 % 64) as u8) ^ (k as u8).wrapping_mul(7);
+                }
+                let obj84 = [0usize, blocos84.as_mut_ptr() as usize];
+                comparar_byte_42_da_selecao(obj84.as_ptr() as usize, clube_a63.as_ptr() as usize, ((h63 >> 48) & 1) as u32);
+                comparar_byte_43_da_selecao(obj84.as_ptr() as usize, clube_a63.as_ptr() as usize, ((h63 >> 49) & 1) as u32);
+                let especiais84 = (*(0x9d00a4 as *const u32), *(0x9d00a8 as *const u32));
+                *(0x9d00a4 as *mut u32) = [4650u32, 7, 9][((h63 >> 51) % 3) as usize];
+                *(0x9d00a8 as *mut u32) = [100u32, 8][((h63 >> 53) % 2) as usize];
+                comparar_selecao_ou_especial(clube_a63.as_ptr() as usize);
+                *(0x9d00a4 as *mut u32) = especiais84.0;
+                *(0x9d00a8 as *mut u32) = especiais84.1;
+                let mut pref84 = [0usize; 8];
+                pref84[4 + ((h63 >> 54) % 3) as usize] = if (h63 >> 56) & 1 == 0 { clube_b63.as_ptr() as usize } else { 1 };
+                let mut pessoa84 = [0u8; 0x70];
+                *(pessoa84.as_mut_ptr().add(0x1a) as *mut usize) = nacao63.as_ptr() as usize;
+                *(pessoa84.as_mut_ptr().add(0x65) as *mut usize) = pref84.as_ptr() as usize;
+                comparar_nao_gosta_da_selecao(pessoa84.as_ptr() as usize);
                 // septuagesima quinta leva: nevoa de guerra (data de hoje, quadro de conhecimento,
                 // pessoas sinteticas; os dois lados com o clube humano sintetico)
                 {
@@ -12333,6 +12464,18 @@ pub unsafe fn autoteste(casos: u64) {
                     let antes83 = *(0x9b5984 as *const u32);
                     *(0x9b5984 as *mut u32) = (h83 >> 20) as u32;
                     comparar_global_9b5984();
+                    // octogesima quarta leva: competicao da pessoa (indice +4 negativo ou nao) e data com marca
+                    let h84 = s.proximo();
+                    let antes84 = *(0xae23d0 as *const usize);
+                    *(0xae23d0 as *mut usize) = 0x0200_0000;
+                    for k in 0..10usize {
+                        *(marcas82.as_mut_ptr().add(0x40 + 110 * k + 4) as *mut i32) = if (h84 >> k) % 4 == 0 { -1 - k as i32 } else { (h84 >> (k + 10)) as i32 & 0xff };
+                    }
+                    comparar_competicao_da_pessoa(obj82.as_ptr() as usize, if (h84 >> 30) % 6 == 0 { 0 } else { pessoa82.as_ptr() as usize });
+                    *(0xae23d0 as *mut usize) = antes84;
+                    let origem84: [u8; 12] = core::array::from_fn(|k| (h84 >> (k * 5)) as u8);
+                    let mut destino84 = [0u8; 12];
+                    comparar_copiar_data_e_marca(destino84.as_mut_ptr() as usize, origem84.as_ptr() as usize);
                     *(0x9b5984 as *mut u32) = antes83;
                     let globais82 = [0x9b59b4usize, 0xae23a0, 0xae23f8];
                     let antes82: Vec<u32> = globais82.iter().map(|&a| *(a as *const u32)).collect();

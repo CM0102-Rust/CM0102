@@ -68,6 +68,8 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x8676f0 | `bandeiras_do_contrato` | contract_flags |
 | 0x5b5a60 | `bit_da_casa` | square_bit |
 | 0x6cd490 | `bola_fora` | ball_out |
+| 0x7754c0 | `byte_42_da_selecao` | national_side_byte_42 |
+| 0x775520 | `byte_43_da_selecao` | national_side_byte_43 |
 | 0x76e010 | `byte_44_da_pessoa` | person_byte_44 |
 | 0x5b57c0 | `byte_da_posicao` | position_byte |
 | 0x6d5cd0 | `byte_do_codigo` | code_byte |
@@ -95,6 +97,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x7002f0 | `comentario_a` | commentary_a |
 | 0x70a860 | `comentario_b` | commentary_b |
 | 0x4b0700 | `competicao_conta` | competition_counts |
+| 0x7751e0 | `competicao_da_pessoa` | person_competition |
 | 0x70dfa0 | `condicao_jogador` | player_condition |
 | 0x6bba80 | `conferir_lance` | check_move |
 | 0x5b09d0 | `conhecer_pessoa` | know_person |
@@ -102,6 +105,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cbbb0 | `contar_ativos` | count_active |
 | 0x4cf5f0 | `contrato_com_clube` | contract_with_club |
 | 0x4cf5a0 | `contrato_de` | contract_of |
+| 0x777590 | `copiar_data_e_marca` | copy_date_and_mark |
 | 0x4bff70 | `criterio_da_competicao` | competition_criterion |
 | 0x6e9540 | `decidir_falta` | decide_foul |
 | 0x6e9820 | `decisao_da_falta` | foul_decision |
@@ -203,6 +207,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f4650 | `na_area` | in_the_box |
 | 0x714c60 | `na_lista` | in_list |
 | 0x7e6f20 | `nacao_do_grupo` | group_nation |
+| 0x776380 | `nao_gosta_da_selecao` | dislikes_national_side |
 | 0x547840 | `nao_gosta_de` | dislikes |
 | 0x547d30 | `nao_gosta_do_clube` | dislikes_club |
 | 0x5afe00 | `nevoa_apos_partida` | fog_after_match |
@@ -256,6 +261,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6ce460 | `resumo_da_partida` | match_summary |
 | 0x6bbe40 | `rolar_bola` | roll_ball |
 | 0x53b4f0 | `selecao_b` | b_national_team |
+| 0x775790 | `selecao_ou_especial` | national_or_special |
 | 0x53b3d0 | `selecao_principal` | main_national_team |
 | 0x6d4280 | `sem_partida` | no_match |
 | 0x5b73a0 | `separar_mascara` | split_mask |

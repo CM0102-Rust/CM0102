@@ -800,3 +800,16 @@ Mutations: 9/9.
 | `global_9b5984()` | 0x535920 | cdecl | Database.cpp: reads global 0x9b5984 |
 
 Mutations: 8/8.
+
+### Match engine, 84th batch — person's competition, national side block bytes, special national sides, date with mark (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `competicao_da_pessoa(pessoa)` | 0x7751e0 | thiscall, ret 4 | national_teams.cpp: the competition (0xae23d0, 107 bytes) of index +4 of the person's record ([this+4], 110 bytes); no person or a negative index, 0 |
+| `byte_42_da_selecao(clube, flag)` | 0x7754c0 | thiscall, ret 8 | byte +0x42 of the class block (as in 0x76d780) of the club's nation (+0x53); the original calls 0x5409b0 twice |
+| `byte_43_da_selecao(clube, flag)` | 0x775520 | thiscall, ret 8 | same, byte +0x43 |
+| `selecao_ou_especial(clube)` | 0x775790 | stdcall | national side (0x53b900) or one of the clubs at 0x9d00a4/0x9d00a8 |
+| `nao_gosta_da_selecao(pessoa)` | 0x776380 | stdcall | does the person dislike (0x547d30) the main national side (0x53b3d0) of nation +0x1a? |
+| `copiar_data_e_marca(origem)` | 0x777590 | thiscall, ret 4 | copies the date (0x417c10) and byte +8; returns `this` |
+
+Mutations: 8/8 (the 0x9d00a8 one only after the self-test put a non-national-side id there; with 4850, the national side test answered first).
