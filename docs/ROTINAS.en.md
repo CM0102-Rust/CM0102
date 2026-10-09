@@ -753,3 +753,16 @@ Mutations: 11/11.
 | `nota_do_jogador()` | 0x6ebd70 | thiscall | match_pl.cpp: n = contract level (0x53ce90); form = (word +0xd of the record − club word +0x80) × 0.002 + 1.5, clamped to −4..4; c = contract byte +0x44 (0x4cf5f0) / 75 + 0.5, adjusted by type (+0x4f >> 4: −10, +2.5, +2, −3, −15, −20, −50); x = byte +0x22 × 75 for a national side, otherwise days alive (0x54cdb0); y = 1 + (x − 1000) × 0.000125 above 1000. Rating = byte +0x2f × y − (n² + 5) × 0.1 + form + c + 0.5, truncated |
 
 Mutations: 10/10 (the one on the sign of contract byte +0x44 only after the 74th batch self-test filled that byte; it used to be always 0).
+
+### Match engine, 80th batch — forget a person and the manager's table (fog of war), formation slots (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `esquecer_pessoa(pessoa)` | 0x5afd00 | thiscall, ret 4 | fog_of_war.cpp: with fog of war on (0x9cc270) and a valid person, zeroes their level in the 16 active tables (+4) |
+| `quadro_do_tecnico(tecnico)` | 0x5afde0 | thiscall, ret 4 | fog_of_war.cpp: [this + (0xae2364 − id) × 4 − 4]; no manager, 0 |
+| `casa_do_setor_ocupada(mascara, jogadores)` | 0x5b2e80 | thiscall, ret 8 | formation.cpp: the first of the 11 slots (+0x12d) with the mask sector (0x5b73a0) and bit 0x200; without players, 1; otherwise whether any of the 20 (+0x19, or +0x1a with 0xfe) is in it |
+| `vaga_da_casa(codigo)` | 0x5b2f10 | thiscall, ret 4 | formation.cpp: slot 0..10 of the code, or 0xff |
+| `limpar_designados()` | 0x5b5960 | thiscall | formation.cpp: marks (+0x5b4) with 4 and 8 become 2; assigned records (+0x5bf) go back to −1; returns 1 |
+| `mascara_da_formacao()` | 0x5b59a0 | thiscall | formation.cpp: +0x187b = OR of the bits of the 11 slots (0x5b5a60), with 11 masks swapped for 4 reference formations |
+
+Mutations: 13/13.

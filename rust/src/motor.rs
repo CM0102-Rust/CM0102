@@ -323,8 +323,14 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x4b07d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
     Prologo { endereco: 0x4b0810, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
     Prologo { endereco: 0x6ebd70, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
+    Prologo { endereco: 0x5afd00, bytes: &[0x55, 0x8b, 0x6c, 0x24, 0x08] },
+    Prologo { endereco: 0x5afde0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
+    Prologo { endereco: 0x5b2e80, bytes: &[0x51, 0x8b, 0x54, 0x24, 0x08] },
+    Prologo { endereco: 0x5b2f10, bytes: &[0x66, 0x8b, 0x54, 0x24, 0x04] },
+    Prologo { endereco: 0x5b5960, bytes: &[0x56, 0x8d, 0x81, 0xb4, 0x05, 0x00, 0x00] },
+    Prologo { endereco: 0x5b59a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
 ];
-const N: usize = 217;
+const N: usize = 223;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3997,6 +4003,98 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- octogesima leva: esquecer a pessoa e quadro do tecnico (nevoa), casas da formacao ----------
+
+/// { 0x5afd00 } (ret 4, fog_of_war.cpp): com a nevoa ligada (0x9cc270) e a pessoa valida, zera o
+/// nivel dela (registro de 9 bytes) nos 16 quadros de [this] que existem e estao ativos (+4).
+unsafe extern "thiscall" fn esquecer_pessoa(this: usize, pessoa: usize) {
+    let valida = || *(pessoa as *const i32) < *(0xae2364 as *const i32) && *(0x9cc270 as *const u8) != 0;
+    if pessoa == 0 || !valida() {
+        return;
+    }
+    for k in 0..16usize {
+        let q = *((this + 4 * k) as *const usize);
+        if q != 0 && *((q + 4) as *const u32) != 0 && valida() {
+            *((*(q as *const usize)).wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(9)) as *mut u8) = 0;
+        }
+    }
+}
+
+/// { 0x5afde0 } (ret 4, fog_of_war.cpp): o quadro do tecnico, [this + (0xae2364 - id) x 4 - 4];
+/// sem tecnico, 0.
+unsafe extern "thiscall" fn quadro_do_tecnico(this: usize, tecnico: usize) -> usize {
+    if tecnico == 0 {
+        return 0;
+    }
+    let k = (*(0xae2364 as *const i32)).wrapping_sub(*(tecnico as *const i32)) as usize;
+    *(this.wrapping_add(k.wrapping_mul(4)).wrapping_sub(4) as *const usize)
+}
+
+/// { 0x5b2e80 } (ret 8, formation.cpp): a primeira das 11 casas (+0x12d) com o setor da mascara
+/// (0x5b73a0) e o bit 0x200; sem ela, 0. Sem `jogadores`, 1; senao 1 se algum dos 20 (+0x19, ou
+/// +0x1a com 0xfe em +0x19) esta naquela vaga.
+unsafe extern "thiscall" fn casa_do_setor_ocupada(this: usize, mascara: u32, jogadores: usize) -> u32 {
+    let separar: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(0x5b73a0usize);
+    let (mut setor, mut lado) = (0u16, 0u16);
+    separar(mascara, &mut setor, &mut lado);
+    let casa = |k: usize| core::ptr::read_unaligned((this + 0x12d + 2 * k) as *const u16);
+    let k = match (0..11usize).find(|&k| casa(k) & setor != 0 && casa(k) & 0x200 != 0) {
+        Some(k) => k as u8,
+        None => return 0,
+    };
+    if jogadores == 0 {
+        return 1;
+    }
+    (0..20usize).any(|i| {
+        let p = jogadores + 0x19 + i * 0x1be;
+        let c = *(p as *const u8);
+        c == k || (c == 0xfe && *((p + 1) as *const u8) == k)
+    }) as u32
+}
+
+/// { 0x5b2f10 } (ret 4, formation.cpp): a vaga (0..10) da casa `codigo` entre as 11 de +0x12d; 0xff
+/// se nao estiver.
+unsafe extern "thiscall" fn vaga_da_casa(this: usize, codigo: u16) -> u32 {
+    (0..11u32).find(|&k| core::ptr::read_unaligned((this + 0x12d + 2 * k as usize) as *const u16) == codigo).unwrap_or(0xff)
+}
+
+/// { 0x5b5960 } (formation.cpp): as 11 marcas (+0x5b4) com 4 e 8 viram 2, e as fichas designadas
+/// (+0x5bf) voltam a -1. Devolve 1.
+unsafe extern "thiscall" fn limpar_designados(this: usize) -> u32 {
+    for k in 0..11usize {
+        let b = (this + 0x5b4 + k) as *mut u8;
+        if *b & 4 != 0 && *b & 8 != 0 {
+            *b = 2;
+        }
+        core::ptr::write_unaligned((this + 0x5bf + 4 * k) as *mut i32, -1);
+    }
+    1
+}
+
+/// { 0x5b59a0 } (formation.cpp): a mascara da formacao (+0x187b) = OU dos bits das 11 casas
+/// (0x5b5a60), com onze mascaras trocadas por quatro formacoes de referencia. Devolve a mascara
+/// antes da troca (o eax da original).
+unsafe extern "thiscall" fn mascara_da_formacao(this: usize) -> u32 {
+    let bit: unsafe extern "stdcall" fn(i16) -> u32 = core::mem::transmute(0x5b5a60usize);
+    let m = (this + 0x187b) as *mut u32;
+    core::ptr::write_unaligned(m, 0);
+    for k in 0..11usize {
+        let c = core::ptr::read_unaligned((this + 0x12d + 2 * k) as *const i16);
+        let v = core::ptr::read_unaligned(m) | bit(c);
+        core::ptr::write_unaligned(m, v);
+    }
+    let v = core::ptr::read_unaligned(m);
+    let troca = match v {
+        0x101176c1 | 0x101b26c1 => 0x101f06c1,
+        0x38115381 | 0x3a242381 => 0x381b0381,
+        0x280e07c1 | 0x091a07c1 | 0x2884ab81 | 0x280aab81 | 0x288c07c1 | 0x281507c1 => 0x280e8b81,
+        0x288a8b81 => 0x281b2381,
+        _ => v,
+    };
+    core::ptr::write_unaligned(m, troca);
+    v
 }
 
 // ---------- septuagesima nona leva: nota do jogador pelo contrato, forma e idade ----------
@@ -9308,6 +9406,35 @@ comparar_ordem!(comparar_ordem_por_80, ordem_por_80, 213);
 comparar_ordem!(comparar_ordem_por_80_desc, ordem_por_80_desc, 214);
 comparar_ordem!(comparar_ordem_por_80_cresc, ordem_por_80_cresc, 215);
 comparar_valor!(comparar_nota_do_jogador, nota_do_jogador, 216, () -> i32);
+unsafe extern "thiscall" fn comparar_esquecer_pessoa(this: usize, pessoa: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(217);
+    let mut reg: Vec<(usize, usize)> = Vec::new();
+    if pessoa != 0 && *(pessoa as *const i32) < *(0xae2364 as *const i32) {
+        for k in 0..16usize {
+            let q = *((this + 4 * k) as *const usize);
+            if q != 0 {
+                reg.push(((*(q as *const usize)).wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(9)), 1));
+            }
+        }
+    }
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa), || esquecer_pessoa(this, pessoa));
+    PLACAR.registrar(igual, || format!("esquecer_pessoa original={:x?} rust={:x?}", mo, mr));
+}
+comparar_valor!(comparar_quadro_do_tecnico, quadro_do_tecnico, 218, (tecnico: usize) -> usize);
+comparar_valor!(comparar_casa_do_setor_ocupada, casa_do_setor_ocupada, 219, (mascara: u32, jogadores: usize) -> u32);
+comparar_valor!(comparar_vaga_da_casa, vaga_da_casa, 220, (codigo: u16) -> u32);
+unsafe extern "thiscall" fn comparar_limpar_designados(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(221);
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x5b4, 11), (this + 0x5bf, 44)], || o(this), || limpar_designados(this));
+    PLACAR.registrar(igual && r == v, || format!("limpar_designados original={} {:x?} rust={} {:x?}", r, mo, v, mr));
+    r
+}
+unsafe extern "thiscall" fn comparar_mascara_da_formacao(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(222);
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x187b, 4)], || o(this), || mascara_da_formacao(this));
+    PLACAR.registrar(igual && r == v, || format!("mascara_da_formacao original={:#x} {:x?} rust={:#x} {:x?}", r, mo, v, mr));
+    r
+}
 unsafe extern "C" fn comparar_chance_de_conhecer(pessoa: usize, nivel: i8) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, i8) -> i32>(200)(pessoa, nivel);
     let v = chance_de_conhecer(pessoa, nivel);
@@ -9859,6 +9986,12 @@ pub unsafe fn instalar(comparando: bool) {
         ordem_por_80_desc as *const () as usize,
         ordem_por_80_cresc as *const () as usize,
         nota_do_jogador as *const () as usize,
+        esquecer_pessoa as *const () as usize,
+        quadro_do_tecnico as *const () as usize,
+        casa_do_setor_ocupada as *const () as usize,
+        vaga_da_casa as *const () as usize,
+        limpar_designados as *const () as usize,
+        mascara_da_formacao as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -10078,6 +10211,12 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_ordem_por_80_desc as *const () as usize,
         comparar_ordem_por_80_cresc as *const () as usize,
         comparar_nota_do_jogador as *const () as usize,
+        comparar_esquecer_pessoa as *const () as usize,
+        comparar_quadro_do_tecnico as *const () as usize,
+        comparar_casa_do_setor_ocupada as *const () as usize,
+        comparar_vaga_da_casa as *const () as usize,
+        comparar_limpar_designados as *const () as usize,
+        comparar_mascara_da_formacao as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -10166,6 +10305,8 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_quantos_marcam", "motor_quem_marca",
         "motor_competicao_conta", "motor_ordem_por_5f", "motor_ordem_por_80", "motor_ordem_por_80_desc", "motor_ordem_por_80_cresc",
         "motor_nota_do_jogador",
+        "motor_esquecer_pessoa", "motor_quadro_do_tecnico", "motor_casa_do_setor_ocupada", "motor_vaga_da_casa",
+        "motor_limpar_designados", "motor_mascara_da_formacao",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -11844,6 +11985,70 @@ pub unsafe fn autoteste(casos: u64) {
                     let qa78 = [fichas78[0].as_ptr() as usize];
                     let qb78 = [fichas78[1].as_ptr() as usize];
                     comparar_ordem_por_80(qa78.as_ptr(), qb78.as_ptr());
+                    // octogesima leva: quadros da nevoa (16, alguns nulos ou inativos; nevoa ligada ou
+                    // nao) e a formacao (casas das onze mascaras trocadas, ou casas sorteadas)
+                    let h80 = s.proximo();
+                    let antes_nevoa80 = *(0x9cc270 as *const u8);
+                    *(0x9cc270 as *mut u8) = ((h80 >> 1) % 4 != 0) as u8;
+                    let mut niveis80 = vec![0u8; 9 * 70];
+                    for (k, b) in niveis80.iter_mut().enumerate() {
+                        *b = 1 + (k % 3) as u8;
+                    }
+                    let base80 = (niveis80.as_mut_ptr() as usize).wrapping_sub(9usize.wrapping_mul((n77 - 64) as usize));
+                    let mut quadros80 = [[0usize; 2]; 16];
+                    let mut ptrs80 = [0usize; 16];
+                    for k in 0..16usize {
+                        quadros80[k] = [base80, ((h80 >> (k + 3)) % 3 != 0) as usize];
+                        ptrs80[k] = if (h80 >> (k + 20)) % 4 == 0 { 0 } else { quadros80[k].as_ptr() as usize };
+                    }
+                    let pessoa80 = [n77 - 64 + ((h80 >> 40) % 66) as i32];
+                    comparar_esquecer_pessoa(ptrs80.as_ptr() as usize, if (h80 >> 47) % 8 == 0 { 0 } else { pessoa80.as_ptr() as usize });
+                    *(0x9cc270 as *mut u8) = antes_nevoa80;
+                    let tecnico80 = [n77 - 1 - ((h80 >> 50) % 16) as i32];
+                    comparar_quadro_do_tecnico(ptrs80.as_ptr() as usize, if (h80 >> 54) % 6 == 0 { 0 } else { tecnico80.as_ptr() as usize });
+                    let codigos80: Vec<u16> = core::iter::once(1u16)
+                        .chain([0x80u16, 0x100, 0x200, 0x400, 0x800].iter().flat_map(|&l| [2u16, 4, 8, 0x10, 0x20, 0x40].iter().map(move |&c| l | c)))
+                        .collect();
+                    let mapeadas80 = [0x101176c1u32, 0x101b26c1, 0x38115381, 0x3a242381, 0x280e07c1, 0x091a07c1, 0x2884ab81, 0x280aab81, 0x288c07c1, 0x281507c1, 0x288a8b81];
+                    let mut casas80 = [0u16; 11];
+                    if (h80 >> 56) % 2 == 0 {
+                        let alvo = mapeadas80[((h80 >> 57) % 11) as usize];
+                        let mut usados = 0u32;
+                        let mut n = 0;
+                        for &c in &codigos80 {
+                            let b = bit_da_casa(c as i16);
+                            if b & alvo != 0 && b & usados == 0 && n < 11 {
+                                casas80[n] = c;
+                                usados |= b;
+                                n += 1;
+                            }
+                        }
+                    } else {
+                        for k in 0..11usize {
+                            let z = h80.rotate_left(k as u32 * 5);
+                            casas80[k] = if z % 9 == 0 { 0x1234 } else { codigos80[(z >> 4) as usize % codigos80.len()] };
+                        }
+                    }
+                    let mut form80 = vec![0u8; 0x1880];
+                    for k in 0..11usize {
+                        core::ptr::write_unaligned(form80.as_mut_ptr().add(0x12d + 2 * k) as *mut u16, casas80[k]);
+                        form80[0x5b4 + k] = (h80 >> (k * 3)) as u8 & 0x1e;
+                        core::ptr::write_unaligned(form80.as_mut_ptr().add(0x5bf + 4 * k) as *mut u32, (h80 >> k) as u32);
+                    }
+                    let f80 = form80.as_mut_ptr() as usize;
+                    comparar_mascara_da_formacao(f80);
+                    let codigo80 = if (h80 >> 60) % 3 == 0 { 0x1234 } else { casas80[((h80 >> 33) % 11) as usize] };
+                    comparar_vaga_da_casa(f80, codigo80);
+                    let mut jogadores80 = vec![0u8; 20 * 0x1be];
+                    for i in 0..20usize {
+                        let z = h80.rotate_right(i as u32 * 3);
+                        jogadores80[i * 0x1be + 0x19] = [0xfeu8, 0xff, (z % 11) as u8, (z % 13) as u8][((z >> 8) % 4) as usize];
+                        jogadores80[i * 0x1be + 0x1a] = ((z >> 12) % 12) as u8;
+                    }
+                    // sempre com um bit de setor (1..0x40): sem ele a original mostra a caixa de erro do formation.cpp
+                    let mascara80 = ((h80 >> 13) as u32 & 0xfff) | 0x200 | 1 << ((h80 >> 5) % 7);
+                    comparar_casa_do_setor_ocupada(f80, mascara80, if (h80 >> 62) == 0 { 0 } else { jogadores80.as_ptr() as usize });
+                    comparar_limpar_designados(f80);
                     for (k, &a) in globais75.iter().enumerate() {
                         *(a as *mut u32) = antes75[k];
                     }

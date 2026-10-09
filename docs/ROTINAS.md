@@ -751,3 +751,16 @@ Mutações: 11/11.
 | `nota_do_jogador()` | 0x6ebd70 | thiscall | match_pl.cpp: n = nível do contrato (0x53ce90); forma = (palavra +0xd da ficha − palavra +0x80 do clube) × 0,002 + 1,5, limitada a −4..4; c = byte +0x44 do contrato (0x4cf5f0) / 75 + 0,5, ajustado pelo tipo (+0x4f >> 4: −10, +2,5, +2, −3, −15, −20, −50); x = byte +0x22 × 75 na seleção, senão os dias de vida (0x54cdb0); y = 1 + (x − 1000) × 0,000125 acima de 1000. Nota = byte +0x2f × y − (n² + 5) × 0,1 + forma + c + 0,5, truncada |
 
 Mutações: 10/10 (a do sinal do byte +0x44 do contrato só depois de o autoteste da 74ª leva encher esse byte; antes ele era sempre 0).
+
+### Motor de partidas, 80ª leva — esquecer a pessoa e quadro do técnico (névoa), casas da formação (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `esquecer_pessoa(pessoa)` | 0x5afd00 | thiscall, ret 4 | fog_of_war.cpp: com a névoa ligada (0x9cc270) e a pessoa válida, zera o nível dela nos 16 quadros ativos (+4) |
+| `quadro_do_tecnico(tecnico)` | 0x5afde0 | thiscall, ret 4 | fog_of_war.cpp: [this + (0xae2364 − id) × 4 − 4]; sem técnico, 0 |
+| `casa_do_setor_ocupada(mascara, jogadores)` | 0x5b2e80 | thiscall, ret 8 | formation.cpp: a primeira das 11 casas (+0x12d) com o setor da máscara (0x5b73a0) e o bit 0x200; sem jogadores, 1; senão se algum dos 20 (+0x19, ou +0x1a com 0xfe) está nela |
+| `vaga_da_casa(codigo)` | 0x5b2f10 | thiscall, ret 4 | formation.cpp: a vaga 0..10 da casa, ou 0xff |
+| `limpar_designados()` | 0x5b5960 | thiscall | formation.cpp: marcas (+0x5b4) com 4 e 8 viram 2; fichas designadas (+0x5bf) voltam a −1; devolve 1 |
+| `mascara_da_formacao()` | 0x5b59a0 | thiscall | formation.cpp: +0x187b = OU dos bits das 11 casas (0x5b5a60), com 11 máscaras trocadas por 4 formações de referência |
+
+Mutações: 13/13.

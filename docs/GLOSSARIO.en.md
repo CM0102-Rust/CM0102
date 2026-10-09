@@ -78,6 +78,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f4600 | `campo_pela_posicao` | field_by_position |
 | 0x6eab60 | `cartao_pela_gravidade` | card_by_severity |
 | 0x6c2a40 | `casa_da_formacao` | formation_square |
+| 0x5b2e80 | `casa_do_setor_ocupada` | sector_slot_taken |
 | 0x544410 | `chance_de_conhecer` | chance_to_know |
 | 0x713e90 | `classificar_lance` | classify_move |
 | 0x76d940 | `clube_especial` | special_club |
@@ -127,6 +128,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c2050 | `escolher_por_papel_c` | choose_by_role_c |
 | 0x6c23f0 | `escolher_por_papel_e` | choose_by_role_e |
 | 0x6cbad0 | `espaco_a_frente` | space_ahead |
+| 0x5afd00 | `esquecer_pessoa` | forget_person |
 | 0x6f4a70 | `estado_do_adversario` | opponent_state |
 | 0x6f4a40 | `estado_do_lado` | side_state |
 | 0x6cf750 | `estatistica_de_posse` | possession_statistic |
@@ -163,6 +165,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x700410 | `ler_8f7a` | read_8f7a |
 | 0x6cb930 | `limite` | limit |
 | 0x70df40 | `limite_jogador` | player_limit |
+| 0x5b5960 | `limpar_designados` | clear_assigned |
 | 0x6bba10 | `limpar_lance` | clear_move |
 | 0x8982b0 | `linha_tatica` | tactics_row |
 | 0x6c3aa0 | `linhas_defensivas` | defensive_lines |
@@ -179,6 +182,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x897760 | `marcar_vaga` | mark_slot |
 | 0x5b5270 | `marcas_da_posicao` | position_marks |
 | 0x7163c0 | `marcas_do_jogador_rot` | player_marks_rot |
+| 0x5b59a0 | `mascara_da_formacao` | formation_mask |
 | 0x6c3950 | `menor_distancia` | smallest_distance |
 | 0x6d4250 | `momento_marcado` | marked_moment |
 | 0x6cfd40 | `motor_cartao_pela_gravidade` | engine_card_by_severity |
@@ -225,6 +229,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x68d1b0 | `proximo_da_lista` | next_list_item |
 | 0x6e9630 | `punir_falta` | punish_foul |
 | 0x6ea4e0 | `punir_lance` | punish_move |
+| 0x5afde0 | `quadro_do_tecnico` | manager_table |
 | 0x6d59b0 | `quantos_marcam` | how_many_mark |
 | 0x6d5a10 | `quem_marca` | who_marks |
 | 0x6bc030 | `quem_marcar` | who_to_mark |
@@ -264,6 +269,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cdd50 | `tirar_de_campo` | take_off_pitch |
 | 0x6ccb60 | `tracar_lance` | trace_move |
 | 0x4b0850 | `unidades` | units_digit |
+| 0x5b2f10 | `vaga_da_casa` | slot_of_code |
 | 0x897590 | `vaga_marcada` | marked_slot |
 | 0x700bd0 | `valor_do_chute` | shot_value |
 | 0x7165b0 | `valor_pela_condicao` | value_by_condition |
