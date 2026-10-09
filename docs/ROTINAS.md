@@ -764,3 +764,12 @@ Mutações: 10/10 (a do sinal do byte +0x44 do contrato só depois de o autotest
 | `mascara_da_formacao()` | 0x5b59a0 | thiscall | formation.cpp: +0x187b = OU dos bits das 11 casas (0x5b5a60), com 11 máscaras trocadas por 4 formações de referência |
 
 Mutações: 13/13.
+
+### Motor de partidas, 81ª leva — casa da vaga, critério da competição (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `casa_da_vaga(vaga, segunda)` | 0x5b2ae0 | thiscall, ret 8 | formation.cpp: palavra +0x12d (ou +0x14e) da vaga 0..10; fora da faixa, a original (caixa de erro e 1) |
+| `criterio_da_competicao(registro, a, b, tipo)` | 0x4bff70 | cdecl | comp_util.cpp: com a palavra baixa de b (ou de a), 0x4ba8f0(palavra, 0); senão o byte +0x37 (tipo 1) ou +0x52 do registro; sem registro, 1. O caminho das palavras depende da configuração em 0xae3138 e fica coberto só pelo jogo real |
+
+Mutações: 5/5 (a da palavra de `a` derruba a 0x4ba8f0 sem configuração, o que conta como acusada).

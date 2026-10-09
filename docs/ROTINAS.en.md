@@ -766,3 +766,12 @@ Mutations: 10/10 (the one on the sign of contract byte +0x44 only after the 74th
 | `mascara_da_formacao()` | 0x5b59a0 | thiscall | formation.cpp: +0x187b = OR of the bits of the 11 slots (0x5b5a60), with 11 masks swapped for 4 reference formations |
 
 Mutations: 13/13.
+
+### Match engine, 81st batch — slot code, competition criterion (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `casa_da_vaga(vaga, segunda)` | 0x5b2ae0 | thiscall, ret 8 | formation.cpp: word +0x12d (or +0x14e) of slot 0..10; out of range, the original (error box and 1) |
+| `criterio_da_competicao(registro, a, b, tipo)` | 0x4bff70 | cdecl | comp_util.cpp: with the low word of b (or of a), 0x4ba8f0(word, 0); otherwise byte +0x37 (type 1) or +0x52 of the record; no record, 1. The word path depends on the configuration at 0xae3138 and is covered only by the real game |
+
+Mutations: 5/5 (the one on the word of `a` crashes 0x4ba8f0 without configuration, which counts as caught).

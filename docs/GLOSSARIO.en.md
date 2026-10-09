@@ -78,6 +78,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f4600 | `campo_pela_posicao` | field_by_position |
 | 0x6eab60 | `cartao_pela_gravidade` | card_by_severity |
 | 0x6c2a40 | `casa_da_formacao` | formation_square |
+| 0x5b2ae0 | `casa_da_vaga` | slot_code |
 | 0x5b2e80 | `casa_do_setor_ocupada` | sector_slot_taken |
 | 0x544410 | `chance_de_conhecer` | chance_to_know |
 | 0x713e90 | `classificar_lance` | classify_move |
@@ -97,6 +98,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cbbb0 | `contar_ativos` | count_active |
 | 0x4cf5f0 | `contrato_com_clube` | contract_with_club |
 | 0x4cf5a0 | `contrato_de` | contract_of |
+| 0x4bff70 | `criterio_da_competicao` | competition_criterion |
 | 0x6e9540 | `decidir_falta` | decide_foul |
 | 0x6e9820 | `decisao_da_falta` | foul_decision |
 | 0x700420 | `defesa_do_goleiro` | goalkeeper_save |

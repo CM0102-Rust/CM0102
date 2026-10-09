@@ -329,8 +329,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x5b2f10, bytes: &[0x66, 0x8b, 0x54, 0x24, 0x04] },
     Prologo { endereco: 0x5b5960, bytes: &[0x56, 0x8d, 0x81, 0xb4, 0x05, 0x00, 0x00] },
     Prologo { endereco: 0x5b59a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
+    Prologo { endereco: 0x5b2ae0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x4bff70, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x66, 0x85, 0xc0] },
 ];
-const N: usize = 223;
+const N: usize = 225;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4003,6 +4005,35 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- octogesima primeira leva: casa da vaga, byte de criterio da competicao ----------
+
+/// { 0x5b2ae0 } (ret 8, formation.cpp): a casa da vaga 0..10 (palavra +0x12d, ou +0x14e com
+/// `segunda`). Vaga fora da faixa: a original (caixa de erro e 1). Devolve so `ax`: no caminho +0x12d
+/// a original deixa em cima de `eax` o que o chamador tinha ali.
+unsafe extern "thiscall" fn casa_da_vaga(this: usize, vaga: i8, segunda: u32) -> u16 {
+    if !(0..=10).contains(&vaga) {
+        return orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u16>(223)(this, vaga, segunda);
+    }
+    let base = if segunda != 0 { 0x14e } else { 0x12d };
+    core::ptr::read_unaligned((this + base + 2 * vaga as usize) as *const u16)
+}
+
+/// { 0x4bff70 } (comp_util.cpp): com a palavra baixa de `b` (ou, sem ela, a de `a`), o resultado
+/// de 0x4ba8f0(palavra, 0); senao o byte +0x37 (`tipo` 1) ou +0x52 do registro; sem registro, 1.
+unsafe extern "C" fn criterio_da_competicao(registro: usize, a: u32, b: u32, tipo: u8) -> u8 {
+    let texto: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(0x4ba8f0usize);
+    if b as u16 != 0 {
+        return texto(b, 0);
+    }
+    if a as u16 != 0 {
+        return texto(a, 0);
+    }
+    if registro == 0 {
+        return 1;
+    }
+    *((registro + if tipo == 1 { 0x37 } else { 0x52 }) as *const u8)
 }
 
 // ---------- octogesima leva: esquecer a pessoa e quadro do tecnico (nevoa), casas da formacao ----------
@@ -9429,6 +9460,13 @@ unsafe extern "thiscall" fn comparar_limpar_designados(this: usize) -> u32 {
     PLACAR.registrar(igual && r == v, || format!("limpar_designados original={} {:x?} rust={} {:x?}", r, mo, v, mr));
     r
 }
+comparar_valor!(comparar_casa_da_vaga, casa_da_vaga, 223, (vaga: i8, segunda: u32) -> u16);
+unsafe extern "C" fn comparar_criterio_da_competicao(registro: usize, a: u32, b: u32, tipo: u8) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize, u32, u32, u8) -> u8>(224)(registro, a, b, tipo);
+    let v = criterio_da_competicao(registro, a, b, tipo);
+    PLACAR.registrar(r == v, || format!("criterio_da_competicao({:#x}, {:#x}, {:#x}, {}) original={} rust={}", registro, a, b, tipo, r, v));
+    r
+}
 unsafe extern "thiscall" fn comparar_mascara_da_formacao(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(222);
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x187b, 4)], || o(this), || mascara_da_formacao(this));
@@ -9992,6 +10030,8 @@ pub unsafe fn instalar(comparando: bool) {
         vaga_da_casa as *const () as usize,
         limpar_designados as *const () as usize,
         mascara_da_formacao as *const () as usize,
+        casa_da_vaga as *const () as usize,
+        criterio_da_competicao as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -10217,6 +10257,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_vaga_da_casa as *const () as usize,
         comparar_limpar_designados as *const () as usize,
         comparar_mascara_da_formacao as *const () as usize,
+        comparar_casa_da_vaga as *const () as usize,
+        comparar_criterio_da_competicao as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -10307,6 +10349,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_nota_do_jogador",
         "motor_esquecer_pessoa", "motor_quadro_do_tecnico", "motor_casa_do_setor_ocupada", "motor_vaga_da_casa",
         "motor_limpar_designados", "motor_mascara_da_formacao",
+        "motor_casa_da_vaga", "motor_criterio_da_competicao",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -12049,6 +12092,20 @@ pub unsafe fn autoteste(casos: u64) {
                     let mascara80 = ((h80 >> 13) as u32 & 0xfff) | 0x200 | 1 << ((h80 >> 5) % 7);
                     comparar_casa_do_setor_ocupada(f80, mascara80, if (h80 >> 62) == 0 { 0 } else { jogadores80.as_ptr() as usize });
                     comparar_limpar_designados(f80);
+                    // octogesima primeira leva: casa da vaga (so vagas 0..10: fora delas a original mostra a
+                    // caixa de erro) e o criterio pelos bytes do registro (as palavras pedem a configuracao
+                    // de 0xae3138, que ainda nao existe aqui; ficam com o jogo real)
+                    let h81 = s.proximo();
+                    for k in 0..0x30usize {
+                        form80[0x12d + k] = (h81 >> (k % 56)) as u8 ^ (k as u8).wrapping_mul(13);
+                    }
+                    comparar_casa_da_vaga(f80, ((h81 >> 2) % 11) as i8, ((h81 >> 6) & 1) as u32);
+                    let mut registro81 = [0u8; 0x60];
+                    registro81[0x37] = (h81 >> 8) as u8;
+                    registro81[0x52] = (h81 >> 16) as u8;
+                    let a81 = ((h81 >> 24) as u32) & 0xffff_0000;
+                    let b81 = ((h81 >> 40) as u32) & 0xffff_0000;
+                    comparar_criterio_da_competicao(if (h81 >> 60) % 5 == 0 { 0 } else { registro81.as_ptr() as usize }, a81, b81, [1u8, 0, 2, 0x81][((h81 >> 61) % 4) as usize]);
                     for (k, &a) in globais75.iter().enumerate() {
                         *(a as *mut u32) = antes75[k];
                     }
