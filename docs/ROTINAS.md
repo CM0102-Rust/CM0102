@@ -690,3 +690,12 @@ Mutações: 4/4 (a da 0x9b23 só depois de o autoteste encher os bytes em volta 
 | `clube_parceiro(clube, eh_a, ativo)` | 0x540a50 | cdecl | Database.cpp: time A ↔ time B; só clubes de nação com id em 0x9cf488/0x9cf314/0x9cf434; 82 pares de globais (A→B aceita parceiro ≠ −1, B→A aceita ≥ 0); parceiro recusado zera +0x244; registro do parceiro no vetor 0xae23b4 (581 bytes) |
 
 Mutações: 8/8 (os 82 pares foram extraídos da desmontagem; o autoteste dá valores distintos às 167 globais, com parceiros −1 e −5 para separar os dois testes de aceite).
+
+### Motor de partidas, 74ª leva — contrato da pessoa com o clube (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `contrato_com_clube(pessoa, clube)` | 0x4cf5f0 | thiscall, ret 8 | registros de 80 bytes em [this]; a pessoa tem até dois índices (tabela 0xae2d0c, 79 bytes por pessoa); vale o registro cujo +4 é o id do clube; sem nenhum, tenta o clube parceiro (0x540a50) quando ele é o time A |
+| `nivel_do_contrato(pessoa, clube)` | 0x53ce90 | cdecl | (byte +0x4f do contrato com 0xae1050 & 0xf) − 10; clube de seleção ou pessoa inválida: o próprio ponteiro do clube com o byte baixo zerado |
+
+Mutações: 7/7 (a do limite das seleções só depois de o autoteste dar valores a 0xae235c e 0xae2350, que valem 0 antes do banco de dados).

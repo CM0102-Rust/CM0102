@@ -303,8 +303,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x547d30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
     Prologo { endereco: 0x547d60, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
     Prologo { endereco: 0x540a50, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x4cf5f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53, 0x55, 0x56] },
+    Prologo { endereco: 0x53ce90, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x85, 0xc0] },
 ];
-const N: usize = 198;
+const N: usize = 200;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3979,6 +3981,78 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     1
 }
 
+// ---------- septuagesima quarta leva: contrato da pessoa com o clube ----------
+
+/// { 0x4cf5f0 } (ret 8): o contrato (registros de 80 bytes em [this]) da pessoa com o clube. A
+/// pessoa tem ate dois indices (tabela 0xae2d0c, 79 bytes por pessoa, +0 e +4); vale o registro
+/// cujo +4 e o id do clube. Sem nenhum, tenta o clube parceiro (0x540a50) quando ele e o time A.
+unsafe extern "thiscall" fn contrato_com_clube(this: usize, pessoa: usize, clube: usize) -> usize {
+    if pessoa == 0 || clube == 0 {
+        return 0;
+    }
+    let id = *(pessoa as *const i32);
+    if id >= *(0xae2364 as *const i32) {
+        return 0;
+    }
+    let e = (*(0xae2d0c as *const usize)).wrapping_add((id as usize).wrapping_mul(79));
+    let i0 = *(e as *const i32);
+    if i0 < 0 {
+        return 0;
+    }
+    let base = *(this as *const usize);
+    let r0 = base.wrapping_add((i0 as usize).wrapping_mul(80));
+    if r0 == 0 {
+        return 0;
+    }
+    let id_de = |q: usize| *((q + 4) as *const u32);
+    let id_clube = *(clube as *const u32);
+    if id_de(r0) == id_clube {
+        return r0;
+    }
+    let i1 = *((e + 4) as *const i32);
+    let mut r1 = 0usize;
+    if i1 >= 0 {
+        r1 = base.wrapping_add((i1 as usize).wrapping_mul(80));
+        if r1 != 0 && id_de(r1) == id_clube {
+            return r1;
+        }
+    }
+    let mut alvo = clube;
+    let mut eh_a = pessoa as u32; // o original reaproveita a vaga do argumento
+    let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
+    let pc = parceiro(clube, &mut eh_a, 1);
+    if pc != 0 && eh_a == 0 {
+        alvo = pc;
+    }
+    let id_alvo = *(alvo as *const u32);
+    if id_de(r0) == id_alvo {
+        return r0;
+    }
+    if r1 != 0 && id_de(r1) == id_alvo {
+        return r1;
+    }
+    0
+}
+
+/// { 0x53ce90 }: (byte +0x4f do contrato da pessoa com o clube (0x4cf5f0 sobre [0xae1050]) & 0xf)
+/// - 10, para clube que nao e selecao (id abaixo de clubes - 2 x nacoes) e pessoa valida. Senao o
+/// byte baixo zerado (o resto do registro fica como estava: o clube, ou 0).
+unsafe extern "C" fn nivel_do_contrato(pessoa: usize, clube: usize) -> u32 {
+    if clube == 0 {
+        return 0;
+    }
+    let limite = (*(0xae235c as *const i32)).wrapping_sub(2 * *(0xae2350 as *const i32));
+    if *(clube as *const i32) >= limite || *(pessoa as *const i32) >= *(0xae2364 as *const i32) {
+        return clube as u32 & !0xff;
+    }
+    let f: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let r = f(*(0xae1050 as *const usize), pessoa, clube);
+    if r == 0 {
+        return 0;
+    }
+    ((*((r + 0x4f) as *const u8) & 0xf) as u32).wrapping_sub(10)
+}
+
 // ---------- septuagesima terceira leva: clube parceiro (time B) ----------
 
 /// Pares de globais com os ids dos clubes A e B (times B da Espanha e outros), na ordem dos testes
@@ -5374,6 +5448,7 @@ unsafe fn cerco(m: usize, s: usize, x: i8, y: i8) -> i8 {
 }
 
 static mut TABELA65: Vec<u8> = Vec::new();
+static mut CLUBES74: Vec<u8> = Vec::new();
 
 /// Bonus de fadiga do sorteio: 0x96d2d8 - distancia ao gol x 0x968a78.
 unsafe fn bonus_do_gol(d: f32) -> i32 {
@@ -8886,6 +8961,13 @@ unsafe extern "thiscall" fn comparar_falta_no_motor(
     r
 }
 comparar_valor!(comparar_tecnico_9b23, tecnico_9b23, 194, (i: i8, pessoa: usize) -> u8);
+comparar_valor!(comparar_contrato_com_clube, contrato_com_clube, 198, (pessoa: usize, clube: usize) -> usize);
+unsafe extern "C" fn comparar_nivel_do_contrato(pessoa: usize, clube: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(199)(pessoa, clube);
+    let v = nivel_do_contrato(pessoa, clube);
+    PLACAR.registrar(r == v, || format!("nivel_do_contrato original={:#x} rust={:#x}", r, v));
+    r
+}
 unsafe extern "C" fn comparar_clube_parceiro(clube: usize, eh_a: *mut u32, ativo: u32) -> usize {
     let o = orig::<unsafe extern "C" fn(usize, *mut u32, u32) -> usize>(197);
     let mut reg: Vec<(usize, usize)> = vec![(clube + 0x244, 1)];
@@ -9370,6 +9452,8 @@ pub unsafe fn instalar(comparando: bool) {
         nao_gosta_do_clube as *const () as usize,
         gosta_do_clube as *const () as usize,
         clube_parceiro as *const () as usize,
+        contrato_com_clube as *const () as usize,
+        nivel_do_contrato as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -9570,6 +9654,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_nao_gosta_do_clube as *const () as usize,
         comparar_gosta_do_clube as *const () as usize,
         comparar_clube_parceiro as *const () as usize,
+        comparar_contrato_com_clube as *const () as usize,
+        comparar_nivel_do_contrato as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -9651,6 +9737,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_escolher_companheiro",
         "motor_falta_no_motor", "motor_tecnico_9b23", "motor_nao_gosta_do_clube", "motor_gosta_do_clube",
         "motor_clube_parceiro",
+        "motor_contrato_com_clube", "motor_nivel_do_contrato",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -11317,6 +11404,42 @@ pub unsafe fn autoteste(casos: u64) {
                         let antes_base73 = *(0xae23b4 as *const u32);
                         *(0xae23b4 as *mut u32) = 0x0100_0000;
                         comparar_clube_parceiro(clube73.as_mut_ptr() as usize, ponteiro73, ((h73 >> 25) & 1) as u32);
+                        // septuagesima quarta leva: contrato com o clube e nivel do contrato
+                        if CLUBES74.is_empty() {
+                            CLUBES74 = vec![0u8; 581 * 2200];
+                            for k in 0..2200usize {
+                                *(CLUBES74.as_mut_ptr().add(581 * k) as *mut i32) = k as i32 - 16;
+                            }
+                        }
+                        // a partir da vaga 16: parceiros de indice negativo (-5) ainda caem dentro do vetor
+                        *(0xae23b4 as *mut usize) = CLUBES74.as_ptr() as usize + 581 * 16;
+                        let h74 = s.proximo();
+                        let id_p74: i32 = [5i32, 40, 99999][((h74 >> 1) % 3) as usize];
+                        let pessoa74 = [id_p74, 0, 0, 0];
+                        let mut entrada74 = [0u8; 79];
+                        *(entrada74.as_mut_ptr() as *mut i32) = [0i32, 1, 2, 3, -1][((h74 >> 3) % 5) as usize];
+                        *(entrada74.as_mut_ptr().add(4) as *mut i32) = [0i32, 1, 2, 3, -1][((h74 >> 6) % 5) as usize];
+                        let antes74 = (*(0xae2d0c as *const usize), *(0xae1050 as *const usize));
+                        // limite das selecoes (clubes - 2 x nacoes) no meio dos ids dos pares
+                        let limites74 = (*(0xae235c as *const i32), *(0xae2350 as *const i32));
+                        *(0xae235c as *mut i32) = 2100;
+                        *(0xae2350 as *mut i32) = 400 + ((h74 >> 20) % 700) as i32;
+                        *(0xae2d0c as *mut usize) = (entrada74.as_ptr() as usize).wrapping_sub((id_p74.max(0) as usize).wrapping_mul(79));
+                        let id_c74 = *(clube73.as_ptr() as *const u32);
+                        let mut regs74 = [0u8; 80 * 4];
+                        for k in 0..4usize {
+                            let z = h74.rotate_left(9 * k as u32);
+                            *(regs74.as_mut_ptr().add(80 * k + 4) as *mut u32) = match z % 4 { 0 => id_c74, 1 => 2000 + (z >> 8) as u32 % 82, 2 => 1000 + (z >> 8) as u32 % 82, _ => 4321 };
+                            regs74[80 * k + 0x4f] = (z >> 16) as u8;
+                        }
+                        let obj74 = [regs74.as_ptr() as usize, 0];
+                        *(0xae1050 as *mut usize) = obj74.as_ptr() as usize;
+                        comparar_contrato_com_clube(obj74.as_ptr() as usize, pessoa74.as_ptr() as usize, clube73.as_mut_ptr() as usize);
+                        comparar_nivel_do_contrato(pessoa74.as_ptr() as usize, clube73.as_mut_ptr() as usize);
+                        *(0xae2d0c as *mut usize) = antes74.0;
+                        *(0xae1050 as *mut usize) = antes74.1;
+                        *(0xae235c as *mut i32) = limites74.0;
+                        *(0xae2350 as *mut i32) = limites74.1;
                         *(0xae23b4 as *mut u32) = antes_base73;
                         for (k, &a) in todos73.iter().enumerate().rev() {
                             *(a as *mut u32) = antes73[k];

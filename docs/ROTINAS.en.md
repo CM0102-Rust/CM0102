@@ -692,3 +692,12 @@ Mutations: 4/4 (the 0x9b23 one only after the self-test filled the bytes around 
 | `clube_parceiro(clube, eh_a, ativo)` | 0x540a50 | cdecl | Database.cpp: A team ↔ B team; only clubs of nations whose id is in 0x9cf488/0x9cf314/0x9cf434; 82 pairs of globals (A→B accepts partner ≠ −1, B→A accepts ≥ 0); a refused partner zeroes +0x244; the partner record lives in the 0xae23b4 array (581 bytes) |
 
 Mutations: 8/8 (the 82 pairs were extracted from the disassembly; the self-test gives distinct values to all 167 globals, with partners −1 and −5 to tell the two acceptance tests apart).
+
+### Match engine, 74th batch — a person's contract with a club (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `contrato_com_clube(pessoa, clube)` | 0x4cf5f0 | thiscall, ret 8 | 80-byte records in [this]; a person has up to two indices (table 0xae2d0c, 79 bytes per person); the record whose +4 is the club id wins; with none, tries the partner club (0x540a50) when it is the A team |
+| `nivel_do_contrato(pessoa, clube)` | 0x53ce90 | cdecl | (byte +0x4f of the contract via 0xae1050 & 0xf) − 10; national side or invalid person: the club pointer itself with the low byte cleared |
+
+Mutations: 7/7 (the national-side limit one only after the self-test gave values to 0xae235c and 0xae2350, which are 0 before the database loads).

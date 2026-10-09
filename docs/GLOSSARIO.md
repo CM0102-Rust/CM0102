@@ -89,6 +89,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6bba80 | `conferir_lance` | check_move |
 | 0x6f9f90 | `consegue_jogar` | can_play |
 | 0x6cbbb0 | `contar_ativos` | count_active |
+| 0x4cf5f0 | `contrato_com_clube` | contract_with_club |
 | 0x4cf5a0 | `contrato_de` | contract_of |
 | 0x6e9540 | `decidir_falta` | decide_foul |
 | 0x6e9820 | `decisao_da_falta` | foul_decision |
@@ -184,6 +185,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x714c60 | `na_lista` | in_list |
 | 0x547840 | `nao_gosta_de` | dislikes |
 | 0x547d30 | `nao_gosta_do_clube` | dislikes_club |
+| 0x53ce90 | `nivel_do_contrato` | contract_level |
 | 0x715f50 | `nota_ajustada` | adjusted_rating |
 | 0x6d3de0 | `nova_reputacao` | new_reputation |
 | 0x6bd760 | `ordem_dos_jogadores` | player_order |
