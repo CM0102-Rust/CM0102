@@ -628,3 +628,11 @@ Mutações: 6/6 no autoteste. Junto: `simular.py --som` mantém o som do jogo (`
 | `ordem_dos_penaltis()` | 0x6be520 | thiscall | match_eng.cpp: a ordem dos 11 cobradores de cada lado em +0x1af + 11 × lado (−1 antes), marcando os escolhidos nas 20 casas de cada lado em +0x8eda (zeradas antes). Técnico do lado (+0x904d + 208 × lado) humano, com +0x5f, sem 0x9a01 e (com +0x904b) de seleção ou com 0x9a05: a ordem vem da tabela tática (0x898040 sobre [0xde1d08]). Senão, `escolher_cobrador` tipo 5; sem ninguém, zera as marcas do lado e repete a vez |
 
 Mutações: no jogo real `p_marca`, `p_tipo5` e `p_11`; no autoteste (caminho da tabela) `p_marca` e `p_11`. `p_limpa` é equivalente (o laço regrava as 22 vagas). **Limitação:** `p_5f` (o teste da marca +0x5f do técnico) não é pega: a carreira automática não passa pelo caminho humano, e o autoteste não leva um lado ao `escolher_cobrador` com blocos sintéticos. **Armadilhas:** (1) a rotina marca `+0x8eda + 20 × lado + byte da tabela` (com sinal); com bytes aleatórios na tabela sintética a marca caía até 128 bytes em volta (ponteiros da formação em 0x8ebc), e um teste seguinte abria a caixa de erro formation.cpp 3133/3174, visível na tela porque o autoteste roda antes da interface do jogo; o teste agora guarda e restaura essa faixa. (2) Interromper o `mutacoes.py` no meio de uma mutação deixa o `motor.rs` mutado: conferir as listas de mutação antes de seguir.
+
+### Motor de partidas, 67ª leva — ordem dos jogadores no lance (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `ordem_dos_jogadores()` | 0x6bd760 | thiscall | match_eng.cpp: a lista dos jogadores ativos (+0x19 ≥ 0) em +0x8f7e, contagem em +0x8eb8. Para cada vaga 0..20 sorteia (0x90cfc0(2)) qual lado entra primeiro. Ordena com o `qsort` da CRT (0x945333) e a comparação do próprio jogo (0x6bd840, que lê o motor em 0xb67a64) |
+
+Mutações: 4/4 no autoteste (a que não grava 0xb67a64 derruba a comparação original: exceção, também detectada).

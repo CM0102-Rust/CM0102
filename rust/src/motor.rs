@@ -290,8 +290,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x8982b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x898040, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6be520, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] },
+    Prologo { endereco: 0x6bd760, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
 ];
-const N: usize = 185;
+const N: usize = 186;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3964,6 +3965,31 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- sexagesima setima leva: ordem dos jogadores no lance ----------
+
+/// { 0x6bd760 } (match_eng.cpp): a lista dos jogadores ativos (+0x19 >= 0) em +0x8f7e (contagem em
+/// +0x8eb8): para cada vaga 0..20 sorteia qual lado entra primeiro (0x90cfc0(2)) e poe o daquele lado
+/// e depois o do outro. Ordena com o `qsort` da CRT (0x945333) e a comparacao do proprio jogo
+/// (0x6bd840, que le o motor em 0xb67a64).
+unsafe extern "thiscall" fn ordem_dos_jogadores(m: usize) {
+    let n = (m + 0x8eb8) as *mut i8;
+    *n = 0;
+    let lista = (m + 0x8f7e) as *mut usize;
+    for i in 0..20usize {
+        let primeiro = sortear(2) as i8;
+        for lado in [(primeiro as isize) as usize, (primeiro == 0) as usize] {
+            let p = (m as isize + 0x4796 + 0x1be * (i as isize + 20 * lado as isize)) as usize;
+            if byte(p, 0x19) >= 0 {
+                *lista.offset(*n as isize) = p;
+                *n = (*n).wrapping_add(1);
+            }
+        }
+    }
+    *(0xb67a64 as *mut usize) = m;
+    let qsort: unsafe extern "C" fn(usize, i32, i32, usize) = core::mem::transmute(0x945333usize);
+    qsort(m + 0x8f7e, *n as i32, 4, 0x6bd840);
 }
 
 // ---------- sexagesima sexta leva: ordem dos cobradores de penalti ----------
@@ -7706,6 +7732,13 @@ unsafe extern "C" fn comparar_separar_mascara(m: u32, setor: *mut u16, lado: *mu
 comparar_valor!(comparar_tecnico_9ace, tecnico_9ace, 178, (pessoa: usize) -> u32);
 comparar_valor!(comparar_lado_sob_controle, lado_sob_controle, 181, (lado: i8) -> u8);
 comparar_valor!(comparar_byte_tatico, byte_tatico, 183, (clube: usize, pos: i8, humano: u32) -> u8);
+unsafe extern "thiscall" fn comparar_ordem_dos_jogadores(m: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(185);
+    let mut regioes = vec![(m + 0x8eb8, 1), (m + 0x8f7e, 4 * 40), (0xb67a64, 4)];
+    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(m), || crate::aleatorio::sem_contar(|| ordem_dos_jogadores(m)));
+    PLACAR.registrar(igual, || format!("ordem_dos_jogadores original={:x?} rust={:x?}", mo, mr));
+}
 unsafe extern "thiscall" fn comparar_ordem_dos_penaltis(m: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(184);
     let mut regioes = vec![(m, 0xf5f8)];
@@ -8086,6 +8119,7 @@ pub unsafe fn instalar(comparando: bool) {
         linha_tatica as *const () as usize,
         byte_tatico as *const () as usize,
         ordem_dos_penaltis as *const () as usize,
+        ordem_dos_jogadores as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -8273,6 +8307,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_linha_tatica as *const () as usize,
         comparar_byte_tatico as *const () as usize,
         comparar_ordem_dos_penaltis as *const () as usize,
+        comparar_ordem_dos_jogadores as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -8347,6 +8382,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_lado_sob_controle",
         "motor_linha_tatica", "motor_byte_tatico",
         "motor_ordem_dos_penaltis",
+        "motor_ordem_dos_jogadores",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -9711,6 +9747,16 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x8eab) as *mut i8) = [0i8, 1, 2][((h52 >> 44) % 3) as usize];
             *((m + 0x8eae) as *mut i8) = [0i8, 1, -1][((h52 >> 46) % 3) as usize];
             comparar_rolar_bola(m);
+            // sexagesima setima leva: ordem dos jogadores (guarda a lista, a contagem e 0xb67a64)
+            {
+                let mut antes67 = [0u8; 4 * 40];
+                core::ptr::copy_nonoverlapping((m + 0x8f7e) as *const u8, antes67.as_mut_ptr(), antes67.len());
+                let (n67, g67) = (*((m + 0x8eb8) as *const u8), *(0xb67a64 as *const u32));
+                comparar_ordem_dos_jogadores(m);
+                core::ptr::copy_nonoverlapping(antes67.as_ptr(), (m + 0x8f7e) as *mut u8, antes67.len());
+                *((m + 0x8eb8) as *mut u8) = n67;
+                *(0xb67a64 as *mut u32) = g67;
+            }
             // quadragesima quinta leva: teste de condicao (condicao 0..100, abaixo de 1 divide por zero)
             let h53 = s.proximo();
             let cond = [0.0f32, 0.5, 0.999, 1.0, 1.5, 100.0, 99.99, 10.0, 31.62, ((h53 >> 8) % 100_001) as f32 / 1000.0][((h53 >> 4) % 10) as usize];
