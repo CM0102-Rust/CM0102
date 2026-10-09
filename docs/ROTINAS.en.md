@@ -711,3 +711,12 @@ Mutations: 7/7 (the national-side limit one only after the self-test gave values
 | `nevoa_apos_partida(partida, dados)` | 0x5afe00 | stdcall | fog_of_war.cpp: for the human sides (0x600a50) with a knowledge table (0xae2a60), the 20 line-up slots become known |
 
 Mutations: 13/15. Two equivalent: multiplying by ⅓ (constant 0x968a80) instead of dividing by 3 almost never changes the truncation; and the `id < 0xae2364` limit in 0x5afe00, which 0x5b09d0 checks again. Swapping the sides only showed with different clubs on the two sides.
+
+### Match engine, 76th batch — shortlist entry, contract flags (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `entrada_da_lista(pessoa, alvo, nao_11, tambem_13)` | 0x849ce0 | thiscall, ret 0x10 | shortlist_manager.cpp: the entry (40 of 37 bytes, pointer at [this+0xdc] + id × 9) whose +0xf (or +0x13) is the target id, with type (+0) 11 or other than 11 |
+| `bandeiras_do_contrato()` | 0x8676f0 | thiscall | staff_contracts.cpp: +0x40 (a 4-byte routine; the hook covers the first alignment nop) |
+
+Mutations: 6/6.

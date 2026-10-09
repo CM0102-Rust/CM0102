@@ -308,8 +308,11 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x544410, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x0f, 0xbe, 0x54, 0x24, 0x08] },
     Prologo { endereco: 0x5b09d0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] },
     Prologo { endereco: 0x5afe00, bytes: &[0x51, 0x53, 0x55, 0x8b, 0x6c, 0x24, 0x10] },
+    Prologo { endereco: 0x849ce0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0xdc, 0x00, 0x00, 0x00] },
+    // 4 bytes de rotina (mov + ret) e o primeiro nop do alinhamento: o ret sai antes do salto de volta
+    Prologo { endereco: 0x8676f0, bytes: &[0x8b, 0x41, 0x40, 0xc3, 0x90] },
 ];
-const N: usize = 203;
+const N: usize = 205;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3982,6 +3985,30 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- septuagesima sexta leva: lista de observacao, bandeiras do contrato ----------
+
+/// { 0x849ce0 } (ret 0x10, shortlist_manager.cpp): a entrada da lista da pessoa (40 entradas de
+/// 37 bytes no ponteiro em [this+0xdc] + id x 9) cujo +0xf (ou, com `tambem_13`, o +0x13) e o id
+/// de `alvo`; com `nao_11` so serve a de tipo (+0) diferente de 11, sem ele so a de tipo 11. Nenhuma: 0.
+unsafe extern "thiscall" fn entrada_da_lista(this: usize, pessoa: usize, alvo: usize, nao_11: u32, tambem_13: u32) -> usize {
+    let lista = (*((this + 0xdc) as *const usize)).wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(9));
+    let base = *(lista as *const usize);
+    let id = *(alvo as *const u32);
+    for k in 0..40usize {
+        let e = base.wrapping_add(k * 37);
+        let casa = *((e + 0xf) as *const u32) == id || (tambem_13 != 0 && *((e + 0x13) as *const u32) == id);
+        if casa && (nao_11 != 0) == (*(e as *const u8) != 11) {
+            return e;
+        }
+    }
+    0
+}
+
+/// { 0x8676f0 } (staff_contracts.cpp): as bandeiras do contrato (+0x40).
+unsafe extern "thiscall" fn bandeiras_do_contrato(this: usize) -> u32 {
+    *((this + 0x40) as *const u32)
 }
 
 // ---------- septuagesima quinta leva: nevoa de guerra (o que o clube humano sabe dos jogadores) ----------
@@ -9044,6 +9071,13 @@ unsafe extern "thiscall" fn comparar_falta_no_motor(
 }
 comparar_valor!(comparar_tecnico_9b23, tecnico_9b23, 194, (i: i8, pessoa: usize) -> u8);
 comparar_valor!(comparar_contrato_com_clube, contrato_com_clube, 198, (pessoa: usize, clube: usize) -> usize);
+unsafe extern "thiscall" fn comparar_entrada_da_lista(this: usize, pessoa: usize, alvo: usize, nao_11: u32, tambem_13: u32) -> usize {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize>(203)(this, pessoa, alvo, nao_11, tambem_13);
+    let v = entrada_da_lista(this, pessoa, alvo, nao_11, tambem_13);
+    PLACAR.registrar(r == v, || format!("entrada_da_lista({}, {}) original={:#x} rust={:#x}", nao_11, tambem_13, r, v));
+    r
+}
+comparar_valor!(comparar_bandeiras_do_contrato, bandeiras_do_contrato, 204, () -> u32);
 unsafe extern "C" fn comparar_chance_de_conhecer(pessoa: usize, nivel: i8) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, i8) -> i32>(200)(pessoa, nivel);
     let v = chance_de_conhecer(pessoa, nivel);
@@ -9581,6 +9615,8 @@ pub unsafe fn instalar(comparando: bool) {
         chance_de_conhecer as *const () as usize,
         conhecer_pessoa as *const () as usize,
         nevoa_apos_partida as *const () as usize,
+        entrada_da_lista as *const () as usize,
+        bandeiras_do_contrato as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -9786,6 +9822,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_chance_de_conhecer as *const () as usize,
         comparar_conhecer_pessoa as *const () as usize,
         comparar_nevoa_apos_partida as *const () as usize,
+        comparar_entrada_da_lista as *const () as usize,
+        comparar_bandeiras_do_contrato as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -9869,6 +9907,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_clube_parceiro",
         "motor_contrato_com_clube", "motor_nivel_do_contrato",
         "motor_chance_de_conhecer", "motor_conhecer_pessoa", "motor_nevoa_apos_partida",
+        "motor_entrada_da_lista", "motor_bandeiras_do_contrato",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -11446,6 +11485,29 @@ pub unsafe fn autoteste(casos: u64) {
                     let quem75 = [[((h75 >> 20) % npes56 as u64) as i32, npes56, npes56 - 1, 0][((h75 >> 60) % 4) as usize]];
                     comparar_conhecer_pessoa(obj75.as_ptr() as usize, if (h75 >> 62) & 1 == 1 && (h75 >> 61) & 1 == 1 { 0 } else { quem75.as_ptr() as usize }, if (h75 >> 59) % 5 == 0 { 0 } else { fonte75.as_ptr() as usize });
                     comparar_chance_de_conhecer(obs75.as_ptr() as usize, (h75 >> 33) as i8);
+                    // septuagesima sexta leva: lista de observacao (ids repetidos em +0xf e +0x13, tipos
+                    // 11 e outros) e bandeiras do contrato
+                    let h76 = s.proximo();
+                    let mut entradas76 = [0u8; 40 * 37];
+                    for k in 0..40usize {
+                        let z = h76.rotate_left(k as u32 * 3) ^ (k as u64 * 0x2545);
+                        entradas76[37 * k] = if z % 3 == 0 { 11 } else { (z >> 2) as u8 % 14 };
+                        *(entradas76.as_mut_ptr().add(37 * k + 0xf) as *mut u32) = 700 + ((z >> 8) % 6) as u32;
+                        *(entradas76.as_mut_ptr().add(37 * k + 0x13) as *mut u32) = 700 + ((z >> 16) % 6) as u32;
+                    }
+                    let id76 = ((h76 >> 30) % 20) as usize;
+                    let mut listas76 = [0u8; 9 * 20 + 4];
+                    *(listas76.as_mut_ptr().add(9 * id76) as *mut usize) = entradas76.as_ptr() as usize;
+                    let mut gerente76 = [0u8; 0xe0];
+                    *(gerente76.as_mut_ptr().add(0xdc) as *mut usize) = listas76.as_ptr() as usize;
+                    let pessoa76 = [id76 as u32];
+                    let alvo76 = [700 + ((h76 >> 40) % 8) as u32];
+                    comparar_entrada_da_lista(gerente76.as_ptr() as usize, pessoa76.as_ptr() as usize, alvo76.as_ptr() as usize, ((h76 >> 50) & 1) as u32, ((h76 >> 51) & 1) as u32);
+                    let mut contrato76 = [0u32; 0x14];
+                    for (k, c) in contrato76.iter_mut().enumerate() {
+                        *c = (h76 as u32).rotate_left(k as u32) ^ k as u32;
+                    }
+                    comparar_bandeiras_do_contrato(contrato76.as_ptr() as usize);
                     for (k, &a) in globais75.iter().enumerate() {
                         *(a as *mut u32) = antes75[k];
                     }

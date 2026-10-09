@@ -84,6 +84,7 @@ EN = {
  'clube_parceiro': 'partner_club',
  'contrato_com_clube': 'contract_with_club', 'nivel_do_contrato': 'contract_level',
  'chance_de_conhecer': 'chance_to_know', 'conhecer_pessoa': 'know_person', 'nevoa_apos_partida': 'fog_after_match',
+ 'entrada_da_lista': 'shortlist_entry', 'bandeiras_do_contrato': 'contract_flags',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

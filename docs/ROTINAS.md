@@ -709,3 +709,12 @@ Mutações: 7/7 (a do limite das seleções só depois de o autoteste dar valore
 | `nevoa_apos_partida(partida, dados)` | 0x5afe00 | stdcall | fog_of_war.cpp: para os lados humanos (0x600a50) com quadro de conhecimento (0xae2a60), as 20 vagas da escalação ficam conhecidas |
 
 Mutações: 13/15. Duas equivalentes: multiplicar por ⅓ (constante 0x968a80) em vez de dividir por 3 quase nunca muda o truncamento; e o limite `id < 0xae2364` na 0x5afe00, que a 0x5b09d0 refaz. A troca dos lados só apareceu com clubes diferentes nos dois lados.
+
+### Motor de partidas, 76ª leva — lista de observação, bandeiras do contrato (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `entrada_da_lista(pessoa, alvo, nao_11, tambem_13)` | 0x849ce0 | thiscall, ret 0x10 | shortlist_manager.cpp: a entrada (40 de 37 bytes, ponteiro em [this+0xdc] + id × 9) cujo +0xf (ou +0x13) é o id do alvo, com tipo (+0) 11 ou diferente de 11 |
+| `bandeiras_do_contrato()` | 0x8676f0 | thiscall | staff_contracts.cpp: +0x40 (4 bytes de rotina; o desvio cobre o primeiro nop do alinhamento) |
+
+Mutações: 6/6.

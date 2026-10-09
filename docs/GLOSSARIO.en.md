@@ -64,6 +64,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f4920 | `apontar` | aim (set facing direction) |
 | 0x6cd5f0 | `atras_do_extremo` | behind_the_extreme |
 | 0x6f4aa0 | `atualizar_jogador` | update_player |
+| 0x8676f0 | `bandeiras_do_contrato` | contract_flags |
 | 0x5b5a60 | `bit_da_casa` | square_bit |
 | 0x6cd490 | `bola_fora` | ball_out |
 | 0x5b57c0 | `byte_da_posicao` | position_byte |
@@ -111,6 +112,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5409b0 | `e_segunda_selecao` | is_second_national_team |
 | 0x53b900 | `e_selecao` | is_national_team |
 | 0x70d630 | `em_perigo` | in_danger |
+| 0x849ce0 | `entrada_da_lista` | shortlist_entry |
 | 0x6cdd00 | `entrar_em_campo` | take_the_field |
 | 0x6c4470 | `escanteio` | corner |
 | 0x6bce80 | `escolher_casa` | choose_square |
