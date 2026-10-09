@@ -293,3 +293,11 @@ All five points checked. Relevant for the database-load stage: the rewritten ver
 ## Promotion and relegation between leagues (topic 3189)
 
 When each league is built (e.g. Greece, 1st division at 0x5EAEF1..0x5EAF23 and 2nd at 0x5EBE3B..0x5EBE47): +0xC1 automatic relegation places, +0xBE automatic promotion places, +0x20 the league teams drop to and +0x1C the league teams go up to (ids at 0x9CF870, 0x9CF86C). Changing only one side (zeroing the places without adjusting the neighbouring league) gives the gre_second.cpp 483 error (`push 0x1E3` at 0x5EBF5F) or a freeze: linked leagues must stay consistent. Checked.
+
+## Saved game and the 2 GB limit (topic 4153)
+
+- The `.sav` is a collection of files (Nick+Co). During play they sit as `.tmp` files in the game folder; old histories can be removed with no effect.
+- **Checked in the binary:** the `comp_stats.cpp 6000` and `6007` errors come from loading the competition statistics (0x4aba76 and 0x4abaf8). 6000 is a failed `malloc` of n × 118 bytes; 6007 is an `fread` (0x945bfe) that read fewer than n records of 0x76 bytes. Both show the error box and quit with `exit(-1)`.
+- According to Nick+Co, the exe keeps file offsets in signed 32-bit variables, which is why the file cannot go past 2 GB. The Large Address Aware flag (4 GB) was tested by the community and does not fix loading. Our exes lack the flag (`Characteristics` 0x10f).
+- **Community trick (l22677):** with the game loaded, move some `.tmp` files out of the folder, save uncompressed (the file drops from >2 GB to ~0.5 GB) and put them back before continuing. It does not help once the file is already past 2 GB.
+- **For the rewritten version:** when porting saving and loading, use 64-bit offsets. Optional pruning of old histories comes as a modernisation, only after the interface is identical. Records refer to each other by index, so pruning has to renumber them.

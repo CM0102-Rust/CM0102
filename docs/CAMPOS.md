@@ -293,3 +293,11 @@ Os cinco pontos foram conferidos. Vale para a etapa da carga do banco: a versão
 ## Promoção e rebaixamento entre ligas (tópico 3189)
 
 Na montagem de cada liga (ex.: Grécia, 1ª divisão em 0x5EAEF1..0x5EAF23 e 2ª em 0x5EBE3B..0x5EBE47): +0xC1 vagas de rebaixamento direto, +0xBE de acesso direto, +0x20 a liga para onde se cai e +0x1C a liga para onde se sobe (ids em 0x9CF870, 0x9CF86C). Mudar só um lado (zerar as vagas sem ajustar a liga vizinha) dá o erro gre_second.cpp 483 (`push 0x1E3` em 0x5EBF5F) ou trava: as ligas ligadas precisam ficar coerentes. Conferido.
+
+## Jogo salvo e o limite de 2 GB (tópico 4153)
+
+- O `.sav` é uma coleção de arquivos (Nick+Co). Durante o jogo eles ficam como `.tmp` na pasta do jogo; históricos antigos podem ser tirados sem efeito.
+- **Conferido no binário:** os erros `comp_stats.cpp 6000` e `6007` saem da carga das estatísticas de competição (0x4aba76 e 0x4abaf8). O 6000 é falha do `malloc` de n × 118 bytes; o 6007 é `fread` (0x945bfe) que leu menos de n registros de 0x76 bytes. Os dois mostram a caixa de erro e saem com `exit(-1)`.
+- Segundo o Nick+Co, os endereços de arquivo do exe são variáveis de 32 bits com sinal, e por isso o arquivo não passa de 2 GB. A flag Large Address Aware (4 GB) foi testada pela comunidade e não resolve a carga. Nossos exe não têm a flag (`Characteristics` 0x10f).
+- **Truque da comunidade (l22677):** com o jogo carregado, tirar da pasta alguns `.tmp`, salvar sem compressão (o arquivo cai de >2 GB para ~0,5 GB) e devolvê-los antes de continuar. Não serve depois que o arquivo já passou de 2 GB.
+- **Para a versão reescrita:** ao portar a gravação e a carga, usar deslocamentos de 64 bits. A poda opcional de históricos antigos entra como modernização, só depois da interface idêntica. Os registros se referem por índice, então a poda precisa renumerar.
