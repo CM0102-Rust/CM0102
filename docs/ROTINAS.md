@@ -827,3 +827,11 @@ Mutações: 10/12 no jogo real (9 até 20/08/2001; a do bit 0x40000 do contrato 
 | `desempenho_na_partida(marcar)` | 0x6eecb0 | thiscall, ret 4 | match_pl.cpp: chama 0x6ec010; palavra +0x37 pelas tabelas táticas A e B contra os bytes +0x10..+0x1a da ficha (com `marcar`, soma 1 ou 2 no byte +0xaf do lado no motor); bytes +0x10e..+0x117 (mínimo 2); ~60 palavras derivadas de +0x11a a +0x196 (T = x·10 + 0,5, Q = (x² + 1)/2, médias inteiras); 63 delas ajustadas por +0x37 numa tabela de 8 fórmulas; por fim 0x6f44a0 |
 
 Mutações: 11/12 no jogo real até 20/08/2001 (a que não apareceu exige o byte +0xf da ficha exatamente 15).
+
+### Motor de partidas, 87ª leva — força do lado (0x6bbb60) (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `forca_do_lado(lado)` | 0x6bbb60 | thiscall, ret 4 | match_eng.cpp: zera a palavra +0x1ce + 2 × lado e o byte +0xaf do lado; para cada um dos 20 ativos, −500 quando o bit da casa (0x717410, 0x5b5a60) já apareceu (a máscara soma, não junta), ajustes pela nota (0x6ebd70) conforme o contrato (0x4cf5a0 em 0xae1080, 0x4cf5f0), três sorteios e o designado da tática (0x897590); no fim, 0x6eecb0 com marca para cada ativo |
+
+Mutações: 5/8 no jogo real. As três restantes (máscara somada × juntada, o −750 e o −3× do designado) dependem do ramo do contrato com três sorteios e bits 0x17a0b, que a carreira automática não alcança nem até 2002-01-01; ficam para a carreira real do Lucas.

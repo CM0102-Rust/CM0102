@@ -148,6 +148,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6f5b20 | `faixa_jogador` | player_band |
 | 0x6cfc60 | `falta_no_motor` | foul_in_engine |
 | 0x6cb910 | `fora_do_meio` | off_centre |
+| 0x6bbb60 | `forca_do_lado` | side_strength |
 | 0x6c0c60 | `forca_do_time` | team_strength |
 | 0x535920 | `global_9b5984` | global_9b5984 |
 | 0x547810 | `gosta_de` | likes |

@@ -829,3 +829,11 @@ Mutations: 10/12 in the real game (9 up to 2001-08-20; the contract bit 0x40000 
 | `desempenho_na_partida(marcar)` | 0x6eecb0 | thiscall, ret 4 | match_pl.cpp: calls 0x6ec010; word +0x37 from tactical tables A and B against record bytes +0x10..+0x1a (with `marcar`, adds 1 or 2 to the side byte +0xaf in the engine); bytes +0x10e..+0x117 (at least 2); ~60 derived words from +0x11a to +0x196 (T = x·10 + 0.5, Q = (x² + 1)/2, integer averages); 63 of them adjusted by +0x37 through a table of 8 formulas; finally 0x6f44a0 |
 
 Mutations: 11/12 in the real game up to 2001-08-20 (the missing one needs record byte +0xf to be exactly 15).
+
+### Match engine, 87th batch — side strength (0x6bbb60) (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `forca_do_lado(lado)` | 0x6bbb60 | thiscall, ret 4 | match_eng.cpp: clears word +0x1ce + 2 × side and the side byte +0xaf; for each of the 20 active players, −500 when the slot bit (0x717410, 0x5b5a60) already appeared (the mask adds, not ORs), adjustments by rating (0x6ebd70) per contract (0x4cf5a0 into 0xae1080, 0x4cf5f0), three draws and the tactic's designated player (0x897590); finally 0x6eecb0 with mark for each active one |
+
+Mutations: 5/8 in the real game. The other three (mask added vs ORed, the −750 and the designated player's −3×) depend on the contract branch with three draws and bits 0x17a0b, which the automatic career does not reach even by 2002-01-01; left for Lucas's real career.

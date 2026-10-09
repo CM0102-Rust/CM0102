@@ -95,6 +95,7 @@ EN = {
  'competicao_da_pessoa': 'person_competition', 'byte_42_da_selecao': 'national_side_byte_42', 'byte_43_da_selecao': 'national_side_byte_43', 'selecao_ou_especial': 'national_or_special', 'nao_gosta_da_selecao': 'dislikes_national_side', 'copiar_data_e_marca': 'copy_date_and_mark',
  'atualizar_atributos': 'update_attributes',
  'desempenho_na_partida': 'match_performance',
+ 'forca_do_lado': 'side_strength',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

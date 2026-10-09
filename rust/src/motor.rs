@@ -350,8 +350,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x777590, bytes: &[0x83, 0xec, 0x08, 0x8d, 0x44, 0x24, 0x00] },
     Prologo { endereco: 0x6ec010, bytes: &[0x83, 0xec, 0x54, 0x53, 0x55] },
     Prologo { endereco: 0x6eecb0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
+    Prologo { endereco: 0x6bbb60, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
 ];
-const N: usize = 244;
+const N: usize = 245;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4024,6 +4025,81 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- octogesima setima leva: forca do lado (0x6bbb60) ----------
+
+/// { 0x6bbb60 } (ret 4, match_eng.cpp): a forca do lado (palavra +0x1ce + 2 x lado do motor,
+/// recomeca do zero, assim como o byte +0xaf do lado). Para cada um dos 20 ativos: -500 quando o bit
+/// da casa (0x717410, 0x5b5a60) ja apareceu (a mascara soma, nao junta); com o contrato (0xae1050:
+/// 0x4cf5a0, guardado em 0xae1080; 0x4cf5f0 com o clube dele) e tres sorteios favoraveis (20 contra
+/// +0x2f da ficha, 7000 contra a palavra +0xb, 6 contra +0x5b da pessoa), a palavra +0xb acima de
+/// +0x80 do clube - 750 e os bits 0x17a0b do contrato, perde 3x a nota (0x6ebd70) se for o designado
+/// da tatica (0x897590), senao 2x ou 1x (sorteio pelo +0x5b). Quem nao e o designado soma a nota. No
+/// fim, o desempenho de cada ativo (0x6eecb0 com marca).
+unsafe extern "thiscall" fn forca_do_lado(this: usize, lado: i8) {
+    let l = lado as isize;
+    let forca = (this as isize + 0x1ce + 2 * l) as *mut i16;
+    let soma = move |v: i32| *forca = (*forca).wrapping_add(v as i16);
+    *forca = 0;
+    *((this as isize + 0xaf + l) as *mut u8) = 0;
+    let casa: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    let bit: unsafe extern "stdcall" fn(u32) -> u32 = core::mem::transmute(0x5b5a60usize);
+    let contrato_principal: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let nota: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x6ebd70usize);
+    let nota = |j: usize| nota(j) as i8 as i32;
+    let vaga: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8 = core::mem::transmute(0x897590usize);
+    let designado = || {
+        let t = *((this + 0x4792) as *const usize);
+        let (c, fl) = if lado != 0 { (*((t + 0x20) as *const usize), (byte(t, 0x41) == 0) as u32) } else { (*((t + 0x1c) as *const usize), (byte(t, 0x40) == 0) as u32) };
+        let k = vaga(*(0xde1d08 as *const usize), c, fl, 0) as i32;
+        (this as isize + 0x4796 + 0x1be * (k + 20 * lado as i32) as isize) as usize
+    };
+    let mut mascara = 0u32;
+    for k in 0..20usize {
+        let j = jogador_do_bloco(this, lado, k);
+        if byte(j, 0x19) < 0 {
+            continue;
+        }
+        let bt = bit(casa(j) as u32);
+        if mascara & bt != 0 {
+            soma(-500);
+        }
+        mascara = mascara.wrapping_add(bt);
+        let pessoa = *((j + 0x69) as *const usize);
+        let principal = contrato_principal(*(0xae1050 as *const usize), pessoa);
+        *(0xae1080 as *mut usize) = principal;
+        let clube = if principal == 0 { 0 } else { (*(0xae23b4 as *const usize)).wrapping_add((*((principal + 4) as *const i32) as usize).wrapping_mul(581)) };
+        let c = contrato(*(0xae1050 as *const usize), pessoa, clube);
+        if c != 0 && clube != 0 {
+            let ficha = *((j + 0x6d) as *const usize);
+            if (byte(ficha, 0x2f) as i32) > sortear(20)
+                && (*((ficha + 0xb) as *const i16) as i32) > sortear(7000)
+                && (byte(pessoa, 0x5b) as i32) < sortear(6)
+                && *((ficha + 0xb) as *const i16) > (*((clube + 0x80) as *const i16)).wrapping_sub(750)
+                && core::ptr::read_unaligned((c + 0x45) as *const u32) & 0x17a0b != 0
+            {
+                if j == designado() {
+                    soma(-3 * nota(j));
+                } else if sortear(byte(pessoa, 0x5b) as i32) == 0 {
+                    soma(-2 * nota(j));
+                } else {
+                    soma(-nota(j));
+                }
+            }
+        }
+        if j != designado() {
+            soma(nota(j));
+        }
+    }
+    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(0x6eecb0usize);
+    for k in 0..20usize {
+        let j = jogador_do_bloco(this, lado, k);
+        if byte(j, 0x19) >= 0 {
+            desempenho(j, 1);
+        }
+    }
 }
 
 // ---------- octogesima sexta leva: desempenho do jogador na partida (0x6eecb0, ~6,4 KB) ----------
@@ -10716,6 +10792,17 @@ unsafe extern "thiscall" fn comparar_desempenho_na_partida(this: usize, marcar: 
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, marcar), || crate::aleatorio::sem_contar(|| desempenho_na_partida(this, marcar)));
     PLACAR.registrar(igual, || format!("desempenho_na_partida({}) original={:x?} rust={:x?}", marcar, mo, mr));
 }
+unsafe extern "thiscall" fn comparar_forca_do_lado(this: usize, lado: i8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8)>(244);
+    let l = lado as isize;
+    let mut reg: Vec<(usize, usize)> = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.push(((this as isize + 0x1ce + 2 * l) as usize, 2));
+    reg.push(((this as isize + 0xaf + l) as usize, 1));
+    reg.push((jogador_do_bloco(this, lado, 0), 20 * 0x1be));
+    reg.push((0xae1080, 4));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, lado), || crate::aleatorio::sem_contar(|| forca_do_lado(this, lado)));
+    PLACAR.registrar(igual, || format!("forca_do_lado({}) original={:x?} rust={:x?}", lado, mo, mr));
+}
 unsafe extern "thiscall" fn comparar_mascara_da_formacao(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(222);
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x187b, 4)], || o(this), || mascara_da_formacao(this));
@@ -11300,6 +11387,7 @@ pub unsafe fn instalar(comparando: bool) {
         copiar_data_e_marca as *const () as usize,
         atualizar_atributos as *const () as usize,
         desempenho_na_partida as *const () as usize,
+        forca_do_lado as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -11546,6 +11634,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_copiar_data_e_marca as *const () as usize,
         comparar_atualizar_atributos as *const () as usize,
         comparar_desempenho_na_partida as *const () as usize,
+        comparar_forca_do_lado as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -11645,6 +11734,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_nao_gosta_da_selecao", "motor_copiar_data_e_marca",
         "motor_atualizar_atributos",
         "motor_desempenho_na_partida",
+        "motor_forca_do_lado",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
