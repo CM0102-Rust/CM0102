@@ -856,3 +856,12 @@ Mutations: 5/8 in the real game up to 2001-08-20; `i_amistoso`, `i_principal` an
 | `narrar_classificacao(lado)` | 0x6be120 | thiscall, ret 4 | match_eng.cpp: comments 0x2171/0x2170 (qualification settled: group or knockout via 0x6ce310), 0x2120 (ahead on aggregate), 0x2121 (starters' average +0x1b below 7.0 or 6.67 and the opponent's strength +0x80 weighing; 0.8 for the away side), 0x2001 (side 1, game still open) |
 
 Mutations: 1/8 in the real game up to 2001-08-20 (`n_2001`). The other seven sit in branches that do not occur before August: group decided only from round 24, and the +0x8ebb section (knockout aggregate). They go to a longer mutation run.
+
+### Match engine, 90th batch — who tries the play, players on the path; recording of 0x70dfd0 (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `procurar_jogada(lado, grupo, ..., modo, ...)` | 0x6cd3d0 | thiscall, ret 0x1c | match_eng.cpp: in the side's list in the cell (+0x58 players), who can act (+0x2b up to 1, +0x19 ≥ 0); mode 2 only counts; otherwise each one tries the play (0x70dfd0, arguments 4, 3, 6, 7): 1 = succeeded (+0x12 goes up), 2 = other outcome; the player goes into +0xf5ae. Compared by recording and replaying 0x70dfd0 (a port that also records the regions the comparator asks for) |
+| `jogadores_no_trajeto(x1, y1, x2, y2)` | 0x6cc070 | thiscall, ret 0x10 | match_eng.cpp: the 0x6cbc00 walk (now `percorrer_linha`, shared) counting through 0x6cd3d0 in mode 2, with both ends on straight lines and x up to 11 on the horizontal |
+
+Mutations: 7/9 in the real game up to 2001-08-20. `j_ret2` survived (the play's answer 2 did not occur before August) and `t_11` is equivalent in practice (x from 9 to 11 is already off the 9-column grid).

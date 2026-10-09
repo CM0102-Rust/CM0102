@@ -169,6 +169,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c2fe0 | `jogador_no_bloco` | player_in_block |
 | 0x6e1cd0 | `jogador_pela_ficha` | player_by_record |
 | 0x6cbc00 | `jogadores_na_linha` | players_in_line |
+| 0x6cc070 | `jogadores_no_trajeto` | players_on_path |
 | 0x6bba50 | `lado_do_lance` | side_of_move |
 | 0x6d42a0 | `lado_sob_controle` | side_under_control |
 | 0x6bab90 | `lance_valendo` | move_counts |
@@ -247,6 +248,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6bd6b0 | `pressao_na_area` | pressure_in_box |
 | 0x6c3a00 | `pressao_no_ponto` | pressure_at_point |
 | 0x6ea760 | `procurar_impedimento` | look_for_offside |
+| 0x6cd3d0 | `procurar_jogada` | look_for_play |
 | 0x6cd330 | `procurar_no_lado` | search_on_side |
 | 0x68d1b0 | `proximo_da_lista` | next_list_item |
 | 0x6e9630 | `punir_falta` | punish_foul |

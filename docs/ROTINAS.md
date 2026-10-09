@@ -854,3 +854,12 @@ Mutações: 5/8 no jogo real até 20/08/2001; `i_amistoso`, `i_principal` e `i_1
 | `narrar_classificacao(lado)` | 0x6be120 | thiscall, ret 4 | match_eng.cpp: comentários 0x2171/0x2170 (classificação decidida: grupo ou mata-mata via 0x6ce310), 0x2120 (à frente no agregado), 0x2121 (média do +0x1b dos titulares abaixo de 7,0 ou 6,67 e força +0x80 do adversário pesando; 0,8 para o visitante), 0x2001 (lado 1, jogo em aberto) |
 
 Mutações: 1/8 no jogo real até 20/08/2001 (`n_2001`). As outras sete estão em ramos que não ocorrem até agosto: grupo decidido só a partir da rodada 24, e o trecho de +0x8ebb (agregado de mata-mata). Vão para uma rodada mais longa de mutações.
+
+### Motor de partidas, 90ª leva — quem tenta a jogada, jogadores no trajeto; gravação da 0x70dfd0 (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `procurar_jogada(lado, grupo, ..., modo, ...)` | 0x6cd3d0 | thiscall, ret 0x1c | match_eng.cpp: na lista do lado na casa (+0x58 jogadores), quem pode agir (+0x2b até 1, +0x19 ≥ 0); modo 2 só conta; senão cada um tenta a jogada (0x70dfd0, argumentos 4, 3, 6, 7): 1 = conseguiu (+0x12 sobe), 2 = outra saída; o jogador fica em +0xf5ae. Comparação com gravação e reprodução da 0x70dfd0 (porta que grava também as regiões pedidas pelo comparador) |
+| `jogadores_no_trajeto(x1, y1, x2, y2)` | 0x6cc070 | thiscall, ret 0x10 | match_eng.cpp: o percurso da 0x6cbc00 (agora `percorrer_linha`, compartilhado) contando pela 0x6cd3d0 em modo 2, com as duas pontas nas linhas retas e x até 11 na horizontal |
+
+Mutações: 7/9 no jogo real até 20/08/2001. `j_ret2` sobreviveu (a resposta 2 da jogada não ocorreu até agosto) e `t_11` é equivalente na prática (x de 9 a 11 já está fora da grade de 9 colunas).
