@@ -743,3 +743,11 @@ Mutações: 12/13 (uma equivalente: `< 1000` virar `<= 1000`, já que 1000 tem r
 | `ordem_por_80_cresc(a, b)` | 0x4b0810 | cdecl (qsort) | crescente, com os nulos no fim |
 
 Mutações: 11/11.
+
+### Motor de partidas, 79ª leva — nota do jogador (contrato, forma e idade) (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `nota_do_jogador()` | 0x6ebd70 | thiscall | match_pl.cpp: n = nível do contrato (0x53ce90); forma = (palavra +0xd da ficha − palavra +0x80 do clube) × 0,002 + 1,5, limitada a −4..4; c = byte +0x44 do contrato (0x4cf5f0) / 75 + 0,5, ajustado pelo tipo (+0x4f >> 4: −10, +2,5, +2, −3, −15, −20, −50); x = byte +0x22 × 75 na seleção, senão os dias de vida (0x54cdb0); y = 1 + (x − 1000) × 0,000125 acima de 1000. Nota = byte +0x2f × y − (n² + 5) × 0,1 + forma + c + 0,5, truncada |
+
+Mutações: 10/10 (a do sinal do byte +0x44 do contrato só depois de o autoteste da 74ª leva encher esse byte; antes ele era sempre 0).

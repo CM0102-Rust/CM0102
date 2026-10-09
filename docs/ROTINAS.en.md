@@ -745,3 +745,11 @@ Mutations: 12/13 (one equivalent: `< 1000` becoming `<= 1000`, since 1000 has re
 | `ordem_por_80_cresc(a, b)` | 0x4b0810 | cdecl (qsort) | ascending, with nulls last |
 
 Mutations: 11/11.
+
+### Match engine, 79th batch — player rating (contract, form and age) (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `nota_do_jogador()` | 0x6ebd70 | thiscall | match_pl.cpp: n = contract level (0x53ce90); form = (word +0xd of the record − club word +0x80) × 0.002 + 1.5, clamped to −4..4; c = contract byte +0x44 (0x4cf5f0) / 75 + 0.5, adjusted by type (+0x4f >> 4: −10, +2.5, +2, −3, −15, −20, −50); x = byte +0x22 × 75 for a national side, otherwise days alive (0x54cdb0); y = 1 + (x − 1000) × 0.000125 above 1000. Rating = byte +0x2f × y − (n² + 5) × 0.1 + form + c + 0.5, truncated |
+
+Mutations: 10/10 (the one on the sign of contract byte +0x44 only after the 74th batch self-test filled that byte; it used to be always 0).

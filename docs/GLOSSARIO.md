@@ -195,6 +195,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5afe00 | `nevoa_apos_partida` | fog_after_match |
 | 0x53ce90 | `nivel_do_contrato` | contract_level |
 | 0x715f50 | `nota_ajustada` | adjusted_rating |
+| 0x6ebd70 | `nota_do_jogador` | player_rating |
 | 0x6d3de0 | `nova_reputacao` | new_reputation |
 | 0x6bd760 | `ordem_dos_jogadores` | player_order |
 | 0x6be520 | `ordem_dos_penaltis` | penalty_order |

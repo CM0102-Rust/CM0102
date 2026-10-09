@@ -322,8 +322,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x4b07b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x08] },
     Prologo { endereco: 0x4b07d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
     Prologo { endereco: 0x4b0810, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
+    Prologo { endereco: 0x6ebd70, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
 ];
-const N: usize = 216;
+const N: usize = 217;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3996,6 +3997,58 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- septuagesima nona leva: nota do jogador pelo contrato, forma e idade ----------
+
+/// { 0x6ebd70 } (match_pl.cpp): nota do jogador na partida, pelo clube do lado dele (motor +0x4792,
+/// +0x1c/+0x20). n = nivel do contrato (0x53ce90, byte com sinal); forma = (palavra +0xd da ficha
+/// +0x6d - palavra +0x80 do clube) x 0,002 + 1,5, limitada a -4..4; c = byte +0x44 do contrato
+/// (0x4cf5f0) x (1/75) + 0,5, ajustado pelo tipo (+0x4f >> 4); x = byte +0x22 da pessoa x 75 na
+/// selecao, senao os dias de vida (0x54cdb0); y = 1 + (x - 1000) x 0,000125 acima de 1000.
+/// Resultado: byte +0x2f da ficha x y - (n^2 + 5) x 0,1 + forma + c + 0,5, truncado.
+unsafe extern "thiscall" fn nota_do_jogador(this: usize) -> i32 {
+    let clube = || {
+        let t = *((*((this + 0x19e) as *const usize) + 0x4792) as *const usize);
+        *((t + if byte(this, 0x27) == 0 { 0x1c } else { 0x20 }) as *const usize)
+    };
+    let pessoa = *((this + 0x69) as *const usize);
+    let ficha = *((this + 0x6d) as *const usize);
+    let nivel: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x53ce90usize);
+    let n = nivel(pessoa, clube()) as i8 as f64;
+    let mut forma = (*((ficha + 0xd) as *const i16) as i32 - *((clube() + 0x80) as *const i16) as i32) as f64 * 0.002 + 1.5;
+    if forma < -4.0 {
+        forma = -4.0;
+    } else if forma > 4.0 {
+        forma = 4.0;
+    }
+    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let r = contrato(*(0xae1050 as *const usize), pessoa, clube());
+    let mut c = 0.0;
+    if r != 0 {
+        c = *((r + 0x44) as *const i8) as f64 * 0.013333333333333334 + 0.5;
+        c = match byte(r, 0x4f) as u8 >> 4 {
+            0 | 5 => c - 10.0,
+            1 => c + 2.5,
+            2 => c + 2.0,
+            4 => c - 3.0,
+            6 => c - 15.0,
+            7 => c - 20.0,
+            8 => c - 50.0,
+            _ => c,
+        };
+    }
+    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let x = if e_selecao(clube()) != 0 {
+        byte(pessoa, 0x22) as u8 as f64 * 75.0
+    } else {
+        let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
+        let ler = |o: usize| core::ptr::read_unaligned((pessoa + o) as *const u32);
+        dias(0xae2c90, ler(0x3e), ler(0x42)) as f64
+    };
+    let y = if x > 1000.0 { (x - 1000.0) * 0.000125 + 1.0 } else { 1.0 };
+    let e = *((ficha + 0x2f) as *const i8) as f64;
+    ftol(e * y - (n * n + 5.0) * 0.1 + forma + c + 0.5)
 }
 
 // ---------- septuagesima oitava leva: competicao com rodada a disputar, comparacoes de ordenacao (comp_util.cpp) ----------
@@ -9254,6 +9307,7 @@ comparar_ordem!(comparar_ordem_por_5f, ordem_por_5f, 212);
 comparar_ordem!(comparar_ordem_por_80, ordem_por_80, 213);
 comparar_ordem!(comparar_ordem_por_80_desc, ordem_por_80_desc, 214);
 comparar_ordem!(comparar_ordem_por_80_cresc, ordem_por_80_cresc, 215);
+comparar_valor!(comparar_nota_do_jogador, nota_do_jogador, 216, () -> i32);
 unsafe extern "C" fn comparar_chance_de_conhecer(pessoa: usize, nivel: i8) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, i8) -> i32>(200)(pessoa, nivel);
     let v = chance_de_conhecer(pessoa, nivel);
@@ -9804,6 +9858,7 @@ pub unsafe fn instalar(comparando: bool) {
         ordem_por_80 as *const () as usize,
         ordem_por_80_desc as *const () as usize,
         ordem_por_80_cresc as *const () as usize,
+        nota_do_jogador as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -10022,6 +10077,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_ordem_por_80 as *const () as usize,
         comparar_ordem_por_80_desc as *const () as usize,
         comparar_ordem_por_80_cresc as *const () as usize,
+        comparar_nota_do_jogador as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -10109,6 +10165,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_proximo_da_lista", "motor_palavra_0c", "motor_arredondar_abaixo_de_1000", "motor_nacao_do_grupo",
         "motor_quantos_marcam", "motor_quem_marca",
         "motor_competicao_conta", "motor_ordem_por_5f", "motor_ordem_por_80", "motor_ordem_por_80_desc", "motor_ordem_por_80_cresc",
+        "motor_nota_do_jogador",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -11958,11 +12015,43 @@ pub unsafe fn autoteste(casos: u64) {
                             let z = h74.rotate_left(9 * k as u32);
                             *(regs74.as_mut_ptr().add(80 * k + 4) as *mut u32) = match z % 4 { 0 => id_c74, 1 => 2000 + (z >> 8) as u32 % 82, 2 => 1000 + (z >> 8) as u32 % 82, _ => 4321 };
                             regs74[80 * k + 0x4f] = (z >> 16) as u8;
+                            regs74[80 * k + 0x44] = (z >> 24) as u8;
                         }
                         let obj74 = [regs74.as_ptr() as usize, 0];
                         *(0xae1050 as *mut usize) = obj74.as_ptr() as usize;
                         comparar_contrato_com_clube(obj74.as_ptr() as usize, pessoa74.as_ptr() as usize, clube73.as_mut_ptr() as usize);
                         comparar_nivel_do_contrato(pessoa74.as_ptr() as usize, clube73.as_mut_ptr() as usize);
+                        // septuagesima nona leva: nota do jogador (motor com o clube73 nos dois lados,
+                        // pessoa com o mesmo id, ficha, data de hoje e de nascimento plausiveis)
+                        let h79 = s.proximo();
+                        let mut pessoa79 = [0u8; 0x50];
+                        *(pessoa79.as_mut_ptr() as *mut i32) = id_p74;
+                        pessoa79[0x22] = (h79 >> 3) as u8;
+                        *(pessoa79.as_mut_ptr().add(0x3e) as *mut u16) = ((h79 >> 11) % 366) as u16;
+                        *(pessoa79.as_mut_ptr().add(0x40) as *mut u16) = 1960 + ((h79 >> 20) % 45) as u16;
+                        let mut ficha79 = [0u8; 0x30];
+                        *(ficha79.as_mut_ptr().add(0xd) as *mut i16) = ((h79 >> 26) % 6000) as i16 - 1000;
+                        ficha79[0x2f] = (h79 >> 40) as u8 % 30;
+                        *(clube73.as_mut_ptr().add(0x80) as *mut i16) = ((h79 >> 48) % 4000) as i16;
+                        // lado 0 (+0x1c) com uma copia de outra forma (+0x80): trocar os lados aparece
+                        let mut clube79 = clube73;
+                        *(clube79.as_mut_ptr().add(0x80) as *mut i16) = ((h79 >> 30) % 4000) as i16 - 2000;
+                        let mut tab79 = [0usize; 9];
+                        tab79[7] = clube79.as_ptr() as usize;
+                        tab79[8] = clube73.as_ptr() as usize;
+                        let mut motor79 = vec![0u8; 0x4800];
+                        *(motor79.as_mut_ptr().add(0x4792) as *mut usize) = tab79.as_ptr() as usize;
+                        let mut jog79 = [0u8; 0x1a4];
+                        jog79[0x27] = ((h79 >> 60) & 1) as u8;
+                        *(jog79.as_mut_ptr().add(0x19e) as *mut usize) = motor79.as_ptr() as usize;
+                        *(jog79.as_mut_ptr().add(0x69) as *mut usize) = pessoa79.as_ptr() as usize;
+                        *(jog79.as_mut_ptr().add(0x6d) as *mut usize) = ficha79.as_ptr() as usize;
+                        let hoje79 = (*(0xae2c90 as *const u32), *(0xae2c94 as *const u32));
+                        *(0xae2c90 as *mut u32) = (2001u32 << 16) | ((h79 >> 52) % 366) as u32;
+                        *(0xae2c94 as *mut u32) = 0;
+                        comparar_nota_do_jogador(jog79.as_ptr() as usize);
+                        *(0xae2c90 as *mut u32) = hoje79.0;
+                        *(0xae2c94 as *mut u32) = hoje79.1;
                         *(0xae2d0c as *mut usize) = antes74.0;
                         *(0xae1050 as *mut usize) = antes74.1;
                         *(0xae235c as *mut i32) = limites74.0;
