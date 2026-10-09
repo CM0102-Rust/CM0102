@@ -302,8 +302,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x5fea50, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x547d30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
     Prologo { endereco: 0x547d60, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
+    Prologo { endereco: 0x540a50, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 197;
+const N: usize = 198;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3976,6 +3977,86 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- septuagesima terceira leva: clube parceiro (time B) ----------
+
+/// Pares de globais com os ids dos clubes A e B (times B da Espanha e outros), na ordem dos testes
+/// do original (0x540a50); extraidos da desmontagem.
+const PARES_A_B: [(usize, usize); 82] = [
+    (0x9d012c, 0x9d0130), (0x9d0120, 0x9d0134), (0x9d0138, 0x9d013c), (0x9d0140, 0x9d0144), (0x9d0148, 0x9d014c), (0x9d0150, 0x9d0154),
+    (0x9d0158, 0x9d015c), (0x9d0160, 0x9d0164), (0x9d0168, 0x9d016c), (0x9d0170, 0x9d0174), (0x9d0178, 0x9d017c), (0x9d0180, 0x9d0184),
+    (0x9d0188, 0x9d018c), (0x9d0190, 0x9d0194), (0x9d0198, 0x9d019c), (0x9d0128, 0x9d01a0), (0x9d0254, 0x9d0258), (0x9d02e4, 0x9d0328),
+    (0x9d03ac, 0x9d03b0), (0x9d03b4, 0x9d03b8), (0x9d03bc, 0x9d03c0), (0x9d03c4, 0x9d03c8), (0x9d0124, 0x9d03d4), (0x9d03d8, 0x9d03dc),
+    (0x9d03e0, 0x9d03e4), (0x9d03e8, 0x9d03ec), (0x9d03f0, 0x9d03f4), (0x9d03f8, 0x9d03fc), (0x9d0400, 0x9d0404), (0x9d0408, 0x9d040c),
+    (0x9d0410, 0x9d0414), (0x9d0418, 0x9d041c), (0xb63cdc, 0xb63c9c), (0xb63cbc, 0xb63ca0), (0xb63ce8, 0xb63cac), (0xb63cd8, 0xb63cd0),
+    (0xb63cb4, 0xb63cb0), (0xb63cd4, 0xb63ca8), (0xb63ce4, 0xb63cec), (0xb63cf0, 0xb63cf8), (0xb63cc0, 0xb63d00), (0xb63cc8, 0xb63ccc),
+    (0xb63ce0, 0xb63cb8), (0xb63cc4, 0xb63cf4), (0xb63cfc, 0xb63ca4), (0x9d02a4, 0x9d02a8), (0x9d02ac, 0x9d02b0), (0x9d02b4, 0x9d02b8),
+    (0x9d02bc, 0x9d02c0), (0x9d02c4, 0x9d02c8), (0x9d02cc, 0x9d02d0), (0x9d02d4, 0x9d02d8), (0x9d02dc, 0x9d02e0), (0x9d0440, 0x9d0444),
+    (0x9d0448, 0x9d044c), (0x9d0450, 0x9d0454), (0x9d0458, 0x9d045c), (0x9d0460, 0x9d0464), (0x9d0468, 0x9d046c), (0x9d0470, 0x9d0474),
+    (0x9d0478, 0x9d047c), (0x9d0480, 0x9d0484), (0x9d0488, 0x9d048c), (0x9d0490, 0x9d0494), (0x9d0498, 0x9d049c), (0x9d04a0, 0x9d04a4),
+    (0x9d04a8, 0x9d04ac), (0x9d04b0, 0x9d04b4), (0x9d04b8, 0x9d04bc), (0x9d04c0, 0x9d04c4), (0x9d04c8, 0x9d04cc), (0x9d04d0, 0x9d04d4),
+    (0x9d04d8, 0x9d04dc), (0x9d04e0, 0x9d04e4), (0x9d04e8, 0x9d04ec), (0x9d04f0, 0x9d04f4), (0x9d04f8, 0x9d04fc), (0x9d0500, 0x9d0504),
+    (0x9d0508, 0x9d050c), (0x9d0510, 0x9d0514), (0x9d0518, 0x9d051c), (0x9d0520, 0x9d0524),
+];
+const PARES_B_A: [(usize, usize); 82] = [
+    (0x9d0130, 0x9d012c), (0x9d0134, 0x9d0120), (0x9d013c, 0x9d0138), (0x9d0144, 0x9d0140), (0x9d014c, 0x9d0148), (0x9d0154, 0x9d0150),
+    (0x9d015c, 0x9d0158), (0x9d0164, 0x9d0160), (0x9d016c, 0x9d0168), (0x9d0174, 0x9d0170), (0x9d017c, 0x9d0178), (0x9d0184, 0x9d0180),
+    (0x9d018c, 0x9d0188), (0x9d0194, 0x9d0190), (0x9d019c, 0x9d0198), (0x9d01a0, 0x9d0128), (0x9d0258, 0x9d0254), (0x9d0328, 0x9d02e4),
+    (0x9d03b0, 0x9d03ac), (0x9d03b8, 0x9d03b4), (0x9d03c0, 0x9d03bc), (0x9d03c8, 0x9d03c4), (0x9d03d4, 0x9d0124), (0x9d03dc, 0x9d03d8),
+    (0x9d03e4, 0x9d03e0), (0x9d03ec, 0x9d03e8), (0x9d03f4, 0x9d03f0), (0x9d03fc, 0x9d03f8), (0x9d0404, 0x9d0400), (0x9d040c, 0x9d0408),
+    (0x9d0414, 0x9d0410), (0x9d041c, 0x9d0418), (0xb63c9c, 0xb63cdc), (0xb63ca0, 0xb63cbc), (0xb63cac, 0xb63ce8), (0xb63cd0, 0xb63cd8),
+    (0xb63cb0, 0xb63cb4), (0xb63ca8, 0xb63cd4), (0xb63cec, 0xb63ce4), (0xb63cf8, 0xb63cf0), (0xb63d00, 0xb63cc0), (0xb63ccc, 0xb63cc8),
+    (0xb63cb8, 0xb63ce0), (0xb63cf4, 0xb63cc4), (0xb63ca4, 0xb63cfc), (0x9d02a8, 0x9d02a4), (0x9d02b0, 0x9d02ac), (0x9d02b8, 0x9d02b4),
+    (0x9d02c0, 0x9d02bc), (0x9d02c8, 0x9d02c4), (0x9d02d0, 0x9d02cc), (0x9d02d8, 0x9d02d4), (0x9d02e0, 0x9d02dc), (0x9d0444, 0x9d0440),
+    (0x9d044c, 0x9d0448), (0x9d0454, 0x9d0450), (0x9d045c, 0x9d0458), (0x9d0464, 0x9d0460), (0x9d046c, 0x9d0468), (0x9d0474, 0x9d0470),
+    (0x9d047c, 0x9d0478), (0x9d0484, 0x9d0480), (0x9d048c, 0x9d0488), (0x9d0494, 0x9d0490), (0x9d049c, 0x9d0498), (0x9d04a4, 0x9d04a0),
+    (0x9d04ac, 0x9d04a8), (0x9d04b4, 0x9d04b0), (0x9d04bc, 0x9d04b8), (0x9d04c4, 0x9d04c0), (0x9d04cc, 0x9d04c8), (0x9d04d4, 0x9d04d0),
+    (0x9d04dc, 0x9d04d8), (0x9d04e4, 0x9d04e0), (0x9d04ec, 0x9d04e8), (0x9d04f4, 0x9d04f0), (0x9d04fc, 0x9d04f8), (0x9d0504, 0x9d0500),
+    (0x9d050c, 0x9d0508), (0x9d0514, 0x9d0510), (0x9d051c, 0x9d0518), (0x9d0524, 0x9d0520),
+];
+
+/// { 0x540a50 } (Database.cpp): o clube parceiro (time A <-> time B). So para clubes de nacao com
+/// id em 0x9cf488, 0x9cf314 ou 0x9cf434 (e, com `ativo`, com a marca +0x244). Clube A: `eh_a` = 1 e
+/// o parceiro e o B do primeiro par que casa (aceito se o id dele for diferente de -1); clube B:
+/// `eh_a` = 0 e o parceiro e o A (aceito se o id for >= 0). Parceiro recusado: zera +0x244 e 0.
+/// Devolve o registro do parceiro (vetor 0xae23b4, 581 bytes cada). Clube nulo: a original.
+unsafe extern "C" fn clube_parceiro(clube: usize, eh_a: *mut u32, ativo: u32) -> usize {
+    if clube == 0 {
+        return orig::<unsafe extern "C" fn(usize, *mut u32, u32) -> usize>(197)(clube, eh_a, ativo);
+    }
+    let nacao = *((clube + 0x53) as *const usize);
+    if nacao == 0 || (ativo != 0 && byte(clube, 0x244) == 0) {
+        return 0;
+    }
+    let g = |a: usize| *(a as *const u32);
+    let n = *(nacao as *const u32);
+    if n != g(0x9cf488) && n != g(0x9cf314) && n != g(0x9cf434) {
+        return 0;
+    }
+    let id = *(clube as *const u32);
+    let parceiro = if let Some(&(_, b)) = PARES_A_B.iter().find(|&&(a, _)| g(a) == id) {
+        if !eh_a.is_null() {
+            *eh_a = 1;
+        }
+        let v = g(b) as i32;
+        (v != -1).then_some(v)
+    } else if let Some(&(_, a)) = PARES_B_A.iter().find(|&&(b, _)| g(b) == id) {
+        if !eh_a.is_null() {
+            *eh_a = 0;
+        }
+        let v = g(a) as i32;
+        (v > -1).then_some(v)
+    } else {
+        return 0;
+    };
+    match parceiro {
+        Some(v) => (*(0xae23b4 as *const usize)).wrapping_add((v as usize).wrapping_mul(581)),
+        None => {
+            *((clube + 0x244) as *mut u8) = 0;
+            0
+        }
+    }
 }
 
 // ---------- septuagesima segunda leva: falta pelo motor, tecnico humano (0x9b23), clubes preferidos ----------
@@ -8805,6 +8886,16 @@ unsafe extern "thiscall" fn comparar_falta_no_motor(
     r
 }
 comparar_valor!(comparar_tecnico_9b23, tecnico_9b23, 194, (i: i8, pessoa: usize) -> u8);
+unsafe extern "C" fn comparar_clube_parceiro(clube: usize, eh_a: *mut u32, ativo: u32) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize, *mut u32, u32) -> usize>(197);
+    let mut reg: Vec<(usize, usize)> = vec![(clube + 0x244, 1)];
+    if !eh_a.is_null() {
+        reg.push((eh_a as usize, 4));
+    }
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(clube, eh_a, ativo), || clube_parceiro(clube, eh_a, ativo));
+    PLACAR.registrar(igual && r == v, || format!("clube_parceiro original={:x} {:x?} rust={:x} {:x?}", r, mo, v, mr));
+    r
+}
 unsafe extern "C" fn comparar_gosta_do_clube(pessoa: usize, clube: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(196)(pessoa, clube);
     let n = gosta_do_clube(pessoa, clube);
@@ -9278,6 +9369,7 @@ pub unsafe fn instalar(comparando: bool) {
         tecnico_9b23 as *const () as usize,
         nao_gosta_do_clube as *const () as usize,
         gosta_do_clube as *const () as usize,
+        clube_parceiro as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -9477,6 +9569,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_tecnico_9b23 as *const () as usize,
         comparar_nao_gosta_do_clube as *const () as usize,
         comparar_gosta_do_clube as *const () as usize,
+        comparar_clube_parceiro as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -9557,6 +9650,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_decisao_da_falta",
         "motor_escolher_companheiro",
         "motor_falta_no_motor", "motor_tecnico_9b23", "motor_nao_gosta_do_clube", "motor_gosta_do_clube",
+        "motor_clube_parceiro",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -11192,6 +11286,42 @@ pub unsafe fn autoteste(casos: u64) {
                     let id69 = if (h69 >> 35) % 3 == 0 { 0x7fff_0000u32 } else { *(guardados[((h69 >> 37) % 9) as usize] as *const u32) };
                     let especial69 = [id69, 0];
                     comparar_clube_especial(if (h69 >> 41) % 7 == 0 { 0 } else { especial69.as_ptr() as usize });
+                    // septuagesima terceira leva: clube parceiro (globais dos 82 pares e das 3 nacoes com
+                    // valores distintos; alguns parceiros -1 e -5 para os dois testes de aceite)
+                    {
+                        let h73 = s.proximo();
+                        let nac73 = [0x9cf488usize, 0x9cf314, 0x9cf434];
+                        let mut todos73: Vec<usize> = nac73.to_vec();
+                        for &(a, b) in PARES_A_B.iter().chain(PARES_B_A.iter()) {
+                            todos73.push(a);
+                            todos73.push(b);
+                        }
+                        let antes73: Vec<u32> = todos73.iter().map(|&a| *(a as *const u32)).collect();
+                        for (k, &a) in nac73.iter().enumerate() {
+                            *(a as *mut u32) = 900 + k as u32;
+                        }
+                        for (k, &(a, b)) in PARES_A_B.iter().enumerate() {
+                            *(a as *mut i32) = if (h73 >> (k % 50 + 3)) % 11 == 0 { -5 } else { 1000 + k as i32 };
+                            *(b as *mut i32) = match (h73 >> (k % 60)) % 9 { 0 => -1, 1 => -5, _ => 2000 + k as i32 };
+                        }
+                        let ids73: Vec<u32> = PARES_A_B.iter().map(|&(a, _)| *(a as *const u32))
+                            .chain(PARES_A_B.iter().map(|&(_, b)| *(b as *const u32))).collect();
+                        let mut nacao73 = [0u32; 4];
+                        nacao73[0] = [900u32, 901, 902, 903][((h73 >> 2) % 4) as usize];
+                        let mut clube73 = [0u8; 0x250];
+                        *(clube73.as_mut_ptr() as *mut u32) = if (h73 >> 5) % 5 == 0 { 7777 } else { ids73[((h73 >> 8) as usize) % ids73.len()] };
+                        *(clube73.as_mut_ptr().add(0x53) as *mut usize) = if (h73 >> 16) % 9 == 0 { 0 } else { nacao73.as_ptr() as usize };
+                        clube73[0x244] = ((h73 >> 20) % 3 != 0) as u8;
+                        let mut eh73 = 5u32;
+                        let ponteiro73 = if (h73 >> 23) % 3 == 0 { core::ptr::null_mut() } else { &mut eh73 as *mut u32 };
+                        let antes_base73 = *(0xae23b4 as *const u32);
+                        *(0xae23b4 as *mut u32) = 0x0100_0000;
+                        comparar_clube_parceiro(clube73.as_mut_ptr() as usize, ponteiro73, ((h73 >> 25) & 1) as u32);
+                        *(0xae23b4 as *mut u32) = antes_base73;
+                        for (k, &a) in todos73.iter().enumerate().rev() {
+                            *(a as *mut u32) = antes73[k];
+                        }
+                    }
                     for (k, &a) in guardados.iter().enumerate() {
                         *(a as *mut u32) = antes_g69[k];
                     }

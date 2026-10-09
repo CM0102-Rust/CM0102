@@ -80,6 +80,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x76d940 | `clube_especial` | special_club |
 | 0x600a50 | `clube_humano` | human_club |
 | 0x48db80 | `clube_na_competicao` | club_in_competition |
+| 0x540a50 | `clube_parceiro` | partner_club |
 | 0x70a8c0 | `codigo_de_bola_parada` | set_piece_code |
 | 0x6cb650 | `codigo_especial` | special_code |
 | 0x7002f0 | `comentario_a` | commentary_a |

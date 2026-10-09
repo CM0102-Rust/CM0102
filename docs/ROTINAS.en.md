@@ -684,3 +684,11 @@ Read through Ghidra's pseudocode and checked instruction by instruction. Points 
 | `nao_gosta_do_clube(pessoa, clube)` | 0x547d30 | cdecl | preferences +0x10, +0x14, +0x18 |
 
 Mutations: 4/4 (the 0x9b23 one only after the self-test filled the bytes around +0x9b23 with varied values; with zeros, reading the neighbouring byte gave the same value).
+
+### Match engine, 73rd batch — partner club (B team) (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `clube_parceiro(clube, eh_a, ativo)` | 0x540a50 | cdecl | Database.cpp: A team ↔ B team; only clubs of nations whose id is in 0x9cf488/0x9cf314/0x9cf434; 82 pairs of globals (A→B accepts partner ≠ −1, B→A accepts ≥ 0); a refused partner zeroes +0x244; the partner record lives in the 0xae23b4 array (581 bytes) |
+
+Mutations: 8/8 (the 82 pairs were extracted from the disassembly; the self-test gives distinct values to all 167 globals, with partners −1 and −5 to tell the two acceptance tests apart).

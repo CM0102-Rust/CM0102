@@ -682,3 +682,11 @@ Lida pelo pseudocódigo do Ghidra e conferida instrução por instrução. Ponto
 | `nao_gosta_do_clube(pessoa, clube)` | 0x547d30 | cdecl | preferências +0x10, +0x14, +0x18 |
 
 Mutações: 4/4 (a da 0x9b23 só depois de o autoteste encher os bytes em volta de +0x9b23 com valores variados; com zeros, ler um byte ao lado dava o mesmo valor).
+
+### Motor de partidas, 73ª leva — clube parceiro (time B) (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `clube_parceiro(clube, eh_a, ativo)` | 0x540a50 | cdecl | Database.cpp: time A ↔ time B; só clubes de nação com id em 0x9cf488/0x9cf314/0x9cf434; 82 pares de globais (A→B aceita parceiro ≠ −1, B→A aceita ≥ 0); parceiro recusado zera +0x244; registro do parceiro no vetor 0xae23b4 (581 bytes) |
+
+Mutações: 8/8 (os 82 pares foram extraídos da desmontagem; o autoteste dá valores distintos às 167 globais, com parceiros −1 e −5 para separar os dois testes de aceite).
