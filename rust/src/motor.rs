@@ -298,8 +298,12 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x76d940, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
     Prologo { endereco: 0x6e9820, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
     Prologo { endereco: 0x6c6a30, bytes: &[0x83, 0xec, 0x7c, 0x56, 0x8b, 0xf1] },
+    Prologo { endereco: 0x6cfc60, bytes: &[0x8b, 0x44, 0x24, 0x1c, 0x8b, 0x54, 0x24, 0x18] },
+    Prologo { endereco: 0x5fea50, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x547d30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
+    Prologo { endereco: 0x547d60, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
 ];
-const N: usize = 193;
+const N: usize = 197;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3972,6 +3976,36 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- septuagesima segunda leva: falta pelo motor, tecnico humano (0x9b23), clubes preferidos ----------
+
+/// { 0x6cfc60 } (match_eng.cpp): a decisao da falta (0x6e9820) com o arbitro do motor (+0xf5b2).
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn falta_no_motor(
+    m: usize, j: usize, outro: usize, tipo: i8, quem: i8, cartao: *mut u8, grav: *mut i8, vantagem: *mut u8,
+) -> u8 {
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8 = core::mem::transmute(0x6e9820usize);
+    f(m + 0xf5b2, j, outro, tipo, quem, cartao, grav, vantagem)
+}
+
+/// { 0x5fea50 } (human_manager.cpp): byte +0x9b23 + `i` do registro do tecnico humano da pessoa (ou
+/// do atual). Sem pessoa ou fora da faixa: a original (caixa de erro).
+unsafe extern "thiscall" fn tecnico_9b23(this: usize, i: i8, pessoa: usize) -> u8 {
+    match pessoa_e_registro(this, pessoa) {
+        Some((_, r)) => *((r as isize + 0x9b23 + i as isize) as *const u8),
+        None => orig::<unsafe extern "thiscall" fn(usize, i8, usize) -> u8>(194)(this, i, pessoa),
+    }
+}
+
+/// { 0x547d60 }: `pessoa` gosta do clube (preferencias +0x04, +0x08, +0x0c)?
+unsafe extern "C" fn gosta_do_clube(pessoa: usize, clube: usize) -> u32 {
+    nas_preferencias(clube, pessoa, 4)
+}
+
+/// { 0x547d30 }: `pessoa` nao gosta do clube (preferencias +0x10, +0x14, +0x18)?
+unsafe extern "C" fn nao_gosta_do_clube(pessoa: usize, clube: usize) -> u32 {
+    nas_preferencias(clube, pessoa, 0x10)
 }
 
 // ---------- septuagesima primeira leva: escolha do companheiro para a jogada (0x6c6a30, 7 KB) ----------
@@ -8750,6 +8784,40 @@ comparar_valor!(comparar_pessoa_da_linha, pessoa_da_linha, 188, (clube: usize, q
 comparar_valor!(comparar_clube_na_competicao, clube_na_competicao, 189, (clube: usize) -> u8);
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn comparar_falta_no_motor(
+    m: usize, j: usize, outro: usize, tipo: i8, quem: i8, cartao: *mut u8, grav: *mut i8, vantagem: *mut u8,
+) -> u8 {
+    // a decisao em si (0x6e9820) ja e comparada no proprio desvio; aqui so o repasse
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8>(193);
+    let mut regioes = vec![(m + 0xf5b2 + 8, 2), (cartao as usize, 1), (grav as usize, 1), (vantagem as usize, 1)];
+    for p in [j, outro] {
+        if p != 0 {
+            regioes.push((p, 0x1be));
+        }
+    }
+    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (r, v, igual, _, _) = crate::comparacao::lado_a_lado(
+        &regioes,
+        || o(m, j, outro, tipo, quem, cartao, grav, vantagem),
+        || crate::aleatorio::sem_contar(|| falta_no_motor(m, j, outro, tipo, quem, cartao, grav, vantagem)),
+    );
+    PLACAR.registrar(igual && r == v, || format!("falta_no_motor original={} rust={}", r, v));
+    r
+}
+comparar_valor!(comparar_tecnico_9b23, tecnico_9b23, 194, (i: i8, pessoa: usize) -> u8);
+unsafe extern "C" fn comparar_gosta_do_clube(pessoa: usize, clube: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(196)(pessoa, clube);
+    let n = gosta_do_clube(pessoa, clube);
+    PLACAR.registrar(r == n, || format!("gosta_do_clube original={} rust={}", r, n));
+    r
+}
+unsafe extern "C" fn comparar_nao_gosta_do_clube(pessoa: usize, clube: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(195)(pessoa, clube);
+    let n = nao_gosta_do_clube(pessoa, clube);
+    PLACAR.registrar(r == n, || format!("nao_gosta_do_clube original={} rust={}", r, n));
+    r
+}
+#[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn comparar_escolher_companheiro(
     m: usize, bx: i8, by: i8, tipo: *mut i8, moveu: *mut u8, x: *mut i8, y: *mut i8, melhor: *mut i32, pedido: i8,
 ) -> usize {
@@ -9206,6 +9274,10 @@ pub unsafe fn instalar(comparando: bool) {
         clube_especial as *const () as usize,
         decisao_da_falta as *const () as usize,
         escolher_companheiro as *const () as usize,
+        falta_no_motor as *const () as usize,
+        tecnico_9b23 as *const () as usize,
+        nao_gosta_do_clube as *const () as usize,
+        gosta_do_clube as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -9401,6 +9473,10 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_clube_especial as *const () as usize,
         comparar_decisao_da_falta as *const () as usize,
         comparar_escolher_companheiro as *const () as usize,
+        comparar_falta_no_motor as *const () as usize,
+        comparar_tecnico_9b23 as *const () as usize,
+        comparar_nao_gosta_do_clube as *const () as usize,
+        comparar_gosta_do_clube as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -9480,6 +9556,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_clube_na_competicao", "motor_clube_especial",
         "motor_decisao_da_falta",
         "motor_escolher_companheiro",
+        "motor_falta_no_motor", "motor_tecnico_9b23", "motor_nao_gosta_do_clube", "motor_gosta_do_clube",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -10875,6 +10952,12 @@ pub unsafe fn autoteste(casos: u64) {
             let quem54 = if (h54 >> 18) % 7 == 0 { 0 } else { pe46 };
             comparar_gosta_de(alvo54, quem54);
             comparar_nao_gosta_de(alvo54, quem54);
+            // septuagesima segunda leva: clubes preferidos (+0x04..+0x0c) e evitados (+0x10..+0x18)
+            for k in 0..6usize {
+                *((pf + 4 + 4 * k) as *mut usize) = cand[((h54 >> (k * 2 + 22)) % 4) as usize];
+            }
+            comparar_gosta_do_clube(quem54, alvo54);
+            comparar_nao_gosta_do_clube(quem54, alvo54);
             let base54 = m + 0x91e2; // lado 0: +0x187f ainda dentro do motor falso
             *((base54 + 0x187f) as *mut u32) = (h54 >> 8) as u32 | 1;
             let v54 = (h54 >> 20) as u32;
@@ -10956,6 +11039,12 @@ pub unsafe fn autoteste(casos: u64) {
                 }
                 let quem62 = if (h56 >> 47) % 4 == 0 { 0 } else { pessoa62.as_ptr() as usize };
                 comparar_tecnico_9ace(obj56.as_ptr() as usize, quem62);
+                for k in 0..16usize {
+                    for b in 0..0x30usize {
+                        *((regs56 + 42735 * k + 0x9b20 + b) as *mut u8) = (h56.rotate_left((k + b) as u32) as u8) ^ (b as u8);
+                    }
+                }
+                comparar_tecnico_9b23(obj56.as_ptr() as usize, ((h56 >> 57) % 40) as i8 - 3, quem62);
                 let mut saida62 = 7u32;
                 let sp = if (h56 >> 55) % 2 == 0 { core::ptr::null_mut() } else { &mut saida62 as *mut u32 };
                 comparar_tecnico_9a06(obj56.as_ptr() as usize, quem62, sp);

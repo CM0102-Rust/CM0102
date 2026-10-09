@@ -124,9 +124,11 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cf750 | `estatistica_de_posse` | possession_statistic |
 | 0x6cb960 | `faixa` | band |
 | 0x6f5b20 | `faixa_jogador` | player_band |
+| 0x6cfc60 | `falta_no_motor` | foul_in_engine |
 | 0x6cb910 | `fora_do_meio` | off_centre |
 | 0x6c0c60 | `forca_do_time` | team_strength |
 | 0x547810 | `gosta_de` | likes |
+| 0x547d60 | `gosta_do_clube` | likes_club |
 | 0x70a890 | `gravar_19c` | write_19c |
 | 0x7160e0 | `gravar_2b` | write_2b |
 | 0x700360 | `gravar_8ea7` | write_8ea7 |
@@ -180,6 +182,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f4650 | `na_area` | in_the_box |
 | 0x714c60 | `na_lista` | in_list |
 | 0x547840 | `nao_gosta_de` | dislikes |
+| 0x547d30 | `nao_gosta_do_clube` | dislikes_club |
 | 0x715f50 | `nota_ajustada` | adjusted_rating |
 | 0x6d3de0 | `nova_reputacao` | new_reputation |
 | 0x6bd760 | `ordem_dos_jogadores` | player_order |
@@ -235,6 +238,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5fd480 | `tecnico_9a05` | manager_9a05 |
 | 0x5fd6b0 | `tecnico_9a06` | manager_9a06 |
 | 0x5fe040 | `tecnico_9ace` | manager_9ace |
+| 0x5fea50 | `tecnico_9b23` | manager_9b23 |
 | 0x6b59a0 | `tem_jogo` | has_match |
 | 0x7164b0 | `teste_de_condicao` | condition_test |
 | 0x6cdd50 | `tirar_de_campo` | take_off_pitch |

@@ -673,3 +673,14 @@ Mutations in the real game: 8/10. **Limitation:** `f_vantagem` (divisor 3 when `
 | `escolher_companheiro(bx, by, tipo, moveu, x, y, melhor, pedido)` | 0x6c6a30 | thiscall, ret 0x20 | match_eng.cpp, 7.4 KB (the largest so far, about 2,100 instructions and 24 `ftol`s): chooses the teammate and the kind of play (pass, cross, through ball, one-two; codes 7, 8, 0xb, 0x1e, 0x1f, 0x3c, 0x3d) for the ball carrier. For each teammate: free space (nearest opponent to him and to the point he can move to, 0x6bce80), role in the formation, position relative to the offside line (0x8eaf/0x8eb0), surrounding opponents, tactical marks (0x7163c0, 64-bit return), the manager's preference (0x897dc0), personal likes (0x547840/0x547810), a nation factor; then the kind of play by distance to the target (or the `pedido`), keeping the best score above `*melhor` |
 
 Read through Ghidra's pseudocode and checked instruction by instruction. Points the pseudocode hid: `pow` with base (3 − surrounding count) and exponent 3; comparisons on the not-yet-rounded value after `fst dword` (the float is stored, but the double is compared); tests on bit 32 of 0x7163c0's return (`edx`). Mutations in the real game: 10/12 (the two that pass are nearly equivalent: comparing the rounded instead of the unrounded value, and +1 on a score that rarely ties). Zero divergences on the very first comparison.
+
+### Match engine, 72nd batch — foul through the engine, human manager (0x9b23), favourite clubs (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `falta_no_motor(...)` | 0x6cfc60 | thiscall, ret 0x1c | match_eng.cpp: forwards to the foul decision (0x6e9820) with the engine's referee (+0xf5b2) |
+| `tecnico_9b23(i, pessoa)` | 0x5fea50 | thiscall, ret 8 | human_manager.cpp: byte +0x9b23 + `i` of the human manager record; errors: the original |
+| `gosta_do_clube(pessoa, clube)` | 0x547d60 | cdecl | preferences +0x04, +0x08, +0x0c |
+| `nao_gosta_do_clube(pessoa, clube)` | 0x547d30 | cdecl | preferences +0x10, +0x14, +0x18 |
+
+Mutations: 4/4 (the 0x9b23 one only after the self-test filled the bytes around +0x9b23 with varied values; with zeros, reading the neighbouring byte gave the same value).

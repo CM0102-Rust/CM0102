@@ -671,3 +671,14 @@ Mutações no jogo real: 8/10. **Limitação:** `f_vantagem` (divisor 3 quando o
 | `escolher_companheiro(bx, by, tipo, moveu, x, y, melhor, pedido)` | 0x6c6a30 | thiscall, ret 0x20 | match_eng.cpp, 7,4 KB (a maior até agora, cerca de 2.100 instruções e 24 `ftol`): escolhe o companheiro e o tipo de jogada (passe, cruzamento, lançamento, tabela; códigos 7, 8, 0xb, 0x1e, 0x1f, 0x3c, 0x3d) para quem está com a bola. Para cada colega: espaço livre (adversário mais próximo dele e do ponto para onde pode se deslocar, 0x6bce80), papel na formação, posição em relação à linha de impedimento (0x8eaf/0x8eb0), cerco, marcas táticas (0x7163c0, retorno de 64 bits), preferência do técnico (0x897dc0), gostos pessoais (0x547840/0x547810), fator por nação; depois o tipo pela distância até o alvo (ou o `pedido`), e fica a maior nota acima de `*melhor` |
 
 Lida pelo pseudocódigo do Ghidra e conferida instrução por instrução. Pontos que o pseudocódigo escondia: o `pow` com base (3 − cerco) e expoente 3; comparações sobre o valor ainda não arredondado depois de `fst dword` (o float é guardado, mas compara-se o double); testes no bit 32 do retorno de 0x7163c0 (`edx`). Mutações no jogo real: 10/12 (as duas que passam são quase equivalentes: comparar o valor arredondado em vez do não arredondado, e +1 numa nota que raramente empata). Zero divergências já na primeira comparação.
+
+### Motor de partidas, 72ª leva — falta pelo motor, técnico humano (0x9b23), clubes preferidos (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `falta_no_motor(...)` | 0x6cfc60 | thiscall, ret 0x1c | match_eng.cpp: repassa a decisão da falta (0x6e9820) com o árbitro do motor (+0xf5b2) |
+| `tecnico_9b23(i, pessoa)` | 0x5fea50 | thiscall, ret 8 | human_manager.cpp: byte +0x9b23 + `i` do registro do técnico humano; erros: a original |
+| `gosta_do_clube(pessoa, clube)` | 0x547d60 | cdecl | preferências +0x04, +0x08, +0x0c |
+| `nao_gosta_do_clube(pessoa, clube)` | 0x547d30 | cdecl | preferências +0x10, +0x14, +0x18 |
+
+Mutações: 4/4 (a da 0x9b23 só depois de o autoteste encher os bytes em volta de +0x9b23 com valores variados; com zeros, ler um byte ao lado dava o mesmo valor).

@@ -80,6 +80,7 @@ EN = {
  'clube_na_competicao': 'club_in_competition', 'clube_especial': 'special_club',
  'decisao_da_falta': 'foul_decision',
  'escolher_companheiro': 'choose_teammate', 'menor_distancia_livre': 'nearest_free_distance',
+ 'falta_no_motor': 'foul_in_engine', 'tecnico_9b23': 'manager_9b23', 'gosta_do_clube': 'likes_club', 'nao_gosta_do_clube': 'dislikes_club',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:
