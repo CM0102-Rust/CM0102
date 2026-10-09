@@ -349,8 +349,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x776380, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
     Prologo { endereco: 0x777590, bytes: &[0x83, 0xec, 0x08, 0x8d, 0x44, 0x24, 0x00] },
     Prologo { endereco: 0x6ec010, bytes: &[0x83, 0xec, 0x54, 0x53, 0x55] },
+    Prologo { endereco: 0x6eecb0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
 ];
-const N: usize = 243;
+const N: usize = 244;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4023,6 +4024,250 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- octogesima sexta leva: desempenho do jogador na partida (0x6eecb0, ~6,4 KB) ----------
+/// { 0x6eecb0 } (ret 4, match_pl.cpp, ~6,4 KB): desempenho do jogador na partida. Atualiza os
+/// atributos (0x6ec010), calcula a palavra +0x37 (posicao nas tabelas taticas A e B contra os
+/// bytes de +0x10 a +0x1a da ficha; com `marcar`, conta no byte +0xaf do lado do motor), os bytes
+/// +0x10e..+0x117 e as palavras derivadas de +0x11a a +0x196 (63 delas ajustadas por +0x37 numa
+/// tabela de casos) e sorteia os atributos do momento (0x6f44a0).
+unsafe extern "thiscall" fn desempenho_na_partida(this: usize, marcar: u8) {
+    let q = |a: usize| f64_em(a);
+    let f = |a: usize| f32_em(a) as f64;
+    let rd = |o: usize| *((this + o) as *const f32) as f64;
+    let b = |p: usize, o: usize| *((p + o) as *const i8) as i32;
+    let motor = || *((this + 0x19e) as *const usize);
+    let ficha = || *((this + 0x6d) as *const usize);
+    let fb = |o: usize| b(ficha(), o);
+    let ta = || if motor() != 0 { tabela_a(motor(), this) } else { 0 };
+    let tb = || if motor() != 0 { tabela_b(motor(), this) } else { 0 };
+    let p37 = (this + 0x37) as *mut i16;
+    let soma37 = move |v: i32| *p37 = (*p37).wrapping_add(v as i16);
+    let palavra = |o: usize, v: i32| *((this + o) as *mut i16) = v as i16;
+    let atributos: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6ec010usize);
+    atributos(this);
+    let bl: i8 = if b(ficha(), 0xf) > 15 { 20 } else { ftol(b(ficha(), 0xf) as f64 * q(0x969040) + q(0x9688a0)) as i8 };
+    *p37 = 0;
+    // a posicao na tabela A contra os atributos de +0x10..+0x1a
+    let maior_13_14 = || core::cmp::max(fb(0x14) - 5, fb(0x13));
+    let x: Option<f64> = if ta() & 1 != 0 {
+        soma37((bl as i16 as i32) * 2 - 40);
+        None
+    } else if ta() & 2 != 0 {
+        Some((20 - fb(0x10)) as f64)
+    } else if ta() & 4 != 0 {
+        Some((20 - fb(0x11)) as f64)
+    } else if ta() & 8 != 0 {
+        if ta() & 0x800 == 0 && ta() & 0x80 == 0 {
+            Some((20 - fb(0x12)) as f64)
+        } else {
+            let b_880 = || tb() & 0x800 != 0 || tb() & 0x80 != 0;
+            if b_880() && (tb() & 8 != 0 || tb() & 0x10 != 0 || tb() & 0x20 != 0 || tb() & 0x40 != 0) {
+                Some((20 - fb(0x16)) as f64)
+            } else if b_880() && (tb() & 4 != 0 || tb() & 2 != 0) {
+                Some((20 - fb(0x11)) as f64)
+            } else {
+                Some((20 - fb(0x12)) as f64)
+            }
+        }
+    } else if ta() & 0x10 != 0 {
+        Some((20 - maior_13_14()) as f64)
+    } else if ta() & 0x20 != 0 {
+        if ta() & 0x800 != 0 || ta() & 0x80 != 0 {
+            Some((20 - fb(0x14)) as f64)
+        } else {
+            let lado = byte(this, 0x27) as isize;
+            let marcas: unsafe extern "thiscall" fn(usize, i8) -> u64 = core::mem::transmute(0x5b5270usize);
+            let m = marcas((motor() as isize + 0x91e2 + 0x18e3 * lado) as usize, byte(this, 0x19));
+            let v = if m as u32 & 0x200000 != 0 { fb(0x1a) * fb(0x14) } else { fb(0x15) * fb(0x14) };
+            Some(q(0x968ea8) - v as f64 * q(0x967888) + q(0x968968))
+        }
+    } else if ta() & 0x40 != 0 {
+        Some((20 - fb(0x15)) as f64)
+    } else {
+        None
+    };
+    if let Some(x) = x {
+        soma37(ftol(x * q(0x96d740)) as i16 as i32);
+    }
+    if ta() & 0x80 != 0 {
+        soma37(fb(0x18) - 20);
+    } else if ta() & 0x100 != 0 {
+        soma37(core::cmp::max(fb(0x19), fb(0x18) / 2) - 20);
+    } else if ta() & 0x200 != 0 {
+        soma37(fb(0x19) - 20);
+    } else if ta() & 0x400 != 0 {
+        soma37(core::cmp::max(fb(0x19), fb(0x17) / 2) - 20);
+    } else if ta() & 0x800 != 0 {
+        soma37(fb(0x17) - 20);
+    }
+    if ta() & 0x1000 != 0 {
+        soma37(fb(0x1a) - 20);
+    }
+    // a tabela B, quando difere da A
+    if tb() != ta() {
+        let tres_quartos = |v: i32| soma37(ftol(v as f64 * q(0x969530)) as i16 as i32);
+        let b_altas = || tb() & 0x100 != 0 || tb() & 0x200 != 0 || tb() & 0x400 != 0;
+        let marca = || (motor() as isize + 0xaf + byte(this, 0x27) as isize) as *mut u8;
+        if tb() & 2 != 0 {
+            tres_quartos(20 - fb(0x10));
+        } else if tb() & 4 != 0 {
+            tres_quartos(20 - fb(0x11));
+        } else if tb() & 8 != 0 {
+            tres_quartos(20 - fb(0x12));
+        } else if tb() & 0x10 != 0 {
+            tres_quartos(20 - maior_13_14());
+        } else if tb() & 0x20 != 0 {
+            tres_quartos(20 - fb(0x14));
+            if marcar != 0 && ta() & 0x40 == 0 && ta() & 0x20 == 0 && b_altas() {
+                *marca() = (*marca()).wrapping_add(1);
+            }
+        } else if tb() & 0x40 != 0 {
+            tres_quartos(20 - fb(0x15));
+            if marcar != 0 && ta() & 0x40 == 0 && b_altas() {
+                *marca() = (*marca()).wrapping_add(2);
+            }
+        }
+    }
+    let meio = |v: i32| soma37(v / 2 - 10);
+    if tb() & 0x80 != 0 {
+        meio(fb(0x18));
+    } else if tb() & 0x100 != 0 {
+        meio(core::cmp::max(fb(0x19), fb(0x18) / 2));
+    } else if tb() & 0x200 != 0 {
+        meio(fb(0x19));
+    } else if tb() & 0x400 != 0 {
+        meio(core::cmp::max(fb(0x19), fb(0x17) / 2));
+    } else if tb() & 0x800 != 0 {
+        meio(fb(0x17));
+    }
+    *p37 = ftol((q(0x96d730) - rd(0xed) * q(0x96d738)) * *p37 as f64) as i16;
+    let w37 = move || *p37 as i32;
+
+    // bytes +0x10e..+0x117 (no minimo 2)
+    let min2 = |v: f64, dois: f64| if v > dois { v } else { dois };
+    let byte_em = |o: usize, v: f64| *((this + o) as *mut u8) = ftol(v) as u8;
+    let d3 = || (w37() / 3) as f64;
+    byte_em(0x10e, min2(rd(0xc1) + f(0x96d228), f(0x9689a8)));
+    byte_em(0x110, min2(d3() + rd(0xcd) + f(0x96d228), f(0x9689a8)));
+    byte_em(0x111, min2(d3() + rd(0xb9) * q(0x9689d8) + q(0x9688a0), q(0x968950)));
+    byte_em(0x112, min2(d3() + rd(0xb5) + f(0x96d228), f(0x9689a8)));
+    byte_em(0x113, min2(pow_do_jogo(byte(this, 0x17) as f64 + rd(0x9d) - f(0x968a78), q(0x968950)) * q(0x967888), q(0x968950)));
+    byte_em(0x114, min2(d3() + rd(0xf1) * q(0x9689b0) + q(0x9688a0), q(0x968950)));
+    byte_em(0x115, min2(d3() + rd(0x7d) + f(0x968990), f(0x9689a8)));
+    byte_em(0x116, min2(rd(0xf5) + f(0x9689a8), f(0x9689a8)));
+    byte_em(0x117, min2(rd(0x79) + f(0x968990), f(0x9689a8)));
+    byte_em(0x10f, min2(rd(0x91) + f(0x9689a8), f(0x9689a8)));
+
+    // palavras derivadas: T = x*10 + 0,5; Q = (x^2 + 1)/2; D = 2x*10 + 0,5 (truncados)
+    let t = |o: usize| ftol(rd(o) * q(0x9688b0) + q(0x968968)) as i16 as i32;
+    let qd = |o: usize| ftol((rd(o) * rd(o) + q(0x967890)) * q(0x968968)) as i16 as i32;
+    let d = |o: usize| ftol((rd(o) + rd(o)) * q(0x9688b0) + q(0x968968)) as i16 as i32;
+    let blq = ftol(((bl as i32 as f64) * (bl as i32 as f64) + q(0x967890)) * q(0x968968)) as i16 as i32;
+    let v = (blq + t(0xa5) + t(0xcd) + t(0xad) + t(0x91) + t(0x7d)) / 6;
+    palavra(0x11a, v);
+    palavra(0x11c, v);
+    palavra(0x11e, t(0xa9));
+    palavra(0x120, t(0xa9));
+    palavra(0x122, (t(0x81) + t(0xa9)) / 2);
+    palavra(0x124, (qd(0x79) + qd(0x9d) + qd(0xe5) + qd(0x81) + 100) / 5);
+    palavra(0x18c, t(0xa9));
+    palavra(0x190, (qd(0x85) + qd(0x79)) / 2);
+    palavra(0x18e, (d(0x99) + 300) / 5);
+    palavra(0x126, t(0x8d));
+    palavra(0x128, t(0x8d));
+    palavra(0x12a, t(0x8d));
+    palavra(0x12c, (t(0xc5) + 200) / 2);
+    palavra(0x196, (t(0xc5) + 200) / 2);
+    palavra(0x12e, qd(0xc5));
+    palavra(0x130, (d(0xc5) + 200) / 3);
+    palavra(0x132, qd(0xe5));
+    palavra(0x134, t(0xe5));
+    palavra(0x136, (qd(0xe5) + t(0xe5)) / 2);
+    palavra(0x138, (t(0xe5) + t(0x79) + t(0x81) + t(0xd9)) / 4);
+    palavra(0x13a, (t(0xe5) + t(0x81) + t(0xd9)) / 3);
+    palavra(0x13c, ftol((qd(0xe5) + d(0xe5) + t(0x71)) as f64 * q(0x96d728)) as i32);
+    palavra(0x13e, ftol((d(0xc1) + d(0x95) + qd(0x95) + t(0xe5)) as f64 * q(0x96d720)) as i32);
+    palavra(0x142, (t(0x79) + t(0x81)) / 2);
+    palavra(0x146, t(0x99));
+    palavra(0x148, t(0x99));
+    // o quadrado de +0xe5 fica na pilha do x87 entre as contas seguintes
+    let e5q = rd(0xe5) * rd(0xe5);
+    let a = ftol((e5q + q(0x967890)) * q(0x968968)) as i16 as i32;
+    let t99 = t(0x99);
+    palavra(0x14a, (a + t99) / 2);
+    palavra(0x14c, (t(0xe5) + t99) / 2);
+    let bq = ftol(((e5q + e5q) + q(0x967890)) * q(0x968968)) as i16 as i32;
+    let d99 = d(0x99);
+    let tc5 = t(0xc5);
+    palavra(0x150, (bq + d99 + tc5) / 5);
+    palavra(0x14e, (bq + d99 + tc5) / 5);
+    palavra(0x152, (qd(0x9d) + d99 + bq + tc5) / 6);
+    palavra(0x154, (t(0xd9) + t99) / 2);
+    palavra(0x156, qd(0xc5));
+    palavra(0x192, qd(0xc5));
+    palavra(0x158, (a + tc5) / 2);
+    palavra(0x15a, (a + tc5) / 2);
+    palavra(0x194, t(0xa9));
+    let ddq = rd(0xdd) * rd(0xdd);
+    let c = ftol(((ddq + ddq) + q(0x967890)) * q(0x968968)) as i16 as i32;
+    let t81 = t(0x81);
+    let t7d = t(0x7d);
+    palavra(0x15c, (t81 + t7d + c) / 4);
+    palavra(0x140, (qd(0xc1) + t81 + t7d + c) / 5);
+    palavra(0x15e, ftol((ddq + q(0x967890)) * q(0x968968)) as i32);
+    palavra(0x160, ftol(qd(0x85) as f64 * q(0x96d718)) as i32);
+    let t79 = t(0x79);
+    palavra(0x162, ftol((t7d + t79) as f64 * q(0x968e00)) as i32);
+    palavra(0x166, (qd(0xd9) + t81) / 2);
+    let bq2 = ftol(((bl as i32 * bl as i32) as f64 + q(0x967890)) * q(0x968968)) as i16 as i32;
+    let ba5 = bq2 + t(0xa5);
+    palavra(0x168, (ba5 + t79) / 3);
+    palavra(0x16a, (ba5 + t79) / 3);
+    palavra(0x16c, (t(0x85) + ba5) / 3);
+    palavra(0x16e, 200);
+    let dd9 = d(0xd9);
+    palavra(0x178, 200);
+    palavra(0x172, 400);
+    palavra(0x174, 400);
+    palavra(0x170, (dd9 + 400) / 2);
+    palavra(0x176, (dd9 + 400) / 2);
+    palavra(0x17a, 200);
+    palavra(0x17c, 200);
+    palavra(0x17e, 200);
+    palavra(0x180, (t(0xc9) + 200) / 2);
+    palavra(0x182, qd(0x89));
+    palavra(0x184, qd(0xa1));
+    palavra(0x144, qd(0xad));
+    palavra(0x186, t(0xe9));
+    palavra(0x188, qd(0xa1));
+    palavra(0x164, 200);
+    palavra(0x18a, (qd(0x81) + qd(0xd9)) / 2);
+
+    // as 63 palavras de +0x11a ajustadas por +0x37 (tabela de casos do original)
+    const CASOS: [u8; 63] = [
+        0, 0, 1, 2, 2, 2, 3, 3, 3, 1, 3, 3, 1, 1, 1, 4, 4, 4, 4, 1, 5, 6, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3,
+        3, 1, 1, 1, 1, 1, 1, 7, 7, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 2, 5, 5, 5, 2, 1, 6, 3, 3, 1,
+    ];
+    for (k, &caso) in CASOS.iter().enumerate() {
+        let p = (this + 0x11a + 2 * k) as *mut i16;
+        let w = *p as f64;
+        let w37f = w37();
+        let v = match caso {
+            0 => ((w37f + 25) * 10) as f64 + w * q(0x968e18),
+            1 => ((w37f + 45) * 5) as f64 + w * q(0x968968),
+            2 => ((w37f * 3) as f64 + f(0x96d710)) + w * q(0x96d708),
+            3 => w * q(0x96d700) + w37f as f64 * q(0x968e18) + q(0x96d520),
+            4 => w * q(0x968ec8) + w37f as f64 * q(0x968e18) + q(0x96d520),
+            5 => w * q(0x96d640) + q(0x968ff8),
+            6 => w * q(0x968e38),
+            _ => ((w37f + 30) * 7) as f64 + w * q(0x96a6e8),
+        };
+        *p = ftol(v) as i16;
+    }
+    let momento: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6f44a0usize);
+    momento(this);
 }
 
 // ---------- octogesima quinta leva: atributos do jogador na partida (0x6ec010, ~11 KB) ----------
@@ -10458,6 +10703,19 @@ unsafe extern "thiscall" fn comparar_atualizar_atributos(this: usize) {
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| atualizar_atributos(this)));
     PLACAR.registrar(igual, || format!("atualizar_atributos original={:x?} rust={:x?}", mo, mr));
 }
+unsafe extern "thiscall" fn comparar_desempenho_na_partida(this: usize, marcar: u8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u8)>(243);
+    // o registro inteiro do jogador (0x6ec010, a propria e 0x6f44a0 gravam nele), o byte do lado em
+    // +0xaf do motor e o estado do sorteio
+    let mut reg: Vec<(usize, usize)> = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.push((this, 0x1be));
+    let motor = *((this + 0x19e) as *const usize);
+    if motor != 0 {
+        reg.push(((motor as isize + 0xaf + byte(this, 0x27) as isize) as usize, 1));
+    }
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, marcar), || crate::aleatorio::sem_contar(|| desempenho_na_partida(this, marcar)));
+    PLACAR.registrar(igual, || format!("desempenho_na_partida({}) original={:x?} rust={:x?}", marcar, mo, mr));
+}
 unsafe extern "thiscall" fn comparar_mascara_da_formacao(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(222);
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x187b, 4)], || o(this), || mascara_da_formacao(this));
@@ -11041,6 +11299,7 @@ pub unsafe fn instalar(comparando: bool) {
         nao_gosta_da_selecao as *const () as usize,
         copiar_data_e_marca as *const () as usize,
         atualizar_atributos as *const () as usize,
+        desempenho_na_partida as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -11286,6 +11545,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_nao_gosta_da_selecao as *const () as usize,
         comparar_copiar_data_e_marca as *const () as usize,
         comparar_atualizar_atributos as *const () as usize,
+        comparar_desempenho_na_partida as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -11384,6 +11644,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_competicao_da_pessoa", "motor_byte_42_da_selecao", "motor_byte_43_da_selecao", "motor_selecao_ou_especial",
         "motor_nao_gosta_da_selecao", "motor_copiar_data_e_marca",
         "motor_atualizar_atributos",
+        "motor_desempenho_na_partida",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

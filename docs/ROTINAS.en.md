@@ -821,3 +821,11 @@ Mutations: 8/8 (the 0x9d00a8 one only after the self-test put a non-national-sid
 | `atualizar_atributos()` | 0x6ec010 | thiscall | match_pl.cpp: recomputes word +0x3b and the 34 f32 fields from +0x71 to +0xf5 of the player: the designated player's rating (0x6ebd70, slot 0x897590), age, days alive, contract (0x4cf5f0, +0x45 bits, +0x10/+0x14 history), morale, tactical tables A/B (0x6c38c0/0x6c38f0), formation (0x6d5b20/0x6d5af0), managers and preferences (0x547810/0x547840/0x547d30/0x547d60), powers (0x945ff0) and random draws. Only the player record changes |
 
 Mutations: 10/12 in the real game (9 up to 2001-08-20; the contract bit 0x40000 one only by 2002-01-01). Two not reached even by 2002-01-01: tactic position 5 (bit 0x40 only) and the byte +0x1b cap for match types 1/8/32; left for Lucas's real career.
+
+### Match engine, 86th batch — player performance in the match (0x6eecb0, ~6.4 KB) (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `desempenho_na_partida(marcar)` | 0x6eecb0 | thiscall, ret 4 | match_pl.cpp: calls 0x6ec010; word +0x37 from tactical tables A and B against record bytes +0x10..+0x1a (with `marcar`, adds 1 or 2 to the side byte +0xaf in the engine); bytes +0x10e..+0x117 (at least 2); ~60 derived words from +0x11a to +0x196 (T = x·10 + 0.5, Q = (x² + 1)/2, integer averages); 63 of them adjusted by +0x37 through a table of 8 formulas; finally 0x6f44a0 |
+
+Mutations: 11/12 in the real game up to 2001-08-20 (the missing one needs record byte +0xf to be exactly 15).

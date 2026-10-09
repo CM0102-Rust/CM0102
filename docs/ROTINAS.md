@@ -819,3 +819,11 @@ Mutações: 8/8 (a do 0x9d00a8 só depois de o autoteste pôr nele um id que nã
 | `atualizar_atributos()` | 0x6ec010 | thiscall | match_pl.cpp: recalcula a palavra +0x3b e os 34 campos f32 de +0x71 a +0xf5 do jogador: nota do designado (0x6ebd70, vaga 0x897590), idade, dias de vida, contrato (0x4cf5f0, bits +0x45, histórico +0x10/+0x14), moral, tabelas táticas A/B (0x6c38c0/0x6c38f0), formação (0x6d5b20/0x6d5af0), técnicos e preferências (0x547810/0x547840/0x547d30/0x547d60), potências (0x945ff0) e sorteios. Só o registro do jogador muda |
 
 Mutações: 10/12 no jogo real (9 até 20/08/2001; a do bit 0x40000 do contrato só até 2002-01-01). Duas não alcançadas nem até 2002-01-01: a posição 5 da tática (só o bit 0x40) e o limite do byte +0x1b nos tipos de partida 1/8/32; ficam para a carreira real do Lucas.
+
+### Motor de partidas, 86ª leva — desempenho do jogador na partida (0x6eecb0, ~6,4 KB) (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `desempenho_na_partida(marcar)` | 0x6eecb0 | thiscall, ret 4 | match_pl.cpp: chama 0x6ec010; palavra +0x37 pelas tabelas táticas A e B contra os bytes +0x10..+0x1a da ficha (com `marcar`, soma 1 ou 2 no byte +0xaf do lado no motor); bytes +0x10e..+0x117 (mínimo 2); ~60 palavras derivadas de +0x11a a +0x196 (T = x·10 + 0,5, Q = (x² + 1)/2, médias inteiras); 63 delas ajustadas por +0x37 numa tabela de 8 fórmulas; por fim 0x6f44a0 |
+
+Mutações: 11/12 no jogo real até 20/08/2001 (a que não apareceu exige o byte +0xf da ficha exatamente 15).
