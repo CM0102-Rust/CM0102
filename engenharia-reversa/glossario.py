@@ -85,6 +85,7 @@ EN = {
  'contrato_com_clube': 'contract_with_club', 'nivel_do_contrato': 'contract_level',
  'chance_de_conhecer': 'chance_to_know', 'conhecer_pessoa': 'know_person', 'nevoa_apos_partida': 'fog_after_match',
  'entrada_da_lista': 'shortlist_entry', 'bandeiras_do_contrato': 'contract_flags',
+ 'proximo_da_lista': 'next_list_item', 'palavra_0c': 'word_0c', 'arredondar_abaixo_de_1000': 'round_below_1000', 'nacao_do_grupo': 'group_nation', 'quantos_marcam': 'how_many_mark', 'quem_marca': 'who_marks',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

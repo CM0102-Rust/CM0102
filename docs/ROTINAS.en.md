@@ -720,3 +720,16 @@ Mutations: 13/15. Two equivalent: multiplying by ⅓ (constant 0x968a80) instead
 | `bandeiras_do_contrato()` | 0x8676f0 | thiscall | staff_contracts.cpp: +0x40 (a 4-byte routine; the hook covers the first alignment nop) |
 
 Mutations: 6/6.
+
+### Match engine, 77th batch — next list item, word +0xc, rounding, group nations, markers (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `proximo_da_lista()` | 0x68d1b0 | thiscall | cursor at +0xa (unaligned): returns the node's +0 and advances to its +6 |
+| `palavra_0c(id)` | 0x62c3d0 | thiscall, ret 4 | injury.cpp: signed word +0xc of the 31-byte record; id from 0xae2364 on: 0 |
+| `arredondar_abaixo_de_1000(v)` | 0x4b0870 | cdecl | comp_util.cpp: `v` minus the (signed) remainder by 10 of the low word, when it is below 1000 |
+| `nacao_do_grupo(nacao)` | 0x7e6f20 | stdcall | is the nation one of the six at 0x9cf794, 0x9cf684, 0x9cf798, 0x9cf6b0, 0x9cf5d8, 0x9cf548? |
+| `quantos_marcam(alvo)` | 0x6d59b0 | thiscall, ret 4 | how many of the 20 on the other side (active) man-mark the target (0x7160f0) |
+| `quem_marca(alvo)` | 0x6d5a10 | thiscall, ret 4 | the first of them, or 0 |
+
+Mutations: 12/13 (one equivalent: `< 1000` becoming `<= 1000`, since 1000 has remainder 0). The markers join the 59th batch self-test, with valid engine and side on the 20 of the other side during the calls.

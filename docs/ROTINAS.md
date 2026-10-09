@@ -718,3 +718,16 @@ Mutações: 13/15. Duas equivalentes: multiplicar por ⅓ (constante 0x968a80) e
 | `bandeiras_do_contrato()` | 0x8676f0 | thiscall | staff_contracts.cpp: +0x40 (4 bytes de rotina; o desvio cobre o primeiro nop do alinhamento) |
 
 Mutações: 6/6.
+
+### Motor de partidas, 77ª leva — próximo da lista, palavra +0xc, arredondamento, nações do grupo, marcadores (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `proximo_da_lista()` | 0x68d1b0 | thiscall | cursor em +0xa (desalinhado): devolve o +0 do nó e avança para o +6 |
+| `palavra_0c(id)` | 0x62c3d0 | thiscall, ret 4 | injury.cpp: palavra com sinal +0xc do registro de 31 bytes; id a partir de 0xae2364: 0 |
+| `arredondar_abaixo_de_1000(v)` | 0x4b0870 | cdecl | comp_util.cpp: `v` menos o resto (com sinal) por 10 da palavra baixa, quando ela é menor que 1000 |
+| `nacao_do_grupo(nacao)` | 0x7e6f20 | stdcall | a nação é uma das seis de 0x9cf794, 0x9cf684, 0x9cf798, 0x9cf6b0, 0x9cf5d8, 0x9cf548? |
+| `quantos_marcam(alvo)` | 0x6d59b0 | thiscall, ret 4 | quantos dos 20 do outro lado (ativos) marcam o alvo (0x7160f0) |
+| `quem_marca(alvo)` | 0x6d5a10 | thiscall, ret 4 | o primeiro deles, ou 0 |
+
+Mutações: 12/13 (uma equivalente: `< 1000` virar `<= 1000`, já que 1000 tem resto 0). Os marcadores entram no autoteste da 59ª leva, com motor e lado válidos nos 20 do outro lado durante as chamadas.

@@ -311,8 +311,14 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x849ce0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0xdc, 0x00, 0x00, 0x00] },
     // 4 bytes de rotina (mov + ret) e o primeiro nop do alinhamento: o ret sai antes do salto de volta
     Prologo { endereco: 0x8676f0, bytes: &[0x8b, 0x41, 0x40, 0xc3, 0x90] },
+    Prologo { endereco: 0x68d1b0, bytes: &[0x8b, 0x51, 0x0a, 0x85, 0xd2] },
+    Prologo { endereco: 0x62c3d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0x64, 0x23, 0xae, 0x00] },
+    Prologo { endereco: 0x4b0870, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x33, 0xd2] },
+    Prologo { endereco: 0x7e6f20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
+    Prologo { endereco: 0x6d59b0, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x0c] },
+    Prologo { endereco: 0x6d5a10, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] },
 ];
-const N: usize = 205;
+const N: usize = 211;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3985,6 +3991,68 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- septuagesima setima leva: proximo da lista, palavra +0xc, arredondamento, nacoes, marcadores ----------
+
+/// { 0x68d1b0 }: o proximo item da lista (cursor em +0xa: devolve o +0 do no e avanca para o +6), ou 0.
+unsafe extern "thiscall" fn proximo_da_lista(this: usize) -> u32 {
+    let no = core::ptr::read_unaligned((this + 0xa) as *const usize);
+    if no == 0 {
+        return 0;
+    }
+    core::ptr::write_unaligned((this + 0xa) as *mut usize, core::ptr::read_unaligned((no + 6) as *const usize));
+    core::ptr::read_unaligned(no as *const u32)
+}
+
+/// { 0x62c3d0 } (ret 4, injury.cpp): a palavra com sinal +0xc do registro de 31 bytes da pessoa `id`
+/// em [this]; id a partir de 0xae2364: 0.
+unsafe extern "thiscall" fn palavra_0c(this: usize, id: i32) -> i32 {
+    if id >= *(0xae2364 as *const i32) {
+        return 0;
+    }
+    core::ptr::read_unaligned((*(this as *const usize)).wrapping_add((id as usize).wrapping_mul(31)).wrapping_add(0xc) as *const i16) as i32
+}
+
+/// { 0x4b0870 } (comp_util.cpp): `v` menos o resto por 10 da palavra baixa, quando ela (com sinal)
+/// e menor que 1000.
+unsafe extern "C" fn arredondar_abaixo_de_1000(v: i32) -> i32 {
+    let w = v as i16;
+    v.wrapping_sub(if w < 1000 { w as i32 % 10 } else { 0 })
+}
+
+/// { 0x7e6f20 } (stdcall): a nacao (id em +0) e uma das seis de 0x9cf794, 0x9cf684, 0x9cf798,
+/// 0x9cf6b0, 0x9cf5d8 e 0x9cf548?
+unsafe extern "stdcall" fn nacao_do_grupo(nacao: usize) -> u32 {
+    if nacao == 0 {
+        return 0;
+    }
+    let id = *(nacao as *const u32);
+    [0x9cf794usize, 0x9cf684, 0x9cf798, 0x9cf6b0, 0x9cf5d8, 0x9cf548].iter().any(|&a| *(a as *const u32) == id) as u32
+}
+
+/// { 0x6d59b0 } (ret 4): quantos dos 20 jogadores do outro lado (ativos, +0x19 >= 0) marcam
+/// `alvo` individualmente (0x7160f0).
+unsafe extern "thiscall" fn quantos_marcam(this: usize, alvo: usize) -> u8 {
+    let marcado: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x7160f0usize);
+    let outro = (lado(alvo) == 0) as i8;
+    (0..20).filter(|&k| {
+        let j = jogador_do_bloco(this, outro, k);
+        *((j + 0x19) as *const i8) >= 0 && marcado(j) == alvo
+    }).count() as u8
+}
+
+/// { 0x6d5a10 } (ret 4): o primeiro dos 20 jogadores do outro lado (ativos) que marca `alvo`, ou 0.
+unsafe extern "thiscall" fn quem_marca(this: usize, alvo: usize) -> usize {
+    let marcado: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x7160f0usize);
+    let outro = (lado(alvo) == 0) as i8;
+    for k in 0..20 {
+        let j = jogador_do_bloco(this, outro, k);
+        if *((j + 0x19) as *const i8) >= 0 && marcado(j) == alvo {
+            return j;
+        }
+    }
+    0
 }
 
 // ---------- septuagesima sexta leva: lista de observacao, bandeiras do contrato ----------
@@ -9078,6 +9146,27 @@ unsafe extern "thiscall" fn comparar_entrada_da_lista(this: usize, pessoa: usize
     r
 }
 comparar_valor!(comparar_bandeiras_do_contrato, bandeiras_do_contrato, 204, () -> u32);
+unsafe extern "thiscall" fn comparar_proximo_da_lista(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(205);
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0xa, 4)], || o(this), || proximo_da_lista(this));
+    PLACAR.registrar(igual && r == v, || format!("proximo_da_lista original={:#x} {:x?} rust={:#x} {:x?}", r, mo, v, mr));
+    r
+}
+comparar_valor!(comparar_palavra_0c, palavra_0c, 206, (id: i32) -> i32);
+unsafe extern "C" fn comparar_arredondar(v: i32) -> i32 {
+    let r = orig::<unsafe extern "C" fn(i32) -> i32>(207)(v);
+    let n = arredondar_abaixo_de_1000(v);
+    PLACAR.registrar(r == n, || format!("arredondar_abaixo_de_1000({:#x}) original={} rust={}", v, r, n));
+    r
+}
+unsafe extern "stdcall" fn comparar_nacao_do_grupo(nacao: usize) -> u32 {
+    let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(208)(nacao);
+    let n = nacao_do_grupo(nacao);
+    PLACAR.registrar(r == n, || format!("nacao_do_grupo({:#x}) original={} rust={}", nacao, r, n));
+    r
+}
+comparar_valor!(comparar_quantos_marcam, quantos_marcam, 209, (alvo: usize) -> u8);
+comparar_valor!(comparar_quem_marca, quem_marca, 210, (alvo: usize) -> usize);
 unsafe extern "C" fn comparar_chance_de_conhecer(pessoa: usize, nivel: i8) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, i8) -> i32>(200)(pessoa, nivel);
     let v = chance_de_conhecer(pessoa, nivel);
@@ -9617,6 +9706,12 @@ pub unsafe fn instalar(comparando: bool) {
         nevoa_apos_partida as *const () as usize,
         entrada_da_lista as *const () as usize,
         bandeiras_do_contrato as *const () as usize,
+        proximo_da_lista as *const () as usize,
+        palavra_0c as *const () as usize,
+        arredondar_abaixo_de_1000 as *const () as usize,
+        nacao_do_grupo as *const () as usize,
+        quantos_marcam as *const () as usize,
+        quem_marca as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -9824,6 +9919,12 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_nevoa_apos_partida as *const () as usize,
         comparar_entrada_da_lista as *const () as usize,
         comparar_bandeiras_do_contrato as *const () as usize,
+        comparar_proximo_da_lista as *const () as usize,
+        comparar_palavra_0c as *const () as usize,
+        comparar_arredondar as *const () as usize,
+        comparar_nacao_do_grupo as *const () as usize,
+        comparar_quantos_marcam as *const () as usize,
+        comparar_quem_marca as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -9908,6 +10009,8 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_contrato_com_clube", "motor_nivel_do_contrato",
         "motor_chance_de_conhecer", "motor_conhecer_pessoa", "motor_nevoa_apos_partida",
         "motor_entrada_da_lista", "motor_bandeiras_do_contrato",
+        "motor_proximo_da_lista", "motor_palavra_0c", "motor_arredondar_abaixo_de_1000", "motor_nacao_do_grupo",
+        "motor_quantos_marcam", "motor_quem_marca",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -11508,6 +11611,40 @@ pub unsafe fn autoteste(casos: u64) {
                         *c = (h76 as u32).rotate_left(k as u32) ^ k as u32;
                     }
                     comparar_bandeiras_do_contrato(contrato76.as_ptr() as usize);
+                    // septuagesima setima leva: lista encadeada (nos de 10 bytes, desalinhados), palavra
+                    // +0xc em registros de 31 bytes, arredondamento e nacoes do grupo
+                    let h77 = s.proximo();
+                    let mut nos77 = [0u8; 10 * 4 + 1];
+                    let base77 = nos77.as_mut_ptr() as usize + 1;
+                    for k in 0..4usize {
+                        core::ptr::write_unaligned((base77 + 10 * k) as *mut u32, (h77 >> (8 * k)) as u32);
+                        core::ptr::write_unaligned((base77 + 10 * k + 6) as *mut usize, if k == 3 || (h77 >> (k + 40)) % 4 == 0 { 0 } else { base77 + 10 * (k + 1) });
+                    }
+                    let mut cursor77 = [0u8; 0x10];
+                    core::ptr::write_unaligned(cursor77.as_mut_ptr().add(0xa) as *mut usize, if (h77 >> 45) % 5 == 0 { 0 } else { base77 + 10 * ((h77 >> 46) % 4) as usize });
+                    for _ in 0..3 {
+                        comparar_proximo_da_lista(cursor77.as_mut_ptr() as usize);
+                    }
+                    let n77 = *(0xae2364 as *const i32);
+                    let mut regs77 = vec![0u8; 31 * 8];
+                    for (k, b) in regs77.iter_mut().enumerate() {
+                        *b = (h77.rotate_left(k as u32 % 64) as u8) ^ (k as u8).wrapping_mul(29);
+                    }
+                    let id77 = [n77 - 1, n77, n77 + 1, n77 - 8 + ((h77 >> 50) % 8) as i32][((h77 >> 48) % 4) as usize];
+                    let tab77 = [(regs77.as_ptr() as usize).wrapping_sub(31usize.wrapping_mul((n77 - 8) as usize))];
+                    comparar_palavra_0c(tab77.as_ptr() as usize, id77);
+                    let v77 = [(h77 >> 10) as i32, 990 + ((h77 >> 20) % 20) as i32, -(((h77 >> 30) % 30000) as i32), ((h77 >> 3) as i32 & !0xffff) | 999][((h77 >> 56) % 4) as usize];
+                    comparar_arredondar(v77);
+                    let globais77 = [0x9cf794usize, 0x9cf684, 0x9cf798, 0x9cf6b0, 0x9cf5d8, 0x9cf548];
+                    let antes77: Vec<u32> = globais77.iter().map(|&a| *(a as *const u32)).collect();
+                    for (k, &a) in globais77.iter().enumerate() {
+                        *(a as *mut u32) = 60 + k as u32;
+                    }
+                    let nacao77 = [58 + ((h77 >> 58) % 10) as u32];
+                    comparar_nacao_do_grupo(if (h77 >> 62) == 0 { 0 } else { nacao77.as_ptr() as usize });
+                    for (k, &a) in globais77.iter().enumerate() {
+                        *(a as *mut u32) = antes77[k];
+                    }
                     for (k, &a) in globais75.iter().enumerate() {
                         *(a as *mut u32) = antes75[k];
                     }
@@ -11869,7 +12006,25 @@ pub unsafe fn autoteste(casos: u64) {
                     *((j + 0x27) as *mut i8) = l59 as i8;
                     *((j + 0x19) as *mut i8) = ((z >> 5) % 11) as i8;
                     *((j + 0x106) as *mut u8) = ((z >> 9) % 2) as u8;
-                    comparar_marcado_designado(j);
+                    let alvo77 = comparar_marcado_designado(j);
+                    // septuagesima setima leva: quantos e quem marcam o alvo (ou o proprio jogador)
+                    let alvo77 = if alvo77 != 0 && (z >> 20) % 4 != 0 { alvo77 } else { j };
+                    // os do outro lado com motor e lado validos durante as duas chamadas (0x7160f0 le os dois)
+                    let outro77 = (*((alvo77 + 0x27) as *const i8) == 0) as i8;
+                    let guardados77: Vec<(usize, u8)> = (0..20).map(|k| {
+                        let q = jogador_do_bloco(m, outro77, k);
+                        let g = (*((q + 0x19e) as *const usize), *((q + 0x27) as *const u8));
+                        *((q + 0x19e) as *mut usize) = m;
+                        *((q + 0x27) as *mut i8) = outro77;
+                        g
+                    }).collect();
+                    comparar_quantos_marcam(m, alvo77);
+                    comparar_quem_marca(m, alvo77);
+                    for (k, &(g, l)) in guardados77.iter().enumerate() {
+                        let q = jogador_do_bloco(m, outro77, k);
+                        *((q + 0x19e) as *mut usize) = g;
+                        *((q + 0x27) as *mut u8) = l;
+                    }
                     comparar_designado_da_posicao(form, [-1i8, 0, 5, 10][((z >> 12) % 4) as usize]);
                 }
                 for (i, &b) in blocos.iter().enumerate() {

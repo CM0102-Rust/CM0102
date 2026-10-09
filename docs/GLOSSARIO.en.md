@@ -62,6 +62,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6bb8d0 | `aplicar_ao_time` | apply_to_team |
 | 0x716450 | `aplicar_fator` | apply_factor |
 | 0x6f4920 | `apontar` | aim (set facing direction) |
+| 0x4b0870 | `arredondar_abaixo_de_1000` | round_below_1000 |
 | 0x6cd5f0 | `atras_do_extremo` | behind_the_extreme |
 | 0x6f4aa0 | `atualizar_jogador` | update_player |
 | 0x8676f0 | `bandeiras_do_contrato` | contract_flags |
@@ -187,6 +188,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f46b0 | `mover_para` | move_to |
 | 0x6f4650 | `na_area` | in_the_box |
 | 0x714c60 | `na_lista` | in_list |
+| 0x7e6f20 | `nacao_do_grupo` | group_nation |
 | 0x547840 | `nao_gosta_de` | dislikes |
 | 0x547d30 | `nao_gosta_do_clube` | dislikes_club |
 | 0x5afe00 | `nevoa_apos_partida` | fog_after_match |
@@ -195,6 +197,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6d3de0 | `nova_reputacao` | new_reputation |
 | 0x6bd760 | `ordem_dos_jogadores` | player_order |
 | 0x6be520 | `ordem_dos_penaltis` | penalty_order |
+| 0x62c3d0 | `palavra_0c` | word_0c |
 | 0x717c70 | `papel_880` | role_880 |
 | 0x716310 | `papel_na_defesa` | defending_role |
 | 0x716270 | `papel_no_ataque` | attacking_role |
@@ -213,8 +216,11 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c3a00 | `pressao_no_ponto` | pressure_at_point |
 | 0x6ea760 | `procurar_impedimento` | look_for_offside |
 | 0x6cd330 | `procurar_no_lado` | search_on_side |
+| 0x68d1b0 | `proximo_da_lista` | next_list_item |
 | 0x6e9630 | `punir_falta` | punish_foul |
 | 0x6ea4e0 | `punir_lance` | punish_move |
+| 0x6d59b0 | `quantos_marcam` | how_many_mark |
+| 0x6d5a10 | `quem_marca` | who_marks |
 | 0x6bc030 | `quem_marcar` | who_to_mark |
 | 0x6bb9a0 | `registrar_lance` | record_move |
 | 0x7003b0 | `registrar_posse` | record_possession |
