@@ -847,3 +847,12 @@ Mutations: 5/8 in the real game. The other three (mask added vs ORed, the −750
 | `partida_de_interesse(partida)` | 0x6b61e0 | cdecl | match_day.cpp: does the match interest any of the 16 human managers? By competition (+0x14): national sides, friendly (0x5c6710), round 150 (0x4b0870), nation (+0x5d) or continental competition (0xae23a4) |
 
 Mutations: 5/8 in the real game up to 2001-08-20; `i_amistoso`, `i_principal` and `i_16` survived: the only human in the automatic career (test manager, on holiday) has no club, so the club/friendly branches never fire and there is no 16th manager. Left for a real career.
+
+### Match engine, 89th batch — group decided, qualification commentary (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `grupo_decidido(clube, partida)` | 0x6854a0 | thiscall, ret 8 | league.cpp: with round +0xa9 ≥ 24 in a counting competition, the club leads a sorted copy of the table (0x687710/0x685f60/0x6827d0/0x687970) and nobody can catch it with the remaining games (+0xa7 − played) × points per win (+0xc2) |
+| `narrar_classificacao(lado)` | 0x6be120 | thiscall, ret 4 | match_eng.cpp: comments 0x2171/0x2170 (qualification settled: group or knockout via 0x6ce310), 0x2120 (ahead on aggregate), 0x2121 (starters' average +0x1b below 7.0 or 6.67 and the opponent's strength +0x80 weighing; 0.8 for the away side), 0x2001 (side 1, game still open) |
+
+Mutations: 1/8 in the real game up to 2001-08-20 (`n_2001`). The other seven sit in branches that do not occur before August: group decided only from round 24, and the +0x8ebb section (knockout aggregate). They go to a longer mutation run.

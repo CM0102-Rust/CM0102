@@ -163,6 +163,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x700390 | `gravar_8eaa` | write_8eaa |
 | 0x7003a0 | `gravar_8ed8` | write_8ed8 |
 | 0x5b5290 | `gravar_casa` | set_square |
+| 0x6854a0 | `grupo_decidido` | group_decided |
 | 0x6cd660 | `guardar_extremos` | store_extremes |
 | 0x6e9470 | `iniciar_rigor` | init_strictness |
 | 0x6c2fe0 | `jogador_no_bloco` | player_in_block |
@@ -215,6 +216,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x776380 | `nao_gosta_da_selecao` | dislikes_national_side |
 | 0x547840 | `nao_gosta_de` | dislikes |
 | 0x547d30 | `nao_gosta_do_clube` | dislikes_club |
+| 0x6be120 | `narrar_classificacao` | narrate_qualification |
 | 0x5afe00 | `nevoa_apos_partida` | fog_after_match |
 | 0x53ce90 | `nivel_do_contrato` | contract_level |
 | 0x715f50 | `nota_ajustada` | adjusted_rating |

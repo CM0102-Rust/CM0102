@@ -845,3 +845,12 @@ Mutações: 5/8 no jogo real. As três restantes (máscara somada × juntada, o 
 | `partida_de_interesse(partida)` | 0x6b61e0 | cdecl | match_day.cpp: a partida interessa a algum dos 16 técnicos humanos? Pela competição (+0x14): seleções, amistoso (0x5c6710), rodada 150 (0x4b0870), nação (+0x5d) ou competição continental (0xae23a4) |
 
 Mutações: 5/8 no jogo real até 20/08/2001; `i_amistoso`, `i_principal` e `i_16` sobreviveram: o único humano da carreira automática (técnico de testes, de férias) não tem clube, então os ramos de clube/amistoso não disparam e o 16º técnico não existe. Ficam para a carreira real.
+
+### Motor de partidas, 89ª leva — grupo decidido, narração da classificação (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `grupo_decidido(clube, partida)` | 0x6854a0 | thiscall, ret 8 | league.cpp: com a rodada +0xa9 ≥ 24 numa competição que conta, o clube está na frente numa cópia ordenada da tabela (0x687710/0x685f60/0x6827d0/0x687970) e ninguém o alcança com os jogos que faltam (+0xa7 − jogos) × pontos por vitória (+0xc2) |
+| `narrar_classificacao(lado)` | 0x6be120 | thiscall, ret 4 | match_eng.cpp: comentários 0x2171/0x2170 (classificação decidida: grupo ou mata-mata via 0x6ce310), 0x2120 (à frente no agregado), 0x2121 (média do +0x1b dos titulares abaixo de 7,0 ou 6,67 e força +0x80 do adversário pesando; 0,8 para o visitante), 0x2001 (lado 1, jogo em aberto) |
+
+Mutações: 1/8 no jogo real até 20/08/2001 (`n_2001`). As outras sete estão em ramos que não ocorrem até agosto: grupo decidido só a partir da rodada 24, e o trecho de +0x8ebb (agregado de mata-mata). Vão para uma rodada mais longa de mutações.

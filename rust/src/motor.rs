@@ -355,8 +355,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x714d00, bytes: &[0x80, 0x79, 0x27, 0x01, 0x75, 0x15] },
     Prologo { endereco: 0x6f55c0, bytes: &[0x51, 0x56, 0x8b, 0xf1, 0xe8, 0xd7, 0xee, 0xff, 0xff] },
     Prologo { endereco: 0x6b61e0, bytes: &[0x53, 0x8b, 0x15, 0x68, 0xf6, 0x9c, 0x00] },
+    Prologo { endereco: 0x6854a0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53, 0x55] },
+    Prologo { endereco: 0x6be120, bytes: &[0x83, 0xec, 0x10, 0x53, 0x56] },
 ];
-const N: usize = 248;
+const N: usize = 250;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4029,6 +4031,153 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- octogesima nona leva: decisao pela classificacao do grupo, narracao da classificacao ----------
+
+/// { 0x6854a0 } (ret 8, league.cpp): a fase (this) com a partida (`partida`, +0x42 = 0xff) ja decide
+/// o clube? So nas competicoes que contam (0x4b0700), com o bit 1 de +0xd9 e a rodada +0xa9 >= 24:
+/// a linha do clube (+0xb1, 0x3b bytes, +0x3e linhas) sem situacao +0x37 de 5, 2, 3, -2, -4 ou -5;
+/// numa copia da tabela (0x687710) preenchida (0x685f60) e ordenada (0x6827d0), o clube tem de estar
+/// na frente (+4 zero) e nenhum outro alcanca-lo com os jogos que faltam (+0xa7 - +0x11 vezes os
+/// pontos por vitoria +0xc2, contra os pontos +0x19). A copia volta (0x687970).
+unsafe extern "thiscall" fn grupo_decidido(this: usize, clube: usize, partida: usize) -> u32 {
+    if *((partida + 0x42) as *const u8) != 0xff {
+        return 0;
+    }
+    let conta: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(0x4b0700usize);
+    if conta(*(*((this + 4) as *const usize) as *const i32)) == 0 {
+        return 0;
+    }
+    if *((this + 0xd9) as *const u8) & 1 == 0 || *((this + 0xa9) as *const i16) < 24 {
+        return 0;
+    }
+    let linhas = *((this + 0x3e) as *const i16);
+    let tabela = *((this + 0xb1) as *const usize);
+    let linha = |base: usize, k: i16| base.wrapping_add(k as usize * 0x3b);
+    let Some(k) = (0..linhas).find(|&k| *(linha(tabela, k) as *const usize) == clube) else {
+        return 0;
+    };
+    let r = linha(tabela, k);
+    if r == 0 || matches!(*((r + 0x37) as *const i8), 5 | 2 | 3 | -2 | -4 | -5) {
+        return 0;
+    }
+    let copia: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x687710usize);
+    let preencher: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, u32, u32) = core::mem::transmute(0x685f60usize);
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x6827d0usize);
+    let soltar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x687970usize);
+    let t = copia(this);
+    if t == 0 {
+        return 0;
+    }
+    preencher(this, partida, t, *((this + 0x3e) as *const u16) as i32, 0, 0, 0);
+    ordenar(this, t);
+    let n = *((this + 0x3e) as *const i16);
+    // a original le +4 do endereco 0 se o clube nao estiver na copia (nunca acontece no jogo)
+    let achada = (0..n).find(|&k| *(linha(t, k) as *const usize) == clube).map_or(0, |k| linha(t, k));
+    if *((achada + 4) as *const u8) != 0 {
+        soltar(this, t);
+        return 0;
+    }
+    let rodadas = *((this + 0xa7) as *const i16);
+    let pontos = *((this + 0xc2) as *const i8) as i16;
+    for k in 1..*((this + 0x3e) as *const i16) {
+        let o = linha(t, k);
+        let jogos = *((o + 0x11) as *const i8) as i16;
+        let alcance = rodadas.wrapping_sub(jogos).wrapping_mul(pontos).wrapping_add(*((o + 0x19) as *const i16));
+        if alcance >= *((t + 0x19) as *const i16) && (*((t + 0x11) as *const i8) as i16 != rodadas || jogos != rodadas) {
+            soltar(this, t);
+            return 0;
+        }
+    }
+    soltar(this, t);
+    1
+}
+
+/// { 0x6be120 } (ret 4, match_eng.cpp) com o comentario injetado: narra a situacao da
+/// classificacao do lado. Grupo decidido (0x6854a0) ou mata-mata ja resolvido (0x6ce310 na rodada
+/// 0x82 ou 0x96): 0x2171/0x2170. Com +0x8ebb: 0x2120 se o lado esta na frente do agregado, senao
+/// 0x2121 quando a media do +0x1b dos titulares e baixa e a forca (+0x80) do outro clube pesa. No fim,
+/// para o lado 1 sem +0x1a8: 0x2001 se o jogo ainda nao estiver decidido.
+unsafe fn narrar_classificacao_com(this: usize, lado: u32, chamar: ChamarComentario) {
+    let t = || *((this + 0x4792) as *const usize);
+    let w = |o: usize| *((t() + o) as *const i16);
+    let conta: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(0x4b0700usize);
+    let conta_t = || conta(*(t() as *const i32));
+    let objeto = || *((*(0xadadfc as *const usize)).wrapping_add((*(t() as *const i32) as usize).wrapping_mul(4)) as *const usize);
+    let decidido: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x6854a0usize);
+    let agregado: unsafe extern "thiscall" fn(usize, i8, *mut i8, *mut i8, *mut u8, *mut u8, *mut u8, u8) -> i8 = core::mem::transmute(0x6ce310usize);
+    let narrador = || *((this + 0x8f7a) as *const usize);
+    let fala = |c: &mut dyn FnMut(usize, [u32; 7]), cod: u32, l: u32| c(narrador(), [cod, this as u32, u32::MAX, l, u32::MAX, u32::MAX, 0]);
+    // o placar agregado com a 5a saida (fase3): na original ela cai no proprio argumento
+    let resolvido = |l: i8| -> bool {
+        let (mut a, mut b, mut c, mut d, mut e) = (0i8, 0i8, 0u8, 0u8, 0u8);
+        agregado(this, l, &mut a, &mut b, &mut c, &mut d, &mut e, 0) > 0 && e == 0
+    };
+    let bl = lado as u8 as i8;
+    if w(0x32) == 0 && conta_t() == 0 && w(0x30) == 0x82 && resolvido(bl) {
+        fala(chamar, 0x2171, lado);
+        return;
+    }
+    if conta_t() != 0 {
+        let clube = *((t() + if bl != 0 { 0x20 } else { 0x1c }) as *const usize);
+        if decidido(objeto(), clube, t()) != 0 {
+            fala(chamar, 0x2170, lado);
+            return;
+        }
+    } else if w(0x30) == 0x96 && resolvido(bl) {
+        fala(chamar, 0x2170, lado);
+        return;
+    }
+    if byte(this, 0x8ebb) != 0 {
+        let (mut casa, mut fora, mut classificado, mut x, mut y) = (0i8, 0i8, 0u8, 0u8, 0u8);
+        agregado(this, bl, &mut casa, &mut fora, &mut classificado, &mut x, &mut y, 0);
+        if casa > fora || (casa == fora && classificado != 0) {
+            fala(chamar, 0x2120, lado);
+        } else {
+            let mut soma = 0.0f64;
+            let mut n = 0i8;
+            for k in 0..20usize {
+                let j = jogador_do_bloco(this, bl, k);
+                if k <= 10 || *((j + 0x1f) as *const u8) != 0xff {
+                    soma += byte(j, 0x1b) as f64;
+                    n = n.wrapping_add(1);
+                }
+            }
+            // sem nenhum titular a media seria o que estivesse no argumento (nao acontece)
+            let media = if n != 0 { (soma / n as f64) as f32 as f64 } else { 0.0 };
+            let forca = |o: usize| *((*((t() + o) as *const usize) + 0x80) as *const i16) as f64;
+            let x = media * f64_em(0x968968) - f64_em(0x968950);
+            if bl == 0 {
+                if media < f64_em(0x968988) && x * forca(0x20) < forca(0x1c) {
+                    fala(chamar, 0x2121, 0);
+                }
+                return;
+            }
+            if media < f64_em(0x96d2e8) && x * forca(0x1c) < forca(0x20) * f64_em(0x9689b0) {
+                fala(chamar, 0x2121, lado);
+            }
+        }
+    }
+    if bl != 1 || byte(this, 0x1a8) != 0 {
+        return;
+    }
+    if w(0x32) == 0 && conta_t() == 0 && w(0x30) == 0x82 && resolvido(0) {
+        return;
+    }
+    if conta_t() != 0 {
+        if decidido(objeto(), *((t() + 0x1c) as *const usize), t()) != 0 {
+            return;
+        }
+    } else if w(0x30) == 0x96 && resolvido(0) {
+        return;
+    }
+    fala(chamar, 0x2001, 0);
+}
+
+/// { 0x6be120 } (ret 4, match_eng.cpp): ver `narrar_classificacao_com`.
+unsafe extern "thiscall" fn narrar_classificacao(this: usize, lado: u32) {
+    narrar_classificacao_com(this, lado, &mut |t, a| comentar(t, a))
 }
 
 // ---------- octogesima oitava leva: lado da bola, momento do jogador, partida de interesse ----------
@@ -10961,6 +11110,12 @@ unsafe extern "C" fn comparar_partida_de_interesse(p: usize) -> u32 {
     PLACAR.registrar(r == v, || format!("partida_de_interesse({:#x}) original={} rust={}", p, r, v));
     r
 }
+comparar_valor!(comparar_grupo_decidido, grupo_decidido, 248, (clube: usize, partida: usize) -> u32);
+unsafe extern "thiscall" fn comparar_narrar_classificacao(this: usize, lado: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(249);
+    let (igual, n) = comparar_com_comentarios(|| o(this, lado), |c| narrar_classificacao_com(this, lado, c));
+    PLACAR.registrar(igual, || format!("narrar_classificacao({}) {} chamadas", lado as u8, n));
+}
 unsafe extern "thiscall" fn comparar_mascara_da_formacao(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(222);
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x187b, 4)], || o(this), || mascara_da_formacao(this));
@@ -11549,6 +11704,8 @@ pub unsafe fn instalar(comparando: bool) {
         bola_no_ataque as *const () as usize,
         evoluir_momento as *const () as usize,
         partida_de_interesse as *const () as usize,
+        grupo_decidido as *const () as usize,
+        narrar_classificacao as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -11799,6 +11956,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_bola_no_ataque as *const () as usize,
         comparar_evoluir_momento as *const () as usize,
         comparar_partida_de_interesse as *const () as usize,
+        comparar_grupo_decidido as *const () as usize,
+        comparar_narrar_classificacao as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -11900,6 +12059,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_desempenho_na_partida",
         "motor_forca_do_lado",
         "motor_bola_no_ataque", "motor_evoluir_momento", "motor_partida_de_interesse",
+        "motor_grupo_decidido", "motor_narrar_classificacao",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
