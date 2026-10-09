@@ -90,6 +90,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cbbb0 | `contar_ativos` | count_active |
 | 0x4cf5a0 | `contrato_de` | contract_of |
 | 0x6e9540 | `decidir_falta` | decide_foul |
+| 0x6e9820 | `decisao_da_falta` | foul_decision |
 | 0x700420 | `defesa_do_goleiro` | goalkeeper_save |
 | 0x6f56c0 | `desgastar` | tire (fatigue) |
 | 0x5b58e0 | `designado_da_posicao` | designated_for_position |

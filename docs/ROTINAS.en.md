@@ -657,3 +657,11 @@ Errors (null club, slot out of range): the original (error box). Mutations: 7/7 
 | `clube_especial(clube)` | 0x76d940 | stdcall, ret 4 | is the club one of the nine kept at 0x9cf78c, 0x9cf790, 0x9cf79c..0x9cf7ac, 0x9cf8a0, 0x9cf964 (by id)? |
 
 Mutations: 8/8 in the self-test. `e_lista` was only caught after the self-test put distinct values in the nine addresses: before the database loads they are all 0, and removing one from the list changes nothing.
+
+### Match engine, 70th batch — referee's foul decision (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `decisao_da_falta(j, outro, tipo, quem, cartao, grav, vantagem)` | 0x6e9820 | thiscall, ret 0x1c | match_man.cpp, 3 KB: the referee decides foul `tipo` by player `j` on `outro`; returns 1 or 7 (card given) and writes the card (4, 5, 7, 10, 11), the severity and the advantage flag. `this`: +0 engine, +4 referee, +8 patience. Strictness factor from severity (+0x25), the side's mode (+0x1ad) and style (+0x27), the advantage and the score (0xf5c9 + 54 × side), clamped to 0.1..10; friendlies (0x5c6710) soften it. 19 foul types, each with its own draw against the factor; severity rises with hardness (+0x14) and falls with the minute (0x8ed0 / 11). Advantage: 20 (or 5) × card+0x5c^1.5 / (1 or 3), with the CRT `pow` |
+
+Mutations in the real game: 8/10. **Limitation:** `f_vantagem` (divisor 3 when `j` himself last brought `outro` down) and `f_teto` (factor above 10) do not happen up to 2002-01-01 in the automatic career; there is no synthetic self-test for this routine.

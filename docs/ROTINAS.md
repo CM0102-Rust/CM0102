@@ -655,3 +655,11 @@ Erros (clube nulo, vaga fora): a original (caixa de erro). Mutações: 7/7 no au
 | `clube_especial(clube)` | 0x76d940 | stdcall, ret 4 | o clube é um dos nove guardados em 0x9cf78c, 0x9cf790, 0x9cf79c..0x9cf7ac, 0x9cf8a0, 0x9cf964 (pelo id)? |
 
 Mutações: 8/8 no autoteste. A `e_lista` só foi pega depois de o autoteste pôr valores distintos nos nove endereços: antes de carregar a base todos são 0, e tirar um da lista não muda nada.
+
+### Motor de partidas, 70ª leva — decisão do árbitro na falta (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `decisao_da_falta(j, outro, tipo, quem, cartao, grav, vantagem)` | 0x6e9820 | thiscall, ret 0x1c | match_man.cpp, 3 KB: o árbitro decide a falta `tipo` do jogador `j` sobre `outro`; devolve 1 ou 7 (cartão dado) e escreve o cartão (4, 5, 7, 10, 11), a gravidade e a vantagem. `this`: +0 motor, +4 árbitro, +8 paciência. Fator de rigor pela severidade (+0x25), pelo modo do lado (+0x1ad) e o estilo (+0x27), pela vantagem e pelo placar (0xf5c9 + 54 × lado), limitado a 0,1..10; amistoso (0x5c6710) alivia. 19 tipos de falta, cada um com seu sorteio contra o fator; a gravidade sobe pela dureza (+0x14) e cai pelo minuto (0x8ed0 / 11). Vantagem: 20 (ou 5) × ficha+0x5c^1,5 / (1 ou 3), com o `pow` da CRT |
+
+Mutações no jogo real: 8/10. **Limitação:** `f_vantagem` (divisor 3 quando o próprio `j` foi o último a derrubar `outro`) e `f_teto` (fator acima de 10) não acontecem até 01/01/2002 na carreira automática; não há autoteste sintético para a rotina.
