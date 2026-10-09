@@ -88,6 +88,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cb650 | `codigo_especial` | special_code |
 | 0x7002f0 | `comentario_a` | commentary_a |
 | 0x70a860 | `comentario_b` | commentary_b |
+| 0x4b0700 | `competicao_conta` | competition_counts |
 | 0x70dfa0 | `condicao_jogador` | player_condition |
 | 0x6bba80 | `conferir_lance` | check_move |
 | 0x5b09d0 | `conhecer_pessoa` | know_person |
@@ -197,6 +198,10 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6d3de0 | `nova_reputacao` | new_reputation |
 | 0x6bd760 | `ordem_dos_jogadores` | player_order |
 | 0x6be520 | `ordem_dos_penaltis` | penalty_order |
+| 0x4b0780 | `ordem_por_5f` | order_by_5f |
+| 0x4b07b0 | `ordem_por_80` | order_by_80 |
+| 0x4b0810 | `ordem_por_80_cresc` | order_by_80_asc |
+| 0x4b07d0 | `ordem_por_80_desc` | order_by_80_desc |
 | 0x62c3d0 | `palavra_0c` | word_0c |
 | 0x717c70 | `papel_880` | role_880 |
 | 0x716310 | `papel_na_defesa` | defending_role |

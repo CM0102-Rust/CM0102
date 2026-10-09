@@ -317,8 +317,13 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x7e6f20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
     Prologo { endereco: 0x6d59b0, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x0c] },
     Prologo { endereco: 0x6d5a10, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] },
+    Prologo { endereco: 0x4b0700, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0xb0, 0xf6, 0x9c, 0x00] },
+    Prologo { endereco: 0x4b0780, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
+    Prologo { endereco: 0x4b07b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x08] },
+    Prologo { endereco: 0x4b07d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
+    Prologo { endereco: 0x4b0810, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
 ];
-const N: usize = 211;
+const N: usize = 216;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3991,6 +3996,68 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- septuagesima oitava leva: competicao com rodada a disputar, comparacoes de ordenacao (comp_util.cpp) ----------
+
+/// { 0x4b0700 } (comp_util.cpp): a competicao `id` conta? As tres de 0x9cf6b0, 0x9cf5d8 e 0x9cf548
+/// sim; sem o +0x5d do registro (0xae23d0, 107 bytes) nao; senao so a do objeto em 0xadadfc com
+/// fase 2 (+0x43), rodadas (+0x3e) e a primeira rodada (+0xb1) com o clube +4 em +0x57 ou +0x60.
+unsafe extern "C" fn competicao_conta(id: i32) -> u32 {
+    let g = |a: usize| *(a as *const i32);
+    if id == g(0x9cf6b0) || id == g(0x9cf5d8) || id == g(0x9cf548) {
+        return 1;
+    }
+    if *((*(0xae23d0 as *const usize)).wrapping_add((id as usize).wrapping_mul(107)).wrapping_add(0x5d) as *const u32) == 0 {
+        return 0;
+    }
+    let c = *((*(0xadadfc as *const usize)).wrapping_add((id as usize).wrapping_mul(4)) as *const usize);
+    if c == 0 || byte(c, 0x43) != 2 || *((c + 0x3e) as *const u16) == 0 {
+        return 0;
+    }
+    let r = *((c + 0xb1) as *const usize);
+    if r == 0 {
+        return 0;
+    }
+    let primeira = *(r as *const usize);
+    let alvo = *((c + 4) as *const i32);
+    (*((primeira + 0x57) as *const i32) == alvo || *((primeira + 0x60) as *const i32) == alvo) as u32
+}
+
+/// { 0x4b0780 } (comparacao do qsort): byte +0x5f do segundo menos o do primeiro (nulo vale 0).
+unsafe extern "C" fn ordem_por_5f(a: *const usize, b: *const usize) -> i32 {
+    let v = |p: usize| if p == 0 { 0 } else { *((p + 0x5f) as *const i8) as i32 };
+    v(*b) - v(*a)
+}
+
+/// { 0x4b07b0 } (comparacao do qsort): palavra +0x80 do segundo menos a do primeiro.
+unsafe extern "C" fn ordem_por_80(a: *const usize, b: *const usize) -> i32 {
+    *((*b + 0x80) as *const i16) as i32 - *((*a + 0x80) as *const i16) as i32
+}
+
+/// { 0x4b07d0 } (comparacao do qsort): como 0x4b07b0, com os nulos no fim (primeiro nulo: 1 se o
+/// segundo nao for; segundo nulo: -1).
+unsafe extern "C" fn ordem_por_80_desc(a: *const usize, b: *const usize) -> i32 {
+    let (x, y) = (*a, *b);
+    if x == 0 {
+        return (y != 0) as i32;
+    }
+    if y == 0 {
+        return -1;
+    }
+    *((y + 0x80) as *const i16) as i32 - *((x + 0x80) as *const i16) as i32
+}
+
+/// { 0x4b0810 } (comparacao do qsort): como 0x4b07d0, em ordem crescente.
+unsafe extern "C" fn ordem_por_80_cresc(a: *const usize, b: *const usize) -> i32 {
+    let (x, y) = (*a, *b);
+    if x == 0 {
+        return (y != 0) as i32;
+    }
+    if y == 0 {
+        return -1;
+    }
+    *((x + 0x80) as *const i16) as i32 - *((y + 0x80) as *const i16) as i32
 }
 
 // ---------- septuagesima setima leva: proximo da lista, palavra +0xc, arredondamento, nacoes, marcadores ----------
@@ -9167,6 +9234,26 @@ unsafe extern "stdcall" fn comparar_nacao_do_grupo(nacao: usize) -> u32 {
 }
 comparar_valor!(comparar_quantos_marcam, quantos_marcam, 209, (alvo: usize) -> u8);
 comparar_valor!(comparar_quem_marca, quem_marca, 210, (alvo: usize) -> usize);
+unsafe extern "C" fn comparar_competicao_conta(id: i32) -> u32 {
+    let r = orig::<unsafe extern "C" fn(i32) -> u32>(211)(id);
+    let v = competicao_conta(id);
+    PLACAR.registrar(r == v, || format!("competicao_conta({}) original={} rust={}", id, r, v));
+    r
+}
+macro_rules! comparar_ordem {
+    ($nome:ident, $rust:ident, $i:expr) => {
+        unsafe extern "C" fn $nome(a: *const usize, b: *const usize) -> i32 {
+            let r = orig::<unsafe extern "C" fn(*const usize, *const usize) -> i32>($i)(a, b);
+            let v = $rust(a, b);
+            PLACAR.registrar(r == v, || format!("{} original={} rust={}", stringify!($rust), r, v));
+            r
+        }
+    };
+}
+comparar_ordem!(comparar_ordem_por_5f, ordem_por_5f, 212);
+comparar_ordem!(comparar_ordem_por_80, ordem_por_80, 213);
+comparar_ordem!(comparar_ordem_por_80_desc, ordem_por_80_desc, 214);
+comparar_ordem!(comparar_ordem_por_80_cresc, ordem_por_80_cresc, 215);
 unsafe extern "C" fn comparar_chance_de_conhecer(pessoa: usize, nivel: i8) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, i8) -> i32>(200)(pessoa, nivel);
     let v = chance_de_conhecer(pessoa, nivel);
@@ -9712,6 +9799,11 @@ pub unsafe fn instalar(comparando: bool) {
         nacao_do_grupo as *const () as usize,
         quantos_marcam as *const () as usize,
         quem_marca as *const () as usize,
+        competicao_conta as *const () as usize,
+        ordem_por_5f as *const () as usize,
+        ordem_por_80 as *const () as usize,
+        ordem_por_80_desc as *const () as usize,
+        ordem_por_80_cresc as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -9925,6 +10017,11 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_nacao_do_grupo as *const () as usize,
         comparar_quantos_marcam as *const () as usize,
         comparar_quem_marca as *const () as usize,
+        comparar_competicao_conta as *const () as usize,
+        comparar_ordem_por_5f as *const () as usize,
+        comparar_ordem_por_80 as *const () as usize,
+        comparar_ordem_por_80_desc as *const () as usize,
+        comparar_ordem_por_80_cresc as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -10011,6 +10108,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_entrada_da_lista", "motor_bandeiras_do_contrato",
         "motor_proximo_da_lista", "motor_palavra_0c", "motor_arredondar_abaixo_de_1000", "motor_nacao_do_grupo",
         "motor_quantos_marcam", "motor_quem_marca",
+        "motor_competicao_conta", "motor_ordem_por_5f", "motor_ordem_por_80", "motor_ordem_por_80_desc", "motor_ordem_por_80_cresc",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -11645,6 +11743,50 @@ pub unsafe fn autoteste(casos: u64) {
                     for (k, &a) in globais77.iter().enumerate() {
                         *(a as *mut u32) = antes77[k];
                     }
+                    // septuagesima oitava leva: competicao que conta (3 globais, tabela de 107 bytes,
+                    // objetos com fase, rodadas e a primeira rodada) e as comparacoes de ordenacao
+                    let h78 = s.proximo();
+                    let globais78 = [0x9cf6b0usize, 0x9cf5d8, 0x9cf548, 0xae23d0, 0xadadfc];
+                    let antes78: Vec<u32> = globais78.iter().map(|&a| *(a as *const u32)).collect();
+                    for k in 0..3usize {
+                        *(globais78[k] as *mut i32) = 10 + k as i32;
+                    }
+                    let mut tabela78 = [0u8; 107 * 16];
+                    let mut rodada78 = [0u8; 0x70];
+                    let primeira78 = [rodada78.as_mut_ptr() as usize];
+                    let mut objs78 = [[0u8; 0xb8]; 16];
+                    let mut ptrs78 = [0usize; 16];
+                    for k in 0..16usize {
+                        let z = h78.rotate_left(k as u32 * 4) ^ (k as u64 * 0x9e3);
+                        *(tabela78.as_mut_ptr().add(107 * k + 0x5d) as *mut u32) = if z % 4 == 0 { 0 } else { z as u32 | 1 };
+                        let o = &mut objs78[k];
+                        o[0x43] = [2u8, 2, 1, 0][((z >> 3) % 4) as usize];
+                        *(o.as_mut_ptr().add(0x3e) as *mut u16) = if (z >> 5) % 5 == 0 { 0 } else { 3 };
+                        *(o.as_mut_ptr().add(0xb1) as *mut usize) = if (z >> 8) % 6 == 0 { 0 } else { primeira78.as_ptr() as usize };
+                        *(o.as_mut_ptr().add(4) as *mut i32) = 500 + ((z >> 12) % 3) as i32;
+                        ptrs78[k] = if (z >> 16) % 7 == 0 { 0 } else { o.as_ptr() as usize };
+                    }
+                    *(rodada78.as_mut_ptr().add(0x57) as *mut i32) = 500 + ((h78 >> 40) % 3) as i32;
+                    *(rodada78.as_mut_ptr().add(0x60) as *mut i32) = 500 + ((h78 >> 42) % 3) as i32;
+                    *(0xae23d0 as *mut usize) = tabela78.as_ptr() as usize;
+                    *(0xadadfc as *mut usize) = ptrs78.as_ptr() as usize;
+                    comparar_competicao_conta(((h78 >> 44) % 16) as i32);
+                    for (k, &a) in globais78.iter().enumerate() {
+                        *(a as *mut u32) = antes78[k];
+                    }
+                    let mut fichas78 = [[0u8; 0x84]; 2];
+                    for (k, f) in fichas78.iter_mut().enumerate() {
+                        f[0x5f] = (h78 >> (k * 8 + 1)) as u8;
+                        *(f.as_mut_ptr().add(0x80) as *mut i16) = (h78 >> (k * 16 + 20)) as i16;
+                    }
+                    let pa78 = [if (h78 >> 60) % 4 == 0 { 0 } else { fichas78[0].as_ptr() as usize }];
+                    let pb78 = [if (h78 >> 62) == 0 { 0 } else { fichas78[1].as_ptr() as usize }];
+                    comparar_ordem_por_5f(pa78.as_ptr(), pb78.as_ptr());
+                    comparar_ordem_por_80_desc(pa78.as_ptr(), pb78.as_ptr());
+                    comparar_ordem_por_80_cresc(pa78.as_ptr(), pb78.as_ptr());
+                    let qa78 = [fichas78[0].as_ptr() as usize];
+                    let qb78 = [fichas78[1].as_ptr() as usize];
+                    comparar_ordem_por_80(qa78.as_ptr(), qb78.as_ptr());
                     for (k, &a) in globais75.iter().enumerate() {
                         *(a as *mut u32) = antes75[k];
                     }

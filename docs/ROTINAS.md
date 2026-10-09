@@ -731,3 +731,15 @@ Mutações: 6/6.
 | `quem_marca(alvo)` | 0x6d5a10 | thiscall, ret 4 | o primeiro deles, ou 0 |
 
 Mutações: 12/13 (uma equivalente: `< 1000` virar `<= 1000`, já que 1000 tem resto 0). Os marcadores entram no autoteste da 59ª leva, com motor e lado válidos nos 20 do outro lado durante as chamadas.
+
+### Motor de partidas, 78ª leva — competição que conta, comparações de ordenação (comp_util.cpp) (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `competicao_conta(id)` | 0x4b0700 | cdecl | comp_util.cpp: as três de 0x9cf6b0/0x9cf5d8/0x9cf548 sim; sem o +0x5d do registro (0xae23d0, 107 bytes) não; senão só o objeto (0xadadfc) em fase 2 (+0x43), com rodadas (+0x3e) e a primeira rodada (+0xb1) com o clube +4 em +0x57 ou +0x60 |
+| `ordem_por_5f(a, b)` | 0x4b0780 | cdecl (qsort) | byte +0x5f de b − o de a (nulo vale 0) |
+| `ordem_por_80(a, b)` | 0x4b07b0 | cdecl (qsort) | palavra +0x80 de b − a de a |
+| `ordem_por_80_desc(a, b)` | 0x4b07d0 | cdecl (qsort) | idem, com os nulos no fim |
+| `ordem_por_80_cresc(a, b)` | 0x4b0810 | cdecl (qsort) | crescente, com os nulos no fim |
+
+Mutações: 11/11.

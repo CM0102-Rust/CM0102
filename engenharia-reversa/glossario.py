@@ -86,6 +86,7 @@ EN = {
  'chance_de_conhecer': 'chance_to_know', 'conhecer_pessoa': 'know_person', 'nevoa_apos_partida': 'fog_after_match',
  'entrada_da_lista': 'shortlist_entry', 'bandeiras_do_contrato': 'contract_flags',
  'proximo_da_lista': 'next_list_item', 'palavra_0c': 'word_0c', 'arredondar_abaixo_de_1000': 'round_below_1000', 'nacao_do_grupo': 'group_nation', 'quantos_marcam': 'how_many_mark', 'quem_marca': 'who_marks',
+ 'competicao_conta': 'competition_counts', 'ordem_por_5f': 'order_by_5f', 'ordem_por_80': 'order_by_80', 'ordem_por_80_desc': 'order_by_80_desc', 'ordem_por_80_cresc': 'order_by_80_asc',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

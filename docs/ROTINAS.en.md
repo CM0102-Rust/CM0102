@@ -733,3 +733,15 @@ Mutations: 6/6.
 | `quem_marca(alvo)` | 0x6d5a10 | thiscall, ret 4 | the first of them, or 0 |
 
 Mutations: 12/13 (one equivalent: `< 1000` becoming `<= 1000`, since 1000 has remainder 0). The markers join the 59th batch self-test, with valid engine and side on the 20 of the other side during the calls.
+
+### Match engine, 78th batch — competition that counts, sort comparisons (comp_util.cpp) (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `competicao_conta(id)` | 0x4b0700 | cdecl | comp_util.cpp: the three at 0x9cf6b0/0x9cf5d8/0x9cf548 yes; without +0x5d of the record (0xae23d0, 107 bytes) no; otherwise only the object (0xadadfc) in phase 2 (+0x43), with rounds (+0x3e) and the first round (+0xb1) holding club +4 at +0x57 or +0x60 |
+| `ordem_por_5f(a, b)` | 0x4b0780 | cdecl (qsort) | byte +0x5f of b − that of a (null counts as 0) |
+| `ordem_por_80(a, b)` | 0x4b07b0 | cdecl (qsort) | word +0x80 of b − that of a |
+| `ordem_por_80_desc(a, b)` | 0x4b07d0 | cdecl (qsort) | same, with nulls last |
+| `ordem_por_80_cresc(a, b)` | 0x4b0810 | cdecl (qsort) | ascending, with nulls last |
+
+Mutations: 11/11.
