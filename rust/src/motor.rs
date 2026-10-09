@@ -294,8 +294,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x897590, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x897760, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x897dc0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x48db80, bytes: &[0x83, 0xec, 0x0c, 0xa1, 0x5c, 0x23, 0xae, 0x00] },
+    Prologo { endereco: 0x76d940, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
 ];
-const N: usize = 189;
+const N: usize = 191;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3968,6 +3970,69 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- sexagesima nona leva: clube na competicao ----------
+
+/// { 0x48db80 } (comp.cpp): o clube esta na competicao? Antes, pela nacao: selecao (id a partir
+/// de clubes - nacoes) de outro continente que o da competicao (+4 -> +0x59): nao. Clube da nacao
+/// da competicao (+4 -> +0x5d) e da propria divisao (+0x57): sim; de nacao de outro continente: nao.
+/// Depois percorre a competicao (-1) e as fases (+0xc, ate +0x30): a ultima de tipo 2 (+0x43, com
+/// tabela de classificacao em +0xb1, linhas de 0x3b) ou, sem nenhuma ainda, a fase da vez (lista
+/// de participantes em +0xa7, 6 bytes cada); quantos em +0x3e.
+unsafe extern "thiscall" fn clube_na_competicao(this: usize, clube: usize) -> u8 {
+    let base = *((this + 4) as *const usize);
+    let d = |p: usize, o: usize| *((p + o) as *const usize);
+    let limite = (*(0xae235c as *const i32)).wrapping_sub(*(0xae2350 as *const i32));
+    let nacao = d(clube, 0x53);
+    if *(clube as *const i32) >= limite {
+        let continente = d(base, 0x59);
+        if continente != 0 && (nacao == 0 || d(nacao, 0x71) != continente) {
+            return 0;
+        }
+    } else if nacao != 0 {
+        if nacao == d(base, 0x5d) && d(clube, 0x57) != 0 && d(clube, 0x57) == base {
+            return 1;
+        }
+        if d(nacao, 0x71) != d(base, 0x59) {
+            return 0;
+        }
+    }
+    let n = *((this + 0x30) as *const i32);
+    let (mut grupo, mut outra) = (0usize, 0usize);
+    let mut i = -1i32;
+    while i <= n {
+        let fase = if i == -1 { this } else { d(d(this, 0xc), 4 * i as usize) };
+        if byte(fase, 0x43) == 2 {
+            grupo = fase;
+        } else {
+            outra = fase;
+        }
+        let (f, tabela, passo) = if grupo != 0 { (grupo, 0xb1, 0x3b) } else { (outra, 0xa7, 6) };
+        let quantos = *((f + 0x3e) as *const i16);
+        let lista = d(f, tabela);
+        let mut k = 0i16;
+        while k < quantos {
+            if d(lista, passo * k as usize) == clube {
+                return 1;
+            }
+            k += 1;
+        }
+        i += 1;
+    }
+    0
+}
+
+/// { 0x76d940 } (ret 4): o clube e um dos nove guardados em 0x9cf78c, 0x9cf790, 0x9cf79c..0x9cf7ac,
+/// 0x9cf8a0 e 0x9cf964 (pelo id)?
+unsafe extern "stdcall" fn clube_especial(clube: usize) -> u32 {
+    if clube == 0 {
+        return 0;
+    }
+    let id = *(clube as *const u32);
+    [0x9cf79cusize, 0x9cf7a0, 0x9cf7a4, 0x9cf7a8, 0x9cf7ac, 0x9cf790, 0x9cf8a0, 0x9cf78c, 0x9cf964]
+        .iter()
+        .any(|&a| *(a as *const u32) == id) as u32
 }
 
 // ---------- sexagesima oitava leva: vagas da tabela tatica ----------
@@ -7794,6 +7859,13 @@ comparar_valor!(comparar_tecnico_9ace, tecnico_9ace, 178, (pessoa: usize) -> u32
 comparar_valor!(comparar_lado_sob_controle, lado_sob_controle, 181, (lado: i8) -> u8);
 comparar_valor!(comparar_byte_tatico, byte_tatico, 183, (clube: usize, pos: i8, humano: u32) -> u8);
 comparar_valor!(comparar_pessoa_da_linha, pessoa_da_linha, 188, (clube: usize, qual: i8, humano: u32) -> usize);
+comparar_valor!(comparar_clube_na_competicao, clube_na_competicao, 189, (clube: usize) -> u8);
+unsafe extern "stdcall" fn comparar_clube_especial(clube: usize) -> u32 {
+    let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(190)(clube);
+    let v = clube_especial(clube);
+    PLACAR.registrar(r == v, || format!("clube_especial({:#x}) original={} rust={}", clube, r, v));
+    r
+}
 unsafe extern "thiscall" fn comparar_vaga_marcada(this: usize, clube: usize, humano: u32, menos_um: u32) -> i8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8>(186)(this, clube, humano, menos_um);
     let v = vaga_marcada(this, clube, humano, menos_um);
@@ -8202,6 +8274,8 @@ pub unsafe fn instalar(comparando: bool) {
         vaga_marcada as *const () as usize,
         marcar_vaga as *const () as usize,
         pessoa_da_linha as *const () as usize,
+        clube_na_competicao as *const () as usize,
+        clube_especial as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -8393,6 +8467,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_vaga_marcada as *const () as usize,
         comparar_marcar_vaga as *const () as usize,
         comparar_pessoa_da_linha as *const () as usize,
+        comparar_clube_na_competicao as *const () as usize,
+        comparar_clube_especial as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -8469,6 +8545,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_ordem_dos_penaltis",
         "motor_ordem_dos_jogadores",
         "motor_vaga_marcada", "motor_marcar_vaga", "motor_pessoa_da_linha",
+        "motor_clube_na_competicao", "motor_clube_especial",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -10035,6 +10112,66 @@ pub unsafe fn autoteste(casos: u64) {
                         TABELA65[0x91 * l..0x91 * l + 0x91].copy_from_slice(&copia68[n]);
                     }
                     *(0xae23bc as *mut usize) = antes68;
+                }
+                // sexagesima nona leva: clube na competicao e clube especial
+                {
+                    let h69 = s.proximo();
+                    let mut cont69 = [[0u8; 0x80]; 2];
+                    *(cont69[1].as_mut_ptr() as *mut i32) = 1;
+                    let mut nac69 = [[0u8; 0x80]; 3];
+                    for (k, n) in nac69.iter_mut().enumerate() {
+                        *(n.as_mut_ptr().add(0x71) as *mut usize) = cont69[k % 2].as_ptr() as usize;
+                    }
+                    let mut base69 = [0u8; 0x80];
+                    *(base69.as_mut_ptr().add(0x59) as *mut usize) = if (h69 >> 2) % 4 == 0 { 0 } else { cont69[0].as_ptr() as usize };
+                    *(base69.as_mut_ptr().add(0x5d) as *mut usize) = nac69[(h69 % 3) as usize].as_ptr() as usize;
+                    let mut clubes69 = [[0u8; 0x60]; 6];
+                    for (k, c) in clubes69.iter_mut().enumerate() {
+                        let z = h69.rotate_left(7 * k as u32);
+                        *(c.as_mut_ptr() as *mut i32) = [100i32, 4799, 4800, 4900, 4650][(z % 5) as usize];
+                        *(c.as_mut_ptr().add(0x53) as *mut usize) = if (z >> 3) % 5 == 0 { 0 } else { nac69[((z >> 5) % 3) as usize].as_ptr() as usize };
+                        *(c.as_mut_ptr().add(0x57) as *mut usize) = [0usize, base69.as_ptr() as usize, 0x1234][((z >> 8) % 3) as usize];
+                    }
+                    let alvo69 = clubes69[((h69 >> 10) % 6) as usize].as_ptr() as usize;
+                    // fases: participantes (6 bytes) e tabelas (0x3b) com alguns dos clubes
+                    let mut listas69 = [[0u8; 6 * 4]; 4];
+                    let mut tabelas69 = [[0u8; 0x3b * 4]; 4];
+                    let mut fases69 = [[0u8; 0xc0]; 4];
+                    let mut comp69 = [0u8; 0xc0];
+                    for f in 0..4usize {
+                        let z = h69.rotate_right(9 * f as u32);
+                        for k in 0..4usize {
+                            let c = clubes69[((z >> (3 * k)) % 6) as usize].as_ptr() as usize;
+                            *(listas69[f].as_mut_ptr().add(6 * k) as *mut usize) = c;
+                            *(tabelas69[f].as_mut_ptr().add(0x3b * k) as *mut usize) = c;
+                        }
+                        fases69[f][0x43] = [0u8, 1, 2, 2][((z >> 20) % 4) as usize];
+                        *(fases69[f].as_mut_ptr().add(0x3e) as *mut i16) = [0i16, 1, 2, 4, -1][((z >> 22) % 5) as usize];
+                        *(fases69[f].as_mut_ptr().add(0xa7) as *mut usize) = listas69[f].as_ptr() as usize;
+                        *(fases69[f].as_mut_ptr().add(0xb1) as *mut usize) = tabelas69[f].as_ptr() as usize;
+                    }
+                    let ponteiros69: [usize; 4] = [0, 1, 2, 3].map(|f| fases69[f].as_ptr() as usize);
+                    *(comp69.as_mut_ptr().add(4) as *mut usize) = base69.as_ptr() as usize;
+                    *(comp69.as_mut_ptr().add(0xc) as *mut usize) = ponteiros69.as_ptr() as usize;
+                    *(comp69.as_mut_ptr().add(0x30) as *mut i32) = [-2i32, -1, 0, 1, 3][((h69 >> 30) % 5) as usize];
+                    comp69[0x43] = [0u8, 2][((h69 >> 33) % 2) as usize];
+                    *(comp69.as_mut_ptr().add(0x3e) as *mut i16) = 3;
+                    *(comp69.as_mut_ptr().add(0xa7) as *mut usize) = listas69[3].as_ptr() as usize;
+                    *(comp69.as_mut_ptr().add(0xb1) as *mut usize) = tabelas69[3].as_ptr() as usize;
+                    comparar_clube_na_competicao(comp69.as_mut_ptr() as usize, alvo69);
+                    // clube especial: o id de um dos nove guardados, ou outro
+                    // (antes de carregar a base os nove ids sao 0: valores distintos durante o teste)
+                    let guardados = [0x9cf79cusize, 0x9cf7a0, 0x9cf7a4, 0x9cf7a8, 0x9cf7ac, 0x9cf790, 0x9cf8a0, 0x9cf78c, 0x9cf964];
+                    let antes_g69: Vec<u32> = guardados.iter().map(|&a| *(a as *const u32)).collect();
+                    for (k, &a) in guardados.iter().enumerate() {
+                        *(a as *mut u32) = 3000 + 7 * k as u32;
+                    }
+                    let id69 = if (h69 >> 35) % 3 == 0 { 0x7fff_0000u32 } else { *(guardados[((h69 >> 37) % 9) as usize] as *const u32) };
+                    let especial69 = [id69, 0];
+                    comparar_clube_especial(if (h69 >> 41) % 7 == 0 { 0 } else { especial69.as_ptr() as usize });
+                    for (k, &a) in guardados.iter().enumerate() {
+                        *(a as *mut u32) = antes_g69[k];
+                    }
                 }
                 // sexagesima quarta leva: lado sob controle (tipos 1 e 9, clube humano ou nao, modos 2..5)
                 let mut partida64 = [0u8; 0x48];

@@ -646,3 +646,12 @@ Mutações: 4/4 no autoteste (a que não grava 0xb67a64 derruba a comparação o
 | `pessoa_da_linha(clube, qual, humano)` | 0x897dc0 | thiscall, ret 0xc | tactics.cpp: a pessoa do índice em +0x56 + 4 × `qual` (0 ou 1); negativo: 0 |
 
 Erros (clube nulo, vaga fora): a original (caixa de erro). Mutações: 7/7 no autoteste (pessoas sintéticas; índices sempre de 0 a 29, para não ler fora do vetor sintético).
+
+### Motor de partidas, 69ª leva — clube na competição (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `clube_na_competicao(clube)` | 0x48db80 | thiscall, ret 4 | comp.cpp: o clube está na competição? Antes, pela nação: seleção (id a partir de clubes − nações) de outro continente que o da competição (+4 → +0x59): não. Clube da nação da competição (+4 → +0x5d) e da própria divisão (+0x57): sim; de nação de outro continente: não. Depois percorre a competição (−1) e as fases (+0xc, até +0x30): a última de tipo 2 (+0x43; tabela em +0xb1, linhas de 0x3b) ou, sem nenhuma, a fase da vez (participantes em +0xa7, 6 bytes); quantos em +0x3e |
+| `clube_especial(clube)` | 0x76d940 | stdcall, ret 4 | o clube é um dos nove guardados em 0x9cf78c, 0x9cf790, 0x9cf79c..0x9cf7ac, 0x9cf8a0, 0x9cf964 (pelo id)? |
+
+Mutações: 8/8 no autoteste. A `e_lista` só foi pega depois de o autoteste pôr valores distintos nos nove endereços: antes de carregar a base todos são 0, e tirar um da lista não muda nada.

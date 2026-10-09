@@ -77,7 +77,9 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6eab60 | `cartao_pela_gravidade` | card_by_severity |
 | 0x6c2a40 | `casa_da_formacao` | formation_square |
 | 0x713e90 | `classificar_lance` | classify_move |
+| 0x76d940 | `clube_especial` | special_club |
 | 0x600a50 | `clube_humano` | human_club |
+| 0x48db80 | `clube_na_competicao` | club_in_competition |
 | 0x70a8c0 | `codigo_de_bola_parada` | set_piece_code |
 | 0x6cb650 | `codigo_especial` | special_code |
 | 0x7002f0 | `comentario_a` | commentary_a |

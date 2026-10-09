@@ -31,6 +31,7 @@ A batch has from 1 to 10 match engine routines (`match_eng.cpp`, `match_pl.cpp`,
 
 ## Known traps
 
+- Globals that come from the database (club and competition ids) are 0 in the self-test, which runs before loading: give them distinct values during the test, otherwise mutations on them pass.
 - Synthetic data that becomes a write address in the original routine (signed index, offset): restore the whole range it can reach, or use only real values. A game error box during the self-test shows on Lucas's screen (the self-test runs before the interface) and stalls the test without using the CPU. Do not interrupt `mutacoes.py` midway: `motor.rs` stays mutated.
 - The comparison-mode fingerprint (`--modo comparar`) is not a criterion and changes between batches: both the original and the Rust version run, and a Rust version that calls hooked routines goes through their comparators. The criterion is zero divergences and the same fingerprint in the Rust and original careers. A new environment variable in `simular.py` shifts the heap and the reference fingerprint: reuse a CM_* with a value of the same length (e.g. `CM_OCULTO=2` for sound).
 - Do not edit `motor.rs` while `mutacoes.py` runs: at the end it rewrites the file as it was at the start. Human-manager routines: the automatic career barely goes through them; the mutations need the synthetic self-test.

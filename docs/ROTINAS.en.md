@@ -648,3 +648,12 @@ Mutations: 4/4 in the self-test (the one that does not write 0xb67a64 crashes th
 | `pessoa_da_linha(clube, qual, humano)` | 0x897dc0 | thiscall, ret 0xc | tactics.cpp: the person of the index at +0x56 + 4 × `qual` (0 or 1); negative: 0 |
 
 Errors (null club, slot out of range): the original (error box). Mutations: 7/7 in the self-test (synthetic people; indices always 0 to 29, so as not to read outside the synthetic array).
+
+### Match engine, 69th batch — club in the competition (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `clube_na_competicao(clube)` | 0x48db80 | thiscall, ret 4 | comp.cpp: is the club in the competition? First by nation: national team (id from clubs − nations) of another continent than the competition's (+4 → +0x59): no. Club of the competition's nation (+4 → +0x5d) and of its own division (+0x57): yes; of a nation of another continent: no. Then walks the competition (−1) and the stages (+0xc, up to +0x30): the last of type 2 (+0x43; table at +0xb1, rows of 0x3b) or, with none, the current stage (participants at +0xa7, 6 bytes); count at +0x3e |
+| `clube_especial(clube)` | 0x76d940 | stdcall, ret 4 | is the club one of the nine kept at 0x9cf78c, 0x9cf790, 0x9cf79c..0x9cf7ac, 0x9cf8a0, 0x9cf964 (by id)? |
+
+Mutations: 8/8 in the self-test. `e_lista` was only caught after the self-test put distinct values in the nine addresses: before the database loads they are all 0, and removing one from the list changes nothing.
