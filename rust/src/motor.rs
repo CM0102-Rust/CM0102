@@ -331,8 +331,14 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x5b59a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
     Prologo { endereco: 0x5b2ae0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x4bff70, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x66, 0x85, 0xc0] },
+    Prologo { endereco: 0x53b610, bytes: &[0x8a, 0x4c, 0x24, 0x04, 0x33, 0xc0] },
+    Prologo { endereco: 0x53b620, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x0b] },
+    Prologo { endereco: 0x76d780, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x50] },
+    Prologo { endereco: 0x76d7b0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
+    Prologo { endereco: 0x76d7e0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
+    Prologo { endereco: 0x53a5b0, bytes: &[0xa1, 0xb4, 0x59, 0x9b, 0x00] },
 ];
-const N: usize = 225;
+const N: usize = 231;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4005,6 +4011,68 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- octogesima segunda leva: tipos de pessoa, selecao B, marcas por pessoa, registro livre ----------
+
+/// { 0x53b610 } (Database.cpp): o tipo nao e 11?
+unsafe extern "C" fn tipo_nao_11(tipo: i8) -> u32 {
+    (tipo != 11) as u32
+}
+
+/// { 0x53b620 } (Database.cpp): o tipo e 11, 12, 13 ou 15?
+unsafe extern "C" fn tipo_11_a_15(tipo: i8) -> u32 {
+    matches!(tipo, 11 | 12 | 13 | 15) as u32
+}
+
+/// { 0x76d780 } (stdcall, national_teams.cpp): com `flag`, 1; sem ela, 2 para a segunda selecao
+/// (0x5409b0) e 0 para as outras.
+unsafe extern "stdcall" fn classe_da_selecao(clube: usize, flag: u32) -> u8 {
+    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
+    let e_segunda = segunda(clube) != 0;
+    if flag != 0 {
+        1
+    } else if e_segunda {
+        2
+    } else {
+        0
+    }
+}
+
+/// O byte das marcas por pessoa: [this+4] + id x 110 + k x 20 + 0x45.
+unsafe fn marca_da_pessoa(this: usize, pessoa: usize, k: i8) -> *mut u8 {
+    (*((this + 4) as *const usize))
+        .wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(110))
+        .wrapping_add((k as isize * 20) as usize)
+        .wrapping_add(0x45) as *mut u8
+}
+
+/// { 0x76d7b0 } (ret 8, national_teams.cpp): a marca `k` da pessoa.
+unsafe extern "thiscall" fn ler_marca_da_pessoa(this: usize, pessoa: usize, k: i8) -> u8 {
+    *marca_da_pessoa(this, pessoa, k)
+}
+
+/// { 0x76d7e0 } (ret 8, national_teams.cpp): zera a marca `k` da pessoa.
+unsafe extern "thiscall" fn zerar_marca_da_pessoa(this: usize, pessoa: usize, k: i8) {
+    *marca_da_pessoa(this, pessoa, k) = 0;
+}
+
+/// { 0x53a5b0 } (Database.cpp): o registro livre (+0 zero) da tabela 0xae23f8 (60 bytes,
+/// 0xae23a0 registros), guardado em 0x9b59b4 na primeira vez; sem nenhum, um sorteado.
+unsafe extern "C" fn registro_livre() -> usize {
+    let base = || *(0xae23f8 as *const usize);
+    let mut i = *(0x9b59b4 as *const i32);
+    if i == -1 {
+        let n = *(0xae23a0 as *const i32);
+        match (0..n.max(0)).find(|&k| *(base().wrapping_add(k as usize * 60) as *const u8) == 0) {
+            Some(k) => {
+                *(0x9b59b4 as *mut i32) = k;
+                return base().wrapping_add(k as usize * 60);
+            }
+            None => i = sortear(n),
+        }
+    }
+    base().wrapping_add((i as usize).wrapping_mul(60))
 }
 
 // ---------- octogesima primeira leva: casa da vaga, byte de criterio da competicao ----------
@@ -9467,6 +9535,39 @@ unsafe extern "C" fn comparar_criterio_da_competicao(registro: usize, a: u32, b:
     PLACAR.registrar(r == v, || format!("criterio_da_competicao({:#x}, {:#x}, {:#x}, {}) original={} rust={}", registro, a, b, tipo, r, v));
     r
 }
+unsafe extern "C" fn comparar_tipo_nao_11(tipo: i8) -> u32 {
+    let r = orig::<unsafe extern "C" fn(i8) -> u32>(225)(tipo);
+    let v = tipo_nao_11(tipo);
+    PLACAR.registrar(r == v, || format!("tipo_nao_11({}) original={} rust={}", tipo, r, v));
+    r
+}
+unsafe extern "C" fn comparar_tipo_11_a_15(tipo: i8) -> u32 {
+    let r = orig::<unsafe extern "C" fn(i8) -> u32>(226)(tipo);
+    let v = tipo_11_a_15(tipo);
+    PLACAR.registrar(r == v, || format!("tipo_11_a_15({}) original={} rust={}", tipo, r, v));
+    r
+}
+unsafe extern "stdcall" fn comparar_classe_da_selecao(clube: usize, flag: u32) -> u8 {
+    let r = orig::<unsafe extern "stdcall" fn(usize, u32) -> u8>(227)(clube, flag);
+    let v = classe_da_selecao(clube, flag);
+    PLACAR.registrar(r == v, || format!("classe_da_selecao({:#x}, {}) original={} rust={}", clube, flag, r, v));
+    r
+}
+comparar_valor!(comparar_ler_marca_da_pessoa, ler_marca_da_pessoa, 228, (pessoa: usize, k: i8) -> u8);
+unsafe extern "thiscall" fn comparar_zerar_marca_da_pessoa(this: usize, pessoa: usize, k: i8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i8)>(229);
+    let reg = [(marca_da_pessoa(this, pessoa, k) as usize, 1)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, k), || zerar_marca_da_pessoa(this, pessoa, k));
+    PLACAR.registrar(igual, || format!("zerar_marca_da_pessoa original={:x?} rust={:x?}", mo, mr));
+}
+unsafe extern "C" fn comparar_registro_livre() -> usize {
+    let o = orig::<unsafe extern "C" fn() -> usize>(230);
+    let mut reg: Vec<(usize, usize)> = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.push((0x9b59b4, 4));
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || crate::aleatorio::sem_contar(|| registro_livre()));
+    PLACAR.registrar(igual && r == v, || format!("registro_livre original={:#x} {:x?} rust={:#x} {:x?}", r, mo, v, mr));
+    r
+}
 unsafe extern "thiscall" fn comparar_mascara_da_formacao(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(222);
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x187b, 4)], || o(this), || mascara_da_formacao(this));
@@ -10032,6 +10133,12 @@ pub unsafe fn instalar(comparando: bool) {
         mascara_da_formacao as *const () as usize,
         casa_da_vaga as *const () as usize,
         criterio_da_competicao as *const () as usize,
+        tipo_nao_11 as *const () as usize,
+        tipo_11_a_15 as *const () as usize,
+        classe_da_selecao as *const () as usize,
+        ler_marca_da_pessoa as *const () as usize,
+        zerar_marca_da_pessoa as *const () as usize,
+        registro_livre as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -10259,6 +10366,12 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_mascara_da_formacao as *const () as usize,
         comparar_casa_da_vaga as *const () as usize,
         comparar_criterio_da_competicao as *const () as usize,
+        comparar_tipo_nao_11 as *const () as usize,
+        comparar_tipo_11_a_15 as *const () as usize,
+        comparar_classe_da_selecao as *const () as usize,
+        comparar_ler_marca_da_pessoa as *const () as usize,
+        comparar_zerar_marca_da_pessoa as *const () as usize,
+        comparar_registro_livre as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -10350,6 +10463,8 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_esquecer_pessoa", "motor_quadro_do_tecnico", "motor_casa_do_setor_ocupada", "motor_vaga_da_casa",
         "motor_limpar_designados", "motor_mascara_da_formacao",
         "motor_casa_da_vaga", "motor_criterio_da_competicao",
+        "motor_tipo_nao_11", "motor_tipo_11_a_15", "motor_classe_da_selecao", "motor_ler_marca_da_pessoa",
+        "motor_zerar_marca_da_pessoa", "motor_registro_livre",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -11876,6 +11991,8 @@ pub unsafe fn autoteste(casos: u64) {
                     tecnicos63[((h63 >> 42) % 3) as usize],
                     ((h63 >> 44) % 3 == 0) as u32,
                 );
+                // octogesima segunda leva: classe da selecao (o clube_a63 passa pela 0x5409b0 como no 63)
+                comparar_classe_da_selecao(clube_a63.as_ptr() as usize, ((h63 >> 45) & 1) as u32);
                 // septuagesima quinta leva: nevoa de guerra (data de hoje, quadro de conhecimento,
                 // pessoas sinteticas; os dois lados com o clube humano sintetico)
                 {
@@ -12105,6 +12222,34 @@ pub unsafe fn autoteste(casos: u64) {
                     registro81[0x52] = (h81 >> 16) as u8;
                     let a81 = ((h81 >> 24) as u32) & 0xffff_0000;
                     let b81 = ((h81 >> 40) as u32) & 0xffff_0000;
+                    // octogesima segunda leva: tipos, marcas por pessoa e o registro livre (tabela sintetica,
+                    // indice guardado ou nao; nunca 0 registros: a 0x90cfc0(0) nao e caso do jogo)
+                    let h82 = s.proximo();
+                    comparar_tipo_nao_11(((h82 >> 1) % 20) as i8 - 2);
+                    comparar_tipo_11_a_15(((h82 >> 6) % 20) as i8 - 2);
+                    let mut marcas82 = vec![0u8; 110 * 12 + 0x100];
+                    for (k, b) in marcas82.iter_mut().enumerate() {
+                        *b = (h82.rotate_left(k as u32 % 64) as u8) | 1;
+                    }
+                    let obj82 = [0usize, marcas82.as_mut_ptr() as usize + 0x40];
+                    let pessoa82 = [((h82 >> 11) % 10) as i32];
+                    let k82 = ((h82 >> 15) % 9) as i8 - 2;
+                    comparar_ler_marca_da_pessoa(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, k82);
+                    comparar_zerar_marca_da_pessoa(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, ((h82 >> 19) % 9) as i8 - 2);
+                    let globais82 = [0x9b59b4usize, 0xae23a0, 0xae23f8];
+                    let antes82: Vec<u32> = globais82.iter().map(|&a| *(a as *const u32)).collect();
+                    let n82 = 1 + ((h82 >> 23) % 8) as i32;
+                    let mut tabela82 = vec![1u8; 60 * 9];
+                    if (h82 >> 27) % 3 != 0 {
+                        tabela82[60 * ((h82 >> 29) % 9) as usize] = 0;
+                    }
+                    *(0xae23a0 as *mut i32) = n82;
+                    *(0xae23f8 as *mut usize) = tabela82.as_ptr() as usize;
+                    *(0x9b59b4 as *mut i32) = if (h82 >> 33) % 3 == 0 { ((h82 >> 35) % 9) as i32 } else { -1 };
+                    comparar_registro_livre();
+                    for (k, &a) in globais82.iter().enumerate() {
+                        *(a as *mut u32) = antes82[k];
+                    }
                     comparar_criterio_da_competicao(if (h81 >> 60) % 5 == 0 { 0 } else { registro81.as_ptr() as usize }, a81, b81, [1u8, 0, 2, 0x81][((h81 >> 61) % 4) as usize]);
                     for (k, &a) in globais75.iter().enumerate() {
                         *(a as *mut u32) = antes75[k];

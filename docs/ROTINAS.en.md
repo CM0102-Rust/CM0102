@@ -775,3 +775,16 @@ Mutations: 13/13.
 | `criterio_da_competicao(registro, a, b, tipo)` | 0x4bff70 | cdecl | comp_util.cpp: with the low word of b (or of a), 0x4ba8f0(word, 0); otherwise byte +0x37 (type 1) or +0x52 of the record; no record, 1. The word path depends on the configuration at 0xae3138 and is covered only by the real game |
 
 Mutations: 5/5 (the one on the word of `a` crashes 0x4ba8f0 without configuration, which counts as caught).
+
+### Match engine, 82nd batch — person types, national side class, per-person marks, free record (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `tipo_nao_11(tipo)` | 0x53b610 | cdecl | Database.cpp: type ≠ 11 |
+| `tipo_11_a_15(tipo)` | 0x53b620 | cdecl | Database.cpp: type 11, 12, 13 or 15 |
+| `classe_da_selecao(clube, flag)` | 0x76d780 | stdcall | national_teams.cpp: with `flag`, 1; without it, 2 for the second national side (0x5409b0) and 0 for the others; returns only `al` |
+| `ler_marca_da_pessoa(pessoa, k)` | 0x76d7b0 | thiscall, ret 8 | national_teams.cpp: byte [this+4] + id × 110 + k × 20 + 0x45; returns only `al` |
+| `zerar_marca_da_pessoa(pessoa, k)` | 0x76d7e0 | thiscall, ret 8 | national_teams.cpp: zeroes that byte |
+| `registro_livre()` | 0x53a5b0 | cdecl | Database.cpp: the first record with +0 zero in table 0xae23f8 (60 bytes, 0xae23a0 records), cached at 0x9b59b4; with none, a random one |
+
+Mutations: 9/9.

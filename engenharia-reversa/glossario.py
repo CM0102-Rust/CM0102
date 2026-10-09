@@ -90,6 +90,7 @@ EN = {
  'nota_do_jogador': 'player_rating',
  'esquecer_pessoa': 'forget_person', 'quadro_do_tecnico': 'manager_table', 'casa_do_setor_ocupada': 'sector_slot_taken', 'vaga_da_casa': 'slot_of_code', 'limpar_designados': 'clear_assigned', 'mascara_da_formacao': 'formation_mask',
  'casa_da_vaga': 'slot_code', 'criterio_da_competicao': 'competition_criterion',
+ 'tipo_nao_11': 'type_not_11', 'tipo_11_a_15': 'type_11_to_15', 'classe_da_selecao': 'national_side_class', 'ler_marca_da_pessoa': 'read_person_mark', 'zerar_marca_da_pessoa': 'clear_person_mark', 'registro_livre': 'free_record',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

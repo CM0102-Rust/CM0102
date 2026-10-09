@@ -773,3 +773,16 @@ Mutações: 13/13.
 | `criterio_da_competicao(registro, a, b, tipo)` | 0x4bff70 | cdecl | comp_util.cpp: com a palavra baixa de b (ou de a), 0x4ba8f0(palavra, 0); senão o byte +0x37 (tipo 1) ou +0x52 do registro; sem registro, 1. O caminho das palavras depende da configuração em 0xae3138 e fica coberto só pelo jogo real |
 
 Mutações: 5/5 (a da palavra de `a` derruba a 0x4ba8f0 sem configuração, o que conta como acusada).
+
+### Motor de partidas, 82ª leva — tipos de pessoa, classe da seleção, marcas por pessoa, registro livre (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `tipo_nao_11(tipo)` | 0x53b610 | cdecl | Database.cpp: tipo ≠ 11 |
+| `tipo_11_a_15(tipo)` | 0x53b620 | cdecl | Database.cpp: tipo 11, 12, 13 ou 15 |
+| `classe_da_selecao(clube, flag)` | 0x76d780 | stdcall | national_teams.cpp: com `flag`, 1; sem ela, 2 para a segunda seleção (0x5409b0) e 0 para as outras; devolve só `al` |
+| `ler_marca_da_pessoa(pessoa, k)` | 0x76d7b0 | thiscall, ret 8 | national_teams.cpp: byte [this+4] + id × 110 + k × 20 + 0x45; devolve só `al` |
+| `zerar_marca_da_pessoa(pessoa, k)` | 0x76d7e0 | thiscall, ret 8 | national_teams.cpp: zera o mesmo byte |
+| `registro_livre()` | 0x53a5b0 | cdecl | Database.cpp: o primeiro registro com +0 zero na tabela 0xae23f8 (60 bytes, 0xae23a0 registros), guardado em 0x9b59b4; sem nenhum, um sorteado |
+
+Mutações: 9/9.

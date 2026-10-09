@@ -81,6 +81,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5b2ae0 | `casa_da_vaga` | slot_code |
 | 0x5b2e80 | `casa_do_setor_ocupada` | sector_slot_taken |
 | 0x544410 | `chance_de_conhecer` | chance_to_know |
+| 0x76d780 | `classe_da_selecao` | national_side_class |
 | 0x713e90 | `classificar_lance` | classify_move |
 | 0x76d940 | `clube_especial` | special_club |
 | 0x600a50 | `clube_humano` | human_club |
@@ -165,6 +166,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x700380 | `ler_8eaa` | read_8eaa |
 | 0x700400 | `ler_8eb2` | read_8eb2 |
 | 0x700410 | `ler_8f7a` | read_8f7a |
+| 0x76d7b0 | `ler_marca_da_pessoa` | read_person_mark |
 | 0x6cb930 | `limite` | limit |
 | 0x70df40 | `limite_jogador` | player_limit |
 | 0x5b5960 | `limpar_designados` | clear_assigned |
@@ -237,6 +239,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6bc030 | `quem_marcar` | who_to_mark |
 | 0x6bb9a0 | `registrar_lance` | record_move |
 | 0x7003b0 | `registrar_posse` | record_possession |
+| 0x53a5b0 | `registro_livre` | free_record |
 | 0x714ca0 | `remover_da_lista` | remove_from_list |
 | 0x6c06b0 | `repartir_a` | split_a |
 | 0x6c07a0 | `repartir_b` | split_b |
@@ -268,6 +271,8 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5fea50 | `tecnico_9b23` | manager_9b23 |
 | 0x6b59a0 | `tem_jogo` | has_match |
 | 0x7164b0 | `teste_de_condicao` | condition_test |
+| 0x53b620 | `tipo_11_a_15` | type_11_to_15 |
+| 0x53b610 | `tipo_nao_11` | type_not_11 |
 | 0x6cdd50 | `tirar_de_campo` | take_off_pitch |
 | 0x6ccb60 | `tracar_lance` | trace_move |
 | 0x4b0850 | `unidades` | units_digit |
@@ -279,6 +284,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6fa140 | `virado_para` | facing |
 | 0x70df20 | `x_fora_do_meio` | x_off_centre |
 | 0x6ce0f0 | `zerar_guardado` | clear_stored |
+| 0x76d7e0 | `zerar_marca_da_pessoa` | clear_person_mark |
 
 ## Random generator and dates
 
