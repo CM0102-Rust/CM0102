@@ -79,6 +79,7 @@ EN = {
  'vaga_marcada': 'marked_slot', 'marcar_vaga': 'mark_slot', 'pessoa_da_linha': 'row_person', 'linha_na_tabela': 'row_in_table',
  'clube_na_competicao': 'club_in_competition', 'clube_especial': 'special_club',
  'decisao_da_falta': 'foul_decision',
+ 'escolher_companheiro': 'choose_teammate', 'menor_distancia_livre': 'nearest_free_distance',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

@@ -111,6 +111,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c4470 | `escanteio` | corner |
 | 0x6bce80 | `escolher_casa` | choose_square |
 | 0x6ceb90 | `escolher_cobrador` | choose_taker |
+| 0x6c6a30 | `escolher_companheiro` | choose_teammate |
 | 0x6d0f80 | `escolher_destaque` | choose_standout |
 | 0x6c2310 | `escolher_pela_condicao` | choose_by_condition |
 | 0x6c2750 | `escolher_por_papel` | choose_by_role |

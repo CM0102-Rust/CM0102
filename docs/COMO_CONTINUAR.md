@@ -29,6 +29,7 @@ Uma leva tem de 1 a 10 rotinas do motor de partidas (`match_eng.cpp`, `match_pl.
 
 ## Armadilhas já conhecidas
 
+- `fst dword` seguido de comparação: guarda o float arredondado mas compara o double; reproduzir guardando `v as f32` e comparando `v`. `pow` do x87 (`_CIpow`): base em st1, expoente em st0 (o primeiro carregado é a base). Retorno de 64 bits (`edx:eax`): ver qual registrador o teste usa.
 - Globais que vêm da base (ids de clubes, competições) valem 0 no autoteste, que roda antes da carga: dar valores distintos durante o teste, senão mutações nelas passam.
 - Dado sintético que vira endereço de escrita na rotina original (índice com sinal, deslocamento): restaurar toda a faixa que ele alcança, ou usar só valores reais. Caixa de erro do jogo durante o autoteste aparece na tela do Lucas (o autoteste roda antes da interface) e trava o teste sem gastar processador. Não interromper o `mutacoes.py` no meio: o `motor.rs` fica mutado.
 - A impressão do modo de comparação (`--modo comparar`) não é critério e muda entre levas: a original e a Rust rodam as duas, e uma Rust que chama rotinas com desvio passa pelos comparadores delas. O critério é zero divergências e a mesma impressão nas carreiras Rust e original. Variável de ambiente nova no `simular.py` muda a heap e a impressão de referência: reaproveitar uma CM_* com valor do mesmo tamanho (ex.: `CM_OCULTO=2` para o som).
