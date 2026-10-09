@@ -620,3 +620,11 @@ Mutações: 5/5 no autoteste (montado sobre o da 63ª leva). Junto: nos testes (
 | `byte_tatico(clube, pos, humano)` | 0x898040 | thiscall, ret 0xc | tactics.cpp: byte `pos` (0..=10) da linha tática na tabela em +0x601 (0x91 bytes por linha, a partir de +0x86); linha −1: 0 |
 
 Mutações: 6/6 no autoteste. Junto: `simular.py --som` mantém o som do jogo (`CM_OCULTO=2`; uma variável de ambiente a mais mudaria a heap e a carreira).
+
+### Motor de partidas, 66ª leva — ordem dos cobradores de pênalti (oficial em 08/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `ordem_dos_penaltis()` | 0x6be520 | thiscall | match_eng.cpp: a ordem dos 11 cobradores de cada lado em +0x1af + 11 × lado (−1 antes), marcando os escolhidos nas 20 casas de cada lado em +0x8eda (zeradas antes). Técnico do lado (+0x904d + 208 × lado) humano, com +0x5f, sem 0x9a01 e (com +0x904b) de seleção ou com 0x9a05: a ordem vem da tabela tática (0x898040 sobre [0xde1d08]). Senão, `escolher_cobrador` tipo 5; sem ninguém, zera as marcas do lado e repete a vez |
+
+Mutações: no jogo real `p_marca`, `p_tipo5` e `p_11`; no autoteste (caminho da tabela) `p_marca` e `p_11`. `p_limpa` é equivalente (o laço regrava as 22 vagas). **Limitação:** `p_5f` (o teste da marca +0x5f do técnico) não é pega: a carreira automática não passa pelo caminho humano, e o autoteste não leva um lado ao `escolher_cobrador` com blocos sintéticos. **Armadilhas:** (1) a rotina marca `+0x8eda + 20 × lado + byte da tabela` (com sinal); com bytes aleatórios na tabela sintética a marca caía até 128 bytes em volta (ponteiros da formação em 0x8ebc), e um teste seguinte abria a caixa de erro formation.cpp 3133/3174, visível na tela porque o autoteste roda antes da interface do jogo; o teste agora guarda e restaura essa faixa. (2) Interromper o `mutacoes.py` no meio de uma mutação deixa o `motor.rs` mutado: conferir as listas de mutação antes de seguir.

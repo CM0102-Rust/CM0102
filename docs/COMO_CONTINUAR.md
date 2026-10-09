@@ -29,6 +29,7 @@ Uma leva tem de 1 a 10 rotinas do motor de partidas (`match_eng.cpp`, `match_pl.
 
 ## Armadilhas já conhecidas
 
+- Dado sintético que vira endereço de escrita na rotina original (índice com sinal, deslocamento): restaurar toda a faixa que ele alcança, ou usar só valores reais. Caixa de erro do jogo durante o autoteste aparece na tela do Lucas (o autoteste roda antes da interface) e trava o teste sem gastar processador. Não interromper o `mutacoes.py` no meio: o `motor.rs` fica mutado.
 - A impressão do modo de comparação (`--modo comparar`) não é critério e muda entre levas: a original e a Rust rodam as duas, e uma Rust que chama rotinas com desvio passa pelos comparadores delas. O critério é zero divergências e a mesma impressão nas carreiras Rust e original. Variável de ambiente nova no `simular.py` muda a heap e a impressão de referência: reaproveitar uma CM_* com valor do mesmo tamanho (ex.: `CM_OCULTO=2` para o som).
 - Não editar o `motor.rs` enquanto o `mutacoes.py` roda: no fim ele regrava o arquivo como estava no começo. Rotina de técnico humano: a carreira automática quase não passa por ela; as mutações precisam do autoteste sintético.
 - Rotina que devolve os casos de erro à original: uma mutação no caminho que decide "é erro" pode sumir, porque a original acerta o resultado. No autoteste, deixar o caminho errado cair num caso válido diferente (ex.: outra pessoa válida na vaga que a mutação leria).

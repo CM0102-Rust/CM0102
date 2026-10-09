@@ -177,6 +177,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x547840 | `nao_gosta_de` | dislikes |
 | 0x715f50 | `nota_ajustada` | adjusted_rating |
 | 0x6d3de0 | `nova_reputacao` | new_reputation |
+| 0x6be520 | `ordem_dos_penaltis` | penalty_order |
 | 0x717c70 | `papel_880` | role_880 |
 | 0x716310 | `papel_na_defesa` | defending_role |
 | 0x716270 | `papel_no_ataque` | attacking_role |

@@ -622,3 +622,11 @@ Mutations: 5/5 in the self-test (built on the 63rd batch's). Also: in the tests 
 | `byte_tatico(clube, pos, humano)` | 0x898040 | thiscall, ret 0xc | tactics.cpp: byte `pos` (0..=10) of the tactics row in the table at +0x601 (0x91 bytes per row, from +0x86); row −1: 0 |
 
 Mutations: 6/6 in the self-test. Also: `simular.py --som` keeps the game's sound (`CM_OCULTO=2`; one more environment variable would shift the heap and the career).
+
+### Match engine, 66th batch — penalty taker order (official on 2026-10-08)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `ordem_dos_penaltis()` | 0x6be520 | thiscall | match_eng.cpp: the order of the 11 takers of each side at +0x1af + 11 × side (−1 first), marking those chosen in each side's 20 slots at +0x8eda (zeroed first). Side's manager (+0x904d + 208 × side) human, with +0x5f, without 0x9a01 and (with +0x904b) national team or with 0x9a05: the order comes from the tactics table (0x898040 on [0xde1d08]). Otherwise, `escolher_cobrador` type 5; with no one, clears the side's marks and repeats the turn |
+
+Mutations: in the real game `p_marca`, `p_tipo5` and `p_11`; in the self-test (table path) `p_marca` and `p_11`. `p_limpa` is equivalent (the loop rewrites all 22 slots). **Limitation:** `p_5f` (the manager's +0x5f mark check) is not caught: the automatic career does not take the human path, and the self-test does not send a side to `escolher_cobrador` with synthetic blocks. **Traps:** (1) the routine marks `+0x8eda + 20 × side + table byte` (signed); with random bytes in the synthetic table the mark fell up to 128 bytes around (formation pointers at 0x8ebc), and a later test opened the formation.cpp 3133/3174 error box, visible on screen because the self-test runs before the game's interface; the test now saves and restores that range. (2) Interrupting `mutacoes.py` in the middle of a mutation leaves `motor.rs` mutated: check the mutation lists before going on.

@@ -289,8 +289,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6d42a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x86, 0x92, 0x47, 0x00, 0x00] },
     Prologo { endereco: 0x8982b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x898040, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x6be520, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] },
 ];
-const N: usize = 184;
+const N: usize = 185;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3963,6 +3964,66 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- sexagesima sexta leva: ordem dos cobradores de penalti ----------
+
+/// { 0x6be520 } (match_eng.cpp): monta a ordem dos 11 cobradores de penalti de cada lado em
+/// +0x1af + 11 x lado (-1 antes), marcando os escolhidos nas 20 casas de cada lado em +0x8eda
+/// (zeradas antes). Se o tecnico do lado (+0x904d + 208 x lado) e um dos 16 humanos, tem a marca
+/// +0x5f, nao tem 0x9a01 (0x5fd210) e, com +0x904b, e de selecao (0x53b900) ou tem 0x9a05
+/// (0x5fd480): a ordem vem da tabela tatica do clube (0x898040 sobre [0xde1d08], com `humano` =
+/// byte +0x40/+0x41 da partida igual a 0). Senao, `escolher_cobrador` tipo 5; sem ninguem, zera as
+/// marcas do lado e tenta a mesma vez de novo.
+unsafe extern "thiscall" fn ordem_dos_penaltis(m: usize) {
+    core::ptr::write_bytes((m + 0x8eda) as *mut u8, 0, 40);
+    core::ptr::write_bytes((m + 0x1af) as *mut u8, 0xff, 22);
+    let h = *(0xb63c98 as *const usize);
+    let t9a01: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd210usize);
+    let t9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd480usize);
+    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let tatico: unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u8 = core::mem::transmute(0x898040usize);
+    let cobrador: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(0x6ceb90usize);
+    for lado in 0..2i8 {
+        let l = lado as usize;
+        let mut vez = 0i8;
+        while vez < 11 {
+            let tecnico = *((m + 0x904d + 208 * l) as *const usize);
+            let pessoas = *(0xae2364 as *const i32);
+            let pela_tabela = tecnico != 0
+                && (pessoas.wrapping_sub(16)..pessoas).contains(&*(tecnico as *const i32))
+                && byte(tecnico, 0x5f) != 0
+                && t9a01(h, tecnico) == 0
+                && (byte(m + 208 * l, 0x904b) == 0 || {
+                    let partida = *((m + 0x4792) as *const usize);
+                    e_selecao(*((partida + if lado == 0 { 0x1c } else { 0x20 }) as *const usize)) != 0
+                        || t9a05(h, *((m + 0x904d + 208 * l) as *const usize)) != 0
+                });
+            let escolhido = if pela_tabela {
+                let partida = *((m + 0x4792) as *const usize);
+                let (marca, clube) = if lado == 0 {
+                    (byte(partida, 0x40), *((partida + 0x1c) as *const usize))
+                } else {
+                    (byte(partida, 0x41), *((partida + 0x20) as *const usize))
+                };
+                Some(tatico(*(0xde1d08 as *const usize), clube, vez, (marca == 0) as u32) as i8)
+            } else {
+                let c = cobrador(m, lado, 5, m + 0x8eda);
+                if c == 0 {
+                    vez = vez.wrapping_sub(1);
+                    core::ptr::write_bytes((m + 0x8eda + 20 * l) as *mut u8, 0, 20);
+                    None
+                } else {
+                    Some(*(c as *const i8))
+                }
+            };
+            if let Some(e) = escolhido {
+                *((m as isize + 0x1af + 11 * l as isize + vez as isize) as *mut i8) = e;
+                *((m as isize + 0x8eda + 20 * l as isize + e as isize) as *mut u8) = 1;
+            }
+            vez = vez.wrapping_add(1);
+        }
+    }
 }
 
 // ---------- sexagesima quinta leva: tabela tatica do clube ----------
@@ -7645,6 +7706,17 @@ unsafe extern "C" fn comparar_separar_mascara(m: u32, setor: *mut u16, lado: *mu
 comparar_valor!(comparar_tecnico_9ace, tecnico_9ace, 178, (pessoa: usize) -> u32);
 comparar_valor!(comparar_lado_sob_controle, lado_sob_controle, 181, (lado: i8) -> u8);
 comparar_valor!(comparar_byte_tatico, byte_tatico, 183, (clube: usize, pos: i8, humano: u32) -> u8);
+unsafe extern "thiscall" fn comparar_ordem_dos_penaltis(m: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(184);
+    let mut regioes = vec![(m, 0xf5f8)];
+    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(m), || crate::aleatorio::sem_contar(|| ordem_dos_penaltis(m)));
+    PLACAR.registrar(igual, || {
+        let (a, b) = (&mo.0, &mr.0);
+        let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
+        format!("ordem_dos_penaltis diferencas em {:x?}", dif)
+    });
+}
 unsafe extern "stdcall" fn comparar_linha_tatica(clube: usize, humano: u32) -> i32 {
     let r = orig::<unsafe extern "stdcall" fn(usize, u32) -> i32>(182)(clube, humano);
     let v = linha_tatica(clube, humano);
@@ -8013,6 +8085,7 @@ pub unsafe fn instalar(comparando: bool) {
         lado_sob_controle as *const () as usize,
         linha_tatica as *const () as usize,
         byte_tatico as *const () as usize,
+        ordem_dos_penaltis as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -8199,6 +8272,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_lado_sob_controle as *const () as usize,
         comparar_linha_tatica as *const () as usize,
         comparar_byte_tatico as *const () as usize,
+        comparar_ordem_dos_penaltis as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -8272,6 +8346,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_clube_humano",
         "motor_lado_sob_controle",
         "motor_linha_tatica", "motor_byte_tatico",
+        "motor_ordem_dos_penaltis",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -9806,6 +9881,44 @@ pub unsafe fn autoteste(casos: u64) {
                 *((m + 0x9766) as *mut u32) = (h63 >> 20) as u32 & 0x4400;
                 *((m + 0x9766 + 6371) as *mut u32) = (h63 >> 30) as u32 & 0x4400;
                 comparar_lado_sob_controle(m, ((h63 >> 53) & 1) as i8);
+                // sexagesima sexta leva: ordem dos penaltis pela tabela tatica (os dois lados com tecnico
+                // humano com a marca 0x5f e sem 0x9a01; +0x904b so com selecao, senao o escolher_cobrador
+                // dos blocos do autoteste poderia dar erro fatal)
+                if TABELA65.len() == 0x91 * 5100 {
+                    let regs66 = |p: &[u32; 16]| regs56 + 42735 * (p[0] as i32 - npes56 + 16) as usize;
+                    let mut tec66 = [pessoa62, outra62];
+                    for t in tec66.iter_mut() {
+                        *(t.as_mut_ptr() as *mut u8).add(0x5f) = 1;
+                    }
+                    for t in tec66.iter() {
+                        *((regs66(t) + 0x9a01) as *mut u32) = 0;
+                    }
+                    partida64[0x41] = ((h63 >> 57) & 1) as u8;
+                    let antes66 = (*(0xde1d08 as *const usize), *((m + 0x904d) as *const usize), *((m + 0x911d) as *const usize),
+                        *((m + 0x904b) as *const u8), *((m + 0x911b) as *const u8));
+                    // a marca vai para +0x8eda + 20 x lado + byte da tabela (com sinal): ate 128 bytes em volta
+                    let mut marcas66 = [0u8; 0x140];
+                    let mut ordem66 = [0u8; 22];
+                    core::ptr::copy_nonoverlapping((m + 0x8eda - 0x80) as *const u8, marcas66.as_mut_ptr(), 0x140);
+                    core::ptr::copy_nonoverlapping((m + 0x1af) as *const u8, ordem66.as_mut_ptr(), 22);
+                    let mut obj66 = [0u8; 0x608];
+                    *(obj66.as_mut_ptr().add(0x601) as *mut usize) = TABELA65.as_ptr() as usize;
+                    *(0xde1d08 as *mut usize) = obj66.as_ptr() as usize;
+                    let ta = ((h63 >> 58) & 1) as usize;
+                    *((m + 0x904d) as *mut usize) = tec66[ta].as_ptr() as usize;
+                    *((m + 0x911d) as *mut usize) = tec66[1 - ta].as_ptr() as usize;
+                    let sel_a = *(clube_a63.as_ptr() as *const i32) >= 4600;
+                    *((m + 0x904b) as *mut u8) = (sel_a && (h63 >> 59) & 1 == 1) as u8;
+                    *((m + 0x911b) as *mut u8) = 0;
+                    comparar_ordem_dos_penaltis(m);
+                    *(0xde1d08 as *mut usize) = antes66.0;
+                    *((m + 0x904d) as *mut usize) = antes66.1;
+                    *((m + 0x911d) as *mut usize) = antes66.2;
+                    *((m + 0x904b) as *mut u8) = antes66.3;
+                    *((m + 0x911b) as *mut u8) = antes66.4;
+                    core::ptr::copy_nonoverlapping(marcas66.as_ptr(), (m + 0x8eda - 0x80) as *mut u8, 0x140);
+                    core::ptr::copy_nonoverlapping(ordem66.as_ptr(), (m + 0x1af) as *mut u8, 22);
+                }
                 *((m + 0x4792) as *mut usize) = antes64.0;
                 *((m + 0x1ab) as *mut u16) = antes64.1;
                 *((m + 0x9766) as *mut u32) = antes64.2;
