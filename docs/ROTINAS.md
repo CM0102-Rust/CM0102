@@ -699,3 +699,13 @@ Mutações: 8/8 (os 82 pares foram extraídos da desmontagem; o autoteste dá va
 | `nivel_do_contrato(pessoa, clube)` | 0x53ce90 | cdecl | (byte +0x4f do contrato com 0xae1050 & 0xf) − 10; clube de seleção ou pessoa inválida: o próprio ponteiro do clube com o byte baixo zerado |
 
 Mutações: 7/7 (a do limite das seleções só depois de o autoteste dar valores a 0xae235c e 0xae2350, que valem 0 antes do banco de dados).
+
+### Motor de partidas, 75ª leva — névoa de guerra (o que o clube humano sabe dos jogadores) (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `chance_de_conhecer(pessoa, nivel)` | 0x544410 | cdecl | x = (palavra +4 + 2 × nível) × 0,05 + 10; (x + 0,1 x²) × ⅓ + 0,5, limitado a 1..20 e truncado (`_ftol`) |
+| `conhecer_pessoa(pessoa, fonte)` | 0x5b09d0 | thiscall, ret 8 | fog_of_war.cpp: registro de 9 bytes por id (nível 0..3 e a data de hoje, 0xae2c90, por 0x417c10); sem observador o nível vai a 3; com ele sorteia pela chance (0x544410) |
+| `nevoa_apos_partida(partida, dados)` | 0x5afe00 | stdcall | fog_of_war.cpp: para os lados humanos (0x600a50) com quadro de conhecimento (0xae2a60), as 20 vagas da escalação ficam conhecidas |
+
+Mutações: 13/15. Duas equivalentes: multiplicar por ⅓ (constante 0x968a80) em vez de dividir por 3 quase nunca muda o truncamento; e o limite `id < 0xae2364` na 0x5afe00, que a 0x5b09d0 refaz. A troca dos lados só apareceu com clubes diferentes nos dois lados.

@@ -76,6 +76,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f4600 | `campo_pela_posicao` | field_by_position |
 | 0x6eab60 | `cartao_pela_gravidade` | card_by_severity |
 | 0x6c2a40 | `casa_da_formacao` | formation_square |
+| 0x544410 | `chance_de_conhecer` | chance_to_know |
 | 0x713e90 | `classificar_lance` | classify_move |
 | 0x76d940 | `clube_especial` | special_club |
 | 0x600a50 | `clube_humano` | human_club |
@@ -87,6 +88,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x70a860 | `comentario_b` | commentary_b |
 | 0x70dfa0 | `condicao_jogador` | player_condition |
 | 0x6bba80 | `conferir_lance` | check_move |
+| 0x5b09d0 | `conhecer_pessoa` | know_person |
 | 0x6f9f90 | `consegue_jogar` | can_play |
 | 0x6cbbb0 | `contar_ativos` | count_active |
 | 0x4cf5f0 | `contrato_com_clube` | contract_with_club |
@@ -185,6 +187,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x714c60 | `na_lista` | in_list |
 | 0x547840 | `nao_gosta_de` | dislikes |
 | 0x547d30 | `nao_gosta_do_clube` | dislikes_club |
+| 0x5afe00 | `nevoa_apos_partida` | fog_after_match |
 | 0x53ce90 | `nivel_do_contrato` | contract_level |
 | 0x715f50 | `nota_ajustada` | adjusted_rating |
 | 0x6d3de0 | `nova_reputacao` | new_reputation |

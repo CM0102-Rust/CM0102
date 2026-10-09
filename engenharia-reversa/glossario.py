@@ -83,6 +83,7 @@ EN = {
  'falta_no_motor': 'foul_in_engine', 'tecnico_9b23': 'manager_9b23', 'gosta_do_clube': 'likes_club', 'nao_gosta_do_clube': 'dislikes_club',
  'clube_parceiro': 'partner_club',
  'contrato_com_clube': 'contract_with_club', 'nivel_do_contrato': 'contract_level',
+ 'chance_de_conhecer': 'chance_to_know', 'conhecer_pessoa': 'know_person', 'nevoa_apos_partida': 'fog_after_match',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

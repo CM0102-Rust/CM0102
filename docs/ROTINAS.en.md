@@ -701,3 +701,13 @@ Mutations: 8/8 (the 82 pairs were extracted from the disassembly; the self-test 
 | `nivel_do_contrato(pessoa, clube)` | 0x53ce90 | cdecl | (byte +0x4f of the contract via 0xae1050 & 0xf) − 10; national side or invalid person: the club pointer itself with the low byte cleared |
 
 Mutations: 7/7 (the national-side limit one only after the self-test gave values to 0xae235c and 0xae2350, which are 0 before the database loads).
+
+### Match engine, 75th batch — fog of war (what the human club knows about players) (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `chance_de_conhecer(pessoa, nivel)` | 0x544410 | cdecl | x = (word +4 + 2 × level) × 0.05 + 10; (x + 0.1 x²) × ⅓ + 0.5, clamped to 1..20 and truncated (`_ftol`) |
+| `conhecer_pessoa(pessoa, fonte)` | 0x5b09d0 | thiscall, ret 8 | fog_of_war.cpp: a 9-byte record per id (level 0..3 and today's date, 0xae2c90, via 0x417c10); without an observer the level goes to 3; with one it draws by the chance (0x544410) |
+| `nevoa_apos_partida(partida, dados)` | 0x5afe00 | stdcall | fog_of_war.cpp: for the human sides (0x600a50) with a knowledge table (0xae2a60), the 20 line-up slots become known |
+
+Mutations: 13/15. Two equivalent: multiplying by ⅓ (constant 0x968a80) instead of dividing by 3 almost never changes the truncation; and the `id < 0xae2364` limit in 0x5afe00, which 0x5b09d0 checks again. Swapping the sides only showed with different clubs on the two sides.

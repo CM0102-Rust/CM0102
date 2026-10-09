@@ -45,3 +45,4 @@ Uma leva tem de 1 a 10 rotinas do motor de partidas (`match_eng.cpp`, `match_pl.
 - Rotinas que gravam eventos de narração (0x6d6f70) ou chamam 0x6cd330 usam gravação e reprodução: a original grava as chamadas, e a Rust confere contra a gravação sem repetir os efeitos (`porta_6d6f70`, `GRAVANDO_6CD330`).
 - Um teste pesado por vez (um jogo aberto de cada vez). O `simular.py` usa `laboratorio.py`: trava `..\..\.laboratorio.lock` e vigia de memória. Na máquina do Lucas isso existe porque ela é compartilhada com outros projetos; fora dela, a trava só serializa os testes.
 - Os testes abrem o jogo sempre em janela (`-windowed`, `CM_JANELA=960x540`) e copiam e restauram o `game.cfg`.
+- Antes de escolher uma rotina, procurar o endereço em todos os módulos (`grep 0x... rust/src/*.rs`): a 0x417c10 (cópia de data) já era desviada pelo `data.rs`, e o desvio repetido é recusado ("bytes ... sao [e9 ...]"), deixando a original da tabela em 0 (salto para 0 no autoteste).

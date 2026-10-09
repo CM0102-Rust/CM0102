@@ -305,8 +305,11 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x540a50, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x4cf5f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53, 0x55, 0x56] },
     Prologo { endereco: 0x53ce90, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x85, 0xc0] },
+    Prologo { endereco: 0x544410, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x0f, 0xbe, 0x54, 0x24, 0x08] },
+    Prologo { endereco: 0x5b09d0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] },
+    Prologo { endereco: 0x5afe00, bytes: &[0x51, 0x53, 0x55, 0x8b, 0x6c, 0x24, 0x10] },
 ];
-const N: usize = 200;
+const N: usize = 203;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3979,6 +3982,85 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- septuagesima quinta leva: nevoa de guerra (o que o clube humano sabe dos jogadores) ----------
+
+/// { 0x544410 }: x = (palavra +4 da pessoa + 2 x `nivel`) x 0,05 + 10; (x + 0,1 x^2) x (1/3) + 0,5,
+/// limitado a 1..20 (NaN vira 1) e truncado.
+unsafe extern "C" fn chance_de_conhecer(pessoa: usize, nivel: i8) -> i32 {
+    let x = (*((pessoa + 4) as *const i16) as f64 + (nivel as f64 + nivel as f64)) * 0.05 + 10.0;
+    let y = (x * x * 0.1 + x) * f64_em(0x968a80) + 0.5;
+    ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y })
+}
+
+/// { 0x5b09d0 } (ret 8, fog_of_war.cpp): o que se sabe da pessoa (registros de 9 bytes em [this],
+/// pelo id): grava a data de hoje (0xae2c90) em +1; sem observador (`fonte` +0x69) o nivel (+0)
+/// vai a 3. Com ele e nivel abaixo de 3: c = 0x544410(observador, byte +0x17), sorteio(c) (byte);
+/// c < 15 e sorteio 0: nivel + 1; senao nivel 0 e sorteio < 6: 2; senao 3.
+unsafe extern "thiscall" fn conhecer_pessoa(this: usize, pessoa: usize, fonte: usize) {
+    if pessoa == 0 || *(pessoa as *const i32) >= *(0xae2364 as *const i32) {
+        return;
+    }
+    let reg = (*(this as *const usize)).wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(9));
+    let mut data = [0u8; 8];
+    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
+    copiar(reg + 1, data.as_mut_ptr() as usize, 0xae2c90);
+    let obs = if fonte == 0 { 0 } else { *((fonte + 0x69) as *const usize) };
+    let nivel = reg as *mut u8;
+    if obs == 0 {
+        *nivel = 3;
+        return;
+    }
+    if *nivel == 3 {
+        return;
+    }
+    let chance: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(0x544410usize);
+    let c = chance(obs, *((obs + 0x17) as *const i8)) as i8;
+    let r = sortear(c as i32) as i8;
+    *nivel = if c < 15 && r == 0 {
+        (*nivel).wrapping_add(1)
+    } else if *nivel == 0 && r < 6 {
+        2
+    } else {
+        3
+    };
+}
+
+/// { 0x5afe00 } (stdcall, fog_of_war.cpp): depois da partida, para cada lado (clube em +0x20 e
+/// +0x1c) controlado por humano (0x600a50) com tecnico e quadro de conhecimento (0xae2a60, pelo
+/// id do tecnico): as 20 vagas da escalacao (`dados` + lado x 0x625 + 0x190, 0x49 bytes cada) com
+/// pessoa e +4 validos (reservas, da 11a em diante, so com +0x32 != 0xff) ficam conhecidas (0x5b09d0).
+unsafe extern "stdcall" fn nevoa_apos_partida(partida: usize, dados: usize) {
+    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let conhecer: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x5b09d0usize);
+    let n = || *(0xae2364 as *const i32);
+    for lado in 0..2usize {
+        let clube = *((partida + if lado == 0 { 0x20 } else { 0x1c }) as *const usize);
+        if humano(clube, 0, 1, 0, 0) == 0 {
+            continue;
+        }
+        let q = *((clube + 0xcf) as *const usize);
+        if q == 0 {
+            continue;
+        }
+        let k = n().wrapping_sub(*(q as *const i32)) as usize;
+        let obj = *((*(0xae2a60 as *const usize)).wrapping_add(k.wrapping_mul(4)).wrapping_sub(4) as *const usize);
+        if obj == 0 {
+            continue;
+        }
+        for vaga in 0..20usize {
+            let e = dados + lado * 0x625 + 0x190 + vaga * 0x49;
+            let i = *(e as *const i32);
+            if i == -1 || *((e + 4) as *const i32) == -1 || (vaga > 10 && *((e + 0x32) as *const u8) == 0xff) {
+                continue;
+            }
+            let p = (*(0xae23bc as *const usize)).wrapping_add((i as usize).wrapping_mul(0x6e));
+            if p == 0 || *(p as *const i32) < n() {
+                conhecer(obj, p, 0);
+            }
+        }
+    }
 }
 
 // ---------- septuagesima quarta leva: contrato da pessoa com o clube ----------
@@ -8962,6 +9044,48 @@ unsafe extern "thiscall" fn comparar_falta_no_motor(
 }
 comparar_valor!(comparar_tecnico_9b23, tecnico_9b23, 194, (i: i8, pessoa: usize) -> u8);
 comparar_valor!(comparar_contrato_com_clube, contrato_com_clube, 198, (pessoa: usize, clube: usize) -> usize);
+unsafe extern "C" fn comparar_chance_de_conhecer(pessoa: usize, nivel: i8) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, i8) -> i32>(200)(pessoa, nivel);
+    let v = chance_de_conhecer(pessoa, nivel);
+    PLACAR.registrar(r == v, || format!("chance_de_conhecer({}, {}) original={} rust={}", *((pessoa + 4) as *const i16), nivel, r, v));
+    r
+}
+unsafe extern "thiscall" fn comparar_conhecer_pessoa(this: usize, pessoa: usize, fonte: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(201);
+    let mut reg: Vec<(usize, usize)> = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    if pessoa != 0 && *(pessoa as *const i32) < *(0xae2364 as *const i32) {
+        reg.push(((*(this as *const usize)).wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(9)), 9));
+    }
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, fonte), || crate::aleatorio::sem_contar(|| conhecer_pessoa(this, pessoa, fonte)));
+    PLACAR.registrar(igual, || format!("conhecer_pessoa original={:x?} rust={:x?}", mo, mr));
+}
+unsafe extern "stdcall" fn comparar_nevoa_apos_partida(partida: usize, dados: usize) {
+    let o = orig::<unsafe extern "stdcall" fn(usize, usize)>(202);
+    // os registros que a rotina pode mexer (mesmos testes, sem o 0x32 das reservas: sobra nao atrapalha)
+    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let n = *(0xae2364 as *const i32);
+    let mut reg: Vec<(usize, usize)> = Vec::new();
+    for lado in 0..2usize {
+        let clube = *((partida + 0x20 - 4 * lado) as *const usize);
+        if humano(clube, 0, 1, 0, 0) == 0 || *((clube + 0xcf) as *const usize) == 0 {
+            continue;
+        }
+        let q = *((clube + 0xcf) as *const usize);
+        let obj = *((*(0xae2a60 as *const usize)).wrapping_add((n.wrapping_sub(*(q as *const i32)) as usize).wrapping_mul(4)).wrapping_sub(4) as *const usize);
+        if obj == 0 {
+            continue;
+        }
+        for vaga in 0..20usize {
+            let i = *((dados + lado * 0x625 + 0x190 + vaga * 0x49) as *const i32);
+            let p = (*(0xae23bc as *const usize)).wrapping_add((i as usize).wrapping_mul(0x6e));
+            if i != -1 && p != 0 && *(p as *const i32) < n {
+                reg.push(((*(obj as *const usize)).wrapping_add((*(p as *const i32) as usize).wrapping_mul(9)), 9));
+            }
+        }
+    }
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(partida, dados), || nevoa_apos_partida(partida, dados));
+    PLACAR.registrar(igual, || format!("nevoa_apos_partida original={:x?} rust={:x?}", mo, mr));
+}
 unsafe extern "C" fn comparar_nivel_do_contrato(pessoa: usize, clube: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(199)(pessoa, clube);
     let v = nivel_do_contrato(pessoa, clube);
@@ -9454,6 +9578,9 @@ pub unsafe fn instalar(comparando: bool) {
         clube_parceiro as *const () as usize,
         contrato_com_clube as *const () as usize,
         nivel_do_contrato as *const () as usize,
+        chance_de_conhecer as *const () as usize,
+        conhecer_pessoa as *const () as usize,
+        nevoa_apos_partida as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -9656,6 +9783,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_clube_parceiro as *const () as usize,
         comparar_contrato_com_clube as *const () as usize,
         comparar_nivel_do_contrato as *const () as usize,
+        comparar_chance_de_conhecer as *const () as usize,
+        comparar_conhecer_pessoa as *const () as usize,
+        comparar_nevoa_apos_partida as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -9738,6 +9868,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_falta_no_motor", "motor_tecnico_9b23", "motor_nao_gosta_do_clube", "motor_gosta_do_clube",
         "motor_clube_parceiro",
         "motor_contrato_com_clube", "motor_nivel_do_contrato",
+        "motor_chance_de_conhecer", "motor_conhecer_pessoa", "motor_nevoa_apos_partida",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -11264,6 +11395,61 @@ pub unsafe fn autoteste(casos: u64) {
                     tecnicos63[((h63 >> 42) % 3) as usize],
                     ((h63 >> 44) % 3 == 0) as u32,
                 );
+                // septuagesima quinta leva: nevoa de guerra (data de hoje, quadro de conhecimento,
+                // pessoas sinteticas; os dois lados com o clube humano sintetico)
+                {
+                    let h75 = s.proximo();
+                    let globais75 = [0xae2a60usize, 0xae23bc, 0xae2c90, 0xae2c94];
+                    let antes75: Vec<u32> = globais75.iter().map(|&a| *(a as *const u32)).collect();
+                    *(0xae2c90 as *mut u32) = (h75 >> 3) as u32;
+                    *(0xae2c94 as *mut u32) = (h75 >> 29) as u32;
+                    let mut conhec75 = vec![0u8; 9 * 1100];
+                    for (k, b) in conhec75.iter_mut().enumerate() {
+                        *b = if k % 9 == 0 { (h75.rotate_left(k as u32 % 61) % 4) as u8 } else { (k as u8).wrapping_mul(37) };
+                    }
+                    let obj75 = [conhec75.as_mut_ptr() as usize, 0];
+                    let mut quadro75 = [0usize; 32];
+                    for k in 0..32usize {
+                        quadro75[k] = if (h75 >> (k % 40 + 5)) % 5 == 0 { 0 } else { obj75.as_ptr() as usize };
+                    }
+                    *(0xae2a60 as *mut usize) = quadro75.as_ptr() as usize;
+                    let mut pessoas75 = vec![0u8; 0x6e * 64];
+                    for k in 0..64usize {
+                        let z = h75.rotate_left(k as u32) ^ (k as u64 * 0x9e37);
+                        *(pessoas75.as_mut_ptr().add(0x6e * k) as *mut i32) = if z % 9 == 0 { npes56 + ((z >> 8) % 3) as i32 } else { (k * 13) as i32 % npes56 };
+                    }
+                    *(0xae23bc as *mut usize) = pessoas75.as_ptr() as usize;
+                    let mut dados75 = vec![0u8; 0x1000];
+                    for lado in 0..2usize {
+                        for v in 0..20usize {
+                            let z = h75.rotate_right((lado * 20 + v) as u32) ^ (v as u64 * 0x5bd1);
+                            let e = dados75.as_mut_ptr().add(lado * 0x625 + 0x190 + v * 0x49);
+                            *(e as *mut i32) = if z % 7 == 0 { -1 } else { ((z >> 4) % 64) as i32 };
+                            *(e.add(4) as *mut i32) = if (z >> 12) % 7 == 0 { -1 } else { 5 };
+                            *e.add(0x32) = if (z >> 16) % 3 == 0 { 0xff } else { 1 };
+                        }
+                    }
+                    let mut partida75 = [0usize; 9];
+                    partida75[7] = clube_a63.as_ptr() as usize;
+                    // o lado 1 (+0x1c) com outro tecnico (ou nenhum): trocar os lados aparece
+                    let mut clube_1_75 = clube_a63;
+                    *(clube_1_75.as_mut_ptr().add(0xcf) as *mut usize) = tecnicos63[((h75 >> 1) % 3) as usize];
+                    partida75[8] = clube_a63.as_ptr() as usize;
+                    partida75[7] = clube_1_75.as_ptr() as usize;
+                    comparar_nevoa_apos_partida(partida75.as_ptr() as usize, dados75.as_ptr() as usize);
+                    // a pessoa direto, com e sem observador (o sorteio so entra com ele)
+                    let mut obs75 = [0u8; 0x20];
+                    *(obs75.as_mut_ptr().add(4) as *mut i16) = if (h75 >> 40) & 1 == 0 { (h75 >> 41) as i16 } else { ((h75 >> 41) % 1200) as i16 - 600 };
+                    obs75[0x17] = (h75 >> 57) as u8;
+                    let mut fonte75 = [0u8; 0x70];
+                    *(fonte75.as_mut_ptr().add(0x69) as *mut usize) = if (h75 >> 58) % 4 == 0 { 0 } else { obs75.as_ptr() as usize };
+                    let quem75 = [[((h75 >> 20) % npes56 as u64) as i32, npes56, npes56 - 1, 0][((h75 >> 60) % 4) as usize]];
+                    comparar_conhecer_pessoa(obj75.as_ptr() as usize, if (h75 >> 62) & 1 == 1 && (h75 >> 61) & 1 == 1 { 0 } else { quem75.as_ptr() as usize }, if (h75 >> 59) % 5 == 0 { 0 } else { fonte75.as_ptr() as usize });
+                    comparar_chance_de_conhecer(obs75.as_ptr() as usize, (h75 >> 33) as i8);
+                    for (k, &a) in globais75.iter().enumerate() {
+                        *(a as *mut u32) = antes75[k];
+                    }
+                }
                 // sexagesima quinta leva: linha e byte da tabela tatica (tabela unica, cobre ids e humanos)
                 if TABELA65.is_empty() {
                     TABELA65 = vec![0u8; 0x91 * 5100];
