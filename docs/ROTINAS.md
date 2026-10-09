@@ -835,3 +835,13 @@ Mutações: 11/12 no jogo real até 20/08/2001 (a que não apareceu exige o byte
 | `forca_do_lado(lado)` | 0x6bbb60 | thiscall, ret 4 | match_eng.cpp: zera a palavra +0x1ce + 2 × lado e o byte +0xaf do lado; para cada um dos 20 ativos, −500 quando o bit da casa (0x717410, 0x5b5a60) já apareceu (a máscara soma, não junta), ajustes pela nota (0x6ebd70) conforme o contrato (0x4cf5a0 em 0xae1080, 0x4cf5f0), três sorteios e o designado da tática (0x897590); no fim, 0x6eecb0 com marca para cada ativo |
 
 Mutações: 5/8 no jogo real. As três restantes (máscara somada × juntada, o −750 e o −3× do designado) dependem do ramo do contrato com três sorteios e bits 0x17a0b, que a carreira automática não alcança nem até 2002-01-01; ficam para a carreira real do Lucas.
+
+### Motor de partidas, 88ª leva — bola no ataque, evolução do momento, partida de interesse; prólogos com instrução relativa (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `bola_no_ataque()` | 0x714d00 | thiscall | match_pl.cpp: já existia em Rust, sem desvio; agora desviada (prólogo com `jne` relativo refeito no trampolim) |
+| `evoluir_momento()` | 0x6f55c0 | thiscall | match_pl.cpp: 0x6f44a0; 1 em 11: +0xff cai 1 acima de (+0x100/2 + ficha +0x25 + 10)/4, +0x4d soma +0x59 (que zera se 1 ou cai à metade), acima de 50 em +1 tira (+1 − 50)^1,25/4 (até 25); +0x4d em 1..10000 (prólogo com `call` relativo) |
+| `partida_de_interesse(partida)` | 0x6b61e0 | cdecl | match_day.cpp: a partida interessa a algum dos 16 técnicos humanos? Pela competição (+0x14): seleções, amistoso (0x5c6710), rodada 150 (0x4b0870), nação (+0x5d) ou competição continental (0xae23a4) |
+
+Mutações: 5/8 no jogo real até 20/08/2001; `i_amistoso`, `i_principal` e `i_16` sobreviveram: o único humano da carreira automática (técnico de testes, de férias) não tem clube, então os ramos de clube/amistoso não disparam e o 16º técnico não existe. Ficam para a carreira real.

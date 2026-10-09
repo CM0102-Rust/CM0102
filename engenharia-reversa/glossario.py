@@ -96,6 +96,7 @@ EN = {
  'atualizar_atributos': 'update_attributes',
  'desempenho_na_partida': 'match_performance',
  'forca_do_lado': 'side_strength',
+ 'evoluir_momento': 'evolve_moment', 'bola_no_ataque': 'ball_in_attack', 'partida_de_interesse': 'match_of_interest',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

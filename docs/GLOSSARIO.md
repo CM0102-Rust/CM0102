@@ -69,6 +69,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x8676f0 | `bandeiras_do_contrato` | contract_flags |
 | 0x5b5a60 | `bit_da_casa` | square_bit |
 | 0x6cd490 | `bola_fora` | ball_out |
+| 0x714d00 | `bola_no_ataque` | ball_in_attack |
 | 0x7754c0 | `byte_42_da_selecao` | national_side_byte_42 |
 | 0x775520 | `byte_43_da_selecao` | national_side_byte_43 |
 | 0x76e010 | `byte_44_da_pessoa` | person_byte_44 |
@@ -144,6 +145,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6f4a70 | `estado_do_adversario` | opponent_state |
 | 0x6f4a40 | `estado_do_lado` | side_state |
 | 0x6cf750 | `estatistica_de_posse` | possession_statistic |
+| 0x6f55c0 | `evoluir_momento` | evolve_moment |
 | 0x6cb960 | `faixa` | band |
 | 0x6f5b20 | `faixa_jogador` | player_band |
 | 0x6cfc60 | `falta_no_motor` | foul_in_engine |
@@ -228,6 +230,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x717c70 | `papel_880` | role_880 |
 | 0x716310 | `papel_na_defesa` | defending_role |
 | 0x716270 | `papel_no_ataque` | attacking_role |
+| 0x6b61e0 | `partida_de_interesse` | match_of_interest |
 | 0x6f0630 | `pegar_bola` | take_ball |
 | 0x6c50d0 | `penalti` | penalty |
 | 0x70df70 | `perto_do_gol` | near_goal |

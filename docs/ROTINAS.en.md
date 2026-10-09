@@ -837,3 +837,13 @@ Mutations: 11/12 in the real game up to 2001-08-20 (the missing one needs record
 | `forca_do_lado(lado)` | 0x6bbb60 | thiscall, ret 4 | match_eng.cpp: clears word +0x1ce + 2 × side and the side byte +0xaf; for each of the 20 active players, −500 when the slot bit (0x717410, 0x5b5a60) already appeared (the mask adds, not ORs), adjustments by rating (0x6ebd70) per contract (0x4cf5a0 into 0xae1080, 0x4cf5f0), three draws and the tactic's designated player (0x897590); finally 0x6eecb0 with mark for each active one |
 
 Mutations: 5/8 in the real game. The other three (mask added vs ORed, the −750 and the designated player's −3×) depend on the contract branch with three draws and bits 0x17a0b, which the automatic career does not reach even by 2002-01-01; left for Lucas's real career.
+
+### Match engine, 88th batch — ball in attack, moment evolution, match of interest; prologues with a relative instruction (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `bola_no_ataque()` | 0x714d00 | thiscall | match_pl.cpp: already in Rust, not hooked; now hooked (prologue with a relative `jne` rebuilt in the trampoline) |
+| `evoluir_momento()` | 0x6f55c0 | thiscall | match_pl.cpp: 0x6f44a0; 1 in 11: +0xff drops 1 above (+0x100/2 + record +0x25 + 10)/4, +0x4d adds +0x59 (which clears if 1 or halves), above 50 in +1 subtracts (+1 − 50)^1.25/4 (up to 25); +0x4d within 1..10000 (prologue with a relative `call`) |
+| `partida_de_interesse(partida)` | 0x6b61e0 | cdecl | match_day.cpp: does the match interest any of the 16 human managers? By competition (+0x14): national sides, friendly (0x5c6710), round 150 (0x4b0870), nation (+0x5d) or continental competition (0xae23a4) |
+
+Mutations: 5/8 in the real game up to 2001-08-20; `i_amistoso`, `i_principal` and `i_16` survived: the only human in the automatic career (test manager, on holiday) has no club, so the club/friendly branches never fire and there is no 16th manager. Left for a real career.

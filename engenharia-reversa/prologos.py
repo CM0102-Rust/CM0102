@@ -7,13 +7,17 @@ d = open(r'D:\Sistemas\CM0102\jogo\cm0102.exe', 'rb').read()
 src = open(r'D:\Sistemas\CM0102\rust\src\motor.rs', encoding='utf-8').read()
 md = Cs(CS_ARCH_X86, CS_MODE_32)
 ruins = 0
+# prologos que terminam numa instrucao relativa refeita pelo trampolim (RELATIVAS em desvios.rs)
+des = open(r'D:\Sistemas\CM0102\rust\src\desvios.rs', encoding='utf-8').read()
+relativas = {int(a, 16): int(k) for a, k in re.findall(r'\((0x[0-9a-f]+), (\d+)\)', des.split('pub const RELATIVAS')[1].split(';')[0])}
 for a, b in re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+), bytes: &\[([^\]]*)\]', src):
     a = int(a, 16); n = len(b.split(','))
     fim = a
     for ins in md.disasm(d[a - 0x400000:a - 0x400000 + n + 15], a):
         if fim >= a + n:
             break
-        if ins.mnemonic.startswith('j') or ins.mnemonic in ('call', 'loop', 'jecxz'):
+        rel_ok = relativas.get(a) == ins.address - a and (ins.mnemonic == 'call' or (ins.mnemonic.startswith('j') and ins.size == 2 and ins.mnemonic != 'jmp'))
+        if (ins.mnemonic.startswith('j') or ins.mnemonic in ('call', 'loop', 'jecxz')) and not rel_ok:
             print('RUIM salto: %#x %s %s' % (ins.address, ins.mnemonic, ins.op_str)); ruins += 1
         fim = ins.address + ins.size
     if fim != a + n:

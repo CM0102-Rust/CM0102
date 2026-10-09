@@ -133,8 +133,8 @@ unsafe fn desviar_para(nome: &str, p: &Prologo, destino: impl FnOnce(usize) -> u
         linha(&format!("desvio {} recusado: VirtualAlloc falhou", nome));
         return None;
     }
-    core::ptr::copy_nonoverlapping(p.bytes.as_ptr(), tramp, n);
-    escrever_jmp(tramp.add(n), p.endereco + n);
+    let m = montar_trampolim(p, tramp);
+    escrever_jmp(tramp.add(m), p.endereco + n);
     let destino = destino(tramp as usize);
 
     let mut antiga = 0u32;
@@ -147,6 +147,40 @@ unsafe fn desviar_para(nome: &str, p: &Prologo, destino: impl FnOnce(usize) -> u
     win::FlushInstructionCache(win::GetCurrentProcess(), p.endereco as *const c_void, n);
     linha(&format!("desvio {}: {:#x} -> {:#x} (original em {:#x})", nome, p.endereco, destino, tramp as usize));
     Some(tramp as usize)
+}
+
+/// Prologos que terminam numa instrucao relativa (`call rel32` ou `jcc rel8`), com a posicao dela
+/// nos bytes: o trampolim refaz a instrucao com o destino absoluto. `engenharia-reversa/prologos.py`
+/// le esta tabela e aceita a instrucao relativa so nessa posicao.
+pub const RELATIVAS: &[(usize, usize)] = &[(0x714d00, 4), (0x6f55c0, 4)];
+
+/// Copia o prologo para o trampolim, refazendo a instrucao relativa de RELATIVAS. Devolve o tamanho
+/// escrito (o `jmp` de volta vem depois).
+unsafe fn montar_trampolim(p: &Prologo, tramp: *mut u8) -> usize {
+    let n = p.bytes.len();
+    let Some(&(_, k)) = RELATIVAS.iter().find(|&&(a, _)| a == p.endereco) else {
+        core::ptr::copy_nonoverlapping(p.bytes.as_ptr(), tramp, n);
+        return n;
+    };
+    core::ptr::copy_nonoverlapping(p.bytes.as_ptr(), tramp, k);
+    let op = p.bytes[k];
+    if op == 0xe8 {
+        let rel = i32::from_le_bytes([p.bytes[k + 1], p.bytes[k + 2], p.bytes[k + 3], p.bytes[k + 4]]);
+        let alvo = (p.endereco as isize + k as isize + 5 + rel as isize) as usize;
+        *tramp.add(k) = 0xe8;
+        core::ptr::write_unaligned(tramp.add(k + 1) as *mut i32, (alvo as isize - (tramp as isize + k as isize + 5)) as i32);
+        core::ptr::copy_nonoverlapping(p.bytes.as_ptr().add(k + 5), tramp.add(k + 5), n - k - 5);
+        n
+    } else {
+        // jcc rel8 vira jcc rel32 (0f 8x): 4 bytes a mais
+        assert!((0x70..0x80).contains(&op));
+        let alvo = (p.endereco as isize + k as isize + 2 + p.bytes[k + 1] as i8 as isize) as usize;
+        *tramp.add(k) = 0x0f;
+        *tramp.add(k + 1) = 0x80 + (op - 0x70);
+        core::ptr::write_unaligned(tramp.add(k + 2) as *mut i32, (alvo as isize - (tramp as isize + k as isize + 6)) as i32);
+        core::ptr::copy_nonoverlapping(p.bytes.as_ptr().add(k + 2), tramp.add(k + 6), n - k - 2);
+        n + 4
+    }
 }
 
 unsafe fn escrever_jmp(onde: *mut u8, para: usize) {

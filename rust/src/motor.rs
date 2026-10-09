@@ -351,8 +351,12 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6ec010, bytes: &[0x83, 0xec, 0x54, 0x53, 0x55] },
     Prologo { endereco: 0x6eecb0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
     Prologo { endereco: 0x6bbb60, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
+    // estes dois terminam numa instrucao relativa, refeita no trampolim (RELATIVAS em desvios.rs)
+    Prologo { endereco: 0x714d00, bytes: &[0x80, 0x79, 0x27, 0x01, 0x75, 0x15] },
+    Prologo { endereco: 0x6f55c0, bytes: &[0x51, 0x56, 0x8b, 0xf1, 0xe8, 0xd7, 0xee, 0xff, 0xff] },
+    Prologo { endereco: 0x6b61e0, bytes: &[0x53, 0x8b, 0x15, 0x68, 0xf6, 0x9c, 0x00] },
 ];
-const N: usize = 245;
+const N: usize = 248;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -2523,8 +2527,8 @@ unsafe extern "thiscall" fn diferenca_do_jogador(this: usize) -> u8 {
     pelo_motor(this, 0x6c4130).unwrap_or(0xff)
 }
 
-/// { 0x714d00 } (sem desvio: o prologo curto inclui um jne relativo): bola (y em 0x8ea8) no campo de ataque do lado (lado 1: y >= 6; outros: y < 6).
-#[allow(dead_code)]
+/// { 0x714d00 } (o prologo curto termina num jne relativo, refeito no trampolim: RELATIVAS em
+/// desvios.rs): bola (y em 0x8ea8) no campo de ataque do lado (lado 1: y >= 6; outros: y < 6).
 unsafe extern "thiscall" fn bola_no_ataque(this: usize) -> u8 {
     let y = byte(*((this + 0x19e) as *const usize), 0x8ea8);
     (if lado(this) == 1 { y >= 6 } else { y < 6 }) as u8
@@ -4025,6 +4029,146 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- octogesima oitava leva: lado da bola, momento do jogador, partida de interesse ----------
+
+/// { 0x6f55c0 } (match_pl.cpp): sorteia o momento (0x6f44a0); 1 em 11 vezes ainda: o byte +0xff
+/// cai 1 se passar de (+0x100 / 2 + 10 + ficha +0x25) / 4; +0x4d soma +0x59 (que zera se era 1 e
+/// senao cai a metade); acima de 50 em +1, tira (+1 - 50)^1,25 / 4 (no maximo 25); +0x4d fica em
+/// 1..10000.
+unsafe extern "thiscall" fn evoluir_momento(this: usize) {
+    let momento: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6f44a0usize);
+    momento(this);
+    if sortear(11) != 0 {
+        return;
+    }
+    let ff = (this + 0xff) as *mut i8;
+    let h = (byte(this, 0x100) as i32 / 2 + byte(*((this + 0x6d) as *const usize), 0x25) as i32 + 10) / 4;
+    if *ff as i32 > h {
+        *ff = (*ff).wrapping_sub(1);
+    }
+    let f = |o: usize| (this + o) as *mut f32;
+    *f(0x4d) = (*f(0x4d) as f64 + *f(0x59) as f64) as f32;
+    if *(f(0x59) as *const u32) == 0x3f80_0000 {
+        *(f(0x59) as *mut u32) = 0;
+    } else {
+        *f(0x59) = (*f(0x59) as f64 * f64_em(0x968968)) as f32;
+    }
+    let b1 = *((this + 1) as *const u8);
+    if b1 > 50 {
+        let v = pow_do_jogo((b1 as i32 - 50) as f64, f64_em(0x968928)) * f32_em(0x96d22c) as f64;
+        // fcom + test ah,0x41: so passa de 25 quando maior (NaN fica)
+        let v = if v > f64_em(0x968890) { f32_em(0x96af88) as f64 } else { v };
+        *f(0x4d) = (*f(0x4d) as f64 - v) as f32;
+    }
+    if !(*f(0x4d) as f64 >= f64_em(0x967890)) {
+        *f(0x4d) = 1.0;
+    } else if *f(0x4d) as f64 > f64_em(0x968910) {
+        *f(0x4d) = 10000.0;
+    }
+}
+
+/// { 0x6b61e0 } (match_day.cpp): a partida interessa a algum dos 16 tecnicos humanos (as ultimas
+/// pessoas, tipo +0x5f = 1)? Pela competicao (+0x14): as duas de 0x9cf668/0x9cf684 so pelas selecoes
+/// dos clubes (+0x11c da nacao); as de 0x9cf794/0x9cf798 nunca; amistoso (0x5c6710 de 0xae2c74): o
+/// clube do tecnico (+0x39) esta nela (0x48db80); a de 0x9cf6f8 so na rodada 150 (0x4b0870 de +0x30);
+/// com nacao (+0x5d): clube do tecnico da mesma nacao e um dos dois clubes fora da divisao dela;
+/// senao pelas selecoes dos tecnicos ou pela competicao continental do grupo (0xae23a4, 0xc6 bytes).
+unsafe extern "C" fn partida_de_interesse(p: usize) -> u32 {
+    let g = |a: usize| *(a as *const i32);
+    let comp = || *((p + 0x14) as *const usize);
+    let id = *(comp() as *const i32);
+    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
+    let na_competicao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x48db80usize);
+    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
+    let rodada: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x4b0870usize);
+    let do_grupo: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7e6f20usize);
+    let objeto = || *((*(0xadadfc as *const usize)).wrapping_add((*(comp() as *const i32) as usize).wrapping_mul(4)) as *const usize);
+    let tecnico = |s: i32| (*(0xae23bc as *const usize)).wrapping_add(((g(0xae2364) - s - 1) as usize).wrapping_mul(110));
+    let u = |a: usize| *(a as *const usize);
+    if id == g(0x9cf668) || id == g(0x9cf684) {
+        let sel = |o: usize| e_selecao(u(p + o)) != 0 && *((u(u(p + o) + 0x53) + 0x11c) as *const u8) != 0;
+        return (sel(0x1c) || sel(0x20)) as u32;
+    }
+    if id == g(0x9cf794) || id == g(0x9cf798) {
+        return 0;
+    }
+    if amistoso(u(0xae2c74), comp()) != 0 {
+        for s in 0..16 {
+            let t = tecnico(s);
+            if byte(t, 0x5f) == 1 && u(t + 0x39) != 0 && na_competicao(objeto(), u(t + 0x39)) != 0 {
+                return 1;
+            }
+        }
+        return 0;
+    }
+    if id == g(0x9cf6f8) && rodada(*((p + 0x30) as *const u16) as i32) as i16 != 150 {
+        return 0;
+    }
+    if u(comp() + 0x5d) != 0 {
+        if u(0xb74434) != 0 && do_grupo(comp()) != 0 {
+            return 0;
+        }
+        for s in 0..16 {
+            let t = tecnico(s);
+            if byte(t, 0x5f) == 1 && u(t + 0x39) != 0 && u(u(t + 0x39) + 0x53) == u(comp() + 0x5d) {
+                let c1c = u(p + 0x1c);
+                let cm = comp();
+                if u(c1c + 0x57) != cm && u(c1c + 0x60) != cm {
+                    return 1;
+                }
+                let x = u(t + 0x39);
+                return (u(x + 0x57) == cm || u(x + 0x60) == cm) as u32;
+            }
+        }
+        return 0;
+    }
+    let mut edi = u(comp() + 0x59);
+    if edi == 0 {
+        let k = if id == g(0x9cf77c) || id == g(0x9cf7ac) {
+            Some(g(0x9cfa08))
+        } else if id == g(0x9cf774) {
+            Some(g(0x9cfa0c))
+        } else if id == g(0x9cf770) {
+            Some(g(0x9cfa14))
+        } else if id == g(0x9cf780) || id == g(0x9cf7a4) || id == g(0x9cf784) {
+            Some(g(0x9cfa10))
+        } else if id == g(0x9cf76c) {
+            Some(g(0x9cfa18))
+        } else if id == g(0x9cf778) || id == g(0x9cf7a8) {
+            Some(g(0x9cfa1c))
+        } else {
+            None
+        };
+        if let Some(k) = k {
+            edi = (*(0xae23a4 as *const usize)).wrapping_add((k as usize).wrapping_mul(0xc6));
+        }
+        if edi == 0 && id != g(0x9cf7a0) {
+            return 1;
+        }
+    }
+    for s in 0..16 {
+        let t = tecnico(s);
+        if byte(t, 0x5f) != 1 {
+            continue;
+        }
+        if na_competicao(objeto(), principal(u(t + 0x1a))) != 0 {
+            return 1;
+        }
+        let x = u(t + 0x39);
+        if x != 0 {
+            let xn = u(x + 0x53);
+            if u(xn + 0x71) == edi || u(u(t + 0x1a) + 0x71) == edi {
+                return 1;
+            }
+            if na_competicao(objeto(), principal(xn)) != 0 {
+                return 1;
+            }
+        }
+    }
+    0
 }
 
 // ---------- octogesima setima leva: forca do lado (0x6bbb60) ----------
@@ -10803,6 +10947,20 @@ unsafe extern "thiscall" fn comparar_forca_do_lado(this: usize, lado: i8) {
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, lado), || crate::aleatorio::sem_contar(|| forca_do_lado(this, lado)));
     PLACAR.registrar(igual, || format!("forca_do_lado({}) original={:x?} rust={:x?}", lado, mo, mr));
 }
+comparar_valor!(comparar_bola_no_ataque, bola_no_ataque, 245, () -> u8);
+unsafe extern "thiscall" fn comparar_evoluir_momento(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(246);
+    let mut reg: Vec<(usize, usize)> = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.push((this, 0x1be));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| evoluir_momento(this)));
+    PLACAR.registrar(igual, || format!("evoluir_momento original={:x?} rust={:x?}", mo, mr));
+}
+unsafe extern "C" fn comparar_partida_de_interesse(p: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(247)(p);
+    let v = partida_de_interesse(p);
+    PLACAR.registrar(r == v, || format!("partida_de_interesse({:#x}) original={} rust={}", p, r, v));
+    r
+}
 unsafe extern "thiscall" fn comparar_mascara_da_formacao(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(222);
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x187b, 4)], || o(this), || mascara_da_formacao(this));
@@ -11388,6 +11546,9 @@ pub unsafe fn instalar(comparando: bool) {
         atualizar_atributos as *const () as usize,
         desempenho_na_partida as *const () as usize,
         forca_do_lado as *const () as usize,
+        bola_no_ataque as *const () as usize,
+        evoluir_momento as *const () as usize,
+        partida_de_interesse as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -11635,6 +11796,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_atualizar_atributos as *const () as usize,
         comparar_desempenho_na_partida as *const () as usize,
         comparar_forca_do_lado as *const () as usize,
+        comparar_bola_no_ataque as *const () as usize,
+        comparar_evoluir_momento as *const () as usize,
+        comparar_partida_de_interesse as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -11735,6 +11899,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_atualizar_atributos",
         "motor_desempenho_na_partida",
         "motor_forca_do_lado",
+        "motor_bola_no_ataque", "motor_evoluir_momento", "motor_partida_de_interesse",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
