@@ -638,3 +638,13 @@ Mutations: in the real game `p_marca`, `p_tipo5` and `p_11`; in the self-test (t
 | `ordem_dos_jogadores()` | 0x6bd760 | thiscall | match_eng.cpp: the list of active players (+0x19 ≥ 0) at +0x8f7e, count at +0x8eb8. For each slot 0..20 draws (0x90cfc0(2)) which side goes first. Sorts with the CRT `qsort` (0x945333) and the game's own compare (0x6bd840, which reads the engine at 0xb67a64) |
 
 Mutations: 4/4 in the self-test (the one that does not write 0xb67a64 crashes the original compare: an exception, also detected).
+
+### Match engine, 68th batch — tactics table slots (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `vaga_marcada(clube, humano, menos_um)` | 0x897590 | thiscall, ret 0xc | tactics.cpp: the slot (0..20) of the tactics row (0x8982b0) whose person (index at +2 + 4 × slot, in the 0xae23bc array) has the id kept at +0x52; none: −1 with `menos_um`, otherwise 0. Row −1: 0 |
+| `marcar_vaga(clube, vaga, humano)` | 0x897760 | thiscall, ret 0xc | tactics.cpp: stores at +0x52 the index of the slot's person (0..20); 1 if there was someone |
+| `pessoa_da_linha(clube, qual, humano)` | 0x897dc0 | thiscall, ret 0xc | tactics.cpp: the person of the index at +0x56 + 4 × `qual` (0 or 1); negative: 0 |
+
+Errors (null club, slot out of range): the original (error box). Mutations: 7/7 in the self-test (synthetic people; indices always 0 to 29, so as not to read outside the synthetic array).

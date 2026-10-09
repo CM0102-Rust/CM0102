@@ -162,6 +162,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6d4330 | `marcador_direto` | direct_marker |
 | 0x6d10a0 | `marcar_craques` | mark_stars |
 | 0x5b5910 | `marcar_posicao` | mark_position |
+| 0x897760 | `marcar_vaga` | mark_slot |
 | 0x5b5270 | `marcas_da_posicao` | position_marks |
 | 0x7163c0 | `marcas_do_jogador_rot` | player_marks_rot |
 | 0x6c3950 | `menor_distancia` | smallest_distance |
@@ -186,6 +187,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c50d0 | `penalti` | penalty |
 | 0x70df70 | `perto_do_gol` | near_goal |
 | 0x70def0 | `perto_do_proprio_gol` | near_own_goal |
+| 0x897dc0 | `pessoa_da_linha` | row_person |
 | 0x6ce310 | `placar_agregado` | aggregate_score |
 | 0x6bce20 | `pode_escolher` | can_choose |
 | 0x6c51e0 | `pontape_inicial` | kick_off |
@@ -234,6 +236,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cdd50 | `tirar_de_campo` | take_off_pitch |
 | 0x6ccb60 | `tracar_lance` | trace_move |
 | 0x4b0850 | `unidades` | units_digit |
+| 0x897590 | `vaga_marcada` | marked_slot |
 | 0x700bd0 | `valor_do_chute` | shot_value |
 | 0x7165b0 | `valor_pela_condicao` | value_by_condition |
 | 0x6b7cf0 | `venceu_o_jogo` | won_the_match |

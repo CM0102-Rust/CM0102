@@ -636,3 +636,13 @@ Mutações: no jogo real `p_marca`, `p_tipo5` e `p_11`; no autoteste (caminho da
 | `ordem_dos_jogadores()` | 0x6bd760 | thiscall | match_eng.cpp: a lista dos jogadores ativos (+0x19 ≥ 0) em +0x8f7e, contagem em +0x8eb8. Para cada vaga 0..20 sorteia (0x90cfc0(2)) qual lado entra primeiro. Ordena com o `qsort` da CRT (0x945333) e a comparação do próprio jogo (0x6bd840, que lê o motor em 0xb67a64) |
 
 Mutações: 4/4 no autoteste (a que não grava 0xb67a64 derruba a comparação original: exceção, também detectada).
+
+### Motor de partidas, 68ª leva — vagas da tabela tática (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `vaga_marcada(clube, humano, menos_um)` | 0x897590 | thiscall, ret 0xc | tactics.cpp: a vaga (0..20) da linha tática (0x8982b0) cuja pessoa (índice em +2 + 4 × vaga, no vetor de 0xae23bc) tem o id guardado em +0x52; sem nenhuma, −1 com `menos_um`, senão 0. Linha −1: 0 |
+| `marcar_vaga(clube, vaga, humano)` | 0x897760 | thiscall, ret 0xc | tactics.cpp: guarda em +0x52 o índice da pessoa da vaga (0..20); 1 se havia alguém |
+| `pessoa_da_linha(clube, qual, humano)` | 0x897dc0 | thiscall, ret 0xc | tactics.cpp: a pessoa do índice em +0x56 + 4 × `qual` (0 ou 1); negativo: 0 |
+
+Erros (clube nulo, vaga fora): a original (caixa de erro). Mutações: 7/7 no autoteste (pessoas sintéticas; índices sempre de 0 a 29, para não ler fora do vetor sintético).

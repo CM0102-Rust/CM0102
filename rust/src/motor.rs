@@ -291,8 +291,11 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x898040, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6be520, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] },
     Prologo { endereco: 0x6bd760, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
+    Prologo { endereco: 0x897590, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x897760, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x897dc0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 186;
+const N: usize = 189;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -3965,6 +3968,64 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- sexagesima oitava leva: vagas da tabela tatica ----------
+
+/// Linha tatica do clube (0x8982b0) e o inicio dela na tabela em +0x601 (0x91 bytes por linha), ou
+/// `None` na linha -1.
+unsafe fn linha_na_tabela(this: usize, clube: usize, humano: u32) -> Option<usize> {
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let l = linha(clube, humano);
+    (l != -1).then(|| (*((this + 0x601) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)))
+}
+
+/// { 0x897590 } (tactics.cpp): a vaga (0..20) cuja pessoa (indice em +2 + 4 x vaga, no vetor de
+/// 0xae23bc) tem o id guardado em +0x52 da linha; sem nenhuma: -1 com `menos_um`, senao 0. Linha
+/// -1: 0. Clube nulo: a original (caixa de erro).
+unsafe extern "thiscall" fn vaga_marcada(this: usize, clube: usize, humano: u32, menos_um: u32) -> i8 {
+    if clube == 0 {
+        return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8>(186)(this, clube, humano, menos_um);
+    }
+    let Some(linha) = linha_na_tabela(this, clube, humano) else { return 0 };
+    let pessoas = *(0xae23bc as *const usize);
+    for vaga in 0..20usize {
+        let i = *((linha + 2 + 4 * vaga) as *const i32);
+        if i != -1 && *(pessoas.wrapping_add((i as usize).wrapping_mul(110)) as *const i32) == *((linha + 0x52) as *const i32) {
+            return vaga as i8;
+        }
+    }
+    -((menos_um != 0) as i8)
+}
+
+/// { 0x897760 } (tactics.cpp): guarda em +0x52 da linha o indice da pessoa da vaga (0..20); 1 se
+/// havia alguem (-1 = vazia). Linha -1: 0. Clube nulo ou vaga fora: a original (caixa de erro).
+unsafe extern "thiscall" fn marcar_vaga(this: usize, clube: usize, vaga: i8, humano: u32) -> u32 {
+    if clube == 0 || !(0..20).contains(&vaga) {
+        return orig::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32>(187)(this, clube, vaga, humano);
+    }
+    let Some(linha) = linha_na_tabela(this, clube, humano) else { return 0 };
+    let i = *((linha + 2 + 4 * vaga as usize) as *const i32);
+    if i == -1 {
+        return 0;
+    }
+    *((linha + 0x52) as *mut i32) = i;
+    1
+}
+
+/// { 0x897dc0 } (tactics.cpp): a pessoa (vetor de 0xae23bc, 110 bytes cada) do indice em +0x56 +
+/// 4 x `qual` (0 ou 1) da linha; indice negativo ou linha -1: 0. Clube nulo ou `qual` fora: a
+/// original (caixa de erro).
+unsafe extern "thiscall" fn pessoa_da_linha(this: usize, clube: usize, qual: i8, humano: u32) -> usize {
+    if clube == 0 || !(0..2).contains(&qual) {
+        return orig::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> usize>(188)(this, clube, qual, humano);
+    }
+    let Some(linha) = linha_na_tabela(this, clube, humano) else { return 0 };
+    let i = *((linha + 0x56 + 4 * qual as usize) as *const i32);
+    if i < 0 {
+        return 0;
+    }
+    (*(0xae23bc as *const usize)).wrapping_add(110 * i as usize)
 }
 
 // ---------- sexagesima setima leva: ordem dos jogadores no lance ----------
@@ -7732,6 +7793,24 @@ unsafe extern "C" fn comparar_separar_mascara(m: u32, setor: *mut u16, lado: *mu
 comparar_valor!(comparar_tecnico_9ace, tecnico_9ace, 178, (pessoa: usize) -> u32);
 comparar_valor!(comparar_lado_sob_controle, lado_sob_controle, 181, (lado: i8) -> u8);
 comparar_valor!(comparar_byte_tatico, byte_tatico, 183, (clube: usize, pos: i8, humano: u32) -> u8);
+comparar_valor!(comparar_pessoa_da_linha, pessoa_da_linha, 188, (clube: usize, qual: i8, humano: u32) -> usize);
+unsafe extern "thiscall" fn comparar_vaga_marcada(this: usize, clube: usize, humano: u32, menos_um: u32) -> i8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8>(186)(this, clube, humano, menos_um);
+    let v = vaga_marcada(this, clube, humano, menos_um);
+    PLACAR.registrar(r == v, || format!("vaga_marcada original={} rust={}", r, v));
+    r
+}
+unsafe extern "thiscall" fn comparar_marcar_vaga(this: usize, clube: usize, vaga: i8, humano: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32>(187);
+    let tabela = *((this + 0x601) as *const usize);
+    // a linha pode ser qualquer uma da tabela: compara as 0x52..0x56 de todas as linhas possiveis
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let l = linha(clube, humano);
+    let reg: Vec<(usize, usize)> = if l == -1 || clube == 0 { vec![] } else { vec![(tabela.wrapping_add((l as usize).wrapping_mul(0x91)) + 0x52, 4)] };
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, vaga, humano), || marcar_vaga(this, clube, vaga, humano));
+    PLACAR.registrar(igual && r == v, || format!("marcar_vaga original={} {:x?} rust={} {:x?}", r, mo, v, mr));
+    r
+}
 unsafe extern "thiscall" fn comparar_ordem_dos_jogadores(m: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(185);
     let mut regioes = vec![(m + 0x8eb8, 1), (m + 0x8f7e, 4 * 40), (0xb67a64, 4)];
@@ -8120,6 +8199,9 @@ pub unsafe fn instalar(comparando: bool) {
         byte_tatico as *const () as usize,
         ordem_dos_penaltis as *const () as usize,
         ordem_dos_jogadores as *const () as usize,
+        vaga_marcada as *const () as usize,
+        marcar_vaga as *const () as usize,
+        pessoa_da_linha as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -8308,6 +8390,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_byte_tatico as *const () as usize,
         comparar_ordem_dos_penaltis as *const () as usize,
         comparar_ordem_dos_jogadores as *const () as usize,
+        comparar_vaga_marcada as *const () as usize,
+        comparar_marcar_vaga as *const () as usize,
+        comparar_pessoa_da_linha as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -8383,6 +8468,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_linha_tatica", "motor_byte_tatico",
         "motor_ordem_dos_penaltis",
         "motor_ordem_dos_jogadores",
+        "motor_vaga_marcada", "motor_marcar_vaga", "motor_pessoa_da_linha",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -9914,6 +10000,42 @@ pub unsafe fn autoteste(casos: u64) {
                 let mut obj65 = [0u8; 0x608];
                 *(obj65.as_mut_ptr().add(0x601) as *mut usize) = TABELA65.as_ptr() as usize;
                 comparar_byte_tatico(obj65.as_mut_ptr() as usize, clube_a63.as_ptr() as usize, ((h63 >> 56) % 11) as i8, humano65);
+                // sexagesima oitava leva: vagas da linha tatica (indices em +2.., +0x52, +0x56) sobre
+                // 30 pessoas sinteticas de 110 bytes; a tabela e restaurada (marcar_vaga escreve +0x52)
+                {
+                    let h68 = s.proximo();
+                    let mut pessoas68 = [0u8; 110 * 30];
+                    for k in 0..30usize {
+                        *(pessoas68.as_mut_ptr().add(110 * k) as *mut i32) = 7000 + (k as i32 % 25);
+                    }
+                    let antes68 = *(0xae23bc as *const usize);
+                    *(0xae23bc as *mut usize) = pessoas68.as_ptr() as usize;
+                    let linhas68: Vec<usize> = [100usize, 4650, 4850].into_iter().chain(4999..5033).collect();
+                    let copia68: Vec<[u8; 0x91]> = linhas68.iter().map(|&l| {
+                        let mut c = [0u8; 0x91];
+                        c.copy_from_slice(&TABELA65[0x91 * l..0x91 * l + 0x91]);
+                        c
+                    }).collect();
+                    for (n, &l) in linhas68.iter().enumerate() {
+                        let r = TABELA65.as_mut_ptr().add(0x91 * l) as usize;
+                        for v in 0..20usize {
+                            let z = h68.rotate_left((v + n) as u32);
+                            *((r + 2 + 4 * v) as *mut i32) = if z % 5 == 0 { -1 } else { ((z >> 8) % 30) as i32 };
+                        }
+                        *((r + 0x52) as *mut i32) = 7000 + ((h68 >> (n + 3)) % 30) as i32;
+                        *((r + 0x56) as *mut i32) = [-1i32, 0, 5, 29, -7][((h68 >> (n + 9)) % 5) as usize];
+                        *((r + 0x5a) as *mut i32) = [-1i32, 3, 12][((h68 >> (n + 17)) % 3) as usize];
+                    }
+                    let o68 = obj65.as_mut_ptr() as usize;
+                    let c68 = clube_a63.as_ptr() as usize;
+                    comparar_vaga_marcada(o68, c68, humano65, ((h68 >> 40) & 1) as u32);
+                    comparar_marcar_vaga(o68, c68, ((h68 >> 41) % 20) as i8, humano65);
+                    comparar_pessoa_da_linha(o68, c68, ((h68 >> 46) % 2) as i8, humano65);
+                    for (n, &l) in linhas68.iter().enumerate() {
+                        TABELA65[0x91 * l..0x91 * l + 0x91].copy_from_slice(&copia68[n]);
+                    }
+                    *(0xae23bc as *mut usize) = antes68;
+                }
                 // sexagesima quarta leva: lado sob controle (tipos 1 e 9, clube humano ou nao, modos 2..5)
                 let mut partida64 = [0u8; 0x48];
                 partida64[0x3a] = [0u8, 1, 9, 2][((h63 >> 46) % 4) as usize];

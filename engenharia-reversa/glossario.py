@@ -76,6 +76,7 @@ EN = {
  'linha_tatica': 'tactics_row', 'byte_tatico': 'tactics_byte',
  'ordem_dos_penaltis': 'penalty_order',
  'ordem_dos_jogadores': 'player_order',
+ 'vaga_marcada': 'marked_slot', 'marcar_vaga': 'mark_slot', 'pessoa_da_linha': 'row_person', 'linha_na_tabela': 'row_in_table',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:
