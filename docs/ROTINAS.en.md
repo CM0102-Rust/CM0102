@@ -945,3 +945,11 @@ Mutations: 9/9 in the real game up to 2001-08-20. Rust ×2 and original careers 
 | `desviar_bola(x, y, espalhar, lado, dentro, cansa, chutador)` | 0x6cd770 | thiscall, ret 0x1c | match_eng.cpp (13 callers): releases the ball and it bounces off (x, y): over the sideline (column 9 or −1) off the centre by draw(4), or at x, y ± draw(spread + 1) (with `dentro`, until the row fits). Height +0x8eaa, spin +0x8ed8 from table 0xb67c30 by the offset, +0x8ea9 = draw(4), possession of `lado` (+0x8d46). With `cansa`, draws into the players' +0x2b (0x7160d0). On the goal line next to goal with the `chutador`: 0x70c040 or 0x70a910 (new tape ports); then the ball out (0x6cd490) |
 
 Mutations: 8 of 8 caught (b_lateral, b_espalhar, b_dentro, b_altura, b_efeito, b_estado, b_cansa, b_fundo); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).
+
+### Match engine, 101st batch — the goalkeeper save (official on 2026-10-10)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `defender(forca)` | 0x70d430 | thiscall, ret 4 | match_pl.cpp: above 1000, or without winning draw(record +0x21 + +0xa5) against draw(20), no save (0x1fe2, returns 1). Otherwise parries (+0x106 above draw(8): 0x1fe3, ball deflected 3 cells) or blocks (0x216f, 1 cell; tires +0x35 − 250 and may lose draw(3) in +0x17 with performance redone, 0x7172d0/0x6eecb0); +0x2b adds draw(2 or 3); the ball stays in play with draw(10) and the keeper is the goal-line taker with draw(200) zero. The deflected ball (0x6cd770) is a tape unit when called directly by the compared routine |
+
+Mutations: 6 of 8 caught (g_20, g_espalma, g_2b, g_dentro, g_espalhar, g_cansa); g_1000 (force exactly 1000) and g_17 (block with draw(30 × v + 20) zero) survive, rare paths; real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).

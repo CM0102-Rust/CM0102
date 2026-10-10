@@ -116,6 +116,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x7103e0 | `decidir_jogador` | decide_player |
 | 0x713fc0 | `decidir_sem_bola` | decide_off_ball |
 | 0x6e9820 | `decisao_da_falta` | foul_decision |
+| 0x70d430 | `defender` | save_shot |
 | 0x700420 | `defesa_do_goleiro` | goalkeeper_save |
 | 0x6eecb0 | `desempenho_na_partida` | match_performance |
 | 0x6f56c0 | `desgastar` | tire (fatigue) |

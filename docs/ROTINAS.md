@@ -943,3 +943,11 @@ Mutações: 9/9 no jogo real até 20/08/2001. Carreiras Rust ×2 e original em `
 | `desviar_bola(x, y, espalhar, lado, dentro, cansa, chutador)` | 0x6cd770 | thiscall, ret 0x1c | match_eng.cpp (13 chamadores): solta a bola e ela espirra de (x, y): pela lateral (coluna 9 ou −1) fora do miolo por sorteio(4), ou em x, y ± sorteio(espalhar + 1) (com `dentro`, até a linha caber). Altura +0x8eaa, efeito +0x8ed8 pela tabela 0xb67c30 do desvio, +0x8ea9 = sorteio(4), posse do `lado` (+0x8d46). Com `cansa`, sorteios em +0x2b dos jogadores (0x7160d0). Na linha de fundo junto ao gol com o `chutador`: 0x70c040 ou 0x70a910 (novas portas da fita); depois, a bola fora (0x6cd490) |
 
 Mutações: 8 de 8 pegas (b_lateral, b_espalhar, b_dentro, b_altura, b_efeito, b_estado, b_cansa, b_fundo); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).
+
+### Motor de partidas, 101ª leva — a defesa do goleiro (oficial em 10/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `defender(forca)` | 0x70d430 | thiscall, ret 4 | match_pl.cpp: acima de 1000, ou sem vencer sorteio(ficha +0x21 + +0xa5) contra sorteio(20), não defende (0x1fe2, devolve 1). Senão espalma (+0x106 acima de sorteio(8): 0x1fe3, bola desviada 3 casas) ou rebate (0x216f, 1 casa; cansa +0x35 − 250 e pode perder sorteio(3) em +0x17 com o desempenho refeito, 0x7172d0/0x6eecb0); +0x2b soma sorteio(2 ou 3); a bola fica em jogo com sorteio(10) e o goleiro é chutador da linha de fundo com sorteio(200) zero. A bola desviada (0x6cd770) é unidade da fita quando chamada direto pela comparada |
+
+Mutações: 6 de 8 pegas (g_20, g_espalma, g_2b, g_dentro, g_espalhar, g_cansa); sobrevivem g_1000 (força exatamente 1000) e g_17 (rebate com sorteio(30 × v + 20) zero), caminhos raros; jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).

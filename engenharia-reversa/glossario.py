@@ -109,6 +109,7 @@ EN = {
  'passar': 'pass_ball',
  'lancar': 'long_ball',
  'desviar_bola': 'deflect_ball',
+ 'defender': 'save_shot',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

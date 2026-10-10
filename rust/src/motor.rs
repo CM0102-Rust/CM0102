@@ -369,8 +369,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6fa250, bytes: &[0x53, 0x55, 0x8b, 0x44, 0x24, 0x18] },
     Prologo { endereco: 0x6fa490, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
     Prologo { endereco: 0x6cd770, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x8e, 0x82, 0xf5, 0x00, 0x00] },
+    Prologo { endereco: 0x70d430, bytes: &[0x66, 0x81, 0x7c, 0x24, 0x04, 0xe8, 0x03] },
 ];
-const N: usize = 262;
+const N: usize = 263;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4061,6 +4062,70 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- centesima primeira leva: a defesa do goleiro (0x70d430) ----------
+
+/// { 0x70d430 } (ret 4, match_pl.cpp) com as chamadas que mexem no jogo injetadas (comentarios
+/// 0x6d6f70, bola desviada 0x6cd770): o goleiro tenta defender o chute de `forca`. Acima de 1000, ou
+/// se sorteio(ficha +0x21 + +0xa5) nao ficar abaixo de sorteio(20), nao defende (0x1fe2) e devolve 1.
+/// Senao defende e devolve 0: com +0x106 acima de sorteio(8) espalma (0x1fe3, +0x2b soma sorteio(2),
+/// a bola espirra 3 casas), senao rebate (0x216f, +0x2b soma sorteio(3), 1 casa). A bola fica em jogo
+/// (dentro) com sorteio(10), senao pode sair; o goleiro so e o chutador da linha de fundo se
+/// sorteio(200) der zero. Rebatendo, cansa (+0x35 - 250) e, com sorteio(30 x +0x5a da ficha +0x69 +
+/// 20) zero, perde sorteio(3) em +0x17 (0x7172d0) e o desempenho e refeito (0x6eecb0).
+unsafe fn defender_com(j: usize, forca: i16, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u32 {
+    let ajustar_17: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x7172d0usize);
+    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(0x6eecb0usize);
+    let m = *((j + 0x19e) as *const usize);
+    let dir = byte(j, 0x27);
+    let narra = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32| {
+        c(0x6d6f70, *((m + 0x8f7a) as *const usize), [codigo, m as u32, byte(j, 0x2e) as u8 as u32, dir as u8 as u32, u32::MAX]);
+    };
+    let ficha = *((j + 0x6d) as *const usize);
+    let pega = forca <= 1000 && {
+        let n = ftol(byte(ficha, 0x21) as f64 + *((j + 0xa5) as *const f32) as f64);
+        sortear(n) < sortear(0x14)
+    };
+    if !pega {
+        narra(chamar, 0x1fe2);
+        return 1;
+    }
+    let espalma = byte(j, 0x106) as i32 > sortear(8);
+    narra(chamar, if espalma { 0x1fe3 } else { 0x216f });
+    let b2 = (j + 0x2b) as *mut i8;
+    *b2 = (*b2).wrapping_add(sortear(if espalma { 2 } else { 3 }) as i8);
+    let (dentro, chutador) = if sortear(10) != 0 { (1u32, 0usize) } else { (0, if sortear(0xc8) != 0 { 0 } else { j }) };
+    let espalhar = if espalma { 3 } else { 1 };
+    chamar(0x6cd770, m, [byte(j, 0x102) as u8 as u32, byte(j, 0x103) as u8 as u32, espalhar | (dir as u8 as u32) << 8, dentro, chutador as u32]);
+    if espalma {
+        return 0;
+    }
+    let w35 = (j + 0x35) as *mut u16;
+    *w35 = (*w35).wrapping_add(0xff06);
+    let v = *((*((j + 0x69) as *const usize) + 0x5a) as *const i8) as i32;
+    if sortear(v * 30 + 0x14) == 0 {
+        let r = sortear(3) as i8;
+        if ajustar_17(j, r.wrapping_neg()) != 0 {
+            desempenho(j, 0);
+        }
+    }
+    0
+}
+
+/// { 0x70d430 } (ret 4, match_pl.cpp): ver `defender_com`. A bola desviada vai com `cansa` 1.
+unsafe extern "thiscall" fn defender(j: usize, forca: i16) -> u32 {
+    defender_com(j, forca, &mut |rotina, this, a| match rotina {
+        0x6cd770 => {
+            let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8, u8, u8, usize) = core::mem::transmute(0x6cd770usize);
+            f(this, a[0] as i8, a[1] as i8, a[2] as u8 as i8, (a[2] >> 8) as u8 as i8, a[3] as u8, 1, a[4] as usize);
+            0
+        }
+        _ => {
+            comentar(this, [a[0], a[1], a[2], a[3], a[4], u32::MAX, 0]);
+            0
+        }
+    })
 }
 
 // ---------- centesima leva: a bola desviada (0x6cd770) ----------
@@ -12950,11 +13015,31 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+unsafe extern "thiscall" fn comparar_defender(j: usize, forca: i16) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i16) -> u32>(262);
+    if gravando_no_topo() {
+        return o(j, forca);
+    }
+    let m = *((j + 0x19e) as *const usize);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m + 0x1a0, 0x30), (m + 0x215e, 0x8f00 - 0x215e), (m + 0xf56e, 0xa0)]);
+    let (r, n, igual, sequencia, k) = comparar_com_fita(reg, || o(j, forca), |chamar| {
+        defender_com(j, forca, &mut |rotina, this, args| {
+            chamar(rotina, this, args, if rotina == 0x6d6f70 { [0xffff, u32::MAX, 0xff, 0xff, 0xff] } else { [0xff, 0xff, 0xffff, 0xff, u32::MAX] })
+        })
+    });
+    PLACAR.registrar(igual && sequencia && r == n, || format!("defender(forca {}) original={} rust={} {} chamadas: {}", forca, r, n, k, detalhe_fita()));
+    r
+}
 #[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn comparar_desviar_bola(this: usize, x: i8, y: i8, espalhar: i8, lado: i8, dentro: u8, cansa: u8, chutador: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8, u8, u8, usize)>(261);
     if gravando_no_topo() {
-        return o(this, x, y, espalhar, lado, dentro, cansa, chutador);
+        chamar_gravando(0x6cd770, this, [x as u8 as u32, y as u8 as u32, espalhar as u8 as u32 | (lado as u8 as u32) << 8, dentro as u32, chutador as u32], || {
+            o(this, x, y, espalhar, lado, dentro, cansa, chutador);
+            0
+        });
+        return;
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(this + 0x1a0, 0x30), (this + 0x215e, 0x8f00 - 0x215e), (this + 0xf56e, 0xa0)]);
@@ -13759,6 +13844,7 @@ pub unsafe fn instalar(comparando: bool) {
         passar as *const () as usize,
         lancar as *const () as usize,
         desviar_bola as *const () as usize,
+        defender as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -14023,6 +14109,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_passar as *const () as usize,
         comparar_lancar as *const () as usize,
         comparar_desviar_bola as *const () as usize,
+        comparar_defender as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -14128,7 +14215,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_interceptar", "motor_avancar_linha", "motor_arrumar_saida", "motor_arrumar_bola_parada",
         "motor_decidir_sem_bola", "motor_mover_sem_bola",
         "motor_decidir_jogador", "motor_passar", "motor_lancar",
-        "motor_desviar_bola",
+        "motor_desviar_bola", "motor_defender",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
