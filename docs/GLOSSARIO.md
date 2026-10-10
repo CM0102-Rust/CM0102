@@ -63,6 +63,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x716450 | `aplicar_fator` | apply_factor |
 | 0x6f4920 | `apontar` | aim (set facing direction) |
 | 0x4b0870 | `arredondar_abaixo_de_1000` | round_below_1000 |
+| 0x6c4ec0 | `arrumar_saida` | line_up_kickoff |
 | 0x6cd5f0 | `atras_do_extremo` | behind_the_extreme |
 | 0x6ec010 | `atualizar_atributos` | update_attributes |
 | 0x6f4aa0 | `atualizar_jogador` | update_player |

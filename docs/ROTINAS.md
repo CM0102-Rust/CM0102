@@ -879,3 +879,11 @@ Mutações: 7/7 no jogo real até 20/08/2001 (seis delas refeitas depois de corr
 | `avancar_linha(direto)` | 0x6f5b80 | thiscall, ret 4 | match_pl.cpp: o jogador anda uma linha para o lado dele (+0x27 = 1 sobe até 11, senão desce até 0); com `direto` vai (0x6f46b0) para a coluna atual na linha da bola (+0x8eb0 + 1 ou +0x8eaf − 1 do motor), senão reposiciona (0x6f09f0) na nova linha com −1, 0, 0. Comparada pela fita genérica: a 0x6f09f0 ganhou porta de gravação e a 0x6f46b0 grava pelo próprio comparador |
 
 Mutações: 4/6 no jogo real até 20/08/2001. `a_11` e `a_0` (limites da linha no caminho pela 0x6f09f0) sobreviveram: o caminho ocorre (`a_direto` e `a_menos1` foram pegas), mas nenhum jogador estava na linha extrema.
+
+### Motor de partidas, 93ª leva — arrumar para a saída de bola (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `arrumar_saida()` | 0x6c4ec0 | thiscall | match_eng.cpp: quem sai jogando (+0xf59e lado 0, centro 4, 0; +0xf5a2 lado 1, centro 4, 11); solta a bola (0x6f0970); cada jogador em campo vai à casa da formação (tabela +0xf56e da direção, byte +0xa2 da posição: x no nibble baixo, y no alto), refaz as linhas defensivas (0x6c3aa0) e, no lado que sai jogando, quem passou da linha volta uma (0x6f5b80); +0x2b zera; no fim quem sai jogando vai ao centro e pega a bola (0x6f0630), +0x19c = 200, +0x19a = 180 fora da linha 0. Sem ele: a original (caixa de erro). Comparada com `lado_a_lado` sobre o motor de 0x1a0, a grade, os 40 jogadores e os ponteiros de 0xf56e |
+
+Mutações: 6/6 no jogo real até 20/08/2001.

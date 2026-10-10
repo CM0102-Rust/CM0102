@@ -881,3 +881,11 @@ Mutations: 7/7 in the real game up to 2001-08-20 (six of them redone after fixin
 | `avancar_linha(direto)` | 0x6f5b80 | thiscall, ret 4 | match_pl.cpp: the player moves one row towards his side (+0x27 = 1 goes up to 11, else down to 0); with `direto` he goes (0x6f46b0) to the current column on the ball's row (+0x8eb0 + 1 or +0x8eaf − 1 of the engine), otherwise he is repositioned (0x6f09f0) on the new row with −1, 0, 0. Compared through the generic tape: 0x6f09f0 got a recording port and 0x6f46b0 records through its own comparator |
 
 Mutations: 4/6 in the real game up to 2001-08-20. `a_11` and `a_0` (row limits on the 0x6f09f0 path) survived: the path happens (`a_direto` and `a_menos1` were caught), but no player was on the edge row.
+
+### Match engine, 93rd batch — line up for kick-off (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `arrumar_saida()` | 0x6c4ec0 | thiscall | match_eng.cpp: who kicks off (+0xf59e side 0, centre 4, 0; +0xf5a2 side 1, centre 4, 11); releases the ball (0x6f0970); every player on the pitch goes to his formation cell (table +0xf56e of the direction, byte +0xa2 of the position: x in the low nibble, y in the high one), the defensive lines are redone (0x6c3aa0) and, on the kicking-off side, whoever crossed the line steps back one row (0x6f5b80); +0x2b is cleared; finally the kicker goes to the centre and takes the ball (0x6f0630), +0x19c = 200, +0x19a = 180 off row 0. Without him: the original (error box). Compared with `lado_a_lado` over the engine from 0x1a0, the grid, the 40 players and the 0xf56e pointers |
+
+Mutations: 6/6 in the real game up to 2001-08-20.

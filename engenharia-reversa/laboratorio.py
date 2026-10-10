@@ -99,4 +99,8 @@ if __name__ == '__main__':
         with Trava('consulta', espera=0):
             print('trava do laboratorio: livre')
     except TimeoutError:
-        print('trava do laboratorio: ocupada por', open(TRAVA).read().strip())
+        try:
+            dono = open(TRAVA).read().strip()
+        except OSError:
+            dono = '(arquivo travado pelo dono; o Windows nao deixa ler)'
+        print('trava do laboratorio: ocupada por', dono)

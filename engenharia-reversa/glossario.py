@@ -101,6 +101,7 @@ EN = {
  'procurar_jogada': 'look_for_play', 'jogadores_no_trajeto': 'players_on_path', 'percorrer_linha': 'walk_line',
  'interceptar': 'intercept',
  'avancar_linha': 'advance_row', 'comparar_com_fita': 'compare_with_tape', 'chamar_gravando': 'call_recording',
+ 'arrumar_saida': 'line_up_kickoff',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

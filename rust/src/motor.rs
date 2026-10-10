@@ -361,8 +361,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6cc070, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x44, 0x24, 0x18] },
     Prologo { endereco: 0x6cc540, bytes: &[0x83, 0xec, 0x14, 0x8a, 0x44, 0x24, 0x24] },
     Prologo { endereco: 0x6f5b80, bytes: &[0x51, 0x8a, 0x51, 0x27, 0x8a, 0x81, 0x03, 0x01, 0x00, 0x00] },
+    Prologo { endereco: 0x6c4ec0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 254;
+const N: usize = 255;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4053,6 +4054,69 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- nonagesima terceira leva: arrumar para a saida de bola (0x6c4ec0) ----------
+
+/// { 0x6c4ec0 } (match_eng.cpp): arruma os times para a saida de bola do lado +0x8eae. Quem sai
+/// jogando: +0xf59e (lado 0, centro 4, 0) ou +0xf5a2 (lado 1, centro 4, 11; outro lado nao mexe no
+/// centro). Solta a bola (0x6f0970) de quem a tem; cada jogador em campo (+0x19 >= 0) vai para a casa
+/// da formacao (tabela +0xf56e do lado da direcao +0x27, byte +0xa2 da posicao: x no nibble baixo, y no
+/// alto), as linhas defensivas sao refeitas (0x6c3aa0) e, no lado que sai jogando, quem nao tem a bola
+/// e passou da linha (+0x8eb0 / +0x8eaf) volta uma linha (0x6f5b80 direto); +0x2b zera (0x7160e0). No
+/// fim, quem sai jogando vai ao centro (+0x8ea9 = 0) e pega a bola (0x6f0630), com +0x19c = 200 e
+/// +0x19a = 180 se o centro nao for a linha 0. Sem ele: a original (caixa de erro).
+unsafe extern "thiscall" fn arrumar_saida(this: usize) {
+    let lado_bola = byte(this, 0x8eae);
+    let u = |o: usize| *((this + o) as *const usize);
+    let b = |o: usize| (this + o) as *mut i8;
+    let quem = if lado_bola == 0 { u(0xf59e) } else { u(0xf5a2) };
+    if quem == 0 {
+        return orig::<unsafe extern "thiscall" fn(usize)>(254)(this);
+    }
+    if lado_bola == 0 {
+        *b(0x8ea7) = 4;
+        *b(0x8ea8) = 0;
+    } else if lado_bola == 1 {
+        *b(0x8ea7) = 4;
+        *b(0x8ea8) = 11;
+    }
+    let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6f0970usize);
+    let linhas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6c3aa0usize);
+    let avancar: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(0x6f5b80usize);
+    let gravar_2b: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(0x7160e0usize);
+    let pegar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6f0630usize);
+    if u(0xf582) != 0 {
+        soltar(u(0xf582));
+    }
+    for l in 0..2i8 {
+        let sai_jogando = lado_bola as i32 == l as i32;
+        for k in 0..20 {
+            let j = jogador_do_bloco(this, l, k);
+            let pos = byte(j, 0x19);
+            if pos < 0 {
+                continue;
+            }
+            let tabela = u(0xf56e + 4 * (byte(j, 0x27) == 1) as usize);
+            let casa = *((tabela + pos as usize * 0xd8 + 0xa2) as *const u8);
+            mover(j, (casa & 0xf) as i8, (casa >> 4) as i8);
+            linhas(this);
+            let y = byte(j, 0x103);
+            let passou = j == u(0xf582) || {
+                let d = if lado(j) == 1 { byte(this, 0x8eb0).wrapping_sub(y) } else { y.wrapping_sub(byte(this, 0x8eaf)) };
+                d >= 0
+            };
+            if passou && sai_jogando {
+                avancar(j, 1);
+            }
+            gravar_2b(j, 0);
+        }
+    }
+    *b(0x8ea9) = 0;
+    mover(quem, byte(this, 0x8ea7), byte(this, 0x8ea8));
+    pegar(quem);
+    *((quem + 0x19c) as *mut u16) = 200;
+    *((quem + 0x19a) as *mut u16) = if byte(this, 0x8ea8) != 0 { 0xb4 } else { 0 };
 }
 
 // ---------- nonagesima segunda leva: avancar uma linha (0x6f5b80), com fita generica ----------
@@ -11439,6 +11503,15 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+unsafe extern "thiscall" fn comparar_arrumar_saida(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(254);
+    // tudo o que a arrumacao (e o que ela chama) grava: o motor de 0x1a0, a grade, os 40 jogadores, a
+    // bola e as posses (0x215e..0x8f00) e os ponteiros de 0xf56e
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(this + 0x1a0, 0x30), (this + 0x215e, 0x8f00 - 0x215e), (this + 0xf56e, 0x48)]);
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| arrumar_saida(this)));
+    PLACAR.registrar(igual, || format!("arrumar_saida(lado {})", byte(this, 0x8eae)));
+}
 unsafe extern "thiscall" fn comparar_avancar_linha(this: usize, direto: u8) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u8) -> u32>(253);
     if gravando() {
@@ -12078,6 +12151,7 @@ pub unsafe fn instalar(comparando: bool) {
         jogadores_no_trajeto as *const () as usize,
         interceptar as *const () as usize,
         avancar_linha as *const () as usize,
+        arrumar_saida as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -12334,6 +12408,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_jogadores_no_trajeto as *const () as usize,
         comparar_interceptar as *const () as usize,
         comparar_avancar_linha as *const () as usize,
+        comparar_arrumar_saida as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -12436,7 +12511,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_forca_do_lado",
         "motor_bola_no_ataque", "motor_evoluir_momento", "motor_partida_de_interesse",
         "motor_grupo_decidido", "motor_narrar_classificacao", "motor_procurar_jogada", "motor_jogadores_no_trajeto",
-        "motor_interceptar", "motor_avancar_linha",
+        "motor_interceptar", "motor_avancar_linha", "motor_arrumar_saida",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
