@@ -887,3 +887,11 @@ Mutações: 4/6 no jogo real até 20/08/2001. `a_11` e `a_0` (limites da linha n
 | `arrumar_saida()` | 0x6c4ec0 | thiscall | match_eng.cpp: quem sai jogando (+0xf59e lado 0, centro 4, 0; +0xf5a2 lado 1, centro 4, 11); solta a bola (0x6f0970); cada jogador em campo vai à casa da formação (tabela +0xf56e da direção, byte +0xa2 da posição: x no nibble baixo, y no alto), refaz as linhas defensivas (0x6c3aa0) e, no lado que sai jogando, quem passou da linha volta uma (0x6f5b80); +0x2b zera; no fim quem sai jogando vai ao centro e pega a bola (0x6f0630), +0x19c = 200, +0x19a = 180 fora da linha 0. Sem ele: a original (caixa de erro). Comparada com `lado_a_lado` sobre o motor de 0x1a0, a grade, os 40 jogadores e os ponteiros de 0xf56e |
 
 Mutações: 6/6 no jogo real até 20/08/2001.
+
+### Motor de partidas, 94ª leva — arrumar para uma bola parada (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `arrumar_bola_parada()` | 0x6c4820 | thiscall | match_eng.cpp: contador +0xf5c6 + 54 × lado; solta a bola. Bola na área do próprio lado: formação (como 0x6c4ec0) e quem do outro lado cair na marca sai uma linha. Senão: marca limitada à grade, longe (+0x8eb1 = 7) ou perto (−1), coluna base 4 − sorteio + sorteio, linha base a 3/4 da marca; perto, todos pela tabela de bola parada (12 linhas × 9 colunas por posição e lado que cobra); longe, pelo papel (0x716270 no ataque: 1 fundo, 2 meio; 0x716310 na defesa: 4 fundo, 3 meio). No fim o cobrador (0x6ceb90, tipo +0x8eb2) vai à marca, pega a bola e aponta (0x6f4920). Casa fora da grade: erro fatal, como a original |
+
+Mutações: 8/8 no jogo real até 20/08/2001.
