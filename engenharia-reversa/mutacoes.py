@@ -63,8 +63,21 @@ def autoteste(valor='1'):
 
 
 def jogo(data):
-    subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'comparar', '--limite', '900'],
-                   cwd=AQUI, capture_output=True)
+    # Sem o log da rodada anterior: se a simulacao for recusada (vigia de memoria), nao ha resultado
+    # velho para ler como se fosse desta mutacao. Recusada por falta de memoria, espera e tenta de novo.
+    import laboratorio
+    for _ in range(120):
+        ok, motivo = laboratorio.pode_rodar()
+        if ok:
+            break
+        print('  aguardando memoria: %s' % motivo, flush=True)
+        time.sleep(60)
+    if os.path.exists(LOG):
+        os.remove(LOG)
+    r = subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'comparar', '--limite', '900'],
+                       cwd=AQUI, capture_output=True, text=True)
+    if r.returncode != 0 and not os.path.exists(LOG):
+        return ['SIMULACAO RECUSADA: ' + (r.stdout + r.stderr).strip().splitlines()[-1:][0] if (r.stdout + r.stderr).strip() else 'SIMULACAO RECUSADA']
     texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
     achados = [l for l in texto.splitlines() if 'DIVERGENCIA' in l or 'EXCECAO' in l]
     return achados[:1] or [l for l in texto.splitlines() if l.startswith('motor: ') and 'comparacoes' in l][-1:]

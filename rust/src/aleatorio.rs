@@ -155,9 +155,11 @@ unsafe extern "C" fn comparar(n: i32) -> i32 {
     let depois_orig = Estado::ler();
 
     antes.escrever();
-    CONTAR.with(|c| c.set(false));
+    // restaura (nao liga): dentro de uma replica Rust (`sem_contar`) que sorteia varias vezes, ligar
+    // aqui fazia os sorteios seguintes da replica entrarem na contagem
+    let contava = CONTAR.with(|c| c.replace(false));
     let r_rust = aleatorio(n);
-    CONTAR.with(|c| c.set(true));
+    CONTAR.with(|c| c.set(contava));
     let depois_rust = Estado::ler();
     depois_orig.escrever();
 

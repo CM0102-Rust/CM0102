@@ -75,6 +75,51 @@ pub unsafe fn lado_a_lado<R>(regioes: &[(usize, usize)], original: impl FnOnce()
     (r_orig, r_rust, igual, depois_orig, depois_rust)
 }
 
+/// Como `lado_a_lado`, sem alocar quando as regioes somam ate 256 bytes: as copias ficam na pilha e
+/// so viram `Memoria` (para a mensagem) se a memoria divergir; iguais, voltam vazias. Para as rotinas
+/// que o jogo chama bilhoes de vezes (datas), em que as copias alocadas tomavam a maior parte do tempo.
+pub unsafe fn lado_a_lado_leve<R>(regioes: &[(usize, usize)], original: impl FnOnce() -> R, rust: impl FnOnce() -> R) -> (R, R, bool, Memoria, Memoria) {
+    const MAX: usize = 256;
+    let total: usize = regioes.iter().map(|r| r.1).sum();
+    if total > MAX {
+        return lado_a_lado(regioes, original, rust);
+    }
+    unsafe fn copiar(regioes: &[(usize, usize)], buf: &mut [u8; MAX]) {
+        let mut k = 0;
+        for &(a, n) in regioes {
+            core::ptr::copy_nonoverlapping(a as *const u8, buf.as_mut_ptr().add(k), n);
+            k += n;
+        }
+    }
+    unsafe fn escrever(regioes: &[(usize, usize)], buf: &[u8; MAX]) {
+        let mut k = 0;
+        for &(a, n) in regioes {
+            core::ptr::copy_nonoverlapping(buf.as_ptr().add(k), a as *mut u8, n);
+            k += n;
+        }
+    }
+    let (mut antes, mut d_orig, mut d_rust) = ([0u8; MAX], [0u8; MAX], [0u8; MAX]);
+    copiar(regioes, &mut antes);
+    let r_orig = original();
+    copiar(regioes, &mut d_orig);
+    escrever(regioes, &antes);
+    let r_rust = rust();
+    copiar(regioes, &mut d_rust);
+    escrever(regioes, &d_orig);
+    let igual = d_orig[..total] == d_rust[..total];
+    if igual {
+        return (r_orig, r_rust, true, Memoria(Vec::new()), Memoria(Vec::new()));
+    }
+    let memoria = |buf: &[u8; MAX]| {
+        let mut k = 0;
+        Memoria(regioes.iter().map(|&(a, n)| {
+            k += n;
+            (a, buf[k - n..k].to_vec())
+        }).collect())
+    };
+    (r_orig, r_rust, false, memoria(&d_orig), memoria(&d_rust))
+}
+
 /// Gerador simples para os autotestes (xorshift64); nao tem relacao com o sorteio do jogo.
 pub struct Sorteio(pub u64);
 

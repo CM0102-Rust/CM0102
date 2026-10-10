@@ -99,6 +99,7 @@ EN = {
  'evoluir_momento': 'evolve_moment', 'bola_no_ataque': 'ball_in_attack', 'partida_de_interesse': 'match_of_interest',
  'grupo_decidido': 'group_decided', 'narrar_classificacao': 'narrate_qualification',
  'procurar_jogada': 'look_for_play', 'jogadores_no_trajeto': 'players_on_path', 'percorrer_linha': 'walk_line',
+ 'interceptar': 'intercept',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

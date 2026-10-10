@@ -863,3 +863,11 @@ Mutações: 1/8 no jogo real até 20/08/2001 (`n_2001`). As outras sete estão e
 | `jogadores_no_trajeto(x1, y1, x2, y2)` | 0x6cc070 | thiscall, ret 0x10 | match_eng.cpp: o percurso da 0x6cbc00 (agora `percorrer_linha`, compartilhado) contando pela 0x6cd3d0 em modo 2, com as duas pontas nas linhas retas e x até 11 na horizontal |
 
 Mutações: 7/9 no jogo real até 20/08/2001. `j_ret2` sobreviveu (a resposta 2 da jogada não ocorreu até agosto) e `t_11` é equivalente na prática (x de 9 a 11 já está fora da grade de 9 colunas).
+
+### Motor de partidas, 91ª leva — interceptação no caminho do gol; comparadores sem alocação (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `interceptar(x, y, a3, gol, a5, a6)` | 0x6cc540 | thiscall, ret 0x18 | match_eng.cpp: casas de (x, y) até o centro do gol (x 4; y 11 com `gol` = 1, senão 0), ao estilo de Bresenham nos quatro quadrantes; em cada casa sorteia (2) o lado que tenta primeiro e procura nos dois pela 0x6cd3d0 em modo 1 (distância da tabela desde a saída, ou 1000); volta o primeiro código ≠ 0; +0xf5ae zera no início. Comparação com a fita da 0x70dfd0 cobrindo a grade inteira e os bytes de todos os jogadores |
+
+Mutações: 7/7 no jogo real até 20/08/2001 (seis delas refeitas depois de corrigir o `mutacoes.py`).

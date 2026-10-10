@@ -865,3 +865,11 @@ Mutations: 1/8 in the real game up to 2001-08-20 (`n_2001`). The other seven sit
 | `jogadores_no_trajeto(x1, y1, x2, y2)` | 0x6cc070 | thiscall, ret 0x10 | match_eng.cpp: the 0x6cbc00 walk (now `percorrer_linha`, shared) counting through 0x6cd3d0 in mode 2, with both ends on straight lines and x up to 11 on the horizontal |
 
 Mutations: 7/9 in the real game up to 2001-08-20. `j_ret2` survived (the play's answer 2 did not occur before August) and `t_11` is equivalent in practice (x from 9 to 11 is already off the 9-column grid).
+
+### Match engine, 91st batch — interception on the path to goal; allocation-free comparators (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `interceptar(x, y, a3, gol, a5, a6)` | 0x6cc540 | thiscall, ret 0x18 | match_eng.cpp: cells from (x, y) to the goal centre (x 4; y 11 with `gol` = 1, else 0), Bresenham style in the four quadrants; in each cell it draws (2) which side tries first and searches both through 0x6cd3d0 in mode 1 (table distance from the start, or 1000); returns the first code ≠ 0; +0xf5ae is cleared at the start. Compared with the 0x70dfd0 tape covering the whole grid and the bytes of every player |
+
+Mutations: 7/7 in the real game up to 2001-08-20 (six of them redone after fixing `mutacoes.py`).

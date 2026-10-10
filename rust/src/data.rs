@@ -13,7 +13,7 @@
 //!   { 0x54c8e0 } operator-(n dias)          > usam uma Data estatica local cada (inicializada na
 //!   { 0x54c770 } mais_semanas(n)           /  primeira chamada, com destrutor vazio no atexit)
 
-use crate::comparacao::{lado_a_lado, Placar, Sorteio};
+use crate::comparacao::{lado_a_lado_leve as lado_a_lado, Placar, Sorteio};
 use crate::desvios::{self, Prologo};
 use crate::jogo;
 use crate::registro::linha;
@@ -267,10 +267,27 @@ unsafe fn orig<F>(i: usize) -> F {
     core::mem::transmute_copy(&ORIGINAIS[i])
 }
 
-fn regioes(objetos: &[usize]) -> Vec<(usize, usize)> {
-    let mut v: Vec<(usize, usize)> = objetos.iter().map(|&a| (a, 8)).collect();
-    v.extend(ESTATICAS);
-    v
+/// As datas (8 bytes cada, ate 3) e as estaticas, num vetor fixo na pilha (sem alocar: as datas sao
+/// comparadas bilhoes de vezes numa carreira com todas as ligas).
+struct Regioes([(usize, usize); 9], usize);
+
+impl core::ops::Deref for Regioes {
+    type Target = [(usize, usize)];
+    fn deref(&self) -> &Self::Target {
+        &self.0[..self.1]
+    }
+}
+
+fn regioes(objetos: &[usize]) -> Regioes {
+    let mut r = Regioes([(0, 0); 9], 0);
+    for (i, &o) in objetos.iter().enumerate() {
+        r.0[i] = (o, 8);
+    }
+    for (i, &e) in ESTATICAS.iter().enumerate() {
+        r.0[objetos.len() + i] = e;
+    }
+    r.1 = objetos.len() + ESTATICAS.len();
+    r
 }
 
 unsafe extern "thiscall" fn comparar_padrao(this: *mut Data) -> *mut Data {

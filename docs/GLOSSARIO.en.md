@@ -166,6 +166,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6854a0 | `grupo_decidido` | group_decided |
 | 0x6cd660 | `guardar_extremos` | store_extremes |
 | 0x6e9470 | `iniciar_rigor` | init_strictness |
+| 0x6cc540 | `interceptar` | intercept |
 | 0x6c2fe0 | `jogador_no_bloco` | player_in_block |
 | 0x6e1cd0 | `jogador_pela_ficha` | player_by_record |
 | 0x6cbc00 | `jogadores_na_linha` | players_in_line |
