@@ -241,6 +241,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x716310 | `papel_na_defesa` | defending_role |
 | 0x716270 | `papel_no_ataque` | attacking_role |
 | 0x6b61e0 | `partida_de_interesse` | match_of_interest |
+| 0x6fa250 | `passar` | pass_ball |
 | 0x6f0630 | `pegar_bola` | take_ball |
 | 0x6c50d0 | `penalti` | penalty |
 | 0x70df70 | `perto_do_gol` | near_goal |

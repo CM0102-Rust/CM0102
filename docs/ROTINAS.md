@@ -919,3 +919,11 @@ Mutações: 9/12 no jogo real até 20/08/2001, incluindo `s_fica` e `s_formacao`
 | `decidir_jogador()` | 0x7103e0 | thiscall | match_pl.cpp: sem a bola, "desliga" (0x67) se sorteio(10) + +0x4d·c não passar de sorteio(65); com a bola fora do alcance do lado, sorteio(20) zero e sem +0x10d desliga cansando (+0x35 − 15, +0x2b = 1, +0x4d + 5..9); com o lado na situação 5 (+0x1ab) e longe do gol, desliga sem o −15; com +0x2b, parado. Antes de cada desfecho os marcados (+0x1ae) se mexem (0x714d40) por sorteio(900) contra +0x107·+0x104. O dono da bola conduz (0x7109f0, nova porta da fita) e pode decidir de novo (sorteio(+0x7d) contra sorteio(5)); os outros vão a 0x713fc0 (bola com o lado, na faixa, em jogo) ou 0x714d40 |
 
 Mutações: 8/8 no jogo real até 20/08/2001. Carreiras Rust ×2 e original iguais em `cd2c213e0ddda4d1` (2.357.622.872 sorteios): a referência mudou porque os arquivos de idioma (`jogo\*.lng`) foram reescritos às 13h04 de 10/10, fora deste trabalho.
+
+### Motor de partidas, 98ª leva — o passe e o impedimento (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `passar(tipo, receptor, saida, a4, a5)` | 0x6fa250 | thiscall, ret 0x14 | match_pl.cpp: o passe (+0x2b sobe). Executa pela 0x6fad40 (13,8 KB, nova porta da fita: grava x, y, tipo, receptor e o 4o argumento e devolve a resposta com o byte que ela escreve na saída). Fora do tipo 0x36 procura o impedido (0x6cfd70); sorteio(2·d1·d2 da distância dele ao gol) zero: impedimento, narra 0x1f78, conta (+0xf5ca), +0x13 do impedido, −1 em +1 do passador, bola com o outro lado (+0x8eb2 = 7). Senão registra o lance (0x6bb9a0). Com a saída do passe: receptor vira o batedor (+0xf57a), posses (+0x8d46) e decisão imediata do receptor (0x7103e0) por sorteio(80) contra +0x105·+0x107 |
+
+Mutações: 8/8 no jogo real até 20/08/2001, com a comparação aninhada (antes dela `p_2b` sobrevivia: o passe nunca era comparado).

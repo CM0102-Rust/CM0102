@@ -921,3 +921,11 @@ Mutations: 9/12 in the real game up to 2001-08-20, including batch 95's `s_fica`
 | `decidir_jogador()` | 0x7103e0 | thiscall | match_pl.cpp: off the ball, "switches off" (0x67) when draw(10) + +0x4d·c does not beat draw(65); with the ball out of the side's reach, draw(20) zero and no +0x10d switches off tiring (+0x35 − 15, +0x2b = 1, +0x4d + 5..9); with the side in situation 5 (+0x1ab) and far from goal, switches off without the −15; with +0x2b, idle. Before each outcome the marked players (+0x1ae) move (0x714d40) by draw(900) against +0x107·+0x104. The ball holder dribbles (0x7109f0, new tape port) and may decide again (draw(+0x7d) against draw(5)); the others go to 0x713fc0 (ball with the side, in the band, in play) or 0x714d40 |
 
 Mutations: 8/8 in the real game up to 2001-08-20. Rust ×2 and original careers equal at `cd2c213e0ddda4d1` (2,357,622,872 draws): the reference changed because the language files (`jogo\*.lng`) were rewritten at 13:04 on 2026-10-10, outside this work.
+
+### Match engine, 98th batch — the pass and offside (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `passar(tipo, receptor, saida, a4, a5)` | 0x6fa250 | thiscall, ret 0x14 | match_pl.cpp: the pass (+0x2b goes up). Executes through 0x6fad40 (13.8 KB, new tape port: records x, y, type, receiver and the 4th argument and returns the answer with the byte it writes into the out slot). Outside type 0x36 looks for the offside player (0x6cfd70); draw(2·d1·d2 of his distance to goal) zero: offside, comment 0x1f78, count (+0xf5ca), offside player's +0x13, −1 in the passer's +1, ball to the other side (+0x8eb2 = 7). Otherwise logs the event (0x6bb9a0). With the pass out byte: the receiver becomes the taker (+0xf57a), possession (+0x8d46) and the receiver's immediate decision (0x7103e0) by draw(80) against +0x105·+0x107 |
+
+Mutations: 8/8 in the real game up to 2001-08-20, with nested comparison (before it `p_2b` survived: the pass was never compared).

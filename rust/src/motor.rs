@@ -366,8 +366,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x713fc0, bytes: &[0x81, 0xec, 0x24, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x714d40, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
     Prologo { endereco: 0x7103e0, bytes: &[0x83, 0xec, 0x14, 0x53, 0x56] },
+    Prologo { endereco: 0x6fa250, bytes: &[0x53, 0x55, 0x8b, 0x44, 0x24, 0x18] },
 ];
-const N: usize = 259;
+const N: usize = 260;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4060,6 +4061,114 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     1
 }
 
+// ---------- nonagesima oitava leva: o passe e o impedimento (0x6fa250) ----------
+
+/// { 0x6fa250 } (ret 0x14, match_pl.cpp) com as chamadas que mexem no jogo injetadas
+/// (`chamar(rotina, this, argumentos)`; a 0x6fad40 devolve a resposta no byte baixo e a saida que
+/// ela grava no argumento 3 no byte seguinte): o passe do jogador (+0x2b sobe). Executa (0x6fad40 com
+/// a casa dele, `tipo`, o receptor e os argumentos 4 e 5); sem sucesso, nada. Fora do tipo 0x36,
+/// procura o impedido (0x6cfd70 na linha 5o argumento): sorteio(2 x d1 x d2, a distancia dele ao gol
+/// adversario) zero e impedimento: narra (0x1f78), conta (+0xf5ca + 54 x lado), o impedido marca +0x13,
+/// o passador perde 1 em +1, a bola vai a casa dele com o outro lado (+0x8eb2 = 7) e ninguem a tem.
+/// Senao registra o lance (0x6bb9a0, 8). Sem +0x8eb2 e com a saida do passe: o receptor e o batedor
+/// (+0xf57a), o lado conta a posse (+0x8d46: o dele sobe, o outro cai 10) e o receptor decide ja
+/// (0x7103e0) se sorteio(80) nao passar de +0x105 x +0x107.
+unsafe fn passar_com(j: usize, tipo: u8, receptor: usize, a4: u32, a5: u32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let impedido_de: unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize = core::mem::transmute(0x6cfd70usize);
+    let dist_ponto: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(0x6f09b0usize);
+    let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(0x6bb9a0usize);
+    let m = || *((j + 0x19e) as *const usize);
+    let b = |p: usize, o: usize| (p + o) as *mut i8;
+    *b(j, 0x2b) = (*b(j, 0x2b)).wrapping_add(1);
+    let dir = byte(j, 0x27);
+    let r = chamar(0x6fad40, j, [byte(j, 0x102) as u8 as u32, byte(j, 0x103) as u8 as u32, tipo as u32, receptor as u32, a4]);
+    if r as u8 == 0 {
+        return;
+    }
+    let completo = (r >> 8) as u8;
+    if tipo != 0x36 {
+        let q = impedido_de(m(), dir, byte(j, 0x103), a5 as i8, 0);
+        if q != 0 {
+            let gol = if byte(q, 0x27) == 0 { 11 } else { 0 };
+            let d1 = dist_ponto(q, 4, gol);
+            let d2 = dist_ponto(q, 4, gol);
+            let n = ftol(d2 as f64 * d1 as f64 + d2 as f64 * d1 as f64);
+            if sortear(n) != 0 {
+                let mm = m();
+                chamar(0x6d6f70, *((mm + 0x8f7a) as *const usize), [0x1f78, mm as u32, byte(q, 0x2e) as u8 as u32, dir as u8 as u32, u32::MAX]);
+                let cont = (m() as isize + 0xf5ca + 54 * dir as isize) as *mut u8;
+                *cont = (*cont).wrapping_add(1);
+                *b(q, 0x13) = (*b(q, 0x13)).wrapping_add(1);
+                *b(j, 1) = (*b(j, 1)).wrapping_sub(1);
+                *b(m(), 0x8ea7) = byte(q, 0x102);
+                *b(m(), 0x8ea8) = byte(q, 0x103);
+                *b(m(), 0x8eb2) = 7;
+                *b(m(), 0x8eae) = (dir == 0) as i8;
+                *((m() + 0xf582) as *mut usize) = 0;
+                return;
+            }
+            registrar(m(), 0xffff, q as u32, 0, 0, 8, byte(q, 0x102) as u8, byte(q, 0x103) as u8, 0xff, 0xff);
+        }
+    }
+    let mm = m();
+    if byte(mm, 0x8eb2) != 0 || completo == 0 {
+        return;
+    }
+    *((mm + 0xf57a) as *mut usize) = receptor;
+    let dir = byte(j, 0x27);
+    *b(mm, 0x8eab) = dir;
+    if dir != -1 {
+        let meu = (mm as isize + 0x8d46 + dir as isize) as *mut i8;
+        *meu = (*meu).wrapping_add(1);
+        let outro = (mm as isize + 0x8d46 + (dir == 0) as isize) as *mut i8;
+        if *outro > 0 {
+            *outro = (*outro).wrapping_sub(10);
+        }
+    }
+    if receptor != 0 && byte(receptor, 0x2b) == 0 {
+        let r = sortear(0x50);
+        if byte(receptor, 0x105) as i32 * byte(receptor, 0x107) as i32 > r {
+            chamar(0x7103e0, receptor, [0; 5]);
+        }
+    }
+}
+
+/// { 0x6fa250 } (ret 0x14, match_pl.cpp): ver `passar_com`. O 3o argumento e a saida da 0x6fad40.
+unsafe extern "thiscall" fn passar(j: usize, tipo: u8, receptor: usize, mut a3: u32, a4: u32, a5: u32) {
+    passar_com(j, tipo, receptor, a4, a5, &mut |rotina, this, a| match rotina {
+        0x6fad40 => {
+            let f: unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32, usize, u32, u32) -> u8 = core::mem::transmute(0x6fad40usize);
+            let r = f(this, a[0] as i8, a[1] as i8, a[2], &mut a3, a[3] as usize, a[4], a5);
+            r as u32 | ((a3 as u8 as u32) << 8)
+        }
+        0x7103e0 => {
+            let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x7103e0usize);
+            f(this);
+            0
+        }
+        _ => {
+            comentar(this, [a[0], a[1], a[2], a[3], a[4], u32::MAX, 0]);
+            0
+        }
+    })
+}
+
+// Porta de 0x6fad40 (executa o passe, 13,8 KB): grava (x, y, tipo, receptor, 4o) e devolve a
+// resposta com o byte que ela escreve na saida (5o argumento) no byte seguinte.
+static mut PORTA_6FAD40: usize = 0;
+const PROLOGO_6FAD40: Prologo = Prologo { endereco: 0x6fad40, bytes: &[0x81, 0xec, 0x6c, 0x02, 0x00, 0x00] };
+
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn porta_6fad40(p: usize, x: u32, y: u32, tipo: u32, saida: *mut u8, receptor: usize, a6: u32, a7: u32) -> u8 {
+    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, *mut u8, usize, u32, u32) -> u8 = core::mem::transmute(PORTA_6FAD40);
+    let mut r = 0u8;
+    chamar_gravando(0x6fad40, p, [x, y, tipo, receptor as u32, a6], || {
+        r = f(p, x, y, tipo, saida, receptor, a6, a7);
+        r as u32 | ((*saida as u32) << 8)
+    });
+    r
+}
+
 // ---------- nonagesima setima leva: a decisao de cada jogador a cada instante (0x7103e0) ----------
 
 /// { 0x7103e0 } (match_pl.cpp) com as chamadas que mexem no jogo injetadas (`chamar(rotina, this,
@@ -5215,6 +5324,13 @@ fn gravando() -> bool {
     fita().is_some()
 }
 
+/// Gravacao aberta e no nivel de cima dela (fora de qualquer unidade gravada em andamento): a
+/// rotina e chamada direto pela que esta sendo comparada e entra na fita (ou so repassa). Dentro de
+/// uma unidade, ela pode ser comparada por conta propria (a fita de fora fica guardada).
+fn gravando_no_topo() -> bool {
+    gravando() && DENTRO.load(std::sync::atomic::Ordering::Relaxed) == 0
+}
+
 /// Quantas chamadas gravaveis estao em andamento: so as de fora (profundidade 0) entram na fita;
 /// as que uma delas faz por dentro (0x70dfd0 e 0x6f09f0 movem jogadores) ja estao na foto.
 static DENTRO: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
@@ -5252,6 +5368,8 @@ fn detalhe_fita() -> String {
 }
 
 unsafe fn comparar_com_fita<R>(reg: Vec<(usize, usize)>, original: impl FnOnce() -> R, rust: impl FnOnce(&mut dyn FnMut(usize, usize, [u32; 5], [u32; 5]) -> u32) -> R) -> (R, R, bool, bool, usize) {
+    // a fita de fora (comparacao aninhada dentro de uma unidade gravada) volta no fim
+    let externa = fita().take();
     *fita() = Some((reg.clone(), Vec::new()));
     // contexto proprio: a rotina comparada pode estar dentro de uma chamada gravavel em andamento (a
     // 0x6f5b80 roda dentro da 0x6f09f0 no jogo normal); as chamadas dela contam a partir de zero
@@ -5317,6 +5435,7 @@ unsafe fn comparar_com_fita<R>(reg: Vec<(usize, usize)>, original: impl FnOnce()
         DETALHE_FITA.lock().unwrap_or_else(|e| e.into_inner()).push_str(&format!(" | sorteios original {:?} rust {:?}", &ro[..ro.len().min(12)], &rr[..rr.len().min(12)]));
     }
     DENTRO.store(nivel, std::sync::atomic::Ordering::Relaxed);
+    *fita() = externa;
     let k = gravadas.borrow().len();
     (r, n, igual, sequencia.get(), k)
 }
@@ -11712,7 +11831,7 @@ unsafe extern "thiscall" fn comparar_ajustar_17(this: usize, delta: i8) -> u8 {
 
 unsafe extern "thiscall" fn comparar_pegar_bola(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(116);
-    if gravando() {
+    if gravando_no_topo() {
         chamar_gravando(0x6f0630, this, [0; 5], || {
             o(this);
             0
@@ -11881,7 +12000,7 @@ unsafe extern "thiscall" fn comparar_defesa(this: usize, a: i8, b: i8, a3: u8, c
 
 unsafe extern "thiscall" fn comparar_mover_para(this: usize, x: i8, y: i8) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i8, i8)>(134);
-    if gravando() {
+    if gravando_no_topo() {
         chamar_gravando(0x6f46b0, this, [x as u8 as u32, y as u8 as u32, 0, 0, 0], || {
             o(this, x, y);
             0
@@ -12460,7 +12579,7 @@ unsafe extern "thiscall" fn comparar_narrar_classificacao(this: usize, lado: u32
 }
 unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: u32, gol: i8, a5: u32, a6: u32) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i8, i8, u32, i8, u32, u32) -> u8>(252);
-    if gravando() {
+    if gravando_no_topo() {
         return o(this, x, y, a3, gol, a5, a6);
     }
     // o que as jogadas mudam e a copia Rust le: a grade inteira, os bytes de todos os jogadores, os
@@ -12480,10 +12599,36 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn comparar_passar(j: usize, tipo: u8, receptor: usize, a3: u32, a4: u32, a5: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u8, usize, u32, u32, u32)>(259);
+    if gravando_no_topo() {
+        return o(j, tipo, receptor, a3, a4, a5);
+    }
+    let m = *((j + 0x19e) as *const usize);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m + 0x1a0, 0x30), (m + 0x215e, 0x8f00 - 0x215e), (m + 0xf56e, 0xa0)]);
+    const MASCARAS: [(usize, [u32; 5]); 3] = [
+        (0x6fad40, [0xff, 0xff, 0xff, u32::MAX, u32::MAX]),
+        (0x6d6f70, [0xffff, u32::MAX, 0xff, 0xff, 0xff]),
+        (0x7103e0, [0; 5]),
+    ];
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(j, tipo, receptor, a3, a4, a5), |chamar| {
+        passar_com(j, tipo, receptor, a4, a5, &mut |rotina, this, args| {
+            let mascara = MASCARAS.iter().find(|m| m.0 == rotina).map_or([u32::MAX; 5], |m| m.1);
+            chamar(rotina, this, args, mascara)
+        })
+    });
+    PLACAR.registrar(igual && sequencia, || format!("passar(tipo {:#x}) {} chamadas: {}", tipo, k, detalhe_fita()));
+}
 unsafe extern "thiscall" fn comparar_decidir_jogador(j: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(258);
-    if gravando() {
-        return o(j);
+    if gravando_no_topo() {
+        chamar_gravando(0x7103e0, j, [0; 5], || {
+            o(j);
+            0
+        });
+        return;
     }
     let m = *((j + 0x19e) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -12496,7 +12641,7 @@ unsafe extern "thiscall" fn comparar_decidir_jogador(j: usize) {
 }
 unsafe extern "thiscall" fn comparar_mover_sem_bola(j: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(257);
-    if gravando() {
+    if gravando_no_topo() {
         chamar_gravando(0x714d40, j, [0; 5], || {
             o(j);
             0
@@ -12525,7 +12670,7 @@ unsafe extern "thiscall" fn comparar_mover_sem_bola(j: usize) {
 }
 unsafe extern "thiscall" fn comparar_decidir_sem_bola(j: usize, a: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(256);
-    if gravando() {
+    if gravando_no_topo() {
         chamar_gravando(0x713fc0, j, [a, 0, 0, 0, 0], || {
             o(j, a);
             0
@@ -12568,7 +12713,7 @@ unsafe extern "thiscall" fn comparar_arrumar_saida(this: usize) {
 }
 unsafe extern "thiscall" fn comparar_avancar_linha(this: usize, direto: u8) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u8) -> u32>(253);
-    if gravando() {
+    if gravando_no_topo() {
         return chamar_gravando(0x6f5b80, this, [direto as u32, 0, 0, 0, 0], || o(this, direto));
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -12584,7 +12729,7 @@ comparar_valor!(comparar_jogadores_no_trajeto, jogadores_no_trajeto, 251, (x1: i
 #[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn comparar_procurar_jogada(this: usize, lado: i8, grupo: usize, a3: u32, a4: u32, modo: u8, a6: u32, a7: u32) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i8, usize, u32, u32, u8, u32, u32) -> u8>(250);
-    if gravando() {
+    if gravando_no_topo() {
         return o(this, lado, grupo, a3, a4, modo, a6, a7);
     }
     // o que a jogada muda e a copia Rust le: a lista e a quantidade do lado, os bytes de cada
@@ -12952,6 +13097,9 @@ pub unsafe fn instalar(comparando: bool) {
         if let Some(t) = desvios::desviar("motor_porta_7109f0 (gravacao)", &PROLOGO_7109F0, porta_7109f0 as *const () as usize) {
             PORTA_7109F0 = t;
         }
+        if let Some(t) = desvios::desviar("motor_porta_6fad40 (gravacao)", &PROLOGO_6FAD40, porta_6fad40 as *const () as usize) {
+            PORTA_6FAD40 = t;
+        }
     }
     let rust: [usize; N] = [
         tabela_a as *const () as usize,
@@ -13213,6 +13361,7 @@ pub unsafe fn instalar(comparando: bool) {
         decidir_sem_bola as *const () as usize,
         mover_sem_bola as *const () as usize,
         decidir_jogador as *const () as usize,
+        passar as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -13474,6 +13623,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_decidir_sem_bola as *const () as usize,
         comparar_mover_sem_bola as *const () as usize,
         comparar_decidir_jogador as *const () as usize,
+        comparar_passar as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -13578,7 +13728,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_grupo_decidido", "motor_narrar_classificacao", "motor_procurar_jogada", "motor_jogadores_no_trajeto",
         "motor_interceptar", "motor_avancar_linha", "motor_arrumar_saida", "motor_arrumar_bola_parada",
         "motor_decidir_sem_bola", "motor_mover_sem_bola",
-        "motor_decidir_jogador",
+        "motor_decidir_jogador", "motor_passar",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
