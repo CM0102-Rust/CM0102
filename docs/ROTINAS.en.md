@@ -961,3 +961,11 @@ Mutations: 6 of 8 caught (g_20, g_espalma, g_2b, g_dentro, g_espalhar, g_cansa);
 | `recuperar_folego(teto)` | 0x6f5810 | thiscall, ret 4 | match_pl.cpp, no draws: recovers stamina (+0x4d) and its ceiling (+0x51). Factor 1, or 1.4 − 0.0004 × injury (0x62c3d0) above 1000. Without `teto`, adds 10 × (record pace +0x34 + 15) × factor on the pitch (0x6c38c0 = 1) or off the bench (12 × pace + 325 with +0x1f = −1), up to 10000. With `teto`, +0x51 = stamina + (12 × pace + 85) × factor, times 5.56 × (+0x20 or +0x21) − 255.76 when that value is 46 to 64; out of play, if the injury (0x62c590) exceeds the ceiling it becomes 6500; finally adds +0x59, up to 10000 |
 
 Mutations: 8 of 9 caught (f_campo, f_banco, f_fora, f_k, f_marca, f_copia, f_6500, f_59); f_1000 survives (injury exactly 1000, boundary); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).
+
+### Match engine, 103rd batch — the end of a period (official on 2026-10-10)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `periodo_encerrado()` | 0x6bd930 | thiscall | match_eng.cpp (`period_completed`): closes the period in +0x8ed4 when the clock (+0x8ed0) passes its end plus stoppage (+0x8eb7). 1st half: half-time score into the fixture (+0x4792 +0x45/+0x46), narrates 0x20f1, recovers stamina and moves to the 2nd (1). 2nd half: by the fixture rule (+0x38) and aggregate (+0x4b/+0x4c), ends (4: standings 0x6be120, stamina ceiling, summary 0x6ce460; penalties in +0x8eb3) or goes to extra time (0x20f2, 2). Extra time: 0x20f3 and 2nd half (3), then ends. Unknown period: logs the error (0x944c9f). Standings and summary become tape units when called directly by the compared routine |
+
+Mutations: 9 of 9 caught (p_passou, p_intervalo, p_20f1, p_3de, p_teto0, p_saida, p_placar, p_fim, p_ordem); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).

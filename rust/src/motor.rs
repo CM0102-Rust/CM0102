@@ -371,8 +371,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6cd770, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x8e, 0x82, 0xf5, 0x00, 0x00] },
     Prologo { endereco: 0x70d430, bytes: &[0x66, 0x81, 0x7c, 0x24, 0x04, 0xe8, 0x03] },
     Prologo { endereco: 0x6f5810, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0xf1] },
+    Prologo { endereco: 0x6bd930, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0xf1] },
 ];
-const N: usize = 264;
+const N: usize = 265;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4063,6 +4064,225 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- centesima terceira leva: o fim do periodo (0x6bd930) ----------
+
+/// { 0x6bd930 } (match_eng.cpp, `CM3_MATCH_ENGINE::period_completed`) com as chamadas que mexem no
+/// jogo injetadas (comentarios 0x6d6f70, classificacao 0x6be120, resumo 0x6ce460): fecha o periodo
+/// de +0x8ed4 quando o relogio (+0x8ed0) passa do fim dele mais os acrescimos (+0x8eb7). Com +0x8eb2
+/// = 5 nada. Periodo 0 ou 1: devolve 4. 0x1ef (1o tempo): grava o placar do intervalo no jogo
+/// (+0x4792: +0x45/+0x46), narra 0x20f1, recupera o folego e passa ao 2o tempo (devolve 1). 0x3de
+/// (2o tempo): grava o placar (+0x43/+0x44); pela regra do jogo (+0x38: 2 jogo de volta, 4, 0x4000;
+/// 1 e 0x20 decidem por penaltis 4 ou 1 em +0x8eb3) e o agregado (+0x4b, +0x4c), encerra (4, com a
+/// classificacao narrada, teto do folego e resumo) ou vai a prorrogacao (narra 0x20f2, devolve 2).
+/// 0x483 (prorrogacao, 1o tempo): com +0x1a8 encerra; senao narra 0x20f3 e passa ao 2o (3). 0x528:
+/// grava +0x47/+0x48 e encerra, com penaltis quando o agregado da prorrogacao empata. Periodo
+/// desconhecido: registra o erro (0x944c9f) e devolve 0, como quando o relogio nao passou.
+unsafe fn periodo_encerrado_com(m: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
+    let folego: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(0x6f5810usize);
+    let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6f0970usize);
+    let b = |o: usize| (m + o) as *mut i8;
+    let w = |o: usize| (m + o) as *mut i16;
+    if byte(m, 0x8eb2) == 5 {
+        return 0;
+    }
+    let per = *w(0x8ed4) as i32;
+    let passou = |fim: i32| *w(0x8ed0) as i32 > byte(m, 0x8eb7) as i32 + fim;
+    let t = *((m + 0x4792) as *const usize);
+    let tb = |o: usize| (t + o) as *mut i8;
+    let narrador = *((m + 0x8f7a) as *const usize);
+    let fala = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, cod: u32| {
+        c(0x6d6f70, narrador, [cod, m as u32, u32::MAX, 0, u32::MAX]);
+    };
+    let classificar = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
+        c(0x6be120, m, [0, 0, 0, 0, 0]);
+        c(0x6be120, m, [1, 0, 0, 0, 0]);
+    };
+    let recuperar = |teto: u8| {
+        for base in [0x4796, 0x6a6e] {
+            for k in 0..20 {
+                folego(m + base + k * 0x1be, teto);
+            }
+        }
+    };
+    let soltar_dono = || {
+        let dono = *((m + 0xf582) as *const usize);
+        if dono != 0 {
+            soltar(dono);
+        }
+    };
+    // a posse da saida: quem nao saiu no 1o tempo sai agora
+    let trocar_saida = || {
+        let a = byte(m, 0x8eb6);
+        *b(0x8eb2) = 8;
+        *b(0x1ca) = 0;
+        *b(0x8eae) = a;
+        *b(0x8eb6) = (a == 0) as i8;
+    };
+    match per {
+        0x1ef => {
+            if !passou(0x1ef) {
+                return 0;
+            }
+            *tb(0x45) = byte(m, 0xf5bd);
+            *tb(0x46) = byte(m, 0xf5f3);
+            fala(chamar, 0x20f1);
+            *w(0x8ed0) = 0x1ef;
+            *b(0x8eb7) = 0;
+            chamar(0x6ce460, m, [0x3de, 0, 0, 0, 0]);
+            recuperar(0);
+            *w(0x8ed4) = 0x3de;
+            *b(0x8eb2) = 8;
+            *b(0x1ca) = 0;
+            soltar_dono();
+            trocar_saida();
+            1
+        }
+        0x3de => {
+            if !passou(0x3de) {
+                return 0;
+            }
+            *tb(0x43) = byte(m, 0xf5bd);
+            *tb(0x44) = byte(m, 0xf5f3);
+            let regra = *((t + 0x38) as *const u16);
+            let cl = byte(t, 0x4b);
+            let empate = || byte(t, 0x43) as i32 + cl as i32 == byte(t, 0x4c) as i32 + byte(t, 0x44) as i32;
+            // encerra com a classificacao narrada antes (ou depois) de fechar o periodo
+            let encerrar_antes = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
+                *b(0x8eb2) = 8;
+                *b(0x1ca) = 0;
+                *w(0x8ed4) = 0;
+                classificar(c);
+                recuperar(1);
+                c(0x6ce460, m, [0, 0, 0, 0, 0]);
+                4
+            };
+            if regra & 2 == 0 {
+                let decide = cl != -1 && regra & 4 == 0 && byte(t, 0x44) != cl && empate();
+                if !decide && regra & 1 != 0 && empate() {
+                    *b(0x8eb3) = 4;
+                } else if !decide && regra & 0x20 != 0 && empate() {
+                    *b(0x8eb3) = 1;
+                } else {
+                    classificar(chamar);
+                }
+                *b(0x8eb2) = 8;
+                *b(0x1ca) = 0;
+                recuperar(1);
+                chamar(0x6ce460, m, [0, 0, 0, 0, 0]);
+                *w(0x8ed4) = 0;
+                return 4;
+            }
+            if cl == -1 {
+                if byte(t, 0x43) != byte(t, 0x44) {
+                    return encerrar_antes(chamar);
+                }
+                fala(chamar, 0x20f2);
+                *w(0x8ed0) = 0x3de;
+                *b(0x8eb7) = 0;
+                *w(0x8ed4) = 0x483;
+                soltar_dono();
+                chamar(0x6ce460, m, [0x3de, 0, 0, 0, 0]);
+                trocar_saida();
+                return 2;
+            }
+            if !empate() {
+                return encerrar_antes(chamar);
+            }
+            if regra & 4 == 0 && byte(t, 0x44) != cl && regra & 0x4000 == 0 {
+                return encerrar_antes(chamar);
+            }
+            fala(chamar, 0x20f2);
+            *w(0x8ed0) = 0x3de;
+            *b(0x8eb7) = 0;
+            *w(0x8ed4) = 0x483;
+            chamar(0x6ce460, m, [0x3de, 0, 0, 0, 0]);
+            soltar_dono();
+            trocar_saida();
+            2
+        }
+        0x483 => {
+            if byte(m, 0x1a8) != 0 {
+                *tb(0x47) = byte(m, 0xf5bd);
+                *tb(0x48) = byte(m, 0xf5f3);
+                *b(0x8eb2) = 8;
+                *b(0x1ca) = 0;
+                *w(0x8ed4) = 1;
+                classificar(chamar);
+                recuperar(1);
+                chamar(0x6ce460, m, [1, 0, 0, 0, 0]);
+                return 4;
+            }
+            if !passou(0x483) {
+                return 0;
+            }
+            fala(chamar, 0x20f3);
+            *w(0x8ed0) = 0x483;
+            *b(0x8eb7) = 0;
+            *w(0x8ed4) = 0x528;
+            *b(0x8eb2) = 8;
+            *b(0x1ca) = 0;
+            soltar_dono();
+            trocar_saida();
+            3
+        }
+        0x528 => {
+            if byte(m, 0x1a8) == 0 && !passou(0x528) {
+                return 0;
+            }
+            *tb(0x47) = byte(m, 0xf5bd);
+            *tb(0x48) = byte(m, 0xf5f3);
+            let cl = byte(t, 0x4b);
+            let regra = *((t + 0x38) as *const u16);
+            let empate = || byte(t, 0x47) as i32 + cl as i32 == byte(t, 0x4c) as i32 + byte(t, 0x48) as i32;
+            let penaltis = if cl == -1 {
+                regra & 0x21 != 0
+            } else if regra & 0x4000 != 0 {
+                empate() && byte(t, 0x48) == cl && regra & 0x21 != 0
+            } else {
+                empate() && regra & 0x21 != 0
+            };
+            let iguais = byte(t, 0x47) as i32 - byte(t, 0x43) as i32 == byte(t, 0x48) as i32 - byte(t, 0x44) as i32;
+            if regra & 1 != 0 && iguais && penaltis {
+                *b(0x8eb3) = 4;
+            } else if regra & 0x20 != 0 && iguais && penaltis {
+                *b(0x8eb3) = 1;
+            } else {
+                classificar(chamar);
+            }
+            *b(0x8eb2) = 8;
+            *b(0x1ca) = 0;
+            *w(0x8ed4) = 1;
+            recuperar(1);
+            chamar(0x6ce460, m, [1, 0, 0, 0, 0]);
+            4
+        }
+        0 | 1 => 4,
+        _ => {
+            let erro: unsafe extern "C" fn(usize, usize, i32) = core::mem::transmute(0x944c9fusize);
+            erro(0xde1f64, 0xa158f8, per);
+            0
+        }
+    }
+}
+
+/// { 0x6bd930 } (match_eng.cpp): ver `periodo_encerrado_com`.
+unsafe extern "thiscall" fn periodo_encerrado(m: usize) -> u8 {
+    periodo_encerrado_com(m, &mut |rotina, this, a| {
+        match rotina {
+            0x6be120 => {
+                let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x6be120usize);
+                f(this, a[0]);
+            }
+            0x6ce460 => {
+                let f: unsafe extern "thiscall" fn(usize, i16) = core::mem::transmute(0x6ce460usize);
+                f(this, a[0] as i16);
+            }
+            _ => comentar(this, [a[0], a[1], a[2], a[3], a[4], u32::MAX, 0]),
+        }
+        0
+    })
 }
 
 // ---------- centesima segunda leva: o folego do jogador (0x6f5810) ----------
@@ -12462,6 +12682,13 @@ unsafe extern "thiscall" fn comparar_estatistica_posse(this: usize, l: i8, janel
 
 unsafe extern "thiscall" fn comparar_resumo(this: usize, momento: i16) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i16)>(131);
+    if gravando_no_topo() {
+        chamar_gravando(0x6ce460, this, [momento as u16 as u32, 0, 0, 0, 0], || {
+            o(this, momento);
+            0
+        });
+        return;
+    }
     let mut reg = vec![(this + 0x4796, 40 * 0x1be), (this + 0xf5b0, 0x90)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, momento), || crate::aleatorio::sem_contar(|| resumo_da_partida(this, momento)));
@@ -13059,6 +13286,13 @@ unsafe extern "C" fn comparar_partida_de_interesse(p: usize) -> u32 {
 comparar_valor!(comparar_grupo_decidido, grupo_decidido, 248, (clube: usize, partida: usize) -> u32);
 unsafe extern "thiscall" fn comparar_narrar_classificacao(this: usize, lado: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(249);
+    if gravando_no_topo() {
+        chamar_gravando(0x6be120, this, [lado, 0, 0, 0, 0], || {
+            o(this, lado);
+            0
+        });
+        return;
+    }
     let (igual, n) = comparar_com_comentarios(|| o(this, lado), |c| narrar_classificacao_com(this, lado, c));
     PLACAR.registrar(igual, || format!("narrar_classificacao({}) {} chamadas", lado as u8, n));
 }
@@ -13082,6 +13316,26 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
         interceptar_com(this, x, y, a3, gol, a5, a6, &mut |lado, grupo, v, a3, a5, a6| procurar_jogada_com(this, lado, grupo, v, a3, 1, a5, a6, &mut jogada))
     });
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
+    r
+}
+unsafe extern "thiscall" fn comparar_periodo_encerrado(m: usize) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u8>(264);
+    if gravando_no_topo() {
+        return o(m);
+    }
+    let t = *((m + 0x4792) as *const usize);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m + 0x1a0, 0x30), (m + 0x215e, 0x8f00 - 0x215e), (m + 0xf56e, 0xd8), (t + 0x38, 0x18)]);
+    let (r, n, igual, sequencia, k) = comparar_com_fita(reg, || o(m), |chamar| {
+        periodo_encerrado_com(m, &mut |rotina, this, args| {
+            chamar(rotina, this, args, match rotina {
+                0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
+                0x6be120 => [u32::MAX, 0, 0, 0, 0],
+                _ => [0xffff, 0, 0, 0, 0],
+            })
+        })
+    });
+    PLACAR.registrar(igual && sequencia && r == n, || format!("periodo_encerrado(periodo {:#x}) original={} rust={} {} chamadas: {}", *((m + 0x8ed4) as *const i16), r, n, k, detalhe_fita()));
     r
 }
 unsafe extern "thiscall" fn comparar_recuperar_folego(j: usize, teto: u8) {
@@ -13921,6 +14175,7 @@ pub unsafe fn instalar(comparando: bool) {
         desviar_bola as *const () as usize,
         defender as *const () as usize,
         recuperar_folego as *const () as usize,
+        periodo_encerrado as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -14187,6 +14442,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_desviar_bola as *const () as usize,
         comparar_defender as *const () as usize,
         comparar_recuperar_folego as *const () as usize,
+        comparar_periodo_encerrado as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -14292,7 +14548,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_interceptar", "motor_avancar_linha", "motor_arrumar_saida", "motor_arrumar_bola_parada",
         "motor_decidir_sem_bola", "motor_mover_sem_bola",
         "motor_decidir_jogador", "motor_passar", "motor_lancar",
-        "motor_desviar_bola", "motor_defender", "motor_recuperar_folego",
+        "motor_desviar_bola", "motor_defender", "motor_recuperar_folego", "motor_periodo_encerrado",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

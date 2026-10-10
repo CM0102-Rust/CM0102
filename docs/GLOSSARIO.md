@@ -247,6 +247,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6fa250 | `passar` | pass_ball |
 | 0x6f0630 | `pegar_bola` | take_ball |
 | 0x6c50d0 | `penalti` | penalty |
+| 0x6bd930 | `periodo_encerrado` | period_completed |
 | 0x70df70 | `perto_do_gol` | near_goal |
 | 0x70def0 | `perto_do_proprio_gol` | near_own_goal |
 | 0x897dc0 | `pessoa_da_linha` | row_person |

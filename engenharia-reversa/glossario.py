@@ -111,6 +111,7 @@ EN = {
  'desviar_bola': 'deflect_ball',
  'defender': 'save_shot',
  'recuperar_folego': 'recover_stamina',
+ 'periodo_encerrado': 'period_completed',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

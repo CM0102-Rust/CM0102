@@ -959,3 +959,11 @@ Mutações: 6 de 8 pegas (g_20, g_espalma, g_2b, g_dentro, g_espalhar, g_cansa);
 | `recuperar_folego(teto)` | 0x6f5810 | thiscall, ret 4 | match_pl.cpp, sem sorteio: recupera o fôlego (+0x4d) e o teto dele (+0x51). Fator 1, ou 1,4 − 0,0004 × lesão (0x62c3d0) acima de 1000. Sem `teto`, soma 10 × (ritmo +0x34 da ficha + 15) × fator em campo (0x6c38c0 = 1) ou fora do banco (12 × ritmo + 325 com +0x1f = −1), até 10000. Com `teto`, +0x51 = fôlego + (12 × ritmo + 85) × fator, multiplicado por 5,56 × (+0x20 ou +0x21) − 255,76 com esse valor entre 46 e 64; fora de jogo, se a lesão (0x62c590) passar do teto, vira 6500; por fim soma +0x59, até 10000 |
 
 Mutações: 8 de 9 pegas (f_campo, f_banco, f_fora, f_k, f_marca, f_copia, f_6500, f_59); sobrevive f_1000 (lesão exatamente 1000, limite); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).
+
+### Motor de partidas, 103ª leva — o fim do período (oficial em 10/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `periodo_encerrado()` | 0x6bd930 | thiscall | match_eng.cpp (`period_completed`): fecha o período de +0x8ed4 quando o relógio (+0x8ed0) passa do fim mais os acréscimos (+0x8eb7). 1º tempo: placar do intervalo no jogo (+0x4792 +0x45/+0x46), narra 0x20f1, recupera o fôlego e vai ao 2º (1). 2º tempo: pela regra do jogo (+0x38) e o agregado (+0x4b/+0x4c), encerra (4: classificação 0x6be120, teto do fôlego, resumo 0x6ce460; pênaltis em +0x8eb3) ou vai à prorrogação (0x20f2, 2). Prorrogação: 0x20f3 e 2º tempo (3), depois encerra. Período desconhecido: registra o erro (0x944c9f). A classificação e o resumo viram unidades da fita quando chamados direto pela comparada |
+
+Mutações: 9 de 9 pegas (p_passou, p_intervalo, p_20f1, p_3de, p_teto0, p_saida, p_placar, p_fim, p_ordem); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).
