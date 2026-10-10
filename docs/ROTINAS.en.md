@@ -929,3 +929,11 @@ Mutations: 8/8 in the real game up to 2001-08-20. Rust ×2 and original careers 
 | `passar(tipo, receptor, saida, a4, a5)` | 0x6fa250 | thiscall, ret 0x14 | match_pl.cpp: the pass (+0x2b goes up). Executes through 0x6fad40 (13.8 KB, new tape port: records x, y, type, receiver and the 4th argument and returns the answer with the byte it writes into the out slot). Outside type 0x36 looks for the offside player (0x6cfd70); draw(2·d1·d2 of his distance to goal) zero: offside, comment 0x1f78, count (+0xf5ca), offside player's +0x13, −1 in the passer's +1, ball to the other side (+0x8eb2 = 7). Otherwise logs the event (0x6bb9a0). With the pass out byte: the receiver becomes the taker (+0xf57a), possession (+0x8d46) and the receiver's immediate decision (0x7103e0) by draw(80) against +0x105·+0x107 |
 
 Mutations: 8/8 in the real game up to 2001-08-20, with nested comparison (before it `p_2b` survived: the pass was never compared).
+
+### Match engine, 99th batch — the long ball (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `lancar(modo, refinar)` | 0x6fa490 | thiscall, ret 8 | match_pl.cpp: hoof, cross or long ball. The direction (+0x19a, degrees) marks which sides the ball goes to; near goal and off the centre, cross (0x5e) to row 0..1/10..11 and column 3..5; in the own half 0x5c (mode 4) or 0x5d; from midfield forward 0x5b (mode 4) or 9/0x3e (ball in play); the offsets are draws of 2 to 5 around the spot. Without `refinar`, far from the own goal and with +0x10b or draw(3), the target goes halfway to the wing (column 1 or 7) and the box. Executes (0x6fad40), offside as 0x6fa250, ball off the grid: 0x6cd490 (a tape unit) |
+
+Mutations: 9/9 in the real game up to 2001-08-20. Rust ×2 and original careers at `cd2c213e0ddda4d1`.

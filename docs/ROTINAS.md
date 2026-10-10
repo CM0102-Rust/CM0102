@@ -927,3 +927,11 @@ Mutações: 8/8 no jogo real até 20/08/2001. Carreiras Rust ×2 e original igua
 | `passar(tipo, receptor, saida, a4, a5)` | 0x6fa250 | thiscall, ret 0x14 | match_pl.cpp: o passe (+0x2b sobe). Executa pela 0x6fad40 (13,8 KB, nova porta da fita: grava x, y, tipo, receptor e o 4o argumento e devolve a resposta com o byte que ela escreve na saída). Fora do tipo 0x36 procura o impedido (0x6cfd70); sorteio(2·d1·d2 da distância dele ao gol) zero: impedimento, narra 0x1f78, conta (+0xf5ca), +0x13 do impedido, −1 em +1 do passador, bola com o outro lado (+0x8eb2 = 7). Senão registra o lance (0x6bb9a0). Com a saída do passe: receptor vira o batedor (+0xf57a), posses (+0x8d46) e decisão imediata do receptor (0x7103e0) por sorteio(80) contra +0x105·+0x107 |
 
 Mutações: 8/8 no jogo real até 20/08/2001, com a comparação aninhada (antes dela `p_2b` sobrevivia: o passe nunca era comparado).
+
+### Motor de partidas, 99ª leva — o lançamento (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `lancar(modo, refinar)` | 0x6fa490 | thiscall, ret 8 | match_pl.cpp: chutão, cruzamento ou bola longa. A direção (+0x19a, graus) marca para que lados a bola vai; perto do gol e fora do miolo, cruzamento (0x5e) para a linha 0..1/10..11 e coluna 3..5; no próprio campo 0x5c (modo 4) ou 0x5d; do meio para a frente 0x5b (modo 4) ou 9/0x3e (bola em jogo); os desvios são sorteios de 2 a 5 em torno da marca. Sem `refinar`, longe do próprio gol e com +0x10b ou sorteio(3), o alvo vai a meio caminho da ponta (coluna 1 ou 7) e da área. Executa (0x6fad40), impedimento como 0x6fa250, bola fora da grade: 0x6cd490 (unidade da fita) |
+
+Mutações: 9/9 no jogo real até 20/08/2001. Carreiras Rust ×2 e original em `cd2c213e0ddda4d1`.

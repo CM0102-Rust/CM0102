@@ -74,6 +74,7 @@ O exe importa 144 funções. Tudo o que ele sabe do mundo entra por elas, pela m
 | Ambiente, `GetCommandLineA` | CRT na partida | fixos pelo `simular.py` |
 | Memória: `Heap*`, `GlobalAlloc`, `VirtualAlloc` | CRT, Database.cpp | regiões fixas |
 | Listagem de pastas: `FindFirstFileA` + datas de arquivo | utils.cpp 0x90bf90 (tela de arquivos, configuração, menus, Setup) | **não fixado**: o conteúdo das pastas do jogo entra na carreira; um save novo pode mudar a impressão. Comparar execuções feitas com a pasta no mesmo estado |
+| Arquivos de idioma `jogo\*.lng` | Database.cpp 0x5339a0 (troca de idioma: grava `<idioma>.lng` em `CM3_TEMP`, que sem a variável é a pasta do jogo) | **regravados pelo próprio jogo** em algumas carreiras automáticas. O conteúdo entra na impressão (a referência mudou de `c76ad0ff6ce3daa6` para `cd2c213e0ddda4d1` em 10/10 às 13h04, quando o conteúdo foi trocado); a data não (regravação idêntica às 15h01 não mudou nada) |
 | Caminhos: `GetCurrentDirectoryA`, `GetFullPathNameA`, `GetModuleFileNameA` | CRT, Setup | constantes enquanto o jogo não mudar de pasta |
 | Registro: `RegQueryValueExA` | main.cpp 0x68d370 (partida) | constante na máquina |
 | Tela e fontes: `GetSystemMetrics`, `GetDeviceCaps`, `GetTextMetricsA` | game_config.cpp, display.cpp | constantes na máquina (mudar a resolução do Windows pode mudar a impressão) |

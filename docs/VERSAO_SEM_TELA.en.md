@@ -76,6 +76,7 @@ The exe imports 144 functions. Everything it knows about the world comes in thro
 | Environment, `GetCommandLineA` | CRT at startup | pinned by `simular.py` |
 | Memory: `Heap*`, `GlobalAlloc`, `VirtualAlloc` | CRT, Database.cpp | fixed regions |
 | Folder listing: `FindFirstFileA` + file dates | utils.cpp 0x90bf90 (files screen, configuration, menus, Setup) | **not pinned**: the contents of the game folders go into the career; a new save can change the fingerprint. Compare runs made with the folder in the same state |
+| Language files `jogo\*.lng` | Database.cpp 0x5339a0 (language switch: writes `<language>.lng` into `CM3_TEMP`, which without the variable is the game folder) | **rewritten by the game itself** in some automatic careers. The content goes into the fingerprint (the reference changed from `c76ad0ff6ce3daa6` to `cd2c213e0ddda4d1` on 2026-10-10 at 13:04, when the content was replaced); the date does not (an identical rewrite at 15:01 changed nothing) |
 | Paths: `GetCurrentDirectoryA`, `GetFullPathNameA`, `GetModuleFileNameA` | CRT, Setup | constant as long as the game does not change folder |
 | Registry: `RegQueryValueExA` | main.cpp 0x68d370 (startup) | constant on the machine |
 | Screen and fonts: `GetSystemMetrics`, `GetDeviceCaps`, `GetTextMetricsA` | game_config.cpp, display.cpp | constant on the machine (changing the Windows resolution can change the fingerprint) |

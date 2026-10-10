@@ -178,6 +178,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cc070 | `jogadores_no_trajeto` | players_on_path |
 | 0x6bba50 | `lado_do_lance` | side_of_move |
 | 0x6d42a0 | `lado_sob_controle` | side_under_control |
+| 0x6fa490 | `lancar` | long_ball |
 | 0x6bab90 | `lance_valendo` | move_counts |
 | 0x6c4290 | `lateral` | throw_in |
 | 0x717400 | `ler_1bc` | read_1bc |
