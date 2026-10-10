@@ -913,3 +913,11 @@ Mutations: 8/10 in the real game up to 2001-08-20. `s_formacao` (the 0x7103e0 di
 | `mover_sem_bola()` | 0x714d40 | thiscall | match_pl.cpp, ~4.7 KB (outside the attacking band; inside it, with the ball in play, it is 0x713fc0): set piece (spot, 0x100), formation (0x68), run beyond the offside line (0x7a, by record +0x105/+0x106/+0x10a/+0x10b and the kept goalkeeper), support and pressing (0x100), man-marking (+0x1aa, 0x105, or drop), pressing threshold (1.5 or ~2, reduced without +0x106/+0x10a and by the draw against +0x1a2). Goalkeeper: picks up and comments (0x1f46, 0x103), comes out (0x103) or returns (0x71). The others: deep (0x78), advance (0x6b), go to the ball (0x100; on it picks up and comments 0x1f46/0x2113, or 0x104), stay in the opponent's area (0x104), cell (0x68/0x76) |
 
 Mutations: 9/12 in the real game up to 2001-08-20, including batch 95's `s_fica` and `s_formacao`, now caught by the before-call snapshot. Survivors: `m_goleiro_9` (no kept goalkeeper), `m_2113` (set-piece comment near goal with +0x1cd) and `m_largar` (marked player at position −3): situations that did not occur before August.
+
+### Match engine, 97th batch — each player's decision at every tick (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `decidir_jogador()` | 0x7103e0 | thiscall | match_pl.cpp: off the ball, "switches off" (0x67) when draw(10) + +0x4d·c does not beat draw(65); with the ball out of the side's reach, draw(20) zero and no +0x10d switches off tiring (+0x35 − 15, +0x2b = 1, +0x4d + 5..9); with the side in situation 5 (+0x1ab) and far from goal, switches off without the −15; with +0x2b, idle. Before each outcome the marked players (+0x1ae) move (0x714d40) by draw(900) against +0x107·+0x104. The ball holder dribbles (0x7109f0, new tape port) and may decide again (draw(+0x7d) against draw(5)); the others go to 0x713fc0 (ball with the side, in the band, in play) or 0x714d40 |
+
+Mutations: 8/8 in the real game up to 2001-08-20. Rust ×2 and original careers equal at `cd2c213e0ddda4d1` (2,357,622,872 draws): the reference changed because the language files (`jogo\*.lng`) were rewritten at 13:04 on 2026-10-10, outside this work.

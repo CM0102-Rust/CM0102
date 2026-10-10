@@ -911,3 +911,11 @@ Mutações: 8/10 no jogo real até 20/08/2001. `s_formacao` (o despachante 0x710
 | `mover_sem_bola()` | 0x714d40 | thiscall | match_pl.cpp, ~4,7 KB (fora da faixa de ataque; dentro dela, com a bola em jogo, é 0x713fc0): bola parada (marca, 0x100), formação (0x68), infiltração além da linha de impedimento (0x7a, pela ficha +0x105/+0x106/+0x10a/+0x10b e o goleiro guardado), apoio e pressão (0x100), marcação individual (+0x1aa, 0x105, ou larga), limiar de pressão (1,5 ou ~2, reduzido sem +0x106/+0x10a e pelo sorteio contra +0x1a2). Goleiro: pega e narra (0x1f46, 0x103), sai à bola (0x103) ou volta (0x71). Os outros: fundo (0x78), avançar (0x6b), ir à bola (0x100; nela pega e narra 0x1f46/0x2113, ou 0x104), ficar na área adversária (0x104), casa (0x68/0x76) |
 
 Mutações: 9/12 no jogo real até 20/08/2001, incluindo `s_fica` e `s_formacao` da leva 95, agora pegas pela foto de antes da chamada. Sobreviveram `m_goleiro_9` (sem goleiro guardado), `m_2113` (comentário de bola parada perto do gol com +0x1cd) e `m_largar` (marcado com posição −3): situações que não ocorreram até agosto.
+
+### Motor de partidas, 97ª leva — a decisão de cada jogador a cada instante (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `decidir_jogador()` | 0x7103e0 | thiscall | match_pl.cpp: sem a bola, "desliga" (0x67) se sorteio(10) + +0x4d·c não passar de sorteio(65); com a bola fora do alcance do lado, sorteio(20) zero e sem +0x10d desliga cansando (+0x35 − 15, +0x2b = 1, +0x4d + 5..9); com o lado na situação 5 (+0x1ab) e longe do gol, desliga sem o −15; com +0x2b, parado. Antes de cada desfecho os marcados (+0x1ae) se mexem (0x714d40) por sorteio(900) contra +0x107·+0x104. O dono da bola conduz (0x7109f0, nova porta da fita) e pode decidir de novo (sorteio(+0x7d) contra sorteio(5)); os outros vão a 0x713fc0 (bola com o lado, na faixa, em jogo) ou 0x714d40 |
+
+Mutações: 8/8 no jogo real até 20/08/2001. Carreiras Rust ×2 e original iguais em `cd2c213e0ddda4d1` (2.357.622.872 sorteios): a referência mudou porque os arquivos de idioma (`jogo\*.lng`) foram reescritos às 13h04 de 10/10, fora deste trabalho.
