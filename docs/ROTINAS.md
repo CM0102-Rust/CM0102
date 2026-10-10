@@ -871,3 +871,11 @@ Mutações: 7/9 no jogo real até 20/08/2001. `j_ret2` sobreviveu (a resposta 2 
 | `interceptar(x, y, a3, gol, a5, a6)` | 0x6cc540 | thiscall, ret 0x18 | match_eng.cpp: casas de (x, y) até o centro do gol (x 4; y 11 com `gol` = 1, senão 0), ao estilo de Bresenham nos quatro quadrantes; em cada casa sorteia (2) o lado que tenta primeiro e procura nos dois pela 0x6cd3d0 em modo 1 (distância da tabela desde a saída, ou 1000); volta o primeiro código ≠ 0; +0xf5ae zera no início. Comparação com a fita da 0x70dfd0 cobrindo a grade inteira e os bytes de todos os jogadores |
 
 Mutações: 7/7 no jogo real até 20/08/2001 (seis delas refeitas depois de corrigir o `mutacoes.py`).
+
+### Motor de partidas, 92ª leva — avançar uma linha; fita de gravação genérica (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `avancar_linha(direto)` | 0x6f5b80 | thiscall, ret 4 | match_pl.cpp: o jogador anda uma linha para o lado dele (+0x27 = 1 sobe até 11, senão desce até 0); com `direto` vai (0x6f46b0) para a coluna atual na linha da bola (+0x8eb0 + 1 ou +0x8eaf − 1 do motor), senão reposiciona (0x6f09f0) na nova linha com −1, 0, 0. Comparada pela fita genérica: a 0x6f09f0 ganhou porta de gravação e a 0x6f46b0 grava pelo próprio comparador |
+
+Mutações: 4/6 no jogo real até 20/08/2001. `a_11` e `a_0` (limites da linha no caminho pela 0x6f09f0) sobreviveram: o caminho ocorre (`a_direto` e `a_menos1` foram pegas), mas nenhum jogador estava na linha extrema.

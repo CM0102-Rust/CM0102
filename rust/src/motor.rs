@@ -360,8 +360,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6cd3d0, bytes: &[0x83, 0xec, 0x08, 0x8b, 0x44, 0x24, 0x10] },
     Prologo { endereco: 0x6cc070, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x44, 0x24, 0x18] },
     Prologo { endereco: 0x6cc540, bytes: &[0x83, 0xec, 0x14, 0x8a, 0x44, 0x24, 0x24] },
+    Prologo { endereco: 0x6f5b80, bytes: &[0x51, 0x8a, 0x51, 0x27, 0x8a, 0x81, 0x03, 0x01, 0x00, 0x00] },
 ];
-const N: usize = 253;
+const N: usize = 254;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4054,6 +4055,44 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     1
 }
 
+// ---------- nonagesima segunda leva: avancar uma linha (0x6f5b80), com fita generica ----------
+
+/// { 0x6f5b80 } (ret 4, match_pl.cpp) com as chamadas injetadas: o jogador anda uma linha para o
+/// lado dele (+0x27 = 1 sobe ate 11, senao desce ate 0). Com `direto`, vai (0x6f46b0) para a coluna
+/// atual na linha da bola (+0x8eb0 + 1 ou +0x8eaf - 1 do motor); senao reposiciona (0x6f09f0) na
+/// nova linha com -1, 0, 0. Devolve o `eax` da chamada (os chamadores ignoram).
+unsafe fn avancar_linha_com(this: usize, direto: u8, chamar: &mut dyn FnMut(usize, [u32; 5]) -> u32) -> u32 {
+    let x = byte(this, 0x102);
+    let mut y = byte(this, 0x103);
+    let motor = *((this + 0x19e) as *const usize);
+    let sobe = byte(this, 0x27) == 1;
+    if sobe {
+        if y < 11 {
+            y += 1;
+        }
+    } else if y > 0 {
+        y -= 1;
+    }
+    if direto != 0 {
+        let linha = if sobe { byte(motor, 0x8eb0).wrapping_add(1) } else { byte(motor, 0x8eaf).wrapping_sub(1) };
+        return chamar(0x6f46b0, [x as u8 as u32, linha as u8 as u32, 0, 0, 0]);
+    }
+    chamar(0x6f09f0, [x as u8 as u32, y as u8 as u32, u32::MAX, 0, 0])
+}
+
+/// { 0x6f5b80 } (ret 4, match_pl.cpp): ver `avancar_linha_com`.
+unsafe extern "thiscall" fn avancar_linha(this: usize, direto: u8) -> u32 {
+    avancar_linha_com(this, direto, &mut |rotina, a| {
+        if rotina == 0x6f46b0 {
+            let f: unsafe extern "thiscall" fn(usize, i8, i8) -> u32 = core::mem::transmute(0x6f46b0usize);
+            f(this, a[0] as i8, a[1] as i8)
+        } else {
+            let f: unsafe extern "thiscall" fn(usize, i8, i8, i32, u32, u32) -> u32 = core::mem::transmute(0x6f09f0usize);
+            f(this, a[0] as i8, a[1] as i8, -1, 0, 0)
+        }
+    })
+}
+
 // ---------- nonagesima primeira leva: interceptacao no caminho do gol (0x6cc540) ----------
 
 /// { 0x6cc540 } (ret 0x18, match_eng.cpp) com a procura (0x6cd3d0 em modo 1) injetada: alguem
@@ -4173,23 +4212,111 @@ unsafe extern "thiscall" fn procurar_jogada(this: usize, lado: i8, grupo: usize,
     procurar_jogada_com(this, lado, grupo, a3, a4, modo, a6, a7, &mut |p, a| f(p, a[0], a[1], a[2], a[3]))
 }
 
-// Porta de 0x70dfd0 (a jogada, 7 KB: narra, sorteia e mexe no motor e no jogador). Na comparacao,
-// grava cada chamada da original com a resposta e as regioes pedidas pelo comparador como ficaram
-// depois; a copia Rust confere a sequencia e reescreve essas regioes no lugar de jogar de novo.
-static mut PORTA_70DFD0: usize = 0;
+// Fita de chamadas com efeitos (0x70dfd0 a jogada, 0x6f09f0 o reposicionamento, 0x6f46b0 o
+// movimento). Na comparacao de uma rotina portada que as chama, cada chamada da original e gravada
+// com a resposta e as regioes pedidas pelo comparador como ficaram depois; a copia Rust confere a
+// sequencia e reescreve essas regioes no lugar de chamar de novo.
+type Chamada = (usize, usize, [u32; 5], u32, crate::comparacao::Memoria); // (rotina, this, argumentos, resposta, depois)
 #[allow(clippy::type_complexity)]
-static FITA_70DFD0: std::sync::Mutex<Option<(Vec<(usize, usize)>, Vec<(usize, [u32; 4], u8, crate::comparacao::Memoria)>)>> = std::sync::Mutex::new(None);
+static FITA: std::sync::Mutex<Option<(Vec<(usize, usize)>, Vec<Chamada>)>> = std::sync::Mutex::new(None);
+
+fn fita() -> std::sync::MutexGuard<'static, Option<(Vec<(usize, usize)>, Vec<Chamada>)>> {
+    FITA.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+/// Ha uma gravacao aberta (uma comparacao de fora ja grava estas chamadas)?
+fn gravando() -> bool {
+    fita().is_some()
+}
+
+/// Quantas chamadas gravaveis estao em andamento: so as de fora (profundidade 0) entram na fita;
+/// as que uma delas faz por dentro (0x70dfd0 e 0x6f09f0 movem jogadores) ja estao na foto.
+static DENTRO: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+
+/// Roda uma chamada gravavel e guarda-a na fita aberta, com a foto das regioes depois dela.
+unsafe fn chamar_gravando(rotina: usize, this: usize, a: [u32; 5], chamada: impl FnOnce() -> u32) -> u32 {
+    use std::sync::atomic::Ordering::Relaxed;
+    let nivel = DENTRO.fetch_add(1, Relaxed);
+    let r = chamada();
+    DENTRO.fetch_sub(1, Relaxed);
+    if nivel == 0 {
+        gravar_chamada(rotina, this, a, r);
+    }
+    r
+}
+
+unsafe fn gravar_chamada(rotina: usize, this: usize, a: [u32; 5], r: u32) {
+    if let Some((reg, f)) = fita().as_mut() {
+        let depois = crate::comparacao::Memoria::ler(reg);
+        f.push((rotina, this, a, r, depois));
+    }
+}
+
+/// Roda a original gravando as chamadas e a copia Rust reproduzindo-as (`reproduzir`). Devolve as
+/// duas respostas, se as regioes ficaram iguais e se a sequencia de chamadas bateu.
+unsafe fn comparar_com_fita<R>(reg: Vec<(usize, usize)>, original: impl FnOnce() -> R, rust: impl FnOnce(&mut dyn FnMut(usize, usize, [u32; 5], [u32; 5]) -> u32) -> R) -> (R, R, bool, bool, usize) {
+    *fita() = Some((reg.clone(), Vec::new()));
+    // contexto proprio: a rotina comparada pode estar dentro de uma chamada gravavel em andamento (a
+    // 0x6f5b80 roda dentro da 0x6f09f0 no jogo normal); as chamadas dela contam a partir de zero
+    let nivel = DENTRO.swap(0, std::sync::atomic::Ordering::Relaxed);
+    let gravadas = core::cell::RefCell::new(Vec::new());
+    let sequencia = core::cell::Cell::new(true);
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(
+        &reg,
+        || {
+            let r = original();
+            *gravadas.borrow_mut() = fita().take().map_or(Vec::new(), |f| f.1);
+            r
+        },
+        || {
+            let g = gravadas.borrow();
+            let mut prox = g.iter();
+            // (rotina, this, argumentos, mascara dos argumentos que a rotina chamada le)
+            let n = crate::aleatorio::sem_contar(|| {
+                rust(&mut |rotina, this, a, mascara| match prox.next() {
+                    Some((gr, gt, ga, resposta, depois)) if *gr == rotina && *gt == this && (0..5).all(|i| ga[i] & mascara[i] == a[i] & mascara[i]) => {
+                        depois.escrever();
+                        *resposta
+                    }
+                    _ => {
+                        sequencia.set(false);
+                        0
+                    }
+                })
+            });
+            if prox.next().is_some() {
+                sequencia.set(false);
+            }
+            n
+        },
+    );
+    DENTRO.store(nivel, std::sync::atomic::Ordering::Relaxed);
+    let k = gravadas.borrow().len();
+    (r, n, igual, sequencia.get(), k)
+}
+
+// Porta de 0x70dfd0 (a jogada, 7 KB: narra, sorteia e mexe no motor e no jogador).
+static mut PORTA_70DFD0: usize = 0;
 const PROLOGO_70DFD0: Prologo = Prologo { endereco: 0x70dfd0, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] };
 
 unsafe extern "thiscall" fn porta_70dfd0(p: usize, a1: u32, a2: u32, a3: u32, a4: u32) -> u8 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u8 = core::mem::transmute(PORTA_70DFD0);
-    let r = f(p, a1, a2, a3, a4);
-    if let Some((reg, fita)) = FITA_70DFD0.lock().unwrap_or_else(|e| e.into_inner()).as_mut() {
-        let depois = crate::comparacao::Memoria::ler(reg);
-        fita.push((p, [a1, a2, a3, a4], r, depois));
-    }
-    r
+    chamar_gravando(0x70dfd0, p, [a1, a2, a3, a4, 0], || f(p, a1, a2, a3, a4) as u32) as u8
 }
+
+// Porta de 0x6f09f0 (reposiciona o jogador, 13 KB, sorteia e mexe em tudo em volta).
+static mut PORTA_6F09F0: usize = 0;
+const PROLOGO_6F09F0: Prologo = Prologo { endereco: 0x6f09f0, bytes: &[0x81, 0xec, 0x5c, 0x02, 0x00, 0x00] };
+
+unsafe extern "thiscall" fn porta_6f09f0(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
+    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> u32 = core::mem::transmute(PORTA_6F09F0);
+    chamar_gravando(0x6f09f0, p, [a1, a2, a3, a4, a5], || f(p, a1, a2, a3, a4, a5))
+}
+
+/// 0x70dfd0 recebe os quatro argumentos inteiros.
+const MASCARA_70DFD0: [u32; 5] = [u32::MAX, u32::MAX, u32::MAX, u32::MAX, 0];
+/// 0x6f09f0 e 0x6f46b0 leem x e y como bytes (o resto do registro empilhado e lixo).
+const MASCARA_XY: [u32; 5] = [0xff, 0xff, u32::MAX, u32::MAX, u32::MAX];
 
 // ---------- octogesima nona leva: decisao pela classificacao do grupo, narracao da classificacao ----------
 
@@ -10721,6 +10848,13 @@ unsafe extern "thiscall" fn comparar_defesa(this: usize, a: i8, b: i8, a3: u8, c
 
 unsafe extern "thiscall" fn comparar_mover_para(this: usize, x: i8, y: i8) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i8, i8)>(134);
+    if gravando() {
+        chamar_gravando(0x6f46b0, this, [x as u8 as u32, y as u8 as u32, 0, 0, 0], || {
+            o(this, x, y);
+            0
+        });
+        return;
+    }
     let motor = *((this + 0x19e) as *const usize);
     let antiga = casa_da_grade(motor, byte(this, 0x102), byte(this, 0x103)) as usize;
     let nova = casa_da_grade(motor, x, y) as usize;
@@ -11285,6 +11419,9 @@ unsafe extern "thiscall" fn comparar_narrar_classificacao(this: usize, lado: u32
 }
 unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: u32, gol: i8, a5: u32, a6: u32) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i8, i8, u32, i8, u32, u32) -> u8>(252);
+    if gravando() {
+        return o(this, x, y, a3, gol, a5, a6);
+    }
     // o que as jogadas mudam e a copia Rust le: a grade inteira, os bytes de todos os jogadores, os
     // campos da bola no motor e o sorteio
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -11295,47 +11432,32 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
             reg.extend([(j + 0x12, 1), (j + 0x19, 1), (j + 0x2b, 1), (j + 0x198, 2)]);
         }
     }
-    *FITA_70DFD0.lock().unwrap_or_else(|e| e.into_inner()) = Some((reg.clone(), Vec::new()));
-    let fita = core::cell::RefCell::new(Vec::new());
-    let sequencia = core::cell::Cell::new(true);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(
-        &reg,
-        || {
-            let r = o(this, x, y, a3, gol, a5, a6);
-            *fita.borrow_mut() = FITA_70DFD0.lock().unwrap_or_else(|e| e.into_inner()).take().map_or(Vec::new(), |f| f.1);
-            r
-        },
-        || {
-            let gravadas = fita.borrow();
-            let mut prox = gravadas.iter();
-            let mut jogada = |p: usize, a: [u32; 4]| match prox.next() {
-                Some((gp, ga, gr, depois)) if *gp == p && *ga == a => {
-                    depois.escrever();
-                    *gr
-                }
-                _ => {
-                    sequencia.set(false);
-                    0
-                }
-            };
-            let n = crate::aleatorio::sem_contar(|| {
-                interceptar_com(this, x, y, a3, gol, a5, a6, &mut |lado, grupo, v, a3, a5, a6| procurar_jogada_com(this, lado, grupo, v, a3, 1, a5, a6, &mut jogada))
-            });
-            if prox.next().is_some() {
-                sequencia.set(false);
-            }
-            n
-        },
-    );
-    let k = fita.borrow().len();
-    PLACAR.registrar(igual && sequencia.get() && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
+    let (r, n, igual, sequencia, k) = comparar_com_fita(reg, || o(this, x, y, a3, gol, a5, a6), |chamar| {
+        let mut jogada = |p: usize, a: [u32; 4]| chamar(0x70dfd0, p, [a[0], a[1], a[2], a[3], 0], MASCARA_70DFD0) as u8;
+        interceptar_com(this, x, y, a3, gol, a5, a6, &mut |lado, grupo, v, a3, a5, a6| procurar_jogada_com(this, lado, grupo, v, a3, 1, a5, a6, &mut jogada))
+    });
+    PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
+    r
+}
+unsafe extern "thiscall" fn comparar_avancar_linha(this: usize, direto: u8) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u8) -> u32>(253);
+    if gravando() {
+        return o(this, direto);
+    }
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.push((this + 0x102, 2));
+    let (r, _, igual, sequencia, k) = comparar_com_fita(reg, || o(this, direto), |chamar| {
+        avancar_linha_com(this, direto, &mut |rotina, a| chamar(rotina, this, a, MASCARA_XY))
+    });
+    // a resposta e o `eax` da chamada (o movimento nao devolve nada): nao entra na comparacao
+    PLACAR.registrar(igual && sequencia && k == 1, || format!("avancar_linha({}) {} chamadas", direto, k));
     r
 }
 comparar_valor!(comparar_jogadores_no_trajeto, jogadores_no_trajeto, 251, (x1: i8, y1: i8, x2: i8, y2: i8) -> u8);
 #[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn comparar_procurar_jogada(this: usize, lado: i8, grupo: usize, a3: u32, a4: u32, modo: u8, a6: u32, a7: u32) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i8, usize, u32, u32, u8, u32, u32) -> u8>(250);
-    if FITA_70DFD0.lock().unwrap_or_else(|e| e.into_inner()).is_some() {
+    if gravando() {
         return o(this, lado, grupo, a3, a4, modo, a6, a7);
     }
     // o que a jogada muda e a copia Rust le: a lista e a quantidade do lado, os bytes de cada
@@ -11348,39 +11470,12 @@ unsafe extern "thiscall" fn comparar_procurar_jogada(this: usize, lado: i8, grup
         let j = *((lista + 4 * k) as *const usize);
         reg.extend([(j + 0x12, 1), (j + 0x19, 1), (j + 0x2b, 1)]);
     }
-    *FITA_70DFD0.lock().unwrap_or_else(|e| e.into_inner()) = Some((reg.clone(), Vec::new()));
-    let fita = core::cell::RefCell::new(Vec::new());
-    let sequencia = core::cell::Cell::new(true);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(
-        &reg,
-        || {
-            let r = o(this, lado, grupo, a3, a4, modo, a6, a7);
-            *fita.borrow_mut() = FITA_70DFD0.lock().unwrap_or_else(|e| e.into_inner()).take().map_or(Vec::new(), |f| f.1);
-            r
-        },
-        || {
-            let gravadas = fita.borrow();
-            let mut prox = gravadas.iter();
-            let n = crate::aleatorio::sem_contar(|| {
-                procurar_jogada_com(this, lado, grupo, a3, a4, modo, a6, a7, &mut |p, a| match prox.next() {
-                    Some((gp, ga, gr, depois)) if *gp == p && *ga == a => {
-                        depois.escrever();
-                        *gr
-                    }
-                    _ => {
-                        sequencia.set(false);
-                        0
-                    }
-                })
-            });
-            if prox.next().is_some() {
-                sequencia.set(false);
-            }
-            n
-        },
+    let (r, n, igual, sequencia, k) = comparar_com_fita(
+        reg,
+        || o(this, lado, grupo, a3, a4, modo, a6, a7),
+        |chamar| procurar_jogada_com(this, lado, grupo, a3, a4, modo, a6, a7, &mut |p, a| chamar(0x70dfd0, p, [a[0], a[1], a[2], a[3], 0], MASCARA_70DFD0) as u8),
     );
-    let k = fita.borrow().len();
-    PLACAR.registrar(igual && sequencia.get() && r == n, || format!("procurar_jogada({} modo {}) original={} rust={} ({} jogadas)", lado, modo, r, n, k));
+    PLACAR.registrar(igual && sequencia && r == n, || format!("procurar_jogada({} modo {}) original={} rust={} ({} jogadas)", lado, modo, r, n, k));
     r
 }
 unsafe extern "thiscall" fn comparar_mascara_da_formacao(this: usize) -> u32 {
@@ -11724,6 +11819,9 @@ pub unsafe fn instalar(comparando: bool) {
         if let Some(t) = desvios::desviar("motor_porta_70dfd0 (gravacao)", &PROLOGO_70DFD0, porta_70dfd0 as *const () as usize) {
             PORTA_70DFD0 = t;
         }
+        if let Some(t) = desvios::desviar("motor_porta_6f09f0 (gravacao)", &PROLOGO_6F09F0, porta_6f09f0 as *const () as usize) {
+            PORTA_6F09F0 = t;
+        }
     }
     let rust: [usize; N] = [
         tabela_a as *const () as usize,
@@ -11979,6 +12077,7 @@ pub unsafe fn instalar(comparando: bool) {
         procurar_jogada as *const () as usize,
         jogadores_no_trajeto as *const () as usize,
         interceptar as *const () as usize,
+        avancar_linha as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -12234,6 +12333,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_procurar_jogada as *const () as usize,
         comparar_jogadores_no_trajeto as *const () as usize,
         comparar_interceptar as *const () as usize,
+        comparar_avancar_linha as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -12336,7 +12436,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_forca_do_lado",
         "motor_bola_no_ataque", "motor_evoluir_momento", "motor_partida_de_interesse",
         "motor_grupo_decidido", "motor_narrar_classificacao", "motor_procurar_jogada", "motor_jogadores_no_trajeto",
-        "motor_interceptar",
+        "motor_interceptar", "motor_avancar_linha",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
