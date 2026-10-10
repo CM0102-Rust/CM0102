@@ -937,3 +937,11 @@ Mutations: 8/8 in the real game up to 2001-08-20, with nested comparison (before
 | `lancar(modo, refinar)` | 0x6fa490 | thiscall, ret 8 | match_pl.cpp: hoof, cross or long ball. The direction (+0x19a, degrees) marks which sides the ball goes to; near goal and off the centre, cross (0x5e) to row 0..1/10..11 and column 3..5; in the own half 0x5c (mode 4) or 0x5d; from midfield forward 0x5b (mode 4) or 9/0x3e (ball in play); the offsets are draws of 2 to 5 around the spot. Without `refinar`, far from the own goal and with +0x10b or draw(3), the target goes halfway to the wing (column 1 or 7) and the box. Executes (0x6fad40), offside as 0x6fa250, ball off the grid: 0x6cd490 (a tape unit) |
 
 Mutations: 9/9 in the real game up to 2001-08-20. Rust ×2 and original careers at `cd2c213e0ddda4d1`.
+
+### Match engine, 100th batch — the deflected ball (official on 2026-10-10)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `desviar_bola(x, y, espalhar, lado, dentro, cansa, chutador)` | 0x6cd770 | thiscall, ret 0x1c | match_eng.cpp (13 callers): releases the ball and it bounces off (x, y): over the sideline (column 9 or −1) off the centre by draw(4), or at x, y ± draw(spread + 1) (with `dentro`, until the row fits). Height +0x8eaa, spin +0x8ed8 from table 0xb67c30 by the offset, +0x8ea9 = draw(4), possession of `lado` (+0x8d46). With `cansa`, draws into the players' +0x2b (0x7160d0). On the goal line next to goal with the `chutador`: 0x70c040 or 0x70a910 (new tape ports); then the ball out (0x6cd490) |
+
+Mutations: 8 of 8 caught (b_lateral, b_espalhar, b_dentro, b_altura, b_efeito, b_estado, b_cansa, b_fundo); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).

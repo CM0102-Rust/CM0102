@@ -935,3 +935,11 @@ Mutações: 8/8 no jogo real até 20/08/2001, com a comparação aninhada (antes
 | `lancar(modo, refinar)` | 0x6fa490 | thiscall, ret 8 | match_pl.cpp: chutão, cruzamento ou bola longa. A direção (+0x19a, graus) marca para que lados a bola vai; perto do gol e fora do miolo, cruzamento (0x5e) para a linha 0..1/10..11 e coluna 3..5; no próprio campo 0x5c (modo 4) ou 0x5d; do meio para a frente 0x5b (modo 4) ou 9/0x3e (bola em jogo); os desvios são sorteios de 2 a 5 em torno da marca. Sem `refinar`, longe do próprio gol e com +0x10b ou sorteio(3), o alvo vai a meio caminho da ponta (coluna 1 ou 7) e da área. Executa (0x6fad40), impedimento como 0x6fa250, bola fora da grade: 0x6cd490 (unidade da fita) |
 
 Mutações: 9/9 no jogo real até 20/08/2001. Carreiras Rust ×2 e original em `cd2c213e0ddda4d1`.
+
+### Motor de partidas, 100ª leva — a bola desviada (oficial em 10/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `desviar_bola(x, y, espalhar, lado, dentro, cansa, chutador)` | 0x6cd770 | thiscall, ret 0x1c | match_eng.cpp (13 chamadores): solta a bola e ela espirra de (x, y): pela lateral (coluna 9 ou −1) fora do miolo por sorteio(4), ou em x, y ± sorteio(espalhar + 1) (com `dentro`, até a linha caber). Altura +0x8eaa, efeito +0x8ed8 pela tabela 0xb67c30 do desvio, +0x8ea9 = sorteio(4), posse do `lado` (+0x8d46). Com `cansa`, sorteios em +0x2b dos jogadores (0x7160d0). Na linha de fundo junto ao gol com o `chutador`: 0x70c040 ou 0x70a910 (novas portas da fita); depois, a bola fora (0x6cd490) |
+
+Mutações: 8 de 8 pegas (b_lateral, b_espalhar, b_dentro, b_altura, b_efeito, b_estado, b_cansa, b_fundo); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).

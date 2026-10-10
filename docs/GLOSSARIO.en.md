@@ -120,6 +120,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6eecb0 | `desempenho_na_partida` | match_performance |
 | 0x6f56c0 | `desgastar` | tire (fatigue) |
 | 0x5b58e0 | `designado_da_posicao` | designated_for_position |
+| 0x6cd770 | `desviar_bola` | deflect_ball |
 | 0x715f30 | `diferenca_do_jogador` | difference_of_player |
 | 0x6c4130 | `diferenca_jogador` | player_difference |
 | 0x6c4180 | `diferenca_lado` | side_difference |
