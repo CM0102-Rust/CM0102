@@ -216,6 +216,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cfd10 | `motor_punir_falta` | engine_punish_foul |
 | 0x6cfcd0 | `motor_punir_lance` | engine_punish_move |
 | 0x6f46b0 | `mover_para` | move_to |
+| 0x714d40 | `mover_sem_bola` | move_off_ball |
 | 0x6f4650 | `na_area` | in_the_box |
 | 0x714c60 | `na_lista` | in_list |
 | 0x7e6f20 | `nacao_do_grupo` | group_nation |
