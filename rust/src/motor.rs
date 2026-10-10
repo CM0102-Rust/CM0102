@@ -370,8 +370,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6fa490, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
     Prologo { endereco: 0x6cd770, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x8e, 0x82, 0xf5, 0x00, 0x00] },
     Prologo { endereco: 0x70d430, bytes: &[0x66, 0x81, 0x7c, 0x24, 0x04, 0xe8, 0x03] },
+    Prologo { endereco: 0x6f5810, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0xf1] },
 ];
-const N: usize = 263;
+const N: usize = 264;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4062,6 +4063,74 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- centesima segunda leva: o folego do jogador (0x6f5810) ----------
+
+/// { 0x6f5810 } (ret 4, match_pl.cpp): recupera o folego (+0x4d) e o teto dele (+0x51), sem sortear.
+/// Sem ficha (+0x6d) nada muda. O fator e 1, ou 1,4 - 0,0004 x lesao (0x62c3d0) acima de 1000.
+/// Sem `teto`: em campo (0x6c38c0 = 1) soma 10 x (ritmo +0x34 da ficha + 15) x fator; senao, fora
+/// do banco (+0x19 >= 0), soma 12 x ritmo + 325 (com +0x1f = -1) ou o mesmo 10 x (ritmo + 15); o
+/// folego para em 10000. Com `teto`: +0x51 = folego + (12 x ritmo + 85) x fator, com a base vezes
+/// 5,56 x +0x20 - 255,76 quando +0x20 (ou +0x21 se aquele for -1) fica entre 46 e 64; sem os dois,
+/// no banco o teto e o folego. Fora de jogo (+0x1c zero) e com pessoa, se a lesao (0x62c590,
+/// ate 6500) passar do teto, o teto vira 6500. Por fim o teto soma +0x59 e para em 10000.
+unsafe extern "thiscall" fn recuperar_folego(j: usize, teto: u8) {
+    let lesao: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(0x62c3d0usize);
+    let limite: unsafe extern "thiscall" fn(usize, usize, u32) -> i16 = core::mem::transmute(0x62c590usize);
+    let papel: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+    let f = |o: usize| (j + o) as *mut f32;
+    let ficha = *((j + 0x6d) as *const usize);
+    if ficha == 0 {
+        return;
+    }
+    let lesoes = *((0xb63d28) as *const usize);
+    let pessoa = *((j + 0x69) as *const usize);
+    let mut fator = 1.0f64;
+    let v = lesao(lesoes, *(pessoa as *const u32));
+    if v > 1000 {
+        fator = f64_em(0x968dc0) - v as f64 * f64_em(0x96a608);
+    }
+    let ritmo = byte(ficha, 0x34) as i32;
+    if teto == 0 {
+        let m = *((j + 0x19e) as *const usize);
+        let base = if m != 0 && papel(m, j) == 1 {
+            Some((ritmo + 15) * 10)
+        } else if byte(j, 0x19) < 0 {
+            None
+        } else if byte(j, 0x1f) == -1 {
+            Some(ritmo * 12 + 0x145)
+        } else {
+            Some((ritmo + 15) * 10)
+        };
+        if let Some(base) = base {
+            let x = base as f64 * fator + *f(0x4d) as f64;
+            *f(0x4d) = x as f32;
+            if x > f64_em(0x968910) {
+                *f(0x4d) = 10000.0;
+            }
+        }
+    } else {
+        let marca = if byte(j, 0x20) >= 0 { byte(j, 0x20) } else { byte(j, 0x21) };
+        let k = ritmo * 12 + 0x55;
+        if marca < 0 && byte(j, 0x19) < 0 {
+            *f(0x51) = *f(0x4d);
+        } else {
+            let v = if marca > 0x2d && marca < 0x41 { (marca as f64 * f64_em(0x96d798) - f64_em(0x96d790)) * k as f64 } else { k as f64 };
+            *f(0x51) = (v * fator + *f(0x4d) as f64) as f32;
+            if byte(j, 0x1c) == 0 && pessoa != 0 {
+                let l = limite(lesoes, pessoa, 0).min(0x1964);
+                if l as f32 > *f(0x51) {
+                    *f(0x51) = 6500.0;
+                }
+            }
+        }
+    }
+    let x = *f(0x59) as f64 + *f(0x51) as f64;
+    *f(0x51) = x as f32;
+    if x > f64_em(0x968910) {
+        *f(0x51) = 10000.0;
+    }
 }
 
 // ---------- centesima primeira leva: a defesa do goleiro (0x70d430) ----------
@@ -13015,6 +13084,12 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+unsafe extern "thiscall" fn comparar_recuperar_folego(j: usize, teto: u8) {
+    let f = orig::<unsafe extern "thiscall" fn(usize, u8)>(263);
+    let regioes = [(j + 0x4d, 8)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || f(j, teto), || recuperar_folego(j, teto));
+    PLACAR.registrar(igual, || format!("recuperar_folego(teto {}) original={:x?} rust={:x?}", teto, mo, mr));
+}
 unsafe extern "thiscall" fn comparar_defender(j: usize, forca: i16) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i16) -> u32>(262);
     if gravando_no_topo() {
@@ -13845,6 +13920,7 @@ pub unsafe fn instalar(comparando: bool) {
         lancar as *const () as usize,
         desviar_bola as *const () as usize,
         defender as *const () as usize,
+        recuperar_folego as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -14110,6 +14186,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_lancar as *const () as usize,
         comparar_desviar_bola as *const () as usize,
         comparar_defender as *const () as usize,
+        comparar_recuperar_folego as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -14215,7 +14292,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_interceptar", "motor_avancar_linha", "motor_arrumar_saida", "motor_arrumar_bola_parada",
         "motor_decidir_sem_bola", "motor_mover_sem_bola",
         "motor_decidir_jogador", "motor_passar", "motor_lancar",
-        "motor_desviar_bola", "motor_defender",
+        "motor_desviar_bola", "motor_defender", "motor_recuperar_folego",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

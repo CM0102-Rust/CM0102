@@ -951,3 +951,11 @@ Mutações: 8 de 8 pegas (b_lateral, b_espalhar, b_dentro, b_altura, b_efeito, b
 | `defender(forca)` | 0x70d430 | thiscall, ret 4 | match_pl.cpp: acima de 1000, ou sem vencer sorteio(ficha +0x21 + +0xa5) contra sorteio(20), não defende (0x1fe2, devolve 1). Senão espalma (+0x106 acima de sorteio(8): 0x1fe3, bola desviada 3 casas) ou rebate (0x216f, 1 casa; cansa +0x35 − 250 e pode perder sorteio(3) em +0x17 com o desempenho refeito, 0x7172d0/0x6eecb0); +0x2b soma sorteio(2 ou 3); a bola fica em jogo com sorteio(10) e o goleiro é chutador da linha de fundo com sorteio(200) zero. A bola desviada (0x6cd770) é unidade da fita quando chamada direto pela comparada |
 
 Mutações: 6 de 8 pegas (g_20, g_espalma, g_2b, g_dentro, g_espalhar, g_cansa); sobrevivem g_1000 (força exatamente 1000) e g_17 (rebate com sorteio(30 × v + 20) zero), caminhos raros; jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).
+
+### Motor de partidas, 102ª leva — o fôlego do jogador (oficial em 10/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `recuperar_folego(teto)` | 0x6f5810 | thiscall, ret 4 | match_pl.cpp, sem sorteio: recupera o fôlego (+0x4d) e o teto dele (+0x51). Fator 1, ou 1,4 − 0,0004 × lesão (0x62c3d0) acima de 1000. Sem `teto`, soma 10 × (ritmo +0x34 da ficha + 15) × fator em campo (0x6c38c0 = 1) ou fora do banco (12 × ritmo + 325 com +0x1f = −1), até 10000. Com `teto`, +0x51 = fôlego + (12 × ritmo + 85) × fator, multiplicado por 5,56 × (+0x20 ou +0x21) − 255,76 com esse valor entre 46 e 64; fora de jogo, se a lesão (0x62c590) passar do teto, vira 6500; por fim soma +0x59, até 10000 |
+
+Mutações: 8 de 9 pegas (f_campo, f_banco, f_fora, f_k, f_marca, f_copia, f_6500, f_59); sobrevive f_1000 (lesão exatamente 1000, limite); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).

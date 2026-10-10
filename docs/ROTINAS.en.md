@@ -953,3 +953,11 @@ Mutations: 8 of 8 caught (b_lateral, b_espalhar, b_dentro, b_altura, b_efeito, b
 | `defender(forca)` | 0x70d430 | thiscall, ret 4 | match_pl.cpp: above 1000, or without winning draw(record +0x21 + +0xa5) against draw(20), no save (0x1fe2, returns 1). Otherwise parries (+0x106 above draw(8): 0x1fe3, ball deflected 3 cells) or blocks (0x216f, 1 cell; tires +0x35 − 250 and may lose draw(3) in +0x17 with performance redone, 0x7172d0/0x6eecb0); +0x2b adds draw(2 or 3); the ball stays in play with draw(10) and the keeper is the goal-line taker with draw(200) zero. The deflected ball (0x6cd770) is a tape unit when called directly by the compared routine |
 
 Mutations: 6 of 8 caught (g_20, g_espalma, g_2b, g_dentro, g_espalhar, g_cansa); g_1000 (force exactly 1000) and g_17 (block with draw(30 × v + 20) zero) survive, rare paths; real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).
+
+### Match engine, 102nd batch — the player stamina (official on 2026-10-10)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `recuperar_folego(teto)` | 0x6f5810 | thiscall, ret 4 | match_pl.cpp, no draws: recovers stamina (+0x4d) and its ceiling (+0x51). Factor 1, or 1.4 − 0.0004 × injury (0x62c3d0) above 1000. Without `teto`, adds 10 × (record pace +0x34 + 15) × factor on the pitch (0x6c38c0 = 1) or off the bench (12 × pace + 325 with +0x1f = −1), up to 10000. With `teto`, +0x51 = stamina + (12 × pace + 85) × factor, times 5.56 × (+0x20 or +0x21) − 255.76 when that value is 46 to 64; out of play, if the injury (0x62c590) exceeds the ceiling it becomes 6500; finally adds +0x59, up to 10000 |
+
+Mutations: 8 of 9 caught (f_campo, f_banco, f_fora, f_k, f_marca, f_copia, f_6500, f_59); f_1000 survives (injury exactly 1000, boundary); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).
