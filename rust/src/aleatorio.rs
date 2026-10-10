@@ -135,6 +135,19 @@ thread_local! {
 
 static PLACAR: Placar = Placar::novo("aleatorio");
 
+thread_local! {
+    /// Rastro de sorteios (diagnostico): (n, resposta) de cada chamada de fora, quando ligado.
+    static RASTRO: core::cell::RefCell<Option<Vec<(i32, i32)>>> = const { core::cell::RefCell::new(None) };
+}
+
+/// Roda `f` guardando os sorteios de fora que ela fizer (n e resposta).
+pub fn rastrear<R>(f: impl FnOnce() -> R) -> (R, Vec<(i32, i32)>) {
+    let antes = RASTRO.with(|t| t.borrow_mut().replace(Vec::new()));
+    let r = f();
+    let v = RASTRO.with(|t| core::mem::replace(&mut *t.borrow_mut(), antes)).unwrap_or_default();
+    (r, v)
+}
+
 unsafe fn original(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(ORIGINAL);
     f(n)
@@ -148,6 +161,7 @@ unsafe extern "C" fn comparar(n: i32) -> i32 {
     if RODANDO.with(|r| r.get()) == Rodando::Original {
         return original(n);
     }
+    let rastro_ligado = RASTRO.with(|t| t.borrow().is_some());
     let antes = Estado::ler();
     RODANDO.with(|r| r.set(Rodando::Original));
     let r_orig = original(n);
@@ -169,6 +183,13 @@ unsafe extern "C" fn comparar(n: i32) -> i32 {
             n, r_orig, r_rust, antes, depois_orig, depois_rust
         )
     });
+    if rastro_ligado {
+        RASTRO.with(|t| {
+            if let Some(v) = t.borrow_mut().as_mut() {
+                v.push((n, r_orig));
+            }
+        });
+    }
     r_orig
 }
 

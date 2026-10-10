@@ -895,3 +895,11 @@ Mutações: 6/6 no jogo real até 20/08/2001.
 | `arrumar_bola_parada()` | 0x6c4820 | thiscall | match_eng.cpp: contador +0xf5c6 + 54 × lado; solta a bola. Bola na área do próprio lado: formação (como 0x6c4ec0) e quem do outro lado cair na marca sai uma linha. Senão: marca limitada à grade, longe (+0x8eb1 = 7) ou perto (−1), coluna base 4 − sorteio + sorteio, linha base a 3/4 da marca; perto, todos pela tabela de bola parada (12 linhas × 9 colunas por posição e lado que cobra); longe, pelo papel (0x716270 no ataque: 1 fundo, 2 meio; 0x716310 na defesa: 4 fundo, 3 meio). No fim o cobrador (0x6ceb90, tipo +0x8eb2) vai à marca, pega a bola e aponta (0x6f4920). Casa fora da grade: erro fatal, como a original |
 
 Mutações: 8/8 no jogo real até 20/08/2001.
+
+### Motor de partidas, 95ª leva — o jogador sem a bola decide para onde ir (oficial em 09/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `decidir_sem_bola(_)` | 0x713fc0 | thiscall, ret 4 (argumento não lido) | match_pl.cpp, ~3,3 KB: ação em +0x198 e a casa. Bola fora de jogo: formação (0x6c2a40, 0x68). Bola parada: quem bate (+0xf57a) ou quem o lado aponta vai à marca (0x100). No jogo: perto da área adversária, ou com a marca 0x200000 da posição, tenta subir para casa livre (0x6bce80; 0x6a, +0x35 sobe 7) por sorteio contra (1 − 0x35·c)·0x101·0x107; senão parte da casa de 0x6c2be0 (x por 0x715f50), pontas vão ao canto pela bola (marcas 0x80/0x800 de `tabela_a`), a linha vai ao fundo por sorteio ou pela linha (0x6cb700) e anda pela diferença do lado (0x6c4180); marcando alguém (+0x1aa, 0x105) segue a casa dele, um passo à frente pelo sorteio(21) contra o 0xad dele; senão avança uma linha (0x6f5b80, 0x6b) pela diferença do jogador; na casa: fica (0x76) ou procura casa livre (0x6a/0x69); fora: procura casa livre ou vai (0x68). Comparada pela fita (0x6f09f0, 0x6f46b0 e a própria 0x6f5b80 como unidade) |
+
+Mutações: 8/10 no jogo real até 20/08/2001. `s_formacao` (o despachante 0x7103e0 só chama com a bola em jogo) e `s_fica` (a ação gravada antes da chamada era apagada pela foto de depois) sobreviveram; a leva 96 traz a foto de antes e refaz as duas.

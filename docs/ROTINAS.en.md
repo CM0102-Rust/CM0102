@@ -897,3 +897,11 @@ Mutations: 6/6 in the real game up to 2001-08-20.
 | `arrumar_bola_parada()` | 0x6c4820 | thiscall | match_eng.cpp: counter +0xf5c6 + 54 × side; releases the ball. Ball in the side's own area: formation (as 0x6c4ec0) and whoever of the other side lands on the spot moves one row. Otherwise: spot clamped to the grid, far (+0x8eb1 = 7) or near (−1), base column 4 − draw + draw, base row 3/4 from the spot; near, everyone from the set-piece table (12 rows × 9 columns per position and kicking side); far, by role (0x716270 in attack: 1 deep, 2 middle; 0x716310 in defence: 4 deep, 3 middle). Finally the taker (0x6ceb90, type +0x8eb2) goes to the spot, takes the ball and aims (0x6f4920). Cell off the grid: fatal error, as the original |
 
 Mutations: 8/8 in the real game up to 2001-08-20.
+
+### Match engine, 95th batch — the off-ball player decides where to go (official on 2026-10-09)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `decidir_sem_bola(_)` | 0x713fc0 | thiscall, ret 4 (argument unread) | match_pl.cpp, ~3.3 KB: action in +0x198 and the cell. Ball out of play: formation (0x6c2a40, 0x68). Set piece: the taker (+0xf57a) or whoever the side points to goes to the spot (0x100). In play: near the opponent's area, or with position mark 0x200000, tries to move up to a free cell (0x6bce80; 0x6a, +0x35 up by 7) by a draw against (1 − 0x35·c)·0x101·0x107; otherwise starts from 0x6c2be0's cell (x through 0x715f50), wingers go to the corner by the ball (marks 0x80/0x800 of `tabela_a`), the line goes deep by a draw or by the line (0x6cb700) and moves by the side difference (0x6c4180); marking someone (+0x1aa, 0x105) follows his cell, one step ahead when draw(21) beats his 0xad; otherwise advances a row (0x6f5b80, 0x6b) by the player difference; at the cell: stays (0x76) or looks for a free cell (0x6a/0x69); away from it: free cell or goes (0x68). Compared through the tape (0x6f09f0, 0x6f46b0 and 0x6f5b80 itself as a unit) |
+
+Mutations: 8/10 in the real game up to 2001-08-20. `s_formacao` (the 0x7103e0 dispatcher only calls with the ball in play) and `s_fica` (the action written before the call was wiped by the after snapshot) survived; batch 96 brings the before snapshot and redoes both.
