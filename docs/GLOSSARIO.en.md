@@ -118,6 +118,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6e9820 | `decisao_da_falta` | foul_decision |
 | 0x70d430 | `defender` | save_shot |
 | 0x700420 | `defesa_do_goleiro` | goalkeeper_save |
+| 0x6c87e0 | `desafio_adversario` | opposition_challenge |
 | 0x6eecb0 | `desempenho_na_partida` | match_performance |
 | 0x6f56c0 | `desgastar` | tire (fatigue) |
 | 0x5b58e0 | `designado_da_posicao` | designated_for_position |

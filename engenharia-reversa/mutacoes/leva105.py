@@ -1,0 +1,21 @@
+# Mutacoes da leva105 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva105.py --jogo 2001-08-20
+MUTACOES = [
+    ('o_dist', "        dist = (x * x + x + f64_em(0x967890)) as f32;", "        dist = (x * x + x + f64_em(0x968968)) as f32;"),
+    ('o_cy', "    let cy = ((if flag == 1 { by - 11 } else { by }).abs()) as i8;", "    let cy = ((if flag == 1 { by - 10 } else { by }).abs()) as i8;"),
+    ('o_marca', "                v *= f32_em(0x96d420) as f64;", "                v *= f32_em(0x96d424) as f64;"),
+    ('o_leitura', "                let k = (w(atacante, 0x19c) as i32).wrapping_add(r2.wrapping_sub(r1).wrapping_mul(6)) as i16;", "                let k = (w(atacante, 0x19c) as i32).wrapping_add(r2.wrapping_sub(r1).wrapping_mul(5)) as i16;"),
+    ('o_folego', "            peso = (f(p, 0x4d) as f64 * f64_em(0x968eb8) * f(p, 0x4d) as f64 * peso as f64) as f32;", "            peso = (f(p, 0x4d) as f64 * f64_em(0x968eb8) * peso as f64) as f32;"),
+    ('o_c', "                let k = if atacante_t1() { 3 } else if bit100 { 10 } else { 20 };", "                let k = if atacante_t1() { 3 } else if bit100 { 10 } else { 21 };"),
+    ('o_f', "                let k = if atacante_t1() { 3 } else if bit100 { 5 } else { 10 };", "                let k = if atacante_t1() { 3 } else if bit100 { 5 } else { 11 };"),
+    ('o_11', "                let (perto, longe) = if tipo == 0x11 { (12, 8) } else { (8, 4) };", "                let (perto, longe) = if tipo == 0x11 { (13, 8) } else { (8, 4) };"),
+    ('o_15', "                    let a2 = if sortear(5) != 0 { -1 } else { 0x2f };", "                    let a2 = if sortear(6) != 0 { -1 } else { 0x2f };"),
+    ('o_6c', "                    k += 0x514;", "                    k += 0x515;"),
+    ('o_6d', "                } else if byte(m, 0x8ea9) < 2 {", "                } else if byte(m, 0x8ea9) < 3 {"),
+    ('o_letras', "            1 => (0x2d, 0x2c),", "            1 => (0x2b, 0x2c),"),
+    ('o_frente', "                if byte(q, 0x19) >= 0 && ((l == 1 && byte(q, 0x103) < y) || (l == 0 && byte(q, 0x103) > y)) {", "                if byte(q, 0x19) >= 0 && ((l == 1 && byte(q, 0x103) <= y) || (l == 0 && byte(q, 0x103) > y)) {"),
+    ('o_ultimo', "                y <= if u != 0 { byte(u, 0x103) } else { 0xc }", "                y < if u != 0 { byte(u, 0x103) } else { 0xc }"),
+    ('o_forca10', "                    forca = forca.wrapping_add(sortear(10));", "                    forca = forca.wrapping_add(sortear(11));"),
+    ('o_lim', "            let lim = ((leitura + 5) * byte(p, 0x24) as i32 + fx * leitura * 14 + leitura * arr * 20) * 25 + 0x14;", "            let lim = ((leitura + 5) * byte(p, 0x24) as i32 + fx * leitura * 14 + leitura * arr * 20) * 25 + 0x15;"),
+    ('o_12', "            valor_lance = valor_lance.wrapping_add(c * c);", "            valor_lance = valor_lance.wrapping_add(c);"),
+    ('o_aceita', "        if melhor != 0 && v16 <= *nota {", "        if melhor != 0 && v16 < *nota {"),
+]

@@ -977,3 +977,11 @@ Mutations: 9 of 9 caught (p_passou, p_intervalo, p_20f1, p_3de, p_teto0, p_saida
 | `pressao(j, saida, lista)` | 0x6bcbd0 | thiscall, ret 0xc | match_eng.cpp, no draws: adds into `*saida` the pressure of active opponents in `j`'s cell and returns how many count (2 per marker). Whoever marks `j` (0x714c60) is worth (0x6f4600 + 0x10a − +0x19c/20 − +0x107 of `j`) × 1.7; the others standing, outside table 1 (0x717410) and with +0x10a or bit 0x100 of +0x198, are worth (0x10a − …) × 1.7 / (+0x2b + 1). With `lista`, the two heaviest (above 5) go into it as 0x1be-byte copies (0x68d0d0, a tape unit so the Rust copy does not allocate again) |
 
 Mutations: 9 of 9 caught (x_lado, x_base, x_marca2, x_dobro, x_2b, x_bit, x_5, x_segundo, x_ordem); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1). The first attempt read 0x66666667 + sar 3 as /10 (it is /20): the baseline caught it at once.
+
+### Match engine, 105th batch — the opposition challenge (official on 2026-10-10)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `desafio_adversario(atacante, lado, tipo, a, b, nota, lance, arriscado, livre)` | 0x6c87e0 | thiscall, ret 0x24 | match_eng.cpp (`get_opposition_challenge`, ~5.3 KB): among active opponents in the ball cell, who challenges move `tipo`. Distance to goal (table 0xa15e44) gives the difficulty; each one has a weight (tactical marks 0x7163c0 or the side strategy, marking +0x1a6/+0x1aa, draw by reading +0x106 and the attacker +0x19c, form +0x24/+0x75, stamina +0x4d, minimum 0.05) that divides each type's k (0xc–0xe, 0xf/0x10/0x67, 0x11/0x12, 0x15/0x25/0x2e/0x38 with the 5th power of how many are in the cell, 0x3b, 0x6c, 0x6d) in a draw against +0x10d + +0x10a − distance. The winner gets a code and alternative moves; offside (0x6cb780) and position set `*arriscado`; value (0x7165b0, 0x5407e0, 0x6f5b20) picks the move and the domain (0x70d690) gives the score. The best score goes to `*nota`/`*lance` and tires (0x6f56c0). The weight stays in double precision between steps, as in the x87 register |
+
+Mutations: 17 of 18 caught; o_marca survives (the 2.25 weight of whoever marks the attacker, +0x1a6: path not exercised up to 2001-08-20, checked against the disassembly); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).

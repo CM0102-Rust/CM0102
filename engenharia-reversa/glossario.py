@@ -113,6 +113,7 @@ EN = {
  'recuperar_folego': 'recover_stamina',
  'periodo_encerrado': 'period_completed',
  'pressao': 'pressure',
+ 'desafio_adversario': 'opposition_challenge',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

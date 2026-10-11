@@ -975,3 +975,11 @@ Mutações: 9 de 9 pegas (p_passou, p_intervalo, p_20f1, p_3de, p_teto0, p_saida
 | `pressao(j, saida, lista)` | 0x6bcbd0 | thiscall, ret 0xc | match_eng.cpp, sem sorteio: soma em `*saida` a pressão dos adversários ativos na casa de `j` e devolve quantos pesam (2 por marcador). Quem marca `j` (0x714c60) vale (0x6f4600 + 0x10a − +0x19c/20 − +0x107 de `j`) × 1,7; os outros em pé, fora da tabela 1 (0x717410) e com +0x10a ou o bit 0x100 de +0x198, valem (0x10a − …) × 1,7 / (+0x2b + 1). Com `lista`, os dois que mais pesam (acima de 5) entram nela como cópia de 0x1be bytes (0x68d0d0, unidade da fita para a cópia Rust não alocar de novo) |
 
 Mutações: 9 de 9 pegas (x_lado, x_base, x_marca2, x_dobro, x_2b, x_bit, x_5, x_segundo, x_ordem); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1). A 1ª tentativa leu 0x66666667 + sar 3 como /10 (é /20): a base pegou na hora.
+
+### Motor de partidas, 105ª leva — o desafio dos adversários (oficial em 10/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `desafio_adversario(atacante, lado, tipo, a, b, nota, lance, arriscado, livre)` | 0x6c87e0 | thiscall, ret 0x24 | match_eng.cpp (`get_opposition_challenge`, ~5,3 KB): entre os adversários ativos na casa da bola, quem desafia o lance `tipo`. A distância ao gol (tabela 0xa15e44) dá a dificuldade; cada um tem um peso (marcas táticas 0x7163c0 ou a estratégia do lado, marcação +0x1a6/+0x1aa, sorteio pela leitura +0x106 e +0x19c do atacante, forma +0x24/+0x75, fôlego +0x4d, mínimo 0,05) que divide o k de cada tipo (0xc–0xe, 0xf/0x10/0x67, 0x11/0x12, 0x15/0x25/0x2e/0x38 com a potência 5 de quantos estão na casa, 0x3b, 0x6c, 0x6d) num sorteio contra +0x10d + +0x10a − distância. Quem vence recebe código e lances alternativos; impedimento (0x6cb780) e posição marcam `*arriscado`; valor (0x7165b0, 0x5407e0, 0x6f5b20) escolhe o lance e o domínio (0x70d690) dá a nota. O de maior nota fica em `*nota`/`*lance` e cansa (0x6f56c0). O peso segue em precisão dupla entre as contas, como no registro do x87 |
+
+Mutações: 17 de 18 pegas; sobrevive o_marca (o peso 2,25 de quem marca o atacante, +0x1a6: caminho não exercitado até 2001-08-20, conferido na desmontagem); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).

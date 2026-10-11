@@ -373,8 +373,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6f5810, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0xf1] },
     Prologo { endereco: 0x6bd930, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0xf1] },
     Prologo { endereco: 0x6bcbd0, bytes: &[0x83, 0xec, 0x28, 0x53, 0x8b, 0x5c, 0x24, 0x34] },
+    Prologo { endereco: 0x6c87e0, bytes: &[0x81, 0xec, 0x3c, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 266;
+const N: usize = 267;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4065,6 +4066,388 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- centesima quinta leva: o desafio dos adversarios (0x6c87e0) ----------
+
+/// { 0x6c87e0 } (ret 0x24, match_eng.cpp, `CM3_MATCH_ENGINE::get_opposition_challenge`, ~5,3 KB):
+/// quem, entre os adversarios ativos na casa da bola, desafia o lance `tipo` de `atacante` (ou do
+/// `lado`, sem atacante). A distancia da bola ao gol (tabela 0xa15e44, 1000 fora dela) da a
+/// dificuldade `dist`; cada adversario em pe (+0x2b < 2) tem um peso: 3,5 com +0x8ea9 = 4, senao
+/// pelas marcas taticas (0x7163c0, ou o byte de estrategia do lado com 0x200) 0,5, 4 ou 2; vezes
+/// 0,05 longe do gol, 2,25 se marca o atacante (+0x1a6), dobrado se o persegue (+0x1aa), o sorteio
+/// pela leitura (+0x106) e o +0x19c do atacante, a forma (+0x24, +0x106, +0x75), o folego (+0x4d,
+/// fora da tabela 1), 1/4 com a estrategia 5 do lado; no minimo 0,05. Cada `tipo` tem a sua
+/// disputa: sorteio(k / peso) contra +0x10d + +0x10a - dist (variantes para 0x11/0x12, 0x15 com a
+/// potencia 5 (pow da CRT) de quantos estao na casa, 0x6c com 10,5 - dist). Quem vence recebe um codigo e os
+/// lances alternativos; o impedimento (0x6cb780) e a posicao decidem `*arriscado`, o valor
+/// (0x7165b0, 0x5407e0, 0x6f5b20) escolhe entre os lances, e o dominio (0x70d690) da a nota. O de
+/// maior nota fica em `*nota`/`*lance` e cansa (0x6f56c0 com -1).
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn desafio_adversario(m: usize, atacante: usize, lado: i8, tipo: i8, a: *mut u8, b: *mut u8, nota: *mut i16, lance: *mut i8, arriscado: *mut i8, livre: u8) -> usize {
+    let tabela: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    let marcas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x7163c0usize);
+    let faixa: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x6f5b20usize);
+    let mais_perto: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x6cb780usize);
+    let x_fora: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x70df20usize);
+    let perto_gol: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x70def0usize);
+    let limite: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x70df40usize);
+    let valor: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x7165b0usize);
+    let dominio: unsafe extern "thiscall" fn(usize, *mut i8, *mut u8, *mut u8) -> u16 = core::mem::transmute(0x70d690usize);
+    let relacao: unsafe extern "C" fn(usize, usize, u32) -> i16 = core::mem::transmute(0x5407e0usize);
+    let desgastar: unsafe extern "thiscall" fn(usize, f32, i16) = core::mem::transmute(0x6f56c0usize);
+    let w = |p: usize, o: usize| *((p + o) as *const i16);
+    let f = |p: usize, o: usize| *((p + o) as *const f32);
+    *arriscado = 0;
+    let lado = if atacante != 0 { byte(atacante, 0x27) } else { lado };
+    let flag = (lado == 0) as i32;
+    if byte(m, 0x8ea9) == -1 && (atacante == *((m + 0xf59e) as *const usize) || atacante == *((m + 0xf5a2) as *const usize)) {
+        return 0;
+    }
+    let bx = byte(m, 0x8ea7) as i32;
+    let by = byte(m, 0x8ea8) as i32;
+    let cx = ((bx - 4).abs()) as i8;
+    let cy = ((if flag == 1 { by - 11 } else { by }).abs()) as i8;
+    let base = if (0..=8).contains(&cx) && (0..=11).contains(&cy) { *((0xa15e44 + (cy as usize * 9 + cx as usize) * 4) as *const f32) } else { f32_em(0x96d2dc) };
+    let mut dist = (base as f64 + f64_em(0x968968)) as f32;
+    if dist as f64 > f64_em(0x967890) {
+        let x = dist as f64 * f64_em(0x968968);
+        dist = (x * x + x + f64_em(0x967890)) as f32;
+    }
+    let distf = dist as f64;
+    let mut melhor = 0usize;
+    let mut contado = false;
+    let mut mais_perto_r = 0i8;
+    let mut colegas_a_frente = 1i8;
+    let casa = m + 0x215e + ((by + bx * 12) * 90) as usize;
+    let n = || byte(casa + flag as usize, 0x58) as i32;
+    let mut i = 0;
+    while i < n() {
+        let p = *((casa + (flag as usize * 11 + i as usize) * 4) as *const usize);
+        i += 1;
+        if p == 0 {
+            // o original registra o erro e encerra o jogo
+            let sair: unsafe extern "C" fn(i32) = core::mem::transmute(0x945934usize);
+            sair(-1);
+        }
+        if byte(p, 0x19) < 0 || byte(p, 0x2b) >= 2 {
+            continue;
+        }
+        // o peso fica no registro (precisao dupla) entre as contas; a copia em memoria e float
+        let mut v: f64 = if byte(m, 0x8ea9) == 4 {
+            f32_em(0x969080) as f64
+        } else if marcas(p) & 0x200 != 0 {
+            let e = *((m + 0x9766 + 6371 * flag as usize) as *const u32);
+            if e & 0x20 != 0 {
+                f32_em(0x968f18) as f64
+            } else if e & 0x40 != 0 {
+                f32_em(0x96d228) as f64
+            } else {
+                f32_em(0x9689a8) as f64
+            }
+        } else if marcas(p) & 0x800 != 0 {
+            f32_em(0x968f18) as f64
+        } else if marcas(p) & 0x1000 != 0 {
+            f32_em(0x96d228) as f64
+        } else {
+            f32_em(0x9689a8) as f64
+        };
+        let mut peso = v as f32;
+        if distf > f64_em(0x9688a0) {
+            v *= f32_em(0x96d424) as f64;
+            peso = v as f32;
+        }
+        if atacante != 0 {
+            if atacante == *((p + 0x1a6) as *const usize) {
+                v *= f32_em(0x96d420) as f64;
+                peso = v as f32;
+            }
+            if *((p + 0x1aa) as *const usize) == atacante {
+                v += v;
+                peso = v as f32;
+            }
+            if byte(m, 0x8ea9) < 4 {
+                let leitura = byte(p, 0x106) as i32;
+                let r1 = sortear(0x1e - leitura);
+                let r2 = sortear(0x1e - leitura);
+                let k = (w(atacante, 0x19c) as i32).wrapping_add(r2.wrapping_sub(r1).wrapping_mul(6)) as i16;
+                v = (k as f64 * f64_em(0x969028) + f64_em(0x967890)) * peso as f64;
+            }
+        }
+        let forma = (byte(p, 0x24) as i32 * byte(p, 0x106) as i32) as f64;
+        peso = (((f64_em(0x96a730) - forma * f64_em(0x969028)) * f(p, 0x75) as f64 + f64_em(0x968968)) * v) as f32;
+        if tabela(p) != 1 {
+            peso = (f(p, 0x4d) as f64 * f64_em(0x968eb8) * f(p, 0x4d) as f64 * peso as f64) as f32;
+        }
+        if byte(m + flag as usize, 0x1ab) == 5 {
+            peso = (peso as f64 * f64_em(0x9689e0)) as f32;
+        }
+        if (peso as f64) < f64_em(0x967888) {
+            peso = f32::from_bits(0x3d4ccccd);
+        }
+        let somado = (byte(p, 0x10d) as i32 + byte(p, 0x10a) as i32) as f64;
+        // a disputa: sorteio(k / peso) abaixo do alvo
+        let disputa = |k: i32| sortear(ftol(k as f64 / peso as f64));
+        let atacante_t1 = || atacante != 0 && tabela(atacante) == 1;
+        let bit100 = *((p + 0x198) as *const u16) & 0x100 != 0;
+        let letras = || match sortear(4) {
+            0 => (0x2a, 0x2c),
+            1 => (0x2d, 0x2c),
+            2 => (0x2b, 0x2c),
+            _ => (0x2e, 0x2c),
+        };
+        // (codigo, lance, alternativo)
+        let venceu: Option<(i8, i8, i8)> = match tipo {
+            0xc..=0xe => {
+                let k = if atacante_t1() { 3 } else if bit100 { 10 } else { 20 };
+                let alvo = (somado - distf) as f32;
+                if (disputa(k) as f32) < alvo {
+                    let (l, a2) = letras();
+                    Some((0x22, l, a2))
+                } else {
+                    None
+                }
+            }
+            0xf | 0x10 | 0x67 => {
+                let k = if atacante_t1() { 3 } else if bit100 { 5 } else { 10 };
+                let alvo = (somado - distf) as f32;
+                if (disputa(k) as f32) < alvo {
+                    let (l, a2) = letras();
+                    Some((0x21, l, a2))
+                } else {
+                    None
+                }
+            }
+            0x11 | 0x12 => {
+                let (perto, longe) = if tipo == 0x11 { (12, 8) } else { (8, 4) };
+                // None: vence direto; Some(k): disputa
+                let k = if tabela(p) == 1 {
+                    if melhor != 0 || n() > 1 {
+                        Some(0xc)
+                    } else if flag == 0 {
+                        if byte(p, 0x103) > 0 || byte(p, 0x102) != 4 { None } else { Some(2) }
+                    } else if byte(p, 0x103) < 0xb || byte(p, 0x102) != 4 {
+                        None
+                    } else {
+                        Some(2)
+                    }
+                } else if livre != 0 {
+                    Some(2)
+                } else if atacante_t1() {
+                    Some(3)
+                } else if bit100 {
+                    Some(longe)
+                } else {
+                    Some(perto)
+                };
+                let vence = match k {
+                    None => true,
+                    Some(k) => {
+                        let alvo = somado - distf * f64_em(0x968968);
+                        ((disputa(k) + byte(atacante, 0x104) as i32) as f64) < alvo
+                    }
+                };
+                if vence {
+                    let (l, a2) = letras();
+                    Some((0x13, l, a2))
+                } else {
+                    None
+                }
+            }
+            0x15 | 0x25 | 0x2e | 0x38 => {
+                let k: Option<i32> = if tabela(p) == 1 {
+                    let quantos = n() as f64;
+                    let mais = if byte(p, 0x102) == 4 && matches!(byte(p, 0x103), 0 | 0xb) { f64_em(0x9688b0) } else { f64_em(0x968930) };
+                    let q5 = pow_do_jogo(quantos, f64_em(0x9688a0));
+                    Some(ftol(q5 * byte(p, 0x106) as f64 + mais))
+                } else {
+                    let r = sortear(if distf < f64_em(0x968950) { 100 } else { 10 });
+                    if r as f64 > distf {
+                        None
+                    } else if bit100 || atacante_t1() {
+                        Some(1)
+                    } else {
+                        Some(3)
+                    }
+                };
+                let vence = match k {
+                    None => true,
+                    Some(k) => {
+                        let r = sortear(ftol(f(p, 0xad) as f64 + f(p, 0xad) as f64)) + byte(p, 0x10a) as i32;
+                        r > sortear(k as i16 as i32)
+                    }
+                };
+                if vence {
+                    let a2 = if sortear(5) != 0 { -1 } else { 0x2f };
+                    Some((0x15, 0x2e, a2))
+                } else {
+                    None
+                }
+            }
+            0x3b => {
+                let k = if atacante_t1() { 3 } else if bit100 { 20 } else { 60 };
+                let alvo = (somado - distf) as f32;
+                if (disputa(k) as f32) < alvo { Some((0xc, 0x32, 0x32)) } else { None }
+            }
+            0x6c => {
+                let mut k = if atacante_t1() { 10 } else if bit100 { 500 } else { 1000 };
+                let (x, y) = (byte(m, 0x8ea7), byte(m, 0x8ea8));
+                if (2..=6).contains(&x) && ((flag == 1 && (10..=11).contains(&y)) || (flag == 0 && (0..=1).contains(&y))) {
+                    k += 0x514;
+                }
+                let alvo = (f64_em(0x96d418) - distf) * f(p, 0x75) as f64 + somado;
+                if (disputa(k) as f64) < alvo && byte(m, 0x8ea9) < 4 {
+                    let (l, a2) = letras();
+                    Some((0x22, l, a2))
+                } else {
+                    None
+                }
+            }
+            0x6d => {
+                let k = if tabela(p) == 1 {
+                    if faixa(p, flag as u32) as u8 == 0 {
+                        None
+                    } else if byte(m, 0x8eb3) != 0 {
+                        Some(5)
+                    } else if livre != 0 {
+                        Some(6)
+                    } else {
+                        Some(30)
+                    }
+                } else if livre != 0 {
+                    if byte(p, 0x105) != 0 { None } else { Some(2) }
+                } else if bit100 {
+                    Some(2)
+                } else {
+                    Some(4)
+                };
+                let vence = match k {
+                    None => true,
+                    Some(k) => {
+                        let alvo = (somado - distf) as f32;
+                        (disputa(k) as f32) < alvo
+                    }
+                };
+                if !vence {
+                    None
+                } else if byte(m, 0x8ea9) < 2 {
+                    let (l, a2) = letras();
+                    Some((0x22, l, a2))
+                } else {
+                    Some((0xc, 0x2e, 0x2e))
+                }
+            }
+            _ => {
+                let erro: unsafe extern "C" fn(usize, usize, i32) = core::mem::transmute(0x944c9fusize);
+                erro(0xde1f64, 0xa15954, tipo as i32);
+                *(0xb67a34 as *mut u32) = 0;
+                None
+            }
+        };
+        let Some((codigo, lance1, mut lance2)) = venceu else { continue };
+        if atacante != 0 && !contado && tipo != 0x3b && tipo != 0x15 {
+            mais_perto_r = mais_perto(m, atacante) as i8;
+            let y = byte(atacante, 0x103);
+            let l = byte(atacante, 0x27);
+            let mut conta = 0i8;
+            for k in 0..20 {
+                let q = m + 0x4796 + l as usize * 0x22d8 + k * 0x1be;
+                if byte(q, 0x19) >= 0 && ((l == 1 && byte(q, 0x103) < y) || (l == 0 && byte(q, 0x103) > y)) {
+                    conta += 1;
+                }
+            }
+            colegas_a_frente = conta;
+            contado = true;
+        }
+        if mais_perto_r != 0 {
+            *arriscado = 1;
+        } else {
+            let y = byte(p, 0x103);
+            let ultimo = if byte(p, 0x27) == 0 {
+                let u = *((m + 0xf58e) as *const usize);
+                y <= if u != 0 { byte(u, 0x103) } else { 0xc }
+            } else {
+                let u = *((m + 0xf592) as *const usize);
+                y >= if u != 0 { byte(u, 0x103) } else { -1 }
+            };
+            let segue = if ultimo && sortear(10) == 0 {
+                true
+            } else {
+                let c = byte(p, 0x19);
+                (0..=10).contains(&c) && *((*((m + 0x8ebc + byte(p, 0x27) as usize * 4) as *const usize) + c as usize * 2) as *const i16) == 1 && sortear(2) == 0
+            };
+            if segue && colegas_a_frente == 0 && (x_fora(p) == 0 || perto_gol(p) == 0) {
+                *arriscado = 1;
+            }
+        }
+        let mut forca = sortear(valor(p, atacante) as i8 as i32);
+        if atacante != 0 && limite(atacante) == 0 && *arriscado == 0 && byte(p, 0x24) == 0 {
+            let r1 = sortear(ftol(f(p, 0x75) as f64));
+            if r1 > sortear(0xc) {
+                let pula = w(atacante, 0x35) as i32 <= sortear(1000) + 0x1d4c && {
+                    let rel = relacao(*((atacante + 0x69) as *const usize), *((p + 0x69) as *const usize), 0) as i32;
+                    rel <= sortear(10000)
+                };
+                if !pula {
+                    forca = forca.wrapping_add(sortear(10));
+                    if byte(p, 0x106) != 0 {
+                        lance2 = -1;
+                    }
+                }
+            }
+        }
+        let leitura = byte(p, 0x106) as i32;
+        let b5c = || byte(*((p + 0x69) as *const usize), 0x5c) as i32;
+        let arr = *arriscado as i32;
+        let escolhido: Option<i8> = 'e: {
+            if tipo == 0x15 {
+                let fx = faixa(p, flag as u32) as i8 as i32;
+                if sortear(b5c() * 200 + fx * 1500 + 0xfa) == 0 {
+                    break 'e Some(0x25);
+                }
+            }
+            let fo = forca as i16 as i32;
+            let fx = faixa(p, flag as u32) as i8 as i32;
+            let lim = ((leitura + 5) * byte(p, 0x24) as i32 + fx * leitura * 14 + leitura * arr * 20) * 25 + 0x14;
+            if fo > sortear(lim) {
+                break 'e Some(lance1);
+            }
+            if lance2 > -1 {
+                let fx = faixa(p, flag as u32) as i8 as i32;
+                let lim = (fx * (leitura + 10) + 10) * 500 + (b5c() + 100) * leitura * arr * 80;
+                if fo * fo > sortear(lim) {
+                    break 'e Some(lance2);
+                }
+            }
+            if arr != 0 && tabela(p) != 1 && !(distf < f64_em(0x968950)) && byte(m, 0x8ea9) != 4 && leitura != 0 {
+                break 'e None;
+            }
+            Some(codigo)
+        };
+        let Some(mut escolha) = escolhido else { continue };
+        let mut valor_lance = sortear(dominio(p, &mut escolha, a, b) as i16 as i32);
+        if tipo == 0x11 && escolha != 0x29 {
+            valor_lance = valor_lance.wrapping_add(sortear(ftol(byte(p, 0x104) as f64 * f(p, 0x71) as f64)));
+        } else if tipo == 0x12 && escolha != 0x29 {
+            let c = byte(p, 0x104) as i32;
+            valor_lance = valor_lance.wrapping_add(c * c);
+        }
+        let v16 = valor_lance as i16;
+        let aceita = v16 > 0 || faixa(p, byte(p, 0x27) as u8 as u32) as u8 != 0 || (leitura == 0 && byte(p, 0x10d) as i32 > sortear(100));
+        if !aceita {
+            continue;
+        }
+        if melhor != 0 && v16 <= *nota {
+            continue;
+        }
+        melhor = p;
+        *lance = escolha;
+        *nota = v16;
+    }
+    if melhor != 0 {
+        desgastar(melhor, -1.0, *lance as i16);
+    }
+    melhor
 }
 
 // ---------- centesima quarta leva: a pressao sobre o jogador (0x6bcbd0) ----------
@@ -13407,6 +13790,30 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn comparar_desafio_adversario(m: usize, atacante: usize, lado: i8, tipo: i8, a: *mut u8, b: *mut u8, nota: *mut i16, lance: *mut i8, arriscado: *mut i8, livre: u8) -> usize {
+    type F = unsafe extern "thiscall" fn(usize, usize, i8, i8, *mut u8, *mut u8, *mut i16, *mut i8, *mut i8, u8) -> usize;
+    let o = orig::<F>(266);
+    // as saidas, o sorteio e o folego (+0x4d) dos 40 jogadores (quem vence cansa)
+    let mut reg = [(0usize, 0usize); 48];
+    reg[0] = crate::aleatorio::REGIOES_DO_ESTADO[0];
+    reg[1] = crate::aleatorio::REGIOES_DO_ESTADO[1];
+    reg[2] = (nota as usize, 2);
+    reg[3] = (lance as usize, 1);
+    reg[4] = (arriscado as usize, 1);
+    reg[5] = (a as usize, if a.is_null() { 0 } else { 1 });
+    reg[6] = (b as usize, if b.is_null() { 0 } else { 1 });
+    for l in 0..2i8 {
+        for k in 0..20 {
+            reg[7 + l as usize * 20 + k] = (jogador_do_bloco(m, l, k) + 0x4d, 4);
+        }
+    }
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg[..47], || o(m, atacante, lado, tipo, a, b, nota, lance, arriscado, livre), || {
+        crate::aleatorio::sem_contar(|| desafio_adversario(m, atacante, lado, tipo, a, b, nota, lance, arriscado, livre))
+    });
+    PLACAR.registrar(igual && r == n, || format!("desafio_adversario(tipo {:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", tipo, r, n, mo, mr));
+    r
+}
 unsafe extern "thiscall" fn comparar_pressao(m: usize, j: usize, saida: *mut i16, lista: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i16, usize) -> u8>(265);
     if lista == 0 {
@@ -14288,6 +14695,7 @@ pub unsafe fn instalar(comparando: bool) {
         recuperar_folego as *const () as usize,
         periodo_encerrado as *const () as usize,
         pressao as *const () as usize,
+        desafio_adversario as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -14556,6 +14964,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_recuperar_folego as *const () as usize,
         comparar_periodo_encerrado as *const () as usize,
         comparar_pressao as *const () as usize,
+        comparar_desafio_adversario as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -14662,7 +15071,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_decidir_sem_bola", "motor_mover_sem_bola",
         "motor_decidir_jogador", "motor_passar", "motor_lancar",
         "motor_desviar_bola", "motor_defender", "motor_recuperar_folego", "motor_periodo_encerrado",
-        "motor_pressao",
+        "motor_pressao", "motor_desafio_adversario",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
