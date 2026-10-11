@@ -126,6 +126,7 @@ EN = {
  'refazer_time': 'redo_team',
  'substituir': 'substitute',
  'escalar': 'pick',
+ 'postura': 'stance',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

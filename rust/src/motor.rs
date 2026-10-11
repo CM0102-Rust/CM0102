@@ -386,8 +386,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6e1aa0, bytes: &[0x81, 0xec, 0x04, 0x01, 0x00, 0x00] },
     Prologo { endereco: 0x6e1090, bytes: &[0x81, 0xec, 0xc4, 0x04, 0x00, 0x00] },
     Prologo { endereco: 0x6e2000, bytes: &[0x81, 0xec, 0x24, 0x01, 0x00, 0x00] },
+    Prologo { endereco: 0x6df460, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
 ];
-const N: usize = 279;
+const N: usize = 280;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4393,6 +4394,267 @@ unsafe extern "C" fn escalar(
     free(jog);
     liberar_param(free);
     1
+}
+
+// ---------- centesima decima oitava leva: a postura do time (0x6df460) ----------
+
+/// { 0x6df460 } (thiscall, match_man.cpp): a postura que a comissao `c` (+0x12 motor, +0x18 lado,
+/// +0x1f tecnico, +0x2f clube, +0x33 adversario, +0x37 partida) pede ao time: 1 ataque total, 2
+/// ataque, 3 equilibrio, 4 defesa, 5 retranca. Parte da forca dos dois lados (com o motor rodando
+/// (+0x8ea5), a soma das notas 0x6e86d0 dos que estao em campo * 50 / 11; senao a reputacao +0x80
+/// dos clubes), da posse (+0x1fc/+0x206/+0x210), do tempo (+0x8ed0), dos expulsos (+0x1ad) e do
+/// placar agregado (0x6ce310), e ajusta pela liga (posicoes na tabela, 0x4a4850), pelo tecnico e pelo
+/// fim do jogo (+0x8ed4 = 0x3de). Guarda o fator em motor+0x476a[lado] (10 e -1 nos extremos); com o
+/// motor rodando e o fator a menos de 0,5 do guardado, mantem a postura atual (+0x1ab).
+unsafe extern "thiscall" fn postura(c: usize) -> u8 {
+    let u = |p: usize, o: usize| *((p + o) as *const usize);
+    let i = |p: usize, o: usize| *((p + o) as *const i32);
+    let w = |p: usize, o: usize| *((p + o) as *const i16) as i32;
+    let m = u(c, 0x12);
+    let lado = byte(c, 0x18);
+    let lu = lado as isize as usize;
+    let (clube_a, clube_b) = (u(c, 0x2f), u(c, 0x33));
+    let (rep_a, rep_b) = (w(clube_a, 0x80), w(clube_b, 0x80));
+    let rodando = byte(m, 0x8ea5) != 0;
+    // a forca de cada lado (so os 16 bits contam, como no original)
+    let (mut proprio, mut outro) = (rep_a, rep_b);
+    if rodando {
+        let nota: unsafe extern "C" fn(usize, usize, usize, u32, u32) -> i16 = core::mem::transmute(0x6e86d0usize);
+        let mut soma = [0i32; 2];
+        for (l, s) in soma.iter_mut().enumerate() {
+            for k in 0..20 {
+                let j = m + 0x22d8 * l + 0x4796 + 0x1be * k;
+                if byte(j, 0x19) >= 0 {
+                    *s = s.wrapping_add(nota(u(c, 0x1b), u(j, 0x69), clube_a, 2, u32::MAX) as i32);
+                }
+            }
+        }
+        let (a, b) = if lado == 0 { (soma[0], soma[1]) } else { (soma[1], soma[0]) };
+        proprio = a.wrapping_mul(50) / 11;
+        outro = b.wrapping_mul(50) / 11;
+    }
+    let (mut x11, mut x12, mut x14, mut x16, mut x17) = (0i8, 0i8, 0u8, 0u8, 0u8);
+    let agregado: unsafe extern "thiscall" fn(usize, i8, *mut i8, *mut i8, *mut u8, *mut u8, *mut u8, u8) -> i8 = core::mem::transmute(0x6ce310usize);
+    agregado(m, lado, &mut x11, &mut x12, &mut x16, &mut x17, &mut x14, 0);
+    let proprio = proprio as i16 as i32;
+    let outro = outro as i16 as i32;
+    let f = (proprio - outro) as f64 / ((1.5 - proprio as f64 * 0.0001) * 6000.0) + 1.0;
+    // a posse
+    let (p1, p2, p3) = (w(m, 0x1fc), w(m, 0x206), w(m, 0x210));
+    let tot = p1 + p2 + p3;
+    let posse_b = if tot != 0 { (p3 * 100 / tot) as i8 } else { 0 };
+    let posse_a = if tot != 0 { (p1 * 100 / tot) as i8 } else { 0 };
+    let r = if lado == 0 && posse_a != 0 {
+        Some(posse_b as f64 / posse_a as f64)
+    } else if lado == 1 && posse_b != 0 {
+        Some(posse_a as f64 / posse_b as f64)
+    } else {
+        None
+    };
+    let r = match r {
+        Some(q) if q > 1.0 => q + q - 1.0,
+        Some(q) => q * 1.29 - 0.29,
+        None => f,
+    };
+    let r = if 0.05 > r { 0.05 } else if 6.0 < r { 6.0 } else { r };
+    let mut t = ((w(m, 0x8ed0) << 2) / 99) as i8;
+    if t > 20 {
+        t = 20;
+    }
+    let t = t as f64;
+    let k = byte(m, 0x1ad + lu);
+    let g = f * (25.0 - t) + t * r;
+    let mut h = g * 0.04 * (1.0 - k as f64 * 0.07);
+    if !(h > 0.0) {
+        h = 0.01;
+    }
+    if x14 != 0 {
+        if lado == 1 && x11 != 0 {
+            x11 = x11.wrapping_add(2);
+        } else if lado == 0 {
+            if x12 != 0 {
+                x12 = x12.wrapping_add(2);
+            } else {
+                x11 = x11.wrapping_add(1);
+            }
+        }
+    }
+    // os expulsos: 0x6cbbb0 conta os ativos de cada lado
+    let mut x13 = 0i8;
+    if rodando {
+        let contar: unsafe extern "thiscall" fn(usize, u32) -> u8 = core::mem::transmute(0x6cbbb0usize);
+        let b = contar(m, (lado == 0) as u32);
+        let a = contar(m, lado as u8 as u32);
+        x13 = (a as i8).wrapping_sub(b as i8);
+        if x13 != 0 {
+            x11 = x11.wrapping_add(x13.wrapping_mul(-2));
+        }
+    }
+    let tt = (w(m, 0x8ed0) / 11) as f64;
+    if x14 == 0 && x17 == 0 && x11 as i32 + x12 as i32 == 0 {
+        let (d, e) = (byte(m, 0x1ad + (lado == 0) as usize), byte(m, 0x1ad + lu));
+        if d > e {
+            h *= tt * 0.014925373134328358 + 1.25;
+        } else if d < e {
+            h *= 0.75;
+        }
+    }
+    h *= 1.0 - (x11 as i32 - x12 as i32) as f64 * 0.1;
+    if u(clube_a, 0x53) != u(clube_b, 0x53) {
+        h *= 0.9;
+    } else {
+        let jogo = u(c, 0x37);
+        let p14 = u(jogo, 0x14);
+        if p14 != 0 {
+            h += h;
+            let comp = if p14 == u(clube_a, 0x57) { u(u(0xadadfc, 0), 4 * u(jogo, 0)) } else { 0 };
+            if comp != 0 && u(comp, 8) != 0 {
+                // a liga: quem esta acima na tabela e quanto falta
+                let busca: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
+                let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
+                let e = busca(u(comp, 8), clube_a);
+                if e != 0 {
+                    let mut x18 = 0f32;
+                    let mut feito = false;
+                    if i(e, 0x55) > 1 && dias(0xae2c90, u(e, 0x61) as u32, u(e, 0x65) as u32) < 30 {
+                        let (a, b) = (i(e, 0x55).wrapping_neg(), i(e, 0x2d).wrapping_neg().wrapping_shl(1));
+                        x18 = (if a < b { a } else { b }) as f32;
+                        feito = true;
+                    }
+                    if !feito && i(e, 0x41) > 1 && dias(0xae2c90, u(e, 0x4d) as u32, u(e, 0x51) as u32) < 10 {
+                        let (a, b) = (i(e, 0x41), i(e, 0x19).wrapping_shl(1));
+                        x18 = (if a > b { a } else { b }) as f32;
+                    }
+                    x18 = ((x18 as f64).abs() * x18 as f64) as f32;
+                    if k == 0 && 0.0f32 > x18 {
+                        x18 = 0.0;
+                    }
+                    let mut base = h;
+                    let pe = *((e + 0x72) as *const u8);
+                    if pe < 5 && (x11 as i32 - 3) < x12 as i32 {
+                        let e2 = busca(u(u(u(0xadadfc, 0), 4 * u(jogo, 0)), 8), clube_b);
+                        if e2 != 0 && *((e2 + 0x72) as *const u8) > pe {
+                            let comp = u(u(0xadadfc, 0), 4 * u(jogo, 0));
+                            let cx = w(comp, 0x3e);
+                            let mut x30 = if cx > 0 { 22.0 / cx as f64 } else { 1.0 };
+                            let ax = w(u(jogo, 0x14), 0x69);
+                            if ax >= 10 {
+                                let lim = ax * 500;
+                                if rep_a > lim {
+                                    x30 *= ((rep_a - lim) as f64 + (rep_a - 5000) as f64) * 0.0002 + 1.0;
+                                }
+                            }
+                            let p = pow_do_jogo(x30, 1.5) * (*((e2 + 0x72) as *const u8) as i32 - pe as i32) as f64;
+                            let p3 = p * p * p;
+                            let q = p3 / ((k as i32 * k as i32) as f64 * 50.0 + 250.0) + 1.0;
+                            let q = if 1.0 > q { 1.0 } else if 10.0 < q { 10.0 } else { q };
+                            base = q * h;
+                        }
+                    }
+                    let z = x18 as f64 * 0.013333333333333334 + 1.0;
+                    let z = if 0.25 > z { 0.25 } else if 5.0 < z { 5.0 } else { z };
+                    h = base * z;
+                }
+            }
+        }
+    }
+    let soma = x11 as i32 + x12 as i32;
+    if soma > 6 {
+        h *= 0.825;
+    } else if soma > 4 {
+        h *= 0.875;
+    }
+    let kb = k;
+    if kb != 0 || x13 < 0 {
+        let pressao = (rep_b > 7500 && rep_b - rep_a > 2000) || (rep_b > 8500 && rep_b - rep_a > 750) || (rep_b > 8000 && x11 as i32 - 1 > x12 as i32);
+        if pressao {
+            let d = x12 as i32 - x11 as i32;
+            if (d < 2 && w(m, 0x8ed4) == 0x1ef) || x12 <= x11 {
+                h *= 0.3;
+            }
+        }
+    }
+    let d = x11 as i32 - x12 as i32;
+    h *= if kb == 0 { 1.0 - d as f64 * 0.1 } else { 0.967 - (kb as i32 + 2 * d) as f64 * 0.067 };
+    if x11 > x12 || (x11 == x12 && (x16 != 0 || lado == 1)) {
+        let a = if 1.0 > tt { 1.0 } else { tt };
+        h *= if 1.0 < 30.0 / a { 1.0 } else { 30.0 / a };
+    } else if x11 < x12 || kb == 0 {
+        let v = tt * 0.03333333333333333;
+        h *= if 1.0 > v { 1.0 } else { v };
+    }
+    let d2 = x12 as i32 - x11 as i32;
+    if d2 > 2 && d2 < 6 {
+        h *= 1.01 - d2 as f64 * 0.2;
+    }
+    let ra_maior = w(clube_a, 0x80) > w(clube_b, 0x80);
+    if ((soma < 5 && x13 > -1 && x11 == x12 && x14 == 0 && ra_maior) || x13 > 0) && !(h > 1.0) {
+        h = 1.0;
+    }
+    if soma < 4 && x13 > -1 && x11 as i32 - 2 >= x12 as i32 && ra_maior && !(h > 1.15) {
+        h = 1.15;
+    }
+    let tecnico = u(c, 0x1f);
+    if tecnico != 0 && x13 > -1 {
+        let e = byte(tecnico, 0xe) as i32;
+        let mut f1 = (1.0 + (e - 10) as f64 * 0.06666666666666667) * h;
+        let e2 = pow_do_jogo(e as f64, 2.0);
+        if f1 < e2 * 0.005 {
+            f1 = e2 * 0.0025 + f1 * 0.5;
+        }
+        let hm1 = h - 1.0;
+        h = if f1 < hm1 { hm1 } else { f1 };
+    }
+    if (rep_b > 7500 || x13 < 0) && kb != 0 && d.abs() < 2 && (x11 >= x12 || tt < 75.0 || soma > 3) {
+        let g = tt * 0.02857142857142857 + 0.2;
+        if !(h < g) {
+            h = g;
+        }
+    }
+    if x17 != 0 && x14 == 0 && x16 == 0 && (x11 == x12 || x11 as i32 + 1 == x12 as i32) && kb == 0 {
+        let g = (if tt < 45.0 { tt } else { 45.0 }) * 0.02857142857142857 + 0.2;
+        if !(h > g) {
+            h = g;
+        }
+    }
+    if x12 > 1 && x11 > 1 {
+        let cai = if x14 == 0 && x17 != 0 { (tt + 90.0) / soma as f64 } else { tt / soma as f64 };
+        if cai < 18.0 {
+            h *= 0.3;
+        }
+    }
+    let fator = (m + 0x476a + 4 * lu) as *mut f32;
+    let tempo = w(m, 0x8ed4);
+    if tt > 85.0 - h * 10.0 && tempo == 0x3de && (x11 as i32 + 1 == x12 as i32 || (x17 != 0 && x14 == 0 && x16 == 0 && x11 == x12)) {
+        *fator = 10.0;
+        return 1;
+    }
+    if soma < 5 && tt > 82.0 - h * 10.0 && tempo == 0x3de && x11 == x12 && x16 == 0 && (h > 1.0 || byte(m, 0x1ab + lu) == 1) {
+        *fator = 10.0;
+        return 1;
+    }
+    if h < 1.4 && kb != 0 && d > 1 {
+        h = 0.2;
+    }
+    let retranca = (d > 3 && h > 1.0)
+        || (tt > 30.0 && x11 >= x12 && 10.0 / h < ((d + 1) * (d + 1)) as f64 && clube_a != u(clube_b, 0xb3) && clube_a != u(clube_b, 0xb7) && clube_a != u(clube_b, 0xbb));
+    if retranca {
+        *fator = -1.0;
+        return 5;
+    }
+    if rodando && (h - *fator as f64).abs() < 0.5 {
+        return byte(m, 0x1ab + lu) as u8;
+    }
+    *fator = h as f32;
+    if !(h > 0.3) {
+        4
+    } else if h < 0.7 {
+        3
+    } else if h > 1.5 {
+        1
+    } else {
+        2
+    }
 }
 
 // ---------- centesima decima sexta leva: a substituicao (0x6e1090) ----------
@@ -15429,6 +15691,16 @@ unsafe extern "C" fn comparar_escalar(
     PLACAR.registrar(igual && r == rr, || format!("escalar(n {} vagas {}+{} modo {:#x}) original={} rust={} {:x?} x {:x?}", a2 as u8 as i8, a4 as u8 as i8, a5 as u8 as i8, a7, r, rr, mo, mr));
     r
 }
+unsafe extern "thiscall" fn comparar_postura(c: usize) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u8>(279);
+    let m = *((c + 0x12) as *const usize);
+    // os ativos (motor+4/+5, 0x6cbbb0), o fator dos dois lados, as datas (0x54cdb0) e o ponteiro da
+    // tabela que a busca na liga (0x4a4850) ordena
+    let reg = [(m + 4, 2), (m + 0x476a, 8), (0xae2470, 8), (0xae2418, 1), (0xadae10, 4)];
+    let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(c), || postura(c));
+    PLACAR.registrar(igual && r == rr, || format!("postura(lado {}) original={} rust={} {:x?} x {:x?}", byte(c, 0x18), r, rr, mo, mr));
+    r
+}
 unsafe extern "thiscall" fn comparar_substituir(c: usize, goleiro: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(277);
     if gravando_no_topo() {
@@ -16517,6 +16789,7 @@ pub unsafe fn instalar(comparando: bool) {
         refazer_time as *const () as usize,
         substituir as *const () as usize,
         escalar as *const () as usize,
+        postura as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -16798,6 +17071,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_refazer_time as *const () as usize,
         comparar_substituir as *const () as usize,
         comparar_escalar as *const () as usize,
+        comparar_postura as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -16908,7 +17182,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_gravidade_da_lesao", "motor_grau_da_lesao", "motor_lesao_na_dividida",
         "motor_avaliar_jogador", "motor_melhor_avaliado", "motor_melhor_da_lista",
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
-        "motor_escalar",
+        "motor_escalar", "motor_postura",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
