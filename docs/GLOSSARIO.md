@@ -145,6 +145,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6ceb90 | `escolher_cobrador` | choose_taker |
 | 0x6c6a30 | `escolher_companheiro` | choose_teammate |
 | 0x6d0f80 | `escolher_destaque` | choose_standout |
+| 0x6e0230 | `escolher_formacao` | choose_formation |
 | 0x6c2310 | `escolher_pela_condicao` | choose_by_condition |
 | 0x6c2750 | `escolher_por_papel` | choose_by_role |
 | 0x6c2880 | `escolher_por_papel_b` | choose_by_role_b |

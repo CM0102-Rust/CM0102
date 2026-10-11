@@ -387,8 +387,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6e1090, bytes: &[0x81, 0xec, 0xc4, 0x04, 0x00, 0x00] },
     Prologo { endereco: 0x6e2000, bytes: &[0x81, 0xec, 0x24, 0x01, 0x00, 0x00] },
     Prologo { endereco: 0x6df460, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
+    Prologo { endereco: 0x6e0230, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
 ];
-const N: usize = 280;
+const N: usize = 281;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4657,6 +4658,291 @@ unsafe extern "thiscall" fn postura(c: usize) -> u8 {
     }
 }
 
+// ---------- centesima decima nona leva: a formacao (0x6e0230) ----------
+
+/// { 0x6e0230 } (thiscall, ret 0x10, match_man.cpp): a comissao `c` escolhe a formacao do clube
+/// (+0x2f) e carrega a tatica no motor. Com o motor em +0 sorteia a formacao; com `modo` != 2 so
+/// recarrega; com tecnico humano a ser consultado (0x5fd210/0x5fea50) usa a tatica dele (0x5fbe20,
+/// 0x5fbd00). Senao da nota (0x6e2f20) a cada setor (7, bits 1..0x40) e faixa (5, bits 0x80..0x800)
+/// pelas duas melhores das `n` pessoas de `fichas` (o goleiro so na faixa do meio; com menos de 11, o
+/// ultimo setor vale metade e as pontas dos setores 1 a 3 ficam com a menor), e julga cada formacao
+/// do banco de taticas (0xde1d08): o tempo (+2, ate 3000) e a postura (0x6df460) pesam a nota da
+/// formacao (+0x10/+0x18/+0x20, ate 3), o tecnico ajusta (+0x1c, +0xe, +0x1f; a favorita +0x43 vale
+/// x1,1 ou ate x3,75, as outras x0,1) e cada vaga soma a nota do seu setor e faixa (0x5b2ae0) e as
+/// marcas (0x5b5270/0x5b57c0); o equilibrio dos setores entra pela postura. Grava a melhor (0x8967d0),
+/// copia a tatica (0x896660) para o motor (+0x91e2 do lado) e para +0x2b e acerta as instrucoes
+/// (0x6ddab0). As notas das formacoes ficam numa lista da CRT do jogo (0x945501/0x9452ca). Devolve 0.
+unsafe extern "thiscall" fn escolher_formacao(c: usize, fichas: usize, a2: u32, a3: u32, a4: u32) -> u8 {
+    let u = |p: usize, o: usize| *((p + o) as *const usize);
+    let w = |p: usize, o: usize| *((p + o) as *const i16) as i32;
+    let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let postura: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x6df460usize);
+    let definir: unsafe extern "thiscall" fn(usize, usize, u32, i32) -> u32 = core::mem::transmute(0x8967d0usize);
+    let carregar: unsafe extern "thiscall" fn(usize, usize, i32) -> usize = core::mem::transmute(0x896660usize);
+    let instrucoes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6ddab0usize);
+    let pp = postura(c) as i8;
+    let clube = u(c, 0x2f);
+    let mut escala = w(clube, 0x80) << 3;
+    if escala <= 2000 {
+        escala = 2000;
+    }
+    let m = u(c, 0x12);
+    let humano = byte(c, 0x19) as i32;
+    let tat = || u(0xde1d08, 0);
+    let quantas = || (*((tat() + 0x5fd) as *const i32)).wrapping_add(*((tat() + 0x5f5) as *const i32));
+    let melhor: i32;
+    let tatica = 'tatica: {
+        if byte(m, 0) != 0 {
+            melhor = sortear(quantas()) as i16 as i32;
+        } else if a4 as u8 != 2 {
+            break 'tatica carregar(tat(), clube, humano);
+        } else {
+            let p = u(clube, 0xcf);
+            let q = *(0xae2364 as *const i32);
+            if humano == 0 && p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && byte(p, 0x5f) != 0 {
+                let gerente = u(0xb63c98, 0);
+                let consultar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd210usize);
+                let opcao: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(0x5fea50usize);
+                if consultar(gerente, p) != 0 && opcao(gerente, 2, p) != 0 {
+                    let preparar: unsafe extern "thiscall" fn(usize, u32, usize, usize) = core::mem::transmute(0x5fbe20usize);
+                    let dele: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5fbd00usize);
+                    preparar(gerente, 0, clube, p);
+                    break 'tatica dele(u(0xb63c98, 0), u(clube, 0xcf));
+                }
+            }
+            melhor = julgar_formacoes(c, fichas, a2, a3, pp, escala, calloc, free);
+        }
+        definir(tat(), clube, melhor as i8 as i16 as u16 as u32, humano);
+        carregar(tat(), clube, humano)
+    };
+    let lado = byte(c, 0x18) as isize;
+    core::ptr::copy_nonoverlapping(tatica as *const u8, (m as isize + 0x91e2 + 0x18e3 * lado) as *mut u8, 0x18e3);
+    // ponytail: sem tatica (ou sem +0x2b) o original para o jogo com erro (match_man.cpp 0xc1d); aqui so nao copia
+    let copia = u(c, 0x2b);
+    if tatica != 0 && copia != 0 {
+        core::ptr::copy_nonoverlapping(tatica as *const u8, copia as *mut u8, 0x18e3);
+        instrucoes(c);
+    }
+    0
+}
+
+/// O miolo da 0x6e0230: as notas por setor e faixa e o julgamento de cada formacao; devolve a melhor.
+#[allow(clippy::too_many_arguments)]
+unsafe fn julgar_formacoes(
+    c: usize, fichas: usize, a2: u32, a3: u32, pp: i8, escala: i32, calloc: unsafe extern "C" fn(u32, u32) -> usize, free: unsafe extern "C" fn(usize),
+) -> i32 {
+    let u = |p: usize, o: usize| *((p + o) as *const usize);
+    let w = |p: usize, o: usize| *((p + o) as *const i16) as i32;
+    let d = |p: usize, o: usize| *((p + o) as *const f64);
+    let nota: unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32) -> i32 =
+        core::mem::transmute(0x6e2f20usize);
+    let pegar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x896570usize);
+    let posicao: unsafe extern "thiscall" fn(usize, u32, u32) -> u16 = core::mem::transmute(0x5b2ae0usize);
+    let marcas: unsafe extern "thiscall" fn(usize, u32) -> u64 = core::mem::transmute(0x5b5270usize);
+    let marca_b: unsafe extern "thiscall" fn(usize, u32) -> u8 = core::mem::transmute(0x5b57c0usize);
+    let clube = u(c, 0x2f);
+    let n = a2 as u8 as i8 as i32;
+    // as notas de cada setor (g) e faixa (s): a soma das duas melhores pessoas
+    let mut tab = [0i32; 35];
+    for g in 0..7 {
+        for s in 0..5 {
+            let faixa = if g == 0 {
+                if s != 2 {
+                    continue;
+                }
+                0
+            } else {
+                0x80u32 << s
+            };
+            let modo = faixa | 1 << g;
+            let (mut a, mut b, mut quantos) = (-10000i32, -10000i32, 0);
+            for k in 0..n {
+                let p = u(fichas + 4 * k as usize, 0);
+                let r = nota(p, u(p, 0x61), 0, modo, a3, clube, c, u(c, 0x1b) as u32, u32::MAX, 0, 0, 0, 0, 0, 0).max(-10000);
+                match quantos {
+                    0 => {
+                        a = r;
+                        quantos = 1;
+                    }
+                    1 => {
+                        if r > a {
+                            b = a;
+                            a = r;
+                        } else {
+                            b = r;
+                        }
+                        quantos = 2;
+                    }
+                    _ => {
+                        if r > a {
+                            b = a;
+                            a = r;
+                        } else if r > b {
+                            b = r;
+                        }
+                    }
+                }
+            }
+            let soma = a.wrapping_add(b);
+            tab[g * 5 + s] = if n < 11 && g == 6 { soma / 2 } else { soma };
+        }
+    }
+    if n < 11 {
+        for (x, y) in [(5, 9), (10, 14), (15, 19)] {
+            let v = tab[x].min(tab[y]);
+            tab[x] = v;
+            tab[y] = v;
+        }
+    }
+    let tat = || u(0xde1d08, 0);
+    let quantas = || (*((tat() + 0x5fd) as *const i32)).wrapping_add(*((tat() + 0x5f5) as *const i32));
+    let lista = calloc(quantas() as u32, 8);
+    let (mut melhor, mut melhor_r) = (-1i32, 0f64);
+    let tec = u(c, 0x1f);
+    let mut idx = 0i32;
+    while idx < quantas() {
+        let f = u(tat(), 0) + 0x28 * idx as usize;
+        let mut t = w(f, 2);
+        if t as f64 > 3000.0 {
+            t = 3000;
+        }
+        let v = match pp {
+            1 => d(f, 0x10),
+            3..=5 => d(f, 0x20),
+            _ => d(f, 0x18),
+        };
+        let v = if v > 3.0 { 3.0 } else { v };
+        let mut x = ((3000.0 - t as f64) * 5.0 + v * t as f64) * 0.005;
+        let tatica = pegar(tat(), *(f as *const u16) as u32, 0);
+        let flags = *((tatica + 0x584) as *const u32);
+        if tec != 0 {
+            if flags & 0x400 != 0 {
+                x += (byte(tec, 0x1c) as i32 - 10) as f64;
+            }
+            if flags & 0x1000 != 0 {
+                x += (10 - byte(tec, 0xe) as i32) as f64;
+            }
+            if flags & 0x100 != 0 {
+                x += (byte(tec, 0x1f) as i32 - 10) as f64;
+            }
+            let fav = byte(tec, 0x43);
+            let favorita = fav > 0 && fav < 10 && {
+                let q = u(tat(), 8 + 4 * fav as usize);
+                q != 0 && q == u(tatica, 0x187b)
+            };
+            x *= if !favorita {
+                0.1
+            } else if n >= 11 {
+                let y = n as f64 * 0.2 - 0.2;
+                if 3.75 < y { 3.75 } else { y }
+            } else {
+                1.1
+            };
+        }
+        let (mut f18, mut f20, mut f28, mut f44, mut f54) = (0f32, 0f32, 0f32, 0f32, 0f32);
+        let mut soma = 0i32;
+        for vaga in 0..11u32 {
+            let p1 = posicao(tatica, vaga, 0);
+            let p2 = posicao(tatica, vaga, 1) as u8;
+            if tec != 0 {
+                let r = marcas(tatica, vaga) as u32;
+                let fl = marca_b(tatica, vaga);
+                if r & 0x8000 != 0 && flags & 0x100 == 0 {
+                    x += byte(tec, 0x1f) as f64 * 0.25 - 2.5;
+                }
+                if r & 0x200000 != 0 {
+                    x += byte(tec, 0x15) as f64 - 10.0;
+                }
+                if r & 0x800000 != 0 {
+                    x += byte(tec, 0xe) as f64 * 0.5 - 5.0;
+                }
+                if fl & 4 != 0 {
+                    x += byte(tec, 0x1a) as f64 * 1.5 - 15.0;
+                }
+            }
+            let mais = |v: &mut f32, q: f64| *v = (*v as f64 + q) as f32;
+            let (mut setor, mut faixa) = (0usize, -1i32);
+            if p1 & 1 != 0 {
+                faixa = 2;
+            } else if p1 & 2 != 0 {
+                mais(&mut f18, 1.0);
+                setor = 1;
+            } else if p1 & 4 != 0 {
+                mais(&mut f18, 1.0);
+                setor = 2;
+            } else if p1 & 8 != 0 {
+                mais(&mut f28, 1.0);
+                setor = 3;
+            } else if p1 & 0x10 != 0 {
+                mais(&mut f54, 1.0);
+                setor = 4;
+            } else if p1 & 0x20 != 0 {
+                mais(&mut f20, 1.0);
+                setor = 5;
+            } else {
+                mais(&mut f44, 1.0);
+                setor = 6;
+            }
+            if p2 & 2 != 0 {
+                mais(&mut f18, 0.5);
+                setor = 1;
+            } else if p2 & 4 != 0 {
+                mais(&mut f18, 0.5);
+                setor = 2;
+            } else if p2 & 8 != 0 {
+                mais(&mut f28, 0.5);
+                setor = 3;
+            } else if p2 & 0x10 != 0 {
+                mais(&mut f54, 0.5);
+                setor = 4;
+            } else if p2 & 0x20 != 0 {
+                mais(&mut f20, 0.5);
+                setor = 5;
+            } else if p2 & 0x40 != 0 {
+                mais(&mut f44, 0.5);
+                setor = 6;
+            }
+            if faixa == -1 {
+                faixa = if p1 & 0x80 != 0 {
+                    0
+                } else if p1 & 0x100 != 0 {
+                    1
+                } else if p1 & 0x200 != 0 {
+                    2
+                } else if p1 & 0x400 != 0 {
+                    3
+                } else {
+                    4
+                };
+            }
+            soma = soma.wrapping_add(tab[setor * 5 + faixa as usize]);
+        }
+        // o equilibrio dos setores
+        let z = (f18 as f64 - f44 as f64) as f32 as f64;
+        let q = |v: f32| pow_do_jogo(v as f64, 2.0);
+        let s_ = (q(f44) + q(f44) + q(f20)) - (q(f18) + q(f18)) - q(f28);
+        let e = 44.0 - ((32.0 - s_) - (z - f20 as f64 * 0.5).abs() * (z - f20 as f64)) * 0.8;
+        let y = match pp {
+            1 => (e * 0.015 + 1.0) * x,
+            3 => (1.0 - e * 0.015) * x,
+            4 => (1.0 - e * 0.025) * x,
+            _ => x,
+        };
+        let r = y * (soma as f64 / escala as f64);
+        *((lista + 8 * idx as usize) as *mut f64) = r;
+        if melhor == -1 || r > melhor_r {
+            melhor_r = r;
+            melhor = idx;
+        }
+        idx += 1;
+    }
+    if lista != 0 {
+        free(lista);
+    }
+    melhor
+}
+
 // ---------- centesima decima sexta leva: a substituicao (0x6e1090) ----------
 
 /// Minuto do relogio (+0x8ed0 / 11), no maximo o fim do periodo (+0x8ed4: 45, 90, 105, 120).
@@ -5074,18 +5360,6 @@ unsafe extern "thiscall" fn refazer_time(c: usize) {
     })
 }
 
-// Portas de 0x6e0230 (julga a escalacao) e 0x6e2000 (escala): unidades da fita com vetores.
-static mut PORTA_6E0230: usize = 0;
-const PROLOGO_6E0230: Prologo = Prologo { endereco: 0x6e0230, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] };
-
-unsafe extern "thiscall" fn porta_6e0230(c: usize, lista: usize, n: u32, codigo: u32, modo: u32) -> u8 {
-    let o: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u8 = core::mem::transmute(PORTA_6E0230);
-    if !gravando() {
-        return o(c, lista, n, codigo, modo);
-    }
-    let q = n as u8 as i8 as isize;
-    chamar_gravando_vetores(0x6e0230, c, [0, n, codigo, modo, 0], &[(lista, 4 * q.max(0) as usize)], &[], || o(c, lista, n, codigo, modo) as u32) as u8
-}
 
 
 // ---------- centesima decima quarta leva: o jogador que sai de campo (0x6cda20) ----------
@@ -15701,6 +15975,37 @@ unsafe extern "thiscall" fn comparar_postura(c: usize) -> u8 {
     PLACAR.registrar(igual && r == rr, || format!("postura(lado {}) original={} rust={} {:x?} x {:x?}", byte(c, 0x18), r, rr, mo, mr));
     r
 }
+unsafe extern "thiscall" fn comparar_escolher_formacao(c: usize, fichas: usize, a2: u32, a3: u32, a4: u32) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u8>(280);
+    let n = (a2 as u8 as i8).max(0) as usize;
+    if gravando_no_topo() {
+        // dentro de uma comparacao com fita: unidade com vetores (as fichas estao na pilha de quem chama)
+        return chamar_gravando_vetores(0x6e0230, c, [0, a2, a3, a4, 0], &[(fichas, 4 * n)], &[], || o(c, fichas, a2, a3, a4) as u32) as u8;
+    }
+    // o sorteio, o motor, a copia da tatica (+0x2b), as linhas do clube no banco de taticas (a formacao
+    // gravada e o que as instrucoes mexem), as datas da nota (0x6e2f20) e o ponteiro da busca na liga
+    let m = *((c + 0x12) as *const usize);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m, 0xf5f8), (*((c + 0x2b) as *const usize), 0x18e3), (0xb67a34, 4), (0xae2470, 8), (0xae2418, 1), (0xae24c0, 8), (0xae249e, 1), (0xadae10, 4)]);
+    let taticas = *(0xde1d08 as *const usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let clube = *((c + 0x2f) as *const usize);
+    for humano in 0..2u32 {
+        let l = if clube == 0 { -1 } else { linha(clube, humano) };
+        if l != -1 {
+            reg.push(((*((taticas + 0x601) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
+        }
+    }
+    let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(c, fichas, a2, a3, a4), || escolher_formacao(c, fichas, a2, a3, a4));
+    PLACAR.registrar(igual && r == rr, || {
+        // o primeiro byte diferente (as regioes sao grandes)
+        let dif = mo.0.iter().zip(mr.0.iter()).find_map(|(a, b)| {
+            a.1.iter().zip(b.1.iter()).position(|(x, y)| x != y).map(|k| format!("{:#x}+{:#x}: {:x?} x {:x?}", a.0, k, &a.1[k..(k + 8).min(a.1.len())], &b.1[k..(k + 8).min(b.1.len())]))
+        });
+        format!("escolher_formacao(n {} modo {:#x} {}) original={} rust={} {}", a2 as u8 as i8, a3, a4 as u8, r, rr, dif.unwrap_or_default())
+    });
+    r
+}
 unsafe extern "thiscall" fn comparar_substituir(c: usize, goleiro: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(277);
     if gravando_no_topo() {
@@ -16505,9 +16810,6 @@ pub unsafe fn instalar(comparando: bool) {
         if let Some(t) = desvios::desviar("motor_porta_6d0980 (gravacao)", &PROLOGO_6D0980, porta_6d0980 as *const () as usize) {
             PORTA_6D0980 = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_6e0230 (gravacao)", &PROLOGO_6E0230, porta_6e0230 as *const () as usize) {
-            PORTA_6E0230 = t;
-        }
     }
     let rust: [usize; N] = [
         tabela_a as *const () as usize,
@@ -16790,6 +17092,7 @@ pub unsafe fn instalar(comparando: bool) {
         substituir as *const () as usize,
         escalar as *const () as usize,
         postura as *const () as usize,
+        escolher_formacao as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -17072,6 +17375,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_substituir as *const () as usize,
         comparar_escalar as *const () as usize,
         comparar_postura as *const () as usize,
+        comparar_escolher_formacao as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -17182,7 +17486,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_gravidade_da_lesao", "motor_grau_da_lesao", "motor_lesao_na_dividida",
         "motor_avaliar_jogador", "motor_melhor_avaliado", "motor_melhor_da_lista",
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
-        "motor_escalar", "motor_postura",
+        "motor_escalar", "motor_postura", "motor_escolher_formacao",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

@@ -127,6 +127,7 @@ EN = {
  'substituir': 'substitute',
  'escalar': 'pick',
  'postura': 'stance',
+ 'escolher_formacao': 'choose_formation',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:
