@@ -16324,6 +16324,36 @@ unsafe extern "C" fn comparar_escalar(
             || chamar() as u32,
         ) as u8;
     }
+    // Sonda (so na comparacao): a 0x6dbc50, no modo 2, nunca escreve o curto da 1a vaga extra e passa
+    // o lixo da pilha a escala (retorno 0x6dd383). Conta quantas vezes ele nao e zero e se zera-lo muda
+    // a escala (a original duas vezes: com o lixo e com 0).
+    if crate::desvios::RETORNO == 0x6dd383 && a5 as u8 != 0 && a15 != 0 {
+        use std::sync::atomic::{AtomicU32, Ordering::Relaxed};
+        static CHAMADAS: AtomicU32 = AtomicU32::new(0);
+        static NAO_ZERO: AtomicU32 = AtomicU32::new(0);
+        static MUDA: AtomicU32 = AtomicU32::new(0);
+        let campo = (a15 + 2 * (a4 as u8 as usize)) as *mut u16;
+        let lixo = *campo;
+        let k = CHAMADAS.fetch_add(1, Relaxed) + 1;
+        if lixo != 0 {
+            NAO_ZERO.fetch_add(1, Relaxed);
+            let (r1, r2, igual, _, _) = crate::comparacao::lado_a_lado(&[(a6, 4 * n)], chamar, || {
+                *campo = 0;
+                let r = chamar();
+                *campo = lixo;
+                r
+            });
+            if !igual || r1 != r2 {
+                MUDA.fetch_add(1, Relaxed);
+            }
+        }
+        if lixo != 0 || k % 500 == 0 {
+            crate::registro::linha(&format!(
+                "sonda_lixo: valor {:#06x}; {} escalas da 0x6dbc50, {} com lixo, {} mudam se zerado",
+                lixo, k, NAO_ZERO.load(Relaxed), MUDA.load(Relaxed)
+            ));
+        }
+    }
     // a saida e as datas estaticas que a nota (0x6e2f20) toca
     let reg = [(a6, 4 * n), (0xae2470, 8), (0xae2418, 1), (0xae24c0, 8), (0xae249e, 1)];
     let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, chamar, || escalar(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15));
