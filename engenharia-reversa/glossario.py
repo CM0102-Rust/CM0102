@@ -122,6 +122,7 @@ EN = {
  'avaliar_jogador': 'rate_player',
  'melhor_avaliado': 'best_rated',
  'melhor_da_lista': 'best_in_list',
+ 'jogador_saiu': 'player_left',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

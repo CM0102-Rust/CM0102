@@ -382,8 +382,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6e1cf0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
     Prologo { endereco: 0x6e1a40, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
     Prologo { endereco: 0x6e1940, bytes: &[0x83, 0xec, 0x0c, 0x8a, 0x44, 0x24, 0x14] },
+    Prologo { endereco: 0x6cda20, bytes: &[0x51, 0x8a, 0x44, 0x24, 0x0c] },
 ];
-const N: usize = 275;
+const N: usize = 276;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4074,6 +4075,142 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- centesima decima quarta leva: o jogador que sai de campo (0x6cda20) ----------
+
+/// { 0x6cda20 } (ret 8, match_eng.cpp) com as chamadas que mexem fora do motor injetadas (0x6e1aa0
+/// e 0x6e1090 da comissao, 0x897760 grava o capitao): `j` sai de campo (lesao ou expulsao). Sem
+/// `ja_fora`, soma +0x23, grava o minuto (+0x8ed0 / 11, no maximo o fim do periodo: 45, 90, 105, 120)
+/// em +0x21 e tira da grade (0x6cdd50 com -3). Fica com +0x19 = -3. Nos jogos com tecnico humano
+/// (+0x904d do lado, 0x5fd210/0x5fd480), so segue com +0x904b e fora de selecao. Com +0x1a3 para.
+/// Goleiro (tabela 1) com +0x9049 do lado: a comissao troca o goleiro (0x6e1090 com 1). Senao a
+/// comissao refaz o time (0x6e1aa0 e 0x6e1090 com 0); se ele era o capitao (0x897590), o mais bem
+/// avaliado (0x6e1a40) vira capitao (0x897760); zera o jogador de posicao 1 do lado e o recompoe
+/// (0x6ce110). Fora dos jogos com tecnico humano guarda o minuto da troca (+0x8ecc + 2 x lado). No
+/// fim refaz a forca do lado (0x6bbb60) e a marcacao individual (0x6bbf60).
+unsafe fn jogador_saiu_com(m: usize, j: usize, ja_fora: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let tirar: unsafe extern "thiscall" fn(usize, usize, i8) = core::mem::transmute(0x6cdd50usize);
+    let tabela: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    let humano_9a01: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd210usize);
+    let humano_9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd480usize);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let vaga_marcada: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8 = core::mem::transmute(0x897590usize);
+    let melhor: unsafe extern "thiscall" fn(usize) -> i8 = core::mem::transmute(0x6e1a40usize);
+    let manter: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(0x6ce110usize);
+    let forca: unsafe extern "thiscall" fn(usize, i8) = core::mem::transmute(0x6bbb60usize);
+    let marcacao: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6bbf60usize);
+    let b = |o: usize| (j + o) as *mut i8;
+    if ja_fora == 0 {
+        *b(0x23) = (*b(0x23)).wrapping_add(1);
+        let min = (*((m + 0x8ed0) as *const i16) as i32 / 11) as i8;
+        *b(0x21) = min;
+        let teto = match *((m + 0x8ed4) as *const i16) {
+            0x1ef => Some(0x2d),
+            0x3de => Some(0x5a),
+            0x483 => Some(0x69),
+            0x528 => Some(0x78),
+            _ => None,
+        };
+        if let Some(t) = teto {
+            *b(0x21) = min.min(t);
+        }
+        tirar(m, j, -3);
+    }
+    let goleiro = tabela(j) == 1;
+    *b(0x19) = -3;
+    let lado = byte(j, 0x27);
+    let base = (m as isize + lado as isize * 0xd0) as usize;
+    let t = *((m + 0x4792) as *const usize);
+    let clube_do = |l: i8| if l == 0 { *((t + 0x1c) as *const usize) } else { *((t + 0x20) as *const usize) };
+    if byte(m, 0) == 0 {
+        let p = *((base + 0x904d) as *const usize);
+        let n = *(0xae2364 as *const i32);
+        if p != 0 && *(p as *const i32) >= n - 0x10 && *(p as *const i32) < n && byte(p, 0x5f) != 0 && humano_9a01(*(0xb63c98 as *const usize), p) == 0 {
+            if byte(base, 0x904b) == 0 || selecao(clube_do(lado)) != 0 || humano_9a05(*(0xb63c98 as *const usize), p) != 0 {
+                return;
+            }
+        }
+    }
+    if byte(m, 0x1a3) != 0 {
+        return;
+    }
+    let comissao = base + 0x9032;
+    let mut guardar = byte(m, 0) == 0;
+    if byte(base, 0x9049) != 0 && goleiro {
+        chamar(0x6e1090, comissao, [1, 0, 0, 0, 0]);
+    } else if byte(m, 0) != 0 {
+        guardar = false;
+    } else {
+        chamar(0x6e1aa0, comissao, [0, 0, 0, 0, 0]);
+        chamar(0x6e1090, comissao, [0, 0, 0, 0, 0]);
+        let l = byte(j, 0x27);
+        let principal = if l != 0 { byte(t, 0x41) } else { byte(t, 0x40) } == 0;
+        let v = vaga_marcada(*(0xde1d08 as *const usize), clube_do(l), principal as u32, 0);
+        if j == jogador_do_bloco(m, l, v as isize as usize) {
+            let l = byte(j, 0x27);
+            let principal = if l != 0 { byte(t, 0x41) } else { byte(t, 0x40) } == 0;
+            let k = melhor(m + 0x9032 + l as isize as usize * 0xd0);
+            chamar(0x897760, *(0xde1d08 as *const usize), [clube_do(l) as u32, k as u8 as u32, principal as u32, 0, 0]);
+        }
+        *((m + if byte(j, 0x27) == 0 { 0xf59e } else { 0xf5a2 }) as *mut usize) = 0;
+        manter(m, byte(j, 0x27));
+    }
+    if guardar {
+        let l = byte(j, 0x27) as isize;
+        *((m as isize + l * 2 + 0x8ecc) as *mut i16) = *((m + 0x8ed0) as *const i16);
+    }
+    forca(m, byte(j, 0x27));
+    marcacao(m);
+}
+
+/// { 0x6cda20 } (ret 8, match_eng.cpp): ver `jogador_saiu_com`.
+unsafe extern "thiscall" fn jogador_saiu(m: usize, j: usize, ja_fora: u32) {
+    jogador_saiu_com(m, j, ja_fora as u8, &mut |rotina, this, a| {
+        match rotina {
+            0x6e1aa0 => {
+                let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6e1aa0usize);
+                f(this);
+            }
+            0x6e1090 => {
+                let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x6e1090usize);
+                f(this, a[0]);
+            }
+            _ => {
+                let f: unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32 = core::mem::transmute(0x897760usize);
+                f(this, a[0] as usize, a[1] as u8 as i8, a[2]);
+            }
+        }
+        0
+    })
+}
+
+// Portas de 0x6e1aa0 e 0x6e1090 (a comissao refaz o time e faz a troca, match_man.cpp): unidades da
+// fita ate serem portadas.
+static mut PORTA_6E1AA0: usize = 0;
+static mut PORTA_6E1090: usize = 0;
+const PROLOGO_6E1AA0: Prologo = Prologo { endereco: 0x6e1aa0, bytes: &[0x81, 0xec, 0x04, 0x01, 0x00, 0x00] };
+const PROLOGO_6E1090: Prologo = Prologo { endereco: 0x6e1090, bytes: &[0x81, 0xec, 0xc4, 0x04, 0x00, 0x00] };
+
+unsafe extern "thiscall" fn porta_6e1aa0(c: usize) {
+    let o: unsafe extern "thiscall" fn(usize) = core::mem::transmute(PORTA_6E1AA0);
+    if !gravando() {
+        return o(c);
+    }
+    chamar_gravando(0x6e1aa0, c, [0, 0, 0, 0, 0], || {
+        o(c);
+        0
+    });
+}
+unsafe extern "thiscall" fn porta_6e1090(c: usize, goleiro: u32) {
+    let o: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(PORTA_6E1090);
+    if !gravando() {
+        return o(c, goleiro);
+    }
+    chamar_gravando(0x6e1090, c, [goleiro, 0, 0, 0, 0], || {
+        o(c, goleiro);
+        0
+    });
 }
 
 // ---------- centesima decima terceira leva: o mais bem avaliado da lista (0x6e1940) ----------
@@ -14478,6 +14615,35 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+unsafe extern "thiscall" fn comparar_jogador_saiu(m: usize, j: usize, ja_fora: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(275);
+    if gravando_no_topo() {
+        return o(m, j, ja_fora);
+    }
+    // o motor inteiro (a grade, os jogadores, a comissao +0x9032), o sorteio e o que a forca do lado
+    // e o erro tocam
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m, 0xf5f8), (0xb67a34, 4), (0xae1080, 4)]);
+    // o capitao guardado na linha da tatica (+0x52) dos dois clubes: a substituicao (0x6e1090) o troca
+    // antes de a comparada conferir se quem saiu era o capitao
+    let taticas = *(0xde1d08 as *const usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let t = *((m + 0x4792) as *const usize);
+    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+        for humano in 0..2u32 {
+            let l = if clube == 0 { -1 } else { linha(clube, humano) };
+            if l != -1 {
+                reg.push(((*((taticas + 0x601) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)) + 0x52, 4));
+            }
+        }
+    }
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(m, j, ja_fora), |chamar| {
+        jogador_saiu_com(m, j, ja_fora as u8, &mut |rotina, this, args| {
+            chamar(rotina, this, args, if rotina == 0x897760 { [u32::MAX, 0xff, u32::MAX, 0, 0] } else { [0xff, 0, 0, 0, 0] })
+        })
+    });
+    PLACAR.registrar(igual && sequencia, || format!("jogador_saiu(ja_fora {}) {} chamadas: {}", ja_fora as u8, k, detalhe_fita()));
+}
 unsafe extern "thiscall" fn comparar_melhor_da_lista(this: usize, lista: *const usize, n: i8) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, *const usize, i8) -> usize>(274);
     let reg = [crate::aleatorio::REGIOES_DO_ESTADO[0], crate::aleatorio::REGIOES_DO_ESTADO[1], (0xae2470, 8), (0xae2418, 1)];
@@ -14965,6 +15131,9 @@ unsafe extern "thiscall" fn comparar_vaga_marcada(this: usize, clube: usize, hum
 }
 unsafe extern "thiscall" fn comparar_marcar_vaga(this: usize, clube: usize, vaga: i8, humano: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32>(187);
+    if gravando_no_topo() {
+        return chamar_gravando(0x897760, this, [clube as u32, vaga as u8 as u32, humano, 0, 0], || o(this, clube, vaga, humano));
+    }
     let tabela = *((this + 0x601) as *const usize);
     // a linha pode ser qualquer uma da tabela: compara as 0x52..0x56 de todas as linhas possiveis
     let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
@@ -15200,6 +15369,12 @@ pub unsafe fn instalar(comparando: bool) {
         }
         if let Some(t) = desvios::desviar("motor_porta_6d0980 (gravacao)", &PROLOGO_6D0980, porta_6d0980 as *const () as usize) {
             PORTA_6D0980 = t;
+        }
+        if let Some(t) = desvios::desviar("motor_porta_6e1aa0 (gravacao)", &PROLOGO_6E1AA0, porta_6e1aa0 as *const () as usize) {
+            PORTA_6E1AA0 = t;
+        }
+        if let Some(t) = desvios::desviar("motor_porta_6e1090 (gravacao)", &PROLOGO_6E1090, porta_6e1090 as *const () as usize) {
+            PORTA_6E1090 = t;
         }
     }
     let rust: [usize; N] = [
@@ -15478,6 +15653,7 @@ pub unsafe fn instalar(comparando: bool) {
         avaliar_jogador as *const () as usize,
         melhor_avaliado as *const () as usize,
         melhor_da_lista as *const () as usize,
+        jogador_saiu as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -15755,6 +15931,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_avaliar_jogador as *const () as usize,
         comparar_melhor_avaliado as *const () as usize,
         comparar_melhor_da_lista as *const () as usize,
+        comparar_jogador_saiu as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -15864,6 +16041,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_pressao", "motor_desafio_adversario", "motor_evoluir_jogador", "motor_uniforme",
         "motor_gravidade_da_lesao", "motor_grau_da_lesao", "motor_lesao_na_dividida",
         "motor_avaliar_jogador", "motor_melhor_avaliado", "motor_melhor_da_lista",
+        "motor_jogador_saiu",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

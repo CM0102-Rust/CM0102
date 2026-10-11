@@ -37,9 +37,16 @@ LIMITE = 2400  # segundos; o autoteste completo passa de 20 minutos (cresce a ca
 
 def compilar():
     os.utime(SRC)  # o cargo nao recompila se a data nao mudar (ver CLAUDE.md)
-    r = subprocess.run(['cargo', 'build', '--release'], cwd=os.path.join(RAIZ, 'rust'), capture_output=True, text=True)
-    if 'Finished' not in r.stderr:
-        raise RuntimeError(r.stderr[-2000:])
+    for tentativa in range(3):
+        r = subprocess.run(['cargo', 'build', '--release'], cwd=os.path.join(RAIZ, 'rust'), capture_output=True, text=True)
+        if 'Finished' in r.stderr:
+            break
+        # falha sem mensagem (cargo interrompido ao lado de outra compilacao): tenta de novo
+        if r.stderr.strip():
+            raise RuntimeError(r.stderr[-2000:])
+        time.sleep(10)
+    else:
+        raise RuntimeError('cargo falhou 3 vezes sem mensagem (codigo %s)' % r.returncode)
     shutil.copy2(DLL, JOGO)
 
 

@@ -181,6 +181,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cc540 | `interceptar` | intercept |
 | 0x6c2fe0 | `jogador_no_bloco` | player_in_block |
 | 0x6e1cd0 | `jogador_pela_ficha` | player_by_record |
+| 0x6cda20 | `jogador_saiu` | player_left |
 | 0x6cbc00 | `jogadores_na_linha` | players_in_line |
 | 0x6cc070 | `jogadores_no_trajeto` | players_on_path |
 | 0x6bba50 | `lado_do_lance` | side_of_move |

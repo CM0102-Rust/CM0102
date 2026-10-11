@@ -1050,3 +1050,11 @@ Mutations: 2 of 2 caught; real game to 2002-01-01 with 0 divergences; Rust ×2 a
 | `melhor_da_lista(lista, n)` | 0x6e1940 | thiscall, ret 8 | match_man.cpp: among the `n` people in the list (with record +0x61), the one best rated by the staff (0x6e1cf0 with club +0x2f); 0 with none. With object +0x1f, if its value (0x544410 with byte +0x17) is below the person id mod 20, the rating becomes (1.1 − 0.01 × (object address mod 20)) × rating, as in the original; ties keep the first |
 
 Mutations: 3 of 3 caught; real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (db8ee4d7a7e1ef8e).
+
+### Match engine, 114th batch — the player who leaves the pitch (official on 2026-10-11)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `jogador_saiu(j, ja_fora)` | 0x6cda20 | thiscall, ret 8 | match_eng.cpp: `j` leaves the pitch (injury or sending-off). Without `ja_fora`, adds +0x23, stores the minute (+0x8ed0/11, capped at the period end) in +0x21 and removes him from the grid (0x6cdd50). Ends with +0x19 = −3. With a human manager on that side (0x5fd210/0x5fd480) it goes on only with +0x904b and outside national sides. Goalkeeper with +0x9049: the staff swap the keeper (0x6e1090 with 1); otherwise they redo the team (0x6e1aa0, 0x6e1090), pick a new captain if it was him (0x897590, 0x6e1a40, 0x897760) and restore the number-1 position player (0x6ce110); stores the substitution minute (+0x8ecc) and redoes side strength (0x6bbb60) and man-marking (0x6bbf60). The staff routines (0x6e1aa0, 0x6e1090, still original) and the stored captain are tape units |
+
+Mutations: 6 of 7 caught; s_zera survives (clearing the other side's number-1 position player: 0x6ce110 redoes both right after); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (db8ee4d7a7e1ef8e). The first baseline diverged: the substitution (a unit) changes the captain in the tactics row (+0x52), outside the regions; both clubs' rows were added to the regions. mutacoes.py retries the build when cargo fails without a message.

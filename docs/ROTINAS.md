@@ -1048,3 +1048,11 @@ Mutações: 2 de 2 pegas; jogo real até 2002-01-01 com 0 divergências; carreir
 | `melhor_da_lista(lista, n)` | 0x6e1940 | thiscall, ret 8 | match_man.cpp: entre as `n` pessoas da lista (com ficha +0x61), a mais bem avaliada pela comissão (0x6e1cf0 com o clube +0x2f); 0 sem nenhuma. Com o objeto +0x1f, se o valor dele (0x544410 com o byte +0x17) ficar abaixo do id da pessoa mod 20, a nota vira (1,1 − 0,01 × (endereço do objeto mod 20)) × nota, como no original; empate fica com a primeira |
 
 Mutações: 3 de 3 pegas; jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (db8ee4d7a7e1ef8e).
+
+### Motor de partidas, 114ª leva — o jogador que sai de campo (oficial em 11/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `jogador_saiu(j, ja_fora)` | 0x6cda20 | thiscall, ret 8 | match_eng.cpp: `j` sai de campo (lesão ou expulsão). Sem `ja_fora`, soma +0x23, grava o minuto (+0x8ed0/11, no máximo o fim do período) em +0x21 e tira da grade (0x6cdd50). Fica com +0x19 = −3. Com técnico humano no lado (0x5fd210/0x5fd480) só segue com +0x904b e fora de seleção. Goleiro com +0x9049: a comissão troca o goleiro (0x6e1090 com 1); senão refaz o time (0x6e1aa0, 0x6e1090), escolhe novo capitão se era ele (0x897590, 0x6e1a40, 0x897760) e recompõe o jogador de posição 1 (0x6ce110); guarda o minuto da troca (+0x8ecc) e refaz força do lado (0x6bbb60) e marcação (0x6bbf60). A comissão (0x6e1aa0, 0x6e1090, ainda no original) e o capitão gravado são unidades da fita |
+
+Mutações: 6 de 7 pegas; sobrevive s_zera (zerar o jogador de posição 1 do outro lado: a 0x6ce110 refaz os dois em seguida); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (db8ee4d7a7e1ef8e). A 1ª base divergiu: a substituição (unidade) troca o capitão na linha da tática (+0x52), fora das regiões; a linha dos dois clubes entrou nas regiões. O mutacoes.py tenta compilar de novo quando o cargo falha sem mensagem.
