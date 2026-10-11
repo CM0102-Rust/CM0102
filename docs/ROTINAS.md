@@ -1040,3 +1040,11 @@ Mutações: 7 de 7 pegas; jogo real até 2002-01-01 com 0 divergências; carreir
 | `melhor_avaliado()` | 0x6e1a40 | thiscall | match_man.cpp: o índice (0..20) do jogador ativo (+0x19 ≥ 0) mais bem avaliado pela comissão (0x6e1cf0 com o clube +0x2f) entre os 20 do bloco que começa em +0x23; o primeiro ativo entra mesmo com nota negativa, depois só nota estritamente maior; −1 sem nenhum ativo |
 
 Mutações: 2 de 2 pegas; jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (db8ee4d7a7e1ef8e).
+
+### Motor de partidas, 113ª leva — o mais bem avaliado da lista (oficial em 11/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `melhor_da_lista(lista, n)` | 0x6e1940 | thiscall, ret 8 | match_man.cpp: entre as `n` pessoas da lista (com ficha +0x61), a mais bem avaliada pela comissão (0x6e1cf0 com o clube +0x2f); 0 sem nenhuma. Com o objeto +0x1f, se o valor dele (0x544410 com o byte +0x17) ficar abaixo do id da pessoa mod 20, a nota vira (1,1 − 0,01 × (endereço do objeto mod 20)) × nota, como no original; empate fica com a primeira |
+
+Mutações: 3 de 3 pegas; jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (db8ee4d7a7e1ef8e).

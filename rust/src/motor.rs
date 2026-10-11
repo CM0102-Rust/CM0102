@@ -381,8 +381,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6cfe10, bytes: &[0x83, 0xec, 0x18, 0x53, 0x55] },
     Prologo { endereco: 0x6e1cf0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
     Prologo { endereco: 0x6e1a40, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
+    Prologo { endereco: 0x6e1940, bytes: &[0x83, 0xec, 0x0c, 0x8a, 0x44, 0x24, 0x14] },
 ];
-const N: usize = 274;
+const N: usize = 275;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4073,6 +4074,36 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- centesima decima terceira leva: o mais bem avaliado da lista (0x6e1940) ----------
+
+/// { 0x6e1940 } (ret 8, match_man.cpp): entre as `n` pessoas de `lista` (com ficha +0x61), a mais
+/// bem avaliada pela comissao (0x6e1cf0 com o clube +0x2f); 0 com `n` <= 0 ou nenhuma. Com o objeto
+/// +0x1f, se o valor dele (0x544410 com o byte +0x17) ficar abaixo do id da pessoa mod 20, a nota
+/// cai para (1,1 - 0,01 x (endereco do objeto mod 20)) x nota, como no original. Empate fica com
+/// a primeira.
+unsafe extern "thiscall" fn melhor_da_lista(this: usize, lista: *const usize, n: i8) -> usize {
+    let avaliar: unsafe extern "C" fn(usize, usize, usize) -> i16 = core::mem::transmute(0x6e1cf0usize);
+    let valor: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(0x544410usize);
+    let (mut melhor, mut nota) = (0usize, 0i16);
+    for i in 0..n.max(0) as usize {
+        let p = *lista.add(i);
+        if p == 0 || *((p + 0x61) as *const usize) == 0 {
+            continue;
+        }
+        let mut v = avaliar(p, 0, *((this + 0x2f) as *const usize)) as i32;
+        let x = *((this + 0x1f) as *const usize);
+        if x != 0 && (valor(x, byte(x, 0x17) as u8 as u32) as i32) < *(p as *const i32) % 20 {
+            let m = (x as i32) % 20;
+            v = ftol((f64_em(0x9689c0) - m as f64 * f64_em(0x967898)) * v as i16 as f64);
+        }
+        if melhor == 0 || v as i16 > nota {
+            melhor = p;
+            nota = v as i16;
+        }
+    }
+    melhor
 }
 
 // ---------- centesima decima segunda leva: o mais bem avaliado do lado (0x6e1a40) ----------
@@ -14447,6 +14478,13 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+unsafe extern "thiscall" fn comparar_melhor_da_lista(this: usize, lista: *const usize, n: i8) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, *const usize, i8) -> usize>(274);
+    let reg = [crate::aleatorio::REGIOES_DO_ESTADO[0], crate::aleatorio::REGIOES_DO_ESTADO[1], (0xae2470, 8), (0xae2418, 1)];
+    let (r, rr, igual, _, _) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, lista, n), || melhor_da_lista(this, lista, n));
+    PLACAR.registrar(igual && r == rr, || format!("melhor_da_lista({}) original={:#x} rust={:#x}", n, r, rr));
+    r
+}
 unsafe extern "thiscall" fn comparar_melhor_avaliado(this: usize) -> i8 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i8>(273);
     let reg = [crate::aleatorio::REGIOES_DO_ESTADO[0], crate::aleatorio::REGIOES_DO_ESTADO[1], (0xae2470, 8), (0xae2418, 1)];
@@ -15439,6 +15477,7 @@ pub unsafe fn instalar(comparando: bool) {
         lesao_na_dividida as *const () as usize,
         avaliar_jogador as *const () as usize,
         melhor_avaliado as *const () as usize,
+        melhor_da_lista as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -15715,6 +15754,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_lesao_na_dividida as *const () as usize,
         comparar_avaliar_jogador as *const () as usize,
         comparar_melhor_avaliado as *const () as usize,
+        comparar_melhor_da_lista as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -15823,7 +15863,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_desviar_bola", "motor_defender", "motor_recuperar_folego", "motor_periodo_encerrado",
         "motor_pressao", "motor_desafio_adversario", "motor_evoluir_jogador", "motor_uniforme",
         "motor_gravidade_da_lesao", "motor_grau_da_lesao", "motor_lesao_na_dividida",
-        "motor_avaliar_jogador", "motor_melhor_avaliado",
+        "motor_avaliar_jogador", "motor_melhor_avaliado", "motor_melhor_da_lista",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

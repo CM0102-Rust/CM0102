@@ -219,6 +219,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x7163c0 | `marcas_do_jogador_rot` | player_marks_rot |
 | 0x5b59a0 | `mascara_da_formacao` | formation_mask |
 | 0x6e1a40 | `melhor_avaliado` | best_rated |
+| 0x6e1940 | `melhor_da_lista` | best_in_list |
 | 0x6c3950 | `menor_distancia` | smallest_distance |
 | 0x6d4250 | `momento_marcado` | marked_moment |
 | 0x6cfd40 | `motor_cartao_pela_gravidade` | engine_card_by_severity |

@@ -1042,3 +1042,11 @@ Mutations: 7 of 7 caught; real game to 2002-01-01 with 0 divergences; Rust ×2 a
 | `melhor_avaliado()` | 0x6e1a40 | thiscall | match_man.cpp: the index (0..20) of the active player (+0x19 ≥ 0) best rated by the staff (0x6e1cf0 with club +0x2f) among the 20 in the block starting at +0x23; the first active one counts even with a negative rating, then only strictly higher; −1 with none active |
 
 Mutations: 2 of 2 caught; real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (db8ee4d7a7e1ef8e).
+
+### Match engine, 113th batch — the best-rated person in a list (official on 2026-10-11)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `melhor_da_lista(lista, n)` | 0x6e1940 | thiscall, ret 8 | match_man.cpp: among the `n` people in the list (with record +0x61), the one best rated by the staff (0x6e1cf0 with club +0x2f); 0 with none. With object +0x1f, if its value (0x544410 with byte +0x17) is below the person id mod 20, the rating becomes (1.1 − 0.01 × (object address mod 20)) × rating, as in the original; ties keep the first |
+
+Mutations: 3 of 3 caught; real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (db8ee4d7a7e1ef8e).
