@@ -280,6 +280,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6d5a10 | `quem_marca` | who_marks |
 | 0x6bc030 | `quem_marcar` | who_to_mark |
 | 0x6f5810 | `recuperar_folego` | recover_stamina |
+| 0x6e1aa0 | `refazer_time` | redo_team |
 | 0x6bb9a0 | `registrar_lance` | record_move |
 | 0x7003b0 | `registrar_posse` | record_possession |
 | 0x53a5b0 | `registro_livre` | free_record |

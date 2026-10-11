@@ -383,8 +383,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6e1a40, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
     Prologo { endereco: 0x6e1940, bytes: &[0x83, 0xec, 0x0c, 0x8a, 0x44, 0x24, 0x14] },
     Prologo { endereco: 0x6cda20, bytes: &[0x51, 0x8a, 0x44, 0x24, 0x0c] },
+    Prologo { endereco: 0x6e1aa0, bytes: &[0x81, 0xec, 0x04, 0x01, 0x00, 0x00] },
 ];
-const N: usize = 276;
+const N: usize = 277;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4077,6 +4078,157 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     1
 }
 
+// ---------- centesima decima quinta leva: a comissao refaz o time (0x6e1aa0) ----------
+
+/// Argumentos da 0x6e2000 (escalar: distribui as pessoas pelas posicoes, recursiva, aloca), cdecl.
+type Escalar = unsafe extern "C" fn(usize, u32, usize, u32, u32, usize, u32, usize, usize, u32, u32, usize, usize, u32, usize) -> u32;
+
+/// { 0x6e1aa0 } (match_man.cpp) com as chamadas que mexem no jogo injetadas (0x6e0230 julga a
+/// escalacao, 0x6e2000 escala, 0x6d6f70 narra): a comissao (`c`: +0x12 motor, +0x23 primeiro dos 20
+/// jogadores, +0x2b tatica, +0x2f clube) refaz o time. Com exatamente 11 em campo e a escalacao
+/// reprovada (0x6e0230 com 0x8c1, 2) narra 0x2007. Depois junta os de linha em campo (fora a tabela
+/// 1): posicao +0x19, tabelas 0x717410/0x717450, marcas (0x5b5270) e byte (0x5b57c0) da posicao e a
+/// ficha +0x69; escala (0x6e2000 com 0x8800, ou 0x408800 com tecnico humano a ser consultado:
+/// 0x600a50, +0x19 da comissao, +0xcf do clube, 0x5fd210, 0x5fea50 com 3) e devolve a cada ficha
+/// escalada a posicao do lugar que ela ganhou, refazendo o desempenho (0x6eecb0).
+unsafe fn refazer_time_com(c: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let tabela: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    let tabela_b: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717450usize);
+    let marcas: unsafe extern "thiscall" fn(usize, i8) -> u64 = core::mem::transmute(0x5b5270usize);
+    let byte_pos: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x5b57c0usize);
+    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let t9a01: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd210usize);
+    let t9b23: unsafe extern "thiscall" fn(usize, i8, usize) -> u8 = core::mem::transmute(0x5fea50usize);
+    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(0x6eecb0usize);
+    let u = |o: usize| *((c + o) as *const usize);
+    let mut fichas = [0usize; 20];
+    let mut n = 0usize;
+    for k in 0..20 {
+        let j = u(0x23) + k * 0x1be;
+        if byte(j, 0x19) >= 0 {
+            fichas[n] = *((j + 0x69) as *const usize);
+            n += 1;
+        }
+    }
+    if n == 11 {
+        pedir_vetores(&[(fichas.as_ptr() as usize, 44)], &[]);
+        if chamar(0x6e0230, c, [fichas.as_ptr() as u32, 0xb, 0x8c1, 2, 0]) as u8 != 0 {
+            let m = u(0x12);
+            chamar(0x6d6f70, *((m + 0x8f7a) as *const usize), [0x2007, m as u32, u32::MAX, byte(c, 0x18) as u8 as u32, u32::MAX]);
+        }
+    }
+    let mut pos = [0i8; 20];
+    let mut tab = [0u16; 20];
+    let mut tab_b = [0u16; 20];
+    let mut marca = [0u64; 20];
+    let mut bpos = [0u8; 20];
+    let mut n = 0usize;
+    for k in 0..20 {
+        let j = u(0x23) + k * 0x1be;
+        if byte(j, 0x19) < 0 || tabela(j) == 1 {
+            continue;
+        }
+        pos[n] = byte(j, 0x19);
+        tab[n] = tabela(j);
+        tab_b[n] = tabela_b(j);
+        marca[n] = marcas(u(0x2b), byte(j, 0x19));
+        bpos[n] = byte_pos(u(0x2b), byte(j, 0x19));
+        fichas[n] = *((j + 0x69) as *const usize);
+        n += 1;
+    }
+    let clube = u(0x2f);
+    let mut modo = 0x8800u32;
+    if humano(clube, 1, 1, 0, 0) != 0 && byte(c, 0x19) == 0 {
+        let p = *((clube + 0xcf) as *const usize);
+        if p != 0 && t9a01(*(0xb63c98 as *const usize), p) != 0 && t9b23(*(0xb63c98 as *const usize), 3, p) != 0 {
+            modo = 0x408800;
+        }
+    }
+    let mut lugar = [0usize; 20];
+    let extra = *((u(0x2b) + 0x584) as *const u32);
+    let args: [usize; 15] = [
+        fichas.as_ptr() as usize, n, tab.as_ptr() as usize, n, 0, lugar.as_mut_ptr() as usize, modo as usize, clube, c, u(0x1b), 0,
+        marca.as_ptr() as usize, bpos.as_ptr() as usize, extra as usize, tab_b.as_ptr() as usize,
+    ];
+    pedir_vetores(
+        &[(args[0], 4 * n), (args[2], 2 * n), (args[11], 8 * n), (args[12], n), (args[14], 2 * n)],
+        &[(args[5], 4 * n)],
+    );
+    chamar(0x6e2000, 0, [args.as_ptr() as u32, n as u32, modo, clube as u32, c as u32]);
+    for i in 0..n {
+        let mut j = u(0x23);
+        let mut achou = false;
+        for _ in 0..20 {
+            if *((j + 0x69) as *const usize) == fichas[i] {
+                achou = true;
+                break;
+            }
+            j += 0x1be;
+        }
+        if !achou {
+            j = 0;
+        }
+        let f = *((j + 0x69) as *const usize);
+        if let Some(k) = (0..n).find(|&k| lugar[k] == f) {
+            *((j + 0x19) as *mut i8) = pos[k];
+            desempenho(j, 0);
+        }
+    }
+}
+
+/// { 0x6e1aa0 } (match_man.cpp): ver `refazer_time_com`.
+unsafe extern "thiscall" fn refazer_time(c: usize) {
+    refazer_time_com(c, &mut |rotina, this, a| match rotina {
+        0x6e0230 => {
+            let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u8 = core::mem::transmute(0x6e0230usize);
+            f(this, a[0] as usize, a[1], a[2], a[3]) as u32
+        }
+        0x6e2000 => {
+            let f: Escalar = core::mem::transmute(0x6e2000usize);
+            let v = *(a[0] as usize as *const [usize; 15]);
+            f(v[0], v[1] as u32, v[2], v[3] as u32, v[4] as u32, v[5], v[6] as u32, v[7], v[8], v[9] as u32, v[10] as u32, v[11], v[12], v[13] as u32, v[14])
+        }
+        _ => {
+            comentar(this, [a[0], a[1], a[2], a[3], a[4], u32::MAX, 0]);
+            0
+        }
+    })
+}
+
+// Portas de 0x6e0230 (julga a escalacao) e 0x6e2000 (escala): unidades da fita com vetores.
+static mut PORTA_6E0230: usize = 0;
+static mut PORTA_6E2000: usize = 0;
+const PROLOGO_6E0230: Prologo = Prologo { endereco: 0x6e0230, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] };
+const PROLOGO_6E2000: Prologo = Prologo { endereco: 0x6e2000, bytes: &[0x81, 0xec, 0x24, 0x01, 0x00, 0x00] };
+
+unsafe extern "thiscall" fn porta_6e0230(c: usize, lista: usize, n: u32, codigo: u32, modo: u32) -> u8 {
+    let o: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u8 = core::mem::transmute(PORTA_6E0230);
+    if !gravando() {
+        return o(c, lista, n, codigo, modo);
+    }
+    let q = n as u8 as i8 as isize;
+    chamar_gravando_vetores(0x6e0230, c, [0, n, codigo, modo, 0], &[(lista, 4 * q.max(0) as usize)], &[], || o(c, lista, n, codigo, modo) as u32) as u8
+}
+
+#[allow(clippy::too_many_arguments)]
+unsafe extern "C" fn porta_6e2000(a1: usize, a2: u32, a3: usize, a4: u32, a5: u32, a6: usize, a7: u32, a8: usize, a9: usize, a10: u32, a11: u32, a12: usize, a13: usize, a14: u32, a15: usize) -> u32 {
+    let o: Escalar = core::mem::transmute(PORTA_6E2000);
+    let chamar = || o(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
+    if !gravando() {
+        return chamar();
+    }
+    let n1 = (a2 as u8 as i8).max(0) as usize;
+    let n = ((a4 as u8 as i8 as i32 + a5 as u8 as i8 as i32).max(0)) as usize;
+    chamar_gravando_vetores(
+        0x6e2000,
+        0,
+        [0, a2, a7, a8 as u32, a9 as u32],
+        &[(a1, 4 * n1), (a3, 2 * n), (a12, 8 * n), (a13, n), (a15, 2 * n)],
+        &[(a6, 4 * n)],
+        chamar,
+    )
+}
+
 // ---------- centesima decima quarta leva: o jogador que sai de campo (0x6cda20) ----------
 
 /// { 0x6cda20 } (ret 8, match_eng.cpp) com as chamadas que mexem fora do motor injetadas (0x6e1aa0
@@ -4187,21 +4339,9 @@ unsafe extern "thiscall" fn jogador_saiu(m: usize, j: usize, ja_fora: u32) {
 
 // Portas de 0x6e1aa0 e 0x6e1090 (a comissao refaz o time e faz a troca, match_man.cpp): unidades da
 // fita ate serem portadas.
-static mut PORTA_6E1AA0: usize = 0;
 static mut PORTA_6E1090: usize = 0;
-const PROLOGO_6E1AA0: Prologo = Prologo { endereco: 0x6e1aa0, bytes: &[0x81, 0xec, 0x04, 0x01, 0x00, 0x00] };
 const PROLOGO_6E1090: Prologo = Prologo { endereco: 0x6e1090, bytes: &[0x81, 0xec, 0xc4, 0x04, 0x00, 0x00] };
 
-unsafe extern "thiscall" fn porta_6e1aa0(c: usize) {
-    let o: unsafe extern "thiscall" fn(usize) = core::mem::transmute(PORTA_6E1AA0);
-    if !gravando() {
-        return o(c);
-    }
-    chamar_gravando(0x6e1aa0, c, [0, 0, 0, 0, 0], || {
-        o(c);
-        0
-    });
-}
 unsafe extern "thiscall" fn porta_6e1090(c: usize, goleiro: u32) {
     let o: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(PORTA_6E1090);
     if !gravando() {
@@ -7310,7 +7450,7 @@ unsafe extern "thiscall" fn procurar_jogada(this: usize, lado: i8, grupo: usize,
 // movimento). Na comparacao de uma rotina portada que as chama, cada chamada da original e gravada
 // com a resposta e as regioes pedidas pelo comparador como ficaram depois; a copia Rust confere a
 // sequencia e reescreve essas regioes no lugar de chamar de novo.
-type Chamada = (usize, usize, [u32; 5], u32, crate::comparacao::Memoria, crate::comparacao::Memoria); // (rotina, this, argumentos, resposta, antes, depois)
+type Chamada = (usize, usize, [u32; 5], u32, crate::comparacao::Memoria, crate::comparacao::Memoria, (Vec<u8>, Vec<u8>)); // (rotina, this, argumentos, resposta, antes, depois, (bytes dos vetores de entrada, de saida))
 #[allow(clippy::type_complexity)]
 static FITA: std::sync::Mutex<Option<(Vec<(usize, usize)>, Vec<Chamada>)>> = std::sync::Mutex::new(None);
 
@@ -7344,16 +7484,62 @@ unsafe fn chamar_gravando(rotina: usize, this: usize, a: [u32; 5], chamada: impl
     let r = chamada();
     DENTRO.fetch_sub(1, Relaxed);
     if let Some(antes) = antes {
-        gravar_chamada(rotina, this, a, r, antes);
+        gravar_chamada(rotina, this, a, r, antes, (Vec::new(), Vec::new()));
     }
     r
 }
 
-unsafe fn gravar_chamada(rotina: usize, this: usize, a: [u32; 5], r: u32, antes: crate::comparacao::Memoria) {
+unsafe fn gravar_chamada(rotina: usize, this: usize, a: [u32; 5], r: u32, antes: crate::comparacao::Memoria, vetores: (Vec<u8>, Vec<u8>)) {
     if let Some((reg, f)) = fita().as_mut() {
         let depois = crate::comparacao::Memoria::ler(reg);
-        f.push((rotina, this, a, r, antes, depois));
+        f.push((rotina, this, a, r, antes, depois, vetores));
     }
+}
+
+/// Os bytes dos vetores (endereco, tamanho), em sequencia.
+unsafe fn ler_vetores(v: &[(usize, usize)]) -> Vec<u8> {
+    let mut b = Vec::new();
+    for &(a, n) in v {
+        if a != 0 {
+            b.extend_from_slice(core::slice::from_raw_parts(a as *const u8, n));
+        }
+    }
+    b
+}
+
+unsafe fn escrever_vetores(v: &[(usize, usize)], bytes: &[u8]) {
+    let mut k = 0;
+    for &(a, n) in v {
+        if a != 0 && k + n <= bytes.len() {
+            core::ptr::copy_nonoverlapping(bytes.as_ptr().add(k), a as *mut u8, n);
+            k += n;
+        }
+    }
+}
+
+/// Como `chamar_gravando`, para uma unidade que le e escreve vetores por ponteiro (na pilha de quem
+/// chama, fora das regioes): grava os bytes das `entradas` antes e das `saidas` depois. A copia Rust
+/// pede os seus (`pedir_vetores`) antes de chamar: as entradas sao conferidas e as saidas escritas.
+unsafe fn chamar_gravando_vetores(rotina: usize, this: usize, a: [u32; 5], entradas: &[(usize, usize)], saidas: &[(usize, usize)], chamada: impl FnOnce() -> u32) -> u32 {
+    use std::sync::atomic::Ordering::Relaxed;
+    let nivel = DENTRO.fetch_add(1, Relaxed);
+    let antes = if nivel == 0 { fita().as_ref().map(|(reg, _)| crate::comparacao::Memoria::ler(reg)) } else { None };
+    let ent = if antes.is_some() { ler_vetores(entradas) } else { Vec::new() };
+    let r = chamada();
+    DENTRO.fetch_sub(1, Relaxed);
+    if let Some(antes) = antes {
+        let sai = ler_vetores(saidas);
+        gravar_chamada(rotina, this, a, r, antes, (ent, sai));
+    }
+    r
+}
+
+/// Os vetores da proxima unidade pedida pela copia Rust: (entradas, saidas).
+#[allow(clippy::type_complexity)]
+static VETORES_PEDIDOS: std::sync::Mutex<Option<(Vec<(usize, usize)>, Vec<(usize, usize)>)>> = std::sync::Mutex::new(None);
+
+fn pedir_vetores(entradas: &[(usize, usize)], saidas: &[(usize, usize)]) {
+    *VETORES_PEDIDOS.lock().unwrap_or_else(|e| e.into_inner()) = Some((entradas.to_vec(), saidas.to_vec()));
 }
 
 /// Roda a original gravando as chamadas e a copia Rust reproduzindo-as (`reproduzir`). Devolve as
@@ -7374,6 +7560,7 @@ unsafe fn comparar_com_fita<R>(reg: Vec<(usize, usize)>, original: impl FnOnce()
     // 0x6f5b80 roda dentro da 0x6f09f0 no jogo normal); as chamadas dela contam a partir de zero
     let nivel = DENTRO.swap(0, std::sync::atomic::Ordering::Relaxed);
     DETALHE_FITA.lock().unwrap_or_else(|e| e.into_inner()).clear();
+    *VETORES_PEDIDOS.lock().unwrap_or_else(|e| e.into_inner()) = None;
     let gravadas = core::cell::RefCell::new(Vec::new());
     let sequencia = core::cell::Cell::new(true);
     let rastros = core::cell::RefCell::new((Vec::new(), Vec::new()));
@@ -7391,7 +7578,7 @@ unsafe fn comparar_com_fita<R>(reg: Vec<(usize, usize)>, original: impl FnOnce()
             // (rotina, this, argumentos, mascara dos argumentos que a rotina chamada le)
             let (n, rr) = crate::aleatorio::rastrear(|| crate::aleatorio::sem_contar(|| {
                 rust(&mut |rotina, this, a, mascara| match prox.next() {
-                    Some((gr, gt, ga, resposta, antes, depois)) if *gr == rotina && *gt == this && (0..5).all(|i| ga[i] & mascara[i] == a[i] & mascara[i]) => {
+                    Some((gr, gt, ga, resposta, antes, depois, vetores)) if *gr == rotina && *gt == this && (0..5).all(|i| ga[i] & mascara[i] == a[i] & mascara[i]) => {
                         let agora = crate::comparacao::Memoria::ler(&reg);
                         if agora != *antes && sequencia.get() {
                             let difs: Vec<String> = antes.0.iter().zip(agora.0.iter()).filter(|(x, y)| x != y).map(|(x, y)| format!("{:#x}: {:x?} x {:x?}", x.0, x.1, y.1)).collect();
@@ -7399,6 +7586,23 @@ unsafe fn comparar_com_fita<R>(reg: Vec<(usize, usize)>, original: impl FnOnce()
                             sequencia.set(false);
                         }
                         depois.escrever();
+                        if !vetores.0.is_empty() || !vetores.1.is_empty() {
+                            match VETORES_PEDIDOS.lock().unwrap_or_else(|e| e.into_inner()).take() {
+                                Some((ent, sai)) => {
+                                    if ler_vetores(&ent) != vetores.0 && sequencia.get() {
+                                        *DETALHE_FITA.lock().unwrap_or_else(|e| e.into_inner()) = format!("entradas de {:#x} diferem", rotina);
+                                        sequencia.set(false);
+                                    }
+                                    escrever_vetores(&sai, &vetores.1);
+                                }
+                                None => {
+                                    if sequencia.get() {
+                                        *DETALHE_FITA.lock().unwrap_or_else(|e| e.into_inner()) = format!("vetores de {:#x} nao pedidos", rotina);
+                                    }
+                                    sequencia.set(false);
+                                }
+                            }
+                        }
                         *resposta
                     }
                     outra => {
@@ -14615,6 +14819,30 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+unsafe extern "thiscall" fn comparar_refazer_time(c: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(276);
+    if gravando_no_topo() {
+        chamar_gravando(0x6e1aa0, c, [0, 0, 0, 0, 0], || {
+            o(c);
+            0
+        });
+        return;
+    }
+    let m = *((c + 0x12) as *const usize);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m, 0xf5f8), (0xb67a34, 4)]);
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(c), |chamar| {
+        refazer_time_com(c, &mut |rotina, this, args| {
+            let mascara = match rotina {
+                0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
+                0x6e0230 => [0, 0xff, u32::MAX, u32::MAX, 0],
+                _ => [0, 0xff, u32::MAX, u32::MAX, u32::MAX],
+            };
+            chamar(rotina, this, args, mascara)
+        })
+    });
+    PLACAR.registrar(igual && sequencia, || format!("refazer_time() {} chamadas: {}", k, detalhe_fita()));
+}
 unsafe extern "thiscall" fn comparar_jogador_saiu(m: usize, j: usize, ja_fora: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(275);
     if gravando_no_topo() {
@@ -15370,8 +15598,11 @@ pub unsafe fn instalar(comparando: bool) {
         if let Some(t) = desvios::desviar("motor_porta_6d0980 (gravacao)", &PROLOGO_6D0980, porta_6d0980 as *const () as usize) {
             PORTA_6D0980 = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_6e1aa0 (gravacao)", &PROLOGO_6E1AA0, porta_6e1aa0 as *const () as usize) {
-            PORTA_6E1AA0 = t;
+        if let Some(t) = desvios::desviar("motor_porta_6e0230 (gravacao)", &PROLOGO_6E0230, porta_6e0230 as *const () as usize) {
+            PORTA_6E0230 = t;
+        }
+        if let Some(t) = desvios::desviar("motor_porta_6e2000 (gravacao)", &PROLOGO_6E2000, porta_6e2000 as *const () as usize) {
+            PORTA_6E2000 = t;
         }
         if let Some(t) = desvios::desviar("motor_porta_6e1090 (gravacao)", &PROLOGO_6E1090, porta_6e1090 as *const () as usize) {
             PORTA_6E1090 = t;
@@ -15654,6 +15885,7 @@ pub unsafe fn instalar(comparando: bool) {
         melhor_avaliado as *const () as usize,
         melhor_da_lista as *const () as usize,
         jogador_saiu as *const () as usize,
+        refazer_time as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -15932,6 +16164,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_melhor_avaliado as *const () as usize,
         comparar_melhor_da_lista as *const () as usize,
         comparar_jogador_saiu as *const () as usize,
+        comparar_refazer_time as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -16041,7 +16274,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_pressao", "motor_desafio_adversario", "motor_evoluir_jogador", "motor_uniforme",
         "motor_gravidade_da_lesao", "motor_grau_da_lesao", "motor_lesao_na_dividida",
         "motor_avaliar_jogador", "motor_melhor_avaliado", "motor_melhor_da_lista",
-        "motor_jogador_saiu",
+        "motor_jogador_saiu", "motor_refazer_time",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
