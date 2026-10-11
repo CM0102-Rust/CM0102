@@ -153,6 +153,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f4a70 | `estado_do_adversario` | opponent_state |
 | 0x6f4a40 | `estado_do_lado` | side_state |
 | 0x6cf750 | `estatistica_de_posse` | possession_statistic |
+| 0x6d26b0 | `evoluir_jogador` | develop_player |
 | 0x6f55c0 | `evoluir_momento` | evolve_moment |
 | 0x6cb960 | `faixa` | band |
 | 0x6f5b20 | `faixa_jogador` | player_band |
