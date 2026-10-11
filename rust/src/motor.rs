@@ -380,8 +380,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x62ece0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
     Prologo { endereco: 0x6cfe10, bytes: &[0x83, 0xec, 0x18, 0x53, 0x55] },
     Prologo { endereco: 0x6e1cf0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
+    Prologo { endereco: 0x6e1a40, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
 ];
-const N: usize = 273;
+const N: usize = 274;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4072,6 +4073,30 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- centesima decima segunda leva: o mais bem avaliado do lado (0x6e1a40) ----------
+
+/// { 0x6e1a40 } (match_man.cpp): o indice (0..20) do jogador ativo (+0x19 >= 0) mais bem avaliado
+/// pela comissao (0x6e1cf0 com o clube +0x2f) entre os 20 do bloco que comeca em +0x23 (de 0x1be em
+/// 0x1be); o primeiro ativo entra mesmo com nota negativa, depois so nota estritamente maior. -1 sem
+/// nenhum ativo.
+unsafe extern "thiscall" fn melhor_avaliado(this: usize) -> i8 {
+    let avaliar: unsafe extern "C" fn(usize, usize, usize) -> i16 = core::mem::transmute(0x6e1cf0usize);
+    let clube = *((this + 0x2f) as *const usize);
+    let mut p = *((this + 0x23) as *const usize);
+    let (mut melhor, mut nota) = (-1i8, 0i16);
+    for k in 0..20i8 {
+        if byte(p, 0x19) >= 0 {
+            let v = avaliar(0, p, clube);
+            if melhor == -1 || v > nota {
+                nota = v;
+                melhor = k;
+            }
+        }
+        p += 0x1be;
+    }
+    melhor
 }
 
 // ---------- centesima decima leva: a avaliacao do jogador pela comissao (0x6e1cf0) ----------
@@ -14422,6 +14447,13 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+unsafe extern "thiscall" fn comparar_melhor_avaliado(this: usize) -> i8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i8>(273);
+    let reg = [crate::aleatorio::REGIOES_DO_ESTADO[0], crate::aleatorio::REGIOES_DO_ESTADO[1], (0xae2470, 8), (0xae2418, 1)];
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado_leve(&reg, || o(this), || melhor_avaliado(this));
+    PLACAR.registrar(igual && r == n, || format!("melhor_avaliado() original={} rust={}", r, n));
+    r
+}
 unsafe extern "C" fn comparar_avaliar_jogador(pessoa: usize, jogador: usize, clube: usize) -> i16 {
     let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> i16>(272);
     // a 0x54cdb0 mexe na data estatica dela: a comparacao restaura
@@ -15406,6 +15438,7 @@ pub unsafe fn instalar(comparando: bool) {
         grau_da_lesao as *const () as usize,
         lesao_na_dividida as *const () as usize,
         avaliar_jogador as *const () as usize,
+        melhor_avaliado as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -15681,6 +15714,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_grau_da_lesao as *const () as usize,
         comparar_lesao_na_dividida as *const () as usize,
         comparar_avaliar_jogador as *const () as usize,
+        comparar_melhor_avaliado as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -15789,7 +15823,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_desviar_bola", "motor_defender", "motor_recuperar_folego", "motor_periodo_encerrado",
         "motor_pressao", "motor_desafio_adversario", "motor_evoluir_jogador", "motor_uniforme",
         "motor_gravidade_da_lesao", "motor_grau_da_lesao", "motor_lesao_na_dividida",
-        "motor_avaliar_jogador",
+        "motor_avaliar_jogador", "motor_melhor_avaliado",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

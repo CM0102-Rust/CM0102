@@ -120,6 +120,7 @@ EN = {
  'lesao_na_dividida': 'tackle_injury',
  'dias_ate': 'days_until',
  'avaliar_jogador': 'rate_player',
+ 'melhor_avaliado': 'best_rated',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

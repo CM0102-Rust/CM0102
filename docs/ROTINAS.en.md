@@ -1034,3 +1034,11 @@ Mutations: 2 of 4 caught; y_frente and y_dia survive (the path with the other da
 | `avaliar_jogador(pessoa, jogador, clube)` | 0x6e1cf0 | cdecl | match_man.cpp: the rating (i16) the staff give the person (or `jogador` +0x69's) for the club; −10000 with no person. Adds record +0x2f times the days-alive factor (0x54cdb0 against today 0xae2c90; national sides +0x22 × 75; above 1000 days, 1 + (days − 1000) × 0.000125), subtracts (fit² + 5) × 0.1 (0x53ce90), adds the +0xd gap to the club reputation (× 0.002 + 1.5, between −4 and 4) and the contract (0x4cf5f0: +0x44/75 + 0.5 adjusted by the type in +0x4f >> 4). Then by age (×0.5/0.75/0.9/1.05), ×0.9 with days below (50 − +0x59) × 10 and ×(0.01 × +0x5b + 0.9) with +0x5b below 10 |
 
 Mutations: 7 of 7 caught; real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (db8ee4d7a7e1ef8e). First routine from match_man.cpp.
+
+### Match engine, 112th batch — the best-rated player on the side (official on 2026-10-11)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `melhor_avaliado()` | 0x6e1a40 | thiscall | match_man.cpp: the index (0..20) of the active player (+0x19 ≥ 0) best rated by the staff (0x6e1cf0 with club +0x2f) among the 20 in the block starting at +0x23; the first active one counts even with a negative rating, then only strictly higher; −1 with none active |
+
+Mutations: 2 of 2 caught; real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (db8ee4d7a7e1ef8e).

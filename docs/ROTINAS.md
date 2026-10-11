@@ -1032,3 +1032,11 @@ Mutações: 2 de 4 pegas; sobrevivem y_frente e y_dia (o caminho com a outra dat
 | `avaliar_jogador(pessoa, jogador, clube)` | 0x6e1cf0 | cdecl | match_man.cpp: a nota (i16) que a comissão dá à pessoa (ou à do `jogador` +0x69) para o clube; −10000 sem pessoa. Soma a ficha +0x2f vezes o fator dos dias de vida (0x54cdb0 com a data de hoje 0xae2c90; nas seleções +0x22 × 75; acima de 1000 dias, 1 + (dias − 1000) × 0,000125), tira (encaixe² + 5) × 0,1 (0x53ce90), soma a diferença da +0xd para a reputação do clube (× 0,002 + 1,5, entre −4 e 4) e o contrato (0x4cf5f0: +0x44/75 + 0,5 ajustado pelo tipo em +0x4f >> 4). Depois pela idade (×0,5/0,75/0,9/1,05), ×0,9 com dias abaixo de (50 − +0x59) × 10 e ×(0,01 × +0x5b + 0,9) com +0x5b abaixo de 10 |
 
 Mutações: 7 de 7 pegas; jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (db8ee4d7a7e1ef8e). Primeira rotina do match_man.cpp.
+
+### Motor de partidas, 112ª leva — o mais bem avaliado do lado (oficial em 11/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `melhor_avaliado()` | 0x6e1a40 | thiscall | match_man.cpp: o índice (0..20) do jogador ativo (+0x19 ≥ 0) mais bem avaliado pela comissão (0x6e1cf0 com o clube +0x2f) entre os 20 do bloco que começa em +0x23; o primeiro ativo entra mesmo com nota negativa, depois só nota estritamente maior; −1 sem nenhum ativo |
+
+Mutações: 2 de 2 pegas; jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (db8ee4d7a7e1ef8e).
