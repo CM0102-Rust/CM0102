@@ -16,6 +16,7 @@ mutacao que passa com poucos casos pode precisar de mais: refazer so ela com --c
 comparacao ate a data (simular.py, com a trava do laboratorio). Para caminhos que o autoteste
 sintetico nao alcanca (o que depende do banco carregado, como a tatica do clube). No fim (inclusive com erro ou Ctrl+C) restaura o motor.rs e recompila.
 
+Se a base divergir, para sem rodar as mutacoes (codigo de saida 1).
 Uma mutacao que passa sem divergencia e uma lacuna do teste (melhorar o gerador de casos) ou uma
 mutacao equivalente pelos valores possiveis (documentar em docs/ROTINAS.md por que).
 O autoteste abre o jogo oculto e em janela (CM_OCULTO, CM_JANELA=960x540): um jogo por vez.
@@ -116,6 +117,9 @@ def main():
             t0 = time.time()
             r = jogo(data) if data else autoteste('1' if '--base-completa' in sys.argv else 'motor:%d' % casos)
             print('sem mutacao (%.0fs):' % (time.time() - t0), r, flush=True)
+            # base com divergencia: as mutacoes nao provam nada (e a cadeia que chamou para aqui)
+            if any('DIVERGENCIA' in l or 'EXCECAO' in l for l in r):
+                sys.exit('base com divergencia: mutacoes canceladas')
         if '--so-base' in sys.argv:
             return
         for nome, velho, novo in mutacoes:

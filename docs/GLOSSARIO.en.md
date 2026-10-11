@@ -303,6 +303,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x7160d0 | `somar_2b` | add_2b |
 | 0x6cf710 | `somar_disposicao` | add_disposition |
 | 0x6f44a0 | `sortear_momento` | draw_moment |
+| 0x6e1090 | `substituir` | substitute |
 | 0x6c38c0 | `tabela_a` | table_a |
 | 0x6c3920 | `tabela_a_1a` | table_a_1a |
 | 0x717430 | `tabela_a_1a_do_jogador` | player_table_a_1a |
