@@ -139,6 +139,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x70d630 | `em_perigo` | in_danger |
 | 0x849ce0 | `entrada_da_lista` | shortlist_entry |
 | 0x6cdd00 | `entrar_em_campo` | take_the_field |
+| 0x6e2000 | `escalar` | pick |
 | 0x6c4470 | `escanteio` | corner |
 | 0x6bce80 | `escolher_casa` | choose_square |
 | 0x6ceb90 | `escolher_cobrador` | choose_taker |

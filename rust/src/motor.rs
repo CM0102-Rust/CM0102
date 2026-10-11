@@ -385,8 +385,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6cda20, bytes: &[0x51, 0x8a, 0x44, 0x24, 0x0c] },
     Prologo { endereco: 0x6e1aa0, bytes: &[0x81, 0xec, 0x04, 0x01, 0x00, 0x00] },
     Prologo { endereco: 0x6e1090, bytes: &[0x81, 0xec, 0xc4, 0x04, 0x00, 0x00] },
+    Prologo { endereco: 0x6e2000, bytes: &[0x81, 0xec, 0x24, 0x01, 0x00, 0x00] },
 ];
-const N: usize = 278;
+const N: usize = 279;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4079,6 +4080,321 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     1
 }
 
+// ---------- centesima decima setima leva: escalar (0x6e2000) ----------
+
+/// { 0x6e2000 } (cdecl, match_man.cpp, ~3,9 KB, recursiva): distribui as `n` pessoas de `pessoas`
+/// pelas `m` vagas (+ `x` extras) e grava em `saida` a pessoa de cada vaga. Cada par (pessoa, vaga)
+/// vale a nota da 0x6e2f20 (codigo da vaga `codigos`, `marcas`, `bytes`, `curtos`, modo, clube,
+/// comissao...). Com menos pessoas que vagas, cada pessoa livre procura a vaga onde rende mais do que
+/// o ocupante (ate 10000 voltas) e no fim saem as vagas pares com +0xf da ficha 20 e as impares com
+/// +0xf abaixo de 10. Com mais pessoas, cada vaga pega a melhor pessoa e os repetidos sao resolvidos
+/// trocando pela pessoa de menor perda (ate 10000 voltas). As extras recebem, pela propria 0x6e2000
+/// (modo | 0x200), as pessoas que sobraram. Por fim troca pares de vagas enquanto a soma melhorar (ate
+/// 100 voltas). A memoria de trabalho e a do jogo (0x945501/0x9452ca), na mesma ordem. Devolve 1, ou 0
+/// sem pessoas ou sem vagas.
+#[allow(clippy::too_many_arguments)]
+unsafe extern "C" fn escalar(
+    pessoas: usize, a2: u32, codigos: usize, a4: u32, a5: u32, saida: usize, modo: u32, clube: usize, comissao: usize,
+    a10: u32, _a11: u32, mut marcas: usize, mut bytes: usize, a14: u32, mut curtos: usize,
+) -> u8 {
+    let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let nota_fn: unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32) -> i32 =
+        core::mem::transmute(0x6e2f20usize);
+    let recursiva: Escalar = core::mem::transmute(0x6e2000usize);
+    let tecnico: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fed50usize);
+    let n = a2 as u8 as i8 as i32;
+    let m = a4 as u8 as i8 as i32;
+    let x = a5 as u8 as i8 as i32;
+    let tot = m + x;
+    let pes = |k: i32| *((pessoas + 4 * k as usize) as *const usize);
+    let sai = |i: i32| (saida + 4 * i as usize) as *mut usize;
+    let (mut al12, mut al13, mut al15) = (false, false, false);
+    if marcas == 0 {
+        marcas = if tot != 0 { calloc(tot as u32, 8) } else { 0 };
+        al12 = true;
+    }
+    if bytes == 0 {
+        bytes = if tot != 0 { calloc(tot as u32, 1) } else { 0 };
+        al13 = true;
+    }
+    if curtos == 0 {
+        curtos = if tot != 0 { calloc(tot as u32, 2) } else { 0 };
+        al15 = true;
+    }
+    let liberar_param = |free: unsafe extern "C" fn(usize)| {
+        if al13 && bytes != 0 {
+            free(bytes);
+        }
+        if al12 && marcas != 0 {
+            free(marcas);
+        }
+        if al15 && curtos != 0 {
+            free(curtos);
+        }
+    };
+    if n < 1 {
+        for i in 0..tot {
+            *sai(i) = 0;
+        }
+        liberar_param(free);
+        return 0;
+    }
+    let jog = calloc(n as u32, 4);
+    let jg = |k: i32| *((jog + 4 * k as usize) as *const usize);
+    if comissao != 0 {
+        for k in 0..n {
+            let mut j = *((comissao + 0x23) as *const usize);
+            let mut achou = 0usize;
+            for _ in 0..20 {
+                if *((j + 0x69) as *const usize) == pes(k) {
+                    achou = j;
+                    break;
+                }
+                j += 0x1be;
+            }
+            *((jog + 4 * k as usize) as *mut usize) = achou;
+        }
+    }
+    let mut lc = 0u32;
+    if modo & 0x400000 != 0 && clube != 0 {
+        let p = *((clube + 0xcf) as *const usize);
+        let q = *(0xae2364 as *const i32);
+        if p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && byte(p, 0x5f) != 0 {
+            lc = tecnico(*(0xb63c98 as *const usize), p);
+        }
+    }
+    let usado = calloc(n as u32, 1);
+    let us = |k: i32| (usado + k as usize) as *mut i8;
+    for i in 0..tot {
+        *sai(i) = 0;
+    }
+    if m == 0 && x == 0 {
+        free(usado);
+        liberar_param(free);
+        free(jog);
+        return 0;
+    }
+    // a nota de `pessoa` (com o jogador `j`) na vaga `i`
+    let nota = |pessoa: usize, j: usize, i: i32| -> i32 {
+        let i = i as usize;
+        nota_fn(
+            pessoa, *((pessoa + 0x61) as *const usize), j, *((codigos + 2 * i) as *const u16) as u32, modo, clube, comissao, a10, u32::MAX,
+            *((marcas + 8 * i) as *const u32), *((marcas + 8 * i + 4) as *const u32), *((bytes + i) as *const u8) as u32, a14,
+            *((curtos + 2 * i) as *const u16) as u32, lc,
+        )
+    };
+    let soltar = |alvo: usize| {
+        for kk in 0..n {
+            if pes(kk) == alvo {
+                *us(kk) = 0;
+            }
+        }
+    };
+    if n < m {
+        // menos pessoas que vagas: cada pessoa livre procura a melhor vaga
+        let mut colocadas = 0i8;
+        let mut voltas = 0;
+        while (colocadas as i32) < n && voltas < 10000 {
+            voltas += 1;
+            for k in 0..n {
+                if *us(k) != 0 {
+                    continue;
+                }
+                let cand = pes(k);
+                if cand == 0 || *((cand + 0x61) as *const usize) == 0 {
+                    continue;
+                }
+                let (mut melhor, mut melhor_nota) = (-1i32, 0i32);
+                for i in 0..m {
+                    let r = nota(cand, jg(k), i);
+                    if melhor == -1 || r > melhor_nota {
+                        let ocupante = *sai(i);
+                        if ocupante == 0 || nota(ocupante, jg(k), i) < r {
+                            melhor = i;
+                            melhor_nota = r;
+                        }
+                    }
+                }
+                if melhor > -1 {
+                    let ocupante = *sai(melhor);
+                    if ocupante != 0 {
+                        for kk in 0..n {
+                            if pes(kk) == *sai(melhor) {
+                                *us(kk) = 0;
+                                colocadas = colocadas.wrapping_sub(1);
+                            }
+                        }
+                    }
+                    *sai(melhor) = cand;
+                    colocadas = colocadas.wrapping_add(1);
+                    *us(k) = 1;
+                }
+            }
+        }
+        for i in 0..m {
+            let ocupante = *sai(i);
+            if ocupante == 0 {
+                continue;
+            }
+            let f = byte(*((ocupante + 0x61) as *const usize), 0xf);
+            let sair = if *((codigos + 2 * i as usize) as *const u8) & 1 != 0 { f < 10 } else { f == 20 };
+            if sair {
+                soltar(ocupante);
+                *sai(i) = 0;
+            }
+        }
+    } else {
+        // mais pessoas: cada vaga pega a melhor; os repetidos sao resolvidos depois
+        let mut conflitos = 0i8;
+        let mut melhor_nota = 0i32;
+        for i in 0..m {
+            let (mut melhor, mut mk) = (0usize, 0i32);
+            for k in 0..n {
+                let cand = pes(k);
+                if cand == 0 || *((cand + 0x61) as *const usize) == 0 {
+                    continue;
+                }
+                let r = nota(cand, jg(k), i);
+                if melhor == 0 || r > melhor_nota {
+                    melhor = cand;
+                    melhor_nota = r;
+                    mk = k;
+                }
+            }
+            if melhor != 0 {
+                *us(mk) = (*us(mk)).wrapping_add(1);
+                if *us(mk) > 1 {
+                    conflitos = conflitos.wrapping_add(1);
+                }
+            }
+            *sai(i) = melhor;
+        }
+        let mut menor_perda = 10000i32;
+        let mut voltas = 0;
+        let mut k2_atual = 0i32;
+        while conflitos > 0 && voltas < 10000 {
+            voltas += 1;
+            let (mut vaga_t, mut k2_t) = (-1i32, -1i32);
+            for k in 0..n {
+                let mut troca = 0usize;
+                let cand = pes(k);
+                if m > 0 {
+                    for j in 0..m {
+                        if cand == 0 || *us(k) <= 1 {
+                            break;
+                        }
+                        if cand != *sai(j) {
+                            continue;
+                        }
+                        let r_atual = nota(cand, jg(k), j);
+                        let (mut outra, mut outra_nota) = (0usize, 0i32);
+                        for k2 in 0..n {
+                            let o = pes(k2);
+                            if o == 0 || *((o + 0x61) as *const usize) == 0 || o == cand {
+                                continue;
+                            }
+                            let r = nota(o, jg(k2), j);
+                            if (outra == 0 || r > outra_nota) && (r < r_atual || *us(k2) == 0) {
+                                outra_nota = r;
+                                outra = o;
+                                k2_atual = k2;
+                            }
+                        }
+                        if troca == 0 || r_atual - outra_nota < menor_perda {
+                            vaga_t = j;
+                            troca = outra;
+                            k2_t = k2_atual;
+                            menor_perda = (r_atual - outra_nota) as i16 as i32;
+                        }
+                    }
+                    if troca != 0 {
+                        *us(k2_t) = (*us(k2_t)).wrapping_add(1);
+                        if *us(k2_t) > 1 {
+                            conflitos = conflitos.wrapping_add(1);
+                        }
+                        *sai(vaga_t) = troca;
+                        *us(k) = (*us(k)).wrapping_sub(1);
+                        conflitos = conflitos.wrapping_sub(1);
+                    }
+                }
+            }
+        }
+    }
+    // as extras: as pessoas que sobraram, pela propria 0x6e2000
+    if x != 0 {
+        let mut resto = [0usize; 128];
+        let mut c = 0usize;
+        for k in 0..n {
+            if *us(k) == 0 {
+                resto[c] = pes(k);
+                c += 1;
+            }
+        }
+        recursiva(
+            resto.as_ptr() as usize, c as u32, codigos + 2 * m as usize, x as u32, 0, saida + 4 * m as usize, modo | 0x200, clube, comissao, a10, 0,
+            marcas, bytes, a14, curtos + 2 * m as usize,
+        );
+    }
+    // trocas de pares enquanto a soma melhorar
+    let jogador_de = |p: usize| -> usize {
+        if comissao == 0 {
+            return 0;
+        }
+        let mut j = *((comissao + 0x23) as *const usize);
+        for _ in 0..20 {
+            if *((j + 0x69) as *const usize) == p {
+                return j;
+            }
+            j += 0x1be;
+        }
+        0
+    };
+    let mut voltas = 0;
+    loop {
+        let mut mudou = false;
+        let mut i = 0;
+        while i < m && !mudou {
+            let a = *sai(i);
+            if a != 0 && *((a + 0x61) as *const usize) != 0 {
+                let ja = jogador_de(a);
+                let a_i = nota(a, ja, i);
+                let mut j = i + 1;
+                while j < tot && !mudou {
+                    let b = *sai(j);
+                    if b != 0 && *((b + 0x61) as *const usize) != 0 {
+                        let jb = jogador_de(b);
+                        let b_i = nota(b, jb, i);
+                        let trocar = if j < m {
+                            let a_j = nota(a, ja, j);
+                            let b_j = nota(b, jb, j);
+                            b_j.wrapping_add(a_i) < a_j.wrapping_add(b_i)
+                        } else {
+                            a_i < b_i
+                        };
+                        if trocar {
+                            mudou = true;
+                            let t = *sai(j);
+                            *sai(j) = *sai(i);
+                            *sai(i) = t;
+                        }
+                    }
+                    j += 1;
+                }
+            }
+            i += 1;
+        }
+        voltas += 1;
+        if !mudou || voltas >= 100 {
+            break;
+        }
+    }
+    free(usado);
+    free(jog);
+    liberar_param(free);
+    1
+}
+
 // ---------- centesima decima sexta leva: a substituicao (0x6e1090) ----------
 
 /// Minuto do relogio (+0x8ed0 / 11), no maximo o fim do periodo (+0x8ed4: 45, 90, 105, 120).
@@ -4498,9 +4814,7 @@ unsafe extern "thiscall" fn refazer_time(c: usize) {
 
 // Portas de 0x6e0230 (julga a escalacao) e 0x6e2000 (escala): unidades da fita com vetores.
 static mut PORTA_6E0230: usize = 0;
-static mut PORTA_6E2000: usize = 0;
 const PROLOGO_6E0230: Prologo = Prologo { endereco: 0x6e0230, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] };
-const PROLOGO_6E2000: Prologo = Prologo { endereco: 0x6e2000, bytes: &[0x81, 0xec, 0x24, 0x01, 0x00, 0x00] };
 
 unsafe extern "thiscall" fn porta_6e0230(c: usize, lista: usize, n: u32, codigo: u32, modo: u32) -> u8 {
     let o: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u8 = core::mem::transmute(PORTA_6E0230);
@@ -4511,24 +4825,6 @@ unsafe extern "thiscall" fn porta_6e0230(c: usize, lista: usize, n: u32, codigo:
     chamar_gravando_vetores(0x6e0230, c, [0, n, codigo, modo, 0], &[(lista, 4 * q.max(0) as usize)], &[], || o(c, lista, n, codigo, modo) as u32) as u8
 }
 
-#[allow(clippy::too_many_arguments)]
-unsafe extern "C" fn porta_6e2000(a1: usize, a2: u32, a3: usize, a4: u32, a5: u32, a6: usize, a7: u32, a8: usize, a9: usize, a10: u32, a11: u32, a12: usize, a13: usize, a14: u32, a15: usize) -> u32 {
-    let o: Escalar = core::mem::transmute(PORTA_6E2000);
-    let chamar = || o(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
-    if !gravando() {
-        return chamar();
-    }
-    let n1 = (a2 as u8 as i8).max(0) as usize;
-    let n = ((a4 as u8 as i8 as i32 + a5 as u8 as i8 as i32).max(0)) as usize;
-    chamar_gravando_vetores(
-        0x6e2000,
-        0,
-        [0, a2, a7, a8 as u32, a9 as u32],
-        &[(a1, 4 * n1), (a3, 2 * n), (a12, 8 * n), (a13, n), (a15, 2 * n)],
-        &[(a6, 4 * n)],
-        chamar,
-    )
-}
 
 // ---------- centesima decima quarta leva: o jogador que sai de campo (0x6cda20) ----------
 
@@ -15108,6 +15404,31 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+#[allow(clippy::too_many_arguments)]
+unsafe extern "C" fn comparar_escalar(
+    a1: usize, a2: u32, a3: usize, a4: u32, a5: u32, a6: usize, a7: u32, a8: usize, a9: usize, a10: u32, a11: u32, a12: usize, a13: usize, a14: u32, a15: usize,
+) -> u8 {
+    let o = orig::<unsafe extern "C" fn(usize, u32, usize, u32, u32, usize, u32, usize, usize, u32, u32, usize, usize, u32, usize) -> u8>(278);
+    let chamar = || o(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
+    let n1 = (a2 as u8 as i8).max(0) as usize;
+    let n = ((a4 as u8 as i8 as i32 + a5 as u8 as i8 as i32).max(0)) as usize;
+    if gravando_no_topo() {
+        // dentro de uma comparacao com fita: unidade com vetores (a escala le e escreve na pilha de quem chama)
+        return chamar_gravando_vetores(
+            0x6e2000,
+            0,
+            [0, a2, a7, a8 as u32, a9 as u32],
+            &[(a1, 4 * n1), (a3, 2 * n), (a12, 8 * n), (a13, n), (a15, 2 * n)],
+            &[(a6, 4 * n)],
+            || chamar() as u32,
+        ) as u8;
+    }
+    // a saida e as datas estaticas que a nota (0x6e2f20) toca
+    let reg = [(a6, 4 * n), (0xae2470, 8), (0xae2418, 1), (0xae24c0, 8), (0xae249e, 1)];
+    let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, chamar, || escalar(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15));
+    PLACAR.registrar(igual && r == rr, || format!("escalar(n {} vagas {}+{} modo {:#x}) original={} rust={} {:x?} x {:x?}", a2 as u8 as i8, a4 as u8 as i8, a5 as u8 as i8, a7, r, rr, mo, mr));
+    r
+}
 unsafe extern "thiscall" fn comparar_substituir(c: usize, goleiro: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(277);
     if gravando_no_topo() {
@@ -15915,9 +16236,6 @@ pub unsafe fn instalar(comparando: bool) {
         if let Some(t) = desvios::desviar("motor_porta_6e0230 (gravacao)", &PROLOGO_6E0230, porta_6e0230 as *const () as usize) {
             PORTA_6E0230 = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_6e2000 (gravacao)", &PROLOGO_6E2000, porta_6e2000 as *const () as usize) {
-            PORTA_6E2000 = t;
-        }
     }
     let rust: [usize; N] = [
         tabela_a as *const () as usize,
@@ -16198,6 +16516,7 @@ pub unsafe fn instalar(comparando: bool) {
         jogador_saiu as *const () as usize,
         refazer_time as *const () as usize,
         substituir as *const () as usize,
+        escalar as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -16478,6 +16797,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_jogador_saiu as *const () as usize,
         comparar_refazer_time as *const () as usize,
         comparar_substituir as *const () as usize,
+        comparar_escalar as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -16588,6 +16908,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_gravidade_da_lesao", "motor_grau_da_lesao", "motor_lesao_na_dividida",
         "motor_avaliar_jogador", "motor_melhor_avaliado", "motor_melhor_da_lista",
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
+        "motor_escalar",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

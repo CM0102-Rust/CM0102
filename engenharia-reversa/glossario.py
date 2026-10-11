@@ -125,6 +125,7 @@ EN = {
  'jogador_saiu': 'player_left',
  'refazer_time': 'redo_team',
  'substituir': 'substitute',
+ 'escalar': 'pick',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:
