@@ -372,8 +372,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x70d430, bytes: &[0x66, 0x81, 0x7c, 0x24, 0x04, 0xe8, 0x03] },
     Prologo { endereco: 0x6f5810, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0xf1] },
     Prologo { endereco: 0x6bd930, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0xf1] },
+    Prologo { endereco: 0x6bcbd0, bytes: &[0x83, 0xec, 0x28, 0x53, 0x8b, 0x5c, 0x24, 0x34] },
 ];
-const N: usize = 265;
+const N: usize = 266;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4064,6 +4065,94 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- centesima quarta leva: a pressao sobre o jogador (0x6bcbd0) ----------
+
+/// { 0x6bcbd0 } (ret 0xc, match_eng.cpp) com a copia na lista injetada (0x68d0d0), sem sortear:
+/// soma em `*saida` a pressao dos adversarios ativos na casa de `j` (a lista do lado de la na grade)
+/// e devolve quantos pesam (2 por marcador). Quem marca `j` (0x714c60) vale (0x6f4600 + 0x10a -
+/// +0x19c de `j` / 20 - +0x107 de `j`) x 1,7; os outros em pe (+0x2b >= 0), fora da tabela 1
+/// (0x717410) e com +0x10a ou o bit 0x100 de +0x198, valem (0x10a - ...) x 1,7 / (+0x2b + 1). Com
+/// `lista`, os dois que mais pesam (acima de 5) vao para ela como copia de 0x1be bytes.
+unsafe fn pressao_com(m: usize, j: usize, saida: *mut i16, lista: usize, copiar: &mut dyn FnMut(usize, usize)) -> u8 {
+    let na_lista: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x714c60usize);
+    let pela_posicao: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x6f4600usize);
+    let tabela: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    *saida = 0;
+    let mut conta = 0u8;
+    let (mut melhor, mut v_melhor) = (0usize, -1000i32);
+    let (mut segundo, mut v_segundo) = (0usize, -1000i32);
+    let casa = m + 0x215e + (byte(j, 0x102) as isize * 12 + byte(j, 0x103) as isize).wrapping_mul(90) as usize;
+    let lado = (byte(j, 0x27) == 0) as usize;
+    let n = byte(casa + lado, 0x58) as i32;
+    let base = || byte(j, 0x107) as i32 + *((j + 0x19c) as *const i16) as i32 / 20;
+    let k = f64_em(0x96d2e0);
+    for i in 0..n.max(0) as usize {
+        let p = *((casa + lado * 44 + i * 4) as *const usize);
+        if byte(p, 0x19) < 0 {
+            continue;
+        }
+        let mut peso = 0i32;
+        if na_lista(j, p) != 0 {
+            conta = conta.wrapping_add(2);
+            let v = pela_posicao(p) as i8 as i32 + byte(p, 0x10a) as i32 - base();
+            let r = ftol(v as f64 * k);
+            *saida = (*saida).wrapping_add(r as i16);
+            peso = r.wrapping_add(r);
+        } else if byte(p, 0x2b) >= 0 && tabela(p) != 1 && (byte(p, 0x10a) != 0 || *((p + 0x198) as *const u16) & 0x100 != 0) {
+            conta = conta.wrapping_add(1);
+            let v = byte(p, 0x10a) as i32 - base();
+            peso = ftol(v as f64 * k / (byte(p, 0x2b) as i32 + 1) as f64);
+            *saida = (*saida).wrapping_add(peso as i16);
+        }
+        if lista != 0 && peso as i16 > 5 {
+            if peso as i16 > v_melhor as i16 {
+                if melhor != 0 {
+                    segundo = melhor;
+                    v_segundo = v_melhor;
+                }
+                melhor = p;
+                v_melhor = peso;
+            } else if peso as i16 > v_segundo as i16 {
+                segundo = p;
+                v_segundo = peso;
+            }
+        }
+    }
+    if lista != 0 {
+        if melhor != 0 {
+            copiar(lista, melhor);
+        }
+        if segundo != 0 {
+            copiar(lista, segundo);
+        }
+    }
+    conta
+}
+
+/// { 0x6bcbd0 } (ret 0xc, match_eng.cpp): ver `pressao_com`.
+unsafe extern "thiscall" fn pressao(m: usize, j: usize, saida: *mut i16, lista: usize) -> u8 {
+    pressao_com(m, j, saida, lista, &mut |l, p| {
+        let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x68d0d0usize);
+        f(l, p, 0x1be);
+    })
+}
+
+// Porta de 0x68d0d0 (poe na lista a copia de um bloco, alocando): unidade da fita, para a copia
+// Rust nao alocar de novo.
+static mut PORTA_68D0D0: usize = 0;
+const PROLOGO_68D0D0: Prologo = Prologo { endereco: 0x68d0d0, bytes: &[0x6a, 0xff, 0x68, 0x56, 0xcb, 0x95, 0x00] };
+
+unsafe extern "thiscall" fn porta_68d0d0(l: usize, p: usize, n: u32) {
+    let o: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(PORTA_68D0D0);
+    if !gravando() {
+        return o(l, p, n);
+    }
+    chamar_gravando(0x68d0d0, l, [p as u32, n, 0, 0, 0], || {
+        o(l, p, n);
+        0
+    });
 }
 
 // ---------- centesima terceira leva: o fim do periodo (0x6bd930) ----------
@@ -13318,6 +13407,25 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+unsafe extern "thiscall" fn comparar_pressao(m: usize, j: usize, saida: *mut i16, lista: usize) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i16, usize) -> u8>(265);
+    if lista == 0 {
+        let reg = [(saida as usize, 2)];
+        let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(m, j, saida, 0), || pressao(m, j, saida, 0));
+        PLACAR.registrar(igual && r == n, || format!("pressao() original={} {:x?} rust={} {:x?}", r, mo, n, mr));
+        return r;
+    }
+    if gravando_no_topo() {
+        return o(m, j, saida, lista);
+    }
+    let (r, n, igual, sequencia, k) = comparar_com_fita(vec![(saida as usize, 2)], || o(m, j, saida, lista), |chamar| {
+        pressao_com(m, j, saida, lista, &mut |l, p| {
+            chamar(0x68d0d0, l, [p as u32, 0x1be, 0, 0, 0], [u32::MAX; 5]);
+        })
+    });
+    PLACAR.registrar(igual && sequencia && r == n, || format!("pressao(lista) original={} rust={} {} copias: {}", r, n, k, detalhe_fita()));
+    r
+}
 unsafe extern "thiscall" fn comparar_periodo_encerrado(m: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u8>(264);
     if gravando_no_topo() {
@@ -13909,6 +14017,9 @@ pub unsafe fn instalar(comparando: bool) {
         if let Some(t) = desvios::desviar("motor_porta_70c040 (gravacao)", &PROLOGO_70C040, porta_70c040 as *const () as usize) {
             PORTA_70C040 = t;
         }
+        if let Some(t) = desvios::desviar("motor_porta_68d0d0 (gravacao)", &PROLOGO_68D0D0, porta_68d0d0 as *const () as usize) {
+            PORTA_68D0D0 = t;
+        }
     }
     let rust: [usize; N] = [
         tabela_a as *const () as usize,
@@ -14176,6 +14287,7 @@ pub unsafe fn instalar(comparando: bool) {
         defender as *const () as usize,
         recuperar_folego as *const () as usize,
         periodo_encerrado as *const () as usize,
+        pressao as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -14443,6 +14555,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_defender as *const () as usize,
         comparar_recuperar_folego as *const () as usize,
         comparar_periodo_encerrado as *const () as usize,
+        comparar_pressao as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -14549,6 +14662,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_decidir_sem_bola", "motor_mover_sem_bola",
         "motor_decidir_jogador", "motor_passar", "motor_lancar",
         "motor_desviar_bola", "motor_defender", "motor_recuperar_folego", "motor_periodo_encerrado",
+        "motor_pressao",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

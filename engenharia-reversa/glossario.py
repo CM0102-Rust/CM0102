@@ -112,6 +112,7 @@ EN = {
  'defender': 'save_shot',
  'recuperar_folego': 'recover_stamina',
  'periodo_encerrado': 'period_completed',
+ 'pressao': 'pressure',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

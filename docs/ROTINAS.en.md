@@ -969,3 +969,11 @@ Mutations: 8 of 9 caught (f_campo, f_banco, f_fora, f_k, f_marca, f_copia, f_650
 | `periodo_encerrado()` | 0x6bd930 | thiscall | match_eng.cpp (`period_completed`): closes the period in +0x8ed4 when the clock (+0x8ed0) passes its end plus stoppage (+0x8eb7). 1st half: half-time score into the fixture (+0x4792 +0x45/+0x46), narrates 0x20f1, recovers stamina and moves to the 2nd (1). 2nd half: by the fixture rule (+0x38) and aggregate (+0x4b/+0x4c), ends (4: standings 0x6be120, stamina ceiling, summary 0x6ce460; penalties in +0x8eb3) or goes to extra time (0x20f2, 2). Extra time: 0x20f3 and 2nd half (3), then ends. Unknown period: logs the error (0x944c9f). Standings and summary become tape units when called directly by the compared routine |
 
 Mutations: 9 of 9 caught (p_passou, p_intervalo, p_20f1, p_3de, p_teto0, p_saida, p_placar, p_fim, p_ordem); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).
+
+### Match engine, 104th batch — the pressure on a player (official on 2026-10-10)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `pressao(j, saida, lista)` | 0x6bcbd0 | thiscall, ret 0xc | match_eng.cpp, no draws: adds into `*saida` the pressure of active opponents in `j`'s cell and returns how many count (2 per marker). Whoever marks `j` (0x714c60) is worth (0x6f4600 + 0x10a − +0x19c/20 − +0x107 of `j`) × 1.7; the others standing, outside table 1 (0x717410) and with +0x10a or bit 0x100 of +0x198, are worth (0x10a − …) × 1.7 / (+0x2b + 1). With `lista`, the two heaviest (above 5) go into it as 0x1be-byte copies (0x68d0d0, a tape unit so the Rust copy does not allocate again) |
+
+Mutations: 9 of 9 caught (x_lado, x_base, x_marca2, x_dobro, x_2b, x_bit, x_5, x_segundo, x_ordem); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1). The first attempt read 0x66666667 + sar 3 as /10 (it is /20): the baseline caught it at once.

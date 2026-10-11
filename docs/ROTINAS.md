@@ -967,3 +967,11 @@ Mutações: 8 de 9 pegas (f_campo, f_banco, f_fora, f_k, f_marca, f_copia, f_650
 | `periodo_encerrado()` | 0x6bd930 | thiscall | match_eng.cpp (`period_completed`): fecha o período de +0x8ed4 quando o relógio (+0x8ed0) passa do fim mais os acréscimos (+0x8eb7). 1º tempo: placar do intervalo no jogo (+0x4792 +0x45/+0x46), narra 0x20f1, recupera o fôlego e vai ao 2º (1). 2º tempo: pela regra do jogo (+0x38) e o agregado (+0x4b/+0x4c), encerra (4: classificação 0x6be120, teto do fôlego, resumo 0x6ce460; pênaltis em +0x8eb3) ou vai à prorrogação (0x20f2, 2). Prorrogação: 0x20f3 e 2º tempo (3), depois encerra. Período desconhecido: registra o erro (0x944c9f). A classificação e o resumo viram unidades da fita quando chamados direto pela comparada |
 
 Mutações: 9 de 9 pegas (p_passou, p_intervalo, p_20f1, p_3de, p_teto0, p_saida, p_placar, p_fim, p_ordem); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).
+
+### Motor de partidas, 104ª leva — a pressão sobre o jogador (oficial em 10/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `pressao(j, saida, lista)` | 0x6bcbd0 | thiscall, ret 0xc | match_eng.cpp, sem sorteio: soma em `*saida` a pressão dos adversários ativos na casa de `j` e devolve quantos pesam (2 por marcador). Quem marca `j` (0x714c60) vale (0x6f4600 + 0x10a − +0x19c/20 − +0x107 de `j`) × 1,7; os outros em pé, fora da tabela 1 (0x717410) e com +0x10a ou o bit 0x100 de +0x198, valem (0x10a − …) × 1,7 / (+0x2b + 1). Com `lista`, os dois que mais pesam (acima de 5) entram nela como cópia de 0x1be bytes (0x68d0d0, unidade da fita para a cópia Rust não alocar de novo) |
+
+Mutações: 9 de 9 pegas (x_lado, x_base, x_marca2, x_dobro, x_2b, x_bit, x_5, x_segundo, x_ordem); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1). A 1ª tentativa leu 0x66666667 + sar 3 como /10 (é /20): a base pegou na hora.

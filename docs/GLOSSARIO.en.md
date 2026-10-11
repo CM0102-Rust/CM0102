@@ -257,6 +257,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cb6c0 | `por_diferenca` | by_difference |
 | 0x6c2be0 | `posicionar` | position (place players) |
 | 0x6d1770 | `posicoes_finas` | fine_positions |
+| 0x6bcbd0 | `pressao` | pressure |
 | 0x6bd6b0 | `pressao_na_area` | pressure_in_box |
 | 0x6c3a00 | `pressao_no_ponto` | pressure_at_point |
 | 0x6ea760 | `procurar_impedimento` | look_for_offside |
