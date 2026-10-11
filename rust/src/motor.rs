@@ -388,8 +388,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6e2000, bytes: &[0x81, 0xec, 0x24, 0x01, 0x00, 0x00] },
     Prologo { endereco: 0x6df460, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
     Prologo { endereco: 0x6e0230, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
+    Prologo { endereco: 0x6ddab0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
 ];
-const N: usize = 281;
+const N: usize = 282;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4941,6 +4942,370 @@ unsafe fn julgar_formacoes(
         free(lista);
     }
     melhor
+}
+
+// ---------- centesima vigesima leva: as instrucoes individuais (0x6ddab0) ----------
+
+/// { 0x6ddab0 } (thiscall, match_man.cpp, ~6,4 KB): a comissao `c` acerta as instrucoes da tatica
+/// copiada em +0x2b (0x5b50d0 gerais, 0x5b2ba0 posicao, 0x5b5290 marcas de 64 bits, 0x5b5910 marcacao
+/// individual no motor) e no banco de taticas (0x897ee0). Com tecnico humano a ser consultado nao
+/// mexe. Em casa (ou com sorteio contra a diferenca de reputacao nas competicoes +0x3a = 1 ou 9) pede
+/// 0x20; o tecnico (+0x13, +0x1f, +0x1c) escolhe o ritmo e a marcacao. Um fator (reputacoes dos dois
+/// clubes / 17000, o tecnico +0xe e um resto pelos ids) e comparado com os atributos (0x5431e0) de cada
+/// um dos 20 do lado em campo: avanco pelas pontas, marcacao individual do adversario de 0x6d4330
+/// (com 0x7c1e30 para os meias), passes, chutes de longe, dribles, desarmes, impedimento, cobrancas
+/// (acumulado dos que tem +0x2e alto), cruzamentos por tabela e o especialista de bola parada (0x897ee0
+/// para quem esta em +6/+0xa/+0xe da comissao).
+unsafe extern "thiscall" fn instrucoes(c: usize) {
+    let u = |p: usize, o: usize| *((p + o) as *const usize);
+    let w = |p: usize, o: usize| *((p + o) as *const i16);
+    let attr: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(0x5431e0usize);
+    let attr_tec: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(0x543f30usize);
+    let attr_tec2: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(0x544410usize);
+    let tabela: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    let tabela_b: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x717450usize);
+    let geral: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x5b50d0usize);
+    let pos: unsafe extern "thiscall" fn(usize, u32, u32, u32) = core::mem::transmute(0x5b2ba0usize);
+    let marca: unsafe extern "thiscall" fn(usize, u32, u32, u32) = core::mem::transmute(0x5b5290usize);
+    let marcas: unsafe extern "thiscall" fn(usize, u32) -> u64 = core::mem::transmute(0x5b5270usize);
+    let marcar: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x5b5910usize);
+    let banco: unsafe extern "thiscall" fn(usize, usize, u32, usize, i32) = core::mem::transmute(0x897ee0usize);
+    let quem_marca: unsafe extern "thiscall" fn(usize, u32, u32) -> i8 = core::mem::transmute(0x6d4330usize);
+    let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f32 = core::mem::transmute(0x7c1e30usize);
+    let (ca, cb) = (u(c, 0x2f), u(c, 0x33));
+    let mut acc = 0i8;
+    let f40 = (w(ca, 0x80) as i32 as f64 + w(cb, 0x80) as i32 as f64) * 5.882352941176471e-05;
+    let humano = byte(c, 0x19);
+    if humano == 0 {
+        let p = u(ca, 0xcf);
+        let q = *(0xae2364 as *const i32);
+        if p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && byte(p, 0x5f) != 0 {
+            let gerente = u(0xb63c98, 0);
+            let consultar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd210usize);
+            let opcao: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(0x5fea50usize);
+            if consultar(gerente, p) != 0 && opcao(u(0xb63c98, 0), 2, u(u(c, 0x2f), 0xcf)) != 0 {
+                return;
+            }
+        }
+    }
+    let t = || u(c, 0x2b);
+    let em_casa = humano != 0 || {
+        let comp = byte(u(c, 0x37), 0x3a);
+        (comp == 1 || comp == 9) && {
+            let r = sortear(2000).wrapping_add(sortear(-4000));
+            (w(u(c, 0x2f), 0x80) as i32 - w(u(c, 0x33), 0x80) as i32) > r
+        }
+    };
+    if em_casa {
+        geral(t(), 0x20);
+    }
+    let tec = u(c, 0x1f);
+    if tec == 0 {
+        return;
+    }
+    let f40 = (1.0 - (byte(tec, 0xe) as f64 - 10.0) * 0.03333333333333333) * f40;
+    let ritmo = byte(tec, 0x13);
+    let r = if ritmo <= 8 {
+        2
+    } else if ritmo <= 14 {
+        1
+    } else if ritmo <= 18 {
+        4
+    } else if ritmo <= 20 {
+        8
+    } else {
+        0
+    };
+    if r != 0 {
+        geral(t(), r);
+    }
+    let m1f = byte(u(c, 0x1f), 0x1f);
+    if m1f >= 15 {
+        geral(t(), 0x100);
+    } else if m1f <= 5 {
+        geral(t(), 0x80);
+    }
+    if 19.0 - w(u(c, 0x2f), 0x80) as i32 as f64 * 0.0003 < byte(u(c, 0x1f), 0x1c) as f64 && *((t() + 0x187b) as *const u8) & 8 == 0 {
+        geral(t(), 0x400);
+    }
+    let tat = || u(0xde1d08, 0);
+    let hum = byte(c, 0x19) as i32;
+    banco(tat(), u(c, 0x2f), 0, 0, hum);
+    banco(tat(), u(c, 0x2f), 1, 0, byte(c, 0x19) as i32);
+    let m = u(c, 0x12);
+    let bloco = |k: usize| m + 0x22d8 * byte(c, 0x18) as isize as usize + 0x4796 + 0x1be * k;
+    // o acumulado dos que sabem cobrar
+    for k in 0..20 {
+        let j = bloco(k);
+        if byte(j, 0x19) >= 0 && tabela(j) & 0x40 != 0 && tabela(j) & 0x200 != 0 {
+            let f = u(j, 0x6d);
+            let v = byte(f, 0x2e);
+            if v > 14 {
+                acc = acc.wrapping_add(ftol(pow_do_jogo((v as i32 - 14) as f64, 1.5)) as i8);
+                let v40 = byte(f, 0x40);
+                if v40 < 8 {
+                    acc = acc.wrapping_add(8 - v40);
+                }
+            }
+        }
+    }
+    let tc = |o: usize| byte(u(c, 0x1f), o);
+    for k in 0..20 {
+        let j = bloco(k);
+        if byte(j, 0x19) < 0 {
+            continue;
+        }
+        let f = u(j, 0x6d);
+        let pos_j = *((j + 0x19) as *const u8) as u32;
+        let a = |k: u32| attr(u(j, 0x69), k) as i32;
+        let tb = || tabela(j);
+        let fb = |o: usize| byte(u(j, 0x6d), o);
+        let div = 13 - (attr_tec2(u(c, 0x1f), 0xb) as i32) / 2;
+        let resto = (*(u(c, 0x1f) as *const i32)).wrapping_add(*(f as *const i32)) % div;
+        let mut f38 = (resto as f64 * 0.05 + 1.0) * f40 * 1.2;
+        if f38 < 0.6 {
+            f38 = 0.6;
+        }
+        // avanco pelas pontas
+        if *((t() + 0x187b) as *const u32) & 0x1c00000 == 0 {
+            let lat = |faixa: u16, ref_: usize| tb() & faixa != 0 && fb(0x14) as i32 >= fb(ref_) as i32 - 1 && fb(0x19) == 20;
+            if tb() & 0x10 != 0 && tb() & 0x200 != 0 && fb(0x14) as i32 > fb(0x13) as i32 - 1 && fb(0x19) == 20 && f38 * 16.0 < a(7) as f64 {
+                pos(t(), pos_j, 0x220, 0);
+                pos(t(), byte(j, 0x19) as u8 as u32, 0x220, 1);
+            } else if tb() & 0x10 != 0 && tabela_b(j) & 0x20 == 0 && lat(0x100, 0x13) && f38 * 16.0 < a(7) as f64 {
+                pos(t(), pos_j, 0x220, 1);
+            } else if tb() & 0x10 != 0 && tabela_b(j) & 0x20 == 0 && lat(0x400, 0x13) && f38 * 16.0 < a(7) as f64 {
+                pos(t(), pos_j, 0x220, 1);
+            } else if tb() & 0x40 != 0 && lat(0x200, 0x15) && f38 * 17.0 < a(7) as f64 {
+                pos(t(), pos_j, 0x220, 0);
+                pos(t(), byte(j, 0x19) as u8 as u32, 0x240, 1);
+            } else if tb() & 0x40 != 0 && lat(0x100, 0x15) && f38 * 17.0 < a(7) as f64 {
+                pos(t(), pos_j, 0x120, 0);
+                pos(t(), byte(j, 0x19) as u8 as u32, 0x140, 1);
+            } else if tb() & 0x40 != 0 && lat(0x400, 0x15) && f38 * 17.0 < a(7) as f64 {
+                pos(t(), pos_j, 0x420, 0);
+                pos(t(), byte(j, 0x19) as u8 as u32, 0x440, 1);
+            }
+        }
+        let fl = |v: f32| *((j + 0x4d) as *const f32) as f64 > v as f64;
+        if (tb() & 2 != 0 || tb() & 0x20 != 0 || tb() & 0x40 != 0)
+            && fl(8250.0)
+            && fb(0x3c) > 12
+            && f38 * 17.0 < a(7) as f64
+            && fb(0x1a) > 15
+            && f38 * 40.0 < (a(0x14) + (tc(0x15) as i32 - 10) * 3) as f64
+        {
+            marca(t(), pos_j, 0x200000, 0);
+            if (*((j + 0x4d) as *const f32) as f64) < 8500.0 || fb(0x3c) < 18 || fb(0x44) > 16 {
+                marca(t(), byte(j, 0x19) as u8 as u32, 0x4000, 0);
+            }
+        } else {
+            let b = a(0x14) + a(0xd) + a(7) + (tc(0x15) as i32 + fb(0x1a) as i32 - 20) * 3;
+            if f38 * 40.0 > b as f64 {
+                marca(t(), pos_j, 0x100000, 0);
+            }
+        }
+        // 0x5b5270 bit 1 e +0x584 bit 8: 2, senao 4
+        let dois_ou_quatro = || {
+            let v = if marcas(t(), byte(j, 0x19) as u8 as u32) & 1 != 0 && *((t() + 0x584) as *const u8) & 8 != 0 { 2 } else { 4 };
+            marca(t(), byte(j, 0x19) as u8 as u32, v, 0);
+        };
+        if tb() & 0x20 != 0 && tb() & 0x80 == 0 && tb() & 0x800 == 0 {
+            dois_ou_quatro();
+        }
+        if (tb() & 8 != 0 || tb() & 0x10 != 0) && tb() & 0x80 == 0 && tb() & 0x800 == 0 && f38 * 16.0 > a(7) as f64 {
+            dois_ou_quatro();
+            let r = quem_marca(m, *((j + 0x27) as *const u8) as u32, byte(j, 0x19) as u8 as u32);
+            if r != -1 {
+                let lado_o = (byte(j, 0x19) == 0) as usize;
+                let o = m + 0x1be * (r as isize as usize).wrapping_add(20 * lado_o) + 0x4796;
+                let blk = || (u(c, 0x12) as isize + 0x91e2 + 0x18e3 * byte(j, 0x27) as isize) as usize;
+                let tbo = || tabela(o);
+                let reps = || {
+                    let ra = w(u(c, 0x2f), 0x80);
+                    ra < w(u(c, 0x33), 0x80).wrapping_add(0xfa) || w(u(o, 0x6d), 0xb).wrapping_add(0xfa) > ra
+                };
+                let lados = || tbo() & 0x200 != 0 || tbo() & 0x100 != 0 || tbo() & 0x400 != 0;
+                let resto5 = || *(u(o, 0x69) as *const i32) % 5;
+                if u(o, 0x69) != 0 {
+                    if (tbo() & 0x20 != 0 || tabela_b(o) & 0x20 != 0)
+                        && lados()
+                        && reps()
+                        && a(0x1c) > 12
+                        && a(0x11) > 10
+                        && a(0x1f) > 10
+                        && fb(0x12) == 20
+                        && tb() & 0x10 != 0
+                        && (tb() & 0x200 != 0 || tb() & 0x100 != 0 || tb() & 0x400 != 0)
+                        && attr_tec(u(c, 0x1b), 0xb) as i32 > (resto5() as i8).wrapping_add(10) as i32
+                    {
+                        if u(u(u(c, 0x12), 0x4792), 0x1c) != u(c, 0x2f) || a(0x1a) > 15 {
+                            pos(t(), byte(j, 0x19) as u8 as u32, 0x208, 1);
+                        }
+                        marcar(blk(), byte(j, 0x19) as u8 as u32, u(o, 0x69));
+                    } else if u(o, 0x69) != 0
+                        && tb() & 8 != 0
+                        && (tb() & 0x200 != 0 || tb() & 0x100 != 0 || tb() & 0x400 != 0)
+                        && (tbo() & 0x20 != 0 || tabela_b(o) & 0x20 != 0)
+                        && tbo() & 0x200 != 0
+                        && reps()
+                        && a(0x1f) > 10
+                        && a(0x1c) > 15
+                        && a(0x13) > 10
+                        && a(0x1a) > 10
+                        && attr_tec(u(c, 0x1b), 0xb) as i32 > (resto5() as i8).wrapping_add(7) as i32
+                    {
+                        marcar(blk(), byte(j, 0x19) as u8 as u32, u(o, 0x69));
+                    } else if u(o, 0x69) != 0
+                        && (tbo() & 0x10 != 0 || tabela_b(o) & 0x10 != 0)
+                        && lados()
+                        && reps()
+                        && a(0x1f) > 10
+                        && a(0x1c) > 12
+                        && a(0x13) > 10
+                        && a(0x1a) > 10
+                        && attr_tec(u(c, 0x1b), 0xb) as i32 > (resto5() as i8).wrapping_add(8) as i32
+                    {
+                        let fo = u(o, 0x6d);
+                        let g = u(0xb74350, 0);
+                        let m1 = media(g, fo, 6, 1, 6.5);
+                        let m2 = media(u(0xb74350, 0), u(o, 0x6d), 6, 2, 6.5);
+                        let m3 = media(u(0xb74350, 0), u(o, 0x6d), 6, 5, 6.5);
+                        let (mut st0, mut r3) = (0.0f64, 0.0f32);
+                        if m1 as f64 > 2.0 {
+                            st0 = m2 as f64 / m1 as f64;
+                            r3 = (m3 as f64 / m1 as f64) as f32;
+                        }
+                        if st0 > 0.35 || r3 as f64 > 0.4 {
+                            if (tbo() & 0x20 != 0 || tabela_b(o) & 0x20 != 0) && (fb(0x12) == 20 || fb(0x13) == 20) && a(0x1a) > 14 {
+                                pos(t(), byte(j, 0x19) as u8 as u32, 0x208, 1);
+                            }
+                            marcar(blk(), byte(j, 0x19) as u8 as u32, u(o, 0x69));
+                        }
+                    }
+                }
+            }
+        }
+        // os passes
+        let q = f38 * 10.0;
+        if (a(0x12) as f64) < q {
+            marca(t(), byte(j, 0x19) as u8 as u32, 0x10000000, 0);
+        } else if f38 * 13.0 < a(0x12) as f64 {
+            marca(t(), byte(j, 0x19) as u8 as u32, 0x20000000, 0);
+        }
+        // chutes de longe
+        if (tb() & 8 != 0 || tb() & 0x10 != 0 || tb() & 0x20 != 0) && tb() & 0x80 == 0 && tb() & 0x800 == 0 {
+            let a2 = a(2);
+            if (tc(0x1f) as i32 / 5) as f64 + q > a2 as f64 {
+                let a3 = a(0x1f);
+                let pj = byte(j, 0x19) as u8 as u32;
+                if (tc(0x1f) as i32 / 5) as f64 + f38 * 5.0 > a3 as f64 {
+                    let v = if marcas(t(), pj) & 0x200 != 0 && *((t() + 0x584) as *const u8) & 0x20 != 0 { 0x400 } else { 0x1000 };
+                    marca(t(), pj, v, 0);
+                    marca(t(), byte(j, 0x19) as u8 as u32, 0x8000, 0);
+                } else {
+                    let a3 = a(0x1f);
+                    if (tc(0x1f) as i32 / 5) as f64 + q > a3 as f64 {
+                        let v = if marcas(t(), pj) & 0x200 != 0 && *((t() + 0x584) as *const u8) & 0x20 != 0 { 0x400 } else { 0x1000 };
+                        marca(t(), byte(j, 0x19) as u8 as u32, v, 0);
+                    }
+                }
+            }
+        }
+        if byte(j, 0x24) != 0 && a(2) > tc(0x1f) as i32 / 4 + 8 {
+            marca(t(), byte(j, 0x19) as u8 as u32, 0x800, 0);
+        }
+        // dribles
+        if tb() & 8 != 0 || tb() & 0x10 != 0 || (tc(0xe) > 16 && tb() & 0x40 != 0) {
+            let f28 = f38 * 14.0;
+            let te4 = tc(0xe) as i32 / 4;
+            let pj = || byte(j, 0x19) as u8 as u32;
+            let fl8000 = || *((j + 0x4d) as *const f32) as f64;
+            if f28 - (te4 as f64) < a(0x14) as f64 && f28 - ((tc(0xe) as i32 / 4) as f64) < a(0xc) as f64 && fl8000() > 8000.0 {
+                marca(t(), pj(), 0x800000, 0);
+            } else {
+                let te4 = tc(0xe) as i32 / 4;
+                let lim = q - te4 as f64;
+                let alto = lim > a(0x14) as f64 && lim < a(0xc) as f64;
+                if alto || fl8000() < 8000.0 {
+                    marca(t(), pj(), 0x400000, 0);
+                }
+            }
+        }
+        // desarmes: os de meio e ataque (ou quem desarma bem) entram pela nota mais alta
+        {
+            let pj = || byte(j, 0x19) as u8 as u32;
+            let entra = tb() & 0x10 != 0 || tb() & 0x20 != 0 || tb() & 0x40 != 0 || f38 * 16.0 < a(0xb) as f64;
+            let forte = entra && (f38 * 14.0 < a(0xb) as f64 || f38 * 34.0 - ((tc(0xe) as i32 / 4) as f64) < (a(0x15) + a(0xb)) as f64);
+            if forte {
+                marca(t(), pj(), 0x2000000, 0);
+            } else if f38 * 25.0 - (tc(0xe) as i32 / 4) as f64 > (a(0x15) + a(0xb)) as f64 {
+                marca(t(), pj(), 0x1000000, 0);
+            }
+        }
+        if tb() & 0x10 != 0 && fb(0x1a) > 12 && fb(0x14) >= fb(0x13) {
+            if tb() & 0x80 != 0 && fb(0x19) > fb(0x18) {
+                pos(t(), byte(j, 0x19) as u8 as u32, 0x120, 1);
+            } else if tb() & 0x800 != 0 && fb(0x19) > fb(0x17) {
+                pos(t(), byte(j, 0x19) as u8 as u32, 0x420, 1);
+            }
+        }
+        // impedimento
+        let d = || a(0x1b) - a(0x15) - a(0x14);
+        if tb() & 0x40 != 0 && tb() & 0x80 == 0 && tb() & 0x800 == 0 && d() > 0 {
+            marca(t(), byte(j, 0x19) as u8 as u32, 0x8000000, 0);
+        } else if d() < -5 {
+            marca(t(), byte(j, 0x19) as u8 as u32, 0x4000000, 0);
+        }
+        // cobrancas
+        let l28 = acc as f64;
+        let pj = || byte(j, 0x19) as u8 as u32;
+        let (k1, k2) = if tb() & 0x80 == 0 && tb() & 0x800 == 0 {
+            (f38 * 16.0, q)
+        } else if tb() & 8 == 0 && tb() & 0x10 == 0 && tb() & 0x20 == 0 {
+            (f38 * 13.0, f38 * 7.0)
+        } else {
+            (q, f38 * 5.0)
+        };
+        if k1 - l28 < a(8) as f64 {
+            marca(t(), pj(), 0, 4);
+        } else if k2 - l28 > a(8) as f64 {
+            marca(t(), pj(), 0, 8);
+        }
+        // cruzamentos pela tabela
+        let tv = tb() as i16 as i32;
+        let b = || a(0x16) + a(7);
+        match tv {
+            0x210 | 0x110 | 0xa0 | 0x120 | 0x420 | 0x220 | 0x410 | 0x820 => {
+                if f38 * 23.0 < b() as f64 {
+                    marca(t(), pj(), 0, 1);
+                }
+            }
+            0x90 | 0x108 | 0x202 | 0x208 | 0x408 | 0x810 => {
+                if f38 * 27.0 < b() as f64 {
+                    marca(t(), pj(), 0, 1);
+                }
+            }
+            _ => {
+                if f38 * 31.0 < b() as f64 {
+                    marca(t(), pj(), 0, 1);
+                } else if f38 * 20.0 > b() as f64 {
+                    marca(t(), pj(), 0, 2);
+                }
+            }
+        }
+        // bola parada
+        if (tb() & 0x10 != 0 || tb() & 8 != 0 || tb() & 0x20 != 0) && tb() & 0x80 == 0 && tb() & 0x800 == 0 && tabela_b(j) & 0x40 == 0 {
+            let ca = u(c, 0x2f);
+            let s = a(0x16) + a(9) + a(7);
+            if ((w(ca, 0x80) as i32 / 500) as f64 + f38 * 30.0) < s as f64 {
+                let pj = u(j, 0x69);
+                if u(c, 6) == pj || u(c, 0xa) == pj || u(c, 0xe) == pj {
+                    banco(tat(), ca, 0, pj, byte(c, 0x19) as i32);
+                }
+            }
+        }
+    }
 }
 
 // ---------- centesima decima sexta leva: a substituicao (0x6e1090) ----------
@@ -16006,6 +16371,30 @@ unsafe extern "thiscall" fn comparar_escolher_formacao(c: usize, fichas: usize, 
     });
     r
 }
+unsafe extern "thiscall" fn comparar_instrucoes(c: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(281);
+    // o sorteio, o motor (a marcacao individual no bloco tatico), a tatica copiada (+0x2b) e as linhas
+    // do clube no banco de taticas
+    let m = *((c + 0x12) as *const usize);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m, 0xf5f8), (*((c + 0x2b) as *const usize), 0x18e3), (0xb67a34, 4)]);
+    let taticas = *(0xde1d08 as *const usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let clube = *((c + 0x2f) as *const usize);
+    for humano in 0..2u32 {
+        let l = if clube == 0 { -1 } else { linha(clube, humano) };
+        if l != -1 {
+            reg.push(((*((taticas + 0x601) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
+        }
+    }
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(c), || instrucoes(c));
+    PLACAR.registrar(igual, || {
+        let dif = mo.0.iter().zip(mr.0.iter()).find_map(|(a, b)| {
+            a.1.iter().zip(b.1.iter()).position(|(x, y)| x != y).map(|k| format!("{:#x}+{:#x}: {:x?} x {:x?}", a.0, k, &a.1[k..(k + 8).min(a.1.len())], &b.1[k..(k + 8).min(b.1.len())]))
+        });
+        format!("instrucoes(lado {}) {}", byte(c, 0x18), dif.unwrap_or_default())
+    });
+}
 unsafe extern "thiscall" fn comparar_substituir(c: usize, goleiro: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(277);
     if gravando_no_topo() {
@@ -17093,6 +17482,7 @@ pub unsafe fn instalar(comparando: bool) {
         escalar as *const () as usize,
         postura as *const () as usize,
         escolher_formacao as *const () as usize,
+        instrucoes as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -17376,6 +17766,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_escalar as *const () as usize,
         comparar_postura as *const () as usize,
         comparar_escolher_formacao as *const () as usize,
+        comparar_instrucoes as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -17486,7 +17877,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_gravidade_da_lesao", "motor_grau_da_lesao", "motor_lesao_na_dividida",
         "motor_avaliar_jogador", "motor_melhor_avaliado", "motor_melhor_da_lista",
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
-        "motor_escalar", "motor_postura", "motor_escolher_formacao",
+        "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
