@@ -4,7 +4,8 @@ Uso: python mutacoes.py <lista.py> [--sem-base] [--so-base] [--base-completa] [-
      ex.: python mutacoes.py mutacoes\leva43.py
 
 A lista e um arquivo Python com MUTACOES = [(nome, trecho_original, trecho_mutado), ...]; cada
-trecho original tem de aparecer uma unica vez em rust/src/motor.rs (conferido antes de comecar).
+trecho original tem de aparecer uma unica vez em rust/src/motor.rs (ou no fonte de ARQUIVO = 'data.rs'
+na lista; conferido antes de comecar).
 Primeiro roda o autoteste sem mutacao com --casos casos (a base tem de dar 0 divergencias; com
 --base-completa, todos os autotestes com 2 milhoes de casos no motor, a cada 5 levas); depois, para
 cada mutacao, troca o trecho, recompila, copia a DLL para jogo/ e roda so o autoteste do motor
@@ -93,6 +94,9 @@ def main():
     lista = {}
     exec(open(sys.argv[1], encoding='utf-8').read(), lista)
     mutacoes = lista['MUTACOES']
+    # a lista pode mutar outro fonte (ex.: ARQUIVO = 'data.rs'); o padrao e o motor.rs
+    global SRC
+    SRC = os.path.join(RAIZ, 'rust', 'src', lista.get('ARQUIVO', 'motor.rs'))
     casos = int(sys.argv[sys.argv.index('--casos') + 1]) if '--casos' in sys.argv else 200000
     data = sys.argv[sys.argv.index('--jogo') + 1] if '--jogo' in sys.argv else None
     original = open(SRC, encoding='utf-8').read()

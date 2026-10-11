@@ -986,10 +986,18 @@ Mutations: 9 of 9 caught (x_lado, x_base, x_marca2, x_dobro, x_2b, x_bit, x_5, x
 
 Mutations: 17 of 18 caught; o_marca survives (the 2.25 weight of whoever marks the attacker, +0x1a6: path not exercised up to 2001-08-20, checked against the disassembly); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).
 
-### Match engine, 106th batch — the player development after a match (official on 2026-10-10)
+### Match engine, 106th batch — the player development after a match (official on 2026-10-11)
 
 | Routine | Original | Convention | Notes |
 |---|---|---|---|
 | `evoluir_jogador(jm, pessoa, clube, rep, comp, nota, media_b, forte)` | 0x6d26b0 | cdecl | match_eng.cpp (~3.9 KB): the three record ratings (+0x61: +0x9, +0xb, +0xd) move with the match rating. The level comes from the competition (−2: 5; +0x40: mean of reputation/500 and +0x69; national sides 0x76d940 at least 15; up to 20); each rating converges to rating + (level/2 + 5) × deviation × 50 (deviation against the league mean 0xb74350, signed square below it), with divisors from the rating's thousands + 16 minus the level; `forte` sets 250 × level × rating/mean as a floor. Floors rise with reputation and rating in big matches (+0x30/+0x32 of the competition). The +0xb change gives morale by draw up to ±20 (0x7172d0 on the match player or 0x544710 on the person); then ratings are clamped to the potential (+0x5) and age band (250/300/375/500 × (2 − rating/10000)) and +0xb pulls toward the club reputation (0x4cf5f0, CRT pow cubed). With `jm`, writes its +0x47/+0x49/+0x4b |
 
 Mutations: 13 of 15 caught; e_nivel20 (level cap 20, level-20 competitions do not appear up to 2001-08-20) and e_div9 (+9 divisor below 5, rare outside big matches) survive; real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).
+
+### Match engine, 107th batch — the kit (official on 2026-10-11)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `uniforme(clube, outro, qualquer)` | 0x6d47e0 | cdecl | match_eng.cpp: which of the club's three kits (colour pairs +0x83/+0x87, +0x8b/+0x8f, +0x93/+0x97) to wear against the other club. Without either club, logs the error and returns 0. 0x48ce70 (returns 0) would decide to swap colours (0x48ce90). Without `qualquer`, a pair works if its second colour does not clash (0x540490) with the other's (+0x87, or the table 0xae23ec entry by index 0x9cf17c); returns the pair number, 1 with a zero colour, 2 if the 2nd/3rd kit is missing, 1 if none works |
+
+Mutations: 4 of 5 caught; u_nenhum survives (all three kits clashing, does not happen up to 2001-08-20); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).

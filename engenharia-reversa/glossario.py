@@ -115,6 +115,7 @@ EN = {
  'pressao': 'pressure',
  'desafio_adversario': 'opposition_challenge',
  'evoluir_jogador': 'develop_player',
+ 'uniforme': 'kit',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

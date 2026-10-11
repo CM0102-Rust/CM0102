@@ -375,8 +375,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6bcbd0, bytes: &[0x83, 0xec, 0x28, 0x53, 0x8b, 0x5c, 0x24, 0x34] },
     Prologo { endereco: 0x6c87e0, bytes: &[0x81, 0xec, 0x3c, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6d26b0, bytes: &[0x83, 0xec, 0x34, 0xb8, 0x01, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x6d47e0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 268;
+const N: usize = 269;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4067,6 +4068,54 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- centesima setima leva: o uniforme (0x6d47e0) ----------
+
+/// { 0x6d47e0 } (cdecl, match_eng.cpp): qual dos tres uniformes do `clube` (pares de cores +0x83/+0x87,
+/// +0x8b/+0x8f, +0x93/+0x97) usar contra o `outro`. Sem clube ou sem outro, registra o erro e devolve 0.
+/// Para cada par, a 0x48ce70 (que devolve 0) decide se troca as cores (0x48ce90). Sem `qualquer`, o
+/// par vale se a segunda cor nao choca (0x540490) com a do outro (+0x87 dele, ou a da tabela 0xae23ec
+/// pelo indice 0x9cf17c); devolve 1, 2 ou 3 conforme o par, 1 se o par tiver cor zero, 2 se faltar
+/// o 2o ou o 3o uniforme, 1 se nenhum servir.
+unsafe extern "C" fn uniforme(clube: usize, outro: usize, qualquer: u32) -> u8 {
+    let decide: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x48ce70usize);
+    let trocar: unsafe extern "C" fn(*mut usize, *mut usize) -> u32 = core::mem::transmute(0x48ce90usize);
+    let choca: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(0x540490usize);
+    let u = |o: usize| *((clube + o) as *const usize);
+    if clube == 0 || outro == 0 {
+        *(0xb67a34 as *mut u32) = 0;
+        return 0;
+    }
+    let qualquer = qualquer as u8 != 0;
+    let cor_outro = if qualquer {
+        0
+    } else {
+        let c = *((outro + 0x87) as *const usize);
+        if c != 0 { c } else { *(0xae23ec as *const usize) + *(0x9cf17c as *const i32) as usize * 58 }
+    };
+    let (mut x, mut y) = (0usize, 0usize);
+    let mut k = 0u8;
+    loop {
+        match k {
+            0 => (x, y) = (u(0x83), u(0x87)),
+            1 | 2 => {
+                (x, y) = if k == 1 { (u(0x8b), u(0x8f)) } else { (u(0x93), u(0x97)) };
+                if x == 0 || y == 0 {
+                    return 2;
+                }
+            }
+            _ => return 1,
+        }
+        if decide(x, y) != 0 {
+            trocar(&mut x, &mut y);
+        }
+        k += 1;
+        if qualquer || (y != 0 && x != 0 && choca(y, cor_outro) == 0) {
+            break;
+        }
+    }
+    if x == 0 || y == 0 { 1 } else { k }
 }
 
 // ---------- centesima sexta leva: a evolucao do jogador depois do jogo (0x6d26b0) ----------
@@ -14055,6 +14104,12 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+unsafe extern "C" fn comparar_uniforme(clube: usize, outro: usize, qualquer: u32) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(268)(clube, outro, qualquer);
+    let n = uniforme(clube, outro, qualquer);
+    PLACAR.registrar(r == n, || format!("uniforme(qualquer {}) original={} rust={}", qualquer as u8, r, n));
+    r
+}
 #[allow(clippy::too_many_arguments)]
 unsafe extern "C" fn comparar_evoluir_jogador(jm: usize, pessoa: usize, clube: usize, rep: usize, comp: usize, nota: f32, media_b: u32, forte: u32) {
     type F = unsafe extern "C" fn(usize, usize, usize, usize, usize, f32, u32, u32);
@@ -14977,6 +15032,7 @@ pub unsafe fn instalar(comparando: bool) {
         pressao as *const () as usize,
         desafio_adversario as *const () as usize,
         evoluir_jogador as *const () as usize,
+        uniforme as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -15247,6 +15303,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_pressao as *const () as usize,
         comparar_desafio_adversario as *const () as usize,
         comparar_evoluir_jogador as *const () as usize,
+        comparar_uniforme as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -15353,7 +15410,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_decidir_sem_bola", "motor_mover_sem_bola",
         "motor_decidir_jogador", "motor_passar", "motor_lancar",
         "motor_desviar_bola", "motor_defender", "motor_recuperar_folego", "motor_periodo_encerrado",
-        "motor_pressao", "motor_desafio_adversario", "motor_evoluir_jogador",
+        "motor_pressao", "motor_desafio_adversario", "motor_evoluir_jogador", "motor_uniforme",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

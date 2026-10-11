@@ -66,7 +66,7 @@ Rotinas que chamam outras com efeitos colaterais (por exemplo, a narração da p
 - As primeiras rotinas em Rust: o gerador de sorteios e as datas do jogo.
 
 ### Etapa 3: motor de partidas, em andamento (06 e 07/10/2026)
-- **106 levas, 268 rotinas** reescritas, de baixo para cima: dos acessores e cálculos às decisões táticas, posse de bola, arbitragem (faltas, cartões, impedimento), estatísticas, movimento dos jogadores, domínio da bola, narração e, como provas de viabilidade, o **valor do chute a gol** e a **força do time** (rotinas de 5 KB).
+- **107 levas, 269 rotinas** reescritas, de baixo para cima: dos acessores e cálculos às decisões táticas, posse de bola, arbitragem (faltas, cartões, impedimento), estatísticas, movimento dos jogadores, domínio da bola, narração e, como provas de viabilidade, o **valor do chute a gol** e a **força do time** (rotinas de 5 KB).
 - Infraestrutura nova: verificação dos desvios (`prologos.py`), porta de gravação para a narração e reprodução de chamadas internas.
 
 ## 6. Aonde vamos

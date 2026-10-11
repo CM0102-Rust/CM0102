@@ -313,6 +313,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cdd50 | `tirar_de_campo` | take_off_pitch |
 | 0x6ccb60 | `tracar_lance` | trace_move |
 | 0x4b0850 | `unidades` | units_digit |
+| 0x6d47e0 | `uniforme` | kit |
 | 0x5b2f10 | `vaga_da_casa` | slot_of_code |
 | 0x897590 | `vaga_marcada` | marked_slot |
 | 0x700bd0 | `valor_do_chute` | shot_value |

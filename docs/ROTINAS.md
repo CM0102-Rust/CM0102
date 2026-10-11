@@ -984,10 +984,18 @@ Mutações: 9 de 9 pegas (x_lado, x_base, x_marca2, x_dobro, x_2b, x_bit, x_5, x
 
 Mutações: 17 de 18 pegas; sobrevive o_marca (o peso 2,25 de quem marca o atacante, +0x1a6: caminho não exercitado até 2001-08-20, conferido na desmontagem); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).
 
-### Motor de partidas, 106ª leva — a evolução do jogador depois do jogo (oficial em 10/10/2026)
+### Motor de partidas, 106ª leva — a evolução do jogador depois do jogo (oficial em 11/10/2026)
 
 | Rotina | Original | Convenção | Observação |
 |---|---|---|---|
 | `evoluir_jogador(jm, pessoa, clube, rep, comp, nota, media_b, forte)` | 0x6d26b0 | cdecl | match_eng.cpp (~3,9 KB): as três notas da ficha (+0x61: +0x9, +0xb, +0xd) andam pela nota do jogo. O nível vem da competição (−2: 5; +0x40: média da reputação/500 e do +0x69; seleções 0x76d940 no mínimo 15; até 20); cada nota converge para nota + (nível/2 + 5) × desvio × 50 (desvio contra a média do campeonato 0xb74350, ao quadrado com sinal abaixo dela), com divisores pela casa de milhar da nota + 16 menos o nível; `forte` põe 250 × nível × nota/média como piso. Pisos sobem com reputação e nota em jogos grandes (+0x30/+0x32 da competição). A diferença na +0xb dá o moral por sorteio até ±20 (0x7172d0 no jogador do jogo ou 0x544710 na pessoa); depois as notas ficam na faixa do potencial (+0x5) e da idade (250/300/375/500 × (2 − nota/10000)) e a +0xb puxa a reputação do clube (0x4cf5f0, potência 3 pela pow da CRT). Com `jm`, grava +0x47/+0x49/+0x4b dele |
 
 Mutações: 13 de 15 pegas; sobrevivem e_nivel20 (teto 20 do nível, competições de nível 20 não aparecem até 2001-08-20) e e_div9 (divisor da +9 abaixo de 5, raro fora de jogos grandes); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).
+
+### Motor de partidas, 107ª leva — o uniforme (oficial em 11/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `uniforme(clube, outro, qualquer)` | 0x6d47e0 | cdecl | match_eng.cpp: qual dos três uniformes do clube (pares de cores +0x83/+0x87, +0x8b/+0x8f, +0x93/+0x97) usar contra o outro. Sem clube ou outro, registra o erro e devolve 0. A 0x48ce70 (devolve 0) decidiria trocar as cores (0x48ce90). Sem `qualquer`, o par vale se a segunda cor não choca (0x540490) com a do outro (+0x87, ou a da tabela 0xae23ec pelo índice 0x9cf17c); devolve o número do par, 1 com cor zero, 2 se faltar o 2º/3º uniforme, 1 se nenhum servir |
+
+Mutações: 4 de 5 pegas; sobrevive u_nenhum (os três uniformes chocando, não ocorre até 2001-08-20); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).
