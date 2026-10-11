@@ -164,6 +164,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x535920 | `global_9b5984` | global_9b5984 |
 | 0x547810 | `gosta_de` | likes |
 | 0x547d60 | `gosta_do_clube` | likes_club |
+| 0x62ece0 | `grau_da_lesao` | injury_grade |
 | 0x70a890 | `gravar_19c` | write_19c |
 | 0x7160e0 | `gravar_2b` | write_2b |
 | 0x700360 | `gravar_8ea7` | write_8ea7 |
@@ -172,6 +173,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x700390 | `gravar_8eaa` | write_8eaa |
 | 0x7003a0 | `gravar_8ed8` | write_8ed8 |
 | 0x5b5290 | `gravar_casa` | set_square |
+| 0x62ec00 | `gravidade_da_lesao` | injury_severity |
 | 0x6854a0 | `grupo_decidido` | group_decided |
 | 0x6cd660 | `guardar_extremos` | store_extremes |
 | 0x6e9470 | `iniciar_rigor` | init_strictness |

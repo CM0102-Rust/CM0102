@@ -376,8 +376,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6c87e0, bytes: &[0x81, 0xec, 0x3c, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6d26b0, bytes: &[0x83, 0xec, 0x34, 0xb8, 0x01, 0x00, 0x00, 0x00] },
     Prologo { endereco: 0x6d47e0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x62ec00, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
+    Prologo { endereco: 0x62ece0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
 ];
-const N: usize = 269;
+const N: usize = 271;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4068,6 +4070,33 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- centesima oitava leva: as folhas das lesoes (0x62ec00, 0x62ece0) ----------
+
+/// { 0x62ec00 } (ret 4, injury.cpp): o byte de gravidade do tipo de lesao `tipo` (tabela de 13 bytes
+/// por tipo em 0x9e7ad9).
+unsafe extern "thiscall" fn gravidade_da_lesao(_lesoes: usize, tipo: i8) -> u8 {
+    *((0x9e7ad9 + tipo as isize as usize * 13) as *const u8)
+}
+
+/// { 0x62ece0 } (ret 4, injury.cpp): o grau da lesao da pessoa (registro de 31 bytes por id na
+/// tabela das lesoes, +0x13, pelo menos 1), ou 0 sem pessoa, sem ficha (+0x61), id fora da tabela
+/// (0xae2364) ou sem lesao (+0x12 negativo).
+unsafe extern "thiscall" fn grau_da_lesao(lesoes: usize, pessoa: usize) -> u8 {
+    if pessoa == 0 {
+        return 0;
+    }
+    let id = *(pessoa as *const i32);
+    if id >= *(0xae2364 as *const i32) || *((pessoa + 0x61) as *const usize) == 0 {
+        return 0;
+    }
+    let r = *(lesoes as *const usize) + (id as usize).wrapping_mul(31);
+    if byte(r, 0x12) <= -1 {
+        return 0;
+    }
+    let g = byte(r, 0x13);
+    if g > 1 { g as u8 } else { 1 }
 }
 
 // ---------- centesima setima leva: o uniforme (0x6d47e0) ----------
@@ -14104,6 +14133,18 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+unsafe extern "thiscall" fn comparar_gravidade_da_lesao(lesoes: usize, tipo: i8) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, i8) -> u8>(269)(lesoes, tipo);
+    let n = gravidade_da_lesao(lesoes, tipo);
+    PLACAR.registrar(r == n, || format!("gravidade_da_lesao({}) original={} rust={}", tipo, r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_grau_da_lesao(lesoes: usize, pessoa: usize) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(270)(lesoes, pessoa);
+    let n = grau_da_lesao(lesoes, pessoa);
+    PLACAR.registrar(r == n, || format!("grau_da_lesao() original={} rust={}", r, n));
+    r
+}
 unsafe extern "C" fn comparar_uniforme(clube: usize, outro: usize, qualquer: u32) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(268)(clube, outro, qualquer);
     let n = uniforme(clube, outro, qualquer);
@@ -15033,6 +15074,8 @@ pub unsafe fn instalar(comparando: bool) {
         desafio_adversario as *const () as usize,
         evoluir_jogador as *const () as usize,
         uniforme as *const () as usize,
+        gravidade_da_lesao as *const () as usize,
+        grau_da_lesao as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -15304,6 +15347,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_desafio_adversario as *const () as usize,
         comparar_evoluir_jogador as *const () as usize,
         comparar_uniforme as *const () as usize,
+        comparar_gravidade_da_lesao as *const () as usize,
+        comparar_grau_da_lesao as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -15411,6 +15456,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_decidir_jogador", "motor_passar", "motor_lancar",
         "motor_desviar_bola", "motor_defender", "motor_recuperar_folego", "motor_periodo_encerrado",
         "motor_pressao", "motor_desafio_adversario", "motor_evoluir_jogador", "motor_uniforme",
+        "motor_gravidade_da_lesao", "motor_grau_da_lesao",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

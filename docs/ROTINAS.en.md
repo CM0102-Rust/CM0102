@@ -1001,3 +1001,12 @@ Mutations: 13 of 15 caught; e_nivel20 (level cap 20, level-20 competitions do no
 | `uniforme(clube, outro, qualquer)` | 0x6d47e0 | cdecl | match_eng.cpp: which of the club's three kits (colour pairs +0x83/+0x87, +0x8b/+0x8f, +0x93/+0x97) to wear against the other club. Without either club, logs the error and returns 0. 0x48ce70 (returns 0) would decide to swap colours (0x48ce90). Without `qualquer`, a pair works if its second colour does not clash (0x540490) with the other's (+0x87, or the table 0xae23ec entry by index 0x9cf17c); returns the pair number, 1 with a zero colour, 2 if the 2nd/3rd kit is missing, 1 if none works |
 
 Mutations: 4 of 5 caught; u_nenhum survives (all three kits clashing, does not happen up to 2001-08-20); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).
+
+### Match engine, 108th batch — the injury leaves (official on 2026-10-11)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `gravidade_da_lesao(tipo)` | 0x62ec00 | thiscall, ret 4 | injury.cpp: the severity byte of injury type `tipo` (13-byte-per-type table at 0x9e7ad9) |
+| `grau_da_lesao(pessoa)` | 0x62ece0 | thiscall, ret 4 | injury.cpp: the injury grade of the person (31-byte record per id in the injury table, +0x13, at least 1), or 0 with no person, no record (+0x61), id outside the table (0xae2364) or no injury (+0x12 negative) |
+
+Mutations: 2 of 3 caught; l_sem survives (record with +0x12 exactly 0); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1). The 108th and 109th prepared earlier (0x6d3de0, 0x6d3610) were dropped: they were already ported.

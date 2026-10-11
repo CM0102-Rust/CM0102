@@ -1,4 +1,5 @@
-"""Confere os prologos do motor.rs: instrucoes inteiras e sem salto/chamada relativa (o trampolim copia os bytes como estao).
+"""Confere os prologos do motor.rs: instrucoes inteiras e sem salto/chamada relativa (o trampolim copia os bytes como estao)
+e nenhum endereco repetido (com o data.rs).
 
 Uso: python prologos.py"""
 import re
@@ -22,4 +23,9 @@ for a, b in re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+), bytes: &\[([^\]]*)\
         fim = ins.address + ins.size
     if fim != a + n:
         print('RUIM corte: %#x' % a); ruins += 1
+# o mesmo endereco em dois prologos (motor.rs e data.rs): o segundo desvio e recusado e a rotina
+# nova nunca roda (aconteceu com 0x6d3de0/0x6d3610, ja portadas)
+todos = re.findall(r'endereco: (0x[0-9a-f]+)', src + open(r'D:\Sistemas\CM0102\rust\src\data.rs', encoding='utf-8').read())
+for a in sorted({x for x in todos if todos.count(x) > 1}):
+    print('RUIM repetido: %s ja tem prologo' % a); ruins += 1
 print('prologos com problema:', ruins)

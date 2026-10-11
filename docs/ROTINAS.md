@@ -999,3 +999,12 @@ Mutações: 13 de 15 pegas; sobrevivem e_nivel20 (teto 20 do nível, competiçõ
 | `uniforme(clube, outro, qualquer)` | 0x6d47e0 | cdecl | match_eng.cpp: qual dos três uniformes do clube (pares de cores +0x83/+0x87, +0x8b/+0x8f, +0x93/+0x97) usar contra o outro. Sem clube ou outro, registra o erro e devolve 0. A 0x48ce70 (devolve 0) decidiria trocar as cores (0x48ce90). Sem `qualquer`, o par vale se a segunda cor não choca (0x540490) com a do outro (+0x87, ou a da tabela 0xae23ec pelo índice 0x9cf17c); devolve o número do par, 1 com cor zero, 2 se faltar o 2º/3º uniforme, 1 se nenhum servir |
 
 Mutações: 4 de 5 pegas; sobrevive u_nenhum (os três uniformes chocando, não ocorre até 2001-08-20); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).
+
+### Motor de partidas, 108ª leva — as folhas das lesões (oficial em 11/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `gravidade_da_lesao(tipo)` | 0x62ec00 | thiscall, ret 4 | injury.cpp: o byte de gravidade do tipo de lesão (tabela de 13 bytes por tipo em 0x9e7ad9) |
+| `grau_da_lesao(pessoa)` | 0x62ece0 | thiscall, ret 4 | injury.cpp: o grau da lesão da pessoa (registro de 31 bytes por id na tabela das lesões, +0x13, pelo menos 1), ou 0 sem pessoa, sem ficha (+0x61), id fora da tabela (0xae2364) ou sem lesão (+0x12 negativo) |
+
+Mutações: 2 de 3 pegas; sobrevive l_sem (registro com +0x12 exatamente 0); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1). As 108ª e 109ª preparadas antes (0x6d3de0, 0x6d3610) foram descartadas: já eram portadas.
