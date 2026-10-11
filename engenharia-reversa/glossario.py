@@ -118,6 +118,7 @@ EN = {
  'uniforme': 'kit',
  'gravidade_da_lesao': 'injury_severity', 'grau_da_lesao': 'injury_grade',
  'lesao_na_dividida': 'tackle_injury',
+ 'dias_ate': 'days_until',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

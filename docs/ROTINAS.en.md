@@ -1018,3 +1018,11 @@ Mutations: 2 of 3 caught; l_sem survives (record with +0x12 exactly 0); real gam
 | `lesao_na_dividida(a, tipo_a, b, tipo_b, direto)` | 0x6cfe10 | thiscall, ret 0x14 | match_eng.cpp (~2.6 KB): a tackle between `a` and `b` may injure. Each has a chance (draw(draw(102)), redrawn above 50) and a risk of 4 (6 when already injured, severity 0x62ec00, chance doubled in 24/25) adjusted by stamina (10000/max(1000, +0x4d/2 + 5000)), the record (+0x2d, always `a`'s choosing the branch) and the injury grade (0x62ece0). `a` with no stamina (< 4000) is injured at once. With `direto` only `a` risks; otherwise the ball holder adds risk by the other's move (+0xd9 × factor), move 5 divides by +0x79, and the type comes from severity or a draw. The current injury (0x62ed70, which first updates it via 0x62c680) and the applied injury (0x6d0980, which allocates) are tape units |
 
 Mutations: 6 of 9 caught; d_ramo (record +0x2d exactly 11), d_grau (injury grade above 3) and d_5 (+0x79 up to 2 on move 5) survive, rare values up to 2001-08-20; real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).
+
+### Dates, 110th batch — the day difference between dates (official on 2026-10-11)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `dias_ate(outra)` | 0x54cdb0 | thiscall, ret 8 | Date.cpp (`rust/src/data.rs`): this − other in days, with `outra` by value. Within the same year it is the day difference; across years, the static Date 0xae2470 takes *this and walks year by year to `outra`'s, adding each year's days (backwards those of the reached year; forwards, as in the original, those of the year before each), and keeps `outra`'s year. `mutacoes.py` now accepts `ARQUIVO = 'data.rs'` in the list |
+
+Mutations: 2 of 4 caught; y_frente and y_dia survive (the path with the other date after this one does not run up to 2001-08-20: the game only counts backwards, today minus birth); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal with the new reference db8ee4d7a7e1ef8e (the .lng files were rewritten by the game at 08:14 on 2026-10-11, as on 2026-10-10; the original gave the same fingerprint).

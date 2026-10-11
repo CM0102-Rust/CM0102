@@ -12,6 +12,8 @@
 //!   { 0x54c5b0 } operator+(n dias)         \
 //!   { 0x54c8e0 } operator-(n dias)          > usam uma Data estatica local cada (inicializada na
 //!   { 0x54c770 } mais_semanas(n)           /  primeira chamada, com destrutor vazio no atexit)
+//!   { 0x54cdb0 } dias_ate(outra)           this - outra em dias (outra por valor; usa a Data estatica
+//!                0xae2470, que fica com a data de this e o ano de outra)
 
 use crate::comparacao::{lado_a_lado_leve as lado_a_lado, Placar, Sorteio};
 use crate::desvios::{self, Prologo};
@@ -42,11 +44,12 @@ struct Estatica {
 const EST_MAIS: Estatica = Estatica { valor: 0xae2420, guarda: 0xae2469, destrutor: 0x54c760 };
 const EST_MENOS: Estatica = Estatica { valor: 0xae24c0, guarda: 0xae249e, destrutor: 0x54caa0 };
 const EST_SEMANAS: Estatica = Estatica { valor: 0xae2410, guarda: 0xae2430, destrutor: 0x54c8d0 };
+const EST_DIAS: Estatica = Estatica { valor: 0xae2470, guarda: 0xae2418, destrutor: 0x54cf60 };
 
 /// Memoria que os operadores tocam alem dos argumentos (para o modo comparacao).
 const ESTATICAS: [(usize, usize); 6] = [(0xae2420, 8), (0xae2469, 1), (0xae24c0, 8), (0xae249e, 1), (0xae2410, 8), (0xae2430, 1)];
 
-const PROLOGOS: [Prologo; 9] = [
+const PROLOGOS: [Prologo; 10] = [
     // 0x54a110: mov eax, ecx; mov word ptr [eax], 0x28
     Prologo { endereco: 0x54a110, bytes: &[0x8b, 0xc1, 0x66, 0xc7, 0x00, 0x28, 0x00] },
     // 0x549ef0: mov ax, word ptr [esp + 4]
@@ -65,6 +68,8 @@ const PROLOGOS: [Prologo; 9] = [
     Prologo { endereco: 0x54a2d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
     // 0x549f70: sub esp, 0x200
     Prologo { endereco: 0x549f70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    // 0x54cdb0: sub esp, 0xc; mov al, byte ptr [0xae2418]
+    Prologo { endereco: 0x54cdb0, bytes: &[0x83, 0xec, 0x0c, 0xa0, 0x18, 0x24, 0xae, 0x00] },
 ];
 
 /// Regra do { 0x549ef0 }: impar ou nao divisivel por 4 -> nao; nao divisivel por 100 -> sim;
@@ -258,9 +263,49 @@ pub unsafe extern "thiscall" fn data_dma(this: *mut Data, dia: u32, mes: u32, an
     this
 }
 
+/// Dias do ano `ano` pela regra do { 0x54cdb0 } (a mesma gregoriana, em 32 bits sem sinal do ano).
+fn dias_do_ano(ano: u16) -> i32 {
+    let a = ano as i32;
+    if a % 2 != 0 || a % 4 != 0 {
+        365
+    } else if a % 100 != 0 || a % 400 == 0 {
+        366
+    } else {
+        365
+    }
+}
+
+/// { 0x54cdb0 } (ret 8) this - outra em dias, com `outra` por valor (8 bytes na pilha). No mesmo
+/// ano e so a diferenca dos dias. Com anos diferentes, a estatica 0xae2470 recebe *this (0x417c10)
+/// e anda ano a ano ate o de `outra`, somando os dias de cada ano: para tras os do proprio ano
+/// alcancado, para a frente os do ano anterior a cada um (como no original); no fim a estatica fica
+/// com o ano de `outra`.
+pub unsafe extern "thiscall" fn dias_ate(this: *const Data, outra: Data) -> i32 {
+    let est = preparar(&EST_DIAS);
+    let a = *this;
+    let mut soma = 0i32;
+    if outra.ano != a.ano {
+        *est = a;
+        let mut ano = a.ano;
+        if outra.ano > a.ano {
+            while ano < outra.ano {
+                soma -= dias_do_ano(ano.wrapping_sub(1));
+                ano += 1;
+            }
+        } else {
+            while ano > outra.ano {
+                ano -= 1;
+                soma += dias_do_ano(ano);
+            }
+        }
+        (*est).ano = ano;
+    }
+    soma + a.dia as i32 - outra.dia as i32
+}
+
 // ---------- comparacao com as originais ----------
 
-static mut ORIGINAIS: [usize; 9] = [0; 9];
+static mut ORIGINAIS: [usize; 10] = [0; 10];
 static PLACAR: Placar = Placar::novo("data");
 
 unsafe fn orig<F>(i: usize) -> F {
@@ -357,6 +402,14 @@ unsafe extern "thiscall" fn comparar_dma(this: *mut Data, dia: u32, mes: u32, an
     r
 }
 
+unsafe extern "thiscall" fn comparar_dias(this: *const Data, outra: Data) -> i32 {
+    let f: unsafe extern "thiscall" fn(*const Data, Data) -> i32 = orig(9);
+    let reg = [(this as usize, 8), (EST_DIAS.valor, 8), (EST_DIAS.guarda, 1)];
+    let (r, rr, igual, mo, mr) = lado_a_lado(&reg, || f(this, outra), || dias_ate(this, outra));
+    PLACAR.registrar(igual && r == rr, || format!("dias_ate({:?}, {:?}) original={} {:x?} rust={} {:x?}", *this, outra, r, mo, rr, mr));
+    r
+}
+
 /// Autoteste (roda depois de a CRT do jogo estar inicializada: os operadores chamam atexit).
 pub unsafe fn autoteste() {
     let mut s = Sorteio(0x1234_5678_9abc_def1);
@@ -414,7 +467,7 @@ pub unsafe fn autoteste() {
 }
 
 pub unsafe fn instalar(comparando: bool) {
-    let rust: [usize; 9] = [
+    let rust: [usize; 10] = [
         data_padrao as *const () as usize,
         data_nova as *const () as usize,
         dia_da_semana as *const () as usize,
@@ -424,8 +477,9 @@ pub unsafe fn instalar(comparando: bool) {
         mais_semanas as *const () as usize,
         ajustar_semana as *const () as usize,
         data_dma as *const () as usize,
+        dias_ate as *const () as usize,
     ];
-    let comp: [usize; 9] = [
+    let comp: [usize; 10] = [
         comparar_padrao as *const () as usize,
         comparar_nova as *const () as usize,
         comparar_semana as *const () as usize,
@@ -435,9 +489,10 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_semanas as *const () as usize,
         comparar_ajustar as *const () as usize,
         comparar_dma as *const () as usize,
+        comparar_dias as *const () as usize,
     ];
-    let nomes = ["data_padrao", "data_nova", "dia_da_semana", "data_copia", "data_mais", "data_menos", "data_mais_semanas", "data_ajustar_semana", "data_dma"];
-    for i in 0..9 {
+    let nomes = ["data_padrao", "data_nova", "dia_da_semana", "data_copia", "data_mais", "data_menos", "data_mais_semanas", "data_ajustar_semana", "data_dma", "data_dias_ate"];
+    for i in 0..10 {
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
             ORIGINAIS[i] = t;
         }
@@ -458,6 +513,14 @@ pub unsafe fn instalar_passagem() {
 #[cfg(test)]
 mod testes {
     use super::*;
+
+    #[test]
+    fn dias_por_ano() {
+        assert_eq!(dias_do_ano(2000), 366);
+        assert_eq!(dias_do_ano(1900), 365);
+        assert_eq!(dias_do_ano(2004), 366);
+        assert_eq!(dias_do_ano(2001), 365);
+    }
 
     #[test]
     fn bissextos() {

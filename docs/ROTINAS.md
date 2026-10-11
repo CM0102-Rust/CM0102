@@ -1016,3 +1016,11 @@ Mutações: 2 de 3 pegas; sobrevive l_sem (registro com +0x12 exatamente 0); jog
 | `lesao_na_dividida(a, tipo_a, b, tipo_b, direto)` | 0x6cfe10 | thiscall, ret 0x14 | match_eng.cpp (~2,6 KB): a dividida entre `a` e `b` pode machucar. Cada um tem chance (sorteio(sorteio(102)), refeita acima de 50) e risco 4 (6 já machucado, gravidade 0x62ec00, chance dobrada em 24/25) ajustado pelo fôlego (10000/max(1000, +0x4d/2 + 5000)), pela ficha (+0x2d, sempre a de `a` decide o ramo) e pelo grau da lesão (0x62ece0). `a` sem fôlego (< 4000) se machuca na hora. Com `direto` só `a` arrisca; senão quem tem a bola soma o risco pelo lance do outro (+0xd9 × fator), o lance 5 divide por +0x79, e o tipo vem da gravidade ou de sorteio. A lesão atual (0x62ed70, que antes a atualiza pela 0x62c680) e a lesão aplicada (0x6d0980, que aloca) são unidades da fita |
 
 Mutações: 6 de 9 pegas; sobrevivem d_ramo (ficha +0x2d exatamente 11), d_grau (lesão de grau acima de 3) e d_5 (+0x79 até 2 no lance 5), valores raros até 2001-08-20; jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).
+
+### Datas, 110ª leva — a diferença em dias entre datas (oficial em 11/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `dias_ate(outra)` | 0x54cdb0 | thiscall, ret 8 | Date.cpp (`rust/src/data.rs`): this − outra em dias, com `outra` por valor. No mesmo ano é a diferença dos dias; com anos diferentes, a Data estática 0xae2470 recebe *this e anda ano a ano até o de `outra` somando os dias de cada ano (para trás os do ano alcançado; para a frente, como no original, os do ano anterior a cada um), e fica com o ano de `outra`. O `mutacoes.py` passou a aceitar `ARQUIVO = 'data.rs'` na lista |
+
+Mutações: 2 de 4 pegas; sobrevivem y_frente e y_dia (o caminho com a outra data depois desta não roda até 2001-08-20: o jogo só conta para trás, hoje menos o nascimento); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais com a nova referência db8ee4d7a7e1ef8e (os .lng foram regravados pelo jogo às 08:14 de 11/10, como em 10/10; a original deu a mesma impressão).
