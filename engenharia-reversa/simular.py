@@ -118,6 +118,14 @@ def main():
     copia = os.path.join(tempfile.gettempdir(), 'cm0102_game.cfg.bak')
     tem_cfg = os.path.exists(cfg)
     if tem_cfg:
+        # Preferencias validas (marca 0x1553117c) e som desligado (bit 0x80 de +4): uma queda de energia
+        # zerou o arquivo em 11/10/2026; sem a marca o jogo usa o padrao (som ligado) e, sem placa de som
+        # nos testes, para numa caixa de erro escondida. Nao copiar por cima de uma copia boa.
+        dados = open(cfg, 'rb').read()
+        if len(dados) < 8 or int.from_bytes(dados[:4], 'little') != 0x1553117C:
+            falha('jogo\\game.cfg invalido (zerado ou corrompido); restaure uma copia boa antes')
+        if dados[4] & 0x80:
+            falha('jogo\\game.cfg com o som ligado: o jogo para na caixa "Unable to initialise the sound" nos testes')
         shutil.copy2(cfg, copia)
     auto = os.path.join(JOGO, 'auto_setup.cfg')
     linhas = ['LANGUAGE=POR', 'DATABASE=MINIMUM', 'MATCH_STATS=NORMAL', 'FOREGROUND_LEAGUES=' + args.ligas,
