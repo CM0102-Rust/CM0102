@@ -195,6 +195,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x700400 | `ler_8eb2` | read_8eb2 |
 | 0x700410 | `ler_8f7a` | read_8f7a |
 | 0x76d7b0 | `ler_marca_da_pessoa` | read_person_mark |
+| 0x6cfe10 | `lesao_na_dividida` | tackle_injury |
 | 0x76c0f0 | `ligar_44_da_pessoa` | set_person_44 |
 | 0x6cb930 | `limite` | limit |
 | 0x70df40 | `limite_jogador` | player_limit |

@@ -1008,3 +1008,11 @@ Mutações: 4 de 5 pegas; sobrevive u_nenhum (os três uniformes chocando, não 
 | `grau_da_lesao(pessoa)` | 0x62ece0 | thiscall, ret 4 | injury.cpp: o grau da lesão da pessoa (registro de 31 bytes por id na tabela das lesões, +0x13, pelo menos 1), ou 0 sem pessoa, sem ficha (+0x61), id fora da tabela (0xae2364) ou sem lesão (+0x12 negativo) |
 
 Mutações: 2 de 3 pegas; sobrevive l_sem (registro com +0x12 exatamente 0); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1). As 108ª e 109ª preparadas antes (0x6d3de0, 0x6d3610) foram descartadas: já eram portadas.
+
+### Motor de partidas, 109ª leva — a lesão na dividida (oficial em 11/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `lesao_na_dividida(a, tipo_a, b, tipo_b, direto)` | 0x6cfe10 | thiscall, ret 0x14 | match_eng.cpp (~2,6 KB): a dividida entre `a` e `b` pode machucar. Cada um tem chance (sorteio(sorteio(102)), refeita acima de 50) e risco 4 (6 já machucado, gravidade 0x62ec00, chance dobrada em 24/25) ajustado pelo fôlego (10000/max(1000, +0x4d/2 + 5000)), pela ficha (+0x2d, sempre a de `a` decide o ramo) e pelo grau da lesão (0x62ece0). `a` sem fôlego (< 4000) se machuca na hora. Com `direto` só `a` arrisca; senão quem tem a bola soma o risco pelo lance do outro (+0xd9 × fator), o lance 5 divide por +0x79, e o tipo vem da gravidade ou de sorteio. A lesão atual (0x62ed70, que antes a atualiza pela 0x62c680) e a lesão aplicada (0x6d0980, que aloca) são unidades da fita |
+
+Mutações: 6 de 9 pegas; sobrevivem d_ramo (ficha +0x2d exatamente 11), d_grau (lesão de grau acima de 3) e d_5 (+0x79 até 2 no lance 5), valores raros até 2001-08-20; jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (cd2c213e0ddda4d1).

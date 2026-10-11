@@ -117,6 +117,7 @@ EN = {
  'evoluir_jogador': 'develop_player',
  'uniforme': 'kit',
  'gravidade_da_lesao': 'injury_severity', 'grau_da_lesao': 'injury_grade',
+ 'lesao_na_dividida': 'tackle_injury',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

@@ -378,8 +378,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6d47e0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x62ec00, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
     Prologo { endereco: 0x62ece0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
+    Prologo { endereco: 0x6cfe10, bytes: &[0x83, 0xec, 0x18, 0x53, 0x55] },
 ];
-const N: usize = 271;
+const N: usize = 272;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4070,6 +4071,213 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- centesima nona leva: a lesao na dividida (0x6cfe10) ----------
+
+/// Codigo do lance -> multiplicador do risco de quem tem a bola (tabelas 0x6d08b0/0x6d0884).
+const RISCO_POR_LANCE: [u8; 0x2f] = [0, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 1, 10, 10, 10, 10, 10, 10, 2, 10, 3, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 2, 4, 10, 10, 10, 10, 10, 10, 5, 6, 7, 8, 2, 2, 9];
+
+/// { 0x6cfe10 } (ret 0x14, match_eng.cpp, ~2,6 KB) com as chamadas que mexem no jogo injetadas
+/// (0x62ed70 lesao atual, que antes a atualiza; 0x6d0980 aplica a lesao): a dividida entre `a` e
+/// `b` (lances `tipo_a`/`tipo_b`) pode machucar. Cada um tem uma chance (sorteio(sorteio(102)),
+/// acima de 50 refeita por sorteio(sorteio(76)) em 2/3) e um risco 4 (6 ja machucado, com a
+/// gravidade 0x62ec00 do tipo e a chance dobrada em 24/25), ajustado pelo folego (10000 /
+/// max(1000, +0x4d/2 + 5000)), pela ficha (+0x2d, sempre a de `a` decidindo o ramo) e pelo grau
+/// da lesao (0x62ece0). `a` sem folego (< 4000) se machuca na hora (-1). Com `direto`, so `a`
+/// arrisca: sorteio(50000) abaixo de 10 x risco machuca pela gravidade, ou por sorteio(11).
+/// Senao cada um arrisca: quem tem a bola soma o risco pelo lance do outro (+0xd9 do outro x
+/// fator da tabela), o lance 5 divide por +0x79; machucado escolhe o tipo pela gravidade (com o
+/// outro jogador, 1..=9; sem, 1..=5) ou por sorteio, e o lance 5 tem tipos proprios (6, 9, 10).
+#[allow(clippy::too_many_arguments)]
+unsafe fn lesao_na_dividida_com(m: usize, a: usize, tipo_a: i16, b: usize, tipo_b: i16, direto: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let gravidade: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x62ec00usize);
+    let grau: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62ece0usize);
+    let lesoes = *(0xb63d28 as *const usize);
+    let f4 = |a: usize| f32_em(a) as f64;
+    let d8 = |a: usize| f64_em(a);
+    let fl = |p: usize, o: usize| *((p + o) as *const f32) as f64;
+    let mut chance = [0i8; 2];
+    let mut grav = [-1i8; 2];
+    let mut f = [4.0f32; 2];
+    for c in chance.iter_mut() {
+        *c = sortear(sortear(0x66)) as i8;
+        if *c > 0x32 && sortear(3) != 0 {
+            *c = sortear(sortear(0x4c)) as i8;
+        }
+    }
+    for (k, p) in [(0usize, a), (1, b)] {
+        if p == 0 {
+            continue;
+        }
+        let pessoa = *((p + 0x69) as *const usize);
+        let e = chamar(0x62ed70, lesoes, [pessoa as u32, 0, 0, 0, 0]) as usize;
+        if e != 0 {
+            f[k] = 6.0;
+            grav[k] = gravidade(lesoes, *(e as *const i8)) as i8;
+            if sortear(0x19) != 0 {
+                chance[k] = (chance[k] as u8).wrapping_shl(1) as i8;
+            }
+        }
+        let mut x = fl(p, 0x4d) * f4(0x968f18) + f4(0x968db0);
+        if !(x > f4(0x96d2dc)) {
+            x = f4(0x96d2dc);
+        }
+        let q = f4(0x96d1b0) / x * f[k] as f64;
+        // o ramo segue a ficha de `a` (como no original), o valor a do proprio jogador
+        let ramo = byte(*((a + 0x6d) as *const usize), 0x2d);
+        let val = byte(*((p + 0x6d) as *const usize), 0x2d) as i32;
+        let v = if ramo > 10 { val as f64 * q * f4(0x96afc4) } else { ((val - 10) as f64 * f4(0x96afc4) + f4(0x968e70)) * q };
+        f[k] = v as f32;
+        if grau(lesoes, pessoa) != 0 {
+            let mut t = grau(lesoes, pessoa) as i8 as f64 * d8(0x968968) + d8(0x968940);
+            if t > d8(0x968930) {
+                t = f4(0x969584);
+            }
+            f[k] = (t * f[k] as f64) as f32;
+        }
+    }
+    let mut lesionar = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, tipo: u32, chance: u32, p: usize, o: usize| {
+        c(0x6d0980, m, [tipo, chance, p as u32, o as u32, 0]);
+    };
+    if a != 0 && fl(a, 0x4d) < f4(0x96d40c) {
+        lesionar(chamar, u32::MAX, 0, a, 0);
+        return;
+    }
+    if direto != 0 && a != 0 {
+        if sortear(50000) >= ftol(f[0] as f64 * f4(0x968a78)) {
+            return;
+        }
+        let tipo = if (1..=5).contains(&grav[0]) {
+            grav[0] as u32
+        } else {
+            match sortear(11) {
+                0..=2 => 1,
+                3..=5 => 3,
+                6 | 7 => 4,
+                8 | 9 => 2,
+                _ => 5,
+            }
+        };
+        let palavra = chance[0] as u8 as u32 | (chance[1] as u8 as u32) << 8 | (grav[0] as u8 as u32) << 16 | (grav[1] as u8 as u32) << 24;
+        lesionar(chamar, tipo, palavra, a, 0);
+        return;
+    }
+    let jog = [a, b];
+    let cod = [tipo_a, tipo_b];
+    for i in 0..2 {
+        let p = jog[i];
+        if p == 0 {
+            continue;
+        }
+        let o = jog[1 - i];
+        if p == *((m + 0xf582) as *const usize) && o != 0 {
+            let c = cod[1 - i];
+            let d9 = fl(o, 0xd9);
+            let r = if (1..=0x2f).contains(&c) { RISCO_POR_LANCE[c as usize - 1] } else { 10 };
+            match r {
+                4 => {
+                    f[i] = (d9 * d8(0x968fd0) * f[i] as f64) as f32;
+                    chance[i] = ftol(chance[i] as f64 * d8(0x9689c0)) as i8;
+                }
+                8 | 9 => {
+                    let k = if r == 8 { d8(0x96afd8) } else { d8(0x96d450) };
+                    f[i] = (d9 * k * f[i] as f64) as f32;
+                    chance[i] = (chance[i] as u8).wrapping_shl(1) as i8;
+                }
+                _ => {
+                    let k = [0x96d440, 0x96d430, 0x967880, 0x96d438, 0, 0x968fd0, 0x968a98, 0x96d448, 0, 0, 0x968918][r as usize];
+                    f[i] = (d9 * d8(k) * f[i] as f64) as f32;
+                }
+            }
+        }
+        if cod[i] == 5 {
+            let r79 = fl(p, 0x79);
+            let x = if r79 > d8(0x968950) { r79 } else { d8(0x968950) };
+            f[i] = (f4(0x968a78) / x * f[i] as f64) as f32;
+        }
+        if sortear(50000) >= ftol(f[i] as f64 * f4(0x968a78)) {
+            continue;
+        }
+        let ch = chance[i] as u8 as u32;
+        let g = grav[i];
+        if cod[i] == 5 {
+            if matches!(g, 6 | 9 | 10) {
+                lesionar(chamar, g as u32, ch, p, 0);
+                return;
+            }
+            let t = match sortear(5) {
+                0..=2 => 9,
+                3 => 6,
+                _ => 10,
+            };
+            lesionar(chamar, t, ch, p, 0);
+        } else if byte(m, 0x8ea9) == 4 && o != 0 {
+            lesionar(chamar, 0xb, ch, p, o);
+        } else if o == 0 {
+            if (1..=5).contains(&g) {
+                lesionar(chamar, g as u32, ch, p, 0);
+                return;
+            }
+            match sortear(11) {
+                1..=3 => lesionar(chamar, 3, ch, p, 0),
+                4 | 5 => lesionar(chamar, 4, ch, p, 0),
+                6 | 7 => {
+                    lesionar(chamar, 2, ch, p, 0);
+                    lesionar(chamar, 5, ch, p, 0);
+                }
+                8 => lesionar(chamar, 5, ch, p, 0),
+                _ => lesionar(chamar, 1, ch, p, 0),
+            }
+        } else {
+            if (1..=9).contains(&g) {
+                lesionar(chamar, g as u32, ch, p, o);
+                return;
+            }
+            let t = sortear(9) + 1;
+            lesionar(chamar, t as u32, ch, p, o);
+        }
+    }
+}
+
+/// { 0x6cfe10 } (ret 0x14, match_eng.cpp): ver `lesao_na_dividida_com`.
+unsafe extern "thiscall" fn lesao_na_dividida(m: usize, a: usize, tipo_a: u32, b: usize, tipo_b: u32, direto: u32) {
+    lesao_na_dividida_com(m, a, tipo_a as u16 as i16, b, tipo_b as u16 as i16, direto as u8, &mut |rotina, this, x| match rotina {
+        0x62ed70 => {
+            let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
+            f(this, x[0] as usize) as u32
+        }
+        _ => {
+            let f: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(0x6d0980usize);
+            f(this, x[0], x[1], x[2] as usize, x[3] as usize);
+            0
+        }
+    })
+}
+
+// Portas de 0x62ed70 (lesao atual: atualiza a ficha pela 0x62c680) e 0x6d0980 (aplica a lesao,
+// alocando): unidades da fita.
+static mut PORTA_62ED70: usize = 0;
+static mut PORTA_6D0980: usize = 0;
+const PROLOGO_62ED70: Prologo = Prologo { endereco: 0x62ed70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] };
+const PROLOGO_6D0980: Prologo = Prologo { endereco: 0x6d0980, bytes: &[0x51, 0x57, 0x8b, 0xf9, 0xc7, 0x44, 0x24, 0x04, 0x00, 0x00, 0x00, 0x00] };
+
+unsafe extern "thiscall" fn porta_62ed70(l: usize, pessoa: usize) -> usize {
+    let o: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(PORTA_62ED70);
+    if !gravando() {
+        return o(l, pessoa);
+    }
+    chamar_gravando(0x62ed70, l, [pessoa as u32, 0, 0, 0, 0], || o(l, pessoa) as u32) as usize
+}
+unsafe extern "thiscall" fn porta_6d0980(m: usize, tipo: u32, chance: u32, p: usize, o: usize) {
+    let f: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(PORTA_6D0980);
+    if !gravando() {
+        return f(m, tipo, chance, p, o);
+    }
+    chamar_gravando(0x6d0980, m, [tipo, chance, p as u32, o as u32, 0], || {
+        f(m, tipo, chance, p, o);
+        0
+    });
 }
 
 // ---------- centesima oitava leva: as folhas das lesoes (0x62ec00, 0x62ece0) ----------
@@ -14133,6 +14341,31 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+unsafe extern "thiscall" fn comparar_lesao_na_dividida(m: usize, a: usize, tipo_a: u32, b: usize, tipo_b: u32, direto: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32)>(271);
+    if gravando_no_topo() {
+        return o(m, a, tipo_a, b, tipo_b, direto);
+    }
+    // o sorteio, os dois jogadores, os registros de lesao deles e o que a 0x6d0980 mexe no motor
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m + 0x8ea0, 0x20), (m + 0xf582, 4), (m + 0xf639, 2)]);
+    let tabela = *(*(0xb63d28 as *const usize) as *const usize);
+    for p in [a, b] {
+        if p != 0 {
+            reg.push((p, 0x1be));
+            let pessoa = *((p + 0x69) as *const usize);
+            if pessoa != 0 && *(pessoa as *const i32) >= 0 && *(pessoa as *const i32) < *(0xae2364 as *const i32) {
+                reg.push((tabela + *(pessoa as *const i32) as usize * 31, 31));
+            }
+        }
+    }
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(m, a, tipo_a, b, tipo_b, direto), |chamar| {
+        lesao_na_dividida_com(m, a, tipo_a as u16 as i16, b, tipo_b as u16 as i16, direto as u8, &mut |rotina, this, args| {
+            chamar(rotina, this, args, if rotina == 0x62ed70 { [u32::MAX, 0, 0, 0, 0] } else { [0xff, 0xff, u32::MAX, u32::MAX, 0] })
+        })
+    });
+    PLACAR.registrar(igual && sequencia, || format!("lesao_na_dividida(lances {}, {} direto {}) {} chamadas: {}", tipo_a as i16, tipo_b as i16, direto as u8, k, detalhe_fita()));
+}
 unsafe extern "thiscall" fn comparar_gravidade_da_lesao(lesoes: usize, tipo: i8) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, i8) -> u8>(269)(lesoes, tipo);
     let n = gravidade_da_lesao(lesoes, tipo);
@@ -14803,6 +15036,12 @@ pub unsafe fn instalar(comparando: bool) {
         if let Some(t) = desvios::desviar("motor_porta_68d0d0 (gravacao)", &PROLOGO_68D0D0, porta_68d0d0 as *const () as usize) {
             PORTA_68D0D0 = t;
         }
+        if let Some(t) = desvios::desviar("motor_porta_62ed70 (gravacao)", &PROLOGO_62ED70, porta_62ed70 as *const () as usize) {
+            PORTA_62ED70 = t;
+        }
+        if let Some(t) = desvios::desviar("motor_porta_6d0980 (gravacao)", &PROLOGO_6D0980, porta_6d0980 as *const () as usize) {
+            PORTA_6D0980 = t;
+        }
     }
     let rust: [usize; N] = [
         tabela_a as *const () as usize,
@@ -15076,6 +15315,7 @@ pub unsafe fn instalar(comparando: bool) {
         uniforme as *const () as usize,
         gravidade_da_lesao as *const () as usize,
         grau_da_lesao as *const () as usize,
+        lesao_na_dividida as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -15349,6 +15589,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_uniforme as *const () as usize,
         comparar_gravidade_da_lesao as *const () as usize,
         comparar_grau_da_lesao as *const () as usize,
+        comparar_lesao_na_dividida as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -15456,7 +15697,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_decidir_jogador", "motor_passar", "motor_lancar",
         "motor_desviar_bola", "motor_defender", "motor_recuperar_folego", "motor_periodo_encerrado",
         "motor_pressao", "motor_desafio_adversario", "motor_evoluir_jogador", "motor_uniforme",
-        "motor_gravidade_da_lesao", "motor_grau_da_lesao",
+        "motor_gravidade_da_lesao", "motor_grau_da_lesao", "motor_lesao_na_dividida",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

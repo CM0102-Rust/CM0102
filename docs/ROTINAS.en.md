@@ -1010,3 +1010,11 @@ Mutations: 4 of 5 caught; u_nenhum survives (all three kits clashing, does not h
 | `grau_da_lesao(pessoa)` | 0x62ece0 | thiscall, ret 4 | injury.cpp: the injury grade of the person (31-byte record per id in the injury table, +0x13, at least 1), or 0 with no person, no record (+0x61), id outside the table (0xae2364) or no injury (+0x12 negative) |
 
 Mutations: 2 of 3 caught; l_sem survives (record with +0x12 exactly 0); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1). The 108th and 109th prepared earlier (0x6d3de0, 0x6d3610) were dropped: they were already ported.
+
+### Match engine, 109th batch — the tackle injury (official on 2026-10-11)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `lesao_na_dividida(a, tipo_a, b, tipo_b, direto)` | 0x6cfe10 | thiscall, ret 0x14 | match_eng.cpp (~2.6 KB): a tackle between `a` and `b` may injure. Each has a chance (draw(draw(102)), redrawn above 50) and a risk of 4 (6 when already injured, severity 0x62ec00, chance doubled in 24/25) adjusted by stamina (10000/max(1000, +0x4d/2 + 5000)), the record (+0x2d, always `a`'s choosing the branch) and the injury grade (0x62ece0). `a` with no stamina (< 4000) is injured at once. With `direto` only `a` risks; otherwise the ball holder adds risk by the other's move (+0xd9 × factor), move 5 divides by +0x79, and the type comes from severity or a draw. The current injury (0x62ed70, which first updates it via 0x62c680) and the applied injury (0x6d0980, which allocates) are tape units |
+
+Mutations: 6 of 9 caught; d_ramo (record +0x2d exactly 11), d_grau (injury grade above 3) and d_5 (+0x79 up to 2 on move 5) survive, rare values up to 2001-08-20; real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal (cd2c213e0ddda4d1).
