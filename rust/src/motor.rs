@@ -379,8 +379,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x62ec00, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
     Prologo { endereco: 0x62ece0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
     Prologo { endereco: 0x6cfe10, bytes: &[0x83, 0xec, 0x18, 0x53, 0x55] },
+    Prologo { endereco: 0x6e1cf0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
 ];
-const N: usize = 272;
+const N: usize = 273;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -4071,6 +4072,86 @@ unsafe fn bola_fora_com(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8
     *((this + 0x8eae) as *mut u8) = quem;
     chamar(narrador, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
+}
+
+// ---------- centesima decima leva: a avaliacao do jogador pela comissao (0x6e1cf0) ----------
+
+/// { 0x6e1cf0 } (cdecl, match_man.cpp): a nota (i16) que a comissao da a `pessoa` (ou a pessoa do
+/// jogador `jogador` +0x69) para o `clube`; -10000 sem pessoa. Soma o encaixe (0x53ce90) em
+/// (encaixe^2 + 5) x 0,1 negativo, a diferenca da nota +0xd da ficha para a reputacao do clube
+/// (x 0,002 + 1,5, entre -4 e 4), o contrato (0x4cf5f0: +0x44 / 75 + 0,5, ajustado pelo tipo em +0x4f
+/// >> 4: -10, +2,5, +2, -3, -15, -20, -50) e a ficha +0x2f vezes o fator da idade (dias de vida pela
+/// data de hoje 0xae2c90 e a de nascimento +0x3e, 0x54cdb0; nas selecoes, +0x22 x 75): acima de 1000
+/// dias, 1 + (dias - 1000) x 0,000125. Depois pela idade +0x18 (x0,5 abaixo de 18, x0,75 abaixo de
+/// 21, x0,9 abaixo de 24, x1,05 acima de 25), x0,9 se os dias ficarem abaixo de (50 - +0x59) x 10 e
+/// x(0,01 x +0x5b + 0,9) com +0x5b abaixo de 10.
+unsafe extern "C" fn avaliar_jogador(pessoa: usize, jogador: usize, clube: usize) -> i16 {
+    let encaixe: unsafe extern "C" fn(usize, usize) -> i8 = core::mem::transmute(0x53ce90usize);
+    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
+    let d8 = |a: usize| f64_em(a);
+    let p = if jogador != 0 { *((jogador + 0x69) as *const usize) } else { pessoa };
+    if p == 0 {
+        return -10000;
+    }
+    let ficha = *((p + 0x61) as *const usize);
+    let enc = encaixe(p, clube) as f64;
+    let mut y = (*((ficha + 0xd) as *const i16) as i32 - *((clube + 0x80) as *const i16) as i32) as f64 * d8(0x969048) + d8(0x968940);
+    if !(d8(0x96d220) <= y) {
+        y = -4.0;
+    } else if d8(0x968938) < y {
+        y = 4.0;
+    }
+    let mut x = 0.0f64;
+    let e = contrato(*(0xae1050 as *const usize), p, clube);
+    if e != 0 {
+        x = byte(e, 0x44) as f64 * d8(0x968ef8) + d8(0x968968);
+        let ajuste = match byte(e, 0x4f) as u8 >> 4 {
+            0 | 5 => -d8(0x9688b0),
+            1 => d8(0x968e18),
+            2 => d8(0x968950),
+            4 => -d8(0x968930),
+            6 => -d8(0x968e08),
+            7 => -d8(0x968ea8),
+            8 => -d8(0x968ff8),
+            _ => 0.0,
+        };
+        if ajuste != 0.0 {
+            x += ajuste;
+        }
+    }
+    let a = if selecao(clube) != 0 {
+        *((p + 0x22) as *const u8) as f64 * d8(0x96d520)
+    } else {
+        dias(0xae2c90, *((p + 0x3e) as *const u32), *((p + 0x42) as *const u32)) as f64
+    };
+    let f = if a > d8(0x968908) { (a - d8(0x968908)) * d8(0x96a6b8) + d8(0x967890) } else { 1.0 };
+    let base = byte(ficha, 0x2f) as f64 * f - (enc * enc + d8(0x9688a0)) * d8(0x967880);
+    let mut v = ftol(base + y + x + d8(0x968968)) as i16;
+    let idade = byte(p, 0x18);
+    let k = if idade < 0x12 {
+        Some(d8(0x968968))
+    } else if idade < 0x15 {
+        Some(d8(0x969040))
+    } else if idade < 0x18 {
+        Some(d8(0x9689d8))
+    } else if idade > 0x19 {
+        Some(d8(0x9689b8))
+    } else {
+        None
+    };
+    if let Some(k) = k {
+        v = ftol(v as f64 * k) as i16;
+    }
+    if a < ((0x32 - byte(p, 0x59) as i32) * 10) as f64 {
+        v = ftol(v as f64 * d8(0x9689d8)) as i16;
+    }
+    let moral = byte(p, 0x5b);
+    if moral < 10 {
+        v = ftol((moral as f64 * d8(0x967898) + d8(0x9689d8)) * v as f64) as i16;
+    }
+    v
 }
 
 // ---------- centesima nona leva: a lesao na dividida (0x6cfe10) ----------
@@ -14341,6 +14422,14 @@ unsafe extern "thiscall" fn comparar_interceptar(this: usize, x: i8, y: i8, a3: 
     PLACAR.registrar(igual && sequencia && r == n, || format!("interceptar({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, gol, r, n, k));
     r
 }
+unsafe extern "C" fn comparar_avaliar_jogador(pessoa: usize, jogador: usize, clube: usize) -> i16 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> i16>(272);
+    // a 0x54cdb0 mexe na data estatica dela: a comparacao restaura
+    let reg = [crate::aleatorio::REGIOES_DO_ESTADO[0], crate::aleatorio::REGIOES_DO_ESTADO[1], (0xae2470, 8), (0xae2418, 1)];
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, jogador, clube), || avaliar_jogador(pessoa, jogador, clube));
+    PLACAR.registrar(igual && r == n, || format!("avaliar_jogador() original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+    r
+}
 unsafe extern "thiscall" fn comparar_lesao_na_dividida(m: usize, a: usize, tipo_a: u32, b: usize, tipo_b: u32, direto: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32)>(271);
     if gravando_no_topo() {
@@ -15316,6 +15405,7 @@ pub unsafe fn instalar(comparando: bool) {
         gravidade_da_lesao as *const () as usize,
         grau_da_lesao as *const () as usize,
         lesao_na_dividida as *const () as usize,
+        avaliar_jogador as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -15590,6 +15680,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_gravidade_da_lesao as *const () as usize,
         comparar_grau_da_lesao as *const () as usize,
         comparar_lesao_na_dividida as *const () as usize,
+        comparar_avaliar_jogador as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -15698,6 +15789,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_desviar_bola", "motor_defender", "motor_recuperar_folego", "motor_periodo_encerrado",
         "motor_pressao", "motor_desafio_adversario", "motor_evoluir_jogador", "motor_uniforme",
         "motor_gravidade_da_lesao", "motor_grau_da_lesao", "motor_lesao_na_dividida",
+        "motor_avaliar_jogador",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

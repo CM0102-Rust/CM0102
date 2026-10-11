@@ -1024,3 +1024,11 @@ Mutações: 6 de 9 pegas; sobrevivem d_ramo (ficha +0x2d exatamente 11), d_grau 
 | `dias_ate(outra)` | 0x54cdb0 | thiscall, ret 8 | Date.cpp (`rust/src/data.rs`): this − outra em dias, com `outra` por valor. No mesmo ano é a diferença dos dias; com anos diferentes, a Data estática 0xae2470 recebe *this e anda ano a ano até o de `outra` somando os dias de cada ano (para trás os do ano alcançado; para a frente, como no original, os do ano anterior a cada um), e fica com o ano de `outra`. O `mutacoes.py` passou a aceitar `ARQUIVO = 'data.rs'` na lista |
 
 Mutações: 2 de 4 pegas; sobrevivem y_frente e y_dia (o caminho com a outra data depois desta não roda até 2001-08-20: o jogo só conta para trás, hoje menos o nascimento); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais com a nova referência db8ee4d7a7e1ef8e (os .lng foram regravados pelo jogo às 08:14 de 11/10, como em 10/10; a original deu a mesma impressão).
+
+### Motor de partidas, 111ª leva — a avaliação do jogador pela comissão (oficial em 11/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `avaliar_jogador(pessoa, jogador, clube)` | 0x6e1cf0 | cdecl | match_man.cpp: a nota (i16) que a comissão dá à pessoa (ou à do `jogador` +0x69) para o clube; −10000 sem pessoa. Soma a ficha +0x2f vezes o fator dos dias de vida (0x54cdb0 com a data de hoje 0xae2c90; nas seleções +0x22 × 75; acima de 1000 dias, 1 + (dias − 1000) × 0,000125), tira (encaixe² + 5) × 0,1 (0x53ce90), soma a diferença da +0xd para a reputação do clube (× 0,002 + 1,5, entre −4 e 4) e o contrato (0x4cf5f0: +0x44/75 + 0,5 ajustado pelo tipo em +0x4f >> 4). Depois pela idade (×0,5/0,75/0,9/1,05), ×0,9 com dias abaixo de (50 − +0x59) × 10 e ×(0,01 × +0x5b + 0,9) com +0x5b abaixo de 10 |
+
+Mutações: 7 de 7 pegas; jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais (db8ee4d7a7e1ef8e). Primeira rotina do match_man.cpp.
