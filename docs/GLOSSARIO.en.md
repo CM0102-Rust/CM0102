@@ -100,6 +100,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x540a50 | `clube_parceiro` | partner_club |
 | 0x70a8c0 | `codigo_de_bola_parada` | set_piece_code |
 | 0x6cb650 | `codigo_especial` | special_code |
+| 0x6e0d00 | `colocar_na_vaga` | put_in_place |
 | 0x7002f0 | `comentario_a` | commentary_a |
 | 0x70a860 | `comentario_b` | commentary_b |
 | 0x4b0700 | `competicao_conta` | competition_counts |
@@ -179,6 +180,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x62ec00 | `gravidade_da_lesao` | injury_severity |
 | 0x6854a0 | `grupo_decidido` | group_decided |
 | 0x6cd660 | `guardar_extremos` | store_extremes |
+| 0x6dbb10 | `guardar_tatica` | store_tactic |
 | 0x6e9470 | `iniciar_rigor` | init_strictness |
 | 0x6ddab0 | `instrucoes` | instructions |
 | 0x6cc540 | `interceptar` | intercept |
@@ -251,6 +253,8 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x4b07b0 | `ordem_por_80` | order_by_80 |
 | 0x4b0810 | `ordem_por_80_cresc` | order_by_80_asc |
 | 0x4b07d0 | `ordem_por_80_desc` | order_by_80_desc |
+| 0x6e0fe0 | `ordem_por_condicao` | order_by_condition |
+| 0x6e0df0 | `ordem_por_tabela` | order_by_table |
 | 0x62c3d0 | `palavra_0c` | word_0c |
 | 0x717c70 | `papel_880` | role_880 |
 | 0x716310 | `papel_na_defesa` | defending_role |
@@ -324,6 +328,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x53b620 | `tipo_11_a_15` | type_11_to_15 |
 | 0x53b610 | `tipo_nao_11` | type_not_11 |
 | 0x6cdd50 | `tirar_de_campo` | take_off_pitch |
+| 0x6dbb80 | `titulares` | starters |
 | 0x6ccb60 | `tracar_lance` | trace_move |
 | 0x4b0850 | `unidades` | units_digit |
 | 0x6d47e0 | `uniforme` | kit |

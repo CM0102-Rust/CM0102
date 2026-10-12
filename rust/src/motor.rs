@@ -389,8 +389,13 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6df460, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
     Prologo { endereco: 0x6e0230, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
     Prologo { endereco: 0x6ddab0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
+    Prologo { endereco: 0x6e0d00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x6e0df0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
+    Prologo { endereco: 0x6e0fe0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
+    Prologo { endereco: 0x6dbb80, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] },
+    Prologo { endereco: 0x6dbb10, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x46, 0x2f] },
 ];
-const N: usize = 282;
+const N: usize = 287;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -5306,6 +5311,163 @@ unsafe extern "thiscall" fn instrucoes(c: usize) {
             }
         }
     }
+}
+
+// ---------- centesima vigesima primeira leva: as pecas pequenas da comissao ----------
+
+/// { 0x6e0d00 } (thiscall, ret 0xc, match_man.cpp): poe `pessoa` na vaga `pos` (0..19) do bloco da
+/// comissao (+0x23) pela 0x6eaea0 (motor +0x12, lado +0x18, `extra`). Sem pessoa devolve 0; senao 1.
+/// ponytail: vaga fora de 0..19 para o jogo com erro no original (match_man.cpp 0xc39); aqui so devolve 0.
+/// A 0x6eaea0 (inicia o jogador, com sorteios e efeitos fora do motor) vem injetada: na comparacao
+/// ela e unidade da fita (a original grava; a copia Rust confere e nao roda de novo).
+unsafe fn colocar_na_vaga_com(c: usize, pos: u32, pessoa: usize, extra: u32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
+    let p = pos as u8 as i8;
+    if pessoa == 0 || !(0..=19).contains(&p) {
+        return 0;
+    }
+    let j = *((c + 0x23) as *const usize) + 0x1be * p as usize;
+    chamar(0x6eaea0, j, [*((c + 0x12) as *const usize) as u32, pessoa as u32, *((c + 0x18) as *const u8) as u32, pos, extra]);
+    1
+}
+
+unsafe extern "thiscall" fn colocar_na_vaga(c: usize, pos: u32, pessoa: usize, extra: u32) -> u8 {
+    colocar_na_vaga_com(c, pos, pessoa, extra, &mut |_, this, a| {
+        let iniciar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) = core::mem::transmute(0x6eaea0usize);
+        iniciar(this, a[0], a[1], a[2], a[3], a[4]);
+        0
+    })
+}
+
+// Porta de 0x6eaea0 (inicia o jogador na vaga): unidade da fita na comparacao.
+static mut PORTA_6EAEA0: usize = 0;
+const PROLOGO_6EAEA0: Prologo = Prologo { endereco: 0x6eaea0, bytes: &[0x83, 0xec, 0x18, 0x8b, 0x44, 0x24, 0x1c] };
+
+unsafe extern "thiscall" fn porta_6eaea0(j: usize, m: u32, pessoa: u32, lado: u32, pos: u32, extra: u32) {
+    let o: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) = core::mem::transmute(PORTA_6EAEA0);
+    if !gravando() {
+        return o(j, m, pessoa, lado, pos, extra);
+    }
+    chamar_gravando(0x6eaea0, j, [m, pessoa, lado, pos, extra], || {
+        o(j, m, pessoa, lado, pos, extra);
+        0
+    });
+}
+
+/// As duas pontas das ordens da substituicao: sem pessoa (+0x6d) vai para o fim; +0x19 = -2 vem
+/// primeiro; goleiro (tabela 1) com ficha +0xf abaixo de 20 tambem. Devolve None quando o resto decide.
+unsafe fn ordem_pontas(a: usize, b: usize) -> Option<i32> {
+    let tabela: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    let u = |p: usize, o: usize| *((p + o) as *const usize);
+    if a == 0 || u(a, 0x6d) == 0 {
+        return Some(1);
+    }
+    if b == 0 || u(b, 0x6d) == 0 {
+        return Some(-1);
+    }
+    if byte(a, 0x19) == -2 {
+        return Some(-1);
+    }
+    if byte(b, 0x19) == -2 {
+        return Some(1);
+    }
+    if tabela(a) == 1 && byte(u(a, 0x6d), 0xf) < 20 {
+        return Some(-1);
+    }
+    if tabela(b) == 1 && byte(u(b, 0x6d), 0xf) < 20 {
+        return Some(1);
+    }
+    None
+}
+
+/// +0x35 (curto) + +0x4d (float), truncado.
+unsafe fn condicao(j: usize) -> i32 {
+    ftol(*((j + 0x35) as *const i16) as f64 + *((j + 0x4d) as *const f32) as f64)
+}
+
+/// { 0x6e0df0 } (cdecl, comparador do qsort da substituicao): pela condicao (+0x35 + +0x4d), pesada
+/// pela tabela de `a` (2 e 4: x1,35; 8: x1,2 em `a` e x1,25 em `b`; 0x10: x1,1) nos dois lados.
+unsafe extern "C" fn ordem_por_tabela(pa: *const usize, pb: *const usize) -> i32 {
+    let (a, b) = (*pa, *pb);
+    if let Some(r) = ordem_pontas(a, b) {
+        return r;
+    }
+    let tabela: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    let pesar = |v: i32, oito: f64| -> i32 {
+        match tabela(a) {
+            4 | 2 => ftol(v as f64 * 1.35),
+            8 => ftol(v as f64 * oito),
+            0x10 => ftol(v as f64 * 1.1),
+            _ => v,
+        }
+    };
+    let va = pesar(condicao(a), 1.2);
+    let vb = pesar(condicao(b), 1.25);
+    va.wrapping_sub(vb)
+}
+
+/// { 0x6e0fe0 } (cdecl, comparador do qsort da substituicao): so pela condicao (+0x35 + +0x4d).
+unsafe extern "C" fn ordem_por_condicao(pa: *const usize, pb: *const usize) -> i32 {
+    let (a, b) = (*pa, *pb);
+    if let Some(r) = ordem_pontas(a, b) {
+        return r;
+    }
+    let vb = condicao(b);
+    condicao(a).wrapping_sub(vb)
+}
+
+/// { 0x6dbb80 } (thiscall, match_man.cpp): os titulares do inicio do jogo. Para cada vaga de 0 a
+/// 10 + (partida +0x4d & 0xf), a pessoa da tatica do clube (0x8968f0) entra (0x6e0d00) se puder jogar:
+/// 0x62c400 diferente de 2, e (partida sem competicao, -2, ou 0x55d270 sem impedimento) e 0x7757d0 sem
+/// impedimento. Devolve quantos entraram.
+unsafe extern "thiscall" fn titulares(c: usize) -> u8 {
+    titulares_com(c, &mut |_, this, a| {
+        let colocar: unsafe extern "thiscall" fn(usize, u32, usize, u32) -> u8 = core::mem::transmute(0x6e0d00usize);
+        colocar(this, a[0], a[1] as usize, a[2]) as u32
+    })
+}
+
+/// `titulares` com a 0x6e0d00 (poe na vaga) injetada.
+unsafe fn titulares_com(c: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
+    let u = |p: usize, o: usize| *((p + o) as *const usize);
+    let da_tatica: unsafe extern "thiscall" fn(usize, usize, u32, i32) -> usize = core::mem::transmute(0x8968f0usize);
+    let estado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
+    let suspenso: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x55d270usize);
+    let impedido: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x7757d0usize);
+    let total = || (*((u(c, 0x37) + 0x4d) as *const u8) & 0xf) as i32 + 11;
+    let mut n = 0u8;
+    let mut k = 0i8;
+    while (k as i32) < total() {
+        let pos = k as u8 as u32;
+        let p = da_tatica(u(0xde1d08, 0), u(c, 0x2f), pos, byte(c, 0x19) as i32);
+        if p != 0 && estado(u(0xb63d28, 0), p) != 2 {
+            let jogo = u(c, 0x37);
+            let livre = *(jogo as *const i32) == -2 || suspenso(u(0xae28f0, 0), p, u(jogo, 0x14), 1, 0) == 0;
+            if livre && impedido(u(0xb74318, 0), p, 0xae2c90, u(c, 0x2f), 0, 0) == 0 && chamar(0x6e0d00, c, [pos, p as u32, pos, 0, 0]) as u8 != 0 {
+                n = n.wrapping_add(1);
+            }
+        }
+        k = k.wrapping_add(1);
+    }
+    n
+}
+
+/// { 0x6dbb10 } (thiscall, match_man.cpp, virtual): guarda a tatica da comissao (+0x3f) no banco de
+/// taticas (0x8984d0). Com tecnico humano (+0x19) so quando 0x600a50 nega ou 0x5fd480 confirma.
+unsafe extern "thiscall" fn guardar_tatica(c: usize) {
+    let u = |p: usize, o: usize| *((p + o) as *const usize);
+    let clube = u(c, 0x2f);
+    if clube == 0 || u(0xde1d08, 0) == 0 {
+        return;
+    }
+    if byte(c, 0x19) != 0 {
+        let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+        let confirma: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd480usize);
+        if humano(clube, 1, 1, 0, 0) != 0 && confirma(u(0xb63c98, 0), u(u(c, 0x2f), 0xcf)) == 0 {
+            return;
+        }
+    }
+    let guardar: unsafe extern "thiscall" fn(usize, usize, usize, i32) = core::mem::transmute(0x8984d0usize);
+    guardar(u(0xde1d08, 0), u(c, 0x2f), c + 0x3f, byte(c, 0x19) as i32);
 }
 
 // ---------- centesima decima sexta leva: a substituicao (0x6e1090) ----------
@@ -16425,6 +16587,75 @@ unsafe extern "thiscall" fn comparar_instrucoes(c: usize) {
         format!("instrucoes(lado {}) {}", byte(c, 0x18), dif.unwrap_or_default())
     });
 }
+/// As linhas do clube da comissao no banco de taticas (0x8982b0 por tecnico humano ou nao).
+unsafe fn linhas_do_clube(clube: usize) -> Vec<(usize, usize)> {
+    let taticas = *(0xde1d08 as *const usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let mut v = Vec::new();
+    for humano in 0..2u32 {
+        let l = if clube == 0 || taticas == 0 { -1 } else { linha(clube, humano) };
+        if l != -1 {
+            v.push(((*((taticas + 0x601) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
+        }
+    }
+    v
+}
+/// O primeiro byte diferente entre as memorias (as regioes do motor sao grandes).
+fn primeira_diferenca(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> String {
+    mo.0.iter()
+        .zip(mr.0.iter())
+        .find_map(|(a, b)| {
+            a.1.iter().zip(b.1.iter()).position(|(x, y)| x != y).map(|k| format!("{:#x}+{:#x}: {:x?} x {:x?}", a.0, k, &a.1[k..(k + 8).min(a.1.len())], &b.1[k..(k + 8).min(b.1.len())]))
+        })
+        .unwrap_or_default()
+}
+unsafe extern "thiscall" fn comparar_colocar_na_vaga(c: usize, pos: u32, pessoa: usize, extra: u32) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, u32) -> u8>(282);
+    if gravando_no_topo() {
+        // dentro dos titulares (ou da comissao): unidade da fita
+        return chamar_gravando(0x6e0d00, c, [pos, pessoa as u32, extra, 0, 0], || o(c, pos, pessoa, extra) as u32) as u8;
+    }
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(*((c + 0x12) as *const usize), 0xf5f8), (0xb67a34, 4)]);
+    let (r, rr, igual, sequencia, k) = comparar_com_fita(reg, || o(c, pos, pessoa, extra), |chamar| {
+        colocar_na_vaga_com(c, pos, pessoa, extra, &mut |rotina, this, args| chamar(rotina, this, args, [u32::MAX, u32::MAX, 0xff, 0xff, 0xff]))
+    });
+    PLACAR.registrar(igual && sequencia && r == rr, || format!("colocar_na_vaga({}, {:#x}) original={} rust={} {} chamadas: {}", pos as u8 as i8, pessoa, r, rr, k, detalhe_fita()));
+    r
+}
+unsafe extern "C" fn comparar_ordem_por_tabela(a: *const usize, b: *const usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(283)(a, b);
+    let n = ordem_por_tabela(a, b);
+    PLACAR.registrar(r == n, || format!("ordem_por_tabela({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
+    r
+}
+unsafe extern "C" fn comparar_ordem_por_condicao(a: *const usize, b: *const usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(284)(a, b);
+    let n = ordem_por_condicao(a, b);
+    PLACAR.registrar(r == n, || format!("ordem_por_condicao({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
+    r
+}
+unsafe extern "thiscall" fn comparar_titulares(c: usize) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u8>(285);
+    if gravando_no_topo() {
+        // dentro da comissao do inicio da partida: unidade da fita
+        return chamar_gravando(0x6dbb80, c, [0, 0, 0, 0, 0], || o(c) as u32) as u8;
+    }
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(*((c + 0x12) as *const usize), 0xf5f8), (0xb67a34, 4)]);
+    let (r, rr, igual, sequencia, k) = comparar_com_fita(reg, || o(c), |chamar| {
+        titulares_com(c, &mut |rotina, this, args| chamar(rotina, this, args, [0xff, u32::MAX, 0xff, 0, 0]))
+    });
+    PLACAR.registrar(igual && sequencia && r == rr, || format!("titulares(lado {}) original={} rust={} {} chamadas: {}", byte(c, 0x18), r, rr, k, detalhe_fita()));
+    r
+}
+unsafe extern "thiscall" fn comparar_guardar_tatica(c: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(286);
+    let mut reg = linhas_do_clube(*((c + 0x2f) as *const usize));
+    reg.push((0xb67a34, 4));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(c), || guardar_tatica(c));
+    PLACAR.registrar(igual, || format!("guardar_tatica(humano {}) {}", byte(c, 0x19), primeira_diferenca(&mo, &mr)));
+}
 unsafe extern "thiscall" fn comparar_substituir(c: usize, goleiro: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(277);
     if gravando_no_topo() {
@@ -17202,6 +17433,9 @@ pub unsafe fn instalar(comparando: bool) {
         if let Some(t) = desvios::desviar("motor_porta_6d6f70 (gravacao)", &PROLOGO_6D6F70, porta_6d6f70 as *const () as usize) {
             PORTA_6D6F70 = t;
         }
+        if let Some(t) = desvios::desviar("motor_porta_6eaea0 (gravacao)", &PROLOGO_6EAEA0, porta_6eaea0 as *const () as usize) {
+            PORTA_6EAEA0 = t;
+        }
         if let Some(t) = desvios::desviar("motor_porta_70dfd0 (gravacao)", &PROLOGO_70DFD0, porta_70dfd0 as *const () as usize) {
             PORTA_70DFD0 = t;
         }
@@ -17513,6 +17747,11 @@ pub unsafe fn instalar(comparando: bool) {
         postura as *const () as usize,
         escolher_formacao as *const () as usize,
         instrucoes as *const () as usize,
+        colocar_na_vaga as *const () as usize,
+        ordem_por_tabela as *const () as usize,
+        ordem_por_condicao as *const () as usize,
+        titulares as *const () as usize,
+        guardar_tatica as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -17797,6 +18036,11 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_postura as *const () as usize,
         comparar_escolher_formacao as *const () as usize,
         comparar_instrucoes as *const () as usize,
+        comparar_colocar_na_vaga as *const () as usize,
+        comparar_ordem_por_tabela as *const () as usize,
+        comparar_ordem_por_condicao as *const () as usize,
+        comparar_titulares as *const () as usize,
+        comparar_guardar_tatica as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -17908,6 +18152,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_avaliar_jogador", "motor_melhor_avaliado", "motor_melhor_da_lista",
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
+        "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
