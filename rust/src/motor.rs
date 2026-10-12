@@ -397,8 +397,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6d0b60, bytes: &[0x83, 0xec, 0x28, 0x53, 0x55] },
     Prologo { endereco: 0x6d1210, bytes: &[0x83, 0xec, 0x10, 0x56, 0x8b, 0xf1] },
     Prologo { endereco: 0x6be710, bytes: &[0x83, 0xec, 0x18, 0x53, 0x56] },
+    Prologo { endereco: 0x6bac40, bytes: &[0x83, 0xec, 0x08, 0x55, 0x56] },
 ];
-const N: usize = 290;
+const N: usize = 291;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -6005,6 +6006,223 @@ unsafe extern "thiscall" fn porta_702050(j: usize, a1: u32, a2: u32, a3: u32, a4
         o(j, a1, a2, a3, a4, a5, a6);
         0
     });
+}
+
+// ---------- centesima vigesima quinta leva: a falta marcada (0x6bac40) ----------
+
+/// { 0x6bac40 } (match_eng.cpp) com as chamadas que mexem fora do motor injetadas (0x6d6f70 narra,
+/// 0x716e10 cansa): aplica o lance pendente em +0x475a (tipo; +0x4761 quem fez, +0x4765 quem sofreu,
+/// +0x475b/+0x475c onde, +0x475d/+0x475e/+0x4769 para a punicao, +0x475f o codigo). Sem tipo devolve
+/// 0. Com bola parada em andamento (+0x8eb2) e o lance do lado que ja tinha a vantagem (+0x8eae)
+/// atras da posicao marcada (+0x8ea8), descarta o lance e devolve 0; senao narra 0x20f0. Tipo 8:
+/// narra 0x20ee, conta no placar do lado (+0xf5ca) e no jogador (+0x13) e marca a bola parada 7. Sem
+/// quem sofreu, a punicao da falta (0x6e9630) e a narracao 0x20fb; com ele, a punicao do lance
+/// (0x6ea4e0) e a narracao pelo codigo +0x475f (0x20fc a 0x2107). O tipo devolvido escolhe o cartao
+/// (0x1ff9 amarelo, 0x1ff7/0x1ff8 vermelho, 0x1ff5 ou 0x1ff6 conforme o caso, 0x210a pela severidade
+/// contra sorteio(7) + 2). Tipo 7 e bola parada 7; perto da area adversaria (+0x475b de 2 a 6 e
+/// +0x475c na faixa do gol) e penalti (5, 0x1f7a, -500 em +0x35 de quem sofreu ou fez); senao falta
+/// (6, 0x1f79). Com cartao: 1 em 4 narra 0x2109 (e 0x20f5 pela severidade), narra o cartao e a
+/// expulsao tira o jogador (0x6cda20). Fora dos codigos de bola parada, 1 em 9 narra 0x20df (1 em 3
+/// tambem 0x20e0) e, com expulsao ou penalti, marca +0x16 de quem fez (1 em 7 narra 0x20d9); o time
+/// de quem fez se desgasta pelo peso da punicao (0x716450: o proprio pelo peso, os de fora p / 6 +
+/// 0,83, os outros (p + 1) / 2) e quem fez cansa (0x716e10). Limpa o lance e devolve 1.
+unsafe fn aplicar_falta_com(m: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
+    let punir_falta: unsafe extern "thiscall" fn(usize, usize, *mut u8, i8, i8, u8, *mut f32) = core::mem::transmute(0x6e9630usize);
+    let punir: unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8) = core::mem::transmute(0x6ea4e0usize);
+    let desgastar: unsafe extern "thiscall" fn(usize, f32) = core::mem::transmute(0x716450usize);
+    let b = |o: usize| (m + o) as *mut u8;
+    let u = |o: usize| *((m + o) as *const usize);
+    let ub = |p: usize, o: usize| *((p + o) as *const u8) as u32;
+    let zero = |p: usize| (byte(p, 0x27) == 0) as u32;
+    let narrar = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, a3: u32, a4: u32, a5: u32| {
+        chamar(0x6d6f70, u(0x8f7a), [codigo, m as u32, a3, a4, a5]);
+    };
+    let limpar = || {
+        *((m + 0x475f) as *mut u16) = 0xffff;
+        *((m + 0x4761) as *mut usize) = 0;
+        *((m + 0x4765) as *mut usize) = 0;
+        *b(0x4769) = 0;
+        *b(0x475a) = 0;
+        for o in 0x475b..=0x475e {
+            *b(o) = 0xff;
+        }
+    };
+    if *b(0x475a) == 0 {
+        return 0;
+    }
+    if *b(0x8eb2) != 0 {
+        let lado = byte(u(0x4761), 0x27);
+        if byte(m, 0x8eae) as i32 == (lado == 0) as i32 {
+            let (marcada, aqui) = (byte(m, 0x8ea8), byte(m, 0x475c));
+            if (aqui < marcada && lado == 1) || (marcada < aqui && lado == 0) {
+                limpar();
+                return 0;
+            }
+        }
+        narrar(chamar, 0x20f0, u32::MAX, lado as u8 as u32, u32::MAX);
+    }
+    let j = u(0x4761);
+    if *b(0x475a) == 8 {
+        narrar(chamar, 0x20ee, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
+        let j = u(0x4761);
+        let placar = (m as isize + byte(j, 0x27) as isize * 0x36 + 0xf5ca) as *mut u8;
+        *placar = (*placar).wrapping_add(1);
+        *((j + 0x13) as *mut u8) = ub(j, 0x13).wrapping_add(1) as u8;
+        *b(0x8ea7) = *b(0x475b);
+        *b(0x8ea8) = *b(0x475c);
+        *b(0x8eb2) = 7;
+        *b(0x8eae) = zero(j) as u8;
+        *((m + 0xf582) as *mut u32) = 0;
+        limpar();
+        return 1;
+    }
+    if j == 0 {
+        limpar();
+        return 1;
+    }
+    let sofreu = u(0x4765) != 0;
+    let mut peso = 0f32;
+    if !sofreu {
+        punir_falta(m + 0xf5b2, j, b(0x475a), byte(m, 0x475d), byte(m, 0x475e), *b(0x4769), &mut peso);
+        let j = u(0x4761);
+        narrar(chamar, 0x20fb, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
+    } else {
+        punir(m + 0xf5b2, j, u(0x4765), b(0x475a), byte(m, 0x475d), byte(m, 0x475e), *b(0x4769), &mut peso, 0);
+        let codigo = match *((m + 0x475f) as *const i16) {
+            1 => 0x2104,
+            0xc => 0x2107,
+            0x13 | 0x21 => 0x2101,
+            0x15 => 0x2103,
+            0x22 => 0x2105,
+            0x29 => 0x2102,
+            0x2a => 0x20fe,
+            0x2b => 0x20ff,
+            0x2c => 0x2100,
+            0x2d => 0x20fd,
+            0x2e => 0x2106,
+            _ => 0x20fc,
+        };
+        let (j, v) = (u(0x4761), u(0x4765));
+        narrar(chamar, codigo, ub(j, 0x2e), ub(j, 0x27), ub(v, 0x2e) | ub(v, 0x27) << 8);
+    }
+    let tipo = *b(0x475a) as i8;
+    let cartao: i32 = match tipo {
+        2 => 0x1ff9,
+        3 => 0x1ff7,
+        4 => 0x1ff8,
+        6 if !sofreu => 0x1ff5,
+        5 if sofreu => 0x1ff6,
+        _ => {
+            if byte(m, 0x475e) as i32 > sortear(7) + 2 { 0x210a } else { -1 }
+        }
+    };
+    let som: u32;
+    if *b(0x475a) == 7 {
+        som = 0x1f79;
+        *b(0x8eb2) = 7;
+    } else {
+        let (x, y) = (byte(m, 0x475b), byte(m, 0x475c));
+        let area = (2..=6).contains(&x) && if byte(u(0x4761), 0x27) == 1 { (10..=11).contains(&y) } else { (0..=1).contains(&y) };
+        if area {
+            *b(0x8eb2) = 5;
+            let quem = if sofreu { u(0x4765) } else { u(0x4761) };
+            *((m + 0x478a) as *mut usize) = if sofreu { quem } else { 0 };
+            let d = (quem + 0x35) as *mut i16;
+            *d = (*d).wrapping_sub(500);
+            som = 0x1f7a;
+        } else {
+            som = 0x1f79;
+            *b(0x8eb2) = 6;
+        }
+    }
+    *b(0x8ea8) = *b(0x475c);
+    *b(0x8ea7) = *b(0x475b);
+    *((m + 0xf582) as *mut u32) = 0;
+    *b(0x8eae) = zero(u(0x4761)) as u8;
+    if som == 0x1f7a {
+        let a4 = if sofreu { ub(u(0x4765), 0x27) } else { zero(u(0x4761)) };
+        narrar(chamar, 0x1f7a, u32::MAX, a4, u32::MAX);
+    }
+    if cartao >= 0 {
+        if sortear(4) == 0 {
+            let a = sortear(byte(m, 0x475e) as i32);
+            if a > sortear(0x14) {
+                narrar(chamar, 0x20f5, 0, 0, u32::MAX);
+            }
+            let j = u(0x4761);
+            narrar(chamar, 0x2109, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
+        }
+        let j = u(0x4761);
+        narrar(chamar, cartao as u32, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
+        if matches!(*b(0x475a), 3..=6) {
+            jogador_saiu_com(m, u(0x4761), 0, chamar);
+        }
+    }
+    if som != 0x1f7a {
+        let a4 = if sofreu { ub(u(0x4765), 0x27) } else { zero(u(0x4761)) };
+        narrar(chamar, som, u32::MAX, a4, u32::MAX);
+    }
+    // os codigos de bola parada (0x25, 0x2a a 0x32, 0x60 e 0x61) param aqui
+    let k = (byte(m, 0x475f) as i32 - 0x25) as u32;
+    if k <= 0x3c && matches!(k, 0 | 5..=13 | 0x3b | 0x3c) {
+        limpar();
+        return 1;
+    }
+    // sem quem sofreu, o lado cru de quem fez; com ele, "lado == 0" (0x20df pelo lado de quem sofreu)
+    let lado_de = |p: usize| if sofreu { zero(p) } else { ub(p, 0x27) };
+    if sortear(9) == 0 {
+        narrar(chamar, 0x20df, u32::MAX, lado_de(if sofreu { u(0x4765) } else { u(0x4761) }), u32::MAX);
+        if sortear(3) == 0 {
+            narrar(chamar, 0x20e0, u32::MAX, lado_de(u(0x4761)), u32::MAX);
+        }
+        if matches!(*b(0x475a), 3..=6) || som == 0x1f7a {
+            *((u(0x4761) + 0x16) as *mut u8) = 1;
+            if sortear(7) == 0 {
+                narrar(chamar, 0x20d9, u32::MAX, lado_de(u(0x4761)), u32::MAX);
+            }
+        }
+    }
+    let j = u(0x4761);
+    let bloco = m + 0x4796 + 0x22d8 * byte(j, 0x27) as isize as usize;
+    for i in 0..20 {
+        let p = bloco + 0x1be * i;
+        if *((p + 0x69) as *const usize) == 0 {
+            continue;
+        }
+        let f = if p == j {
+            peso
+        } else if byte(p, 0x19) < 0 {
+            (peso as f64 * 0.16666666666666666 + 0.83) as f32
+        } else {
+            ((peso as f64 + 1.0) * 0.5) as f32
+        };
+        desgastar(p, f);
+    }
+    chamar(0x716e10, u(0x4761), [0; 5]);
+    limpar();
+    1
+}
+
+/// { 0x6bac40 } (match_eng.cpp): ver `aplicar_falta_com`.
+unsafe extern "thiscall" fn aplicar_falta(m: usize) -> u8 {
+    aplicar_falta_com(m, &mut |rotina, this, a| {
+        match rotina {
+            0x6d6f70 => comentar(this, [a[0], a[1], a[2], a[3], a[4] & 0xff, (a[4] >> 8) & 0xff, 0]),
+            0x716e10 | 0x6e1090 => {
+                let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(rotina);
+                f(this, a[0]);
+            }
+            0x6e1aa0 => {
+                let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6e1aa0usize);
+                f(this);
+            }
+            _ => {
+                let f: unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32 = core::mem::transmute(0x897760usize);
+                f(this, a[0] as usize, a[1] as u8 as i8, a[2]);
+            }
+        }
+        0
+    })
 }
 
 // ---------- centesima decima sexta leva: a substituicao (0x6e1090) ----------
@@ -15660,89 +15878,56 @@ unsafe extern "thiscall" fn comparar_virado_para(this: usize, a: i8, b: i8) -> u
 
 // --- gravar e reproduzir: 0x6f5c30 (3,9 KB, sorteia e altera jogadores) chamada por 0x6cd330 ---
 //
-// Na comparacao a original roda e cada chamada dela a 0x6f5c30 e gravada (porta abaixo); a copia
-// Rust recebe a gravacao no lugar da rotina, e a sequencia de chamadas tambem e comparada. No
-// autoteste (jogadores sinteticos) a porta responde de forma sintetica, sem rodar a rotina real.
+// Na comparacao a original roda e cada chamada dela a 0x6f5c30 entra na fita (porta abaixo, so
+// durante esta comparacao); a copia Rust recebe a resposta e o efeito gravados (a 0x6f5c30 altera os
+// proximos jogadores da lista, que a original pula). No autoteste (jogadores sinteticos) a porta
+// responde de forma sintetica, sem rodar a rotina real.
 
 static mut PORTA_6F5C30: usize = 0;
-static GRAVANDO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static GRAVAR_6F5C30: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 static SINTETICO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-static GRAVACAO: std::sync::Mutex<Vec<(u32, usize, [u32; 4], u8)>> = std::sync::Mutex::new(Vec::new()); // (rotina, this, args, resposta)
 
 // 0x6f5c30: sub esp, 0x218
 const PROLOGO_6F5C30: Prologo = Prologo { endereco: 0x6f5c30, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] };
 
 unsafe extern "thiscall" fn porta_6f5c30(p: usize, a: u32, b: u32, c: u32, d: u32) -> u8 {
     use std::sync::atomic::Ordering::Relaxed;
-    let r = if SINTETICO.load(Relaxed) {
-        ((p as u32 ^ a ^ b.wrapping_mul(3) ^ c.wrapping_mul(5) ^ d.wrapping_mul(7)) >> 4 & 1) as u8
-    } else {
-        let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u8 = core::mem::transmute(PORTA_6F5C30);
-        f(p, a, b, c, d)
+    let rodar = || {
+        if SINTETICO.load(Relaxed) {
+            (p as u32 ^ a ^ b.wrapping_mul(3) ^ c.wrapping_mul(5) ^ d.wrapping_mul(7)) >> 4 & 1
+        } else {
+            let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u8 = core::mem::transmute(PORTA_6F5C30);
+            f(p, a, b, c, d) as u32
+        }
     };
-    if GRAVANDO.load(Relaxed) {
-        GRAVACAO.lock().unwrap_or_else(|e| e.into_inner()).push((0x6f5c30, p, [a, b, c, d], r));
+    if GRAVAR_6F5C30.load(Relaxed) && gravando() {
+        return chamar_gravando(0x6f5c30, p, [a, b, c, d, 0], rodar) as u8;
     }
-    r
+    rodar() as u8
 }
 
 #[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn comparar_procurar(this: usize, lado: i8, grupo: usize, a3: u32, a4: u32, a5: u32, a6: u32, modo: i8) -> u8 {
     use std::sync::atomic::Ordering::Relaxed;
     let f = orig::<unsafe extern "thiscall" fn(usize, i8, usize, u32, u32, u32, u32, i8) -> u8>(18);
-    GRAVACAO.lock().unwrap_or_else(|e| e.into_inner()).clear();
-    GRAVANDO.store(true, Relaxed);
-    let repeticao = core::cell::RefCell::new(Vec::new());
-    let sequencia_igual = core::cell::Cell::new(true);
     // A copia Rust tem de ver o estado que a original viu: 0x6f5c30 altera o jogador que recebe
-    // (0x2b, 0x19), entao esses bytes de cada jogador da lista e a quantidade entram nas regioes.
-    let mut regioes = vec![(this + 0x1a5, 2), ((grupo as isize + lado as isize) as usize + 0x58, 1)];
+    // (0x2b, 0x19) e pode tira-lo da lista, entao a lista, a quantidade e esses bytes de cada jogador
+    // entram nas regioes (a fita os grava depois de cada chamada).
     let lista = (grupo as isize + lado as isize * 44) as *const usize;
+    let mut regioes = vec![(this + 0x1a5, 2), ((grupo as isize + lado as isize) as usize + 0x58, 1), (lista as usize, 44)];
     for i in 0..byte((grupo as isize + lado as isize) as usize, 0x58).clamp(0, 11) as usize {
         let p = *lista.add(i);
         regioes.extend([(p + 0x19, 1), (p + 0x2b, 1)]);
     }
-    let (r, n, _, mo, mr) = crate::comparacao::lado_a_lado(
-        &regioes,
-        || {
-            let r = f(this, lado, grupo, a3, a4, a5, a6, modo);
-            GRAVANDO.store(false, Relaxed);
-            *repeticao.borrow_mut() = GRAVACAO.lock().unwrap_or_else(|e| e.into_inner()).clone();
-            r
-        },
-        || {
-            let gravadas = repeticao.borrow();
-            let mut prox = gravadas.iter();
-            let n = procurar_com(this, lado, grupo, a3, a4, a5, a6, modo, &mut |p, w, x, y, z| match prox.next() {
-                Some(&(0x6f5c30, gp, ga, gr)) if gp == p && ga == [w, x, y, z] => gr,
-                _ => {
-                    sequencia_igual.set(false);
-                    0
-                }
-            });
-            if prox.next().is_some() {
-                sequencia_igual.set(false); // a original chamou mais vezes
-            }
-            n
-        },
-    );
-    let (todas, sequencia_igual) = (repeticao.borrow().len(), sequencia_igual.get());
-    // so o que a propria rotina escreve (0x1a5/0x1a6); os bytes dos jogadores mudam pela 0x6f5c30
-    let igual = mo.0[0] == mr.0[0];
-    // 0x6f5c30 altera os proximos jogadores da lista; a reproducao devolve so a resposta gravada,
-    // sem esses efeitos, e a copia Rust pode querer perguntar por um jogador que a original pulou.
-    // Com resultado e memoria iguais isso e inconclusivo, nao divergencia (a carreira inteira, em
-    // que a rotina roda de verdade, e a prova). Resultado ou memoria diferentes continuam acusados.
-    if !sequencia_igual && igual && r == n {
-        static INCONCLUSIVAS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-        let k = INCONCLUSIVAS.fetch_add(1, Relaxed) + 1;
-        if k.is_power_of_two() {
-            linha(&format!("motor: procurar_no_lado {} comparacoes inconclusivas (efeito de 0x6f5c30 nos proximos jogadores)", k));
-        }
-        return r;
-    }
-    PLACAR.registrar(igual && r == n && sequencia_igual, || {
-        format!("procurar_no_lado(lado {}, modo {}, {} chamadas) original={} rust={} seq={} {:x?} {:x?}", lado, modo, todas, r, n, sequencia_igual, mo, mr)
+    let gravar = GRAVAR_6F5C30.swap(true, Relaxed);
+    let (r, n, igual, sequencia, k) = comparar_com_fita(regioes, || f(this, lado, grupo, a3, a4, a5, a6, modo), |chamar| {
+        procurar_com(this, lado, grupo, a3, a4, a5, a6, modo, &mut |p, w, x, y, z| {
+            chamar(0x6f5c30, p, [w, x, y, z, 0], [u32::MAX, u32::MAX, u32::MAX, u32::MAX, 0]) as u8
+        })
+    });
+    GRAVAR_6F5C30.store(gravar, Relaxed);
+    PLACAR.registrar(igual && sequencia && r == n, || {
+        format!("procurar_no_lado(lado {}, modo {}, {} chamadas) original={} rust={}: {}", lado, modo, k, r, n, detalhe_fita())
     });
     r
 }
@@ -17272,6 +17457,36 @@ unsafe extern "thiscall" fn comparar_penaltis(m: usize, modo: u32) {
     GRAVAR_702050.store(false, Relaxed);
     PLACAR.registrar(igual && sequencia, || format!("penaltis(estado {}) {} chamadas: {}", byte(m, 0x8eb3), k, detalhe_fita()));
 }
+unsafe extern "thiscall" fn comparar_aplicar_falta(m: usize) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u8>(290);
+    if gravando_no_topo() {
+        return o(m);
+    }
+    // o motor inteiro, o sorteio, o erro, 0xae1080 e a linha da tatica dos dois clubes (a expulsao
+    // pode trocar o capitao)
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m, 0xf5f8), (0xb67a34, 4), (0xae1080, 4)]);
+    let t = *((m + 0x4792) as *const usize);
+    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+        reg.extend(linhas_do_clube(clube));
+    }
+    let tipo = byte(m, 0x475a);
+    GRAVAR_716.store(true, std::sync::atomic::Ordering::Relaxed);
+    let (r, rr, igual, sequencia, k) = comparar_com_fita(reg, || o(m), |chamar| {
+        aplicar_falta_com(m, &mut |rotina, this, args| {
+            let mascara = match rotina {
+                0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
+                0x897760 => [u32::MAX, 0xff, u32::MAX, 0, 0],
+                0x6e1aa0 => [0, 0, 0, 0, 0],
+                _ => [0xff, 0, 0, 0, 0],
+            };
+            chamar(rotina, this, args, mascara)
+        })
+    });
+    GRAVAR_716.store(false, std::sync::atomic::Ordering::Relaxed);
+    PLACAR.registrar(igual && sequencia && r == rr, || format!("aplicar_falta(tipo {}) original={} rust={} {} chamadas: {}", tipo, r, rr, k, detalhe_fita()));
+    r
+}
 unsafe extern "thiscall" fn comparar_substituir(c: usize, goleiro: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(277);
     if gravando_no_topo() {
@@ -18380,6 +18595,7 @@ pub unsafe fn instalar(comparando: bool) {
         aplicar_trocas as *const () as usize,
         punicoes as *const () as usize,
         penaltis as *const () as usize,
+        aplicar_falta as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -18672,6 +18888,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_aplicar_trocas as *const () as usize,
         comparar_punicoes as *const () as usize,
         comparar_penaltis as *const () as usize,
+        comparar_aplicar_falta as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -18784,7 +19001,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
