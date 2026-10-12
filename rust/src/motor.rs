@@ -394,8 +394,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6e0fe0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
     Prologo { endereco: 0x6dbb80, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] },
     Prologo { endereco: 0x6dbb10, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x46, 0x2f] },
+    Prologo { endereco: 0x6d0b60, bytes: &[0x83, 0xec, 0x28, 0x53, 0x55] },
 ];
-const N: usize = 287;
+const N: usize = 288;
 
 const TABELA_GLOBAL: usize = 0xb67c30;
 
@@ -5468,6 +5469,127 @@ unsafe extern "thiscall" fn guardar_tatica(c: usize) {
     }
     let guardar: unsafe extern "thiscall" fn(usize, usize, usize, i32) = core::mem::transmute(0x8984d0usize);
     guardar(u(0xde1d08, 0), u(c, 0x2f), c + 0x3f, byte(c, 0x19) as i32);
+}
+
+// ---------- centesima vigesima segunda leva: as trocas marcadas (0x6d0b60) ----------
+
+/// { 0x6d0b60 } (match_eng.cpp) com as chamadas que mexem fora do motor injetadas (0x6d6f70 narra,
+/// 0x6e1090 e 0x6e1aa0 da comissao, 0x897760 grava o capitao): aplica as trocas marcadas (+0x1d) dos
+/// dois lados. Quem esta em campo (ou -3) e marcado: com +0x1c sai (em campo: narra 0x1f56, 0x6cdd50
+/// com -1 ou -2 conforme +0x9049 do lado, +0x1a = posicao, +0x19 = -2; com -3: narra 0x1f57 e 0x6cdd50
+/// com 0) e grava o minuto em +0x22 (no maximo o fim do periodo); sem +0x1c narra 0x1f58 por sorteio(4)
+/// ou com +0x55. Com +0x55 narra 0x20f6 (os dois e o lado de cada um, 0x714d30). Havendo marcados, fora
+/// dos jogos com tecnico humano que nao delega (como na 0x6cda20): com +0x9049 a comissao substitui
+/// (0x6e1090); senao refaz o time (0x6e1aa0), e se o capitao (0x897590) saiu de campo o mais bem
+/// avaliado (0x6e1a40) vira capitao (0x897760), zera +0xf59e/+0xf5a2 e recompoe (0x6ce110). Guarda o
+/// minuto da troca (+0x8ecc + 2 x lado), refaz a forca do lado (0x6bbb60) e a marcacao (0x6bbf60). No
+/// fim zera +0x8eb5. Na fita, o 6o argumento da narracao vai no byte 1 do 5o (a 0x6d6f70 le os dois
+/// como bytes; so o byte 0 e conferido).
+unsafe fn aplicar_trocas_com(m: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let tirar: unsafe extern "thiscall" fn(usize, usize, i8) = core::mem::transmute(0x6cdd50usize);
+    let lado_de: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x714d30usize);
+    let humano_9a01: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd210usize);
+    let humano_9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd480usize);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let vaga_marcada: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8 = core::mem::transmute(0x897590usize);
+    let melhor: unsafe extern "thiscall" fn(usize) -> i8 = core::mem::transmute(0x6e1a40usize);
+    let manter: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(0x6ce110usize);
+    let forca: unsafe extern "thiscall" fn(usize, i8) = core::mem::transmute(0x6bbb60usize);
+    let marcacao: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6bbf60usize);
+    let u = |p: usize, o: usize| *((p + o) as *const usize);
+    for lado in 0..2i8 {
+        let lu = lado as usize;
+        let mut marcados = 0u8;
+        for k in 0..20 {
+            let j = m + 0x4796 + 0x22d8 * lu + 0x1be * k;
+            let e = byte(j, 0x19);
+            if !(e >= 0 || e == -3) || byte(j, 0x1d) == 0 {
+                continue;
+            }
+            marcados = marcados.wrapping_add(1);
+            let nome = |p: usize| *((p + 0x2e) as *const u8) as u32;
+            if byte(j, 0x1c) != 0 {
+                if e >= 0 {
+                    let a = nome(j);
+                    chamar(0x6d6f70, u(m, 0x8f7a), [0x1f56, m as u32, a, lado_de(j) as u32, u32::MAX]);
+                    tirar(m, j, if byte(m, 0x9049 + 0xd0 * lu) != 0 { -1 } else { -2 });
+                    *((j + 0x1a) as *mut i8) = byte(j, 0x19);
+                    *((j + 0x19) as *mut i8) = -2;
+                } else {
+                    let a = nome(j);
+                    chamar(0x6d6f70, u(m, 0x8f7a), [0x1f57, m as u32, a, lado_de(j) as u32, u32::MAX]);
+                    tirar(m, j, 0);
+                }
+                *((j + 0x22) as *mut i8) = minuto_do_periodo(m);
+            } else if sortear(4) == 0 || u(j, 0x55) != 0 {
+                let a = nome(j);
+                chamar(0x6d6f70, u(m, 0x8f7a), [0x1f58, m as u32, a, lado_de(j) as u32, u32::MAX]);
+            }
+            let p55 = u(j, 0x55);
+            if p55 != 0 {
+                let (a5, a3) = (nome(p55), nome(j));
+                let a6 = lado_de(p55) as u32;
+                let a4 = lado_de(j) as u32;
+                chamar(0x6d6f70, u(m, 0x8f7a), [0x20f6, m as u32, a3, a4, a5 | a6 << 8]);
+            }
+            *((j + 0x1d) as *mut u8) = 0;
+        }
+        if marcados == 0 {
+            continue;
+        }
+        let base = m + 0xd0 * lu;
+        let t = u(m, 0x4792);
+        let clube_do = |l: i8| if l == 0 { u(t, 0x1c) } else { u(t, 0x20) };
+        let p = u(base, 0x904d);
+        let q = *(0xae2364 as *const i32);
+        if p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && byte(p, 0x5f) != 0 && humano_9a01(u(0xb63c98, 0), p) == 0 {
+            if byte(base, 0x904b) == 0 || selecao(clube_do(lado)) != 0 || humano_9a05(u(0xb63c98, 0), u(base, 0x904d)) != 0 {
+                continue;
+            }
+        }
+        let comissao = base + 0x9032;
+        if byte(base, 0x9049) != 0 {
+            chamar(0x6e1090, comissao, [0, 0, 0, 0, 0]);
+        } else {
+            chamar(0x6e1aa0, comissao, [0, 0, 0, 0, 0]);
+            let principal = if lado != 0 { byte(t, 0x41) } else { byte(t, 0x40) } == 0;
+            let v = vaga_marcada(u(0xde1d08, 0), clube_do(lado), principal as u32, 0);
+            let jv = (m as isize + 0x4796 + 0x1be * (v as isize + 20 * lado as isize)) as usize;
+            if byte(jv, 0x19) < 0 {
+                let principal = if lado != 0 { byte(t, 0x41) } else { byte(t, 0x40) } == 0;
+                let k = melhor(comissao);
+                chamar(0x897760, u(0xde1d08, 0), [clube_do(lado) as u32, k as u8 as u32, principal as u32, 0, 0]);
+            }
+            *((m + if lado == 0 { 0xf59e } else { 0xf5a2 }) as *mut usize) = 0;
+            manter(m, lado);
+        }
+        *((m as isize + lado as isize * 2 + 0x8ecc) as *mut i16) = *((m + 0x8ed0) as *const i16);
+        forca(m, lado);
+        marcacao(m);
+    }
+    *((m + 0x8eb5) as *mut u8) = 0;
+}
+
+/// { 0x6d0b60 } (match_eng.cpp): ver `aplicar_trocas_com`.
+unsafe extern "thiscall" fn aplicar_trocas(m: usize) {
+    aplicar_trocas_com(m, &mut |rotina, this, a| {
+        match rotina {
+            0x6d6f70 => comentar(this, [a[0], a[1], a[2], a[3], a[4] & 0xff, (a[4] >> 8) & 0xff, 0]),
+            0x6e1aa0 => {
+                let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6e1aa0usize);
+                f(this);
+            }
+            0x6e1090 => {
+                let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x6e1090usize);
+                f(this, a[0]);
+            }
+            _ => {
+                let f: unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32 = core::mem::transmute(0x897760usize);
+                f(this, a[0] as usize, a[1] as u8 as i8, a[2]);
+            }
+        }
+        0
+    })
 }
 
 // ---------- centesima decima sexta leva: a substituicao (0x6e1090) ----------
@@ -16656,6 +16778,32 @@ unsafe extern "thiscall" fn comparar_guardar_tatica(c: usize) {
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(c), || guardar_tatica(c));
     PLACAR.registrar(igual, || format!("guardar_tatica(humano {}) {}", byte(c, 0x19), primeira_diferenca(&mo, &mr)));
 }
+unsafe extern "thiscall" fn comparar_aplicar_trocas(m: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(287);
+    if gravando_no_topo() {
+        return o(m);
+    }
+    // o motor inteiro (jogadores e comissoes), o sorteio, o erro, 0xae1080 e a linha da tatica dos dois
+    // clubes (o capitao em +0x52, que a substituicao troca)
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m, 0xf5f8), (0xb67a34, 4), (0xae1080, 4)]);
+    let t = *((m + 0x4792) as *const usize);
+    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+        reg.extend(linhas_do_clube(clube));
+    }
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(m), |chamar| {
+        aplicar_trocas_com(m, &mut |rotina, this, args| {
+            let mascara = match rotina {
+                0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
+                0x897760 => [u32::MAX, 0xff, u32::MAX, 0, 0],
+                0x6e1aa0 => [0, 0, 0, 0, 0],
+                _ => [0xff, 0, 0, 0, 0],
+            };
+            chamar(rotina, this, args, mascara)
+        })
+    });
+    PLACAR.registrar(igual && sequencia, || format!("aplicar_trocas() {} chamadas: {}", k, detalhe_fita()));
+}
 unsafe extern "thiscall" fn comparar_substituir(c: usize, goleiro: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(277);
     if gravando_no_topo() {
@@ -17752,6 +17900,7 @@ pub unsafe fn instalar(comparando: bool) {
         ordem_por_condicao as *const () as usize,
         titulares as *const () as usize,
         guardar_tatica as *const () as usize,
+        aplicar_trocas as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -18041,6 +18190,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_ordem_por_condicao as *const () as usize,
         comparar_titulares as *const () as usize,
         comparar_guardar_tatica as *const () as usize,
+        comparar_aplicar_trocas as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -18153,6 +18303,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
+        "motor_aplicar_trocas",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

@@ -130,6 +130,7 @@ EN = {
  'escolher_formacao': 'choose_formation',
  'instrucoes': 'instructions',
  'colocar_na_vaga': 'put_in_place', 'ordem_por_tabela': 'order_by_table', 'ordem_por_condicao': 'order_by_condition', 'titulares': 'starters', 'guardar_tatica': 'store_tactic',
+ 'aplicar_trocas': 'apply_substitutions',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:
