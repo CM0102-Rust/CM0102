@@ -134,6 +134,7 @@ EN = {
  'punicoes': 'punishments',
  'penaltis': 'penalties',
  'aplicar_falta': 'apply_foul',
+ 'dividida': 'tackle',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:
