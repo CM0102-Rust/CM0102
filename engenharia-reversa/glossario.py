@@ -137,6 +137,7 @@ EN = {
  'dividida': 'tackle',
  'disputa': 'contest',
  'responder': 'respond',
+ 'jogada': 'play',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:
