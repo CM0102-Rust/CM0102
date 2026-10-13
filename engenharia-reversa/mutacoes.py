@@ -3,9 +3,11 @@ r"""Autoteste do motor (CM_AUTOTESTE) com mutacoes propositais: cada mutacao tem
 Uso: python mutacoes.py <lista.py> [--sem-base] [--so-base] [--base-completa] [--casos N] [--jogo AAAA-MM-DD]
      ex.: python mutacoes.py mutacoes\leva43.py
 
-A lista e um arquivo Python com MUTACOES = [(nome, trecho_original, trecho_mutado), ...]; cada
+A lista e um arquivo Python com MUTACOES = [(nome, trecho_original, trecho_mutado[, ramo]), ...]; cada
 trecho original tem de aparecer uma unica vez em rust/src/motor.rs (ou no fonte de ARQUIVO = 'data.rs'
-na lista; conferido antes de comecar).
+na lista; conferido antes de comecar). O `ramo` opcional e o nome de uma marca `ramo("...")` da copia
+Rust: a base registra quantas vezes cada ramo rodou (linhas "ramo <nome>: N" no ddraw.log, a cada
+potencia de 2) e a mutacao cujo ramo nao rodou na base e pulada (lacuna medida, sem gastar a rodada).
 Primeiro roda o autoteste sem mutacao com --casos casos (a base tem de dar 0 divergencias; com
 --base-completa, todos os autotestes com 2 milhoes de casos no motor, a cada 5 levas); depois, para
 cada mutacao, troca o trecho, recompila, copia a DLL para jogo/ e roda so o autoteste do motor
@@ -92,6 +94,18 @@ def jogo(data):
     return achados[:1] or [l for l in texto.splitlines() if l.startswith('motor: ') and 'comparacoes' in l][-1:]
 
 
+def ramos_da_base():
+    """Quantas vezes cada ramo marcado rodou na base (o maior valor registrado de cada um)."""
+    texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
+    vistos = {}
+    for l in texto.splitlines():
+        if l.startswith('ramo ') and ': ' in l:
+            nome, n = l[5:].rsplit(': ', 1)
+            if n.strip().isdigit():
+                vistos[nome] = max(vistos.get(nome, 0), int(n))
+    return vistos
+
+
 def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
@@ -108,7 +122,7 @@ def main():
     casos = int(sys.argv[sys.argv.index('--casos') + 1]) if '--casos' in sys.argv else 200000
     data = sys.argv[sys.argv.index('--jogo') + 1] if '--jogo' in sys.argv else None
     original = open(SRC, encoding='utf-8').read()
-    ruins = [(n, original.count(a)) for n, a, _ in mutacoes if original.count(a) != 1]
+    ruins = [(m[0], original.count(m[1])) for m in mutacoes if original.count(m[1]) != 1]
     if ruins:
         sys.exit('trechos que nao aparecem exatamente uma vez: %s' % ruins)
     try:
@@ -120,9 +134,18 @@ def main():
             # base com divergencia: as mutacoes nao provam nada (e a cadeia que chamou para aqui)
             if any('DIVERGENCIA' in l or 'EXCECAO' in l for l in r):
                 sys.exit('base com divergencia: mutacoes canceladas')
+            ramos = ramos_da_base()
+            if ramos:
+                print('ramos na base:', ', '.join('%s %d' % x for x in sorted(ramos.items())), flush=True)
+        else:
+            ramos = None
         if '--so-base' in sys.argv:
             return
-        for nome, velho, novo in mutacoes:
+        for m in mutacoes:
+            nome, velho, novo = m[:3]
+            if len(m) > 3 and ramos is not None and ramos.get(m[3], 0) == 0:
+                print('mutacao %-18s    0s ramo "%s" nao rodou na base: lacuna (pulada)' % (nome, m[3]), flush=True)
+                continue
             open(SRC, 'w', encoding='utf-8').write(original.replace(velho, novo))
             compilar()
             t0 = time.time()

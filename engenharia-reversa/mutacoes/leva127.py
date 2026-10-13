@@ -1,0 +1,16 @@
+# Mutacoes da leva127 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva127.py --jogo 2001-10-01
+# O quarto campo e o ramo (marca ramo("...") no motor.rs): sem passagem na base, a mutacao e pulada.
+MUTACOES = [
+    ('t_fora', "if x < 0 || y < 0 || x >= 9 || y >= 12 {\n        crate::comparacao::ramo(\"disputa fora do campo\");", "if x < 0 || y < 0 || x >= 8 || y >= 12 {\n        crate::comparacao::ramo(\"disputa fora do campo\");", "disputa fora do campo"),
+    ('t_angulo', "            if d as i16 > 0xb4 {\n                d = 0x168 - d;", "            if d as i16 > 0xb3 {\n                d = 0x168 - d;"),
+    ('t_vence', "if nota1 as i16 > nota0 as i16 {", "if nota1 as i16 >= nota0 as i16 {"),
+    ('t_folego', "*w(wv, 0x35) = (*w(wv, 0x35)).wrapping_add(4);", "*w(wv, 0x35) = (*w(wv, 0x35)).wrapping_add(5);", "disputa falta do vencedor"),
+    ('t_agora', "sortear(ftol(ao_gol(d) as f64 * 10.0 + 2.0)) != 0", "sortear(ftol(ao_gol(d) as f64 * 10.0 + 3.0)) != 0", "disputa falta do vencedor"),
+    ('t_pendente', "            *b(m, 0x475b) = x as u8;\n            *((m + 0x4761) as *mut usize) = quem;", "            *b(m, 0x475b) = y as u8;\n            *((m + 0x4761) as *mut usize) = quem;", "disputa falta pendente"),
+    ('t_penalti', "*w(f, 0x35) = (*w(f, 0x35)).wrapping_sub(500);", "*w(f, 0x35) = (*w(f, 0x35)).wrapping_sub(499);", "disputa penalti"),
+    ('t_lado', "let lado_narrado = if modo == 1 { ub(v, 0x27) } else { zero(f) };", "let lado_narrado = if modo == 1 { zero(v) } else { zero(f) };", "disputa punida modo 1"),
+    ('t_extra', "let (alvo, lado_extra) = if modo == 1 { (v, zero(v)) } else { (f, ub(f, 0x27)) };", "let (alvo, lado_extra) = if modo == 1 { (v, zero(v)) } else { (f, zero(f)) };", "disputa punida modo 3"),
+    ('t_defesa', "let forca = if l == 0 { nota_w + 0x11 } else { nota_w - nota_l };", "let forca = if l == 0 { nota_w + 0x11 } else { nota_w - nota_l + 1 };", "disputa defesa"),
+    ('t_leitura', "*w(l, 0x35) = (*w(l, 0x35)).wrapping_add(if papel(l) == 1 { -600 } else { -10 });", "*w(l, 0x35) = (*w(l, 0x35)).wrapping_add(if papel(l) == 1 { -600 } else { -11 });", "disputa leitura 1f5d"),
+    ('t_domina', "*w(wv, 0x19c) = (nota_w - nota_l - 225) as i16;", "*w(wv, 0x19c) = (nota_w - nota_l - 224) as i16;"),
+]

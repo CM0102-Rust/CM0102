@@ -5,6 +5,30 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::registro::linha;
 
+/// Quantas vezes cada ramo marcado de uma rotina portada rodou (mutacoes.py le da base e pula a
+/// mutacao de ramo que nao rodou). No registro a cada potencia de 2: "ramo <nome>: N".
+static RAMOS: std::sync::Mutex<Vec<(&'static str, u64)>> = std::sync::Mutex::new(Vec::new());
+
+/// Conta uma passagem pelo ramo `nome` (para rotinas que nao rodam bilhoes de vezes).
+pub fn ramo(nome: &'static str) {
+    let n = {
+        let mut r = RAMOS.lock().unwrap_or_else(|e| e.into_inner());
+        match r.iter_mut().find(|x| x.0 == nome) {
+            Some(x) => {
+                x.1 += 1;
+                x.1
+            }
+            None => {
+                r.push((nome, 1));
+                1
+            }
+        }
+    };
+    if n.is_power_of_two() {
+        linha(&format!("ramo {}: {}", nome, n));
+    }
+}
+
 /// Quantas divergencias de cada rotina saem detalhadas no registro.
 const DETALHADAS: u64 = 20;
 
@@ -12,11 +36,13 @@ pub struct Placar {
     nome: &'static str,
     total: AtomicU64,
     divergencias: AtomicU64,
+    /// o proximo marco (10, 100, 1000...): sem divisao de 64 bits a cada comparacao
+    marco: AtomicU64,
 }
 
 impl Placar {
     pub const fn novo(nome: &'static str) -> Placar {
-        Placar { nome, total: AtomicU64::new(0), divergencias: AtomicU64::new(0) }
+        Placar { nome, total: AtomicU64::new(0), divergencias: AtomicU64::new(0), marco: AtomicU64::new(10) }
     }
 
     /// Registra uma comparacao. `detalhe` so e montado se for uma das primeiras divergencias.
@@ -28,7 +54,8 @@ impl Placar {
                 linha(&format!("{}: DIVERGENCIA {}", self.nome, detalhe()));
             }
         }
-        if total >= 10 && 10u64.pow(total.ilog10()) == total {
+        if total == self.marco.load(Ordering::Relaxed) {
+            self.marco.store(total * 10, Ordering::Relaxed);
             linha(&format!("{}: {} comparacoes, {} divergencias", self.nome, total, self.divergencias.load(Ordering::Relaxed)));
         }
     }
@@ -50,9 +77,41 @@ impl Placar {
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Memoria(pub Vec<(usize, Vec<u8>)>);
 
+/// Buffers de fotos devolvidos (as fotos do motor inteiro tem 63 KB e eram alocadas e liberadas
+/// a cada comparacao: a maior parte do tempo do modo comparacao).
+/// Buffers devolvidos pelas fotos (reaproveitados em vez de alocar e liberar a cada comparacao).
+static SOBRAS: std::sync::Mutex<Vec<Vec<u8>>> = std::sync::Mutex::new(Vec::new());
+
+fn buffer(n: usize) -> Vec<u8> {
+    let mut sobras = SOBRAS.lock().unwrap_or_else(|e| e.into_inner());
+    match sobras.iter().rposition(|v| v.capacity() >= n && v.capacity() <= 2 * n + 64) {
+        Some(i) => {
+            let mut v = sobras.swap_remove(i);
+            v.clear();
+            v
+        }
+        None => Vec::with_capacity(n),
+    }
+}
+
+impl Drop for Memoria {
+    fn drop(&mut self) {
+        let mut sobras = SOBRAS.lock().unwrap_or_else(|e| e.into_inner());
+        for (_, v) in self.0.drain(..) {
+            if sobras.len() < 256 && v.capacity() > 0 {
+                sobras.push(v);
+            }
+        }
+    }
+}
+
 impl Memoria {
     pub unsafe fn ler(regioes: &[(usize, usize)]) -> Memoria {
-        Memoria(regioes.iter().map(|&(a, n)| (a, core::slice::from_raw_parts(a as *const u8, n).to_vec())).collect())
+        Memoria(regioes.iter().map(|&(a, n)| {
+            let mut v = buffer(n);
+            v.extend_from_slice(core::slice::from_raw_parts(a as *const u8, n));
+            (a, v)
+        }).collect())
     }
     pub unsafe fn escrever(&self) {
         for (a, b) in &self.0 {
