@@ -16,7 +16,12 @@ mutacao que passa com poucos casos pode precisar de mais: refazer so ela com --c
 
 --jogo AAAA-MM-DD: em vez do autoteste, cada mutacao (e a base) roda o jogo real em modo de
 comparacao ate a data (simular.py, com a trava do laboratorio). Para caminhos que o autoteste
-sintetico nao alcanca (o que depende do banco carregado, como a tatica do clube). No fim (inclusive com erro ou Ctrl+C) restaura o motor.rs e recompila.
+sintetico nao alcanca (o que depende do banco carregado, como a tatica do clube).
+
+--carreira AAAA-MM-DD: cada mutacao (e a base) roda a carreira automatica em modo Rust (sem
+comparacao, ~15x mais rapido) ate a data; a mutacao e acusada se a impressao ou a contagem de
+sorteios muda em relacao a base (ou se o jogo cai). A base tem de bater com a do original na mesma
+data (conferido pela cadeia). Nao diz onde divergiu: para isso, o modo --jogo. No fim (inclusive com erro ou Ctrl+C) restaura o motor.rs e recompila.
 
 Se a base divergir, para sem rodar as mutacoes (codigo de saida 1).
 Uma mutacao que passa sem divergencia e uma lacuna do teste (melhorar o gerador de casos) ou uma
@@ -94,6 +99,25 @@ def jogo(data):
     return achados[:1] or [l for l in texto.splitlines() if l.startswith('motor: ') and 'comparacoes' in l][-1:]
 
 
+def carreira(data):
+    # a impressao e os sorteios ao fim da carreira Rust (ou a queda); ver --carreira
+    import laboratorio
+    for _ in range(120):
+        ok, motivo = laboratorio.pode_rodar()
+        if ok:
+            break
+        print('  aguardando memoria: %s' % motivo, flush=True)
+        time.sleep(60)
+    if os.path.exists(LOG):
+        os.remove(LOG)
+    r = subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'rust', '--limite', '900'],
+                       cwd=AQUI, capture_output=True, text=True)
+    texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
+    quedas = [l for l in texto.splitlines() if 'EXCECAO' in l]
+    fim = [l.split(': ', 1)[1].rsplit(', ', 1)[0] for l in r.stdout.splitlines() if l.startswith('execucao 1:')]
+    return quedas[:1] or fim or ['SEM RESULTADO: ' + ' '.join((r.stdout + r.stderr).strip().splitlines()[-2:])]
+
+
 def ramos_da_base():
     """Quantas vezes cada ramo marcado rodou na base (o maior valor registrado de cada um)."""
     texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
@@ -121,6 +145,9 @@ def main():
     SRC = os.path.join(RAIZ, 'rust', 'src', lista.get('ARQUIVO', 'motor.rs'))
     casos = int(sys.argv[sys.argv.index('--casos') + 1]) if '--casos' in sys.argv else 200000
     data = sys.argv[sys.argv.index('--jogo') + 1] if '--jogo' in sys.argv else None
+    fim = sys.argv[sys.argv.index('--carreira') + 1] if '--carreira' in sys.argv else None
+    rodar = (lambda: carreira(fim)) if fim else (lambda: jogo(data)) if data else None
+    base = None
     original = open(SRC, encoding='utf-8').read()
     ruins = [(m[0], original.count(m[1])) for m in mutacoes if original.count(m[1]) != 1]
     if ruins:
@@ -129,8 +156,11 @@ def main():
         compilar()
         if '--sem-base' not in sys.argv:
             t0 = time.time()
-            r = jogo(data) if data else autoteste('1' if '--base-completa' in sys.argv else 'motor:%d' % casos)
+            r = rodar() if rodar else autoteste('1' if '--base-completa' in sys.argv else 'motor:%d' % casos)
             print('sem mutacao (%.0fs):' % (time.time() - t0), r, flush=True)
+            if fim and not r[0].startswith('parou em'):
+                sys.exit('base sem resultado: mutacoes canceladas')
+            base = r[0]
             # base com divergencia: as mutacoes nao provam nada (e a cadeia que chamou para aqui)
             if any('DIVERGENCIA' in l or 'EXCECAO' in l for l in r):
                 sys.exit('base com divergencia: mutacoes canceladas')
@@ -149,7 +179,9 @@ def main():
             open(SRC, 'w', encoding='utf-8').write(original.replace(velho, novo))
             compilar()
             t0 = time.time()
-            r = jogo(data) if data else autoteste('motor:%d' % casos)
+            r = rodar() if rodar else autoteste('motor:%d' % casos)
+            if fim and base:
+                r = [('IGUAL A BASE (escapou): ' if r[0] == base else 'ACUSADA: ') + r[0]]
             print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, r[0][:150] if r else 'SEM RESULTADO'), flush=True)
     finally:
         open(SRC, 'w', encoding='utf-8').write(original)
