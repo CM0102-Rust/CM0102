@@ -144,6 +144,18 @@ unsafe fn hash_memoria(inicio: usize, fim: usize) -> u64 {
         .fold(0xcbf29ce484222325u64, |h, &w| (h ^ w).wrapping_mul(0x100000001b3).rotate_left(17))
 }
 
+/// Impressao das partidas: o hash de cada motor de partida ao ser liberado (o estado de fim de jogo
+/// que nao chega ao sorteio, como o desgaste dos jogadores), encadeado na ordem das partidas.
+static PARTIDAS: AtomicU64 = AtomicU64::new(0);
+static QUANTAS: AtomicU64 = AtomicU64::new(0);
+
+pub unsafe fn partida_terminou(motor: usize) {
+    let h = hash_memoria(motor, motor + (0xf63b & !7));
+    let v = PARTIDAS.load(Ordering::Relaxed);
+    PARTIDAS.store(v.rotate_left(5) ^ h, Ordering::Relaxed);
+    QUANTAS.fetch_add(1, Ordering::Relaxed);
+}
+
 /// Com o rastro ligado, o diario ganha o hash de toda a memoria do jogo (heap fixa e .data do exe,
 /// 0x987000..0xde463c): acha o primeiro dia em que qualquer dado diverge, antes de chegar ao sorteio.
 unsafe fn hash_do_jogo() -> String {
@@ -192,6 +204,7 @@ pub unsafe fn sorteio(pedido: i32, ponteiro: u32, deslocamento: i32, rand: u32) 
         "SIMULACAO parou em {}-{:03} sorteios={} ponteiro={:#x} deslocamento={:#x} rand={:#x}",
         a, d, n, ponteiro, deslocamento, rand
     ));
+    linha(&format!("partidas: {} motores, impressao {:016x}", QUANTAS.load(Ordering::Relaxed), PARTIDAS.load(Ordering::Relaxed)));
     linha(&format!("alocador: pico {} MB", crate::alocador::pico() >> 20));
     despejar_cobertura();
     fechar_rastro();

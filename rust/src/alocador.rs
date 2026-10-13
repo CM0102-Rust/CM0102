@@ -164,6 +164,10 @@ unsafe extern "system" fn heap_free(h: usize, flags: u32, p: usize) -> i32 {
         return f(h, flags, p);
     }
     if p != 0 {
+        // o motor de partida (0xf63b bytes, 0xf640 com o arredondamento do CRT; jogadores em campo inclusive) entra na impressao das partidas
+        if com(|a| a.tamanho(p)) == 0xf640 {
+            crate::simulacao::partida_terminou(p);
+        }
         com(|a| a.liberar(p));
     }
     1

@@ -21,7 +21,10 @@ sintetico nao alcanca (o que depende do banco carregado, como a tatica do clube)
 --carreira AAAA-MM-DD: cada mutacao (e a base) roda a carreira automatica em modo Rust (sem
 comparacao, ~15x mais rapido) ate a data; a mutacao e acusada se a impressao ou a contagem de
 sorteios muda em relacao a base (ou se o jogo cai). A base tem de bater com a do original na mesma
-data (conferido pela cadeia). Nao diz onde divergiu: para isso, o modo --jogo. No fim (inclusive com erro ou Ctrl+C) restaura o motor.rs e recompila.
+data (conferido pela cadeia). A impressao inclui a das partidas (hash de cada motor de partida ao
+ser liberado): pega o que nao chega aos sorteios. Nao diz onde divergiu: para isso, o modo --jogo.
+--confirmar AAAA-MM-DD (com --carreira): a mutacao que escapar da carreira e refeita no jogo em
+modo de comparacao ate a data (esquema hibrido: triagem rapida, confirmacao so do que escapou). No fim (inclusive com erro ou Ctrl+C) restaura o motor.rs e recompila.
 
 Se a base divergir, para sem rodar as mutacoes (codigo de saida 1).
 Uma mutacao que passa sem divergencia e uma lacuna do teste (melhorar o gerador de casos) ou uma
@@ -148,6 +151,7 @@ def main():
     fim = sys.argv[sys.argv.index('--carreira') + 1] if '--carreira' in sys.argv else None
     rodar = (lambda: carreira(fim)) if fim else (lambda: jogo(data)) if data else None
     base = None
+    confirmar = sys.argv[sys.argv.index('--confirmar') + 1] if '--confirmar' in sys.argv else None
     original = open(SRC, encoding='utf-8').read()
     ruins = [(m[0], original.count(m[1])) for m in mutacoes if original.count(m[1]) != 1]
     if ruins:
@@ -182,6 +186,10 @@ def main():
             r = rodar() if rodar else autoteste('motor:%d' % casos)
             if fim and base:
                 r = [('IGUAL A BASE (escapou): ' if r[0] == base else 'ACUSADA: ') + r[0]]
+                if confirmar and r[0].startswith('IGUAL'):
+                    print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, r[0][:150]), flush=True)
+                    t0 = time.time()
+                    r = ['comparando: ' + (jogo(confirmar) or ['SEM RESULTADO'])[0]]
             print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, r[0][:150] if r else 'SEM RESULTADO'), flush=True)
     finally:
         open(SRC, 'w', encoding='utf-8').write(original)

@@ -86,7 +86,9 @@ def rodar(args, semente):
     if not m:
         return None, segundos, 'o jogo saiu sem chegar na data (codigo %s); veja jogo\\ddraw.log' % p.returncode
     impressao = hashlib.sha1(' '.join(m.groups()[1:]).encode()).hexdigest()[:16]
+    mp = re.search(r'^partidas: (\d+) motores, impressao (\w+)', texto, re.M)
     info = {'data': m.group(1), 'sorteios': int(m.group(2)), 'impressao': impressao,
+            'partidas': '%s/%s' % mp.groups() if mp else '-',
             'comparacoes': re.findall(r'^(\w+): (\d+) comparacoes, (\d+) divergencias', texto, re.M),
             'divergencias': len(re.findall(r'DIVERGENCIA', texto)),
             'avisos': re.findall(r'^(?:alocador|cobertura): AVISO.*', texto, re.M),
@@ -161,8 +163,8 @@ def main():
                 print('execucao %d: %s (%.0f s)' % (i + 1, erro, seg))
                 resultados.append(None)
                 continue
-            print('execucao %d: parou em %s, %d sorteios, impressao %s, %.0f s' % (
-                i + 1, info['data'], info['sorteios'], info['impressao'], seg))
+            print('execucao %d: parou em %s, %d sorteios, impressao %s, partidas %s, %.0f s' % (
+                i + 1, info['data'], info['sorteios'], info['impressao'], info['partidas'], seg))
             for aviso in info['avisos']:
                 print('    ' + aviso)
             if info['cobertura']:
@@ -200,7 +202,7 @@ def main():
         print('ATENCAO: game.cfg diferente da copia em', copia)
     ok = [r for r in resultados if r]
     if args.repetir > 1 and ok:
-        iguais = len({r['impressao'] for r in ok}) == 1 and len(ok) == len(resultados)
+        iguais = len({(r['impressao'], r['partidas']) for r in ok}) == 1 and len(ok) == len(resultados)
         print('determinismo: %s' % ('OK, todas as execucoes iguais' if iguais else 'DIFERENTES'))
     return 0 if ok and len(ok) == len(resultados) else 1
 
