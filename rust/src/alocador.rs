@@ -298,11 +298,35 @@ unsafe extern "system" fn virtual_alloc(end: usize, tam: usize, tipo: u32, prot:
 
 const GMEM_ZEROINIT: u32 = 0x40;
 
+/// Os blocos vivos do GlobalAlloc (o banco de dados do jogo), para a impressao da memoria.
+static BANCO: Mutex<Vec<(usize, usize)>> = Mutex::new(Vec::new());
+
+/// O tamanho do bloco que comeca em `p` na regiao fixa, se `p` parece mesmo o inicio de um bloco
+/// (cabecalho coerente: capacidade de classe, nao menor que a do tamanho pedido; o realocar mantem
+/// a capacidade ao encolher).
+pub unsafe fn bloco(p: usize) -> Option<usize> {
+    let (ini, topo) = regiao_do_jogo();
+    if p < ini + CABECALHO || p >= topo || p & 15 != 0 {
+        return None;
+    }
+    let (cap, n) = (*((p - 16) as *const usize), *((p - 12) as *const usize));
+    (n > 0 && cap >= capacidade(n) && capacidade(cap) == cap && p + cap <= topo).then_some(n)
+}
+
+pub fn blocos_do_banco() -> Vec<(usize, usize)> {
+    BANCO.lock().unwrap_or_else(|e| e.into_inner()).clone()
+}
+
 unsafe extern "system" fn global_alloc(flags: u32, n: usize) -> usize {
-    com(|a| a.alocar(n, flags & GMEM_ZEROINIT != 0))
+    let p = com(|a| a.alocar(n, flags & GMEM_ZEROINIT != 0));
+    if p != 0 {
+        BANCO.lock().unwrap_or_else(|e| e.into_inner()).push((p, n));
+    }
+    p
 }
 unsafe extern "system" fn global_free(p: usize) -> usize {
     if p != 0 {
+        BANCO.lock().unwrap_or_else(|e| e.into_inner()).retain(|b| b.0 != p);
         com(|a| a.liberar(p));
     }
     0

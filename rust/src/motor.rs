@@ -402,8 +402,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6c9cd0, bytes: &[0x83, 0xec, 0x4c, 0x8a, 0x44, 0x24, 0x50] },
     Prologo { endereco: 0x6f5c30, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x70dfd0, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x6b74a0, bytes: &[0xa1, 0xc8, 0x7d, 0xb6, 0x00] },
 ];
-const N: usize = 295;
+const N: usize = 296;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -7614,6 +7615,165 @@ unsafe fn jogada_com(j: usize, forca: i16, altura: f32, estilo: i8, forte: u8, c
     *b(j, 0x2b) = (*b(j, 0x2b)).wrapping_add(sortear(2).wrapping_add(1) as u8);
     *w(j, 0x198) = lance;
     1
+}
+
+// ---------- centesima trigesima leva: os eventos do pos-jogo (0x6b74a0) ----------
+
+/// { 0x6b74a0 } (cdecl, match_day.cpp): depois da partida, percorre a lista de eventos em
+/// [0xb67dc8] (cursor reposto no inicio; 0x68d1b0 da o proximo) e trata os dos dois clubes da
+/// `partida` (+0x1c, +0x20) que nao estao fora (0x53b900). Evento: +0 pessoa, +4 clube, +8 marca,
+/// +0x13 tipo, +0x15 outra pessoa. Tipo 0x82: 0x759610 com as duas pessoas. 0x13: com o contrato
+/// (0x4cf5f0), sem marca tira o 0x40 (0x8676d0) e o 0x2000000 (0x8674e0); com marca, se o 0x40 ja
+/// esta e +0x5b < 6, ou por sorteio(+0x5b) == 0, a noticia 0x72c1f0 e o 0x2000000 (0x867700); senao
+/// poe o 0x40 (0x867560). 0x0a: poe o 0x4000000 e, com ficha (+0x61), se sorteio(+0x5d) <
+/// sorteio(5), 0x735840 ou o contrato com mais que o 0x4000000, e +0xb da ficha > sorteio(2000) +
+/// 4500, a noticia. 0x0b: 0x7daf50. 0x1e: por sorteio(+0x5a) < sorteio(10) o 0x40000; 0x733a60;
+/// com 0x600a50 zero e o tecnico (+0xcf) de ficha +0x14 > 15, 0x547af0 e -50 na palavra +0xa da linha
+/// do clube em [[0xb67a44]] (linhas de 0x49 bytes); senao -75 em +0xa e +0xc (entre 1 e 10000).
+/// Os outros: por sorteio(+0x5a) < sorteio(15, 8 ou 6 pela idade +0x18 e +0x5b) o 0x40000, e a
+/// noticia com o tipo.
+unsafe extern "C" fn eventos_do_pos_jogo(partida: usize) {
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
+    let fora: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x53b900usize);
+    let duas: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x759610usize);
+    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let marcas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x8676f0usize);
+    let tirar_40: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x8676d0usize);
+    let tirar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x8674e0usize);
+    let por_40: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x867560usize);
+    let por: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x867700usize);
+    let noticia: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32) = core::mem::transmute(0x72c1f0usize);
+    let protegido: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x735840usize);
+    let tipo_0b: unsafe extern "C" fn(usize, usize, usize) = core::mem::transmute(0x7daf50usize);
+    let tipo_1e: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x733a60usize);
+    let teste_600a50: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x600a50usize);
+    let reserva: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547af0usize);
+    let lista = || *(0xb67dc8 as *const usize);
+    let noticias = || *(0xb6b7c8 as *const usize);
+    let ler = |p: usize| core::ptr::read_unaligned(p as *const i32);
+    let pessoa = |id: i32| (*(0xae23bc as *const usize) as isize + id as isize * 0x6e) as usize;
+    let c45 = |c: usize| core::ptr::read_unaligned((c + 0x45) as *const u32);
+    // a palavra +o da linha do clube em [[0xb67a44]] menos `menos`, entre 1 e 10000
+    let ajustar = |clube: usize, o: usize, menos: i16| {
+        let linha = (**(0xb67a44 as *const *const usize) as isize + ler(clube) as isize * 0x49) as usize;
+        let w = (linha + o) as *mut i16;
+        let v = core::ptr::read_unaligned(w).wrapping_sub(menos);
+        core::ptr::write_unaligned(w, v.clamp(1, 10000));
+    };
+    if lista() == 0 {
+        return;
+    }
+    core::ptr::write_unaligned((lista() + 0xa) as *mut u32, core::ptr::read_unaligned((lista() + 2) as *const u32));
+    let mut k = 0i32;
+    while k < core::ptr::read_unaligned(lista() as *const i16) as i32 {
+        let ev = proximo(lista());
+        if ev == 0 {
+            return;
+        }
+        k += 1;
+        let clube = (*(0xae23b4 as *const usize) as isize + ler(ev + 4) as isize * 0x245) as usize;
+        if (clube != *((partida + 0x1c) as *const usize) && clube != *((partida + 0x20) as *const usize)) || fora(clube) != 0 {
+            continue;
+        }
+        let tipo = core::ptr::read_unaligned((ev + 0x13) as *const u16);
+        match tipo {
+            0x82 => {
+                crate::comparacao::ramo("eventos 0x82");
+                duas(noticias(), pessoa(ler(ev)), pessoa(ler(ev + 0x15)), partida);
+            }
+            0x0b => {
+                crate::comparacao::ramo("eventos 0x0b");
+                tipo_0b(pessoa(ler(ev)), clube, partida);
+            }
+            _ => {
+                let p = pessoa(ler(ev));
+                let c = contrato(*(0xae1050 as *const usize), p, clube);
+                if c == 0 {
+                    continue;
+                }
+                match tipo {
+                    0x13 if ler(ev + 8) == 0 => {
+                        crate::comparacao::ramo("eventos 0x13 sem marca");
+                        if marcas(c) & 0x40 != 0 {
+                            tirar_40(c, 0x40);
+                        }
+                        if c45(c) & 0x2000000 != 0 {
+                            tirar(c, 0x2000000);
+                        }
+                    }
+                    0x13 => {
+                        let ja = marcas(c) & 0x40 != 0 && byte(p, 0x5b) < 6;
+                        if !ja && sortear(byte(p, 0x5b) as i32) != 0 {
+                            crate::comparacao::ramo("eventos 0x13 marca");
+                            if marcas(c) & 0x40 == 0 {
+                                por_40(c, 0x40);
+                            }
+                        } else {
+                            crate::comparacao::ramo("eventos 0x13 noticia");
+                            noticia(noticias(), p, clube, 0x13, partida, 0);
+                            if c45(c) & 0x2000000 == 0 {
+                                por(c, 0x2000000, 0);
+                            }
+                        }
+                    }
+                    0x0a => {
+                        crate::comparacao::ramo("eventos 0x0a");
+                        por(c, 0x4000000, 0);
+                        if *((p + 0x61) as *const usize) == 0 {
+                            continue;
+                        }
+                        let a = sortear(byte(p, 0x5d) as i32);
+                        let b = sortear(5);
+                        if a < b || protegido(noticias(), p) != 0 || c45(c) != 0x4000000 {
+                            let r = sortear(2000) + 0x1194;
+                            let ficha = *((p + 0x61) as *const usize);
+                            if core::ptr::read_unaligned((ficha + 0xb) as *const i16) as i32 > r {
+                                crate::comparacao::ramo("eventos 0x0a noticia");
+                                noticia(noticias(), p, clube, 0xa, partida, 0);
+                            }
+                        }
+                    }
+                    0x1e => {
+                        crate::comparacao::ramo("eventos 0x1e");
+                        let a = sortear(byte(p, 0x5a) as i32);
+                        if a < sortear(10) {
+                            por(c, 0x40000, 0);
+                        }
+                        tipo_1e(noticias(), ev, partida);
+                        let r = teste_600a50(clube, 1, 1, 0, 0);
+                        let t = *((clube + 0xcf) as *const usize);
+                        if r == 0 && t != 0 && *((t + 0x69) as *const usize) != 0 && byte(*((t + 0x69) as *const usize), 0x14) > 0xf {
+                            crate::comparacao::ramo("eventos 0x1e tecnico");
+                            reserva(t, pessoa(ler(ev)), 1);
+                            if clube != 0 {
+                                ajustar(clube, 0xa, 0x32);
+                            }
+                        } else if clube != 0 {
+                            crate::comparacao::ramo("eventos 0x1e sem tecnico");
+                            ajustar(clube, 0xa, 0x4b);
+                            ajustar(clube, 0xc, 0x4b);
+                        }
+                    }
+                    _ => {
+                        crate::comparacao::ramo("eventos outros");
+                        let idade = byte(p, 0x18);
+                        let a = sortear(byte(p, 0x5a) as i32);
+                        let b = if idade < 0x18 && byte(p, 0x5b) < 0xf {
+                            sortear(0xf)
+                        } else if idade < 0x20 {
+                            sortear(8)
+                        } else {
+                            sortear(6)
+                        };
+                        if a < b {
+                            por(c, 0x40000, 0);
+                        }
+                        noticia(noticias(), p, clube, tipo as u32, partida, 0);
+                    }
+                }
+            }
+        }
+    }
 }
 
 /// { 0x70dfd0 } (ret 0x10, match_pl.cpp): ver `jogada_com`.
@@ -20144,6 +20304,7 @@ pub unsafe fn instalar(comparando: bool) {
         disputa as *const () as usize,
         responder as *const () as usize,
         jogada as *const () as usize,
+        eventos_do_pos_jogo as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -20441,6 +20602,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_disputa as *const () as usize,
         porta_6f5c30 as *const () as usize,
         porta_70dfd0 as *const () as usize,
+        eventos_do_pos_jogo as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -20553,7 +20715,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -20562,6 +20724,11 @@ pub unsafe fn instalar(comparando: bool) {
         }
         // na comparacao a 0x6f5c30 e a 0x70dfd0 ja tem a porta (instalada antes), que tambem as compara
         if comparando && (PROLOGOS[i].endereco == 0x6f5c30 || PROLOGOS[i].endereco == 0x70dfd0) {
+            continue;
+        }
+        // 0x6b74a0 (130a leva) nao tem comparacao lado a lado: chama 14 rotinas do banco com efeitos;
+        // a carreira (heap inteira igual a do original) e as mutacoes pela carreira a conferem
+        if comparando && PROLOGOS[i].endereco == 0x6b74a0 {
             continue;
         }
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {

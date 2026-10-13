@@ -138,6 +138,7 @@ EN = {
  'disputa': 'contest',
  'responder': 'respond',
  'jogada': 'play',
+ 'eventos_do_pos_jogo': 'post_match_events',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

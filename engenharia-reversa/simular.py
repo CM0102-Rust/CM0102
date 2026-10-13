@@ -89,6 +89,7 @@ def rodar(args, semente):
     mp = re.search(r'^partidas: (\d+) motores, impressao (\w+)', texto, re.M)
     info = {'data': m.group(1), 'sorteios': int(m.group(2)), 'impressao': impressao,
             'partidas': '%s/%s' % mp.groups() if mp else '-',
+            'banco': (re.findall(r'^memoria: banco ([0-9a-f]{16})', texto, re.M) or ['-'])[-1],
             'comparacoes': re.findall(r'^(\w+): (\d+) comparacoes, (\d+) divergencias', texto, re.M),
             'divergencias': len(re.findall(r'DIVERGENCIA', texto)),
             'avisos': re.findall(r'^(?:alocador|cobertura): AVISO.*', texto, re.M),
@@ -163,8 +164,8 @@ def main():
                 print('execucao %d: %s (%.0f s)' % (i + 1, erro, seg))
                 resultados.append(None)
                 continue
-            print('execucao %d: parou em %s, %d sorteios, impressao %s, partidas %s, %.0f s' % (
-                i + 1, info['data'], info['sorteios'], info['impressao'], info['partidas'], seg))
+            print('execucao %d: parou em %s, %d sorteios, impressao %s, partidas %s, banco %s, %.0f s' % (
+                i + 1, info['data'], info['sorteios'], info['impressao'], info['partidas'], info['banco'], seg))
             for aviso in info['avisos']:
                 print('    ' + aviso)
             if info['cobertura']:
@@ -202,7 +203,7 @@ def main():
         print('ATENCAO: game.cfg diferente da copia em', copia)
     ok = [r for r in resultados if r]
     if args.repetir > 1 and ok:
-        iguais = len({(r['impressao'], r['partidas']) for r in ok}) == 1 and len(ok) == len(resultados)
+        iguais = len({(r['impressao'], r['partidas'], r['banco']) for r in ok}) == 1 and len(ok) == len(resultados)
         print('determinismo: %s' % ('OK, todas as execucoes iguais' if iguais else 'DIFERENTES'))
     return 0 if ok and len(ok) == len(resultados) else 1
 

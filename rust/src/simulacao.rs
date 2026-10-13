@@ -156,6 +156,40 @@ pub unsafe fn partida_terminou(motor: usize) {
     QUANTAS.fetch_add(1, Ordering::Relaxed);
 }
 
+/// A memoria do jogo, encadeada dia a dia: os blocos do banco de dados. A heap inteira mistura a
+/// interface (buffers de imagem, telas), que o jogo desenha em momentos que dependem da velocidade e
+/// varia entre o Rust e o original sem mudar o jogo (13/10/2026). Entram os blocos apontados pela
+/// tabela de ponteiros do banco (0xae2300..0xae2400: pessoas, clubes, ...), a tabela em [[0xb67a44]]
+/// e os blocos do GlobalAlloc.
+static MEMORIA: AtomicU64 = AtomicU64::new(0);
+
+pub unsafe fn blocos_do_jogo() -> Vec<(usize, usize)> {
+    let mut v = crate::alocador::blocos_do_banco();
+    let mut ponteiros: Vec<usize> = (0xae2300..0xae2400).step_by(4).map(|g| *(g as *const usize)).collect();
+    if *(0xb67a44 as *const usize) != 0 {
+        ponteiros.push(**(0xb67a44 as *const *const usize));
+    }
+    for p in ponteiros {
+        if let Some(n) = crate::alocador::bloco(p) {
+            if !v.iter().any(|b| b.0 == p) {
+                v.push((p, n));
+            }
+        }
+    }
+    v
+}
+
+unsafe fn hash_da_memoria() -> u64 {
+    blocos_do_jogo().iter().fold(0u64, |h, &(p, n)| h.rotate_left(7) ^ hash_memoria(p, p + (n & !7)))
+}
+
+/// O hash encadeado ate agora, com a memoria deste momento.
+unsafe fn memoria_do_dia() -> u64 {
+    let v = MEMORIA.load(Ordering::Relaxed).rotate_left(5) ^ hash_da_memoria();
+    MEMORIA.store(v, Ordering::Relaxed);
+    v
+}
+
 /// Com o rastro ligado, o diario ganha o hash de toda a memoria do jogo (heap fixa e .data do exe,
 /// 0x987000..0xde463c): acha o primeiro dia em que qualquer dado diverge, antes de chegar ao sorteio.
 unsafe fn hash_do_jogo() -> String {
@@ -194,7 +228,8 @@ pub unsafe fn sorteio(pedido: i32, ponteiro: u32, deslocamento: i32, rand: u32) 
     static ULTIMO_DIA: AtomicU64 = AtomicU64::new(0);
     let hoje = (a as u64) << 16 | d as u64;
     if ULTIMO_DIA.swap(hoje, Ordering::Relaxed) != hoje {
-        linha(&format!("dia {}-{:03} sorteios={} ponteiro={:#x} deslocamento={:#x} rand={:#x} pessoas={:016x} relogios={:?}{}", a, d, n, ponteiro, deslocamento, rand, hash_pessoas(),
+        let mem = memoria_do_dia();
+        linha(&format!("dia {}-{:03} sorteios={} ponteiro={:#x} deslocamento={:#x} rand={:#x} pessoas={:016x} memoria={:016x} relogios={:?}{}", a, d, n, ponteiro, deslocamento, rand, hash_pessoas(), mem,
             RELOGIOS.iter().map(|r| r.load(Ordering::Relaxed)).collect::<Vec<_>>(), hash_do_jogo()));
     }
     if (a, d) < (ano, dia) || a < 1900 {
@@ -205,6 +240,21 @@ pub unsafe fn sorteio(pedido: i32, ponteiro: u32, deslocamento: i32, rand: u32) 
         a, d, n, ponteiro, deslocamento, rand
     ));
     linha(&format!("partidas: {} motores, impressao {:016x}", QUANTAS.load(Ordering::Relaxed), PARTIDAS.load(Ordering::Relaxed)));
+    {
+        let (ini, topo) = crate::alocador::regiao_do_jogo();
+        // diagnostico: com jogo\heap_fim.txt (o caminho de saida dentro), despeja a heap do jogo no fim
+        // (um arquivo, e nao uma variavel de ambiente, que deslocaria a heap e mudaria a carreira)
+        let marcador = std::env::current_exe().map(|p| p.with_file_name("heap_fim.txt")).unwrap_or_default();
+        if let Ok(arq) = std::fs::read_to_string(marcador).map(|t| t.trim().to_string()) {
+            if ini != 0 {
+                let _ = std::fs::write(&arq, core::slice::from_raw_parts(ini as *const u8, topo - ini));
+                linha(&format!("memoria: heap em {:#x}", ini));
+            }
+        }
+        let _ = ini;
+        let blocos = blocos_do_jogo();
+        linha(&format!("memoria: banco {:016x} ({} blocos, {} KB)", memoria_do_dia(), blocos.len(), blocos.iter().map(|b| b.1).sum::<usize>() >> 10));
+    }
     linha(&format!("alocador: pico {} MB", crate::alocador::pico() >> 20));
     despejar_cobertura();
     fechar_rastro();

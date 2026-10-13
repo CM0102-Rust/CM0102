@@ -22,7 +22,8 @@ sintetico nao alcanca (o que depende do banco carregado, como a tatica do clube)
 comparacao, ~15x mais rapido) ate a data; a mutacao e acusada se a impressao ou a contagem de
 sorteios muda em relacao a base (ou se o jogo cai). A base tem de bater com a do original na mesma
 data (conferido pela cadeia). A impressao inclui a das partidas (hash de cada motor de partida ao
-ser liberado): pega o que nao chega aos sorteios. Nao diz onde divergiu: para isso, o modo --jogo.
+ser liberado) e a do banco (hash diario dos blocos do banco de dados, ver simulacao.rs): pega o que nao
+chega aos sorteios. Nao diz onde divergiu: para isso, o modo --jogo.
 --confirmar AAAA-MM-DD (com --carreira): a mutacao que escapar da carreira e refeita no jogo em
 modo de comparacao ate a data (esquema hibrido: triagem rapida, confirmacao so do que escapou). No fim (inclusive com erro ou Ctrl+C) restaura o motor.rs e recompila.
 
