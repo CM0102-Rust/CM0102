@@ -405,8 +405,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6b74a0, bytes: &[0xa1, 0xc8, 0x7d, 0xb6, 0x00] },
     Prologo { endereco: 0x6b6cc0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
     Prologo { endereco: 0x6b79a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x6b66a0, bytes: &[0xa1, 0x04, 0x57, 0xa1, 0x00] },
 ];
-const N: usize = 298;
+const N: usize = 299;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -7632,6 +7633,135 @@ unsafe fn jogada_com(j: usize, forca: i16, altura: f32, estilo: i8, forte: u8, c
     *b(j, 0x2b) = (*b(j, 0x2b)).wrapping_add(sortear(2).wrapping_add(1) as u8);
     *w(j, 0x198) = lance;
     1
+}
+
+// ---------- centesima trigesima terceira leva: a partida sem o humano (0x6b66a0) ----------
+
+/// As marcas das selecoes dos tecnicos humanos (0xb67a58 + id), que a 0x6b66a0 poe uma vez
+/// (com [0xa15704] ligado): para cada vaga de humano em 0xb63d60 (de 0x48 em 0x48 ate 0xb64738) com
+/// +0x11c bit 2 e selecao (+0x71).
+unsafe fn marcas_das_selecoes() -> Vec<usize> {
+    let mut v = Vec::new();
+    for e in (0xb63d60usize..0xb64738).step_by(0x48) {
+        let p = *(e as *const usize);
+        if p != 0 && *((p + 0x11c) as *const u8) & 2 != 0 {
+            let q = *((p + 0x71) as *const usize);
+            if q != 0 {
+                v.push(0xb67a58 + *(q as *const usize));
+            }
+        }
+    }
+    v
+}
+
+/// { 0x6b66a0 } (cdecl, match_day.cpp): 1 se a `partida` nao envolve o humano, pela 0x7f9720. Antes,
+/// uma vez ([0xa15704]), marca as selecoes dos humanos em 0xb67a58. Sem [0xdd7118]: 1. Devolve 0 se:
+/// algum dos clubes (+0x1c, +0x20) e de humano (0x600a50), ou o clube ligado a ele (0x540a50); a
+/// competicao (+0) e uma de duas fixas ([0x9cf7bc], [0x9cf6e4]); e a de [0x9cf958] com um dos dois
+/// clubes fixos ([0x9cf2e4], [0x9cf510], linhas de 0x122 em [0xae23a8]) humano (+0x11c bit 2); um dos
+/// 16 humanos no fim da tabela de pessoas (+0x5f = 1) treina clube da mesma nacao (+0x57) de um dos
+/// dois. Na competicao [0x9cf684] sem clube humano, direto a 0x7f9720. Fora de selecao (0x53b900) com
+/// 0x5c2990, ou na competicao [0x9cf6f8]: 0 se o +0x80 dos dois somar mais de 12000. Senao a vaga da
+/// 0x48dd70 (pela tabela em 0xb63d74): 0 ou 1 da 0; nas 3 a 7 com a selecao da competicao marcada, 0;
+/// vaga de humano com +0x11c bit 2, 0. No fim: 1 se a 0x7f9720 der 0.
+unsafe extern "C" fn partida_sem_humano(partida: usize) -> u32 {
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x600a50usize);
+    let ligado: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x540a50usize);
+    let selecao: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x53b900usize);
+    let f5c2990: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(0x5c2990usize);
+    let vaga_de: unsafe extern "C" fn(u32, usize) -> u32 = core::mem::transmute(0x48dd70usize);
+    let f7f9720: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(0x7f9720usize);
+    let g = |a: usize| *(a as *const usize);
+    let ler = |a: usize| core::ptr::read_unaligned(a as *const i32);
+    let w = |a: usize| core::ptr::read_unaligned(a as *const i16) as i32;
+    if g(0xa15704) != 0 {
+        for e in marcas_das_selecoes() {
+            *(e as *mut u8) = 1;
+        }
+        *(0xa15704 as *mut u32) = 0;
+    }
+    if g(0xdd7118) == 0 {
+        return 1;
+    }
+    let (c1, c2) = (g(partida + 0x1c), g(partida + 0x20));
+    if humano(c1, 1, 1, 0, 0) != 0 || humano(c2, 1, 1, 0, 0) != 0 {
+        return 0;
+    }
+    for c in [c1, c2] {
+        if ligado(c, 0, 1) != 0 && humano(ligado(c, 0, 1), 1, 1, 0, 0) != 0 {
+            crate::comparacao::ramo("sem humano clube ligado");
+            return 0;
+        }
+    }
+    let final_ = || (f7f9720(g(0xb74448), partida) == 0) as u32;
+    let comp = ler(partida);
+    if comp == ler(0x9cf7bc) || comp == ler(0x9cf6e4) {
+        return 0;
+    }
+    if comp == ler(0x9cf958) {
+        let base = g(0xae23a8);
+        for k in [ler(0x9cf2e4), ler(0x9cf510)] {
+            if *((base as isize + k as isize * 0x122 + 0x11c) as *const u8) & 2 != 0 {
+                return 0;
+            }
+        }
+    }
+    if comp == ler(0x9cf684) && humano(c1, 1, 1, 0, 0) == 0 && humano(c2, 1, 1, 0, 0) == 0 {
+        crate::comparacao::ramo("sem humano competicao direta");
+        return final_();
+    }
+    // os 16 humanos no fim da tabela de pessoas
+    let base = g(0xae23bc);
+    for k in 0..16isize {
+        let pe = (base as isize + (ler(0xae2364) as isize - 1 - k) * 0x6e) as usize;
+        if pe != 0 && *((pe + 0x5f) as *const u8) == 1 && g(pe + 0x39) != 0 {
+            let nacao = ler(g(pe + 0x39) + 0x57);
+            if nacao == ler(c1 + 0x57) || nacao == ler(c2 + 0x57) {
+                crate::comparacao::ramo("sem humano tecnico da nacao");
+                return 0;
+            }
+        }
+    }
+    if (selecao(c2) == 0 && f5c2990(g(0xae2c74), ler(partida + 0x14) as u32) != 0) || comp == ler(0x9cf6f8) {
+        crate::comparacao::ramo("sem humano pela reputacao");
+        return if w(c2 + 0x80) + w(c1 + 0x80) > 0x2ee0 { 0 } else { final_() };
+    }
+    let mut x = vaga_de(ler(partida + 0x14) as u32, partida) as u8;
+    if let Some(k) = (0xb63d74usize..0xb6474c).step_by(0x48).position(|e| *(e as *const u8) == x) {
+        x = k as u8;
+    }
+    if x == 0 || x == 1 {
+        return 0;
+    }
+    if matches!(x, 3..=7) {
+        let q = g(g(partida + 0x14) + 0x59);
+        if q != 0 && *((0xb67a58 + g(q)) as *const u8) != 0 {
+            crate::comparacao::ramo("sem humano selecao marcada");
+            return 0;
+        }
+    }
+    if (x as i8) > -1 {
+        let e = g(0xb63d60 + x as usize * 0x48);
+        if e != 0 && *((e + 0x11c) as *const u8) & 2 != 0 {
+            return 0;
+        }
+    }
+    crate::comparacao::ramo("sem humano 7f9720");
+    final_()
+}
+
+unsafe extern "C" fn comparar_partida_sem_humano(partida: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize) -> u32>(298);
+    if gravando_no_topo() {
+        return o(partida);
+    }
+    let mut reg = vec![(0xa15704usize, 4usize)];
+    if *(0xa15704 as *const usize) != 0 {
+        reg.extend(marcas_das_selecoes().into_iter().map(|e| (e, 1)));
+    }
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(partida), || partida_sem_humano(partida));
+    PLACAR.registrar(igual && r == n, || format!("partida_sem_humano original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+    r
 }
 
 // ---------- centesima trigesima segunda leva: o clube no pos-jogo (0x6b79a0) ----------
@@ -20885,6 +21015,7 @@ pub unsafe fn instalar(comparando: bool) {
         eventos_do_pos_jogo as *const () as usize,
         jogadores_do_pos_jogo as *const () as usize,
         clube_do_pos_jogo as *const () as usize,
+        partida_sem_humano as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -21185,6 +21316,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_eventos_do_pos_jogo as *const () as usize,
         comparar_jogadores_do_pos_jogo as *const () as usize,
         comparar_clube_do_pos_jogo as *const () as usize,
+        comparar_partida_sem_humano as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -21297,7 +21429,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
