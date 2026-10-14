@@ -6699,6 +6699,13 @@ unsafe extern "thiscall" fn dividida(j: usize, forte: u32) {
 /// vira para a jogada (0x6f4920), domina (0x6f0630) com +0x19c = nota - nota do outro - 225
 /// (+-200), o perdedor soma o segundo byte do desafio a +0x2b (0x7160d0) e o vencedor segue (0x7103e0).
 /// Devolve o vencedor.
+/// Marca posta na vantagem antes da 0x6e9820 (que so escreve 0 ou 1).
+const SEM_RESPOSTA: u8 = 0xa5;
+/// A disputa em andamento leu a vantagem sem resposta do juiz (lixo da pilha na original).
+static VANTAGEM_SEM_RESPOSTA: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Divergencias da disputa explicadas pelo lixo da pilha (contadas a parte, nao como divergencia).
+static LIXO_DISPUTA: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 unsafe fn disputa_com(m: usize, x: i8, y: i8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> usize {
     let desafio: unsafe extern "thiscall" fn(usize, usize, i8, i8, *mut u8, *mut u8, *mut i16, *mut i8, *mut i8, u8) -> usize = core::mem::transmute(0x6c87e0usize);
     let direcao_: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x6f4a30usize);
@@ -6786,7 +6793,15 @@ unsafe fn disputa_com(m: usize, x: i8, y: i8, chamar: &mut dyn FnMut(usize, usiz
     'faltas: {
         if l != 0 {
             *w(wv, 0x35) = (*w(wv, 0x35)).wrapping_add(4);
+            // a 0x6e9820 pode sair antes de escrever a vantagem (falta na area, juiz sem paciencia): a
+            // original le entao o que sobrou na pilha; a copia usa 0 (decisao do Lucas, 14/10/2026)
+            vantagem = SEM_RESPOSTA;
             tipo = decisao(arb, wv, l, lance_w, -1, &mut cartao, &mut grav, &mut vantagem);
+            if vantagem == SEM_RESPOSTA {
+                crate::comparacao::ramo("disputa vantagem sem resposta");
+                VANTAGEM_SEM_RESPOSTA.store(true, std::sync::atomic::Ordering::Relaxed);
+                vantagem = 0;
+            }
             if byte(m, 0x8ebb) != 0 && faixa(wv, byte(wv, 0x27) as u8) as u8 != 0
                 && (especial(lance_w) || vantagem != 0 || sortear(*w(wv, 0x31) as i32) < -10)
                 && sortear(3) != 0
@@ -19704,6 +19719,7 @@ unsafe extern "thiscall" fn comparar_disputa(m: usize, x: u32, y: u32) -> usize 
     if gravando_no_topo() {
         return o(m, x, y);
     }
+    VANTAGEM_SEM_RESPOSTA.store(false, std::sync::atomic::Ordering::Relaxed);
     // o motor inteiro, o sorteio, o erro, 0xae1080 e a linha da tatica dos dois clubes (a expulsao
     // pode trocar o capitao)
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -19728,7 +19744,17 @@ unsafe extern "thiscall" fn comparar_disputa(m: usize, x: u32, y: u32) -> usize 
         })
     });
     GRAVAR_716.store(gravar, std::sync::atomic::Ordering::Relaxed);
-    PLACAR.registrar(igual && sequencia && r == rr, || format!("disputa({}, {}) original={:#x} rust={:#x} {} chamadas: {}", x as i8, y as i8, r, rr, k, detalhe_fita()));
+    let certo = igual && sequencia && r == rr;
+    if !certo && VANTAGEM_SEM_RESPOSTA.swap(false, std::sync::atomic::Ordering::Relaxed) {
+        // a original leu lixo da pilha como vantagem (ver `disputa_com`): conta a parte
+        let n = LIXO_DISPUTA.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+        if n <= 20 || n.is_power_of_two() {
+            linha(&format!("motor: LIXO_DE_PILHA disputa({}, {}) vantagem sem resposta do juiz ({} ate agora): {}", x as i8, y as i8, n, detalhe_fita()));
+        }
+        PLACAR.registrar(true, String::new);
+        return r;
+    }
+    PLACAR.registrar(certo, || format!("disputa({}, {}) original={:#x} rust={:#x} {} chamadas: {}", x as i8, y as i8, r, rr, k, detalhe_fita()));
     r
 }
 unsafe extern "thiscall" fn comparar_substituir(c: usize, goleiro: u32) {
