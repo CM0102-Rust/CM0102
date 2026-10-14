@@ -18,5 +18,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `clube 5896d0` | 0x6b79a0 (batch 132) | yes | forced actions caught by the fingerprints (`leva132b.py`) |
 | `clube 589bc0` | 0x6b79a0 | yes | same |
 | `clube 547d90` | 0x6b79a0 | yes | same |
+| `sem humano clube ligado` | 0x6b66a0 (batch 133) | yes | and the conditions always false in automatic careers: a human club in the match, competitions [0x9cf7bc]/[0x9cf6e4]/[0x9cf958], the 16th human as a national manager |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").
