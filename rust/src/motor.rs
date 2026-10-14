@@ -403,8 +403,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6f5c30, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x70dfd0, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6b74a0, bytes: &[0xa1, 0xc8, 0x7d, 0xb6, 0x00] },
+    Prologo { endereco: 0x6b6cc0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
 ];
-const N: usize = 296;
+const N: usize = 297;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -7615,6 +7616,168 @@ unsafe fn jogada_com(j: usize, forca: i16, altura: f32, estilo: i8, forte: u8, c
     *b(j, 0x2b) = (*b(j, 0x2b)).wrapping_add(sortear(2).wrapping_add(1) as u8);
     *w(j, 0x198) = lance;
     1
+}
+
+// ---------- centesima trigesima primeira leva: os jogadores no pos-jogo (0x6b6cc0) ----------
+
+/// { 0x6b6cc0 } (cdecl, match_day.cpp): depois da partida, para os dois lados do registro `t` da
+/// partida (clube em t+0 / t+4; lado em t + lado x 0x625): os 20 jogadores (linhas de 0x49 a partir
+/// de +0x1c5; pessoa em -0x35) com ficha (+0x61) e da base (id < [0xae2364]). Com a competicao da
+/// partida ([[0xadadfc][+0]]+8), o clube da competicao (+0x57 = partida+0x14) e sem +0x4c no
+/// registro: por contrato (0x4cf5f0) de tipo 0x10/0x20/0x30, o teste 0x849ce0/0x600a50, a nota +3
+/// acima de 5000 e de 1,1 x +0x18e (ou +7 acima de 0,9 x, ou +5 da ficha acima de 0,024 x), +0 ate
+/// 6, o placar do lado nao acima do outro, sorteio(10) + 5 < nota 1 (0x4a31a0) e sorteio(10) acima
+/// de +0x45 da ficha, e a nota 0x11 a menos de 0,2 da media da competicao ([0xb74350]+0x10 / +0x18,
+/// ou 6,8): a noticia 0x72c1f0 tipo 0x11. Com 0x76d940 tambem, +0 de 9 em diante, o placar do lado
+/// nao abaixo do outro, sorteio(5) + 2 < nota 1 e ainda sem noticia 0x34 na partida: com a nota
+/// 0x11 acima de sorteio(9) x 0,1 + media + 0,5, 0x744240 (0x34). Depois copia para a ficha +0x45,
+/// +0xb, +9, +0xd (de -4, +3, +5, +7). Dois clubes da mesma nacao (+0x53) e -8 na linha: com 0x7c1e30
+/// nao zero, o clube anterior (+0x1a) de outra nacao (+0x76), +0xb da ficha acima de 5750, +0x57
+/// acima de 10, +0x59 abaixo de 15, +0x5c ou +0x5d abaixo de 10 e sorteio(3) == 0 (do proprio clube
+/// [0x9cf300]) ou sorteio(10) == 0: o 0x20 no contrato (0x867560). Por fim o tecnico (pessoa em
+/// +0x184): a ficha dele (+0x69) recebe +0x188/+0x18a/+0x18c em +0xa/+8/+0xc, e o auxiliar (+0xd3)
+/// e os 5 de +0x19f ganham um quarto da diferenca (entre 1 e 10000); +0x80 do clube = +0x18e.
+unsafe extern "C" fn jogadores_do_pos_jogo(partida: usize, t: usize) {
+    let especial: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x76d940usize);
+    let registrar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x5afe00usize);
+    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let nota: unsafe extern "thiscall" fn(usize, usize, u32) -> f64 = core::mem::transmute(0x4a31a0usize);
+    let teste_849ce0: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
+    let teste_600a50: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x600a50usize);
+    let noticia: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32) = core::mem::transmute(0x72c1f0usize);
+    let noticia_34: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize) = core::mem::transmute(0x744240usize);
+    let media_7c1e30: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(0x7c1e30usize);
+    let marcas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x8676f0usize);
+    let por_20: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x867560usize);
+    let g = |a: usize| *(a as *const usize);
+    let ler = |a: usize| core::ptr::read_unaligned(a as *const i32);
+    let w = |a: usize| core::ptr::read_unaligned(a as *const i16);
+    let ub = |a: usize| *(a as *const u8) as i32;
+    let clube_de = |id: i32| (g(0xae23b4) as isize + id as isize * 0x245) as usize;
+    let media = || {
+        let b = g(0xb74350);
+        let d = core::ptr::read_unaligned((b + 0x18) as *const f64);
+        if d != 0.0 { core::ptr::read_unaligned((b + 0x10) as *const f64) / d } else { 6.8 }
+    };
+    let esp = especial(g(0xb74318), ler(partida + 0x14) as u32);
+    if *(0x9cc270 as *const u8) != 0 && g(0xae2a60) != 0 {
+        registrar(g(0xae2a60), partida, t);
+    }
+    let comp = if ler(partida) > -1 { g(g(g(0xadadfc) + ler(partida) as usize * 4) + 8) } else { 0 };
+    let mut ja_34 = false;
+    for lado in 0..2usize {
+        let clube = clube_de(ler(t + 4 * lado));
+        let ts = t + lado * 0x625;
+        let outro = t + (lado == 0) as usize * 0x625;
+        let placar = |r: usize| ub(r + 0x120) + ub(r + 0x11f);
+        for k in 0..20usize {
+            let linha = ts + 0x1c5 + k * 0x49;
+            let id = ler(linha - 0x35);
+            if id == -1 {
+                continue;
+            }
+            let p = (g(0xae23bc) as isize + id as isize * 0x6e) as usize;
+            if g(p + 0x61) == 0 || (p != 0 && ler(p) >= ler(0xae2364)) {
+                continue;
+            }
+            if comp != 0 && ler(partida + 0x14) == ler(clube + 0x57) && *((t + 0x4c) as *const u8) == 0 {
+                let c = contrato(g(0xae1050), p, clube);
+                let nota1 = nota(comp, g(p + 0x61), 1);
+                let nota11 = nota(comp, g(p + 0x61), 0x11);
+                if c != 0 && matches!(*((c + 0x4f) as *const u8) & 0xf0, 0x10 | 0x20 | 0x30) {
+                    let x = teste_849ce0(g(g(0xde1f54) + 0x856), clube, p, 0, 0);
+                    let passa = teste_600a50(clube, 0, 1, 0, 0) != 0 || (x != 0 && ler(x + 0xf) == ler(p));
+                    let d = w(ts + 0x18e) as f64;
+                    if passa
+                        && w(linha + 3) > 0x1388
+                        && (d * 1.1 < w(linha + 3) as f64 || d * 0.9 < w(linha + 7) as f64 || d * 0.024 < w(g(p + 0x61) + 5) as f64)
+                        && *(linha as *const u8) <= 6
+                        && placar(ts) <= placar(outro)
+                        && ((sortear(10) + 5) as f64) < nota1
+                        && (*((g(p + 0x61) + 0x45) as *const i8) as i32) < sortear(10)
+                        && media() + 0.2 > nota11
+                        && media() - 0.2 < nota11
+                    {
+                        crate::comparacao::ramo("jogadores noticia 0x11");
+                        noticia(g(0xb6b7c8), p, clube, 0x11, partida, 0);
+                    }
+                }
+            }
+            if esp != 0 && comp != 0 && *((t + 0x4c) as *const u8) == 0 {
+                let nota1 = nota(comp, g(p + 0x61), 1);
+                if *(linha as *const u8) >= 9 && placar(ts) >= placar(outro) && ((sortear(5) + 2) as f64) < nota1 && !ja_34 {
+                    let m = media();
+                    let nota11 = nota(comp, g(p + 0x61), 0x11);
+                    let r = sortear(9);
+                    if r as f64 * 0.1 + m + 0.5 < nota11 {
+                        crate::comparacao::ramo("jogadores noticia 0x34");
+                        noticia_34(g(0xb6b7c8), p, clube, 0x34, partida);
+                        ja_34 = true;
+                    }
+                }
+            }
+            let f = g(p + 0x61);
+            *((f + 0x45) as *mut u8) = *((linha - 4) as *const u8);
+            core::ptr::write_unaligned((f + 0xb) as *mut i16, w(linha + 3));
+            core::ptr::write_unaligned((g(p + 0x61) + 9) as *mut i16, w(linha + 5));
+            core::ptr::write_unaligned((g(p + 0x61) + 0xd) as *mut i16, w(linha + 7));
+            if ler(clube_de(ler(t)) + 0x53) == ler(clube_de(ler(t + 4)) + 0x53) && *((linha - 8) as *const u8) != 0 {
+                let v = media_7c1e30(g(0xb74350), g(p + 0x61), 6, 0xb, 6.5);
+                let anterior = g(p + 0x1a);
+                let nacao = g(clube + 0x53);
+                let f = g(p + 0x61);
+                if !(v == 0.0 || v.is_nan())
+                    && anterior != 0
+                    && nacao != 0
+                    && *((anterior + 0x76) as *const u8) != *((nacao + 0x76) as *const u8)
+                    && f != 0
+                    && w(f + 0xb) > 0x1676
+                    && byte(p, 0x57) > 0xa
+                    && byte(p, 0x59) < 0xf
+                    && (byte(p, 0x5c) < 0xa || byte(p, 0x5d) < 0xa)
+                    && ((ler(anterior) == ler(0x9cf300) && sortear(3) == 0) || sortear(10) == 0)
+                {
+                    let c = contrato(g(0xae1050), p, clube);
+                    if c != 0 && marcas(c) & 0x20 == 0 {
+                        crate::comparacao::ramo("jogadores marca 0x20");
+                        por_20(c, 0x20);
+                    }
+                }
+            }
+        }
+        // o tecnico e os auxiliares
+        let id = ler(ts + 0x184);
+        if id > -1 {
+            crate::comparacao::ramo("jogadores tecnico");
+            let tec = (g(0xae23bc) as isize + id as isize * 0x6e) as usize;
+            let (mut da, mut db, mut dc) = (0i16, 0i16, 0i16);
+            if tec != 0 && g(tec + 0x69) != 0 {
+                let f = g(tec + 0x69);
+                da = w(ts + 0x188).wrapping_sub(w(f + 0xa));
+                core::ptr::write_unaligned((f + 0xa) as *mut i16, w(f + 0xa).wrapping_add(da));
+                let f = g(tec + 0x69);
+                db = w(ts + 0x18a).wrapping_sub(w(f + 8));
+                core::ptr::write_unaligned((f + 8) as *mut i16, w(f + 8).wrapping_add(db));
+                let f = g(tec + 0x69);
+                dc = w(ts + 0x18c).wrapping_sub(w(f + 0xc));
+                core::ptr::write_unaligned((f + 0xc) as *mut i16, w(f + 0xc).wrapping_add(dc));
+            }
+            for k in -1i32..5 {
+                let aux = if k == -1 { g(clube + 0xd3) } else { g(clube + 0x19f + k as usize * 4) };
+                if aux == 0 || aux == tec || g(aux + 0x69) == 0 {
+                    continue;
+                }
+                for (o, dv) in [(0xa, da), (8, db), (0xc, dc)] {
+                    let f = g(aux + 0x69);
+                    let v = w(f + o).wrapping_add(ftol(dv as f64 * 0.25) as i16);
+                    core::ptr::write_unaligned((f + o) as *mut i16, v);
+                    let f = g(aux + 0x69);
+                    core::ptr::write_unaligned((f + o) as *mut i16, w(f + o).clamp(1, 10000));
+                }
+            }
+        }
+        core::ptr::write_unaligned((clube + 0x80) as *mut i16, w(ts + 0x18e));
+    }
 }
 
 // ---------- centesima trigesima leva: os eventos do pos-jogo (0x6b74a0) ----------
@@ -20305,6 +20468,7 @@ pub unsafe fn instalar(comparando: bool) {
         responder as *const () as usize,
         jogada as *const () as usize,
         eventos_do_pos_jogo as *const () as usize,
+        jogadores_do_pos_jogo as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -20603,6 +20767,7 @@ pub unsafe fn instalar(comparando: bool) {
         porta_6f5c30 as *const () as usize,
         porta_70dfd0 as *const () as usize,
         eventos_do_pos_jogo as *const () as usize,
+        jogadores_do_pos_jogo as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -20715,7 +20880,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -20726,9 +20891,9 @@ pub unsafe fn instalar(comparando: bool) {
         if comparando && (PROLOGOS[i].endereco == 0x6f5c30 || PROLOGOS[i].endereco == 0x70dfd0) {
             continue;
         }
-        // 0x6b74a0 (130a leva) nao tem comparacao lado a lado: chama 14 rotinas do banco com efeitos;
-        // a carreira (heap inteira igual a do original) e as mutacoes pela carreira a conferem
-        if comparando && PROLOGOS[i].endereco == 0x6b74a0 {
+        // 0x6b74a0 (130a leva) e 0x6b6cc0 (131a) nao tem comparacao lado a lado: chamam rotinas do
+        // banco com efeitos; a carreira (banco igual ao do original dia a dia) e as mutacoes a conferem
+        if comparando && (PROLOGOS[i].endereco == 0x6b74a0 || PROLOGOS[i].endereco == 0x6b6cc0) {
             continue;
         }
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
