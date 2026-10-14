@@ -19,5 +19,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `clube 589bc0` | 0x6b79a0 | sim | idem |
 | `clube 547d90` | 0x6b79a0 | sim | idem |
 | `sem humano clube ligado` | 0x6b66a0 (133ª) | sim | e as condições sempre falsas nas carreiras automáticas: clube humano na partida, competições [0x9cf7bc]/[0x9cf6e4]/[0x9cf958], o 16º humano técnico de seleção |
+| `interesse partida marcada` | 0x6b5040 (134ª) | sim | partida com clube humano; e os outros humanos (as 16 vagas, o vínculo +0x24) |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").

@@ -142,6 +142,7 @@ EN = {
  'jogadores_do_pos_jogo': 'post_match_players',
  'clube_do_pos_jogo': 'post_match_club',
  'partida_sem_humano': 'match_without_human',
+ 'interesse_do_dia': 'match_day_interest',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

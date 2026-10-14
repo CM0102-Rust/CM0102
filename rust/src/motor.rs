@@ -406,8 +406,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6b6cc0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
     Prologo { endereco: 0x6b79a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6b66a0, bytes: &[0xa1, 0x04, 0x57, 0xa1, 0x00] },
+    Prologo { endereco: 0x6b5040, bytes: &[0x83, 0xec, 0x1c, 0x53, 0x8b, 0xd9] },
 ];
-const N: usize = 299;
+const N: usize = 300;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -7633,6 +7634,117 @@ unsafe fn jogada_com(j: usize, forca: i16, altura: f32, estilo: i8, forte: u8, c
     *b(j, 0x2b) = (*b(j, 0x2b)).wrapping_add(sortear(2).wrapping_add(1) as u8);
     *w(j, 0x198) = lance;
     1
+}
+
+// ---------- centesima trigesima quarta leva: o interesse do humano no dia de jogos (0x6b5040) ----------
+
+/// As regioes que a 0x6b5040 marca no dia `d`: +0x29 a +0x2e do dia, +0x14 de cada grupo, +0xc a
+/// +0x13 de cada competicao e +0x53 de cada partida.
+unsafe fn marcas_do_dia(d: usize) -> Vec<(usize, usize)> {
+    let ler = |a: usize| core::ptr::read_unaligned(a as *const i32);
+    let mut v = vec![(d + 0x29, 6)];
+    for gi in 0..ler(d + 9).max(0) as usize {
+        let grp = (ler(d + 1) as usize).wrapping_add(gi * 0x18);
+        v.push((grp + 0x14, 4));
+        for ci in ler(grp + 4)..=ler(grp + 8) {
+            let comp = (ler(d + 0xd) as isize + ci as isize * 0x54) as usize;
+            v.push((comp + 0xc, 8));
+            for mi in ler(comp + 4)..=ler(comp + 8) {
+                v.push(((ler(d + 0x19) as isize + mi as isize * 0x69) as usize + 0x53, 4));
+            }
+        }
+    }
+    v
+}
+
+/// { 0x6b5040 } (thiscall, match_day.cpp): marca no dia de jogos `d` o que interessa ao humano.
+/// Primeiro a lista dos humanos (0x5fe8d0 em [0xb63c98]); zera +0x29, +0x2a e +0x2b. Para cada grupo
+/// (+1, de 0x18 em 0x18, quantos em +9) e cada competicao dele (+4 a +8; em +0xd, de 0x54 em 0x54):
+/// a competicao interessa (+0xc) se um dos 16 humanos no fim da tabela de pessoas tem o clube (+0x39)
+/// ou o outro vinculo (+0x24) nela (0x48db80 da competicao em [[0xadadfc] + id x 4]). Cada partida
+/// dela (+4 a +8; em +0x19, de 0x69 em 0x69): com clube humano (0x600a50 com +0x20/+0x44 ou
+/// +0x24/+0x45) ou pela 0x5fe420 a partida e marcada (+0x53) e conta o grupo (+0x29) e a competicao
+/// (+0x2a) na primeira vez (+0x14 do grupo, +0x10 da competicao); senao, pela 0x6b61e0, so a
+/// competicao interessa. Qualquer marca liga +0x2b do dia. Devolve 1.
+unsafe extern "thiscall" fn interesse_do_dia(d: usize) -> u32 {
+    let lista: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5fe8d0usize);
+    let na_competicao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x48db80usize);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x600a50usize);
+    let f5fe420: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(0x5fe420usize);
+    let f6b61e0: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x6b61e0usize);
+    let g = |a: usize| *(a as *const usize);
+    let ler = |a: usize| core::ptr::read_unaligned(a as *const i32);
+    let pr = |a: usize, v: i32| core::ptr::write_unaligned(a as *mut i32, v);
+    lista(g(0xb63c98));
+    *((d + 0x29) as *mut u8) = 0;
+    *((d + 0x2a) as *mut u8) = 0;
+    pr(d + 0x2b, 0);
+    let mut gi = 0i32;
+    while gi < ler(d + 9) {
+        let grp = (ler(d + 1) as usize).wrapping_add(gi as usize * 0x18);
+        pr(grp + 0x14, 0);
+        let mut ci = ler(grp + 4);
+        while ci <= ler(grp + 8) {
+            let comp = (ler(d + 0xd) as isize + ci as isize * 0x54) as usize;
+            pr(comp + 0xc, 0);
+            pr(comp + 0x10, 0);
+            if ler(comp) > -1 {
+                let objeto = g(g(0xadadfc) + ler(comp) as usize * 4);
+                for k in 0..16 {
+                    let pe = (g(0xae23bc) as isize + (ler(0xae2364) + k - 16) as isize * 0x6e) as usize;
+                    let clube = g(pe + 0x39);
+                    let outro = g(pe + 0x24);
+                    if (clube != 0 && na_competicao(objeto, clube) != 0) || (outro != 0 && na_competicao(objeto, outro) != 0) {
+                        crate::comparacao::ramo("interesse humano na competicao");
+                        pr(comp + 0xc, 1);
+                        pr(d + 0x2b, 1);
+                    }
+                }
+            }
+            let mut mi = ler(comp + 4);
+            while mi <= ler(comp + 8) {
+                let m = (ler(d + 0x19) as isize + mi as isize * 0x69) as usize;
+                pr(m + 0x53, 0);
+                let marcada = humano(g(m + 0x20), 0, *((m + 0x44) as *const u8) as u32, 0, 0) != 0
+                    || humano(g(m + 0x24), 0, *((m + 0x45) as *const u8) as u32, 0, 0) != 0
+                    || f5fe420(g(0xb63c98), m + 4) != 0;
+                if marcada {
+                    crate::comparacao::ramo("interesse partida marcada");
+                    pr(m + 0x53, 1);
+                    if ler(grp + 0x14) == 0 {
+                        *((d + 0x29) as *mut u8) = (*((d + 0x29) as *const u8)).wrapping_add(1);
+                    }
+                    if ler(comp + 0x10) == 0 {
+                        *((d + 0x2a) as *mut u8) = (*((d + 0x2a) as *const u8)).wrapping_add(1);
+                    }
+                    pr(grp + 0x14, 1);
+                    pr(comp + 0x10, 1);
+                    pr(comp + 0xc, 1);
+                    pr(d + 0x2b, 1);
+                } else if f6b61e0(m + 4) != 0 {
+                    crate::comparacao::ramo("interesse pela 6b61e0");
+                    pr(comp + 0xc, 1);
+                    pr(d + 0x2b, 1);
+                }
+                mi += 1;
+            }
+            ci += 1;
+        }
+        gi += 1;
+    }
+    1
+}
+
+unsafe extern "thiscall" fn comparar_interesse_do_dia(d: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(299);
+    if gravando_no_topo() {
+        return o(d);
+    }
+    // ponytail: a 0x5fe8d0 (lista dos humanos) roda nas duas; ela refaz a lista do zero
+    let reg = marcas_do_dia(d);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(d), || interesse_do_dia(d));
+    PLACAR.registrar(igual && r == n, || format!("interesse_do_dia original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+    r
 }
 
 // ---------- centesima trigesima terceira leva: a partida sem o humano (0x6b66a0) ----------
@@ -21016,6 +21128,7 @@ pub unsafe fn instalar(comparando: bool) {
         jogadores_do_pos_jogo as *const () as usize,
         clube_do_pos_jogo as *const () as usize,
         partida_sem_humano as *const () as usize,
+        interesse_do_dia as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -21317,6 +21430,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_jogadores_do_pos_jogo as *const () as usize,
         comparar_clube_do_pos_jogo as *const () as usize,
         comparar_partida_sem_humano as *const () as usize,
+        comparar_interesse_do_dia as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -21429,7 +21543,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
