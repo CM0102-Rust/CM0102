@@ -148,6 +148,15 @@ pub fn rastrear<R>(f: impl FnOnce() -> R) -> (R, Vec<(i32, i32)>) {
     (r, v)
 }
 
+/// Roda `f` sem guardar sorteios no rastro (os de uma unidade gravada: a copia Rust recebe o resultado
+/// da fita e nao os refaz, entao a lista da original so tem de conter o que a propria rotina sorteia).
+pub fn pausar_rastro<R>(f: impl FnOnce() -> R) -> R {
+    let guardado = RASTRO.with(|t| t.borrow_mut().take());
+    let r = f();
+    RASTRO.with(|t| *t.borrow_mut() = guardado);
+    r
+}
+
 unsafe fn original(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(ORIGINAL);
     f(n)

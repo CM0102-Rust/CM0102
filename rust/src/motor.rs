@@ -7632,16 +7632,17 @@ unsafe fn jogada_com(j: usize, forca: i16, altura: f32, estilo: i8, forte: u8, c
 /// partida da competicao do clube (+0x14 = +0x57, com +0x40/+0x41), o clube nao fora, +0x59 acima
 /// de 15, +0x57 acima de sorteio(5) + 10, +0xb da ficha abaixo de 4250 e 0x7c3a40 zero: 0x589bc0 e,
 /// sem 0x547d60, 0x547d90(pessoa, clube, 1), e fim.
-unsafe extern "C" fn clube_do_pos_jogo(clube: usize, outro: usize, partida: usize, n: u32, t: usize) {
-    let teste_600a50: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x600a50usize);
-    let teste_6b7cf0: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(0x6b7cf0usize);
-    let fora: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x53b900usize);
+unsafe fn clube_do_pos_jogo_com(clube: usize, outro: usize, partida: usize, n: u32, t: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let saida: unsafe extern "C" fn(usize, usize, usize, i32) = core::mem::transmute(0x5896d0usize);
-    let teste_7c3a40: unsafe extern "thiscall" fn(usize, usize, usize) -> u16 = core::mem::transmute(0x7c3a40usize);
-    let f589bc0: unsafe extern "C" fn(usize, usize) = core::mem::transmute(0x589bc0usize);
     let teste_547d60: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x547d60usize);
-    let f547d90: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547d90usize);
+    let ch = core::cell::RefCell::new(chamar);
+    let saida = |s: usize, c: usize, o: usize, n: i32| (ch.borrow_mut())(0x5896d0, 0, [s as u32, c as u32, o as u32, n as u32, 0]);
+    let f589bc0 = |p: usize, c: usize| (ch.borrow_mut())(0x589bc0, 0, [p as u32, c as u32, 0, 0, 0]);
+    let f547d90 = |p: usize, c: usize, um: u32| (ch.borrow_mut())(0x547d90, 0, [p as u32, c as u32, um, 0, 0]);
+    let teste_600a50 = |c: usize, a: u32, b: u32, d: u32, e: u32| (ch.borrow_mut())(0x600a50, 0, [c as u32, a, b, d, e]) as i32;
+    let teste_6b7cf0 = |pa: usize, c: usize| (ch.borrow_mut())(0x6b7cf0, 0, [pa as u32, c as u32, 0, 0, 0]) as u8;
+    let fora = |c: usize| (ch.borrow_mut())(0x53b900, 0, [c as u32, 0, 0, 0, 0]) as i32;
+    let teste_7c3a40 = |n: usize, p: usize, c: usize| (ch.borrow_mut())(0x7c3a40, n, [p as u32, c as u32, 0, 0, 0]) as u16;
     let g = |a: usize| *(a as *const usize);
     let ler = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16);
@@ -7721,6 +7722,255 @@ unsafe extern "C" fn clube_do_pos_jogo(clube: usize, outro: usize, partida: usiz
     }
 }
 
+/// { 0x6b74a0 }: ver `eventos_do_pos_jogo_com`.
+unsafe extern "C" fn eventos_do_pos_jogo(partida: usize) {
+    eventos_do_pos_jogo_com(partida, &mut |r, t, a| despachar_pos(r, t, a))
+}
+
+/// { 0x6b6cc0 }: ver `jogadores_do_pos_jogo_com`.
+unsafe extern "C" fn jogadores_do_pos_jogo(partida: usize, t: usize) {
+    jogadores_do_pos_jogo_com(partida, t, &mut |r, tt, a| despachar_pos(r, tt, a))
+}
+
+/// { 0x6b79a0 }: ver `clube_do_pos_jogo_com`.
+unsafe extern "C" fn clube_do_pos_jogo(clube: usize, outro: usize, partida: usize, n: u32, t: usize) {
+    clube_do_pos_jogo_com(clube, outro, partida, n, t, &mut |r, tt, a| despachar_pos(r, tt, a))
+}
+
+/// As rotinas do banco com efeitos chamadas pelo pos-jogo, pelo endereco do jogo (`this` 0: cdecl).
+unsafe fn despachar_pos(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
+    type T1 = unsafe extern "thiscall" fn(usize, u32) -> u32;
+    type T2 = unsafe extern "thiscall" fn(usize, u32, u32) -> u32;
+    type T3 = unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32;
+    type T4 = unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32;
+    type T5 = unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> u32;
+    type C4 = unsafe extern "C" fn(u32, u32, u32, u32) -> u32;
+    type C5 = unsafe extern "C" fn(u32, u32, u32, u32, u32) -> u32;
+    match rotina {
+        0x4cf5f0 | 0x7c3a40 => core::mem::transmute::<usize, T2>(rotina)(this, a[0], a[1]),
+        0x600a50 => core::mem::transmute::<usize, C5>(rotina)(a[0], a[1], a[2], a[3], a[4]),
+        0x8676d0 | 0x8674e0 | 0x867560 => core::mem::transmute::<usize, T1>(rotina)(this, a[0]),
+        0x867700 | 0x733a60 | 0x5afe00 => core::mem::transmute::<usize, T2>(rotina)(this, a[0], a[1]),
+        0x759610 => core::mem::transmute::<usize, T3>(rotina)(this, a[0], a[1], a[2]),
+        0x744240 => core::mem::transmute::<usize, T4>(rotina)(this, a[0], a[1], a[2], a[3]),
+        0x72c1f0 => core::mem::transmute::<usize, T5>(rotina)(this, a[0], a[1], a[2], a[3], a[4]),
+        // cdecl: quem chama limpa a pilha, os argumentos a mais nao sao lidos
+        _ => core::mem::transmute::<usize, C4>(rotina)(a[0], a[1], a[2], a[3]),
+    }
+}
+
+// --- portas do pos-jogo: as 14 rotinas do banco com efeitos (e a consulta 0x7c3a40), gravadas na fita so durante as
+// comparacoes do pos-jogo (GRAVAR_POS); para os outros chamadores do jogo so repassam. Devolvem
+// edx:eax inteiro (nenhuma devolve ponto flutuante: conferido na 132a leva).
+static GRAVAR_POS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static mut PORTAS_POS: [usize; 15] = [0; 15];
+const PROLOGOS_POS: [Prologo; 15] = [
+    Prologo { endereco: 0x8676d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x51, 0x40] },
+    Prologo { endereco: 0x8674e0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
+    Prologo { endereco: 0x867560, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x867700, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x15, 0xb4, 0x23, 0xae, 0x00] },
+    Prologo { endereco: 0x733a60, bytes: &[0x6a, 0xff, 0x68, 0xe6, 0xd6, 0x95, 0x00] },
+    Prologo { endereco: 0x5afe00, bytes: &[0x51, 0x53, 0x55, 0x8b, 0x6c, 0x24, 0x10] },
+    Prologo { endereco: 0x759610, bytes: &[0x6a, 0xff, 0x68, 0x83, 0xd9, 0x95, 0x00] },
+    Prologo { endereco: 0x744240, bytes: &[0x6a, 0xff, 0x68, 0x06, 0xd8, 0x95, 0x00] },
+    Prologo { endereco: 0x72c1f0, bytes: &[0x6a, 0xff, 0x68, 0x86, 0xd6, 0x95, 0x00] },
+    Prologo { endereco: 0x7daf50, bytes: &[0x6a, 0xff, 0x68, 0x70, 0xfd, 0x95, 0x00] },
+    Prologo { endereco: 0x547af0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
+    Prologo { endereco: 0x5896d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x589bc0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x547d90, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
+    Prologo { endereco: 0x7c3a40, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
+];
+
+/// Dentro de uma comparacao do pos-jogo, com a fita aberta.
+fn gravando_pos() -> bool {
+    GRAVAR_POS.load(std::sync::atomic::Ordering::Relaxed) && gravando()
+}
+
+/// Repassa ou grava (durante uma comparacao do pos-jogo, no nivel de cima da fita).
+unsafe fn passar_pos(rotina: usize, this: usize, a: [u32; 5], f: impl FnOnce() -> u64) -> u64 {
+    use std::sync::atomic::Ordering::Relaxed;
+    if GRAVAR_POS.load(Relaxed) && gravando() {
+        let mut r = 0u64;
+        chamar_gravando(rotina, this, a, || {
+            r = f();
+            r as u32
+        });
+        return r;
+    }
+    f()
+}
+
+unsafe extern "thiscall" fn porta_8676d0(c: usize, a: u32) -> u64 {
+    let f: unsafe extern "thiscall" fn(usize, u32) -> u64 = core::mem::transmute(PORTAS_POS[0]);
+    passar_pos(0x8676d0, c, [a, 0, 0, 0, 0], || f(c, a))
+}
+unsafe extern "thiscall" fn porta_8674e0(c: usize, a: u32) -> u64 {
+    let f: unsafe extern "thiscall" fn(usize, u32) -> u64 = core::mem::transmute(PORTAS_POS[1]);
+    passar_pos(0x8674e0, c, [a, 0, 0, 0, 0], || f(c, a))
+}
+unsafe extern "thiscall" fn porta_867560(c: usize, a: u32) -> u64 {
+    let f: unsafe extern "thiscall" fn(usize, u32) -> u64 = core::mem::transmute(PORTAS_POS[2]);
+    passar_pos(0x867560, c, [a, 0, 0, 0, 0], || f(c, a))
+}
+unsafe extern "thiscall" fn porta_867700(c: usize, a: u32, b: u32) -> u64 {
+    let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[3]);
+    passar_pos(0x867700, c, [a, b, 0, 0, 0], || f(c, a, b))
+}
+unsafe extern "thiscall" fn porta_733a60(c: usize, a: u32, b: u32) -> u64 {
+    let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[4]);
+    passar_pos(0x733a60, c, [a, b, 0, 0, 0], || f(c, a, b))
+}
+unsafe extern "thiscall" fn porta_5afe00(c: usize, a: u32, b: u32) -> u64 {
+    let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[5]);
+    passar_pos(0x5afe00, c, [a, b, 0, 0, 0], || f(c, a, b))
+}
+unsafe extern "thiscall" fn porta_759610(c: usize, a: u32, b: u32, d: u32) -> u64 {
+    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[6]);
+    passar_pos(0x759610, c, [a, b, d, 0, 0], || f(c, a, b, d))
+}
+unsafe extern "thiscall" fn porta_744240(c: usize, a: u32, b: u32, d: u32, e: u32) -> u64 {
+    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[7]);
+    passar_pos(0x744240, c, [a, b, d, e, 0], || f(c, a, b, d, e))
+}
+unsafe extern "thiscall" fn porta_72c1f0(c: usize, a: u32, b: u32, d: u32, e: u32, g: u32) -> u64 {
+    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[8]);
+    passar_pos(0x72c1f0, c, [a, b, d, e, g], || f(c, a, b, d, e, g))
+}
+unsafe extern "C" fn porta_7daf50(a: u32, b: u32, d: u32) -> u64 {
+    let f: unsafe extern "C" fn(u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[9]);
+    passar_pos(0x7daf50, 0, [a, b, d, 0, 0], || f(a, b, d))
+}
+unsafe extern "C" fn porta_547af0(a: u32, b: u32, d: u32) -> u64 {
+    let f: unsafe extern "C" fn(u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[10]);
+    passar_pos(0x547af0, 0, [a, b, d, 0, 0], || f(a, b, d))
+}
+unsafe extern "C" fn porta_5896d0(a: u32, b: u32, d: u32, e: u32) -> u64 {
+    let f: unsafe extern "C" fn(u32, u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[11]);
+    passar_pos(0x5896d0, 0, [a, b, d, e, 0], || f(a, b, d, e))
+}
+unsafe extern "C" fn porta_589bc0(a: u32, b: u32) -> u64 {
+    let f: unsafe extern "C" fn(u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[12]);
+    passar_pos(0x589bc0, 0, [a, b, 0, 0, 0], || f(a, b))
+}
+unsafe extern "C" fn porta_547d90(a: u32, b: u32, d: u32) -> u64 {
+    let f: unsafe extern "C" fn(u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[13]);
+    passar_pos(0x547d90, 0, [a, b, d, 0, 0], || f(a, b, d))
+}
+
+unsafe extern "thiscall" fn porta_7c3a40(c: usize, a: u32, b: u32) -> u64 {
+    let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[14]);
+    passar_pos(0x7c3a40, c, [a, b, 0, 0, 0], || f(c, a, b))
+}
+
+fn portas_pos() -> [usize; 15] {
+    [
+        porta_8676d0 as *const () as usize, porta_8674e0 as *const () as usize, porta_867560 as *const () as usize,
+        porta_867700 as *const () as usize, porta_733a60 as *const () as usize, porta_5afe00 as *const () as usize,
+        porta_759610 as *const () as usize, porta_744240 as *const () as usize, porta_72c1f0 as *const () as usize,
+        porta_7daf50 as *const () as usize, porta_547af0 as *const () as usize, porta_5896d0 as *const () as usize,
+        porta_589bc0 as *const () as usize, porta_547d90 as *const () as usize, porta_7c3a40 as *const () as usize,
+    ]
+}
+
+/// Roda a comparacao de uma rotina do pos-jogo pela fita: as 14 do banco entram como unidades.
+unsafe fn comparar_pos(nome: &str, reg: Vec<(usize, usize)>, original: impl FnOnce(), rust: impl FnOnce(&mut dyn FnMut(usize, usize, [u32; 5]) -> u32)) {
+    use std::sync::atomic::Ordering::Relaxed;
+    let gravar = GRAVAR_POS.swap(true, Relaxed);
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, original, |chamar| rust(&mut |r, t, a| chamar(r, t, a, [u32::MAX; 5])));
+    GRAVAR_POS.store(gravar, Relaxed);
+    PLACAR.registrar(igual && sequencia, || format!("{} ({} chamadas): {}", nome, k, detalhe_fita()));
+}
+
+/// As flags do contrato (+0x40 a +0x48) de `pessoa` no `clube`, como regiao.
+unsafe fn regiao_do_contrato(pessoa: usize, clube: usize) -> Option<(usize, usize)> {
+    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let c = contrato(*(0xae1050 as *const usize), pessoa, clube);
+    (c != 0).then_some((c + 0x40, 9))
+}
+
+unsafe extern "C" fn comparar_eventos_do_pos_jogo(partida: usize) {
+    let o = orig::<unsafe extern "C" fn(usize)>(295);
+    // o cursor da lista, as linhas dos dois clubes em [[0xb67a44]] e as flags dos contratos dos eventos
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let lista = *(0xb67dc8 as *const usize);
+    if lista != 0 {
+        reg.push((lista, 0xe));
+        let pessoa = |id: i32| (*(0xae23bc as *const usize) as isize + id as isize * 0x6e) as usize;
+        let mut no = core::ptr::read_unaligned((lista + 2) as *const usize);
+        let mut k = 0;
+        while no != 0 && k < core::ptr::read_unaligned(lista as *const i16) as i32 {
+            let ev = core::ptr::read_unaligned(no as *const usize);
+            no = core::ptr::read_unaligned((no + 6) as *const usize);
+            k += 1;
+            if ev == 0 {
+                break;
+            }
+            let clube = (*(0xae23b4 as *const usize) as isize + core::ptr::read_unaligned((ev + 4) as *const i32) as isize * 0x245) as usize;
+            if clube == *((partida + 0x1c) as *const usize) || clube == *((partida + 0x20) as *const usize) {
+                reg.extend(regiao_do_contrato(pessoa(core::ptr::read_unaligned(ev as *const i32)), clube));
+            }
+        }
+    }
+    let tabela = *(0xb67a44 as *const usize);
+    if tabela != 0 {
+        for o in [0x1c, 0x20] {
+            let clube = *((partida + o) as *const usize);
+            if clube != 0 {
+                reg.push(((*(tabela as *const usize) as isize + *(clube as *const i32) as isize * 0x49) as usize, 0x49));
+            }
+        }
+    }
+    comparar_pos("eventos_do_pos_jogo", reg, || o(partida), |chamar| eventos_do_pos_jogo_com(partida, chamar));
+}
+
+unsafe extern "C" fn comparar_jogadores_do_pos_jogo(partida: usize, t: usize) {
+    let o = orig::<unsafe extern "C" fn(usize, usize)>(296);
+    // as fichas dos jogadores (+0x45, +9 a +0xe), os contratos, +0x80 dos clubes e as fichas do
+    // tecnico e dos auxiliares (+8 a +0xd)
+    let g = |a: usize| *(a as *const usize);
+    let ler = |a: usize| core::ptr::read_unaligned(a as *const i32);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    for lado in 0..2usize {
+        let clube = (g(0xae23b4) as isize + ler(t + 4 * lado) as isize * 0x245) as usize;
+        let ts = t + lado * 0x625;
+        reg.push((clube + 0x80, 2));
+        for k in 0..20usize {
+            let id = ler(ts + 0x1c5 + k * 0x49 - 0x35);
+            if id == -1 {
+                continue;
+            }
+            let p = (g(0xae23bc) as isize + id as isize * 0x6e) as usize;
+            let f = g(p + 0x61);
+            if f != 0 {
+                reg.extend([(f + 0x45, 1), (f + 9, 6)]);
+                reg.extend(regiao_do_contrato(p, clube));
+            }
+        }
+        let id = ler(ts + 0x184);
+        if id > -1 {
+            let tec = (g(0xae23bc) as isize + id as isize * 0x6e) as usize;
+            let mut fichas = vec![g(tec + 0x69)];
+            for a in [g(clube + 0xd3), g(clube + 0x19f), g(clube + 0x1a3), g(clube + 0x1a7), g(clube + 0x1ab), g(clube + 0x1af)] {
+                if a != 0 {
+                    fichas.push(g(a + 0x69));
+                }
+            }
+            for f in fichas.into_iter().filter(|&f| f != 0) {
+                reg.push((f + 8, 6));
+            }
+        }
+    }
+    comparar_pos("jogadores_do_pos_jogo", reg, || o(partida, t), |chamar| jogadores_do_pos_jogo_com(partida, t, chamar));
+}
+
+unsafe extern "C" fn comparar_clube_do_pos_jogo(clube: usize, outro: usize, partida: usize, n: u32, t: usize) {
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, usize)>(297);
+    // a copia nao escreve no banco: so as chamadas e o sorteio
+    let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    comparar_pos("clube_do_pos_jogo", reg, || o(clube, outro, partida, n, t), |chamar| clube_do_pos_jogo_com(clube, outro, partida, n, t, chamar));
+}
+
 // ---------- centesima trigesima primeira leva: os jogadores no pos-jogo (0x6b6cc0) ----------
 
 /// { 0x6b6cc0 } (cdecl, match_day.cpp): depois da partida, para os dois lados do registro `t` da
@@ -7740,18 +7990,20 @@ unsafe extern "C" fn clube_do_pos_jogo(clube: usize, outro: usize, partida: usiz
 /// [0x9cf300]) ou sorteio(10) == 0: o 0x20 no contrato (0x867560). Por fim o tecnico (pessoa em
 /// +0x184): a ficha dele (+0x69) recebe +0x188/+0x18a/+0x18c em +0xa/+8/+0xc, e o auxiliar (+0xd3)
 /// e os 5 de +0x19f ganham um quarto da diferenca (entre 1 e 10000); +0x80 do clube = +0x18e.
-unsafe extern "C" fn jogadores_do_pos_jogo(partida: usize, t: usize) {
+unsafe fn jogadores_do_pos_jogo_com(partida: usize, t: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let especial: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x76d940usize);
-    let registrar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x5afe00usize);
-    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let nota: unsafe extern "thiscall" fn(usize, usize, u32) -> f64 = core::mem::transmute(0x4a31a0usize);
     let teste_849ce0: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
-    let teste_600a50: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x600a50usize);
-    let noticia: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32) = core::mem::transmute(0x72c1f0usize);
-    let noticia_34: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize) = core::mem::transmute(0x744240usize);
     let media_7c1e30: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(0x7c1e30usize);
     let marcas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x8676f0usize);
-    let por_20: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x867560usize);
+    let ch = core::cell::RefCell::new(chamar);
+    let registrar = |r: usize, pa: usize, t: usize| (ch.borrow_mut())(0x5afe00, r, [pa as u32, t as u32, 0, 0, 0]);
+    let noticia = |n: usize, p: usize, c: usize, tp: u32, pa: usize, z: u32| (ch.borrow_mut())(0x72c1f0, n, [p as u32, c as u32, tp, pa as u32, z]);
+    let noticia_34 = |n: usize, p: usize, c: usize, tp: u32, pa: usize| (ch.borrow_mut())(0x744240, n, [p as u32, c as u32, tp, pa as u32, 0]);
+    let por_20 = |c: usize, f: u32| (ch.borrow_mut())(0x867560, c, [f, 0, 0, 0, 0]);
+    // ponytail: a 0x7c1e30 (devolve ponto flutuante) tambem alcanca a 0x68d0d0 em 3 niveis, fica direta
+    let contrato = |n: usize, p: usize, c: usize| (ch.borrow_mut())(0x4cf5f0, n, [p as u32, c as u32, 0, 0, 0]) as usize;
+    let teste_600a50 = |c: usize, a: u32, b: u32, d: u32, e: u32| (ch.borrow_mut())(0x600a50, 0, [c as u32, a, b, d, e]) as i32;
     let g = |a: usize| *(a as *const usize);
     let ler = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16);
@@ -7898,22 +8150,25 @@ unsafe extern "C" fn jogadores_do_pos_jogo(partida: usize, t: usize) {
 /// do clube em [[0xb67a44]] (linhas de 0x49 bytes); senao -75 em +0xa e +0xc (entre 1 e 10000).
 /// Os outros: por sorteio(+0x5a) < sorteio(15, 8 ou 6 pela idade +0x18 e +0x5b) o 0x40000, e a
 /// noticia com o tipo.
-unsafe extern "C" fn eventos_do_pos_jogo(partida: usize) {
+unsafe fn eventos_do_pos_jogo_com(partida: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    let fora: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x53b900usize);
-    let duas: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x759610usize);
-    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let marcas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x8676f0usize);
-    let tirar_40: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x8676d0usize);
-    let tirar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x8674e0usize);
-    let por_40: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x867560usize);
-    let por: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x867700usize);
-    let noticia: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32) = core::mem::transmute(0x72c1f0usize);
     let protegido: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x735840usize);
-    let tipo_0b: unsafe extern "C" fn(usize, usize, usize) = core::mem::transmute(0x7daf50usize);
-    let tipo_1e: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x733a60usize);
-    let teste_600a50: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x600a50usize);
-    let reserva: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547af0usize);
+    // as que mexem no banco vao por `chamar` (no modo Rust a rotina do jogo; na comparacao, a fita)
+    let ch = core::cell::RefCell::new(chamar);
+    let duas = |n: usize, a: usize, b: usize, p: usize| (ch.borrow_mut())(0x759610, n, [a as u32, b as u32, p as u32, 0, 0]);
+    let tirar_40 = |c: usize, f: u32| (ch.borrow_mut())(0x8676d0, c, [f, 0, 0, 0, 0]);
+    let tirar = |c: usize, f: u32| (ch.borrow_mut())(0x8674e0, c, [f, 0, 0, 0, 0]);
+    let por_40 = |c: usize, f: u32| (ch.borrow_mut())(0x867560, c, [f, 0, 0, 0, 0]);
+    let por = |c: usize, f: u32, z: u32| (ch.borrow_mut())(0x867700, c, [f, z, 0, 0, 0]);
+    let noticia = |n: usize, p: usize, c: usize, t: u32, pa: usize, z: u32| (ch.borrow_mut())(0x72c1f0, n, [p as u32, c as u32, t, pa as u32, z]);
+    let tipo_0b = |p: usize, c: usize, pa: usize| (ch.borrow_mut())(0x7daf50, 0, [p as u32, c as u32, pa as u32, 0, 0]);
+    let tipo_1e = |n: usize, ev: usize, pa: usize| (ch.borrow_mut())(0x733a60, n, [ev as u32, pa as u32, 0, 0, 0]);
+    let reserva = |t: usize, p: usize, um: u32| (ch.borrow_mut())(0x547af0, 0, [t as u32, p as u32, um, 0, 0]);
+    // as consultas que alcancam a 0x68d0d0 (aloca) tambem vao por `chamar`
+    let fora = |c: usize| (ch.borrow_mut())(0x53b900, 0, [c as u32, 0, 0, 0, 0]) as i32;
+    let contrato = |n: usize, p: usize, c: usize| (ch.borrow_mut())(0x4cf5f0, n, [p as u32, c as u32, 0, 0, 0]) as usize;
+    let teste_600a50 = |c: usize, a: u32, b: u32, d: u32, e: u32| (ch.borrow_mut())(0x600a50, 0, [c as u32, a, b, d, e]) as i32;
     let lista = || *(0xb67dc8 as *const usize);
     let noticias = || *(0xb6b7c8 as *const usize);
     let ler = |p: usize| core::ptr::read_unaligned(p as *const i32);
@@ -11706,7 +11961,8 @@ unsafe fn chamar_gravando(rotina: usize, this: usize, a: [u32; 5], chamada: impl
     // o estado antes da chamada: a replica Rust tem de chegar a ele (o que a rotina gravou antes de
     // chamar, como a acao em +0x198, seria apagado pela foto de depois)
     let antes = if nivel == 0 { fita().as_ref().map(|(reg, _)| crate::comparacao::Memoria::ler(reg)) } else { None };
-    let r = chamada();
+    // os sorteios de dentro da unidade nao entram no rastro da original (ver `pausar_rastro`)
+    let r = if antes.is_some() { crate::aleatorio::pausar_rastro(chamada) } else { chamada() };
     DENTRO.fetch_sub(1, Relaxed);
     if let Some(antes) = antes {
         gravar_chamada(rotina, this, a, r, antes, (Vec::new(), Vec::new()));
@@ -11750,7 +12006,7 @@ unsafe fn chamar_gravando_vetores(rotina: usize, this: usize, a: [u32; 5], entra
     let nivel = DENTRO.fetch_add(1, Relaxed);
     let antes = if nivel == 0 { fita().as_ref().map(|(reg, _)| crate::comparacao::Memoria::ler(reg)) } else { None };
     let ent = if antes.is_some() { ler_vetores(entradas) } else { Vec::new() };
-    let r = chamada();
+    let r = if antes.is_some() { crate::aleatorio::pausar_rastro(chamada) } else { chamada() };
     DENTRO.fetch_sub(1, Relaxed);
     if let Some(antes) = antes {
         let sai = ler_vetores(saidas);
@@ -11850,6 +12106,12 @@ unsafe fn comparar_com_fita<R>(reg: Vec<(usize, usize)>, original: impl FnOnce()
             n
         },
     );
+    // os sorteios (pedido, resultado) tambem tem de bater: `sortear(5)` no lugar de `sortear(6)` com o
+    // mesmo resultado nao muda a memoria nem o estado do gerador, mas e outra rotina (131a leva)
+    if sequencia.get() && rastros.borrow().0 != rastros.borrow().1 {
+        *DETALHE_FITA.lock().unwrap_or_else(|e| e.into_inner()) = "sorteios diferentes".to_string();
+        sequencia.set(false);
+    }
     if !igual {
         let difs: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a != b).map(|(a, b)| format!("{:#x}: {:x?} x {:x?}", a.0, a.1, b.1)).collect();
         let mut d = DETALHE_FITA.lock().unwrap_or_else(|e| e.into_inner());
@@ -18584,6 +18846,9 @@ unsafe extern "thiscall" fn comparar_tracar(this: usize, x0: i8, y0: i8, x1: i8,
 
 comparar_valor!(comparar_tem_jogo, tem_jogo, 138, (clube: u32, so: u32) -> u32);
 unsafe extern "C" fn comparar_venceu(jogo: usize, clube: u32) -> u8 {
+    if gravando_pos() {
+        return chamar_gravando(0x6b7cf0, 0, [jogo as u32, clube, 0, 0, 0], || orig::<unsafe extern "C" fn(usize, u32) -> u8>(139)(jogo, clube) as u32) as u8;
+    }
     let r = orig::<unsafe extern "C" fn(usize, u32) -> u8>(139)(jogo, clube);
     let n = venceu_o_jogo(jogo, clube);
     PLACAR.registrar(r == n, || format!("venceu_o_jogo original={} rust={}", r, n));
@@ -18797,6 +19062,9 @@ unsafe extern "C" fn comparar_unidades(n: i32) -> u8 {
 comparar_valor!(comparar_e_amistoso, e_amistoso, 153, (comp: usize) -> u32);
 comparar_valor!(comparar_contrato_de, contrato_de, 154, (pessoa: usize) -> usize);
 unsafe extern "C" fn comparar_e_selecao(clube: usize) -> u32 {
+    if gravando_pos() {
+        return chamar_gravando(0x53b900, 0, [clube as u32, 0, 0, 0, 0], || orig::<unsafe extern "C" fn(usize) -> u32>(155)(clube));
+    }
     let r = orig::<unsafe extern "C" fn(usize) -> u32>(155)(clube);
     let v = e_selecao(clube);
     PLACAR.registrar(r == v, || format!("e_selecao original={} rust={}", r, v));
@@ -18847,7 +19115,16 @@ unsafe extern "thiscall" fn comparar_falta_no_motor(
     r
 }
 comparar_valor!(comparar_tecnico_9b23, tecnico_9b23, 194, (i: i8, pessoa: usize) -> u8);
-comparar_valor!(comparar_contrato_com_clube, contrato_com_clube, 198, (pessoa: usize, clube: usize) -> usize);
+unsafe extern "thiscall" fn comparar_contrato_com_clube(this: usize, pessoa: usize, clube: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(198);
+    if gravando_pos() {
+        return chamar_gravando(0x4cf5f0, this, [pessoa as u32, clube as u32, 0, 0, 0], || o(this, pessoa, clube) as u32) as usize;
+    }
+    let r = o(this, pessoa, clube);
+    let n = contrato_com_clube(this, pessoa, clube);
+    PLACAR.registrar(r == n, || format!("contrato_com_clube({:#x}, {:?}, {:?}) original={:#x} rust={:#x}", this, pessoa, clube, r, n));
+    r
+}
 unsafe extern "thiscall" fn comparar_entrada_da_lista(this: usize, pessoa: usize, alvo: usize, nao_11: u32, tambem_13: u32) -> usize {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize>(203)(this, pessoa, alvo, nao_11, tambem_13);
     let v = entrada_da_lista(this, pessoa, alvo, nao_11, tambem_13);
@@ -20056,6 +20333,10 @@ unsafe extern "stdcall" fn comparar_linha_tatica(clube: usize, humano: u32) -> i
     r
 }
 unsafe extern "C" fn comparar_clube_humano(clube: usize, a: u32, b: u8, pessoa: usize, c: u32) -> u32 {
+    if gravando_pos() {
+        let o = orig::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(180);
+        return chamar_gravando(0x600a50, 0, [clube as u32, a, b as u32, pessoa as u32, c], || o(clube, a, b, pessoa, c));
+    }
     let r = orig::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(180)(clube, a, b, pessoa, c);
     let v = clube_humano(clube, a, b, pessoa, c);
     PLACAR.registrar(r == v, || format!("clube_humano({:#x}, {}, {}, {:#x}, {}) original={} rust={}", clube, a, b, pessoa, c, r, v));
@@ -20225,6 +20506,11 @@ unsafe extern "thiscall" fn comparar_marcado_designado(this: usize) -> usize {
 
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
+        for (k, pr) in PROLOGOS_POS.iter().enumerate() {
+            if let Some(t) = desvios::desviar(&format!("motor_porta_{:x} (pos-jogo)", pr.endereco), pr, portas_pos()[k]) {
+                PORTAS_POS[k] = t;
+            }
+        }
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, porta_6f5c30 as *const () as usize) {
             PORTA_6F5C30 = t;
         }
@@ -20870,9 +21156,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_disputa as *const () as usize,
         porta_6f5c30 as *const () as usize,
         porta_70dfd0 as *const () as usize,
-        eventos_do_pos_jogo as *const () as usize,
-        jogadores_do_pos_jogo as *const () as usize,
-        clube_do_pos_jogo as *const () as usize,
+        comparar_eventos_do_pos_jogo as *const () as usize,
+        comparar_jogadores_do_pos_jogo as *const () as usize,
+        comparar_clube_do_pos_jogo as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -20994,11 +21280,6 @@ pub unsafe fn instalar(comparando: bool) {
         }
         // na comparacao a 0x6f5c30 e a 0x70dfd0 ja tem a porta (instalada antes), que tambem as compara
         if comparando && (PROLOGOS[i].endereco == 0x6f5c30 || PROLOGOS[i].endereco == 0x70dfd0) {
-            continue;
-        }
-        // 0x6b74a0 (130a leva), 0x6b6cc0 (131a) e 0x6b79a0 (132a) nao tem comparacao lado a lado: chamam rotinas do
-        // banco com efeitos; a carreira (banco igual ao do original dia a dia) e as mutacoes a conferem
-        if comparando && matches!(PROLOGOS[i].endereco, 0x6b74a0 | 0x6b6cc0 | 0x6b79a0) {
             continue;
         }
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
