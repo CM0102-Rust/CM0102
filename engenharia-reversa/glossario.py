@@ -146,6 +146,7 @@ EN = {
  'reiniciar_lance': 'restart_play',
  'chute': 'shot',
  'nota_do_arbitro': 'referee_grade', 'registrar_nota_do_arbitro': 'record_referee_grade',
+ 'batedor_guardado': 'stored_taker', 'guardar_instrucoes': 'store_instructions', 'numero_da_competicao': 'competition_number',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

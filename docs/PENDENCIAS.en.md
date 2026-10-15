@@ -20,5 +20,14 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `clube 547d90` | 0x6b79a0 | yes | same |
 | `sem humano clube ligado` | 0x6b66a0 (batch 133) | yes | and the conditions always false in automatic careers: a human club in the match, competitions [0x9cf7bc]/[0x9cf6e4]/[0x9cf958], the 16th human as a national manager |
 | `interesse partida marcada` | 0x6b5040 (batch 134) | yes | **covered** in Lucas's session of Oct 14 (8+, no divergence); the other humans (the 16 slots, the +0x24 link) are still pending |
+| `batedor do clube` | 0x897990 (batch 138) | — | the automatic career only goes through the empty cell (16 million times): AI clubs have no chosen taker. Needs a human club with takers chosen on the tactics screen (penalty, free kick, corner) and a match with a set piece |
+| `batedor de fora do clube` | 0x897990 | — | a chosen taker who is not from the club (national team or link 0x775790): a national manager with chosen takers |
+| `batedor saiu do clube` | 0x897990 | — | a chosen taker who left the club (sold, loaned) before the match |
+| `batedor sem ficha` | 0x897990 | — | a chosen taker without the +0x61 record (retired?) |
+| `batedor alem das pessoas` | 0x897990 | — | a cell with an id beyond the people (corrupt data): probably unreachable |
+| `instrucoes guardadas` | 0x896fe0 (batch 138) | — | the career only clears the instructions (32 thousand times). Saving and restoring depend on the current human ([0xb77c7a]) with the flag on: probably more than one human, or the human taking over/leaving a club |
+| `instrucoes devolvidas` | 0x896fe0 | — | same |
+| `instrucoes liberadas` | 0x896fe0 | — | same (without the flag) |
+| `numero da competicao` | 0x6b6570 (batch 138) | — | never runs in the automatic career; called by 0x6b55c0 (match day) and by the interface: a match day with a human manager |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

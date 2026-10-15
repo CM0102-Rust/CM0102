@@ -411,8 +411,11 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6f6c00, bytes: &[0x83, 0xec, 0x3c, 0x53, 0x55] },
     Prologo { endereco: 0x6d4a20, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0xf1] },
     Prologo { endereco: 0x79ce10, bytes: &[0x8b, 0x11, 0x56, 0x85, 0xd2] },
+    Prologo { endereco: 0x897990, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x896fe0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x6b6570, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x04] },
 ];
-const N: usize = 304;
+const N: usize = 307;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -8972,6 +8975,196 @@ unsafe extern "thiscall" fn comparar_nota_do_arbitro(m: usize) {
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(m), || nota_do_arbitro(m));
     PLACAR.registrar(igual, || format!("nota_do_arbitro {:x?} x {:x?}", mo, mr));
+}
+
+// ---------- centesima trigesima oitava leva: o batedor guardado, as instrucoes guardadas e o codigo da competicao ----------
+
+/// { 0x897990 } (ret 0x10, tactics.cpp): quem bate a bola parada `tipo` (0..=4) no lado `lado`
+/// (0..=1) pelo clube: a celula (dword) na linha tatica do clube (0x8982b0 com `humano`) em +0x601 +
+/// linha x 0x91 + 0x5e + (lado + tipo x 2) x 4. Acima de [0xae2364] + 0x52d a celula vira -1 (0);
+/// negativa, 0. A pessoa (0x6e bytes em [0xae23bc]) sem +0x61 apaga a celula (0); do clube (+0x39),
+/// numa selecao (0x53b900) ou com o vinculo das selecoes (0x775790 em [0xb74318]) e devolvida; senao
+/// a celula vira -1 (0). Clube nulo, tipo ou lado fora: a original (caixa de erro).
+unsafe extern "thiscall" fn batedor_guardado(this: usize, clube: usize, tipo: u32, lado: u32, humano: u32) -> usize {
+    let (t, l) = (tipo as u8 as i8, lado as u8 as i8);
+    if clube == 0 || !(0..=4).contains(&t) || !(0..=1).contains(&l) {
+        return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> usize>(304)(this, clube, tipo, lado, humano);
+    }
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let k = linha(clube, humano);
+    if k == -1 {
+        crate::comparacao::ramo("batedor sem linha");
+        return 0;
+    }
+    let celula = (*((this + 0x601) as *const usize)).wrapping_add(k as usize * 0x91 + 0x5e + (l as i32 + t as i32 * 2) as usize * 4) as *mut i32;
+    let v = *celula;
+    if v > (*(0xae2364 as *const i32)).wrapping_add(0x52d) {
+        crate::comparacao::ramo("batedor alem das pessoas");
+        *celula = -1;
+        return 0;
+    }
+    if v <= -1 {
+        crate::comparacao::ramo("batedor vazio");
+        return 0;
+    }
+    let pessoa = (*(0xae23bc as *const usize)).wrapping_add(v as usize * 0x6e);
+    if *((pessoa + 0x61) as *const u32) == 0 {
+        crate::comparacao::ramo("batedor sem ficha");
+        *celula = -1;
+        return 0;
+    }
+    if *((pessoa + 0x39) as *const usize) == clube {
+        crate::comparacao::ramo("batedor do clube");
+        return pessoa;
+    }
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let vinculo: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x775790usize);
+    if selecao(clube) != 0 || vinculo(*(0xb74318 as *const usize), clube) != 0 {
+        crate::comparacao::ramo("batedor de fora do clube");
+        return pessoa;
+    }
+    crate::comparacao::ramo("batedor saiu do clube");
+    *celula = -1;
+    0
+}
+
+/// { 0x896fe0 } (ret 0x10, tactics.cpp): guarda (`volta` 0) ou devolve (`volta` != 0) as 20
+/// instrucoes (dwords em +0x601 + linha x 0x91 + 2, linha da 0x8982b0 com `pessoa`) do clube num dos
+/// 16 espacos de 0x5c bytes a partir de +0x30 (clube +0x30, pessoa +0x34, ocupado +0x38, instrucoes
+/// +0x3c; ocupados em +0x5f0). O espaco e o do humano da vez ([0xb74c26 + [0xb77c7a] x 0x300]):
+/// [0xae2364] - id dele - 1, em 0..16. Guardando (com `usar`), marca o espaco e copia; depois as 20
+/// instrucoes viram -1. Devolvendo com `usar`, o espaco do mesmo clube e pessoa volta para a tabela
+/// e e liberado; sem `usar`, libera todos os espacos do clube e pessoa. Clube nulo: a original (caixa
+/// de erro); linha -1: 0; senao 1.
+unsafe extern "thiscall" fn guardar_instrucoes(this: usize, clube: usize, pessoa: u32, usar: u32, volta: u32) -> u32 {
+    if clube == 0 {
+        return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(305)(this, clube, pessoa, usar, volta);
+    }
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let k = linha(clube, pessoa);
+    if k == -1 {
+        return 0;
+    }
+    let instrucao = |i: usize| (*((this + 0x601) as *const usize)).wrapping_add(k as usize * 0x91 + 2 + 4 * i) as *mut u32;
+    let ocupados = (this + 0x5f0) as *mut u8;
+    // o espaco do humano da vez, se houver
+    let espaco = || {
+        let humano = *((0xb74c26 + *(0xb77c7a as *const i16) as isize as usize * 0x300) as *const usize);
+        if humano == 0 {
+            return None;
+        }
+        let e = (*(0xae2364 as *const i32)).wrapping_sub(*(humano as *const i32)).wrapping_sub(1);
+        if (0..16).contains(&e) { Some(this + e as usize * 0x5c) } else { None }
+    };
+    let u = |p: usize, o: usize| (p + o) as *mut u32;
+    if volta == 0 {
+        if usar != 0 {
+            if let Some(s) = espaco() {
+                crate::comparacao::ramo("instrucoes guardadas");
+                if *u(s, 0x38) == 0 {
+                    *ocupados = (*ocupados).wrapping_add(1);
+                }
+                *u(s, 0x30) = clube as u32;
+                *u(s, 0x34) = pessoa;
+                *u(s, 0x38) = 1;
+                for i in 0..20 {
+                    *u(s, 0x3c + 4 * i) = *instrucao(i);
+                }
+            }
+        }
+        crate::comparacao::ramo("instrucoes apagadas");
+        for i in 0..20 {
+            *instrucao(i) = u32::MAX;
+        }
+        return 1;
+    }
+    if usar != 0 {
+        if let Some(s) = espaco() {
+            if *u(s, 0x38) != 0 && *u(s, 0x30) == clube as u32 && *u(s, 0x34) == pessoa {
+                crate::comparacao::ramo("instrucoes devolvidas");
+                for i in 0..20 {
+                    *instrucao(i) = *u(s, 0x3c + 4 * i);
+                }
+            }
+            if *u(s, 0x38) != 0 {
+                *ocupados = (*ocupados).wrapping_sub(1);
+            }
+            *u(s, 0x38) = 0;
+        }
+        return 1;
+    }
+    if *ocupados != 0 {
+        for e in 0..16 {
+            let s = this + e * 0x5c;
+            if *u(s, 0x38) != 0 && *u(s, 0x30) == clube as u32 && *u(s, 0x34) == pessoa {
+                crate::comparacao::ramo("instrucoes liberadas");
+                *u(s, 0x38) = 0;
+                *ocupados = (*ocupados).wrapping_sub(1);
+            }
+        }
+    }
+    1
+}
+
+/// { 0x6b6570 } (cdecl, match_day.cpp): o numero da competicao pelo codigo (0: 5/4, 1: 11/10, 0x1ef:
+/// 1/0, 0x3de: 3/2, 0x483: 7/6, 0x528: 9/8; o primeiro com `segunda` 1). Outro codigo: a original
+/// (caixa de erro).
+unsafe extern "C" fn numero_da_competicao(codigo: u32, segunda: u32) -> u32 {
+    let s = (segunda as u8 == 1) as u32;
+    crate::comparacao::ramo("numero da competicao");
+    match codigo as u16 as i16 {
+        0 => 4 + s,
+        1 => 10 + s,
+        0x1ef => s,
+        0x3de => 2 + s,
+        0x483 => 6 + s,
+        0x528 => 8 + s,
+        _ => orig::<unsafe extern "C" fn(u32, u32) -> u32>(306)(codigo, segunda),
+    }
+}
+
+unsafe extern "thiscall" fn comparar_batedor_guardado(this: usize, clube: usize, tipo: u32, lado: u32, humano: u32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> usize>(304);
+    let (t, l) = (tipo as u8 as i8, lado as u8 as i8);
+    if gravando_no_topo() || clube == 0 || !(0..=4).contains(&t) || !(0..=1).contains(&l) {
+        return o(this, clube, tipo, lado, humano);
+    }
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let k = linha(clube, humano);
+    let mut reg = vec![(0xb67a34, 4)];
+    if k != -1 {
+        reg.push(((*((this + 0x601) as *const usize)).wrapping_add(k as usize * 0x91 + 0x5e + (l as i32 + t as i32 * 2) as usize * 4), 4));
+    }
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, tipo, lado, humano), || batedor_guardado(this, clube, tipo, lado, humano));
+    PLACAR.registrar(igual && r == n, || format!("batedor_guardado(tipo {} lado {}) original={:#x} rust={:#x} {:x?} x {:x?}", t, l, r, n, mo, mr));
+    r
+}
+
+unsafe extern "thiscall" fn comparar_guardar_instrucoes(this: usize, clube: usize, pessoa: u32, usar: u32, volta: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(305);
+    if gravando_no_topo() || clube == 0 {
+        return o(this, clube, pessoa, usar, volta);
+    }
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let k = linha(clube, pessoa);
+    // os 16 espacos e o contador, e a linha de instrucoes do clube
+    let mut reg = vec![(this + 0x30, 0x5c * 16), (this + 0x5f0, 1)];
+    if k != -1 {
+        reg.push(((*((this + 0x601) as *const usize)).wrapping_add(k as usize * 0x91 + 2), 80));
+    }
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, pessoa, usar, volta), || guardar_instrucoes(this, clube, pessoa, usar, volta));
+    PLACAR.registrar(igual && r == n, || format!("guardar_instrucoes(usar {} volta {}) original={} rust={} {:x?} x {:x?}", usar, volta, r, n, mo, mr));
+    r
+}
+
+unsafe extern "C" fn comparar_numero_da_competicao(codigo: u32, segunda: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(u32, u32) -> u32>(306);
+    let r = o(codigo, segunda);
+    if matches!(codigo as u16 as i16, 0 | 1 | 0x1ef | 0x3de | 0x483 | 0x528) {
+        let n = numero_da_competicao(codigo, segunda);
+        PLACAR.registrar(r as u8 == n as u8, || format!("numero_da_competicao({:#x}, {}) original={} rust={}", codigo as u16, segunda as u8, r as u8, n as u8));
+    }
+    r
 }
 
 // ---------- centesima trigesima quarta leva: o interesse do humano no dia de jogos (0x6b5040) ----------
@@ -22540,6 +22733,9 @@ pub unsafe fn instalar(comparando: bool) {
         chute as *const () as usize,
         nota_do_arbitro as *const () as usize,
         registrar_nota_do_arbitro as *const () as usize,
+        batedor_guardado as *const () as usize,
+        guardar_instrucoes as *const () as usize,
+        numero_da_competicao as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -22846,6 +23042,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_chute as *const () as usize,
         comparar_nota_do_arbitro as *const () as usize,
         comparar_registrar_nota_do_arbitro as *const () as usize,
+        comparar_batedor_guardado as *const () as usize,
+        comparar_guardar_instrucoes as *const () as usize,
+        comparar_numero_da_competicao as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -22958,7 +23157,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

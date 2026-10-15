@@ -20,5 +20,14 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `clube 547d90` | 0x6b79a0 | sim | idem |
 | `sem humano clube ligado` | 0x6b66a0 (133ª) | sim | e as condições sempre falsas nas carreiras automáticas: clube humano na partida, competições [0x9cf7bc]/[0x9cf6e4]/[0x9cf958], o 16º humano técnico de seleção |
 | `interesse partida marcada` | 0x6b5040 (134ª) | sim | **coberto** na sessão do Lucas de 14/10 (8+, sem divergência); continuam pendentes os outros humanos (as 16 vagas, o vínculo +0x24) |
+| `batedor do clube` | 0x897990 (138ª) | — | a carreira automática só passa pela célula vazia (16 milhões de vezes): os clubes da IA não têm batedor escolhido. Precisa de um clube humano com batedores escolhidos na tela de táticas (pênalti, falta, escanteio) e uma partida com bola parada |
+| `batedor de fora do clube` | 0x897990 | — | batedor escolhido que não é do clube (seleção ou vínculo 0x775790): técnico de seleção com batedores escolhidos |
+| `batedor saiu do clube` | 0x897990 | — | batedor escolhido que saiu do clube (vendido, emprestado) antes da partida |
+| `batedor sem ficha` | 0x897990 | — | batedor escolhido sem a ficha +0x61 (aposentado?) |
+| `batedor alem das pessoas` | 0x897990 | — | célula com id acima das pessoas (dado corrompido): provavelmente inalcançável |
+| `instrucoes guardadas` | 0x896fe0 (138ª) | — | a carreira só apaga as instruções (32 mil vezes). Guardar e devolver dependem do humano da vez ([0xb77c7a]) com o flag ligado: provavelmente mais de um humano, ou o humano assumindo/deixando um clube |
+| `instrucoes devolvidas` | 0x896fe0 | — | idem |
+| `instrucoes liberadas` | 0x896fe0 | — | idem (sem o flag) |
+| `numero da competicao` | 0x6b6570 (138ª) | — | nunca roda na carreira automática; chamada pela 0x6b55c0 (dia de jogos) e pela interface: dia de jogo com técnico humano |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
