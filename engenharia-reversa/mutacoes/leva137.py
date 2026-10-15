@@ -1,0 +1,12 @@
+# Mutacoes da leva137 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva137.py --carreira 2002-06-01 --confirmar 2001-10-01
+MUTACOES = [
+    ('a_minuto', "let mut nota = (*((m + 0xf5ba) as *const i16) as i32 / 1000) as i8;", "let mut nota = (*((m + 0xf5ba) as *const i16) as i32 / 1001) as i8;"),
+    ('a_cartoes', "    if cartoes > 2 {\n        nota = nota.wrapping_sub(2);", "    if cartoes > 3 {\n        nota = nota.wrapping_sub(2);"),
+    ('a_sem_cartao', "    } else if cartoes == 0 {\n        nota = nota.wrapping_add(1);", "    } else if cartoes == 0 {\n        nota = nota.wrapping_add(2);"),
+    ('a_faltas', "    if faltas > 5 {\n        nota = nota.wrapping_sub(1);", "    if faltas > 6 {\n        nota = nota.wrapping_sub(1);"),
+    ('a_quatro', "if nota < 4 && sortear(500) != 0 {", "if nota < 4 && sortear(499) != 0 {"),
+    ('a_oito', "} else if nota > 8 && sortear(0x19) != 0 {", "} else if nota > 8 && sortear(0x18) != 0 {"),
+    ('a_cartoes_ficha', "*b(0xf) = (*b(0xf)).wrapping_add(*r.add(4));", "*b(0xf) = (*b(0xf)).wrapping_add(*r.add(5));"),
+    ('a_media', "*((f + 4) as *mut f32) = (*w(0xa) as f64 / *w(0xc) as f64) as f32;", "*((f + 4) as *mut f32) = (*w(0xa) as f64 / *w(0xc) as f64 * 1.0001) as f32;"),
+    ('a_ultima', "*b(0x10) = *r.add(6);", "*b(0x10) = *r.add(5);"),
+]

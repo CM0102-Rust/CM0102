@@ -145,6 +145,7 @@ EN = {
  'interesse_do_dia': 'match_day_interest',
  'reiniciar_lance': 'restart_play',
  'chute': 'shot',
+ 'nota_do_arbitro': 'referee_grade', 'registrar_nota_do_arbitro': 'record_referee_grade',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

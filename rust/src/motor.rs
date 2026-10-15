@@ -409,8 +409,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6b5040, bytes: &[0x83, 0xec, 0x1c, 0x53, 0x8b, 0xd9] },
     Prologo { endereco: 0x6c54a0, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6f6c00, bytes: &[0x83, 0xec, 0x3c, 0x53, 0x55] },
+    Prologo { endereco: 0x6d4a20, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0xf1] },
+    Prologo { endereco: 0x79ce10, bytes: &[0x8b, 0x11, 0x56, 0x85, 0xd2] },
 ];
-const N: usize = 302;
+const N: usize = 304;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -8846,6 +8848,130 @@ unsafe extern "thiscall" fn comparar_chute(j: usize, forca: u32, x: u32, y: u32)
     });
     GRAVAR_716.store(gravar, std::sync::atomic::Ordering::Relaxed);
     PLACAR.registrar(igual && sequencia, || format!("chute(forca {}, alvo {} {}) {} chamadas: {}", forca as i16, x as i8, y as i8, k, detalhe_fita()));
+}
+
+// ---------- centesima trigesima setima leva: a nota do arbitro (0x6d4a20, 0x79ce10) ----------
+
+/// { 0x79ce10 } (ret 4, officials_manager.cpp): soma a nota `r` (dword id, bytes: cartoes, faltas,
+/// nota) na ficha do arbitro (17 bytes em [this] + id x 17, id em 0..[0xae2390]): +0xf os cartoes,
+/// as palavras +8 e +0xa as faltas e a nota, +0x10 a ultima nota, +0xc os jogos e +4 a media
+/// (+0xa / +0xc, float).
+unsafe extern "thiscall" fn registrar_nota_do_arbitro(this: usize, r: *const u8) {
+    let base = *(this as *const usize);
+    if base == 0 || r.is_null() {
+        return;
+    }
+    let id = *(r as *const i32);
+    if id < 0 || id >= *(0xae2390 as *const i32) {
+        return;
+    }
+    let f = base + id as usize * 17;
+    let b = |o: usize| (f + o) as *mut u8;
+    let w = |o: usize| (f + o) as *mut i16;
+    *b(0xf) = (*b(0xf)).wrapping_add(*r.add(4));
+    *w(8) = (*w(8)).wrapping_add(*r.add(5) as i8 as i16);
+    *w(0xa) = (*w(0xa)).wrapping_add(*r.add(6) as i8 as i16);
+    *b(0x10) = *r.add(6);
+    *w(0xc) = (*w(0xc)).wrapping_add(1);
+    if *w(0xc) != 0 {
+        *((f + 4) as *mut f32) = (*w(0xa) as f64 / *w(0xc) as f64) as f32;
+    }
+}
+
+/// { 0x6d4a20 } (match_eng.cpp, chamada pela 0x6b98c0): a nota do arbitro da partida (+0xf5b6, id
+/// != -1), fora das competicoes amistosas (0x5c6710 em [0xae2c74]). Os cartoes (+0xf5cb e +0xf601 dos
+/// dois lados) e as faltas (+0xf5cc e +0xf602); a nota parte de +0xf5ba / 1000, perde 2 com mais de 2
+/// cartoes, 1 com 2, ganha 1 sem cartao; perde 1 com mais de 5 faltas, ganha 1 com menos de 3. Abaixo
+/// de 4 vira 4 (salvo 1 em 500), acima de 8 vira 8 (salvo 1 em 25), e fica entre 1 e 10. Grava pela
+/// 0x79ce10 em [0xb74340].
+unsafe extern "thiscall" fn nota_do_arbitro(m: usize) {
+    let arbitro = *((m + 0xf5b6) as *const usize);
+    if arbitro == 0 || *(arbitro as *const i32) == -1 {
+        return;
+    }
+    let partida = *((m + 0x4792) as *const usize);
+    if partida == 0 {
+        return;
+    }
+    let comp = *((partida + 0x14) as *const usize);
+    if comp == 0 {
+        return;
+    }
+    let amistosos = *(0xae2c74 as *const usize);
+    if amistosos != 0 {
+        let amistosa: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
+        if amistosa(amistosos, comp) != 0 {
+            crate::comparacao::ramo("nota do arbitro amistoso");
+            return;
+        }
+    }
+    let cartoes = (*((m + 0xf601) as *const u8)).wrapping_add(*((m + 0xf5cb) as *const u8)) as i8;
+    let faltas = (*((m + 0xf602) as *const u8)).wrapping_add(*((m + 0xf5cc) as *const u8)) as i8;
+    let mut nota = (*((m + 0xf5ba) as *const i16) as i32 / 1000) as i8;
+    if cartoes > 2 {
+        nota = nota.wrapping_sub(2);
+    } else if cartoes > 1 {
+        nota = nota.wrapping_sub(1);
+    } else if cartoes == 0 {
+        nota = nota.wrapping_add(1);
+    }
+    if faltas > 5 {
+        nota = nota.wrapping_sub(1);
+    } else if faltas < 3 {
+        nota = nota.wrapping_add(1);
+    }
+    if nota < 4 && sortear(500) != 0 {
+        nota = 4;
+    } else if nota > 8 && sortear(0x19) != 0 {
+        nota = 8;
+    } else if nota < 1 {
+        crate::comparacao::ramo("nota do arbitro minima");
+        nota = 1;
+    } else if nota > 10 {
+        crate::comparacao::ramo("nota do arbitro maxima");
+        nota = 10;
+    }
+    let mut r = [0u8; 8];
+    r[..4].copy_from_slice(&(*(arbitro as *const i32)).to_le_bytes());
+    r[4] = cartoes as u8;
+    r[5] = faltas as u8;
+    r[6] = nota as u8;
+    let registrar: unsafe extern "thiscall" fn(usize, *const u8) = core::mem::transmute(0x79ce10usize);
+    registrar(*(0xb74340 as *const usize), r.as_ptr());
+}
+
+/// A ficha do arbitro que a 0x79ce10 mexe (vazia se o id nao vale).
+unsafe fn ficha_do_arbitro(gerente: usize, id: i32) -> Vec<(usize, usize)> {
+    let base = *(gerente as *const usize);
+    if base == 0 || id < 0 || id >= *(0xae2390 as *const i32) {
+        return Vec::new();
+    }
+    vec![(base + id as usize * 17, 17)]
+}
+
+unsafe extern "thiscall" fn comparar_registrar_nota_do_arbitro(this: usize, r: *const u8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, *const u8)>(303);
+    if gravando_no_topo() || r.is_null() {
+        return o(this, r);
+    }
+    let reg = ficha_do_arbitro(this, *(r as *const i32));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, r), || registrar_nota_do_arbitro(this, r));
+    PLACAR.registrar(igual, || format!("registrar_nota_do_arbitro(nota {}) {:x?} x {:x?}", *r.add(6), mo, mr));
+}
+
+unsafe extern "thiscall" fn comparar_nota_do_arbitro(m: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(302);
+    if gravando_no_topo() {
+        return o(m);
+    }
+    // o sorteio e a ficha do arbitro
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let arbitro = *((m + 0xf5b6) as *const usize);
+    if arbitro != 0 && *(0xb74340 as *const usize) != 0 {
+        reg.extend(ficha_do_arbitro(*(0xb74340 as *const usize), *(arbitro as *const i32)));
+    }
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(m), || nota_do_arbitro(m));
+    PLACAR.registrar(igual, || format!("nota_do_arbitro {:x?} x {:x?}", mo, mr));
 }
 
 // ---------- centesima trigesima quarta leva: o interesse do humano no dia de jogos (0x6b5040) ----------
@@ -22412,6 +22538,8 @@ pub unsafe fn instalar(comparando: bool) {
         interesse_do_dia as *const () as usize,
         reiniciar_lance as *const () as usize,
         chute as *const () as usize,
+        nota_do_arbitro as *const () as usize,
+        registrar_nota_do_arbitro as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -22716,6 +22844,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_interesse_do_dia as *const () as usize,
         comparar_reiniciar_lance as *const () as usize,
         comparar_chute as *const () as usize,
+        comparar_nota_do_arbitro as *const () as usize,
+        comparar_registrar_nota_do_arbitro as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -22828,7 +22958,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
