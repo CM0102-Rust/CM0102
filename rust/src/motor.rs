@@ -408,8 +408,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6b66a0, bytes: &[0xa1, 0x04, 0x57, 0xa1, 0x00] },
     Prologo { endereco: 0x6b5040, bytes: &[0x83, 0xec, 0x1c, 0x53, 0x8b, 0xd9] },
     Prologo { endereco: 0x6c54a0, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x6f6c00, bytes: &[0x83, 0xec, 0x3c, 0x53, 0x55] },
 ];
-const N: usize = 301;
+const N: usize = 302;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -6253,6 +6254,154 @@ unsafe extern "thiscall" fn aplicar_falta(m: usize) -> u8 {
 
 // ---------- centesima vigesima sexta leva: a dividida (0x70ec80) ----------
 
+/// A falta do desafiante `e` sobre `j` (tipo da 0x6cfc60, lance `lance`) punida pelo arbitro
+/// (0x6cfcd0), como na dividida (0x70ec80) e no chute (0x6f6c00): narracao pelo lance, cartao, bola
+/// parada 7, penalti (5) ou falta (6), expulsao, cobrador, as narracoes de sempre, o desgaste do time
+/// e o cansaco; no fim `e` perde 25 de folego. `ramos`: penalti, expulsao, cobrador, vantagem.
+#[allow(clippy::too_many_arguments)]
+unsafe fn punir_desafiante_com(m: usize, e: usize, j: usize, mut tipo: u8, cartao: u8, grav: i8, arriscado: i8, vantagem: u8, lance: i8, ajustar_no_penalti: bool, ramos: &[&'static str; 4], chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(0x6cb650usize);
+    let punir: unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8) = core::mem::transmute(0x6cfcd0usize);
+    let cobrador: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(0x6ceb90usize);
+    let ao_time: unsafe extern "thiscall" fn(usize, usize, f32) = core::mem::transmute(0x6bb8d0usize);
+    let ajustar: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x7172d0usize);
+    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(0x6eecb0usize);
+    let b = |p: usize, o: usize| (p + o) as *mut u8;
+    let w = |p: usize, o: usize| (p + o) as *mut i16;
+    let ub = |p: usize, o: usize| *((p + o) as *const u8) as u32;
+    let narrar = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, a3: u32, a4: u32, a5: u32| {
+        chamar(0x6d6f70, *((m + 0x8f7a) as *const usize), [codigo, m as u32, a3, a4, a5]);
+    };
+    let par = |p: usize| ub(p, 0x2e) | ub(p, 0x27) << 8;
+    let zero = |p: usize| (byte(p, 0x27) == 0) as u32;
+    let na_area = |p: usize, lado1: bool| {
+        (2..=6).contains(&byte(p, 0x102)) && if lado1 { (10..=11).contains(&byte(p, 0x103)) } else { (0..=1).contains(&byte(p, 0x103)) }
+    };
+    let mut peso = 0f32;
+    punir(m, e, j, &mut tipo, cartao as i8, grav, arriscado as u8, &mut peso, vantagem);
+    narrar(chamar, narracao_da_falta(lance), ub(e, 0x2e), ub(e, 0x27), par(j));
+    let cor: i32 = match tipo {
+        2 => 0x1ff9,
+        3 => 0x1ff7,
+        4 => 0x1ff8,
+        5 => 0x1ff6,
+        _ => {
+            if grav as i32 > sortear(7) + 2 { 0x210a } else { -1 }
+        }
+    };
+    let som: u32;
+    if tipo == 7 {
+        som = 0x1f79;
+        *b(m, 0x8eb2) = 7;
+    } else if na_area(j, byte(j, 0x27) == 0) {
+        if cor == -1 {
+            match sortear(4) {
+                0 => narrar(chamar, 0x20e9, u32::MAX, ub(j, 0x27), u32::MAX),
+                1 => narrar(chamar, 0x20ec, u32::MAX, ub(j, 0x27), u32::MAX),
+                _ => {}
+            }
+        }
+        crate::comparacao::ramo(ramos[0]);
+        som = 0x1f7a;
+        *b(m, 0x8eb2) = 5;
+        *((m + 0x478a) as *mut usize) = j;
+        *w(e, 0x35) = (*w(e, 0x35)).wrapping_sub(500);
+        // no chute (0x6f6c00) o penalti ainda mexe no +0x17 de quem fez
+        if ajustar_no_penalti && sortear(byte(*((e + 0x69) as *const usize), 0x5a) as i32) == 0 {
+            let r = sortear(10);
+            if ajustar(e, (r as u8).wrapping_neg() as i8) != 0 {
+                desempenho(e, 0);
+            }
+        }
+    } else {
+        som = 0x1f79;
+        *b(m, 0x8eb2) = 6;
+    }
+    *b(m, 0x8ea7) = *b(j, 0x102);
+    *b(m, 0x8ea8) = *b(j, 0x103);
+    *b(m, 0x8eae) = *b(j, 0x27);
+    *((m + 0xf582) as *mut u32) = 0;
+    if som == 0x1f7a {
+        narrar(chamar, 0x1f7a, u32::MAX, ub(j, 0x27), u32::MAX);
+    }
+    let expulso = matches!(tipo, 3..=6);
+    if cor > -1 {
+        if (lance == 0x2c || lance == 0x2f) && vantagem != 0 {
+            narrar(chamar, if lance == 0x2f { 0x21da } else { 0x21d9 }, ub(j, 0x2e), ub(j, 0x27), par(e));
+            if expulso || som == 0x1f7a {
+                *b(e, 0x16) = 1;
+            }
+        }
+        if sortear(4) == 0 {
+            let x = sortear(grav as i32);
+            if x > sortear(0x14) {
+                let t = *((m + 0x4792) as *const usize);
+                let clube = *((t + if byte(j, 0x27) != 0 { 0x20 } else { 0x1c }) as *const usize);
+                let k = *((clube + 0x53) as *const usize);
+                if k != 0 && byte(k, 0x77) == 8 {
+                    narrar(chamar, 0x20f5, 0, 0, u32::MAX);
+                }
+            }
+            narrar(chamar, 0x2109, ub(e, 0x2e), ub(e, 0x27), u32::MAX);
+        }
+        narrar(chamar, cor as u32, ub(e, 0x2e), ub(e, 0x27), u32::MAX);
+        if expulso {
+            crate::comparacao::ramo(ramos[1]);
+            jogador_saiu_com(m, e, 0, chamar);
+        }
+    }
+    if som != 0x1f7a {
+        crate::comparacao::ramo(ramos[2]);
+        let c = cobrador(m, byte(j, 0x27), byte(m, 0x8eb2), 0);
+        if c == 0 {
+            narrar(chamar, som, u32::MAX, ub(j, 0x27), u32::MAX);
+        } else {
+            if tipo == 7 {
+                narrar(chamar, 0x21e2, ub(c, 0x2e), ub(j, 0x27), u32::MAX);
+            } else {
+                narrar(chamar, som, u32::MAX, ub(j, 0x27), u32::MAX);
+            }
+            // a cobranca longe do gol adversario (lado 1: linha < 4; lado 0: > 7)
+            let longe = (byte(j, 0x27) == 1 && byte(j, 0x103) < 4) || (byte(j, 0x27) == 0 && byte(j, 0x103) > 7);
+            if som == 0x1f79 && vantagem == 0 && longe {
+                if tipo == 7 {
+                    if !na_area(j, byte(j, 0x27) == 0) {
+                        narrar(chamar, 0x21e1, ub(c, 0x2e), ub(j, 0x27), u32::MAX);
+                    }
+                } else if (2..=6).contains(&byte(j, 0x102)) {
+                    narrar(chamar, 0x21e0, ub(c, 0x2e), ub(j, 0x27), u32::MAX);
+                } else {
+                    narrar(chamar, 0x21df, ub(c, 0x2e), ub(j, 0x27), u32::MAX);
+                }
+            }
+        }
+    }
+    if especial(lance) == 0 {
+        let extra = expulso || som == 0x1f7a;
+        if vantagem != 0 {
+            crate::comparacao::ramo(ramos[3]);
+            narrar(chamar, 0x20dd, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
+            if tipo == 4 || tipo == 5 {
+                *b(e, 0x16) = 1;
+            }
+            if extra && sortear(2) == 0 {
+                narrar(chamar, 0x20d9, u32::MAX, zero(j), u32::MAX);
+            }
+        } else if sortear(9) == 0 {
+            narrar(chamar, 0x20df, u32::MAX, zero(j), u32::MAX);
+            if sortear(3) == 0 {
+                narrar(chamar, 0x20e0, u32::MAX, zero(j), u32::MAX);
+            }
+            if extra && sortear(2) == 0 {
+                narrar(chamar, 0x20d9, u32::MAX, zero(j), u32::MAX);
+            }
+        }
+        ao_time(m, e, peso);
+        chamar(0x716e10, e, [0; 5]);
+    }
+    *w(e, 0x35) = (*w(e, 0x35)).wrapping_sub(0x19);
+}
+
 /// Narracao da falta pelo lance em disputa (tabelas 0x71026c e 0x710328 da 0x70ec80).
 fn narracao_da_falta(lance: i8) -> u32 {
     match lance {
@@ -6305,9 +6454,6 @@ unsafe fn dividida_com(j: usize, forte: u8, chamar: &mut dyn FnMut(usize, usize,
     let falta: unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8 = core::mem::transmute(0x6cfc60usize);
     let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(0x6cb650usize);
     let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(0x6bb9a0usize);
-    let punir: unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8) = core::mem::transmute(0x6cfcd0usize);
-    let cobrador: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(0x6ceb90usize);
-    let ao_time: unsafe extern "thiscall" fn(usize, usize, f32) = core::mem::transmute(0x6bb8d0usize);
     let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
     let apontar_: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) = core::mem::transmute(0x6f4920usize);
     let pressao: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) -> u8 = core::mem::transmute(0x6c3a00usize);
@@ -6365,122 +6511,7 @@ unsafe fn dividida_com(j: usize, forte: u8, chamar: &mut dyn FnMut(usize, usize,
                 } else {
                     // a falta com punicao
                     crate::comparacao::ramo("dividida falta punida");
-                    let mut peso = 0f32;
-                    punir(m, e, j, &mut tipo, cartao as i8, grav, arriscado as u8, &mut peso, vantagem);
-                    narrar(chamar, narracao_da_falta(lance), ub(e, 0x2e), ub(e, 0x27), par(j));
-                    let cor: i32 = match tipo {
-                        2 => 0x1ff9,
-                        3 => 0x1ff7,
-                        4 => 0x1ff8,
-                        5 => 0x1ff6,
-                        _ => {
-                            if grav as i32 > sortear(7) + 2 { 0x210a } else { -1 }
-                        }
-                    };
-                    let som: u32;
-                    if tipo == 7 {
-                        som = 0x1f79;
-                        *b(m, 0x8eb2) = 7;
-                    } else if na_area(j, byte(j, 0x27) == 0) {
-                        if cor == -1 {
-                            match sortear(4) {
-                                0 => narrar(chamar, 0x20e9, u32::MAX, ub(j, 0x27), u32::MAX),
-                                1 => narrar(chamar, 0x20ec, u32::MAX, ub(j, 0x27), u32::MAX),
-                                _ => {}
-                            }
-                        }
-                        crate::comparacao::ramo("dividida penalti");
-                        som = 0x1f7a;
-                        *b(m, 0x8eb2) = 5;
-                        *((m + 0x478a) as *mut usize) = j;
-                        *w(e, 0x35) = (*w(e, 0x35)).wrapping_sub(500);
-                    } else {
-                        som = 0x1f79;
-                        *b(m, 0x8eb2) = 6;
-                    }
-                    *b(m, 0x8ea7) = *b(j, 0x102);
-                    *b(m, 0x8ea8) = *b(j, 0x103);
-                    *b(m, 0x8eae) = *b(j, 0x27);
-                    *((m + 0xf582) as *mut u32) = 0;
-                    if som == 0x1f7a {
-                        narrar(chamar, 0x1f7a, u32::MAX, ub(j, 0x27), u32::MAX);
-                    }
-                    let expulso = matches!(tipo, 3..=6);
-                    if cor > -1 {
-                        if (lance == 0x2c || lance == 0x2f) && vantagem != 0 {
-                            narrar(chamar, if lance == 0x2f { 0x21da } else { 0x21d9 }, ub(j, 0x2e), ub(j, 0x27), par(e));
-                            if expulso || som == 0x1f7a {
-                                *b(e, 0x16) = 1;
-                            }
-                        }
-                        if sortear(4) == 0 {
-                            let x = sortear(grav as i32);
-                            if x > sortear(0x14) {
-                                let t = *((m + 0x4792) as *const usize);
-                                let clube = *((t + if byte(j, 0x27) != 0 { 0x20 } else { 0x1c }) as *const usize);
-                                let k = *((clube + 0x53) as *const usize);
-                                if k != 0 && byte(k, 0x77) == 8 {
-                                    narrar(chamar, 0x20f5, 0, 0, u32::MAX);
-                                }
-                            }
-                            narrar(chamar, 0x2109, ub(e, 0x2e), ub(e, 0x27), u32::MAX);
-                        }
-                        narrar(chamar, cor as u32, ub(e, 0x2e), ub(e, 0x27), u32::MAX);
-                        if expulso {
-                            crate::comparacao::ramo("dividida expulsao");
-                            jogador_saiu_com(m, e, 0, chamar);
-                        }
-                    }
-                    if som != 0x1f7a {
-                        crate::comparacao::ramo("dividida cobrador");
-                        let c = cobrador(m, byte(j, 0x27), byte(m, 0x8eb2), 0);
-                        if c == 0 {
-                            narrar(chamar, som, u32::MAX, ub(j, 0x27), u32::MAX);
-                        } else {
-                            if tipo == 7 {
-                                narrar(chamar, 0x21e2, ub(c, 0x2e), ub(j, 0x27), u32::MAX);
-                            } else {
-                                narrar(chamar, som, u32::MAX, ub(j, 0x27), u32::MAX);
-                            }
-                            // a cobranca longe do gol adversario (lado 1: linha < 4; lado 0: > 7)
-                            let longe = (byte(j, 0x27) == 1 && byte(j, 0x103) < 4) || (byte(j, 0x27) == 0 && byte(j, 0x103) > 7);
-                            if som == 0x1f79 && vantagem == 0 && longe {
-                                if tipo == 7 {
-                                    if !na_area(j, byte(j, 0x27) == 0) {
-                                        narrar(chamar, 0x21e1, ub(c, 0x2e), ub(j, 0x27), u32::MAX);
-                                    }
-                                } else if (2..=6).contains(&byte(j, 0x102)) {
-                                    narrar(chamar, 0x21e0, ub(c, 0x2e), ub(j, 0x27), u32::MAX);
-                                } else {
-                                    narrar(chamar, 0x21df, ub(c, 0x2e), ub(j, 0x27), u32::MAX);
-                                }
-                            }
-                        }
-                    }
-                    if especial(lance) == 0 {
-                        let extra = expulso || som == 0x1f7a;
-                        if vantagem != 0 {
-                            crate::comparacao::ramo("dividida vantagem");
-                            narrar(chamar, 0x20dd, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
-                            if tipo == 4 || tipo == 5 {
-                                *b(e, 0x16) = 1;
-                            }
-                            if extra && sortear(2) == 0 {
-                                narrar(chamar, 0x20d9, u32::MAX, zero(j), u32::MAX);
-                            }
-                        } else if sortear(9) == 0 {
-                            narrar(chamar, 0x20df, u32::MAX, zero(j), u32::MAX);
-                            if sortear(3) == 0 {
-                                narrar(chamar, 0x20e0, u32::MAX, zero(j), u32::MAX);
-                            }
-                            if extra && sortear(2) == 0 {
-                                narrar(chamar, 0x20d9, u32::MAX, zero(j), u32::MAX);
-                            }
-                        }
-                        ao_time(m, e, peso);
-                        chamar(0x716e10, e, [0; 5]);
-                    }
-                    *w(e, 0x35) = (*w(e, 0x35)).wrapping_sub(0x19);
+                    punir_desafiante_com(m, e, j, tipo, cartao, grav, arriscado, vantagem, lance, false, &["dividida penalti", "dividida expulsao", "dividida cobrador", "dividida vantagem"], chamar);
                     return;
                 }
             }
@@ -7056,6 +7087,140 @@ unsafe extern "thiscall" fn disputa(m: usize, x: u32, y: u32) -> usize {
 }
 
 // ---------- centesima vigesima oitava leva: a bola que chega ao jogador (0x6f5c30) ----------
+
+/// A falta de `j` (tipo `t` da 0x6cfca0, lance `codigo`) punida pelo arbitro (0x6cfd10) no chute
+/// (0x6f6c00), igual ao trecho da 0x6f5c30. A 0x6f5c30 guarda a sua copia em linha: chamar esta
+/// funcao de la muda a carreira em 2002-01-12 sem mudar a logica (ver PENDENCIAS): 0x1fe8, cartao, bola parada 7, penalti (5, -500 em +0x35 e, por
+/// sorteio(+0x5a da ficha), ajuste do +0x17 e desempenho 0x6eecb0) ou falta (6), expulsao, cobrador
+/// (0x6ceb90) e as narracoes 0x21df a 0x21e2, e fora dos lances especiais 0x20df/0x20e0/0x20d9, o
+/// desgaste do time (0x6bb8d0) e o cansaco. Devolve se foi penalti.
+/// Sonda: enche 4 KB da pilha abaixo com 0xa5 (o lixo que uma rotina original chamada depois leria).
+#[inline(never)]
+fn sujar() {
+    let mut a = [0xa5u8; 65536];
+    std::hint::black_box(&mut a);
+}
+
+unsafe fn punir_falta_de_quem_disputa_com(j: usize, mut t: u8, cartao: u8, grav: u8, codigo: i16, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> bool {
+    let punir: unsafe extern "thiscall" fn(usize, usize, *mut u8, i8, i8, u8, *mut f32) = core::mem::transmute(0x6cfd10usize);
+    let ajustar: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x7172d0usize);
+    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(0x6eecb0usize);
+    let cobrador: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(0x6ceb90usize);
+    let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(0x6cb650usize);
+    let ao_time: unsafe extern "thiscall" fn(usize, usize, f32) = core::mem::transmute(0x6bb8d0usize);
+    let b = |p: usize, o: usize| (p + o) as *mut u8;
+    let w = |p: usize, o: usize| (p + o) as *mut i16;
+    let ub = |p: usize, o: usize| *((p + o) as *const u8) as u32;
+    let zero = |p: usize| (byte(p, 0x27) == 0) as u32;
+    let m = *((j + 0x19e) as *const usize);
+    let narrar = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, a3: u32, a4: u32, a5: u32| {
+        chamar(0x6d6f70, *((m + 0x8f7a) as *const usize), [codigo, m as u32, a3, a4, a5]);
+    };
+    let area_de = |p: usize, lado1: bool| {
+        (2..=6).contains(&byte(p, 0x102)) && if lado1 { (10..=11).contains(&byte(p, 0x103)) } else { (0..=1).contains(&byte(p, 0x103)) }
+    };
+    let mut peso = 0f32;
+    punir(m, j, &mut t, cartao as i8, grav as i8, 0, &mut peso);
+    narrar(chamar, 0x1fe8, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
+    let cor: i32 = match t {
+        2 => 0x1ff9,
+        3 => 0x1ff7,
+        4 => 0x1ff8,
+        6 => 0x1ff5,
+        _ => {
+            if grav as i8 as i32 > sortear(7) + 2 { 0x210a } else { -1 }
+        }
+    };
+    let som: u32;
+    if t == 7 {
+        som = 0x1f79;
+        *b(m, 0x8eb2) = 7;
+    } else if area_de(j, byte(j, 0x27) == 1) {
+        if cor == -1 {
+            match sortear(4) {
+                0 => narrar(chamar, 0x20e9, u32::MAX, zero(j), u32::MAX),
+                1 => narrar(chamar, 0x20ec, u32::MAX, zero(j), u32::MAX),
+                _ => {}
+            }
+        }
+        som = 0x1f7a;
+        *b(m, 0x8eb2) = 5;
+        *((m + 0x478a) as *mut usize) = 0;
+        *w(j, 0x35) = (*w(j, 0x35)).wrapping_sub(500);
+        if sortear(byte(*((j + 0x69) as *const usize), 0x5a) as i32) == 0 {
+            let r = sortear(10);
+            if ajustar(j, (r as u8).wrapping_neg() as i8) != 0 {
+                desempenho(j, 0);
+            }
+        }
+    } else {
+        som = 0x1f79;
+        *b(m, 0x8eb2) = 6;
+    }
+    *b(m, 0x8ea7) = *b(j, 0x102);
+    *b(m, 0x8ea8) = *b(j, 0x103);
+    *b(m, 0x8eae) = zero(j) as u8;
+    *((m + 0xf582) as *mut u32) = 0;
+    if som == 0x1f7a {
+        narrar(chamar, 0x1f7a, u32::MAX, zero(j), u32::MAX);
+    }
+    let expulso = matches!(t, 3..=6);
+    if cor > -1 {
+        if sortear(4) == 0 {
+            let a = sortear(grav as i8 as i32);
+            if a > sortear(0x14) {
+                let partida = *((m + 0x4792) as *const usize);
+                let clube = *((partida + if byte(j, 0x27) == 0 { 0x20 } else { 0x1c }) as *const usize);
+                let k = *((clube + 0x53) as *const usize);
+                if k != 0 && byte(k, 0x77) == 8 {
+                    narrar(chamar, 0x20f5, 0, 0, u32::MAX);
+                }
+            }
+            narrar(chamar, 0x2109, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
+        }
+        narrar(chamar, cor as u32, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
+        if expulso {
+            jogador_saiu_com(m, j, 0, chamar);
+        }
+    }
+    if som != 0x1f7a {
+        let c = cobrador(m, (byte(j, 0x27) == 0) as i8, byte(m, 0x8eb2), 0);
+        if c == 0 {
+            narrar(chamar, som, u32::MAX, zero(j), u32::MAX);
+        } else {
+            if t == 7 {
+                narrar(chamar, 0x21e2, ub(c, 0x2e), zero(j), u32::MAX);
+            } else {
+                narrar(chamar, som, u32::MAX, zero(j), u32::MAX);
+            }
+            if som == 0x1f79 {
+                // o cobrador longe do gol que ataca (lado 1: linha < 4; lado 0: > 7)
+                let longe = (byte(c, 0x27) == 1 && byte(c, 0x103) < 4) || (byte(c, 0x27) == 0 && byte(c, 0x103) > 7);
+                if t == 7 {
+                    if longe && !area_de(c, byte(j, 0x27) == 1) {
+                        narrar(chamar, 0x21e1, ub(c, 0x2e), zero(j), u32::MAX);
+                    }
+                } else if longe {
+                    narrar(chamar, if (2..=6).contains(&byte(j, 0x102)) { 0x21e0 } else { 0x21df }, ub(c, 0x2e), zero(j), u32::MAX);
+                }
+            }
+        }
+    }
+    if especial(codigo as i8) == 0 {
+        if sortear(9) == 0 {
+            narrar(chamar, 0x20df, u32::MAX, ub(j, 0x27), u32::MAX);
+            if sortear(3) == 0 {
+                narrar(chamar, 0x20e0, u32::MAX, ub(j, 0x27), u32::MAX);
+            }
+            if (expulso || som == 0x1f7a) && sortear(2) == 0 {
+                narrar(chamar, 0x20d9, u32::MAX, ub(j, 0x27), u32::MAX);
+            }
+        }
+        ao_time(m, j, peso);
+        chamar(0x716e10, j, [0; 5]);
+    }
+    som == 0x1f7a
+}
 
 /// { 0x6f5c30 } (ret 0x10, match_pl.cpp) com as chamadas que mexem fora do motor injetadas (0x6d6f70
 /// narra, 0x716e10 cansa, 0x6cd770 a bola espirra, 0x6f0630 dominio; e as de dentro da saida de
@@ -8084,6 +8249,603 @@ unsafe extern "thiscall" fn comparar_reiniciar_lance(m: usize) {
     GRAVAR_A7.store(a7, Relaxed);
     GRAVAR_REINICIO.store(gravar, Relaxed);
     PLACAR.registrar(igual && sequencia, || format!("reiniciar_lance(modo {}) {} chamadas: {}", *((m + 0x8eb2) as *const u8), k, detalhe_fita()));
+}
+
+// ---------- centesima trigesima sexta leva: o chute (0x6f6c00) ----------
+
+/// { 0x6f6c00 } (ret 0xc, match_pl.cpp, chamada so pela 0x6b98c0) com as chamadas que mexem fora do
+/// motor injetadas (0x6d6f70 narra, 0x716e10 cansa, 0x6f0630 dominio, 0x6cd770 a bola espirra,
+/// 0x716c90, 0x7103e0 o lance seguinte; e as de dentro da lesao, da defesa e da saida de campo): o
+/// jogador `j` chuta com `forca` mirando (x, y) (x = -1: a bola parada +0x8ea7/+0x8ea8).
+/// A chance pela distancia ao gol (lado 0 pela tabela 0xa15e44, lado 1 pela 0x6f09b0); o folego
+/// (sorteio((10000 - +0x4d)^2 / 50000)); o angulo da direcao (+0x19a) contra +0x8ed8 pesado pelo lance
+/// (+0x8ea9); a forca perde 20 x (+0x8eaa - 1)^3 (e mais pelo byte 1 do motor). Com angulo ate 90 o
+/// jogador vira (0x6f4920) para o gol (por +0x10c x +0x105, chance abaixo de 2 ou 0x6bd5b0) ou para o
+/// alvo. O lance e o atributo: a cabecada 0x25 (+0x164), ou pelo +0x8ea9: 4+ fora da area de ataque
+/// com forca e caminho livre (0x6c41b0) o 0xc ((+0x10c - 20) x 10 + +0x132, +0x8ea9 vira 2), senao
+/// 0x2e (+0x176) ou 0x15 (+0x144) pelo +0x1a2 e +0xff contra +0x24; 2 e 3 o 0x3b (+0x190) perto do gol
+/// (0x6f9f90, chance abaixo de 1,41 e sorteios), senao 0xc (+0x132); os outros 0xd (+0x134). A nota e
+/// sorteio(atributo) - sorteio(folego) - sorteio(angulo) + sorteio(forca); 0x6f56c0 cansa. O arbitro
+/// olha a falta do chutador (0x6cfca0): por sorteio(chance x 5 + 2) so registra (0x6bb9a0), senao pune
+/// como a 0x6f5c30. O desafiante sai da 0x6c87e0 (lesao 0x6cfe10 logo); ele (nota >= a do chute ou 1
+/// em 5) e o chutador (nota do chute maior ou 1 em 5) podem fazer falta (0x6cfc60: registrada 1 em 30
+/// / 1 em 10 ou punida, a do desafiante como na dividida e com ajuste do +0x17 no penalti). Com a nota
+/// do desafiante, ele fica com a bola: falta narrada na area, defesa do goleiro (0x70d430) ou a
+/// narracao do lance, 0x6f0630, +0x19c, a bola espirra abaixo do limite do lance, contas e folego
+/// (+0x35, 0x21cd/0x21ce, +0x17) e 1 em 7 0x1f41. Senao o chute segue: 0x6f0630, +0x4782/+0x4786
+/// perdem a nota x 2/11; de cabeca (+0x8ea9 4) 0x2164/0x21cb/0x214f/0x1f5d, contas e 0x7103e0; senao
+/// 0x216e (no 0xc) ou as narracoes do chute de longe (0x21cc, 0x21db, 0x21dc, 0x1f47), +0x19c ganha a
+/// nota - a do desafiante - 200 (+-200) e por sorteio(+0x19c) contra sorteio(200) 0x7103e0 (com
+/// +0x1a7 e +100 de posse). Fora da area de ataque, sorteio(+0x31) < -10 faz o jogador crescer (0x211d).
+unsafe fn chute_com(j: usize, forca_in: i16, x_in: i8, y_in: i8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let dist_ponto: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(0x6f09b0usize);
+    let caminho: unsafe extern "thiscall" fn(usize, usize, i8) -> u8 = core::mem::transmute(0x6bd5b0usize);
+    let apontar_: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) = core::mem::transmute(0x6f4920usize);
+    let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+    let livre: unsafe extern "thiscall" fn(usize, i8, i8, i8) -> u8 = core::mem::transmute(0x6c41b0usize);
+    let desgastar: unsafe extern "thiscall" fn(usize, f32, i16) = core::mem::transmute(0x6f56c0usize);
+    let decidir: unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8 = core::mem::transmute(0x6cfca0usize);
+    let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(0x6bb9a0usize);
+    let desafio: unsafe extern "thiscall" fn(usize, usize, i8, i8, *mut u8, *mut u8, *mut i16, *mut i8, *mut i8, u8) -> usize = core::mem::transmute(0x6c87e0usize);
+    let falta: unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8 = core::mem::transmute(0x6cfc60usize);
+    let punir: unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8) = core::mem::transmute(0x6cfcd0usize);
+    let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(0x6cb650usize);
+    let cobrador: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(0x6ceb90usize);
+    let ao_time: unsafe extern "thiscall" fn(usize, usize, f32) = core::mem::transmute(0x6bb8d0usize);
+    let ajustar: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x7172d0usize);
+    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(0x6eecb0usize);
+    let atras: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x6cd5f0usize);
+    let b = |p: usize, o: usize| (p + o) as *mut u8;
+    let w = |p: usize, o: usize| (p + o) as *mut i16;
+    let ub = |p: usize, o: usize| *((p + o) as *const u8) as u32;
+    let zero = |p: usize| (byte(p, 0x27) == 0) as u32;
+    let par = |p: usize| ub(p, 0x2e) | ub(p, 0x27) << 8;
+    let mais = |p: *mut i16, v: i16| *p = (*p).wrapping_add(v);
+    let um = |p: *mut u8| *p = (*p).wrapping_add(1);
+    let m = *((j + 0x19e) as *const usize);
+    let narrar = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, a3: u32, a4: u32, a5: u32| {
+        chamar(0x6d6f70, *((m + 0x8f7a) as *const usize), [codigo, m as u32, a3, a4, a5]);
+    };
+    // nas colunas 2 a 6, linhas 10-11 (`lado1`) ou 0-1
+    let area_de = |p: usize, lado1: bool| {
+        (2..=6).contains(&byte(p, 0x102)) && if lado1 { (10..=11).contains(&byte(p, 0x103)) } else { (0..=1).contains(&byte(p, 0x103)) }
+    };
+    // o desafiante longe do gol dele pela tabela e atras do extremo, ou o chutador sem como bater
+    let conta_o_chute = |e: usize| {
+        let dy = byte(e, 0x103) as i32 - if byte(e, 0x27) != 0 { 11 } else { 0 };
+        !(tabela_12x9(dy, byte(e, 0x102) as i32 - 4) as f64 > 1.0 && atras(*((e + 0x19e) as *const usize), e) == 0) && pode_bater(j)
+    };
+    let (jx, jy) = (byte(j, 0x102), byte(j, 0x103));
+    let chance = if byte(j, 0x27) == 0 { tabela_12x9(jy as i32 - 11, jx as i32 - 4) } else { dist_ponto(j, 4, 0) };
+    let mut tipo = byte(m, 0x8ea9);
+    let (x, y) = if x_in == -1 { (byte(m, 0x8ea7), byte(m, 0x8ea8)) } else { (x_in, y_in) };
+    let d = 10000 - ftol(f32_em(j + 0x4d) as f64) as i16 as i32;
+    let folego = sortear(d.wrapping_mul(d) / 50000);
+    let mut ang = (*w(j, 0x19a) as i32 - *w(m, 0x8ed8) as i32).abs();
+    if ang as i16 > 0xb4 {
+        ang = 0x168 - ang;
+    }
+    let q = (((0xb4 - ang) * 2) as i16 as i32) / ((5 - tipo as i32).max(1) as i16 as i32);
+    let angulo = if (ang as i16) < 0x5a { (11 - ang as i16 as i32 / 10) * q } else { q * 2 };
+    let c = (*b(m, 0x8eaa)).wrapping_sub(1) as i8 as i16;
+    let mut forca = forca_in.wrapping_sub(c.wrapping_mul(c).wrapping_mul(c).wrapping_mul(20));
+    if c != 0 {
+        match byte(m, 1) {
+            2 => forca = forca.wrapping_sub(((sortear(3) + 1) as i16).wrapping_mul(c)),
+            0x20 => forca = forca.wrapping_sub(((sortear(8) + 3) as i16).wrapping_mul(c)),
+            _ => {}
+        }
+    }
+    let dono = *((m + 0xf57a) as *const usize);
+    // vira para o gol ou para o alvo
+    if (ang as i16) <= 0x5a {
+        let r = sortear(200);
+        let ao_gol = byte(j, 0x10c) as i32 * byte(j, 0x105) as i32 > r || (chance as f64) < 2.0 || caminho(m, j, 0) != 0;
+        if ao_gol {
+            if byte(j, 0x27) == 0 {
+                apontar_(j, jx, jy, 4, if jy < 9 { jy + 3 } else { 11 });
+            } else {
+                apontar_(j, jx, jy, 4, if jy > 3 { jy - 3 } else { 0 });
+            }
+        } else if byte(m, 0x8ea9) < 4 {
+            apontar_(j, jx, jy, x, y);
+        }
+    }
+    // o lance e o atributo
+    let mut doze = false;
+    let na_propria = area_de(j, byte(j, 0x27) == 1);
+    let cabeca = !(na_propria && tabela(m, j) == 1)
+        && sortear(na_propria as i32 * 500 + 100 + byte(*((j + 0x69) as *const usize), 0x5c) as i32 * 200) == 0;
+    let (attr, lance): (i16, i8) = if cabeca {
+        crate::comparacao::ramo("chute cabecada");
+        (*w(j, 0x164), 0x25)
+    } else if tipo >= 4 {
+        if !area_de(j, byte(j, 0x27) == 0)
+            && forca as i32 > (20 - byte(j, 0x10c) as i32) * 7
+            && livre(m, byte(j, 0x27), jx, jy) != 0
+        {
+            crate::comparacao::ramo("chute 0xc de longe");
+            doze = true;
+            *b(m, 0x8ea9) = 2;
+            tipo = byte(m, 0x8ea9);
+            ((byte(j, 0x10c) as i16 - 20).wrapping_mul(10).wrapping_add(*w(j, 0x132)), 0xc)
+        } else {
+            let v = ftol(((f32_em(j + 0x1a2) as f64 * f64_em(0x967898) + 0.75) * byte(j, 0xff) as f64 + 5.0) * 0.5) as i8;
+            let r1 = sortear(byte(j, 0x24) as i32 * 80 + na_propria as i32 * 1500 + 0x46);
+            if sortear(v as i32) > r1 { (*w(j, 0x176), 0x2e) } else { (*w(j, 0x144), 0x15) }
+        }
+    } else if tipo != 3 && tipo != 2 {
+        (*w(j, 0x134), 0xd)
+    } else {
+        let ok = pode_bater(j)
+            && (chance as f64) < 1.41
+            && {
+                let r1 = sortear(*w(j, 0x132) as i32);
+                sortear(*w(j, 0x190) as i32) > r1
+            }
+            && sortear(ftol(f32_em(j + 0x99) as f64)) >= sortear(5);
+        if ok {
+            crate::comparacao::ramo("chute 0x3b");
+            (*w(j, 0x190), 0x3b)
+        } else {
+            (*w(j, 0x132), 0xc)
+        }
+    };
+    let s1 = sortear(attr as i32);
+    let s2 = sortear(folego as i16 as i32);
+    let s3 = sortear(angulo as i16 as i32);
+    let nota_chute = (s1 - s2 - s3 + sortear(forca as i32)) as i16;
+    desgastar(j, -1.0, lance as i16);
+    // a falta do chutador
+    let (mut cartao, mut grav) = (0u8, 0u8);
+    let t = decidir(m, j, lance as i16 as u16, &mut cartao, &mut grav);
+    if t != 0 {
+        if sortear(ftol(chance as f64 * 5.0 + 2.0)) == 0 {
+            crate::comparacao::ramo("chute falta registrada");
+            registrar(m, lance as i16 as u16, j as u32, 0, 0, t, *b(j, 0x102), *b(j, 0x103), cartao, grav);
+        } else {
+            crate::comparacao::ramo("chute falta punida");
+            punir_falta_de_quem_disputa_com(j, t, cartao, grav, lance as i16, chamar);
+            mais(w(j, 0x35), -0x19);
+            return;
+        }
+    }
+    // o desafiante
+    *((m + 0xf582) as *mut usize) = j;
+    let (mut a, mut b2, mut nota, mut ld, mut arriscado) = (0u8, 0u8, 0i16, 0i8, 0i8);
+    let e = desafio(m, j, byte(j, 0x27), lance, &mut a, &mut b2, &mut nota, &mut ld, &mut arriscado, 0);
+    lesao_na_dividida_com(m, j, lance as i16, e, ld as i16, 0, chamar);
+    *((m + 0xf582) as *mut usize) = 0;
+    let gr = &mut grav as *mut u8 as *mut i8;
+    'disputa: {
+        if e == 0 {
+            crate::comparacao::ramo("chute sem desafiante");
+            break 'disputa;
+        }
+        let mut vantagem = 0u8;
+        let mut checar_chutador = true;
+        // a falta do desafiante
+        if nota >= nota_chute || sortear(5) == 0 {
+            let td = falta(m, e, j, ld, -1, &mut cartao, gr, &mut vantagem);
+            if byte(m, 0x8ebb) != 0 && area_de(e, byte(j, 0x27) == 0)
+                && (especial(ld) != 0 || vantagem != 0 || sortear(*w(e, 0x31) as i32) < -10)
+                && sortear(3) != 0
+            {
+                narrar(chamar, 0x2168, ub(e, 0x2e), ub(e, 0x27), u32::MAX);
+            }
+            if td != 0 {
+                if sortear(0x1e) == 0 && arriscado == 0 {
+                    crate::comparacao::ramo("chute desafiante registrado");
+                    registrar(m, ld as i16 as u16, e as u32, j as u32, 0, td, *b(j, 0x102), *b(j, 0x103), cartao, grav);
+                    checar_chutador = false;
+                } else {
+                    crate::comparacao::ramo("chute desafiante punido");
+                    punir_desafiante_com(m, e, j, td, cartao, grav as i8, arriscado, vantagem, ld, true, &["chute penalti do desafiante", "chute expulsao do desafiante", "chute cobrador do desafiante", "chute vantagem do desafiante"], chamar);
+                    return;
+                }
+            }
+        }
+        // a falta do chutador sobre o desafiante
+        if checar_chutador && (nota_chute > nota || sortear(5) == 0) {
+            let mut tj = falta(m, j, e, lance, -1, &mut cartao, gr, &mut vantagem);
+            if byte(m, 0x8ebb) != 0 && area_de(j, byte(j, 0x27) == 1)
+                && (especial(lance) != 0 || vantagem != 0 || sortear(*w(e, 0x31) as i32) < -10)
+                && sortear(3) != 0
+            {
+                narrar(chamar, 0x2168, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
+            }
+            if tj != 0 {
+                if sortear(10) == 0 {
+                    crate::comparacao::ramo("chute chutador registrado");
+                    registrar(m, lance as i16 as u16, j as u32, e as u32, 0, tj, *b(j, 0x102), *b(j, 0x103), cartao, grav);
+                } else {
+                    crate::comparacao::ramo("chute chutador punido");
+                    let mut peso = 0f32;
+                    punir(m, j, e, &mut tj, cartao as i8, grav as i8, 0, &mut peso, vantagem);
+                    narrar(chamar, if lance == 0x38 { 0x1ff3 } else { narracao_da_falta(lance) }, ub(j, 0x2e), ub(j, 0x27), par(e));
+                    let cor: i32 = match tj {
+                        2 => 0x1ff9,
+                        3 => 0x1ff7,
+                        4 => 0x1ff8,
+                        5 => 0x1ff6,
+                        _ => {
+                            if grav as i8 as i32 > sortear(7) + 2 { 0x210a } else { -1 }
+                        }
+                    };
+                    let som: u32;
+                    if tj == 7 {
+                        som = 0x1f79;
+                        *b(m, 0x8eb2) = 7;
+                    } else if area_de(j, byte(j, 0x27) == 1) {
+                        if cor == -1 {
+                            match sortear(4) {
+                                0 => narrar(chamar, 0x20e9, u32::MAX, zero(j), u32::MAX),
+                                1 => narrar(chamar, 0x20ec, u32::MAX, zero(j), u32::MAX),
+                                _ => {}
+                            }
+                        }
+                        crate::comparacao::ramo("chute penalti do chutador");
+                        som = 0x1f7a;
+                        *b(m, 0x8eb2) = 5;
+                        *((m + 0x478a) as *mut usize) = e;
+                        mais(w(j, 0x35), -500);
+                        if sortear(byte(*((j + 0x69) as *const usize), 0x5a) as i32) == 0 {
+                            let r = sortear(10);
+                            if ajustar(j, (r as u8).wrapping_neg() as i8) != 0 {
+                                desempenho(j, 0);
+                            }
+                        }
+                    } else {
+                        som = 0x1f79;
+                        *b(m, 0x8eb2) = 6;
+                    }
+                    *b(m, 0x8ea7) = *b(j, 0x102);
+                    *b(m, 0x8ea8) = *b(j, 0x103);
+                    *b(m, 0x8eae) = zero(j) as u8;
+                    *((m + 0xf582) as *mut u32) = 0;
+                    if som == 0x1f7a {
+                        narrar(chamar, 0x1f7a, u32::MAX, zero(j), u32::MAX);
+                    }
+                    let expulso = matches!(tj, 3..=6);
+                    if cor > -1 {
+                        if sortear(4) == 0 {
+                            let g = sortear(grav as i8 as i32);
+                            if g > sortear(0x14) {
+                                let partida = *((m + 0x4792) as *const usize);
+                                let clube = *((partida + if byte(j, 0x27) == 0 { 0x20 } else { 0x1c }) as *const usize);
+                                let k = *((clube + 0x53) as *const usize);
+                                if k != 0 && byte(k, 0x77) == 8 {
+                                    narrar(chamar, 0x20f5, 0, 0, u32::MAX);
+                                }
+                            }
+                            narrar(chamar, 0x2109, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
+                        }
+                        narrar(chamar, cor as u32, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
+                        if expulso {
+                            crate::comparacao::ramo("chute expulsao do chutador");
+                            jogador_saiu_com(m, j, 0, chamar);
+                        }
+                    }
+                    if som != 0x1f7a {
+                        let cb = cobrador(m, zero(j) as i8, byte(m, 0x8eb2), 0);
+                        if cb == 0 {
+                            narrar(chamar, som, u32::MAX, zero(j), u32::MAX);
+                        } else {
+                            if tj == 7 {
+                                narrar(chamar, 0x21e2, ub(cb, 0x2e), zero(j), u32::MAX);
+                            } else {
+                                narrar(chamar, som, u32::MAX, zero(j), u32::MAX);
+                            }
+                            if som == 0x1f79 && vantagem == 0 {
+                                // o cobrador longe do gol que ataca (lado 1: linha < 4; lado 0: > 7)
+                                let longe = (byte(cb, 0x27) == 1 && byte(cb, 0x103) < 4) || (byte(cb, 0x27) == 0 && byte(cb, 0x103) > 7);
+                                if tj == 7 {
+                                    if longe && !area_de(cb, byte(j, 0x27) == 1) {
+                                        narrar(chamar, 0x21e1, ub(cb, 0x2e), zero(j), u32::MAX);
+                                    }
+                                } else if longe {
+                                    narrar(chamar, if (2..=6).contains(&byte(j, 0x102)) { 0x21e0 } else { 0x21df }, ub(cb, 0x2e), zero(j), u32::MAX);
+                                }
+                            }
+                        }
+                    }
+                    if especial(lance) == 0 {
+                        let extra = expulso || som == 0x1f7a;
+                        if vantagem != 0 {
+                            crate::comparacao::ramo("chute vantagem do chutador");
+                            narrar(chamar, 0x20dd, ub(e, 0x2e), zero(j), u32::MAX);
+                            if matches!(tj, 4..=6) {
+                                *b(e, 0x16) = 1;
+                            }
+                            if extra && sortear(3) != 0 {
+                                narrar(chamar, 0x20d9, u32::MAX, ub(j, 0x27), u32::MAX);
+                            }
+                        } else if sortear(9) == 0 {
+                            narrar(chamar, 0x20df, u32::MAX, ub(j, 0x27), u32::MAX);
+                            if sortear(3) == 0 {
+                                narrar(chamar, 0x20e0, u32::MAX, ub(j, 0x27), u32::MAX);
+                            }
+                            if extra && sortear(2) != 0 {
+                                narrar(chamar, 0x20d9, u32::MAX, ub(j, 0x27), u32::MAX);
+                            }
+                        }
+                        ao_time(m, j, peso);
+                        chamar(0x716e10, j, [0; 5]);
+                    }
+                    mais(w(j, 0x35), -0x19);
+                    return;
+                }
+            }
+        }
+        let penalti = vantagem != 0 && (area_de(j, byte(j, 0x27) == 0) || arriscado != 0);
+        *w(e, 0x198) = ld as i16;
+        if tipo != 4 {
+            um(b(e, 4));
+            mais(w(e, 0x35), if tabela(m, e) & 0x30 != 0 && tabela(m, e) & 0x880 != 0 { -0x3b } else { -0x46 });
+        }
+        if nota_chute > nota {
+            break 'disputa;
+        }
+        // o desafiante fica com a bola
+        crate::comparacao::ramo("chute desafiante ganha");
+        let narrou = (especial(ld) != 0 || vantagem != 0 || sortear(*w(e, 0x31) as i32) < -10)
+            && area_de(e, byte(e, 0x27) == 1)
+            && sortear(2) == 0;
+        if narrou {
+            crate::comparacao::ramo("chute desafiante narra falta na area");
+            narrar(chamar, narracao_da_falta(ld), ub(e, 0x2e), ub(e, 0x27), par(j));
+            if tipo < 4 {
+                let codigo = match sortear(0x32) {
+                    1 => 0x20ea,
+                    0 | 2 | 5 | 6 | 9 => 0x20eb,
+                    _ => 0x20e8,
+                };
+                narrar(chamar, codigo, u32::MAX, zero(e), u32::MAX);
+            }
+        } else {
+            let codigo = match ld {
+                1 => {
+                    crate::comparacao::ramo("chute defesa do goleiro");
+                    if defender_com(e, nota.wrapping_sub(nota_chute), chamar) == 0 {
+                        return;
+                    }
+                    0
+                }
+                0x13 | 0x21 | 0x2d => 0x1f62,
+                0x15 | 0x2e => {
+                    let r = sortear(6);
+                    if ((r as f64 + f32_em(e + 0xad) as f64) + 3.0) < f32_em(j + 0xad) as f64 { 0x2164 } else { 0x1f5d }
+                }
+                0x22 | 0x2c => 0x2150,
+                0x29 => 0x1f61,
+                0x2a | 0x2b => 0x1f64,
+                _ => 0,
+            };
+            if codigo != 0 {
+                narrar(chamar, codigo, ub(e, 0x2e), ub(e, 0x27), par(j));
+            }
+        }
+        chamar(0x6f0630, e, [0; 5]);
+        *w(e, 0x19c) = nota.wrapping_sub(nota_chute).wrapping_sub(200).clamp(-200, 200);
+        let mut dominou = false;
+        let limite = match ld {
+            0x13 => 400,
+            0x21 | 0x2d => 250,
+            _ => 100,
+        };
+        if *w(e, 0x19c) < limite && byte(m, 0x8ea9) != 4 && byte(m, 0x8ea9) != -1 {
+            crate::comparacao::ramo("chute bola espirra");
+            chamar(0x6cd770, m, [ub(j, 0x102), ub(j, 0x103), 1 | zero(j) << 8, 0, 0]);
+            if byte(m, 0x8eb2) == 0 {
+                let mut k = 3;
+                k -= (byte(e, 0x10d) as i32 > sortear(10)) as i32;
+                k -= (byte(e, 0x10c) as i32 > sortear(10)) as i32;
+                *b(e, 0x2b) = sortear(k) as u8;
+                dominou = true;
+            } else if penalti {
+                crate::comparacao::ramo("chute 716c90");
+                chamar(0x716c90, j, [0; 5]);
+            }
+        } else {
+            if (0..4).contains(&byte(m, 0x8ea9)) {
+                *b(m, 0x8ea9) = 0;
+            }
+            let (x, y) = (byte(j, 0x102), byte(j, 0x103));
+            if byte(e, 0x27) == 0 && byte(m, 0x8ea9) != -1 {
+                apontar_(e, x, y, 4, if y < 9 { y + 3 } else { 11 });
+            } else {
+                apontar_(e, x, y, 4, if y > 3 { y - 3 } else { 0 });
+            }
+            let minuto = (*w(m, 0x8ed0) as i32 / 11) as i8;
+            let (contas, sorteio) = if ld == 0x15 { ((7, 8), 0x37) } else { ((4, 5), 0x41) };
+            let media = if byte(e, contas.0) != 0 { (ub(e, contas.1) as f64 / ub(e, contas.0) as f64) as f32 } else { 0.0 };
+            if minuto > (sortear(0x14) + sorteio) as u8 as i8 {
+                let me = *((e + 0x19e) as *const usize);
+                let gols = byte(me, if byte(e, 0x27) != 0 { 0xf5bd } else { 0xf5f3 });
+                let tentativas = if ld == 0x15 { ub(e, 8) > 3 && byte(e, 9) != 0 } else { ub(e, 6) > 1 };
+                if gols == 0 && media as f64 > 0.725 && tentativas && *w(e, 0x35) > 0x1a5e && byte(e, 0xfd) == 0 {
+                    crate::comparacao::ramo("chute media de acertos");
+                    narrar(chamar, if ld == 0x15 { 0x21ce } else { 0x21cd }, ub(e, 0x2e), ub(e, 0x27), par(j));
+                    *b(e, 0xfd) = 1;
+                }
+            }
+        }
+        *b(j, 0x2b) = (*b(j, 0x2b)).wrapping_add(a);
+        let ganho: i16 = if dominou { 0x78 } else { 0xc8 };
+        mais(w(e, 0x35), ganho);
+        if tipo != 4 {
+            um(b(e, 5));
+            let me = *((e + 0x19e) as *const usize);
+            let t1 = if me != 0 { tabela(me, e) } else { 0 };
+            let longe = t1 & 4 == 0 && (if me != 0 { tabela(me, e) } else { 0 }) & 2 == 0;
+            mais(w(e, 0x35), if longe { ganho.wrapping_mul(2) } else { ganho });
+            if conta_o_chute(e) {
+                mais(w(e, 0x35), 300);
+                um(b(e, 6));
+                if sortear(byte(e, 0x17) as i32 * 30 + 0x46) == 0 {
+                    let r = sortear(3);
+                    if ajustar(e, r as i8) != 0 {
+                        desempenho(e, 0);
+                    }
+                }
+            }
+        } else {
+            crate::comparacao::ramo("chute desafiante ganha de cabeca");
+            um(b(e, 7));
+            um(b(e, 8));
+            *w(e, 0x198) = 0x7b;
+            mais(w(e, 0x35), 0x28);
+            mais(w(j, 0x35), -10);
+            um(b(j, 7));
+            if conta_o_chute(e) {
+                mais(w(e, 0x35), 300);
+                um(b(e, 9));
+                if sortear(byte(e, 0x17) as i32 * 30 + 0x46) == 0 {
+                    let r = sortear(2);
+                    if ajustar(e, r as i8) != 0 {
+                        desempenho(e, 0);
+                    }
+                }
+            }
+        }
+        if dominou && sortear(7) == 0 {
+            narrar(chamar, 0x1f41, ub(e, 0x2e), ub(e, 0x27), u32::MAX);
+        }
+        return;
+    }
+    // o chute segue
+    crate::comparacao::ramo("chute segue");
+    chamar(0x6f0630, j, [0; 5]);
+    mais(w(j, 0x35), 4);
+    *w(j, 0x198) = lance as i16;
+    let v = ftol(nota_chute as f64 * f64_em(0x96d7a0));
+    let posse = |o: usize| *((m + o) as *mut i32) = (*((m + o) as *const i32)).wrapping_sub(v);
+    posse(0x4782);
+    posse(0x4786);
+    if e != 0 {
+        *b(e, 0x2b) = (*b(e, 0x2b)).wrapping_add(b2);
+    }
+    let somar_19c = || *w(j, 0x19c) = (*w(j, 0x19c)).wrapping_add(nota_chute.wrapping_sub(nota).wrapping_sub(200)).clamp(-200, 200);
+    if tipo == 4 {
+        if e != 0 {
+            crate::comparacao::ramo("chute de cabeca com desafiante");
+            let (pj, pe) = (*((j + 0x6d) as *const usize), *((e + 0x6d) as *const usize));
+            let me = *((e + 0x19e) as *const usize);
+            let codigo = 'n: {
+                if pj != 0 {
+                    if pe != 0 {
+                        let r = sortear(3);
+                        if r + byte(pj, 0x2e) as i32 + 3 < byte(pe, 0x2e) as i32 {
+                            break 'n 0x2164;
+                        }
+                    }
+                    if pe != 0 && !(me != 0 && tabela(me, e) == 1) {
+                        let r = sortear(3);
+                        if byte(pj, 0x2e) as i32 > r + byte(pe, 0x2e) as i32 + 5 {
+                            break 'n 0x21cb;
+                        }
+                    }
+                }
+                if me != 0 && tabela(me, e) == 1 && sortear(5) != 0 { 0x214f } else { 0x1f5d }
+            };
+            narrar(chamar, codigo, ub(j, 0x2e), ub(j, 0x27), par(e));
+            *w(j, 0x198) = 0x7b;
+            um(b(e, 7));
+            let t1 = if me != 0 { tabela(me, e) } else { 0 };
+            mais(w(e, 0x35), if t1 != 1 { -10 } else { -600 });
+            mais(w(j, 0x35), 0x28);
+            um(b(j, 7));
+            um(b(j, 8));
+            if conta_o_chute(e) {
+                mais(w(j, 0x35), 300);
+                um(b(j, 9));
+                if sortear(byte(e, 0x17) as i32 * 30 + 0x46) == 0 {
+                    let r = sortear(2);
+                    if ajustar(e, r as i8) != 0 {
+                        desempenho(e, 0);
+                    }
+                }
+            }
+        }
+        somar_19c();
+        chamar(0x7103e0, j, [0; 5]);
+    } else {
+        if doze {
+            narrar(chamar, 0x216e, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
+        } else {
+            let (jy, jx) = (byte(j, 0x103), byte(j, 0x102));
+            if dono == j && tipo < 2 && ((jy != 0 && jy != 11) || (4 - jx as i32).abs() <= 1) {
+                crate::comparacao::ramo("chute narra de longe");
+                let lado = byte(j, 0x27);
+                let codigo = if forca < -500 {
+                    0x21cc
+                } else if ((lado == 0 && jy < 3) || (lado == 1 && jy > 8)) && sortear(2) != 0 {
+                    0x21db
+                } else if ((lado == 1 && byte(j, 0x103) >= 6) || (lado == 0 && byte(j, 0x103) < 6)) && sortear(2) != 0 {
+                    0x21dc
+                } else {
+                    0x1f47
+                };
+                narrar(chamar, codigo, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
+            }
+            somar_19c();
+        }
+        let r = sortear(*w(j, 0x19c) as i32);
+        if r >= sortear(200) {
+            if tipo < 4 {
+                *b(m, 0x1a7) = 1;
+                *((m + 0x4782) as *mut i32) = (*((m + 0x4782) as *const i32)).wrapping_add(100);
+                *((m + 0x4786) as *mut i32) = (*((m + 0x4786) as *const i32)).wrapping_add(100);
+            }
+            chamar(0x7103e0, j, [0; 5]);
+        }
+    }
+    // fora da area de ataque o jogador pode crescer
+    if !area_de(j, byte(j, 0x27) == 0) && sortear(*w(j, 0x31) as i32) < -10 {
+        crate::comparacao::ramo("chute cresce");
+        let p = f32_em(j + 0x1a2) as f64 * 1.0499999523162842;
+        *((j + 0x1a2) as *mut f32) = p as f32;
+        let minimo = ((25 - byte(*((j + 0x69) as *const usize), 0x5d) as i32) * 2) as f32;
+        let v = if p > minimo as f64 { p } else { minimo as f64 };
+        *((j + 0x1a2) as *mut f32) = if v > 100.0 { 100.0 } else { v as f32 };
+        narrar(chamar, 0x211d, u32::MAX, zero(j), u32::MAX);
+    }
+}
+
+/// { 0x6f6c00 } (ret 0xc, match_pl.cpp): ver `chute_com`.
+unsafe extern "thiscall" fn chute(j: usize, forca: u32, x: u32, y: u32) {
+    chute_com(j, forca as i16, x as i8, y as i8, &mut |rotina, this, a| despachar_dividida(rotina, this, a))
+}
+
+unsafe extern "thiscall" fn comparar_chute(j: usize, forca: u32, x: u32, y: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(301);
+    if gravando_no_topo() {
+        return o(j, forca, x, y);
+    }
+    let m = *((j + 0x19e) as *const usize);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m, MOTOR), (0xb67a34, 4), (0xae1080, 4)]);
+    let t = *((m + 0x4792) as *const usize);
+    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+        reg.extend(linhas_do_clube(clube));
+    }
+    let gravar = GRAVAR_716.swap(true, std::sync::atomic::Ordering::Relaxed);
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(j, forca, x, y), |chamar| {
+        chute_com(j, forca as i16, x as i8, y as i8, &mut |rotina, this, args| {
+            let mascara = match rotina {
+                0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
+                0x6cd770 => [0xff, 0xff, 0xffff, 0xff, u32::MAX],
+                0x62ed70 => [u32::MAX, 0, 0, 0, 0],
+                0x6d0980 => [0xff, 0xff, u32::MAX, u32::MAX, 0],
+                0x897760 => [u32::MAX, 0xff, u32::MAX, 0, 0],
+                0x6e1aa0 | 0x716c90 | 0x6f0630 | 0x7103e0 => [0, 0, 0, 0, 0],
+                _ => [0xff, 0, 0, 0, 0],
+            };
+            chamar(rotina, this, args, mascara)
+        })
+    });
+    GRAVAR_716.store(gravar, std::sync::atomic::Ordering::Relaxed);
+    PLACAR.registrar(igual && sequencia, || format!("chute(forca {}, alvo {} {}) {} chamadas: {}", forca as i16, x as i8, y as i8, k, detalhe_fita()));
 }
 
 // ---------- centesima trigesima quarta leva: o interesse do humano no dia de jogos (0x6b5040) ----------
@@ -21649,6 +22411,7 @@ pub unsafe fn instalar(comparando: bool) {
         partida_sem_humano as *const () as usize,
         interesse_do_dia as *const () as usize,
         reiniciar_lance as *const () as usize,
+        chute as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -21952,6 +22715,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_partida_sem_humano as *const () as usize,
         comparar_interesse_do_dia as *const () as usize,
         comparar_reiniciar_lance as *const () as usize,
+        comparar_chute as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -22064,7 +22828,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

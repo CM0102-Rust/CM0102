@@ -144,6 +144,7 @@ EN = {
  'partida_sem_humano': 'match_without_human',
  'interesse_do_dia': 'match_day_interest',
  'reiniciar_lance': 'restart_play',
+ 'chute': 'shot',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

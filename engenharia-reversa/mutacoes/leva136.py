@@ -1,0 +1,20 @@
+# Mutacoes da leva136 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva136.py --carreira 2002-06-01 --confirmar 2001-10-01
+MUTACOES = [
+    ('c_angulo', "{ (11 - ang as i16 as i32 / 10) * q } else { q * 2 };", "{ (12 - ang as i16 as i32 / 10) * q } else { q * 2 };"),
+    ('c_forca', "c.wrapping_mul(c).wrapping_mul(c).wrapping_mul(20)", "c.wrapping_mul(c).wrapping_mul(c).wrapping_mul(21)"),
+    ('c_ao_gol', "(chance as f64) < 2.0 || caminho(m, j, 0) != 0", "(chance as f64) < 2.1 || caminho(m, j, 0) != 0"),
+    ('c_cabeca', "&& sortear(na_propria as i32 * 500 + 100 + byte(", "&& sortear(na_propria as i32 * 500 + 101 + byte(", "chute cabecada"),
+    ('c_doze', "&& forca as i32 > (20 - byte(j, 0x10c) as i32) * 7", "&& forca as i32 > (20 - byte(j, 0x10c) as i32) * 8", "chute 0xc de longe"),
+    ('c_volei', "if sortear(v as i32) > r1 { (*w(j, 0x176), 0x2e) }", "if sortear(v as i32) >= r1 { (*w(j, 0x176), 0x2e) }"),
+    ('c_3b', "&& (chance as f64) < 1.41", "&& (chance as f64) < 1.4"),
+    ('c_nota', "let nota_chute = (s1 - s2 - s3 + sortear(forca as i32)) as i16;", "let nota_chute = (s1 - s2 - s3 + sortear(forca as i32) + 1) as i16;"),
+    ('c_falta', "if sortear(ftol(chance as f64 * 5.0 + 2.0)) == 0 {", "if sortear(ftol(chance as f64 * 5.0 + 3.0)) == 0 {", "chute falta registrada"),
+    ('c_desafiante', "if nota >= nota_chute || sortear(5) == 0 {", "if nota > nota_chute || sortear(5) == 0 {"),
+    ('c_chutador', "if checar_chutador && (nota_chute > nota || sortear(5) == 0) {", "if checar_chutador && (nota_chute >= nota || sortear(5) == 0) {"),
+    ('c_ajuste_penalti', "if ajustar_no_penalti && sortear(byte(", "if !ajustar_no_penalti && sortear(byte(", "chute penalti do desafiante"),
+    ('c_ganho', "mais(w(e, 0x35), if longe { ganho.wrapping_mul(2) } else { ganho });", "mais(w(e, 0x35), if longe { ganho.wrapping_mul(3) } else { ganho });"),
+    ('c_cabeca_216', "if r + byte(pj, 0x2e) as i32 + 3 < byte(pe, 0x2e) as i32 {", "if r + byte(pj, 0x2e) as i32 + 4 < byte(pe, 0x2e) as i32 {", "chute de cabeca com desafiante"),
+    ('c_longe', "let codigo = if forca < -500 {", "let codigo = if forca < -400 {", "chute narra de longe"),
+    ('c_posse', "let v = ftol(nota_chute as f64 * f64_em(0x96d7a0));", "let v = ftol(nota_chute as f64 * f64_em(0x96d7a0) * 1.01);"),
+    ('c_19c', "if r >= sortear(200) {", "if r >= sortear(201) {"),
+]
