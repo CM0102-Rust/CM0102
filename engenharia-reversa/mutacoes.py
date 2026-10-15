@@ -42,7 +42,7 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.dirname(AQUI)
 SRC = os.path.join(RAIZ, 'rust', 'src', 'motor.rs')
 DLL = os.path.join(RAIZ, 'rust', 'target', 'i686-pc-windows-msvc', 'release', 'ddraw.dll')
-JOGO = os.path.join(RAIZ, 'jogo')
+JOGO = os.path.join(RAIZ, 'jogo_testes' if os.path.isdir(os.path.join(RAIZ, 'jogo_testes')) else 'jogo')  # ver simular.py
 LOG = os.path.join(JOGO, 'ddraw.log')
 LIMITE = 2400  # segundos; o autoteste completo passa de 20 minutos (cresce a cada leva)
 

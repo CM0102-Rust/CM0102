@@ -407,8 +407,9 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6b79a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6b66a0, bytes: &[0xa1, 0x04, 0x57, 0xa1, 0x00] },
     Prologo { endereco: 0x6b5040, bytes: &[0x83, 0xec, 0x1c, 0x53, 0x8b, 0xd9] },
+    Prologo { endereco: 0x6c54a0, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 300;
+const N: usize = 301;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -7636,6 +7637,455 @@ unsafe fn jogada_com(j: usize, forca: i16, altura: f32, estilo: i8, forte: u8, c
     1
 }
 
+// ---------- centesima trigesima quinta leva: o reinicio do lance (0x6c54a0) ----------
+
+/// As bolas paradas que a 0x6c54a0 despacha por +0x8eb2 (2 lateral, 3 escanteio, 4 saida, 5
+/// penalti, 6/7 falta, 8 pontape inicial). Na comparacao do reinicio elas sao unidades da fita
+/// (`GRAVAR_REINICIO`): por dentro reposicionam jogadores (0x6f09f0), que a fita grava.
+const BOLAS_PARADAS: [usize; 6] = [0x6c4290, 0x6c4470, 0x6c4ec0, 0x6c50d0, 0x6c4820, 0x6c51e0];
+static GRAVAR_REINICIO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Dentro da comparacao do reinicio, com a fita aberta: as bolas paradas se gravam como unidade.
+fn gravando_reinicio() -> bool {
+    GRAVAR_REINICIO.load(std::sync::atomic::Ordering::Relaxed) && gravando()
+}
+
+/// { 0x6c54a0 } (thiscall, match_eng.cpp) com as chamadas que mexem fora injetadas (0x6d6f70 narra,
+/// 0x6e1090 substitui, as bolas paradas): o reinicio do lance. Zera o estado do lance (+0x1c5,
+/// +0x4782.., +0x8ea9/+0x8eaa, +0xf576.., o lance pendente em +0x475a..) e, sem +0x1a8:
+/// - os 15 minutos desde a ultima mudanca de cada lado (+0x1d2/+0x1d4; com +0x8eb2 = 8, os dois e
+///   -1000 em +0x476a/+0x476e);
+/// - depois dos 60 minutos, 1 em 6, o primeiro jogador sem folego (+0x4d < 6750, +0x10d zerado) e
+///   narrado (0x21cf);
+/// - a postura de cada lado (0x6df460 em +0x9032 + 0xd0 x lado): mudou (ou no inicio) e guardada em
+///   +0x1ab, com a anterior;
+/// - postura 3/4 do lado com a bola (+0x8eae): sorteio(10) de acrescimo em +0x8ed0 e metade em
+///   +0x8eb7; o outro lado, na postura 1, cansa (0x716450 com 1 + n/9);
+/// - a substituicao da IA de cada lado (0x6e1090; sem humano, ou humano com +0x904b fora de selecao
+///   e sem 0x5fd480): minuto > sorteio(50) + 10 e 55 de jogo desde a ultima, depois 0x6bbb60 e
+///   0x6bbf60;
+/// - perto do fim de cada tempo (+0x8ed4 = 495 ou 990) a narracao 0x21c1 com o acrescimo;
+/// - a tatica de cada lado (sem humano) que mudou de postura, pelas marcas 0x5b50d0 no objeto em
+///   +0x91e2 + 0x18e3 x lado, conforme a postura (1 a 5), o +0xe/+0x13 do tecnico (+0x9051), a
+///   formacao (+0x905d: 3-4-3 e 3-5-2 Attacking ja sao de ataque) e +0x476a; as narracoes 0x2135 a
+///   0x213d (0x6ce310 decide 0x213b/0x213d), 0x6d10a0 e a marca 0x400000 das casas (0x5b5290);
+/// - com +0x8ebb (partida narrada), fora do escanteio e do penalti, e na falta so perto do gol
+///   (tabela 0xa15e44 >= 5): os cantos da torcida pelo placar (0x6ce310), pelos clubes fixos
+///   ([0x9d0230]..), pela nacao (+0x76: 4/12, 13, 14) ou o "Ruud Gullit" (0x84b8b0);
+/// - e a bola parada por +0x8eb2.
+unsafe fn reiniciar_lance_com(m: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let postura: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x6df460usize);
+    let lado_de: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x714d30usize);
+    let cansar: unsafe extern "thiscall" fn(usize, f32) = core::mem::transmute(0x716450usize);
+    let lista_humanos: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(0x5fd210usize);
+    let auto_humano: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(0x5fd480usize);
+    let selecao: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x53b900usize);
+    let forca: unsafe extern "thiscall" fn(usize, i8) = core::mem::transmute(0x6bbb60usize);
+    let marcacao: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6bbf60usize);
+    let geral: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x5b50d0usize);
+    let gravar_casa_: unsafe extern "thiscall" fn(usize, i8, u64) -> u32 = core::mem::transmute(0x5b5290usize);
+    let craques: unsafe extern "thiscall" fn(usize, i8) = core::mem::transmute(0x6d10a0usize);
+    let placar: unsafe extern "thiscall" fn(usize, i8, *mut i8, *mut i8, *mut u8, *mut u8, *mut u8, u8) -> u8 = core::mem::transmute(0x6ce310usize);
+    let nome_e: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x84b8b0usize);
+    let f69eb50: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x69eb50usize);
+    let b = |o: usize| (m + o) as *mut u8;
+    let w = |o: usize| (m + o) as *mut i16;
+    let d = |o: usize| (m + o) as *mut u32;
+    let g = |a: usize| *(a as *const usize);
+    let ler = |a: usize| core::ptr::read_unaligned(a as *const i32);
+    let f32m = |o: usize| core::ptr::read_unaligned((m + o) as *const f32);
+    let narr = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, a3: u32, a4: u32, a5: u32, a7: i8| {
+        chamar(0x6d6f70, g(m + 0x8f7a), [codigo | (a7 as u8 as u32) << 16, m as u32, a3, a4, a5]);
+    };
+    let jogador = |lado: usize, k: usize| m + 0x4796 + lado * 0x22d8 + k * 0x1be;
+    // o estado do lance
+    *b(0x1c5) = 0;
+    *d(0x4782) = 0;
+    *d(0x4786) = 0;
+    *d(0x477e) = 0;
+    *b(0x8eaa) = 0;
+    *b(0x8ea9) = 0;
+    *d(0xf5aa) = 0;
+    *d(0xf5a6) = 0;
+    *d(0xf576) = 0;
+    let mut mudou = [false; 2];
+    let mut antiga = [0u8; 2];
+    *d(0xf57a) = 0;
+    *w(0x8ed6) = 0;
+    *d(0x91de) = 0;
+    *b(0x1cd) = 0;
+    *d(0x4761) = 0;
+    *d(0x4765) = 0;
+    *b(0x4769) = 0;
+    *b(0x475a) = 0;
+    *b(0x8ea6) = 0xff;
+    *b(0x8eb9) = 0xff;
+    *w(0x475f) = -1;
+    *b(0x475b) = 0xff;
+    *b(0x475c) = 0xff;
+    *b(0x475d) = 0xff;
+    *b(0x475e) = 0xff;
+    if *b(0x1a8) != 0 {
+        return;
+    }
+    let quinze: [bool; 2] = if *b(0x8eb2) == 8 {
+        *d(0x476a) = 0xc47a0000;
+        *d(0x476e) = 0xc47a0000;
+        [true, true]
+    } else {
+        let t = *w(0x8ed0) as i32;
+        [t - *w(0x1d2) as i32 > 0xa5, t - *w(0x1d4) as i32 > 0xa5]
+    };
+    let minuto = (*w(0x8ed0) as i32 / 11) as i8;
+    // o primeiro jogador sem folego
+    if minuto > 0x3c && sortear(6) == 0 {
+        crate::comparacao::ramo("reinicio sem folego");
+        'achou: for lado in 0..2 {
+            for k in 0..20 {
+                let j = jogador(lado, k);
+                if byte(j, 0x19) >= 0 && f32_em(j + 0x4d) < 6750.0 && byte(j, 0x10d) == 0 {
+                    let l = lado_de(j) as u32;
+                    narr(chamar, 0x21cf, *((j + 0x2e) as *const u8) as u32, l, u32::MAX, 0);
+                    break 'achou;
+                }
+            }
+        }
+    }
+    // a postura de cada lado
+    for lado in 0..2usize {
+        if *b(0x8eb2) == 5 || *b(0x1a8) != 0 {
+            break;
+        }
+        let nova = postura(m + 0x9032 + lado * 0xd0);
+        let velha = *b(0x1ab + lado);
+        if nova != velha || *w(0x8ed0) <= 1 {
+            mudou[lado] = true;
+            antiga[lado] = velha;
+            *b(0x1ab + lado) = nova;
+        }
+    }
+    // o acrescimo (postura 3/4 de quem tem a bola) e o cansaco do outro lado
+    if *b(0x8eae) != 0xff {
+        let modo = *b((0x1ab + *(b(0x8eae) as *const i8) as isize) as usize);
+        if modo == 3 || modo == 4 {
+            crate::comparacao::ramo("reinicio acrescimo");
+            let r = sortear(10) as i8 as i32;
+            *w(0x8ed0) = (*w(0x8ed0)).wrapping_add(r as i16);
+            let r2 = sortear(r / 2);
+            *b(0x8eb7) = (*b(0x8eb7)).wrapping_add(r2 as u8);
+            let outro = (*b(0x8eae) == 0) as usize;
+            if *b(0x1ab + outro) == 1 {
+                for k in 0..20 {
+                    let j = jogador(outro, k);
+                    if g(j + 0x69) != 0 {
+                        cansar(j, (r as f64 * f64_em(0x96d3d8) + 1.0) as f32);
+                    }
+                }
+            }
+        }
+    }
+    // o humano de verdade no lado (ou a IA): +0x904d + 0xd0 x lado
+    let humano_de_verdade = |lado: usize| -> bool {
+        let p = g(m + 0x904d + lado * 0xd0);
+        p != 0
+            && ler(p) >= ler(0xae2364) - 0x10
+            && ler(p) < ler(0xae2364)
+            && *((p + 0x5f) as *const u8) != 0
+            && lista_humanos(g(0xb63c98), p) == 0
+    };
+    let clube_do = |lado: usize| g(g(m + 0x4792) + if lado == 0 { 0x1c } else { 0x20 });
+    // a substituicao da IA, lado 0 e lado 1
+    for lado in 0..2usize {
+        let ia = if humano_de_verdade(lado) {
+            *b(0x904b + lado * 0xd0) != 0 && selecao(clube_do(lado)) == 0 && auto_humano(g(0xb63c98), g(m + 0x904d + lado * 0xd0)) == 0
+        } else {
+            true
+        };
+        let ultima = 0x8ecc + 2 * lado;
+        if ia && (minuto as i32) > sortear(0x32) + 10 && *w(0x8ed0) as i32 - *w(ultima) as i32 > 0x37 {
+            crate::comparacao::ramo("reinicio substituicao da IA");
+            chamar(0x6e1090, m + 0x9032 + lado * 0xd0, [0; 5]);
+            *w(ultima) = *w(0x8ed0);
+            forca(m, lado as i8);
+            marcacao(m);
+        }
+        if lado == 0 {
+            // perto do fim de cada tempo, o acrescimo narrado
+            let fim = match *w(0x8ed4) {
+                0x1ef if minuto > 0x27 && minuto < 0x2e => Some(0x8d48),
+                0x3de if minuto > 0x54 && minuto < 0x5b => Some(0x8d49),
+                _ => None,
+            };
+            if let Some(f) = fim {
+                if *b(f) == 0 {
+                    crate::comparacao::ramo("reinicio acrescimo narrado");
+                    let q = *(b(0x8eb7) as *const i8) as i32 / 11;
+                    let v = if q <= 2 { 2 } else { q as i8 };
+                    narr(chamar, 0x21c1, *b(0x8eae) as u32, 0, 0, v);
+                    *b(f) = 1;
+                }
+            }
+        }
+    }
+    // a tatica da IA pela postura
+    for lado in 0..2usize {
+        let blk = m + lado * 0xd0;
+        if humano_de_verdade(lado) {
+            if *((blk + 0x904b) as *const u8) == 0 || selecao(clube_do(lado)) != 0 || auto_humano(g(0xb63c98), g(blk + 0x904d)) != 0 {
+                continue;
+            }
+        }
+        if !mudou[lado] {
+            continue;
+        }
+        let formacao = {
+            let n = g(blk + 0x905d);
+            let n = if n == 0 { 0xa15934 } else { n };
+            std::ffi::CStr::from_ptr(n as *const core::ffi::c_char).to_bytes()
+        };
+        let ataque = formacao != b"3-4-3" && formacao != b"3-5-2 Attacking";
+        let tobj = m + 0x91e2 + lado * 0x18e3;
+        let tec = g(blk + 0x9051);
+        let tb = |o: usize| *((tec + o) as *const i8);
+        let lim = |base: i32| if *(b(0x1ad + lado) as *const i8) <= 0 { base } else { base + 3 };
+        let la = lado as u32;
+        let casas = || {
+            for k in 0..20 {
+                let c = byte(jogador(lado, k), 0x19);
+                if c >= 0 {
+                    gravar_casa_(tobj, c, 0x400000);
+                }
+            }
+        };
+        let quinze_l = quinze[lado];
+        match *b(0x1ab + lado) {
+            1 => {
+                crate::comparacao::ramo("reinicio postura 1");
+                let f = if (tec != 0 && f32m(0x476a + 4 * lado) < 2.5 && tb(0xe) <= 6) || !ataque { 0x20000 } else { 0x10000 };
+                geral(tobj, f);
+                geral(tobj, 0x800);
+                geral(tobj, 0x2000);
+                if *w(0x8ed0) <= 1 {
+                    narr(chamar, 0x2137, u32::MAX, la, u32::MAX, 0);
+                } else if quinze_l {
+                    narr(chamar, 0x2139, u32::MAX, la, u32::MAX, 0);
+                    *w(0x1d2 + 2 * lado) = *w(0x8ed0);
+                }
+                craques(m, lado as i8);
+            }
+            2 => {
+                crate::comparacao::ramo("reinicio postura 2");
+                if tec == 0 || (!(tb(0xe) as i32 > lim(0xf) && ataque) && (tb(0xe) > 5 || *b(0x1ad + lado) == 0 || f32m(0x476a + 4 * lado) as f64 > 1.0)) {
+                    geral(tobj, 0x20000);
+                    geral(tobj, 0x800);
+                } else if tb(0xe) as i32 > lim(0xf) && ataque {
+                    geral(tobj, 0x10000);
+                    geral(tobj, 0x800);
+                } else {
+                    // NaN em +0x476a cai aqui, como o fcomp da original
+                    geral(tobj, 0x8000);
+                    geral(tobj, if (tb(0x13) as i32) < lim(4) { 0x1000 } else { 0x800 });
+                }
+                geral(tobj, 0x2000);
+                if *w(0x8ed0) > 1 {
+                    if matches!(antiga[lado], 3..=5) {
+                        narr(chamar, 0x2138, u32::MAX, la, u32::MAX, 0);
+                    } else if antiga[lado] == 1 && quinze_l {
+                        narr(chamar, 0x213a, u32::MAX, la, u32::MAX, 0);
+                        *w(0x1d2 + 2 * lado) = *w(0x8ed0);
+                    }
+                }
+                casas();
+            }
+            modo @ (3 | 4) => {
+                if modo == 3 {
+                    crate::comparacao::ramo("reinicio postura 3");
+                    if tec != 0 {
+                        geral(tobj, if tb(0xe) > 0x10 { 0x20000 } else { 0x8000 });
+                        geral(tobj, if (tb(0x13) as i32) < lim(10) { 0x1000 } else { 0x800 });
+                    } else {
+                        geral(tobj, 0x8000);
+                        geral(tobj, 0x1000);
+                    }
+                    geral(tobj, 0x2000);
+                } else {
+                    crate::comparacao::ramo("reinicio postura 4");
+                    geral(tobj, if tec != 0 && tb(0xe) > 0x12 { 0x20000 } else { 0x8000 });
+                    geral(tobj, 0x800);
+                    geral(tobj, 0x4000);
+                }
+                if *w(0x8ed0) <= 1 {
+                    narr(chamar, if modo == 3 { 0x2136 } else { 0x2135 }, u32::MAX, la, u32::MAX, 0);
+                } else if (antiga[lado] == 2 || antiga[lado] == 1) && quinze_l {
+                    let (mut c1, mut c2, mut c3, mut c4, mut c5) = (0i8, 0i8, 0u8, 0u8, 0u8);
+                    let r = placar(m, lado as i8, &mut c1, &mut c2, &mut c3, &mut c4, &mut c5, 0);
+                    narr(chamar, if (r as i8) > 0 { 0x213b } else { 0x213d }, u32::MAX, la, u32::MAX, 0);
+                    *w(0x1d2 + 2 * lado) = *w(0x8ed0);
+                }
+                casas();
+            }
+            5 => {
+                crate::comparacao::ramo("reinicio postura 5");
+                if tec != 0 {
+                    let e = tb(0xe);
+                    geral(tobj, if e > 0x10 && ataque { 0x10000 } else if e > 0xc { 0x20000 } else { 0x8000 });
+                    geral(tobj, if (tb(0x13) as i32) < lim(10) { 0x1000 } else { 0x800 });
+                } else {
+                    geral(tobj, 0x20000);
+                    geral(tobj, 0x1000);
+                }
+                geral(tobj, 0x2000);
+                if quinze_l {
+                    narr(chamar, 0x213c, u32::MAX, la, u32::MAX, 0);
+                    *w(0x1d2 + 2 * lado) = *w(0x8ed0);
+                }
+                casas();
+            }
+            _ => {}
+        }
+    }
+    // os cantos da torcida (partida narrada)
+    'cantos: {
+        let modo = *b(0x8eb2);
+        if *b(0x8ebb) == 0 || modo == 3 || modo == 5 {
+            break 'cantos;
+        }
+        if modo == 6 {
+            // na falta, so perto do gol (chance da tabela 0xa15e44 >= 5)
+            let chance = |x: i32, y: i32| -> f32 {
+                let (x, y) = (x as i8, y as i8);
+                if (0..=8).contains(&x) && (0..=11).contains(&y) { f32_em(0xa15e44 + (y as usize * 9 + x as usize) * 4) } else { 1000.0 }
+            };
+            let x = ((*(b(0x8ea7) as *const i8) as i32) - 4).abs();
+            let ycol = *(b(0x8ea8) as *const i8) as i32;
+            let lado = *b(0x8eae);
+            if lado == 0 && (chance(x, (ycol - 0xb).abs()) as f64) < 5.0 {
+                break 'cantos;
+            }
+            if lado == 1 && (chance(x, ycol.abs()) as f64) < 5.0 {
+                break 'cantos;
+            }
+        }
+        let (mut o1, mut o2, mut o3, mut o4, mut o5) = (0i8, 0i8, 0u8, 0u8, 0u8);
+        placar(m, 0, &mut o1, &mut o2, &mut o3, &mut o4, &mut o5, 0);
+        let (v1, v2, empate) = (o1 as i32, o2 as i32, o3);
+        let canto = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, lado: u32| {
+            crate::comparacao::ramo("reinicio canto da torcida");
+            narr(chamar, codigo, u32::MAX, lado, u32::MAX, 0);
+        };
+        // os cantos de um clube (`lado_clube` 0 casa, 1 fora): o do outro lado com +0x77 = 8, os fixos
+        // e os da nacao
+        let cantos_de = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, lado_clube: usize| {
+            let outro = clube_do(1 - lado_clube);
+            if f69eb50(g(0xb67a44), outro) != 0 && *((g(outro + 0x53) + 0x77) as *const u8) == 8 {
+                canto(chamar, 0x2129, (1 - lado_clube) as u32);
+                return;
+            }
+            let clube = clube_do(lado_clube);
+            for (fixo, codigo) in [(0x9d0230usize, 0x2127u32), (0x9d0234, 0x2128), (0x9d0238, 0x2163), (0x9d0268, 0x2166), (0x9d023c, 0x212b), (0x9d0240, 0x212c), (0x9d0244, 0x212d)] {
+                if sortear(2) == 0 && ler(clube) == ler(fixo) {
+                    canto(chamar, codigo, lado_clube as u32);
+                    return;
+                }
+            }
+            match *((g(clube + 0x53) + 0x76) as *const i8) {
+                4 | 12 => {
+                    let r = sortear(2);
+                    canto(chamar, if r == 0 { 0x216b } else { 0x216a }, lado_clube as u32);
+                }
+                13 => {
+                    let r = sortear(2);
+                    canto(chamar, if r == 0 { 0x2167 } else { 0x216a }, lado_clube as u32);
+                }
+                14 => canto(chamar, 0x2118, lado_clube as u32),
+                _ => {}
+            }
+        };
+        // A: perdendo (ou empatado sem classificacao) por sorteio(10), o "Ruud Gullit"
+        if (v1 < v2 || (v1 == v2 && empate == 0)) && sortear(10) == 0 && nome_e(g(m + 0x904d), 0x9b63a8) != 0 {
+            canto(chamar, 0x212a, 1);
+            break 'cantos;
+        }
+        // B/C: a torcida do clube de fora
+        let r = sortear(v2 - v1 + 1);
+        let fora = r != 0 && (v1 < v2 || (v1 == v2 && empate == 0));
+        if fora || sortear(v1 - v2 + 5) == 0 {
+            cantos_de(chamar, 1);
+            break 'cantos;
+        }
+        // E/F: a torcida da casa
+        let r = sortear(v1 - v2 + 1);
+        let casa = r != 0 && (v1 > v2 || (v1 == v2 && empate != 0));
+        if casa || sortear(v2 - v1 + 5) == 0 {
+            cantos_de(chamar, 0);
+        }
+    }
+    // a bola parada
+    match *b(0x8eb2) {
+        1 => {}
+        2..=8 => {
+            let k = match *b(0x8eb2) {
+                2 => 0,
+                3 => 1,
+                4 => 2,
+                5 => 3,
+                6 | 7 => 4,
+                _ => 5,
+            };
+            chamar(BOLAS_PARADAS[k], m, [0; 5]);
+        }
+        _ => {
+            // ponytail: a original mostra a caixa "Error" (match_eng.cpp, linha 0x29ab) e sai do jogo
+            *(0xb67a34 as *mut u32) = 0;
+        }
+    }
+}
+
+/// O despacho do reinicio no modo Rust: narracao e substituicao como na dividida; as bolas paradas
+/// pelo endereco do jogo.
+unsafe fn despachar_reinicio(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
+    if BOLAS_PARADAS.contains(&rotina) {
+        let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(rotina);
+        f(this);
+        return 0;
+    }
+    despachar_dividida(rotina, this, a)
+}
+
+/// { 0x6c54a0 } (thiscall, match_eng.cpp): ver `reiniciar_lance_com`.
+unsafe extern "thiscall" fn reiniciar_lance(m: usize) {
+    reiniciar_lance_com(m, &mut |r, t, a| despachar_reinicio(r, t, a))
+}
+
+unsafe extern "thiscall" fn comparar_reiniciar_lance(m: usize) {
+    use std::sync::atomic::Ordering::Relaxed;
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(300);
+    if gravando_no_topo() {
+        return o(m);
+    }
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m, MOTOR), (0xb67a34, 4), (0xae1080, 4)]);
+    let t = *((m + 0x4792) as *const usize);
+    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+        reg.extend(linhas_do_clube(clube));
+    }
+    let gravar = GRAVAR_REINICIO.swap(true, Relaxed);
+    let a7 = GRAVAR_A7.swap(true, Relaxed);
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(m), |chamar| {
+        reiniciar_lance_com(m, &mut |rotina, this, args| {
+            let mascara = match rotina {
+                0x6d6f70 => [0xffffff, u32::MAX, 0xff, 0xff, 0xff],
+                0x6e1090 => [u32::MAX, 0, 0, 0, 0],
+                _ => [0, 0, 0, 0, 0],
+            };
+            chamar(rotina, this, args, mascara)
+        })
+    });
+    GRAVAR_A7.store(a7, Relaxed);
+    GRAVAR_REINICIO.store(gravar, Relaxed);
+    PLACAR.registrar(igual && sequencia, || format!("reiniciar_lance(modo {}) {} chamadas: {}", *((m + 0x8eb2) as *const u8), k, detalhe_fita()));
+}
+
 // ---------- centesima trigesima quarta leva: o interesse do humano no dia de jogos (0x6b5040) ----------
 
 /// As regioes que a 0x6b5040 marca no dia `d`: +0x29 a +0x2e do dia, +0x14 de cada grupo, +0xc a
@@ -7690,6 +8140,9 @@ unsafe extern "thiscall" fn interesse_do_dia(d: usize) -> u32 {
             pr(comp + 0x10, 0);
             if ler(comp) > -1 {
                 let objeto = g(g(0xadadfc) + ler(comp) as usize * 4);
+                if (0..16).filter(|k| g((g(0xae23bc) as isize + (ler(0xae2364) + k - 16) as isize * 0x6e) as usize + 0x39) != 0).count() >= 2 {
+                    crate::comparacao::ramo("interesse dois humanos com clube");
+                }
                 for k in 0..16 {
                     let pe = (g(0xae23bc) as isize + (ler(0xae2364) + k - 16) as isize * 0x6e) as usize;
                     let clube = g(pe + 0x39);
@@ -7788,6 +8241,7 @@ unsafe extern "C" fn partida_sem_humano(partida: usize) -> u32 {
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16) as i32;
     if g(0xa15704) != 0 {
         for e in marcas_das_selecoes() {
+            crate::comparacao::ramo("sem humano selecao de humano");
             *(e as *mut u8) = 1;
         }
         *(0xa15704 as *mut u32) = 0;
@@ -7797,6 +8251,7 @@ unsafe extern "C" fn partida_sem_humano(partida: usize) -> u32 {
     }
     let (c1, c2) = (g(partida + 0x1c), g(partida + 0x20));
     if humano(c1, 1, 1, 0, 0) != 0 || humano(c2, 1, 1, 0, 0) != 0 {
+        crate::comparacao::ramo("sem humano clube humano em campo");
         return 0;
     }
     for c in [c1, c2] {
@@ -19256,6 +19711,15 @@ unsafe extern "thiscall" fn comparar_forca_do_time(this: usize, l: i8) {
 
 /// O pontape inicial mexe em todo o motor (jogadores, grade, bola): compara o objeto inteiro.
 unsafe extern "thiscall" fn comparar_pontape_inicial(this: usize) {
+    // dentro da comparacao do reinicio (0x6c54a0) a bola parada e uma unidade da fita
+    if gravando_reinicio() {
+        let o = orig::<unsafe extern "thiscall" fn(usize)>(145);
+        chamar_gravando(0x6c51e0, this, [0; 5], || {
+            o(this);
+            0
+        });
+        return;
+    }
     let o = orig::<unsafe extern "thiscall" fn(usize)>(145);
     let mut reg = vec![(this, MOTOR)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
@@ -20380,6 +20844,15 @@ unsafe extern "thiscall" fn comparar_decidir_sem_bola(j: usize, a: u32) {
     PLACAR.registrar(igual && sequencia && k == 1, || format!("decidir_sem_bola acao {:#x} {} chamadas: {}", *((j + 0x198) as *const u16), k, detalhe_fita()));
 }
 unsafe extern "thiscall" fn comparar_arrumar_bola_parada(this: usize) {
+    // dentro da comparacao do reinicio (0x6c54a0) a bola parada e uma unidade da fita
+    if gravando_reinicio() {
+        let o = orig::<unsafe extern "thiscall" fn(usize)>(255);
+        chamar_gravando(0x6c4820, this, [0; 5], || {
+            o(this);
+            0
+        });
+        return;
+    }
     let o = orig::<unsafe extern "thiscall" fn(usize)>(255);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(this + 0x1a0, 0x30), (this + 0x215e, 0x8f00 - 0x215e), (this + 0xf56e, 0x90)]);
@@ -20388,6 +20861,15 @@ unsafe extern "thiscall" fn comparar_arrumar_bola_parada(this: usize) {
     PLACAR.registrar(igual, || format!("arrumar_bola_parada(lado {})", lado_b));
 }
 unsafe extern "thiscall" fn comparar_arrumar_saida(this: usize) {
+    // dentro da comparacao do reinicio (0x6c54a0) a bola parada e uma unidade da fita
+    if gravando_reinicio() {
+        let o = orig::<unsafe extern "thiscall" fn(usize)>(254);
+        chamar_gravando(0x6c4ec0, this, [0; 5], || {
+            o(this);
+            0
+        });
+        return;
+    }
     let o = orig::<unsafe extern "thiscall" fn(usize)>(254);
     // tudo o que a arrumacao (e o que ela chama) grava: o motor de 0x1a0, a grade, os 40 jogadores, a
     // bola e as posses (0x215e..0x8f00) e os ponteiros de 0xf56e
@@ -20675,6 +21157,16 @@ unsafe extern "thiscall" fn comparar_tirar_de_campo(this: usize, j: usize, modo:
 /// ambiente do jogo, que desloca a heap). Vazio no uso normal.
 const SEM_ROTINAS: &[&str] = &[];
 
+/// Rotinas portadas que, fora da comparacao, rodam a original (pelo desvio de passagem, como no modo
+/// original): alguma rotina original chamada abaixo delas le lixo da pilha, e o lixo que a copia Rust
+/// deixa e outro. Na comparacao a copia segue conferida chamada a chamada.
+/// 0x6ccb60 `tracar_lance` (15/10/2026): com a pasta do jogo atual (o save e o hall da fama do Lucas)
+/// a carreira Rust se separava da original em 2002-01-12; a busca binaria entre as 301 rotinas
+/// apontou so ela, e uma sonda (a original e a copia tracando o mesmo lance, sem rodar nada) deu os
+/// mesmos quadrados e argumentos: o que muda e o resto da pilha que fica para quem e chamado depois.
+const SO_NA_COMPARACAO: &[usize] = &[0x6ccb60];
+
+
 unsafe extern "thiscall" fn comparar_marcacao_individual(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(164);
     let reg = [(this, MOTOR)];
@@ -20732,12 +21224,39 @@ unsafe fn comparar_reinicio(nome: &str, this: usize, o: unsafe extern "thiscall"
     });
 }
 unsafe extern "thiscall" fn comparar_lateral(this: usize) {
+    // dentro da comparacao do reinicio (0x6c54a0) a bola parada e uma unidade da fita
+    if gravando_reinicio() {
+        let o = orig::<unsafe extern "thiscall" fn(usize)>(168);
+        chamar_gravando(0x6c4290, this, [0; 5], || {
+            o(this);
+            0
+        });
+        return;
+    }
     comparar_reinicio("lateral", this, orig::<unsafe extern "thiscall" fn(usize)>(168), lateral);
 }
 unsafe extern "thiscall" fn comparar_escanteio(this: usize) {
+    // dentro da comparacao do reinicio (0x6c54a0) a bola parada e uma unidade da fita
+    if gravando_reinicio() {
+        let o = orig::<unsafe extern "thiscall" fn(usize)>(169);
+        chamar_gravando(0x6c4470, this, [0; 5], || {
+            o(this);
+            0
+        });
+        return;
+    }
     comparar_reinicio("escanteio", this, orig::<unsafe extern "thiscall" fn(usize)>(169), escanteio);
 }
 unsafe extern "thiscall" fn comparar_penalti(this: usize) {
+    // dentro da comparacao do reinicio (0x6c54a0) a bola parada e uma unidade da fita
+    if gravando_reinicio() {
+        let o = orig::<unsafe extern "thiscall" fn(usize)>(170);
+        chamar_gravando(0x6c50d0, this, [0; 5], || {
+            o(this);
+            0
+        });
+        return;
+    }
     comparar_reinicio("penalti", this, orig::<unsafe extern "thiscall" fn(usize)>(170), penalti);
 }
 
@@ -21129,6 +21648,7 @@ pub unsafe fn instalar(comparando: bool) {
         clube_do_pos_jogo as *const () as usize,
         partida_sem_humano as *const () as usize,
         interesse_do_dia as *const () as usize,
+        reiniciar_lance as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -21431,6 +21951,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_clube_do_pos_jogo as *const () as usize,
         comparar_partida_sem_humano as *const () as usize,
         comparar_interesse_do_dia as *const () as usize,
+        comparar_reiniciar_lance as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -21543,15 +22064,22 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
+            // a original pelo mesmo desvio de passagem do modo original (mesma pilha particular)
             linha(&format!("motor: {} fica no original (SEM_ROTINAS)", nomes[i]));
+            desvios::desviar(nomes[i], &PROLOGOS[i], desvios::PASSAGEM);
             continue;
         }
         // na comparacao a 0x6f5c30 e a 0x70dfd0 ja tem a porta (instalada antes), que tambem as compara
         if comparando && (PROLOGOS[i].endereco == 0x6f5c30 || PROLOGOS[i].endereco == 0x70dfd0) {
+            continue;
+        }
+        if !comparando && SO_NA_COMPARACAO.contains(&PROLOGOS[i].endereco) {
+            linha(&format!("motor: {} roda a original fora da comparacao (SO_NA_COMPARACAO)", nomes[i]));
+            desvios::desviar(nomes[i], &PROLOGOS[i], desvios::PASSAGEM);
             continue;
         }
         if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {

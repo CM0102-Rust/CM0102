@@ -1,13 +1,12 @@
 # Arquivos do jogo e de terceiros: nunca vao para o git.
 /jogo/
+/jogo_testes/
 /original/
 /referencias/
 
 __pycache__/
 *.pyc
-
 /rust/target/
-
 # Patch de base de dados do jogo (nao versionar)
 CLZ Leagues Patch*/
 CLZ Leagues Patch*.rar

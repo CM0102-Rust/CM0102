@@ -38,7 +38,9 @@ import time
 import laboratorio
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
-JOGO = os.path.normpath(os.path.join(AQUI, '..', 'jogo'))
+# Os testes automaticos rodam numa copia so deles (jogo_testes): a carreira automatica depende do que
+# esta na pasta (saves, hall_of_fame.bin), e os jogos do Lucas em jogo/ mudavam a referencia (15/10/2026).
+JOGO = os.path.normpath(os.path.join(AQUI, '..', 'jogo_testes' if os.path.isdir(os.path.join(AQUI, '..', 'jogo_testes')) else 'jogo'))
 
 
 def falha(msg):
