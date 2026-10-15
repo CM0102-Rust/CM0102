@@ -19,6 +19,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `clube 589bc0` | 0x6b79a0 | yes | same |
 | `clube 547d90` | 0x6b79a0 | yes | same |
 | `sem humano clube ligado` | 0x6b66a0 (batch 133) | yes | and the conditions always false in automatic careers: a human club in the match, competitions [0x9cf7bc]/[0x9cf6e4]/[0x9cf958], the 16th human as a national manager |
-| `interesse partida marcada` | 0x6b5040 (batch 134) | yes | a match with a human club; and the other humans (the 16 slots, the +0x24 link) |
+| `interesse partida marcada` | 0x6b5040 (batch 134) | yes | **covered** in Lucas's session of Oct 14 (8+, no divergence); the other humans (the 16 slots, the +0x24 link) are still pending |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").
