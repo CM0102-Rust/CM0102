@@ -1,0 +1,23 @@
+"""Documentacao da 144a leva. Uso: python docs.py "<jogo real>" "<real game>" "<mutacoes>" "<mutations>"."""
+import os, sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'engenharia-reversa'))
+from gen_docs import fazer
+
+jogo = sys.argv[1] if len(sys.argv) > 1 else '0 divergências'
+jogo_en = sys.argv[2] if len(sys.argv) > 2 else '0 divergences'
+mut = sys.argv[3] if len(sys.argv) > 3 else ''
+mut_en = sys.argv[4] if len(sys.argv) > 4 else ''
+car = sys.argv[5] if len(sys.argv) > 5 else '2.368.855.859 sorteios, impressão 459815f5e0dca92b, partidas 9ad4f994099c32e2, banco c8c977301cbf96ba'
+car_en = sys.argv[6] if len(sys.argv) > 6 else '2,368,855,859 draws, fingerprint 459815f5e0dca92b, matches 9ad4f994099c32e2, database c8c977301cbf96ba'
+M = (mut + " Leva de uma rotina grande (13 KB, a decisão do jogador com a bola). Lê variáveis sem valor no modo 4 (o goleiro na disputa de pênaltis: a nota do passe em 0x712ec4 e o companheiro em 0x713107 nunca são escritos) e passa bytes com a parte alta sem valor ao passe e ao chute: entrou no original determinizado (`ZERADAS`). A lista da pressão (0x68d020) fica na pilha: a cópia na lista (0x68d0d0) entra na fita sem o endereço da lista e o chute (0x702050, ainda original) entra como unidade com a cabeça da lista ignorada. O passe, o lançamento e a dividida rodam por dentro da cópia (as unidades deles entram na fita da condução). "
+     f"Comparando até 2001-08-20: 0 divergências. Jogo real comparando até 2002-01-01: {jogo}. Carreiras Rust ×2 e original até 2002-06-01: {car}")
+ME = (mut_en + " A batch of one large routine (13 KB, the decision of the player on the ball). It reads variables with no value in mode 4 (the keeper in the penalty shoot-out: the pass score at 0x712ec4 and the team-mate at 0x713107 are never written) and passes bytes with an unset high part to the pass and the shot: it joined the determinized original (`ZERADAS`). The pressure list (0x68d020) lives on the stack: the copy into the list (0x68d0d0) enters the tape without the list's address and the shot (0x702050, still original) enters as a unit with the list head ignored. The pass, the long ball and the dividida run inside the copy (their units go into the dribble's tape). "
+      f"Comparing to 2001-08-20: 0 divergences. Real game comparing to 2002-01-01: {jogo_en}. Rust ×2 and original careers to 2002-06-01: {car_en}")
+fazer(144, 320, 321, 'o jogador com a bola', 'the player on the ball',
+      ["| `conduzir()` | 0x7109f0 | thiscall, ret 4 | match_pl.cpp (13 KB): a decisão de quem está com a bola. Bola parada: escanteios, lateral e faltas passam (0x6c6a30 escolhe o companheiro, senão uma casa sorteada); pênalti e falta perto do gol chutam (0x700bd0 + 0x702050). Em jogo, notas do chute, do passe e da condução pela distância ao gol, a pressão (0x6bcbd0, com lista), o placar, o goleiro, as marcas da posição e o relógio; lança (0x6fa490), divide (0x70ec80), chuta, passa (0x6fa250) ou conduz (0x6f09f0) para a casa de 0x6bce80. Modo 4: o goleiro nos pênaltis (devolve 1 quando fica). Original determinizado. Comparada pela fita |"],
+      ["| `conduzir()` | 0x7109f0 | thiscall, ret 4 | match_pl.cpp (13 KB): the decision of the player on the ball. Set pieces: corners, throw-in and free kicks pass (0x6c6a30 picks the team-mate, otherwise a drawn cell); penalty and free kick near goal shoot (0x700bd0 + 0x702050). In play, shot, pass and dribble scores from the distance to goal, the pressure (0x6bcbd0, with list), the score, the keeper, the position's marks and the clock; long ball (0x6fa490), dividida (0x70ec80), shot, pass (0x6fa250) or dribble (0x6f09f0) to 0x6bce80's cell. Mode 4: the keeper in the shoot-out (returns 1 when he stays). Determinized original. Compared through the tape |"],
+      M, ME,
+      [('conduzir', 'dribble')],
+      "'mover_jogador': 'player_move',",
+      armadilha=("**Lista na pilha** (144ª leva): a unidade que recebe uma lista montada na pilha de quem está sendo comparado (0x68d0d0 com a lista da 0x68d020) tem `this` diferente na original e na cópia. A porta grava sem o endereço (`lista_gravada`, pela bandeira da comparação, que vale nas duas fases: na fase da cópia a fita já foi tirada e `gravando()` é falso) e a cópia pede igual.",
+                 "**List on the stack** (batch 144): a unit that receives a list built on the stack of the routine being compared (0x68d0d0 with 0x68d020's list) has a different `this` in the original and in the copy. The port records it without the address (`lista_gravada`, by the comparison's flag, valid in both phases: in the copy's phase the tape has already been taken and `gravando()` is false) and the copy requests the same."))

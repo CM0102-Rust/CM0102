@@ -36,5 +36,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `chute a gol empate tardio` | 0x70a910 | — | an equaliser after 70 minutes in a detailed match (0x1fd6..0x1fd9): does not happen in the automatic career |
 | `movimento sem vaga na grade` | 0x6f09f0 (batch 143) | — | a player moving with no slot in the cell (+0x28 negative) enters the new cell; in the automatic career everyone already takes the field with a slot |
 | `movimento sem mais adiantado` | 0x6f09f0 | — | side 1 with no furthest-forward player recorded (+0xf59a empty) uses row 9; in the automatic career the record is never empty when someone moves |
+| `conducao goleiro sem marca` | 0x7109f0 (batch 144) | — | the opponent's position-1 guard without the goalkeeper mark (table &1 = 0) gives +5000 to the shot score; in the automatic career the position-1 guard is always a goalkeeper |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

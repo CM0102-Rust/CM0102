@@ -151,7 +151,8 @@ EN = {
  'ler_linha_tatica': 'read_tactics_row', 'gravar_linha_tatica': 'write_tactics_row', 'simulacao_rapida': 'quick_simulation',
  'lesionar': 'injure', 'registrar_lesao': 'register_injury', 'destaque_do_jogador': 'player_highlight',
  'chute_a_gol': 'shot_on_goal',
- 'mover_jogador': 'player_move', 'desfecho_do_chute': 'shot_outcome',
+ 'mover_jogador': 'player_move',
+ 'conduzir': 'dribble', 'desfecho_do_chute': 'shot_outcome',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

@@ -36,5 +36,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `chute a gol empate tardio` | 0x70a910 | — | gol que empata depois dos 70 minutos numa partida detalhada (0x1fd6..0x1fd9): não acontece na carreira automática |
 | `movimento sem vaga na grade` | 0x6f09f0 (143ª) | — | o jogador que anda sem vaga na casa (+0x28 negativo) entra na casa nova; na carreira automática todos já entram em campo com vaga |
 | `movimento sem mais adiantado` | 0x6f09f0 | — | o lado 1 sem o mais adiantado registrado (+0xf59a vazio) usa a linha 9; na carreira automática o registro nunca está vazio quando alguém anda |
+| `conducao goleiro sem marca` | 0x7109f0 (144ª) | — | quem guarda a posição 1 do adversário sem a marca de goleiro (tabela &1 = 0) dá +5000 à nota do chute; na carreira automática o guarda da posição 1 é sempre goleiro |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
