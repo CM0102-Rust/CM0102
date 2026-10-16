@@ -150,6 +150,7 @@ EN = {
  'favorito_de': 'favourite_of', 'rejeitado_por': 'rejected_by', 'fechamento': 'match_wrap_up',
  'ler_linha_tatica': 'read_tactics_row', 'gravar_linha_tatica': 'write_tactics_row', 'simulacao_rapida': 'quick_simulation',
  'lesionar': 'injure', 'registrar_lesao': 'register_injury', 'destaque_do_jogador': 'player_highlight',
+ 'chute_a_gol': 'shot_on_goal', 'desfecho_do_chute': 'shot_outcome',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

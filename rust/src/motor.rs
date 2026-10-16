@@ -423,8 +423,10 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6d0980, bytes: &[0x51, 0x57, 0x8b, 0xf9, 0xc7, 0x44, 0x24, 0x04, 0x00, 0x00, 0x00, 0x00] },
     Prologo { endereco: 0x62be00, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
     Prologo { endereco: 0x717470, bytes: &[0x6a, 0xff, 0x68, 0x90, 0xd4, 0x95, 0x00] },
+    Prologo { endereco: 0x70c040, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x70a910, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 316;
+const N: usize = 318;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -9901,18 +9903,20 @@ unsafe extern "thiscall" fn lesionar(m: usize, tipo: u32, chance: u32, p: usize,
     lesionar_com(m, tipo, chance, p, o, &mut |r, t, a| despachar_lesao(r, t, a))
 }
 
-/// As regioes da lesao: a lista de lesoes (cabecalho e registros de 6 bytes).
+/// As regioes da lesao: o ponteiro da lista de lesoes, o cabecalho, os nos (o ultimo ganha o
+/// proximo quando a original acrescenta) e os registros de 6 bytes.
 unsafe fn regioes_das_lesoes() -> Vec<(usize, usize)> {
     let mut reg = Vec::new();
     let dono = *(0xb63d28 as *const usize);
     let lista = if dono != 0 { *((dono + 0x28) as *const usize) } else { 0 };
     if lista != 0 {
-        reg.push((lista, 0xe));
+        reg.extend([(dono + 0x28, 4), (lista, 0xe)]);
         let mut no = core::ptr::read_unaligned((lista + 2) as *const usize);
         for _ in 0..(*(lista as *const i16)).max(0) {
             if no == 0 {
                 break;
             }
+            reg.push((no, 0xa));
             let e = *(no as *const usize);
             if e != 0 {
                 reg.push((e, 6));
@@ -9924,15 +9928,24 @@ unsafe fn regioes_das_lesoes() -> Vec<(usize, usize)> {
 }
 
 unsafe extern "thiscall" fn comparar_lesionar(m: usize, tipo: u32, chance: u32, p: usize, o: usize) {
-    use std::sync::atomic::Ordering::Relaxed;
-    let f = orig::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize)>(313);
     if gravando() {
-        // dentro de outra comparacao pela fita, a lesao e uma unidade (como fazia a porta)
+        // unidade da fita de fora; por dentro, a propria comparacao (fita aninhada)
         chamar_gravando(0x6d0980, m, [tipo, chance, p as u32, o as u32, 0], || {
-            f(m, tipo, chance, p, o);
+            fita_da_lesao(m, tipo, chance, p, o);
             0
         });
         return;
+    }
+    fita_da_lesao(m, tipo, chance, p, o);
+}
+
+unsafe fn fita_da_lesao(m: usize, tipo: u32, chance: u32, p: usize, o: usize) {
+    use std::sync::atomic::Ordering::Relaxed;
+    let f = orig::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize)>(313);
+    let dono = *(0xb63d28 as *const usize);
+    if dono == 0 || *((dono + 0x28) as *const usize) == 0 {
+        // sem lista, a original a cria (aloca): fica sem comparacao
+        return f(m, tipo, chance, p, o);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4)]);
@@ -10060,6 +10073,789 @@ unsafe extern "thiscall" fn comparar_destaque_do_jogador(p: usize, codigo: u32) 
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(p, codigo), || crate::aleatorio::sem_contar(|| destaque_do_jogador(p, codigo)));
     PLACAR.registrar(igual && r == n, || format!("destaque_do_jogador({:#x}) original={} rust={} {:x?} x {:x?}", codigo as u16, r, n, mo, mr));
     r
+}
+
+// ---------- centesima quadragesima segunda leva: o desfecho do chute (0x70c040) ----------
+
+/// { 0x70c040 } (ret 4, match_pl.cpp) com as chamadas que mexem fora do motor injetadas (0x6d6f70
+/// narra, 0x6cd770 bola parada, 0x716e10 e 0x6f0630; e as da falta 0x6bac40): o desfecho do chute de
+/// `p` com a forca `f` (0 vale 1). A qualidade (sorteio(1000) - sorteio(2000)) x (+0x8eaa + 1) / f
+/// contra a defesa do goleiro (0x6ce110, 0x700420, com rebote e saida) da o tipo: 1 no alvo, 2..11
+/// para fora (so o placar 0x6ce310), 12/13 para fora com tiro de meta narrado (0x1fca/0x1fcb, bola
+/// parada 2). No alvo, a parte do chute na soma com a defesa: acima de 71 e gol (disputa de penaltis
+/// 0x6bba50, gol de ouro 0x6d4250, o goleiro sofre; narracoes pelo placar e o tempo, 0x6bb950 no
+/// lado; o placar +0xf5bd do outro lado, as narracoes da torcida), acima de 61 defesa com escanteio,
+/// acima de 51 defesa que sai pela linha (+0x8ea8, bola parada 3 e 0x1f75), senao defesa (0x6f0630);
+/// nas defesas, o destaque do goleiro (0x717470) escolhe a narracao.
+unsafe fn desfecho_do_chute_com(p: usize, f_in: f32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let m = *((p + 0x19e) as *const usize);
+    let u = |q: usize, o: usize| *((q + o) as *const usize);
+    let bm = |o: usize| (m + o) as *mut u8;
+    let lado = byte(p, 0x27);
+    let outro = (lado == 0) as u8;
+    let narrar = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, x: u32, y: u8, a7: i16| narrar_chute(chamar, m, codigo, x, y, a7);
+    let tabela1 = |q: usize| u(q, 0x19e) != 0 && tabela_do_jogador(q) == 1;
+    let somar = |q: usize, d: i16| {
+        let w = (q + 0x35) as *mut i16;
+        *w = (*w).wrapping_add(d);
+    };
+    let mais_2b = |q: usize, d: u8| {
+        let b = (q + 0x2b) as *mut u8;
+        *b = (*b).wrapping_add(d);
+    };
+    let f = if f_in as f64 == f64_em(0x9689a0) { 1.0f32 } else { f_in };
+    let fator = byte(m, 0x8eaa);
+    let r1 = sortear(0x7d0);
+    let r2 = sortear(0x3e8);
+    let qualidade = ftol(r2.wrapping_sub(r1).wrapping_mul(fator as i32 + 1) as f64 / f as f64);
+    let g = manter_posicao_um(m, lado);
+    if g == 0 {
+        return orig::<unsafe extern "thiscall" fn(usize, f32)>(316)(p, f_in);
+    }
+    let mut b18 = 0u8;
+    if byte(m, 0x8ea9) > 3 {
+        b18 = 1;
+    }
+    let (mut b13, mut b16) = (0u8, 0u8);
+    let defesa = if g != p {
+        crate::comparacao::ramo("desfecho goleiro defende");
+        defesa_do_goleiro(g, byte(p, 0x102), byte(p, 0x103), b18, -1, &mut b16, &mut b13)
+    } else {
+        // ponytail: com o proprio goleiro chutando, a original le b13/b16 sem valor (zerados no
+        // original determinizado)
+        0
+    };
+    let (mut b12, mut b14) = (0u8, 0u8);
+    if b13 == 0 {
+        if defesa as i16 > 0x177 {
+            b12 = 1;
+        } else if defesa as i16 > 0x104 {
+            b14 = 1;
+        }
+    }
+    let q = qualidade as i16;
+    let tipo: u8 = if q > 0xf0 {
+        1
+    } else if q < 10 {
+        if b18 != 0 { if sortear(4) != 0 { 3 } else { 4 } } else { 2 }
+    } else {
+        let d = 0xf0 - q as i32;
+        if d > 0x32 {
+            if b18 != 0 { if sortear(4) != 0 { 6 } else { 7 } } else { 5 }
+        } else if d > 0xa {
+            8 + (b18 != 0) as u8
+        } else if d > 6 {
+            0xa + (b18 != 0) as u8
+        } else {
+            0xc + (b18 != 0) as u8
+        }
+    };
+    let (mut b10, mut b11, mut b15, mut b23, mut b17) = (0i8, 0i8, 0u8, 0u8, 0u8);
+    placar_agregado(m, outro as i8, &mut b10, &mut b11, &mut b15, &mut b23, &mut b17, 1);
+    if tipo != 1 {
+        match tipo {
+            0xc => narrar(chamar, 0x1fca, byte(p, 0x2e) as u8 as u32, outro, 0),
+            0xd => narrar(chamar, 0x1fcb, byte(p, 0x2e) as u8 as u32, outro, 0),
+            _ => {}
+        }
+        if !(0xc..=0xd).contains(&tipo) {
+            crate::comparacao::ramo("desfecho para fora");
+            return;
+        }
+        crate::comparacao::ramo("desfecho tiro de meta");
+        if b13 != 0 && b16 == 0 && tabela1(g) {
+            narrar(chamar, 0x20d5, byte(g, 0x2e) as u8 as u32, byte(g, 0x27) as u8, 0);
+        }
+        narrar(chamar, 0x211b, byte(p, 0x2e) as u8 as u32, lado as u8, 0);
+        chamar(0x6cd770, m, [byte(m, 0x8ea7) as u8 as u32, byte(m, 0x8ea8) as u8 as u32, 2 | (lado as u8 as u32) << 8, 1, 0]);
+        if tabela1(g) {
+            mais_2b(g, sortear(3) as u8);
+        }
+        *bm(0x1cd) = 1;
+        return;
+    }
+    // no alvo
+    let k = defesa as i16 as i32;
+    let parte = if k + q as i32 == 0 { 0 } else { (q as i32 * 100) / (k + q as i32) };
+    let parte = parte as i16;
+    if parte <= 0x47 {
+        if b14 != 0 && tabela1(g) {
+            crate::comparacao::ramo("desfecho defesa media");
+            somar(g, 0x15e);
+            if sortear(byte(g, 0x17) as i32 * 20 + 0x32) == 0 {
+                let r = sortear(4);
+                if ajustar_17(g, r as i8) != 0 {
+                    desempenho_na_partida(g, 0);
+                }
+            }
+        } else if b12 != 0 && tabela1(g) {
+            crate::comparacao::ramo("desfecho defesa dificil");
+            somar(g, 0x258);
+            if sortear((byte(g, 0x17) as i32 + 1) * 20) == 0 {
+                let r = sortear(7);
+                if ajustar_17(g, r as i8) != 0 {
+                    desempenho_na_partida(g, 0);
+                }
+            }
+        }
+    }
+    if parte > 0x47 {
+        desfecho_gol(m, p, g, lado, outro, b10, b11, b12, b13, b14, b15, b16, b17, chamar);
+        return;
+    }
+    let codigos = [0x219f, 0x21a0, 0x21b0, 0x21b3, 0x21b4, 0x21b5];
+    let destaque = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, abertura: u32, comum: u32, quieta: u32| {
+        let (g2e, g27) = (byte(g, 0x2e) as u8 as u32, byte(g, 0x27) as u8);
+        if b12 != 0 {
+            narrar(chamar, abertura, g2e, g27, 0);
+            if let Some(&c) = codigos.iter().find(|&&c| destaque_do_jogador(g, c) != 0) {
+                crate::comparacao::ramo("desfecho destaque do goleiro");
+                narrar(chamar, c, g2e, g27, 0);
+            }
+        } else {
+            narrar(chamar, if b14 != 0 { comum } else { quieta }, g2e, g27, 0);
+        }
+    };
+    if parte > 0x3d {
+        crate::comparacao::ramo("desfecho escanteio");
+        destaque(chamar, 0x2111, 0x210f, 0x1fe6);
+        somar(g, 0x8c);
+        mais_2b(g, (sortear(3) + 1) as u8);
+        chamar(0x6cd770, m, [byte(m, 0x8ea7) as u8 as u32, byte(m, 0x8ea8) as u8 as u32, (lado as u8 as u32) << 8, 0, 0]);
+        narrar(chamar, 0x211b, byte(p, 0x2e) as u8 as u32, lado as u8, 0);
+        *bm(0x1cd) = 1;
+    } else if parte > 0x33 {
+        crate::comparacao::ramo("desfecho linha de fundo");
+        destaque(chamar, 0x2111, 0x210f, 0x1fe4);
+        if lado == 1 {
+            *bm(0x8ea8) = 0xff;
+        } else if lado == 0 {
+            *bm(0x8ea8) = 0xc;
+        }
+        *bm(0x8eae) = outro;
+        *((m + 0xf582) as *mut u32) = 0;
+        narrar(chamar, 0x211b, byte(p, 0x2e) as u8 as u32, lado as u8, 0);
+        *bm(0x8eb2) = 3;
+        narrar(chamar, 0x1f75, u32::MAX, outro, 0);
+    } else {
+        crate::comparacao::ramo("desfecho defesa");
+        let r = sortear(3);
+        somar(g, 0xc8);
+        mais_2b(g, r as u8);
+        destaque(chamar, 0x2112, 0x2110, 0x1fe5);
+        narrar(chamar, 0x211b, byte(p, 0x2e) as u8 as u32, lado as u8, 0);
+        chamar(0x6f0630, g, [0; 5]);
+    }
+}
+
+/// O gol do desfecho (parte do chute acima de 71): ver `desfecho_do_chute_com`.
+#[allow(clippy::too_many_arguments)]
+unsafe fn desfecho_gol(m: usize, p: usize, g: usize, lado: i8, outro: u8, mut b10: i8, b11: i8, b12: u8, b13: u8, b14: u8, b15: u8, b16: u8, b17: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let _ = (b12, b14);
+    let u = |q: usize, o: usize| *((q + o) as *const usize);
+    let bm = |o: usize| (m + o) as *mut u8;
+    let narrar = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, x: u32, y: u8, a7: i16| narrar_chute(chamar, m, codigo, x, y, a7);
+    let tabela1 = |q: usize| u(q, 0x19e) != 0 && tabela_do_jogador(q) == 1;
+    let somar = |q: usize, d: i16| {
+        let w = (q + 0x35) as *mut i16;
+        *w = (*w).wrapping_add(d);
+    };
+    let minuto = || *((m + 0x8ed0) as *const i16) as i32 / 11;
+    let tarde = |d: i32| (0x55..0x5a).contains(&d) || d >= 0x73;
+    let (p2e, p27) = (byte(p, 0x2e) as u8 as u32, lado as u8);
+    crate::comparacao::ramo("desfecho gol");
+    if lado_do_lance(m) as i8 == -1 {
+        if momento_marcado(m) as u8 != 0 {
+            crate::comparacao::ramo("desfecho gol de ouro");
+            *bm(0x1a8) = 1;
+        }
+        if tabela1(g) {
+            *((g + 0xf) as *mut u8) = byte(g, 0xf).wrapping_add(1) as u8;
+            let ficha = u(g, 0x69);
+            if sortear(byte(ficha, 0x58) as i32 + 1) != 0 && sortear(byte(ficha, 0x5a) as i32 + 1) != 0 {
+                let s = byte(g, 0xf) as u8 as i32;
+                let r = sortear(s * s) as u8;
+                let pf = byte(p, 0xf) as u8;
+                let v = if ((r as i8) as i32) < pf as i32 { pf } else { r };
+                *((g + 0x100) as *mut u8) = (byte(g, 0x100) as u8).wrapping_add(v);
+                desempenho_na_partida(g, 0);
+            }
+            somar(g, -500);
+            if b13 != 0 {
+                somar(g, -600);
+            }
+        }
+    }
+    if tabela1(g) && g != p && b13 == 0 && sortear(0x32) == 0 && b16 == 0 {
+        narrar(chamar, 0x20d6, byte(g, 0x2e) as u8 as u32, byte(g, 0x27) as u8, 0);
+    }
+    narrar(chamar, 0x1fff, p2e, outro, 0);
+    let penaltis = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, y: u8| {
+        crate::comparacao::ramo("desfecho gol nos penaltis");
+        narrar(chamar, 0x20ed, u32::MAX, y, 0);
+        let bl = lado_do_lance(m);
+        aplicar_falta_com(m, chamar);
+        let k = if bl as i8 == lado {
+            narrar(chamar, 0x20df, u32::MAX, p27, 0);
+            if sortear((b11 as i32) - (b10 as i32) + 3) > 0 {
+                narrar(chamar, 0x20d9, u32::MAX, p27, 0);
+            }
+            3.0f32
+        } else {
+            if (b10 == b11 || (b10 as i32) - 1 == b11 as i32) && sortear(0x28) == 0 {
+                narrar(chamar, 0x20d9, u32::MAX, p27, 0);
+            }
+            f32::from_bits(0x3fb9999a)
+        };
+        aplicar_ao_time(m, p, k);
+        chamar(0x716e10, p, [0; 5]);
+    };
+    if sortear(3) != 0 && lado_do_lance(m) as i8 > -1 {
+        penaltis(chamar, outro);
+        return;
+    }
+    let nos_penaltis = lado_do_lance(m) as i8 > -1;
+    narrar(chamar, if nos_penaltis { 0x20fa } else { 0x1fcd }, p2e, p27, 0);
+    if lado_do_lance(m) as i8 > -1 {
+        penaltis(chamar, p27);
+        return;
+    }
+    if tabela1(g) && g != p && b16 != 0 {
+        narrar(chamar, 0x1fe1, byte(g, 0x2e) as u8 as u32, byte(g, 0x27) as u8, b16 as i8 as i16);
+    }
+    b10 = b10.wrapping_add(1);
+    let k_lado = |k: u32| aplicar_ao_lado(m, lado, f32::from_bits(k));
+    if *bm(0x1a8) != 0 {
+        narrar(chamar, 0x1fd2, u32::MAX, outro, 0);
+    } else if b17 != 0 {
+        torcida(chamar, m, lado, outro, b15, &narrar);
+    } else {
+        let dif = b10 as i32 - b11 as i32;
+        let t = minuto();
+        let fase2 = *((m + 0x8ed4) as *const i16) == 0x3de;
+        if dif == 2 && ((t >= 0x46 && fase2) || t >= 0x6a) {
+            narrar(chamar, 0x1fd0, u32::MAX, outro, 0);
+            k_lado(0x3fc66666);
+        } else if (dif == 1 || b15 != 0) && ((t >= 0x50 && fase2) || t >= 0x6e) {
+            narrar(chamar, 0x1fd1, u32::MAX, outro, 0);
+            k_lado(0x3fb9999a);
+        } else if b10 == b11 && b15 == 0 && t >= 0x46 {
+            crate::comparacao::ramo("desfecho empate tardio");
+            let a = contar_ativos(m, outro as i8) as i8;
+            let b = contar_ativos(m, lado) as i8;
+            let bl = if a < b { byte(m, 4 + outro as usize) } else { -1 };
+            let d = minuto() as i16 as i32;
+            let (codigo, k) = if bl == -1 {
+                if tarde(d) { (0x1fd8, 0x3fb9999a) } else { (0x1fd6, 0x3faccccd) }
+            } else if tarde(d) {
+                (0x1fd9, 0x3fd33333)
+            } else {
+                (0x1fd7, 0x3fb33333)
+            };
+            k_lado(k);
+            narrar(chamar, codigo, u32::MAX, outro, bl as i16);
+        } else if dif < 0 && dif > -3 && (t >= 0x50 || (t >= 0x46 && b10 == 1) || (t >= 0x3c && b10 == 1 && 1 - b11 as i32 == -2)) {
+            narrar(chamar, if tarde(t as i16 as i32) { 0x1fdb } else { 0x1fda }, u32::MAX, outro, 0);
+        } else {
+            torcida(chamar, m, lado, outro, b15, &narrar);
+        }
+    }
+    if tabela1(g) && g != p && b13 != 0 && b16 == 0 {
+        narrar(chamar, 0x20d5, byte(g, 0x2e) as u8 as u32, byte(g, 0x27) as u8, 0);
+    }
+    aplicar_ao_time(m, p, f32::from_bits(0x3fd9999a));
+    let gols = bm(0xf5bd + outro as usize * 0x36);
+    *gols = (*gols).wrapping_add(1);
+    let r = sortear(5);
+    let clube = || {
+        let pt = u(m, 0x4792);
+        u(if lado != 0 { pt + 0x1c } else { pt + 0x20 }, 0)
+    };
+    let tecnico_8 = || {
+        let t = u(clube(), 0x53);
+        t != 0 && byte(t, 0x77) == 8
+    };
+    let mut feito = false;
+    if (b10 as i32 - b11 as i32) > r + 2 && sortear(7) == 0 && tecnico_8() {
+        narrar(chamar, 0x2117, u32::MAX, outro, 0);
+        feito = true;
+    }
+    if !feito && (b10 == b11 || b10 as i32 - 1 == b11 as i32 || b15 != 0) {
+        let r1 = sortear(minuto());
+        if r1 > sortear(0x78) && tecnico_8() {
+            narrar(chamar, 0x2116, u32::MAX, outro, 0);
+        }
+    }
+    *bm(0x8eae) = lado as u8;
+    *((m + 0xf582) as *mut u32) = 0;
+    *bm(0x8eb2) = 8;
+    *bm(0x1ca) = 0;
+}
+
+/// O fim comum das narracoes do gol: a torcida (0x1fdc antes dos 80 com +0x15, fator 1,45) ou
+/// so o fator 1,25 no lado.
+unsafe fn torcida(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, m: usize, lado: i8, outro: u8, b15: u8, narrar: &dyn Fn(&mut dyn FnMut(usize, usize, [u32; 5]) -> u32, u32, u32, u8, i16)) {
+    let t = *((m + 0x8ed0) as *const i16) as i32 / 11;
+    if b15 != 0 && t < 0x50 {
+        narrar(chamar, 0x1fdc, u32::MAX, outro, 0);
+        aplicar_ao_lado(m, lado, f32::from_bits(0x3fb9999a));
+    } else {
+        aplicar_ao_lado(m, lado, f32::from_bits(0x3fa00000));
+    }
+}
+
+/// A narracao dos chutes: o ultimo argumento (a7) vai em 16 bits no alto do codigo (contagens de gols
+/// em palavra; a fita confere o byte baixo).
+unsafe fn narrar_chute(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, m: usize, codigo: u32, x: u32, y: u8, a7: i16) {
+    chamar(0x6d6f70, *((m + 0x8f7a) as *const usize), [codigo | (a7 as u16 as u32) << 16, m as u32, x, y as u32, u32::MAX]);
+}
+
+unsafe fn despachar_chute(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
+    if rotina == 0x6d6f70 {
+        comentar(this, [a[0] & 0xffff, a[1], a[2], a[3], a[4] & 0xff, (a[4] >> 8) & 0xff, (a[0] >> 16) as u16 as i16 as i32 as u32]);
+        return 0;
+    }
+    despachar_dividida(rotina, this, a)
+}
+
+/// { 0x70c040 }: ver `desfecho_do_chute_com`.
+unsafe extern "thiscall" fn desfecho_do_chute(p: usize, f: f32) {
+    desfecho_do_chute_com(p, f, &mut |r, t, a| despachar_chute(r, t, a))
+}
+
+unsafe extern "thiscall" fn comparar_desfecho_do_chute(p: usize, f: f32) {
+    if gravando() {
+        // unidade da fita de fora; por dentro, a propria comparacao (fita aninhada)
+        chamar_gravando(0x70c040, p, [f.to_bits(), 0, 0, 0, 0], || {
+            fita_do_desfecho(p, f);
+            0
+        });
+        return;
+    }
+    fita_do_desfecho(p, f);
+}
+
+unsafe fn fita_do_desfecho(p: usize, f: f32) {
+    use std::sync::atomic::Ordering::Relaxed;
+    let o = orig::<unsafe extern "thiscall" fn(usize, f32)>(316);
+    let m = *((p + 0x19e) as *const usize);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m, MOTOR), (0xb67a34, 4), (0xae1080, 4)]);
+    let t = *((m + 0x4792) as *const usize);
+    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+        reg.extend(linhas_do_clube(clube));
+    }
+    let gravar = GRAVAR_716.swap(true, Relaxed);
+    let a7 = GRAVAR_A7.swap(true, Relaxed);
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || {
+        zerar_pilha();
+        o(p, f)
+    }, |chamar| {
+        desfecho_do_chute_com(p, f, &mut |rotina, this, args| {
+            let mascara = match rotina {
+                0x6d6f70 => [0xff_ffff, u32::MAX, 0xff, 0xff, 0xff],
+                0x6cd770 => [0xff, 0xff, 0xffff, 0xff, u32::MAX],
+                0x62ed70 => [u32::MAX, 0, 0, 0, 0],
+                0x6d0980 => [0xff, 0xff, u32::MAX, u32::MAX, 0],
+                0x897760 => [u32::MAX, 0xff, u32::MAX, 0, 0],
+                0x6e1aa0 | 0x716c90 | 0x6f0630 => [0, 0, 0, 0, 0],
+                _ => [0xff, 0, 0, 0, 0],
+            };
+            chamar(rotina, this, args, mascara)
+        })
+    });
+    GRAVAR_A7.store(a7, Relaxed);
+    GRAVAR_716.store(gravar, Relaxed);
+    PLACAR.registrar(igual && sequencia, || format!("desfecho_do_chute {} chamadas: {}", k, detalhe_fita()));
+}
+
+/// { 0x70a910 } (ret 4, match_pl.cpp) com as chamadas que mexem fora do motor injetadas (como na
+/// 0x70c040): o chute a gol de `p` com a forca `f` (0 vale 1), contra o goleiro do outro lado
+/// (0x6ce110, 0x700420). Mesmo tipo da 0x70c040; fora da disputa de penaltis conta o chute (+0xa) e o
+/// chute no alvo (+0xb); para fora narra 0x1fc6..0x1fcb pelo tipo (8..13) e, com 12/13, o tiro de
+/// meta (0x211c). Gol: +0xc, atuacao +0x89 e as cinco contagens de gols (+0x3d..+0x45, palavras); as
+/// narracoes do placar, o hat-trick (0x2011/0x1fd5) e as marcas da carreira (0x200a..0x2012 e o
+/// destaque 0x21b6, com a contagem como ultimo argumento); o placar +0xf5bd do lado. As defesas como
+/// na 0x70c040 (0x211c no lugar de 0x211b).
+unsafe fn chute_a_gol_com(p: usize, f_in: f32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let m = *((p + 0x19e) as *const usize);
+    let u = |q: usize, o: usize| *((q + o) as *const usize);
+    let bm = |o: usize| (m + o) as *mut u8;
+    let lado = byte(p, 0x27);
+    let outro = (lado == 0) as u8;
+    let narrar = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, x: u32, y: u8, a7: i16| narrar_chute(chamar, m, codigo, x, y, a7);
+    let tabela1 = |q: usize| u(q, 0x19e) != 0 && tabela_do_jogador(q) == 1;
+    let somar = |q: usize, d: i16| {
+        let w = (q + 0x35) as *mut i16;
+        *w = (*w).wrapping_add(d);
+    };
+    let mais = |q: usize, o: usize| {
+        let b = (q + o) as *mut u8;
+        *b = (*b).wrapping_add(1);
+    };
+    let mais_2b = |q: usize, d: u8| {
+        let b = (q + 0x2b) as *mut u8;
+        *b = (*b).wrapping_add(d);
+    };
+    let (p2e, p27) = (byte(p, 0x2e) as u8 as u32, lado as u8);
+    let f = if f_in as f64 == f64_em(0x9689a0) { 1.0f32 } else { f_in };
+    let fator = byte(m, 0x8eaa);
+    let r1 = sortear(0x7d0);
+    let r2 = sortear(0x3e8);
+    let qualidade = ftol(r2.wrapping_sub(r1).wrapping_mul(fator as i32 + 1) as f64 / f as f64);
+    let g = manter_posicao_um(m, outro as i8);
+    if g == 0 {
+        return orig::<unsafe extern "thiscall" fn(usize, f32)>(317)(p, f_in);
+    }
+    let b18 = (byte(m, 0x8ea9) > 3) as u8;
+    let (mut b13, mut b15) = (0u8, 0u8);
+    let defesa = defesa_do_goleiro(g, byte(p, 0x102), byte(p, 0x103), b18, -1, &mut b15, &mut b13);
+    let (mut b12, mut b14) = (0u8, 0u8);
+    if b13 == 0 {
+        if defesa as i16 > 0x177 {
+            b12 = 1;
+        } else if defesa as i16 > 0x104 {
+            b14 = 1;
+        }
+    }
+    let q = qualidade as i16;
+    let tipo: u8 = if q > 0xf0 {
+        1
+    } else if q < 10 {
+        if b18 != 0 { if sortear(4) != 0 { 3 } else { 4 } } else { 2 }
+    } else {
+        let d = 0xf0 - q as i32;
+        if d > 0x32 {
+            if b18 != 0 { if sortear(4) != 0 { 6 } else { 7 } } else { 5 }
+        } else if d > 0xa {
+            8 + (b18 != 0) as u8
+        } else if d > 6 {
+            0xa + (b18 != 0) as u8
+        } else {
+            0xc + (b18 != 0) as u8
+        }
+    };
+    if lado_do_lance(m) as i8 == -1 {
+        mais(p, 0xa);
+        if tipo == 1 {
+            mais(p, 0xb);
+        }
+    }
+    let (mut b10, mut b11, mut b16, mut b23, mut b17) = (0i8, 0i8, 0u8, 0u8, 0u8);
+    placar_agregado(m, lado, &mut b10, &mut b11, &mut b16, &mut b23, &mut b17, 1);
+    if tipo != 1 {
+        if (8..=0xd).contains(&tipo) {
+            narrar(chamar, 0x1fc6 + (tipo as u32 - 8), p2e, p27, 0);
+        }
+        if !(0xc..=0xd).contains(&tipo) {
+            crate::comparacao::ramo("chute a gol para fora");
+            return;
+        }
+        crate::comparacao::ramo("chute a gol tiro de meta");
+        if b13 != 0 && b15 == 0 && tabela1(g) {
+            narrar(chamar, 0x20d5, byte(g, 0x2e) as u8 as u32, byte(g, 0x27) as u8, 0);
+        }
+        narrar(chamar, 0x211c, p2e, p27, 0);
+        chamar(0x6cd770, m, [byte(m, 0x8ea7) as u8 as u32, byte(m, 0x8ea8) as u8 as u32, 2 | (p27 as u32) << 8, 1, 0]);
+        if tabela1(g) {
+            mais_2b(g, sortear(3) as u8);
+        }
+        *bm(0x1cd) = 1;
+        return;
+    }
+    let k = defesa as i16 as i32;
+    let parte = if k + q as i32 == 0 { 0 } else { (q as i32 * 100) / (k + q as i32) } as i16;
+    if parte <= 0x47 {
+        if b14 != 0 && tabela1(g) {
+            crate::comparacao::ramo("chute a gol defesa media");
+            somar(g, 0x15e);
+            if sortear(byte(g, 0x17) as i32 * 20 + 0x32) == 0 {
+                let r = sortear(4);
+                if ajustar_17(g, r as i8) != 0 {
+                    desempenho_na_partida(g, 0);
+                }
+            }
+        } else if b12 != 0 && tabela1(g) {
+            crate::comparacao::ramo("chute a gol defesa dificil");
+            somar(g, 0x258);
+            if sortear((byte(g, 0x17) as i32 + 1) * 20) == 0 {
+                let r = sortear(7);
+                if ajustar_17(g, r as i8) != 0 {
+                    desempenho_na_partida(g, 0);
+                }
+            }
+        }
+        let codigos = [0x219f, 0x21a0, 0x21b0, 0x21b3, 0x21b4, 0x21b5];
+        let destaque = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, abertura: u32, comum: u32, quieta: u32| {
+            let (g2e, g27) = (byte(g, 0x2e) as u8 as u32, byte(g, 0x27) as u8);
+            if b12 != 0 {
+                narrar(chamar, abertura, g2e, g27, 0);
+                if let Some(&c) = codigos.iter().find(|&&c| destaque_do_jogador(g, c) != 0) {
+                    crate::comparacao::ramo("chute a gol destaque do goleiro");
+                    narrar(chamar, c, g2e, g27, 0);
+                }
+            } else {
+                narrar(chamar, if b14 != 0 { comum } else { quieta }, g2e, g27, 0);
+            }
+        };
+        if parte > 0x3d {
+            crate::comparacao::ramo("chute a gol escanteio");
+            destaque(chamar, 0x2111, 0x210f, 0x1fe6);
+            narrar(chamar, 0x211c, p2e, p27, 0);
+            somar(g, 0x8c);
+            mais_2b(g, (sortear(3) + 1) as u8);
+            chamar(0x6cd770, m, [byte(m, 0x8ea7) as u8 as u32, byte(m, 0x8ea8) as u8 as u32, (outro as u32) << 8, 0, 0]);
+            *bm(0x1cd) = 1;
+        } else if parte > 0x33 {
+            crate::comparacao::ramo("chute a gol linha de fundo");
+            destaque(chamar, 0x2111, 0x210f, 0x1fe4);
+            if lado == 1 {
+                *bm(0x8ea8) = 0xff;
+            } else if lado == 0 {
+                *bm(0x8ea8) = 0xc;
+            }
+            *bm(0x8eae) = p27;
+            *((m + 0xf582) as *mut u32) = 0;
+            narrar(chamar, 0x211c, p2e, p27, 0);
+            *bm(0x8eb2) = 3;
+            narrar(chamar, 0x1f75, u32::MAX, p27, 0);
+        } else {
+            crate::comparacao::ramo("chute a gol defesa");
+            let r = sortear(3);
+            somar(g, 0xc8);
+            mais_2b(g, r as u8);
+            destaque(chamar, 0x2112, 0x2110, 0x1fe5);
+            narrar(chamar, 0x211c, p2e, p27, 0);
+            chamar(0x6f0630, g, [0; 5]);
+        }
+        return;
+    }
+    // o gol
+    crate::comparacao::ramo("chute a gol gol");
+    let w = |o: usize| (p + o) as *mut i16;
+    if lado_do_lance(m) as i8 == -1 {
+        if momento_marcado(m) as u8 != 0 {
+            crate::comparacao::ramo("chute a gol gol de ouro");
+            *bm(0x1a8) = 1;
+        }
+        mais(p, 0xc);
+        somar(p, 0x89);
+        for o in [0x3d, 0x3f, 0x41, 0x43, 0x45] {
+            *w(o) = (*w(o)).wrapping_add(1);
+        }
+        if tabela1(g) {
+            mais(g, 0xf);
+            let ficha = u(g, 0x69);
+            if sortear(byte(ficha, 0x58) as i32 + 1) != 0 && sortear(byte(ficha, 0x5a) as i32 + 1) != 0 {
+                let s = byte(g, 0xf) as u8 as i32;
+                let r = sortear(s * s) as u8;
+                let pf = byte(p, 0xf) as u8;
+                let v = if ((r as i8) as i32) < pf as i32 { pf } else { r };
+                *((g + 0x100) as *mut u8) = (byte(g, 0x100) as u8).wrapping_add(v);
+                desempenho_na_partida(g, 0);
+            }
+            somar(g, -500);
+            if b13 != 0 {
+                somar(g, -600);
+            }
+        }
+    }
+    if b13 == 0 && sortear(0x32) == 0 && b15 == 0 && tabela1(g) {
+        narrar(chamar, 0x20d6, byte(g, 0x2e) as u8 as u32, byte(g, 0x27) as u8, 0);
+    }
+    narrar(chamar, 0x1fff, p2e, p27, 0);
+    // a disputa de penaltis: a falta (0x6bac40) e as narracoes do cobrador
+    let penaltis = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
+        crate::comparacao::ramo("chute a gol nos penaltis");
+        narrar(chamar, 0x20ed, u32::MAX, p27, 0);
+        let bl = lado_do_lance(m);
+        aplicar_falta_com(m, chamar);
+        let k = if bl as i8 == lado {
+            narrar(chamar, 0x20df, u32::MAX, p27, 0);
+            if sortear((b11 as i32) - (b10 as i32) + 3) > 0 {
+                narrar(chamar, 0x20d9, u32::MAX, p27, 0);
+            }
+            3.0f32
+        } else {
+            if (b10 == b11 || (b10 as i32) - 1 == b11 as i32) && sortear(0x28) == 0 {
+                narrar(chamar, 0x20d9, u32::MAX, p27, 0);
+            }
+            f32::from_bits(0x3fb9999a)
+        };
+        aplicar_ao_time(m, p, k);
+        chamar(0x716e10, p, [0; 5]);
+    };
+    if sortear(3) != 0 && lado_do_lance(m) as i8 > -1 {
+        penaltis(chamar);
+        return;
+    }
+    narrar(chamar, if lado_do_lance(m) as i8 > -1 { 0x2115 } else { 0x2114 }, p2e, p27, 0);
+    if sortear(3) != 0 && lado_do_lance(m) as i8 > -1 {
+        penaltis(chamar);
+        return;
+    }
+    if byte(p, 0xc) == 3 {
+        crate::comparacao::ramo("chute a gol hat-trick");
+        narrar(chamar, if byte(p, 0x30) != 0 { 0x2011 } else { 0x1fd5 }, p2e, p27, 0);
+    }
+    if lado_do_lance(m) as i8 > -1 {
+        penaltis(chamar);
+        return;
+    }
+    // as marcas: o ultimo argumento e a contagem
+    let c = |o: usize| *w(o);
+    let redondo = |v: i16, d: i16| v >= d && v % d == 0;
+    let marca: Option<(u32, i16)> = if byte(p, 0x30) != 0 && byte(p, 0xc) == 1 {
+        Some((if destaque_do_jogador(p, 0x21b6) != 0 { 0x21b6 } else { 0x2010 }, c(0x3d)))
+    } else if c(0x3d) == 1 {
+        Some((0x200f, 1))
+    } else if c(0x3f) == 1 {
+        Some((0x200b, 1))
+    } else if c(0x43) == 1 {
+        Some((0x2012, 1))
+    } else if redondo(c(0x3f), 10) {
+        Some((0x200b, c(0x3f)))
+    } else if c(0x3d) == 0x32 || redondo(c(0x3d), 100) {
+        Some((0x200a, c(0x3d)))
+    } else if c(0x41) != c(0x3d) && (c(0x41) == 0x32 || redondo(c(0x41), 100)) {
+        Some((0x200c, c(0x41)))
+    } else if c(0x43) != c(0x41) && redondo(c(0x43), 100) {
+        Some((0x200d, c(0x43)))
+    } else if c(0x45) == 1 || redondo(c(0x45), 5) {
+        Some((0x200e, c(0x45)))
+    } else {
+        None
+    };
+    if let Some((codigo, n)) = marca {
+        crate::comparacao::ramo("chute a gol marca");
+        narrar(chamar, codigo, p2e, p27, n);
+    }
+    if b15 != 0 && tabela1(g) {
+        narrar(chamar, 0x1fe1, byte(g, 0x2e) as u8 as u32, byte(g, 0x27) as u8, b15 as i8 as i16);
+    }
+    b10 = b10.wrapping_add(1);
+    let minuto = || *((m + 0x8ed0) as *const i16) as i32 / 11;
+    let tarde = |d: i32| (0x55..0x5a).contains(&d) || d >= 0x73;
+    let k_outro = |k: u32| aplicar_ao_lado(m, outro as i8, f32::from_bits(k));
+    let torcida = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
+        if b16 != 0 && minuto() < 0x50 {
+            narrar(chamar, 0x1fdc, u32::MAX, p27, 0);
+            k_outro(0x3fb9999a);
+        } else {
+            k_outro(0x3fa00000);
+        }
+    };
+    if *bm(0x1a8) != 0 {
+        narrar(chamar, 0x1fd2, u32::MAX, p27, 0);
+    } else if b17 != 0 {
+        torcida(chamar);
+    } else {
+        let dif = b10 as i32 - b11 as i32;
+        let t = minuto();
+        let fase2 = *((m + 0x8ed4) as *const i16) == 0x3de;
+        if dif == 2 && ((t >= 0x46 && fase2) || t >= 0x6a) {
+            narrar(chamar, 0x1fd0, u32::MAX, p27, 0);
+            k_outro(0x3fc66666);
+        } else if (dif == 1 || b16 != 0) && ((t >= 0x50 && fase2) || t >= 0x6e) {
+            narrar(chamar, 0x1fd1, u32::MAX, p27, 0);
+            k_outro(0x3fb9999a);
+        } else if b10 == b11 && b16 == 0 && t >= 0x46 {
+            crate::comparacao::ramo("chute a gol empate tardio");
+            let a = contar_ativos(m, outro as i8) as i8;
+            let b = contar_ativos(m, lado) as i8;
+            let bl = if b < a { byte(m, (4 + lado as isize) as usize) } else { -1 };
+            let d = minuto() as i16 as i32;
+            let (codigo, k) = if bl == -1 {
+                if tarde(d) { (0x1fd8, 0x3fb9999a) } else { (0x1fd6, 0x3faccccd) }
+            } else if tarde(d) {
+                (0x1fd9, 0x3fd33333)
+            } else {
+                (0x1fd7, 0x3fb33333)
+            };
+            k_outro(k);
+            narrar(chamar, codigo, u32::MAX, p27, bl as i16);
+        } else if dif < 0 && dif > -3 && (t >= 0x50 || (t >= 0x46 && b10 == 1) || (t >= 0x3c && b10 == 1 && 1 - b11 as i32 == -2)) {
+            narrar(chamar, if tarde(t as i16 as i32) { 0x1fdb } else { 0x1fda }, u32::MAX, p27, 0);
+        } else {
+            torcida(chamar);
+        }
+    }
+    if b13 != 0 && b15 == 0 && tabela1(g) {
+        narrar(chamar, 0x20d5, byte(g, 0x2e) as u8 as u32, byte(g, 0x27) as u8, 0);
+    }
+    aplicar_ao_time(m, p, f32::from_bits(0x3dcccccd));
+    let gols = bm((0xf5bd + lado as isize * 0x36) as usize);
+    *gols = (*gols).wrapping_add(1);
+    let r = sortear(5);
+    let tecnico_8 = || {
+        let pt = u(m, 0x4792);
+        let t = u(u(pt, if lado == 0 { 0x1c } else { 0x20 }), 0x53);
+        t != 0 && byte(t, 0x77) == 8
+    };
+    let mut feito = false;
+    if (b10 as i32 - b11 as i32) > r + 2 && sortear(7) == 0 && tecnico_8() {
+        narrar(chamar, 0x2117, u32::MAX, p27, 0);
+        feito = true;
+    }
+    if !feito && (b10 == b11 || b10 as i32 - 1 == b11 as i32 || b16 != 0) {
+        let r1 = sortear(minuto());
+        if r1 > sortear(0x78) && tecnico_8() {
+            narrar(chamar, 0x2116, u32::MAX, p27, 0);
+        }
+    }
+    let _ = b23;
+    *bm(0x8eae) = outro;
+    *((m + 0xf582) as *mut u32) = 0;
+    *bm(0x8eb2) = 8;
+    *bm(0x1ca) = 0;
+}
+
+/// { 0x70a910 }: ver `chute_a_gol_com`.
+unsafe extern "thiscall" fn chute_a_gol(p: usize, f: f32) {
+    chute_a_gol_com(p, f, &mut |r, t, a| despachar_chute(r, t, a))
+}
+
+unsafe extern "thiscall" fn comparar_chute_a_gol(p: usize, f: f32) {
+    if gravando() {
+        // unidade da fita de fora; por dentro, a propria comparacao (fita aninhada)
+        chamar_gravando(0x70a910, p, [f.to_bits(), 0, 0, 0, 0], || {
+            fita_do_chute_a_gol(p, f);
+            0
+        });
+        return;
+    }
+    fita_do_chute_a_gol(p, f);
+}
+
+unsafe fn fita_do_chute_a_gol(p: usize, f: f32) {
+    use std::sync::atomic::Ordering::Relaxed;
+    let o = orig::<unsafe extern "thiscall" fn(usize, f32)>(317);
+    let m = *((p + 0x19e) as *const usize);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m, MOTOR), (0xb67a34, 4), (0xae1080, 4)]);
+    let t = *((m + 0x4792) as *const usize);
+    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+        reg.extend(linhas_do_clube(clube));
+    }
+    let gravar = GRAVAR_716.swap(true, Relaxed);
+    let a7 = GRAVAR_A7.swap(true, Relaxed);
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(p, f), |chamar| {
+        chute_a_gol_com(p, f, &mut |rotina, this, args| {
+            let mascara = match rotina {
+                0x6d6f70 => [0xff_ffff, u32::MAX, 0xff, 0xff, 0xff],
+                0x6cd770 => [0xff, 0xff, 0xffff, 0xff, u32::MAX],
+                0x62ed70 => [u32::MAX, 0, 0, 0, 0],
+                0x6d0980 => [0xff, 0xff, u32::MAX, u32::MAX, 0],
+                0x897760 => [u32::MAX, 0xff, u32::MAX, 0, 0],
+                0x6e1aa0 | 0x716c90 | 0x6f0630 => [0, 0, 0, 0, 0],
+                _ => [0xff, 0, 0, 0, 0],
+            };
+            chamar(rotina, this, args, mascara)
+        })
+    });
+    GRAVAR_A7.store(a7, Relaxed);
+    GRAVAR_716.store(gravar, Relaxed);
+    PLACAR.registrar(igual && sequencia, || format!("chute_a_gol {} chamadas: {}", k, detalhe_fita()));
 }
 
 // ---------- centesima trigesima nona leva: o fechamento da partida (0x6d1cc0, 0x547790, 0x5477d0) ----------
@@ -13500,25 +14296,7 @@ unsafe extern "thiscall" fn desviar_bola(this: usize, x: i8, y: i8, espalhar: i8
 }
 
 // Portas de 0x70a910 e 0x70c040 (lances na linha de fundo, ~6 e 5 KB): unidades da fita.
-static mut PORTA_70A910: usize = 0;
-static mut PORTA_70C040: usize = 0;
-const PROLOGO_70A910: Prologo = Prologo { endereco: 0x70a910, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] };
-const PROLOGO_70C040: Prologo = Prologo { endereco: 0x70c040, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] };
 
-unsafe extern "thiscall" fn porta_70a910(p: usize, f: f32) {
-    let o: unsafe extern "thiscall" fn(usize, f32) = core::mem::transmute(PORTA_70A910);
-    chamar_gravando(0x70a910, p, [f.to_bits(), 0, 0, 0, 0], || {
-        o(p, f);
-        0
-    });
-}
-unsafe extern "thiscall" fn porta_70c040(p: usize, f: f32) {
-    let o: unsafe extern "thiscall" fn(usize, f32) = core::mem::transmute(PORTA_70C040);
-    chamar_gravando(0x70c040, p, [f.to_bits(), 0, 0, 0, 0], || {
-        o(p, f);
-        0
-    });
-}
 
 // ---------- nonagesima nona leva: o lancamento (0x6fa490) ----------
 
@@ -23702,12 +24480,6 @@ pub unsafe fn instalar(comparando: bool) {
         if let Some(t) = desvios::desviar("motor_porta_6fad40 (gravacao)", &PROLOGO_6FAD40, porta_6fad40 as *const () as usize) {
             PORTA_6FAD40 = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_70a910 (gravacao)", &PROLOGO_70A910, porta_70a910 as *const () as usize) {
-            PORTA_70A910 = t;
-        }
-        if let Some(t) = desvios::desviar("motor_porta_70c040 (gravacao)", &PROLOGO_70C040, porta_70c040 as *const () as usize) {
-            PORTA_70C040 = t;
-        }
         if let Some(t) = desvios::desviar("motor_porta_68d0d0 (gravacao)", &PROLOGO_68D0D0, porta_68d0d0 as *const () as usize) {
             PORTA_68D0D0 = t;
         }
@@ -24032,6 +24804,8 @@ pub unsafe fn instalar(comparando: bool) {
         lesionar as *const () as usize,
         registrar_lesao as *const () as usize,
         destaque_do_jogador as *const () as usize,
+        desfecho_do_chute as *const () as usize,
+        chute_a_gol as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -24350,6 +25124,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_lesionar as *const () as usize,
         comparar_registrar_lesao as *const () as usize,
         comparar_destaque_do_jogador as *const () as usize,
+        comparar_desfecho_do_chute as *const () as usize,
+        comparar_chute_a_gol as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -24462,7 +25238,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -24500,11 +25276,13 @@ pub unsafe fn instalar(comparando: bool) {
 /// a pilha abaixo da entrada antes de rodar. A carreira de referencia passa a ser a da original com
 /// essas zeragens; as copias Rust usam zero. 0x6dbc50: o curto da 1a vaga extra na escalacao;
 /// 0x6d1cc0: a media (double) de um lado sem avaliados; 0x6beeb0: bytes altos dos dwords passados as
-/// escolhas da simulacao rapida.
-const ZERADAS: [(Prologo, u32); 3] = [
+/// escolhas da simulacao rapida; 0x70c040: o rebote e a saida da defesa quando o proprio goleiro
+/// chuta.
+const ZERADAS: [(Prologo, u32); 4] = [
     (Prologo { endereco: 0x6dbc50, bytes: &[0x6a, 0xff, 0x68, 0x52, 0xd4, 0x95, 0x00] }, 0x2000),
     (Prologo { endereco: 0x6d1cc0, bytes: &[0x83, 0xec, 0x44, 0x53, 0x55] }, 0x2000),
     (Prologo { endereco: 0x6beeb0, bytes: &[0x83, 0xec, 0x38, 0x53, 0x55] }, 0x2000),
+    (Prologo { endereco: 0x70c040, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] }, 0x2000),
 ];
 
 pub unsafe fn instalar_zeradas() {

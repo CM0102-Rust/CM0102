@@ -32,5 +32,7 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `simulacao rapida abandono` | 0x6beeb0 (batch 140) | — | more than 4 players sent off on one side in the quick simulation (3-0 to the other): never happens in the automatic career up to 2002-06-01 (sendings-off 2048 times, second yellow 1024). Maybe unreachable in practice; would need a side with many cards |
 | `simulacao rapida contador reiniciado` | 0x6beeb0 | — | at the end of the quick simulation, the attack counter (+0xf5e2/+0xf618) below 10 restarts (20 and draw(6) + 12): attacks exceed 10 in every match of the career |
 | `lesao para 3 e sai` | 0x6d0980 (batch 141) | — | a light injury (severity up to 50) with the stamina taken above the limit (0x96d1a8) on a player already marked at +0x1c (an earlier serious injury in the same match): never happens in the automatic career up to 2002-06-01 |
+| `chute a gol marca` | 0x70a910 (batch 142) | — | the career milestone commentaries (first goal, 50th, 100th...; 0x200a..0x2012, highlight 0x21b6) never come up in the automatic career up to 2002-06-01: goals in detailed matches are few |
+| `chute a gol empate tardio` | 0x70a910 | — | an equaliser after 70 minutes in a detailed match (0x1fd6..0x1fd9): does not happen in the automatic career |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").
