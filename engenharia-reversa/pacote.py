@@ -8,6 +8,10 @@ Grava em pacotes/<end>/ (fora do git: tem desmontagem e pseudocodigo do jogo):
                    .rdata; tabelas de salto; onde a rotina ja aparece nas notas (levas/, docs/)
   desmontagem.txt  o assembly inteiro (desmonta.py), a fonte das contas exatas
   pseudocodigo.c   o pseudocodigo do Ghidra (descompilar.py), a estrutura (sem --sem-ghidra)
+  desmontagem_olly.txt  o mesmo trecho no texto do OllyDbg trazido do forum (referencias/
+                   cm0102_3.9.68_text.zip): lacos desenhados, Arg1.., switch e strings comentados
+E no LEIA.md, com o texto do OllyDbg: os campos (deslocamentos >= 0x400) que a rotina usa e as
+rotinas do exe inteiro que os leem ou escrevem, cada uma com o nome Rust ou "original".
 Ideia emprestada do decomp.wtf (MIT, github.com/i12bp8/decomp.wtf): cada rotina vira um pacote
 com o assembly, as referencias, quem chama, um rascunho e as notas das tentativas anteriores.
 """
@@ -66,6 +70,68 @@ def tabelas(d, texto):
     return r
 
 
+OLLY = os.path.join(R, 'referencias', 'cm0102_3.9.68_text.zip')  # o exe inteiro em texto (OllyDbg), do forum
+ESCREVE = ('MOV', 'ADD', 'SUB', 'INC', 'DEC', 'AND', 'OR', 'XOR', 'NEG', 'NOT', 'SHL', 'SHR', 'SAR', 'FSTP', 'FST', 'FISTP', 'SETE', 'SETNE')
+
+
+def olly_linhas():
+    """As linhas do texto do OllyDbg (ou [] sem o arquivo)."""
+    if not os.path.exists(OLLY):
+        return []
+    import zipfile
+    z = zipfile.ZipFile(OLLY)
+    return z.open(z.namelist()[0]).read().decode('latin-1').split('\n')
+
+
+def campos(c, linhas, a0, a1, minimo=0x400):
+    """Deslocamentos >= `minimo` usados em [a0, a1) e, para cada um, as rotinas do exe que o leem ou
+    escrevem (o mesmo deslocamento em outro objeto tambem conta: e uma pista, nao prova)."""
+    import bisect
+    ref = re.compile(r'\+([0-9A-F]{3,5})\]')
+    usados = set()
+    for l in linhas:
+        if len(l) > 8 and l[:8].isalnum():
+            a = int(l[:8], 16) if all(ch in '0123456789ABCDEF' for ch in l[:8]) else -1
+            if a0 <= a < a1:
+                usados |= {int(x, 16) for x in ref.findall(l) if int(x, 16) >= minimo}
+    uso = {k: {} for k in usados}
+    ini = c['inicios']
+    for l in linhas:
+        if '+' not in l or ']' not in l:
+            continue
+        for x in ref.findall(l):
+            k = int(x, 16)
+            if k in uso:
+                try:
+                    a = int(l[:8], 16)
+                except ValueError:
+                    continue
+                f = ini[bisect.bisect_right(ini, a) - 1] if a >= ini[0] else a
+                # a instrucao comeca na coluna 28, depois das barras que o OllyDbg desenha nos lacos
+                instr = l[28:].split(';')[0].lstrip('|\\/>^ ').strip() if len(l) > 28 else ''
+                mn = instr.split(' ')[0] if instr else ''
+                op1 = instr[len(mn):].split(',')[0]
+                w = mn in ESCREVE and f'+{x}]' in op1
+                r_, e_ = uso[k].get(f, (0, 0))
+                uso[k][f] = (r_ + (not w), e_ + w)
+    return uso
+
+
+def olly_trecho(linhas, a0, a1):
+    """O trecho [a0, a1) do texto do OllyDbg (laços desenhados, Arg1.., switch e strings comentados)."""
+    r = []
+    for l in linhas:
+        try:
+            a = int(l[:8], 16)
+        except ValueError:
+            continue
+        if a0 <= a < a1:
+            r.append(l.rstrip('\r'))
+        elif a >= a1:
+            break
+    return '\n'.join(r) + '\n'
+
+
 def notas(addr):
     """Onde o endereco ja aparece nas notas do projeto."""
     padrao = f'{addr:#x}'
@@ -110,6 +176,18 @@ def main():
             return f'Rust `{rust[a][0]}` ({rust[a][1]})' + ('' if a in c['port'] else ' (so consulta, sem desvio)')
         return 'Rust (desviada)' if a in c['port'] else 'original'
 
+    linhas = olly_linhas()
+    secao_campos = ['', '## Campos (deslocamentos >= 0x400) e quem mais os usa', '']
+    if linhas:
+        open(os.path.join(saida, 'desmontagem_olly.txt'), 'w', encoding='utf-8').write(olly_trecho(linhas, addr, addr + n))
+        uso = campos(c, linhas, addr, addr + n)
+        secao_campos.append('(o mesmo deslocamento pode ser de outro objeto: pista, nao prova; l = leituras, e = escritas)')
+        for k in sorted(uso):
+            fs = sorted(uso[k].items(), key=lambda kv: -(kv[1][0] + kv[1][1]))
+            secao_campos.append(f'- **+{k:#x}** ({len(fs)} rotinas): ' + '; '.join(
+                f'{f:#x}{" (esta)" if f == addr else ""} {estado(f)} l{r_}/e{e_}' for f, (r_, e_) in fs[:12]) + (' ...' if len(fs) > 12 else ''))
+    else:
+        secao_campos.append('(sem o texto do OllyDbg em referencias/cm0102_3.9.68_text.zip)')
     chama = sorted(fronteiras.chamadas_em(d, addr, n, c['alvos']))
     chamadores = [a for a in c['inicios'] if addr in fronteiras.chamadas_em(d, a, c['ext'][a], c['alvos'])]
     faltam = [a for a in chama if a not in c['port'] and a < 0x940000]
@@ -123,6 +201,7 @@ def main():
         ['', '## Constantes de ponto flutuante', '', '| Endereco | Tipo | Valor |', '|---|---|---|'] + \
         [f'| {a:#x} | {"f32" if t == "dword" else "f64"} | {v!r} |' for (a, t), v in constantes(d, desm)] + \
         ['', '## Tabelas de salto', '', '(lidas ate o primeiro valor fora do .text; a ultima pode emendar na tabela vizinha)', ''] + [f'- {a:#x}: ' + ', '.join(hex(x) for x in dest) for a, dest in tabelas(d, desm)] + \
+        secao_campos + \
         ['', '## Nas notas do projeto', ''] + (notas(addr) or ['(nenhuma)']) + \
         ['', 'Ciclo de uma leva e armadilhas: `levas/LEIA.md` e `docs/COMO_CONTINUAR.md`.', '']
     open(os.path.join(saida, 'LEIA.md'), 'w', encoding='utf-8').write('\n'.join(L))
