@@ -1,4 +1,3 @@
-
 // ---------- centesima quadragesima quinta leva: o laco do motor (0x6b98c0) ----------
 
 // Chamadas do laco pelo endereco: cada uma passa pelo proprio desvio (copia Rust ou comparador).

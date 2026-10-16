@@ -1,65 +1,105 @@
-"""Placar da migracao. Uso: python fronteiras.py [--candidatas]
+"""Placar da migracao. Uso: python fronteiras.py [--candidatas] [--placar]
 
 Fronteiras reais das funcoes: inicio = alvo de call (ou ja portado); fim = proximo inicio.
-Imprime cobertura por modulo e as candidatas (motor) com chamadas ainda nao portadas."""
-import csv, re, glob, sys
-import os
+Imprime cobertura por modulo e as candidatas (motor) com chamadas ainda nao portadas.
+--placar regrava docs/PLACAR.md e docs/PLACAR.en.md. Importavel: `calcular()` (usado pelo pacote.py)."""
+import csv, re, glob, sys, os
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # raiz do projeto
-d = open(R + r'\jogo\cm0102.exe', 'rb').read()
 TXT0, TXT1 = 0x401000, 0x401000 + 0x55c000
-alvos = set()
-codigo = d[TXT0 - 0x400000:TXT1 - 0x400000]
-# varredura linear barata: E8 rel32 com alvo dentro do .text
-for i in range(len(codigo) - 5):
-    if codigo[i] == 0xE8:
-        rel = int.from_bytes(codigo[i + 1:i + 5], 'little', signed=True)
-        t = TXT0 + i + 5 + rel
-        if TXT0 <= t < TXT1:
-            alvos.add(t)
-port = set()
-for f in glob.glob(R + r'\rust\src\*.rs'):
-    t = open(f, encoding='utf-8').read()
-    # so a tabela PROLOGOS (copias em Rust); as portas de gravacao (PROLOGO_xxx, PROLOGOS_POS) nao contam
-    if 'const PROLOGOS:' in t:
-        i = t.index('const PROLOGOS:')
-        t = t[i:t.index('\n];', i)]
-    else:
-        t = re.sub(r'const PROLOGO_[0-9A-F]+: Prologo = Prologo [^;]*;', '', t)
-    port |= set(int(x, 16) for x in re.findall(r'endereco:\s*0x([0-9a-f]+)', t))
-rows = [r for r in csv.reader(open(R + r'\docs\mapa_funcoes.csv', encoding='utf-8')) if r and r[0].startswith('0x')]
-mapa = {int(r[0], 16): (int(r[1]), r[2].split('/')[-1] if r[2] else '(sem)') for r in rows}
-inicios = sorted(a for a in mapa if a in alvos or a in port)
-fim_txt = max(a + n for a, (n, _) in mapa.items())
-ext = {}
-for k, a in enumerate(inicios):
-    b = inicios[k + 1] if k + 1 < len(inicios) else fim_txt
-    ext[a] = b - a
-mod = {a: mapa[a][1] for a in inicios}
-tot, cov = {}, {}
-for a in inicios:
-    m = mod[a]
-    tot.setdefault(m, [0, 0]); cov.setdefault(m, [0, 0])
-    tot[m][0] += 1; tot[m][1] += ext[a]
-    if a in port:
-        cov[m][0] += 1; cov[m][1] += ext[a]
-motor = [m for m in tot if m.startswith('match_')]
-for m in sorted(motor, key=lambda m: -tot[m][1]):
-    print(f"{m:20s} {cov[m][0]:4d}/{tot[m][0]:<4d} funcoes {cov[m][1]/1024:6.1f}/{tot[m][1]/1024:6.1f} KB {100*cov[m][1]/tot[m][1]:5.1f}%")
-c = sum(cov[m][1] for m in motor); t = sum(tot[m][1] for m in motor)
-ct = sum(v[1] for v in cov.values()); tt = sum(v[1] for v in tot.values())
-print(f"motor {c/1024:.0f}/{t/1024:.0f} KB = {100*c/t:.1f}%   exe {ct/1024:.0f}/{tt/1024:.0f} KB = {100*ct/tt:.2f}%  ({len(port)} copias)")
-sm = [m for m in motor if m != 'match_screens.cpp']
-c2 = sum(cov[m][1] for m in sm); t2 = sum(tot[m][1] for m in sm)
-print(f"motor sem telas {c2/1024:.0f}/{t2/1024:.0f} KB = {100*c2/t2:.1f}%")
-if '--candidatas' in sys.argv:
+
+
+def chamadas_em(d, a, n, alvos):
+    """Alvos de `call rel32` (E8) dentro de [a, a+n) que sao inicios conhecidos."""
+    seg = d[a - 0x400000:a - 0x400000 + n]
+    r = set()
+    for i in range(len(seg) - 5):
+        if seg[i] == 0xE8:
+            t = a + i + 5 + int.from_bytes(seg[i + 1:i + 5], 'little', signed=True)
+            if t in alvos:
+                r.add(t)
+    return r
+
+
+def calcular():
+    d = open(os.path.join(R, 'jogo', 'cm0102.exe'), 'rb').read()
+    alvos = set()
+    codigo = d[TXT0 - 0x400000:TXT1 - 0x400000]
+    # varredura linear barata: E8 rel32 com alvo dentro do .text
+    for i in range(len(codigo) - 5):
+        if codigo[i] == 0xE8:
+            t = TXT0 + i + 5 + int.from_bytes(codigo[i + 1:i + 5], 'little', signed=True)
+            if TXT0 <= t < TXT1:
+                alvos.add(t)
+    port = set()
+    for f in glob.glob(os.path.join(R, 'rust', 'src', '*.rs')):
+        t = open(f, encoding='utf-8').read()
+        # so a tabela PROLOGOS (copias em Rust); as portas de gravacao (PROLOGO_xxx, PROLOGOS_POS) nao contam
+        if 'const PROLOGOS:' in t:
+            i = t.index('const PROLOGOS:')
+            t = t[i:t.index('\n];', i)]
+        else:
+            t = re.sub(r'const PROLOGO_[0-9A-F]+: Prologo = Prologo [^;]*;', '', t)
+        port |= set(int(x, 16) for x in re.findall(r'endereco:\s*0x([0-9a-f]+)', t))
+    rows = [r for r in csv.reader(open(os.path.join(R, 'docs', 'mapa_funcoes.csv'), encoding='utf-8')) if r and r[0].startswith('0x')]
+    mapa = {int(r[0], 16): (int(r[1]), r[2].split('/')[-1] if r[2] else '(sem)') for r in rows}
+    inicios = sorted(a for a in mapa if a in alvos or a in port)
+    fim_txt = max(a + n for a, (n, _) in mapa.items())
+    ext = {a: (inicios[k + 1] if k + 1 < len(inicios) else fim_txt) - a for k, a in enumerate(inicios)}
+    mod = {a: mapa[a][1] for a in inicios}
+    tot, cov = {}, {}
     for a in inicios:
-        if mod[a] in motor and mod[a] != 'match_screens.cpp' and a not in port:
-            seg = d[a - 0x400000:a - 0x400000 + ext[a]]
-            chama = set()
-            for i in range(len(seg) - 5):
-                if seg[i] == 0xE8:
-                    t = a + i + 5 + int.from_bytes(seg[i + 1:i + 5], 'little', signed=True)
-                    if t in alvos:
-                        chama.add(t)
-            falta = sorted(x for x in chama if x not in port and x < 0x940000)
-            print(f"{a:#x} {ext[a]:6d} {mod[a]:18s} faltam {len(falta):2d} {' '.join(hex(x) for x in falta[:8])}")
+        m = mod[a]
+        tot.setdefault(m, [0, 0]); cov.setdefault(m, [0, 0])
+        tot[m][0] += 1; tot[m][1] += ext[a]
+        if a in port:
+            cov[m][0] += 1; cov[m][1] += ext[a]
+    return dict(d=d, alvos=alvos, port=port, inicios=inicios, ext=ext, mod=mod, tot=tot, cov=cov)
+
+
+def resumo(c):
+    tot, cov = c['tot'], c['cov']
+    motor = [m for m in tot if m.startswith('match_')]
+    sm = [m for m in motor if m != 'match_screens.cpp']
+    soma = lambda ms, x: sum(x[m][1] for m in ms)
+    return dict(motor=motor, m=(soma(motor, cov), soma(motor, tot)), st=(soma(sm, cov), soma(sm, tot)),
+                exe=(sum(v[1] for v in cov.values()), sum(v[1] for v in tot.values())))
+
+
+def placar(c):
+    """docs/PLACAR.md e .en.md: a cobertura por modulo do motor e o total do exe."""
+    s = resumo(c)
+    tot, cov = c['tot'], c['cov']
+    pct = lambda a, b: f"{100 * a / b:.1f}%"
+    linhas = [f"| `{m}` | {cov[m][0]}/{tot[m][0]} | {cov[m][1] / 1024:.1f}/{tot[m][1] / 1024:.1f} | {pct(cov[m][1], tot[m][1])} |"
+              for m in sorted(s['motor'], key=lambda m: -tot[m][1])]
+    for arq, t in (('PLACAR.md', ("# Placar da migração",
+                                  "Gerado por `python engenharia-reversa/fronteiras.py --placar` a cada leva. Fronteira de função = alvo de `call` ou rotina já portada; tamanho = até a próxima fronteira.",
+                                  "| Módulo | Funções | KB | Coberto |",
+                                  f"**Motor de partidas:** {pct(*s['m'])} · **sem as telas:** {pct(*s['st'])} · **executável inteiro:** {s['exe'][0] / 1024:.0f} de {s['exe'][1] / 1024:.0f} KB ({100 * s['exe'][0] / s['exe'][1]:.2f}%) · **{len(c['port'])} cópias Rust**")),
+                   ('PLACAR.en.md', ("# Migration scoreboard",
+                                     "Generated by `python engenharia-reversa/fronteiras.py --placar` at each batch. Function boundary = `call` target or already-ported routine; size = up to the next boundary.",
+                                     "| Module | Functions | KB | Covered |",
+                                     f"**Match engine:** {pct(*s['m'])} · **without screens:** {pct(*s['st'])} · **whole executable:** {s['exe'][0] / 1024:.0f} of {s['exe'][1] / 1024:.0f} KB ({100 * s['exe'][0] / s['exe'][1]:.2f}%) · **{len(c['port'])} Rust copies**"))):
+        titulo, nota, cab, total = t
+        texto = f"{titulo}\n\n{nota}\n\n{total}\n\n{cab}\n|---|---|---|---|\n" + '\n'.join(linhas) + '\n'
+        if arq == 'PLACAR.md':
+            texto = re.sub(r'(\d)\.(\d)', r'\1,\2', texto)  # virgula decimal em portugues
+        open(os.path.join(R, 'docs', arq), 'w', encoding='utf-8').write(texto)
+
+
+if __name__ == '__main__':
+    c = calcular()
+    s = resumo(c)
+    tot, cov = c['tot'], c['cov']
+    for m in sorted(s['motor'], key=lambda m: -tot[m][1]):
+        print(f"{m:20s} {cov[m][0]:4d}/{tot[m][0]:<4d} funcoes {cov[m][1]/1024:6.1f}/{tot[m][1]/1024:6.1f} KB {100*cov[m][1]/tot[m][1]:5.1f}%")
+    print(f"motor {s['m'][0]/1024:.0f}/{s['m'][1]/1024:.0f} KB = {100*s['m'][0]/s['m'][1]:.1f}%   exe {s['exe'][0]/1024:.0f}/{s['exe'][1]/1024:.0f} KB = {100*s['exe'][0]/s['exe'][1]:.2f}%  ({len(c['port'])} copias)")
+    print(f"motor sem telas {s['st'][0]/1024:.0f}/{s['st'][1]/1024:.0f} KB = {100*s['st'][0]/s['st'][1]:.1f}%")
+    if '--placar' in sys.argv:
+        placar(c)
+        print('docs/PLACAR.md e .en.md gravados')
+    if '--candidatas' in sys.argv:
+        for a in c['inicios']:
+            if c['mod'][a] in s['motor'] and c['mod'][a] != 'match_screens.cpp' and a not in c['port']:
+                falta = sorted(x for x in chamadas_em(c['d'], a, c['ext'][a], c['alvos']) if x not in c['port'] and x < 0x940000)
+                print(f"{a:#x} {c['ext'][a]:6d} {c['mod'][a]:18s} faltam {len(falta):2d} {' '.join(hex(x) for x in falta[:8])}")

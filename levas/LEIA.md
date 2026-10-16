@@ -16,8 +16,8 @@ As mutações ficam em `engenharia-reversa/mutacoes/levaNNN.py`, junto com as da
 
 ## O ciclo de uma leva
 
-1. **Escolher** as rotinas: `python engenharia-reversa/fronteiras.py --candidatas` mostra o placar e as rotinas do motor cujas chamadas já estão portadas.
-2. **Ler** o original: `descompilar.py` (pseudocódigo do Ghidra) para a estrutura e `desmonta.py` (assembly) para as contas de ponto flutuante e os detalhes que o pseudocódigo esconde.
+1. **Escolher** as rotinas: `python engenharia-reversa/fronteiras.py --candidatas` mostra o placar e as rotinas do motor cujas chamadas já estão portadas. O placar publicado fica em `docs/PLACAR.md` (atualizado a cada leva).
+2. **Ler** o original: `python engenharia-reversa/pacote.py 0xADDR` junta numa pasta (`pacotes/`, fora do git) a desmontagem, o pseudocódigo, quem chama e o que é chamado (com o nome Rust de cada rotina já portada), as constantes de ponto flutuante com os valores, as tabelas de salto e onde a rotina já aparece nas notas. Por dentro: `descompilar.py` (pseudocódigo do Ghidra) para a estrutura e `desmonta.py` (assembly) para as contas de ponto flutuante e os detalhes que o pseudocódigo esconde.
 3. **Escrever** a cópia Rust com as chamadas que mexem fora do motor injetadas (`chamar`), o despacho do modo Rust e o comparador (lado a lado, ou pela fita quando há chamadas com efeito).
 4. **Comparar** num jogo até 2001-08-20 (`simular.py --modo comparar`): zero divergências.
 5. **Mutações**: cada uma muda um detalhe da cópia; a carreira tem de mudar (ou a comparação acusar). A que não é acusada é lacuna (vai para `docs/PENDENCIAS.md`) ou mutação equivalente (refeita).

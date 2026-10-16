@@ -10,3 +10,6 @@ __pycache__/
 # Patch de base de dados do jogo (nao versionar)
 CLZ Leagues Patch*/
 CLZ Leagues Patch*.rar
+
+# Pacotes de trabalho por rotina (engenharia-reversa/pacote.py): desmontagem e pseudocodigo do jogo
+/pacotes/
