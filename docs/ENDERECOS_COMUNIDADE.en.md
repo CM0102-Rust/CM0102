@@ -83,3 +83,15 @@ The tactics screen matters for the new graphic element Lucas has considered: 0x8
 ## Areas used as "caves" (depends on the exe)
 - **VA 0x58ff74 (file 0x18ff74):** NOPs inside routine 0x58f500 (`file_screens.cpp`). The "Stats" patch writes a text there.
 - **File 0x5e8200 and 0x6dd254:** they do not match the original exe. The first is not zero in `.data`; the second lies past the end of the file. They only hold in an exe already expanded by CM0102Patcher. Do not use without checking.
+
+## World Cup qualifiers (the crash of early-start databases)
+
+Source: Danek1985, in the "I've been studying the match engine, happy to share" thread on the same forum (viewtopic.php?t=10790, 2026-07-12).
+
+- **The year in which each confederation draws its qualifiers** is a word (`cmp`/`mov` with the year) inside each qualifying league's routines:
+  - Asia: VA 0x911c4d, 0x911c88, 0x911ca4 and 0x911cb8, in routine 0x911bf0 (`wc_asia_league.cpp`);
+  - Europe: VA 0x9182dc, in routine 0x918200 (`wc_europe_league.cpp`);
+  - South America: VA 0x92036e, in routine 0x9202b0 (`wc_south_american_league.cpp`).
+- **In the original 3.9.68 exe** they are 2000 (0x7d0) at the first three Asian sites and 2004 (0x7d4) at the others. The post fixes an exe whose start was moved to 1994, where they stay at 1994 (0x7ca); the fix sets 1996 (0x7cc).
+- **The cause, according to him:** the draws are staggered (Asia in 1995, Europe in 1996). In the gap, the Asian qualifying code looks up the still-empty European group and reads a null pointer: a read of 0x3e at VA 0x91df0e, in routine 0x91def0. It only takes effect in a new game.
+- **For us:** a real case of cross-reference between competitions, to remember when we port the qualifiers or change the start year.

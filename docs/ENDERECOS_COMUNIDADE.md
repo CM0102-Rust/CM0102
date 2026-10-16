@@ -83,3 +83,15 @@ A tela de tática interessa para o elemento gráfico novo que o Lucas cogitou: a
 ## Áreas usadas como "caverna" (depende do exe)
 - **VA 0x58ff74 (arquivo 0x18ff74):** NOPs dentro da rotina 0x58f500 (`file_screens.cpp`). O patch "Stats" grava um texto ali.
 - **Arquivo 0x5e8200 e 0x6dd254:** não batem com o exe original. O primeiro não é zero na `.data`; o segundo fica depois do fim do arquivo. Só valem num exe já expandido pelo CM0102Patcher. Não usar sem conferir.
+
+## Eliminatórias da Copa (o travamento das bases que começam cedo)
+
+Fonte: Danek1985, no tópico "I've been studying the match engine, happy to share" do mesmo fórum (viewtopic.php?t=10790, 12/07/2026).
+
+- **O ano em que cada confederação sorteia as eliminatórias** é uma palavra (`cmp`/`mov` com o ano) dentro das rotinas de cada liga das eliminatórias:
+  - Ásia: VA 0x911c4d, 0x911c88, 0x911ca4 e 0x911cb8, na rotina 0x911bf0 (`wc_asia_league.cpp`);
+  - Europa: VA 0x9182dc, na rotina 0x918200 (`wc_europe_league.cpp`);
+  - América do Sul: VA 0x92036e, na rotina 0x9202b0 (`wc_south_american_league.cpp`).
+- **No exe 3.9.68 original** valem 2000 (0x7d0) nos três primeiros pontos da Ásia e 2004 (0x7d4) nos outros. O post corrige um exe com o início mudado para 1994, em que ficam em 1994 (0x7ca); a correção põe 1996 (0x7cc).
+- **A causa, segundo ele:** os sorteios ficam escalonados (Ásia em 1995, Europa em 1996). No intervalo, o código das eliminatórias asiáticas consulta o grupo europeu ainda vazio e lê um ponteiro nulo: leitura de 0x3e em VA 0x91df0e, na rotina 0x91def0. Só vale para jogo novo.
+- **Para nós:** é um caso real de referência cruzada entre competições, a lembrar quando portarmos as eliminatórias ou mudarmos o ano inicial.
