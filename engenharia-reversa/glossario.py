@@ -153,7 +153,8 @@ EN = {
  'chute_a_gol': 'shot_on_goal',
  'mover_jogador': 'player_move',
  'conduzir': 'dribble',
- 'laco_do_motor': 'engine_loop', 'desfecho_do_chute': 'shot_outcome',
+ 'laco_do_motor': 'engine_loop',
+ 'executar_passe': 'execute_pass', 'desfecho_do_chute': 'shot_outcome',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:
