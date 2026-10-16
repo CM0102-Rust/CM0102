@@ -95,3 +95,11 @@ Fonte: Danek1985, no tópico "I've been studying the match engine, happy to shar
 - **No exe 3.9.68 original** valem 2000 (0x7d0) nos três primeiros pontos da Ásia e 2004 (0x7d4) nos outros. O post corrige um exe com o início mudado para 1994, em que ficam em 1994 (0x7ca); a correção põe 1996 (0x7cc).
 - **A causa, segundo ele:** os sorteios ficam escalonados (Ásia em 1995, Europa em 1996). No intervalo, o código das eliminatórias asiáticas consulta o grupo europeu ainda vazio e lê um ponteiro nulo: leitura de 0x3e em VA 0x91df0e, na rotina 0x91def0. Só vale para jogo novo.
 - **Para nós:** é um caso real de referência cruzada entre competições, a lembrar quando portarmos as eliminatórias ou mudarmos o ano inicial.
+
+## Textos em português (language.ldb e estatísticas)
+
+Fonte: o mesmo tópico do Danek1985, página 2 (t=10790&start=25, 18/07/2026), com observações de tafo.
+
+- **Pé preferido em português:** o `Data\language.ldb` (204 MB) guarda os rótulos traduzidos. Em 0x070B0198 do arquivo está "Esquerdo"; trocar por "Só Esque" corrige o "Só esquerdo" exibido errado. Segundo tafo, cada rótulo pode aparecer duas vezes no arquivo, a alguns KB de distância.
+- **Coluna "Key" vazia nas estatísticas da partida em português:** VA 0xa161cc (arquivo 0x6161cc), na lista de abreviações "Won", "Tck", "Key", "Cmp" da `.data`. O patch troca "Key" por "Imp".
+- **Para nós:** quando a interface for nossa, os rótulos e abreviações traduzidos vêm do `language.ldb`, e as abreviações em inglês servem de chave.

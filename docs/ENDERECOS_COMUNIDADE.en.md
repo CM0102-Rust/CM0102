@@ -95,3 +95,11 @@ Source: Danek1985, in the "I've been studying the match engine, happy to share" 
 - **In the original 3.9.68 exe** they are 2000 (0x7d0) at the first three Asian sites and 2004 (0x7d4) at the others. The post fixes an exe whose start was moved to 1994, where they stay at 1994 (0x7ca); the fix sets 1996 (0x7cc).
 - **The cause, according to him:** the draws are staggered (Asia in 1995, Europe in 1996). In the gap, the Asian qualifying code looks up the still-empty European group and reads a null pointer: a read of 0x3e at VA 0x91df0e, in routine 0x91def0. It only takes effect in a new game.
 - **For us:** a real case of cross-reference between competitions, to remember when we port the qualifiers or change the start year.
+
+## Portuguese texts (language.ldb and statistics)
+
+Source: the same Danek1985 thread, page 2 (t=10790&start=25, 2026-07-18), with notes from tafo.
+
+- **Preferred foot in Portuguese:** `Data\language.ldb` (204 MB) stores the translated labels. At 0x070B0198 in the file is "Esquerdo"; changing it to "Só Esque" fixes the wrongly displayed "Left only". According to tafo, each label may appear twice in the file, a few KB apart.
+- **Blank "Key" column in the match statistics in Portuguese:** VA 0xa161cc (file 0x6161cc), in the "Won", "Tck", "Key", "Cmp" abbreviation list in `.data`. The patch changes "Key" to "Imp".
+- **For us:** when the interface is ours, the translated labels and abbreviations come from `language.ldb`, and the English abbreviations serve as keys.
