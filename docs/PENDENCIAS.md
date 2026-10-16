@@ -37,5 +37,7 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `movimento sem vaga na grade` | 0x6f09f0 (143ª) | — | o jogador que anda sem vaga na casa (+0x28 negativo) entra na casa nova; na carreira automática todos já entram em campo com vaga |
 | `movimento sem mais adiantado` | 0x6f09f0 | — | o lado 1 sem o mais adiantado registrado (+0xf59a vazio) usa a linha 9; na carreira automática o registro nunca está vazio quando alguém anda |
 | `conducao goleiro sem marca` | 0x7109f0 (144ª) | — | quem guarda a posição 1 do adversário sem a marca de goleiro (tabela &1 = 0) dá +5000 à nota do chute; na carreira automática o guarda da posição 1 é sempre goleiro |
+| `laco ficha sem motor` | 0x6b98c0 (145ª) | — | ficha em campo (+0x19 >= 0) sem motor (+0x19e = 0) é tirada (-5) no início do laço; na carreira automática não acontece |
+| `laco cobrador da bola parada` | 0x6b98c0 | — | bola parada sem dono (ou dono expulso) escolhe o cobrador (0x6ceb90) e o vira para o gol; o reinício já deixa um dono na carreira automática |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").

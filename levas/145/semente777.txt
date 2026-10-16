@@ -1,0 +1,6 @@
+    pool nao paginado 1.49 -> 1.48 GB, paginado 2.07 -> 2.11 GB
+execucao 1: parou em 2003-151, 4738450581 sorteios, impressao 17dcb32ab70df0bd, partidas 37894/b006b77a7a0cc3ec, banco 480fccdff099e75f, 291 s
+game.cfg restaurado; auto_setup.cfg removido
+    pool nao paginado 1.49 -> 1.48 GB, paginado 2.11 -> 2.11 GB
+execucao 1: parou em 2003-151, 4738450581 sorteios, impressao 17dcb32ab70df0bd, partidas 37894/b006b77a7a0cc3ec, banco 480fccdff099e75f, 314 s
+game.cfg restaurado; auto_setup.cfg removido
