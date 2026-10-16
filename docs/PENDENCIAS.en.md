@@ -34,5 +34,7 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `lesao para 3 e sai` | 0x6d0980 (batch 141) | — | a light injury (severity up to 50) with the stamina taken above the limit (0x96d1a8) on a player already marked at +0x1c (an earlier serious injury in the same match): never happens in the automatic career up to 2002-06-01 |
 | `chute a gol marca` | 0x70a910 (batch 142) | — | the career milestone commentaries (first goal, 50th, 100th...; 0x200a..0x2012, highlight 0x21b6) never come up in the automatic career up to 2002-06-01: goals in detailed matches are few |
 | `chute a gol empate tardio` | 0x70a910 | — | an equaliser after 70 minutes in a detailed match (0x1fd6..0x1fd9): does not happen in the automatic career |
+| `movimento sem vaga na grade` | 0x6f09f0 (batch 143) | — | a player moving with no slot in the cell (+0x28 negative) enters the new cell; in the automatic career everyone already takes the field with a slot |
+| `movimento sem mais adiantado` | 0x6f09f0 | — | side 1 with no furthest-forward player recorded (+0xf59a empty) uses row 9; in the automatic career the record is never empty when someone moves |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

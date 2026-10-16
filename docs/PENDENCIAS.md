@@ -34,5 +34,7 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `lesao para 3 e sai` | 0x6d0980 (141ª) | — | lesão leve (gravidade até 50) com o fôlego tirado acima do limite (0x96d1a8) num jogador já marcado em +0x1c (lesão grave anterior na mesma partida): nunca acontece na carreira automática até 2002-06-01 |
 | `chute a gol marca` | 0x70a910 (142ª) | — | as narrações de marca da carreira (primeiro gol, 50º, 100º...; 0x200a..0x2012, destaque 0x21b6) nunca saem na carreira automática até 2002-06-01: os gols das partidas detalhadas são poucos |
 | `chute a gol empate tardio` | 0x70a910 | — | gol que empata depois dos 70 minutos numa partida detalhada (0x1fd6..0x1fd9): não acontece na carreira automática |
+| `movimento sem vaga na grade` | 0x6f09f0 (143ª) | — | o jogador que anda sem vaga na casa (+0x28 negativo) entra na casa nova; na carreira automática todos já entram em campo com vaga |
+| `movimento sem mais adiantado` | 0x6f09f0 | — | o lado 1 sem o mais adiantado registrado (+0xf59a vazio) usa a linha 9; na carreira automática o registro nunca está vazio quando alguém anda |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
