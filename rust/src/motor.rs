@@ -420,8 +420,11 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x8983f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x8984d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6beeb0, bytes: &[0x83, 0xec, 0x38, 0x53, 0x55] },
+    Prologo { endereco: 0x6d0980, bytes: &[0x51, 0x57, 0x8b, 0xf9, 0xc7, 0x44, 0x24, 0x04, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x62be00, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x717470, bytes: &[0x6a, 0xff, 0x68, 0x90, 0xd4, 0x95, 0x00] },
 ];
-const N: usize = 313;
+const N: usize = 316;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -9755,6 +9758,310 @@ unsafe extern "thiscall" fn comparar_simulacao_rapida(m: usize) {
     PLACAR.registrar(igual && sequencia, || format!("simulacao_rapida {} chamadas: {}", k, detalhe_fita()));
 }
 
+// ---------- centesima quadragesima primeira leva: a lesao (0x6d0980, 0x62be00) e o destaque do jogador (0x717470) ----------
+
+/// Unidades da fita da lesao: a 0x68d0d0 recebe o registro montado na pilha (confere o conteudo).
+static GRAVAR_LESAO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+fn gravando_lesao() -> bool {
+    GRAVAR_LESAO.load(std::sync::atomic::Ordering::Relaxed) && gravando()
+}
+
+/// { 0x62be00 } (ret 0xc, injury.cpp) com a copia na lista injetada (0x68d0d0): registra a lesao da
+/// ficha na lista de lesoes do objeto (+0x28; sem lista, a original, que a cria). Ficha ja na lista
+/// (pelo id): mesmo tipo soma a gravidade (+5, no maximo 100); outro tipo fica o mais grave. Ficha nova:
+/// o registro (id, tipo, gravidade) vai para a lista. Devolve em `tipo` e `chance` o que ficou.
+unsafe fn registrar_lesao_com(this: usize, ficha: usize, tipo: *mut u8, chance: *mut u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let l = *((this + 0x28) as *const usize);
+    if l == 0 {
+        crate::comparacao::ramo("lesao lista nova");
+        let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(314);
+        return o(this, ficha, tipo, chance);
+    }
+    core::ptr::write_unaligned((l + 0xa) as *mut u32, core::ptr::read_unaligned((l + 2) as *const u32));
+    let prox: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
+    let id = *(ficha as *const u32);
+    let mut e = prox(l);
+    while e != 0 && *(e as *const u32) != id {
+        e = prox(l);
+    }
+    if e == 0 {
+        crate::comparacao::ramo("lesao registrada");
+        let mut r = [0u8; 6];
+        r[..4].copy_from_slice(&id.to_le_bytes());
+        r[4] = *tipo;
+        r[5] = *chance;
+        pedir_vetores(&[(r.as_ptr() as usize, 6)], &[]);
+        chamar(0x68d0d0, l, [0, 6, 0, 0, 0]);
+        return;
+    }
+    let (t, g) = ((e + 4) as *mut u8, (e + 5) as *mut u8);
+    if *t == *tipo {
+        crate::comparacao::ramo("lesao agravada");
+        *g = if *chance as i8 as i32 + *g as i8 as i32 > 0x64 { 0x64 } else { (*chance).wrapping_add(*g) };
+    } else if *chance as i8 > *g as i8 {
+        crate::comparacao::ramo("lesao mais grave");
+        *g = *chance;
+        *t = *tipo;
+    }
+    *tipo = *t;
+    *chance = *g;
+}
+
+unsafe fn despachar_lesao(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
+    // 0x68d0d0: o bloco pedido por ultimo (pedir_vetores) e o que vai para a lista
+    let p = VETORES_PEDIDOS.lock().unwrap_or_else(|e| e.into_inner()).take().map_or(0, |v| v.0[0].0);
+    let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(rotina);
+    f(this, p, a[1]);
+    0
+}
+
+/// { 0x62be00 }: ver `registrar_lesao_com`.
+unsafe extern "thiscall" fn registrar_lesao(this: usize, ficha: usize, tipo: *mut u8, chance: *mut u8) {
+    registrar_lesao_com(this, ficha, tipo, chance, &mut |r, t, a| despachar_lesao(r, t, a))
+}
+
+/// { 0x6d0980 } (ret 0x10, match_eng.cpp) com a copia na lista de lesoes injetada (0x68d0d0): a lesao
+/// do jogador `p` na partida. Com mais de 3 lesoes no jogo (+0xf639), sorteio(lesoes) e sorteio(500)
+/// nao nulos a evitam; mais de 6, nunca. Tipo valido: registra (0x62be00, que devolve tipo e
+/// gravidade). +0x55 = `o` (o causador perde 10 em +0x31). Gravidade acima de 50: tira gravidade^2 do
+/// folego (+0x4d) e marca +0x1c; senao tira sorteio(gravidade^2 / 2), grava sorteio(isso x 0,5) em
+/// +0x59 e reduz +0xd5 a metade. Folego abaixo do limite: sai (+0x8eb5, +0x1d, +0x1c); senao para
+/// (0x7160e0 com 5 ou 3) conforme a forca da pessoa (+0x2d x 25). Folego entre 1 e o teto; saindo,
+/// mais uma lesao no jogo.
+unsafe fn lesionar_com(m: usize, tipo: u32, chance: u32, p: usize, o: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let w = |x: usize| (m + x) as *mut i16;
+    let b = |q: usize, x: usize| (q + x) as *mut u8;
+    let n = *w(0xf639);
+    if n > 3 && sortear(n as i32) != 0 && sortear(0x1f4) != 0 {
+        return;
+    }
+    if *w(0xf639) > 6 {
+        return;
+    }
+    let (mut t, mut g) = (tipo as u8, chance as u8);
+    if t as i8 > -1 {
+        registrar_lesao_com(*(0xb63d28 as *const usize), *((p + 0x69) as *const usize), &mut t, &mut g, chamar);
+    }
+    *((p + 0x55) as *mut usize) = o;
+    if o != 0 {
+        let q = (o + 0x31) as *mut i16;
+        *q = (*q).wrapping_sub(10);
+    }
+    let folego = (p + 0x4d) as *mut f32;
+    let c = g as i8 as i32;
+    let mut local = 0f32;
+    if g as i8 > 0x32 {
+        crate::comparacao::ramo("lesao grave");
+        *b(p, 0x1c) = 1;
+        *folego = (*folego as f64 - (c * c) as f64) as f32;
+    } else {
+        local = sortear(ftol((c * c) as f64 * f64_em(0x968968))) as f32;
+        *folego = (*folego as f64 - local as f64) as f32;
+        let r = sortear(ftol(local as f64 * f32_em(0x968f18) as f64));
+        *((p + 0x59) as *mut f32) = r as f32;
+        let d5 = (p + 0xd5) as *mut f32;
+        *d5 = (*d5 as f64 * f32_em(0x968f18) as f64) as f32;
+    }
+    if !(*folego as f64 >= f64_em(0x9688e8)) {
+        crate::comparacao::ramo("lesao sem folego");
+        *b(m, 0x8eb5) = 1;
+        *b(p, 0x1d) = 1;
+        *b(p, 0x1c) = 1;
+    } else {
+        let pessoa = *((p + 0x6d) as *const usize);
+        let v = (byte(pessoa, 0x2d) as i32 * 25) as f64 + f64_em(0x96d458);
+        if v > *folego as f64 {
+            crate::comparacao::ramo("lesao para 5");
+            gravar_2b(p, 5);
+            *b(m, 0x8eb5) = 1;
+            *b(p, 0x1d) = 1;
+        } else {
+            gravar_2b(p, 3);
+            if local >= f32_em(0x96d1a8) && *b(p, 0x1c) != 0 {
+                crate::comparacao::ramo("lesao para 3 e sai");
+                *b(m, 0x8eb5) = 1;
+                *b(p, 0x1d) = 1;
+            }
+        }
+    }
+    let x = *folego as f64;
+    if !(x >= f64_em(0x967890)) {
+        *folego = f64_em(0x967890) as f32;
+    } else if x > f64_em(0x968910) {
+        *folego = f64_em(0x968910) as f32;
+    }
+    if *b(m, 0x8eb5) != 0 {
+        *w(0xf639) = (*w(0xf639)).wrapping_add(1);
+    }
+}
+
+/// { 0x6d0980 }: ver `lesionar_com`.
+unsafe extern "thiscall" fn lesionar(m: usize, tipo: u32, chance: u32, p: usize, o: usize) {
+    lesionar_com(m, tipo, chance, p, o, &mut |r, t, a| despachar_lesao(r, t, a))
+}
+
+/// As regioes da lesao: a lista de lesoes (cabecalho e registros de 6 bytes).
+unsafe fn regioes_das_lesoes() -> Vec<(usize, usize)> {
+    let mut reg = Vec::new();
+    let dono = *(0xb63d28 as *const usize);
+    let lista = if dono != 0 { *((dono + 0x28) as *const usize) } else { 0 };
+    if lista != 0 {
+        reg.push((lista, 0xe));
+        let mut no = core::ptr::read_unaligned((lista + 2) as *const usize);
+        for _ in 0..(*(lista as *const i16)).max(0) {
+            if no == 0 {
+                break;
+            }
+            let e = *(no as *const usize);
+            if e != 0 {
+                reg.push((e, 6));
+            }
+            no = core::ptr::read_unaligned((no + 6) as *const usize);
+        }
+    }
+    reg
+}
+
+unsafe extern "thiscall" fn comparar_lesionar(m: usize, tipo: u32, chance: u32, p: usize, o: usize) {
+    use std::sync::atomic::Ordering::Relaxed;
+    let f = orig::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize)>(313);
+    if gravando() {
+        // dentro de outra comparacao pela fita, a lesao e uma unidade (como fazia a porta)
+        chamar_gravando(0x6d0980, m, [tipo, chance, p as u32, o as u32, 0], || {
+            f(m, tipo, chance, p, o);
+            0
+        });
+        return;
+    }
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m, MOTOR), (0xb67a34, 4)]);
+    if o != 0 {
+        reg.push((o + 0x31, 2));
+    }
+    reg.extend(regioes_das_lesoes());
+    let gravar = GRAVAR_LESAO.swap(true, Relaxed);
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || f(m, tipo, chance, p, o), |chamar| {
+        lesionar_com(m, tipo, chance, p, o, &mut |rotina, this, args| chamar(rotina, this, args, [0, u32::MAX, 0, 0, 0]))
+    });
+    GRAVAR_LESAO.store(gravar, Relaxed);
+    PLACAR.registrar(igual && sequencia, || format!("lesionar(tipo {}, chance {}) {} chamadas: {}", tipo as u8 as i8, chance as u8 as i8, k, detalhe_fita()));
+}
+
+/// A 0x62be00 so e chamada pela 0x6d0980: a comparacao e a dela (a lista entra nas regioes).
+unsafe extern "thiscall" fn comparar_registrar_lesao(this: usize, ficha: usize, tipo: *mut u8, chance: *mut u8) {
+    orig::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(314)(this, ficha, tipo, chance)
+}
+
+/// { 0x717470 } (ret 4): o jogador pode ganhar o destaque `codigo` (0x1f40..=0x21e4) nesta partida?
+/// Nao se o lado ja o teve (tabela de dwords em +0x21e do motor, 4000 bytes por lado) ou se a ficha
+/// (+0x69) e de fora da base ([0xae2364]). Os codigos 0x219e..=0x21b8 tem regras proprias (atuacao
+/// +0x35 contra um sorteio ou contra o tempo em campo, gols +0xc, cartoes, e a busca no historico
+/// 0x757da0 nos ultimos 7 ou 30 dias, datas da 0x54c8e0); os demais da faixa, sim.
+unsafe extern "thiscall" fn destaque_do_jogador(p: usize, codigo: u32) -> u32 {
+    let m = *((p + 0x19e) as *const usize);
+    let hoje = 0xae2c90usize;
+    let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) = core::mem::transmute(0x54c8e0usize);
+    let (mut d7, mut d30) = ([0u8; 8], [0u8; 8]);
+    datar(hoje, &mut d7, 7);
+    datar(hoje, &mut d30, 0x1e);
+    let c = codigo as u16 as i16 as i32;
+    if !(0x1f40..=0x21e4).contains(&c) {
+        return 0;
+    }
+    let lado = byte(p, 0x27) as i32;
+    if *((m as isize + ((c + lado * 1000) * 4) as isize - 0x7ae2) as *const u32) != 0 {
+        return 0;
+    }
+    let ficha = *((p + 0x69) as *const usize);
+    if ficha != 0 && *(ficha as *const i32) >= *(0xae2364 as *const i32) {
+        return 0;
+    }
+    let atuacao = *((p + 0x35) as *const i16) as i32;
+    let b = |o: usize| byte(p, o);
+    let minuto = *((m + 0x8ed0) as *const i16) as i32 / 11;
+    let em_campo = minuto - b(0x1f) as i32;
+    let limite = |t: i32| (t * 33 + 0xfa0).min(0x1964);
+    // as condicoes comuns: sem gol, sem cartao, +0x17 ate 8, +0x03 ate 2 e a atuacao ate o limite
+    let comum = || b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && atuacao <= limite(em_campo);
+    let buscar = |cod: u32, data: &[u8; 8]| {
+        let f: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, *const [u8; 8]) -> u32 = core::mem::transmute(0x757da0usize);
+        f(*(0xb6b7c8 as *const usize), ficha, *((p + 0xf9) as *const usize), -1, cod, data) != 0
+    };
+    let algum = |de: u32, ate: u32, data: &[u8; 8]| (de..=ate).any(|k| buscar(k as u16 as u32, data));
+    let r = match c {
+        0x219e => comum() && (algum(0, 0x1d, &d7) || algum(0x1e, 0x27, &d7)),
+        0x219f => atuacao >= sortear(0x7d0) + 0x1b58 && algum(0, 0x1d, &d7),
+        0x21a0 => {
+            let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
+            if dias(hoje, *((ficha + 0x3e) as *const u32), *((ficha + 0x42) as *const u32)) < 0x5a || atuacao <= sortear(0x7d0) + 0x1b58 {
+                false
+            } else {
+                let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x735780usize);
+                f(*(0xb6b7c8 as *const usize), ficha) != 0
+            }
+        }
+        0x21a1 | 0x21a2 => {
+            let gols = b(0xa) as u8 as i32;
+            if p != *((m + 0xf5aa) as *const usize) || *((m + 0xf5a6) as *const u32) == 0 {
+                false
+            } else if c == 0x21a1 {
+                if gols <= 4 || *((p + 0x39) as *const i16) <= 0xfa {
+                    false
+                } else {
+                    let r = sortear(6) + 12;
+                    em_campo / gols < r && buscar(0x52, &d7)
+                }
+            } else if gols >= 3 || gols == 0 {
+                false
+            } else {
+                let r = sortear(0x19) + 0x32;
+                minuto > r && em_campo / gols > 0x1e && buscar(0x52, &d7)
+            }
+        }
+        0x21b0 => atuacao > sortear(1000) + 0x1f40 && buscar(0x34, &d7),
+        0x21b1 => comum() && buscar(0x34, &d7),
+        0x21b2 => comum() && buscar(0x33, &d30),
+        0x21b3 => atuacao > sortear(1000) + 0x1f40 && buscar(0x33, &d30),
+        0x21b4 => atuacao >= sortear(0x7d0) + 0x1b58 && algum(0x28, 0x3b, &d7),
+        0x21b5 => atuacao > sortear(1000) + 0x1f40 && b(0x30) != 0,
+        0x21b6 => {
+            let sim = atuacao > sortear(0x7d0) + 0x1c52 && b(0xc) == 1 && em_campo > 0x41 && b(0x30) != 0;
+            if sim {
+                crate::comparacao::ramo("destaque marca 21b5");
+                *((m + 0xbf2 + lado as usize * 4000) as *mut u32) = 1;
+            }
+            sim
+        }
+        0x21b7 => b(0x30) != 0 && b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && em_campo >= 0x37 && atuacao <= limite(em_campo),
+        0x21b8 => {
+            atuacao < 0x1964
+                && (b(0x14) as u8 as i32) > sortear(3)
+                && tabela_do_jogador(p) & 4 != 0
+                && byte(*((p + 0x6d) as *const usize), 0x11) as i32 > sortear(4) + 0xf
+                && b(0xc) == 0
+                && (b(0x17) as i32) < sortear(6)
+                && em_campo > sortear(0x32) + 0x1e
+        }
+        _ => true,
+    };
+    crate::comparacao::ramo(if r { "destaque sim" } else { "destaque nao" });
+    r as u32
+}
+
+unsafe extern "thiscall" fn comparar_destaque_do_jogador(p: usize, codigo: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(315);
+    if gravando_no_topo() {
+        return o(p, codigo);
+    }
+    let m = *((p + 0x19e) as *const usize);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m, MOTOR), (0xb67a34, 4)]);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(p, codigo), || crate::aleatorio::sem_contar(|| destaque_do_jogador(p, codigo)));
+    PLACAR.registrar(igual && r == n, || format!("destaque_do_jogador({:#x}) original={} rust={} {:x?} x {:x?}", codigo as u16, r, n, mo, mr));
+    r
+}
+
 // ---------- centesima trigesima nona leva: o fechamento da partida (0x6d1cc0, 0x547790, 0x5477d0) ----------
 
 /// { 0x547790 } (cdecl): `b` tem `a` entre os tres favoritos (+0x9b, +0x9f, +0xa3)? No fechamento,
@@ -11909,9 +12216,7 @@ unsafe extern "thiscall" fn lesao_na_dividida(m: usize, a: usize, tipo_a: u32, b
 // Portas de 0x62ed70 (lesao atual: atualiza a ficha pela 0x62c680) e 0x6d0980 (aplica a lesao,
 // alocando): unidades da fita.
 static mut PORTA_62ED70: usize = 0;
-static mut PORTA_6D0980: usize = 0;
 const PROLOGO_62ED70: Prologo = Prologo { endereco: 0x62ed70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] };
-const PROLOGO_6D0980: Prologo = Prologo { endereco: 0x6d0980, bytes: &[0x51, 0x57, 0x8b, 0xf9, 0xc7, 0x44, 0x24, 0x04, 0x00, 0x00, 0x00, 0x00] };
 
 unsafe extern "thiscall" fn porta_62ed70(l: usize, pessoa: usize) -> usize {
     let o: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(PORTA_62ED70);
@@ -11919,16 +12224,6 @@ unsafe extern "thiscall" fn porta_62ed70(l: usize, pessoa: usize) -> usize {
         return o(l, pessoa);
     }
     chamar_gravando(0x62ed70, l, [pessoa as u32, 0, 0, 0, 0], || o(l, pessoa) as u32) as usize
-}
-unsafe extern "thiscall" fn porta_6d0980(m: usize, tipo: u32, chance: u32, p: usize, o: usize) {
-    let f: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(PORTA_6D0980);
-    if !gravando() {
-        return f(m, tipo, chance, p, o);
-    }
-    chamar_gravando(0x6d0980, m, [tipo, chance, p as u32, o as u32, 0], || {
-        f(m, tipo, chance, p, o);
-        0
-    });
 }
 
 // ---------- centesima oitava leva: as folhas das lesoes (0x62ec00, 0x62ece0) ----------
@@ -12734,8 +13029,8 @@ unsafe extern "thiscall" fn porta_68d0d0(l: usize, p: usize, n: u32) {
     if !gravando() {
         return o(l, p, n);
     }
-    if gravando_fechamento() {
-        // no fechamento o bloco vem da pilha (endereco diferente na copia Rust): confere o conteudo
+    if gravando_fechamento() || gravando_lesao() {
+        // no fechamento (e na lesao) o bloco vem da pilha (endereco diferente na copia Rust): confere o conteudo
         chamar_gravando_vetores(0x68d0d0, l, [0, n, 0, 0, 0], &[(p, n as usize)], &[], || {
             o(l, p, n);
             0
@@ -23419,9 +23714,6 @@ pub unsafe fn instalar(comparando: bool) {
         if let Some(t) = desvios::desviar("motor_porta_62ed70 (gravacao)", &PROLOGO_62ED70, porta_62ed70 as *const () as usize) {
             PORTA_62ED70 = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_6d0980 (gravacao)", &PROLOGO_6D0980, porta_6d0980 as *const () as usize) {
-            PORTA_6D0980 = t;
-        }
     }
     let rust: [usize; N] = [
         tabela_a as *const () as usize,
@@ -23737,6 +24029,9 @@ pub unsafe fn instalar(comparando: bool) {
         ler_linha_tatica as *const () as usize,
         gravar_linha_tatica as *const () as usize,
         simulacao_rapida as *const () as usize,
+        lesionar as *const () as usize,
+        registrar_lesao as *const () as usize,
+        destaque_do_jogador as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -24052,6 +24347,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_ler_linha_tatica as *const () as usize,
         comparar_gravar_linha_tatica as *const () as usize,
         comparar_simulacao_rapida as *const () as usize,
+        comparar_lesionar as *const () as usize,
+        comparar_registrar_lesao as *const () as usize,
+        comparar_destaque_do_jogador as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -24164,7 +24462,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

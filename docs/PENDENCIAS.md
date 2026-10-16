@@ -31,5 +31,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `numero da competicao` | 0x6b6570 (138ª) | — | nunca roda na carreira automática; chamada pela 0x6b55c0 (dia de jogos) e pela interface: dia de jogo com técnico humano |
 | `simulacao rapida abandono` | 0x6beeb0 (140ª) | — | mais de 4 expulsos de um lado na simulação rápida (3 x 0 para o outro): nunca acontece na carreira automática até 2002-06-01 (expulsões 2048 vezes, segundo amarelo 1024). Talvez inalcançável na prática; precisaria de um lado com muitos cartões |
 | `simulacao rapida contador reiniciado` | 0x6beeb0 | — | no fim da simulação rápida, o contador de ataques (+0xf5e2/+0xf618) abaixo de 10 reinicia (20 e sorteio(6) + 12): os ataques passam de 10 em toda partida da carreira |
+| `lesao para 3 e sai` | 0x6d0980 (141ª) | — | lesão leve (gravidade até 50) com o fôlego tirado acima do limite (0x96d1a8) num jogador já marcado em +0x1c (lesão grave anterior na mesma partida): nunca acontece na carreira automática até 2002-06-01 |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").

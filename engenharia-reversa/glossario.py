@@ -149,6 +149,7 @@ EN = {
  'batedor_guardado': 'stored_taker', 'guardar_instrucoes': 'store_instructions', 'numero_da_competicao': 'competition_number',
  'favorito_de': 'favourite_of', 'rejeitado_por': 'rejected_by', 'fechamento': 'match_wrap_up',
  'ler_linha_tatica': 'read_tactics_row', 'gravar_linha_tatica': 'write_tactics_row', 'simulacao_rapida': 'quick_simulation',
+ 'lesionar': 'injure', 'registrar_lesao': 'register_injury', 'destaque_do_jogador': 'player_highlight',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:
