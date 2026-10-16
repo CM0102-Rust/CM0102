@@ -106,6 +106,34 @@ pub unsafe fn desviar(nome: &str, p: &Prologo, destino: usize) -> Option<usize> 
     })
 }
 
+/// Desvia `p.endereco` para `destino` (ou a propria original, com PASSAGEM) passando antes por um
+/// trecho que zera `n` bytes da pilha logo abaixo da entrada. Original determinizado (15/10/2026): as
+/// rotinas que leem variavel local sem valor passam a ler zero em todos os modos (a sobra da pilha
+/// variava com o modo). Na simulacao o trecho roda ja na pilha particular.
+pub unsafe fn desviar_zerando(nome: &str, p: &Prologo, n: u32, destino: usize) -> Option<usize> {
+    desviar_para(nome, p, |tramp| {
+        let destino = if destino == PASSAGEM { tramp } else { destino };
+        let z = zerar_e_saltar(n, destino);
+        if ISOLAR.load(std::sync::atomic::Ordering::Relaxed) { isolar(z) } else { z }
+    })
+}
+
+/// `push edi; push ecx; push eax; lea edi, [esp - 12 - n]; mov ecx, n/4; xor eax, eax; rep stosd;
+/// pop eax; pop ecx; pop edi; jmp destino`: zera [esp_entrada - n - 12, esp_entrada - 12) sem tocar
+/// registradores nem argumentos.
+unsafe fn zerar_e_saltar(n: u32, destino: usize) -> usize {
+    let codigo = win::VirtualAlloc(core::ptr::null_mut(), 64, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as usize;
+    let mut c: Vec<u8> = vec![0x57, 0x51, 0x50, 0x8d, 0xbc, 0x24];
+    c.extend((-(n as i32)).to_le_bytes()); // lea edi, [esp - n] (esp ja desceu 12)
+    c.push(0xb9);
+    c.extend((n / 4).to_le_bytes());
+    c.extend([0x31, 0xc0, 0xfc, 0xf3, 0xab, 0x58, 0x59, 0x5f, 0xe9]); // xor eax, eax; cld; rep stosd; pop; pop; pop; jmp
+    let rel = (destino as isize - (codigo + c.len() + 4) as isize) as i32;
+    c.extend(rel.to_le_bytes());
+    core::ptr::copy_nonoverlapping(c.as_ptr(), codigo as *mut u8, c.len());
+    codigo
+}
+
 /// Contador de chamadas (cobertura): `inc dword [contador]; jmp original`. Nao toca pilha nem
 /// registradores (so os flags, que nao sobrevivem a um call), entao a carreira nao muda.
 pub unsafe fn contar(nome: &str, p: &Prologo, contador: *mut u32) -> bool {
@@ -205,6 +233,7 @@ pub unsafe fn instalar() {
             data::instalar_passagem();
             crate::motor::instalar_passagem();
         }
+        crate::motor::instalar_zeradas();
         return;
     }
     // CM_AUTOTESTE=1 liga o modo comparacao; os autotestes em si rodam depois (ver `autotestes`).
@@ -216,6 +245,7 @@ pub unsafe fn instalar() {
     aleatorio::instalar(if comparar { aleatorio::Modo::Comparar } else { aleatorio::Modo::Rust });
     data::instalar(comparar);
     crate::motor::instalar(comparar);
+    crate::motor::instalar_zeradas();
 }
 
 /// CM_AUTOTESTE=1: cada rotina reescrita se compara com a original em entradas sinteticas

@@ -11,6 +11,8 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 
 - **Rust**, entrando rotina por rotina: uma DLL carregada pelo exe original, com desvios (hooks) nas funções reescritas. O jogo continua jogável o tempo todo e cada rotina é comparada com a original.
 - **Interface idêntica antes de tudo:** modernizações (resolução, fontes, escala) só depois que a tela reescrita bater pixel a pixel com a original.
+- **Original determinizado (15/10/2026):** rotinas originais que leem variável local sem valor (lixo de pilha que muda com o modo) recebem, em todos os modos, um desvio que zera a pilha abaixo da entrada (`ZERADAS` em `motor.rs`, `desvios::desviar_zerando`). A referência das carreiras é a original com essas zeragens; as cópias Rust usam zero. Cada zeragem nova é provada (sonda) e documentada.
+- **Levas de 3 rotinas (15/10/2026):** cada leva porta três rotinas e roda uma cadeia só; divergência é localizada pelo comparador de cada rotina (ou `SEM_ROTINAS`).
 - **Base de trabalho: `cm0102.exe` (DirectDraw).** É nele que estão os endereços mapeados pela comunidade. O `cm0102_GDI.exe` é a referência para o caminho de vídeo por GDI.
 - **Os exe originais nunca são alterados.** Correções vão para cópias geradas por ferramenta (`*-portatil.exe`), que confere o MD5 do original e falha se um padrão esperado não bater.
 - **Nada do jogo no git:** nem exe, nem `Data/`, nem código descompilado em bruto. O repositório `CM0102-Rust/CM0102` (organização; antes `lucastmpacheco/CM0102`) é privado.

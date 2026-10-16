@@ -414,8 +414,11 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x897990, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x896fe0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6b6570, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x04] },
+    Prologo { endereco: 0x547790, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] },
+    Prologo { endereco: 0x5477d0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] },
+    Prologo { endereco: 0x6d1cc0, bytes: &[0x83, 0xec, 0x44, 0x53, 0x55] },
 ];
-const N: usize = 307;
+const N: usize = 310;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -9167,6 +9170,382 @@ unsafe extern "C" fn comparar_numero_da_competicao(codigo: u32, segunda: u32) ->
     r
 }
 
+// ---------- centesima trigesima nona leva: o fechamento da partida (0x6d1cc0, 0x547790, 0x5477d0) ----------
+
+/// { 0x547790 } (cdecl): `b` tem `a` entre os tres favoritos (+0x9b, +0x9f, +0xa3)? No fechamento,
+/// a pessoa e o clube adversario.
+unsafe extern "C" fn favorito_de(a: usize, b: usize) -> u32 {
+    if a == 0 || b == 0 {
+        return 0;
+    }
+    [0x9b, 0x9f, 0xa3].iter().any(|&o| *((b + o) as *const usize) == a) as u32
+}
+
+/// { 0x5477d0 } (cdecl): `b` tem `a` entre os tres rejeitados (+0xa7, +0xab, +0xaf)?
+unsafe extern "C" fn rejeitado_por(a: usize, b: usize) -> u32 {
+    if a == 0 || b == 0 {
+        return 0;
+    }
+    [0xa7, 0xab, 0xaf].iter().any(|&o| *((b + o) as *const usize) == a) as u32
+}
+
+/// Liga as unidades da fita do fechamento (0x6d26b0, 0x6d3610, 0x6d3de0 e o conteudo da 0x68d0d0).
+static GRAVAR_FECHAMENTO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+fn gravando_fechamento() -> bool {
+    GRAVAR_FECHAMENTO.load(std::sync::atomic::Ordering::Relaxed) && gravando()
+}
+
+/// { 0x6d1cc0 } (cdecl, match_eng.cpp, chamada pelo passo do motor 0x6b98c0) com as chamadas que
+/// mexem fora do motor injetadas (0x6d26b0 a ficha de cada jogador, 0x6d3610 e 0x6d3de0 as
+/// reputacoes, 0x68d0d0 a copia de um evento na lista [0xb67dc8]): o fechamento da partida. Com a
+/// lista de eventos do dia (+0x478e) e a partida (+0x4792, +0x40 ligado), percorre os eventos (0x68d1b0):
+/// 0x82 vai para a lista; 0x1e (proposta?) pelo placar (+0x43/+0x44, empate pela forca +0x80 dos
+/// clubes x 1,2/0,8) e pelo tecnico do outro lado (+0xd3, 0x544410 sorteado contra 20 ou 5, +0x14 > 5)
+/// marca o evento (+0xe 1, +0xf o tecnico) ou o compara com a forca do clube do evento (+0x80 com dois
+/// sorteios de 1000, ou acima de 7000; no outro lado, 1 em 4) e o marca (+0xe 0, +0xf -1); os outros,
+/// do jogador da partida: no 6 pelas marcas +0x24/+0x23, nos demais com +0x1b < 7 por sorteio(+0x17).
+/// Depois, por lado, cada jogador em campo (reservas so se entraram, +0x1f) com ficha e contrato:
+/// 0x6d26b0 com a nota +0x1b; com a lista: fora das selecoes e dos amistosos, sem ser o tecnico, quem
+/// saiu (+0x20) sem ser substituido de volta (+0x22) e com contrato (+0x3d) e reputacao (+0xb >
+/// 4250) pode pedir para sair (evento 0xa, 0x4000000) por sorteios de +0x1a2, +0x5d, folego (+0x4d) e
+/// +0x57/+0x5b; a insatisfacao (-+0x31, +10 contra o rival +0xb3/+0xb7/+0xbb ou rejeitado pelo
+/// adversario 0x5477d0, -10 favorito dele 0x547790, +10/-20 pelas preferencias 0x547d30/0x547d60) contra
+/// sorteio((+0x5a x +0x5b x +0x5d + 20) x 100) gera o evento 0xb. A media das notas pelos minutos
+/// jogados (90 no motor rapido; +0x21/+0x20/minuto, menos a entrada +0x1f) -0,25 em casa (+0x18) ou
+/// +0,25 fora vai para 0x6d3610 e, fora das selecoes, 0x6d3de0. Sem minutos, a media fica a do lado
+/// anterior (no 1o lado era lixo de pilha: 0 no original determinizado, como os 4 bytes finais do
+/// evento montado na pilha).
+unsafe fn fechamento_com(m: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
+    let conhecer: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(0x544410usize);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
+    let favorito: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547790usize);
+    let rejeitado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x5477d0usize);
+    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d30usize);
+    let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d60usize);
+    let d = |p: usize, o: usize| *((p + o) as *const usize);
+    let w = |p: usize, o: usize| *((p + o) as *const i16);
+    let lista_global = || *(0xb67dc8 as *const usize);
+    // poe uma copia do bloco (0x19 bytes) na lista de eventos (o conteudo e conferido na fita)
+    let mut evento = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, p: usize| {
+        pedir_vetores(&[(p, 0x19)], &[]);
+        chamar(0x68d0d0, lista_global(), [0, 0x19, 0, 0, 0]);
+    };
+    let partida = || d(m, 0x4792);
+    let pessoa_de = |id: i32| (*(0xae23bc as *const usize)).wrapping_add(id as usize * 0x6e);
+    let lista = d(m, 0x478e);
+    if lista != 0 && lista_global() != 0 && partida() != 0 && byte(partida(), 0x40) != 0 {
+        *((lista + 0xa) as *mut u32) = core::ptr::read_unaligned((lista + 2) as *const u32);
+        let mut i: i8 = 0;
+        while (i as i16) < *(lista as *const i16) {
+            let e = proximo(lista);
+            if e == 0 {
+                break;
+            }
+            let tipo = w(e, 0x13);
+            crate::comparacao::ramo("fechamento evento do dia");
+            let marcar = |valor: u8, quem: u32| {
+                *((e + 0xe) as *mut u8) = valor;
+                core::ptr::write_unaligned((e + 0xf) as *mut u32, quem);
+            };
+            let pt = partida();
+            let clube_ev = || (*(0xae23b4 as *const usize)).wrapping_add(d(e, 4) * 0x245);
+            let reputacao = || w(d(pessoa_de(*(e as *const i32)), 0x61), 0xb);
+            if tipo == 0x82 {
+                evento(chamar, e);
+            } else if tipo == 0x1e {
+                let (c1c, c20) = (d(pt, 0x1c), d(pt, 0x20));
+                if byte(e, 0xd) != 0 {
+                    let (a, b) = (byte(pt, 0x43), byte(pt, 0x44));
+                    let ok = b < a || (b == a && (w(c1c, 0x80) as f64) < w(c20, 0x80) as f64 * f64_em(0x968e40));
+                    let t = d(c20, 0xd3);
+                    if ok && t != 0 && d(t, 0x69) != 0 {
+                        let x = d(t, 0x69);
+                        let r1 = sortear(conhecer(x, byte(x, 0x17) as u8 as u32) as i32);
+                        if r1 > sortear(0x14) && byte(x, 0x14) > 5 {
+                            crate::comparacao::ramo("fechamento proposta aceita");
+                            marcar(1, *(t as *const u32));
+                            evento(chamar, e);
+                        } else {
+                            let rep = reputacao();
+                            let r = sortear(1000);
+                            let forca = w(clube_ev(), 0x80) as i32 - r + sortear(1000);
+                            if rep as i32 > forca || rep > 7000 {
+                                marcar(0, u32::MAX);
+                                evento(chamar, e);
+                            }
+                        }
+                    }
+                } else {
+                    let (a, b) = (byte(pt, 0x43), byte(pt, 0x44));
+                    let ok = b > a || (b == a && (w(c20, 0x80) as f64) < w(c1c, 0x80) as f64 * f64_em(0x968e48));
+                    let t = d(c1c, 0xd3);
+                    if ok && t != 0 && d(t, 0x69) != 0 {
+                        let x = d(t, 0x69);
+                        if sortear(conhecer(x, byte(x, 0x17) as u8 as u32) as i32) > 5 && byte(x, 0x14) > 5 {
+                            crate::comparacao::ramo("fechamento proposta aceita");
+                            marcar(1, *(t as *const u32));
+                            evento(chamar, e);
+                        } else {
+                            if reputacao() > w(clube_ev(), 0x80) && sortear(4) == 0 {
+                                marcar(0, u32::MAX);
+                            }
+                            evento(chamar, e);
+                        }
+                    }
+                }
+            } else {
+                let pessoa = pessoa_de(*(e as *const i32));
+                if pessoa != 0 {
+                    // o jogador do evento num dos dois lados
+                    let achar = |lado: usize| (0..20usize).find(|&k| {
+                        let p = m + 0x4796 + (k + lado * 20) * 0x1be;
+                        d(p, 0x69) == pessoa && byte(p, 0x19) >= 0
+                    });
+                    let achado = achar(0).map(|k| (k, 0)).or_else(|| achar(1).map(|k| (k, 1)));
+                    if let Some((k, lado)) = achado {
+                        let p = m + 0x4796 + (k + lado * 20) * 0x1be;
+                        let vale = if tipo == 6 {
+                            crate::comparacao::ramo("fechamento evento tipo 6");
+                            byte(p, 0x24) == 2 || byte(p, 0x23) != 0
+                        } else {
+                            byte(p, 0x1b) < 7 && sortear(byte(p, 0x17) as i32) == 0
+                        };
+                        if vale {
+                            crate::comparacao::ramo("fechamento evento do jogador");
+                            marcar(0, u32::MAX);
+                            evento(chamar, e);
+                        }
+                    }
+                }
+            }
+            i = i.wrapping_add(1);
+        }
+    }
+    let mut media = 0f64;
+    for lado in 0..2usize {
+        let (mut soma, mut somap) = (0i32, 0i32);
+        let pt = partida();
+        let (meu, outro) = if lado == 0 { (d(pt, 0x1c), d(pt, 0x20)) } else { (d(pt, 0x20), d(pt, 0x1c)) };
+        for k in 0..20usize {
+            let p = m + 0x4796 + (k + lado * 20) * 0x1be;
+            if k > 10 && byte(p, 0x1f) == -1 {
+                continue;
+            }
+            let pessoa = d(p, 0x69);
+            if pessoa != 0 && d(p, 0x6d) != 0 && *(pessoa as *const i32) < *(0xae2364 as *const i32) {
+                chamar(0x6d26b0, p, [pessoa as u32, meu as u32, outro as u32, (byte(p, 0x1b) as f32).to_bits(), *(m as *const u8) as u32 | 1 << 8]);
+                if lista_global() != 0 && selecao(meu) == 0 && byte(pt, 0x40) != 0 {
+                    let ct = contrato(*(0xae1050 as *const usize), pessoa, meu);
+                    if ct != 0
+                        && meu != 0
+                        && pessoa != d(meu, 0xcf)
+                        && d(pt, 0x14) != 0
+                        && amistoso(*(0xae2c74 as *const usize), d(pt, 0x14)) == 0
+                        && byte(p, 0x20) != -1
+                        && byte(p, 0x22) == -1
+                        && byte(ct, 0x3d) > 0
+                        && w(d(p, 0x6d), 0xb) > 0x109a
+                        && partida() != 0
+                        && byte(partida(), 0x40) != 0
+                    {
+                        let r1 = sortear(ftol(f32_em(p + 0x1a2) as f64));
+                        if r1 > sortear(100) {
+                            let r3 = sortear(byte(pessoa, 0x5d) as i32);
+                            if r3 < sortear(10) {
+                                let f = f32_em(p + 0x4d);
+                                if ((sortear(0x5dc) + 0x1d4c) as f64) < f as f64 {
+                                    let b5b = byte(pessoa, 0x5b);
+                                    if b5b < 6 && byte(pessoa, 0x57) > 10 {
+                                        let r6 = sortear(byte(pessoa, 0x57) as i32);
+                                        if sortear(b5b as i32) < r6 {
+                                            crate::comparacao::ramo("fechamento pede para sair");
+                                            let mut ev = [0u8; 0x19];
+                                            ev[..4].copy_from_slice(&(*(pessoa as *const u32)).to_le_bytes());
+                                            ev[4..8].copy_from_slice(&(*(meu as *const u32)).to_le_bytes());
+                                            ev[8..12].copy_from_slice(&0x4000000u32.to_le_bytes());
+                                            ev[0xd] = lado as u8;
+                                            ev[0xf..0x13].copy_from_slice(&u32::MAX.to_le_bytes());
+                                            ev[0x13..0x15].copy_from_slice(&10u16.to_le_bytes());
+                                            evento(chamar, ev.as_ptr() as usize);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // a insatisfacao
+                    let mut x = -(w(p, 0x31) as i32);
+                    if [0xb3, 0xb7, 0xbb].iter().any(|&o| d(meu, o) == outro) {
+                        x += 10;
+                    }
+                    if rejeitado(pessoa, outro) != 0 {
+                        x += 10;
+                    } else if favorito(pessoa, outro) != 0 {
+                        x -= 10;
+                    }
+                    if nao_gosta(pessoa, outro) != 0 {
+                        x += 10;
+                    } else if gosta(pessoa, outro) != 0 {
+                        x -= 20;
+                    }
+                    let (a, b, c) = (byte(pessoa, 0x5a) as i32, byte(pessoa, 0x5b), byte(pessoa, 0x5d));
+                    if b < 6 && c < 10 {
+                        let r1 = sortear((a * b as i32 * c as i32 + 0x14) * 100);
+                        if r1 < sortear(x + 0x32) {
+                            crate::comparacao::ramo("fechamento insatisfeito");
+                            let mut ev = [0u8; 0x19];
+                            ev[..4].copy_from_slice(&(*(pessoa as *const u32)).to_le_bytes());
+                            ev[4..8].copy_from_slice(&(*(meu as *const u32)).to_le_bytes());
+                            ev[0xd] = lado as u8;
+                            ev[0xf..0x13].copy_from_slice(&u32::MAX.to_le_bytes());
+                            ev[0x13..0x15].copy_from_slice(&11u16.to_le_bytes());
+                            evento(chamar, ev.as_ptr() as usize);
+                        }
+                    }
+                }
+            }
+            // os minutos jogados
+            let minuto = (w(m, 0x8ed0) as i32 / 11) as i8;
+            let v: i8 = if k >= 11 {
+                let c = byte(p, 0x1f);
+                if c == -1 {
+                    continue;
+                }
+                let fim = if byte(p, 0x21) > -1 { byte(p, 0x21) } else if byte(p, 0x20) > -1 { byte(p, 0x20) } else { minuto };
+                fim.wrapping_sub(c)
+            } else if *(m as *const u8) != 0 {
+                0x5a
+            } else if byte(p, 0x21) > -1 {
+                byte(p, 0x21)
+            } else if byte(p, 0x20) > -1 {
+                byte(p, 0x20)
+            } else {
+                minuto
+            };
+            if v == 0 {
+                continue;
+            }
+            soma += v as i32;
+            somap += byte(p, 0x1b) as i32 * v as i32;
+        }
+        if soma != 0 {
+            let q = somap as f64 / soma as f64;
+            media = if d(pt, 0x18) == d(meu, 0x69) { q - f64_em(0x967880) } else { q + f64_em(0x968918) };
+        }
+        crate::comparacao::ramo(if soma != 0 { "fechamento media do lado" } else { "fechamento lado sem minutos" });
+        let valor = (media as f32).to_bits();
+        let alt = *(m as *const u8) as u32;
+        chamar(0x6d3610, m + 0x9032 + lado * 0xd0, [meu as u32, outro as u32, pt as u32, valor, alt | 1 << 8]);
+        if selecao(meu) == 0 {
+            chamar(0x6d3de0, m, [lado as u32, valor, alt | 1 << 8, 0, 0]);
+        }
+    }
+}
+
+/// Despacho real das chamadas injetadas do fechamento.
+unsafe fn despachar_fechamento(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
+    let m = |p: usize| *((p + 0x19e) as *const usize);
+    match rotina {
+        0x6d26b0 => {
+            let f: unsafe extern "C" fn(usize, usize, usize, usize, usize, f32, u32, u32) = core::mem::transmute(0x6d26b0usize);
+            f(this, a[0] as usize, a[1] as usize, a[2] as usize, *((m(this) + 0x4792) as *const usize), f32::from_bits(a[3]), a[4] & 0xff, (a[4] >> 8) & 0xff);
+        }
+        0x6d3610 => {
+            let f: unsafe extern "C" fn(usize, usize, usize, usize, f32, u8, u8) = core::mem::transmute(0x6d3610usize);
+            f(this, a[0] as usize, a[1] as usize, a[2] as usize, f32::from_bits(a[3]), a[4] as u8, (a[4] >> 8) as u8);
+        }
+        0x6d3de0 => {
+            let f: unsafe extern "C" fn(usize, i8, f32, u8, u8) = core::mem::transmute(0x6d3de0usize);
+            f(this, a[0] as u8 as i8, f32::from_bits(a[1]), a[2] as u8, (a[2] >> 8) as u8);
+        }
+        _ => {
+            // 0x68d0d0: o bloco pedido por ultimo (pedir_vetores) e o que vai para a lista
+            let p = VETORES_PEDIDOS.lock().unwrap_or_else(|e| e.into_inner()).take().map_or(0, |v| v.0[0].0);
+            let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x68d0d0usize);
+            f(this, p, a[1]);
+        }
+    }
+    0
+}
+
+/// Zera 8 KB da pilha logo abaixo (a rotina original chamada em seguida ocupa essa area): na
+/// comparacao, a original determinizada roda com as variaveis sem valor em zero, como no desvio.
+#[inline(never)]
+fn zerar_pilha() {
+    let mut a = [0u8; 0x2000];
+    std::hint::black_box(&mut a);
+}
+
+unsafe extern "C" fn comparar_favorito_de(a: usize, b: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(307)(a, b);
+    let n = favorito_de(a, b);
+    PLACAR.registrar(r == n, || format!("favorito_de original={} rust={}", r, n));
+    r
+}
+
+unsafe extern "C" fn comparar_rejeitado_por(a: usize, b: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(308)(a, b);
+    let n = rejeitado_por(a, b);
+    PLACAR.registrar(r == n, || format!("rejeitado_por original={} rust={}", r, n));
+    r
+}
+
+/// As regioes do fechamento: o sorteio, o motor, a lista de eventos do dia (cabecalho e cursor) e os
+/// eventos dela (+0xe e +0xf mudam).
+unsafe fn regioes_do_fechamento(m: usize) -> Vec<(usize, usize)> {
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m, MOTOR), (0xb67a34, 4)]);
+    let lista = *((m + 0x478e) as *const usize);
+    if lista != 0 {
+        reg.push((lista, 0xe));
+        let mut no = core::ptr::read_unaligned((lista + 2) as *const usize);
+        for _ in 0..(*(lista as *const i16)).max(0) {
+            if no == 0 {
+                break;
+            }
+            let e = *(no as *const usize);
+            if e != 0 {
+                reg.push((e, 0x19));
+            }
+            no = core::ptr::read_unaligned((no + 6) as *const usize);
+        }
+    }
+    reg
+}
+
+unsafe extern "C" fn comparar_fechamento(m: usize) {
+    use std::sync::atomic::Ordering::Relaxed;
+    let o = orig::<unsafe extern "C" fn(usize)>(309);
+    if gravando_no_topo() {
+        return o(m);
+    }
+    let reg = regioes_do_fechamento(m);
+    let gravar = GRAVAR_FECHAMENTO.swap(true, Relaxed);
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || {
+        zerar_pilha();
+        o(m)
+    }, |chamar| {
+        fechamento_com(m, &mut |rotina, this, args| {
+            let mascara = match rotina {
+                0x68d0d0 => [0, u32::MAX, 0, 0, 0],
+                _ => [u32::MAX; 5],
+            };
+            chamar(rotina, this, args, mascara)
+        })
+    });
+    GRAVAR_FECHAMENTO.store(gravar, Relaxed);
+    PLACAR.registrar(igual && sequencia, || format!("fechamento {} chamadas: {}", k, detalhe_fita()));
+}
+
+/// { 0x6d1cc0 } (cdecl, match_eng.cpp): ver `fechamento_com`.
+unsafe extern "C" fn fechamento(m: usize) {
+    fechamento_com(m, &mut |r, t, a| despachar_fechamento(r, t, a))
+}
+
 // ---------- centesima trigesima quarta leva: o interesse do humano no dia de jogos (0x6b5040) ----------
 
 /// As regioes que a 0x6b5040 marca no dia `d`: +0x29 a +0x2e do dia, +0x14 de cada grupo, +0xc a
@@ -11769,6 +12148,14 @@ unsafe extern "thiscall" fn porta_68d0d0(l: usize, p: usize, n: u32) {
     let o: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(PORTA_68D0D0);
     if !gravando() {
         return o(l, p, n);
+    }
+    if gravando_fechamento() {
+        // no fechamento o bloco vem da pilha (endereco diferente na copia Rust): confere o conteudo
+        chamar_gravando_vetores(0x68d0d0, l, [0, n, 0, 0, 0], &[(p, n as usize)], &[], || {
+            o(l, p, n);
+            0
+        });
+        return;
     }
     chamar_gravando(0x68d0d0, l, [p as u32, n, 0, 0, 0], || {
         o(l, p, n);
@@ -21691,6 +22078,13 @@ unsafe extern "C" fn comparar_uniforme(clube: usize, outro: usize, qualquer: u32
 unsafe extern "C" fn comparar_evoluir_jogador(jm: usize, pessoa: usize, clube: usize, rep: usize, comp: usize, nota: f32, media_b: u32, forte: u32) {
     type F = unsafe extern "C" fn(usize, usize, usize, usize, usize, f32, u32, u32);
     let o = orig::<F>(267);
+    if gravando_fechamento() {
+        chamar_gravando(0x6d26b0, jm, [pessoa as u32, clube as u32, rep as u32, nota.to_bits(), media_b & 0xff | (forte & 0xff) << 8], || {
+            o(jm, pessoa, clube, rep, comp, nota, media_b, forte);
+            0
+        });
+        return;
+    }
     let st = *((pessoa + 0x61) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(st + 5, 0xa), (st + 0x45, 1)]);
@@ -22261,6 +22655,13 @@ unsafe extern "thiscall" fn comparar_marcacao_individual(this: usize) {
 
 unsafe extern "C" fn comparar_nova_reputacao(this: usize, lado: i8, valor: f32, alt: u8, bonus: u8) {
     let o = orig::<unsafe extern "C" fn(usize, i8, f32, u8, u8)>(165);
+    if gravando_fechamento() {
+        chamar_gravando(0x6d3de0, this, [lado as u8 as u32, valor.to_bits(), alt as u32 | (bonus as u32) << 8, 0, 0], || {
+            o(this, lado, valor, alt, bonus);
+            0
+        });
+        return;
+    }
     let reg = [(this, 0x200)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, lado, valor, alt, bonus), || nova_reputacao(this, lado, valor, alt, bonus));
     PLACAR.registrar(igual, || {
@@ -22271,6 +22672,13 @@ unsafe extern "C" fn comparar_nova_reputacao(this: usize, lado: i8, valor: f32, 
 
 unsafe extern "C" fn comparar_reputacao_do_jogador(reg: usize, meu: usize, outro: usize, partida: usize, valor: f32, alt: u8, bonus: u8) {
     let o = orig::<unsafe extern "C" fn(usize, usize, usize, usize, f32, u8, u8)>(166);
+    if gravando_fechamento() {
+        chamar_gravando(0x6d3610, reg, [meu as u32, outro as u32, partida as u32, valor.to_bits(), alt as u32 | (bonus as u32) << 8], || {
+            o(reg, meu, outro, partida, valor, alt, bonus);
+            0
+        });
+        return;
+    }
     let regioes = [(reg, 6)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(reg, meu, outro, partida, valor, alt, bonus), || reputacao_do_jogador(reg, meu, outro, partida, valor, alt, bonus));
     PLACAR.registrar(igual, || format!("reputacao_do_jogador valor {} alt {} bonus {}: {:?} x {:?}", valor, alt, bonus, mo.0[0].1, mr.0[0].1));
@@ -22736,6 +23144,9 @@ pub unsafe fn instalar(comparando: bool) {
         batedor_guardado as *const () as usize,
         guardar_instrucoes as *const () as usize,
         numero_da_competicao as *const () as usize,
+        favorito_de as *const () as usize,
+        rejeitado_por as *const () as usize,
+        fechamento as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -23045,6 +23456,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_batedor_guardado as *const () as usize,
         comparar_guardar_instrucoes as *const () as usize,
         comparar_numero_da_competicao as *const () as usize,
+        comparar_favorito_de as *const () as usize,
+        comparar_rejeitado_por as *const () as usize,
+        comparar_fechamento as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -23157,7 +23571,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
@@ -23175,7 +23589,13 @@ pub unsafe fn instalar(comparando: bool) {
             desvios::desviar(nomes[i], &PROLOGOS[i], desvios::PASSAGEM);
             continue;
         }
-        if let Some(t) = desvios::desviar(nomes[i], &PROLOGOS[i], if comparando { comp[i] } else { rust[i] }) {
+        let destino = if comparando { comp[i] } else { rust[i] };
+        // rotina do original determinizado: o desvio zera a pilha antes (ver ZERADAS)
+        let feito = match ZERADAS.iter().find(|z| z.0.endereco == PROLOGOS[i].endereco) {
+            Some(z) => desvios::desviar_zerando(nomes[i], &PROLOGOS[i], z.1, destino),
+            None => desvios::desviar(nomes[i], &PROLOGOS[i], destino),
+        };
+        if let Some(t) = feito {
             ORIGINAIS[i] = t;
         }
     }
@@ -23184,10 +23604,32 @@ pub unsafe fn instalar(comparando: bool) {
     }
 }
 
+/// Original determinizado (15/10/2026, aprovado pelo Lucas): rotinas originais que leem variavel
+/// local sem valor (a sobra da pilha muda com o modo) recebem, em todos os modos, um desvio que zera
+/// a pilha abaixo da entrada antes de rodar. A carreira de referencia passa a ser a da original com
+/// essas zeragens; as copias Rust usam zero. 0x6dbc50: o curto da 1a vaga extra na escalacao;
+/// 0x6d1cc0: a media (double) de um lado sem avaliados; 0x6beeb0: bytes altos dos dwords passados as
+/// escolhas da simulacao rapida.
+const ZERADAS: [(Prologo, u32); 3] = [
+    (Prologo { endereco: 0x6dbc50, bytes: &[0x6a, 0xff, 0x68, 0x52, 0xd4, 0x95, 0x00] }, 0x2000),
+    (Prologo { endereco: 0x6d1cc0, bytes: &[0x83, 0xec, 0x44, 0x53, 0x55] }, 0x2000),
+    (Prologo { endereco: 0x6beeb0, bytes: &[0x83, 0xec, 0x38, 0x53, 0x55] }, 0x2000),
+];
+
+pub unsafe fn instalar_zeradas() {
+    // as que tem copia Rust ja foram desviadas (zerando) junto com o motor
+    for (p, n) in ZERADAS.iter().filter(|z| !PROLOGOS.iter().any(|q| q.endereco == z.0.endereco)) {
+        desvios::desviar_zerando(&format!("zerada {:#x}", p.endereco), p, *n, desvios::PASSAGEM);
+    }
+}
+
 /// Simulacao no modo original: as mesmas rotinas desviadas para a propria original (pilha particular).
 pub unsafe fn instalar_passagem() {
     for (i, p) in PROLOGOS.iter().enumerate() {
-        desvios::desviar(&format!("motor {} (original isolada)", i), p, desvios::PASSAGEM);
+        match ZERADAS.iter().find(|z| z.0.endereco == p.endereco) {
+            Some(z) => desvios::desviar_zerando(&format!("motor {} (original isolada, zerada)", i), p, z.1, desvios::PASSAGEM),
+            None => desvios::desviar(&format!("motor {} (original isolada)", i), p, desvios::PASSAGEM),
+        };
     }
 }
 
