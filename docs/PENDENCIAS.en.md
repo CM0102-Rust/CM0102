@@ -29,5 +29,7 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `instrucoes devolvidas` | 0x896fe0 | — | same |
 | `instrucoes liberadas` | 0x896fe0 | — | same (without the flag) |
 | `numero da competicao` | 0x6b6570 (batch 138) | — | never runs in the automatic career; called by 0x6b55c0 (match day) and by the interface: a match day with a human manager |
+| `simulacao rapida abandono` | 0x6beeb0 (batch 140) | — | more than 4 players sent off on one side in the quick simulation (3-0 to the other): never happens in the automatic career up to 2002-06-01 (sendings-off 2048 times, second yellow 1024). Maybe unreachable in practice; would need a side with many cards |
+| `simulacao rapida contador reiniciado` | 0x6beeb0 | — | at the end of the quick simulation, the attack counter (+0xf5e2/+0xf618) below 10 restarts (20 and draw(6) + 12): attacks exceed 10 in every match of the career |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

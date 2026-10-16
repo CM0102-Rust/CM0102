@@ -148,6 +148,7 @@ EN = {
  'nota_do_arbitro': 'referee_grade', 'registrar_nota_do_arbitro': 'record_referee_grade',
  'batedor_guardado': 'stored_taker', 'guardar_instrucoes': 'store_instructions', 'numero_da_competicao': 'competition_number',
  'favorito_de': 'favourite_of', 'rejeitado_por': 'rejected_by', 'fechamento': 'match_wrap_up',
+ 'ler_linha_tatica': 'read_tactics_row', 'gravar_linha_tatica': 'write_tactics_row', 'simulacao_rapida': 'quick_simulation',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

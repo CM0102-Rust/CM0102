@@ -29,5 +29,7 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `instrucoes devolvidas` | 0x896fe0 | — | idem |
 | `instrucoes liberadas` | 0x896fe0 | — | idem (sem o flag) |
 | `numero da competicao` | 0x6b6570 (138ª) | — | nunca roda na carreira automática; chamada pela 0x6b55c0 (dia de jogos) e pela interface: dia de jogo com técnico humano |
+| `simulacao rapida abandono` | 0x6beeb0 (140ª) | — | mais de 4 expulsos de um lado na simulação rápida (3 x 0 para o outro): nunca acontece na carreira automática até 2002-06-01 (expulsões 2048 vezes, segundo amarelo 1024). Talvez inalcançável na prática; precisaria de um lado com muitos cartões |
+| `simulacao rapida contador reiniciado` | 0x6beeb0 | — | no fim da simulação rápida, o contador de ataques (+0xf5e2/+0xf618) abaixo de 10 reinicia (20 e sorteio(6) + 12): os ataques passam de 10 em toda partida da carreira |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").

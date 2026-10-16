@@ -127,7 +127,9 @@ pub unsafe fn lado_a_lado<R>(regioes: &[(usize, usize)], original: impl FnOnce()
     let r_orig = original();
     let depois_orig = Memoria::ler(regioes);
     antes.escrever();
-    let r_rust = rust();
+    // os sorteios da copia nao entram no rastro de uma comparacao pela fita que esteja gravando a
+    // original (ela chama esta rotina pelo desvio): o rastro da original so tem os dela
+    let r_rust = crate::aleatorio::pausar_rastro(rust);
     let depois_rust = Memoria::ler(regioes);
     depois_orig.escrever();
     let igual = depois_orig == depois_rust;
@@ -162,7 +164,7 @@ pub unsafe fn lado_a_lado_leve<R>(regioes: &[(usize, usize)], original: impl FnO
     let r_orig = original();
     copiar(regioes, &mut d_orig);
     escrever(regioes, &antes);
-    let r_rust = rust();
+    let r_rust = crate::aleatorio::pausar_rastro(rust);
     copiar(regioes, &mut d_rust);
     escrever(regioes, &d_orig);
     let igual = d_orig[..total] == d_rust[..total];
