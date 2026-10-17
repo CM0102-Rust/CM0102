@@ -118,6 +118,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x70dfa0 | `condicao_jogador` | player_condition |
 | 0x7109f0 | `conduzir` | dribble |
 | 0x6bba80 | `conferir_lance` | check_move |
+| 0x6b5260 | `confirmar_partida_em_rede` | confirm_network_match |
 | 0x5b09d0 | `conhecer_pessoa` | know_person |
 | 0x6f9f90 | `consegue_jogar` | can_play |
 | 0x6b7e50 | `construir_motor` | build_engine |
@@ -381,6 +382,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5fea50 | `tecnico_9b23` | manager_9b23 |
 | 0x6b59a0 | `tem_jogo` | has_match |
 | 0x7164b0 | `teste_de_condicao` | condition_test |
+| 0x6d8d10 | `texto_do_evento` | event_text |
 | 0x53b620 | `tipo_11_a_15` | type_11_to_15 |
 | 0x53b610 | `tipo_nao_11` | type_not_11 |
 | 0x6cdd50 | `tirar_de_campo` | take_off_pitch |

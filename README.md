@@ -18,7 +18,7 @@ Este repositório o mantém jogável no Windows 11 e prepara a reescrita do jogo
 | `wiki/` | Estado do projeto, decisões e histórico. | sim |
 | `CLAUDE.md` | Instruções para continuar o trabalho no Claude Code. | sim |
 
-**Estado:** 155 levas, 344 rotinas do motor de partidas em Rust, cada uma comparada com a original; quanto falta, módulo a módulo: [`docs/PLACAR.md`](docs/PLACAR.md).
+**Estado:** 156 levas, 346 rotinas do motor de partidas em Rust, cada uma comparada com a original; quanto falta, módulo a módulo: [`docs/PLACAR.md`](docs/PLACAR.md).
 
 Os arquivos do jogo não entram no git: o jogo é gratuito para baixar, mas o código e a marca continuam da SI e da Eidos.
 
