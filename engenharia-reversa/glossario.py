@@ -162,7 +162,8 @@ EN = {
  'iniciar_proxima_partida': 'start_next_match', 'andar_partida_do_dia': 'step_day_match', 'fechar_partida_do_dia': 'close_day_match',
  'jogar_o_dia': 'play_the_day',
  'montar_o_dia': 'set_up_the_day', 'lado_do_jogador': 'player_side', 'sons_terminados': 'sounds_finished',
- 'gravar_eventos': 'record_events', 'ler_eventos': 'read_events', 'passo_em_rede': 'network_step', 'atras_no_agregado': 'behind_on_aggregate', 'companheiro_livre': 'free_teammate', 'desfecho_do_chute': 'shot_outcome',
+ 'gravar_eventos': 'record_events', 'ler_eventos': 'read_events', 'passo_em_rede': 'network_step',
+ 'ler_eventos_cfg': 'read_events_cfg', 'erro_em': 'error_in', 'atras_no_agregado': 'behind_on_aggregate', 'companheiro_livre': 'free_teammate', 'desfecho_do_chute': 'shot_outcome',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

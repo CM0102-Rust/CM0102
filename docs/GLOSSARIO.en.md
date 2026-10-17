@@ -238,6 +238,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x700400 | `ler_8eb2` | read_8eb2 |
 | 0x700410 | `ler_8f7a` | read_8f7a |
 | 0x6d9c40 | `ler_eventos` | read_events |
+| 0x6d9e50 | `ler_eventos_cfg` | read_events_cfg |
 | 0x8983f0 | `ler_linha_tatica` | read_tactics_row |
 | 0x76d7b0 | `ler_marca_da_pessoa` | read_person_mark |
 | 0x6cfe10 | `lesao_na_dividida` | tackle_injury |
