@@ -85,6 +85,8 @@ extern "system" {
 #[link(name = "kernel32")]
 extern "system" {
     pub fn GetModuleHandleW(nome: *const u16) -> *mut c_void;
+    pub fn LoadLibraryA(nome: *const u8) -> *mut c_void;
+    pub fn GetProcAddress(modulo: *mut c_void, nome: *const u8) -> *mut c_void;
     pub fn VirtualProtect(end: *mut c_void, tam: usize, nova: u32, antiga: *mut u32) -> i32;
     pub fn VirtualAlloc(end: *mut c_void, tam: usize, tipo: u32, protecao: u32) -> *mut c_void;
     pub fn FlushInstructionCache(processo: *mut c_void, end: *const c_void, tam: usize) -> i32;

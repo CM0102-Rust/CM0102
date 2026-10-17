@@ -22,6 +22,7 @@ mod comparacao;
 mod data;
 mod desvios;
 mod espiao;
+mod extensao;
 mod ganchos;
 mod jogo;
 mod motor;

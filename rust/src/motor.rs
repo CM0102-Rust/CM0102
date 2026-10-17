@@ -12889,6 +12889,7 @@ unsafe extern "thiscall" fn laco_do_motor(m: usize, n_in: u32) -> u32 {
         }
     }
     'instante: while n != 0 {
+        crate::extensao::instante(m);
         if byte(m, 0x8eb4) == 1 {
             em1(0x6d1210, m, 0);
             n = n.wrapping_sub(1);
