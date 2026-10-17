@@ -35,7 +35,8 @@ unsafe extern "thiscall" fn jogar_o_dia(dia: usize) -> u32 {
     let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
     let avisar_humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) = core::mem::transmute(0x4542f0usize);
     let nivel: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x5fcff0usize);
-    let em_rede: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fe290usize);
+    // 0x5fe290 (ret 8): a partida e o humano (a original empilha o humano antes do teste)
+    let em_rede: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x5fe290usize);
     let t9a01: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd210usize);
     let f5fd2f0: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x5fd2f0usize);
     let f727f00: unsafe extern "C" fn(usize) = core::mem::transmute(0x727f00usize);
@@ -147,7 +148,7 @@ unsafe extern "thiscall" fn jogar_o_dia(dia: usize) -> u32 {
                                     s13 = maior(s13, h);
                                 }
                                 None => {
-                                    if em_rede(gerente(), p + 4) == 0 {
+                                    if em_rede(gerente(), p + 4, h) == 0 {
                                         continue;
                                     }
                                     if t9a01(gerente(), h) != 0 {
