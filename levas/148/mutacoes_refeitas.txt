@@ -1,0 +1,5 @@
+sem mutacao (134s): ['parou em 2002-151, 2368855859 sorteios, impressao 459815f5e0dca92b, partidas 19248/9ad4f994099c32e2, banco c8c977301cbf96ba']
+mutacao i_ceu               127s IGUAL A BASE (escapou): parou em 2002-151, 2368855859 sorteios, impressao 459815f5e0dca92b, partidas 19248/9ad4f994099c32e2, banco c8c977
+mutacao i_pontos            129s ACUSADA: parou em 2002-151, 2364890544 sorteios, impressao c0bb168ab7ab42e2, partidas 19363/de2bfa73d5134866, banco db8ca7cbcceb5296
+mutacao i_contrato          130s ACUSADA: parou em 2002-151, 2375543855 sorteios, impressao 444a4b3770c226a1, partidas 19316/d57d643d198f225d, banco ab0850113801abac
+mutacao i_insatisfeito      127s IGUAL A BASE (escapou): parou em 2002-151, 2368855859 sorteios, impressao 459815f5e0dca92b, partidas 19248/9ad4f994099c32e2, banco c8c977

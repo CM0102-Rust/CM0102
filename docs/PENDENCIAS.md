@@ -40,5 +40,7 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `laco ficha sem motor` | 0x6b98c0 (145ª) | — | ficha em campo (+0x19 >= 0) sem motor (+0x19e = 0) é tirada (-5) no início do laço; na carreira automática não acontece |
 | `laco cobrador da bola parada` | 0x6b98c0 | — | bola parada sem dono (ou dono expulso) escolhe o cobrador (0x6ceb90) e o vira para o gol; o reinício já deixa um dono na carreira automática |
 | `chute bloqueado` | 0x702050 (147ª) | — | a interceptação no caminho do gol devolve 2 (alguém desvia): 0x1fd3/0x1fd4, o chute muda em sorteio(1000) - sorteio(2000) e, fora do alvo, sai para escanteio; na carreira automática até 2002-06-01 não ocorreu |
+| `prejogo ceu com chuva` | 0x6b7f20 (148ª) | — | com a marca de chuva (+0x4d & 0x2000) e o céu fora de 0/2/4, o limite +0xf638 do laço vem de sorteio(25) + 15 ou sorteio(30) + 50; na carreira automática até 2002-06-01 o limite nunca pesou (a mutação que o fixa em 1 não muda nada) |
+| `prejogo codigo da insatisfacao` | 0x6b7f20 | — | o evento de pré-jogo 0x13 (jogador insatisfeito com o contrato) entra na lista com o código; na carreira automática quem o lê não muda o resultado (a mutação para 0x1e não muda nada) |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
