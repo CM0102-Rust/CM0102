@@ -223,6 +223,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cc070 | `jogadores_no_trajeto` | players_on_path |
 | 0x6b4360 | `jogar_o_dia` | play_the_day |
 | 0x6b98c0 | `laco_do_motor` | engine_loop |
+| 0x714d30 | `lado_do_jogador` | player_side |
 | 0x6bba50 | `lado_do_lance` | side_of_move |
 | 0x6d42a0 | `lado_sob_controle` | side_under_control |
 | 0x6fa490 | `lancar` | long_ball |
@@ -264,6 +265,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6e1940 | `melhor_da_lista` | best_in_list |
 | 0x6c3950 | `menor_distancia` | smallest_distance |
 | 0x6d4250 | `momento_marcado` | marked_moment |
+| 0x6b3c10 | `montar_o_dia` | set_up_the_day |
 | 0x6cfd40 | `motor_cartao_pela_gravidade` | engine_card_by_severity |
 | 0x6cfca0 | `motor_decidir_falta` | engine_decide_foul |
 | 0x6cfd70 | `motor_procurar_impedimento` | engine_look_for_offside |
@@ -359,6 +361,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f0970 | `soltar_bola` | release_ball |
 | 0x7160d0 | `somar_2b` | add_2b |
 | 0x6cf710 | `somar_disposicao` | add_disposition |
+| 0x6d8c70 | `sons_terminados` | sounds_finished |
 | 0x6f44a0 | `sortear_momento` | draw_moment |
 | 0x6e1090 | `substituir` | substitute |
 | 0x6c38c0 | `tabela_a` | table_a |

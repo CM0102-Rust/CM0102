@@ -48,5 +48,8 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `dia rodada do humano` | 0x6b5f00 (151ª) | — | a rodada (+0x2d de 0x4a4850) e a troca dos lados no 0x6b79a0 só existem com técnico humano; o contador "fechar rodada do humano" fica em zero na carreira automática |
 | `dia historia` | 0x6b5f00 (151ª) | — | o método 1 de [0xb74434] (a história) roda (contador "fechar historia" acima de 2048), mas a história não entra nas impressões da carreira (sorteios, partidas, banco): tirar a chamada não muda nada nelas |
 | `dia linhas do humano` | 0x6b4360 (152ª) | — | no fechamento do dia, as táticas guardadas dos humanos (0x5fbe20, 0x5fbd00, 0x5b5960) só são refeitas com técnico humano; o contador "linhas do humano refeitas" fica em zero na carreira automática (a mutação que tira a chamada escapa; o contador de terminadas, +0x25, é a lacuna já anotada na 151ª) |
+| `dia primeira volta` | 0x6b3c10 (153ª) | — | a 1ª volta do dia (+0x33 = 1) só começa partidas cuja competição (+0x63 da partida) tem +0x10, que a montagem cria zerado; na carreira automática a 1ª volta não escolhe nada e tudo cai na 2ª, então começar na 2ª ou apontar outra competição não muda a carreira |
+| `dia partidas ja marcadas` | 0x6b3c10 (153ª) | — | a montagem pula as partidas da lista já marcadas -2; na carreira automática nenhuma chega marcada assim (a mutação que as deixa entrar escapa, mesmo a forte) |
+| `sons dos eventos` | 0x6d8c70 (153ª) | — | a espera dos sons dos eventos só roda com a tela da partida (0x6b55c0, jogo em rede): o contador "sons dos eventos" fica em zero na carreira automática |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").

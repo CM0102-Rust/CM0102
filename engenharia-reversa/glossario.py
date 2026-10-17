@@ -160,7 +160,8 @@ EN = {
  'escalar_lado': 'select_side', 'encerrar_dia': 'end_day', 'escolher_partida_do_dia': 'pick_day_match',
  'escalar_automatico': 'select_automatically',
  'iniciar_proxima_partida': 'start_next_match', 'andar_partida_do_dia': 'step_day_match', 'fechar_partida_do_dia': 'close_day_match',
- 'jogar_o_dia': 'play_the_day', 'atras_no_agregado': 'behind_on_aggregate', 'companheiro_livre': 'free_teammate', 'desfecho_do_chute': 'shot_outcome',
+ 'jogar_o_dia': 'play_the_day',
+ 'montar_o_dia': 'set_up_the_day', 'lado_do_jogador': 'player_side', 'sons_terminados': 'sounds_finished', 'atras_no_agregado': 'behind_on_aggregate', 'companheiro_livre': 'free_teammate', 'desfecho_do_chute': 'shot_outcome',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

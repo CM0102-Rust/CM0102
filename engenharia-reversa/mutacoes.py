@@ -138,7 +138,11 @@ def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
     import psutil
-    abertos = [q.pid for q in psutil.process_iter(['name']) if (q.info['name'] or '').lower().startswith('cm0102')]
+    # so os jogos deste projeto: outros projetos da maquina (ex.: D:\Sistemas\CMRTE) tem exe de teste com o
+    # mesmo nome; a carga deles fica a cargo da trava do laboratorio
+    raiz = os.path.normcase(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    abertos = [q.pid for q in psutil.process_iter(['name', 'exe'])
+               if (q.info['name'] or '').lower().startswith('cm0102') and os.path.normcase(q.info['exe'] or '').startswith(raiz)]
     if abertos:
         sys.exit('ja ha um jogo aberto (pid %s): um teste por vez (outra rodada ainda rodando?)' % abertos)
     lista = {}
