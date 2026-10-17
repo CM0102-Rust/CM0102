@@ -7,6 +7,13 @@ import csv, re, glob, sys, os
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # raiz do projeto
 TXT0, TXT1 = 0x401000, 0x401000 + 0x55c000
 
+# Fronteiras falsas: bytes E8 no meio de instrucoes que a varredura linear le como `call` (e o mapa de
+# funcoes tambem as lista). Conferidas a mao: o alvo cai no meio de uma instrucao de outra rotina.
+FALSAS = {
+    0x71483e: 'meio da 0x7109f0 (conduzir): "sal byte ptr [ebp + 0x61]" nao existe ali',
+    0x714864: 'meio da 0x7109f0 (conduzir), logo depois da anterior',
+}
+
 
 def chamadas_em(d, a, n, alvos):
     """Alvos de `call rel32` (E8) dentro de [a, a+n) que sao inicios conhecidos."""
@@ -42,6 +49,7 @@ def calcular():
         port |= set(int(x, 16) for x in re.findall(r'endereco:\s*0x([0-9a-f]+)', t))
     rows = [r for r in csv.reader(open(os.path.join(R, 'docs', 'mapa_funcoes.csv'), encoding='utf-8')) if r and r[0].startswith('0x')]
     mapa = {int(r[0], 16): (int(r[1]), r[2].split('/')[-1] if r[2] else '(sem)') for r in rows}
+    alvos -= set(FALSAS)
     inicios = sorted(a for a in mapa if a in alvos or a in port)
     fim_txt = max(a + n for a, (n, _) in mapa.items())
     ext = {a: (inicios[k + 1] if k + 1 < len(inicios) else fim_txt) - a for k, a in enumerate(inicios)}
