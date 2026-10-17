@@ -1,0 +1,21 @@
+"""Documentacao da 151a leva. Uso: python docs.py"""
+import os, sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'engenharia-reversa'))
+from gen_docs import fazer
+
+M = ("`mutacoes/leva151.py` (14 e 2 refeitas, pela carreira até 2002-06-01): 6 acusadas e 8 escaparam; com os contadores de ramo na base: 2 eram fracas e, refeitas (`mutacoes/leva151b.py`: o intervalo como fim, a cópia da partida), as 2 acusadas; 1 é equivalente (o teste de partida decidida, -2, é redundante: a escolhida precisa de -1); 5 viram 4 lacunas em `PENDENCIAS.md` (o passo a passo e a rodada do humano não rodam na carreira automática; o contador de terminadas só serve à barra; a história não entra nas impressões). "
+     "Sem comparação própria: o dia de jogos cria e libera motores e resumos e chama dezenas de rotinas ainda originais; validadas pela carreira (Rust × original). "
+     "Jogo real comparando até 2002-01-01: 0 divergências. Carreiras Rust ×2 e original até 2002-06-01: 2.368.855.859 sorteios, impressão 459815f5e0dca92b, partidas 9ad4f994099c32e2, banco c8c977301cbf96ba")
+ME = ("`mutacoes/leva151.py` (14 and 2 redone, by the career to 2002-06-01): 6 caught and 8 escaped; with the branch counters in the base: 2 were weak and, redone (`mutacoes/leva151b.py`: half time as the end, the match copy), both caught; 1 is equivalent (the decided-match test, -2, is redundant: the chosen one needs -1); 5 become 4 gaps in `PENDENCIAS.en.md` (the step by step and the human's round do not run in the automatic career; the finished counter only serves the bar; the history is not part of the fingerprints). "
+      "No comparison of their own: the match day creates and frees engines and summaries and calls dozens of routines still in the original; validated by the career (Rust × original). "
+      "Real game comparing to 2002-01-01: 0 divergences. Rust ×2 and original careers to 2002-06-01: 2,368,855,859 draws, fingerprint 459815f5e0dca92b, matches 9ad4f994099c32e2, database c8c977301cbf96ba")
+fazer(151, 333, 336, 'o andamento do dia de jogos', 'the progress of the match day',
+      ["| `iniciar_proxima_partida()` | 0x6b5a70 | thiscall | match_day.cpp: começa a próxima partida do dia depois da atual (+0x2f): pula as decididas, as de clube humano e as já começadas; cria o motor (0x6b7e50) e o prepara (0x6b7f20); na 1ª volta sem nenhuma passa à 2ª. Devolve 1 se começou uma |",
+       "| `andar_partida_do_dia()` | 0x6b5ce0 | thiscall, ret 4 | match_day.cpp: um passo do motor da partida atual (1 de cada 3 ou 6 chamadas, pelos modos de [0xae3138]) ou até o fim; ao terminar, cria o resumo, registra (0x7293f0), libera o motor e tira da fila. Devolve 1 se terminou |",
+       "| `fechar_partida_do_dia()` | 0x6b5f00 | thiscall, ret 4 | match_day.cpp: copia a partida do dia para a partida, registra o resultado na competição (método 1, ou 0x924050 e 0x5ab510/0x5aa680 no jogo de fora) e roda o pós-jogo: jogadores, eventos, contratos, suspensões, estados, a história e o clube de cada lado (0x6b79a0) |"],
+      ["| `iniciar_proxima_partida()` | 0x6b5a70 | thiscall | match_day.cpp: starts the day's next match after the current one (+0x2f): skips the decided ones, those of a human club and those already started; creates the engine (0x6b7e50) and prepares it (0x6b7f20); in the 1st round with none, moves to the 2nd. Returns 1 if it started one |",
+       "| `andar_partida_do_dia()` | 0x6b5ce0 | thiscall, ret 4 | match_day.cpp: one engine step of the current match (1 in 3 or 6 calls, by the modes in [0xae3138]) or to the end; when it finishes, creates the summary, records it (0x7293f0), frees the engine and takes it off the queue. Returns 1 if it finished |",
+       "| `fechar_partida_do_dia()` | 0x6b5f00 | thiscall, ret 4 | match_day.cpp: copies the day's match into the match, records the result in the competition (method 1, or 0x924050 and 0x5ab510/0x5aa680 for the away game) and runs the post-match: players, events, contracts, suspensions, states, the history and each side's club (0x6b79a0) |"],
+      M, ME,
+      [('iniciar_proxima_partida', 'start_next_match'), ('andar_partida_do_dia', 'step_day_match'), ('fechar_partida_do_dia', 'close_day_match')],
+      "'escalar_automatico': 'select_automatically',")

@@ -43,5 +43,9 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `prejogo ceu com chuva` | 0x6b7f20 (148ª) | — | com a marca de chuva (+0x4d & 0x2000) e o céu fora de 0/2/4, o limite +0xf638 do laço vem de sorteio(25) + 15 ou sorteio(30) + 50; na carreira automática até 2002-06-01 o limite nunca pesou (a mutação que o fixa em 1 não muda nada) |
 | `prejogo codigo da insatisfacao` | 0x6b7f20 | — | o evento de pré-jogo 0x13 (jogador insatisfeito com o contrato) entra na lista com o código; na carreira automática quem o lê não muda o resultado (a mutação para 0x1e não muda nada) |
 | `escalacao ficha do tecnico` | 0x6db500 (149ª) | — | a tática copia três campos da ficha do técnico (+0xa, +8, +0xc) para +0, +2, +4; na carreira automática o segundo (+2) não pesa (a mutação que o troca não muda nada) |
+| `dia passo a passo` | 0x6b5ce0 (151ª) | — | um passo do motor por chamada (sem `ate_o_fim`) não roda na carreira automática: o contador de ramo "andar um passo" fica em zero; lá o laço do dia joga cada partida até o fim |
+| `dia contador de terminadas` | 0x6b5ce0 (151ª) | — | o +0x25 do dia (partidas terminadas) só alimenta a porcentagem da barra; contar 2 em vez de 1 não muda a carreira |
+| `dia rodada do humano` | 0x6b5f00 (151ª) | — | a rodada (+0x2d de 0x4a4850) e a troca dos lados no 0x6b79a0 só existem com técnico humano; o contador "fechar rodada do humano" fica em zero na carreira automática |
+| `dia historia` | 0x6b5f00 (151ª) | — | o método 1 de [0xb74434] (a história) roda (contador "fechar historia" acima de 2048), mas a história não entra nas impressões da carreira (sorteios, partidas, banco): tirar a chamada não muda nada nelas |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").

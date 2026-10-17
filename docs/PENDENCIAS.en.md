@@ -43,5 +43,9 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `prejogo ceu com chuva` | 0x6b7f20 (batch 148) | — | with the rain flag (+0x4d & 0x2000) and the sky outside 0/2/4, the loop's limit +0xf638 comes from draw(25) + 15 or draw(30) + 50; in the automatic career up to 2002-06-01 the limit never mattered (the mutation that fixes it at 1 changes nothing) |
 | `prejogo codigo da insatisfacao` | 0x6b7f20 | — | the pre-match event 0x13 (player unhappy with his contract) goes into the list with the code; in the automatic career whoever reads it does not change the result (the mutation to 0x1e changes nothing) |
 | `escalacao ficha do tecnico` | 0x6db500 (batch 149) | — | the tactics copy three fields of the manager's record (+0xa, +8, +0xc) to +0, +2, +4; in the automatic career the second (+2) does not matter (the mutation that swaps it changes nothing) |
+| `dia passo a passo` | 0x6b5ce0 (batch 151) | — | one engine step per call (without `ate_o_fim`) does not run in the automatic career: the branch counter "andar um passo" stays at zero; there the day loop plays each match to the end |
+| `dia contador de terminadas` | 0x6b5ce0 (batch 151) | — | the day's +0x25 (finished matches) only feeds the bar's percentage; counting 2 instead of 1 does not change the career |
+| `dia rodada do humano` | 0x6b5f00 (batch 151) | — | the round (+0x2d from 0x4a4850) and the swap of sides in 0x6b79a0 only exist with a human manager; the counter "fechar rodada do humano" stays at zero in the automatic career |
+| `dia historia` | 0x6b5f00 (batch 151) | — | [0xb74434]'s method 1 (the history) runs (counter "fechar historia" above 2048), but the history is not part of the career fingerprints (draws, matches, database): removing the call changes nothing in them |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

@@ -58,6 +58,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cb9b0 | `alcanca` | reaches |
 | 0x713d90 | `alcanca_o_ponto` | reaches_the_point |
 | 0x6cb700 | `alem_da_linha` | beyond_the_line |
+| 0x6b5ce0 | `andar_partida_do_dia` | step_day_match |
 | 0x6bb950 | `aplicar_ao_lado` | apply_to_side |
 | 0x6bb8d0 | `aplicar_ao_time` | apply_to_team |
 | 0x6bac40 | `aplicar_falta` | apply_foul |
@@ -186,6 +187,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cfc60 | `falta_no_motor` | foul_in_engine |
 | 0x547790 | `favorito_de` | favourite_of |
 | 0x6d1cc0 | `fechamento` | match_wrap_up |
+| 0x6b5f00 | `fechar_partida_do_dia` | close_day_match |
 | 0x6cb910 | `fora_do_meio` | off_centre |
 | 0x6bbb60 | `forca_do_lado` | side_strength |
 | 0x6c0c60 | `forca_do_time` | team_strength |
@@ -207,6 +209,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cd660 | `guardar_extremos` | store_extremes |
 | 0x896fe0 | `guardar_instrucoes` | store_instructions |
 | 0x6dbb10 | `guardar_tatica` | store_tactic |
+| 0x6b5a70 | `iniciar_proxima_partida` | start_next_match |
 | 0x6e9470 | `iniciar_rigor` | init_strictness |
 | 0x6ddab0 | `instrucoes` | instructions |
 | 0x6cc540 | `interceptar` | intercept |
