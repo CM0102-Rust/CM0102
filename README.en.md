@@ -14,8 +14,11 @@ This repository keeps it playable on Windows 11 and prepares the rewrite of the 
 | `referencias/` | Third-party projects consulted (e.g. nckstwrt's `CM0102Patcher`). | no |
 | `engenharia-reversa/` | Analysis tools (Python) and the generator of the portable exes. | yes |
 | `docs/` | Technical documentation; start with [`DESCOMPILACAO.md`](docs/DESCOMPILACAO.en.md). To continue the rewrite: [`COMO_CONTINUAR.md`](docs/COMO_CONTINUAR.en.md). English meaning of the code's names: [`GLOSSARIO.en.md`](docs/GLOSSARIO.en.md). Record fields: [`CAMPOS.en.md`](docs/CAMPOS.en.md). | yes |
+| `levas/` | One folder per batch of the rewrite: the code, the integration and the test results. | yes |
 | `wiki/` | Project state, decisions and history. | yes |
 | `CLAUDE.md` | Instructions for continuing the work in Claude Code. | yes |
+
+**State:** 150 batches, 333 routines of the match engine in Rust, each one compared with the original; how much is left, module by module: [`docs/PLACAR.en.md`](docs/PLACAR.en.md).
 
 The game files do not go into git: the game is free to download, but the code and the brand still belong to SI and Eidos.
 

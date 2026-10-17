@@ -5,6 +5,7 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 - **Responda sempre em português (Brasil).**
 - **Wiki primeiro:** leia `wiki/index.md` antes de trabalhar; ao fim da sessão, atualize `wiki/index.md` (estado) e registre em `wiki/log.md`.
 - **Documentação bilíngue:** todo `.md` do projeto tem a versão em inglês ao lado (`.en.md`). Ao criar ou mudar um, atualize o par no mesmo commit. O português é o original; o código e os comentários no código seguem em português.
+- **Documentação em dia a cada commit:** o estado (README, wiki, PROJETO, PLACAR, ROTINAS) e as instruções (este arquivo, a estrutura, as ferramentas) acompanham cada leva; nada fica falando de uma leva antiga.
 - Leitura obrigatória: `docs/DESCOMPILACAO.md` (tudo o que se sabe do binário) e `docs/COMO_CONTINUAR.md` (o ciclo de uma leva do motor).
 
 ## Decisões em vigor (não mudar sem o Lucas)
@@ -27,9 +28,11 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 | `jogo/` | instalação jogável (não versionada) |
 | `original/` | downloads e exe 3.9.68 intocados (não versionado) |
 | `referencias/` | projetos de terceiros (não versionado) |
-| `engenharia-reversa/` | `pe_info.py`, `textos.py`, `refs.py`, `desmonta.py`, `descompilar.py` (pseudocódigo do Ghidra, portátil em `referencias/ferramentas`), `desvios.py`, `escuta_tela.py`, `patch_portatil.py`, `resolucao.py`, `simular.py` (banco de provas), `cobertura.py`, `laboratorio.py`, `prologos.py`, `candidatos.py` (próximas rotinas), `mutacoes.py` + `mutacoes/` (autoteste com mutações) |
-| `rust/` | núcleo em Rust = `ddraw.dll` (i686, CRT estática, sem crates externos): `video.rs` (DirectDraw próprio), `apresentacao.rs` (quadro → janela, mouse), `ganchos.rs` (IAT), `desvios.rs` (desvios no exe, pilha particular), `simulacao.rs` + `alocador.rs` (simulação reproduzível), `aleatorio.rs`, `data.rs`, `motor.rs` (rotinas portadas), `espiao.rs` (diagnóstico, `CM_ESPIAO=1`) |
-| `docs/` | `DESCOMPILACAO.md`, `COMO_CONTINUAR.md`, `ROTINAS.md`, `PROJETO.md`, `VERSAO_SEM_TELA.md`, `mapa_funcoes.csv`, `cobertura_motor.txt` |
+| `engenharia-reversa/` | `pe_info.py`, `textos.py`, `refs.py`, `desmonta.py`, `descompilar.py` (pseudocódigo do Ghidra, portátil em `referencias/ferramentas`), `desvios.py`, `escuta_tela.py`, `patch_portatil.py`, `resolucao.py`, `simular.py` (banco de provas), `cobertura.py`, `laboratorio.py`, `prologos.py`, `candidatos.py` e `fronteiras.py` (próximas rotinas, placar), `pacote.py` (o pacote de leitura de uma rotina em `pacotes/`), `mutacoes.py` + `mutacoes/` (autoteste com mutações), `cadeia.sh` (a cadeia de testes de uma leva), `gen_docs.py`, `glossario.py` e `pendencias.py` (documentação gerada) |
+| `rust/` | núcleo em Rust = `ddraw.dll` (i686, CRT estática, sem crates externos): `video.rs` (DirectDraw próprio), `apresentacao.rs` (quadro → janela, mouse), `ganchos.rs` (IAT), `desvios.rs` (desvios no exe, pilha particular), `simulacao.rs` + `alocador.rs` (simulação reproduzível), `aleatorio.rs`, `data.rs`, `motor.rs` (rotinas portadas, tabela `PROLOGOS`), `comparacao.rs` (comparação original × Rust, fita), `jogo.rs`, `reducao.rs`, `registro.rs`, `win.rs`, `espiao.rs` (diagnóstico, `CM_ESPIAO=1`) |
+| `levas/` | uma pasta por leva desde a 143ª: `codigo.rs`, `integrar.py`, `docs.py`, `cadeia.txt` (resultado dos testes), `LEIA.md` |
+| `pacotes/`, `jogo_testes/` | pacotes de leitura das rotinas (desmontagem, pseudocódigo) e a cópia do jogo para os testes automáticos (não versionados) |
+| `docs/` | `DESCOMPILACAO.md`, `COMO_CONTINUAR.md`, `ROTINAS.md`, `PROJETO.md`, `PLACAR.md` (quanto já está em Rust), `PENDENCIAS.md` (lacunas das mutações), `GLOSSARIO.md`, `CAMPOS.md`, `FORMATOS.md`, `MAPA_MODULOS.md`, `ENDERECOS_COMUNIDADE.md`, `VERSAO_SEM_TELA.md`, `mapa_funcoes.csv`, `cobertura_motor.txt` |
 | `wiki/` | `index.md` (estado e próximos passos), `log.md` |
 
 ## Ambiente

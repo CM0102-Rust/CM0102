@@ -157,7 +157,8 @@ EN = {
  'executar_passe': 'execute_pass',
  'chutar': 'shoot',
  'construir_motor': 'build_engine', 'preparar_partida': 'prepare_match', 'destruir_motor': 'destroy_engine',
- 'escalar_lado': 'select_side', 'encerrar_dia': 'end_day', 'escolher_partida_do_dia': 'pick_day_match', 'atras_no_agregado': 'behind_on_aggregate', 'companheiro_livre': 'free_teammate', 'desfecho_do_chute': 'shot_outcome',
+ 'escalar_lado': 'select_side', 'encerrar_dia': 'end_day', 'escolher_partida_do_dia': 'pick_day_match',
+ 'escalar_automatico': 'select_automatically', 'atras_no_agregado': 'behind_on_aggregate', 'companheiro_livre': 'free_teammate', 'desfecho_do_chute': 'shot_outcome',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

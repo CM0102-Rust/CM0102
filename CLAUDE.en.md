@@ -7,6 +7,7 @@ Lucas's personal project: Championship Manager 01/02 (3.9.68) reverse-engineered
 - **Always answer in Portuguese (Brazil).**
 - **Wiki first:** read `wiki/index.md` before working; at the end of the session, update `wiki/index.md` (state) and record it in `wiki/log.md`.
 - **Bilingual documentation:** every project `.md` has an English version next to it (`.en.md`). When creating or changing one, update its pair in the same commit. Portuguese is the original; the code and the comments in the code stay in Portuguese.
+- **Documentation up to date on every commit:** the state (README, wiki, PROJETO, PLACAR, ROTINAS) and the instructions (this file, the structure, the tools) follow each batch; nothing keeps talking about an old batch.
 - Mandatory reading: `docs/DESCOMPILACAO.md` (everything known about the binary) and `docs/COMO_CONTINUAR.md` (the cycle of a match engine batch).
 
 ## Decisions in force (do not change without Lucas)
@@ -29,9 +30,11 @@ Lucas's personal project: Championship Manager 01/02 (3.9.68) reverse-engineered
 | `jogo/` | playable installation (not versioned) |
 | `original/` | untouched downloads and 3.9.68 exes (not versioned) |
 | `referencias/` | third-party projects (not versioned) |
-| `engenharia-reversa/` | `pe_info.py`, `textos.py`, `refs.py`, `desmonta.py`, `descompilar.py` (Ghidra pseudocode, portable in `referencias/ferramentas`), `desvios.py`, `escuta_tela.py`, `patch_portatil.py`, `resolucao.py`, `simular.py` (test bench), `cobertura.py`, `laboratorio.py`, `prologos.py`, `candidatos.py` (next routines), `mutacoes.py` + `mutacoes/` (self-test with mutations) |
-| `rust/` | Rust core = `ddraw.dll` (i686, static CRT, no external crates): `video.rs` (our own DirectDraw), `apresentacao.rs` (frame → window, mouse), `ganchos.rs` (IAT), `desvios.rs` (hooks in the exe, private stack), `simulacao.rs` + `alocador.rs` (reproducible simulation), `aleatorio.rs`, `data.rs`, `motor.rs` (ported routines), `espiao.rs` (diagnostics, `CM_ESPIAO=1`) |
-| `docs/` | `DESCOMPILACAO.md`, `COMO_CONTINUAR.md`, `ROTINAS.md`, `PROJETO.md`, `VERSAO_SEM_TELA.md`, `mapa_funcoes.csv`, `cobertura_motor.txt` |
+| `engenharia-reversa/` | `pe_info.py`, `textos.py`, `refs.py`, `desmonta.py`, `descompilar.py` (Ghidra pseudocode, portable in `referencias/ferramentas`), `desvios.py`, `escuta_tela.py`, `patch_portatil.py`, `resolucao.py`, `simular.py` (test bench), `cobertura.py`, `laboratorio.py`, `prologos.py`, `candidatos.py` and `fronteiras.py` (next routines, scoreboard), `pacote.py` (a routine's reading package in `pacotes/`), `mutacoes.py` + `mutacoes/` (self-test with mutations), `cadeia.sh` (a batch's test chain), `gen_docs.py`, `glossario.py` and `pendencias.py` (generated documentation) |
+| `rust/` | Rust core = `ddraw.dll` (i686, static CRT, no external crates): `video.rs` (our own DirectDraw), `apresentacao.rs` (frame → window, mouse), `ganchos.rs` (IAT), `desvios.rs` (hooks in the exe, private stack), `simulacao.rs` + `alocador.rs` (reproducible simulation), `aleatorio.rs`, `data.rs`, `motor.rs` (ported routines, `PROLOGOS` table), `comparacao.rs` (original × Rust comparison, tape), `jogo.rs`, `reducao.rs`, `registro.rs`, `win.rs`, `espiao.rs` (diagnostics, `CM_ESPIAO=1`) |
+| `levas/` | one folder per batch since the 143rd: `codigo.rs`, `integrar.py`, `docs.py`, `cadeia.txt` (test results), `LEIA.md` |
+| `pacotes/`, `jogo_testes/` | routines' reading packages (disassembly, pseudocode) and the copy of the game for the automatic tests (not versioned) |
+| `docs/` | `DESCOMPILACAO.md`, `COMO_CONTINUAR.md`, `ROTINAS.md`, `PROJETO.md`, `PLACAR.md` (how much is in Rust), `PENDENCIAS.md` (gaps in the mutations), `GLOSSARIO.md`, `CAMPOS.md`, `FORMATOS.md`, `MAPA_MODULOS.md`, `ENDERECOS_COMUNIDADE.md`, `VERSAO_SEM_TELA.md`, `mapa_funcoes.csv`, `cobertura_motor.txt` |
 | `wiki/` | `index.md` (state and next steps), `log.md` |
 
 ## Environment
