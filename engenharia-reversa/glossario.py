@@ -154,7 +154,8 @@ EN = {
  'mover_jogador': 'player_move',
  'conduzir': 'dribble',
  'laco_do_motor': 'engine_loop',
- 'executar_passe': 'execute_pass', 'desfecho_do_chute': 'shot_outcome',
+ 'executar_passe': 'execute_pass',
+ 'chutar': 'shoot', 'atras_no_agregado': 'behind_on_aggregate', 'companheiro_livre': 'free_teammate', 'desfecho_do_chute': 'shot_outcome',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

@@ -39,5 +39,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `conducao goleiro sem marca` | 0x7109f0 (144ª) | — | quem guarda a posição 1 do adversário sem a marca de goleiro (tabela &1 = 0) dá +5000 à nota do chute; na carreira automática o guarda da posição 1 é sempre goleiro |
 | `laco ficha sem motor` | 0x6b98c0 (145ª) | — | ficha em campo (+0x19 >= 0) sem motor (+0x19e = 0) é tirada (-5) no início do laço; na carreira automática não acontece |
 | `laco cobrador da bola parada` | 0x6b98c0 | — | bola parada sem dono (ou dono expulso) escolhe o cobrador (0x6ceb90) e o vira para o gol; o reinício já deixa um dono na carreira automática |
+| `chute bloqueado` | 0x702050 (147ª) | — | a interceptação no caminho do gol devolve 2 (alguém desvia): 0x1fd3/0x1fd4, o chute muda em sorteio(1000) - sorteio(2000) e, fora do alvo, sai para escanteio; na carreira automática até 2002-06-01 não ocorreu |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").

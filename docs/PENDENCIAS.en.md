@@ -39,5 +39,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `conducao goleiro sem marca` | 0x7109f0 (batch 144) | — | the opponent's position-1 guard without the goalkeeper mark (table &1 = 0) gives +5000 to the shot score; in the automatic career the position-1 guard is always a goalkeeper |
 | `laco ficha sem motor` | 0x6b98c0 (batch 145) | — | an on-field record (+0x19 >= 0) with no engine (+0x19e = 0) is removed (-5) at the start of the loop; does not happen in the automatic career |
 | `laco cobrador da bola parada` | 0x6b98c0 | — | a set piece with no ball owner (or a sent-off one) picks the taker (0x6ceb90) and turns him to goal; the restart already leaves an owner in the automatic career |
+| `chute bloqueado` | 0x702050 (batch 147) | — | the interception on the way to goal returns 2 (someone deflects): 0x1fd3/0x1fd4, the shot changes by draw(1000) - draw(2000) and, off target, goes out for a corner; it did not happen in the automatic career up to 2002-06-01 |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").
