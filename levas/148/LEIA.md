@@ -10,7 +10,7 @@
   - a lista de eventos de pré-jogo: insatisfação com o contrato, interesse de outro clube, forma e fim de contrato.
 - `destruir_motor()` = 0x6b97a0: o destrutor.
 
-Com elas o `match_eng.cpp` fica com só uma rotina original (0x6b97a0 era a penúltima).
+Com elas o `match_eng.cpp` fica 100% em Rust (117 de 117 rotinas).
 
 **Como foi comparada:** sem comparação própria, pela carreira (Rust × original), como o laço do motor da 145ª.
 - As três alocam ou liberam (o narrador, a lista de eventos), e a fita teria de reproduzir as alocações.

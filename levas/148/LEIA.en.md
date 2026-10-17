@@ -10,7 +10,7 @@
   - the pre-match event list: contract unhappiness, interest from another club, form and contract end.
 - `destruir_motor()` = 0x6b97a0: the destructor.
 
-With them, `match_eng.cpp` is left with only one original routine (0x6b97a0 was the second to last).
+With them, `match_eng.cpp` is 100% in Rust (117 of 117 routines).
 
 **How it was compared:** with no comparison of its own, through the career (Rust × original), like batch 145's engine loop.
 - The three allocate or free (the commentator, the event list), and the tape would have to reproduce the allocations.
