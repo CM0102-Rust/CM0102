@@ -1,0 +1,9 @@
+# Mutacoes da leva154 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva154.py --carreira 2002-06-01
+MUTACOES = [
+    ('g_cheio', "        if quantos < 0x9c4 {\n", "        if quantos < 0x10 {\n"),
+    ('g_numero', "        numero = *(r as *const i32) + 1;\n        *(r as *mut i32) = numero;", "        numero = *(r as *const i32) + 2;\n        *(r as *mut i32) = numero;"),
+    ('g_desc', "    *desc.add(2) = numero as u32;\n", "    *desc.add(2) = 0;\n"),
+    ('l_numero', "        if numero as u32 == *desc.add(2) {", "        if numero as u32 != *desc.add(2) {"),
+    ('r_gols', "    if byte(motor, 0xf5bd) as i32 > *((resumo + 0x11f) as *const u8) as i32 {", "    if byte(motor, 0xf5bd) as i32 >= *((resumo + 0x11f) as *const u8) as i32 {"),
+    ('r_passo', "        let r = laco(motor, 1) as u8;", "        let r = laco(motor, 2) as u8;"),
+]

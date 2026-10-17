@@ -51,5 +51,7 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `dia primeira volta` | 0x6b3c10 (batch 153) | — | the day's 1st round (+0x33 = 1) only starts matches whose competition (the match's +0x63) has +0x10, which the setup creates zeroed; in the automatic career the 1st round picks nothing and everything falls to the 2nd, so starting in the 2nd or pointing to another competition does not change the career |
 | `dia partidas ja marcadas` | 0x6b3c10 (batch 153) | — | the setup skips the list's matches already marked -2; in the automatic career none arrives marked like that (the mutation that lets them in escapes, even the strong one) |
 | `sons dos eventos` | 0x6d8c70 (batch 153) | — | waiting for the event sounds only runs with the match screen (0x6b55c0, network game): the counter "sons dos eventos" stays at zero in the automatic career |
+| `eventos gravados` | 0x6d98b0, 0x6d9c40 (batch 154) | — | recording runs in the career (counter above 2048), but the "events1/2.tmp" files are not part of the fingerprints, and reading them back (replaying the plays) only runs with the screen: the test is in the game, replaying the plays of a watched match |
+| `passo em rede` | 0x6b55c0 (batch 154) | — | the human's network match (by the clock and the humans' scoreboard) does not run in the automatic career; the counter "passo em rede" stays at zero |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

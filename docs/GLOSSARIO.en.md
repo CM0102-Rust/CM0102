@@ -203,6 +203,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x700390 | `gravar_8eaa` | write_8eaa |
 | 0x7003a0 | `gravar_8ed8` | write_8ed8 |
 | 0x5b5290 | `gravar_casa` | set_square |
+| 0x6d98b0 | `gravar_eventos` | record_events |
 | 0x8984d0 | `gravar_linha_tatica` | write_tactics_row |
 | 0x62ec00 | `gravidade_da_lesao` | injury_severity |
 | 0x6854a0 | `grupo_decidido` | group_decided |
@@ -236,6 +237,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x700380 | `ler_8eaa` | read_8eaa |
 | 0x700400 | `ler_8eb2` | read_8eb2 |
 | 0x700410 | `ler_8f7a` | read_8f7a |
+| 0x6d9c40 | `ler_eventos` | read_events |
 | 0x8983f0 | `ler_linha_tatica` | read_tactics_row |
 | 0x76d7b0 | `ler_marca_da_pessoa` | read_person_mark |
 | 0x6cfe10 | `lesao_na_dividida` | tackle_injury |
@@ -303,6 +305,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6b61e0 | `partida_de_interesse` | match_of_interest |
 | 0x6b66a0 | `partida_sem_humano` | match_without_human |
 | 0x6fa250 | `passar` | pass_ball |
+| 0x6b55c0 | `passo_em_rede` | network_step |
 | 0x6f0630 | `pegar_bola` | take_ball |
 | 0x6c50d0 | `penalti` | penalty |
 | 0x6be710 | `penaltis` | penalties |

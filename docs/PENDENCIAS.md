@@ -51,5 +51,7 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `dia primeira volta` | 0x6b3c10 (153ª) | — | a 1ª volta do dia (+0x33 = 1) só começa partidas cuja competição (+0x63 da partida) tem +0x10, que a montagem cria zerado; na carreira automática a 1ª volta não escolhe nada e tudo cai na 2ª, então começar na 2ª ou apontar outra competição não muda a carreira |
 | `dia partidas ja marcadas` | 0x6b3c10 (153ª) | — | a montagem pula as partidas da lista já marcadas -2; na carreira automática nenhuma chega marcada assim (a mutação que as deixa entrar escapa, mesmo a forte) |
 | `sons dos eventos` | 0x6d8c70 (153ª) | — | a espera dos sons dos eventos só roda com a tela da partida (0x6b55c0, jogo em rede): o contador "sons dos eventos" fica em zero na carreira automática |
+| `eventos gravados` | 0x6d98b0, 0x6d9c40 (154ª) | — | a gravação roda na carreira (contador acima de 2048), mas os arquivos "events1/2.tmp" não entram nas impressões, e a leitura de volta (rever os lances) só roda com a tela: o teste é no jogo, revendo os lances de uma partida assistida |
+| `passo em rede` | 0x6b55c0 (154ª) | — | a partida do humano em rede (pelo relógio e pelo placar dos humanos) não roda na carreira automática; o contador "passo em rede" fica em zero |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
