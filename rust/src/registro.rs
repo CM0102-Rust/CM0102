@@ -1,4 +1,5 @@
-//! Registro em texto (`ddraw.log`, ao lado do exe). Recriado a cada execucao.
+//! Registro em texto (`ddraw.log`, ao lado do exe). Recriado a cada execucao; o da execucao anterior
+//! fica em `ddraw.anterior.log` (o Lucas fechava e reabria o jogo e perdia o relatorio da comparacao).
 
 use std::fs::File;
 use std::io::Write;
@@ -12,6 +13,7 @@ pub fn linha(texto: &str) {
         let caminho = std::env::current_exe()
             .map(|p| p.with_file_name("ddraw.log"))
             .unwrap_or_else(|_| "ddraw.log".into());
+        let _ = std::fs::rename(&caminho, caminho.with_file_name("ddraw.anterior.log"));
         *arq = File::create(caminho).ok();
     }
     if let Some(f) = arq.as_mut() {
