@@ -1419,3 +1419,11 @@ Mutações: `mutacoes/leva155.py` (6 e 2 refeitas, pela carreira até 2002-06-01
 | `confirmar_partida_em_rede()` | 0x6b5260 | thiscall, ret 4 | match_day.cpp: cada humano confirma a partida em rede; com todos, cria o motor e o prepara para ver, ou joga até o fim e registra |
 
 Mutações: `mutacoes/leva156.py` (3, pela carreira até 2002-06-01): as 3 escaparam; os contadores de ramo ("texto do evento", "partida em rede confirmada") ficam em zero: as duas só rodam com a tela da partida (lacuna em `PENDENCIAS.md`). O texto do evento ganhou comparação de verdade (só escreve nos buffers de texto): no `JOGAR_COMPARANDO`, cada linha de narração é montada pela original e pela cópia e conferida. A confirmação em rede não tem comparação (cria e libera motor e resumo). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 157ª leva — a narração no painel (oficial em 17/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `narrar_no_painel()` | 0x6d7b00 | thiscall, ret 0x20 | match_events.cpp (~4,4 KB): repõe o som da torcida, monta o texto `G` do evento (como a 0x6d8d10) numa linha com as cores do clube (`<O>` as do outro, `<Y>`/`<R>` as padrão), quebra ou corta com "..." pela largura (0x5e5ad0, 0x90cb20), desenha no painel (0x801040…0x800580), toca o som do evento (0x8025e0) e marca a hora e a duração (+0x2d6c, +0x2dac) |
+
+Mutações: `mutacoes/leva157.py` (2, pela carreira até 2002-06-01): as 2 escaparam; o contador "narracao no painel" fica em zero: a rotina só roda com a tela da partida (lacuna em `PENDENCIAS.md`; o teste é assistir partidas no `JOGAR.bat`). Sem comparação própria: desenha no painel e toca som. Com ela, o motor de partidas sem as telas fica 100% em Rust. Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

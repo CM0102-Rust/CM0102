@@ -1421,3 +1421,11 @@ Mutations: `mutacoes/leva155.py` (6 and 2 redone, by the career to 2002-06-01): 
 | `confirmar_partida_em_rede()` | 0x6b5260 | thiscall, ret 4 | match_day.cpp: each human confirms the network match; with all of them, creates the engine and prepares it for watching, or plays it to the end and records it |
 
 Mutations: `mutacoes/leva156.py` (3, by the career to 2002-06-01): all 3 escaped; the branch counters ("texto do evento", "partida em rede confirmada") stay at zero: both only run with the match screen (gap in `PENDENCIAS.en.md`). The event text got a real comparison (it only writes to the text buffers): in `JOGAR_COMPARANDO`, each commentary line is built by the original and the copy and checked. The network confirmation has no comparison (it creates and frees engine and summary). Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 157th batch — the commentary on the panel (official on 2026-10-17)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `narrar_no_painel()` | 0x6d7b00 | thiscall, ret 0x20 | match_events.cpp (~4.4 KB): restores the crowd sound, builds the event's `G` text (like 0x6d8d10) into a line with the club colours (`<O>` the other's, `<Y>`/`<R>` the default ones), wraps or cuts with "..." by the width (0x5e5ad0, 0x90cb20), draws on the panel (0x801040…0x800580), plays the event sound (0x8025e0) and marks the time and duration (+0x2d6c, +0x2dac) |
+
+Mutations: `mutacoes/leva157.py` (2, by the career to 2002-06-01): both escaped; the counter "narracao no painel" stays at zero: the routine only runs with the match screen (gap in `PENDENCIAS.en.md`; the test is watching matches in `JOGAR.bat`). No comparison of its own: it draws on the panel and plays sound. With it, the match engine without the screens is 100% in Rust. Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

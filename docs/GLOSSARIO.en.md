@@ -285,6 +285,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x547840 | `nao_gosta_de` | dislikes |
 | 0x547d30 | `nao_gosta_do_clube` | dislikes_club |
 | 0x6be120 | `narrar_classificacao` | narrate_qualification |
+| 0x6d7b00 | `narrar_no_painel` | commentate_on_panel |
 | 0x5afe00 | `nevoa_apos_partida` | fog_after_match |
 | 0x53ce90 | `nivel_do_contrato` | contract_level |
 | 0x715f50 | `nota_ajustada` | adjusted_rating |
