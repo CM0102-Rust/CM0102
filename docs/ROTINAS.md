@@ -1346,3 +1346,13 @@ Mutações: `mutacoes/leva147.py` (26, pela carreira até 2002-06-01, confirmaç
 | `destruir_motor()` | 0x6b97a0 | thiscall | match_eng.cpp: o destrutor (o narrador próprio, a lista, o rigor e os vetores) |
 
 Mutações: `mutacoes/leva148.py` (18, pela carreira até 2002-06-01) e `mutacoes/leva148b.py` (as 4 que escaparam, refeitas mais fortes): 16 pegas pela carreira e 2 lacunas (`i_ceu`: o limite do céu com chuva não pesa na carreira automática; `i_insatisfeito`: o código do evento 0x13 não muda o resultado; ver `PENDENCIAS.md`). Sem comparação própria: as três alocam (o narrador e a lista de eventos) ou liberam, e a fita teria de reproduzir as alocações; validadas pela carreira (Rust × original), como o laço do motor. As rotinas que elas chamam seguem comparadas. A tabela de ângulos (0xb67c30), calculada na primeira partida com fpatan, sai do atan do Rust e bate. Jogo real comparando até 2002-01-01: 0 divergências. Carreiras Rust ×2 e original até 2002-06-01: 2.368.855.859 sorteios, impressão 459815f5e0dca92b, partidas 9ad4f994099c32e2, banco c8c977301cbf96ba
+
+### Motor de partidas, 149ª leva — a escalação de cada lado e o dia de jogos (oficial em 17/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `escalar_lado()` | 0x6db500 | thiscall, ret 0x24 | match_man.cpp: monta a tática de um lado (técnico, jogadores, clube, adversário, partida, mando) e escala: no clube do humano as linhas guardadas (0x5fbe20/0x5fbd00) e a automática 0x6dbc50 modo 1 ou os titulares (0x6dbb80); fora isso a automática modo 2 e a conta dos da casa; os reservas pelo banco e a linha tática do clube. Devolve quantos escalou |
+| `encerrar_dia()` | 0x6b4190 | thiscall | match_day.cpp: libera a lista global, os vetores do dia e, de cada partida, o motor (0x6b97a0), o resumo e o objeto +0x5f |
+| `escolher_partida_do_dia()` | 0x6b42a0 | thiscall | match_day.cpp: limpa os campos de cada partida do dia e escolhe a do humano (ou a primeira marcada) para a tela (0x717cc0, 0x7fc7e0) |
+
+Mutações: `mutacoes/leva149.py` (8, pela carreira até 2002-06-01): 7 pegas e 1 lacuna (`e_ficha`: o segundo campo da ficha do técnico não pesa na carreira automática; ver `PENDENCIAS.md`). Sem comparação própria: a escalação de cada lado chama a automática (0x6dbc50, ainda na original, que aloca a lista e lê a pilha) e o dia de jogos libera motores e listas; validadas pela carreira (Rust × original). As rotinas que elas chamam seguem comparadas. Jogo real comparando até 2002-01-01: 0 divergências. Carreiras Rust ×2 e original até 2002-06-01: 2.368.855.859 sorteios, impressão 459815f5e0dca92b, partidas 9ad4f994099c32e2, banco c8c977301cbf96ba

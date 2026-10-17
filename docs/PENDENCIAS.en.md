@@ -42,5 +42,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `chute bloqueado` | 0x702050 (batch 147) | — | the interception on the way to goal returns 2 (someone deflects): 0x1fd3/0x1fd4, the shot changes by draw(1000) - draw(2000) and, off target, goes out for a corner; it did not happen in the automatic career up to 2002-06-01 |
 | `prejogo ceu com chuva` | 0x6b7f20 (batch 148) | — | with the rain flag (+0x4d & 0x2000) and the sky outside 0/2/4, the loop's limit +0xf638 comes from draw(25) + 15 or draw(30) + 50; in the automatic career up to 2002-06-01 the limit never mattered (the mutation that fixes it at 1 changes nothing) |
 | `prejogo codigo da insatisfacao` | 0x6b7f20 | — | the pre-match event 0x13 (player unhappy with his contract) goes into the list with the code; in the automatic career whoever reads it does not change the result (the mutation to 0x1e changes nothing) |
+| `escalacao ficha do tecnico` | 0x6db500 (batch 149) | — | the tactics copy three fields of the manager's record (+0xa, +8, +0xc) to +0, +2, +4; in the automatic career the second (+2) does not matter (the mutation that swaps it changes nothing) |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

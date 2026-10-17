@@ -1348,3 +1348,13 @@ Mutations: `mutacoes/leva147.py` (26, by the career to 2002-06-01, confirmation 
 | `destruir_motor()` | 0x6b97a0 | thiscall | match_eng.cpp: the destructor (its own commentator, the list, the strictness and the vectors) |
 
 Mutations: `mutacoes/leva148.py` (18, by the career to 2002-06-01) and `mutacoes/leva148b.py` (the 4 that escaped, redone stronger): 16 caught by the career and 2 gaps (`i_ceu`: the rainy-sky limit does not matter in the automatic career; `i_insatisfeito`: the code of event 0x13 does not change the result; see `PENDENCIAS.en.md`). No comparison of their own: the three allocate (the commentator and the event list) or free, and the tape would have to reproduce the allocations; validated by the career (Rust × original), like the engine loop. The routines they call stay compared. The angle table (0xb67c30), computed in the first match with fpatan, comes from Rust's atan and matches. Real game comparing to 2002-01-01: 0 divergences. Rust ×2 and original careers to 2002-06-01: 2,368,855,859 draws, fingerprint 459815f5e0dca92b, matches 9ad4f994099c32e2, database c8c977301cbf96ba
+
+### Match engine, 149th batch — each side's selection and the match day (official on 2026-10-17)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `escalar_lado()` | 0x6db500 | thiscall, ret 0x24 | match_man.cpp: sets up one side's tactics (manager, players, club, opponent, match, home side) and selects: at the human's club the stored lines (0x5fbe20/0x5fbd00) and the automatic 0x6dbc50 mode 1 or the regulars (0x6dbb80); otherwise the automatic mode 2 and the count of the home players; the substitutes by the bench and the club's tactical line. Returns how many it selected |
+| `encerrar_dia()` | 0x6b4190 | thiscall | match_day.cpp: frees the global list, the day's vectors and, for each match, the engine (0x6b97a0), the summary and the +0x5f object |
+| `escolher_partida_do_dia()` | 0x6b42a0 | thiscall | match_day.cpp: clears each of the day's matches' fields and picks the human's (or the first marked) for the screen (0x717cc0, 0x7fc7e0) |
+
+Mutations: `mutacoes/leva149.py` (8, by the career to 2002-06-01): 7 caught and 1 gap (`e_ficha`: the second field of the manager's record does not matter in the automatic career; see `PENDENCIAS.en.md`). No comparison of their own: each side's selection calls the automatic one (0x6dbc50, still in the original, which allocates the list and reads the stack) and the match day frees engines and lists; validated by the career (Rust × original). The routines they call stay compared. Real game comparing to 2002-01-01: 0 divergences. Rust ×2 and original careers to 2002-06-01: 2,368,855,859 draws, fingerprint 459815f5e0dca92b, matches 9ad4f994099c32e2, database c8c977301cbf96ba
