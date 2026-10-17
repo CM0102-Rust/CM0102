@@ -47,5 +47,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `dia contador de terminadas` | 0x6b5ce0 (151ª) | — | o +0x25 do dia (partidas terminadas) só alimenta a porcentagem da barra; contar 2 em vez de 1 não muda a carreira |
 | `dia rodada do humano` | 0x6b5f00 (151ª) | — | a rodada (+0x2d de 0x4a4850) e a troca dos lados no 0x6b79a0 só existem com técnico humano; o contador "fechar rodada do humano" fica em zero na carreira automática |
 | `dia historia` | 0x6b5f00 (151ª) | — | o método 1 de [0xb74434] (a história) roda (contador "fechar historia" acima de 2048), mas a história não entra nas impressões da carreira (sorteios, partidas, banco): tirar a chamada não muda nada nelas |
+| `dia linhas do humano` | 0x6b4360 (152ª) | — | no fechamento do dia, as táticas guardadas dos humanos (0x5fbe20, 0x5fbd00, 0x5b5960) só são refeitas com técnico humano; o contador "linhas do humano refeitas" fica em zero na carreira automática (a mutação que tira a chamada escapa; o contador de terminadas, +0x25, é a lacuna já anotada na 151ª) |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").

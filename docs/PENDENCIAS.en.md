@@ -47,5 +47,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `dia contador de terminadas` | 0x6b5ce0 (batch 151) | — | the day's +0x25 (finished matches) only feeds the bar's percentage; counting 2 instead of 1 does not change the career |
 | `dia rodada do humano` | 0x6b5f00 (batch 151) | — | the round (+0x2d from 0x4a4850) and the swap of sides in 0x6b79a0 only exist with a human manager; the counter "fechar rodada do humano" stays at zero in the automatic career |
 | `dia historia` | 0x6b5f00 (batch 151) | — | [0xb74434]'s method 1 (the history) runs (counter "fechar historia" above 2048), but the history is not part of the career fingerprints (draws, matches, database): removing the call changes nothing in them |
+| `dia linhas do humano` | 0x6b4360 (batch 152) | — | at the end of the day, the humans' stored tactics (0x5fbe20, 0x5fbd00, 0x5b5960) are only redone with a human manager; the counter "linhas do humano refeitas" stays at zero in the automatic career (the mutation that removes the call escapes; the finished counter, +0x25, is the gap already noted in batch 151) |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

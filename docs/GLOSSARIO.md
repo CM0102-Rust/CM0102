@@ -221,6 +221,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6b6cc0 | `jogadores_do_pos_jogo` | post_match_players |
 | 0x6cbc00 | `jogadores_na_linha` | players_in_line |
 | 0x6cc070 | `jogadores_no_trajeto` | players_on_path |
+| 0x6b4360 | `jogar_o_dia` | play_the_day |
 | 0x6b98c0 | `laco_do_motor` | engine_loop |
 | 0x6bba50 | `lado_do_lance` | side_of_move |
 | 0x6d42a0 | `lado_sob_controle` | side_under_control |
