@@ -1449,3 +1449,13 @@ Mutations: `mutacoes/leva158.py` (4, by the career to 2002-06-01): all 4 escaped
 | `vagas_sem_conflito()` | 0x5b8960 | thiscall | formation.cpp: 0 if any of the 11 slots with an open side (0x880) is a striker's, midfielder's, defensive or attacking midfielder's (cells +0x12d/+0x14e and 0x5b2ae0); returns only `al` |
 
 Mutations: `mutacoes/leva159.py` (7, by the career to 2002-06-01, confirming the escaped ones in comparison mode to 2001-08-20): 5 caught; `m_nivel` (stepping the level down by 2) and `v_a20` (0x10 instead of 0x20) escaped both proofs: in the game database the natural position is rated 20 (the loop stops at level 15) and no slot with an open side is a midfielder's (gap in `PENDENCIAS.en.md`). First batch outside the match engine: the candidates come from `candidatos.py --simulacao` (coverage of the automatic career in 26 simulation modules, `docs/cobertura_simulacao.txt`). Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 160th batch — player statistics and centre-backs in the formation (official on 2026-10-18)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `estatistica_do_jogador()` | 0x7c2150 | stdcall | player_stats.cpp: statistic `qual` 1..22 of the record (bytes, percentages ×100.0f, per-match averages, the two ratings completed with under 20 matches ×0.05f), in x87 like the original |
+| `media_das_notas()` | 0x7c1950 | thiscall | player_stats.cpp: the average of the record's five 4-bit ratings (zero counts 27), 16-bit, divided by 4 |
+| `zagueiros_sem_conflito()` | 0x5b8dc0 | thiscall | formation.cpp: 0 if any slot with an open side is a centre-back's or defensive midfielder's |
+
+Mutations: `mutacoes/leva160.py` (7, by the career to 2002-06-01): all 7 caught. The floating-point statistic (f64 divisions and products) matches the original's x87 over the whole career. Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

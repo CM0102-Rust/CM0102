@@ -1447,3 +1447,13 @@ Mutações: `mutacoes/leva158.py` (4, pela carreira até 2002-06-01): as 4 escap
 | `vagas_sem_conflito()` | 0x5b8960 | thiscall | formation.cpp: 0 se alguma das 11 vagas com lado aberto (0x880) é de atacante, meia, volante ou meia-atacante (casas +0x12d/+0x14e e 0x5b2ae0); devolve só `al` |
 
 Mutações: `mutacoes/leva159.py` (7, pela carreira até 2002-06-01, confirmando as que escapam no modo comparação até 2001-08-20): 5 acusadas; `m_nivel` (descer o nível de 2 em 2) e `v_a20` (0x10 no lugar de 0x20) escaparam nas duas provas: no banco do jogo a posição natural tem nota 20 (o laço para no nível 15) e nenhuma vaga com lado aberto é de meia (lacuna em `PENDENCIAS.md`). Primeira leva fora do motor de partidas: as candidatas vêm de `candidatos.py --simulacao` (cobertura da carreira automática em 26 módulos da simulação, `docs/cobertura_simulacao.txt`). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 160ª leva — estatísticas do jogador e zagueiros na formação (oficial em 18/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `estatistica_do_jogador()` | 0x7c2150 | stdcall | player_stats.cpp: a estatística `qual` 1..22 do registro (bytes, porcentagens ×100.0f, médias por jogo, as duas notas completadas com menos de 20 jogos ×0.05f), em x87 como a original |
+| `media_das_notas()` | 0x7c1950 | thiscall | player_stats.cpp: a média das cinco notas de 4 bits do registro (zero conta 27), em 16 bits dividida por 4 |
+| `zagueiros_sem_conflito()` | 0x5b8dc0 | thiscall | formation.cpp: 0 se alguma vaga com lado aberto é de zagueiro ou volante |
+
+Mutações: `mutacoes/leva160.py` (7, pela carreira até 2002-06-01): as 7 acusadas. A estatística em ponto flutuante (divisões e produtos em f64) bate com o x87 da original em toda a carreira. Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

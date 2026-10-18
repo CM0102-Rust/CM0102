@@ -182,6 +182,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f4a70 | `estado_do_adversario` | opponent_state |
 | 0x6f4a40 | `estado_do_lado` | side_state |
 | 0x6cf750 | `estatistica_de_posse` | possession_statistic |
+| 0x7c2150 | `estatistica_do_jogador` | player_statistic |
 | 0x6b74a0 | `eventos_do_pos_jogo` | post_match_events |
 | 0x6d26b0 | `evoluir_jogador` | develop_player |
 | 0x6f55c0 | `evoluir_momento` | evolve_moment |
@@ -269,6 +270,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x7163c0 | `marcas_do_jogador_rot` | player_marks_rot |
 | 0x5b59a0 | `mascara_da_formacao` | formation_mask |
 | 0x5b7d20 | `mascara_de_posicoes` | position_mask |
+| 0x7c1950 | `media_das_notas` | ratings_average |
 | 0x6e1a40 | `melhor_avaliado` | best_rated |
 | 0x6e1940 | `melhor_da_lista` | best_in_list |
 | 0x6c3950 | `menor_distancia` | smallest_distance |
@@ -404,6 +406,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6b7cf0 | `venceu_o_jogo` | won_the_match |
 | 0x6fa140 | `virado_para` | facing |
 | 0x70df20 | `x_fora_do_meio` | x_off_centre |
+| 0x5b8dc0 | `zagueiros_sem_conflito` | centre_backs_without_conflict |
 | 0x6ce0f0 | `zerar_guardado` | clear_stored |
 | 0x76d7e0 | `zerar_marca_da_pessoa` | clear_person_mark |
 
