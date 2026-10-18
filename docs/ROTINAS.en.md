@@ -1499,3 +1499,13 @@ Mutations: `mutacoes/leva163.py` (5, by the career to 2002-06-01, confirming the
 | `marcar_ano_no_calendario()` | 0x5af180 | cdecl | fix_man.cpp: marks the match year in both clubs' entries (year × 2 + bit, 2001 rule) |
 
 Mutations: `mutacoes/leva164.py` (7, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 5 caught. `g_meio` escaped: the automatic career only plays English leagues, without the rotation's 0x80 flag; not even redone stronger (`g_meio_b`, `mutacoes/leva164b.py`) is it caught. `g_volta` escaped: wrapping at the end of the rotation does not happen in the career; not even redone stronger (`g_volta_b`) is it caught. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 165th batch — extra tactic slots, national team ages and the human manager field (official on 2026-10-18)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `vaga_extra_tatica()` | 0x897ee0 | thiscall | tactics.cpp: the two extra slots (+0x56, +0x5a) of the club row |
+| `idades_da_selecao()` | 0x76d430 | stdcall | national_teams.cpp: the age limits (23/23 in youth competitions, 24/22, 26/22) |
+| `gravar_dado_do_humano()` | 0x5fdd30 | thiscall | human_manager.cpp: stores +0x9a65 of the human manager record (0xa6ef bytes) |
+
+Mutations: `mutacoes/leva165.py` (5, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 4 caught. `v_desce` escaped: when the first extra slot is cleared, the second is already empty (−1) in AI clubs: moving −1 down or writing −1 is the same (the counters "vaga extra apagada" 65536 and "vaga extra gravada" 4096 show both paths run). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

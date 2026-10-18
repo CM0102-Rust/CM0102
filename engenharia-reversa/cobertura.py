@@ -44,7 +44,10 @@ def main():
     feitas = {int(x, 16) for x in re.findall(r'endereco: (0x[0-9a-f]+)', open(os.path.join(AQUI, '..', 'rust', 'src', 'motor.rs'), encoding='utf-8').read())}
     linhas, recusadas = [], []
     for r in csv.DictReader(open(os.path.join(AQUI, '..', 'docs', 'mapa_funcoes.csv'))):
-        if not any(m in r['arquivo'] for m in sys.argv[1:]):
+        # argumentos 0x... sao enderecos avulsos (rotinas sem modulo no mapa, como as do motor que o mapa de
+        # maxevans60 atribui a match_man/match_events); os outros, trechos do nome do arquivo-fonte
+        avulsos = {int(m, 16) for m in sys.argv[1:] if m.startswith('0x')}
+        if int(r['endereco'], 16) not in avulsos and not any(m in r['arquivo'] for m in sys.argv[1:] if not m.startswith('0x')):
             continue
         va = int(r['endereco'], 16)
         if va in feitas:

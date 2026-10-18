@@ -474,8 +474,11 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x68a030, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x8b, 0x0d, 0xe8, 0xf6, 0x9c, 0x00] },
     Prologo { endereco: 0x68a1c0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x5af180, bytes: &[0xa1, 0x5c, 0x2a, 0xae, 0x00] },
+    Prologo { endereco: 0x897ee0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x76d430, bytes: &[0x8b, 0x54, 0x24, 0x0c, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x5fdd30, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 367;
+const N: usize = 370;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -31929,6 +31932,124 @@ unsafe extern "stdcall" fn comparar_codigo_da_posicao(m: i16) -> u8 {
 
 comparar_valor!(comparar_criterio_da_comissao, criterio_da_comissao, 357, () -> u32);
 
+// ---------- centesima sexagesima quinta leva: as vagas extras da tatica, as idades da selecao e o dado do tecnico humano ----------
+
+/// { 0x897ee0 } (thiscall, ret 0x10, tactics.cpp): as duas vagas extras (+0x56 e +0x5a) da linha do
+/// `clube` na tabela tática (0x8982b0 com `humano`; sem linha, 0): com `pessoa`, `*pessoa` na vaga
+/// `qual` 0/1; sem, a vaga vira −1 e, na 0, a 1 desce para a 0 e fica −1. Devolve 1. `clube` nulo ou
+/// `qual` fora: a original (caixa de erro).
+unsafe extern "thiscall" fn vaga_extra_tatica(t: usize, clube: usize, qual: i8, pessoa: *const u32, humano: u32) -> u32 {
+    if clube == 0 || !(0..=1).contains(&qual) {
+        return orig::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(367)(t, clube, qual, pessoa, humano);
+    }
+    let linha_tatica: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let l = linha_tatica(clube, humano);
+    if l == -1 {
+        return 0;
+    }
+    let linha = linha_da_tabela(t, l);
+    let casa = (linha + 0x56 + 4 * qual as usize) as *mut u32;
+    if !pessoa.is_null() {
+        crate::comparacao::ramo("vaga extra gravada");
+        core::ptr::write_unaligned(casa, *pessoa);
+        return 1;
+    }
+    crate::comparacao::ramo("vaga extra apagada");
+    core::ptr::write_unaligned(casa, u32::MAX);
+    if qual == 0 {
+        let segunda = core::ptr::read_unaligned((linha + 0x5a) as *const u32);
+        core::ptr::write_unaligned((linha + 0x56) as *mut u32, segunda);
+        core::ptr::write_unaligned((linha + 0x5a) as *mut u32, u32::MAX);
+    }
+    1
+}
+
+/// { 0x76d430 } (stdcall, ret 0x10, national_teams.cpp): as idades limite (`*minima`, `*maxima`) de
+/// uma seleção na competição `comp`: 23/23 nas competições olímpicas e de base ([comp+0x14] com id
+/// numa das 9 constantes 0x9cf78c…0x9cf964); 24/22 com `tipo` 1 ou acima de 2; senão 26/22.
+/// Ponteiros nulos: a original (caixa de erro).
+unsafe extern "stdcall" fn idades_da_selecao(comp: usize, tipo: i8, minima: *mut u8, maxima: *mut u8) {
+    if minima.is_null() || maxima.is_null() {
+        return orig::<unsafe extern "stdcall" fn(usize, i8, *mut u8, *mut u8)>(368)(comp, tipo, minima, maxima);
+    }
+    if comp != 0 {
+        let c = *((comp + 0x14) as *const usize);
+        if c != 0 {
+            let id = *(c as *const i32);
+            if [0x9cf79c, 0x9cf7a0, 0x9cf7a4, 0x9cf7a8, 0x9cf7ac, 0x9cf790, 0x9cf8a0, 0x9cf78c, 0x9cf964usize]
+                .iter()
+                .any(|&a| *(a as *const i32) == id)
+            {
+                *minima = 0x17;
+                *maxima = 0x17;
+                return;
+            }
+        }
+    }
+    if tipo != 0 && tipo != 2 {
+        *minima = 0x18;
+        *maxima = 0x16;
+    } else {
+        *minima = 0x1a;
+        *maxima = 0x16;
+    }
+}
+
+/// { 0x5fdd30 } (thiscall, ret 8, human_manager.cpp): grava `valor` em +0x9a65 do registro do técnico
+/// humano `tecnico` (sem ele, o da vez em [0xb74c26 + 0x300 × [0xb77c7a]]) entre os humanos `this`
+/// ([this], 0xa6ef bytes cada; o índice é o id − [0xae2364] + 16, até [this+4] − 1). Devolve 1.
+/// Sem técnico ou índice fora: a original (caixa de erro).
+unsafe extern "thiscall" fn gravar_dado_do_humano(t: usize, valor: u32, tecnico: *const i32) -> u32 {
+    let mut p = tecnico;
+    if p.is_null() {
+        let vez = *(0xb77c7a as *const i16) as isize;
+        p = core::ptr::read_unaligned((0xb74c26 + vez * 0x300) as usize as *const *const i32);
+    }
+    if p.is_null() {
+        return orig::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(369)(t, valor, tecnico);
+    }
+    let i = (*p).wrapping_sub(*(0xae2364 as *const i32)).wrapping_add(0x10);
+    if i < 0 || i > (*((t + 4) as *const i32)).wrapping_sub(1) {
+        return orig::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(369)(t, valor, tecnico);
+    }
+    crate::comparacao::ramo("dado do humano gravado");
+    core::ptr::write_unaligned((*(t as *const usize) + i as usize * 0xa6ef + 0x9a65) as *mut u32, valor);
+    1
+}
+
+unsafe extern "thiscall" fn comparar_vaga_extra_tatica(t: usize, clube: usize, qual: i8, pessoa: *const u32, humano: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(367);
+    let reg = regioes_da_tabela(t, clube, humano);
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, clube, qual, pessoa, humano), || vaga_extra_tatica(t, clube, qual, pessoa, humano));
+    PLACAR.registrar(igual && r == v, || format!("vaga_extra_tatica({:#x}, {:#x}, {}, {}) original={} {:x?} rust={} {:x?}", t, clube, qual, humano, r, mo, v, mr));
+    r
+}
+
+unsafe extern "stdcall" fn comparar_idades_da_selecao(comp: usize, tipo: i8, minima: *mut u8, maxima: *mut u8) {
+    let o = orig::<unsafe extern "stdcall" fn(usize, i8, *mut u8, *mut u8)>(368);
+    let reg = if minima.is_null() || maxima.is_null() { vec![] } else { vec![(minima as usize, 1), (maxima as usize, 1)] };
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(comp, tipo, minima, maxima), || idades_da_selecao(comp, tipo, minima, maxima));
+    PLACAR.registrar(igual, || format!("idades_da_selecao({:#x}, {}) {:x?} x {:x?}", comp, tipo, mo, mr));
+}
+
+unsafe extern "thiscall" fn comparar_gravar_dado_do_humano(t: usize, valor: u32, tecnico: *const i32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(369);
+    let mut p = tecnico;
+    if p.is_null() {
+        let vez = *(0xb77c7a as *const i16) as isize;
+        p = core::ptr::read_unaligned((0xb74c26 + vez * 0x300) as usize as *const *const i32);
+    }
+    let reg = if p.is_null() {
+        vec![]
+    } else {
+        let i = (*p).wrapping_sub(*(0xae2364 as *const i32)).wrapping_add(0x10);
+        if i < 0 || i > (*((t + 4) as *const i32)).wrapping_sub(1) { vec![] } else { vec![(*(t as *const usize) + i as usize * 0xa6ef + 0x9a65, 4)] }
+    };
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, valor, tecnico), || gravar_dado_do_humano(t, valor, tecnico));
+    PLACAR.registrar(igual && r == v, || format!("gravar_dado_do_humano({:#x}, {:#x}, {:p}) original={} {:x?} rust={} {:x?}", t, valor, tecnico, r, mo, v, mr));
+    r
+}
+
 // ---------- centesima sexagesima quarta leva: o calendario das ligas (league.cpp, fix_man.cpp) ----------
 
 /// { 0x68a030 } (cdecl, league.cpp): a próxima posição `pos` no rodízio do calendário de `n` (palavra)
@@ -34875,6 +34996,9 @@ pub unsafe fn instalar(comparando: bool) {
         girar_rodada as *const () as usize,
         registrar_jogo_da_rodada as *const () as usize,
         marcar_ano_no_calendario as *const () as usize,
+        vaga_extra_tatica as *const () as usize,
+        idades_da_selecao as *const () as usize,
+        gravar_dado_do_humano as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -35244,6 +35368,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_girar_rodada as *const () as usize,
         comparar_registrar_jogo_da_rodada as *const () as usize,
         comparar_marcar_ano_no_calendario as *const () as usize,
+        comparar_vaga_extra_tatica as *const () as usize,
+        comparar_idades_da_selecao as *const () as usize,
+        comparar_gravar_dado_do_humano as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -35356,7 +35483,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

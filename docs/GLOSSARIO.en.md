@@ -212,6 +212,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x700390 | `gravar_8eaa` | write_8eaa |
 | 0x7003a0 | `gravar_8ed8` | write_8ed8 |
 | 0x5b5290 | `gravar_casa` | set_square |
+| 0x5fdd30 | `gravar_dado_do_humano` | set_human_field |
 | 0x6d98b0 | `gravar_eventos` | record_events |
 | 0x8967d0 | `gravar_formacao_tatica` | set_tactic_formation |
 | 0x8984d0 | `gravar_linha_tatica` | write_tactics_row |
@@ -221,6 +222,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cd660 | `guardar_extremos` | store_extremes |
 | 0x896fe0 | `guardar_instrucoes` | store_instructions |
 | 0x6dbb10 | `guardar_tatica` | store_tactic |
+| 0x76d430 | `idades_da_selecao` | national_team_ages |
 | 0x6b5a70 | `iniciar_proxima_partida` | start_next_match |
 | 0x6e9470 | `iniciar_rigor` | init_strictness |
 | 0x6ddab0 | `instrucoes` | instructions |
@@ -411,6 +413,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x4b0850 | `unidades` | units_digit |
 | 0x6d47e0 | `uniforme` | kit |
 | 0x5b2f10 | `vaga_da_casa` | slot_of_code |
+| 0x897ee0 | `vaga_extra_tatica` | extra_tactic_slot |
 | 0x897590 | `vaga_marcada` | marked_slot |
 | 0x5b8960 | `vagas_sem_conflito` | slots_without_conflict |
 | 0x700bd0 | `valor_do_chute` | shot_value |

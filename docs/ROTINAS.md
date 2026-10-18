@@ -1497,3 +1497,13 @@ Mutações: `mutacoes/leva163.py` (5, pela carreira até 2002-06-01, confirmando
 | `marcar_ano_no_calendario()` | 0x5af180 | cdecl | fix_man.cpp: marca o ano do jogo nas entradas dos dois clubes (ano × 2 + bit, regra de 2001) |
 
 Mutações: `mutacoes/leva164.py` (7, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 5 acusadas. `g_meio` escapou: a carreira automática só joga ligas inglesas, sem a marca 0x80 do rodízio; nem refeita mais forte (`g_meio_b`, `mutacoes/leva164b.py`) é acusada. `g_volta` escapou: a volta no fim do rodízio não acontece na carreira; nem refeita mais forte (`g_volta_b`) é acusada. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 165ª leva — as vagas extras da tática, as idades da seleção e o dado do técnico humano (oficial em 18/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `vaga_extra_tatica()` | 0x897ee0 | thiscall | tactics.cpp: as duas vagas extras (+0x56, +0x5a) da linha do clube |
+| `idades_da_selecao()` | 0x76d430 | stdcall | national_teams.cpp: as idades limite (23/23 nas competições de base, 24/22, 26/22) |
+| `gravar_dado_do_humano()` | 0x5fdd30 | thiscall | human_manager.cpp: grava +0x9a65 do registro do técnico humano (0xa6ef bytes) |
+
+Mutações: `mutacoes/leva165.py` (5, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 4 acusadas. `v_desce` escapou: ao apagar a primeira vaga extra, a segunda já está vazia (−1) nos clubes da IA: descer −1 ou gravar −1 dá o mesmo (os contadores "vaga extra apagada" 65536 e "vaga extra gravada" 4096 mostram que os dois caminhos rodam). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

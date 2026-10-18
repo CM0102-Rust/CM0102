@@ -61,5 +61,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `comissao` | 0x866f60 (batch 161) | — | the 51..75 range of the staff +0x44 (+5 on the score) does not appear in the data: mutation `c_idade` escapes even redone with +15. Needs an edited database |
 | `tabela tatica` | 0x896a90, 0x8968f0 (batch 162) | — | in the automatic career the tactics table slots stay empty (−1) and there are no pending instructions: the slot person (record, nation in a national team) and the pending cleanup only run with a human manager. The test is Lucas's game in comparison mode (setting tactics, picking the national team) |
 | `calendario` | 0x68a030 (batch 164) | — | the automatic career only plays English leagues: the rotation with flag 0x80 and wrapping at the end of the rotation do not run (`g_meio`, `g_volta` escape, even redone). Test: automatic career with other leagues (`simular.py --ligas`) |
+| `vaga extra apagada` | 0x897ee0 (batch 165) | — | the path runs (high counter), but the second extra slot is always empty when the first is cleared in AI clubs: mutation `v_desce` is equivalent in the data. Test: a human manager with both extra slots filled, clearing the first |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").
