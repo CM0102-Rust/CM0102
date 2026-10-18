@@ -16,7 +16,7 @@ import sys
 import desvios
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
-JOGO = os.path.join(AQUI, '..', 'jogo')
+JOGO = os.path.join(AQUI, '..', 'jogo_testes' if os.path.isdir(os.path.join(AQUI, '..', 'jogo_testes')) else 'jogo')
 
 
 def main():
@@ -38,11 +38,17 @@ def main():
             chamados.add(int(ins[3], 16))
     md.skipdata = False
     ponteiros = {struct.unpack_from('<I', d, o)[0] for o in range(desvios.TEXTO[1], len(d) - 3, 4)}
+    # As rotinas ja desviadas (Prologo em motor.rs) nao levam contador: os dois desvios no mesmo
+    # inicio se atropelam (o trampolim fica vazio e o Rust chama o endereco 0; 17/10/2026).
+    import re
+    feitas = {int(x, 16) for x in re.findall(r'endereco: (0x[0-9a-f]+)', open(os.path.join(AQUI, '..', 'rust', 'src', 'motor.rs'), encoding='utf-8').read())}
     linhas, recusadas = [], []
     for r in csv.DictReader(open(os.path.join(AQUI, '..', 'docs', 'mapa_funcoes.csv'))):
         if not any(m in r['arquivo'] for m in sys.argv[1:]):
             continue
         va = int(r['endereco'], 16)
+        if va in feitas:
+            continue
         try:
             if va not in chamados and va not in ponteiros:
                 raise ValueError('nao e inicio comprovado de rotina')

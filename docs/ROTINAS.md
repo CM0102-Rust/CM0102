@@ -1437,3 +1437,13 @@ Mutações: `mutacoes/leva157.py` (2, pela carreira até 2002-06-01): as 2 escap
 | `posicao_no_conteiner()` | 0x933170 | cdecl | zipdir.cpp (`ztell`): tipo 4 devolve posição do item + z+8; tipo 3, o `ftell` (aqui em 64 bits, descontando o buffer como a 0x946aae) menos a posição do item |
 
 Mutações: `mutacoes/leva158.py` (4, pela carreira até 2002-06-01): as 4 escaparam; a carreira automática não salva nem carrega (lacuna em `PENDENCIAS.md`). A prova é o `save_grande.py`: um início rápido com um enchimento de 2,2 GB gera um `.qst` de 2,38 GB; na original os 45 itens além de 2 GB ficam com posição 0xffffffff, com a 158ª o índice sai certo. No jogo do Lucas: save de 2,55 GB (187 itens além de 2 GB) gravado e carregado com a nossa DLL; com as originais (`CM_ORIGINAL=1`) o carregamento falha (`Friendly.cpp`, primeiro item além de 2 GB). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 159ª leva — a formação: posições do jogador e casas no campo (oficial em 18/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `mascara_de_posicoes()` | 0x5b7d20 | cdecl | formation.cpp: a máscara das posições fortes pelas notas (+0xf..+0x15, do nível 15 ao 10) e os lados com nota 15 (+0x17..+0x19); devolve só `ax` |
+| `casa_no_campo()` | 0x5b7e60 | cdecl | formation.cpp: coluna 0..26 e linha 0..35 da posição (setor e lado pela 0x5b73a0) pelo ataque e pela faixa (tabelas de 4 e de 5, encostos de 1 ou 5 nas faixas, limites) |
+| `vagas_sem_conflito()` | 0x5b8960 | thiscall | formation.cpp: 0 se alguma das 11 vagas com lado aberto (0x880) é de atacante, meia, volante ou meia-atacante (casas +0x12d/+0x14e e 0x5b2ae0); devolve só `al` |
+
+Mutações: `mutacoes/leva159.py` (7, pela carreira até 2002-06-01, confirmando as que escapam no modo comparação até 2001-08-20): 5 acusadas; `m_nivel` (descer o nível de 2 em 2) e `v_a20` (0x10 no lugar de 0x20) escaparam nas duas provas: no banco do jogo a posição natural tem nota 20 (o laço para no nível 15) e nenhuma vaga com lado aberto é de meia (lacuna em `PENDENCIAS.md`). Primeira leva fora do motor de partidas: as candidatas vêm de `candidatos.py --simulacao` (cobertura da carreira automática em 26 módulos da simulação, `docs/cobertura_simulacao.txt`). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

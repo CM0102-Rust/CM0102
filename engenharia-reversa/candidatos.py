@@ -1,6 +1,7 @@
 r"""Proximas rotinas do motor: as cobertas (executadas no jogo real) que ainda nao estao em Rust.
 
 Uso: python candidatos.py                lista por dependencias pendentes e tamanho
+     python candidatos.py --simulacao   idem, nos modulos da simulacao (docs/cobertura_simulacao.txt)
      python candidatos.py --fora         chamadas pelo motor, fora da lista de cobertura
      python candidatos.py 0x6c51e0 ...   extensao real de cada uma e o que ela chama ainda em C
 
@@ -29,7 +30,9 @@ arq = {r[0]: r[2].split('/')[-1] for r in rows}
 src = open(os.path.join(RAIZ, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
 feitas = {int(x, 16) for x in re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+)', src)}
 neutras = {0x90cfc0, 0x945640, 0x5e8290, 0x90d130, 0x944c9f, 0x944cff, 0x5a8f60, 0x5cc7d0, 0x945934}
-cob = [int(l.split()[0], 16) for l in open(os.path.join(RAIZ, 'docs', 'cobertura_motor.txt'))]
+# --simulacao: os modulos da simulacao fora do motor e das telas (docs/cobertura_simulacao.txt, 17/10/2026)
+LISTA = 'cobertura_simulacao.txt' if '--simulacao' in sys.argv else 'cobertura_motor.txt'
+cob = [int(l.split()[0], 16) for l in open(os.path.join(RAIZ, 'docs', LISTA)) if l.strip() and not l.startswith('#')]
 md = Cs(CS_ARCH_X86, CS_MODE_32)
 
 

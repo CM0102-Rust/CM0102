@@ -97,6 +97,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c2a40 | `casa_da_formacao` | formation_square |
 | 0x5b2ae0 | `casa_da_vaga` | slot_code |
 | 0x5b2e80 | `casa_do_setor_ocupada` | sector_slot_taken |
+| 0x5b7e60 | `casa_no_campo` | pitch_cell |
 | 0x544410 | `chance_de_conhecer` | chance_to_know |
 | 0x702050 | `chutar` | shoot |
 | 0x6f6c00 | `chute` | shot |
@@ -267,6 +268,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5b5270 | `marcas_da_posicao` | position_marks |
 | 0x7163c0 | `marcas_do_jogador_rot` | player_marks_rot |
 | 0x5b59a0 | `mascara_da_formacao` | formation_mask |
+| 0x5b7d20 | `mascara_de_posicoes` | position_mask |
 | 0x6e1a40 | `melhor_avaliado` | best_rated |
 | 0x6e1940 | `melhor_da_lista` | best_in_list |
 | 0x6c3950 | `menor_distancia` | smallest_distance |
@@ -396,6 +398,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6d47e0 | `uniforme` | kit |
 | 0x5b2f10 | `vaga_da_casa` | slot_of_code |
 | 0x897590 | `vaga_marcada` | marked_slot |
+| 0x5b8960 | `vagas_sem_conflito` | slots_without_conflict |
 | 0x700bd0 | `valor_do_chute` | shot_value |
 | 0x7165b0 | `valor_pela_condicao` | value_by_condition |
 | 0x6b7cf0 | `venceu_o_jogo` | won_the_match |
