@@ -40,7 +40,7 @@ The three routines were rewritten in Rust (`rust/src/conteiner.rs`):
 
 ## The save-only DLL
 
-`save/` builds a `ddraw.dll` of ~190 KB.
+`save/` builds a `ddraw.dll` of ~190 KB. **Public distribution:** repository [`CM0102-Rust/cm0102-save2gb`](https://github.com/CM0102-Rust/cm0102-save2gb) (public; without the source code, which is given on request), release `v1.0` with `save2gb-1.0.zip`: the DLL, LEIAME/README and this documentation without the private repository paths. When changing this document, update the copy there.
 
 **Install:**
 1. Copy the `ddraw.dll` into the game exe's folder.
