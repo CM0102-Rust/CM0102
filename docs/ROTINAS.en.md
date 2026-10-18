@@ -1569,3 +1569,13 @@ Mutations: `mutacoes/leva170.py` (5, by the career to 2002-06-01, confirming the
 | `construir_jogador_da_partida()` | 0x6eada0 | thiscall | match_pl.cpp: the match player constructor (clears the fields, with initial values for some) |
 
 Mutations: `mutacoes/leva171.py` (7, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 7 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 172nd batch — closing the engine (6): reading the commentary, the player name and the perceived ability (official on 2026-10-18)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `proximo_evento()` | 0x6d78b0 | thiscall | match_events.cpp: the next commentary event to show, part by part of the text (split by |), advancing the queue reading |
+| `nome_do_jogador_na_narracao()` | 0x6db2d0 | cdecl | match_events.cpp: the player name in the commentary: the short form, or the long one when another player of either club has the same short name |
+| `habilidade_vista()` | 0x6e86d0 | cdecl | match_man.cpp: a player's current or potential ability as an observer sees it (reputation, noise and the observer's knowledge) |
+
+Mutations: `mutacoes/leva172.py` (6, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 3 caught. `p_parte` escaped: 0x6d78b0 only runs with the commentary on screen, which the automatic career does not show (goes to a match watched by Lucas). `p_anel` escaped: 0x6d78b0 only runs with the commentary on screen, which the automatic career does not show. `n_longa` escaped: 0x6db2d0 only runs with the commentary on screen, which the automatic career does not show. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

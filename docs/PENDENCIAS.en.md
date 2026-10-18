@@ -68,5 +68,7 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `commentary queue: +0x2db0` | 0x6d5bf0 (batch 169) | — | equivalent mutation (`c_tempo`): the initial 125 is only compared with 20 and 101 (0x6b5686, 0x6d8ace) and the match screens rewrite it (0x719c4e, 0x71a3d5); 124 takes the same paths |
 | `events language` | 0x6d5b50 (batch 169) | — | equivalent mutation (`l_fim`): 0xa1599c holds the language of the loaded events and 0x6d9e50, which calls the freeing, rewrites it right after (0x6d9eb8) |
 | `day match order` | 0x6b6510 (batch 170) | — | in the English league the day's matches tied on competition, +0x46 and +0x36 never disagree in sign between +0x38 and +0x34: mutation `o_campos` (swaps their order) escapes even comparing. Test: broad career (several leagues) |
+| `next commentary event` | 0x6d78b0 (batch 172) | — | only runs with the commentary on screen (the automatic career shows no match): mutations `p_parte` and `p_anel` escape. Test: Lucas watching matches with commentary, in comparison mode |
+| `commentary player name` | 0x6db2d0 (batch 172) | — | only runs with the commentary on screen: mutation `n_longa` (the long form for repeated short names) escapes. Test: a watched match in comparison mode, ideally with two players sharing a short name |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

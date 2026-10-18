@@ -68,5 +68,7 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `fila da narração: +0x2db0` | 0x6d5bf0 (169ª) | — | mutação equivalente (`c_tempo`): o valor inicial 125 só é comparado com 20 e 101 (0x6b5686, 0x6d8ace) e as telas da partida o regravam (0x719c4e, 0x71a3d5); 124 toma os mesmos caminhos |
 | `idioma dos eventos` | 0x6d5b50 (169ª) | — | mutação equivalente (`l_fim`): 0xa1599c guarda o idioma dos eventos carregados e a 0x6d9e50, que chama a liberação, o regrava logo depois (0x6d9eb8) |
 | `ordem das partidas do dia` | 0x6b6510 (170ª) | — | na liga inglesa as partidas do dia que empatam na competição, +0x46 e +0x36 nunca divergem em sinal entre +0x38 e +0x34: a mutação `o_campos` (troca a ordem dos dois) escapa até comparando. Teste: carreira ampla (várias ligas) |
+| `próximo evento da narração` | 0x6d78b0 (172ª) | — | só roda com a narração na tela (a carreira automática não mostra partida): as mutações `p_parte` e `p_anel` escapam. Teste: o Lucas assistindo partidas com a narração, comparando |
+| `nome do jogador na narração` | 0x6db2d0 (172ª) | — | só roda com a narração na tela: a mutação `n_longa` (a forma longa para os nomes curtos repetidos) escapa. Teste: partida assistida comparando, de preferência com dois jogadores de mesmo nome curto |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").

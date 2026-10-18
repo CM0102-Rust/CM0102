@@ -231,6 +231,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cd660 | `guardar_extremos` | store_extremes |
 | 0x896fe0 | `guardar_instrucoes` | store_instructions |
 | 0x6dbb10 | `guardar_tatica` | store_tactic |
+| 0x6e86d0 | `habilidade_vista` | perceived_ability |
 | 0x600c90 | `humano_manda_no_clube` | human_runs_club |
 | 0x76d430 | `idades_da_selecao` | national_team_ages |
 | 0x6b5a70 | `iniciar_proxima_partida` | start_next_match |
@@ -315,6 +316,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6d7b00 | `narrar_no_painel` | commentate_on_panel |
 | 0x5afe00 | `nevoa_apos_partida` | fog_after_match |
 | 0x53ce90 | `nivel_do_contrato` | contract_level |
+| 0x6db2d0 | `nome_do_jogador_na_narracao` | commentary_player_name |
 | 0x715f50 | `nota_ajustada` | adjusted_rating |
 | 0x6d4a20 | `nota_do_arbitro` | referee_grade |
 | 0x6ebd70 | `nota_do_jogador` | player_rating |
@@ -363,6 +365,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cd3d0 | `procurar_jogada` | look_for_play |
 | 0x6cd330 | `procurar_no_lado` | search_on_side |
 | 0x68d1b0 | `proximo_da_lista` | next_list_item |
+| 0x6d78b0 | `proximo_evento` | next_event |
 | 0x6d1210 | `punicoes` | punishments |
 | 0x6e9630 | `punir_falta` | punish_foul |
 | 0x6ea4e0 | `punir_lance` | punish_move |

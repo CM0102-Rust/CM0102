@@ -1567,3 +1567,13 @@ Mutações: `mutacoes/leva170.py` (5, pela carreira até 2002-06-01, confirmando
 | `construir_jogador_da_partida()` | 0x6eada0 | thiscall | match_pl.cpp: o construtor do jogador da partida (zera os campos, com os valores iniciais de alguns) |
 
 Mutações: `mutacoes/leva171.py` (7, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 7 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 172ª leva — o fechamento do motor (6): a leitura da narração, o nome do jogador e a habilidade vista (oficial em 18/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `proximo_evento()` | 0x6d78b0 | thiscall | match_events.cpp: o próximo evento da narração a mostrar, parte por parte do texto (separadas por |), avançando a leitura da fila |
+| `nome_do_jogador_na_narracao()` | 0x6db2d0 | cdecl | match_events.cpp: o nome do jogador na narração: a forma curta, ou a longa quando outro jogador dos dois clubes tem o mesmo nome curto |
+| `habilidade_vista()` | 0x6e86d0 | cdecl | match_man.cpp: a habilidade atual ou potencial do jogador como um observador a vê (reputação, ruído e conhecimento do observador) |
+
+Mutações: `mutacoes/leva172.py` (6, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 3 acusadas. `p_parte` escapou: a 0x6d78b0 só roda com a narração na tela, que a carreira automática não mostra (vai para a partida assistida do Lucas). `p_anel` escapou: a 0x6d78b0 só roda com a narração na tela, que a carreira automática não mostra. `n_longa` escapou: a 0x6db2d0 só roda com a narração na tela, que a carreira automática não mostra. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
