@@ -461,9 +461,14 @@ pub unsafe extern "system" fn registrar_excecao(info: *const [usize; 2]) -> i32 
         let r = |o: usize| *((ctx + o) as *const u32);
         let esp = r(0xc4) as usize;
         let pilha: Vec<String> = (0..12).map(|i| format!("{:x}", *((esp + 4 * i) as *const u32))).collect();
+        extern "C" {
+            static __ImageBase: u8;
+        }
+        let dll = core::ptr::addr_of!(__ImageBase) as usize;
+        let onde = if endereco >= dll && endereco - dll < 0x0100_0000 { format!(" (ddraw.dll+{:#x})", endereco - dll) } else { String::new() };
         linha(&format!(
-            "EXCECAO {:#x} em {:#x} (data {:?}) eax={:x} ebx={:x} ecx={:x} edx={:x} esi={:x} edi={:x} ebp={:x} esp={:x} pilha: {}",
-            codigo, endereco, *DATA_ATUAL, r(0xb0), r(0xa4), r(0xac), r(0xa8), r(0xa0), r(0x9c), r(0xb4), esp, pilha.join(" ")
+            "EXCECAO {:#x} em {:#x}{} (data {:?}) eax={:x} ebx={:x} ecx={:x} edx={:x} esi={:x} edi={:x} ebp={:x} esp={:x} pilha: {}",
+            codigo, endereco, onde, *DATA_ATUAL, r(0xb0), r(0xa4), r(0xac), r(0xa8), r(0xa0), r(0x9c), r(0xb4), esp, pilha.join(" ")
         ));
     }
     0 // EXCEPTION_CONTINUE_SEARCH
