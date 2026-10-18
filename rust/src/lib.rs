@@ -19,6 +19,7 @@ static GLOBAL: alocador::Global = alocador::Global;
 mod aleatorio;
 mod apresentacao;
 mod comparacao;
+mod conteiner;
 mod data;
 mod desvios;
 mod espiao;

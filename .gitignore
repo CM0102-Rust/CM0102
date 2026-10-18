@@ -16,3 +16,8 @@ CLZ Leagues Patch*.rar
 
 # Rascunhos de postagens no forum (por data e assunto)
 /postagens/
+
+# DLL so do save (save/): saida da compilacao
+/save/target/
+# Copia da instalacao da CLZ para testes
+/clz_teste/

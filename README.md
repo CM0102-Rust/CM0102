@@ -9,6 +9,7 @@ Este repositório o mantém jogável no Windows 11 e prepara a reescrita do jogo
 |---|---|---|
 | `JOGAR.bat` | Abre o jogo em 1920×1080 nativo, em janela redimensionável, sem CD e sem trocar a resolução do Windows. | sim |
 | `rust/` | Núcleo em Rust, compilado como `ddraw.dll` (camada de vídeo própria; ponto de entrada dos desvios). | sim |
+| `save/` | DLL só do save (saves acima de 2 GB, até 4 GB), para os exes modificados (NickPatcher, CLZ): [`docs/SAVE_2GB.md`](docs/SAVE_2GB.md). | sim |
 | `jogo/` | Instalação jogável: originais `cm0102.exe` / `cm0102_GDI.exe` e as cópias corrigidas `*-portatil.exe`. | não |
 | `original/` | Downloads intocados (ISO, zips, patch 3.9.68) e cópia de segurança dos dois exe 3.9.68. | não |
 | `referencias/` | Projetos de terceiros consultados (ex.: `CM0102Patcher` do nckstwrt). | não |
