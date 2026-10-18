@@ -76,12 +76,23 @@ def rodar(args, semente):
         falha('CM_RASTRO tem de ser AAAA-MM-DD')
     t0 = time.time()
     p = subprocess.Popen([os.path.join(JOGO, args.exe), '-windowed', '-seed', str(semente)], cwd=JOGO, env=ambiente)
-    try:
-        p.wait(timeout=args.limite)
-    except subprocess.TimeoutExpired:
-        p.kill()
-        p.wait()
-        return None, time.time() - t0, 'tempo esgotado (%d s) antes de chegar em %s' % (args.limite, args.ate)
+    while True:
+        try:
+            p.wait(timeout=5)
+            break
+        except subprocess.TimeoutExpired:
+            pass
+        if time.time() - t0 > args.limite:
+            p.kill()
+            p.wait()
+            return None, time.time() - t0, 'tempo esgotado (%d s) antes de chegar em %s' % (args.limite, args.ate)
+        # --parar-na-divergencia: a primeira divergencia ja decide (as mutacoes no modo comparacao)
+        if args.parar_na_divergencia and os.path.exists(log):
+            with open(log, encoding='utf-8', errors='replace') as f:
+                if 'DIVERGENCIA' in f.read():
+                    p.kill()
+                    p.wait()
+                    return None, time.time() - t0, 'parado na primeira divergencia'
     segundos = time.time() - t0
     texto = open(log, encoding='utf-8', errors='replace').read() if os.path.exists(log) else ''
     m = re.search(r'SIMULACAO parou em (\S+) sorteios=(\d+) ponteiro=(\S+) deslocamento=(\S+) rand=(\S+)', texto)
@@ -111,6 +122,7 @@ def main():
     ap.add_argument('--visivel', action='store_true', help='mostra a janela (por padrao fica fora da tela)')
     ap.add_argument('--som', action='store_true', help='mantem o som do jogo (por padrao os testes ocultos ficam mudos)')
     ap.add_argument('--limite', type=int, default=900, help='segundos maximos por execucao')
+    ap.add_argument('--parar-na-divergencia', action='store_true', help='encerra a execucao na primeira DIVERGENCIA do ddraw.log')
     ap.add_argument('--exe', default='cm0102-1080.exe')
     ap.add_argument('--cobertura', action='store_true', help='conta as chamadas das funcoes de jogo/cobertura.txt (gerado por cobertura.py)')
     ap.add_argument('--sem-trava', action='store_true', help='nao espera a trava do laboratorio (o vigia de memoria continua)')

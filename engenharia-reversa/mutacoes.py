@@ -15,7 +15,8 @@ com --casos casos (padrao 200 mil; CM_AUTOTESTE=motor:N), que para na primeira d
 mutacao que passa com poucos casos pode precisar de mais: refazer so ela com --casos 2000000.
 
 --jogo AAAA-MM-DD: em vez do autoteste, cada mutacao (e a base) roda o jogo real em modo de
-comparacao ate a data (simular.py, com a trava do laboratorio). Para caminhos que o autoteste
+comparacao ate a data (simular.py, com a trava do laboratorio; a mutacao para na primeira
+divergencia, a base vai ate o fim). Para caminhos que o autoteste
 sintetico nao alcanca (o que depende do banco carregado, como a tatica do clube).
 
 --carreira AAAA-MM-DD: cada mutacao (e a base) roda a carreira automatica em modo Rust (sem
@@ -82,6 +83,9 @@ def autoteste(valor='1'):
     return [l for l in texto.splitlines() if l.startswith('motor: AUTOTESTE') or 'motor: DIVERGENCIA' in l or 'EXCECAO' in l]
 
 
+PARAR_NA_DIVERGENCIA = False  # ligado depois da base: a mutacao para na primeira divergencia
+
+
 def jogo(data):
     # Sem o log da rodada anterior: se a simulacao for recusada (vigia de memoria), nao ha resultado
     # velho para ler como se fosse desta mutacao. Recusada por falta de memoria, espera e tenta de novo.
@@ -94,7 +98,9 @@ def jogo(data):
         time.sleep(60)
     if os.path.exists(LOG):
         os.remove(LOG)
-    r = subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'comparar', '--limite', '900'],
+    # a mutacao ja e acusada na primeira divergencia: a rodada para ali (a base vai ate o fim)
+    extra = ['--parar-na-divergencia'] if PARAR_NA_DIVERGENCIA else []
+    r = subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'comparar', '--limite', '900'] + extra,
                        cwd=AQUI, capture_output=True, text=True)
     if r.returncode != 0 and not os.path.exists(LOG):
         return ['SIMULACAO RECUSADA: ' + (r.stdout + r.stderr).strip().splitlines()[-1:][0] if (r.stdout + r.stderr).strip() else 'SIMULACAO RECUSADA']
@@ -180,6 +186,8 @@ def main():
             ramos = None
         if '--so-base' in sys.argv:
             return
+        global PARAR_NA_DIVERGENCIA
+        PARAR_NA_DIVERGENCIA = True
         for m in mutacoes:
             nome, velho, novo = m[:3]
             if len(m) > 3 and ramos is not None and ramos.get(m[3], 0) == 0:
