@@ -1549,3 +1549,13 @@ Mutations: `mutacoes/leva168.py` (3, by the career to 2002-06-01, confirming the
 | `liberar_tabelas_de_eventos()` | 0x6d5b50 | cdecl | match_events.cpp: frees the loaded event tables and each record's texts |
 
 Mutations: `mutacoes/leva169.py` (4, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `c_tempo` escaped: equivalent mutation: the initial +0x2db0 (125) is only compared with 20 and 101 and the match screens rewrite it. `l_fim` escaped: equivalent mutation: 0x6d9e50, which calls the freeing, rewrites 0xa1599c (the events language) right after. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 170th batch — closing the engine (4): the match and player orderings and the event variant (official on 2026-10-18)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `ordem_das_partidas_do_dia()` | 0x6b6510 | cdecl | match_eng.cpp: the day's match order (qsort): competition, record fields and the club name |
+| `ordem_de_acao()` | 0x6bd840 | cdecl | match_eng.cpp: the players' order on the engine's turn (qsort): the marked ones first, then by strength |
+| `variante_do_evento()` | 0x6d5d80 | stdcall | match_events.cpp: swaps the commentary event for a variant, by a draw and by the play type |
+
+Mutations: `mutacoes/leva170.py` (5, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 4 caught. `o_campos` escaped: in the English league the day matches tied up to +0x36 never disagree in sign between +0x38 and +0x34 (missing data; goes to the broad career). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

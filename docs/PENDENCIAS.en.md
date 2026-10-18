@@ -67,5 +67,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `partida abandonada` | 0x6d5930 (batch 167) | — | no match is abandoned in the automatic career (abandonment minute at −1): mutation `a_onze` escapes. Test: an abandoned match (weather) in Lucas's game in comparison mode |
 | `commentary queue: +0x2db0` | 0x6d5bf0 (batch 169) | — | equivalent mutation (`c_tempo`): the initial 125 is only compared with 20 and 101 (0x6b5686, 0x6d8ace) and the match screens rewrite it (0x719c4e, 0x71a3d5); 124 takes the same paths |
 | `events language` | 0x6d5b50 (batch 169) | — | equivalent mutation (`l_fim`): 0xa1599c holds the language of the loaded events and 0x6d9e50, which calls the freeing, rewrites it right after (0x6d9eb8) |
+| `day match order` | 0x6b6510 (batch 170) | — | in the English league the day's matches tied on competition, +0x46 and +0x36 never disagree in sign between +0x38 and +0x34: mutation `o_campos` (swaps their order) escapes even comparing. Test: broad career (several leagues) |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

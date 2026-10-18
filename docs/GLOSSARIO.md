@@ -317,6 +317,8 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6ebd70 | `nota_do_jogador` | player_rating |
 | 0x6d3de0 | `nova_reputacao` | new_reputation |
 | 0x6b6570 | `numero_da_competicao` | competition_number |
+| 0x6b6510 | `ordem_das_partidas_do_dia` | day_match_order |
+| 0x6bd840 | `ordem_de_acao` | action_order |
 | 0x6bd760 | `ordem_dos_jogadores` | player_order |
 | 0x6be520 | `ordem_dos_penaltis` | penalty_order |
 | 0x4b0780 | `ordem_por_5f` | order_by_5f |
@@ -429,6 +431,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5b8960 | `vagas_sem_conflito` | slots_without_conflict |
 | 0x700bd0 | `valor_do_chute` | shot_value |
 | 0x7165b0 | `valor_pela_condicao` | value_by_condition |
+| 0x6d5d80 | `variante_do_evento` | event_variant |
 | 0x6b7cf0 | `venceu_o_jogo` | won_the_match |
 | 0x6fa140 | `virado_para` | facing |
 | 0x70df20 | `x_fora_do_meio` | x_off_centre |

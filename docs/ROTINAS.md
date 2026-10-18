@@ -1547,3 +1547,13 @@ Mutações: `mutacoes/leva168.py` (3, pela carreira até 2002-06-01, confirmando
 | `liberar_tabelas_de_eventos()` | 0x6d5b50 | cdecl | match_events.cpp: libera as tabelas de eventos carregadas e os textos de cada registro |
 
 Mutações: `mutacoes/leva169.py` (4, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `c_tempo` escapou: mutação equivalente: o +0x2db0 inicial (125) só é comparado com 20 e 101 e as telas da partida o regravam. `l_fim` escapou: mutação equivalente: a 0x6d9e50, que chama a liberação, regrava 0xa1599c (o idioma dos eventos) logo depois. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 170ª leva — o fechamento do motor (4): as ordens das partidas e dos jogadores e a variante do evento (oficial em 18/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `ordem_das_partidas_do_dia()` | 0x6b6510 | cdecl | match_eng.cpp: a ordem das partidas do dia (qsort): competição, campos do registro e o nome do clube |
+| `ordem_de_acao()` | 0x6bd840 | cdecl | match_eng.cpp: a ordem dos jogadores na vez do motor (qsort): os marcados primeiro, depois pela força |
+| `variante_do_evento()` | 0x6d5d80 | stdcall | match_events.cpp: troca o evento da narração por uma variante, por sorteio e pelo tipo do lance |
+
+Mutações: `mutacoes/leva170.py` (5, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 4 acusadas. `o_campos` escapou: na liga inglesa as partidas do dia empatadas até +0x36 nunca divergem em sinal entre +0x38 e +0x34 (falta de dados; vai para a carreira ampla). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
