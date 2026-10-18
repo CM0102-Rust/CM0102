@@ -1487,3 +1487,13 @@ Mutações: `mutacoes/leva162.py` (5, pela carreira até 2002-06-01, confirmando
 | `reiniciar_recordes()` | 0x452fe0 | cdecl | club_records.cpp: −1.0f e −1 nos campos dos recordes do clube |
 
 Mutações: `mutacoes/leva163.py` (5, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 5 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 164ª leva — o calendário das ligas (oficial em 18/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `girar_rodada()` | 0x68a030 | cdecl | league.cpp: a próxima posição no rodízio do calendário (liga especial, saltos de 3 por sorteio, voltas em n) |
+| `registrar_jogo_da_rodada()` | 0x68a1c0 | cdecl | league.cpp: grava o jogo da rodada (três bytes e um dword) |
+| `marcar_ano_no_calendario()` | 0x5af180 | cdecl | fix_man.cpp: marca o ano do jogo nas entradas dos dois clubes (ano × 2 + bit, regra de 2001) |
+
+Mutações: `mutacoes/leva164.py` (7, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 5 acusadas. `g_meio` escapou: a carreira automática só joga ligas inglesas, sem a marca 0x80 do rodízio; nem refeita mais forte (`g_meio_b`, `mutacoes/leva164b.py`) é acusada. `g_volta` escapou: a volta no fim do rodízio não acontece na carreira; nem refeita mais forte (`g_volta_b`) é acusada. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

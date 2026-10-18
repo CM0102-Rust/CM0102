@@ -199,6 +199,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cb910 | `fora_do_meio` | off_centre |
 | 0x6bbb60 | `forca_do_lado` | side_strength |
 | 0x6c0c60 | `forca_do_time` | team_strength |
+| 0x68a030 | `girar_rodada` | rotate_round |
 | 0x535920 | `global_9b5984` | global_9b5984 |
 | 0x547810 | `gosta_de` | likes |
 | 0x547d60 | `gosta_do_clube` | likes_club |
@@ -269,6 +270,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6bbf60 | `marcacao_individual` | individual_marking |
 | 0x7160f0 | `marcado_designado` | designated_marked |
 | 0x6d4330 | `marcador_direto` | direct_marker |
+| 0x5af180 | `marcar_ano_no_calendario` | mark_calendar_year |
 | 0x6d10a0 | `marcar_craques` | mark_stars |
 | 0x5b5910 | `marcar_posicao` | mark_position |
 | 0x897760 | `marcar_vaga` | mark_slot |
@@ -354,6 +356,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6bc030 | `quem_marcar` | who_to_mark |
 | 0x6f5810 | `recuperar_folego` | recover_stamina |
 | 0x6e1aa0 | `refazer_time` | redo_team |
+| 0x68a1c0 | `registrar_jogo_da_rodada` | store_round_match |
 | 0x6bb9a0 | `registrar_lance` | record_move |
 | 0x62be00 | `registrar_lesao` | register_injury |
 | 0x79ce10 | `registrar_nota_do_arbitro` | record_referee_grade |

@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'girar_rodada': 'rotate_round', 'registrar_jogo_da_rodada': 'store_round_match', 'marcar_ano_no_calendario': 'mark_calendar_year',
  'casa_guardada': 'stored_cell', 'ligar_marca_da_formacao': 'set_formation_flag', 'reiniciar_recordes': 'reset_records',
  'gravar_vaga_tatica': 'set_tactic_slot', 'pessoa_da_vaga_tatica': 'tactic_slot_person', 'gravar_formacao_tatica': 'set_tactic_formation',
  'serve_para_a_vaga': 'shortlist_slot_fits', 'codigo_da_posicao': 'position_code', 'criterio_da_comissao': 'staff_criterion',

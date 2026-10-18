@@ -1489,3 +1489,13 @@ Mutations: `mutacoes/leva162.py` (5, by the career to 2002-06-01, confirming the
 | `reiniciar_recordes()` | 0x452fe0 | cdecl | club_records.cpp: −1.0f and −1 in the club record fields |
 
 Mutations: `mutacoes/leva163.py` (5, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 5 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 164th batch — the league calendar (official on 2026-10-18)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `girar_rodada()` | 0x68a030 | cdecl | league.cpp: the next position in the calendar rotation (special league, jumps of 3 by draw, wrapping at n) |
+| `registrar_jogo_da_rodada()` | 0x68a1c0 | cdecl | league.cpp: stores the round match (three bytes and a dword) |
+| `marcar_ano_no_calendario()` | 0x5af180 | cdecl | fix_man.cpp: marks the match year in both clubs' entries (year × 2 + bit, 2001 rule) |
+
+Mutations: `mutacoes/leva164.py` (7, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 5 caught. `g_meio` escaped: the automatic career only plays English leagues, without the rotation's 0x80 flag; not even redone stronger (`g_meio_b`, `mutacoes/leva164b.py`) is it caught. `g_volta` escaped: wrapping at the end of the rotation does not happen in the career; not even redone stronger (`g_volta_b`) is it caught. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
