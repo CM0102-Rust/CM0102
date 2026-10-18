@@ -129,6 +129,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5b09d0 | `conhecer_pessoa` | know_person |
 | 0x6f9f90 | `consegue_jogar` | can_play |
 | 0x6e9460 | `construir_arbitro` | construct_referee |
+| 0x6d5bf0 | `construir_fila_da_narracao` | construct_commentary_queue |
 | 0x6b7e50 | `construir_motor` | build_engine |
 | 0x6cbbb0 | `contar_ativos` | count_active |
 | 0x4cf5f0 | `contrato_com_clube` | contract_with_club |
@@ -190,6 +191,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f4a40 | `estado_do_lado` | side_state |
 | 0x6cf750 | `estatistica_de_posse` | possession_statistic |
 | 0x7c2150 | `estatistica_do_jogador` | player_statistic |
+| 0x6d5d00 | `evento_na_frente` | event_at_front |
 | 0x6b74a0 | `eventos_do_pos_jogo` | post_match_events |
 | 0x6d26b0 | `evoluir_jogador` | develop_player |
 | 0x6f55c0 | `evoluir_momento` | evolve_moment |
@@ -261,6 +263,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x76d7b0 | `ler_marca_da_pessoa` | read_person_mark |
 | 0x6cfe10 | `lesao_na_dividida` | tackle_injury |
 | 0x6d0980 | `lesionar` | injure |
+| 0x6d5b50 | `liberar_tabelas_de_eventos` | free_event_tables |
 | 0x76c0f0 | `ligar_44_da_pessoa` | set_person_44 |
 | 0x5b50d0 | `ligar_marca_da_formacao` | set_formation_flag |
 | 0x6cb930 | `limite` | limit |

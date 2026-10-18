@@ -1539,3 +1539,13 @@ Mutations: `mutacoes/leva167.py` (4, by the career to 2002-06-01, confirming the
 | `destruir_jogador_da_partida()` | 0x6ebd60 | thiscall | match_pl.cpp: the match player destructor (zeroes +0x19e) |
 
 Mutations: `mutacoes/leva168.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 3 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 169th batch — closing the engine (3): the commentary queue (official on 2026-10-18)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `evento_na_frente()` | 0x6d5d00 | thiscall | match_events.cpp: puts an event at the front of the commentary queue (steps the 12-slot ring back, drops the repeat) and queues it via 0x6d6f70 |
+| `construir_fila_da_narracao()` | 0x6d5bf0 | thiscall | match_events.cpp: the commentary queue constructor: clears the queue, reads the events and, if asked, plays the crowd loop |
+| `liberar_tabelas_de_eventos()` | 0x6d5b50 | cdecl | match_events.cpp: frees the loaded event tables and each record's texts |
+
+Mutations: `mutacoes/leva169.py` (4, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `c_tempo` escaped: equivalent mutation: the initial +0x2db0 (125) is only compared with 20 and 101 and the match screens rewrite it. `l_fim` escaped: equivalent mutation: 0x6d9e50, which calls the freeing, rewrites 0xa1599c (the events language) right after. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

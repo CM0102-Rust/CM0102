@@ -1537,3 +1537,13 @@ Mutações: `mutacoes/leva167.py` (4, pela carreira até 2002-06-01, confirmando
 | `destruir_jogador_da_partida()` | 0x6ebd60 | thiscall | match_pl.cpp: o destrutor do jogador da partida (zera +0x19e) |
 
 Mutações: `mutacoes/leva168.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 3 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 169ª leva — o fechamento do motor (3): a fila da narração (oficial em 18/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `evento_na_frente()` | 0x6d5d00 | thiscall | match_events.cpp: põe um evento na frente da fila da narração (recua a posição no anel de 12, tira o repetido) e enfileira pela 0x6d6f70 |
+| `construir_fila_da_narracao()` | 0x6d5bf0 | thiscall | match_events.cpp: o construtor da fila da narração: zera a fila, lê os eventos e, se pedido, toca o loop da torcida |
+| `liberar_tabelas_de_eventos()` | 0x6d5b50 | cdecl | match_events.cpp: libera as tabelas de eventos carregadas e os textos de cada registro |
+
+Mutações: `mutacoes/leva169.py` (4, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `c_tempo` escapou: mutação equivalente: o +0x2db0 inicial (125) só é comparado com 20 e 101 e as telas da partida o regravam. `l_fim` escapou: mutação equivalente: a 0x6d9e50, que chama a liberação, regrava 0xa1599c (o idioma dos eventos) logo depois. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

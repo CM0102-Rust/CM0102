@@ -65,5 +65,7 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `humano manda no clube` | 0x600c90 (batch 166) | — | with no human manager the counter stays at zero (`h_forcar` escapes). The test is Lucas's game in comparison mode, also as a national team manager |
 | `categoria do contrato` | 0x4ca470 (batch 166) | — | type-5 contracts and the status-0 range with happiness 40 to 75 do not appear in the career (`c_tipo5`, `c_k0` escape even redone). Candidates for the overnight wide career |
 | `partida abandonada` | 0x6d5930 (batch 167) | — | no match is abandoned in the automatic career (abandonment minute at −1): mutation `a_onze` escapes. Test: an abandoned match (weather) in Lucas's game in comparison mode |
+| `commentary queue: +0x2db0` | 0x6d5bf0 (batch 169) | — | equivalent mutation (`c_tempo`): the initial 125 is only compared with 20 and 101 (0x6b5686, 0x6d8ace) and the match screens rewrite it (0x719c4e, 0x71a3d5); 124 takes the same paths |
+| `events language` | 0x6d5b50 (batch 169) | — | equivalent mutation (`l_fim`): 0xa1599c holds the language of the loaded events and 0x6d9e50, which calls the freeing, rewrites it right after (0x6d9eb8) |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

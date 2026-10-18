@@ -486,8 +486,11 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6d5b20, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x84, 0xc0] },
     Prologo { endereco: 0x6e9460, bytes: &[0x8b, 0xc1, 0xc7, 0x00, 0x00, 0x00, 0x00, 0x00] },
     Prologo { endereco: 0x6ebd60, bytes: &[0xc7, 0x81, 0x9e, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x6d5d00, bytes: &[0x66, 0x8b, 0x41, 0x08, 0x66, 0x85, 0xc0] },
+    Prologo { endereco: 0x6d5bf0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x83, 0xc8, 0xff] },
+    Prologo { endereco: 0x6d5b50, bytes: &[0x53, 0x56, 0x57, 0xbe, 0x90, 0x87, 0xb6, 0x00] },
 ];
-const N: usize = 379;
+const N: usize = 382;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -31941,6 +31944,111 @@ unsafe extern "stdcall" fn comparar_codigo_da_posicao(m: i16) -> u8 {
 
 comparar_valor!(comparar_criterio_da_comissao, criterio_da_comissao, 357, () -> u32);
 
+// ---------- 169a leva: o fechamento do motor (3): a fila da narracao (match_events.cpp) ----------
+
+/// { 0x6d5d00 } (thiscall, ret 0x1c, match_events.cpp): põe um evento na frente da fila da narração:
+/// a posição de escrita (+8, anel de 12) recua uma casa (de 0 vai a 11); se o último da fila (+6
+/// itens, palavra +0x712 de 14 bytes) é o mesmo evento da nova posição (+0x30), a fila perde um;
+/// depois enfileira pela 0x6d6f70 com os mesmos 7 argumentos.
+unsafe extern "thiscall" fn evento_na_frente(t: usize, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32 {
+    let w = |o: usize| core::ptr::read_unaligned((t + o) as *const i16);
+    let pos = w(8);
+    let pos = if pos == 0 { 0xb } else { pos.wrapping_sub(1) };
+    core::ptr::write_unaligned((t + 8) as *mut i16, pos);
+    let n = w(6);
+    if n > 0 && w(0x712 + n as usize * 14) == w(0x30 + pos as usize * 14) {
+        core::ptr::write_unaligned((t + 6) as *mut i16, n - 1);
+    }
+    let enfileirar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x6d6f70usize);
+    enfileirar(t, a, b, c, d, e, f, g)
+}
+
+/// { 0x6d5bf0 } (thiscall, ret 4, match_events.cpp): o construtor da fila da narração: zera a fila e
+/// os campos (+0x2db0 = 125, +1 e +0xa = −1, +0x2d68 = −1), os globais de evento (0xb68670..), lê os
+/// eventos (0x6d9e50), marca as 16 vagas (+0x10, +0x20) com −1 e zera os 16 tempos (+0x2d6c); com
+/// `torcida`, toca o loop da torcida do lado da vez ([0xb77c7a]) pela 0x8025e0. Devolve `this`.
+unsafe extern "thiscall" fn construir_fila_da_narracao(t: usize, torcida: u8) -> usize {
+    let b = |o: usize, v: u8| *((t + o) as *mut u8) = v;
+    let w = |o: usize, v: u16| core::ptr::write_unaligned((t + o) as *mut u16, v);
+    w(0xa, 0xffff);
+    core::ptr::write_unaligned((t + 0x2d68) as *mut u32, u32::MAX);
+    for o in [6, 8, 0xc, 0xe] {
+        w(o, 0);
+    }
+    b(5, 0);
+    b(2, 0);
+    b(0, 1);
+    b(0x2db0, 0x7d);
+    b(1, 0xff);
+    b(3, 0);
+    core::ptr::write_unaligned((t + 0x2dac) as *mut u32, 0);
+    b(4, 0);
+    *(0xb68670 as *mut u16) = 1;
+    *(0xb68672 as *mut u16) = 0x2bc;
+    *(0xb68674 as *mut u8) = 0;
+    *(0xb68778 as *mut u32) = 0xad9c64;
+    *(0xb6877c as *mut u32) = 0xad9c64;
+    let ler_eventos_cfg: unsafe extern "C" fn() = core::mem::transmute(0x6d9e50usize);
+    ler_eventos_cfg();
+    for k in 0..16 {
+        b(0x10 + k, 0xff);
+        b(0x20 + k, 0xff);
+        core::ptr::write_unaligned((t + 0x2d6c + 4 * k) as *mut u32, 0);
+    }
+    if torcida != 0 {
+        let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
+        let tocar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) = core::mem::transmute(0x8025e0usize);
+        let lado = *(0xb77c7a as *const i16) as isize;
+        let nome = caminho(0x9c382c, 0xa159a0);
+        tocar(0xb74450, (t as isize + 0x20 + lado) as usize, 2, nome, 1);
+    }
+    t
+}
+
+/// { 0x6d5b50 } (cdecl, match_events.cpp): libera as tabelas de eventos carregadas: em cada uma das
+/// entradas de 0x12 bytes de 0xb68790 a 0xb6b72a com tabela própria (nem nula, nem a padrão
+/// 0xb68670), os dois textos (+0x108, +0x10c) de cada registro de 0x110 bytes e a tabela; depois
+/// zera 0xb6b723 e põe −1 em 0xa1599c.
+unsafe extern "C" fn liberar_tabelas_de_eventos() {
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let mut e = 0xb68790usize;
+    while e < 0xb6b72a {
+        let tabela = core::ptr::read_unaligned(e as *const usize);
+        if tabela != 0xb68670 && tabela != 0 {
+            let mut k = 0i32;
+            while k < core::ptr::read_unaligned((e + 4) as *const i16) as i32 {
+                let r = tabela + k as usize * 0x110;
+                for o in [0x108, 0x10c] {
+                    let p = core::ptr::read_unaligned((r + o) as *const usize);
+                    if p != 0 {
+                        liberar(p);
+                    }
+                }
+                k += 1;
+            }
+            liberar(tabela);
+            core::ptr::write_unaligned(e as *mut usize, 0);
+        }
+        e += 0x12;
+    }
+    *(0xb6b723 as *mut u8) = 0;
+    *(0xa1599c as *mut u32) = u32::MAX;
+}
+
+// ponytail: as tres enfileiram narracao, tocam som ou liberam memoria (nao rodam duas vezes): sem
+// comparacao propria, provadas pela carreira (fila de 19414 partidas, 285 mil eventos na frente).
+unsafe extern "thiscall" fn comparar_evento_na_frente(t: usize, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32 {
+    orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) -> u32>(379)(t, a, b, c, d, e, f, g)
+}
+
+unsafe extern "thiscall" fn comparar_construir_fila_da_narracao(t: usize, torcida: u8) -> usize {
+    orig::<unsafe extern "thiscall" fn(usize, u8) -> usize>(380)(t, torcida)
+}
+
+unsafe extern "C" fn comparar_liberar_tabelas_de_eventos() {
+    orig::<unsafe extern "C" fn()>(381)()
+}
+
 // ---------- 168a leva: o fechamento do motor (2): os zagueiros do lado, o arbitro e o jogador da partida ----------
 
 /// { 0x6d5b20 } (thiscall, ret 4, match_eng.cpp): os zagueiros do lado `lado` sem conflito (0x5b8dc0
@@ -35267,6 +35375,9 @@ pub unsafe fn instalar(comparando: bool) {
         zagueiros_do_lado_sem_conflito as *const () as usize,
         construir_arbitro as *const () as usize,
         destruir_jogador_da_partida as *const () as usize,
+        evento_na_frente as *const () as usize,
+        construir_fila_da_narracao as *const () as usize,
+        liberar_tabelas_de_eventos as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -35648,6 +35759,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_zagueiros_do_lado_sem_conflito as *const () as usize,
         comparar_construir_arbitro as *const () as usize,
         comparar_destruir_jogador_da_partida as *const () as usize,
+        comparar_evento_na_frente as *const () as usize,
+        comparar_construir_fila_da_narracao as *const () as usize,
+        comparar_liberar_tabelas_de_eventos as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -35760,7 +35874,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito", "motor_zagueiros_do_lado_sem_conflito", "motor_construir_arbitro", "motor_destruir_jogador_da_partida",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito", "motor_zagueiros_do_lado_sem_conflito", "motor_construir_arbitro", "motor_destruir_jogador_da_partida", "motor_evento_na_frente", "motor_construir_fila_da_narracao", "motor_liberar_tabelas_de_eventos",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

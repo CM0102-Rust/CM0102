@@ -1,5 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-motor_narracao_1
 motor_ordenacoes
 motor_narracao_2
 motor_narracao_3
