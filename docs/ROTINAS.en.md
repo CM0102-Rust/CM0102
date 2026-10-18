@@ -1479,3 +1479,13 @@ Mutations: `mutacoes/leva161.py` (9, by the career to 2002-06-01, confirming the
 | `gravar_formacao_tatica()` | 0x8967d0 | thiscall | tactics.cpp: stores the formation in the club row |
 
 Mutations: `mutacoes/leva162.py` (5, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `g_pendente` escaped: pending instructions (+0x5f0) only exist with a human manager. `p_ficha` escaped: in the automatic career the tactics table slots are empty (−1): not even the inverted condition (`p_ficha_b`, `mutacoes/leva162b.py`) is caught; the part with a person only runs on the human manager's tactics. `p_nacao` escaped: likewise (the inverted `p_nacao_b` also escapes). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 163rd batch — the formation (flags and cells) and resetting the club records (official on 2026-10-18)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `casa_guardada()` | 0x5b3c70 | thiscall | formation.cpp: the stored cell of the slot by attack and band |
+| `ligar_marca_da_formacao()` | 0x5b50d0 | thiscall | formation.cpp: sets the flag in +0x584 clearing the same group and zeroes +0x187f |
+| `reiniciar_recordes()` | 0x452fe0 | cdecl | club_records.cpp: −1.0f and −1 in the club record fields |
+
+Mutations: `mutacoes/leva163.py` (5, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 5 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

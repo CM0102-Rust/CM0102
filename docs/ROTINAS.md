@@ -1477,3 +1477,13 @@ Mutações: `mutacoes/leva161.py` (9, pela carreira até 2002-06-01, confirmando
 | `gravar_formacao_tatica()` | 0x8967d0 | thiscall | tactics.cpp: grava a formação na linha do clube |
 
 Mutações: `mutacoes/leva162.py` (5, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `g_pendente` escapou: as instruções pendentes (+0x5f0) só existem com técnico humano. `p_ficha` escapou: na carreira automática as vagas da tabela tática estão vazias (−1): nem a condição invertida (`p_ficha_b`, `mutacoes/leva162b.py`) é acusada; a parte com pessoa só roda na tática do técnico humano. `p_nacao` escapou: idem (`p_nacao_b` invertida também escapa). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 163ª leva — a formação (marcas e casas) e o reinício dos recordes do clube (oficial em 18/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `casa_guardada()` | 0x5b3c70 | thiscall | formation.cpp: a casa guardada da vaga pelo ataque e pela faixa |
+| `ligar_marca_da_formacao()` | 0x5b50d0 | thiscall | formation.cpp: liga a marca em +0x584 apagando as do mesmo grupo e zera +0x187f |
+| `reiniciar_recordes()` | 0x452fe0 | cdecl | club_records.cpp: −1.0f e −1 nos campos dos recordes do clube |
+
+Mutações: `mutacoes/leva163.py` (5, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 5 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

@@ -97,6 +97,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c2a40 | `casa_da_formacao` | formation_square |
 | 0x5b2ae0 | `casa_da_vaga` | slot_code |
 | 0x5b2e80 | `casa_do_setor_ocupada` | sector_slot_taken |
+| 0x5b3c70 | `casa_guardada` | stored_cell |
 | 0x5b7e60 | `casa_no_campo` | pitch_cell |
 | 0x544410 | `chance_de_conhecer` | chance_to_know |
 | 0x702050 | `chutar` | shoot |
@@ -253,6 +254,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cfe10 | `lesao_na_dividida` | tackle_injury |
 | 0x6d0980 | `lesionar` | injure |
 | 0x76c0f0 | `ligar_44_da_pessoa` | set_person_44 |
+| 0x5b50d0 | `ligar_marca_da_formacao` | set_formation_flag |
 | 0x6cb930 | `limite` | limit |
 | 0x70df40 | `limite_jogador` | player_limit |
 | 0x5b5960 | `limpar_designados` | clear_assigned |
@@ -358,6 +360,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x7003b0 | `registrar_posse` | record_possession |
 | 0x53a5b0 | `registro_livre` | free_record |
 | 0x6c54a0 | `reiniciar_lance` | restart_play |
+| 0x452fe0 | `reiniciar_recordes` | reset_records |
 | 0x5477d0 | `rejeitado_por` | rejected_by |
 | 0x714ca0 | `remover_da_lista` | remove_from_list |
 | 0x6c06b0 | `repartir_a` | split_a |
