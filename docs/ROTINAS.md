@@ -1527,3 +1527,13 @@ Mutações: `mutacoes/leva166.py` (7, pela carreira até 2002-06-01, confirmando
 | `vagas_do_lado_sem_conflito()` | 0x6d5af0 | thiscall | match_eng.cpp: a 0x5b8960 na formação do lado |
 
 Mutações: `mutacoes/leva167.py` (4, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 3 acusadas. `a_onze` escapou: nenhuma partida é abandonada na carreira automática (o minuto do abandono fica em −1). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 168ª leva — o fechamento do motor (2): os zagueiros do lado, o árbitro e o jogador da partida (oficial em 18/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `zagueiros_do_lado_sem_conflito()` | 0x6d5b20 | thiscall | match_eng.cpp: a 0x5b8dc0 na formação do lado |
+| `construir_arbitro()` | 0x6e9460 | thiscall | match_official.cpp: o construtor do árbitro (zera +0 e +4) |
+| `destruir_jogador_da_partida()` | 0x6ebd60 | thiscall | match_pl.cpp: o destrutor do jogador da partida (zera +0x19e) |
+
+Mutações: `mutacoes/leva168.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 3 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

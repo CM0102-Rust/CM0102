@@ -128,6 +128,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6b5260 | `confirmar_partida_em_rede` | confirm_network_match |
 | 0x5b09d0 | `conhecer_pessoa` | know_person |
 | 0x6f9f90 | `consegue_jogar` | can_play |
+| 0x6e9460 | `construir_arbitro` | construct_referee |
 | 0x6b7e50 | `construir_motor` | build_engine |
 | 0x6cbbb0 | `contar_ativos` | count_active |
 | 0x4cf5f0 | `contrato_com_clube` | contract_with_club |
@@ -147,6 +148,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6f56c0 | `desgastar` | tire (fatigue) |
 | 0x5b58e0 | `designado_da_posicao` | designated_for_position |
 | 0x717470 | `destaque_do_jogador` | player_highlight |
+| 0x6ebd60 | `destruir_jogador_da_partida` | destroy_match_player |
 | 0x6b97a0 | `destruir_motor` | destroy_engine |
 | 0x6cd770 | `desviar_bola` | deflect_ball |
 | 0x715f30 | `diferenca_do_jogador` | difference_of_player |
@@ -427,6 +429,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6b7cf0 | `venceu_o_jogo` | won_the_match |
 | 0x6fa140 | `virado_para` | facing |
 | 0x70df20 | `x_fora_do_meio` | x_off_centre |
+| 0x6d5b20 | `zagueiros_do_lado_sem_conflito` | side_centre_backs_without_conflict |
 | 0x5b8dc0 | `zagueiros_sem_conflito` | centre_backs_without_conflict |
 | 0x6ce0f0 | `zerar_guardado` | clear_stored |
 | 0x76d7e0 | `zerar_marca_da_pessoa` | clear_person_mark |

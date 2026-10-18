@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'zagueiros_do_lado_sem_conflito': 'side_centre_backs_without_conflict', 'construir_arbitro': 'construct_referee', 'destruir_jogador_da_partida': 'destroy_match_player',
  'bola_na_area': 'ball_goal_end', 'partida_abandonada': 'match_abandoned', 'vagas_do_lado_sem_conflito': 'side_slots_without_conflict',
  'registro_do_observador': 'scout_record', 'humano_manda_no_clube': 'human_runs_club', 'categoria_do_contrato': 'contract_category',
  'vaga_extra_tatica': 'extra_tactic_slot', 'idades_da_selecao': 'national_team_ages', 'gravar_dado_do_humano': 'set_human_field',

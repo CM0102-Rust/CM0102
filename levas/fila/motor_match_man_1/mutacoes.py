@@ -1,0 +1,15 @@
+# Mutacoes do fechamento do motor (7). Uso: python mutacoes.py mutacoes\levaN.py --carreira 2002-06-01
+MUTACOES = [
+    ('r_banco', "            cod2[i] = w(curtos, j);", "            cod2[i] = w(codigos, j);"),
+    ('r_idade', "            3 => p != 0 && r(1) < *((p + 0x18) as *const i8),", "            3 => p != 0 && r(1) <= *((p + 0x18) as *const i8),"),
+    ('n_posicao', "        fb(0xf) * fb(0xf) - 300", "        fb(0xf) * fb(0xf) - 299"),
+    ('n_ponta', "k1a / 400", "k1a / 401"),
+    ('n_contrato', "        3 | 4 | 7 => 25,", "        3 | 4 | 7 => 24,"),
+    ('n_final', "        (500 - l4c) * l40", "        (501 - l4c) * l40"),
+    ('n_veterano', "            Some(0x9689e0)", "            Some(0x968968)"),
+    ('n_forma', "        soma += ftol(a / ((f64_em(0x96d640) - b * f64_em(0x96a5c0)) * f64_em(0x968ff8)));", "        soma += ftol(a / ((f64_em(0x96d640) - b * f64_em(0x96a5c0)) * f64_em(0x968ff8))) + 1;"),
+    ('v_folego', "        let e = extra + ((60 - minuto) * 150).min(3000);", "        let e = extra + ((60 - minuto) * 149).min(3000);"),
+    ('v_tatica', "        l4c += fb(0x26) / 7;", "        l4c += fb(0x26) / 8;"),
+    ('v_ferias', "        bonus = (base * 200).max(10000) + 40000;", "        bonus = (base * 200).max(10000) + 39999;"),
+    ('v_segunda', "        if segunda { (ebp + ajuste_da_posicao(f, pos2) + 2 * edi) / 3 } else { edi }", "        if segunda { (ebp + ajuste_da_posicao(f, pos2) + 2 * edi) / 4 } else { edi }"),
+]

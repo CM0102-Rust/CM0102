@@ -1529,3 +1529,13 @@ Mutations: `mutacoes/leva166.py` (7, by the career to 2002-06-01, confirming the
 | `vagas_do_lado_sem_conflito()` | 0x6d5af0 | thiscall | match_eng.cpp: 0x5b8960 on the side's formation |
 
 Mutations: `mutacoes/leva167.py` (4, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 3 caught. `a_onze` escaped: no match is abandoned in the automatic career (the abandonment minute stays at −1). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 168th batch — closing the engine (2): the side's centre-backs, the referee and the match player (official on 2026-10-18)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `zagueiros_do_lado_sem_conflito()` | 0x6d5b20 | thiscall | match_eng.cpp: 0x5b8dc0 on the side's formation |
+| `construir_arbitro()` | 0x6e9460 | thiscall | match_official.cpp: the referee constructor (zeroes +0 and +4) |
+| `destruir_jogador_da_partida()` | 0x6ebd60 | thiscall | match_pl.cpp: the match player destructor (zeroes +0x19e) |
+
+Mutations: `mutacoes/leva168.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 3 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

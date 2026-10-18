@@ -69,10 +69,11 @@ def materializar(nome, n, base, antes):
     open(os.path.join(destino, 'integrar.py'), 'w', encoding='utf-8').write(INTEGRAR.format(n=n, rotinas=[(a, e, list(b)) for a, e, b in rot['ROTINAS']], base=base))
     shutil.copy2(os.path.join(src, 'mutacoes.py'), os.path.join(R, 'engenharia-reversa', 'mutacoes', f'leva{n}.py'))
     tpt, ten, docs = rot['DOCS']
+    secao = "secao=('Motor de partidas', 'Match engine')" if rot.get('MOTOR') else "secao=('Simulação', 'Simulation')"
     molde = open(os.path.join(R, 'engenharia-reversa', 'molde_docs.py'), encoding='utf-8').read()
     open(os.path.join(destino, 'docs.py'), 'w', encoding='utf-8').write(
         molde.replace('%%N%%', str(n)).replace('%%ANTES%%', str(antes)).replace('%%R%%', repr(docs))
-        .replace('%%TPT%%', repr(tpt)).replace('%%TEN%%', repr(ten)))
+        .replace('%%TPT%%', repr(tpt)).replace('%%TEN%%', repr(ten)).replace("secao=('Simulação', 'Simulation')", secao))
     with open(os.path.join(src, 'materializada.txt'), 'w', encoding='utf-8') as f:
         f.write(f'leva {n}, índices {base}..{base + len(rot["ROTINAS"]) - 1}\n')
     linhas = [l for l in open(os.path.join(FILA, 'ordem.txt'), encoding='utf-8') if l.strip() != nome]
