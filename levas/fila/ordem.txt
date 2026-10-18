@@ -1,0 +1,8 @@
+# ordem da fila (fila.py); um item por linha
+motor_pequenas_1
+motor_pequenas_2
+lista_contrato_desgaste
+formacao_peso_noticia
+lesao_transferencias_punicao
+bits_marca_liga
+media_contrato_selecao

@@ -1,0 +1,6 @@
+=== INGLATERRA, rust, cobertura
+    pool nao paginado 1.84 -> 1.84 GB, paginado 3.06 -> 3.05 GB
+execucao 1: parou em 2002-151, 2382029053 sorteios, impressao 034ff3eb3e55dfd3, partidas 19414/b3ee24bdc00da55f, banco 7f2c15024cd99e7e, 131 s
+    cobertura: 732 de 1184 funcoes chamadas (lista completa no ddraw.log)
+game.cfg restaurado; auto_setup.cfg removido
+=== AMPLA, original

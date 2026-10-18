@@ -1509,3 +1509,13 @@ Mutations: `mutacoes/leva164.py` (7, by the career to 2002-06-01, confirming the
 | `gravar_dado_do_humano()` | 0x5fdd30 | thiscall | human_manager.cpp: stores +0x9a65 of the human manager record (0xa6ef bytes) |
 
 Mutations: `mutacoes/leva165.py` (5, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 4 caught. `v_desce` escaped: when the first extra slot is cleared, the second is already empty (−1) in AI clubs: moving −1 down or writing −1 is the same (the counters "vaga extra apagada" 65536 and "vaga extra gravada" 4096 show both paths run). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 166th batch — the human's scout, the human at the club and the contract category (official on 2026-10-18)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `registro_do_observador()` | 0x7f6cd0 | thiscall | scout_manager.cpp: the human manager's scouting record 0..9 (0x2b0 bytes) |
+| `humano_manda_no_clube()` | 0x600c90 | cdecl | human_manager.cpp: does the current human manager run the club (or the nation's main team)? |
+| `categoria_do_contrato()` | 0x4ca470 | stdcall | contract_manager.cpp: the player's category 1..8 in the contract (status, happiness, age, ambition, reputation) |
+
+Mutations: `mutacoes/leva166.py` (7, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 3 caught. `h_forcar` escaped: counter "humano manda no clube" stays at zero: with no human manager the routine never returns 1 in the career. `c_k0` escaped: exact limit; not even redone stronger (`c_k0_b`, `mutacoes/leva166b.py`) is it caught: the status-0 range with happiness 40 to 75 does not appear. `c_k5` escaped: exact limit; redone as `c_k5_b` and caught. `c_tipo5` escaped: type-5 contracts do not appear in the career; not even redone stronger (`c_tipo5_b`) is it caught. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

@@ -33,6 +33,7 @@ def main():
     rodar('git', 'add', '-A', 'docs', 'README.md', 'README.en.md', 'wiki', os.path.join('levas', str(n)),
           os.path.join('engenharia-reversa', 'glossario.py'), os.path.join('engenharia-reversa', 'mutacoes', f'leva{n}.py'),
           'CLAUDE.md', 'CLAUDE.en.md', os.path.join('engenharia-reversa', 'gen_docs.py'), os.path.join('engenharia-reversa', 'publicar_leva.py'),
+          os.path.join('engenharia-reversa', 'fila.py'), os.path.join('engenharia-reversa', 'molde_docs.py'), os.path.join('levas', 'fila'),
           os.path.join('rust', 'src', 'motor.rs'))
     msg = (f'Simulacao: {n}a leva ({total} rotinas): {titulo}\n\nComparacao de verdade nas tres rotinas; cadeia completa '
            f'(levas/{n}/cadeia.txt): jogo real 0 divergencias, carreiras iguais a referencia 034ff3eb.\n\n'
@@ -40,6 +41,8 @@ def main():
     rodar('git', 'commit', '-q', '-m', msg)
     rodar('git', 'push', '-q')
     prox = n + 1
+    if not os.path.isdir(os.path.join(RAIZ, 'levas', str(prox))):
+        rodar(sys.executable, os.path.join('engenharia-reversa', 'fila.py'), 'proxima')
     rodar(sys.executable, os.path.join('levas', str(prox), 'integrar.py'))
     rodar('cargo', 'build', '--release', cwd=os.path.join(RAIZ, 'rust'))
     shutil.copy2(os.path.join(RAIZ, 'rust', 'target', 'i686-pc-windows-msvc', 'release', 'ddraw.dll'), os.path.join(RAIZ, 'jogo_testes', 'ddraw.dll'))

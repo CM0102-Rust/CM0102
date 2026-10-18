@@ -1507,3 +1507,13 @@ Mutações: `mutacoes/leva164.py` (7, pela carreira até 2002-06-01, confirmando
 | `gravar_dado_do_humano()` | 0x5fdd30 | thiscall | human_manager.cpp: grava +0x9a65 do registro do técnico humano (0xa6ef bytes) |
 
 Mutações: `mutacoes/leva165.py` (5, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 4 acusadas. `v_desce` escapou: ao apagar a primeira vaga extra, a segunda já está vazia (−1) nos clubes da IA: descer −1 ou gravar −1 dá o mesmo (os contadores "vaga extra apagada" 65536 e "vaga extra gravada" 4096 mostram que os dois caminhos rodam). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 166ª leva — o observador do humano, o humano no clube e a categoria do contrato (oficial em 18/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `registro_do_observador()` | 0x7f6cd0 | thiscall | scout_manager.cpp: o registro de observação 0..9 do técnico humano (0x2b0 bytes) |
+| `humano_manda_no_clube()` | 0x600c90 | cdecl | human_manager.cpp: o técnico humano da vez manda no clube (ou na seleção principal da nação)? |
+| `categoria_do_contrato()` | 0x4ca470 | stdcall | contract_manager.cpp: a categoria 1..8 do jogador no contrato (situação, satisfação, idade, ambição, reputação) |
+
+Mutações: `mutacoes/leva166.py` (7, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 3 acusadas. `h_forcar` escapou: o contador "humano manda no clube" fica em zero: sem técnico humano, a rotina nunca devolve 1 na carreira. `c_k0` escapou: limite exato; nem refeita mais forte (`c_k0_b`, `mutacoes/leva166b.py`) é acusada: a faixa da situação 0 com satisfação de 40 a 75 não aparece. `c_k5` escapou: limite exato; refeita como `c_k5_b` e acusada. `c_tipo5` escapou: contrato do tipo 5 não aparece na carreira; nem refeita mais forte (`c_tipo5_b`) é acusada. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

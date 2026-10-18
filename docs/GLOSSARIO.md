@@ -99,6 +99,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5b2e80 | `casa_do_setor_ocupada` | sector_slot_taken |
 | 0x5b3c70 | `casa_guardada` | stored_cell |
 | 0x5b7e60 | `casa_no_campo` | pitch_cell |
+| 0x4ca470 | `categoria_do_contrato` | contract_category |
 | 0x544410 | `chance_de_conhecer` | chance_to_know |
 | 0x702050 | `chutar` | shoot |
 | 0x6f6c00 | `chute` | shot |
@@ -222,6 +223,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cd660 | `guardar_extremos` | store_extremes |
 | 0x896fe0 | `guardar_instrucoes` | store_instructions |
 | 0x6dbb10 | `guardar_tatica` | store_tactic |
+| 0x600c90 | `humano_manda_no_clube` | human_runs_club |
 | 0x76d430 | `idades_da_selecao` | national_team_ages |
 | 0x6b5a70 | `iniciar_proxima_partida` | start_next_match |
 | 0x6e9470 | `iniciar_rigor` | init_strictness |
@@ -363,6 +365,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x62be00 | `registrar_lesao` | register_injury |
 | 0x79ce10 | `registrar_nota_do_arbitro` | record_referee_grade |
 | 0x7003b0 | `registrar_posse` | record_possession |
+| 0x7f6cd0 | `registro_do_observador` | scout_record |
 | 0x53a5b0 | `registro_livre` | free_record |
 | 0x6c54a0 | `reiniciar_lance` | restart_play |
 | 0x452fe0 | `reiniciar_recordes` | reset_records |

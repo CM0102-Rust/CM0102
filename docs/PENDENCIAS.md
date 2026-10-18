@@ -62,5 +62,7 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `tabela tatica` | 0x896a90, 0x8968f0 (162ª) | — | na carreira automática as vagas da tabela tática ficam vazias (−1) e não há instruções pendentes: a pessoa da vaga (ficha, nação na seleção) e a limpeza das pendentes só rodam com técnico humano. O teste é o jogo do Lucas comparando (montar a tática, convocar a seleção) |
 | `calendario` | 0x68a030 (164ª) | — | a carreira automática só joga ligas inglesas: o rodízio com a marca 0x80 e a volta no fim do rodízio não rodam (`g_meio`, `g_volta` escapam, mesmo refeitas). Teste: carreira automática com outras ligas (`simular.py --ligas`) |
 | `vaga extra apagada` | 0x897ee0 (165ª) | — | o caminho roda (contador alto), mas a segunda vaga extra está sempre vazia ao apagar a primeira nos clubes da IA: a mutação `v_desce` é equivalente nos dados. Teste: técnico humano com as duas vagas extras preenchidas, apagando a primeira |
+| `humano manda no clube` | 0x600c90 (166ª) | — | sem técnico humano o contador fica em zero (`h_forcar` escapa). O teste é o jogo do Lucas comparando, inclusive como técnico de seleção |
+| `categoria do contrato` | 0x4ca470 (166ª) | — | o contrato do tipo 5 e a faixa da situação 0 com satisfação de 40 a 75 não aparecem na carreira (`c_tipo5`, `c_k0` escapam mesmo refeitas). Candidatas à carreira ampla de madrugada |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
