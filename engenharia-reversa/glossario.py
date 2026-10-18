@@ -165,7 +165,8 @@ EN = {
  'gravar_eventos': 'record_events', 'ler_eventos': 'read_events', 'passo_em_rede': 'network_step',
  'ler_eventos_cfg': 'read_events_cfg',
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
- 'narrar_no_painel': 'commentate_on_panel', 'erro_em': 'error_in', 'atras_no_agregado': 'behind_on_aggregate', 'companheiro_livre': 'free_teammate', 'desfecho_do_chute': 'shot_outcome',
+ 'narrar_no_painel': 'commentate_on_panel',
+ 'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container', 'erro_em': 'error_in', 'atras_no_agregado': 'behind_on_aggregate', 'companheiro_livre': 'free_teammate', 'desfecho_do_chute': 'shot_outcome',
 }
 faltam = [n for n in rust if n not in EN]
 if faltam:

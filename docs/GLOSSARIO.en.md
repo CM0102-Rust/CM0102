@@ -54,6 +54,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 
 | Address | Português | English |
 |---|---|---|
+| 0x9326e0 | `abrir_no_conteiner` | open_in_container |
 | 0x7172d0 | `ajustar_17` | adjust_17 |
 | 0x6cb9b0 | `alcanca` | reaches |
 | 0x713d90 | `alcanca_o_ponto` | reaches_the_point |
@@ -79,6 +80,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5b5a60 | `bit_da_casa` | square_bit |
 | 0x6cd490 | `bola_fora` | ball_out |
 | 0x714d00 | `bola_no_ataque` | ball_in_attack |
+| 0x933080 | `buscar_no_conteiner` | seek_in_container |
 | 0x7754c0 | `byte_42_da_selecao` | national_side_byte_42 |
 | 0x775520 | `byte_43_da_selecao` | national_side_byte_43 |
 | 0x76e010 | `byte_44_da_pessoa` | person_byte_44 |
@@ -320,6 +322,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6bce20 | `pode_escolher` | can_choose |
 | 0x6c51e0 | `pontape_inicial` | kick_off |
 | 0x6cb6c0 | `por_diferenca` | by_difference |
+| 0x933170 | `posicao_no_conteiner` | position_in_container |
 | 0x6c2be0 | `posicionar` | position (place players) |
 | 0x6d1770 | `posicoes_finas` | fine_positions |
 | 0x6df460 | `postura` | stance |

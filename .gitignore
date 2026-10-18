@@ -13,3 +13,6 @@ CLZ Leagues Patch*.rar
 
 # Pacotes de trabalho por rotina (engenharia-reversa/pacote.py): desmontagem e pseudocodigo do jogo
 /pacotes/
+
+# Rascunhos de postagens no forum (por data e assunto)
+/postagens/

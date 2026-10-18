@@ -85,6 +85,8 @@ extern "system" {
 #[link(name = "kernel32")]
 extern "system" {
     pub fn GetModuleHandleW(nome: *const u16) -> *mut c_void;
+    pub fn SetFilePointer(h: *mut c_void, baixo: i32, alto: *mut i32, metodo: u32) -> u32;
+    pub fn GetLastError() -> u32;
     pub fn LoadLibraryA(nome: *const u8) -> *mut c_void;
     pub fn GetProcAddress(modulo: *mut c_void, nome: *const u8) -> *mut c_void;
     pub fn VirtualProtect(end: *mut c_void, tam: usize, nova: u32, antiga: *mut u32) -> i32;
