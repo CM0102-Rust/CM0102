@@ -1469,3 +1469,13 @@ Mutations: `mutacoes/leva160.py` (7, by the career to 2002-06-01): all 7 caught.
 | `criterio_da_comissao()` | 0x866f60 | thiscall | staff_contracts.cpp: the staff criterion: an 8-bit score (id mod 7, ratings, age, reputation, number of roles) decides by the roles whether it returns 1 |
 
 Mutations: `mutacoes/leva161.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 6 caught. `s_id` escaped: it only changed the exact id limit (−16 to −17); redone as `s_id_b` in `mutacoes/leva161b.py` and caught (`mutacoes_refeitas.txt`). `c_idade` escaped: not even redone with +15 (`c_idade_b`) is it caught: no staff member has +0x44 between 51 and 75 in the data. `c_rep` escaped: it only changed the exact reputation 0x1c53; redone as `c_rep_b` and caught. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 162nd batch — the tactics table slots (official on 2026-10-18)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `gravar_vaga_tatica()` | 0x896a90 | thiscall | tactics.cpp: stores the person in slot 0..19 of the club row (0x8982b0) and clears the club's pending instructions |
+| `pessoa_da_vaga_tatica()` | 0x8968f0 | thiscall | tactics.cpp: the slot's person; without a record or from another nation in a national team, the slot becomes −1 |
+| `gravar_formacao_tatica()` | 0x8967d0 | thiscall | tactics.cpp: stores the formation in the club row |
+
+Mutations: `mutacoes/leva162.py` (5, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `g_pendente` escaped: pending instructions (+0x5f0) only exist with a human manager. `p_ficha` escaped: in the automatic career the tactics table slots are empty (−1): not even the inverted condition (`p_ficha_b`, `mutacoes/leva162b.py`) is caught; the part with a person only runs on the human manager's tactics. `p_nacao` escaped: likewise (the inverted `p_nacao_b` also escapes). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

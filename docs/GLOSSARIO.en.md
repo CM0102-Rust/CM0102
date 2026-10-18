@@ -211,7 +211,9 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x7003a0 | `gravar_8ed8` | write_8ed8 |
 | 0x5b5290 | `gravar_casa` | set_square |
 | 0x6d98b0 | `gravar_eventos` | record_events |
+| 0x8967d0 | `gravar_formacao_tatica` | set_tactic_formation |
 | 0x8984d0 | `gravar_linha_tatica` | write_tactics_row |
+| 0x896a90 | `gravar_vaga_tatica` | set_tactic_slot |
 | 0x62ec00 | `gravidade_da_lesao` | injury_severity |
 | 0x6854a0 | `grupo_decidido` | group_decided |
 | 0x6cd660 | `guardar_extremos` | store_extremes |
@@ -324,6 +326,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x70df70 | `perto_do_gol` | near_goal |
 | 0x70def0 | `perto_do_proprio_gol` | near_own_goal |
 | 0x897dc0 | `pessoa_da_linha` | row_person |
+| 0x8968f0 | `pessoa_da_vaga_tatica` | tactic_slot_person |
 | 0x6ce310 | `placar_agregado` | aggregate_score |
 | 0x6bce20 | `pode_escolher` | can_choose |
 | 0x6c51e0 | `pontape_inicial` | kick_off |

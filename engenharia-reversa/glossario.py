@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'gravar_vaga_tatica': 'set_tactic_slot', 'pessoa_da_vaga_tatica': 'tactic_slot_person', 'gravar_formacao_tatica': 'set_tactic_formation',
  'serve_para_a_vaga': 'shortlist_slot_fits', 'codigo_da_posicao': 'position_code', 'criterio_da_comissao': 'staff_criterion',
  'estatistica_do_jogador': 'player_statistic', 'media_das_notas': 'ratings_average', 'zagueiros_sem_conflito': 'centre_backs_without_conflict',
  'mascara_de_posicoes': 'position_mask', 'casa_no_campo': 'pitch_cell', 'vagas_sem_conflito': 'slots_without_conflict', 'erro_em': 'error_in', 'atras_no_agregado': 'behind_on_aggregate', 'companheiro_livre': 'free_teammate', 'desfecho_do_chute': 'shot_outcome',

@@ -1467,3 +1467,13 @@ Mutações: `mutacoes/leva160.py` (7, pela carreira até 2002-06-01): as 7 acusa
 | `criterio_da_comissao()` | 0x866f60 | thiscall | staff_contracts.cpp: o critério da comissão técnica: uma nota em 8 bits (id mod 7, notas, idade, reputação, número de funções) decide pelas funções se devolve 1 |
 
 Mutações: `mutacoes/leva161.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 6 acusadas. `s_id` escapou: mudava só o limite exato do id (−16 para −17); refeita como `s_id_b` em `mutacoes/leva161b.py` e acusada (`mutacoes_refeitas.txt`). `c_idade` escapou: nem refeita com +15 (`c_idade_b`) é acusada: nenhuma pessoa da comissão tem +0x44 entre 51 e 75 nos dados. `c_rep` escapou: mudava só a reputação exata 0x1c53; refeita como `c_rep_b` e acusada. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 162ª leva — as vagas da tabela tática (oficial em 18/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `gravar_vaga_tatica()` | 0x896a90 | thiscall | tactics.cpp: grava a pessoa na vaga 0..19 da linha do clube (0x8982b0) e apaga as instruções pendentes desse clube |
+| `pessoa_da_vaga_tatica()` | 0x8968f0 | thiscall | tactics.cpp: a pessoa da vaga; sem ficha ou de outra nação numa seleção, a vaga vira −1 |
+| `gravar_formacao_tatica()` | 0x8967d0 | thiscall | tactics.cpp: grava a formação na linha do clube |
+
+Mutações: `mutacoes/leva162.py` (5, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `g_pendente` escapou: as instruções pendentes (+0x5f0) só existem com técnico humano. `p_ficha` escapou: na carreira automática as vagas da tabela tática estão vazias (−1): nem a condição invertida (`p_ficha_b`, `mutacoes/leva162b.py`) é acusada; a parte com pessoa só roda na tática do técnico humano. `p_nacao` escapou: idem (`p_nacao_b` invertida também escapa). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
