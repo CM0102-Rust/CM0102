@@ -1,3 +1,4 @@
 Mutacoes que precisam da carreira ampla (rodar de madrugada):
 - leva164b.py: g_meio_b, g_volta_b (calendario, marca 0x80 e volta do rodizio)
 - leva166b.py: c_k0_b, c_tipo5_b (categoria do contrato)
+- leva170.py: o_campos (ordem das partidas do dia, desempate +0x38/+0x34)
