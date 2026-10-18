@@ -117,8 +117,10 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x70a8c0 | `codigo_de_bola_parada` | set_piece_code |
 | 0x6cb650 | `codigo_especial` | special_code |
 | 0x6e0d00 | `colocar_na_vaga` | put_in_place |
+| 0x6d60b0 | `combinar_com_o_anterior` | combine_with_previous |
 | 0x7002f0 | `comentario_a` | commentary_a |
 | 0x70a860 | `comentario_b` | commentary_b |
+| 0x6d4b70 | `comentario_de_contexto` | context_commentary |
 | 0x6d5a70 | `companheiro_livre` | free_teammate |
 | 0x4b0700 | `competicao_conta` | competition_counts |
 | 0x7751e0 | `competicao_da_pessoa` | person_competition |
@@ -130,6 +132,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f9f90 | `consegue_jogar` | can_play |
 | 0x6e9460 | `construir_arbitro` | construct_referee |
 | 0x6d5bf0 | `construir_fila_da_narracao` | construct_commentary_queue |
+| 0x6eada0 | `construir_jogador_da_partida` | construct_match_player |
 | 0x6b7e50 | `construir_motor` | build_engine |
 | 0x6cbbb0 | `contar_ativos` | count_active |
 | 0x4cf5f0 | `contrato_com_clube` | contract_with_club |

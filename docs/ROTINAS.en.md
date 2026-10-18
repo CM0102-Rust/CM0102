@@ -1559,3 +1559,13 @@ Mutations: `mutacoes/leva169.py` (4, by the career to 2002-06-01, confirming the
 | `variante_do_evento()` | 0x6d5d80 | stdcall | match_events.cpp: swaps the commentary event for a variant, by a draw and by the play type |
 
 Mutations: `mutacoes/leva170.py` (5, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 4 caught. `o_campos` escaped: in the English league the day matches tied up to +0x36 never disagree in sign between +0x38 and +0x34 (missing data; goes to the broad career). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 171st batch — closing the engine (5): the combined commentary, the context commentary and the match player (official on 2026-10-18)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `combinar_com_o_anterior()` | 0x6d60b0 | thiscall | match_events.cpp: combines the new commentary event with the last queued one (returns the combined event and copies the previous player, side and value) |
+| `comentario_de_contexto()` | 0x6d4b70 | thiscall | match_eng.cpp: decides whether a context commentary (league race, club news) may play now |
+| `construir_jogador_da_partida()` | 0x6eada0 | thiscall | match_pl.cpp: the match player constructor (clears the fields, with initial values for some) |
+
+Mutations: `mutacoes/leva171.py` (7, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 7 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'combinar_com_o_anterior': 'combine_with_previous', 'comentario_de_contexto': 'context_commentary', 'construir_jogador_da_partida': 'construct_match_player',
  'ordem_das_partidas_do_dia': 'day_match_order', 'ordem_de_acao': 'action_order', 'variante_do_evento': 'event_variant',
  'evento_na_frente': 'event_at_front', 'construir_fila_da_narracao': 'construct_commentary_queue', 'liberar_tabelas_de_eventos': 'free_event_tables',
  'zagueiros_do_lado_sem_conflito': 'side_centre_backs_without_conflict', 'construir_arbitro': 'construct_referee', 'destruir_jogador_da_partida': 'destroy_match_player',

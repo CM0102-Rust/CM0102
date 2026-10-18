@@ -1,0 +1,5 @@
+sem mutacao (12s): ['EXCECAO 0xc0000005 em 0x5e8f420e (data [222, 2001]) eax=ffff210 ebx=7b40028 ecx=ffff1fc edx=19 esi=0 edi=21ae0000 ebp=ffff218 esp=ffff1bc pilha: ffffffff 21ae0000 21ae ffff218 5e99ce21 41 1be7e5e4 ff000021 20d8210f 1000000 166 1e2']
+restaurado e recompilado
+base sem resultado: mutacoes canceladas
+=== MUTACOES FALHARAM
+=== FIM

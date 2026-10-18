@@ -375,7 +375,7 @@ unsafe extern "thiscall" fn comentario_de_contexto(m: usize, lado: u32, evento: 
     let mut linha = 0usize;
     if competicao != 0 && *((competicao + 8) as *const u32) != 0 {
         let busca: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
-        linha = busca(competicao, clube);
+        linha = busca(*((competicao + 8) as *const usize), clube);
     }
     let na_competicao = || {
         let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x48f150usize);

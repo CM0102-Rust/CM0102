@@ -1557,3 +1557,13 @@ Mutações: `mutacoes/leva169.py` (4, pela carreira até 2002-06-01, confirmando
 | `variante_do_evento()` | 0x6d5d80 | stdcall | match_events.cpp: troca o evento da narração por uma variante, por sorteio e pelo tipo do lance |
 
 Mutações: `mutacoes/leva170.py` (5, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 4 acusadas. `o_campos` escapou: na liga inglesa as partidas do dia empatadas até +0x36 nunca divergem em sinal entre +0x38 e +0x34 (falta de dados; vai para a carreira ampla). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 171ª leva — o fechamento do motor (5): a narração combinada, o comentário de contexto e o jogador da partida (oficial em 18/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `combinar_com_o_anterior()` | 0x6d60b0 | thiscall | match_events.cpp: combina o evento novo da narração com o último da fila (devolve o evento combinado e copia jogador, lado e valor do anterior) |
+| `comentario_de_contexto()` | 0x6d4b70 | thiscall | match_eng.cpp: decide se um comentário de contexto (corrida da liga, notícias do clube) pode tocar agora |
+| `construir_jogador_da_partida()` | 0x6eada0 | thiscall | match_pl.cpp: o construtor do jogador da partida (zera os campos, com os valores iniciais de alguns) |
+
+Mutações: `mutacoes/leva171.py` (7, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 7 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
