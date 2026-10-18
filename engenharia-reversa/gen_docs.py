@@ -75,3 +75,26 @@ def leia(n, titulo_pt, titulo_en, rotinas, mutacoes, acusadas, lacuna_pt='', lac
            '2. `cargo build --release` and copy the DLL to `jogo_testes/`', f'3. `bash engenharia-reversa/cadeia.sh {n}`', '']
     open(os.path.join(base, 'LEIA.md'), 'w', encoding='utf-8').write('\n'.join(pt))
     open(os.path.join(base, 'LEIA.en.md'), 'w', encoding='utf-8').write('\n'.join(en))
+
+
+def cadeia(n):
+    """O resultado de levas/NNN/cadeia.txt: (total de mutações, acusadas, escapadas, cadeia ok).
+    Cadeia ok = jogo real sem divergência e as três carreiras com a impressão de referência."""
+    import re
+    t = open(os.path.join(R, 'levas', str(n), 'cadeia.txt'), encoding='utf-8', errors='replace').read()
+    nomes = {}
+    for nome, res in re.findall(r'^mutacao (\S+)\s+\d+s (ACUSADA|IGUAL A BASE|EXCECAO|[A-Z ]+?)[:(]', t, re.M):
+        res = res.strip()
+        if nome not in nomes or res == 'ACUSADA':
+            nomes[nome] = res
+    acusadas = [k for k, v in nomes.items() if v != 'IGUAL A BASE']
+    escapadas = [k for k, v in nomes.items() if v == 'IGUAL A BASE']
+    conf = [(m.group(1), 'DIVERGENCIA' in m.group(2) or re.search(r'\b[1-9]\d* divergencias', m.group(2)))
+            for m in re.finditer(r'^mutacao (\S+)\s+\d+s comparando: (.*)$', t, re.M)]
+    for nome, div in conf:
+        if div and nome in escapadas:
+            escapadas.remove(nome)
+            acusadas.append(nome)
+    ok = ('impressao 963cea289f055ac3' in t and t.count('impressao 034ff3eb3e55dfd3') >= 3
+          and not re.search(r'\b[1-9]\d* divergencias', t.split('=== JOGO REAL')[-1]))
+    return len(nomes), len(acusadas), escapadas, ok

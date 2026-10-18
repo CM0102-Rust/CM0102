@@ -1457,3 +1457,13 @@ Mutações: `mutacoes/leva159.py` (7, pela carreira até 2002-06-01, confirmando
 | `zagueiros_sem_conflito()` | 0x5b8dc0 | thiscall | formation.cpp: 0 se alguma vaga com lado aberto é de zagueiro ou volante |
 
 Mutações: `mutacoes/leva160.py` (7, pela carreira até 2002-06-01): as 7 acusadas. A estatística em ponto flutuante (divisões e produtos em f64) bate com o x87 da original em toda a carreira. Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 161ª leva — lista de observação, código da posição e critério da comissão (oficial em 18/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `serve_para_a_vaga()` | 0x844300 | stdcall | shortlist_manager.cpp: o jogador serve para a vaga 0..15 da lista de observação (nota 15 no setor e no lado; a 15 pede contrato, id e a 0x600a50 em zero); devolve só `al` |
+| `codigo_da_posicao()` | 0x83bd00 | stdcall | shortlist_manager.cpp: o código da posição pela máscara de setor e lado (28 combinações; o resto 0xe); devolve só `al` |
+| `criterio_da_comissao()` | 0x866f60 | thiscall | staff_contracts.cpp: o critério da comissão técnica: uma nota em 8 bits (id mod 7, notas, idade, reputação, número de funções) decide pelas funções se devolve 1 |
+
+Mutações: `mutacoes/leva161.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 6 acusadas. `s_id` escapou: mudava só o limite exato do id (−16 para −17); refeita como `s_id_b` em `mutacoes/leva161b.py` e acusada (`mutacoes_refeitas.txt`). `c_idade` escapou: nem refeita com +15 (`c_idade_b`) é acusada: nenhuma pessoa da comissão tem +0x44 entre 51 e 75 nos dados. `c_rep` escapou: mudava só a reputação exata 0x1c53; refeita como `c_rep_b` e acusada. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

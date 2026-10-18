@@ -110,6 +110,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x600a50 | `clube_humano` | human_club |
 | 0x48db80 | `clube_na_competicao` | club_in_competition |
 | 0x540a50 | `clube_parceiro` | partner_club |
+| 0x83bd00 | `codigo_da_posicao` | position_code |
 | 0x70a8c0 | `codigo_de_bola_parada` | set_piece_code |
 | 0x6cb650 | `codigo_especial` | special_code |
 | 0x6e0d00 | `colocar_na_vaga` | put_in_place |
@@ -129,6 +130,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x4cf5f0 | `contrato_com_clube` | contract_with_club |
 | 0x4cf5a0 | `contrato_de` | contract_of |
 | 0x777590 | `copiar_data_e_marca` | copy_date_and_mark |
+| 0x866f60 | `criterio_da_comissao` | staff_criterion |
 | 0x4bff70 | `criterio_da_competicao` | competition_criterion |
 | 0x6e9540 | `decidir_falta` | decide_foul |
 | 0x7103e0 | `decidir_jogador` | decide_player |
@@ -370,6 +372,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x53b3d0 | `selecao_principal` | main_national_team |
 | 0x6d4280 | `sem_partida` | no_match |
 | 0x5b73a0 | `separar_mascara` | split_mask |
+| 0x844300 | `serve_para_a_vaga` | shortlist_slot_fits |
 | 0x6beeb0 | `simulacao_rapida` | quick_simulation |
 | 0x6f0970 | `soltar_bola` | release_ball |
 | 0x7160d0 | `somar_2b` | add_2b |

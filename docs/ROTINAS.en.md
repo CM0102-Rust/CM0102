@@ -1459,3 +1459,13 @@ Mutations: `mutacoes/leva159.py` (7, by the career to 2002-06-01, confirming the
 | `zagueiros_sem_conflito()` | 0x5b8dc0 | thiscall | formation.cpp: 0 if any slot with an open side is a centre-back's or defensive midfielder's |
 
 Mutations: `mutacoes/leva160.py` (7, by the career to 2002-06-01): all 7 caught. The floating-point statistic (f64 divisions and products) matches the original's x87 over the whole career. Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 161st batch — shortlist slot, position code and staff criterion (official on 2026-10-18)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `serve_para_a_vaga()` | 0x844300 | stdcall | shortlist_manager.cpp: the player fits shortlist slot 0..15 (rating 15 in sector and side; slot 15 needs a contract, an id and 0x600a50 at zero); returns only `al` |
+| `codigo_da_posicao()` | 0x83bd00 | stdcall | shortlist_manager.cpp: the position code from the sector and side mask (28 combinations; the rest 0xe); returns only `al` |
+| `criterio_da_comissao()` | 0x866f60 | thiscall | staff_contracts.cpp: the staff criterion: an 8-bit score (id mod 7, ratings, age, reputation, number of roles) decides by the roles whether it returns 1 |
+
+Mutations: `mutacoes/leva161.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 6 caught. `s_id` escaped: it only changed the exact id limit (−16 to −17); redone as `s_id_b` in `mutacoes/leva161b.py` and caught (`mutacoes_refeitas.txt`). `c_idade` escaped: not even redone with +15 (`c_idade_b`) is it caught: no staff member has +0x44 between 51 and 75 in the data. `c_rep` escaped: it only changed the exact reputation 0x1c53; redone as `c_rep_b` and caught. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
