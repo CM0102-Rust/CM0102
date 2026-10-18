@@ -145,6 +145,37 @@ def notas(addr):
     return r
 
 
+
+def mapa_da_comunidade():
+    """O mapa de funções e globais de maxevans60 (CC BY 4.0, github.com/maxevans60/cm0102-function-map),
+    clonado em referencias/cm0102-function-map. Devolve (funções por endereço, globais por endereço)."""
+    import csv
+    base = os.path.join(R, 'referencias', 'cm0102-function-map')
+    if not os.path.isdir(base):
+        return {}, {}
+    f = {int(r['address'], 16): r for r in csv.DictReader(open(os.path.join(base, 'map', 'functions.tsv'), encoding='utf-8'), delimiter='\t')}
+    g = {int(r['address'], 16): r for r in csv.DictReader(open(os.path.join(base, 'data-map', 'globals.tsv'), encoding='utf-8'), delimiter='\t')}
+    return f, g
+
+
+def secao_mapa(addr, desm):
+    """Nome, convenção e propósito da rotina no mapa da comunidade, e os globais que ela usa."""
+    import re
+    f, g = mapa_da_comunidade()
+    if not f:
+        return ['', '## No mapa da comunidade', '', '(clonar github.com/maxevans60/cm0102-function-map em referencias/)']
+    r = f.get(addr)
+    L = ['', '## No mapa da comunidade (maxevans60, CC BY 4.0)', '']
+    if r:
+        L += [f'- **{r["name"]}** ({r["doc"]}; confiança {r["confidence"]}): {r["purpose"]}', f'- Convenção: `{r["convention"]}`']
+    else:
+        L += ['- (não é início de função no mapa)']
+    usados = sorted({int(x, 16) for x in re.findall(r'(0x[0-9a-f]{6})\b', desm) if int(x, 16) in g})
+    for a in usados:
+        L.append(f'- global {a:#x} **{g[a]["name"]}** ({g[a]["type"]}, {g[a]["size"]} bytes, {g[a]["confidence"]})')
+    return L
+
+
 def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
@@ -201,6 +232,7 @@ def main():
         ['', '## Constantes de ponto flutuante', '', '| Endereco | Tipo | Valor |', '|---|---|---|'] + \
         [f'| {a:#x} | {"f32" if t == "dword" else "f64"} | {v!r} |' for (a, t), v in constantes(d, desm)] + \
         ['', '## Tabelas de salto', '', '(lidas ate o primeiro valor fora do .text; a ultima pode emendar na tabela vizinha)', ''] + [f'- {a:#x}: ' + ', '.join(hex(x) for x in dest) for a, dest in tabelas(d, desm)] + \
+        secao_mapa(addr, desm) + \
         secao_campos + \
         ['', '## Nas notas do projeto', ''] + (notas(addr) or ['(nenhuma)']) + \
         ['', 'Ciclo de uma leva e armadilhas: `levas/LEIA.md` e `docs/COMO_CONTINUAR.md`.', '']

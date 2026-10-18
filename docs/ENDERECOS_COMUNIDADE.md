@@ -103,3 +103,13 @@ Fonte: o mesmo tópico do Danek1985, página 2 (t=10790&start=25, 18/07/2026), c
 - **Pé preferido em português:** o `Data\language.ldb` (204 MB) guarda os rótulos traduzidos. Em 0x070B0198 do arquivo está "Esquerdo"; trocar por "Só Esque" corrige o "Só esquerdo" exibido errado. Segundo tafo, cada rótulo pode aparecer duas vezes no arquivo, a alguns KB de distância.
 - **Coluna "Key" vazia nas estatísticas da partida em português:** VA 0xa161cc (arquivo 0x6161cc), na lista de abreviações "Won", "Tck", "Key", "Cmp" da `.data`. O patch troca "Key" por "Imp".
 - **Para nós:** quando a interface for nossa, os rótulos e abreviações traduzidos vêm do `language.ldb`, e as abreviações em inglês servem de chave.
+
+## O mapa de funções e globais de maxevans60 (18/10/2026)
+
+O mapa público [cm0102-function-map](https://github.com/maxevans60/cm0102-function-map) (maxevans60, licença CC BY 4.0, com permissão extra para uso com IA) dá nome, arquivo-fonte, convenção, propósito e confiança às 6.863 funções do `cm0102.exe` 3.9.68, e nome, tipo e leitores/escritores aos 4.428 globais. Foi feito para o "Bosman Edition", um porte recompilado do jogo para Mac, Windows e Linux.
+
+- Clonado em `referencias/cm0102-function-map` (fora do git, como as outras referências).
+- `engenharia-reversa/pacote.py` põe no `LEIA.md` de cada pacote o nome, a convenção e o propósito da rotina no mapa e os globais que ela usa.
+- Conferência de 18/10/2026: os 391 inícios de rotina já portados aqui são inícios de função no mapa; dos 6.071 inícios em comum com o `docs/mapa_funcoes.csv`, só 44 têm arquivo diferente. Os nomes das rotinas da noite de 17/10 batem com os nossos (por exemplo 0x5b7d20 `formation_get_position_mask`, 0x9326e0 `zopen`).
+- Nomes de confiança média ou baixa são pista, não prova: o critério continua sendo a comparação com a original.
+- Obrigado a maxevans60, e aos que ele credita (John Locke, Tapani, Saturn e o tópico Offset Index).

@@ -103,3 +103,13 @@ Source: the same Danek1985 thread, page 2 (t=10790&start=25, 2026-07-18), with n
 - **Preferred foot in Portuguese:** `Data\language.ldb` (204 MB) stores the translated labels. At 0x070B0198 in the file is "Esquerdo"; changing it to "Só Esque" fixes the wrongly displayed "Left only". According to tafo, each label may appear twice in the file, a few KB apart.
 - **Blank "Key" column in the match statistics in Portuguese:** VA 0xa161cc (file 0x6161cc), in the "Won", "Tck", "Key", "Cmp" abbreviation list in `.data`. The patch changes "Key" to "Imp".
 - **For us:** when the interface is ours, the translated labels and abbreviations come from `language.ldb`, and the English abbreviations serve as keys.
+
+## maxevans60's function and global map (2026-10-18)
+
+The public map [cm0102-function-map](https://github.com/maxevans60/cm0102-function-map) (maxevans60, CC BY 4.0 licence, with extra permission for AI use) gives a name, source file, convention, purpose and confidence to the 6,863 functions of `cm0102.exe` 3.9.68, and a name, type and readers/writers to the 4,428 globals. It was made for the "Bosman Edition", a recompiled port of the game to Mac, Windows and Linux.
+
+- Cloned into `referencias/cm0102-function-map` (outside git, like the other references).
+- `engenharia-reversa/pacote.py` puts in each package's `LEIA.md` the routine's name, convention and purpose in the map and the globals it uses.
+- Check on 2026-10-18: the 391 routine starts already ported here are function starts in the map; of the 6,071 starts shared with `docs/mapa_funcoes.csv`, only 44 have a different file. The names of the routines from the night of 10/17 match ours (for example 0x5b7d20 `formation_get_position_mask`, 0x9326e0 `zopen`).
+- Medium or low confidence names are a hint, not proof: the criterion is still the comparison with the original.
+- Thanks to maxevans60, and to those he credits (John Locke, Tapani, Saturn and the Offset Index thread).
