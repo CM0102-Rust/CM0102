@@ -64,5 +64,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `vaga extra apagada` | 0x897ee0 (batch 165) | — | the path runs (high counter), but the second extra slot is always empty when the first is cleared in AI clubs: mutation `v_desce` is equivalent in the data. Test: a human manager with both extra slots filled, clearing the first |
 | `humano manda no clube` | 0x600c90 (batch 166) | — | with no human manager the counter stays at zero (`h_forcar` escapes). The test is Lucas's game in comparison mode, also as a national team manager |
 | `categoria do contrato` | 0x4ca470 (batch 166) | — | type-5 contracts and the status-0 range with happiness 40 to 75 do not appear in the career (`c_tipo5`, `c_k0` escape even redone). Candidates for the overnight wide career |
+| `partida abandonada` | 0x6d5930 (batch 167) | — | no match is abandoned in the automatic career (abandonment minute at −1): mutation `a_onze` escapes. Test: an abandoned match (weather) in Lucas's game in comparison mode |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

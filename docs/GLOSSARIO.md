@@ -79,6 +79,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x897990 | `batedor_guardado` | stored_taker |
 | 0x5b5a60 | `bit_da_casa` | square_bit |
 | 0x6cd490 | `bola_fora` | ball_out |
+| 0x6d58f0 | `bola_na_area` | ball_goal_end |
 | 0x714d00 | `bola_no_ataque` | ball_in_attack |
 | 0x933080 | `buscar_no_conteiner` | seek_in_container |
 | 0x7754c0 | `byte_42_da_selecao` | national_side_byte_42 |
@@ -323,6 +324,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x717c70 | `papel_880` | role_880 |
 | 0x716310 | `papel_na_defesa` | defending_role |
 | 0x716270 | `papel_no_ataque` | attacking_role |
+| 0x6d5930 | `partida_abandonada` | match_abandoned |
 | 0x6b61e0 | `partida_de_interesse` | match_of_interest |
 | 0x6b66a0 | `partida_sem_humano` | match_without_human |
 | 0x6fa250 | `passar` | pass_ball |
@@ -418,6 +420,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5b2f10 | `vaga_da_casa` | slot_of_code |
 | 0x897ee0 | `vaga_extra_tatica` | extra_tactic_slot |
 | 0x897590 | `vaga_marcada` | marked_slot |
+| 0x6d5af0 | `vagas_do_lado_sem_conflito` | side_slots_without_conflict |
 | 0x5b8960 | `vagas_sem_conflito` | slots_without_conflict |
 | 0x700bd0 | `valor_do_chute` | shot_value |
 | 0x7165b0 | `valor_pela_condicao` | value_by_condition |

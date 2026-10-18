@@ -480,8 +480,11 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x7f6cd0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x600c90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x4ca470, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] },
+    Prologo { endereco: 0x6d58f0, bytes: &[0x8a, 0x81, 0xa8, 0x8e, 0x00, 0x00] },
+    Prologo { endereco: 0x6d5930, bytes: &[0x8a, 0x81, 0x38, 0xf6, 0x00, 0x00] },
+    Prologo { endereco: 0x6d5af0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x84, 0xc0] },
 ];
-const N: usize = 373;
+const N: usize = 376;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -31935,6 +31938,45 @@ unsafe extern "stdcall" fn comparar_codigo_da_posicao(m: i16) -> u8 {
 
 comparar_valor!(comparar_criterio_da_comissao, criterio_da_comissao, 357, () -> u32);
 
+// ---------- 167a leva: o fechamento do motor (1): o gol da bola, a partida abandonada e as vagas do lado ----------
+
+/// { 0x6d58f0 } (thiscall, match_eng.cpp): a bola numa área (casas centrais +0x8ea7 de 2 a 6): 1 na
+/// área de cima (linha +0x8ea8 0 ou 1), −1 na de baixo (10 ou 11), senão 0. Devolve só `al`.
+unsafe extern "thiscall" fn bola_na_area(m: usize) -> i8 {
+    let linha = *((m + 0x8ea8) as *const i8);
+    let coluna = *((m + 0x8ea7) as *const i8);
+    if (2..=6).contains(&coluna) {
+        if (0..=1).contains(&linha) {
+            return 1;
+        }
+        if (10..=11).contains(&linha) {
+            return -1;
+        }
+    }
+    0
+}
+
+/// { 0x6d5930 } (thiscall, match_eng.cpp): a partida foi abandonada? O minuto do abandono (+0xf638,
+/// −1 sem abandono) × 11 abaixo do relógio (+0x8ed0), em 16 bits. Devolve só `al`.
+unsafe extern "thiscall" fn partida_abandonada(m: usize) -> u8 {
+    let minuto = *((m + 0xf638) as *const i8);
+    if minuto == -1 {
+        return 0;
+    }
+    ((minuto as i16).wrapping_mul(11) < core::ptr::read_unaligned((m + 0x8ed0) as *const i16)) as u8
+}
+
+/// { 0x6d5af0 } (thiscall, ret 4, match_eng.cpp): as vagas do lado `lado` sem conflito (0x5b8960 na
+/// formação +0xaac5, ou +0x91e2 com lado 0).
+unsafe extern "thiscall" fn vagas_do_lado_sem_conflito(m: usize, lado: i8) -> u8 {
+    let f: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5b8960usize);
+    f(m + if lado != 0 { 0xaac5 } else { 0x91e2 })
+}
+
+comparar_valor!(comparar_bola_na_area, bola_na_area, 373, () -> i8);
+comparar_valor!(comparar_partida_abandonada, partida_abandonada, 374, () -> u8);
+comparar_valor!(comparar_vagas_do_lado_sem_conflito, vagas_do_lado_sem_conflito, 375, (lado: i8) -> u8);
+
 // ---------- centesima sexagesima sexta leva: o observador do humano, o humano no clube e a categoria do contrato ----------
 
 /// { 0x7f6cd0 } (thiscall, ret 8, scout_manager.cpp): o registro de observação `qual` 0..9 do técnico
@@ -35178,6 +35220,9 @@ pub unsafe fn instalar(comparando: bool) {
         registro_do_observador as *const () as usize,
         humano_manda_no_clube as *const () as usize,
         categoria_do_contrato as *const () as usize,
+        bola_na_area as *const () as usize,
+        partida_abandonada as *const () as usize,
+        vagas_do_lado_sem_conflito as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -35553,6 +35598,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_registro_do_observador as *const () as usize,
         comparar_humano_manda_no_clube as *const () as usize,
         comparar_categoria_do_contrato as *const () as usize,
+        comparar_bola_na_area as *const () as usize,
+        comparar_partida_abandonada as *const () as usize,
+        comparar_vagas_do_lado_sem_conflito as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -35665,7 +35713,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

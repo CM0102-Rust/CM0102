@@ -1519,3 +1519,13 @@ Mutations: `mutacoes/leva165.py` (5, by the career to 2002-06-01, confirming the
 | `categoria_do_contrato()` | 0x4ca470 | stdcall | contract_manager.cpp: the player's category 1..8 in the contract (status, happiness, age, ambition, reputation) |
 
 Mutations: `mutacoes/leva166.py` (7, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 3 caught. `h_forcar` escaped: counter "humano manda no clube" stays at zero: with no human manager the routine never returns 1 in the career. `c_k0` escaped: exact limit; not even redone stronger (`c_k0_b`, `mutacoes/leva166b.py`) is it caught: the status-0 range with happiness 40 to 75 does not appear. `c_k5` escaped: exact limit; redone as `c_k5_b` and caught. `c_tipo5` escaped: type-5 contracts do not appear in the career; not even redone stronger (`c_tipo5_b`) is it caught. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 167th batch — closing the engine (1): the ball's goal end, the abandoned match and the side's slots (official on 2026-10-18)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `bola_na_area()` | 0x6d58f0 | thiscall | match_eng.cpp: 1 with the ball in the top box, −1 in the bottom one, otherwise 0; returns only `al` |
+| `partida_abandonada()` | 0x6d5930 | thiscall | match_eng.cpp: the abandonment minute × 11 below the clock (16-bit); returns only `al` |
+| `vagas_do_lado_sem_conflito()` | 0x6d5af0 | thiscall | match_eng.cpp: 0x5b8960 on the side's formation |
+
+Mutations: `mutacoes/leva167.py` (4, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 3 caught. `a_onze` escaped: no match is abandoned in the automatic career (the abandonment minute stays at −1). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

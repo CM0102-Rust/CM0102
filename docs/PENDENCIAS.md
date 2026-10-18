@@ -64,5 +64,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `vaga extra apagada` | 0x897ee0 (165ª) | — | o caminho roda (contador alto), mas a segunda vaga extra está sempre vazia ao apagar a primeira nos clubes da IA: a mutação `v_desce` é equivalente nos dados. Teste: técnico humano com as duas vagas extras preenchidas, apagando a primeira |
 | `humano manda no clube` | 0x600c90 (166ª) | — | sem técnico humano o contador fica em zero (`h_forcar` escapa). O teste é o jogo do Lucas comparando, inclusive como técnico de seleção |
 | `categoria do contrato` | 0x4ca470 (166ª) | — | o contrato do tipo 5 e a faixa da situação 0 com satisfação de 40 a 75 não aparecem na carreira (`c_tipo5`, `c_k0` escapam mesmo refeitas). Candidatas à carreira ampla de madrugada |
+| `partida abandonada` | 0x6d5930 (167ª) | — | nenhuma partida é abandonada na carreira automática (minuto do abandono em −1): a mutação `a_onze` escapa. Teste: uma partida abandonada (clima) no jogo do Lucas comparando |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
