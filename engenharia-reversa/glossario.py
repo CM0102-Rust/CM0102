@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'media_do_jogo': 'game_average', 'valor_do_contrato': 'contract_value', 'nivel_para_a_selecao': 'national_team_level',
  'bits_do_registro': 'record_bits', 'competicao_marcada': 'competition_flagged', 'registro_da_liga': 'league_record',
  'recuperar_lesao': 'recover_injury', 'pessoa_na_lista_de_transferencias': 'person_in_transfer_list', 'punicao_da_tabela': 'table_penalty',
  'registro_da_formacao': 'formation_record', 'peso_da_competicao': 'competition_weight', 'gravar_dado_da_noticia': 'set_news_field',

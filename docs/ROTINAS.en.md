@@ -1629,3 +1629,13 @@ Mutations: `mutacoes/leva176.py` (6, by the career to 2002-06-01, confirming the
 | `registro_da_liga()` | 0x6826d0 | thiscall | league.cpp: the record (59 bytes) of table +0xb1 |
 
 Mutations: `mutacoes/leva177.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `m_marca` escaped: in the English leagues the competitions with +0xbe set never have bits 1 and 2 of +0xd9 different (missing data; goes to the broad career). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 178th batch — the game average, the contract value and the national team level (official on 2026-10-19)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `media_do_jogo()` | 0x5d5a60 | thiscall | game.cpp: the f64 average +0x20/+0x28 or +0x10/+0x18 (zero divisor: 6.8) |
+| `valor_do_contrato()` | 0x4d0c20 | thiscall | contract_manager.cpp: dword +0xc of the person's contract record |
+| `nivel_para_a_selecao()` | 0x76d810 | stdcall | national_teams.cpp: the player's level 1..3 for the national team by reputation and position ratings |
+
+Mutations: `mutacoes/leva178.py` (5, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 4 caught. `m_padrao` escaped: the average divisor (+0x18/+0x28) is never zero when the career asks for the average: the default 6.8 never shows. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

@@ -1627,3 +1627,13 @@ Mutações: `mutacoes/leva176.py` (6, pela carreira até 2002-06-01, confirmando
 | `registro_da_liga()` | 0x6826d0 | thiscall | league.cpp: o registro (59 bytes) da tabela +0xb1 |
 
 Mutações: `mutacoes/leva177.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `m_marca` escapou: nas ligas inglesas as competições com +0xbe ligado nunca têm os bits 1 e 2 de +0xd9 diferentes (falta de dados; vai para a carreira ampla). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 178ª leva — a média do jogo, o valor do contrato e o nível para a seleção (oficial em 19/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `media_do_jogo()` | 0x5d5a60 | thiscall | game.cpp: a média f64 +0x20/+0x28 ou +0x10/+0x18 (divisor zero: 6.8) |
+| `valor_do_contrato()` | 0x4d0c20 | thiscall | contract_manager.cpp: o dword +0xc da ficha de contrato da pessoa |
+| `nivel_para_a_selecao()` | 0x76d810 | stdcall | national_teams.cpp: o nível 1..3 do jogador para a seleção pela reputação e pelas notas de posição |
+
+Mutações: `mutacoes/leva178.py` (5, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 4 acusadas. `m_padrao` escapou: o divisor da média (+0x18/+0x28) nunca é zero quando a carreira consulta a média: o 6,8 padrão não aparece. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

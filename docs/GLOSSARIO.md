@@ -299,6 +299,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5b59a0 | `mascara_da_formacao` | formation_mask |
 | 0x5b7d20 | `mascara_de_posicoes` | position_mask |
 | 0x7c1950 | `media_das_notas` | ratings_average |
+| 0x5d5a60 | `media_do_jogo` | game_average |
 | 0x6e1a40 | `melhor_avaliado` | best_rated |
 | 0x6e1940 | `melhor_da_lista` | best_in_list |
 | 0x6c3950 | `menor_distancia` | smallest_distance |
@@ -322,6 +323,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6d7b00 | `narrar_no_painel` | commentate_on_panel |
 | 0x5afe00 | `nevoa_apos_partida` | fog_after_match |
 | 0x53ce90 | `nivel_do_contrato` | contract_level |
+| 0x76d810 | `nivel_para_a_selecao` | national_team_level |
 | 0x6db2d0 | `nome_do_jogador_na_narracao` | commentary_player_name |
 | 0x715f50 | `nota_ajustada` | adjusted_rating |
 | 0x6d4a20 | `nota_do_arbitro` | referee_grade |
@@ -451,6 +453,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6d5af0 | `vagas_do_lado_sem_conflito` | side_slots_without_conflict |
 | 0x5b8960 | `vagas_sem_conflito` | slots_without_conflict |
 | 0x700bd0 | `valor_do_chute` | shot_value |
+| 0x4d0c20 | `valor_do_contrato` | contract_value |
 | 0x7165b0 | `valor_pela_condicao` | value_by_condition |
 | 0x6d5d80 | `variante_do_evento` | event_variant |
 | 0x6b7cf0 | `venceu_o_jogo` | won_the_match |

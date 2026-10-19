@@ -1,5 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-media_contrato_selecao
 sim_contratos_1
 sim_midia_copa
 sim_disciplina
