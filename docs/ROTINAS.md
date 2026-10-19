@@ -1647,3 +1647,13 @@ Mutações: `mutacoes/leva178.py` (5, pela carreira até 2002-06-01, confirmando
 | `oferta_fechada()` | 0x8d0d90 | stdcall | transfer_offer.cpp: a oferta de transferência está encerrada (pelo estado e, no estado 0xf, pela fase) |
 
 Mutações: `mutacoes/leva179.py` (4, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `f_estado` escapou: na carreira as ofertas de transferência consultadas nunca estão no estado 4. `f_fase` escapou: nenhuma oferta no estado 0xf está na fase 2 quando é consultada. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 180ª leva — as telas da partida (1): o rótulo do controle, fechar a tela e a espera (oficial em 19/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `rotulo_do_controle()` | 0x725a70 | cdecl | match_screens.cpp: o rótulo do botão de controle da partida (esperando, começar, recomeçar, pausar ou retomar, continuar) e se ele fica desligado |
+| `fechar_tela_da_partida()` | 0x71b120 | cdecl | match_screens.cpp: fecha a tela da partida: destrói e libera os parâmetros 0x2d e 0x1d do gerente de telas |
+| `abrir_tela_de_espera()` | 0x727f00 | cdecl | match_screens.cpp: abre a tela de espera do técnico humano no gerente de telas |
+
+Mutações: `mutacoes/leva180.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

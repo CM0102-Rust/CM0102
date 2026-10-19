@@ -55,6 +55,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | Address | Português | English |
 |---|---|---|
 | 0x9326e0 | `abrir_no_conteiner` | open_in_container |
+| 0x727f00 | `abrir_tela_de_espera` | open_waiting_screen |
 | 0x7172d0 | `ajustar_17` | adjust_17 |
 | 0x6cb9b0 | `alcanca` | reaches |
 | 0x713d90 | `alcanca_o_ponto` | reaches_the_point |
@@ -209,6 +210,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x547790 | `favorito_de` | favourite_of |
 | 0x6d1cc0 | `fechamento` | match_wrap_up |
 | 0x6b5f00 | `fechar_partida_do_dia` | close_day_match |
+| 0x71b120 | `fechar_tela_da_partida` | close_match_screen |
 | 0x4cf6d0 | `ficha_de_contrato` | contract_record |
 | 0x6cb910 | `fora_do_meio` | off_centre |
 | 0x6bbb60 | `forca_do_lado` | side_strength |
@@ -416,6 +418,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f5c30 | `responder` | respond |
 | 0x6ce460 | `resumo_da_partida` | match_summary |
 | 0x6bbe40 | `rolar_bola` | roll_ball |
+| 0x725a70 | `rotulo_do_controle` | match_control_label |
 | 0x53b4f0 | `selecao_b` | b_national_team |
 | 0x775790 | `selecao_ou_especial` | national_or_special |
 | 0x53b3d0 | `selecao_principal` | main_national_team |

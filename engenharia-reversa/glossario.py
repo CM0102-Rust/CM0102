@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'rotulo_do_controle': 'match_control_label', 'fechar_tela_da_partida': 'close_match_screen', 'abrir_tela_de_espera': 'open_waiting_screen',
  'oferta_de_contrato': 'contract_offer', 'oferta_acertada': 'agreed_contract_offer', 'oferta_fechada': 'transfer_offer_closed',
  'media_do_jogo': 'game_average', 'valor_do_contrato': 'contract_value', 'nivel_para_a_selecao': 'national_team_level',
  'bits_do_registro': 'record_bits', 'competicao_marcada': 'competition_flagged', 'registro_da_liga': 'league_record',

@@ -1649,3 +1649,13 @@ Mutations: `mutacoes/leva178.py` (5, by the career to 2002-06-01, confirming the
 | `oferta_fechada()` | 0x8d0d90 | stdcall | transfer_offer.cpp: whether the transfer offer is closed (by its state and, in state 0xf, by its phase) |
 
 Mutations: `mutacoes/leva179.py` (4, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `f_estado` escaped: in the career the transfer offers asked about are never in state 4. `f_fase` escaped: no offer in state 0xf is in phase 2 when it is asked about. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 180th batch — the match screens (1): the control label, closing the screen and the waiting screen (official on 2026-10-19)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `rotulo_do_controle()` | 0x725a70 | cdecl | match_screens.cpp: the match control button label (waiting, kick off, restart, pause or resume, continue) and whether it is disabled |
+| `fechar_tela_da_partida()` | 0x71b120 | cdecl | match_screens.cpp: closes the match screen: destroys and frees screen manager parameters 0x2d and 0x1d |
+| `abrir_tela_de_espera()` | 0x727f00 | cdecl | match_screens.cpp: opens the human manager's waiting screen in the screen manager |
+
+Mutations: `mutacoes/leva180.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
