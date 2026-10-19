@@ -74,5 +74,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `nota do jogador: veterano sem jogos` | 0x6e6340/0x6e2f20 (173ª) | — | o ajuste do contrato (flag 0x2000000) nunca pegou um veterano (mais de 34) sem jogos: `n_veterano` escapa. Teste: carreira ampla |
 | `nota para a vaga: férias` | 0x6e2f20 (173ª) | — | o bônus das férias só roda com a lista de férias de um técnico humano: `v_ferias` escapa. Teste: o Lucas saindo de férias comparando |
 | `registro da formação: humano` | 0x896570 (175ª) | — | o limite só muda para as formações próprias de um técnico humano (além das [+0x5fd] padrão): `f_limite` escapa até comparando. Teste: o Lucas usando uma formação própria salva, comparando |
+| `pessoa na lista de transferências` | 0x8c1870 (176ª) | — | a lista +0x92c nunca tem a pessoa procurada na carreira automática: `t_item` (o campo +4 em vez do +0) escapa até comparando. Teste: carreira ampla |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").

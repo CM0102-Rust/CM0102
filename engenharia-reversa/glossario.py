@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'recuperar_lesao': 'recover_injury', 'pessoa_na_lista_de_transferencias': 'person_in_transfer_list', 'punicao_da_tabela': 'table_penalty',
  'registro_da_formacao': 'formation_record', 'peso_da_competicao': 'competition_weight', 'gravar_dado_da_noticia': 'set_news_field',
  'pessoa_na_lista': 'person_in_list', 'ficha_de_contrato': 'contract_record', 'desgaste_diario': 'daily_wear',
  'cumprir_regra_do_elenco': 'apply_squad_rule', 'nota_fora_da_partida': 'off_match_score', 'nota_para_a_vaga': 'lineup_slot_score',

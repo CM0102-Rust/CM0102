@@ -357,6 +357,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x897dc0 | `pessoa_da_linha` | row_person |
 | 0x8968f0 | `pessoa_da_vaga_tatica` | tactic_slot_person |
 | 0x69fc60 | `pessoa_na_lista` | person_in_list |
+| 0x8c1870 | `pessoa_na_lista_de_transferencias` | person_in_transfer_list |
 | 0x6ce310 | `placar_agregado` | aggregate_score |
 | 0x6bce20 | `pode_escolher` | can_choose |
 | 0x6c51e0 | `pontape_inicial` | kick_off |
@@ -374,6 +375,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cd330 | `procurar_no_lado` | search_on_side |
 | 0x68d1b0 | `proximo_da_lista` | next_list_item |
 | 0x6d78b0 | `proximo_evento` | next_event |
+| 0x55cae0 | `punicao_da_tabela` | table_penalty |
 | 0x6d1210 | `punicoes` | punishments |
 | 0x6e9630 | `punir_falta` | punish_foul |
 | 0x6ea4e0 | `punir_lance` | punish_move |
@@ -382,6 +384,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6d5a10 | `quem_marca` | who_marks |
 | 0x6bc030 | `quem_marcar` | who_to_mark |
 | 0x6f5810 | `recuperar_folego` | recover_stamina |
+| 0x62bd10 | `recuperar_lesao` | recover_injury |
 | 0x6e1aa0 | `refazer_time` | redo_team |
 | 0x68a1c0 | `registrar_jogo_da_rodada` | store_round_match |
 | 0x6bb9a0 | `registrar_lance` | record_move |

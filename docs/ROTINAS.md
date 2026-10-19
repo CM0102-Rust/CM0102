@@ -1607,3 +1607,13 @@ Mutações: `mutacoes/leva174.py` (7, pela carreira até 2002-06-01, confirmando
 | `gravar_dado_da_noticia()` | 0x785790 | thiscall | news.cpp: grava o dado 0..49 da notícia |
 
 Mutações: `mutacoes/leva175.py` (6, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 5 acusadas. `f_limite` escapou: o limite só muda para as formações além das padrão pedidas com o humano (as formações próprias de um técnico humano), que a carreira automática não usa. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 176ª leva — a recuperação da lesão, a pessoa na lista de transferências e a punição da disciplina (oficial em 19/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `recuperar_lesao()` | 0x62bd10 | thiscall | injury.cpp: o dia de recuperação (abaixo de −1000 em x87 com −0.0035 e 2.5; senão o ritmo ou sorteio) |
+| `pessoa_na_lista_de_transferencias()` | 0x8c1870 | thiscall | transfer_manager.cpp: a pessoa está na lista +0x92c? |
+| `punicao_da_tabela()` | 0x55cae0 | thiscall | discipline.cpp: a punição da linha e da coluna da tabela, se o tipo bater |
+
+Mutações: `mutacoes/leva176.py` (6, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 5 acusadas. `t_item` escapou: a lista +0x92c do gerente de transferências nunca tem a pessoa procurada na carreira automática (a rotina devolve sempre 0); vai para a carreira ampla. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

@@ -1609,3 +1609,13 @@ Mutations: `mutacoes/leva174.py` (7, by the career to 2002-06-01, confirming the
 | `gravar_dado_da_noticia()` | 0x785790 | thiscall | news.cpp: stores news field 0..49 |
 
 Mutations: `mutacoes/leva175.py` (6, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 5 caught. `f_limite` escaped: the limit only changes for formations beyond the default ones asked with the human flag (a human manager's own formations), which the automatic career does not use. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 176th batch — injury recovery, the person in the transfer list and the discipline penalty (official on 2026-10-19)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `recuperar_lesao()` | 0x62bd10 | thiscall | injury.cpp: the recovery day (below −1000 in x87 with −0.0035 and 2.5; otherwise the pace or a draw) |
+| `pessoa_na_lista_de_transferencias()` | 0x8c1870 | thiscall | transfer_manager.cpp: is the person in list +0x92c? |
+| `punicao_da_tabela()` | 0x55cae0 | thiscall | discipline.cpp: the penalty at the table row and column, if the type matches |
+
+Mutations: `mutacoes/leva176.py` (6, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 5 caught. `t_item` escaped: the transfer manager list +0x92c never holds the person looked up in the automatic career (the routine always returns 0); goes to the broad career. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

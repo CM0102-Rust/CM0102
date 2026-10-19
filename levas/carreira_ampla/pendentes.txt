@@ -8,3 +8,4 @@ Noite de 19/10/2026 (lote_ampla_1 ate 2001-12-01; lote_ampla_2 ate 2002-03-31, i
 - acusadas: g_meio_b, g_volta_b, c_k5_b
 - seguem escapando: c_k0_b (ate comparando ate 2001-12-01), c_tipo5_b; nao rodadas: o_campos, r_banco, r_idade, n_veterano
 - proxima noite: lote_ampla_2.py so pela carreira (sem --confirmar: ~50 min por mutacao comparando na ampla)
+- leva176.py: t_item (pessoa na lista +0x92c do gerente de transferencias)

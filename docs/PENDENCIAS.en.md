@@ -74,5 +74,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `player score: veteran with no games` | 0x6e6340/0x6e2f20 (batch 173) | — | the contract adjustment (flag 0x2000000) never met a veteran (over 34) with no games: `n_veterano` escapes. Test: broad career |
 | `lineup slot score: holidays` | 0x6e2f20 (batch 173) | — | the holiday bonus only runs with a human manager's holiday list: `v_ferias` escapes. Test: Lucas going on holiday in comparison mode |
 | `formation record: human` | 0x896570 (batch 175) | — | the limit only changes for a human manager's own formations (beyond the [+0x5fd] default ones): `f_limite` escapes even comparing. Test: Lucas using a saved custom formation in comparison mode |
+| `person in transfer list` | 0x8c1870 (batch 176) | — | list +0x92c never holds the person looked up in the automatic career: `t_item` (field +4 instead of +0) escapes even comparing. Test: broad career |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").
