@@ -1637,3 +1637,13 @@ Mutações: `mutacoes/leva177.py` (3, pela carreira até 2002-06-01, confirmando
 | `nivel_para_a_selecao()` | 0x76d810 | stdcall | national_teams.cpp: o nível 1..3 do jogador para a seleção pela reputação e pelas notas de posição |
 
 Mutações: `mutacoes/leva178.py` (5, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 4 acusadas. `m_padrao` escapou: o divisor da média (+0x18/+0x28) nunca é zero quando a carreira consulta a média: o 6,8 padrão não aparece. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 179ª leva — as ofertas de contrato e a oferta de transferência fechada (oficial em 19/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `oferta_de_contrato()` | 0x4cc9e0 | thiscall | contract_manager.cpp: a oferta de contrato da pessoa para o clube, na lista do gerente de contratos |
+| `oferta_acertada()` | 0x4cca30 | thiscall | contract_manager.cpp: a oferta de contrato acertada (estado 2) da pessoa |
+| `oferta_fechada()` | 0x8d0d90 | stdcall | transfer_offer.cpp: a oferta de transferência está encerrada (pelo estado e, no estado 0xf, pela fase) |
+
+Mutações: `mutacoes/leva179.py` (4, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `f_estado` escapou: na carreira as ofertas de transferência consultadas nunca estão no estado 4. `f_fase` escapou: nenhuma oferta no estado 0xf está na fase 2 quando é consultada. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

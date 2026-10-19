@@ -1639,3 +1639,13 @@ Mutations: `mutacoes/leva177.py` (3, by the career to 2002-06-01, confirming the
 | `nivel_para_a_selecao()` | 0x76d810 | stdcall | national_teams.cpp: the player's level 1..3 for the national team by reputation and position ratings |
 
 Mutations: `mutacoes/leva178.py` (5, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 4 caught. `m_padrao` escaped: the average divisor (+0x18/+0x28) is never zero when the career asks for the average: the default 6.8 never shows. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 179th batch — the contract offers and the closed transfer offer (official on 2026-10-19)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `oferta_de_contrato()` | 0x4cc9e0 | thiscall | contract_manager.cpp: the person's contract offer for the club, in the contract manager's list |
+| `oferta_acertada()` | 0x4cca30 | thiscall | contract_manager.cpp: the person's agreed contract offer (state 2) |
+| `oferta_fechada()` | 0x8d0d90 | stdcall | transfer_offer.cpp: whether the transfer offer is closed (by its state and, in state 0xf, by its phase) |
+
+Mutations: `mutacoes/leva179.py` (4, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `f_estado` escaped: in the career the transfer offers asked about are never in state 4. `f_fase` escaped: no offer in state 0xf is in phase 2 when it is asked about. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

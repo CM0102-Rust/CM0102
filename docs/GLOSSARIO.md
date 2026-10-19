@@ -332,6 +332,9 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6e2f20 | `nota_para_a_vaga` | lineup_slot_score |
 | 0x6d3de0 | `nova_reputacao` | new_reputation |
 | 0x6b6570 | `numero_da_competicao` | competition_number |
+| 0x4cca30 | `oferta_acertada` | agreed_contract_offer |
+| 0x4cc9e0 | `oferta_de_contrato` | contract_offer |
+| 0x8d0d90 | `oferta_fechada` | transfer_offer_closed |
 | 0x6b6510 | `ordem_das_partidas_do_dia` | day_match_order |
 | 0x6bd840 | `ordem_de_acao` | action_order |
 | 0x6bd760 | `ordem_dos_jogadores` | player_order |

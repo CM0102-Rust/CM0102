@@ -77,5 +77,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `person in transfer list` | 0x8c1870 (batch 176) | — | list +0x92c never holds the person looked up in the automatic career: `t_item` (field +4 instead of +0) escapes even comparing. Test: broad career |
 | `marked competition` | 0x684790 (batch 177) | — | in the English leagues the competitions with +0xbe set never have bits 1 and 2 of +0xd9 different: `m_marca` escapes even comparing. Test: broad career |
 | `game average: default` | 0x5d5a60 (batch 178) | — | the average divisor is never zero when the career asks for it: `m_padrao` (the 6.8 with no games) escapes even comparing. Test: a new career right at the start (before the first games), comparing |
+| `closed transfer offer` | 0x8d0d90 (batch 179) | — | the offers asked about in the career are never in state 4 nor in state 0xf at phase 2: `f_estado` and `f_fase` escape even comparing. Test: broad career |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").
