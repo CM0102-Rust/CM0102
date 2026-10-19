@@ -78,5 +78,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `competição marcada` | 0x684790 (177ª) | — | nas ligas inglesas as competições com +0xbe ligado nunca têm os bits 1 e 2 de +0xd9 diferentes: `m_marca` escapa até comparando. Teste: carreira ampla |
 | `média do jogo: padrão` | 0x5d5a60 (178ª) | — | o divisor da média nunca é zero quando a carreira a consulta: `m_padrao` (o 6,8 sem jogos) escapa até comparando. Teste: carreira nova logo no início (antes dos primeiros jogos), comparando |
 | `oferta de transferência encerrada` | 0x8d0d90 (179ª) | — | as ofertas consultadas na carreira nunca estão no estado 4 nem no estado 0xf na fase 2: `f_estado` e `f_fase` escapam até comparando. Teste: carreira ampla |
+| `tela de espera` | 0x727f00 (180ª) | — | só roda com mais de um técnico humano (jogo em rede ou vários técnicos no mesmo PC). As outras duas da 180ª foram provadas na sessão do Lucas de 19/10/2026: rótulo do controle comparado (≥ 16 vezes, 0 divergências) e no modo Rust; fechar a tela no modo Rust (≥ 4 vezes) |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
