@@ -1,5 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-bits_marca_liga
 media_contrato_selecao
 sim_contratos_1
 sim_midia_copa

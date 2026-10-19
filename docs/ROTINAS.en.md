@@ -1619,3 +1619,13 @@ Mutations: `mutacoes/leva175.py` (6, by the career to 2002-06-01, confirming the
 | `punicao_da_tabela()` | 0x55cae0 | thiscall | discipline.cpp: the penalty at the table row and column, if the type matches |
 
 Mutations: `mutacoes/leva176.py` (6, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 5 caught. `t_item` escaped: the transfer manager list +0x92c never holds the person looked up in the automatic career (the routine always returns 0); goes to the broad career. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 177th batch — the contract bit, the competition flag and the club record in the league (official on 2026-10-19)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `bits_do_registro()` | 0x7a7eb0 | stdcall | player_regen.cpp: bits 4..5 of byte +0xb of the person's 79-byte record |
+| `competicao_marcada()` | 0x684790 | thiscall | league.cpp: does the competition have +0xbe and flag 2 of +0xd9? |
+| `registro_da_liga()` | 0x6826d0 | thiscall | league.cpp: the record (59 bytes) of table +0xb1 |
+
+Mutations: `mutacoes/leva177.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `m_marca` escaped: in the English leagues the competitions with +0xbe set never have bits 1 and 2 of +0xd9 different (missing data; goes to the broad career). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

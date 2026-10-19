@@ -1617,3 +1617,13 @@ Mutações: `mutacoes/leva175.py` (6, pela carreira até 2002-06-01, confirmando
 | `punicao_da_tabela()` | 0x55cae0 | thiscall | discipline.cpp: a punição da linha e da coluna da tabela, se o tipo bater |
 
 Mutações: `mutacoes/leva176.py` (6, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 5 acusadas. `t_item` escapou: a lista +0x92c do gerente de transferências nunca tem a pessoa procurada na carreira automática (a rotina devolve sempre 0); vai para a carreira ampla. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 177ª leva — o bit do contrato, a marca da competição e o registro do clube na liga (oficial em 19/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `bits_do_registro()` | 0x7a7eb0 | stdcall | player_regen.cpp: os bits 4..5 do byte +0xb do registro de 79 bytes da pessoa |
+| `competicao_marcada()` | 0x684790 | thiscall | league.cpp: a competição tem +0xbe e a marca 2 de +0xd9? |
+| `registro_da_liga()` | 0x6826d0 | thiscall | league.cpp: o registro (59 bytes) da tabela +0xb1 |
+
+Mutações: `mutacoes/leva177.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `m_marca` escapou: nas ligas inglesas as competições com +0xbe ligado nunca têm os bits 1 e 2 de +0xd9 diferentes (falta de dados; vai para a carreira ampla). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

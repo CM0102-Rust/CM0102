@@ -78,6 +78,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x8676f0 | `bandeiras_do_contrato` | contract_flags |
 | 0x897990 | `batedor_guardado` | stored_taker |
 | 0x5b5a60 | `bit_da_casa` | square_bit |
+| 0x7a7eb0 | `bits_do_registro` | record_bits |
 | 0x6cd490 | `bola_fora` | ball_out |
 | 0x6d58f0 | `bola_na_area` | ball_goal_end |
 | 0x714d00 | `bola_no_ataque` | ball_in_attack |
@@ -124,6 +125,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6d5a70 | `companheiro_livre` | free_teammate |
 | 0x4b0700 | `competicao_conta` | competition_counts |
 | 0x7751e0 | `competicao_da_pessoa` | person_competition |
+| 0x684790 | `competicao_marcada` | competition_flagged |
 | 0x70dfa0 | `condicao_jogador` | player_condition |
 | 0x7109f0 | `conduzir` | dribble |
 | 0x6bba80 | `conferir_lance` | check_move |
@@ -392,6 +394,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x79ce10 | `registrar_nota_do_arbitro` | record_referee_grade |
 | 0x7003b0 | `registrar_posse` | record_possession |
 | 0x896570 | `registro_da_formacao` | formation_record |
+| 0x6826d0 | `registro_da_liga` | league_record |
 | 0x7f6cd0 | `registro_do_observador` | scout_record |
 | 0x53a5b0 | `registro_livre` | free_record |
 | 0x6c54a0 | `reiniciar_lance` | restart_play |
