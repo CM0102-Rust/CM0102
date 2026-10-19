@@ -67,15 +67,16 @@ Routines that call others with side effects (for example, the match commentary) 
 - **Long proof:** ten seasons with Rust and original identical.
 - The first routines in Rust: the random draw generator and the game dates.
 
-### Stage 3: match engine, in progress (2026-10-06 and 2026-10-07)
-- **180 batches, 416 routines** rewritten, bottom-up: from accessors and calculations to tactical decisions, ball possession, refereeing (fouls, cards, offside), statistics, player movement, ball control, commentary and, as feasibility proofs, the **shot-on-goal value** and the **team strength** (5 KB routines).
+### Stage 3: match engine (2026-10-06 to 2026-10-17) and simulation, in progress
+- **181 batches, 419 routines** rewritten, bottom-up: from accessors and calculations to tactical decisions, ball possession, refereeing (fouls, cards, offside), statistics, player movement, ball control, commentary and, as feasibility proofs, the **shot-on-goal value** and the **team strength** (5 KB routines).
 - New infrastructure: hook verification (`prologos.py`), a recording gate for the commentary and replay of internal calls.
+- The match engine (screens aside) reached 100% on 2026-10-17; since then the batches go through the simulation (`candidatos.py --simulacao`) and, from batch 180, through the match screens (`match_screens.cpp`).
 
 ## 6. Where we are going
 
-1. **Finish the match engine.** The large integrating routines (the play loop, the pass, the dribble, the full shot), using the pieces already rewritten and recording and replay for the calls with effects.
+1. **Close the engine with the match screens.** The screens build a display list (the screen manager's `Display`), compared as data; the proofs are Lucas's game in Rust mode and comparing.
 2. **The rest of the simulation:** the match day, competitions, tables, transfers, finances, contracts, injuries, news. Same method: routine by routine, proven against the original.
-3. **The interface.** Open decision: translate the screens instruction by instruction or rewrite them on top of what we already know about them, keeping the appearance identical first.
+3. **The interface (decided on 2026-10-19: hybrid approach).** Translate the interface base and each screen's logic, rewrite the presentation over the base checked pixel by pixel, and only then modernise.
 4. **Independence from the executable.** With the whole simulation in Rust, the core becomes a library of its own (64-bit), which runs without `cm0102.exe`.
 5. **Modernization.** Resolution and fonts, pictures fitted to the screen and, on top of the faithful base, changes to rules and realism.
 6. **New ways of seeing the game.** The engine already computes the match on a board (positions of each player and of the ball at each play); with it in Rust, it becomes possible to draw the match (2D, "button football") in a modern interface (Unity, Godot or another), reading the engine.

@@ -1659,3 +1659,13 @@ Mutations: `mutacoes/leva179.py` (4, by the career to 2002-06-01, confirming the
 | `abrir_tela_de_espera()` | 0x727f00 | cdecl | match_screens.cpp: opens the human manager's waiting screen in the screen manager |
 
 Mutations: `mutacoes/leva180.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 181st batch — the player's media stories and the cup match importance (official on 2026-10-19)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `noticia_com_resposta_2()` | 0x735780 | thiscall | media.cpp: whether the player has a story with response 2 in the media log |
+| `tem_noticia()` | 0x735840 | thiscall | media.cpp: whether the player has any story in the media log |
+| `importancia_da_partida()` | 0x5221f0 | thiscall | Cup.cpp: the cup match importance by round and the first-leg score difference |
+
+Mutations: `mutacoes/leva181.py` (4, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `m_alguma` escaped: the media log stories asked about in the career never have response 0. `c_fase` escaped: equivalent mutation: at round 1, replacing it with 1 changes nothing (not a test gap). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

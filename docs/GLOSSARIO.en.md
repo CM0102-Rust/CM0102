@@ -242,6 +242,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6e86d0 | `habilidade_vista` | perceived_ability |
 | 0x600c90 | `humano_manda_no_clube` | human_runs_club |
 | 0x76d430 | `idades_da_selecao` | national_team_ages |
+| 0x5221f0 | `importancia_da_partida` | cup_match_importance |
 | 0x6b5a70 | `iniciar_proxima_partida` | start_next_match |
 | 0x6e9470 | `iniciar_rigor` | init_strictness |
 | 0x6ddab0 | `instrucoes` | instructions |
@@ -332,6 +333,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6ebd70 | `nota_do_jogador` | player_rating |
 | 0x6e6340 | `nota_fora_da_partida` | off_match_score |
 | 0x6e2f20 | `nota_para_a_vaga` | lineup_slot_score |
+| 0x735780 | `noticia_com_resposta_2` | story_with_response_two |
 | 0x6d3de0 | `nova_reputacao` | new_reputation |
 | 0x6b6570 | `numero_da_competicao` | competition_number |
 | 0x4cca30 | `oferta_acertada` | agreed_contract_offer |
@@ -444,6 +446,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5fe040 | `tecnico_9ace` | manager_9ace |
 | 0x5fea50 | `tecnico_9b23` | manager_9b23 |
 | 0x6b59a0 | `tem_jogo` | has_match |
+| 0x735840 | `tem_noticia` | has_story |
 | 0x7164b0 | `teste_de_condicao` | condition_test |
 | 0x6d8d10 | `texto_do_evento` | event_text |
 | 0x53b620 | `tipo_11_a_15` | type_11_to_15 |

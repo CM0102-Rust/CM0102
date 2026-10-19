@@ -1657,3 +1657,13 @@ Mutações: `mutacoes/leva179.py` (4, pela carreira até 2002-06-01, confirmando
 | `abrir_tela_de_espera()` | 0x727f00 | cdecl | match_screens.cpp: abre a tela de espera do técnico humano no gerente de telas |
 
 Mutações: `mutacoes/leva180.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 181ª leva — as notícias do jogador na mídia e a importância da partida de copa (oficial em 19/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `noticia_com_resposta_2()` | 0x735780 | thiscall | media.cpp: o jogador tem uma notícia com a resposta 2 no registro da mídia |
+| `tem_noticia()` | 0x735840 | thiscall | media.cpp: o jogador tem alguma notícia no registro da mídia |
+| `importancia_da_partida()` | 0x5221f0 | thiscall | Cup.cpp: a importância da partida da copa pela fase e a diferença do placar da ida |
+
+Mutações: `mutacoes/leva181.py` (4, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `m_alguma` escapou: as notícias do registro da mídia consultadas na carreira nunca têm a resposta 0. `c_fase` escapou: mutação equivalente: com a fase 1 trocar por 1 não muda nada (não é lacuna do teste). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

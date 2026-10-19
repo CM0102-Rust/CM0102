@@ -65,15 +65,16 @@ Rotinas que chamam outras com efeitos colaterais (por exemplo, a narração da p
 - **Prova longa:** dez temporadas com Rust e original idênticos.
 - As primeiras rotinas em Rust: o gerador de sorteios e as datas do jogo.
 
-### Etapa 3: motor de partidas, em andamento (06 e 07/10/2026)
-- **180 levas, 416 rotinas** reescritas, de baixo para cima: dos acessores e cálculos às decisões táticas, posse de bola, arbitragem (faltas, cartões, impedimento), estatísticas, movimento dos jogadores, domínio da bola, narração e, como provas de viabilidade, o **valor do chute a gol** e a **força do time** (rotinas de 5 KB).
+### Etapa 3: motor de partidas (06 a 17/10/2026) e simulação, em andamento
+- **181 levas, 419 rotinas** reescritas, de baixo para cima: dos acessores e cálculos às decisões táticas, posse de bola, arbitragem (faltas, cartões, impedimento), estatísticas, movimento dos jogadores, domínio da bola, narração e, como provas de viabilidade, o **valor do chute a gol** e a **força do time** (rotinas de 5 KB).
 - Infraestrutura nova: verificação dos desvios (`prologos.py`), porta de gravação para a narração e reprodução de chamadas internas.
+- O motor de partidas (fora as telas) chegou a 100% em 17/10/2026; desde então as levas seguem pela simulação (`candidatos.py --simulacao`) e, a partir da 180ª, pelas telas da partida (`match_screens.cpp`).
 
 ## 6. Aonde vamos
 
-1. **Terminar o motor de partidas.** As integradoras grandes (o laço do lance, o passe, o drible, o chute completo), usando as peças já reescritas e a gravação e reprodução para as chamadas com efeito.
+1. **Fechar o motor com as telas da partida.** As telas montam uma lista de exibição (o `Display` do gerente de telas), comparada como dado; as provas são o jogo do Lucas em modo Rust e comparando.
 2. **O resto da simulação:** o dia de jogos, competições, tabelas, transferências, finanças, contratos, lesões, notícias. Mesmo método: rotina por rotina, provada contra a original.
-3. **A interface.** Decisão em aberto: traduzir as telas instrução por instrução ou reescrevê-las por cima do que já sabemos delas, mantendo a aparência idêntica primeiro.
+3. **A interface (decidido em 19/10/2026: abordagem híbrida).** Traduzir a base da interface e a lógica de cada tela, reescrever a apresentação sobre a base conferida pixel a pixel e só depois modernizar.
 4. **Independência do executável.** Com a simulação inteira em Rust, o núcleo vira uma biblioteca própria (64 bits), que roda sem o `cm0102.exe`.
 5. **Modernização.** Resolução e fontes, fotos ajustadas à tela e, sobre a base fiel, mudanças de regras e realismo.
 6. **Novas formas de ver o jogo.** O motor já calcula a partida num tabuleiro (posições de cada jogador e da bola a cada lance); com ele em Rust, dá para desenhar a partida (2D, "jogo de botão") numa interface moderna (Unity, Godot ou outra), lendo o motor.
