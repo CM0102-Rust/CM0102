@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'pessoa_na_lista': 'person_in_list', 'ficha_de_contrato': 'contract_record', 'desgaste_diario': 'daily_wear',
  'cumprir_regra_do_elenco': 'apply_squad_rule', 'nota_fora_da_partida': 'off_match_score', 'nota_para_a_vaga': 'lineup_slot_score',
  'proximo_evento': 'next_event', 'nome_do_jogador_na_narracao': 'commentary_player_name', 'habilidade_vista': 'perceived_ability',
  'combinar_com_o_anterior': 'combine_with_previous', 'comentario_de_contexto': 'context_commentary', 'construir_jogador_da_partida': 'construct_match_player',

@@ -151,6 +151,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6eecb0 | `desempenho_na_partida` | match_performance |
 | 0x70c040 | `desfecho_do_chute` | shot_outcome |
 | 0x6f56c0 | `desgastar` | tire (fatigue) |
+| 0x62c2f0 | `desgaste_diario` | daily_wear |
 | 0x5b58e0 | `designado_da_posicao` | designated_for_position |
 | 0x717470 | `destaque_do_jogador` | player_highlight |
 | 0x6ebd60 | `destruir_jogador_da_partida` | destroy_match_player |
@@ -206,6 +207,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x547790 | `favorito_de` | favourite_of |
 | 0x6d1cc0 | `fechamento` | match_wrap_up |
 | 0x6b5f00 | `fechar_partida_do_dia` | close_day_match |
+| 0x4cf6d0 | `ficha_de_contrato` | contract_record |
 | 0x6cb910 | `fora_do_meio` | off_centre |
 | 0x6bbb60 | `forca_do_lado` | side_strength |
 | 0x6c0c60 | `forca_do_time` | team_strength |
@@ -352,6 +354,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x70def0 | `perto_do_proprio_gol` | near_own_goal |
 | 0x897dc0 | `pessoa_da_linha` | row_person |
 | 0x8968f0 | `pessoa_da_vaga_tatica` | tactic_slot_person |
+| 0x69fc60 | `pessoa_na_lista` | person_in_list |
 | 0x6ce310 | `placar_agregado` | aggregate_score |
 | 0x6bce20 | `pode_escolher` | can_choose |
 | 0x6c51e0 | `pontape_inicial` | kick_off |

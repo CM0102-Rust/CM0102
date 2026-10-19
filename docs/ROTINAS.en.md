@@ -1589,3 +1589,13 @@ Mutations: `mutacoes/leva172.py` (6, by the career to 2002-06-01, confirming the
 | `nota_para_a_vaga()` | 0x6e2f20 | cdecl | match_man.cpp: the player's score for a lineup slot: like the off-match score, plus the second position, in-match stamina, tactics, veterans and holidays |
 
 Mutations: `mutacoes/leva173.py` (12, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `r_banco` escaped: the bench phase of the squad rule (0x6e8910) had no restricted bench players in the English league (goes to the broad career). `r_idade` escaped: the age rule (type 3) never had a player exactly at the limit. `n_veterano` escaped: the contract adjustment (flag 0x2000000) never met a veteran (over 34) with no games. `v_ferias` escaped: the holiday bonus of 0x6e2f20 only runs with a human manager's holiday list. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 174th batch — person in the manager list, the contract record and the daily wear (official on 2026-10-19)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `pessoa_na_lista()` | 0x69fc60 | thiscall | manager_manager.cpp: is the person in the list (iterator 0x68d1b0, restored at the end)? |
+| `ficha_de_contrato()` | 0x4cf6d0 | thiscall | contract_manager.cpp: the person's contract record (0x50 bytes) |
+| `desgaste_diario()` | 0x62c2f0 | thiscall | injury.cpp: the day's wear on word +0xc (age, draws of 25 and 13, goalkeeper cap) |
+
+Mutations: `mutacoes/leva174.py` (7, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 7 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

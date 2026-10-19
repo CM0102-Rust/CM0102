@@ -1,4 +1,4 @@
-// ---------- centesima sexagesima nona leva: a recuperacao da lesao, a pessoa na lista de transferencias e a punicao da disciplina ----------
+// ---------- %%LEVA%%a leva: a recuperacao da lesao, a pessoa na lista de transferencias e a punicao da disciplina ----------
 
 /// { 0x62bd10 } (thiscall, ret 0xc, injury.cpp): o dia de recuperação da pessoa `p` no registro de
 /// 31 bytes (a partir de [this]): +0xa recebe `marca`; a palavra +0xc, abaixo de −1000, sobe

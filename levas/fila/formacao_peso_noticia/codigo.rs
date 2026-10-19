@@ -1,4 +1,4 @@
-// ---------- centesima sexagesima oitava leva: a formacao da tabela tatica, o peso das competicoes do jogador e o dado da noticia ----------
+// ---------- %%LEVA%%a leva: a formacao da tabela tatica, o peso das competicoes do jogador e o dado da noticia ----------
 
 /// { 0x896570 } (thiscall, ret 8, tactics.cpp): o registro (0x18e3 bytes) da formação `f`: as
 /// [+0x5fd] primeiras em [+0x5f9], as seguintes (até [+0x5f5] mais, só sem `humano`) em [+0x5f1].

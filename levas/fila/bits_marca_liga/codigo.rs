@@ -1,4 +1,4 @@
-// ---------- centesima septuagesima leva: o bit do contrato, a marca da competicao e o registro do clube na liga ----------
+// ---------- %%LEVA%%a leva: o bit do contrato, a marca da competicao e o registro do clube na liga ----------
 
 /// { 0x7a7eb0 } (stdcall, ret 4, player_regen.cpp): os bits 4..5 do byte +0xb do registro de 79 bytes
 /// da pessoa `*p` em [0xae2d0c]. Devolve só `al`.

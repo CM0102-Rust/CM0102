@@ -1587,3 +1587,13 @@ Mutações: `mutacoes/leva172.py` (6, pela carreira até 2002-06-01, confirmando
 | `nota_para_a_vaga()` | 0x6e2f20 | cdecl | match_man.cpp: a nota do jogador para uma vaga da escalação: como a nota fora da partida, mais a segunda posição, o fôlego na partida, a tática, os veteranos e as férias |
 
 Mutações: `mutacoes/leva173.py` (12, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `r_banco` escapou: a fase do banco da regra de elenco (0x6e8910) não teve restritos no banco na liga inglesa (vai para a carreira ampla). `r_idade` escapou: a regra por idade (tipo 3) nunca teve um jogador exatamente no limite. `n_veterano` escapou: o ajuste do contrato (flag 0x2000000) nunca pegou um veterano (mais de 34 anos) sem jogos. `v_ferias` escapou: o bônus das férias da 0x6e2f20 só roda com a lista de férias de um técnico humano. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 174ª leva — a pessoa na lista do técnico, a ficha de contrato e o desgaste diário (oficial em 19/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `pessoa_na_lista()` | 0x69fc60 | thiscall | manager_manager.cpp: a pessoa está na lista (iterador 0x68d1b0, devolvido no fim)? |
+| `ficha_de_contrato()` | 0x4cf6d0 | thiscall | contract_manager.cpp: a ficha de contrato (0x50 bytes) da pessoa |
+| `desgaste_diario()` | 0x62c2f0 | thiscall | injury.cpp: o desgaste do dia na palavra +0xc (idade, sorteios de 25 e 13, teto de goleiro) |
+
+Mutações: `mutacoes/leva174.py` (7, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 7 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

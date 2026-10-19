@@ -1,4 +1,4 @@
-// ---------- centesima septuagesima primeira leva: a media do jogo, o valor do contrato e o nivel para a selecao ----------
+// ---------- %%LEVA%%a leva: a media do jogo, o valor do contrato e o nivel para a selecao ----------
 
 /// { 0x5d5a60 } (thiscall, ret 4, game.cpp): a média +0x20/+0x28 (com `segunda`) ou +0x10/+0x18 (f64,
 /// como a original deixa no x87); com divisor zero (ou não comparável), 6.8.

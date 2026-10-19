@@ -1,4 +1,4 @@
-// ---------- centesima sexagesima setima leva: a pessoa na lista do tecnico, a ficha de contrato e o desgaste diario ----------
+// ---------- %%LEVA%%a leva: a pessoa na lista do tecnico, a ficha de contrato e o desgaste diario ----------
 
 /// { 0x69fc60 } (thiscall, ret 4, manager_manager.cpp): a pessoa `*p` está na lista [this+8]
 /// (palavra da quantidade em +0, iterador 0x68d1b0 com posição em +0xa, recomeçada de +2 e
