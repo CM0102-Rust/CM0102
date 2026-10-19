@@ -1599,3 +1599,13 @@ Mutations: `mutacoes/leva173.py` (12, by the career to 2002-06-01, confirming th
 | `desgaste_diario()` | 0x62c2f0 | thiscall | injury.cpp: the day's wear on word +0xc (age, draws of 25 and 13, goalkeeper cap) |
 
 Mutations: `mutacoes/leva174.py` (7, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 7 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 175th batch — the tactics table formation, the player's competition weight and the news field (official on 2026-10-19)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `registro_da_formacao()` | 0x896570 | thiscall | tactics.cpp: the formation record (0x18e3 bytes) in the two tables |
+| `peso_da_competicao()` | 0x7c6930 | stdcall | player_stats.cpp: the competition weight by the club's two competitions (500/1000/300/100) |
+| `gravar_dado_da_noticia()` | 0x785790 | thiscall | news.cpp: stores news field 0..49 |
+
+Mutations: `mutacoes/leva175.py` (6, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 5 caught. `f_limite` escaped: the limit only changes for formations beyond the default ones asked with the human flag (a human manager's own formations), which the automatic career does not use. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

@@ -1597,3 +1597,13 @@ Mutações: `mutacoes/leva173.py` (12, pela carreira até 2002-06-01, confirmand
 | `desgaste_diario()` | 0x62c2f0 | thiscall | injury.cpp: o desgaste do dia na palavra +0xc (idade, sorteios de 25 e 13, teto de goleiro) |
 
 Mutações: `mutacoes/leva174.py` (7, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 7 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 175ª leva — a formação da tabela tática, o peso das competições do jogador e o dado da notícia (oficial em 19/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `registro_da_formacao()` | 0x896570 | thiscall | tactics.cpp: o registro da formação (0x18e3 bytes) nas duas tabelas |
+| `peso_da_competicao()` | 0x7c6930 | stdcall | player_stats.cpp: o peso da competição pelas duas competições do clube (500/1000/300/100) |
+| `gravar_dado_da_noticia()` | 0x785790 | thiscall | news.cpp: grava o dado 0..49 da notícia |
+
+Mutações: `mutacoes/leva175.py` (6, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 5 acusadas. `f_limite` escapou: o limite só muda para as formações além das padrão pedidas com o humano (as formações próprias de um técnico humano), que a carreira automática não usa. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

@@ -224,6 +224,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x700390 | `gravar_8eaa` | write_8eaa |
 | 0x7003a0 | `gravar_8ed8` | write_8ed8 |
 | 0x5b5290 | `gravar_casa` | set_square |
+| 0x785790 | `gravar_dado_da_noticia` | set_news_field |
 | 0x5fdd30 | `gravar_dado_do_humano` | set_human_field |
 | 0x6d98b0 | `gravar_eventos` | record_events |
 | 0x8967d0 | `gravar_formacao_tatica` | set_tactic_formation |
@@ -352,6 +353,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6bd930 | `periodo_encerrado` | period_completed |
 | 0x70df70 | `perto_do_gol` | near_goal |
 | 0x70def0 | `perto_do_proprio_gol` | near_own_goal |
+| 0x7c6930 | `peso_da_competicao` | competition_weight |
 | 0x897dc0 | `pessoa_da_linha` | row_person |
 | 0x8968f0 | `pessoa_da_vaga_tatica` | tactic_slot_person |
 | 0x69fc60 | `pessoa_na_lista` | person_in_list |
@@ -386,6 +388,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x62be00 | `registrar_lesao` | register_injury |
 | 0x79ce10 | `registrar_nota_do_arbitro` | record_referee_grade |
 | 0x7003b0 | `registrar_posse` | record_possession |
+| 0x896570 | `registro_da_formacao` | formation_record |
 | 0x7f6cd0 | `registro_do_observador` | scout_record |
 | 0x53a5b0 | `registro_livre` | free_record |
 | 0x6c54a0 | `reiniciar_lance` | restart_play |
