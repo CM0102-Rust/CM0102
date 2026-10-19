@@ -1579,3 +1579,13 @@ Mutations: `mutacoes/leva171.py` (7, by the career to 2002-06-01, confirming the
 | `habilidade_vista()` | 0x6e86d0 | cdecl | match_man.cpp: a player's current or potential ability as an observer sees it (reputation, noise and the observer's knowledge) |
 
 Mutations: `mutacoes/leva172.py` (6, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 3 caught. `p_parte` escaped: 0x6d78b0 only runs with the commentary on screen, which the automatic career does not show (goes to a match watched by Lucas). `p_anel` escaped: 0x6d78b0 only runs with the commentary on screen, which the automatic career does not show. `n_longa` escaped: 0x6db2d0 only runs with the commentary on screen, which the automatic career does not show. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 173rd batch — closing the engine (7): the squad rule and the player scores (official on 2026-10-18)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `cumprir_regra_do_elenco()` | 0x6e8910 | cdecl | match_man.cpp: applies the squad rule (foreigners, non-EU or age): swaps restricted players for the candidates with the smallest score loss |
+| `nota_fora_da_partida()` | 0x6e6340 | cdecl | match_man.cpp: the player's score for a position outside a match (transfers and scouting): position, form, perceived ability, contract, age, scout knowledge |
+| `nota_para_a_vaga()` | 0x6e2f20 | cdecl | match_man.cpp: the player's score for a lineup slot: like the off-match score, plus the second position, in-match stamina, tactics, veterans and holidays |
+
+Mutations: `mutacoes/leva173.py` (12, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `r_banco` escaped: the bench phase of the squad rule (0x6e8910) had no restricted bench players in the English league (goes to the broad career). `r_idade` escaped: the age rule (type 3) never had a player exactly at the limit. `n_veterano` escaped: the contract adjustment (flag 0x2000000) never met a veteran (over 34) with no games. `v_ferias` escaped: the holiday bonus of 0x6e2f20 only runs with a human manager's holiday list. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

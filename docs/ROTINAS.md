@@ -1577,3 +1577,13 @@ Mutações: `mutacoes/leva171.py` (7, pela carreira até 2002-06-01, confirmando
 | `habilidade_vista()` | 0x6e86d0 | cdecl | match_man.cpp: a habilidade atual ou potencial do jogador como um observador a vê (reputação, ruído e conhecimento do observador) |
 
 Mutações: `mutacoes/leva172.py` (6, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 3 acusadas. `p_parte` escapou: a 0x6d78b0 só roda com a narração na tela, que a carreira automática não mostra (vai para a partida assistida do Lucas). `p_anel` escapou: a 0x6d78b0 só roda com a narração na tela, que a carreira automática não mostra. `n_longa` escapou: a 0x6db2d0 só roda com a narração na tela, que a carreira automática não mostra. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 173ª leva — o fechamento do motor (7): a regra do elenco e as notas do jogador (oficial em 18/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `cumprir_regra_do_elenco()` | 0x6e8910 | cdecl | match_man.cpp: cumpre a regra do elenco (estrangeiros, extracomunitários ou idade): troca os restritos pelos candidatos de menor perda na nota |
+| `nota_fora_da_partida()` | 0x6e6340 | cdecl | match_man.cpp: a nota do jogador para uma posição fora da partida (transferências e observação): posição, forma, habilidade vista, contrato, idade, conhecimento do observador |
+| `nota_para_a_vaga()` | 0x6e2f20 | cdecl | match_man.cpp: a nota do jogador para uma vaga da escalação: como a nota fora da partida, mais a segunda posição, o fôlego na partida, a tática, os veteranos e as férias |
+
+Mutações: `mutacoes/leva173.py` (12, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `r_banco` escapou: a fase do banco da regra de elenco (0x6e8910) não teve restritos no banco na liga inglesa (vai para a carreira ampla). `r_idade` escapou: a regra por idade (tipo 3) nunca teve um jogador exatamente no limite. `n_veterano` escapou: o ajuste do contrato (flag 0x2000000) nunca pegou um veterano (mais de 34 anos) sem jogos. `v_ferias` escapou: o bônus das férias da 0x6e2f20 só roda com a lista de férias de um técnico humano. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

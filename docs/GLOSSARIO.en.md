@@ -140,6 +140,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x777590 | `copiar_data_e_marca` | copy_date_and_mark |
 | 0x866f60 | `criterio_da_comissao` | staff_criterion |
 | 0x4bff70 | `criterio_da_competicao` | competition_criterion |
+| 0x6e8910 | `cumprir_regra_do_elenco` | apply_squad_rule |
 | 0x6e9540 | `decidir_falta` | decide_foul |
 | 0x7103e0 | `decidir_jogador` | decide_player |
 | 0x713fc0 | `decidir_sem_bola` | decide_off_ball |
@@ -320,6 +321,8 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x715f50 | `nota_ajustada` | adjusted_rating |
 | 0x6d4a20 | `nota_do_arbitro` | referee_grade |
 | 0x6ebd70 | `nota_do_jogador` | player_rating |
+| 0x6e6340 | `nota_fora_da_partida` | off_match_score |
+| 0x6e2f20 | `nota_para_a_vaga` | lineup_slot_score |
 | 0x6d3de0 | `nova_reputacao` | new_reputation |
 | 0x6b6570 | `numero_da_competicao` | competition_number |
 | 0x6b6510 | `ordem_das_partidas_do_dia` | day_match_order |

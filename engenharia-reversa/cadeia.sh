@@ -16,7 +16,7 @@ CONF="--confirmar $DATA"; [ "$DATA" = "-" ] && CONF=""
 (if python -u mutacoes.py mutacoes/leva$N.py --carreira 2002-06-01 $CONF; then
   python laboratorio.py | head -1
   echo "=== JOGO REAL"
-  python -u simular.py --ate 2002-01-01 --motor sim --modo comparar --limite 2400
+  python -u simular.py --ate 2002-01-01 --motor sim --modo comparar --limite 3600
   grep -aE "DIVERG|EXCECAO" ../jogo_testes/ddraw.log | head -5 | cut -c1-300
   grep -aE "comparacoes" ../jogo_testes/ddraw.log | tail -3
   grep -a "sonda_lixo" ../jogo_testes/ddraw.log | tail -1
