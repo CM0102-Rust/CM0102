@@ -1,5 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-telas_partida_4
 telas_partida_5
 sim_acessores_treino
 sim_amistosos_registros

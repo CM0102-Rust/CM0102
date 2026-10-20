@@ -19,7 +19,7 @@ This repository keeps it playable on Windows 11 and prepares the rewrite of the 
 | `wiki/` | Project state, decisions and history. | yes |
 | `CLAUDE.md` | Instructions for continuing the work in Claude Code. | yes |
 
-**State:** 185 batches, 431 routines in Rust, each one compared with the original (the match engine without the screens is 100% in Rust; saves go beyond 2 GB, up to 4 GB); how much is left, module by module: [`docs/PLACAR.en.md`](docs/PLACAR.en.md).
+**State:** 186 batches, 434 routines in Rust, each one compared with the original (the match engine without the screens is 100% in Rust; saves go beyond 2 GB, up to 4 GB); how much is left, module by module: [`docs/PLACAR.en.md`](docs/PLACAR.en.md).
 
 The game files do not go into git: the game is free to download, but the code and the brand still belong to SI and Eidos.
 

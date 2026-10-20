@@ -1709,3 +1709,13 @@ Mutations: `mutacoes/leva184.py` (4, by the career to 2002-06-01, confirming the
 | `vaga_da_oferta()` | 0x8c61e0 | thiscall | transfer_manager.cpp: the address of an offer slot (out of range, the table start) |
 
 Mutations: `mutacoes/leva185.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 1 caught. `t_desmarca` escaped: when the agreed-contract flag is cleared, the person never also has flag 0x80. `t_vaga` escaped: the career never asks for the offer slot equal to the count (out of range). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 186th batch — the match screens (4): opening the match screen and the responses of the latest scores and team stats panels (official on 2026-10-20)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `abrir_tela_da_partida()` | 0x718aa0 | cdecl | match_screens.cpp: opens the live match screen, writes its parameters and marks the human as a spectator |
+| `responder_ultimos_placares_da_partida()` | 0x725860 | cdecl | match_screens.cpp: the latest scores panel of the match screen: the page switch every 5 s and the clicks (competition, pages, pause) |
+| `responder_estatisticas_do_time()` | 0x722dc0 | cdecl | match_screens.cpp: the team stats panel: the redraw with new data and the clicks that move the row up and down |
+
+Mutations: `mutacoes/leva186.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

@@ -56,6 +56,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 |---|---|---|
 | 0x71b4a0 | `abrir_detalhes_da_partida` | open_match_details |
 | 0x9326e0 | `abrir_no_conteiner` | open_in_container |
+| 0x718aa0 | `abrir_tela_da_partida` | open_match_screen |
 | 0x727f00 | `abrir_tela_de_espera` | open_waiting_screen |
 | 0x71b1b0 | `abrir_ultimos_placares` | open_latest_scores |
 | 0x7172d0 | `ajustar_17` | adjust_17 |
@@ -428,7 +429,9 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6d3610 | `reputacao_do_jogador` | player_reputation |
 | 0x6f5c30 | `responder` | respond |
 | 0x71bdc0 | `responder_detalhes_da_partida` | match_details_input |
+| 0x722dc0 | `responder_estatisticas_do_time` | handle_team_stats_input |
 | 0x71b3d0 | `responder_ultimos_placares` | latest_scores_input |
+| 0x725860 | `responder_ultimos_placares_da_partida` | match_screens_handle_latest_scores_cycle |
 | 0x6ce460 | `resumo_da_partida` | match_summary |
 | 0x6bbe40 | `rolar_bola` | roll_ball |
 | 0x725a70 | `rotulo_do_controle` | match_control_label |

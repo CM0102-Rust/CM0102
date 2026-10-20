@@ -1707,3 +1707,13 @@ Mutações: `mutacoes/leva184.py` (4, pela carreira até 2002-06-01, confirmando
 | `vaga_da_oferta()` | 0x8c61e0 | thiscall | transfer_manager.cpp: o endereço da vaga de uma oferta (fora da faixa, o começo da tabela) |
 
 Mutações: `mutacoes/leva185.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 1 acusadas. `t_desmarca` escapou: quando a marca de contrato acertado é desligada, a pessoa nunca tem também a marca 0x80. `t_vaga` escapou: a carreira nunca pede a vaga de oferta igual à quantidade (fora da faixa). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 186ª leva — as telas da partida (4): abrir a tela da partida e as respostas dos painéis dos últimos placares e das estatísticas do time (oficial em 20/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `abrir_tela_da_partida()` | 0x718aa0 | cdecl | match_screens.cpp: abre a tela da partida ao vivo, grava os parâmetros dela e marca o humano como espectador |
+| `responder_ultimos_placares_da_partida()` | 0x725860 | cdecl | match_screens.cpp: o painel dos últimos placares da tela da partida: a troca de página a cada 5 s e os cliques (competição, páginas, parar) |
+| `responder_estatisticas_do_time()` | 0x722dc0 | cdecl | match_screens.cpp: o painel das estatísticas do time: o redesenho com dados novos e os cliques que sobem e descem a linha |
+
+Mutações: `mutacoes/leva186.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

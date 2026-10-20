@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'abrir_tela_da_partida': 'open_match_screen', 'responder_ultimos_placares_da_partida': 'match_screens_handle_latest_scores_cycle', 'responder_estatisticas_do_time': 'handle_team_stats_input',
  'marcar_contrato_acertado': 'set_agreed_contract_flag', 'desmarcar_contrato_acertado': 'clear_agreed_contract_flag', 'vaga_da_oferta': 'offer_slot',
  'disciplina_temporada_nova': 'discipline_new_season', 'disciplina_do_dia': 'discipline_daily_update', 'disciplina_gravar_vaga': 'discipline_set_slot',
  'abrir_detalhes_da_partida': 'open_match_details', 'responder_detalhes_da_partida': 'match_details_input', 'fechar_detalhes_da_partida': 'close_match_details',
