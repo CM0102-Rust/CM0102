@@ -185,6 +185,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x70d630 | `em_perigo` | in_danger |
 | 0x6b4190 | `encerrar_dia` | end_day |
 | 0x849ce0 | `entrada_da_lista` | shortlist_entry |
+| 0x5d5ac0 | `entrada_do_treino` | training_manager_get_player_entry |
 | 0x6cdd00 | `entrar_em_campo` | take_the_field |
 | 0x6e2000 | `escalar` | pick |
 | 0x6dbc50 | `escalar_automatico` | select_automatically |
@@ -236,6 +237,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x700350 | `gravar_8ea9` | write_8ea9 |
 | 0x700390 | `gravar_8eaa` | write_8eaa |
 | 0x7003a0 | `gravar_8ed8` | write_8ed8 |
+| 0x62c660 | `gravar_carga_de_treino` | Injury::set_training_load |
 | 0x5b5290 | `gravar_casa` | set_square |
 | 0x785790 | `gravar_dado_da_noticia` | set_news_field |
 | 0x5fdd30 | `gravar_dado_do_humano` | set_human_field |
@@ -294,6 +296,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6bba10 | `limpar_lance` | clear_move |
 | 0x8982b0 | `linha_tatica` | tactics_row |
 | 0x6c3aa0 | `linhas_defensivas` | defensive_lines |
+| 0x5d5ab0 | `lista_de_observados` | transfer_manager_get_shortlist_manager |
 | 0x6cb780 | `mais_perto_do_gol` | closest_to_goal |
 | 0x6c30e0 | `mais_perto_no_lado` | closest_on_side |
 | 0x6c3010 | `mais_proximo_do_ponto` | nearest_to_point |
