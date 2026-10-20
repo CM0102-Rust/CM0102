@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'e_competicao_do_amistoso': 'Friendly::is_own_comp_record', 'preencher_data_internacional': 'friendly_international_date_set', 'limpar_registro_de_tecnico': 'Staff_Records::clear_manager_record',
  'lista_de_observados': 'transfer_manager_get_shortlist_manager', 'entrada_do_treino': 'training_manager_get_player_entry', 'gravar_carga_de_treino': 'Injury::set_training_load',
  'painel_dos_ultimos_placares': 'draw_latest_scores_panel', 'sem_tela_seguinte': 'ScreenManager::is_forward_unavailable', 'cor_do_titulo': 'get_heading_colour',
  'abrir_tela_da_partida': 'open_match_screen', 'responder_ultimos_placares_da_partida': 'match_screens_handle_latest_scores_cycle', 'responder_estatisticas_do_time': 'handle_team_stats_input',

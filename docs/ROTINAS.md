@@ -1737,3 +1737,13 @@ Mutações: `mutacoes/leva187.py` (0, pela carreira até 2002-06-01, confirmando
 | `gravar_carga_de_treino()` | 0x62c660 | thiscall | injury.cpp: grava a carga de treino do jogador no registro de condição |
 
 Mutações: `mutacoes/leva188.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 3 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 189ª leva — a competição do amistoso, a data internacional e o registro de técnico (oficial em 20/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `e_competicao_do_amistoso()` | 0x5c2990 | thiscall | friendly.cpp: diz se a competição é a dos amistosos |
+| `preencher_data_internacional()` | 0x5cb9b0 | thiscall | friendly.cpp: preenche uma data internacional: dia, mês, duração, ano, continente e competição |
+| `limpar_registro_de_tecnico()` | 0x86fc20 | thiscall | staff_records.cpp: zera o registro de técnico e põe −1 nos ids do dono, da liga e dos clubes |
+
+Mutações: `mutacoes/leva189.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `r_ids` escapou: o id da última passagem (+0x72) de um registro de técnico limpo nunca é lido na carreira antes de ser regravado. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

@@ -1739,3 +1739,13 @@ Mutations: `mutacoes/leva187.py` (0, by the career to 2002-06-01, confirming the
 | `gravar_carga_de_treino()` | 0x62c660 | thiscall | injury.cpp: stores the player's training load in the fitness record |
 
 Mutations: `mutacoes/leva188.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 3 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 189th batch — the friendly competition, the international date and the manager record (official on 2026-10-20)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `e_competicao_do_amistoso()` | 0x5c2990 | thiscall | friendly.cpp: tells whether the competition is the friendlies one |
+| `preencher_data_internacional()` | 0x5cb9b0 | thiscall | friendly.cpp: fills an international date: day, month, span, year, continent and competition |
+| `limpar_registro_de_tecnico()` | 0x86fc20 | thiscall | staff_records.cpp: clears the manager record and sets the owner, league and club ids to −1 |
+
+Mutations: `mutacoes/leva189.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `r_ids` escaped: the last spell id (+0x72) of a cleared manager record is never read in the career before being rewritten. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

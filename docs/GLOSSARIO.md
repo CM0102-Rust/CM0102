@@ -179,6 +179,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x70ec80 | `dividida` | tackle |
 | 0x70d690 | `dominio_do_lance` | control_of_move |
 | 0x5c6710 | `e_amistoso` | is_friendly |
+| 0x5c2990 | `e_competicao_do_amistoso` | Friendly::is_own_comp_record |
 | 0x7103c0 | `e_o_guardado` | is_the_stored |
 | 0x5409b0 | `e_segunda_selecao` | is_second_national_team |
 | 0x53b900 | `e_selecao` | is_national_team |
@@ -294,6 +295,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x70df40 | `limite_jogador` | player_limit |
 | 0x5b5960 | `limpar_designados` | clear_assigned |
 | 0x6bba10 | `limpar_lance` | clear_move |
+| 0x86fc20 | `limpar_registro_de_tecnico` | Staff_Records::clear_manager_record |
 | 0x8982b0 | `linha_tatica` | tactics_row |
 | 0x6c3aa0 | `linhas_defensivas` | defensive_lines |
 | 0x5d5ab0 | `lista_de_observados` | transfer_manager_get_shortlist_manager |
@@ -392,6 +394,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c2be0 | `posicionar` | position (place players) |
 | 0x6d1770 | `posicoes_finas` | fine_positions |
 | 0x6df460 | `postura` | stance |
+| 0x5cb9b0 | `preencher_data_internacional` | friendly_international_date_set |
 | 0x6b7f20 | `preparar_partida` | prepare_match |
 | 0x6bcbd0 | `pressao` | pressure |
 | 0x6bd6b0 | `pressao_na_area` | pressure_in_box |
