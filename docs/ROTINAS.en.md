@@ -1799,3 +1799,13 @@ Mutations: `mutacoes/leva193.py` (3, by the career to 2002-06-01, confirming the
 | `premio_da_liga()` | 0x682f70 | thiscall | league.cpp: the league total prize fund (one more share per place above the last) |
 
 Mutations: `mutacoes/leva194.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `r_marca` escaped: field +8 of the slot freed at the end of the reserve list is never read before being rewritten. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 195th batch — the player's last rating and the player search slot and list type (official on 2026-10-20)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `ultima_nota_do_jogador()` | 0x7c1a60 | thiscall | player_stats.cpp: the player's last match rating (6.5 with none) |
+| `vaga_da_busca()` | 0x7ae640 | thiscall | player_search.cpp: stores the player search slot (0 to 9) |
+| `tipo_da_lista_da_busca()` | 0x7ae6e0 | thiscall | player_search.cpp: stores the player search list type (1 to 4) |
+
+Mutations: `mutacoes/leva195.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 3 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

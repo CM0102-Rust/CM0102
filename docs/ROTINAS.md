@@ -1797,3 +1797,13 @@ Mutações: `mutacoes/leva193.py` (3, pela carreira até 2002-06-01, confirmando
 | `premio_da_liga()` | 0x682f70 | thiscall | league.cpp: o prêmio total da liga (uma cota a mais por posição acima do último) |
 
 Mutações: `mutacoes/leva194.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `r_marca` escapou: o campo +8 da vaga que fica livre no fim da lista de reserva nunca é lido antes de ser regravado. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 195ª leva — a última nota do jogador e a vaga e o tipo da busca de jogadores (oficial em 20/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `ultima_nota_do_jogador()` | 0x7c1a60 | thiscall | player_stats.cpp: a nota da última partida do jogador (6,5 sem nota) |
+| `vaga_da_busca()` | 0x7ae640 | thiscall | player_search.cpp: grava a vaga (0 a 9) da busca de jogadores |
+| `tipo_da_lista_da_busca()` | 0x7ae6e0 | thiscall | player_search.cpp: grava o tipo de lista (1 a 4) da busca de jogadores |
+
+Mutações: `mutacoes/leva195.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 3 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

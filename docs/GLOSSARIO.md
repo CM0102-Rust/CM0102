@@ -481,6 +481,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x7164b0 | `teste_de_condicao` | condition_test |
 | 0x6d8d10 | `texto_do_evento` | event_text |
 | 0x53b620 | `tipo_11_a_15` | type_11_to_15 |
+| 0x7ae6e0 | `tipo_da_lista_da_busca` | PLAYER_SEARCH::set_list_type |
 | 0x53b610 | `tipo_nao_11` | type_not_11 |
 | 0x8cb630 | `tirar_bonus_pela_selecao` | TRANSFER_MANAGER::remove_international_team_appearance_money |
 | 0x8cb590 | `tirar_bonus_por_jogo` | TRANSFER_MANAGER::remove_first_team_appearance_money |
@@ -491,8 +492,10 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x7a82b0 | `tirar_reserva_de_tecnico` | PLAYER_REGEN::remove_spare_non_player_record |
 | 0x6dbb80 | `titulares` | starters |
 | 0x6ccb60 | `tracar_lance` | trace_move |
+| 0x7c1a60 | `ultima_nota_do_jogador` | PlayerStats::get_last_match_rating |
 | 0x4b0850 | `unidades` | units_digit |
 | 0x6d47e0 | `uniforme` | kit |
+| 0x7ae640 | `vaga_da_busca` | PLAYER_SEARCH::set_slot_index |
 | 0x5b2f10 | `vaga_da_casa` | slot_of_code |
 | 0x785830 | `vaga_da_noticia` | NewsItem::get_slot |
 | 0x8c61e0 | `vaga_da_oferta` | offer_slot |
