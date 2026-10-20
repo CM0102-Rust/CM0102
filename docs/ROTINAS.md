@@ -1677,3 +1677,13 @@ Mutações: `mutacoes/leva181.py` (4, pela carreira até 2002-06-01, confirmando
 | `responder_ultimos_placares()` | 0x71b3d0 | cdecl | match_screens.cpp: a resposta da tela dos últimos placares a um clique (troca de competição, redesenho, menu) |
 
 Mutações: `mutacoes/leva182.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 183ª leva — as telas da partida (3): a tela de detalhes da partida (oficial em 19/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `abrir_detalhes_da_partida()` | 0x71b4a0 | cdecl | match_screens.cpp: abre a tela de detalhes de uma partida e grava os parâmetros dela |
+| `responder_detalhes_da_partida()` | 0x71bdc0 | cdecl | match_screens.cpp: a resposta da tela de detalhes a um clique (troca de aba, tática do clube, redesenho das abas, menu) |
+| `fechar_detalhes_da_partida()` | 0x71c170 | cdecl | match_screens.cpp: fecha a tela de detalhes: destrói e libera os objetos guardados nos parâmetros |
+
+Mutações: `mutacoes/leva183.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

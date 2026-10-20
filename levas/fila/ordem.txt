@@ -1,4 +1,3 @@
 # ordem da fila (fila.py); um item por linha
-telas_partida_3
 sim_disciplina
 sim_transferencias_marcas

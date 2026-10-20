@@ -1679,3 +1679,13 @@ Mutations: `mutacoes/leva181.py` (4, by the career to 2002-06-01, confirming the
 | `responder_ultimos_placares()` | 0x71b3d0 | cdecl | match_screens.cpp: the latest scores screen's response to a click (competition switch, redraw, menu) |
 
 Mutations: `mutacoes/leva182.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 183rd batch — the match screens (3): the match details screen (official on 2026-10-19)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `abrir_detalhes_da_partida()` | 0x71b4a0 | cdecl | match_screens.cpp: opens the details screen of a match and writes its parameters |
+| `responder_detalhes_da_partida()` | 0x71bdc0 | cdecl | match_screens.cpp: the match details screen's response to a click (tab switch, club tactics, tab redraw, menu) |
+| `fechar_detalhes_da_partida()` | 0x71c170 | cdecl | match_screens.cpp: closes the details screen: destroys and frees the objects kept in the parameters |
+
+Mutations: `mutacoes/leva183.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

@@ -54,6 +54,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 
 | Endereço | Português | English |
 |---|---|---|
+| 0x71b4a0 | `abrir_detalhes_da_partida` | open_match_details |
 | 0x9326e0 | `abrir_no_conteiner` | open_in_container |
 | 0x727f00 | `abrir_tela_de_espera` | open_waiting_screen |
 | 0x71b1b0 | `abrir_ultimos_placares` | open_latest_scores |
@@ -210,6 +211,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cfc60 | `falta_no_motor` | foul_in_engine |
 | 0x547790 | `favorito_de` | favourite_of |
 | 0x6d1cc0 | `fechamento` | match_wrap_up |
+| 0x71c170 | `fechar_detalhes_da_partida` | close_match_details |
 | 0x6b5f00 | `fechar_partida_do_dia` | close_day_match |
 | 0x71b120 | `fechar_tela_da_partida` | close_match_screen |
 | 0x4cf6d0 | `ficha_de_contrato` | contract_record |
@@ -420,6 +422,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c0b70 | `repartir_f` | split_f |
 | 0x6d3610 | `reputacao_do_jogador` | player_reputation |
 | 0x6f5c30 | `responder` | respond |
+| 0x71bdc0 | `responder_detalhes_da_partida` | match_details_input |
 | 0x71b3d0 | `responder_ultimos_placares` | latest_scores_input |
 | 0x6ce460 | `resumo_da_partida` | match_summary |
 | 0x6bbe40 | `rolar_bola` | roll_ball |

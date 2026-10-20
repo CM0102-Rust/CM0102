@@ -528,8 +528,11 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x71b1b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x71b300, bytes: &[0x83, 0xec, 0x08, 0x6a, 0x0e] },
     Prologo { endereco: 0x71b3d0, bytes: &[0xa1, 0x84, 0x7c, 0xb7, 0x00] },
+    Prologo { endereco: 0x71b4a0, bytes: &[0x6a, 0x00, 0x68, 0x70, 0xc1, 0x71, 0x00] },
+    Prologo { endereco: 0x71bdc0, bytes: &[0x51, 0xa1, 0x84, 0x7c, 0xb7, 0x00] },
+    Prologo { endereco: 0x71c170, bytes: &[0x56, 0x6a, 0x2d, 0xb9, 0x50, 0x44, 0xb7, 0x00] },
 ];
-const N: usize = 421;
+const N: usize = 424;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -31983,6 +31986,201 @@ unsafe extern "stdcall" fn comparar_codigo_da_posicao(m: i16) -> u8 {
 
 comparar_valor!(comparar_criterio_da_comissao, criterio_da_comissao, 357, () -> u32);
 
+// ---------- 183a leva: as telas da partida (3): a tela de detalhes da partida (match_screens.cpp) ----------
+
+/// Lê e grava os parâmetros da tela atual do gerente de telas [0xb74450] (0x7ff010, 0x7ff270).
+unsafe fn parametro_da_tela(k: u32) -> usize {
+    let ler: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x7ff010usize);
+    ler(0xb74450, k)
+}
+unsafe fn gravar_parametro_da_tela(k: u32, v: usize) {
+    let gravar: unsafe extern "thiscall" fn(usize, u32, usize, u32) = core::mem::transmute(0x7ff270usize);
+    gravar(0xb74450, k, v, 0);
+}
+
+/// { 0x71b4a0 } (cdecl, match_screens.cpp): abre a tela de detalhes da partida `partida` (0x7fe600 com a
+/// montagem 0x71b630, a resposta 0x71bdc0 e o fechamento 0x71c170) e grava os parâmetros dela (a
+/// partida em 0x1e; a aba 2 começa em 6).
+unsafe extern "C" fn abrir_detalhes_da_partida(partida: usize) {
+    crate::comparacao::ramo("telas abrir os detalhes");
+    let abrir: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x7fe600usize);
+    if abrir(0xb74450, 0x71b630, 0x71bdc0, 0, 0x71c170, 0) == 0 {
+        return;
+    }
+    const MENOS1: usize = usize::MAX;
+    for (k, v) in [
+        (0u32, 0usize), (2, 6), (9, MENOS1), (0xa, 3), (0xb, MENOS1), (0xc, 0), (0xd, MENOS1), (0x16, 0), (0x17, 0), (0x18, 0), (0x19, 0),
+        (0x1a, MENOS1), (0x1b, 0), (0x1c, 1), (0x1d, 0), (0x1e, partida), (0x1f, 0), (0x20, 0), (0x21, MENOS1), (0x22, 0), (0x23, MENOS1), (0x2d, 0),
+    ] {
+        gravar_parametro_da_tela(k, v);
+    }
+}
+
+/// { 0x71bdc0 } (cdecl, match_screens.cpp): a resposta da tela de detalhes ao item `item` (−1 nenhum).
+/// Sem [0xb77c84]: zera 0xb6b7a8/ac/b0; um item de id 1 (ou [0xdd6bde]) troca a aba (parâmetro 2) pelo
+/// dado do item (+0x48 do item no `Display` do humano da vez) e pede −11; de id 2 abre a tática do clube
+/// do item (0x899a50) e devolve −4. Depois, pela aba: 1 posse (0x71d9e0), 2 estatísticas (0x71e750), 3
+/// zonas de ação (0x720320; e um item de id 4 troca a ação do parâmetro 0xa), 4 relatório, 5 e 7 as
+/// estatísticas do time (0x722dc0), 6 as notas (0x723350); os redesenhos só com a marca 4 do menu da
+/// partida ([[parâmetro 0]+0x5b]) e [0xb6b7ac]. Por fim −11, o redesenho (0x802d00) e a barra de menu.
+unsafe extern "C" fn responder_detalhes_da_partida(item: u32) -> i32 {
+    crate::comparacao::ramo("telas responder aos detalhes");
+    let g = |a: usize| *(a as *const u32);
+    let item16 = item as u16 as i16;
+    let display_do_humano = || *((0xb74c4c + *(0xb77c7a as *const i16) as isize * 0x300) as *const usize);
+    let id_ou_padrao = |w: u16| if w == 0 { *(0xdd6bde as *const u16) } else { w };
+    if g(0xb77c84) == 0 {
+        let aba = parametro_da_tela(2) as u8 as i8;
+        let v1e = parametro_da_tela(0x1e);
+        let p1f = parametro_da_tela(0x1f);
+        *(0xb6b7ac as *mut u32) = 0;
+        *(0xb6b7b0 as *mut u32) = 0;
+        *(0xb6b7a8 as *mut u32) = 0;
+        if item16 != -1 {
+            let deslocamento = item16 as isize * 0x18c;
+            let registro = |d: usize| (d as isize + deslocamento) as usize;
+            let e = registro(display_do_humano());
+            if id_ou_padrao(core::ptr::read_unaligned((e + 0xba966) as *const u16)) == 1 {
+                let dado = core::ptr::read_unaligned((e + 0xba9a6) as *const usize);
+                if dado != parametro_da_tela(2) {
+                    gravar_parametro_da_tela(2, dado);
+                    *(0xb6b7b0 as *mut u32) = 1;
+                }
+            }
+            let e = registro(display_do_humano());
+            if id_ou_padrao(core::ptr::read_unaligned((e + 0xba966) as *const u16)) == 2 {
+                let clube = core::ptr::read_unaligned((e + 0xba9a6) as *const usize);
+                let marca = if clube == *((p1f + 0x1c) as *const usize) { *((p1f + 0x40) as *const u8) } else { *((p1f + 0x41) as *const u8) };
+                let tatica: unsafe extern "C" fn(usize, u32, u32, u32, usize, u32) = core::mem::transmute(0x899a50usize);
+                tatica(clube, (marca == 0) as u32, 0, 0, v1e, 0);
+                return -4;
+            }
+        }
+        let menu_da_partida = |bit: u8| {
+            let p = parametro_da_tela(0);
+            g(0xb6b7ac) != 0 && *(*((p + 0x5b) as *const usize) as *const u8) & bit != 0
+        };
+        let refazer = |f: usize| -> bool {
+            // os redesenhos de aba: com a marca 4; com [0xb6b7b0] ligado a resposta é −11
+            if g(0xb6b7b0) != 0 {
+                return true;
+            }
+            let r: unsafe extern "C" fn() = core::mem::transmute(f);
+            r();
+            *(0xb6b7a8 as *mut u32) = 1;
+            false
+        };
+        let estatisticas_do_time: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x722dc0usize);
+        match aba {
+            1 => {
+                let p = parametro_da_tela(0);
+                if g(0xb6b7ac) != 0 {
+                    let m = *(*((p + 0x5b) as *const usize) as *const u8);
+                    if m & 0x20 != 0 || m & 0x10 != 0 {
+                        *(0xb6b7b0 as *mut u32) = 1;
+                    }
+                    if m & 4 != 0 && refazer(0x71d9e0) {
+                        return -11;
+                    }
+                }
+            }
+            2 => {
+                if menu_da_partida(4) && refazer(0x71e750) {
+                    return -11;
+                }
+            }
+            3 => {
+                if menu_da_partida(4) && g(0xb6b7b0) == 0 {
+                    refazer(0x720320);
+                }
+                if item16 != -1 {
+                    let d = display_do_humano();
+                    let id: unsafe extern "thiscall" fn(usize, u32) -> u16 = core::mem::transmute(0x468b10usize);
+                    if id_ou_padrao(id(d, item)) == 4 {
+                        let dado: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x4739a0usize);
+                        if dado(d, item) != parametro_da_tela(0xa) {
+                            let acao: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x468b90usize);
+                            gravar_parametro_da_tela(0xa, acao(0xb74450, item));
+                            *(0xb6b7b0 as *mut u32) = 1;
+                            return -11;
+                        }
+                    }
+                }
+            }
+            4 => {
+                if menu_da_partida(0x20) {
+                    *(0xb6b7b0 as *mut u32) = 1;
+                    return -11;
+                }
+            }
+            5 | 7 => {
+                let r = estatisticas_do_time(item);
+                if r != 0 {
+                    return r;
+                }
+            }
+            6 => {
+                if menu_da_partida(4) && refazer(0x723350) {
+                    return -11;
+                }
+            }
+            _ => {}
+        }
+        if g(0xb6b7b0) != 0 {
+            return -11;
+        }
+        if g(0xb6b7a8) != 0 {
+            let redesenhar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x802d00usize);
+            redesenhar(0xb74450, 0, 0);
+        }
+    }
+    let comando: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7615d0usize);
+    let r = comando(item);
+    if r != 0 {
+        return r;
+    }
+    let ligacao: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7643d0usize);
+    ligacao(item)
+}
+
+/// { 0x71c170 } (cdecl, match_screens.cpp): fecha a tela de detalhes: os parâmetros 0x2d (0x5a8f60),
+/// 0x1d e 0x20 (0x453bc0) são destruídos e liberados, o 0x1f só liberado (0x944c94), e todos zerados.
+unsafe extern "C" fn fechar_detalhes_da_partida() {
+    crate::comparacao::ramo("telas fechar os detalhes");
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
+    for (k, destrutor) in [(0x2du32, Some(0x5a8f60usize)), (0x1d, Some(0x453bc0)), (0x1f, None), (0x20, Some(0x453bc0))] {
+        if parametro_da_tela(k) == 0 {
+            continue;
+        }
+        let p = parametro_da_tela(k);
+        match destrutor {
+            Some(d) => {
+                if p != 0 {
+                    let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(d);
+                    destruir(p);
+                    liberar(p);
+                }
+            }
+            None => liberar(p),
+        }
+        gravar_parametro_da_tela(k, 0);
+    }
+}
+
+// ponytail: as três mexem em telas, menus e memória (não rodam duas vezes): no modo comparação só a
+// original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
+unsafe extern "C" fn comparar_abrir_detalhes_da_partida(partida: usize) {
+    orig::<unsafe extern "C" fn(usize)>(421)(partida)
+}
+
+unsafe extern "C" fn comparar_responder_detalhes_da_partida(item: u32) -> i32 {
+    orig::<unsafe extern "C" fn(u32) -> i32>(422)(item)
+}
+
+unsafe extern "C" fn comparar_fechar_detalhes_da_partida() {
+    orig::<unsafe extern "C" fn()>(423)()
+}
+
 // ---------- 182a leva: as telas da partida (2): a tela dos últimos placares (match_screens.cpp) ----------
 
 /// O gerente de telas (o objeto [0xb74450], que tem a vaga da tela atual em +0x382a e um `Display` por
@@ -38786,6 +38984,9 @@ pub unsafe fn instalar(comparando: bool) {
         abrir_ultimos_placares as *const () as usize,
         montar_ultimos_placares as *const () as usize,
         responder_ultimos_placares as *const () as usize,
+        abrir_detalhes_da_partida as *const () as usize,
+        responder_detalhes_da_partida as *const () as usize,
+        fechar_detalhes_da_partida as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -39209,6 +39410,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_abrir_ultimos_placares as *const () as usize,
         comparar_montar_ultimos_placares as *const () as usize,
         comparar_responder_ultimos_placares as *const () as usize,
+        comparar_abrir_detalhes_da_partida as *const () as usize,
+        comparar_responder_detalhes_da_partida as *const () as usize,
+        comparar_fechar_detalhes_da_partida as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -39321,7 +39525,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito", "motor_zagueiros_do_lado_sem_conflito", "motor_construir_arbitro", "motor_destruir_jogador_da_partida", "motor_evento_na_frente", "motor_construir_fila_da_narracao", "motor_liberar_tabelas_de_eventos", "motor_ordem_das_partidas_do_dia", "motor_ordem_de_acao", "motor_variante_do_evento", "motor_combinar_com_o_anterior", "motor_comentario_de_contexto", "motor_construir_jogador_da_partida", "motor_proximo_evento", "motor_nome_do_jogador_na_narracao", "motor_habilidade_vista", "motor_cumprir_regra_do_elenco", "motor_nota_fora_da_partida", "motor_nota_para_a_vaga", "motor_pessoa_na_lista", "motor_ficha_de_contrato", "motor_desgaste_diario", "motor_registro_da_formacao", "motor_peso_da_competicao", "motor_gravar_dado_da_noticia", "motor_recuperar_lesao", "motor_pessoa_na_lista_de_transferencias", "motor_punicao_da_tabela", "motor_bits_do_registro", "motor_competicao_marcada", "motor_registro_da_liga", "motor_media_do_jogo", "motor_valor_do_contrato", "motor_nivel_para_a_selecao", "motor_oferta_de_contrato", "motor_oferta_acertada", "motor_oferta_fechada", "motor_rotulo_do_controle", "motor_fechar_tela_da_partida", "motor_abrir_tela_de_espera", "motor_noticia_com_resposta_2", "motor_tem_noticia", "motor_importancia_da_partida", "motor_abrir_ultimos_placares", "motor_montar_ultimos_placares", "motor_responder_ultimos_placares",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito", "motor_zagueiros_do_lado_sem_conflito", "motor_construir_arbitro", "motor_destruir_jogador_da_partida", "motor_evento_na_frente", "motor_construir_fila_da_narracao", "motor_liberar_tabelas_de_eventos", "motor_ordem_das_partidas_do_dia", "motor_ordem_de_acao", "motor_variante_do_evento", "motor_combinar_com_o_anterior", "motor_comentario_de_contexto", "motor_construir_jogador_da_partida", "motor_proximo_evento", "motor_nome_do_jogador_na_narracao", "motor_habilidade_vista", "motor_cumprir_regra_do_elenco", "motor_nota_fora_da_partida", "motor_nota_para_a_vaga", "motor_pessoa_na_lista", "motor_ficha_de_contrato", "motor_desgaste_diario", "motor_registro_da_formacao", "motor_peso_da_competicao", "motor_gravar_dado_da_noticia", "motor_recuperar_lesao", "motor_pessoa_na_lista_de_transferencias", "motor_punicao_da_tabela", "motor_bits_do_registro", "motor_competicao_marcada", "motor_registro_da_liga", "motor_media_do_jogo", "motor_valor_do_contrato", "motor_nivel_para_a_selecao", "motor_oferta_de_contrato", "motor_oferta_acertada", "motor_oferta_fechada", "motor_rotulo_do_controle", "motor_fechar_tela_da_partida", "motor_abrir_tela_de_espera", "motor_noticia_com_resposta_2", "motor_tem_noticia", "motor_importancia_da_partida", "motor_abrir_ultimos_placares", "motor_montar_ultimos_placares", "motor_responder_ultimos_placares", "motor_abrir_detalhes_da_partida", "motor_responder_detalhes_da_partida", "motor_fechar_detalhes_da_partida",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
