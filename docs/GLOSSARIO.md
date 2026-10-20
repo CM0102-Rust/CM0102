@@ -166,6 +166,9 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c4130 | `diferenca_jogador` | player_difference |
 | 0x6c4180 | `diferenca_lado` | side_difference |
 | 0x6f4a30 | `direcao` | direction |
+| 0x556240 | `disciplina_do_dia` | discipline_daily_update |
+| 0x55cb20 | `disciplina_gravar_vaga` | discipline_set_slot |
+| 0x556210 | `disciplina_temporada_nova` | discipline_new_season |
 | 0x6c9cd0 | `disputa` | contest |
 | 0x6fa1e0 | `distancia_ao_gol` | distance_to_goal |
 | 0x6f09b0 | `distancia_ao_ponto` | distance_to_point |

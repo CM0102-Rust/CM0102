@@ -1687,3 +1687,13 @@ Mutações: `mutacoes/leva182.py` (0, pela carreira até 2002-06-01, confirmando
 | `fechar_detalhes_da_partida()` | 0x71c170 | cdecl | match_screens.cpp: fecha a tela de detalhes: destrói e libera os objetos guardados nos parâmetros |
 
 Mutações: `mutacoes/leva183.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 184ª leva — a disciplina: a temporada nova, o dia e a vaga da tabela (oficial em 20/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `disciplina_temporada_nova()` | 0x556210 | thiscall | discipline.cpp: começa a temporada nova das regras de disciplina da competição (método 0 da tabela virtual) |
+| `disciplina_do_dia()` | 0x556240 | thiscall | discipline.cpp: o dia de cada uma das 43 regras de disciplina (método 1 da tabela virtual) |
+| `disciplina_gravar_vaga()` | 0x55cb20 | thiscall | discipline.cpp: grava o tipo e o valor de uma vaga da pessoa na tabela da disciplina |
+
+Mutações: `mutacoes/leva184.py` (4, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `d_sem_regra` escapou: a competição com as regras de disciplina de índice 0 não começa temporada na carreira (liga fora das carregadas). `d_43` escapou: a 43ª regra de disciplina está vazia ou não muda nada nas ligas carregadas. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

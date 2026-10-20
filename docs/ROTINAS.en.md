@@ -1689,3 +1689,13 @@ Mutations: `mutacoes/leva182.py` (0, by the career to 2002-06-01, confirming the
 | `fechar_detalhes_da_partida()` | 0x71c170 | cdecl | match_screens.cpp: closes the details screen: destroys and frees the objects kept in the parameters |
 
 Mutations: `mutacoes/leva183.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 184th batch — discipline: the new season, the day and the table slot (official on 2026-10-20)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `disciplina_temporada_nova()` | 0x556210 | thiscall | discipline.cpp: starts the new season of the competition's discipline rules (virtual method 0) |
+| `disciplina_do_dia()` | 0x556240 | thiscall | discipline.cpp: the day of each of the 43 discipline rules (virtual method 1) |
+| `disciplina_gravar_vaga()` | 0x55cb20 | thiscall | discipline.cpp: writes the type and value of one of the person's slots in the discipline table |
+
+Mutations: `mutacoes/leva184.py` (4, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `d_sem_regra` escaped: the competition with discipline rules index 0 does not start a season in the career (league outside the loaded ones). `d_43` escaped: the 43rd discipline rule is empty or changes nothing in the loaded leagues. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
