@@ -1747,3 +1747,13 @@ Mutações: `mutacoes/leva188.py` (3, pela carreira até 2002-06-01, confirmando
 | `limpar_registro_de_tecnico()` | 0x86fc20 | thiscall | staff_records.cpp: zera o registro de técnico e põe −1 nos ids do dono, da liga e dos clubes |
 
 Mutações: `mutacoes/leva189.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `r_ids` escapou: o id da última passagem (+0x72) de um registro de técnico limpo nunca é lido na carreira antes de ser regravado. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 190ª leva — o contrato de empréstimo, as marcas de lance da lista de observados e o técnico substituto (oficial em 20/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `tirar_contrato_de_emprestimo()` | 0x4d0bd0 | thiscall | contract_manager.cpp: libera a vaga do contrato de empréstimo da pessoa, se houver |
+| `desmarcar_lances_pelo_jogador()` | 0x84aeb0 | thiscall | shortlist_manager.cpp: tira a marca de lance das vagas da lista de observados do clube que miram o jogador |
+| `tecnico_substituto()` | 0x600e90 | cdecl | human_manager.cpp: o auxiliar do clube ou, sem ele, o membro da comissão de maior reputação |
+
+Mutações: `mutacoes/leva190.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `s_empate` escapou: o técnico substituto só é pedido para o clube humano, e na comissão dele nunca há empate de reputação. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

@@ -15,3 +15,4 @@ Noite de 19/10/2026 (lote_ampla_1 ate 2001-12-01; lote_ampla_2 ate 2002-03-31, i
 - leva184.py: d_sem_regra, d_43 (regras de disciplina 0 e 42)
 - leva185.py: t_desmarca, t_vaga (marcas do gerente de transferencias)
 - leva189.py: r_ids (registro de tecnico limpo, id +0x72)
+- leva190.py: s_empate (tecnico substituto, empate de reputacao)

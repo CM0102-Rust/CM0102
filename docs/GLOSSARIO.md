@@ -161,6 +161,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x62c2f0 | `desgaste_diario` | daily_wear |
 | 0x5b58e0 | `designado_da_posicao` | designated_for_position |
 | 0x8c5430 | `desmarcar_contrato_acertado` | clear_agreed_contract_flag |
+| 0x84aeb0 | `desmarcar_lances_pelo_jogador` | Shortlist_Manager::clear_bid_markers_for_player |
 | 0x717470 | `destaque_do_jogador` | player_highlight |
 | 0x6ebd60 | `destruir_jogador_da_partida` | destroy_match_player |
 | 0x6b97a0 | `destruir_motor` | destroy_engine |
@@ -468,12 +469,14 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5fd6b0 | `tecnico_9a06` | manager_9a06 |
 | 0x5fe040 | `tecnico_9ace` | manager_9ace |
 | 0x5fea50 | `tecnico_9b23` | manager_9b23 |
+| 0x600e90 | `tecnico_substituto` | human_manager_get_stand_in_manager |
 | 0x6b59a0 | `tem_jogo` | has_match |
 | 0x735840 | `tem_noticia` | has_story |
 | 0x7164b0 | `teste_de_condicao` | condition_test |
 | 0x6d8d10 | `texto_do_evento` | event_text |
 | 0x53b620 | `tipo_11_a_15` | type_11_to_15 |
 | 0x53b610 | `tipo_nao_11` | type_not_11 |
+| 0x4d0bd0 | `tirar_contrato_de_emprestimo` | CONTRACT_MANAGER::remove_loan_contract |
 | 0x6cdd50 | `tirar_de_campo` | take_off_pitch |
 | 0x6dbb80 | `titulares` | starters |
 | 0x6ccb60 | `tracar_lance` | trace_move |

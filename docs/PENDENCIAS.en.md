@@ -84,5 +84,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `discipline` | 0x556210, 0x556240 (batch 184) | — | discipline rules index 0 and the 43rd do not act in the career leagues: `d_sem_regra` and `d_43` escape even comparing. Test: broad career |
 | `transfer flags` | 0x8c5430, 0x8c61e0 (batch 185) | — | flag 0x80 is never set when the agreed-contract one is cleared, and the out-of-range offer slot is never asked for: `t_desmarca` and `t_vaga` escape even comparing. Test: broad career |
 | `manager record` | 0x86fc20 (batch 189) | — | the +0x72 id of the cleared record is not read before being rewritten: `r_ids` escapes even comparing. Test: broad career |
+| `stand-in manager` | 0x600e90 (batch 190) | — | no reputation tie in the human club's staff: `s_empate` escapes even comparing. Test: broad career (other human clubs) |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

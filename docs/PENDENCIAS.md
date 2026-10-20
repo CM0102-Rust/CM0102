@@ -84,5 +84,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `disciplina` | 0x556210, 0x556240 (184ª) | — | as regras de disciplina de índice 0 e a 43ª não agem nas ligas da carreira: `d_sem_regra` e `d_43` escapam até comparando. Teste: carreira ampla |
 | `marcas das transferências` | 0x8c5430, 0x8c61e0 (185ª) | — | a marca 0x80 nunca está ligada ao desligar a de contrato acertado, e a vaga de oferta fora da faixa nunca é pedida: `t_desmarca` e `t_vaga` escapam até comparando. Teste: carreira ampla |
 | `registro de técnico` | 0x86fc20 (189ª) | — | o id +0x72 do registro limpo não é lido antes de ser regravado: `r_ids` escapa até comparando. Teste: carreira ampla |
+| `técnico substituto` | 0x600e90 (190ª) | — | sem empate de reputação na comissão do clube humano: `s_empate` escapa até comparando. Teste: carreira ampla (outros clubes humanos) |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
