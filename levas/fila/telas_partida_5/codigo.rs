@@ -1,25 +1,14 @@
-// ---------- %%LEVA%%a leva: as telas da partida (5): o painel dos últimos placares, a altura da fonte e a cor do título (match_screens.cpp, goldcup.cpp, Setup.cpp) ----------
+// ---------- %%LEVA%%a leva: as telas da partida (5): o painel dos últimos placares, a tela seguinte e a cor do título (match_screens.cpp, scrman.cpp, Setup.cpp) ----------
 
-/// { 0x5e5cd0 } (cdecl, goldcup.cpp): a altura da linha da fonte `fonte`: com as fontes próprias
-/// ([0x9cc2c4] ≠ −1) uma tabela fixa (0 e 1: 15, 2: 18, 3: 21, 4: 24, 5: 27, 6: 39, 7: 45, fora: 0);
-/// senão a da tabela de fontes carregadas ([0xae1dac], 5124 bytes por fonte; −1 dá 0).
-unsafe extern "C" fn altura_da_fonte(fonte: i16) -> i32 {
-    if *(0x9cc2c4 as *const i32) != -1 {
-        return match fonte {
-            0 | 1 => 0xf,
-            2 => 0x12,
-            3 => 0x15,
-            4 => 0x18,
-            5 => 0x1b,
-            6 => 0x27,
-            7 => 0x2d,
-            _ => 0,
-        };
+/// { 0x7febb0 } (thiscall, scrman.cpp): o gerente de telas não tem para onde avançar? (o bloco de
+/// parâmetros da tela atual sem a tela seguinte em +0x1f8). Sem bloco: a original (caixa de erro e saída).
+unsafe extern "thiscall" fn sem_tela_seguinte(gerente: usize) -> u32 {
+    let vaga = *((gerente + 0x382a) as *const i16) as isize;
+    let bloco = core::ptr::read_unaligned((gerente as isize + 0x7e2 + vaga * 0x300) as *const usize);
+    if bloco == 0 {
+        return orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(gerente);
     }
-    if fonte == -1 {
-        return 0;
-    }
-    *((0xae1dac + fonte as isize * 1281 * 4) as *const i32)
+    (*((bloco + 0x1f8) as *const usize) == 0) as u32
 }
 
 /// { 0x839590 } (cdecl, Setup.cpp): a cor do título: [0xae3184] com `x` ≠ 0, senão [0xae31a8]. A
@@ -65,7 +54,7 @@ unsafe fn nome_da_competicao_no_painel(c: usize, rodadas: usize) {
 /// ([[0xb67a50]+0x2a] > 1) a lista dos grupos do dia ([+1], 0x18 bytes, [+9] quantos) com as partidas
 /// de cada um ([+0xd], 84 bytes, de +4 a +8 do grupo): cabeçalho do grupo (Copa do Mundo, Internacional,
 /// Continental ou o nome da nação) e uma linha por partida (0x55f990). Depois a tabela de 4 colunas
-/// com as linhas que cabem (0x5e5cd0 com a fonte 3; quantas no parâmetro 0xf, o primeiro item no 0x10),
+/// com as linhas que cabem (0x5e5cd0, a altura da fonte 3; quantas no parâmetro 0xf, o primeiro item no 0x10),
 /// os três botões do alto (0x804030, 6 a 8) e o redesenho dos placares (0x724520).
 unsafe extern "C" fn painel_dos_ultimos_placares(topo: *mut i32, base: *mut i32) {
     crate::comparacao::ramo("telas painel dos ultimos placares");
@@ -200,10 +189,10 @@ unsafe extern "C" fn painel_dos_ultimos_placares(topo: *mut i32, base: *mut i32)
     redesenhar();
 }
 
-unsafe extern "C" fn comparar_altura_da_fonte(fonte: i16) -> i32 {
-    let r = orig::<unsafe extern "C" fn(i16) -> i32>(%%I1%%)(fonte);
-    let n = altura_da_fonte(fonte);
-    PLACAR.registrar(r == n, || format!("altura_da_fonte({}) original={} rust={}", fonte, r, n));
+unsafe extern "thiscall" fn comparar_sem_tela_seguinte(gerente: usize) -> u32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(gerente);
+    let n = sem_tela_seguinte(gerente);
+    PLACAR.registrar(r == n, || format!("sem_tela_seguinte original={} rust={}", r, n));
     r
 }
 

@@ -144,6 +144,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x4cf5f0 | `contrato_com_clube` | contract_with_club |
 | 0x4cf5a0 | `contrato_de` | contract_of |
 | 0x777590 | `copiar_data_e_marca` | copy_date_and_mark |
+| 0x839590 | `cor_do_titulo` | get_heading_colour |
 | 0x866f60 | `criterio_da_comissao` | staff_criterion |
 | 0x4bff70 | `criterio_da_competicao` | competition_criterion |
 | 0x6e8910 | `cumprir_regra_do_elenco` | apply_squad_rule |
@@ -359,6 +360,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x4b07d0 | `ordem_por_80_desc` | order_by_80_desc |
 | 0x6e0fe0 | `ordem_por_condicao` | order_by_condition |
 | 0x6e0df0 | `ordem_por_tabela` | order_by_table |
+| 0x723d20 | `painel_dos_ultimos_placares` | draw_latest_scores_panel |
 | 0x62c3d0 | `palavra_0c` | word_0c |
 | 0x717c70 | `papel_880` | role_880 |
 | 0x716310 | `papel_na_defesa` | defending_role |
@@ -439,6 +441,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x775790 | `selecao_ou_especial` | national_or_special |
 | 0x53b3d0 | `selecao_principal` | main_national_team |
 | 0x6d4280 | `sem_partida` | no_match |
+| 0x7febb0 | `sem_tela_seguinte` | ScreenManager::is_forward_unavailable |
 | 0x5b73a0 | `separar_mascara` | split_mask |
 | 0x844300 | `serve_para_a_vaga` | shortlist_slot_fits |
 | 0x6beeb0 | `simulacao_rapida` | quick_simulation |

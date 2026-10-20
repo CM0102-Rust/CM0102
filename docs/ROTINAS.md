@@ -1717,3 +1717,13 @@ Mutações: `mutacoes/leva185.py` (3, pela carreira até 2002-06-01, confirmando
 | `responder_estatisticas_do_time()` | 0x722dc0 | cdecl | match_screens.cpp: o painel das estatísticas do time: o redesenho com dados novos e os cliques que sobem e descem a linha |
 
 Mutações: `mutacoes/leva186.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 187ª leva — as telas da partida (5): o painel dos últimos placares, a tela seguinte e a cor do título (oficial em 20/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `painel_dos_ultimos_placares()` | 0x723d20 | cdecl | match_screens.cpp: desenha o painel dos últimos placares: título, selo, grupos e partidas do dia, tabela e botões |
+| `sem_tela_seguinte()` | 0x7febb0 | thiscall | scrman.cpp: o gerente de telas não tem tela seguinte para avançar |
+| `cor_do_titulo()` | 0x839590 | cdecl | Setup.cpp: a cor do texto do título (duas cores pela marca) |
+
+Mutações: `mutacoes/leva187.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

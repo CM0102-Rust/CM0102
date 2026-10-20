@@ -104,8 +104,18 @@ def main():
         shutil.copytree(os.path.join(R, 'rust', 'src'), os.path.join(tmp, 'rust', 'src'))
         m = open(os.path.join(tmp, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
         base = int(re.search(r'\];\nconst N: usize = (\d+);', m).group(1))
+        # o exe de trabalho (1920x1080) é o cm0102.exe com patches (resolucao.py): rotina alterada nele não
+        # se porta igual à original (187a: a 0x5e5cd0, altura da fonte, salta para um trecho novo)
+        # ponytail: janela fixa de 0x100 bytes a partir do começo; o fim real da rotina pede o pacote.py
+        exes = [open(os.path.join(R, 'jogo', e), 'rb').read() for e in ('cm0102.exe', 'cm0102-1080.exe')]
         for nome in ordem():
             rot = runpy.run_path(os.path.join(FILA, nome, 'rotinas.py'))
+            for a, e, bs in rot['ROTINAS']:
+                o = e - 0x400000
+                if list(exes[0][o:o + len(bs)]) != list(bs):
+                    print('prologo diferente do exe', nome, a, hex(e))
+                if exes[0][o:o + 0x100] != exes[1][o:o + 0x100]:
+                    print('alterada no cm0102-1080.exe', nome, a, hex(e))
             cod = open(os.path.join(FILA, nome, 'codigo.rs'), encoding='utf-8').read()
             for k in range(len(rot['ROTINAS'])):
                 cod = cod.replace('%%%%I%d%%%%' % k, str(base + k))

@@ -1719,3 +1719,13 @@ Mutations: `mutacoes/leva185.py` (3, by the career to 2002-06-01, confirming the
 | `responder_estatisticas_do_time()` | 0x722dc0 | cdecl | match_screens.cpp: the team stats panel: the redraw with new data and the clicks that move the row up and down |
 
 Mutations: `mutacoes/leva186.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 187th batch — the match screens (5): the latest scores panel, the next screen and the heading colour (official on 2026-10-20)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `painel_dos_ultimos_placares()` | 0x723d20 | cdecl | match_screens.cpp: draws the latest scores panel: title, badge, the day's groups and matches, table and buttons |
+| `sem_tela_seguinte()` | 0x7febb0 | thiscall | scrman.cpp: the screen manager has no next screen to go forward to |
+| `cor_do_titulo()` | 0x839590 | cdecl | Setup.cpp: the heading text colour (two colours by the flag) |
+
+Mutations: `mutacoes/leva187.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
