@@ -82,5 +82,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `any story` | 0x735840 (batch 181) | — | the stories asked about in the career never have response 0: `m_alguma` escapes even comparing. Test: broad career |
 | `latest scores` | 0x71b1b0, 0x71b300, 0x71b3d0 (batch 182) | — | the standalone screen only opens through the "Latest Scores" menu bar button (item 0x418, created at 0x75e32a with a match in progress outside modes 2 and 8) or by itself on match day (0x6b4807); the "Latest Scores" inside the match screen is another routine (0x718aa0). It did not open in Rust mode in Lucas's session of 2026-10-19. Batch 183 (match details) was proven in it: Rust mode (open and close twice, respond ≥ 16 million) and comparing (0 divergences) |
 | `discipline` | 0x556210, 0x556240 (batch 184) | — | discipline rules index 0 and the 43rd do not act in the career leagues: `d_sem_regra` and `d_43` escape even comparing. Test: broad career |
+| `transfer flags` | 0x8c5430, 0x8c61e0 (batch 185) | — | flag 0x80 is never set when the agreed-contract one is cleared, and the out-of-range offer slot is never asked for: `t_desmarca` and `t_vaga` escape even comparing. Test: broad career |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

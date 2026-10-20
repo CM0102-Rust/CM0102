@@ -158,6 +158,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f56c0 | `desgastar` | tire (fatigue) |
 | 0x62c2f0 | `desgaste_diario` | daily_wear |
 | 0x5b58e0 | `designado_da_posicao` | designated_for_position |
+| 0x8c5430 | `desmarcar_contrato_acertado` | clear_agreed_contract_flag |
 | 0x717470 | `destaque_do_jogador` | player_highlight |
 | 0x6ebd60 | `destruir_jogador_da_partida` | destroy_match_player |
 | 0x6b97a0 | `destruir_motor` | destroy_engine |
@@ -300,6 +301,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x7160f0 | `marcado_designado` | designated_marked |
 | 0x6d4330 | `marcador_direto` | direct_marker |
 | 0x5af180 | `marcar_ano_no_calendario` | mark_calendar_year |
+| 0x8c5410 | `marcar_contrato_acertado` | set_agreed_contract_flag |
 | 0x6d10a0 | `marcar_craques` | mark_stars |
 | 0x5b5910 | `marcar_posicao` | mark_position |
 | 0x897760 | `marcar_vaga` | mark_slot |
@@ -466,6 +468,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x4b0850 | `unidades` | units_digit |
 | 0x6d47e0 | `uniforme` | kit |
 | 0x5b2f10 | `vaga_da_casa` | slot_of_code |
+| 0x8c61e0 | `vaga_da_oferta` | offer_slot |
 | 0x897ee0 | `vaga_extra_tatica` | extra_tactic_slot |
 | 0x897590 | `vaga_marcada` | marked_slot |
 | 0x6d5af0 | `vagas_do_lado_sem_conflito` | side_slots_without_conflict |

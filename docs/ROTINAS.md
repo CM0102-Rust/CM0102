@@ -1697,3 +1697,13 @@ Mutações: `mutacoes/leva183.py` (0, pela carreira até 2002-06-01, confirmando
 | `disciplina_gravar_vaga()` | 0x55cb20 | thiscall | discipline.cpp: grava o tipo e o valor de uma vaga da pessoa na tabela da disciplina |
 
 Mutações: `mutacoes/leva184.py` (4, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `d_sem_regra` escapou: a competição com as regras de disciplina de índice 0 não começa temporada na carreira (liga fora das carregadas). `d_43` escapou: a 43ª regra de disciplina está vazia ou não muda nada nas ligas carregadas. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 185ª leva — a marca de contrato acertado e a vaga da oferta (oficial em 20/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `marcar_contrato_acertado()` | 0x8c5410 | thiscall | transfer_manager.cpp: liga a marca de contrato acertado (0x40) da pessoa no gerente de transferências |
+| `desmarcar_contrato_acertado()` | 0x8c5430 | thiscall | transfer_manager.cpp: desliga a marca de contrato acertado da pessoa |
+| `vaga_da_oferta()` | 0x8c61e0 | thiscall | transfer_manager.cpp: o endereço da vaga de uma oferta (fora da faixa, o começo da tabela) |
+
+Mutações: `mutacoes/leva185.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 1 acusadas. `t_desmarca` escapou: quando a marca de contrato acertado é desligada, a pessoa nunca tem também a marca 0x80. `t_vaga` escapou: a carreira nunca pede a vaga de oferta igual à quantidade (fora da faixa). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

@@ -1699,3 +1699,13 @@ Mutations: `mutacoes/leva183.py` (0, by the career to 2002-06-01, confirming the
 | `disciplina_gravar_vaga()` | 0x55cb20 | thiscall | discipline.cpp: writes the type and value of one of the person's slots in the discipline table |
 
 Mutations: `mutacoes/leva184.py` (4, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `d_sem_regra` escaped: the competition with discipline rules index 0 does not start a season in the career (league outside the loaded ones). `d_43` escaped: the 43rd discipline rule is empty or changes nothing in the loaded leagues. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 185th batch — the agreed-contract flag and the offer slot (official on 2026-10-20)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `marcar_contrato_acertado()` | 0x8c5410 | thiscall | transfer_manager.cpp: sets the person's agreed-contract flag (0x40) in the transfer manager |
+| `desmarcar_contrato_acertado()` | 0x8c5430 | thiscall | transfer_manager.cpp: clears the person's agreed-contract flag |
+| `vaga_da_oferta()` | 0x8c61e0 | thiscall | transfer_manager.cpp: the address of an offer slot (out of range, the table start) |
+
+Mutations: `mutacoes/leva185.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 1 caught. `t_desmarca` escaped: when the agreed-contract flag is cleared, the person never also has flag 0x80. `t_vaga` escaped: the career never asks for the offer slot equal to the count (out of range). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

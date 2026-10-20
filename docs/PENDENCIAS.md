@@ -82,5 +82,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `alguma notícia` | 0x735840 (181ª) | — | as notícias consultadas na carreira nunca têm a resposta 0: `m_alguma` escapa até comparando. Teste: carreira ampla |
 | `últimos placares` | 0x71b1b0, 0x71b300, 0x71b3d0 (182ª) | — | a tela avulsa só abre pelo botão "Latest Scores" da barra de menu (item 0x418, criado em 0x75e32a com uma partida em andamento fora dos modos 2 e 8) ou sozinha no dia de jogo (0x6b4807); o "Latest Scores" de dentro da tela da partida é outra rotina (0x718aa0). Não abriu no modo Rust da sessão do Lucas de 19/10/2026. A 183ª (detalhes da partida) foi provada nela: modo Rust (abrir e fechar 2 vezes, responder ≥ 16 milhões) e comparando (0 divergências) |
 | `disciplina` | 0x556210, 0x556240 (184ª) | — | as regras de disciplina de índice 0 e a 43ª não agem nas ligas da carreira: `d_sem_regra` e `d_43` escapam até comparando. Teste: carreira ampla |
+| `marcas das transferências` | 0x8c5430, 0x8c61e0 (185ª) | — | a marca 0x80 nunca está ligada ao desligar a de contrato acertado, e a vaga de oferta fora da faixa nunca é pedida: `t_desmarca` e `t_vaga` escapam até comparando. Teste: carreira ampla |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
