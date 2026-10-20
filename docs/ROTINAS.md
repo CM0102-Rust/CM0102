@@ -1767,3 +1767,13 @@ Mutações: `mutacoes/leva190.py` (3, pela carreira até 2002-06-01, confirmando
 | `punicao_guardada()` | 0x55cb60 | thiscall | discipline.cpp: a punição guardada do jogador numa vaga, ou nenhuma |
 
 Mutações: `mutacoes/leva191.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 1 acusadas. `c_clube` escapou: na carreira o clube do contrato acertado nunca é pedido com a marca ligada e o contrato achado. `p_vaga` escapou: nenhum jogador tem duas punições guardadas em vagas diferentes quando a busca roda. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 192ª leva — a entrada da aposentadoria, as competições do amistoso e a vaga da notícia (oficial em 20/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `entrada_da_aposentadoria()` | 0x7a7ed0 | thiscall | player_regen.cpp: a entrada da pessoa na lista das aposentadorias (por lesão ou já anunciada) |
+| `registrar_competicoes_do_amistoso()` | 0x5ca030 | thiscall | friendly.cpp: grava os objetos dos amistosos e dos torneios na tabela das competições |
+| `vaga_da_noticia()` | 0x785830 | thiscall | news.cpp: o valor de uma das 50 vagas da notícia |
+
+Mutações: `mutacoes/leva192.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `a_torneio` escapou: a vaga 0 dos torneios do amistoso nunca está ocupada na carreira. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

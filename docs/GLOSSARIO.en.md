@@ -187,6 +187,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x53b900 | `e_selecao` | is_national_team |
 | 0x70d630 | `em_perigo` | in_danger |
 | 0x6b4190 | `encerrar_dia` | end_day |
+| 0x7a7ed0 | `entrada_da_aposentadoria` | PLAYER_REGEN::find_retirement_entry |
 | 0x849ce0 | `entrada_da_lista` | shortlist_entry |
 | 0x5d5ac0 | `entrada_do_treino` | training_manager_get_player_entry |
 | 0x6cdd00 | `entrar_em_campo` | take_the_field |
@@ -418,6 +419,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f5810 | `recuperar_folego` | recover_stamina |
 | 0x62bd10 | `recuperar_lesao` | recover_injury |
 | 0x6e1aa0 | `refazer_time` | redo_team |
+| 0x5ca030 | `registrar_competicoes_do_amistoso` | Friendly::register_comp_objects |
 | 0x68a1c0 | `registrar_jogo_da_rodada` | store_round_match |
 | 0x8ce920 | `registrar_jogo_pela_selecao` | TRANSFER_MANAGER::record_international_appearance |
 | 0x6bb9a0 | `registrar_lance` | record_move |
@@ -486,6 +488,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x4b0850 | `unidades` | units_digit |
 | 0x6d47e0 | `uniforme` | kit |
 | 0x5b2f10 | `vaga_da_casa` | slot_of_code |
+| 0x785830 | `vaga_da_noticia` | NewsItem::get_slot |
 | 0x8c61e0 | `vaga_da_oferta` | offer_slot |
 | 0x897ee0 | `vaga_extra_tatica` | extra_tactic_slot |
 | 0x897590 | `vaga_marcada` | marked_slot |

@@ -1769,3 +1769,13 @@ Mutations: `mutacoes/leva190.py` (3, by the career to 2002-06-01, confirming the
 | `punicao_guardada()` | 0x55cb60 | thiscall | discipline.cpp: the player's held ban in a slot, or none |
 
 Mutations: `mutacoes/leva191.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 1 caught. `c_clube` escaped: in the career the agreed contract club is never asked for with the flag set and the contract found. `p_vaga` escaped: no player has two held bans in different slots when the search runs. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 192nd batch — the retirement entry, the friendly competitions and the news slot (official on 2026-10-20)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `entrada_da_aposentadoria()` | 0x7a7ed0 | thiscall | player_regen.cpp: the person's entry in the retirement list (by injury or already announced) |
+| `registrar_competicoes_do_amistoso()` | 0x5ca030 | thiscall | friendly.cpp: stores the friendly and tournament objects in the competition table |
+| `vaga_da_noticia()` | 0x785830 | thiscall | news.cpp: the value of one of the 50 news item slots |
+
+Mutations: `mutacoes/leva192.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `a_torneio` escaped: friendly tournament slot 0 is never taken in the career. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

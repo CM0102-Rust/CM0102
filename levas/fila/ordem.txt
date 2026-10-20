@@ -1,2 +1,2 @@
 # ordem da fila (fila.py); um item por linha
-sim_regen_amistoso_noticia
+sim_transferencias_listas

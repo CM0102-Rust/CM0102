@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'entrada_da_aposentadoria': 'PLAYER_REGEN::find_retirement_entry', 'registrar_competicoes_do_amistoso': 'Friendly::register_comp_objects', 'vaga_da_noticia': 'NewsItem::get_slot',
  'clube_do_contrato_acertado': 'TRANSFER_MANAGER::get_agreed_contract_club', 'registrar_jogo_pela_selecao': 'TRANSFER_MANAGER::record_international_appearance', 'punicao_guardada': 'Discipline::find_held_ban',
  'tirar_contrato_de_emprestimo': 'CONTRACT_MANAGER::remove_loan_contract', 'desmarcar_lances_pelo_jogador': 'Shortlist_Manager::clear_bid_markers_for_player', 'tecnico_substituto': 'human_manager_get_stand_in_manager',
  'e_competicao_do_amistoso': 'Friendly::is_own_comp_record', 'preencher_data_internacional': 'friendly_international_date_set', 'limpar_registro_de_tecnico': 'Staff_Records::clear_manager_record',
