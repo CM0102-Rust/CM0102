@@ -1669,3 +1669,13 @@ Mutations: `mutacoes/leva180.py` (0, by the career to 2002-06-01, confirming the
 | `importancia_da_partida()` | 0x5221f0 | thiscall | Cup.cpp: the cup match importance by round and the first-leg score difference |
 
 Mutations: `mutacoes/leva181.py` (4, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `m_alguma` escaped: the media log stories asked about in the career never have response 0. `c_fase` escaped: equivalent mutation: at round 1, replacing it with 1 changes nothing (not a test gap). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 182nd batch — the match screens (2): the latest scores screen (official on 2026-10-19)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `abrir_ultimos_placares()` | 0x71b1b0 | cdecl | match_screens.cpp: opens the latest scores screen of a competition and writes its parameters |
+| `montar_ultimos_placares()` | 0x71b300 | cdecl | match_screens.cpp: builds the latest scores screen: background, title, menu, panel and back and next buttons |
+| `responder_ultimos_placares()` | 0x71b3d0 | cdecl | match_screens.cpp: the latest scores screen's response to a click (competition switch, redraw, menu) |
+
+Mutations: `mutacoes/leva182.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

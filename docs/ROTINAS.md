@@ -1667,3 +1667,13 @@ Mutações: `mutacoes/leva180.py` (0, pela carreira até 2002-06-01, confirmando
 | `importancia_da_partida()` | 0x5221f0 | thiscall | Cup.cpp: a importância da partida da copa pela fase e a diferença do placar da ida |
 
 Mutações: `mutacoes/leva181.py` (4, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `m_alguma` escapou: as notícias do registro da mídia consultadas na carreira nunca têm a resposta 0. `c_fase` escapou: mutação equivalente: com a fase 1 trocar por 1 não muda nada (não é lacuna do teste). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 182ª leva — as telas da partida (2): a tela dos últimos placares (oficial em 19/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `abrir_ultimos_placares()` | 0x71b1b0 | cdecl | match_screens.cpp: abre a tela dos últimos placares de uma competição e grava os parâmetros dela |
+| `montar_ultimos_placares()` | 0x71b300 | cdecl | match_screens.cpp: monta a tela dos últimos placares: fundo, título, menu, painel e botões de voltar e avançar |
+| `responder_ultimos_placares()` | 0x71b3d0 | cdecl | match_screens.cpp: a resposta da tela dos últimos placares a um clique (troca de competição, redesenho, menu) |
+
+Mutações: `mutacoes/leva182.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

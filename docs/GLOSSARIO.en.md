@@ -56,6 +56,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 |---|---|---|
 | 0x9326e0 | `abrir_no_conteiner` | open_in_container |
 | 0x727f00 | `abrir_tela_de_espera` | open_waiting_screen |
+| 0x71b1b0 | `abrir_ultimos_placares` | open_latest_scores |
 | 0x7172d0 | `ajustar_17` | adjust_17 |
 | 0x6cb9b0 | `alcanca` | reaches |
 | 0x713d90 | `alcanca_o_ponto` | reaches_the_point |
@@ -308,6 +309,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c3950 | `menor_distancia` | smallest_distance |
 | 0x6d4250 | `momento_marcado` | marked_moment |
 | 0x6b3c10 | `montar_o_dia` | set_up_the_day |
+| 0x71b300 | `montar_ultimos_placares` | build_latest_scores |
 | 0x6cfd40 | `motor_cartao_pela_gravidade` | engine_card_by_severity |
 | 0x6cfca0 | `motor_decidir_falta` | engine_decide_foul |
 | 0x6cfd70 | `motor_procurar_impedimento` | engine_look_for_offside |
@@ -418,6 +420,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c0b70 | `repartir_f` | split_f |
 | 0x6d3610 | `reputacao_do_jogador` | player_reputation |
 | 0x6f5c30 | `responder` | respond |
+| 0x71b3d0 | `responder_ultimos_placares` | latest_scores_input |
 | 0x6ce460 | `resumo_da_partida` | match_summary |
 | 0x6bbe40 | `rolar_bola` | roll_ball |
 | 0x725a70 | `rotulo_do_controle` | match_control_label |
