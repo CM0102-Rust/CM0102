@@ -113,6 +113,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x76d780 | `classe_da_selecao` | national_side_class |
 | 0x76e070 | `classe_pela_selecao` | class_by_national_side |
 | 0x713e90 | `classificar_lance` | classify_move |
+| 0x8c5450 | `clube_do_contrato_acertado` | TRANSFER_MANAGER::get_agreed_contract_club |
 | 0x6b79a0 | `clube_do_pos_jogo` | post_match_club |
 | 0x76d940 | `clube_especial` | special_club |
 | 0x600a50 | `clube_humano` | human_club |
@@ -406,6 +407,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x68d1b0 | `proximo_da_lista` | next_list_item |
 | 0x6d78b0 | `proximo_evento` | next_event |
 | 0x55cae0 | `punicao_da_tabela` | table_penalty |
+| 0x55cb60 | `punicao_guardada` | Discipline::find_held_ban |
 | 0x6d1210 | `punicoes` | punishments |
 | 0x6e9630 | `punir_falta` | punish_foul |
 | 0x6ea4e0 | `punir_lance` | punish_move |
@@ -417,6 +419,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x62bd10 | `recuperar_lesao` | recover_injury |
 | 0x6e1aa0 | `refazer_time` | redo_team |
 | 0x68a1c0 | `registrar_jogo_da_rodada` | store_round_match |
+| 0x8ce920 | `registrar_jogo_pela_selecao` | TRANSFER_MANAGER::record_international_appearance |
 | 0x6bb9a0 | `registrar_lance` | record_move |
 | 0x62be00 | `registrar_lesao` | register_injury |
 | 0x79ce10 | `registrar_nota_do_arbitro` | record_referee_grade |

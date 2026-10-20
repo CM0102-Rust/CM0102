@@ -1759,3 +1759,13 @@ Mutations: `mutacoes/leva189.py` (3, by the career to 2002-06-01, confirming the
 | `tecnico_substituto()` | 0x600e90 | cdecl | human_manager.cpp: the club's assistant or, without one, the highest-reputation staff member |
 
 Mutations: `mutacoes/leva190.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `s_empate` escaped: the stand-in manager is only asked for the human club, and its staff never tie on reputation. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 191st batch — the agreed contract club, the national team appearance and the held ban (official on 2026-10-20)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `clube_do_contrato_acertado()` | 0x8c5450 | thiscall | transfer_manager.cpp: the club of the person's agreed contract (clears the flag when the contract is gone) |
+| `registrar_jogo_pela_selecao()` | 0x8ce920 | thiscall | transfer_manager.cpp: records the player's national team match in the recent-matches bits |
+| `punicao_guardada()` | 0x55cb60 | thiscall | discipline.cpp: the player's held ban in a slot, or none |
+
+Mutations: `mutacoes/leva191.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 1 caught. `c_clube` escaped: in the career the agreed contract club is never asked for with the flag set and the contract found. `p_vaga` escaped: no player has two held bans in different slots when the search runs. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

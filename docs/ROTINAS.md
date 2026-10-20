@@ -1757,3 +1757,13 @@ Mutações: `mutacoes/leva189.py` (3, pela carreira até 2002-06-01, confirmando
 | `tecnico_substituto()` | 0x600e90 | cdecl | human_manager.cpp: o auxiliar do clube ou, sem ele, o membro da comissão de maior reputação |
 
 Mutações: `mutacoes/leva190.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `s_empate` escapou: o técnico substituto só é pedido para o clube humano, e na comissão dele nunca há empate de reputação. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 191ª leva — o clube do contrato acertado, o jogo pela seleção e a punição guardada (oficial em 20/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `clube_do_contrato_acertado()` | 0x8c5450 | thiscall | transfer_manager.cpp: o clube do contrato acertado da pessoa (desliga a marca quando o contrato sumiu) |
+| `registrar_jogo_pela_selecao()` | 0x8ce920 | thiscall | transfer_manager.cpp: registra o jogo do jogador pela seleção nos bits dos últimos jogos |
+| `punicao_guardada()` | 0x55cb60 | thiscall | discipline.cpp: a punição guardada do jogador numa vaga, ou nenhuma |
+
+Mutações: `mutacoes/leva191.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 1 acusadas. `c_clube` escapou: na carreira o clube do contrato acertado nunca é pedido com a marca ligada e o contrato achado. `p_vaga` escapou: nenhum jogador tem duas punições guardadas em vagas diferentes quando a busca roda. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
