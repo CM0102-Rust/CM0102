@@ -1,1 +1,14 @@
 # ordem da fila (fila.py); um item por linha
+sim_tecnico_humano
+telas_partida_6
+sim_match_stats_1
+telas_partida_9
+telas_partida_7
+telas_partida_8
+sim_match_stats_2
+telas_partida_11
+telas_partida_10
+telas_partida_12
+sim_match_stats_3
+telas_partida_15
+telas_partida_14

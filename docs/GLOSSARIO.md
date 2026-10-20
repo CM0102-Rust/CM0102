@@ -76,6 +76,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cd5f0 | `atras_do_extremo` | behind_the_extreme |
 | 0x6d5950 | `atras_no_agregado` | behind_on_aggregate |
 | 0x6ec010 | `atualizar_atributos` | update_attributes |
+| 0x6869a0 | `atualizar_confronto_direto` | League::update_head_to_head |
 | 0x6f4aa0 | `atualizar_jogador` | update_player |
 | 0x6e1cf0 | `avaliar_jogador` | rate_player |
 | 0x6f5b80 | `avancar_linha` | advance_row |
@@ -314,6 +315,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x8c5410 | `marcar_contrato_acertado` | set_agreed_contract_flag |
 | 0x6d10a0 | `marcar_craques` | mark_stars |
 | 0x5b5910 | `marcar_posicao` | mark_position |
+| 0x8c1f80 | `marcar_termos_oferecidos` | TRANSFER_MANAGER::note_terms_offered_to_main_player |
 | 0x897760 | `marcar_vaga` | mark_slot |
 | 0x5b5270 | `marcas_da_posicao` | position_marks |
 | 0x7163c0 | `marcas_do_jogador_rot` | player_marks_rot |
@@ -360,6 +362,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x8d0d90 | `oferta_fechada` | transfer_offer_closed |
 | 0x6b6510 | `ordem_das_partidas_do_dia` | day_match_order |
 | 0x6bd840 | `ordem_de_acao` | action_order |
+| 0x6834f0 | `ordem_do_confronto` | league_compare_h2h_rows |
 | 0x6bd760 | `ordem_dos_jogadores` | player_order |
 | 0x6be520 | `ordem_dos_penaltis` | penalty_order |
 | 0x4b0780 | `ordem_por_5f` | order_by_5f |

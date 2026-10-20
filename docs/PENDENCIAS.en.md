@@ -89,5 +89,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `friendly competitions` | 0x5ca030 (batch 192) | — | friendly tournament slot 0 is never taken: `a_torneio` escapes even comparing. Test: broad career |
 | `contract clauses` | 0x8cb4f0, 0x8cb590, 0x8cb630 (batch 193) | — | no clause is removed in the automatic career: `l_venda`, `l_jogo` and `l_conta` escape even comparing. Test: broad career |
 | `player generator lists` | 0x7a82b0 (batch 194) | — | the +8 of the slot freed at the end of the list is not read before being rewritten: `r_marca` escapes even comparing. Test: broad career |
+| `head-to-head` | 0x6834f0, 0x6869a0 (batch 196) | — | the head-to-head mini table decides no standings in the career leagues: `c_saldo` and `c_empate` escape even comparing. Test: broad career (Italy, Spain) |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

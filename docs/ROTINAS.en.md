@@ -1809,3 +1809,13 @@ Mutations: `mutacoes/leva194.py` (3, by the career to 2002-06-01, confirming the
 | `tipo_da_lista_da_busca()` | 0x7ae6e0 | thiscall | player_search.cpp: stores the player search list type (1 to 4) |
 
 Mutations: `mutacoes/leva195.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 3 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 196th batch — the league head-to-head and the terms offered in the transfer (official on 2026-10-20)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `ordem_do_confronto()` | 0x6834f0 | cdecl | league.cpp: the head-to-head mini table order: points and the league tie-breakers |
+| `atualizar_confronto_direto()` | 0x6869a0 | thiscall | league.cpp: adds one match to the head-to-head record (played, result, goals and points) |
+| `marcar_termos_oferecidos()` | 0x8c1f80 | thiscall | transfer_manager.cpp: marks that the transfer offer had contract terms offered to the player |
+
+Mutations: `mutacoes/leva196.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 1 caught. `c_saldo` escaped: no career league breaks ties by head-to-head goal difference (the mini table does not decide). `c_empate` escaped: head-to-head draw points decide no standings in the career. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

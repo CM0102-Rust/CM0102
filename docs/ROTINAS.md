@@ -1807,3 +1807,13 @@ Mutações: `mutacoes/leva194.py` (3, pela carreira até 2002-06-01, confirmando
 | `tipo_da_lista_da_busca()` | 0x7ae6e0 | thiscall | player_search.cpp: grava o tipo de lista (1 a 4) da busca de jogadores |
 
 Mutações: `mutacoes/leva195.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 3 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 196ª leva — o confronto direto da liga e os termos oferecidos na transferência (oficial em 20/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `ordem_do_confronto()` | 0x6834f0 | cdecl | league.cpp: a ordem da minitabela do confronto direto: pontos e os critérios de desempate da liga |
+| `atualizar_confronto_direto()` | 0x6869a0 | thiscall | league.cpp: soma um jogo ao confronto direto (jogos, resultado, gols e pontos) |
+| `marcar_termos_oferecidos()` | 0x8c1f80 | thiscall | transfer_manager.cpp: marca que a oferta de transferência teve os termos de contrato oferecidos ao jogador |
+
+Mutações: `mutacoes/leva196.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 1 acusadas. `c_saldo` escapou: nenhuma liga da carreira desempata pelo confronto direto com o saldo (a minitabela não decide). `c_empate` escapou: os pontos por empate do confronto direto não decidem nenhuma classificação da carreira. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

@@ -20,3 +20,4 @@ Noite de 19/10/2026 (lote_ampla_1 ate 2001-12-01; lote_ampla_2 ate 2002-03-31, i
 - leva192.py: a_torneio (vaga 0 dos torneios do amistoso)
 - leva193.py: l_venda, l_jogo, l_conta (clausulas do contrato)
 - leva194.py: r_marca (lista de reserva do gerador de jogadores, campo +8)
+- leva196.py: c_saldo, c_empate (confronto direto)

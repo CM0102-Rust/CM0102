@@ -108,9 +108,14 @@ def main():
         # se porta igual à original (187a: a 0x5e5cd0, altura da fonte, salta para um trecho novo)
         # ponytail: janela fixa de 0x100 bytes a partir do começo; o fim real da rotina pede o pacote.py
         exes = [open(os.path.join(R, 'jogo', e), 'rb').read() for e in ('cm0102.exe', 'cm0102-1080.exe')]
+        # a mesma rotina não pode ser desviada duas vezes (já no motor.rs ou em dois itens da fila)
+        desviadas = {int(x, 16): 'motor.rs' for x in re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+)', m)}
         for nome in ordem():
             rot = runpy.run_path(os.path.join(FILA, nome, 'rotinas.py'))
             for a, e, bs in rot['ROTINAS']:
+                if e in desviadas:
+                    print('repetida', nome, a, hex(e), 'já em', desviadas[e])
+                desviadas[e] = nome
                 o = e - 0x400000
                 if list(exes[0][o:o + len(bs)]) != list(bs):
                     print('prologo diferente do exe', nome, a, hex(e))

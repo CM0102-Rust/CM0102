@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'ordem_do_confronto': 'league_compare_h2h_rows', 'atualizar_confronto_direto': 'League::update_head_to_head', 'marcar_termos_oferecidos': 'TRANSFER_MANAGER::note_terms_offered_to_main_player',
  'ultima_nota_do_jogador': 'PlayerStats::get_last_match_rating', 'vaga_da_busca': 'PLAYER_SEARCH::set_slot_index', 'tipo_da_lista_da_busca': 'PLAYER_SEARCH::set_list_type',
  'tirar_reserva_de_tecnico': 'PLAYER_REGEN::remove_spare_non_player_record', 'tirar_jogador_do_banco': 'PLAYER_REGEN::remove_player_data_from_pool', 'premio_da_liga': 'League::calc_prize_fund',
  'tirar_percentual_da_proxima_venda': 'TRANSFER_MANAGER::remove_next_sale_percentage', 'tirar_bonus_por_jogo': 'TRANSFER_MANAGER::remove_first_team_appearance_money', 'tirar_bonus_pela_selecao': 'TRANSFER_MANAGER::remove_international_team_appearance_money',
