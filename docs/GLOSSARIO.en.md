@@ -481,8 +481,11 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6d8d10 | `texto_do_evento` | event_text |
 | 0x53b620 | `tipo_11_a_15` | type_11_to_15 |
 | 0x53b610 | `tipo_nao_11` | type_not_11 |
+| 0x8cb630 | `tirar_bonus_pela_selecao` | TRANSFER_MANAGER::remove_international_team_appearance_money |
+| 0x8cb590 | `tirar_bonus_por_jogo` | TRANSFER_MANAGER::remove_first_team_appearance_money |
 | 0x4d0bd0 | `tirar_contrato_de_emprestimo` | CONTRACT_MANAGER::remove_loan_contract |
 | 0x6cdd50 | `tirar_de_campo` | take_off_pitch |
+| 0x8cb4f0 | `tirar_percentual_da_proxima_venda` | TRANSFER_MANAGER::remove_next_sale_percentage |
 | 0x6dbb80 | `titulares` | starters |
 | 0x6ccb60 | `tracar_lance` | trace_move |
 | 0x4b0850 | `unidades` | units_digit |

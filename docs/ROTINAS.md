@@ -1777,3 +1777,13 @@ Mutações: `mutacoes/leva191.py` (3, pela carreira até 2002-06-01, confirmando
 | `vaga_da_noticia()` | 0x785830 | thiscall | news.cpp: o valor de uma das 50 vagas da notícia |
 
 Mutações: `mutacoes/leva192.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `a_torneio` escapou: a vaga 0 dos torneios do amistoso nunca está ocupada na carreira. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 193ª leva — as cláusulas do contrato: percentual da próxima venda, bônus por jogo e bônus pela seleção (oficial em 20/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `tirar_percentual_da_proxima_venda()` | 0x8cb4f0 | thiscall | transfer_manager.cpp: tira o percentual da próxima venda do jogador (marca e registro da lista) |
+| `tirar_bonus_por_jogo()` | 0x8cb590 | thiscall | transfer_manager.cpp: tira o bônus por jogo no time principal (marca e registro da lista) |
+| `tirar_bonus_pela_selecao()` | 0x8cb630 | thiscall | transfer_manager.cpp: tira o bônus por jogo pela seleção (marca e registro da lista) |
+
+Mutações: `mutacoes/leva193.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas. `l_venda` escapou: nenhuma cláusula de contrato (percentual da próxima venda, bônus por jogo, bônus pela seleção) é tirada na carreira até 2002-06. `l_jogo` escapou: nenhuma cláusula de contrato (percentual da próxima venda, bônus por jogo, bônus pela seleção) é tirada na carreira até 2002-06. `l_conta` escapou: nenhuma cláusula de contrato (percentual da próxima venda, bônus por jogo, bônus pela seleção) é tirada na carreira até 2002-06. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

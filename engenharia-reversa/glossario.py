@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'tirar_percentual_da_proxima_venda': 'TRANSFER_MANAGER::remove_next_sale_percentage', 'tirar_bonus_por_jogo': 'TRANSFER_MANAGER::remove_first_team_appearance_money', 'tirar_bonus_pela_selecao': 'TRANSFER_MANAGER::remove_international_team_appearance_money',
  'entrada_da_aposentadoria': 'PLAYER_REGEN::find_retirement_entry', 'registrar_competicoes_do_amistoso': 'Friendly::register_comp_objects', 'vaga_da_noticia': 'NewsItem::get_slot',
  'clube_do_contrato_acertado': 'TRANSFER_MANAGER::get_agreed_contract_club', 'registrar_jogo_pela_selecao': 'TRANSFER_MANAGER::record_international_appearance', 'punicao_guardada': 'Discipline::find_held_ban',
  'tirar_contrato_de_emprestimo': 'CONTRACT_MANAGER::remove_loan_contract', 'desmarcar_lances_pelo_jogador': 'Shortlist_Manager::clear_bid_markers_for_player', 'tecnico_substituto': 'human_manager_get_stand_in_manager',

@@ -1779,3 +1779,13 @@ Mutations: `mutacoes/leva191.py` (3, by the career to 2002-06-01, confirming the
 | `vaga_da_noticia()` | 0x785830 | thiscall | news.cpp: the value of one of the 50 news item slots |
 
 Mutations: `mutacoes/leva192.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `a_torneio` escaped: friendly tournament slot 0 is never taken in the career. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 193rd batch — the contract clauses: next sale percentage, appearance bonus and national team bonus (official on 2026-10-20)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `tirar_percentual_da_proxima_venda()` | 0x8cb4f0 | thiscall | transfer_manager.cpp: removes the player's next sale percentage (flag and list record) |
+| `tirar_bonus_por_jogo()` | 0x8cb590 | thiscall | transfer_manager.cpp: removes the first-team appearance bonus (flag and list record) |
+| `tirar_bonus_pela_selecao()` | 0x8cb630 | thiscall | transfer_manager.cpp: removes the international appearance bonus (flag and list record) |
+
+Mutations: `mutacoes/leva193.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught. `l_venda` escaped: no contract clause (next sale percentage, appearance bonus, international bonus) is removed in the career up to 2002-06. `l_jogo` escaped: no contract clause (next sale percentage, appearance bonus, international bonus) is removed in the career up to 2002-06. `l_conta` escaped: no contract clause (next sale percentage, appearance bonus, international bonus) is removed in the career up to 2002-06. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

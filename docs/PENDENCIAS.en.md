@@ -87,5 +87,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `stand-in manager` | 0x600e90 (batch 190) | — | no reputation tie in the human club's staff: `s_empate` escapes even comparing. Test: broad career (other human clubs) |
 | `agreed contract and held ban` | 0x8c5450, 0x55cb60 (batch 191) | — | the agreed contract club is never asked for with the contract found, and no player has two held bans: `c_clube` and `p_vaga` escape even comparing. Test: broad career |
 | `friendly competitions` | 0x5ca030 (batch 192) | — | friendly tournament slot 0 is never taken: `a_torneio` escapes even comparing. Test: broad career |
+| `contract clauses` | 0x8cb4f0, 0x8cb590, 0x8cb630 (batch 193) | — | no clause is removed in the automatic career: `l_venda`, `l_jogo` and `l_conta` escape even comparing. Test: broad career |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").
