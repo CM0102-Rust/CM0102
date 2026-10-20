@@ -398,6 +398,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6d1770 | `posicoes_finas` | fine_positions |
 | 0x6df460 | `postura` | stance |
 | 0x5cb9b0 | `preencher_data_internacional` | friendly_international_date_set |
+| 0x682f70 | `premio_da_liga` | League::calc_prize_fund |
 | 0x6b7f20 | `preparar_partida` | prepare_match |
 | 0x6bcbd0 | `pressao` | pressure |
 | 0x6bd6b0 | `pressao_na_area` | pressure_in_box |
@@ -485,7 +486,9 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x8cb590 | `tirar_bonus_por_jogo` | TRANSFER_MANAGER::remove_first_team_appearance_money |
 | 0x4d0bd0 | `tirar_contrato_de_emprestimo` | CONTRACT_MANAGER::remove_loan_contract |
 | 0x6cdd50 | `tirar_de_campo` | take_off_pitch |
+| 0x7a8470 | `tirar_jogador_do_banco` | PLAYER_REGEN::remove_player_data_from_pool |
 | 0x8cb4f0 | `tirar_percentual_da_proxima_venda` | TRANSFER_MANAGER::remove_next_sale_percentage |
+| 0x7a82b0 | `tirar_reserva_de_tecnico` | PLAYER_REGEN::remove_spare_non_player_record |
 | 0x6dbb80 | `titulares` | starters |
 | 0x6ccb60 | `tracar_lance` | trace_move |
 | 0x4b0850 | `unidades` | units_digit |

@@ -88,5 +88,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `agreed contract and held ban` | 0x8c5450, 0x55cb60 (batch 191) | — | the agreed contract club is never asked for with the contract found, and no player has two held bans: `c_clube` and `p_vaga` escape even comparing. Test: broad career |
 | `friendly competitions` | 0x5ca030 (batch 192) | — | friendly tournament slot 0 is never taken: `a_torneio` escapes even comparing. Test: broad career |
 | `contract clauses` | 0x8cb4f0, 0x8cb590, 0x8cb630 (batch 193) | — | no clause is removed in the automatic career: `l_venda`, `l_jogo` and `l_conta` escape even comparing. Test: broad career |
+| `player generator lists` | 0x7a82b0 (batch 194) | — | the +8 of the slot freed at the end of the list is not read before being rewritten: `r_marca` escapes even comparing. Test: broad career |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

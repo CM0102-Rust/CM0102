@@ -1789,3 +1789,13 @@ Mutations: `mutacoes/leva192.py` (3, by the career to 2002-06-01, confirming the
 | `tirar_bonus_pela_selecao()` | 0x8cb630 | thiscall | transfer_manager.cpp: removes the international appearance bonus (flag and list record) |
 
 Mutations: `mutacoes/leva193.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught. `l_venda` escaped: no contract clause (next sale percentage, appearance bonus, international bonus) is removed in the career up to 2002-06. `l_jogo` escaped: no contract clause (next sale percentage, appearance bonus, international bonus) is removed in the career up to 2002-06. `l_conta` escaped: no contract clause (next sale percentage, appearance bonus, international bonus) is removed in the career up to 2002-06. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 194th batch — the player generator reserve lists and the league prize fund (official on 2026-10-20)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `tirar_reserva_de_tecnico()` | 0x7a82b0 | thiscall | player_regen.cpp: removes a non-player record from the spare list by id |
+| `tirar_jogador_do_banco()` | 0x7a8470 | thiscall | player_regen.cpp: removes the player data record from the free player pool |
+| `premio_da_liga()` | 0x682f70 | thiscall | league.cpp: the league total prize fund (one more share per place above the last) |
+
+Mutations: `mutacoes/leva194.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `r_marca` escaped: field +8 of the slot freed at the end of the reserve list is never read before being rewritten. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

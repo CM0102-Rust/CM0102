@@ -1787,3 +1787,13 @@ Mutações: `mutacoes/leva192.py` (3, pela carreira até 2002-06-01, confirmando
 | `tirar_bonus_pela_selecao()` | 0x8cb630 | thiscall | transfer_manager.cpp: tira o bônus por jogo pela seleção (marca e registro da lista) |
 
 Mutações: `mutacoes/leva193.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas. `l_venda` escapou: nenhuma cláusula de contrato (percentual da próxima venda, bônus por jogo, bônus pela seleção) é tirada na carreira até 2002-06. `l_jogo` escapou: nenhuma cláusula de contrato (percentual da próxima venda, bônus por jogo, bônus pela seleção) é tirada na carreira até 2002-06. `l_conta` escapou: nenhuma cláusula de contrato (percentual da próxima venda, bônus por jogo, bônus pela seleção) é tirada na carreira até 2002-06. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 194ª leva — as listas de reserva do gerador de jogadores e o prêmio da liga (oficial em 20/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `tirar_reserva_de_tecnico()` | 0x7a82b0 | thiscall | player_regen.cpp: tira da lista de reserva o registro de não jogador de um id |
+| `tirar_jogador_do_banco()` | 0x7a8470 | thiscall | player_regen.cpp: tira do banco de jogadores livres o registro dos dados de jogador |
+| `premio_da_liga()` | 0x682f70 | thiscall | league.cpp: o prêmio total da liga (uma cota a mais por posição acima do último) |
+
+Mutações: `mutacoes/leva194.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `r_marca` escapou: o campo +8 da vaga que fica livre no fim da lista de reserva nunca é lido antes de ser regravado. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
