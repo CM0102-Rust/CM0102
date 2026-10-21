@@ -1869,3 +1869,13 @@ Mutations: `mutacoes/leva200.py` (0, by the career to 2002-06-01, confirming the
 | `responder_escalacao_da_partida()` | 0x727c30 | cdecl | match_screens.cpp: the Team Selection buttons: appoints the captain (the best starter) when missing and stores the pending command; the rest go to the common handler |
 
 Mutations: `mutacoes/leva201.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 202nd batch — the match screens (8): the team stats, player ratings and match stats panels (official on 2026-10-21)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `painel_das_estatisticas_do_time()` | 0x7217a0 | cdecl | match_screens.cpp: draws one team's stats table (page header, arrows, column titles) or the no-stats message |
+| `painel_das_notas_dos_jogadores()` | 0x722ed0 | cdecl | match_screens.cpp: draws both teams' player ratings: shirt number, name (button, with the captain) and rating |
+| `painel_das_estatisticas_da_partida()` | 0x71e040 | cdecl | match_screens.cpp: draws the match stats: 13 labelled rows (shots, corners, fouls, passes, tackles, headers, cards) |
+
+Mutations: `mutacoes/leva202.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

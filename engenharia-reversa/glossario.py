@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'painel_das_estatisticas_do_time': 'draw_team_stats_panel', 'painel_das_notas_dos_jogadores': 'draw_player_ratings_panel', 'painel_das_estatisticas_da_partida': 'draw_match_stats_panel',
  'responder_continuar_da_partida': 'match_screens_handle_continue_command', 'abrir_escalacao_da_partida': 'match_screens_open_team_selection', 'responder_escalacao_da_partida': 'match_screens_handle_team_selection_input',
  'atribuir_bloco_do_time': 'match_team_block_assign', 'atribuir_linha_do_jogador': 'match_player_row_assign', 'contar_placar_ao_vivo': 'match_screens_tally_live_score',
  'estatistica_da_liga_do_jogador': 'PlayerStats::get_club_league_stat', 'entrada_do_jogo_bate': 'Match_Stats::fixture_entry_matches', 'balde_do_registro': 'match_stats_get_record_bucket',

@@ -381,6 +381,9 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x4b07d0 | `ordem_por_80_desc` | order_by_80_desc |
 | 0x6e0fe0 | `ordem_por_condicao` | order_by_condition |
 | 0x6e0df0 | `ordem_por_tabela` | order_by_table |
+| 0x71e040 | `painel_das_estatisticas_da_partida` | draw_match_stats_panel |
+| 0x7217a0 | `painel_das_estatisticas_do_time` | draw_team_stats_panel |
+| 0x722ed0 | `painel_das_notas_dos_jogadores` | draw_player_ratings_panel |
 | 0x723d20 | `painel_dos_ultimos_placares` | draw_latest_scores_panel |
 | 0x62c3d0 | `palavra_0c` | word_0c |
 | 0x717c70 | `papel_880` | role_880 |

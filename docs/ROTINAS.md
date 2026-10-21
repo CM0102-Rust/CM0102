@@ -1867,3 +1867,13 @@ Mutações: `mutacoes/leva200.py` (0, pela carreira até 2002-06-01, confirmando
 | `responder_escalacao_da_partida()` | 0x727c30 | cdecl | match_screens.cpp: os botões da escalação: nomeia o capitão (o melhor titular) se faltar e deixa o comando pendente; os outros vão à resposta comum |
 
 Mutações: `mutacoes/leva201.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 202ª leva — as telas da partida (8): os painéis das estatísticas do time, das notas dos jogadores e das estatísticas da partida (oficial em 21/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `painel_das_estatisticas_do_time()` | 0x7217a0 | cdecl | match_screens.cpp: desenha a tabela das estatísticas de um time (cabeçalho da página, setas, títulos das colunas) ou a mensagem de que não há estatísticas |
+| `painel_das_notas_dos_jogadores()` | 0x722ed0 | cdecl | match_screens.cpp: desenha as notas dos jogadores dos dois times: camisa, nome (botão, com o capitão) e nota |
+| `painel_das_estatisticas_da_partida()` | 0x71e040 | cdecl | match_screens.cpp: desenha as estatísticas da partida: 13 linhas rotuladas (chutes, escanteios, faltas, passes, desarmes, cabeçadas, cartões) |
+
+Mutações: `mutacoes/leva202.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
