@@ -55,6 +55,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | Address | Português | English |
 |---|---|---|
 | 0x71b4a0 | `abrir_detalhes_da_partida` | open_match_details |
+| 0x717cc0 | `abrir_jogos_do_dia` | open_day_fixtures_screen |
 | 0x9326e0 | `abrir_no_conteiner` | open_in_container |
 | 0x718aa0 | `abrir_tela_da_partida` | open_match_screen |
 | 0x727f00 | `abrir_tela_de_espera` | open_waiting_screen |
@@ -450,6 +451,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f5c30 | `responder` | respond |
 | 0x71bdc0 | `responder_detalhes_da_partida` | match_details_input |
 | 0x722dc0 | `responder_estatisticas_do_time` | handle_team_stats_input |
+| 0x718930 | `responder_jogos_do_dia` | handle_day_fixtures_input |
 | 0x71b3d0 | `responder_ultimos_placares` | latest_scores_input |
 | 0x725860 | `responder_ultimos_placares_da_partida` | match_screens_handle_latest_scores_cycle |
 | 0x6ce460 | `resumo_da_partida` | match_summary |
@@ -505,6 +507,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5b2f10 | `vaga_da_casa` | slot_of_code |
 | 0x785830 | `vaga_da_noticia` | NewsItem::get_slot |
 | 0x8c61e0 | `vaga_da_oferta` | offer_slot |
+| 0x727e20 | `vaga_do_mais_bem_avaliado` | match_screens_find_best_rated_starter_slot |
 | 0x897ee0 | `vaga_extra_tatica` | extra_tactic_slot |
 | 0x897590 | `vaga_marcada` | marked_slot |
 | 0x6d5af0 | `vagas_do_lado_sem_conflito` | side_slots_without_conflict |

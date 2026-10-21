@@ -1827,3 +1827,13 @@ Mutações: `mutacoes/leva196.py` (3, pela carreira até 2002-06-01, confirmando
 | `tecnico_da_busca()` | 0x7ae570 | thiscall | player_search.cpp: grava na busca de jogadores o id do técnico humano |
 
 Mutações: `mutacoes/leva197.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 3 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 198ª leva — as telas da partida (6): a tela dos jogos do dia e o capitão padrão (oficial em 21/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `abrir_jogos_do_dia()` | 0x717cc0 | cdecl | match_screens.cpp: abre a tela dos jogos do dia numa vaga com o grupo de jogos (caixa de erro sem grupo) |
+| `responder_jogos_do_dia()` | 0x718930 | cdecl | match_screens.cpp: a resposta da tela dos jogos do dia: outro grupo de jogos, o andamento da competição ou a barra de menu |
+| `vaga_do_mais_bem_avaliado()` | 0x727e20 | cdecl | match_screens.cpp: a vaga dos onze com a maior nota da comissão (o capitão padrão), −1 sem ninguém |
+
+Mutações: `mutacoes/leva198.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

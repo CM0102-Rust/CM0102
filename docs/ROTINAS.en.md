@@ -1829,3 +1829,13 @@ Mutations: `mutacoes/leva196.py` (3, by the career to 2002-06-01, confirming the
 | `tecnico_da_busca()` | 0x7ae570 | thiscall | player_search.cpp: stores the human manager id in the player search |
 
 Mutations: `mutacoes/leva197.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 3 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 198th batch — the match screens (6): the day fixtures screen and the default captain (official on 2026-10-21)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `abrir_jogos_do_dia()` | 0x717cc0 | cdecl | match_screens.cpp: opens the day fixtures screen in a slot with the fixture group (error box without a group) |
+| `responder_jogos_do_dia()` | 0x718930 | cdecl | match_screens.cpp: the day fixtures screen input: another fixture group, the competition progress or the menu bar |
+| `vaga_do_mais_bem_avaliado()` | 0x727e20 | cdecl | match_screens.cpp: the first eleven slot with the highest staff rating (the default captain), -1 for none |
+
+Mutations: `mutacoes/leva198.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

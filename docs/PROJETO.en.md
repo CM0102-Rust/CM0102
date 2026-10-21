@@ -68,7 +68,7 @@ Routines that call others with side effects (for example, the match commentary) 
 - The first routines in Rust: the random draw generator and the game dates.
 
 ### Stage 3: match engine (2026-10-06 to 2026-10-17) and simulation, in progress
-- **197 batches, 467 routines** rewritten, bottom-up: from accessors and calculations to tactical decisions, ball possession, refereeing (fouls, cards, offside), statistics, player movement, ball control, commentary and, as feasibility proofs, the **shot-on-goal value** and the **team strength** (5 KB routines).
+- **198 batches, 470 routines** rewritten, bottom-up: from accessors and calculations to tactical decisions, ball possession, refereeing (fouls, cards, offside), statistics, player movement, ball control, commentary and, as feasibility proofs, the **shot-on-goal value** and the **team strength** (5 KB routines).
 - New infrastructure: hook verification (`prologos.py`), a recording gate for the commentary and replay of internal calls.
 - The match engine (screens aside) reached 100% on 2026-10-17; since then the batches go through the simulation (`candidatos.py --simulacao`) and, from batch 180, through the match screens (`match_screens.cpp`).
 
@@ -86,10 +86,22 @@ Routines that call others with side effects (for example, the match commentary) 
    - **same conditions**: same database (`Data/`), same version and same options (loaded leagues, match detail);
    - only with the engine 100% in Rust: in the original exe, stack garbage influences the results (see ROTINAS, note on the career fingerprint).
    It is a separate mode: it breaks fidelity to the original on purpose and does not replace the identical game.
+8. **After the 1:1 game: the editors inside the project (Lucas's roadmap, 2026-10-21).** All of this comes only after the game is entirely in Rust and identical to the original.
+   - **CMRTE inside the game.** A button turns on editing on the screen itself, like FM's in-game editor. The base is the sibling project `D:\Sistemas\CMRTE` (CMRTE v0.1.11 decompiled: Rust core done, proven by the original's gold output and by mutations). Inside the game there is no need to read and write another process's memory: editing touches the structures the game uses directly.
+   - **The official editor rebuilt.** Decompile the database editor that ships with the game and rebuild it along the lines of the Elifoot II Bombado editor (`D:\Sistemas\Elifoot II\bombado\editor`): a core with no screen (database, entities, validation, patch) and the window on top (Tauri, HTML/CSS/JS without Node); the database only stores what passes validation, and changes can go out as a patch (the difference from the source database).
+   - **The save editor in the same editor.** The Save Game Editor's logic is already decompiled and in Rust in the sibling project `D:\Sistemas\CM3SaveEditor` (Graeme Kelly's `SaveGame_Editor.exe` v4.0; `cm3sav` core, opening and saving byte for byte like the original, validator and batch editing). It goes into the new editor: one program for both the database and the save.
+   - **Corrupted saves, solved at the root.** Understand why saves end up with broken ids (duplicated clubs and people, which today only the save editor's "repair" fixes) and fix it in the game, so the repair is no longer needed. Leads already gathered from the old forum threads (`ENDERECOS_COMUNIDADE.en.md`, old threads section): editors used together, nationality, job or retirement changed by an editor, two exes in the same folder sharing the `.tmp` files, power cuts while saving, Windows VirtualStore.
+9. **Suggestions across the projects (to discuss).**
+   - **A shared data core.** Today the database and save formats are described in three places (this project, CM3SaveEditor and CMRTE). A Rust library with just the formats, used by the game, the editor and on-screen editing, avoids three versions of the same structures.
+   - **The validator in the game.** The save editor's validator can run in the game itself when saving and loading: the problem is reported (and, when safe, fixed) the moment it appears, not years later.
+   - **The siblings' oracles in the chain.** CMRTE's gold output and `cm3sav`'s byte-for-byte oracle can join the tests here, proving the game and the editors together.
+   - **The extended save together with the editor.** The format to go past 4 GB should be born together with the editor, which needs to read both formats.
+   - **Rules as data.** What today can only be changed by patching bytes in the exe (start year, foreigner limits, substitutions, transfer windows, playable leagues; see the old forum threads) becomes configuration editable in the editor, like the rules as data in Elifoot II Bombado.
+   - **Other platforms.** With the whole game in Rust and its own window, the Elifoot II path applies here: Linux, then Mac.
 
 ## 7. Risks and open decisions
 
 - **Pace:** from 2 to 10 routines per batch and from 30 to 60 minutes of tests per batch. The engine will be done in a few dozen more batches; the whole game, with the same method, is months of work.
 - **Shared machine:** the heavy tests respect a lock between sessions and a memory watchdog (there was a driver leak that froze the PC).
-- **Interface:** translate or rewrite (section 6.3), to be decided when the engine is finished.
+- **Interface:** decided on 2026-10-19 (hybrid approach, section 6.3); the match screens are already in Rust and being tested.
 - **Large routines:** the method scales. The shot value (5.2 KB) and the team strength (5.1 KB, full of internal calls with effects) matched the original on the first attempt; the problems were only in the test infrastructure.
