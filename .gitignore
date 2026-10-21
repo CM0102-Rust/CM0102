@@ -21,3 +21,6 @@ CLZ Leagues Patch*.rar
 /save/target/
 # Copia da instalacao da CLZ para testes
 /clz_teste/
+
+# copias de compilacao da fila e da DLL de sessao (fila.py/testar_fila, sessao_telas)
+copias/
