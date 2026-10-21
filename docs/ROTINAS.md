@@ -1897,3 +1897,13 @@ Mutações: `mutacoes/leva203.py` (0, pela carreira até 2002-06-01, confirmando
 | `montar_jogos_do_dia()` | 0x717db0 | cdecl | match_screens.cpp: monta a tela dos jogos do dia: título, árvore das competições do dia, a tabela das rodadas e partidas e a rolagem até a partida do humano |
 
 Mutações: `mutacoes/leva204.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 205ª leva — as telas da partida (12): as linhas das estatísticas do time, o redesenho dos últimos placares e a espera dos outros jogadores (oficial em 21/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `preencher_estatisticas_do_time()` | 0x721cd0 | cdecl | match_screens.cpp: escreve as 20 linhas de jogador das estatísticas do time (22 colunas pela tabela do parâmetro 0x1c), montando as células ou atualizando o que mudou |
+| `atualizar_ultimos_placares()` | 0x724520 | cdecl | match_screens.cpp: reescreve as linhas dos últimos placares em páginas: fase, jogo, placar, período, autores dos eventos, agregado e o rodapé da página |
+| `esperar_os_outros_jogadores()` | 0x727fb0 | cdecl | match_screens.cpp: no jogo em rede, espera os outros humanos da mesma partida ou fecha as telas, avisa e abre a tela da partida |
+
+Mutações: `mutacoes/leva205.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

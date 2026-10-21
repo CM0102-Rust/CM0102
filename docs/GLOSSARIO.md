@@ -82,6 +82,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6ec010 | `atualizar_atributos` | update_attributes |
 | 0x6869a0 | `atualizar_confronto_direto` | League::update_head_to_head |
 | 0x6f4aa0 | `atualizar_jogador` | update_player |
+| 0x724520 | `atualizar_ultimos_placares` | refresh_latest_scores_rows |
 | 0x6e1cf0 | `avaliar_jogador` | rate_player |
 | 0x6f5b80 | `avancar_linha` | advance_row |
 | 0x729bd0 | `balde_do_registro` | match_stats_get_record_bucket |
@@ -216,6 +217,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c2050 | `escolher_por_papel_c` | choose_by_role_c |
 | 0x6c23f0 | `escolher_por_papel_e` | choose_by_role_e |
 | 0x6cbad0 | `espaco_a_frente` | space_ahead |
+| 0x727fb0 | `esperar_os_outros_jogadores` | match_screens_handle_waiting_screen |
 | 0x5afd00 | `esquecer_pessoa` | forget_person |
 | 0x6f4a70 | `estado_do_adversario` | opponent_state |
 | 0x6f4a40 | `estado_do_lado` | side_state |
@@ -417,6 +419,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6d1770 | `posicoes_finas` | fine_positions |
 | 0x6df460 | `postura` | stance |
 | 0x5cb9b0 | `preencher_data_internacional` | friendly_international_date_set |
+| 0x721cd0 | `preencher_estatisticas_do_time` | fill_team_stats_rows |
 | 0x682f70 | `premio_da_liga` | League::calc_prize_fund |
 | 0x6b7f20 | `preparar_partida` | prepare_match |
 | 0x6bcbd0 | `pressao` | pressure |

@@ -1899,3 +1899,13 @@ Mutations: `mutacoes/leva203.py` (0, by the career to 2002-06-01, confirming the
 | `montar_jogos_do_dia()` | 0x717db0 | cdecl | match_screens.cpp: builds the day fixtures screen: title, the day's competition tree, the rounds and matches table and the scroll to the human's match |
 
 Mutations: `mutacoes/leva204.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 205th batch — the match screens (12): the team stats rows, the latest scores refresh and the wait for the other players (official on 2026-10-21)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `preencher_estatisticas_do_time()` | 0x721cd0 | cdecl | match_screens.cpp: writes the 20 player rows of the team stats table (22 columns from the param 0x1c table), building the cells or updating what changed |
+| `atualizar_ultimos_placares()` | 0x724520 | cdecl | match_screens.cpp: rewrites the latest scores rows in pages: stage, fixture, score, period, event scorers, aggregate and the page footer |
+| `esperar_os_outros_jogadores()` | 0x727fb0 | cdecl | match_screens.cpp: in a network game, waits for the other humans of the same fixture or closes the screens, shows the notice and opens the match screen |
+
+Mutations: `mutacoes/leva205.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
