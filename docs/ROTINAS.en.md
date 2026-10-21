@@ -1839,3 +1839,13 @@ Mutations: `mutacoes/leva197.py` (3, by the career to 2002-06-01, confirming the
 | `vaga_do_mais_bem_avaliado()` | 0x727e20 | cdecl | match_screens.cpp: the first eleven slot with the highest staff rating (the default captain), -1 for none |
 
 Mutations: `mutacoes/leva198.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 199th batch — the match statistics: the player league stat, the fixture entry and the record bucket (official on 2026-10-21)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `estatistica_da_liga_do_jogador()` | 0x7c47b0 | thiscall | player_stats.cpp: the player's league appearances (field 1) or league goals (field 2) at the club, as a float |
+| `entrada_do_jogo_bate()` | 0x729500 | thiscall | match_screens.cpp: reports whether a match statistics entry holds the two given clubs in either order and the given date |
+| `balde_do_registro()` | 0x729bd0 | stdcall | match_screens.cpp: the bucket (0 to 3) where the match statistics record is stored: competition type, national team and fixture flags |
+
+Mutations: `mutacoes/leva199.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 1 caught. `e_data` escaped: in the career the fixture entry second date never decides (when the first matches, the second matches too). `b_tipo` escaped: the record bucket branch without the +0x40 flag does not run in the automatic career. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

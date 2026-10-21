@@ -90,5 +90,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `cláusulas do contrato` | 0x8cb4f0, 0x8cb590, 0x8cb630 (193ª) | — | nenhuma cláusula é tirada na carreira automática: `l_venda`, `l_jogo` e `l_conta` escapam até comparando. Teste: carreira ampla |
 | `listas do gerador de jogadores` | 0x7a82b0 (194ª) | — | o +8 da vaga liberada no fim da lista não é lido antes de ser regravado: `r_marca` escapa até comparando. Teste: carreira ampla |
 | `confronto direto` | 0x6834f0, 0x6869a0 (196ª) | — | a minitabela do confronto direto não decide classificação nas ligas da carreira: `c_saldo` e `c_empate` escapam até comparando. Teste: carreira ampla (Itália, Espanha) |
+| `estatísticas da partida` | 0x729500, 0x729bd0 (199ª) | — | a segunda data da entrada do jogo e o balde sem a marca +0x40 não aparecem na carreira: `e_data` e `b_tipo` escapam até comparando. Teste: carreira ampla |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").

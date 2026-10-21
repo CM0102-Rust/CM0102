@@ -1837,3 +1837,13 @@ Mutações: `mutacoes/leva197.py` (3, pela carreira até 2002-06-01, confirmando
 | `vaga_do_mais_bem_avaliado()` | 0x727e20 | cdecl | match_screens.cpp: a vaga dos onze com a maior nota da comissão (o capitão padrão), −1 sem ninguém |
 
 Mutações: `mutacoes/leva198.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 199ª leva — as estatísticas da partida: a estatística de liga do jogador, a entrada do jogo e o balde do registro (oficial em 21/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `estatistica_da_liga_do_jogador()` | 0x7c47b0 | thiscall | player_stats.cpp: as partidas (campo 1) ou os gols (campo 2) de liga do jogador no clube, como número de ponto flutuante |
+| `entrada_do_jogo_bate()` | 0x729500 | thiscall | match_screens.cpp: diz se uma entrada das estatísticas tem os dois clubes, em qualquer ordem, e as datas dadas |
+| `balde_do_registro()` | 0x729bd0 | stdcall | match_screens.cpp: o balde (0 a 3) em que o registro de estatística do jogo é guardado: tipo da competição, seleção e marcas do jogo |
+
+Mutações: `mutacoes/leva199.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 1 acusadas. `e_data` escapou: na carreira a segunda data da entrada do jogo nunca decide (quando a primeira bate, a segunda também bate). `b_tipo` escapou: o ramo sem a marca +0x40 do balde do registro não roda na carreira automática. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

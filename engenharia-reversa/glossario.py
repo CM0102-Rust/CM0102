@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'estatistica_da_liga_do_jogador': 'PlayerStats::get_club_league_stat', 'entrada_do_jogo_bate': 'Match_Stats::fixture_entry_matches', 'balde_do_registro': 'match_stats_get_record_bucket',
  'abrir_jogos_do_dia': 'open_day_fixtures_screen', 'responder_jogos_do_dia': 'handle_day_fixtures_input', 'vaga_do_mais_bem_avaliado': 'match_screens_find_best_rated_starter_slot',
  'hora_das_ferias': 'HUMAN_MANAGER::get_holiday_stamp', 'escalacao_guardada': 'HUMAN_MANAGER::get_saved_lineup', 'tecnico_da_busca': 'PLAYER_SEARCH::set_manager',
  'ordem_do_confronto': 'league_compare_h2h_rows', 'atualizar_confronto_direto': 'League::update_head_to_head', 'marcar_termos_oferecidos': 'TRANSFER_MANAGER::note_terms_offered_to_main_player',

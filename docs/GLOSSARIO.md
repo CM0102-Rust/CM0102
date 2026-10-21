@@ -81,6 +81,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6f4aa0 | `atualizar_jogador` | update_player |
 | 0x6e1cf0 | `avaliar_jogador` | rate_player |
 | 0x6f5b80 | `avancar_linha` | advance_row |
+| 0x729bd0 | `balde_do_registro` | match_stats_get_record_bucket |
 | 0x8676f0 | `bandeiras_do_contrato` | contract_flags |
 | 0x897990 | `batedor_guardado` | stored_taker |
 | 0x5b5a60 | `bit_da_casa` | square_bit |
@@ -191,6 +192,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6b4190 | `encerrar_dia` | end_day |
 | 0x7a7ed0 | `entrada_da_aposentadoria` | PLAYER_REGEN::find_retirement_entry |
 | 0x849ce0 | `entrada_da_lista` | shortlist_entry |
+| 0x729500 | `entrada_do_jogo_bate` | Match_Stats::fixture_entry_matches |
 | 0x5d5ac0 | `entrada_do_treino` | training_manager_get_player_entry |
 | 0x6cdd00 | `entrar_em_campo` | take_the_field |
 | 0x5fed50 | `escalacao_guardada` | HUMAN_MANAGER::get_saved_lineup |
@@ -213,6 +215,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5afd00 | `esquecer_pessoa` | forget_person |
 | 0x6f4a70 | `estado_do_adversario` | opponent_state |
 | 0x6f4a40 | `estado_do_lado` | side_state |
+| 0x7c47b0 | `estatistica_da_liga_do_jogador` | PlayerStats::get_club_league_stat |
 | 0x6cf750 | `estatistica_de_posse` | possession_statistic |
 | 0x7c2150 | `estatistica_do_jogador` | player_statistic |
 | 0x6d5d00 | `evento_na_frente` | event_at_front |
