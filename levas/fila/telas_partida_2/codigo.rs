@@ -127,7 +127,10 @@ unsafe extern "C" fn comparar_montar_ultimos_placares() {
     let o = orig::<unsafe extern "C" fn()>(%%I1%%);
     let mut reg = regioes_da_tela();
     reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || montar_ultimos_placares());
+    // a foto de fundo (0x41c410) sorteia: o estado do gerador volta para a segunda rodada (sem ele o
+    // gerador andava duas vezes no modo comparação e a carreira se deslocava; 204ª)
+    reg.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || crate::aleatorio::sem_contar(|| montar_ultimos_placares()));
     PLACAR.registrar(igual, || {
         // so as diferencas (a lista e grande): onde comecam e quantos bytes
         let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {

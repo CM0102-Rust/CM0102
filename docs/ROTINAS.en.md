@@ -1889,3 +1889,13 @@ Mutations: `mutacoes/leva202.py` (0, by the career to 2002-06-01, confirming the
 | `valores_das_notas_dos_jogadores()` | 0x723350 | cdecl | match_screens.cpp: updates the player ratings rows: cards, injury/dismissal/substitution minute, rating, goals and name colour; updates the state copy |
 
 Mutations: `mutacoes/leva203.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 204th batch — the match screens (10): the action zones and match report panels and the day fixtures screen (official on 2026-10-21)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `painel_das_zonas_de_acao()` | 0x71f500 | cdecl | match_screens.cpp: draws the action zones: the period selector, the pitch split into three zones with both clubs' colour bars, or the no-zones message |
+| `painel_do_relatorio_da_partida()` | 0x721000 | cdecl | match_screens.cpp: draws the match report: the minutes and the event texts (building the report outside the match), or the no-report message |
+| `montar_jogos_do_dia()` | 0x717db0 | cdecl | match_screens.cpp: builds the day fixtures screen: title, the day's competition tree, the rounds and matches table and the scroll to the human's match |
+
+Mutations: `mutacoes/leva204.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

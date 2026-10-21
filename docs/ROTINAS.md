@@ -1887,3 +1887,13 @@ Mutações: `mutacoes/leva202.py` (0, pela carreira até 2002-06-01, confirmando
 | `valores_das_notas_dos_jogadores()` | 0x723350 | cdecl | match_screens.cpp: atualiza as linhas das notas dos jogadores: cartões, minuto de lesão/expulsão/substituição, nota, gols e cor do nome; atualiza a cópia do estado |
 
 Mutações: `mutacoes/leva203.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 204ª leva — as telas da partida (10): os painéis das zonas de ação e do relatório da partida e a tela dos jogos do dia (oficial em 21/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `painel_das_zonas_de_acao()` | 0x71f500 | cdecl | match_screens.cpp: desenha as zonas de ação: o seletor de período, o campo dividido em três zonas com as barras das cores dos dois clubes, ou a mensagem de que não há zonas |
+| `painel_do_relatorio_da_partida()` | 0x721000 | cdecl | match_screens.cpp: desenha o relatório da partida: os minutos e os textos dos lances (criando o relatório fora da partida), ou a mensagem de que não há relatório |
+| `montar_jogos_do_dia()` | 0x717db0 | cdecl | match_screens.cpp: monta a tela dos jogos do dia: título, árvore das competições do dia, a tabela das rodadas e partidas e a rolagem até a partida do humano |
+
+Mutações: `mutacoes/leva204.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

@@ -337,6 +337,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6e1940 | `melhor_da_lista` | best_in_list |
 | 0x6c3950 | `menor_distancia` | smallest_distance |
 | 0x6d4250 | `momento_marcado` | marked_moment |
+| 0x717db0 | `montar_jogos_do_dia` | build_day_fixtures_screen |
 | 0x6b3c10 | `montar_o_dia` | set_up_the_day |
 | 0x71b300 | `montar_ultimos_placares` | build_latest_scores |
 | 0x6cfd40 | `motor_cartao_pela_gravidade` | engine_card_by_severity |
@@ -384,6 +385,8 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x71e040 | `painel_das_estatisticas_da_partida` | draw_match_stats_panel |
 | 0x7217a0 | `painel_das_estatisticas_do_time` | draw_team_stats_panel |
 | 0x722ed0 | `painel_das_notas_dos_jogadores` | draw_player_ratings_panel |
+| 0x71f500 | `painel_das_zonas_de_acao` | draw_action_zones_panel |
+| 0x721000 | `painel_do_relatorio_da_partida` | draw_match_report_panel |
 | 0x723d20 | `painel_dos_ultimos_placares` | draw_latest_scores_panel |
 | 0x62c3d0 | `palavra_0c` | word_0c |
 | 0x717c70 | `papel_880` | role_880 |

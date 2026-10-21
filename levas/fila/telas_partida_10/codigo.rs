@@ -521,7 +521,10 @@ unsafe fn comparar_pela_lista_com(nome: &str, extra: &[(usize, usize)], original
     reg.push((0xde1f64, 0x100));
     reg.push((0xae290c, 4));
     reg.extend_from_slice(extra);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, original, rust);
+    // a foto de fundo (0x41c410) sorteia: o estado do gerador volta para a segunda rodada (sem ele o
+    // gerador andava duas vezes no modo comparação e a carreira se deslocava; 204ª)
+    reg.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, original, || crate::aleatorio::sem_contar(rust));
     PLACAR.registrar(igual, || {
         let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
