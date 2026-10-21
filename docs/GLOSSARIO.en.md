@@ -55,6 +55,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | Address | Português | English |
 |---|---|---|
 | 0x71b4a0 | `abrir_detalhes_da_partida` | open_match_details |
+| 0x725f70 | `abrir_escalacao_da_partida` | match_screens_open_team_selection |
 | 0x717cc0 | `abrir_jogos_do_dia` | open_day_fixtures_screen |
 | 0x9326e0 | `abrir_no_conteiner` | open_in_container |
 | 0x718aa0 | `abrir_tela_da_partida` | open_match_screen |
@@ -455,7 +456,9 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c0b70 | `repartir_f` | split_f |
 | 0x6d3610 | `reputacao_do_jogador` | player_reputation |
 | 0x6f5c30 | `responder` | respond |
+| 0x725ca0 | `responder_continuar_da_partida` | match_screens_handle_continue_command |
 | 0x71bdc0 | `responder_detalhes_da_partida` | match_details_input |
+| 0x727c30 | `responder_escalacao_da_partida` | match_screens_handle_team_selection_input |
 | 0x722dc0 | `responder_estatisticas_do_time` | handle_team_stats_input |
 | 0x718930 | `responder_jogos_do_dia` | handle_day_fixtures_input |
 | 0x71b3d0 | `responder_ultimos_placares` | latest_scores_input |

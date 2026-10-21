@@ -1,17 +1,1 @@
 # ordem da fila (fila.py); um item por linha
-telas_partida_7
-telas_partida_8
-sim_match_stats_2
-telas_partida_11
-telas_partida_10
-telas_partida_12
-sim_match_stats_3
-telas_partida_15
-telas_partida_14
-telas_partida_13
-sim_midia_lesao
-sim_selecoes_taticas
-sim_copas_amistosos
-sim_transferencias_3
-sim_diversos_1
-sim_diversos_2

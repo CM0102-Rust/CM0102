@@ -1859,3 +1859,13 @@ Mutations: `mutacoes/leva199.py` (3, by the career to 2002-06-01, confirming the
 | `contar_placar_ao_vivo()` | 0x728e90 | cdecl | match_screens.cpp: counts the goals and shoot-out goals of a match up to the current minute of the live match |
 
 Mutations: `mutacoes/leva200.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 201st batch — the match screens (7): the match Continue, opening team selection and the team selection response (official on 2026-10-21)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `responder_continuar_da_partida()` | 0x725ca0 | cdecl | match_screens.cpp: the match Continue: the pending team selection command (online, the club's free slot or waiting for the others), the network matches and team selection |
+| `abrir_escalacao_da_partida()` | 0x725f70 | cdecl | match_screens.cpp: opens the Team Selection screen for the human's next match and stores the club, the match and the home flag |
+| `responder_escalacao_da_partida()` | 0x727c30 | cdecl | match_screens.cpp: the Team Selection buttons: appoints the captain (the best starter) when missing and stores the pending command; the rest go to the common handler |
+
+Mutations: `mutacoes/leva201.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
