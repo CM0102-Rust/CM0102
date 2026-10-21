@@ -80,6 +80,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x71dd70 | `atribuir_bloco_do_time` | match_team_block_assign |
 | 0x71df00 | `atribuir_linha_do_jogador` | match_player_row_assign |
 | 0x6ec010 | `atualizar_atributos` | update_attributes |
+| 0x71d9e0 | `atualizar_barra_da_posse` | refresh_possession_bar |
 | 0x6869a0 | `atualizar_confronto_direto` | League::update_head_to_head |
 | 0x6f4aa0 | `atualizar_jogador` | update_player |
 | 0x724520 | `atualizar_ultimos_placares` | refresh_latest_scores_rows |
@@ -345,8 +346,10 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6e1940 | `melhor_da_lista` | best_in_list |
 | 0x6c3950 | `menor_distancia` | smallest_distance |
 | 0x6d4250 | `momento_marcado` | marked_moment |
+| 0x71b630 | `montar_detalhes_da_partida` | build_match_details_screen |
 | 0x717db0 | `montar_jogos_do_dia` | build_day_fixtures_screen |
 | 0x6b3c10 | `montar_o_dia` | set_up_the_day |
+| 0x718e90 | `montar_tela_da_partida` | build_match_screen |
 | 0x71b300 | `montar_ultimos_placares` | build_latest_scores |
 | 0x6cfd40 | `motor_cartao_pela_gravidade` | engine_card_by_severity |
 | 0x6cfca0 | `motor_decidir_falta` | engine_decide_foul |
@@ -391,6 +394,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6e0fe0 | `ordem_por_condicao` | order_by_condition |
 | 0x6e0df0 | `ordem_por_tabela` | order_by_table |
 | 0x403350 | `organizar_area` | Area::layout |
+| 0x71c270 | `painel_da_visao_geral_da_partida` | draw_match_overview_panel |
 | 0x71e040 | `painel_das_estatisticas_da_partida` | draw_match_stats_panel |
 | 0x7217a0 | `painel_das_estatisticas_do_time` | draw_team_stats_panel |
 | 0x722ed0 | `painel_das_notas_dos_jogadores` | draw_player_ratings_panel |
@@ -478,6 +482,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x727c30 | `responder_escalacao_da_partida` | match_screens_handle_team_selection_input |
 | 0x722dc0 | `responder_estatisticas_do_time` | handle_team_stats_input |
 | 0x718930 | `responder_jogos_do_dia` | handle_day_fixtures_input |
+| 0x71a240 | `responder_tela_da_partida` | handle_match_screen_input |
 | 0x71b3d0 | `responder_ultimos_placares` | latest_scores_input |
 | 0x725860 | `responder_ultimos_placares_da_partida` | match_screens_handle_latest_scores_cycle |
 | 0x6ce460 | `resumo_da_partida` | match_summary |
@@ -503,6 +508,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x717430 | `tabela_a_1a_do_jogador` | player_table_a_1a |
 | 0x6c38f0 | `tabela_b` | table_b |
 | 0x717450 | `tabela_b_do_jogador` | player_table_b |
+| 0x7280e0 | `tabela_da_liga_ao_vivo` | match_screens_draw_live_league_table |
 | 0x717410 | `tabela_do_jogador` | player_table |
 | 0x5fd210 | `tecnico_9a01` | manager_9a01 |
 | 0x5fd480 | `tecnico_9a05` | manager_9a05 |

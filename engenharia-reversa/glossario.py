@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'montar_tela_da_partida': 'build_match_screen', 'responder_tela_da_partida': 'handle_match_screen_input', 'montar_detalhes_da_partida': 'build_match_details_screen', 'atualizar_barra_da_posse': 'refresh_possession_bar', 'painel_da_visao_geral_da_partida': 'draw_match_overview_panel', 'tabela_da_liga_ao_vivo': 'match_screens_draw_live_league_table',
  'organizar_area': 'Area::layout', 'iniciar_area': 'Area::init', 'desenhar_area': 'Area::draw',
  'desenhar_conferencia_da_escalacao': 'match_screens_draw_team_selection', 'carregar_estatisticas_da_partida': 'Match_Stats::load', 'salvar_estatisticas_da_partida': 'Match_Stats::save',
  'ler_registro_da_partida': 'Match_Stats::read_match_record', 'registrar_partida': 'Match_Stats::record_match', 'gravar_registro_da_partida': 'Match_Stats::write_match_record',

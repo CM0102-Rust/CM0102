@@ -1937,3 +1937,16 @@ Mutações: `mutacoes/leva207.py` (0, pela carreira até 2002-06-01, confirmando
 | `desenhar_area()` | 0x402e70 | thiscall | Area.cpp: desenha a área: o painel, as linhas da grade ou cada item à mostra na sua célula, e a barra de rolagem |
 
 Mutações: `mutacoes/leva208.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 209ª leva — as telas da partida (14): a montagem e a resposta da tela da partida ao vivo e a montagem da tela de detalhes; as telas da partida (13): a barra da posse, o painel da visão geral da partida e a tabela da liga ao vivo (oficial em 21/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `montar_tela_da_partida()` | 0x718e90 | cdecl | match_screens.cpp: monta a tela da partida ao vivo: cabeçalhos dos times e placar, narração, relógio, controle, botões táticos, velocidades da narração, abas, o painel da aba, o estádio e o painel de narração |
+| `responder_tela_da_partida()` | 0x71a240 | cdecl | match_screens.cpp: responde na tela da partida ao vivo: volume e velocidade da narração, o lance novo (relógio, narração, modos), assistir ou não, a tática de um time, a troca de aba e as respostas de cada aba |
+| `montar_detalhes_da_partida()` | 0x71b630 | cdecl | match_screens.cpp: monta a tela de detalhes de uma partida guardada: lê o registro e a foto da partida nas estatísticas, os cabeçalhos dos times, as 7 abas e o painel da aba |
+| `atualizar_barra_da_posse()` | 0x71d9e0 | cdecl | match_screens.cpp: redesenha a barra da posse da visão geral quando a posse muda (percentuais e a cor do clube com mais posse) e guarda o estado da partida na cópia do parâmetro 0x1d |
+| `painel_da_visao_geral_da_partida()` | 0x71c270 | cdecl | match_screens.cpp: desenha a visão geral da partida: período, barra da posse e comentário, data, placar com intervalo/prorrogação/pênaltis, competição, autores dos gols e cartões, disputa de pênaltis, árbitro, público, tempo e partida abandonada |
+| `tabela_da_liga_ao_vivo()` | 0x7280e0 | cdecl | match_screens.cpp: desenha a tabela da liga ao vivo (liga, topo, base) numa cópia da liga com os placares do dia aplicados (ou o aviso da data do sorteio): título, cabeçalhos, separadores, posição, seta de subida/descida, clube e colunas |
+
+Mutações: `mutacoes/leva209.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

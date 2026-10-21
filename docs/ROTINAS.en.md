@@ -1939,3 +1939,16 @@ Mutations: `mutacoes/leva207.py` (0, by the career to 2002-06-01, confirming the
 | `desenhar_area()` | 0x402e70 | thiscall | Area.cpp: draws the area: the panel, the grid lines or each visible widget in its cell, and the scrollbar |
 
 Mutations: `mutacoes/leva208.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 209th batch — the match screens (14): building and handling the live match screen and building the match details screen; the match screens (13): the possession bar, the match overview panel and the live league table (official on 2026-10-21)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `montar_tela_da_partida()` | 0x718e90 | cdecl | match_screens.cpp: builds the live match screen: team headers and score, commentary, clock, control, tactics buttons, commentary speeds, tabs, the selected tab panel, the stadium and the commentary panel |
+| `responder_tela_da_partida()` | 0x71a240 | cdecl | match_screens.cpp: handles the live match screen: commentary volume and speed, the new event (clock, commentary, modes), watching or not, a team's tactics, switching tabs and each tab's input |
+| `montar_detalhes_da_partida()` | 0x71b630 | cdecl | match_screens.cpp: builds the details screen of a stored match: loads the match record and snapshot from the match stats, the team headers, the 7 tabs and the selected tab panel |
+| `atualizar_barra_da_posse()` | 0x71d9e0 | cdecl | match_screens.cpp: redraws the overview possession bar when the share changes (percentages and the colour of the club with more of the ball) and stores the match state in the param 0x1d copy |
+| `painel_da_visao_geral_da_partida()` | 0x71c270 | cdecl | match_screens.cpp: draws the match overview: period, possession bar and commentary, date, score with half time/extra time/penalties, competition, scorers and cards, shoot-out, referee, attendance, weather and abandoned match |
+| `tabela_da_liga_ao_vivo()` | 0x7280e0 | cdecl | match_screens.cpp: draws the live league table (league, top, bottom) on a copy of the league with the day scores applied (or the draw date notice): title, headers, separators, position, up/down arrow, club and columns |
+
+Mutations: `mutacoes/leva209.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
