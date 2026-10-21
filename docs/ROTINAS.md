@@ -1917,3 +1917,13 @@ Mutações: `mutacoes/leva205.py` (0, pela carreira até 2002-06-01, confirmando
 | `gravar_registro_da_partida()` | 0x729820 | thiscall | match_stats.cpp: grava os eventos e o registro na vaga do jogo (ou na vaga do cursor do balde, que anda em círculo) e atualiza o índice |
 
 Mutações: `mutacoes/leva206.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 1 acusadas. `l_tamanho` escapou: ler o registro da partida (0x729600) só roda quando se abre o relatório de uma partida jogada; a carreira automática não abre telas. `r_excluido` escapou: na carreira o jogo nunca é o da competição [0x9cf684], então o "ou" decide na primeira metade e a marca +0x4c do registro nunca é lida. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 207ª leva — as telas da partida (15): a conferência da escalação e o índice das estatísticas da partida no save (oficial em 21/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `desenhar_conferencia_da_escalacao()` | 0x7260f0 | cdecl | match_screens.cpp: desenha a conferência da escalação: avisa (com os nomes ligados) os convocados, emprestados, indisponíveis, inelegíveis, suspensos, lesionados e sem permissão de trabalho, o limite do banco ou a falta de titulares; senão pede a confirmação (capitão, cobradores, reservas) com "No" e "Yes" |
+| `carregar_estatisticas_da_partida()` | 0x72aa80 | thiscall | match_stats.cpp: lê do match_stats.dat do save o índice dos registros, os cursores dos quatro baldes e as contagens |
+| `salvar_estatisticas_da_partida()` | 0x72adf0 | thiscall | match_stats.cpp: grava no match_stats.dat do save o índice dos registros, os cursores dos quatro baldes e as contagens |
+
+Mutações: `mutacoes/leva207.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

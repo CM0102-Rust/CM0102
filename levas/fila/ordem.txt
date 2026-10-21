@@ -1,5 +1,5 @@
 # ordem da fila (fila.py); um item por linha
-telas_partida_15
+telas_area_1
 telas_partida_14
 telas_partida_13
 sim_midia_lesao

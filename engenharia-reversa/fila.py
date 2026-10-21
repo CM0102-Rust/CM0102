@@ -126,9 +126,14 @@ def main():
                 k = bisect.bisect_right(inicios, e)
                 fim = inicios[k] if k < len(inicios) else e + 0x1000
                 trocados = [hex(x) for x in alteradas if e <= x < fim]
+                if any(e <= x < e + len(bs) for x in alteradas):
+                    # o desvio vai no começo da rotina: no exe de 1080 ele não entra (ex.: 0x55fba0, que lá já é desvio)
+                    print('PROLOGO alterado no cm0102-1080.exe', nome, a, hex(e))
                 if trocados:
-                    # a cópia que lê o valor do próprio exe naquele endereço cita-o no código: aceita
-                    lido = any(t in open(os.path.join(FILA, nome, 'codigo.rs'), encoding='utf-8').read() for t in trocados)
+                    # a cópia que lê o valor do próprio exe naquele endereço (`0x... as *const`) é aceita; citar
+                    # o endereço num comentário não basta
+                    cod = open(os.path.join(FILA, nome, 'codigo.rs'), encoding='utf-8').read()
+                    lido = any(re.search(r'\b%s as \*const' % t, cod) for t in trocados)
                     print('alterada no cm0102-1080.exe', nome, a, hex(e), 'em', trocados[:6], '(lida do exe no código)' if lido else '')
             cod = open(os.path.join(FILA, nome, 'codigo.rs'), encoding='utf-8').read()
             for k in range(len(rot['ROTINAS'])):

@@ -1919,3 +1919,13 @@ Mutations: `mutacoes/leva205.py` (0, by the career to 2002-06-01, confirming the
 | `gravar_registro_da_partida()` | 0x729820 | thiscall | match_stats.cpp: writes the events and the record into the fixture's slot (or the bucket cursor's slot, which wraps around) and updates the index |
 
 Mutations: `mutacoes/leva206.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 1 caught. `l_tamanho` escaped: reading the match record (0x729600) only runs when the report of a played match is opened; the automatic career opens no screens. `r_excluido` escaped: in the career the fixture is never the [0x9cf684] competition one, so the "or" is decided by its first half and the record +0x4c flag is never read. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 207th batch — the match screens (15): the team selection check and the match statistics index in the saved game (official on 2026-10-21)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `desenhar_conferencia_da_escalacao()` | 0x7260f0 | cdecl | match_screens.cpp: draws the team selection check: warns (with linked names) about players on international duty, on loan, unavailable, ineligible, banned, injured or without a work permit, the bench limit or missing starters; otherwise asks for confirmation (captain, set piece takers, substitutes) with "No" and "Yes" |
+| `carregar_estatisticas_da_partida()` | 0x72aa80 | thiscall | match_stats.cpp: reads the record index, the four bucket cursors and the counts from match_stats.dat in the saved game |
+| `salvar_estatisticas_da_partida()` | 0x72adf0 | thiscall | match_stats.cpp: writes the record index, the four bucket cursors and the counts to match_stats.dat in the saved game |
+
+Mutations: `mutacoes/leva207.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

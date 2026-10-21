@@ -106,6 +106,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c41b0 | `caminho_livre_ate` | clear_path_to |
 | 0x76e040 | `campo_3a_da_pessoa` | person_field_3a |
 | 0x6f4600 | `campo_pela_posicao` | field_by_position |
+| 0x72aa80 | `carregar_estatisticas_da_partida` | Match_Stats::load |
 | 0x6eab60 | `cartao_pela_gravidade` | card_by_severity |
 | 0x6c2a40 | `casa_da_formacao` | formation_square |
 | 0x5b2ae0 | `casa_da_vaga` | slot_code |
@@ -165,6 +166,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x700420 | `defesa_do_goleiro` | goalkeeper_save |
 | 0x6c87e0 | `desafio_adversario` | opposition_challenge |
 | 0x6eecb0 | `desempenho_na_partida` | match_performance |
+| 0x7260f0 | `desenhar_conferencia_da_escalacao` | match_screens_draw_team_selection |
 | 0x70c040 | `desfecho_do_chute` | shot_outcome |
 | 0x6f56c0 | `desgastar` | tire (fatigue) |
 | 0x62c2f0 | `desgaste_diario` | daily_wear |
@@ -478,6 +480,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6ce460 | `resumo_da_partida` | match_summary |
 | 0x6bbe40 | `rolar_bola` | roll_ball |
 | 0x725a70 | `rotulo_do_controle` | match_control_label |
+| 0x72adf0 | `salvar_estatisticas_da_partida` | Match_Stats::save |
 | 0x53b4f0 | `selecao_b` | b_national_team |
 | 0x775790 | `selecao_ou_especial` | national_or_special |
 | 0x53b3d0 | `selecao_principal` | main_national_team |
