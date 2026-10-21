@@ -1849,3 +1849,13 @@ Mutations: `mutacoes/leva198.py` (0, by the career to 2002-06-01, confirming the
 | `balde_do_registro()` | 0x729bd0 | stdcall | match_screens.cpp: the bucket (0 to 3) where the match statistics record is stored: competition type, national team and fixture flags |
 
 Mutations: `mutacoes/leva199.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 1 caught. `e_data` escaped: in the career the fixture entry second date never decides (when the first matches, the second matches too). `b_tipo` escaped: the record bucket branch without the +0x40 flag does not run in the automatic career. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 200th batch — the match screens (9): the team block and player row copies and the live score (official on 2026-10-21)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `atribuir_bloco_do_time()` | 0x71dd70 | thiscall | match_screens.cpp: copies the match team block (0x625 bytes) field by field, with its 20 player rows |
+| `atribuir_linha_do_jogador()` | 0x71df00 | thiscall | match_screens.cpp: copies one player row of the team block (0x49 bytes), the date through Date::operator= |
+| `contar_placar_ao_vivo()` | 0x728e90 | cdecl | match_screens.cpp: counts the goals and shoot-out goals of a match up to the current minute of the live match |
+
+Mutations: `mutacoes/leva200.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

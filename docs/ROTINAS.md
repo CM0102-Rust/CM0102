@@ -1847,3 +1847,13 @@ Mutações: `mutacoes/leva198.py` (0, pela carreira até 2002-06-01, confirmando
 | `balde_do_registro()` | 0x729bd0 | stdcall | match_screens.cpp: o balde (0 a 3) em que o registro de estatística do jogo é guardado: tipo da competição, seleção e marcas do jogo |
 
 Mutações: `mutacoes/leva199.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 1 acusadas. `e_data` escapou: na carreira a segunda data da entrada do jogo nunca decide (quando a primeira bate, a segunda também bate). `b_tipo` escapou: o ramo sem a marca +0x40 do balde do registro não roda na carreira automática. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 200ª leva — as telas da partida (9): a cópia do bloco do time e da linha do jogador e o placar ao vivo (oficial em 21/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `atribuir_bloco_do_time()` | 0x71dd70 | thiscall | match_screens.cpp: copia o bloco do time da partida (0x625 bytes) campo a campo, com as 20 linhas de jogador |
+| `atribuir_linha_do_jogador()` | 0x71df00 | thiscall | match_screens.cpp: copia uma linha de jogador do bloco do time (0x49 bytes), a data pela Date::operator= |
+| `contar_placar_ao_vivo()` | 0x728e90 | cdecl | match_screens.cpp: conta os gols e os gols nos pênaltis de uma partida até o minuto atual da partida ao vivo |
+
+Mutações: `mutacoes/leva200.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

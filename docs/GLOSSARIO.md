@@ -76,6 +76,8 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c4ec0 | `arrumar_saida` | line_up_kickoff |
 | 0x6cd5f0 | `atras_do_extremo` | behind_the_extreme |
 | 0x6d5950 | `atras_no_agregado` | behind_on_aggregate |
+| 0x71dd70 | `atribuir_bloco_do_time` | match_team_block_assign |
+| 0x71df00 | `atribuir_linha_do_jogador` | match_player_row_assign |
 | 0x6ec010 | `atualizar_atributos` | update_attributes |
 | 0x6869a0 | `atualizar_confronto_direto` | League::update_head_to_head |
 | 0x6f4aa0 | `atualizar_jogador` | update_player |
@@ -145,6 +147,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6eada0 | `construir_jogador_da_partida` | construct_match_player |
 | 0x6b7e50 | `construir_motor` | build_engine |
 | 0x6cbbb0 | `contar_ativos` | count_active |
+| 0x728e90 | `contar_placar_ao_vivo` | match_screens_tally_live_score |
 | 0x4cf5f0 | `contrato_com_clube` | contract_with_club |
 | 0x4cf5a0 | `contrato_de` | contract_of |
 | 0x777590 | `copiar_data_e_marca` | copy_date_and_mark |
