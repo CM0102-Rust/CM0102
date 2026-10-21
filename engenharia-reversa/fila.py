@@ -8,7 +8,7 @@ Cada item fica em levas/fila/<nome>/:
   mutacoes.py  MUTACOES = [(nome, trecho, troca)]  (mesmo formato de mutacoes/levaN.py)
 A ordem está em levas/fila/ordem.txt (um nome por linha).
 
-Uso: python fila.py proxima      materializa o primeiro da ordem como levas/N (N = a próxima leva) com
+Uso: python fila.py proxima      materializa os próximos da ordem (até ITENS_POR_LEVA do mesmo tipo) como levas/N (N = a próxima leva) com
                                  integrar.py genérico (âncoras achadas no motor.rs), docs.py e mutacoes/levaN.py
      python fila.py checar       aplica a fila inteira numa cópia do motor.rs e confere as âncoras das mutações
 O publicar_leva.py chama `proxima` quando levas/N+1 não existe.
@@ -55,30 +55,61 @@ def ordem():
     return [l.strip() for l in open(p, encoding='utf-8') if l.strip() and not l.startswith('#')]
 
 
-def materializar(nome, n, base, antes):
-    src = os.path.join(FILA, nome)
-    rot = runpy.run_path(os.path.join(src, 'rotinas.py'))
+# 21/10/2026: uma leva junta até ITENS_POR_LEVA itens da fila do mesmo tipo (telas ou simulação), 3 rotinas
+# cada (9 por leva); os itens seguem escritos de 3 em 3, então um item que dê problema sai da leva sozinho.
+# Para voltar às levas de 3 rotinas: ITENS_POR_LEVA = 1.
+ITENS_POR_LEVA = 3
+
+
+def do_lote(ordem_):
+    """Os itens da próxima leva: o primeiro da ordem e os seguintes do mesmo tipo (MOTOR), até ITENS_POR_LEVA."""
+    tipo = lambda nome: bool(runpy.run_path(os.path.join(FILA, nome, 'rotinas.py')).get('MOTOR'))
+    lote = [ordem_[0]]
+    for nome in ordem_[1:]:
+        if len(lote) == ITENS_POR_LEVA:
+            break
+        if tipo(nome) == tipo(lote[0]):
+            lote.append(nome)
+    return lote
+
+
+def materializar(nomes, n, base, antes):
     destino = os.path.join(R, 'levas', str(n))
     os.makedirs(destino, exist_ok=False)
-    cod = open(os.path.join(src, 'codigo.rs'), encoding='utf-8').read()
-    for k in range(len(rot['ROTINAS'])):
-        cod = cod.replace('%%%%I%d%%%%' % k, str(base + k))
-    assert '%%I' not in cod, 'índice sem valor'
-    cod = cod.replace('%%LEVA%%', str(n))
-    open(os.path.join(destino, 'codigo.rs'), 'w', encoding='utf-8').write(cod)
-    open(os.path.join(destino, 'integrar.py'), 'w', encoding='utf-8').write(INTEGRAR.format(n=n, rotinas=[(a, e, list(b)) for a, e, b in rot['ROTINAS']], base=base))
-    shutil.copy2(os.path.join(src, 'mutacoes.py'), os.path.join(R, 'engenharia-reversa', 'mutacoes', f'leva{n}.py'))
-    tpt, ten, docs = rot['DOCS']
-    secao = "secao=('Motor de partidas', 'Match engine')" if rot.get('MOTOR') else "secao=('Simulação', 'Simulation')"
+    codigos, rotinas, mutacoes, docs, tpts, tens = [], [], [], [], [], []
+    b = base
+    for nome in nomes:
+        src = os.path.join(FILA, nome)
+        rot = runpy.run_path(os.path.join(src, 'rotinas.py'))
+        cod = open(os.path.join(src, 'codigo.rs'), encoding='utf-8').read()
+        for k in range(len(rot['ROTINAS'])):
+            cod = cod.replace('%%%%I%d%%%%' % k, str(b + k))
+        assert '%%I' not in cod, 'índice sem valor'
+        codigos.append(cod.replace('%%LEVA%%', str(n)))
+        rotinas += [(a, e, list(bs)) for a, e, bs in rot['ROTINAS']]
+        mutacoes += runpy.run_path(os.path.join(src, 'mutacoes.py'))['MUTACOES']
+        tpt, ten, d = rot['DOCS']
+        tpts.append(tpt)
+        tens.append(ten)
+        docs += d
+        with open(os.path.join(src, 'materializada.txt'), 'w', encoding='utf-8') as f:
+            f.write(f'leva {n}, índices {b}..{b + len(rot["ROTINAS"]) - 1}\n')
+        b += len(rot['ROTINAS'])
+    assert len({m[0] for m in mutacoes}) == len(mutacoes), 'mutações com o mesmo nome em itens diferentes'
+    open(os.path.join(destino, 'codigo.rs'), 'w', encoding='utf-8').write('\n'.join(codigos))
+    open(os.path.join(destino, 'integrar.py'), 'w', encoding='utf-8').write(INTEGRAR.format(n=n, rotinas=rotinas, base=base))
+    with open(os.path.join(R, 'engenharia-reversa', 'mutacoes', f'leva{n}.py'), 'w', encoding='utf-8') as f:
+        f.write(f'# Mutações da {n}a leva (itens {", ".join(nomes)}). Uso: python mutacoes.py mutacoes\\leva{n}.py --carreira 2002-06-01\n')
+        f.write('MUTACOES = [\n' + ''.join(f'    {m!r},\n' for m in mutacoes) + ']\n')
+    runpy.run_path(os.path.join(R, 'engenharia-reversa', 'mutacoes', f'leva{n}.py'))
+    secao = "secao=('Motor de partidas', 'Match engine')" if runpy.run_path(os.path.join(FILA, nomes[0], 'rotinas.py')).get('MOTOR') else "secao=('Simulação', 'Simulation')"
     molde = open(os.path.join(R, 'engenharia-reversa', 'molde_docs.py'), encoding='utf-8').read()
     open(os.path.join(destino, 'docs.py'), 'w', encoding='utf-8').write(
         molde.replace('%%N%%', str(n)).replace('%%ANTES%%', str(antes)).replace('%%R%%', repr(docs))
-        .replace('%%TPT%%', repr(tpt)).replace('%%TEN%%', repr(ten)).replace("secao=('Simulação', 'Simulation')", secao))
-    with open(os.path.join(src, 'materializada.txt'), 'w', encoding='utf-8') as f:
-        f.write(f'leva {n}, índices {base}..{base + len(rot["ROTINAS"]) - 1}\n')
-    linhas = [l for l in open(os.path.join(FILA, 'ordem.txt'), encoding='utf-8') if l.strip() != nome]
+        .replace('%%TPT%%', repr('; '.join(tpts))).replace('%%TEN%%', repr('; '.join(tens))).replace("secao=('Simulação', 'Simulation')", secao))
+    linhas = [l for l in open(os.path.join(FILA, 'ordem.txt'), encoding='utf-8') if l.strip() not in nomes]
     open(os.path.join(FILA, 'ordem.txt'), 'w', encoding='utf-8').writelines(linhas)
-    print(f'{nome} -> levas/{n} (índices a partir de {base})')
+    print(f'{" + ".join(nomes)} -> levas/{n} ({len(rotinas)} rotinas, índices a partir de {base})')
 
 
 def estado():
@@ -97,7 +128,7 @@ def main():
             n += 1  # já materializada (ou escrita à mão) e ainda não publicada
         ordem_ = ordem()
         assert ordem_, 'fila vazia'
-        materializar(ordem_[0], n + 1, base, total)
+        materializar(do_lote(ordem_), n + 1, base, total)
     elif cmd == 'checar':
         import tempfile
         tmp = tempfile.mkdtemp()

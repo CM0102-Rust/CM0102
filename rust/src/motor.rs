@@ -603,8 +603,11 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x7260f0, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
     Prologo { endereco: 0x72aa80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x72adf0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x403350, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x402ac0, bytes: &[0x66, 0x83, 0x7c, 0x24, 0x38, 0xff] },
+    Prologo { endereco: 0x402e70, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 496;
+const N: usize = 499;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -32058,6 +32061,350 @@ unsafe extern "stdcall" fn comparar_codigo_da_posicao(m: i16) -> u8 {
 
 comparar_valor!(comparar_criterio_da_comissao, criterio_da_comissao, 357, () -> u32);
 
+// ---------- 208a leva: as áreas da interface (1): organizar a grade, iniciar e desenhar uma área (Area.cpp) ----------
+
+// A área (0xbf1 bytes, 249 por Display a partir de Display+4; criada pela lista 0x55fba0): +0 x1,
+// +4 y1, +8 x2, +0xc y2; +0x10 a primeira e +0x14 a última linha dos itens; +0x18 as marcas; as
+// grades de no máximo 30 colunas e 30 linhas: +0x1c início e +0x10c fim das colunas, +0x94 início e
+// +0x184 fim das linhas (i32, relativos a x1/y1); +0x1fc a linha pedida para a rolagem; +0x200 a
+// imagem guardada; +0x204 as áreas; +0x208 os itens (0x18c bytes cada); +0x20c a cor; +0x20e o item
+// dono (áreas que abrem por cima, -1 nas outras); +0x212 a lista dos itens (1200 i16); +0xb72 o
+// índice da área; +0xb74 quantos itens; +0xb76 o primeiro item à mostra; +0xb7a..0xbab a barra de
+// rolagem; +0xbab colunas e +0xbac linhas (u8); +0xbad os pesos das colunas e +0xbcb os das linhas
+// (30 u8 cada); +0xbe9 aberta; +0xbed tem barra de rolagem.
+
+/// O item `k` (i16) da tabela de itens `base` (0x18c bytes cada).
+fn area_item(base: usize, k: i16) -> usize {
+    (base as isize).wrapping_add(k as isize * 0x18c) as usize
+}
+
+/// O item da posição `i` (i16) da lista da área (+0x212).
+unsafe fn area_item_da_lista(area: usize, i: i16) -> usize {
+    let k = core::ptr::read_unaligned((area as isize + i as isize * 2 + 0x212) as *const i16);
+    area_item(*((area + 0x208) as *const usize), k)
+}
+
+unsafe fn area_i32(area: usize, desl: isize) -> i32 {
+    core::ptr::read_unaligned((area as isize).wrapping_add(desl) as *const i32)
+}
+
+unsafe fn area_gravar_i32(area: usize, desl: isize, v: i32) {
+    core::ptr::write_unaligned((area as isize).wrapping_add(desl) as *mut i32, v)
+}
+
+/// { 0x403350 } (thiscall, Area.cpp): organiza a grade da área. Grava o índice da área no item dono
+/// (+0x7c, se houver; e zera +0xbe9) e zera o primeiro item à mostra; fora das áreas só de grade
+/// (marca 0x80000), com colunas e linhas, calcula as margens (marca 1: 0; senão 2 nas laterais e, em
+/// cima e embaixo, 2 com a marca 0x10 ou uma linha só, 8 nas outras), liga a barra de rolagem (0x403600)
+/// quando os itens passam das linhas e reparte a largura e a altura pelos pesos. Mais de 30 colunas
+/// ou linhas: a original (caixa de erro, Area.cpp 497 e 507).
+unsafe extern "thiscall" fn organizar_area(area: usize) {
+    let marcas = *((area + 0x18) as *const u32);
+    let colunas = *((area + 0xbab) as *const u8);
+    let linhas = *((area + 0xbac) as *const u8);
+    if marcas & 0x80000 == 0 && colunas != 0 && (colunas > 30 || (linhas != 0 && linhas > 30)) {
+        // ponytail: a original grava o dono e o +0xb76 antes do erro; repetir é inofensivo (mesmos valores)
+        return orig::<unsafe extern "thiscall" fn(usize)>(496)(area);
+    }
+    crate::comparacao::ramo("telas organizar a area");
+    let dono = core::ptr::read_unaligned((area + 0x20e) as *const i16);
+    if dono != -1 {
+        *((area + 0xbe9) as *mut u32) = 0;
+        let item = area_item(*((area + 0x208) as *const usize), dono);
+        core::ptr::write_unaligned((item + 0x7c) as *mut u16, core::ptr::read_unaligned((area + 0xb72) as *const u16));
+    }
+    core::ptr::write_unaligned((area + 0xb76) as *mut i16, 0);
+    if marcas & 0x80000 != 0 || colunas == 0 || linhas == 0 {
+        return;
+    }
+    let (lado, cima): (i32, i32) = if marcas & 1 != 0 {
+        (0, 0)
+    } else if marcas & 0x10 != 0 || linhas == 1 {
+        (2, 2)
+    } else {
+        (2, 8)
+    };
+    let mut largura = area_i32(area, 8).wrapping_sub(2 * lado).wrapping_sub(area_i32(area, 0)).wrapping_add(1);
+    let altura = (-2 * cima).wrapping_sub(area_i32(area, 4)).wrapping_add(area_i32(area, 0xc)).wrapping_add(1);
+    if area_i32(area, 0x14).wrapping_add(1) > linhas as i32 {
+        let barra: unsafe extern "thiscall" fn(usize, i32, i32) = core::mem::transmute(0x403600usize);
+        barra(area, lado, cima);
+        largura = largura.wrapping_sub(0x16);
+    }
+    // colunas: +0x1c início e +0x10c fim, pelos pesos +0xbad
+    let pesos = |desl: usize, n: usize| (0..n).map(|k| *((area + desl + k) as *const u8) as i32).fold(0i32, |a, b| a.wrapping_add(b));
+    let n = *((area + 0xbab) as *const u8) as i32 - 1;
+    let soma = pesos(0xbad, (n + 1) as usize);
+    let mut acumulado = 0i32;
+    let mut c = 0i32;
+    while c <= n {
+        acumulado = acumulado.wrapping_add(*((area as isize + c as isize + 0xbad) as *const u8) as i32);
+        if c == 0 {
+            area_gravar_i32(area, 0x1c, lado);
+        } else {
+            area_gravar_i32(area, c as isize * 4 + 0x1c, area_i32(area, c as isize * 4 + 0x108).wrapping_add(2));
+        }
+        if c < *((area + 0xbab) as *const u8) as i32 - 1 {
+            area_gravar_i32(area, c as isize * 4 + 0x10c, acumulado.wrapping_mul(largura).wrapping_div(soma).wrapping_add(lado - 1));
+        } else {
+            area_gravar_i32(area, c as isize * 4 + 0x10c, largura.wrapping_add(lado - 1));
+        }
+        c += 1;
+        if c > *((area + 0xbab) as *const u8) as i32 - 1 {
+            break;
+        }
+    }
+    // linhas: +0x94 início e +0x184 fim, pelos pesos +0xbcb
+    let n = *((area + 0xbac) as *const u8) as i32 - 1;
+    let soma = pesos(0xbcb, (n + 1) as usize);
+    let mut acumulado = 0i32;
+    let mut l = 0i32;
+    while l <= n {
+        acumulado = acumulado.wrapping_add(*((area as isize + l as isize + 0xbcb) as *const u8) as i32);
+        if l == 0 {
+            area_gravar_i32(area, 0x94, cima);
+        } else {
+            area_gravar_i32(area, l as isize * 4 + 0x94, area_i32(area, l as isize * 4 + 0x180).wrapping_add(2));
+        }
+        let fim = if l < *((area + 0xbac) as *const u8) as i32 - 1 {
+            acumulado.wrapping_mul(altura).wrapping_div(soma).wrapping_add(cima - 1)
+        } else {
+            altura.wrapping_add(cima - 1)
+        };
+        area_gravar_i32(area, l as isize * 4 + 0x184, fim);
+        l += 1;
+        if l > *((area + 0xbac) as *const u8) as i32 - 1 {
+            break;
+        }
+    }
+}
+
+/// A área inteira, o +0x7c do item dono (se houver) e o ponteiro da barra de rolagem do teclado
+/// (0xad9c58, que a 0x403600 grava) têm de sair iguais.
+unsafe extern "thiscall" fn comparar_organizar_area(area: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(496);
+    let marcas = *((area + 0x18) as *const u32);
+    let colunas = *((area + 0xbab) as *const u8);
+    let linhas = *((area + 0xbac) as *const u8);
+    if marcas & 0x80000 == 0 && colunas != 0 && (colunas > 30 || (linhas != 0 && linhas > 30)) {
+        return o(area);
+    }
+    let mut reg = vec![(area, 0xbf1), (0xad9c58, 4)];
+    let dono = core::ptr::read_unaligned((area + 0x20e) as *const i16);
+    if dono != -1 {
+        reg.push((area_item(*((area + 0x208) as *const usize), dono) + 0x7c, 2));
+    }
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(area), || organizar_area(area));
+    PLACAR.registrar(igual, || format!("organizar_area {:#x}: diferencas em {:?}", area, diferencas_da_tela(&mo, &mr)));
+}
+
+/// { 0x402ac0 } (thiscall, Area.cpp): inicia a área. Área que abre por cima de um item (`dono` ≠ -1):
+/// pesos 1 nas 30 colunas e linhas, retângulo zero, 1 coluna e 0 linhas. Nas outras: ordena x1/x2 e
+/// y1/y2 (troca 0x90ba90), x1/y1 no mínimo 0 e x2/y2 no máximo a tela (0x31f/0x257 no exe de 800x600; o
+/// exe de 1920x1080 troca esses imediatos, lidos aqui do próprio exe). Grava os campos, zera a barra
+/// de rolagem e, fora das áreas só de grade (0x80000), copia os pesos (com 1..29 colunas/linhas e
+/// ponteiro) ou enche de 1 (inclusive com 30 ou mais: aí a original passa do vetor de 30, como aqui).
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn iniciar_area(
+    area: usize, areas: usize, itens: usize, indice: u32, x1: i32, y1: i32, x2: i32, y2: i32, colunas: u32,
+    pesos_colunas: usize, linhas: u32, pesos_linhas: usize, marcas: u32, cor: u32, dono: u32,
+) {
+    crate::comparacao::ramo("telas iniciar a area");
+    let linhas = travar_linhas(linhas);
+    let (mut x1, mut y1, mut x2, mut y2) = (x1, y1, x2, y2);
+    let (mut colunas, mut pesos_colunas, mut linhas, mut pesos_linhas) = (colunas as u8, pesos_colunas, linhas as u8, pesos_linhas);
+    if dono as u16 as i16 != -1 {
+        core::ptr::write_bytes((area + 0xbad) as *mut u8, 1, 30);
+        core::ptr::write_bytes((area + 0xbcb) as *mut u8, 1, 30);
+        x1 = 0;
+        y1 = 0;
+        x2 = 0;
+        y2 = 0;
+        colunas = 1;
+        linhas = 0;
+        pesos_colunas = 0;
+        pesos_linhas = 0;
+    } else {
+        let trocar: unsafe extern "C" fn(*mut i32, *mut i32, u32) = core::mem::transmute(0x90ba90usize);
+        if x1 > x2 {
+            trocar(&mut x1, &mut x2, 4);
+        }
+        if y1 > y2 {
+            trocar(&mut y1, &mut y2, 4);
+        }
+    }
+    let x1 = if x1 > 0 { x1 } else { 0 };
+    let y1 = if y1 > 0 { y1 } else { 0 };
+    // os limites da tela: imediatos de `cmp edx, imm` e `mov edx, imm` (0x402b7c) e `mov esi, imm` (0x402b8d)
+    let x2 = if x2 >= core::ptr::read_unaligned(0x402b7e as *const i32) { core::ptr::read_unaligned(0x402b85 as *const i32) } else { x2 };
+    let teto_y = core::ptr::read_unaligned(0x402b8e as *const i32);
+    let y2 = if y2 >= teto_y { teto_y } else { y2 };
+    area_gravar_i32(area, 0, x1);
+    area_gravar_i32(area, 4, y1);
+    area_gravar_i32(area, 8, x2);
+    area_gravar_i32(area, 0xc, y2);
+    *((area + 0xbac) as *mut u8) = linhas;
+    *((area + 0xbab) as *mut u8) = colunas;
+    area_gravar_i32(area, 0x10, 0x7fffffff);
+    area_gravar_i32(area, 0x14, 0);
+    core::ptr::write_bytes((area + 0xb7a) as *mut u8, 0, 0x31);
+    core::ptr::write_unaligned((area + 0x20e) as *mut u16, dono as u16);
+    core::ptr::write_unaligned((area + 0x204) as *mut usize, areas);
+    core::ptr::write_unaligned((area + 0x208) as *mut usize, itens);
+    core::ptr::write_unaligned((area + 0xb72) as *mut u16, indice as u16);
+    core::ptr::write_unaligned((area + 0x20c) as *mut u16, cor as u16);
+    area_gravar_i32(area, 0xbed, 0);
+    area_gravar_i32(area, 0x200, 0);
+    area_gravar_i32(area, 0xba6, 0);
+    core::ptr::write_unaligned((area + 0x210) as *mut i16, -1);
+    area_gravar_i32(area, 0xbe9, 1);
+    core::ptr::write_unaligned((area + 0xb76) as *mut i16, -1);
+    core::ptr::write_unaligned((area + 0x18) as *mut u32, marcas);
+    area_gravar_i32(area, 0x1fc, -1);
+    if marcas & 0x80000 != 0 {
+        return;
+    }
+    for (n, pesos, desl) in [(colunas, pesos_colunas, 0xbad), (linhas, pesos_linhas, 0xbcb)] {
+        if pesos != 0 && n != 0 && n < 30 {
+            core::ptr::copy(pesos as *const u8, (area + desl) as *mut u8, n as usize);
+        } else {
+            core::ptr::write_bytes((area + desl) as *mut u8, 1, n as usize);
+        }
+    }
+}
+
+/// A área e os 0xd9 bytes depois dela (os pesos de 30 ou mais linhas passam do fim) têm de sair iguais.
+#[allow(clippy::too_many_arguments)]
+/// A trava das 30 linhas: a grade da área tem no máximo 30 linhas (vetor fixo em +0xbcb; o Area::layout
+/// mostra a caixa "Area.cpp 507" acima disso, e o Area::init já escreve os pesos fora do vetor). Em
+/// 1920 × 1080 o relatório de uma partida antiga pede mais; travadas em 30, o resto vai para a barra de
+/// rolagem, como em 800 × 600 (onde nunca passa de 30 e a trava não muda nada). Fica no Area::init porque
+/// o começo do Display::add_area (0x55fba0) já é desvio do exe de 1080 (escala das coordenadas).
+// ponytail: as 30 linhas se espalham pela altura da área (linhas mais altas em 1080); layout pela
+// resolução de verdade fica para a modernização (PLANO_LIMITE.md); a original e a cópia recebem a trava
+// igual no comparador, então a comparação segue valendo
+fn travar_linhas(linhas: u32) -> u32 {
+    if linhas & 0xff > 30 {
+        crate::comparacao::ramo("telas linhas da area travadas em 30");
+        (linhas & !0xff) | 30
+    } else {
+        linhas
+    }
+}
+
+unsafe extern "thiscall" fn comparar_iniciar_area(
+    area: usize, areas: usize, itens: usize, indice: u32, x1: i32, y1: i32, x2: i32, y2: i32, colunas: u32,
+    pesos_colunas: usize, linhas: u32, pesos_linhas: usize, marcas: u32, cor: u32, dono: u32,
+) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, i32, i32, i32, u32, usize, u32, usize, u32, u32, u32)>(497);
+    let reg = [(area, 0xbcb + 0xff)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(
+        &reg,
+        || o(area, areas, itens, indice, x1, y1, x2, y2, colunas, pesos_colunas, travar_linhas(linhas), pesos_linhas, marcas, cor, dono),
+        || iniciar_area(area, areas, itens, indice, x1, y1, x2, y2, colunas, pesos_colunas, linhas, pesos_linhas, marcas, cor, dono),
+    );
+    PLACAR.registrar(igual, || format!("iniciar_area {:#x}: diferencas em {:?}", area, diferencas_da_tela(&mo, &mr)));
+}
+
+/// { 0x402e70 } (thiscall, Area.cpp): desenha a área. Com `redesenhar`, libera a imagem guardada
+/// (0x5e42b0); área que abre por cima guarda o fundo (0x5e3dd0); desenha o painel (0x5e5df0). Área só
+/// de grade (0x80000): as linhas da grade (0x5e3730, cor [0xae317e]) e fim. Nas outras: guarda o fundo
+/// da barra de rolagem, põe cada item à mostra na sua célula (as grades +0x1c/+0x10c e +0x94/+0x184,
+/// quando o item não tem retângulo próprio em +0x28/+0x30) e o desenha (0x5ee590) até passar da última
+/// linha; depois a barra (0x403c80). Sem o primeiro item à mostra (+0xb76 = -1): a original (caixa de
+/// erro Area.cpp 245 e a organização 0x403350).
+unsafe extern "thiscall" fn desenhar_area(area: usize, redesenhar: u32) {
+    if core::ptr::read_unaligned((area + 0xb76) as *const i16) == -1 {
+        return orig::<unsafe extern "thiscall" fn(usize, u32)>(498)(area, redesenhar);
+    }
+    crate::comparacao::ramo("telas desenhar a area");
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x5e42b0usize);
+    let guardar: unsafe extern "C" fn(i32, i32, i32, i32, usize) -> usize = core::mem::transmute(0x5e3dd0usize);
+    let imagem = (area + 0x200) as *mut usize;
+    if redesenhar != 0 && *imagem != 0 {
+        liberar(*imagem);
+        *imagem = 0;
+    }
+    if core::ptr::read_unaligned((area + 0x20e) as *const i16) != -1 && *imagem == 0 {
+        *imagem = guardar(area_i32(area, 0), area_i32(area, 4), area_i32(area, 8), area_i32(area, 0xc), 0);
+    }
+    // ponytail: a original empurra edx com a cor em dx e, em cima, sobra de chamadas anteriores
+    // (imprevisível); a cor é u16 para o painel, aqui estendida com zero
+    let painel: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32, u32) = core::mem::transmute(0x5e5df0usize);
+    let cor = core::ptr::read_unaligned((area + 0x20c) as *const u16) as u32;
+    painel(area_i32(area, 0), area_i32(area, 4), area_i32(area, 8), area_i32(area, 0xc), *((area + 0x18) as *const u32), cor, 0);
+    if *((area + 0x18) as *const u32) & 0x80000 != 0 {
+        let linha: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32) = core::mem::transmute(0x5e3730usize);
+        let mut k: i16 = 1;
+        while *((area + 0xbac) as *const u8) > 1 && k < *((area + 0xbac) as *const u8) as i16 {
+            let y1 = area_i32(area, 4);
+            let y = area_i32(area, 0xc).wrapping_sub(y1).wrapping_add(1).wrapping_mul(k as i32) / *((area + 0xbac) as *const u8) as i32;
+            let y = y.wrapping_add(y1);
+            linha(area_i32(area, 0), y, area_i32(area, 8), y, 2, *(0xae317e as *const u16) as u32);
+            k = k.wrapping_add(1);
+        }
+        let mut k: i16 = 1;
+        while *((area + 0xbab) as *const u8) > 1 && k < *((area + 0xbab) as *const u8) as i16 {
+            let x1 = area_i32(area, 0);
+            let x = area_i32(area, 8).wrapping_sub(x1).wrapping_add(1).wrapping_mul(k as i32) / *((area + 0xbab) as *const u8) as i32;
+            let x = x.wrapping_add(x1);
+            linha(x, area_i32(area, 4), x, area_i32(area, 0xc), 2, *(0xae317e as *const u16) as u32);
+            k = k.wrapping_add(1);
+        }
+        return;
+    }
+    if area_i32(area, 0xbed) != 0 && *imagem == 0 {
+        *imagem = guardar(area_i32(area, 0), area_i32(area, 4), area_i32(area, 8).wrapping_sub(0x16), area_i32(area, 0xc), 0);
+    }
+    let desenhar_item: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x5ee590usize);
+    let total = || core::ptr::read_unaligned((area + 0xb74) as *const i16);
+    let mut i = core::ptr::read_unaligned((area + 0xb76) as *const i16);
+    let mut parar = false;
+    while i < total() && !parar {
+        let item = area_item_da_lista(area, i);
+        let primeiro = area_item_da_lista(area, core::ptr::read_unaligned((area + 0xb76) as *const i16));
+        let d = area_i32(item, 0x24).wrapping_sub(area_i32(primeiro, 0x24));
+        if d > *((area + 0xbac) as *const u8) as i32 - 1 {
+            parar = true;
+        } else {
+            area_posicionar_item(area, item, d);
+            desenhar_item(area_item_da_lista(area, i), redesenhar);
+        }
+        i = i.wrapping_add(1);
+    }
+    if area_i32(area, 0xbed) != 0 {
+        let barra: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x403c80usize);
+        barra(area);
+    }
+}
+
+/// O retângulo do item na tela (+0x10 x1, +0x14 y1, +0x18 x2, +0x1c y2): o próprio (+0x28..+0x34)
+/// ou, onde for 0, a célula da grade (coluna +0x20; linha = primeira linha da área + `d`).
+unsafe fn area_posicionar_item(area: usize, item: usize, d: i32) {
+    let (mut x1, mut x2, mut y1, mut y2) = (area_i32(item, 0x28), area_i32(item, 0x2c), area_i32(item, 0x30), area_i32(item, 0x34));
+    if x1 == 0 {
+        let c = area_i32(item, 0x20) as isize;
+        x1 = area_i32(area, c * 4 + 0x1c).wrapping_add(area_i32(area, 0));
+        x2 = area_i32(area, c * 4 + 0x10c).wrapping_add(area_i32(area, 0));
+    }
+    if y1 == 0 {
+        let l = area_i32(area, 0x10).wrapping_add(d) as isize;
+        y1 = area_i32(area, l * 4 + 0x94).wrapping_add(area_i32(area, 4));
+        y2 = area_i32(area, l * 4 + 0x184).wrapping_add(area_i32(area, 4));
+    }
+    area_gravar_i32(item, 0x10, x1);
+    area_gravar_i32(item, 0x18, x2);
+    area_gravar_i32(item, 0x14, y1);
+    area_gravar_i32(item, 0x1c, y2);
+}
+
+// ponytail: desenhar guarda e libera imagens (aloca) e escurece o fundo (desenhar duas vezes escurece
+// duas vezes): no modo comparação só a original roda; a cópia se prova no jogo do Lucas em modo Rust
+// (contador "telas desenhar a area" no ddraw.log)
+unsafe extern "thiscall" fn comparar_desenhar_area(area: usize, redesenhar: u32) {
+    orig::<unsafe extern "thiscall" fn(usize, u32)>(498)(area, redesenhar)
+}
+
 // ---------- 207a leva: as telas da partida (15): a conferência da escalação e o índice das estatísticas da partida no save (match_screens.cpp, match_stats.cpp) ----------
 
 /// strcpy de C (a original copia com `rep movs`).
@@ -43593,6 +43940,9 @@ pub unsafe fn instalar(comparando: bool) {
         desenhar_conferencia_da_escalacao as *const () as usize,
         carregar_estatisticas_da_partida as *const () as usize,
         salvar_estatisticas_da_partida as *const () as usize,
+        organizar_area as *const () as usize,
+        iniciar_area as *const () as usize,
+        desenhar_area as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -44091,6 +44441,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_desenhar_conferencia_da_escalacao as *const () as usize,
         comparar_carregar_estatisticas_da_partida as *const () as usize,
         comparar_salvar_estatisticas_da_partida as *const () as usize,
+        comparar_organizar_area as *const () as usize,
+        comparar_iniciar_area as *const () as usize,
+        comparar_desenhar_area as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -44203,7 +44556,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito", "motor_zagueiros_do_lado_sem_conflito", "motor_construir_arbitro", "motor_destruir_jogador_da_partida", "motor_evento_na_frente", "motor_construir_fila_da_narracao", "motor_liberar_tabelas_de_eventos", "motor_ordem_das_partidas_do_dia", "motor_ordem_de_acao", "motor_variante_do_evento", "motor_combinar_com_o_anterior", "motor_comentario_de_contexto", "motor_construir_jogador_da_partida", "motor_proximo_evento", "motor_nome_do_jogador_na_narracao", "motor_habilidade_vista", "motor_cumprir_regra_do_elenco", "motor_nota_fora_da_partida", "motor_nota_para_a_vaga", "motor_pessoa_na_lista", "motor_ficha_de_contrato", "motor_desgaste_diario", "motor_registro_da_formacao", "motor_peso_da_competicao", "motor_gravar_dado_da_noticia", "motor_recuperar_lesao", "motor_pessoa_na_lista_de_transferencias", "motor_punicao_da_tabela", "motor_bits_do_registro", "motor_competicao_marcada", "motor_registro_da_liga", "motor_media_do_jogo", "motor_valor_do_contrato", "motor_nivel_para_a_selecao", "motor_oferta_de_contrato", "motor_oferta_acertada", "motor_oferta_fechada", "motor_rotulo_do_controle", "motor_fechar_tela_da_partida", "motor_abrir_tela_de_espera", "motor_noticia_com_resposta_2", "motor_tem_noticia", "motor_importancia_da_partida", "motor_abrir_ultimos_placares", "motor_montar_ultimos_placares", "motor_responder_ultimos_placares", "motor_abrir_detalhes_da_partida", "motor_responder_detalhes_da_partida", "motor_fechar_detalhes_da_partida", "motor_disciplina_temporada_nova", "motor_disciplina_do_dia", "motor_disciplina_gravar_vaga", "motor_marcar_contrato_acertado", "motor_desmarcar_contrato_acertado", "motor_vaga_da_oferta", "motor_abrir_tela_da_partida", "motor_responder_ultimos_placares_da_partida", "motor_responder_estatisticas_do_time", "motor_painel_dos_ultimos_placares", "motor_sem_tela_seguinte", "motor_cor_do_titulo", "motor_lista_de_observados", "motor_entrada_do_treino", "motor_gravar_carga_de_treino", "motor_e_competicao_do_amistoso", "motor_preencher_data_internacional", "motor_limpar_registro_de_tecnico", "motor_tirar_contrato_de_emprestimo", "motor_desmarcar_lances_pelo_jogador", "motor_tecnico_substituto", "motor_clube_do_contrato_acertado", "motor_registrar_jogo_pela_selecao", "motor_punicao_guardada", "motor_entrada_da_aposentadoria", "motor_registrar_competicoes_do_amistoso", "motor_vaga_da_noticia", "motor_tirar_percentual_da_proxima_venda", "motor_tirar_bonus_por_jogo", "motor_tirar_bonus_pela_selecao", "motor_tirar_reserva_de_tecnico", "motor_tirar_jogador_do_banco", "motor_premio_da_liga", "motor_ultima_nota_do_jogador", "motor_vaga_da_busca", "motor_tipo_da_lista_da_busca", "motor_ordem_do_confronto", "motor_atualizar_confronto_direto", "motor_marcar_termos_oferecidos", "motor_hora_das_ferias", "motor_escalacao_guardada", "motor_tecnico_da_busca", "motor_abrir_jogos_do_dia", "motor_responder_jogos_do_dia", "motor_vaga_do_mais_bem_avaliado", "motor_estatistica_da_liga_do_jogador", "motor_entrada_do_jogo_bate", "motor_balde_do_registro", "motor_atribuir_bloco_do_time", "motor_atribuir_linha_do_jogador", "motor_contar_placar_ao_vivo", "motor_responder_continuar_da_partida", "motor_abrir_escalacao_da_partida", "motor_responder_escalacao_da_partida", "motor_painel_das_estatisticas_do_time", "motor_painel_das_notas_dos_jogadores", "motor_painel_das_estatisticas_da_partida", "motor_valores_das_estatisticas_da_partida", "motor_valores_das_zonas_de_acao", "motor_valores_das_notas_dos_jogadores", "motor_painel_das_zonas_de_acao", "motor_painel_do_relatorio_da_partida", "motor_montar_jogos_do_dia", "motor_preencher_estatisticas_do_time", "motor_atualizar_ultimos_placares", "motor_esperar_os_outros_jogadores", "motor_ler_registro_da_partida", "motor_registrar_partida", "motor_gravar_registro_da_partida", "motor_desenhar_conferencia_da_escalacao", "motor_carregar_estatisticas_da_partida", "motor_salvar_estatisticas_da_partida",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito", "motor_zagueiros_do_lado_sem_conflito", "motor_construir_arbitro", "motor_destruir_jogador_da_partida", "motor_evento_na_frente", "motor_construir_fila_da_narracao", "motor_liberar_tabelas_de_eventos", "motor_ordem_das_partidas_do_dia", "motor_ordem_de_acao", "motor_variante_do_evento", "motor_combinar_com_o_anterior", "motor_comentario_de_contexto", "motor_construir_jogador_da_partida", "motor_proximo_evento", "motor_nome_do_jogador_na_narracao", "motor_habilidade_vista", "motor_cumprir_regra_do_elenco", "motor_nota_fora_da_partida", "motor_nota_para_a_vaga", "motor_pessoa_na_lista", "motor_ficha_de_contrato", "motor_desgaste_diario", "motor_registro_da_formacao", "motor_peso_da_competicao", "motor_gravar_dado_da_noticia", "motor_recuperar_lesao", "motor_pessoa_na_lista_de_transferencias", "motor_punicao_da_tabela", "motor_bits_do_registro", "motor_competicao_marcada", "motor_registro_da_liga", "motor_media_do_jogo", "motor_valor_do_contrato", "motor_nivel_para_a_selecao", "motor_oferta_de_contrato", "motor_oferta_acertada", "motor_oferta_fechada", "motor_rotulo_do_controle", "motor_fechar_tela_da_partida", "motor_abrir_tela_de_espera", "motor_noticia_com_resposta_2", "motor_tem_noticia", "motor_importancia_da_partida", "motor_abrir_ultimos_placares", "motor_montar_ultimos_placares", "motor_responder_ultimos_placares", "motor_abrir_detalhes_da_partida", "motor_responder_detalhes_da_partida", "motor_fechar_detalhes_da_partida", "motor_disciplina_temporada_nova", "motor_disciplina_do_dia", "motor_disciplina_gravar_vaga", "motor_marcar_contrato_acertado", "motor_desmarcar_contrato_acertado", "motor_vaga_da_oferta", "motor_abrir_tela_da_partida", "motor_responder_ultimos_placares_da_partida", "motor_responder_estatisticas_do_time", "motor_painel_dos_ultimos_placares", "motor_sem_tela_seguinte", "motor_cor_do_titulo", "motor_lista_de_observados", "motor_entrada_do_treino", "motor_gravar_carga_de_treino", "motor_e_competicao_do_amistoso", "motor_preencher_data_internacional", "motor_limpar_registro_de_tecnico", "motor_tirar_contrato_de_emprestimo", "motor_desmarcar_lances_pelo_jogador", "motor_tecnico_substituto", "motor_clube_do_contrato_acertado", "motor_registrar_jogo_pela_selecao", "motor_punicao_guardada", "motor_entrada_da_aposentadoria", "motor_registrar_competicoes_do_amistoso", "motor_vaga_da_noticia", "motor_tirar_percentual_da_proxima_venda", "motor_tirar_bonus_por_jogo", "motor_tirar_bonus_pela_selecao", "motor_tirar_reserva_de_tecnico", "motor_tirar_jogador_do_banco", "motor_premio_da_liga", "motor_ultima_nota_do_jogador", "motor_vaga_da_busca", "motor_tipo_da_lista_da_busca", "motor_ordem_do_confronto", "motor_atualizar_confronto_direto", "motor_marcar_termos_oferecidos", "motor_hora_das_ferias", "motor_escalacao_guardada", "motor_tecnico_da_busca", "motor_abrir_jogos_do_dia", "motor_responder_jogos_do_dia", "motor_vaga_do_mais_bem_avaliado", "motor_estatistica_da_liga_do_jogador", "motor_entrada_do_jogo_bate", "motor_balde_do_registro", "motor_atribuir_bloco_do_time", "motor_atribuir_linha_do_jogador", "motor_contar_placar_ao_vivo", "motor_responder_continuar_da_partida", "motor_abrir_escalacao_da_partida", "motor_responder_escalacao_da_partida", "motor_painel_das_estatisticas_do_time", "motor_painel_das_notas_dos_jogadores", "motor_painel_das_estatisticas_da_partida", "motor_valores_das_estatisticas_da_partida", "motor_valores_das_zonas_de_acao", "motor_valores_das_notas_dos_jogadores", "motor_painel_das_zonas_de_acao", "motor_painel_do_relatorio_da_partida", "motor_montar_jogos_do_dia", "motor_preencher_estatisticas_do_time", "motor_atualizar_ultimos_placares", "motor_esperar_os_outros_jogadores", "motor_ler_registro_da_partida", "motor_registrar_partida", "motor_gravar_registro_da_partida", "motor_desenhar_conferencia_da_escalacao", "motor_carregar_estatisticas_da_partida", "motor_salvar_estatisticas_da_partida", "motor_organizar_area", "motor_iniciar_area", "motor_desenhar_area",
     ];
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {

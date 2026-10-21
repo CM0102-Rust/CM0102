@@ -28,6 +28,7 @@ def main():
     assert st.strip(), 'motor.rs sem mudanças: a leva já foi publicada?'
     rodar(sys.executable, os.path.join('levas', str(n), 'docs.py'))
     rodar(sys.executable, os.path.join('engenharia-reversa', 'glossario.py'))
+    rodar(sys.executable, os.path.join('engenharia-reversa', 'placar_arquivos.py'))
     titulo = open(os.path.join(RAIZ, 'levas', str(n), 'LEIA.md'), encoding='utf-8').readline().split('—', 1)[1].strip()
     total = re.search(r'\*\*Estado:\*\* \d+ levas, (\d+) rotinas', open(os.path.join(RAIZ, 'README.md'), encoding='utf-8').read()).group(1)
     rodar('git', 'add', '-A', 'docs', 'README.md', 'README.en.md', 'wiki', os.path.join('levas', str(n)),
@@ -36,7 +37,7 @@ def main():
           os.path.join('engenharia-reversa', 'fila.py'), os.path.join('engenharia-reversa', 'molde_docs.py'), os.path.join('levas', 'fila'),
           os.path.join('rust', 'src', 'motor.rs'))
     prefixo = 'Motor' if 'Motor de partidas' in open(os.path.join(RAIZ, 'levas', str(n), 'docs.py'), encoding='utf-8').read() else 'Simulacao'
-    msg = (f'{prefixo}: {n}a leva ({total} rotinas): {titulo}\n\nComparacao de verdade nas tres rotinas; cadeia completa '
+    msg = (f'{prefixo}: {n}a leva ({total} rotinas): {titulo}\n\nComparacao de verdade em cada rotina; cadeia completa '
            f'(levas/{n}/cadeia.txt): jogo real 0 divergencias, carreiras iguais a referencia 034ff3eb.\n\n'
            'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n')
     rodar('git', 'commit', '-q', '-m', msg)

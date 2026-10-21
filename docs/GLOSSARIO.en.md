@@ -166,6 +166,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x700420 | `defesa_do_goleiro` | goalkeeper_save |
 | 0x6c87e0 | `desafio_adversario` | opposition_challenge |
 | 0x6eecb0 | `desempenho_na_partida` | match_performance |
+| 0x402e70 | `desenhar_area` | Area::draw |
 | 0x7260f0 | `desenhar_conferencia_da_escalacao` | match_screens_draw_team_selection |
 | 0x70c040 | `desfecho_do_chute` | shot_outcome |
 | 0x6f56c0 | `desgastar` | tire (fatigue) |
@@ -274,6 +275,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x600c90 | `humano_manda_no_clube` | human_runs_club |
 | 0x76d430 | `idades_da_selecao` | national_team_ages |
 | 0x5221f0 | `importancia_da_partida` | cup_match_importance |
+| 0x402ac0 | `iniciar_area` | Area::init |
 | 0x6b5a70 | `iniciar_proxima_partida` | start_next_match |
 | 0x6e9470 | `iniciar_rigor` | init_strictness |
 | 0x6ddab0 | `instrucoes` | instructions |
@@ -388,6 +390,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x4b07d0 | `ordem_por_80_desc` | order_by_80_desc |
 | 0x6e0fe0 | `ordem_por_condicao` | order_by_condition |
 | 0x6e0df0 | `ordem_por_tabela` | order_by_table |
+| 0x403350 | `organizar_area` | Area::layout |
 | 0x71e040 | `painel_das_estatisticas_da_partida` | draw_match_stats_panel |
 | 0x7217a0 | `painel_das_estatisticas_do_time` | draw_team_stats_panel |
 | 0x722ed0 | `painel_das_notas_dos_jogadores` | draw_player_ratings_panel |

@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologo` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 487 de 6709 funções, 459.5 de 5528.0 KB (**8.31%**) · 43 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 520 de 6709 funções, 507.2 de 5528.0 KB (**9.18%**) · 44 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -12,13 +12,14 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `match_official.cpp` | 8/8 | 6.3/6.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `match_pl.cpp` | 96/96 | 179.8/179.8 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `match_day.cpp` | 19/20 | 15.7/16.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **95.0%** |
+| `match_screens.cpp` | 42/55 | 52.4/77.3 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **67.8%** |
+| `Area.cpp` | 3/15 | 2.0/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.7%** |
 | `formation.cpp` | 18/45 | 8.3/26.5 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **31.3%** |
 | `zipdir.cpp` | 3/10 | 1.3/4.8 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **28.1%** |
 | `tactics.cpp` | 14/29 | 4.7/23.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.4%** |
 | `human_manager.cpp` | 11/61 | 3.2/25.5 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.7%** |
-| `match_screens.cpp` | 13/55 | 6.9/77.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.9%** |
+| `player_stats.cpp` | 6/34 | 2.4/28.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.4%** |
 | `main.cpp` | 2/16 | 0.2/3.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.2%** |
-| `player_stats.cpp` | 5/34 | 2.2/28.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **7.5%** |
 | `league.cpp` | 8/61 | 1.9/35.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.2%** |
 | `fog_of_war.cpp` | 4/34 | 0.6/12.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.9%** |
 | `media.cpp` | 6/69 | 9.9/202.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.9%** |
@@ -50,4 +51,4 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `manager_manager.cpp` | 1/98 | 0.2/129.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.2%** |
 | `Setup.cpp` | 1/107 | 0.0/120.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.0%** |
 
-Os outros 350 arquivos ainda não têm rotina em Rust.
+Os outros 349 arquivos ainda não têm rotina em Rust.

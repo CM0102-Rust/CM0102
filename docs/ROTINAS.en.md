@@ -1929,3 +1929,13 @@ Mutations: `mutacoes/leva206.py` (3, by the career to 2002-06-01, confirming the
 | `salvar_estatisticas_da_partida()` | 0x72adf0 | thiscall | match_stats.cpp: writes the record index, the four bucket cursors and the counts to match_stats.dat in the saved game |
 
 Mutations: `mutacoes/leva207.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Match engine, 208th batch — the interface areas (1): laying out the grid, initialising and drawing an area (with the 30-row clamp: the 1080 report "Area.cpp 507") (official on 2026-10-21)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `organizar_area()` | 0x403350 | thiscall | Area.cpp: splits the area width and height by the column and row weights (up to 30 each; more raises the Area.cpp 497/507 box) and sets up the scrollbar |
+| `iniciar_area()` | 0x402ac0 | thiscall | Area.cpp: initialises the area: rectangle clamped to the screen, fields, cleared scrollbar and the column and row weights; the visible rows clamped at 30 (the grid size), the rest goes to the scroll bar |
+| `desenhar_area()` | 0x402e70 | thiscall | Area.cpp: draws the area: the panel, the grid lines or each visible widget in its cell, and the scrollbar |
+
+Mutations: `mutacoes/leva208.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

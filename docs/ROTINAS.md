@@ -1927,3 +1927,13 @@ Mutações: `mutacoes/leva206.py` (3, pela carreira até 2002-06-01, confirmando
 | `salvar_estatisticas_da_partida()` | 0x72adf0 | thiscall | match_stats.cpp: grava no match_stats.dat do save o índice dos registros, os cursores dos quatro baldes e as contagens |
 
 Mutações: `mutacoes/leva207.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 208ª leva — as áreas da interface (1): organizar a grade, iniciar e desenhar uma área (com a trava das 30 linhas: o "Area.cpp 507" do relatório em 1080) (oficial em 21/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `organizar_area()` | 0x403350 | thiscall | Area.cpp: reparte a largura e a altura da área pelos pesos das colunas e linhas (até 30 de cada; mais dá a caixa Area.cpp 497/507) e liga a barra de rolagem |
+| `iniciar_area()` | 0x402ac0 | thiscall | Area.cpp: inicia a área: retângulo limitado à tela, campos, barra de rolagem zerada e os pesos das colunas e linhas; as linhas à mostra travadas em 30 (o tamanho da grade), o resto vai para a barra de rolagem |
+| `desenhar_area()` | 0x402e70 | thiscall | Area.cpp: desenha a área: o painel, as linhas da grade ou cada item à mostra na sua célula, e a barra de rolagem |
+
+Mutações: `mutacoes/leva208.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
