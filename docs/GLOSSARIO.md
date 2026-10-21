@@ -260,6 +260,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6d98b0 | `gravar_eventos` | record_events |
 | 0x8967d0 | `gravar_formacao_tatica` | set_tactic_formation |
 | 0x8984d0 | `gravar_linha_tatica` | write_tactics_row |
+| 0x729820 | `gravar_registro_da_partida` | Match_Stats::write_match_record |
 | 0x896a90 | `gravar_vaga_tatica` | set_tactic_slot |
 | 0x62ec00 | `gravidade_da_lesao` | injury_severity |
 | 0x6854a0 | `grupo_decidido` | group_decided |
@@ -302,6 +303,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6d9e50 | `ler_eventos_cfg` | read_events_cfg |
 | 0x8983f0 | `ler_linha_tatica` | read_tactics_row |
 | 0x76d7b0 | `ler_marca_da_pessoa` | read_person_mark |
+| 0x729600 | `ler_registro_da_partida` | Match_Stats::read_match_record |
 | 0x6cfe10 | `lesao_na_dividida` | tackle_injury |
 | 0x6d0980 | `lesionar` | injure |
 | 0x6d5b50 | `liberar_tabelas_de_eventos` | free_event_tables |
@@ -448,6 +450,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6bb9a0 | `registrar_lance` | record_move |
 | 0x62be00 | `registrar_lesao` | register_injury |
 | 0x79ce10 | `registrar_nota_do_arbitro` | record_referee_grade |
+| 0x7293f0 | `registrar_partida` | Match_Stats::record_match |
 | 0x7003b0 | `registrar_posse` | record_possession |
 | 0x896570 | `registro_da_formacao` | formation_record |
 | 0x6826d0 | `registro_da_liga` | league_record |

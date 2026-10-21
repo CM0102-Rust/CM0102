@@ -1909,3 +1909,13 @@ Mutations: `mutacoes/leva204.py` (0, by the career to 2002-06-01, confirming the
 | `esperar_os_outros_jogadores()` | 0x727fb0 | cdecl | match_screens.cpp: in a network game, waits for the other humans of the same fixture or closes the screens, shows the notice and opens the match screen |
 
 Mutations: `mutacoes/leva205.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 206th batch — the match statistics: reading and writing the record in the temporary file and recording the match (official on 2026-10-21)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `ler_registro_da_partida()` | 0x729600 | thiscall | match_stats.cpp: reads one match statistics record (0xd7a bytes) from match_stats_matches.tmp by index |
+| `registrar_partida()` | 0x7293f0 | thiscall | match_stats.cpp: fills the record of a finished match and writes it, except for excluded matches |
+| `gravar_registro_da_partida()` | 0x729820 | thiscall | match_stats.cpp: writes the events and the record into the fixture's slot (or the bucket cursor's slot, which wraps around) and updates the index |
+
+Mutations: `mutacoes/leva206.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 1 caught. `l_tamanho` escaped: reading the match record (0x729600) only runs when the report of a played match is opened; the automatic career opens no screens. `r_excluido` escaped: in the career the fixture is never the [0x9cf684] competition one, so the "or" is decided by its first half and the record +0x4c flag is never read. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
