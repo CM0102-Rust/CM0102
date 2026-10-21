@@ -144,16 +144,17 @@ unsafe extern "C" fn preencher_estatisticas_do_time(modo: u32, area: usize) {
                     estilo = 1;
                     if !(foto != 0 && igual(0x1bc) && igual(0x1bd)) {
                         let (a, d) = (b(0x1bc), b(0x1bd));
+                        // a cor do cartao vai no fundo da celula ([esp+0x1c] na original), nao no texto
                         if codigo == 1 {
                             if a != 0 {
                                 marcas = 0x20030;
-                                cor = cor_de(0xaebdec);
+                                fundo = cor_de(0xaebdec);
                             } else if d != 0 {
                                 marcas = 0x20030;
-                                cor = cor_de(0xae31a8);
+                                fundo = cor_de(0xae31a8);
                             }
                         } else if a != 0 && d != 0 {
-                            cor = cor_de(0xae31a8);
+                            fundo = cor_de(0xae31a8);
                             marcas = 0x40030;
                         }
                     }

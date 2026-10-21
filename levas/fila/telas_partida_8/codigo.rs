@@ -270,10 +270,20 @@ unsafe extern "C" fn comparar_painel_das_estatisticas_do_time(lado: u32, topo: *
 
 unsafe extern "C" fn comparar_painel_das_notas_dos_jogadores(topo: *mut i32, base: *mut i32) {
     let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%);
+    // ponytail: sem a copia do estado (parametro 0x1d) a atualizacao dentro do painel a aloca, e cada
+    // lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho
+    if parametro_da_tela(0x1d) == 0 {
+        return o(topo, base);
+    }
     comparar_painel_pela_lista("painel_das_notas_dos_jogadores", || o(topo, base), || painel_das_notas_dos_jogadores(topo, base));
 }
 
 unsafe extern "C" fn comparar_painel_das_estatisticas_da_partida(topo: *mut i32, base: *mut i32) {
     let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I2%%);
+    // ponytail: sem a copia do estado (parametro 0x1d) a atualizacao dentro do painel a aloca, e cada
+    // lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho
+    if parametro_da_tela(0x1d) == 0 {
+        return o(topo, base);
+    }
     comparar_painel_pela_lista("painel_das_estatisticas_da_partida", || o(topo, base), || painel_das_estatisticas_da_partida(topo, base));
 }

@@ -1817,3 +1817,13 @@ Mutações: `mutacoes/leva195.py` (3, pela carreira até 2002-06-01, confirmando
 | `marcar_termos_oferecidos()` | 0x8c1f80 | thiscall | transfer_manager.cpp: marca que a oferta de transferência teve os termos de contrato oferecidos ao jogador |
 
 Mutações: `mutacoes/leva196.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 1 acusadas. `c_saldo` escapou: nenhuma liga da carreira desempata pelo confronto direto com o saldo (a minitabela não decide). `c_empate` escapou: os pontos por empate do confronto direto não decidem nenhuma classificação da carreira. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 197ª leva — o registro do técnico humano (hora das férias e escalação guardada) e o técnico da busca (oficial em 21/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `hora_das_ferias()` | 0x5fdc30 | thiscall | human_manager.cpp: a hora guardada quando o técnico humano saiu de férias |
+| `escalacao_guardada()` | 0x5fed50 | thiscall | human_manager.cpp: o endereço da escalação guardada do técnico humano (16 pares) |
+| `tecnico_da_busca()` | 0x7ae570 | thiscall | player_search.cpp: grava na busca de jogadores o id do técnico humano |
+
+Mutações: `mutacoes/leva197.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 3 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

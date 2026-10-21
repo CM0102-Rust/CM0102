@@ -192,6 +192,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x849ce0 | `entrada_da_lista` | shortlist_entry |
 | 0x5d5ac0 | `entrada_do_treino` | training_manager_get_player_entry |
 | 0x6cdd00 | `entrar_em_campo` | take_the_field |
+| 0x5fed50 | `escalacao_guardada` | HUMAN_MANAGER::get_saved_lineup |
 | 0x6e2000 | `escalar` | pick |
 | 0x6dbc50 | `escalar_automatico` | select_automatically |
 | 0x6db500 | `escalar_lado` | select_side |
@@ -256,6 +257,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x896fe0 | `guardar_instrucoes` | store_instructions |
 | 0x6dbb10 | `guardar_tatica` | store_tactic |
 | 0x6e86d0 | `habilidade_vista` | perceived_ability |
+| 0x5fdc30 | `hora_das_ferias` | HUMAN_MANAGER::get_holiday_stamp |
 | 0x600c90 | `humano_manda_no_clube` | human_runs_club |
 | 0x76d430 | `idades_da_selecao` | national_team_ages |
 | 0x5221f0 | `importancia_da_partida` | cup_match_importance |
@@ -478,6 +480,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5fd6b0 | `tecnico_9a06` | manager_9a06 |
 | 0x5fe040 | `tecnico_9ace` | manager_9ace |
 | 0x5fea50 | `tecnico_9b23` | manager_9b23 |
+| 0x7ae570 | `tecnico_da_busca` | PLAYER_SEARCH::set_manager |
 | 0x600e90 | `tecnico_substituto` | human_manager_get_stand_in_manager |
 | 0x6b59a0 | `tem_jogo` | has_match |
 | 0x735840 | `tem_noticia` | has_story |

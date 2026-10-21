@@ -197,7 +197,9 @@ unsafe extern "C" fn montar_tela_da_partida() {
     }
 
     // a narração, o relógio e as setas
-    let narracao = lista(display_do_humano(), 0, 0, 0x59, 0x257, 1, 0, 1, 0, 1, 0, MENOS1);
+    // o y2 e o imediato do push em 0x719345: 0x257 no exe 800x600, 0x437 no cm0102-1080 (resolucao.py)
+    let y2 = core::ptr::read_unaligned(0x719346 as *const u32) as usize;
+    let narracao = lista(display_do_humano(), 0, 0, 0x59, y2, 1, 0, 1, 0, 1, 0, MENOS1);
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
     let fundo = caminho(0x9b5348, 0xa16448);
     linha(display_do_humano(), 0x400, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0xc, 1, 0, fundo, 0, 0, 0, narracao);
@@ -952,7 +954,8 @@ unsafe fn comparar_montagem_da_partida(nome: &str, extra: &[(usize, usize)], ori
 unsafe extern "C" fn comparar_montar_tela_da_partida() {
     let o = orig::<unsafe extern "C" fn()>(%%I0%%);
     let aba = parametro_da_tela(2) as u8;
-    if parametro_da_tela(0x1d) != 0 || parametro_da_tela(7) != 0 || matches!(aba, 1 | 3 | 10) {
+    // as abas 2 (estatisticas) e 7 (notas) alocam a copia do estado 0x1d quando ela falta: tambem so a original
+    if parametro_da_tela(0x1d) != 0 || parametro_da_tela(7) != 0 || matches!(aba, 1 | 2 | 3 | 7 | 10) {
         // ponytail: liberar, narrar com som e alocar não rodam duas vezes; esses casos se provam no modo Rust
         return o();
     }
@@ -992,7 +995,8 @@ unsafe extern "C" fn comparar_responder_tela_da_partida(item: u32) -> i32 {
 unsafe extern "C" fn comparar_montar_detalhes_da_partida() {
     let o = orig::<unsafe extern "C" fn()>(%%I2%%);
     let aba = parametro_da_tela(2) as u8;
-    if parametro_da_tela(0x1d) != 0 || parametro_da_tela(0x1f) == 0 || parametro_da_tela(0x20) == 0 || matches!(aba, 1 | 3 | 4) {
+    // as abas 2 (estatisticas) e 6 (notas) alocam a copia do estado 0x1d: tambem so a original
+    if parametro_da_tela(0x1d) != 0 || parametro_da_tela(0x1f) == 0 || parametro_da_tela(0x20) == 0 || matches!(aba, 1 | 2 | 3 | 4 | 6) {
         // ponytail: alocar, liberar e narrar não rodam duas vezes; esses casos se provam no modo Rust
         return o();
     }

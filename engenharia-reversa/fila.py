@@ -106,8 +106,12 @@ def main():
         base = int(re.search(r'\];\nconst N: usize = (\d+);', m).group(1))
         # o exe de trabalho (1920x1080) é o cm0102.exe com patches (resolucao.py): rotina alterada nele não
         # se porta igual à original (187a: a 0x5e5cd0, altura da fonte, salta para um trecho novo)
-        # ponytail: janela fixa de 0x100 bytes a partir do começo; o fim real da rotina pede o pacote.py
+        # a rotina vai do começo até o próximo início de função do docs/mapa_funcoes.csv (o mapa às vezes junta
+        # funções: a faixa fica maior, nunca menor); 20/10: o y2 0x257 → 0x437 em 0x719346, no meio da 0x718e90
         exes = [open(os.path.join(R, 'jogo', e), 'rb').read() for e in ('cm0102.exe', 'cm0102-1080.exe')]
+        import bisect, csv
+        inicios = sorted(int(r[0], 16) for r in csv.reader(open(os.path.join(R, 'docs', 'mapa_funcoes.csv'), encoding='utf-8')) if r and r[0].startswith('0x'))
+        alteradas = [i + 0x400000 for i in range(0x1000, 0x567000) if exes[0][i] != exes[1][i]]
         # a mesma rotina não pode ser desviada duas vezes (já no motor.rs ou em dois itens da fila)
         desviadas = {int(x, 16): 'motor.rs' for x in re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+)', m)}
         for nome in ordem():
@@ -119,8 +123,13 @@ def main():
                 o = e - 0x400000
                 if list(exes[0][o:o + len(bs)]) != list(bs):
                     print('prologo diferente do exe', nome, a, hex(e))
-                if exes[0][o:o + 0x100] != exes[1][o:o + 0x100]:
-                    print('alterada no cm0102-1080.exe', nome, a, hex(e))
+                k = bisect.bisect_right(inicios, e)
+                fim = inicios[k] if k < len(inicios) else e + 0x1000
+                trocados = [hex(x) for x in alteradas if e <= x < fim]
+                if trocados:
+                    # a cópia que lê o valor do próprio exe naquele endereço cita-o no código: aceita
+                    lido = any(t in open(os.path.join(FILA, nome, 'codigo.rs'), encoding='utf-8').read() for t in trocados)
+                    print('alterada no cm0102-1080.exe', nome, a, hex(e), 'em', trocados[:6], '(lida do exe no código)' if lido else '')
             cod = open(os.path.join(FILA, nome, 'codigo.rs'), encoding='utf-8').read()
             for k in range(len(rot['ROTINAS'])):
                 cod = cod.replace('%%%%I%d%%%%' % k, str(base + k))
