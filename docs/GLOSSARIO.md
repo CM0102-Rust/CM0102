@@ -527,6 +527,9 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x700bd0 | `valor_do_chute` | shot_value |
 | 0x4d0c20 | `valor_do_contrato` | contract_value |
 | 0x7165b0 | `valor_pela_condicao` | value_by_condition |
+| 0x71e750 | `valores_das_estatisticas_da_partida` | refresh_match_stats_values |
+| 0x723350 | `valores_das_notas_dos_jogadores` | refresh_player_ratings_rows |
+| 0x720320 | `valores_das_zonas_de_acao` | refresh_action_zones_values |
 | 0x6d5d80 | `variante_do_evento` | event_variant |
 | 0x6b7cf0 | `venceu_o_jogo` | won_the_match |
 | 0x6fa140 | `virado_para` | facing |

@@ -1877,3 +1877,13 @@ Mutações: `mutacoes/leva201.py` (0, pela carreira até 2002-06-01, confirmando
 | `painel_das_estatisticas_da_partida()` | 0x71e040 | cdecl | match_screens.cpp: desenha as estatísticas da partida: 13 linhas rotuladas (chutes, escanteios, faltas, passes, desarmes, cabeçadas, cartões) |
 
 Mutações: `mutacoes/leva202.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Motor de partidas, 203ª leva — as telas da partida (11): os valores das estatísticas da partida, das zonas de ação e das notas dos jogadores (oficial em 21/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `valores_das_estatisticas_da_partida()` | 0x71e750 | cdecl | match_screens.cpp: passa às células das estatísticas da partida os valores que mudaram desde a cópia do estado (parâmetro 0x1d) e atualiza a cópia |
+| `valores_das_zonas_de_acao()` | 0x720320 | cdecl | match_screens.cpp: atualiza as zonas de ação: marcadores, posse, tempo de bola em jogo, barras das três zonas e da posse com as cores dos clubes; atualiza a cópia do estado |
+| `valores_das_notas_dos_jogadores()` | 0x723350 | cdecl | match_screens.cpp: atualiza as linhas das notas dos jogadores: cartões, minuto de lesão/expulsão/substituição, nota, gols e cor do nome; atualiza a cópia do estado |
+
+Mutações: `mutacoes/leva203.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
