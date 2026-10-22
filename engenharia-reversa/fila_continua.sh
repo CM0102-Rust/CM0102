@@ -4,8 +4,9 @@
 # mutação que escapou sem ser acusada comparando, divergência, carreira fora da referência, falha ao publicar,
 # ou o jogo aberto (o Lucas jogando). Uso: bash engenharia-reversa/fila_continua.sh N
 cd "$(dirname "$0")/.." || exit 1
-REF_CARREIRA=034ff3eb3e55dfd3
-REF_JOGO=963cea289f055ac3
+# as referências vêm do gen_docs.py (mudam com uma zeragem nova do original determinizado)
+REF_CARREIRA=$(python -c "import sys; sys.path.insert(0, 'engenharia-reversa'); import gen_docs; print(gen_docs.REF_CARREIRA)")
+REF_JOGO=$(python -c "import sys; sys.path.insert(0, 'engenharia-reversa'); import gen_docs; print(gen_docs.REF_JOGO)")
 n=$1
 while [ -d "levas/$n" ]; do
   if tasklist | grep -qi cm0102; then echo "PARADA: jogo aberto antes da leva $n"; exit 1; fi
