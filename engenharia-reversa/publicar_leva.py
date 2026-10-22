@@ -35,7 +35,7 @@ def main():
           os.path.join('engenharia-reversa', 'glossario.py'), os.path.join('engenharia-reversa', 'mutacoes', f'leva{n}.py'),
           'CLAUDE.md', 'CLAUDE.en.md', os.path.join('engenharia-reversa', 'gen_docs.py'), os.path.join('engenharia-reversa', 'publicar_leva.py'),
           os.path.join('engenharia-reversa', 'fila.py'), os.path.join('engenharia-reversa', 'molde_docs.py'), os.path.join('levas', 'fila'),
-          os.path.join('rust', 'src', 'motor.rs'))
+          os.path.join('rust', 'src', 'motor.rs'), os.path.join('levas', 'carreira_ampla', 'pendentes.txt'))
     prefixo = 'Motor' if 'Motor de partidas' in open(os.path.join(RAIZ, 'levas', str(n), 'docs.py'), encoding='utf-8').read() else 'Simulacao'
     msg = (f'{prefixo}: {n}a leva ({total} rotinas): {titulo}\n\nComparacao de verdade em cada rotina; cadeia completa '
            f'(levas/{n}/cadeia.txt): jogo real 0 divergencias, carreiras iguais a referencia 034ff3eb.\n\n'
