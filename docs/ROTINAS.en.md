@@ -1968,3 +1968,19 @@ Mutations: `mutacoes/leva209.py` (0, by the career to 2002-06-01, confirming the
 | `pais_da_excursao()` | 0x5c4680 | thiscall | friendly.cpp: draws the nation for a club tour, nearer the lower the reputation |
 
 Mutations: `mutacoes/leva210.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `m_dobro` escaped: doubling the weight (or adding 1) only decides when candidates from the subject nation compete with others; in the career the other-nation ones hardly ever pass the cut (reputation above 6500 + draw and record ≥ 6000), and among same-nation ones 2a and a + 1 keep the same order. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 211th batch — closing the contract offers of a transfer offer, the free transfer queue and the player exchange negotiations; the player leaving the national side, the fixture time slice and the shortlist fee ceiling; the offers for a player, the club target reputation and the fixture in the news item (official on 2026-10-22)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `fechar_propostas_da_oferta()` | 0x8c6db0 | stdcall | transfer_manager.cpp: closes (state 4) the contract offers linked to the transfer offer: the target player and the exchange players |
+| `enfileirar_transferencia_livre()` | 0x8c16b0 | thiscall | transfer_manager.cpp: queues the player for a free transfer (id, reason and compensation), refusing players out on loan |
+| `negociacoes_de_troca_do_jogador()` | 0x8c5fc0 | thiscall | transfer_manager.cpp: counts the open negotiations of the player's club that include him in a part exchange and, if asked, lists the offer indices |
+| `tirar_jogador_da_selecao()` | 0x775ba0 | thiscall | national_teams.cpp: takes the player out of his level pool in the nation and out of the squad, clearing his national team fields |
+| `faixa_do_horario()` | 0x5af2f0 | thiscall | fix_man.cpp: the fixture time slice (1 weekend, 2 otherwise) by competition nation and weekday |
+| `teto_da_observacao()` | 0x84b230 | stdcall | shortlist_manager.cpp: the shortlist slot fee ceiling: club reputation times a factor (or -1) |
+| `ofertas_pelo_jogador()` | 0x8c5cf0 | thiscall | transfer_manager.cpp: counts the transfer offers for a player (skipping closed ones unless asked) and may list their indices |
+| `reputacao_alvo_do_clube()` | 0x83bf40 | thiscall | shortlist_manager.cpp: the reputation a club aims for in signings, adjusted by manager and chairman, between the club floor and 10000 |
+| `gravar_jogo_na_noticia()` | 0x4afeb0 | cdecl | comp_util.cpp: writes the fixture clubs, venue, competition, score and round into 18 consecutive news slots and advances the cursor |
+
+Mutations: `mutacoes/leva211.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `s_faixa` escaped: in the career the player leaving the national team is never in his level band with the level mark below the record one, so the band size never shrinks (the comparator covers the whole nation record, where the size lives). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e

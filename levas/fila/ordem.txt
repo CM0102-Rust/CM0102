@@ -1,5 +1,2 @@
 # ordem da fila (fila.py); um item por linha
-sim_transferencias_3
-sim_diversos_1
-sim_diversos_2
 sim_match_stats_2

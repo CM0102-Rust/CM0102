@@ -202,6 +202,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x53b900 | `e_selecao` | is_national_team |
 | 0x70d630 | `em_perigo` | in_danger |
 | 0x6b4190 | `encerrar_dia` | end_day |
+| 0x8c16b0 | `enfileirar_transferencia_livre` | TRANSFER_MANAGER::queue_free_transfer |
 | 0x7a7ed0 | `entrada_da_aposentadoria` | PLAYER_REGEN::find_retirement_entry |
 | 0x849ce0 | `entrada_da_lista` | shortlist_entry |
 | 0x729500 | `entrada_do_jogo_bate` | Match_Stats::fixture_entry_matches |
@@ -239,12 +240,14 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6f55c0 | `evoluir_momento` | evolve_moment |
 | 0x6fad40 | `executar_passe` | execute_pass |
 | 0x6cb960 | `faixa` | band |
+| 0x5af2f0 | `faixa_do_horario` | FIXTURE_MANAGER::get_time_slice |
 | 0x6f5b20 | `faixa_jogador` | player_band |
 | 0x6cfc60 | `falta_no_motor` | foul_in_engine |
 | 0x547790 | `favorito_de` | favourite_of |
 | 0x6d1cc0 | `fechamento` | match_wrap_up |
 | 0x71c170 | `fechar_detalhes_da_partida` | close_match_details |
 | 0x6b5f00 | `fechar_partida_do_dia` | close_day_match |
+| 0x8c6db0 | `fechar_propostas_da_oferta` | transfer_manager_close_offer_contract_offers |
 | 0x71b120 | `fechar_tela_da_partida` | close_match_screen |
 | 0x4cf6d0 | `ficha_de_contrato` | contract_record |
 | 0x6cb910 | `fora_do_meio` | off_centre |
@@ -268,6 +271,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5fdd30 | `gravar_dado_do_humano` | set_human_field |
 | 0x6d98b0 | `gravar_eventos` | record_events |
 | 0x8967d0 | `gravar_formacao_tatica` | set_tactic_formation |
+| 0x4afeb0 | `gravar_jogo_na_noticia` | comp_util_write_fixture_to_news_slots |
 | 0x8984d0 | `gravar_linha_tatica` | write_tactics_row |
 | 0x729820 | `gravar_registro_da_partida` | Match_Stats::write_match_record |
 | 0x896a90 | `gravar_vaga_tatica` | set_tactic_slot |
@@ -373,6 +377,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x547d30 | `nao_gosta_do_clube` | dislikes_club |
 | 0x6be120 | `narrar_classificacao` | narrate_qualification |
 | 0x6d7b00 | `narrar_no_painel` | commentate_on_panel |
+| 0x8c5fc0 | `negociacoes_de_troca_do_jogador` | TRANSFER_MANAGER::get_exchange_negotiations_for_player |
 | 0x5afe00 | `nevoa_apos_partida` | fog_after_match |
 | 0x53ce90 | `nivel_do_contrato` | contract_level |
 | 0x76d810 | `nivel_para_a_selecao` | national_team_level |
@@ -388,6 +393,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x4cca30 | `oferta_acertada` | agreed_contract_offer |
 | 0x4cc9e0 | `oferta_de_contrato` | contract_offer |
 | 0x8d0d90 | `oferta_fechada` | transfer_offer_closed |
+| 0x8c5cf0 | `ofertas_pelo_jogador` | TRANSFER_MANAGER::get_offers_for_player |
 | 0x6b6510 | `ordem_das_partidas_do_dia` | day_match_order |
 | 0x6bd840 | `ordem_de_acao` | action_order |
 | 0x6834f0 | `ordem_do_confronto` | league_compare_h2h_rows |
@@ -483,6 +489,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c0890 | `repartir_d` | split_d |
 | 0x6c0980 | `repartir_e` | split_e |
 | 0x6c0b70 | `repartir_f` | split_f |
+| 0x83bf40 | `reputacao_alvo_do_clube` | Shortlist_Manager::update_club_target_reputation |
 | 0x6d3610 | `reputacao_do_jogador` | player_reputation |
 | 0x6f5c30 | `responder` | respond |
 | 0x725ca0 | `responder_continuar_da_partida` | match_screens_handle_continue_command |
@@ -528,6 +535,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6b59a0 | `tem_jogo` | has_match |
 | 0x735840 | `tem_noticia` | has_story |
 | 0x7164b0 | `teste_de_condicao` | condition_test |
+| 0x84b230 | `teto_da_observacao` | shortlist_manager_max_fee_for_squad_status |
 | 0x6d8d10 | `texto_do_evento` | event_text |
 | 0x53b620 | `tipo_11_a_15` | type_11_to_15 |
 | 0x7ae6e0 | `tipo_da_lista_da_busca` | PLAYER_SEARCH::set_list_type |
@@ -536,6 +544,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x8cb590 | `tirar_bonus_por_jogo` | TRANSFER_MANAGER::remove_first_team_appearance_money |
 | 0x4d0bd0 | `tirar_contrato_de_emprestimo` | CONTRACT_MANAGER::remove_loan_contract |
 | 0x6cdd50 | `tirar_de_campo` | take_off_pitch |
+| 0x775ba0 | `tirar_jogador_da_selecao` | NationalTeams::remove_player |
 | 0x7a8470 | `tirar_jogador_do_banco` | PLAYER_REGEN::remove_player_data_from_pool |
 | 0x8cb4f0 | `tirar_percentual_da_proxima_venda` | TRANSFER_MANAGER::remove_next_sale_percentage |
 | 0x7a82b0 | `tirar_reserva_de_tecnico` | PLAYER_REGEN::remove_spare_non_player_record |

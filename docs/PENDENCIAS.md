@@ -93,5 +93,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `estatísticas da partida` | 0x729500, 0x729bd0 (199ª) | — | a segunda data da entrada do jogo e o balde sem a marca +0x40 não aparecem na carreira: `e_data` e `b_tipo` escapam até comparando. Teste: carreira ampla |
 | `estatísticas da partida` | 0x729600, 0x7293f0 (206ª) | — | ler o registro só roda ao abrir o relatório de uma partida, e o jogo da competição [0x9cf684] não aparece na carreira: `l_tamanho` e `r_excluido` escapam até comparando. Teste: sessão comparando do Lucas (relatório da partida) e carreira ampla |
 | `comentarista` | `escolher_comentarista` (210ª) | — | o peso dobrado da nação do assunto só decide contra um candidato de outra nação que passe do corte, o que a carreira não mostra: `m_dobro` escapa até comparando. Teste: carreira ampla |
+| `seleções` | `tirar_jogador_da_selecao` 0x775ba0 (211ª) | — | o jogador que sai da seleção estando na faixa do nível (nota do nível abaixo da ficha) não aparece na carreira: `s_faixa` escapa até comparando. Teste: carreira ampla |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").

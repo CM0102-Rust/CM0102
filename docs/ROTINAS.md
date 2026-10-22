@@ -1966,3 +1966,19 @@ Mutações: `mutacoes/leva209.py` (0, pela carreira até 2002-06-01, confirmando
 | `pais_da_excursao()` | 0x5c4680 | thiscall | friendly.cpp: sorteia o país da excursão do clube, mais perto quanto menor a reputação |
 
 Mutações: `mutacoes/leva210.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `m_dobro` escapou: dobrar o peso (ou somar 1) só decide quando concorrem candidatos da nação do assunto e de outra nação; na carreira os de outra nação quase nunca passam do corte (reputação acima de 6500 + sorteio e ficha ≥ 6000), e entre os da mesma nação a ordem de 2a e a + 1 é a mesma. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 211ª leva — o fechamento das propostas de contrato da oferta, a fila da transferência livre e as negociações de troca do jogador; o jogador que sai da seleção, a faixa de horário do jogo e o teto da lista de observados; as ofertas pelo jogador, a reputação-alvo do clube e o jogo na notícia (oficial em 22/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `fechar_propostas_da_oferta()` | 0x8c6db0 | stdcall | transfer_manager.cpp: fecha (estado 4) as propostas de contrato ligadas à oferta: a do jogador-alvo e as dos jogadores da troca |
+| `enfileirar_transferencia_livre()` | 0x8c16b0 | thiscall | transfer_manager.cpp: põe o jogador na fila da transferência livre (id, motivo e compensação), recusando o emprestado |
+| `negociacoes_de_troca_do_jogador()` | 0x8c5fc0 | thiscall | transfer_manager.cpp: conta as negociações abertas do clube do jogador que o incluem na troca e, se pedido, lista os índices das ofertas |
+| `tirar_jogador_da_selecao()` | 0x775ba0 | thiscall | national_teams.cpp: tira o jogador da reserva do nível dele na nação e da convocação, limpando os campos de seleção |
+| `faixa_do_horario()` | 0x5af2f0 | thiscall | fix_man.cpp: a faixa de horário do jogo (1 fim de semana, 2 os outros) pela nação da competição e o dia |
+| `teto_da_observacao()` | 0x84b230 | stdcall | shortlist_manager.cpp: o teto de preço da vaga na lista de observados: reputação do clube vezes um fator (ou -1) |
+| `ofertas_pelo_jogador()` | 0x8c5cf0 | thiscall | transfer_manager.cpp: conta as ofertas de transferência pelo jogador (sem as encerradas, salvo pedido) e pode listar os índices delas |
+| `reputacao_alvo_do_clube()` | 0x83bf40 | thiscall | shortlist_manager.cpp: a reputação que o clube procura nas contratações, ajustada pelo técnico e pelo presidente, entre o piso do clube e 10000 |
+| `gravar_jogo_na_noticia()` | 0x4afeb0 | cdecl | comp_util.cpp: grava clubes, local, competição, placar e rodada do jogo em 18 dados seguidos da notícia e avança o cursor |
+
+Mutações: `mutacoes/leva211.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `s_faixa` escapou: na carreira o jogador que sai da seleção nunca está na faixa do nível dele com a nota do nível abaixo da da ficha, então o tamanho da faixa não diminui (o comparador cobre o registro da nação inteiro, onde fica o tamanho). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
