@@ -2007,3 +2007,19 @@ Mutações: `mutacoes/leva212.py` (3, pela carreira até 2002-06-01, confirmando
 | `tirar_clube_dos_amistosos()` | 0x5c64e0 | thiscall | friendly.cpp: tira o clube dos amistosos planejados pelo computador e das listas de amistosos |
 
 Mutações: `mutacoes/leva213.py` (8, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 7 acusadas. `tr_recusa` escapou: na carreira as regras de transferência não recusam nenhuma contratação perguntada sem a segunda chance (a5 = 0), então o caminho "recusado, sem segunda pergunta" não roda (nem no modo comparação). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (5afd987e1a1a3ef3). Carreiras Rust ×2 e original até 2002-06-01: 2.361.839.396 sorteios, impressão b11bd5cb63f51d72, partidas 2461da5b0d296dba, banco 4d07a03c94c6fda5
+
+### Simulação, 214ª leva — a ordem das linhas da tabela, a grade de turnos da liga e a margem de gols do último dia; a partida guardada na notícia, o resultado da eliminatória para a notícia e o dia da rodada da copa; o mapa de casas da formação, a nota do clube para o jovem e a partida assistida pelo humano (oficial em 22/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `ordem_das_linhas_da_tabela()` | 0x683210 | cdecl | league.cpp: a comparação do qsort da tabela: pontos, os critérios de desempate da liga e o id do clube |
+| `montar_grade_de_turnos()` | 0x6844b0 | stdcall | league.cpp: monta a grade em que cada clube enfrenta todos uma vez, com o mando equilibrado |
+| `margem_do_ultimo_dia()` | 0x68a4d0 | thiscall | league.cpp: no último dia, a margem de gols que o clube precisa para o título, as vagas de cima ou fugir da queda, e a marca de jogo decisivo |
+| `partida_das_vagas_da_noticia()` | 0x4b0010 | cdecl | comp_util.cpp: refaz a partida a partir de 18 vagas seguidas da notícia e liga os clubes, o estádio e a competição |
+| `resultado_da_eliminatoria_na_noticia()` | 0x4b0890 | cdecl | comp_util.cpp: a categoria do resultado da eliminatória para o clube, pela margem final, o mando e a diferença de reputação |
+| `dia_da_rodada_da_copa()` | 0x521f10 | cdecl | Cup.cpp: grava um dos oito dias da rodada da copa: o mando, o dia da semana, o horário e o código |
+| `mapa_de_casas_da_formacao()` | 0x5b7160 | thiscall | formation.cpp: expande as posições de cada casa da formação nas tabelas de células do campo e no espelho delas |
+| `nota_do_clube_para_o_jovem()` | 0x7ad220 | stdcall | player_regen.cpp: a nota sorteada de quanto o clube serve ao jovem: reputação contra habilidade, juniores, controle humano e nação |
+| `partida_assistida_pelo_humano()` | 0x5fe290 | thiscall | human_manager.cpp: se a partida é a que o técnico humano escolheu assistir |
+
+Mutações: `mutacoes/leva214.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `lt_ultimo_dia` escapou: a margem só é pedida pela 0x68a3e0 (importância do jogo), que grava o byte num campo; no jogo real comparando (até 2002-01-01) ela não é chamada, e na carreira até 2002-06-01 o 0xfe no lugar de 0xff (sem margem) não muda nenhuma decisão. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (5afd987e1a1a3ef3). Carreiras Rust ×2 e original até 2002-06-01: 2.361.839.396 sorteios, impressão b11bd5cb63f51d72, partidas 2461da5b0d296dba, banco 4d07a03c94c6fda5

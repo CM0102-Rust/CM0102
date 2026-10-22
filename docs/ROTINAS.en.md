@@ -2009,3 +2009,19 @@ Mutations: `mutacoes/leva212.py` (3, by the career to 2002-06-01, confirming the
 | `tirar_clube_dos_amistosos()` | 0x5c64e0 | thiscall | friendly.cpp: removes the club from the planned AI friendlies and from the friendly lists |
 
 Mutations: `mutacoes/leva213.py` (8, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 7 caught. `tr_recusa` escaped: in the career the transfer rules never refuse a signing asked without the second chance (a5 = 0), so the "refused, no second question" path does not run (not even in comparison mode). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (5afd987e1a1a3ef3). Rust ×2 and original careers to 2002-06-01: 2,361,839,396 draws, fingerprint b11bd5cb63f51d72, matches 2461da5b0d296dba, database 4d07a03c94c6fda5
+
+### Simulation, 214th batch — the league table row order, the league round-robin grid and the last-day goal margin; the match stored in the news item, the cup tie result for the news and the cup round match day; the formation position lookup, the club score for a youth player and the match watched by the human (official on 2026-10-22)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `ordem_das_linhas_da_tabela()` | 0x683210 | cdecl | league.cpp: the table qsort comparison: points, the league tiebreak rules and the club id |
+| `montar_grade_de_turnos()` | 0x6844b0 | stdcall | league.cpp: builds the grid where every club meets each other once, with balanced home and away games |
+| `margem_do_ultimo_dia()` | 0x68a4d0 | thiscall | league.cpp: on the last matchday, the goal margin a club needs for the title, the top places or survival, and the deciding-match flag |
+| `partida_das_vagas_da_noticia()` | 0x4b0010 | cdecl | comp_util.cpp: rebuilds the fixture from eighteen consecutive news slots and resolves its clubs, stadium and competition |
+| `resultado_da_eliminatoria_na_noticia()` | 0x4b0890 | cdecl | comp_util.cpp: the category of the cup tie result for the club, from the final margin, the side and the reputation gap |
+| `dia_da_rodada_da_copa()` | 0x521f10 | cdecl | Cup.cpp: stores one of the eight cup round match days: the venue flags, the weekday, the time slot and the code |
+| `mapa_de_casas_da_formacao()` | 0x5b7160 | thiscall | formation.cpp: expands each formation slot's positions into the pitch cell tables and their mirrored copy |
+| `nota_do_clube_para_o_jovem()` | 0x7ad220 | stdcall | player_regen.cpp: the random score of how well the club suits the youth player: reputation against ability, youth facilities, human control and nation |
+| `partida_assistida_pelo_humano()` | 0x5fe290 | thiscall | human_manager.cpp: whether the fixture is the one the human manager chose to watch |
+
+Mutations: `mutacoes/leva214.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `lt_ultimo_dia` escaped: the margin is only asked by 0x68a3e0 (match importance), which stores the byte in a field; in the real game comparing (to 2002-01-01) it is not called, and in the career to 2002-06-01 0xfe instead of 0xff (no margin) changes no decision. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (5afd987e1a1a3ef3). Rust ×2 and original careers to 2002-06-01: 2,361,839,396 draws, fingerprint b11bd5cb63f51d72, matches 2461da5b0d296dba, database 4d07a03c94c6fda5

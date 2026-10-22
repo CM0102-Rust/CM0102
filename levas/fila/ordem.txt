@@ -1,4 +1,1 @@
 # ordem da fila (fila.py); um item por linha
-sim_lote_b1
-sim_lote_b2
-sim_lote_b3

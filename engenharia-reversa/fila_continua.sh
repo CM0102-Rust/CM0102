@@ -9,7 +9,9 @@ REF_CARREIRA=$(python -c "import sys; sys.path.insert(0, 'engenharia-reversa'); 
 REF_JOGO=$(python -c "import sys; sys.path.insert(0, 'engenharia-reversa'); import gen_docs; print(gen_docs.REF_JOGO)")
 n=$1
 while [ -d "levas/$n" ]; do
-  if tasklist | grep -qi cm0102; then echo "PARADA: jogo aberto antes da leva $n"; exit 1; fi
+  # só o jogo deste projeto (jogo/ ou jogo_testes/) conta; outras sessões têm exes com o mesmo nome (o
+  # jogo falso do CMRTE se chama cm0102.exe)
+  if python -c "import os, psutil, sys; k = os.path.join('sistemas', 'cm0102', ''); sys.exit(any(k in (p.info['exe'] or '').lower() for p in psutil.process_iter(['exe'])))"; then :; else echo "PARADA: jogo aberto antes da leva $n"; exit 1; fi
   echo "=== leva $n: cadeia ($(date +%H:%M))"
   bash engenharia-reversa/cadeia.sh "$n" > /dev/null 2>&1
   c="levas/$n/cadeia.txt"

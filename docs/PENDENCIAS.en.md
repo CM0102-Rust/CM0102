@@ -96,5 +96,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `national teams` | `tirar_jogador_da_selecao` 0x775ba0 (batch 211) | — | a player leaving the national team while in his level band (level mark below the record) does not show up in the career: `s_faixa` escapes even comparing. Test: broad career |
 | `languages` | `tirar_idioma_do_jogador` 0x7c6bf0 (batch 212) | — | in the career only the regens call it, and the freshly created player has no language to remove: `i_ultima` escapes even comparing. Test: broad career (a player losing a language) |
 | `transfers` | `pode_contratar_jogador` 0x8ced40 (batch 213) | — | a rules refusal without the second chance (a5 = 0) does not show up in the career: `tr_recusa` escapes even comparing. Test: broad career |
+| `league` | `margem_do_ultimo_dia` 0x68a4d0 (batch 214) | — | the "no margin" byte (0xff) stored by the match importance decides nothing up to 2002-06 and the routine does not run before 2002-01: `lt_ultimo_dia` escapes even comparing. Test: broad career (season end) |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

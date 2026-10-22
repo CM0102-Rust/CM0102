@@ -185,6 +185,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6ebd60 | `destruir_jogador_da_partida` | destroy_match_player |
 | 0x6b97a0 | `destruir_motor` | destroy_engine |
 | 0x6cd770 | `desviar_bola` | deflect_ball |
+| 0x521f10 | `dia_da_rodada_da_copa` | cup_set_round_match_day |
 | 0x715f30 | `diferenca_do_jogador` | difference_of_player |
 | 0x6c4130 | `diferenca_jogador` | player_difference |
 | 0x6c4180 | `diferenca_lado` | side_difference |
@@ -340,6 +341,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c30e0 | `mais_perto_no_lado` | closest_on_side |
 | 0x6c3010 | `mais_proximo_do_ponto` | nearest_to_point |
 | 0x6ce110 | `manter_posicao_um` | hold_position_one |
+| 0x5b7160 | `mapa_de_casas_da_formacao` | Formation::build_position_lookup |
 | 0x7163f0 | `marca_800000` | mark_800000 |
 | 0x6bbf60 | `marcacao_individual` | individual_marking |
 | 0x7160f0 | `marcado_designado` | designated_marked |
@@ -352,6 +354,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x897760 | `marcar_vaga` | mark_slot |
 | 0x5b5270 | `marcas_da_posicao` | position_marks |
 | 0x7163c0 | `marcas_do_jogador_rot` | player_marks_rot |
+| 0x68a4d0 | `margem_do_ultimo_dia` | League::final_day_margin_needed |
 | 0x5b59a0 | `mascara_da_formacao` | formation_mask |
 | 0x5b7d20 | `mascara_de_posicoes` | position_mask |
 | 0x7c1950 | `media_das_notas` | ratings_average |
@@ -361,6 +364,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c3950 | `menor_distancia` | smallest_distance |
 | 0x6d4250 | `momento_marcado` | marked_moment |
 | 0x71b630 | `montar_detalhes_da_partida` | build_match_details_screen |
+| 0x6844b0 | `montar_grade_de_turnos` | league_build_round_robin_grid |
 | 0x717db0 | `montar_jogos_do_dia` | build_day_fixtures_screen |
 | 0x6b3c10 | `montar_o_dia` | set_up_the_day |
 | 0x718e90 | `montar_tela_da_partida` | build_match_screen |
@@ -388,6 +392,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6db2d0 | `nome_do_jogador_na_narracao` | commentary_player_name |
 | 0x715f50 | `nota_ajustada` | adjusted_rating |
 | 0x6d4a20 | `nota_do_arbitro` | referee_grade |
+| 0x7ad220 | `nota_do_clube_para_o_jovem` | player_regen_score_club_for_player |
 | 0x6ebd70 | `nota_do_jogador` | player_rating |
 | 0x6e6340 | `nota_fora_da_partida` | off_match_score |
 | 0x6e2f20 | `nota_para_a_vaga` | lineup_slot_score |
@@ -399,6 +404,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x4cc9e0 | `oferta_de_contrato` | contract_offer |
 | 0x8d0d90 | `oferta_fechada` | transfer_offer_closed |
 | 0x8c5cf0 | `ofertas_pelo_jogador` | TRANSFER_MANAGER::get_offers_for_player |
+| 0x683210 | `ordem_das_linhas_da_tabela` | league_compare_table_rows |
 | 0x6b6510 | `ordem_das_partidas_do_dia` | day_match_order |
 | 0x6bd840 | `ordem_de_acao` | action_order |
 | 0x6834f0 | `ordem_do_confronto` | league_compare_h2h_rows |
@@ -425,6 +431,8 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x716310 | `papel_na_defesa` | defending_role |
 | 0x716270 | `papel_no_ataque` | attacking_role |
 | 0x6d5930 | `partida_abandonada` | match_abandoned |
+| 0x5fe290 | `partida_assistida_pelo_humano` | HUMAN_MANAGER::is_watching_fixture |
+| 0x4b0010 | `partida_das_vagas_da_noticia` | comp_util_read_fixture_from_news_slots |
 | 0x6b61e0 | `partida_de_interesse` | match_of_interest |
 | 0x6b66a0 | `partida_sem_humano` | match_without_human |
 | 0x6fa250 | `passar` | pass_ball |
@@ -508,6 +516,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x71a240 | `responder_tela_da_partida` | handle_match_screen_input |
 | 0x71b3d0 | `responder_ultimos_placares` | latest_scores_input |
 | 0x725860 | `responder_ultimos_placares_da_partida` | match_screens_handle_latest_scores_cycle |
+| 0x4b0890 | `resultado_da_eliminatoria_na_noticia` | comp_util_classify_tie_result_for_news |
 | 0x6ce460 | `resumo_da_partida` | match_summary |
 | 0x6bbe40 | `rolar_bola` | roll_ball |
 | 0x725a70 | `rotulo_do_controle` | match_control_label |

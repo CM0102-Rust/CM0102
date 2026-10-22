@@ -49,14 +49,14 @@ unsafe extern "C" fn partida_das_vagas_da_noticia(noticia: usize, partida: usize
 
 /// { 0x4b0890 } (cdecl, comp_util.cpp): a categoria (1 a 7) do resultado da eliminatória para o
 /// `clube` na `partida`: a margem final (placar +0x4b/+0x4c, ou +0x47/+0x48, ou +0x43/+0x44, o
-/// primeiro sem 0xff) do lado do clube (da casa = +0x1c) e as reputações (+0x80 / 1000) dos clubes.
+/// primeiro sem 0xff) do lado do clube (da casa = +0x1c) e as reputações (+0x80 / 500) dos clubes.
 /// 1 goleada, 2 e 3 vitórias contra mais fortes, 4 comum, 5 e 7 derrotas para mais fracos, 6
 /// zebra. Só o al é fiel (quem chama usa al).
 unsafe extern "C" fn resultado_da_eliminatoria_na_noticia(clube: usize, partida: usize) -> u8 {
     let casa = *((partida + 0x1c) as *const usize);
     let fora = *((partida + 0x20) as *const usize);
-    let h = (core::ptr::read_unaligned((casa + 0x80) as *const i16) as i32 / 1000) as i8 as i32;
-    let a = (core::ptr::read_unaligned((fora + 0x80) as *const i16) as i32 / 1000) as i8 as i32;
+    let h = (core::ptr::read_unaligned((casa + 0x80) as *const i16) as i32 / 500) as i8 as i32;
+    let a = (core::ptr::read_unaligned((fora + 0x80) as *const i16) as i32 / 500) as i8 as i32;
     let p = |o: usize| *((partida + o) as *const u8);
     let (g1, g2) = if p(0x4b) != 0xff {
         (p(0x4b), p(0x4c))

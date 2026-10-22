@@ -66,14 +66,14 @@ Rotinas que chamam outras com efeitos colaterais (por exemplo, a narração da p
 - As primeiras rotinas em Rust: o gerador de sorteios e as datas do jogo.
 
 ### Etapa 3: motor de partidas (06 a 17/10/2026) e simulação, em andamento
-- **213 levas, 535 rotinas** reescritas, de baixo para cima: dos acessores e cálculos às decisões táticas, posse de bola, arbitragem (faltas, cartões, impedimento), estatísticas, movimento dos jogadores, domínio da bola, narração e, como provas de viabilidade, o **valor do chute a gol** e a **força do time** (rotinas de 5 KB).
+- **214 levas, 544 rotinas** reescritas, de baixo para cima: dos acessores e cálculos às decisões táticas, posse de bola, arbitragem (faltas, cartões, impedimento), estatísticas, movimento dos jogadores, domínio da bola, narração e, como provas de viabilidade, o **valor do chute a gol** e a **força do time** (rotinas de 5 KB).
 - Infraestrutura nova: verificação dos desvios (`prologos.py`), porta de gravação para a narração e reprodução de chamadas internas.
 - O motor de partidas (fora as telas) chegou a 100% em 17/10/2026; desde então as levas seguem pela simulação (`candidatos.py --simulacao`) e, a partir da 180ª, pelas telas da partida (`match_screens.cpp`).
 
 ## 6. Aonde vamos
 
 1. **Fechar o motor com as telas da partida.** As telas montam uma lista de exibição (o `Display` do gerente de telas), comparada como dado; as provas são o jogo do Lucas em modo Rust e comparando.
-2. **O resto da simulação:** o dia de jogos, competições, tabelas, transferências, finanças, contratos, lesões, notícias. Mesmo método: rotina por rotina, provada contra a original.
+2. **O resto da simulação:** o dia de jogos, competições, tabelas, transferências, finanças, contratos, lesões, notícias. Mesmo método: rotina por rotina, provada contra a original. **Ordem (Lucas, 22/10/2026):** fechar `match_screens.cpp` e `match_day.cpp` (faltam 6 funções); depois mapear e portar, em blocos, o **save** (`zipdir.cpp`, o contêiner com RLE, e `Setup.cpp`, gravar/carregar; referência: o CM3SaveEditor, já em Rust), o **banco de dados** (`Database.cpp`, `index.cpp`: a leitura dos `Data/*.dat`) e por fim as **competições** (~180 classes em `comp/`: 87 ligas, 60 copas, europeias, intercontinentais e Copa do Mundo, com a estrutura escrita no código). Cada bloco abre frentes nas ferramentas irmãs (editor, CMRTE, Save Game Editor); as competições em Rust são o caminho para o editor mexer na estrutura (item 8).
 3. **A interface (decidido em 19/10/2026: abordagem híbrida).** Traduzir a base da interface e a lógica de cada tela, reescrever a apresentação sobre a base conferida pixel a pixel e só depois modernizar.
 4. **Independência do executável.** Com a simulação inteira em Rust, o núcleo vira uma biblioteca própria (64 bits), que roda sem o `cm0102.exe`.
 5. **Modernização.** Resolução e fontes, fotos ajustadas à tela e, sobre a base fiel, mudanças de regras e realismo.
