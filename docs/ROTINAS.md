@@ -1982,3 +1982,13 @@ Mutações: `mutacoes/leva210.py` (9, pela carreira até 2002-06-01, confirmando
 | `gravar_jogo_na_noticia()` | 0x4afeb0 | cdecl | comp_util.cpp: grava clubes, local, competição, placar e rodada do jogo em 18 dados seguidos da notícia e avança o cursor |
 
 Mutações: `mutacoes/leva211.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `s_faixa` escapou: na carreira o jogador que sai da seleção nunca está na faixa do nível dele com a nota do nível abaixo da da ficha, então o tamanho da faixa não diminui (o comparador cobre o registro da nação inteiro, onde fica o tamanho). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 212ª leva — o registro da partida, a ordem dos eventos e o idioma que o jogador perde (oficial em 22/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `preencher_registro_da_partida()` | 0x729ff0 | thiscall | match_screens.cpp: preenche o registro de estatística da partida: clubes, datas, público, renda, clima, eventos ordenados, formação, capitão e os 20 jogadores de cada time |
+| `ordem_dos_eventos()` | 0x72b160 | cdecl | match_screens.cpp: ordena dois eventos da partida pelo grupo do tipo, depois pelo minuto e pela ordem de chegada (comparador do qsort) |
+| `tirar_idioma_do_jogador()` | 0x7c6bf0 | thiscall | player_stats.cpp: tira um idioma do jogador da tabela de idiomas (busca binária) e desce as entradas seguintes |
+
+Mutações: `mutacoes/leva212.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `i_ultima` escapou: na carreira a 0x7c6bf0 só é chamada pelos regens (idiomas 1..64 do jogador recém-criado, que ainda não tem nenhum): a busca nunca acha a entrada, então a última vaga nunca é apagada (o comparador cobre a tabela inteira). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (5afd987e1a1a3ef3). Carreiras Rust ×2 e original até 2002-06-01: 2.361.839.396 sorteios, impressão b11bd5cb63f51d72, partidas 2461da5b0d296dba, banco 4d07a03c94c6fda5

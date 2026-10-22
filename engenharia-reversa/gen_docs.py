@@ -3,6 +3,13 @@ Uso: o levas/NNN/docs.py importa e chama fazer() (ver levas/LEIA.md)."""
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # raiz do projeto
+
+# As referências da cadeia (o original determinizado): mudam quando entra uma zeragem nova. 22/10/2026,
+# 212a: a 0x84be20 entrou em ZERADAS (antes: jogo 963cea289f055ac3, carreira 034ff3eb3e55dfd3).
+REF_JOGO = '5afd987e1a1a3ef3'
+REF_CARREIRA = 'b11bd5cb63f51d72'
+CARREIRA_PT = '2.361.839.396 sorteios, impressão b11bd5cb63f51d72, partidas 2461da5b0d296dba, banco 4d07a03c94c6fda5'
+CARREIRA_EN = '2,361,839,396 draws, fingerprint b11bd5cb63f51d72, matches 2461da5b0d296dba, database 4d07a03c94c6fda5'
 def _extenso_pt(n):
     """O número por extenso no feminino (as levas), de 1 a 999."""
     u = ['', 'uma', 'duas', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez', 'onze', 'doze', 'treze',
@@ -90,8 +97,8 @@ def leia(n, titulo_pt, titulo_en, rotinas, mutacoes, acusadas, lacuna_pt='', lac
     completa. `rotinas` = [(nome, endereço, arquivo, o que faz pt, o que faz en)]."""
     base = os.path.join(R, 'levas', str(n))
     ord_en = 'th' if n % 100 in (11, 12, 13) else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')
-    ref = ('0 divergências (963cea289f055ac3)', 'as três iguais (034ff3eb3e55dfd3)',
-           '0 divergences (963cea289f055ac3)', 'all three equal (034ff3eb3e55dfd3)')
+    ref = (f'0 divergências ({REF_JOGO})', f'as três iguais ({REF_CARREIRA})',
+           f'0 divergences ({REF_JOGO})', f'all three equal ({REF_CARREIRA})')
     pt = [f'# {n}ª leva — {titulo_pt}', '', '**Rotinas:**']
     pt += [f'- `{a}()` = {e} ({f}): {d};' for a, e, f, d, _ in rotinas]
     pt += ['', '**Como foi comparada:** comparação de verdade em cada rotina (o original e o Rust a partir do mesmo estado, com as regiões que a rotina toca).',
@@ -132,6 +139,6 @@ def cadeia(n):
         if div and nome in escapadas:
             escapadas.remove(nome)
             acusadas.append(nome)
-    ok = ('impressao 963cea289f055ac3' in t and t.count('impressao 034ff3eb3e55dfd3') >= 3
+    ok = (f'impressao {REF_JOGO}' in t and t.count(f'impressao {REF_CARREIRA}') >= 3
           and not re.search(r'\b[1-9]\d* divergencias', t.split('=== JOGO REAL')[-1]))
     return len(nomes), len(acusadas), escapadas, ok

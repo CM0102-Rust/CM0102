@@ -1984,3 +1984,13 @@ Mutations: `mutacoes/leva210.py` (9, by the career to 2002-06-01, confirming the
 | `gravar_jogo_na_noticia()` | 0x4afeb0 | cdecl | comp_util.cpp: writes the fixture clubs, venue, competition, score and round into 18 consecutive news slots and advances the cursor |
 
 Mutations: `mutacoes/leva211.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `s_faixa` escaped: in the career the player leaving the national team is never in his level band with the level mark below the record one, so the band size never shrinks (the comparator covers the whole nation record, where the size lives). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 212th batch — the match record, the order of the events and the language a player loses (official on 2026-10-22)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `preencher_registro_da_partida()` | 0x729ff0 | thiscall | match_screens.cpp: fills the match statistics record: clubs, dates, attendance, gate receipts, weather, sorted events, formation, captain and the 20 players of each side |
+| `ordem_dos_eventos()` | 0x72b160 | cdecl | match_screens.cpp: orders two match events by type group, then by minute and arrival order (qsort comparator) |
+| `tirar_idioma_do_jogador()` | 0x7c6bf0 | thiscall | player_stats.cpp: removes a language from the player's language table (binary search) and shifts the later entries down |
+
+Mutations: `mutacoes/leva212.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `i_ultima` escaped: in the career 0x7c6bf0 is only called by the regens (languages 1..64 of the freshly created player, who has none yet): the search never finds the entry, so the last slot is never cleared (the comparator covers the whole table). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (5afd987e1a1a3ef3). Rust ×2 and original careers to 2002-06-01: 2,361,839,396 draws, fingerprint b11bd5cb63f51d72, matches 2461da5b0d296dba, database 4d07a03c94c6fda5

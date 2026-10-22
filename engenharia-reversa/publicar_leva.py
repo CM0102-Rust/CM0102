@@ -14,6 +14,9 @@ import shutil
 import subprocess
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from gen_docs import REF_CARREIRA  # noqa: E402
+
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -38,7 +41,7 @@ def main():
           os.path.join('rust', 'src', 'motor.rs'), os.path.join('levas', 'carreira_ampla', 'pendentes.txt'))
     prefixo = 'Motor' if 'Motor de partidas' in open(os.path.join(RAIZ, 'levas', str(n), 'docs.py'), encoding='utf-8').read() else 'Simulacao'
     msg = (f'{prefixo}: {n}a leva ({total} rotinas): {titulo}\n\nComparacao de verdade em cada rotina; cadeia completa '
-           f'(levas/{n}/cadeia.txt): jogo real 0 divergencias, carreiras iguais a referencia 034ff3eb.\n\n'
+           f'(levas/{n}/cadeia.txt): jogo real 0 divergencias, carreiras iguais a referencia {REF_CARREIRA[:8]}.\n\n'
            'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n')
     rodar('git', 'commit', '-q', '-m', msg)
     rodar('git', 'push', '-q')

@@ -397,6 +397,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6b6510 | `ordem_das_partidas_do_dia` | day_match_order |
 | 0x6bd840 | `ordem_de_acao` | action_order |
 | 0x6834f0 | `ordem_do_confronto` | league_compare_h2h_rows |
+| 0x72b160 | `ordem_dos_eventos` | match_stats_compare_events |
 | 0x6bd760 | `ordem_dos_jogadores` | player_order |
 | 0x6be520 | `ordem_dos_penaltis` | penalty_order |
 | 0x4b0780 | `ordem_por_5f` | order_by_5f |
@@ -444,6 +445,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6df460 | `postura` | stance |
 | 0x5cb9b0 | `preencher_data_internacional` | friendly_international_date_set |
 | 0x721cd0 | `preencher_estatisticas_do_time` | fill_team_stats_rows |
+| 0x729ff0 | `preencher_registro_da_partida` | Match_Stats::fill_match_record |
 | 0x682f70 | `premio_da_liga` | League::calc_prize_fund |
 | 0x6b7f20 | `preparar_partida` | prepare_match |
 | 0x6bcbd0 | `pressao` | pressure |
@@ -544,6 +546,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x8cb590 | `tirar_bonus_por_jogo` | TRANSFER_MANAGER::remove_first_team_appearance_money |
 | 0x4d0bd0 | `tirar_contrato_de_emprestimo` | CONTRACT_MANAGER::remove_loan_contract |
 | 0x6cdd50 | `tirar_de_campo` | take_off_pitch |
+| 0x7c6bf0 | `tirar_idioma_do_jogador` | PlayerStats::remove_language |
 | 0x775ba0 | `tirar_jogador_da_selecao` | NationalTeams::remove_player |
 | 0x7a8470 | `tirar_jogador_do_banco` | PLAYER_REGEN::remove_player_data_from_pool |
 | 0x8cb4f0 | `tirar_percentual_da_proxima_venda` | TRANSFER_MANAGER::remove_next_sale_percentage |
