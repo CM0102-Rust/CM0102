@@ -1994,3 +1994,18 @@ Mutations: `mutacoes/leva211.py` (9, by the career to 2002-06-01, confirming the
 | `tirar_idioma_do_jogador()` | 0x7c6bf0 | thiscall | player_stats.cpp: removes a language from the player's language table (binary search) and shifts the later entries down |
 
 Mutations: `mutacoes/leva212.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught. `i_ultima` escaped: in the career 0x7c6bf0 is only called by the regens (languages 1..64 of the freshly created player, who has none yet): the search never finds the entry, so the last slot is never cleared (the comparator covers the whole table). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (5afd987e1a1a3ef3). Rust ×2 and original careers to 2002-06-01: 2,361,839,396 draws, fingerprint b11bd5cb63f51d72, matches 2461da5b0d296dba, database 4d07a03c94c6fda5
+
+### Simulation, 213th batch — the signing by the nation rules and the exchanges offering the player; the unread news, the slot written into the inbox news item and the human-managed club; the draw and match dates of the cup round and the club removed from the planned friendlies (official on 2026-10-22)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `pode_contratar_jogador()` | 0x8ced40 | thiscall | transfer_manager.cpp: whether the club may sign the player under the nation rules, with the refusal reason and the human club's second try on the foreign player limit |
+| `trocas_oferecendo_o_jogador()` | 0x8c5e40 | thiscall | transfer_manager.cpp: how many of the club's open offers include the player in the exchange, listing their indices when asked |
+| `noticias_nao_lidas()` | 0x786fe0 | thiscall | news.cpp: the unread news in a human manager's inbox, in total or for one category |
+| `gravar_marca_da_noticia()` | 0x786d30 | thiscall | news.cpp: writes a value into a slot of a news item in the human manager's inbox and into its local copy |
+| `clube_de_tecnico_humano()` | 0x7875e0 | stdcall | news.cpp: whether a human manager runs the club, ignoring holidays |
+| `data_do_sorteio_da_rodada()` | 0x521e60 | cdecl | Cup.cpp: stores the cup round draw date: the day number and the year offset from the base year |
+| `data_do_jogo_da_rodada()` | 0x521eb0 | cdecl | Cup.cpp: stores the cup round match date, its match time and the venue flags |
+| `tirar_clube_dos_amistosos()` | 0x5c64e0 | thiscall | friendly.cpp: removes the club from the planned AI friendlies and from the friendly lists |
+
+Mutations: `mutacoes/leva213.py` (8, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 7 caught. `tr_recusa` escaped: in the career the transfer rules never refuse a signing asked without the second chance (a5 = 0), so the "refused, no second question" path does not run (not even in comparison mode). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (5afd987e1a1a3ef3). Rust ×2 and original careers to 2002-06-01: 2,361,839,396 draws, fingerprint b11bd5cb63f51d72, matches 2461da5b0d296dba, database 4d07a03c94c6fda5

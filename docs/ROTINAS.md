@@ -1992,3 +1992,18 @@ Mutações: `mutacoes/leva211.py` (9, pela carreira até 2002-06-01, confirmando
 | `tirar_idioma_do_jogador()` | 0x7c6bf0 | thiscall | player_stats.cpp: tira um idioma do jogador da tabela de idiomas (busca binária) e desce as entradas seguintes |
 
 Mutações: `mutacoes/leva212.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas. `i_ultima` escapou: na carreira a 0x7c6bf0 só é chamada pelos regens (idiomas 1..64 do jogador recém-criado, que ainda não tem nenhum): a busca nunca acha a entrada, então a última vaga nunca é apagada (o comparador cobre a tabela inteira). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (5afd987e1a1a3ef3). Carreiras Rust ×2 e original até 2002-06-01: 2.361.839.396 sorteios, impressão b11bd5cb63f51d72, partidas 2461da5b0d296dba, banco 4d07a03c94c6fda5
+
+### Simulação, 213ª leva — a contratação pelas regras da nação e as trocas que oferecem o jogador; as notícias não lidas, a marca gravada na notícia da caixa e o clube de técnico humano; as datas do sorteio e do jogo da rodada da copa e o clube que sai dos amistosos planejados (oficial em 22/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `pode_contratar_jogador()` | 0x8ced40 | thiscall | transfer_manager.cpp: se o clube pode contratar o jogador pelas regras da nação, com o motivo da recusa e a segunda chance do clube humano no limite de estrangeiros |
+| `trocas_oferecendo_o_jogador()` | 0x8c5e40 | thiscall | transfer_manager.cpp: quantas ofertas abertas do clube oferecem o jogador na troca, com a lista dos índices se pedida |
+| `noticias_nao_lidas()` | 0x786fe0 | thiscall | news.cpp: as notícias não lidas da caixa do técnico humano, no total ou de uma categoria |
+| `gravar_marca_da_noticia()` | 0x786d30 | thiscall | news.cpp: grava um valor numa vaga da notícia da caixa do técnico humano e na cópia local dela |
+| `clube_de_tecnico_humano()` | 0x7875e0 | stdcall | news.cpp: se um humano dirige o clube, sem contar as férias |
+| `data_do_sorteio_da_rodada()` | 0x521e60 | cdecl | Cup.cpp: grava a data do sorteio da rodada da copa: o dia do ano e o ano contado do ano-base |
+| `data_do_jogo_da_rodada()` | 0x521eb0 | cdecl | Cup.cpp: grava a data do jogo da rodada da copa, o horário e as marcas do mando |
+| `tirar_clube_dos_amistosos()` | 0x5c64e0 | thiscall | friendly.cpp: tira o clube dos amistosos planejados pelo computador e das listas de amistosos |
+
+Mutações: `mutacoes/leva213.py` (8, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 7 acusadas. `tr_recusa` escapou: na carreira as regras de transferência não recusam nenhuma contratação perguntada sem a segunda chance (a5 = 0), então o caminho "recusado, sem segunda pergunta" não roda (nem no modo comparação). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (5afd987e1a1a3ef3). Carreiras Rust ×2 e original até 2002-06-01: 2.361.839.396 sorteios, impressão b11bd5cb63f51d72, partidas 2461da5b0d296dba, banco 4d07a03c94c6fda5

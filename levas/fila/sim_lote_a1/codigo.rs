@@ -9,27 +9,6 @@ unsafe fn regras_de_transferencia_da_nacao(gerente: usize, nacao: usize) -> usiz
         .unwrap_or(0)
 }
 
-/// { 0x8d0530 } (thiscall, ret 0x14, transfer_manager.cpp): se o empréstimo do `jogador` pode acabar.
-/// Clube do jogador (+0x39) de outra nação (+0x53) que a do `clube`, ou nação sem regras: 1. Senão
-/// pergunta às regras da nação (método +0x24 com clube, jogador e os três argumentos).
-unsafe extern "thiscall" fn pode_encerrar_emprestimo(gerente: usize, clube: usize, jogador: usize, a3: u32, a4: u32, a5: u32) -> u32 {
-    let dono = core::ptr::read_unaligned((jogador + 0x39) as *const usize);
-    if dono == 0 {
-        return 1;
-    }
-    let nacao = core::ptr::read_unaligned((clube + 0x53) as *const usize);
-    if core::ptr::read_unaligned((dono + 0x53) as *const usize) != nacao {
-        return 1; // empréstimo entre nações
-    }
-    let regras = regras_de_transferencia_da_nacao(gerente, nacao);
-    if regras == 0 {
-        return 1;
-    }
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> u32 =
-        core::mem::transmute(*((*(regras as *const usize) + 0x24) as *const usize));
-    f(regras, clube, jogador, a3, a4, a5)
-}
-
 /// { 0x8ced40 } (thiscall, ret 0x18, transfer_manager.cpp): se o `clube` pode contratar o `jogador`,
 /// pelas regras da nação do clube (método +0x10 com clube, jogador, a4, a2 e o motivo); sem regras, 1. O
 /// motivo (palavra) vai para `saida` (zerada antes). Recusado com `a5`, clube humano (0x600a50) e motivo
@@ -134,16 +113,9 @@ unsafe extern "thiscall" fn trocas_oferecendo_o_jogador(gerente: usize, jogador:
     conta
 }
 
-unsafe extern "thiscall" fn comparar_pode_encerrar_emprestimo(gerente: usize, clube: usize, jogador: usize, a3: u32, a4: u32, a5: u32) -> u32 {
-    // as regras só escrevem o texto da recusa em a3 (o mesmo texto de novo na cópia)
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> u32>(%%I0%%)(gerente, clube, jogador, a3, a4, a5);
-    let n = pode_encerrar_emprestimo(gerente, clube, jogador, a3, a4, a5);
-    PLACAR.registrar(r == n, || format!("pode_encerrar_emprestimo original={} rust={}", r, n));
-    r
-}
 
 unsafe extern "thiscall" fn comparar_pode_contratar_jogador(gerente: usize, clube: usize, a2: u32, jogador: usize, a4: u32, a5: u32, saida: *mut u16) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, *mut u16) -> u32>(%%I1%%);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, *mut u16) -> u32>(%%I0%%);
     let mut regioes = vec![];
     if !saida.is_null() {
         regioes.push((saida as usize, 2));
@@ -158,7 +130,7 @@ unsafe extern "thiscall" fn comparar_pode_contratar_jogador(gerente: usize, club
 }
 
 unsafe extern "thiscall" fn comparar_trocas_oferecendo_o_jogador(gerente: usize, jogador: usize, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if saida != 0 {
         // ponytail: com lista de saída a original anexa (aloca); só a original
         return o(gerente, jogador, saida);

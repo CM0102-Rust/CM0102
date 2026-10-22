@@ -95,5 +95,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `pundit` | `escolher_comentarista` (batch 210) | — | the doubled weight for the subject nation only decides against an other-nation candidate that passes the cut, which the career does not show: `m_dobro` escapes even comparing. Test: broad career |
 | `national teams` | `tirar_jogador_da_selecao` 0x775ba0 (batch 211) | — | a player leaving the national team while in his level band (level mark below the record) does not show up in the career: `s_faixa` escapes even comparing. Test: broad career |
 | `languages` | `tirar_idioma_do_jogador` 0x7c6bf0 (batch 212) | — | in the career only the regens call it, and the freshly created player has no language to remove: `i_ultima` escapes even comparing. Test: broad career (a player losing a language) |
+| `transfers` | `pode_contratar_jogador` 0x8ced40 (batch 213) | — | a rules refusal without the second chance (a5 = 0) does not show up in the career: `tr_recusa` escapes even comparing. Test: broad career |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

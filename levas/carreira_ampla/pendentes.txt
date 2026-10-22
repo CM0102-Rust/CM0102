@@ -26,3 +26,4 @@ Noite de 19/10/2026 (lote_ampla_1 ate 2001-12-01; lote_ampla_2 ate 2002-03-31, i
 - leva210.py: m_dobro (escolher_comentarista)
 - leva211.py: s_faixa (tirar_jogador_da_selecao)
 - leva212.py: i_ultima (tirar_idioma_do_jogador)
+- leva213.py: tr_recusa (pode_contratar_jogador)

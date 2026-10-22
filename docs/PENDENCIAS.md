@@ -95,5 +95,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `comentarista` | `escolher_comentarista` (210ª) | — | o peso dobrado da nação do assunto só decide contra um candidato de outra nação que passe do corte, o que a carreira não mostra: `m_dobro` escapa até comparando. Teste: carreira ampla |
 | `seleções` | `tirar_jogador_da_selecao` 0x775ba0 (211ª) | — | o jogador que sai da seleção estando na faixa do nível (nota do nível abaixo da ficha) não aparece na carreira: `s_faixa` escapa até comparando. Teste: carreira ampla |
 | `idiomas` | `tirar_idioma_do_jogador` 0x7c6bf0 (212ª) | — | na carreira só os regens chamam, e o jogador recém-criado não tem idioma para tirar: `i_ultima` escapa até comparando. Teste: carreira ampla (jogador que perde um idioma) |
+| `transferências` | `pode_contratar_jogador` 0x8ced40 (213ª) | — | a recusa das regras sem a segunda chance (a5 = 0) não aparece na carreira: `tr_recusa` escapa até comparando. Teste: carreira ampla |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
