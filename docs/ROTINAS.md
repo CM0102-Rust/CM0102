@@ -1950,3 +1950,19 @@ Mutações: `mutacoes/leva208.py` (0, pela carreira até 2002-06-01, confirmando
 | `tabela_da_liga_ao_vivo()` | 0x7280e0 | cdecl | match_screens.cpp: desenha a tabela da liga ao vivo (liga, topo, base) numa cópia da liga com os placares do dia aplicados (ou o aviso da data do sorteio): título, cabeçalhos, separadores, posição, seta de subida/descida, clube e colunas |
 
 Mutações: `mutacoes/leva209.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e
+
+### Simulação, 210ª leva — a história punível da imprensa, o tipo de lesão sorteado e a categoria da notícia; as convocações repetidas das seleções, a vaga do escalado e o comentarista ex-internacional; as regras da rodada no jogo da copa, a chave do jogo e o país da excursão (oficial em 22/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `historia_punivel_do_jogador()` | 0x7357c0 | thiscall | media.cpp: o tipo da história da imprensa sobre o jogador quando é de indisciplina, senão 0 |
+| `escolher_tipo_de_lesao()` | 0x62d140 | thiscall | injury.cpp: sorteia o tipo de lesão da parte do corpo e da gravidade, mantendo a lesão atual ou preferindo a recorrente |
+| `categoria_da_noticia()` | 0x785670 | thiscall | news.cpp: a categoria da notícia pelo milhar do tipo |
+| `apagar_repetidos_das_convocacoes()` | 0x76c060 | stdcall | national_teams.cpp: apaga as convocações repetidas da seleção principal e da seleção B da nação |
+| `vaga_do_escalado()` | 0x8972c0 | thiscall | tactics.cpp: a vaga (0..19) da escalação do clube em que o jogador está, ou 0xff |
+| `escolher_comentarista()` | 0x72b810 | thiscall | media.cpp: sorteia um ex-internacional (37 anos ou mais, 50 jogos pela seleção) para comentar, pesando a reputação da nação e os jogos |
+| `regras_da_rodada_no_jogo()` | 0x521d60 | thiscall | Cup.cpp: passa as regras da rodada para o jogo e, com decisão no empate, marca quem passa pelo nível dos dois lados |
+| `chave_do_jogo_na_copa()` | 0x519c90 | thiscall | Cup.cpp: a chave da rodada em que está o mandante do jogo (-1 se nenhuma) |
+| `pais_da_excursao()` | 0x5c4680 | thiscall | friendly.cpp: sorteia o país da excursão do clube, mais perto quanto menor a reputação |
+
+Mutações: `mutacoes/leva210.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `m_dobro` escapou: dobrar o peso (ou somar 1) só decide quando concorrem candidatos da nação do assunto e de outra nação; na carreira os de outra nação quase nunca passam do corte (reputação acima de 6500 + sorteio e ficha ≥ 6000), e entre os da mesma nação a ordem de 2a e a + 1 é a mesma. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.382.029.053 sorteios, impressão 034ff3eb3e55dfd3, partidas b3ee24bdc00da55f, banco 7f2c15024cd99e7e

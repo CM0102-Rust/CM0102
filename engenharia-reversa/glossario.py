@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'historia_punivel_do_jogador': 'Media::get_finable_story_kind', 'escolher_tipo_de_lesao': 'Injury::choose_injury_type', 'categoria_da_noticia': 'NewsItem::get_category', 'apagar_repetidos_das_convocacoes': 'national_teams_remove_duplicate_squad_entries', 'vaga_do_escalado': 'Tactics::find_selection_slot', 'escolher_comentarista': 'Media::pick_former_international_pundit', 'regras_da_rodada_no_jogo': 'Cup::apply_round_rules_to_match', 'chave_do_jogo_na_copa': 'Cup::find_tree_slot_for_fixture', 'pais_da_excursao': 'Friendly::pick_tour_nation',
  'montar_tela_da_partida': 'build_match_screen', 'responder_tela_da_partida': 'handle_match_screen_input', 'montar_detalhes_da_partida': 'build_match_details_screen', 'atualizar_barra_da_posse': 'refresh_possession_bar', 'painel_da_visao_geral_da_partida': 'draw_match_overview_panel', 'tabela_da_liga_ao_vivo': 'match_screens_draw_live_league_table',
  'organizar_area': 'Area::layout', 'iniciar_area': 'Area::init', 'desenhar_area': 'Area::draw',
  'desenhar_conferencia_da_escalacao': 'match_screens_draw_team_selection', 'carregar_estatisticas_da_partida': 'Match_Stats::load', 'salvar_estatisticas_da_partida': 'Match_Stats::save',

@@ -92,5 +92,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `head-to-head` | 0x6834f0, 0x6869a0 (batch 196) | — | the head-to-head mini table decides no standings in the career leagues: `c_saldo` and `c_empate` escape even comparing. Test: broad career (Italy, Spain) |
 | `match stats` | 0x729500, 0x729bd0 (batch 199) | — | the fixture entry second date and the bucket without the +0x40 flag do not show up in the career: `e_data` and `b_tipo` escape even comparing. Test: broad career |
 | `match stats` | 0x729600, 0x7293f0 (batch 206) | — | reading the record only runs when a match report is opened, and the [0x9cf684] competition fixture does not show up in the career: `l_tamanho` and `r_excluido` escape even comparing. Test: Lucas's comparing session (match report) and broad career |
+| `pundit` | `escolher_comentarista` (batch 210) | — | the doubled weight for the subject nation only decides against an other-nation candidate that passes the cut, which the career does not show: `m_dobro` escapes even comparing. Test: broad career |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

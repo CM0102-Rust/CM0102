@@ -66,6 +66,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x713d90 | `alcanca_o_ponto` | reaches_the_point |
 | 0x6cb700 | `alem_da_linha` | beyond_the_line |
 | 0x6b5ce0 | `andar_partida_do_dia` | step_day_match |
+| 0x76c060 | `apagar_repetidos_das_convocacoes` | national_teams_remove_duplicate_squad_entries |
 | 0x6bb950 | `aplicar_ao_lado` | apply_to_side |
 | 0x6bb8d0 | `aplicar_ao_time` | apply_to_team |
 | 0x6bac40 | `aplicar_falta` | apply_foul |
@@ -114,8 +115,10 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5b2e80 | `casa_do_setor_ocupada` | sector_slot_taken |
 | 0x5b3c70 | `casa_guardada` | stored_cell |
 | 0x5b7e60 | `casa_no_campo` | pitch_cell |
+| 0x785670 | `categoria_da_noticia` | NewsItem::get_category |
 | 0x4ca470 | `categoria_do_contrato` | contract_category |
 | 0x544410 | `chance_de_conhecer` | chance_to_know |
+| 0x519c90 | `chave_do_jogo_na_copa` | Cup::find_tree_slot_for_fixture |
 | 0x702050 | `chutar` | shoot |
 | 0x6f6c00 | `chute` | shot |
 | 0x70a910 | `chute_a_gol` | shot_on_goal |
@@ -211,6 +214,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c4470 | `escanteio` | corner |
 | 0x6bce80 | `escolher_casa` | choose_square |
 | 0x6ceb90 | `escolher_cobrador` | choose_taker |
+| 0x72b810 | `escolher_comentarista` | Media::pick_former_international_pundit |
 | 0x6c6a30 | `escolher_companheiro` | choose_teammate |
 | 0x6d0f80 | `escolher_destaque` | choose_standout |
 | 0x6e0230 | `escolher_formacao` | choose_formation |
@@ -220,6 +224,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c2880 | `escolher_por_papel_b` | choose_by_role_b |
 | 0x6c2050 | `escolher_por_papel_c` | choose_by_role_c |
 | 0x6c23f0 | `escolher_por_papel_e` | choose_by_role_e |
+| 0x62d140 | `escolher_tipo_de_lesao` | Injury::choose_injury_type |
 | 0x6cbad0 | `espaco_a_frente` | space_ahead |
 | 0x727fb0 | `esperar_os_outros_jogadores` | match_screens_handle_waiting_screen |
 | 0x5afd00 | `esquecer_pessoa` | forget_person |
@@ -272,6 +277,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x896fe0 | `guardar_instrucoes` | store_instructions |
 | 0x6dbb10 | `guardar_tatica` | store_tactic |
 | 0x6e86d0 | `habilidade_vista` | perceived_ability |
+| 0x7357c0 | `historia_punivel_do_jogador` | Media::get_finable_story_kind |
 | 0x5fdc30 | `hora_das_ferias` | HUMAN_MANAGER::get_holiday_stamp |
 | 0x600c90 | `humano_manda_no_clube` | human_runs_club |
 | 0x76d430 | `idades_da_selecao` | national_team_ages |
@@ -401,6 +407,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x71f500 | `painel_das_zonas_de_acao` | draw_action_zones_panel |
 | 0x721000 | `painel_do_relatorio_da_partida` | draw_match_report_panel |
 | 0x723d20 | `painel_dos_ultimos_placares` | draw_latest_scores_panel |
+| 0x5c4680 | `pais_da_excursao` | Friendly::pick_tour_nation |
 | 0x62c3d0 | `palavra_0c` | word_0c |
 | 0x717c70 | `papel_880` | role_880 |
 | 0x716310 | `papel_na_defesa` | defending_role |
@@ -465,6 +472,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6826d0 | `registro_da_liga` | league_record |
 | 0x7f6cd0 | `registro_do_observador` | scout_record |
 | 0x53a5b0 | `registro_livre` | free_record |
+| 0x521d60 | `regras_da_rodada_no_jogo` | Cup::apply_round_rules_to_match |
 | 0x6c54a0 | `reiniciar_lance` | restart_play |
 | 0x452fe0 | `reiniciar_recordes` | reset_records |
 | 0x5477d0 | `rejeitado_por` | rejected_by |
@@ -540,6 +548,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5b2f10 | `vaga_da_casa` | slot_of_code |
 | 0x785830 | `vaga_da_noticia` | NewsItem::get_slot |
 | 0x8c61e0 | `vaga_da_oferta` | offer_slot |
+| 0x8972c0 | `vaga_do_escalado` | Tactics::find_selection_slot |
 | 0x727e20 | `vaga_do_mais_bem_avaliado` | match_screens_find_best_rated_starter_slot |
 | 0x897ee0 | `vaga_extra_tatica` | extra_tactic_slot |
 | 0x897590 | `vaga_marcada` | marked_slot |

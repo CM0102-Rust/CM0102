@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn comparar_escolher_tipo_de_lesao(lesoes: usize, categ
     let atual: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
     atual(lesoes, jogador);
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO,
-        || o(lesoes, categoria, gravidade, jogador), || escolher_tipo_de_lesao(lesoes, categoria, gravidade, jogador));
+        || o(lesoes, categoria, gravidade, jogador), || crate::aleatorio::sem_contar(|| escolher_tipo_de_lesao(lesoes, categoria, gravidade, jogador)));
     PLACAR.registrar(igual && r == n, || format!("escolher_tipo_de_lesao({}, {}) original={} rust={} sorteio igual={}", categoria, gravidade, r, n, igual));
     r
 }

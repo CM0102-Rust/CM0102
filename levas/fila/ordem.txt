@@ -1,7 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-sim_midia_lesao
-sim_selecoes_taticas
-sim_copas_amistosos
 sim_transferencias_3
 sim_diversos_1
 sim_diversos_2

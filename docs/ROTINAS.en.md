@@ -1952,3 +1952,19 @@ Mutations: `mutacoes/leva208.py` (0, by the career to 2002-06-01, confirming the
 | `tabela_da_liga_ao_vivo()` | 0x7280e0 | cdecl | match_screens.cpp: draws the live league table (league, top, bottom) on a copy of the league with the day scores applied (or the draw date notice): title, headers, separators, position, up/down arrow, club and columns |
 
 Mutations: `mutacoes/leva209.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
+
+### Simulation, 210th batch — the finable media story, the drawn injury type and the news category; the repeated national squad entries, the selected player slot and the former international pundit; the round rules on the cup match, the match tie and the tour nation (official on 2026-10-22)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `historia_punivel_do_jogador()` | 0x7357c0 | thiscall | media.cpp: the kind of the media story about the player when it is a misbehaviour kind, else 0 |
+| `escolher_tipo_de_lesao()` | 0x62d140 | thiscall | injury.cpp: draws the injury type for the body part and severity, keeping the current injury or preferring the recurring one |
+| `categoria_da_noticia()` | 0x785670 | thiscall | news.cpp: the news category by the thousands range of its type |
+| `apagar_repetidos_das_convocacoes()` | 0x76c060 | stdcall | national_teams.cpp: clears repeated squad entries from the senior and B national sides of a nation |
+| `vaga_do_escalado()` | 0x8972c0 | thiscall | tactics.cpp: the club selection slot (0..19) holding the player, or 0xff |
+| `escolher_comentarista()` | 0x72b810 | thiscall | media.cpp: draws a former international (37+, 50+ caps) as pundit, weighted by nation reputation and caps |
+| `regras_da_rodada_no_jogo()` | 0x521d60 | thiscall | Cup.cpp: copies the round rules onto the match and, with a decision on a draw, marks who goes through by both sides' levels |
+| `chave_do_jogo_na_copa()` | 0x519c90 | thiscall | Cup.cpp: the round tie that holds the match's home club (-1 if none) |
+| `pais_da_excursao()` | 0x5c4680 | thiscall | friendly.cpp: draws the nation for a club tour, nearer the lower the reputation |
+
+Mutations: `mutacoes/leva210.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `m_dobro` escaped: doubling the weight (or adding 1) only decides when candidates from the subject nation compete with others; in the career the other-nation ones hardly ever pass the cut (reputation above 6500 + draw and record ≥ 6000), and among same-nation ones 2a and a + 1 keep the same order. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,382,029,053 draws, fingerprint 034ff3eb3e55dfd3, matches b3ee24bdc00da55f, database 7f2c15024cd99e7e
