@@ -25,6 +25,7 @@ e os devolve no fim (cada execucao comeca sem eles: sobras de uma execucao mudam
 nao rouba o foco; nao grava no janela.cfg (CM_JANELA).
 """
 import argparse
+import contextlib
 import glob
 import hashlib
 import os
@@ -55,7 +56,74 @@ def limpar_temporarios():
         os.remove(nome)
 
 
-def rodar(args, semente):
+def linhas_carreira(ligas='ENG', fundo='', motor='nao'):
+    """As linhas do auto_setup.cfg da carreira automatica de ferias (formato em docs/VERSAO_SEM_TELA.md)."""
+    return ['LANGUAGE=POR', 'DATABASE=MINIMUM', 'MATCH_STATS=NORMAL', 'FOREGROUND_LEAGUES=' + ligas,
+            'BACKGROUND_LEAGUES=' + fundo, 'ENABLE_MATCH_ENGINE=' + ('YES' if motor == 'sim' else 'NO'),
+            'ENABLE_COMPUTER_BIDS=YES', 'ON_HOLIDAY=YES']
+
+
+@contextlib.contextmanager
+def bancada(dono, arquivos, sem_trava=False):
+    """A pasta do jogo preparada para um teste pesado, e devolvida como estava no fim.
+
+    Segura a trava do laboratorio; confere e copia o game.cfg (restaura no fim); guarda os *.tmp
+    que houver (devolve no fim); grava `arquivos` ({nome: [linhas]}, ex.: auto_setup.cfg) na pasta
+    do jogo e os apaga no fim. Recusa se algum deles (ou auto_setup/quick_start) ja existir.
+    Usado tambem pelo prova_save.py."""
+    trava = laboratorio.Trava(dono)
+    if sem_trava:
+        print('rodando SEM a trava do laboratorio (--sem-trava)')
+    else:
+        trava.__enter__()
+    try:
+        for nome in set(arquivos) | {'auto_setup.cfg', 'quick_start.cfg'}:
+            if os.path.exists(os.path.join(JOGO, nome)):
+                falha('ja existe jogo\\%s; nao vou sobrescrever (apague ou mova antes)' % nome)
+        cfg = os.path.join(JOGO, 'game.cfg')
+        copia = os.path.join(tempfile.gettempdir(), 'cm0102_game.cfg.bak')
+        tem_cfg = os.path.exists(cfg)
+        if tem_cfg:
+            # Preferencias validas (marca 0x1553117c) e som desligado (bit 0x80 de +4): uma queda de energia
+            # zerou o arquivo em 11/10/2026; sem a marca o jogo usa o padrao (som ligado) e, sem placa de som
+            # nos testes, para numa caixa de erro escondida. Nao copiar por cima de uma copia boa.
+            dados = open(cfg, 'rb').read()
+            if len(dados) < 8 or int.from_bytes(dados[:4], 'little') != 0x1553117C:
+                falha('jogo\\game.cfg invalido (zerado ou corrompido); restaure uma copia boa antes')
+            if dados[4] & 0x80:
+                falha('jogo\\game.cfg com o som ligado: o jogo para na caixa "Unable to initialise the sound" nos testes')
+            shutil.copy2(cfg, copia)
+        # Arquivos de trabalho que ja estavam na pasta: guardados e devolvidos no fim.
+        guarda_tmp = os.path.join(tempfile.gettempdir(), 'cm0102_tmp_guardados')
+        shutil.rmtree(guarda_tmp, ignore_errors=True)
+        os.makedirs(guarda_tmp)
+        for nome in glob.glob(os.path.join(JOGO, '*.tmp')):
+            shutil.move(nome, guarda_tmp)
+        try:
+            for nome, linhas in arquivos.items():
+                with open(os.path.join(JOGO, nome), 'w', newline='\r\n') as f:
+                    f.write('\n'.join(linhas) + '\n')
+            yield
+        finally:
+            for nome in arquivos:
+                if os.path.exists(os.path.join(JOGO, nome)):
+                    os.remove(os.path.join(JOGO, nome))
+            limpar_temporarios()
+            for nome in glob.glob(os.path.join(guarda_tmp, '*.tmp')):
+                shutil.move(nome, JOGO)
+            if tem_cfg:
+                shutil.copy2(copia, cfg)
+            if not tem_cfg or open(cfg, 'rb').read() == open(copia, 'rb').read():
+                print('game.cfg restaurado; %s removido' % ', '.join(arquivos))
+            else:
+                print('ATENCAO: game.cfg diferente da copia em', copia)
+    finally:
+        if trava.f and not trava.f.closed:
+            trava.__exit__(None, None, None)
+
+
+def rodar(args, semente, extra=()):
+    """Uma execucao do jogo; `extra` vai no fim da linha de comando (ex.: ['-load', save])."""
     limpar_temporarios()
     log = os.path.join(JOGO, 'ddraw.log')
     # Ambiente minimo e fixo: a CRT do jogo copia cada variavel para a heap logo no inicio, e
@@ -75,7 +143,7 @@ def rodar(args, semente):
     if len(ambiente['CM_RASTRO']) != 10:
         falha('CM_RASTRO tem de ser AAAA-MM-DD')
     t0 = time.time()
-    p = subprocess.Popen([os.path.join(JOGO, args.exe), '-windowed', '-seed', str(semente)], cwd=JOGO, env=ambiente)
+    p = subprocess.Popen([os.path.join(JOGO, args.exe), '-windowed', '-seed', str(semente), *extra], cwd=JOGO, env=ambiente)
     while True:
         try:
             p.wait(timeout=5)
@@ -128,41 +196,8 @@ def main():
     ap.add_argument('--sem-trava', action='store_true', help='nao espera a trava do laboratorio (o vigia de memoria continua)')
     args = ap.parse_args()
 
-    for nome in ('auto_setup.cfg', 'quick_start.cfg'):
-        if os.path.exists(os.path.join(JOGO, nome)):
-            falha('ja existe jogo\\%s; nao vou sobrescrever (apague ou mova antes)' % nome)
-    cfg = os.path.join(JOGO, 'game.cfg')
-    copia = os.path.join(tempfile.gettempdir(), 'cm0102_game.cfg.bak')
-    tem_cfg = os.path.exists(cfg)
-    if tem_cfg:
-        # Preferencias validas (marca 0x1553117c) e som desligado (bit 0x80 de +4): uma queda de energia
-        # zerou o arquivo em 11/10/2026; sem a marca o jogo usa o padrao (som ligado) e, sem placa de som
-        # nos testes, para numa caixa de erro escondida. Nao copiar por cima de uma copia boa.
-        dados = open(cfg, 'rb').read()
-        if len(dados) < 8 or int.from_bytes(dados[:4], 'little') != 0x1553117C:
-            falha('jogo\\game.cfg invalido (zerado ou corrompido); restaure uma copia boa antes')
-        if dados[4] & 0x80:
-            falha('jogo\\game.cfg com o som ligado: o jogo para na caixa "Unable to initialise the sound" nos testes')
-        shutil.copy2(cfg, copia)
-    auto = os.path.join(JOGO, 'auto_setup.cfg')
-    linhas = ['LANGUAGE=POR', 'DATABASE=MINIMUM', 'MATCH_STATS=NORMAL', 'FOREGROUND_LEAGUES=' + args.ligas,
-              'BACKGROUND_LEAGUES=' + args.fundo, 'ENABLE_MATCH_ENGINE=' + ('YES' if args.motor == 'sim' else 'NO'),
-              'ENABLE_COMPUTER_BIDS=YES', 'ON_HOLIDAY=YES']
-    # Arquivos de trabalho que ja estavam na pasta: guardados e devolvidos no fim.
-    guarda_tmp = os.path.join(tempfile.gettempdir(), 'cm0102_tmp_guardados')
-    shutil.rmtree(guarda_tmp, ignore_errors=True)
-    os.makedirs(guarda_tmp)
-    for nome in glob.glob(os.path.join(JOGO, '*.tmp')):
-        shutil.move(nome, guarda_tmp)
     resultados = []
-    trava = laboratorio.Trava('CM0102 simular.py')
-    try:
-        if args.sem_trava:
-            print('rodando SEM a trava do laboratorio (--sem-trava)')
-        else:
-            trava.__enter__()
-        with open(auto, 'w', newline='\r\n') as f:
-            f.write('\n'.join(linhas) + '\n')
+    with bancada('CM0102 simular.py', {'auto_setup.cfg': linhas_carreira(args.ligas, args.fundo, args.motor)}, args.sem_trava):
         for i in range(args.repetir):
             ok, motivo = laboratorio.pode_rodar()
             if not ok:
@@ -201,20 +236,6 @@ def main():
                 for rotina, (total, div) in ultimos.items():
                     print('    %s: %s comparacoes, %s divergencias' % (rotina, total, div))
             resultados.append(info)
-    finally:
-        if os.path.exists(auto):
-            os.remove(auto)
-        limpar_temporarios()
-        for nome in glob.glob(os.path.join(guarda_tmp, '*.tmp')):
-            shutil.move(nome, JOGO)
-        if tem_cfg:
-            shutil.copy2(copia, cfg)
-        if trava.f and not trava.f.closed:
-            trava.__exit__(None, None, None)
-    if not tem_cfg or open(cfg, 'rb').read() == open(copia, 'rb').read():
-        print('game.cfg restaurado; auto_setup.cfg removido')
-    else:
-        print('ATENCAO: game.cfg diferente da copia em', copia)
     ok = [r for r in resultados if r]
     if args.repetir > 1 and ok:
         iguais = len({(r['impressao'], r['partidas'], r['banco']) for r in ok}) == 1 and len(ok) == len(resultados)

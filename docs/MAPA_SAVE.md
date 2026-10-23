@@ -54,7 +54,7 @@ Nenhuma destas está em Rust. As rotinas `load`/`save` de cada subsistema (~30 p
 
 1. Data local, `[0xdd7110] = 0xfffc1fb9`. Menos de 25 MB livres liga `[0xdd7134]` (caixa Disk Full); memória livre < 1 liga `[0xdd7138]`.
 2. Em rede (bit 0x20000000 de `[0xae3138]+4`) grava em `temp_save_file` e renomeia no fim; senão apaga o save antigo (`remove`).
-3. Tipo do contêiner: bit 0x8000 de `[0xae3138]+4` (a opção de compressão) ligado = **3**, desligado = **4** (RLE). O `a4` do cabeçalho é o 2º argumento: 0x16 `.sav`, 0x17 `.qst`.
+3. Tipo do contêiner: bit 0x8000 de `[0xae3138]+4` (o dword +4 do `game.cfg`) ligado = **3** (sem compressão), desligado = **4** (RLE). O `a4` do cabeçalho é o 2º argumento: 0x16 `.sav`, 0x17 `.qst`.
 4. Passo 1: `save_database_for_game` → `save_database` grava as tabelas do banco (um item por tabela, `index.dat`) e empacota os `*.lng` (`zadd`).
 5. Passo 2: `general.dat` (16 `zwrite`: versão, resumo de `build_save_game_summary`, id único, tamanho do banco, data e hora, última data e hora, ligas, nação padrão, dados de execução de pessoas e clubes...). Depois, cada subsistema, nesta ordem (entre um e outro: espaço em disco, memória e mensagem de rede 0x802f80):
 
@@ -126,7 +126,7 @@ Tipo novo de item (**save**), ao lado de telas e simulação. 21 rotinas em 7 it
 | S3 | S4 gravar | 0x82e430 `save_game_data`, 0x827110 `create_game_from_setup_file` | orquestrador sem comparador: `.qst` gravado pela original e pela Rust no mesmo estado, comparado byte a byte (tipos 3 e 4); `create_game_from_setup_file` também pela carreira |
 | S4 | S5 carregar | 0x82a9c0 `load_game_data` | orquestrador: `-load <qst>` + carreira de férias, impressão Rust = original; mutações pela cadeia |
 
-**Banco de provas do bloco (falta montar):** passo novo na cadeia: `quick_start.cfg` com a compressão ligada (`game.cfg` isolado por `CM3_PREFS`, ou cópia e restauração) grava um `.qst` tipo 4 nos dois modos; depois `-load` desse `.qst` e alguns dias de férias. A carreira atual não passa por nenhuma rotina de zipdir.
+**Banco de provas do bloco:** `engenharia-reversa/prova_save.py` (`docs/COMO_CONTINUAR.md`, "Prova do save"): `quick_start.cfg` com a compressão ligada (bit 0x8000 do `game.cfg` desligado, cópia e restauração) grava um `.qst` tipo 4 nos dois modos e compara item a item. A carga não pode ser do `.qst` (sem técnico, o `-load` para no "Enter Name"): usa um `.sav` com técnico de férias, feito uma vez pelo Lucas. A carreira atual não passa por nenhuma rotina de zipdir.
 
 ## 5. Riscos
 

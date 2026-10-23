@@ -54,7 +54,7 @@ None of these is in Rust. Each subsystem's `load`/`save` routines (~30 pairs, li
 
 1. Local date, `[0xdd7110] = 0xfffc1fb9`. Under 25 MB free sets `[0xdd7134]` (Disk Full box); free memory < 1 sets `[0xdd7138]`.
 2. Network game (bit 0x20000000 of `[0xae3138]+4`): writes to `temp_save_file` and renames at the end; otherwise removes the old save (`remove`).
-3. Container type: bit 0x8000 of `[0xae3138]+4` (the compression option) set = **3**, clear = **4** (RLE). The header's `a4` is the 2nd argument: 0x16 `.sav`, 0x17 `.qst`.
+3. Container type: bit 0x8000 of `[0xae3138]+4` (the `game.cfg` dword +4) set = **3** (uncompressed), clear = **4** (RLE). The header's `a4` is the 2nd argument: 0x16 `.sav`, 0x17 `.qst`.
 4. Step 1: `save_database_for_game` → `save_database` writes the database tables (one item per table, `index.dat`) and packs the `*.lng` (`zadd`).
 5. Step 2: `general.dat` (16 `zwrite`s: version, summary from `build_save_game_summary`, unique id, database size, date and time, last date and time, leagues, default nation, staff and club runtime data...). Then each subsystem, in this order (between each: disk space, memory and network message 0x802f80):
 
@@ -126,7 +126,7 @@ New item type (**save**), next to screens and simulation. 21 routines in 7 items
 | S3 | S4 save | 0x82e430 `save_game_data`, 0x827110 `create_game_from_setup_file` | orchestrator without comparator: `.qst` written by the original and by Rust from the same state, compared byte for byte (types 3 and 4); `create_game_from_setup_file` also by the career |
 | S4 | S5 load | 0x82a9c0 `load_game_data` | orchestrator: `-load <qst>` + holiday career, Rust print = original; mutations through the chain |
 
-**Test bench for the block (to be built):** a new chain step: `quick_start.cfg` with compression on (`game.cfg` isolated through `CM3_PREFS`, or copy and restore) writes a type 4 `.qst` in both modes; then `-load` of that `.qst` and a few holiday days. The current career goes through no zipdir routine.
+**Test bench for the block:** `engenharia-reversa/prova_save.py` (`docs/COMO_CONTINUAR.en.md`, "Save proof"): `quick_start.cfg` with compression on (`game.cfg` bit 0x8000 cleared, copy and restore) writes a type 4 `.qst` in both modes and compares item by item. The load cannot use the `.qst` (no manager, `-load` stops at "Enter Name"): it uses a `.sav` with a manager on holiday, made once by Lucas. The current career goes through no zipdir routine.
 
 ## 5. Risks
 
