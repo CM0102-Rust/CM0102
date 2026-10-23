@@ -77,6 +77,7 @@ def materializar(nomes, n, base, antes):
     destino = os.path.join(R, 'levas', str(n))
     os.makedirs(destino, exist_ok=False)
     codigos, rotinas, mutacoes, docs, tpts, tens = [], [], [], [], [], []
+    campos, interessa = [], []  # LEIA: campos tocados e sessões irmãs interessadas (desde a 215a)
     b = base
     for nome in nomes:
         src = os.path.join(FILA, nome)
@@ -92,6 +93,8 @@ def materializar(nomes, n, base, antes):
         tpts.append(tpt)
         tens.append(ten)
         docs += d
+        campos += rot.get('CAMPOS', [])
+        interessa += [t for t in rot.get('INTERESSA', []) if t not in interessa]
         with open(os.path.join(src, 'materializada.txt'), 'w', encoding='utf-8') as f:
             f.write(f'leva {n}, índices {b}..{b + len(rot["ROTINAS"]) - 1}\n')
         b += len(rot['ROTINAS'])
@@ -106,6 +109,7 @@ def materializar(nomes, n, base, antes):
     molde = open(os.path.join(R, 'engenharia-reversa', 'molde_docs.py'), encoding='utf-8').read()
     open(os.path.join(destino, 'docs.py'), 'w', encoding='utf-8').write(
         molde.replace('%%N%%', str(n)).replace('%%ANTES%%', str(antes)).replace('%%R%%', repr(docs))
+        .replace('%%CAMPOS%%', repr(campos)).replace('%%INTERESSA%%', repr(interessa))
         .replace('%%TPT%%', repr('; '.join(tpts))).replace('%%TEN%%', repr('; '.join(tens))).replace("secao=('Simulação', 'Simulation')", secao))
     linhas = [l for l in open(os.path.join(FILA, 'ordem.txt'), encoding='utf-8') if l.strip() not in nomes]
     open(os.path.join(FILA, 'ordem.txt'), 'w', encoding='utf-8').writelines(linhas)

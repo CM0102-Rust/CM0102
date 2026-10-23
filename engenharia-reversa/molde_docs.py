@@ -19,4 +19,5 @@ fazer(N, %%ANTES%%, %%ANTES%% + len(R), %%TPT%%, %%TEN%%,
       [f"| `{a}()` | {e} | {c} | {f}: {d} |" for a, _, e, f, c, d, _ in R],
       [f"| `{a}()` | {e} | {c} | {f}: {d} |" for a, _, e, f, c, _, d in R],
       M, ME, [(a, g) for a, g, *_ in R], "'posicao_no_conteiner': 'position_in_container',", secao=('Simulação', 'Simulation'))
-leia(N, %%TPT%%, %%TEN%%, [(a, e, f + ', ' + c, dp, de) for a, _, e, f, c, dp, de in R], tot, ac, lac_pt, lac_en)
+leia(N, %%TPT%%, %%TEN%%, [(a, e, f + ', ' + c, dp, de) for a, _, e, f, c, dp, de in R], tot, ac, lac_pt, lac_en,
+     campos=%%CAMPOS%%, interessa=%%INTERESSA%%)

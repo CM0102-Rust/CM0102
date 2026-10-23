@@ -4,12 +4,15 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # raiz do projeto
 
-# As referências da cadeia (o original determinizado): mudam quando entra uma zeragem nova. 22/10/2026,
-# 212a: a 0x84be20 entrou em ZERADAS (antes: jogo 963cea289f055ac3, carreira 034ff3eb3e55dfd3).
-REF_JOGO = '5afd987e1a1a3ef3'
-REF_CARREIRA = 'b11bd5cb63f51d72'
-CARREIRA_PT = '2.361.839.396 sorteios, impressão b11bd5cb63f51d72, partidas 2461da5b0d296dba, banco 4d07a03c94c6fda5'
-CARREIRA_EN = '2,361,839,396 draws, fingerprint b11bd5cb63f51d72, matches 2461da5b0d296dba, database 4d07a03c94c6fda5'
+# As referências da cadeia (o original determinizado): mudam quando muda uma zeragem ou um desvio desligado.
+# 22/10/2026: a zeragem da 0x84be20 (212a) foi desfeita e a 0x7c6bf0 desligada (DESLIGADAS no motor.rs);
+# o jogo real volta a 963cea289f055ac3 e a ampla a 9ee2b5ac (Rust = original); antes: carreira 034ff3eb3e55dfd3.
+REF_JOGO = '963cea289f055ac3'
+REF_CARREIRA = 'b28542870027e432'
+CARREIRA_PT = '2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551'
+CARREIRA_EN = '2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551'
+
+
 def _extenso_pt(n):
     """O número por extenso no feminino (as levas), de 1 a 999."""
     u = ['', 'uma', 'duas', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez', 'onze', 'doze', 'treze',
@@ -92,9 +95,12 @@ def fazer(n, antes, depois, titulo_pt, titulo_en, linhas_pt, linhas_en, mut_pt, 
     print('docs ok')
 
 
-def leia(n, titulo_pt, titulo_en, rotinas, mutacoes, acusadas, lacuna_pt='', lacuna_en=''):
+def leia(n, titulo_pt, titulo_en, rotinas, mutacoes, acusadas, lacuna_pt='', lacuna_en='', campos=(), interessa=()):
     """LEIA.md e LEIA.en.md da leva (levas/NNN/), para as levas com comparação de verdade e a cadeia
-    completa. `rotinas` = [(nome, endereço, arquivo, o que faz pt, o que faz en)]."""
+    completa. `rotinas` = [(nome, endereço, arquivo, o que faz pt, o que faz en)]. Desde a 215ª (pedido
+    da sessão orquestradora, autorizado pelo Lucas em 22/10/2026): `campos` = [(linha pt, linha en)] no
+    formato `registro +desloc: o que é; ponteiro|id|valor; lê|grava (rotina)` e `interessa` = as sessões
+    irmãs que podem aproveitar a leva (CMRTE, SGE, CMScout, GPF2)."""
     base = os.path.join(R, 'levas', str(n))
     ord_en = 'th' if n % 100 in (11, 12, 13) else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')
     ref = (f'0 divergências ({REF_JOGO})', f'as três iguais ({REF_CARREIRA})',
@@ -117,6 +123,12 @@ def leia(n, titulo_pt, titulo_en, rotinas, mutacoes, acusadas, lacuna_pt='', lac
            f'- **Rust ×2 and original careers to 2002-06-01:** {ref[3]}.',
            '', f'**Redo**, on top of batch {n - 1}\'s commit:', '1. `python integrar.py`',
            '2. `cargo build --release` and copy the DLL to `jogo_testes/`', f'3. `bash engenharia-reversa/cadeia.sh {n}`', '']
+    if campos:
+        pt += ['**Campos tocados:**'] + [f'- {c}' for c, _ in campos] + ['']
+        en += ['**Fields touched:**'] + [f'- {c}' for _, c in campos] + ['']
+    if interessa:
+        pt += [f'**Interessa a:** {", ".join(interessa)}', '']
+        en += [f'**Of interest to:** {", ".join(interessa)}', '']
     open(os.path.join(base, 'LEIA.md'), 'w', encoding='utf-8').write('\n'.join(pt))
     open(os.path.join(base, 'LEIA.en.md'), 'w', encoding='utf-8').write('\n'.join(en))
 
