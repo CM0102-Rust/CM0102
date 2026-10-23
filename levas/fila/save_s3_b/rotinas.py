@@ -1,0 +1,14 @@
+SAVE = True
+ROTINAS = [('gravar_jogo', 0x82e430, [0x64, 0xa1, 0x00, 0x00, 0x00, 0x00])]
+DOCS = ('o save: gravar o jogo inteiro',
+        'the saved game: saving the whole game',
+        [('gravar_jogo', 'save_game_data', '0x82e430', 'Setup.cpp', 'cdecl',
+          'grava o save: apaga o antigo, o banco (0x524d30), o general.dat (16 campos e o resumo), o save dos subsistemas na ordem da original com disco e memória entre eles, empacota os *.tmp, as regras FIFA; em rede, grava em temp_save_file e renomeia',
+          'saves the game: deletes the old file, the database (0x524d30), general.dat (16 fields and the summary), the subsystem saves in the original order with disk and memory checks between them, packs the *.tmp files, the FIFA rules; on a network game, writes to temp_save_file and renames')])
+CAMPOS = [('[0xdd7110] versão do save (0xfffc1fb9); valor; grava (gravar_jogo)', '[0xdd7110] save version (0xfffc1fb9); value; writes (gravar_jogo)'),
+          ('general.dat: [0xdd7110] versão, resumo (0xf74), [0xdd7120] id único, [0xdd7114] tamanho do banco (1 byte), [0xdd6ec8] e [0xae2c90] datas, [0xae2c88] hora, [0xae2c78] última data, [0xae2cfc] última hora, [0xae2d00] e [0xae2d04] ligas, nação padrão (id em +0 de [0xae2d08] ou −1), [0xae2d10] × 0x4f de [0xae2d0c], [0xae2d18] × 6 de [0xae2d14], [0xae235c] × 4 de [0xae2d1c]; bytes; lê e grava no save (gravar_jogo)', 'general.dat: [0xdd7110] version, summary (0xf74), [0xdd7120] unique id, [0xdd7114] database size (1 byte), [0xdd6ec8] and [0xae2c90] dates, [0xae2c88] time, [0xae2c78] last date, [0xae2cfc] last time, [0xae2d00] and [0xae2d04] leagues, default nation (id at +0 of [0xae2d08] or −1), [0xae2d10] × 0x4f from [0xae2d0c], [0xae2d18] × 6 from [0xae2d14], [0xae235c] × 4 from [0xae2d1c]; bytes; reads and writes into the save (gravar_jogo)'),
+          ('[0xae3138] opções do jogo +4: bits 0x8000 (sem compressão), 0x20000000 (rede), 0x40000000 (conferir disco antes); valor; lê (gravar_jogo)', '[0xae3138] game options +4: bits 0x8000 (no compression), 0x20000000 (network), 0x40000000 (check disk first); value; reads (gravar_jogo)'),
+          ('[0xdd7134] sem disco, [0xdd7138] sem memória; valor; grava 1 (gravar_jogo)', '[0xdd7134] out of disk, [0xdd7138] out of memory; value; writes 1 (gravar_jogo)'),
+          ('os globais dos subsistemas (PASSOS_DO_SAVE; [0xb6b7c8], o de Media, também é a condição do FOG_OF_WAR [0xae2a60]) e [0xb5ded8] (hall da fama); ponteiro; lê (gravar_jogo)', 'the subsystem globals (PASSOS_DO_SAVE; [0xb6b7c8], the Media one, is also the FOG_OF_WAR [0xae2a60] condition) and [0xb5ded8] (hall of fame); pointer; reads (gravar_jogo)'),
+          ('[0xdd7130] jogo gravado, [0xa801bc]; valor; grava 1 e 0; 0xdd70a0 data do último save; valor; grava (gravar_jogo)', '[0xdd7130] game saved, [0xa801bc]; value; writes 1 and 0; 0xdd70a0 last save date; value; writes (gravar_jogo)')]
+INTERESSA = ['SGE']

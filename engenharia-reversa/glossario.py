@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'criar_jogo_pela_configuracao': 'create_game_from_setup_file', 'gravar_jogo': 'save_game_data',
  'filtro_do_jogo_salvo': 'check_saved_game_file', 'filtro_do_inicio_rapido': 'check_quick_start_file', 'versao_do_jogo_salvo_valida': 'valid_saved_game_version', 'gravar_regras_fifa': 'save_fifa_transfer_rules', 'carregar_regras_fifa': 'load_fifa_transfer_rules', 'montar_resumo_do_save': 'build_save_game_summary', 'gravar_banco_no_save': 'save_database_for_game', 'carregar_banco_do_save': 'load_database_from_stream', 'liberar_dados_do_jogo': 'free_game_data',
  'casar_nome_com_padrao': 'zipdir_match_filename_pattern', 'id_do_conteiner': 'zget_archive_id', 'tamanho_dos_itens_do_padrao': 'zget_matching_size', 'empacotar_no_conteiner': 'zadd_matching_files', 'desempacotar_do_conteiner': 'zextract_matching_files', 'limpar_pasta_temporaria': 'utils_clear_temp_folder', 'ler_do_conteiner': 'zread', 'gravar_no_conteiner': 'zwrite', 'fechar_conteiner': 'zclose',
  'montar_estatisticas_da_partida': 'Match_Stats::Match_Stats', 'desmontar_estatisticas_da_partida': 'Match_Stats::~Match_Stats',

@@ -167,6 +167,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x448110 | `copiar_registro_de_partida` | match_record_assign |
 | 0x448170 | `copiar_registro_de_sequencia` | run_record_assign |
 | 0x839590 | `cor_do_titulo` | get_heading_colour |
+| 0x827110 | `criar_jogo_pela_configuracao` | create_game_from_setup_file |
 | 0x866f60 | `criterio_da_comissao` | staff_criterion |
 | 0x4bff70 | `criterio_da_competicao` | competition_criterion |
 | 0x6e8910 | `cumprir_regra_do_elenco` | apply_squad_rule |
@@ -291,6 +292,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5fdd30 | `gravar_dado_do_humano` | set_human_field |
 | 0x6d98b0 | `gravar_eventos` | record_events |
 | 0x8967d0 | `gravar_formacao_tatica` | set_tactic_formation |
+| 0x82e430 | `gravar_jogo` | save_game_data |
 | 0x4afeb0 | `gravar_jogo_na_noticia` | comp_util_write_fixture_to_news_slots |
 | 0x8984d0 | `gravar_linha_tatica` | write_tactics_row |
 | 0x786d30 | `gravar_marca_da_noticia` | News::set_item_slot |

@@ -1,0 +1,16 @@
+SAVE = True
+ROTINAS = [('criar_jogo_pela_configuracao', 0x827110, [0x81, 0xec, 0x00, 0x08, 0x00, 0x00])]
+DOCS = ('o save: criar o jogo pelo arquivo de configuração (o início rápido e a carreira automática)',
+        'the saved game: creating the game from the setup file (quick start and automatic career)',
+        [('criar_jogo_pela_configuracao', 'create_game_from_setup_file', '0x827110', 'Setup.cpp', 'cdecl',
+          'lê o auto_setup.cfg/quick_start.cfg (banco, estatísticas, ligas de frente e de fundo, idioma, motor, propostas, férias), cria o jogo (0x828110) e grava o .qst (0x82e430 com 0x17) e libera tudo, ou põe o técnico humano de férias num clube sorteado',
+          'reads auto_setup.cfg/quick_start.cfg (database, stats, foreground and background leagues, language, engine, bids, holiday), creates the game (0x828110) and saves the .qst (0x82e430 with 0x17) and frees everything, or puts the human manager on holiday at a drawn club')])
+CAMPOS = [('[0xae3138] opções do jogo (game.cfg) +4: bit 2 (o tipo das ligas); valor; lê; +0x113: nome do jogo ("auto_setup_game"); texto; grava (criar_jogo_pela_configuracao)', '[0xae3138] game options (game.cfg) +4: bit 2 (league type); value; reads; +0x113: game name ("auto_setup_game"); text; writes (criar_jogo_pela_configuracao)'),
+          ('nação +0x11c: marca da liga (de frente 2 ou 6, de fundo 1 ou 5, pelo bit 2 das opções); valor; lê e grava (criar_jogo_pela_configuracao)', 'nation +0x11c: league mark (foreground 2 or 6, background 1 or 5, by options bit 2); value; reads and writes (criar_jogo_pela_configuracao)'),
+          ('[0xae2d00] ligas marcadas, [0xae2d04] ligas de frente; valor; grava; [0xae2d08] nação padrão; ponteiro; grava (criar_jogo_pela_configuracao)', '[0xae2d00] marked leagues, [0xae2d04] foreground leagues; value; writes; [0xae2d08] default nation; pointer; writes (criar_jogo_pela_configuracao)'),
+          ('[0xa5a390] motor da partida ligado (byte), [0x9cd1f8] propostas do computador; valor; grava (criar_jogo_pela_configuracao)', '[0xa5a390] match engine enabled (byte), [0x9cd1f8] computer bids; value; writes (criar_jogo_pela_configuracao)'),
+          ('[0xdd7124], [0xdd713c], [0xdd7130] marcas do jogo; valor; grava 1 (criar_jogo_pela_configuracao)', '[0xdd7124], [0xdd713c], [0xdd7130] game flags; value; writes 1 (criar_jogo_pela_configuracao)'),
+          ('humano da vez 0xb74c26 + 0x300 × (i16)[0xb77c7a]: pessoa do técnico; ponteiro; lê e grava (criar_jogo_pela_configuracao)', 'current human 0xb74c26 + 0x300 × (i16)[0xb77c7a]: manager person; pointer; reads and writes (criar_jogo_pela_configuracao)'),
+          ('pessoa (0x6e) +0x5f: humano (1); valor; lê e grava; +0x18 ano 1966, +0x10 data, +0x24 e +0x39 = 0, +0xc texto zerado; +0x1a nação; ponteiro; +4 e +8 nomes; id; grava (criar_jogo_pela_configuracao)', 'person (0x6e) +0x5f: human (1); value; reads and writes; +0x18 year 1966, +0x10 date, +0x24 and +0x39 = 0, +0xc text cleared; +0x1a nation; pointer; +4 and +8 names; id; writes (criar_jogo_pela_configuracao)'),
+          ('clube (0x245) +0x53: nação; ponteiro; lê (criar_jogo_pela_configuracao)', 'club (0x245) +0x53: nation; pointer; reads (criar_jogo_pela_configuracao)')]
+INTERESSA = ['SGE', 'CMRTE']

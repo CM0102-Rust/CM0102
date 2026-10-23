@@ -1,0 +1,64 @@
+leva 220: desligando motor_criar_jogo_pela_configuracao, motor_gravar_jogo
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\base1.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\base2.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+motor.rs restaurado e recompilado
+variaveis: general.dat 48 bytes
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\mutacao.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+sem mutacao (4s): ['IGUAL (16856662 bytes)']
+ramos na base: andar ate o fim 16, andar com motor 16, andar partida terminada 16, batedor vazio 131072, clube elenco 16, clube segue 16, conteiner criado 1, conteiner gravado 64, conteiner posicao 2, dia partida iniciada 16, dia segunda volta 512, dia sem mais partidas 512, estatisticas desmontar 1, estatisticas gravar registro 64, estatisticas montar 1, estatisticas registrar partida 64, eventos arquivo com espaco 64, eventos arquivo novo 1, fechamento 64, fechamento media do lado 128, fechar com competicao 64, fechar historia 64, fechar metodo da competicao 64, instrucoes apagadas 128, jogadores tecnico 64, lesao agravada 2, lesao grave 32, lesao lista nova 16, lesao mais grave 2, lesao para 5 8, lesao registrada 32, lesao sem folego 32, linha tatica gravada 128, linha tatica lida 128, montagem avisada 64, montagem competicao nova 32, montagem grupo novo 32, partida sem humano 64, save empacotar 2, save gravar banco 1, save gravar jogo 1, save gravar regras fifa 1, save liberar dados do jogo 2, save limpar temporarios 4, save zclose 64, save zwrite bloco 64, save zwrite par 0x7f 262144, sem humano selecao de humano 1, simulacao rapida amarelo 128, simulacao rapida contador igual 4, simulacao rapida expulsao 16, simulacao rapida gol 128, simulacao rapida gol de penalti 4, simulacao rapida lesao 64, simulacao rapida penalti perdido 2, simulacao rapida penaltis 4, simulacao rapida prorrogacao 4, simulacao rapida segundo amarelo 4, telas desenhar a area 4, telas estatisticas salvar 1, telas iniciar a area 4, telas organizar a area 4, vaga extra apagada 256, vaga extra gravada 8
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\mutacao.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+mutacao sv3_criar_id          4s IGUAL A BASE (escapou): IGUAL (16856662 bytes)
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\mutacao.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+mutacao sv3_criar_frente      4s IGUAL A BASE (escapou): IGUAL (16856662 bytes)
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\mutacao.qst, 16856661 bytes, tipo 4, id 0x17, 106 itens, 4 s
+mutacao sv3_gravar_id_unico    4s ACUSADA: DIFERENTE item 31 general.dat +0xf78 (tamanho 778601/778601)
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\mutacao.qst, 16856657 bytes, tipo 4, id 0x17, 106 itens, 4 s
+mutacao sv3_gravar_resumo     4s ACUSADA: DIFERENTE item 31 general.dat +0xf78 (tamanho 778601/778597)
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\mutacao.qst, 16856660 bytes, tipo 4, id 0x17, 105 itens, 4 s
+mutacao sv3_gravar_fifa       4s ACUSADA: DIFERENTE cabecalho: tipo 4/4, id 0x17/0x17, 106/105 itens
+restaurado e recompilado
+pool nao paginado 2.12 GB, paginado 2.90 GB, RAM livre 9.0 GB, comprometida 50.8/62.1 GB
+=== PROVA DO SAVE
+leva 220: desligando motor_criar_jogo_pela_configuracao, motor_gravar_jogo
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\base1.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\base2.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+motor.rs restaurado e recompilado
+variaveis: general.dat 48 bytes
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\leva.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+prova da leva 220: IGUAL (16856662 bytes)
+pool nao paginado 2.12 GB, paginado 2.90 GB, RAM livre 9.0 GB, comprometida 50.8/62.1 GB
+=== JOGO REAL
+    pool nao paginado 2.12 -> 2.10 GB, paginado 2.90 -> 2.86 GB
+execucao 1: parou em 2002-000, 1357034645 sorteios, impressao 963cea289f055ac3, partidas 10350/39362e12361c2458, banco a834b0db98028930, 1969 s
+    data: 100000000 comparacoes, 0 divergencias
+    motor: 10000000000 comparacoes, 0 divergencias
+    aleatorio: 1000000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+data: 100000000 comparacoes, 0 divergencias
+aleatorio: 1000000000 comparacoes, 0 divergencias
+motor: 10000000000 comparacoes, 0 divergencias
+sonda_lixo: valor 0x0000; 6500 escalas da 0x6dbc50, 0 com lixo, 0 mudam se zerado
+pool nao paginado 2.10 GB, paginado 2.86 GB, RAM livre 7.3 GB, comprometida 53.7/62.1 GB
+=== CARREIRA
+    pool nao paginado 2.10 -> 2.09 GB, paginado 2.86 -> 2.86 GB
+execucao 1: parou em 2002-151, 2368478169 sorteios, impressao b28542870027e432, partidas 19327/959a02ada4a23639, banco ce037e0141221551, 139 s
+    pool nao paginado 2.09 -> 2.10 GB, paginado 2.86 -> 2.86 GB
+execucao 2: parou em 2002-151, 2368478169 sorteios, impressao b28542870027e432, partidas 19327/959a02ada4a23639, banco ce037e0141221551, 140 s
+game.cfg restaurado; auto_setup.cfg removido
+determinismo: OK, todas as execucoes iguais
+    pool nao paginado 2.10 -> 2.09 GB, paginado 2.86 -> 2.84 GB
+execucao 1: parou em 2002-151, 2368478169 sorteios, impressao b28542870027e432, partidas 19327/959a02ada4a23639, banco ce037e0141221551, 146 s
+game.cfg restaurado; auto_setup.cfg removido
+pool nao paginado 2.09 GB, paginado 2.84 GB, RAM livre 6.6 GB, comprometida 54.6/62.1 GB
+=== FIM

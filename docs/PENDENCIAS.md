@@ -100,5 +100,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `regens` | `copiar_aposentadoria_pendente` 0x7a8780 (216ª) | — | o motivo da aposentadoria pendente só pesa no fim da temporada: `ha_motivo` escapa até comparando. Teste: carreira ampla até o fim da temporada |
 | `save` | `casar_nome_com_padrao` 0x933a00 (218ª) | — | o padrão só roda ao carregar: `sv_padrao_letra`, `sv_padrao_ponto`, `sv_padrao_fim` escapam da prova de gravar. Teste: a etapa de carregar da prova do save (falta o save com técnico de férias) |
 | `save` | `gravar_banco_no_save` 0x524d30 (219ª) | — | desligada (DESLIGADAS): o resíduo de pilha que o save_database grava no index.dat muda se ela roda pela cópia; `sv2_banco_a4` não roda. Volta quando a cópia reproduzir o resíduo |
+| `save` | `criar_jogo_pela_configuracao` 0x827110 (220ª) | — | desligada (DESLIGADAS): a create_game 0x828110 lê o resíduo de pilha que a cópia muda; `sv3_criar_id` e `sv3_criar_frente` não rodam. Volta quando a cópia reproduzir o resíduo (ou com a create_game em Rust) |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
