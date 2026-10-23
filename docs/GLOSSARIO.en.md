@@ -186,6 +186,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5b58e0 | `designado_da_posicao` | designated_for_position |
 | 0x8c5430 | `desmarcar_contrato_acertado` | clear_agreed_contract_flag |
 | 0x84aeb0 | `desmarcar_lances_pelo_jogador` | Shortlist_Manager::clear_bid_markers_for_player |
+| 0x7293c0 | `desmontar_estatisticas_da_partida` | Match_Stats::~Match_Stats |
 | 0x717470 | `destaque_do_jogador` | player_highlight |
 | 0x6ebd60 | `destruir_jogador_da_partida` | destroy_match_player |
 | 0x6b97a0 | `destruir_motor` | destroy_engine |
@@ -375,6 +376,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c3950 | `menor_distancia` | smallest_distance |
 | 0x6d4250 | `momento_marcado` | marked_moment |
 | 0x71b630 | `montar_detalhes_da_partida` | build_match_details_screen |
+| 0x729000 | `montar_estatisticas_da_partida` | Match_Stats::Match_Stats |
 | 0x6844b0 | `montar_grade_de_turnos` | league_build_round_robin_grid |
 | 0x717db0 | `montar_jogos_do_dia` | build_day_fixtures_screen |
 | 0x6b3c10 | `montar_o_dia` | set_up_the_day |

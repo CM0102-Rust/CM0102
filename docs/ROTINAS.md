@@ -2048,3 +2048,12 @@ Mutações: `mutacoes/leva215.py` (0, pela carreira até 2002-06-01, confirmando
 | `copiar_aposentadoria_pendente()` | 0x7a8780 | thiscall | player_regen.cpp: copia a aposentadoria pendente: a pessoa, o clube, as duas datas, o motivo e a marca de anunciada |
 
 Mutações: `mutacoes/leva216.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `ha_motivo` escapou: o motivo (+0x18) da aposentadoria pendente copiada não é lido de forma que decida até 2002-06-01, e no jogo real comparando (até 2002-01-01) a cópia não pega nenhuma aposentadoria com motivo que mude (as aposentadorias se resolvem no fim da temporada). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
+
+### Motor de partidas, 217ª leva — o fim das estatísticas da partida: o construtor (com a conferência do CD) e o destrutor (oficial em 23/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `montar_estatisticas_da_partida()` | 0x729000 | thiscall | match_stats.cpp: confere o CD do CM01/02 e monta as estatísticas: carrega do save ou cria o índice, os baldes e o arquivo temporário zerado |
+| `desmontar_estatisticas_da_partida()` | 0x7293c0 | thiscall | match_stats.cpp: libera o índice dos registros e zera o ponteiro e a quantidade |
+
+Mutações: `mutacoes/leva217.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551

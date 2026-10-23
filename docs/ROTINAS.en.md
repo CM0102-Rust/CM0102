@@ -2050,3 +2050,12 @@ Mutations: `mutacoes/leva215.py` (0, by the career to 2002-06-01, confirming the
 | `copiar_aposentadoria_pendente()` | 0x7a8780 | thiscall | player_regen.cpp: copies the pending retirement record: the person, the club, the two dates, the reason and the announced flag |
 
 Mutations: `mutacoes/leva216.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `ha_motivo` escaped: the reason (+0x18) of the copied pending retirement is not read in a deciding way up to 2002-06-01, and in the real game comparing (to 2002-01-01) the copy catches no retirement whose reason changes (retirements are settled at season end). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
+
+### Match engine, 217th batch — the end of the match statistics: the constructor (with the CD check) and the destructor (official on 2026-10-23)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `montar_estatisticas_da_partida()` | 0x729000 | thiscall | match_stats.cpp: checks for the CM01/02 CD and builds the statistics: loads from the save or creates the index, the buckets and the zeroed temporary file |
+| `desmontar_estatisticas_da_partida()` | 0x7293c0 | thiscall | match_stats.cpp: frees the record index and clears its pointer and count |
+
+Mutations: `mutacoes/leva217.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
