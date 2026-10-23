@@ -98,5 +98,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `transferências` | `pode_contratar_jogador` 0x8ced40 (213ª) | — | a recusa das regras sem a segunda chance (a5 = 0) não aparece na carreira: `tr_recusa` escapa até comparando. Teste: carreira ampla |
 | `liga` | `margem_do_ultimo_dia` 0x68a4d0 (214ª) | — | o byte "sem margem" (0xff) gravado pela importância do jogo não decide nada até 2002-06 e a rotina não roda antes de 2002-01: `lt_ultimo_dia` escapa até comparando. Teste: carreira ampla (fim de temporada) |
 | `regens` | `copiar_aposentadoria_pendente` 0x7a8780 (216ª) | — | o motivo da aposentadoria pendente só pesa no fim da temporada: `ha_motivo` escapa até comparando. Teste: carreira ampla até o fim da temporada |
+| `save` | `casar_nome_com_padrao` 0x933a00 (218ª) | — | o padrão só roda ao carregar: `sv_padrao_letra`, `sv_padrao_ponto`, `sv_padrao_fim` escapam da prova de gravar. Teste: a etapa de carregar da prova do save (falta o save com técnico de férias) |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").

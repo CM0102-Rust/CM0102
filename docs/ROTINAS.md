@@ -2057,3 +2057,19 @@ Mutações: `mutacoes/leva216.py` (9, pela carreira até 2002-06-01, confirmando
 | `desmontar_estatisticas_da_partida()` | 0x7293c0 | thiscall | match_stats.cpp: libera o índice dos registros e zera o ponteiro e a quantidade |
 
 Mutações: `mutacoes/leva217.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
+
+### Simulação, 218ª leva — o contêiner do save: as consultas (o padrão do nome, o id e o tamanho dos itens); o contêiner do save: empacotar e desempacotar os arquivos da pasta e limpar a pasta temporária; o contêiner do save: ler, gravar e fechar um item (o RLE do tipo 4) (oficial em 23/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `casar_nome_com_padrao()` | 0x933a00 | cdecl | zipdir.cpp: casa o nome de um item do contêiner com um padrão com `*` (`*.` vai ao último ponto), sem diferenciar maiúsculas; a vaga "{ Empty }" nunca casa |
+| `id_do_conteiner()` | 0x9331c0 | cdecl | zipdir.cpp: lê o cabeçalho do contêiner e devolve o dword +4 (0x16 .sav, 0x17 .qst; 0x14 se falhar) |
+| `tamanho_dos_itens_do_padrao()` | 0x933860 | cdecl | zipdir.cpp: soma os tamanhos descomprimidos dos itens que casam com o padrão (int com sinal: acima de 2 GB dá negativo, como na original) |
+| `empacotar_no_conteiner()` | 0x933610 | cdecl | zipdir.cpp: cada arquivo da pasta que casa com o padrão (FindFirstFile) vira um item do contêiner: zopen gravando, fread/zwrite em blocos de 0x30d40, zclose |
+| `desempacotar_do_conteiner()` | 0x933320 | cdecl | zipdir.cpp: cada item do contêiner cujo nome casa com o padrão vira um arquivo da pasta (zopen lendo, zread em blocos de 0x30d40, fwrite) |
+| `limpar_pasta_temporaria()` | 0x90cd50 | cdecl | utils.cpp: monta em [0xde279c] a pasta CM3_TEMP e apaga os arquivos dela que casam com o padrão, em grupos de 100 |
+| `ler_do_conteiner()` | 0x932c30 | cdecl | zipdir.cpp: lê do item como o fread, cortando no fim do item; no tipo 4 decodifica o RLE (a repetição pode atravessar chamadas) |
+| `gravar_no_conteiner()` | 0x932e10 | cdecl | zipdir.cpp: grava no item como o fwrite e soma ao tamanho no índice; no tipo 4 codifica o RLE (repetições de até 0x7f guardadas entre as chamadas) |
+| `fechar_conteiner()` | 0x932b00 | cdecl | zipdir.cpp: gravando: esvazia o buffer, fecha a repetição pendente do RLE e regrava cabeçalho e índice no começo; fecha o arquivo e libera o item |
+
+Mutações: `mutacoes/leva218.py` (9, pela prova do save): 6 acusadas. `sv_padrao_letra` escapou: o casamento do nome com o padrão (0x933a00) só roda na carga (o desempacotar de "*.lng" e "*.tmp"); a prova grava o .qst e a etapa de carregar depende de um save com técnico de férias, que ainda não existe. `sv_padrao_ponto` escapou: o casamento do nome com o padrão (0x933a00) só roda na carga (o desempacotar de "*.lng" e "*.tmp"); a prova grava o .qst e a etapa de carregar depende de um save com técnico de férias, que ainda não existe. `sv_padrao_fim` escapou: o casamento do nome com o padrão (0x933a00) só roda na carga (o desempacotar de "*.lng" e "*.tmp"); a prova grava o .qst e a etapa de carregar depende de um save com técnico de férias, que ainda não existe. (lacuna em `PENDENCIAS.md`) Prova do save (o .qst com e sem as rotinas): IGUAL fora dos campos ignorados. Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551

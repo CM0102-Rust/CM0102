@@ -2059,3 +2059,19 @@ Mutations: `mutacoes/leva216.py` (9, by the career to 2002-06-01, confirming the
 | `desmontar_estatisticas_da_partida()` | 0x7293c0 | thiscall | match_stats.cpp: frees the record index and clears its pointer and count |
 
 Mutations: `mutacoes/leva217.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
+
+### Simulation, 218th batch — the saved game container: the queries (name pattern, id and item size); the saved game container: packing and unpacking the folder files and clearing the temporary folder; the saved game container: reading, writing and closing an item (the type 4 RLE) (official on 2026-10-23)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `casar_nome_com_padrao()` | 0x933a00 | cdecl | zipdir.cpp: matches a container item name against a pattern with `*` (`*.` goes to the last dot), case-insensitively; the "{ Empty }" slot never matches |
+| `id_do_conteiner()` | 0x9331c0 | cdecl | zipdir.cpp: reads the container header and returns dword +4 (0x16 .sav, 0x17 .qst; 0x14 on failure) |
+| `tamanho_dos_itens_do_padrao()` | 0x933860 | cdecl | zipdir.cpp: adds up the uncompressed sizes of the items matching the pattern (signed int: negative above 2 GB, as in the original) |
+| `empacotar_no_conteiner()` | 0x933610 | cdecl | zipdir.cpp: each folder file matching the pattern (FindFirstFile) becomes a container item: zopen for writing, fread/zwrite in 0x30d40 blocks, zclose |
+| `desempacotar_do_conteiner()` | 0x933320 | cdecl | zipdir.cpp: each container item whose name matches the pattern becomes a folder file (zopen for reading, zread in 0x30d40 blocks, fwrite) |
+| `limpar_pasta_temporaria()` | 0x90cd50 | cdecl | utils.cpp: builds the CM3_TEMP folder path in [0xde279c] and deletes its files matching the pattern, in groups of 100 |
+| `ler_do_conteiner()` | 0x932c30 | cdecl | zipdir.cpp: reads from the item like fread, clipped at the item end; on type 4 decodes the RLE (a run may span calls) |
+| `gravar_no_conteiner()` | 0x932e10 | cdecl | zipdir.cpp: writes to the item like fwrite and adds to the size in the index; on type 4 encodes the RLE (runs of up to 0x7f kept across calls) |
+| `fechar_conteiner()` | 0x932b00 | cdecl | zipdir.cpp: when writing: flushes the buffer, closes the pending RLE run and rewrites header and index at the start; closes the file and frees the item |
+
+Mutations: `mutacoes/leva218.py` (9, by the save proof): 6 caught. `sv_padrao_letra` escaped: the name pattern match (0x933a00) only runs when loading (unpacking "*.lng" and "*.tmp"); the proof writes the .qst and the load step needs a save with a manager on holiday, which does not exist yet. `sv_padrao_ponto` escaped: the name pattern match (0x933a00) only runs when loading (unpacking "*.lng" and "*.tmp"); the proof writes the .qst and the load step needs a save with a manager on holiday, which does not exist yet. `sv_padrao_fim` escaped: the name pattern match (0x933a00) only runs when loading (unpacking "*.lng" and "*.tmp"); the proof writes the .qst and the load step needs a save with a manager on holiday, which does not exist yet. (gap in `PENDENCIAS.en.md`) Save proof (the .qst with and without the routines): EQUAL fora dos campos ignorados. Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551

@@ -1,0 +1,31 @@
+SAVE = True
+ROTINAS = [('ler_do_conteiner', 0x932c30, [0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x1c]),
+           ('gravar_no_conteiner', 0x932e10, [0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x1c]),
+           ('fechar_conteiner', 0x932b00, [0x56, 0x8b, 0x74, 0x24, 0x08])]
+DOCS = ('o contêiner do save: ler, gravar e fechar um item (o RLE do tipo 4)',
+        'the saved game container: reading, writing and closing an item (the type 4 RLE)',
+        [('ler_do_conteiner', 'zread', '0x932c30', 'zipdir.cpp', 'cdecl',
+          'lê do item como o fread, cortando no fim do item; no tipo 4 decodifica o RLE (a repetição pode atravessar chamadas)',
+          'reads from the item like fread, clipped at the item end; on type 4 decodes the RLE (a run may span calls)'),
+         ('gravar_no_conteiner', 'zwrite', '0x932e10', 'zipdir.cpp', 'cdecl',
+          'grava no item como o fwrite e soma ao tamanho no índice; no tipo 4 codifica o RLE (repetições de até 0x7f guardadas entre as chamadas)',
+          'writes to the item like fwrite and adds to the size in the index; on type 4 encodes the RLE (runs of up to 0x7f kept across calls)'),
+         ('fechar_conteiner', 'zclose', '0x932b00', 'zipdir.cpp', 'cdecl',
+          'gravando: esvazia o buffer, fecha a repetição pendente do RLE e regrava cabeçalho e índice no começo; fecha o arquivo e libera o item',
+          'when writing: flushes the buffer, closes the pending RLE run and rewrites header and index at the start; closes the file and frees the item')])
+CAMPOS = [('ZFILE (0xa3191 bytes, do zopen) +0: FILE da CRT; ponteiro; lê, e grava 0 ao fechar (todas)', 'ZFILE (0xa3191 bytes, from zopen) +0: CRT FILE; pointer; reads, and writes 0 on close (all)'),
+          ('ZFILE +4: modo (1 gravando, 0 lendo); valor; lê (todas)', 'ZFILE +4: mode (1 writing, 0 reading); value; reads (all)'),
+          ('ZFILE +8: posição lógica no item (bytes descomprimidos); valor; lê e grava (ler_do_conteiner, gravar_no_conteiner)', 'ZFILE +8: logical position in the item (uncompressed bytes); value; reads and writes (ler_do_conteiner, gravar_no_conteiner)'),
+          ('ZFILE +0xc: item aberto; id; lê (todas)', 'ZFILE +0xc: open item; id; reads (all)'),
+          ('ZFILE +0x10: bytes da repetição já entregues; valor; lê e grava (ler_do_conteiner)', 'ZFILE +0x10: run bytes already delivered; value; reads and writes (ler_do_conteiner)'),
+          ('ZFILE +0x14: contagem da repetição do RLE (1 a 0x7f); valor; lê e grava (todas)', 'ZFILE +0x14: RLE run count (1 to 0x7f); value; reads and writes (all)'),
+          ('ZFILE +0x18: byte da repetição; valor; lê e grava (todas)', 'ZFILE +0x18: run byte; value; reads and writes (all)'),
+          ('ZFILE +0x19: tipo do contêiner (3 sem compressão, 4 RLE); valor; lê (todas)', 'ZFILE +0x19: container type (3 uncompressed, 4 RLE); value; reads (all)'),
+          ('ZFILE +0x19..+0x41705: cabeçalho e índice (0x416ec bytes); bytes; regrava no começo do arquivo (fechar_conteiner)', 'ZFILE +0x19..+0x41705: header and index (0x416ec bytes); bytes; rewritten at the file start (fechar_conteiner)'),
+          ('índice do item (ZFILE +0x25 + 0x10c × item) +4: tamanho descomprimido; valor; lê (ler_do_conteiner, fechar_conteiner) e soma (gravar_no_conteiner)', 'item index entry (ZFILE +0x25 + 0x10c × item) +4: uncompressed size; value; reads (ler_do_conteiner, fechar_conteiner) and adds (gravar_no_conteiner)'),
+          ('ZFILE +0x41705: buffer de leitura (0x30d40); bytes; grava pelo fread e lê (ler_do_conteiner)', 'ZFILE +0x41705: read buffer (0x30d40); bytes; filled by fread and read (ler_do_conteiner)'),
+          ('ZFILE +0x72445: buffer de escrita (0x30d40); bytes; grava e esvazia pelo fwrite (gravar_no_conteiner, fechar_conteiner)', 'ZFILE +0x72445: write buffer (0x30d40); bytes; writes and flushes via fwrite (gravar_no_conteiner, fechar_conteiner)'),
+          ('ZFILE +0xa3185 / +0xa318d: cursor do buffer de leitura e bytes lidos; valor; lê e grava (ler_do_conteiner), zera (fechar_conteiner)', 'ZFILE +0xa3185 / +0xa318d: read buffer cursor and bytes read; value; reads and writes (ler_do_conteiner), clears (fechar_conteiner)'),
+          ('ZFILE +0xa3189: cursor do buffer de escrita; valor; lê e grava (gravar_no_conteiner, fechar_conteiner)', 'ZFILE +0xa3189: write buffer cursor; value; reads and writes (gravar_no_conteiner, fechar_conteiner)'),
+          ('item do .sav/.qst tipo 4: RLE (byte <= 0x80 literal; > 0x80 = byte − 0x80 cópias do seguinte); formato; grava (gravar_no_conteiner, fechar_conteiner) e lê (ler_do_conteiner)', 'type 4 .sav/.qst item: RLE (byte <= 0x80 literal; > 0x80 = byte − 0x80 copies of the next); format; writes (gravar_no_conteiner, fechar_conteiner) and reads (ler_do_conteiner)')]
+INTERESSA = ['SGE', 'CMScout']

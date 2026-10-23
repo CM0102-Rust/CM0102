@@ -115,6 +115,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5b2e80 | `casa_do_setor_ocupada` | sector_slot_taken |
 | 0x5b3c70 | `casa_guardada` | stored_cell |
 | 0x5b7e60 | `casa_no_campo` | pitch_cell |
+| 0x933a00 | `casar_nome_com_padrao` | zipdir_match_filename_pattern |
 | 0x785670 | `categoria_da_noticia` | NewsItem::get_category |
 | 0x4ca470 | `categoria_do_contrato` | contract_category |
 | 0x544410 | `chance_de_conhecer` | chance_to_know |
@@ -177,6 +178,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x70d430 | `defender` | save_shot |
 | 0x700420 | `defesa_do_goleiro` | goalkeeper_save |
 | 0x6c87e0 | `desafio_adversario` | opposition_challenge |
+| 0x933320 | `desempacotar_do_conteiner` | zextract_matching_files |
 | 0x6eecb0 | `desempenho_na_partida` | match_performance |
 | 0x402e70 | `desenhar_area` | Area::draw |
 | 0x7260f0 | `desenhar_conferencia_da_escalacao` | match_screens_draw_team_selection |
@@ -211,6 +213,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5409b0 | `e_segunda_selecao` | is_second_national_team |
 | 0x53b900 | `e_selecao` | is_national_team |
 | 0x70d630 | `em_perigo` | in_danger |
+| 0x933610 | `empacotar_no_conteiner` | zadd_matching_files |
 | 0x6b4190 | `encerrar_dia` | end_day |
 | 0x8c16b0 | `enfileirar_transferencia_livre` | TRANSFER_MANAGER::queue_free_transfer |
 | 0x7a7ed0 | `entrada_da_aposentadoria` | PLAYER_REGEN::find_retirement_entry |
@@ -255,6 +258,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cfc60 | `falta_no_motor` | foul_in_engine |
 | 0x547790 | `favorito_de` | favourite_of |
 | 0x6d1cc0 | `fechamento` | match_wrap_up |
+| 0x932b00 | `fechar_conteiner` | zclose |
 | 0x71c170 | `fechar_detalhes_da_partida` | close_match_details |
 | 0x6b5f00 | `fechar_partida_do_dia` | close_day_match |
 | 0x8c6db0 | `fechar_propostas_da_oferta` | transfer_manager_close_offer_contract_offers |
@@ -285,6 +289,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x4afeb0 | `gravar_jogo_na_noticia` | comp_util_write_fixture_to_news_slots |
 | 0x8984d0 | `gravar_linha_tatica` | write_tactics_row |
 | 0x786d30 | `gravar_marca_da_noticia` | News::set_item_slot |
+| 0x932e10 | `gravar_no_conteiner` | zwrite |
 | 0x729820 | `gravar_registro_da_partida` | Match_Stats::write_match_record |
 | 0x896a90 | `gravar_vaga_tatica` | set_tactic_slot |
 | 0x62ec00 | `gravidade_da_lesao` | injury_severity |
@@ -298,6 +303,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5fe420 | `humano_assiste_a_partida` | HUMAN_MANAGER::is_fixture_watched |
 | 0x600740 | `humano_deu_apelido` | HUMAN_MANAGER::has_nickname |
 | 0x600c90 | `humano_manda_no_clube` | human_runs_club |
+| 0x9331c0 | `id_do_conteiner` | zget_archive_id |
 | 0x76d430 | `idades_da_selecao` | national_team_ages |
 | 0x5221f0 | `importancia_da_partida` | cup_match_importance |
 | 0x68a3e0 | `importancia_do_jogo_da_liga` | League::get_match_importance |
@@ -330,6 +336,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x700380 | `ler_8eaa` | read_8eaa |
 | 0x700400 | `ler_8eb2` | read_8eb2 |
 | 0x700410 | `ler_8f7a` | read_8f7a |
+| 0x932c30 | `ler_do_conteiner` | zread |
 | 0x6d9c40 | `ler_eventos` | read_events |
 | 0x6d9e50 | `ler_eventos_cfg` | read_events_cfg |
 | 0x8983f0 | `ler_linha_tatica` | read_tactics_row |
@@ -345,6 +352,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x70df40 | `limite_jogador` | player_limit |
 | 0x5b5960 | `limpar_designados` | clear_assigned |
 | 0x6bba10 | `limpar_lance` | clear_move |
+| 0x90cd50 | `limpar_pasta_temporaria` | utils_clear_temp_folder |
 | 0x86fc20 | `limpar_registro_de_tecnico` | Staff_Records::clear_manager_record |
 | 0x8982b0 | `linha_tatica` | tactics_row |
 | 0x6c3aa0 | `linhas_defensivas` | defensive_lines |
@@ -555,6 +563,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x717450 | `tabela_b_do_jogador` | player_table_b |
 | 0x7280e0 | `tabela_da_liga_ao_vivo` | match_screens_draw_live_league_table |
 | 0x717410 | `tabela_do_jogador` | player_table |
+| 0x933860 | `tamanho_dos_itens_do_padrao` | zget_matching_size |
 | 0x5fd210 | `tecnico_9a01` | manager_9a01 |
 | 0x5fd480 | `tecnico_9a05` | manager_9a05 |
 | 0x5fd6b0 | `tecnico_9a06` | manager_9a06 |
