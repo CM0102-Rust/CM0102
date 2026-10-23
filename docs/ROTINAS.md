@@ -2032,3 +2032,19 @@ Mutações: `mutacoes/leva214.py` (9, pela carreira até 2002-06-01, confirmando
 | `ficha_do_registro()` | 0x729e30 | thiscall | match_stats.cpp: acha na agenda o jogo de um registro de estatística (data, competição e clube) e copia a ficha |
 
 Mutações: `mutacoes/leva215.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
+
+### Simulação, 216ª leva — se a liga tem rebaixamento, a data da rodada do modelo da liga e a importância do jogo da liga; as cópias do recordista, do registro de partida e do registro de sequência dos recordes do clube; a partida assistida por algum humano, o apelido dado pelo humano e a cópia da aposentadoria pendente (oficial em 23/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `liga_tem_rebaixamento()` | 0x6847b0 | thiscall | league.cpp: se a liga tem vagas de rebaixamento no fim da tabela |
+| `data_da_rodada_da_liga()` | 0x68a160 | cdecl | league.cpp: grava num registro de rodada do modelo da liga a data com o ano relativo, o código e um valor |
+| `importancia_do_jogo_da_liga()` | 0x68a3e0 | thiscall | league.cpp: a importância do jogo da liga para o clube: a base da liga, +1 no começo do campeonato ou com a margem do último dia |
+| `copiar_recordista()` | 0x448490 | thiscall | club_records.cpp: copia o recordista: quatro campos de identificação e a data |
+| `copiar_registro_de_partida()` | 0x448110 | thiscall | club_records.cpp: copia o registro de partida: a data, o adversário, o placar e os campos do jogo |
+| `copiar_registro_de_sequencia()` | 0x448170 | thiscall | club_records.cpp: copia o registro de sequência: o número de jogos e as datas de início e fim |
+| `humano_assiste_a_partida()` | 0x5fe420 | thiscall | human_manager.cpp: se algum dos técnicos humanos ativos escolheu assistir a partida |
+| `humano_deu_apelido()` | 0x600740 | thiscall | human_manager.cpp: se o técnico humano (ou o da vez) deu apelido à pessoa, por busca binária na lista dele |
+| `copiar_aposentadoria_pendente()` | 0x7a8780 | thiscall | player_regen.cpp: copia a aposentadoria pendente: a pessoa, o clube, as duas datas, o motivo e a marca de anunciada |
+
+Mutações: `mutacoes/leva216.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `ha_motivo` escapou: o motivo (+0x18) da aposentadoria pendente copiada não é lido de forma que decida até 2002-06-01, e no jogo real comparando (até 2002-01-01) a cópia não pega nenhuma aposentadoria com motivo que mude (as aposentadorias se resolvem no fim da temporada). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551

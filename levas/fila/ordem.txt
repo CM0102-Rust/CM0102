@@ -1,5 +1,2 @@
 # ordem da fila (fila.py); um item por linha
-sim_lote_c1
-sim_lote_c2
-sim_lote_c3
 fim_match_2

@@ -2034,3 +2034,19 @@ Mutations: `mutacoes/leva214.py` (9, by the career to 2002-06-01, confirming the
 | `ficha_do_registro()` | 0x729e30 | thiscall | match_stats.cpp: finds in the fixture list the match of a statistics record (date, competition and club) and copies the fixture |
 
 Mutations: `mutacoes/leva215.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
+
+### Simulation, 216th batch — whether the league has relegation, the league schedule round date and the league match importance; the club records copies of the record holder, the match record and the run record; the fixture watched by any human, the nickname given by the human and the pending retirement copy (official on 2026-10-23)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `liga_tem_rebaixamento()` | 0x6847b0 | thiscall | league.cpp: whether the league has relegation places at the bottom of the table |
+| `data_da_rodada_da_liga()` | 0x68a160 | cdecl | league.cpp: stores in a league schedule round record the date with a relative year, the code and a value |
+| `importancia_do_jogo_da_liga()` | 0x68a3e0 | thiscall | league.cpp: the league match importance for the club: the league base, +1 early in the season or with the final-day margin |
+| `copiar_recordista()` | 0x448490 | thiscall | club_records.cpp: copies the record holder: four identity fields and the date |
+| `copiar_registro_de_partida()` | 0x448110 | thiscall | club_records.cpp: copies the match record: the date, the opponent, the score and the fixture fields |
+| `copiar_registro_de_sequencia()` | 0x448170 | thiscall | club_records.cpp: copies the run record: the game count and the start and end dates |
+| `humano_assiste_a_partida()` | 0x5fe420 | thiscall | human_manager.cpp: whether any of the active human managers chose to watch the fixture |
+| `humano_deu_apelido()` | 0x600740 | thiscall | human_manager.cpp: whether the human manager (or the current one) gave the person a nickname, by binary search in his list |
+| `copiar_aposentadoria_pendente()` | 0x7a8780 | thiscall | player_regen.cpp: copies the pending retirement record: the person, the club, the two dates, the reason and the announced flag |
+
+Mutations: `mutacoes/leva216.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `ha_motivo` escaped: the reason (+0x18) of the copied pending retirement is not read in a deciding way up to 2002-06-01, and in the real game comparing (to 2002-01-01) the copy catches no retirement whose reason changes (retirements are settled at season end). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551

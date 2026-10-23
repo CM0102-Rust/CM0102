@@ -158,11 +158,16 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x728e90 | `contar_placar_ao_vivo` | match_screens_tally_live_score |
 | 0x4cf5f0 | `contrato_com_clube` | contract_with_club |
 | 0x4cf5a0 | `contrato_de` | contract_of |
+| 0x7a8780 | `copiar_aposentadoria_pendente` | retire_record_assign |
 | 0x777590 | `copiar_data_e_marca` | copy_date_and_mark |
+| 0x448490 | `copiar_recordista` | record_holder_assign |
+| 0x448110 | `copiar_registro_de_partida` | match_record_assign |
+| 0x448170 | `copiar_registro_de_sequencia` | run_record_assign |
 | 0x839590 | `cor_do_titulo` | get_heading_colour |
 | 0x866f60 | `criterio_da_comissao` | staff_criterion |
 | 0x4bff70 | `criterio_da_competicao` | competition_criterion |
 | 0x6e8910 | `cumprir_regra_do_elenco` | apply_squad_rule |
+| 0x68a160 | `data_da_rodada_da_liga` | league_round_set_date |
 | 0x521eb0 | `data_do_jogo_da_rodada` | cup_set_round_match_date |
 | 0x521e60 | `data_do_sorteio_da_rodada` | cup_set_round_draw_date |
 | 0x6e9540 | `decidir_falta` | decide_foul |
@@ -289,9 +294,12 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6e86d0 | `habilidade_vista` | perceived_ability |
 | 0x7357c0 | `historia_punivel_do_jogador` | Media::get_finable_story_kind |
 | 0x5fdc30 | `hora_das_ferias` | HUMAN_MANAGER::get_holiday_stamp |
+| 0x5fe420 | `humano_assiste_a_partida` | HUMAN_MANAGER::is_fixture_watched |
+| 0x600740 | `humano_deu_apelido` | HUMAN_MANAGER::has_nickname |
 | 0x600c90 | `humano_manda_no_clube` | human_runs_club |
 | 0x76d430 | `idades_da_selecao` | national_team_ages |
 | 0x5221f0 | `importancia_da_partida` | cup_match_importance |
+| 0x68a3e0 | `importancia_do_jogo_da_liga` | League::get_match_importance |
 | 0x402ac0 | `iniciar_area` | Area::init |
 | 0x6b5a70 | `iniciar_proxima_partida` | start_next_match |
 | 0x6e9470 | `iniciar_rigor` | init_strictness |
@@ -329,6 +337,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cfe10 | `lesao_na_dividida` | tackle_injury |
 | 0x6d0980 | `lesionar` | injure |
 | 0x6d5b50 | `liberar_tabelas_de_eventos` | free_event_tables |
+| 0x6847b0 | `liga_tem_rebaixamento` | League::has_relegation |
 | 0x76c0f0 | `ligar_44_da_pessoa` | set_person_44 |
 | 0x5b50d0 | `ligar_marca_da_formacao` | set_formation_flag |
 | 0x6cb930 | `limite` | limit |
