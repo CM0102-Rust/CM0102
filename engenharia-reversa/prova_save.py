@@ -247,7 +247,15 @@ def desligadas(nomes):
     dos testes; no fim (mesmo com erro ou Ctrl+C) o motor.rs volta e e recompilado."""
     original = open(MOTOR, encoding='utf-8').read()
     assert original.count(LACO) == 1, 'laco da instalacao nao achado no motor.rs'
-    trava = '        if [%s].contains(&nomes[i]) {\n            continue;\n        }\n' % ', '.join('"%s"' % x for x in nomes)
+    # a rotina da leva que esta em ZERADAS roda a original COM a zeragem (como no modo original): so o
+    # `continue` deixava a base sem a zeragem, com o lixo de pilha que a referencia nao tem (220a: o resumo
+    # do general.dat da 0x82e430 saia com lixo na base e zerado na leva, DIFERENTE em +0xf)
+    trava = ('        if [%s].contains(&nomes[i]) {\n'
+             '            if let Some(z) = ZERADAS.iter().find(|z| z.0.endereco == PROLOGOS[i].endereco) {\n'
+             '                desvios::desviar_zerando(nomes[i], &PROLOGOS[i], z.1, desvios::PASSAGEM);\n'
+             '            }\n'
+             '            continue;\n'
+             '        }\n') % ', '.join('"%s"' % x for x in nomes)
     try:
         open(MOTOR, 'w', encoding='utf-8').write(original.replace(LACO, LACO + trava))
         mutacoes.compilar()
