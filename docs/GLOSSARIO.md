@@ -110,6 +110,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6f4600 | `campo_pela_posicao` | field_by_position |
 | 0x524d10 | `carregar_banco_do_save` | load_database_from_stream |
 | 0x72aa80 | `carregar_estatisticas_da_partida` | Match_Stats::load |
+| 0x82a9c0 | `carregar_jogo` | load_game_data |
 | 0x839760 | `carregar_regras_fifa` | load_fifa_transfer_rules |
 | 0x6eab60 | `cartao_pela_gravidade` | card_by_severity |
 | 0x6c2a40 | `casa_da_formacao` | formation_square |

@@ -276,3 +276,19 @@ Modelled on the Elifoot II Bombado editor (`D:\Sistemas\Elifoot II\bombado\edito
 - The silent fixes of the load (§2, step 9, and the `resolve` nulls): the editor can warn about what the game will "repair" (job 7, missing nation, out-of-range ids) instead of letting the game decide.
 - The texts of jobs, attributes, positions, regions and nationality adjectives (26 KB of code per language and gender): to check whether they come from `language.ldb` or the code.
 - Two staff versions (157 bytes in the shipped database, 110 + preferences in community databases): the editor reads both and writes the one of the source database.
+
+## Request P7 (2026-10-22/23, approved by Lucas)
+
+In items B9/B10 (language), bring in the `idiomas` crate from the langtool session (D:\Sistemas\CM0102-LangTool\rust, no dependencies; `cargo test --release`) and the formats of `docs/MAPA_LANGTOOL.md` §2, §4, §5 and §6.1 (language.ldb, .lng, the rule for applying translated names). §5.4 answers the question about job titles and adjectives. Use the crate's MSVC 6 qsort/bsearch: 202 repeated keys change the on-screen text. Proof: the Rust load compared with the original.
+
+## Request P8 (2026-10-23, approved by Lucas): the findings of the original editor
+
+Repository D:\Sistemas\CM0102-Editor (commit 35c219b; MAPA_EDITOR.md §3.1, §3.2, §6 and §10, LIGACOES.md, IDA_E_VOLTA.md):
+- staff.dat v1 (157 bytes) decoded and checked on all 169,342 records (closes the FORMATOS.md gap); colour.dat (58) and officials.dat (43) complete;
+- 369 fields of the official editor match the offsets and names in FORMATOS.md;
+- database rules: club and nation reputations ×500; nat_club.dat rebuilt from the nations on every save; fixed club slots 3/50/5/7/3; reputation threshold 1000 with division; cm_date leap flag at 0 on births in leap years;
+- the official editor's mandatory list does not apply (57 clubs and 6 nations do not match): the index.cpp keys are what count;
+- IDA_E_VOLTA: what the official editor changes in a database (NationalJob −2 → −1, PERMANENT_ injuries vanish, seat −1 → 0, files not shortened);
+- rust/nucleo: database reader and writer with byte-for-byte round trip, a candidate oracle for the Rust database load.
+
+When the database batches start: format questions go to the session "Descompilar o editor original do CM 01/02"; once the Rust load and the index.cpp key list are ready, send CM0102-Editor a request (ORQUESTRACAO.md §4) with the keys and the real names, so it resumes the Pre-Editor.

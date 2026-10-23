@@ -2098,3 +2098,11 @@ Mutações: `mutacoes/leva219.py` (4, pela prova do save): 3 acusadas. `sv2_banc
 | `gravar_jogo()` | 0x82e430 | cdecl | Setup.cpp: grava o save: apaga o antigo, o banco (0x524d30), o general.dat (16 campos e o resumo), o save dos subsistemas na ordem da original com disco e memória entre eles, empacota os *.tmp, as regras FIFA; em rede, grava em temp_save_file e renomeia |
 
 Mutações: `mutacoes/leva220.py` (5, pela prova do save): 3 acusadas. `sv3_criar_id` escapou: a cópia da 0x827110 está desligada (DESLIGADAS: rodando na pilha particular, ela muda o resíduo que a create_game 0x828110 lê e o club.dat sai diferente), então a mutação não roda. `sv3_criar_frente` escapou: a cópia da 0x827110 está desligada (DESLIGADAS: rodando na pilha particular, ela muda o resíduo que a create_game 0x828110 lê e o club.dat sai diferente), então a mutação não roda. (lacuna em `PENDENCIAS.md`) Prova do save (o .qst com e sem as rotinas): IGUAL (16856662 bytes). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
+
+### Simulação, 221ª leva — o save: carregar o jogo inteiro (oficial em 23/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `carregar_jogo()` | 0x82a9c0 | cdecl | Setup.cpp: carrega o save: disco, memória, CD, o banco (0x524d10), desempacota os *.tmp, o general.dat (versão, resumo, ids, datas, ligas, nação padrão, os dados de execução de pessoas, clubes e reputação, convertendo saves antigos), os construtores dos subsistemas na ordem da original com disco e memória entre eles, as regras FIFA e a data do último save |
+
+Mutações: `mutacoes/leva221.py` (3, pela prova do save): 3 acusadas.  Prova do save (o .qst com e sem as rotinas): IGUAL fora dos campos ignorados; carga IGUAL (parou em 2001-239, 728264576 sorteios, impressao 7a1167744a713c73). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551

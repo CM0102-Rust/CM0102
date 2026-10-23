@@ -2100,3 +2100,11 @@ Mutations: `mutacoes/leva219.py` (4, by the save proof): 3 caught. `sv2_banco_a4
 | `gravar_jogo()` | 0x82e430 | cdecl | Setup.cpp: saves the game: deletes the old file, the database (0x524d30), general.dat (16 fields and the summary), the subsystem saves in the original order with disk and memory checks between them, packs the *.tmp files, the FIFA rules; on a network game, writes to temp_save_file and renames |
 
 Mutations: `mutacoes/leva220.py` (5, by the save proof): 3 caught. `sv3_criar_id` escaped: the 0x827110 copy is switched off (DESLIGADAS: running on the private stack it changes the residue create_game 0x828110 reads and club.dat comes out different), so the mutation does not run. `sv3_criar_frente` escaped: the 0x827110 copy is switched off (DESLIGADAS: running on the private stack it changes the residue create_game 0x828110 reads and club.dat comes out different), so the mutation does not run. (gap in `PENDENCIAS.en.md`) Save proof (the .qst with and without the routines): EQUAL (16856662 bytes). Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
+
+### Simulation, 221st batch — the saved game: loading the whole game (official on 2026-10-23)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `carregar_jogo()` | 0x82a9c0 | cdecl | Setup.cpp: loads the saved game: disk, memory, CD, the database (0x524d10), unpacks the *.tmp files, general.dat (version, summary, ids, dates, leagues, default nation, the runtime data of people, clubs and reputation, converting old saves), the subsystem constructors in the original order with disk and memory checks between them, the FIFA rules and the last save date |
+
+Mutations: `mutacoes/leva221.py` (3, by the save proof): 3 caught.  Save proof (the .qst with and without the routines): EQUAL fora dos campos ignorados; carga EQUAL (parou em 2001-239, 728264576 sorteios, impressao 7a1167744a713c73). Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551

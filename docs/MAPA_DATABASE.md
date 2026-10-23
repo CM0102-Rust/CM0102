@@ -276,3 +276,19 @@ No molde do editor do Elifoot II Bombado (`D:\Sistemas\Elifoot II\bombado\editor
 - As correções silenciosas da carga (§2, passo 9, e os nulos do `resolve`): o editor pode avisar do que o jogo vai "consertar" (cargo 7, nação ausente, ids fora da faixa) em vez de deixar o jogo decidir.
 - Os textos de cargos, atributos, posições, regiões e adjetivos de nacionalidade (26 KB de código por idioma e gênero): a conferir se vêm do `language.ldb` ou do código.
 - Duas versões de pessoa (157 bytes na base de fábrica, 110 + preferências nas bases da comunidade): o editor lê as duas e grava a da base de origem.
+
+## Pedido P7 (22-23/10/2026, aprovado pelo Lucas)
+
+Nos itens B9/B10 (idioma), incorporar o crate `idiomas` da sessão do langtool (D:\Sistemas\CM0102-LangTool\rust, sem dependências; `cargo test --release`) e os formatos de `docs/MAPA_LANGTOOL.md` §2, §4, §5 e §6.1 (language.ldb, .lng, a regra de aplicação dos nomes traduzidos). O §5.4 responde à dúvida dos cargos e adjetivos. Usar o qsort/bsearch do MSVC 6 do crate: 202 chaves repetidas mudam o texto da tela. Prova: a carga em Rust comparada com a original.
+
+## Pedido P8 (23/10/2026, aprovado pelo Lucas): os achados do editor original
+
+Repositório D:\Sistemas\CM0102-Editor (commit 35c219b; MAPA_EDITOR.md §3.1, §3.2, §6 e §10, LIGACOES.md, IDA_E_VOLTA.md):
+- staff.dat v1 (157 bytes) decodificado e conferido nos 169.342 registros (fecha a pendência do FORMATOS.md); colour.dat (58) e officials.dat (43) completos;
+- 369 campos do editor oficial batem com os deslocamentos e nomes do FORMATOS.md;
+- regras da base: reputações de clube e nação ×500; nat_club.dat refeito a partir das nações a cada gravação; vagas fixas do clube 3/50/5/7/3; limiar de reputação 1000 com divisão; bissexto do cm_date em 0 nos nascimentos de anos bissextos;
+- a lista de obrigatórios do editor oficial não serve (57 clubes e 6 nações não casam): valem as chaves do index.cpp;
+- IDA_E_VOLTA: o que o editor oficial muda numa base (NationalJob −2 → −1, lesões PERMANENT_ somem, sede −1 → 0, arquivos não encurtados);
+- rust/nucleo: leitor e gravador da base com ida e volta byte a byte, candidato a oráculo da carga Rust do banco.
+
+Quando as levas do banco começarem: dúvidas de formato vão à sessão "Descompilar o editor original do CM 01/02"; com a carga Rust e a lista de chaves do index.cpp prontas, mandar ao CM0102-Editor um pedido (ORQUESTRACAO.md §4) com as chaves e os nomes reais, para ele retomar o Pré-Editor.

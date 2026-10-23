@@ -1,0 +1,72 @@
+leva 221: desligando motor_carregar_jogo (com a carga de D:\Sistemas\CM0102\jogo\FeriasTesteSave.sav ate 2001-08-28)
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\base1.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\base2.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+game.cfg restaurado;  removido
+carregar rust: parou em 2001-239, 728264576 sorteios, impressao 7a1167744a713c73, partidas 9639/39306b13a8a03e20, banco 9cf020c0197d7c1c, 73 s
+motor.rs restaurado e recompilado
+variaveis: general.dat 48 bytes
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\mutacao.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+game.cfg restaurado;  removido
+carregar rust: parou em 2001-239, 728264576 sorteios, impressao 7a1167744a713c73, partidas 9639/39306b13a8a03e20, banco 9cf020c0197d7c1c, 68 s
+sem mutacao (72s): ['IGUAL (16856662 bytes); carga IGUAL (parou em 2001-239, 728264576 sorteios, impressao 7a1167744a713c73)']
+ramos na base: andar ate o fim 32, andar com motor 32, andar partida terminada 32, batedor vazio 8388608, chute 0x3b 256, chute 0xc de longe 8192, chute 716c90 8, chute a gol defesa 4, chute a gol defesa dificil 2, chute a gol defesa media 4, chute a gol escanteio 4, chute a gol gol 4, chute a gol linha de fundo 4, chute a gol para fora 256, chute a gol tiro de meta 4, chute assistencia 8192, chute bola espirra 4096, chute cabecada 512, chute chutador punido 128, chute chutador registrado 16, chute cobrador do desafiante 1024, chute cresce 256, chute de cabeca com desafiante 4096, chute de longe 128, chute defesa do goleiro 256, chute defesa escanteio 1024, chute defesa rebatida 2048, chute defesa segura 512, chute desafiante ganha 16384, chute desafiante ganha de cabeca 16384, chute desafiante narra falta na area 256, chute desafiante punido 1024, chute desafiante registrado 32, chute desarmado 2048, chute desarme narrado na area 64, chute empate no fim 64, chute expulsao 8, chute expulsao do desafiante 8, chute falta punida 1024, chute falta registrada 64, chute falta so registra 1, chute fraco para fora 1024, chute gol 2048, chute gol anulado 64, chute gol valido 2048, chute goleiro adiantado 4, chute impedimento registrado 64, chute marca do artilheiro 16, chute media de acertos 64, chute na trave 256, chute narra de longe 8192, chute para fora 2048, chute passa pelo desafiante 4096, chute penalti 16, chute penalti do desafiante 32, chute segue 262144, chute sem desafiante 262144, chute tres gols 16, chute vantagem do desafiante 2, clube elenco 8192, clube jovem 64, clube segue 512, conducao alivia de longe 4096, conducao alivia sem companheiro 32768, conducao alivio 16384, conducao armador 131072, conducao cara a cara 64, conducao chuta 16384, conducao chute colocado 2048, conducao chute de longe 131072, conducao cruza da linha de fundo 2048, conducao divide 32768, conducao escanteio sem companheiro 256, conducao falta direta 512, conducao falta na area 1024, conducao folego 16384, conducao goleiro adiantado 1024, conducao instrucao de avancar 8192, conducao lanca sem companheiro 256, conducao lancamento 8192, conducao lateral sorteada 8192, conducao mata-mata perde folego 8192, conducao passa 262144, conducao penalti 64, conducao ponta de lanca 16384, conducao segura a bola 256, conducao segura no canto 256, conducao segura o resultado 512, conducao sem saida divide 2048, conducao sem saida lanca 512, conducao tabela devolvida 128, conducao vira para o gol 16384, conteiner busca direta 16, conteiner lido 128, contexto minuto 31 16, dado do humano gravado 32, data na barra 16, desfecho defesa 1, desfecho defesa media 2, desfecho escanteio 2, desfecho gol 16, desfecho gol nos penaltis 1, desfecho goleiro defende 128, desfecho linha de fundo 1, desfecho para fora 64, destaque nao 32768, dia partida iniciada 32, dia segunda volta 64, dia sem mais partidas 32, disputa aponta para o lance marcado 2048, disputa defesa 128, disputa expulsao 1, disputa falta do perdedor 32, disputa falta do vencedor 64, disputa falta pendente 8, disputa leitura 1f5d 1024, disputa leitura 214f 4, disputa leitura 2164 64, disputa penalti 4, disputa punida lance especial 64, disputa punida modo 1 64, disputa punida modo 2 32, disputa punida modo 3 16, disputa sem desafiante 16384, disputa so um desafiante 2048, disputa vantagem sem resposta 512, dividida 716c90 2, dividida bola espirra 2048, dividida cobrador 128, dividida cresce 64, dividida disputa limpa 2048, dividida expulsao 1, dividida falta punida 128, dividida media de acertos 1, dividida narra falta na area 8, dividida passa na limpa 512, dividida penalti 2, dividida sem desafiante 32768, dividida so registra 8, dividida vantagem 1, estatisticas gravar registro 512, estatisticas montar 1, estatisticas registrar partida 1024, eventos 0x0b 1, eventos arquivo com espaco 512, eventos arquivo novo 1, eventos outros 1, fechamento 1024, fechamento evento do dia 128, fechamento evento do jogador 1, fechamento evento tipo 6 64, fechamento insatisfeito 1, fechamento media do lado 16384, fechar com competicao 1024, fechar historia 512, fechar metodo da competicao 1024, instrucoes apagadas 16384, interesse humano na competicao 4, interesse pela 6b61e0 128, jogada bola do proprio lado 32, jogada cabecada 4, jogada falta punida 1, jogada forte 1024, jogada meia-lua 16, jogada nota muito baixa 4096, jogada penalti 1, jogada perdeu 2048, jogada venceu 1, jogadores noticia 0x11 4, jogadores tecnico 2048, laco batedor se aproxima 16384, laco disputa marcada 32768, laco entra na lista 1048576, laco fim para os penaltis 8, laco penaltis decididos sem resumo 8, lesao agravada 128, lesao grave 512, lesao lista nova 16, lesao mais grave 256, lesao para 5 256, lesao registrada 4096, lesao sem folego 512, linha tatica gravada 16384, linha tatica lida 16384, montagem avisada 1024, montagem competicao nova 64, montagem grupo novo 64, movimento aproximacao narrada 2048, movimento bola espirra 4096, movimento com a bola 131072, movimento cresce 128, movimento desafiante bonus 2048, movimento desafiante vence 4096, movimento domina a bola livre 65536, movimento expulsao 8, movimento falta punida 512, movimento falta so registra 16, movimento media de acertos 1, movimento narra falta na area 64, movimento narra o marcado 8192, movimento passa 65536, movimento penalti 8, movimento perde a bola 128, movimento rouba a bola livre 8192, movimento so vira 2048, nota do arbitro amistoso 128, nota do arbitro maxima 8, nota do arbitro minima 1, partida sem humano 1024, passe aproximacao narrada 32768, passe bola espirra 1024, passe desarmado 1024, passe desarme narrado na area 8, passe em transito sai 8192, passe expulsao 2, passe falta punida 256, passe falta so registra 32, passe impreciso 131072, passe penalti 4, passe sem folego 512, passe vira chute 256, placar com competicao 512, placar na barra 512, prejogo fim de contrato 64, prejogo forma em alta 64, prejogo forma em baixa 8, prejogo insatisfeito pela posicao 8, prejogo interesse 4, rede 64, registro do observador 32768, reinicio acrescimo 4096, reinicio acrescimo narrado 1024, reinicio postura 1 1024, reinicio postura 2 1024, reinicio postura 3 512, reinicio postura 4 256, reinicio postura 5 256, reinicio sem folego 2048, reinicio substituicao da IA 16384, responder bola do proprio lado 256, responder dominou 4096, responder falta punida 64, responder falta registrada 8, responder goleiro na area 8192, responder goleiro perdeu 256, responder media de acertos 16, responder nota muito baixa 262144, responder perdeu 16384, responder tipo 5 131072, save carregar banco 1, save carregar jogo 1, save carregar regras fifa 1, save desempacotar 2, save limpar temporarios 2, save zclose 128, save zread tipo 3 32768, sem humano clube humano em campo 8, sem humano competicao direta 256, sem humano pela reputacao 64, sem humano selecao de humano 4, sem humano selecao marcada 128, sem humano tecnico da nacao 64, simulacao rapida amarelo 16384, simulacao rapida contador igual 32, simulacao rapida expulsao 1024, simulacao rapida gol 8192, simulacao rapida gol de ouro 128, simulacao rapida gol de penalti 256, simulacao rapida gol do mando 8, simulacao rapida lesao 256, simulacao rapida nota do amistoso 131072, simulacao rapida penalti perdido 128, simulacao rapida penaltis 1024, simulacao rapida prorrogacao 256, simulacao rapida prorrogacao com gol de ouro 256, simulacao rapida segundo amarelo 512, telas abrir os jogos do dia 16, telas desenhar a area 128, telas estatisticas carregar 1, telas iniciar a area 512, telas montar os jogos do dia 16, telas organizar a area 512, telas responder ao continuar 512, telas responder aos jogos do dia 16, vaga extra apagada 16384, vaga extra gravada 2048
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\mutacao.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+game.cfg restaurado;  removido
+carregar rust: parou em 2001-239, 726552042 sorteios, impressao 99dec35057b91b73, partidas 9615/d1966d72b4ed9e9a, banco 2628ef081c8e62a5, 70 s
+mutacao sv4_hora_do_dia      74s ACUSADA: DIFERENTE carga: parou em 2001-239, 726552042 sorteios, impressao 99dec35057b91b73, base parou em 2001-239, 728264576 sorteios, impressao 7a1
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\mutacao.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+game.cfg restaurado;  removido
+carregar rust: o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.log (58 s)
+mutacao sv4_data_do_jogo     62s ACUSADA: sem carga (caiu ou estourou o tempo); gravacao IGUAL (16856662 bytes)
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\mutacao.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+game.cfg restaurado;  removido
+carregar rust: o jogo saiu sem chegar na data (codigo 3221225513); veja jogo\ddraw.log (2 s)
+mutacao sv4_iniciar_0x22      6s ACUSADA: sem carga (caiu ou estourou o tempo); gravacao IGUAL (16856662 bytes)
+restaurado e recompilado
+pool nao paginado 2.10 GB, paginado 2.91 GB, RAM livre 9.9 GB, comprometida 51.8/62.1 GB
+=== PROVA DO SAVE
+leva 221: desligando motor_carregar_jogo (com a carga de D:\Sistemas\CM0102\jogo\FeriasTesteSave.sav ate 2001-08-28)
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\base1.qst, 16856668 bytes, tipo 4, id 0x17, 106 itens, 4 s
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\base2.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+game.cfg restaurado;  removido
+carregar rust: parou em 2001-239, 728264576 sorteios, impressao 7a1167744a713c73, partidas 9639/39306b13a8a03e20, banco 9cf020c0197d7c1c, 97 s
+motor.rs restaurado e recompilado
+variaveis: general.dat 48 bytes, staff history.tmp 8 bytes
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\leva.qst, 16856662 bytes, tipo 4, id 0x17, 106 itens, 4 s
+game.cfg restaurado;  removido
+carregar rust: parou em 2001-239, 728264576 sorteios, impressao 7a1167744a713c73, partidas 9639/39306b13a8a03e20, banco 9cf020c0197d7c1c, 98 s
+prova da leva 221: IGUAL fora dos campos ignorados; carga IGUAL (parou em 2001-239, 728264576 sorteios, impressao 7a1167744a713c73)
+pool nao paginado 2.07 GB, paginado 2.82 GB, RAM livre 6.2 GB, comprometida 55.7/62.1 GB
+=== JOGO REAL
+    pool nao paginado 2.07 -> 2.04 GB, paginado 2.82 -> 2.74 GB
+execucao 1: parou em 2002-000, 1357034645 sorteios, impressao 963cea289f055ac3, partidas 10350/39362e12361c2458, banco a834b0db98028930, 2102 s
+    data: 100000000 comparacoes, 0 divergencias
+    motor: 10000000000 comparacoes, 0 divergencias
+    aleatorio: 1000000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+data: 100000000 comparacoes, 0 divergencias
+aleatorio: 1000000000 comparacoes, 0 divergencias
+motor: 10000000000 comparacoes, 0 divergencias
+sonda_lixo: valor 0x0000; 6500 escalas da 0x6dbc50, 0 com lixo, 0 mudam se zerado
+pool nao paginado 2.03 GB, paginado 2.74 GB, RAM livre 13.2 GB, comprometida 51.6/64.7 GB
+=== CARREIRA
+    pool nao paginado 2.04 -> 2.03 GB, paginado 2.74 -> 2.74 GB
+execucao 1: parou em 2002-151, 2368478169 sorteios, impressao b28542870027e432, partidas 19327/959a02ada4a23639, banco ce037e0141221551, 139 s
+    pool nao paginado 2.03 -> 2.00 GB, paginado 2.74 -> 2.74 GB
+execucao 2: parou em 2002-151, 2368478169 sorteios, impressao b28542870027e432, partidas 19327/959a02ada4a23639, banco ce037e0141221551, 137 s
+game.cfg restaurado; auto_setup.cfg removido
+determinismo: OK, todas as execucoes iguais
+    pool nao paginado 2.00 -> 2.00 GB, paginado 2.74 -> 2.74 GB
+execucao 1: parou em 2002-151, 2368478169 sorteios, impressao b28542870027e432, partidas 19327/959a02ada4a23639, banco ce037e0141221551, 142 s
+game.cfg restaurado; auto_setup.cfg removido
+pool nao paginado 2.00 GB, paginado 2.74 GB, RAM livre 13.1 GB, comprometida 51.6/64.7 GB
+=== FIM
