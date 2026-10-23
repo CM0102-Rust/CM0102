@@ -99,6 +99,25 @@ def conteudo(dados, tipo, pos, tam):
     return bytes(saida)
 
 
+MASCARA_GUARDADA = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mascara_save.json')
+
+
+def acumular(v):
+    """Junta a mascara aprendida agora com a guardada (engenharia-reversa/mascara_save.json, versionada) e
+    grava a uniao: duas gravacoes da base nem sempre mostram todo o lixo que varia (na 219a o +0x51c do
+    general.dat, ja visto em outras provas, calhou de sair igual nas duas). So cresce com bytes que variaram
+    sozinhos numa base, nunca com diferencas de leva."""
+    import json
+    try:
+        guardada = {k: set(x) for k, x in json.load(open(MASCARA_GUARDADA, encoding='utf-8')).items()}
+    except (OSError, ValueError):
+        guardada = {}
+    for k, x in v.items():
+        guardada.setdefault(k, set()).update(x)
+    json.dump({k: sorted(x) for k, x in sorted(guardada.items())}, open(MASCARA_GUARDADA, 'w', encoding='utf-8'))
+    return guardada
+
+
 def variaveis(a, b):
     """{item: bytes que diferem} entre duas gravacoes da mesma base: lixo de heap e de ponteiro que o jogo
     grava sem inicializar (23/10/2026: 13 bytes do general.dat mudam de uma rodada para outra no mesmo modo;
@@ -248,7 +267,7 @@ def base_da_leva(a, n):
         bases = [gravar(a, 'rust', 'base%d' % k) for k in (1, 2)]
     if None in bases:
         return None
-    mascara = variaveis(*bases)
+    mascara = acumular(variaveis(*bases))
     print('variaveis: %s' % (', '.join('%s %d bytes' % (x, len(v)) for x, v in mascara.items()) or 'nenhuma'), flush=True)
     return bases[0], bases[1], mascara
 
@@ -284,7 +303,12 @@ def carregar(a, modo):
         if not ok:
             print('carregar %s: nao iniciado: %s' % (modo, motivo))
             return None
-        info, seg, erro = rodar(opcoes(a, modo, a.ate), a.semente, ['-load', copia])
+        # CM_FERIAS: a DLL poe o tecnico de ferias logo depois do -load (o jogo nao grava de ferias; simulacao.rs)
+        os.environ['CM_FERIAS'] = '1'
+        try:
+            info, seg, erro = rodar(opcoes(a, modo, a.ate), a.semente, ['-load', copia])
+        finally:
+            os.environ.pop('CM_FERIAS', None)
     if erro:
         print('carregar %s: %s (%.0f s)' % (modo, erro, seg))
         return None
