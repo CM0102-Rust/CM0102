@@ -4,7 +4,8 @@
 #   1. mutacoes de mutacoes/levaN.py pela carreira automatica ate 2002-06-01, confirmando no modo
 #      comparacao ate a data dada (padrao 2001-08-20; "-" so pela carreira); leva do save (levas/N/SAVE,
 #      criado pelo fila.py): pela prova do save (mutacoes.py --prova-save N), que a carreira nao exercita;
-#   1b. so leva do save: === PROVA DO SAVE (prova_save.py --leva N: a mesma DLL com e sem as rotinas);
+#   1b. so leva do save: === PROVA DO SAVE (prova_save.py --leva N: a mesma DLL com e sem as rotinas;
+#       com levas/N/CARGA tambem a carga do save de ferias, nas mutacoes e na prova);
 #   2. jogo real comparando ate 2002-01-01 (divergencias e excecoes do ddraw.log);
 #   3. carreiras Rust x2 e original ate 2002-06-01 (as tres impressoes tem de bater com a referencia).
 # Saida completa em levas/N/cadeia.txt. Com a base divergindo, o mutacoes.py sai com erro e o resto

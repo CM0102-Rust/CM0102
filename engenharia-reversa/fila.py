@@ -6,6 +6,8 @@ Cada item fica em levas/fila/<nome>/:
   rotinas.py   ROTINAS = [(nome_rust, endereco, [bytes do prologo])]
                SAVE = True (opcional): item do bloco do save; a leva ganha levas/N/SAVE e a cadeia prova
                pelo save (prova_save.py --leva N, mutacoes.py --prova-save N) em vez da carreira
+               CARGA = True (opcional, com SAVE): item de carregar; a leva ganha também levas/N/CARGA e a
+               prova do save carrega o FeriasTesteSave com e sem as rotinas (a impressão tem de bater)
                DOCS = (titulo pt, titulo en, [(nome, nome_en, endereco, arquivo, convencao, o que faz pt, en)])
   mutacoes.py  MUTACOES = [(nome, trecho, troca)]  (mesmo formato de mutacoes/levaN.py)
 A ordem está em levas/fila/ordem.txt (um nome por linha).
@@ -107,6 +109,8 @@ def materializar(nomes, n, base, antes):
     save = any(runpy.run_path(os.path.join(FILA, x, 'rotinas.py')).get('SAVE') for x in nomes)
     if save:  # a marca da cadeia: prova do save em vez da carreira (ver cadeia.sh)
         open(os.path.join(destino, 'SAVE'), 'w', encoding='utf-8').write('leva do bloco do save\n')
+    if any(runpy.run_path(os.path.join(FILA, x, 'rotinas.py')).get('CARGA') for x in nomes):  # a prova também pela carga
+        open(os.path.join(destino, 'CARGA'), 'w', encoding='utf-8').write('leva de carregar: a prova do save carrega o save de ferias\n')
     open(os.path.join(destino, 'integrar.py'), 'w', encoding='utf-8').write(INTEGRAR.format(n=n, rotinas=rotinas, base=base))
     with open(os.path.join(R, 'engenharia-reversa', 'mutacoes', f'leva{n}.py'), 'w', encoding='utf-8') as f:
         uso = f'--prova-save {n}' if save else '--carreira 2002-06-01'

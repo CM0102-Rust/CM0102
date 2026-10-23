@@ -33,7 +33,9 @@ modo de comparacao ate a data (esquema hibrido: triagem rapida, confirmacao so d
 do .qst em modo rust com as rotinas da leva N desligadas (prova_save.base_da_leva: os bytes que variam
 entre elas viram mascara); sem mutacao, a gravacao com a leva tem de dar IGUAL fora da mascara. Cada
 mutacao grava 1 .qst: ACUSADA se diferir fora da mascara ou se o jogo cair/estourar o tempo (sem .qst),
-IGUAL A BASE (escapou) se igual.
+IGUAL A BASE (escapou) se igual. Leva de carregar (levas/N/CARGA): a base e cada mutacao tambem carregam o
+save de ferias (prova_save: --sav, --ate); com a gravacao igual, ACUSADA se a impressao da carga mudar ou se
+o jogo cair/estourar o tempo na carga.
 
 Se a base divergir, para sem rodar as mutacoes (codigo de saida 1).
 Uma mutacao que passa sem divergencia e uma lacuna do teste (melhorar o gerador de casos) ou uma

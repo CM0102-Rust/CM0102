@@ -4,7 +4,7 @@ esta prova e o banco de provas dele.
 
 Uso:
   python prova_save.py [--so-gravar] [--tipo 4|3] [--semente 12345] [--pasta DIR]
-                       [--sav SAVE.sav] [--ate 2001-09-01] [--exe cm0102-1080.exe] [--limite 900]
+                       [--sav SAVE.sav] [--ate 2001-08-28] [--exe cm0102-1080.exe] [--limite 900]
   python prova_save.py --comparar A B          (so o passo 2, sem abrir o jogo)
   python prova_save.py --leva N                (a prova de uma leva do save, ver abaixo)
 
@@ -38,6 +38,11 @@ fica a original), compila, grava a base 2 vezes (a mascara: os bytes que variam 
 motor.rs (sempre, com recompilacao), grava 1 vez com a leva e compara fora da mascara. Saida:
 "prova da leva N: IGUAL" ou "prova da leva N: DIFERENTE item X nome +0x..." (ou FALHOU se nao gravou).
 O mutacoes.py --prova-save N usa a mesma base (base_da_leva).
+Leva de carregar (levas/N/CARGA, criado pelo fila.py pelo CARGA = True do item): a base e a leva tambem
+CARREGAM (modo rust, CM_FERIAS) uma copia do --sav (padrao jogo\FeriasTesteSave.sav, nunca alterado: MD5
+conferido antes e depois) ate --ate (padrao 2001-08-28); "IGUAL" so se a gravacao E a impressao da carga
+baterem. Nas mutacoes, a carga so roda se a gravacao deu igual; carga diferente, queda ou tempo estourado =
+ACUSADA.
 
 Cuidados (os do simular.py, pela mesma bancada): trava do laboratorio, vigia de memoria, game.cfg
 copiado e restaurado, *.tmp guardados e devolvidos, PROVA.cfg/quick_start.cfg apagados no fim.
@@ -55,6 +60,8 @@ from types import SimpleNamespace
 import laboratorio
 import mutacoes
 from simular import JOGO, bancada, falha, linhas_carreira, rodar
+
+JOGO_LUCAS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'jogo')  # o FeriasTesteSave.sav
 
 CABECALHO = 12 + 1000 * 0x10c  # 0x416ec: tipo, id, quantidade e as 1000 entradas
 # Campos que dependem do relogio da maquina, ignorados na comparacao. general.dat = versao (4) +
@@ -266,28 +273,68 @@ def desligadas(nomes):
         print('motor.rs restaurado e recompilado', flush=True)
 
 
+def e_de_carga(n):
+    return os.path.exists(os.path.join(mutacoes.RAIZ, 'levas', str(n), 'CARGA'))
+
+
 def base_da_leva(a, n):
-    """(base1, base2, mascara): duas gravacoes rust com as rotinas da leva desligadas e os bytes que variam
-    entre elas. None se alguma gravacao falhar."""
+    """(base1, base2, mascara, carga): duas gravacoes rust com as rotinas da leva desligadas, os bytes que
+    variam entre elas e, se a leva for de carregar (levas/N/CARGA), a impressao da carga da base (senao None).
+    None se alguma gravacao (ou a carga) falhar."""
     nomes = rotinas_da_leva(n)
-    print('leva %s: desligando %s' % (n, ', '.join(nomes)), flush=True)
+    carga = e_de_carga(n)
+    if carga:
+        a.sav = a.sav or FERIAS
+        conferir_sav(a)
+    print('leva %s: desligando %s%s' % (n, ', '.join(nomes), ' (com a carga de %s ate %s)' % (a.sav, a.ate) if carga else ''), flush=True)
     with desligadas(nomes):
         bases = [gravar(a, 'rust', 'base%d' % k) for k in (1, 2)]
-    if None in bases:
+        imp = carregar(a, 'rust') if carga and None not in bases else None
+    if None in bases or (carga and imp is None):
         return None
     mascara = acumular(variaveis(*bases))
     print('variaveis: %s' % (', '.join('%s %d bytes' % (x, len(v)) for x, v in mascara.items()) or 'nenhuma'), flush=True)
-    return bases[0], bases[1], mascara
+    return bases[0], bases[1], mascara, imp
 
 
 def contra_a_base(a, base, nome):
-    """Grava 1 vez em modo rust (com o motor.rs como esta) e compara com a base fora da mascara.
-    (igual, texto); texto = 'IGUAL ...', 'DIFERENTE item ...' ou 'sem .qst (caiu ou estourou o tempo)'."""
+    """Grava 1 vez em modo rust (com o motor.rs como esta) e compara com a base fora da mascara; leva de
+    carregar (base[3] = impressao da carga da base): se a gravacao bateu, carrega e compara a impressao.
+    (igual, texto); texto = 'IGUAL ...', 'DIFERENTE item ...', 'DIFERENTE carga ...' ou 'sem .qst/carga ...'."""
     q = gravar(a, 'rust', nome)
     if q is None:
         return False, 'sem .qst (caiu ou estourou o tempo)'
     igual, linhas = comparar(base[0], q, extra=base[2])
-    return igual, linhas[-1].replace('comparar: ', '', 1)
+    texto = linhas[-1].replace('comparar: ', '', 1)
+    if not igual or base[3] is None:
+        return igual, texto
+    imp = carregar(a, 'rust')
+    if imp is None:
+        return False, 'sem carga (caiu ou estourou o tempo); gravacao ' + texto
+    if imp != base[3]:
+        return False, 'DIFERENTE carga: %s, base %s; gravacao %s' % (resumo_carga(imp), resumo_carga(base[3]), texto)
+    return True, '%s; carga IGUAL (%s)' % (texto, resumo_carga(imp))
+
+
+def resumo_carga(imp):
+    return 'parou em %s, %d sorteios, impressao %s' % imp[:3]
+
+
+FERIAS = os.path.join(JOGO_LUCAS, 'FeriasTesteSave.sav')
+MD5_FERIAS = '33fda465193b5e8e6d7ace93ecd44559'
+
+
+def md5(p):
+    import hashlib
+    return hashlib.md5(open(p, 'rb').read()).hexdigest()
+
+
+def conferir_sav(a):
+    """O --sav existe e, se for o FeriasTesteSave do Lucas, esta intocado (a prova so carrega copias)."""
+    if not os.path.isfile(a.sav):
+        falha('save de carga nao achado: %s' % a.sav)
+    if os.path.normcase(os.path.abspath(a.sav)) == os.path.normcase(FERIAS) and md5(a.sav) != MD5_FERIAS:
+        falha('%s mudou (MD5 %s, esperado %s): pare e avise o Lucas' % (a.sav, md5(a.sav), MD5_FERIAS))
 
 
 def prova_da_leva(a, n):
@@ -298,6 +345,8 @@ def prova_da_leva(a, n):
         print('prova da leva %s: FALHOU (a base nao gravou)' % n)
         return 1
     igual, texto = contra_a_base(a, base, 'leva')
+    if base[3] is not None:
+        conferir_sav(a)  # o save do Lucas continua intocado
     print('prova da leva %s: %s' % (n, texto if igual or texto.startswith('DIFERENTE') else 'FALHOU ' + texto))
     return 0 if igual else 1
 
@@ -305,6 +354,7 @@ def prova_da_leva(a, n):
 def carregar(a, modo):
     """-load de uma copia do --sav e carreira ate --ate. Devolve a tupla da impressao ou None."""
     copia = os.path.join(a.pasta, 'carga_%s%s' % (modo, os.path.splitext(a.sav)[1]))
+    antes = md5(a.sav)
     shutil.copy2(a.sav, copia)
     with bancada('CM0102 prova_save.py', {}):
         ok, motivo = laboratorio.pode_rodar()
@@ -313,10 +363,18 @@ def carregar(a, modo):
             return None
         # CM_FERIAS: a DLL poe o tecnico de ferias logo depois do -load (o jogo nao grava de ferias; simulacao.rs)
         os.environ['CM_FERIAS'] = '1'
+        # a carga regrava o hall_of_fame.bin do jogo de testes (o do save): guarda e devolve, para nao mudar o
+        # que as carreiras e as gravacoes seguintes leem
+        hof = os.path.join(JOGO, 'hall_of_fame.bin')
+        hof_guardado = open(hof, 'rb').read() if os.path.exists(hof) else None
         try:
             info, seg, erro = rodar(opcoes(a, modo, a.ate), a.semente, ['-load', copia])
         finally:
+            if hof_guardado is not None:
+                open(hof, 'wb').write(hof_guardado)
             os.environ.pop('CM_FERIAS', None)
+    if md5(a.sav) != antes:
+        falha('%s mudou durante a carga: pare e avise o Lucas' % a.sav)
     if erro:
         print('carregar %s: %s (%.0f s)' % (modo, erro, seg))
         return None
@@ -331,8 +389,10 @@ def parser():
     ap.add_argument('--tipo', type=int, choices=[3, 4], default=4, help='4 = RLE (padrao), 3 = sem compressao')
     ap.add_argument('--semente', type=int, default=12345)
     ap.add_argument('--pasta', default=os.path.join(tempfile.gettempdir(), 'cm0102_prova_save'), help='pasta de trabalho')
-    ap.add_argument('--sav', help='save COM tecnico de ferias para o passo 3 (o .qst nao serve: pede o nome do tecnico)')
-    ap.add_argument('--ate', default='2001-09-01', help='data de parada da carga AAAA-MM-DD')
+    ap.add_argument('--sav', help='save COM tecnico de ferias para o passo 3 (o .qst nao serve: pede o nome do tecnico); '
+                    'na leva de carregar o padrao e jogo\\FeriasTesteSave.sav')
+    ap.add_argument('--ate', default='2001-08-28', help='data de parada da carga AAAA-MM-DD (2001-08-28: original e rust '
+                    'dao a mesma impressao com o FeriasTesteSave)')
     ap.add_argument('--exe', default='cm0102-1080.exe')
     ap.add_argument('--limite', type=int, default=900, help='segundos maximos por execucao')
     ap.add_argument('--comparar', nargs=2, metavar=('A', 'B'), help='so compara dois arquivos de conteiner')

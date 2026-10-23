@@ -126,9 +126,10 @@ def leia(n, titulo_pt, titulo_en, rotinas, mutacoes, acusadas, lacuna_pt='', lac
     ps = prova_save(n)
     if ps:  # leva do save: as mutações foram pela prova do save, e ela entra no resultado
         i = pt.index('**Resultado** (`cadeia.txt`):') + 1
-        pt.insert(i, f'- **Prova do save** (o `.qst` gravado em modo Rust com e sem as rotinas da leva, fora dos bytes que variam sozinhos; as mutações também foram por ela): {ps}.')
+        carga = os.path.exists(os.path.join(base, 'CARGA'))  # leva de carregar: a prova também carrega o save de férias
+        pt.insert(i, f'- **Prova do save** (o `.qst` gravado em modo Rust com e sem as rotinas da leva, fora dos bytes que variam sozinhos' + (', e o save de férias carregado até 2001-08-28 com e sem elas, mesma impressão' if carga else '') + f'; as mutações também foram por ela): {ps}.')
         i = en.index('**Result** (`cadeia.txt`):') + 1
-        en.insert(i, f'- **Save proof** (the `.qst` saved in Rust mode with and without the batch\'s routines, outside the bytes that vary on their own; the mutations also went through it): {ps.replace("IGUAL", "EQUAL").replace("DIFERENTE", "DIFFERENT")}.')
+        en.insert(i, f'- **Save proof** (the `.qst` saved in Rust mode with and without the batch\'s routines, outside the bytes that vary on their own' + (', and the holiday save loaded to 2001-08-28 with and without them, same fingerprint' if carga else '') + f'; the mutations also went through it): {ps.replace("IGUAL", "EQUAL").replace("DIFERENTE", "DIFFERENT")}.')
     if campos:
         pt += ['**Campos tocados:**'] + [f'- {c}' for c, _ in campos] + ['']
         en += ['**Fields touched:**'] + [f'- {c}' for _, c in campos] + ['']
