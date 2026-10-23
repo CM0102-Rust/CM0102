@@ -86,8 +86,25 @@ def conteudo(dados, tipo, pos, tam):
     return bytes(saida)
 
 
-def comparar(a, b):
-    """(igual, [linhas]) entre dois arquivos de conteiner."""
+def variaveis(a, b):
+    """{item: bytes que diferem} entre duas gravacoes da mesma base: lixo de heap e de ponteiro que o jogo
+    grava sem inicializar (23/10/2026: 13 bytes do general.dat mudam de uma rodada para outra no mesmo modo;
+    entre os modos ainda ha 161 do staff history.tmp, por isso a prova compara a mesma DLL com e sem a leva,
+    nao a original com a Rust)."""
+    da, db = open(a, 'rb').read(), open(b, 'rb').read()
+    ta, _, la = indice(da)
+    tb, _, lb = indice(db)
+    v = {}
+    for (nome, pa, sa), (_, pb, sb) in zip(la, lb):
+        ca, cb = conteudo(da, ta, pa, sa), conteudo(db, tb, pb, sb)
+        if ca != cb:
+            v[nome] = {i for i in range(min(len(ca), len(cb))) if ca[i] != cb[i]}
+    return v
+
+
+def comparar(a, b, extra=None):
+    """(igual, [linhas]) entre dois arquivos de conteiner; `extra` = {item: bytes a ignorar} (ver variaveis)."""
+    extra = extra or {}
     da, db = open(a, 'rb').read(), open(b, 'rb').read()
     if da == db:
         return True, ['comparar: IGUAL (%d bytes)' % len(da)]
@@ -111,6 +128,8 @@ def comparar(a, b):
         for i in range(min(sa, sb)):
             if ca[i] != cb[i]:
                 campo = next((m for m in mascara if m[0] <= i < m[0] + m[1]), None)
+                if campo is None and i in extra.get(nome, ()):
+                    campo = (i, 1, 'varia entre gravacoes da base')
                 if campo is None:
                     primeira = i
                     break
@@ -203,10 +222,15 @@ def main():
     ap.add_argument('--exe', default='cm0102-1080.exe')
     ap.add_argument('--limite', type=int, default=900, help='segundos maximos por execucao')
     ap.add_argument('--comparar', nargs=2, metavar=('A', 'B'), help='so compara dois arquivos de conteiner')
+    ap.add_argument('--variaveis', nargs=2, metavar=('BASE1', 'BASE2'),
+                    help='com --comparar: ignora os bytes que diferem entre duas gravacoes da base')
     a = ap.parse_args()
 
     if a.comparar:
-        igual, linhas = comparar(*a.comparar)
+        extra = variaveis(*a.variaveis) if a.variaveis else None
+        if extra:
+            print('variaveis: %s' % ', '.join('%s %d bytes' % (n, len(v)) for n, v in extra.items()))
+        igual, linhas = comparar(*a.comparar, extra=extra)
         print('\n'.join(linhas))
         return 0 if igual else 1
     if len(a.ate) != 10:
