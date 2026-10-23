@@ -49145,9 +49145,8 @@ const SEM_ROTINAS: &[&str] = &[];
 /// +0x38 da ficha do jogo simulado da 0x84be20 (regras de prorrogação e pênaltis da simulação rápida
 /// 0x6beeb0). Zerar a 0x84be20 (como na 212a) dava empates sem desempate, caminho que o jogo de verdade
 /// quase nunca percorre, e separava Rust e original na carreira de 8 ligas.
-/// 0x524d30 (219a, desligada em 23/10/2026): a save_database que ela chama grava no index.dat 408 bytes
-/// de locais sem valor; chamada da cópia, na pilha particular, o lixo gravado muda (prova do save).
-const DESLIGADAS: &[usize] = &[0x7c6bf0, 0x524d30];
+/// 0x524d30 (219a) ficou desligada até a zeragem da save_database 0x52dad0 (opção A, 23/10/2026).
+const DESLIGADAS: &[usize] = &[0x7c6bf0];
 
 /// Rotinas portadas que, fora da comparacao, rodam a original (pelo desvio de passagem, como no modo
 /// original): alguma rotina original chamada abaixo delas le lixo da pilha, e o lixo que a copia Rust
@@ -50638,12 +50637,18 @@ pub unsafe fn instalar(comparando: bool) {
 /// 0x6d1cc0: a media (double) de um lado sem avaliados; 0x6beeb0: bytes altos dos dwords passados as
 /// escolhas da simulacao rapida; 0x70c040: o rebote e a saida da defesa quando o proprio goleiro
 /// chuta.
-const ZERADAS: [(Prologo, u32); 5] = [
+const ZERADAS: [(Prologo, u32); 7] = [
     (Prologo { endereco: 0x6dbc50, bytes: &[0x6a, 0xff, 0x68, 0x52, 0xd4, 0x95, 0x00] }, 0x2000),
     (Prologo { endereco: 0x6d1cc0, bytes: &[0x83, 0xec, 0x44, 0x53, 0x55] }, 0x2000),
     (Prologo { endereco: 0x6beeb0, bytes: &[0x83, 0xec, 0x38, 0x53, 0x55] }, 0x2000),
     (Prologo { endereco: 0x70c040, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] }, 0x2000),
     (Prologo { endereco: 0x7109f0, bytes: &[0x6a, 0xff, 0x68, 0x6b, 0xd4, 0x95, 0x00] }, 0x2000),
+    // o save (opção A, aprovada pelo Lucas em 23/10/2026): lixo de pilha que vai para o ARQUIVO, sem caminho
+    // de jogo (o zero só troca enchimento): 0x52dad0 (save_database) grava no index.dat 408 bytes de locais
+    // sem valor; 0x82e430 (save_game_data) monta o resumo do general.dat no próprio quadro e a 0x591f80 não
+    // preenche tudo (o clube dos técnicos não humanos, as caudas dos textos)
+    (Prologo { endereco: 0x52dad0, bytes: &[0x81, 0xec, 0x10, 0x0a, 0x00, 0x00] }, 0x2000),
+    (Prologo { endereco: 0x82e430, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] }, 0x2000),
 ];
 
 pub unsafe fn instalar_zeradas() {

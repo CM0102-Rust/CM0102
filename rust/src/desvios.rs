@@ -127,7 +127,14 @@ unsafe fn zerar_e_saltar(n: u32, destino: usize) -> usize {
     c.extend((-(n as i32)).to_le_bytes()); // lea edi, [esp - n] (esp ja desceu 12)
     c.push(0xb9);
     c.extend((n / 4).to_le_bytes());
-    c.extend([0x31, 0xc0, 0xfc, 0xf3, 0xab, 0x58, 0x59, 0x5f, 0xe9]); // xor eax, eax; cld; rep stosd; pop; pop; pop; jmp
+    c.extend([0x31, 0xc0, 0xfc, 0xf3, 0xab, 0x58, 0x59, 0x5f]); // xor eax, eax; cld; rep stosd; pop; pop; pop
+    // os 12 bytes logo abaixo da entrada guardaram edi, ecx e eax durante a zeragem: zera-os tambem
+    // (mov dword [esp-4/-8/-12], 0), senao ficam os registradores de quem chamou (a save_database grava esse
+    // trecho no index.dat; prova do save da 219a, 23/10/2026)
+    for d in [0xfcu8, 0xf8, 0xf4] {
+        c.extend([0xc7, 0x44, 0x24, d, 0, 0, 0, 0]);
+    }
+    c.push(0xe9); // jmp
     let rel = (destino as isize - (codigo + c.len() + 4) as isize) as i32;
     c.extend(rel.to_le_bytes());
     core::ptr::copy_nonoverlapping(c.as_ptr(), codigo as *mut u8, c.len());
