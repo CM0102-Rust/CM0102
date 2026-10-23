@@ -1,0 +1,7 @@
+# Mutações da 219a leva (itens save_s2_a, save_s2_b, save_s2_c). Uso: python mutacoes.py mutacoes\leva219.py --prova-save 219
+MUTACOES = [
+    ('sv2_resumo_primeira', '            if primeira {\n                formatar(', '            if !primeira {\n                formatar('),
+    ('sv2_resumo_versao', '    copiar_texto(resumo.add(0x7d0), versao());', '    copiar_texto(resumo.add(0x7d1), versao());'),
+    ('sv2_fifa_segundo_byte', '    if gravar(0xa83608, 1, 1, z) != 1 {', '    if 1 != 1 {'),
+    ('sv2_banco_a4', '    gravar_banco(save, 1, a4, tipo)', '    gravar_banco(save, 1, a4 ^ 1, tipo)'),
+]

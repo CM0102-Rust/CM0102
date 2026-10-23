@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologo` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 586 de 6709 funções, 550.3 de 5528.0 KB (**9.95%**) · 46 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 595 de 6709 funções, 554.7 de 5528.0 KB (**10.03%**) · 47 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -22,14 +22,16 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `player_stats.cpp` | 7/34 | 2.6/28.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **9.0%** |
 | `main.cpp` | 2/16 | 0.2/3.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.2%** |
 | `utils.cpp` | 1/23 | 0.5/5.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.0%** |
+| `file_screens.cpp` | 1/10 | 0.7/11.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.2%** |
 | `media.cpp` | 8/69 | 10.3/202.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.1%** |
 | `fog_of_war.cpp` | 4/34 | 0.6/12.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.9%** |
-| `Database.cpp` | 19/181 | 7.0/148.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.7%** |
+| `Database.cpp` | 21/181 | 7.1/148.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.8%** |
 | `injury.cpp` | 9/47 | 1.4/30.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.7%** |
 | `staff_contracts.cpp` | 6/45 | 1.8/39.9 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.6%** |
 | `news.cpp` | 6/33 | 1.7/49.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.4%** |
 | `Cup.cpp` | 6/47 | 1.3/41.9 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.1%** |
 | `player_regen.cpp` | 6/51 | 1.4/44.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.0%** |
+| `Setup.cpp` | 7/107 | 3.7/120.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.0%** |
 | `national_teams.cpp` | 18/69 | 1.7/58.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.9%** |
 | `comp_util.cpp` | 11/38 | 2.0/68.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.9%** |
 | `european_cup.cpp` | 2/50 | 0.8/29.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.8%** |
@@ -51,6 +53,5 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `staff_records.cpp` | 1/37 | 0.1/31.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.2%** |
 | `manager_manager.cpp` | 1/98 | 0.2/129.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.2%** |
 | `library_without_asserts` | 1/243 | 0.3/205.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
-| `Setup.cpp` | 1/107 | 0.0/120.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.0%** |
 
-Os outros 347 arquivos ainda não têm rotina em Rust.
+Os outros 346 arquivos ainda não têm rotina em Rust.

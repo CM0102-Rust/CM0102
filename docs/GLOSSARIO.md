@@ -108,7 +108,9 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c41b0 | `caminho_livre_ate` | clear_path_to |
 | 0x76e040 | `campo_3a_da_pessoa` | person_field_3a |
 | 0x6f4600 | `campo_pela_posicao` | field_by_position |
+| 0x524d10 | `carregar_banco_do_save` | load_database_from_stream |
 | 0x72aa80 | `carregar_estatisticas_da_partida` | Match_Stats::load |
+| 0x839760 | `carregar_regras_fifa` | load_fifa_transfer_rules |
 | 0x6eab60 | `cartao_pela_gravidade` | card_by_severity |
 | 0x6c2a40 | `casa_da_formacao` | formation_square |
 | 0x5b2ae0 | `casa_da_vaga` | slot_code |
@@ -265,6 +267,8 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x71b120 | `fechar_tela_da_partida` | close_match_screen |
 | 0x4cf6d0 | `ficha_de_contrato` | contract_record |
 | 0x729e30 | `ficha_do_registro` | Match_Stats::find_record_fixture |
+| 0x839290 | `filtro_do_inicio_rapido` | check_quick_start_file |
+| 0x838e10 | `filtro_do_jogo_salvo` | check_saved_game_file |
 | 0x6cb910 | `fora_do_meio` | off_centre |
 | 0x6bbb60 | `forca_do_lado` | side_strength |
 | 0x6c0c60 | `forca_do_time` | team_strength |
@@ -280,6 +284,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x700350 | `gravar_8ea9` | write_8ea9 |
 | 0x700390 | `gravar_8eaa` | write_8eaa |
 | 0x7003a0 | `gravar_8ed8` | write_8ed8 |
+| 0x524d30 | `gravar_banco_no_save` | save_database_for_game |
 | 0x62c660 | `gravar_carga_de_treino` | Injury::set_training_load |
 | 0x5b5290 | `gravar_casa` | set_square |
 | 0x785790 | `gravar_dado_da_noticia` | set_news_field |
@@ -291,6 +296,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x786d30 | `gravar_marca_da_noticia` | News::set_item_slot |
 | 0x932e10 | `gravar_no_conteiner` | zwrite |
 | 0x729820 | `gravar_registro_da_partida` | Match_Stats::write_match_record |
+| 0x8395b0 | `gravar_regras_fifa` | save_fifa_transfer_rules |
 | 0x896a90 | `gravar_vaga_tatica` | set_tactic_slot |
 | 0x62ec00 | `gravidade_da_lesao` | injury_severity |
 | 0x6854a0 | `grupo_decidido` | group_decided |
@@ -344,6 +350,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x729600 | `ler_registro_da_partida` | Match_Stats::read_match_record |
 | 0x6cfe10 | `lesao_na_dividida` | tackle_injury |
 | 0x6d0980 | `lesionar` | injure |
+| 0x82ff40 | `liberar_dados_do_jogo` | free_game_data |
 | 0x6d5b50 | `liberar_tabelas_de_eventos` | free_event_tables |
 | 0x6847b0 | `liga_tem_rebaixamento` | League::has_relegation |
 | 0x76c0f0 | `ligar_44_da_pessoa` | set_person_44 |
@@ -388,6 +395,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6844b0 | `montar_grade_de_turnos` | league_build_round_robin_grid |
 | 0x717db0 | `montar_jogos_do_dia` | build_day_fixtures_screen |
 | 0x6b3c10 | `montar_o_dia` | set_up_the_day |
+| 0x591f80 | `montar_resumo_do_save` | build_save_game_summary |
 | 0x718e90 | `montar_tela_da_partida` | build_match_screen |
 | 0x71b300 | `montar_ultimos_placares` | build_latest_scores |
 | 0x6cfd40 | `motor_cartao_pela_gravidade` | engine_card_by_severity |
@@ -613,6 +621,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x720320 | `valores_das_zonas_de_acao` | refresh_action_zones_values |
 | 0x6d5d80 | `variante_do_evento` | event_variant |
 | 0x6b7cf0 | `venceu_o_jogo` | won_the_match |
+| 0x838eb0 | `versao_do_jogo_salvo_valida` | valid_saved_game_version |
 | 0x6fa140 | `virado_para` | facing |
 | 0x70df20 | `x_fora_do_meio` | x_off_centre |
 | 0x6d5b20 | `zagueiros_do_lado_sem_conflito` | side_centre_backs_without_conflict |
