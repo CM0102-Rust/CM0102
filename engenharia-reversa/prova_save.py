@@ -111,7 +111,9 @@ def variaveis(a, b):
     for (nome, pa, sa), (_, pb, sb) in zip(la, lb):
         ca, cb = conteudo(da, ta, pa, sa), conteudo(db, tb, pb, sb)
         if ca != cb:
-            v[nome] = {i for i in range(min(len(ca), len(cb))) if ca[i] != cb[i]}
+            # o lixo e de ponteiro: o campo de 4 bytes inteiro varia, mesmo quando so alguns bytes mudaram
+            # nas duas gravacoes (23/10: +0x711 escapou da mascara de +0x710 na prova da 218a)
+            v[nome] = {j for i in range(min(len(ca), len(cb))) if ca[i] != cb[i] for j in range(i & ~3, (i & ~3) + 4)}
     return v
 
 
