@@ -2025,3 +2025,12 @@ Mutations: `mutacoes/leva213.py` (8, by the career to 2002-06-01, confirming the
 | `partida_assistida_pelo_humano()` | 0x5fe290 | thiscall | human_manager.cpp: whether the fixture is the one the human manager chose to watch |
 
 Mutations: `mutacoes/leva214.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `lt_ultimo_dia` escaped: the margin is only asked by 0x68a3e0 (match importance), which stores the byte in a field; in the real game comparing (to 2002-01-01) it is not called, and in the career to 2002-06-01 0xfe instead of 0xff (no margin) changes no decision. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (5afd987e1a1a3ef3). Rust ×2 and original careers to 2002-06-01: 2,361,839,396 draws, fingerprint b11bd5cb63f51d72, matches 2461da5b0d296dba, database 4d07a03c94c6fda5
+
+### Match engine, 215th batch — the end of the match screens: the match the human leaves and the fixture of a statistics record (official on 2026-10-23)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `largar_partida_assistida()` | 0x6b6970 | cdecl | match_day.cpp: the current human leaves the match he was watching; with no other human watching, the match runs to the end, is recorded and leaves the queue |
+| `ficha_do_registro()` | 0x729e30 | thiscall | match_stats.cpp: finds in the fixture list the match of a statistics record (date, competition and club) and copies the fixture |
+
+Mutations: `mutacoes/leva215.py` (0, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 0 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551

@@ -12,3 +12,17 @@ DOCS = ('se a liga tem rebaixamento, a data da rodada do modelo da liga e a impo
          ('importancia_do_jogo_da_liga', 'League::get_match_importance', '0x68a3e0', 'league.cpp', 'thiscall',
           'a importância do jogo da liga para o clube: a base da liga, +1 no começo do campeonato ou com a margem do último dia',
           'the league match importance for the club: the league base, +1 early in the season or with the final-day margin')])
+CAMPOS = [('liga +0xc1: tem vagas de rebaixamento; valor; lê (liga_tem_rebaixamento)', 'league +0xc1: has relegation places; value; reads (liga_tem_rebaixamento)'),
+          ('rodada do modelo da liga (0x41 bytes) +0: dia do ano; valor; grava (data_da_rodada_da_liga)', 'league schedule round (0x41 bytes) +0: day of year; value; writes (data_da_rodada_da_liga)'),
+          ('rodada do modelo da liga +2: ano relativo (ano − base); valor; grava (data_da_rodada_da_liga)', 'league schedule round +2: relative year (year − base); value; writes (data_da_rodada_da_liga)'),
+          ('rodada do modelo da liga +4: sem nome (código); valor; grava (data_da_rodada_da_liga)', 'league schedule round +4: unnamed (code); value; writes (data_da_rodada_da_liga)'),
+          ('rodada do modelo da liga +0x3d: sem nome; valor; grava (data_da_rodada_da_liga)', 'league schedule round +0x3d: unnamed; value; writes (data_da_rodada_da_liga)'),
+          ('liga +0x51: sem nome (dá a importância base: (x − 10) / 4 + 10); valor; lê (importancia_do_jogo_da_liga)', 'league +0x51: unnamed (gives the base importance: (x − 10) / 4 + 10); value; reads (importancia_do_jogo_da_liga)'),
+          ('liga +0x3e: quantidade de clubes; valor; lê (importancia_do_jogo_da_liga)', 'league +0x3e: club count; value; reads (importancia_do_jogo_da_liga)'),
+          ('liga +0xb1: tabela (linhas de 59 bytes); ponteiro; lê (importancia_do_jogo_da_liga)', 'league +0xb1: table (59-byte rows); pointer; reads (importancia_do_jogo_da_liga)'),
+          ('linha da tabela +0: clube; ponteiro; lê (importancia_do_jogo_da_liga)', 'table row +0: club; pointer; reads (importancia_do_jogo_da_liga)'),
+          ('linha da tabela +0x37: sem nome (marca; 0xff = sem marca); valor; lê (importancia_do_jogo_da_liga)', 'table row +0x37: unnamed (mark; 0xff = none); value; reads (importancia_do_jogo_da_liga)'),
+          ('liga +0xa9: sem nome (rodadas; teste > 10); valor; lê (importancia_do_jogo_da_liga)', 'league +0xa9: unnamed (rounds; test > 10); value; reads (importancia_do_jogo_da_liga)'),
+          ('partida +0x1c/+0x20: clube da casa e de fora; ponteiro; lê (importancia_do_jogo_da_liga)', 'match +0x1c/+0x20: home and away club; pointer; reads (importancia_do_jogo_da_liga)'),
+          ('partida +0x34: sem nome (teste < 3); valor; lê (importancia_do_jogo_da_liga)', 'match +0x34: unnamed (test < 3); value; reads (importancia_do_jogo_da_liga)')]
+INTERESSA = ['CMRTE']

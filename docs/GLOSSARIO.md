@@ -254,6 +254,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x8c6db0 | `fechar_propostas_da_oferta` | transfer_manager_close_offer_contract_offers |
 | 0x71b120 | `fechar_tela_da_partida` | close_match_screen |
 | 0x4cf6d0 | `ficha_de_contrato` | contract_record |
+| 0x729e30 | `ficha_do_registro` | Match_Stats::find_record_fixture |
 | 0x6cb910 | `fora_do_meio` | off_centre |
 | 0x6bbb60 | `forca_do_lado` | side_strength |
 | 0x6c0c60 | `forca_do_time` | team_strength |
@@ -311,6 +312,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6d42a0 | `lado_sob_controle` | side_under_control |
 | 0x6fa490 | `lancar` | long_ball |
 | 0x6bab90 | `lance_valendo` | move_counts |
+| 0x6b6970 | `largar_partida_assistida` | match_day_drop_viewer_and_finish_match |
 | 0x6c4290 | `lateral` | throw_in |
 | 0x717400 | `ler_1bc` | read_1bc |
 | 0x700320 | `ler_8ea7` | read_8ea7 |

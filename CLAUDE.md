@@ -33,7 +33,7 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 | `save/` | DLL só do save (`ddraw.dll` repassadora com as 3 rotinas do contêiner de `rust/src/conteiner.rs`, assinatura do código antes de desviar; para os exes do NickPatcher): `cd save && cargo build --release`; ver `docs/SAVE_2GB.md` |
 | `levas/` | uma pasta por leva desde a 143ª: `codigo.rs`, `integrar.py`, `docs.py`, `cadeia.txt` (resultado dos testes), `LEIA.md` |
 | `pacotes/`, `jogo_testes/` | pacotes de leitura das rotinas (desmontagem, pseudocódigo) e a cópia do jogo para os testes automáticos (não versionados) |
-| `docs/` | `DESCOMPILACAO.md`, `COMO_CONTINUAR.md`, `ROTINAS.md`, `PROJETO.md`, `PLACAR.md` (quanto já está em Rust), `PLACAR_ARQUIVOS.md` (por arquivo, exe inteiro, pelo mapa de maxevans60), `PENDENCIAS.md` (lacunas das mutações), `GLOSSARIO.md`, `CAMPOS.md`, `FORMATOS.md`, `MAPA_MODULOS.md`, `ENDERECOS_COMUNIDADE.md`, `EXTENSAO.md`, `SAVE_2GB.md`, `VERSAO_SEM_TELA.md`, `mapa_funcoes.csv`, `cobertura_motor.txt` |
+| `docs/` | `DESCOMPILACAO.md`, `COMO_CONTINUAR.md`, `ROTINAS.md`, `PROJETO.md`, `PLACAR.md` (quanto já está em Rust), `PLACAR_ARQUIVOS.md` (por arquivo, exe inteiro, pelo mapa de maxevans60), `PENDENCIAS.md` (lacunas das mutações), `GLOSSARIO.md`, `CAMPOS.md`, `FORMATOS.md`, `MAPA_MODULOS.md`, `MAPA_SAVE.md` (o bloco do save: contêiner, RLE, gravar/carregar, levas propostas), `ENDERECOS_COMUNIDADE.md`, `EXTENSAO.md`, `SAVE_2GB.md`, `VERSAO_SEM_TELA.md`, `mapa_funcoes.csv`, `cobertura_motor.txt` |
 | `wiki/` | `index.md` (estado e próximos passos), `log.md` |
 
 ## Ambiente

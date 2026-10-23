@@ -12,3 +12,19 @@ DOCS = ('a partida assistida por algum humano, o apelido dado pelo humano e a c�
          ('copiar_aposentadoria_pendente', 'retire_record_assign', '0x7a8780', 'player_regen.cpp', 'thiscall',
           'copia a aposentadoria pendente: a pessoa, o clube, as duas datas, o motivo e a marca de anunciada',
           'copies the pending retirement record: the person, the club, the two dates, the reason and the announced flag')])
+CAMPOS = [('[0xae23bc] tabela de pessoas (110 bytes); ponteiro; lê (humano_assiste_a_partida)', '[0xae23bc] staff table (110 bytes); pointer; reads (humano_assiste_a_partida)'),
+          ('[0xae2364] quantidade de pessoas (as 16 últimas são os humanos); valor; lê (humano_assiste_a_partida, humano_deu_apelido)', '[0xae2364] staff count (the last 16 are the humans); value; reads (humano_assiste_a_partida, humano_deu_apelido)'),
+          ('staff +0x5f: técnico humano ativo; valor; lê (humano_assiste_a_partida)', 'staff +0x5f: active human manager; value; reads (humano_assiste_a_partida)'),
+          ('staff +0: id da pessoa; id; lê (humano_deu_apelido)', 'staff +0: person id; id; reads (humano_deu_apelido)'),
+          ('[0xb77c7a] vez (canal do humano da vez); valor; lê (humano_deu_apelido)', '[0xb77c7a] current slot (channel of the current human); value; reads (humano_deu_apelido)'),
+          ('[0xb74c26 + 0x300 × vez] técnico humano do canal; ponteiro; lê (humano_deu_apelido)', '[0xb74c26 + 0x300 × slot] channel human manager; pointer; reads (humano_deu_apelido)'),
+          ('HUMAN_MANAGER +0: registros dos humanos (0xa6ef bytes); ponteiro; lê (humano_deu_apelido)', 'HUMAN_MANAGER +0: human records (0xa6ef bytes); pointer; reads (humano_deu_apelido)'),
+          ('HUMAN_MANAGER +4: quantidade de humanos; valor; lê (humano_deu_apelido)', 'HUMAN_MANAGER +4: human count; value; reads (humano_deu_apelido)'),
+          ('registro do humano +0xa6e3: lista de apelidos (itens de 0x1e bytes, +0 id da pessoa); ponteiro; lê (humano_deu_apelido)', 'human record +0xa6e3: nickname list (0x1e-byte items, +0 person id); pointer; reads (humano_deu_apelido)'),
+          ('registro do humano +0xa6eb: quantidade de apelidos; valor; lê (humano_deu_apelido)', 'human record +0xa6eb: nickname count; value; reads (humano_deu_apelido)'),
+          ('aposentadoria pendente (0x1a bytes) +0: pessoa; id; lê e grava (copiar_aposentadoria_pendente)', 'pending retirement (0x1a bytes) +0: person; id; reads and writes (copiar_aposentadoria_pendente)'),
+          ('aposentadoria pendente +4: clube; id; lê e grava (copiar_aposentadoria_pendente)', 'pending retirement +4: club; id; reads and writes (copiar_aposentadoria_pendente)'),
+          ('aposentadoria pendente +8/+0x10: duas datas, sem nome cada; valor; lê e grava (copiar_aposentadoria_pendente)', 'pending retirement +8/+0x10: two dates, each unnamed; value; reads and writes (copiar_aposentadoria_pendente)'),
+          ('aposentadoria pendente +0x18: motivo; valor; lê e grava (copiar_aposentadoria_pendente)', 'pending retirement +0x18: reason; value; reads and writes (copiar_aposentadoria_pendente)'),
+          ('aposentadoria pendente +0x19: marca de anunciada; valor; lê e grava (copiar_aposentadoria_pendente)', 'pending retirement +0x19: announced flag; value; reads and writes (copiar_aposentadoria_pendente)')]
+INTERESSA = ['GPF2', 'SGE']

@@ -2023,3 +2023,12 @@ Mutações: `mutacoes/leva213.py` (8, pela carreira até 2002-06-01, confirmando
 | `partida_assistida_pelo_humano()` | 0x5fe290 | thiscall | human_manager.cpp: se a partida é a que o técnico humano escolheu assistir |
 
 Mutações: `mutacoes/leva214.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `lt_ultimo_dia` escapou: a margem só é pedida pela 0x68a3e0 (importância do jogo), que grava o byte num campo; no jogo real comparando (até 2002-01-01) ela não é chamada, e na carreira até 2002-06-01 o 0xfe no lugar de 0xff (sem margem) não muda nenhuma decisão. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (5afd987e1a1a3ef3). Carreiras Rust ×2 e original até 2002-06-01: 2.361.839.396 sorteios, impressão b11bd5cb63f51d72, partidas 2461da5b0d296dba, banco 4d07a03c94c6fda5
+
+### Motor de partidas, 215ª leva — o fim das telas da partida: a partida que o humano deixa e a ficha do jogo de um registro de estatística (oficial em 23/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `largar_partida_assistida()` | 0x6b6970 | cdecl | match_day.cpp: o humano da vez deixa a partida que assistia; sem outro humano assistindo, a partida anda até o fim, é registrada e sai da fila |
+| `ficha_do_registro()` | 0x729e30 | thiscall | match_stats.cpp: acha na agenda o jogo de um registro de estatística (data, competição e clube) e copia a ficha |
+
+Mutações: `mutacoes/leva215.py` (0, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 0 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
