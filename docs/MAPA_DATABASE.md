@@ -292,3 +292,15 @@ Repositório D:\Sistemas\CM0102-Editor (commit 35c219b; MAPA_EDITOR.md §3.1, §
 - rust/nucleo: leitor e gravador da base com ida e volta byte a byte, candidato a oráculo da carga Rust do banco.
 
 Quando as levas do banco começarem: dúvidas de formato vão à sessão "Descompilar o editor original do CM 01/02"; com a carga Rust e a lista de chaves do index.cpp prontas, mandar ao CM0102-Editor um pedido (ORQUESTRACAO.md §4) com as chaves e os nomes reais, para ele retomar o Pré-Editor.
+
+## Cobertura medida (23/10/2026)
+
+Carreira automática até 2002-01-01 com contador (`cobertura.py Database.cpp Db_files.cpp index.cpp`, `simular.py --cobertura`), 160 funções com contador:
+
+| Arquivo | Funções | Não chamadas | 1 vez | Mais de 1 vez, sem Rust |
+|---|---|---|---|---|
+| Database.cpp | 106 | 25 | 19 | 62 (as consultas do dia a dia: reputação vista por outro técnico, 81 M chamadas; idade, 18 M; estrangeiro, 15 M; transferência livre na nação, 13 M; lista de transferências, 12 M...) |
+| Db_files.cpp | 37 | 21 | 12 | 4 (a leitura dos .dat, no começo) |
+| index.cpp | 17 | 7 | 1 | 9 (as chaves de clube, ~13 mil vezes) |
+
+Ordem decidida: primeiro as consultas do Database.cpp (levas de simulação comuns, provadas pela carreira); depois a leitura dos .dat e a criação (que a gravação do .qst da prova do save já percorre: o início rápido cria o jogo lendo o banco); por fim o idioma (P7) e a carga.

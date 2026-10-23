@@ -292,3 +292,15 @@ Repository D:\Sistemas\CM0102-Editor (commit 35c219b; MAPA_EDITOR.md §3.1, §3.
 - rust/nucleo: database reader and writer with byte-for-byte round trip, a candidate oracle for the Rust database load.
 
 When the database batches start: format questions go to the session "Descompilar o editor original do CM 01/02"; once the Rust load and the index.cpp key list are ready, send CM0102-Editor a request (ORQUESTRACAO.md §4) with the keys and the real names, so it resumes the Pre-Editor.
+
+## Coverage measured (2026-10-23)
+
+Automatic career to 2002-01-01 with counters (`cobertura.py Database.cpp Db_files.cpp index.cpp`, `simular.py --cobertura`), 160 functions with a counter:
+
+| File | Functions | Not called | Once | More than once, no Rust |
+|---|---|---|---|---|
+| Database.cpp | 106 | 25 | 19 | 62 (the everyday queries: reputation seen by another manager, 81 M calls; age, 18 M; foreign, 15 M; free transfer in the nation, 13 M; transfer list, 12 M...) |
+| Db_files.cpp | 37 | 21 | 12 | 4 (reading the .dat files, at the start) |
+| index.cpp | 17 | 7 | 1 | 9 (the club keys, ~13 thousand times) |
+
+Order decided: first the Database.cpp queries (ordinary simulation batches, proven by the career); then reading the .dat files and the creation (which the save proof's .qst write already goes through: the quick start creates the game by reading the database); finally the language (P7) and the load.
