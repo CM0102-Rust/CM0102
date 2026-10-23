@@ -29,6 +29,12 @@ chega aos sorteios. Nao diz onde divergiu: para isso, o modo --jogo.
 --confirmar AAAA-MM-DD (com --carreira): a mutacao que escapar da carreira e refeita no jogo em
 modo de comparacao ate a data (esquema hibrido: triagem rapida, confirmacao so do que escapou). No fim (inclusive com erro ou Ctrl+C) restaura o motor.rs e recompila.
 
+--prova-save N: para as levas do bloco do save (a carreira nao passa por elas). A base sao duas gravacoes
+do .qst em modo rust com as rotinas da leva N desligadas (prova_save.base_da_leva: os bytes que variam
+entre elas viram mascara); sem mutacao, a gravacao com a leva tem de dar IGUAL fora da mascara. Cada
+mutacao grava 1 .qst: ACUSADA se diferir fora da mascara ou se o jogo cair/estourar o tempo (sem .qst),
+IGUAL A BASE (escapou) se igual.
+
 Se a base divergir, para sem rodar as mutacoes (codigo de saida 1).
 Uma mutacao que passa sem divergencia e uma lacuna do teste (melhorar o gerador de casos) ou uma
 mutacao equivalente pelos valores possiveis (documentar em docs/ROTINAS.md por que).
@@ -144,15 +150,20 @@ def ramos_da_base():
     return vistos
 
 
+def jogo_aberto():
+    """Os pids dos jogos deste projeto abertos (jogo/ ou jogo_testes/). So os deste projeto: outros projetos da
+    maquina (ex.: o CMRTE em D:/Sistemas) tem exe de teste com o mesmo nome; a carga deles fica a cargo da trava
+    do laboratorio."""
+    import psutil
+    raiz = os.path.normcase(RAIZ)
+    return [q.pid for q in psutil.process_iter(['name', 'exe'])
+            if (q.info['name'] or '').lower().startswith('cm0102') and os.path.normcase(q.info['exe'] or '').startswith(raiz)]
+
+
 def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
-    import psutil
-    # so os jogos deste projeto: outros projetos da maquina (ex.: D:\Sistemas\CMRTE) tem exe de teste com o
-    # mesmo nome; a carga deles fica a cargo da trava do laboratorio
-    raiz = os.path.normcase(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    abertos = [q.pid for q in psutil.process_iter(['name', 'exe'])
-               if (q.info['name'] or '').lower().startswith('cm0102') and os.path.normcase(q.info['exe'] or '').startswith(raiz)]
+    abertos = jogo_aberto()
     if abertos:
         sys.exit('ja ha um jogo aberto (pid %s): um teste por vez (outra rodada ainda rodando?)' % abertos)
     lista = {}
@@ -165,6 +176,14 @@ def main():
     data = sys.argv[sys.argv.index('--jogo') + 1] if '--jogo' in sys.argv else None
     fim = sys.argv[sys.argv.index('--carreira') + 1] if '--carreira' in sys.argv else None
     rodar = (lambda: carreira(fim)) if fim else (lambda: jogo(data)) if data else None
+    prova = sys.argv[sys.argv.index('--prova-save') + 1] if '--prova-save' in sys.argv else None
+    if prova:
+        import prova_save
+        opcoes = prova_save.padrao()
+        base_save = prova_save.base_da_leva(opcoes, prova)  # mexe no motor.rs e o devolve antes de seguir
+        if base_save is None:
+            sys.exit('base da prova do save sem .qst: mutacoes canceladas')
+        rodar = lambda: [prova_save.contra_a_base(opcoes, base_save, 'mutacao')[1]]
     base = None
     confirmar = sys.argv[sys.argv.index('--confirmar') + 1] if '--confirmar' in sys.argv else None
     original = open(SRC, encoding='utf-8').read()
@@ -177,6 +196,8 @@ def main():
             t0 = time.time()
             r = rodar() if rodar else autoteste('1' if '--base-completa' in sys.argv else 'motor:%d' % casos)
             print('sem mutacao (%.0fs):' % (time.time() - t0), r, flush=True)
+            if prova and not r[0].startswith('IGUAL'):
+                sys.exit('base da prova do save diferente: mutacoes canceladas')
             if fim and not r[0].startswith('parou em'):
                 sys.exit('base sem resultado: mutacoes canceladas')
             base = r[0]
@@ -201,6 +222,8 @@ def main():
             compilar()
             t0 = time.time()
             r = rodar() if rodar else autoteste('motor:%d' % casos)
+            if prova:
+                r = [('IGUAL A BASE (escapou): ' if r[0].startswith('IGUAL') else 'ACUSADA: ') + r[0]]
             if fim and base:
                 r = [('IGUAL A BASE (escapou): ' if r[0] == base else 'ACUSADA: ') + r[0]]
                 if confirmar and r[0].startswith('IGUAL'):

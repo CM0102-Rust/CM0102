@@ -4,6 +4,8 @@ Cada item fica em levas/fila/<nome>/:
   codigo.rs    as rotinas e os comparadores; os índices de `orig::<..>(N)` e `comparar_valor!(.., N, ..)`
                escritos como %%I0%%, %%I1%%, %%I2%% (na ordem de ROTINAS)
   rotinas.py   ROTINAS = [(nome_rust, endereco, [bytes do prologo])]
+               SAVE = True (opcional): item do bloco do save; a leva ganha levas/N/SAVE e a cadeia prova
+               pelo save (prova_save.py --leva N, mutacoes.py --prova-save N) em vez da carreira
                DOCS = (titulo pt, titulo en, [(nome, nome_en, endereco, arquivo, convencao, o que faz pt, en)])
   mutacoes.py  MUTACOES = [(nome, trecho, troca)]  (mesmo formato de mutacoes/levaN.py)
 A ordem está em levas/fila/ordem.txt (um nome por linha).
@@ -62,8 +64,10 @@ ITENS_POR_LEVA = 3
 
 
 def do_lote(ordem_):
-    """Os itens da próxima leva: o primeiro da ordem e os seguintes do mesmo tipo (MOTOR), até ITENS_POR_LEVA."""
-    tipo = lambda nome: bool(runpy.run_path(os.path.join(FILA, nome, 'rotinas.py')).get('MOTOR'))
+    """Os itens da próxima leva: o primeiro da ordem e os seguintes do mesmo tipo (MOTOR, SAVE), até ITENS_POR_LEVA."""
+    def tipo(nome):
+        rot = runpy.run_path(os.path.join(FILA, nome, 'rotinas.py'))
+        return bool(rot.get('MOTOR')), bool(rot.get('SAVE'))
     lote = [ordem_[0]]
     for nome in ordem_[1:]:
         if len(lote) == ITENS_POR_LEVA:
@@ -100,9 +104,13 @@ def materializar(nomes, n, base, antes):
         b += len(rot['ROTINAS'])
     assert len({m[0] for m in mutacoes}) == len(mutacoes), 'mutações com o mesmo nome em itens diferentes'
     open(os.path.join(destino, 'codigo.rs'), 'w', encoding='utf-8').write('\n'.join(codigos))
+    save = any(runpy.run_path(os.path.join(FILA, x, 'rotinas.py')).get('SAVE') for x in nomes)
+    if save:  # a marca da cadeia: prova do save em vez da carreira (ver cadeia.sh)
+        open(os.path.join(destino, 'SAVE'), 'w', encoding='utf-8').write('leva do bloco do save\n')
     open(os.path.join(destino, 'integrar.py'), 'w', encoding='utf-8').write(INTEGRAR.format(n=n, rotinas=rotinas, base=base))
     with open(os.path.join(R, 'engenharia-reversa', 'mutacoes', f'leva{n}.py'), 'w', encoding='utf-8') as f:
-        f.write(f'# Mutações da {n}a leva (itens {", ".join(nomes)}). Uso: python mutacoes.py mutacoes\\leva{n}.py --carreira 2002-06-01\n')
+        uso = f'--prova-save {n}' if save else '--carreira 2002-06-01'
+        f.write(f'# Mutações da {n}a leva (itens {", ".join(nomes)}). Uso: python mutacoes.py mutacoes\\leva{n}.py {uso}\n')
         f.write('MUTACOES = [\n' + ''.join(f'    {m!r},\n' for m in mutacoes) + ']\n')
     runpy.run_path(os.path.join(R, 'engenharia-reversa', 'mutacoes', f'leva{n}.py'))
     secao = "secao=('Motor de partidas', 'Match engine')" if runpy.run_path(os.path.join(FILA, nomes[0], 'rotinas.py')).get('MOTOR') else "secao=('Simulação', 'Simulation')"

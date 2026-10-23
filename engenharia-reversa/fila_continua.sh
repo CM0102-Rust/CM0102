@@ -1,7 +1,7 @@
 #!/bin/bash
 # Roda a fila sozinha: para cada leva N já integrada (levas/N existe e não foi publicada), roda a cadeia,
 # confere o resultado e publica (o publicar_leva.py integra a N+1). Para (código 1) quando algo pede gente:
-# mutação que escapou sem ser acusada comparando, divergência, carreira fora da referência, falha ao publicar,
+# mutação que escapou sem ser acusada comparando, prova do save DIFERENTE (levas/N/SAVE), divergência, carreira fora da referência, falha ao publicar,
 # ou o jogo aberto (o Lucas jogando). Uso: bash engenharia-reversa/fila_continua.sh N
 cd "$(dirname "$0")/.." || exit 1
 # as referências vêm do gen_docs.py (mudam com uma zeragem nova do original determinizado)
@@ -17,6 +17,10 @@ while [ -d "levas/$n" ]; do
   c="levas/$n/cadeia.txt"
   grep -q "=== FIM" "$c" || { echo "PARADA: cadeia $n sem FIM"; exit 1; }
   grep -q "determinismo: OK" "$c" || { echo "PARADA: cadeia $n sem determinismo"; exit 1; }
+  # leva do save: a prova (a mesma DLL com e sem as rotinas) tem de dar IGUAL
+  if [ -f "levas/$n/SAVE" ] && ! grep -aq "^prova da leva $n: IGUAL" "$c"; then
+    echo "PARADA: cadeia $n: $(grep -a "^prova da leva $n:" "$c" | tail -1 | grep . || echo "prova do save ausente")"; exit 1
+  fi
   if grep -a "^execucao" "$c" | grep -v "impressao $REF_CARREIRA\|impressao $REF_JOGO" | grep -q .; then
     echo "PARADA: cadeia $n com carreira fora da referência"; exit 1
   fi

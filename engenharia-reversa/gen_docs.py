@@ -123,6 +123,12 @@ def leia(n, titulo_pt, titulo_en, rotinas, mutacoes, acusadas, lacuna_pt='', lac
            f'- **Rust ×2 and original careers to 2002-06-01:** {ref[3]}.',
            '', f'**Redo**, on top of batch {n - 1}\'s commit:', '1. `python integrar.py`',
            '2. `cargo build --release` and copy the DLL to `jogo_testes/`', f'3. `bash engenharia-reversa/cadeia.sh {n}`', '']
+    ps = prova_save(n)
+    if ps:  # leva do save: as mutações foram pela prova do save, e ela entra no resultado
+        i = pt.index('**Resultado** (`cadeia.txt`):') + 1
+        pt.insert(i, f'- **Prova do save** (o `.qst` gravado em modo Rust com e sem as rotinas da leva, fora dos bytes que variam sozinhos; as mutações também foram por ela): {ps}.')
+        i = en.index('**Result** (`cadeia.txt`):') + 1
+        en.insert(i, f'- **Save proof** (the `.qst` saved in Rust mode with and without the batch\'s routines, outside the bytes that vary on their own; the mutations also went through it): {ps.replace("IGUAL", "EQUAL").replace("DIFERENTE", "DIFFERENT")}.')
     if campos:
         pt += ['**Campos tocados:**'] + [f'- {c}' for c, _ in campos] + ['']
         en += ['**Fields touched:**'] + [f'- {c}' for _, c in campos] + ['']
@@ -131,6 +137,15 @@ def leia(n, titulo_pt, titulo_en, rotinas, mutacoes, acusadas, lacuna_pt='', lac
         en += [f'**Of interest to:** {", ".join(interessa)}', '']
     open(os.path.join(base, 'LEIA.md'), 'w', encoding='utf-8').write('\n'.join(pt))
     open(os.path.join(base, 'LEIA.en.md'), 'w', encoding='utf-8').write('\n'.join(en))
+
+
+def prova_save(n):
+    """O resultado da prova do save no cadeia.txt (o que vem depois de "prova da leva N: "), ou None
+    se a leva nao for do bloco do save."""
+    import re
+    t = open(os.path.join(R, 'levas', str(n), 'cadeia.txt'), encoding='utf-8', errors='replace').read()
+    m = re.findall(r'^prova da leva %d: (.*)$' % n, t, re.M)
+    return m[-1].strip() if m else None
 
 
 def cadeia(n):

@@ -6,6 +6,7 @@ Uso:
   python prova_save.py [--so-gravar] [--tipo 4|3] [--semente 12345] [--pasta DIR]
                        [--sav SAVE.sav] [--ate 2001-09-01] [--exe cm0102-1080.exe] [--limite 900]
   python prova_save.py --comparar A B          (so o passo 2, sem abrir o jogo)
+  python prova_save.py --leva N                (a prova de uma leva do save, ver abaixo)
 
 1. Gravar: em jogo_testes, o inicio rapido (quick_start.cfg com AUTO_SETUP=PROVA.cfg, que tem as
    linhas da carreira do simular.py) cria a carreira e grava qstart\PROVA.qst, uma vez em cada
@@ -29,10 +30,21 @@ Uso:
 4. Saida: linhas curtas ("gravar rust: ...", "comparar: IGUAL" ou "comparar: DIFERENTE item ...",
    "carregar original: impressao ..."); codigo 0 so se tudo bater.
 
+--leva N: a prova de uma leva do bloco do save. Os .qst nunca saem identicos (lixo de ponteiro no
+general.dat muda a cada execucao; entre os modos ha ainda o staff history.tmp), entao a prova compara a
+MESMA DLL no modo rust COM e SEM as rotinas da leva: le os nomes do ROTINAS de levas/N/integrar.py (sem
+executa-lo), desliga os desvios delas no motor.rs (`continue` no laco `for i in 0..N {` da instalacao:
+fica a original), compila, grava a base 2 vezes (a mascara: os bytes que variam sozinhos), restaura o
+motor.rs (sempre, com recompilacao), grava 1 vez com a leva e compara fora da mascara. Saida:
+"prova da leva N: IGUAL" ou "prova da leva N: DIFERENTE item X nome +0x..." (ou FALHOU se nao gravou).
+O mutacoes.py --prova-save N usa a mesma base (base_da_leva).
+
 Cuidados (os do simular.py, pela mesma bancada): trava do laboratorio, vigia de memoria, game.cfg
 copiado e restaurado, *.tmp guardados e devolvidos, PROVA.cfg/quick_start.cfg apagados no fim.
 """
 import argparse
+import ast
+import contextlib
 import os
 import shutil
 import struct
@@ -41,6 +53,7 @@ import tempfile
 from types import SimpleNamespace
 
 import laboratorio
+import mutacoes
 from simular import JOGO, bancada, falha, linhas_carreira, rodar
 
 CABECALHO = 12 + 1000 * 0x10c  # 0x416ec: tipo, id, quantidade e as 1000 entradas
@@ -158,10 +171,11 @@ def opcoes(a, modo, ate):
                            cobertura=False, parar_na_divergencia=False)
 
 
-def gravar(a, modo):
-    """Grava qstart\\PROVA.qst no modo pedido e o move para a pasta de trabalho. Devolve o caminho ou None."""
+def gravar(a, modo, nome=None):
+    """Grava qstart\\PROVA.qst no modo pedido e o move para a pasta de trabalho (como <nome ou modo>.qst).
+    Devolve o caminho ou None."""
     qst = os.path.join(JOGO, 'qstart', 'PROVA.qst')
-    destino = os.path.join(a.pasta, modo + '.qst')
+    destino = os.path.join(a.pasta, (nome or modo) + '.qst')
     if os.path.exists(destino):
         os.remove(destino)
     with bancada('CM0102 prova_save.py', {'PROVA.cfg': linhas_carreira(), 'quick_start.cfg': ['AUTO_SETUP=PROVA.cfg']}):
@@ -193,6 +207,72 @@ def gravar(a, modo):
     return destino
 
 
+MOTOR = os.path.join(mutacoes.RAIZ, 'rust', 'src', 'motor.rs')
+LACO = '\n    ];\n    for i in 0..N {\n'  # o laco da instalacao dos desvios (a ancora do integrar.py)
+
+
+def rotinas_da_leva(n):
+    """Os nomes do motor.rs ("motor_<nome>") do ROTINAS = [...] de levas/N/integrar.py, sem executa-lo."""
+    arv = ast.parse(open(os.path.join(mutacoes.RAIZ, 'levas', str(n), 'integrar.py'), encoding='utf-8').read())
+    for no in arv.body:
+        if isinstance(no, ast.Assign) and any(isinstance(t, ast.Name) and t.id == 'ROTINAS' for t in no.targets):
+            return ['motor_' + (r[0] if isinstance(r, (tuple, list)) else r) for r in ast.literal_eval(no.value)]
+    falha('levas/%s/integrar.py sem ROTINAS = [...]' % n)
+
+
+@contextlib.contextmanager
+def desligadas(nomes):
+    """O motor.rs com os desvios de `nomes` desligados (a original roda), compilado e copiado para o jogo
+    dos testes; no fim (mesmo com erro ou Ctrl+C) o motor.rs volta e e recompilado."""
+    original = open(MOTOR, encoding='utf-8').read()
+    assert original.count(LACO) == 1, 'laco da instalacao nao achado no motor.rs'
+    trava = '        if [%s].contains(&nomes[i]) {\n            continue;\n        }\n' % ', '.join('"%s"' % x for x in nomes)
+    try:
+        open(MOTOR, 'w', encoding='utf-8').write(original.replace(LACO, LACO + trava))
+        mutacoes.compilar()
+        yield
+    finally:
+        open(MOTOR, 'w', encoding='utf-8').write(original)
+        mutacoes.compilar()  # toca a data (os.utime) antes do cargo
+        print('motor.rs restaurado e recompilado', flush=True)
+
+
+def base_da_leva(a, n):
+    """(base1, base2, mascara): duas gravacoes rust com as rotinas da leva desligadas e os bytes que variam
+    entre elas. None se alguma gravacao falhar."""
+    nomes = rotinas_da_leva(n)
+    print('leva %s: desligando %s' % (n, ', '.join(nomes)), flush=True)
+    with desligadas(nomes):
+        bases = [gravar(a, 'rust', 'base%d' % k) for k in (1, 2)]
+    if None in bases:
+        return None
+    mascara = variaveis(*bases)
+    print('variaveis: %s' % (', '.join('%s %d bytes' % (x, len(v)) for x, v in mascara.items()) or 'nenhuma'), flush=True)
+    return bases[0], bases[1], mascara
+
+
+def contra_a_base(a, base, nome):
+    """Grava 1 vez em modo rust (com o motor.rs como esta) e compara com a base fora da mascara.
+    (igual, texto); texto = 'IGUAL ...', 'DIFERENTE item ...' ou 'sem .qst (caiu ou estourou o tempo)'."""
+    q = gravar(a, 'rust', nome)
+    if q is None:
+        return False, 'sem .qst (caiu ou estourou o tempo)'
+    igual, linhas = comparar(base[0], q, extra=base[2])
+    return igual, linhas[-1].replace('comparar: ', '', 1)
+
+
+def prova_da_leva(a, n):
+    if mutacoes.jogo_aberto():
+        falha('ja ha um jogo deste projeto aberto: um teste por vez')
+    base = base_da_leva(a, n)
+    if base is None:
+        print('prova da leva %s: FALHOU (a base nao gravou)' % n)
+        return 1
+    igual, texto = contra_a_base(a, base, 'leva')
+    print('prova da leva %s: %s' % (n, texto if igual or texto.startswith('DIFERENTE') else 'FALHOU ' + texto))
+    return 0 if igual else 1
+
+
 def carregar(a, modo):
     """-load de uma copia do --sav e carreira ate --ate. Devolve a tupla da impressao ou None."""
     copia = os.path.join(a.pasta, 'carga_%s%s' % (modo, os.path.splitext(a.sav)[1]))
@@ -211,7 +291,7 @@ def carregar(a, modo):
     return info['data'], info['sorteios'], info['impressao'], info['partidas'], info['banco']
 
 
-def main():
+def parser():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--so-gravar', action='store_true', help='so grava e compara os .qst (sem a carga)')
     ap.add_argument('--tipo', type=int, choices=[3, 4], default=4, help='4 = RLE (padrao), 3 = sem compressao')
@@ -224,7 +304,19 @@ def main():
     ap.add_argument('--comparar', nargs=2, metavar=('A', 'B'), help='so compara dois arquivos de conteiner')
     ap.add_argument('--variaveis', nargs=2, metavar=('BASE1', 'BASE2'),
                     help='com --comparar: ignora os bytes que diferem entre duas gravacoes da base')
-    a = ap.parse_args()
+    ap.add_argument('--leva', help='a prova da leva N do save: a mesma DLL com e sem as rotinas dela')
+    return ap
+
+
+def padrao():
+    """As opcoes padrao (para o mutacoes.py --prova-save)."""
+    a = parser().parse_args([])
+    os.makedirs(a.pasta, exist_ok=True)
+    return a
+
+
+def main():
+    a = parser().parse_args()
 
     if a.comparar:
         extra = variaveis(*a.variaveis) if a.variaveis else None
@@ -233,6 +325,9 @@ def main():
         igual, linhas = comparar(*a.comparar, extra=extra)
         print('\n'.join(linhas))
         return 0 if igual else 1
+    if a.leva:
+        os.makedirs(a.pasta, exist_ok=True)
+        return prova_da_leva(a, a.leva)
     if len(a.ate) != 10:
         falha('--ate tem de ser AAAA-MM-DD')
     os.makedirs(a.pasta, exist_ok=True)
