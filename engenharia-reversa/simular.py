@@ -140,6 +140,10 @@ def rodar(args, semente, extra=()):
         'CM_RASTRO': os.environ.get('CM_RASTRO', '0000-00-00'),
         'CM_COBERTURA': '1' if args.cobertura else '0',
     }
+    # CM_FERIAS (carga da prova do save, prova_save.py): so quando pedida, para nao mexer no ambiente
+    # (e na heap) das outras execucoes; vai igual nos dois modos da carga.
+    if os.environ.get('CM_FERIAS', '0') != '0':
+        ambiente['CM_FERIAS'] = '1'
     if len(ambiente['CM_RASTRO']) != 10:
         falha('CM_RASTRO tem de ser AAAA-MM-DD')
     t0 = time.time()

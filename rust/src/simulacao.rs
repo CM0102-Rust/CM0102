@@ -474,6 +474,36 @@ pub unsafe extern "system" fn registrar_excecao(info: *const [usize; 2]) -> i32 
     0 // EXCEPTION_CONTINUE_SEARCH
 }
 
+const PROLOGO_RESTAURAR_HUMANOS: crate::desvios::Prologo =
+    crate::desvios::Prologo { endereco: 0x8387e0, bytes: &[0x51, 0x53, 0x55, 0x33, 0xed] };
+static mut RESTAURAR_ORIGINAL: usize = 0;
+
+/// CM_FERIAS=1 (prova do save, etapa de carregar): o jogo nao deixa gravar com o tecnico de ferias, e um save
+/// carregado com -load espera o Continuar. Na entrada da 0x8387e0 (Setup.cpp, os humanos restaurados; so o
+/// -load e a rede passam por ela, depois do load_game_data) cada humano ativo (+0x5f = 1, entre as 16 ultimas
+/// pessoas) sai de ferias como o ON_HOLIDAY=YES do auto_setup (0x827cc9: set_on_holiday 0x5fd2f0 com 1), e o
+/// carimbo das ferias (+0x9a65, setter 0x5fdd30) volta a 0, como depois do reset 0x5fb810 da carreira
+/// automatica: com o carimbo do relogio real do save, o clock fixo da simulacao nunca passaria dele + 2000 e a
+/// barra lateral (0x7615d0) nao andaria sozinha. Igual nos dois modos (nao e rotina portada).
+unsafe extern "C" fn restaurar_humanos_de_ferias() -> i32 {
+    let hm = *(0xb63c98 as *const usize);
+    if hm != 0 {
+        let ferias: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x5fd2f0usize);
+        let carimbo: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x5fdd30usize);
+        let (base, qtd) = (*(0xae23bc as *const usize), *(0xae2364 as *const i32) as usize);
+        for i in 0..16usize.min(qtd) {
+            let t = base + (qtd - 1 - i) * 0x6e;
+            if *((t + 0x5f) as *const u8) == 1 {
+                ferias(hm, 1, t);
+                carimbo(hm, 0, t);
+                crate::registro::linha(&format!("CM_FERIAS: humano {:#x} de ferias depois do -load", t));
+            }
+        }
+    }
+    let f: unsafe extern "C" fn() -> i32 = core::mem::transmute(RESTAURAR_ORIGINAL);
+    f()
+}
+
 /// Chamado no carregamento da DLL: so age em modo simulacao (CM_PARAR_EM definido).
 pub unsafe fn instalar() {
     if alvo().is_some() {
@@ -482,6 +512,12 @@ pub unsafe fn instalar() {
         crate::win::AddVectoredExceptionHandler(1, registrar_excecao);
         crate::ganchos::trocar_importacao("USER32.dll", "PeekMessageA", peek_isolado as *const () as usize);
         crate::alocador::instalar();
+        if crate::win::ambiente("CM_FERIAS") {
+            if let Some(t) = crate::desvios::desviar("ferias depois do -load (CM_FERIAS)", &PROLOGO_RESTAURAR_HUMANOS,
+                                                     restaurar_humanos_de_ferias as *const () as usize) {
+                RESTAURAR_ORIGINAL = t;
+            }
+        }
         if crate::win::ambiente("CM_COBERTURA") {
             instalar_cobertura();
         }
