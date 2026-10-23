@@ -1,0 +1,27 @@
+ROTINAS = [('escopo_da_reputacao', 0x5408c0, [0x56, 0x8b, 0x74, 0x24, 0x0c]),
+           ('reputacao_vista_por', 0x5407e0, [0x8b, 0x44, 0x24, 0x0c, 0x56]),
+           ('pessoa_e_estrangeira', 0x53d980, [0x8b, 0x44, 0x24, 0x08, 0x83, 0xec, 0x10])]
+DOCS = ('o alcance da reputação, a reputação vista por alguém e se a pessoa é estrangeira',
+        'the reputation scope, the reputation seen by a viewer and whether a person is foreign',
+        [('escopo_da_reputacao', 'database_get_reputation_scope', '0x5408c0', 'Database.cpp', 'cdecl',
+          'de que distância quem vê olha a pessoa (0 mesmo clube ou liga, 2 mesma nação, 3 nação do clube ou reputação alta, 4 mundo): escolhe a reputação',
+          'how far the viewer stands from the person (0 same club or league, 2 same nation, 3 club nation or high reputation, 4 world): picks the reputation'),
+         ('reputacao_vista_por', 'database_get_staff_reputation_for_viewer', '0x5407e0', 'Database.cpp', 'cdecl',
+          'a reputação da pessoa vista por alguém: atual, nacional, mundial ou uma média, pelo alcance; de jogador ou de não jogador',
+          "the person's reputation as seen by a viewer: current, home, world or a blend, by the scope; player or non-player data"),
+         ('pessoa_e_estrangeira', 'database_is_staff_foreign', '0x53d980', 'Database.cpp', 'cdecl',
+          'se a pessoa é estrangeira na nação: nacionalidades, grupos (ilhas britânicas, Austrália, [0x9cf360]) e a regra de Portugal para contratos até 1998',
+          'whether the person is foreign in the nation: nationalities, groups (British Isles, Australia, [0x9cf360]) and the Portugal rule for contracts up to 1998')])
+CAMPOS = [('pessoa +0x39: clube do contrato; ponteiro; lê (escopo_da_reputacao)', 'staff +0x39: contracted club; pointer; reads (escopo_da_reputacao)'),
+          ('clube +0x53: nação; ponteiro; lê (escopo_da_reputacao)', 'club +0x53: nation; pointer; reads (escopo_da_reputacao)'),
+          ('clube +0x80 [2]: reputação; valor; lê (escopo_da_reputacao: + reputação atual do jogador ≥ 14000)', 'club +0x80 [2]: reputation; value; reads (escopo_da_reputacao: + player current reputation ≥ 14000)'),
+          ('pessoa +0x1a / +0x1e: nacionalidade e segunda nacionalidade; ponteiro; lê (escopo_da_reputacao, pessoa_e_estrangeira)', 'staff +0x1a / +0x1e: nationality and second nationality; pointer; reads (escopo_da_reputacao, pessoa_e_estrangeira)'),
+          ('pessoa +0x00: id (os 16 últimos são os técnicos humanos); id; lê (escopo_da_reputacao)', 'staff +0x00: id (the last 16 are the human managers); id; reads (escopo_da_reputacao)'),
+          ('pessoa +0x61: dados de jogador; ponteiro; lê (escopo_da_reputacao, reputacao_vista_por)', 'staff +0x61: player data; pointer; reads (escopo_da_reputacao, reputacao_vista_por)'),
+          ('pessoa +0x69: dados de não jogador; ponteiro; lê (reputacao_vista_por)', 'staff +0x69: non-player data; pointer; reads (reputacao_vista_por)'),
+          ('jogador +0x09 / +0x0b / +0x0d [2]: reputação atual, nacional e mundial; valor; lê (escopo_da_reputacao, reputacao_vista_por)', 'player +0x09 / +0x0b / +0x0d [2]: current, home and world reputation; value; reads (escopo_da_reputacao, reputacao_vista_por)'),
+          ('não jogador +0x08 / +0x0a / +0x0c [2]: reputação atual, nacional e mundial; valor; lê (reputacao_vista_por)', 'non-player +0x08 / +0x0a / +0x0c [2]: current, home and world reputation; value; reads (reputacao_vista_por)'),
+          ('nação +0x00: id; id; lê (pessoa_e_estrangeira: comparado com [0x9cf2e4] Inglaterra, [0x9cf45c] Escócia, [0x9cf510] País de Gales, [0x9cf3e4] Irlanda do Norte, [0x9cf2dc] Irlanda, [0x9cf224] Austrália, [0x9cf3f4], [0x9cf360], [0x9cf4f0] e [0x9cf434] Portugal)', 'nation +0x00: id; id; reads (pessoa_e_estrangeira: compared with [0x9cf2e4] England, [0x9cf45c] Scotland, [0x9cf510] Wales, [0x9cf3e4] Northern Ireland, [0x9cf2dc] Ireland, [0x9cf224] Australia, [0x9cf3f4], [0x9cf360], [0x9cf4f0] and [0x9cf434] Portugal)'),
+          ('contrato (0x4cf5a0) +0x25 / +0x27 [2]: dia do ano e ano do início; valor; lê (pessoa_e_estrangeira, regra de Portugal: até 1/1/1998)', 'contract (0x4cf5a0) +0x25 / +0x27 [2]: start day of year and year; value; reads (pessoa_e_estrangeira, Portugal rule: up to 1/1/1998)'),
+          ('[0xae2364] quantidade de pessoas; valor; lê (escopo_da_reputacao)', '[0xae2364] staff count; value; reads (escopo_da_reputacao)')]
+INTERESSA = ['CMScout', 'CMRTE']

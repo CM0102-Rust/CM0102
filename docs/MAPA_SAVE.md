@@ -143,3 +143,7 @@ Tipo novo de item (**save**), ao lado de telas e simulação. 21 rotinas em 7 it
 | Alocação grande | cada `zopen` aloca ~650 KB, `zextract` mais ~530 KB | muda a heap e a impressão: comparar só no passo do save |
 
 Fronteira com o bloco Database: `save_database` 0x52dad0, `load_database` 0x528540, `database_free_all_tables` 0x528080 e as `db_files_read_*`/`db_files_write_*` (Db_files.cpp, 0x54d5e0–0x550950), todas sobre `zread`/`zwrite`.
+
+## Pista: ids fora da tabela no elenco gravado (23/10/2026, do estudo do validador do Save Editor)
+
+Fonte: CM3SaveEditor\docs\VALIDADOR_ESTUDO.md (commit bd7959e), repassado pela sessão orquestradora; marcado como inferência lá. O próprio jogo grava no elenco do club.dat ids ≥ N (fora da tabela de pessoas): 51 vagas no TesteTelas.sav (clube 1109, ids 159578..159597; clube 3397, 158727..158734) e 22 no Valencia.sav. Entre o TesteTelas e o TesteTelasComprimido o club.dat muda só nessas vagas (viram −1) e o staff.dat fica igual: um recarregamento entre os dois, com o `resolve_database_indexes` esvaziando as vagas. Hipótese: jovens criados nas linhas de reserva (as 23.000 de tipo 6 ou as 1.325 não contadas) que o `save_database` (0x52dad0) não leva ao staff.dat, mas cujo id fica no elenco. É um candidato à causa da corrupção de ids que o Save Game Editor conserta (PROJETO.md, item 8). Conferir quando o save_database e a carga estiverem em Rust: a cópia mostra exatamente que pessoas entram no staff.dat e quais ids ficam nos elencos.

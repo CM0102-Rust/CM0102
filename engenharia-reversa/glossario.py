@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'escopo_da_reputacao': 'database_get_reputation_scope', 'reputacao_vista_por': 'database_get_staff_reputation_for_viewer', 'pessoa_e_estrangeira': 'database_is_staff_foreign', 'idade_da_pessoa': 'database_get_staff_age', 'nacao_com_transferencia_livre': 'nation_allows_free_transfers', 'pessoa_e_comunitaria': 'database_is_staff_eu_national', 'pessoa_listada_para_transferencia': 'staff_is_transfer_listed_or_requested', 'atributo_calculado_do_jogador': 'staff_compute_player_attribute', 'atributo_da_pessoa': 'staff_get_player_attribute',
  'carregar_jogo': 'load_game_data',
  'criar_jogo_pela_configuracao': 'create_game_from_setup_file', 'gravar_jogo': 'save_game_data',
  'filtro_do_jogo_salvo': 'check_saved_game_file', 'filtro_do_inicio_rapido': 'check_quick_start_file', 'versao_do_jogo_salvo_valida': 'valid_saved_game_version', 'gravar_regras_fifa': 'save_fifa_transfer_rules', 'carregar_regras_fifa': 'load_fifa_transfer_rules', 'montar_resumo_do_save': 'build_save_game_summary', 'gravar_banco_no_save': 'save_database_for_game', 'carregar_banco_do_save': 'load_database_from_stream', 'liberar_dados_do_jogo': 'free_game_data',

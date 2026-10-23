@@ -143,3 +143,7 @@ New item type (**save**), next to screens and simulation. 21 routines in 7 items
 | Large allocation | each `zopen` allocates ~650 KB, `zextract` another ~530 KB | changes the heap and the print: compare only in the save step |
 
 Border with the Database block: `save_database` 0x52dad0, `load_database` 0x528540, `database_free_all_tables` 0x528080 and the `db_files_read_*`/`db_files_write_*` (Db_files.cpp, 0x54d5e0–0x550950), all on top of `zread`/`zwrite`.
+
+## Lead: out-of-table ids in the saved squad (2026-10-23, from the Save Editor validator study)
+
+Source: CM3SaveEditor\docs\VALIDADOR_ESTUDO.md (commit bd7959e), passed on by the orchestrator session; marked as inference there. The game itself writes into the club.dat squad ids ≥ N (outside the people table): 51 slots in TesteTelas.sav (club 1109, ids 159578..159597; club 3397, 158727..158734) and 22 in Valencia.sav. Between TesteTelas and TesteTelasComprimido, club.dat changes only in those slots (they become −1) and staff.dat stays the same: a reload between the two, with `resolve_database_indexes` emptying the slots. Hypothesis: youngsters created in the reserve rows (the 23,000 of type 6 or the 1,325 uncounted) that `save_database` (0x52dad0) does not carry into staff.dat, while their id stays in the squad. A candidate cause of the id corruption the Save Game Editor repairs (PROJETO.md, item 8). Check once save_database and the load are in Rust: the copy shows exactly which people go into staff.dat and which ids stay in the squads.

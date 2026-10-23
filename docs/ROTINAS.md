@@ -2106,3 +2106,19 @@ Mutações: `mutacoes/leva220.py` (5, pela prova do save): 3 acusadas. `sv3_cria
 | `carregar_jogo()` | 0x82a9c0 | cdecl | Setup.cpp: carrega o save: disco, memória, CD, o banco (0x524d10), desempacota os *.tmp, o general.dat (versão, resumo, ids, datas, ligas, nação padrão, os dados de execução de pessoas, clubes e reputação, convertendo saves antigos), os construtores dos subsistemas na ordem da original com disco e memória entre eles, as regras FIFA e a data do último save |
 
 Mutações: `mutacoes/leva221.py` (3, pela prova do save): 3 acusadas.  Prova do save (o .qst com e sem as rotinas): IGUAL fora dos campos ignorados; carga IGUAL (parou em 2001-239, 728264576 sorteios, impressao 7a1167744a713c73). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
+
+### Simulação, 222ª leva — o alcance da reputação, a reputação vista por alguém e se a pessoa é estrangeira; a idade da pessoa, se a nação tem transferência livre e se a pessoa é da UE; se a pessoa está na lista de transferências e os atributos de jogador de 1 a 20 (oficial em 23/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `escopo_da_reputacao()` | 0x5408c0 | cdecl | Database.cpp: de que distância quem vê olha a pessoa (0 mesmo clube ou liga, 2 mesma nação, 3 nação do clube ou reputação alta, 4 mundo): escolhe a reputação |
+| `reputacao_vista_por()` | 0x5407e0 | cdecl | Database.cpp: a reputação da pessoa vista por alguém: atual, nacional, mundial ou uma média, pelo alcance; de jogador ou de não jogador |
+| `pessoa_e_estrangeira()` | 0x53d980 | cdecl | Database.cpp: se a pessoa é estrangeira na nação: nacionalidades, grupos (ilhas britânicas, Austrália, [0x9cf360]) e a regra de Portugal para contratos até 1998 |
+| `idade_da_pessoa()` | 0x53ab90 | cdecl | Database.cpp: a idade da pessoa em anos completos numa data, pelo nascimento |
+| `nacao_com_transferencia_livre()` | 0x544670 | cdecl | Database.cpp: se a nação tem transferência livre: regras novas da FIFA, Brasil, ou Europa fora de Polônia, Turquia, Croácia e Rússia |
+| `pessoa_e_comunitaria()` | 0x53d740 | cdecl | Database.cpp: se a pessoa conta como da UE para um clube da nação: marca de UE da nacionalidade, Suíça e as exceções da Alemanha, [0x9cf360] e Dinamarca |
+| `pessoa_listada_para_transferencia()` | 0x544520 | cdecl | Database.cpp: se o vínculo da pessoa com o clube (ou o do contrato) está na lista de transferências, pelo clube ou a pedido |
+| `atributo_calculado_do_jogador()` | 0x543540 | cdecl | Database.cpp: um atributo de jogador (1 a 31) de 1 a 20: o byte do registro ou, nos relativos, a nota de 2 × byte + habilidade atual |
+| `atributo_da_pessoa()` | 0x5431e0 | cdecl | Database.cpp: um atributo de jogador da pessoa, pelos dados de jogador dela (0x543540) |
+
+Mutações: `mutacoes/leva222.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 9 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551

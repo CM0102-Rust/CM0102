@@ -2108,3 +2108,19 @@ Mutations: `mutacoes/leva220.py` (5, by the save proof): 3 caught. `sv3_criar_id
 | `carregar_jogo()` | 0x82a9c0 | cdecl | Setup.cpp: loads the saved game: disk, memory, CD, the database (0x524d10), unpacks the *.tmp files, general.dat (version, summary, ids, dates, leagues, default nation, the runtime data of people, clubs and reputation, converting old saves), the subsystem constructors in the original order with disk and memory checks between them, the FIFA rules and the last save date |
 
 Mutations: `mutacoes/leva221.py` (3, by the save proof): 3 caught.  Save proof (the .qst with and without the routines): EQUAL fora dos campos ignorados; carga EQUAL (parou em 2001-239, 728264576 sorteios, impressao 7a1167744a713c73). Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
+
+### Simulation, 222nd batch — the reputation scope, the reputation seen by a viewer and whether a person is foreign; the person's age, whether the nation has free transfers and whether the person is an EU national; whether the person is transfer listed and the 1 to 20 player attributes (official on 2026-10-23)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `escopo_da_reputacao()` | 0x5408c0 | cdecl | Database.cpp: how far the viewer stands from the person (0 same club or league, 2 same nation, 3 club nation or high reputation, 4 world): picks the reputation |
+| `reputacao_vista_por()` | 0x5407e0 | cdecl | Database.cpp: the person's reputation as seen by a viewer: current, home, world or a blend, by the scope; player or non-player data |
+| `pessoa_e_estrangeira()` | 0x53d980 | cdecl | Database.cpp: whether the person is foreign in the nation: nationalities, groups (British Isles, Australia, [0x9cf360]) and the Portugal rule for contracts up to 1998 |
+| `idade_da_pessoa()` | 0x53ab90 | cdecl | Database.cpp: the person's age in whole years on a date, from the birth date |
+| `nacao_com_transferencia_livre()` | 0x544670 | cdecl | Database.cpp: whether the nation has free transfers: new FIFA rules, Brazil, or Europe except Poland, Turkey, Croatia and Russia |
+| `pessoa_e_comunitaria()` | 0x53d740 | cdecl | Database.cpp: whether the person counts as an EU national for a club of the nation: the nationality EU mark, Switzerland and the Germany, [0x9cf360] and Denmark exceptions |
+| `pessoa_listada_para_transferencia()` | 0x544520 | cdecl | Database.cpp: whether the person's link with the club (or the contract club) is transfer listed, by the club or at request |
+| `atributo_calculado_do_jogador()` | 0x543540 | cdecl | Database.cpp: a player attribute (1 to 31) as 1 to 20: the record byte or, for relative ones, the rating of 2 × byte + current ability |
+| `atributo_da_pessoa()` | 0x5431e0 | cdecl | Database.cpp: a player attribute of the person, from the person's player data (0x543540) |
+
+Mutations: `mutacoes/leva222.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 9 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
