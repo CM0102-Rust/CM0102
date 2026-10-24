@@ -62,6 +62,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x727f00 | `abrir_tela_de_espera` | open_waiting_screen |
 | 0x71b1b0 | `abrir_ultimos_placares` | open_latest_scores |
 | 0x7172d0 | `ajustar_17` | adjust_17 |
+| 0x544710 | `ajustar_moral_da_pessoa` | staff_adjust_morale |
 | 0x6cb9b0 | `alcanca` | reaches |
 | 0x713d90 | `alcanca_o_ponto` | reaches_the_point |
 | 0x6cb700 | `alem_da_linha` | beyond_the_line |
@@ -172,6 +173,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x448110 | `copiar_registro_de_partida` | match_record_assign |
 | 0x448170 | `copiar_registro_de_sequencia` | run_record_assign |
 | 0x839590 | `cor_do_titulo` | get_heading_colour |
+| 0x53b640 | `cores_do_uniforme_do_clube` | database_get_club_kit_colours |
 | 0x827110 | `criar_jogo_pela_configuracao` | create_game_from_setup_file |
 | 0x866f60 | `criterio_da_comissao` | staff_criterion |
 | 0x4bff70 | `criterio_da_competicao` | competition_criterion |
@@ -279,6 +281,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6cb910 | `fora_do_meio` | off_centre |
 | 0x6bbb60 | `forca_do_lado` | side_strength |
 | 0x6c0c60 | `forca_do_time` | team_strength |
+| 0x53dba0 | `formatar_nome_da_pessoa` | database_format_staff_name |
 | 0x68a030 | `girar_rodada` | rotate_round |
 | 0x535920 | `global_9b5984` | global_9b5984 |
 | 0x547810 | `gosta_de` | likes |
@@ -385,6 +388,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5af180 | `marcar_ano_no_calendario` | mark_calendar_year |
 | 0x8c5410 | `marcar_contrato_acertado` | set_agreed_contract_flag |
 | 0x6d10a0 | `marcar_craques` | mark_stars |
+| 0x540980 | `marcar_elenco_da_pessoa` | staff_set_squad_flags |
 | 0x5b5910 | `marcar_posicao` | mark_position |
 | 0x8c1f80 | `marcar_termos_oferecidos` | TRANSFER_MANAGER::note_terms_offered_to_main_player |
 | 0x897760 | `marcar_vaga` | mark_slot |
@@ -430,6 +434,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x53ce90 | `nivel_do_contrato` | contract_level |
 | 0x76d810 | `nivel_para_a_selecao` | national_team_level |
 | 0x6db2d0 | `nome_do_jogador_na_narracao` | commentary_player_name |
+| 0x545880 | `nome_ingles_do_clube` | club_get_english_name |
 | 0x715f50 | `nota_ajustada` | adjusted_rating |
 | 0x6d4a20 | `nota_do_arbitro` | referee_grade |
 | 0x7ad220 | `nota_do_clube_para_o_jovem` | player_regen_score_club_for_player |
@@ -513,6 +518,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6bcbd0 | `pressao` | pressure |
 | 0x6bd6b0 | `pressao_na_area` | pressure_in_box |
 | 0x6c3a00 | `pressao_no_ponto` | pressure_at_point |
+| 0x539c60 | `primeiro_nome_da_nacao` | database_pick_first_name_for_nation |
 | 0x6ea760 | `procurar_impedimento` | look_for_offside |
 | 0x6cd3d0 | `procurar_jogada` | look_for_play |
 | 0x6cd330 | `procurar_no_lado` | search_on_side |
@@ -570,6 +576,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6bbe40 | `rolar_bola` | roll_ball |
 | 0x725a70 | `rotulo_do_controle` | match_control_label |
 | 0x72adf0 | `salvar_estatisticas_da_partida` | Match_Stats::save |
+| 0x53a1b0 | `segundo_nome_da_nacao` | database_pick_second_name_for_nation |
 | 0x53b4f0 | `selecao_b` | b_national_team |
 | 0x775790 | `selecao_ou_especial` | national_or_special |
 | 0x53b3d0 | `selecao_principal` | main_national_team |
@@ -598,6 +605,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5fe040 | `tecnico_9ace` | manager_9ace |
 | 0x5fea50 | `tecnico_9b23` | manager_9b23 |
 | 0x7ae570 | `tecnico_da_busca` | PLAYER_SEARCH::set_manager |
+| 0x53ca90 | `tecnico_do_clube_ou_selecao` | database_get_club_manager |
 | 0x600e90 | `tecnico_substituto` | human_manager_get_stand_in_manager |
 | 0x6b59a0 | `tem_jogo` | has_match |
 | 0x735840 | `tem_noticia` | has_story |
@@ -643,6 +651,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6b7cf0 | `venceu_o_jogo` | won_the_match |
 | 0x838eb0 | `versao_do_jogo_salvo_valida` | valid_saved_game_version |
 | 0x53a610 | `vetor_de_atributos_do_jogador` | database_player_to_attribute_vector |
+| 0x53a8b0 | `vetor_de_atributos_do_nao_jogador` | database_non_player_to_attribute_vector |
 | 0x6fa140 | `virado_para` | facing |
 | 0x70df20 | `x_fora_do_meio` | x_off_centre |
 | 0x6d5b20 | `zagueiros_do_lado_sem_conflito` | side_centre_backs_without_conflict |

@@ -2140,3 +2140,19 @@ Mutations: `mutacoes/leva222.py` (9, by the career to 2002-06-01, confirming the
 | `clube_pode_ter_reservas()` | 0x542740 | cdecl | Database.cpp: whether the club may have a reserve side: not national teams, A/B pairs, Spanish, German and Portuguese clubs and some second national sides |
 
 Mutations: `mutacoes/leva223.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 9 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
+
+### Simulation, 224th batch — the first and second name draw by nation and the formatted person name; the club's kit colours, the club's manager and the club's English name; the morale adjustment, the non-player attribute vector and the person's squad flags (official on 2026-10-23)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `primeiro_nome_da_nacao()` | 0x539c60 | cdecl | Database.cpp: draws a first name for the nation (20 draws by weight when it has over 100; otherwise borrows from the language group) |
+| `segundo_nome_da_nacao()` | 0x53a1b0 | cdecl | Database.cpp: draws a second name for the nation, the same way |
+| `formatar_nome_da_pessoa()` | 0x53dba0 | cdecl | Database.cpp: writes the person's name in one of 7 styles (first last, F.last, last, first, initials...), preferring the common name or nickname |
+| `cores_do_uniforme_do_clube()` | 0x53b640 | cdecl | Database.cpp: the club's home, away or third kit colours as screen pixels, with defaults when missing |
+| `tecnico_do_clube_ou_selecao()` | 0x53ca90 | cdecl | Database.cpp: the manager of the club, of its A/B partner or, for an under-21 side, the senior national team's |
+| `nome_ingles_do_clube()` | 0x545880 | cdecl | Database.cpp: the club's name, or its English one from eng.lng when another language is loaded |
+| `ajustar_moral_da_pessoa()` | 0x544710 | cdecl | Database.cpp: adds a delta to the player's morale, damped by a draw near the ends, clamped to 1..20; returns whether it changed |
+| `vetor_de_atributos_do_nao_jogador()` | 0x53a8b0 | cdecl | Database.cpp: widens the non-player's coaching attributes (+0x0e..+0x22) into a 21-cell vector of 3 bytes, with the split at 13 |
+| `marcar_elenco_da_pessoa()` | 0x540980 | cdecl | Database.cpp: sets the person's club or national squad bits, keeping the other pair |
+
+Mutations: `mutacoes/leva224.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `dq8_ingles` escaped: the English club name only reads eng.lng when the game runs in another language; the career and the real game comparing run in English (language 0/1), where the routine returns the name itself. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551

@@ -2138,3 +2138,19 @@ Mutações: `mutacoes/leva222.py` (9, pela carreira até 2002-06-01, confirmando
 | `clube_pode_ter_reservas()` | 0x542740 | cdecl | Database.cpp: se o clube pode ter time reserva: não para seleções, pares A/B, clubes de Espanha, Alemanha e Portugal e algumas segundas seleções |
 
 Mutações: `mutacoes/leva223.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 9 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
+
+### Simulação, 224ª leva — o sorteio do primeiro e do segundo nome por nação e o nome da pessoa formatado; as cores do uniforme do clube, o técnico do clube e o nome do clube em inglês; o ajuste do moral, o vetor de atributos do não jogador e as marcas de elenco da pessoa (oficial em 23/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `primeiro_nome_da_nacao()` | 0x539c60 | cdecl | Database.cpp: sorteia um primeiro nome para a nação (20 sorteios pelo peso se ela tem mais de 100; senão empresta do grupo de língua) |
+| `segundo_nome_da_nacao()` | 0x53a1b0 | cdecl | Database.cpp: sorteia um segundo nome para a nação, do mesmo jeito |
+| `formatar_nome_da_pessoa()` | 0x53dba0 | cdecl | Database.cpp: escreve o nome da pessoa num dos 7 estilos (nome sobrenome, N.sobrenome, sobrenome, nome, iniciais...), preferindo o nome comum ou o apelido |
+| `cores_do_uniforme_do_clube()` | 0x53b640 | cdecl | Database.cpp: as cores do uniforme de casa, fora ou terceiro do clube em pixels de tela, com padrões quando faltam |
+| `tecnico_do_clube_ou_selecao()` | 0x53ca90 | cdecl | Database.cpp: o técnico do clube, do parceiro A/B ou, na seleção sub-21, o da seleção principal |
+| `nome_ingles_do_clube()` | 0x545880 | cdecl | Database.cpp: o nome do clube, ou o em inglês do eng.lng quando outro idioma está carregado |
+| `ajustar_moral_da_pessoa()` | 0x544710 | cdecl | Database.cpp: soma uma variação ao moral do jogador, amortecida por sorteio perto das pontas, presa em 1..20; devolve se mudou |
+| `vetor_de_atributos_do_nao_jogador()` | 0x53a8b0 | cdecl | Database.cpp: estende os atributos de treinador (+0x0e..+0x22) do não jogador num vetor de 21 células de 3 bytes, com o corte em 13 |
+| `marcar_elenco_da_pessoa()` | 0x540980 | cdecl | Database.cpp: grava os bits de elenco do clube ou da seleção da pessoa, mantendo o outro par |
+
+Mutações: `mutacoes/leva224.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `dq8_ingles` escapou: o nome inglês do clube só consulta o eng.lng quando o jogo está em outro idioma; a carreira e o jogo real comparando rodam em inglês (idioma 0/1), onde a rotina devolve o próprio nome. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551

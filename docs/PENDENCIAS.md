@@ -101,5 +101,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `save` | `casar_nome_com_padrao` 0x933a00 (218ª) | — | o padrão só roda ao carregar: `sv_padrao_letra`, `sv_padrao_ponto`, `sv_padrao_fim` escapam da prova de gravar. Teste: a etapa de carregar da prova do save (falta o save com técnico de férias) |
 | `save` | `gravar_banco_no_save` 0x524d30 (219ª) | — | desligada (DESLIGADAS): o resíduo de pilha que o save_database grava no index.dat muda se ela roda pela cópia; `sv2_banco_a4` não roda. Volta quando a cópia reproduzir o resíduo |
 | `save` | `criar_jogo_pela_configuracao` 0x827110 (220ª) | — | desligada (DESLIGADAS): a create_game 0x828110 lê o resíduo de pilha que a cópia muda; `sv3_criar_id` e `sv3_criar_frente` não rodam. Volta quando a cópia reproduzir o resíduo (ou com a create_game em Rust) |
+| `banco` | `nome_ingles_do_clube` 0x545880 (224ª) | — | o caminho do eng.lng só roda com o jogo em outro idioma: `dq8_ingles` escapa até comparando. Teste: uma sessão do Lucas com o jogo em português ou outro idioma |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
