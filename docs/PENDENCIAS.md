@@ -103,5 +103,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `save` | `criar_jogo_pela_configuracao` 0x827110 (220ª) | — | desligada (DESLIGADAS): a create_game 0x828110 lê o resíduo de pilha que a cópia muda; `sv3_criar_id` e `sv3_criar_frente` não rodam. Volta quando a cópia reproduzir o resíduo (ou com a create_game em Rust) |
 | `banco` | `nome_ingles_do_clube` 0x545880 (224ª) | — | o caminho do eng.lng só roda com o jogo em outro idioma: `dq8_ingles` escapa até comparando. Teste: uma sessão do Lucas com o jogo em português ou outro idioma |
 | `banco` | `reunir_elenco_do_clube` 0x541f90 (225ª) | — | desligada (DESLIGADAS): o desvio muda o resíduo de pilha da 0x540a50 e a carreira muda nos dois modos; `dq10_reunir` não roda. Volta quando a cópia reproduzir o resíduo |
+| `banco` | `nota_relativa_com_habilidade_reduzida` 0x5442f0 (226ª) | — | a habilidade reduzida só pesa fora da faixa presa em 1..20 e não decide na carreira: `dq13_reduzida` escapa até comparando. Teste: carreira ampla |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").

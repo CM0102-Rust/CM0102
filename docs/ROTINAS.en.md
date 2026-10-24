@@ -2172,3 +2172,17 @@ Mutations: `mutacoes/leva224.py` (9, by the career to 2002-06-01, confirming the
 | `atributo_calculado_do_nao_jogador()` | 0x543fd0 | cdecl | Database.cpp: the coaching attribute 1..12: four straight from the record, eight through the 1-to-20 formula with the non-player word +4 |
 
 Mutations: `mutacoes/leva225.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `dq10_reunir` escaped: the 0x541f90 copy is switched off (DESLIGADAS: even the original through the passthrough hook changes the career, because the 0x540a50 it calls leaves its residue on the private stack), so the mutation does not run. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
+
+### Simulation, 226th batch — the adjective form per language, the person's coaching attribute and the rating with the reduced ability; the first name by weight, the competition's colours and whether the club has room in the job; adding a person to a club (official on 2026-10-24)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `forma_do_adjetivo()` | 0x545a60 | cdecl | Database.cpp: the adjective form (0..4) for index 1..35 in the inflecting languages 3..10 (jump tables); any other language or index: 0xff |
+| `atributo_do_nao_jogador()` | 0x543f30 | cdecl | Database.cpp: the person's coaching attribute 1..12: 0x543fd0 with their non-player record (+0x69) |
+| `nota_relativa_com_habilidade_reduzida()` | 0x5442f0 | cdecl | Database.cpp: the 1-to-20 rating of 2 × value + current ability × 0.1 (0x544380 with the ability scaled down) |
+| `primeiro_nome_pelo_peso()` | 0x539b90 | cdecl | Database.cpp: a first name: nation with more than 15 names, the heaviest of 3 draws in its range; otherwise a draw over the whole table |
+| `cores_da_competicao()` | 0x53b7c0 | cdecl | Database.cpp: the competition's colours (foreground and background) in pixels, from the +0x5d record or the competition itself |
+| `clube_tem_vaga_para_cargo()` | 0x53b9a0 | cdecl | Database.cpp: whether the club has room for the person in job 1..15 (an empty slot or one already theirs; 12, 13 and 15 also in the squad) |
+| `incluir_pessoa_no_clube()` | 0x53bd10 | cdecl | Database.cpp: puts the person in the job slot at the club (jobs 1..15; a player above 85 without a human manager moves from 6/8 to 13/15), copies the date and writes club and job into the person |
+
+Mutations: `mutacoes/leva226.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `dq13_reduzida` escaped: the score with reduced ability (0x5442f0) decides nothing in the career up to 2002-06-01, and in the real game comparing (to 2002-01-01) there was no call where ×0.2 and ×0.1 gave different scores after clamping to 1..20. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551

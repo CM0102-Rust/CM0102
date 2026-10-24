@@ -2170,3 +2170,17 @@ Mutações: `mutacoes/leva224.py` (9, pela carreira até 2002-06-01, confirmando
 | `atributo_calculado_do_nao_jogador()` | 0x543fd0 | cdecl | Database.cpp: o atributo 1..12 de treinador: quatro direto do registro, oito pela fórmula de 1 a 20 com a palavra +4 do não jogador |
 
 Mutações: `mutacoes/leva225.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `dq10_reunir` escapou: a cópia da 0x541f90 está desligada (DESLIGADAS: mesmo a original pelo desvio de passagem muda a carreira, porque a 0x540a50 que ela chama deixa o resíduo na pilha particular), então a mutação não roda. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
+
+### Simulação, 226ª leva — a forma do adjetivo por idioma, o atributo de treinador da pessoa e a nota com a habilidade reduzida; o primeiro nome pelo peso, as cores da competição e se o clube tem vaga no cargo; a entrada da pessoa no clube (oficial em 24/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `forma_do_adjetivo()` | 0x545a60 | cdecl | Database.cpp: a forma (0..4) do adjetivo para o índice 1..35 nos idiomas 3..10 que flexionam (tabelas de salto); outro idioma ou índice: 0xff |
+| `atributo_do_nao_jogador()` | 0x543f30 | cdecl | Database.cpp: o atributo 1..12 de treinador da pessoa: 0x543fd0 com o não jogador dela (+0x69) |
+| `nota_relativa_com_habilidade_reduzida()` | 0x5442f0 | cdecl | Database.cpp: a nota de 1 a 20 de 2 × valor + habilidade atual × 0,1 (a de 0x544380 com a habilidade reduzida) |
+| `primeiro_nome_pelo_peso()` | 0x539b90 | cdecl | Database.cpp: um primeiro nome: nação com mais de 15 nomes, o de maior peso em 3 sorteios na faixa dela; senão sorteio na tabela inteira |
+| `cores_da_competicao()` | 0x53b7c0 | cdecl | Database.cpp: as cores (frente e fundo) da competição em pixels, do registro +0x5d ou da própria competição |
+| `clube_tem_vaga_para_cargo()` | 0x53b9a0 | cdecl | Database.cpp: se o clube tem vaga para a pessoa no cargo 1..15 (casa vazia ou já dela; 12, 13 e 15 também no elenco) |
+| `incluir_pessoa_no_clube()` | 0x53bd10 | cdecl | Database.cpp: põe a pessoa na casa do cargo no clube (cargos 1..15; jogador acima de 85 sem técnico humano sobe de 6/8 para 13/15), copia a data e grava clube e cargo na pessoa |
+
+Mutações: `mutacoes/leva226.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `dq13_reduzida` escapou: a nota com a habilidade reduzida (0x5442f0) não decide nada na carreira até 2002-06-01 e no jogo real comparando (até 2002-01-01) não houve chamada em que ×0,2 e ×0,1 dessem notas diferentes depois de presas em 1..20. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
