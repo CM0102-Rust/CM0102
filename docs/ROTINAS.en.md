@@ -2156,3 +2156,19 @@ Mutations: `mutacoes/leva223.py` (9, by the career to 2002-06-01, confirming the
 | `marcar_elenco_da_pessoa()` | 0x540980 | cdecl | Database.cpp: sets the person's club or national squad bits, keeping the other pair |
 
 Mutations: `mutacoes/leva224.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `dq8_ingles` escaped: the English club name only reads eng.lng when the game runs in another language; the career and the real game comparing run in English (language 0/1), where the routine returns the name itself. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
+
+### Simulation, 225th batch — the club's squad count and squad list and whether the club can be managed; the attribute vectors back into the non-player and the player and the rebalancing of the non-player's attributes; the colour family, whether two colours clash and the non-player's computed attribute (official on 2026-10-24)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `contar_elenco_do_clube()` | 0x53c590 | cdecl | Database.cpp: how many valid people are in the club's squad (with the A/B partner, the reserve squad flags and the loanee filter) |
+| `reunir_elenco_do_clube()` | 0x541f90 | cdecl | Database.cpp: copies the club's squad (and the A/B partner's, up to 50 or 100) into a vector, padding with zeros |
+| `clube_pode_ser_dirigido()` | 0x544820 | cdecl | Database.cpp: whether the club can be managed: senior national team of a nation with +0x88 > 150, or a club that is not a B team, with an active competition and a flagged nation |
+| `vetor_para_o_nao_jogador()` | 0x53a980 | cdecl | Database.cpp: writes the low byte of the vector's 21 cells back to the non-player's coaching attributes (+0x0e..+0x22) |
+| `vetor_para_o_jogador()` | 0x53aa10 | cdecl | Database.cpp: writes the low byte of the vector's cells 0..53 back to the player's attributes and cell 54 to staff +0x58 |
+| `normalizar_atributos_do_nao_jogador()` | 0x539490 | cdecl | Database.cpp: rebalances the non-player's attributes in two passes: mean of the near-zero cells pulled to −5, positive excess trimmed, cap −80 for job 10 |
+| `familia_da_cor()` | 0x540520 | cdecl | Database.cpp: the colour's family (1..10) from the index.cpp colour keys |
+| `cores_se_confundem()` | 0x540490 | cdecl | Database.cpp: whether two colours clash: same family or the pairs 8-9, 8-7, 6-7 and family 6 against the colour keyed at [0x9cf1dc] |
+| `atributo_calculado_do_nao_jogador()` | 0x543fd0 | cdecl | Database.cpp: the coaching attribute 1..12: four straight from the record, eight through the 1-to-20 formula with the non-player word +4 |
+
+Mutations: `mutacoes/leva225.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `dq10_reunir` escaped: the 0x541f90 copy is switched off (DESLIGADAS: even the original through the passthrough hook changes the career, because the 0x540a50 it calls leaves its residue on the private stack), so the mutation does not run. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551

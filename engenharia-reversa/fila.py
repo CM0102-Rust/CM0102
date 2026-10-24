@@ -105,6 +105,11 @@ def materializar(nomes, n, base, antes):
             f.write(f'leva {n}, índices {b}..{b + len(rot["ROTINAS"]) - 1}\n')
         b += len(rot['ROTINAS'])
     assert len({m[0] for m in mutacoes}) == len(mutacoes), 'mutações com o mesmo nome em itens diferentes'
+    # o trecho de cada mutação tem de aparecer uma vez só no motor.rs com a leva (24/10: a dq10_contar casava 8
+    # vezes e a cadeia da 225a parou sem rodar as mutações)
+    junto = open(os.path.join(R, 'rust', 'src', 'motor.rs'), encoding='utf-8').read() + '\n'.join(codigos)
+    repetidas = [(m[0], junto.count(m[1])) for m in mutacoes if junto.count(m[1]) != 1]
+    assert not repetidas, ('trecho de mutação que não aparece uma vez só', repetidas)
     open(os.path.join(destino, 'codigo.rs'), 'w', encoding='utf-8').write('\n'.join(codigos))
     save = any(runpy.run_path(os.path.join(FILA, x, 'rotinas.py')).get('SAVE') for x in nomes)
     if save:  # a marca da cadeia: prova do save em vez da carreira (ver cadeia.sh)

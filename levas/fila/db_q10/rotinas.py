@@ -1,0 +1,28 @@
+ROTINAS = [('contar_elenco_do_clube', 0x53c590, [0x81, 0xec, 0x0c, 0x02, 0x00, 0x00]),
+           ('reunir_elenco_do_clube', 0x541f90, [0x81, 0xec, 0x04, 0x02, 0x00, 0x00]),
+           ('clube_pode_ser_dirigido', 0x544820, [0x56, 0x8b, 0x74, 0x24, 0x08])]
+DOCS = ('a contagem e a lista do elenco do clube e se o clube pode ser dirigido',
+        "the club's squad count and squad list and whether the club can be managed",
+        [('contar_elenco_do_clube', 'database_count_club_squad', '0x53c590', 'Database.cpp', 'cdecl',
+          'quantas pessoas válidas há no elenco do clube (com o parceiro A/B, as marcas de elenco do time reserva e o filtro dos emprestados)',
+          "how many valid people are in the club's squad (with the A/B partner, the reserve squad flags and the loanee filter)"),
+         ('reunir_elenco_do_clube', 'database_collect_club_squad', '0x541f90', 'Database.cpp', 'cdecl',
+          'copia o elenco do clube (e o do parceiro A/B, até 50 ou 100) para um vetor, completando com zeros',
+          "copies the club's squad (and the A/B partner's, up to 50 or 100) into a vector, padding with zeros"),
+         ('clube_pode_ser_dirigido', 'club_can_be_managed', '0x544820', 'Database.cpp', 'cdecl',
+          'se o clube pode ser dirigido: seleção principal de nação com +0x88 > 150, ou clube que não é time B, com competição ativa e nação marcada',
+          'whether the club can be managed: senior national team of a nation with +0x88 > 150, or a club that is not a B team, with an active competition and a flagged nation')])
+CAMPOS = [('clube +0xd7: elenco (50 ponteiros de pessoa); ponteiro; lê (contar_elenco_do_clube, reunir_elenco_do_clube)', 'club +0xd7: squad (50 person pointers); pointer; reads (contar_elenco_do_clube, reunir_elenco_do_clube)'),
+          ('pessoa +0x00: id (válida se < [0xae2364]); id; lê (contar_elenco_do_clube, reunir_elenco_do_clube)', 'staff +0x00: id (valid if < [0xae2364]); id; reads (contar_elenco_do_clube, reunir_elenco_do_clube)'),
+          ('pessoa +0x5e: marcas de elenco (filtro do time reserva); valor; lê (contar_elenco_do_clube)', 'staff +0x5e: squad flags (reserve squad filter); value; reads (contar_elenco_do_clube)'),
+          ('pessoa +0x39: clube; ponteiro; lê (contar_elenco_do_clube)', 'staff +0x39: club; pointer; reads (contar_elenco_do_clube)'),
+          ('contrato (0x4cf5a0) +0x04: id do clube do contrato; id; lê (contar_elenco_do_clube)', 'contract (0x4cf5a0) +0x04: contract club id; id; reads (contar_elenco_do_clube)'),
+          ('[0xae1080] último contrato consultado; ponteiro; grava (contar_elenco_do_clube)', '[0xae1080] last contract looked up; pointer; writes (contar_elenco_do_clube)'),
+          ('clube +0x244: sem nome (marca de parceiro A/B, zerada por 0x540a50 ao recusar); valor; lê e pode zerar (as três, por 0x540a50)', 'club +0x244: unnamed (A/B partner flag, zeroed by 0x540a50 on refusal); value; reads and may zero (all three, through 0x540a50)'),
+          ('clube +0x00: id (seleções a partir de [0xae235c] − 2 × [0xae2350]; principais abaixo de [0xae235c] − [0xae2350]); id; lê (clube_pode_ser_dirigido)', 'club +0x00: id (national teams from [0xae235c] − 2 × [0xae2350]; senior ones below [0xae235c] − [0xae2350]); id; reads (clube_pode_ser_dirigido)'),
+          ('clube +0x53: nação; ponteiro; lê (clube_pode_ser_dirigido)', 'club +0x53: nation; pointer; reads (clube_pode_ser_dirigido)'),
+          ('clube +0x57: competição; ponteiro; lê (clube_pode_ser_dirigido)', 'club +0x57: competition; pointer; reads (clube_pode_ser_dirigido)'),
+          ('nação +0x88: sem nome (> 150 deixa dirigir a seleção); valor; lê (clube_pode_ser_dirigido)', 'nation +0x88: unnamed (> 150 lets the national team be managed); value; reads (clube_pode_ser_dirigido)'),
+          ('nação +0x11c: marcas (o bit 2 é exigido); valor; lê (clube_pode_ser_dirigido)', 'nation +0x11c: flags (bit 2 required); value; reads (clube_pode_ser_dirigido)'),
+          ('[0xadadfc] objetos das competições (por id); ponteiro; lê (clube_pode_ser_dirigido)', '[0xadadfc] competition objects (by id); pointer; reads (clube_pode_ser_dirigido)')]
+INTERESSA = ['CMRTE']

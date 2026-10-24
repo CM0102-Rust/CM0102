@@ -82,6 +82,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x71dd70 | `atribuir_bloco_do_time` | match_team_block_assign |
 | 0x71df00 | `atribuir_linha_do_jogador` | match_player_row_assign |
 | 0x543540 | `atributo_calculado_do_jogador` | staff_compute_player_attribute |
+| 0x543fd0 | `atributo_calculado_do_nao_jogador` | staff_compute_non_player_attribute |
 | 0x5431e0 | `atributo_da_pessoa` | staff_get_player_attribute |
 | 0x6ec010 | `atualizar_atributos` | update_attributes |
 | 0x71d9e0 | `atualizar_barra_da_posse` | refresh_possession_bar |
@@ -140,6 +141,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x600a50 | `clube_humano` | human_club |
 | 0x48db80 | `clube_na_competicao` | club_in_competition |
 | 0x540a50 | `clube_parceiro` | partner_club |
+| 0x544820 | `clube_pode_ser_dirigido` | club_can_be_managed |
 | 0x542740 | `clube_pode_ter_reservas` | database_club_has_reserve_squad |
 | 0x83bd00 | `codigo_da_posicao` | position_code |
 | 0x70a8c0 | `codigo_de_bola_parada` | set_piece_code |
@@ -164,6 +166,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6eada0 | `construir_jogador_da_partida` | construct_match_player |
 | 0x6b7e50 | `construir_motor` | build_engine |
 | 0x6cbbb0 | `contar_ativos` | count_active |
+| 0x53c590 | `contar_elenco_do_clube` | database_count_club_squad |
 | 0x728e90 | `contar_placar_ao_vivo` | match_screens_tally_live_score |
 | 0x4cf5f0 | `contrato_com_clube` | contract_with_club |
 | 0x4cf5a0 | `contrato_de` | contract_of |
@@ -174,6 +177,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x448170 | `copiar_registro_de_sequencia` | run_record_assign |
 | 0x839590 | `cor_do_titulo` | get_heading_colour |
 | 0x53b640 | `cores_do_uniforme_do_clube` | database_get_club_kit_colours |
+| 0x540490 | `cores_se_confundem` | database_colours_clash |
 | 0x827110 | `criar_jogo_pela_configuracao` | create_game_from_setup_file |
 | 0x866f60 | `criterio_da_comissao` | staff_criterion |
 | 0x4bff70 | `criterio_da_competicao` | competition_criterion |
@@ -267,6 +271,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5af2f0 | `faixa_do_horario` | FIXTURE_MANAGER::get_time_slice |
 | 0x6f5b20 | `faixa_jogador` | player_band |
 | 0x6cfc60 | `falta_no_motor` | foul_in_engine |
+| 0x540520 | `familia_da_cor` | database_get_colour_family |
 | 0x547790 | `favorito_de` | favourite_of |
 | 0x6d1cc0 | `fechamento` | match_wrap_up |
 | 0x932b00 | `fechar_conteiner` | zclose |
@@ -435,6 +440,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x76d810 | `nivel_para_a_selecao` | national_team_level |
 | 0x6db2d0 | `nome_do_jogador_na_narracao` | commentary_player_name |
 | 0x545880 | `nome_ingles_do_clube` | club_get_english_name |
+| 0x539490 | `normalizar_atributos_do_nao_jogador` | staff_normalise_non_player_attributes |
 | 0x715f50 | `nota_ajustada` | adjusted_rating |
 | 0x6d4a20 | `nota_do_arbitro` | referee_grade |
 | 0x7ad220 | `nota_do_clube_para_o_jovem` | player_regen_score_club_for_player |
@@ -573,6 +579,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x725860 | `responder_ultimos_placares_da_partida` | match_screens_handle_latest_scores_cycle |
 | 0x4b0890 | `resultado_da_eliminatoria_na_noticia` | comp_util_classify_tie_result_for_news |
 | 0x6ce460 | `resumo_da_partida` | match_summary |
+| 0x541f90 | `reunir_elenco_do_clube` | database_collect_club_squad |
 | 0x6bbe40 | `rolar_bola` | roll_ball |
 | 0x725a70 | `rotulo_do_controle` | match_control_label |
 | 0x72adf0 | `salvar_estatisticas_da_partida` | Match_Stats::save |
@@ -652,6 +659,8 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x838eb0 | `versao_do_jogo_salvo_valida` | valid_saved_game_version |
 | 0x53a610 | `vetor_de_atributos_do_jogador` | database_player_to_attribute_vector |
 | 0x53a8b0 | `vetor_de_atributos_do_nao_jogador` | database_non_player_to_attribute_vector |
+| 0x53aa10 | `vetor_para_o_jogador` | database_vector_to_player |
+| 0x53a980 | `vetor_para_o_nao_jogador` | database_vector_to_non_player |
 | 0x6fa140 | `virado_para` | facing |
 | 0x70df20 | `x_fora_do_meio` | x_off_centre |
 | 0x6d5b20 | `zagueiros_do_lado_sem_conflito` | side_centre_backs_without_conflict |

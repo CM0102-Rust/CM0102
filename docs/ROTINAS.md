@@ -2154,3 +2154,19 @@ Mutações: `mutacoes/leva223.py` (9, pela carreira até 2002-06-01, confirmando
 | `marcar_elenco_da_pessoa()` | 0x540980 | cdecl | Database.cpp: grava os bits de elenco do clube ou da seleção da pessoa, mantendo o outro par |
 
 Mutações: `mutacoes/leva224.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `dq8_ingles` escapou: o nome inglês do clube só consulta o eng.lng quando o jogo está em outro idioma; a carreira e o jogo real comparando rodam em inglês (idioma 0/1), onde a rotina devolve o próprio nome. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
+
+### Simulação, 225ª leva — a contagem e a lista do elenco do clube e se o clube pode ser dirigido; os vetores de atributos de volta ao não jogador e ao jogador e o reequilíbrio dos atributos do não jogador; a família da cor, se duas cores se confundem e o atributo calculado do não jogador (oficial em 24/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `contar_elenco_do_clube()` | 0x53c590 | cdecl | Database.cpp: quantas pessoas válidas há no elenco do clube (com o parceiro A/B, as marcas de elenco do time reserva e o filtro dos emprestados) |
+| `reunir_elenco_do_clube()` | 0x541f90 | cdecl | Database.cpp: copia o elenco do clube (e o do parceiro A/B, até 50 ou 100) para um vetor, completando com zeros |
+| `clube_pode_ser_dirigido()` | 0x544820 | cdecl | Database.cpp: se o clube pode ser dirigido: seleção principal de nação com +0x88 > 150, ou clube que não é time B, com competição ativa e nação marcada |
+| `vetor_para_o_nao_jogador()` | 0x53a980 | cdecl | Database.cpp: devolve o byte de baixo das 21 células do vetor aos atributos de treinador do não jogador (+0x0e..+0x22) |
+| `vetor_para_o_jogador()` | 0x53aa10 | cdecl | Database.cpp: devolve o byte de baixo das células 0..53 do vetor aos atributos do jogador e o da 54 à pessoa +0x58 |
+| `normalizar_atributos_do_nao_jogador()` | 0x539490 | cdecl | Database.cpp: reequilibra os atributos do não jogador em duas passadas: média das células perto de zero levada a −5, excesso positivo cortado, teto −80 para o cargo 10 |
+| `familia_da_cor()` | 0x540520 | cdecl | Database.cpp: a família (1..10) da cor pelas chaves de cor do index.cpp |
+| `cores_se_confundem()` | 0x540490 | cdecl | Database.cpp: se duas cores se confundem: mesma família ou os pares 8-9, 8-7, 6-7 e a família 6 com a cor da chave [0x9cf1dc] |
+| `atributo_calculado_do_nao_jogador()` | 0x543fd0 | cdecl | Database.cpp: o atributo 1..12 de treinador: quatro direto do registro, oito pela fórmula de 1 a 20 com a palavra +4 do não jogador |
+
+Mutações: `mutacoes/leva225.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `dq10_reunir` escapou: a cópia da 0x541f90 está desligada (DESLIGADAS: mesmo a original pelo desvio de passagem muda a carreira, porque a 0x540a50 que ela chama deixa o resíduo na pilha particular), então a mutação não roda. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551

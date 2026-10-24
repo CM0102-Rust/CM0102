@@ -102,5 +102,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `save` | `gravar_banco_no_save` 0x524d30 (batch 219) | — | switched off (DESLIGADAS): the stack residue save_database writes into index.dat changes if it runs through the copy; `sv2_banco_a4` does not run. Comes back when the copy reproduces the residue |
 | `save` | `criar_jogo_pela_configuracao` 0x827110 (batch 220) | — | switched off (DESLIGADAS): create_game 0x828110 reads the stack residue the copy changes; `sv3_criar_id` and `sv3_criar_frente` do not run. Comes back when the copy reproduces the residue (or with create_game in Rust) |
 | `database` | `nome_ingles_do_clube` 0x545880 (batch 224) | — | the eng.lng path only runs with the game in another language: `dq8_ingles` escapes even comparing. Test: a session of Lucas with the game in Portuguese or another language |
+| `database` | `reunir_elenco_do_clube` 0x541f90 (batch 225) | — | switched off (DESLIGADAS): the hook changes the 0x540a50 stack residue and the career changes in both modes; `dq10_reunir` does not run. Comes back when the copy reproduces the residue |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").
