@@ -2230,3 +2230,19 @@ Mutations: `mutacoes/leva228.py` (9, by the save proof): 8 caught. `dbf_historic
 | `ler_preferencias()` | 0x54fc10 | cdecl | Db_files.cpp: reads the staff preferences table (id 22: the save and community databases) of 52-byte records in one go, through zread (save) or fread (Data), with the entry version 1 (other: box and exit); 1 if everything came |
 
 Mutations: `mutacoes/leva229.py` (9, by the save proof): 9 caught.  Save proof (the .qst with and without the routines): EQUAL (16856662 bytes); carga EQUAL (parou em 2001-239, 728264576 sorteios, impressao 7a1167744a713c73). Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
+
+### Simulation, 230th batch — writing the .dat files: continents, nations, cities; writing the .dat files: stadiums, clubs, staff 110; writing the .dat files: non-players, players, preferences (official on 2026-10-24)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `gravar_continentes()` | 0x54d6e0 | cdecl | Db_files.cpp: writes the continent.dat (id 3) table of 198-byte records in one go, through zwrite (save) or fwrite (Data); 1 if everything went out |
+| `gravar_nacoes()` | 0x54d840 | cdecl | Db_files.cpp: writes the nation.dat (id 4) table of 290-byte records in one go, through zwrite (save) or fwrite (Data); 1 if everything went out |
+| `gravar_cidades()` | 0x54d9a0 | cdecl | Db_files.cpp: writes the city.dat (id 21) table of 56-byte records in one go, through zwrite (save) or fwrite (Data); 1 if everything went out |
+| `gravar_estadios()` | 0x54daf0 | cdecl | Db_files.cpp: writes the stadium.dat table of 78-byte records in one go, through zwrite (save) or fwrite (Data); 1 if everything went out |
+| `gravar_clubes()` | 0x54e5d0 | cdecl | Db_files.cpp: writes the club.dat and nat_club.dat (ids 0, 1) table of 581-byte records in one go, through zwrite (save) or fwrite (Data); 1 if everything went out |
+| `gravar_pessoas_110()` | 0x54e720 | cdecl | Db_files.cpp: writes the staff.dat (staff, 110 bytes; id 6) table of 110-byte records in one go, through zwrite (save) or fwrite (Data); 1 if everything went out |
+| `gravar_nao_jogadores()` | 0x54efd0 | cdecl | Db_files.cpp: writes the staff.dat non-player (id 9; the community map calls it players) table of 68-byte records in one go, through zwrite (save) or fwrite (Data); 1 if everything went out |
+| `gravar_jogadores()` | 0x54fbb0 | cdecl | Db_files.cpp: writes the staff.dat player (id 10; the community map calls it non_players) table of 70-byte records in one go, through zwrite (save) or fwrite (Data); 1 if everything went out |
+| `gravar_preferencias()` | 0x54fd00 | cdecl | Db_files.cpp: writes the staff preferences (id 22) table of 52-byte records in one go, through zwrite (save) or fwrite (Data); 1 if everything went out |
+
+Mutations: `mutacoes/leva230.py` (9, by the save proof): 9 caught.  Save proof (the .qst with and without the routines): EQUAL (16856662 bytes). Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551

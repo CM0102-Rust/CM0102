@@ -2228,3 +2228,19 @@ Mutações: `mutacoes/leva228.py` (9, pela prova do save): 8 acusadas. `dbf_hist
 | `ler_preferencias()` | 0x54fc10 | cdecl | Db_files.cpp: lê a tabela das preferências das pessoas (id 22: o save e as bases da comunidade) de registros de 52 bytes de uma vez, por zread (save) ou fread (Data), com a versão da entrada igual a 1 (outra: caixa e saída); 1 se veio tudo |
 
 Mutações: `mutacoes/leva229.py` (9, pela prova do save): 9 acusadas.  Prova do save (o .qst com e sem as rotinas): IGUAL (16856662 bytes); carga IGUAL (parou em 2001-239, 728264576 sorteios, impressao 7a1167744a713c73). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
+
+### Simulação, 230ª leva — a gravação dos .dat: continentes, nações, cidades; a gravação dos .dat: estádios, clubes, pessoas 110; a gravação dos .dat: não jogadores, jogadores, preferências (oficial em 24/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `gravar_continentes()` | 0x54d6e0 | cdecl | Db_files.cpp: grava a tabela continent.dat (id 3) de registros de 198 bytes de uma vez, por zwrite (save) ou fwrite (Data); 1 se foi tudo |
+| `gravar_nacoes()` | 0x54d840 | cdecl | Db_files.cpp: grava a tabela nation.dat (id 4) de registros de 290 bytes de uma vez, por zwrite (save) ou fwrite (Data); 1 se foi tudo |
+| `gravar_cidades()` | 0x54d9a0 | cdecl | Db_files.cpp: grava a tabela city.dat (id 21) de registros de 56 bytes de uma vez, por zwrite (save) ou fwrite (Data); 1 se foi tudo |
+| `gravar_estadios()` | 0x54daf0 | cdecl | Db_files.cpp: grava a tabela stadium.dat de registros de 78 bytes de uma vez, por zwrite (save) ou fwrite (Data); 1 se foi tudo |
+| `gravar_clubes()` | 0x54e5d0 | cdecl | Db_files.cpp: grava a tabela club.dat e nat_club.dat (ids 0, 1) de registros de 581 bytes de uma vez, por zwrite (save) ou fwrite (Data); 1 se foi tudo |
+| `gravar_pessoas_110()` | 0x54e720 | cdecl | Db_files.cpp: grava a tabela staff.dat (pessoas, 110 bytes; id 6) de registros de 110 bytes de uma vez, por zwrite (save) ou fwrite (Data); 1 se foi tudo |
+| `gravar_nao_jogadores()` | 0x54efd0 | cdecl | Db_files.cpp: grava a tabela dos não jogadores do staff.dat (id 9; o mapa da comunidade a chama de players) de registros de 68 bytes de uma vez, por zwrite (save) ou fwrite (Data); 1 se foi tudo |
+| `gravar_jogadores()` | 0x54fbb0 | cdecl | Db_files.cpp: grava a tabela dos jogadores do staff.dat (id 10; o mapa da comunidade a chama de non_players) de registros de 70 bytes de uma vez, por zwrite (save) ou fwrite (Data); 1 se foi tudo |
+| `gravar_preferencias()` | 0x54fd00 | cdecl | Db_files.cpp: grava a tabela das preferências das pessoas (id 22) de registros de 52 bytes de uma vez, por zwrite (save) ou fwrite (Data); 1 se foi tudo |
+
+Mutações: `mutacoes/leva230.py` (9, pela prova do save): 9 acusadas.  Prova do save (o .qst com e sem as rotinas): IGUAL (16856662 bytes). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
