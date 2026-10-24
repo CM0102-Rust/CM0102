@@ -123,6 +123,10 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5b2e80 | `casa_do_setor_ocupada` | sector_slot_taken |
 | 0x5b3c70 | `casa_guardada` | stored_cell |
 | 0x5b7e60 | `casa_no_campo` | pitch_cell |
+| 0x6146b0 | `casar_chave_de_clube` | match_club_key_id |
+| 0x60efd0 | `casar_chave_de_competicao_de_clube` | match_club_comp_key_id |
+| 0x6115e0 | `casar_chave_de_competicao_de_pessoa` | match_staff_comp_key_id |
+| 0x60d810 | `casar_chave_de_nacao` | match_nation_key_id |
 | 0x933a00 | `casar_nome_com_padrao` | zipdir_match_filename_pattern |
 | 0x785670 | `categoria_da_noticia` | NewsItem::get_category |
 | 0x4ca470 | `categoria_do_contrato` | contract_category |
@@ -565,6 +569,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c54a0 | `reiniciar_lance` | restart_play |
 | 0x452fe0 | `reiniciar_recordes` | reset_records |
 | 0x5477d0 | `rejeitado_por` | rejected_by |
+| 0x60ba80 | `remapear_chave_de_clube` | remap_club_key_id |
 | 0x714ca0 | `remover_da_lista` | remove_from_list |
 | 0x6c06b0 | `repartir_a` | split_a |
 | 0x6c07a0 | `repartir_b` | split_b |

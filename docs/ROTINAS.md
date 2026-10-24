@@ -2184,3 +2184,15 @@ Mutações: `mutacoes/leva225.py` (9, pela carreira até 2002-06-01, confirmando
 | `incluir_pessoa_no_clube()` | 0x53bd10 | cdecl | Database.cpp: põe a pessoa na casa do cargo no clube (cargos 1..15; jogador acima de 85 sem técnico humano sobe de 6/8 para 13/15), copia a data e grava clube e cargo na pessoa |
 
 Mutações: `mutacoes/leva226.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 8 acusadas. `dq13_reduzida` escapou: a nota com a habilidade reduzida (0x5442f0) não decide nada na carreira até 2002-06-01 e no jogo real comparando (até 2002-01-01) não houve chamada em que ×0,2 e ×0,1 dessem notas diferentes depois de presas em 1..20. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
+
+### Simulação, 227ª leva — as chaves fixas de clube e de nação pelo nome e a troca da chave de clube depois do corte da base; as chaves fixas das competições de clube e das competições e prêmios de pessoa pelo nome (oficial em 24/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `casar_chave_de_clube()` | 0x6146b0 | cdecl | index.cpp: casa o nome do clube da base com as 313 chaves fixas de clube (372 nomes em 4 cadeias, _stricmp): o primeiro acerto de cada cadeia grava a linha na global da chave |
+| `remapear_chave_de_clube()` | 0x60ba80 | cdecl | index.cpp: depois do corte da tabela de clubes, a primeira chave de clube que guarda o id antigo passa a guardar o novo (devolve 1; nenhuma: 0) |
+| `casar_chave_de_nacao()` | 0x60d810 | cdecl | index.cpp: casa o nome da nação da base com as 209 chaves fixas de nação (217 nomes em 2 cadeias, _stricmp) |
+| `casar_chave_de_competicao_de_clube()` | 0x60efd0 | cdecl | index.cpp: casa o nome longo da competição de clube com as 301 chaves fixas (351 nomes em 3 cadeias, _stricmp; as duas divisões croatas gravam também 0x9cf8a4) |
+| `casar_chave_de_competicao_de_pessoa()` | 0x6115e0 | cdecl | index.cpp: casa o nome da competição ou prêmio de pessoa com as 417 chaves fixas (442 nomes em 5 cadeias, _stricmp) |
+
+Mutações: `mutacoes/leva227.py` (6, pela prova do save): 4 acusadas. `ix2_comp_pessoa` escapou: as chaves de competição de pessoa (0x9cfa20..0x9d00a0) são globais do exe, não vão para o .qst, e o início rápido não as lê antes de gravar; a prova do save (que avalia as mutações das levas do save) não as vê. `ix2_devolucao` escapou: quem chama (set_key_ids 0x601a40) ignora a devolução das rotinas de casar a chave (o resultado do último _stricmp). (lacuna em `PENDENCIAS.md`) Prova do save (o .qst com e sem as rotinas): IGUAL (16856662 bytes). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551

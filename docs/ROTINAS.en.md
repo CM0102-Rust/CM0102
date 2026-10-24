@@ -2186,3 +2186,15 @@ Mutations: `mutacoes/leva225.py` (9, by the career to 2002-06-01, confirming the
 | `incluir_pessoa_no_clube()` | 0x53bd10 | cdecl | Database.cpp: puts the person in the job slot at the club (jobs 1..15; a player above 85 without a human manager moves from 6/8 to 13/15), copies the date and writes club and job into the person |
 
 Mutations: `mutacoes/leva226.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught. `dq13_reduzida` escaped: the score with reduced ability (0x5442f0) decides nothing in the career up to 2002-06-01, and in the real game comparing (to 2002-01-01) there was no call where ×0.2 and ×0.1 gave different scores after clamping to 1..20. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
+
+### Simulation, 227th batch — the fixed club and nation keys by name and the club key remap after the database trim; the fixed club competition and staff competition/award keys by name (official on 2026-10-24)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `casar_chave_de_clube()` | 0x6146b0 | cdecl | index.cpp: matches the database club name with the 313 fixed club keys (372 names in 4 chains, _stricmp): the first hit of each chain stores the row in the key global |
+| `remapear_chave_de_clube()` | 0x60ba80 | cdecl | index.cpp: after the club table trim, the first club key holding the old id gets the new one (returns 1; none: 0) |
+| `casar_chave_de_nacao()` | 0x60d810 | cdecl | index.cpp: matches the database nation name with the 209 fixed nation keys (217 names in 2 chains, _stricmp) |
+| `casar_chave_de_competicao_de_clube()` | 0x60efd0 | cdecl | index.cpp: matches the club competition long name with the 301 fixed keys (351 names in 3 chains, _stricmp; the two Croatian divisions also store 0x9cf8a4) |
+| `casar_chave_de_competicao_de_pessoa()` | 0x6115e0 | cdecl | index.cpp: matches the staff competition or award name with the 417 fixed keys (442 names in 5 chains, _stricmp) |
+
+Mutations: `mutacoes/leva227.py` (6, by the save proof): 4 caught. `ix2_comp_pessoa` escaped: the person competition keys (0x9cfa20..0x9d00a0) are exe globals, not written into the .qst, and the quick start does not read them before saving; the save proof (which evaluates the save batch mutations) does not see them. `ix2_devolucao` escaped: the caller (set_key_ids 0x601a40) ignores the return value of the key matching routines (the result of the last _stricmp). (gap in `PENDENCIAS.en.md`) Save proof (the .qst with and without the routines): EQUAL (16856662 bytes). Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
