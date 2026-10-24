@@ -29,3 +29,8 @@ Noite de 19/10/2026 (lote_ampla_1 ate 2001-12-01; lote_ampla_2 ate 2002-03-31, i
 - leva213.py: tr_recusa (pode_contratar_jogador)
 - leva214.py: lt_ultimo_dia (margem_do_ultimo_dia)
 - leva216.py: ha_motivo (copiar_aposentadoria_pendente)
+
+Ampla de 22-23/10/2026 (lotes 4a..4d ate 2002-03-31, 8 ligas; prova geral Rust = original 9ee2b5ac ate a 224a):
+- acusadas: o_campos, m_marca, d_sem_regra, m_alguma (travou), c_empate, m_dobro
+- seguem escapando: c_k0_b, c_tipo5_b, r_banco, r_idade, n_veterano, t_item, f_estado, f_fase, d_43, t_desmarca, t_vaga, r_ids, s_empate, c_clube, p_vaga, a_torneio, l_venda, l_jogo, l_conta, r_marca, e_data, b_tipo, l_tamanho, r_excluido, s_faixa, i_ultima, tr_recusa (caminhos raros: dependem de sessoes do Lucas ou de carreiras mais longas)
+- c_saldo fora (ancora nao unica)
