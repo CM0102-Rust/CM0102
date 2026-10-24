@@ -14,7 +14,7 @@ Tamanhos em bytes, medidos do início ao último byte antes do enchimento (o "si
 
 ### cm3/code/Db_files.cpp (os leitores e gravadores de tabela)
 
-Todos têm a forma `int f(void *stream, int use_zip, void *registros, entrada_do_index *e)` (leitores) ou `(stream, use_zip, registros, quantidade)` (gravadores): `use_zip` escolhe `zread`/`zwrite` (save) ou `fread`/`fwrite` (pasta `Data`). O leitor confere a versão da entrada (+0x3f: 1 ou 2; outra abre caixa) e lê `e->quantidade` registros de uma vez. Nenhum tem SEH.
+Todos têm a forma `int f(void *stream, int use_zip, void *registros, entrada_do_index *e)` (leitores) ou `(stream, use_zip, registros, quantidade)` (gravadores): `use_zip` escolhe `zread`/`zwrite` (save) ou `fread`/`fwrite` (pasta `Data`). O leitor confere a versão da entrada (+0x3f), que é fixa por tabela (228ª leva, pelo binário): 2 em nação, clubes, competições, staff_comp e jogador/não jogador; 1 em continentes, estádios, staff v1, históricos, nomes, cores e árbitros; 1 ou 2 em cidades. Outra versão abre a caixa "Error" e o jogo sai. Depois o leitor lê `e->quantidade` registros de uma vez. Nenhum tem SEH.
 
 | Endereço | Nome (comunidade) | Bytes | Tabela (id do index) | Registro | Rust | Carreira |
 |---|---|---|---|---|---|---|

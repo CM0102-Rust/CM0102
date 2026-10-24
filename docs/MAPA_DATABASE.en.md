@@ -14,7 +14,7 @@ Sizes in bytes, measured from the entry to the last byte before the padding (the
 
 ### cm3/code/Db_files.cpp (table readers and writers)
 
-All have the shape `int f(void *stream, int use_zip, void *records, index_entry *e)` (readers) or `(stream, use_zip, records, count)` (writers): `use_zip` picks `zread`/`zwrite` (save) or `fread`/`fwrite` (`Data` folder). The reader checks the entry version (+0x3f: 1 or 2; anything else opens a box) and reads `e->count` records in one go. None has SEH.
+All have the shape `int f(void *stream, int use_zip, void *records, index_entry *e)` (readers) or `(stream, use_zip, records, count)` (writers): `use_zip` picks `zread`/`zwrite` (save) or `fread`/`fwrite` (`Data` folder). The reader checks the entry version (+0x3f), which is fixed per table (batch 228, from the binary): 2 for nation, clubs, competitions, staff_comp and player/non-player; 1 for continents, stadiums, staff v1, histories, names, colours and referees; 1 or 2 for cities. Any other version opens the "Error" box and the game exits. Then the reader reads `e->count` records in one go. None has SEH.
 
 | Address | Name (community) | Bytes | Table (index id) | Record | Rust | Career |
 |---|---|---|---|---|---|---|

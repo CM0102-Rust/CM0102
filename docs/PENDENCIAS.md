@@ -105,5 +105,6 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `banco` | `reunir_elenco_do_clube` 0x541f90 (225ª) | — | desligada (DESLIGADAS): o desvio muda o resíduo de pilha da 0x540a50 e a carreira muda nos dois modos; `dq10_reunir` não roda. Volta quando a cópia reproduzir o resíduo |
 | `banco` | `nota_relativa_com_habilidade_reduzida` 0x5442f0 (226ª) | — | a habilidade reduzida só pesa fora da faixa presa em 1..20 e não decide na carreira: `dq13_reduzida` escapa até comparando. Teste: carreira ampla |
 | `banco` | `casar_chave_de_competicao_de_pessoa` 0x6115e0, `casar_chave_de_competicao_de_clube` 0x60efd0 (227ª) | — | as chaves de competição de pessoa não vão para o .qst e a devolução é ignorada: `ix2_comp_pessoa` e `ix2_devolucao` escapam da prova do save. Teste: carreira (as chaves são lidas durante o jogo) |
+| `banco` | `ler_historico_de_competicoes_de_pessoal` 0x5504d0 (228ª) | — | a tabela não vai para o .qst: `dbf_historico_de_competicoes_de_pessoal` escapa da prova do save. Teste: a tela do histórico das competições de pessoal (prêmios) num jogo |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
