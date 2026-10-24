@@ -1,0 +1,8 @@
+=== PROVA GERAL AMPLA ate 2002-01-01 (ENG ESP ITA FRA BRA JPN AUS USA), tudo ate a 229a
+    pool nao paginado 2.23 -> 2.23 GB, paginado 3.24 -> 3.24 GB
+execucao 1: parou em 2002-000, 5171262759 sorteios, impressao 9ee2b5acf52a3bcb, partidas 33975/1ea3c7874c8aa012, banco 9bc5c6f663d5969e, 377 s
+game.cfg restaurado; auto_setup.cfg removido
+    pool nao paginado 2.23 -> 2.23 GB, paginado 3.24 -> 3.24 GB
+execucao 1: parou em 2002-000, 5171262759 sorteios, impressao 9ee2b5acf52a3bcb, partidas 33975/1ea3c7874c8aa012, banco 9bc5c6f663d5969e, 380 s
+game.cfg restaurado; auto_setup.cfg removido
+=== FIM
