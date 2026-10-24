@@ -54,3 +54,13 @@ python engenharia-reversa/renomear_no_save.py --carregar COPIA.sav [--modo origi
 - No fim, confere que todos os itens descomprimidos da saída são iguais aos da entrada, menos o item trocado, que tem de sair igual ao esperado.
 - O tipo 4 foi conferido só por essa conferência, numa cópia do `TesteTelasComprimido.sav`. O jogo não carregou nenhum save tipo 4 regravado.
 - O `--carregar` usa a carga da `prova_save.py` (bancada: trava do laboratório, `game.cfg` e `*.tmp` restaurados) e o vigia da caixa.
+
+## Onde fica o idioma
+
+Levantamento só pela desmontagem e pela leitura (sem abrir o jogo) do `FeriasTesteSave.sav` (MD5 `33fda465193b5e8e6d7ace93ecd44559`, igual antes e depois). O Lucas manteve o bloqueio do nome-chave em todos os idiomas, e por isso o caso do idioma 0 não foi carregado no jogo.
+
+- **Na memória:** o dword `[0x9b5984]` (`.data`). A carga zera ele para −1 em 0x52851c, antes de ler o save. A troca de idioma do jogo (0x5339c0) grava nele o idioma novo em 0x535806, e o leitor é 0x535920. **[observado na desmontagem]**
+- **No arquivo:** são os **4 últimos bytes do item `index.dat`** (descomprimido). A gravação (0x531400..0x5314b7) escreve, nesta ordem, depois dos 0x16 registros de 0x43 bytes: um byte de marca (=1), 0x1cc bytes, a contagem u32 `[0xae235c]` (−1 se a lista `[0xae23fc]` não existe), a lista (contagem × 4 bytes: linha do save → linha do `eng.lng`) e o idioma u32. A leitura (0x52881a..0x528974) segue a mesma ordem. **[observado na desmontagem]**
+- **No `FeriasTesteSave.sav`:** o `index.dat` tem 30.067 bytes, a cauda começa em +0x5ca, a contagem é 7.029 e o idioma, em **+0x756f** (os 4 últimos bytes), vale **9** (POR). O `eng.lng` está no save. **[observado no arquivo]**
+- **Marca 0:** se o byte de marca for 0 (save sem a cauda), a carga põe `[0x9b5984] = 0` (0x528a30) e não lê o resto. **[observado na desmontagem]**
+- **Idioma 0 no save:** **[inferência]** vale 0 quando a carreira foi criada em inglês (`LANGUAGE=ENG_UK` na configuração automática, ou o jogo em inglês) e ninguém trocou o idioma depois. Aí a chave é casada direto no nome +4 do `club.dat`/`nation.dat` (ver "Por que") e o `eng.lng` não é aberto. Para saber o idioma de um save, basta ler o último u32 do `index.dat`. A presença do item `eng.lng` é só um indício, porque o jogo só abre o arquivo quando o idioma ≠ 0.

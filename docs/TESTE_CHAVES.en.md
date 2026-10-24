@@ -54,3 +54,13 @@ python engenharia-reversa/renomear_no_save.py --carregar COPY.sav [--modo origin
 - At the end, it checks that every decompressed item of the output equals the input's, except the changed item, which must come out as expected.
 - Type 4 was checked only by that check, on a copy of `TesteTelasComprimido.sav`. The game did not load any rewritten type 4 save.
 - `--carregar` uses the load from `prova_save.py` (bench: laboratory lock, `game.cfg` and `*.tmp` restored) plus the box watcher.
+
+## Where the language is stored
+
+Found from the disassembly alone, plus a read-only look at `FeriasTesteSave.sav` (MD5 `33fda465193b5e8e6d7ace93ecd44559`, unchanged before and after). The game was not opened. Lucas kept the key-name block for every language, so the language-0 case was not loaded in the game.
+
+- **In memory:** the dword `[0x9b5984]` (`.data`). Loading resets it to −1 at 0x52851c before reading the save. The game's language switch (0x5339c0) writes the new language there at 0x535806, and the getter is 0x535920. **[observed in the disassembly]**
+- **In the file:** it is the **last 4 bytes of the `index.dat` item** (decompressed). The writer (0x531400..0x5314b7) writes these in order after the 0x16 records of 0x43 bytes: a flag byte (=1), 0x1cc bytes, the u32 count `[0xae235c]` (−1 if the list `[0xae23fc]` does not exist), the list (count × 4 bytes: save row → `eng.lng` row) and the u32 language. The reader (0x52881a..0x528974) follows the same order. **[observed in the disassembly]**
+- **In `FeriasTesteSave.sav`:** `index.dat` is 30,067 bytes, the tail starts at +0x5ca, the count is 7,029 and the language, at **+0x756f** (the last 4 bytes), is **9** (POR). The `eng.lng` item is in the save. **[observed in the file]**
+- **Flag 0:** if the flag byte is 0 (a save without the tail), loading sets `[0x9b5984] = 0` (0x528a30) and reads nothing more. **[observed in the disassembly]**
+- **Language 0 in a save:** **[inference]** it is 0 when the career was created in English (`LANGUAGE=ENG_UK` in the auto setup, or the game running in English) and nobody switched the language afterwards. In that case the key is matched directly against the +4 name in `club.dat`/`nation.dat` (see "Why") and `eng.lng` is not opened. To find a save's language, read the last u32 of `index.dat`. Having an `eng.lng` item is only a hint, because the game opens that file only when the language is ≠ 0.
