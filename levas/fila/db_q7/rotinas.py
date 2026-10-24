@@ -1,0 +1,25 @@
+ROTINAS = [('primeiro_nome_da_nacao', 0x539c60, [0x83, 0xec, 0x14, 0x53, 0x55]),
+           ('segundo_nome_da_nacao', 0x53a1b0, [0x51, 0x53, 0x55, 0x56, 0x57]),
+           ('formatar_nome_da_pessoa', 0x53dba0, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00])]
+DOCS = ('o sorteio do primeiro e do segundo nome por nação e o nome da pessoa formatado',
+        'the first and second name draw by nation and the formatted person name',
+        [('primeiro_nome_da_nacao', 'database_pick_first_name_for_nation', '0x539c60', 'Database.cpp', 'cdecl',
+          'sorteia um primeiro nome para a nação (20 sorteios pelo peso se ela tem mais de 100; senão empresta do grupo de língua)',
+          'draws a first name for the nation (20 draws by weight when it has over 100; otherwise borrows from the language group)'),
+         ('segundo_nome_da_nacao', 'database_pick_second_name_for_nation', '0x53a1b0', 'Database.cpp', 'cdecl',
+          'sorteia um segundo nome para a nação, do mesmo jeito',
+          'draws a second name for the nation, the same way'),
+         ('formatar_nome_da_pessoa', 'database_format_staff_name', '0x53dba0', 'Database.cpp', 'cdecl',
+          'escreve o nome da pessoa num dos 7 estilos (nome sobrenome, N.sobrenome, sobrenome, nome, iniciais...), preferindo o nome comum ou o apelido',
+          "writes the person's name in one of 7 styles (first last, F.last, last, first, initials...), preferring the common name or nickname")])
+CAMPOS = [('nação +0x00: id; id; lê (primeiro_nome_da_nacao, segundo_nome_da_nacao)', 'nation +0x00: id; id; reads (primeiro_nome_da_nacao, segundo_nome_da_nacao)'),
+          ('nação +0x77: grupo de língua (1..32; 0 nenhum); valor; lê (primeiro_nome_da_nacao, segundo_nome_da_nacao)', 'nation +0x77: language group (1..32; 0 none); value; reads (primeiro_nome_da_nacao, segundo_nome_da_nacao)'),
+          ('índice de nomes da nação ([0xae2338] + id × 36) +0x00 / +0x04: primeiro primeiro nome / primeiro segundo nome; id; lê (primeiro_nome_da_nacao, segundo_nome_da_nacao)', 'nation name index ([0xae2338] + id × 36) +0x00 / +0x04: first first name / first second name; id; reads (primeiro_nome_da_nacao, segundo_nome_da_nacao)'),
+          ('índice de nomes da nação +0x18 / +0x1c: quantos primeiros / segundos nomes; valor; lê (primeiro_nome_da_nacao, segundo_nome_da_nacao)', 'nation name index +0x18 / +0x1c: first / second name count; value; reads (primeiro_nome_da_nacao, segundo_nome_da_nacao)'),
+          ('linha de nome (60 bytes em [0xae23f0] primeiros, [0xae23f4] segundos) +0x00 texto, +0x3b peso (com sinal); valor; lê (primeiro_nome_da_nacao, segundo_nome_da_nacao)', 'name row (60 bytes at [0xae23f0] first, [0xae23f4] second) +0x00 text, +0x3b weight (signed); value; reads (primeiro_nome_da_nacao, segundo_nome_da_nacao)'),
+          ('[0xae2398] / [0xae239c] total de primeiros / segundos nomes (até 0x7fff no sorteio); valor; lê (primeiro_nome_da_nacao, segundo_nome_da_nacao)', '[0xae2398] / [0xae239c] first / second name total (capped at 0x7fff in the draw); value; reads (primeiro_nome_da_nacao, segundo_nome_da_nacao)'),
+          ('[0xae23a8] nações (0x122 bytes), [0xae2350] quantas; ponteiro; lê (primeiro_nome_da_nacao, segundo_nome_da_nacao)', '[0xae23a8] nations (0x122 bytes), [0xae2350] count; pointer; reads (primeiro_nome_da_nacao, segundo_nome_da_nacao)'),
+          ('[0xad6c30] estado do rand() da CRT; valor; lê e grava (primeiro_nome_da_nacao, segundo_nome_da_nacao)', '[0xad6c30] CRT rand() state; value; reads and writes (primeiro_nome_da_nacao, segundo_nome_da_nacao)'),
+          ('staff +0x04 / +0x08 / +0x0c: nome / sobrenome / nome comum; ponteiro (texto); lê (formatar_nome_da_pessoa)', 'staff +0x04 / +0x08 / +0x0c: first name / second name / common name; pointer (text); reads (formatar_nome_da_pessoa)'),
+          ('[0xb63c98] apelidos dados pelos humanos (0x600740, 0x6005e0); ponteiro; lê (formatar_nome_da_pessoa)', '[0xb63c98] nicknames given by humans (0x600740, 0x6005e0); pointer; reads (formatar_nome_da_pessoa)')]
+INTERESSA = ['GPF2', 'CMRTE']

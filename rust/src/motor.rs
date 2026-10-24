@@ -693,8 +693,17 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x544520, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
     Prologo { endereco: 0x543540, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x5431e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x540780, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
+    Prologo { endereco: 0x53a610, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0xba, 0x3f, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x5446d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0xe4, 0xf2, 0x9c, 0x00] },
+    Prologo { endereco: 0x53d7f0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] },
+    Prologo { endereco: 0x5444a0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
+    Prologo { endereco: 0x544590, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
+    Prologo { endereco: 0x544600, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
+    Prologo { endereco: 0x544380, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x0f, 0xbe, 0x54, 0x24, 0x08] },
+    Prologo { endereco: 0x542740, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
 ];
-const N: usize = 586;
+const N: usize = 595;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -32148,6 +32157,311 @@ unsafe extern "stdcall" fn comparar_codigo_da_posicao(m: i16) -> u8 {
 
 comparar_valor!(comparar_criterio_da_comissao, criterio_da_comissao, 357, () -> u32);
 
+// ---------- 223a leva: a ordem do histórico de competições, o vetor de atributos do jogador e se a nação é britânica ou a Irlanda (Database.cpp) ----------
+
+/// { 0x540780 } (cdecl, Database.cpp): comparação do qsort das linhas do histórico de competições.
+/// Linha sem competição (+4) vai para o fim (a sem e b com: 1; a com e b sem: −1; as duas sem: 0);
+/// depois pelo id da competição (a − b); na mesma, pela temporada (+8, palavra) da mais nova para a
+/// mais velha (b − a), a não ser que uma delas seja −1 (0).
+unsafe extern "C" fn ordem_do_historico_de_competicao(a: usize, b: usize) -> i32 {
+    let ler = |p: usize, d: usize| core::ptr::read_unaligned((p + d) as *const usize);
+    let ca = ler(a, 4);
+    if ca == 0 {
+        return (ler(b, 4) != 0) as i32;
+    }
+    let cb = ler(b, 4);
+    if cb == 0 {
+        return -1;
+    }
+    let d = (*(ca as *const i32)).wrapping_sub(*(cb as *const i32));
+    if d != 0 {
+        return d; // pelo id da competição
+    }
+    let ta = core::ptr::read_unaligned((a + 8) as *const i16);
+    let tb = core::ptr::read_unaligned((b + 8) as *const i16);
+    if ta == -1 || tb == -1 {
+        return 0;
+    }
+    tb as i32 - ta as i32 // a temporada mais nova primeiro
+}
+
+/// As 54 primeiras células do vetor de atributos (0x53a610), na ordem em que a original grava:
+/// (deslocamento no registro de jogador, peso). Peso 0 = o zero do começo.
+const CELULAS_DO_VETOR: [(u8, u8); 54] = [
+    (0x0f, 0), (0x10, 0), (0x11, 0), (0x12, 0), (0x13, 0), (0x14, 0), (0x15, 0), (0x16, 0), (0x1a, 0),
+    (0x17, 0), (0x18, 0), (0x19, 0),
+    (0x30, 0), (0x3b, 0), (0x1e, 0), (0x23, 2), (0x24, 0), (0x26, 2), (0x27, 2), (0x2a, 1), (0x2b, 2),
+    (0x31, 2), (0x32, 2), (0x33, 2), (0x35, 0), (0x37, 2), (0x38, 2), (0x39, 0), (0x3a, 0), (0x3e, 2),
+    (0x41, 0), (0x43, 2),
+    (0x28, 2), (0x22, 2), (0x29, 0), (0x40, 2), (0x3d, 0), (0x3c, 0), (0x36, 0), (0x2e, 0), (0x2f, 0),
+    (0x25, 0), (0x1f, 0), (0x20, 0), (0x21, 0), (0x1b, 2), (0x1c, 0), (0x1d, 0), (0x2c, 0), (0x2d, 0),
+    (0x42, 0), (0x3f, 2), (0x44, 2), (0x34, 0),
+];
+
+/// { 0x53a610 } (cdecl, Database.cpp): estende os bytes do registro de `jogador` num vetor de 63
+/// células de 3 bytes (palavra com sinal + peso): zera os 63 pesos; células 0..53 pela tabela
+/// `CELULAS_DO_VETOR` (posições 0..8, lados 9..11, depois os atributos, peso 2 nos que contam e 1 no
+/// +0x2a); a célula 54 é o byte +0x58 da `pessoa`. Os fins de grupo vão às saídas não nulas:
+/// posições 9, lados 0xc, ponderados 0x20. Devolve o vetor (eax).
+unsafe extern "C" fn vetor_de_atributos_do_jogador(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
+                                                   fim_das_posicoes: *mut u8, fim_dos_ponderados: *mut u8) -> usize {
+    for i in 0..0x3f {
+        *((vetor + 3 * i + 2) as *mut u8) = 0;
+    }
+    for (i, &(d, peso)) in CELULAS_DO_VETOR.iter().enumerate() {
+        core::ptr::write_unaligned((vetor + 3 * i) as *mut i16, *((jogador + d as usize) as *const i8) as i16);
+        *((vetor + 3 * i + 2) as *mut u8) = peso;
+        match i {
+            8 if !fim_das_posicoes.is_null() => *fim_das_posicoes = 9,
+            11 if !fim_dos_lados.is_null() => *fim_dos_lados = 0xc,
+            31 if !fim_dos_ponderados.is_null() => *fim_dos_ponderados = 0x20,
+            _ => {}
+        }
+    }
+    core::ptr::write_unaligned((vetor + 3 * 54) as *mut i16, *((pessoa + 0x58) as *const i8) as i16);
+    vetor
+}
+
+/// { 0x5446d0 } (cdecl, Database.cpp): 1 se a `nacao` (não nula) é Inglaterra, Escócia, Irlanda, País
+/// de Gales ou Irlanda do Norte (a regra das nações da casa).
+unsafe extern "C" fn nacao_britanica_ou_irlanda(nacao: usize) -> u32 {
+    let g = |a: usize| *(a as *const u32);
+    let id = g(nacao);
+    (id == g(0x9cf2e4) || id == g(0x9cf45c) || id == g(0x9cf2dc) || id == g(0x9cf510) || id == g(0x9cf3e4)) as u32
+}
+
+unsafe extern "C" fn comparar_ordem_do_historico_de_competicao(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(586)(a, b);
+    let n = ordem_do_historico_de_competicao(a, b);
+    PLACAR.registrar(r == n, || format!("ordem_do_historico_de_competicao({:x}, {:x}) original={} rust={}", a, b, r, n));
+    r
+}
+
+unsafe extern "C" fn comparar_vetor_de_atributos_do_jogador(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
+                                                            fim_das_posicoes: *mut u8, fim_dos_ponderados: *mut u8) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8, *mut u8) -> usize>(587);
+    let mut regioes = vec![(vetor, 0x3f * 3)];
+    for p in [fim_dos_lados, fim_das_posicoes, fim_dos_ponderados] {
+        if !p.is_null() {
+            regioes.push((p as usize, 1));
+        }
+    }
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes,
+        || o(jogador, pessoa, vetor, fim_dos_lados, fim_das_posicoes, fim_dos_ponderados),
+        || vetor_de_atributos_do_jogador(jogador, pessoa, vetor, fim_dos_lados, fim_das_posicoes, fim_dos_ponderados));
+    PLACAR.registrar(igual && r == n, || format!("vetor_de_atributos_do_jogador({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, pessoa, r, n, mo, mr));
+    r
+}
+
+unsafe extern "C" fn comparar_nacao_britanica_ou_irlanda(nacao: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(588)(nacao);
+    let n = nacao_britanica_ou_irlanda(nacao);
+    PLACAR.registrar(r == n, || format!("nacao_britanica_ou_irlanda({:x}) original={} rust={}", nacao, r, n));
+    r
+}
+
+// ---------- 223a leva: se o clube é basco e se a pessoa está na lista de transferências do clube ou na de empréstimos (Database.cpp) ----------
+
+/// Os 23 clubes bascos de 0x53d7f0 (ponteiros fixos da área 0x9d00a4..), na ordem da original.
+const CLUBES_BASCOS: [usize; 23] = [
+    0x9d0120, 0x9d0134, 0x9d02e4, 0x9d02e8, 0x9d02ec, 0x9d02f0, 0x9d02f4, 0x9d02f8, 0x9d02fc, 0x9d0304, 0x9d0308,
+    0x9d030c, 0x9d0310, 0x9d0314, 0x9d0318, 0x9d031c, 0x9d0320, 0x9d0324, 0x9d0328, 0x9d032c, 0x9d0330, 0x9d0334,
+    0x9d0338,
+];
+
+/// { 0x53d7f0 } (cdecl, Database.cpp): 1 se o `clube` é da Espanha ([0x9cf488], nação +0x53) e o id
+/// dele é um dos 23 clubes bascos (`CLUBES_BASCOS`). Clube ou nação nulos: 0.
+unsafe extern "C" fn clube_basco(clube: usize) -> u32 {
+    let g = |a: usize| *(a as *const u32);
+    if clube == 0 {
+        return 0;
+    }
+    let nacao = core::ptr::read_unaligned((clube + 0x53) as *const usize);
+    if nacao == 0 || g(nacao) != g(0x9cf488) {
+        return 0; // fora da Espanha
+    }
+    let id = g(clube);
+    CLUBES_BASCOS.iter().any(|&a| id == g(a)) as u32
+}
+
+/// O vínculo (0x4cf5f0) da `pessoa` (não nula) com o `clube` e o clube usado: sem clube, o do contrato
+/// (0x4cf5a0, guardado em [0xae1080]; contrato +4 = id na tabela [0xae23b4], 581 bytes por clube).
+/// Sem contrato ou clube: (0, 0). Comum a 0x5444a0 e 0x544590 (e 0x544520, 0x544600).
+unsafe fn vinculo_da_lista(pessoa: usize, clube: usize) -> (usize, usize) {
+    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let mut clube = clube;
+    if clube == 0 {
+        let c = contrato_de(*(0xae1050 as *const usize), pessoa);
+        *(0xae1080 as *mut usize) = c;
+        if c == 0 {
+            return (0, 0);
+        }
+        let id = core::ptr::read_unaligned((c + 4) as *const u32) as usize;
+        clube = (*(0xae23b4 as *const usize)).wrapping_add(id.wrapping_mul(581));
+        if clube == 0 {
+            return (0, 0);
+        }
+    }
+    (vinculo(*(0xae1050 as *const usize), pessoa, clube), clube)
+}
+
+/// { 0x5444a0 } (cdecl, Database.cpp): 1 se o vínculo da `pessoa` com o `clube` (sem clube, o do
+/// contrato) está na lista de transferências pelo clube (vínculo +0x4e, bit 1), a não ser que o clube
+/// não seja de técnico humano (0x600a50 com 1, 1, 0, 0) e a função no clube da pessoa (+0x3d) seja 0xf.
+unsafe extern "C" fn pessoa_listada_pelo_clube(pessoa: usize, clube: usize) -> u32 {
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    if pessoa == 0 {
+        return 0;
+    }
+    let (v, clube) = vinculo_da_lista(pessoa, clube);
+    if v == 0 || *((v + 0x4e) as *const u8) & 1 == 0 {
+        return 0;
+    }
+    if humano(clube, 1, 1, 0, 0) == 0 && *((pessoa + 0x3d) as *const u8) == 0xf {
+        return 0;
+    }
+    1
+}
+
+/// { 0x544590 } (cdecl, Database.cpp): 1 se o vínculo da `pessoa` com o `clube` (sem clube, o do
+/// contrato) está na lista de empréstimos (vínculo +0x4e, bit 2).
+unsafe extern "C" fn pessoa_listada_para_emprestimo(pessoa: usize, clube: usize) -> u32 {
+    if pessoa == 0 {
+        return 0;
+    }
+    let (v, _) = vinculo_da_lista(pessoa, clube);
+    (v != 0 && *((v + 0x4e) as *const u8) & 2 != 0) as u32
+}
+
+unsafe extern "C" fn comparar_clube_basco(clube: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(589)(clube);
+    let n = clube_basco(clube);
+    PLACAR.registrar(r == n, || format!("clube_basco({:x}) original={} rust={}", clube, r, n));
+    r
+}
+
+unsafe extern "C" fn comparar_pessoa_listada_pelo_clube(pessoa: usize, clube: usize) -> u32 {
+    // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0, 0x4cf5f0 e 0x600a50 (clube não
+    // nulo) só leem
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(590);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa, clube),
+        || pessoa_listada_pelo_clube(pessoa, clube));
+    PLACAR.registrar(igual && r == n, || format!("pessoa_listada_pelo_clube({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    r
+}
+
+unsafe extern "C" fn comparar_pessoa_listada_para_emprestimo(pessoa: usize, clube: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(591);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa, clube),
+        || pessoa_listada_para_emprestimo(pessoa, clube));
+    PLACAR.registrar(igual && r == n, || format!("pessoa_listada_para_emprestimo({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    r
+}
+
+// ---------- 223a leva: se a pessoa está na lista a pedido, a nota de um atributo relativo e se o clube pode ter time reserva (Database.cpp) ----------
+
+/// { 0x544600 } (cdecl, Database.cpp): 1 se o vínculo (0x4cf5f0) da `pessoa` com o `clube` está na
+/// lista de transferências a pedido (vínculo +0x4e, bit 8). Sem clube, o do contrato (0x4cf5a0,
+/// guardado em [0xae1080]; contrato +4 = id na tabela [0xae23b4], 581 bytes por clube).
+unsafe extern "C" fn pessoa_listada_a_pedido(pessoa: usize, clube: usize) -> u32 {
+    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    if pessoa == 0 {
+        return 0;
+    }
+    let mut clube = clube;
+    if clube == 0 {
+        let c = contrato_de(*(0xae1050 as *const usize), pessoa);
+        *(0xae1080 as *mut usize) = c;
+        if c == 0 {
+            return 0;
+        }
+        let id = core::ptr::read_unaligned((c + 4) as *const u32) as usize;
+        clube = (*(0xae23b4 as *const usize)).wrapping_add(id.wrapping_mul(581));
+        if clube == 0 {
+            return 0;
+        }
+    }
+    let v = vinculo(*(0xae1050 as *const usize), pessoa, clube);
+    (v != 0 && *((v + 0x4e) as *const u8) & 8 != 0) as u32
+}
+
+/// { 0x544380 } (cdecl, Database.cpp): a nota de 1 a 20 (`nota_do_atributo`) de 2 × `valor` (byte com
+/// sinal) + habilidade atual (+5) do `jogador`. Termina no `_ftol` (eax inteiro, 1..20).
+unsafe extern "C" fn nota_relativa_do_atributo(jogador: usize, valor: u32) -> u32 {
+    let habilidade = core::ptr::read_unaligned((jogador + 5) as *const i16) as i32;
+    nota_do_atributo((habilidade + 2 * (valor as u8 as i8 as i32)) as f64) as u32
+}
+
+/// { 0x542740 } (cdecl, Database.cpp): 1 se o `clube` pode ter time reserva. Não: seleções (id ≥
+/// [0xae235c] − [0xae2350]), clubes com parceiro A/B (0x540a50 com nulo e 1); na faixa das segundas
+/// seleções (id ≥ [0xae235c] − 2 × [0xae2350]), nação Espanha, Noruega, [0x9cf360], Brasil ou
+/// Argentina ou continente (+0x71) [0x9cfa18] ou [0x9cfa08]; nos demais, nação Espanha, Alemanha ou
+/// Portugal. Clube nulo: caixa "Error" e 0 (a original).
+unsafe extern "C" fn clube_pode_ter_reservas(clube: usize) -> u32 {
+    if clube == 0 {
+        return orig::<unsafe extern "C" fn(usize) -> u32>(594)(clube);
+    }
+    let parceiro: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x540a50usize);
+    let g = |a: usize| *(a as *const u32);
+    let gi = |a: usize| *(a as *const i32);
+    let id = gi(clube);
+    if id >= gi(0xae235c).wrapping_sub(gi(0xae2350)) {
+        return 0; // seleção
+    }
+    if parceiro(clube, 0, 1) != 0 {
+        return 0;
+    }
+    let nacao = core::ptr::read_unaligned((clube + 0x53) as *const usize);
+    if nacao == 0 {
+        return 1;
+    }
+    let n = g(nacao);
+    if id >= gi(0xae235c).wrapping_sub(gi(0xae2350).wrapping_mul(2)) {
+        if [0x9cf488, 0x9cf408, 0x9cf360, 0x9cf260, 0x9cf218].iter().any(|&a| n == g(a)) {
+            return 0;
+        }
+        let continente = core::ptr::read_unaligned((nacao + 0x71) as *const usize);
+        if continente != 0 && (g(continente) == g(0x9cfa18) || g(continente) == g(0x9cfa08)) {
+            return 0;
+        }
+        return 1;
+    }
+    if n == g(0x9cf488) || n == g(0x9cf314) || n == g(0x9cf434) {
+        return 0; // Espanha, Alemanha, Portugal
+    }
+    1 // pode
+}
+
+unsafe extern "C" fn comparar_pessoa_listada_a_pedido(pessoa: usize, clube: usize) -> u32 {
+    // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0 e 0x4cf5f0 só leem
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(592);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa, clube),
+        || pessoa_listada_a_pedido(pessoa, clube));
+    PLACAR.registrar(igual && r == n, || format!("pessoa_listada_a_pedido({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    r
+}
+
+unsafe extern "C" fn comparar_nota_relativa_do_atributo(jogador: usize, valor: u32) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, u32) -> u32>(593)(jogador, valor);
+    let n = nota_relativa_do_atributo(jogador, valor);
+    PLACAR.registrar(r == n, || format!("nota_relativa_do_atributo({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
+    r
+}
+
+unsafe extern "C" fn comparar_clube_pode_ter_reservas(clube: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize) -> u32>(594);
+    if clube == 0 {
+        return o(clube); // caixa: só a original
+    }
+    // 0x540a50 zera a marca +0x244 do clube quando recusa o parceiro: a região volta entre os lados
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + 0x244, 1)], || o(clube),
+        || clube_pode_ter_reservas(clube));
+    PLACAR.registrar(igual && r == n, || format!("clube_pode_ter_reservas({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    r
+}
+
 // ---------- 222a leva: o alcance da reputação, a reputação vista por alguém e se a pessoa é estrangeira (Database.cpp) ----------
 
 /// { 0x5408c0 } (cdecl, Database.cpp): de que distância `quem_ve` olha a `pessoa`, o que escolhe a
@@ -51558,6 +51872,15 @@ pub unsafe fn instalar(comparando: bool) {
         pessoa_listada_para_transferencia as *const () as usize,
         atributo_calculado_do_jogador as *const () as usize,
         atributo_da_pessoa as *const () as usize,
+        ordem_do_historico_de_competicao as *const () as usize,
+        vetor_de_atributos_do_jogador as *const () as usize,
+        nacao_britanica_ou_irlanda as *const () as usize,
+        clube_basco as *const () as usize,
+        pessoa_listada_pelo_clube as *const () as usize,
+        pessoa_listada_para_emprestimo as *const () as usize,
+        pessoa_listada_a_pedido as *const () as usize,
+        nota_relativa_do_atributo as *const () as usize,
+        clube_pode_ter_reservas as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -52146,6 +52469,15 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_pessoa_listada_para_transferencia as *const () as usize,
         comparar_atributo_calculado_do_jogador as *const () as usize,
         comparar_atributo_da_pessoa as *const () as usize,
+        comparar_ordem_do_historico_de_competicao as *const () as usize,
+        comparar_vetor_de_atributos_do_jogador as *const () as usize,
+        comparar_nacao_britanica_ou_irlanda as *const () as usize,
+        comparar_clube_basco as *const () as usize,
+        comparar_pessoa_listada_pelo_clube as *const () as usize,
+        comparar_pessoa_listada_para_emprestimo as *const () as usize,
+        comparar_pessoa_listada_a_pedido as *const () as usize,
+        comparar_nota_relativa_do_atributo as *const () as usize,
+        comparar_clube_pode_ter_reservas as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -52258,7 +52590,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito", "motor_zagueiros_do_lado_sem_conflito", "motor_construir_arbitro", "motor_destruir_jogador_da_partida", "motor_evento_na_frente", "motor_construir_fila_da_narracao", "motor_liberar_tabelas_de_eventos", "motor_ordem_das_partidas_do_dia", "motor_ordem_de_acao", "motor_variante_do_evento", "motor_combinar_com_o_anterior", "motor_comentario_de_contexto", "motor_construir_jogador_da_partida", "motor_proximo_evento", "motor_nome_do_jogador_na_narracao", "motor_habilidade_vista", "motor_cumprir_regra_do_elenco", "motor_nota_fora_da_partida", "motor_nota_para_a_vaga", "motor_pessoa_na_lista", "motor_ficha_de_contrato", "motor_desgaste_diario", "motor_registro_da_formacao", "motor_peso_da_competicao", "motor_gravar_dado_da_noticia", "motor_recuperar_lesao", "motor_pessoa_na_lista_de_transferencias", "motor_punicao_da_tabela", "motor_bits_do_registro", "motor_competicao_marcada", "motor_registro_da_liga", "motor_media_do_jogo", "motor_valor_do_contrato", "motor_nivel_para_a_selecao", "motor_oferta_de_contrato", "motor_oferta_acertada", "motor_oferta_fechada", "motor_rotulo_do_controle", "motor_fechar_tela_da_partida", "motor_abrir_tela_de_espera", "motor_noticia_com_resposta_2", "motor_tem_noticia", "motor_importancia_da_partida", "motor_abrir_ultimos_placares", "motor_montar_ultimos_placares", "motor_responder_ultimos_placares", "motor_abrir_detalhes_da_partida", "motor_responder_detalhes_da_partida", "motor_fechar_detalhes_da_partida", "motor_disciplina_temporada_nova", "motor_disciplina_do_dia", "motor_disciplina_gravar_vaga", "motor_marcar_contrato_acertado", "motor_desmarcar_contrato_acertado", "motor_vaga_da_oferta", "motor_abrir_tela_da_partida", "motor_responder_ultimos_placares_da_partida", "motor_responder_estatisticas_do_time", "motor_painel_dos_ultimos_placares", "motor_sem_tela_seguinte", "motor_cor_do_titulo", "motor_lista_de_observados", "motor_entrada_do_treino", "motor_gravar_carga_de_treino", "motor_e_competicao_do_amistoso", "motor_preencher_data_internacional", "motor_limpar_registro_de_tecnico", "motor_tirar_contrato_de_emprestimo", "motor_desmarcar_lances_pelo_jogador", "motor_tecnico_substituto", "motor_clube_do_contrato_acertado", "motor_registrar_jogo_pela_selecao", "motor_punicao_guardada", "motor_entrada_da_aposentadoria", "motor_registrar_competicoes_do_amistoso", "motor_vaga_da_noticia", "motor_tirar_percentual_da_proxima_venda", "motor_tirar_bonus_por_jogo", "motor_tirar_bonus_pela_selecao", "motor_tirar_reserva_de_tecnico", "motor_tirar_jogador_do_banco", "motor_premio_da_liga", "motor_ultima_nota_do_jogador", "motor_vaga_da_busca", "motor_tipo_da_lista_da_busca", "motor_ordem_do_confronto", "motor_atualizar_confronto_direto", "motor_marcar_termos_oferecidos", "motor_hora_das_ferias", "motor_escalacao_guardada", "motor_tecnico_da_busca", "motor_abrir_jogos_do_dia", "motor_responder_jogos_do_dia", "motor_vaga_do_mais_bem_avaliado", "motor_estatistica_da_liga_do_jogador", "motor_entrada_do_jogo_bate", "motor_balde_do_registro", "motor_atribuir_bloco_do_time", "motor_atribuir_linha_do_jogador", "motor_contar_placar_ao_vivo", "motor_responder_continuar_da_partida", "motor_abrir_escalacao_da_partida", "motor_responder_escalacao_da_partida", "motor_painel_das_estatisticas_do_time", "motor_painel_das_notas_dos_jogadores", "motor_painel_das_estatisticas_da_partida", "motor_valores_das_estatisticas_da_partida", "motor_valores_das_zonas_de_acao", "motor_valores_das_notas_dos_jogadores", "motor_painel_das_zonas_de_acao", "motor_painel_do_relatorio_da_partida", "motor_montar_jogos_do_dia", "motor_preencher_estatisticas_do_time", "motor_atualizar_ultimos_placares", "motor_esperar_os_outros_jogadores", "motor_ler_registro_da_partida", "motor_registrar_partida", "motor_gravar_registro_da_partida", "motor_desenhar_conferencia_da_escalacao", "motor_carregar_estatisticas_da_partida", "motor_salvar_estatisticas_da_partida", "motor_organizar_area", "motor_iniciar_area", "motor_desenhar_area", "motor_montar_tela_da_partida", "motor_responder_tela_da_partida", "motor_montar_detalhes_da_partida", "motor_atualizar_barra_da_posse", "motor_painel_da_visao_geral_da_partida", "motor_tabela_da_liga_ao_vivo", "motor_historia_punivel_do_jogador", "motor_escolher_tipo_de_lesao", "motor_categoria_da_noticia", "motor_apagar_repetidos_das_convocacoes", "motor_vaga_do_escalado", "motor_escolher_comentarista", "motor_regras_da_rodada_no_jogo", "motor_chave_do_jogo_na_copa", "motor_pais_da_excursao", "motor_fechar_propostas_da_oferta", "motor_enfileirar_transferencia_livre", "motor_negociacoes_de_troca_do_jogador", "motor_tirar_jogador_da_selecao", "motor_faixa_do_horario", "motor_teto_da_observacao", "motor_ofertas_pelo_jogador", "motor_reputacao_alvo_do_clube", "motor_gravar_jogo_na_noticia", "motor_preencher_registro_da_partida", "motor_ordem_dos_eventos", "motor_tirar_idioma_do_jogador", "motor_pode_contratar_jogador", "motor_trocas_oferecendo_o_jogador", "motor_noticias_nao_lidas", "motor_gravar_marca_da_noticia", "motor_clube_de_tecnico_humano", "motor_data_do_sorteio_da_rodada", "motor_data_do_jogo_da_rodada", "motor_tirar_clube_dos_amistosos", "motor_ordem_das_linhas_da_tabela", "motor_montar_grade_de_turnos", "motor_margem_do_ultimo_dia", "motor_partida_das_vagas_da_noticia", "motor_resultado_da_eliminatoria_na_noticia", "motor_dia_da_rodada_da_copa", "motor_mapa_de_casas_da_formacao", "motor_nota_do_clube_para_o_jovem", "motor_partida_assistida_pelo_humano", "motor_largar_partida_assistida", "motor_ficha_do_registro", "motor_liga_tem_rebaixamento", "motor_data_da_rodada_da_liga", "motor_importancia_do_jogo_da_liga", "motor_copiar_recordista", "motor_copiar_registro_de_partida", "motor_copiar_registro_de_sequencia", "motor_humano_assiste_a_partida", "motor_humano_deu_apelido", "motor_copiar_aposentadoria_pendente", "motor_montar_estatisticas_da_partida", "motor_desmontar_estatisticas_da_partida", "motor_casar_nome_com_padrao", "motor_id_do_conteiner", "motor_tamanho_dos_itens_do_padrao", "motor_empacotar_no_conteiner", "motor_desempacotar_do_conteiner", "motor_limpar_pasta_temporaria", "motor_ler_do_conteiner", "motor_gravar_no_conteiner", "motor_fechar_conteiner", "motor_filtro_do_jogo_salvo", "motor_filtro_do_inicio_rapido", "motor_versao_do_jogo_salvo_valida", "motor_gravar_regras_fifa", "motor_carregar_regras_fifa", "motor_montar_resumo_do_save", "motor_gravar_banco_no_save", "motor_carregar_banco_do_save", "motor_liberar_dados_do_jogo", "motor_criar_jogo_pela_configuracao", "motor_gravar_jogo", "motor_carregar_jogo", "motor_escopo_da_reputacao", "motor_reputacao_vista_por", "motor_pessoa_e_estrangeira", "motor_idade_da_pessoa", "motor_nacao_com_transferencia_livre", "motor_pessoa_e_comunitaria", "motor_pessoa_listada_para_transferencia", "motor_atributo_calculado_do_jogador", "motor_atributo_da_pessoa",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito", "motor_zagueiros_do_lado_sem_conflito", "motor_construir_arbitro", "motor_destruir_jogador_da_partida", "motor_evento_na_frente", "motor_construir_fila_da_narracao", "motor_liberar_tabelas_de_eventos", "motor_ordem_das_partidas_do_dia", "motor_ordem_de_acao", "motor_variante_do_evento", "motor_combinar_com_o_anterior", "motor_comentario_de_contexto", "motor_construir_jogador_da_partida", "motor_proximo_evento", "motor_nome_do_jogador_na_narracao", "motor_habilidade_vista", "motor_cumprir_regra_do_elenco", "motor_nota_fora_da_partida", "motor_nota_para_a_vaga", "motor_pessoa_na_lista", "motor_ficha_de_contrato", "motor_desgaste_diario", "motor_registro_da_formacao", "motor_peso_da_competicao", "motor_gravar_dado_da_noticia", "motor_recuperar_lesao", "motor_pessoa_na_lista_de_transferencias", "motor_punicao_da_tabela", "motor_bits_do_registro", "motor_competicao_marcada", "motor_registro_da_liga", "motor_media_do_jogo", "motor_valor_do_contrato", "motor_nivel_para_a_selecao", "motor_oferta_de_contrato", "motor_oferta_acertada", "motor_oferta_fechada", "motor_rotulo_do_controle", "motor_fechar_tela_da_partida", "motor_abrir_tela_de_espera", "motor_noticia_com_resposta_2", "motor_tem_noticia", "motor_importancia_da_partida", "motor_abrir_ultimos_placares", "motor_montar_ultimos_placares", "motor_responder_ultimos_placares", "motor_abrir_detalhes_da_partida", "motor_responder_detalhes_da_partida", "motor_fechar_detalhes_da_partida", "motor_disciplina_temporada_nova", "motor_disciplina_do_dia", "motor_disciplina_gravar_vaga", "motor_marcar_contrato_acertado", "motor_desmarcar_contrato_acertado", "motor_vaga_da_oferta", "motor_abrir_tela_da_partida", "motor_responder_ultimos_placares_da_partida", "motor_responder_estatisticas_do_time", "motor_painel_dos_ultimos_placares", "motor_sem_tela_seguinte", "motor_cor_do_titulo", "motor_lista_de_observados", "motor_entrada_do_treino", "motor_gravar_carga_de_treino", "motor_e_competicao_do_amistoso", "motor_preencher_data_internacional", "motor_limpar_registro_de_tecnico", "motor_tirar_contrato_de_emprestimo", "motor_desmarcar_lances_pelo_jogador", "motor_tecnico_substituto", "motor_clube_do_contrato_acertado", "motor_registrar_jogo_pela_selecao", "motor_punicao_guardada", "motor_entrada_da_aposentadoria", "motor_registrar_competicoes_do_amistoso", "motor_vaga_da_noticia", "motor_tirar_percentual_da_proxima_venda", "motor_tirar_bonus_por_jogo", "motor_tirar_bonus_pela_selecao", "motor_tirar_reserva_de_tecnico", "motor_tirar_jogador_do_banco", "motor_premio_da_liga", "motor_ultima_nota_do_jogador", "motor_vaga_da_busca", "motor_tipo_da_lista_da_busca", "motor_ordem_do_confronto", "motor_atualizar_confronto_direto", "motor_marcar_termos_oferecidos", "motor_hora_das_ferias", "motor_escalacao_guardada", "motor_tecnico_da_busca", "motor_abrir_jogos_do_dia", "motor_responder_jogos_do_dia", "motor_vaga_do_mais_bem_avaliado", "motor_estatistica_da_liga_do_jogador", "motor_entrada_do_jogo_bate", "motor_balde_do_registro", "motor_atribuir_bloco_do_time", "motor_atribuir_linha_do_jogador", "motor_contar_placar_ao_vivo", "motor_responder_continuar_da_partida", "motor_abrir_escalacao_da_partida", "motor_responder_escalacao_da_partida", "motor_painel_das_estatisticas_do_time", "motor_painel_das_notas_dos_jogadores", "motor_painel_das_estatisticas_da_partida", "motor_valores_das_estatisticas_da_partida", "motor_valores_das_zonas_de_acao", "motor_valores_das_notas_dos_jogadores", "motor_painel_das_zonas_de_acao", "motor_painel_do_relatorio_da_partida", "motor_montar_jogos_do_dia", "motor_preencher_estatisticas_do_time", "motor_atualizar_ultimos_placares", "motor_esperar_os_outros_jogadores", "motor_ler_registro_da_partida", "motor_registrar_partida", "motor_gravar_registro_da_partida", "motor_desenhar_conferencia_da_escalacao", "motor_carregar_estatisticas_da_partida", "motor_salvar_estatisticas_da_partida", "motor_organizar_area", "motor_iniciar_area", "motor_desenhar_area", "motor_montar_tela_da_partida", "motor_responder_tela_da_partida", "motor_montar_detalhes_da_partida", "motor_atualizar_barra_da_posse", "motor_painel_da_visao_geral_da_partida", "motor_tabela_da_liga_ao_vivo", "motor_historia_punivel_do_jogador", "motor_escolher_tipo_de_lesao", "motor_categoria_da_noticia", "motor_apagar_repetidos_das_convocacoes", "motor_vaga_do_escalado", "motor_escolher_comentarista", "motor_regras_da_rodada_no_jogo", "motor_chave_do_jogo_na_copa", "motor_pais_da_excursao", "motor_fechar_propostas_da_oferta", "motor_enfileirar_transferencia_livre", "motor_negociacoes_de_troca_do_jogador", "motor_tirar_jogador_da_selecao", "motor_faixa_do_horario", "motor_teto_da_observacao", "motor_ofertas_pelo_jogador", "motor_reputacao_alvo_do_clube", "motor_gravar_jogo_na_noticia", "motor_preencher_registro_da_partida", "motor_ordem_dos_eventos", "motor_tirar_idioma_do_jogador", "motor_pode_contratar_jogador", "motor_trocas_oferecendo_o_jogador", "motor_noticias_nao_lidas", "motor_gravar_marca_da_noticia", "motor_clube_de_tecnico_humano", "motor_data_do_sorteio_da_rodada", "motor_data_do_jogo_da_rodada", "motor_tirar_clube_dos_amistosos", "motor_ordem_das_linhas_da_tabela", "motor_montar_grade_de_turnos", "motor_margem_do_ultimo_dia", "motor_partida_das_vagas_da_noticia", "motor_resultado_da_eliminatoria_na_noticia", "motor_dia_da_rodada_da_copa", "motor_mapa_de_casas_da_formacao", "motor_nota_do_clube_para_o_jovem", "motor_partida_assistida_pelo_humano", "motor_largar_partida_assistida", "motor_ficha_do_registro", "motor_liga_tem_rebaixamento", "motor_data_da_rodada_da_liga", "motor_importancia_do_jogo_da_liga", "motor_copiar_recordista", "motor_copiar_registro_de_partida", "motor_copiar_registro_de_sequencia", "motor_humano_assiste_a_partida", "motor_humano_deu_apelido", "motor_copiar_aposentadoria_pendente", "motor_montar_estatisticas_da_partida", "motor_desmontar_estatisticas_da_partida", "motor_casar_nome_com_padrao", "motor_id_do_conteiner", "motor_tamanho_dos_itens_do_padrao", "motor_empacotar_no_conteiner", "motor_desempacotar_do_conteiner", "motor_limpar_pasta_temporaria", "motor_ler_do_conteiner", "motor_gravar_no_conteiner", "motor_fechar_conteiner", "motor_filtro_do_jogo_salvo", "motor_filtro_do_inicio_rapido", "motor_versao_do_jogo_salvo_valida", "motor_gravar_regras_fifa", "motor_carregar_regras_fifa", "motor_montar_resumo_do_save", "motor_gravar_banco_no_save", "motor_carregar_banco_do_save", "motor_liberar_dados_do_jogo", "motor_criar_jogo_pela_configuracao", "motor_gravar_jogo", "motor_carregar_jogo", "motor_escopo_da_reputacao", "motor_reputacao_vista_por", "motor_pessoa_e_estrangeira", "motor_idade_da_pessoa", "motor_nacao_com_transferencia_livre", "motor_pessoa_e_comunitaria", "motor_pessoa_listada_para_transferencia", "motor_atributo_calculado_do_jogador", "motor_atributo_da_pessoa", "motor_ordem_do_historico_de_competicao", "motor_vetor_de_atributos_do_jogador", "motor_nacao_britanica_ou_irlanda", "motor_clube_basco", "motor_pessoa_listada_pelo_clube", "motor_pessoa_listada_para_emprestimo", "motor_pessoa_listada_a_pedido", "motor_nota_relativa_do_atributo", "motor_clube_pode_ter_reservas",
     ];
     for i in 0..N {
         if DESLIGADAS.contains(&PROLOGOS[i].endereco) {

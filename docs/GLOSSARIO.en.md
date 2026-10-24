@@ -131,6 +131,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x76d780 | `classe_da_selecao` | national_side_class |
 | 0x76e070 | `classe_pela_selecao` | class_by_national_side |
 | 0x713e90 | `classificar_lance` | classify_move |
+| 0x53d7f0 | `clube_basco` | database_is_basque_club |
 | 0x7875e0 | `clube_de_tecnico_humano` | news_club_has_human_manager |
 | 0x8c5450 | `clube_do_contrato_acertado` | TRANSFER_MANAGER::get_agreed_contract_club |
 | 0x6b79a0 | `clube_do_pos_jogo` | post_match_club |
@@ -138,6 +139,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x600a50 | `clube_humano` | human_club |
 | 0x48db80 | `clube_na_competicao` | club_in_competition |
 | 0x540a50 | `clube_parceiro` | partner_club |
+| 0x542740 | `clube_pode_ter_reservas` | database_club_has_reserve_squad |
 | 0x83bd00 | `codigo_da_posicao` | position_code |
 | 0x70a8c0 | `codigo_de_bola_parada` | set_piece_code |
 | 0x6cb650 | `codigo_especial` | special_code |
@@ -415,6 +417,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x714d40 | `mover_sem_bola` | move_off_ball |
 | 0x6f4650 | `na_area` | in_the_box |
 | 0x714c60 | `na_lista` | in_list |
+| 0x5446d0 | `nacao_britanica_ou_irlanda` | nation_is_uk_or_ireland |
 | 0x544670 | `nacao_com_transferencia_livre` | nation_allows_free_transfers |
 | 0x7e6f20 | `nacao_do_grupo` | group_nation |
 | 0x776380 | `nao_gosta_da_selecao` | dislikes_national_side |
@@ -433,6 +436,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6ebd70 | `nota_do_jogador` | player_rating |
 | 0x6e6340 | `nota_fora_da_partida` | off_match_score |
 | 0x6e2f20 | `nota_para_a_vaga` | lineup_slot_score |
+| 0x544380 | `nota_relativa_do_atributo` | player_attribute_rating |
 | 0x735780 | `noticia_com_resposta_2` | story_with_response_two |
 | 0x786fe0 | `noticias_nao_lidas` | News::count_unread |
 | 0x6d3de0 | `nova_reputacao` | new_reputation |
@@ -445,6 +449,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6b6510 | `ordem_das_partidas_do_dia` | day_match_order |
 | 0x6bd840 | `ordem_de_acao` | action_order |
 | 0x6834f0 | `ordem_do_confronto` | league_compare_h2h_rows |
+| 0x540780 | `ordem_do_historico_de_competicao` | database_compare_comp_history_rows |
 | 0x72b160 | `ordem_dos_eventos` | match_stats_compare_events |
 | 0x6bd760 | `ordem_dos_jogadores` | player_order |
 | 0x6be520 | `ordem_dos_penaltis` | penalty_order |
@@ -485,7 +490,10 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x8968f0 | `pessoa_da_vaga_tatica` | tactic_slot_person |
 | 0x53d740 | `pessoa_e_comunitaria` | database_is_staff_eu_national |
 | 0x53d980 | `pessoa_e_estrangeira` | database_is_staff_foreign |
+| 0x544600 | `pessoa_listada_a_pedido` | staff_is_listed_by_request |
+| 0x544590 | `pessoa_listada_para_emprestimo` | staff_is_loan_listed |
 | 0x544520 | `pessoa_listada_para_transferencia` | staff_is_transfer_listed_or_requested |
+| 0x5444a0 | `pessoa_listada_pelo_clube` | staff_is_transfer_listed |
 | 0x69fc60 | `pessoa_na_lista` | person_in_list |
 | 0x8c1870 | `pessoa_na_lista_de_transferencias` | person_in_transfer_list |
 | 0x6ce310 | `placar_agregado` | aggregate_score |
@@ -634,6 +642,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6d5d80 | `variante_do_evento` | event_variant |
 | 0x6b7cf0 | `venceu_o_jogo` | won_the_match |
 | 0x838eb0 | `versao_do_jogo_salvo_valida` | valid_saved_game_version |
+| 0x53a610 | `vetor_de_atributos_do_jogador` | database_player_to_attribute_vector |
 | 0x6fa140 | `virado_para` | facing |
 | 0x70df20 | `x_fora_do_meio` | x_off_centre |
 | 0x6d5b20 | `zagueiros_do_lado_sem_conflito` | side_centre_backs_without_conflict |

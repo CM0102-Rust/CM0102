@@ -2122,3 +2122,19 @@ Mutações: `mutacoes/leva221.py` (3, pela prova do save): 3 acusadas.  Prova do
 | `atributo_da_pessoa()` | 0x5431e0 | cdecl | Database.cpp: um atributo de jogador da pessoa, pelos dados de jogador dela (0x543540) |
 
 Mutações: `mutacoes/leva222.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 9 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
+
+### Simulação, 223ª leva — a ordem do histórico de competições, o vetor de atributos do jogador e se a nação é britânica ou a Irlanda; se o clube é basco e se a pessoa está na lista de transferências do clube ou na de empréstimos; se a pessoa está na lista a pedido, a nota de um atributo relativo e se o clube pode ter time reserva (oficial em 23/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `ordem_do_historico_de_competicao()` | 0x540780 | cdecl | Database.cpp: comparação do qsort do histórico de competições: sem competição no fim, pelo id da competição e pela temporada da mais nova para a mais velha |
+| `vetor_de_atributos_do_jogador()` | 0x53a610 | cdecl | Database.cpp: estende posições, lados e atributos do jogador num vetor de 63 células (valor e peso) e devolve os fins dos grupos (9, 0xc, 0x20) |
+| `nacao_britanica_ou_irlanda()` | 0x5446d0 | cdecl | Database.cpp: se a nação é Inglaterra, Escócia, Irlanda, País de Gales ou Irlanda do Norte |
+| `clube_basco()` | 0x53d7f0 | cdecl | Database.cpp: se o clube é da Espanha e um dos 23 clubes bascos citados no código |
+| `pessoa_listada_pelo_clube()` | 0x5444a0 | cdecl | Database.cpp: se o vínculo da pessoa com o clube (ou o do contrato) está na lista de transferências pelo clube; função 0xf em clube sem técnico humano não conta |
+| `pessoa_listada_para_emprestimo()` | 0x544590 | cdecl | Database.cpp: se o vínculo da pessoa com o clube (ou o do contrato) está na lista de empréstimos |
+| `pessoa_listada_a_pedido()` | 0x544600 | cdecl | Database.cpp: se o vínculo da pessoa com o clube (ou o do contrato) está na lista de transferências a pedido |
+| `nota_relativa_do_atributo()` | 0x544380 | cdecl | Database.cpp: a nota de 1 a 20 de 2 × byte do atributo + habilidade atual do jogador |
+| `clube_pode_ter_reservas()` | 0x542740 | cdecl | Database.cpp: se o clube pode ter time reserva: não para seleções, pares A/B, clubes de Espanha, Alemanha e Portugal e algumas segundas seleções |
+
+Mutações: `mutacoes/leva223.py` (9, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 9 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551

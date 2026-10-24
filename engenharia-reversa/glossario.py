@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'ordem_do_historico_de_competicao': 'database_compare_comp_history_rows', 'vetor_de_atributos_do_jogador': 'database_player_to_attribute_vector', 'nacao_britanica_ou_irlanda': 'nation_is_uk_or_ireland', 'clube_basco': 'database_is_basque_club', 'pessoa_listada_pelo_clube': 'staff_is_transfer_listed', 'pessoa_listada_para_emprestimo': 'staff_is_loan_listed', 'pessoa_listada_a_pedido': 'staff_is_listed_by_request', 'nota_relativa_do_atributo': 'player_attribute_rating', 'clube_pode_ter_reservas': 'database_club_has_reserve_squad',
  'escopo_da_reputacao': 'database_get_reputation_scope', 'reputacao_vista_por': 'database_get_staff_reputation_for_viewer', 'pessoa_e_estrangeira': 'database_is_staff_foreign', 'idade_da_pessoa': 'database_get_staff_age', 'nacao_com_transferencia_livre': 'nation_allows_free_transfers', 'pessoa_e_comunitaria': 'database_is_staff_eu_national', 'pessoa_listada_para_transferencia': 'staff_is_transfer_listed_or_requested', 'atributo_calculado_do_jogador': 'staff_compute_player_attribute', 'atributo_da_pessoa': 'staff_get_player_attribute',
  'carregar_jogo': 'load_game_data',
  'criar_jogo_pela_configuracao': 'create_game_from_setup_file', 'gravar_jogo': 'save_game_data',

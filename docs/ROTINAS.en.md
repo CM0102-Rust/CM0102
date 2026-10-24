@@ -2124,3 +2124,19 @@ Mutations: `mutacoes/leva221.py` (3, by the save proof): 3 caught.  Save proof (
 | `atributo_da_pessoa()` | 0x5431e0 | cdecl | Database.cpp: a player attribute of the person, from the person's player data (0x543540) |
 
 Mutations: `mutacoes/leva222.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 9 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
+
+### Simulation, 223rd batch — the competition history order, the player attribute vector and whether the nation is British or Ireland; whether the club is Basque and whether the person is on the club transfer list or the loan list; whether the person is listed at request, the rating of a relative attribute and whether the club may have a reserve side (official on 2026-10-23)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `ordem_do_historico_de_competicao()` | 0x540780 | cdecl | Database.cpp: qsort comparison of the competition history: rows without a competition last, by competition id and by season, newest first |
+| `vetor_de_atributos_do_jogador()` | 0x53a610 | cdecl | Database.cpp: widens the player's positions, sides and attributes into a 63 cell vector (value and weight) and returns the group ends (9, 0xc, 0x20) |
+| `nacao_britanica_ou_irlanda()` | 0x5446d0 | cdecl | Database.cpp: whether the nation is England, Scotland, Ireland, Wales or Northern Ireland |
+| `clube_basco()` | 0x53d7f0 | cdecl | Database.cpp: whether the club is Spanish and one of the 23 Basque clubs named in the code |
+| `pessoa_listada_pelo_clube()` | 0x5444a0 | cdecl | Database.cpp: whether the person's link with the club (or the contract club) is transfer listed by the club; job 0xf at a club without a human manager does not count |
+| `pessoa_listada_para_emprestimo()` | 0x544590 | cdecl | Database.cpp: whether the person's link with the club (or the contract club) is loan listed |
+| `pessoa_listada_a_pedido()` | 0x544600 | cdecl | Database.cpp: whether the person's link with the club (or the contract club) is transfer listed at request |
+| `nota_relativa_do_atributo()` | 0x544380 | cdecl | Database.cpp: the 1 to 20 rating of 2 × the attribute byte + the player's current ability |
+| `clube_pode_ter_reservas()` | 0x542740 | cdecl | Database.cpp: whether the club may have a reserve side: not national teams, A/B pairs, Spanish, German and Portuguese clubs and some second national sides |
+
+Mutations: `mutacoes/leva223.py` (9, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 9 caught.  Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551

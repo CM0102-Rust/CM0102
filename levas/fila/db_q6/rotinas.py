@@ -1,0 +1,25 @@
+ROTINAS = [('pessoa_listada_a_pedido', 0x544600, [0x56, 0x8b, 0x74, 0x24, 0x08]),
+           ('nota_relativa_do_atributo', 0x544380, [0x8b, 0x44, 0x24, 0x04, 0x0f, 0xbe, 0x54, 0x24, 0x08]),
+           ('clube_pode_ter_reservas', 0x542740, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00])]
+DOCS = ('se a pessoa está na lista a pedido, a nota de um atributo relativo e se o clube pode ter time reserva',
+        'whether the person is listed at request, the rating of a relative attribute and whether the club may have a reserve side',
+        [('pessoa_listada_a_pedido', 'staff_is_listed_by_request', '0x544600', 'Database.cpp', 'cdecl',
+          'se o vínculo da pessoa com o clube (ou o do contrato) está na lista de transferências a pedido',
+          "whether the person's link with the club (or the contract club) is transfer listed at request"),
+         ('nota_relativa_do_atributo', 'player_attribute_rating', '0x544380', 'Database.cpp', 'cdecl',
+          'a nota de 1 a 20 de 2 × byte do atributo + habilidade atual do jogador',
+          "the 1 to 20 rating of 2 × the attribute byte + the player's current ability"),
+         ('clube_pode_ter_reservas', 'database_club_has_reserve_squad', '0x542740', 'Database.cpp', 'cdecl',
+          'se o clube pode ter time reserva: não para seleções, pares A/B, clubes de Espanha, Alemanha e Portugal e algumas segundas seleções',
+          'whether the club may have a reserve side: not national teams, A/B pairs, Spanish, German and Portuguese clubs and some second national sides')])
+CAMPOS = [('contrato (0x4cf5a0) +4: id do clube; id; lê (pessoa_listada_a_pedido)', 'contract (0x4cf5a0) +4: club id; id; reads (pessoa_listada_a_pedido)'),
+          ('vínculo pessoa-clube (0x4cf5f0) +0x4e: marcas (8 a pedido); valor; lê (pessoa_listada_a_pedido)', 'staff-club link (0x4cf5f0) +0x4e: flags (8 at request); value; reads (pessoa_listada_a_pedido)'),
+          ('[0xae1080] último contrato consultado; ponteiro; grava (pessoa_listada_a_pedido, sem clube)', '[0xae1080] last looked-up contract; pointer; writes (pessoa_listada_a_pedido, without a club)'),
+          ('jogador +0x05 [2]: habilidade atual; valor; lê (nota_relativa_do_atributo)', 'player +0x05 [2]: current ability; value; reads (nota_relativa_do_atributo)'),
+          ('clube +0x00: id (≥ [0xae235c] − [0xae2350] seleção; ≥ [0xae235c] − 2 × [0xae2350] segunda seleção); id; lê (clube_pode_ter_reservas)', 'club +0x00: id (≥ [0xae235c] − [0xae2350] national team; ≥ [0xae235c] − 2 × [0xae2350] second national team); id; reads (clube_pode_ter_reservas)'),
+          ('clube +0x53: nação; ponteiro; lê (clube_pode_ter_reservas)', 'club +0x53: nation; pointer; reads (clube_pode_ter_reservas)'),
+          ('clube +0x244: sem nome (marca de parceiro A/B, zerada por 0x540a50 ao recusar); valor; lê e pode zerar (clube_pode_ter_reservas, por 0x540a50)', 'club +0x244: unnamed (A/B partner flag, zeroed by 0x540a50 on refusal); value; reads and may zero (clube_pode_ter_reservas, through 0x540a50)'),
+          ('nação +0x00: id; id; lê (clube_pode_ter_reservas: comparado com [0x9cf488] Espanha, [0x9cf314] Alemanha, [0x9cf434] Portugal, [0x9cf408] Noruega, [0x9cf360], [0x9cf260] Brasil, [0x9cf218] Argentina)', 'nation +0x00: id; id; reads (clube_pode_ter_reservas: compared with [0x9cf488] Spain, [0x9cf314] Germany, [0x9cf434] Portugal, [0x9cf408] Norway, [0x9cf360], [0x9cf260] Brazil, [0x9cf218] Argentina)'),
+          ('nação +0x71: continente; ponteiro; lê (clube_pode_ter_reservas: [0x9cfa18] e [0x9cfa08])', 'nation +0x71: continent; pointer; reads (clube_pode_ter_reservas: [0x9cfa18] and [0x9cfa08])'),
+          ('[0xae235c] / [0xae2350] total de clubes / nações; valor; lê (clube_pode_ter_reservas)', '[0xae235c] / [0xae2350] club total / nation count; value; reads (clube_pode_ter_reservas)')]
+INTERESSA = ['CMScout', 'CMRTE']

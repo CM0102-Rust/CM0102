@@ -1,0 +1,27 @@
+ROTINAS = [('cores_do_uniforme_do_clube', 0x53b640, [0x66, 0xa1, 0xf0, 0xbd, 0xae, 0x00]),
+           ('tecnico_do_clube_ou_selecao', 0x53ca90, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('nome_ingles_do_clube', 0x545880, [0x6a, 0xff, 0x68, 0xfb, 0x79, 0x95, 0x00])]
+DOCS = ('as cores do uniforme do clube, o técnico do clube e o nome do clube em inglês',
+        "the club's kit colours, the club's manager and the club's English name",
+        [('cores_do_uniforme_do_clube', 'database_get_club_kit_colours', '0x53b640', 'Database.cpp', 'cdecl',
+          'as cores do uniforme de casa, fora ou terceiro do clube em pixels de tela, com padrões quando faltam',
+          "the club's home, away or third kit colours as screen pixels, with defaults when missing"),
+         ('tecnico_do_clube_ou_selecao', 'database_get_club_manager', '0x53ca90', 'Database.cpp', 'cdecl',
+          'o técnico do clube, do parceiro A/B ou, na seleção sub-21, o da seleção principal',
+          "the manager of the club, of its A/B partner or, for an under-21 side, the senior national team's"),
+         ('nome_ingles_do_clube', 'club_get_english_name', '0x545880', 'Database.cpp', 'cdecl',
+          'o nome do clube, ou o em inglês do eng.lng quando outro idioma está carregado',
+          "the club's name, or its English one from eng.lng when another language is loaded")])
+CAMPOS = [('clube +0x83 / +0x87: cores de casa (frente / fundo); ponteiro; lê (cores_do_uniforme_do_clube)', 'club +0x83 / +0x87: home colours (foreground / background); pointer; reads (cores_do_uniforme_do_clube)'),
+          ('clube +0x8b / +0x8f: cores de fora; ponteiro; lê (cores_do_uniforme_do_clube)', 'club +0x8b / +0x8f: away colours; pointer; reads (cores_do_uniforme_do_clube)'),
+          ('clube +0x93 / +0x97: cores do terceiro uniforme; ponteiro; lê (cores_do_uniforme_do_clube)', 'club +0x93 / +0x97: third kit colours; pointer; reads (cores_do_uniforme_do_clube)'),
+          ('cor +0x37 / +0x38 / +0x39: vermelho / verde / azul; valor; lê (cores_do_uniforme_do_clube)', 'colour +0x37 / +0x38 / +0x39: red / green / blue; value; reads (cores_do_uniforme_do_clube)'),
+          ('[0xaebdf0] / [0xae3184] pixels padrão de frente / fundo; valor; lê (cores_do_uniforme_do_clube)', '[0xaebdf0] / [0xae3184] default foreground / background pixels; value; reads (cores_do_uniforme_do_clube)'),
+          ('clube +0xcf: técnico; ponteiro; lê (tecnico_do_clube_ou_selecao)', 'club +0xcf: manager; pointer; reads (tecnico_do_clube_ou_selecao)'),
+          ('clube +0x00: id (≥ [0xae235c] − [0xae2350] seleção); id; lê (tecnico_do_clube_ou_selecao, nome_ingles_do_clube)', 'club +0x00: id (≥ [0xae235c] − [0xae2350] national team); id; reads (tecnico_do_clube_ou_selecao, nome_ingles_do_clube)'),
+          ('clube +0x53: nação; ponteiro; lê (tecnico_do_clube_ou_selecao)', 'club +0x53: nation; pointer; reads (tecnico_do_clube_ou_selecao)'),
+          ('clube +0x244: sem nome (marca de parceiro A/B, zerada por 0x540a50 ao recusar); valor; lê e pode zerar (tecnico_do_clube_ou_selecao, por 0x540a50)', 'club +0x244: unnamed (A/B partner flag, zeroed by 0x540a50 on refusal); value; reads and may zero (tecnico_do_clube_ou_selecao, through 0x540a50)'),
+          ('clube +0x04: nome; texto; devolve o endereço (nome_ingles_do_clube)', 'club +0x04: name; text; returns its address (nome_ingles_do_clube)'),
+          ('[0x9b5984] idioma; valor; lê (nome_ingles_do_clube)', '[0x9b5984] language; value; reads (nome_ingles_do_clube)'),
+          ('[0xae2408] nomes em inglês (+0 quantos, +0x20 linhas de 79 bytes), [0xae23fc] mapa de ids; ponteiro; lê (nome_ingles_do_clube)', '[0xae2408] English names (+0 count, +0x20 79-byte rows), [0xae23fc] id map; pointer; reads (nome_ingles_do_clube)')]
+INTERESSA = ['CMRTE']
