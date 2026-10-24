@@ -1,4 +1,1 @@
 # ordem da fila (fila.py); um item por linha
-dbf_4
-dbf_5
-dbf_6
