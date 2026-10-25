@@ -3,6 +3,9 @@ r"""Muda a resolucao nativa do CM 01/02 (cria um exe novo e converte as imagens 
 Uso:
   python resolucao.py <exe portatil 800x600> <exe de saida> <largura> <altura> <pasta do jogo>
   ex.: python resolucao.py ..\jogo\cm0102-portatil.exe ..\jogo\cm0102-1080.exe 1920 1080 ..\jogo
+  python resolucao.py --rust [cm0102.exe original]
+    gera rust/src/resolucao.rs: as trocas (VA, antes, depois) que levam o cm0102.exe original ao
+    cm0102-1080.exe (patch_portatil.py + este, 1920x1080), para a DLL aplicar em memoria (CM_RESOLUCAO=1080)
 
 O layout das telas e fixo em 800x600 dentro do exe. A comunidade (CM0102Patcher, nckstwrt) mapeou
 como leva-lo a outras resolucoes; os dados vem de `referencias/CM0102Patcher` (lidos dali, nao copiados):
@@ -212,7 +215,56 @@ def converter_imagens(pasta, largura, altura):
     return n
 
 
+MD5_1080 = '3397006dbc36eef317477365c8928fec'  # cm0102-1080.exe (jogo/)
+
+
+def gerar_rust(original):
+    """As trocas que levam o original ao 1080, pelas mesmas funcoes que geram os exes (nada duplicado)."""
+    import pefile
+    import patch_portatil as pp
+    dados = open(original, 'rb').read()
+    if hashlib.md5(dados).hexdigest() != 'ed0cb3bc9bcc8ac3964dad52f6007cb8':
+        falha('%s nao e o cm0102.exe 3.9.68 original' % original)
+    exe = pp.Exe(dados)
+    pp.corrigir_cd(exe)
+    pp.corrigir_pasta(exe)
+    pp.corrigir_pasta_usuario(exe)
+    novo = exe.d
+    if hashlib.md5(novo).hexdigest() != MD5_PORTATIL:
+        falha('o portatil gerado nao bate com o MD5 esperado')
+    aplicar_exe(novo, 1920, 1080)
+    if hashlib.md5(novo).hexdigest() != MD5_1080:
+        falha('o 1080 gerado nao bate com o MD5 esperado')
+    trocas = []  # [inicio, fim) no arquivo
+    for i in range(len(dados)):
+        if dados[i] != novo[i]:
+            if trocas and trocas[-1][1] == i:
+                trocas[-1][1] = i + 1
+            else:
+                trocas.append([i, i + 1])
+    # so secoes com deslocamento no arquivo = RVA (.text, .rdata, .data): VA = deslocamento + base
+    pe = pefile.PE(data=bytes(dados), fast_load=True)
+    for ini, fim in trocas:
+        if not any(s.PointerToRawData == s.VirtualAddress <= ini and fim <= s.VirtualAddress + s.SizeOfRawData
+                   for s in pe.sections):
+            falha('troca em %#x fora de uma secao com deslocamento = RVA' % ini)
+    h = lambda b: ', '.join('0x%02x' % x for x in b)
+    linhas = ['//! GERADO por `python engenharia-reversa/resolucao.py --rust` (nao editar): as trocas que levam o',
+              '//! cm0102.exe original ao cm0102-1080.exe (patch_portatil.py + resolucao.py 1920x1080), aplicadas',
+              '//! em memoria pela DLL com CM_RESOLUCAO=1080. (VA, bytes antes, bytes depois).', '',
+              'pub const TROCAS: [(usize, &[u8], &[u8]); %d] = [' % len(trocas)]
+    for ini, fim in trocas:
+        linhas.append('    (%#x, &[%s], &[%s]),' % (0x400000 + ini, h(dados[ini:fim]), h(novo[ini:fim])))
+    linhas.append('];')
+    saida = os.path.join(AQUI, '..', 'rust', 'src', 'resolucao.rs')
+    open(saida, 'w', encoding='utf-8', newline='\n').write('\n'.join(linhas) + '\n')
+    print('%s: %d trocas, %d bytes' % (os.path.normpath(saida), len(trocas), sum(f - i for i, f in trocas)))
+
+
 def main():
+    if len(sys.argv) >= 2 and sys.argv[1] == '--rust':
+        gerar_rust(sys.argv[2] if len(sys.argv) > 2 else os.path.join(AQUI, '..', 'jogo', 'cm0102.exe'))
+        return
     if len(sys.argv) != 6:
         sys.exit(__doc__)
     origem, destino, largura, altura, pasta = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), sys.argv[5]

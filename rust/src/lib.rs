@@ -30,6 +30,7 @@ mod jogo;
 mod motor;
 mod reducao;
 mod registro;
+mod resolucao;
 mod simulacao;
 mod video;
 mod win;
@@ -70,6 +71,9 @@ unsafe fn ddraw_do_sistema() -> Option<FnDirectDrawCreate> {
 #[no_mangle]
 pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reservado: *mut c_void) -> i32 {
     const DLL_PROCESS_ATTACH: u32 = 1;
+    if motivo == DLL_PROCESS_ATTACH {
+        desvios::aplicar_resolucao(); // CM_RESOLUCAO=1080 (experimento): antes de tudo
+    }
     if motivo == DLL_PROCESS_ATTACH && !win::ambiente("CM_ESPIAO") {
         ganchos::instalar_cedo();
         desvios::instalar();

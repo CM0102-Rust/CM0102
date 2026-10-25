@@ -265,6 +265,75 @@ unsafe fn escrever_jmp(onde: *mut u8, para: usize) {
     core::ptr::write_unaligned(onde.add(1) as *mut i32, rel);
 }
 
+// ---------- resolucao em memoria (experimento, CM_RESOLUCAO=1080) ----------
+
+/// Com `CM_RESOLUCAO=1080`, aplica em memoria as trocas de `resolucao.rs` (geradas por `resolucao.py --rust`:
+/// patch_portatil.py + resolucao.py 1920x1080), e o cm0102.exe original fica igual ao cm0102-1080.exe.
+/// Roda no DllMain antes de tudo (antes do WinMain e da CRT do exe, entao as trocas em .data valem desde o
+/// inicio, e antes dos desvios, que entao veem o mesmo que no cm0102-1080.exe). Troca cujos bytes nao sao os
+/// "antes" (nem ja os "depois") fica de fora e vai para o log (exe com patch de terceiros).
+pub unsafe fn aplicar_resolucao() {
+    if win::texto_ambiente("CM_RESOLUCAO") != "1080" {
+        return;
+    }
+    // tira a variavel do ambiente antes que a CRT do exe o copie para a heap (a CRT roda depois do DllMain):
+    // uma variavel a mais desloca a heap e muda a carreira (ver simular.py, rodar)
+    let nome: Vec<u16> = "CM_RESOLUCAO ".encode_utf16().collect();
+    win::SetEnvironmentVariableW(nome.as_ptr(), core::ptr::null());
+    let (mut feitas, mut ja, mut fora) = (0, 0, 0);
+    for &(va, antes, depois) in crate::resolucao::TROCAS.iter() {
+        let atual = core::slice::from_raw_parts(va as *const u8, antes.len());
+        if atual == depois {
+            ja += 1;
+            continue;
+        }
+        if atual != antes {
+            linha(&format!("resolucao: troca em {:#x} fica de fora: bytes {:02x?}, esperava {:02x?}", va, atual, antes));
+            fora += 1;
+            continue;
+        }
+        let mut antiga = 0u32;
+        win::VirtualProtect(va as *mut c_void, antes.len(), win::PAGE_EXECUTE_READWRITE, &mut antiga);
+        core::ptr::copy_nonoverlapping(depois.as_ptr(), va as *mut u8, depois.len());
+        win::VirtualProtect(va as *mut c_void, antes.len(), antiga, &mut antiga);
+        win::FlushInstructionCache(win::GetCurrentProcess(), va as *const c_void, depois.len());
+        feitas += 1;
+    }
+    linha(&format!("resolucao 1080: {} trocas aplicadas, {} ja estavam, {} de fora (de {})", feitas, ja, fora, crate::resolucao::TROCAS.len()));
+    if win::ambiente("CM_RESOLUCAO_CONFERIR") {
+        conferir_resolucao();
+    }
+}
+
+/// Diagnostico (`CM_RESOLUCAO_CONFERIR=1`): compara cada secao da imagem em memoria com o cm0102-1080.exe ao
+/// lado do exe (fora a IAT, que o carregador preenche). Usa a heap: so nas provas, nunca na carreira.
+unsafe fn conferir_resolucao() {
+    let Ok(disco) = std::env::current_exe().and_then(|p| std::fs::read(p.with_file_name("cm0102-1080.exe"))) else {
+        linha("resolucao: conferencia sem o cm0102-1080.exe");
+        return;
+    };
+    let base = 0x400000usize;
+    let rd = |o: usize| core::ptr::read_unaligned((base + o) as *const u32) as usize;
+    let pe = rd(0x3c);
+    let nsec = core::ptr::read_unaligned((base + pe + 6) as *const u16) as usize;
+    let opt = pe + 24;
+    let (iat, iat_n) = (rd(opt + 96 + 12 * 8), rd(opt + 96 + 12 * 8 + 4));
+    let tabela = opt + core::ptr::read_unaligned((base + pe + 20) as *const u16) as usize;
+    let mut total = 0;
+    for k in 0..nsec {
+        let s = tabela + 40 * k;
+        let nome = String::from_utf8_lossy(core::slice::from_raw_parts((base + s) as *const u8, 8)).trim_end_matches('\0').to_string();
+        let (vtam, rva, rtam, raw) = (rd(s + 8), rd(s + 12), rd(s + 16), rd(s + 20));
+        let n = vtam.min(rtam).min(disco.len().saturating_sub(raw));
+        let mem = core::slice::from_raw_parts((base + rva) as *const u8, n);
+        let difs: Vec<usize> = (0..n).filter(|&i| mem[i] != disco[raw + i] && !(iat..iat + iat_n).contains(&(rva + i))).collect();
+        let exemplos: Vec<String> = difs.iter().take(8).map(|&i| format!("{:#x}", base + rva + i)).collect();
+        linha(&format!("resolucao: conferencia {} ({} bytes): {} diferem {:?}", nome, n, difs.len(), exemplos));
+        total += difs.len();
+    }
+    linha(&format!("resolucao: conferencia com o cm0102-1080.exe: {} bytes diferem (IAT de fora)", total));
+}
+
 /// Instala todos os desvios. Chamado no carregamento da DLL, antes do WinMain do jogo.
 pub unsafe fn instalar() {
     if win::ambiente("CM_SEM_DESVIOS") {

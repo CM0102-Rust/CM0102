@@ -144,6 +144,11 @@ def rodar(args, semente, extra=()):
     # (e na heap) das outras execucoes; vai igual nos dois modos da carga.
     if os.environ.get('CM_FERIAS', '0') != '0':
         ambiente['CM_FERIAS'] = '1'
+    # CM_RESOLUCAO=1080 (experimento: o cm0102.exe original vira o 1080 em memoria) e o diagnostico
+    # CM_RESOLUCAO_CONFERIR: so quando pedidos, pelo mesmo motivo do CM_FERIAS
+    for nome in ('CM_RESOLUCAO', 'CM_RESOLUCAO_CONFERIR'):
+        if os.environ.get(nome, '0') != '0':
+            ambiente[nome] = os.environ[nome]
     if len(ambiente['CM_RASTRO']) != 10:
         falha('CM_RASTRO tem de ser AAAA-MM-DD')
     t0 = time.time()

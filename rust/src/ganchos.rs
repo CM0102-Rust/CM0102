@@ -142,8 +142,32 @@ unsafe extern "system" fn direct_sound_create(_guid: *const c_void, saida: *mut 
     0x8878_0078
 }
 
+static mut CREATE_MUTEX_ORIGINAL: usize = 0;
+static mut NOME_DO_MUTEX: [u8; 64] = [0; 64];
+
+/// O jogo cria o mutex "Championship Manager 2001/02 Process" (0x68d3a0) e, se já existe, abre a caixa "Already
+/// Running" e sai. O nome ganha o hash do caminho do exe: o mesmo exe no mesmo caminho continua barrado; outro exe
+/// ou outra pasta abre ao lado (ex.: o original e o nosso, o jogo do Lucas e o dos testes).
+unsafe extern "system" fn create_mutex_a(atributos: *mut c_void, dono: i32, nome: *const u8) -> *mut c_void {
+    let f: unsafe extern "system" fn(*mut c_void, i32, *const u8) -> *mut c_void = core::mem::transmute(CREATE_MUTEX_ORIGINAL);
+    const DO_JOGO: &str = "Championship Manager 2001/02 Process";
+    if nome.is_null() || cstr(nome as usize) != DO_JOGO {
+        return f(atributos, dono, nome);
+    }
+    let mut caminho = [0u8; 520];
+    let n = win::GetModuleFileNameA(core::ptr::null_mut(), caminho.as_mut_ptr(), caminho.len() as u32) as usize;
+    let h = caminho[..n].iter().fold(0xcbf2_9ce4_8422_2325u64, |h, &b| (h ^ b.to_ascii_lowercase() as u64).wrapping_mul(0x100_0000_01b3));
+    let novo = format!("{} {:016x}\0", DO_JOGO, h);
+    NOME_DO_MUTEX[..novo.len()].copy_from_slice(novo.as_bytes());
+    linha(&format!("mutex do jogo: {}", novo.trim_end_matches('\0')));
+    f(atributos, dono, core::ptr::addr_of!(NOME_DO_MUTEX) as *const u8)
+}
+
 /// Chamado no carregamento da DLL (antes de o jogo criar a janela).
 pub unsafe fn instalar_cedo() {
+    if let Some(a) = trocar_importacao("KERNEL32.dll", "CreateMutexA", create_mutex_a as *const () as usize) {
+        CREATE_MUTEX_ORIGINAL = a;
+    }
     // CM_OCULTO=2: oculto com som (o valor tem o mesmo tamanho; uma variavel a mais mudaria a heap)
     if crate::apresentacao::oculto() && win::texto_ambiente("CM_OCULTO") != "2" {
         let n = para_cada_importacao(|dll, nome, _| {

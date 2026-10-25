@@ -84,6 +84,7 @@ extern "system" {
 
 #[link(name = "kernel32")]
 extern "system" {
+    pub fn GetModuleFileNameA(modulo: *mut c_void, saida: *mut u8, tam: u32) -> u32;
     pub fn GetModuleHandleW(nome: *const u16) -> *mut c_void;
     pub fn LoadLibraryA(nome: *const u8) -> *mut c_void;
     pub fn GetProcAddress(modulo: *mut c_void, nome: *const u8) -> *mut c_void;
@@ -95,6 +96,7 @@ extern "system" {
     pub fn GetCurrentThreadId() -> u32;
     pub fn AddVectoredExceptionHandler(primeiro: u32, f: unsafe extern "system" fn(*const [usize; 2]) -> i32) -> *mut c_void;
     pub fn GetEnvironmentVariableW(nome: *const u16, buf: *mut u16, tam: u32) -> u32;
+    pub fn SetEnvironmentVariableW(nome: *const u16, valor: *const u16) -> i32;
 }
 
 /// Variavel de ambiente ligada: definida, nao vazia e diferente de "0". (A simulacao passa todas
