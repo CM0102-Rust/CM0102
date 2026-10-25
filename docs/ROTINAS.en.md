@@ -2246,3 +2246,19 @@ Mutations: `mutacoes/leva229.py` (9, by the save proof): 9 caught.  Save proof (
 | `gravar_preferencias()` | 0x54fd00 | cdecl | Db_files.cpp: writes the staff preferences (id 22) table of 52-byte records in one go, through zwrite (save) or fwrite (Data); 1 if everything went out |
 
 Mutations: `mutacoes/leva230.py` (9, by the save proof): 9 caught.  Save proof (the .qst with and without the routines): EQUAL (16856662 bytes). Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
+
+### Simulation, 231st batch — writing the .dat files: staff history, competitions, competition histories; writing the .dat files: staff competitions, officials, colours; writing the .dat files: names; opening and creating the .dat files (official on 2026-10-24)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `gravar_historico_de_pessoas()` | 0x54fe50 | cdecl | Db_files.cpp: writes n 17-byte records (staff_history.dat, id 17) in one go, through zwrite (save) or fwrite (Data folder); 1 if everything went |
+| `gravar_competicoes()` | 0x5501d0 | cdecl | Db_files.cpp: writes n 107-byte records (club_comp.dat, in two calls: the competitions and the 127 reserve ones; nation_comp.dat) in one go, through zwrite (save) or fwrite (Data folder); 1 if everything went |
+| `gravar_historicos_de_competicao()` | 0x550320 | cdecl | Db_files.cpp: writes n 26-byte records (club_comp_history.dat and nation_comp_history.dat, ids 19 and 20) in one go, through zwrite (save) or fwrite (Data folder); 1 if everything went |
+| `gravar_competicoes_de_pessoal()` | 0x550470 | cdecl | Db_files.cpp: writes n 101-byte records (staff_comp.dat, id 11) in one go, through zwrite (save) or fwrite (Data folder); 1 if everything went |
+| `gravar_arbitros()` | 0x5506b0 | cdecl | Db_files.cpp: writes n 43-byte records (officials.dat, id 7) in one go, through zwrite (save) or fwrite (Data folder); 1 if everything went |
+| `gravar_registros_58()` | 0x550800 | cdecl | Db_files.cpp: writes n 58-byte records (colour.dat, id 2, and staff_comp_history.dat, id 18: the same routine for both) in one go, through zwrite (save) or fwrite (Data folder); 1 if everything went |
+| `gravar_nomes()` | 0x550950 | cdecl | Db_files.cpp: writes n 60-byte records (first_names.dat, second_names.dat and common_names.dat, ids 13 to 15) in one go, through zwrite (save) or fwrite (Data folder); 1 if everything went (it only writes, despite the community name) |
+| `abrir_arquivo_do_banco()` | 0x54d580 | cdecl | Db_files.cpp: builds folder + name at 0xde1f64 (_makepath) and returns fopen(path, "rb"); the comparator checks the path |
+| `criar_arquivo_do_banco()` | 0x54d5b0 | cdecl | Db_files.cpp: builds folder + name at 0xde1f64 (_makepath) and returns fopen(path, "wb"); only when writing the database to the folder; the comparator checks the path |
+
+Mutations: `mutacoes/leva231.py` (9, by the save proof): 7 caught. `dbh_gravar_historico_de_pessoas` escaped: save_database only calls 0x54fe50 when [0xae23cc] ≠ 0 (0x5311ac); in the game the staff history has already become staff history.tmp, so the write only runs when saving the database to the Data folder, never into the .qst. `dbh_criar` escaped: 0x54d5b0 is only called from save_database(…, 0, …), saving the database to the Data folder; the .qst is opened by zopen 0x9326e0. (gap in `PENDENCIAS.en.md`) Save proof (the .qst with and without the routines): EQUAL (16856662 bytes). Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551

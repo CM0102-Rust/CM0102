@@ -106,5 +106,6 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `database` | `nota_relativa_com_habilidade_reduzida` 0x5442f0 (batch 226) | — | the reduced ability only matters outside the range clamped to 1..20 and decides nothing in the career: `dq13_reduzida` escapes even comparing. Test: broad career |
 | `database` | `casar_chave_de_competicao_de_pessoa` 0x6115e0, `casar_chave_de_competicao_de_clube` 0x60efd0 (batch 227) | — | the person competition keys do not go into the .qst and the return value is ignored: `ix2_comp_pessoa` and `ix2_devolucao` escape the save proof. Test: career (the keys are read during play) |
 | `database` | `ler_historico_de_competicoes_de_pessoal` 0x5504d0 (batch 228) | — | the table does not go into the .qst: `dbf_historico_de_competicoes_de_pessoal` escapes the save proof. Test: the staff competition history (awards) screen in a game |
+| `database` | `gravar_historico_de_pessoas` 0x54fe50, `criar_arquivo_do_banco` 0x54d5b0 (batch 231) | — | only run when saving the database to the `Data` folder (not the save): `dbh_gravar_historico_de_pessoas` and `dbh_criar` escape the save proof. Test: saving the loose database (editor or future tool) |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").

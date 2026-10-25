@@ -2244,3 +2244,19 @@ Mutações: `mutacoes/leva229.py` (9, pela prova do save): 9 acusadas.  Prova do
 | `gravar_preferencias()` | 0x54fd00 | cdecl | Db_files.cpp: grava a tabela das preferências das pessoas (id 22) de registros de 52 bytes de uma vez, por zwrite (save) ou fwrite (Data); 1 se foi tudo |
 
 Mutações: `mutacoes/leva230.py` (9, pela prova do save): 9 acusadas.  Prova do save (o .qst com e sem as rotinas): IGUAL (16856662 bytes). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
+
+### Simulação, 231ª leva — a gravação dos .dat: histórico de pessoas, competições, históricos de competição; a gravação dos .dat: competições de pessoal, árbitros, cores; a gravação dos .dat: nomes; abrir e criar os .dat (oficial em 24/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `gravar_historico_de_pessoas()` | 0x54fe50 | cdecl | Db_files.cpp: grava de uma vez n registros de 17 bytes (staff_history.dat, id 17) por zwrite (save) ou fwrite (pasta Data); 1 se foi tudo |
+| `gravar_competicoes()` | 0x5501d0 | cdecl | Db_files.cpp: grava de uma vez n registros de 107 bytes (club_comp.dat, em duas chamadas: as competições e as 127 de reserva; nation_comp.dat) por zwrite (save) ou fwrite (pasta Data); 1 se foi tudo |
+| `gravar_historicos_de_competicao()` | 0x550320 | cdecl | Db_files.cpp: grava de uma vez n registros de 26 bytes (club_comp_history.dat e nation_comp_history.dat, ids 19 e 20) por zwrite (save) ou fwrite (pasta Data); 1 se foi tudo |
+| `gravar_competicoes_de_pessoal()` | 0x550470 | cdecl | Db_files.cpp: grava de uma vez n registros de 101 bytes (staff_comp.dat, id 11) por zwrite (save) ou fwrite (pasta Data); 1 se foi tudo |
+| `gravar_arbitros()` | 0x5506b0 | cdecl | Db_files.cpp: grava de uma vez n registros de 43 bytes (officials.dat, id 7) por zwrite (save) ou fwrite (pasta Data); 1 se foi tudo |
+| `gravar_registros_58()` | 0x550800 | cdecl | Db_files.cpp: grava de uma vez n registros de 58 bytes (colour.dat, id 2, e staff_comp_history.dat, id 18: a mesma rotina para os dois) por zwrite (save) ou fwrite (pasta Data); 1 se foi tudo |
+| `gravar_nomes()` | 0x550950 | cdecl | Db_files.cpp: grava de uma vez n registros de 60 bytes (first_names.dat, second_names.dat e common_names.dat, ids 13 a 15) por zwrite (save) ou fwrite (pasta Data); 1 se foi tudo (só grava, apesar do nome da comunidade) |
+| `abrir_arquivo_do_banco()` | 0x54d580 | cdecl | Db_files.cpp: monta pasta + nome em 0xde1f64 (_makepath) e devolve fopen(caminho, "rb"); o comparador confere o caminho |
+| `criar_arquivo_do_banco()` | 0x54d5b0 | cdecl | Db_files.cpp: monta pasta + nome em 0xde1f64 (_makepath) e devolve fopen(caminho, "wb"); só ao gravar a base na pasta; o comparador confere o caminho |
+
+Mutações: `mutacoes/leva231.py` (9, pela prova do save): 7 acusadas. `dbh_gravar_historico_de_pessoas` escapou: o save_database só chama a 0x54fe50 com [0xae23cc] ≠ 0 (0x5311ac); no jogo o histórico de pessoas já virou staff history.tmp, então a gravação só roda ao gravar a base na pasta Data, nunca no .qst. `dbh_criar` escapou: a 0x54d5b0 só é chamada em save_database(…, 0, …), a gravação da base na pasta Data; o .qst é aberto pelo zopen 0x9326e0. (lacuna em `PENDENCIAS.md`) Prova do save (o .qst com e sem as rotinas): IGUAL (16856662 bytes). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551

@@ -54,6 +54,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 
 | Endereço | Português | English |
 |---|---|---|
+| 0x54d580 | `abrir_arquivo_do_banco` | db_files_open_for_read |
 | 0x71b4a0 | `abrir_detalhes_da_partida` | open_match_details |
 | 0x725f70 | `abrir_escalacao_da_partida` | match_screens_open_team_selection |
 | 0x717cc0 | `abrir_jogos_do_dia` | open_day_fixtures_screen |
@@ -185,6 +186,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x53b7c0 | `cores_da_competicao` | database_get_comp_colours |
 | 0x53b640 | `cores_do_uniforme_do_clube` | database_get_club_kit_colours |
 | 0x540490 | `cores_se_confundem` | database_colours_clash |
+| 0x54d5b0 | `criar_arquivo_do_banco` | db_files_open_for_write |
 | 0x827110 | `criar_jogo_pela_configuracao` | create_game_from_setup_file |
 | 0x866f60 | `criterio_da_comissao` | staff_criterion |
 | 0x4bff70 | `criterio_da_competicao` | competition_criterion |
@@ -307,17 +309,22 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x700350 | `gravar_8ea9` | write_8ea9 |
 | 0x700390 | `gravar_8eaa` | write_8eaa |
 | 0x7003a0 | `gravar_8ed8` | write_8ed8 |
+| 0x5506b0 | `gravar_arbitros` | db_files_write_officials |
 | 0x524d30 | `gravar_banco_no_save` | save_database_for_game |
 | 0x62c660 | `gravar_carga_de_treino` | Injury::set_training_load |
 | 0x5b5290 | `gravar_casa` | set_square |
 | 0x54d9a0 | `gravar_cidades` | db_files_write_cities |
 | 0x54e5d0 | `gravar_clubes` | db_files_write_clubs |
+| 0x5501d0 | `gravar_competicoes` | db_files_write_comps |
+| 0x550470 | `gravar_competicoes_de_pessoal` | db_files_write_staff_comps |
 | 0x54d6e0 | `gravar_continentes` | db_files_write_continents |
 | 0x785790 | `gravar_dado_da_noticia` | set_news_field |
 | 0x5fdd30 | `gravar_dado_do_humano` | set_human_field |
 | 0x54daf0 | `gravar_estadios` | db_files_write_stadiums |
 | 0x6d98b0 | `gravar_eventos` | record_events |
 | 0x8967d0 | `gravar_formacao_tatica` | set_tactic_formation |
+| 0x54fe50 | `gravar_historico_de_pessoas` | db_files_write_staff_history |
+| 0x550320 | `gravar_historicos_de_competicao` | db_files_write_comp_history |
 | 0x54fbb0 | `gravar_jogadores` | db_files_write_non_players |
 | 0x82e430 | `gravar_jogo` | save_game_data |
 | 0x4afeb0 | `gravar_jogo_na_noticia` | comp_util_write_fixture_to_news_slots |
@@ -326,9 +333,11 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x54d840 | `gravar_nacoes` | db_files_write_nations |
 | 0x54efd0 | `gravar_nao_jogadores` | db_files_write_players |
 | 0x932e10 | `gravar_no_conteiner` | zwrite |
+| 0x550950 | `gravar_nomes` | db_files_write_or_read_records_0x3c |
 | 0x54e720 | `gravar_pessoas_110` | db_files_write_staff |
 | 0x54fd00 | `gravar_preferencias` | db_files_write_staff_extra |
 | 0x729820 | `gravar_registro_da_partida` | Match_Stats::write_match_record |
+| 0x550800 | `gravar_registros_58` | db_files_write_records_0x3a |
 | 0x8395b0 | `gravar_regras_fifa` | save_fifa_transfer_rules |
 | 0x896a90 | `gravar_vaga_tatica` | set_tactic_slot |
 | 0x62ec00 | `gravidade_da_lesao` | injury_severity |
