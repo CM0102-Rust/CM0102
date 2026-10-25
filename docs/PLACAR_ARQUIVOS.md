@@ -2,10 +2,11 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologo` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 683 de 6709 funções, 662.4 de 5528.0 KB (**11.98%**) · 49 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 703 de 6709 funções, 676.2 de 5528.0 KB (**12.23%**) · 49 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
+| `Db_files.cpp` | 40/40 | 13.0/13.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `match_day.cpp` | 20/20 | 16.6/16.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `match_eng.cpp` | 129/129 | 119.2/119.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `match_events.cpp` | 15/15 | 22.4/22.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
@@ -14,11 +15,10 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `match_pl.cpp` | 96/96 | 179.8/179.8 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `zipdir.cpp` | 10/10 | 4.8/4.8 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `match_screens.cpp` | 53/55 | 77.2/77.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **100.0%** |
-| `Db_files.cpp` | 36/40 | 6.1/13.0 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **46.7%** |
 | `Area.cpp` | 3/15 | 2.0/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.7%** |
 | `formation.cpp` | 19/45 | 8.9/26.5 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **33.4%** |
+| `Database.cpp` | 81/181 | 46.0/148.5 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **31.0%** |
 | `index.cpp` | 5/11 | 45.0/163.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.6%** |
-| `Database.cpp` | 65/181 | 39.3/148.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.4%** |
 | `Setup.cpp` | 10/107 | 28.1/120.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.3%** |
 | `tactics.cpp` | 15/29 | 5.0/23.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.6%** |
 | `human_manager.cpp` | 14/61 | 4.2/25.5 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **16.3%** |

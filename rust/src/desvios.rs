@@ -269,6 +269,17 @@ pub unsafe fn autotestes() {
         crate::motor::autoteste(n.parse().unwrap_or(2_000_000));
         return;
     }
+    // CM_AUTOTESTE=banco: só os autotestes do banco (mutacoes.py --autoteste-banco); o motor com 1 caso fecha
+    // com a linha "motor: AUTOTESTE" que o mutacoes.py espera
+    if valor == "banco" {
+        crate::motor::autoteste_dbj_1();
+        crate::motor::autoteste_dbj_2();
+        crate::motor::autoteste(1);
+        return;
+    }
+    // os conversores da versão 1 e os nomes em inglês (232ª): nem a carreira nem a prova do save passam por eles
+    crate::motor::autoteste_dbj_1();
+    crate::motor::autoteste_dbj_2();
     aleatorio::autoteste(5_000_000);
     data::autoteste();
     crate::motor::autoteste(2_000_000);

@@ -89,12 +89,12 @@ def autoteste(valor='1'):
         p.kill()
         p.wait()
     texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
-    return [l for l in texto.splitlines() if l.startswith('motor: AUTOTESTE') or 'motor: DIVERGENCIA' in l or 'EXCECAO' in l]
+    return [l for l in texto.splitlines() if l.startswith('banco v1') or l.startswith('motor: AUTOTESTE') or 'motor: DIVERGENCIA' in l or 'EXCECAO' in l]
 
 
 # --ligas "ENG ESP ...": a carreira ampla (de madrugada); --limite: segundos por execucao (padrao 900)
 LIGAS = ['--ligas', sys.argv[sys.argv.index('--ligas') + 1]] if '--ligas' in sys.argv else []
-LIMITE = sys.argv[sys.argv.index('--limite') + 1] if '--limite' in sys.argv else '900'
+LIMITE_CARREIRA = sys.argv[sys.argv.index('--limite') + 1] if '--limite' in sys.argv else '900'
 PARAR_NA_DIVERGENCIA = False  # ligado depois da base: a mutacao para na primeira divergencia
 
 
@@ -112,7 +112,7 @@ def jogo(data):
         os.remove(LOG)
     # a mutacao ja e acusada na primeira divergencia: a rodada para ali (a base vai ate o fim)
     extra = ['--parar-na-divergencia'] if PARAR_NA_DIVERGENCIA else []
-    r = subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'comparar', '--limite', LIMITE] + LIGAS + extra,
+    r = subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'comparar', '--limite', LIMITE_CARREIRA] + LIGAS + extra,
                        cwd=AQUI, capture_output=True, text=True)
     if r.returncode != 0 and not os.path.exists(LOG):
         return ['SIMULACAO RECUSADA: ' + (r.stdout + r.stderr).strip().splitlines()[-1:][0] if (r.stdout + r.stderr).strip() else 'SIMULACAO RECUSADA']
@@ -132,7 +132,7 @@ def carreira(data):
         time.sleep(60)
     if os.path.exists(LOG):
         os.remove(LOG)
-    r = subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'rust', '--limite', LIMITE] + LIGAS,
+    r = subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'rust', '--limite', LIMITE_CARREIRA] + LIGAS,
                        cwd=AQUI, capture_output=True, text=True)
     texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
     quedas = [l for l in texto.splitlines() if 'EXCECAO' in l]
@@ -178,6 +178,8 @@ def main():
     data = sys.argv[sys.argv.index('--jogo') + 1] if '--jogo' in sys.argv else None
     fim = sys.argv[sys.argv.index('--carreira') + 1] if '--carreira' in sys.argv else None
     rodar = (lambda: carreira(fim)) if fim else (lambda: jogo(data)) if data else None
+    if '--autoteste-banco' in sys.argv:  # só os autotestes do banco (CM_AUTOTESTE=banco, 232a)
+        rodar = lambda: autoteste('banco')
     prova = sys.argv[sys.argv.index('--prova-save') + 1] if '--prova-save' in sys.argv else None
     if prova:
         import prova_save

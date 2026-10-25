@@ -1,0 +1,8 @@
+Autoteste do banco (CM_AUTOTESTE=banco; mutacoes.py --autoteste-banco), 24/10/2026, antes da cadeia:
+sem mutacao: banco v1 (conversores) 192 casos, 0 divergencias; banco v1 e nomes em ingles 576 casos, 0 divergencias; motor 16200 casos, 0 divergencias
+mutacao dbj1_clubes         ACUSADA: DIVERGENCIA ler_clubes_v1
+mutacao dbj1_nao_jogadores  ACUSADA: DIVERGENCIA ler_nao_jogadores_v1
+mutacao dbj1_jogadores      ACUSADA: DIVERGENCIA ler_jogadores_v1
+mutacao dbj2_competicoes    ACUSADA: DIVERGENCIA ler_competicoes_v1
+mutacao dbj2_nacao          ACUSADA: DIVERGENCIA nome_ingles_da_nacao
+mutacao dbj2_clube_curto    ACUSADA: DIVERGENCIA nome_curto_ingles_do_clube

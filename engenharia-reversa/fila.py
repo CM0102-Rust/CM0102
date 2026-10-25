@@ -62,7 +62,8 @@ def ordem():
 # 21/10/2026: uma leva junta até ITENS_POR_LEVA itens da fila do mesmo tipo (telas ou simulação), 3 rotinas
 # cada (9 por leva); os itens seguem escritos de 3 em 3, então um item que dê problema sai da leva sozinho.
 # Para voltar às levas de 3 rotinas: ITENS_POR_LEVA = 1.
-ITENS_POR_LEVA = 3
+# 24/10/2026: o Lucas dobrou a aposta: a 232ª junta 7 itens (20 rotinas). Para voltar às de 9: ITENS_POR_LEVA = 3.
+ITENS_POR_LEVA = 7
 
 
 def do_lote(ordem_):
