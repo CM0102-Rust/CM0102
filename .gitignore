@@ -24,3 +24,4 @@ CLZ Leagues Patch*.rar
 
 # copias de compilacao da fila e da DLL de sessao (fila.py/testar_fila, sessao_telas)
 copias/
+*.sav
