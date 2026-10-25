@@ -178,7 +178,7 @@ pub unsafe fn desviar(nome: &str, p: &Prologo, destino: usize) -> Option<usize> 
         let destino = if destino == PASSAGEM { tramp } else { destino };
         // só no exe com patch (o código de terceiros conta com o ECX; o do jogo não, e o trecho genérico dobra o
         // tempo da carreira); o sorteio (1 argumento, cdecl, o mais chamado) tem o trecho barato
-        let destino = if !ADIADO.load(std::sync::atomic::Ordering::Relaxed) { destino }
+        let destino = if !exe_com_patch() { destino }
             else if p.endereco == 0x90cfc0 { preservar_ecx_cdecl(destino, 1) } else { preservar_ecx(destino) };
         if ISOLAR.load(std::sync::atomic::Ordering::Relaxed) { isolar(destino) } else { destino }
     })
@@ -447,6 +447,14 @@ const TEXTOS_NOSSOS: [u64; 3] = [0x7af14da1f595ae30, 0x62afeb6b1b407585, 0xfd250
 const ENTRADA_NOSSA: u32 = 0x547a13; // AddressOfEntryPoint (RVA; VA 0x947a13)
 
 static ADIADO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Permanente (o ADIADO é só "instalação pendente" e volta a falso na instalação; consultá-lo depois dela
+/// desligava o ECX preservado e o vídeo do sistema no exe com patch, 25/10/2026).
+static COM_PATCH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// O exe tem patch de terceiros (o .text ou a entrada não são os nossos): instalação adiada.
+pub fn exe_com_patch() -> bool {
+    COM_PATCH.load(std::sync::atomic::Ordering::Relaxed)
+}
 
 fn fnv(b: &[u8]) -> u64 {
     b.iter().fold(0xcbf29ce484222325u64, |h, &x| (h ^ x as u64).wrapping_mul(0x100000001b3))
@@ -473,6 +481,7 @@ pub unsafe fn instalar() {
         // a simulacao (alocador, relogio, sorteio da CRT) precisa estar antes da CRT; nada dela cai nas faixas
         crate::simulacao::instalar();
         ADIADO.store(true, std::sync::atomic::Ordering::Relaxed);
+        COM_PATCH.store(true, std::sync::atomic::Ordering::Relaxed);
         return;
     }
     conferir_assinaturas();
