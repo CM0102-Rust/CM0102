@@ -172,6 +172,6 @@ pendentes = lista [R+7]: [+2] primeiro nó; nó: [+0] dado (0x70), [+6] próximo
 
 Tudo [observado]. Para listar todos os suspensos: percorrer `[D+4]` até `(i16)[D+0xa]` e pular os livres; o dono sai pelas entradas das regras listadas em `+0xc..+0xf` (a suspensão não guarda a pessoa) [observado].
 
-## 5. Prova no jogo (não feita)
+## 5. Prova no jogo (feita em 25/10/2026: ver `CONFERENCIA_SUSPENSAO.md`, com `engenharia-reversa/remover_suspensao.py`)
 
 Sem cliques daria assim: numa cópia do save, apagar uma suspensão no `discipline.dat` (passos da §2, reescrevendo o item no contêiner tipo 3 sem compressão), carregar com `-load` (`prova_save.py --sav`), deixar a carreira de férias correr um dia e conferir na memória (cadeia da §4) que a entrada continua com `+6 = −1` e o vetor fechado; e, para ver o efeito, que o jogador entra na escalação automática da próxima partida. A gravação de volta do item exige reescrever o índice do contêiner (tamanhos e posições): é trabalho de ferramenta, por isso ficou de fora [inferência].

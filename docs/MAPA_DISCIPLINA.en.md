@@ -172,6 +172,6 @@ pending = list [R+7]: [+2] first node; node: [+0] data (0x70), [+6] next
 
 All [observed]. To list every banned player: walk `[D+4]` up to `(i16)[D+0xa]` skipping free ones; the owner comes from the entries of the rule sets listed in `+0xc..+0xf` (the ban does not store the person) [observed].
 
-## 5. In-game proof (not done)
+## 5. In-game proof (done on 25/10/2026: see `CONFERENCIA_SUSPENSAO.en.md`, with `engenharia-reversa/remover_suspensao.py`)
 
 Without clicks it would go like this: in a copy of the save, delete one ban in `discipline.dat` (the §2 steps, rewriting the item in an uncompressed type 3 container), load it with `-load` (`prova_save.py --sav`), let the holiday career run one day and check in memory (the §4 chain) that the entry still has `+6 = −1` and the array is consistent; and, to see the effect, that the player makes the automatic line-up of the next match. Writing the item back requires rewriting the container index (sizes and positions): that is tool work, so it was left out [inference].

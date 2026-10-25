@@ -87,16 +87,17 @@ def rle(dados):
 
 
 def regravar(dados, alvo, novo_conteudo):
-    """O conteiner com o item `alvo` (indice na lista) trocado por `novo_conteudo` (mesmo tamanho descomprimido)."""
+    """O conteiner com o item `alvo` (indice na lista) trocado por `novo_conteudo`. Tamanho descomprimido diferente
+    (remover_suspensao.py): o tamanho no indice muda e as posicoes seguintes andam, nos dois tipos."""
     tipo, _, itens = ps.indice(dados)
     nome, pos, tam = itens[alvo]
-    assert len(novo_conteudo) == tam
     if tipo != 4:
-        return dados[:pos] + novo_conteudo + dados[pos + tam:]
-    fim = ps.trechos(dados, itens)[alvo]
-    enc = rle(novo_conteudo)
+        fim, enc = pos + tam, novo_conteudo
+    else:
+        fim, enc = ps.trechos(dados, itens)[alvo], rle(novo_conteudo)
     delta = len(enc) - (fim - pos)
     saida = bytearray(dados[:pos] + enc + dados[fim:])
+    struct.pack_into('<I', saida, 12 + alvo * 0x10c + 4, len(novo_conteudo))
     for i, (_, p, _) in enumerate(itens):
         if p > pos:
             struct.pack_into('<I', saida, 12 + i * 0x10c, p + delta)
@@ -109,7 +110,7 @@ def conferir(antes, depois, alvo, esperado):
     td, idd, ld = ps.indice(depois)
     assert (ta, ia, len(la)) == (td, idd, len(ld)), 'cabecalho mudou'
     for k, ((na, pa, sa), (nd, pd, sd)) in enumerate(zip(la, ld)):
-        assert (na, sa) == (nd, sd), 'entrada %d mudou' % k
+        assert na == nd and (sa == sd or k == alvo), 'entrada %d mudou' % k
         cd = ps.conteudo(depois, td, pd, sd)
         assert cd == (esperado if k == alvo else ps.conteudo(antes, ta, pa, sa)), 'item %d %s diferente' % (k, nd)
 
