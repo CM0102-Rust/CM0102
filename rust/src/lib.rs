@@ -98,6 +98,7 @@ pub unsafe extern "system" fn DirectDrawCreate(guid: *mut c_void, saida: *mut *m
         }
         return r;
     }
+    desvios::instalar_adiado(); // exe com patch de terceiros: depois de todo o carregamento da partida
     ganchos::instalar();
     *saida = video::criar();
     desvios::autotestes();

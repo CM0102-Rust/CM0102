@@ -56,6 +56,7 @@ pub fn sem_contar<R>(f: impl FnOnce() -> R) -> R {
 pub const REGIOES_DO_ESTADO: [(usize, usize); 2] = [(0xde1f5c, 8), (0xad6c30, 4)];
 
 unsafe fn contar(n: i32) {
+    desvios::reconferir_no_dia();
     if CONTAR.with(|c| c.get()) {
         simulacao::sorteio(n, *PONTEIRO, *DESLOCAMENTO, *ESTADO_RAND);
     }

@@ -241,6 +241,7 @@ unsafe fn desviar_para(nome: &str, p: &Prologo, destino: impl FnOnce(usize) -> u
     win::VirtualProtect(p.endereco as *mut c_void, n, antiga, &mut antiga);
     win::FlushInstructionCache(win::GetCurrentProcess(), p.endereco as *const c_void, n);
     linha(&format!("desvio {}: {:#x} -> {:#x} (original em {:#x})", nome, p.endereco, destino, tramp as usize));
+    registrar_instalado(p);
     Some(tramp as usize)
 }
 
@@ -353,15 +354,65 @@ unsafe fn conferir_resolucao() {
     linha(&format!("resolucao: conferencia com o cm0102-1080.exe: {} bytes diferem (IAT de fora)", total));
 }
 
+// ---------- exe com patch de terceiros: instalacao adiada ----------
+//
+// Um patcher pode mudar rotinas na memoria depois do nosso DllMain (no CLZ, a NickDLL.dll, carregada por um desvio no
+// inicio da CRT, e o no-CD, carregado na entrada do exe, mudam 15 rotinas nossas). Criterio generico, sem nome de DLL
+// nem de secao: o .text inteiro e o ponto de entrada sao os de um exe nosso? Instala como sempre (carreira de
+// referencia intocada). Senao, a foto das assinaturas e os desvios do motor esperam a primeira DirectDrawCreate
+// (exportada por esta DLL: o jogo so a chama no WinMain, depois do carregamento das DLLs da partida e da CRT).
+
+/// FNV-1a 64 de 0x401000..0x401000+TEXTO no cm0102.exe, no cm0102-portatil.exe e no cm0102-1080.exe (os exes nunca
+/// mudam; o CM_RESOLUCAO=1080 leva o primeiro ao terceiro antes desta conferencia).
+const TEXTO: usize = 0x5650e5;
+const TEXTOS_NOSSOS: [u64; 3] = [0x7af14da1f595ae30, 0x62afeb6b1b407585, 0xfd25058c59d683d5];
+const ENTRADA_NOSSA: u32 = 0x547a13; // AddressOfEntryPoint (RVA; VA 0x947a13)
+
+static ADIADO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+fn fnv(b: &[u8]) -> u64 {
+    b.iter().fold(0xcbf29ce484222325u64, |h, &x| (h ^ x as u64).wrapping_mul(0x100000001b3))
+}
+
+unsafe fn exe_nosso() -> bool {
+    let pe = core::ptr::read_unaligned(0x40003c as *const u32) as usize;
+    let entrada = core::ptr::read_unaligned((0x400000 + pe + 0x28) as *const u32);
+    let h = fnv(core::slice::from_raw_parts(0x401000 as *const u8, TEXTO));
+    let nosso = entrada == ENTRADA_NOSSA && TEXTOS_NOSSOS.contains(&h);
+    if !nosso {
+        linha(&format!("desvios: exe com patch (.text {:016x}, entrada {:#x}): foto das assinaturas e desvios do motor adiados para a 1a DirectDrawCreate", h, 0x400000 + entrada));
+    }
+    nosso
+}
+
 /// Instala todos os desvios. Chamado no carregamento da DLL, antes do WinMain do jogo.
 pub unsafe fn instalar() {
     if win::ambiente("CM_SEM_DESVIOS") {
         linha("desvios: desligados (CM_SEM_DESVIOS)");
         return;
     }
+    if !exe_nosso() {
+        // a simulacao (alocador, relogio, sorteio da CRT) precisa estar antes da CRT; nada dela cai nas faixas
+        crate::simulacao::instalar();
+        ADIADO.store(true, std::sync::atomic::Ordering::Relaxed);
+        return;
+    }
     conferir_assinaturas();
     // Simulacao em lote (CM_PARAR_EM): relogio fixo, para a simulacao ser reproduzivel.
     crate::simulacao::instalar();
+    instalar_motor();
+}
+
+/// Primeira DirectDrawCreate: a instalacao adiada do exe com patch (nada nos exes nossos).
+pub unsafe fn instalar_adiado() {
+    if ADIADO.swap(false, std::sync::atomic::Ordering::Relaxed) {
+        linha(&format!("desvios: instalacao adiada (data do jogo {:?})", *(0xae2c90 as *const [u16; 2])));
+        conferir_assinaturas();
+        instalar_motor();
+    }
+}
+
+unsafe fn instalar_motor() {
     // CM_ORIGINAL=1: nenhuma rotina substituida; o sorteio so e observado (contagem e parada da
     // simulacao), para comparar uma simulacao so com as originais contra outra com o Rust.
     if win::ambiente("CM_ORIGINAL") {
@@ -371,6 +422,7 @@ pub unsafe fn instalar() {
             crate::motor::instalar_passagem();
         }
         crate::motor::instalar_zeradas();
+        fotografar_corpos();
         resumo_assinaturas();
         return;
     }
@@ -384,7 +436,71 @@ pub unsafe fn instalar() {
     data::instalar(comparar);
     crate::motor::instalar(comparar);
     crate::motor::instalar_zeradas();
+    fotografar_corpos();
     resumo_assinaturas();
+}
+
+// ---------- reconferencia diaria dos corpos ----------
+//
+// Patcher que muda codigo depois da instalacao: uma vez por dia do jogo (pelo sorteio, que roda em todos os modos),
+// o corpo de cada rotina desviada (a faixa das ASSINATURAS sem o prologo, onde esta o nosso jmp) e comparado com a
+// foto do fim da instalacao. Corpo mudado: o prologo original volta (desvio desfeito) e o log registra. ~670 KB de
+// hash por dia (~2 ms). ponytail: so as rotinas das ASSINATURAS (data, sorteio e simulacao nao tem faixa).
+
+/// (inicio, prologo original, fim da faixa, hash do corpo, o nosso jmp); hash 0 = sem foto ou ja desfeito.
+static mut INSTALADOS: Vec<(usize, &'static [u8], usize, u64, [u8; 5])> = Vec::new();
+static mut DIA_CONFERIDO: [u16; 2] = [0; 2];
+
+unsafe fn registrar_instalado(p: &Prologo) {
+    use crate::assinaturas::ASSINATURAS;
+    if let Ok(k) = ASSINATURAS.binary_search_by_key(&p.endereco, |a| a.0) {
+        (*core::ptr::addr_of_mut!(INSTALADOS)).push((p.endereco, p.bytes, p.endereco + ASSINATURAS[k].1, 0, *(p.endereco as *const [u8; 5])));
+    }
+}
+
+unsafe fn corpo(e: &(usize, &'static [u8], usize, u64, [u8; 5])) -> u64 {
+    let ini = e.0 + e.1.len();
+    if e.2 <= ini { 1 } else { fnv(core::slice::from_raw_parts(ini as *const u8, e.2 - ini)) }
+}
+
+unsafe fn fotografar_corpos() {
+    for e in (*core::ptr::addr_of_mut!(INSTALADOS)).iter_mut() {
+        e.3 = corpo(e);
+    }
+    DIA_CONFERIDO = *(0xae2c90 as *const [u16; 2]);
+}
+
+/// Chamado a cada sorteio: so trabalha quando o dia do jogo muda. Inline e sem quadro de pilha no caminho comum (o
+/// jogo le sobras de pilha; um quadro a mais em cada sorteio mudaria o que ele encontra fora da pilha particular).
+#[inline(always)]
+pub unsafe fn reconferir_no_dia() {
+    let hoje = *(0xae2c90 as *const [u16; 2]);
+    if hoje != DIA_CONFERIDO {
+        reconferir_corpos(hoje);
+    }
+}
+
+#[inline(never)]
+#[cold]
+unsafe fn reconferir_corpos(hoje: [u16; 2]) {
+    DIA_CONFERIDO = hoje;
+    for e in (*core::ptr::addr_of_mut!(INSTALADOS)).iter_mut() {
+        if e.3 == 0 || corpo(e) == e.3 {
+            continue;
+        }
+        e.3 = 0;
+        let p = e.0 as *mut u8;
+        if *(p as *const [u8; 5]) != e.4 {
+            linha(&format!("rotina {:#x}: corpo e entrada mudaram depois do desvio (dia {:?}); fica com o exe", e.0, hoje));
+            continue;
+        }
+        let mut antiga = 0u32;
+        win::VirtualProtect(p as *mut c_void, e.1.len(), win::PAGE_EXECUTE_READWRITE, &mut antiga);
+        core::ptr::copy_nonoverlapping(e.1.as_ptr(), p, e.1.len());
+        win::VirtualProtect(p as *mut c_void, e.1.len(), antiga, &mut antiga);
+        win::FlushInstructionCache(win::GetCurrentProcess(), p as *const c_void, e.1.len());
+        linha(&format!("rotina {:#x}: corpo mudou depois do desvio (dia {:?}); desvio desfeito, fica com o exe", e.0, hoje));
+    }
 }
 
 /// CM_AUTOTESTE=1: cada rotina reescrita se compara com a original em entradas sinteticas
