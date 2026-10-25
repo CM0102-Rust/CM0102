@@ -38,7 +38,7 @@ def main():
           os.path.join('engenharia-reversa', 'glossario.py'), os.path.join('engenharia-reversa', 'mutacoes', f'leva{n}.py'),
           'CLAUDE.md', 'CLAUDE.en.md', os.path.join('engenharia-reversa', 'gen_docs.py'), os.path.join('engenharia-reversa', 'publicar_leva.py'),
           os.path.join('engenharia-reversa', 'fila.py'), os.path.join('engenharia-reversa', 'molde_docs.py'), os.path.join('levas', 'fila'),
-          os.path.join('rust', 'src', 'motor.rs'), os.path.join('levas', 'carreira_ampla', 'pendentes.txt'), os.path.join('engenharia-reversa', 'fila_continua.sh'))
+          os.path.join('rust', 'src', 'motor.rs'), os.path.join('rust', 'src', 'assinaturas.rs'), os.path.join('levas', 'carreira_ampla', 'pendentes.txt'), os.path.join('engenharia-reversa', 'fila_continua.sh'))
     prefixo = 'Motor' if 'Motor de partidas' in open(os.path.join(RAIZ, 'levas', str(n), 'docs.py'), encoding='utf-8').read() else 'Simulacao'
     msg = (f'{prefixo}: {n}a leva ({total} rotinas): {titulo}\n\nComparacao de verdade em cada rotina; cadeia completa '
            f'(levas/{n}/cadeia.txt): jogo real 0 divergencias, carreiras iguais a referencia {REF_CARREIRA[:8]}.\n\n'
@@ -49,6 +49,8 @@ def main():
     if not os.path.isdir(os.path.join(RAIZ, 'levas', str(prox))):
         rodar(sys.executable, os.path.join('engenharia-reversa', 'fila.py'), 'proxima')
     rodar(sys.executable, os.path.join('levas', str(prox), 'integrar.py'))
+    # a tabela das assinaturas acompanha a PROLOGOS (a DLL não desvia rotina que não seja a do exe original/1080)
+    rodar(sys.executable, os.path.join('engenharia-reversa', 'assinaturas.py'))
     rodar('cargo', 'build', '--release', cwd=os.path.join(RAIZ, 'rust'))
     shutil.copy2(os.path.join(RAIZ, 'rust', 'target', 'i686-pc-windows-msvc', 'release', 'ddraw.dll'), os.path.join(RAIZ, 'jogo_testes', 'ddraw.dll'))
     m = open(os.path.join(RAIZ, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()

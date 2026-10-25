@@ -59648,9 +59648,8 @@ pub unsafe fn instalar(comparando: bool) {
             Some(z) => desvios::desviar_zerando(nomes[i], &PROLOGOS[i], z.1, destino),
             None => desvios::desviar(nomes[i], &PROLOGOS[i], destino),
         };
-        if let Some(t) = feito {
-            ORIGINAIS[i] = t;
-        }
+        // recusado (rotina alterada por outro patch): orig(i) chama o proprio exe, que segue sem desvio
+        ORIGINAIS[i] = feito.unwrap_or(PROLOGOS[i].endereco);
     }
     if comparando {
         linha("motor: modo comparacao (original x Rust)");

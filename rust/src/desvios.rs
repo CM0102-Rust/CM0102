@@ -155,8 +155,49 @@ pub unsafe fn contar(nome: &str, p: &Prologo, contador: *mut u32) -> bool {
     .is_some()
 }
 
-/// Miolo dos desvios: confere os bytes, monta o trampolim e salta para `destino(trampolim)`.
+// ---------- assinaturas: a rotina inteira, nao so o prologo ----------
+//
+// Rotina da tabela ASSINATURAS (as do motor) cuja faixa inteira em memoria nao e a do exe original nem
+// a do cm0102-1080.exe fica com o exe: outro patch (NickPatcher, CLZ...) mudou o codigo e o dele roda.
+
+static CONFERIDAS: AtomicU32 = AtomicU32::new(0);
+static COM_O_EXE: AtomicU32 = AtomicU32::new(0);
+static MICROS: AtomicU32 = AtomicU32::new(0);
+use std::sync::atomic::AtomicU32;
+
+/// false = a rotina esta na tabela e os bytes nao batem com nenhuma das duas versoes.
+unsafe fn assinatura_confere(endereco: usize) -> bool {
+    use crate::assinaturas::ASSINATURAS;
+    use std::sync::atomic::Ordering::Relaxed;
+    let Ok(k) = ASSINATURAS.binary_search_by_key(&endereco, |a| a.0) else { return true };
+    let t = std::time::Instant::now();
+    let (_, n, original, r1080) = ASSINATURAS[k];
+    let mut h: u64 = 0xcbf29ce484222325; // FNV-1a 64 (o mesmo do assinaturas.py)
+    for &b in core::slice::from_raw_parts(endereco as *const u8, n) {
+        h = (h ^ b as u64).wrapping_mul(0x100000001b3);
+    }
+    MICROS.fetch_add(t.elapsed().as_micros() as u32, Relaxed);
+    CONFERIDAS.fetch_add(1, Relaxed);
+    let ok = h == original || h == r1080;
+    if !ok {
+        COM_O_EXE.fetch_add(1, Relaxed);
+    }
+    ok
+}
+
+/// A linha final da conferencia no ddraw.log.
+pub fn resumo_assinaturas() {
+    use std::sync::atomic::Ordering::Relaxed;
+    linha(&format!("assinaturas: {} conferidas, {} ficam com o exe ({} us)",
+        CONFERIDAS.load(Relaxed), COM_O_EXE.load(Relaxed), MICROS.load(Relaxed)));
+}
+
+/// Miolo dos desvios: confere a rotina e os bytes, monta o trampolim e salta para `destino(trampolim)`.
 unsafe fn desviar_para(nome: &str, p: &Prologo, destino: impl FnOnce(usize) -> usize) -> Option<usize> {
+    if !assinatura_confere(p.endereco) {
+        linha(&format!("rotina {:#x} fica com o exe (alterada)", p.endereco));
+        return None;
+    }
     let atual = core::slice::from_raw_parts(p.endereco as *const u8, p.bytes.len());
     if atual != p.bytes {
         linha(&format!("desvio {} recusado: bytes em {:#x} sao {:02x?}, esperava {:02x?}", nome, p.endereco, atual, p.bytes));
@@ -241,6 +282,7 @@ pub unsafe fn instalar() {
             crate::motor::instalar_passagem();
         }
         crate::motor::instalar_zeradas();
+        resumo_assinaturas();
         return;
     }
     // CM_AUTOTESTE=1 liga o modo comparacao; os autotestes em si rodam depois (ver `autotestes`).
@@ -253,6 +295,7 @@ pub unsafe fn instalar() {
     data::instalar(comparar);
     crate::motor::instalar(comparar);
     crate::motor::instalar_zeradas();
+    resumo_assinaturas();
 }
 
 /// CM_AUTOTESTE=1: cada rotina reescrita se compara com a original em entradas sinteticas

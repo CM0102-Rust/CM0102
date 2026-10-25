@@ -13,6 +13,7 @@
 #![allow(linker_messages)]
 
 mod alocador;
+mod assinaturas;
 
 #[global_allocator]
 static GLOBAL: alocador::Global = alocador::Global;
