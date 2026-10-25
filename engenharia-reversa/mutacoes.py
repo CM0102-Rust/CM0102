@@ -89,7 +89,7 @@ def autoteste(valor='1'):
         p.kill()
         p.wait()
     texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
-    return [l for l in texto.splitlines() if l.startswith('banco v1') or l.startswith('motor: AUTOTESTE') or 'motor: DIVERGENCIA' in l or 'EXCECAO' in l]
+    return [l for l in texto.splitlines() if l.startswith('banco') or l.startswith('motor: AUTOTESTE') or 'motor: DIVERGENCIA' in l or 'EXCECAO' in l]
 
 
 # --ligas "ENG ESP ...": a carreira ampla (de madrugada); --limite: segundos por execucao (padrao 900)

@@ -274,12 +274,16 @@ pub unsafe fn autotestes() {
     if valor == "banco" {
         crate::motor::autoteste_dbj_1();
         crate::motor::autoteste_dbj_2();
+        crate::motor::autoteste_dbm_1();
+        crate::motor::autoteste_dbm_2();
         crate::motor::autoteste(1);
         return;
     }
     // os conversores da versão 1 e os nomes em inglês (232ª): nem a carreira nem a prova do save passam por eles
     crate::motor::autoteste_dbj_1();
     crate::motor::autoteste_dbj_2();
+    crate::motor::autoteste_dbm_1();
+    crate::motor::autoteste_dbm_2();
     aleatorio::autoteste(5_000_000);
     data::autoteste();
     crate::motor::autoteste(2_000_000);

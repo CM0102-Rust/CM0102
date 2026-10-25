@@ -39,3 +39,4 @@ Ampla de 22-23/10/2026 (lotes 4a..4d ate 2002-03-31, 8 ligas; prova geral Rust =
 
 Ampla de 24/10/2026: prova geral Rust = original 9ee2b5ac ate a 229a (8 ligas ate 2002-01-01)
 - leva232.py: dbi_crescer_historico_de_competicoes, dbi_ordem_do_elenco_pela_habilidade_atual, dbk1_juntar_comissao, dbk2_olheiros (rodam na temporada)
+- leva233.py: dbl_nacao_grande, dbl_juntar_vinculo, dbl_tirar_vinculo, dbl_auxiliar, dbl_treinadores, dbl_contar_treinadores (rodam na temporada)
