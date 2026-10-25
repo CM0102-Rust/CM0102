@@ -229,3 +229,19 @@ The entry size (0x10c) and the 0x416ec block stay the same. That way the in-memo
 | C (item > 4 GB) | format of 8 subsystems | 5 or more; not recommended |
 
 **Suggested order:** measure memory (M) → phase A in model R → B only when some real `player stats history.tmp` passes ~1 GB.
+
+## Measurement on a long real save (2026-10-25)
+
+Lucas provided `All Leagues - 3.9.68 - Compress.sav` (unpatched 3.9.68, "All Leagues" database), read only in the index and in `general.dat` [observed]:
+
+- **Game date:** 2063, day 182, i.e. about 62 seasons.
+- **File:** 1,431,514,996 bytes (type 4, compressed), with 564 items.
+- **Sum of uncompressed items:** 2,147.8 MB, just above 2^31 (2,147.48 MB). The same save uncompressed would pass 2 GB, and would only open with save2gb.
+- **Largest items:** `player stats history.tmp` 646.4 MB; `club records history.tmp` 474.2 MB; `injury_history.tmp` 258.5 MB; `staff history.tmp` 186.6 MB; `match_stats_matches.tmp` 69.0 MB; `contract.dat` 40.9 MB; `transfer.dat` 26.4 MB. The `.dat` files together stay well below the histories.
+
+Average rate in this career [inference, a single point, assuming linear growth]: ~35 MB per season uncompressed (~23 MB compressed), below the estimate above. At that rate:
+
+- the uncompressed file would reach 4 GB around season 115 (~2116); compressed, around season 175;
+- the largest item (`player stats history.tmp`, ~10.4 MB per season) would reach 2 GB around season 190.
+
+This save is the best real test case for phases A and B: it already has a 646 MB item and the sum at the 2 GB limit.

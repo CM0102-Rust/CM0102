@@ -229,3 +229,19 @@ O tamanho da entrada (0x10c) e o bloco de 0x416ec continuam iguais. Assim a estr
 | C (item > 4 GB) | formato de 8 subsistemas | 5 ou mais; não recomendado |
 
 **Ordem sugerida:** medir a memória (M) → fase A no modelo R → B só quando algum `player stats history.tmp` real passar de ~1 GB.
+
+## Medição num save real longo (25/10/2026)
+
+O Lucas trouxe `All Leagues - 3.9.68 - Compress.sav` (3.9.68 sem patch, base "All Leagues"), só lido no índice e no `general.dat` [observado]:
+
+- **Data do jogo:** 2063, dia 182, ou seja, cerca de 62 temporadas.
+- **Arquivo:** 1.431.514.996 bytes (tipo 4, compactado), com 564 itens.
+- **Soma dos itens descompactados:** 2.147,8 MB, um pouco acima de 2^31 (2.147,48 MB). O mesmo save sem compressão passaria de 2 GB, e só abriria com o save2gb.
+- **Maiores itens:** `player stats history.tmp` 646,4 MB; `club records history.tmp` 474,2 MB; `injury_history.tmp` 258,5 MB; `staff history.tmp` 186,6 MB; `match_stats_matches.tmp` 69,0 MB; `contract.dat` 40,9 MB; `transfer.dat` 26,4 MB. Os `.dat` somados ficam bem abaixo dos históricos.
+
+Ritmo médio nesta carreira [inferência, um ponto só, com crescimento suposto linear]: ~35 MB por temporada descompactado (~23 MB compactado), abaixo da estimativa acima. Com esse ritmo:
+
+- o arquivo descompactado chegaria a 4 GB perto da temporada 115 (~2116); compactado, perto da 175;
+- o maior item (`player stats history.tmp`, ~10,4 MB por temporada) chegaria a 2 GB perto da temporada 190.
+
+Este save é o melhor caso de teste real para as fases A e B: ele já tem um item de 646 MB e a soma no limite de 2 GB.
