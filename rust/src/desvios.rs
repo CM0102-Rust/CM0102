@@ -165,8 +165,27 @@ static COM_O_EXE: AtomicU32 = AtomicU32::new(0);
 static MICROS: AtomicU32 = AtomicU32::new(0);
 use std::sync::atomic::AtomicU32;
 
+// Os veredictos saem de uma foto tirada no começo da instalação (`conferir_assinaturas`), antes de qualquer desvio
+// nosso: uma porta instalada antes do motor mudava os bytes da faixa e a nossa própria conferência recusava a rotina
+// (0x5afe00 no modo comparando, a porta do pós-jogo; 25/10/2026).
+static mut VEREDICTOS: Vec<bool> = Vec::new();
+
+/// A foto: o veredicto de cada linha de ASSINATURAS com os bytes de agora (chamar antes de desviar qualquer coisa).
+pub unsafe fn conferir_assinaturas() {
+    use crate::assinaturas::ASSINATURAS;
+    let v: Vec<bool> = ASSINATURAS.iter().map(|a| conferir_faixa(a.0)).collect();
+    VEREDICTOS = v;
+}
+
 /// false = a rotina esta na tabela e os bytes nao batem com nenhuma das duas versoes.
 unsafe fn assinatura_confere(endereco: usize) -> bool {
+    use crate::assinaturas::ASSINATURAS;
+    let Ok(k) = ASSINATURAS.binary_search_by_key(&endereco, |a| a.0) else { return true };
+    let v = &*core::ptr::addr_of!(VEREDICTOS);
+    if k < v.len() { v[k] } else { conferir_faixa(endereco) }
+}
+
+unsafe fn conferir_faixa(endereco: usize) -> bool {
     use crate::assinaturas::ASSINATURAS;
     use std::sync::atomic::Ordering::Relaxed;
     let Ok(k) = ASSINATURAS.binary_search_by_key(&endereco, |a| a.0) else { return true };
@@ -340,6 +359,7 @@ pub unsafe fn instalar() {
         linha("desvios: desligados (CM_SEM_DESVIOS)");
         return;
     }
+    conferir_assinaturas();
     // Simulacao em lote (CM_PARAR_EM): relogio fixo, para a simulacao ser reproduzivel.
     crate::simulacao::instalar();
     // CM_ORIGINAL=1: nenhuma rotina substituida; o sorteio so e observado (contagem e parada da
