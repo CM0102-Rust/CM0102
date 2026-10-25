@@ -30,6 +30,10 @@ pub struct Prologo {
 /// Endereco de retorno da ultima chamada do jogo a uma rotina desviada (gravado na entrada).
 pub static mut RETORNO: u32 = 0;
 static mut ESP_DO_JOGO: u32 = 0;
+/// O ECX do jogo na entrada: o código de patch de terceiros (NickPatcher) conta com o ECX preservado depois de
+/// chamar uma rotina que o preserva (a 0x90cfc0 faz push ecx/pop ecx); o trecho de saída usava o ECX e o laço de
+/// 9 voltas do patch em 0x602610 nunca chegava a 0 (CLZ, 25/10/2026).
+static mut ECX_DO_JOGO: u32 = 0;
 const PILHA: usize = 1 << 20;
 const ARGUMENTOS: u32 = 16; // dwords copiados da pilha do jogo (sobra para qualquer rotina desviada)
 
@@ -72,6 +76,9 @@ pub unsafe fn isolar(destino: usize) -> usize {
     let fora = c.len();
     c[jb] = (fora - jb - 1) as u8;
     c[jae] = (fora - jae - 1) as u8;
+    c.push(0x89); // mov [ECX_DO_JOGO], ecx
+    c.push(0x0d);
+    c.extend(le(&raw mut ECX_DO_JOGO as u32));
     c.extend([0x89, 0xe0, 0xa3]); // mov eax, esp; mov [ESP_DO_JOGO], eax
     c.extend(le(esp_jogo));
     c.push(0xbc); // mov esp, topo
@@ -88,8 +95,75 @@ pub unsafe fn isolar(destino: usize) -> usize {
     c.extend(le(esp_jogo));
     c.extend([0x89, 0xcc, 0x8b, 0x0d]); // mov esp, ecx; mov ecx, [ESP_DO_JOGO]
     c.extend(le(esp_jogo));
-    c.extend([0x8b, 0x09, 0x89, 0x0c, 0x24, 0xc3]); // mov ecx, [ecx]; mov [esp], ecx; ret
+    c.extend([0x8b, 0x09, 0x89, 0x0c, 0x24, 0x8b, 0x0d]); // mov ecx, [ecx]; mov [esp], ecx; mov ecx, [ECX_DO_JOGO]
+    c.extend(le(&raw mut ECX_DO_JOGO as u32));
+    c.push(0xc3); // ret
     assert!(c.len() <= 256);
+    core::ptr::copy_nonoverlapping(c.as_ptr(), codigo as *mut u8, c.len());
+    codigo
+}
+
+// Pilha dos ECX e retornos guardados pelo trecho de `preservar_ecx` (chamadas aninhadas).
+// ponytail: uma pilha só, para a thread principal (o jogo chama as rotinas desviadas nela); 512 níveis.
+static mut PILHA_ECX: [u32; 1024] = [0; 1024];
+static mut TOPO_ECX: u32 = 0;
+static mut GUARDA_EAX: u32 = 0;
+
+/// Trecho em volta de `destino` que devolve o ECX como estava na chamada (as cópias Rust e o caminho de saída
+/// não o preservam; o código compilado do jogo não conta com isso, mas o patch de terceiros conta). Troca o
+/// endereço de retorno pelo nosso, guarda ECX e retorno na PILHA_ECX e, na volta, restaura os dois; EAX (o
+/// resultado) passa intacto. A profundidade da pilha do jogo não muda.
+pub unsafe fn preservar_ecx(destino: usize) -> usize {
+    let codigo = win::VirtualAlloc(core::ptr::null_mut(), 96, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as usize;
+    if codigo == 0 {
+        return destino;
+    }
+    if TOPO_ECX == 0 {
+        TOPO_ECX = &raw mut PILHA_ECX as u32;
+    }
+    let le = |v: u32| v.to_le_bytes();
+    let (topo, guarda) = (&raw mut TOPO_ECX as u32, &raw mut GUARDA_EAX as u32);
+    let mut c: Vec<u8> = Vec::new();
+    c.push(0xa1); c.extend(le(topo)); // mov eax, [TOPO_ECX]
+    c.extend([0x89, 0x08, 0x8b, 0x0c, 0x24, 0x89, 0x48, 0x04]); // mov [eax], ecx; mov ecx, [esp]; mov [eax+4], ecx
+    c.extend([0x83, 0xc0, 0x08, 0xa3]); c.extend(le(topo)); // add eax, 8; mov [TOPO_ECX], eax
+    c.extend([0xc7, 0x04, 0x24]); // mov dword [esp], depois
+    let depois_em = c.len();
+    c.extend(le(0));
+    c.extend([0x8b, 0x48, 0xf8]); // mov ecx, [eax-8] (o this das thiscall)
+    c.push(0xe9); // jmp destino
+    let r = ((destino as isize - (codigo + c.len() + 4) as isize) as i32).to_le_bytes();
+    c.extend(r);
+    let depois = codigo + c.len();
+    c[depois_em..depois_em + 4].copy_from_slice(&le(depois as u32));
+    c.push(0xa3); c.extend(le(guarda)); // mov [GUARDA_EAX], eax
+    c.push(0xa1); c.extend(le(topo)); // mov eax, [TOPO_ECX]
+    c.extend([0x83, 0xe8, 0x08, 0xa3]); c.extend(le(topo)); // sub eax, 8; mov [TOPO_ECX], eax
+    c.extend([0x8b, 0x08, 0xff, 0x70, 0x04]); // mov ecx, [eax]; push dword [eax+4]
+    c.push(0xa1); c.extend(le(guarda)); // mov eax, [GUARDA_EAX]
+    c.push(0xc3); // ret
+    assert!(c.len() <= 96);
+    core::ptr::copy_nonoverlapping(c.as_ptr(), codigo as *mut u8, c.len());
+    codigo
+}
+
+/// O mesmo para uma rotina cdecl de `n` argumentos, sem trocar o endereço de retorno: push ecx; copia os
+/// argumentos; call; add esp; pop ecx; ret. Fica com as chamadas e retornos casados (a troca do retorno do
+/// `preservar_ecx` desfaz a previsão de retorno do processador e dobrava o tempo da carreira, com o sorteio
+/// 0x90cfc0 chamado bilhões de vezes).
+pub unsafe fn preservar_ecx_cdecl(destino: usize, n: u8) -> usize {
+    let codigo = win::VirtualAlloc(core::ptr::null_mut(), 64, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as usize;
+    if codigo == 0 {
+        return destino;
+    }
+    let mut c: Vec<u8> = vec![0x51]; // push ecx
+    for _ in 0..n {
+        c.extend([0xff, 0x74, 0x24, 4 * n + 4]); // push dword [esp + 4n + 4] (o último argumento primeiro)
+    }
+    c.push(0xe8); // call destino
+    let r = ((destino as isize - (codigo + c.len() + 4) as isize) as i32).to_le_bytes();
+    c.extend(r);
+    c.extend([0x83, 0xc4, 4 * n, 0x59, 0xc3]); // add esp, 4n; pop ecx; ret
     core::ptr::copy_nonoverlapping(c.as_ptr(), codigo as *mut u8, c.len());
     codigo
 }
@@ -102,6 +176,10 @@ pub const PASSAGEM: usize = 0;
 pub unsafe fn desviar(nome: &str, p: &Prologo, destino: usize) -> Option<usize> {
     desviar_para(nome, p, |tramp| {
         let destino = if destino == PASSAGEM { tramp } else { destino };
+        // só no exe com patch (o código de terceiros conta com o ECX; o do jogo não, e o trecho genérico dobra o
+        // tempo da carreira); o sorteio (1 argumento, cdecl, o mais chamado) tem o trecho barato
+        let destino = if !ADIADO.load(std::sync::atomic::Ordering::Relaxed) { destino }
+            else if p.endereco == 0x90cfc0 { preservar_ecx_cdecl(destino, 1) } else { preservar_ecx(destino) };
         if ISOLAR.load(std::sync::atomic::Ordering::Relaxed) { isolar(destino) } else { destino }
     })
 }
@@ -122,7 +200,7 @@ pub unsafe fn desviar_zerando(nome: &str, p: &Prologo, n: u32, destino: usize) -
 /// pop eax; pop ecx; pop edi; jmp destino`: zera [esp_entrada - n - 12, esp_entrada - 12) sem tocar
 /// registradores nem argumentos.
 unsafe fn zerar_e_saltar(n: u32, destino: usize) -> usize {
-    let codigo = win::VirtualAlloc(core::ptr::null_mut(), 64, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as usize;
+    let codigo = win::VirtualAlloc(core::ptr::null_mut(), 96, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as usize;
     let mut c: Vec<u8> = vec![0x57, 0x51, 0x50, 0x8d, 0xbc, 0x24];
     c.extend((-(n as i32)).to_le_bytes()); // lea edi, [esp - n] (esp ja desceu 12)
     c.push(0xb9);
