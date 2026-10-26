@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'adjetivo_da_nacao': 'nation_get_nationality_adjective',
  'inicializar_jogadores': 'database_player_initialisation',
  'definir_chaves_fixas': 'set_key_ids', 'definir_chaves_fixas_1080': 'set_key_ids_1080',
  'nome_pelos_textos': 'database_format_name_from_strings', 'nome_do_cargo': 'database_get_job_name', 'nome_do_idioma': 'database_get_language_name', 'nome_da_selecao': 'club_get_national_team_name', 'nome_do_atributo_do_jogador': 'database_get_player_attribute_name', 'texto_das_posicoes': 'database_format_player_positions', 'nome_da_regiao': 'get_region_name', 'adjetivo_do_continente': 'get_continent_adjective',

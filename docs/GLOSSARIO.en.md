@@ -64,6 +64,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x71b1b0 | `abrir_ultimos_placares` | open_latest_scores |
 | 0x547e70 | `acrescentar_clube_rejeitado` | staff_add_disliked_club |
 | 0x547a10 | `acrescentar_pessoa_favorita` | staff_add_favoured_staff |
+| 0x6181d0 | `adjetivo_da_nacao` | nation_get_nationality_adjective |
 | 0x6177f0 | `adjetivo_do_continente` | get_continent_adjective |
 | 0x7172d0 | `ajustar_17` | adjust_17 |
 | 0x544710 | `ajustar_moral_da_pessoa` | staff_adjust_morale |

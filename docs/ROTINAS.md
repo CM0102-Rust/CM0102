@@ -2442,3 +2442,11 @@ Mutações: `mutacoes/leva238.py` (5, pela prova do save): 4 acusadas. `dbw_cont
 | `inicializar_jogadores()` | 0x535a80 | cdecl | Database.cpp: prepara cada pessoa do jogo novo: nomes que faltam, datas, atributos de pessoa, nação; do jogador as habilidades, o potencial, a atual, a idade, as posições e os atributos que faltam (pelo jogador mais parecido entre 250 sorteados); do não jogador as reputações, os atributos (o molde entre 250), o cargo e os nomes famosos; depois os vetores relativos à habilidade e as normalizações; barra "Player Initialisation" |
 
 Mutações: `mutacoes/leva239.py` (5, pela prova do save): 5 acusadas.  Prova do save (o .qst com e sem as rotinas): IGUAL (16856054 bytes). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
+
+### Simulação, 240ª leva — o adjetivo de nacionalidade pelo idioma e pela forma (oficial em 26/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `adjetivo_da_nacao()` | 0x6181d0 | cdecl | index.cpp: o adjetivo da nação no texto (tamanho >= 50): com gênero 0 ou fora dos idiomas 9, 4, 5, 10 e 6 o nome da nação; nesses, a forma da 0x545a60 e as cadeias de 937 nações (geradas do exe por adjetivos_nacao.py, textos pelo endereço), com o nome se o texto ficar vazio (menos nos idiomas 4 e 5); devolve 1 (0 com nação ou texto nulo ou tamanho curto) |
+
+Mutações: `mutacoes/leva240.py` (5, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 3 acusadas. `dbx_forma` escapou: a forma 5 (min(5) → min(4)) só aparece nas tabelas de italiano e espanhol, que o jogo em inglês não usa; escapou também no jogo real comparando (0 divergências). `dbx_vazio` escapou: o nome no fim só muda algo nos idiomas 4 e 5 (italiano, espanhol); escapou também no jogo real comparando (0 divergências). (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551

@@ -2444,3 +2444,11 @@ Mutations: `mutacoes/leva238.py` (5, by the save proof): 4 caught. `dbw_continen
 | `inicializar_jogadores()` | 0x535a80 | cdecl | Database.cpp: prepares every person of the new game: missing names, dates, staff attributes, nation; for the player the abilities, potential, current ability, age, positions and missing attributes (from the most similar of 250 random players); for the non-player the reputations, attributes (template among 250), job and the famous names; then the ability-relative vectors and the normalisations; "Player Initialisation" bar |
 
 Mutations: `mutacoes/leva239.py` (5, by the save proof): 5 caught.  Save proof (the .qst with and without the routines): EQUAL (16856054 bytes). Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
+
+### Simulation, 240th batch — the nationality adjective by language and form (official on 2026-10-26)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `adjetivo_da_nacao()` | 0x6181d0 | cdecl | index.cpp: the nation's adjective into the text (size >= 50): with gender 0 or outside languages 9, 4, 5, 10 and 6 the nation's name; in those, the form from 0x545a60 and the chains of 937 nations (generated from the exe by adjetivos_nacao.py, texts by address), with the name if the text stays empty (except in languages 4 and 5); returns 1 (0 with a null nation or text or a short size) |
+
+Mutations: `mutacoes/leva240.py` (5, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 3 caught. `dbx_forma` escaped: form 5 (min(5) → min(4)) only appears in the Italian and Spanish tables, which the English game does not use; also escaped the real game comparing (0 divergences). `dbx_vazio` escaped: the name at the end only changes something in languages 4 and 5 (Italian, Spanish); also escaped the real game comparing (0 divergences). (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
