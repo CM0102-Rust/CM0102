@@ -171,6 +171,20 @@ def jogo_aberto():
             if (q.info['name'] or '').lower().startswith('cm0102') and os.path.normcase(q.info['exe'] or '').startswith(raiz)]
 
 
+def carga_comparando():
+    """Carrega o jogo\\FeriasTesteSave.sav (idioma 9, português) no modo comparando até a data da prova do save e
+    devolve as divergências do ddraw.log: exercita os ramos por idioma que a carreira em inglês não alcança
+    (textos, nomes traduzidos). Sem divergência: a primeira linha é a do placar do motor."""
+    import prova_save
+    a = prova_save.padrao()
+    a.sav = a.sav or prova_save.FERIAS
+    a.ate = '2001-07-27'  # 3 dias depois do save (2001-205): a carga comparando é lenta; os textos rodam logo
+    prova_save.carregar(a, 'comparar')
+    texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
+    linhas = [l for l in texto.splitlines() if 'DIVERGENCIA' in l or 'EXCECAO' in l]
+    return linhas[:3] or [l for l in texto.splitlines() if l.startswith('motor:') and 'comparacoes' in l][-1:] or ['SEM RESULTADO']
+
+
 def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
@@ -189,6 +203,8 @@ def main():
     rodar = (lambda: carreira(fim)) if fim else (lambda: jogo(data)) if data else None
     if '--autoteste-banco' in sys.argv:  # só os autotestes do banco (CM_AUTOTESTE=banco, 232a)
         rodar = lambda: autoteste('banco')
+    if '--carga-comparando' in sys.argv:  # o FeriasTesteSave (em português) carregado no modo comparando (26/10)
+        rodar = carga_comparando
     prova = sys.argv[sys.argv.index('--prova-save') + 1] if '--prova-save' in sys.argv else None
     if prova:
         import prova_save
@@ -243,6 +259,11 @@ def main():
                     print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, r[0][:150]), flush=True)
                     t0 = time.time()
                     r = ['comparando: ' + (jogo(confirmar) or ['SEM RESULTADO'])[0]]
+                    # ainda sem divergência: o save em português (os ramos por idioma que o inglês não alcança, 26/10)
+                    if '--confirmar-pt' in sys.argv and 'DIVERGENCIA' not in r[0] and 'EXCECAO' not in r[0]:
+                        print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, r[0][:150]), flush=True)
+                        t0 = time.time()
+                        r = ['comparando (carga pt): ' + carga_comparando()[0]]
             print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, r[0][:150] if r else 'SEM RESULTADO'), flush=True)
     finally:
         open(SRC, 'w', encoding='utf-8').write(original)

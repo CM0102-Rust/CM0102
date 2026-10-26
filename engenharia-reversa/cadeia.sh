@@ -17,7 +17,7 @@ mkdir -p "$RAIZ/levas/$N"
 cd "$RAIZ/engenharia-reversa"
 CONF="--confirmar $DATA"; [ "$DATA" = "-" ] && CONF=""
 SAVE=""; [ -f "$RAIZ/levas/$N/SAVE" ] && SAVE=1
-MODO="--carreira 2002-06-01 $CONF"; [ -n "$SAVE" ] && MODO="--prova-save $N"
+MODO="--carreira 2002-06-01 $CONF --confirmar-pt"; [ -n "$SAVE" ] && MODO="--prova-save $N"
 (if python -u mutacoes.py mutacoes/leva$N.py $MODO; then
   if [ -n "$SAVE" ]; then
     python laboratorio.py | head -1
