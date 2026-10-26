@@ -401,6 +401,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5221f0 | `importancia_da_partida` | cup_match_importance |
 | 0x68a3e0 | `importancia_do_jogo_da_liga` | League::get_match_importance |
 | 0x53bd10 | `incluir_pessoa_no_clube` | database_add_staff_to_club |
+| 0x535a80 | `inicializar_jogadores` | database_player_initialisation |
 | 0x402ac0 | `iniciar_area` | Area::init |
 | 0x6b5a70 | `iniciar_proxima_partida` | start_next_match |
 | 0x6e9470 | `iniciar_rigor` | init_strictness |

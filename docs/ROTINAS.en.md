@@ -2436,3 +2436,11 @@ Mutations: `mutacoes/leva238.py` (5, by the save proof): 4 caught. `dbw_continen
 | `definir_chaves_fixas()` | 0x601a40 | cdecl | index.cpp: the fixed keys (colours, continents, nations, competitions, awards, clubs) set to -1 and then to the database row by name (from eng.lng or from the database); the ones left without a value go to the "Unable to find the %s index" box (7 fatal by nation); in cm0102-1080.exe through the 0x603834 entry, with -1 over the whole ranges |
 
 Mutations: `mutacoes/leva238.py` (5, by the save proof): 4 caught. `dbw_continentes` escaped: the continent keys (0x9cfa08..0x9cfa1c) decide nothing in the .qst creation nor in the load to 2001-08-28; Asia and Europe swapped did not change the save. (gap in `PENDENCIAS.en.md`) Save proof (the .qst with and without the routines): EQUAL (16856662 bytes); carga EQUAL (parou em 2001-239, 728264576 sorteios, impressao 7a1167744a713c73). Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551
+
+### Simulation, 239th batch — game creation: initialising the players and the staff (official on 2026-10-26)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `inicializar_jogadores()` | 0x535a80 | cdecl | Database.cpp: prepares every person of the new game: missing names, dates, staff attributes, nation; for the player the abilities, potential, current ability, age, positions and missing attributes (from the most similar of 250 random players); for the non-player the reputations, attributes (template among 250), job and the famous names; then the ability-relative vectors and the normalisations; "Player Initialisation" bar |
+
+Mutations: `mutacoes/leva239.py` (5, by the save proof): 5 caught.  Save proof (the .qst with and without the routines): EQUAL (16856054 bytes). Real game comparing to 2002-01-01: 0 divergences (963cea289f055ac3). Rust ×2 and original careers to 2002-06-01: 2,368,478,169 draws, fingerprint b28542870027e432, matches 959a02ada4a23639, database ce037e0141221551

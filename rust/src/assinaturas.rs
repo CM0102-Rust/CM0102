@@ -2,7 +2,7 @@
 //! mudar a tabela PROLOGOS do motor.rs. (início, tamanho até a próxima fronteira real, FNV-1a 64 no
 //! cm0102.exe original, FNV-1a 64 no cm0102-1080.exe). Ordenada pelo início (busca binária).
 
-pub const ASSINATURAS: [(usize, usize, u64, u64); 771] = [
+pub const ASSINATURAS: [(usize, usize, u64, u64); 772] = [
     (0x402ac0, 592, 0xfa010800d837904b, 0x37a872bd03d17975),
     (0x402e70, 816, 0x454593afa149cac9, 0x454593afa149cac9),
     (0x403350, 688, 0x98f03052b419bd32, 0x98f03052b419bd32),
@@ -46,6 +46,7 @@ pub const ASSINATURAS: [(usize, usize, u64, u64); 771] = [
     (0x5315a0, 6240, 0x387ab511b7cc827f, 0x387ab511b7cc827f),
     (0x535920, 16, 0x28bd60f36f574319, 0x28bd60f36f574319),
     (0x535930, 336, 0x330ab8000f235a58, 0x330ab8000f235a58),
+    (0x535a80, 12608, 0x5738b6d7a4b5bc29, 0x5738b6d7a4b5bc29),
     (0x538bc0, 768, 0x528f180a21435eb6, 0x528f180a21435eb6),
     (0x538ec0, 1488, 0x80e61a24a93bc818, 0x80e61a24a93bc818),
     (0x539490, 704, 0xcc7f509a0562e1db, 0xcc7f509a0562e1db),

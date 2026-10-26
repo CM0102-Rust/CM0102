@@ -2434,3 +2434,11 @@ Mutações: `mutacoes/leva238.py` (5, pela prova do save): 4 acusadas. `dbw_cont
 | `definir_chaves_fixas()` | 0x601a40 | cdecl | index.cpp: as chaves fixas (cores, continentes, nações, competições, prêmios, clubes) em -1 e depois a linha da base pelo nome (pelo eng.lng ou pela base); as que ficam sem valor vão à caixa "Unable to find the %s index" (7 fatais pela nação); no cm0102-1080.exe pela entrada 0x603834, com o -1 nas faixas inteiras |
 
 Mutações: `mutacoes/leva238.py` (5, pela prova do save): 4 acusadas. `dbw_continentes` escapou: as chaves de continente (0x9cfa08..0x9cfa1c) não decidem nada na criação do .qst nem na carga até 2001-08-28; Ásia e Europa trocadas não mudaram o save. (lacuna em `PENDENCIAS.md`) Prova do save (o .qst com e sem as rotinas): IGUAL (16856662 bytes); carga IGUAL (parou em 2001-239, 728264576 sorteios, impressao 7a1167744a713c73). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
+
+### Simulação, 239ª leva — a criação do jogo: inicializar os jogadores e as pessoas (oficial em 26/10/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `inicializar_jogadores()` | 0x535a80 | cdecl | Database.cpp: prepara cada pessoa do jogo novo: nomes que faltam, datas, atributos de pessoa, nação; do jogador as habilidades, o potencial, a atual, a idade, as posições e os atributos que faltam (pelo jogador mais parecido entre 250 sorteados); do não jogador as reputações, os atributos (o molde entre 250), o cargo e os nomes famosos; depois os vetores relativos à habilidade e as normalizações; barra "Player Initialisation" |
+
+Mutações: `mutacoes/leva239.py` (5, pela prova do save): 5 acusadas.  Prova do save (o .qst com e sem as rotinas): IGUAL (16856054 bytes). Jogo real comparando até 2002-01-01: 0 divergências (963cea289f055ac3). Carreiras Rust ×2 e original até 2002-06-01: 2.368.478.169 sorteios, impressão b28542870027e432, partidas 959a02ada4a23639, banco ce037e0141221551
