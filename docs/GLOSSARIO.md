@@ -90,6 +90,8 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x543fd0 | `atributo_calculado_do_nao_jogador` | staff_compute_non_player_attribute |
 | 0x5431e0 | `atributo_da_pessoa` | staff_get_player_attribute |
 | 0x543f30 | `atributo_do_nao_jogador` | staff_get_non_player_attribute |
+| 0x543440 | `atributo_para_quem_ve` | staff_get_player_attribute_for_viewer |
+| 0x543280 | `atributo_visivel` | staff_is_player_attribute_visible |
 | 0x6ec010 | `atualizar_atributos` | update_attributes |
 | 0x71d9e0 | `atualizar_barra_da_posse` | refresh_possession_bar |
 | 0x6869a0 | `atualizar_confronto_direto` | League::update_head_to_head |
@@ -150,6 +152,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x7875e0 | `clube_de_tecnico_humano` | news_club_has_human_manager |
 | 0x8c5450 | `clube_do_contrato_acertado` | TRANSFER_MANAGER::get_agreed_contract_club |
 | 0x6b79a0 | `clube_do_pos_jogo` | post_match_club |
+| 0x5448c0 | `clube_e_time_b` | club_is_b_team |
 | 0x549e50 | `clube_em_nacao_grande` | club_is_in_major_nation |
 | 0x547770 | `clube_em_temporada` | club_is_in_season |
 | 0x76d940 | `clube_especial` | special_club |
@@ -196,6 +199,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x548150 | `contar_elenco_com_mascara` | club_count_squad_with_position_mask |
 | 0x53c590 | `contar_elenco_do_clube` | database_count_club_squad |
 | 0x547ce0 | `contar_favoritos_no_clube` | staff_count_favoured_staff_at_club |
+| 0x53c9b0 | `contar_fisioterapeutas` | database_count_club_physios |
 | 0x728e90 | `contar_placar_ao_vivo` | match_screens_tally_live_score |
 | 0x547c90 | `contar_rejeitados_no_clube` | staff_count_disliked_staff_at_club |
 | 0x53c8d0 | `contar_treinadores_do_clube` | database_count_club_coaches |
@@ -228,6 +232,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x70d430 | `defender` | save_shot |
 | 0x700420 | `defesa_do_goleiro` | goalkeeper_save |
 | 0x6c87e0 | `desafio_adversario` | opposition_challenge |
+| 0x5465a0 | `descricao_do_jogador` | write_player_description |
 | 0x933320 | `desempacotar_do_conteiner` | zextract_matching_files |
 | 0x6eecb0 | `desempenho_na_partida` | match_performance |
 | 0x402e70 | `desenhar_area` | Area::draw |
@@ -328,8 +333,10 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cb910 | `fora_do_meio` | off_centre |
 | 0x6bbb60 | `forca_do_lado` | side_strength |
 | 0x6c0c60 | `forca_do_time` | team_strength |
+| 0x546ab0 | `forcas_do_jogador` | staff_get_player_strength_flags |
 | 0x545a60 | `forma_do_adjetivo` | get_adjective_form_index |
 | 0x53dba0 | `formatar_nome_da_pessoa` | database_format_staff_name |
+| 0x5470d0 | `fraquezas_do_jogador` | staff_get_player_weakness_flags |
 | 0x527240 | `gerar_comissao_extra` | database_generate_extra_non_playing_staff |
 | 0x68a030 | `girar_rodada` | rotate_round |
 | 0x535920 | `global_9b5984` | global_9b5984 |
@@ -495,6 +502,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x7c1950 | `media_das_notas` | ratings_average |
 | 0x5d5a60 | `media_do_jogo` | game_average |
 | 0x6e1a40 | `melhor_avaliado` | best_rated |
+| 0x548810 | `melhor_candidato_a_favorito` | staff_is_best_favoured_candidate |
 | 0x6e1940 | `melhor_da_lista` | best_in_list |
 | 0x6c3950 | `menor_distancia` | smallest_distance |
 | 0x6d4250 | `momento_marcado` | marked_moment |
@@ -521,6 +529,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x544670 | `nacao_com_transferencia_livre` | nation_allows_free_transfers |
 | 0x53d900 | `nacao_da_melanesia` | database_is_melanesian_nation |
 | 0x53d940 | `nacao_da_polinesia` | database_is_polynesian_nation |
+| 0x53d7d0 | `nacao_do_clube_na_cee` | database_club_nation_is_eec |
 | 0x7e6f20 | `nacao_do_grupo` | group_nation |
 | 0x549ea0 | `nacao_grande` | nation_is_major_nation |
 | 0x776380 | `nao_gosta_da_selecao` | dislikes_national_side |
@@ -533,6 +542,8 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x53ce90 | `nivel_do_contrato` | contract_level |
 | 0x76d810 | `nivel_para_a_selecao` | national_team_level |
 | 0x545770 | `nome_curto_ingles_do_clube` | club_get_english_short_name |
+| 0x5461b0 | `nome_da_posicao` | write_position_name |
+| 0x543b10 | `nome_do_atributo_de_tecnico` | database_get_non_player_attribute_name |
 | 0x53ac40 | `nome_do_cargo_de_treino` | database_get_coaching_job_name |
 | 0x6db2d0 | `nome_do_jogador_na_narracao` | commentary_player_name |
 | 0x5455a0 | `nome_ingles_da_competicao` | comp_get_english_name |
@@ -540,6 +551,8 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5453f0 | `nome_ingles_da_nacao` | nation_get_english_name |
 | 0x545880 | `nome_ingles_do_clube` | club_get_english_name |
 | 0x545990 | `nome_ingles_do_estadio` | stadium_get_english_name |
+| 0x53eab0 | `nome_oficial` | database_format_official_name |
+| 0x53e140 | `nome_por_ids` | database_format_name_from_ids |
 | 0x538bc0 | `normalizar_atributos_do_jogador` | staff_normalise_player_attributes |
 | 0x539490 | `normalizar_atributos_do_nao_jogador` | staff_normalise_non_player_attributes |
 | 0x538ec0 | `normalizar_atributos_fisicos_do_jogador` | staff_normalise_player_physical_attributes |
@@ -563,6 +576,8 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x683210 | `ordem_das_linhas_da_tabela` | league_compare_table_rows |
 | 0x6b6510 | `ordem_das_partidas_do_dia` | day_match_order |
 | 0x540270 | `ordem_das_pessoas_pelo_nome_completo` | database_compare_staff_by_full_name |
+| 0x53ff60 | `ordem_das_pessoas_pelo_sobrenome` | database_compare_staff_by_surname |
+| 0x545e00 | `ordem_das_regioes_pelo_nome` | compare_region_names |
 | 0x6bd840 | `ordem_de_acao` | action_order |
 | 0x6834f0 | `ordem_do_confronto` | league_compare_h2h_rows |
 | 0x5402f0 | `ordem_do_elenco_pela_habilidade` | qsort comparator (squad by player +0xb) |
@@ -575,6 +590,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x72b160 | `ordem_dos_eventos` | match_stats_compare_events |
 | 0x6bd760 | `ordem_dos_jogadores` | player_order |
 | 0x6be520 | `ordem_dos_penaltis` | penalty_order |
+| 0x53ffe0 | `ordem_dos_ponteiros_de_clube_pela_reputacao` | database_compare_clubs_by_reputation |
 | 0x4b0780 | `ordem_por_5f` | order_by_5f |
 | 0x4b07b0 | `ordem_por_80` | order_by_80 |
 | 0x4b0810 | `ordem_por_80_cresc` | order_by_80_asc |
@@ -611,6 +627,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x7c6930 | `peso_da_competicao` | competition_weight |
 | 0x53e990 | `pessoa_confere_com_os_nomes` | database_staff_matches_names |
 | 0x897dc0 | `pessoa_da_linha` | row_person |
+| 0x549dd0 | `pessoa_da_opiniao` | staff_get_opinion_link_staff |
 | 0x8968f0 | `pessoa_da_vaga_tatica` | tactic_slot_person |
 | 0x53d740 | `pessoa_e_comunitaria` | database_is_staff_eu_national |
 | 0x53d980 | `pessoa_e_estrangeira` | database_is_staff_foreign |
@@ -621,6 +638,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x69fc60 | `pessoa_na_lista` | person_in_list |
 | 0x8c1870 | `pessoa_na_lista_de_transferencias` | person_in_transfer_list |
 | 0x548090 | `pessoas_favoritas` | staff_get_favoured_staff |
+| 0x544c70 | `pessoas_fora_do_elenco` | club_collect_non_playing_staff |
 | 0x5480f0 | `pessoas_rejeitadas` | staff_get_disliked_staff |
 | 0x6ce310 | `placar_agregado` | aggregate_score |
 | 0x539ae0 | `podar_historico_de_competicoes` | database_prune_comp_history_table |
@@ -659,6 +677,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6f5810 | `recuperar_folego` | recover_stamina |
 | 0x62bd10 | `recuperar_lesao` | recover_injury |
 | 0x6e1aa0 | `refazer_time` | redo_team |
+| 0x545dc0 | `regioes_pelo_nome` | get_regions_sorted_by_name |
 | 0x5ca030 | `registrar_competicoes_do_amistoso` | Friendly::register_comp_objects |
 | 0x68a1c0 | `registrar_jogo_da_rodada` | store_round_match |
 | 0x8ce920 | `registrar_jogo_pela_selecao` | TRANSFER_MANAGER::record_international_appearance |
@@ -740,6 +759,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x735840 | `tem_noticia` | has_story |
 | 0x7164b0 | `teste_de_condicao` | condition_test |
 | 0x84b230 | `teto_da_observacao` | shortlist_manager_max_fee_for_squad_status |
+| 0x5482f0 | `texto_da_mascara_da_posicao` | position_mask_get_text |
 | 0x6d8d10 | `texto_do_evento` | event_text |
 | 0x53b620 | `tipo_11_a_15` | type_11_to_15 |
 | 0x7ae6e0 | `tipo_da_lista_da_busca` | PLAYER_SEARCH::set_list_type |
