@@ -209,6 +209,14 @@ def main():
     with bancada('CM0102 simular.py', {'auto_setup.cfg': linhas_carreira(args.ligas, args.fundo, args.motor)}, args.sem_trava):
         for i in range(args.repetir):
             ok, motivo = laboratorio.pode_rodar()
+            # a RAM livre oscila perto do mínimo com outras sessões abertas: espera até 30 min antes de desistir
+            # (25/10/2026: uma mutação "não iniciada" por 4,0 GB derrubou a cadeia inteira)
+            for _ in range(60):
+                if ok:
+                    break
+                print('  aguardando: %s' % motivo, flush=True)
+                time.sleep(30)
+                ok, motivo = laboratorio.pode_rodar()
             if not ok:
                 print('execucao %d nao iniciada: %s' % (i + 1, motivo))
                 resultados.append(None)

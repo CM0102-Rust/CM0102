@@ -193,7 +193,7 @@ def main():
             cod = open(os.path.join(FILA, nome, 'codigo.rs'), encoding='utf-8').read()
             # comparador que restaura o gerador e roda a cópia sem `sem_contar`: os sorteios dela entram na
             # contagem e a impressão do jogo real comparando sai da referência (204a, 210a)
-            for chamada in re.findall(r'lado_a_lado\((?:[^;]|\n)*?;', cod):
+            for chamada in re.findall(r'lado_a_lado(?:_leve)?\((?:[^;]|\n)*?;', cod):
                 if 'REGIOES_DO_ESTADO' in chamada and 'sem_contar' not in chamada:
                     print('sem sem_contar', nome, chamada.split('\n')[0][:100])
             for k in range(len(rot['ROTINAS'])):

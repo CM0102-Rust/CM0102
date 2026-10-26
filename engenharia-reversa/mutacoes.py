@@ -69,6 +69,15 @@ def compilar():
         time.sleep(10)
     else:
         raise RuntimeError('cargo falhou 3 vezes sem mensagem (codigo %s)' % r.returncode)
+    # a DLL em uso (um jogo de outra sessão no jogo_testes) derrubava a cadeia: espera até 30 min
+    for tentativa in range(180):
+        try:
+            shutil.copy2(DLL, JOGO)
+            return
+        except PermissionError:
+            if tentativa % 6 == 0:
+                print('  aguardando a ddraw.dll do jogo_testes (em uso)', flush=True)
+            time.sleep(10)
     shutil.copy2(DLL, JOGO)
 
 

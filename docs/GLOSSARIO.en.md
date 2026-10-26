@@ -153,7 +153,16 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x540a50 | `clube_parceiro` | partner_club |
 | 0x544820 | `clube_pode_ser_dirigido` | club_can_be_managed |
 | 0x542740 | `clube_pode_ter_reservas` | database_club_has_reserve_squad |
+| 0x549770 | `clube_tem_atacante_rapido` | club_has_fast_striker |
+| 0x5492c0 | `clube_tem_atacantes` | club_has_enough_strikers |
+| 0x549100 | `clube_tem_defensores` | club_has_enough_defenders |
+| 0x5493c0 | `clube_tem_esforcados` | club_has_enough_hard_workers |
+| 0x549470 | `clube_tem_goleiro` | club_has_fit_goalkeeper |
+| 0x549200 | `clube_tem_meias` | club_has_enough_midfielders |
+| 0x549940 | `clube_tem_meias_criativos` | club_has_two_creative_midfielders |
+| 0x549850 | `clube_tem_meias_que_roubam` | club_has_ball_winning_midfielders |
 | 0x53b9a0 | `clube_tem_vaga_para_cargo` | database_club_has_room_for_job |
+| 0x547bd0 | `clube_tirar_pessoa_favorita` | club_remove_favoured_staff |
 | 0x83bd00 | `codigo_da_posicao` | position_code |
 | 0x70a8c0 | `codigo_de_bola_parada` | set_piece_code |
 | 0x6cb650 | `codigo_especial` | special_code |
@@ -178,7 +187,9 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6b7e50 | `construir_motor` | build_engine |
 | 0x6cbbb0 | `contar_ativos` | count_active |
 | 0x53c590 | `contar_elenco_do_clube` | database_count_club_squad |
+| 0x547ce0 | `contar_favoritos_no_clube` | staff_count_favoured_staff_at_club |
 | 0x728e90 | `contar_placar_ao_vivo` | match_screens_tally_live_score |
+| 0x547c90 | `contar_rejeitados_no_clube` | staff_count_disliked_staff_at_club |
 | 0x53c8d0 | `contar_treinadores_do_clube` | database_count_club_coaches |
 | 0x4cf5f0 | `contrato_com_clube` | contract_with_club |
 | 0x4cf5a0 | `contrato_de` | contract_of |
@@ -285,9 +296,13 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6f55c0 | `evoluir_momento` | evolve_moment |
 | 0x6fad40 | `executar_passe` | execute_pass |
 | 0x6cb960 | `faixa` | band |
+| 0x549a30 | `faixa_de_forca_do_elenco` | club_squad_strength_band |
 | 0x5af2f0 | `faixa_do_horario` | FIXTURE_MANAGER::get_time_slice |
 | 0x6f5b20 | `faixa_jogador` | player_band |
 | 0x6cfc60 | `falta_no_motor` | foul_in_engine |
+| 0x5494d0 | `faltam_atacantes_pelo_alto` | club_lacks_aerial_strikers |
+| 0x5495b0 | `faltam_zagueiros_pelo_alto` | club_lacks_aerial_defenders |
+| 0x549690 | `faltam_zagueiros_rapidos` | club_lacks_fast_defenders |
 | 0x540520 | `familia_da_cor` | database_get_colour_family |
 | 0x547790 | `favorito_de` | favourite_of |
 | 0x6d1cc0 | `fechamento` | match_wrap_up |
@@ -586,6 +601,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5444a0 | `pessoa_listada_pelo_clube` | staff_is_transfer_listed |
 | 0x69fc60 | `pessoa_na_lista` | person_in_list |
 | 0x8c1870 | `pessoa_na_lista_de_transferencias` | person_in_transfer_list |
+| 0x548090 | `pessoas_favoritas` | staff_get_favoured_staff |
 | 0x6ce310 | `placar_agregado` | aggregate_score |
 | 0x539ae0 | `podar_historico_de_competicoes` | database_prune_comp_history_table |
 | 0x8ced40 | `pode_contratar_jogador` | TRANSFER_MANAGER::can_sign_player |
@@ -648,6 +664,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c0980 | `repartir_e` | split_e |
 | 0x6c0b70 | `repartir_f` | split_f |
 | 0x83bf40 | `reputacao_alvo_do_clube` | Shortlist_Manager::update_club_target_reputation |
+| 0x545e90 | `reputacao_do_clube_para_pessoa` | club_reputation_for_staff |
 | 0x6d3610 | `reputacao_do_jogador` | player_reputation |
 | 0x5407e0 | `reputacao_vista_por` | database_get_staff_reputation_for_viewer |
 | 0x5315a0 | `resolver_indices_do_banco` | resolve_database_indexes |
@@ -710,6 +727,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x8cb630 | `tirar_bonus_pela_selecao` | TRANSFER_MANAGER::remove_international_team_appearance_money |
 | 0x8cb590 | `tirar_bonus_por_jogo` | TRANSFER_MANAGER::remove_first_team_appearance_money |
 | 0x5c64e0 | `tirar_clube_dos_amistosos` | Friendly::remove_club_from_ai_plans |
+| 0x547f50 | `tirar_clube_favorito` | staff_remove_favoured_club |
 | 0x4d0bd0 | `tirar_contrato_de_emprestimo` | CONTRACT_MANAGER::remove_loan_contract |
 | 0x6cdd50 | `tirar_de_campo` | take_off_pitch |
 | 0x7c6bf0 | `tirar_idioma_do_jogador` | PlayerStats::remove_language |
@@ -717,6 +735,8 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x7a8470 | `tirar_jogador_do_banco` | PLAYER_REGEN::remove_player_data_from_pool |
 | 0x8cb4f0 | `tirar_percentual_da_proxima_venda` | TRANSFER_MANAGER::remove_next_sale_percentage |
 | 0x53c190 | `tirar_pessoa_do_clube` | database_remove_staff_from_club |
+| 0x547c10 | `tirar_pessoa_favorita` | staff_remove_favoured_staff |
+| 0x547c50 | `tirar_pessoa_rejeitada` | staff_remove_disliked_staff |
 | 0x7a82b0 | `tirar_reserva_de_tecnico` | PLAYER_REGEN::remove_spare_non_player_record |
 | 0x549d60 | `tirar_vinculo_de_opiniao` | staff_remove_opinion_link |
 | 0x6dbb80 | `titulares` | starters |

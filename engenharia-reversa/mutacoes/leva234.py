@@ -1,0 +1,23 @@
+# Mutações da 234a leva (itens dbo_1, dbo_2, dbo_3, dbo_4, dbp_1, dbp_2, dbp_3). Uso: python mutacoes.py mutacoes\leva234.py --carreira 2002-06-01
+MUTACOES = [
+    ('dbo_defensores', '> 2) as u8 // zagueiros (dbo)', '<= 2) as u8 // mutacao: a resposta invertida (zagueiros)'),
+    ('dbo_meias', '> 2) as u8 // meias (dbo)', '<= 2) as u8 // mutacao: a resposta invertida (meias)'),
+    ('dbo_atacantes', '> 1) as u8 // atacantes (dbo)', '<= 1) as u8 // mutacao: a resposta invertida (atacantes)'),
+    ('dbo_esforcados', '    (n > 4) as u8 // esforcados (dbo)', '    (n <= 4) as u8 // mutacao: a resposta invertida (esforcados)'),
+    ('dbo_goleiro', '            return 1; // goleiro em condicoes (dbo)', '            return 0; // mutacao: nunca acha o goleiro'),
+    ('dbo_meias_que_roubam', '    (n > 1) as u8 // meias que roubam (dbo)', '    (n <= 1) as u8 // mutacao: a resposta invertida (meias que roubam)'),
+    ('dbo_atacantes_pelo_alto', '<= 1) as u8 // atacantes pelo alto (dbo)', '> 1) as u8 // mutacao: a resposta invertida (atacantes pelo alto)'),
+    ('dbo_zagueiros_pelo_alto', '<= 1) as u8 // zagueiros pelo alto (dbo)', '> 1) as u8 // mutacao: a resposta invertida (zagueiros pelo alto)'),
+    ('dbo_zagueiros_rapidos', '<= 1) as u8 // zagueiros rapidos (dbo)', '> 1) as u8 // mutacao: a resposta invertida (zagueiros rapidos)'),
+    ('dbo_atacante_rapido', '    (n > 0) as u8 // atacante rapido (dbo)', '    (n == 0) as u8 // mutacao: a resposta invertida (atacante rapido)'),
+    ('dbo_meias_criativos', '    (n > 1) as u8 // meias criativos (dbo)', '    (n <= 1) as u8 // mutacao: a resposta invertida (meias criativos)'),
+    ('dbo_faixa_de_forca', '    ordenar(v.as_mut_ptr() as usize, n as u32, 4, 0x549c30); // os melhores primeiro (dbo)', '    let _ = ordenar; // mutacao: sem a ordenacao (os primeiros do elenco, nao os melhores)'),
+    ('dbp_reputacao', '    let mut x = v * f64_em(0x969558) - f64_em(0x969550); // o peso entre 0 e 10', '    let mut x = v * f64_em(0x969558) - f64_em(0x969558); // mutacao: 14 no lugar do 18'),
+    ('dbp_contar_rejeitados', '    dbp_contar_no_clube(pessoa, clube, 0x28) // os rejeitados', '    dbp_contar_no_clube(pessoa, clube, 0x1c) // mutacao: os favoritos no lugar dos rejeitados'),
+    ('dbp_contar_favoritos', '    dbp_contar_no_clube(pessoa, clube, 0x1c) // os favoritos', '    dbp_contar_no_clube(pessoa, clube, 0x28) // mutacao: os rejeitados no lugar dos favoritos'),
+    ('dbp_tirar_clube_favorito', '        dbp_tirar_de_tres(pref + 4, clube); // os clubes favoritos', '        dbp_tirar_de_tres(pref + 0x10, clube); // mutacao: dos clubes rejeitados'),
+    ('dbp_clube_tirar_favorita', '        dbp_tirar_de_tres(clube + 0x9b, pessoa); // os favoritos do clube', '        dbp_tirar_de_tres(clube + 0xa7, pessoa); // mutacao: dos rejeitados do clube'),
+    ('dbp_tirar_pessoa_favorita', '        dbp_tirar_de_tres(pref + 0x1c, alvo); // as pessoas favoritas', '        dbp_tirar_de_tres(pref + 0x28, alvo); // mutacao: das pessoas rejeitadas'),
+    ('dbp_tirar_rejeitada', '        let reg = pref + 0x28; // as pessoas rejeitadas', '        let reg = pref + 0x1c; // mutacao: das pessoas favoritas'),
+    ('dbp_pessoas_favoritas', '[0x1cusize, 0x20, 0x24].into_iter().enumerate() { // as três favoritas', '[0x1cusize, 0x20, 0x20].into_iter().enumerate() { // mutacao: a segunda no lugar da terceira'),
+]

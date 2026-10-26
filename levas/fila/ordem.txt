@@ -1,1 +1,8 @@
 # ordem da fila (fila.py); um item por linha
+dbq_1
+dbq_2
+dbq_3
+dbr_1
+dbr_2
+dbr_3
+dbr_4
