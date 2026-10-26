@@ -43,3 +43,5 @@ Ampla de 24/10/2026: prova geral Rust = original 9ee2b5ac ate a 229a (8 ligas at
 - leva234.py: dbp_clube_tirar_favorita, dbp_pessoas_favoritas, dbp_tirar_clube_favorito, dbp_tirar_rejeitada (caminho raro; as dbo_* só com relatório de olheiro)
 - leva235.py: dbr_longitude, dbr_fora_da_argentina, dbr_fora_de_arg_fra_cro, dbr_pessoas_pelo_nome_completo, dbr_confere_nomes (outras ligas)
 - leva238.py: dbw_continentes (chaves de continente)
+
+Ampla de 26/10/2026: prova geral Rust = original 9ee2b5ac ate a 239a (com a zeragem nova 0x5fb810)
