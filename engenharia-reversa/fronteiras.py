@@ -44,6 +44,12 @@ def calcular():
         if 'const PROLOGOS:' in t:
             i = t.index('const PROLOGOS:')
             t = t[i:t.index('\n];', i)]
+            # entrada só do cm0102-1080.exe (o prólogo não é o do original; 0x603834, a set_key_ids do 1080): a rotina
+            # já conta pela entrada original, e o endereço não é início de função no original
+            def do_original(m):
+                a, bs = int(m.group(1), 16) - 0x400000, bytes(int(x, 16) for x in m.group(2).split(','))
+                return m.group(0) if d[a:a + len(bs)] == bs else ''
+            t = re.sub(r'Prologo \{ endereco: 0x([0-9a-f]+), bytes: &\[([^\]]*)\] \},', do_original, t)
         else:
             t = re.sub(r'const PROLOGO_[0-9A-F]+: Prologo = Prologo [^;]*;', '', t)
         port |= set(int(x, 16) for x in re.findall(r'endereco:\s*0x([0-9a-f]+)', t))

@@ -9,9 +9,9 @@ Uso:
 Faixa = do início da rotina (tabela PROLOGOS do motor.rs) até a próxima fronteira real (fronteiras.py).
 Hash = FNV-1a 64 dos bytes da faixa. Confere também que nenhum outro desvio da DLL (as portas da
 comparação, a simulação, data.rs...) cai dentro de uma faixa: ele mudaria os bytes antes da conferência."""
-import glob, os, re, sys
+import bisect, glob, os, re, sys
 import pefile
-from fronteiras import calcular, R
+from fronteiras import calcular, R, TXT0, TXT1
 
 FNV0, FNVP = 0xcbf29ce484222325, 0x100000001b3
 
@@ -39,28 +39,55 @@ def leitor(caminho):
 
 
 def prologos():
+    """{início: bytes do prólogo} da tabela PROLOGOS do motor.rs."""
     m = open(os.path.join(R, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
     i = m.index('const PROLOGOS:')
-    return sorted({int(x, 16) for x in re.findall(r'endereco:\s*0x([0-9a-f]+)', m[i:m.index('\n];', i)])})
+    return {int(a, 16): bytes(int(x, 16) for x in b.split(','))
+            for a, b in re.findall(r'endereco:\s*0x([0-9a-f]+), bytes: &\[([^\]]*)\]', m[i:m.index('\n];', i)])}
+
+
+def chamadas_para(ler, alvo):
+    """Os `call rel32` do .text que vão a `alvo`."""
+    txt = ler(TXT0, TXT1 - TXT0)
+    return [TXT0 + i for i in (x.start() for x in re.finditer(b'\xe8', txt))
+            if TXT0 + i + 5 + int.from_bytes(txt[i + 1:i + 5], 'little', signed=True) == alvo]
 
 
 def tabela():
     c = calcular()
-    ends = prologos()
+    pro = prologos()
+    orig = leitor(os.path.join(R, 'jogo', 'cm0102.exe'))
+    r1080 = leitor(os.path.join(R, 'jogo', 'cm0102-1080.exe'))
+    # Entrada só do 1080 (o prólogo só existe lá; 0x603834, a set_key_ids do 1080): vale só o hash do 1080. A rotina
+    # original que o 1080 deixou de chamar (a chamada vai à entrada nova; 0x601a40) vale só no original. Uma não corta a
+    # faixa da outra (nunca ficam desviadas juntas no mesmo exe): a da original vai até a próxima fronteira real.
+    so1080 = {e for e, bs in pro.items() if orig(e, len(bs)) != bs and r1080(e, len(bs)) == bs}
+    so_orig = {}
+    for e in so1080:
+        for site in chamadas_para(r1080, e):
+            b = orig(site, 5)
+            antiga = site + 5 + int.from_bytes(b[1:], 'little', signed=True)
+            if b[0] == 0xe8 and antiga in pro:
+                so_orig[antiga] = e
     # fronteiras reais do fronteiras.py mais as rotinas portadas que o mapa_funcoes.csv não lista (31 na 233ª)
-    inicios = sorted(set(c['inicios']) | set(ends))
-    fim = {a: (inicios[k + 1] if k + 1 < len(inicios) else a + c['ext'].get(a, 0x100)) for k, a in enumerate(inicios)}
-    faixas = [(a, fim[a] - a) for a in ends]
+    inicios = sorted(set(c['inicios']) | (set(pro) - so1080))
+
+    def fim(a):
+        k = bisect.bisect_right(inicios, a)
+        return inicios[k] if k < len(inicios) else a + c['ext'].get(a, 0x100)
+    faixas = [(a, fim(a) - a) for a in sorted(pro)]
     # outros desvios da DLL dentro de uma faixa mudariam os bytes antes da conferencia
     outros = set()
     for f in glob.glob(os.path.join(R, 'rust', 'src', '*.rs')):
         outros |= {int(x, 16) for x in re.findall(r'endereco:\s*0x([0-9a-f]+)', open(f, encoding='utf-8').read())}
     for a, n in faixas:
-        dentro = [hex(o) for o in outros if a < o < a + n]
+        dentro = [hex(o) for o in outros if a < o < a + n and so_orig.get(a) != o]
         assert not dentro, 'desvio %s dentro da faixa de %#x (+%d)' % (dentro, a, n)
-    orig = leitor(os.path.join(R, 'jogo', 'cm0102.exe'))
-    r1080 = leitor(os.path.join(R, 'jogo', 'cm0102-1080.exe'))
-    return [(a, n, fnv(orig(a, n)), fnv(r1080(a, n))) for a, n in faixas]
+    t = []
+    for a, n in faixas:
+        h0, h1 = fnv(orig(a, n)), fnv(r1080(a, n))
+        t.append((a, n, h1 if a in so1080 else h0, h0 if a in so_orig else h1))
+    return t
 
 
 def gravar():

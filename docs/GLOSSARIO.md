@@ -232,6 +232,8 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6e9820 | `decisao_da_falta` | foul_decision |
 | 0x70d430 | `defender` | save_shot |
 | 0x700420 | `defesa_do_goleiro` | goalkeeper_save |
+| 0x601a40 | `definir_chaves_fixas` | set_key_ids |
+| 0x603834 | `definir_chaves_fixas_1080` | set_key_ids_1080 |
 | 0x6c87e0 | `desafio_adversario` | opposition_challenge |
 | 0x5465a0 | `descricao_do_jogador` | write_player_description |
 | 0x933320 | `desempacotar_do_conteiner` | zextract_matching_files |

@@ -8,6 +8,8 @@ Cada item fica em levas/fila/<nome>/:
                pelo save (prova_save.py --leva N, mutacoes.py --prova-save N) em vez da carreira
                CARGA = True (opcional, com SAVE): item de carregar; a leva ganha também levas/N/CARGA e a
                prova do save carrega o FeriasTesteSave com e sem as rotinas (a impressão tem de bater)
+               EXE = {endereco: '1080' | 'original'} (opcional): entrada de um exe só (checar: a do 1080 confere o
+               prólogo contra o cm0102-1080.exe; nenhuma das duas é acusada de "alterada no 1080")
                DOCS = (titulo pt, titulo en, [(nome, nome_en, endereco, arquivo, convencao, o que faz pt, en)])
   mutacoes.py  MUTACOES = [(nome, trecho, troca)]  (mesmo formato de mutacoes/levaN.py)
 A ordem está em levas/fila/ordem.txt (um nome por linha).
@@ -176,8 +178,14 @@ def main():
                     print('repetida', nome, a, hex(e), 'já em', desviadas[e])
                 desviadas[e] = nome
                 o = e - 0x400000
-                if list(exes[0][o:o + len(bs)]) != list(bs):
-                    print('prologo diferente do exe', nome, a, hex(e))
+                # EXE = {endereço: '1080' | 'original'} (opcional): a entrada que só existe no cm0102-1080.exe (o
+                # prólogo é dele; 0x603834) confere contra o 1080; a original que o 1080 trocou por ela (0x601a40) é
+                # alterada lá de propósito (assinaturas.py: cada uma vale só no seu exe)
+                exe = rot.get('EXE', {}).get(e)
+                if list(exes[1 if exe == '1080' else 0][o:o + len(bs)]) != list(bs):
+                    print('prologo diferente do exe', nome, a, hex(e), exe or '')
+                if exe:
+                    continue
                 k = bisect.bisect_right(inicios, e)
                 fim = inicios[k] if k < len(inicios) else e + 0x1000
                 trocados = [hex(x) for x in alteradas if e <= x < fim]
