@@ -868,8 +868,16 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x545dc0, bytes: &[0xb0, 0x01, 0xb9, 0x04, 0x21, 0xae, 0x00] },
     Prologo { endereco: 0x545e00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x90, 0x01, 0x00, 0x00] },
     Prologo { endereco: 0x549dd0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x33, 0xc0] },
+    Prologo { endereco: 0x53e2e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x53ad00, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
+    Prologo { endereco: 0x53cee0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
+    Prologo { endereco: 0x542100, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x5428a0, bytes: &[0x8a, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x53ee50, bytes: &[0xb8, 0xa4, 0x11, 0x00, 0x00] },
+    Prologo { endereco: 0x616f20, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x6177f0, bytes: &[0x55, 0x8b, 0x6c, 0x24, 0x0c] },
 ];
-const N: usize = 761;
+const N: usize = 769;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -32323,6 +32331,723 @@ unsafe extern "stdcall" fn comparar_codigo_da_posicao(m: i16) -> u8 {
 
 comparar_valor!(comparar_criterio_da_comissao, criterio_da_comissao, 357, () -> u32);
 
+// ---------- 237a leva: o nome pelos textos, o nome do cargo e o nome do idioma (Database.cpp) ----------
+
+/// Texto não nulo e não vazio (os `repne scasb` da original).
+unsafe fn dbu1_cheio(t: usize) -> bool {
+    t != 0 && *(t as *const u8) != 0
+}
+
+/// strcpy (o `repne scasb` e os `rep movsd`/`rep movsb` da original).
+unsafe fn dbu1_copiar(destino: usize, origem: usize) {
+    let mut k = 0;
+    loop {
+        let c = *((origem + k) as *const u8);
+        *((destino + k) as *mut u8) = c;
+        if c == 0 {
+            break;
+        }
+        k += 1;
+    }
+}
+
+/// { 0x53e2e0 } (cdecl, Database.cpp): `database_format_name_from_strings(nome, sobrenome, comum, texto, tamanho,
+/// forma)`: o nome da pessoa em `texto` pela forma (byte) a partir dos três textos (nulos ou vazios contam como
+/// faltando). Formas 1 a 4: o nome comum, se houver; senão, com nome e sobrenome, 1 "%s %s", 2 "%c.%s", 3 "%s, %s"
+/// (sobrenome primeiro), 4 "%s, %c"; senão o sobrenome, senão o nome. 5: o comum, o sobrenome ou o nome. 6: as
+/// iniciais ("%c" do comum, "%c %c" do nome e do sobrenome, "%c" do sobrenome ou do nome). 7: "%s %s" primeiro, depois
+/// o comum, o sobrenome ou o nome. Sem nada: o texto vazio. Devolve 1. Texto nulo, tamanho (palavra) < 0x69 ou forma
+/// fora de 1..7: a original (caixa; as locais de 0x200 bytes só servem a ela). Chamada pela 0x53e140 (já em Rust, pelo
+/// endereço do jogo: o desvio vale também lá), pelas telas do clube (0x45ccf0) e pelo manager_manager.
+unsafe extern "C" fn nome_pelos_textos(nome: usize, sobrenome: usize, comum: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    let f = forma as u8;
+    if texto == 0 || (tamanho as u16 as i16) < 0x69 || !(1..=7).contains(&f) {
+        return orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(761)(nome, sobrenome, comum, texto, tamanho, forma);
+    }
+    let sprintf: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
+    let (a, b, c) = (nome, sobrenome, comum);
+    let inicial = |t: usize| *(t as *const i8) as i32;
+    *(texto as *mut u8) = 0;
+    let os_dois = dbu1_cheio(a) && dbu1_cheio(b);
+    // o que sobra: o primeiro cheio da lista
+    let um_de = |lista: &[usize]| {
+        if let Some(&t) = lista.iter().find(|&&t| dbu1_cheio(t)) {
+            dbu1_copiar(texto, t);
+        }
+    };
+    match f {
+        7 => {
+            if os_dois {
+                sprintf(texto, 0x98f0b8, a, b); // "%s %s"
+            } else {
+                um_de(&[c, b, a]);
+            }
+        }
+        6 => {
+            if dbu1_cheio(c) {
+                sprintf(texto, 0x99ec1c, inicial(c)); // "%c"
+            } else if os_dois {
+                sprintf(texto, 0x9b7418, inicial(a), inicial(b)); // "%c %c"
+            } else if dbu1_cheio(b) {
+                sprintf(texto, 0x99ec1c, inicial(b));
+            } else if dbu1_cheio(a) {
+                sprintf(texto, 0x99ec1c, inicial(a));
+            }
+        }
+        5 => um_de(&[c, b, a]),
+        _ => {
+            if dbu1_cheio(c) {
+                dbu1_copiar(texto, c);
+            } else if os_dois {
+                match f {
+                    1 => { sprintf(texto, 0x98f0b8, a, b); } // "%s %s" (dbu)
+                    2 => { sprintf(texto, 0x9b7410, inicial(a), b); } // "%c.%s"
+                    3 => { sprintf(texto, 0x98f6ac, b, a); } // "%s, %s"
+                    _ => { sprintf(texto, 0x9b7408, b, inicial(a)); } // "%s, %c"
+                }
+            } else {
+                um_de(&[b, a]);
+            }
+        }
+    }
+    1
+}
+
+unsafe extern "C" fn comparar_nome_pelos_textos(nome: usize, sobrenome: usize, comum: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(761);
+    if texto == 0 || (tamanho as u16 as i16) < 0x69 || !(1..=7).contains(&(forma as u8)) {
+        return o(nome, sobrenome, comum, texto, tamanho, forma); // caixa: só a original
+    }
+    // o texto produzido (até o tamanho dado, no máximo 128 bytes)
+    let n = (tamanho as u16 as usize).min(128);
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(nome, sobrenome, comum, texto, tamanho, forma),
+        || nome_pelos_textos(nome, sobrenome, comum, texto, tamanho, forma));
+    PLACAR.registrar(igual && r == x, || format!("nome_pelos_textos(forma {}) original={} rust={} {:x?} x {:x?}", forma as u8, r, x, mo, mr));
+    r
+}
+
+/// Os textos dos cargos 0..0x11 da 0x53ad00 (imediatos do código, pelos endereços no exe): curto minúsculo, curto
+/// maiúsculo, inteiro minúsculo, inteiro maiúsculo e o gênero com o idioma 4 (0: não grava). Os curtos levam o
+/// vazio 0xad9c64 ("<%s - COMMENT - short name>"); dos inteiros, só o do jogador (11). O 14 não existe (0).
+const DBU1_CARGOS: [(usize, usize, usize, usize, u8); 18] = [
+    (0x9b6b10, 0x9b6b38, 0x9b6af8, 0x9b6b04, 1), // unemployed
+    (0x9b6ab0, 0x9b6ad4, 0x9b6aa4, 0x9b1234, 1), // chairman
+    (0x9b6a54, 0x9b6a7c, 0x9b6a2c, 0x9b6a40, 4), // managing director
+    (0x9b6780, 0x9b67a8, 0x9b6760, 0x9b6770, 1), // general manager
+    (0x9b69dc, 0x9b6a04, 0x9b69ac, 0x9b69c4, 1), // director of football
+    (0x9b6964, 0x9b6988, 0x9b695c, 0x9b6440, 4), // manager (dbu)
+    (0x9b690c, 0x9b6934, 0x9b68f8, 0x9b642c, 4), // assistant manager
+    (0x9b68a8, 0x9b68d0, 0x9b6878, 0x9b6890, 4), // reserve team manager
+    (0x9b6830, 0x9b6854, 0x9b6828, 0x9b6448, 1), // coach
+    (0x9b67e0, 0x9b6804, 0x9b67d0, 0x9b67d8, 4), // scout
+    (0x9b6718, 0x9b673c, 0x9b6708, 0x9b6710, 1), // physio
+    (0x9b66b8, 0x9b66e0, 0x9b6678, 0x9b6698, 1), // player
+    (0x9b6628, 0x9b6650, 0x9b6608, 0x9b6618, 1), // player/manager
+    (0x9b65b0, 0x9b65dc, 0x9b6578, 0x9b6594, 1), // player/assistant manager
+    (0, 0, 0, 0, 0),
+    (0x9b6530, 0x9b6554, 0x9b6510, 0x9b6520, 1), // player/coach
+    (0x9b64c8, 0x9b64ec, 0x9b64a8, 0x9b64b8, 0), // retired player (sem gênero)
+    (0x9b6460, 0x9b6484, 0x9b6450, 0x9b6450, 1), // pundit, "Media Pundit" nas duas
+];
+
+/// { 0x53ad00 } (cdecl, Database.cpp): `database_get_job_name(cargo, curto, maiuscula, genero)`: o nome traduzido
+/// (0x66f4e0) do cargo (byte com sinal, 0..0x11 sem o 14) no texto [0xae19b4], que é o que devolve; curto ou inteiro e
+/// minúsculo ou maiúsculo pelos dois inteiros. Com `genero` não nulo e o idioma (0x66f4d0) 4, grava o gênero: 4 para
+/// diretor executivo, técnico, auxiliar, técnico dos reservas e olheiro; 1 para os outros; nada para o aposentado.
+/// Cargo fora da faixa: 0, sem escrever. Nas telas do clube, de contratos, da pessoa e de busca, na mídia
+/// (0x744f80, 0x74bbd0), nos regens (0x7a9650, 0x7aa4c0) e nas transferências (0x8d3520, 0x8dc370).
+unsafe extern "C" fn nome_do_cargo(cargo: u32, curto: u32, maiuscula: u32, genero: usize) -> usize {
+    let j = cargo as u8 as i8;
+    if !(0..=0x11).contains(&j) || j == 14 {
+        return 0;
+    }
+    let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x66f4d0usize);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    let (cm, cg, im, ig, g) = DBU1_CARGOS[j as usize];
+    if curto != 0 {
+        formatar(0xae19b4, if maiuscula != 0 { cg } else { cm }, 0xad9c64usize);
+    } else if j == 11 {
+        formatar(0xae19b4, if maiuscula != 0 { ig } else { im }, 0xad9c64usize); // "<%s - COMMENT - job name>"
+    } else {
+        formatar(0xae19b4, if maiuscula != 0 { ig } else { im });
+    }
+    if g != 0 && genero != 0 && idioma() == 4 {
+        *(genero as *mut u8) = g;
+    }
+    0xae19b4
+}
+
+unsafe extern "C" fn comparar_nome_do_cargo(cargo: u32, curto: u32, maiuscula: u32, genero: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(u32, u32, u32, usize) -> usize>(762);
+    // o texto [0xae19b4] e o byte do gênero, se houver
+    let regioes = [(0xae19b4usize, 100usize), (genero, 1)];
+    let reg = if genero != 0 { &regioes[..] } else { &regioes[..1] };
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(cargo, curto, maiuscula, genero),
+        || nome_do_cargo(cargo, curto, maiuscula, genero));
+    PLACAR.registrar(igual && r == x, || format!("nome_do_cargo({}, {}, {}) original={:x} rust={:x} {:x?} x {:x?}", cargo as u8 as i8, curto, maiuscula, r, x, mo, mr));
+    r
+}
+
+/// Os nomes dos idiomas 1..64 da 0x53cee0 (imediatos do código, pelos endereços no exe; o 34 repete o albanês),
+/// todos com o vazio 0xad9c64 ("<%s - COMMENT - language>").
+const DBU1_IDIOMAS: [usize; 64] = [
+    0x9b73dc, 0x9b73bc, 0x9b7398, 0x9b7374, 0x9b7350, 0x9b7330, 0x9b7310, 0x9b72ec, // Albanian .. English
+    0x9b72c8, 0x9b72a8, 0x9b7288, 0x9b7268, 0x9b7248, 0x9b7224, 0x9b7200, 0x9b71dc, // Finnish .. Japanese
+    0x9b71bc, 0x9b719c, 0x9b7178, 0x9b7154, 0x9b7130, 0x9b710c, 0x9b70e8, 0x9b70c4, // Korean .. Spanish
+    0x9b70a0, 0x9b707c, 0x9b705c, 0x9b7038, 0x9b7018, 0x9b6fb0, 0x9b6fd4, 0x9b6ff8, // Turkish .. Danish
+    0x9b6f8c, 0x9b73dc, 0x9b6f68, 0x9b6f44, 0x9b6f24, 0x9b6f04, 0x9b6ee0, 0x9b6ebc, // Afrikaans, Albanian .. Georgian
+    0x9b6e9c, 0x9b6e78, 0x9b6e58, 0x9b6e38, 0x9b6e18, 0x9b6df4, 0x9b6dcc, 0x9b6da8, // Hindi .. Lithuanian
+    0x9b6d84, 0x9b6d60, 0x9b6d3c, 0x9b6d18, 0x9b6cf4, 0x9b6cd4, 0x9b6cb0, 0x9b6c90, // Macedonian .. Tajik
+    0x9b6c70, 0x9b6c50, 0x9b6c30, 0x9b6c0c, 0x9b6bec, 0x9b6bc8, 0x9b6ba4, 0x9b6b84, // Tamil .. Zulu
+];
+
+/// { 0x53cee0 } (cdecl, Database.cpp): `database_get_language_name(idioma)`: o nome traduzido (0x66f4e0) do idioma
+/// (byte com sinal, 1..64; fora disso "Unknown") no texto [0xae21d4] (100 bytes), que é o que devolve. Na busca
+/// (0x813210) e na tela da pessoa (0x87dd80).
+unsafe extern "C" fn nome_do_idioma(idioma: u32) -> usize {
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    let x = idioma as u8 as i8;
+    let s = if (1..=64).contains(&x) { DBU1_IDIOMAS[x as usize - 1] } else { 0x9b6b60 }; // Unknown (dbu)
+    formatar(0xae21d4, s, 0xad9c64usize);
+    0xae21d4
+}
+
+unsafe extern "C" fn comparar_nome_do_idioma(idioma: u32) -> usize {
+    let o = orig::<unsafe extern "C" fn(u32) -> usize>(763);
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae21d4, 100)], || o(idioma), || nome_do_idioma(idioma));
+    PLACAR.registrar(igual && r == x, || format!("nome_do_idioma({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8 as i8, r, x, mo, mr));
+    r
+}
+
+// ---------- 237a leva: o nome da seleção, o nome do atributo do jogador e o texto das posições (Database.cpp) ----------
+
+unsafe fn dbu2_u32(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+unsafe fn dbu2_vazio(t: usize) -> bool {
+    *(t as *const u8) == 0
+}
+
+/// strcat (os `repne scasb` e os `rep movsd`/`rep movsb` da original).
+unsafe fn dbu2_juntar(destino: usize, origem: usize) {
+    let mut d = destino;
+    while *(d as *const u8) != 0 {
+        d += 1;
+    }
+    let mut k = 0;
+    loop {
+        let c = *((origem + k) as *const u8);
+        *((d + k) as *mut u8) = c;
+        if c == 0 {
+            break;
+        }
+        k += 1;
+    }
+}
+
+/// { 0x542100 } (cdecl, Database.cpp): `club_get_national_team_name(clube, variante, texto, tamanho, forma, aspas)`:
+/// o nome do clube de seleção em `texto` pela forma (byte, 1..4; fora disso não escreve). O nome é o de +0x38 com o
+/// gênero +0x52 (byte com sinal), na forma 3 o de +4 com o gênero +0x37. Fora das seleções (id < [0xae235c] −
+/// 2 × [0xae2350]): variante 0 copia o nome (forma 4: "Main Squad"); senão "Reserves" (formas 1 e 3), "Reserve" (2),
+/// "Reserve Squad" (4). Seleção com variante: "B" ou "'B'" (com `aspas`), na forma 4 "B Squad"/"'B' Squad". Seleção
+/// principal (id < clubes − nações): copia o nome (forma 4: "Squad"). As de base: sub-21 ou sub-23 pelo byte
+/// [[0xb74318] + 0x36] + id da nação (+0x53), "U21"/"U23" (1), "Under 21"/"Under 23" (2), "Under 21's"/"Under 23's"
+/// (3), "Under 21 Squad"/"Under 23 Squad" (4). Os formatos vão ao 0x66f4e0 com (gênero, gênero, nome). Devolve 1.
+/// Tamanho < 0x47 ou clube nulo (com forma 1..4): a original (caixa). Nas telas do clube, da seleção, do técnico, na
+/// escalação da partida (0x725f70, em Rust), no hall da fama, nas impressões e no Setup.
+unsafe extern "C" fn nome_da_selecao(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
+    let f = forma as u8 as i8;
+    if tamanho < 0x47 || ((1..=4).contains(&f) && clube == 0) {
+        return orig::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(764)(clube, variante, texto, tamanho, forma, aspas);
+    }
+    if !(1..=4).contains(&f) {
+        return 1;
+    }
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    let id = dbu2_u32(clube) as i32;
+    let nacoes = dbu2_u32(0xae2350) as i32;
+    let clubes = dbu2_u32(0xae235c) as i32;
+    let (nome, g) = if f == 3 { (clube + 4, *((clube + 0x37) as *const i8) as i32) } else { (clube + 0x38, *((clube + 0x52) as *const i8) as i32) };
+    let formato = if id < clubes.wrapping_sub(nacoes.wrapping_mul(2)) {
+        if variante == 0 {
+            if f == 4 { Some(0x9b7634) } else { None } // Main Squad
+        } else {
+            Some([0x9b784c, 0x9b77ac, 0x9b784c, 0x9b770c][f as usize - 1]) // Reserves, Reserve, Reserves, Reserve Squad
+        }
+    } else if variante != 0 {
+        Some(match (f == 4, aspas != 0) {
+            (false, false) => 0x9b7814, // B
+            (false, true) => 0x9b7830,  // 'B'
+            (true, false) => 0x9b76c8,  // B Squad
+            (true, true) => 0x9b76e8,   // 'B' Squad
+        })
+    } else if id < clubes.wrapping_sub(nacoes) {
+        if f == 4 { Some(0x9b7658) } else { None } // Squad
+    } else {
+        let nacao = dbu2_u32(dbu2_u32(clube + 0x53));
+        let sub23 = *(nacao.wrapping_add(dbu2_u32(dbu2_u32(0xb74318) + 0x36)) as *const u8) != 0;
+        Some(match (f, sub23) {
+            (1, false) => 0x9b7734, // U21
+            (1, true) => 0x9b7750,  // U23
+            (2, false) => 0x9b776c, // Under 21 (dbu)
+            (2, true) => 0x9b778c,  // Under 23
+            (3, false) => 0x9b77cc, // Under 21's
+            (3, true) => 0x9b77f0,  // Under 23's
+            (_, false) => 0x9b7678, // Under 21 Squad
+            (_, true) => 0x9b76a0,  // Under 23 Squad
+        })
+    };
+    match formato {
+        Some(s) => {
+            formatar(texto, s, g, g, nome);
+        }
+        None => {
+            *(texto as *mut u8) = 0;
+            dbu2_juntar(texto, nome);
+        }
+    }
+    1
+}
+
+unsafe extern "C" fn comparar_nome_da_selecao(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(764);
+    let f = forma as u8 as i8;
+    if tamanho < 0x47 || ((1..=4).contains(&f) && clube == 0) {
+        return o(clube, variante, texto, tamanho, forma, aspas); // caixa: só a original
+    }
+    let n = (tamanho as usize).min(128);
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(clube, variante, texto, tamanho, forma, aspas),
+        || nome_da_selecao(clube, variante, texto, tamanho, forma, aspas));
+    PLACAR.registrar(igual && r == x, || format!("nome_da_selecao({:x}, {}, forma {}, {}) original={} rust={} {:x?} x {:x?}", clube, variante, f, aspas, r, x, mo, mr));
+    r
+}
+
+/// Os nomes dos 31 atributos de jogador da 0x5428a0 (imediatos do código, pelos endereços no exe): (abreviado, leva o
+/// vazio 0xad9c64, inteiro, leva o vazio).
+const DBU2_ATRIBUTOS: [(usize, bool, usize, bool); 31] = [
+    (0x9b7b60, false, 0x9b7b50, false), // Acc / Acceleration
+    (0x9b7af4, false, 0x9b7ae8, false), // Agg / Aggression
+    (0x9b7ae4, false, 0x9b7adc, false), // Agi / Agility
+    (0x9b7ad8, false, 0x9b7ac8, false), // Ant / Anticipation
+    (0x9b7ac4, false, 0x9b7a98, true),  // Bal / Balance
+    (0x9b7a94, false, 0x9b7a8c, false), // Bra / Bravery
+    (0x9b7a88, false, 0x9b7a7c, false), // Cre / Creativity
+    (0x9b7a78, false, 0x9b7a6c, false), // Cro / Crossing
+    (0x9b7b30, true, 0x9b7b24, false),  // Dec / Decisions
+    (0x9b7a68, false, 0x9b7a58, false), // Det / Determination
+    (0x9b7a54, false, 0x9b7a48, false), // Dri / Dribbling
+    (0x9b78d4, true, 0x9b78c8, false),  // Fin / Finishing
+    (0x9b7a44, false, 0x9b7a3c, false), // Fla / Flair
+    (0x9b7a38, false, 0x9b7a2c, false), // Han / Handling
+    (0x9b7a28, false, 0x9b7a20, false), // Hea / Heading
+    (0x98ea64, false, 0x9b7a14, false), // Inf / Influence
+    (0x9b7a10, false, 0x9b7a08, false), // Jum / Jumping
+    (0x9b7b04, true, 0x9b7af8, false),  // Lon / Long Shots
+    (0x9b79d8, true, 0x9b79b0, true),   // Mar / Marking
+    (0x9b7984, true, 0x9b7974, false),  // Off / Off The Ball
+    (0x9b7970, false, 0x9b7968, false), // Pac / Pace
+    (0x9b7964, false, 0x9b795c, false), // Pas / Passing
+    (0x9b7958, false, 0x9b794c, false), // Pos / Positioning
+    (0x9b792c, true, 0x9b7920, false),  // Ref / Reflexes
+    (0x9b7900, true, 0x9b78f4, false),  // Set / Set Pieces
+    (0x9b78c4, false, 0x9b78bc, false), // Sta / Stamina
+    (0x9b78b8, false, 0x9b78ac, false), // Str / Strength
+    (0x9b78a8, false, 0x9b789c, false), // Tac / Tackling
+    (0x9b7898, false, 0x9b788c, false), // Tea / Teamwork
+    (0x9b7888, false, 0x9b787c, false), // Tec / Technique
+    (0x9b7878, false, 0x9b786c, false), // Wor / Work Rate
+];
+
+/// { 0x5428a0 } (cdecl, Database.cpp; o mapa parte a rotina em 0x542f48, que é só o meio dela: a fronteira real vai
+/// até 0x5431e0): `database_get_player_attribute_name(atributo, texto, tamanho, abreviado)`: zera o texto e escreve o
+/// nome traduzido (0x66f4e0) do atributo de jogador (1..0x1f, byte com sinal), abreviado (`abreviado` não nulo) ou
+/// inteiro; devolve 1. Atributo fora da faixa, texto nulo ou tamanho (curto com sinal) < 100: a original (caixa e 0).
+/// Nas telas do clube, de busca, da pessoa e de treino.
+unsafe extern "C" fn nome_do_atributo_do_jogador(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
+    let x = atributo as u8 as i8;
+    if !(1..=0x1f).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
+        return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(765)(atributo, texto, tamanho, abreviado);
+    }
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    *(texto as *mut u8) = 0;
+    let (c, cv, l, lv) = DBU2_ATRIBUTOS[x as usize - 1];
+    let (s, vazio) = if abreviado != 0 { (c, cv) } else { (l, lv) }; // (dbu)
+    if vazio {
+        formatar(texto, s, 0xad9c64usize);
+    } else {
+        formatar(texto, s);
+    }
+    1
+}
+
+unsafe extern "C" fn comparar_nome_do_atributo_do_jogador(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(765);
+    let x = atributo as u8 as i8;
+    if !(1..=0x1f).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
+        return o(atributo, texto, tamanho, abreviado); // caixa: só a original
+    }
+    // os 100 primeiros bytes (o tamanho mínimo aceito): os nomes cabem neles
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 100)], || o(atributo, texto, tamanho, abreviado),
+        || nome_do_atributo_do_jogador(atributo, texto, tamanho, abreviado));
+    PLACAR.registrar(igual && r == n, || format!("nome_do_atributo_do_jogador({}, {}) original={} rust={} {:x?} x {:x?}", x, abreviado, r, n, mo, mr));
+    r
+}
+
+/// Uma posição no texto da 0x53ee50: forma 1 o abreviado (com o vazio 0xad9c64), 2 e 3 o inteiro, com a barra antes
+/// quando o texto já tem algo; as outras formas, a letra só com o texto ainda vazio. O traduzido passa pelo texto
+/// global [0xde1f64] (0x66f4e0), como na original.
+unsafe fn dbu2_posicao(buf: usize, f: u8, curto: usize, longo: usize, longo_vazio: bool, letra: usize) {
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    match f {
+        1 => {
+            if !dbu2_vazio(buf) {
+                dbu2_juntar(buf, 0x9b7630); // "/"
+            }
+            formatar(0xde1f64, curto, 0xad9c64usize);
+            dbu2_juntar(buf, 0xde1f64);
+        }
+        2 | 3 => {
+            if !dbu2_vazio(buf) {
+                dbu2_juntar(buf, 0x9b7630);
+            }
+            if longo_vazio {
+                formatar(0xde1f64, longo, 0xad9c64usize);
+            } else {
+                formatar(0xde1f64, longo);
+            }
+            dbu2_juntar(buf, 0xde1f64);
+        }
+        _ => {
+            if dbu2_vazio(buf) {
+                dbu2_juntar(buf, letra);
+            }
+        }
+    }
+}
+
+/// As posições da 0x53ee50 (abreviado, inteiro, o inteiro leva o vazio, letra), imediatos do código.
+const DBU2_GOLEIRO: (usize, usize, bool, usize) = (0x9b7610, 0x9b7600, false, 0x9b760c); // GK, Goalkeeper, A
+const DBU2_LIBERO: (usize, usize, bool, usize) = (0x9b75e4, 0x9b75dc, false, 0x98b3f0); // SW, Sweeper, B
+const DBU2_DEFENSOR: (usize, usize, bool, usize) = (0x9b75c0, 0x9b75b0, false, 0x9b75bc); // D, Defender, C
+const DBU2_VOLANTE: (usize, usize, bool, usize) = (0x9b7588, 0x9b756c, false, 0x9b7584); // DM, Defensive Midfielder, D
+const DBU2_MEIA_ATACANTE: (usize, usize, bool, usize) = (0x9b7544, 0x9b7528, false, 0x9b7540); // AM, Attacking Midfielder, F
+const DBU2_MEIA: (usize, usize, bool, usize) = (0x9b7508, 0x9b74f8, false, 0x9b7504); // M, Midfielder, E
+const DBU2_ATACANTE: (usize, usize, bool, usize) = (0x9b74dc, 0x9b74d0, false, 0x9b74d8); // S, Striker, H
+const DBU2_AVANTE: (usize, usize, bool, usize) = (0x9b74b4, 0x9b7484, true, 0x9b74b0); // F, Forward<%s>, G
+
+/// { 0x53ee50 } (cdecl, Database.cpp): `database_format_player_positions(jogador, texto, tamanho, forma)`: o texto das
+/// posições do jogador (as notas +0xf..+0x1a, bytes com sinal) pela forma (byte): 1 abreviado ("D/DM RC"), 2 inteiro
+/// com os lados entre parênteses, 3 inteiro sem os lados, 4 e outras as letras. A linha: com a nota mínima de 15 a 10
+/// (para quando achar algo): goleiro (+0xf), líbero (+0x10), defensor (+0x11), volante (+0x12) ou meia-atacante (+0x14
+/// e +0x13) ou meia (+0x13), e atacante (+0x15; "avante" se também +0x14, +0x17, +0x18 ou +0x1a). Goleiro na nota:
+/// só a linha. Nada até 10: meia-atacante, e com +0x14 ≥ 15 a original GRAVA 15 em +0x13 do jogador (a cópia também).
+/// Os lados (nota ≥ 15): direito (+0x17), esquerdo (+0x18), centro (+0x19); forma 1 abreviados juntos, 2 inteiros com
+/// barra, 4 as letras A, B, C só com os lados vazios. Fim: forma 2 "%s (%s)", as outras "%s %s" ou só a linha.
+/// Devolve 1. Os textos traduzidos passam pelo global [0xde1f64] (o mesmo uso da original). Texto ou jogador nulos ou
+/// tamanho (curto com sinal) < 30: a original (caixa). As locais (linha e lados, 2 KB cada) são gravadas antes de lidas.
+/// Nas telas do clube, de busca, da pessoa, de tática e de treino e nas impressões.
+unsafe extern "C" fn texto_das_posicoes(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    if texto == 0 || jogador == 0 || (tamanho as u16 as i16) < 0x1e {
+        return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(766)(jogador, texto, tamanho, forma);
+    }
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    let sprintf: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
+    *(texto as *mut u8) = 0;
+    let f = forma as u8;
+    let nota = |o: usize| *((jogador + o) as *const i8) as i32;
+    let mut linha = [0u8; 0x7d0];
+    let mut lados = [0u8; 0x7c0];
+    let buf = linha.as_mut_ptr() as usize;
+    let pos = |p: (usize, usize, bool, usize)| dbu2_posicao(buf, f, p.0, p.1, p.2, p.3);
+    let mut minimo: u8 = 0xf;
+    loop {
+        *(buf as *mut u8) = 0;
+        let t = minimo as i32;
+        if nota(0xf) >= t {
+            pos(DBU2_GOLEIRO);
+        }
+        if nota(0x10) >= t {
+            pos(DBU2_LIBERO);
+        }
+        if nota(0x11) >= t {
+            pos(DBU2_DEFENSOR);
+        }
+        if nota(0x12) >= t {
+            pos(DBU2_VOLANTE);
+        } else if nota(0x14) >= t && nota(0x13) >= t {
+            pos(DBU2_MEIA_ATACANTE);
+        } else if nota(0x13) >= t {
+            pos(DBU2_MEIA);
+        }
+        if nota(0x15) >= t {
+            if nota(0x14) >= t || nota(0x17) >= t || nota(0x18) >= t || nota(0x1a) >= t {
+                pos(DBU2_AVANTE);
+            } else {
+                pos(DBU2_ATACANTE);
+            }
+        }
+        if nota(0xf) >= t {
+            // goleiro: só a linha
+            dbu2_juntar(texto, buf);
+            return 1;
+        }
+        minimo = minimo.wrapping_sub(1);
+        if !dbu2_vazio(buf) || minimo < 0xa {
+            break;
+        }
+    }
+    if dbu2_vazio(buf) {
+        if nota(0x14) >= 0xf {
+            *((jogador + 0x13) as *mut u8) = 0xf; // a original grava no jogador
+        }
+        if f == 2 || f == 3 {
+            formatar(0xde1f64, DBU2_MEIA_ATACANTE.1);
+        } else {
+            formatar(0xde1f64, DBU2_MEIA_ATACANTE.0, 0xad9c64usize);
+        }
+        dbu2_juntar(buf, 0xde1f64);
+    }
+    let lado = lados.as_mut_ptr() as usize;
+    let mut volta: u8 = 0xf;
+    loop {
+        *(lado as *mut u8) = 0;
+        for (o, curto, longo, letra) in [(0x17, 0x9b746c, 0x9b7464, 0x9b760c), (0x18, 0x9b744c, 0x9b7444, 0x98b3f0), (0x19, 0x9b7428, 0x9b7420, 0x9b75bc)] {
+            if nota(o) < 0xf {
+                continue;
+            }
+            match f {
+                1 => {
+                    formatar(0xde1f64, curto, 0xad9c64usize); // R, L, C
+                    dbu2_juntar(lado, 0xde1f64);
+                }
+                2 => {
+                    if !dbu2_vazio(lado) {
+                        dbu2_juntar(lado, 0x9b7630);
+                    }
+                    formatar(0xde1f64, longo); // Right, Left, Centre
+                    dbu2_juntar(lado, 0xde1f64);
+                }
+                4 => {
+                    if dbu2_vazio(lado) {
+                        dbu2_juntar(lado, letra);
+                    }
+                }
+                _ => {}
+            }
+        }
+        // a original repete a volta (de 15 a 10) enquanto os lados ficam vazios; as notas são as mesmas
+        volta = volta.wrapping_sub(1);
+        if !dbu2_vazio(lado) || volta < 0xa {
+            break;
+        }
+    }
+    if f == 2 && !dbu2_vazio(lado) {
+        sprintf(texto, 0x9a3d8c, buf, lado); // "%s (%s)" (dbu)
+    } else if !dbu2_vazio(lado) {
+        sprintf(texto, 0x98f0b8, buf, lado); // "%s %s"
+    } else {
+        dbu2_juntar(texto, buf);
+    }
+    1
+}
+
+unsafe extern "C" fn comparar_texto_das_posicoes(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(766);
+    if texto == 0 || jogador == 0 || (tamanho as u16 as i16) < 0x1e {
+        return o(jogador, texto, tamanho, forma); // caixa: só a original
+    }
+    // o texto, as notas do jogador (a original pode gravar +0x13) e o começo do texto global [0xde1f64]
+    let n = (tamanho as u16 as usize).min(128);
+    let reg = [(texto, n), (jogador + 0xf, 12), (0xde1f64, 64)];
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(jogador, texto, tamanho, forma),
+        || texto_das_posicoes(jogador, texto, tamanho, forma));
+    PLACAR.registrar(igual && r == x, || format!("texto_das_posicoes({:x}, forma {}) original={} rust={} {:x?} x {:x?}", jogador, forma as u8, r, x, mo, mr));
+    r
+}
+
+// ---------- 237a leva: o nome da região e o adjetivo do continente (index.cpp) ----------
+
+unsafe fn dbu3_u32(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+/// strcpy (o `repne scasb` e os `rep movsd`/`rep movsb` da original).
+unsafe fn dbu3_copiar(destino: usize, origem: usize) {
+    let mut k = 0;
+    loop {
+        let c = *((origem + k) as *const u8);
+        *((destino + k) as *mut u8) = c;
+        if c == 0 {
+            break;
+        }
+        k += 1;
+    }
+}
+
+/// Os nomes das regiões 1..14 da 0x616f20 (imediatos do código, pelos endereços no exe): (adjetivo, substantivo). A
+/// 3 (Caribe) tem textos próprios.
+const DBU3_REGIOES: [(usize, usize); 14] = [
+    (0x9e20bc, 0x9d9458), // African / Africa
+    (0x9e20b4, 0x9d9450), // Asian / Asia
+    (0, 0),               // Caribbean (à parte)
+    (0x9e2040, 0x9e1f84), // Central American / Central America
+    (0x9e202c, 0x9e1f74), // Central European / Central Europe
+    (0x9e2018, 0x9e1f64), // Eastern European / Eastern Europe
+    (0x9e2008, 0x9e1f58), // Middle Eastern / Middle East
+    (0x9e1ff8, 0x9e1f48), // North African / North Africa
+    (0x9e1fe8, 0x9d9438), // North American / North America
+    (0x9e1fe0, 0x9d9430), // Oceanic / Oceania
+    (0x9e1fd0, 0x9e1f3c), // Scandinavian / Scandinavia
+    (0x9e1fc0, 0x9d9420), // South American / South America
+    (0x9e1fac, 0x9e1f2c), // Southern European / Southern Europe
+    (0x9e1fa0, 0x9e1f1c), // UK & Irish / UK & Ireland
+];
+
+/// { 0x616f20 } (cdecl, index.cpp): `get_region_name(regiao, texto, tamanho, forma)`: zera o texto e escreve o nome da
+/// região (1..14, byte com sinal). Forma (byte) diferente de 0xff com o idioma (0x66f4d0) 4, 5 ou 9: o texto da
+/// tabela do idioma, lida pelo endereço ([0x9d0518 + 4 × (4 × região + f)], [0x9d06d4 + 4 × (5 × região + f)],
+/// [0x9d05f8 + 4 × (4 × região + f)], com f a forma do adjetivo 0x545a60, já em Rust, chamada pelo endereço do
+/// jogo), copiado. Senão, pelo 0x66f4e0: nos idiomas 2, 4, 5 e 9 o adjetivo com a forma 0xff e o substantivo com as
+/// outras; nos demais o contrário; o Caribe: "Caribbean" nos idiomas 2, 4, 5 e 9, senão os textos de região (forma
+/// 0xff) ou de regionalidade, com o vazio 0xad9c64. Devolve 1. Texto nulo, região fora da faixa ou tamanho (curto
+/// com sinal) < 100: a original (caixa). Na ordem das regiões (0x545dc0, em Rust), na busca de jogadores
+/// (player_search, search_screens) e em telas sem módulo (0x7db360, 0x7e13d0, 0x7e29e0).
+unsafe extern "C" fn nome_da_regiao(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    let r = regiao as u8 as i8;
+    if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
+        return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(767)(regiao, texto, tamanho, forma);
+    }
+    let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x66f4d0usize);
+    let adjetivo: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(0x545a60usize);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    *(texto as *mut u8) = 0;
+    let r = r as i32;
+    let fb = forma as u8;
+    let i = idioma(); // a original relê [0x9eb2dc] a cada pergunta (o mesmo valor)
+    if fb != 0xff {
+        // (tabela, linha) do idioma: as tabelas do exe, lidas pelo endereço
+        let tabela = match i {
+            4 => Some((0x9d0518usize, 4)),
+            5 => Some((0x9d06d4usize, 5)),
+            9 => Some((0x9d05f8usize, 4)),
+            _ => None,
+        };
+        if let Some((base, linha)) = tabela {
+            let f = adjetivo(forma, i as u32) as i8 as i32;
+            let k = r.wrapping_mul(linha).wrapping_add(f);
+            dbu3_copiar(texto, dbu3_u32(base.wrapping_add((k as usize).wrapping_mul(4))));
+            return 1;
+        }
+    }
+    let grupo = i == 5 || i == 2 || i == 4 || i == 9;
+    if r == 3 {
+        if grupo {
+            formatar(texto, 0x9e1f94); // Caribbean
+        } else if fb == 0xff {
+            formatar(texto, 0x9e2054, 0xad9c64usize); // Caribbean<%s COMMENT Region as in Europe>
+        } else {
+            formatar(texto, 0x9e2080, 0xad9c64usize); // Caribbean<%s COMMENT Regionality as in European>
+        }
+    } else {
+        let (adj, nome) = DBU3_REGIOES[r as usize - 1];
+        // nos idiomas do grupo o adjetivo vem com a forma 0xff; nos outros, com as outras formas
+        let usa_adjetivo = if grupo { fb == 0xff } else { fb != 0xff }; // (dbu)
+        formatar(texto, if usa_adjetivo { adj } else { nome });
+    }
+    1
+}
+
+unsafe extern "C" fn comparar_nome_da_regiao(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(767);
+    let r = regiao as u8 as i8;
+    if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
+        return o(regiao, texto, tamanho, forma); // caixa: só a original
+    }
+    // os 100 primeiros bytes (o tamanho mínimo aceito)
+    let (x, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 100)], || o(regiao, texto, tamanho, forma),
+        || nome_da_regiao(regiao, texto, tamanho, forma));
+    PLACAR.registrar(igual && x == n, || format!("nome_da_regiao({}, forma {}) original={} rust={} {:x?} x {:x?}", r, forma as u8, x, n, mo, mr));
+    x
+}
+
+/// Os adjetivos dos continentes da 0x6177f0 por idioma (imediatos do código, pelos endereços no exe; levantados
+/// seguindo os desvios da original): linhas África [0x9cfa08], Ásia [0x9cfa0c], Europa [0x9cfa10], América do Norte
+/// [0x9cfa14], Oceania [0x9cfa18] e os outros; colunas a forma do adjetivo 0, 1, 2, 3 e as outras.
+const DBU3_CONTINENTES_9: [[usize; 5]; 6] = [
+    [0x9d1064, 0x9d104c, 0x9d0d44, 0x9d0d38, 0x9d0d38],
+    [0x9d0d2c, 0x9d0d20, 0x9d0d14, 0x9d0d08, 0x9d0d08],
+    [0x9e2120, 0x9e2114, 0x9e2108, 0x9e20fc, 0x9e20fc],
+    [0x9d0b94, 0x9d0b84, 0x9d0b70, 0x9d0b5c, 0x9d0b5c],
+    [0x9d0b50, 0x9d0b44, 0x9d0b38, 0x9d0b2c, 0x9d0b2c],
+    [0x9d0ae4, 0x9d0ad4, 0x9d0ac4, 0x9d0ab4, 0x9d0ab4],
+];
+const DBU3_CONTINENTES_5: [[usize; 5]; 6] = [
+    [0x9d1064, 0x9d1064, 0x9d104c, 0x9d0d44, 0x9d0d38],
+    [0x9d0d2c, 0x9d0d2c, 0x9d0d20, 0x9d0d14, 0x9d0d08],
+    [0x9e20f4, 0x9e20f4, 0x9e20ec, 0x9e20e0, 0x9e20d4],
+    [0x9d08cc, 0x9d08cc, 0x9d08bc, 0x9d08ac, 0x9d089c],
+    [0x9d0890, 0x9d0890, 0x9d0884, 0x9d0878, 0x9d086c],
+    [0x9d085c, 0x9d085c, 0x9d084c, 0x9d083c, 0x9d082c],
+];
+const DBU3_CONTINENTES_4: [[usize; 5]; 6] = [
+    [0x9d1064, 0x9d1058, 0x9d104c, 0x9d1040, 0x9d1040],
+    [0x9d1034, 0x9d1028, 0x9d101c, 0x9d1010, 0x9d1010],
+    [0x9e20f4, 0x9e20cc, 0x9e20ec, 0x9e20c4, 0x9e20c4],
+    [0x9d0eb0, 0x9d0ea0, 0x9d0e90, 0x9d0e80, 0x9d0e80],
+    [0x9d0e74, 0x9d0e68, 0x9d0e5c, 0x9d0e50, 0x9d0e50],
+    [0x9d0e10, 0x9d0e00, 0x9d0df0, 0x9d0de0, 0x9d0de0],
+];
+
+/// { 0x6177f0 } (cdecl, index.cpp; o mapa dá 629 bytes, a rotina vai até 0x6181c5: 2518): `get_continent_adjective(
+/// continente, texto, tamanho, forma)`: zera o texto e copia o adjetivo do continente. Forma (byte) 0 ou idioma
+/// (0x66f4d0) fora de 9, 5 e 4: o adjetivo do próprio registro (+0x23). Senão o texto do idioma pelo continente (o id
+/// +0 comparado às chaves [0x9cfa08..0x9cfa18], nessa ordem) e pela forma do adjetivo (0x545a60, já em Rust, pelo
+/// endereço do jogo). Devolve 1. Continente ou texto nulos ou tamanho (curto com sinal) < 50: a original (0). Na
+/// busca (find_screens), no Menubar, nos jogos do dia (0x717cc0, em Rust) e em 0x7dd400.
+unsafe extern "C" fn adjetivo_do_continente(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
+        return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(768)(continente, texto, tamanho, forma);
+    }
+    let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x66f4d0usize);
+    let adjetivo: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(0x545a60usize);
+    *(texto as *mut u8) = 0;
+    let proprio = continente + 0x23; // o adjetivo do registro (dbu)
+    let tabela = if forma as u8 == 0 {
+        None
+    } else {
+        match idioma() {
+            9 => Some((&DBU3_CONTINENTES_9, 9)),
+            5 => Some((&DBU3_CONTINENTES_5, 5)),
+            4 => Some((&DBU3_CONTINENTES_4, 4)),
+            _ => None,
+        }
+    };
+    let s = match tabela {
+        None => proprio,
+        Some((t, i)) => {
+            let f = adjetivo(forma, i) as i8;
+            let id = dbu3_u32(continente);
+            let linha = [0x9cfa08usize, 0x9cfa0c, 0x9cfa10, 0x9cfa14, 0x9cfa18].iter().position(|&g| dbu3_u32(g) == id).unwrap_or(5);
+            t[linha][if (0..=3).contains(&f) { f as usize } else { 4 }]
+        }
+    };
+    dbu3_copiar(texto, s);
+    1
+}
+
+unsafe extern "C" fn comparar_adjetivo_do_continente(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(768);
+    if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
+        return o(continente, texto, tamanho, forma);
+    }
+    // os 50 primeiros bytes (o tamanho mínimo aceito)
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 50)], || o(continente, texto, tamanho, forma),
+        || adjetivo_do_continente(continente, texto, tamanho, forma));
+    PLACAR.registrar(igual && r == n, || format!("adjetivo_do_continente({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continente, forma as u8, r, n, mo, mr));
+    r
+}
+
 // ---------- 236a leva: o nome pelos ids, o nome do oficial e o texto da máscara da posição (Database.cpp) ----------
 
 unsafe fn dbs1_u32(a: usize) -> usize {
@@ -61758,6 +62483,14 @@ pub unsafe fn instalar(comparando: bool) {
         regioes_pelo_nome as *const () as usize,
         ordem_das_regioes_pelo_nome as *const () as usize,
         pessoa_da_opiniao as *const () as usize,
+        nome_pelos_textos as *const () as usize,
+        nome_do_cargo as *const () as usize,
+        nome_do_idioma as *const () as usize,
+        nome_da_selecao as *const () as usize,
+        nome_do_atributo_do_jogador as *const () as usize,
+        texto_das_posicoes as *const () as usize,
+        nome_da_regiao as *const () as usize,
+        adjetivo_do_continente as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -62521,6 +63254,14 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_regioes_pelo_nome as *const () as usize,
         comparar_ordem_das_regioes_pelo_nome as *const () as usize,
         comparar_pessoa_da_opiniao as *const () as usize,
+        comparar_nome_pelos_textos as *const () as usize,
+        comparar_nome_do_cargo as *const () as usize,
+        comparar_nome_do_idioma as *const () as usize,
+        comparar_nome_da_selecao as *const () as usize,
+        comparar_nome_do_atributo_do_jogador as *const () as usize,
+        comparar_texto_das_posicoes as *const () as usize,
+        comparar_nome_da_regiao as *const () as usize,
+        comparar_adjetivo_do_continente as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -62633,7 +63374,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito", "motor_zagueiros_do_lado_sem_conflito", "motor_construir_arbitro", "motor_destruir_jogador_da_partida", "motor_evento_na_frente", "motor_construir_fila_da_narracao", "motor_liberar_tabelas_de_eventos", "motor_ordem_das_partidas_do_dia", "motor_ordem_de_acao", "motor_variante_do_evento", "motor_combinar_com_o_anterior", "motor_comentario_de_contexto", "motor_construir_jogador_da_partida", "motor_proximo_evento", "motor_nome_do_jogador_na_narracao", "motor_habilidade_vista", "motor_cumprir_regra_do_elenco", "motor_nota_fora_da_partida", "motor_nota_para_a_vaga", "motor_pessoa_na_lista", "motor_ficha_de_contrato", "motor_desgaste_diario", "motor_registro_da_formacao", "motor_peso_da_competicao", "motor_gravar_dado_da_noticia", "motor_recuperar_lesao", "motor_pessoa_na_lista_de_transferencias", "motor_punicao_da_tabela", "motor_bits_do_registro", "motor_competicao_marcada", "motor_registro_da_liga", "motor_media_do_jogo", "motor_valor_do_contrato", "motor_nivel_para_a_selecao", "motor_oferta_de_contrato", "motor_oferta_acertada", "motor_oferta_fechada", "motor_rotulo_do_controle", "motor_fechar_tela_da_partida", "motor_abrir_tela_de_espera", "motor_noticia_com_resposta_2", "motor_tem_noticia", "motor_importancia_da_partida", "motor_abrir_ultimos_placares", "motor_montar_ultimos_placares", "motor_responder_ultimos_placares", "motor_abrir_detalhes_da_partida", "motor_responder_detalhes_da_partida", "motor_fechar_detalhes_da_partida", "motor_disciplina_temporada_nova", "motor_disciplina_do_dia", "motor_disciplina_gravar_vaga", "motor_marcar_contrato_acertado", "motor_desmarcar_contrato_acertado", "motor_vaga_da_oferta", "motor_abrir_tela_da_partida", "motor_responder_ultimos_placares_da_partida", "motor_responder_estatisticas_do_time", "motor_painel_dos_ultimos_placares", "motor_sem_tela_seguinte", "motor_cor_do_titulo", "motor_lista_de_observados", "motor_entrada_do_treino", "motor_gravar_carga_de_treino", "motor_e_competicao_do_amistoso", "motor_preencher_data_internacional", "motor_limpar_registro_de_tecnico", "motor_tirar_contrato_de_emprestimo", "motor_desmarcar_lances_pelo_jogador", "motor_tecnico_substituto", "motor_clube_do_contrato_acertado", "motor_registrar_jogo_pela_selecao", "motor_punicao_guardada", "motor_entrada_da_aposentadoria", "motor_registrar_competicoes_do_amistoso", "motor_vaga_da_noticia", "motor_tirar_percentual_da_proxima_venda", "motor_tirar_bonus_por_jogo", "motor_tirar_bonus_pela_selecao", "motor_tirar_reserva_de_tecnico", "motor_tirar_jogador_do_banco", "motor_premio_da_liga", "motor_ultima_nota_do_jogador", "motor_vaga_da_busca", "motor_tipo_da_lista_da_busca", "motor_ordem_do_confronto", "motor_atualizar_confronto_direto", "motor_marcar_termos_oferecidos", "motor_hora_das_ferias", "motor_escalacao_guardada", "motor_tecnico_da_busca", "motor_abrir_jogos_do_dia", "motor_responder_jogos_do_dia", "motor_vaga_do_mais_bem_avaliado", "motor_estatistica_da_liga_do_jogador", "motor_entrada_do_jogo_bate", "motor_balde_do_registro", "motor_atribuir_bloco_do_time", "motor_atribuir_linha_do_jogador", "motor_contar_placar_ao_vivo", "motor_responder_continuar_da_partida", "motor_abrir_escalacao_da_partida", "motor_responder_escalacao_da_partida", "motor_painel_das_estatisticas_do_time", "motor_painel_das_notas_dos_jogadores", "motor_painel_das_estatisticas_da_partida", "motor_valores_das_estatisticas_da_partida", "motor_valores_das_zonas_de_acao", "motor_valores_das_notas_dos_jogadores", "motor_painel_das_zonas_de_acao", "motor_painel_do_relatorio_da_partida", "motor_montar_jogos_do_dia", "motor_preencher_estatisticas_do_time", "motor_atualizar_ultimos_placares", "motor_esperar_os_outros_jogadores", "motor_ler_registro_da_partida", "motor_registrar_partida", "motor_gravar_registro_da_partida", "motor_desenhar_conferencia_da_escalacao", "motor_carregar_estatisticas_da_partida", "motor_salvar_estatisticas_da_partida", "motor_organizar_area", "motor_iniciar_area", "motor_desenhar_area", "motor_montar_tela_da_partida", "motor_responder_tela_da_partida", "motor_montar_detalhes_da_partida", "motor_atualizar_barra_da_posse", "motor_painel_da_visao_geral_da_partida", "motor_tabela_da_liga_ao_vivo", "motor_historia_punivel_do_jogador", "motor_escolher_tipo_de_lesao", "motor_categoria_da_noticia", "motor_apagar_repetidos_das_convocacoes", "motor_vaga_do_escalado", "motor_escolher_comentarista", "motor_regras_da_rodada_no_jogo", "motor_chave_do_jogo_na_copa", "motor_pais_da_excursao", "motor_fechar_propostas_da_oferta", "motor_enfileirar_transferencia_livre", "motor_negociacoes_de_troca_do_jogador", "motor_tirar_jogador_da_selecao", "motor_faixa_do_horario", "motor_teto_da_observacao", "motor_ofertas_pelo_jogador", "motor_reputacao_alvo_do_clube", "motor_gravar_jogo_na_noticia", "motor_preencher_registro_da_partida", "motor_ordem_dos_eventos", "motor_tirar_idioma_do_jogador", "motor_pode_contratar_jogador", "motor_trocas_oferecendo_o_jogador", "motor_noticias_nao_lidas", "motor_gravar_marca_da_noticia", "motor_clube_de_tecnico_humano", "motor_data_do_sorteio_da_rodada", "motor_data_do_jogo_da_rodada", "motor_tirar_clube_dos_amistosos", "motor_ordem_das_linhas_da_tabela", "motor_montar_grade_de_turnos", "motor_margem_do_ultimo_dia", "motor_partida_das_vagas_da_noticia", "motor_resultado_da_eliminatoria_na_noticia", "motor_dia_da_rodada_da_copa", "motor_mapa_de_casas_da_formacao", "motor_nota_do_clube_para_o_jovem", "motor_partida_assistida_pelo_humano", "motor_largar_partida_assistida", "motor_ficha_do_registro", "motor_liga_tem_rebaixamento", "motor_data_da_rodada_da_liga", "motor_importancia_do_jogo_da_liga", "motor_copiar_recordista", "motor_copiar_registro_de_partida", "motor_copiar_registro_de_sequencia", "motor_humano_assiste_a_partida", "motor_humano_deu_apelido", "motor_copiar_aposentadoria_pendente", "motor_montar_estatisticas_da_partida", "motor_desmontar_estatisticas_da_partida", "motor_casar_nome_com_padrao", "motor_id_do_conteiner", "motor_tamanho_dos_itens_do_padrao", "motor_empacotar_no_conteiner", "motor_desempacotar_do_conteiner", "motor_limpar_pasta_temporaria", "motor_ler_do_conteiner", "motor_gravar_no_conteiner", "motor_fechar_conteiner", "motor_filtro_do_jogo_salvo", "motor_filtro_do_inicio_rapido", "motor_versao_do_jogo_salvo_valida", "motor_gravar_regras_fifa", "motor_carregar_regras_fifa", "motor_montar_resumo_do_save", "motor_gravar_banco_no_save", "motor_carregar_banco_do_save", "motor_liberar_dados_do_jogo", "motor_criar_jogo_pela_configuracao", "motor_gravar_jogo", "motor_carregar_jogo", "motor_escopo_da_reputacao", "motor_reputacao_vista_por", "motor_pessoa_e_estrangeira", "motor_idade_da_pessoa", "motor_nacao_com_transferencia_livre", "motor_pessoa_e_comunitaria", "motor_pessoa_listada_para_transferencia", "motor_atributo_calculado_do_jogador", "motor_atributo_da_pessoa", "motor_ordem_do_historico_de_competicao", "motor_vetor_de_atributos_do_jogador", "motor_nacao_britanica_ou_irlanda", "motor_clube_basco", "motor_pessoa_listada_pelo_clube", "motor_pessoa_listada_para_emprestimo", "motor_pessoa_listada_a_pedido", "motor_nota_relativa_do_atributo", "motor_clube_pode_ter_reservas", "motor_primeiro_nome_da_nacao", "motor_segundo_nome_da_nacao", "motor_formatar_nome_da_pessoa", "motor_cores_do_uniforme_do_clube", "motor_tecnico_do_clube_ou_selecao", "motor_nome_ingles_do_clube", "motor_ajustar_moral_da_pessoa", "motor_vetor_de_atributos_do_nao_jogador", "motor_marcar_elenco_da_pessoa", "motor_contar_elenco_do_clube", "motor_reunir_elenco_do_clube", "motor_clube_pode_ser_dirigido", "motor_vetor_para_o_nao_jogador", "motor_vetor_para_o_jogador", "motor_normalizar_atributos_do_nao_jogador", "motor_familia_da_cor", "motor_cores_se_confundem", "motor_atributo_calculado_do_nao_jogador", "motor_forma_do_adjetivo", "motor_atributo_do_nao_jogador", "motor_nota_relativa_com_habilidade_reduzida", "motor_primeiro_nome_pelo_peso", "motor_cores_da_competicao", "motor_clube_tem_vaga_para_cargo", "motor_incluir_pessoa_no_clube", "motor_casar_chave_de_clube", "motor_remapear_chave_de_clube", "motor_casar_chave_de_nacao", "motor_casar_chave_de_competicao_de_clube", "motor_casar_chave_de_competicao_de_pessoa", "motor_ler_continentes", "motor_ler_nacoes", "motor_ler_cidades", "motor_ler_estadios", "motor_ler_pessoas_157", "motor_ler_historico_de_pessoas", "motor_ler_historicos_de_competicao", "motor_ler_competicoes_de_pessoal", "motor_ler_historico_de_competicoes_de_pessoal", "motor_ler_arbitros", "motor_ler_cores", "motor_ler_nomes", "motor_ler_clubes", "motor_ler_competicoes", "motor_ler_nao_jogadores", "motor_ler_jogadores", "motor_ler_pessoas_110", "motor_ler_preferencias", "motor_gravar_continentes", "motor_gravar_nacoes", "motor_gravar_cidades", "motor_gravar_estadios", "motor_gravar_clubes", "motor_gravar_pessoas_110", "motor_gravar_nao_jogadores", "motor_gravar_jogadores", "motor_gravar_preferencias", "motor_gravar_historico_de_pessoas", "motor_gravar_competicoes", "motor_gravar_historicos_de_competicao", "motor_gravar_competicoes_de_pessoal", "motor_gravar_arbitros", "motor_gravar_registros_58", "motor_gravar_nomes", "motor_abrir_arquivo_do_banco", "motor_criar_arquivo_do_banco", "motor_liberar_historico_de_pessoas", "motor_liberar_historico_de_premios", "motor_crescer_historico_de_competicoes", "motor_ordem_dos_clubes_pela_reputacao", "motor_ordem_do_elenco_pela_habilidade", "motor_ordem_do_elenco_pela_habilidade_atual", "motor_normalizar_atributos_fisicos_do_jogador", "motor_segundo_nome_pelo_peso", "motor_normalizar_atributos_do_jogador", "motor_ler_clubes_v1", "motor_ler_nao_jogadores_v1", "motor_ler_jogadores_v1", "motor_ler_competicoes_v1", "motor_nome_ingles_da_nacao", "motor_nome_curto_ingles_do_clube", "motor_cortar_elencos_de_a_e_b", "motor_juntar_o_time_b_ao_a", "motor_montar_indice_de_nomes", "motor_tirar_pessoa_do_clube", "motor_olheiros_do_clube", "motor_clube_em_temporada", "motor_clube_em_nacao_grande", "motor_nacao_grande", "motor_limpar_vinculos_de_opiniao", "motor_juntar_vinculo_de_opiniao", "motor_tirar_vinculo_de_opiniao", "motor_auxiliar_do_clube", "motor_treinadores_do_clube", "motor_contar_treinadores_do_clube", "motor_sigla_inglesa_da_nacao", "motor_nome_ingles_da_competicao", "motor_nome_ingles_da_competicao_de_pessoal", "motor_nome_ingles_do_estadio", "motor_arquivo_do_idioma_existe", "motor_liberar_tabelas_em_ingles", "motor_gerar_comissao_extra", "motor_cortar_tabela_de_clubes", "motor_podar_historico_de_competicoes", "motor_resolver_indices_do_banco", "motor_ordenar_clubes_pela_reputacao", "motor_clube_tem_defensores", "motor_clube_tem_meias", "motor_clube_tem_atacantes", "motor_clube_tem_esforcados", "motor_clube_tem_goleiro", "motor_clube_tem_meias_que_roubam", "motor_faltam_atacantes_pelo_alto", "motor_faltam_zagueiros_pelo_alto", "motor_faltam_zagueiros_rapidos", "motor_clube_tem_atacante_rapido", "motor_clube_tem_meias_criativos", "motor_faixa_de_forca_do_elenco", "motor_reputacao_do_clube_para_pessoa", "motor_contar_rejeitados_no_clube", "motor_contar_favoritos_no_clube", "motor_tirar_clube_favorito", "motor_clube_tirar_pessoa_favorita", "motor_tirar_pessoa_favorita", "motor_tirar_pessoa_rejeitada", "motor_pessoas_favoritas", "motor_clube_acrescentar_pessoa_favorita", "motor_clube_acrescentar_pessoa_rejeitada", "motor_acrescentar_pessoa_favorita", "motor_acrescentar_clube_rejeitado", "motor_esmaecer_relacoes", "motor_pessoas_rejeitadas", "motor_mascara_da_posicao_natural", "motor_contar_elenco_com_mascara", "motor_escolher_companheiro_favorito", "motor_clube_fora_da_argentina", "motor_clube_fora_de_argentina_franca_croacia", "motor_nacao_da_melanesia", "motor_nacao_da_polinesia", "motor_nome_do_cargo_de_treino", "motor_anos_entre_datas_em_texto", "motor_ordem_dos_clubes_pelo_nome_curto", "motor_ordem_das_pessoas_pelo_nome_completo", "motor_pessoa_confere_com_os_nomes", "motor_ordem_dos_clubes_pela_latitude", "motor_ordem_dos_clubes_pela_longitude", "motor_nome_por_ids", "motor_nome_oficial", "motor_texto_da_mascara_da_posicao", "motor_nome_da_posicao", "motor_descricao_do_jogador", "motor_melhor_candidato_a_favorito", "motor_forcas_do_jogador", "motor_fraquezas_do_jogador", "motor_contar_fisioterapeutas", "motor_clube_e_time_b", "motor_pessoas_fora_do_elenco", "motor_atributo_visivel", "motor_atributo_para_quem_ve", "motor_nome_do_atributo_de_tecnico", "motor_ordem_das_pessoas_pelo_sobrenome", "motor_ordem_dos_ponteiros_de_clube_pela_reputacao", "motor_nacao_do_clube_na_cee", "motor_regioes_pelo_nome", "motor_ordem_das_regioes_pelo_nome", "motor_pessoa_da_opiniao",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito", "motor_zagueiros_do_lado_sem_conflito", "motor_construir_arbitro", "motor_destruir_jogador_da_partida", "motor_evento_na_frente", "motor_construir_fila_da_narracao", "motor_liberar_tabelas_de_eventos", "motor_ordem_das_partidas_do_dia", "motor_ordem_de_acao", "motor_variante_do_evento", "motor_combinar_com_o_anterior", "motor_comentario_de_contexto", "motor_construir_jogador_da_partida", "motor_proximo_evento", "motor_nome_do_jogador_na_narracao", "motor_habilidade_vista", "motor_cumprir_regra_do_elenco", "motor_nota_fora_da_partida", "motor_nota_para_a_vaga", "motor_pessoa_na_lista", "motor_ficha_de_contrato", "motor_desgaste_diario", "motor_registro_da_formacao", "motor_peso_da_competicao", "motor_gravar_dado_da_noticia", "motor_recuperar_lesao", "motor_pessoa_na_lista_de_transferencias", "motor_punicao_da_tabela", "motor_bits_do_registro", "motor_competicao_marcada", "motor_registro_da_liga", "motor_media_do_jogo", "motor_valor_do_contrato", "motor_nivel_para_a_selecao", "motor_oferta_de_contrato", "motor_oferta_acertada", "motor_oferta_fechada", "motor_rotulo_do_controle", "motor_fechar_tela_da_partida", "motor_abrir_tela_de_espera", "motor_noticia_com_resposta_2", "motor_tem_noticia", "motor_importancia_da_partida", "motor_abrir_ultimos_placares", "motor_montar_ultimos_placares", "motor_responder_ultimos_placares", "motor_abrir_detalhes_da_partida", "motor_responder_detalhes_da_partida", "motor_fechar_detalhes_da_partida", "motor_disciplina_temporada_nova", "motor_disciplina_do_dia", "motor_disciplina_gravar_vaga", "motor_marcar_contrato_acertado", "motor_desmarcar_contrato_acertado", "motor_vaga_da_oferta", "motor_abrir_tela_da_partida", "motor_responder_ultimos_placares_da_partida", "motor_responder_estatisticas_do_time", "motor_painel_dos_ultimos_placares", "motor_sem_tela_seguinte", "motor_cor_do_titulo", "motor_lista_de_observados", "motor_entrada_do_treino", "motor_gravar_carga_de_treino", "motor_e_competicao_do_amistoso", "motor_preencher_data_internacional", "motor_limpar_registro_de_tecnico", "motor_tirar_contrato_de_emprestimo", "motor_desmarcar_lances_pelo_jogador", "motor_tecnico_substituto", "motor_clube_do_contrato_acertado", "motor_registrar_jogo_pela_selecao", "motor_punicao_guardada", "motor_entrada_da_aposentadoria", "motor_registrar_competicoes_do_amistoso", "motor_vaga_da_noticia", "motor_tirar_percentual_da_proxima_venda", "motor_tirar_bonus_por_jogo", "motor_tirar_bonus_pela_selecao", "motor_tirar_reserva_de_tecnico", "motor_tirar_jogador_do_banco", "motor_premio_da_liga", "motor_ultima_nota_do_jogador", "motor_vaga_da_busca", "motor_tipo_da_lista_da_busca", "motor_ordem_do_confronto", "motor_atualizar_confronto_direto", "motor_marcar_termos_oferecidos", "motor_hora_das_ferias", "motor_escalacao_guardada", "motor_tecnico_da_busca", "motor_abrir_jogos_do_dia", "motor_responder_jogos_do_dia", "motor_vaga_do_mais_bem_avaliado", "motor_estatistica_da_liga_do_jogador", "motor_entrada_do_jogo_bate", "motor_balde_do_registro", "motor_atribuir_bloco_do_time", "motor_atribuir_linha_do_jogador", "motor_contar_placar_ao_vivo", "motor_responder_continuar_da_partida", "motor_abrir_escalacao_da_partida", "motor_responder_escalacao_da_partida", "motor_painel_das_estatisticas_do_time", "motor_painel_das_notas_dos_jogadores", "motor_painel_das_estatisticas_da_partida", "motor_valores_das_estatisticas_da_partida", "motor_valores_das_zonas_de_acao", "motor_valores_das_notas_dos_jogadores", "motor_painel_das_zonas_de_acao", "motor_painel_do_relatorio_da_partida", "motor_montar_jogos_do_dia", "motor_preencher_estatisticas_do_time", "motor_atualizar_ultimos_placares", "motor_esperar_os_outros_jogadores", "motor_ler_registro_da_partida", "motor_registrar_partida", "motor_gravar_registro_da_partida", "motor_desenhar_conferencia_da_escalacao", "motor_carregar_estatisticas_da_partida", "motor_salvar_estatisticas_da_partida", "motor_organizar_area", "motor_iniciar_area", "motor_desenhar_area", "motor_montar_tela_da_partida", "motor_responder_tela_da_partida", "motor_montar_detalhes_da_partida", "motor_atualizar_barra_da_posse", "motor_painel_da_visao_geral_da_partida", "motor_tabela_da_liga_ao_vivo", "motor_historia_punivel_do_jogador", "motor_escolher_tipo_de_lesao", "motor_categoria_da_noticia", "motor_apagar_repetidos_das_convocacoes", "motor_vaga_do_escalado", "motor_escolher_comentarista", "motor_regras_da_rodada_no_jogo", "motor_chave_do_jogo_na_copa", "motor_pais_da_excursao", "motor_fechar_propostas_da_oferta", "motor_enfileirar_transferencia_livre", "motor_negociacoes_de_troca_do_jogador", "motor_tirar_jogador_da_selecao", "motor_faixa_do_horario", "motor_teto_da_observacao", "motor_ofertas_pelo_jogador", "motor_reputacao_alvo_do_clube", "motor_gravar_jogo_na_noticia", "motor_preencher_registro_da_partida", "motor_ordem_dos_eventos", "motor_tirar_idioma_do_jogador", "motor_pode_contratar_jogador", "motor_trocas_oferecendo_o_jogador", "motor_noticias_nao_lidas", "motor_gravar_marca_da_noticia", "motor_clube_de_tecnico_humano", "motor_data_do_sorteio_da_rodada", "motor_data_do_jogo_da_rodada", "motor_tirar_clube_dos_amistosos", "motor_ordem_das_linhas_da_tabela", "motor_montar_grade_de_turnos", "motor_margem_do_ultimo_dia", "motor_partida_das_vagas_da_noticia", "motor_resultado_da_eliminatoria_na_noticia", "motor_dia_da_rodada_da_copa", "motor_mapa_de_casas_da_formacao", "motor_nota_do_clube_para_o_jovem", "motor_partida_assistida_pelo_humano", "motor_largar_partida_assistida", "motor_ficha_do_registro", "motor_liga_tem_rebaixamento", "motor_data_da_rodada_da_liga", "motor_importancia_do_jogo_da_liga", "motor_copiar_recordista", "motor_copiar_registro_de_partida", "motor_copiar_registro_de_sequencia", "motor_humano_assiste_a_partida", "motor_humano_deu_apelido", "motor_copiar_aposentadoria_pendente", "motor_montar_estatisticas_da_partida", "motor_desmontar_estatisticas_da_partida", "motor_casar_nome_com_padrao", "motor_id_do_conteiner", "motor_tamanho_dos_itens_do_padrao", "motor_empacotar_no_conteiner", "motor_desempacotar_do_conteiner", "motor_limpar_pasta_temporaria", "motor_ler_do_conteiner", "motor_gravar_no_conteiner", "motor_fechar_conteiner", "motor_filtro_do_jogo_salvo", "motor_filtro_do_inicio_rapido", "motor_versao_do_jogo_salvo_valida", "motor_gravar_regras_fifa", "motor_carregar_regras_fifa", "motor_montar_resumo_do_save", "motor_gravar_banco_no_save", "motor_carregar_banco_do_save", "motor_liberar_dados_do_jogo", "motor_criar_jogo_pela_configuracao", "motor_gravar_jogo", "motor_carregar_jogo", "motor_escopo_da_reputacao", "motor_reputacao_vista_por", "motor_pessoa_e_estrangeira", "motor_idade_da_pessoa", "motor_nacao_com_transferencia_livre", "motor_pessoa_e_comunitaria", "motor_pessoa_listada_para_transferencia", "motor_atributo_calculado_do_jogador", "motor_atributo_da_pessoa", "motor_ordem_do_historico_de_competicao", "motor_vetor_de_atributos_do_jogador", "motor_nacao_britanica_ou_irlanda", "motor_clube_basco", "motor_pessoa_listada_pelo_clube", "motor_pessoa_listada_para_emprestimo", "motor_pessoa_listada_a_pedido", "motor_nota_relativa_do_atributo", "motor_clube_pode_ter_reservas", "motor_primeiro_nome_da_nacao", "motor_segundo_nome_da_nacao", "motor_formatar_nome_da_pessoa", "motor_cores_do_uniforme_do_clube", "motor_tecnico_do_clube_ou_selecao", "motor_nome_ingles_do_clube", "motor_ajustar_moral_da_pessoa", "motor_vetor_de_atributos_do_nao_jogador", "motor_marcar_elenco_da_pessoa", "motor_contar_elenco_do_clube", "motor_reunir_elenco_do_clube", "motor_clube_pode_ser_dirigido", "motor_vetor_para_o_nao_jogador", "motor_vetor_para_o_jogador", "motor_normalizar_atributos_do_nao_jogador", "motor_familia_da_cor", "motor_cores_se_confundem", "motor_atributo_calculado_do_nao_jogador", "motor_forma_do_adjetivo", "motor_atributo_do_nao_jogador", "motor_nota_relativa_com_habilidade_reduzida", "motor_primeiro_nome_pelo_peso", "motor_cores_da_competicao", "motor_clube_tem_vaga_para_cargo", "motor_incluir_pessoa_no_clube", "motor_casar_chave_de_clube", "motor_remapear_chave_de_clube", "motor_casar_chave_de_nacao", "motor_casar_chave_de_competicao_de_clube", "motor_casar_chave_de_competicao_de_pessoa", "motor_ler_continentes", "motor_ler_nacoes", "motor_ler_cidades", "motor_ler_estadios", "motor_ler_pessoas_157", "motor_ler_historico_de_pessoas", "motor_ler_historicos_de_competicao", "motor_ler_competicoes_de_pessoal", "motor_ler_historico_de_competicoes_de_pessoal", "motor_ler_arbitros", "motor_ler_cores", "motor_ler_nomes", "motor_ler_clubes", "motor_ler_competicoes", "motor_ler_nao_jogadores", "motor_ler_jogadores", "motor_ler_pessoas_110", "motor_ler_preferencias", "motor_gravar_continentes", "motor_gravar_nacoes", "motor_gravar_cidades", "motor_gravar_estadios", "motor_gravar_clubes", "motor_gravar_pessoas_110", "motor_gravar_nao_jogadores", "motor_gravar_jogadores", "motor_gravar_preferencias", "motor_gravar_historico_de_pessoas", "motor_gravar_competicoes", "motor_gravar_historicos_de_competicao", "motor_gravar_competicoes_de_pessoal", "motor_gravar_arbitros", "motor_gravar_registros_58", "motor_gravar_nomes", "motor_abrir_arquivo_do_banco", "motor_criar_arquivo_do_banco", "motor_liberar_historico_de_pessoas", "motor_liberar_historico_de_premios", "motor_crescer_historico_de_competicoes", "motor_ordem_dos_clubes_pela_reputacao", "motor_ordem_do_elenco_pela_habilidade", "motor_ordem_do_elenco_pela_habilidade_atual", "motor_normalizar_atributos_fisicos_do_jogador", "motor_segundo_nome_pelo_peso", "motor_normalizar_atributos_do_jogador", "motor_ler_clubes_v1", "motor_ler_nao_jogadores_v1", "motor_ler_jogadores_v1", "motor_ler_competicoes_v1", "motor_nome_ingles_da_nacao", "motor_nome_curto_ingles_do_clube", "motor_cortar_elencos_de_a_e_b", "motor_juntar_o_time_b_ao_a", "motor_montar_indice_de_nomes", "motor_tirar_pessoa_do_clube", "motor_olheiros_do_clube", "motor_clube_em_temporada", "motor_clube_em_nacao_grande", "motor_nacao_grande", "motor_limpar_vinculos_de_opiniao", "motor_juntar_vinculo_de_opiniao", "motor_tirar_vinculo_de_opiniao", "motor_auxiliar_do_clube", "motor_treinadores_do_clube", "motor_contar_treinadores_do_clube", "motor_sigla_inglesa_da_nacao", "motor_nome_ingles_da_competicao", "motor_nome_ingles_da_competicao_de_pessoal", "motor_nome_ingles_do_estadio", "motor_arquivo_do_idioma_existe", "motor_liberar_tabelas_em_ingles", "motor_gerar_comissao_extra", "motor_cortar_tabela_de_clubes", "motor_podar_historico_de_competicoes", "motor_resolver_indices_do_banco", "motor_ordenar_clubes_pela_reputacao", "motor_clube_tem_defensores", "motor_clube_tem_meias", "motor_clube_tem_atacantes", "motor_clube_tem_esforcados", "motor_clube_tem_goleiro", "motor_clube_tem_meias_que_roubam", "motor_faltam_atacantes_pelo_alto", "motor_faltam_zagueiros_pelo_alto", "motor_faltam_zagueiros_rapidos", "motor_clube_tem_atacante_rapido", "motor_clube_tem_meias_criativos", "motor_faixa_de_forca_do_elenco", "motor_reputacao_do_clube_para_pessoa", "motor_contar_rejeitados_no_clube", "motor_contar_favoritos_no_clube", "motor_tirar_clube_favorito", "motor_clube_tirar_pessoa_favorita", "motor_tirar_pessoa_favorita", "motor_tirar_pessoa_rejeitada", "motor_pessoas_favoritas", "motor_clube_acrescentar_pessoa_favorita", "motor_clube_acrescentar_pessoa_rejeitada", "motor_acrescentar_pessoa_favorita", "motor_acrescentar_clube_rejeitado", "motor_esmaecer_relacoes", "motor_pessoas_rejeitadas", "motor_mascara_da_posicao_natural", "motor_contar_elenco_com_mascara", "motor_escolher_companheiro_favorito", "motor_clube_fora_da_argentina", "motor_clube_fora_de_argentina_franca_croacia", "motor_nacao_da_melanesia", "motor_nacao_da_polinesia", "motor_nome_do_cargo_de_treino", "motor_anos_entre_datas_em_texto", "motor_ordem_dos_clubes_pelo_nome_curto", "motor_ordem_das_pessoas_pelo_nome_completo", "motor_pessoa_confere_com_os_nomes", "motor_ordem_dos_clubes_pela_latitude", "motor_ordem_dos_clubes_pela_longitude", "motor_nome_por_ids", "motor_nome_oficial", "motor_texto_da_mascara_da_posicao", "motor_nome_da_posicao", "motor_descricao_do_jogador", "motor_melhor_candidato_a_favorito", "motor_forcas_do_jogador", "motor_fraquezas_do_jogador", "motor_contar_fisioterapeutas", "motor_clube_e_time_b", "motor_pessoas_fora_do_elenco", "motor_atributo_visivel", "motor_atributo_para_quem_ve", "motor_nome_do_atributo_de_tecnico", "motor_ordem_das_pessoas_pelo_sobrenome", "motor_ordem_dos_ponteiros_de_clube_pela_reputacao", "motor_nacao_do_clube_na_cee", "motor_regioes_pelo_nome", "motor_ordem_das_regioes_pelo_nome", "motor_pessoa_da_opiniao", "motor_nome_pelos_textos", "motor_nome_do_cargo", "motor_nome_do_idioma", "motor_nome_da_selecao", "motor_nome_do_atributo_do_jogador", "motor_texto_das_posicoes", "motor_nome_da_regiao", "motor_adjetivo_do_continente",
     ];
     for i in 0..N {
         if DESLIGADAS.contains(&PROLOGOS[i].endereco) {
