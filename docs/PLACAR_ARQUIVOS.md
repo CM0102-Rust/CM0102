@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologo` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 743 de 6709 funções, 694.9 de 5528.0 KB (**12.57%**) · 49 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 763 de 6709 funções, 699.2 de 5528.0 KB (**12.65%**) · 49 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -15,7 +15,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `match_pl.cpp` | 96/96 | 179.8/179.8 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `zipdir.cpp` | 10/10 | 4.8/4.8 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `match_screens.cpp` | 53/55 | 77.2/77.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **100.0%** |
-| `Database.cpp` | 121/181 | 64.8/148.5 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **43.6%** |
+| `Database.cpp` | 141/181 | 69.1/148.5 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **46.5%** |
 | `Area.cpp` | 3/15 | 2.0/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.7%** |
 | `formation.cpp` | 19/45 | 8.9/26.5 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **33.4%** |
 | `index.cpp` | 5/11 | 45.0/163.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.6%** |

@@ -41,3 +41,4 @@ Ampla de 24/10/2026: prova geral Rust = original 9ee2b5ac ate a 229a (8 ligas at
 - leva232.py: dbi_crescer_historico_de_competicoes, dbi_ordem_do_elenco_pela_habilidade_atual, dbk1_juntar_comissao, dbk2_olheiros (rodam na temporada)
 - leva233.py: dbl_nacao_grande, dbl_juntar_vinculo, dbl_tirar_vinculo, dbl_auxiliar, dbl_treinadores, dbl_contar_treinadores (rodam na temporada)
 - leva234.py: dbp_clube_tirar_favorita, dbp_pessoas_favoritas, dbp_tirar_clube_favorito, dbp_tirar_rejeitada (caminho raro; as dbo_* só com relatório de olheiro)
+- leva235.py: dbr_longitude, dbr_fora_da_argentina, dbr_fora_de_arg_fra_cro, dbr_pessoas_pelo_nome_completo, dbr_confere_nomes (outras ligas)

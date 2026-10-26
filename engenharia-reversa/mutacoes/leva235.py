@@ -1,0 +1,23 @@
+# Mutações da 235a leva (itens dbq_1, dbq_2, dbq_3, dbr_1, dbr_2, dbr_3, dbr_4). Uso: python mutacoes.py mutacoes\leva235.py --carreira 2002-06-01
+MUTACOES = [
+    ('dbq_clube_favorita', '    dbq1_acrescentar(clube + 0x9b, clube + 0xa7, pessoa, dbq1_tem(clube + 0x9b, pessoa), forcar) // as favoritas do clube', '    dbq1_acrescentar(clube + 0x9f, clube + 0xa7, pessoa, dbq1_tem(clube + 0x9b, pessoa), forcar) // mutacao: uma vaga adiante'),
+    ('dbq_clube_rejeitada', '    dbq1_acrescentar(clube + 0xa7, clube + 0x9b, pessoa, dbq1_tem(clube + 0xa7, pessoa), forcar) // as rejeitadas do clube', '    dbq1_acrescentar(clube + 0xab, clube + 0x9b, pessoa, dbq1_tem(clube + 0xa7, pessoa), forcar) // mutacao: uma vaga adiante'),
+    ('dbq_pessoa_favorita', '    dbq1_acrescentar(pref + 0x1c, pref + 0x28, outra, dbq1_tem(pref + 0x1c, outra), forcar) // as favoritas da pessoa', '    dbq1_acrescentar(pref + 0x20, pref + 0x28, outra, dbq1_tem(pref + 0x1c, outra), forcar) // mutacao: uma vaga adiante'),
+    ('dbq_clube_rejeitado', '    let lista = pref + 0x10; // os clubes rejeitados', '    let lista = pref + 0x14; // mutacao: uma vaga adiante'),
+    ('dbq_esmaecer', '        if dbq2_u32(v) != 0 && sortear(*((pessoa + 0x59) as *const i8) as i32 + 15) == 0 { // as favoritas', '        if dbq2_u32(v) != 0 && sortear(*((pessoa + 0x59) as *const i8) as i32 + 14) == 0 { // mutacao: 14 no lugar do 15'),
+    ('dbq_rejeitadas', '        let p = dbq2_u32(pref + 0x28 + 4 * k); // as rejeitadas', '        let p = dbq2_u32(pref + 0x1c + 4 * k); // mutacao: as favoritas'),
+    ('dbq_mascara', '    for (k, bit) in [(0x10, 2), (0x11, 4), (0x12, 0x18), (0x13, 0x38), (0x14, 0x30)] {', '    for (k, bit) in [(0x10, 2), (0x11, 4), (0x12, 0x8), (0x13, 0x38), (0x14, 0x30)] { // mutacao: zagueiro sem o 0x10'),
+    ('dbq_contar_mascara', '        if p != 0 && dbq3_u32(p + 0x61) != 0 && mascara_de(p) == mascara { // os iguais', '        if p != 0 && dbq3_u32(p + 0x61) != 0 && mascara_de(p) != mascara { // mutacao: os diferentes'),
+    ('dbq_companheiro', '        nota += oid.wrapping_add(id) % 500; // o desempate pelos ids', '        nota += oid.wrapping_add(id) % 50; // mutacao: % 50 no lugar de % 500'),
+    ('dbr_fora_da_argentina', '(id != *(0x9cf218 as *const u32)) as u32, // a Argentina', '(id == *(0x9cf218 as *const u32)) as u32, // mutacao: a resposta invertida'),
+    ('dbr_fora_de_arg_fra_cro', 'let chaves = [0x9cf218usize, 0x9cf300, 0x9cf2ac]; // Argentina, França, Croácia', 'let chaves = [0x9cf218usize, 0x9cf218, 0x9cf2ac]; // mutacao: sem a Franca'),
+    ('dbr_melanesia', '0x9cf2f8, 0x9cf500]) // melanésias', '0x9cf2f8, 0x9cf2f8]) // mutacao: sem a ultima melanesia'),
+    ('dbr_polinesia', '0x9cf2a4, 0x9cf514]; // polinésias', '0x9cf2a4, 0x9cf2a4]; // mutacao: sem a ultima polinesia'),
+    ('dbr_nome_do_cargo', '        3 | 10 => (0x9b6448, 1),       // "Coach"', '        3 | 10 => (0x9b6440, 1),       // mutacao: "Manager" no lugar de "Coach"'),
+    ('dbr_anos_em_texto', '        anos = anos.wrapping_sub(1); // o aniversário ainda não chegou', '        // mutacao: sem o desconto do aniversario'),
+    ('dbr_clubes_pelo_nome_curto', '    dbr_comparar_textos(nome(a), nome(b))', '    dbr_comparar_textos(nome(b), nome(a)) // mutacao: a ordem invertida'),
+    ('dbr_pessoas_pelo_nome_completo', '    dbr_comparar_textos(na.as_ptr(), nb.as_ptr())', '    dbr_comparar_textos(nb.as_ptr(), na.as_ptr()) // mutacao: a ordem invertida'),
+    ('dbr_confere_nomes', '    for (d, id) in [(4, nome), (8, sobrenome), (0xc, comum)] {', '    for (d, id) in [(4, nome), (0xc, comum)] { // mutacao: sem o sobrenome'),
+    ('dbr_latitude', '    dbr_ordem_pela_coordenada(ca, cb, 0x23) // a latitude', '    dbr_ordem_pela_coordenada(ca, cb, 0x2b) // mutacao: a longitude no lugar da latitude'),
+    ('dbr_longitude', '    dbr_ordem_pela_coordenada(ca, cb, 0x2b) // a longitude', '    dbr_ordem_pela_coordenada(ca, cb, 0x23) // mutacao: a latitude no lugar da longitude'),
+]
