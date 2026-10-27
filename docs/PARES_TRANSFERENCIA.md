@@ -72,7 +72,7 @@ Nenhum item foi criado nem apagado (142 / 142). `general.dat` não muda no cabe�
 |---|---|---|---|---|---|
 | `club.dat[A]` | vaga da pessoa no elenco | `p → −1` **sem compactar** (A 4221 vaga 34; 4504 vaga 5) | `p → −1` (vaga 34), sem compactar | — | **nada** (o dono 3529 mantém o jogador no elenco) |
 | `club.dat[B]` | **primeira** vaga livre do grupo | elenco: 4504 vaga 1; Liverpool vaga 37 (as primeiras −1) | — | olheiros[3] (c), elenco[1] (e) | elenco[1] |
-| `club.dat[A]`, `[B]` | i16 em +128 | ±1 (A −1, B +1) | — | (e) +2; (c) nada | — |
+| `club.dat[A]`, `[B]` | i16 em +128 | ±1 (A −1, B +1; varia com a reputação do jogador: ver 2ª rodada) | — | (e) +2; (c) nada | — |
 | `staff.dat[p]` | +57 clube | A → B | A → −1 | −1 → B | dono → **clube do empréstimo** |
 | | +62..+69 entrada (data + i32 bissexto) | → 205/2001, bissexto 0 | não muda | → 205/2001 | não muda |
 | | +70..+77 saída | → fim do contrato novo | não muda | → fim do contrato novo | não muda (fim do contrato do dono) |
@@ -155,6 +155,177 @@ do contrato na entrada; +94 muda (2 → 1) na entrada do jogador; club +128 (i16
 0x42 (bit 0x40) aparece em contratos **novos** (c, e) e no da venda (b2), não só no do dono de um emprestado; e o
 contrato do dono **não** ganhou o bit 0x40 no empréstimo (d).
 
+## Segunda rodada: vaga ocupada, jogador-técnico, clube B e Bosman
+
+26/10/2026, mesmo método, mesma base e mesma cópia do jogo; o "antes" continua `antes1.sav` (uma 4ª gravação sem
+operação com a DLL recompilada, `antes4.sav`, saiu **idêntica**, MD5 `35448cd3…`) **[observado]**. O `FeriasTesteSave`
+foi conferido antes e depois de cada carga e no fim: MD5 `33fda465…` intocado. Candidatos escolhidos pelo
+`ferramentas\analise2.py`; contagens C1–C8 em `coerencias2.txt`; diferenças completas nos `*.diff.txt`.
+
+A DLL de diagnóstico ganhou quatro operações (o `S` e o `D` viraram funções, sem mudar o que fazem): `R` (substituição:
+`D` no ocupante e `S` no novo), `B` (pré-contrato Bosman), `A` (passar para o time B) e `K` (contrato aceito com cargo
+novo; não precisou ser usado, o `C` bastou).
+
+### Os pares
+
+| Caso | Arquivo "depois" | Bytes | MD5 | Itens mudados | Operação |
+|---|---|---|---|---|---|
+| (f1) auxiliar com a vaga ocupada | `f1_vaga_ocupada.sav` | 137.618.621 | `db35a7f2da67e97613ad6244ea5e180c` | 2 | auxiliar 487, sem clube, para o 4504, que já tem o auxiliar 24253 |
+| (f2) substituição do auxiliar | `f2_substituicao.sav` | 137.618.924 | `95c7743e60b3317a2ebd87e0a0dc595f` | 10 | dispensa do 24253 e contratação do 487 no mesmo dia |
+| (g1) jogador vira jogador-treinador | `g1_jogador_treinador.sav` | 137.618.532 | `354e33d9df980aca6363082fe4cb42ca` | 8 | jogador 3304 do 4504 renova com o cargo 15 |
+| (g2) jogador contratado como auxiliar | `g2_jogador_auxiliar.sav` | 137.619.014 | `66e392706c099f700e21dd9b87c23eaa` | 12 | jogador 25549, sem clube, contratado como auxiliar (6) pelo AFC Bournemouth (983, de IA) |
+| (h1) do time principal para o B | `h1_para_o_b.sav` | 137.618.548 | `45317be87f6e6461fbd3d5f145639361` | 2 | jogador 40851 do Real Madrid (4834) para o Real Madrid B (4835) |
+| (h2) compra pelo time B | `h2_compra_pelo_b.sav` | 137.619.864 | `6d94b080f4121171f1a582af26f570e3` | 13 | jogador 1366, sem clube, contratado pelo 4835 sem valor |
+| (h3) venda de quem está no B | `h3_venda_do_b.sav` | 137.618.995 | `4e25861b219e3d3a20d3774c3f8c260d` | 15 | jogador 40740 (contrato com o 4834, no elenco do 4835) para o 4504, valor 95.125 |
+| (i1) pré-contrato Bosman | `i1_precontrato.sav` | 137.618.740 | `ecbb07f7f6ff4a66b4fe17b9cb4a70a6` | 3 | jogador 26657 do Colchester (1451), contrato até 272/2001, acerta ir para o 4504 no dia 273/2001 |
+| (i2) saída Bosman concluída | `i2_bosman_saida.sav` | 137.619.038 | `e200bdd992e12f949656e97ab66ae430` | 15 | o mesmo 26657 sai para o 4504, valor 0, ainda com contrato |
+
+### As rotinas e os argumentos
+
+| Caso | Chamadas |
+|---|---|
+| (f1) | O `S` da 1ª rodada: 0x8bf060 (thiscall `TM`; pessoa 487, clube 4504, `&hoje`, 0, −1, 0) com o cargo 11 fixo trocado por **6**, e 0x8cbbe0. |
+| (f2) | `R`: os passos do *Terminate Contract* do caso (b) no ocupante 24253 (0x4d0b50, 0x53c190 (4504, 24253, 0, 1, 0), 0x8c1af0 (24253, 4504, 0, 0, 1), treino 0x8b2880 (4504, 0)) e depois o mesmo de (f1). |
+| (g1) | `C`: `STAFF_CONTRACT` 0x85e410 + `set_to_desired_contract` 0x85fc50 (pessoa 3304, clube 4504, −1, 0, cargo **15**, 0, 0) + `add_contract_offer` 0x4cc490 (thiscall `CM`; oferta, −1, −1, 15, 0, 0, 0) + `resolve_contract_offers` 0x4ce4e0 (thiscall `CM`; pessoa). É a renovação da tela *Offer Contract* com o cargo "Player/Coach"; o jogador **aceitou**, e o `sign_contract` 0x4cf720 seguiu o ramo de troca de cargo (vaga conferida pela 0x53b9a0, tira do clube pela 0x53c190 e põe de novo pela 0x53bd10 com o cargo novo) **[observado: desmontagem e save]**. |
+| (g2) | O `S` com cargo **6** num clube de IA. Quem transforma em 13 é a `database_add_staff_to_club` 0x53bd10: clube não humano, pessoa com ficha de jogador (+0x61) e a ficha +5 (i16) acima de 0x55 → o cargo 6 vira 13 (e o 8 vira 15), com vaga de comissão **e** vaga no elenco **[observado na desmontagem]**. |
+| (h1) | `A`: `CONTRACT_MANAGER::move_to_reserves` 0x4cc0f0 (thiscall `CM`; pessoa 40851, clube 4834) → `toggle_squad_placement` 0x4cbd20. É a ação do elenco que passa o jogador para o time B ligado. |
+| (h2), (h3), (i2) | `T`: 0x8bf060 (pessoa, clube comprador, `&hoje`, valor, −1, 0) + 0x8cbbe0, como (a)/(e): valor 0 em (h2) e (i2), −1 (o valor do jogador) em (h3). |
+| (i1) | `B`: 0x8bf060 (thiscall `TM`; pessoa 26657, clube 4504, `&(fim do contrato + 1 dia)` = 273/2001, valor **0**, −1, 0), **sem** 0x8cbbe0 (a data ainda não chegou). É a data que o jogo usa: `transfer_manager_get_offer_completion_date` 0x8cee70 dá, para o tipo 3, o fim do contrato + 1 dia, e o `confirm_offer_by_club` 0x8c3310 marca a transferência futura (`add_future_transfer` 0x8cb9a0) para esse dia **[observado na desmontagem]**. Com valor 0, contrato atual e nação do clube com regra Bosman (`nation_allows_free_transfers` 0x544670), a 0x8bf060 marca o contrato +0x49 = 1. Não é chamada a notícia de acordo (`post_transfer_agreed_news` 0x8e05d0) que a confirmação da tela posta. |
+
+### O que mudou, item a item
+
+**(f1) vaga ocupada: o jogo não substitui.** Só `news.dat` (1 notícia, tipo 0xfb0, não a 0xfa8 das transferências
+concluídas) e `transfer.dat` (+73) mudaram; `club.dat`, `staff.dat`, `contract.dat` e `general.dat` **idênticos**: o
+487 continua sem clube e o 24253 continua auxiliar **[observado]**. Pela desmontagem, a `process_due_future_transfers`
+chama a `check_offer_restrictions` 0x8cfc90 → `transfer_manager_check_squad_limits` 0x8cd450, que recusa quando o
+cargo da oferta é 6/13 e o clube (ou o B ligado) já tem auxiliar (motivo 0x22/0x23: "too many staff employed"); a
+oferta é desfeita (`collapse_offer` 0x8c44e0) **[inferência sobre a desmontagem]**. O mesmo vale para treinadores (5),
+olheiros (7) e fisios (3) cheios; e a `database_add_staff_to_club` devolve 0 para vaga única ocupada (presidente,
+técnico, auxiliar) sem tocar no ocupante. **Não há caminho do jogo em que o novo empurre o antigo:** a substituição é
+dispensar e depois contratar, que é o (f2).
+
+**(f2) substituição (dispensa + contratação):**
+
+| Arquivo | Campo | Antes → depois |
+|---|---|---|
+| `club.dat[4504]` | auxiliar (+211) | 24253 → 487 (a mesma vaga) |
+| `staff.dat[24253]` (o ocupante) | +57 | 4504 → −1; **+61 (cargo 6), +62, +70, +78, +82 não mudam** |
+| `staff.dat[487]` | +57; +62; +70 (+74 bissexto) | −1 → 4504; → 205/2001; → 204/2005 (+78 e +82 não mudam) |
+| `general.dat` | 24253 +0; 487 +0, +8 | 18321 → −1; −1 → **18321**, +8 +1 |
+| `contract.dat` | registro 18321 | **reaproveitado**: era o do 24253, vira o do 487 (clube 4504, salário 450, 205/2001 → 204/2005, tipo 0x2); `n` não muda (41.974) |
+| `finance.dat[4504]` | +12, +20 | folha salarial |
+| `transfer.dat` | +151 | = 37 (registro de transferência passada do dispensado) + 114 (oferta do contratado) |
+| `training.dat` | 7 bytes | o auxiliar novo no treino do clube humano |
+| `news.dat`, `staff records.dat`, `staff history.tmp`, cauda do `contract.dat` (+111) | | como nos casos da 1ª rodada |
+
+O registro de contrato que a dispensa marca livre (+0 = −1) é o **primeiro livre** que a contratação seguinte usa
+(`sign_contract`): confirma a regra 3 da coerência na prática **[observado]**.
+
+**(g1) jogador vira jogador-treinador (mesmo clube):**
+
+| Arquivo | Campo | Antes → depois |
+|---|---|---|
+| `club.dat[4504]` | elenco | **sai da vaga 16 e entra na vaga 1** (a primeira livre): o jogo tira e põe de novo; o elenco não é compactado e a ordem muda |
+| | treinadores[2] (+423) | −1 → 3304 (a primeira livre) |
+| `staff.dat[3304]` | +61 cargo | 11 → **15**; +62 (entrada) **não muda** (mesmo clube); +70 → 167/2007 (fim novo); +78 salário 650 → 1.094; +82 valor recalculado; **+105 (i32) −1 → 5533** (não decodificado) |
+| `contract.dat` | registro 2496 | o mesmo, reescrito: +8 5.758, salário 1.094, início 205/2001, fim 167/2007, +79 0x4a → 0x0a; tamanho e `n` iguais, sem oferta pendente na cauda |
+| `general.dat` | — | não muda |
+| `player.dat` | +69 | 10 → 20 |
+| `finance.dat[4504]` | +0 saldo, +12, +20, +156/+316 | luvas (= contrato +8) e folha |
+| `retire.dat` | −16 bytes | sai um registro (o jogador tinha aposentadoria anunciada) **[inferência]** |
+| `training.dat`, `news.dat` | | o treinador novo; 1 notícia |
+
+**(g2) jogador sem clube contratado como auxiliar por clube de IA → jogador-auxiliar (13):**
+
+| Arquivo | Campo | Antes → depois |
+|---|---|---|
+| `club.dat[983]` | auxiliar (+211); elenco[26] (+319) | −1 → 25549 nas **duas** vagas (a do elenco é a primeira livre) |
+| | i16 +128 | 2.999 → 3.051 |
+| `staff.dat[25549]` | +57; +61; +62; +70; +78; +82 | −1 → 983; 11 → **13**; → 205/2001; → 204/2005; 10.000 → 684 (salário do contrato); 0 → 105.815 |
+| `contract.dat` | | **novo no fim** (41974; `n` +1), clube 983, salário 684, multa 250.000, tipo 0x2 |
+| `general.dat` | +0, +8 | −1 → 41974; +1 |
+| outros | | `player.dat`, `player stats`, `staff records`, `finance.dat[983]`, `transfer.dat` +114, `man_conf.dat`, históricos, cauda +111 |
+
+**(h1) do time principal para o B (`move_to_reserves`): o mínimo de todos os pares.** Só 2 itens:
+
+| Arquivo | Campo | Antes → depois |
+|---|---|---|
+| `club.dat[4834]` | elenco[5] (+235) | 40851 → −1 (sem compactar) |
+| `club.dat[4835]` | elenco[8] (+247) | −1 → 40851 (a primeira livre) |
+| `staff.dat[40851]` | +57 | 4834 → **4835** |
+
+O **contrato não muda** (continua com o clube 4834, mesmo registro, mesmo tipo 0x2, sem bit 0x40), nem o
+`general.dat`, nem as datas e o salário da pessoa **[observado]**. É exatamente o padrão dos 186 casos de "contrato com
+o principal, pessoa no B" do save (C5 186 → 187).
+
+**(h2) compra feita pelo time B:** núcleo igual ao de (e) (jogador livre): `club.dat[4835]` elenco[8] −1 → 1366;
++57 −1 → 4835; +62/+70/+78/+82; contrato **novo no fim** (41974) **com o clube 4835** (o B, não o principal), salário
+2.802, +8 3.434; `general +0` −1 → 41974. Mas o dinheiro sai do **principal**: `finance.dat[4834]` +0 saldo −3.434 e
++156/+316 luvas (o 4835 não tem mudança em `finance.dat`) **[observado]**. `club records.dat` cresce 907 bytes.
+
+**(h3) venda de quem está no B (contrato com o principal):**
+
+| Arquivo | Campo | Antes → depois |
+|---|---|---|
+| `club.dat[4835]` | elenco[3] | 40740 → −1 (sai do **B**, onde está) |
+| `club.dat[4504]` | elenco[1] | −1 → 40740 |
+| `staff.dat[40740]` | +57, +62, +70, +78, +82 | 4835 → 4504; → 205/2001; → 204/2006; 0 → 1.216; recalculado |
+| `contract.dat` | registro 30537 | o mesmo, reescrito: clube **4834 → 4504**, salário 1.216, início 205/2001, fim 204/2006, +79 0x6a → 0x20 |
+| `general.dat` | +34 (clube anterior) | −1 → **4834** (o principal, o do contrato), não o 4835 |
+| `finance.dat` | 4834 (principal) recebe; 4504 paga | 4834: +0 saldo +95.125, +120/+280 = 95.125; 4504: +0, +12, +20, +112/+272 = 95.125, +156/+316 |
+
+C5 186 → 185 (some um caso de "contrato ≠ +57"). Quem recebe o valor e fica como "clube anterior" é o dono do contrato.
+
+**(i1) pré-contrato Bosman (o acordo, antes da data):** o jogador **não sai** do clube.
+
+| Arquivo | Campo | Antes → depois |
+|---|---|---|
+| `contract.dat` | registro 19956, +73 (+0x49, "sai pela Bosman") | 0 → **1**; o resto do registro igual (fim 272/2001, clube 1451) |
+| | cauda | +111 (a oferta de contrato com o 4504, pendente até o dia) |
+| `general.dat` | +8 | +1 |
+| `transfer.dat` | +81 | a oferta (tipo 3, "no fim do contrato") e a transferência futura para 273/2001 |
+
+Nada em `club.dat`, `staff.dat`, `finance.dat` **[observado]**. O byte +73 do contrato é o `staff_contract_is_leaving_on_bosman`
+(0x8857e0 lê +0x49) e o "Leaving the club under the Bosman ruling on <data>" do perfil.
+
+**(i2) saída Bosman concluída (contrato ainda em vigor, valor 0):** o mesmo núcleo de uma compra com contrato (a):
+`club.dat[1451]` elenco[6] → −1, `club.dat[4504]` elenco[1] → 26657, +128 −5/+5; +57 1451 → 4504; +62 → 205/2001;
++70 → 204/2005 (e o bissexto +66 da entrada); +78 → 1.016; o **mesmo registro** 19956 reescrito (clube 4504, salário 1.016,
++8 1.565, início 205/2001, fim 204/2005, **+73 volta a 0**); `general +34` = 1451, +38 = 1; `tactics.dat` tira o
+jogador da tática do 1451. **Sem dinheiro para o 1451** (só o 4504 paga as luvas, `finance.dat[4504]` +0/+156/+316 e a
+folha) **[observado]**. No jogo a conclusão acontece no dia 273/2001 (contrato já vencido); aqui foi no próprio dia
+205, com o contrato ainda valendo: a diferença é só a data.
+
+### Coerência obrigatória (acréscimos desta rodada) [inferência sobre o observado]
+
+7. **Vaga única ocupada:** o editor **não** deve empurrar o ocupante. O jogo recusa; a substituição é dispensa (caso b)
+   + contratação. O ocupante dispensado fica com +57 = −1, `general +0 = −1`, registro de contrato livre, e **mantém**
+   +61 (cargo), +62, +70, +78, +82 (confirma TRANSFERENCIA §3b, item 7; o CMRTE zerar o cargo é erro).
+8. **Jogador-técnico/auxiliar/treinador (12/13/15):** duas vagas no **mesmo** clube (a de comissão e a do elenco).
+   Na troca de cargo no mesmo clube, o jogo tira a pessoa do elenco e a põe de novo na **primeira vaga livre** (a
+   posição muda); +62 não muda; o contrato é o mesmo registro reescrito.
+9. **Clube B:** passar do principal para o B (e voltar) mexe **só** nas duas vagas de elenco e no +57; o contrato
+   continua com o principal. Contratação feita pelo B: contrato com o **B** (+4 = B), dinheiro do principal. Venda de
+   quem está no B: sai da vaga do **B**, o contrato (do principal) é reescrito para o comprador, o principal recebe e
+   fica como clube anterior (`general +34`).
+10. **Bosman:** o acordo grava só o contrato +73 = 1 (e as sobras de oferta); a mudança no dia é igual a uma
+    transferência com contrato e valor 0 (mesmo registro reescrito, +73 volta a 0, nenhum dinheiro ao clube antigo).
+
+### Cruzamento com as C1–C9 (2ª rodada)
+
+`coerencias2.txt` **[observado]**: C1, C2, C3, C6, C7 e C8 **iguais ao "antes"** nos nove pares (o jogador-auxiliar
+de (g2) e o jogador-treinador de (g1) estão em duas vagas do **mesmo** clube, que a C1 aceita). C4: `n` +1 em (g2) e
+(h2) (contrato novo no fim); (f2) reaproveita o registro livre, então 0 vagas livres depois. C5: (h1) +1 (186 → 187, o
+novo caso "contrato no principal, +57 no B") e (h3) −1 (185) — os dois **conferem** com a exceção do clube B do §2.1.
+C9: o jogo muda de 2 a 15 itens; (h1) é o único par cujo "depois" é praticamente o núcleo.
+
+Respostas ao §7 do TRANSFERENCIA **[observado]**: (4) substituído: +61 **fica**, +78/+82 ficam. (5) jogador-técnico:
+vaga de comissão + vaga no elenco do mesmo clube; virar jogador-técnico no mesmo clube reposiciona o elenco. (6) clube B:
+ver coerência 9. **Diverge do §1.2/§2.1** em um ponto: a contratação **pelo** B cria contrato com o próprio B (+4 = B),
+então nem todo jogador do B tem contrato com o principal. E a nota da 1ª rodada sobre o club +128 (i16) "±1" estava
+estreita: ele varia com a reputação do jogador (a 0x8c9720 soma a reputação/100 no clube novo e tira do antigo;
+(i2) ±5, (g2) +52, (h2) +20).
+
 ## Limites
 
 - Os casos (a), (b2), (c) e (e) usam o caminho das transferências **combinadas de antemão** (0x8bf060 + 0x8cbbe0), não a
@@ -163,6 +334,10 @@ contrato do dono **não** ganhou o bit 0x40 no empréstimo (d).
   tela **[inferência]**. O empréstimo (d) é o do arquivo de configuração (salário 0 %).
 - O caso (c) troca, só durante a chamada, o cargo fixo da 0x8bf060 (11 → 9) em três imediatos do código.
 - O "valor" de (a) e (b2) é o valor do jogador (+0x52), sem parcelas nem cláusulas.
-- Não cobertos: auxiliar com a vaga ocupada (3b), jogador-técnico, clube B/reservas, elenco a 50, transferência
-  Bosman de quem ainda tem contrato (a 0x8bf060 com valor 0 e contrato marca o contrato antigo para acabar).
+- 2ª rodada: (g2) e (h2)/(h3)/(i2) usam o mesmo caminho combinado de antemão; (f1)/(f2) trocam o cargo fixo para 6;
+  (i1) não posta a notícia de acordo da tela; (i2) conclui no dia do acordo, não no dia seguinte ao fim do contrato.
+  (g1) é o caminho da tela (oferta + decisão do jogador), que aceitou.
+- Não cobertos: elenco a 50; transferência de quem já é jogador-técnico (12/13/15) para outro clube; jogador-técnico
+  (12) por nomeação de técnico (`MANAGER_MANAGER`); clube B com o principal **humano**; reservas de clubes ingleses (não
+  são clubes à parte: só o bit 0x40 do contrato, `toggle_squad_placement` caso 1/2); a chegada real do dia 273/2001.
 - `transfer.dat`, `news.dat`, `staff records.dat` e os históricos não foram decodificados (só tamanho e posição).

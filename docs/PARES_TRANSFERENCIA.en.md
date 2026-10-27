@@ -74,7 +74,7 @@ removed (142 / 142). The `general.dat` header (date, counts) does not change in 
 |---|---|---|---|---|---|
 | `club.dat[A]` | the person's squad slot | `p → −1` **without compacting** (A 4221 slot 34; 4504 slot 5) | `p → −1` (slot 34), without compacting | — | **nothing** (the owner 3529 keeps the player in the squad) |
 | `club.dat[B]` | **first** free slot of the group | squad: 4504 slot 1; Liverpool slot 37 (the first −1) | — | scouts[3] (c), squad[1] (e) | squad[1] |
-| `club.dat[A]`, `[B]` | i16 at +128 | ±1 (A −1, B +1) | — | (e) +2; (c) nothing | — |
+| `club.dat[A]`, `[B]` | i16 at +128 | ±1 (A −1, B +1; varies with the player's reputation: see 2nd round) | — | (e) +2; (c) nothing | — |
 | `staff.dat[p]` | +57 club | A → B | A → −1 | −1 → B | owner → **loan club** |
 | | +62..+69 joined (date + i32 leap) | → 205/2001, leap 0 | unchanged | → 205/2001 | unchanged |
 | | +70..+77 leaves | → end of the new contract | unchanged | → end of the new contract | unchanged (owner contract end) |
@@ -160,6 +160,178 @@ the contract wage on entry; +94 changes (2 → 1) when a player joins; club +128
 §1.3:** type 0x42 (bit 0x40) shows up on **new** contracts (c, e) and on the sale one (b2), not only on the owner's
 contract of a loanee; and the owner's contract did **not** get bit 0x40 with the loan (d).
 
+## Second round: occupied slot, player-manager, B club and Bosman
+
+26/10/2026, same method, same base and same game copy; the "before" is still `antes1.sav` (a 4th save with no
+operation and the recompiled DLL, `antes4.sav`, came out **identical**, MD5 `35448cd3…`) **[observed]**. The
+`FeriasTesteSave` was checked before and after each load and at the end: MD5 `33fda465…` untouched. Candidates chosen
+by `ferramentas\analise2.py`; C1–C8 counts in `coerencias2.txt`; full differences in the `*.diff.txt` files.
+
+The diagnostic DLL gained four operations (`S` and `D` became functions, doing the same as before): `R` (replacement:
+`D` on the incumbent and `S` on the new one), `B` (Bosman pre-contract), `A` (move to the B team) and `K` (accepted
+contract with a new job; not needed, `C` was enough).
+
+### The pairs
+
+| Case | "After" file | Bytes | MD5 | Items changed | Operation |
+|---|---|---|---|---|---|
+| (f1) assistant with the slot occupied | `f1_vaga_ocupada.sav` | 137,618,621 | `db35a7f2da67e97613ad6244ea5e180c` | 2 | assistant 487, no club, to 4504, which already has assistant 24253 |
+| (f2) assistant replacement | `f2_substituicao.sav` | 137,618,924 | `95c7743e60b3317a2ebd87e0a0dc595f` | 10 | 24253 dismissed and 487 hired on the same day |
+| (g1) player becomes player-coach | `g1_jogador_treinador.sav` | 137,618,532 | `354e33d9df980aca6363082fe4cb42ca` | 8 | player 3304 of 4504 renews with job 15 |
+| (g2) player hired as assistant | `g2_jogador_auxiliar.sav` | 137,619,014 | `66e392706c099f700e21dd9b87c23eaa` | 12 | player 25549, no club, hired as assistant (6) by AFC Bournemouth (983, AI) |
+| (h1) from the senior side to the B side | `h1_para_o_b.sav` | 137,618,548 | `45317be87f6e6461fbd3d5f145639361` | 2 | player 40851 from Real Madrid (4834) to Real Madrid B (4835) |
+| (h2) signing by the B side | `h2_compra_pelo_b.sav` | 137,619,864 | `6d94b080f4121171f1a582af26f570e3` | 13 | player 1366, no club, signed by 4835 for no fee |
+| (h3) sale of a B-side player | `h3_venda_do_b.sav` | 137,618,995 | `4e25861b219e3d3a20d3774c3f8c260d` | 15 | player 40740 (contract with 4834, in the 4835 squad) to 4504, fee 95,125 |
+| (i1) Bosman pre-contract | `i1_precontrato.sav` | 137,618,740 | `ecbb07f7f6ff4a66b4fe17b9cb4a70a6` | 3 | player 26657 of Colchester (1451), contract until 272/2001, agrees to join 4504 on day 273/2001 |
+| (i2) Bosman exit completed | `i2_bosman_saida.sav` | 137,619,038 | `e200bdd992e12f949656e97ab66ae430` | 15 | the same 26657 leaves for 4504, fee 0, still under contract |
+
+### The routines and the arguments
+
+| Case | Calls |
+|---|---|
+| (f1) | The 1st round `S`: 0x8bf060 (thiscall `TM`; person 487, club 4504, `&today`, 0, −1, 0) with the hard-coded job 11 changed to **6**, and 0x8cbbe0. |
+| (f2) | `R`: the *Terminate Contract* steps of case (b) on incumbent 24253 (0x4d0b50, 0x53c190 (4504, 24253, 0, 1, 0), 0x8c1af0 (24253, 4504, 0, 0, 1), training 0x8b2880 (4504, 0)), then the same as (f1). |
+| (g1) | `C`: `STAFF_CONTRACT` 0x85e410 + `set_to_desired_contract` 0x85fc50 (person 3304, club 4504, −1, 0, job **15**, 0, 0) + `add_contract_offer` 0x4cc490 (thiscall `CM`; offer, −1, −1, 15, 0, 0, 0) + `resolve_contract_offers` 0x4ce4e0 (thiscall `CM`; person). It is the *Offer Contract* screen renewal with the "Player/Coach" job; the player **accepted**, and `sign_contract` 0x4cf720 took the job-change branch (slot checked by 0x53b9a0, removed from the club by 0x53c190 and added again by 0x53bd10 with the new job) **[observed: disassembly and save]**. |
+| (g2) | `S` with job **6** at an AI club. What turns it into 13 is `database_add_staff_to_club` 0x53bd10: non-human club, person with a player record (+0x61) and record +5 (i16) above 0x55 → job 6 becomes 13 (and 8 becomes 15), with a staff slot **and** a squad slot **[observed in the disassembly]**. |
+| (h1) | `A`: `CONTRACT_MANAGER::move_to_reserves` 0x4cc0f0 (thiscall `CM`; person 40851, club 4834) → `toggle_squad_placement` 0x4cbd20. It is the squad action that moves the player to the linked B side. |
+| (h2), (h3), (i2) | `T`: 0x8bf060 (person, buying club, `&today`, fee, −1, 0) + 0x8cbbe0, as in (a)/(e): fee 0 in (h2) and (i2), −1 (the player's value) in (h3). |
+| (i1) | `B`: 0x8bf060 (thiscall `TM`; person 26657, club 4504, `&(contract end + 1 day)` = 273/2001, fee **0**, −1, 0), **without** 0x8cbbe0 (the date has not come yet). It is the date the game uses: `transfer_manager_get_offer_completion_date` 0x8cee70 gives, for type 3, the contract end + 1 day, and `confirm_offer_by_club` 0x8c3310 books the future transfer (`add_future_transfer` 0x8cb9a0) for that day **[observed in the disassembly]**. With fee 0, a current contract and a club nation under the Bosman rule (`nation_allows_free_transfers` 0x544670), 0x8bf060 sets contract +0x49 = 1. The agreement news (`post_transfer_agreed_news` 0x8e05d0) that the screen confirmation posts is not called. |
+
+### What changed, item by item
+
+**(f1) occupied slot: the game does not replace.** Only `news.dat` (1 news item, type 0xfb0, not the 0xfa8 of completed
+transfers) and `transfer.dat` (+73) changed; `club.dat`, `staff.dat`, `contract.dat` and `general.dat` **identical**:
+487 stays without a club and 24253 stays assistant **[observed]**. From the disassembly, `process_due_future_transfers`
+calls `check_offer_restrictions` 0x8cfc90 → `transfer_manager_check_squad_limits` 0x8cd450, which refuses when the
+offer's job is 6/13 and the club (or its linked B side) already has an assistant (reason 0x22/0x23: "too many staff
+employed"); the offer is collapsed (`collapse_offer` 0x8c44e0) **[inference from the disassembly]**. The same holds for
+full coaches (5), scouts (7) and physios (3); and `database_add_staff_to_club` returns 0 for an occupied single slot
+(chairman, manager, assistant) without touching the incumbent. **No game path has the newcomer push the incumbent
+out:** replacement is dismiss then hire, which is (f2).
+
+**(f2) replacement (dismissal + hiring):**
+
+| File | Field | Before → after |
+|---|---|---|
+| `club.dat[4504]` | assistant (+211) | 24253 → 487 (the same slot) |
+| `staff.dat[24253]` (the incumbent) | +57 | 4504 → −1; **+61 (job 6), +62, +70, +78, +82 unchanged** |
+| `staff.dat[487]` | +57; +62; +70 (+74 leap) | −1 → 4504; → 205/2001; → 204/2005 (+78 and +82 unchanged) |
+| `general.dat` | 24253 +0; 487 +0, +8 | 18321 → −1; −1 → **18321**, +8 +1 |
+| `contract.dat` | record 18321 | **reused**: it was 24253's, becomes 487's (club 4504, wage 450, 205/2001 → 204/2005, type 0x2); `n` unchanged (41,974) |
+| `finance.dat[4504]` | +12, +20 | wage bill |
+| `transfer.dat` | +151 | = 37 (past transfer record of the dismissed) + 114 (offer of the hired) |
+| `training.dat` | 7 bytes | the new assistant in the human club's training |
+| `news.dat`, `staff records.dat`, `staff history.tmp`, `contract.dat` tail (+111) | | as in the 1st round cases |
+
+The contract record the dismissal marks free (+0 = −1) is the **first free one** the next hiring uses (`sign_contract`):
+coherence rule 3 confirmed in practice **[observed]**.
+
+**(g1) player becomes player-coach (same club):**
+
+| File | Field | Before → after |
+|---|---|---|
+| `club.dat[4504]` | squad | **leaves slot 16 and enters slot 1** (the first free one): the game removes and re-adds; the squad is not compacted and the order changes |
+| | coaches[2] (+423) | −1 → 3304 (the first free one) |
+| `staff.dat[3304]` | +61 job | 11 → **15**; +62 (joined) **unchanged** (same club); +70 → 167/2007 (new end); +78 wage 650 → 1,094; +82 value recalculated; **+105 (i32) −1 → 5533** (not decoded) |
+| `contract.dat` | record 2496 | the same, rewritten: +8 5,758, wage 1,094, start 205/2001, end 167/2007, +79 0x4a → 0x0a; size and `n` equal, no pending offer in the tail |
+| `general.dat` | — | unchanged |
+| `player.dat` | +69 | 10 → 20 |
+| `finance.dat[4504]` | +0 balance, +12, +20, +156/+316 | signing bonus (= contract +8) and wage bill |
+| `retire.dat` | −16 bytes | one record removed (the player had announced retirement) **[inference]** |
+| `training.dat`, `news.dat` | | the new coach; 1 news item |
+
+**(g2) free player hired as assistant by an AI club → player/assistant manager (13):**
+
+| File | Field | Before → after |
+|---|---|---|
+| `club.dat[983]` | assistant (+211); squad[26] (+319) | −1 → 25549 in **both** slots (the squad one is the first free) |
+| | i16 +128 | 2,999 → 3,051 |
+| `staff.dat[25549]` | +57; +61; +62; +70; +78; +82 | −1 → 983; 11 → **13**; → 205/2001; → 204/2005; 10,000 → 684 (contract wage); 0 → 105,815 |
+| `contract.dat` | | **new at the end** (41974; `n` +1), club 983, wage 684, release fee 250,000, type 0x2 |
+| `general.dat` | +0, +8 | −1 → 41974; +1 |
+| others | | `player.dat`, `player stats`, `staff records`, `finance.dat[983]`, `transfer.dat` +114, `man_conf.dat`, histories, tail +111 |
+
+**(h1) senior side to B side (`move_to_reserves`): the smallest of all pairs.** Only 2 items:
+
+| File | Field | Before → after |
+|---|---|---|
+| `club.dat[4834]` | squad[5] (+235) | 40851 → −1 (not compacted) |
+| `club.dat[4835]` | squad[8] (+247) | −1 → 40851 (the first free one) |
+| `staff.dat[40851]` | +57 | 4834 → **4835** |
+
+The **contract does not change** (still with club 4834, same record, same type 0x2, no 0x40 bit), nor `general.dat`,
+nor the person's dates and wage **[observed]**. It is exactly the pattern of the save's 186 "contract with the senior
+side, person in the B side" cases (C5 186 → 187).
+
+**(h2) signing by the B side:** core equal to (e) (free player): `club.dat[4835]` squad[8] −1 → 1366; +57 −1 → 4835;
++62/+70/+78/+82; contract **new at the end** (41974) **with club 4835** (the B side, not the senior one), wage 2,802,
++8 3,434; `general +0` −1 → 41974. But the money comes from the **senior side**: `finance.dat[4834]` +0 balance −3,434
+and +156/+316 signing bonus (4835 has no change in `finance.dat`) **[observed]**. `club records.dat` grows 907 bytes.
+
+**(h3) sale of a player in the B side (contract with the senior side):**
+
+| File | Field | Before → after |
+|---|---|---|
+| `club.dat[4835]` | squad[3] | 40740 → −1 (leaves the **B side**, where he is) |
+| `club.dat[4504]` | squad[1] | −1 → 40740 |
+| `staff.dat[40740]` | +57, +62, +70, +78, +82 | 4835 → 4504; → 205/2001; → 204/2006; 0 → 1,216; recalculated |
+| `contract.dat` | record 30537 | the same, rewritten: club **4834 → 4504**, wage 1,216, start 205/2001, end 204/2006, +79 0x6a → 0x20 |
+| `general.dat` | +34 (previous club) | −1 → **4834** (the senior side, the contract's), not 4835 |
+| `finance.dat` | 4834 (senior) receives; 4504 pays | 4834: +0 balance +95,125, +120/+280 = 95,125; 4504: +0, +12, +20, +112/+272 = 95,125, +156/+316 |
+
+C5 186 → 185 (one "contract ≠ +57" case disappears). The fee and the "previous club" go to the contract owner.
+
+**(i1) Bosman pre-contract (the agreement, before the date):** the player **does not leave** the club.
+
+| File | Field | Before → after |
+|---|---|---|
+| `contract.dat` | record 19956, +73 (+0x49, "leaves under Bosman") | 0 → **1**; the rest of the record equal (end 272/2001, club 1451) |
+| | tail | +111 (the contract offer with 4504, pending until the day) |
+| `general.dat` | +8 | +1 |
+| `transfer.dat` | +81 | the offer (type 3, "at contract end") and the future transfer for 273/2001 |
+
+Nothing in `club.dat`, `staff.dat`, `finance.dat` **[observed]**. Contract byte +73 is `staff_contract_is_leaving_on_bosman`
+(0x8857e0 reads +0x49) and the profile's "Leaving the club under the Bosman ruling on <date>".
+
+**(i2) Bosman exit completed (contract still running, fee 0):** the same core as a purchase under contract (a):
+`club.dat[1451]` squad[6] → −1, `club.dat[4504]` squad[1] → 26657, +128 −5/+5; +57 1451 → 4504; +62 → 205/2001;
++70 → 204/2005 (and the joined-date leap +66); +78 → 1,016; the **same record** 19956 rewritten (club 4504, wage 1,016,
++8 1,565, start 205/2001, end 204/2005, **+73 back to 0**); `general +34` = 1451, +38 = 1; `tactics.dat` drops the
+player from 1451's tactic. **No money for 1451** (only 4504 pays the signing bonus, `finance.dat[4504]` +0/+156/+316
+and the wage bill) **[observed]**. In the game the completion happens on day 273/2001 (contract already expired); here
+it was on day 205, with the contract still running: the only difference is the date.
+
+### Mandatory coherence (additions of this round) [inference from what was observed]
+
+7. **Occupied single slot:** the editor must **not** push the incumbent out. The game refuses; replacement is dismissal
+   (case b) + hiring. The dismissed incumbent gets +57 = −1, `general +0 = −1`, a free contract record, and **keeps**
+   +61 (job), +62, +70, +78, +82 (confirms TRANSFERENCIA §3b, item 7; CMRTE zeroing the job is a bug).
+8. **Player-manager/assistant/coach (12/13/15):** two slots at the **same** club (the staff one and the squad one). On a
+   job change at the same club, the game removes the person from the squad and puts him back in the **first free
+   slot** (the position changes); +62 unchanged; the contract is the same record rewritten.
+9. **B club:** moving from the senior side to the B side (and back) touches **only** the two squad slots and +57; the
+   contract stays with the senior side. Signing made by the B side: contract with the **B side** (+4 = B), money from
+   the senior side. Sale of a B-side player: leaves the **B side** slot, the (senior side's) contract is rewritten for
+   the buyer, the senior side receives the fee and becomes the previous club (`general +34`).
+10. **Bosman:** the agreement writes only contract +73 = 1 (plus offer leftovers); the move on the day equals a transfer
+    under contract with fee 0 (same record rewritten, +73 back to 0, no money to the old club).
+
+### Cross-check with C1–C9 (2nd round)
+
+`coerencias2.txt` **[observed]**: C1, C2, C3, C6, C7 and C8 **equal to the "before"** in all nine pairs (the
+player/assistant of (g2) and the player-coach of (g1) are in two slots of the **same** club, which C1 accepts). C4:
+`n` +1 in (g2) and (h2) (new contract at the end); (f2) reuses the free record, so 0 free records afterwards. C5: (h1)
++1 (186 → 187, the new "contract with the senior side, +57 in the B side" case) and (h3) −1 (185) — both **agree**
+with the B club exception of §2.1. C9: the game changes 2 to 15 items; (h1) is the only pair whose "after" is
+practically the core.
+
+Answers to TRANSFERENCIA §7 **[observed]**: (4) replaced person: +61 **stays**, +78/+82 stay. (5) player-manager: staff
+slot + squad slot at the same club; becoming a player-manager at the same club repositions the squad. (6) B club: see
+coherence 9. **Diverges from §1.2/§2.1** on one point: a signing **by** the B side creates a contract with the B side
+itself (+4 = B), so not every B-side player has a contract with the senior side. And the 1st round note on club +128
+(i16) "±1" was too narrow: it varies with the player's reputation (0x8c9720 adds reputation/100 to the new club and
+subtracts it from the old one; (i2) ±5, (g2) +52, (h2) +20).
+
 ## Limits
 
 - Cases (a), (b2), (c) and (e) use the **pre-arranged** transfer path (0x8bf060 + 0x8cbbe0), not the multi-day screen
@@ -168,6 +340,10 @@ contract of a loanee; and the owner's contract did **not** get bit 0x40 with the
   (d) is the configuration file one (0 % wage).
 - Case (c) changes, only during the call, the hard-coded job of 0x8bf060 (11 → 9) in three code immediates.
 - The "fee" of (a) and (b2) is the player's value (+0x52), with no instalments or clauses.
-- Not covered: assistant with an occupied slot (3b), player-manager, B/reserve clubs, a 50-man squad, a Bosman move of
-  someone still under contract (0x8bf060 with fee 0 and a contract marks the old contract to end).
+- 2nd round: (g2) and (h2)/(h3)/(i2) use the same pre-arranged path; (f1)/(f2) change the hard-coded job to 6; (i1)
+  does not post the screen's agreement news; (i2) completes on the agreement day, not the day after the contract end.
+  (g1) is the screen path (offer + the player's decision), which he accepted.
+- Not covered: a 50-man squad; transfer of someone already player-manager (12/13/15) to another club; player-manager
+  (12) by manager appointment (`MANAGER_MANAGER`); a B club whose senior side is **human**; reserves of English clubs
+  (not separate clubs: only contract bit 0x40, `toggle_squad_placement` cases 1/2); the real arrival on day 273/2001.
 - `transfer.dat`, `news.dat`, `staff records.dat` and the histories were not decoded (only size and position).
