@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologo` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 810 de 6709 funções, 862.0 de 5528.0 KB (**15.59%**) · 49 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 830 de 6709 funções, 869.4 de 5528.0 KB (**15.73%**) · 49 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -19,16 +19,18 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `Database.cpp` | 168/181 | 107.1/148.5 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **72.1%** |
 | `Area.cpp` | 3/15 | 2.0/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.7%** |
 | `formation.cpp` | 19/45 | 8.9/26.5 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **33.4%** |
+| `league.cpp` | 26/61 | 8.9/35.8 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **25.0%** |
 | `Setup.cpp` | 10/107 | 28.1/120.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.3%** |
 | `tactics.cpp` | 15/29 | 5.0/23.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.6%** |
 | `human_manager.cpp` | 15/61 | 5.4/25.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.1%** |
-| `league.cpp` | 20/61 | 6.5/35.8 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **18.2%** |
 | `player_stats.cpp` | 7/34 | 2.6/28.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **9.0%** |
+| `national_teams.cpp` | 30/69 | 5.2/58.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.8%** |
 | `main.cpp` | 2/16 | 0.2/3.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.2%** |
 | `utils.cpp` | 1/23 | 0.5/5.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.0%** |
 | `fix_man.cpp` | 5/37 | 1.6/22.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **7.1%** |
 | `file_screens.cpp` | 1/10 | 0.7/11.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.2%** |
 | `comp_util.cpp` | 15/38 | 3.9/68.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.7%** |
+| `friendly.cpp` | 10/67 | 2.2/41.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.4%** |
 | `media.cpp` | 8/69 | 10.3/202.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.1%** |
 | `fog_of_war.cpp` | 4/34 | 0.6/12.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.9%** |
 | `injury.cpp` | 9/47 | 1.4/30.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.7%** |
@@ -36,11 +38,9 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `news.cpp` | 6/33 | 1.7/49.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.4%** |
 | `Cup.cpp` | 6/47 | 1.3/41.9 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.1%** |
 | `player_regen.cpp` | 6/51 | 1.4/44.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.0%** |
-| `national_teams.cpp` | 18/69 | 1.7/58.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.9%** |
 | `european_cup.cpp` | 2/50 | 0.8/29.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.8%** |
 | `comp.cpp` | 1/46 | 0.3/11.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.8%** |
 | `shortlist_manager.cpp` | 6/54 | 1.9/71.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.7%** |
-| `friendly.cpp` | 8/67 | 0.8/41.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **1.9%** |
 | `transfer_manager.cpp` | 17/199 | 2.8/167.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **1.7%** |
 | `officials_manager.cpp` | 1/34 | 0.2/12.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **1.7%** |
 | `printouts.cpp` | 1/20 | 0.4/27.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **1.5%** |

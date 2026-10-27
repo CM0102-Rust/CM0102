@@ -1,0 +1,23 @@
+# Mutações da 242a leva (itens cpd_1, cpd_2, cpd_3, cpd_4, cpe_1, cpe_2, cpe_3). Uso: python mutacoes.py mutacoes\leva242.py --carreira 2002-06-01
+MUTACOES = [
+    ('cpd_fim_competicao', 'cpd1_d(r + 4) == cpd1_d(comp) /* a competição */', 'cpd1_d(r + 4) != cpd1_d(comp) /* mutacao: as outras */'),
+    ('cpd_fim_nacao', 'cpd1_d(r) == cpd1_d(nacao) /* a nação */', 'cpd1_d(r) != cpd1_d(nacao) /* mutacao: as outras */'),
+    ('cpd_poda_vencidas', 'vencidas = vencidas.wrapping_add(1); // uma vencida', 'vencidas = vencidas.wrapping_add(0); // mutacao: nenhuma vencida'),
+    ('cpd_por_marca', '    *((p + 0x28) as *mut u8) = 0xb;\n    let marcar_elenco', '    *((p + 0x28) as *mut u8) = 0xa; // mutacao: outra marca\n    let marcar_elenco'),
+    ('cpd_tirar_vaga', 'core::ptr::write_unaligned((time + 0xd7 + 4 * c) as *mut usize, 0);', 'core::ptr::write_unaligned((time + 0xd7 + 4 * c) as *mut usize, p); // mutacao: a vaga fica'),
+    ('cpd_sub21_idade', '*((p + 0x18) as *const i8) > 0x15 { // acima de 21 anos', '*((p + 0x18) as *const i8) >= 0x15 { // mutacao: tambem os de 21'),
+    ('cpd_atual_aviso', '        cpd3_avisar_tecnicos(nacao); // o aviso da competição seguinte', '        // mutacao: sem o aviso da competicao seguinte'),
+    ('cpd_continente_aviso', '                cpd3_avisar_tecnicos(nacao); // o aviso do continente', '                // mutacao: sem o aviso do continente'),
+    ('cpd_substituto_posicao', 'as u8 & mascara & 0x7f == 0 { // as posições de quem sai', 'as u8 & mascara & 0x7f != 0 { // mutacao: as outras posicoes'),
+    ('cpd_reservas_posicao', 'pos = j + 1; // depois das de nota maior', 'pos = j; // mutacao: antes da de nota maior'),
+    ('cpd_ordem_reservas', '(cpd4_nota(b) as i32) - cpd4_nota(a) as i32 // decrescente', '(cpd4_nota(a) as i32) - cpd4_nota(b) as i32 // mutacao: crescente'),
+    ('cpd_ordem_clube', 'return (*(cx as *const i32)).wrapping_sub(*(cy as *const i32)); // o id do clube', 'return (*(cy as *const i32)).wrapping_sub(*(cx as *const i32)); // mutacao: ao contrario'),
+    ('cpe_amistoso_sorteio', 'if cpe1_sorteio(5) == 1 { // o adversário do amistoso', 'if cpe1_sorteio(5) == 2 { // mutacao: outro sorteio'),
+    ('cpe_excursao_sorteio', 'if cpe1_sorteio(2) == 1 { // o adversário da excursão', 'if cpe1_sorteio(2) == 0 { // mutacao: o outro lado do sorteio'),
+    ('cpe_resultado_pontos_casa', 'cpe2_somar(r + 0x27, pontos(cpe2_d(p + 0x1c))); // os pontos do mandante', 'cpe2_somar(r + 0x27, pontos(cpe2_d(p + 0x1c)).wrapping_mul(2)); // mutacao: o dobro'),
+    ('cpe_pontos_vitoria', 'if venceu(pb(0x43), pb(0x44)) { ganho(0xc2) } else { 0 } // os pontos da vitória', 'if venceu(pb(0x43), pb(0x44)) { ganho(0xc2).wrapping_add(1) } else { 0 } // mutacao: um a mais'),
+    ('cpe_confronto_posicao', 'let dif = *((b + 4) as *const i8) as i32 - *((a + 4) as *const i8) as i32; // a posição do confronto', 'let dif = *((a + 4) as *const i8) as i32 - *((b + 4) as *const i8) as i32; // mutacao: invertida'),
+    ('cpe_datas_ano', 'if ya < yb { // o ano antes\n        return -1;', 'if ya < yb { // mutacao: invertido\n        return 1;'),
+    ('cpe_linha_do_clube', 'if cpe3_d(r) == clube { // a linha do clube\n                return r;', 'if cpe3_d(r) == clube { // mutacao: nunca acha\n                return 0;'),
+    ('cpe_liga_tem_o_clube', 'return (r != 0) as u32; // a liga tem o clube', 'return (r == 0) as u32; // mutacao: nao tem'),
+]

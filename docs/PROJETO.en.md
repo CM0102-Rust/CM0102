@@ -68,7 +68,7 @@ Routines that call others with side effects (for example, the match commentary) 
 - The first routines in Rust: the random draw generator and the game dates.
 
 ### Stage 3: match engine (2026-10-06 to 2026-10-17) and simulation, in progress
-- **241 batches, 788 routines** rewritten, bottom-up: from accessors and calculations to tactical decisions, ball possession, refereeing (fouls, cards, offside), statistics, player movement, ball control, commentary and, as feasibility proofs, the **shot-on-goal value** and the **team strength** (5 KB routines).
+- **242 batches, 808 routines** rewritten, bottom-up: from accessors and calculations to tactical decisions, ball possession, refereeing (fouls, cards, offside), statistics, player movement, ball control, commentary and, as feasibility proofs, the **shot-on-goal value** and the **team strength** (5 KB routines).
 - New infrastructure: hook verification (`prologos.py`), a recording gate for the commentary and replay of internal calls.
 - The match engine (screens aside) reached 100% on 2026-10-17; since then the batches go through the simulation (`candidatos.py --simulacao`) and, from batch 180, through the match screens (`match_screens.cpp`).
 
