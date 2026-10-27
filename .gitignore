@@ -26,3 +26,6 @@ CLZ Leagues Patch*.rar
 copias/
 *.sav
 /clz_sessao/
+
+# Pares de saves de transferencia feitos pelo jogo (docs/PARES_TRANSFERENCIA.md): saves, diferencas e ferramentas
+/pares_transferencia/
