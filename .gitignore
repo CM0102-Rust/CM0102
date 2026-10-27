@@ -29,3 +29,5 @@ copias/
 
 # Pares de saves de transferencia feitos pelo jogo (docs/PARES_TRANSFERENCIA.md): saves, diferencas e ferramentas
 /pares_transferencia/
+# Despejo cru das tabelas logo depois do -load (docs/DESPEJO_REGENS.md)
+/despejo_regens/
