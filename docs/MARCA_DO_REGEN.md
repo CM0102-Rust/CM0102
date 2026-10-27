@@ -162,3 +162,74 @@ O `+0x5f` não é marca de regen: é a classificação (0 técnico humano, 1 nã
 **Se o editor ainda quiser casar uma pessoa com a base** (para outros fins): use nome em texto + ano, e aceite o dia/mês sorteados quando a base tinha `31/1900`. O ano bate com o +0x18 da base quando ele é > 1900; senão é 1967/1980 (jogador) ou 1940..1965 (não jogador). O dia fica entre 1 e 27, e o mês entre janeiro e novembro.
 
 **Não marcado:** regens não jogadores e o pessoal extra da criação. Para eles não há marca. O filtro "Só regens" deve dizer que cobre só os jogadores gerados.
+
+## 7. Quando o regen entrou (28/10/2026)
+
+Pedido para a coluna "Entrou em" da lista de regens. Mesmo método: desmontagem e leitura de saves, sem rodar o jogo.
+
+### O que a criação grava
+
+A `regenerate_as_youth_player` 0x7abac0 grava **uma** data do dia: a entrada no clube [observado].
+
+```
+7abda8  mov ax, [0xae2c92]      ; ano atual
+7abdb0  mov [esi+0x40], ax      ; entrada no clube: ano
+7abdb4  mov cx, [0xae2c90]      ; dia do ano atual
+7abdbd  mov [esi+0x3e], cx      ; entrada no clube: dia
+7abdc1  mov [esi+0x39], 0       ; ainda sem clube
+```
+
+O resto da rotina não grava data do dia:
+
+- O nascimento é `+0x12 = ano atual − idade` e `+0x10 = sorteio(365)` (0x7ac74e/0x7ac75d), com a idade sorteada entre **15 e 27**.
+- O registro de 79 bytes recebe só `+8 = 0`, `+9 = 0x9c` e `+0xd = 0`, que não são datas.
+- Quando há clube, `player_regen_sign_for_club` 0x7a6f10 põe o regen numa vaga do elenco direto (0x7a6f6a). Ela **não** chama `database_add_staff_to_club` e não mexe no +0x3e. Grava só o fim do contrato (+0x46, 0x7a7061: ano atual + 2, ou + 1..6 a partir dos 19 anos) e o contrato (0x4c7950).
+- Logo, enquanto o regen não troca de clube, +0x3e/+0x40 é **o dia em que o jogo o criou** [observado].
+
+### Quando a data muda
+
+A data vai para o `staff.dat` do save (+0x3e/+0x40, i16 dia do ano e i16 ano) e volta na carga como qualquer campo da pessoa. Mas várias rotinas a regravam [observado]:
+
+- `database_add_staff_to_club` 0x53bd10 (0x53be14), quando recebe uma data: entrada num clube;
+- `database_remove_staff_from_club` 0x53c190 (0x53c24c): saída;
+- `TRANSFER_MANAGER::free_transfer_staff` 0x8c1af0 (0x8c1d6c, grava o dia atual);
+- `CONTRACT_MANAGER::sign_loan_contract` 0x4d01e0 (0x4d0431): empréstimo;
+- `MANAGER_MANAGER` 0x690472, 0x69b804 e 0x69f5d4: técnicos.
+
+Assim, depois de uma transferência, de um empréstimo, de uma dispensa ou da contratação de um regen que estava sem clube, o campo passa a ser a **entrada no clube atual**. A renovação de contrato não mexe nele (abaixo).
+
+### Conferência nos saves
+
+| Save | Regens | Ano de entrada (+0x40) | Sem clube |
+|---|---|---|---|
+| `Roteiro.sav` (hoje ≈ dia 213 de 2001) | 1 | 2001 (dia 204) | 1 |
+| `TesteCMRTE.sav` (≈ dia 293 de 2001) | 13 | todos 2001, dias 204 a 290 | 4 |
+| `TesteTelas.sav` (gravado de novo em 27/10 às 17:24, ≈ dia 50 de 2002) | 533 | 27 em 2001, 506 em 2002 | 207 |
+| `Valencia.sav` (CLZ, dia 329 de 2028) | 3.857 | 431 em 2026, 1.514 em 2027, 1.912 em 2028 | 214 |
+
+O `TesteTelas.sav` mudou durante a investigação: tinha 492 marcados na §1 e 533 nesta leitura.
+
+- **Toda data de entrada cai depois do início da carreira** e não passa de "hoje" [observado]: 2001 em diante na base de fábrica, 2026 em diante na CLZ, que começa em 2025. Como o regen nasce na carreira e as regravações usam o dia corrente, isso vale por construção.
+- **Sequência Roteiro → TesteCMRTE → TesteTelas** (os 13 regens em comum):
+  - 2 mudaram de clube, os dois saindo de "sem clube": ids 86141 (de 253/2001 para 348/2001) e 107241 (de 277/2001 para 340/2001). **A entrada mudou nos 2.**
+  - 11 não mudaram de clube, e a entrada continuou igual nos 11.
+  - Um deles (id 32095) teve o fim de contrato trocado de 178/2003 para 160/2003, uma renegociação, e a entrada **não** mudou.
+- O `Valencia.sav` tem 118 regens com entrada no dia 0 de 2028 (1º de janeiro), um pico que combina com transferências na virada do ano [inferência]. Esses já não mostram a data de criação.
+
+### Deduzir a temporada sem a data
+
+A idade de criação é sorteada entre 15 e 27, e o ano de nascimento é **exatamente** `ano da criação − idade` [observado; 0x7ac74e e os ramos do sorteio da idade]. Daí:
+
+- **ano da criação ∈ [nascimento + 15, nascimento + 27]**;
+- e também **≤ ano da entrada (+0x40)**, porque toda troca de clube só move a data para frente;
+- e **≥ ano do início da carreira**.
+
+Nos saves, `ano da entrada − ano de nascimento` deu 16 a 27; quase todos ficam entre 16 e 20 (`Valencia`: 3.741 de 3.857). Isso é distribuição, não regra: o nascimento sozinho não fixa a temporada [observado nos saves; usar a faixa mais provável é inferência].
+
+Outras fontes possíveis, **não conferidas**: a primeira temporada do histórico do jogador (`PlayerStats`) e a notícia de promoção de juvenil (0xbce, 0x7a8ba0), que as notícias antigas apagam.
+
+### Critério recomendado para a coluna
+
+1. **"Entrou em" = +0x3e/+0x40** (dia do ano e ano), com o rótulo "entrada no clube atual (ou criação, se nunca trocou de clube)". É a data da criação exata enquanto o regen não trocou de clube, e o editor não tem como saber, por um save só, se trocou.
+2. Para não mentir, mostrar ao lado a faixa da criação: **de max(início da carreira, nascimento + 15) a min(+0x40, nascimento + 27)**.
+3. Se o editor guardar os saves da carreira (ou um cache por id + nome), use a **primeira** data vista para cada regen. Entre saves, a data só muda quando o clube muda; renovação não muda.

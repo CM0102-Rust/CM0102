@@ -162,3 +162,74 @@ In `TesteTelas` there is no player without the bit and without a name in the dat
 **If the editor still wants to match a person to the database** (for other purposes): use the name as text + year, and accept the drawn day/month when the database had `31/1900`. The year matches the database +0x18 when it is > 1900; otherwise it is 1967/1980 (player) or 1940..1965 (non-player). The day is between 1 and 27, and the month between January and November.
 
 **Not marked:** non-player regens and the extra staff at creation. They have no mark. The "Regens only" filter should say that it covers only generated players.
+
+## 7. When the regen entered (28/10/2026)
+
+Requested for the "Joined" column of the regen list. Same method: disassembly and reading of saves, without running the game.
+
+### What creation writes
+
+`regenerate_as_youth_player` 0x7abac0 writes **one** date of the day: the club joining date [observed].
+
+```
+7abda8  mov ax, [0xae2c92]      ; current year
+7abdb0  mov [esi+0x40], ax      ; club joining date: year
+7abdb4  mov cx, [0xae2c90]      ; current day of year
+7abdbd  mov [esi+0x3e], cx      ; club joining date: day
+7abdc1  mov [esi+0x39], 0       ; no club yet
+```
+
+The rest of the routine writes no date of the day:
+
+- The birth date is `+0x12 = current year − age` and `+0x10 = rand(365)` (0x7ac74e/0x7ac75d), with the age drawn between **15 and 27**.
+- The 79-byte record only gets `+8 = 0`, `+9 = 0x9c` and `+0xd = 0`, which are not dates.
+- When there is a club, `player_regen_sign_for_club` 0x7a6f10 puts the regen into a squad slot directly (0x7a6f6a). It does **not** call `database_add_staff_to_club` and does not touch +0x3e. It only writes the contract end (+0x46, 0x7a7061: current year + 2, or + 1..6 from age 19) and the contract (0x4c7950).
+- So, as long as the regen has not changed club, +0x3e/+0x40 is **the day the game created him** [observed].
+
+### When the date changes
+
+The date goes into the save's `staff.dat` (+0x3e/+0x40, i16 day of year and i16 year) and comes back on load like any other person field. But several routines rewrite it [observed]:
+
+- `database_add_staff_to_club` 0x53bd10 (0x53be14), when given a date: joining a club;
+- `database_remove_staff_from_club` 0x53c190 (0x53c24c): leaving;
+- `TRANSFER_MANAGER::free_transfer_staff` 0x8c1af0 (0x8c1d6c, writes the current day);
+- `CONTRACT_MANAGER::sign_loan_contract` 0x4d01e0 (0x4d0431): loan;
+- `MANAGER_MANAGER` 0x690472, 0x69b804 and 0x69f5d4: managers.
+
+So after a transfer, a loan, a release, or the signing of a regen who had no club, the field becomes the **date he joined his current club**. A contract renewal does not touch it (below).
+
+### Check in the saves
+
+| Save | Regens | Joining year (+0x40) | No club |
+|---|---|---|---|
+| `Roteiro.sav` (today ≈ day 213 of 2001) | 1 | 2001 (day 204) | 1 |
+| `TesteCMRTE.sav` (≈ day 293 of 2001) | 13 | all 2001, days 204 to 290 | 4 |
+| `TesteTelas.sav` (saved again on 27/10 at 17:24, ≈ day 50 of 2002) | 533 | 27 in 2001, 506 in 2002 | 207 |
+| `Valencia.sav` (CLZ, day 329 of 2028) | 3,857 | 431 in 2026, 1,514 in 2027, 1,912 in 2028 | 214 |
+
+`TesteTelas.sav` changed during the investigation: it had 492 marked in §1 and 533 in this reading.
+
+- **Every joining date falls after the career start** and does not go past "today" [observed]: 2001 onwards in the factory database, 2026 onwards in CLZ, which starts in 2025. Since the regen is born during the career and the rewrites use the current day, this holds by construction.
+- **Roteiro → TesteCMRTE → TesteTelas sequence** (the 13 regens in common):
+  - 2 changed club, both from "no club": ids 86141 (from 253/2001 to 348/2001) and 107241 (from 277/2001 to 340/2001). **The joining date changed in both.**
+  - 11 did not change club, and the joining date stayed the same in all 11.
+  - One of them (id 32095) had his contract end changed from 178/2003 to 160/2003, a renegotiation, and the joining date did **not** change.
+- `Valencia.sav` has 118 regens with joining date day 0 of 2028 (1 January), a peak that fits transfers at the turn of the year [inference]. Those no longer show the creation date.
+
+### Working out the season without the date
+
+The creation age is drawn between 15 and 27, and the birth year is **exactly** `creation year − age` [observed; 0x7ac74e and the age-draw branches]. Hence:
+
+- **creation year ∈ [birth + 15, birth + 27]**;
+- and also **≤ joining year (+0x40)**, because every club change only moves the date forward;
+- and **≥ the career start year**.
+
+In the saves, `joining year − birth year` came out between 16 and 27; almost all fall between 16 and 20 (`Valencia`: 3,741 of 3,857). That is a distribution, not a rule: the birth date alone does not pin down the season [observed in the saves; using the most likely band is an inference].
+
+Other possible sources, **not checked**: the first season of the player's history (`PlayerStats`) and the youth promotion news item (0xbce, 0x7a8ba0), which gets deleted along with old news.
+
+### Recommended criterion for the column
+
+1. **"Joined" = +0x3e/+0x40** (day of year and year), labelled "joined current club (or creation, if he never changed club)". It is the exact creation date as long as the regen has not changed club, and the editor cannot tell from a single save whether he did.
+2. To stay honest, show the creation range next to it: **from max(career start, birth + 15) to min(+0x40, birth + 27)**.
+3. If the editor keeps the career's saves (or a cache by id + name), use the **first** date seen for each regen. Between saves, the date only changes when the club changes; a renewal does not change it.
