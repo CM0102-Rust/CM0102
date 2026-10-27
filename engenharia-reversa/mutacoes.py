@@ -166,7 +166,7 @@ def jogo_aberto():
     maquina (ex.: o CMRTE em D:/Sistemas) tem exe de teste com o mesmo nome; a carga deles fica a cargo da trava
     do laboratorio."""
     import psutil
-    raiz = os.path.normcase(RAIZ)
+    raiz = os.path.normcase(os.path.join(RAIZ, 'jogo_testes'))  # o jogo do Lucas (jogo/) roda junto desde 25/10
     return [q.pid for q in psutil.process_iter(['name', 'exe'])
             if (q.info['name'] or '').lower().startswith('cm0102') and os.path.normcase(q.info['exe'] or '').startswith(raiz)]
 

@@ -455,7 +455,8 @@ unsafe extern "C" fn texto_das_posicoes(jogador: usize, texto: usize, tamanho: u
             }
         }
         if nota(0xf) >= t {
-            // goleiro: só a linha
+            // goleiro: só a linha (strcpy na original; o texto pode ser o próprio [0xde1f64])
+            *(texto as *mut u8) = 0;
             dbu2_juntar(texto, buf);
             return 1;
         }
@@ -514,6 +515,7 @@ unsafe extern "C" fn texto_das_posicoes(jogador: usize, texto: usize, tamanho: u
     } else if !dbu2_vazio(lado) {
         sprintf(texto, 0x98f0b8, buf, lado); // "%s %s"
     } else {
+        *(texto as *mut u8) = 0; // strcpy na original (o texto pode ser o próprio [0xde1f64])
         dbu2_juntar(texto, buf);
     }
     1

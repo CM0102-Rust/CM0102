@@ -167,6 +167,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'ordenar_tabela_da_liga': 'League::sort_table', 'mini_tabela_do_confronto': 'League::build_h2h_table', 'liberar_tabela_da_liga': 'League::free_table', 'liga_completa': 'League::check_complete', 'pagar_direitos_de_tv': 'League::pay_tv_rights', 'registrar_honras_da_temporada': 'League::record_season_honours', 'acrescentar_ao_historico': 'comp_util_add_history_record', 'tipo_de_confronto_na_liga': 'comp_util_get_league_clash_type', 'forca_do_clube': 'comp_util_get_club_strength_score', 'clube_colocado_mais_recente': 'comp_util_get_latest_placed_club', 'amistoso_do_clube': 'find_friendly_match', 'lista_da_data': 'FIXTURE_MANAGER::get_fixture_list_for_date', 'proxima_partida': 'FIXTURE_MANAGER::find_next_fixture', 'estadio_em_uso': 'FIXTURE_MANAGER::is_stadium_in_use', 'data_do_amistoso_internacional': 'friendly_international_date_resolve',
  'adjetivo_da_nacao': 'nation_get_nationality_adjective',
  'inicializar_jogadores': 'database_player_initialisation',
  'definir_chaves_fixas': 'set_key_ids', 'definir_chaves_fixas_1080': 'set_key_ids_1080',
