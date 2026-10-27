@@ -47,3 +47,4 @@ Ampla de 24/10/2026: prova geral Rust = original 9ee2b5ac ate a 229a (8 ligas at
 Ampla de 26/10/2026: prova geral Rust = original 9ee2b5ac ate a 239a (com a zeragem nova 0x5fb810)
 - leva241.py: cpa_tv_valor (direitos de TV, fim de temporada); cpa_ordem_posicao, cpa_confronto_titulo, cpa_completa_rodadas (desligadas)
 - leva242.py: cpd_atual_aviso, cpd_continente_aviso (selecoes, competicao seguinte), cpe_datas_ano, cpe_linha_do_clube
+- leva243.py: cpg_doador_zero, cpg_salario_minimo, cph_queixas_zero; cpg_condicao_porcento (desligada)

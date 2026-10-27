@@ -1,11 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-cpf_1
-cpf_2
-cpf_3
-cpg_1
-cpg_2
-cpg_3
-cph_1
 cph_2
 cph_3
 cph_4
