@@ -5,3 +5,9 @@ cpi_3
 cpi_4
 cpi_5
 cpi_6
+cpj_1
+cpj_2
+cpj_3
+cpj_4
+cpj_5
+cpj_6
