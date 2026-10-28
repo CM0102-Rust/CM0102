@@ -63,6 +63,14 @@ def linhas_carreira(ligas='ENG', fundo='', motor='nao'):
             'ENABLE_COMPUTER_BIDS=YES', 'ON_HOLIDAY=YES']
 
 
+def sufixo_da_pasta():
+    """Vazio no jogo_testes da principal (os nomes de sempre); outra pasta (worktree, copia em %TEMP%) ganha um sufixo
+    proprio, para duas bancadas em paralelo nao se pisarem na copia do game.cfg nem nos .tmp guardados."""
+    if os.path.normcase(JOGO) == os.path.normcase(r'D:\Sistemas\CM0102\jogo_testes'):
+        return ''
+    return '_' + hashlib.md5(os.path.normcase(JOGO).encode()).hexdigest()[:8]
+
+
 @contextlib.contextmanager
 def bancada(dono, arquivos, sem_trava=False):
     """A pasta do jogo preparada para um teste pesado, e devolvida como estava no fim.
@@ -81,7 +89,7 @@ def bancada(dono, arquivos, sem_trava=False):
             if os.path.exists(os.path.join(JOGO, nome)):
                 falha('ja existe jogo\\%s; nao vou sobrescrever (apague ou mova antes)' % nome)
         cfg = os.path.join(JOGO, 'game.cfg')
-        copia = os.path.join(tempfile.gettempdir(), 'cm0102_game.cfg.bak')
+        copia = os.path.join(tempfile.gettempdir(), 'cm0102_game.cfg%s.bak' % sufixo_da_pasta())
         tem_cfg = os.path.exists(cfg)
         if tem_cfg:
             # Preferencias validas (marca 0x1553117c) e som desligado (bit 0x80 de +4): uma queda de energia
@@ -94,7 +102,7 @@ def bancada(dono, arquivos, sem_trava=False):
                 falha('jogo\\game.cfg com o som ligado: o jogo para na caixa "Unable to initialise the sound" nos testes')
             shutil.copy2(cfg, copia)
         # Arquivos de trabalho que ja estavam na pasta: guardados e devolvidos no fim.
-        guarda_tmp = os.path.join(tempfile.gettempdir(), 'cm0102_tmp_guardados')
+        guarda_tmp = os.path.join(tempfile.gettempdir(), 'cm0102_tmp_guardados' + sufixo_da_pasta())
         shutil.rmtree(guarda_tmp, ignore_errors=True)
         os.makedirs(guarda_tmp)
         for nome in glob.glob(os.path.join(JOGO, '*.tmp')):

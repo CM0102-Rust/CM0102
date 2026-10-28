@@ -1,0 +1,25 @@
+# Lote 5b da carreira ampla (28/10/2026): as escapadas das levas 232 a 238 (banco: historicos, comissao, olheiros, vinculos,
+# preferencias, regras por nacao, chaves), numa carreira que passa da Copa e de janeiro de 2003.
+# Uso: python mutacoes.py mutacoes\lote_ampla_5b.py --carreira 2003-01-31 --ligas "ENG ESP ITA FRA BRA JPN AUS USA" --limite 14400
+MUTACOES = [
+    ('dbi_crescer_historico_de_competicoes', '        core::ptr::write_unaligned(linha as *mut i32, i); // a linha nova guarda o próprio índice', '        core::ptr::write_unaligned(linha as *mut i32, i + 1); // mutacao: o índice + 1'),
+    ('dbi_ordem_do_elenco_pela_habilidade_atual', '        palavra(jb, 5) - palavra(ja, 5) // a habilidade atual maior primeiro', '        palavra(ja, 5) - palavra(jb, 5) // mutacao: a menor primeiro'),
+    ('dbk1_juntar_comissao', '                        if n < k as i32 { // a comissão do B vai para o A', '                        if n < 0 { // mutacao: a comissao do B nao vai para o A'),
+    ('dbk2_olheiros', '        let o = rd(p + 0x1b3 + 4 * j); // os olheiros do parceiro', '        let o = rd(clube + 0x1b3 + 4 * j); // mutacao: os olheiros do proprio clube no lugar dos do parceiro'),
+    ('dbl_nacao_grande', '0x9cf488, 0x9cf338]; // Holanda (nação)', '0x9cf488, 0x9cf488]; // mutacao: sem a Holanda (nação)'),
+    ('dbl_juntar_vinculo', '        opiniao_gravar(c, 0x3b, id); // o segundo vínculo', '        // mutacao: o segundo vínculo sem o id'),
+    ('dbl_tirar_vinculo', '        opiniao_gravar(c, 0x3b, -1); // esvazia o segundo vínculo', '        // mutacao: o segundo vínculo fica com o id'),
+    ('dbl_auxiliar', '    rd(p + 0xd3) // o auxiliar do parceiro', '    rd(clube + 0xd3) // mutacao: o auxiliar do proprio clube no lugar do parceiro'),
+    ('dbl_treinadores', '        let t = rd(p + 0x19f + 4 * j); // os treinadores do parceiro', '        let t = rd(clube + 0x19f + 4 * j); // mutacao: os treinadores do proprio clube no lugar dos do parceiro'),
+    ('dbl_contar_treinadores', '        n = n.wrapping_add(contar(p)); // e os do parceiro', '        // mutacao: sem os treinadores do parceiro'),
+    ('dbp_clube_tirar_favorita', '        dbp_tirar_de_tres(clube + 0x9b, pessoa); // os favoritos do clube', '        dbp_tirar_de_tres(clube + 0xa7, pessoa); // mutacao: dos rejeitados do clube'),
+    ('dbp_pessoas_favoritas', '[0x1cusize, 0x20, 0x24].into_iter().enumerate() { // as três favoritas', '[0x1cusize, 0x20, 0x20].into_iter().enumerate() { // mutacao: a segunda no lugar da terceira'),
+    ('dbp_tirar_clube_favorito', '        dbp_tirar_de_tres(pref + 4, clube); // os clubes favoritos', '        dbp_tirar_de_tres(pref + 0x10, clube); // mutacao: dos clubes rejeitados'),
+    ('dbp_tirar_rejeitada', '        let reg = pref + 0x28; // as pessoas rejeitadas', '        let reg = pref + 0x1c; // mutacao: das pessoas favoritas'),
+    ('dbr_longitude', '    dbr_ordem_pela_coordenada(ca, cb, 0x2b) // a longitude', '    dbr_ordem_pela_coordenada(ca, cb, 0x23) // mutacao: a latitude no lugar da longitude'),
+    ('dbr_fora_da_argentina', '(id != *(0x9cf218 as *const u32)) as u32, // a Argentina', '(id == *(0x9cf218 as *const u32)) as u32, // mutacao: a resposta invertida'),
+    ('dbr_fora_de_arg_fra_cro', 'let chaves = [0x9cf218usize, 0x9cf300, 0x9cf2ac]; // Argentina, França, Croácia', 'let chaves = [0x9cf218usize, 0x9cf218, 0x9cf2ac]; // mutacao: sem a Franca'),
+    ('dbr_pessoas_pelo_nome_completo', 'formatar(pb, nb.as_mut_ptr() as usize, 0x7d0, 1);\n    }\n    dbr_comparar_textos(na.as_ptr(), nb.as_ptr())', 'formatar(pb, nb.as_mut_ptr() as usize, 0x7d0, 1);\n    }\n    dbr_comparar_textos(nb.as_ptr(), na.as_ptr()) // mutacao: a ordem invertida'),
+    ('dbr_confere_nomes', '    for (d, id) in [(4, nome), (8, sobrenome), (0xc, comum)] {', '    for (d, id) in [(4, nome), (0xc, comum)] { // mutacao: sem o sobrenome'),
+    ('dbw_continentes', '            cadeia_das_chaves_dbw(nome, &CONTINENTES_DAS_CHAVES, i as u32); // continentes da base', '            let mut t = CONTINENTES_DAS_CHAVES; t.swap(1, 2); cadeia_das_chaves_dbw(nome, &t, i as u32); // mutacao: Asia e Europa trocadas'),
+]
