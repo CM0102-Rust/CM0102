@@ -25,7 +25,9 @@ comparacao, ~15x mais rapido) ate a data; a mutacao e acusada se a impressao ou 
 sorteios muda em relacao a base (ou se o jogo cai). A base tem de bater com a do original na mesma
 data (conferido pela cadeia). A impressao inclui a das partidas (hash de cada motor de partida ao
 ser liberado) e a do banco (hash diario dos blocos do banco de dados, ver simulacao.rs): pega o que nao
-chega aos sorteios. Nao diz onde divergiu: para isso, o modo --jogo.
+chega aos sorteios. A mutacao para no primeiro dia em que o diario (linha "dia" do ddraw.log: sorteios,
+pessoas, hash encadeado da memoria) difere do da base: "ACUSADA: divergiu da base em AAAA-DDD" (o
+hash encadeado faz a decisao igual a do fim da carreira, so mais cedo). Para achar a rotina, o modo --jogo.
 --confirmar AAAA-MM-DD (com --carreira): a mutacao que escapar da carreira e refeita no jogo em
 modo de comparacao ate a data (esquema hibrido: triagem rapida, confirmacao so do que escapou). No fim (inclusive com erro ou Ctrl+C) restaura o motor.rs e recompila.
 
@@ -107,6 +109,8 @@ LIMITE_CARREIRA = sys.argv[sys.argv.index('--limite') + 1] if '--limite' in sys.
 # --sem-trava: em paralelo a outro teste, noutra pasta (so com o Lucas autorizando e o vigia de memoria liberando)
 SEM_TRAVA = ['--sem-trava'] if '--sem-trava' in sys.argv else []
 PARAR_NA_DIVERGENCIA = False  # ligado depois da base: a mutacao para na primeira divergencia
+# o diario da base (linhas "dia"): a mutacao da carreira para no primeiro dia diferente (28/10/2026)
+DIAS = os.path.join(JOGO, 'dias_base.txt')
 
 
 def jogo(data):
@@ -143,7 +147,8 @@ def carreira(data):
         time.sleep(60)
     if os.path.exists(LOG):
         os.remove(LOG)
-    r = subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'rust', '--limite', LIMITE_CARREIRA] + LIGAS + SEM_TRAVA,
+    extra = ['--referencia', DIAS] if PARAR_NA_DIVERGENCIA and os.path.exists(DIAS) else []
+    r = subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'rust', '--limite', LIMITE_CARREIRA] + LIGAS + extra + SEM_TRAVA,
                        cwd=AQUI, capture_output=True, text=True)
     texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
     quedas = [l for l in texto.splitlines() if 'EXCECAO' in l]
@@ -221,6 +226,8 @@ def main():
     ruins = [(m[0], original.count(m[1])) for m in mutacoes if original.count(m[1]) != 1]
     if ruins:
         sys.exit('trechos que nao aparecem exatamente uma vez: %s' % ruins)
+    if os.path.exists(DIAS):
+        os.remove(DIAS)  # o diario e so da base desta rodada
     try:
         compilar()
         if '--sem-base' not in sys.argv:
@@ -232,6 +239,9 @@ def main():
             if fim and not r[0].startswith('parou em'):
                 sys.exit('base sem resultado: mutacoes canceladas')
             base = r[0]
+            if fim:
+                texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
+                open(DIAS, 'w', encoding='utf-8').write(''.join(l + '\n' for l in texto.splitlines() if l.startswith('dia ')))
             # base com divergencia: as mutacoes nao provam nada (e a cadeia que chamou para aqui)
             if any('DIVERGENCIA' in l or 'EXCECAO' in l for l in r):
                 sys.exit('base com divergencia: mutacoes canceladas')
