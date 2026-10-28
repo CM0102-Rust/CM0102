@@ -53,3 +53,7 @@ Ampla de 26/10/2026: prova geral Rust = original 9ee2b5ac ate a 239a (com a zera
 Ampla de 28/10/2026 (lote_ampla_5a ate 2003-01-31, 8 ligas, base d52b3d33):
 - acusadas: cpa_tv_valor, cpd_atual_aviso, cpe_datas_ano, cpe_linha_do_clube (excecao em 2001-342), cph_lugar_marca (tempo esgotado), cph_interesse_ordem
 - seguem escapando: cpd_continente_aviso, cpg_doador_zero, cpg_salario_minimo, cph_queixas_zero, cph_conversas_clube, cph_pedido_data, cph_desempregado_tecnico, cph_permissao_marca, cph_olheiro_confere, cph_sequencia_dias
+
+Ampla de 28/10/2026 (lote_ampla_5b ate 2003-01-31, 8 ligas, base d52b3d33):
+- acusadas: dbi_crescer_historico_de_competicoes, dbk1_juntar_comissao, dbl_nacao_grande, dbp_tirar_clube_favorito, dbr_longitude, dbr_fora_da_argentina
+- seguem escapando: dbi_ordem_do_elenco_pela_habilidade_atual, dbk2_olheiros, dbl_juntar_vinculo, dbl_tirar_vinculo, dbl_auxiliar, dbl_treinadores, dbl_contar_treinadores, dbp_clube_tirar_favorita, dbp_pessoas_favoritas, dbp_tirar_rejeitada, dbr_fora_de_arg_fra_cro, dbr_pessoas_pelo_nome_completo, dbr_confere_nomes, dbw_continentes
