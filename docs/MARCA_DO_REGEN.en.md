@@ -8,6 +8,7 @@ Investigation of 27/10/2026, read-only (disassembly of `cm0102.exe` 3.9.68 and r
 2. **The mark survives saving and loading.** The table goes whole into `general.dat` and comes back whole on load [observed in the code and in three saves of the same career].
 3. **The day is drawn when the career is created**, not when the `.sav` is loaded: `database_player_initialisation` 0x535a80, called only by `create_game` 0x828110. The year is not drawn: it comes from the database's +0x18, which the routine then replaces with the age. That is why name + year identifies the database person (§3).
 4. **It does not record it.** The regen takes the slot (the id) of the retiree from the queue. The player record and the nation come from the first entry of a pool of records, which is deleted when used. Nothing keeps "in whose place" (§4).
+5. **He does inherit, but from two different predecessors.** From the owner of the player record (B, a player who retired) the regen inherits the PA, the positions, the feet, the nation and the profile of the technical and hidden attributes; the CA is drawn as a fraction of that PA. From the owner of the slot (A, usually a retired non-player) he inherits only the id, the personality of the person record and the preferences. A and B are the same person only when the queue is short (§8).
 
 ## 1. Bit 0x40
 
@@ -233,3 +234,139 @@ Other possible sources, **not checked**: the first season of the player's histor
 1. **"Joined" = +0x3e/+0x40** (day of year and year), labelled "joined current club (or creation, if he never changed club)". It is the exact creation date as long as the regen has not changed club, and the editor cannot tell from a single save whether he did.
 2. To stay honest, show the creation range next to it: **from max(career start, birth + 15) to min(+0x40, birth + 27)**.
 3. If the editor keeps the career's saves (or a cache by id + name), use the **first** date seen for each regen. Between saves, the date only changes when the club changes; a renewal does not change it.
+
+## 8. What the regen inherits (28/10/2026)
+
+Lucas's question: "if the regen inherits nothing from the retiree, it makes no sense to link one to the other". Same method: disassembly and pseudocode of 0x7abac0 and of the queue and pool routines, plus reading of saves, without running the game. Scripts in `%TEMP%\marca` (`heranca.py`, `cruza_heranca.py`, `extra_heranca.py`, `b_depois.py`, `ficha_dividida.py`; read-only).
+
+There are **two** predecessors, and "in the place of" mixes them up:
+
+- **A, the owner of the slot:** the person at the head of the regen queue. The regen keeps his id (§4).
+- **B, the owner of the record:** the player whose player record (`player.dat`, 70 bytes) is first in the pool. The regen keeps that record.
+
+### How the queue and the pool are built
+
+`PLAYER_REGEN::process_retirements` 0x7a59e0 handles each retiree along one of three paths [observed]:
+
+| Who retires | Queue (12 bytes, `this+0x10`) | Pool of player records (16 bytes, `this+0x3c`) |
+|---|---|---|
+| Player who does not become a coach | goes in, through `queue_staff_for_regen` 0x7a87d0 (called at 0x7a64e2) | his record goes in: record id, nation (+0x1a), person id at +0xc (0x7a8ab0..0x7a8adc). +8 (second nation) is not written there. **His +0x61 is not cleared** |
+| Player who becomes a coach (already has a non-player record, or gets one from the non-player pool by a draw on professionalism +0x5b, 0x7a5cdb..0x7a5d98) | does not go in | his record goes in, through `add_player_data_to_pool` 0x7a8350 (called at 0x7a6335: record, nation, second nation). Then `+0x61 = 0` and `+0x5f = 1`: he lives on as a non-player |
+| Non-player | goes in, through 0x7a87d0 (0x7a64c9), or becomes a new non-player in the same slot (`regenerate_as_non_player` 0x7ab340) | nothing (the non-player record goes to the other pool, `this+0x1c`) |
+
+- The queue date is today if the person is under 30, or today + 1 to 65 days (0x7a6397..0x7a63b4) [observed].
+- The queue is sorted by date and then by id (`player_regen_compare_queue_entries` 0x7ae240, at the end of 0x7a59e0). The pool stays in arrival order; only 0x7a87d0 and 0x7a8350 add to it [observed; `refs.py`].
+- `process_regen_queue` 0x7a65d0 goes on while the date at the head of the queue is before today (0x7a660b) **and** the pool is not empty (0x7a6618). For each head it calls 0x7abac0, which **always takes pool entry 0** (0x7abb0e..0x7abb16) and deletes it (0x7abb1a). There is no comparison at all between the slot and the record: not nation, not position, not level, not club [observed].
+
+So:
+
+- **B is always a player who retired**: either he is himself in the queue waiting for his turn, or he became a coach [observed in the code and in the saves].
+- **A can be any retiree in the queue**, and with a backlog he is almost always a non-player. Non-players enter the queue without a record, so the pool becomes the bottleneck: each new record goes to the oldest slot [observed].
+- **A = B only when the queue is short** and the head of the queue is the very player whose record is at the front of the pool [observed in the saves, below].
+
+In the saves of the same career (§1):
+
+| Pair of saves | Queue / pool in the first | New regens | B = A | A was a non-player | B active (not retiring) in the first |
+|---|---|---|---|---|---|
+| `Roteiro` → `TesteCMRTE` | 2 / 2 (the two records belong to the two people in the queue) | 12 | 2 | 10 | 10 (the other 2 are the B = A) |
+| `TesteCMRTE` → `TesteTelas` | 847 / 0 | 520 | **0** | 518 | 520 (ages 25 to 50, 506 between 30 and 39) |
+
+In `TesteCMRTE` the queue holds 847 waiting slots and the pool is empty. In `Valencia.sav` there are 26 slots and an empty pool [observed].
+
+### What comes from B (the owner of the record)
+
+0x7abac0 puts the pool record in +0x61 (0x7abb38) and **neither clears nor rebuilds it**. It rewrites only part of the record [observed: every write of the routine and of its callees]:
+
+- **Drawn again:** CA (+5), the three reputations (+9, +0xb, +0xd), acceleration (+0x1b), agility (+0x1d), jumping (+0x2e), natural fitness (+0x34), pace (+0x36), stamina (+0x3c), strength (+0x3d) and work rate (+0x44).
+- **Changed starting from B's value:** anticipation (+0x1e) and decisions (+0x24) lose a draw of up to 40, 20 or 10 depending on age; important matches (+0x2c) and leadership (+0x2f) lose a draw of up to 3 to 10; consistency (+0x21) only goes up, and only if it is < 5 in a regen aged 26 to 28.
+- **Never written:** the PA (+7) is only read. Neither are the positions (+0xf..+0x1a), the feet (+0x30, +0x3b) and the other attributes.
+- At the end, `staff_normalise_player_physical_attributes` 0x538ec0 and `staff_normalise_player_attributes` 0x538bc0 rebalance the attribute vector. They start from the values already in the record (`database_player_to_attribute_vector` 0x53a610 → `database_attribute_vector_to_player` 0x53aa10), that is, from B's.
+
+**The CA comes from B's PA.** Example, in the branch for a nation with reputation < 350 (0x7abea0..0x7abffa): CA = PA/4 + draw(0.55·PA) from age 21, or PA/4 + draw(0.6·PA) up to age 20. The other branch (0x7ac3dd..) also uses only fractions of the PA (0.25, 0.55, 0.6…) [observed].
+
+**The draw depends on B, not on A** [observed]:
+
+- the age and the CA formulas depend on the nation (B's), its reputation (+0x88), the PA and the record's positions (goalkeeper +0xf, defender +0x11, attacker +0x15);
+- names: from the nation, through `database_pick_first_name_for_nation` 0x539c60, 0x53a1b0 and 0x53a5b0;
+- club: `pick_best_club_for_player` 0x7ad0e0 or `pick_club_from_nation_list` 0x7ad590, by the regen's nation and ability.
+
+**Nation:** that of the pool entry, i.e. B's (0x7abcd4). If its reputation is < 100, there is a 1 in 4 chance of swapping it for a drawn nation, also with reputation < 100 (0x7abcd7..0x7abd1d). The second nation comes from the entry's +8:
+- always, if it is the Basque Country;
+- otherwise with a 1 in 3 chance;
+- otherwise zero (0x7abd20..0x7abd6e).
+- If the nation is Spain, 1 time in 100 the routine skips this step and +0x1e keeps A's second nation (0x7abd2c..0x7abd3f).
+
+Checked on the 520 regens of `TesteCMRTE` → `TesteTelas`: B was found as the previous owner of the record for all of them [observed].
+
+| Regen × B comparison | Equal |
+|---|---|
+| PA | 520 of 520 |
+| 12 positions | 520 |
+| left and right foot | 520 |
+| nation | 520 (A's nation: only 14, by chance) |
+| aggression, balance, bravery, dirtiness, flair, injury proneness | 520 each |
+| versatility, consistency, important matches, handling, leadership, corners, free kicks, teamwork, technique | 259 to 454 each |
+| other attributes | 10 to 63 each |
+| CA | 14 |
+
+- Mean difference per attribute (+0x1b..+0x44): **4.3** between the regen and B, against **14.0** between the regen and any record [observed].
+- The pair `Roteiro` → `TesteCMRTE` shows the same in its 12 regens: PA, positions, feet and nation equal to B's; CA different; mean difference 4.2 against 15.6 [observed].
+
+### What comes from A (the owner of the slot)
+
+Besides the id, 0x7abac0 and its callees **do not write** these fields of the person record (110 bytes) [observed]:
+
+- the personality +0x56..+0x5d (adaptability, ambition, determination, loyalty, pressure, professionalism, sportsmanship, temperament). Determination (+0x58) goes through the rebalancing in 0x53aa10, but starts from A's value;
+- the preferences (+0x65: favourite and disliked clubs and people);
+- +0x60 (ClubValuation).
+
+A's adaptability still weighs on the draw of the regen's languages: the cut is (20 − adaptability) × 10 (0x7abded) [observed].
+
+In the 520 regens:
+- the personality without determination is A's in 514 [observed];
+- determination, in 518 [observed];
+- the preferences index, in 520 [observed];
+- the 6 remaining differences were not investigated [inference: changes after creation].
+
+The rest of A is cleared or replaced [observed]:
+
+- written by 0x7abac0 itself: names, birth, age, nation and second nation, caps and goals for the national team (+0x22/+0x23), national team job (+0x24), club, wage, value and the non-player record (+0x69 = 0). The routine only goes on if A has no club (0x7abaec);
+- cleared by the callees:
+
+| What | Routine |
+|---|---|
+| statistics | `PlayerStats::reset_player` 0x7c6650 |
+| history | 0x86fb80 |
+| discipline | 0x55e1d0, 0x556830 |
+| injuries | 0x631f90, 0x62bfa0 |
+| contracts | 0x4d0b50, 0x4d0bd0 |
+| national team | 0x775ba0 |
+| fog of war | 0x5afd00 |
+| nickname | 0x5fff30 |
+
+**A's club, position and reputation play no part**: A already has no club, and his record, if he had one, went to the pool and may go to another regen [observed].
+
+### The shared record in the save
+
+Since 0x7a87d0 does not clear the +0x61 of the player who enters the queue, **while he waits for his turn the same record is pointed to by two people**: the retiree in the queue (B) and the regen already using it. When B's turn comes, 0x7abac0 replaces his +0x61 with the next record in the pool [observed].
+
+| Save | Records with two owners | The other owner |
+|---|---|---|
+| `TesteTelas.sav` | 428 | retiree (bits 0x30 = 2), no club, in the queue |
+| `Valencia.sav` | 24 | same |
+
+In both saves, every record with two owners belongs to a regen and to a retiree of that kind [observed].
+
+**For the editor:** the screen of a retiree in the queue may show the regen's record. Editing that record changes both.
+
+### Conclusion
+
+- **There is a real ability link, yes, but with B, not with A.** The regen is the record of a player who retired (or became a coach), with the same PA, the same positions, the same feet and the same nation. The CA, age, names, physical attributes and part of the mental ones are drawn again, and the other attributes are rebalanced from B's [observed in the code and in the saves].
+- **With A the link is the slot:** the id, the personality of the person record (including determination and adaptability, which weighs on the languages) and the preferences. Nothing of ability, position, nation or club [observed].
+- **"So-and-so is the regen of Such-and-such" is true in B's sense**, the owner of the record: same potential, same player "as a youngster".
+  - **In A's sense** (the id, the slot), it is a myth for ability and only holds for personality.
+  - **The two only coincide when the queue is short.** In `TesteCMRTE` → `TesteTelas`, with 847 waiting slots, they coincided 0 times out of 520 [observed].
+- **For the editor to link a regen to the "original":**
+  - in a single save, B is the retiree in the queue who points to the same record (while he waits);
+  - between two saves of the career, B is whoever held the record in the earlier save;
+  - once B also becomes a regen, or if there is no earlier save, no trace is left [inference from the code: the pool entry is deleted when used, and B's +0x61 is replaced on his turn].

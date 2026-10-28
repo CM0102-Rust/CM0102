@@ -8,6 +8,7 @@ Investigação de 27/10/2026, só leitura (desmontagem do `cm0102.exe` 3.9.68 e 
 2. **A marca sobrevive à gravação e à carga.** A tabela vai inteira para o `general.dat` e volta inteira na carga [observado no código e em três saves da mesma carreira].
 3. **O dia é sorteado na criação da carreira**, não na carga do `.sav`: `database_player_initialisation` 0x535a80, chamada só pela `create_game` 0x828110. O ano não é sorteado: vem do +0x18 da base, que a rotina depois troca pela idade. Por isso o par nome + ano reconhece a pessoa da base (§3).
 4. **Não registra.** O regen ocupa a vaga (o id) do aposentado da fila. A ficha de jogador e a nação vêm da primeira entrada de uma reserva de fichas, que é apagada ao ser usada. Nada guarda "no lugar de quem" (§4).
+5. **Herda, mas de dois antecessores diferentes.** Do dono da ficha (B, um jogador que se aposentou) o regen herda o PA, as posições, os pés, a nação e o perfil dos atributos técnicos e ocultos; o CA é sorteado como fração desse PA. Do dono da vaga (A, em geral um não jogador aposentado) herda só o id, a personalidade do registro de pessoa e as preferências. A e B só coincidem quando a fila está curta (§8).
 
 ## 1. O bit 0x40
 
@@ -233,3 +234,139 @@ Outras fontes possíveis, **não conferidas**: a primeira temporada do históric
 1. **"Entrou em" = +0x3e/+0x40** (dia do ano e ano), com o rótulo "entrada no clube atual (ou criação, se nunca trocou de clube)". É a data da criação exata enquanto o regen não trocou de clube, e o editor não tem como saber, por um save só, se trocou.
 2. Para não mentir, mostrar ao lado a faixa da criação: **de max(início da carreira, nascimento + 15) a min(+0x40, nascimento + 27)**.
 3. Se o editor guardar os saves da carreira (ou um cache por id + nome), use a **primeira** data vista para cada regen. Entre saves, a data só muda quando o clube muda; renovação não muda.
+
+## 8. O que o regen herda (28/10/2026)
+
+Pergunta do Lucas: "se o regen não herda nada do aposentado, não faz sentido vincular um ao outro". Mesmo método: desmontagem e pseudocódigo da 0x7abac0 e das rotinas da fila e da reserva, e leitura de saves, sem rodar o jogo. Scripts em `%TEMP%\marca` (`heranca.py`, `cruza_heranca.py`, `extra_heranca.py`, `b_depois.py`, `ficha_dividida.py`; só leitura).
+
+Há **dois** antecessores, e o "no lugar de" mistura os dois:
+
+- **A, o dono da vaga:** a pessoa da cabeça da fila de regens. O regen fica com o id dela (§4).
+- **B, o dono da ficha:** o jogador cuja ficha de jogador (`player.dat`, 70 bytes) é a primeira da reserva. O regen fica com essa ficha.
+
+### Como a fila e a reserva se formam
+
+`PLAYER_REGEN::process_retirements` 0x7a59e0 trata cada aposentado por um de três caminhos [observado]:
+
+| Quem se aposenta | Fila (12 bytes, `this+0x10`) | Reserva de fichas (16 bytes, `this+0x3c`) |
+|---|---|---|
+| Jogador que não vira técnico | entra, por `queue_staff_for_regen` 0x7a87d0 (chamada em 0x7a64e2) | entra a ficha dele: id da ficha, nação (+0x1a), id da pessoa em +0xc (0x7a8ab0..0x7a8adc). O +8 (segunda nação) não é gravado aí. **O +0x61 dele não é zerado** |
+| Jogador que vira técnico (já tem ficha de não jogador, ou ganha uma da reserva de não jogadores por sorteio com o profissionalismo +0x5b, 0x7a5cdb..0x7a5d98) | não entra | entra a ficha dele, por `add_player_data_to_pool` 0x7a8350 (chamada em 0x7a6335: ficha, nação, segunda nação). Depois `+0x61 = 0` e `+0x5f = 1`: ele segue vivo como não jogador |
+| Não jogador | entra, por 0x7a87d0 (0x7a64c9), ou vira um não jogador novo na mesma vaga (`regenerate_as_non_player` 0x7ab340) | nada (a ficha de não jogador vai para a outra reserva, `this+0x1c`) |
+
+- A data da entrada na fila é hoje, se a pessoa tem menos de 30 anos, ou hoje + 1 a 65 dias (0x7a6397..0x7a63b4) [observado].
+- A fila é ordenada por data e depois por id (`player_regen_compare_queue_entries` 0x7ae240, no fim da 0x7a59e0). A reserva fica na ordem de chegada; só a 0x7a87d0 e a 0x7a8350 acrescentam nela [observado; `refs.py`].
+- `process_regen_queue` 0x7a65d0 anda enquanto a data da cabeça da fila for anterior a hoje (0x7a660b) **e** a reserva não estiver vazia (0x7a6618). Para cada cabeça chama a 0x7abac0, que pega **sempre a entrada 0 da reserva** (0x7abb0e..0x7abb16) e a apaga (0x7abb1a). Não há nenhuma comparação entre a vaga e a ficha: nem nação, nem posição, nem nível, nem clube [observado].
+
+Então:
+
+- **B é sempre um jogador que se aposentou**: ou está ele mesmo na fila esperando a sua vez, ou virou técnico [observado no código e nos saves].
+- **A pode ser qualquer aposentado da fila**, e com a fila acumulada é quase sempre um não jogador. Os não jogadores entram na fila sem ficha, então a reserva vira o gargalo: cada ficha nova vai para a vaga mais antiga [observado].
+- **A = B só quando a fila está curta**, e a cabeça da fila é o próprio jogador cuja ficha está na frente da reserva [observado nos saves, abaixo].
+
+Nos saves da mesma carreira (§1):
+
+| Par de saves | Fila / reserva no primeiro | Regens novos | B = A | A era não jogador | B ativo (sem aposentadoria) no primeiro |
+|---|---|---|---|---|---|
+| `Roteiro` → `TesteCMRTE` | 2 / 2 (as duas fichas são das duas pessoas da fila) | 12 | 2 | 10 | 10 (os outros 2 são os B = A) |
+| `TesteCMRTE` → `TesteTelas` | 847 / 0 | 520 | **0** | 518 | 520 (idades 25 a 50, 506 entre 30 e 39) |
+
+No `TesteCMRTE`, a fila tem 847 vagas paradas e a reserva está vazia. No `Valencia.sav` são 26 vagas e reserva vazia [observado].
+
+### O que vem de B (o dono da ficha)
+
+A 0x7abac0 põe a ficha da reserva em +0x61 (0x7abb38) e **não a apaga nem a refaz**. Ela regrava só parte da ficha [observado: todas as escritas da rotina, e as das chamadas]:
+
+- **Sorteados de novo:** CA (+5), as três reputações (+9, +0xb, +0xd), aceleração (+0x1b), agilidade (+0x1d), impulsão (+0x2e), forma física natural (+0x34), velocidade (+0x36), resistência (+0x3c), força (+0x3d) e índice de trabalho (+0x44).
+- **Mexidos a partir do valor de B:** antecipação (+0x1e) e decisões (+0x24) perdem um sorteio de até 40, 20 ou 10 conforme a idade; jogos importantes (+0x2c) e liderança (+0x2f) perdem um sorteio de até 3 a 10; consistência (+0x21) só sobe, e só se for < 5 num regen de 26 a 28 anos.
+- **Nunca escritos:** o PA (+7) só é lido. Nem as posições (+0xf..+0x1a), os pés (+0x30, +0x3b) e os outros atributos.
+- No fim, `staff_normalise_player_physical_attributes` 0x538ec0 e `staff_normalise_player_attributes` 0x538bc0 rebalanceiam o vetor de atributos. Elas partem dos valores que já estão na ficha (`database_player_to_attribute_vector` 0x53a610 → `database_attribute_vector_to_player` 0x53aa10), ou seja, dos de B.
+
+**O CA sai do PA de B.** Exemplo, no ramo da nação de reputação < 350 (0x7abea0..0x7abffa): CA = PA/4 + sorteio(0,55·PA) a partir dos 21 anos, ou PA/4 + sorteio(0,6·PA) até os 20. O outro ramo (0x7ac3dd..) também usa só frações do PA (0,25, 0,55, 0,6…) [observado].
+
+**O sorteio depende de B, não de A** [observado]:
+
+- a idade e as fórmulas do CA dependem da nação (de B), da reputação dela (+0x88), do PA e das posições da ficha (goleiro +0xf, defesa +0x11, atacante +0x15);
+- nomes: da nação, por `database_pick_first_name_for_nation` 0x539c60, 0x53a1b0 e 0x53a5b0;
+- clube: `pick_best_club_for_player` 0x7ad0e0 ou `pick_club_from_nation_list` 0x7ad590, pela nação e pela habilidade do regen.
+
+**Nação:** a da entrada da reserva, ou seja, a de B (0x7abcd4). Se a reputação dela for < 100, há 1 chance em 4 de trocar por uma nação sorteada, também de reputação < 100 (0x7abcd7..0x7abd1d). A segunda nação vem do +8 da entrada:
+- sempre, se for o País Basco;
+- senão com 1 chance em 3;
+- senão zero (0x7abd20..0x7abd6e).
+- Se a nação for a Espanha, 1 vez em 100 a rotina pula esse passo e o +0x1e fica com a segunda nação de A (0x7abd2c..0x7abd3f).
+
+Conferido nos 520 regens de `TesteCMRTE` → `TesteTelas`: B foi achado como dono anterior da ficha em todos [observado].
+
+| Comparação regen × B | Iguais |
+|---|---|
+| PA | 520 de 520 |
+| 12 posições | 520 |
+| pés esquerdo e direito | 520 |
+| nação | 520 (nação de A: só 14, coincidência) |
+| agressividade, equilíbrio, bravura, deslealdade, talento, propensão a lesões | 520 cada |
+| versatilidade, consistência, jogos importantes, mãos, liderança, escanteios, faltas, espírito de equipe, técnica | 259 a 454 cada |
+| demais atributos | 10 a 63 cada |
+| CA | 14 |
+
+- Diferença média por atributo (+0x1b..+0x44): **4,3** entre o regen e B, contra **14,0** entre o regen e uma ficha qualquer [observado].
+- No par `Roteiro` → `TesteCMRTE` vale o mesmo nos 12 regens: PA, posições, pés e nação iguais aos de B; CA diferente; diferença média 4,2 contra 15,6 [observado].
+
+### O que vem de A (o dono da vaga)
+
+Além do id, a 0x7abac0 e as chamadas dela **não escrevem** nestes campos do registro de pessoa (110 bytes) [observado]:
+
+- a personalidade +0x56..+0x5d (adaptabilidade, ambição, determinação, lealdade, pressão, profissionalismo, espírito esportivo, temperamento). A determinação (+0x58) passa pelo rebalanceamento da 0x53aa10, mas parte do valor de A;
+- as preferências (+0x65: clubes e pessoas favoritos e detestados);
+- +0x60 (ClubValuation).
+
+A adaptabilidade de A ainda pesa no sorteio dos idiomas do regen: o corte é (20 − adaptabilidade) × 10 (0x7abded) [observado].
+
+Nos 520 regens:
+- a personalidade sem a determinação é a de A em 514 [observado];
+- a determinação, em 518 [observado];
+- o índice das preferências, em 520 [observado];
+- as 6 diferenças restantes não foram investigadas [inferência: mudanças depois da criação].
+
+O resto de A é apagado ou trocado [observado]:
+
+- gravados pela própria 0x7abac0: nomes, nascimento, idade, nação e segunda nação, jogos e gols pela seleção (+0x22/+0x23), cargo na seleção (+0x24), clube, salário, valor e a ficha de não jogador (+0x69 = 0). A rotina só segue se A estiver sem clube (0x7abaec);
+- limpos pelas chamadas:
+
+| O que | Rotina |
+|---|---|
+| estatísticas | `PlayerStats::reset_player` 0x7c6650 |
+| histórico | 0x86fb80 |
+| disciplina | 0x55e1d0, 0x556830 |
+| lesões | 0x631f90, 0x62bfa0 |
+| contratos | 0x4d0b50, 0x4d0bd0 |
+| seleção | 0x775ba0 |
+| névoa de guerra | 0x5afd00 |
+| apelido | 0x5fff30 |
+
+**O clube, a posição e a reputação de A não entram em nada**: A já está sem clube, e a ficha dele, se tinha uma, foi para a reserva e pode ir para outro regen [observado].
+
+### A ficha dividida no save
+
+Como a 0x7a87d0 não zera o +0x61 do jogador que entra na fila, **enquanto ele espera a vez dele, a mesma ficha é apontada por duas pessoas**: o aposentado na fila (B) e o regen que já a usa. Quando chega a vez de B, a 0x7abac0 troca o +0x61 dele pela ficha seguinte da reserva [observado].
+
+| Save | Fichas com dois donos | O outro dono |
+|---|---|---|
+| `TesteTelas.sav` | 428 | aposentado (bits 0x30 = 2), sem clube, na fila |
+| `Valencia.sav` | 24 | idem |
+
+Nos dois saves, todas as fichas com dois donos são de um regen e de um aposentado assim [observado].
+
+**Para o editor:** a tela de um aposentado na fila pode mostrar a ficha do regen. Editar essa ficha muda os dois.
+
+### Conclusão
+
+- **Existe uma relação real de habilidade, sim, mas com B, não com A.** O regen é a ficha de um jogador que se aposentou (ou virou técnico), com o mesmo PA, as mesmas posições, os mesmos pés e a mesma nação. O CA, a idade, os nomes, o físico e parte dos atributos mentais são sorteados de novo, e os demais atributos são rebalanceados a partir dos de B [observado no código e nos saves].
+- **Com A a ligação é a vaga:** o id, a personalidade do registro de pessoa (com a determinação e a adaptabilidade, que pesa nos idiomas) e as preferências. Nada de habilidade, posição, nação ou clube [observado].
+- **"Fulano é o regen de Beltrano" é verdade no sentido do B**, o dono da ficha: mesmo potencial, mesmo jogador "em forma de juvenil".
+  - **No sentido do A** (o id, a vaga), é mito para a habilidade e só vale para a personalidade.
+  - **Os dois só coincidem com a fila curta.** No `TesteCMRTE` → `TesteTelas`, com 847 vagas paradas, coincidiram 0 de 520 vezes [observado].
+- **Para o editor ligar um regen ao "original":**
+  - num save só, B é o aposentado na fila que aponta para a mesma ficha (enquanto ele espera);
+  - entre dois saves da carreira, B é quem tinha a ficha no save anterior;
+  - depois que B também vira regen, ou se o save anterior não existe, não sobra rastro [inferência pelo código: a entrada da reserva é apagada ao ser usada, e o +0x61 de B é trocado na vez dele].
