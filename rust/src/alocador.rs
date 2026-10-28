@@ -76,7 +76,8 @@ impl Alocador {
             }
             _ => {
                 if self.fim - self.topo < CABECALHO + cap {
-                    return 0;
+                    // so com a regiao esgotada (as carreiras que cabem nela nao mudam): junta os livres e tenta de novo
+                    return self.alocar_juntando(n, cap, zerar);
                 }
                 let p = self.topo + CABECALHO;
                 self.topo += CABECALHO + cap;
@@ -92,6 +93,83 @@ impl Alocador {
             core::ptr::write_bytes(p as *mut u8, 0, n);
         }
         p
+    }
+
+    /// Regiao esgotada: junta os blocos livres vizinhos (os do fim voltam ao topo) e serve o pedido pelo topo ou
+    /// pelo menor livre que caiba, partindo o resto. Deterministico (pela ordem dos enderecos). A carreira ampla
+    /// (8 ligas) esgotava 1 GB em abril de 2002: a lista de estatisticas dos jogadores cresce de 100 em 100 e as
+    /// copias antigas nunca serviam de novo (27/10/2026).
+    /// ponytail: varre todas as listas a cada esgotamento; se ficar lento, juntar so depois de N bytes liberados.
+    unsafe fn alocar_juntando(&mut self, n: usize, cap: usize, zerar: bool) -> usize {
+        let mut p = self.menor_livre(cap);
+        if p == 0 {
+            self.juntar();
+            if self.fim - self.topo >= CABECALHO + cap {
+                p = self.topo + CABECALHO;
+                self.topo += CABECALHO + cap;
+                *((p - 16) as *mut usize) = cap;
+            } else {
+                p = self.menor_livre(cap);
+            }
+        }
+        if p != 0 {
+            *((p - 12) as *mut usize) = n;
+            if zerar {
+                core::ptr::write_bytes(p as *mut u8, 0, n);
+            }
+        }
+        p
+    }
+
+    /// O menor livre de capacidade >= `cap` (o primeiro de cada lista), partido se sobrar; 0 se nenhum.
+    unsafe fn menor_livre(&mut self, cap: usize) -> usize {
+        let Some(c0) = classe(cap) else { return 0 };
+        let Some(c) = (c0..CLASSES).find(|&c| self.livres[c] != 0 && *((self.livres[c] - 16) as *const usize) >= cap) else {
+            return 0;
+        };
+        let p = self.livres[c];
+        self.livres[c] = *(p as *const usize);
+        let total = *((p - 16) as *const usize);
+        if total - cap >= CABECALHO + 16 {
+            let resto = p + cap + CABECALHO;
+            *((resto - 16) as *mut usize) = total - cap - CABECALHO;
+            self.liberar(resto);
+            *((p - 16) as *mut usize) = cap;
+        }
+        p
+    }
+
+    /// Junta os livres vizinhos; os que chegam ao topo voltam para ele.
+    unsafe fn juntar(&mut self) {
+        let mut livres = Vec::new();
+        for c in 0..CLASSES {
+            let mut p = self.livres[c];
+            while p != 0 {
+                livres.push(p);
+                p = *(p as *const usize);
+            }
+            self.livres[c] = 0;
+        }
+        livres.sort_unstable();
+        let mut juntos: Vec<(usize, usize)> = Vec::new(); // (dados, capacidade)
+        for p in livres {
+            let c = *((p - 16) as *const usize);
+            match juntos.last_mut() {
+                Some((q, cq)) if *q + *cq == p - CABECALHO => *cq += CABECALHO + c,
+                _ => juntos.push((p, c)),
+            }
+        }
+        if let Some(&(q, cq)) = juntos.last() {
+            if q + cq == self.topo {
+                self.topo = q - CABECALHO;
+                juntos.pop();
+            }
+        }
+        for &(q, cq) in juntos.iter().rev() {
+            *((q - 16) as *mut usize) = cq;
+            self.liberar(q);
+        }
+        linha(&format!("alocador: regiao esgotada; {} livres depois de juntar, topo em {:#x}", juntos.len(), self.topo));
     }
 
     pub unsafe fn liberar(&mut self, p: usize) {
@@ -397,5 +475,27 @@ mod testes {
             vec![x - base, y - base, z - base, v - base]
         };
         assert_eq!(rodar(base), rodar(base));
+    }
+
+    #[test]
+    fn esgotada_junta_os_livres() {
+        let mut mem = vec![0u8; 1 << 20];
+        let base = (mem.as_mut_ptr() as usize + 15) & !15;
+        unsafe {
+            let mut a = Alocador::novo(base, (1 << 20) - 16);
+            let fixo = a.alocar(100, false); // no comeco, nunca liberado
+            // a lista que cresce de 3200 em 3200 bytes (como a das estatisticas dos jogadores): sem juntar, esgota
+            let mut p = a.alocar(3200, false);
+            *(p as *mut u32) = 0x1234;
+            for k in 2..300 {
+                p = a.realocar(p, 3200 * k, 0);
+                assert_ne!(p, 0, "esgotou em {}", k);
+                assert_eq!(*(p as *const u32), 0x1234);
+                if 3200 * (k + 1) > (1 << 18) { // sem juntar, esgota perto de k = 25
+                    break;
+                }
+            }
+            assert_eq!(a.tamanho(fixo), 100);
+        }
     }
 }

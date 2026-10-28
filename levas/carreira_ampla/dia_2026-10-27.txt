@@ -1,0 +1,15 @@
+=== AMPLA longa ate 2003-01-31, rust, tudo ate a 244a (23:13)
+    pool nao paginado 2.51 -> 2.46 GB, paginado 4.28 -> 4.30 GB
+execucao 1: o jogo saiu sem chegar na data (codigo 1); veja jogo\ddraw.log (2486 s)
+game.cfg restaurado; auto_setup.cfg removido
+=== FIM (23:54)
+=== AMPLA longa ate 2003-01-31, rust, tudo ate a 244a + alocador que junta os livres (23:58)
+    pool nao paginado 2.51 -> 2.50 GB, paginado 4.30 -> 4.30 GB
+execucao 1: parou em 2003-030, 15518733587 sorteios, impressao d52b3d330fc56cd2, partidas 99675/8cd1f4aeb70c6791, banco 24bd18cc74eb8202, 1111 s
+game.cfg restaurado; auto_setup.cfg removido
+=== FIM (00:17)
+=== AMPLA longa ate 2003-01-31, original (00:17)
+    pool nao paginado 2.51 -> 2.50 GB, paginado 4.31 -> 4.30 GB
+execucao 1: parou em 2003-030, 15518733587 sorteios, impressao d52b3d330fc56cd2, partidas 99675/8cd1f4aeb70c6791, banco 24bd18cc74eb8202, 1153 s
+game.cfg restaurado; auto_setup.cfg removido
+=== FIM (00:36)
