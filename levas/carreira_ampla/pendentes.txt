@@ -48,3 +48,4 @@ Ampla de 26/10/2026: prova geral Rust = original 9ee2b5ac ate a 239a (com a zera
 - leva241.py: cpa_tv_valor (direitos de TV, fim de temporada); cpa_ordem_posicao, cpa_confronto_titulo, cpa_completa_rodadas (desligadas)
 - leva242.py: cpd_atual_aviso, cpd_continente_aviso (selecoes, competicao seguinte), cpe_datas_ano, cpe_linha_do_clube
 - leva243.py: cpg_doador_zero, cpg_salario_minimo, cph_queixas_zero; cpg_condicao_porcento (desligada)
+- leva244.py: cph_lugar_marca, cph_conversas_clube, cph_interesse_ordem, cph_pedido_data, cph_desempregado_tecnico, cph_permissao_marca, cph_olheiro_confere, cph_sequencia_dias (cph_apelido_fim e cph_pendente_fim: vaga depois do fim, invisiveis)
