@@ -352,10 +352,11 @@ Since 0x7a87d0 does not clear the +0x61 of the player who enters the queue, **wh
 
 | Save | Records with two owners | The other owner |
 |---|---|---|
-| `TesteTelas.sav` | 428 | retiree (bits 0x30 = 2), no club, in the queue |
+| `jogo\TesteTelas.sav` of 27/10 at 17:24 (SHA-256 `571a96aa…`; 533 regens, queue of 1,289) | 428 | retiree (bits 0x30 = 2), no club, in the queue |
+| the Orchestrator's `TesteTelas-2026-10-27.sav`, from 17:21 (SHA-256 `89067368…`; 529 regens, queue of 1,290) | 426 | same |
 | `Valencia.sav` | 24 | same |
 
-In both saves, every record with two owners belongs to a regen and to a retiree of that kind [observed].
+The two `TesteTelas` are different saves of the same career; on the same file, the CMRTE count and this reading agree (426). In every save, every record with two owners belongs to a regen and to a retiree of that kind [observed].
 
 **For the editor:** the screen of a retiree in the queue may show the regen's record. Editing that record changes both.
 

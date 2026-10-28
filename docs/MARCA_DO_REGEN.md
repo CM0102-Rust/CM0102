@@ -352,10 +352,11 @@ Como a 0x7a87d0 não zera o +0x61 do jogador que entra na fila, **enquanto ele e
 
 | Save | Fichas com dois donos | O outro dono |
 |---|---|---|
-| `TesteTelas.sav` | 428 | aposentado (bits 0x30 = 2), sem clube, na fila |
+| `jogo\TesteTelas.sav` de 27/10 às 17:24 (SHA-256 `571a96aa…`; 533 regens, fila de 1.289) | 428 | aposentado (bits 0x30 = 2), sem clube, na fila |
+| `TesteTelas-2026-10-27.sav` do Orquestrador, das 17:21 (SHA-256 `89067368…`; 529 regens, fila de 1.290) | 426 | idem |
 | `Valencia.sav` | 24 | idem |
 
-Nos dois saves, todas as fichas com dois donos são de um regen e de um aposentado assim [observado].
+Os dois `TesteTelas` são gravações diferentes da mesma carreira; no mesmo arquivo, a contagem do CMRTE e a desta leitura batem (426). Em todos os saves, todas as fichas com dois donos são de um regen e de um aposentado assim [observado].
 
 **Para o editor:** a tela de um aposentado na fila pode mostrar a ficha do regen. Editar essa ficha muda os dois.
 
