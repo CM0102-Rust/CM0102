@@ -347,3 +347,33 @@ subtracts it from the old one; (i2) ±5, (g2) +52, (h2) +20).
   (12) by manager appointment (`MANAGER_MANAGER`); a B club whose senior side is **human**; reserves of English clubs
   (not separate clubs: only contract bit 0x40, `toggle_squad_placement` cases 1/2); the real arrival on day 273/2001.
 - `transfer.dat`, `news.dat`, `staff records.dat` and the histories were not decoded (only size and position).
+
+## Line-up: moving between the first team and the reserves (2026-10-28)
+
+Request from CMRTE (via the orchestrator; Lucas's decision "(b)": remove from the line-up as the game does). Same bench,
+with the diagnostic DLL's `L` trigger: `CM_TRANSFERIR="L SSSSSSS CCCCC NNNNNNNNN"`, N = times × 100000 + captain. In
+all of them, the set-up through the tactics screen on the club's row (team 0): captain (0x897ee0 role 0), vice = the
+first slot ≥ 0 that is not the captain (role 1), and the 5 set pieces with side 0 = captain and side 1 = vice
+(0x897bb0). Then `times` calls of `toggle_squad_placement` 0x4cbd20 (thiscall `[0xae1050]`; person, person+0x39, &out,
+as the screen at 0x888760). Differences in `pares_transferencia\escalacao_diffs.txt` (`ferramentas\escalacao.py`).
+
+| Save | Operation | MD5 |
+|---|---|---|
+| `l_A.sav` | set-up (captain 3304, vice 18401) | `7742a9c6f368b68438b476e831185c53` |
+| `l_B.sav` | set-up + 3304 down (placement 2 → 1) | `f604333055704f8df0f316c326b4c4f1` |
+| `l_C.sav` | set-up + 3304 down and up | `ebdcb8dec8aa8c9f187778ad9b56f421` |
+| `l_D3.sav` | set-up + 30530 down (slot 5, no role) | `2326106c1a24ef91d7cf0e47e5c9d638` |
+| `l_D.sav` | set-up + 7923 up (reserve, in slot 3) | `fcbc9747c5882c718f1658841eb77ac5` |
+
+**[observed]** Only `staff.dat` (the person's byte +0x5e: 0x01 first team ↔ 0x02 reserves) and `tactics.dat` change.
+Going down only changes the **club's** row (team 0 = club id): the slot becomes −1; the captain leaves and the vice
+moves up (vice −1); in each set piece side 1 moves up to side 0 (side 1 −1). Going up removes the player from the
+manager's private row (team 1 = the reserves' line-up) and nothing comes back on the club's row. The row's +0x52 is not
+touched. CMRTE reproduced the four cases byte for byte.
+
+**Layout** **[observed]**: `tactics.dat` = n1 + n1 × 0x18e3, n2 + n2 × 0x18e3, n3 + n3 rows of 0x91, n4 + n4 × 0x28, 10
+dwords (0x8995d0). Row: +0 word, +2 20 slots (ids), +0x52 a selected id, +0x56 captain, +0x5a vice, +0x5e set pieces
+(side + type × 2) × 4, type 0..4, +0x86 11 bytes. A club's row = club id (also the computer's clubs, which have a
+line-up and a captain); the human manager's = [0xae235c] + (people − manager id) − 1 (+ 15 for a national team), with
+[0xae235c] = records of `club.dat` + `nat_club.dat` (7029 here). The row count varies (7077 in `FeriasTesteSave`, 7093
+after loading and saving): do not derive [0xae235c] from it.

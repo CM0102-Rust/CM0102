@@ -341,3 +341,33 @@ estreita: ele varia com a reputação do jogador (a 0x8c9720 soma a reputação/
   (12) por nomeação de técnico (`MANAGER_MANAGER`); clube B com o principal **humano**; reservas de clubes ingleses (não
   são clubes à parte: só o bit 0x40 do contrato, `toggle_squad_placement` caso 1/2); a chegada real do dia 273/2001.
 - `transfer.dat`, `news.dat`, `staff records.dat` e os históricos não foram decodificados (só tamanho e posição).
+
+## Escalação: descer e subir entre o principal e os reservas (28/10/2026)
+
+Pedido do CMRTE (via orquestrador; decisão do Lucas "(b)": tirar da escalação igual ao jogo). Mesma bancada, com o
+gatilho `L` da DLL de diagnóstico: `CM_TRANSFERIR="L SSSSSSS CCCCC NNNNNNNNN"`, N = vezes × 100000 + capitão. Em todos,
+o preparo pela tela de táticas na linha do clube (equipe 0): capitão (0x897ee0 papel 0), vice = a primeira vaga ≥ 0
+que não é o capitão (papel 1), e as 5 bolas paradas com lado 0 = capitão e lado 1 = vice (0x897bb0). Depois, `vezes`
+chamadas de `toggle_squad_placement` 0x4cbd20 (thiscall `[0xae1050]`; pessoa, pessoa+0x39, &saída, como a tela em
+0x888760). Diferenças em `pares_transferencia\escalacao_diffs.txt` (`ferramentas\escalacao.py`).
+
+| Save | Operação | MD5 |
+|---|---|---|
+| `l_A.sav` | preparo (capitão 3304, vice 18401) | `7742a9c6f368b68438b476e831185c53` |
+| `l_B.sav` | preparo + desce o 3304 (placement 2 → 1) | `f604333055704f8df0f316c326b4c4f1` |
+| `l_C.sav` | preparo + desce e sobe o 3304 | `ebdcb8dec8aa8c9f187778ad9b56f421` |
+| `l_D3.sav` | preparo + desce o 30530 (vaga 5, sem papel) | `2326106c1a24ef91d7cf0e47e5c9d638` |
+| `l_D.sav` | preparo + sobe o 7923 (reserva, na vaga 3) | `fcbc9747c5882c718f1658841eb77ac5` |
+
+**[observado]** Só mudam o `staff.dat` (byte +0x5e da pessoa: 0x01 principal ↔ 0x02 reservas) e o `tactics.dat`. Ao
+descer, muda só a linha do **clube** (equipe 0 = id do clube): a vaga vai a −1; o capitão sai e o vice sobe (vice −1);
+em cada bola parada, o lado 1 sobe ao lado 0 (lado 1 −1). Ao subir, tira-se o jogador da linha particular do técnico
+(equipe 1 = a escalação dos reservas) e nada volta na linha do clube. O +0x52 da linha não é tocado. O CMRTE reproduziu
+os quatro casos byte a byte.
+
+**Leiaute** **[observado]**: `tactics.dat` = n1 + n1 × 0x18e3, n2 + n2 × 0x18e3, n3 + n3 linhas de 0x91, n4 + n4 × 0x28, 10
+dwords (0x8995d0). Linha: +0 word, +2 20 vagas (ids), +0x52 um id escalado, +0x56 capitão, +0x5a vice, +0x5e bolas
+paradas (lado + tipo × 2) × 4, tipo 0..4, +0x86 11 bytes. Linha de um clube = id do clube (também os da IA, que têm
+escalação e capitão); a do técnico humano = [0xae235c] + (pessoas − id do técnico) − 1 (+ 15 em seleção), com [0xae235c]
+= registros do `club.dat` + do `nat_club.dat` (7029 aqui). O número de linhas varia (7077 no `FeriasTesteSave`, 7093
+depois de carregar e gravar): não derivar [0xae235c] dele.
