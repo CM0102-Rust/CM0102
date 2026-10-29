@@ -4,9 +4,9 @@ unsafe fn cpl2_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const usize)
 }
 
-/// O clube do id `i` (registros de 0x244 bytes em [0xae23b4]).
+/// O clube do id `i` (registros de 0x245 bytes em [0xae23b4]).
 unsafe fn cpl2_clube(i: usize) -> usize {
-    cpl2_d(0xae23b4).wrapping_add(i.wrapping_mul(0x244))
+    cpl2_d(0xae23b4).wrapping_add(i.wrapping_mul(0x245))
 }
 
 /// O contrato da pessoa (0x4cf5a0 em [0xae1050]), guardado em [0xae1080] como a original.

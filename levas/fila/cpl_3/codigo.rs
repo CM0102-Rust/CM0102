@@ -26,14 +26,15 @@ unsafe fn cpl3_sem_memoria(linha: u32, texto: usize) {
     caixa(0xae28bc, 0xae26c4, 0);
 }
 
-/// Cresce o vetor [this+v] (capacidade +v+4, conta +v+8) de `passo` registros de `tam` bytes quando cheio: malloc
-/// (0x944e46) sem vetor, senão realloc (0x945667). Devolve se há vetor (sem memória: a caixa já saiu).
-unsafe fn cpl3_crescer(this: usize, v: usize, passo: usize, tam: usize, linha: u32, texto: usize) -> bool {
-    if cpl3_d(this + v + 8) != cpl3_d(this + v + 4) {
+/// Cresce o vetor [this+v] (capacidade em +v+`c`, conta em +v+12−`c`: `c` = 4 nas passadas e nos prêmios, 8 nas
+/// permissões) de `passo` registros de `tam` bytes quando cheio: malloc (0x944e46) sem vetor, senão realloc
+/// (0x945667). Devolve se há vetor (sem memória: a caixa já saiu).
+unsafe fn cpl3_crescer(this: usize, v: usize, c: usize, passo: usize, tam: usize, linha: u32, texto: usize) -> bool {
+    if cpl3_d(this + v + 12 - c) != cpl3_d(this + v + c) {
         return true;
     }
-    let cap = cpl3_d(this + v + 4).wrapping_add(passo);
-    cpl3_por(this + v + 4, cap);
+    let cap = cpl3_d(this + v + c).wrapping_add(passo);
+    cpl3_por(this + v + c, cap);
     let p = if cpl3_d(this + v) == 0 {
         let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
         alocar(cap.wrapping_mul(tam) as u32)
@@ -55,7 +56,7 @@ unsafe fn cpl3_crescer(this: usize, v: usize, passo: usize, tam: usize, linha: u
 unsafe extern "thiscall" fn guardar_transferencia_passada(this: usize, registro: usize) -> usize {
     crate::comparacao::ramo("cpl_3 transferencia passada");
     // ponytail: sem memória a original devolve o que a caixa deixou em eax; aqui 0 (o jogo não lê)
-    if !cpl3_crescer(this, 0x862, 100, 0x25, 0x2794, 0xa8ec34) {
+    if !cpl3_crescer(this, 0x862, 4, 100, 0x25, 0x2794, 0xa8ec34) {
         return 0;
     }
     let n = cpl3_d(this + 0x86a);
@@ -72,7 +73,7 @@ unsafe extern "thiscall" fn guardar_transferencia_passada(this: usize, registro:
 /// 0x945333 com 0x8e55c0, a ordem da busca 0x8c7560).
 unsafe extern "thiscall" fn dar_permissao_de_trabalho(this: usize, pessoa: usize, nacao: usize, ano: u32, _nao_usado: u32, ordenar: u32) {
     crate::comparacao::ramo("cpl_3 permissao de trabalho");
-    if !cpl3_crescer(this, 0x93a, 30, 0xe, 0x1b1b, 0xa8eb04) {
+    if !cpl3_crescer(this, 0x93a, 8, 30, 0xe, 0x1b1b, 0xa8eb04) {
         return;
     }
     let n = cpl3_d(this + 0x93e);
@@ -97,7 +98,7 @@ unsafe extern "thiscall" fn dar_permissao_de_trabalho(this: usize, pessoa: usize
 /// 0x945333 com 0x8b4e00).
 unsafe extern "thiscall" fn guardar_premio_por_jogo_no_time(this: usize, registro: usize) {
     crate::comparacao::ramo("cpl_3 premio por jogo");
-    if !cpl3_crescer(this, 0x88c, 50, 0xd, 0x2581, 0xa8eb94) {
+    if !cpl3_crescer(this, 0x88c, 4, 50, 0xd, 0x2581, 0xa8eb94) {
         return;
     }
     let n = cpl3_d(this + 0x894);
