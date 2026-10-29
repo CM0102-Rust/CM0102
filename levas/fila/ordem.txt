@@ -1,1 +1,15 @@
 # ordem da fila (fila.py); um item por linha
+cpl_1
+cpl_2
+cpl_3
+cpl_4
+cpl_5
+cpl_6
+cpl_7
+cpm_1
+cpm_2
+cpm_3
+cpm_4
+cpm_5
+cpm_6
+cpm_7

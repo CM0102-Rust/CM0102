@@ -62,9 +62,12 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x718aa0 | `abrir_tela_da_partida` | open_match_screen |
 | 0x727f00 | `abrir_tela_de_espera` | open_waiting_screen |
 | 0x71b1b0 | `abrir_ultimos_placares` | open_latest_scores |
+| 0x4cd030 | `acionar_clausulas_de_rebaixamento` | CONTRACT_MANAGER::trigger_relegation_clauses |
 | 0x4afce0 | `acrescentar_ao_historico` | comp_util_add_history_record |
+| 0x7a8510 | `acrescentar_aposentadoria` | PLAYER_REGEN::add_retirement |
 | 0x547e70 | `acrescentar_clube_rejeitado` | staff_add_disliked_club |
 | 0x547a10 | `acrescentar_pessoa_favorita` | staff_add_favoured_staff |
+| 0x7a81a0 | `acrescentar_reserva_de_tecnico` | PLAYER_REGEN::add_spare_non_player_record |
 | 0x6181d0 | `adjetivo_da_nacao` | nation_get_nationality_adjective |
 | 0x6177f0 | `adjetivo_do_continente` | get_continent_adjective |
 | 0x5c5040 | `adversario_da_excursao` | Friendly::find_tour_opponent |
@@ -186,6 +189,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x547bd0 | `clube_tirar_pessoa_favorita` | club_remove_favoured_staff |
 | 0x83bd00 | `codigo_da_posicao` | position_code |
 | 0x70a8c0 | `codigo_de_bola_parada` | set_piece_code |
+| 0x8cf5e0 | `codigo_de_inelegibilidade` | TRANSFER_MANAGER::get_ineligibility_code |
 | 0x6cb650 | `codigo_especial` | special_code |
 | 0x6e0d00 | `colocar_na_vaga` | put_in_place |
 | 0x6d60b0 | `combinar_com_o_anterior` | combine_with_previous |
@@ -350,11 +354,13 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c23f0 | `escolher_por_papel_e` | choose_by_role_e |
 | 0x62d140 | `escolher_tipo_de_lesao` | Injury::choose_injury_type |
 | 0x5408c0 | `escopo_da_reputacao` | database_get_reputation_scope |
+| 0x8d2fa0 | `escopo_das_regras_da_partida` | TRANSFER_MANAGER::get_fixture_rules_scope |
 | 0x547f90 | `esmaecer_relacoes` | staff_fade_staff_relationships |
 | 0x6cbad0 | `espaco_a_frente` | space_ahead |
 | 0x727fb0 | `esperar_os_outros_jogadores` | match_screens_handle_waiting_screen |
 | 0x5afd00 | `esquecer_pessoa` | forget_person |
 | 0x842080 | `esta_na_lista_de_observados` | Shortlist_Manager::is_on_shortlist |
+| 0x55d270 | `esta_suspenso` | Discipline::is_player_suspended |
 | 0x5ae870 | `estadio_em_uso` | FIXTURE_MANAGER::is_stadium_in_use |
 | 0x6f4a70 | `estado_do_adversario` | opponent_state |
 | 0x6f4a40 | `estado_do_lado` | side_state |
@@ -386,6 +392,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x729e30 | `ficha_do_registro` | Match_Stats::find_record_fixture |
 | 0x839290 | `filtro_do_inicio_rapido` | check_quick_start_file |
 | 0x838e10 | `filtro_do_jogo_salvo` | check_saved_game_file |
+| 0x7c6830 | `fluencia_no_idioma` | PlayerStats::get_language_fluency |
 | 0x6cb910 | `fora_do_meio` | off_centre |
 | 0x4c0720 | `forca_do_clube` | comp_util_get_club_strength_score |
 | 0x6bbb60 | `forca_do_lado` | side_strength |
@@ -442,8 +449,10 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6854a0 | `grupo_decidido` | group_decided |
 | 0x6cd660 | `guardar_extremos` | store_extremes |
 | 0x896fe0 | `guardar_instrucoes` | store_instructions |
+| 0x452cb0 | `guardar_noticia_de_recorde` | Club_Records::queue_record_news |
 | 0x5563f0 | `guardar_suspensoes_do_emprestado` | Discipline::hold_bans_for_loan |
 | 0x6dbb10 | `guardar_tatica` | store_tactic |
+| 0x7a87d0 | `guardar_vaga_para_regen` | PLAYER_REGEN::queue_staff_for_regen |
 | 0x6e86d0 | `habilidade_vista` | perceived_ability |
 | 0x7357c0 | `historia_punivel_do_jogador` | Media::get_finable_story_kind |
 | 0x5fdc30 | `hora_das_ferias` | HUMAN_MANAGER::get_holiday_stamp |
@@ -646,8 +655,12 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5442f0 | `nota_relativa_com_habilidade_reduzida` | player_attribute_rating_with_scaled_ability |
 | 0x544380 | `nota_relativa_do_atributo` | player_attribute_rating |
 | 0x735780 | `noticia_com_resposta_2` | story_with_response_two |
+| 0x74ae60 | `noticia_de_apuro_financeiro` | Media::post_financial_trouble_news |
+| 0x784eb0 | `noticia_importante_para_a_pessoa` | NewsItem::is_important_for |
+| 0x786860 | `noticia_para_a_regiao_da_competicao` | News::send_to_comp_region |
 | 0x7862d0 | `noticia_para_os_tecnicos_da_divisao` | News::send_to_division_managers |
 | 0x786520 | `noticia_para_os_tecnicos_da_nacao` | News::send_to_nation_club_managers |
+| 0x786640 | `noticia_para_os_tecnicos_do_continente` | News::send_to_continent_managers |
 | 0x7863f0 | `noticia_para_os_tecnicos_do_pais` | News::send_to_nation_managers |
 | 0x786780 | `noticia_para_todos_os_tecnicos` | News::send_to_all_managers |
 | 0x786fe0 | `noticias_nao_lidas` | News::count_unread |
@@ -660,6 +673,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x8c7470 | `oferta_precisa_de_permissao` | transfer_manager_offer_needs_work_permit |
 | 0x8c5cf0 | `ofertas_pelo_jogador` | TRANSFER_MANAGER::get_offers_for_player |
 | 0x7ae950 | `olheiro_da_busca` | PLAYER_SEARCH::get_scout |
+| 0x7f9190 | `olheiros_cobrem_a_nacao` | SCOUT_MANAGER::can_club_scout_nation |
 | 0x53cd60 | `olheiros_do_clube` | database_get_club_scouts |
 | 0x685cf0 | `ordem_das_datas_da_liga` | league_compare_dates |
 | 0x683210 | `ordem_das_linhas_da_tabela` | league_compare_table_rows |
@@ -746,6 +760,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x68aad0 | `pontos_do_resultado` | League::points_for_result |
 | 0x6cb6c0 | `por_diferenca` | by_difference |
 | 0x776250 | `por_no_elenco_da_selecao` | add_player_to_squad |
+| 0x5b2ba0 | `posicao_na_formacao` | Formation::set_slot_position |
 | 0x933170 | `posicao_no_conteiner` | position_in_container |
 | 0x6c2be0 | `posicionar` | position (place players) |
 | 0x6d1770 | `posicoes_finas` | fine_positions |
@@ -777,6 +792,9 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6d59b0 | `quantos_marcam` | how_many_mark |
 | 0x6d5a10 | `quem_marca` | who_marks |
 | 0x6bc030 | `quem_marcar` | who_to_mark |
+| 0x86fb80 | `recomecar_historico_da_pessoa` | Staff_Records::rewind_staff_history |
+| 0x4528d0 | `recordes_da_temporada` | Club_Records::get_season_record |
+| 0x452710 | `recordes_de_sempre` | Club_Records::get_all_time_record |
 | 0x6f5810 | `recuperar_folego` | recover_stamina |
 | 0x62bd10 | `recuperar_lesao` | recover_injury |
 | 0x6e1aa0 | `refazer_time` | redo_team |
@@ -871,6 +889,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x84b230 | `teto_da_observacao` | shortlist_manager_max_fee_for_squad_status |
 | 0x5482f0 | `texto_da_mascara_da_posicao` | position_mask_get_text |
 | 0x53ee50 | `texto_das_posicoes` | database_format_player_positions |
+| 0x785a20 | `texto_do_dado_da_noticia` | NewsItem::get_slot_string |
 | 0x6d8d10 | `texto_do_evento` | event_text |
 | 0x8e05a0 | `texto_do_fim_do_prazo` | TRANSFER_MANAGER::write_deadline_news_text |
 | 0x53b620 | `tipo_11_a_15` | type_11_to_15 |
@@ -891,6 +910,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x7549b0 | `tirar_interesses_de_transferencia` | Media::remove_transfer_interest |
 | 0x775ba0 | `tirar_jogador_da_selecao` | NationalTeams::remove_player |
 | 0x7a8470 | `tirar_jogador_do_banco` | PLAYER_REGEN::remove_player_data_from_pool |
+| 0x4cca70 | `tirar_oferta_de_contrato` | CONTRACT_MANAGER::remove_contract_offer |
 | 0x4cf560 | `tirar_ofertas_guardadas` | CONTRACT_MANAGER::remove_held_offers |
 | 0x4ccbf0 | `tirar_ofertas_pendentes` | CONTRACT_MANAGER::remove_pending_offers_for_staff |
 | 0x7f8ee0 | `tirar_pedido_de_observacao` | SCOUT_MANAGER::remove_scout_request |
@@ -912,6 +932,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5b2f10 | `vaga_da_casa` | slot_of_code |
 | 0x785830 | `vaga_da_noticia` | NewsItem::get_slot |
 | 0x8c61e0 | `vaga_da_oferta` | offer_slot |
+| 0x5c6740 | `vaga_do_amistoso` | Friendly::find_scheduled_friendly_slot |
 | 0x8972c0 | `vaga_do_escalado` | Tactics::find_selection_slot |
 | 0x727e20 | `vaga_do_mais_bem_avaliado` | match_screens_find_best_rated_starter_slot |
 | 0x897ee0 | `vaga_extra_tatica` | extra_tactic_slot |

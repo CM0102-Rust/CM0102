@@ -54,7 +54,7 @@ def main():
     rodar('cargo', 'build', '--release', cwd=os.path.join(RAIZ, 'rust'))
     shutil.copy2(os.path.join(RAIZ, 'rust', 'target', 'i686-pc-windows-msvc', 'release', 'ddraw.dll'), os.path.join(RAIZ, 'jogo_testes', 'ddraw.dll'))
     m = open(os.path.join(RAIZ, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
-    for nome, a, _ in runpy.run_path(os.path.join(RAIZ, 'engenharia-reversa', 'mutacoes', f'leva{prox}.py'))['MUTACOES']:
+    for nome, a, *_ in runpy.run_path(os.path.join(RAIZ, 'engenharia-reversa', 'mutacoes', f'leva{prox}.py'))['MUTACOES']:
         assert m.count(a) == 1, ('ancora da mutacao', nome, m.count(a))
     print(f'pronto: publicada a {n}a; a {prox}a integrada e compilada. Agora: bash engenharia-reversa/cadeia.sh {prox}')
 
