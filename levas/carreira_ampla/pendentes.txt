@@ -57,3 +57,7 @@ Ampla de 28/10/2026 (lote_ampla_5a ate 2003-01-31, 8 ligas, base d52b3d33):
 Ampla de 28/10/2026 (lote_ampla_5b ate 2003-01-31, 8 ligas, base d52b3d33):
 - acusadas: dbi_crescer_historico_de_competicoes, dbk1_juntar_comissao, dbl_nacao_grande, dbp_tirar_clube_favorito, dbr_longitude, dbr_fora_da_argentina
 - seguem escapando: dbi_ordem_do_elenco_pela_habilidade_atual, dbk2_olheiros, dbl_juntar_vinculo, dbl_tirar_vinculo, dbl_auxiliar, dbl_treinadores, dbl_contar_treinadores, dbp_clube_tirar_favorita, dbp_pessoas_favoritas, dbp_tirar_rejeitada, dbr_fora_de_arg_fra_cro, dbr_pessoas_pelo_nome_completo, dbr_confere_nomes, dbw_continentes
+
+Ampla de 28-29/10/2026 (lote_ampla_5c ate 2003-01-31, 8 ligas, base ff5405ca, em paralelo ao 5b):
+- acusadas: t_item, r_excluido, ha_motivo
+- seguem escapando: c_k0_b, c_tipo5_b, r_banco, r_idade, n_veterano, f_estado, f_fase, d_43, t_desmarca, t_vaga, r_ids, s_empate, c_clube, p_vaga, a_torneio, l_venda, l_jogo, l_conta, r_marca, e_data, b_tipo, l_tamanho, s_faixa, i_ultima, tr_recusa, lt_ultimo_dia, dq13_reduzida
