@@ -31,3 +31,5 @@ copias/
 /pares_transferencia/
 # Despejo cru das tabelas logo depois do -load (docs/DESPEJO_REGENS.md)
 /despejo_regens/
+# rascunhos antigos e registros fora do git (antes ficavam soltos em D:\Sistemas)
+arquivo/
