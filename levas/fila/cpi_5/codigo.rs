@@ -125,12 +125,13 @@ unsafe extern "stdcall" fn preencher_vaga_da_comissao(clube: usize, cargo: u32) 
     }
 }
 
-/// Comparador: a original tira; confere que ficaram os itens de antes menos os da pessoa, na mesma ordem.
+/// Comparador: o plano antes (a 0x68d1f0 libera o item tirado, que não pode mais ser lido); a original tira; confere
+/// que ficaram os itens de antes menos os da pessoa, na mesma ordem.
 unsafe extern "thiscall" fn comparar_tirar_ofertas_guardadas(this: usize, pessoa: u32) {
     let l = cpi5_d(this + 0x38);
     let antes: Vec<usize> = if l != 0 { cpd1_itens(l) } else { Vec::new() };
-    orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%)(this, pessoa);
     let esperado: Vec<usize> = antes.iter().copied().filter(|&e| cpi5_d(e) as u32 != pessoa).collect();
+    orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%)(this, pessoa);
     let depois: Vec<usize> = if l != 0 { cpd1_itens(l) } else { Vec::new() };
     PLACAR.registrar(depois == esperado, || format!("tirar_ofertas_guardadas({:x}) {} itens, esperava {}, ficaram {}", pessoa, antes.len(), esperado.len(), depois.len()));
 }
