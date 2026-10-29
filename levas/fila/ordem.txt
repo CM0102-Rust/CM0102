@@ -1,8 +1,1 @@
 # ordem da fila (fila.py); um item por linha
-cpm_1
-cpm_2
-cpm_3
-cpm_4
-cpm_5
-cpm_6
-cpm_7
