@@ -1,6 +1,1 @@
 # ordem da fila (fila.py); um item por linha
-cpj_2
-cpj_3
-cpj_4
-cpj_5
-cpj_6

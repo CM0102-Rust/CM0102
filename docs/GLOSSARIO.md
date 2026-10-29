@@ -74,6 +74,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6cb9b0 | `alcanca` | reaches |
 | 0x713d90 | `alcanca_o_ponto` | reaches_the_point |
 | 0x6cb700 | `alem_da_linha` | beyond_the_line |
+| 0x7f9690 | `alvos_dos_olheiros_do_clube` | SCOUT_MANAGER::collect_club_scout_targets |
 | 0x5c88f0 | `amistoso_do_clube` | find_friendly_match |
 | 0x6b5ce0 | `andar_partida_do_dia` | step_day_match |
 | 0x540340 | `anos_entre_datas_em_texto` | database_format_years_between_dates |
@@ -196,6 +197,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x7751e0 | `competicao_da_pessoa` | person_competition |
 | 0x684790 | `competicao_marcada` | competition_flagged |
 | 0x62c510 | `condicao_de_jogo_do_jogador` | Injury::get_match_condition |
+| 0x62c590 | `condicao_do_jogador` | Injury::get_condition |
 | 0x70dfa0 | `condicao_jogador` | player_condition |
 | 0x7109f0 | `conduzir` | dribble |
 | 0x6bba80 | `conferir_lance` | check_move |
@@ -298,6 +300,8 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6c4130 | `diferenca_jogador` | player_difference |
 | 0x6c4180 | `diferenca_lado` | side_difference |
 | 0x6f4a30 | `direcao` | direction |
+| 0x6951e0 | `diretoria_depois_da_partida` | MANAGER_MANAGER::update_board_after_fixture |
+| 0x55ca00 | `disciplina_da_partida` | Discipline::process_match |
 | 0x556240 | `disciplina_do_dia` | discipline_daily_update |
 | 0x55cb20 | `disciplina_gravar_vaga` | discipline_set_slot |
 | 0x556210 | `disciplina_temporada_nova` | discipline_new_season |
@@ -323,6 +327,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x849ce0 | `entrada_da_lista` | shortlist_entry |
 | 0x729500 | `entrada_do_jogo_bate` | Match_Stats::fixture_entry_matches |
 | 0x5d5ac0 | `entrada_do_treino` | training_manager_get_player_entry |
+| 0x8420e0 | `entradas_do_clube_na_shortlist` | Shortlist_Manager::collect_club_shortlist_entries |
 | 0x6cdd00 | `entrar_em_campo` | take_the_field |
 | 0x5fed50 | `escalacao_guardada` | HUMAN_MANAGER::get_saved_lineup |
 | 0x6e2000 | `escalar` | pick |
@@ -526,10 +531,12 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x76c0f0 | `ligar_44_da_pessoa` | set_person_44 |
 | 0x5b50d0 | `ligar_marca_da_formacao` | set_formation_flag |
 | 0x6cb930 | `limite` | limit |
+| 0x8cf7e0 | `limite_de_escalacao` | get_selection_limit |
 | 0x70df40 | `limite_jogador` | player_limit |
 | 0x775000 | `limpar_competicao_atual` | clear_current_competition |
 | 0x5b5960 | `limpar_designados` | clear_assigned |
 | 0x6bba10 | `limpar_lance` | clear_move |
+| 0x5fe8d0 | `limpar_partidas_assistidas` | HUMAN_MANAGER::clear_invalid_watched_fixtures |
 | 0x90cd50 | `limpar_pasta_temporaria` | utils_clear_temp_folder |
 | 0x86fc20 | `limpar_registro_de_tecnico` | Staff_Records::clear_manager_record |
 | 0x867520 | `limpar_todas_as_queixas` | STAFF_CONTRACT::clear_all_grievances |
@@ -540,6 +547,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5ae6a0 | `lista_da_data` | FIXTURE_MANAGER::get_fixture_list_for_date |
 | 0x5d5ab0 | `lista_de_observados` | transfer_manager_get_shortlist_manager |
 | 0x4cbb60 | `lugar_no_elenco` | CONTRACT_MANAGER::get_squad_placement |
+| 0x8cc930 | `maior_oferta_pelo_jogador` | TRANSFER_MANAGER::find_highest_offer_for_player |
 | 0x6cb780 | `mais_perto_do_gol` | closest_to_goal |
 | 0x6c30e0 | `mais_perto_no_lado` | closest_on_side |
 | 0x6c3010 | `mais_proximo_do_ponto` | nearest_to_point |
@@ -552,6 +560,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5af180 | `marcar_ano_no_calendario` | mark_calendar_year |
 | 0x8c5410 | `marcar_contrato_acertado` | set_agreed_contract_flag |
 | 0x6d10a0 | `marcar_craques` | mark_stars |
+| 0x4cc930 | `marcar_decisao_da_transferencia` | CONTRACT_MANAGER::schedule_decision_for_transfer |
 | 0x540980 | `marcar_elenco_da_pessoa` | staff_set_squad_flags |
 | 0x5b5910 | `marcar_posicao` | mark_position |
 | 0x8c1f80 | `marcar_termos_oferecidos` | TRANSFER_MANAGER::note_terms_offered_to_main_player |
@@ -637,11 +646,15 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5442f0 | `nota_relativa_com_habilidade_reduzida` | player_attribute_rating_with_scaled_ability |
 | 0x544380 | `nota_relativa_do_atributo` | player_attribute_rating |
 | 0x735780 | `noticia_com_resposta_2` | story_with_response_two |
+| 0x7862d0 | `noticia_para_os_tecnicos_da_divisao` | News::send_to_division_managers |
 | 0x786520 | `noticia_para_os_tecnicos_da_nacao` | News::send_to_nation_club_managers |
+| 0x7863f0 | `noticia_para_os_tecnicos_do_pais` | News::send_to_nation_managers |
+| 0x786780 | `noticia_para_todos_os_tecnicos` | News::send_to_all_managers |
 | 0x786fe0 | `noticias_nao_lidas` | News::count_unread |
 | 0x6d3de0 | `nova_reputacao` | new_reputation |
 | 0x6b6570 | `numero_da_competicao` | competition_number |
 | 0x4cca30 | `oferta_acertada` | agreed_contract_offer |
+| 0x4486c0 | `oferta_bate_o_recorde` | Club_Records::offer_breaks_fee_record |
 | 0x4cc9e0 | `oferta_de_contrato` | contract_offer |
 | 0x8d0d90 | `oferta_fechada` | transfer_offer_closed |
 | 0x8c7470 | `oferta_precisa_de_permissao` | transfer_manager_offer_needs_work_permit |
@@ -827,6 +840,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x5454c0 | `sigla_inglesa_da_nacao` | nation_get_english_three_letter_name |
 | 0x6beeb0 | `simulacao_rapida` | quick_simulation |
 | 0x6f0970 | `soltar_bola` | release_ball |
+| 0x5567d0 | `soltar_suspensoes_guardadas` | Discipline::drop_held_bans |
 | 0x7160d0 | `somar_2b` | add_2b |
 | 0x6cf710 | `somar_disposicao` | add_disposition |
 | 0x6d8c70 | `sons_terminados` | sounds_finished |
@@ -878,6 +892,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x775ba0 | `tirar_jogador_da_selecao` | NationalTeams::remove_player |
 | 0x7a8470 | `tirar_jogador_do_banco` | PLAYER_REGEN::remove_player_data_from_pool |
 | 0x4cf560 | `tirar_ofertas_guardadas` | CONTRACT_MANAGER::remove_held_offers |
+| 0x4ccbf0 | `tirar_ofertas_pendentes` | CONTRACT_MANAGER::remove_pending_offers_for_staff |
 | 0x7f8ee0 | `tirar_pedido_de_observacao` | SCOUT_MANAGER::remove_scout_request |
 | 0x8cb4f0 | `tirar_percentual_da_proxima_venda` | TRANSFER_MANAGER::remove_next_sale_percentage |
 | 0x53c190 | `tirar_pessoa_do_clube` | database_remove_staff_from_club |
@@ -888,6 +903,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6dbb80 | `titulares` | starters |
 | 0x6ccb60 | `tracar_lance` | trace_move |
 | 0x53cc30 | `treinadores_do_clube` | database_get_club_coaches |
+| 0x7ae8a0 | `trocar_olheiro_da_busca` | PLAYER_SEARCH::set_scout |
 | 0x8c5e40 | `trocas_oferecendo_o_jogador` | TRANSFER_MANAGER::get_exchange_offers_for_player |
 | 0x7c1a60 | `ultima_nota_do_jogador` | PlayerStats::get_last_match_rating |
 | 0x4b0850 | `unidades` | units_digit |

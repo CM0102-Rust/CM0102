@@ -164,7 +164,7 @@ def cadeia(n):
     acusadas = [k for k, v in nomes.items() if v != 'IGUAL A BASE']
     escapadas = [k for k, v in nomes.items() if v == 'IGUAL A BASE']
     conf = [(m.group(1), 'DIVERGENCIA' in m.group(2) or re.search(r'\b[1-9]\d* divergencias', m.group(2)))
-            for m in re.finditer(r'^mutacao (\S+)\s+\d+s comparando: (.*)$', t, re.M)]
+            for m in re.finditer(r'^mutacao (\S+)\s+\d+s comparando[^:]*: (.*)$', t, re.M)]
     for nome, div in conf:
         if div and nome in escapadas:
             escapadas.remove(nome)
