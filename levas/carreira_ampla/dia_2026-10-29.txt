@@ -1,0 +1,5 @@
+=== prova geral 249 (DESLIGADAS 0x7a8510 0x74ae60 0x62e500) ate 2003-01-31 17:16
+execucao 1: parou em 2003-030, 15529798978 sorteios, impressao e84dcea20dc319a4, partidas 99738/3f668c6ce2b6d4ce, banco 2a48acdba626f0ba, 1140 s
+game.cfg restaurado; auto_setup.cfg removido
+execucao 1: parou em 2003-030, 15529798978 sorteios, impressao e84dcea20dc319a4, partidas 99738/3f668c6ce2b6d4ce, banco 2a48acdba626f0ba, 1180 s
+game.cfg restaurado; auto_setup.cfg removido
