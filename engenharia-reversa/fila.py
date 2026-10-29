@@ -208,7 +208,7 @@ def main():
                 cod = cod.replace('%%%%I%d%%%%' % k, str(base + k))
             m += '\n' + cod
             base += len(rot['ROTINAS'])
-            for mut, a, _ in runpy.run_path(os.path.join(FILA, nome, 'mutacoes.py'))['MUTACOES']:
+            for mut, a, *_ in runpy.run_path(os.path.join(FILA, nome, 'mutacoes.py'))['MUTACOES']:
                 if m.count(a) != 1:
                     print('ancora', nome, mut, m.count(a))
         print('checado', len(ordem()), 'itens')
