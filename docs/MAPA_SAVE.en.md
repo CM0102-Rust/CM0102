@@ -194,7 +194,7 @@ Each competition writes its state to a `.tmp` in the `CM3_TEMP` folder (`docs/.e
 - The `.tmp` is not a copy of the object: it is a list of chosen fields, and club pointers become ids. The exception is +0x18, written as a memory address; that is the "pointer" the other session found in some `.tmp` files.
 - Tables are only written if the pointer exists, and the file does not keep that flag: the reader assumes an empty table when the count is 0, which closed in every case above.
 - For the editor: in a simple cup, entrants and ties sit at computable positions, and swapping a club is swapping an id. Changing the number of rounds or entrants changes the sizes and requires rewriting the whole file.
-- Still missing: the layout of the 0x35-byte tie and the meaning of several fields known only by offset.
+- Still missing: the meaning of several fields known only by offset. The tie and the league round are in §6.1 and §6.2.
 
 **Stages** [observed at 0x523EB0 and 0x68CA40; proven by the reader].
 - Step 22 writes, for each stage, the type and a small header, and calls the stage's own save.
@@ -261,3 +261,37 @@ Several derived leagues also have their own slot 10 (`RusPrm`, `GreCup`, `EuroCh
 - the Northern Irish League Cup, under `GreCup` and under `EuroChamp`.
 
 The variant order resolves both in favour of the real class. A mutation that shortens a field is sometimes absorbed by another variant: +0xD1 with 4 bytes still lets 146 of 164 close. That is why the proof measures the drop in the count, not just zero.
+
+### 6.1 The cup tie (0x35 bytes)
+
+[observed in `Cup::map_fixture_tree` 0x518790 (each tie's reset), `Cup::set_home_teams_for_round` 0x51E870 (the home swap, which swaps the fields in pairs) and `Cup::decide_tie_winner` 0x51F2F0; meanings checked on real ties of the save: European Super Cup Liverpool × Bayern 0–0, 0–0 after extra time and 5–6 on penalties; UEFA Cup and Champions League two-legged ties]. "A" is the home side of the first match and "B" the away side.
+
+| Off. | Size | Field |
+|---|---|---|
+| +0x00 / +0x02 | u16 / u16 | side A / side B entrant (index in the round's entry book, −1 = not yet known) |
+| +0x04 / +0x05 | u8 / u8 | one byte per side that the reset does not clear: in European cups it holds the entry class (6); elsewhere it is leftover memory [inference] |
+| +0x06 | u16 | next-round tie that receives the winner (−1 = none: final, or the place goes to a stage) |
+| +0x08 | u16 | the winner's side in that tie (0 = A, 1 = B) |
+| +0x0A / +0x0C | u16 / u16 | previous-round tie that side A / side B comes from (−1 = enters directly) |
+| +0x0E / +0x10 | u16 / u16 | round that side A / side B comes from |
+| +0x12 | u16 | next round (−1 = none) |
+| +0x14..+0x1D | 10 × u8 | **first match**, in (A, B) pairs: normal time, half time, extra time, penalties, aggregate; 0xFF = did not happen |
+| +0x1E..+0x27 | 10 × u8 | **second match** (second leg or replay), in pairs from its home side's view (B, A): the same five pairs; the aggregate only exists here |
+| +0x28..+0x31 | 10 × u8 | **third match** (the round's +0x11 tie-break), same format |
+| +0x32 | u8 | cleared on reset; read together with +0x06 in `process_fixture` (0x51A3CE) [meaning to be checked] |
+| +0x33 | u8 | which match comes next (0 = the first; 1 = the second, written at 0x51A57F after the first) |
+| +0x34 | u8 | state: 0 = matches not yet created (the draw only runs if the round's first tie is at 0); 3 = decided |
+
+Example (UEFA Cup, first round): the first match holds `02 00 01 00 ff…` (2–0, half time 1–0) and the second `00 01 00 01 ff ff ff ff 00 03` (B 0–1 A, half time 0–1, aggregate B 0–3 A).
+
+### 6.2 The league round (0x41 bytes)
+
+[observed in `league_round_set_date` 0x68A160 and `league_round_set_match_slot` 0x68A1C0; checked on the 46 rounds of the save's English First Division: Saturdays from August to May, a bank-holiday Monday in the evening, TV slots on Sunday and Monday]
+
+| Off. | Size | Field |
+|---|---|---|
+| +0x00 | u16 | day of the year (0 = 1 January), already moved to the requested weekday |
+| +0x02 | u16 | year relative to the season's (+0x40 of the object): 0 or 1 |
+| +0x04 | u8 | time of day: 0 morning, 1 afternoon, 2 evening |
+| +0x05 + 7·i | 8 × 7 bytes | TV slots (i = 0..7): value (u32), weekday (u8, 0 = Monday; 0xFF ends the list), time of day (u8), option (u8, 0..4) |
+| +0x3D | u32 | venue (the `docs/CAMPOS.md` table: 0 home side, 4 national stadium, 8 neutral...) |

@@ -194,7 +194,7 @@ Cada competição grava o seu estado num `.tmp` da pasta `CM3_TEMP` (`docs/.md` 
 - O `.tmp` não é cópia do objeto: é uma lista de campos escolhidos, e os ponteiros para clubes viram ids. A exceção é o +0x18, gravado como endereço de memória; é ele o "ponteiro" que a outra sessão achou em alguns `.tmp`.
 - As tabelas só são gravadas se o ponteiro existir, e o arquivo não guarda essa marca: o leitor supõe tabela vazia quando a contagem é 0, o que fechou em todos os casos acima.
 - Para o editor: numa copa simples, inscritos e confrontos estão em posições calculáveis, e trocar um clube é trocar um id. Mudar a quantidade de rodadas ou de inscritos muda os tamanhos e exige regravar o arquivo inteiro.
-- Faltam: o leiaute do confronto de 0x35 bytes e o sentido de vários campos marcados só pelo deslocamento.
+- Faltam: o sentido de vários campos marcados só pelo deslocamento. O confronto e a rodada de liga estão em §6.1 e §6.2.
 
 **Estágios** [observado em 0x523EB0 e 0x68CA40; provado pelo leitor].
 - O passo 22 grava, para cada estágio, o tipo e um pequeno cabeçalho, e chama a gravação do estágio.
@@ -261,3 +261,37 @@ Várias ligas derivadas também têm slot 10 próprio (`RusPrm`, `GreCup`, `Euro
 - a Taça da Liga da Irlanda do Norte, por `GreCup` e por `EuroChamp`.
 
 A ordem das variantes resolve os dois a favor da classe real. Uma mutação que encurta um campo às vezes é absorvida por outra variante: a de +0xD1 com 4 bytes ainda deixa fechar 146 de 164. Por isso a prova mede a queda da contagem, e não só o zero.
+
+### 6.1 O confronto de copa (0x35 bytes)
+
+[observado em `Cup::map_fixture_tree` 0x518790 (o reset de cada confronto), `Cup::set_home_teams_for_round` 0x51E870 (a troca de mando, que troca os campos aos pares) e `Cup::decide_tie_winner` 0x51F2F0; os sentidos conferidos em confrontos reais do save: Supertaça Europeia Liverpool × Bayern 0×0, 0×0 na prorrogação e 5×6 nos pênaltis; Taça UEFA e Liga dos Campeões em ida e volta]. "A" é o mandante do 1º jogo e "B" o visitante.
+
+| Desl. | Tamanho | Campo |
+|---|---|---|
+| +0x00 / +0x02 | u16 / u16 | inscrito do lado A / do lado B (índice no livro de inscritos da rodada, −1 = ainda não sabido) |
+| +0x04 / +0x05 | u8 / u8 | um byte por lado, que o reset não zera: nas copas europeias vale a classe de entrada (6); em outras é lixo da memória [inferência] |
+| +0x06 | u16 | confronto da rodada seguinte que recebe o vencedor (−1 = não há: final, ou a vaga vai para um estágio) |
+| +0x08 | u16 | lado do vencedor nesse confronto (0 = A, 1 = B) |
+| +0x0A / +0x0C | u16 / u16 | confronto da rodada anterior de onde vem o lado A / o lado B (−1 = entra direto) |
+| +0x0E / +0x10 | u16 / u16 | rodada de onde vem o lado A / o lado B |
+| +0x12 | u16 | rodada seguinte (−1 = não há) |
+| +0x14..+0x1D | 10 × u8 | **1º jogo**, em pares (A, B): tempo normal, intervalo, prorrogação, pênaltis, agregado; 0xFF = não houve |
+| +0x1E..+0x27 | 10 × u8 | **2º jogo** (volta ou replay), em pares do ponto de vista do mandante dele (B, A): os mesmos cinco pares; o agregado só existe aqui |
+| +0x28..+0x31 | 10 × u8 | **3º jogo** (o desempate de +0x11 da rodada), mesmo formato |
+| +0x32 | u8 | zerado no reset; lido junto com +0x06 em `process_fixture` (0x51A3CE) [sentido a conferir] |
+| +0x33 | u8 | qual jogo vem a seguir (0 = o 1º; 1 = o 2º, gravado em 0x51A57F depois do 1º) |
+| +0x34 | u8 | estado: 0 = jogos ainda não criados (o sorteio só roda se o 1º confronto da rodada está em 0); 3 = decidido |
+
+Exemplo (Taça UEFA, 1ª rodada): o 1º jogo vale `02 00 01 00 ff…` (2×0, intervalo 1×0) e o 2º `00 01 00 01 ff ff ff ff 00 03` (B 0×1 A, intervalo 0×1, agregado B 0×3 A).
+
+### 6.2 A rodada de liga (0x41 bytes)
+
+[observado em `league_round_set_date` 0x68A160 e `league_round_set_match_slot` 0x68A1C0; conferido nas 46 rodadas da 1ª Divisão Inglesa do save: sábados de agosto a maio, uma segunda-feira de feriado à noite, faixas de TV no domingo e na segunda]
+
+| Desl. | Tamanho | Campo |
+|---|---|---|
+| +0x00 | u16 | dia do ano (0 = 1º de janeiro), já levado ao dia da semana pedido |
+| +0x02 | u16 | ano relativo ao da temporada (+0x40 do objeto): 0 ou 1 |
+| +0x04 | u8 | turno: 0 manhã, 1 tarde, 2 noite |
+| +0x05 + 7·i | 8 × 7 bytes | faixas de TV (i = 0..7): valor (u32), dia da semana (u8, 0 = segunda; 0xFF fecha a lista), turno (u8), opção (u8, 0..4) |
+| +0x3D | u32 | local (a tabela de `docs/CAMPOS.md`: 0 casa do mandante, 4 estádio nacional, 8 neutro...) |
