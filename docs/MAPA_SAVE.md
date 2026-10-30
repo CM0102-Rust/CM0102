@@ -342,3 +342,11 @@ Os `.tmp` que não são de uma competição: 22 no save de teste (25 no `TesteTe
 O `transfers_<ano>.tmp` não aparece em nenhum dos saves de teste. Pelo código, `TRANSFER_MANAGER::clear_old_past_transfers` (0x8C3EB0) abre o arquivo do ano em "ab" e anexa as transferências antigas que saem da memória, 0x25 bytes cada (valor em +0x18, data em +0x1D); `get_past_transfers` (0x8CC030) as lê de volta. O leitor confere essa grade, sem amostra para provar.
 
 No registro de partida (0x4F), +0x36, +0x38 e +0x3A recebem as regras da rodada: na liga +0xDB, +0xAB e +0xC4; na copa +0x0B, +0x0D e +0x17. O +0x3A é a categoria do jogo (referência das competições, §2.1).
+
+### 7.1 O save da CLZ (NickPatcher e NickDLL)
+
+[observado em `clz_teste\Maior2GBPatcher.sav`, só leitura, lendo o índice e os trechos dos `.tmp` sem carregar os 2,3 GB]: carreira de 2025–2026 com 57 competições. Os leitores fecham as 57 e os 18 globais (fica de fora só o `0000_enchimento.tmp` do teste de 2 GB). Duas diferenças do exe original:
+- o `match_stats_matches.tmp` tem 20000 vagas de 0xD7A (o original, 10000); o leitor tira a quantidade do tamanho;
+- a Intercontinental da NickDLL declara capacidade no livro de inscritos (+0x38) sem alocá-lo, e a gravação do original só grava o livro se o ponteiro existe (0x5216A1). Como o arquivo não guarda essa marca, o leitor aceita livro ausente quando o arquivo acaba ali.
+
+O `TesteMais2GB.sav` é a carreira de 2001–2002 dos outros saves de teste mais o enchimento: fecha igual (164 + 22).

@@ -342,3 +342,11 @@ The `.tmp` files that do not belong to a competition: 22 in the test save (25 in
 `transfers_<year>.tmp` does not appear in any test save. From the code, `TRANSFER_MANAGER::clear_old_past_transfers` (0x8C3EB0) opens the year's file in "ab" and appends the old transfers that leave memory, 0x25 bytes each (fee at +0x18, date at +0x1D); `get_past_transfers` (0x8CC030) reads them back. The reader checks that grid, with no sample to prove it.
 
 In the match record (0x4F), +0x36, +0x38 and +0x3A receive the round rules: in leagues +0xDB, +0xAB and +0xC4; in cups +0x0B, +0x0D and +0x17. +0x3A is the match category (competitions reference, §2.1).
+
+### 7.1 The CLZ save (NickPatcher and NickDLL)
+
+[observed in `clz_teste\Maior2GBPatcher.sav`, read only, reading the index and the `.tmp` slices without loading the 2.3 GB]: a 2025–2026 career with 57 competitions. The readers close all 57 and the 18 global ones (only the 2 GB test's `0000_enchimento.tmp` is left out). Two differences from the original exe:
+- `match_stats_matches.tmp` has 20000 slots of 0xD7A (the original, 10000); the reader takes the count from the size;
+- the NickDLL's Intercontinental declares an entry-book capacity (+0x38) without allocating it, and the original's save only writes the book if the pointer exists (0x5216A1). Since the file does not keep that flag, the reader accepts a missing book when the file ends there.
+
+`TesteMais2GB.sav` is the same 2001–2002 career as the other test saves plus the filler: it closes the same way (164 + 22).

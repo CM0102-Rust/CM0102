@@ -152,7 +152,10 @@ def estagios_e_livro(r, c):
         else:
             raise ValueError(f'estágio de tipo {tipo}')
     c['+0x38 capacidade do livro'], c['+0x36 inscritos no livro'] = r.u16(), r.u16()
-    c['livro (0x14, 6 cada)'] = [struct.unpack('<iBB', r.ler(6)) for _ in range(c['+0x38 capacidade do livro'])]
+    # o livro só é gravado se o ponteiro +0x14 existe (0x5216A1), e o arquivo não guarda a marca: livro ausente
+    # quando o arquivo acaba aqui (a NickDLL deixa capacidade sem alocar, ex. a Intercontinental da CLZ)
+    tem_livro = r.p < len(r.d)
+    c['livro (0x14, 6 cada)'] = [struct.unpack('<iBB', r.ler(6)) for _ in range(c['+0x38 capacidade do livro'] if tem_livro else 0)]
 
 
 def liga(dados, extra=lambda r: {}):

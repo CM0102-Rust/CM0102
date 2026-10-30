@@ -128,9 +128,11 @@ def eventos(r):
 
 
 def match_stats_matches(r):
-    """Match_Stats (0x729000): 10000 vagas fixas de 0xD7A bytes, lidas e gravadas por índice (0x729600/0x729820);
-    o índice fica no match_stats.dat."""
-    return {'vagas (0xd7a)': [r.ler(0xD7A) for _ in range(10000)]}
+    """Match_Stats (0x729000): vagas fixas de 0xD7A bytes, lidas e gravadas por índice (0x729600/0x729820);
+    o índice fica no match_stats.dat. São 10000 no exe original; o exe da CLZ (NickPatcher) grava 20000."""
+    if len(r.d) % 0xD7A:
+        raise ValueError('fora da grade de 0xd7a')
+    return {'vagas (0xd7a)': [r.ler(0xD7A) for _ in range(len(r.d) // 0xD7A)]}
 
 
 def transfers(r):
