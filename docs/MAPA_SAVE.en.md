@@ -269,7 +269,7 @@ The variant order resolves both in favour of the real class. A mutation that sho
 | Off. | Size | Field |
 |---|---|---|
 | +0x00 / +0x02 | u16 / u16 | side A / side B entrant (index in the round's entry book, −1 = not yet known) |
-| +0x04 / +0x05 | u8 / u8 | one byte per side that the reset does not clear: in European cups it holds the entry class (6); elsewhere it is leftover memory [inference] |
+| +0x04 / +0x05 | u8 / u8 | the result mark of side A / side B in the tie's last match: `process_fixture` copies here the match's +0x3D/+0x3E, put in A/B order (0x51A4EE..0x51A524) [observed]. The match gets those marks from `Cup::decide_fixture_winner` (0x51C020) and `decide_tie_winner` (0x51F2F0), following the match's +0x38 rules: 0x10, a draw is worth 1 and a win 2; 0x2, the winner in extra time; 0x2000, minus 3; 0x800/0x1000, walkover = 8 [observed; the meaning of each value, to be checked]. The reset does not clear the field: before the first match it holds whatever was in memory. The 6 seen in the European cups is one of those marks, not the entry class |
 | +0x06 | u16 | next-round tie that receives the winner (−1 = none: final, or the place goes to a stage) |
 | +0x08 | u16 | the winner's side in that tie (0 = A, 1 = B) |
 | +0x0A / +0x0C | u16 / u16 | previous-round tie that side A / side B comes from (−1 = enters directly) |

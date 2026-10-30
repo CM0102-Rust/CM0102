@@ -269,7 +269,7 @@ A ordem das variantes resolve os dois a favor da classe real. Uma mutação que 
 | Desl. | Tamanho | Campo |
 |---|---|---|
 | +0x00 / +0x02 | u16 / u16 | inscrito do lado A / do lado B (índice no livro de inscritos da rodada, −1 = ainda não sabido) |
-| +0x04 / +0x05 | u8 / u8 | um byte por lado, que o reset não zera: nas copas europeias vale a classe de entrada (6); em outras é lixo da memória [inferência] |
+| +0x04 / +0x05 | u8 / u8 | a marca de resultado do lado A / do lado B no último jogo do confronto: `process_fixture` copia para cá o +0x3D/+0x3E da partida, posto em ordem A/B (0x51A4EE..0x51A524) [observado]. A partida recebe essas marcas de `Cup::decide_fixture_winner` (0x51C020) e `decide_tie_winner` (0x51F2F0), conforme as regras do +0x38 da partida: 0x10, empate vale 1 e a vitória 2; 0x2, o vencedor na prorrogação; 0x2000, menos 3; 0x800/0x1000, W.O. = 8 [observado; o sentido de cada valor, a conferir]. O reset não zera o campo: antes do primeiro jogo, ele guarda o que estava na memória. O 6 visto nas copas europeias é uma dessas marcas, não a classe de entrada |
 | +0x06 | u16 | confronto da rodada seguinte que recebe o vencedor (−1 = não há: final, ou a vaga vai para um estágio) |
 | +0x08 | u16 | lado do vencedor nesse confronto (0 = A, 1 = B) |
 | +0x0A / +0x0C | u16 / u16 | confronto da rodada anterior de onde vem o lado A / o lado B (−1 = entra direto) |
