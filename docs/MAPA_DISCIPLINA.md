@@ -61,9 +61,9 @@ A competição aponta a sua regra no byte **`+0x50`** (`[[0xadadfc] + 4 * id_com
 |---|---|---|---|
 | +0x0 | `i32` | id da pessoa (−1 = entrada livre) | [observado] 0x7e82e0, 0x7e7ed0 |
 | +0x4 | `u8` | cartões amarelos acumulados na temporada (a regra 0x96ec74 avisa "a um cartão" em 4, 7, 10, 13, 16...) | [observado] 0x7df910 |
-| +0x5 | `u8` | outro contador da temporada (vermelhos ou suspensões) | [inferência]; zerado na temporada nova [observado] |
+| +0x5 | `u8` | cartões vermelhos na temporada: sobe a cada expulsão; nas regras que contam vermelhos, a suspensão cresce com eles (numa, 1 jogo a mais nos dois primeiros e 2 do 3º em diante; noutra, 1 jogo a mais por vermelho anterior) | [observado] 0x7db6c9, 0x7dd1e7, 0x7dc123; zerado na temporada nova |
 | +0x6 | `i16` | **índice da suspensão** no vetor `[D+4]`; −1 = sem suspensão nesta regra | [observado] 0x7e8590, 0x7e85b0 |
-| +0x8 | `i16` | contador da temporada | [inferência]; zerado na temporada nova [observado] |
+| +0x8 | `i16` | pontos disciplinares da temporada, nas regras por pontos (motivo 0 da suspensão): o vermelho direto soma 24 e o segundo amarelo 9; cada amarelo da partida soma 3, 4 ou 6 conforme o valor que o evento traz para ele (+0x2e/+0x2f: até 3, até 6, acima); outras regras somam 4 ou 12 | [observado] 0x7dccd8..0x7dcd23, 0x7e0bb9, 0x7e229f; zerado na temporada nova |
 | +0xa | 4 bytes | marcas (bits 0..5 zerados na temporada nova) | [observado] 0x7e7ed0 |
 
 ### A suspensão (`BanRecord`, 20 bytes, `[D+4] + índice * 20`)
@@ -77,7 +77,7 @@ A competição aponta a sua regra no byte **`+0x50`** (`[[0xadadfc] + 4 * id_com
 | +0x0c | `i8[4]` | a regra que vale em cada vaga (índice = vaga do corpo; −1 = não vale); +0xf ≠ −1 = suspensão da FIFA, entra no índice por nação | [observado] 0x556940, 0x556d00 e no save |
 | +0x10 | `u8` | motivo: 0 pontos, 1 amarelos, 2 vermelho(s), 3 conduta, 4 amarelos seguidos, 5 doping, 6 passaporte inválido, outro = comportamento antiprofissional | [observado] 0x55d0a0 |
 | +0x11 | `i16` | quantidade do motivo (pontos, cartões) | [observado] 0x55d0a0 |
-| +0x13 | `u8` | bits: 0 = somada a uma suspensão existente; 1 = vale em todas as competições (é conferida contra a FIFA em `is_player_banned`); 2 = ver nota | bit 0 e 1 [observado] 0x556940, 0x55d270; bit 2 [inferência] |
+| +0x13 | `u8` | bits: 0 = somada a uma suspensão existente; 1 = vale em todas as competições (é conferida contra a FIFA em `is_player_banned`); 2 = a suspensão foi estendida por uma pendente que somou jogos ou dias a ela no dia (`RulingBody::daily_update` 0x7e7e74); nada o lê, só a cópia do registro (0x556c70) o leva adiante | [observado] 0x556940, 0x55d270, 0x7e7e74 |
 
 Livre: `+0 = 0xff` e `+2 = 0xffff` [observado] 0x556d00.
 

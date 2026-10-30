@@ -61,9 +61,9 @@ A competition points to its rule set in byte **`+0x50`** (`[[0xadadfc] + 4 * com
 |---|---|---|---|
 | +0x0 | `i32` | person id (−1 = free entry) | [observed] 0x7e82e0, 0x7e7ed0 |
 | +0x4 | `u8` | yellow cards accumulated this season (rule set 0x96ec74 warns "one booking away" at 4, 7, 10, 13, 16...) | [observed] 0x7df910 |
-| +0x5 | `u8` | another season counter (reds or bans) | [inference]; zeroed at the new season [observed] |
+| +0x5 | `u8` | red cards in the season: goes up on each sending-off; in the rules that count reds, the ban grows with them (in one, 1 extra match for the first two and 2 from the 3rd on; in another, 1 extra match per earlier red) | [observed] 0x7db6c9, 0x7dd1e7, 0x7dc123; zeroed at the new season |
 | +0x6 | `i16` | **ban index** into array `[D+4]`; −1 = no ban in this rule set | [observed] 0x7e8590, 0x7e85b0 |
-| +0x8 | `i16` | season counter | [inference]; zeroed at the new season [observed] |
+| +0x8 | `i16` | disciplinary points in the season, in the points-based rules (ban reason 0): a straight red adds 24 and a second yellow 9; each yellow in the match adds 3, 4 or 6 depending on the value the event carries for it (+0x2e/+0x2f: up to 3, up to 6, above); other rules add 4 or 12 | [observed] 0x7dccd8..0x7dcd23, 0x7e0bb9, 0x7e229f; zeroed at the new season |
 | +0xa | 4 bytes | flags (bits 0..5 cleared at the new season) | [observed] 0x7e7ed0 |
 
 ### The ban (`BanRecord`, 20 bytes, `[D+4] + index * 20`)
@@ -77,7 +77,7 @@ A competition points to its rule set in byte **`+0x50`** (`[[0xadadfc] + 4 * com
 | +0x0c | `i8[4]` | the rule set that applies in each slot (index = the body's slot; −1 = does not apply); +0xf ≠ −1 = FIFA ban, goes into the nation index | [observed] 0x556940, 0x556d00 and in the save |
 | +0x10 | `u8` | reason: 0 points, 1 yellows, 2 red card(s), 3 misconduct, 4 successive yellows, 5 doping, 6 invalid passport, other = unprofessional behaviour | [observed] 0x55d0a0 |
 | +0x11 | `i16` | amount for the reason (points, cards) | [observed] 0x55d0a0 |
-| +0x13 | `u8` | bits: 0 = merged into an existing ban; 1 = applies in all competitions (checked against FIFA in `is_player_banned`); 2 = see note | bits 0 and 1 [observed] 0x556940, 0x55d270; bit 2 [inference] |
+| +0x13 | `u8` | bits: 0 = merged into an existing ban; 1 = applies in all competitions (checked against FIFA in `is_player_banned`); 2 = the ban was extended by a pending one that added matches or days to it on the day (`RulingBody::daily_update` 0x7e7e74); nothing reads it, only the record copy (0x556c70) carries it along | [observed] 0x556940, 0x55d270, 0x7e7e74 |
 
 Free: `+0 = 0xff` and `+2 = 0xffff` [observed] 0x556d00.
 
