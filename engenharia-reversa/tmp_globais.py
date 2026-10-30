@@ -133,7 +133,17 @@ def match_stats_matches(r):
     return {'vagas (0xd7a)': [r.ler(0xD7A) for _ in range(10000)]}
 
 
+def transfers(r):
+    """TRANSFER_MANAGER::clear_old_past_transfers (0x8C3EB0): o arquivo do ano, aberto em "ab", recebe as
+    transferências antigas que saem da memória, 0x25 bytes cada (valor em +0x18, data em +0x1D). Sem amostra
+    nos saves de teste."""
+    if len(r.d) % 0x25:
+        raise ValueError('fora da grade de 0x25')
+    return {'transferencias (0x25)': [r.ler(0x25) for _ in range(len(r.d) // 0x25)]}
+
+
 LEITORES = {
+    'transfers_%d.tmp': transfers,
     'fixtures_%d.tmp': fixtures,
     'computer events1.tmp': eventos,
     'computer events2.tmp': eventos,

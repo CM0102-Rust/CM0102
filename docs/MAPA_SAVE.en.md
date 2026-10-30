@@ -339,4 +339,6 @@ The `.tmp` files that do not belong to a competition: 22 in the test save (25 in
 | `computer events1/2.tmp`, `human events1/2.tmp` | `Match_Events::save_event_log` 0x6D98B0 | rolling file: a 3-u32 header (the 3rd, at +8, rewritten for each match) and each match's 0x0E-byte events, appended at the end. Where each match starts (offset, event count, which of the two files) lives in memory, not in the file |
 | `match_stats_matches.tmp` | `Match_Stats` 0x729000 | 10000 fixed slots of 0xD7A bytes (34,500,000 bytes), read and written by index (0x729600 / 0x729820); the index lives in `match_stats.dat` |
 
-`transfers_<year>.tmp` (`TRANSFER_MANAGER`, 0x8C3EB0 and 0x8CC030) does not appear in any test save. It stays without a reader until one does.
+`transfers_<year>.tmp` does not appear in any test save. From the code, `TRANSFER_MANAGER::clear_old_past_transfers` (0x8C3EB0) opens the year's file in "ab" and appends the old transfers that leave memory, 0x25 bytes each (fee at +0x18, date at +0x1D); `get_past_transfers` (0x8CC030) reads them back. The reader checks that grid, with no sample to prove it.
+
+In the match record (0x4F), +0x36, +0x38 and +0x3A receive the round rules: in leagues +0xDB, +0xAB and +0xC4; in cups +0x0B, +0x0D and +0x17. +0x3A is the match category (competitions reference, §2.1).

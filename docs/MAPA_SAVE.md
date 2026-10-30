@@ -339,4 +339,6 @@ Os `.tmp` que não são de uma competição: 22 no save de teste (25 no `TesteTe
 | `computer events1/2.tmp`, `human events1/2.tmp` | `Match_Events::save_event_log` 0x6D98B0 | arquivo rotativo: cabeçalho de 3 u32 (o 3º, em +8, regravado a cada partida) e os eventos de 0x0E bytes de cada partida, anexados no fim. Onde começa cada partida (deslocamento, quantos eventos, qual dos dois arquivos) fica na memória, não no arquivo |
 | `match_stats_matches.tmp` | `Match_Stats` 0x729000 | 10000 vagas fixas de 0xD7A bytes (34.500.000 bytes), lidas e gravadas por índice (0x729600 / 0x729820); o índice fica no `match_stats.dat` |
 
-O `transfers_<ano>.tmp` (`TRANSFER_MANAGER`, 0x8C3EB0 e 0x8CC030) não aparece em nenhum dos saves de teste. Fica sem leitor até haver um.
+O `transfers_<ano>.tmp` não aparece em nenhum dos saves de teste. Pelo código, `TRANSFER_MANAGER::clear_old_past_transfers` (0x8C3EB0) abre o arquivo do ano em "ab" e anexa as transferências antigas que saem da memória, 0x25 bytes cada (valor em +0x18, data em +0x1D); `get_past_transfers` (0x8CC030) as lê de volta. O leitor confere essa grade, sem amostra para provar.
+
+No registro de partida (0x4F), +0x36, +0x38 e +0x3A recebem as regras da rodada: na liga +0xDB, +0xAB e +0xC4; na copa +0x0B, +0x0D e +0x17. O +0x3A é a categoria do jogo (referência das competições, §2.1).
