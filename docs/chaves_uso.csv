@@ -1,0 +1,1285 @@
+chave,endereco,tipo,conferida_na_carga,usos,arquivos
+g_key_colour_black,0x9cf178,colour,sim,1,Database.cpp:1
+g_key_colour_white,0x9cf17c,colour,sim,2,Database.cpp:1 match_eng.cpp:1
+g_key_colour_grey_1,0x9cf180,colour,sim,1,Database.cpp:1
+g_key_colour_grey_2,0x9cf184,colour,sim,1,Database.cpp:1
+g_key_colour_grey_3,0x9cf188,colour,sim,1,Database.cpp:1
+g_key_colour_red_1,0x9cf18c,colour,sim,1,Database.cpp:1
+g_key_colour_red_2,0x9cf190,colour,sim,1,Database.cpp:1
+g_key_colour_red_3,0x9cf194,colour,sim,1,Database.cpp:1
+g_key_colour_red_4,0x9cf198,colour,não,1,Database.cpp:1
+g_key_colour_orange_1,0x9cf19c,colour,sim,1,Database.cpp:1
+g_key_colour_orange_2,0x9cf1a0,colour,sim,1,Database.cpp:1
+g_key_colour_yellow_1,0x9cf1a4,colour,sim,1,Database.cpp:1
+g_key_colour_yellow_2,0x9cf1a8,colour,sim,1,Database.cpp:1
+g_key_colour_green_1,0x9cf1ac,colour,sim,1,Database.cpp:1
+g_key_colour_green_2,0x9cf1b0,colour,sim,1,Database.cpp:1
+g_key_colour_green_3,0x9cf1b4,colour,sim,1,Database.cpp:1
+g_key_colour_green_4,0x9cf1b8,colour,sim,1,Database.cpp:1
+g_key_colour_green_5,0x9cf1bc,colour,não,1,Database.cpp:1
+g_key_colour_blue_1,0x9cf1c0,colour,sim,1,Database.cpp:1
+g_key_colour_blue_2,0x9cf1c4,colour,sim,1,Database.cpp:1
+g_key_colour_blue_3,0x9cf1c8,colour,sim,1,Database.cpp:1
+g_key_colour_blue_4,0x9cf1cc,colour,sim,1,Database.cpp:1
+g_key_colour_blue_5,0x9cf1d0,colour,sim,1,Database.cpp:1
+g_key_colour_purple_1,0x9cf1d4,colour,sim,1,Database.cpp:1
+g_key_colour_purple_2,0x9cf1d8,colour,sim,1,Database.cpp:1
+g_key_colour_purple_3,0x9cf1dc,colour,sim,2,Database.cpp:2
+g_key_colour_purple_4,0x9cf1e0,colour,sim,1,Database.cpp:1
+g_key_colour_brown_1,0x9cf1e4,colour,sim,1,Database.cpp:1
+g_key_colour_brown_2,0x9cf1e8,colour,sim,1,Database.cpp:1
+g_key_colour_pink,0x9cf1ec,colour,sim,1,Database.cpp:1
+g_key_colour_gold,0x9cf1f0,colour,sim,1,Database.cpp:1
+g_key_colour_cyan_1,0x9cf1f4,colour,não,1,Database.cpp:1
+g_key_colour_cyan_2,0x9cf1f8,colour,não,1,Database.cpp:1
+g_key_colour_amber,0x9cf1fc,colour,não,1,Database.cpp:1
+g_key_nation_afghanistan,0x9cf200,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_albania,0x9cf204,nation,sim,28,euro_champ_qual.cpp:12 wc_europe_league.cpp:9 ?:5 Database.cpp:2
+g_key_nation_algeria,0x9cf208,nation,sim,6,?:5 host_country.cpp:1
+g_key_nation_andorra,0x9cf20c,nation,sim,29,euro_champ_qual.cpp:12 wc_europe_league.cpp:11 ?:5 uefa_seeding.cpp:1
+g_key_nation_angola,0x9cf210,nation,sim,5,?:5
+g_key_nation_antigua_barbuda,0x9cf214,nation,sim,3,?:2 wc_concacaf_cup.cpp:1
+g_key_nation_argentina,0x9cf218,nation,sim,51,wc_south_american_league.cpp:18 ?:14 host_country.cpp:5 Database.cpp:2 Setup.cpp:2 staff_contracts.cpp:2 world_cup.cpp:2 discipline.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 league.cpp:1 rb_argentina.cpp:1 transfer_manager.cpp:1
+g_key_nation_armenia,0x9cf21c,nation,sim,28,euro_champ_qual.cpp:12 wc_europe_league.cpp:11 ?:5
+g_key_nation_aruba,0x9cf220,nation,sim,3,?:2 wc_concacaf_cup.cpp:1
+g_key_nation_australia,0x9cf224,nation,sim,36,?:12 host_country.cpp:5 staff_contracts.cpp:3 manager_manager.cpp:2 oceania_nations.cpp:2 Setup.cpp:2 australia_awards.cpp:1 Database.cpp:1 discipline.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 national_teams.cpp:1 oceania_club_champ.cpp:1 olympics.cpp:1 rb_australia.cpp:1 transfer_manager.cpp:1
+g_key_nation_austria,0x9cf228,nation,sim,28,euro_champ_qual.cpp:10 wc_europe_league.cpp:9 ?:5 Database.cpp:1 euro_champ.cpp:1 host_country.cpp:1 world_cup.cpp:1
+g_key_nation_azerbaijan,0x9cf22c,nation,sim,28,euro_champ_qual.cpp:12 wc_europe_league.cpp:11 ?:5
+g_key_nation_the_bahamas,0x9cf230,nation,sim,5,?:4 wc_concacaf_cup.cpp:1
+g_key_nation_bahrain,0x9cf234,nation,sim,4,?:2 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_bangladesh,0x9cf238,nation,sim,6,?:4 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_barbados,0x9cf23c,nation,sim,5,?:4 wc_concacaf_cup.cpp:1
+g_key_nation_belarus,0x9cf240,nation,sim,27,wc_europe_league.cpp:11 euro_champ_qual.cpp:10 ?:5 uefa_seeding.cpp:1
+g_key_nation_belgium,0x9cf244,nation,sim,51,?:18 wc_europe_league.cpp:9 staff_contracts.cpp:3 uefa_seeding.cpp:3 host_country.cpp:2 player_stats.cpp:2 Setup.cpp:2 shortlist_manager.cpp:2 world_cup.cpp:2 bel_fa_cup.cpp:1 Database.cpp:1 discipline.cpp:1 fix_man.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 match_eng.cpp:1 transfer_manager.cpp:1
+g_key_nation_belize,0x9cf248,nation,sim,5,?:4 wc_concacaf_cup.cpp:1
+g_key_nation_benin,0x9cf24c,nation,sim,4,?:4
+g_key_nation_bermuda,0x9cf250,nation,sim,3,?:2 wc_concacaf_cup.cpp:1
+g_key_nation_bolivia,0x9cf254,nation,sim,25,wc_south_american_league.cpp:18 ?:5 con_merc_cup.cpp:1 goldcup.cpp:1
+g_key_nation_bosnia_herzegovina,0x9cf258,nation,sim,27,euro_champ_qual.cpp:12 wc_europe_league.cpp:9 ?:5 uefa_seeding.cpp:1
+g_key_nation_botswana,0x9cf25c,nation,sim,5,?:5
+g_key_nation_brazil,0x9cf260,nation,sim,56,wc_south_american_league.cpp:18 ?:13 host_country.cpp:4 Database.cpp:3 Setup.cpp:2 staff_contracts.cpp:2 bra_champ_cup.cpp:1 bra_cup.cpp:1 bra_nat_first.cpp:1 club_history.cpp:1 conmebol_seeding.cpp:1 contract_manager.cpp:1 discipline.cpp:1 goldcup.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 national_teams.cpp:1 olympics.cpp:1 transfer_manager.cpp:1 world_cup.cpp:1
+g_key_nation_brunei_darussalam,0x9cf264,nation,sim,6,?:4 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_bulgaria,0x9cf268,nation,sim,28,wc_europe_league.cpp:11 euro_champ_qual.cpp:10 ?:5 euro_champ.cpp:1 world_cup.cpp:1
+g_key_nation_burkino_faso,0x9cf26c,nation,sim,4,?:4
+g_key_nation_burma,0x9cf270,nation,não,7,?:5 Database.cpp:2
+g_key_nation_burundi,0x9cf274,nation,sim,4,?:4
+g_key_nation_commonwealth_of_soviet_states,0x9cf278,nation,sim,2,?:2
+g_key_nation_cameroon,0x9cf27c,nation,sim,10,?:5 world_cup.cpp:3 host_country.cpp:1 olympics.cpp:1
+g_key_nation_canada,0x9cf280,nation,sim,12,?:7 host_country.cpp:2 goldcup.cpp:1 Setup.cpp:1 wc_concacaf_cup.cpp:1
+g_key_nation_cape_verde_islands,0x9cf284,nation,sim,5,?:5
+g_key_nation_cayman_islands,0x9cf288,nation,sim,3,?:2 wc_concacaf_cup.cpp:1
+g_key_nation_central_african_republic,0x9cf28c,nation,sim,5,?:5
+g_key_nation_chad,0x9cf290,nation,sim,4,?:4
+g_key_nation_chile,0x9cf294,nation,sim,26,wc_south_american_league.cpp:18 ?:5 goldcup.cpp:1 olympics.cpp:1 world_cup.cpp:1
+g_key_nation_china,0x9cf298,nation,sim,13,?:5 Database.cpp:3 world_cup.cpp:2 asia_club_champ.cpp:1 asia_cup_winner.cpp:1 host_country.cpp:1
+g_key_nation_colombia,0x9cf29c,nation,sim,27,wc_south_american_league.cpp:18 ?:5 con_merc_cup.cpp:1 goldcup.cpp:1 host_country.cpp:1 world_cup.cpp:1
+g_key_nation_the_congo,0x9cf2a0,nation,sim,5,?:5
+g_key_nation_cook_islands,0x9cf2a4,nation,sim,3,?:2 Database.cpp:1
+g_key_nation_costa_rica,0x9cf2a8,nation,sim,9,?:5 world_cup.cpp:2 goldcup.cpp:1 wc_concacaf_cup.cpp:1
+g_key_nation_croatia,0x9cf2ac,nation,sim,48,?:10 euro_champ_qual.cpp:10 wc_europe_league.cpp:9 Database.cpp:3 staff_contracts.cpp:3 Setup.cpp:2 shortlist_manager.cpp:2 world_cup.cpp:2 cro_a1.cpp:1 discipline.cpp:1 euro_champ.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 rb_croatia.cpp:1 transfer_manager.cpp:1
+g_key_nation_cuba,0x9cf2b0,nation,sim,6,?:5 wc_concacaf_cup.cpp:1
+g_key_nation_cyprus,0x9cf2b4,nation,sim,26,wc_europe_league.cpp:11 euro_champ_qual.cpp:10 ?:5
+g_key_nation_czech_republic,0x9cf2b8,nation,sim,32,euro_champ_qual.cpp:12 wc_europe_league.cpp:11 ?:5 Database.cpp:3 olympics.cpp:1
+g_key_nation_czechoslovakia,0x9cf2bc,nation,sim,5,?:5
+g_key_nation_denmark,0x9cf2c0,nation,sim,73,?:20 euro_champ_qual.cpp:11 wc_europe_league.cpp:11 Setup.cpp:5 Database.cpp:4 den_cup.cpp:3 staff_contracts.cpp:3 host_country.cpp:2 match_eng.cpp:2 shortlist_manager.cpp:2 world_cup.cpp:2 den_prm.cpp:1 discipline.cpp:1 euro_champ.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 player_stats.cpp:1 rb_denmark.cpp:1 transfer_manager.cpp:1
+g_key_nation_djibouti,0x9cf2c4,nation,sim,4,?:4
+g_key_nation_dominica,0x9cf2c8,nation,sim,6,?:5 wc_concacaf_cup.cpp:1
+g_key_nation_dominican_republic,0x9cf2cc,nation,sim,6,?:5 wc_concacaf_cup.cpp:1
+g_key_nation_east_germany,0x9cf2d0,nation,sim,2,?:2
+g_key_nation_ecuador,0x9cf2d4,nation,sim,25,wc_south_american_league.cpp:18 ?:5 goldcup.cpp:1 world_cup.cpp:1
+g_key_nation_egypt,0x9cf2d8,nation,sim,6,?:5 host_country.cpp:1
+g_key_nation_republic_of_ireland,0x9cf2dc,nation,sim,74,?:22 euro_champ_qual.cpp:11 wc_europe_league.cpp:11 Database.cpp:5 ire_super_cup.cpp:3 staff_contracts.cpp:3 ire_lge_cup.cpp:2 Setup.cpp:2 discipline.cpp:1 fix_man.cpp:1 hall_of_fame.cpp:1 host_country.cpp:1 ireland_awards.cpp:1 key_nation.cpp:1 manager_manager.cpp:1 match_eng.cpp:1 old_ireland_awards.cpp:1 olympics.cpp:1 player_regen.cpp:1 rb_ireland.cpp:1 shortlist_manager.cpp:1 transfer_manager.cpp:1 world_cup.cpp:1
+g_key_nation_el_salvador,0x9cf2e0,nation,sim,6,?:5 wc_concacaf_cup.cpp:1
+g_key_nation_england,0x9cf2e4,nation,sim,116,?:26 Database.cpp:12 euro_champ_qual.cpp:11 wc_europe_league.cpp:9 staff_contracts.cpp:7 Setup.cpp:6 host_country.cpp:5 media.cpp:3 player_regen.cpp:3 shortlist_manager.cpp:3 stadium.cpp:3 transfer_manager.cpp:3 eng_fa_cup.cpp:2 key_nation.cpp:2 match_eng.cpp:2 search_screens.cpp:2 uefa_seeding.cpp:2 world_cup.cpp:2 contract_manager.cpp:1 discipline.cpp:1 eng_auto_cup.cpp:1 eng_prm.cpp:1 england_awards.cpp:1 euro_champ.cpp:1 hall_of_fame.cpp:1 match_day.cpp:1 olympics.cpp:1 player_search.cpp:1 rb_england.cpp:1 scout_manager.cpp:1 transfer_offer.cpp:1
+g_key_nation_equatorial_guinea,0x9cf2e8,nation,sim,5,?:5
+g_key_nation_estonia,0x9cf2ec,nation,sim,28,euro_champ_qual.cpp:12 wc_europe_league.cpp:11 ?:5
+g_key_nation_ethiopia,0x9cf2f0,nation,sim,5,?:5
+g_key_nation_faroe_islands,0x9cf2f4,nation,sim,27,euro_champ_qual.cpp:12 wc_europe_league.cpp:11 ?:4
+g_key_nation_fiji,0x9cf2f8,nation,sim,6,?:4 Database.cpp:1 oceania_club_champ.cpp:1
+g_key_nation_finland,0x9cf2fc,nation,sim,59,?:20 euro_champ_qual.cpp:10 wc_europe_league.cpp:9 staff_contracts.cpp:4 Database.cpp:2 Setup.cpp:2 stadium.cpp:2 transfer_manager.cpp:2 discipline.cpp:1 euro_champ.cpp:1 finland_awards.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 old_finland_awards.cpp:1 shortlist_manager.cpp:1 uefa_seeding.cpp:1
+g_key_nation_france,0x9cf300,nation,sim,84,?:33 euro_champ_qual.cpp:12 Setup.cpp:5 shortlist_manager.cpp:5 Database.cpp:4 host_country.cpp:4 staff_contracts.cpp:3 contract_manager.cpp:2 fra_cup.cpp:2 discipline.cpp:1 euro_champ.cpp:1 fix_man.cpp:1 fra_lower.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 manager_manager.cpp:1 match_day.cpp:1 match_eng.cpp:1 rb_france.cpp:1 stadium.cpp:1 transfer_manager.cpp:1 uefa_seeding.cpp:1 world_cup.cpp:1
+g_key_nation_fyr_of_macedonia,0x9cf304,nation,sim,26,wc_europe_league.cpp:11 euro_champ_qual.cpp:10 ?:5
+g_key_nation_gabon,0x9cf308,nation,sim,5,?:5
+g_key_nation_the_gambia,0x9cf30c,nation,sim,5,?:5
+g_key_nation_georgia,0x9cf310,nation,sim,26,euro_champ_qual.cpp:12 wc_europe_league.cpp:9 ?:5
+g_key_nation_germany,0x9cf314,nation,sim,93,?:33 euro_champ_qual.cpp:10 wc_europe_league.cpp:9 Database.cpp:7 host_country.cpp:5 Setup.cpp:5 shortlist_manager.cpp:5 staff_contracts.cpp:3 key_nation.cpp:2 match_eng.cpp:2 club_screens.cpp:1 contract_manager.cpp:1 discipline.cpp:1 euro_champ.cpp:1 ger_cup.cpp:1 ger_first.cpp:1 ger_lge_cup.cpp:1 germany_awards.cpp:1 hall_of_fame.cpp:1 transfer_manager.cpp:1 uefa_seeding.cpp:1 world_cup.cpp:1
+g_key_nation_ghana,0x9cf318,nation,sim,6,?:5 host_country.cpp:1
+g_key_nation_greece,0x9cf31c,nation,sim,47,euro_champ_qual.cpp:12 ?:11 wc_europe_league.cpp:9 Setup.cpp:3 Database.cpp:2 host_country.cpp:2 manager_manager.cpp:2 discipline.cpp:1 fix_man.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 rb_greece.cpp:1 transfer_manager.cpp:1
+g_key_nation_grenada,0x9cf320,nation,sim,5,?:4 wc_concacaf_cup.cpp:1
+g_key_nation_guatemala,0x9cf324,nation,sim,6,?:5 wc_concacaf_cup.cpp:1
+g_key_nation_guinea,0x9cf328,nation,sim,5,?:5
+g_key_nation_guinea_bissau,0x9cf32c,nation,sim,5,?:5
+g_key_nation_guyana,0x9cf330,nation,sim,6,?:5 wc_concacaf_cup.cpp:1
+g_key_nation_haiti,0x9cf334,nation,sim,6,?:5 wc_concacaf_cup.cpp:1
+g_key_nation_holland,0x9cf338,nation,sim,58,?:17 wc_europe_league.cpp:11 hol_cup.cpp:5 Setup.cpp:5 Database.cpp:4 staff_contracts.cpp:3 host_country.cpp:2 shortlist_manager.cpp:2 contract_manager.cpp:1 discipline.cpp:1 fix_man.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 match_eng.cpp:1 rb_holland.cpp:1 transfer_manager.cpp:1 world_cup.cpp:1
+g_key_nation_honduras,0x9cf33c,nation,sim,10,?:5 world_cup.cpp:2 goldcup.cpp:1 olympics.cpp:1 wc_concacaf_cup.cpp:1
+g_key_nation_hong_kong,0x9cf340,nation,sim,5,?:2 asia_club_champ.cpp:1 asia_cup_winner.cpp:1 Setup.cpp:1
+g_key_nation_hungary,0x9cf344,nation,sim,30,euro_champ_qual.cpp:12 wc_europe_league.cpp:9 ?:5 Database.cpp:2 host_country.cpp:1 world_cup.cpp:1
+g_key_nation_iceland,0x9cf348,nation,sim,33,euro_champ_qual.cpp:12 wc_europe_league.cpp:11 ?:5 Database.cpp:3 Setup.cpp:1 world_cup.cpp:1
+g_key_nation_india,0x9cf34c,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_indonesia,0x9cf350,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_iran,0x9cf354,nation,sim,9,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1 friendly.cpp:1 world_cup.cpp:1
+g_key_nation_iraq,0x9cf358,nation,sim,8,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1 friendly.cpp:1
+g_key_nation_israel,0x9cf35c,nation,sim,28,euro_champ_qual.cpp:11 wc_europe_league.cpp:9 ?:5 Database.cpp:2 Setup.cpp:1
+g_key_nation_italy,0x9cf360,nation,sim,102,?:25 Database.cpp:10 euro_champ_qual.cpp:10 shortlist_manager.cpp:9 wc_europe_league.cpp:9 staff_contracts.cpp:7 host_country.cpp:5 Setup.cpp:5 ita_cup.cpp:4 key_nation.cpp:2 transfer_manager.cpp:2 uefa_seeding.cpp:2 world_cup.cpp:2 contract_manager.cpp:1 discipline.cpp:1 euro_champ.cpp:1 hall_of_fame.cpp:1 ita_c_cup.cpp:1 ita_ser_a.cpp:1 league.cpp:1 manager_manager.cpp:1 olympics.cpp:1 stadium.cpp:1
+g_key_nation_ivory_coast,0x9cf364,nation,sim,5,?:5
+g_key_nation_jamaica,0x9cf368,nation,sim,8,?:6 wc_concacaf_cup.cpp:1 world_cup.cpp:1
+g_key_nation_japan,0x9cf36c,nation,sim,48,?:16 Setup.cpp:5 host_country.cpp:4 Database.cpp:3 staff_contracts.cpp:3 asia_club_champ.cpp:2 asia_cup_winner.cpp:2 world_cup.cpp:2 contract_manager.cpp:1 discipline.cpp:1 fix_man.cpp:1 goldcup.cpp:1 hall_of_fame.cpp:1 jap_emp_cup.cpp:1 key_nation.cpp:1 olympics.cpp:1 shortlist_manager.cpp:1 transfer_manager.cpp:1 virtual_staff.cpp:1
+g_key_nation_jordan,0x9cf370,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_kampuchea,0x9cf374,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_kazakhstan,0x9cf378,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_kenya,0x9cf37c,nation,sim,5,?:5
+g_key_nation_kuwait,0x9cf380,nation,sim,8,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1 olympics.cpp:1
+g_key_nation_kyrgyzstan,0x9cf384,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_laos,0x9cf388,nation,sim,6,?:4 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_latvia,0x9cf38c,nation,sim,26,euro_champ_qual.cpp:12 wc_europe_league.cpp:9 ?:5
+g_key_nation_lebanon,0x9cf390,nation,sim,8,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1 host_country.cpp:1
+g_key_nation_lesotho,0x9cf394,nation,sim,4,?:4
+g_key_nation_liberia,0x9cf398,nation,sim,5,?:5
+g_key_nation_libya,0x9cf39c,nation,sim,5,?:5
+g_key_nation_liechtenstein,0x9cf3a0,nation,sim,29,euro_champ_qual.cpp:12 wc_europe_league.cpp:9 ?:4 uefa_seeding.cpp:3 Database.cpp:1
+g_key_nation_lithuania,0x9cf3a4,nation,sim,26,euro_champ_qual.cpp:12 wc_europe_league.cpp:9 ?:5
+g_key_nation_luxembourg,0x9cf3a8,nation,sim,26,wc_europe_league.cpp:11 euro_champ_qual.cpp:10 ?:5
+g_key_nation_macau,0x9cf3ac,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_madagascar,0x9cf3b0,nation,sim,5,?:5
+g_key_nation_malawi,0x9cf3b4,nation,sim,4,?:4
+g_key_nation_malaysia,0x9cf3b8,nation,sim,9,?:5 Database.cpp:2 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_maldives,0x9cf3bc,nation,sim,6,?:4 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_mali,0x9cf3c0,nation,sim,5,?:5
+g_key_nation_malta,0x9cf3c4,nation,sim,26,wc_europe_league.cpp:11 euro_champ_qual.cpp:10 ?:5
+g_key_nation_mauritania,0x9cf3c8,nation,sim,6,?:6
+g_key_nation_mauritius,0x9cf3cc,nation,sim,5,?:5
+g_key_nation_mexico,0x9cf3d0,nation,sim,23,?:9 world_cup.cpp:4 host_country.cpp:3 goldcup.cpp:2 con_champ.cpp:1 con_merc_cup.cpp:1 conmebol_seeding.cpp:1 Database.cpp:1 wc_concacaf_cup.cpp:1
+g_key_nation_moldova,0x9cf3d4,nation,sim,27,wc_europe_league.cpp:11 euro_champ_qual.cpp:10 ?:5 uefa_seeding.cpp:1
+g_key_nation_morocco,0x9cf3d8,nation,sim,8,?:5 host_country.cpp:1 olympics.cpp:1 world_cup.cpp:1
+g_key_nation_mozambique,0x9cf3dc,nation,sim,5,?:5
+g_key_nation_myanmar,0x9cf3e0,nation,sim,4,?:2 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_northern_ireland,0x9cf3e4,nation,sim,61,?:15 wc_europe_league.cpp:11 euro_champ_qual.cpp:10 Database.cpp:4 staff_contracts.cpp:3 nir_lge_cup.cpp:2 Setup.cpp:2 discipline.cpp:1 fix_man.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 manager_manager.cpp:1 match_eng.cpp:1 northern_ireland_awards.cpp:1 olympics.cpp:1 player_regen.cpp:1 player_search.cpp:1 rb_northern_ireland.cpp:1 scout_manager.cpp:1 shortlist_manager.cpp:1 transfer_manager.cpp:1
+g_key_nation_namibia,0x9cf3e8,nation,sim,5,?:5
+g_key_nation_nepal,0x9cf3ec,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_netherlands_antilles,0x9cf3f0,nation,sim,3,?:2 wc_concacaf_cup.cpp:1
+g_key_nation_new_zealand,0x9cf3f4,nation,sim,15,?:7 host_country.cpp:3 oceania_nations.cpp:3 Database.cpp:1 oceania_club_champ.cpp:1
+g_key_nation_nicaragua,0x9cf3f8,nation,sim,6,?:5 wc_concacaf_cup.cpp:1
+g_key_nation_niger,0x9cf3fc,nation,sim,4,?:4
+g_key_nation_nigeria,0x9cf400,nation,sim,11,?:5 world_cup.cpp:3 host_country.cpp:2 olympics.cpp:1
+g_key_nation_north_korea,0x9cf404,nation,sim,10,?:5 Database.cpp:2 asia_club_champ.cpp:1 asia_cup_winner.cpp:1 friendly.cpp:1
+g_key_nation_norway,0x9cf408,nation,sim,80,?:22 euro_champ_qual.cpp:12 wc_europe_league.cpp:11 Database.cpp:6 Setup.cpp:5 host_country.cpp:3 shortlist_manager.cpp:3 staff_contracts.cpp:3 match_eng.cpp:2 discipline.cpp:1 euro_champ.cpp:1 fix_man.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 nor_cup.cpp:1 nor_prm.cpp:1 norway_awards.cpp:1 olympics.cpp:1 player_stats.cpp:1 transfer_manager.cpp:1 uefa_seeding.cpp:1 world_cup.cpp:1
+g_key_nation_oman,0x9cf40c,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_pakistan,0x9cf410,nation,sim,8,?:6 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_palestine,0x9cf414,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_panama,0x9cf418,nation,sim,6,?:5 wc_concacaf_cup.cpp:1
+g_key_nation_papua_new_guinea,0x9cf41c,nation,sim,7,?:5 Database.cpp:1 wc_oceania_league.cpp:1
+g_key_nation_paraguay,0x9cf420,nation,sim,28,wc_south_american_league.cpp:18 ?:5 host_country.cpp:2 world_cup.cpp:2 goldcup.cpp:1
+g_key_nation_pays_basque,0x9cf424,nation,sim,17,?:5 transfer_screens.cpp:4 player_regen.cpp:3 transfer_manager.cpp:3 search_filters.cpp:1 virtual_staff.cpp:1
+g_key_nation_peru,0x9cf428,nation,sim,28,wc_south_american_league.cpp:18 ?:5 Database.cpp:2 con_merc_cup.cpp:1 goldcup.cpp:1 host_country.cpp:1
+g_key_nation_the_philippines,0x9cf42c,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_poland,0x9cf430,nation,sim,45,wc_europe_league.cpp:11 euro_champ_qual.cpp:10 ?:9 Database.cpp:3 staff_contracts.cpp:3 Setup.cpp:2 discipline.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 pol_first.cpp:1 rb_poland.cpp:1 transfer_manager.cpp:1 world_cup.cpp:1
+g_key_nation_portugal,0x9cf434,nation,sim,80,?:14 euro_champ_qual.cpp:12 wc_europe_league.cpp:11 contract_manager.cpp:6 Database.cpp:6 Setup.cpp:5 shortlist_manager.cpp:3 staff_contracts.cpp:3 staff_screens.cpp:3 host_country.cpp:2 key_nation.cpp:2 national_teams.cpp:2 por_prm.cpp:2 transfer_manager.cpp:2 discipline.cpp:1 hall_of_fame.cpp:1 match_eng.cpp:1 por_cup.cpp:1 rb_portugal.cpp:1 uefa_seeding.cpp:1 world_cup.cpp:1
+g_key_nation_puerto_rico,0x9cf438,nation,sim,6,?:5 wc_concacaf_cup.cpp:1
+g_key_nation_qatar,0x9cf43c,nation,sim,6,?:4 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_democratic_republic_of_congo,0x9cf440,nation,sim,5,?:5
+g_key_nation_romania,0x9cf444,nation,sim,30,euro_champ_qual.cpp:12 wc_europe_league.cpp:9 ?:5 Database.cpp:2 euro_champ.cpp:1 world_cup.cpp:1
+g_key_nation_russia,0x9cf448,nation,sim,47,euro_champ_qual.cpp:12 wc_europe_league.cpp:11 ?:9 Database.cpp:3 rus_prm.cpp:2 Setup.cpp:2 transfer_manager.cpp:2 discipline.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 rb_russia.cpp:1 uefa_seeding.cpp:1 world_cup.cpp:1
+g_key_nation_rwanda,0x9cf44c,nation,sim,5,?:5
+g_key_nation_san_marino,0x9cf450,nation,sim,25,euro_champ_qual.cpp:10 wc_europe_league.cpp:9 ?:4 uefa_seeding.cpp:2
+g_key_nation_sao_tome_principe,0x9cf454,nation,sim,5,?:5
+g_key_nation_saudi_arabia,0x9cf458,nation,sim,15,?:6 Database.cpp:2 shortlist_manager.cpp:2 world_cup.cpp:2 asia_club_champ.cpp:1 asia_cup_winner.cpp:1 transfer_manager.cpp:1
+g_key_nation_scotland,0x9cf45c,nation,sim,77,?:18 euro_champ_qual.cpp:13 wc_europe_league.cpp:9 transfer_manager.cpp:6 Database.cpp:4 staff_contracts.cpp:3 host_country.cpp:2 match_eng.cpp:2 media.cpp:2 Setup.cpp:2 contract_manager.cpp:1 discipline.cpp:1 euro_champ.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 league.cpp:1 olympics.cpp:1 player_regen.cpp:1 player_search.cpp:1 sco_fa_cup.cpp:1 scotland_awards.cpp:1 scout_manager.cpp:1 shortlist_manager.cpp:1 transfer_offer.cpp:1 uefa_seeding.cpp:1 world_cup.cpp:1
+g_key_nation_senegal,0x9cf460,nation,sim,7,?:5 world_cup.cpp:2
+g_key_nation_seychelles,0x9cf464,nation,sim,4,?:4
+g_key_nation_sierra_leone,0x9cf468,nation,sim,4,?:4
+g_key_nation_singapore,0x9cf46c,nation,sim,8,?:4 asia_club_champ.cpp:1 asia_cup_winner.cpp:1 host_country.cpp:1 Setup.cpp:1
+g_key_nation_slovakia,0x9cf470,nation,sim,32,euro_champ_qual.cpp:12 wc_europe_league.cpp:11 ?:5 Database.cpp:2 olympics.cpp:1 uefa_seeding.cpp:1
+g_key_nation_slovenia,0x9cf474,nation,sim,30,euro_champ_qual.cpp:13 wc_europe_league.cpp:11 ?:5 world_cup.cpp:1
+g_key_nation_solomon_islands,0x9cf478,nation,sim,3,?:2 Database.cpp:1
+g_key_nation_somalia,0x9cf47c,nation,sim,5,?:5
+g_key_nation_south_africa,0x9cf480,nation,sim,12,?:5 world_cup.cpp:3 Database.cpp:1 host_country.cpp:1 olympics.cpp:1 Setup.cpp:1
+g_key_nation_south_korea,0x9cf484,nation,sim,42,?:12 Setup.cpp:4 Database.cpp:3 host_country.cpp:3 staff_contracts.cpp:3 asia_club_champ.cpp:2 asia_cup_winner.cpp:2 contract_manager.cpp:2 world_cup.cpp:2 discipline.cpp:1 friendly.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 korea_awards.cpp:1 olympics.cpp:1 rb_korea.cpp:1 shortlist_manager.cpp:1 transfer_manager.cpp:1
+g_key_nation_spain,0x9cf488,nation,sim,100,?:22 euro_champ_qual.cpp:10 Database.cpp:9 wc_europe_league.cpp:9 host_country.cpp:7 staff_contracts.cpp:7 Setup.cpp:5 shortlist_manager.cpp:4 transfer_manager.cpp:4 transfer_screens.cpp:4 spa_lower.cpp:3 key_nation.cpp:2 spa_cup.cpp:2 uefa_seeding.cpp:2 world_cup.cpp:2 club_screens.cpp:1 contract_manager.cpp:1 discipline.cpp:1 euro_champ.cpp:1 hall_of_fame.cpp:1 olympics.cpp:1 player_regen.cpp:1 spa_first.cpp:1
+g_key_nation_sri_lanka,0x9cf48c,nation,sim,6,?:4 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_st_kitts_nevis,0x9cf490,nation,sim,3,?:2 wc_concacaf_cup.cpp:1
+g_key_nation_saint_lucia,0x9cf494,nation,sim,3,?:2 wc_concacaf_cup.cpp:1
+g_key_nation_st_vincent_the_grenadines,0x9cf498,nation,sim,3,?:2 wc_concacaf_cup.cpp:1
+g_key_nation_sudan,0x9cf49c,nation,sim,7,?:6 host_country.cpp:1
+g_key_nation_surinam,0x9cf4a0,nation,sim,5,?:4 wc_concacaf_cup.cpp:1
+g_key_nation_swaziland,0x9cf4a4,nation,sim,4,?:4
+g_key_nation_sweden,0x9cf4a8,nation,sim,77,?:27 wc_europe_league.cpp:11 euro_champ_qual.cpp:10 Setup.cpp:5 Database.cpp:3 staff_contracts.cpp:3 host_country.cpp:2 key_nation.cpp:2 match_eng.cpp:2 shortlist_manager.cpp:2 transfer_manager.cpp:2 discipline.cpp:1 hall_of_fame.cpp:1 olympics.cpp:1 player_stats.cpp:1 swe_cup.cpp:1 swe_prm.cpp:1 swe_second.cpp:1 world_cup.cpp:1
+g_key_nation_switzerland,0x9cf4ac,nation,sim,32,wc_europe_league.cpp:11 euro_champ_qual.cpp:10 ?:5 host_country.cpp:4 Database.cpp:2
+g_key_nation_syria,0x9cf4b0,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_tahiti,0x9cf4b4,nation,sim,7,?:5 Database.cpp:1 oceania_club_champ.cpp:1
+g_key_nation_taiwan,0x9cf4b8,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_tajikistan,0x9cf4bc,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_tanzania,0x9cf4c0,nation,sim,5,?:5
+g_key_nation_thailand,0x9cf4c4,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_timor,0x9cf4c8,nation,sim,5,?:5
+g_key_nation_togo,0x9cf4cc,nation,sim,5,?:5
+g_key_nation_tonga,0x9cf4d0,nation,sim,5,?:4 Database.cpp:1
+g_key_nation_trinidad_tobago,0x9cf4d4,nation,sim,5,?:4 wc_concacaf_cup.cpp:1
+g_key_nation_tunisia,0x9cf4d8,nation,sim,9,?:5 world_cup.cpp:3 host_country.cpp:1
+g_key_nation_turkey,0x9cf4dc,nation,sim,51,?:17 euro_champ_qual.cpp:11 wc_europe_league.cpp:11 Database.cpp:3 Setup.cpp:2 transfer_manager.cpp:2 discipline.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 staff_contracts.cpp:1 world_cup.cpp:1
+g_key_nation_turkmenistan,0x9cf4e0,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_united_arab_emirates,0x9cf4e4,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_soviet_union,0x9cf4e8,nation,sim,5,?:5
+g_key_nation_uganda,0x9cf4ec,nation,sim,5,?:5
+g_key_nation_ukraine,0x9cf4f0,nation,sim,30,euro_champ_qual.cpp:13 wc_europe_league.cpp:11 ?:5 Database.cpp:1
+g_key_nation_uruguay,0x9cf4f4,nation,sim,27,wc_south_american_league.cpp:18 ?:5 host_country.cpp:2 goldcup.cpp:1 world_cup.cpp:1
+g_key_nation_united_states,0x9cf4f8,nation,sim,40,?:15 world_cup.cpp:4 Setup.cpp:3 staff_contracts.cpp:3 friendly.cpp:2 host_country.cpp:2 con_champ.cpp:1 contract_manager.cpp:1 discipline.cpp:1 hall_of_fame.cpp:1 key_nation.cpp:1 olympics.cpp:1 shortlist_manager.cpp:1 transfer_manager.cpp:1 usa_awards.cpp:1 usa_mls_all_stars.cpp:1 wc_concacaf_cup.cpp:1
+g_key_nation_uzbekistan,0x9cf4fc,nation,sim,7,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_vanuatu,0x9cf500,nation,sim,3,?:2 Database.cpp:1
+g_key_nation_venezuela,0x9cf504,nation,sim,26,wc_south_american_league.cpp:18 ?:6 goldcup.cpp:1 host_country.cpp:1
+g_key_nation_vietnam,0x9cf508,nation,sim,8,?:5 asia_club_champ.cpp:1 asia_cup_winner.cpp:1 friendly.cpp:1
+g_key_nation_west_germany,0x9cf50c,nation,sim,3,?:2 club_screens.cpp:1
+g_key_nation_wales,0x9cf510,nation,sim,64,?:16 wc_europe_league.cpp:11 euro_champ_qual.cpp:10 Database.cpp:3 staff_contracts.cpp:3 player_regen.cpp:2 Setup.cpp:2 discipline.cpp:1 euro_champ.cpp:1 hall_of_fame.cpp:1 host_country.cpp:1 key_nation.cpp:1 manager_manager.cpp:1 match_day.cpp:1 match_eng.cpp:1 olympics.cpp:1 player_search.cpp:1 rb_wales.cpp:1 scout_manager.cpp:1 shortlist_manager.cpp:1 stadium.cpp:1 transfer_manager.cpp:1 wales_awards.cpp:1 wel_cup.cpp:1
+g_key_nation_western_samoa,0x9cf514,nation,sim,6,?:5 Database.cpp:1
+g_key_nation_yemen,0x9cf518,nation,sim,6,?:4 asia_club_champ.cpp:1 asia_cup_winner.cpp:1
+g_key_nation_yugoslavia,0x9cf51c,nation,sim,31,wc_europe_league.cpp:11 euro_champ_qual.cpp:10 ?:5 shortlist_manager.cpp:2 Database.cpp:1 host_country.cpp:1 world_cup.cpp:1
+g_key_nation_zaire,0x9cf520,nation,sim,5,?:5
+g_key_nation_zambia,0x9cf524,nation,sim,5,?:5
+g_key_nation_zimbabwe,0x9cf528,nation,sim,4,?:4
+g_key_nation_american_samoa,0x9cf52c,nation,sim,1,Database.cpp:1
+g_key_nation_new_caledonia,0x9cf530,nation,sim,2,Database.cpp:1 wc_oceania_league.cpp:1
+g_key_nation_british_virgin_islands,0x9cf534,nation,sim,1,wc_concacaf_cup.cpp:1
+g_key_nation_turks_and_caicos_islands,0x9cf538,nation,sim,1,wc_concacaf_cup.cpp:1
+g_key_nation_us_virgin_islands,0x9cf53c,nation,sim,1,wc_concacaf_cup.cpp:1
+g_key_nation_anguilla,0x9cf540,nation,sim,1,wc_concacaf_cup.cpp:1
+g_key_nation_montserrat,0x9cf544,nation,sim,1,wc_concacaf_cup.cpp:1
+g_key_club_comp_french_lower_division,0x9cf548,club_comp,sim,9,comp_util.cpp:3 ?:3 fra_first.cpp:2 fra_lower.cpp:1
+g_key_club_comp_german_first_division,0x9cf54c,club_comp,sim,16,?:4 germany_awards.cpp:4 ger_first.cpp:3 ger_cup.cpp:2 ger_lge_cup.cpp:1 ger_second.cpp:1 Setup.cpp:1
+g_key_club_comp_german_second_division,0x9cf550,club_comp,sim,24,ger_first.cpp:10 ?:4 germany_awards.cpp:4 ger_cup.cpp:3 ger_regional.cpp:1 ger_second.cpp:1 Setup.cpp:1
+g_key_club_comp_german_regional_division_west_southwest,0x9cf554,club_comp,sim,1,ger_first.cpp:1
+g_key_club_comp_german_regional_division_east,0x9cf558,club_comp,sim,1,ger_first.cpp:1
+g_key_club_comp_german_regional_division_north,0x9cf55c,club_comp,sim,5,ger_first.cpp:3 comp_util.cpp:1 ger_regional.cpp:1
+g_key_club_comp_german_regional_division_south,0x9cf560,club_comp,sim,5,ger_first.cpp:3 comp_util.cpp:1 ger_regional.cpp:1
+g_key_club_comp_german_regional,0x9cf564,club_comp,sim,22,ger_first.cpp:17 comp_util.cpp:1 ger_cup.cpp:1 ger_regional.cpp:1 ger_second.cpp:1 Setup.cpp:1
+g_key_club_comp_dutch_kpn_telecompetition,0x9cf568,club_comp,sim,26,?:10 hol_cup.cpp:4 hol_first.cpp:4 holland_awards.cpp:4 hol_super.cpp:2 hol_prm.cpp:1 Setup.cpp:1
+g_key_club_comp_dutch_toto_division,0x9cf56c,club_comp,sim,14,?:5 hol_prm.cpp:3 holland_awards.cpp:3 hol_cup.cpp:1 hol_first.cpp:1 Setup.cpp:1
+g_key_club_comp_italian_serie_a,0x9cf570,club_comp,sim,36,?:16 italy_awards.cpp:10 ita_cup.cpp:3 ita_ser_a.cpp:3 ita_ser_b.cpp:1 ita_super.cpp:1 Setup.cpp:1 shortlist_manager.cpp:1
+g_key_club_comp_italian_serie_b,0x9cf574,club_comp,sim,26,?:6 ita_ser_a.cpp:6 ita_cup.cpp:5 italy_awards.cpp:5 ita_c_cup.cpp:1 ita_ser_b.cpp:1 ita_ser_c1a.cpp:1 Setup.cpp:1
+g_key_club_comp_italian_serie_c1_a,0x9cf578,club_comp,sim,28,ita_ser_a.cpp:10 italy_awards.cpp:5 ?:5 ita_c_cup.cpp:2 ita_cup.cpp:2 ita_ser_b.cpp:1 ita_ser_c1a.cpp:1 ita_ser_c1b.cpp:1 Setup.cpp:1
+g_key_club_comp_italian_serie_c1_b,0x9cf57c,club_comp,sim,27,ita_ser_a.cpp:9 italy_awards.cpp:5 ?:5 ita_c_cup.cpp:2 ita_cup.cpp:2 ita_ser_c1a.cpp:1 ita_ser_c1b.cpp:1 ita_ser_c2a.cpp:1 Setup.cpp:1
+g_key_club_comp_italian_serie_c2_a,0x9cf580,club_comp,sim,27,ita_ser_a.cpp:12 italy_awards.cpp:5 ?:5 ita_c_cup.cpp:1 ita_ser_c1b.cpp:1 ita_ser_c2a.cpp:1 ita_ser_c2b.cpp:1 Setup.cpp:1
+g_key_club_comp_italian_serie_c2_b,0x9cf584,club_comp,sim,23,ita_ser_a.cpp:8 italy_awards.cpp:5 ?:5 ita_c_cup.cpp:1 ita_ser_c2a.cpp:1 ita_ser_c2b.cpp:1 ita_ser_c2c.cpp:1 Setup.cpp:1
+g_key_club_comp_italian_serie_c2_c,0x9cf588,club_comp,sim,22,ita_ser_a.cpp:8 italy_awards.cpp:5 ?:5 ita_c_cup.cpp:1 ita_ser_c2b.cpp:1 ita_ser_c2c.cpp:1 Setup.cpp:1
+g_key_club_comp_italian_serie_d,0x9cf58c,club_comp,sim,4,ita_ser_a.cpp:4
+g_key_club_comp_american_major_league,0x9cf590,club_comp,sim,45,comp_screens.cpp:11 ?:7 usa_awards.cpp:7 match_screens.cpp:5 con_champ.cpp:3 con_merc_cup.cpp:3 usa_mls.cpp:2 usa_mls_all_stars.cpp:2 club_history.cpp:1 fix_man.cpp:1 national_teams.cpp:1 Setup.cpp:1 usa_open_cup.cpp:1
+g_key_club_comp_american_a_league,0x9cf594,club_comp,sim,3,staff_contracts.cpp:2 usa_open_cup.cpp:1
+g_key_club_comp_american_usisl,0x9cf598,club_comp,sim,1,usa_open_cup.cpp:1
+g_key_club_comp_belgian_first_division,0x9cf59c,club_comp,sim,18,?:8 belgium_awards.cpp:4 bel_super.cpp:2 bel_fa_cup.cpp:1 bel_first.cpp:1 bel_second.cpp:1 Setup.cpp:1
+g_key_club_comp_belgian_second_division,0x9cf5a0,club_comp,sim,20,?:6 bel_third.cpp:5 bel_first.cpp:3 belgium_awards.cpp:3 bel_fa_cup.cpp:1 bel_second.cpp:1 Setup.cpp:1
+g_key_club_comp_belgian_third_division_a,0x9cf5a4,club_comp,sim,7,bel_third.cpp:5 bel_fa_cup.cpp:1 ?:1
+g_key_club_comp_belgian_third_division_b,0x9cf5a8,club_comp,sim,4,bel_third.cpp:2 bel_fa_cup.cpp:1 ?:1
+g_key_club_comp_danish_premier_division,0x9cf5ac,club_comp,sim,9,denmark_awards.cpp:3 ?:2 den_cup.cpp:1 den_first.cpp:1 den_prm.cpp:1 Setup.cpp:1
+g_key_club_comp_danish_first_division,0x9cf5b0,club_comp,sim,12,den_prm.cpp:3 denmark_awards.cpp:3 ?:2 den_cup.cpp:1 den_first.cpp:1 den_second.cpp:1 Setup.cpp:1
+g_key_club_comp_danish_second_division,0x9cf5b4,club_comp,sim,13,den_prm.cpp:4 denmark_awards.cpp:3 ?:2 den_cup.cpp:1 den_first.cpp:1 den_second.cpp:1 Setup.cpp:1
+g_key_club_comp_danish_kvalifikationsraekken,0x9cf5b8,club_comp,sim,1,den_prm.cpp:1
+g_key_club_comp_english_premier_division,0x9cf5bc,club_comp,sim,32,?:7 england_awards.cpp:6 eng_cc_cup.cpp:5 eng_fa_cup.cpp:4 eng_charity.cpp:2 eng_first.cpp:2 eng_prm.cpp:2 uefa_seeding.cpp:2 eng_fa_trophy.cpp:1 Setup.cpp:1
+g_key_club_comp_english_first_division,0x9cf5c0,club_comp,sim,28,?:6 england_awards.cpp:6 eng_cc_cup.cpp:5 eng_fa_cup.cpp:4 eng_prm.cpp:3 eng_fa_trophy.cpp:1 eng_first.cpp:1 eng_second.cpp:1 Setup.cpp:1
+g_key_club_comp_english_second_division,0x9cf5c4,club_comp,sim,27,?:6 england_awards.cpp:6 eng_fa_cup.cpp:4 eng_cc_cup.cpp:2 eng_first.cpp:2 eng_prm.cpp:2 eng_auto_cup.cpp:1 eng_fa_trophy.cpp:1 eng_second.cpp:1 eng_third.cpp:1 Setup.cpp:1
+g_key_club_comp_english_third_division,0x9cf5c8,club_comp,sim,31,?:7 england_awards.cpp:6 eng_prm.cpp:5 eng_fa_cup.cpp:4 eng_auto_cup.cpp:2 eng_cc_cup.cpp:2 eng_conf.cpp:1 eng_fa_trophy.cpp:1 eng_second.cpp:1 eng_third.cpp:1 Setup.cpp:1
+g_key_club_comp_french_first_division,0x9cf5cc,club_comp,sim,34,?:15 france_awards.cpp:5 old_france_awards.cpp:4 fra_cfa.cpp:2 fra_second.cpp:2 fra_super.cpp:2 fra_cup.cpp:1 fra_first.cpp:1 fra_lge_cup.cpp:1 Setup.cpp:1
+g_key_club_comp_french_second_division,0x9cf5d0,club_comp,sim,28,?:9 france_awards.cpp:5 old_france_awards.cpp:4 fra_cfa.cpp:2 fra_first.cpp:2 fra_second.cpp:2 fra_cup.cpp:1 fra_lge_cup.cpp:1 fra_third.cpp:1 Setup.cpp:1
+g_key_club_comp_french_national,0x9cf5d4,club_comp,sim,24,?:6 france_awards.cpp:5 fra_first.cpp:4 fra_lge_cup.cpp:2 fra_lower.cpp:2 fra_second.cpp:2 fra_cup.cpp:1 fra_third.cpp:1 Setup.cpp:1
+g_key_club_comp_french_cfa,0x9cf5d8,club_comp,sim,15,?:4 fra_first.cpp:4 comp_util.cpp:2 fra_cfa.cpp:2 fra_lge_cup.cpp:2 fra_cup.cpp:1
+g_key_club_comp_scottish_premier_division,0x9cf5dc,club_comp,sim,32,?:14 scotland_awards.cpp:6 sco_first.cpp:5 sco_lge_cup.cpp:3 league.cpp:1 sco_fa_cup.cpp:1 sco_prm.cpp:1 Setup.cpp:1
+g_key_club_comp_scottish_first_division,0x9cf5e0,club_comp,sim,23,?:8 scotland_awards.cpp:6 sco_lge_cup.cpp:2 sco_prm.cpp:2 sco_chal_cup.cpp:1 sco_fa_cup.cpp:1 sco_first.cpp:1 sco_second.cpp:1 Setup.cpp:1
+g_key_club_comp_scottish_second_division,0x9cf5e4,club_comp,sim,21,scotland_awards.cpp:6 ?:5 sco_lge_cup.cpp:2 sco_prm.cpp:2 sco_chal_cup.cpp:1 sco_fa_cup.cpp:1 sco_first.cpp:1 sco_second.cpp:1 sco_third.cpp:1 Setup.cpp:1
+g_key_club_comp_scottish_third_division,0x9cf5e8,club_comp,sim,22,scotland_awards.cpp:6 ?:5 sco_prm.cpp:4 sco_lge_cup.cpp:2 sco_chal_cup.cpp:1 sco_fa_cup.cpp:1 sco_second.cpp:1 sco_third.cpp:1 Setup.cpp:1
+g_key_club_comp_swedish_premier_division,0x9cf5ec,club_comp,sim,20,?:8 swe_first.cpp:4 swe_prm.cpp:4 sweden_awards.cpp:2 Setup.cpp:1 swe_cup.cpp:1
+g_key_club_comp_swedish_first_division,0x9cf5f0,club_comp,sim,22,swe_prm.cpp:13 ?:3 swe_second.cpp:2 Setup.cpp:1 swe_cup.cpp:1 swe_first.cpp:1 sweden_awards.cpp:1
+g_key_club_comp_swedish_second_division_south_gotaland,0x9cf5f4,club_comp,sim,9,swe_prm.cpp:5 swe_second.cpp:3 ?:1
+g_key_club_comp_swedish_second_division_north,0x9cf5f8,club_comp,sim,9,swe_prm.cpp:5 swe_second.cpp:3 ?:1
+g_key_club_comp_swedish_second_division_east_svealand,0x9cf5fc,club_comp,sim,8,swe_prm.cpp:4 swe_second.cpp:3 ?:1
+g_key_club_comp_swedish_second_division_east_gotaland,0x9cf600,club_comp,sim,8,swe_prm.cpp:4 swe_second.cpp:3 ?:1
+g_key_club_comp_swedish_second_division_west_svealand,0x9cf604,club_comp,sim,8,swe_prm.cpp:4 swe_second.cpp:3 ?:1
+g_key_club_comp_swedish_second_division_west_gotaland,0x9cf608,club_comp,sim,8,swe_prm.cpp:4 swe_second.cpp:3 ?:1
+g_key_club_comp_portuguese_premier_division,0x9cf60c,club_comp,sim,23,?:8 portugal_awards.cpp:6 por_prm.cpp:4 por_second.cpp:2 por_cup.cpp:1 por_super.cpp:1 Setup.cpp:1
+g_key_club_comp_portuguese_second_division,0x9cf610,club_comp,sim,30,por_prm.cpp:12 ?:8 portugal_awards.cpp:6 por_cup.cpp:1 por_second.cpp:1 por_second_b.cpp:1 Setup.cpp:1
+g_key_club_comp_portuguese_second_division_b_north,0x9cf614,club_comp,sim,11,por_prm.cpp:8 por_second_b.cpp:2 por_cup.cpp:1
+g_key_club_comp_portuguese_second_division_b_central,0x9cf618,club_comp,sim,10,por_prm.cpp:7 por_second_b.cpp:2 por_cup.cpp:1
+g_key_club_comp_portuguese_second_division_b_south,0x9cf61c,club_comp,sim,10,por_prm.cpp:7 por_second_b.cpp:2 por_cup.cpp:1
+g_key_club_comp_portuguese_third_division,0x9cf620,club_comp,sim,4,por_prm.cpp:3 por_cup.cpp:1
+g_key_club_comp_spanish_first_division,0x9cf624,club_comp,sim,27,?:11 spa_first.cpp:4 spa_lower.cpp:4 spain_awards.cpp:3 spa_second.cpp:2 Setup.cpp:1 spa_cup.cpp:1 spa_super.cpp:1
+g_key_club_comp_spanish_second_division,0x9cf628,club_comp,sim,30,spa_first.cpp:14 ?:6 spa_lower.cpp:3 spain_awards.cpp:3 Setup.cpp:1 spa_cup.cpp:1 spa_second.cpp:1 spa_second_b.cpp:1
+g_key_club_comp_spanish_second_division_b1,0x9cf62c,club_comp,sim,16,spa_first.cpp:8 spa_second_b.cpp:5 spa_cup.cpp:2 spa_lower.cpp:1
+g_key_club_comp_spanish_second_division_b2,0x9cf630,club_comp,sim,15,spa_first.cpp:7 spa_second_b.cpp:5 spa_cup.cpp:2 spa_lower.cpp:1
+g_key_club_comp_spanish_second_division_b3,0x9cf634,club_comp,sim,15,spa_first.cpp:7 spa_second_b.cpp:5 spa_cup.cpp:2 spa_lower.cpp:1
+g_key_club_comp_spanish_second_division_b4,0x9cf638,club_comp,sim,15,spa_first.cpp:7 spa_second_b.cpp:5 spa_cup.cpp:2 spa_lower.cpp:1
+g_key_club_comp_south_american_copa_libertadores,0x9cf63c,club_comp,sim,15,conmebol_seeding.cpp:8 world_club_cup.cpp:3 inter_amer_cup.cpp:2 key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_south_american_super_cup,0x9cf640,club_comp,sim,0,
+g_key_club_comp_south_american_conmebol_cup,0x9cf644,club_comp,sim,0,
+g_key_club_comp_south_american_recopa,0x9cf648,club_comp,sim,0,
+g_key_club_comp_asian_champions_cup,0x9cf64c,club_comp,sim,3,asia_super_cup.cpp:2 Setup.cpp:1
+g_key_club_comp_asian_cup_winners_cup,0x9cf650,club_comp,sim,2,asia_super_cup.cpp:1 Setup.cpp:1
+g_key_club_comp_argentine_premier_division,0x9cf654,club_comp,sim,19,arg_second.cpp:13 arg_prm.cpp:3 argentina_awards.cpp:1 club_history.cpp:1 Setup.cpp:1
+g_key_club_comp_argentine_second_division,0x9cf658,club_comp,sim,13,arg_prm.cpp:7 arg_second.cpp:4 argentina_awards.cpp:1 Setup.cpp:1
+g_key_club_comp_japanese_j_league_1,0x9cf65c,club_comp,sim,19,?:5 jap_super.cpp:3 asia_club_champ.cpp:2 jap_emp_cup.cpp:2 japan_awards.cpp:2 jap_j1.cpp:1 jap_j2.cpp:1 jap_j_cup.cpp:1 Setup.cpp:1 virtual_staff.cpp:1
+g_key_club_comp_japanese_emperor_s_cup,0x9cf660,club_comp,sim,6,jap_super.cpp:3 asia_cup_winner.cpp:2 Setup.cpp:1
+g_key_club_comp_japanese_yamazaki_nabisco_cup,0x9cf664,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_friendly,0x9cf668,club_comp,sim,17,friendly.cpp:5 match_screens.cpp:5 comp_screens.cpp:2 ?:2 match_day.cpp:1 national_teams.cpp:1 news.cpp:1
+g_key_club_comp_japanese_xerox_super_cup,0x9cf66c,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_japanese_football_league,0x9cf670,club_comp,sim,2,jap_emp_cup.cpp:1 virtual_staff.cpp:1
+g_key_club_comp_japanese_university_league,0x9cf674,club_comp,sim,2,jap_emp_cup.cpp:1 virtual_staff.cpp:1
+g_key_club_comp_japanese_administrative_division,0x9cf678,club_comp,sim,2,jap_emp_cup.cpp:1 virtual_staff.cpp:1
+g_key_club_comp_argentine_metropolitan_zone,0x9cf67c,club_comp,sim,0,
+g_key_club_comp_argentine_interior_zone,0x9cf680,club_comp,sim,0,
+g_key_club_comp_reserve,0x9cf684,club_comp,sim,38,?:14 match_screens.cpp:6 club_screens.cpp:3 match_day.cpp:3 player_search.cpp:2 ruling_body.cpp:2 comp.cpp:1 contract_manager.cpp:1 discipline.cpp:1 fix_man.cpp:1 match_eng.cpp:1 match_man.cpp:1 player_stats.cpp:1 transfer_manager.cpp:1
+g_key_club_comp_argentine_third_division,0x9cf688,club_comp,sim,2,arg_prm.cpp:2
+g_key_club_comp_concacaf_merconorte_cup,0x9cf68c,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_american_mls_all_stars,0x9cf690,club_comp,sim,4,fix_man.cpp:1 national_teams.cpp:1 Setup.cpp:1 ?:1
+g_key_club_comp_german_league_cup,0x9cf694,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_south_american_copa_mercosur,0x9cf698,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_english_conference,0x9cf69c,club_comp,sim,37,eng_prm.cpp:9 eng_fa_cup.cpp:7 ?:7 england_awards.cpp:6 eng_auto_cup.cpp:3 eng_fa_trophy.cpp:2 eng_conf.cpp:1 eng_third.cpp:1 Setup.cpp:1
+g_key_club_comp_english_fa_trophy,0x9cf6a0,club_comp,sim,3,eng_fa_cup.cpp:2 Setup.cpp:1
+g_key_club_comp_english_conference_cup,0x9cf6a4,club_comp,sim,0,
+g_key_club_comp_french_champions_trophy,0x9cf6a8,club_comp,sim,2,Setup.cpp:2
+g_key_club_comp_swedish_lower_division,0x9cf6ac,club_comp,sim,5,swe_prm.cpp:3 swe_cup.cpp:1 swe_second.cpp:1
+g_key_club_comp_spanish_lower_division,0x9cf6b0,club_comp,sim,9,comp_util.cpp:2 ?:2 spa_first.cpp:2 spa_lower.cpp:2 spa_cup.cpp:1
+g_key_club_comp_portuguese_super_cup,0x9cf6b4,club_comp,sim,2,Setup.cpp:2
+g_key_club_comp_a_premier_division,0x9cf6b8,club_comp,sim,1,?:1
+g_key_club_comp_norwegian_premier_division,0x9cf6bc,club_comp,sim,19,?:7 nor_first.cpp:4 norway_awards.cpp:4 nor_cup.cpp:2 nor_prm.cpp:1 Setup.cpp:1
+g_key_club_comp_norwegian_first_division,0x9cf6c0,club_comp,sim,18,?:5 nor_prm.cpp:4 norway_awards.cpp:4 nor_first.cpp:3 nor_cup.cpp:1 Setup.cpp:1
+g_key_club_comp_norwegian_second_division_group_1,0x9cf6c4,club_comp,sim,4,nor_prm.cpp:2 nor_cup.cpp:1 ?:1
+g_key_club_comp_norwegian_second_division_group_2,0x9cf6c8,club_comp,sim,3,nor_cup.cpp:1 nor_prm.cpp:1 ?:1
+g_key_club_comp_norwegian_second_division_group_3,0x9cf6cc,club_comp,sim,3,nor_cup.cpp:1 nor_prm.cpp:1 ?:1
+g_key_club_comp_norwegian_second_division_group_4,0x9cf6d0,club_comp,sim,3,nor_cup.cpp:1 nor_prm.cpp:1 ?:1
+g_key_club_comp_norwegian_second_division_group_5,0x9cf6d4,club_comp,sim,3,nor_cup.cpp:1 nor_prm.cpp:1 ?:1
+g_key_club_comp_norwegian_second_division_group_6,0x9cf6d8,club_comp,sim,3,nor_cup.cpp:1 nor_prm.cpp:1 ?:1
+g_key_club_comp_norwegian_second_division_group_7,0x9cf6dc,club_comp,sim,3,nor_cup.cpp:1 nor_prm.cpp:1 ?:1
+g_key_club_comp_norwegian_second_division_group_8,0x9cf6e0,club_comp,sim,3,nor_cup.cpp:1 nor_prm.cpp:1 ?:1
+g_key_club_comp_world_club_cup,0x9cf6e4,club_comp,sim,5,conmebol_liber.cpp:1 host_country.cpp:1 key_nation.cpp:1 match_day.cpp:1 Setup.cpp:1
+g_key_club_comp_uefa_european_champions_league,0x9cf6e8,club_comp,sim,34,sco_lge_cup.cpp:5 comp_screens.cpp:4 ?:3 shortlist_manager.cpp:3 uefa_seeding.cpp:3 host_country.cpp:2 league.cpp:2 world_club_cup.cpp:2 eur_super_cup.cpp:1 european_cup.cpp:1 hol_cup.cpp:1 ire_super_cup.cpp:1 key_nation.cpp:1 match_man.cpp:1 Setup.cpp:1 squad_manager.cpp:1 stadium.cpp:1 ultimatum.cpp:1
+g_key_club_comp_european_cup_winners_cup,0x9cf6ec,club_comp,sim,4,host_country.cpp:2 eur_super_cup.cpp:1 ?:1
+g_key_club_comp_uefa_cup,0x9cf6f0,club_comp,sim,45,european_cup.cpp:8 uefa_seeding.cpp:7 intertoto_cup.cpp:6 sco_lge_cup.cpp:5 ?:3 match_man.cpp:3 host_country.cpp:2 comp_screens.cpp:1 Cup.cpp:1 eur_super_cup.cpp:1 hol_cup.cpp:1 ire_super_cup.cpp:1 league.cpp:1 Setup.cpp:1 squad_manager.cpp:1 uefa_cup.cpp:1 ultimatum.cpp:1 world_club_champ.cpp:1
+g_key_club_comp_european_super_cup,0x9cf6f4,club_comp,sim,2,?:1 Setup.cpp:1
+g_key_club_comp_inter_toto_cup,0x9cf6f8,club_comp,sim,39,friendly.cpp:5 comp_screens.cpp:4 ?:4 manager_manager.cpp:4 shortlist_manager.cpp:4 uefa_seeding.cpp:4 match_man.cpp:3 match_day.cpp:2 news.cpp:2 hol_cup.cpp:1 intertoto_cup.cpp:1 ire_super_cup.cpp:1 Setup.cpp:1 spa_cup.cpp:1 squad_manager.cpp:1 ultimatum.cpp:1
+g_key_club_comp_belgian_super_cup,0x9cf6fc,club_comp,sim,2,Setup.cpp:2
+g_key_club_comp_belgian_cup,0x9cf700,club_comp,sim,3,bel_super.cpp:1 key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_belgian_league_cup,0x9cf704,club_comp,sim,0,
+g_key_club_comp_danish_cup,0x9cf708,club_comp,sim,2,key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_french_cup,0x9cf70c,club_comp,sim,3,fra_super.cpp:1 key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_french_league_cup,0x9cf710,club_comp,sim,2,key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_german_cup,0x9cf714,club_comp,sim,4,ger_lge_cup.cpp:1 ?:1 key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_dutch_amstel_cup,0x9cf718,club_comp,sim,3,hol_super.cpp:1 key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_italian_cup,0x9cf71c,club_comp,sim,4,ita_super.cpp:2 key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_italian_serie_c_cup,0x9cf720,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_italian_super_cup,0x9cf724,club_comp,sim,2,Setup.cpp:2
+g_key_club_comp_us_open_cup,0x9cf728,club_comp,sim,3,con_champ.cpp:1 con_merc_cup.cpp:1 Setup.cpp:1
+g_key_club_comp_concacaf_champions_cup,0x9cf72c,club_comp,sim,5,inter_amer_cup.cpp:2 key_nation.cpp:1 Setup.cpp:1 world_club_champ.cpp:1
+g_key_club_comp_concacaf_cup_winners_cup,0x9cf730,club_comp,sim,0,
+g_key_club_comp_norwegian_cup,0x9cf734,club_comp,sim,2,key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_norwegian_third_division,0x9cf738,club_comp,sim,1,nor_cup.cpp:1
+g_key_club_comp_portuguese_cup,0x9cf73c,club_comp,sim,4,por_super.cpp:2 key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_spanish_cup,0x9cf740,club_comp,sim,6,Setup.cpp:2 spa_super.cpp:2 key_nation.cpp:1 ?:1
+g_key_club_comp_spanish_super_cup,0x9cf744,club_comp,sim,3,Setup.cpp:3
+g_key_club_comp_swedish_cup,0x9cf748,club_comp,sim,2,key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_english_fa_cup,0x9cf74c,club_comp,sim,9,?:3 news.cpp:3 eng_charity.cpp:1 key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_english_league_cup,0x9cf750,club_comp,sim,4,Cup.cpp:1 ?:1 key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_english_charity_shield,0x9cf754,club_comp,sim,2,Setup.cpp:2
+g_key_club_comp_english_autoglass_trophy,0x9cf758,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_scottish_cup,0x9cf75c,club_comp,sim,3,key_nation.cpp:1 ?:1 Setup.cpp:1
+g_key_club_comp_scottish_league_cup,0x9cf760,club_comp,sim,2,?:1 Setup.cpp:1
+g_key_club_comp_a_lower_division,0x9cf764,club_comp,sim,52,?:7 cro_a1.cpp:3 Database.cpp:3 den_prm.cpp:3 eng_fa_cup.cpp:3 fra_first.cpp:3 ger_first.cpp:3 spa_first.cpp:3 fra_cup.cpp:2 hol_cup.cpp:2 manager_manager.cpp:2 media.cpp:2 shortlist_manager.cpp:2 spa_lower.cpp:2 contract_manager.cpp:1 den_cup.cpp:1 eng_auto_cup.cpp:1 eng_fa_trophy.cpp:1 eng_prm.cpp:1 fra_cfa.cpp:1 fra_lower.cpp:1 ger_cup.cpp:1 por_cup.cpp:1 por_prm.cpp:1 sco_fa_cup.cpp:1 spa_cup.cpp:1
+g_key_club_comp_japanese_j_league_2,0x9cf768,club_comp,sim,11,jap_emp_cup.cpp:2 jap_j1.cpp:2 japan_awards.cpp:2 jap_j2.cpp:1 jap_j_cup.cpp:1 ?:1 Setup.cpp:1 virtual_staff.cpp:1
+g_key_club_comp_world_cup_oceania_qualifying_section,0x9cf76c,club_comp,sim,24,friendly.cpp:8 wc_south_american_league.cpp:3 host_country.cpp:2 key_nation.cpp:2 club_screens.cpp:1 comp_util.cpp:1 fix_man.cpp:1 match_day.cpp:1 national_teams.cpp:1 Setup.cpp:1 stadium.cpp:1 wc_asia_league.cpp:1 world_cup.cpp:1
+g_key_club_comp_world_cup_concacaf_qualifying_section,0x9cf770,club_comp,sim,19,friendly.cpp:12 key_nation.cpp:2 club_screens.cpp:1 match_day.cpp:1 Setup.cpp:1 wc_asia_league.cpp:1 world_cup.cpp:1
+g_key_club_comp_world_cup_asian_qualifying_section,0x9cf774,club_comp,sim,12,friendly.cpp:2 key_nation.cpp:2 club_screens.cpp:1 comp_util.cpp:1 match_day.cpp:1 Setup.cpp:1 wc_concacaf_cup.cpp:1 wc_europe_league.cpp:1 wc_oceania_league.cpp:1 world_cup.cpp:1
+g_key_club_comp_world_cup_south_american_qualifying_sect,0x9cf778,club_comp,sim,22,friendly.cpp:12 wc_oceania_league.cpp:3 key_nation.cpp:2 club_screens.cpp:1 match_day.cpp:1 Setup.cpp:1 wc_african_cup.cpp:1 world_cup.cpp:1
+g_key_club_comp_world_cup_african_qualifying_section,0x9cf77c,club_comp,sim,21,friendly.cpp:13 key_nation.cpp:2 club_screens.cpp:1 match_day.cpp:1 Setup.cpp:1 wc_europe_league.cpp:1 wc_south_american_league.cpp:1 world_cup.cpp:1
+g_key_club_comp_world_cup_european_qualifying_section,0x9cf780,club_comp,sim,15,friendly.cpp:7 key_nation.cpp:2 club_screens.cpp:1 match_day.cpp:1 Setup.cpp:1 wc_african_cup.cpp:1 wc_asia_league.cpp:1 world_cup.cpp:1
+g_key_club_comp_european_championship_qualifying,0x9cf784,club_comp,sim,13,friendly.cpp:8 club_screens.cpp:1 euro_champ.cpp:1 key_nation.cpp:1 match_day.cpp:1 Setup.cpp:1
+g_key_club_comp_asian_cup_qualifying,0x9cf788,club_comp,sim,0,
+g_key_club_comp_football_tournament_of_the_asian_games,0x9cf78c,club_comp,sim,9,national_teams.cpp:9
+g_key_club_comp_asian_cup,0x9cf790,club_comp,sim,13,national_teams.cpp:9 fifa_confed.cpp:1 host_country.cpp:1 key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_b_international,0x9cf794,club_comp,sim,12,national_teams.cpp:4 ?:4 fix_man.cpp:1 key_nation.cpp:1 match_day.cpp:1 player_stats.cpp:1
+g_key_club_comp_under_21_international,0x9cf798,club_comp,sim,10,?:4 national_teams.cpp:2 fix_man.cpp:1 key_nation.cpp:1 match_day.cpp:1 player_stats.cpp:1
+g_key_club_comp_fifa_world_cup,0x9cf79c,club_comp,sim,91,wc_african_cup.cpp:12 wc_asia_league.cpp:12 wc_europe_league.cpp:11 national_teams.cpp:10 wc_south_american_league.cpp:9 wc_concacaf_cup.cpp:7 wc_oceania_league.cpp:5 world_cup.cpp:4 award_screens.cpp:2 fifa_rankings.cpp:2 host_country.cpp:2 key_nation.cpp:2 rus_prm.cpp:2 staff_screens.cpp:2 world_cup_awards.cpp:2 ?:2 comp_screens.cpp:1 comp_util.cpp:1 league.cpp:1 Setup.cpp:1 stadium.cpp:1
+g_key_club_comp_football_tournament_of_the_olympic_games,0x9cf7a0,club_comp,sim,21,national_teams.cpp:14 host_country.cpp:2 comp_screens.cpp:1 key_nation.cpp:1 match_day.cpp:1 olympics.cpp:1 Setup.cpp:1
+g_key_club_comp_european_football_championship,0x9cf7a4,club_comp,sim,38,euro_champ_qual.cpp:10 national_teams.cpp:9 euro_champ.cpp:7 rus_prm.cpp:2 fifa_confed.cpp:1 fifa_rankings.cpp:1 host_country.cpp:1 key_nation.cpp:1 league.cpp:1 match_day.cpp:1 ?:1 Setup.cpp:1 stadium.cpp:1 wc_europe_league.cpp:1
+g_key_club_comp_copa_america,0x9cf7a8,club_comp,sim,15,national_teams.cpp:9 fifa_confed.cpp:1 goldcup.cpp:1 host_country.cpp:1 key_nation.cpp:1 match_day.cpp:1 Setup.cpp:1
+g_key_club_comp_african_cup_of_nations,0x9cf7ac,club_comp,sim,16,national_teams.cpp:9 african_nations.cpp:1 fifa_confed.cpp:1 host_country.cpp:1 key_nation.cpp:1 match_day.cpp:1 Setup.cpp:1 stadium.cpp:1
+g_key_club_comp_dutch_super_cup,0x9cf7b0,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_scottish_league_challenge_cup,0x9cf7b4,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_spanish_second_division_b,0x9cf7b8,club_comp,sim,23,spa_first.cpp:17 spa_cup.cpp:2 spa_second_b.cpp:2 Setup.cpp:1 spa_second.cpp:1
+g_key_club_comp_fifa_club_world_championship,0x9cf7bc,club_comp,sim,9,host_country.cpp:2 news.cpp:2 eng_fa_cup.cpp:1 fix_man.cpp:1 key_nation.cpp:1 match_day.cpp:1 Setup.cpp:1
+g_key_club_comp_portuguese_second_division_b,0x9cf7c0,club_comp,sim,22,por_prm.cpp:15 por_second_b.cpp:2 ?:2 por_cup.cpp:1 por_second.cpp:1 Setup.cpp:1
+g_key_club_comp_belgian_third_division,0x9cf7c4,club_comp,sim,19,?:12 belgium_awards.cpp:2 bel_fa_cup.cpp:1 bel_first.cpp:1 bel_second.cpp:1 bel_third.cpp:1 Setup.cpp:1
+g_key_club_comp_swedish_second_division,0x9cf7c8,club_comp,sim,18,swe_prm.cpp:15 Setup.cpp:1 swe_cup.cpp:1 swe_first.cpp:1
+g_key_club_comp_oceania_club_championship,0x9cf7cc,club_comp,sim,4,host_country.cpp:2 Setup.cpp:1 world_club_champ.cpp:1
+g_key_club_comp_asian_super_cup,0x9cf7d0,club_comp,sim,2,Setup.cpp:1 world_club_champ.cpp:1
+g_key_club_comp_belgian_fourth_division_a,0x9cf7d4,club_comp,sim,3,bel_fa_cup.cpp:1 ?:1 bel_third.cpp:1
+g_key_club_comp_belgian_fourth_division_b,0x9cf7d8,club_comp,sim,3,bel_fa_cup.cpp:1 ?:1 bel_third.cpp:1
+g_key_club_comp_belgian_fourth_division_c,0x9cf7dc,club_comp,sim,2,bel_fa_cup.cpp:1 bel_third.cpp:1
+g_key_club_comp_belgian_fourth_division_d,0x9cf7e0,club_comp,sim,2,bel_fa_cup.cpp:1 bel_third.cpp:1
+g_key_club_comp_finnish_cup,0x9cf7e4,club_comp,sim,2,key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_finnish_premier_division,0x9cf7e8,club_comp,sim,32,?:10 fin_first.cpp:9 finland_awards.cpp:5 old_finland_awards.cpp:4 fin_cup.cpp:2 fin_prm.cpp:1 Setup.cpp:1
+g_key_club_comp_finnish_first_division_north,0x9cf7ec,club_comp,sim,3,?:2 fin_first.cpp:1
+g_key_club_comp_finnish_first_division_south,0x9cf7f0,club_comp,sim,3,?:2 fin_first.cpp:1
+g_key_club_comp_finnish_lower_division,0x9cf7f4,club_comp,sim,1,fin_cup.cpp:1
+g_key_club_comp_finnish_first_division,0x9cf7f8,club_comp,sim,29,?:13 finland_awards.cpp:5 fin_first.cpp:4 old_finland_awards.cpp:3 fin_prm.cpp:2 fin_cup.cpp:1 Setup.cpp:1
+g_key_club_comp_finnish_second_division_north,0x9cf7fc,club_comp,sim,3,fin_cup.cpp:1 fin_first.cpp:1 ?:1
+g_key_club_comp_finnish_second_division_west,0x9cf800,club_comp,sim,2,fin_cup.cpp:1 fin_first.cpp:1
+g_key_club_comp_finnish_second_division_south,0x9cf804,club_comp,sim,2,fin_cup.cpp:1 fin_first.cpp:1
+g_key_club_comp_finnish_second_division_east,0x9cf808,club_comp,sim,2,fin_cup.cpp:1 fin_first.cpp:1
+g_key_club_comp_irish_premier_division,0x9cf80c,club_comp,sim,46,?:20 ireland_awards.cpp:7 old_ireland_awards.cpp:7 ire_first.cpp:4 ire_prm.cpp:2 ire_chal_cup.cpp:1 ire_leinster_cup.cpp:1 ire_munster_cup.cpp:1 ire_pres_cup.cpp:1 ire_super_cup.cpp:1 Setup.cpp:1
+g_key_club_comp_irish_first_division,0x9cf810,club_comp,sim,36,?:14 ireland_awards.cpp:7 old_ireland_awards.cpp:7 ire_first.cpp:2 ire_prm.cpp:2 ire_chal_cup.cpp:1 ire_leinster_cup.cpp:1 ire_munster_cup.cpp:1 Setup.cpp:1
+g_key_club_comp_irish_group_a,0x9cf814,club_comp,sim,4,pol_first.cpp:2 ire_lge_cup.cpp:1 ?:1
+g_key_club_comp_irish_group_b,0x9cf818,club_comp,sim,3,pol_first.cpp:2 ire_lge_cup.cpp:1
+g_key_club_comp_irish_group_c,0x9cf81c,club_comp,sim,1,ire_lge_cup.cpp:1
+g_key_club_comp_irish_group_d,0x9cf820,club_comp,sim,1,ire_lge_cup.cpp:1
+g_key_club_comp_irish_group_e,0x9cf824,club_comp,sim,1,ire_lge_cup.cpp:1
+g_key_club_comp_irish_unmatched,0x9cf828,club_comp,não,0,
+g_key_club_comp_northern_irish_group_a,0x9cf82c,club_comp,não,1,nir_lge_cup.cpp:1
+g_key_club_comp_northern_irish_group_b,0x9cf830,club_comp,não,1,nir_lge_cup.cpp:1
+g_key_club_comp_northern_irish_group_c,0x9cf834,club_comp,não,1,nir_lge_cup.cpp:1
+g_key_club_comp_northern_irish_group_d,0x9cf838,club_comp,não,1,nir_lge_cup.cpp:1
+g_key_club_comp_irish_league_cup,0x9cf83c,club_comp,sim,2,?:1 Setup.cpp:1
+g_key_club_comp_irish_senior_challenge_cup,0x9cf840,club_comp,sim,4,Setup.cpp:2 ?:1 key_nation.cpp:1
+g_key_club_comp_irish_super_cup,0x9cf844,club_comp,sim,3,Setup.cpp:2 ?:1
+g_key_club_comp_irish_connacht_senior_league,0x9cf848,club_comp,sim,3,ire_chal_cup.cpp:2 ire_lge_cup.cpp:1
+g_key_club_comp_irish_ulster_senior_league,0x9cf84c,club_comp,sim,3,ire_chal_cup.cpp:2 ire_lge_cup.cpp:1
+g_key_club_comp_irish_munster_senior_league,0x9cf850,club_comp,sim,4,ire_chal_cup.cpp:2 ire_lge_cup.cpp:1 ire_munster_cup.cpp:1
+g_key_club_comp_irish_leinster_senior_league,0x9cf854,club_comp,sim,4,ire_chal_cup.cpp:2 ire_leinster_cup.cpp:1 ire_lge_cup.cpp:1
+g_key_club_comp_polish_first_division,0x9cf858,club_comp,sim,31,?:10 poland_awards.cpp:5 pol_lge_cup.cpp:4 pol_second.cpp:4 club_history.cpp:3 comp_screens.cpp:1 pol_cup.cpp:1 pol_first.cpp:1 pol_super.cpp:1 Setup.cpp:1
+g_key_club_comp_polish_second_division,0x9cf85c,club_comp,sim,24,?:9 poland_awards.cpp:5 pol_first.cpp:4 pol_cup.cpp:2 pol_lge_cup.cpp:2 pol_second.cpp:1 Setup.cpp:1
+g_key_club_comp_polish_league_cup,0x9cf860,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_polish_fa_cup,0x9cf864,club_comp,sim,4,pol_super.cpp:2 key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_polish_lower_division,0x9cf868,club_comp,sim,4,pol_cup.cpp:2 pol_first.cpp:2
+g_key_club_comp_greek_premier_division,0x9cf86c,club_comp,sim,15,greece_awards.cpp:4 ?:4 gre_super.cpp:2 Setup.cpp:2 gre_cup.cpp:1 gre_prm.cpp:1 gre_second.cpp:1
+g_key_club_comp_greek_second_division,0x9cf870,club_comp,sim,15,gre_prm.cpp:4 greece_awards.cpp:4 ?:3 Setup.cpp:2 gre_cup.cpp:1 gre_second.cpp:1
+g_key_club_comp_greek_lower_division,0x9cf874,club_comp,sim,3,gre_prm.cpp:2 gre_cup.cpp:1
+g_key_club_comp_greek_cup,0x9cf878,club_comp,sim,3,gre_super.cpp:1 key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_croatian_first_division_9cf87c,0x9cf87c,club_comp,sim,0,
+g_key_club_comp_croatian_second_division,0x9cf880,club_comp,sim,0,
+g_key_club_comp_croatian_third_division_central,0x9cf884,club_comp,sim,0,
+g_key_club_comp_croatian_third_division_north,0x9cf888,club_comp,sim,1,cro_a1.cpp:1
+g_key_club_comp_croatian_third_division_south,0x9cf88c,club_comp,sim,1,cro_a1.cpp:1
+g_key_club_comp_croatian_third_division_east,0x9cf890,club_comp,sim,1,cro_a1.cpp:1
+g_key_club_comp_croatian_third_division_west,0x9cf894,club_comp,sim,1,cro_a1.cpp:1
+g_key_club_comp_croatian_cup,0x9cf898,club_comp,sim,2,key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_australian_national_soccer_league,0x9cf89c,club_comp,sim,19,australia_awards.cpp:9 ?:6 aus_nsl.cpp:1 comp_screens.cpp:1 oceania_club_champ.cpp:1 Setup.cpp:1
+g_key_club_comp_oceania_nations_cup,0x9cf8a0,club_comp,sim,13,national_teams.cpp:10 fifa_confed.cpp:1 key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_croatian_first_division_9cf8a4,0x9cf8a4,club_comp,sim,12,?:5 croatia_awards.cpp:3 cro_a1.cpp:1 cro_a2a.cpp:1 cro_cup.cpp:1 Setup.cpp:1
+g_key_club_comp_croatian_second_division_north,0x9cf8a8,club_comp,sim,17,cro_a1.cpp:5 ?:5 croatia_awards.cpp:3 cro_a2a.cpp:1 cro_a2b.cpp:1 cro_cup.cpp:1 Setup.cpp:1
+g_key_club_comp_croatian_second_division_south,0x9cf8ac,club_comp,sim,15,?:5 cro_a1.cpp:3 croatia_awards.cpp:3 cro_a2a.cpp:1 cro_a2b.cpp:1 cro_cup.cpp:1 Setup.cpp:1
+g_key_club_comp_northern_ireland_premier_division,0x9cf8b0,club_comp,sim,25,?:11 northern_ireland_awards.cpp:6 nir_first.cpp:4 nir_charity.cpp:1 nir_cup.cpp:1 nir_prm.cpp:1 Setup.cpp:1
+g_key_club_comp_northern_ireland_first_division,0x9cf8b4,club_comp,sim,19,?:8 northern_ireland_awards.cpp:6 nir_prm.cpp:2 nir_cup.cpp:1 nir_first.cpp:1 Setup.cpp:1
+g_key_club_comp_northern_ireland_lower_division,0x9cf8b8,club_comp,sim,1,nir_cup.cpp:1
+g_key_club_comp_northern_irish_charity_shield,0x9cf8bc,club_comp,sim,2,Setup.cpp:2
+g_key_club_comp_northern_irish_cup,0x9cf8c0,club_comp,sim,6,nir_charity.cpp:2 Setup.cpp:2 key_nation.cpp:1 ?:1
+g_key_club_comp_northern_irish_gold_cup,0x9cf8c4,club_comp,sim,1,?:1
+g_key_club_comp_northern_irish_league_cup,0x9cf8c8,club_comp,sim,2,?:1 Setup.cpp:1
+g_key_club_comp_turkish_lower_division,0x9cf8cc,club_comp,sim,2,tur_first.cpp:2
+g_key_club_comp_turkish_unmatched_a,0x9cf8d0,club_comp,não,2,tur_first.cpp:1 ?:1
+g_key_club_comp_turkish_unmatched_b,0x9cf8d4,club_comp,não,1,?:1
+g_key_club_comp_turkish_premier_division,0x9cf8d8,club_comp,sim,13,?:5 tur_first.cpp:2 turkey_awards.cpp:2 Setup.cpp:1 transfer_manager.cpp:1 tur_cup.cpp:1 tur_second.cpp:1
+g_key_club_comp_turkish_2_division_category_a,0x9cf8dc,club_comp,sim,16,tur_first.cpp:9 turkey_awards.cpp:2 Setup.cpp:1 tur_cup.cpp:1 tur_second.cpp:1 tur_second_b.cpp:1 ?:1
+g_key_club_comp_turkish_2_division_category_b,0x9cf8e0,club_comp,sim,16,tur_first.cpp:11 Setup.cpp:1 tur_cup.cpp:1 ?:1 tur_second.cpp:1 tur_second_b.cpp:1
+g_key_club_comp_turkish_2_division_category_b_g1,0x9cf8e4,club_comp,sim,6,tur_second_b.cpp:4 tur_first.cpp:1 ?:1
+g_key_club_comp_turkish_2_division_category_b_g2,0x9cf8e8,club_comp,sim,6,tur_second_b.cpp:4 tur_first.cpp:1 ?:1
+g_key_club_comp_turkish_2_division_category_b_g3,0x9cf8ec,club_comp,sim,6,tur_second_b.cpp:4 tur_first.cpp:1 ?:1
+g_key_club_comp_turkish_2_division_category_b_g4,0x9cf8f0,club_comp,sim,6,tur_second_b.cpp:4 tur_first.cpp:1 ?:1
+g_key_club_comp_turkish_2_division_category_b_g5,0x9cf8f4,club_comp,sim,6,tur_second_b.cpp:4 tur_first.cpp:1 ?:1
+g_key_club_comp_turkish_fa_cup,0x9cf8f8,club_comp,sim,3,key_nation.cpp:1 Setup.cpp:1 ?:1
+g_key_club_comp_turkish_football_writers_association_cup,0x9cf8fc,club_comp,não,0,
+g_key_club_comp_turkish_2_division_group_1,0x9cf900,club_comp,sim,0,
+g_key_club_comp_turkish_2_division_group_2,0x9cf904,club_comp,sim,0,
+g_key_club_comp_turkish_2_division_group_3,0x9cf908,club_comp,sim,0,
+g_key_club_comp_turkish_2_division_group_4,0x9cf90c,club_comp,sim,0,
+g_key_club_comp_turkish_2_division_group_5,0x9cf910,club_comp,sim,0,
+g_key_club_comp_russian_second_division_west,0x9cf914,club_comp,sim,2,rus_cup.cpp:1 rus_prm.cpp:1
+g_key_club_comp_russian_second_division_central,0x9cf918,club_comp,sim,2,rus_cup.cpp:1 rus_prm.cpp:1
+g_key_club_comp_russian_second_division_south,0x9cf91c,club_comp,sim,3,rus_cup.cpp:1 rus_first.cpp:1 rus_prm.cpp:1
+g_key_club_comp_russian_second_division_volga,0x9cf920,club_comp,sim,2,rus_cup.cpp:1 rus_prm.cpp:1
+g_key_club_comp_russian_second_division_ural,0x9cf924,club_comp,sim,2,rus_cup.cpp:1 rus_prm.cpp:1
+g_key_club_comp_russian_second_division_east,0x9cf928,club_comp,sim,2,rus_cup.cpp:1 rus_prm.cpp:1
+g_key_club_comp_russian_first_division,0x9cf92c,club_comp,sim,14,rus_prm.cpp:5 russia_awards.cpp:3 ?:3 rus_cup.cpp:1 rus_first.cpp:1 Setup.cpp:1
+g_key_club_comp_russian_premier_division,0x9cf930,club_comp,sim,9,russia_awards.cpp:3 ?:2 rus_cup.cpp:1 rus_first.cpp:1 rus_prm.cpp:1 Setup.cpp:1
+g_key_club_comp_russian_cup,0x9cf934,club_comp,sim,2,key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_italian_c1_super_cup,0x9cf938,club_comp,sim,3,ita_ser_c1a.cpp:1 ita_ser_c1b.cpp:1 Setup.cpp:1
+g_key_club_comp_greek_super_cup,0x9cf93c,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_croatian_super_cup,0x9cf940,club_comp,sim,0,
+g_key_club_comp_polish_super_cup,0x9cf944,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_irish_presidents_cup,0x9cf948,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_welsh_premier_division,0x9cf94c,club_comp,sim,18,wales_awards.cpp:6 ?:5 wel_prm_cup.cpp:3 Setup.cpp:1 wel_cup.cpp:1 wel_first.cpp:1 wel_lge_cup.cpp:1
+g_key_club_comp_welsh_league_cup,0x9cf950,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_welsh_cup,0x9cf954,club_comp,sim,3,key_nation.cpp:1 Setup.cpp:1 wel_prm_cup.cpp:1
+g_key_club_comp_welsh_premier_cup,0x9cf958,club_comp,sim,3,Cup.cpp:1 match_day.cpp:1 Setup.cpp:1
+g_key_club_comp_inter_american_cup,0x9cf95c,club_comp,sim,4,Setup.cpp:3 host_country.cpp:1
+g_key_club_comp_welsh_lower_division,0x9cf960,club_comp,sim,1,wel_cup.cpp:1
+g_key_club_comp_confederations_cup,0x9cf964,club_comp,sim,15,national_teams.cpp:10 host_country.cpp:2 Setup.cpp:2 key_nation.cpp:1
+g_key_club_comp_brazilian_bahia_lower_division,0x9cf968,club_comp,sim,1,bra_nat_first.cpp:1
+g_key_club_comp_brazilian_central_lower_division,0x9cf96c,club_comp,sim,1,bra_nat_first.cpp:1
+g_key_club_comp_brazilian_santa_catarina_lower_division,0x9cf970,club_comp,sim,1,bra_nat_first.cpp:1
+g_key_club_comp_brazilian_pernambuco_lower_division,0x9cf974,club_comp,sim,1,bra_nat_first.cpp:1
+g_key_club_comp_brazilian_north_lower_division,0x9cf978,club_comp,sim,1,bra_nat_first.cpp:1
+g_key_club_comp_brazilian_rio_de_janeiro_lower_division,0x9cf97c,club_comp,sim,1,bra_nat_first.cpp:1
+g_key_club_comp_brazilian_northeast_lower_division,0x9cf980,club_comp,sim,1,bra_nat_first.cpp:1
+g_key_club_comp_brazilian_goias_lower_division,0x9cf984,club_comp,sim,1,bra_nat_first.cpp:1
+g_key_club_comp_brazilian_minas_gerais_lower_division,0x9cf988,club_comp,sim,1,bra_nat_first.cpp:1
+g_key_club_comp_brazilian_parana_lower_division,0x9cf98c,club_comp,sim,1,bra_nat_first.cpp:1
+g_key_club_comp_brazilian_gaucho_lower_division,0x9cf990,club_comp,sim,1,bra_nat_first.cpp:1
+g_key_club_comp_brazilian_north_state_championship,0x9cf994,club_comp,sim,18,?:5 brazil_awards.cpp:4 bra_cup.cpp:3 bra_champ_cup.cpp:2 bra_nat_first.cpp:2 bra_reg_north.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_central_state_championship,0x9cf998,club_comp,sim,18,?:5 brazil_awards.cpp:4 bra_cup.cpp:3 bra_champ_cup.cpp:2 bra_nat_first.cpp:2 bra_reg_central.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_sao_paulo_lower_division,0x9cf99c,club_comp,sim,1,bra_nat_first.cpp:1
+g_key_club_comp_brazilian_central_regional_cup,0x9cf9a0,club_comp,sim,0,
+g_key_club_comp_brazilian_northeast_state_championship,0x9cf9a4,club_comp,sim,18,?:5 brazil_awards.cpp:4 bra_cup.cpp:3 bra_champ_cup.cpp:2 bra_nat_first.cpp:2 bra_reg_northeast.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_north_regional_cup,0x9cf9a8,club_comp,sim,0,
+g_key_club_comp_brazilian_national_third_division,0x9cf9ac,club_comp,sim,21,bra_nat_first.cpp:19 bra_nat_second.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_santa_catarina_state_champions,0x9cf9b0,club_comp,sim,18,?:5 brazil_awards.cpp:4 bra_cup.cpp:3 bra_champ_cup.cpp:2 bra_nat_first.cpp:2 bra_reg_santa.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_goias_state_championship,0x9cf9b4,club_comp,sim,18,?:5 brazil_awards.cpp:4 bra_cup.cpp:3 bra_champ_cup.cpp:2 bra_nat_first.cpp:2 bra_reg_goias.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_champions_cup,0x9cf9b8,club_comp,sim,5,?:4 Setup.cpp:1
+g_key_club_comp_brazilian_pernambuco_state_championship,0x9cf9bc,club_comp,sim,18,?:5 brazil_awards.cpp:4 bra_cup.cpp:3 bra_champ_cup.cpp:2 bra_nat_first.cpp:2 bra_reg_pern.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_bahia_state_championship,0x9cf9c0,club_comp,sim,18,?:5 brazil_awards.cpp:4 bra_cup.cpp:3 bra_champ_cup.cpp:2 bra_nat_first.cpp:2 bra_reg_bahia.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_northeast_regional_cup,0x9cf9c4,club_comp,sim,0,
+g_key_club_comp_brazilian_gaucho_state_championship,0x9cf9c8,club_comp,sim,18,?:5 brazil_awards.cpp:4 bra_cup.cpp:3 bra_champ_cup.cpp:2 bra_nat_first.cpp:2 bra_reg_gaucho.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_south_minas_regional_cup,0x9cf9cc,club_comp,sim,0,
+g_key_club_comp_brazilian_parana_state_championship,0x9cf9d0,club_comp,sim,18,?:5 brazil_awards.cpp:4 bra_cup.cpp:3 bra_champ_cup.cpp:2 bra_nat_first.cpp:2 bra_reg_parana.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_minas_gerais_state_championshi,0x9cf9d4,club_comp,sim,18,?:5 brazil_awards.cpp:4 bra_cup.cpp:3 bra_champ_cup.cpp:2 bra_nat_first.cpp:2 bra_reg_minas_gerais.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_rio_sao_paulo_tournement,0x9cf9d8,club_comp,sim,0,
+g_key_club_comp_brazilian_rio_de_janeiro_state_champions,0x9cf9dc,club_comp,sim,18,?:5 brazil_awards.cpp:4 bra_cup.cpp:3 bra_champ_cup.cpp:2 bra_nat_first.cpp:2 bra_reg_rio.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_national_second_division,0x9cf9e0,club_comp,sim,25,bra_nat_first.cpp:13 brazil_awards.cpp:5 ?:4 bra_nat_second.cpp:1 bra_nat_third.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_sao_paulo_state_champ,0x9cf9e4,club_comp,sim,18,?:5 brazil_awards.cpp:4 bra_cup.cpp:3 bra_champ_cup.cpp:2 bra_nat_first.cpp:2 bra_reg_sp.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_cup,0x9cf9e8,club_comp,sim,5,conmebol_seeding.cpp:2 ?:1 key_nation.cpp:1 Setup.cpp:1
+g_key_club_comp_brazilian_national_first_division,0x9cf9ec,club_comp,sim,18,?:5 brazil_awards.cpp:5 bra_nat_first.cpp:3 conmebol_seeding.cpp:2 bra_cup.cpp:1 bra_nat_second.cpp:1 Setup.cpp:1
+g_key_club_comp_irish_munster_senior_cup,0x9cf9f0,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_irish_leinster_senior_cup,0x9cf9f4,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_korean_super_cup,0x9cf9f8,club_comp,sim,2,Setup.cpp:2
+g_key_club_comp_korean_league_cup,0x9cf9fc,club_comp,sim,1,Setup.cpp:1
+g_key_club_comp_korean_league,0x9cfa00,club_comp,sim,9,asia_club_champ.cpp:2 kor_fa_cup.cpp:2 ?:2 kor_league_cup.cpp:1 kor_super_cup.cpp:1 Setup.cpp:1
+g_key_club_comp_korean_fa_cup,0x9cfa04,club_comp,sim,6,asia_cup_winner.cpp:2 kor_super_cup.cpp:2 key_nation.cpp:1 Setup.cpp:1
+g_key_continent_africa,0x9cfa08,continent,sim,42,friendly.cpp:26 ?:5 wc_african_cup.cpp:4 world_club_champ.cpp:2 african_nations.cpp:1 Database.cpp:1 match_day.cpp:1 olympics.cpp:1 world_cup.cpp:1
+g_key_continent_asia,0x9cfa0c,continent,sim,27,?:8 friendly.cpp:4 wc_asia_league.cpp:4 world_club_champ.cpp:3 asia_club_champ.cpp:1 asia_cup_winner.cpp:1 asia_nations.cpp:1 comp_util.cpp:1 key_nation.cpp:1 match_day.cpp:1 olympics.cpp:1 world_cup.cpp:1
+g_key_continent_europe,0x9cfa10,continent,sim,115,?:45 friendly.cpp:23 manager_manager.cpp:6 transfer_manager.cpp:5 national_teams.cpp:4 wc_europe_league.cpp:4 Database.cpp:3 euro_champ_qual.cpp:3 shortlist_manager.cpp:2 uefa_seeding.cpp:2 world_club_champ.cpp:2 world_club_cup.cpp:2 club_screens.cpp:1 Cup.cpp:1 euro_champ.cpp:1 game.cpp:1 host_country.cpp:1 key_nation.cpp:1 league.cpp:1 match_day.cpp:1 media.cpp:1 olympics.cpp:1 rb_europe.cpp:1 Setup.cpp:1 staff_records.cpp:1 world_cup.cpp:1
+g_key_continent_north_america,0x9cfa14,continent,sim,39,friendly.cpp:21 wc_concacaf_cup.cpp:5 ?:4 world_club_champ.cpp:3 inter_amer_cup.cpp:2 key_nation.cpp:1 match_day.cpp:1 olympics.cpp:1 world_cup.cpp:1
+g_key_continent_oceania,0x9cfa18,continent,sim,44,friendly.cpp:17 ?:9 wc_oceania_league.cpp:4 wc_south_american_league.cpp:2 world_club_champ.cpp:2 comp_util.cpp:1 Database.cpp:1 discipline.cpp:1 host_country.cpp:1 key_nation.cpp:1 match_day.cpp:1 oceania_club_champ.cpp:1 oceania_nations.cpp:1 olympics.cpp:1 world_cup.cpp:1
+g_key_continent_south_america,0x9cfa1c,continent,sim,48,friendly.cpp:21 ?:8 wc_south_american_league.cpp:4 world_club_cup.cpp:4 inter_amer_cup.cpp:2 world_club_champ.cpp:2 conmebol_liber.cpp:1 conmebol_seeding.cpp:1 goldcup.cpp:1 key_nation.cpp:1 match_day.cpp:1 olympics.cpp:1 world_cup.cpp:1
+g_key_staff_comp_fifa_world_player_of_the_year,0x9cfa20,staff_comp,sim,2,international_awards.cpp:1 old_international_awards.cpp:1
+g_key_staff_comp_world_footballer_of_the_year,0x9cfa24,staff_comp,sim,2,international_awards.cpp:1 old_international_awards.cpp:1
+g_key_staff_comp_european_footballer_of_the_year,0x9cfa28,staff_comp,sim,2,international_awards.cpp:1 old_international_awards.cpp:1
+g_key_staff_comp_south_american_footballer_of_the_year,0x9cfa2c,staff_comp,sim,2,international_awards.cpp:1 old_international_awards.cpp:1
+g_key_staff_comp_african_footballer_of_the_year,0x9cfa30,staff_comp,sim,2,international_awards.cpp:1 old_international_awards.cpp:1
+g_key_staff_comp_english_players_player_of_the_year,0x9cfa34,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_players_young_player_of_the_year,0x9cfa38,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_players_premier_division_select,0x9cfa3c,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_players_first_division_select,0x9cfa40,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_players_second_division_select,0x9cfa44,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_players_third_division_select,0x9cfa48,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_premier_division_player_of_the_m,0x9cfa4c,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_first_division_player_of_the_mon,0x9cfa50,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_second_division_player_of_the_mo,0x9cfa54,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_third_division_player_of_the_mon,0x9cfa58,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_premier_division_young_player_of,0x9cfa5c,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_first_division_young_player_of_t,0x9cfa60,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_second_division_young_player_of,0x9cfa64,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_third_division_young_player_of_t,0x9cfa68,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_premier_division_team_of_the_wee,0x9cfa6c,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_first_division_team_of_the_week,0x9cfa70,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_second_division_team_of_the_week,0x9cfa74,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_third_division_team_of_the_week,0x9cfa78,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_scottish_player_of_the_year,0x9cfa7c,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_young_player_of_the_year,0x9cfa80,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_premier_division_player_of_the,0x9cfa84,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_first_division_player_of_the_mo,0x9cfa88,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_second_division_player_of_the_m,0x9cfa8c,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_third_division_player_of_the_mo,0x9cfa90,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_premier_division_team_of_the_we,0x9cfa94,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_first_division_team_of_the_week,0x9cfa98,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_second_division_team_of_the_wee,0x9cfa9c,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_third_division_team_of_the_week,0x9cfaa0,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_belgian_golden_boot,0x9cfaa4,staff_comp,sim,1,belgium_awards.cpp:1
+g_key_staff_comp_belgian_first_division_player_of_the_yea,0x9cfaa8,staff_comp,não,0,
+g_key_staff_comp_belgian_first_division_goalkeeper_of_the,0x9cfaac,staff_comp,sim,1,belgium_awards.cpp:1
+g_key_staff_comp_belgian_second_division_player_of_the_ye,0x9cfab0,staff_comp,não,0,
+g_key_staff_comp_danish_player_of_the_year,0x9cfab4,staff_comp,sim,1,denmark_awards.cpp:1
+g_key_staff_comp_danish_premier_division_player_of_the_ye,0x9cfab8,staff_comp,sim,1,denmark_awards.cpp:1
+g_key_staff_comp_danish_premier_division_young_player_of,0x9cfabc,staff_comp,sim,1,denmark_awards.cpp:1
+g_key_staff_comp_danish_first_division_player_of_the_year,0x9cfac0,staff_comp,sim,1,denmark_awards.cpp:1
+g_key_staff_comp_danish_first_division_young_player_of_th,0x9cfac4,staff_comp,sim,1,denmark_awards.cpp:1
+g_key_staff_comp_danish_kvalifik_player_of_the_year,0x9cfac8,staff_comp,sim,0,
+g_key_staff_comp_danish_second_division_player_of_the_yea,0x9cfacc,staff_comp,sim,1,denmark_awards.cpp:1
+g_key_staff_comp_danish_kvalifik_young_player_of_yr,0x9cfad0,staff_comp,sim,0,
+g_key_staff_comp_danish_second_division_young_player_of_y,0x9cfad4,staff_comp,sim,1,denmark_awards.cpp:1
+g_key_staff_comp_french_player_of_the_year,0x9cfad8,staff_comp,sim,2,france_awards.cpp:1 old_france_awards.cpp:1
+g_key_staff_comp_french_foreign_player_of_the_year,0x9cfadc,staff_comp,sim,2,france_awards.cpp:1 old_france_awards.cpp:1
+g_key_staff_comp_french_under_23_player_of_the_year,0x9cfae0,staff_comp,sim,2,france_awards.cpp:1 old_france_awards.cpp:1
+g_key_staff_comp_french_most_popular_player_of_the_year,0x9cfae4,staff_comp,sim,2,france_awards.cpp:1 old_france_awards.cpp:1
+g_key_staff_comp_french_most_unpopular_player_of_the_year,0x9cfae8,staff_comp,sim,4,?:2 france_awards.cpp:1 old_france_awards.cpp:1
+g_key_staff_comp_french_players_first_division_player_of,0x9cfaec,staff_comp,sim,2,france_awards.cpp:1 old_france_awards.cpp:1
+g_key_staff_comp_french_first_division_player_of_the_year,0x9cfaf0,staff_comp,sim,2,france_awards.cpp:1 old_france_awards.cpp:1
+g_key_staff_comp_french_first_division_goalkeeper_of_the,0x9cfaf4,staff_comp,sim,2,france_awards.cpp:1 old_france_awards.cpp:1
+g_key_staff_comp_french_players_second_division_player_of,0x9cfaf8,staff_comp,sim,2,france_awards.cpp:1 old_france_awards.cpp:1
+g_key_staff_comp_french_second_division_player_of_the_yea,0x9cfafc,staff_comp,sim,2,france_awards.cpp:1 old_france_awards.cpp:1
+g_key_staff_comp_french_second_division_goalkeeper_of_the,0x9cfb00,staff_comp,sim,2,france_awards.cpp:1 old_france_awards.cpp:1
+g_key_staff_comp_german_player_of_the_year,0x9cfb04,staff_comp,sim,1,germany_awards.cpp:1
+g_key_staff_comp_german_first_division_player_of_the_mont,0x9cfb08,staff_comp,sim,1,germany_awards.cpp:1
+g_key_staff_comp_german_second_division_player_of_the_mon,0x9cfb0c,staff_comp,sim,1,germany_awards.cpp:1
+g_key_staff_comp_dutch_goalkeeper_of_the_year,0x9cfb10,staff_comp,sim,1,holland_awards.cpp:1
+g_key_staff_comp_dutch_young_player_of_the_year,0x9cfb14,staff_comp,sim,1,holland_awards.cpp:1
+g_key_staff_comp_dutch_premier_division_player_of_the_yea,0x9cfb18,staff_comp,sim,1,holland_awards.cpp:1
+g_key_staff_comp_dutch_premier_division_top_goalscorer,0x9cfb1c,staff_comp,sim,1,holland_awards.cpp:1
+g_key_staff_comp_dutch_premier_division_golden_boot,0x9cfb20,staff_comp,sim,1,holland_awards.cpp:1
+g_key_staff_comp_dutch_first_division_player_of_the_year,0x9cfb24,staff_comp,sim,1,holland_awards.cpp:1
+g_key_staff_comp_dutch_first_division_top_goalscorer,0x9cfb28,staff_comp,sim,0,
+g_key_staff_comp_dutch_first_division_golden_boot,0x9cfb2c,staff_comp,sim,1,holland_awards.cpp:1
+g_key_staff_comp_italian_serie_a_young_player_of_the_year,0x9cfb30,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_a_player_of_the_year,0x9cfb34,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_a_italian_player_of_the_ye,0x9cfb38,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_a_foreign_player_of_the_ye,0x9cfb3c,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_a_defender_of_the_year,0x9cfb40,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_a_goalkeeper_of_the_year,0x9cfb44,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_b_player_of_the_year,0x9cfb48,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c1_a_player_of_the_year,0x9cfb4c,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c1_b_player_of_the_year,0x9cfb50,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_norwegian_player_of_the_year,0x9cfb54,staff_comp,sim,1,norway_awards.cpp:1
+g_key_staff_comp_norwegian_goalkeeper_of_the_year,0x9cfb58,staff_comp,sim,1,norway_awards.cpp:1
+g_key_staff_comp_norwegian_defender_of_the_year,0x9cfb5c,staff_comp,sim,1,norway_awards.cpp:1
+g_key_staff_comp_norwegian_midfielder_of_the_year,0x9cfb60,staff_comp,sim,1,norway_awards.cpp:1
+g_key_staff_comp_norwegian_attacker_of_the_year,0x9cfb64,staff_comp,sim,1,norway_awards.cpp:1
+g_key_staff_comp_norwegian_premier_division_team_of_the_w,0x9cfb68,staff_comp,sim,1,norway_awards.cpp:1
+g_key_staff_comp_norwegian_first_division_team_of_the_wee,0x9cfb6c,staff_comp,sim,1,norway_awards.cpp:1
+g_key_staff_comp_portuguese_premier_division_most_man_of,0x9cfb70,staff_comp,sim,1,portugal_awards.cpp:1
+g_key_staff_comp_portuguese_premier_division_top_goalscor,0x9cfb74,staff_comp,sim,1,portugal_awards.cpp:1
+g_key_staff_comp_portuguese_second_division_player_of_the,0x9cfb78,staff_comp,sim,1,portugal_awards.cpp:1
+g_key_staff_comp_spanish_first_division_goalkeeper_of_the,0x9cfb7c,staff_comp,sim,1,spain_awards.cpp:1
+g_key_staff_comp_spanish_player_of_the_year,0x9cfb80,staff_comp,sim,1,spain_awards.cpp:1
+g_key_staff_comp_spanish_first_division_top_goalscorer,0x9cfb84,staff_comp,sim,1,spain_awards.cpp:1
+g_key_staff_comp_swedish_player_of_the_year,0x9cfb88,staff_comp,sim,1,sweden_awards.cpp:1
+g_key_staff_comp_swedish_premier_division_top_goalscorer,0x9cfb8c,staff_comp,sim,1,sweden_awards.cpp:1
+g_key_staff_comp_swedish_fans_player_of_the_year,0x9cfb90,staff_comp,sim,1,sweden_awards.cpp:1
+g_key_staff_comp_mls_goalkeeper_of_the_year,0x9cfb94,staff_comp,sim,1,usa_awards.cpp:1
+g_key_staff_comp_mls_defender_of_the_year,0x9cfb98,staff_comp,sim,1,usa_awards.cpp:1
+g_key_staff_comp_mls_rookie_of_the_year,0x9cfb9c,staff_comp,sim,1,usa_awards.cpp:1
+g_key_staff_comp_mls_scoring_champion,0x9cfba0,staff_comp,sim,1,usa_awards.cpp:1
+g_key_staff_comp_mls_all_pro_team,0x9cfba4,staff_comp,sim,1,usa_awards.cpp:1
+g_key_staff_comp_mls_player_of_the_month,0x9cfba8,staff_comp,sim,1,usa_awards.cpp:1
+g_key_staff_comp_scottish_premier_division_team_of_the_ye,0x9cfbac,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_first_division_team_of_the_year,0x9cfbb0,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_second_division_team_of_the_yea,0x9cfbb4,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_third_division_team_of_the_year,0x9cfbb8,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_top_goalscorer,0x9cfbbc,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_premier_division_young_player_o,0x9cfbc0,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_first_division_young_player_of,0x9cfbc4,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_second_division_young_player_of,0x9cfbc8,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_third_division_young_player_of,0x9cfbcc,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_belgian_manager_of_the_year,0x9cfbd0,staff_comp,sim,1,belgium_awards.cpp:1
+g_key_staff_comp_english_premier_division_manager_of_the_9cfbd4,0x9cfbd4,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_premier_division_manager_of_the_9cfbd8,0x9cfbd8,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_first_division_manager_of_the_ye,0x9cfbdc,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_first_division_manager_of_the_mo,0x9cfbe0,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_second_division_manager_of_the_y,0x9cfbe4,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_second_division_manager_of_the_m,0x9cfbe8,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_third_division_manager_of_the_ye,0x9cfbec,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_third_division_manager_of_the_mo,0x9cfbf0,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_french_manager_of_the_year,0x9cfbf4,staff_comp,sim,2,france_awards.cpp:1 old_france_awards.cpp:1
+g_key_staff_comp_german_first_division_manager_of_the_yea,0x9cfbf8,staff_comp,sim,1,germany_awards.cpp:1
+g_key_staff_comp_german_second_division_manager_of_the_ye,0x9cfbfc,staff_comp,sim,1,germany_awards.cpp:1
+g_key_staff_comp_dutch_manager_of_the_year,0x9cfc00,staff_comp,sim,1,holland_awards.cpp:1
+g_key_staff_comp_italian_serie_a_manager_of_the_year,0x9cfc04,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_b_manager_of_the_year,0x9cfc08,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c1_a_manager_of_the_year,0x9cfc0c,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c1_b_manager_of_the_year,0x9cfc10,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_scottish_premier_division_manager_of_the_9cfc14,0x9cfc14,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_premier_division_manager_of_the_9cfc18,0x9cfc18,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_first_division_manager_of_the_y,0x9cfc1c,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_first_division_manager_of_the_m,0x9cfc20,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_second_division_manager_of_the_9cfc24,0x9cfc24,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_second_division_manager_of_the_9cfc28,0x9cfc28,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_third_division_manager_of_the_y,0x9cfc2c,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_scottish_third_division_manager_of_the_m,0x9cfc30,staff_comp,sim,1,scotland_awards.cpp:1
+g_key_staff_comp_spanish_manager_of_the_year,0x9cfc34,staff_comp,sim,1,spain_awards.cpp:1
+g_key_staff_comp_swedish_manager_of_the_year,0x9cfc38,staff_comp,sim,1,sweden_awards.cpp:1
+g_key_staff_comp_mls_manager_of_the_year,0x9cfc3c,staff_comp,sim,1,usa_awards.cpp:1
+g_key_staff_comp_belgian_young_player_of_the_year,0x9cfc40,staff_comp,sim,0,
+g_key_staff_comp_argentinian_premier_division_team_of_the,0x9cfc44,staff_comp,sim,1,argentina_awards.cpp:1
+g_key_staff_comp_argentinian_second_division_team_of_the,0x9cfc48,staff_comp,sim,1,argentina_awards.cpp:1
+g_key_staff_comp_japanese_player_of_the_year,0x9cfc4c,staff_comp,sim,1,japan_awards.cpp:1
+g_key_staff_comp_japanese_top_goalscorer,0x9cfc50,staff_comp,sim,1,japan_awards.cpp:1
+g_key_staff_comp_japanese_young_player_of_the_year,0x9cfc54,staff_comp,sim,1,japan_awards.cpp:1
+g_key_staff_comp_japanese_manager_of_the_year,0x9cfc58,staff_comp,sim,1,japan_awards.cpp:1
+g_key_staff_comp_japanese_j_league_1_team_of_the_year,0x9cfc5c,staff_comp,sim,1,japan_awards.cpp:1
+g_key_staff_comp_world_cup_golden_boot,0x9cfc60,staff_comp,sim,1,world_cup_awards.cpp:1
+g_key_staff_comp_world_cup_dream_team,0x9cfc64,staff_comp,sim,1,world_cup_awards.cpp:1
+g_key_staff_comp_german_goalkeeper_of_the_year,0x9cfc68,staff_comp,sim,1,germany_awards.cpp:1
+g_key_staff_comp_german_sweeper_of_the_year,0x9cfc6c,staff_comp,sim,1,germany_awards.cpp:1
+g_key_staff_comp_german_defender_of_the_year,0x9cfc70,staff_comp,sim,1,germany_awards.cpp:1
+g_key_staff_comp_german_midfielder_of_the_year,0x9cfc74,staff_comp,sim,1,germany_awards.cpp:1
+g_key_staff_comp_german_striker_of_the_year,0x9cfc78,staff_comp,sim,1,germany_awards.cpp:1
+g_key_staff_comp_german_first_division_top_goalscorer,0x9cfc7c,staff_comp,sim,1,germany_awards.cpp:1
+g_key_staff_comp_english_footballer_of_the_year,0x9cfc80,staff_comp,sim,0,
+g_key_staff_comp_english_conference_manager_of_the_month,0x9cfc84,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_players_conference_select,0x9cfc88,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_conference_manager_of_the_year,0x9cfc8c,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_conference_player_of_the_month,0x9cfc90,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_conference_team_of_the_week,0x9cfc94,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_english_conference_young_player_of_the_m,0x9cfc98,staff_comp,sim,1,england_awards.cpp:1
+g_key_staff_comp_portuguese_premier_division_team_of_the_9cfc9c,0x9cfc9c,staff_comp,sim,1,portugal_awards.cpp:1
+g_key_staff_comp_portuguese_second_division_team_of_the_y,0x9cfca0,staff_comp,sim,1,portugal_awards.cpp:1
+g_key_staff_comp_portuguese_premier_division_team_of_the_9cfca4,0x9cfca4,staff_comp,sim,1,portugal_awards.cpp:1
+g_key_staff_comp_portuguese_second_division_team_of_the_w,0x9cfca8,staff_comp,sim,1,portugal_awards.cpp:1
+g_key_staff_comp_japanese_j_league_1_team_of_the_week,0x9cfcac,staff_comp,sim,1,japan_awards.cpp:1
+g_key_staff_comp_japanese_j_league_2_team_of_the_week,0x9cfcb0,staff_comp,sim,1,japan_awards.cpp:1
+g_key_staff_comp_swedish_premier_division_team_of_the_wee,0x9cfcb4,staff_comp,sim,1,sweden_awards.cpp:1
+g_key_staff_comp_swedish_first_division_team_of_the_week,0x9cfcb8,staff_comp,sim,1,sweden_awards.cpp:1
+g_key_staff_comp_spanish_first_division_team_of_the_week,0x9cfcbc,staff_comp,sim,1,spain_awards.cpp:1
+g_key_staff_comp_spanish_second_division_team_of_the_week,0x9cfcc0,staff_comp,sim,1,spain_awards.cpp:1
+g_key_staff_comp_italian_serie_a_team_of_the_week,0x9cfcc4,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_b_team_of_the_week,0x9cfcc8,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c1_a_team_of_the_week,0x9cfccc,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c1_b_team_of_the_week,0x9cfcd0,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_dutch_premier_division_team_of_the_week,0x9cfcd4,staff_comp,sim,1,holland_awards.cpp:1
+g_key_staff_comp_dutch_first_division_team_of_the_week,0x9cfcd8,staff_comp,sim,1,holland_awards.cpp:1
+g_key_staff_comp_german_first_division_team_of_the_week,0x9cfcdc,staff_comp,sim,1,germany_awards.cpp:1
+g_key_staff_comp_german_second_division_team_of_the_week,0x9cfce0,staff_comp,sim,1,germany_awards.cpp:1
+g_key_staff_comp_french_first_division_team_of_the_week,0x9cfce4,staff_comp,sim,2,france_awards.cpp:1 old_france_awards.cpp:1
+g_key_staff_comp_french_second_division_team_of_the_week,0x9cfce8,staff_comp,sim,2,france_awards.cpp:1 old_france_awards.cpp:1
+g_key_staff_comp_danish_premier_division_team_of_the_week,0x9cfcec,staff_comp,sim,1,denmark_awards.cpp:1
+g_key_staff_comp_danish_first_division_team_of_the_week,0x9cfcf0,staff_comp,sim,1,denmark_awards.cpp:1
+g_key_staff_comp_danish_second_division_team_of_the_week,0x9cfcf4,staff_comp,sim,1,denmark_awards.cpp:1
+g_key_staff_comp_belgian_first_division_team_of_the_week,0x9cfcf8,staff_comp,sim,1,belgium_awards.cpp:1
+g_key_staff_comp_belgian_second_division_team_of_the_week,0x9cfcfc,staff_comp,sim,1,belgium_awards.cpp:1
+g_key_staff_comp_portuguese_premier_division_player_of_th,0x9cfd00,staff_comp,sim,1,portugal_awards.cpp:1
+g_key_staff_comp_portuguese_second_division_most_man_of_t,0x9cfd04,staff_comp,sim,1,portugal_awards.cpp:1
+g_key_staff_comp_portuguese_second_division_top_goalscore,0x9cfd08,staff_comp,sim,1,portugal_awards.cpp:1
+g_key_staff_comp_german_second_division_top_goalscorer,0x9cfd0c,staff_comp,sim,1,germany_awards.cpp:1
+g_key_staff_comp_swedish_goalkeeper_of_the_year,0x9cfd10,staff_comp,sim,1,sweden_awards.cpp:1
+g_key_staff_comp_swedish_defender_of_the_year,0x9cfd14,staff_comp,sim,1,sweden_awards.cpp:1
+g_key_staff_comp_swedish_forward_of_the_year,0x9cfd18,staff_comp,sim,1,sweden_awards.cpp:1
+g_key_staff_comp_swedish_rookie_of_the_year,0x9cfd1c,staff_comp,sim,0,
+g_key_staff_comp_swedish_midfielder_of_the_year,0x9cfd20,staff_comp,sim,1,sweden_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_a_manager_of_the_year,0x9cfd24,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_a_player_of_the_year,0x9cfd28,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_a_team_of_the_week,0x9cfd2c,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_b_manager_of_the_year,0x9cfd30,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_b_player_of_the_year,0x9cfd34,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_japanese_j_league_2_team_of_the_year,0x9cfd38,staff_comp,sim,1,japan_awards.cpp:1
+g_key_staff_comp_spanish_second_division_goalkeeper_of_th,0x9cfd3c,staff_comp,sim,1,spain_awards.cpp:1
+g_key_staff_comp_spanish_second_division_top_goalscorer,0x9cfd40,staff_comp,sim,1,spain_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_b_team_of_the_week,0x9cfd44,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_c_manager_of_the_year,0x9cfd48,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_c_player_of_the_year,0x9cfd4c,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_c_team_of_the_week,0x9cfd50,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_belgian_first_division_top_goalscorer,0x9cfd54,staff_comp,sim,1,belgium_awards.cpp:1
+g_key_staff_comp_belgian_first_division_young_player_of_t,0x9cfd58,staff_comp,sim,1,belgium_awards.cpp:1
+g_key_staff_comp_belgian_second_division_top_goalscorer,0x9cfd5c,staff_comp,sim,1,belgium_awards.cpp:1
+g_key_staff_comp_belgian_third_division_team_of_the_week,0x9cfd60,staff_comp,sim,1,belgium_awards.cpp:1
+g_key_staff_comp_belgian_third_division_player_of_the_yea,0x9cfd64,staff_comp,sim,0,
+g_key_staff_comp_belgian_third_division_top_goalscorer,0x9cfd68,staff_comp,sim,1,belgium_awards.cpp:1
+g_key_staff_comp_european_goalkeeper_of_the_year,0x9cfd6c,staff_comp,sim,1,european_awards.cpp:1
+g_key_staff_comp_european_defender_of_the_year,0x9cfd70,staff_comp,sim,1,european_awards.cpp:1
+g_key_staff_comp_european_midfielder_of_the_year,0x9cfd74,staff_comp,sim,1,european_awards.cpp:1
+g_key_staff_comp_european_striker_of_the_year,0x9cfd78,staff_comp,sim,1,european_awards.cpp:1
+g_key_staff_comp_italian_serie_a_team_of_the_year,0x9cfd7c,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_b_team_of_the_year,0x9cfd80,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c1_a_team_of_the_year,0x9cfd84,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c1_b_team_of_the_year,0x9cfd88,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_a_team_of_the_year,0x9cfd8c,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_b_team_of_the_year,0x9cfd90,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_c_team_of_the_year,0x9cfd94,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_a_top_goalscorer,0x9cfd98,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_b_top_goalscorer,0x9cfd9c,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c1_a_top_goalscorer,0x9cfda0,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c1_b_top_goalscorer,0x9cfda4,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_a_top_goalscorer,0x9cfda8,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_b_top_goalscorer,0x9cfdac,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_italian_serie_c2_c_top_goalscorer,0x9cfdb0,staff_comp,sim,1,italy_awards.cpp:1
+g_key_staff_comp_norwegian_premier_division_manager_of_th,0x9cfdb4,staff_comp,sim,2,norway_awards.cpp:2
+g_key_staff_comp_norwegian_premier_division_player_of_the,0x9cfdb8,staff_comp,sim,1,norway_awards.cpp:1
+g_key_staff_comp_norwegian_first_division_manager_of_the,0x9cfdbc,staff_comp,sim,2,norway_awards.cpp:2
+g_key_staff_comp_norwegian_first_division_player_of_the_m,0x9cfdc0,staff_comp,sim,2,norway_awards.cpp:1 ?:1
+g_key_staff_comp_portuguese_premier_league_manager_of_the,0x9cfdc4,staff_comp,sim,1,portugal_awards.cpp:1
+g_key_staff_comp_portuguese_second_league_manager_of_the,0x9cfdc8,staff_comp,sim,1,portugal_awards.cpp:1
+g_key_staff_comp_finnish_player_of_the_year,0x9cfdcc,staff_comp,sim,2,finland_awards.cpp:1 old_finland_awards.cpp:1
+g_key_staff_comp_finnish_young_player_of_the_year,0x9cfdd0,staff_comp,sim,2,finland_awards.cpp:1 old_finland_awards.cpp:1
+g_key_staff_comp_finnish_goalkeeper_of_the_year,0x9cfdd4,staff_comp,sim,2,finland_awards.cpp:1 old_finland_awards.cpp:1
+g_key_staff_comp_finnish_manager_of_the_year,0x9cfdd8,staff_comp,sim,2,finland_awards.cpp:1 old_finland_awards.cpp:1
+g_key_staff_comp_finnish_premier_division_top_goalscorer,0x9cfddc,staff_comp,sim,2,finland_awards.cpp:1 old_finland_awards.cpp:1
+g_key_staff_comp_finnish_premier_division_player_of_the_m,0x9cfde0,staff_comp,sim,2,finland_awards.cpp:1 old_finland_awards.cpp:1
+g_key_staff_comp_finnish_premier_division_team_of_the_yea,0x9cfde4,staff_comp,sim,2,finland_awards.cpp:1 old_finland_awards.cpp:1
+g_key_staff_comp_finnish_premier_division_team_of_the_wee,0x9cfde8,staff_comp,sim,2,finland_awards.cpp:1 old_finland_awards.cpp:1
+g_key_staff_comp_finnish_first_division_top_goalscorer,0x9cfdec,staff_comp,sim,2,finland_awards.cpp:1 old_finland_awards.cpp:1
+g_key_staff_comp_finnish_first_division_team_of_the_year,0x9cfdf0,staff_comp,sim,2,finland_awards.cpp:1 old_finland_awards.cpp:1
+g_key_staff_comp_finnish_first_division_team_of_the_week,0x9cfdf4,staff_comp,sim,2,finland_awards.cpp:1 old_finland_awards.cpp:1
+g_key_staff_comp_irish_player_of_the_year,0x9cfdf8,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_irish_young_player_of_the_year,0x9cfdfc,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_irish_premier_division_team_of_the_week,0x9cfe00,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_irish_premier_division_player_of_the_yea,0x9cfe04,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_irish_premier_division_young_player_of_t,0x9cfe08,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_irish_premier_division_team_of_the_year,0x9cfe0c,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_irish_first_division_team_of_the_week,0x9cfe10,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_irish_first_division_player_of_the_year,0x9cfe14,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_irish_first_division_young_player_of_the,0x9cfe18,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_irish_first_division_team_of_the_year,0x9cfe1c,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_irish_premier_division_manager_of_the_ye,0x9cfe20,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_irish_premier_division_manager_of_the_mo,0x9cfe24,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_irish_first_division_manager_of_the_year,0x9cfe28,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_irish_first_division_manager_of_the_mont,0x9cfe2c,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_polish_first_division_team_of_the_week,0x9cfe30,staff_comp,sim,1,poland_awards.cpp:1
+g_key_staff_comp_polish_first_division_player_of_the_year,0x9cfe34,staff_comp,sim,1,poland_awards.cpp:1
+g_key_staff_comp_polish_first_division_young_player_of_th,0x9cfe38,staff_comp,sim,1,poland_awards.cpp:1
+g_key_staff_comp_polish_first_division_manager_of_the_yea,0x9cfe3c,staff_comp,sim,1,poland_awards.cpp:1
+g_key_staff_comp_polish_first_division_manager_of_the_mon,0x9cfe40,staff_comp,sim,1,poland_awards.cpp:1
+g_key_staff_comp_polish_second_division_team_of_the_week,0x9cfe44,staff_comp,sim,1,poland_awards.cpp:1
+g_key_staff_comp_polish_second_division_player_of_the_yea,0x9cfe48,staff_comp,sim,1,poland_awards.cpp:1
+g_key_staff_comp_polish_second_division_young_player_of_t,0x9cfe4c,staff_comp,sim,1,poland_awards.cpp:1
+g_key_staff_comp_polish_second_division_manager_of_the_ye,0x9cfe50,staff_comp,sim,1,poland_awards.cpp:1
+g_key_staff_comp_polish_second_division_manager_of_the_mo,0x9cfe54,staff_comp,sim,1,poland_awards.cpp:1
+g_key_staff_comp_croatian_first_division_player_of_the_ye,0x9cfe58,staff_comp,sim,1,croatia_awards.cpp:1
+g_key_staff_comp_croatian_first_division_team_of_the_week,0x9cfe5c,staff_comp,sim,1,croatia_awards.cpp:1
+g_key_staff_comp_croatian_first_division_top_goalscorer,0x9cfe60,staff_comp,sim,1,croatia_awards.cpp:1
+g_key_staff_comp_croatian_second_division_a_player_of_the,0x9cfe64,staff_comp,sim,1,croatia_awards.cpp:1
+g_key_staff_comp_croatian_second_division_a_team_of_the_w,0x9cfe68,staff_comp,sim,1,croatia_awards.cpp:1
+g_key_staff_comp_croatian_second_division_a_top_goalscore,0x9cfe6c,staff_comp,sim,1,croatia_awards.cpp:1
+g_key_staff_comp_croatian_second_division_b_player_of_the,0x9cfe70,staff_comp,sim,1,croatia_awards.cpp:1
+g_key_staff_comp_croatian_second_division_b_team_of_the_w,0x9cfe74,staff_comp,sim,1,croatia_awards.cpp:1
+g_key_staff_comp_croatian_second_division_b_top_goalscore,0x9cfe78,staff_comp,sim,1,croatia_awards.cpp:1
+g_key_staff_comp_australian_nsl_team_of_the_week,0x9cfe7c,staff_comp,sim,1,australia_awards.cpp:1
+g_key_staff_comp_australian_manager_of_the_month,0x9cfe80,staff_comp,sim,1,australia_awards.cpp:1
+g_key_staff_comp_australian_player_of_the_month,0x9cfe84,staff_comp,sim,1,australia_awards.cpp:1
+g_key_staff_comp_australian_nsl_young_player_of_the_month,0x9cfe88,staff_comp,sim,1,australia_awards.cpp:1
+g_key_staff_comp_australian_player_of_the_year,0x9cfe8c,staff_comp,sim,1,australia_awards.cpp:1
+g_key_staff_comp_australian_nsl_u21_player_of_the_year,0x9cfe90,staff_comp,sim,1,australia_awards.cpp:1
+g_key_staff_comp_australian_goalkeeper_of_the_year,0x9cfe94,staff_comp,sim,1,australia_awards.cpp:1
+g_key_staff_comp_australian_top_goalscorer,0x9cfe98,staff_comp,sim,1,australia_awards.cpp:1
+g_key_staff_comp_australian_manager_of_the_year,0x9cfe9c,staff_comp,sim,1,australia_awards.cpp:1
+g_key_staff_comp_greek_player_of_the_year,0x9cfea0,staff_comp,sim,1,greece_awards.cpp:1
+g_key_staff_comp_greek_foreign_player_of_the_year,0x9cfea4,staff_comp,sim,1,greece_awards.cpp:1
+g_key_staff_comp_greek_premier_division_team_of_the_week,0x9cfea8,staff_comp,sim,1,greece_awards.cpp:1
+g_key_staff_comp_greek_premier_division_player_of_the_yea,0x9cfeac,staff_comp,sim,1,greece_awards.cpp:1
+g_key_staff_comp_greek_premier_division_manager_of_the_ye,0x9cfeb0,staff_comp,sim,1,greece_awards.cpp:1
+g_key_staff_comp_greek_premier_division_top_goalscorer,0x9cfeb4,staff_comp,sim,1,greece_awards.cpp:1
+g_key_staff_comp_greek_second_division_team_of_the_week,0x9cfeb8,staff_comp,sim,1,greece_awards.cpp:1
+g_key_staff_comp_greek_second_division_player_of_the_year,0x9cfebc,staff_comp,sim,1,greece_awards.cpp:1
+g_key_staff_comp_greek_second_division_manager_of_the_yea,0x9cfec0,staff_comp,sim,1,greece_awards.cpp:1
+g_key_staff_comp_greek_second_division_top_goalscorer,0x9cfec4,staff_comp,sim,1,greece_awards.cpp:1
+g_key_staff_comp_turkish_player_of_the_year,0x9cfec8,staff_comp,sim,1,turkey_awards.cpp:1
+g_key_staff_comp_turkish_manager_of_the_year,0x9cfecc,staff_comp,sim,1,turkey_awards.cpp:1
+g_key_staff_comp_turkish_premier_division_team_of_the_wee,0x9cfed0,staff_comp,sim,1,turkey_awards.cpp:1
+g_key_staff_comp_turkish_premier_division_team_of_the_yea,0x9cfed4,staff_comp,sim,1,turkey_awards.cpp:1
+g_key_staff_comp_turkish_first_division_team_of_the_week,0x9cfed8,staff_comp,sim,1,turkey_awards.cpp:1
+g_key_staff_comp_turkish_first_division_team_of_the_year,0x9cfedc,staff_comp,sim,1,turkey_awards.cpp:1
+g_key_staff_comp_russian_player_of_the_year,0x9cfee0,staff_comp,sim,1,russia_awards.cpp:1
+g_key_staff_comp_russian_premier_division_team_of_the_wee,0x9cfee4,staff_comp,sim,1,russia_awards.cpp:1
+g_key_staff_comp_russian_premier_division_team_of_the_yea,0x9cfee8,staff_comp,sim,1,russia_awards.cpp:1
+g_key_staff_comp_russian_premier_division_player_of_the_m,0x9cfeec,staff_comp,sim,1,russia_awards.cpp:1
+g_key_staff_comp_russian_first_division_team_of_the_week,0x9cfef0,staff_comp,sim,1,russia_awards.cpp:1
+g_key_staff_comp_russian_first_division_team_of_the_year,0x9cfef4,staff_comp,sim,1,russia_awards.cpp:1
+g_key_staff_comp_russian_first_division_player_of_the_mon,0x9cfef8,staff_comp,sim,1,russia_awards.cpp:1
+g_key_staff_comp_irish_personality_of_the_year,0x9cfefc,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_n_irish_player_of_the_year,0x9cff00,staff_comp,sim,1,northern_ireland_awards.cpp:1
+g_key_staff_comp_n_irish_premier_division_team_of_the_wee,0x9cff04,staff_comp,sim,1,northern_ireland_awards.cpp:1
+g_key_staff_comp_n_irish_premier_division_player_of_the_y,0x9cff08,staff_comp,sim,1,northern_ireland_awards.cpp:1
+g_key_staff_comp_n_irish_premier_division_young_player_of,0x9cff0c,staff_comp,sim,1,northern_ireland_awards.cpp:1
+g_key_staff_comp_n_irish_premier_division_top_goalscorer,0x9cff10,staff_comp,sim,1,northern_ireland_awards.cpp:1
+g_key_staff_comp_n_irish_premier_division_manager_of_the_9cff14,0x9cff14,staff_comp,sim,1,northern_ireland_awards.cpp:1
+g_key_staff_comp_n_irish_premier_division_manager_of_the_9cff18,0x9cff18,staff_comp,sim,1,northern_ireland_awards.cpp:1
+g_key_staff_comp_n_irish_first_division_team_of_the_week,0x9cff1c,staff_comp,sim,1,northern_ireland_awards.cpp:1
+g_key_staff_comp_n_irish_first_division_player_of_the_yea,0x9cff20,staff_comp,sim,1,northern_ireland_awards.cpp:1
+g_key_staff_comp_n_irish_first_division_young_player_of_t,0x9cff24,staff_comp,sim,1,northern_ireland_awards.cpp:1
+g_key_staff_comp_n_irish_first_division_top_goalscorer,0x9cff28,staff_comp,sim,1,northern_ireland_awards.cpp:1
+g_key_staff_comp_n_irish_first_division_manager_of_the_ye,0x9cff2c,staff_comp,sim,1,northern_ireland_awards.cpp:1
+g_key_staff_comp_n_irish_first_division_manager_of_the_mo,0x9cff30,staff_comp,sim,1,northern_ireland_awards.cpp:1
+g_key_staff_comp_irish_league_golden_boot,0x9cff34,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_irish_league_bronze_boot,0x9cff38,staff_comp,sim,2,ireland_awards.cpp:1 old_ireland_awards.cpp:1
+g_key_staff_comp_belgian_second_division_revelation_of_th,0x9cff3c,staff_comp,sim,1,belgium_awards.cpp:1
+g_key_staff_comp_welsh_team_of_the_week,0x9cff40,staff_comp,sim,1,wales_awards.cpp:1
+g_key_staff_comp_welsh_player_of_the_year,0x9cff44,staff_comp,sim,1,wales_awards.cpp:1
+g_key_staff_comp_welsh_young_player_of_the_year,0x9cff48,staff_comp,sim,1,wales_awards.cpp:1
+g_key_staff_comp_welsh_top_goalscorer,0x9cff4c,staff_comp,sim,1,wales_awards.cpp:1
+g_key_staff_comp_welsh_manager_of_the_year,0x9cff50,staff_comp,sim,1,wales_awards.cpp:1
+g_key_staff_comp_welsh_manager_of_the_month,0x9cff54,staff_comp,sim,1,wales_awards.cpp:1
+g_key_staff_comp_french_first_division_team_of_the_year,0x9cff58,staff_comp,sim,2,?:1 france_awards.cpp:1
+g_key_staff_comp_french_second_division_team_of_the_year,0x9cff5c,staff_comp,sim,1,france_awards.cpp:1
+g_key_staff_comp_french_national_player_of_the_year,0x9cff60,staff_comp,sim,1,france_awards.cpp:1
+g_key_staff_comp_french_national_goalkeeper_of_the_year,0x9cff64,staff_comp,sim,1,france_awards.cpp:1
+g_key_staff_comp_french_national_team_of_the_week,0x9cff68,staff_comp,sim,1,france_awards.cpp:1
+g_key_staff_comp_french_national_team_of_the_year,0x9cff6c,staff_comp,sim,1,france_awards.cpp:1
+g_key_staff_comp_irish_player_of_the_month,0x9cff70,staff_comp,sim,3,?:2 ireland_awards.cpp:1
+g_key_staff_comp_french_players_national_player_of_the_ye,0x9cff74,staff_comp,sim,1,france_awards.cpp:1
+g_key_staff_comp_oceania_player_of_the_year,0x9cff78,staff_comp,sim,1,international_awards.cpp:1
+g_key_staff_comp_finnish_first_division_player_of_the_mon,0x9cff7c,staff_comp,sim,2,?:1 finland_awards.cpp:1
+g_key_staff_comp_finnish_premier_division_manager_of_the,0x9cff80,staff_comp,sim,1,finland_awards.cpp:1
+g_key_staff_comp_finnish_first_division_manager_of_the_mo,0x9cff84,staff_comp,sim,1,finland_awards.cpp:1
+g_key_staff_comp_brazilian_1st_division_player_of_the_yea,0x9cff88,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_1st_division_team_of_the_week,0x9cff8c,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_1st_division_team_of_the_year,0x9cff90,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_1st_division_top_goalscorer,0x9cff94,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_1st_division_young_player_of_t,0x9cff98,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_2nd_division_player_of_the_yea,0x9cff9c,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_2nd_division_team_of_the_week,0x9cffa0,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_2nd_division_team_of_the_year,0x9cffa4,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_2nd_division_top_goalscorer,0x9cffa8,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_2nd_division_young_player_of_t,0x9cffac,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_3rd_division_player_of_the_yea,0x9cffb0,staff_comp,sim,0,
+g_key_staff_comp_brazilian_3rd_division_team_of_the_week,0x9cffb4,staff_comp,sim,0,
+g_key_staff_comp_brazilian_3rd_division_team_of_the_year,0x9cffb8,staff_comp,sim,0,
+g_key_staff_comp_brazilian_3rd_division_top_goalscorer,0x9cffbc,staff_comp,sim,0,
+g_key_staff_comp_brazilian_3rd_division_young_player_of_t,0x9cffc0,staff_comp,sim,0,
+g_key_staff_comp_brazilian_bahia_best_goalkeeper,0x9cffc4,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_bahia_best_player,0x9cffc8,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_bahia_team_of_the_week,0x9cffcc,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_bahia_top_goalscorer,0x9cffd0,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_central_best_goalkeeper,0x9cffd4,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_central_best_player,0x9cffd8,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_central_team_of_the_week,0x9cffdc,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_central_top_goalscorer,0x9cffe0,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_gaucho_best_goalkeeper,0x9cffe4,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_gaucho_best_player,0x9cffe8,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_gaucho_team_of_the_week,0x9cffec,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_gaucho_top_goalscorer,0x9cfff0,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_goias_best_goalkeeper,0x9cfff4,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_goias_best_player,0x9cfff8,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_goias_team_of_the_week,0x9cfffc,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_goias_top_goalscorer,0x9d0000,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_minas_gerais_best_goalkeeper,0x9d0004,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_minas_gerais_best_player,0x9d0008,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_minas_gerais_team_of_the_week,0x9d000c,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_minas_gerais_top_goalscorer,0x9d0010,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_north_best_goalkeeper,0x9d0014,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_north_best_player,0x9d0018,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_north_team_of_the_week,0x9d001c,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_north_top_goalscorer,0x9d0020,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_northeast_best_goalkeeper,0x9d0024,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_northeast_best_player,0x9d0028,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_northeast_team_of_the_week,0x9d002c,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_northeast_top_goalscorer,0x9d0030,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_parana_best_goalkeeper,0x9d0034,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_parana_best_player,0x9d0038,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_parana_team_of_the_week,0x9d003c,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_parana_top_goalscorer,0x9d0040,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_pernambuco_best_goalkeeper,0x9d0044,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_pernambuco_best_player,0x9d0048,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_pernambuco_team_of_the_week,0x9d004c,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_pernambuco_top_goalscorer,0x9d0050,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_rio_de_janeiro_best_goalkeeper,0x9d0054,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_rio_de_janeiro_best_player,0x9d0058,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_rio_de_janeiro_team_of_the_wee,0x9d005c,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_rio_de_janeiro_top_goalscorer,0x9d0060,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_santa_catarina_best_goalkeeper,0x9d0064,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_santa_catarina_best_player,0x9d0068,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_santa_catarina_team_of_the_wee,0x9d006c,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_santa_catarina_top_goalscorer,0x9d0070,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_sao_paulo_best_goalkeeper,0x9d0074,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_sao_paulo_best_player,0x9d0078,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_sao_paulo_team_of_week,0x9d007c,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_brazilian_sao_paulo_top_goalscorer,0x9d0080,staff_comp,sim,1,brazil_awards.cpp:1
+g_key_staff_comp_south_korean_best_11_of_the_year,0x9d0084,staff_comp,sim,1,korea_awards.cpp:1
+g_key_staff_comp_south_korean_goalkeeper_of_the_month,0x9d0088,staff_comp,sim,0,
+g_key_staff_comp_south_korean_manager_of_the_year,0x9d008c,staff_comp,sim,1,korea_awards.cpp:1
+g_key_staff_comp_south_korean_most_assisted_player_of_the,0x9d0090,staff_comp,sim,1,korea_awards.cpp:1
+g_key_staff_comp_south_korean_player_of_the_month,0x9d0094,staff_comp,sim,1,korea_awards.cpp:1
+g_key_staff_comp_south_korean_player_of_the_year,0x9d0098,staff_comp,sim,1,korea_awards.cpp:1
+g_key_staff_comp_south_korean_top_goal_scorer_of_the_year,0x9d009c,staff_comp,sim,1,korea_awards.cpp:1
+g_key_staff_comp_south_korean_young_player_of_the_year,0x9d00a0,staff_comp,sim,1,korea_awards.cpp:1
+g_key_club_mls_all_stars_east,0x9d00a4,club,sim,11,national_teams.cpp:4 usa_mls_all_stars.cpp:3 index.cpp:2 player_regen.cpp:1 virtual_staff.cpp:1
+g_key_club_mls_all_stars_west,0x9d00a8,club,sim,12,national_teams.cpp:4 usa_mls_all_stars.cpp:4 index.cpp:2 player_regen.cpp:1 virtual_staff.cpp:1
+g_key_club_river_plate,0x9d00ac,club,sim,4,index.cpp:2 arg_prm.cpp:1 conmebol_seeding.cpp:1
+g_key_club_velez_sarsfield,0x9d00b0,club,sim,4,index.cpp:2 arg_prm.cpp:1 conmebol_seeding.cpp:1
+g_key_club_independiente,0x9d00b4,club,sim,4,index.cpp:2 arg_prm.cpp:1 conmebol_seeding.cpp:1
+g_key_club_independiente_rivadavia_de_mendoza,0x9d00b8,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_racing_de_cordoba,0x9d00bc,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_villa_mitre_de_bahia_blanca,0x9d00c0,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_argentino_de_rosario,0x9d00c4,club,sim,2,index.cpp:2
+g_key_club_temperley,0x9d00c8,club,sim,2,index.cpp:2
+g_key_club_lanus,0x9d00cc,club,sim,3,index.cpp:2 arg_prm.cpp:1
+g_key_club_boca_juniors,0x9d00d0,club,sim,4,index.cpp:2 arg_prm.cpp:1 conmebol_seeding.cpp:1
+g_key_club_gimnasia_y_esgrima_de_la_plata,0x9d00d4,club,sim,3,index.cpp:2 arg_prm.cpp:1
+g_key_club_san_lorenzo_de_almagro,0x9d00d8,club,sim,4,index.cpp:2 arg_prm.cpp:1 conmebol_seeding.cpp:1
+g_key_club_argentinos_juniors,0x9d00dc,club,sim,3,index.cpp:2 arg_prm.cpp:1
+g_key_club_rosario_central,0x9d00e0,club,sim,4,index.cpp:2 arg_prm.cpp:1 conmebol_seeding.cpp:1
+g_key_club_newell_s_old_boys,0x9d00e4,club,sim,3,index.cpp:2 arg_prm.cpp:1
+g_key_club_racing_club,0x9d00e8,club,sim,3,index.cpp:2 arg_prm.cpp:1
+g_key_club_colon_de_santa_fe,0x9d00ec,club,sim,3,index.cpp:2 arg_prm.cpp:1
+g_key_club_platense,0x9d00f0,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_ferro_carril_oeste,0x9d00f4,club,sim,2,index.cpp:2
+g_key_club_estudiantes_de_la_plata,0x9d00f8,club,sim,3,index.cpp:2 arg_prm.cpp:1
+g_key_club_gimnasia_y_esgrima_de_jujuy,0x9d00fc,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_union_de_santa_fe,0x9d0100,club,sim,3,index.cpp:2 arg_prm.cpp:1
+g_key_club_huracan,0x9d0104,club,sim,3,index.cpp:2 arg_prm.cpp:1
+g_key_club_talleres_de_cordoba,0x9d0108,club,sim,3,index.cpp:2 arg_prm.cpp:1
+g_key_club_belgrano_de_cordoba,0x9d010c,club,sim,3,index.cpp:2 arg_prm.cpp:1
+g_key_club_arsenal,0x9d0110,club,sim,4,?:2 index.cpp:2
+g_key_club_crystal_palace,0x9d0114,club,sim,2,index.cpp:2
+g_key_club_glasgow_celtic,0x9d0118,club,sim,7,index.cpp:2 shortlist_manager.cpp:2 contract_manager.cpp:1 league.cpp:1 media.cpp:1
+g_key_club_glasgow_rangers,0x9d011c,club,sim,8,index.cpp:2 media.cpp:2 shortlist_manager.cpp:2 contract_manager.cpp:1 league.cpp:1
+g_key_club_athletic_club_de_bilbao,0x9d0120,club,sim,9,Database.cpp:4 index.cpp:2 player_regen.cpp:2 virtual_staff.cpp:1
+g_key_club_c_d_alaves,0x9d0124,club,sim,8,Database.cpp:3 index.cpp:2 player_regen.cpp:2 virtual_staff.cpp:1
+g_key_club_real_sociedad_c_f,0x9d0128,club,sim,9,Database.cpp:3 index.cpp:2 player_regen.cpp:2 transfer_manager.cpp:1 virtual_staff.cpp:1
+g_key_club_atletico_de_madrid,0x9d012c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_atletico_de_madrid_b,0x9d0130,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_athletic_club_de_bilbao_b,0x9d0134,club,sim,9,Database.cpp:4 index.cpp:2 player_regen.cpp:2 virtual_staff.cpp:1
+g_key_club_f_c_barcelona,0x9d0138,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_f_c_barcelona_b,0x9d013c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_valladolid,0x9d0140,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_valladolid_b,0x9d0144,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_malaga_c_f,0x9d0148,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_malaga_c_f_b,0x9d014c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_betis_balompie,0x9d0150,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_betis_balompie_b,0x9d0154,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_club_celta_de_vigo,0x9d0158,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_club_celta_de_vigo_b,0x9d015c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_deportivo_de_la_coruna,0x9d0160,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_deportivo_de_la_coruna_b,0x9d0164,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_r_c_d_espanyol,0x9d0168,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_r_c_d_espanyol_b,0x9d016c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_logrones,0x9d0170,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_logrones_b,0x9d0174,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_r_c_d_mallorca,0x9d0178,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_r_c_d_mallorca_b,0x9d017c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_club_atletico_osasuna,0x9d0180,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_club_atletico_osasuna_b,0x9d0184,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_oviedo_c_f,0x9d0188,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_oviedo_c_f_b,0x9d018c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_madrid_c_f,0x9d0190,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_madrid_c_f_b,0x9d0194,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sevilla_c_f,0x9d0198,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sevilla_c_f_b,0x9d019c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_sociedad_c_f_b,0x9d01a0,club,sim,9,Database.cpp:3 index.cpp:2 player_regen.cpp:2 transfer_manager.cpp:1 virtual_staff.cpp:1
+g_key_club_instituto_de_cordoba,0x9d01a4,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_san_martin_de_san_juan,0x9d01a8,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_gimnasia_y_tiro_de_salta,0x9d01ac,club,sim,2,index.cpp:2
+g_key_club_atletico_rafaela,0x9d01b0,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_san_martin_de_tucuman,0x9d01b4,club,sim,2,index.cpp:2
+g_key_club_almirante_brown_de_arrecifes,0x9d01b8,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_atletico_tucuman,0x9d01bc,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_olimpo_de_bahia_blanca,0x9d01c0,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_huracan_de_corrientes,0x9d01c4,club,sim,2,index.cpp:2
+g_key_club_aldosivi,0x9d01c8,club,sim,2,index.cpp:2
+g_key_club_cipolletti_de_rio_negro,0x9d01cc,club,sim,2,index.cpp:2
+g_key_club_san_martin_de_mendoza,0x9d01d0,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_douglas_haig,0x9d01d4,club,sim,2,index.cpp:2
+g_key_club_gimnasia_y_esgrima_concepcion_uruguay,0x9d01d8,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_juventud_antoniana_de_salta,0x9d01dc,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_godoy_cruz_de_mendoza,0x9d01e0,club,não,3,index.cpp:2 arg_second.cpp:1
+g_key_club_banfield,0x9d01e4,club,sim,3,index.cpp:2 arg_prm.cpp:1
+g_key_club_los_andes,0x9d01e8,club,sim,4,index.cpp:2 arg_second.cpp:1 club_records.cpp:1
+g_key_club_quilmes,0x9d01ec,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_central_cordoba_de_rosario,0x9d01f0,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_chacarita_juniors,0x9d01f4,club,sim,3,index.cpp:2 arg_prm.cpp:1
+g_key_club_all_boys,0x9d01f8,club,sim,2,index.cpp:2
+g_key_club_san_miguel,0x9d01fc,club,sim,2,index.cpp:2
+g_key_club_nueva_chicago,0x9d0200,club,sim,3,index.cpp:2 arg_prm.cpp:1
+g_key_club_defensa_y_justicia,0x9d0204,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_arsenal_de_sarandi,0x9d0208,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_huracan_de_tres_arroyos,0x9d020c,club,sim,5,arg_second.cpp:3 index.cpp:2
+g_key_club_defensores_de_belgrano,0x9d0210,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_deportivo_moron,0x9d0214,club,sim,2,index.cpp:2
+g_key_club_estudiantes_de_buenos_aires,0x9d0218,club,sim,2,index.cpp:2
+g_key_club_almagro,0x9d021c,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_atlanta,0x9d0220,club,sim,2,index.cpp:2
+g_key_club_deportivo_espanol,0x9d0224,club,sim,2,index.cpp:2
+g_key_club_el_porvenir,0x9d0228,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_tigre,0x9d022c,club,sim,3,index.cpp:2 arg_second.cpp:1
+g_key_club_middlesbrough,0x9d0230,club,sim,4,index.cpp:2 match_eng.cpp:2
+g_key_club_newcastle_united,0x9d0234,club,sim,4,index.cpp:2 match_eng.cpp:2
+g_key_club_sunderland,0x9d0238,club,sim,4,index.cpp:2 match_eng.cpp:2
+g_key_club_aston_villa,0x9d023c,club,sim,4,index.cpp:2 match_eng.cpp:2
+g_key_club_manchester_united,0x9d0240,club,sim,10,news.cpp:4 eng_fa_cup.cpp:2 index.cpp:2 match_eng.cpp:2
+g_key_club_liverpool,0x9d0244,club,sim,6,?:2 index.cpp:2 match_eng.cpp:2
+g_key_club_everton,0x9d0248,club,sim,6,?:4 index.cpp:2
+g_key_club_tottenham_hotspur,0x9d024c,club,sim,4,?:2 index.cpp:2
+g_key_club_chelsea,0x9d0250,club,sim,4,?:2 index.cpp:2
+g_key_club_valencia_c_f,0x9d0254,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_valencia_c_f_b,0x9d0258,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_brighton_and_hove_albion,0x9d025c,club,sim,6,?:3 index.cpp:2 new_transfer_rule_screens.cpp:1
+g_key_club_southampton,0x9d0260,club,sim,3,index.cpp:2 ?:1
+g_key_club_as_monaco,0x9d0264,club,sim,3,index.cpp:2 stadium.cpp:1
+g_key_club_fc_metz,0x9d0268,club,sim,4,index.cpp:2 match_eng.cpp:2
+g_key_club_cruzeiro_esporte_clube,0x9d026c,club,sim,4,conmebol_seeding.cpp:2 index.cpp:2
+g_key_club_sao_paulo_futebol_clube,0x9d0270,club,sim,3,index.cpp:2 conmebol_seeding.cpp:1
+g_key_club_sociedade_esportiva_palmeiras,0x9d0274,club,sim,4,conmebol_seeding.cpp:2 index.cpp:2
+g_key_club_sport_club_corinthians_paulista,0x9d0278,club,sim,3,index.cpp:2 conmebol_seeding.cpp:1
+g_key_club_gremio_foot_ball_porto_alegre,0x9d027c,club,sim,3,index.cpp:2 conmebol_seeding.cpp:1
+g_key_club_club_social_y_deportivo_colo_colo,0x9d0280,club,sim,3,index.cpp:2 conmebol_seeding.cpp:1
+g_key_club_univ_de_chile,0x9d0284,club,sim,3,index.cpp:2 conmebol_seeding.cpp:1
+g_key_club_univ_catolica,0x9d0288,club,sim,3,index.cpp:2 conmebol_seeding.cpp:1
+g_key_club_club_nacional_de_futbol,0x9d028c,club,sim,3,index.cpp:2 conmebol_seeding.cpp:1
+g_key_club_olimpia,0x9d0290,club,sim,3,index.cpp:2 conmebol_seeding.cpp:1
+g_key_club_cerro_porteno,0x9d0294,club,sim,3,index.cpp:2 conmebol_seeding.cpp:1
+g_key_club_club_atletico_penarol,0x9d0298,club,sim,3,index.cpp:2 conmebol_seeding.cpp:1
+g_key_club_elgin_city,0x9d029c,club,não,3,index.cpp:2 sco_prm.cpp:1
+g_key_club_peterhead,0x9d02a0,club,não,3,index.cpp:2 sco_prm.cpp:1
+g_key_club_eintracht_frankfurt,0x9d02a4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_eintracht_frankfurt_amateure,0x9d02a8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_fc_hansa_rostock,0x9d02ac,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_fc_hansa_rostock_amateure,0x9d02b0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_fc_schalke_04,0x9d02b4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_fc_schalke_04_amateure,0x9d02b8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sg_wattenscheid_09,0x9d02bc,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sg_wattenscheid_09_amateure,0x9d02c0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sport_lisboa_e_benfica,0x9d02c4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sport_lisboa_e_benfica_b,0x9d02c8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sporting_clube_de_braga,0x9d02cc,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sporting_clube_de_braga_b,0x9d02d0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_clube_sport_maritimo,0x9d02d4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_clube_sport_maritimo_b,0x9d02d8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_futebol_clube_do_porto,0x9d02dc,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_futebol_clube_do_porto_b,0x9d02e0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_s_d_eibar,0x9d02e4,club,sim,6,Database.cpp:4 index.cpp:2
+g_key_club_amurrio_c_f,0x9d02e8,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_c_d_aurrera_vitoria,0x9d02ec,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_barakaldo_c_f,0x9d02f0,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_s_d_beasain,0x9d02f4,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_bermeo_club,0x9d02f8,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_gernika_club,0x9d02fc,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_s_d_lemona,0x9d0304,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_elgoibar_c_d,0x9d0308,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_hernani_c_d,0x9d030c,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_zalla_u_c,0x9d0310,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_cultural_durango,0x9d0314,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_s_d_amorebieta,0x9d0318,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_arenas_getxo_bilbao,0x9d031c,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_aurrera_ondarroa_c_d,0x9d0320,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_baskonia_c_d,0x9d0324,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_s_d_eibar_b,0x9d0328,club,sim,6,Database.cpp:4 index.cpp:2
+g_key_club_u_d_san_pedro,0x9d032c,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_santurtzi_c_d,0x9d0330,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_sestao_river_club,0x9d0334,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_tolosa_c_f,0x9d0338,club,sim,3,index.cpp:2 Database.cpp:1
+g_key_club_coritiba_football_club,0x9d033c,club,sim,2,index.cpp:2
+g_key_club_santos_futebol_clube,0x9d0340,club,sim,2,index.cpp:2
+g_key_club_sport_club_do_recife,0x9d0344,club,sim,2,index.cpp:2
+g_key_club_associacao_portugesa_de_desportos,0x9d0348,club,sim,2,index.cpp:2
+g_key_club_clube_atletico_mineiro,0x9d0350,club,sim,2,index.cpp:2
+g_key_club_clube_de_regatas_vasco_da_gama,0x9d0354,club,sim,3,index.cpp:2 conmebol_seeding.cpp:1
+g_key_club_clube_de_regatas_flamengo,0x9d0358,club,sim,3,index.cpp:2 conmebol_seeding.cpp:1
+g_key_club_sport_club_internacional,0x9d035c,club,sim,2,index.cpp:2
+g_key_club_esporte_clube_vitoria,0x9d0360,club,sim,2,index.cpp:2
+g_key_club_botafogo_futebol_clube,0x9d0364,club,sim,2,index.cpp:2
+g_key_club_clube_atletico_paranaense,0x9d0368,club,sim,2,index.cpp:2
+g_key_club_associacao_atletica_ponte_preta,0x9d036c,club,sim,2,index.cpp:2
+g_key_club_esporte_clube_juventude,0x9d0370,club,sim,2,index.cpp:2
+g_key_club_guarani_futebol_clube,0x9d0374,club,sim,2,index.cpp:2
+g_key_club_parana_clube,0x9d0378,club,sim,2,index.cpp:2
+g_key_club_chicago_fire,0x9d037c,club,sim,4,index.cpp:2 usa_mls.cpp:2
+g_key_club_miami_fusion_fc,0x9d0380,club,sim,4,index.cpp:2 usa_mls.cpp:2
+g_key_club_washington_dc_united,0x9d0384,club,sim,4,index.cpp:2 usa_mls.cpp:2
+g_key_club_tampa_bay_mutiny,0x9d0388,club,sim,4,index.cpp:2 usa_mls.cpp:2
+g_key_club_san_jose_earthquakes,0x9d038c,club,sim,4,index.cpp:2 usa_mls.cpp:2
+g_key_club_new_england_revolution,0x9d0390,club,sim,4,index.cpp:2 usa_mls.cpp:2
+g_key_club_ny_nj_metrostars,0x9d0394,club,sim,4,index.cpp:2 usa_mls.cpp:2
+g_key_club_los_angeles_galaxy,0x9d0398,club,sim,4,index.cpp:2 usa_mls.cpp:2
+g_key_club_kansas_city_wizards,0x9d039c,club,sim,4,index.cpp:2 usa_mls.cpp:2
+g_key_club_dallas_burn,0x9d03a0,club,sim,4,index.cpp:2 usa_mls.cpp:2
+g_key_club_columbus_crew,0x9d03a4,club,sim,4,index.cpp:2 usa_mls.cpp:2
+g_key_club_colorado_rapids,0x9d03a8,club,sim,4,index.cpp:2 usa_mls.cpp:2
+g_key_club_albacete_balompie,0x9d03ac,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_albacete_balompie_b,0x9d03b0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_badajoz_9d03b4,0x9d03b4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_badajoz_b_9d03b8,0x9d03b8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_leganes,0x9d03bc,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_leganes_b,0x9d03c0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_tenerife,0x9d03c4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_tenerife_b,0x9d03c8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_p_merida,0x9d03cc,club,não,2,index.cpp:2
+g_key_club_c_p_merida_b,0x9d03d0,club,não,2,index.cpp:2
+g_key_club_deportivo_alaves_b,0x9d03d4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_extremadura_c_f,0x9d03d8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_extremadura_c_f_b,0x9d03dc,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_racing_club_de_santander,0x9d03e0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_racing_club_de_santander_b,0x9d03e4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_rayo_vallecano_de_madrid,0x9d03e8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_rayo_vallecano_de_madrid_b,0x9d03ec,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_murcia_c_f,0x9d03f0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_murcia_c_f_b,0x9d03f4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_sporting_de_gijon,0x9d03f8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_sporting_de_gijon_b,0x9d03fc,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_zaragoza,0x9d0400,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_zaragoza_b,0x9d0404,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_s_d_compostela,0x9d0408,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_s_d_compostela_b,0x9d040c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_u_d_las_palmas,0x9d0410,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_u_d_las_palmas_b,0x9d0414,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_u_d_salamanca,0x9d0418,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_u_d_salamanca_b,0x9d041c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_galatasaray,0x9d0420,club,sim,2,index.cpp:2
+g_key_club_bjk_besiktas,0x9d0424,club,sim,2,index.cpp:2
+g_key_club_fenerbahce,0x9d0428,club,sim,2,index.cpp:2
+g_key_club_general_paz_juniors_de_cordoba,0x9d042c,club,sim,2,index.cpp:2
+g_key_club_swansea_city,0x9d0430,club,sim,5,index.cpp:2 club_screens.cpp:1 player_regen.cpp:1 wel_prm_cup.cpp:1
+g_key_club_cardiff_city,0x9d0434,club,sim,5,index.cpp:2 club_screens.cpp:1 player_regen.cpp:1 wel_prm_cup.cpp:1
+g_key_club_merthyr_tydfil,0x9d0438,club,sim,3,index.cpp:2 wel_prm_cup.cpp:1
+g_key_club_wrexham,0x9d043c,club,sim,5,index.cpp:2 club_screens.cpp:1 player_regen.cpp:1 wel_prm_cup.cpp:1
+g_key_club_sporting_clube_de_portugal,0x9d0440,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sporting_clube_de_portugal_b,0x9d0444,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_arminia_bielefeld,0x9d0448,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_arminia_bielefeld_amateure,0x9d044c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_fc_energie_cottbus,0x9d0450,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_fc_energie_cottbus_amateure,0x9d0454,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_msv_duisburg,0x9d0458,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_msv_duisburg_amateure,0x9d045c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_hannover_96,0x9d0460,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_hannover_96_amateure,0x9d0464,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_1_fc_koln,0x9d0468,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_1_fc_koln_amateure,0x9d046c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_borussia_m_gladbach,0x9d0470,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_bor_m_gladbach_amateure,0x9d0474,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_1_fc_nurnberg,0x9d0478,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_1_fc_nurnberg_amateure,0x9d047c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_rot_weiss_oberhausen,0x9d0480,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_rw_oberhausen_amateure,0x9d0484,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sc_freiburg,0x9d0488,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sc_freiburg_amateure,0x9d048c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_1_fc_saarbrucken,0x9d0490,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_1_fc_saarbrucken_amateure,0x9d0494,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_ssv_ulm_1846,0x9d0498,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_ssv_ulm_1846_amateure,0x9d049c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sp_vgg_unterhaching,0x9d04a0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sp_vgg_unterhaching_amateure,0x9d04a4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_vf_b_leipzig,0x9d04a8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_vf_b_leipzig_amateure,0x9d04ac,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_vf_l_wolfsburg,0x9d04b0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_vf_l_wolfsburg_amateure,0x9d04b4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_castellon,0x9d04b8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_castellon_b,0x9d04bc,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_badajoz_9d04c0,0x9d04c0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_badajoz_b_9d04c4,0x9d04c4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_logrones_9d04c8,0x9d04c8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_logrones_b_9d04cc,0x9d04cc,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_ourense,0x9d04d0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_c_d_ourense_b,0x9d04d4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_cordoba_c_f,0x9d04d8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_cordoba_c_f_b,0x9d04dc,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_cultural_leonesa,0x9d04e0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_cultural_leonesa_b,0x9d04e4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_elche_c_f,0x9d04e8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_elche_c_f_b,0x9d04ec,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_levante_u_d,0x9d04f0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_levante_u_d_b,0x9d04f4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_union_de_irun,0x9d04f8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_real_union_de_irun_b,0x9d04fc,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_recreativo_de_huelva,0x9d0500,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_recreativo_de_huelva_b,0x9d0504,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_fortuna_dusseldorf,0x9d0508,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_fortuna_dusseldorf_ii,0x9d050c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sg_hoechst,0x9d0510,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sg_hoechst_ii,0x9d0514,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_fsv_mainz_05,0x9d0518,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_fsv_mainz_05_ii,0x9d051c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_stuttgarter_kickers,0x9d0520,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_stuttgarter_kickers_ii,0x9d0524,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_1_fc_kaiserslautern_amateure,0xb63c9c,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_bayer_leverkusen_amateure,0xb63ca0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_vf_l_bochum_amateure,0xb63ca4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_hamburger_sv_amateure,0xb63ca8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_borussia_dortmund_amateure,0xb63cac,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_fc_st_pauli_amateure,0xb63cb0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_fc_st_pauli,0xb63cb4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_tennis_borussia_amateure,0xb63cb8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_bayer_04_leverkusen,0xb63cbc,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sv_werder_bremen,0xb63cc0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_vf_b_stuttgart,0xb63cc4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_tsv_munchen_1860,0xb63cc8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_tsv_munchen_1860_amateure,0xb63ccc,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_bayern_munchen_amateure,0xb63cd0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_hamburger_sv,0xb63cd4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_fc_bayern_munchen,0xb63cd8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_1_fc_kaiserslautern,0xb63cdc,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_tennis_borussia_berlin,0xb63ce0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_hertha_bsc_berlin,0xb63ce4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_borussia_dortmund,0xb63ce8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_hertha_bsc_amateure,0xb63cec,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_karlsruher_sc,0xb63cf0,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_vf_b_stuttgart_amateure,0xb63cf4,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_karlsruher_sc_amateure,0xb63cf8,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_vf_l_bochum,0xb63cfc,club,sim,5,Database.cpp:3 index.cpp:2
+g_key_club_sv_werder_bremen_amateure,0xb63d00,club,sim,5,Database.cpp:3 index.cpp:2
