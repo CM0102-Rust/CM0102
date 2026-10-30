@@ -278,7 +278,7 @@ A ordem das variantes resolve os dois a favor da classe real. Uma mutação que 
 | +0x14..+0x1D | 10 × u8 | **1º jogo**, em pares (A, B): tempo normal, intervalo, prorrogação, pênaltis, agregado; 0xFF = não houve |
 | +0x1E..+0x27 | 10 × u8 | **2º jogo** (volta ou replay), em pares do ponto de vista do mandante dele (B, A): os mesmos cinco pares; o agregado só existe aqui |
 | +0x28..+0x31 | 10 × u8 | **3º jogo** (o desempate de +0x11 da rodada), mesmo formato |
-| +0x32 | u8 | zerado no reset; lido junto com +0x06 em `process_fixture` (0x51A3CE) [sentido a conferir] |
+| +0x32 | u8 | replays já disputados: `process_fixture` soma +0x32 e +0x33 para escolher o bloco que recebe o resultado (0 = 1º jogo, 1 = 2º, 2 = 3º; 0x51A3CE) |
 | +0x33 | u8 | qual jogo vem a seguir (0 = o 1º; 1 = o 2º, gravado em 0x51A57F depois do 1º) |
 | +0x34 | u8 | estado: 0 = jogos ainda não criados (o sorteio só roda se o 1º confronto da rodada está em 0); 3 = decidido |
 
@@ -340,6 +340,19 @@ Os `.tmp` que não são de uma competição: 22 no save de teste (25 no `TesteTe
 | `match_stats_matches.tmp` | `Match_Stats` 0x729000 | 10000 vagas fixas de 0xD7A bytes (34.500.000 bytes), lidas e gravadas por índice (0x729600 / 0x729820); o índice fica no `match_stats.dat` |
 
 O `transfers_<ano>.tmp`: `TRANSFER_MANAGER::clear_old_past_transfers` (0x8C3EB0) abre o arquivo do ano em "ab" e anexa as transferências antigas que saem da memória, 0x25 bytes cada; `get_past_transfers` (0x8CC030) as lê de volta. Registro: +0x00..+0x17 seis u32 (pessoa e clubes, a nomear), +0x18 valor (u32), +0x1C tipo (u8), +0x1D data (o `Date` de 8 bytes: dia do ano u16, ano u16, marca de bissexto). Provado nos 32 arquivos do save `All Leagues` (§7.1): todos na grade, e a data de cada registro cai no ano do nome do arquivo (2032 com a marca de bissexto).
+
+O registro de transferência (0x25 bytes) [observado em `transfer_screens_build_transfers_screen` 0x8F5080, que monta a tela de transferências, e na rotina que o grava, 0x8C2789; contado nos 27.836 registros de 2010 do save `All Leagues`]:
+
+| Desl. | Tamanho | Campo |
+|---|---|---|
+| +0x00 | u32 | a pessoa |
+| +0x04 / +0x08 / +0x0C | 3 × u32 | ids do primeiro nome, do sobrenome e do nome comum (`database_format_name_from_ids`); 0 = sem nome comum |
+| +0x10 / +0x14 | 2 × u32 | clube de origem / de destino (−1 = sem clube) |
+| +0x18 | u32 | valor |
+| +0x1C | u8 | tipo (a tela mostra o valor em dinheiro para um tipo e um rótulo para os outros) |
+| +0x1D | 8 bytes | data (`Date`) |
+
+Os tipos nos dados: **0** é o único com valor (5.222 de 11.086 com valor > 0; 5.864 com destino −1, saída sem clube); **2**, valor 0, é o que a negociação grava para o jogador de troca (0x8C27B4); **3** tem a origem sempre −1 (contratação de quem estava sem clube); **4**, valor 0 com os dois clubes [empréstimo, inferência]; **5** vem de `MANAGER_MANAGER::daily_update` (0x69043F), os técnicos (destino −1 na demissão).
 
 **A categoria do jogo** (+0x3A do registro de partida), contada nos fixtures de 2010, 2011 e 2014 do save `All Leagues`:
 

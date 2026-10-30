@@ -278,7 +278,7 @@ The variant order resolves both in favour of the real class. A mutation that sho
 | +0x14..+0x1D | 10 × u8 | **first match**, in (A, B) pairs: normal time, half time, extra time, penalties, aggregate; 0xFF = did not happen |
 | +0x1E..+0x27 | 10 × u8 | **second match** (second leg or replay), in pairs from its home side's view (B, A): the same five pairs; the aggregate only exists here |
 | +0x28..+0x31 | 10 × u8 | **third match** (the round's +0x11 tie-break), same format |
-| +0x32 | u8 | cleared on reset; read together with +0x06 in `process_fixture` (0x51A3CE) [meaning to be checked] |
+| +0x32 | u8 | replays already played: `process_fixture` adds +0x32 and +0x33 to pick the block that receives the result (0 = first match, 1 = second, 2 = third; 0x51A3CE) |
 | +0x33 | u8 | which match comes next (0 = the first; 1 = the second, written at 0x51A57F after the first) |
 | +0x34 | u8 | state: 0 = matches not yet created (the draw only runs if the round's first tie is at 0); 3 = decided |
 
@@ -340,6 +340,19 @@ The `.tmp` files that do not belong to a competition: 22 in the test save (25 in
 | `match_stats_matches.tmp` | `Match_Stats` 0x729000 | 10000 fixed slots of 0xD7A bytes (34,500,000 bytes), read and written by index (0x729600 / 0x729820); the index lives in `match_stats.dat` |
 
 `transfers_<year>.tmp`: `TRANSFER_MANAGER::clear_old_past_transfers` (0x8C3EB0) opens the year's file in "ab" and appends the old transfers that leave memory, 0x25 bytes each; `get_past_transfers` (0x8CC030) reads them back. Record: +0x00..+0x17 six u32 (person and clubs, to be named), +0x18 fee (u32), +0x1C type (u8), +0x1D date (the 8-byte `Date`: day of year u16, year u16, leap flag). Proven on the 32 files of the `All Leagues` save (§7.1): all on the grid, and each record's date falls in the year of the file name (2032 with the leap flag).
+
+The transfer record (0x25 bytes) [observed in `transfer_screens_build_transfers_screen` 0x8F5080, which builds the transfers screen, and in the routine that writes it, 0x8C2789; counted on the 27,836 records of 2010 in the `All Leagues` save]:
+
+| Off. | Size | Field |
+|---|---|---|
+| +0x00 | u32 | the person |
+| +0x04 / +0x08 / +0x0C | 3 × u32 | first name, surname and common name ids (`database_format_name_from_ids`); 0 = no common name |
+| +0x10 / +0x14 | 2 × u32 | club from / club to (−1 = no club) |
+| +0x18 | u32 | fee |
+| +0x1C | u8 | type (the screen shows the money amount for one type and a label for the others) |
+| +0x1D | 8 bytes | date (`Date`) |
+
+The types in the data: **0** is the only one with a fee (5,222 of 11,086 with fee > 0; 5,864 with destination −1, leaving without a club); **2**, fee 0, is what the negotiation writes for the exchange player (0x8C27B4); **3** always has origin −1 (signing someone without a club); **4**, fee 0 with both clubs [loan, inference]; **5** comes from `MANAGER_MANAGER::daily_update` (0x69043F), the managers (destination −1 on a sacking).
 
 **The match category** (+0x3A of the match record), counted in the 2010, 2011 and 2014 fixtures of the `All Leagues` save:
 
