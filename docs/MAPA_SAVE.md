@@ -295,3 +295,48 @@ Exemplo (Taça UEFA, 1ª rodada): o 1º jogo vale `02 00 01 00 ff…` (2×0, int
 | +0x04 | u8 | turno: 0 manhã, 1 tarde, 2 noite |
 | +0x05 + 7·i | 8 × 7 bytes | faixas de TV (i = 0..7): valor (u32), dia da semana (u8, 0 = segunda; 0xFF fecha a lista), turno (u8), opção (u8, 0..4) |
 | +0x3D | u32 | local (a tabela de `docs/CAMPOS.md`: 0 casa do mandante, 4 estádio nacional, 8 neutro...) |
+
+## 7. Os `.tmp` globais (30/10/2026)
+
+Os `.tmp` que não são de uma competição: 22 no save de teste (25 no `TesteTelas`, que tem mais um ano de fixtures e mais dois arquivos). Achados pelas referências do exe a cada nome; o leiaute de cada um vem da rotina que o grava.
+
+**Prova** [observado]: `engenharia-reversa/tmp_globais.py <save>` lê cada arquivo nessa ordem e confere que a leitura acaba no último byte.
+- Fecham todos: 22 no `Testes Claude 2`, no `Roteiro` e no `FeriasTesteSave`, e 25 no `TesteTelas`. Junto com os 164 de competição (§6), **todos os `.tmp` do save têm leiaute conhecido**.
+- Mutações (registro do `staff history` com 0x34, tabela final da UEFA com 49 registros, registro fixo dos amistosos com 0x68, tirar o u32 final dos estádios, registro de partida com 0x4E, 9999 vagas no `match_stats_matches`): cada uma derruba exatamente o arquivo afetado (dois anos de fixtures, no caso do registro de partida).
+
+**Históricos em lista ligada** (`FILE_LLIST`, 0x58E280):
+- O arquivo é uma sequência de nós; cada nó é o registro seguido do deslocamento do próximo nó (i32, −1 no último).
+- `FILE_LLIST::add_node` (0x58E340) anexa no fim e emenda o nó anterior.
+- Vários donos (cada clube, cada pessoa) têm a sua lista no mesmo arquivo. O primeiro e o último deslocamento de cada lista ficam no dono, fora do arquivo.
+- O tamanho do registro é o 2º argumento do construtor:
+
+| Arquivo | Registro | Dono |
+|---|---|---|
+| `past_year_awards.tmp` | 0x4A | `AWARD_MANAGER` 0x413180 |
+| `past_team_awards.tmp` | 0x205 | `AWARD_MANAGER` 0x413180 |
+| `club league history.tmp` | 0x15 | `Club_History` 0x442AB0 |
+| `club cup history.tmp` | 0x0B | `Club_History` 0x442AB0 |
+| `club records history.tmp` | 0x38D | `Club_Records` 0x444520 |
+| `comp records history.tmp` | 0x26B | `Comp_Stats` 0x49EE70 |
+| `ban_history.tmp` | 0x14 | `Discipline` 0x5554A0 |
+| `injury_history.tmp` | 0x2C | `Injury` 0x62A680 |
+| `player stats history.tmp` | 0x2B | `PlayerStats` 0x7BFD50 (na carga de saves antigos há uma conversão de registros de 0x1B, `new_history.tmp`) |
+| `staff history.tmp` | 0x35 | `Staff_Records` 0x868390 |
+| `club history.tmp` | 0x31 | `Staff_Records` 0x868390 |
+
+**Tabelas gravadas de uma vez**:
+
+| Arquivo | Rotina | Leiaute |
+|---|---|---|
+| `fixtures_<ano>.tmp` | `FIXTURE_MANAGER::save_fixtures` 0x5AC060 | quantos (u32, regravado no fim) e um registro de partida de 0x4F por jogo do ano. É o `MATCH_DATA` da NickDLL (referência das competições, §2.8): ids e ponteiros dos clubes, datas, estágio, número do jogo, placares e substituições |
+| `club_dates.tmp` | `fix_man_save_club_dates` 0x5AF040 | um u16 por clube, de [0xAE2A5C]; quantos = [0xAE235C] |
+| `check_fixture_legs.tmp` | `fix_man_save_fixture_leg_checks` 0x5AF4A0 | quantos (u16) e 0x0F bytes por item |
+| `HostCountry.tmp` | `HostCountry::save_temp_file` 0x5FB320 | quantos (u16) e 0x22 bytes por anfitrião |
+| `conmebol_seeding.tmp` | `ConmebolSeeding::save_to_temp_file` 0x4C6B70 | quantos (+0x6E, u8), 0x0A por país, +0x6F (u16), 4 bytes |
+| `uefa_seeding.tmp` | `UefaSeeding::save_to_temp_file` 0x905510 | quantos (+0x438, u8) e 0x12 por país (`UEFA_SEEDINGS`, §2.9 da referência), +0x439 (u16), quantos (+0x43F, u8) e essa quantidade de u32 de [+0x43B], e 50 registros fixos de 0x0C de +0x440 |
+| `Stadium.tmp` | `Stadium::save_to_temp_file` 0x85BEA0 | +0x08 (u32); quantos (u32) e 0x0C bytes cada de [+0x00]; +0x14 (u32); quantos (u32); +0x18 (u8); 0x10 bytes cada de [+0x0C], clubes em id; o u32 global [0xA835A4] |
+| `Friendly.tmp` | `Friendly::save_to_temp_file` 0x5C9650 | +0xA7 (8 bytes), +0xAF (u16), +0x34DC (u32), quantos (u32), +0x34E4 (u32) e 0x14 bytes cada de [+0x34D8]; 127 registros fixos de 0x69 de +0xB1 (clubes em id); quatro listas com a contagem (u32) regravada no fim: [+0x34C8] de 0x19, [+0x34D0] de 1 byte (+0x64 do item), uma de 8 + 4 e [+0x34CC] de 0x107; +0x34F4 (u16); e uma lista por nação ([0xAE2350] nações), cada uma com quantos (u16) e u32 |
+| `computer events1/2.tmp`, `human events1/2.tmp` | `Match_Events::save_event_log` 0x6D98B0 | arquivo rotativo: cabeçalho de 3 u32 (o 3º, em +8, regravado a cada partida) e os eventos de 0x0E bytes de cada partida, anexados no fim. Onde começa cada partida (deslocamento, quantos eventos, qual dos dois arquivos) fica na memória, não no arquivo |
+| `match_stats_matches.tmp` | `Match_Stats` 0x729000 | 10000 vagas fixas de 0xD7A bytes (34.500.000 bytes), lidas e gravadas por índice (0x729600 / 0x729820); o índice fica no `match_stats.dat` |
+
+O `transfers_<ano>.tmp` (`TRANSFER_MANAGER`, 0x8C3EB0 e 0x8CC030) não aparece em nenhum dos saves de teste. Fica sem leitor até haver um.

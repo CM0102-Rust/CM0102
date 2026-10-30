@@ -295,3 +295,48 @@ Example (UEFA Cup, first round): the first match holds `02 00 01 00 ff…` (2–
 | +0x04 | u8 | time of day: 0 morning, 1 afternoon, 2 evening |
 | +0x05 + 7·i | 8 × 7 bytes | TV slots (i = 0..7): value (u32), weekday (u8, 0 = Monday; 0xFF ends the list), time of day (u8), option (u8, 0..4) |
 | +0x3D | u32 | venue (the `docs/CAMPOS.md` table: 0 home side, 4 national stadium, 8 neutral...) |
+
+## 7. The global `.tmp` files (2026-10-30)
+
+The `.tmp` files that do not belong to a competition: 22 in the test save (25 in `TesteTelas`, which has one more fixtures year and two more files). Found through the exe references to each name; each layout comes from the routine that writes it.
+
+**Proof** [observed]: `engenharia-reversa/tmp_globais.py <save>` reads each file in that order and checks that the reading ends at the last byte.
+- They all close: 22 in `Testes Claude 2`, `Roteiro` and `FeriasTesteSave`, and 25 in `TesteTelas`. Together with the 164 competition ones (§6), **every `.tmp` in the save has a known layout**.
+- Mutations (`staff history` record of 0x34, UEFA final table with 49 records, the friendlies' fixed record of 0x68, dropping the stadiums' final u32, match record of 0x4E, 9999 slots in `match_stats_matches`): each one brings down exactly the affected file (two fixtures years, for the match record).
+
+**Linked-list histories** (`FILE_LLIST`, 0x58E280):
+- The file is a sequence of nodes; each node is the record followed by the offset of the next node (i32, −1 on the last).
+- `FILE_LLIST::add_node` (0x58E340) appends at the end and links the previous node.
+- Several owners (each club, each person) keep their own list in the same file. Each list's first and last offsets live in the owner, outside the file.
+- The record size is the constructor's 2nd argument:
+
+| File | Record | Owner |
+|---|---|---|
+| `past_year_awards.tmp` | 0x4A | `AWARD_MANAGER` 0x413180 |
+| `past_team_awards.tmp` | 0x205 | `AWARD_MANAGER` 0x413180 |
+| `club league history.tmp` | 0x15 | `Club_History` 0x442AB0 |
+| `club cup history.tmp` | 0x0B | `Club_History` 0x442AB0 |
+| `club records history.tmp` | 0x38D | `Club_Records` 0x444520 |
+| `comp records history.tmp` | 0x26B | `Comp_Stats` 0x49EE70 |
+| `ban_history.tmp` | 0x14 | `Discipline` 0x5554A0 |
+| `injury_history.tmp` | 0x2C | `Injury` 0x62A680 |
+| `player stats history.tmp` | 0x2B | `PlayerStats` 0x7BFD50 (loading old saves converts 0x1B-byte records, `new_history.tmp`) |
+| `staff history.tmp` | 0x35 | `Staff_Records` 0x868390 |
+| `club history.tmp` | 0x31 | `Staff_Records` 0x868390 |
+
+**Tables written in one go**:
+
+| File | Routine | Layout |
+|---|---|---|
+| `fixtures_<year>.tmp` | `FIXTURE_MANAGER::save_fixtures` 0x5AC060 | count (u32, rewritten at the end) and one 0x4F-byte match record per match of the year. It is the NickDLL's `MATCH_DATA` (competitions reference, §2.8): club ids and pointers, dates, stage, match number, scores and substitutions |
+| `club_dates.tmp` | `fix_man_save_club_dates` 0x5AF040 | one u16 per club, from [0xAE2A5C]; count = [0xAE235C] |
+| `check_fixture_legs.tmp` | `fix_man_save_fixture_leg_checks` 0x5AF4A0 | count (u16) and 0x0F bytes per item |
+| `HostCountry.tmp` | `HostCountry::save_temp_file` 0x5FB320 | count (u16) and 0x22 bytes per host |
+| `conmebol_seeding.tmp` | `ConmebolSeeding::save_to_temp_file` 0x4C6B70 | count (+0x6E, u8), 0x0A per country, +0x6F (u16), 4 bytes |
+| `uefa_seeding.tmp` | `UefaSeeding::save_to_temp_file` 0x905510 | count (+0x438, u8) and 0x12 per country (`UEFA_SEEDINGS`, reference §2.9), +0x439 (u16), count (+0x43F, u8) and that many u32 from [+0x43B], and 50 fixed 0x0C records from +0x440 |
+| `Stadium.tmp` | `Stadium::save_to_temp_file` 0x85BEA0 | +0x08 (u32); count (u32) and 0x0C bytes each from [+0x00]; +0x14 (u32); count (u32); +0x18 (u8); 0x10 bytes each from [+0x0C], clubs as ids; the global u32 [0xA835A4] |
+| `Friendly.tmp` | `Friendly::save_to_temp_file` 0x5C9650 | +0xA7 (8 bytes), +0xAF (u16), +0x34DC (u32), count (u32), +0x34E4 (u32) and 0x14 bytes each from [+0x34D8]; 127 fixed 0x69 records from +0xB1 (clubs as ids); four lists with the count (u32) rewritten at the end: [+0x34C8] of 0x19, [+0x34D0] of 1 byte (+0x64 of the item), one of 8 + 4 and [+0x34CC] of 0x107; +0x34F4 (u16); and one list per nation ([0xAE2350] nations), each with a count (u16) and u32 values |
+| `computer events1/2.tmp`, `human events1/2.tmp` | `Match_Events::save_event_log` 0x6D98B0 | rolling file: a 3-u32 header (the 3rd, at +8, rewritten for each match) and each match's 0x0E-byte events, appended at the end. Where each match starts (offset, event count, which of the two files) lives in memory, not in the file |
+| `match_stats_matches.tmp` | `Match_Stats` 0x729000 | 10000 fixed slots of 0xD7A bytes (34,500,000 bytes), read and written by index (0x729600 / 0x729820); the index lives in `match_stats.dat` |
+
+`transfers_<year>.tmp` (`TRANSFER_MANAGER`, 0x8C3EB0 and 0x8CC030) does not appear in any test save. It stays without a reader until one does.
