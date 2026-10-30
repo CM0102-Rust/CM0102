@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologo` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 1028 de 6709 funções, 937.3 de 5528.0 KB (**16.96%**) · 49 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 1067 de 6709 funções, 958.0 de 5528.0 KB (**17.33%**) · 49 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -19,33 +19,33 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `Database.cpp` | 168/181 | 107.1/148.5 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **72.1%** |
 | `formation.cpp` | 20/45 | 9.6/26.5 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **36.1%** |
 | `Area.cpp` | 3/15 | 2.0/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.7%** |
-| `league.cpp` | 30/61 | 10.2/35.8 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **28.5%** |
+| `league.cpp` | 31/61 | 10.4/35.8 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **29.0%** |
 | `Setup.cpp` | 10/107 | 28.1/120.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.3%** |
 | `human_manager.cpp` | 17/61 | 5.9/25.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.0%** |
 | `tactics.cpp` | 15/29 | 5.0/23.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.6%** |
 | `news.cpp` | 25/33 | 9.5/49.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **19.4%** |
-| `player_stats.cpp` | 11/34 | 3.9/28.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.6%** |
+| `injury.cpp` | 19/47 | 4.9/30.5 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.9%** |
+| `player_stats.cpp` | 12/34 | 4.2/28.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **14.8%** |
+| `shortlist_manager.cpp` | 22/54 | 10.2/71.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **14.2%** |
+| `contract_manager.cpp` | 33/121 | 11.1/87.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.8%** |
+| `player_regen.cpp` | 17/51 | 5.3/44.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.8%** |
+| `national_teams.cpp` | 35/69 | 6.8/58.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.6%** |
 | `discipline.cpp` | 17/38 | 4.5/38.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.5%** |
 | `media.cpp` | 25/69 | 23.0/202.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.4%** |
-| `player_regen.cpp` | 16/51 | 5.0/44.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.2%** |
-| `national_teams.cpp` | 32/69 | 6.2/58.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **10.6%** |
-| `friendly.cpp` | 16/67 | 3.9/41.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **9.3%** |
+| `friendly.cpp` | 19/67 | 4.3/41.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **10.3%** |
+| `club_records.cpp` | 33/56 | 5.8/61.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **9.4%** |
+| `Cup.cpp` | 12/47 | 3.9/41.9 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **9.3%** |
 | `staff_contracts.cpp` | 13/45 | 3.7/39.9 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **9.2%** |
-| `Cup.cpp` | 10/47 | 3.8/41.9 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **9.1%** |
-| `shortlist_manager.cpp` | 17/54 | 6.4/71.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **9.0%** |
-| `injury.cpp` | 14/47 | 2.7/30.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.7%** |
 | `main.cpp` | 2/16 | 0.2/3.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.2%** |
 | `utils.cpp` | 1/23 | 0.5/5.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.0%** |
+| `transfer_manager.cpp` | 47/199 | 12.0/167.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **7.2%** |
 | `fix_man.cpp` | 5/37 | 1.6/22.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **7.1%** |
-| `club_records.cpp` | 31/56 | 4.4/61.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **7.1%** |
-| `transfer_manager.cpp` | 43/199 | 10.6/167.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.3%** |
 | `comp_util.cpp` | 17/38 | 4.3/68.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.3%** |
 | `file_screens.cpp` | 1/10 | 0.7/11.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.2%** |
-| `contract_manager.cpp` | 25/121 | 5.1/87.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.8%** |
+| `staff_records.cpp` | 6/37 | 2.0/31.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.2%** |
+| `manager_manager.cpp` | 14/98 | 7.9/129.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.1%** |
 | `fog_of_war.cpp` | 4/34 | 0.6/12.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.9%** |
 | `scout_manager.cpp` | 4/39 | 1.0/23.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.3%** |
-| `manager_manager.cpp` | 11/98 | 4.7/129.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.6%** |
-| `staff_records.cpp` | 5/37 | 1.1/31.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.3%** |
 | `european_cup.cpp` | 2/50 | 0.8/29.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.8%** |
 | `comp.cpp` | 1/46 | 0.3/11.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.8%** |
 | `player_search.cpp` | 7/61 | 1.7/70.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.4%** |

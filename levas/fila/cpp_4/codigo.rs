@@ -421,6 +421,11 @@ unsafe extern "thiscall" fn comparar_baixar_moral_pela_partida(this: usize, pess
     }
     let antes = cpp4_b(contrato + 0x44) as i8;
     let plano = cpp4_queda_da_moral(pessoa, clube, contrato);
+    // apagar uma queixa (0x8674e0) recalcula o contrato (0x867240), que pode regravar a moral: com queixa marcada antes
+    // ou queda acima de 5 (os ramos que apagam sempre), só a original
+    if cpp4_b(contrato + 0x45) & 0x14 != 0 || plano.is_some_and(|m| m > 5) {
+        return o(this, pessoa, clube, contrato);
+    }
     o(this, pessoa, clube, contrato);
     let depois = cpp4_b(contrato + 0x44) as i8;
     let esperada = plano.map_or(antes, |m| cpp4_moral_nova(antes, m));
