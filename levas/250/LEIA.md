@@ -1,0 +1,99 @@
+# 250ª leva — a entrega das notícias: pelo alcance, ao técnico do clube e na caixa do técnico humano; a caixa do técnico humano: responder a todas as notícias, se há notícia pendente e o texto num campo da notícia; a mídia e a caixa: a nota do jogador para uma história, o texto da crise financeira e as notícias da caixa do humano; o jogador que se aposenta sai dos elencos e a escolha do clube do jovem: o de maior nota entre todos e o sorteado da lista da nação; as vagas de técnico e o agendamento das ofertas: abrir as vagas que faltam, a melhor nota de candidato a técnico e agendar a oferta; a lista de observação do clube: o estatuto no elenco que o clube dá à pessoa, a estimativa do clube humano e soltar os alvos que não são do clube; a busca do olheiro e os amistosos: se a busca cobre a nação, tirar o amistoso marcado e os pares de nações que não jogam amistoso
+
+**Rotinas:**
+- `noticia_pelo_alcance()` = 0x786090 (news.cpp, thiscall, ret 0x18): entrega a notícia pelo alcance: 0 o técnico do clube, 1 os da divisão, 2 os do país, 3 os do continente, 4 todos, 5 os da região da competição; fora disso a caixa "Error";
+- `noticia_ao_tecnico_do_clube()` = 0x7861e0 (news.cpp, thiscall, ret 8): marca o alcance como clube (+0xde = 0) e entrega a notícia ao técnico do clube (+0xcf) se ele for humano (entre as 16 últimas pessoas); em DESLIGADAS desde 29/10/2026 (o desvio, mesmo de passagem, muda o resíduo de pilha que uma original lê depois: a carreira saía de be54a138); a cópia fica no código e não roda;
+- `entregar_noticia_ao_tecnico()` = 0x785d40 (news.cpp, thiscall, ret 0xc): copia a notícia no anel de 100 vagas do humano (criado na primeira, realocando o vetor), dá o id, não repete a última e, com o técnico de férias, dá a resposta automática pelo clube e pela seleção; em DESLIGADAS desde 29/10/2026 (o desvio, mesmo de passagem, muda o resíduo de pilha que uma original lê depois: a carreira saía de be54a138); a cópia fica no código e não roda;
+- `responder_todas_as_noticias()` = 0x7874b0 (news.cpp, thiscall, ret 8): da notícia mais nova para a mais antiga da caixa do humano, até a vaga vazia, dá a resposta automática (0x784100) pelo clube;
+- `tecnico_tem_noticia_pendente()` = 0x787350 (news.cpp, thiscall, ret 8): sem "só urgentes", se há notícia não lida; com ele, se uma notícia pede resposta (o texto devolve 2) ou é importante e não lida;
+- `gravar_texto_na_noticia()` = 0x7858c0 (news.cpp, thiscall, ret 0xc): copia o texto nos campos da notícia a partir do campo dado e devolve o primeiro campo livre depois dele (no máximo 50);
+- `nota_do_jogador_para_a_historia()` = 0x736720 (media.cpp, thiscall, ret 0x18, st0): a nota do jogador para um tipo de história: as estatísticas e a média das notas contra a média da liga, o peso, as partidas e a reputação; depois, pelo tipo, o contrato, a idade, os dias de casa e atributos;
+- `texto_da_crise_financeira()` = 0x74af60 (media.cpp, thiscall, ret 0xc): o título ou o corpo da notícia do clube em crise financeira, pela gravidade, com o nome do clube ligado;
+- `noticias_da_caixa()` = 0x786960 (news.cpp, thiscall, ret 0xc): um vetor novo com as notícias da caixa do humano, da mais nova para a mais antiga, só as de uma categoria se pedida, e a conta;
+- `aposentar_do_elenco()` = 0x7aace0 (player_regen.cpp, stdcall, ret 4): tira o jogador da tática e das 50 vagas do clube (+0x39) e da seleção (+0x24) e troca o cargo de jogador pelo da comissão (12 → 5, 13 → 6, 15 → 8, os outros 0x10 aposentado); sem cargo que fica, zera o clube e a seleção;
+- `melhor_clube_para_o_jovem()` = 0x7ad0e0 (player_regen.cpp, thiscall, ret 4): entre os clubes em que o jovem não é estrangeiro, que não são time B, que podem chegar a ele e com elenco abaixo de 50, o de maior nota (0x7ad220);
+- `clube_da_nacao_para_o_jovem()` = 0x7ad590 (player_regen.cpp, thiscall, ret 4): na lista de clubes da nação do jovem (algumas nações trocadas por [0x9cf2e4]), o de maior sorteio da nota pela reputação contra a habilidade, entre os que podem chegar a ele e com elenco abaixo de 50;
+- `abrir_vagas_que_faltam()` = 0x69d060 (manager_manager.cpp, thiscall, ret 0): cada clube sem técnico (0x53ca90), dirigível (0x544820), que não é time B e sem vaga na lista [this+8] ganha o aviso "Job not found" e a vaga (0x69ba50);
+- `melhor_nota_de_candidato_a_tecnico()` = 0x69c540 (manager_manager.cpp, thiscall, ret 8): a maior nota de técnico (0x69d1b0, cargo 5) entre as pessoas da comissão disponíveis e aceitas para o clube (nação, continente, reputação, contrato, 0x69f810), fora o técnico atual; ninguém: −10000;
+- `agendar_oferta()` = 0x8c6220 (transfer_manager.cpp, thiscall, ret 0xc): dá à oferta a data de hoje + dias e a fatia do dia (0 a 2, cada 3 fatias mais um dia) e a põe no balde (dias desde a data base + começo, módulo 50, × 3 + fatia) das listas de +0x18;
+- `estatuto_no_elenco_pelo_clube()` = 0x849f00 (shortlist_manager.cpp, thiscall, ret 0xc): o estatuto no elenco que o clube dá à pessoa: pela entrada dela na lista do clube (bits 1..4 do +0x24, cargo do +0), pelo contrato com o clube (nibble alto do +0x4f), pela estimativa do clube humano ou 7;
+- `estimar_estatuto_no_elenco()` = 0x849d60 (shortlist_manager.cpp, stdcall, ret 8): a estimativa do estatuto que o clube humano dá: a razão entre a reputação da pessoa vista pelo técnico (1,5 × na lista do humano) e a do clube, e a idade;
+- `liberar_alvos_da_lista_do_clube()` = 0x844660 (shortlist_manager.cpp, thiscall, ret 8): nas 40 vagas do clube, o alvo de id inválido vira −1 e o alvo que não é do clube (contrato nem +0x39) e sem +0x17 recebe o evento 3 da lista (0x843e10);
+- `busca_cobre_a_nacao()` = 0x7b7490 (player_search.cpp, thiscall, ret 4): se a busca do olheiro (tipo 4, olheiro conferido, com clube) cobre a nação: pelas missões marcadas (clube, nação, região, base) ou, sem missão, pela região da nação do clube, a nação do olheiro e os olheiros do clube;
+- `tirar_amistoso_marcado()` = 0x5c87b0 (friendly.cpp, thiscall, ret 8): tira da lista +0x34d4 os itens do jogo, zera a vaga marcada (com limpar_vaga) e tira o jogo da lista +0x34c8 (liberando-o);
+- `iniciar_pares_proibidos_de_amistoso()` = 0x5cc2d0 (friendly.cpp, thiscall): aloca os 4 pares de nações que não jogam amistoso entre si (Irã e EUA, Iraque e qualquer uma, Vietnã e EUA, as Coreias) em +0x3502, conta em +0x3506;
+
+**Como foi comparada:** comparação de verdade em cada rotina (o original e o Rust a partir do mesmo estado, com as regiões que a rotina toca).
+
+**Resultado** (`cadeia.txt`):
+- **Mutações (17):** 15 acusadas. `cpn_responder_todas` escapou: responder_todas_as_noticias 0x7874b0: na carreira automática ela só roda quando o humano sai de férias no começo (contador: 64 passagens, as notícias que já estão na caixa dele); as respostas automáticas dessas notícias (0x784100) não mudam nada que a carreira leia (impressão igual com e sem elas, e com só a mais nova); no jogo comparando o comparador roda só a original e confere a devolução. `cpn_responder_so_a_nova` escapou: responder_todas_as_noticias 0x7874b0: na carreira automática ela só roda quando o humano sai de férias no começo (contador: 64 passagens, as notícias que já estão na caixa dele); as respostas automáticas dessas notícias (0x784100) não mudam nada que a carreira leia (impressão igual com e sem elas, e com só a mais nova); no jogo comparando o comparador roda só a original e confere a devolução. (lacuna em `PENDENCIAS.md`)
+- **Jogo real comparando até 2002-01-01:** 0 divergências (2f65fd6b68d1027b).
+- **Carreiras Rust ×2 e original até 2002-06-01:** as três iguais (be54a1386f51073a).
+
+**Refazer**, sobre o commit da 249ª:
+1. `python integrar.py`
+2. `cargo build --release` e copiar a DLL para `jogo_testes/`
+3. `bash engenharia-reversa/cadeia.sh 250`
+
+**Campos tocados:**
+- News +0/+4: o vetor das notícias guardadas (0xdf bytes cada) e a conta de vagas; ponteiro e valor; lê e grava (entregar_noticia_ao_tecnico)
+- News +8: as entradas dos 16 humanos (12 bytes: início do anel, próxima vaga, conta; −1 sem anel), pelo id − [0xae2364] + 16; ponteiro e valor; lê e grava (entregar_noticia_ao_tecnico)
+- News +0x10: o último id de notícia; valor; lê e grava (entregar_noticia_ao_tecnico)
+- notícia +4, +0xd6, +0xda, +0xde: importante, id, livre/lida, alcance (0 clube); valor; grava (entregar_noticia_ao_tecnico, noticia_ao_tecnico_do_clube)
+- clube +0xcf: o técnico; ponteiro; lê (noticia_ao_tecnico_do_clube)
+- pessoa +0, +0x24, +0x39: id, a seleção e o clube que ele treina; id e ponteiro; lê (entregar_noticia_ao_tecnico)
+- [0xae2364] o número de pessoas (os humanos são as 16 últimas); [0xdd6bec] todos de férias; valor; lê
+- News +0/+8: o vetor das notícias guardadas (0xdf bytes) e as entradas dos humanos (início do anel, próxima vaga); ponteiro e valor; lê (responder_todas_as_noticias, tecnico_tem_noticia_pendente)
+- notícia +4, +0xd6, +0xda: importante, id (0 vaga vazia), lida; valor; lê (tecnico_tem_noticia_pendente, responder_todas_as_noticias)
+- notícia +5..+0xcc: os 50 campos de 4 bytes (texto ou valor) e o fim; valor; grava (gravar_texto_na_noticia)
+- [0xde1f64] o texto montado da notícia; valor; grava pela 0x782b70 (tecnico_tem_noticia_pendente)
+- [0xb74350] +0x10/+0x18: a soma e a conta das notas da liga (a média; sem jogos, 6,8); valor; lê (nota_do_jogador_para_a_historia)
+- pessoa +0x18, +0x3e, +0x61: idade, a data (dias de casa, 0x54cdb0) e o registro de jogador; valor e ponteiro; lê (nota_do_jogador_para_a_historia)
+- registro de jogador +0xb, +0x25, +0x2f: a reputação e dois atributos; valor; lê (nota_do_jogador_para_a_historia)
+- contrato +0x4f: o tipo de contrato no meio alto; valor; lê (nota_do_jogador_para_a_historia)
+- clube +0x80, +0x38, +0x52: reputação, nome e gênero; valor; lê (nota_do_jogador_para_a_historia, texto_da_crise_financeira)
+- notícia, campos 0 e 1: o clube e a gravidade da crise; id e valor; lê (texto_da_crise_financeira)
+- News +0/+8, notícia +0xd6: o vetor, os anéis dos humanos e o id; ponteiro e valor; lê (noticias_da_caixa)
+- staff +0x39 / +0x24: o clube e a seleção da pessoa; ponteiro; lê e grava 0 (aposentar_do_elenco)
+- staff +0x3d / +0x28: o cargo no clube e na seleção (11 jogador, 12/13/15 jogador e comissão, 16 aposentado; 5, 6, 8 comissão); valor; lê e grava (aposentar_do_elenco)
+- clube +0xd7: as 50 vagas do elenco; ponteiro; lê e grava 0 (aposentar_do_elenco)
+- staff +0x1a / +0x1e: a nação e a segunda nação; ponteiro; lê (melhor_clube_para_o_jovem, clube_da_nacao_para_o_jovem)
+- staff +0x61 → ficha +5, +7, +0xb: a habilidade atual, a potencial e a reputação; valor; lê (clube_da_nacao_para_o_jovem)
+- clube +0x53 / +0x80: a nação e a reputação; ponteiro e valor; lê (melhor_clube_para_o_jovem, clube_da_nacao_para_o_jovem)
+- PLAYER_REGEN +0 → [4 × nação]: a lista de clubes da nação (+0 conta, +2 cabeça, +0xa cursor); ponteiro; lê e grava o cursor (clube_da_nacao_para_o_jovem)
+- [0x9cf424], [0x9d0120], [0x9d0124], [0x9d0128], [0x9d0134], [0x9d01a0]: a nação e os clubes do veto; id; lê (melhor_clube_para_o_jovem, clube_da_nacao_para_o_jovem)
+- [0x9cf510], [0x9cf2dc], [0x9cf3e4] → [0x9cf2e4]: as nações cuja lista é a de outra; id; lê (clube_da_nacao_para_o_jovem)
+- MANAGER_MANAGER +8: a lista das vagas de técnico (+0 conta, +2 cabeça, +0xa cursor; vaga +0xe o id do clube); ponteiro; lê e grava o cursor (abrir_vagas_que_faltam, melhor_nota_de_candidato_a_tecnico)
+- clube +4: o nome; texto; lê (abrir_vagas_que_faltam)
+- clube +0x53 / +0x80 e nação +0x75: a nação, a reputação e o continente; ponteiro e valor; lê (melhor_nota_de_candidato_a_tecnico)
+- staff +0x69 → +0xa / +0xc: as reputações da ficha da comissão; valor; lê (melhor_nota_de_candidato_a_tecnico)
+- staff +0x5f, +0x1a, +0x39, +0x3d, +0x61: humano, nação, clube, cargo e ficha de jogador; valor e ponteiro; lê (melhor_nota_de_candidato_a_tecnico)
+- [0xae2d0c] registro de 79 bytes +0xb: as marcas 0x30; valor; lê (melhor_nota_de_candidato_a_tecnico)
+- contrato +0x49: a marca que impede o candidato; valor; lê (melhor_nota_de_candidato_a_tecnico)
+- TRANSFER_MANAGER +0x84c / +0x84d / +0x855: o começo do anel, a data base (ano +0x84f) e a fatia base; valor; lê e grava (agendar_oferta)
+- TRANSFER_MANAGER +0x18: as 150 listas de 14 bytes (50 dias × 3 fatias) das ofertas agendadas; ponteiro; grava (agendar_oferta)
+- oferta +0x12 / +0x1a / +0x20: a data e a fatia do processamento e o valor que entra na lista; valor; grava e lê (agendar_oferta)
+- [0xae2c90] / [0xae2c88]: hoje e a fatia de hoje; valor; lê (agendar_oferta)
+- entrada da lista (40 × 0x25 bytes) +0: o cargo (tipo, 11 = não jogador); valor; lê (estatuto_no_elenco_pelo_clube, liberar_alvos_da_lista_do_clube)
+- entrada da lista +0xf: o alvo; id de pessoa; lê e grava −1 se acima de [0xae2364] − 1 (liberar_alvos_da_lista_do_clube)
+- entrada da lista +0x17: o segundo alvo (−1 vazio); id; lê (liberar_alvos_da_lista_do_clube)
+- entrada da lista +0x24: bits 1..4 o estatuto no elenco; valor; lê (estatuto_no_elenco_pelo_clube)
+- staff +0x18: a idade; valor; lê (estimar_estatuto_no_elenco)
+- staff +0x39: o clube; ponteiro; lê (estatuto_no_elenco_pelo_clube, liberar_alvos_da_lista_do_clube)
+- staff +0x3d: o cargo; valor; lê (estatuto_no_elenco_pelo_clube)
+- staff +0x61/+0x69: os dados de jogador e de não jogador; ponteiro; lê (estatuto_no_elenco_pelo_clube)
+- contrato +4: o clube; id; lê; +0x35 (6 bits) o tipo (5 não conta); valor; lê (liberar_alvos_da_lista_do_clube); +0x4f nibble alto o estatuto no elenco; valor; lê (estatuto_no_elenco_pelo_clube)
+- clube +0x80: a reputação; valor; lê (estimar_estatuto_no_elenco)
+- [0xae1080] o último contrato buscado; ponteiro; grava (estatuto_no_elenco_pelo_clube, liberar_alvos_da_lista_do_clube)
+- busca de olheiro +0xa: o tipo (4 = olheiro); valor; lê (busca_cobre_a_nacao)
+- busca de olheiro +0x174..+0x184: os nomes e a data do olheiro; +0x180 o olheiro; id; lê (busca_cobre_a_nacao)
+- busca de olheiro +0x18c nação, +0x190 clube, +0x194 região (byte), +0x195 competição, +0x199 base, +0x19d adversário: as missões; id, valor e ponteiro; lê (busca_cobre_a_nacao)
+- nação +0: o id; +0x76 a região; +0x7f o grupo (2); valor; lê (busca_cobre_a_nacao)
+- clube +0x53: a nação; ponteiro; lê (busca_cobre_a_nacao)
+- staff +0x39: o clube do olheiro; ponteiro; lê (busca_cobre_a_nacao)
+- amistosos +0x34c8: a lista dos jogos marcados; +0x34d4 a lista dos itens que apontam para eles (+0 o jogo); ponteiro; lê e tira (tirar_amistoso_marcado)
+- jogo amistoso +0 dia, +2 ano, +0x10 adversário, +0x14 clube; valor e ponteiro; lê (tirar_amistoso_marcado)
+- vaga do amistoso +0x10: o adversário; ponteiro; grava 0; +0x18 byte grava 0 (tirar_amistoso_marcado)
+- amistosos +0x3502: o vetor dos pares proibidos (8 ids de nação, −1 = qualquer); ponteiro; grava; +0x3506 a conta (4); valor; grava (iniciar_pares_proibidos_de_amistoso)
+
+**Interessa a:** CMRTE, CMScout, GPF2
