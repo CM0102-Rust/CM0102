@@ -170,7 +170,7 @@ Cada competição grava o seu estado num `.tmp` da pasta `CM3_TEMP` (`docs/.md` 
 | 4 | dados próprios da classe derivada: slot 10 da vtable (+0x24); na base é vazio (0x48CEA0 = `ret 4`); tabela abaixo | variável |
 | 5 | fundo de prêmios +0x28 | u32 |
 | 6 | +0x52, +0x51, +0x4B | 3 × u8 |
-| 7 | +0x4C, +0x24 (o id da regra de mando, §2.1 da referência) | 2 × u32 |
+| 7 | +0x4C, +0x24 (o estádio da competição, usado na regra de mando, §2.1 da referência) | 2 × u32 |
 | 8 | banco +0x49, substituições +0x4A | 2 × u8 |
 | 9 | +0x45 (o sorteio só roda com ele ≠ 0, 0x51C431) | u32 |
 | 10 | +0xB1 | u8 |

@@ -170,7 +170,7 @@ Each competition writes its state to a `.tmp` in the `CM3_TEMP` folder (`docs/.e
 | 4 | the derived class's own data: vtable slot 10 (+0x24); empty in the base (0x48CEA0 = `ret 4`); table below | variable |
 | 5 | prize fund +0x28 | u32 |
 | 6 | +0x52, +0x51, +0x4B | 3 × u8 |
-| 7 | +0x4C, +0x24 (the home-rule id, §2.1 of the reference) | 2 × u32 |
+| 7 | +0x4C, +0x24 (the competition's stadium, used by the home rule, §2.1 of the reference) | 2 × u32 |
 | 8 | bench +0x49, substitutions +0x4A | 2 × u8 |
 | 9 | +0x45 (the draw only runs when it is ≠ 0, 0x51C431) | u32 |
 | 10 | +0xB1 | u8 |
