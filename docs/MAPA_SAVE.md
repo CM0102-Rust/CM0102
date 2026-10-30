@@ -148,17 +148,19 @@ Fronteira com o bloco Database: `save_database` 0x52dad0, `load_database` 0x5285
 
 Fonte: CM3SaveEditor\docs\VALIDADOR_ESTUDO.md (commit bd7959e), repassado pela sessão orquestradora; marcado como inferência lá. O próprio jogo grava no elenco do club.dat ids ≥ N (fora da tabela de pessoas): 51 vagas no TesteTelas.sav (clube 1109, ids 159578..159597; clube 3397, 158727..158734) e 22 no Valencia.sav. Entre o TesteTelas e o TesteTelasComprimido o club.dat muda só nessas vagas (viram −1) e o staff.dat fica igual: um recarregamento entre os dois, com o `resolve_database_indexes` esvaziando as vagas. Hipótese: jovens criados nas linhas de reserva (as 23.000 de tipo 6 ou as 1.325 não contadas) que o `save_database` (0x52dad0) não leva ao staff.dat, mas cujo id fica no elenco. É um candidato à causa da corrupção de ids que o Save Game Editor conserta (PROJETO.md, item 8). Conferir quando o save_database e a carga estiverem em Rust: a cópia mostra exatamente que pessoas entram no staff.dat e quais ids ficam nos elencos.
 
-## 6. O `.tmp` de uma copa (30/10/2026)
+## 6. O `.tmp` de uma competição: copas e ligas (30/10/2026)
 
 Cada competição grava o seu estado num `.tmp` da pasta `CM3_TEMP` (`docs/.md` §2.11), e esses arquivos entram no save como itens. A ordem abaixo é a de `Cup::save_cup_to_disk` (0x5210F0), lida na desmontagem. A carga, `Cup::load_from_disk` (0x51FC00), lê na mesma ordem. Deslocamentos com `+` são do objeto da copa (0xB2 bytes) e "u16"/"u32" são inteiros com sinal, little-endian.
 
-**Prova** [observado]: `engenharia-reversa/tmp_copa.py <save>` segue esta ordem e confere que cada arquivo acaba exatamente onde a leitura acaba.
-- Fecham 59 dos 186 `.tmp` do `Testes Claude 2.sav` (59 também no `Roteiro` e no `TesteTelas`, 18 no `FeriasTesteSave`). São todas as competições de classe Copa: as supertaças (1781 bytes), as copas nacionais de 1 a 9 rodadas (até a Taça de França, com 222 inscritos) e as copas com estágios. Entre estas, a Liga dos Campeões tem 8 estágios de liga, a Taça da Suécia 8 estágios de copa e a Taça dos Campeões Asiáticos tem os dois tipos.
+**Prova** [observado]: `engenharia-reversa/tmp_competicao.py <save>` segue esta ordem e confere que cada arquivo acaba exatamente onde a leitura acaba.
+- Fecham **os 164 `.tmp` de competição** do `Testes Claude 2.sav`, do `Roteiro` e do `TesteTelas` (58 no `FeriasTesteSave`, um save pequeno). Ficam de fora só as 20 tabelas globais e os `fixtures_<ano>.tmp`.
+- Entre as copas (59 por save) estão as supertaças (1781 bytes), as copas nacionais de 1 a 9 rodadas (até a Taça de França, com 222 inscritos) e as copas com estágios. Entre estas, a Liga dos Campeões tem 8 estágios de liga, a Taça da Suécia 8 estágios de copa e a Taça dos Campeões Asiáticos tem os dois tipos.
 - Os ids dos inscritos são clubes do `club.dat`: a Supertaça de Inglaterra dá Arsenal × Liverpool, a Intercontinental Bayern × Boca, a Supertaça de Portugal Sporting × Leixões.
 - Mutações no leitor derrubam a contagem:
-  - na copa: tirar o +0x562 das estatísticas, confronto de 0x34 em vez de 0x35, tirar o +0xab; cada uma leva a 0;
-  - nos estágios: rodada de liga de 0x40, confronto direto de n registros, tirar o +0xDB, tirar o +0x20 do estágio de copa; cada uma derruba de 59 para 55–58.
-- Não fecham: as ligas (inclusive as "taças" que são Liga, ver abaixo) e as 20 tabelas globais.
+  - na copa: tirar o +0x562 das estatísticas, confronto de 0x34 em vez de 0x35, tirar o +0xab: de 164 para 140, 82 e 105;
+  - nos estágios e na tabela de liga: rodada de liga de 0x40, confronto direto de n registros, tirar o +0xDB, tirar o +0x20 do estágio de copa: para 57, 130, 57 e 137.
+- As outras 105 são ligas: as divisões nacionais, as "taças" que são Liga (abaixo), os torneios de seleções e as eliminatórias.
+- Mutações na parte da liga (tirar o +0xE6, +0xD1 com 4 bytes, gravar a tabela mesmo sem times, tirar o +0x140 da EuroChamp) derrubam de 164 para 59, 146, 152 e 163.
 
 | Ordem | Campo | Tamanho |
 |---|---|---|
@@ -192,7 +194,7 @@ Cada competição grava o seu estado num `.tmp` da pasta `CM3_TEMP` (`docs/.md` 
 - O `.tmp` não é cópia do objeto: é uma lista de campos escolhidos, e os ponteiros para clubes viram ids. A exceção é o +0x18, gravado como endereço de memória; é ele o "ponteiro" que a outra sessão achou em alguns `.tmp`.
 - As tabelas só são gravadas se o ponteiro existir, e o arquivo não guarda essa marca: o leitor supõe tabela vazia quando a contagem é 0, o que fechou em todos os casos acima.
 - Para o editor: numa copa simples, inscritos e confrontos estão em posições calculáveis, e trocar um clube é trocar um id. Mudar a quantidade de rodadas ou de inscritos muda os tamanhos e exige regravar o arquivo inteiro.
-- Faltam: o `.tmp` das ligas (`League::save_to_temp_file`, 0x6891C0) e o leiaute do confronto de 0x35 bytes.
+- Faltam: o leiaute do confronto de 0x35 bytes e o sentido de vários campos marcados só pelo deslocamento.
 
 **Estágios** [observado em 0x523EB0 e 0x68CA40; provado pelo leitor].
 - O passo 22 grava, para cada estágio, o tipo e um pequeno cabeçalho, e chama a gravação do estágio.
@@ -223,4 +225,39 @@ Cada competição grava o seu estado num `.tmp` da pasta `CM3_TEMP` (`docs/.md` 
 
 Várias ligas derivadas também têm slot 10 próprio (`RusPrm`, `GreCup`, `EuroChamp`, `WorldCup`, `SpaFirst`, `HolFirst`...), para a fase das ligas.
 
-**Nem toda "taça" é Copa**: Taça de Itália (`ItaCCup`), Taça Holandesa (`HolCup`), Taça da Grécia (`GreCup`), as taças da liga da Irlanda, Irlanda do Norte, Gales e Coreia, a Libertadores, a Mercosur, a Merconorte e os torneios de seleções são objetos de Liga, gravados por `League::save_to_temp_file`. Por isso não fecham pela ordem da copa.
+**Nem toda "taça" é Copa**: Taça de Itália (`ItaCCup`), Taça Holandesa (`HolCup`), Taça da Grécia (`GreCup`), as taças da liga da Irlanda, Irlanda do Norte, Gales e Coreia, a Libertadores, a Mercosur, a Merconorte e os torneios de seleções são objetos de Liga, gravados por `League::save_to_temp_file`. Por isso não fecham pela ordem da copa, e sim pela da liga.
+
+**Ligas** (`League::save_to_temp_file`, 0x6891C0) [observado; provado pelo leitor].
+- **Ordem**: nome (0x50), marca e bloco de estatísticas, dados da classe (slot 10), como na copa. Depois o cabeçalho:
+  - +0xE2 capacidade mínima, +0xE4 lugares mínimos (u16); +0xE1 (u8); +0x28 prêmio, +0xDD (u32); +0xD1 (8 bytes); +0xA7 jogos por time (u16);
+  - +0x52, +0x51, +0x4B (u8); +0x4C, +0x24 (u32); +0x49 banco, +0x4A substituições (u8); +0xB6, +0xB8 (u16); +0x45 (u32); +0xB5 (u8);
+  - +0x3C turnos, +0x3E times, +0x40 ano (u16); +0x43, +0x42 (u8); +0x3A (u16); o id da competição (u32); +0xA9 rodadas (u16);
+  - +0xC2, +0xC3, +0xC4 (u8); +0xC5 desempates, +0xBE vagas (4 bytes cada); +0xD9, +0xDB, +0xAB (u16); +0x1C, +0x20, +0xE6 (u32).
+- Em seguida, a mesma parte de tabela do estágio de liga: rodadas (0x41), média, tabela, confronto direto e histórico de posições. Depois os mesmos estágios e o mesmo livro de inscritos da copa.
+- **Sem times** (+0x3E ≤ 0, torneio ainda não montado), a gravação pula a tabela e as duas marcas (`jle` em 0x68964F e 0x68CCE9). É o caso dos torneios de seleções de 1852 bytes.
+
+**Dados próprios das ligas derivadas** (slot 10):
+
+| Classe | Rotina | O que grava |
+|---|---|---|
+| `League`, `SpaFirst` (a dela chama outro objeto e não grava nada) | 0x48CEA0, 0x850950 | nada |
+| `RusPrm`, `CroA1`, `CroA2a/b`, `ItaSerA/B`, `WcSouthAmericanLeague` | 0x7EC1F0 | +0xEE (u8) |
+| `HolFirst` | 0x5F75B0 | +0xEE..+0xF1 (4 × u8) |
+| `MiniLeague` | 0x766D90 | 8 bytes de +0xEE |
+| `BelSecond` | 0x420E90 | +0xF6..+0xF8 (u8) e 8 bytes |
+| `FinFirst` | 0x594FD0 | 16 bytes de +0xEE |
+| `BelThird` | 0x424280 | +0xFE, +0x100, +0x102 (u16) e 16 bytes |
+| `SweSecond` | 0x893700 | 48 bytes de +0xEE |
+| `IrePrm` | 0x63ACB0 | 50 bytes de +0xEE |
+| `GreCup`, `HolCup` (0x5F5070), `IreLgeCup`, `ItaCCup`, `KorLeagueCup`, `NirLgeCup`, `WelLgeCup`, `WelPrmCup` | 0x5E9FB0 | a lista auxiliar: quantos (+0xF2, u32) e os clubes (+0xEE, u32 em id) |
+| `EuroChamp` | 0x57C5D0 | 80 bytes de +0xEE, +0x13E, +0x140 (u16) |
+| `WorldCup` | 0x92F150 | 160 bytes de +0xEE, +0x18E, +0x190 (u16) |
+| `WcAsiaLeague`, `WcOceaniaLeague` | 0x914410 | +0xEE (u8), quantos (+0xF3, u32) e os clubes (u32 em id) |
+| `EuroChampQual` | 0x580410 | quantos (u32, regravado no fim por `fsetpos`) e esses registros de 0x4F; +0xF6 (u8); +0xFB (u32) |
+| `WcEuropeLeague` | 0x91AE80 | +0xF6 (u8); quantos e registros de 0x4F, como acima; +0xFB (u32); a lista auxiliar (+0xF2 quantos, +0xEE clubes) |
+
+**A classe não está no arquivo.** O jogo a conhece porque monta cada competição pelo id; o leitor a deduz pela variante que fecha. Dois arquivos fecham por duas classes:
+- a 1ª Divisão Holandesa, por `HolFirst` e por `GreCup` (os 4 bytes servem de lista vazia);
+- a Taça da Liga da Irlanda do Norte, por `GreCup` e por `EuroChamp`.
+
+A ordem das variantes resolve os dois a favor da classe real. Uma mutação que encurta um campo às vezes é absorvida por outra variante: a de +0xD1 com 4 bytes ainda deixa fechar 146 de 164. Por isso a prova mede a queda da contagem, e não só o zero.

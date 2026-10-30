@@ -148,17 +148,19 @@ Border with the Database block: `save_database` 0x52dad0, `load_database` 0x5285
 
 Source: CM3SaveEditor\docs\VALIDADOR_ESTUDO.md (commit bd7959e), passed on by the orchestrator session; marked as inference there. The game itself writes into the club.dat squad ids ≥ N (outside the people table): 51 slots in TesteTelas.sav (club 1109, ids 159578..159597; club 3397, 158727..158734) and 22 in Valencia.sav. Between TesteTelas and TesteTelasComprimido, club.dat changes only in those slots (they become −1) and staff.dat stays the same: a reload between the two, with `resolve_database_indexes` emptying the slots. Hypothesis: youngsters created in the reserve rows (the 23,000 of type 6 or the 1,325 uncounted) that `save_database` (0x52dad0) does not carry into staff.dat, while their id stays in the squad. A candidate cause of the id corruption the Save Game Editor repairs (PROJETO.md, item 8). Check once save_database and the load are in Rust: the copy shows exactly which people go into staff.dat and which ids stay in the squads.
 
-## 6. A cup's `.tmp` (2026-10-30)
+## 6. A competition's `.tmp`: cups and leagues (2026-10-30)
 
 Each competition writes its state to a `.tmp` in the `CM3_TEMP` folder (`docs/.en.md` §2.11), and these files go into the save as items. The order below is that of `Cup::save_cup_to_disk` (0x5210F0), read from the disassembly. The load, `Cup::load_from_disk` (0x51FC00), reads in the same order. Offsets with `+` belong to the cup object (0xB2 bytes) and "u16"/"u32" are signed little-endian integers.
 
-**Proof** [observed]: `engenharia-reversa/tmp_copa.py <save>` follows this order and checks that each file ends exactly where the reading ends.
-- 59 of the 186 `.tmp` files of `Testes Claude 2.sav` close (59 also in `Roteiro` and `TesteTelas`, 18 in `FeriasTesteSave`). They are all the Cup-class competitions: the super cups (1781 bytes), the domestic cups of 1 to 9 rounds (up to the French Cup, with 222 entrants) and the cups with stages. Among these, the Champions League has 8 league stages, the Swedish Cup 8 cup stages and the Asian Champions Cup has both types.
+**Proof** [observed]: `engenharia-reversa/tmp_competicao.py <save>` follows this order and checks that each file ends exactly where the reading ends.
+- **All 164 competition `.tmp` files** of `Testes Claude 2.sav`, `Roteiro` and `TesteTelas` close (58 in `FeriasTesteSave`, a small save). Only the 20 global tables and the `fixtures_<year>.tmp` files are left out.
+- Among the cups (59 per save) are the super cups (1781 bytes), the domestic cups of 1 to 9 rounds (up to the French Cup, with 222 entrants) and the cups with stages. Among these, the Champions League has 8 league stages, the Swedish Cup 8 cup stages and the Asian Champions Cup has both types.
 - The entrant ids are `club.dat` clubs: the English Super Cup gives Arsenal × Liverpool, the Intercontinental Bayern × Boca, the Portuguese Super Cup Sporting × Leixões.
 - Mutations in the reader bring the count down:
-  - in the cup: dropping +0x562 from the statistics, a 0x34-byte tie instead of 0x35, dropping +0xab; each one leads to 0;
-  - in the stages: a 0x40-byte league round, head-to-head with n records, dropping +0xDB, dropping +0x20 from the cup stage; each one brings 59 down to 55–58.
-- The ones that do not close: the leagues (including the "cups" that are Leagues, see below) and the 20 global tables.
+  - in the cup: dropping +0x562 from the statistics, a 0x34-byte tie instead of 0x35, dropping +0xab: from 164 to 140, 82 and 105;
+  - in the stages and the league table: a 0x40-byte league round, head-to-head with n records, dropping +0xDB, dropping +0x20 from the cup stage: to 57, 130, 57 and 137.
+- The other 105 are leagues: the national divisions, the "cups" that are Leagues (below), the national-team tournaments and the qualifiers.
+- Mutations in the league part (dropping +0xE6, +0xD1 with 4 bytes, writing the table even without teams, dropping +0x140 from EuroChamp) bring 164 down to 59, 146, 152 and 163.
 
 | Order | Field | Size |
 |---|---|---|
@@ -192,7 +194,7 @@ Each competition writes its state to a `.tmp` in the `CM3_TEMP` folder (`docs/.e
 - The `.tmp` is not a copy of the object: it is a list of chosen fields, and club pointers become ids. The exception is +0x18, written as a memory address; that is the "pointer" the other session found in some `.tmp` files.
 - Tables are only written if the pointer exists, and the file does not keep that flag: the reader assumes an empty table when the count is 0, which closed in every case above.
 - For the editor: in a simple cup, entrants and ties sit at computable positions, and swapping a club is swapping an id. Changing the number of rounds or entrants changes the sizes and requires rewriting the whole file.
-- Still missing: the league `.tmp` (`League::save_to_temp_file`, 0x6891C0) and the layout of the 0x35-byte tie.
+- Still missing: the layout of the 0x35-byte tie and the meaning of several fields known only by offset.
 
 **Stages** [observed at 0x523EB0 and 0x68CA40; proven by the reader].
 - Step 22 writes, for each stage, the type and a small header, and calls the stage's own save.
@@ -223,4 +225,39 @@ Each competition writes its state to a `.tmp` in the `CM3_TEMP` folder (`docs/.e
 
 Several derived leagues also have their own slot 10 (`RusPrm`, `GreCup`, `EuroChamp`, `WorldCup`, `SpaFirst`, `HolFirst`...), for the league phase.
 
-**Not every "cup" is a Cup**: the Italian Cup (`ItaCCup`), the Dutch Cup (`HolCup`), the Greek Cup (`GreCup`), the Irish, Northern Irish, Welsh and Korean league cups, the Libertadores, the Mercosur, the Merconorte and the national-team tournaments are League objects, written by `League::save_to_temp_file`. That is why they do not close by the cup order.
+**Not every "cup" is a Cup**: the Italian Cup (`ItaCCup`), the Dutch Cup (`HolCup`), the Greek Cup (`GreCup`), the Irish, Northern Irish, Welsh and Korean league cups, the Libertadores, the Mercosur, the Merconorte and the national-team tournaments are League objects, written by `League::save_to_temp_file`. That is why they do not close by the cup order, but by the league one.
+
+**Leagues** (`League::save_to_temp_file`, 0x6891C0) [observed; proven by the reader].
+- **Order**: name (0x50), statistics flag and block, class data (slot 10), as in the cup. Then the header:
+  - +0xE2 minimum capacity, +0xE4 minimum seats (u16); +0xE1 (u8); +0x28 prize, +0xDD (u32); +0xD1 (8 bytes); +0xA7 matches per team (u16);
+  - +0x52, +0x51, +0x4B (u8); +0x4C, +0x24 (u32); +0x49 bench, +0x4A substitutions (u8); +0xB6, +0xB8 (u16); +0x45 (u32); +0xB5 (u8);
+  - +0x3C rounds of play, +0x3E teams, +0x40 year (u16); +0x43, +0x42 (u8); +0x3A (u16); the competition id (u32); +0xA9 rounds (u16);
+  - +0xC2, +0xC3, +0xC4 (u8); +0xC5 tie-breaks, +0xBE places (4 bytes each); +0xD9, +0xDB, +0xAB (u16); +0x1C, +0x20, +0xE6 (u32).
+- Then the same table part as the league stage: rounds (0x41), average, table, head-to-head and position history. After that, the same stages and the same entry book as the cup.
+- **Without teams** (+0x3E ≤ 0, tournament not yet built), the save skips the table and the two flags (`jle` at 0x68964F and 0x68CCE9). That is the case of the 1852-byte national-team tournaments.
+
+**Derived leagues' own data** (slot 10):
+
+| Class | Routine | What it writes |
+|---|---|---|
+| `League`, `SpaFirst` (its routine calls another object and writes nothing) | 0x48CEA0, 0x850950 | nothing |
+| `RusPrm`, `CroA1`, `CroA2a/b`, `ItaSerA/B`, `WcSouthAmericanLeague` | 0x7EC1F0 | +0xEE (u8) |
+| `HolFirst` | 0x5F75B0 | +0xEE..+0xF1 (4 × u8) |
+| `MiniLeague` | 0x766D90 | 8 bytes from +0xEE |
+| `BelSecond` | 0x420E90 | +0xF6..+0xF8 (u8) and 8 bytes |
+| `FinFirst` | 0x594FD0 | 16 bytes from +0xEE |
+| `BelThird` | 0x424280 | +0xFE, +0x100, +0x102 (u16) and 16 bytes |
+| `SweSecond` | 0x893700 | 48 bytes from +0xEE |
+| `IrePrm` | 0x63ACB0 | 50 bytes from +0xEE |
+| `GreCup`, `HolCup` (0x5F5070), `IreLgeCup`, `ItaCCup`, `KorLeagueCup`, `NirLgeCup`, `WelLgeCup`, `WelPrmCup` | 0x5E9FB0 | the auxiliary list: count (+0xF2, u32) and the clubs (+0xEE, u32 as ids) |
+| `EuroChamp` | 0x57C5D0 | 80 bytes from +0xEE, +0x13E, +0x140 (u16) |
+| `WorldCup` | 0x92F150 | 160 bytes from +0xEE, +0x18E, +0x190 (u16) |
+| `WcAsiaLeague`, `WcOceaniaLeague` | 0x914410 | +0xEE (u8), count (+0xF3, u32) and the clubs (u32 as ids) |
+| `EuroChampQual` | 0x580410 | count (u32, rewritten at the end through `fsetpos`) and that many 0x4F records; +0xF6 (u8); +0xFB (u32) |
+| `WcEuropeLeague` | 0x91AE80 | +0xF6 (u8); count and 0x4F records, as above; +0xFB (u32); the auxiliary list (+0xF2 count, +0xEE clubs) |
+
+**The class is not in the file.** The game knows it because it builds each competition by id; the reader deduces it from the variant that closes. Two files close under two classes:
+- the Dutch first division, under `HolFirst` and under `GreCup` (the 4 bytes work as an empty list);
+- the Northern Irish League Cup, under `GreCup` and under `EuroChamp`.
+
+The variant order resolves both in favour of the real class. A mutation that shortens a field is sometimes absorbed by another variant: +0xD1 with 4 bytes still lets 146 of 164 close. That is why the proof measures the drop in the count, not just zero.
