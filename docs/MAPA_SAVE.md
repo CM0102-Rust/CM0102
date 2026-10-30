@@ -147,3 +147,47 @@ Fronteira com o bloco Database: `save_database` 0x52dad0, `load_database` 0x5285
 ## Pista: ids fora da tabela no elenco gravado (23/10/2026, do estudo do validador do Save Editor)
 
 Fonte: CM3SaveEditor\docs\VALIDADOR_ESTUDO.md (commit bd7959e), repassado pela sessão orquestradora; marcado como inferência lá. O próprio jogo grava no elenco do club.dat ids ≥ N (fora da tabela de pessoas): 51 vagas no TesteTelas.sav (clube 1109, ids 159578..159597; clube 3397, 158727..158734) e 22 no Valencia.sav. Entre o TesteTelas e o TesteTelasComprimido o club.dat muda só nessas vagas (viram −1) e o staff.dat fica igual: um recarregamento entre os dois, com o `resolve_database_indexes` esvaziando as vagas. Hipótese: jovens criados nas linhas de reserva (as 23.000 de tipo 6 ou as 1.325 não contadas) que o `save_database` (0x52dad0) não leva ao staff.dat, mas cujo id fica no elenco. É um candidato à causa da corrupção de ids que o Save Game Editor conserta (PROJETO.md, item 8). Conferir quando o save_database e a carga estiverem em Rust: a cópia mostra exatamente que pessoas entram no staff.dat e quais ids ficam nos elencos.
+
+## 6. O `.tmp` de uma copa (30/10/2026)
+
+Cada competição grava o seu estado num `.tmp` da pasta `CM3_TEMP` (`docs/.md` §2.11), e esses arquivos entram no save como itens. A ordem abaixo é a de `Cup::save_cup_to_disk` (0x5210F0), lida na desmontagem. A carga, `Cup::load_from_disk` (0x51FC00), lê na mesma ordem. Deslocamentos com `+` são do objeto da copa (0xB2 bytes) e "u16"/"u32" são inteiros com sinal, little-endian.
+
+**Prova** [observado]: `engenharia-reversa/tmp_copa.py <save>` segue esta ordem e confere que cada arquivo acaba exatamente onde a leitura acaba.
+- Fecham 47 dos 186 `.tmp` do `Testes Claude 2.sav`, e 48, 47 e 9 em outros três saves (`Roteiro`, `TesteTelas`, `FeriasTesteSave`). Todos são copas sem estágios: as supertaças (1781 bytes) e as copas nacionais de 1 a 9 rodadas, até a Taça de França com 222 inscritos.
+- Os ids dos inscritos são clubes do `club.dat`: a Supertaça de Inglaterra dá Arsenal × Liverpool, a Intercontinental Bayern × Boca, a Supertaça de Portugal Sporting × Leixões.
+- Três mutações no leitor (tirar o +0x562 das estatísticas, confronto de 0x34 em vez de 0x35, tirar o +0xab) derrubam a contagem para 0.
+- Não fecham, e o leitor separa: as ligas, as copas com estágios (as 51 que recusa por ter estágio atual ≥ 0) e os 20 globais.
+
+| Ordem | Campo | Tamanho |
+|---|---|---|
+| 1 | nome do arquivo (+0x53) | 0x50 |
+| 2 | há bloco de estatísticas (+0x08 ≠ 0) | u32 |
+| 3 | o bloco, se houver: `Comp_Stats::save` (0x4AC4E0), ver abaixo | variável |
+| 4 | dados próprios da classe derivada: slot 10 da vtable (+0x24); na base é vazio (0x48CEA0 = `ret 4`) | variável |
+| 5 | fundo de prêmios +0x28 | u32 |
+| 6 | +0x52, +0x51, +0x4B | 3 × u8 |
+| 7 | +0x4C, +0x24 (o id da regra de mando, §2.1 da referência) | 2 × u32 |
+| 8 | banco +0x49, substituições +0x4A | 2 × u8 |
+| 9 | +0x45 (o sorteio só roda com ele ≠ 0, 0x51C431) | u32 |
+| 10 | +0xB1 | u8 |
+| 11 | rodadas +0x3C, inscritos +0x3E, ano +0x40 | 3 × u16 |
+| 12 | +0xAB, +0xAC, tipo +0x42 | 3 × u8 |
+| 13 | código do estágio principal +0x3A | u16 |
+| 14 | liga de cima +0x1C, de baixo +0x20 | 2 × u32 |
+| 15 | **o ponteiro** da tabela de média de pontos +0x18 (o valor de memória, gravado como está) | u32 |
+| 16 | linhas da média +0x34 e, se o ponteiro não é nulo, 0x13 bytes por linha | u16 + variável |
+| 17 | id da competição (registro +0, o mesmo do nome do arquivo) | u32 |
+| 18 | rodadas: 0x68 bytes cada (leiaute na referência, §2.4) | 0x68 × +0x3C |
+| 19 | inscritos (+0xA7): 6 bytes cada; o ponteiro do clube vira o **id** na gravação e volta a ser ponteiro depois | 6 × +0x3E |
+| 20 | confrontos de cada rodada (+0xAD): 0x35 bytes por jogo, quantos diz o +0x1A da rodada | variável |
+| 21 | estágios +0x2C, estágio atual +0x30, +0x44 | u32 + u32 + u8 |
+| 22 | para cada estágio de 0 até o atual: tipo (+0x43 do estágio); se 1, estágio de copa: +0x3E, +0x3C, o +0x1A de cada rodada (u16) e `Cup_Stage::save_to_file` (0x523EB0); se 2, estágio de liga: +0x3E, +0xA9 e `League_Stage::save_to_file` (0x68CA40) | variável |
+| 23 | livro de inscritos: capacidade +0x38, usados +0x36 (u16 cada) e, se existe, 6 bytes por vaga da capacidade, com os clubes em id | variável |
+
+**Bloco de estatísticas** (`Comp_Stats::save`, objeto de 0x5CE bytes), na ordem: +0x10 (u32); +0x14 (u32, n) e n × 0x76 de +0x0C; +0x1D (u32); +0x21 (u32, n) e n × 0x2D de +0x19; 0x64 de +0x56A; 0x269 de +0x26 e 0x269 de +0x28F (os dois conjuntos de recordes); +0x4F8, +0x4FC (u32); +0x500 (u16); 0x5C de +0x506; +0x562 (u32); +0x04 (u32, n); +0x08 (u32); n × 0x1C de +0x00. Sem tabelas, são 0x5B8 bytes.
+
+**O que isso diz** [inferência, a conferir]:
+- O `.tmp` não é cópia do objeto: é uma lista de campos escolhidos, e os ponteiros para clubes viram ids. A exceção é o +0x18, gravado como endereço de memória; é ele o "ponteiro" que a outra sessão achou em alguns `.tmp`.
+- As tabelas só são gravadas se o ponteiro existir, e o arquivo não guarda essa marca: o leitor supõe tabela vazia quando a contagem é 0, o que fechou em todos os casos acima.
+- Para o editor: numa copa simples, inscritos e confrontos estão em posições calculáveis, e trocar um clube é trocar um id. Mudar a quantidade de rodadas ou de inscritos muda os tamanhos e exige regravar o arquivo inteiro.
+- Faltam: os estágios (o próximo passo natural, com `Cup_Stage::save_to_file` e `League_Stage::save_to_file`), o `.tmp` das ligas (`League::save_to_temp_file`, 0x6891C0), o slot 10 das copas derivadas e o leiaute do confronto de 0x35 bytes.

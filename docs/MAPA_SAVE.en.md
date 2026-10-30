@@ -147,3 +147,47 @@ Border with the Database block: `save_database` 0x52dad0, `load_database` 0x5285
 ## Lead: out-of-table ids in the saved squad (2026-10-23, from the Save Editor validator study)
 
 Source: CM3SaveEditor\docs\VALIDADOR_ESTUDO.md (commit bd7959e), passed on by the orchestrator session; marked as inference there. The game itself writes into the club.dat squad ids ≥ N (outside the people table): 51 slots in TesteTelas.sav (club 1109, ids 159578..159597; club 3397, 158727..158734) and 22 in Valencia.sav. Between TesteTelas and TesteTelasComprimido, club.dat changes only in those slots (they become −1) and staff.dat stays the same: a reload between the two, with `resolve_database_indexes` emptying the slots. Hypothesis: youngsters created in the reserve rows (the 23,000 of type 6 or the 1,325 uncounted) that `save_database` (0x52dad0) does not carry into staff.dat, while their id stays in the squad. A candidate cause of the id corruption the Save Game Editor repairs (PROJETO.md, item 8). Check once save_database and the load are in Rust: the copy shows exactly which people go into staff.dat and which ids stay in the squads.
+
+## 6. A cup's `.tmp` (2026-10-30)
+
+Each competition writes its state to a `.tmp` in the `CM3_TEMP` folder (`docs/.en.md` §2.11), and these files go into the save as items. The order below is that of `Cup::save_cup_to_disk` (0x5210F0), read from the disassembly. The load, `Cup::load_from_disk` (0x51FC00), reads in the same order. Offsets with `+` belong to the cup object (0xB2 bytes) and "u16"/"u32" are signed little-endian integers.
+
+**Proof** [observed]: `engenharia-reversa/tmp_copa.py <save>` follows this order and checks that each file ends exactly where the reading ends.
+- 47 of the 186 `.tmp` files of `Testes Claude 2.sav` close, and 48, 47 and 9 in three other saves (`Roteiro`, `TesteTelas`, `FeriasTesteSave`). All are cups without stages: the super cups (1781 bytes) and the domestic cups of 1 to 9 rounds, up to the French Cup with 222 entrants.
+- The entrant ids are `club.dat` clubs: the English Super Cup gives Arsenal × Liverpool, the Intercontinental Bayern × Boca, the Portuguese Super Cup Sporting × Leixões.
+- Three mutations in the reader (dropping +0x562 from the statistics, a 0x34-byte tie instead of 0x35, dropping +0xab) bring the count down to 0.
+- The ones that do not close, and that the reader sets apart: leagues, cups with stages (the 51 it refuses for having a current stage ≥ 0) and the 20 global tables.
+
+| Order | Field | Size |
+|---|---|---|
+| 1 | file name (+0x53) | 0x50 |
+| 2 | there is a statistics block (+0x08 ≠ 0) | u32 |
+| 3 | the block, if any: `Comp_Stats::save` (0x4AC4E0), see below | variable |
+| 4 | the derived class's own data: vtable slot 10 (+0x24); empty in the base (0x48CEA0 = `ret 4`) | variable |
+| 5 | prize fund +0x28 | u32 |
+| 6 | +0x52, +0x51, +0x4B | 3 × u8 |
+| 7 | +0x4C, +0x24 (the home-rule id, §2.1 of the reference) | 2 × u32 |
+| 8 | bench +0x49, substitutions +0x4A | 2 × u8 |
+| 9 | +0x45 (the draw only runs when it is ≠ 0, 0x51C431) | u32 |
+| 10 | +0xB1 | u8 |
+| 11 | rounds +0x3C, entrants +0x3E, year +0x40 | 3 × u16 |
+| 12 | +0xAB, +0xAC, type +0x42 | 3 × u8 |
+| 13 | main stage code +0x3A | u16 |
+| 14 | league above +0x1C, below +0x20 | 2 × u32 |
+| 15 | **the pointer** of the average-points table +0x18 (the memory value, written as is) | u32 |
+| 16 | average rows +0x34 and, if the pointer is not null, 0x13 bytes per row | u16 + variable |
+| 17 | competition id (record +0, the same as in the file name) | u32 |
+| 18 | rounds: 0x68 bytes each (layout in the reference, §2.4) | 0x68 × +0x3C |
+| 19 | entrants (+0xA7): 6 bytes each; the club pointer becomes the **id** when saving and is turned back into a pointer afterwards | 6 × +0x3E |
+| 20 | ties of each round (+0xAD): 0x35 bytes per match, as many as the round's +0x1A says | variable |
+| 21 | stages +0x2C, current stage +0x30, +0x44 | u32 + u32 + u8 |
+| 22 | for each stage from 0 up to the current one: type (+0x43 of the stage); if 1, cup stage: +0x3E, +0x3C, each round's +0x1A (u16) and `Cup_Stage::save_to_file` (0x523EB0); if 2, league stage: +0x3E, +0xA9 and `League_Stage::save_to_file` (0x68CA40) | variable |
+| 23 | entry book: capacity +0x38, used +0x36 (u16 each) and, if it exists, 6 bytes per capacity slot, with the clubs as ids | variable |
+
+**Statistics block** (`Comp_Stats::save`, a 0x5CE-byte object), in order: +0x10 (u32); +0x14 (u32, n) and n × 0x76 from +0x0C; +0x1D (u32); +0x21 (u32, n) and n × 0x2D from +0x19; 0x64 from +0x56A; 0x269 from +0x26 and 0x269 from +0x28F (the two record sets); +0x4F8, +0x4FC (u32); +0x500 (u16); 0x5C from +0x506; +0x562 (u32); +0x04 (u32, n); +0x08 (u32); n × 0x1C from +0x00. Without tables, 0x5B8 bytes.
+
+**What it tells us** [inference, to be checked]:
+- The `.tmp` is not a copy of the object: it is a list of chosen fields, and club pointers become ids. The exception is +0x18, written as a memory address; that is the "pointer" the other session found in some `.tmp` files.
+- Tables are only written if the pointer exists, and the file does not keep that flag: the reader assumes an empty table when the count is 0, which closed in every case above.
+- For the editor: in a simple cup, entrants and ties sit at computable positions, and swapping a club is swapping an id. Changing the number of rounds or entrants changes the sizes and requires rewriting the whole file.
+- Still missing: the stages (the natural next step, with `Cup_Stage::save_to_file` and `League_Stage::save_to_file`), the league `.tmp` (`League::save_to_temp_file`, 0x6891C0), the derived cups' slot 10 and the layout of the 0x35-byte tie.
