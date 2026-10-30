@@ -121,3 +121,32 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `contracts`, `regens`, `scouts`, `news` | 0x4cbb60, 0x4ca1c0, 0x7549b0, 0x7f8ee0, 0x5fff30, 0x7a8690, 0x7a8050, 0x8c7330, 0x7ae950, 0x690c30 (batch 244) | — | all run in the career (counters), but the mutated cases do not show up before 2002-06: slots past the end of the array (`cph_apelido_fim`, `cph_pendente_fim`), exact limits (`cph_desempregado_tecnico`, `cph_sequencia_dias`), talks with two clubs, affiliate, replaced scout, array order and dates (`cph_conversas_clube`, `cph_lugar_marca`, `cph_olheiro_confere`, `cph_interesse_ordem`, `cph_pedido_data`, `cph_permissao_marca`). Test: broad career, a full season **Broad career (28/10, to 2003-01-31):** `cph_lugar_marca` and `cph_interesse_ordem` caught; the other six still escape. |
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").
+
+## Disabled routines (DESLIGADAS)
+
+The copies that stay in the code but do not run (`DESLIGADAS` in `rust/src/motor.rs`, detour off in every mode), to check at the end of the migration. Groups: **detour** = the detour alone (the original passing through, on the private stack) already changes the career, because it changes the residue the routine leaves on the game stack and a later original decides with it; **Rust only** = the career changes only in Rust mode and the cause (residue or a difference in the copy) is not isolated; **unset local** = the original writes into game memory bytes of a local nobody filled. Each one comes back when the copy reproduces the residue, when the routine that reads it is also in Rust, or with a proven zeroing (ZERADAS, with Lucas); the proof is the broad career (8 leagues, Rust = original). 0x524d30 (batch 219) is already back, through the zeroing of 0x52dad0.
+
+| Routine | Name | Batch | Group | Who leaves or reads the residue |
+|---|---|---|---|---|
+| 0x7c6bf0 | tirar_idioma_do_jogador | batch 212 | detour | reader: 0x84be20 (word +0x38 of the simulated-match record, extra-time and penalty rules of 0x6beeb0) |
+| 0x827110 | criar_jogo_pela_configuracao | batch 220 | detour | reader: create_game 0x828110 (club.dat comes out different; the exact local was not found) |
+| 0x541f90 | reunir_elenco_do_clube | batch 225 | detour | left by: 0x540a50, which it calls; reader: not mapped |
+| 0x547770 | clube_em_temporada | batch 233 | detour | not mapped |
+| 0x689ad0 | liga_completa | batch 241 | detour | not mapped |
+| 0x6827d0 | ordenar_tabela_da_liga | batch 241 | detour | not mapped |
+| 0x4b02e0 | tipo_de_confronto_na_liga | batch 241 | detour | not mapped (changes only the real game in comparison mode) |
+| 0x62c510 | condicao_de_jogo_do_jogador | batch 243 | detour | left by: 0x62c680, which it calls; reader: not mapped |
+| 0x7a8510 | acrescentar_aposentadoria | batch 247 | detour | not mapped |
+| 0x74ae60 | noticia_de_apuro_financeiro | batch 247 | detour | not mapped |
+| 0x62e500 | sortear_lesao_recorrente | batch 249 | detour | not mapped |
+| 0x7861e0 | noticia_ao_tecnico_do_clube | batch 250 | detour | not mapped |
+| 0x785d40 | entregar_noticia_ao_tecnico | batch 250 | detour | not mapped |
+| 0x77bbe0 | construir_noticia | batch 251 | Rust only | not isolated; with it the game later crashed in 0x7c6650 with a bad index |
+| 0x8d0590 | periodo_do_emprestimo | batch 251 | Rust only | not isolated |
+| 0x7c6650 | zerar_estatisticas_do_jogador | batch 251 | Rust only | not isolated |
+| 0x7775c0 | marcar_clubes_com_jogo | batch 251 | Rust only | not isolated |
+| 0x4cd9c0 | decidir_as_datas_vencidas | batch 252 | detour | not mapped |
+| 0x842c00 | por_jogador_nas_listas_dos_clubes | batch 252 | detour | not mapped |
+| 0x776fc0 | pode_marcar_jogo_do_clube | batch 252 | detour | not mapped |
+| 0x694c80 | diretoria_do_tecnico_novo | batch 252 | Rust only | not isolated |
+| 0x8bed60 | fazer_oferta_de_emprestimo | batch 253 | unset local | the bytes of the local offer (0x8e5680) and contract (0x85e410) that the constructors leave unset go into the stored offer; reader: not mapped |

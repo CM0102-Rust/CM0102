@@ -121,3 +121,32 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `contratos`, `regens`, `olheiros`, `notícias` | 0x4cbb60, 0x4ca1c0, 0x7549b0, 0x7f8ee0, 0x5fff30, 0x7a8690, 0x7a8050, 0x8c7330, 0x7ae950, 0x690c30 (244ª) | — | todas rodam na carreira (contadores), mas os casos mutados não aparecem até 2002-06: vagas depois do fim do vetor (`cph_apelido_fim`, `cph_pendente_fim`), limites exatos (`cph_desempregado_tecnico`, `cph_sequencia_dias`), conversas com dois clubes, filial, olheiro substituído, ordem e datas de vetores (`cph_conversas_clube`, `cph_lugar_marca`, `cph_olheiro_confere`, `cph_interesse_ordem`, `cph_pedido_data`, `cph_permissao_marca`). Teste: carreira ampla, temporada inteira **Carreira ampla (28/10, até 2003-01-31):** `cph_lugar_marca` e `cph_interesse_ordem` acusadas; as outras seis seguem escapando. |
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
+
+## Rotinas desligadas (DESLIGADAS)
+
+As cópias que ficam no código mas não rodam (`DESLIGADAS` em `rust/src/motor.rs`, desvio desligado em todos os modos), para conferir no fim da migração. Grupos: **desvio** = o desvio sozinho (a original de passagem, pela pilha particular) já muda a carreira, porque muda o resíduo que a rotina deixa na pilha do jogo e uma original lida depois decide com ele; **só Rust** = a carreira muda só no modo Rust e a causa (resíduo ou diferença da cópia) não foi isolada; **local sem valor** = a original grava na memória do jogo bytes de uma variável local que ninguém preencheu. Cada uma volta quando a cópia reproduzir o resíduo, quando a rotina que o lê também estiver em Rust ou com uma zeragem provada (ZERADAS, com o Lucas); a prova é a carreira ampla (8 ligas, Rust = original). A 0x524d30 (219ª) já voltou, pela zeragem da 0x52dad0.
+
+| Rotina | Nome | Leva | Grupo | Quem deixa ou lê o resíduo |
+|---|---|---|---|---|
+| 0x7c6bf0 | tirar_idioma_do_jogador | 212ª | desvio | lê: a 0x84be20 (a palavra +0x38 da ficha do jogo simulado, regras de prorrogação e pênaltis da 0x6beeb0) |
+| 0x827110 | criar_jogo_pela_configuracao | 220ª | desvio | lê: a create_game 0x828110 (o club.dat sai diferente; a variável exata não foi achada) |
+| 0x541f90 | reunir_elenco_do_clube | 225ª | desvio | deixa: a 0x540a50 que ela chama; quem lê: não mapeado |
+| 0x547770 | clube_em_temporada | 233ª | desvio | não mapeado |
+| 0x689ad0 | liga_completa | 241ª | desvio | não mapeado |
+| 0x6827d0 | ordenar_tabela_da_liga | 241ª | desvio | não mapeado |
+| 0x4b02e0 | tipo_de_confronto_na_liga | 241ª | desvio | não mapeado (muda só o jogo real comparando) |
+| 0x62c510 | condicao_de_jogo_do_jogador | 243ª | desvio | deixa: a 0x62c680 que ela chama; quem lê: não mapeado |
+| 0x7a8510 | acrescentar_aposentadoria | 247ª | desvio | não mapeado |
+| 0x74ae60 | noticia_de_apuro_financeiro | 247ª | desvio | não mapeado |
+| 0x62e500 | sortear_lesao_recorrente | 249ª | desvio | não mapeado |
+| 0x7861e0 | noticia_ao_tecnico_do_clube | 250ª | desvio | não mapeado |
+| 0x785d40 | entregar_noticia_ao_tecnico | 250ª | desvio | não mapeado |
+| 0x77bbe0 | construir_noticia | 251ª | só Rust | não isolado; com ela o jogo caía depois na 0x7c6650 com um índice estragado |
+| 0x8d0590 | periodo_do_emprestimo | 251ª | só Rust | não isolado |
+| 0x7c6650 | zerar_estatisticas_do_jogador | 251ª | só Rust | não isolado |
+| 0x7775c0 | marcar_clubes_com_jogo | 251ª | só Rust | não isolado |
+| 0x4cd9c0 | decidir_as_datas_vencidas | 252ª | desvio | não mapeado |
+| 0x842c00 | por_jogador_nas_listas_dos_clubes | 252ª | desvio | não mapeado |
+| 0x776fc0 | pode_marcar_jogo_do_clube | 252ª | desvio | não mapeado |
+| 0x694c80 | diretoria_do_tecnico_novo | 252ª | só Rust | não isolado |
+| 0x8bed60 | fazer_oferta_de_emprestimo | 253ª | local sem valor | os bytes da oferta (0x8e5680) e do contrato (0x85e410) locais que os construtores não preenchem vão para a oferta guardada; quem lê: não mapeado |
