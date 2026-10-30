@@ -90,7 +90,7 @@ Order in `create_game` 0x828110 (Bosman's creation inventory §3a, checked on th
 
 ### cm3/code/index.cpp (the keys)
 
-The **keys** are ~1,100 globals (0x9cf178..0x9d0524) holding the index of records the code uses by name: colours ("Black", "Red 1"…), nations, club and national competitions, continents, staff competitions (awards) and clubs. Each matcher is a chain `if (!_stricmp(name, "Argentina")) key = row; else if …` (0x951c50).
+The **keys** are 1,284 globals (0x9cf178..0x9d0524, plus 26 German amateur teams at 0xb63c9c..0xb63d00; list and uses in `CHAVES_DO_EXE.en.md`) holding the index of records the code uses by name: colours ("Black", "Red 1"…), nations, club and national competitions, continents, staff competitions (awards) and clubs. Each matcher is a chain `if (!_stricmp(name, "Argentina")) key = row; else if …` (0x951c50).
 
 | Address | Name | Bytes | What it does | Effects | Rust | Career |
 |---|---|---|---|---|---|---|
@@ -269,12 +269,12 @@ Modelled on the Elifoot II Bombado editor (`D:\Sistemas\Elifoot II\bombado\edito
 
 **Fixed in the code (the editor needs to know, to validate or to turn into data later):**
 
-- **The ~1,100 keys by name** (`index.cpp`): colours, nations, competitions, continents, awards and clubs. Renaming "England", "Premier Division" or a club on the list breaks the key and the game stops with "Unable to find the %s index". The editor's validation must check the list (generated from the exe), and "rules as data" (PROJETO §6.9) starts with it.
+- **The 1,284 keys by name** (`index.cpp`; where the code uses each one: `CHAVES_DO_EXE.en.md` and `chaves_uso.csv`): colours, nations, competitions, continents, awards and clubs. Renaming "England", "Premier Division" or a club on the list breaks the key and the game stops with "Unable to find the %s index". The editor's validation must check the list (generated from the exe), and "rules as data" (PROJETO §6.9) starts with it.
 - A/B pairs (82 pairs of club keys from Spain, Germany and Portugal, `club_get_linked_b_team`), the 24 Basque clubs, the 5 Melanesian and 5 Polynesian nations, UK and Ireland, the 6 major nations, the free-transfer exceptions, Argentina/France/Croatia, the "Reserve" division, the "Bright…"/"Wimble…" clubs (+0x6d), Greece's 14 places (0x839920).
 - National team table layout: the first 213 rows of `nat_club` are the senior teams, the next 213 the under-21 teams (half the reputation at load); the last 16 staff ids are the human managers; the last 127 club competitions are the friendlies; reserves of 23,000 staff and 1,325 players.
 - The trim by the database size option (who stays, by nation and reputation) and the player initialisation (tables 0x9b5988, 22 shorts from 1 to 175, and 0x9b59c0, 20 `double`s from 2.1 to 0.9 by league position).
 - The silent fixes of the load (§2, step 9, and the `resolve` nulls): the editor can warn about what the game will "repair" (job 7, missing nation, out-of-range ids) instead of letting the game decide.
-- The texts of jobs, attributes, positions, regions and nationality adjectives (26 KB of code per language and gender): to check whether they come from `language.ldb` or the code.
+- The texts of jobs, attributes and positions are in the code in English and go through `langlib_sprintf` (0x66f4e0), which swaps the text for the active language's template: the English text is the translation key (`database_get_job_name` 0x53ad00, `database_get_player_attribute_name` 0x5428a0, `database_get_non_player_attribute_name` 0x543b10, `position_mask_get_text` 0x5482f0) [observed]. Regions (`get_region_name` 0x616f20) use the same path and, in some languages, their own tables in the code. The **nationality adjectives** (`nation_get_nationality_adjective` 0x6181d0, the 24 KB) are in the code: nearly a thousand distinct texts for languages 9 (Portuguese), 4 (Italian), 5 (Spanish), 10 and 6, by key nation and form (gender and number). In form 0 and in other languages, the game uses the text of the nation record [observed; the routine is already in Rust, batch 240]. For the editor: changing an adjective in those languages requires changing the exe, not the database.
 - Two staff versions (157 bytes in the shipped database, 110 + preferences in community databases): the editor reads both and writes the one of the source database.
 
 ## Request P7 (2026-10-22/23, approved by Lucas)

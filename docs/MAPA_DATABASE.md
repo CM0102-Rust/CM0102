@@ -90,7 +90,7 @@ Ordem em `create_game` 0x828110 (inventário de criação do Bosman §3a, confer
 
 ### cm3/code/index.cpp (as chaves)
 
-As **chaves** são ~1.100 globais (0x9cf178..0x9d0524) com o índice de registros que o código usa pelo nome: cores ("Black", "Red 1"…), nações, competições de clube e de seleção, continentes, competições de pessoal (prêmios) e clubes. Cada casador é uma cadeia `if (!_stricmp(nome, "Argentina")) chave = linha; else if …` (0x951c50).
+As **chaves** são 1.284 globais (0x9cf178..0x9d0524, mais 26 times amadores alemães em 0xb63c9c..0xb63d00; lista e usos em `CHAVES_DO_EXE.md`) com o índice de registros que o código usa pelo nome: cores ("Black", "Red 1"…), nações, competições de clube e de seleção, continentes, competições de pessoal (prêmios) e clubes. Cada casador é uma cadeia `if (!_stricmp(nome, "Argentina")) chave = linha; else if …` (0x951c50).
 
 | Endereço | Nome | Bytes | O que faz | Efeitos | Rust | Carreira |
 |---|---|---|---|---|---|---|
@@ -269,12 +269,12 @@ No molde do editor do Elifoot II Bombado (`D:\Sistemas\Elifoot II\bombado\editor
 
 **Fixo no código (o editor precisa saber, para validar ou para virar dado depois):**
 
-- **As ~1.100 chaves por nome** (`index.cpp`): cores, nações, competições, continentes, prêmios e clubes. Renomear "England", "Premier Division" ou um clube da lista quebra a chave e o jogo para com "Unable to find the %s index". A validação do editor tem de conferir a lista (gerada do exe), e "regras em dados" (PROJETO §6.9) começa por ela.
+- **As 1.284 chaves por nome** (`index.cpp`; onde o código usa cada uma: `CHAVES_DO_EXE.md` e `chaves_uso.csv`): cores, nações, competições, continentes, prêmios e clubes. Renomear "England", "Premier Division" ou um clube da lista quebra a chave e o jogo para com "Unable to find the %s index". A validação do editor tem de conferir a lista (gerada do exe), e "regras em dados" (PROJETO §6.9) começa por ela.
 - Pares A/B (82 pares de chaves de clube da Espanha, Alemanha e Portugal, `club_get_linked_b_team`), os 24 clubes bascos, as 5 nações melanésias e 5 polinésias, Reino Unido e Irlanda, as 6 grandes nações, as exceções de transferência livre, Argentina/França/Croácia, a divisão "Reserve", os clubes "Bright…"/"Wimble…" (+0x6d), as 14 vagas da Grécia (0x839920).
 - Estrutura da tabela de seleções: as 213 primeiras de `nat_club` são as principais, as 213 seguintes as sub-21 (metade da reputação na carga); os 16 últimos ids de pessoa são os técnicos humanos; as 127 últimas competições de clube são os amistosos; reservas de 23.000 pessoas e 1.325 jogadores.
 - O corte pela opção de tamanho da base (quem fica, por nação e reputação) e a inicialização dos jogadores (tabelas 0x9b5988, 22 curtos de 1 a 175, e 0x9b59c0, 20 `double` de 2,1 a 0,9 pela posição na liga).
 - As correções silenciosas da carga (§2, passo 9, e os nulos do `resolve`): o editor pode avisar do que o jogo vai "consertar" (cargo 7, nação ausente, ids fora da faixa) em vez de deixar o jogo decidir.
-- Os textos de cargos, atributos, posições, regiões e adjetivos de nacionalidade (26 KB de código por idioma e gênero): a conferir se vêm do `language.ldb` ou do código.
+- Os textos de cargos, atributos e posições estão no código em inglês e passam por `langlib_sprintf` (0x66f4e0), que troca o texto pelo modelo do idioma ativo: o texto em inglês serve de chave da tradução (`database_get_job_name` 0x53ad00, `database_get_player_attribute_name` 0x5428a0, `database_get_non_player_attribute_name` 0x543b10, `position_mask_get_text` 0x5482f0) [observado]. As regiões (`get_region_name` 0x616f20) usam o mesmo caminho e, em alguns idiomas, tabelas próprias no código. Os **adjetivos de nacionalidade** (`nation_get_nationality_adjective` 0x6181d0, os 24 KB) estão no código: quase mil textos distintos para os idiomas 9 (português), 4 (italiano), 5 (espanhol), 10 e 6, por nação-chave e forma (gênero e número). Na forma 0 e nos outros idiomas, o jogo usa o texto do registro da nação [observado; a rotina já está em Rust, 240ª leva]. Para o editor: trocar um adjetivo nesses idiomas exige mudar o exe, não a base.
 - Duas versões de pessoa (157 bytes na base de fábrica, 110 + preferências nas bases da comunidade): o editor lê as duas e grava a da base de origem.
 
 ## Pedido P7 (22-23/10/2026, aprovado pelo Lucas)
