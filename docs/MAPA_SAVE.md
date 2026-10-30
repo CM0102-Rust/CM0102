@@ -339,7 +339,22 @@ Os `.tmp` que não são de uma competição: 22 no save de teste (25 no `TesteTe
 | `computer events1/2.tmp`, `human events1/2.tmp` | `Match_Events::save_event_log` 0x6D98B0 | arquivo rotativo: cabeçalho de 3 u32 (o 3º, em +8, regravado a cada partida) e os eventos de 0x0E bytes de cada partida, anexados no fim. Onde começa cada partida (deslocamento, quantos eventos, qual dos dois arquivos) fica na memória, não no arquivo |
 | `match_stats_matches.tmp` | `Match_Stats` 0x729000 | 10000 vagas fixas de 0xD7A bytes (34.500.000 bytes), lidas e gravadas por índice (0x729600 / 0x729820); o índice fica no `match_stats.dat` |
 
-O `transfers_<ano>.tmp` não aparece em nenhum dos saves de teste. Pelo código, `TRANSFER_MANAGER::clear_old_past_transfers` (0x8C3EB0) abre o arquivo do ano em "ab" e anexa as transferências antigas que saem da memória, 0x25 bytes cada (valor em +0x18, data em +0x1D); `get_past_transfers` (0x8CC030) as lê de volta. O leitor confere essa grade, sem amostra para provar.
+O `transfers_<ano>.tmp`: `TRANSFER_MANAGER::clear_old_past_transfers` (0x8C3EB0) abre o arquivo do ano em "ab" e anexa as transferências antigas que saem da memória, 0x25 bytes cada; `get_past_transfers` (0x8CC030) as lê de volta. Registro: +0x00..+0x17 seis u32 (pessoa e clubes, a nomear), +0x18 valor (u32), +0x1C tipo (u8), +0x1D data (o `Date` de 8 bytes: dia do ano u16, ano u16, marca de bissexto). Provado nos 32 arquivos do save `All Leagues` (§7.1): todos na grade, e a data de cada registro cai no ano do nome do arquivo (2032 com a marca de bissexto).
+
+**A categoria do jogo** (+0x3A do registro de partida), contada nos fixtures de 2010, 2011 e 2014 do save `All Leagues`:
+
+| Valor | Partidas | Onde aparece |
+|---|---|---|
+| 1 | 23.973 | amistosos de clubes |
+| 2 | 80.808 | jogos de liga |
+| 4 | 9.285 | rodadas de copa nacional |
+| 5 | 768 | play-offs e decisões de liga (3ª divisão brasileira, MLS, 2ª sueca, 3ª belga, Série C1) |
+| 6 | 1.017 | fases finais de copa nacional e de copa da liga |
+| 7 | 1.626 | continentais secundárias (Copa UEFA, Intertoto, Libertadores, Mercosul, Merconorte) |
+| 8 | 1.404 | Liga dos Campeões e fases decisivas (Copa UEFA, Libertadores, finais regionais) |
+| 9 | 1.520 | amistosos ligados às competições de seleções (ids 433, 434) |
+| 10 | 563 | competições de seleções (eliminatórias, Copa do Mundo, continentais) |
+| 23 | 67 | Copa dos Campeões brasileira e Mundial de Clubes |
 
 No registro de partida (0x4F), +0x36, +0x38 e +0x3A recebem as regras da rodada: na liga +0xDB, +0xAB e +0xC4; na copa +0x0B, +0x0D e +0x17. O +0x3A é a categoria do jogo (referência das competições, §2.1).
 
@@ -350,3 +365,5 @@ No registro de partida (0x4F), +0x36, +0x38 e +0x3A recebem as regras da rodada:
 - a Intercontinental da NickDLL declara capacidade no livro de inscritos (+0x38) sem alocá-lo, e a gravação do original só grava o livro se o ponteiro existe (0x5216A1). Como o arquivo não guarda essa marca, o leitor aceita livro ausente quando o arquivo acaba ali.
 
 O `TesteMais2GB.sav` é a carreira de 2001–2002 dos outros saves de teste mais o enchimento: fecha igual (164 + 22).
+
+**O save `All Leagues - 3.9.68 - Compress.sav`** (externo, recebido em 25/10/2026, na raiz do projeto e fora do git; 1,43 GB comprimido, exe 3.9.68 original, todas as ligas): carreira de 2001 a 2064, com 64 anos de fixtures e 32 de transferências arquivadas. Os leitores fecham as **383 competições e os 119 globais**, sem ajuste nenhum, inclusive classes que os outros saves não tinham (MiniCup e MiniLeague, os torneios de pré-temporada, 22 de cada; SweSecond).

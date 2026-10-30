@@ -339,7 +339,22 @@ The `.tmp` files that do not belong to a competition: 22 in the test save (25 in
 | `computer events1/2.tmp`, `human events1/2.tmp` | `Match_Events::save_event_log` 0x6D98B0 | rolling file: a 3-u32 header (the 3rd, at +8, rewritten for each match) and each match's 0x0E-byte events, appended at the end. Where each match starts (offset, event count, which of the two files) lives in memory, not in the file |
 | `match_stats_matches.tmp` | `Match_Stats` 0x729000 | 10000 fixed slots of 0xD7A bytes (34,500,000 bytes), read and written by index (0x729600 / 0x729820); the index lives in `match_stats.dat` |
 
-`transfers_<year>.tmp` does not appear in any test save. From the code, `TRANSFER_MANAGER::clear_old_past_transfers` (0x8C3EB0) opens the year's file in "ab" and appends the old transfers that leave memory, 0x25 bytes each (fee at +0x18, date at +0x1D); `get_past_transfers` (0x8CC030) reads them back. The reader checks that grid, with no sample to prove it.
+`transfers_<year>.tmp`: `TRANSFER_MANAGER::clear_old_past_transfers` (0x8C3EB0) opens the year's file in "ab" and appends the old transfers that leave memory, 0x25 bytes each; `get_past_transfers` (0x8CC030) reads them back. Record: +0x00..+0x17 six u32 (person and clubs, to be named), +0x18 fee (u32), +0x1C type (u8), +0x1D date (the 8-byte `Date`: day of year u16, year u16, leap flag). Proven on the 32 files of the `All Leagues` save (§7.1): all on the grid, and each record's date falls in the year of the file name (2032 with the leap flag).
+
+**The match category** (+0x3A of the match record), counted in the 2010, 2011 and 2014 fixtures of the `All Leagues` save:
+
+| Value | Matches | Where it appears |
+|---|---|---|
+| 1 | 23,973 | club friendlies |
+| 2 | 80,808 | league matches |
+| 4 | 9,285 | domestic cup rounds |
+| 5 | 768 | league play-offs and deciders (Brazilian 3rd division, MLS, Swedish 2nd, Belgian 3rd, Serie C1) |
+| 6 | 1,017 | domestic cup and league cup final stages |
+| 7 | 1,626 | secondary continental competitions (UEFA Cup, Intertoto, Libertadores, Mercosur, Merconorte) |
+| 8 | 1,404 | Champions League and deciding stages (UEFA Cup, Libertadores, regional finals) |
+| 9 | 1,520 | friendlies linked to national-team competitions (ids 433, 434) |
+| 10 | 563 | national-team competitions (qualifiers, World Cup, continental) |
+| 23 | 67 | Brazilian Champions Cup and Club World Cup |
 
 In the match record (0x4F), +0x36, +0x38 and +0x3A receive the round rules: in leagues +0xDB, +0xAB and +0xC4; in cups +0x0B, +0x0D and +0x17. +0x3A is the match category (competitions reference, §2.1).
 
@@ -350,3 +365,5 @@ In the match record (0x4F), +0x36, +0x38 and +0x3A receive the round rules: in l
 - the NickDLL's Intercontinental declares an entry-book capacity (+0x38) without allocating it, and the original's save only writes the book if the pointer exists (0x5216A1). Since the file does not keep that flag, the reader accepts a missing book when the file ends there.
 
 `TesteMais2GB.sav` is the same 2001–2002 career as the other test saves plus the filler: it closes the same way (164 + 22).
+
+**The `All Leagues - 3.9.68 - Compress.sav` save** (external, received on 2026-10-25, at the project root and outside git; 1.43 GB compressed, original 3.9.68 exe, all leagues): a career from 2001 to 2064, with 64 years of fixtures and 32 of archived transfers. The readers close **all 383 competitions and 119 global files**, with no adjustment, including classes the other saves lacked (MiniCup and MiniLeague, the pre-season tournaments, 22 of each; SweSecond).
