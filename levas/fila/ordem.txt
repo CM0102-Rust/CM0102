@@ -12,3 +12,16 @@ cpt_10
 cpt_11
 cpt_12
 cpt_13
+cpu_1
+cpu_2
+cpu_3
+cpu_4
+cpu_5
+cpu_6
+cpu_7
+cpu_8
+cpu_9
+cpu_10
+cpu_11
+cpu_12
+cpu_13
