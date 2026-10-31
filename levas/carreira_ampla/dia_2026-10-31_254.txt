@@ -1,0 +1,6 @@
+    pool nao paginado 1.22 -> 1.21 GB, paginado 1.64 -> 1.63 GB
+execucao 1: parou em 2003-030, 15544047835 sorteios, impressao 036f6ee278760397, partidas 99161/bd36226d344703f0, banco 089d04b8e28ec646, 1050 s
+game.cfg restaurado; auto_setup.cfg removido
+    pool nao paginado 1.22 -> 1.22 GB, paginado 1.64 -> 1.62 GB
+execucao 1: parou em 2003-030, 15544047835 sorteios, impressao 036f6ee278760397, partidas 99161/bd36226d344703f0, banco 089d04b8e28ec646, 1118 s
+game.cfg restaurado; auto_setup.cfg removido
