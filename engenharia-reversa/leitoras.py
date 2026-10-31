@@ -90,7 +90,7 @@ def gravar(linhas, marcadas):
 
 def carreira(ate, referencia=None):
     amb = dict(os.environ, CM_SONDA_LISTA='1')
-    cmd = [sys.executable, '-u', 'simular.py', '--ate', ate, '--motor', 'sim', '--modo', 'original', '--limite', '900']
+    cmd = [sys.executable, '-u', 'simular.py', '--ate', ate, '--motor', 'sim', '--modo', 'original', '--limite', '400']
     if referencia:
         cmd += ['--referencia', referencia]
     r = subprocess.run(cmd, cwd=os.path.dirname(os.path.abspath(__file__)), env=amb, capture_output=True, text=True)

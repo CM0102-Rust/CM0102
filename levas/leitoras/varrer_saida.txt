@@ -1,0 +1,25 @@
+3343 rotinas candidatas, 866 recusadas (prólogo com salto relativo ou sem quadro)
+base 5b6e9029 (lista transparente, 3343 rotinas, até 2002-06-01)
+ 3343 rotinas 0x401000..0x931690 -> saiu:o jogo saiu sem chegar na data (codigo 3221225513); veja jogo\ddraw.lo MUDA
+ 1671 rotinas 0x401000..0x665140 -> saiu:o jogo saiu sem chegar na data (codigo 3221225513); veja jogo\ddraw.lo MUDA
+  835 rotinas 0x401000..0x572d90 -> saiu:o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.lo MUDA
+  417 rotinas 0x401000..0x452070 -> saiu:o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.lo MUDA
+  208 rotinas 0x401000..0x427320 -> saiu:o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.lo MUDA
+  104 rotinas 0x401000..0x412c80 -> saiu:divergiu da base em 2001-279 (40 s) MUDA
+   52 rotinas 0x401000..0x40c070 -> saiu:divergiu da base em 2001-279 (40 s) MUDA
+   26 rotinas 0x401000..0x4068d0 -> saiu:divergiu da base em 2001-279 (40 s) MUDA
+   13 rotinas 0x401000..0x4027d0 -> saiu:divergiu da base em 2001-279 (40 s) MUDA
+    6 rotinas 0x401000..0x401ba0 -> saiu:divergiu da base em 2001-279 (40 s) MUDA
+    3 rotinas 0x401000..0x4012e0 -> saiu:divergiu da base em 2001-279 (40 s) MUDA
+    1 rotinas 0x401000..0x401000 -> 5b6e9029 igual
+    2 rotinas 0x401220..0x4012e0 -> saiu:divergiu da base em 2001-279 (40 s) MUDA
+    1 rotinas 0x401220..0x401220 -> 5b6e9029 igual
+    1 rotinas 0x4012e0..0x4012e0 -> saiu:divergiu da base em 2001-279 (40 s) MUDA
+LEITORA 0x4012e0
+    3 rotinas 0x4019c0..0x401ba0 -> 5b6e9029 igual
+    7 rotinas 0x401d20..0x4027d0 -> 5b6e9029 igual
+   13 rotinas 0x404250..0x4068d0 -> 5b6e9029 igual
+   26 rotinas 0x406bf0..0x40c070 -> 5b6e9029 igual
+   52 rotinas 0x40c110..0x412c80 -> 5b6e9029 igual
+  104 rotinas 0x413fe0..0x427320 -> saiu:o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.lo MUDA
+   52 rotinas 0x413fe0..0x41e9e0 -> saiu:o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.lo MUDA

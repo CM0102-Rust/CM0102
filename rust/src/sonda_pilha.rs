@@ -173,7 +173,6 @@ pub unsafe fn instalar_lista() {
         linha("sonda_pilha: lista sem memória");
         return;
     }
-    let a = |v: *mut u32| (v as u32).to_le_bytes();
     let mut pos = bloco;
     for &(end, n, quadro) in &marcadas {
         let original = core::slice::from_raw_parts(end as *const u8, n).to_vec();
@@ -182,18 +181,14 @@ pub unsafe fn instalar_lista() {
         let mut c: Vec<u8> = original.clone();
         c.push(0xe9);
         c.extend(((end as usize + n) as i32).wrapping_sub((tramp + c.len() + 4) as i32).to_le_bytes());
-        // trecho: guarda eax/ecx/edi; lea edi, [esp − quadro]; mov ecx, quadro/4; mov eax, veneno; cld; rep stosd; volta; jmp trampolim
+        // trecho: push eax/ecx/edi (na própria pilha: outra thread pode passar pela mesma rotina); lea edi, [esp − 4];
+        // mov ecx, quadro/4; mov eax, veneno; std; rep stosd; cld (de cima para baixo: passa pela página de guarda na
+        // ordem, como o __chkstk); pop; jmp trampolim. O quadro envenenado fica 12 bytes abaixo da entrada.
         let trecho = tramp + c.len();
-        c.push(0xa3); c.extend(a(&raw mut TMP_EAX));
-        c.extend([0x89, 0x0d]); c.extend(a(&raw mut TMP_ECX));
-        c.extend([0x89, 0x3d]); c.extend(a(&raw mut TMP_EDI));
-        c.extend([0x8d, 0xbc, 0x24]); c.extend((quadro as i32).wrapping_neg().to_le_bytes());
+        c.extend([0x50, 0x51, 0x57, 0x8d, 0x7c, 0x24, 0xfc]);
         c.push(0xb9); c.extend((quadro / 4).to_le_bytes());
         c.push(0xb8); c.extend(0x5a5a_5a5au32.to_le_bytes());
-        c.extend([0xfc, 0xf3, 0xab]);
-        c.extend([0x8b, 0x3d]); c.extend(a(&raw mut TMP_EDI));
-        c.extend([0x8b, 0x0d]); c.extend(a(&raw mut TMP_ECX));
-        c.push(0xa1); c.extend(a(&raw mut TMP_EAX));
+        c.extend([0xfd, 0xf3, 0xab, 0xfc, 0x5f, 0x59, 0x58]);
         c.push(0xe9);
         c.extend((tramp as i32).wrapping_sub((bloco + (c.len() + (tramp - bloco)) + 4) as i32).to_le_bytes());
         assert!(c.len() <= 96);
