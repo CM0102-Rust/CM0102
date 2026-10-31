@@ -59,7 +59,7 @@ from types import SimpleNamespace
 
 import laboratorio
 import mutacoes
-from simular import JOGO, bancada, falha, linhas_carreira, rodar
+from simular import JOGO, bancada, falha, linhas_carreira, rodar, sufixo_da_pasta  # o sufixo: uma pasta de trabalho por bancada (31/10/2026)
 
 JOGO_LUCAS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'jogo')  # o FeriasTesteSave.sav
 
@@ -388,7 +388,7 @@ def parser():
     ap.add_argument('--so-gravar', action='store_true', help='so grava e compara os .qst (sem a carga)')
     ap.add_argument('--tipo', type=int, choices=[3, 4], default=4, help='4 = RLE (padrao), 3 = sem compressao')
     ap.add_argument('--semente', type=int, default=12345)
-    ap.add_argument('--pasta', default=os.path.join(tempfile.gettempdir(), 'cm0102_prova_save'), help='pasta de trabalho')
+    ap.add_argument('--pasta', default=os.path.join(tempfile.gettempdir(), 'cm0102_prova_save' + sufixo_da_pasta()), help='pasta de trabalho')
     ap.add_argument('--sav', help='save COM tecnico de ferias para o passo 3 (o .qst nao serve: pede o nome do tecnico); '
                     'na leva de carregar o padrao e jogo\\FeriasTesteSave.sav')
     ap.add_argument('--ate', default='2001-08-28', help='data de parada da carga AAAA-MM-DD (2001-08-28: original e rust '
