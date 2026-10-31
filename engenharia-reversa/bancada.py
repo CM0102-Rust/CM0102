@@ -51,13 +51,18 @@ def sincronizar(k):
 def cadeia(k, n, data=None):
     b = pasta(k)
     sincronizar(k)
-    src = open(os.path.join(b, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
-    integ = open(os.path.join(b, 'levas', str(n), 'integrar.py'), encoding='utf-8').read()
-    # a leva ainda não integrada na principal: integra só na bancada (a primeira rotina dela já no motor = integrada)
+    # as levas ainda não integradas na principal (até a N, em ordem): integra só na bancada (a primeira rotina de cada
+    # uma já no motor = integrada); assim a N+1 roda antes de a N ser publicada
     import re
-    primeira = re.search(r"\('\w+', (\d+), \[", integ)
-    if primeira and ('endereco: %#x,' % int(primeira.group(1))) not in src:
-        subprocess.run([sys.executable, os.path.join(b, 'levas', str(n), 'integrar.py')], check=True)
+    for k in range(n - 5, n + 1):
+        p = os.path.join(b, 'levas', str(k), 'integrar.py')
+        if not os.path.exists(p):
+            continue
+        src = open(os.path.join(b, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
+        primeira = re.search(r"\('\w+', (\d+), \[", open(p, encoding='utf-8').read())
+        if primeira and ('endereco: %#x,' % int(primeira.group(1))) not in src:
+            print('integrando a %d' % k, flush=True)
+            subprocess.run([sys.executable, p], check=True)
     r = subprocess.run(['cargo', 'build', '--release'], cwd=os.path.join(b, 'rust'), capture_output=True, text=True)
     if r.returncode:
         sys.exit('cargo falhou na bancada %d:\n%s' % (k, r.stderr[-1500:]))

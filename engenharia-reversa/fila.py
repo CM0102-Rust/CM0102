@@ -149,8 +149,17 @@ def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else ''
     if cmd == 'proxima':
         n, total, base = estado()
+        s = open(os.path.join(R, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
         while os.path.isdir(os.path.join(R, 'levas', str(n + 1))):
             n += 1  # já materializada (ou escrita à mão) e ainda não publicada
+            # bancadas paralelas (31/10/2026): a leva pendente conta no total e, se ainda não estiver integrada na
+            # principal, também nos índices (a seguinte roda numa bancada com as duas integradas)
+            p = os.path.join(R, 'levas', str(n), 'integrar.py')
+            if os.path.exists(p):
+                rot = re.findall(r"\('\w+', (\d+), \[", open(p, encoding='utf-8').read())
+                total += len(rot)
+                if rot and ('endereco: %#x,' % int(rot[0])) not in s:
+                    base += len(rot)
         ordem_ = ordem()
         assert ordem_, 'fila vazia'
         materializar(do_lote(ordem_), n + 1, base, total)

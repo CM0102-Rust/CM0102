@@ -154,7 +154,7 @@ def rodar(args, semente, extra=()):
         ambiente['CM_FERIAS'] = '1'
     # CM_RESOLUCAO=1080 (experimento: o cm0102.exe original vira o 1080 em memoria) e o diagnostico
     # CM_RESOLUCAO_CONFERIR; a sonda de pilha (CM_SONDA_*, sonda_pilha.py): so quando pedidos, pelo mesmo motivo do CM_FERIAS
-    for nome in ('CM_RESOLUCAO', 'CM_RESOLUCAO_CONFERIR', 'CM_SONDA_PILHA', 'CM_SONDA_FAIXA', 'CM_SONDA_VENENO', 'CM_SONDA_MOSTRAR', 'CM_SONDA_LISTA', 'CM_DIAG_PESSOA'):
+    for nome in ('CM_RESOLUCAO', 'CM_RESOLUCAO_CONFERIR', 'CM_SONDA_PILHA', 'CM_SONDA_FAIXA', 'CM_SONDA_VENENO', 'CM_SONDA_MOSTRAR', 'CM_SONDA_LISTA', 'CM_DIAG_PESSOA', 'CM_DIAG_CLUBE', 'CM_DIAG_FORCAR'):
         if os.environ.get(nome, '0') != '0':
             ambiente[nome] = os.environ[nome]
     if len(ambiente['CM_RASTRO']) != 10:
