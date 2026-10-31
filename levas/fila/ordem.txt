@@ -1,14 +1,14 @@
 # ordem da fila (fila.py); um item por linha
-cpu_1
-cpu_2
-cpu_3
-cpu_4
-cpu_5
-cpu_6
-cpu_7
-cpu_8
-cpu_9
-cpu_10
-cpu_11
-cpu_12
-cpu_13
+cpv_1
+cpv_2
+cpv_3
+cpv_4
+cpv_5
+cpv_6
+cpv_7
+cpv_8
+cpv_9
+cpv_10
+cpv_11
+cpv_12
+cpv_13
