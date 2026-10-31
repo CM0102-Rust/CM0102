@@ -23,3 +23,9 @@ LEITORA 0x4012e0
    52 rotinas 0x40c110..0x412c80 -> 5b6e9029 igual
   104 rotinas 0x413fe0..0x427320 -> saiu:o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.lo MUDA
    52 rotinas 0x413fe0..0x41e9e0 -> saiu:o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.lo MUDA
+   26 rotinas 0x413fe0..0x41544e -> saiu:tempo esgotado (400 s) antes de chegar em 2002-06-01 (401 s) MUDA
+   13 rotinas 0x413fe0..0x414553 -> saiu:tempo esgotado (400 s) antes de chegar em 2002-06-01 (401 s) MUDA
+    6 rotinas 0x413fe0..0x414320 -> 5b6e9029 igual
+    7 rotinas 0x414340..0x414553 -> saiu:tempo esgotado (400 s) antes de chegar em 2002-06-01 (401 s) MUDA
+    3 rotinas 0x414340..0x414352 -> saiu:tempo esgotado (400 s) antes de chegar em 2002-06-01 (401 s) MUDA
+    1 rotinas 0x414340..0x414340 -> 5b6e9029 igual
