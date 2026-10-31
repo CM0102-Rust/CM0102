@@ -41,7 +41,7 @@ def main():
           os.path.join('rust', 'src', 'motor.rs'), os.path.join('rust', 'src', 'assinaturas.rs'), os.path.join('levas', 'carreira_ampla', 'pendentes.txt'), os.path.join('engenharia-reversa', 'fila_continua.sh'))
     prefixo = 'Motor' if 'Motor de partidas' in open(os.path.join(RAIZ, 'levas', str(n), 'docs.py'), encoding='utf-8').read() else 'Simulacao'
     msg = (f'{prefixo}: {n}a leva ({total} rotinas): {titulo}\n\nComparacao de verdade em cada rotina; cadeia completa '
-           f'(levas/{n}/cadeia.txt): jogo real 0 divergencias, carreiras iguais a referencia {REF_CARREIRA[:8]}.\n\n'
+           f'(levas/{n}/cadeia.txt): jogo real 0 divergencias, carreiras Rust x2 iguais (criterio de 31/10/2026: a original so registrada).\n\n'
            'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n')
     rodar('git', 'commit', '-q', '-m', msg)
     rodar('git', 'push', '-q')

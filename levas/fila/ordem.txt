@@ -1,17 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-cpt_1
-cpt_2
-cpt_3
-cpt_4
-cpt_5
-cpt_6
-cpt_7
-cpt_8
-cpt_9
-cpt_10
-cpt_11
-cpt_12
-cpt_13
 cpu_1
 cpu_2
 cpu_3

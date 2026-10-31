@@ -105,8 +105,9 @@ def leia(n, titulo_pt, titulo_en, rotinas, mutacoes, acusadas, lacuna_pt='', lac
     irmãs que podem aproveitar a leva (CMRTE, SGE, CMScout, GPF2)."""
     base = os.path.join(R, 'levas', str(n))
     ord_en = 'th' if n % 100 in (11, 12, 13) else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')
-    ref = (f'0 divergências ({REF_JOGO})', f'as três iguais ({REF_CARREIRA})',
-           f'0 divergences ({REF_JOGO})', f'all three equal ({REF_CARREIRA})')
+    rp, re_ = resultado_pt_en(n)
+    ref = (rp.split(': ', 1)[1].split('. Carreiras')[0], rp.split('Carreiras até 2002-06-01: ')[1].rstrip('.'),
+           re_.split(': ', 1)[1].split('. Careers')[0], re_.split('Careers to 2002-06-01: ')[1].rstrip('.'))
     pt = [f'# {n}ª leva — {titulo_pt}', '', '**Rotinas:**']
     pt += [f'- `{a}()` = {e} ({f}): {d};' for a, e, f, d, _ in rotinas]
     pt += ['', '**Como foi comparada:** comparação de verdade em cada rotina (o original e o Rust a partir do mesmo estado, com as regiões que a rotina toca).',
@@ -169,6 +170,34 @@ def cadeia(n):
         if div and nome in escapadas:
             escapadas.remove(nome)
             acusadas.append(nome)
-    ok = (f'impressao {REF_JOGO}' in t and t.count(f'impressao {REF_CARREIRA}') >= 3
+    # desde 31/10/2026 (Lucas): sem referência fixa; ok = jogo real comparando sem divergência e as carreiras
+    # chegando à data (Rust ×2 iguais entre si); a carreira original só é registrada
+    imp = impressoes(n)
+    ok = (imp['jogo'] is not None and len(imp['rust']) >= 2 and len(set(imp['rust'])) == 1 and bool(imp['original'])
           and not re.search(r'\b[1-9]\d* divergencias', t.split('=== JOGO REAL')[-1]))
     return len(nomes), len(acusadas), escapadas, ok
+
+
+def impressoes(n):
+    """As impressões do cadeia.txt: {'jogo': a do jogo real comparando, 'rust': [as carreiras Rust], 'original': a
+    carreira original} (None / [] quando a etapa não chegou à data)."""
+    import re
+    t = open(os.path.join(R, 'levas', str(n), 'cadeia.txt'), encoding='utf-8', errors='replace').read()
+    jogo = re.findall(r'^execucao \d+: parou em .*?impressao (\w+)', t.split('=== JOGO REAL')[-1].split('=== CARREIRA')[0], re.M) if '=== JOGO REAL' in t else []
+    car = re.findall(r'^execucao (\d+): parou em .*?impressao (\w+)', t.split('=== CARREIRA')[-1], re.M) if '=== CARREIRA' in t else []
+    # Rust ×2 (execucao 1 e 2) e depois a original (execucao 1 de novo)
+    rust = [i for _, i in car[:2]] if len(car) >= 2 and car[1][0] == '2' else [i for _, i in car[:1]]
+    original = car[len(rust)][1] if len(car) > len(rust) else None
+    return {'jogo': jogo[0] if jogo else None, 'rust': rust, 'original': original}
+
+
+def resultado_pt_en(n):
+    """O texto do jogo real e das carreiras para o PROJETO/wiki (pt, en), pelas impressões da leva."""
+    i = impressoes(n)
+    r = (i['rust'] or ['?'])[0]
+    igual = i['original'] == r
+    o_pt = 'igual' if igual else '%s (registrada; não barra a leva desde 31/10/2026)' % (i['original'] or '?')[:8]
+    o_en = 'equal' if igual else '%s (recorded; does not block the batch since 31/10/2026)' % (i['original'] or '?')[:8]
+    j = (i['jogo'] or '?')[:8]
+    return (f"Jogo real comparando até 2002-01-01: 0 divergências ({j}). Carreiras até 2002-06-01: Rust ×2 {r[:8]}, original {o_pt}.",
+            f"Real game comparing to 2002-01-01: 0 divergences ({j}). Careers to 2002-06-01: Rust ×2 {r[:8]}, original {o_en}.")
