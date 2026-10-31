@@ -9,8 +9,8 @@ R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # raiz do proje
 # o jogo real volta a 963cea289f055ac3 e a ampla a 9ee2b5ac (Rust = original); antes: carreira 034ff3eb3e55dfd3.
 # 28/10/2026: o alocador da simulacao passa a juntar os blocos livres (a5a949d): o jogo real vai a 2f65fd6b68d1027b e a
 # carreira a be54a1386f51073a (Rust = original na cadeia da 245a); antes: jogo 963cea289f055ac3, carreira b28542870027e432.
-REF_JOGO = '2f65fd6b68d1027b'
-REF_CARREIRA = 'be54a1386f51073a'
+REF_JOGO = '8c95873456684fd1'
+REF_CARREIRA = '7f4ecded7ef233a0'
 CARREIRA_PT = '2.378.003.110 sorteios, impressão be54a1386f51073a, partidas 8832310884e7ef66, banco da73be6ffdbb550b'
 CARREIRA_EN = '2,378,003,110 draws, fingerprint be54a1386f51073a, matches 8832310884e7ef66, database da73be6ffdbb550b'
 
