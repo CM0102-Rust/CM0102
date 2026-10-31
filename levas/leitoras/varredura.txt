@@ -55,3 +55,23 @@ LEITORA 0x4012e0
     3 rotinas 0x414340..0x414352 -> saiu:tempo esgotado (400 s) antes de chegar em 2002-06-01 (401 s) MUDA
     1 rotinas 0x414340..0x414340 -> 5b6e9029 igual
 --- pausa para a cadeia da 254a; retomar com: python leitoras.py varrer --de 111 (0x414340 já igual; pendentes 0x414348..0x414352)
+--- retomada com a DLL da 254ª (lista de 3315; posição 111 = 0x414348)
+base 42d071c0 (lista transparente, 3315 rotinas, até 2002-06-01)
+ 3204 rotinas 0x414349..0x931690 -> saiu:o jogo saiu sem chegar na data (codigo 3221225513); veja jogo\ddraw.lo MUDA
+ 1602 rotinas 0x414349..0x66cad0 -> saiu:o jogo saiu sem chegar na data (codigo 3221225513); veja jogo\ddraw.lo MUDA
+  801 rotinas 0x414349..0x580040 -> saiu:o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.lo MUDA
+  400 rotinas 0x414349..0x497930 -> saiu:o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.lo MUDA
+  200 rotinas 0x414349..0x435e80 -> saiu:o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.lo MUDA
+  100 rotinas 0x414349..0x427700 -> saiu:o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.lo MUDA
+   50 rotinas 0x414349..0x41fd70 -> saiu:o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.lo MUDA
+   25 rotinas 0x414349..0x416d50 -> saiu:o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.lo MUDA
+   12 rotinas 0x414349..0x414954 -> saiu:tempo esgotado (400 s) antes de chegar em 2002-06-01 (401 s) MUDA
+    6 rotinas 0x414349..0x414553 -> saiu:tempo esgotado (400 s) antes de chegar em 2002-06-01 (401 s) MUDA
+    3 rotinas 0x414349..0x4143f0 -> saiu:tempo esgotado (400 s) antes de chegar em 2002-06-01 (401 s) MUDA
+    1 rotinas 0x414349..0x414349 -> saiu:tempo esgotado (400 s) antes de chegar em 2002-06-01 (401 s) MUDA
+LEITORA 0x414349
+    2 rotinas 0x414352..0x4143f0 -> 42d071c0 igual
+    3 rotinas 0x414420..0x414553 -> 42d071c0 igual
+    6 rotinas 0x4147f0..0x414954 -> 42d071c0 igual
+   13 rotinas 0x4149a0..0x416d50 -> saiu:o jogo saiu sem chegar na data (codigo 3221225477); veja jogo\ddraw.lo MUDA
+--- pausa para a cadeia da 255ª; retomar depois da LEITORA 0x414349 (próxima: 0x4149a0, grupo de 13 que derruba o jogo)

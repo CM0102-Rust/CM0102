@@ -7,7 +7,7 @@
 #   1b. so leva do save: === PROVA DO SAVE (prova_save.py --leva N: a mesma DLL com e sem as rotinas;
 #       com levas/N/CARGA tambem a carga do save de ferias, nas mutacoes e na prova);
 #   2. jogo real comparando ate 2002-01-01 (divergencias e excecoes do ddraw.log);
-#   3. carreiras Rust x2 e original ate 2002-06-01 (as tres impressoes tem de bater com a referencia).
+#   3. carreiras Rust x2 (iguais entre si) e original ate 2002-06-01 (desde 31/10/2026 a original e so registrada).
 # Saida completa em levas/N/cadeia.txt. Com a base divergindo, o mutacoes.py sai com erro e o resto
 # nao roda. Testes pesados passam pela trava do laboratorio (laboratorio.py).
 RAIZ="$(cd "$(dirname "$0")/.." && pwd)"

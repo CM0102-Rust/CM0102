@@ -22,8 +22,8 @@ sintetico nao alcanca (o que depende do banco carregado, como a tatica do clube)
 
 --carreira AAAA-MM-DD: cada mutacao (e a base) roda a carreira automatica em modo Rust (sem
 comparacao, ~15x mais rapido) ate a data; a mutacao e acusada se a impressao ou a contagem de
-sorteios muda em relacao a base (ou se o jogo cai). A base tem de bater com a do original na mesma
-data (conferido pela cadeia). A impressao inclui a das partidas (hash de cada motor de partida ao
+sorteios muda em relacao a base (ou se o jogo cai). A base nao precisa bater com a do original na mesma
+data (desde 31/10/2026 a cadeia so registra a original). A impressao inclui a das partidas (hash de cada motor de partida ao
 ser liberado) e a do banco (hash diario dos blocos do banco de dados, ver simulacao.rs): pega o que nao
 chega aos sorteios. A mutacao para no primeiro dia em que o diario (linha "dia" do ddraw.log: sorteios,
 pessoas, hash encadeado da memoria) difere do da base: "ACUSADA: divergiu da base em AAAA-DDD" (o

@@ -1,0 +1,18 @@
+=== CARREIRA (com as seis desligadas)
+    pool nao paginado 1.27 -> 1.27 GB, paginado 1.76 -> 1.76 GB
+execucao 1: parou em 2002-151, 2379363750 sorteios, impressao 7f4ecded7ef233a0, partidas 19447/510479f77a7c5abc, banco 2dcd3b863a9bfb4a, 136 s
+    pool nao paginado 1.27 -> 1.27 GB, paginado 1.76 -> 1.76 GB
+execucao 2: parou em 2002-151, 2379363750 sorteios, impressao 7f4ecded7ef233a0, partidas 19447/510479f77a7c5abc, banco 2dcd3b863a9bfb4a, 137 s
+game.cfg restaurado; auto_setup.cfg removido
+determinismo: OK, todas as execucoes iguais
+    pool nao paginado 1.27 -> 1.27 GB, paginado 1.77 -> 1.75 GB
+execucao 1: parou em 2002-151, 2379363750 sorteios, impressao 7f4ecded7ef233a0, partidas 19447/510479f77a7c5abc, banco 2dcd3b863a9bfb4a, 153 s
+game.cfg restaurado; auto_setup.cfg removido
+=== AMPLA rust
+    pool nao paginado 1.28 -> 1.26 GB, paginado 1.75 -> 1.76 GB
+execucao 1: parou em 2003-030, 15544047835 sorteios, impressao 036f6ee278760397, partidas 99161/bd36226d344703f0, banco 089d04b8e28ec646, 1362 s
+game.cfg restaurado; auto_setup.cfg removido
+=== AMPLA original
+    pool nao paginado 1.26 -> 1.28 GB, paginado 1.76 -> 1.77 GB
+execucao 1: parou em 2003-030, 15544047835 sorteios, impressao 036f6ee278760397, partidas 99161/bd36226d344703f0, banco 089d04b8e28ec646, 1176 s
+game.cfg restaurado; auto_setup.cfg removido
