@@ -1,14 +1,2 @@
 # ordem da fila (fila.py); um item por linha
-cpw_1
-cpw_2
-cpw_3
-cpw_4
-cpw_5
-cpw_6
 cpw_7
-cpw_8
-cpw_9
-cpw_10
-cpw_11
-cpw_12
-cpw_13
