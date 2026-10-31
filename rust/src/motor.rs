@@ -84689,7 +84689,13 @@ const DESLIGADAS: &[usize] = &[0x7c6bf0, 0x827110, 0x541f90, 0x547770, 0x689ad0,
 /// a carreira Rust se separava da original em 2002-01-12; a busca binaria entre as 301 rotinas
 /// apontou so ela, e uma sonda (a original e a copia tracando o mesmo lance, sem rodar nada) deu os
 /// mesmos quadrados e argumentos: o que muda e o resto da pilha que fica para quem e chamado depois.
-const SO_NA_COMPARACAO: &[usize] = &[0x6ccb60];
+/// 0x6b5f00 `fechar_partida_do_dia` e 0x6b74a0 `eventos_do_pos_jogo` (31/10/2026): na carreira ampla (8 ligas, ate
+/// 2003-01-31, DLL da 253a) o Rust se separava da original em 2002-299; a busca binaria entre as 1083 rotinas
+/// (SEM_ROTINAS) so fecha com as duas juntas na original (388f944f, igual a original); uma so nao basta. A copia dos
+/// eventos confere ramo a ramo com a desmontagem, e envenenar o quadro das 8 rotinas sem copia chamadas por ela nao
+/// muda a carreira: quem le a sobra esta mais fundo ou depois dos eventos, dentro do fechamento (a varredura das
+/// leitoras, `leitoras.py`, deve acha-la).
+const SO_NA_COMPARACAO: &[usize] = &[0x6ccb60, 0x6b5f00, 0x6b74a0];
 
 
 unsafe extern "thiscall" fn comparar_marcacao_individual(this: usize) {
@@ -87155,7 +87161,10 @@ pub unsafe fn instalar(comparando: bool) {
         if SEM_ROTINAS.contains(&nomes[i]) {
             // a original pelo mesmo desvio de passagem do modo original (mesma pilha particular)
             linha(&format!("motor: {} fica no original (SEM_ROTINAS)", nomes[i]));
-            desvios::desviar(nomes[i], &PROLOGOS[i], desvios::PASSAGEM);
+            match ZERADAS.iter().find(|z| z.0.endereco == PROLOGOS[i].endereco) {
+                Some(z) => desvios::desviar_zerando(nomes[i], &PROLOGOS[i], z.1, desvios::PASSAGEM),
+                None => desvios::desviar(nomes[i], &PROLOGOS[i], desvios::PASSAGEM),
+            };
             continue;
         }
         // na comparacao a 0x6f5c30 e a 0x70dfd0 ja tem a porta (instalada antes), que tambem as compara
@@ -87216,7 +87225,17 @@ pub unsafe fn instalar_zeradas() {
 
 /// Simulacao no modo original: as mesmas rotinas desviadas para a propria original (pilha particular).
 pub unsafe fn instalar_passagem() {
+    let (sonda, dentro, prologo) = crate::sonda_pilha::alvo();
+    if sonda != 0 && prologo >= 5 && !PROLOGOS.iter().any(|p| p.endereco == sonda) {
+        // rotina fora da tabela: o prólogo vem do próprio exe (o tamanho, da variável)
+        let bytes: &'static [u8] = Box::leak(core::slice::from_raw_parts(sonda as *const u8, prologo).to_vec().into_boxed_slice());
+        desvios::desviar_sonda("sonda de pilha", &Prologo { endereco: sonda, bytes }, dentro);
+    }
     for (i, p) in PROLOGOS.iter().enumerate() {
+        if p.endereco == sonda {
+            desvios::desviar_sonda(&format!("motor {} (sonda de pilha)", i), p, dentro);
+            continue;
+        }
         if DESLIGADAS.contains(&p.endereco) {
             continue;
         }

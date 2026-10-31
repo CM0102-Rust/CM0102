@@ -196,6 +196,11 @@ pub unsafe fn desviar_zerando(nome: &str, p: &Prologo, n: u32, destino: usize) -
     })
 }
 
+/// Desvio da sonda de pilha (`CM_SONDA_PILHA`, diagnóstico): a original roda na pilha do jogo entre os trechos da sonda.
+pub unsafe fn desviar_sonda(nome: &str, p: &Prologo, dentro: bool) -> Option<usize> {
+    desviar_para(nome, p, |tramp| crate::sonda_pilha::montar(tramp, dentro))
+}
+
 /// `push edi; push ecx; push eax; lea edi, [esp - 12 - n]; mov ecx, n/4; xor eax, eax; rep stosd;
 /// pop eax; pop ecx; pop edi; jmp destino`: zera [esp_entrada - n - 12, esp_entrada - 12) sem tocar
 /// registradores nem argumentos.
@@ -509,6 +514,7 @@ unsafe fn instalar_motor() {
             crate::motor::instalar_passagem();
         }
         crate::motor::instalar_zeradas();
+        crate::sonda_pilha::instalar_lista();
         fotografar_corpos();
         resumo_assinaturas();
         return;

@@ -32,6 +32,7 @@ mod reducao;
 mod registro;
 mod resolucao;
 mod simulacao;
+mod sonda_pilha;
 mod video;
 mod win;
 
