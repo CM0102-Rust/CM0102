@@ -181,6 +181,28 @@ def sobra_do_amistoso(da, db, i):
     return 0x24 <= o < 0x28 or (o == 0x4e and not (x[o] ^ y[o]) & 0x07)
 
 
+def sobra_da_copa(da, db, i):
+    """No fixtures_<ano>.tmp: o byte i é o +0x4e de um jogo de rodada de copa (+0x30, o código da fase, diferente de
+    zero) e só os bits 0xf0 diferem. A Cup cria a partida num local de 0x4f (Cup
+    0x51a150: esp+0x34; Cup::create_match 0x51cb90: esp+0x18) e a manda ao calendário (0x5aa680) mexendo na palavra
+    +0x4d só com and 0xf4ff/0xfbff/0xf0ff e or 4 no +0x4e (0x51a999, 0x51aa30, 0x51ae53, 0x51cd21, 0x51cdfc, 0x51ce03):
+    os bits 12..15 (0xf0 do +0x4e) ficam com o que havia na pilha; a 0x51ebe0 (as datas da rodada) copia o registro
+    inteiro (rep movsd) e o leva junto. Ninguém lê os bits 14-15; os 12-13 o motor da partida regrava ao começar o jogo
+    (0x6b8089, do 0x923630) e só o fechamento do mesmo jogo os lê (0x6b6062, a única leitura): no registro gravado são
+    estado morto, jogado ou não (o placar não serve de marca: a carreira nova já traz +0x43 = 0 nos jogos da
+    repescagem, e resultados da base de dados nos da fase de grupos). A sobra muda com o
+    que rodou antes na pilha: na 265a, as cargas em Rust da carreira nova (0x5aee90, 0x59b2a0, na pilha particular) não
+    deixam o rastro da original, e as quartas da Copa América (0x1c2, +0x30 = 0x78) e a repescagem da Oceania (0x1b5,
+    +0x30 = 0x99/0x9a) saíram com 0x40 na base e 0x10/0x00 na leva (1/11/2026)."""
+    if i < 4:
+        return False
+    r, o = divmod(i - 4, 0x4f)
+    x, y = da[4 + r * 0x4f:4 + r * 0x4f + 0x4f], db[4 + r * 0x4f:4 + r * 0x4f + 0x4f]
+    if o != 0x4e or len(x) < 0x4f or len(y) < 0x4f:
+        return False
+    return all(z[0x30:0x32] != b'\0\0' for z in (x, y)) and not (x[o] ^ y[o]) & 0x0f
+
+
 def comparar(a, b, extra=None):
     """(igual, [linhas]) entre dois arquivos de conteiner; `extra` = {item: bytes a ignorar} (ver variaveis)."""
     extra = extra or {}
@@ -211,6 +233,8 @@ def comparar(a, b, extra=None):
                     campo = (i, 1, 'cauda do nome da entrada (locais sem valor da save_database 0x52dad0)')
                 if campo is None and nome.startswith('fixtures_') and sobra_do_amistoso(ca, cb, i):
                     campo = (i, 1, 'sobra de pilha do amistoso (+0x24 e bits 0xf8 do +0x4e, 0x5c5f40)')
+                if campo is None and nome.startswith('fixtures_') and sobra_da_copa(ca, cb, i):
+                    campo = (i, 1, 'sobra de pilha da copa (bits 0xf0 do +0x4e, 0x51a150/0x51cb90)')
                 if campo is None and i in extra.get(nome, ()):
                     campo = (i, 1, 'varia entre gravacoes da base')
                 if campo is None:

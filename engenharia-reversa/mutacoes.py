@@ -45,6 +45,7 @@ mutacao equivalente pelos valores possiveis (documentar em docs/ROTINAS.md por q
 O autoteste abre o jogo oculto e em janela (CM_OCULTO, CM_JANELA=960x540): um jogo por vez.
 """
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -109,6 +110,17 @@ LIMITE_CARREIRA = sys.argv[sys.argv.index('--limite') + 1] if '--limite' in sys.
 # --sem-trava: em paralelo a outro teste, noutra pasta (so com o Lucas autorizando e o vigia de memoria liberando)
 SEM_TRAVA = ['--sem-trava'] if '--sem-trava' in sys.argv else []
 PARAR_NA_DIVERGENCIA = False  # ligado depois da base: a mutacao para na primeira divergencia
+
+
+def fora_do_item(nome, linha):
+    """A confirmação no modo comparando só vale se a rotina que divergiu é do item da mutação (cqa12_x -> levas/fila/
+    cqa_12/rotinas.py): uma divergência de outro item (um erro dele) confirmaria todas as escapadas (264ª, 01/11)."""
+    m = re.match(r'([a-z]+)(\d+)_', nome)
+    d = re.search(r'DIVERGENCIA (\w+)', linha)
+    rot = m and os.path.join(RAIZ, 'levas', 'fila', '%s_%s' % m.groups(), 'rotinas.py')
+    if not d or not rot or not os.path.exists(rot) or d.group(1) in open(rot, encoding='utf-8').read():
+        return linha
+    return linha.split(':')[0] + ': fora do item (%s), nao confirma' % d.group(1)
 # o diario da base (linhas "dia"): a mutacao da carreira para no primeiro dia diferente (28/10/2026)
 DIAS = os.path.join(JOGO, 'dias_base.txt')
 
@@ -276,6 +288,7 @@ def main():
                         print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, r[0][:150]), flush=True)
                         t0 = time.time()
                         r = ['comparando (carga pt): ' + carga_comparando()[0]]
+                    r = [fora_do_item(nome, r[0])]
             print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, r[0][:150] if r else 'SEM RESULTADO'), flush=True)
     finally:
         open(SRC, 'w', encoding='utf-8').write(original)

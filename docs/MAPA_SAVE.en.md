@@ -354,6 +354,10 @@ The transfer record (0x25 bytes) [observed in `transfer_screens_build_transfers_
 
 The types in the data: **0** is the only one with a fee (5,222 of 11,086 with fee > 0; 5,864 with destination −1, leaving without a club); **2**, fee 0, is what the negotiation writes for the exchange player (0x8C27B4); **3** always has origin −1 (signing someone without a club); **4**, fee 0 with both clubs [loan, inference]; **5** comes from `MANAGER_MANAGER::daily_update` (0x69043F), the managers (destination −1 on a sacking).
 
+**Stack leftovers in the match record** (2026-11-01) [observed in the code]: whoever creates the match builds the record in a 0x4F local and does not write all of it, and the leftover goes into `fixtures_<year>.tmp`. Two saves of the same career can differ in these bits with no effect on the game. The save proof (`prova_save.py`) ignores them:
+- **Friendly** (0x5C5F40): +0x24..+0x27 and bits 0xF8 of +0x4E (`sobra_do_amistoso`).
+- **Cup match** (0x51A150, 0x51CB90): bits 0xF0 of +0x4E (`sobra_da_copa`). Nobody reads bits 14-15 of the +0x4D word; bits 12-13 only matter during the match, written at 0x6B8089 and read at 0x6B6062.
+
 **The match category** (+0x3A of the match record), counted in the 2010, 2011 and 2014 fixtures of the `All Leagues` save:
 
 | Value | Matches | Where it appears |

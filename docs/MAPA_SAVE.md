@@ -354,6 +354,10 @@ O registro de transferência (0x25 bytes) [observado em `transfer_screens_build_
 
 Os tipos nos dados: **0** é o único com valor (5.222 de 11.086 com valor > 0; 5.864 com destino −1, saída sem clube); **2**, valor 0, é o que a negociação grava para o jogador de troca (0x8C27B4); **3** tem a origem sempre −1 (contratação de quem estava sem clube); **4**, valor 0 com os dois clubes [empréstimo, inferência]; **5** vem de `MANAGER_MANAGER::daily_update` (0x69043F), os técnicos (destino −1 na demissão).
 
+**Sobras de pilha no registro de partida** (01/11/2026) [observado no código]: quem cria o jogo monta o registro num local de 0x4F e não grava tudo, e a sobra vai para o `fixtures_<ano>.tmp`. Duas gravações da mesma carreira podem diferir nesses bits sem efeito no jogo. A prova do save (`prova_save.py`) os ignora:
+- **Amistoso** (0x5C5F40): +0x24..+0x27 e os bits 0xF8 do +0x4E (`sobra_do_amistoso`).
+- **Jogo de copa** (0x51A150, 0x51CB90): os bits 0xF0 do +0x4E (`sobra_da_copa`). Ninguém lê os bits 14-15 da palavra +0x4D; os bits 12-13 só valem durante a partida, gravados em 0x6B8089 e lidos em 0x6B6062.
+
 **A categoria do jogo** (+0x3A do registro de partida), contada nos fixtures de 2010, 2011 e 2014 do save `All Leagues`:
 
 | Valor | Partidas | Onde aparece |
