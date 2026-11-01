@@ -35,10 +35,35 @@ unsafe fn cqc11_itens(lista: usize) -> Vec<u32> {
 
 /// O ensaio do comparador da 0x5cbdf0: as nações usadas (o vetor local da original), as listas antes e o que a cópia
 /// acrescentaria a cada uma (índice da lista, item).
+#[derive(Clone)]
 struct Cqc11Ensaio {
     usadas: Vec<u8>,
-    antes: Vec<Vec<u32>>,
+    antes: std::rc::Rc<Vec<Vec<u32>>>,
     novos: Vec<Vec<u32>>,
+}
+
+/// A fita do ensaio: os sorteios que a original fez (n, resposta), o próximo e se um n não bateu. Também estão nela os
+/// sorteios de dentro das rotinas que a original chama no amistoso (0x53b3d0, 0x5c6f00, 0x5c5f40), que o ensaio pula.
+static mut CQC11_FITA: (Vec<(i32, i32)>, usize, bool) = (Vec::new(), 0, false);
+
+/// O sorteio do ensaio: o próximo da fita, com o mesmo n.
+unsafe extern "C" fn cqc11_sorteio_da_fita(n: i32) -> i32 {
+    let f = &mut *core::ptr::addr_of_mut!(CQC11_FITA);
+    match f.0.get(f.1) {
+        Some(&(m, r)) if m == n && !f.2 => {
+            f.1 += 1;
+            r
+        }
+        _ => {
+            f.2 = true;
+            0
+        }
+    }
+}
+
+unsafe fn cqc11_fita_fechou() -> bool {
+    let f = &*core::ptr::addr_of!(CQC11_FITA);
+    !f.2 && f.1 == f.0.len()
 }
 
 impl Cqc11Ensaio {
@@ -164,9 +189,12 @@ unsafe fn cqc11_africana_fora(datas: usize, n: usize) -> bool {
 /// o mando sorteado (0x90cfc0 de 2), as seleções principais (0x53b3d0, `b` antes) e o amistoso (0x5c6f00 com a data
 /// +3); criado, a resposta forçada (0x5c5f40 com 1), as duas marcadas e cada uma na lista da posição da outra (`b` na
 /// de `a`, depois `a` na de `b`; os 4 bytes do registro, a id). Criado ou não, a próxima `a`. No ensaio, o amistoso
-/// não é criado: vale o que a original fez (a id de `b` apareceu na lista da posição de `a`).
-unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, mut ens: Option<&mut Cqc11Ensaio>) {
-    let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+/// não é criado: vale o que a original fez (a id de `b` apareceu na lista da posição de `a`), os sorteios vêm da fita
+/// e, depois do mando, o resto continua (desde `a` seguinte) no primeiro sorteio de 500 da fita (ou no fim) com que
+/// fecha: os de dentro das rotinas do amistoso ficam para trás. Começa na nação `i0`.
+unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, mut ens: Option<&mut Cqc11Ensaio>, i0: i32) {
+    let sortear: unsafe extern "C" fn(i32) -> i32 =
+        if ens.is_some() { cqc11_sorteio_da_fita } else { core::mem::transmute(0x90cfc0usize) };
     let proibido: unsafe extern "thiscall" fn(usize, i32, i32) -> u32 = core::mem::transmute(0x5cc3e0usize);
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> usize = core::mem::transmute(0x5c6f00usize);
@@ -178,7 +206,7 @@ unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, 
     let quantas = n as i16 as i32;
     let total = |this: usize| cqc11_d(this + 0x34fe) as i32;
     let nacao = |this: usize, k: i32| cqc11_d(cqc11_d(this + 0x34fa).wrapping_add(k as usize * 4));
-    let mut i: i32 = 0;
+    let mut i: i32 = i0;
     while i < total(this) {
         let a = nacao(this, i);
         let ida = cqc11_d(a);
@@ -189,6 +217,9 @@ unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, 
         if livre_a && quantas > 0 && cqc11_na_data(datas, quantas, a) && !cqc11_africana_fora(datas, a) {
             let mut j = i + 1;
             while j < total(this) {
+                if ens.is_some() && (*core::ptr::addr_of!(CQC11_FITA)).2 {
+                    return; // a fita já não bate
+                }
                 let b = nacao(this, j);
                 let idb = cqc11_d(b);
                 let livre_b = match ens.as_deref() {
@@ -233,6 +264,25 @@ unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, 
                                             e.por(i as usize, idb as u32);
                                             e.por(j as usize, ida as u32);
                                         }
+                                        let f = core::ptr::addr_of_mut!(CQC11_FITA);
+                                        if (*f).2 {
+                                            return;
+                                        }
+                                        let base = e.clone();
+                                        for p in (*f).1..=(*f).0.len() {
+                                            if p < (*f).0.len() && (*f).0[p].0 != 500 {
+                                                continue;
+                                            }
+                                            (*f).1 = p;
+                                            *e = base.clone();
+                                            cqc11_segunda_parte(this, datas, n, 0, Some(&mut *e), i + 1);
+                                            if cqc11_fita_fechou() {
+                                                return;
+                                            }
+                                            (*f).2 = false;
+                                        }
+                                        (*f).2 = true; // nenhum ponto fecha
+                                        return;
                                     }
                                     None => {
                                         let sb = selecao(b);
@@ -274,24 +324,31 @@ unsafe extern "thiscall" fn amistosos_entre_selecoes(this: usize, datas: usize, 
         return;
     }
     cqc11_primeira_parte(this, datas, usadas, None);
-    cqc11_segunda_parte(this, datas, n, usadas, None);
+    cqc11_segunda_parte(this, datas, n, usadas, None, 0);
     liberar(usadas);
 }
 
 /// Comparador: a original cria amistosos (0x5c6f00, 0x5c5f40), acrescenta às listas (0x68d0d0) e sorteia: só ela roda,
 /// com o plano em ensaio. A primeira parte do ensaio roda antes dela (depois, o calendário já teria os amistosos
-/// novos); a segunda, lado a lado pelo estado do sorteador (em sem_contar), decide cada amistoso pelo que a original
-/// fez. Confere o estado do sorteador (a sequência dos sorteios) e, lista a lista de nações, que os itens novos da
-/// original são os que o ensaio acrescentaria.
+/// novos); a segunda, depois dela, pela fita dos sorteios que ela fez (aleatorio::rastrear: n e resposta, os de dentro
+/// das rotinas do amistoso também), decide cada amistoso pelo que a original fez. Confere a sequência dos sorteios (os
+/// do ensaio são os da original, salvo os de dentro das rotinas do amistoso, e a fita acaba junto) e, lista a lista de
+/// nações, que os itens novos da original são os que o ensaio acrescentaria. (Lado a lado pelo estado do sorteador não
+/// servia: a 0x5c6f00 e a 0x5c5f40 sorteiam por dentro na original e o ensaio não as chama.)
 unsafe extern "thiscall" fn comparar_amistosos_entre_selecoes(this: usize, datas: usize, n: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let nacoes = cqc11_d(0xae2350) as i32;
     let k = nacoes.max(cqc11_d(this + 0x34fe) as i32).max(0) as usize;
     let antes: Vec<Vec<u32>> = (0..k).map(|q| cqc11_itens(cqc11_lista(this, q))).collect();
-    let mut e = Cqc11Ensaio { usadas: vec![0u8; nacoes.max(0) as usize], antes, novos: vec![Vec::new(); k] };
+    let mut e = Cqc11Ensaio { usadas: vec![0u8; nacoes.max(0) as usize], antes: std::rc::Rc::new(antes), novos: vec![Vec::new(); k] };
     cqc11_primeira_parte(this, datas, 0, Some(&mut e));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO, || o(this, datas, n),
-        || crate::aleatorio::sem_contar(|| cqc11_segunda_parte(this, datas, n, 0, Some(&mut e))));
+    let ((), fita) = crate::aleatorio::rastrear(|| o(this, datas, n));
+    let quantos = fita.len();
+    *core::ptr::addr_of_mut!(CQC11_FITA) = (fita, 0, false);
+    cqc11_segunda_parte(this, datas, n, 0, Some(&mut e), 0);
+    let igual = cqc11_fita_fechou();
+    let (pos, falhou) = { let f = &*core::ptr::addr_of!(CQC11_FITA); (f.1, f.2) };
+    *core::ptr::addr_of_mut!(CQC11_FITA) = (Vec::new(), 0, false);
     let mut dif = Vec::new();
     for q in 0..k.max(e.novos.len()) {
         let mut depois = if q < k { cqc11_itens(cqc11_lista(this, q)) } else { Vec::new() };
@@ -312,8 +369,8 @@ unsafe extern "thiscall" fn comparar_amistosos_entre_selecoes(this: usize, datas
         }
     }
     PLACAR.registrar(igual && dif.is_empty(), || {
-        format!("amistosos_entre_selecoes(datas {:x}, {}) sorteador {:x?} x {:x?}; listas (indice, original, ensaio) {:x?}",
-            datas, n as i16, mo, mr, dif.iter().take(4).collect::<Vec<_>>())
+        format!("amistosos_entre_selecoes(datas {:x}, {}) fita de {} sorteios, o ensaio parou em {} (n diferente: {}); listas (indice, original, ensaio) {:x?}",
+            datas, n as i16, quantos, pos, falhou, dif.iter().take(4).collect::<Vec<_>>())
     });
 }
 
