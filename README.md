@@ -10,7 +10,7 @@ Este repositório o mantém jogável no Windows 11 e prepara a reescrita do jogo
 | `JOGAR.bat` | Abre o jogo em 1920×1080 nativo, em janela redimensionável, sem CD e sem trocar a resolução do Windows. | sim |
 | `rust/` | Núcleo em Rust, compilado como `ddraw.dll` (camada de vídeo própria; ponto de entrada dos desvios). | sim |
 | `save/` | DLL só do save (saves acima de 2 GB, até 4 GB), para os exes modificados (NickPatcher, CLZ): [`docs/SAVE_2GB.md`](docs/SAVE_2GB.md). | sim |
-| `regens/` | DLL pontual dos regens (protótipo; separada da `ddraw.dll` de trabalho): outra regra para a distribuição e a idade dos jovens, configurável em `regens.cfg`, com o save acima de 2 GB incluído (tudo desligado sem o `.cfg`): [`regens/LEIA.md`](regens/LEIA.md); a regra original em [`docs/DISTRIBUICAO_DOS_REGENS.md`](docs/DISTRIBUICAO_DOS_REGENS.md). | sim |
+| CM0102-Rust-Tweaks | A `ddraw.dll` de ajustes para a comunidade (save acima de 2 GB, idade e distribuição dos regens), num repositório à parte, `CM0102-Rust/CM0102-Rust-Tweaks` (privado até a abertura); a regra original dos regens em [`docs/DISTRIBUICAO_DOS_REGENS.md`](docs/DISTRIBUICAO_DOS_REGENS.md). | à parte |
 | `jogo/` | Instalação jogável: originais `cm0102.exe` / `cm0102_GDI.exe` e as cópias corrigidas `*-portatil.exe`. | não |
 | `original/` | Downloads intocados (ISO, zips, patch 3.9.68) e cópia de segurança dos dois exe 3.9.68. | não |
 | `referencias/` | Projetos de terceiros consultados (ex.: `CM0102Patcher` do nckstwrt). | não |

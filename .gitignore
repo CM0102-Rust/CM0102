@@ -19,8 +19,6 @@ CLZ Leagues Patch*.rar
 
 # DLL so do save (save/): saida da compilacao
 /save/target/
-# DLL so dos regens (regens/): saida da compilacao
-/regens/target/
 # Copia da instalacao da CLZ para testes
 /clz_teste/
 
