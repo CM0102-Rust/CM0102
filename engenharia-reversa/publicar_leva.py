@@ -29,7 +29,8 @@ def main():
     n = int(sys.argv[1])
     st = subprocess.run(['git', 'status', '--short', 'rust/src/motor.rs'], cwd=RAIZ, capture_output=True, text=True).stdout
     assert st.strip(), 'motor.rs sem mudanças: a leva já foi publicada?'
-    rodar(sys.executable, os.path.join('levas', str(n), 'docs.py'))
+    if not os.environ.get('DOCS_JA_FEITOS'):  # o docs.py já rodou à mão (ele não roda duas vezes)
+        rodar(sys.executable, os.path.join('levas', str(n), 'docs.py'))
     rodar(sys.executable, os.path.join('engenharia-reversa', 'glossario.py'))
     rodar(sys.executable, os.path.join('engenharia-reversa', 'placar_arquivos.py'))
     titulo = open(os.path.join(RAIZ, 'levas', str(n), 'LEIA.md'), encoding='utf-8').readline().split('—', 1)[1].strip()
