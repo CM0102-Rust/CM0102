@@ -194,7 +194,9 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x8b4f60 | `carga_do_programa` | TRAINING_SCHEDULE::get_training_load |
 | 0x4cbb20 | `cargo_com_contrato` | is_contract_staff_job |
 | 0x524d10 | `carregar_banco_do_save` | load_database_from_stream |
+| 0x5aee90 | `carregar_datas_dos_clubes` | fix_man_load_club_dates |
 | 0x72aa80 | `carregar_estatisticas_da_partida` | Match_Stats::load |
+| 0x59b2a0 | `carregar_financas` | FinanceTable::load_from_save |
 | 0x82a9c0 | `carregar_jogo` | load_game_data |
 | 0x839760 | `carregar_regras_fifa` | load_fifa_transfer_rules |
 | 0x6eab60 | `cartao_pela_gravidade` | card_by_severity |
@@ -620,13 +622,20 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x54e5d0 | `gravar_clubes` | db_files_write_clubs |
 | 0x5501d0 | `gravar_competicoes` | db_files_write_comps |
 | 0x550470 | `gravar_competicoes_de_pessoal` | db_files_write_staff_comps |
+| 0x5af4a0 | `gravar_conferencia_das_pernas` | fix_man_save_fixture_leg_checks |
 | 0x54d6e0 | `gravar_continentes` | db_files_write_continents |
 | 0x785790 | `gravar_dado_da_noticia` | set_news_field |
 | 0x5fdd30 | `gravar_dado_do_humano` | set_human_field |
+| 0x5af040 | `gravar_datas_dos_clubes` | fix_man_save_club_dates |
 | 0x54daf0 | `gravar_estadios` | db_files_write_stadiums |
+| 0x79bb80 | `gravar_estatisticas_dos_arbitros` | OfficialsManager::save_official_stats |
+| 0x84c680 | `gravar_estatisticas_simuladas` | SimulatedStats::save |
 | 0x6d98b0 | `gravar_eventos` | record_events |
+| 0x59b3b0 | `gravar_financas` | FinanceTable::save_finance_dat |
 | 0x8967d0 | `gravar_formacao_tatica` | set_tactic_formation |
+| 0x859cc0 | `gravar_gerente_de_elencos` | SQUAD_MANAGER::save |
 | 0x54fe50 | `gravar_historico_de_pessoas` | db_files_write_staff_history |
+| 0x443f50 | `gravar_historico_dos_clubes` | Club_History::save |
 | 0x550320 | `gravar_historicos_de_competicao` | db_files_write_comp_history |
 | 0x54fbb0 | `gravar_jogadores` | db_files_write_non_players |
 | 0x82e430 | `gravar_jogo` | save_game_data |
@@ -638,6 +647,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x932e10 | `gravar_no_conteiner` | zwrite |
 | 0x550950 | `gravar_nomes` | db_files_write_or_read_records_0x3c |
 | 0x69f7c0 | `gravar_notas_da_diretoria` | MANAGER_MANAGER::set_board_ratings |
+| 0x5fb320 | `gravar_paises_anfitrioes` | HostCountry::save_temp_file |
 | 0x54e720 | `gravar_pessoas_110` | db_files_write_staff |
 | 0x4a2540 | `gravar_posicao_do_clube` | Comp_Stats::set_club_final_position |
 | 0x68aa30 | `gravar_posicoes_finais_da_liga` | League::record_final_positions |
@@ -645,6 +655,8 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x729820 | `gravar_registro_da_partida` | Match_Stats::write_match_record |
 | 0x550800 | `gravar_registros_58` | db_files_write_records_0x3a |
 | 0x8395b0 | `gravar_regras_fifa` | save_fifa_transfer_rules |
+| 0x4c6b70 | `gravar_sementes_da_conmebol` | ConmebolSeeding::save_to_temp_file |
+| 0x905510 | `gravar_sementes_da_uefa` | UefaSeeding::save_to_temp_file |
 | 0x7858c0 | `gravar_texto_na_noticia` | NewsItem::set_slot_string |
 | 0x896a90 | `gravar_vaga_tatica` | set_tactic_slot |
 | 0x7671c0 | `gravar_vencedor_do_mes` | MONTH_AWARD::set_winner |

@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologo` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 1516 de 6709 funções, 1188.9 de 5528.0 KB (**21.51%**) · 65 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 1528 de 6709 funções, 1193.8 de 5528.0 KB (**21.60%**) · 71 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -24,12 +24,13 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `injury.cpp` | 31/47 | 14.1/30.5 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **46.4%** |
 | `formation.cpp` | 23/45 | 11.9/26.5 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **44.8%** |
 | `Cup.cpp` | 32/47 | 18.0/41.9 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **42.9%** |
+| `fix_man.cpp` | 22/37 | 8.6/22.4 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **38.4%** |
 | `month_ratings.cpp` | 3/8 | 0.7/1.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.7%** |
 | `tactics.cpp` | 24/29 | 8.5/23.1 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **36.5%** |
 | `Area.cpp` | 3/15 | 2.0/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.7%** |
-| `fix_man.cpp` | 19/37 | 7.6/22.4 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **33.9%** |
+| `officials_manager.cpp` | 8/34 | 4.1/12.0 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **33.8%** |
+| `fin_prm.cpp` | 28/66 | 14.8/45.2 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **32.7%** |
 | `player_regen.cpp` | 33/51 | 14.3/44.7 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **32.1%** |
-| `fin_prm.cpp` | 26/66 | 14.2/45.2 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **31.5%** |
 | `transfer_manager.cpp` | 116/199 | 52.3/167.1 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **31.3%** |
 | `training_manager.cpp` | 11/34 | 5.0/16.3 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **30.6%** |
 | `player_stats.cpp` | 20/34 | 8.2/28.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **28.5%** |
@@ -37,7 +38,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `shortlist_manager.cpp` | 32/54 | 19.1/71.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.7%** |
 | `contract_manager.cpp` | 51/121 | 23.1/87.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.5%** |
 | `national_teams.cpp` | 48/69 | 15.5/58.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.5%** |
-| `officials_manager.cpp` | 7/34 | 3.1/12.0 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.0%** |
 | `human_manager.cpp` | 20/61 | 6.2/25.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.4%** |
 | `Setup.cpp` | 10/107 | 28.1/120.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.3%** |
 | `stadium.cpp` | 7/17 | 2.4/11.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.5%** |
@@ -52,6 +52,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `media.cpp` | 35/69 | 31.6/202.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.6%** |
 | `eng_second.cpp` | 3/10 | 1.0/6.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.6%** |
 | `discipline.cpp` | 21/38 | 5.3/38.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.6%** |
+| `conmebol_seeding.cpp` | 1/9 | 0.5/3.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.6%** |
 | `comp.cpp` | 9/46 | 1.5/11.8 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.9%** |
 | `eng_first.cpp` | 3/10 | 0.9/7.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.3%** |
 | `month_award.cpp` | 2/10 | 0.4/3.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.1%** |
@@ -60,16 +61,21 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `staff_contracts.cpp` | 17/45 | 4.6/39.9 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.6%** |
 | `record_utils.cpp` | 6/32 | 1.4/12.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.6%** |
 | `award_manager.cpp` | 1/22 | 0.6/7.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.9%** |
+| `club_history.cpp` | 1/11 | 0.6/6.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.5%** |
 | `game.cpp` | 14/34 | 3.7/43.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.5%** |
 | `utils.cpp` | 1/23 | 0.5/5.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.0%** |
 | `comp_util.cpp` | 22/38 | 5.4/68.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **7.9%** |
 | `file_screens.cpp` | 1/10 | 0.7/11.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.2%** |
+| `simulated_stats.cpp` | 1/19 | 0.3/5.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.9%** |
 | `Fine.cpp` | 2/19 | 0.9/15.9 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.7%** |
+| `uefa_seeding.cpp` | 1/26 | 0.6/12.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.1%** |
 | `printouts.cpp` | 3/20 | 1.4/27.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.0%** |
 | `fog_of_war.cpp` | 4/34 | 0.6/12.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.9%** |
 | `player_search.cpp` | 12/61 | 3.3/70.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.7%** |
+| `squad_manager.cpp` | 1/16 | 0.2/7.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.6%** |
+| `host_country.cpp` | 1/12 | 0.2/7.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.9%** |
 | `scrman.cpp` | 1/69 | 0.2/29.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.6%** |
 | `comp_screens.cpp` | 1/106 | 0.2/124.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
 | `library_without_asserts` | 1/243 | 0.3/205.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
 
-Os outros 328 arquivos ainda não têm rotina em Rust.
+Os outros 322 arquivos ainda não têm rotina em Rust.

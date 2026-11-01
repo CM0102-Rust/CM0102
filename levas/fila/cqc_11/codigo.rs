@@ -269,10 +269,11 @@ unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, 
                                             return;
                                         }
                                         let base = e.clone();
-                                        for p in (*f).1..=(*f).0.len() {
-                                            if p < (*f).0.len() && (*f).0[p].0 != 500 {
-                                                continue;
-                                            }
+                                        let pontos: Vec<usize> = {
+                                            let v = &(*f).0;
+                                            ((*f).1..=v.len()).filter(|&p| p == v.len() || v[p].0 == 500).collect()
+                                        };
+                                        for p in pontos {
                                             (*f).1 = p;
                                             *e = base.clone();
                                             cqc11_segunda_parte(this, datas, n, 0, Some(&mut *e), i + 1);
