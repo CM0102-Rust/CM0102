@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologo` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 1528 de 6709 funções, 1193.8 de 5528.0 KB (**21.60%**) · 71 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 1568 de 6709 funções, 1245.5 de 5528.0 KB (**22.53%**) · 71 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -16,40 +16,40 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `zipdir.cpp` | 10/10 | 4.8/4.8 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `match_screens.cpp` | 53/55 | 77.2/77.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **100.0%** |
 | `index.cpp` | 9/11 | 162.8/163.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **99.8%** |
+| `fix_man.cpp` | 28/37 | 15.8/22.4 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **70.4%** |
 | `Database.cpp` | 167/181 | 92.4/148.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.2%** |
 | `staff_records.cpp` | 26/37 | 19.2/31.8 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **60.3%** |
 | `weather.cpp` | 8/16 | 4.2/7.3 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **57.0%** |
+| `fin_prm.cpp` | 34/66 | 24.2/45.2 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **53.6%** |
+| `Cup.cpp` | 35/47 | 22.3/41.9 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **53.2%** |
+| `friendly.cpp` | 45/67 | 21.6/41.7 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **51.7%** |
 | `league.cpp` | 42/61 | 18.2/35.8 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **51.0%** |
-| `friendly.cpp` | 42/67 | 19.5/41.7 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **46.8%** |
 | `injury.cpp` | 31/47 | 14.1/30.5 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **46.4%** |
 | `formation.cpp` | 23/45 | 11.9/26.5 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **44.8%** |
-| `Cup.cpp` | 32/47 | 18.0/41.9 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **42.9%** |
-| `fix_man.cpp` | 22/37 | 8.6/22.4 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **38.4%** |
 | `month_ratings.cpp` | 3/8 | 0.7/1.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.7%** |
+| `national_teams.cpp` | 50/69 | 21.6/58.6 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **36.8%** |
 | `tactics.cpp` | 24/29 | 8.5/23.1 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **36.5%** |
+| `transfer_manager.cpp` | 122/199 | 58.1/167.1 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.8%** |
 | `Area.cpp` | 3/15 | 2.0/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.7%** |
 | `officials_manager.cpp` | 8/34 | 4.1/12.0 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **33.8%** |
-| `fin_prm.cpp` | 28/66 | 14.8/45.2 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **32.7%** |
 | `player_regen.cpp` | 33/51 | 14.3/44.7 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **32.1%** |
-| `transfer_manager.cpp` | 116/199 | 52.3/167.1 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **31.3%** |
 | `training_manager.cpp` | 11/34 | 5.0/16.3 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **30.6%** |
 | `player_stats.cpp` | 20/34 | 8.2/28.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **28.5%** |
 | `awol.cpp` | 7/19 | 3.3/11.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.6%** |
+| `manager_manager.cpp` | 44/98 | 35.3/129.4 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.2%** |
 | `shortlist_manager.cpp` | 32/54 | 19.1/71.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.7%** |
 | `contract_manager.cpp` | 51/121 | 23.1/87.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.5%** |
-| `national_teams.cpp` | 48/69 | 15.5/58.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.5%** |
 | `human_manager.cpp` | 20/61 | 6.2/25.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.4%** |
 | `Setup.cpp` | 10/107 | 28.1/120.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.3%** |
+| `scout_manager.cpp` | 17/39 | 5.0/23.0 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.6%** |
 | `stadium.cpp` | 7/17 | 2.4/11.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.5%** |
 | `news.cpp` | 26/33 | 9.8/49.0 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.0%** |
+| `european_cup.cpp` | 11/50 | 5.6/29.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **19.2%** |
 | `fifa_rankings.cpp` | 8/20 | 1.8/9.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **18.6%** |
-| `manager_manager.cpp` | 38/98 | 23.0/129.4 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.8%** |
-| `european_cup.cpp` | 10/50 | 5.1/29.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.5%** |
 | `ruling_body.cpp` | 3/19 | 1.1/6.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.1%** |
+| `media.cpp` | 37/69 | 34.4/202.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.0%** |
 | `key_nation.cpp` | 9/27 | 2.2/12.9 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **16.8%** |
 | `main.cpp` | 5/16 | 0.5/3.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.9%** |
-| `scout_manager.cpp` | 12/39 | 3.7/23.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.9%** |
-| `media.cpp` | 35/69 | 31.6/202.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.6%** |
 | `eng_second.cpp` | 3/10 | 1.0/6.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.6%** |
 | `discipline.cpp` | 21/38 | 5.3/38.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.6%** |
 | `conmebol_seeding.cpp` | 1/9 | 0.5/3.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.6%** |

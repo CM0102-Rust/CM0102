@@ -1,1 +1,11 @@
 # ordem da fila (fila.py); um item por linha
+cqd_2
+cqd_5
+cqd_6
+cqd_7
+cqd_8
+cqd_9
+cqd_10
+cqd_11
+cqd_12
+cqd_13
