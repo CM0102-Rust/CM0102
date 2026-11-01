@@ -265,6 +265,8 @@ unsafe extern "C" fn nome_da_fase_e_rodada(fase: u32, rodada: u32, saida: *mut u
         nome(saida, tamanho, fase, estilo);
     } else if rodada != 0 {
         nome(saida, tamanho, rodada, estilo);
+    } else {
+        return 0; // nenhuma das duas: 0 (0x4c0136)
     }
     1
 }

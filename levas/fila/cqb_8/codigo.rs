@@ -29,18 +29,34 @@ unsafe fn cqb8_contrato(pessoa: usize, clube: usize) -> Option<(usize, usize)> {
     (c != 0).then_some((c, 0x50))
 }
 
+/// Uma rotina sem porta que por dentro chama unidades da fita (0x544520 e 0x544600 chamam a 0x4cf5f0; a 0x62c400
+/// alcança a 0x600a50 e portas): na comparação pela fita, a original grava essas chamadas internas no nível de cima
+/// (com o comparador da rotina, a original e a cópia dele gravam cada uma a sua). A cópia roda a rotina numa fita de
+/// rascunho e pede as mesmas chamadas por `chamar`, na ordem. Fora da comparação (sem GRAVAR_POS) só chama.
+unsafe fn cqb8_pela_fita<R>(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, f: impl FnOnce() -> R) -> R {
+    if !GRAVAR_POS.load(std::sync::atomic::Ordering::Relaxed) {
+        return f();
+    }
+    let externa = fita().replace((Vec::new(), Vec::new()));
+    let r = f();
+    let gravadas = core::mem::replace(&mut *fita(), externa).map_or(Vec::new(), |g| g.1);
+    for c in gravadas {
+        chamar(c.0, c.1, c.2);
+    }
+    r
+}
+
 /// O vetor que a 0x755340 monta na pilha (58 dwords, ela percorre 57): os 50 do elenco (0x541f90 com 0, cdecl), o
-/// +0xbf do clube, o técnico (+0xcf) só sem humano no clube (0x600a50 com 0, 1, 0, 0, cdecl) e fora dos tipos 11 a 15
-/// (0x53b620, cdecl, o byte +0x3d), o +0xd3 e os cinco dwords de +0x19f.
-unsafe fn cqb8_vetor(clube: usize) -> [usize; 58] {
+/// +0xbf do clube, o técnico (+0xcf) só sem humano no clube (0x600a50 com 0, 1, 0, 0, cdecl, por `chamar`: unidade da
+/// fita) e fora dos tipos 11 a 15 (0x53b620, cdecl, o byte +0x3d), o +0xd3 e os cinco dwords de +0x19f.
+unsafe fn cqb8_vetor(clube: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> [usize; 58] {
     let reunir: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let tipo: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x53b620usize);
     let mut v = [0usize; 58];
     reunir(clube, v.as_mut_ptr(), 0);
     v[50] = cqb8_d(clube + 0xbf);
     let tecnico = cqb8_d(clube + 0xcf);
-    v[51] = if humano(clube, 0, 1, 0, 0) != 0 || (tecnico != 0 && tipo(*((tecnico + 0x3d) as *const u8) as u32) != 0) {
+    v[51] = if chamar(0x600a50, 0, [clube as u32, 0, 1, 0, 0]) != 0 || (tecnico != 0 && tipo(*((tecnico + 0x3d) as *const u8) as u32) != 0) {
         0
     } else {
         tecnico
@@ -64,7 +80,9 @@ unsafe fn cqb8_vetor(clube: usize) -> [usize; 58] {
 /// por gostar ou não do jogador (0x547810/0x547840) e pelo jogador ser favorito ou rejeitado do clube, no mínimo 5;
 /// sorteio(chance) acima de sorteio(nota): a pessoa passa a não gostar do jogador (0x547af0 com 1) e, com vínculo e
 /// sorteio(nota) abaixo de sorteio(10), a marca 1 do contrato (0x867560) ou, nos tópicos 0x1e/0x20 ou com sorteio(nota)
-/// zero, as queixas 0x800 (0x867700). As três com efeito vão por `chamar` (as portas do pós-jogo).
+/// zero, as queixas 0x800 (0x867700). As três com efeito vão por `chamar` (as portas do pós-jogo), e também as unidades
+/// da fita que a original chama: o vínculo 0x4cf5f0 (0x75551e, 0x7557dc), o humano 0x600a50 (0x755598) e as 0x4cf5f0
+/// de dentro da 0x544520 (0x7554e8) e da 0x544600 (0x75567f, 0x7556ad), estas por `cqb8_pela_fita`.
 unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, ids: usize, n: u32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let favorito: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547790usize);
     let rejeitado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x5477d0usize);
@@ -116,10 +134,11 @@ unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, ids: usize,
     if r1 > cqb8_sortear(10) {
         rejeitar(clube, jogador, 1);
     }
-    if listada(jogador, 0) != 0 {
+    // cqb8: a 0x4cf5f0 (de dentro da 0x544520 e direta) é unidade da fita: vai por `chamar`
+    if cqb8_pela_fita(chamar, || listada(jogador, 0)) != 0 {
         chance -= 0x19;
     } else {
-        let c = cqb8_vinculo(jogador, clube);
+        let c = chamar(0x4cf5f0, cqb8_d(0xae1050), [jogador as u32, clube as u32, 0, 0, 0]) as usize;
         if c == 0 {
             chance -= 0xf;
         } else {
@@ -132,7 +151,7 @@ unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, ids: usize,
     if chance < 5 {
         chance = 5;
     }
-    let v = cqb8_vetor(clube);
+    let v = cqb8_vetor(clube, chamar);
     let topico = topico as u16;
     for &p in v.iter().take(57) {
         if p == 0 || p == jogador || cqb8_d(p + 0x65) == 0 {
@@ -155,12 +174,12 @@ unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, ids: usize,
             if m == 0x14 {
                 nota = nota.wrapping_add(1);
             } else if m == 1 {
-                nota = nota.wrapping_sub(if a_pedido(p, 0) != 0 { 0xf } else { 10 });
+                nota = nota.wrapping_sub(if cqb8_pela_fita(chamar, || a_pedido(p, 0)) != 0 { 0xf } else { 10 });
                 if cqb8_w(cqb8_d(p + 0x61) + 0xb) > 0x1676 {
                     nota = nota.wrapping_sub(10);
                 }
             } else if m < 6 {
-                nota = nota.wrapping_sub(if a_pedido(p, 0) != 0 { 10 } else { 5 });
+                nota = nota.wrapping_sub(if cqb8_pela_fita(chamar, || a_pedido(p, 0)) != 0 { 10 } else { 5 });
                 if cqb8_w(cqb8_d(p + 0x61) + 0xb) > 0x1676 {
                     nota = nota.wrapping_sub(5);
                 }
@@ -209,7 +228,7 @@ unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, ids: usize,
         if r1 > cqb8_sortear(nota as i32) { // cqb8: o desafeto sorteado
             crate::comparacao::ramo("cqb_8 desafeto sorteado");
             chamar(0x547af0, 0, [p as u32, jogador as u32, 1, 0, 0]);
-            let c = cqb8_vinculo(p, clube);
+            let c = chamar(0x4cf5f0, cqb8_d(0xae1050), [p as u32, clube as u32, 0, 0, 0]) as usize;
             if c != 0 {
                 let r = cqb8_sortear(nota as i32);
                 if r < cqb8_sortear(10) {
@@ -239,7 +258,7 @@ unsafe extern "thiscall" fn comparar_reacao_do_elenco_a_historia(this: usize, to
     if clube != 0 && jogador != 0 {
         reg.push((clube + 0x9b, 24));
         reg.extend(cqb8_contrato(jogador, clube));
-        for &p in cqb8_vetor(clube).iter().take(57) {
+        for &p in cqb8_vetor(clube, &mut |r, t, a| despachar_pos(r, t, a)).iter().take(57) {
             if p == 0 {
                 continue;
             }
@@ -263,7 +282,8 @@ unsafe extern "thiscall" fn comparar_reacao_do_elenco_a_historia(this: usize, to
 /// (0x544520), acima de 20 anos, do tipo 0x10/0x20/0x30 (+0x4f & 0xf0), com +0x5a abaixo de n + 5 e +0x5b abaixo de
 /// n + 10, sorteio(+0x5a) abaixo de sorteio(n), a mesma máscara e reputação acima de 3750: a primeira vez, a história
 /// 0x25 dele (0x72c1f0 em [0xb6b7c8]); sem a marca 0x800 (0x8676f0), a marca 0x800 (0x867560). As duas com efeito vão
-/// por `chamar`.
+/// por `chamar`, e também o vínculo 0x4cf5f0 (0x7580c2, unidade da fita) e, por `cqb8_pela_fita`, o que a 0x62c400
+/// (0x7580ee) e a 0x544520 (0x75810a) chamam de unidades por dentro.
 unsafe fn cqb8_rival_com(jogador: usize, clube: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let mascara: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5481a0usize);
     let contar: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(0x548150usize);
@@ -292,11 +312,14 @@ unsafe fn cqb8_rival_com(jogador: usize, clube: usize, chamar: &mut dyn FnMut(us
         if p == 0 || cqb8_d(p + 0x61) == 0 || p == jogador {
             continue;
         }
-        let c = cqb8_vinculo(p, clube);
+        // cqb8: a 0x4cf5f0 é unidade da fita (direta e de dentro da 0x544520; a 0x62c400 alcança a 0x600a50)
+        let c = chamar(0x4cf5f0, cqb8_d(0xae1050), [p as u32, clube as u32, 0, 0, 0]) as usize;
         if c == 0 || cqb8_d(p + 0x61) == 0 || cqb8_b(c + 0x3d) <= 0 {
             continue;
         }
-        if lesao(cqb8_d(0xb63d28), jogador) == 2 || cqb8_d(c + 0x45) & 0x101 != 0 || listada(p, clube) != 0 {
+        if cqb8_pela_fita(chamar, || lesao(cqb8_d(0xb63d28), jogador)) == 2 || cqb8_d(c + 0x45) & 0x101 != 0
+            || cqb8_pela_fita(chamar, || listada(p, clube)) != 0
+        {
             continue;
         }
         if cqb8_b(p + 0x18) <= 0x14 {

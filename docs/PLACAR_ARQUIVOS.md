@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologo` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 1438 de 6709 funções, 1126.5 de 5528.0 KB (**20.38%**) · 65 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 1477 de 6709 funções, 1160.4 de 5528.0 KB (**20.99%**) · 65 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -17,42 +17,42 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `match_screens.cpp` | 53/55 | 77.2/77.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **100.0%** |
 | `index.cpp` | 9/11 | 162.8/163.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **99.8%** |
 | `Database.cpp` | 167/181 | 92.4/148.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.2%** |
+| `staff_records.cpp` | 26/37 | 19.2/31.8 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **60.3%** |
 | `weather.cpp` | 8/16 | 4.2/7.3 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **57.0%** |
 | `league.cpp` | 42/61 | 18.2/35.8 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **51.0%** |
 | `formation.cpp` | 23/45 | 11.9/26.5 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **44.8%** |
-| `staff_records.cpp` | 20/37 | 12.7/31.8 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **40.0%** |
 | `month_ratings.cpp` | 3/8 | 0.7/1.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.7%** |
 | `tactics.cpp` | 24/29 | 8.5/23.1 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **36.5%** |
 | `injury.cpp` | 29/47 | 10.7/30.5 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **35.1%** |
 | `Area.cpp` | 3/15 | 2.0/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.7%** |
+| `Cup.cpp` | 29/47 | 14.1/41.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **33.7%** |
 | `player_regen.cpp` | 33/51 | 14.3/44.7 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **32.1%** |
 | `training_manager.cpp` | 11/34 | 5.0/16.3 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **30.6%** |
+| `friendly.cpp` | 36/67 | 12.7/41.7 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **30.3%** |
 | `fix_man.cpp` | 16/37 | 6.7/22.4 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **30.0%** |
+| `transfer_manager.cpp` | 110/199 | 49.2/167.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **29.4%** |
 | `player_stats.cpp` | 20/34 | 8.2/28.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **28.5%** |
-| `transfer_manager.cpp` | 106/199 | 46.5/167.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.8%** |
+| `shortlist_manager.cpp` | 32/54 | 19.1/71.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.7%** |
+| `contract_manager.cpp` | 51/121 | 23.1/87.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.5%** |
 | `national_teams.cpp` | 48/69 | 15.5/58.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.5%** |
 | `awol.cpp` | 6/19 | 3.1/11.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.4%** |
 | `officials_manager.cpp` | 7/34 | 3.1/12.0 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.0%** |
-| `friendly.cpp` | 33/67 | 10.8/41.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **25.9%** |
 | `human_manager.cpp` | 20/61 | 6.2/25.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.4%** |
-| `Cup.cpp` | 21/47 | 10.0/41.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.0%** |
 | `Setup.cpp` | 10/107 | 28.1/120.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.3%** |
 | `stadium.cpp` | 7/17 | 2.4/11.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.5%** |
-| `shortlist_manager.cpp` | 31/54 | 14.4/71.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.1%** |
 | `news.cpp` | 26/33 | 9.8/49.0 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.0%** |
-| `contract_manager.cpp` | 45/121 | 17.4/87.1 | 🟩🟩⬜⬜⬜⬜⬜⬜⬜⬜ **20.0%** |
 | `fin_prm.cpp` | 20/66 | 8.5/45.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **18.9%** |
 | `fifa_rankings.cpp` | 8/20 | 1.8/9.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **18.6%** |
+| `manager_manager.cpp` | 38/98 | 23.0/129.4 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.8%** |
 | `european_cup.cpp` | 10/50 | 5.1/29.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.5%** |
 | `ruling_body.cpp` | 3/19 | 1.1/6.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.1%** |
 | `key_nation.cpp` | 9/27 | 2.2/12.9 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **16.8%** |
-| `manager_manager.cpp` | 35/98 | 20.8/129.4 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **16.0%** |
+| `scout_manager.cpp` | 12/39 | 3.7/23.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.9%** |
 | `eng_second.cpp` | 3/10 | 1.0/6.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.6%** |
+| `media.cpp` | 32/69 | 28.3/202.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **14.0%** |
 | `eng_first.cpp` | 3/10 | 0.9/7.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.3%** |
-| `scout_manager.cpp` | 10/39 | 2.8/23.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.2%** |
 | `month_award.cpp` | 2/10 | 0.4/3.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.1%** |
 | `eng_third.cpp` | 2/11 | 0.8/6.4 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.9%** |
-| `media.cpp` | 29/69 | 24.0/202.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.9%** |
 | `discipline.cpp` | 18/38 | 4.5/38.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.8%** |
 | `club_records.cpp` | 35/56 | 7.2/61.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.7%** |
 | `staff_contracts.cpp` | 17/45 | 4.6/39.9 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.6%** |
@@ -62,12 +62,12 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `game.cpp` | 14/34 | 3.7/43.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.5%** |
 | `main.cpp` | 2/16 | 0.2/3.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.2%** |
 | `utils.cpp` | 1/23 | 0.5/5.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.0%** |
-| `comp_util.cpp` | 21/38 | 5.1/68.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **7.4%** |
+| `comp_util.cpp` | 22/38 | 5.4/68.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **7.9%** |
 | `file_screens.cpp` | 1/10 | 0.7/11.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.2%** |
 | `Fine.cpp` | 2/19 | 0.9/15.9 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.7%** |
 | `printouts.cpp` | 3/20 | 1.4/27.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.0%** |
 | `fog_of_war.cpp` | 4/34 | 0.6/12.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.9%** |
-| `player_search.cpp` | 10/61 | 2.8/70.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.9%** |
+| `player_search.cpp` | 12/61 | 3.3/70.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.7%** |
 | `scrman.cpp` | 1/69 | 0.2/29.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.6%** |
 | `comp_screens.cpp` | 1/106 | 0.2/124.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
 | `library_without_asserts` | 1/243 | 0.3/205.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |

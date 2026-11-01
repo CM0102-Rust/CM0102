@@ -44,7 +44,7 @@ unsafe fn cqa12_subir(a: usize, peso: i16, k: i32) {
     cqa12_pw(a, if piso > x { piso } else if x > 10000 { 10000 } else { x });
 }
 
-/// O vice (tipo 1: limiar 500, teto 350, notas 300/150) e o terceiro (tipo 2: 200, 200, 200/100) da copa: a reputação do
+/// O vice (tipo 1: limiar 500, teto 350, notas 300/150) e o terceiro (tipo 2: 500, 200, 200/100; o limiar 500 conferido em 0x86b774) da copa: a reputação do
 /// clube (+0x80) sobe até peso da competição (+0x69 de [jogo+0x14]) × limiar, no máximo `teto` de uma vez (entre 1 e
 /// 10000); com técnico (+0xcf) que tem registro de não jogador (+0x69), as três notas do lado do clube na partida
 /// (+0x188/+0x18a/+0x18c, lado 0x625 × visitante): peso × k, e na competição de fase 1 ([0xadadfc] +0x42 = 1) peso ×
@@ -53,7 +53,7 @@ unsafe fn cqa12_subir(a: usize, peso: i16, k: i32) {
 /// −1 vazio; pessoas válidas e fora o técnico); no terceiro, as convocações acabam nas competições guardadas (0x76d940,
 /// 0x774f90 com os dois clubes); por fim o histórico do clube (tipo no +8, competição no +9).
 unsafe fn cqa12_colocado(this: usize, clube: usize, jogo: usize, partida: usize, tipo: u8) {
-    let (limiar, teto, k, metade) = if tipo == 1 { (500, 350, 300, 150) } else { (200, 200, 200, 100) };
+    let (limiar, teto, k, metade) = if tipo == 1 { (500, 350, 300, 150) } else { (500, 200, 200, 100) };
     let comp = cqa12_d(jogo + 0x14);
     let peso = cqa12_w(comp + 0x69);
     let alvo = (peso as i32).wrapping_mul(limiar); // cqa12: o limiar da reputação
