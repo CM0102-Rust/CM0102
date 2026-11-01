@@ -1,2 +1,5 @@
 # ordem da fila (fila.py); um item por linha
-cpx_13
+cpx_5
+cpx_6
+cpx_7
+cpy_7
