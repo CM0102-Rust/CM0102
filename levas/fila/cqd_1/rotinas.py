@@ -56,8 +56,8 @@ SAVE = False
 ROTINAS = [('dia_das_transferencias', 0x8c5880, [0x64, 0xa1, 0x00, 0x00, 0x00, 0x00]),
            ('processar_oferta_vencida', 0x8c63a0, [0x6a, 0xff, 0x68, 0x00, 0x3d, 0x96, 0x00]),
            ('restricoes_da_oferta', 0x8cfc90, [0x6a, 0xff, 0x68, 0xf8, 0x3f, 0x96, 0x00])]
-DOCS = ('o dia das transferências: a fatia do dia (as ofertas vencidas, o balde da fatia, a base, as prestações, as regras das nações e o clube de formação no dia 100), a oferta que vence hoje pelo status e as restrições da oferta (data, veto, orçamento, vaga no elenco e a regra da nação)',
-        'the transfer day: the day slice (overdue offers, the slice bucket, the base date, instalments, nation rules and the training club on day 100), the offer due today by its status and the offer restrictions (date, veto, budget, squad room and the nation rule)',
+DOCS = ('o dia das transferências: a fatia do dia (as ofertas vencidas, o balde da fatia, a base, as prestações, as regras das nações e a naturalização no dia 100), a oferta que vence hoje pelo status e as restrições da oferta (data, veto, orçamento, vaga no elenco e a regra da nação)',
+        'the transfer day: the day slice (overdue offers, the slice bucket, the base date, instalments, nation rules and the naturalisation on day 100), the offer due today by its status and the offer restrictions (date, veto, budget, squad room and the nation rule)',
         [('dia_das_transferencias', 'TRANSFER_MANAGER::daily_update', '0x8c5880', 'transfer_manager.cpp', 'thiscall, ret 8',
           'uma fatia do dia das transferências: avisos das janelas, ofertas vencidas reagendadas, o balde da fatia processado; na fatia 2 a base passa a amanhã, as prestações no fim do mês, as regras das nações; no dia 100 o +0x1e das pessoas não comunitárias há anos no clube',
           'one slice of the transfer day: window notices, overdue offers rescheduled, the slice bucket processed; in slice 2 the base date moves to tomorrow, instalments at month end, nation rules; on day 100 the +0x1e of non-EU people at the club for years'),
@@ -71,8 +71,8 @@ CAMPOS = [('gerência de transferências +0x84c começo dos baldes, +0x84d/+0x84
            'transfer manager +0x84c bucket start, +0x84d/+0x84f the base date, +0x855 the slice, +0x18 buckets (0xe-byte lists), +0x86e 8-byte records (bit 0), +0x8ac the 28 rules (+0xa nation); value; reads and writes (dia_das_transferencias, processar_oferta_vencida), reads (restricoes_da_oferta)'),
           ('oferta +0 lista de ofertas, +4 troca, +8 comprador, +0xc alvo, +0x10, +0x11 tipo, +0x12/+0x14 data, +0x1a fatia, +0x1f empréstimo, +0x2c status, +0x2e, +0x2f, +0x30; id e valor; lê e grava (processar_oferta_vencida), lê (dia_das_transferencias, restricoes_da_oferta)',
            'offer +0 offer list, +4 exchange, +8 buyer, +0xc target, +0x10, +0x11 type, +0x12/+0x14 date, +0x1a slice, +0x1f loan, +0x2c status, +0x2e, +0x2f, +0x30; id and value; reads and writes (processar_oferta_vencida), reads (dia_das_transferencias, restricoes_da_oferta)'),
-          ('pessoa (0x6e bytes) +0x1e clube de formação, +0x39 jogador (+0x53 clube), +0x3e/+0x40 data, +0x61; ponteiro e valor; lê e grava +0x1e (dia_das_transferencias)',
-           'person (0x6e bytes) +0x1e training club, +0x39 player (+0x53 club), +0x3e/+0x40 date, +0x61; pointer and value; reads and writes +0x1e (dia_das_transferencias)'),
+          ('pessoa (0x6e bytes) +0x1e segunda nacionalidade (a naturalização do dia 100), +0x39 jogador (+0x53 clube), +0x3e/+0x40 data, +0x61; ponteiro e valor; lê e grava +0x1e (dia_das_transferencias)',
+           'person (0x6e bytes) +0x1e second nationality (the day-100 naturalisation), +0x39 player (+0x53 club), +0x3e/+0x40 date, +0x61; pointer and value; reads and writes +0x1e (dia_das_transferencias)'),
           ('[0xae1080] o último contrato; [0x9cfa10] a nação; [0x9cf488], [0x9cf434], [0x9cf360], [0x9cf2fc], [0x9cf448] clubes; ponteiro e id; grava [0xae1080], lê o resto',
            '[0xae1080] the last contract; [0x9cfa10] the nation; [0x9cf488], [0x9cf434], [0x9cf360], [0x9cf2fc], [0x9cf448] clubs; pointer and id; writes [0xae1080], reads the rest')]
 INTERESSA = ['CMRTE']
