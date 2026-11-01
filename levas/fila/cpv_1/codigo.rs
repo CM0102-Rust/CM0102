@@ -73,7 +73,8 @@ unsafe fn cpv1_dados_da_pessoa(n: usize, k: i8, p: usize) {
 unsafe extern "thiscall" fn passar_a_oferta_aos_clubes(this: usize, oferta: usize) {
     let agendar: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8c6220usize);
     let limpar_marcas: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x84aeb0usize);
-    let pede_permissao: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x8c7470usize);
+    // thiscall (ecx = this, o gerente de transferências; corrigido em 31/10/2026: antes stdcall, o this ia com o ecx da vez e às vezes 0)
+    let pede_permissao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x8c7470usize);
     let noticia_da_espera: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8e2a00usize);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
@@ -137,7 +138,7 @@ unsafe extern "thiscall" fn passar_a_oferta_aos_clubes(this: usize, oferta: usiz
                 x = cpv1_proximo(rivais);
             }
         }
-        if cpv1_b(oferta + 0x30) & 0xf == 0 && pede_permissao(oferta) != 0 && cpv1_b(oferta + 0x2e) == 0 {
+        if cpv1_b(oferta + 0x30) & 0xf == 0 && pede_permissao(this, oferta) != 0 && cpv1_b(oferta + 0x2e) == 0 {
             noticia_da_espera(this, oferta);
             cpv1_pb(oferta + 0x2c, 0xa);
             let r = sorteio(7);
