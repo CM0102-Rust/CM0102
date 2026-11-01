@@ -1,18 +1,31 @@
-//! DLL só dos regens do CM 01/02 3.9.68: troca a disputa dos clubes pelo jovem regen, sem alterar o exe.
+//! DLL de ajustes do CM 01/02 3.9.68, sem alterar o exe: a distribuição dos regens e o save acima de 2 GB.
 //!
-//! Entra no jogo como `ddraw.dll`, como a do save2gb. Ao carregar, lê `regens.cfg` ao lado do exe; com `rule = new`
-//! e a assinatura do código de que depende batendo com o 3.9.68 (`TRECHOS`), desvia
-//! `PLAYER_REGEN::pick_best_club_for_player` (0x7ad0e0) para `escolher_clube`. O `DirectDrawCreate` é repassado a
+//! Entra no jogo como `ddraw.dll`, como a do save2gb, e lê `regens.cfg` ao lado do exe. Cada parte só liga se a
+//! assinatura do código de que depende bater com o 3.9.68:
+//! - `save_over_2gb = 1` (padrão): as três rotinas do contêiner do save (`zopen` 0x9326e0, `zseek` 0x933080, `ztell`
+//!   0x933170) vão para as de `rust/src/conteiner.rs`, como na DLL do save2gb (`TRECHOS_DO_SAVE`);
+//! - `rule = new`: `PLAYER_REGEN::pick_best_club_for_player` (0x7ad0e0) vai para `escolher_clube` (`TRECHOS`).
+//! O `DirectDrawCreate` é repassado a
 //! `ddraw_chain.dll` na pasta do jogo, se existir, senão à `ddraw.dll` do Windows. O registro vai para `regens.log`.
 //!
 //! A regra original (docs/DISTRIBUICAO_DOS_REGENS.md): cada clube do país com elenco abaixo de 50 recebe uma nota
 //! (0x7ad220) e ganha o maior sorteio(nota). A nova: os mesmos clubes elegíveis, mas o clube é sorteado na proporção
 //! do peso = nível × instalações × comissão × elenco, à potência da temperatura, com um teto de jovens por clube nos
-//! últimos 365 dias. As mesmas contas de `regens/calibrar.py` (`peso_novo`).
+//! últimos 365 dias. As mesmas contas de `tools/calibrar.py` (`peso_novo`).
 
 #![allow(linker_messages)]
 
 use core::ffi::c_void;
+
+// O save acima de 2 GB (o do save2gb): as três rotinas do contêiner. Na cópia do repositório separado, o arquivo vai
+// em src/conteiner.rs e esta linha fica sem o #[path].
+#[path = "../../rust/src/conteiner.rs"]
+mod conteiner;
+
+/// Os contadores de ramo do projeto: aqui não contam nada.
+mod comparacao {
+    pub fn ramo(_: &'static str) {}
+}
 
 mod registro {
     use std::io::Write;
@@ -40,9 +53,18 @@ const TRECHOS: [(usize, usize); 7] = [(0x7ad0e0, 7), (0x7ace9b, 0x1a), (0x53d980
 /// FNV-1a de 64 bits dos trechos no cm0102.exe 3.9.68.
 const ASSINATURA: u64 = 0xb9c6540ed49c8bff;
 
-unsafe fn assinatura() -> u64 {
+/// O save: o contêiner inteiro (zipdir.cpp) e o começo das funções da CRT e do jogo que as rotinas chamam (os mesmos
+/// trechos e a mesma assinatura de save/src/lib.rs).
+const TRECHOS_DO_SAVE: [(usize, usize); 15] = [
+    (0x9326e0, 0x1180), (0x944c94, 32), (0x944c9f, 32), (0x944cf1, 32), (0x944cff, 32), (0x945a09, 32),
+    (0x945b00, 32), (0x945bfe, 32), (0x945ce6, 32), (0x946a22, 32), (0x94af9e, 32), (0x94fded, 32),
+    (0x94c552, 32), (0x90d130, 32), (0x5e8290, 32),
+];
+const ASSINATURA_DO_SAVE: u64 = 0x232589cfe29f6240;
+
+unsafe fn assinatura(trechos: &[(usize, usize)]) -> u64 {
     let mut h = 0xcbf29ce484222325u64;
-    for (va, n) in TRECHOS {
+    for &(va, n) in trechos {
         for i in 0..n {
             h = (h ^ *((va + i) as *const u8) as u64).wrapping_mul(0x100000001b3);
         }
@@ -64,6 +86,7 @@ unsafe fn desviar(de: usize, para: usize) {
 
 #[derive(Clone, Copy)]
 struct Regras {
+    save: bool,
     novo: bool,
     alvo_k: f64,
     alvo_ca: f64,
@@ -81,6 +104,7 @@ struct Regras {
 }
 
 const PADRAO: Regras = Regras {
+    save: true,
     novo: true,
     alvo_k: 50.0,
     alvo_ca: 0.0,
@@ -109,6 +133,10 @@ fn ler_regras() -> Regras {
         let (k, v) = (k.trim(), v.trim());
         if k == "rule" {
             r.novo = v != "original"; // rule = new | original
+            continue;
+        }
+        if k == "save_over_2gb" {
+            r.save = v != "0";
             continue;
         }
         let Ok(x) = v.parse::<f64>() else { continue };
@@ -268,7 +296,17 @@ pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reserv
     if motivo == 1 {
         let r = ler_regras();
         REGRAS = r;
-        let a = assinatura();
+        if !r.save {
+            registro::linha("save over 2 GB: off (save_over_2gb = 0)");
+        } else if assinatura(&TRECHOS_DO_SAVE) == ASSINATURA_DO_SAVE {
+            desviar(0x9326e0, conteiner::abrir_no_conteiner as *const () as usize);
+            desviar(0x933080, conteiner::buscar_no_conteiner as *const () as usize);
+            desviar(0x933170, conteiner::posicao_no_conteiner as *const () as usize);
+            registro::linha("save over 2 GB: on (saves up to 4 GB)");
+        } else {
+            registro::linha(&format!("save over 2 GB: this exe differs from 3.9.68 where the save code is (signature {:016x}); nothing was changed", assinatura(&TRECHOS_DO_SAVE)));
+        }
+        let a = assinatura(&TRECHOS);
         if !r.novo {
             registro::linha("regens 0.1: rule = original; nothing was changed");
         } else if a == ASSINATURA {

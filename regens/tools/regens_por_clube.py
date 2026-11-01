@@ -1,15 +1,10 @@
 """Regens (bit 0x40 do +0xb do registro de 79 bytes) por clube: reputação (+0x80) e instalações (Training, +0x7f).
 So leitura. Uso: python regens_por_clube.py SAVE"""
-import sys, struct, collections
-sys.path.insert(0, r'D:\Sistemas\CM0102\engenharia-reversa')
-import prova_save as ps
+import collections, os, struct, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import sav
 
-d = open(sys.argv[1], 'rb').read()
-t, _, it = ps.indice(d)
-f = {}
-for n, p, tam in it:
-    if n.lower() in ('staff.dat', 'general.dat', 'club.dat', 'player.dat') and n.lower() not in f:
-        f[n.lower()] = ps.conteudo(d, t, p, tam)
+f = sav.itens(sys.argv[1], ('staff.dat', 'general.dat', 'club.dat', 'player.dat'))
 S, G, C, P = f['staff.dat'], f['general.dat'], f['club.dat'], f['player.dat']
 N = len(S) // 110
 T = G[0xfa7:0xfa7 + 79 * N]

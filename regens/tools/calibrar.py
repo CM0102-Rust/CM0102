@@ -2,8 +2,8 @@
 regra original (a nota da 0x7ad220 e o maior sorteio da 0x7ad0e0) e pela regra nova (sorteio proporcional, os pesos de
 `regens.cfg`). Só leitura do save; nada roda no jogo.
 
-Uso: python regens/calibrar.py SAVE PAIS [--cfg regens/regens.cfg] [--temporadas 20] [--humano "Nome do clube"]
-Ex.: python regens/calibrar.py jogo/TesteTelas.sav Inglaterra --humano Fulham
+Uso: python tools/calibrar.py SAVE PAIS [--cfg regens.cfg] [--temporadas 20] [--humano "Nome do clube"]
+Ex.: python tools/calibrar.py TesteTelas.sav Inglaterra --humano Fulham
 
 Simplificações (ponytail: bastam para comparar as duas regras; o jogo real é a prova):
 - os jovens são só os da disputa (menos de 19 anos); o PA vem dos jogadores de 31 anos ou mais do país (os próximos a se
@@ -14,19 +14,14 @@ Simplificações (ponytail: bastam para comparar as duas regras; o jogo real é 
 - o bônus de +250/+500 do humano pelo estado do clube (ainda não decifrado) fica de fora."""
 import argparse, collections, math, os, random, struct, sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'engenharia-reversa'))
-import prova_save as ps
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import sav
 
 
 # ---------- o save ----------
 
 def ler_save(caminho):
-    d = open(caminho, 'rb').read()
-    t, _, it = ps.indice(d)
-    f = {}
-    for n, p, tam in it:
-        if n in ('club.dat', 'nation.dat', 'staff.dat', 'player.dat', 'nonplayer.dat') and n not in f:
-            f[n] = ps.conteudo(d, t, p, tam)
+    f = sav.itens(caminho, ('club.dat', 'nation.dat', 'staff.dat', 'player.dat', 'nonplayer.dat'))
     i32 = lambda b, o: struct.unpack_from('<i', b, o)[0]
     nacoes = {i32(f['nation.dat'], k * 290): f['nation.dat'][k * 290 + 4:k * 290 + 55].split(b'\0')[0].decode('latin1')
               for k in range(len(f['nation.dat']) // 290)}
@@ -52,7 +47,7 @@ def ler_save(caminho):
     return nacoes, fichas, pessoas, clubes
 
 
-# ---------- a regra original (0x7ad220, transcrita de rust/src/motor.rs) ----------
+# ---------- a regra original (0x7ad220, transcrita da reescrita em Rust do projeto CM0102) ----------
 
 def chance_de_conhecer(ca, jp):  # 0x544410
     x = (ca + 2 * jp) * 0.05 + 10
@@ -123,7 +118,7 @@ def ler_cfg(caminho):
 
 
 def peso_novo(j, c, cfg, recebidos):
-    """O peso do clube: nível × instalações × comissão × elenco, à potência da temperatura (o mesmo que regens/src/lib.rs)."""
+    """O peso do clube: nível × instalações × comissão × elenco, à potência da temperatura (o mesmo que src/lib.rs)."""
     if c['elenco'] >= cfg['squad_limit'] or recebidos >= cfg['season_cap'] > 0:
         return 0.0
     alvo = cfg['target_k'] * ((1 - cfg['target_ca']) * j['pa'] + cfg['target_ca'] * j['ca'])
@@ -176,7 +171,7 @@ def temporada(regra, clubes, pas, n, cfg):
 def main():
     a = argparse.ArgumentParser()
     a.add_argument('save'); a.add_argument('pais')
-    a.add_argument('--cfg', default=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'regens.cfg'))
+    a.add_argument('--cfg', default=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'regens.cfg'))
     a.add_argument('--temporadas', type=int, default=20); a.add_argument('--jovens', type=int)
     a.add_argument('--humano', default=''); a.add_argument('--semente', type=int, default=1)
     o = a.parse_args()

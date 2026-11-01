@@ -4,15 +4,17 @@
 
 A regens-only `ddraw.dll`, built like the save2gb one (`save/`). It replaces the clubs' contest for a youth regen (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) with a proportional draw configured in `regens.cfg`. The rest of the game, including how the youngster is created, stays the same. The original rule is in [docs/DISTRIBUICAO_DOS_REGENS.en.md](../docs/DISTRIBUICAO_DOS_REGENS.en.md).
 
+The same DLL carries the save2gb **saves above 2 GB** fix (`save_over_2gb = 1` in the `.cfg`, on by default): the three container routines (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) go to the ones in `rust/src/conteiner.rs`, with the same signature as `save/`. So save2gb users swap one DLL for the other, with no need to chain two `ddraw.dll` files. Each part checks its own signature and turns on by itself. In the separate repository's copy, `conteiner.rs` goes in `src/` and the `#[path]` is removed, as in save2gb.
+
 **Status: prototype for discussion.** It builds and checks the signature, but it hasn't run in the game yet. The curve in `regens.cfg` is a starting point, not a final proposal.
 
 ## Files
 
 | File | What |
 |---|---|
-| `src/lib.rs` | The DLL: forwards `DirectDrawCreate` (to `ddraw_chain.dll` or the Windows one), reads `regens.cfg`, checks the signature and redirects 0x7ad0e0 |
+| `src/lib.rs` | The DLL: forwards `DirectDrawCreate` (to `ddraw_chain.dll` or the Windows one), reads `regens.cfg`, checks the signatures and redirects the save container and 0x7ad0e0 |
 | `regens.cfg` | The rules; goes next to the exe. `rule = original` turns everything off |
-| `calibrar.py` | Out-of-game simulator: a country's real clubs, read from a save, contest several seasons of youngsters under the original rule and the new one |
+| `tools/calibrar.py` | Out-of-game simulator: a country's real clubs, read from a save, contest several seasons of youngsters under the original rule and the new one |
 
 Build: `cd regens && cargo build --release` (output in `target/i686-pc-windows-msvc/release/ddraw.dll`).
 
@@ -73,7 +75,7 @@ Two attempts dropped [observed in the simulator]:
 - **5% level floor and squad limit 45:** the big clubs dropped to zero (they were above 45) and about 30 of the 52 youngsters went to the 499 amateur clubs. With hundreds of small clubs, a small floor added up becomes the biggest slice of the draw.
 - **Temperature 2:** concentrates more on clubs of the right size; the 7000+ clubs get twice the PA ≥ 140 youngsters.
 
-Run: `python regens/calibrar.py jogo/TesteTelas.sav Inglaterra --humano Fulham --temporadas 200 [--cfg other.cfg]`.
+Run: `python regens/tools/calibrar.py jogo/TesteTelas.sav Inglaterra --humano Fulham --temporadas 200 [--cfg other.cfg]`.
 
 ## To discuss
 
@@ -91,5 +93,5 @@ Run: `python regens/calibrar.py jogo/TesteTelas.sav Inglaterra --humano Fulham -
 ## Next steps
 
 - Settle the curve in the discussion.
-- In-game proof: an automatic holiday career on the test bench, with the original exe and this DLL, comparing the distribution by band (`regens/regens_por_clube.py`) with the original.
+- In-game proof: an automatic holiday career on the test bench, with the original exe and this DLL, comparing the distribution by band (`regens/tools/regens_por_clube.py`) with the original.
 - Test with NickPatcher and CLZ.

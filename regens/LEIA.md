@@ -4,15 +4,17 @@
 
 Uma `ddraw.dll` só dos regens, no molde da do save2gb (`save/`). Ela troca a disputa dos clubes pelo jovem regen (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) por um sorteio proporcional configurável em `regens.cfg`. O resto do jogo, inclusive a criação do jovem, segue igual. A regra original está em [docs/DISTRIBUICAO_DOS_REGENS.md](../docs/DISTRIBUICAO_DOS_REGENS.md).
 
+A mesma DLL traz o **save acima de 2 GB** do save2gb (`save_over_2gb = 1` no `.cfg`, ligado por padrão): as três rotinas do contêiner (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) vão para as de `rust/src/conteiner.rs`, com a mesma assinatura da `save/`. Assim quem usa o save2gb troca uma DLL pela outra, sem precisar encadear duas `ddraw.dll`. Cada parte confere a sua assinatura e liga sozinha. Na cópia do repositório separado, o `conteiner.rs` vai em `src/` e o `#[path]` sai, como no save2gb.
+
 **Estado: protótipo para discussão.** Compila e confere a assinatura, mas ainda não rodou no jogo. A curva do `regens.cfg` é um ponto de partida, não uma proposta fechada.
 
 ## Arquivos
 
 | Arquivo | O quê |
 |---|---|
-| `src/lib.rs` | A DLL: repassa o `DirectDrawCreate` (a `ddraw_chain.dll` ou a do Windows), lê `regens.cfg`, confere a assinatura e desvia a 0x7ad0e0 |
+| `src/lib.rs` | A DLL: repassa o `DirectDrawCreate` (a `ddraw_chain.dll` ou a do Windows), lê `regens.cfg`, confere as assinaturas e desvia o contêiner do save e a 0x7ad0e0 |
 | `regens.cfg` | As regras; vai ao lado do exe. `rule = original` desliga tudo |
-| `calibrar.py` | Simulador fora do jogo: os clubes reais de um país, lidos de um save, disputam várias temporadas de jovens pela regra original e pela nova |
+| `tools/calibrar.py` | Simulador fora do jogo: os clubes reais de um país, lidos de um save, disputam várias temporadas de jovens pela regra original e pela nova |
 
 Compilar: `cd regens && cargo build --release` (sai em `target/i686-pc-windows-msvc/release/ddraw.dll`).
 
@@ -73,7 +75,7 @@ Duas tentativas descartadas [observado no simulador]:
 - **Piso de nível de 5% e teto de elenco de 45:** os grandes zeraram (estavam acima de 45) e uns 30 dos 52 jovens foram para os 499 clubes amadores. Com centenas de clubes pequenos, um piso pequeno somado vira a maior fatia do sorteio.
 - **Temperatura 2:** concentra mais nos clubes do tamanho certo; os de 7000+ ficam com o dobro dos PA ≥ 140.
 
-Rodar: `python regens/calibrar.py jogo/TesteTelas.sav Inglaterra --humano Fulham --temporadas 200 [--cfg outro.cfg]`.
+Rodar: `python regens/tools/calibrar.py jogo/TesteTelas.sav Inglaterra --humano Fulham --temporadas 200 [--cfg outro.cfg]`.
 
 ## Para discutir
 
@@ -91,5 +93,5 @@ Rodar: `python regens/calibrar.py jogo/TesteTelas.sav Inglaterra --humano Fulham
 ## Próximos passos
 
 - Fechar a curva na discussão.
-- Prova no jogo: carreira automática de férias na bancada, com o exe original e esta DLL, comparando a distribuição por faixa (`regens/regens_por_clube.py`) com a original.
+- Prova no jogo: carreira automática de férias na bancada, com o exe original e esta DLL, comparando a distribuição por faixa (`regens/tools/regens_por_clube.py`) com a original.
 - Teste com o NickPatcher e o CLZ.
