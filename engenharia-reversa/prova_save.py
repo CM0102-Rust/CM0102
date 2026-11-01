@@ -70,7 +70,11 @@ CABECALHO = 12 + 1000 * 0x10c  # 0x416ec: tipo, id, quantidade e as 1000 entrada
 # No modo simulacao o time() e fixo e os dois deveriam sair iguais; ficam fora mesmo assim porque
 # nao sao estado do jogo e, fora do modo simulacao, mudam sempre. Diferenca neles e so informada.
 # O "id unico" (+0xf78, [0xdd7120]) e a semente do -seed (0x81b9aa): fica na comparacao.
-IGNORAR = {'general.dat': [(4 + 0xf6c, 4, 'tempo de jogo no resumo'), (4 + 0xf70, 4, 'time() da gravacao no resumo')]}
+IGNORAR = {'general.dat': [(4 + 0xf6c, 4, 'tempo de jogo no resumo'), (4 + 0xf70, 4, 'time() da gravacao no resumo')],
+           # desde 31/10/2026 (sem a zeragem da 0x5fb810 reset_human_record): o rascunho de contrato de cada um dos 16
+           # humanos (registros de 0x4a80 a partir de +0x3dc0) leva as datas sem valor do STAFF_CONTRACT temporario
+           'human_manager.dat': [(0x3dc0 + k * 0x4a80 + o, n, 'datas sem valor do rascunho de contrato do humano %d' % k)
+                                 for k in range(16) for o, n in ((0, 12), (0x24, 2))]}
 
 
 def indice(dados):
@@ -143,6 +147,24 @@ def variaveis(a, b):
     return v
 
 
+def cauda_do_nome(d, i):
+    """No index.dat (8 bytes de cabeçalho, entradas de 67: nome de 51 terminado em zero, FORMATOS.md): o byte i está
+    depois do zero que termina o nome da entrada. Desde 31/10/2026 (sem a zeragem da save_database 0x52dad0) esses
+    bytes são as locais sem valor que ela grava, e variam com o lixo de pilha: não são estado do jogo."""
+    import re
+    if i < 8:
+        return False
+    e, p = divmod(i - 8, 67)
+    # da primeira entrada sem nome de arquivo em diante (as vagas além das 22 tabelas) tudo é sobra
+    for k in range(e + 1):
+        n = d[8 + 67 * k:8 + 67 * k + 51].split(b'\0')[0]
+        if not re.fullmatch(rb'[\w ]+\.\w+', n):
+            return True
+    nome = d[8 + 67 * e:8 + 67 * e + 51]
+    z = nome.find(b'\0')
+    return p < 51 and z >= 0 and p > z
+
+
 def comparar(a, b, extra=None):
     """(igual, [linhas]) entre dois arquivos de conteiner; `extra` = {item: bytes a ignorar} (ver variaveis)."""
     extra = extra or {}
@@ -169,6 +191,8 @@ def comparar(a, b, extra=None):
         for i in range(min(sa, sb)):
             if ca[i] != cb[i]:
                 campo = next((m for m in mascara if m[0] <= i < m[0] + m[1]), None)
+                if campo is None and nome == 'index.dat' and cauda_do_nome(ca, i) and cauda_do_nome(cb, i):
+                    campo = (i, 1, 'cauda do nome da entrada (locais sem valor da save_database 0x52dad0)')
                 if campo is None and i in extra.get(nome, ()):
                     campo = (i, 1, 'varia entre gravacoes da base')
                 if campo is None:
