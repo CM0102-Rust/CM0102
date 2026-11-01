@@ -82,7 +82,7 @@
 - staff +0x24: the national side that called him up; pointer; reads (selecao_que_tem_o_jogador, jogador_serve_a_selecao)
 - staff +0x5e bit 4: the side in national fixtures and whether call-ups count; value; reads (selecao_que_tem_o_jogador)
 - staff +0x39: the club; pointer; reads (selecao_que_tem_o_jogador)
-- staff +0x1a / +0x1e / +0x22 / +0x18 / +0x61: nationalities, the single-nationality flag, the age and the player record; pointer and value; reads (jogador_serve_a_selecao)
+- staff +0x1a / +0x1e / +0x22 / +0x18 / +0x61: nationalities, the international caps (with caps, only the first nationality counts), the age and the player record; pointer and value; reads (jogador_serve_a_selecao)
 - [0xae2d0c] person's 79-byte record +0xc bit 2: first nationality only; value; reads (jogador_serve_a_selecao)
 - club +0x57: the league; pointer; reads (selecao_que_tem_o_jogador); club +0xd7: the 50 all-star squad names; pointer; reads
 - NationalTeams +0: the duty list (+0 the national side, +4 the opponent/competition, +8 the date); pointer; reads (selecao_que_tem_o_jogador, juntar_competicoes_das_convocacoes)
