@@ -4,7 +4,7 @@ esta prova e o banco de provas dele.
 
 Uso:
   python prova_save.py [--so-gravar] [--tipo 4|3] [--semente 12345] [--pasta DIR]
-                       [--sav SAVE.sav] [--ate 2001-08-28] [--exe cm0102-1080.exe] [--limite 900]
+                       [--sav SAVE.sav] [--ate 2001-08-28] [--exe cm0102-1080.exe] [--limite 1800]
   python prova_save.py --comparar A B          (so o passo 2, sem abrir o jogo)
   python prova_save.py --leva N                (a prova de uma leva do save, ver abaixo)
 
@@ -165,6 +165,22 @@ def cauda_do_nome(d, i):
     return p < 51 and z >= 0 and p > z
 
 
+def sobra_do_amistoso(da, db, i):
+    """No fixtures_<ano>.tmp (u32 quantos e registros de partida de 0x4f, MAPA_SAVE §7): o byte i é sobra de pilha de
+    um amistoso (+0x30 = 0, categoria +0x3a 1 ou 9). Friendly::process_friendly_reply (0x5c5f40) monta a partida num
+    local de 0x4f (esp+0x14) e a manda ao calendário (0x5aa680) sem gravar +0x24..+0x27 e, na palavra +0x4d, só limpa
+    os bits 8..10 (and 0xf8ff, 0x5c61a6) e põe 0x99 no byte baixo: os bits 0xf8 do +0x4e ficam com o que havia na pilha.
+    Desde 31/10/2026 (sem zeragens) variam entre duas gravações da mesma base (bases de 31/10: +0x4e 0xf8/0x00/0x08,
+    +0x24 0x5d4e19f3/0x5e511863). A cópia em Rust (cqa_2, 263a) grava zero neles; a máscara vale para a original."""
+    if i < 4:
+        return False
+    r, o = divmod(i - 4, 0x4f)
+    x, y = da[4 + r * 0x4f:4 + r * 0x4f + 0x4f], db[4 + r * 0x4f:4 + r * 0x4f + 0x4f]
+    if len(x) < 0x4f or len(y) < 0x4f or not all(z[0x30:0x32] == b'\0\0' and z[0x3a] in (1, 9) for z in (x, y)):
+        return False
+    return 0x24 <= o < 0x28 or (o == 0x4e and not (x[o] ^ y[o]) & 0x07)
+
+
 def comparar(a, b, extra=None):
     """(igual, [linhas]) entre dois arquivos de conteiner; `extra` = {item: bytes a ignorar} (ver variaveis)."""
     extra = extra or {}
@@ -193,6 +209,8 @@ def comparar(a, b, extra=None):
                 campo = next((m for m in mascara if m[0] <= i < m[0] + m[1]), None)
                 if campo is None and nome == 'index.dat' and cauda_do_nome(ca, i) and cauda_do_nome(cb, i):
                     campo = (i, 1, 'cauda do nome da entrada (locais sem valor da save_database 0x52dad0)')
+                if campo is None and nome.startswith('fixtures_') and sobra_do_amistoso(ca, cb, i):
+                    campo = (i, 1, 'sobra de pilha do amistoso (+0x24 e bits 0xf8 do +0x4e, 0x5c5f40)')
                 if campo is None and i in extra.get(nome, ()):
                     campo = (i, 1, 'varia entre gravacoes da base')
                 if campo is None:
@@ -418,7 +436,7 @@ def parser():
     ap.add_argument('--ate', default='2001-08-28', help='data de parada da carga AAAA-MM-DD (2001-08-28: original e rust '
                     'dao a mesma impressao com o FeriasTesteSave)')
     ap.add_argument('--exe', default='cm0102-1080.exe')
-    ap.add_argument('--limite', type=int, default=900, help='segundos maximos por execucao')
+    ap.add_argument('--limite', type=int, default=1800, help='segundos maximos por execucao (1800 desde 01/11/2026: com bancadas em paralelo a carga passa de 900)')
     ap.add_argument('--comparar', nargs=2, metavar=('A', 'B'), help='so compara dois arquivos de conteiner')
     ap.add_argument('--variaveis', nargs=2, metavar=('BASE1', 'BASE2'),
                     help='com --comparar: ignora os bytes que diferem entre duas gravacoes da base')
