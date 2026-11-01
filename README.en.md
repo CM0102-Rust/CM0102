@@ -10,6 +10,7 @@ This repository keeps it playable on Windows 11 and prepares the rewrite of the 
 | `JOGAR.bat` | Opens the game at native 1920×1080, in a resizable window, without the CD and without changing the Windows resolution. | yes |
 | `rust/` | Rust core, compiled as `ddraw.dll` (our own video layer; entry point for the hooks). | yes |
 | `save/` | Save-only DLL (saves above 2 GB, up to 4 GB), for modified exes (NickPatcher, CLZ): [`docs/SAVE_2GB.en.md`](docs/SAVE_2GB.en.md). | yes |
+| `regens/` | One-off regens DLL (prototype; separate from the working `ddraw.dll`): a different rule for how youngsters are distributed and their ages, configured in `regens.cfg`, with the saves above 2 GB fix included (everything off without the `.cfg`): [`regens/LEIA.en.md`](regens/LEIA.en.md); the original rule in [`docs/DISTRIBUICAO_DOS_REGENS.en.md`](docs/DISTRIBUICAO_DOS_REGENS.en.md). | yes |
 | `jogo/` | Playable installation: the originals `cm0102.exe` / `cm0102_GDI.exe` and the patched copies `*-portatil.exe`. | no |
 | `original/` | Untouched downloads (ISO, zips, 3.9.68 patch) and a backup of the two 3.9.68 exes. | no |
 | `referencias/` | Third-party projects consulted (e.g. nckstwrt's `CM0102Patcher`). | no |

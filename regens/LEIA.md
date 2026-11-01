@@ -1,0 +1,121 @@
+# regens: outra regra para a distribuição dos regens (protótipo)
+
+*English version: [LEIA.en.md](LEIA.en.md)*
+
+Uma `ddraw.dll` **pontual**, para a comunidade, no molde da do save2gb (`save/`). Não é a `ddraw.dll` de trabalho do projeto (`rust/`): roda com o exe original ou com os do NickPatcher, sem o resto da reescrita. A regra original está em [docs/DISTRIBUICAO_DOS_REGENS.md](../docs/DISTRIBUICAO_DOS_REGENS.md).
+
+Ela tem três partes, cada uma com a sua chave no `regens.cfg` e a sua assinatura. **Todas começam desligadas:** sem o `.cfg`, ou sem a linha, a DLL não muda nada no jogo.
+
+| Chave | O que faz |
+|---|---|
+| `save_over_2gb = 1` | O **save acima de 2 GB** do save2gb: as três rotinas do contêiner (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) vão para as de `rust/src/conteiner.rs`, com a mesma assinatura da `save/` |
+| `ages = custom` | As **idades dos regens** por uma tabela (§ As idades) |
+| `rule = new` | A **disputa dos clubes** pelo jovem (`PLAYER_REGEN::pick_best_club_for_player`, 0x7ad0e0) vira um sorteio proporcional (§ A regra nova) |
+
+**O save dentro desta DLL é uma escolha consciente** (do Lucas, 01/11/2026): duas `ddraw.dll` não ficam na mesma pasta sem encadear uma na outra, então quem quiser os regens e o save usa uma DLL só. O save2gb público (`CM0102-Rust/cm0102-save2gb`) continua como está: o fonte dele só muda nas releases.
+
+**Compila sozinha só aqui dentro:** o `src/lib.rs` inclui `rust/src/conteiner.rs` por `#[path]`. A cópia do repositório separado (`CM0102-Rust/cm0102-regens`, por `tools/espelhar.py`) leva o `conteiner.rs` para `src/` e tira o `#[path]`, como no save2gb.
+
+**Estado: protótipo para discussão.** Compila e confere as assinaturas, mas ainda não rodou no jogo. A curva do `regens.cfg` é um ponto de partida, não uma proposta fechada.
+
+## Arquivos
+
+| Arquivo | O quê |
+|---|---|
+| `src/lib.rs` | A DLL: repassa o `DirectDrawCreate` (a `ddraw_chain.dll` ou a do Windows), lê `regens.cfg`, confere as assinaturas e liga cada parte |
+| `regens.cfg` | As regras, em inglês e comentadas (é o arquivo da comunidade); vai ao lado do exe |
+| `tools/calibrar.py` | Simulador fora do jogo: os clubes reais de um país, lidos de um save, disputam várias temporadas de jovens pela regra original e pela nova (com a tabela de idades do `.cfg`) |
+| `tools/simula_nota.py` | O exemplo de clubes inventados do documento (§7) |
+| `tools/regens_por_clube.py` | Os regens por clube num save, por faixa de reputação e de Training |
+| `tools/sav.py` | Leitura dos itens de um `.sav` |
+| `tools/espelhar.py` | A cópia para o repositório separado (sem commit nem push) |
+
+Compilar: `cd regens && cargo build --release` (sai em `target/i686-pc-windows-msvc/release/ddraw.dll`).
+
+Assinaturas (FNV-1a dos trechos de que cada parte depende) [observado]:
+- **batem** no `cm0102.exe`, no `cm0102-1080.exe`, no portátil e nos três exes do CLZ;
+- **não batem** no `cm0102_GDI.exe`, que tem outro leiaute.
+
+Na dos regens, o corpo da 0x7ad0e0 fica fora, então o exe com o Regen Tweak (0x7ad1bd) também serve.
+
+## As idades
+
+A idade do jovem é sorteada num bloco da `regenerate_as_youth_player` (0x7ac597..0x7ac6f6), que também limita o CA pela idade. Com `ages = custom`, a DLL troca esse bloco por um pequeno trecho de máquina que chama `sortear_idade`: a idade sai da tabela `age_NN = chance, teto do CA` do `.cfg` (14 a 35 anos), e o teto do CA dessa idade é aplicado, menos em `ca_cap_skip`% das vezes. A idade segue para o resto da rotina como na original (o ano de nascimento, os ajustes de atributos pela idade). E `contest_max_age` (padrão 18) troca o corte "menos de 19 anos entra na disputa" (o byte de 0x7ace69).
+
+- A tabela padrão do `.cfg` é a distribuição original: 16 a 20 anos quase sempre (17 e 18 com 29% cada), 15 e 21 a 26 raríssimos.
+- Diferença assumida: o teto do CA vira um valor por idade. Na original, o de 17 e o de 18 dependem da faixa sorteada (80 ou 90, 100 ou 110).
+- Só o ramo das nações no jogo (ou de reputação ≥ 350) usa a tabela. As nações fora do jogo de reputação < 350 seguem com a idade original (17 a 27), porque ali a idade decide também a fórmula do CA.
+
+## A regra nova
+
+Os clubes elegíveis são os mesmos da original:
+- o jovem não é estrangeiro no clube;
+- não é time B;
+- não é vetado pela regra basca;
+- o clube pode chegar ao jogador;
+- elenco abaixo do teto.
+
+Cada clube recebe um **peso**, e o clube é sorteado **na proporção do peso**, pelo gerador do próprio jogo. Peso nenhum: o jovem fica sem clube, como na original.
+
+**A sequência aleatória muda:** a regra nova gasta 2 sorteios do gerador por jovem; a original gasta 1 por clube elegível (e às vezes mais, nos bônus da nota). A tabela de idades também gasta outros sorteios. Para um mod é o esperado, mas uma carreira com a mesma semente (`-seed`) não sai igual à do jogo sem a DLL.
+
+    peso = (nível × instalações × comissão × vaga) ^ temperatura
+
+| Fator | Conta | Ajustes |
+|---|---|---|
+| Nível | curva em sino da reputação do clube em torno do alvo = target_k × PA (ou a mistura com o CA) | `target_k`, `target_ca`, `sigma`, `level_floor` |
+| Instalações | facilities_base + facilities_k × Training | `facilities_base`, `facilities_k` |
+| Comissão | de staff_min a staff_max pelo melhor "Working with Youngsters" entre o técnico e os 5 treinadores. Vale para a IA e para o humano igual | `staff_min`, `staff_max` |
+| Vaga | ((squad_limit − elenco) / squad_limit) ^ squad_exp; com o elenco no teto, peso 0 | `squad_limit`, `squad_exp` |
+| Teto por clube | peso 0 se o clube já recebeu `season_cap` regens nos últimos 365 dias (contados no próprio save: o bit do regen e a data de entrada no clube; sem dado novo no save) | `season_cap` |
+| Temperatura | expoente: 1 proporcional, maior mais previsível, menor mais aleatório | `temperature` |
+
+Com `log = 1`, cada escolha vai para `regens.log`: PA, clube, reputação, Training, chance e quantos disputaram.
+
+## A calibração (Inglaterra, `TesteTelas.sav`, 200 temporadas simuladas)
+
+Parâmetros:
+- 687 clubes;
+- 52 jovens por temporada na disputa (no `Valencia.sav`, a Inglaterra teve ~88 regens por temporada, e ~56% entram na disputa);
+- PA sorteado entre os jogadores ingleses de 31 anos ou mais;
+- o elenco volta ao do save a cada temporada [simplificação].
+
+| Reputação | Clubes | Original: jovens por clube por temporada | Nova (padrão) | Original: PA ≥ 140 | Nova: PA ≥ 140 |
+|---|---|---|---|---|---|
+| 0–999 | 499 | 0,00 | 0,03 | 0,000 | 0,000 |
+| 1000–1999 | 83 | 0,09 | 0,05 | 0,000 | 0,000 |
+| 2000–2999 | 24 | 0,40 | 0,14 | 0,000 | 0,001 |
+| 3000–3999 | 21 | 0,28 | 0,28 | 0,002 | 0,004 |
+| 4000–4999 | 27 | 0,22 | 0,42 | 0,020 | 0,019 |
+| 5000–5999 | 13 | 0,27 | 0,40 | 0,038 | 0,039 |
+| 6000–6999 | 13 | 0,54 | 0,37 | 0,083 | 0,068 |
+| 7000–7999 | 3 | 1,26 | 0,31 | 0,110 | 0,140 |
+| 8000–8999 | 2 | 1,45 | 0,21 | 0,083 | 0,102 |
+| 9000+ | 2 | 1,96 | 0,09 | 0,138 | 0,062 |
+
+Na original, Liverpool, Arsenal e Manchester United recebem ~2 por temporada cada, a maioria jovens comuns. Na nova, os grandes recebem menos jovens no total, mas a parte deles nos de PA ≥ 140 é parecida (menos no 9000+, porque esses estão com 47 a 48 no elenco). Os clubes médios, de 4000 a 6999, passam a receber mais.
+
+Duas tentativas descartadas [observado no simulador]:
+- **Piso de nível de 5% e teto de elenco de 45:** os grandes zeraram (estavam acima de 45) e uns 30 dos 52 jovens foram para os 499 clubes amadores. Com centenas de clubes pequenos, um piso pequeno somado vira a maior fatia do sorteio.
+- **Temperatura 2:** concentra mais nos clubes do tamanho certo; os de 7000+ ficam com o dobro dos PA ≥ 140.
+
+Rodar: `python regens/tools/calibrar.py jogo/TesteTelas.sav Inglaterra --humano Fulham --temporadas 200 [--cfg outro.cfg]`.
+
+## Para discutir
+
+1. **O alvo.** Onde o jovem "deveria" ir: pelo nível que vai ter (PA, o padrão) ou pelo que tem hoje (CA, `target_ca`)? O alvo de 50 × PA põe um jovem de PA 180 num clube de 9000.
+2. **A largura (`sigma`).** Com 1500, um clube a 3000 do alvo fica com ~14% do peso máximo. Mais estreita: menos surpresa.
+3. **Os grandes e os craques.** Quanto dos jovens de PA alto os grandes devem levar? Hoje a nova regra mantém a parte deles parecida com a original.
+4. **O peso das instalações.** Hoje Training 20 vale 2,7 vezes o Training 1 (1,5 contra 0,55). Mais forte?
+5. **A comissão.** Hoje vai de 0,8 a 1,2. O humano entra igual à IA, pelos treinadores. Mais forte?
+6. **O teto por clube** (3 por 365 dias) e o teto de elenco (50).
+7. **A aleatoriedade (`temperature`).**
+8. **Fora do protótipo:**
+   - os ~44% de jovens que nascem sem clube poderiam passar pelo mesmo sorteio com peso menor (um ajuste depois da fila diária, 0x7a65d0);
+   - o PA do jovem poderia variar alguns pontos pelo Training do clube que o recebe (ao assinar, 0x7a6f10).
+
+## Próximos passos
+
+- Fechar a curva na discussão.
+- Prova no jogo: carreira automática de férias na bancada, com o exe original e esta DLL, comparando a distribuição por faixa (`regens/tools/regens_por_clube.py`) com a original.
+- Teste com o NickPatcher e o CLZ.
