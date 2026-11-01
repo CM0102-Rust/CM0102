@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologo` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 1399 de 6709 funções, 1109.8 de 5528.0 KB (**20.08%**) · 61 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 1438 de 6709 funções, 1126.5 de 5528.0 KB (**20.38%**) · 65 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -18,41 +18,45 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `index.cpp` | 9/11 | 162.8/163.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **99.8%** |
 | `Database.cpp` | 167/181 | 92.4/148.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.2%** |
 | `weather.cpp` | 8/16 | 4.2/7.3 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **57.0%** |
-| `league.cpp` | 41/61 | 16.3/35.8 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **45.6%** |
+| `league.cpp` | 42/61 | 18.2/35.8 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **51.0%** |
 | `formation.cpp` | 23/45 | 11.9/26.5 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **44.8%** |
 | `staff_records.cpp` | 20/37 | 12.7/31.8 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **40.0%** |
 | `month_ratings.cpp` | 3/8 | 0.7/1.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.7%** |
+| `tactics.cpp` | 24/29 | 8.5/23.1 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **36.5%** |
 | `injury.cpp` | 29/47 | 10.7/30.5 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **35.1%** |
 | `Area.cpp` | 3/15 | 2.0/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.7%** |
 | `player_regen.cpp` | 33/51 | 14.3/44.7 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **32.1%** |
-| `tactics.cpp` | 21/29 | 7.3/23.1 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **31.5%** |
 | `training_manager.cpp` | 11/34 | 5.0/16.3 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **30.6%** |
+| `fix_man.cpp` | 16/37 | 6.7/22.4 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **30.0%** |
 | `player_stats.cpp` | 20/34 | 8.2/28.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **28.5%** |
 | `transfer_manager.cpp` | 106/199 | 46.5/167.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.8%** |
+| `national_teams.cpp` | 48/69 | 15.5/58.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.5%** |
+| `awol.cpp` | 6/19 | 3.1/11.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.4%** |
 | `officials_manager.cpp` | 7/34 | 3.1/12.0 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.0%** |
 | `friendly.cpp` | 33/67 | 10.8/41.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **25.9%** |
 | `human_manager.cpp` | 20/61 | 6.2/25.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.4%** |
-| `national_teams.cpp` | 45/69 | 14.2/58.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.3%** |
 | `Cup.cpp` | 21/47 | 10.0/41.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.0%** |
 | `Setup.cpp` | 10/107 | 28.1/120.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.3%** |
 | `stadium.cpp` | 7/17 | 2.4/11.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.5%** |
-| `awol.cpp` | 5/19 | 2.5/11.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.4%** |
-| `fix_man.cpp` | 13/37 | 4.7/22.4 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.0%** |
 | `shortlist_manager.cpp` | 31/54 | 14.4/71.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.1%** |
 | `news.cpp` | 26/33 | 9.8/49.0 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.0%** |
 | `contract_manager.cpp` | 45/121 | 17.4/87.1 | 🟩🟩⬜⬜⬜⬜⬜⬜⬜⬜ **20.0%** |
+| `fin_prm.cpp` | 20/66 | 8.5/45.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **18.9%** |
 | `fifa_rankings.cpp` | 8/20 | 1.8/9.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **18.6%** |
+| `european_cup.cpp` | 10/50 | 5.1/29.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.5%** |
 | `ruling_body.cpp` | 3/19 | 1.1/6.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.1%** |
 | `key_nation.cpp` | 9/27 | 2.2/12.9 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **16.8%** |
 | `manager_manager.cpp` | 35/98 | 20.8/129.4 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **16.0%** |
-| `fin_prm.cpp` | 11/66 | 6.9/45.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.2%** |
+| `eng_second.cpp` | 3/10 | 1.0/6.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.6%** |
+| `eng_first.cpp` | 3/10 | 0.9/7.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.3%** |
 | `scout_manager.cpp` | 10/39 | 2.8/23.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.2%** |
 | `month_award.cpp` | 2/10 | 0.4/3.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.1%** |
+| `eng_third.cpp` | 2/11 | 0.8/6.4 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.9%** |
+| `media.cpp` | 29/69 | 24.0/202.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.9%** |
 | `discipline.cpp` | 18/38 | 4.5/38.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.8%** |
 | `club_records.cpp` | 35/56 | 7.2/61.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.7%** |
-| `media.cpp` | 28/69 | 23.5/202.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.6%** |
 | `staff_contracts.cpp` | 17/45 | 4.6/39.9 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.6%** |
-| `european_cup.cpp` | 7/50 | 3.0/29.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **10.4%** |
+| `record_utils.cpp` | 6/32 | 1.4/12.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.6%** |
 | `comp.cpp` | 6/46 | 1.2/11.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **9.9%** |
 | `award_manager.cpp` | 1/22 | 0.6/7.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.9%** |
 | `game.cpp` | 14/34 | 3.7/43.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.5%** |
@@ -60,12 +64,12 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `utils.cpp` | 1/23 | 0.5/5.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.0%** |
 | `comp_util.cpp` | 21/38 | 5.1/68.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **7.4%** |
 | `file_screens.cpp` | 1/10 | 0.7/11.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.2%** |
+| `Fine.cpp` | 2/19 | 0.9/15.9 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.7%** |
+| `printouts.cpp` | 3/20 | 1.4/27.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.0%** |
 | `fog_of_war.cpp` | 4/34 | 0.6/12.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.9%** |
-| `record_utils.cpp` | 3/32 | 0.5/12.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.2%** |
 | `player_search.cpp` | 10/61 | 2.8/70.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.9%** |
-| `printouts.cpp` | 1/20 | 0.4/27.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **1.5%** |
 | `scrman.cpp` | 1/69 | 0.2/29.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.6%** |
 | `comp_screens.cpp` | 1/106 | 0.2/124.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
 | `library_without_asserts` | 1/243 | 0.3/205.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
 
-Os outros 332 arquivos ainda não têm rotina em Rust.
+Os outros 328 arquivos ainda não têm rotina em Rust.
