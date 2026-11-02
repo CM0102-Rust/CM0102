@@ -53,6 +53,6 @@ CAMPOS = [('vaga da lista de observação (0x25 bytes, 40 por clube em [this+0xd
            '9-byte club record at [this+0xdc] +0 slots, +4 active, +8 days; pointer and value; reads (lances_do_clube)'),
           ('clube +0x53 nação, +0x57 liga, +0x64, +0x80 reputação, +0xd3 técnico, +0x19f/+0x1b3/+0x1cf as listas da comissão; valor e ponteiro; lê (lances_do_clube)',
            'club +0x53 nation, +0x57 league, +0x64, +0x80 reputation, +0xd3 manager, +0x19f/+0x1b3/+0x1cf the staff lists; value and pointer; reads (lances_do_clube)'),
-          ('pessoa +0x24/+0x28 empréstimo de saída, +0x39 clube, +0x61 ficha (+0x45); registro de 79 bytes +0xb (bits 0x30 e 4 baixos); lesão +0x2c dias; contrato +0x4e bit 2, +0x4f estatuto; [0xae1080]; lê, grava [0xae1080] (lances_do_clube)',
-           'person +0x24/+0x28 outgoing loan, +0x39 club, +0x61 record (+0x45); 79-byte record +0xb (bits 0x30 and low 4); injury +0x2c days; contract +0x4e bit 2, +0x4f status; [0xae1080]; reads, writes [0xae1080] (lances_do_clube)')]
+          ('pessoa +0x24/+0x28 empréstimo de saída, +0x39 clube, +0x61 ficha (+0x45 moral do jogador); registro de 79 bytes +0xb (bits 0x30 e 4 baixos); lesão +0x2c dias; contrato +0x4e bit 2, +0x4f estatuto; [0xae1080]; lê, grava [0xae1080] (lances_do_clube)',
+           'person +0x24/+0x28 outgoing loan, +0x39 club, +0x61 record (+0x45 player morale); 79-byte record +0xb (bits 0x30 and low 4); injury +0x2c days; contract +0x4e bit 2, +0x4f status; [0xae1080]; reads, writes [0xae1080] (lances_do_clube)')]
 INTERESSA = ['CMRTE', 'GPF2']

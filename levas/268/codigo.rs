@@ -824,7 +824,7 @@ unsafe fn cqe3_registro_0b(pessoa: usize) -> u8 {
 ///   menos 20000); com a liga (+0x57) ativa em [0xadadfc], × 3 ou × 2 pela reputação (+0x80 acima de 0x128e) e a conta
 ///   abaixo de 25/35, ou × 2 abaixo de 25. Vaga de jogador com substituto (+0x13): sem poder contratar (0x8ced40 com
 ///   hoje + 7, 1; fora o motivo 9) soma o +0xb (pelo menos 10000); a lesão do substituto (0x62ed70 em [0xb63d28], três
-///   vezes) soma dias² × (reputação / 500); com ficha, (1,5 − o byte +0x45 / 30) × valor; sob oferta (0x8cde70) soma
+///   vezes) soma dias² × (reputação / 500); com ficha, (1,5 − a moral do jogador, o byte +0x45 da ficha, / 30) × valor; sob oferta (0x8cde70) soma
 ///   max(+0xb × 1,5, 10000). Vaga de jogador com vendedor humano (ou alvo já no clube): o contrato desejado (0x85fc50) 0
 ///   pula; salário (+0xc) acima de 1,3 × o teto (0x5968d0) pula. Os sorteios (0x90cfc0): sorteio(valor) acima de
 ///   sorteio(2 × reputação + 1000) faz o lance: +0x24 bit 5 apagado, a oferta local (0x8e5680) preenchida (0x8e5d60);
@@ -1314,7 +1314,7 @@ unsafe fn cqe4_fluencia(p1: usize, clube: usize, s: i16) -> (f64, f64) {
 /// o clube é o dela), x87 transcrito em f64 na ordem da original. Os motivos (bits) só são marcados com o ponteiro. A
 /// nota parte de 2,75 (3,5 para o próprio clube; com contrato acabando, 1,1 − dias × 0,002; sem clube, a idade fora do
 /// clube), e passa pelos fatores: reputação dos clubes no empréstimo, gostar ou não do clube e do técnico, rivais, as
-/// nações e a distância, a moral (+0x44), a situação no elenco (+0x4f) e a pedida, a reputação comparada (a do clube
+/// nações e a distância, a felicidade no contrato (+0x44), a situação no elenco (+0x4f) e a pedida, a reputação comparada (a do clube
 /// novo e a do atual, pela divisão, pela competição, pelo técnico e pelas finanças), a fluência no idioma, os jogos
 /// de seleção e o tempo sem clube; e, pedido o salário (salário ≠ 0, sem empréstimo e nota de 1,75), o salário padrão
 /// (0x864550 num STAFF_CONTRACT local) contra o teto do clube (0x5968d0). O resto das contas está nos comentários.
@@ -1581,7 +1581,7 @@ unsafe extern "thiscall" fn cqe4_interesse(this: usize, p1: usize, p2: usize, p3
             }
         }
     }
-    // a moral (+0x44), a situação no elenco (ea) e a pedida do contrato (c1 = +0x3d)
+    // a felicidade no contrato (+0x44), a situação no elenco (ea) e a pedida do contrato (c1 = +0x3d)
     let mut ea: i8;
     let c1: i8;
     if c == 0 {
@@ -2435,7 +2435,7 @@ unsafe fn cqe5_contrato(p: usize) -> usize {
     c
 }
 
-/// A entrada de 16 bytes do clube na tabela dos empréstimos da temporada ([[0xde1f54] + 0x91c] + id × 16, o byte +0
+/// A entrada de 16 bytes do clube na tabela dos empréstimos da temporada ([[0xde1f54] + 0x91c] + id do clube que pega emprestado × 16, o byte +0
 /// é a conta).
 unsafe fn cqe5_conta(clube: usize) -> usize {
     cqe5_d(cqe5_d(0xde1f54) + 0x91c).wrapping_add(cqe5_d(clube).wrapping_mul(16))

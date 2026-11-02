@@ -194,7 +194,7 @@ unsafe fn cqe4_fluencia(p1: usize, clube: usize, s: i16) -> (f64, f64) {
 /// o clube é o dela), x87 transcrito em f64 na ordem da original. Os motivos (bits) só são marcados com o ponteiro. A
 /// nota parte de 2,75 (3,5 para o próprio clube; com contrato acabando, 1,1 − dias × 0,002; sem clube, a idade fora do
 /// clube), e passa pelos fatores: reputação dos clubes no empréstimo, gostar ou não do clube e do técnico, rivais, as
-/// nações e a distância, a moral (+0x44), a situação no elenco (+0x4f) e a pedida, a reputação comparada (a do clube
+/// nações e a distância, a felicidade no contrato (+0x44), a situação no elenco (+0x4f) e a pedida, a reputação comparada (a do clube
 /// novo e a do atual, pela divisão, pela competição, pelo técnico e pelas finanças), a fluência no idioma, os jogos
 /// de seleção e o tempo sem clube; e, pedido o salário (salário ≠ 0, sem empréstimo e nota de 1,75), o salário padrão
 /// (0x864550 num STAFF_CONTRACT local) contra o teto do clube (0x5968d0). O resto das contas está nos comentários.
@@ -461,7 +461,7 @@ unsafe extern "thiscall" fn cqe4_interesse(this: usize, p1: usize, p2: usize, p3
             }
         }
     }
-    // a moral (+0x44), a situação no elenco (ea) e a pedida do contrato (c1 = +0x3d)
+    // a felicidade no contrato (+0x44), a situação no elenco (ea) e a pedida do contrato (c1 = +0x3d)
     let mut ea: i8;
     let c1: i8;
     if c == 0 {

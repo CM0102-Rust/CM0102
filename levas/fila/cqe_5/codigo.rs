@@ -26,7 +26,7 @@ unsafe fn cqe5_contrato(p: usize) -> usize {
     c
 }
 
-/// A entrada de 16 bytes do clube na tabela dos empréstimos da temporada ([[0xde1f54] + 0x91c] + id × 16, o byte +0
+/// A entrada de 16 bytes do clube na tabela dos empréstimos da temporada ([[0xde1f54] + 0x91c] + id do clube que pega emprestado × 16, o byte +0
 /// é a conta).
 unsafe fn cqe5_conta(clube: usize) -> usize {
     cqe5_d(cqe5_d(0xde1f54) + 0x91c).wrapping_add(cqe5_d(clube).wrapping_mul(16))
