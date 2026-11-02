@@ -255,7 +255,9 @@ pub unsafe fn sorteio(pedido: i32, ponteiro: u32, deslocamento: i32, rand: u32) 
         let blocos = blocos_do_jogo();
         linha(&format!("memoria: banco {:016x} ({} blocos, {} KB)", memoria_do_dia(), blocos.len(), blocos.iter().map(|b| b.1).sum::<usize>() >> 10));
     }
-    linha(&format!("alocador: pico {} MB", crate::alocador::pico() >> 20));
+    let (dll, vivos) = crate::alocador::pico_dll();
+    linha(&format!("alocador: pico {} MB; regiao da DLL: pico {} KB, ate {} KB vivos", crate::alocador::pico() >> 20, dll >> 10, vivos >> 10));
+    crate::desvios::resumo_trechos();
     despejar_cobertura();
     fechar_rastro();
     // Encerra sem rodar finalizacoes do jogo (nada de gravar preferencias).
@@ -440,7 +442,7 @@ unsafe fn isolar_importacoes() {
         if nome.is_some_and(|n| FORA.contains(&n)) {
             None
         } else {
-            Some(crate::desvios::isolar(atual))
+            Some(crate::desvios::isolar_importacao(atual))
         }
     });
     linha(&format!("simulacao: {} funcoes do Windows isoladas na pilha particular", n));
@@ -511,6 +513,14 @@ pub unsafe fn instalar() {
         crate::desvios::ISOLAR.store(true, Ordering::Relaxed);
         crate::win::AddVectoredExceptionHandler(1, registrar_excecao);
         crate::ganchos::trocar_importacao("USER32.dll", "PeekMessageA", peek_isolado as *const () as usize);
+        // detector de lixo (simular.py --detector): jogo\veneno.txt com o veneno em hex. Um arquivo, e nao uma variavel
+        // de ambiente (deslocaria a heap do jogo); lido antes da regiao da DLL, e a linha tem o mesmo tamanho com e sem
+        // ele, para a memoria da DLL ficar igual a das carreiras normais.
+        let arq = std::env::current_exe().map(|p| p.with_file_name("veneno.txt")).unwrap_or_default();
+        if let Some(v) = std::fs::read_to_string(arq).ok().and_then(|t| u32::from_str_radix(t.trim(), 16).ok()) {
+            crate::desvios::VENENO.store(v, Ordering::Relaxed);
+        }
+        linha(&format!("simulacao: veneno {:08x}", crate::desvios::VENENO.load(Ordering::Relaxed)));
         crate::alocador::instalar();
         if crate::win::ambiente("CM_FERIAS") {
             if let Some(t) = crate::desvios::desviar("ferias depois do -load (CM_FERIAS)", &PROLOGO_RESTAURAR_HUMANOS,

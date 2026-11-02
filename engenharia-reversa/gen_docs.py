@@ -180,7 +180,9 @@ def cadeia(n):
 
 def impressoes(n):
     """As impressões do cadeia.txt: {'jogo': a do jogo real comparando, 'rust': [as carreiras Rust], 'original': a
-    carreira original} (None / [] quando a etapa não chegou à data)."""
+    carreira original, 'detector': o resultado do detector de lixo ('igual', 'DIFERENTE (...)') ou None} (None / []
+    quando a etapa não chegou à data). A carreira do detector (01/11/2026) sai em linhas "detector...", nunca em
+    "execucao N:": não entra nas Rust nem na original."""
     import re
     t = open(os.path.join(R, 'levas', str(n), 'cadeia.txt'), encoding='utf-8', errors='replace').read()
     jogo = re.findall(r'^execucao \d+: parou em .*?impressao (\w+)', t.split('=== JOGO REAL')[-1].split('=== CARREIRA')[0], re.M) if '=== JOGO REAL' in t else []
@@ -188,7 +190,8 @@ def impressoes(n):
     # Rust ×2 (execucao 1 e 2) e depois a original (execucao 1 de novo)
     rust = [i for _, i in car[:2]] if len(car) >= 2 and car[1][0] == '2' else [i for _, i in car[:1]]
     original = car[len(rust)][1] if len(car) > len(rust) else None
-    return {'jogo': jogo[0] if jogo else None, 'rust': rust, 'original': original}
+    det = re.findall(r'^detector de lixo: (.*)$', t.split('=== CARREIRA')[-1], re.M) if '=== CARREIRA' in t else []
+    return {'jogo': jogo[0] if jogo else None, 'rust': rust, 'original': original, 'detector': det[-1].strip() if det else None}
 
 
 def resultado_pt_en(n):
@@ -199,5 +202,8 @@ def resultado_pt_en(n):
     o_pt = 'igual' if igual else '%s (registrada; não barra a leva desde 31/10/2026)' % (i['original'] or '?')[:8]
     o_en = 'equal' if igual else '%s (recorded; does not block the batch since 31/10/2026)' % (i['original'] or '?')[:8]
     j = (i['jogo'] or '?')[:8]
-    return (f"Jogo real comparando até 2002-01-01: 0 divergências ({j}). Carreiras até 2002-06-01: Rust ×2 {r[:8]}, original {o_pt}.",
-            f"Real game comparing to 2002-01-01: 0 divergences ({j}). Careers to 2002-06-01: Rust ×2 {r[:8]}, original {o_en}.")
+    # o detector de lixo é só registro (não decide a leva); entra no texto quando a cadeia o rodou
+    d_pt = ' Detector de lixo: %s.' % i['detector'] if i['detector'] else ''
+    d_en = ' Garbage detector: %s.' % i['detector'].replace('igual', 'equal').replace('DIFERENTE', 'DIFFERENT') if i['detector'] else ''
+    return (f"Jogo real comparando até 2002-01-01: 0 divergências ({j}). Carreiras até 2002-06-01: Rust ×2 {r[:8]}, original {o_pt}.{d_pt}",
+            f"Real game comparing to 2002-01-01: 0 divergences ({j}). Careers to 2002-06-01: Rust ×2 {r[:8]}, original {o_en}.{d_en}")

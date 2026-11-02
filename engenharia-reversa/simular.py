@@ -2,7 +2,7 @@ r"""Simulacao em lote do CM 01/02, sem tela e sem cliques (ver docs/VERSAO_SEM_T
 
 Uso:
   python simular.py --ate 2001-10-01 [--semente 12345] [--ligas ENG] [--motor sim|nao]
-                    [--modo rust|original|comparar] [--repetir N] [--visivel] [--limite 900]
+                    [--modo rust|original|comparar] [--repetir N] [--visivel] [--limite 900] [--detector]
 
 Monta uma carreira automatica (auto_setup.cfg, treinador de ferias), abre o jogo com a semente
 fixa (-seed) e a nossa DLL em modo oculto, e a DLL encerra o jogo na primeira chamada do sorteio
@@ -13,7 +13,8 @@ Modos (rotinas do jogo):
   rust      as rotinas ja reescritas rodam em Rust (o normal)
   original  nenhuma rotina substituida; o sorteio so e observado
   comparar  original e Rust lado a lado em cada chamada; divergencias contadas no log
-Mesma semente => mesma impressao digital. --repetir roda varias vezes e confere.
+Mesma semente => mesma impressao digital. --repetir roda varias vezes e confere. --detector roda mais uma com a
+pilha particular envenenada e so registra se saiu diferente (detector de lixo; ver a funcao detector).
 
 Cuidado com a maquina (laboratorio.py): segura a trava D:\Sistemas\.laboratorio.lock durante a
 simulacao (so um teste pesado por vez entre as sessoes) e nao inicia execucao se o pool nao
@@ -209,6 +210,39 @@ def rodar(args, semente, extra=()):
     return info, segundos, None
 
 
+VENENO = '5a5a5a5a'
+
+
+def detector(args, normais):
+    """Detector de lixo (01/11/2026, so registro): mais uma execucao, com jogo\\veneno.txt, em que a DLL enche a pilha
+    particular inteira com VENENO a cada entrada vinda de fora (desvios::VENENO). Uma rotina original que le variavel
+    local sem valor passa a ler o veneno: se a carreira sair diferente das normais, ha uma leitura de lixo a achar e
+    corrigir. Nao muda o codigo de saida nem a impressao registrada; as linhas nao comecam com "execucao" (gen_docs)."""
+    pode, motivo = laboratorio.pode_rodar()
+    if not pode:
+        print('detector de lixo: nao rodou (%s)' % motivo)
+        return
+    arq = os.path.join(JOGO, 'veneno.txt')
+    if os.path.exists(arq):
+        falha('ja existe jogo\\veneno.txt; nao vou sobrescrever')
+    with open(arq, 'w') as f:
+        f.write(VENENO)
+    try:
+        info, seg, erro = rodar(args, args.semente)
+    finally:
+        os.remove(arq)
+    if erro:
+        print('detector de lixo: DIFERENTE (%s, %.0f s)' % (erro, seg))
+        return
+    print('detector: parou em %s, %d sorteios, impressao %s, partidas %s, banco %s, %.0f s' % (
+        info['data'], info['sorteios'], info['impressao'], info['partidas'], info['banco'], seg))
+    chave = lambda r: (r['impressao'], r['partidas'], r['banco'])
+    if all(chave(r) == chave(info) for r in normais):
+        print('detector de lixo: igual')
+    else:
+        print('detector de lixo: DIFERENTE (impressao %s, partidas %s, banco %s)' % chave(info))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--ate', required=True, help='data de parada AAAA-MM-DD')
@@ -226,6 +260,7 @@ def main():
     ap.add_argument('--exe', default='cm0102-1080.exe')
     ap.add_argument('--cobertura', action='store_true', help='conta as chamadas das funcoes de jogo/cobertura.txt (gerado por cobertura.py)')
     ap.add_argument('--sem-trava', action='store_true', help='nao espera a trava do laboratorio (o vigia de memoria continua)')
+    ap.add_argument('--detector', action='store_true', help='depois das execucoes, mais uma com a pilha particular envenenada (detector de lixo, so registro)')
     args = ap.parse_args()
 
     resultados = []
@@ -276,6 +311,9 @@ def main():
                 for rotina, (total, div) in ultimos.items():
                     print('    %s: %s comparacoes, %s divergencias' % (rotina, total, div))
             resultados.append(info)
+        normais = [r for r in resultados if r]
+        if args.detector and normais:
+            detector(args, normais)
     ok = [r for r in resultados if r]
     if args.repetir > 1 and ok:
         iguais = len({(r['impressao'], r['partidas'], r['banco']) for r in ok}) == 1 and len(ok) == len(resultados)

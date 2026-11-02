@@ -1,7 +1,2 @@
 # ordem da fila (fila.py); um item por linha
-cqe_1
-cqe_2
-cqe_3
-cqe_4
-cqe_5
-cqe_6
+cqc_6

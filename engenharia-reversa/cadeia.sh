@@ -7,7 +7,9 @@
 #   1b. so leva do save: === PROVA DO SAVE (prova_save.py --leva N: a mesma DLL com e sem as rotinas;
 #       com levas/N/CARGA tambem a carga do save de ferias, nas mutacoes e na prova);
 #   2. jogo real comparando ate 2002-01-01 (divergencias e excecoes do ddraw.log);
-#   3. carreiras Rust x2 (iguais entre si) e original ate 2002-06-01 (desde 31/10/2026 a original e so registrada).
+#   3. carreiras Rust x2 (iguais entre si) e original ate 2002-06-01 (desde 31/10/2026 a original e so registrada);
+#      depois das Rust x2, o detector de lixo (simular.py --detector, 01/11/2026): uma terceira com a pilha particular
+#      envenenada, so registro ("detector de lixo: igual" ou "DIFERENTE (...)"); nao decide a cadeia.
 # Saida completa em levas/N/cadeia.txt. Com a base divergindo, o mutacoes.py sai com erro e o resto
 # nao roda. Testes pesados passam pela trava do laboratorio (laboratorio.py).
 RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
@@ -32,7 +34,7 @@ MODO="--carreira 2002-06-01 $CONF --confirmar-pt"; [ -n "$SAVE" ] && MODO="--pro
   grep -a "sonda_lixo" ../jogo_testes/ddraw.log | tail -1
   python laboratorio.py | head -1
   echo "=== CARREIRA"
-  python -u simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2 --limite 2400 && python -u simular.py --ate 2002-06-01 --motor sim --modo original --limite 2400
+  python -u simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2 --detector --limite 2400 && python -u simular.py --ate 2002-06-01 --motor sim --modo original --limite 2400
   python laboratorio.py | head -1
 else
   echo "=== MUTACOES FALHARAM"

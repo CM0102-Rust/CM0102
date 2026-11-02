@@ -8,17 +8,18 @@
 //!
 //! A memoria da DLL que o jogo enxerga (objetos DirectDraw, superficies e seus pixels) vai para
 //! uma segunda regiao fixa (`visivel`): o jogo guarda ponteiros para ela e o endereco na heap do
-//! processo variava (dia 2001-271). O resto da DLL fica na heap do Windows, para que comparacoes,
-//! placares e registro (que mudam com o modo) nao desloquem o que o jogo ve.
+//! processo variava (dia 2001-271). O resto da DLL vai para uma terceira regiao fixa, so dela (`REGIAO_DLL`):
+//! longe da do jogo, para que comparacoes, placares e registro (que mudam com o modo) nao desloquem o que o
+//! jogo ve, e em endereco fixo, porque os ponteiros dela ficam na pilha particular (01/11/2026).
 //!
 //! Blocos: cabecalho de 16 bytes {capacidade, tamanho pedido} + dados alinhados em 16.
 //! Ate 4 KB: classes de 16 em 16 bytes; acima: classes por pagina (ate 256 MB). Cada classe tem
 //! uma lista de livres encadeada dentro dos proprios blocos (o ultimo liberado sai primeiro; nada
 //! e alocado para controle, o que permite servir de alocador global); sem livre, avanca o topo.
-//! ponytail: sem juntar blocos vizinhos livres; se a regiao esgotar, aumentar REGIAO ou juntar.
+//! Os livres vizinhos so se juntam quando a regiao esgota (`alocar_juntando`).
 
 use std::alloc::{GlobalAlloc, Layout, System};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
 use std::sync::Mutex;
 
 use crate::registro::linha;
@@ -37,6 +38,9 @@ pub struct Alocador {
     fim: usize,
     livres: [usize; CLASSES], // cabeca da lista de livres de cada classe (0 = vazia)
     pico: usize,
+    /// (livres, topo) do ultimo `juntar`, para quem chamou registrar depois de soltar a trava (registrar aloca, e o
+    /// alocador da DLL nao pode alocar com a propria trava na mao: o Mutex nao e reentrante)
+    juntou: Option<(usize, usize)>,
 }
 
 const CLASSES: usize = PEQUENO / 16 + 65536 + 1;
@@ -54,7 +58,7 @@ fn classe(cap: usize) -> Option<usize> {
 
 impl Alocador {
     pub const fn novo(inicio: usize, tamanho: usize) -> Self {
-        Alocador { inicio, topo: inicio, fim: inicio + tamanho, livres: [0; CLASSES], pico: 0 }
+        Alocador { inicio, topo: inicio, fim: inicio + tamanho, livres: [0; CLASSES], pico: 0, juntou: None }
     }
 
     /// Passa a usar a regiao dada (sem mover a estrutura, que e grande para a pilha).
@@ -139,37 +143,65 @@ impl Alocador {
         p
     }
 
-    /// Junta os livres vizinhos; os que chegam ao topo voltam para ele.
+    /// Junta os livres vizinhos; os que chegam ao topo voltam para ele. Nao passa pelo alocador global (a lista vai
+    /// direto na heap do Windows) nem registra: serve tambem a regiao da DLL, que roda com a propria trava na mao.
     unsafe fn juntar(&mut self) {
-        let mut livres = Vec::new();
+        let mut n = 0;
         for c in 0..CLASSES {
             let mut p = self.livres[c];
             while p != 0 {
-                livres.push(p);
+                n += 1;
+                p = *(p as *const usize);
+            }
+        }
+        let layout = Layout::array::<usize>(n.max(1)).unwrap();
+        let buf = System.alloc(layout) as *mut usize;
+        if buf.is_null() {
+            return;
+        }
+        let livres = core::slice::from_raw_parts_mut(buf, n);
+        let mut i = 0;
+        for c in 0..CLASSES {
+            let mut p = self.livres[c];
+            while p != 0 {
+                livres[i] = p;
+                i += 1;
                 p = *(p as *const usize);
             }
             self.livres[c] = 0;
         }
         livres.sort_unstable();
-        let mut juntos: Vec<(usize, usize)> = Vec::new(); // (dados, capacidade)
-        for p in livres {
-            let c = *((p - 16) as *const usize);
-            match juntos.last_mut() {
-                Some((q, cq)) if *q + *cq == p - CABECALHO => *cq += CABECALHO + c,
-                _ => juntos.push((p, c)),
+        // vizinhos juntos no lugar: o primeiro de cada sequencia fica com a capacidade somada
+        let mut k = 0;
+        for i in 0..n {
+            let (p, c) = (livres[i], *((livres[i] - 16) as *const usize));
+            if k > 0 {
+                let q = livres[k - 1];
+                let cq = *((q - 16) as *const usize);
+                if q + cq == p - CABECALHO {
+                    *((q - 16) as *mut usize) = cq + CABECALHO + c;
+                    continue;
+                }
             }
+            livres[k] = p;
+            k += 1;
         }
-        if let Some(&(q, cq)) = juntos.last() {
-            if q + cq == self.topo {
-                self.topo = q - CABECALHO;
-                juntos.pop();
-            }
+        if k > 0 && livres[k - 1] + *((livres[k - 1] - 16) as *const usize) == self.topo {
+            self.topo = livres[k - 1] - CABECALHO;
+            k -= 1;
         }
-        for &(q, cq) in juntos.iter().rev() {
-            *((q - 16) as *mut usize) = cq;
-            self.liberar(q);
+        for i in (0..k).rev() {
+            self.liberar(livres[i]);
         }
-        linha(&format!("alocador: regiao esgotada; {} livres depois de juntar, topo em {:#x}", juntos.len(), self.topo));
+        System.dealloc(buf as *mut u8, layout);
+        self.juntou = Some((k, self.topo));
+    }
+
+    /// Registra o aviso do ultimo `juntar` (chamar depois de soltar a trava).
+    fn registrar_juntou(aviso: Option<(usize, usize)>, qual: &str) {
+        if let Some((k, topo)) = aviso {
+            linha(&format!("alocador: regiao {} esgotada; {} livres depois de juntar, topo em {:#x}", qual, k, topo));
+        }
     }
 
     pub unsafe fn liberar(&mut self, p: usize) {
@@ -215,7 +247,11 @@ static mut ALCA: usize = 0; // "alca" devolvida ao HeapCreate (= inicio da regia
 
 fn com<R>(f: impl FnOnce(&mut Alocador) -> R) -> R {
     let mut g = HEAP.lock().unwrap_or_else(|e| e.into_inner());
-    f(&mut g)
+    let r = f(&mut g);
+    let aviso = g.juntou.take();
+    drop(g);
+    Alocador::registrar_juntou(aviso, "do jogo");
+    r
 }
 
 unsafe fn nosso(h: usize) -> bool {
@@ -298,7 +334,24 @@ pub fn visivel<R>(f: impl FnOnce() -> R) -> R {
     r
 }
 
-/// Alocador global da DLL: heap do processo, ou a regiao visivel dentro de `visivel(...)`.
+// O resto da memoria da DLL (Vec, String, format!, Box: registro, diario, comparacoes, fitas) tambem vai para uma
+// regiao fixa na simulacao, so dela e da thread que carregou a DLL (a do jogo). Na heap do processo, que muda de
+// endereco a cada execucao, esses ponteiros ficavam na pilha particular e uma rotina original que le variavel sem
+// valor os encontrava: a carreira mudava entre execucoes iguais (item cqc_6, 01/11/2026). Como a heap do jogo e a
+// regiao visivel, nao escreve nada na pilha: so fixa onde a memoria da DLL fica. Fora da simulacao, nada muda. O que
+// nao couber (regiao esgotada mesmo depois de juntar) vai para a heap do Windows, com AVISO.
+// O modo comparar fica na heap do Windows: as fotos e fitas dele chegam a 143 MB vivos ate 2002-01-01 (a carreira Rust,
+// 96 KB), nao ha espaco baixo livre com folga para isso, e o criterio dele e a divergencia, nao a impressao.
+const REGIAO_DLL: usize = 0x0400_0000; // 64 MB; a carreira ate 2002-06-01 usa 145 KB
+const BASES_DLL: [usize; 1] = [0x0b00_0000]; // ate 0x0f000000, abaixo da pilha particular (0x0ff00000)
+static DLL: Mutex<Alocador> = Mutex::new(Alocador::novo(0, 0));
+static DLL_FAIXA: [AtomicUsize; 2] = [AtomicUsize::new(0), AtomicUsize::new(0)]; // (inicio, fim): o dealloc confere sem trava
+static DLL_THREAD: AtomicU32 = AtomicU32::new(0);
+static DLL_ESGOTOU: AtomicBool = AtomicBool::new(false);
+static DLL_VIVOS: [AtomicUsize; 2] = [AtomicUsize::new(0), AtomicUsize::new(0)]; // (bytes vivos agora, maximo)
+
+/// Alocador global da DLL: heap do processo; na simulacao, a regiao visivel dentro de `visivel(...)` e a regiao da
+/// DLL no resto.
 pub struct Global;
 
 unsafe fn na_visivel(l: Layout, zerar: bool) -> Option<*mut u8> {
@@ -309,22 +362,54 @@ unsafe fn na_visivel(l: Layout, zerar: bool) -> Option<*mut u8> {
     a.ativo().then(|| a.alocar(l.size(), zerar) as *mut u8)
 }
 
+unsafe fn na_dll(l: Layout, zerar: bool) -> Option<*mut u8> {
+    let t = DLL_THREAD.load(Ordering::Relaxed);
+    if t == 0 || l.align() > 16 || crate::win::GetCurrentThreadId() != t {
+        return None;
+    }
+    let mut a = DLL.lock().unwrap_or_else(|e| e.into_inner());
+    let p = a.alocar(l.size(), zerar);
+    let aviso = a.juntou.take();
+    drop(a);
+    Alocador::registrar_juntou(aviso, "da DLL");
+    if p == 0 && !DLL_ESGOTOU.swap(true, Ordering::Relaxed) {
+        linha(&format!("alocador: AVISO regiao da DLL esgotada pedindo {} bytes; o que nao couber vai para a heap do Windows", l.size()));
+    }
+    if p == 0 {
+        return None;
+    }
+    let vivos = DLL_VIVOS[0].fetch_add(l.size(), Ordering::Relaxed) + l.size();
+    DLL_VIVOS[1].fetch_max(vivos, Ordering::Relaxed);
+    Some(p as *mut u8)
+}
+
 unsafe impl GlobalAlloc for Global {
     unsafe fn alloc(&self, l: Layout) -> *mut u8 {
-        na_visivel(l, false).unwrap_or_else(|| System.alloc(l))
+        na_visivel(l, false).or_else(|| na_dll(l, false)).unwrap_or_else(|| System.alloc(l))
     }
     unsafe fn alloc_zeroed(&self, l: Layout) -> *mut u8 {
-        na_visivel(l, true).unwrap_or_else(|| System.alloc_zeroed(l))
+        na_visivel(l, true).or_else(|| na_dll(l, true)).unwrap_or_else(|| System.alloc_zeroed(l))
     }
     unsafe fn dealloc(&self, p: *mut u8, l: Layout) {
         let mut a = VISIVEL.lock().unwrap_or_else(|e| e.into_inner());
         if a.contem(p as usize) {
             a.liberar(p as usize);
+            return;
+        }
+        drop(a);
+        if (DLL_FAIXA[0].load(Ordering::Relaxed)..DLL_FAIXA[1].load(Ordering::Relaxed)).contains(&(p as usize)) {
+            DLL.lock().unwrap_or_else(|e| e.into_inner()).liberar(p as usize);
+            DLL_VIVOS[0].fetch_sub(l.size(), Ordering::Relaxed);
         } else {
-            drop(a);
             System.dealloc(p, l)
         }
     }
+}
+
+/// Pico de uso da regiao da DLL e maximo de bytes vivos nela (0 sem ela), para o registro da simulacao. O pico passa dos
+/// vivos porque os livres so se juntam com a regiao esgotada.
+pub fn pico_dll() -> (usize, usize) {
+    (DLL.lock().unwrap_or_else(|e| e.into_inner()).pico, DLL_VIVOS[1].load(Ordering::Relaxed))
 }
 
 unsafe fn reservar(bases: &[usize], tamanho: usize) -> usize {
@@ -421,6 +506,19 @@ pub unsafe fn instalar() {
     if vis != 0 {
         VISIVEL.lock().unwrap_or_else(|e| e.into_inner()).ativar(vis, REGIAO_VISIVEL);
         linha(&format!("alocador: memoria visivel da DLL em regiao fixa {:#x}..{:#x}", vis, vis + REGIAO_VISIVEL));
+    }
+    let comparar = crate::win::ambiente("CM_COMPARAR");
+    let dll = if comparar { 0 } else { reservar(&BASES_DLL, REGIAO_DLL) };
+    if comparar {
+        linha("alocador: modo comparar, o resto da memoria da DLL fica na heap do Windows");
+    } else if dll != 0 {
+        DLL.lock().unwrap_or_else(|e| e.into_inner()).ativar(dll, REGIAO_DLL);
+        DLL_FAIXA[0].store(dll, Ordering::Relaxed);
+        DLL_FAIXA[1].store(dll + REGIAO_DLL, Ordering::Relaxed);
+        DLL_THREAD.store(crate::win::GetCurrentThreadId(), Ordering::Relaxed);
+        linha(&format!("alocador: resto da memoria da DLL em regiao fixa {:#x}..{:#x}", dll, dll + REGIAO_DLL));
+    } else {
+        linha("alocador: AVISO regiao da DLL ocupada; o resto da memoria da DLL fica na heap do Windows");
     }
     HEAP.lock().unwrap_or_else(|e| e.into_inner()).ativar(inicio, REGIAO);
     ALCA = inicio;

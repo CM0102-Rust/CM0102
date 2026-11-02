@@ -8,3 +8,7 @@ Com a `liga_jogos_para_a_tv` (0x685640, `League::move_fixtures_for_tv`) em Rust,
 - **A rotina original que lê esse lixo não foi achada:** o ponto muda com a disposição da heap.
 
 Saída aprovada pelo Lucas (01/11): a opção (c). As alocações da DLL vão para uma região fixa no modo simulação; no experimento, com isso, deram 6 de 6 carreiras iguais até 2001-03-01 e 3 de 3 até 2002-06-01. Quando ela entrar, o item volta à fila sem mudança.
+
+## Resolução (02/11/2026)
+
+A opção (c) entrou no commit seguinte ao da 267ª: as alocações da DLL vão para uma região fixa (0x0b000000..0x0f000000) no modo simulação, e os trampolins ficam num bloco único. Com ela, a 266ª com este item deu as duas carreiras Rust iguais e o detector de lixo igual. O item volta à fila sem mudança.

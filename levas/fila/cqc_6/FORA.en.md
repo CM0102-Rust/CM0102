@@ -8,3 +8,7 @@ With `liga_jogos_para_a_tv` (0x685640, `League::move_fixtures_for_tv`) in Rust, 
 - **The original routine that reads this garbage was not found:** the spot moves with the heap layout.
 
 Way out approved by Lucas (11/01): option (c). The DLL's allocations go to a fixed region in simulation mode; in the experiment, that gave 6 out of 6 equal careers to 2001-03-01 and 3 out of 3 to 2002-06-01. Once it is in, the item goes back to the queue unchanged.
+
+## Resolution (2026-11-02)
+
+Option (c) went into the commit after the 267th batch: the DLL's allocations go to a fixed region (0x0b000000..0x0f000000) in simulation mode, and the trampolines sit in a single block. With it, the 266th batch plus this item gave two equal Rust careers and an equal garbage detector run. The item goes back to the queue unchanged.

@@ -35,22 +35,86 @@ static mut ESP_DO_JOGO: u32 = 0;
 /// 9 voltas do patch em 0x602610 nunca chegava a 0 (CLZ, 25/10/2026).
 static mut ECX_DO_JOGO: u32 = 0;
 const PILHA: usize = 1 << 20;
+const PILHA_BASE: usize = 0x0ff0_0000;
 const ARGUMENTOS: u32 = 16; // dwords copiados da pilha do jogo (sobra para qualquer rotina desviada)
 
 /// Liga a pilha particular para os desvios instalados daqui em diante.
 pub static ISOLAR: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
+/// Detector de lixo (so diagnostico, a terceira carreira Rust da cadeia; `jogo\veneno.txt`, lido por
+/// `simulacao::instalar`): diferente de 0, toda entrada vinda de fora numa rotina desviada enche os VENENO_FAIXA bytes
+/// do alto da pilha particular com esse valor antes de chamar a rotina. Uma original que le variavel local sem valor
+/// passa a ler o veneno, e a carreira sai diferente das duas normais. Nao entra no produto nem decide nada: so acusa
+/// (ver docs/COMO_CONTINUAR.md).
+pub static VENENO: AtomicU32 = AtomicU32::new(0);
+static mut GUARDA_EDI: u32 = 0;
+/// A carreira com motor usa ate 33 KB da pilha particular (medido ate 2001-09-01) e entra nela ~158 milhoes de vezes ate
+/// 2002-06-01: encher 1 MB a cada entrada deixava a carreira 6 vezes mais lenta. ponytail: faixa fixa; se a linha
+/// "pilha particular usou ate" passar dela, aumentar.
+const VENENO_FAIXA: u32 = 64 << 10;
+
+// ---------- memoria executavel dos trechos ----------
+//
+// Trampolins e trechos (de 16 a 256 bytes cada) saem de blocos de BLOCO bytes reservados de uma vez. Antes cada um era
+// um VirtualAlloc(NULL), e o Windows reserva 64 KB por chamada: com ~1.570 desvios (2 por rotina na simulacao) eram
+// ~200 MB de espaco de enderecos, de 0x03440000 ate perto da pilha particular (01/11/2026).
+const BLOCO: usize = 2 << 20; // ~7.000 desvios na simulacao (288 bytes cada); acabou, reserva outro
+static TRECHOS: std::sync::Mutex<(usize, usize, usize, usize)> = std::sync::Mutex::new((0, 0, 0, 0)); // (livre, fim, blocos, usados)
+
+/// `n` bytes de memoria executavel (alinhados em 16; 0 se o Windows recusar).
+unsafe fn executavel(n: usize) -> usize {
+    let n = (n + 15) & !15;
+    let mut g = TRECHOS.lock().unwrap_or_else(|e| e.into_inner());
+    if g.1 - g.0 < n {
+        let b = win::VirtualAlloc(core::ptr::null_mut(), BLOCO, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as usize;
+        if b == 0 {
+            return 0;
+        }
+        (g.0, g.1, g.2) = (b, b + BLOCO, g.2 + 1);
+    }
+    let p = g.0;
+    g.0 += n;
+    g.3 += n;
+    p
+}
+
+/// A linha dos trechos no ddraw.log: quantos blocos, quanto usado e onde esta o ultimo.
+pub fn resumo_trechos() {
+    let g = *TRECHOS.lock().unwrap_or_else(|e| e.into_inner());
+    if ISOLAR.load(std::sync::atomic::Ordering::Relaxed) {
+        // a pilha particular nasce zerada: o dword nao nulo mais baixo e o mais fundo que ja se escreveu (com o detector,
+        // a faixa envenenada); passando de VENENO_FAIXA, aumentar a faixa
+        let mut p = PILHA_BASE;
+        while p < PILHA_BASE + PILHA && unsafe { *(p as *const u32) } == 0 {
+            p += 4;
+        }
+        linha(&format!("desvios: pilha particular usou ate {} KB (detector enche {} KB)", (PILHA_BASE + PILHA - p) >> 10, VENENO_FAIXA >> 10));
+    }
+    linha(&format!("desvios: trechos em {} bloco(s) de {} KB, {} KB usados, ultimo bloco em {:#x}..{:#x}",
+        g.2, BLOCO >> 10, g.3 >> 10, g.1.saturating_sub(BLOCO), g.1));
+}
+
 /// Trecho de entrada: grava o retorno; se ja estiver na pilha particular (chamada aninhada), so
 /// salta; senao troca de pilha, copia os argumentos, chama `destino` e volta descontando os
 /// argumentos que a rotina retirou (vale para cdecl, stdcall e thiscall; ecx = this e preservado).
 pub unsafe fn isolar(destino: usize) -> usize {
+    isolar_com(destino, true)
+}
+
+/// O mesmo para as funcoes do Windows (entradas da IAT): o detector de lixo nao enche a pilha antes delas, porque o
+/// codigo do Windows nao le o lixo do jogo e a proxima rotina desviada vinda de fora envenena de novo.
+pub unsafe fn isolar_importacao(destino: usize) -> usize {
+    isolar_com(destino, false)
+}
+
+unsafe fn isolar_com(destino: usize, envenenar: bool) -> usize {
     static TOPO: std::sync::OnceLock<u32> = std::sync::OnceLock::new();
     let topo = *TOPO.get_or_init(|| {
         // Endereco fixo, logo abaixo das regioes do alocador: enderecos de pilha nao podem variar.
-        let p = win::VirtualAlloc(0x0ff0_0000 as *mut c_void, PILHA, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_READWRITE) as usize;
+        let p = win::VirtualAlloc(PILHA_BASE as *mut c_void, PILHA, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_READWRITE) as usize;
         if p == 0 { 0 } else { (p + PILHA - 16) as u32 }
     });
-    let codigo = win::VirtualAlloc(core::ptr::null_mut(), 256, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as usize;
+    let codigo = executavel(256);
     if topo == 0 || codigo == 0 {
         linha("desvios: AVISO sem pilha particular");
         return destino;
@@ -81,6 +145,25 @@ pub unsafe fn isolar(destino: usize) -> usize {
     c.extend(le(&raw mut ECX_DO_JOGO as u32));
     c.extend([0x89, 0xe0, 0xa3]); // mov eax, esp; mov [ESP_DO_JOGO], eax
     c.extend(le(esp_jogo));
+    let veneno = if envenenar { VENENO.load(std::sync::atomic::Ordering::Relaxed) } else { 0 };
+    if veneno != 0 {
+        // detector: mov [GUARDA_EDI], edi; mov edi, topo - VENENO_FAIXA; mov ecx, VENENO_FAIXA/4; mov eax, veneno; cld;
+        // rep stosd; mov edi, [GUARDA_EDI]; mov ecx, [ECX_DO_JOGO]; mov eax, [ESP_DO_JOGO]
+        c.extend([0x89, 0x3d]);
+        c.extend(le(&raw mut GUARDA_EDI as u32));
+        c.push(0xbf);
+        c.extend(le(topo - VENENO_FAIXA));
+        c.push(0xb9);
+        c.extend(le(VENENO_FAIXA / 4));
+        c.push(0xb8);
+        c.extend(le(veneno));
+        c.extend([0xfc, 0xf3, 0xab, 0x8b, 0x3d]);
+        c.extend(le(&raw mut GUARDA_EDI as u32));
+        c.extend([0x8b, 0x0d]);
+        c.extend(le(&raw mut ECX_DO_JOGO as u32));
+        c.push(0xa1);
+        c.extend(le(esp_jogo));
+    }
     c.push(0xbc); // mov esp, topo
     c.extend(le(topo));
     for i in (1..=ARGUMENTOS).rev() {
@@ -114,7 +197,7 @@ static mut GUARDA_EAX: u32 = 0;
 /// endereço de retorno pelo nosso, guarda ECX e retorno na PILHA_ECX e, na volta, restaura os dois; EAX (o
 /// resultado) passa intacto. A profundidade da pilha do jogo não muda.
 pub unsafe fn preservar_ecx(destino: usize) -> usize {
-    let codigo = win::VirtualAlloc(core::ptr::null_mut(), 96, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as usize;
+    let codigo = executavel(96);
     if codigo == 0 {
         return destino;
     }
@@ -152,7 +235,7 @@ pub unsafe fn preservar_ecx(destino: usize) -> usize {
 /// `preservar_ecx` desfaz a previsão de retorno do processador e dobrava o tempo da carreira, com o sorteio
 /// 0x90cfc0 chamado bilhões de vezes).
 pub unsafe fn preservar_ecx_cdecl(destino: usize, n: u8) -> usize {
-    let codigo = win::VirtualAlloc(core::ptr::null_mut(), 64, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as usize;
+    let codigo = executavel(64);
     if codigo == 0 {
         return destino;
     }
@@ -205,7 +288,7 @@ pub unsafe fn desviar_sonda(nome: &str, p: &Prologo, dentro: bool) -> Option<usi
 /// pop eax; pop ecx; pop edi; jmp destino`: zera [esp_entrada - n - 12, esp_entrada - 12) sem tocar
 /// registradores nem argumentos.
 unsafe fn zerar_e_saltar(n: u32, destino: usize) -> usize {
-    let codigo = win::VirtualAlloc(core::ptr::null_mut(), 96, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as usize;
+    let codigo = executavel(96);
     let mut c: Vec<u8> = vec![0x57, 0x51, 0x50, 0x8d, 0xbc, 0x24];
     c.extend((-(n as i32)).to_le_bytes()); // lea edi, [esp - n] (esp ja desceu 12)
     c.push(0xb9);
@@ -228,7 +311,7 @@ unsafe fn zerar_e_saltar(n: u32, destino: usize) -> usize {
 /// registradores (so os flags, que nao sobrevivem a um call), entao a carreira nao muda.
 pub unsafe fn contar(nome: &str, p: &Prologo, contador: *mut u32) -> bool {
     desviar_para(nome, p, |tramp| {
-        let c = win::VirtualAlloc(core::ptr::null_mut(), 16, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as *mut u8;
+        let c = executavel(16) as *mut u8;
         *c = 0xff;
         *c.add(1) = 0x05;
         core::ptr::write_unaligned(c.add(2) as *mut u32, contador as u32);
@@ -306,9 +389,9 @@ unsafe fn desviar_para(nome: &str, p: &Prologo, destino: impl FnOnce(usize) -> u
         return None;
     }
     let n = p.bytes.len();
-    let tramp = win::VirtualAlloc(core::ptr::null_mut(), 32, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as *mut u8;
+    let tramp = executavel(32) as *mut u8;
     if tramp.is_null() {
-        linha(&format!("desvio {} recusado: VirtualAlloc falhou", nome));
+        linha(&format!("desvio {} recusado: sem memoria executavel", nome));
         return None;
     }
     let m = montar_trampolim(p, tramp);
