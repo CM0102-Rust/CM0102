@@ -384,6 +384,10 @@ unsafe extern "thiscall" fn comparar_lesao_nova(this: usize, tipo_arg: u32, retr
             r >= 0 // trocada depois (a recaída lesionou de novo): nada a conferir
         } else {
             let l = cqb5_lesao(this, r as usize);
+            // a recaída (0x62e500) pode lesionar de novo a própria pessoa com 0x4d/0x4e/0x4f: a troca libera esta vaga e
+            // a nova lesão a reocupa (a primeira livre), com o tipo dela; confere a nova
+            let t = cqb5_b(l) as i8;
+            let tipo = if t != tipo && (0x4d..=0x4f).contains(&t) { t } else { tipo };
             cqb5_b(l) as i8 == tipo
                 && cqb5_b(reg + 0x1d) as i8 == tipo
                 && cqb5_b(reg + 0x1c) == 0

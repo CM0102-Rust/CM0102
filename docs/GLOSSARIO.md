@@ -92,6 +92,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6177f0 | `adjetivo_do_continente` | get_continent_adjective |
 | 0x5c5040 | `adversario_da_excursao` | Friendly::find_tour_opponent |
 | 0x5c4cb0 | `adversario_do_amistoso` | Friendly::find_friendly_opponent |
+| 0x4ccca0 | `agendar_fim_do_emprestimo` | CONTRACT_MANAGER::schedule_loan_end |
 | 0x8c6220 | `agendar_oferta` | TRANSFER_MANAGER::schedule_offer |
 | 0x7172d0 | `ajustar_17` | adjust_17 |
 | 0x7386f0 | `ajustar_confianca_da_diretoria` | Media::adjust_board_confidence |
@@ -406,6 +407,17 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x540490 | `cores_se_confundem` | database_colours_clash |
 | 0x541e60 | `cortar_elencos_de_a_e_b` | database_trim_senior_and_b_team_squads |
 | 0x5267c0 | `cortar_tabela_de_clubes` | database_trim_club_table |
+| 0x85e410 | `cqe4_construir_contrato` | STAFF_CONTRACT::STAFF_CONTRACT |
+| 0x846920 | `cqe4_interesse` | Shortlist_Manager::staff_interest_in_joining_club |
+| 0x57a020 | `cqe5_dia_das_regras` | ENGLAND_RULES::daily_update |
+| 0x579d60 | `cqe5_pode_emprestar` | ENGLAND_RULES::can_loan_player |
+| 0x579fd0 | `cqe5_registrar_emprestimo` | ENGLAND_RULES::record_loan |
+| 0x7f6530 | `cqe6_periodo_escocia` | SCOTLAND_RULES::get_loan_period |
+| 0x579c70 | `cqe6_periodo_inglaterra` | ENGLAND_RULES::get_loan_period |
+| 0x7f6650 | `cqe6_pode_emprestar_escocia` | SCOTLAND_RULES::can_loan_player |
+| 0x859630 | `cqe6_pode_emprestar_espanha` | SPAIN_RULES::can_loan_player |
+| 0x63c3d0 | `cqe6_pode_emprestar_irlanda` | IRELAND_RULES::can_loan_player |
+| 0x661770 | `cqe6_pode_emprestar_italia` | ITALY_RULES::can_loan_player |
 | 0x527f60 | `crescer_historico_de_competicoes` | database_grow_comp_history_table |
 | 0x5c2ae0 | `criar_amistosos_planejados` | Friendly::create_due_planned_friendlies |
 | 0x54d5b0 | `criar_arquivo_do_banco` | db_files_open_for_write |
@@ -778,6 +790,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x6d42a0 | `lado_sob_controle` | side_under_control |
 | 0x6fa490 | `lancar` | long_ball |
 | 0x6bab90 | `lance_valendo` | move_counts |
+| 0x84a020 | `lances_do_clube` | Shortlist_Manager::make_club_bids |
 | 0x6b6970 | `largar_partida_assistida` | match_day_drop_viewer_and_finish_match |
 | 0x6c4290 | `lateral` | throw_in |
 | 0x717400 | `ler_1bc` | read_1bc |
@@ -971,6 +984,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x547d30 | `nao_gosta_do_clube` | dislikes_club |
 | 0x6be120 | `narrar_classificacao` | narrate_qualification |
 | 0x6d7b00 | `narrar_no_painel` | commentate_on_panel |
+| 0x8bee50 | `negociacao_de_emprestimo` | TRANSFER_MANAGER::add_loan_negotiation |
 | 0x8c5fc0 | `negociacoes_de_troca_do_jogador` | TRANSFER_MANAGER::get_exchange_negotiations_for_player |
 | 0x5afe00 | `nevoa_apos_partida` | fog_after_match |
 | 0x8b4f50 | `nivel_da_categoria_do_programa` | TRAINING_SCHEDULE::get_category_level |
@@ -1104,6 +1118,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x7f9190 | `olheiros_cobrem_a_nacao` | SCOUT_MANAGER::can_club_scout_nation |
 | 0x53cd60 | `olheiros_do_clube` | database_get_club_scouts |
 | 0x7f8c00 | `olheiros_na_partida` | SCOUT_MANAGER::scout_match |
+| 0x8c8860 | `opcao_de_troca` | TRANSFER_MANAGER::make_exchange_option |
 | 0x7ae240 | `ordem_da_fila_de_regens` | player_regen_compare_queue_entries |
 | 0x7c6d90 | `ordem_da_historia_por_clube` | player_stats_compare_history_by_club |
 | 0x68afb0 | `ordem_da_projecao_pela_reputacao` | compare_projection_by_reputation_desc |
@@ -1407,6 +1422,7 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x7874b0 | `responder_todas_as_noticias` | News::auto_respond_all |
 | 0x71b3d0 | `responder_ultimos_placares` | latest_scores_input |
 | 0x725860 | `responder_ultimos_placares_da_partida` | match_screens_handle_latest_scores_cycle |
+| 0x8c8090 | `resposta_da_ia_ao_lance` | TRANSFER_MANAGER::ai_respond_to_bid |
 | 0x735870 | `resposta_do_tecnico_da_maquina` | Media::pick_ai_manager_response |
 | 0x556570 | `restaurar_suspensoes_guardadas` | Discipline::restore_held_bans |
 | 0x8cfc90 | `restricoes_da_oferta` | TRANSFER_MANAGER::check_offer_restrictions |

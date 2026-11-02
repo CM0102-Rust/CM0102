@@ -174,7 +174,9 @@ def cadeia(n):
     # chegando à data (Rust ×2 iguais entre si); a carreira original só é registrada
     imp = impressoes(n)
     ok = (imp['jogo'] is not None and len(imp['rust']) >= 2 and len(set(imp['rust'])) == 1 and bool(imp['original'])
-          and not re.search(r'\b[1-9]\d* divergencias', t.split('=== JOGO REAL')[-1]))
+          and not re.search(r'\b[1-9]\d* divergencias|DIVERGENCIA ', t.split('=== JOGO REAL')[-1].split('=== CARREIRA')[0]))
+    # a linha DIVERGENCIA do ddraw.log também barra: o total de comparações só é impresso em marcos, e uma
+    # divergência depois do último marco não entra nele (a 268ª, 02/11/2026)
     return len(nomes), len(acusadas), escapadas, ok
 
 
