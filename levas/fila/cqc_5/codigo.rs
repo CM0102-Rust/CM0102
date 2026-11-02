@@ -255,8 +255,8 @@ fn cqc5_somar((ano, dia): (i32, i32), n: i32) -> (i32, i32) {
 }
 
 /// Os jogos do clube (id) na competição de hoje até (ano, dia) (0x5acbe0: lista nula, tipo 0xfe e lado 0xff
-/// quaisquer), para o comparador. A janela não passa da data dos jogos novos + 7 dias: a busca cria o bloco do ano que
-/// faltar (0x5abf10), e o da partida a 0x5aa680 cria de qualquer jeito.
+/// quaisquer), para o comparador. A janela não passa de onde a 0x5aa680 pode pôr os jogos novos + 14 dias: a busca cria
+/// o bloco do ano que faltar (0x5abf10).
 unsafe fn cqc5_jogos(clube: u32, comp: u32, (ano, dia): (i32, i32)) -> u32 {
     let achar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32 =
         core::mem::transmute(0x5acbe0usize);
@@ -297,11 +297,19 @@ unsafe extern "thiscall" fn comparar_copa_criar_jogos_do_confronto(this: usize, 
     let casa = if completo { cqc5_d(cpq11_time(this, cqc5_w(t))) } else { 0 };
     let ic = if casa != 0 { cqc5_d(casa) as u32 } else { u32::MAX };
     let conferir = ad == 0 && completo && ic != u32::MAX;
-    // o fim da janela: a data da rodada (+ os dias até a volta) ou amanhã, o que vier depois, + 7 dias
+    // o fim da janela: a data da rodada (+ os dias até a volta), amanhã ou a data da rodada seguinte (+0x6b/+0x6d), o
+    // que vier depois, + 14 dias. Com conflito, a 0x5aa680 remarca o jogo (0x5ab510): copa (tipo 2) até a data da
+    // rodada seguinte (sem ela, 2 semanas), os outros tipos até 2 semanas depois; com mais ligas acontece (a 1a rodada
+    // da copa 101, 2001-225, foi a mais de 7 dias)
     let ida = (cqc5_b(e + 5) as i8 as i32 + cqc5_w(this + 0x40) as i32, cqc5_w(e + 3) as i32);
     let ultimo = if duas { cqc5_somar(ida, cqc5_b(e + 0x22) as i32) } else { ida };
     let amanha = cqc5_somar((cqc5_w(0xae2c92) as u16 as i32, cqc5_w(0xae2c90) as i32), 1);
-    let fim = cqc5_somar(ultimo.max(amanha), 7);
+    let seguinte = if ri < cqc5_w(this + 0x3c) as i32 - 1 {
+        (cqc5_b(e + 0x6d) as i8 as i32 + cqc5_w(this + 0x40) as i32, cqc5_w(e + 0x6b) as i32)
+    } else {
+        ultimo
+    };
+    let fim = cqc5_somar(ultimo.max(amanha).max(seguinte), 14);
     let antes = if conferir { cqc5_jogos(ic, id, fim) } else { 0 };
     let r = o(this, rodada, confronto, adiar);
     let marca = cqc5_b(t + 0x34);
