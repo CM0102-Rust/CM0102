@@ -131,10 +131,22 @@ def bancada(dono, arquivos, sem_trava=False):
             trava.__exit__(None, None, None)
 
 
+def caixa_do_jogo(log):
+    """'caixa do jogo: titulo | texto' da primeira linha `msgbox AAAA-DDD titulo | texto` do ddraw.log (a DLL registra
+    toda caixa de mensagem do jogo antes de ela aparecer), ou None."""
+    if not os.path.exists(log):
+        return None
+    with open(log, encoding='utf-8', errors='replace') as f:
+        m = re.search(r'^msgbox \S+ (.*)$', f.read(), re.M)
+    return m and 'caixa do jogo: ' + m.group(1)
+
+
 def rodar(args, semente, extra=()):
     """Uma execucao do jogo; `extra` vai no fim da linha de comando (ex.: ['-load', save])."""
     limpar_temporarios()
     log = os.path.join(JOGO, 'ddraw.log')
+    if os.path.exists(log):
+        os.remove(log)  # nada da execucao anterior (uma linha msgbox velha pararia esta)
     # Ambiente minimo e fixo: a CRT do jogo copia cada variavel para a heap logo no inicio, e
     # variaveis diferentes (do terminal, ou CM_ORIGINAL presente so num modo) deslocavam a heap
     # e mudavam a carreira. Todas as CM_* vao sempre, com valores do mesmo tamanho.
@@ -172,6 +184,12 @@ def rodar(args, semente, extra=()):
             break
         except subprocess.TimeoutExpired:
             pass
+        # uma caixa do jogo (desvios::caixa_de_mensagem): oculto, o jogo ficaria parado esperando o OK
+        caixa = caixa_do_jogo(log)
+        if caixa:
+            p.kill()
+            p.wait()
+            return None, time.time() - t0, caixa
         if time.time() - t0 > args.limite:
             p.kill()
             p.wait()
@@ -196,6 +214,8 @@ def rodar(args, semente, extra=()):
     segundos = time.time() - t0
     texto = open(log, encoding='utf-8', errors='replace').read() if os.path.exists(log) else ''
     m = re.search(r'SIMULACAO parou em (\S+) sorteios=(\d+) ponteiro=(\S+) deslocamento=(\S+) rand=(\S+)', texto)
+    if not m and caixa_do_jogo(log):
+        return None, segundos, caixa_do_jogo(log)
     if not m:
         return None, segundos, 'o jogo saiu sem chegar na data (codigo %s); veja jogo\\ddraw.log' % p.returncode
     impressao = hashlib.sha1(' '.join(m.groups()[1:]).encode()).hexdigest()[:16]

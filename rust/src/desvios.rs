@@ -559,10 +559,75 @@ unsafe fn exe_nosso() -> bool {
     nosso
 }
 
+// ---------- as caixas de mensagem do jogo no ddraw.log (so observa) ----------
+//
+// gui_show_message_box (0x5e8290, cdecl: titulo, texto, permitir sair) e desenhada pelo proprio jogo, nao e caixa do
+// Windows: com o jogo oculto (CM_OCULTO), um erro ("Database..cpp 7784") ou o pedido do CD deixa o jogo parado esperando
+// o OK e o teste so via o tempo esgotado. Toda caixa vira a linha `msgbox AAAA-DDD titulo | texto` antes de aparecer, e
+// o simular.py para na hora (02/11/2026). Nao e rotina do motor (fora da PROLOGOS e das ASSINATURAS): roda na pilha do
+// jogo, so formata quando ha caixa, e entra depois dos desvios do motor (os trampolins deles nao mudam de endereco). Em
+// todos os modos, inclusive CM_ORIGINAL e CM_SEM_DESVIOS (so observa). As rotinas portadas chamam a caixa pelo endereco
+// do jogo, entao tambem passam por aqui.
+
+/// A caixa original (ou o salto de outra DLL que a desviou antes), pelo trampolim.
+static mut CAIXA_ORIGINAL: usize = 0;
+
+unsafe extern "C" fn caixa_de_mensagem(titulo: *const u8, texto: *const u8, sair: u32) -> u32 {
+    // texto ANSI do jogo, um byte por caractere; quebras e tabulacoes viram espaco (uma linha so no log)
+    let ler = |p: *const u8| -> String {
+        if p.is_null() {
+            return String::new();
+        }
+        let n = (0..1024).position(|k| *p.add(k) == 0).unwrap_or(1024);
+        core::slice::from_raw_parts(p, n).iter().map(|&c| if matches!(c, b'\n' | b'\r' | b'\t') { ' ' } else { c as char }).collect()
+    };
+    linha(&format!("msgbox {}-{:03} {} | {}", *(0xae2c92 as *const u16), *(0xae2c90 as *const u16), ler(titulo), ler(texto)));
+    let original: unsafe extern "C" fn(*const u8, *const u8, u32) -> u32 = core::mem::transmute(CAIXA_ORIGINAL);
+    original(titulo, texto, sair)
+}
+
+/// Desvia a 0x5e8290 para `caixa_de_mensagem`. A entrada original (`sub esp,0x6c; mov ecx,[0xb67a30]`, 9 bytes sem
+/// instrucao relativa) vai para o trampolim; um `jmp` de outra DLL ali (a LaMOHatesCD do CLZ troca esses 9 bytes) e
+/// encadeado no destino dele; outra coisa, nao mexe e diz no log. Uma vez so (de novo, encadearia em si mesma).
+unsafe fn instalar_caixa() {
+    static FEITO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    if FEITO.swap(true, std::sync::atomic::Ordering::Relaxed) {
+        return;
+    }
+    const E: usize = 0x5e8290;
+    const ENTRADA: [u8; 9] = [0x83, 0xec, 0x6c, 0x8b, 0x0d, 0x30, 0x7a, 0xb6, 0x00];
+    let atual = *(E as *const [u8; 9]);
+    if atual != ENTRADA && atual[0] != 0xe9 {
+        linha(&format!("msgbox: caixas do jogo fora do log (entrada de {:#x} mudada: {:02x?})", E, atual));
+        return;
+    }
+    let t = executavel(16) as *mut u8;
+    if t.is_null() {
+        linha("msgbox: caixas do jogo fora do log (sem memoria executavel)");
+        return;
+    }
+    let como = if atual == ENTRADA {
+        core::ptr::copy_nonoverlapping(ENTRADA.as_ptr(), t, 9);
+        escrever_jmp(t.add(9), E + 9); // o E9 em t+9 termina em t+14
+        "a do exe"
+    } else {
+        escrever_jmp(t, (E + 5).wrapping_add(core::ptr::read_unaligned((E + 1) as *const i32) as usize));
+        "encadeada no salto de outra DLL"
+    };
+    CAIXA_ORIGINAL = t as usize;
+    let mut antiga = 0u32;
+    win::VirtualProtect(E as *mut c_void, 5, win::PAGE_EXECUTE_READWRITE, &mut antiga);
+    escrever_jmp(E as *mut u8, caixa_de_mensagem as *const () as usize);
+    win::VirtualProtect(E as *mut c_void, 5, antiga, &mut antiga);
+    win::FlushInstructionCache(win::GetCurrentProcess(), E as *const c_void, 5);
+    linha(&format!("msgbox: as caixas do jogo vao para o log ({})", como));
+}
+
 /// Instala todos os desvios. Chamado no carregamento da DLL, antes do WinMain do jogo.
 pub unsafe fn instalar() {
     if win::ambiente("CM_SEM_DESVIOS") {
         linha("desvios: desligados (CM_SEM_DESVIOS)");
+        instalar_caixa(); // so observa; num exe com patch, a DLL dele pode trocar a entrada depois (a caixa sai do log)
         return;
     }
     if !exe_nosso() {
@@ -576,6 +641,7 @@ pub unsafe fn instalar() {
     // Simulacao em lote (CM_PARAR_EM): relogio fixo, para a simulacao ser reproduzivel.
     crate::simulacao::instalar();
     instalar_motor();
+    instalar_caixa();
 }
 
 /// Primeira DirectDrawCreate: a instalacao adiada do exe com patch (nada nos exes nossos).
@@ -584,6 +650,7 @@ pub unsafe fn instalar_adiado() {
         linha(&format!("desvios: instalacao adiada (data do jogo {:?})", *(0xae2c90 as *const [u16; 2])));
         conferir_assinaturas();
         instalar_motor();
+        instalar_caixa();
     }
 }
 
