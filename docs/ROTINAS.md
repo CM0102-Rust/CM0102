@@ -3536,3 +3536,13 @@ Mutações: `mutacoes/leva267.py` (29, pela carreira até 2002-06-01, confirmand
 | `cqe6_pode_emprestar_espanha()` | 0x859630 | thiscall, ret 0x10 | spain_rules.cpp: recusa fora da janela (9) e entre clubes da mesma divisão depois de cinco jogos do jogador na liga (0x1f) |
 
 Mutações: `mutacoes/leva268.py` (18, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 17 acusadas. `cqe1_preco_sempre_o_piso` escapou: o ramo do preço pelo k rodou (contador ≥ 256), mas em nenhuma das ofertas até 2002-06-01 a opção mais barata mudou a decisão: as que a IA aceitou continuaram acima do pedido e as recusadas abaixo, e só 8 lances chegaram à contraproposta; a comparação rotina a rotina também não acusou [inferência]. (lacuna em `PENDENCIAS.md`) Jogo real comparando até 2002-01-01: 0 divergências (8845ebc9). Carreiras até 2002-06-01: Rust ×2 151bdf85, original 117d6bb4 (registrada; não barra a leva desde 31/10/2026). Detector de lixo: igual.
+
+### Simulação, 269ª leva — a liga: os jogos de maior nota levados ao dia e à fatia da TV, a notícia do sorteio dos grupos e a notícia dos primeiros jogos (oficial em 02/11/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `liga_jogos_para_a_tv()` | 0x685640 | thiscall, ret 4 | league.cpp: nas datas da tabela da TV, cada vaga leva o jogo de maior nota (sorteio pelas reputações, zerado com jogo de um dos clubes 2..5 dias antes ou depois; 100/50 nas vagas de seleção) para o dia da semana e a fatia da vaga, com a notícia, o estádio e o calendário |
+| `liga_noticia_dos_grupos()` | 0x684230 | thiscall, ret 0 | league.cpp: a notícia 0x15 do grupo (a competição, a primeira data, os adversários) a cada clube de técnico humano |
+| `liga_noticia_da_tabela()` | 0x683ee0 | thiscall, ret 4 | league.cpp: a notícia 0xd com os três primeiros jogos (data, adversário, mando) a cada clube de técnico humano ainda não avisado, e o mesmo nas fases seguintes |
+
+Mutações: `mutacoes/leva269.py` (3, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 3 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (8845ebc9). Carreiras até 2002-06-01: Rust ×2 151bdf85, original 385e2e8b (registrada; não barra a leva desde 31/10/2026). Detector de lixo: igual.

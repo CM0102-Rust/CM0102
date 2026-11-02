@@ -847,6 +847,9 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 | 0x689ad0 | `liga_completa` | League::check_complete |
 | 0x6835c0 | `liga_criar_tabela` | League::create_fixtures |
 | 0x6847c0 | `liga_dia` | League::update_for_date |
+| 0x685640 | `liga_jogos_para_a_tv` | League::move_fixtures_for_tv |
+| 0x683ee0 | `liga_noticia_da_tabela` | League::send_fixture_list_news |
+| 0x684230 | `liga_noticia_dos_grupos` | League::send_group_draw_news |
 | 0x689c80 | `liga_promover_e_rebaixar` | league_promote_and_relegate |
 | 0x68abd0 | `liga_tem_o_clube` | League::contains_club |
 | 0x6847b0 | `liga_tem_rebaixamento` | League::has_relegation |

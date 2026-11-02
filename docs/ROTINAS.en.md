@@ -3538,3 +3538,13 @@ Mutations: `mutacoes/leva267.py` (29, by the career to 2002-06-01, confirming th
 | `cqe6_pode_emprestar_espanha()` | 0x859630 | thiscall, ret 0x10 | spain_rules.cpp: refuses outside the window (9) and between clubs of the same division after five league games of the player (0x1f) |
 
 Mutations: `mutacoes/leva268.py` (18, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 17 caught. `cqe1_preco_sempre_o_piso` escaped: the price-by-k branch ran (counter ≥ 256), but in none of the offers to 2002-06-01 did the cheaper option change the decision: those the AI accepted stayed above the asking price and the refused ones below, and only 8 bids reached a counter-offer; the routine-by-routine comparison did not flag it either [inference]. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (8845ebc9). Careers to 2002-06-01: Rust ×2 151bdf85, original 117d6bb4 (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.
+
+### Simulation, 269th batch — the league: the highest-rated fixtures moved to the TV day and slot, the group draw news and the opening fixtures news (official on 2026-11-02)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `liga_jogos_para_a_tv()` | 0x685640 | thiscall, ret 4 | league.cpp: on the TV table dates, each slot takes the highest-rated fixture (a draw by reputation, zeroed when either club plays 2..5 days before or after; 100/50 in national team slots) to the weekday and time slot of the slot, with the news, the stadium and the calendar |
+| `liga_noticia_dos_grupos()` | 0x684230 | thiscall, ret 0 | league.cpp: group news 0x15 (the competition, the first date, the opponents) to each human-managed club |
+| `liga_noticia_da_tabela()` | 0x683ee0 | thiscall, ret 4 | league.cpp: news 0xd with the first three fixtures (date, opponent, venue) to each human-managed club not yet told, and the same in the following stages |
+
+Mutations: `mutacoes/leva269.py` (3, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 3 caught.  Real game comparing to 2002-01-01: 0 divergences (8845ebc9). Careers to 2002-06-01: Rust ×2 151bdf85, original 385e2e8b (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.
