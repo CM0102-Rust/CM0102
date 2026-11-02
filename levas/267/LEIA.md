@@ -72,7 +72,7 @@
 - regen (PLAYER_REGEN [0xb7434c]) +4/+8 aposentadorias pendentes (26 bytes: +0 pessoa, +4 clube, +8/+0xa anúncio, +0x10/+0x12 data, +0x18 motivo, +0x19 anunciada); ponteiro/valor; lê e grava (aposentadorias_do_dia)
 - regen +0x10/+0x14 vagas para o regen (12 bytes: pessoa, dia, ano, bissexto 1); +0x1c/+0x20 reserva de fichas de não jogador; ponteiro/valor; lê e grava
 - [0xae2d0c] + 79 × id +0xb marcas da aposentadoria (0x10 anunciada, 0x20 vaga, 0xf); valor; lê e grava
-- pessoa +0x18 idade, +0x1a/+0x1e nações, +0x22 reputação, +0x39 clube, +0x3d cargo, +0x3e/+0x42 data de chegada, +0x52, +0x57, +0x5b, +0x5f, +0x61 ficha (+9, +0xb, +0xd, +0xf), +0x69 registro de não jogador (+8, +0xa, +0xc, +0x10, +0x11); valor/ponteiro; lê e grava
+- pessoa +0x18 idade, +0x1a/+0x1e nações, +0x22 jogos pela seleção (byte), +0x39 clube, +0x3d cargo, +0x3e/+0x42 data de chegada, +0x52, +0x57, +0x5b, +0x5f, +0x61 ficha (+9, +0xb, +0xd, +0xf), +0x69 registro de não jogador (+8, +0xa, +0xc, +0x10, +0x11); valor/ponteiro; lê e grava
 - clube +0x53 nação, +0x57 divisão, +0x7f força, +0x80 reputação, +0xd3 auxiliar, +0x19f treinadores; ponteiro/valor; lê (as notícias)
 - [[0xde1f54] + 0x856] (+0xdc linhas de 9 bytes por clube, +8 = 100); ponteiro/valor; grava
 - AWOL +0xc tabela de marcas (um byte por pessoa: bit 1 ausente, bit 2 faltou ao treino); valor; lê e grava (limpar_ausencia, limpar_falta_ao_treino)

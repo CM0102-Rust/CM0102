@@ -72,7 +72,7 @@
 - regen (PLAYER_REGEN [0xb7434c]) +4/+8 pending retirements (26 bytes: +0 person, +4 club, +8/+0xa announcement, +0x10/+0x12 date, +0x18 reason, +0x19 announced); pointer/value; reads and writes (aposentadorias_do_dia)
 - regen +0x10/+0x14 regen slots (12 bytes: person, day, year, leap flag 1); +0x1c/+0x20 spare non-player record pool; pointer/value; reads and writes
 - [0xae2d0c] + 79 × id +0xb retirement flags (0x10 announced, 0x20 slot, 0xf); value; reads and writes
-- person +0x18 age, +0x1a/+0x1e nations, +0x22 reputation, +0x39 club, +0x3d job, +0x3e/+0x42 joined date, +0x52, +0x57, +0x5b, +0x5f, +0x61 player record (+9, +0xb, +0xd, +0xf), +0x69 non-player record (+8, +0xa, +0xc, +0x10, +0x11); value/pointer; reads and writes
+- person +0x18 age, +0x1a/+0x1e nations, +0x22 international caps (byte), +0x39 club, +0x3d job, +0x3e/+0x42 joined date, +0x52, +0x57, +0x5b, +0x5f, +0x61 player record (+9, +0xb, +0xd, +0xf), +0x69 non-player record (+8, +0xa, +0xc, +0x10, +0x11); value/pointer; reads and writes
 - club +0x53 nation, +0x57 division, +0x7f strength, +0x80 reputation, +0xd3 assistant, +0x19f coaches; pointer/value; reads (the news)
 - [[0xde1f54] + 0x856] (+0xdc 9-byte rows per club, +8 = 100); pointer/value; writes
 - AWOL +0xc flag table (one byte per person: bit 1 absent, bit 2 missed training); value; reads and writes (limpar_ausencia, limpar_falta_ao_treino)
