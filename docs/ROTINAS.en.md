@@ -3610,3 +3610,22 @@ Mutations: `mutacoes/leva270.py` (30, by the career to 2002-06-01, confirming th
 | `tipo_da_linha()` | 0x7a3140 | cdecl | player_regen.cpp: the type bit of a player_setup.cfg line (injury, manager, retirement, transfer, loan, doping, misconduct, passport, tactics, colour blindness, language, absence) |
 
 Mutations: `mutacoes/leva271.py` (21, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 21 caught.  Real game comparing to 2002-01-01: 0 divergences (8845ebc9). Careers to 2002-06-01: Rust ×2 151bdf85, original 932f1944 (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.
+
+### Simulation, 272nd batch — the Champions League: the phase 1 group draw (same-nation partners, halves, pots, prize, stages and the losers to the UEFA Cup), the pot order and the predicted positions; the Champions League: the phase 2 group draw (same-group pairs, halves, nations, prize, stages, third places to the UEFA Cup) and the qualifiers' order; the group of a stage by id; the Champions League: the round schedule of the group stages (the dates of both phases, by half); the league: the season expectations and a club relegation; the competition: all stages complete, the club list and the club progress (official on 2026-11-03)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `campeoes_sortear_grupos()` | 0x585290 | thiscall, ret 0 | european_cup.cpp: the 32 clubs sorted by pot, the same-nation partners in opposite halves, the draw of the 8 groups pot by pot, the swap of same-nation clubs in a group, the coefficient, the 1,800,000 prize and its news, the 8 stages and the third qualifying round losers into the UEFA Cup |
+| `campeoes_ordem_dos_potes()` | 0x586f60 | cdecl | european_cup.cpp: the pot comparison: the club's European seed (+0x1df), and on a tie the higher reputation first |
+| `campeoes_posicoes_previstas()` | 0x586900 | thiscall, ret 0 | european_cup.cpp: the entrants sorted by strength and each one's predicted position: the knockout from the final back, the second and first group phases and the qualifying rounds |
+| `campeoes_sortear_segunda_fase()` | 0x585ab0 | thiscall, ret 4 | european_cup.cpp: the 16 qualifiers sorted, the same-group pairs, each one's group choice (shuffled order, fewest teams, no same group nor nation), the redraw up to 20 times, the coefficient, the 1,200,000 prize and its news, stages 8 to 11 and the third places into the UEFA Cup |
+| `campeoes_ordem_da_segunda_fase()` | 0x5871e0 | cdecl | european_cup.cpp: the qualifiers comparison: more same-nation clubs first, then the higher nation word +0x8e, then the group winner before the runner-up |
+| `grupo_da_fase()` | 0x4b01d0 | cdecl | comp_util.cpp: the group (the containing stage) of a stage or round by id, by the fixed ranges; −1 without a group |
+| `campeoes_rodadas_da_fase()` | 0x583c50 | thiscall, ret 0x10 | european_cup.cpp: in the group stages, the 6-round schedule (phase 1 dates in September and October and phase 2 from November to March, by half) with fixture 0 of each round empty; the qualifying rounds and the knockout stay with the original |
+| `liga_expectativas_da_temporada()` | 0x68aa80 | thiscall, ret 0 | league.cpp: the season expectations of each club in the table, through the manager manager, with the news |
+| `liga_rebaixar_clube()` | 0x6831a0 | thiscall, ret 0xc | league.cpp: the club goes down to the division (keeping the previous one), the relegation clauses and the human manager leaving when the division is not played |
+| `competicao_todas_completas()` | 0x48ce10 | thiscall, ret 0 | comp.cpp: in the top competition, whether it and every one down the chain are complete |
+| `competicao_lista_de_clubes()` | 0x48e1c0 | thiscall, ret 8 | comp.cpp: the vector of the distinct clubs of all stages (up to 200) and the count |
+| `competicao_progresso_do_clube()` | 0x48cc70 | thiscall, ret 0x10 | comp.cpp: the stage id, the status and the round the club reached, from the last stage back |
+
+Mutations: `mutacoes/leva272.py` (11, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 10 caught. `cqh6_lista_com_repetidos` escaped: no phase of the career to 2002-06-01 has a repeated club in the list, so removing the repeat check changes nothing. (gap in `PENDENCIAS.en.md`) Real game comparing to 2002-01-01: 0 divergences (8845ebc9). Careers to 2002-06-01: Rust ×2 151bdf85, original 2aacab3a (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.

@@ -20,6 +20,10 @@ unsafe fn cqd13_pi(a: usize, v: i32) {
 /// convocações (0x774f30) e sem a renovação (0x4cda70), anotando os contratos que a renovação mexeria.
 static mut CQD13_ENSAIO: bool = false;
 static mut CQD13_RENOVADOS: Vec<usize> = Vec::new();
+/// Depois da última conta de dias (0x54cdb0) da cópia, o ensaio pulou uma chamada da original que também conta dias
+/// e deixa a data de rascunho estática dela (0xae2470) noutro ano: a renovação (0x4cda70, pela idade), o fim das
+/// convocações (0x774f30) ou a notícia do elogio (0x75c390). Essa data então fica fora da conta.
+static mut CQD13_DATA_SOLTA: bool = false;
 
 /// A reputação do clube (+0x80) sobe até peso × 500, no máximo 750 de uma vez (entre 1 e 10000; soma em 16 bits).
 unsafe fn cqd13_reputacao(clube: usize, peso: i16, campeao_da_liga: bool) {
@@ -50,7 +54,11 @@ unsafe fn cqd13_moral(k: usize, d: i32) {
 /// ([0xde1f54]), mais de 300 dias desde a data do contrato (+0x25; 0x54cdb0) e a vaga dele na lista do clube (0x849ce0
 /// com 0, 0; +0xf o id). No ensaio, só anota o contrato.
 unsafe fn cqd13_renovar(clube: usize, p: usize, k: usize) {
-    if cqd13_d(0xde1f54) == 0 || cqa12_dias(0xae2c90, k + 0x25) <= 300 {
+    if cqd13_d(0xde1f54) == 0 {
+        return;
+    }
+    CQD13_DATA_SOLTA = false;
+    if cqa12_dias(0xae2c90, k + 0x25) <= 300 {
         return;
     }
     let vaga_de: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
@@ -61,6 +69,7 @@ unsafe fn cqd13_renovar(clube: usize, p: usize, k: usize) {
     }
     if CQD13_ENSAIO {
         (*core::ptr::addr_of_mut!(CQD13_RENOVADOS)).push(k);
+        CQD13_DATA_SOLTA = true;
         return;
     }
     let oferecer: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, f64, u32) -> u32 = core::mem::transmute(0x4cda70usize);
@@ -108,6 +117,7 @@ unsafe fn cqd13_historico_do_clube(this: usize, clube: usize, tipo: u8, comp: us
 /// A notícia do elogio do título (0x75c390 em [0xb6b7c8]; fora do ensaio).
 unsafe fn cqd13_elogio(clube: usize, comp: usize, marca: u32) {
     if CQD13_ENSAIO {
+        CQD13_DATA_SOLTA = true;
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x75c390usize);
@@ -313,10 +323,12 @@ unsafe extern "thiscall" fn campeao_da_copa_nos_registros(this: usize, clube: us
         }
         cqd13_renovar(clube, p, k);
     }
-    if !CQD13_ENSAIO {
-        let guardada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x76d940usize);
-        // 0x76d940 e 0x774f30: push comp; mov ecx, [0xb74318] (a 0x76d940 não lê o ecx; ret 4 nas duas)
-        if guardada(cqd13_d(0xb74318), cqd13_d(jogo + 0x14)) != 0 {
+    let guardada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x76d940usize);
+    // 0x76d940 e 0x774f30: push comp; mov ecx, [0xb74318] (a 0x76d940 não lê o ecx e só compara o id; ret 4 nas duas)
+    if guardada(cqd13_d(0xb74318), cqd13_d(jogo + 0x14)) != 0 {
+        if CQD13_ENSAIO {
+            CQD13_DATA_SOLTA = true;
+        } else {
             let acabar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x774f30usize);
             acabar(cqd13_d(0xb74318), cqd13_d(jogo + 0x14));
         }
@@ -336,7 +348,10 @@ unsafe extern "thiscall" fn campeao_da_copa_nos_registros(this: usize, clube: us
 /// (as três do lado na partida, ou +8..+0xd do registro de não jogador do técnico), o +0x7b do clube e o +0x44 do bloco
 /// +0x69 (na liga), o moral (+0x45 da ficha) e o do contrato (+0x44) dos 50 do elenco e a data estática da 0x54cdb0. O
 /// moral dos contratos que a renovação mexeria (a original renova) e o estado do sorteador (as notícias da original
-/// sorteiam) não entram na conta; o sorteador volta ao de antes para a original.
+/// sorteiam) não entram na conta; o sorteador volta ao de antes para a original. A renovação da original também sorteia
+/// e conta dias (0x54cdb0): o moral das fichas depois do primeiro renovado fica fora da igualdade e é conferido pela
+/// faixa da 0x544710; a data estática fica fora quando o ensaio pulou, depois da última conta de dias da cópia, uma
+/// chamada da original que conta dias (CQD13_DATA_SOLTA). Visto na ENG em maio de 2002 e na auditoria das 8 ligas.
 unsafe fn cqd13_comparar(nome: &str, this: usize, clube: usize, notas: (usize, usize), liga: bool, original: impl FnOnce(), copia: impl FnOnce()) {
     let mut fixas: Vec<(usize, usize)> = vec![(clube + 0x80, 2), (0xae2470, 8), notas];
     let t = cqd13_d(clube + 0xcf);
@@ -353,33 +368,52 @@ unsafe fn cqd13_comparar(nome: &str, this: usize, clube: usize, notas: (usize, u
     }
     let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let mut contratos = Vec::new();
+    let mut fichas = Vec::new(); // (moral da ficha, contrato ou 0, moral de antes), na ordem do elenco
     for j in 0..50usize {
         let p = cqd13_d(clube + 0xd7 + 4 * j);
         if p == 0 || cqd13_d(p + 0x61) == 0 || cqd13_i(p) >= cqd13_i(0xae2364) {
             continue;
         }
-        fixas.push((cqd13_d(p + 0x61) + 0x45, 1));
         let k = contrato(cqd13_d(0xae1050), p, clube);
+        let m = cqd13_d(p + 0x61) + 0x45;
+        fichas.push((m, k, *(m as *const i8)));
         if k != 0 {
             contratos.push(k);
         }
     }
     let mut todas = fixas.clone();
+    todas.extend(fichas.iter().map(|&(m, _, _)| (m, 1)));
     todas.extend(contratos.iter().map(|&k| (k + 0x44, 1)));
     todas.extend(crate::aleatorio::REGIOES_DO_ESTADO.iter().copied());
     let antes = crate::comparacao::Memoria::ler(&todas);
     (*core::ptr::addr_of_mut!(CQD13_RENOVADOS)).clear();
+    CQD13_DATA_SOLTA = false;
     CQD13_ENSAIO = true;
     crate::aleatorio::sem_contar(copia);
     CQD13_ENSAIO = false;
     let renovados = core::mem::take(&mut *core::ptr::addr_of_mut!(CQD13_RENOVADOS));
     let mut conta = fixas;
+    if CQD13_DATA_SOLTA {
+        conta.retain(|&(a, _)| a != 0xae2470);
+    }
+    // A renovação da original sorteia (0x4cda70): o moral dos jogadores depois do primeiro renovado (0x544710 sorteia)
+    // sai de outro ponto do sorteador; o dele e os de antes entram na conta.
+    let corte = renovados.first().and_then(|r| fichas.iter().position(|&(_, k, _)| k == *r)).unwrap_or(fichas.len());
+    conta.extend(fichas.iter().take(corte + 1).map(|&(m, _, _)| (m, 1)));
     conta.extend(contratos.iter().filter(|k| !renovados.contains(k)).map(|&k| (k + 0x44, 1)));
+    // Os de depois, pela faixa da 0x544710: o moral m sobe de 0 a 20 (+20 ou +10 sorteados), preso em 1..20.
+    let faixa = |&(m, _, m0): &(usize, usize, i8)| -> bool {
+        let (m0, v) = (m0 as i32, *(m as *const i8) as i32);
+        v >= m0.clamp(1, 20) && v <= (m0 + 20).clamp(1, 20)
+    };
+    let mut na_faixa = fichas.iter().skip(corte + 1).all(faixa);
     let mr = crate::comparacao::Memoria::ler(&conta);
     antes.escrever();
     original();
+    na_faixa &= fichas.iter().skip(corte + 1).all(faixa);
     let mo = crate::comparacao::Memoria::ler(&conta);
-    PLACAR.registrar(mo == mr, || format!("{}(clube {:#x}) renovados {} original={:x?} rust={:x?}", nome, clube, renovados.len(), mo, mr));
+    PLACAR.registrar(mo == mr && na_faixa, || format!("{}(clube {:#x}) renovados {} (o primeiro na ficha {} de {}; fora da faixa: {}) original={:x?} rust={:x?}",
+        nome, clube, renovados.len(), corte, fichas.len(), !na_faixa, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_campeao_da_liga_nos_registros(this: usize, clube: usize, comp: usize) {

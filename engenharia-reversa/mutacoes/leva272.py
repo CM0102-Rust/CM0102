@@ -1,0 +1,15 @@
+# Mutações da 272a leva (itens cqg_4, cqg_6, cqh_4, cqh_6). Uso: python mutacoes.py mutacoes\leva272.py --carreira 2002-06-01
+MUTACOES = [
+    ('cqg4_sem_parceiro_de_um_lado', 'cqg4_pd(e + 4, cqg4_d(o)); // cqg4: o parceiro da mesma nação', 'cqg4_pd(e + 4, 0); // mutacao: sem o parceiro deste lado', 'cqg_4 parceiro da mesma nação'),
+    ('cqg4_sorteio_a_mais_no_pote', 'let mut s = sorteio(8).wrapping_add(base); // cqg4: o clube sorteado do pote', 'let mut s = { sorteio(8); sorteio(8) }.wrapping_add(base); // mutacao: um sorteio a mais', 'cqg_4 clube sorteado'),
+    ('cqg4_premio_pela_metade', 'let valor = 1_800_000i32; // cqg4: o prêmio da fase de grupos', 'let valor = 900_000i32; // mutacao: a metade do premio', 'cqg_4 prêmio da fase de grupos'),
+    ('cqg6_premio_pela_metade', 'let valor = 1_200_000i32; // cqg6: o prêmio da segunda fase', 'let valor = 600_000i32; // mutacao: a metade do premio', 'cqg_6 prêmio da segunda fase'),
+    ('cqg6_sorteio_a_mais_na_troca', 'let b = sorteio(4) as i8 as usize; // cqg6: a troca da ordem dos grupos', 'let b = { sorteio(4); sorteio(4) } as i8 as usize; // mutacao: um sorteio a mais', 'cqg_6 troca da ordem'),
+    ('cqg6_nacao_nao_impede', 'if cqg6_b(v + 5) == cqg6_b(p + 5) || cqg6_nacao(clube) == cqg6_nacao(cqg6_d(p)) { // cqg6: mesmo grupo ou nação', 'if cqg6_b(v + 5) == cqg6_b(p + 5) { // mutacao: so o grupo da primeira fase', 'cqg_6 grupo escolhido'),
+    ('cqh4_primeira_rodada_a_d_depois', '[(0, 0xc, 8, 0, 1), (1, 0x14, 8, 0, 2), (2, 0x1b, 8, 0, 2), (3, 0x11, 9, 0, 1), (4, 0x19, 9, 0, 2), (5, 7, 0xa, 0, 1)], // cqh4: a primeira fase, grupos A a D', '[(0, 0x13, 8, 0, 1), (1, 0x14, 8, 0, 2), (2, 0x1b, 8, 0, 2), (3, 0x11, 9, 0, 1), (4, 0x19, 9, 0, 2), (5, 7, 0xa, 0, 1)], // mutacao: uma semana depois', 'cqh_4 tabela das rodadas'),
+    ('cqh4_primeira_rodada_e_h_depois', '[(0, 0xd, 8, 0, 2), (1, 0x13, 8, 0, 1), (2, 0x1a, 8, 0, 1), (3, 0x12, 9, 0, 2), (4, 0x18, 9, 0, 1), (5, 8, 0xa, 0, 2)], // cqh4: a primeira fase, grupos E a H', '[(0, 0x14, 8, 0, 2), (1, 0x13, 8, 0, 1), (2, 0x1a, 8, 0, 1), (3, 0x12, 9, 0, 2), (4, 0x18, 9, 0, 1), (5, 8, 0xa, 0, 2)], // mutacao: uma semana depois', 'cqh_4 tabela das rodadas'),
+    ('cqh4_ultima_rodada_segunda_fase_depois', '[(0, 0x16, 0xa, 0, 2), (1, 5, 0xb, 0, 1), (2, 0xd, 1, 1, 1), (3, 0x15, 1, 1, 2), (4, 6, 2, 1, 1), (5, 0xe, 2, 1, 2)], // cqh4: a segunda fase, grupos C e D', '[(0, 0x16, 0xa, 0, 2), (1, 5, 0xb, 0, 1), (2, 0xd, 1, 1, 1), (3, 0x15, 1, 1, 2), (4, 6, 2, 1, 1), (5, 0x15, 2, 1, 2)], // mutacao: uma semana depois', 'cqh_4 tabela das rodadas'),
+    ('cqh6_lista_de_16', '&& n < 0xc8 { // cqh6: até 200 clubes', '&& n < 0x10 { // mutacao: ate 16 clubes', 'cqh_6 clube na lista'),
+    ('cqh6_lista_com_repetidos', 'if clube != 0 && !(0..n).any(|k| cqh6_d(v + k as usize * 4) == clube) && n < 0xc8 {', 'if clube != 0 && n < 0xc8 { // mutacao: com os repetidos', 'cqh_6 clube na lista'),
+    ('cqh6_sem_as_ligas_de_baixo', 'i = cqh6_d(c + 0x20) as i32; // cqh6: a liga de baixo', 'i = -1; // mutacao: sem as ligas de baixo', 'cqh_6 liga de baixo completa'),
+]

@@ -205,6 +205,12 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x6c41b0 | `caminho_livre_ate` | clear_path_to |
 | 0x86a800 | `campeao_da_copa_nos_registros` | Staff_Records::add_cup_winners_record |
 | 0x868c50 | `campeao_da_liga_nos_registros` | Staff_Records::add_league_champions_record |
+| 0x5871e0 | `campeoes_ordem_da_segunda_fase` | european_cup_compare_phase2_draw_entries |
+| 0x586f60 | `campeoes_ordem_dos_potes` | european_cup_compare_clubs_by_seed |
+| 0x586900 | `campeoes_posicoes_previstas` | EuropeanCup::rank_teams |
+| 0x583c50 | `campeoes_rodadas_da_fase` | EuropeanCup::create_round_table |
+| 0x585290 | `campeoes_sortear_grupos` | EuropeanCup::draw_phase1_groups |
+| 0x585ab0 | `campeoes_sortear_segunda_fase` | EuropeanCup::draw_phase2_groups |
 | 0x76e040 | `campo_3a_da_pessoa` | person_field_3a |
 | 0x6f4600 | `campo_pela_posicao` | field_by_position |
 | 0x86fab0 | `candidatos_a_tecnico_do_ano` | Staff_Records::get_manager_of_year_candidates |
@@ -303,10 +309,13 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x4b0700 | `competicao_conta` | competition_counts |
 | 0x7751e0 | `competicao_da_pessoa` | person_competition |
 | 0x48cec0 | `competicao_fase_atual` | Comp::get_current_stage |
+| 0x48e1c0 | `competicao_lista_de_clubes` | Comp::collect_club_list |
 | 0x684790 | `competicao_marcada` | competition_flagged |
 | 0x5c29b0 | `competicao_na_data_do_amistoso` | Friendly::is_comp_current_on_date |
 | 0x48d2b0 | `competicao_primeira_fase_do_grupo` | Comp::get_first_stage_of_group |
+| 0x48cc70 | `competicao_progresso_do_clube` | Comp::find_club_progress |
 | 0x5ae6d0 | `competicao_tem_jogo_na_data` | fix_man_comp_has_fixture_on_date |
+| 0x48ce10 | `competicao_todas_completas` | Comp::all_stages_complete |
 | 0x5ce060 | `competicoes_do_dia` | game_update_comps_for_date |
 | 0x8c38b0 | `concluir_oferta_de_contrato_aceita` | TRANSFER_MANAGER::complete_accepted_contract_offer |
 | 0x8cbbe0 | `concluir_transferencias_futuras` | TRANSFER_MANAGER::process_due_future_transfers |
@@ -723,6 +732,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x896a90 | `gravar_vaga_tatica` | set_tactic_slot |
 | 0x7671c0 | `gravar_vencedor_do_mes` | MONTH_AWARD::set_winner |
 | 0x62ec00 | `gravidade_da_lesao` | injury_severity |
+| 0x4b01d0 | `grupo_da_fase` | comp_util_get_parent_stage_id |
 | 0x6854a0 | `grupo_decidido` | group_decided |
 | 0x8be9d0 | `guardar_a_negociacao` | add_transfer_negotiation |
 | 0x6cd660 | `guardar_extremos` | store_extremes |
@@ -867,10 +877,12 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x689ad0 | `liga_completa` | League::check_complete |
 | 0x6835c0 | `liga_criar_tabela` | League::create_fixtures |
 | 0x6847c0 | `liga_dia` | League::update_for_date |
+| 0x68aa80 | `liga_expectativas_da_temporada` | League::set_club_season_expectations |
 | 0x685640 | `liga_jogos_para_a_tv` | League::move_fixtures_for_tv |
 | 0x683ee0 | `liga_noticia_da_tabela` | League::send_fixture_list_news |
 | 0x684230 | `liga_noticia_dos_grupos` | League::send_group_draw_news |
 | 0x689c80 | `liga_promover_e_rebaixar` | league_promote_and_relegate |
+| 0x6831a0 | `liga_rebaixar_clube` | League::relegate_club_to_division |
 | 0x68abd0 | `liga_tem_o_clube` | League::contains_club |
 | 0x6847b0 | `liga_tem_rebaixamento` | League::has_relegation |
 | 0x76c0f0 | `ligar_44_da_pessoa` | set_person_44 |
