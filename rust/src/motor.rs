@@ -48030,6 +48030,10 @@ unsafe fn cqd13_pi(a: usize, v: i32) {
 /// convocações (0x774f30) e sem a renovação (0x4cda70), anotando os contratos que a renovação mexeria.
 static mut CQD13_ENSAIO: bool = false;
 static mut CQD13_RENOVADOS: Vec<usize> = Vec::new();
+/// Depois da última conta de dias (0x54cdb0) da cópia, o ensaio pulou uma chamada da original que também conta dias
+/// e deixa a data de rascunho estática dela (0xae2470) noutro ano: a renovação (0x4cda70, pela idade), o fim das
+/// convocações (0x774f30) ou a notícia do elogio (0x75c390). Essa data então fica fora da conta.
+static mut CQD13_DATA_SOLTA: bool = false;
 
 /// A reputação do clube (+0x80) sobe até peso × 500, no máximo 750 de uma vez (entre 1 e 10000; soma em 16 bits).
 unsafe fn cqd13_reputacao(clube: usize, peso: i16, campeao_da_liga: bool) {
@@ -48060,7 +48064,11 @@ unsafe fn cqd13_moral(k: usize, d: i32) {
 /// ([0xde1f54]), mais de 300 dias desde a data do contrato (+0x25; 0x54cdb0) e a vaga dele na lista do clube (0x849ce0
 /// com 0, 0; +0xf o id). No ensaio, só anota o contrato.
 unsafe fn cqd13_renovar(clube: usize, p: usize, k: usize) {
-    if cqd13_d(0xde1f54) == 0 || cqa12_dias(0xae2c90, k + 0x25) <= 300 {
+    if cqd13_d(0xde1f54) == 0 {
+        return;
+    }
+    CQD13_DATA_SOLTA = false;
+    if cqa12_dias(0xae2c90, k + 0x25) <= 300 {
         return;
     }
     let vaga_de: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
@@ -48071,6 +48079,7 @@ unsafe fn cqd13_renovar(clube: usize, p: usize, k: usize) {
     }
     if CQD13_ENSAIO {
         (*core::ptr::addr_of_mut!(CQD13_RENOVADOS)).push(k);
+        CQD13_DATA_SOLTA = true;
         return;
     }
     let oferecer: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, f64, u32) -> u32 = core::mem::transmute(0x4cda70usize);
@@ -48118,6 +48127,7 @@ unsafe fn cqd13_historico_do_clube(this: usize, clube: usize, tipo: u8, comp: us
 /// A notícia do elogio do título (0x75c390 em [0xb6b7c8]; fora do ensaio).
 unsafe fn cqd13_elogio(clube: usize, comp: usize, marca: u32) {
     if CQD13_ENSAIO {
+        CQD13_DATA_SOLTA = true;
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x75c390usize);
@@ -48323,10 +48333,12 @@ unsafe extern "thiscall" fn campeao_da_copa_nos_registros(this: usize, clube: us
         }
         cqd13_renovar(clube, p, k);
     }
-    if !CQD13_ENSAIO {
-        let guardada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x76d940usize);
-        // 0x76d940 e 0x774f30: push comp; mov ecx, [0xb74318] (a 0x76d940 não lê o ecx; ret 4 nas duas)
-        if guardada(cqd13_d(0xb74318), cqd13_d(jogo + 0x14)) != 0 {
+    let guardada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x76d940usize);
+    // 0x76d940 e 0x774f30: push comp; mov ecx, [0xb74318] (a 0x76d940 não lê o ecx e só compara o id; ret 4 nas duas)
+    if guardada(cqd13_d(0xb74318), cqd13_d(jogo + 0x14)) != 0 {
+        if CQD13_ENSAIO {
+            CQD13_DATA_SOLTA = true;
+        } else {
             let acabar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x774f30usize);
             acabar(cqd13_d(0xb74318), cqd13_d(jogo + 0x14));
         }
@@ -48346,7 +48358,10 @@ unsafe extern "thiscall" fn campeao_da_copa_nos_registros(this: usize, clube: us
 /// (as três do lado na partida, ou +8..+0xd do registro de não jogador do técnico), o +0x7b do clube e o +0x44 do bloco
 /// +0x69 (na liga), o moral (+0x45 da ficha) e o do contrato (+0x44) dos 50 do elenco e a data estática da 0x54cdb0. O
 /// moral dos contratos que a renovação mexeria (a original renova) e o estado do sorteador (as notícias da original
-/// sorteiam) não entram na conta; o sorteador volta ao de antes para a original.
+/// sorteiam) não entram na conta; o sorteador volta ao de antes para a original. A renovação da original também sorteia
+/// e conta dias (0x54cdb0): o moral das fichas depois do primeiro renovado fica fora da igualdade e é conferido pela
+/// faixa da 0x544710; a data estática fica fora quando o ensaio pulou, depois da última conta de dias da cópia, uma
+/// chamada da original que conta dias (CQD13_DATA_SOLTA). Visto na ENG em maio de 2002 e na auditoria das 8 ligas.
 unsafe fn cqd13_comparar(nome: &str, this: usize, clube: usize, notas: (usize, usize), liga: bool, original: impl FnOnce(), copia: impl FnOnce()) {
     let mut fixas: Vec<(usize, usize)> = vec![(clube + 0x80, 2), (0xae2470, 8), notas];
     let t = cqd13_d(clube + 0xcf);
@@ -48363,33 +48378,52 @@ unsafe fn cqd13_comparar(nome: &str, this: usize, clube: usize, notas: (usize, u
     }
     let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let mut contratos = Vec::new();
+    let mut fichas = Vec::new(); // (moral da ficha, contrato ou 0, moral de antes), na ordem do elenco
     for j in 0..50usize {
         let p = cqd13_d(clube + 0xd7 + 4 * j);
         if p == 0 || cqd13_d(p + 0x61) == 0 || cqd13_i(p) >= cqd13_i(0xae2364) {
             continue;
         }
-        fixas.push((cqd13_d(p + 0x61) + 0x45, 1));
         let k = contrato(cqd13_d(0xae1050), p, clube);
+        let m = cqd13_d(p + 0x61) + 0x45;
+        fichas.push((m, k, *(m as *const i8)));
         if k != 0 {
             contratos.push(k);
         }
     }
     let mut todas = fixas.clone();
+    todas.extend(fichas.iter().map(|&(m, _, _)| (m, 1)));
     todas.extend(contratos.iter().map(|&k| (k + 0x44, 1)));
     todas.extend(crate::aleatorio::REGIOES_DO_ESTADO.iter().copied());
     let antes = crate::comparacao::Memoria::ler(&todas);
     (*core::ptr::addr_of_mut!(CQD13_RENOVADOS)).clear();
+    CQD13_DATA_SOLTA = false;
     CQD13_ENSAIO = true;
     crate::aleatorio::sem_contar(copia);
     CQD13_ENSAIO = false;
     let renovados = core::mem::take(&mut *core::ptr::addr_of_mut!(CQD13_RENOVADOS));
     let mut conta = fixas;
+    if CQD13_DATA_SOLTA {
+        conta.retain(|&(a, _)| a != 0xae2470);
+    }
+    // A renovação da original sorteia (0x4cda70): o moral dos jogadores depois do primeiro renovado (0x544710 sorteia)
+    // sai de outro ponto do sorteador; o dele e os de antes entram na conta.
+    let corte = renovados.first().and_then(|r| fichas.iter().position(|&(_, k, _)| k == *r)).unwrap_or(fichas.len());
+    conta.extend(fichas.iter().take(corte + 1).map(|&(m, _, _)| (m, 1)));
     conta.extend(contratos.iter().filter(|k| !renovados.contains(k)).map(|&k| (k + 0x44, 1)));
+    // Os de depois, pela faixa da 0x544710: o moral m sobe de 0 a 20 (+20 ou +10 sorteados), preso em 1..20.
+    let faixa = |&(m, _, m0): &(usize, usize, i8)| -> bool {
+        let (m0, v) = (m0 as i32, *(m as *const i8) as i32);
+        v >= m0.clamp(1, 20) && v <= (m0 + 20).clamp(1, 20)
+    };
+    let mut na_faixa = fichas.iter().skip(corte + 1).all(faixa);
     let mr = crate::comparacao::Memoria::ler(&conta);
     antes.escrever();
     original();
+    na_faixa &= fichas.iter().skip(corte + 1).all(faixa);
     let mo = crate::comparacao::Memoria::ler(&conta);
-    PLACAR.registrar(mo == mr, || format!("{}(clube {:#x}) renovados {} original={:x?} rust={:x?}", nome, clube, renovados.len(), mo, mr));
+    PLACAR.registrar(mo == mr && na_faixa, || format!("{}(clube {:#x}) renovados {} (o primeiro na ficha {} de {}; fora da faixa: {}) original={:x?} rust={:x?}",
+        nome, clube, renovados.len(), corte, fichas.len(), !na_faixa, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_campeao_da_liga_nos_registros(this: usize, clube: usize, comp: usize) {
@@ -64939,6 +64973,14 @@ unsafe fn cpz3_s(a: usize) -> i8 {
 /// e grava os registros) e +0x68 (a situação nas estatísticas) nem as cláusulas de rebaixamento (0x4cd030).
 static mut CPZ3_ENSAIO: bool = false;
 
+/// A fita do comparador da 0x684cd0: a original roda primeiro e cada anúncio dela (+0x40 = 0x686670, pelo comparador
+/// dela) guarda o clube, a situação e os bytes que a virtual +0x44 da competição gravou nas regiões (a BraNatFirst
+/// 0x42abc0, a BraNatSecond 0x42d040, a BelThird 0x4230d0 e a FinFirst 0x594810 põem 5 ou 0xfe no +0x37 da linha).
+/// No ensaio, o anúncio da cópia que bater com o próximo da fita repõe esses bytes.
+static mut CPZ3_GRAVAR: Option<Vec<(usize, usize)>> = None;
+static mut CPZ3_FITA: Vec<(usize, u8, Vec<(usize, u8)>)> = Vec::new();
+static mut CPZ3_LIDO: usize = 0;
+
 /// A linha `i` da tabela (+0xb1, 0x3b bytes).
 unsafe fn cpz3_linha(liga: usize, i: i32) -> usize {
     cpz3_d(liga + 0xb1).wrapping_add((i as usize).wrapping_mul(0x3b))
@@ -64949,6 +64991,15 @@ unsafe fn cpz3_linha(liga: usize, i: i32) -> usize {
 /// baixo (o ponteiro da linha ou a devolução das cláusulas: reproduzidos).
 unsafe fn cpz3_anunciar(liga: usize, i: i32, situacao: u32, alto: u32) {
     if CPZ3_ENSAIO {
+        let fita = &*core::ptr::addr_of!(CPZ3_FITA);
+        if let Some((clube, s, bytes)) = fita.get(CPZ3_LIDO) {
+            CPZ3_LIDO += 1;
+            if *clube == cpz3_d(cpz3_linha(liga, i)) && *s == situacao as u8 {
+                for &(a, v) in bytes {
+                    *(a as *mut u8) = v;
+                }
+            }
+        }
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(cpz3_d(cpz3_d(liga) + 0x40));
@@ -65269,10 +65320,11 @@ unsafe fn cpz3_regioes(this: usize) -> Vec<(usize, usize)> {
     v
 }
 
-/// Comparador da 0x684cd0, em ensaio (modelo CPV6_ENSAIO): a cópia roda primeiro sem as virtuais +0x40 e +0x68 nem
-/// as cláusulas (que mandam notícia, gravam registros e sorteiam o moral); a memória volta e a original roda inteira.
-/// As duas a partir do mesmo estado da tabela, de +0xa7 e das vagas europeias dos clubes da tabela, que têm de sair
-/// iguais (as virtuais e as cláusulas não gravam nelas). Sem linhas ou com +0xdd: só a original.
+/// Comparador da 0x684cd0, em ensaio (modelo CPV6_ENSAIO): a original roda inteira primeiro, gravando a fita dos
+/// anúncios (CPZ3_FITA); a memória volta e a cópia roda sem as virtuais +0x40 e +0x68 nem as cláusulas (que mandam
+/// notícia, gravam registros e sorteiam o moral), repondo da fita o que a +0x44 de cada anúncio gravou na tabela. As
+/// duas a partir do mesmo estado da tabela, de +0xa7 e das vagas europeias dos clubes da tabela, que têm de sair
+/// iguais; no fim fica o estado da original. Sem linhas ou com +0xdd: só a original.
 unsafe extern "thiscall" fn comparar_posicoes_e_situacao_na_liga(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1386);
     if cpz3_d(this + 0xdd) != 0 || cpz3_w(this + 0x3e) <= 0 || cpz3_d(this + 0xb1) == 0 {
@@ -65280,13 +65332,18 @@ unsafe extern "thiscall" fn comparar_posicoes_e_situacao_na_liga(this: usize) {
     }
     let regioes = cpz3_regioes(this);
     let antes = crate::comparacao::Memoria::ler(&regioes);
+    *core::ptr::addr_of_mut!(CPZ3_FITA) = Vec::new();
+    CPZ3_LIDO = 0;
+    *core::ptr::addr_of_mut!(CPZ3_GRAVAR) = Some(regioes.clone());
+    o(this);
+    *core::ptr::addr_of_mut!(CPZ3_GRAVAR) = None;
+    let mo = crate::comparacao::Memoria::ler(&regioes);
+    antes.escrever();
     CPZ3_ENSAIO = true;
     crate::aleatorio::pausar_rastro(|| posicoes_e_situacao_na_liga(this));
     CPZ3_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
-    o(this);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
+    mo.escrever();
     PLACAR.registrar(mo == mr, || format!("posicoes_e_situacao_na_liga({:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
@@ -69483,9 +69540,9 @@ unsafe extern "thiscall" fn comparar_limpar_arbitros_ocupados(this: usize) -> u3
 /// ou o bloco inteiro. Cada árbitro da faixa (fichas de 0x2b bytes em [0xae23e8]; ficha nula: a caixa "Error"): com
 /// mais de 45 anos (o ano em byte, menos 1 antes do dia dele), ou mais de 40 e sorteio(3) zero, vira outro: dois nomes
 /// da nação dele (0x539c60, +4 e +8), +0x25 sorteio(16) + 5 (ou, com sorteio(10) zero, sorteio(11) + sorteio(11)), o
-/// ano (+0xe) ano do jogo − 27 + sorteio(5) e o dia (+0xc) sorteio(340). Depois zera a linha de estatísticas (17 bytes
-/// em [this]) do primeiro da faixa (+4, +8, +0xa, +0xc, +0xf; a original repete a mesma linha `conta` vezes). Devolve
-/// 1 (só o al vale).
+/// ano (+0xe) ano do jogo − 27 + sorteio(5) e o dia (+0xc) sorteio(340). Depois zera as linhas de estatísticas (17
+/// bytes em [this]) de cada árbitro da faixa (+4, +8, +0xa, +0xc, +0xf; o `add eax, 0x11` em 0x79d149 fica dentro do
+/// laço). Devolve 1 (só o al vale).
 unsafe extern "thiscall" fn renovar_arbitros(this: usize, comp: usize) -> u8 {
     if comp == 0 {
         return 0;
@@ -69539,8 +69596,8 @@ unsafe extern "thiscall" fn renovar_arbitros(this: usize, comp: usize) -> u8 {
         core::ptr::write_unaligned((ficha + 0xe) as *mut u16, (r5 as u16).wrapping_add(base));
         core::ptr::write_unaligned((ficha + 0xc) as *mut u16, sortear(0x154) as u16);
     }
-    if n > 0 {
-        let linha = cpy8_d(this).wrapping_add(ini.wrapping_mul(0x11) as usize);
+    for k in 0..n.max(0) {
+        let linha = cpy8_d(this).wrapping_add(ini.wrapping_add(k).wrapping_mul(0x11) as usize);
         *((linha + 0xf) as *mut u8) = 0;
         core::ptr::write_unaligned((linha + 8) as *mut u16, 0);
         core::ptr::write_unaligned((linha + 0xa) as *mut u16, 0);
@@ -73828,8 +73885,21 @@ unsafe extern "thiscall" fn anunciar_situacao_na_liga(liga: usize, clube: usize,
 
 // ponytail: a virtual +0x44 acrescenta registros e a notícia vai às caixas dos técnicos (alocam): só a original; a
 // cópia leva o ramo.
+// Dentro do comparador da 0x684cd0 (CPZ3_GRAVAR), guarda na fita dele o que o anúncio gravou nas regiões.
 unsafe extern "thiscall" fn comparar_anunciar_situacao_na_liga(liga: usize, clube: usize, situacao: u32, fase: u32, a: u32, b: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32>(1337)(liga, clube, situacao, fase, a, b)
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32>(1337);
+    let Some(regioes) = (*core::ptr::addr_of!(CPZ3_GRAVAR)).clone() else {
+        return o(liga, clube, situacao, fase, a, b);
+    };
+    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let r = o(liga, clube, situacao, fase, a, b);
+    let depois = crate::comparacao::Memoria::ler(&regioes);
+    let mut bytes = Vec::new();
+    for ((base, x), (_, y)) in antes.0.iter().zip(depois.0.iter()) {
+        bytes.extend((0..x.len()).filter(|&k| x[k] != y[k]).map(|k| (base + k, y[k])));
+    }
+    (*core::ptr::addr_of_mut!(CPZ3_FITA)).push((clube, situacao as u8, bytes));
+    r
 }
 
 // ---------- 260a leva: as estatísticas do jogo e os recordes do clube: o jogo nas estatísticas dos jogadores, os recordes de posição na liga e as notícias dos recordes (player_stats.cpp, club_records.cpp) ----------
