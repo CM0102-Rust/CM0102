@@ -5,6 +5,8 @@
 #   quatro semanas antes, em maio);
 # - so metade das nacoes passa a ter a Copa como competicao atual (0x775220): o gerenciador dos tecnicos e as
 #   convocacoes das selecoes mudam.
+# Resultado (03/11, carreira Rust ate 2002-06-01 com a 270a publicada): as duas ultimas pegas; a do grupo um do fim
+# escapa (os jogos do grupo A sao de junho de 2002 e a ordem das linhas nao muda o que roda antes).
 # Os contadores ficam colados no efeito: o time do grupo um e o time do grupo depois da condicao do grupo; a competicao
 # da nacao dentro do laco.
 MUTACOES = [

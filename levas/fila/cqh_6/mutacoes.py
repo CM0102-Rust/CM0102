@@ -5,6 +5,8 @@
 # - todas as fases completas sem olhar as ligas de baixo da cadeia (0x48ce10): [inferencia] escapa ate 2002-06-01 (o
 #   contador da liga de baixo completa nao rodou: a cadeia so fecha no fim da temporada).
 # (02/11: a situacao do time na copa lida de +4 (0x48cc70) escapou: a 0x48cc70 nao rodou ate 2002-06-01.)
+# Resultado (03/11): a lista de 16 pega (so pelo hash das partidas); a lista com repetidos escapa (sem clube repetido nas
+# fases da carreira) e a das ligas de baixo escapa (a cadeia so fecha no fim da temporada).
 MUTACOES = [
     ('cqh6_lista_de_16',
      '&& n < 0xc8 { // cqh6: até 200 clubes',

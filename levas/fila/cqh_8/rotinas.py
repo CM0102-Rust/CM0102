@@ -15,6 +15,9 @@
 #   0x68d1b0 thiscall (mov ecx, a lista), 0; 0x68d040 thiscall, 0; 0x944c94 cdecl (add esp, 4), 1; a caixa (aviso_em).
 # Leitura de pilha: o byte do tipo do nó (+0x2a) é lido antes de gravado ((x & 7) | categoria × 8), mas os 3 bits de
 #   baixo são trocados pelo tipo logo depois: o valor sai sempre categoria × 8 + tipo, sem sobra.
+# Mutações: as de 02/11 nos jogos e gols pelo clube recontados (+0x20/+0x22) e no tipo do nó do histórico escaparam (a
+# carreira até 2002-06-01 não lê o que vai para o arquivo nem a recontagem); trocadas por duas no zeramento dos
+# registros da temporada, que a carreira lê.
 # Comparador em ensaio (modelo CPV6_ENSAIO): a cópia roda sem gravar no arquivo (os nós que gravaria entram direto na
 # soma dos jogos e gols pelo clube), depois a original do mesmo estado; compara a devolução, os seis registros de 32
 # bytes e os jogos e gols pelo clube. As posições do histórico (+0x18/+0x1c), que só a gravação move, ficam fora.
