@@ -1,15 +1,16 @@
 # Mutacoes (cqg_1), no contrato assinado (0x4cf720; 1970 chamadas na carreira automatica ate 2002-06-01,
-# docs/cobertura_simulacao.txt, 17/10):
-# - o emprestimo dura uma semana a mais (o fim pela duracao a partir de hoje + 7 dias): o jogador volta mais tarde
-#   (contador "cqg_1 empréstimo");
+# docs/cobertura_simulacao.txt, 17/10). O ramo do emprestimo (+0x35 = 5) nao rodou na carreira da copia (contador
+# "cqg_1 empréstimo" ausente): sem mutacao nele.
+# - a renovacao no mesmo clube tratada como contrato novo (sem manter os termos antigos: o tipo pelo cargo, a
+#   felicidade zerada pela 0x866ee0, +0x3b zerado) (contador "cqg_1 mesmo clube", 1024 na carreira);
 # - sem reaproveitar a vaga livre do vetor dos contratos: o contrato vai sempre para o fim, e a ordem dos contratos (que
-#   o dia dos contratos percorre) muda (contador "cqg_1 vaga livre");
-# - o valor do contrato nao vai para +0x4e da pessoa (fica 0) (contador "cqg_1 valor na pessoa").
+#   o dia dos contratos percorre) muda (contador "cqg_1 vaga livre", 32);
+# - o valor do contrato nao vai para +0x4e da pessoa (fica 0) (contador "cqg_1 valor na pessoa", 1024).
 MUTACOES = [
-    ('cqg1_emprestimo_mais_uma_semana',
-     'let fim = mais(0xae2c90, tmp2.as_mut_ptr(), n); // cqg1: o fim pela duração',
-     'let fim = mais(0xae2c90, tmp2.as_mut_ptr(), n + 7); // mutacao: uma semana a mais',
-     'cqg_1 empréstimo'),
+    ('cqg1_renovacao_como_nova',
+     'if cqg1_d(r + 4) == cqg1_d(c + 4) { // cqg1: o mesmo clube',
+     'if cqg1_d(r + 4) == cqg1_d(c + 4) && false { // mutacao: renovacao como contrato novo',
+     'cqg_1 mesmo clube'),
     ('cqg1_sem_vaga_livre',
      'if cqg1_d(r) as i32 == -1 { // cqg1: a vaga livre',
      'if cqg1_d(r) as i32 == -1 && false { // mutacao: sem a vaga livre',

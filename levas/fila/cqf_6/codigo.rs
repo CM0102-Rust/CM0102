@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn mundial_rodadas_da_fase(this: usize, fase: u32, roda
     let ano = cqf6_w(this + 0x40) as u16 as u32;
     data(t, 0, 0xc, 5, 0, 4, 1, ano, 1); // cqf6: a primeira rodada
     jogo(t, 0, 2, -1, -1, -1, 0);
-    data(t, 1, 0x13, 5, 0, 4, 1, ano, 1);
+    data(t, 1, 0x13, 5, 0, 4, 1, ano, 1); // cqf6: a segunda rodada
     jogo(t, 1, 2, -1, -1, -1, 0);
     data(t, 2, 0x18, 5, 0, 2, 1, ano, 1); // cqf6: a terceira rodada
     jogo(t, 2, 2, -1, -1, -1, 0);

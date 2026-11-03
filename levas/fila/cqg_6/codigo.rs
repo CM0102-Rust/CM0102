@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: a Liga dos Campeões: o sorteio dos grupos da segunda fase e a ordem dos classificados (european_cup.cpp) ----------
+// ---------- %%LEVA%%a leva: a Liga dos Campeões: o sorteio dos grupos da segunda fase e a ordem dos classificados; o grupo de uma fase (european_cup.cpp, comp_util.cpp) ----------
 
 unsafe fn cqg6_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const u32) as usize
@@ -345,5 +345,59 @@ unsafe extern "C" fn comparar_campeoes_ordem_da_segunda_fase(a: usize, b: usize)
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = campeoes_ordem_da_segunda_fase(a, b);
     PLACAR.registrar(r == n, || format!("campeoes_ordem_da_segunda_fase: original={} rust={}", r, n));
+    r
+}
+
+/// { 0x4b01d0 } (cdecl, comp_util.cpp): `comp_util_get_parent_stage_id(id)`, o grupo de uma fase pelo id: 0x3e8..0x3fb,
+/// 0x41f..0x42e, 0x413, 0x414, 0x47b e 0x3fc -> 0x41c; 0x473..0x474 -> 0x410; 0x475..0x479 -> 0x47a; 0x3fd..0x406 ->
+/// 0xa; 0x407..0x40b e 0x472 -> 0x14; 0x47e..0x47f -> 0x1e; 0x40c..0x40e -> 0x82; 0x43d..0x444 -> 0x449; 0x445..0x448
+/// -> 0x44a; 0x44d..0x450 -> 0x451; o resto −1 (na ordem dos testes da original).
+unsafe extern "C" fn grupo_da_fase(id: i32) -> i32 {
+    let em = |a: i32, b: i32| id >= a && id <= b;
+    if em(0x3e8, 0x3fb) {
+        return 0x41c;
+    }
+    if em(0x473, 0x474) {
+        return 0x410;
+    }
+    if em(0x475, 0x479) {
+        return 0x47a;
+    }
+    if em(0x3fd, 0x406) {
+        crate::comparacao::ramo("cqg_6 grupo 0xa");
+        return 0xa; // cqg6: o grupo das fases 0x3fd..0x406
+    }
+    if em(0x407, 0x40b) || id == 0x472 {
+        return 0x14;
+    }
+    if em(0x47e, 0x47f) {
+        return 0x1e;
+    }
+    if em(0x41f, 0x42e) {
+        return 0x41c;
+    }
+    if em(0x40c, 0x40e) {
+        return 0x82;
+    }
+    if id == 0x413 || id == 0x414 || id == 0x47b || id == 0x3fc {
+        return 0x41c;
+    }
+    if em(0x43d, 0x444) {
+        return 0x449;
+    }
+    if em(0x445, 0x448) {
+        return 0x44a;
+    }
+    if em(0x44d, 0x450) {
+        return 0x451;
+    }
+    -1
+}
+
+/// Pura: a devolução.
+unsafe extern "C" fn comparar_grupo_da_fase(id: i32) -> i32 {
+    let r = orig::<unsafe extern "C" fn(i32) -> i32>(%%I2%%)(id);
+    let n = grupo_da_fase(id);
+    PLACAR.registrar(r == n, || format!("grupo_da_fase({:#x}): original={:#x} rust={:#x}", id, r, n));
     r
 }

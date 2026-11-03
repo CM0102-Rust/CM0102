@@ -277,7 +277,7 @@ unsafe extern "thiscall" fn noticia_de_jogador_listado(this: usize, jogador: usi
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let verba: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> i64 = core::mem::transmute(0x598800usize);
-    let destinatarios: unsafe extern "stdcall" fn(usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(0x8d1da0usize);
+    let destinatarios: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(0x8d1da0usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
     if jogador == 0 || cqf2_d(jogador + 0x61) == 0 || clube == 0 || cqf2_d(clube + 0xcf) == 0 {
         return;
@@ -382,7 +382,7 @@ unsafe extern "thiscall" fn noticia_de_jogador_listado(this: usize, jogador: usi
             gravar(n, fim, fora_da_lista);
             let mut dest = clubes;
             let qd = if cqf2_d(0xde1f54) != 0 && cqf2_d(jogador + 0x61) != 0 {
-                destinatarios(jogador, 0x21a, dest.as_mut_ptr(), 0x1e) as i8
+                destinatarios(cqf2_d(0xde1f54), jogador, 0x21a, dest.as_mut_ptr(), 0x1e) as i8
             } else {
                 0
             };

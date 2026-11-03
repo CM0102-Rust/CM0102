@@ -29,6 +29,10 @@
 #   esp, 0x14 -> cdecl; a caixa "Error" (aviso_em) com o fonte 0x9a8190 (contract_manager.cpp).
 # Comparador: só a original (inclui e tira a pessoa dos clubes, realoca o vetor, entrega notícias, sorteia, recalcula a
 # folha).
+# Provas (02/11, cópia fora do projeto com o motor.rs da principal = 268ª + cqc_6, mais cqf_1..3 e cqg_1): jogo comparando
+# até 2001-09-01 em ENG (0 divergências, nenhuma linha DIVERGENCIA) e em ENG ESP ITA FRA (0 do total; uma linha
+# DIVERGENCIA da aviso_ao_rival_de_posicao, a mesma com a DLL sem os itens: anterior a eles); carreira Rust até 2002-06-01
+# duas vezes iguais e o detector de lixo igual (impressão 825918943f68aa97, 473125915 sorteios, a mesma da base sem os itens).
 SAVE = False
 ROTINAS = [('assinar_contrato', 0x4cf720, [0x81, 0xec, 0x18, 0x02, 0x00, 0x00])]
 DOCS = ('o contrato assinado e posto no vetor dos contratos (a entrada no clube, o empréstimo com a duração a partir de hoje, o fim mínimo, o lugar no vetor com os termos antigos no mesmo clube, a vaga livre ou o fim do vetor, o valor na pessoa e a troca de clube)',

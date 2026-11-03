@@ -33,6 +33,10 @@
 #   push 0; push 1; push 0; push cargo; push −1; push vaga; push &local; mov ecx, this -> thiscall, ret 0x1c.
 # Comparador: com `saida`, lado a lado (a saída de 0x50 bytes, [0xae1080] e o estado do sorteador; a cópia sem contar
 # os sorteios); sem `saida` (o caminho da proposta, que aloca), só a original.
+# Provas (02/11, cópia fora do projeto com o motor.rs da principal = 268ª + cqc_6, mais cqf_1..3 e cqg_1): jogo comparando
+# até 2001-09-01 em ENG (0 divergências, nenhuma linha DIVERGENCIA) e em ENG ESP ITA FRA (0 do total; uma linha
+# DIVERGENCIA da aviso_ao_rival_de_posicao, a mesma com a DLL sem os itens: anterior a eles); carreira Rust até 2002-06-01
+# duas vezes iguais e o detector de lixo igual (impressão 825918943f68aa97, 473125915 sorteios, a mesma da base sem os itens).
 SAVE = False
 ROTINAS = [('contrato_oferecido', 0x4cda70, [0x6a, 0xff, 0x68, 0x68, 0x6d, 0x95, 0x00])]
 DOCS = ('o contrato que o clube oferece a uma pessoa (o desejado ajustado pelo fator, a multa mínima, o teto salarial, o fim pela idade e pela habilidade, o total pela idade, os cortes e o valor no teto) e a proposta',

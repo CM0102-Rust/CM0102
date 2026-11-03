@@ -1,5 +1,8 @@
 # Mutacoes (cqf_10), no olheiro na partida observada (0x7b5be0, 50770 chamadas ate 2002-06-01): o relatorio (0x7b62a0)
 # sorteia; as mutacoes mudam quem e avaliado ou quando a lista volta a observar, e a carreira pega pelos sorteios.
+# ATENCAO (02/11, carreira automatica ate 2002-06-01): as 50770 chamadas saem todas antes do relatorio (nenhuma lista
+# de observar partidas com olheiro); os contadores 'cqf_10 relatorio' e 'avaliar jogador' nao rodaram e a nota
+# minima 5 nao mudou a impressao: as tres escapam. O item so passa nas mutacoes junto de outro com efeito.
 MUTACOES = [
     ('cqf10_nota_minima_5',
      'if (nota as i8) < 0xf { // cqf10: a nota mínima',

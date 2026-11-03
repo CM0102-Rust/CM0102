@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: a fuga do jogador (as reputações, as antipatias do técnico e do elenco, a volta marcada) e a notícia dela (awol.cpp) ----------
+// ---------- %%LEVA%%a leva: o player_setup.cfg: a pessoa pelo nome (no clube ou em todos), o texto entre aspas da linha e o tipo da linha pelo nome (player_regen.cpp) ----------
 
 unsafe fn cqh9_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const u32) as usize
@@ -8,177 +8,161 @@ unsafe fn cqh9_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cqh9_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
-    f(n)
+/// strncmp (0x946fa0, cdecl).
+unsafe fn cqh9_strncmp(a: usize, b: usize, n: u32) -> i32 {
+    let f: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(0x946fa0usize);
+    f(a, b, n)
 }
 
-/// A antipatia (0x547af0, cdecl): `dono` passa a não gostar de `outro` (forçando).
-unsafe fn cqh9_antipatia(dono: usize, outro: usize) {
-    let f: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547af0usize);
-    f(dono, outro, 1);
+/// O nome `k` (+4 primeiro, +8 segundo, +0xc o comum; o registro do nome começa pelo texto) da pessoa bate com `texto`
+/// (até 26 caracteres)? `texto` vazio sempre bate.
+unsafe fn cqh9_bate(p: usize, k: usize, texto: usize) -> bool {
+    *(texto as *const u8) == 0 || cqh9_strncmp(cqh9_d(p + k), texto, 0x1a) == 0
 }
 
-/// O ensaio do comparador: a cópia roda sem pôr a fuga na lista (0x68d0d0, que aloca) e sem a notícia (0x419ad0).
-static mut CQH9_ENSAIO: bool = false;
-
-/// A reputação (palavra da ficha) × (1 − sorteio(41) × 0,01), truncada (fild; fmul 0x967898; fsubr 0x967890; fild;
-/// fmulp; _ftol).
-unsafe fn cqh9_reputacao(a: usize) {
-    let r = cqh9_sortear(0x29);
-    let v = core::ptr::read_unaligned(a as *const i16);
-    let k = f64_em(0x967890) - r as f64 * f64_em(0x967898); // cqh9: o corte da reputação
-    core::ptr::write_unaligned(a as *mut i16, ftol(v as f64 * k) as i16);
-}
-
-/// { 0x419840 } (thiscall, ret 0xc, quadro SEH só da data local): `AWOL::start_absence(jogador, clube, tipo)`, pelas
-/// faltas ao treino (0x41a360), pelo lance de outro clube (0x8c1290), pela volta das férias (0x630ee0), pelo diário
-/// (0x5ce2d0) e pela mídia. Jogador nulo, sem ficha, fora dos jogadores ou já marcado (bit 1 da tabela this+0xc): nada.
-/// Senão marca; as três reputações da ficha (+0xb, +9, +0xd) caem até 40%; com clube: ele não gosta do técnico (+0xcf),
-/// o técnico do computador não gosta dele, cada um do elenco (50 em +0xd7) com sorteio(+0x59) e sem sorteio(+0x5b) não
-/// gosta dele, nem o +0xbf do clube; a volta (id e a data de hoje + 2..32 dias no tipo 4, senão + 21..170) vai para a
-/// lista das fugas (this+0, 12 bytes); a notícia (0x419ad0) com o clube (o dele, sem `clube`): tipo 1 → 2, tipo 4 → 4
-/// com os dias, outros → 1.
-unsafe extern "thiscall" fn comecar_a_fuga(this: usize, p: usize, clube: usize, tipo: u32) {
-    let mut d = [0u8; 8];
-    let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
-    data_padrao(d.as_mut_ptr() as usize);
-    if p == 0 || cqh9_d(p + 0x61) == 0 || cqh9_i(p) >= cqh9_i(0xae2364) {
-        return;
-    }
-    let m = (cqh9_d(this + 0xc) as isize + cqh9_i(p) as isize) as *mut u8;
-    if *m & 1 != 0 {
-        return;
-    }
-    *m |= 1;
-    crate::comparacao::ramo("cqh_9 fuga");
-    cqh9_reputacao(cqh9_d(p + 0x61) + 0xb);
-    cqh9_reputacao(cqh9_d(p + 0x61) + 9);
-    cqh9_reputacao(cqh9_d(p + 0x61) + 0xd);
-    let c = cqh9_d(p + 0x39);
-    if c != 0 {
-        cqh9_antipatia(p, cqh9_d(c + 0xcf));
-        let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
-        if humano(cqh9_d(p + 0x39), 1, 1, 0, 0) == 0 {
-            cqh9_antipatia(cqh9_d(cqh9_d(p + 0x39) + 0xcf), p);
+/// { 0x7a50f0 } (cdecl, player_regen.cpp): `player_setup_find_staff(primeiro, comum, segundo, clube, no_elenco)`. Sem
+/// `clube` (nulo ou vazio): a primeira das [0xae2364] pessoas ([0xae23bc], 0x6e bytes) cujos nomes não vazios batem
+/// (cada nome conferido só se o texto e o nome da pessoa existem). Com `clube`: o clube com esse nome (0x545880, 51
+/// caracteres); sem achar, 0. Com `no_elenco` 1: o primeiro das 50 vagas do elenco (+0xd7) com os nomes que batem;
+/// senão (ou nenhum do elenco), o técnico do clube (+0xcf) se os nomes batem; senão 0.
+unsafe extern "C" fn pessoa_pelo_nome(primeiro: usize, comum: usize, segundo: usize, clube: usize, no_elenco: u32) -> usize {
+    if clube == 0 || *(clube as *const u8) == 0 {
+        let mut p = cqh9_d(0xae23bc);
+        for _ in 0..cqh9_i(0xae2364).max(0) {
+            let falha = (*(primeiro as *const u8) != 0 && cqh9_d(p + 4) != 0 && cqh9_strncmp(cqh9_d(p + 4), primeiro, 0x1a) != 0)
+                || (*(segundo as *const u8) != 0 && cqh9_d(p + 8) != 0 && cqh9_strncmp(cqh9_d(p + 8), segundo, 0x1a) != 0) // cqh9: o segundo nome
+                || (*(comum as *const u8) != 0 && cqh9_d(p + 0xc) != 0 && cqh9_strncmp(cqh9_d(p + 0xc), comum, 0x1a) != 0);
+            if !falha {
+                crate::comparacao::ramo("cqh_9 pessoa pelo nome");
+                return p;
+            }
+            p += 0x6e;
         }
-        for k in 0..50usize {
-            let q = cqh9_d(cqh9_d(p + 0x39) + 0xd7 + 4 * k);
-            if q == 0 || q == p {
+        return 0;
+    }
+    let nome_do_clube: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x545880usize);
+    let mut achado = 0usize;
+    for k in 0..cqh9_i(0xae235c).max(0) {
+        let c = cqh9_d(0xae23b4).wrapping_add(k as usize * 0x245);
+        if cqh9_strncmp(nome_do_clube(c), clube, 0x33) == 0 {
+            achado = c;
+            break;
+        }
+    }
+    if achado == 0 {
+        return 0;
+    }
+    let c = achado;
+    if no_elenco as u8 == 1 {
+        for k in 0..0x32usize {
+            let q = cqh9_d(c + 0xd7 + 4 * k);
+            if q != 0 && cqh9_bate(q, 4, primeiro) && cqh9_bate(q, 8, segundo) && cqh9_bate(q, 0xc, comum) {
+                crate::comparacao::ramo("cqh_9 jogador do clube pelo nome");
+                return q; // cqh9: o do elenco pelo nome
+            }
+        }
+    }
+    let t = cqh9_d(c + 0xcf);
+    if t == 0 {
+        return 0;
+    }
+    if cqh9_bate(t, 4, primeiro) && cqh9_bate(t, 8, segundo) && cqh9_bate(t, 0xc, comum) {
+        return t;
+    }
+    0
+}
+
+/// Comparador: a devolução (só lê).
+unsafe extern "C" fn comparar_pessoa_pelo_nome(primeiro: usize, comum: usize, segundo: usize, clube: usize, no_elenco: u32) -> usize {
+    let r = orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32) -> usize>(%%I0%%)(primeiro, comum, segundo, clube, no_elenco);
+    let n = pessoa_pelo_nome(primeiro, comum, segundo, clube, no_elenco);
+    PLACAR.registrar(r == n, || format!("pessoa_pelo_nome(clube {:x}, elenco {}) original={:x} rust={:x}", clube, no_elenco as u8, r, n));
+    r
+}
+
+/// { 0x7a5090 } (cdecl, player_regen.cpp): `player_setup_read_quoted_token(origem, destino)`: copia para `destino` o
+/// texto entre as primeiras aspas de `origem`: espaços e '\r' no começo do texto e '\n' antes dele são pulados; termina
+/// nas aspas de fecho ou no zero (o destino ganha o zero) e devolve o ponteiro dois depois do fim.
+unsafe extern "C" fn texto_entre_aspas(origem: usize, destino: usize) -> usize {
+    let (mut i, mut n, mut aberto) = (0usize, 0usize, false);
+    loop {
+        let c = *((origem + i) as *const u8);
+        i += 1;
+        if c == b'"' {
+            if aberto {
+                break;
+            }
+            aberto = true;
+            continue;
+        }
+        if (c == b' ' || c == b'\r') && n == 0 {
+            continue;
+        }
+        if c == b'\n' {
+            if n == 0 {
                 continue;
             }
-            if cqh9_sortear(*((q + 0x59) as *const i8) as i32) != 0 && cqh9_sortear(*((q + 0x5b) as *const i8) as i32) == 0 {
-                cqh9_antipatia(q, p); // cqh9: o companheiro não gosta dele
-            }
+        } else if c == 0 {
+            break;
         }
-        cqh9_antipatia(cqh9_d(cqh9_d(p + 0x39) + 0xbf), p);
-    }
-    let mut reg = [0u8; 12];
-    reg[0..4].copy_from_slice(&(cqh9_d(p) as u32).to_le_bytes());
-    let copia: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
-    let mut tmp = [0u8; 8];
-    copia(reg.as_mut_ptr() as usize + 4, tmp.as_mut_ptr() as usize, 0xae2c90);
-    let t = tipo as u8;
-    let dias = if t == 4 { cqh9_sortear(0x1f) + 2 } else { cqh9_sortear(0x96) + 0x15 }; // cqh9: os dias até a volta
-    let mais: unsafe extern "thiscall" fn(usize, usize, i32) -> usize = core::mem::transmute(0x54c5b0usize);
-    let mut tmp2 = [0u8; 8];
-    let r = mais(reg.as_mut_ptr() as usize + 4, tmp2.as_mut_ptr() as usize, dias);
-    let mut tmp3 = [0u8; 8];
-    copia(reg.as_mut_ptr() as usize + 4, tmp3.as_mut_ptr() as usize, r);
-    if CQH9_ENSAIO {
-        return;
-    }
-    let por: unsafe extern "thiscall" fn(usize, *const u8, u32) -> usize = core::mem::transmute(0x68d0d0usize);
-    por(cqh9_d(this), reg.as_ptr(), 0xc);
-    let clube = if clube == 0 { cqh9_d(p + 0x39) } else { clube };
-    let noticia: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x419ad0usize);
-    match t {
-        1 => noticia(this, p, clube, 2, 0xffff_ffff),
-        4 => noticia(this, p, clube, 4, dias as u32),
-        _ => noticia(this, p, clube, 1, 0xffff_ffff),
-    }
-}
-
-/// Comparador em ensaio (modelo CPV6_ENSAIO): a cópia roda primeiro sem a lista e sem a notícia, depois a original a
-/// partir do mesmo estado; compara a marca, o jogador e a ficha, o técnico, o +0xbf e o elenco do clube (as
-/// antipatias) e o estado do sorteio. Já marcado ou fora das condições: nada muda, lado a lado na marca.
-unsafe extern "thiscall" fn comparar_comecar_a_fuga(this: usize, p: usize, clube: usize, tipo: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I0%%);
-    if p == 0 || cqh9_d(p + 0x61) == 0 || cqh9_i(p) >= cqh9_i(0xae2364) || this == 0 {
-        return o(this, p, clube, tipo);
-    }
-    let mut reg: Vec<(usize, usize)> = Vec::from(crate::aleatorio::REGIOES_DO_ESTADO);
-    reg.push(((cqh9_d(this + 0xc) as isize + cqh9_i(p) as isize) as usize, 1));
-    reg.push((p, 0x6e));
-    reg.push((cqh9_d(p + 0x61), 0x46));
-    let c = cqh9_d(p + 0x39);
-    if c != 0 {
-        for k in [0xcfusize, 0xbf] {
-            if cqh9_d(c + k) != 0 {
-                reg.push((cqh9_d(c + k), 0x6e));
-            }
-        }
-        for k in 0..50usize {
-            let q = cqh9_d(c + 0xd7 + 4 * k);
-            if q != 0 && q != p {
-                reg.push((q, 0x6e));
-            }
+        if aberto {
+            crate::comparacao::ramo("cqh_9 texto entre aspas");
+            *((destino + n) as *mut u8) = c; // cqh9: o caractere do texto
+            n += 1;
         }
     }
-    let antes = crate::comparacao::Memoria::ler(&reg);
-    CQH9_ENSAIO = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| comecar_a_fuga(this, p, clube, tipo)));
-    CQH9_ENSAIO = false;
-    let mr = crate::comparacao::Memoria::ler(&reg);
-    antes.escrever();
-    o(this, p, clube, tipo);
-    let mo = crate::comparacao::Memoria::ler(&reg);
-    PLACAR.registrar(mo == mr, || format!("comecar_a_fuga(pessoa {:x}, clube {:x}, tipo {}) {:x?} x {:x?}", p, clube, tipo as u8, mo.0, mr.0));
+    *((destino + n) as *mut u8) = 0;
+    origem + i + 1
 }
 
-/// { 0x419ad0 } (thiscall, ret 0x10, awol.cpp; o this não é lido): `awol_post_news(jogador, clube, tipo, valor)`: sem
-/// jogador, clube atual (+0x39), ficha ou `clube`: nada. A notícia 3013 (0x77bbe0) com o id, os três nomes, o `clube`, o
-/// clube atual (−1 sem), o tipo, o valor e a nação do clube atual (−1 sem); reputação mundial (ficha +0xd) acima de
-/// 7500: para todos (0x786780); senão para o país do clube (0x7863f0) e, se a nacionalidade (+0x1a) é outra, para ela.
-unsafe extern "thiscall" fn noticia_da_fuga(_this: usize, p: usize, clube: usize, tipo: u32, valor: u32) {
-    if p == 0 || cqh9_d(p + 0x39) == 0 || cqh9_d(p + 0x61) == 0 || clube == 0 {
-        return;
+/// Comparador: lado a lado no destino (até 0x100 bytes) e na devolução.
+unsafe extern "C" fn comparar_texto_entre_aspas(origem: usize, destino: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(%%I1%%);
+    if origem == 0 || destino == 0 {
+        return o(origem, destino);
     }
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
-    let dado: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
-    let mut noticia = [0u8; 0xe8];
-    let n = noticia.as_mut_ptr() as usize;
-    construir(n, 0xbc5, 0);
-    dado(n, 0, cqh9_d(p) as u32);
-    dado(n, 1, cqh9_d(cqh9_d(p + 4) + 0x33) as u32);
-    dado(n, 2, cqh9_d(cqh9_d(p + 8) + 0x33) as u32);
-    dado(n, 3, cqh9_d(cqh9_d(p + 0xc) + 0x33) as u32);
-    dado(n, 4, cqh9_d(clube) as u32);
-    let atual = cqh9_d(p + 0x39);
-    dado(n, 5, if atual != 0 { cqh9_d(atual) as u32 } else { 0xffff_ffff });
-    dado(n, 6, tipo as u8 as i8 as i32 as u32);
-    dado(n, 7, valor as u16 as i16 as i32 as u32);
-    let nac = if atual != 0 { cqh9_d(atual + 0x53) } else { 0 };
-    dado(n, 8, if nac != 0 { cqh9_d(nac) as u32 } else { 0xffff_ffff });
-    let gerente = cqh9_d(0xb7431c);
-    crate::comparacao::ramo("cqh_9 noticia da fuga");
-    if core::ptr::read_unaligned((cqh9_d(p + 0x61) + 0xd) as *const i16) > 0x1d4c {
-        let todos: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x786780usize);
-        todos(gerente, n);
-        return;
-    }
-    let pais: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7863f0usize);
-    let nac = cqh9_d(cqh9_d(p + 0x39) + 0x53);
-    if nac != 0 {
-        pais(gerente, n, nac);
-    }
-    let natal = cqh9_d(p + 0x1a);
-    if cqh9_d(cqh9_d(p + 0x39) + 0x53) != natal {
-        pais(gerente, n, natal);
-    }
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(destino, 0x100)], || o(origem, destino), || texto_entre_aspas(origem, destino));
+    PLACAR.registrar(igual && r == n, || format!("texto_entre_aspas({:x}) original={:x} rust={:x}", origem, r, n));
+    r
 }
 
-/// Comparador: só a original (ponytail: a entrega aloca a notícia nas caixas de entrada).
-unsafe extern "thiscall" fn comparar_noticia_da_fuga(this: usize, p: usize, clube: usize, tipo: u32, valor: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I1%%)(this, p, clube, tipo, valor)
+/// Os tipos de linha do player_setup.cfg (o texto no .rdata e o bit), na ordem da original (strncmp de 100); o último,
+/// AWOL (0xa6b2f8), dá 0x40, e nenhum, 0.
+const CQH9_TIPOS: [(usize, u32); 14] = [
+    (0xa6b3a0, 1),      // INJURY
+    (0xa6b390, 2),      // MANAGER_CONF
+    (0xa6b384, 0x200),  // RETIREMENT
+    (0xa6b374, 4),      // INT_RETIREMENT
+    (0xa6b364, 8),      // FUTURE_TRANSFER
+    (0xa6b35c, 0x10),   // LOAN
+    (0xa6b350, 0x100),  // NANDROLONE
+    (0xa6b348, 0x100),  // DRUGS
+    (0xa6b33c, 0x1000), // MISCONDUCT
+    (0xa6b32c, 0x800),  // FALSE_PASSPORT
+    (0xa6b324, 0x20),   // ARSE
+    (0xa6b314, 0x2000), // PRESET_TACTICS
+    (0xa6b308, 0x400),  // COLOURBLIND
+    (0xa6b300, 0x80),   // GERMAN
+];
+
+/// { 0x7a3140 } (cdecl, player_regen.cpp): `player_setup_type_from_name(nome)`: o bit do tipo da linha (INJURY 1,
+/// MANAGER_CONF 2, RETIREMENT 0x200, INT_RETIREMENT 4, FUTURE_TRANSFER 8, LOAN 0x10, NANDROLONE e DRUGS 0x100,
+/// MISCONDUCT 0x1000, FALSE_PASSPORT 0x800, ARSE 0x20, PRESET_TACTICS 0x2000, COLOURBLIND 0x400, GERMAN 0x80, AWOL 0x40;
+/// nenhum 0), pela aplicação das linhas (0x7a3a10) na criação do jogo.
+unsafe extern "C" fn tipo_da_linha(nome: usize) -> u32 {
+    for &(texto, bit) in CQH9_TIPOS.iter() {
+        if cqh9_strncmp(nome, texto, 100) == 0 {
+            crate::comparacao::ramo("cqh_9 tipo da linha");
+            return bit;
+        }
+    }
+    if cqh9_strncmp(nome, 0xa6b2f8, 100) == 0 { 0x40 } else { 0 }
+}
+
+/// Comparador: a devolução (só lê).
+unsafe extern "C" fn comparar_tipo_da_linha(nome: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(nome);
+    let n = tipo_da_linha(nome);
+    PLACAR.registrar(r == n, || format!("tipo_da_linha({:x}) original={:x} rust={:x}", nome, r, n));
+    r
 }

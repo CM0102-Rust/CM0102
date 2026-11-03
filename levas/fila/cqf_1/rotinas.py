@@ -37,6 +37,10 @@
 # Comparadores: só a original nas duas (alocam e soltam ofertas e listas, agendam, entregam notícias). A da 0x8be300
 # confere o plano: a vaga escolhida (com o vetor que cresce quando cheio) e o número de série gravados na oferta de
 # entrada, e a série que sobe.
+# Provas (02/11, cópia fora do projeto com o motor.rs da principal = 268ª + cqc_6, mais cqf_1..3 e cqg_1): jogo comparando
+# até 2001-09-01 em ENG (0 divergências, nenhuma linha DIVERGENCIA) e em ENG ESP ITA FRA (0 do total; uma linha
+# DIVERGENCIA da aviso_ao_rival_de_posicao, a mesma com a DLL sem os itens: anterior a eles); carreira Rust até 2002-06-01
+# duas vezes iguais e o detector de lixo igual (impressão 825918943f68aa97, 473125915 sorteios, a mesma da base sem os itens).
 SAVE = False
 ROTINAS = [('por_oferta_de_transferencia', 0x8be300, [0x6a, 0xff, 0x68, 0x6a, 0x3a, 0x96, 0x00]),
            ('aceitar_emprestimo', 0x8c0660, [0x8b, 0x44, 0x24, 0x08, 0x55])]

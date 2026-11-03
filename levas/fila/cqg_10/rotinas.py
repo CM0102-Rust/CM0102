@@ -28,6 +28,12 @@
 # confere o plano: o dono e a competição zerados, a vaga da tabela de competições zerada e o torneio fora da lista dos
 # pendentes. 0x5cb9e0 sem plano (a busca no calendário já mudado não se refaz).
 # Determinismo: nada lê pilha sem valor nem usa endereço como valor (as datas locais são construídas antes do uso).
+# Provas (02/11/2026, mesma cópia: cqf_10, cqf_11, cqf_12, cqg_10):
+# - duas carreiras Rust até 2002-06-01 iguais entre si e ao detector ('detector de lixo: igual'), 825918943f68aa97;
+# - jogo comparando (Inglaterra, sem o motor) até 2002-059: 0 divergências; com ENG ESP ITA FRA até 2001-304: 1
+#   DIVERGENCIA, de aviso_ao_rival_de_posicao (não é deste item);
+# - mutações: amistoso fica e rodada invertida mudam a impressão (b1fbbdaaaaa15549); a da véspera pode escapar (o ramo
+#   não rodou); contadores: 'cqg_10 amistoso fora do calendario' 2, 'noticia do amistoso cancelado' 2.
 SAVE = False
 ROTINAS = [('cqg10_amistoso_cancelado', 0x5c6570, [0x64, 0xa1, 0x00, 0x00, 0x00, 0x00]),
            ('cqg10_jogo_da_selecao_cancelado', 0x5cb9e0, [0x6a, 0xff, 0x68, 0x80, 0xa3, 0x95, 0x00]),

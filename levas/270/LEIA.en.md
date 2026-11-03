@@ -1,0 +1,103 @@
+# Batch 270 — the transfer offer placed in the offer array (the slot, the growing array, the copy, the serial number, linked rival offers, the deadline and the news) and the loan accepted by the club; the terms accepted by the player (the reply news and the offer follow-up; for loans, refusal for a full squad or by the nation rule, or completion at once with the transfer record) and the news of a player put on the transfer list (the drawn price and the strongest interested clubs); the contract a club offers a person (the desired one scaled by the factor, the minimum release fee, the wage cap, the end by age and ability, the total by age, the cut-offs and the value capped) and the offer; the World Cup: the group draw (with the 27/12/2001 hang loop), the draw run on its day and the World Cup day; the World Cup: the group 1 table, the group 2 to 8 stages and the predicted positions; the World Cup: the round schedule of each group stage, the qualified nation and the seeding; the human manager training staff: the coach ratings per category, the squad schedules on a club change and the default schedule names; the player career history (the table of seasons per club built from the history file), the years since he played for a club and the history order by person; the injury by name of the player_setup.cfg; the back-to-training news and what it settles (the treatment, the holidays and the player morale, the relation with the manager, the absence) and the injury category name; the scout at the watched match and the watched club history; the national team news to clubs: the match report, the call-up and the opponents; the scouts' day, their reports and the report news
+
+**Routines:**
+- `por_oferta_de_transferencia()` = 0x8be300 (transfer_manager.cpp, thiscall, ret 8): puts the offer in an array slot (the stored one, the same buyer's for the same target or the first empty one; grows by 50 when full), copies the fields, gives the serial number, links rival offers for the player, schedules the answer (28 days with a human, otherwise the reply deadline) and posts the news;
+- `aceitar_emprestimo()` = 0x8c0660 (transfer_manager.cpp, thiscall, ret 8): screens only: the club accepts the loan request; the contract decision, the news, and without agreement status 0xf, the shortlists, the 10-day scheduling and bit 0 of the player record;
+- `termos_aceitos()` = 0x8c2180 (transfer_manager.cpp, thiscall, ret 0x14): marks the agreement of the target (or the exchange player); outside loans, the reply news and the offer follow-up; for loans, a squad above 50 or the nation rule refuse, otherwise completes at once (contract, history, numbers, record, status 0x14 in 5 days);
+- `noticia_de_jogador_listado()` = 0x4d71b0 (contract_manager.cpp, thiscall, ret 8): news 0xbea of a player on the transfer list: the price (the value, or the asking price times a drawn factor, rounded) and from 500 thousand up the up to 3 strongest interested clubs; posted to the interested human clubs;
+- `contrato_oferecido()` = 0x4cda70 (contract_manager.cpp, thiscall, ret 0x1c): the desired contract (0x85fc50) × factor, the minimum release fee, the cap (club or staff maximum wage), the end next year, in 2 years or by age, the total by age that reduces the value or the cap, the cut-offs and the value capped; returns the terms or makes the offer (0x4cc490);
+- `mundial_sortear_grupos()` = 0x92e940 (world_cup.cpp, thiscall, ret 0): the draw list: the seeds in groups 1..8 (drawn among the slots still standing: the loop that hangs the game on 27/12/2001 when none is), the other 24 in drawn groups with a limit; in 2002, the real draw and the nation table with the holder and the hosts;
+- `mundial_sorteio_dos_grupos()` = 0x92e7f0 (world_cup.cpp, thiscall, ret 0): the draw day: the list, group 1 in the World Cup itself with its fixtures and sorted table, the group 2..8 stages, the predicted positions and the bookings reset;
+- `mundial_dia()` = 0x92f1a0 (world_cup.cpp, thiscall, ret 8): the World Cup day: the seeding on the seeding date, the draw on its date (no table yet) and the league day;
+- `mundial_tabela_do_grupo_um()` = 0x92d0f0 (world_cup.cpp, thiscall, ret 4): the World Cup itself becomes group 1: four teams, the allocated table, the group 1 teams of the list in the rows and the group draw news;
+- `mundial_fase_do_grupo()` = 0x92d540 (world_cup.cpp, thiscall, ret 8): the stage of one of groups 2 to 8: its teams, the round schedule, the stage constructor, the current stage and the group news;
+- `mundial_posicoes_previstas()` = 0x92f680 (world_cup.cpp, thiscall, ret 0): the 32 nations sorted by reputation, each one's predicted position (1, 2, 3, 4, 5, 9, 17, 25 by the stage bands) and the World Cup as the nation's current competition;
+- `mundial_rodadas_da_fase()` = 0x92c290 (world_cup.cpp, thiscall, ret 0x10): the three-round schedule of a group stage (12, 19 and 24 June, moved to the weekday) with the two fixtures of each round; the knockout stays with the original;
+- `mundial_nacao_classificada()` = 0x92e740 (world_cup.cpp, thiscall, ret 4): the qualified nation enters the World Cup nation table (status 6), or the box when the list is full;
+- `mundial_cabecas_de_chave()` = 0x92f230 (world_cup.cpp, thiscall, ret 0): the seeds (holder, hosts, reputation) and the pots by continent; does nothing for the 2002 World Cup;
+- `distribuir_os_treinadores()` = 0x8b2880 (training_manager.cpp, thiscall): the six training staff slots of the human manager: drops who left the club, adds the new assistant and coaches with all five categories and recomputes each category rating (the chance from the coaching attributes, divided by the coach category count, 1 to 20);
+- `trocar_os_programas_do_elenco()` = 0x8b2470 (training_manager.cpp, thiscall): on the human manager club change: the old squad goes back to the default schedules (goalkeeper or general) with load 50; the new one goes to the manager goalkeeper or general schedule, with the schedule load; and the new club training staff;
+- `nomes_padrao_dos_programas()` = 0x8b2230 (training_manager.cpp, thiscall): the default names of the 167 training schedules;
+- `historico_da_carreira()` = 0x7c3e40 (player_stats.cpp, thiscall): the player career table, six entries (categories) per season and club: the current season, the ones from the history file from newest to oldest with the empty years filled, the repeated entries of the same season and club summed and the empty groups removed;
+- `anos_desde_o_clube()` = 0x7c6e30 (player_stats.cpp, stdcall): how many years since the person played for the club: 0 when he is there, −1 when never;
+- `ordem_do_historico_por_pessoa()` = 0x7c6de0 (player_stats.cpp, cdecl): the qsort order of the history records: by person, by year and by the first field;
+- `lesao_pelo_nome()` = 0x7a32e0 (player_regen.cpp, cdecl): the injury type of a player_setup.cfg INJURY line by name (76 names, from cold to arthritis); none: 0x4b;
+- `noticia_da_volta_aos_treinos()` = 0x630ee0 (injury.cpp, thiscall): the news of the player return to light or full training; with a type 12 category: the outcome of the treatment, the return and the holidays (the contract holiday flags, the happiness, the liking for the manager, the chance of going absent and the personality attribute changes);
+- `nome_da_categoria_da_lesao()` = 0x630c50 (injury.cpp, stdcall): the translated injury category name (internal, foot, shin, knee, thigh, groin, upper body, hand, arm, shoulder, neck, head, rehabilitation); returns the name gender in language 3;
+- `cqf10_olheiro_no_jogo()` = 0x7b5be0 (player_search.cpp, thiscall, ret 0xc): the matching scout list (type 4) watches the played match: the history of the followed club; within the dates, with the followed player in the match or with the club asking for a player of either club, the list start moves to tomorrow and every player of another club rated at least 15 (and asked for, followed or with a seen reputation below 4000) becomes a report in the output;
+- `cqf10_historico_do_clube_observado()` = 0x7bd310 (player_search.cpp, thiscall, ret 8): the slots of players who left the watched club are cleared; every club player who played gets a line in the 10-match history: goals, rating, date, opponent, score, side, statistics and the type (starter, substitute, rating from +0x30);
+- `cqf11_relatorio_da_selecao()` = 0x7706c0 (national_teams.cpp, thiscall, ret 0x18): the match squad is sorted by club; each group of the same club becomes news 0x24 to its manager: the match data, the star player, how many, up to 4 players (the star first, the others by how they did), draw(2) and the codes; the group players leave the array;
+- `cqf11_noticia_da_convocacao()` = 0x76e0b0 (national_teams.cpp, thiscall, ret 0x1c): the called-up players (flag 4, or 8 for the second team) of human-managed clubs, grouped by club, become news 0x1d to the manager: national team, club, type, how many, the opponents (given list or built by 0x76d560) and up to 3 players;
+- `cqf11_adversarios_da_selecao()` = 0x76d560 (national_teams.cpp, thiscall, ret 8): a new list with the match opponent (its nation's first team, for the second team) and the opponents of the fixtures from tomorrow to 13 days later that are not finals;
+- `cqf12_olheiros_do_dia()` = 0x7f8750 (scout_manager.cpp, thiscall, ret 0): on day slice 2: prunes the scouting requests (non-human club, player already at the club, older than a year, 3 reports, injured); a request older than 30 days becomes up to 3 reports from the manager's scouts covering the player's nation and leaves; then the reports, the request order and one search tick on every human manager list;
+- `cqf12_relatorios_dos_olheiros()` = 0x7f9890 (scout_manager.cpp, thiscall, ret 4): copies the list records into an array, sorts it and sends one news item per run of the same player and club;
+- `cqf12_noticia_do_relatorio()` = 0x7f9a60 (scout_manager.cpp, thiscall, ret 8): the 0x138e news item with up to 3 records, the scout, the match and the player's strengths for the club, to the club manager;
+
+**How it was compared:** real comparison on every routine (original and Rust from the same state, with the regions the routine touches).
+
+**Result** (`cadeia.txt`):
+- **Mutations (30):** 29 caught. `cqf5_grupo_um_do_fim` escaped: the row order of World Cup group 1 (the opening group, on 2002-05-31) only changes that groups matches, and by 2002-06-01 only the opening match falls inside the career, with the same two teams in both orders; the routine-by-routine comparison did not flag it either [inference]. (gap in `PENDENCIAS.en.md`)
+- **Real game comparing to 2002-01-01:** 0 divergences (8845ebc9).
+- **Rust ×2 and original careers to 2002-06-01:** Rust ×2 151bdf85, original 6fbff3c6 (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.
+
+**Redo**, on top of batch 269's commit:
+1. `python integrar.py`
+2. `cargo build --release` and copy the DLL to `jogo_testes/`
+3. `bash engenharia-reversa/cadeia.sh 270`
+
+**Fields touched:**
+- transfer manager +0 offer array, +4 capacity, +8 count, +0x85a next serial number, +0x85e lowest free slot, +0x86e 8-byte record per person (+0 bit 0 has offer, +1 offers for the player, +2 offers where he is in the exchange), +0x856 shortlists; pointer and value; reads and writes (por_oferta_de_transferencia, aceitar_emprestimo)
+- offer +0 list of offers for the player, +4 exchange, +8 buyer, +0xc target, +0x10, +0x12 date, +0x1a slice, +0x1b value, +0x1f loan, +0x20 slot, +0x24 serial number, +0x28 linked, +0x2c status, +0x2d, +0x2e, +0x2f, +0x30 and +0x31 low nibbles, +0x35, +0x3a, +0x40; id and value; reads and writes (por_oferta_de_transferencia, aceitar_emprestimo)
+- person +0x61 player record; pointer; reads (por_oferta_de_transferencia)
+- contract +4 club, +0x35 type (6 bits); [0xae1080] the last contract; id and pointer; reads, writes [0xae1080] (por_oferta_de_transferencia, aceitar_emprestimo)
+- offer +0 list of offers for the player, +4 exchange (7-byte nodes: +0 id, +4 agreement, +6 type), +8 buyer, +0xc target, +0x10 target agreement, +0x11 type, +0x1f loan, +0x2c status, +0x2e; id and value; reads and writes (termos_aceitos)
+- transfer manager +0 offer array, +4 capacity, +0x856 shortlists, +0x86e 8-byte record per person (bit 0), +0x8ac the 28 per-nation rule objects (+0xa the nation); pointer and value; reads, writes bit 0 (termos_aceitos)
+- person +0 id, +4/+8/+0xc pointers with the id at +0x33, +0x52 value, +0x61 player record, +0x6d status (2 becomes 0x10); id and value; reads, writes +0x6d (termos_aceitos, noticia_de_jogador_listado)
+- club +0x53 nation, +0x80 reputation, +0xcf board (+0 id, +4/+8/+0xc with the id at +0x33); id and value; reads (termos_aceitos, noticia_de_jogador_listado)
+- contract +4 club, +0x35 type (6 bits), +0x45, +0x4f high nibble; id and value; reads (termos_aceitos, noticia_de_jogador_listado)
+- contract (STAFF_CONTRACT, 0x50 bytes) +4 club, +8 wage, +0xc value [inference], +0x10..+0x18 three bonuses (−1 none), +0x1c, +0x1d signing fee, +0x1f, +0x21 release fee, +0x25 date, +0x2d end (+0x2f year), +0x35 bits, +0x4f high nibble of the job; value; writes (contrato_oferecido)
+- person +0 id, +0x10 birth date, +0x39 club, +0x3d type, +0x5b, +0x61 player record; id and value; reads (contrato_oferecido)
+- player record +0xb current ability, +0xd potential ability, +0xf position, +0x34, +0x3c; value; reads (contrato_oferecido)
+- club +0 id, +0x80 reputation, +0xcf board; [0xae2d0c] 79-byte record (+0 contract index, +0xb bits 0x30); [0xae1080] the last contract; [0xae233c] 5-year limit; reads, writes [0xae1080] (contrato_oferecido)
+- world cup +0x14 nation table (6 bytes: +0 club, +4 status: 6, 2 holder, 1 host), +0x36 count (word), +0x38 maximum, +0x40 year, +0x45 draw done, +0x50 ruling body index (char), +0xb1 group 1 table, +0xb6/+0xb8 draw date (day of year, relative year), +0x18e/+0x190 seeding date; value and pointer; reads and writes (mundial_sortear_grupos, mundial_sorteio_dos_grupos, mundial_dia)
+- world cup +0xee the 8 seed slots and +0x116 the other 24 (5 bytes: +0 club id, +4 pot; 0xff = already drawn); id and value; reads and writes (mundial_sortear_grupos)
+- draw list (32 × 5 bytes, allocated): +0 national team club id, +4 group 1..8; id and value; writes (mundial_sortear_grupos)
+- [0x9cf218..0x9cf51c] nation keys (g_key_nation_*), [0xae23a8] nation table (0x122 bytes), [0xae23b4] club table (0x245 bytes); id and pointer; reads (mundial_sortear_grupos)
+- world cup +4 competition id (passed on), +8 statistics (Comp_Stats), +0xc the stages, +0x14 nation table (6 bytes: +0 club), +0x30 current stage, +0x36 nation count (word), +0x3e teams (word), +0x40 year, +0x51, +0xb1 group 1 table (0x3b-byte rows, +0 club), +0xbe/+0xc2..+0xc5 rules passed to the stage, +0xd9 (word, passed on); value and pointer; reads and writes (mundial_tabela_do_grupo_um, mundial_fase_do_grupo, mundial_posicoes_previstas)
+- club +0x53 nation; pointer; reads (mundial_posicoes_previstas)
+- competition statistics record +0x72 position (byte); value; writes through 0x4a2540 (mundial_posicoes_previstas)
+- world cup +0x14 nation table (6 bytes: +0 club, +4 status: 3 seed, 6 qualified, 0xa/0xb/0xc pots), +0x36 count (word), +0x38 maximum (word), +0x40 year, +0x4b, +0xee the 8 seed slots and +0x116 the other 24 (5 bytes: +0 club id, +4 pot); value, id and pointer; reads and writes (mundial_nacao_classificada, mundial_cabecas_de_chave), reads (mundial_rodadas_da_fase)
+- round schedule (0x41 bytes per round): +0 day of year, +2 year − base, +4 code, +0x3d value; 7-byte fixtures from +5 (+5 value, +9 a, +0xa b, +0xb c); value; writes through 0x68a160 and 0x68a1c0 (mundial_rodadas_da_fase)
+- club +0x53 nation; nation +0x71 continent; [0x9cfa08..0x9cfa1c] continent keys; [0x9cf79c] World Cup id; [0xae23d0] competitions (0x6b bytes); [0xb5e134] hosts; pointer and id; reads (mundial_cabecas_de_chave)
+- training (TRAINING_MANAGER [0xde1f44]) +0x652d + 54 × ([0xae2364] − id − 1) the human training staff: six 9-byte slots (+0 coach id, +4..+8 rating per category, 0 = not coaching); id/value; reads and writes (distribuir_os_treinadores)
+- non-player record (person +0x69) +0xe, +0x10, +0x11, +0x12, +0x21 coaching attributes [inference: the ones the chance uses per category]; value; reads
+- training +0x651d 6-byte entry per player record, +0 the schedule slot; value; writes (trocar_os_programas_do_elenco); + 0x9b × (slot + 7 + 10 × human) the human schedules, +0x15 type (1 general, 6 goalkeepers); value; reads
+- player record (person +0x61) +0xf goalkeeper; value; reads; [[0xb63d28]] + 31 × id + 0x1e training load; value; writes
+- club +0xcf manager, +0x244 partner flag (cleared by 0x540a50); pointer/value; reads
+- career table (0x2b bytes per entry, 6 per season): +0 year; +2 club id (−1 none); +6..+0x26 the 32 category bytes (+6 games, +8 goals [inference from 0x7c3d20/0x7c3bb0 uses], +0x14 word); +0x26 transfer fee (−1 none); +0x2a category × 8 and the kind (3 bits); value; writes (historico_da_carreira)
+- PlayerStats ([0xb74350]) +0 the history file (FILE_LLIST), +0x30 0x27-byte records per player record (+0x18/+0x1c the first and last node offsets); pointer/value; reads
+- person +0x39 club, +0x61 record; pointer; reads; [0xae2c92] the current year; value; reads (anos_desde_o_clube)
+- [0xa6b3a8..0xa6b840] the player_setup.cfg injury names; text; reads (lesao_pelo_nome)
+- person +0x57, +0x59, +0x5b, +0x5d personality attributes [inference: the ones the holidays adjust]; value; reads and writes (noticia_da_volta_aos_treinos)
+- player record (person +0x61) +0xb value [inference], +0x44 [inference: attribute the holidays lower; morale is +0x45]; value; reads and writes
+- contract +0x44 contract happiness (i8, −100..100), +0x45 holiday flags 0x20, 0x40, 0x20000 (cleared through 0x8674e0); value; reads and writes
+- injuries ([0xb63d28]) [+0] + 31 × id fitness record: +0x12 (0xff) and +0x13 [inference: the recovery progress]; value; writes
+- [0xae2d0c] + 0x4f × id +0xc bit 0 [inference: under treatment]; value; writes 0; [0x9e7ad9] + 13 × type the injury type category; value; reads
+- news 2001: data 0 stage, 1 type, 2 id, 3..5 the names, 6 birth, 7 year, 8 days, 9 outcome, 10 the liking; value; writes
+- search list +0xa type (4 = watch matches), +0x170 watched club record, +0x174..+0x184 scout names, +0x180 scout id, +0x190 followed club, +0x195 followed player; value/pointer/id; reads (cqf10_olheiro_no_jogo)
+- search list +0x1a5 start date (day, year), +0x1ad end date; value; reads and writes start = tomorrow (cqf10_olheiro_no_jogo)
+- match result +0x4c no ratings, +0x4d default rating, +0x190/+0x1c0 the 20 records of 0x49 bytes per side (+0x625): +0 id, +4 entry, +0x21 type, +0x30/+0x34 ratings, +0x32 entry minute [inference], +0x35 match rating; value; reads (both)
+- watched club record +0 club id, +4 50 slots of 0x1a2 bytes (+0 id, +4 matches, +0x1a0 start and +0x1a1 size of the 10-line ring of 0x29 bytes from +6); id/value; reads and writes (cqf10_historico_do_clube_observado)
+- [0x9cc270] attribute masking enabled; value; reads (both)
+- person +0x39 club, +0x61 player record; pointer; reads (both)
+- fixture +0x1c home club, +0x20 away club, +0x14 competition, +0x28 year, +0x2a day, +0x40 type byte [inference]; pointer/value; reads (all three)
+- match result +0x3c player record id of the man of the match, +0x190 the 20 records of 0x49 bytes per side (+0x625): +0 id, +0x21 type, +0x23/+0x24 [inference], +0x34 rating; value; reads (cqf11_relatorio_da_selecao)
+- national team (club) +0xd7 the 50 squad slots (pointers), +0x53 nation; person +0x5e call-up flag (4 first team, 8 second), +0x39 club; pointer/value; reads (cqf11_noticia_da_convocacao)
+- person +0 id, +4/+8/+0xc keys (+0x33), +0x39 club, +0x61 player record (+0 id); id/pointer; reads (cqf11_relatorio_da_selecao)
+- SCOUT_MANAGER +0x5c scouting request array (0x11 bytes: +0 club id, +4 player id, +8 date, +0x10 reports made), +0x64 count; id/value; reads and writes (cqf12_olheiros_do_dia)
+- [0xae2c88] day slice; value; reads (cqf12_olheiros_do_dia)
+- contract +0x4f status (& 0xf0: 0, 0x60, 0x70); value; reads (cqf12_olheiros_do_dia)
+- person +0x1a nation, +0x39 club, +0x5f human (1); pointer/value; reads (cqf12_olheiros_do_dia)
+- report record (0x67 bytes) +0x2b player id, +0x50 club id, +0x37 the following records (0x67), +0x54..+0x66 data; id/value; reads (cqf12_relatorios_dos_olheiros, cqf12_noticia_do_relatorio)
+
+**Of interest to:** CMRTE, GPF2, SGE, CMScout

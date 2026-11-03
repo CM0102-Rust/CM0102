@@ -170,7 +170,7 @@ unsafe extern "thiscall" fn assinar_contrato(this: usize, contrato: usize, cargo
     if idx > -1 {
         let off = (idx as usize).wrapping_mul(0x50);
         let r = cqg1_d(this).wrapping_add(off);
-        if cqg1_d(r + 4) == cqg1_d(c + 4) {
+        if cqg1_d(r + 4) == cqg1_d(c + 4) { // cqg1: o mesmo clube
             crate::comparacao::ramo("cqg_1 mesmo clube");
             let r = || cqg1_d(this).wrapping_add(off);
             cqg1_pb(c + 0x3a, cqg1_b(r() + 0x3a));

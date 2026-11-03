@@ -43,10 +43,15 @@
 #   push 1; push 0; push jogador; push 0; push clube; mov ecx, this -> thiscall, ret 0x18; 0x945640 _ftol; 0x842180
 #   push 0; push 1; push 1; push &lista; push jogador; mov ecx, [[0xde1f54]+0x856] -> thiscall, ret 0x14; 0x5a0590 push
 #   clube; mov ecx, [0xae2a38] -> thiscall, ret 4; 0x598800 push 0; push 1; push 0; push 0; push 0; mov ecx, finanças ->
-#   thiscall, ret 0x14 (edx:eax); 0x8d1da0 push 0x1e; push &clubes; push 0x21a; push jogador -> stdcall, ret 0x10 (al);
+#   thiscall, ret 0x14 (edx:eax); 0x8d1da0 push 0x1e; push &clubes; push 0x21a; push jogador; mov ecx, [0xde1f54] -> thiscall, ret 0x10 (al; a
+#   0x8d1da0 faz mov esi, ecx: o mapa da comunidade a dá como stdcall, e a cópia a chamava assim e caía no modo Rust);
 #   0x7861e0 push clube; push &notícia; mov ecx, [0xb7431c] -> thiscall, ret 8.
 # Comparadores: só a original nas duas (a 0x8c2180 entrega notícias, assina contrato, conclui e registra o
 # empréstimo; a 0x4d71b0 sorteia e entrega a notícia, que aloca).
+# Provas (02/11, cópia fora do projeto com o motor.rs da principal = 268ª + cqc_6, mais cqf_1..3 e cqg_1): jogo comparando
+# até 2001-09-01 em ENG (0 divergências, nenhuma linha DIVERGENCIA) e em ENG ESP ITA FRA (0 do total; uma linha
+# DIVERGENCIA da aviso_ao_rival_de_posicao, a mesma com a DLL sem os itens: anterior a eles); carreira Rust até 2002-06-01
+# duas vezes iguais e o detector de lixo igual (impressão 825918943f68aa97, 473125915 sorteios, a mesma da base sem os itens).
 SAVE = False
 ROTINAS = [('termos_aceitos', 0x8c2180, [0x64, 0xa1, 0x00, 0x00, 0x00, 0x00]),
            ('noticia_de_jogador_listado', 0x4d71b0, [0x6a, 0xff, 0x68, 0x16, 0x6f, 0x95, 0x00])]

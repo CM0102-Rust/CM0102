@@ -29,7 +29,8 @@
 #   +0x53]; mov ecx, [0xb74318] -> thiscall, ret 8; 0x9452ca push; add esp -> cdecl.
 # Comparadores: as três só a original (alocam, mandam notícias, acrescentam registros à estatística e avisam o
 # gerenciador dos técnicos), conferindo o plano feito antes com a lista: as linhas do grupo 1 com os clubes dele, na
-# ordem; a fase do grupo g+2 em [+0xc][g] com +0x30 = g, os times e o ano da Copa e as linhas com os clubes do grupo; e
+# ordem; a fase do grupo g+2 em [+0xc][g] com +0x30 = g, os times e o ano da Copa e os clubes do grupo nas linhas (em
+# qualquer ordem: as linhas da fase não seguem a ordem da lista); e
 # a posição prevista (+0x72 do registro achado por 0x4a4850) das 32 nações na ordem da mesma qsort feita numa cópia.
 # Determinismo: as duas saídas da tabela das rodadas começam em 0 na cópia (a 0x92c290 as grava sempre nas fases 0..6;
 # na original são sobra de pilha até lá); nada lê pilha, heap ou endereço como valor.

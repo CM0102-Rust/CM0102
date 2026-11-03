@@ -87,8 +87,8 @@ unsafe extern "thiscall" fn comparar_mundial_tabela_do_grupo_um(this: usize, lis
 /// das rodadas pelo método +0x3c da Copa (push 0; push &id; push &rodadas; push g; mov ecx -> thiscall, ret 0x10: a
 /// 0x92c290 grava as duas saídas para as fases 0..6); a fase (0x944cf1(0xee) push; add esp -> cdecl; o construtor
 /// League_Stage 0x68b100, thiscall, ret 0x58: 22 argumentos, conferidos na leitura dele: a Copa, os times (word),
-/// o vetor, 1, +4, a tabela das rodadas, o id (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, o ano +0x40 (word), g (byte),
-/// as rodadas (word), +0x51, 4, 0, +0xd9 (word), −1, 0, 2; a original empurra os words e bytes com lixo nos bytes
+/// o vetor, 1, +4, a tabela das rodadas, as rodadas (word: +0xa9 da fase, a conta das datas), +0xc2, +0xc3, +0xc4,
+/// &+0xc5, &+0xbe, o ano +0x40 (word), g (byte), o id (word: +0x3a da fase), +0x51, 4, 0, +0xd9 (word), −1, 0, 2; a original empurra os words e bytes com lixo nos bytes
 /// altos, que o construtor não lê: a cópia passa os valores limpos) guardada em [+0xc][g]; o vetor e a tabela das
 /// rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x380 e 0. Com ela: +0x30 = g e a notícia do grupo
 /// (0x684230 na fase). Devolve 1.
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn mundial_fase_do_grupo(this: usize, g: i32, lista: us
             1,
             cqf5_d(this + 4),
             tabela,
-            id as u16 as u32,
+            rodadas as u16 as u32, // cqf5: as rodadas (as datas, +0xa9 da fase)
             cqf5_b(this + 0xc2) as u32,
             cqf5_b(this + 0xc3) as u32,
             cqf5_b(this + 0xc4) as u32,
@@ -140,7 +140,7 @@ unsafe extern "thiscall" fn mundial_fase_do_grupo(this: usize, g: i32, lista: us
             this + 0xbe,
             cqf5_w(this + 0x40) as u16 as u32,
             g as u8 as u32,
-            rodadas as u16 as u32,
+            id as u16 as u32,
             cqf5_b(this + 0x51) as u32,
             4,
             0,
@@ -166,7 +166,8 @@ unsafe extern "thiscall" fn mundial_fase_do_grupo(this: usize, g: i32, lista: us
 
 /// Só a original (aloca a fase e manda a notícia), conferindo o plano: devolve 1 com a fase em [+0xc][g], +0x30 = g, a
 /// fase com os times (+0x3e) da Copa, o ano dela e, na tabela da fase (+0xb1, linhas de 0x3b bytes), os clubes do
-/// grupo g+2 da lista, na ordem.
+/// grupo g+2 da lista (em qualquer ordem: na comparação de 02/11 as linhas da fase não
+/// saíram na ordem da lista [inferência: a fase ordena ou sorteia a tabela dela]).
 unsafe extern "thiscall" fn comparar_mundial_fase_do_grupo(this: usize, g: i32, lista: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I1%%);
     let plano = cqf5_do_grupo(lista, g + 2);
@@ -174,8 +175,17 @@ unsafe extern "thiscall" fn comparar_mundial_fase_do_grupo(this: usize, g: i32, 
     if r == 1 {
         let f = cqf5_d(cqf5_d(this + 0xc) + g as usize * 4);
         let t = cqf5_d(f + 0xb1);
+        // as rodadas (3) na conta das datas +0xa9 e o id (0x420 + g) em +0x3a: a ordem dos argumentos do construtor
         let ok = f != 0 && cqf5_d(this + 0x30) as i32 == g && cqf5_w(f + 0x3e) == cqf5_w(this + 0x3e) && cqf5_w(f + 0x40) == cqf5_w(this + 0x40)
-            && (t == 0 || plano.iter().enumerate().all(|(k, &c)| cqf5_d(t + k * 0x3b) == c));
+            && cqf5_w(f + 0xa9) == 3 && cqf5_w(f + 0x3a) as i32 == 0x420 + g
+            && (t == 0 || {
+                // as linhas da fase não seguem a ordem da lista: confere o conjunto dos clubes
+                let mut a: Vec<usize> = (0..plano.len()).map(|k| cqf5_d(t + k * 0x3b)).collect();
+                let mut b = plano.clone();
+                a.sort_unstable();
+                b.sort_unstable();
+                a == b
+            });
         PLACAR.registrar(ok, || format!("mundial_fase_do_grupo({}): a fase não bate com o plano ({:x?})", g, plano));
     }
     r

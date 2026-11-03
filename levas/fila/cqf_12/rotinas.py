@@ -27,6 +27,12 @@
 # Determinismo: o 2º dword da data passada à 0x5acbe0 tem a palavra alta sem valor na original (sobra da pilha); a
 # cópia usa 0 (a 0x5acbe0 só lê a palavra baixa). O registro do relatório começa zerado na cópia, com as datas que a
 # entrada da original constrói (+0, +0x2f, +0x47). Nada lê endereço como valor.
+# Provas (02/11/2026, mesma cópia: cqf_10, cqf_11, cqf_12, cqg_10):
+# - duas carreiras Rust até 2002-06-01 iguais entre si e ao detector ('detector de lixo: igual'), 825918943f68aa97;
+# - jogo comparando (Inglaterra, sem o motor) até 2002-059: 0 divergências; com ENG ESP ITA FRA até 2001-304: 1
+#   DIVERGENCIA, de aviso_ao_rival_de_posicao (não é deste item);
+# - mutações: escapam (nenhum pedido processado na carreira automática; tirar as buscas dos humanos também não mudou
+#   a impressão; ver mutacoes.py).
 SAVE = False
 ROTINAS = [('cqf12_olheiros_do_dia', 0x7f8750, [0x6a, 0xff, 0x68, 0xbe, 0x0f, 0x96, 0x00]),
            ('cqf12_relatorios_dos_olheiros', 0x7f9890, [0x81, 0xec, 0x10, 0x02, 0x00, 0x00]),

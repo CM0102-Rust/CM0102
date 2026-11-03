@@ -1,40 +1,37 @@
-# A fuga do jogador e a notícia dela (awol.cpp), pedido de 02/11 (agente C, família das pessoas):
-# - 0x419840 (AWOL::start_absence, 656 bytes, x87 nas reputações, quadro SEH só da data local): o jogador some: a marca
-#   na tabela das fugas, as três reputações cortadas até 40%, as antipatias com o técnico, o elenco e o +0xbf do clube,
-#   a volta marcada (12 bytes na lista das fugas) e a notícia. Pela falta ao treino (0x41a360), pelo lance de outro clube
-#   (0x8c1290), pela volta das férias (0x630ee0), pelo diário (0x5ce2d0) e pela mídia (0x736c00). As mutações estão nela.
-# - 0x419ad0 (awol_post_news, 400 bytes): a notícia 3013 da fuga, para todos (reputação mundial acima de 7500) ou para
-#   o país do clube e o da nacionalidade: passageira.
-# Iguais no cm0102-1080.exe (as duas inteiras, conferido byte a byte).
+# O player_setup.cfg (player_regen.cpp), pedido de 02/11 (agente C, família das pessoas):
+# - 0x7a50f0 (player_setup_find_staff, 656 bytes): a pessoa de cada linha pelos nomes (em todas as pessoas ou no
+#   elenco e no técnico do clube nomeado). 290 chamadas na carreira automática até 2002-06-01 (cobertura de 02/11: o
+#   player_setup.cfg do jogo_testes aplicado na criação do jogo pela 0x7a3a10).
+# - 0x7a5090 (player_setup_read_quoted_token, 80 bytes): o texto entre aspas de cada campo da linha (3694 chamadas).
+# - 0x7a3140 (player_setup_type_from_name, 400 bytes): o tipo da linha (2320 chamadas).
+# As três mudam quais lesões, suspensões, aposentadorias, transferências, empréstimos e fugas da criação do jogo são
+# aplicadas e a quem: as mutações estão nelas. (A escolha inicial deste item, a fuga AWOL::start_absence 0x419840 e
+# a notícia 0x419ad0, foi trocada: a carreira automática de 02/11 não passou por elas.)
+# Iguais no cm0102-1080.exe (as três inteiras, conferido byte a byte).
 # Convenções conferidas nos pontos de chamada da original (lição da 258ª):
-#   0x419840: thiscall (mov ecx, [0xad9c6c]; push 4; push ebp; push esi em 0x6311c2..0x6311cc; e as Rust 0x41a360 e
-#   0x8c1290), 3 (ret 0xc: jogador, clube, tipo byte). Dentro: 0x54a110 thiscall (lea ecx, a data local), 0; 0x90cfc0
-#   cdecl, 1; 0x945640 _ftol; 0x547af0 cdecl (add esp, 0xc), 3 (dono, outro, 1); 0x600a50 cdecl (add esp, 0x20 junto
-#   da 0x547af0), 5 (clube, 1, 1, 0, 0); 0x417c10 thiscall (lea ecx, a data), 2; 0x54c5b0 thiscall (lea ecx, a data;
-#   push dias; push temporária), 2; 0x68d0d0 thiscall (mov ecx, [this]; push 0xc; push &registro), 2; 0x419ad0 (mov
-#   ecx, ebp = this; push valor; push tipo; push clube; push jogador; ret 0x10; ela não lê o ecx), 4.
-#   0x419ad0: thiscall como a 0x419840 a chama (o this não é lido), 4. Dentro: 0x77bbe0 thiscall (lea ecx, a notícia
-#   local), 2 (0xbc5, 0); 0x785790 thiscall (lea ecx, a notícia), 2; 0x786780 thiscall (mov ecx, [0xb7431c]), 1;
-#   0x7863f0 thiscall (mov ecx, [0xb7431c]), 2 (a notícia, a nação).
-# Leitura de pilha: nenhuma local lida antes de gravada (o registro da volta é o id e a data montada).
-# Comparadores: 0x419840 em ensaio (modelo CPV6_ENSAIO: a cópia sem a lista e sem a notícia, que alocam; depois a
-# original do mesmo estado): a marca, o jogador, a ficha, o técnico, o +0xbf e o elenco do clube e o estado do sorteio.
-# 0x419ad0 só a original (a entrega aloca a notícia).
+#   0x7a50f0: cdecl (add esp, 0x14 em 0x7a3b08), 5 (primeiro, comum, segundo, clube, no_elenco byte). Dentro: 0x545880
+#   cdecl (add esp, 4), 1 (o clube); 0x946fa0 strncmp cdecl (add esp, 0xc), 3.
+#   0x7a5090: cdecl (as chamadas de 0x7a3a63 em diante), 2 (origem, destino), devolve o ponteiro depois do fim.
+#   0x7a3140: cdecl (call em 0x7a3a76), 1. Dentro: 0x946fa0 strncmp cdecl (add esp, 0xc), 3 (com 100).
+# Leitura de memória: só as linhas e os registros (pessoas, clubes); nenhuma local lida antes de gravada.
+# Comparadores: 0x7a50f0 e 0x7a3140 pela devolução (só leem); 0x7a5090 lado a lado no destino e na devolução.
 SAVE = False
-ROTINAS = [('comecar_a_fuga', 0x419840, [0x6a, 0xff, 0x68, 0xb0, 0x3e, 0x95, 0x00]),
-           ('noticia_da_fuga', 0x419ad0, [0x64, 0xa1, 0x00, 0x00, 0x00, 0x00])]
-DOCS = ('a fuga do jogador (as reputações, as antipatias do técnico e do elenco, a volta marcada) e a notícia dela',
-        'the player going absent (the reputations, the dislikes of the manager and the squad, the scheduled return) and its news',
-        [('comecar_a_fuga', 'AWOL::start_absence', '0x419840', 'awol.cpp', 'thiscall',
-          'o jogador some: marca a fuga, corta as três reputações até 40%, cria antipatias com o técnico, o elenco e o auxiliar, marca a volta (2 a 32 dias no tipo 4, senão 21 a 170) e manda a notícia',
-          'the player goes absent: marks the absence, cuts the three reputations by up to 40%, creates dislikes with the manager, the squad and the assistant, schedules the return (2 to 32 days for kind 4, else 21 to 170) and posts the news'),
-         ('noticia_da_fuga', 'awol_post_news', '0x419ad0', 'awol.cpp', 'thiscall',
-          'a notícia da fuga para todos os técnicos (reputação mundial acima de 7500) ou para os do país do clube e da nacionalidade',
-          'the absence news to every manager (world reputation above 7500) or to the ones of the club country and of the nationality')])
-CAMPOS = [('AWOL ([0xad9c6c]) +0 a lista das fugas (12 bytes: id e a data da volta), +0xc a tabela de marcas por id (bit 1 fugido); valor; lê e grava (comecar_a_fuga)',
-           'AWOL ([0xad9c6c]) +0 the absence list (12 bytes: id and the return date), +0xc the flag table per id (bit 1 absent); value; reads and writes (comecar_a_fuga)'),
-          ('ficha do jogador +9, +0xb, +0xd reputações [inferência: atual, local, mundial; a +0xd acima de 7500 leva a notícia a todos]; valor; lê e grava',
-           'player record +9, +0xb, +0xd reputations [inference: current, home, world; +0xd above 7500 sends the news to everyone]; value; reads and writes'),
-          ('pessoa +0x1a nacionalidade, +0x39 clube, +0x59/+0x5b atributos de personalidade [inferência]; clube +0xbf, +0xcf técnico, +0xd7 elenco (50); ponteiro/valor; lê',
-           'person +0x1a nationality, +0x39 club, +0x59/+0x5b personality attributes [inference]; club +0xbf, +0xcf manager, +0xd7 squad (50); pointer/value; reads')]
+ROTINAS = [('pessoa_pelo_nome', 0x7a50f0, [0x53, 0x8b, 0x5c, 0x24, 0x14]),
+           ('texto_entre_aspas', 0x7a5090, [0x55, 0x8b, 0x6c, 0x24, 0x0c]),
+           ('tipo_da_linha', 0x7a3140, [0x56, 0x8b, 0x74, 0x24, 0x08])]
+DOCS = ('o player_setup.cfg: a pessoa pelo nome (no clube ou em todas), o texto entre aspas da linha e o tipo da linha pelo nome',
+        'the player_setup.cfg: the person by name (in the club or in all), the quoted text of the line and the line type by name',
+        [('pessoa_pelo_nome', 'player_setup_find_staff', '0x7a50f0', 'player_regen.cpp', 'cdecl',
+          'acha a pessoa de uma linha do player_setup.cfg pelos três nomes: em todas as pessoas ou, com o nome do clube, no elenco (se pedido) e no técnico dele',
+          'finds the person of a player_setup.cfg line by the three names: among all people or, with the club name, in its squad (when asked) and its manager'),
+         ('texto_entre_aspas', 'player_setup_read_quoted_token', '0x7a5090', 'player_regen.cpp', 'cdecl',
+          'copia o próximo texto entre aspas da linha (pulando espaços e quebras antes dele) e devolve onde continuar',
+          'copies the next quoted text of the line (skipping spaces and line breaks before it) and returns where to continue'),
+         ('tipo_da_linha', 'player_setup_type_from_name', '0x7a3140', 'player_regen.cpp', 'cdecl',
+          'o bit do tipo de uma linha do player_setup.cfg (lesão, técnico, aposentadoria, transferência, empréstimo, doping, conduta, passaporte, táticas, daltonismo, idioma, fuga)',
+          'the type bit of a player_setup.cfg line (injury, manager, retirement, transfer, loan, doping, misconduct, passport, tactics, colour blindness, language, absence)')])
+CAMPOS = [('pessoa ([0xae23bc], 0x6e bytes) +4 primeiro nome, +8 segundo nome, +0xc nome comum (registros de nome que começam pelo texto); ponteiro; lê (pessoa_pelo_nome)',
+           'person ([0xae23bc], 0x6e bytes) +4 first name, +8 second name, +0xc common name (name records that start with the text); pointer; reads (pessoa_pelo_nome)'),
+          ('clube ([0xae23b4], 0x245 bytes) o nome (0x545880), +0xcf técnico, +0xd7 elenco (50); ponteiro; lê',
+           'club ([0xae23b4], 0x245 bytes) the name (0x545880), +0xcf manager, +0xd7 squad (50); pointer; reads')]
 INTERESSA = ['CMRTE', 'SGE']

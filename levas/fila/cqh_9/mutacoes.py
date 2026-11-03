@@ -1,13 +1,14 @@
-# Mutacoes (cqh_9), todas na 0x419840 (a fuga do jogador). As reputacoes cortadas e as antipatias mudam as notas,
-# as transferencias e o elenco.
-# - O corte da reputacao: sorteio(41) x 0,02 em vez de 0,01 (ate 80%).
-# - A volta: 22..171 dias em vez de 21..170 (a data da lista das fugas).
-# - O companheiro nao ganha antipatia.
+# Mutacoes (cqh_9): o player_setup.cfg aplicado na criacao do jogo da carreira automatica (as lesoes, suspensoes,
+# aposentadorias, transferencias e emprestimos das linhas mudam o elenco e o mercado desde o comeco).
+# - A linha INJURY vira o tipo 2 (MANAGER_CONF): as lesoes nao sao aplicadas.
+# - O jogador do elenco achado sem conferir o segundo nome (o primeiro do elenco com o mesmo primeiro nome e nome
+#   comum; a busca por clube e a das linhas, 128 ou mais na carreira).
+# - O texto entre aspas em minusculas: os nomes nao batem mais.
 MUTACOES = [
-    ('cqh9_corte_duplo', 'let k = f64_em(0x967890) - r as f64 * f64_em(0x967898); // cqh9: o corte da reputação',
-     'let k = f64_em(0x967890) - r as f64 * f64_em(0x967898) * 2.0; // mutacao: o corte da reputação', 'cqh_9 fuga'),
-    ('cqh9_volta_mais_1', 'let dias = if t == 4 { cqh9_sortear(0x1f) + 2 } else { cqh9_sortear(0x96) + 0x15 }; // cqh9: os dias até a volta',
-     'let dias = if t == 4 { cqh9_sortear(0x1f) + 3 } else { cqh9_sortear(0x96) + 0x16 }; // mutacao: os dias até a volta', 'cqh_9 fuga'),
-    ('cqh9_sem_antipatia', 'cqh9_antipatia(q, p); // cqh9: o companheiro não gosta dele',
-     'let _ = q; // mutacao: o companheiro não gosta dele', 'cqh_9 fuga'),
+    ('cqh9_lesao_vira_tecnico', '(0xa6b3a0, 1),      // INJURY',
+     '(0xa6b3a0, 2),      // mutacao INJURY', 'cqh_9 tipo da linha'),
+    ('cqh9_elenco_sem_segundo_nome', 'if q != 0 && cqh9_bate(q, 4, primeiro) && cqh9_bate(q, 8, segundo) && cqh9_bate(q, 0xc, comum) {',
+     'if q != 0 && cqh9_bate(q, 4, primeiro) && cqh9_bate(q, 0xc, comum) {', 'cqh_9 jogador do clube pelo nome'),
+    ('cqh9_texto_minusculo', '*((destino + n) as *mut u8) = c; // cqh9: o caractere do texto',
+     '*((destino + n) as *mut u8) = c.to_ascii_lowercase(); // mutacao: o caractere do texto', 'cqh_9 texto entre aspas'),
 ]

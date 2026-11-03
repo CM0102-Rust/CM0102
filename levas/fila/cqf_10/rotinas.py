@@ -25,6 +25,12 @@
 # Determinismo: o registro local de 0x67 bytes começa zerado na cópia (na original, sobra da pilha que a 0x7b62a0
 # sobrescreve), com as partes que a entrada da original constrói (a data em +0 e os recordistas em +0x1f e +0x37); é
 # reaproveitado entre os jogadores como na original. Nada lê endereço como valor.
+# Provas (02/11/2026, cópia fora do projeto: motor.rs da principal + cqf_10, cqf_11, cqf_12, cqg_10, 11 rotinas):
+# - duas carreiras Rust até 2002-06-01 com o motor iguais entre si e ao detector (simular.py --repetir 2 --detector:
+#   'detector de lixo: igual'), impressão 825918943f68aa97, a mesma da cópia sem os itens;
+# - jogo comparando (Inglaterra, sem o motor) até 2002-059: 0 divergências (nenhuma linha DIVERGENCIA); com ENG ESP
+#   ITA FRA até 2001-304: 1 DIVERGENCIA, de aviso_ao_rival_de_posicao (não é deste item);
+# - mutações: as três escapam (o relatório não roda na carreira automática; ver mutacoes.py).
 SAVE = False
 ROTINAS = [('cqf10_olheiro_no_jogo', 0x7b5be0, [0x6a, 0xff, 0x68, 0x68, 0xf5, 0x95, 0x00]),
            ('cqf10_historico_do_clube_observado', 0x7bd310, [0x81, 0xec, 0x14, 0x02, 0x00, 0x00])]
