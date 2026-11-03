@@ -71699,6 +71699,31 @@ unsafe fn cpx1_itens(l: usize) -> Vec<usize> {
 /// notícia, o agendamento, as listas de observação e as ofertas de contrato), que não podem rodar duas vezes.
 static mut CPX1_ENSAIO: bool = false;
 
+/// As ofertas que o ensaio passou do estado 0xf para o 8 (`cpx1_ensaio_reenviar`), devolvidas ao 0xf depois da cópia.
+static mut CPX1_DESFAZER: Vec<usize> = Vec::new();
+
+/// No ensaio, o que a 0x4cf4a0 (as ofertas de contrato guardadas da pessoa voltam) muda no que a marca de oferta lê: em
+/// cada oferta de contrato guardada da pessoa (lista [[0xae1050]+0x38], +0 o id) ligada a uma oferta de transferência
+/// (+0x59 a vaga, ≠ −1; 0x8c61e0 da gerência [0xde1f54]) com a mesma série (+0x5d = +0x24 dela), a oferta no estado
+/// 0xf volta ao 8 e deixa de contar como encerrada.
+unsafe fn cpx1_ensaio_reenviar(id: usize) {
+    let vaga: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x8c61e0usize);
+    for e in cpx1_nos(cpx1_d(cpx1_d(0xae1050) + 0x38)) {
+        if cpx1_d(e) != id || cpx1_d(e + 0x59) == usize::MAX {
+            continue;
+        }
+        let v = vaga(cpx1_d(0xde1f54), cpx1_d(e + 0x59));
+        if v == 0 || cpx1_d(v) == 0 {
+            continue;
+        }
+        let r = cpx1_d(v);
+        if cpx1_d(r + 0x24) == cpx1_d(e + 0x5d) && cpx1_b(r + 0x2c) == 0xf {
+            *((r + 0x2c) as *mut u8) = 8;
+            (*core::ptr::addr_of_mut!(CPX1_DESFAZER)).push(r);
+        }
+    }
+}
+
 /// A gerência da lista de observação (Shortlist_Manager em +0x856 da gerência de transferências).
 unsafe fn cpx1_listas(this: usize) -> usize {
     cpx1_d(this + 0x856)
@@ -71725,9 +71750,13 @@ unsafe fn cpx1_situacao_na_lista(this: usize, pessoa: usize, clube: usize, event
 }
 
 /// Uma chamada thiscall(gerência de transferências, oferta) com ret 4 (0x8c1290 desassossegar, 0x8cbf70 tirar a
-/// transferência futura, 0x8c6db0 fechar as ofertas de contrato da oferta); no ensaio, nada.
+/// transferência futura, 0x8c6db0 fechar as ofertas de contrato da oferta); no ensaio, nada, só o bit 0x10 da marca da
+/// pessoa que a 0x8cbf70 apaga (o comparador lê o byte; as marcas dos jogadores da troca ele não lê nem devolve).
 unsafe fn cpx1_com_a_oferta(f: usize, this: usize, o: usize) {
     if CPX1_ENSAIO {
+        if f == 0x8cbf70 {
+            *((cpx1_d(this + 0x86e).wrapping_add(cpx1_d(o + 0xc).wrapping_mul(8))) as *mut u8) &= 0xef;
+        }
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(f);
@@ -71901,9 +71930,13 @@ unsafe extern "thiscall" fn retirar_oferta_de_transferencia(this: usize, vaga: *
     if cpx1_b(atual + 0x2c) == 0x13 {
         cpx1_com_a_oferta(0x8cbf70, this, atual);
     }
-    if cpx1_b(o + 0x2c) as i8 >= 0xb && !CPX1_ENSAIO {
-        let reenviar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x4cf4a0usize);
-        reenviar(cpx1_d(0xae1050), cpx1_d(o + 0xc));
+    if cpx1_b(o + 0x2c) as i8 >= 0xb {
+        if CPX1_ENSAIO {
+            cpx1_ensaio_reenviar(cpx1_d(o + 0xc));
+        } else {
+            let reenviar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x4cf4a0usize);
+            reenviar(cpx1_d(0xae1050), cpx1_d(o + 0xc));
+        }
     }
     *((o + 0x2c) as *mut u8) = 3;
     cpx1_com_a_oferta(0x8c6db0, this, o);
@@ -71955,6 +71988,9 @@ unsafe fn cpx1_comparar(nome: &str, this: usize, vaga: *mut usize, original: imp
     crate::aleatorio::pausar_rastro(copia);
     CPX1_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
+    for r in (*core::ptr::addr_of_mut!(CPX1_DESFAZER)).drain(..) {
+        *((r + 0x2c) as *mut u8) = 0xf;
+    }
     antes.escrever();
     original();
     let mo = crate::comparacao::Memoria::ler(&regioes);

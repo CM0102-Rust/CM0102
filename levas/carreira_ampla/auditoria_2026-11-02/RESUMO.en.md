@@ -23,6 +23,7 @@ No game message boxes. All 4 routines pass the chain (ENG only, to 2002-01-01): 
 - cqd_13: the comparator did not redo the morale draw or the scratch date 0xae2470 after the calls the dry run skips (renewal, call-ups, news); the Rust routine was right.
 - 261st `renovar_arbitros`: port defect (it cleared the stats row of the first referee in the range only; the original clears each one's).
 - 262nd `posicoes_e_situacao_na_liga`: comparator defect (the dry-run copy lost what the announcement writes to the table in the Brazil, Belgium and Finland classes; now the original records a tape and the copy replays it).
+- cpx_1 `retirar_oferta_de_transferencia`: comparator defect (the dry run skipped 0x4cf4a0, which returns the stored contract offers and moves the rival offer from 0xf to 8, and 0x8cbf70 in state 0x13, which clears bit 0x10 of the person's offer mark; the dry run now reproduces both effects and undoes them before the original). Comparing 8 leagues to 2002-031 with no divergence.
 
 ## Comparing `ENG SCO IRL ITA ESP` to 2002-06-01 (bench 3)
 Reached 2002-151; date 0, random 0; only cqd_13 lines (14 league, 1 cup). `retirar_oferta` (cpx_1) and `aviso_ao_rival_de_posicao` (cqb_8), seen before with these leagues, did not diverge.
