@@ -7,7 +7,7 @@
 #   fica como passageira.
 # - 0x630ee0 (Injury::post_recovery_news, 1648 bytes, quadro SEH da notícia local sem destrutor): a notícia 2001 e, nas
 #   categorias de tipo 12, o acerto do tratamento ('M': o registro de forma, a simpatia pelo técnico), da volta da
-#   lesão ('O', 'N': a forma e a marca +0xc do registro de 79 bytes) e das férias ('Q': as marcas de férias do
+#   lesão ('O', 'N': a forma e a marca +0xc do registro de 79 bytes) e das férias ('Q': as queixas do
 #   contrato, a felicidade do contrato, a simpatia, a fuga 0x419840 e os atributos +0x57/+0x59/+0x5d e a ficha +0x44).
 #   9 chamadas na carreira automática até 2002-06-01 (cobertura de 02/11), pelas voltas aos treinos (0x62e010) e pelo
 #   fim da lesão (0x62e700), ambas já em Rust. Passageira (o acerto não rodou na carreira de 02/11).
@@ -44,19 +44,19 @@ DOCS = ('a lesão pelo nome do player_setup.cfg; a notícia da volta aos treinos
           'o tipo da lesão de uma linha INJURY do player_setup.cfg pelo nome (76 nomes, de resfriado a artrite); nenhum: 0x4b',
           'the injury type of a player_setup.cfg INJURY line by name (76 names, from cold to arthritis); none: 0x4b'),
          ('noticia_da_volta_aos_treinos', 'Injury::post_recovery_news', '0x630ee0', 'injury.cpp', 'thiscall',
-          'a notícia da volta do jogador aos treinos leves ou completos; com a categoria de tipo 12: o resultado do tratamento, da volta e das férias (as marcas de férias do contrato, a felicidade, a simpatia pelo técnico, a chance de fugir e o acerto de atributos de personalidade)',
-          'the news of the player return to light or full training; with a type 12 category: the outcome of the treatment, the return and the holidays (the contract holiday flags, the happiness, the liking for the manager, the chance of going absent and the personality attribute changes)'),
+          'a notícia da volta do jogador aos treinos leves ou completos; com a categoria de tipo 12: o resultado do tratamento, da volta e das férias (as queixas do contrato, a felicidade, a simpatia pelo técnico, a chance de fugir e o acerto de atributos de personalidade)',
+          'the news of the player return to light or full training; with a type 12 category: the outcome of the treatment, the return and the holidays (the contract grievances, the happiness, the liking for the manager, the chance of going absent and the personality attribute changes)'),
          ('nome_da_categoria_da_lesao', 'injury_get_category_name', '0x630c50', 'injury.cpp', 'stdcall',
           'o nome traduzido da categoria da lesão (interna, pé, canela, joelho, coxa, virilha, tronco, mão, braço, ombro, pescoço, cabeça, recuperação); devolve o gênero do nome no idioma 3',
           'the translated injury category name (internal, foot, shin, knee, thigh, groin, upper body, hand, arm, shoulder, neck, head, rehabilitation); returns the name gender in language 3')])
 CAMPOS = [('[0xa6b3a8..0xa6b840] os nomes das lesões do player_setup.cfg; texto; lê (lesao_pelo_nome)',
            '[0xa6b3a8..0xa6b840] the player_setup.cfg injury names; text; reads (lesao_pelo_nome)'),
-          ('pessoa +0x57, +0x59, +0x5b, +0x5d atributos de personalidade [inferência: os que as férias acertam]; valor; lê e grava (noticia_da_volta_aos_treinos)',
-           'person +0x57, +0x59, +0x5b, +0x5d personality attributes [inference: the ones the holidays adjust]; value; reads and writes (noticia_da_volta_aos_treinos)'),
+          ('pessoa +0x57 ambição, +0x59 lealdade, +0x5b profissionalismo, +0x5d temperamento (os nomes do LFM do original); valor; lê e grava (noticia_da_volta_aos_treinos)',
+           'person +0x57 ambition, +0x59 loyalty, +0x5b professionalism, +0x5d temperament (the names from the original LFM); value; reads and writes (noticia_da_volta_aos_treinos)'),
           ('ficha do jogador (pessoa +0x61) +0xb valor [inferência], +0x44 [inferência: atributo que as férias baixam; a moral é a +0x45]; valor; lê e grava',
            'player record (person +0x61) +0xb value [inference], +0x44 [inference: attribute the holidays lower; morale is +0x45]; value; reads and writes'),
-          ('contrato +0x44 felicidade no contrato (i8, −100..100), +0x45 marcas de férias 0x20, 0x40, 0x20000 (caem pela 0x8674e0); valor; lê e grava',
-           'contract +0x44 contract happiness (i8, −100..100), +0x45 holiday flags 0x20, 0x40, 0x20000 (cleared through 0x8674e0); value; reads and writes'),
+          ('contrato +0x44 felicidade no contrato (i8, −100..100), +0x45 queixas 0x20, 0x40, 0x20000 (STAFF_CONTRACT::clear_grievances 0x8674e0); valor; lê e grava',
+           'contract +0x44 contract happiness (i8, −100..100), +0x45 grievances 0x20, 0x40, 0x20000 (STAFF_CONTRACT::clear_grievances 0x8674e0); value; reads and writes'),
           ('lesões ([0xb63d28]) [+0] + 31 × id registro de forma: +0x12 (0xff) e +0x13 [inferência: o andamento da recuperação]; valor; grava',
            'injuries ([0xb63d28]) [+0] + 31 × id fitness record: +0x12 (0xff) and +0x13 [inference: the recovery progress]; value; writes'),
           ('[0xae2d0c] + 0x4f × id +0xc bit 0 [inferência: em tratamento]; valor; grava 0; [0x9e7ad9] + 13 × tipo a categoria do tipo de lesão; valor; lê',

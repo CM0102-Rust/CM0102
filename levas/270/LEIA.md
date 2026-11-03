@@ -22,7 +22,7 @@
 - `anos_desde_o_clube()` = 0x7c6e30 (player_stats.cpp, stdcall): quantos anos desde que a pessoa jogou pelo clube: 0 se está nele, −1 se nunca;
 - `ordem_do_historico_por_pessoa()` = 0x7c6de0 (player_stats.cpp, cdecl): a ordem do qsort dos registros de histórico: pela pessoa, pelo ano e pelo primeiro campo;
 - `lesao_pelo_nome()` = 0x7a32e0 (player_regen.cpp, cdecl): o tipo da lesão de uma linha INJURY do player_setup.cfg pelo nome (76 nomes, de resfriado a artrite); nenhum: 0x4b;
-- `noticia_da_volta_aos_treinos()` = 0x630ee0 (injury.cpp, thiscall): a notícia da volta do jogador aos treinos leves ou completos; com a categoria de tipo 12: o resultado do tratamento, da volta e das férias (as marcas de férias do contrato, a felicidade, a simpatia pelo técnico, a chance de fugir e o acerto de atributos de personalidade);
+- `noticia_da_volta_aos_treinos()` = 0x630ee0 (injury.cpp, thiscall): a notícia da volta do jogador aos treinos leves ou completos; com a categoria de tipo 12: o resultado do tratamento, da volta e das férias (as queixas do contrato, a felicidade, a simpatia pelo técnico, a chance de fugir e o acerto de atributos de personalidade);
 - `nome_da_categoria_da_lesao()` = 0x630c50 (injury.cpp, stdcall): o nome traduzido da categoria da lesão (interna, pé, canela, joelho, coxa, virilha, tronco, mão, braço, ombro, pescoço, cabeça, recuperação); devolve o gênero do nome no idioma 3;
 - `cqf10_olheiro_no_jogo()` = 0x7b5be0 (player_search.cpp, thiscall, ret 0xc): a lista do olheiro (tipo 4) que confere vê a partida jogada: o histórico do clube acompanhado; dentro das datas, com o jogador acompanhado no jogo ou com pedido do clube por algum jogador dos dois clubes, o começo da lista vai a amanhã e cada jogador de outro clube com nota de ao menos 15 (e pedido, acompanhado ou com reputação vista abaixo de 4000) vira um relatório na saída;
 - `cqf10_historico_do_clube_observado()` = 0x7bd310 (player_search.cpp, thiscall, ret 8): as vagas de quem saiu do clube observado são limpas; cada jogador do clube que jogou ganha uma linha no histórico de 10 partidas: gols, nota, data, adversário, placar, lado, estatísticas e o tipo (titular, reserva, nota pelo +0x30);
@@ -55,7 +55,7 @@
 - pessoa +0 id, +4/+8/+0xc ponteiros com o id em +0x33, +0x52 valor, +0x61 ficha de jogador, +0x6d situação (2 vira 0x10); id e valor; lê, grava +0x6d (termos_aceitos, noticia_de_jogador_listado)
 - clube +0x53 nação, +0x80 reputação, +0xcf comissão (+0 id, +4/+8/+0xc com o id em +0x33); id e valor; lê (termos_aceitos, noticia_de_jogador_listado)
 - contrato +4 clube, +0x35 tipo (6 bits), +0x45, +0x4f nibble alto; id e valor; lê (termos_aceitos, noticia_de_jogador_listado)
-- contrato (STAFF_CONTRACT, 0x50 bytes) +4 clube, +8 salário, +0xc valor [inferência], +0x10..+0x18 três bônus (−1 sem), +0x1c, +0x1d luvas, +0x1f, +0x21 multa, +0x25 data, +0x2d fim (+0x2f ano), +0x35 bits, +0x4f nibble alto do cargo; valor; grava (contrato_oferecido)
+- contrato (STAFF_CONTRACT, 0x50 bytes) +4 clube, +8 luvas, +0xc salário (conferidos pelo CMRTE nos pares de transferência), +0x10..+0x18 três bônus (−1 sem), +0x1c, +0x1d [a conferir], +0x1f, +0x21 multa, +0x25 data, +0x2d fim (+0x2f ano), +0x35 bits, +0x4f nibble alto do cargo; valor; grava (contrato_oferecido)
 - pessoa +0 id, +0x10 nascimento, +0x39 clube, +0x3d tipo, +0x5b, +0x61 ficha de jogador; id e valor; lê (contrato_oferecido)
 - ficha do jogador +0xb habilidade atual, +0xd habilidade potencial, +0xf posição, +0x34, +0x3c; valor; lê (contrato_oferecido)
 - clube +0 id, +0x80 reputação, +0xcf comissão; [0xae2d0c] registro de 79 bytes (+0 índice do contrato, +0xb bits 0x30); [0xae1080] o último contrato; [0xae233c] limite de 5 anos; lê, grava [0xae1080] (contrato_oferecido)
@@ -78,9 +78,9 @@
 - PlayerStats ([0xb74350]) +0 o arquivo de histórico (FILE_LLIST), +0x30 registros de 0x27 bytes por ficha de jogador (+0x18/+0x1c as posições do primeiro e do último nó); ponteiro/valor; lê
 - pessoa +0x39 clube, +0x61 ficha; ponteiro; lê; [0xae2c92] o ano de hoje; valor; lê (anos_desde_o_clube)
 - [0xa6b3a8..0xa6b840] os nomes das lesões do player_setup.cfg; texto; lê (lesao_pelo_nome)
-- pessoa +0x57, +0x59, +0x5b, +0x5d atributos de personalidade [inferência: os que as férias acertam]; valor; lê e grava (noticia_da_volta_aos_treinos)
+- pessoa +0x57 ambição, +0x59 lealdade, +0x5b profissionalismo, +0x5d temperamento (os nomes do LFM do original); valor; lê e grava (noticia_da_volta_aos_treinos)
 - ficha do jogador (pessoa +0x61) +0xb valor [inferência], +0x44 [inferência: atributo que as férias baixam; a moral é a +0x45]; valor; lê e grava
-- contrato +0x44 felicidade no contrato (i8, −100..100), +0x45 marcas de férias 0x20, 0x40, 0x20000 (caem pela 0x8674e0); valor; lê e grava
+- contrato +0x44 felicidade no contrato (i8, −100..100), +0x45 queixas 0x20, 0x40, 0x20000 (STAFF_CONTRACT::clear_grievances 0x8674e0); valor; lê e grava
 - lesões ([0xb63d28]) [+0] + 31 × id registro de forma: +0x12 (0xff) e +0x13 [inferência: o andamento da recuperação]; valor; grava
 - [0xae2d0c] + 0x4f × id +0xc bit 0 [inferência: em tratamento]; valor; grava 0; [0x9e7ad9] + 13 × tipo a categoria do tipo de lesão; valor; lê
 - notícia 2001: dados 0 estágio, 1 tipo, 2 id, 3..5 os nomes, 6 nascimento, 7 ano, 8 dias, 9 resultado, 10 a simpatia; valor; grava

@@ -22,7 +22,7 @@
 - `anos_desde_o_clube()` = 0x7c6e30 (player_stats.cpp, stdcall): how many years since the person played for the club: 0 when he is there, −1 when never;
 - `ordem_do_historico_por_pessoa()` = 0x7c6de0 (player_stats.cpp, cdecl): the qsort order of the history records: by person, by year and by the first field;
 - `lesao_pelo_nome()` = 0x7a32e0 (player_regen.cpp, cdecl): the injury type of a player_setup.cfg INJURY line by name (76 names, from cold to arthritis); none: 0x4b;
-- `noticia_da_volta_aos_treinos()` = 0x630ee0 (injury.cpp, thiscall): the news of the player return to light or full training; with a type 12 category: the outcome of the treatment, the return and the holidays (the contract holiday flags, the happiness, the liking for the manager, the chance of going absent and the personality attribute changes);
+- `noticia_da_volta_aos_treinos()` = 0x630ee0 (injury.cpp, thiscall): the news of the player return to light or full training; with a type 12 category: the outcome of the treatment, the return and the holidays (the contract grievances, the happiness, the liking for the manager, the chance of going absent and the personality attribute changes);
 - `nome_da_categoria_da_lesao()` = 0x630c50 (injury.cpp, stdcall): the translated injury category name (internal, foot, shin, knee, thigh, groin, upper body, hand, arm, shoulder, neck, head, rehabilitation); returns the name gender in language 3;
 - `cqf10_olheiro_no_jogo()` = 0x7b5be0 (player_search.cpp, thiscall, ret 0xc): the matching scout list (type 4) watches the played match: the history of the followed club; within the dates, with the followed player in the match or with the club asking for a player of either club, the list start moves to tomorrow and every player of another club rated at least 15 (and asked for, followed or with a seen reputation below 4000) becomes a report in the output;
 - `cqf10_historico_do_clube_observado()` = 0x7bd310 (player_search.cpp, thiscall, ret 8): the slots of players who left the watched club are cleared; every club player who played gets a line in the 10-match history: goals, rating, date, opponent, score, side, statistics and the type (starter, substitute, rating from +0x30);
@@ -55,7 +55,7 @@
 - person +0 id, +4/+8/+0xc pointers with the id at +0x33, +0x52 value, +0x61 player record, +0x6d status (2 becomes 0x10); id and value; reads, writes +0x6d (termos_aceitos, noticia_de_jogador_listado)
 - club +0x53 nation, +0x80 reputation, +0xcf board (+0 id, +4/+8/+0xc with the id at +0x33); id and value; reads (termos_aceitos, noticia_de_jogador_listado)
 - contract +4 club, +0x35 type (6 bits), +0x45, +0x4f high nibble; id and value; reads (termos_aceitos, noticia_de_jogador_listado)
-- contract (STAFF_CONTRACT, 0x50 bytes) +4 club, +8 wage, +0xc value [inference], +0x10..+0x18 three bonuses (−1 none), +0x1c, +0x1d signing fee, +0x1f, +0x21 release fee, +0x25 date, +0x2d end (+0x2f year), +0x35 bits, +0x4f high nibble of the job; value; writes (contrato_oferecido)
+- contract (STAFF_CONTRACT, 0x50 bytes) +4 club, +8 signing-on fee, +0xc wage (checked by CMRTE on the transfer pairs), +0x10..+0x18 three bonuses (−1 none), +0x1c, +0x1d [to be checked], +0x1f, +0x21 release fee, +0x25 date, +0x2d end (+0x2f year), +0x35 bits, +0x4f high nibble of the job; value; writes (contrato_oferecido)
 - person +0 id, +0x10 birth date, +0x39 club, +0x3d type, +0x5b, +0x61 player record; id and value; reads (contrato_oferecido)
 - player record +0xb current ability, +0xd potential ability, +0xf position, +0x34, +0x3c; value; reads (contrato_oferecido)
 - club +0 id, +0x80 reputation, +0xcf board; [0xae2d0c] 79-byte record (+0 contract index, +0xb bits 0x30); [0xae1080] the last contract; [0xae233c] 5-year limit; reads, writes [0xae1080] (contrato_oferecido)
@@ -78,9 +78,9 @@
 - PlayerStats ([0xb74350]) +0 the history file (FILE_LLIST), +0x30 0x27-byte records per player record (+0x18/+0x1c the first and last node offsets); pointer/value; reads
 - person +0x39 club, +0x61 record; pointer; reads; [0xae2c92] the current year; value; reads (anos_desde_o_clube)
 - [0xa6b3a8..0xa6b840] the player_setup.cfg injury names; text; reads (lesao_pelo_nome)
-- person +0x57, +0x59, +0x5b, +0x5d personality attributes [inference: the ones the holidays adjust]; value; reads and writes (noticia_da_volta_aos_treinos)
+- person +0x57 ambition, +0x59 loyalty, +0x5b professionalism, +0x5d temperament (the names from the original LFM); value; reads and writes (noticia_da_volta_aos_treinos)
 - player record (person +0x61) +0xb value [inference], +0x44 [inference: attribute the holidays lower; morale is +0x45]; value; reads and writes
-- contract +0x44 contract happiness (i8, −100..100), +0x45 holiday flags 0x20, 0x40, 0x20000 (cleared through 0x8674e0); value; reads and writes
+- contract +0x44 contract happiness (i8, −100..100), +0x45 grievances 0x20, 0x40, 0x20000 (STAFF_CONTRACT::clear_grievances 0x8674e0); value; reads and writes
 - injuries ([0xb63d28]) [+0] + 31 × id fitness record: +0x12 (0xff) and +0x13 [inference: the recovery progress]; value; writes
 - [0xae2d0c] + 0x4f × id +0xc bit 0 [inference: under treatment]; value; writes 0; [0x9e7ad9] + 13 × type the injury type category; value; reads
 - news 2001: data 0 stage, 1 type, 2 id, 3..5 the names, 6 birth, 7 year, 8 days, 9 outcome, 10 the liking; value; writes
