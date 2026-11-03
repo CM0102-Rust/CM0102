@@ -535,6 +535,8 @@ const TEXTOS_NOSSOS: [u64; 3] = [0x7af14da1f595ae30, 0x62afeb6b1b407585, 0xfd250
 const ENTRADA_NOSSA: u32 = 0x547a13; // AddressOfEntryPoint (RVA; VA 0x947a13)
 
 static ADIADO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Só a caixa adiada (CM_SEM_DESVIOS num exe com patch): os desvios do motor ficam desligados.
+static CAIXA_ADIADA: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 /// Permanente (o ADIADO é só "instalação pendente" e volta a falso na instalação; consultá-lo depois dela
 /// desligava o ECX preservado e o vídeo do sistema no exe com patch, 25/10/2026).
 static COM_PATCH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
@@ -627,7 +629,13 @@ unsafe fn instalar_caixa() {
 pub unsafe fn instalar() {
     if win::ambiente("CM_SEM_DESVIOS") {
         linha("desvios: desligados (CM_SEM_DESVIOS)");
-        instalar_caixa(); // so observa; num exe com patch, a DLL dele pode trocar a entrada depois (a caixa sai do log)
+        // so observa; num exe com patch a DLL dele (a LaMOHatesCD do CLZ) troca a entrada depois do DllMain: a caixa
+        // espera a 1a DirectDrawCreate para encadear no salto dela (achado da sessao do CLZ, 02/11/2026)
+        if exe_nosso() {
+            instalar_caixa();
+        } else {
+            CAIXA_ADIADA.store(true, std::sync::atomic::Ordering::Relaxed);
+        }
         return;
     }
     if !exe_nosso() {
@@ -646,6 +654,9 @@ pub unsafe fn instalar() {
 
 /// Primeira DirectDrawCreate: a instalacao adiada do exe com patch (nada nos exes nossos).
 pub unsafe fn instalar_adiado() {
+    if CAIXA_ADIADA.swap(false, std::sync::atomic::Ordering::Relaxed) {
+        instalar_caixa();
+    }
     if ADIADO.swap(false, std::sync::atomic::Ordering::Relaxed) {
         linha(&format!("desvios: instalacao adiada (data do jogo {:?})", *(0xae2c90 as *const [u16; 2])));
         conferir_assinaturas();
