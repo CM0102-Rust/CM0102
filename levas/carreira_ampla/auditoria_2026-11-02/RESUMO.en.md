@@ -27,3 +27,6 @@ No game message boxes. All 4 routines pass the chain (ENG only, to 2002-01-01): 
 
 ## Comparing `ENG SCO IRL ITA ESP` to 2002-06-01 (bench 3)
 Reached 2002-151; date 0, random 0; only cqd_13 lines (14 league, 1 cup). `retirar_oferta` (cpx_1) and `aviso_ao_rival_de_posicao` (cqb_8), seen before with these leagues, did not diverge.
+
+## Confirmation: comparing the 8 leagues to 2002-06-01 with the 4 fixes (bench 2)
+Reached 2002-151 (18,368 s; relaunched after the PC restarted at 2002-085); date, random and engine with **0 divergences** and no `DIVERGENCIA` line. 63,243 matches, fingerprint `9916badfcad92332`. Audit closed.

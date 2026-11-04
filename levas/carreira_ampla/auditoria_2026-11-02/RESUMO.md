@@ -27,3 +27,6 @@ Nenhuma caixa do jogo. As 4 rotinas passam na cadeia (só ENG até 2002-01-01): 
 
 ## Comparando `ENG SCO IRL ITA ESP` até 2002-06-01 (bancada 3)
 Chegou a 2002-151; data 0, aleatório 0; só linhas da cqd_13 (14 da liga, 1 da copa). A `retirar_oferta` (cpx_1) e o `aviso_ao_rival_de_posicao` (cqb_8), vistos antes com essas ligas, não divergiram.
+
+## Confirmação: comparando as 8 ligas até 2002-06-01 com as 4 correções (bancada 2)
+Chegou a 2002-151 (18.368 s; relançada depois de o PC reiniciar em 2002-085); data, aleatório e motor com **0 divergências** e nenhuma linha `DIVERGENCIA`. Partidas 63.243, impressão `9916badfcad92332`. Auditoria fechada.
