@@ -40,7 +40,9 @@ The whole `.text` was scanned (capstone; every access to `[0xAE2D0C]` and the by
 
 Afterwards the same routine does `and 0x7f` (0x7abba2), `and 0xf0` (0x7abc94) and `and 0xcf` (0x7abe82). None of these masks clears 0x40.
 
-**b) The `"ARSE"` line of `player_setup.cfg`**, in `player_setup_apply_line` 0x7a3a10: type 0x20 (0x7a324f..0x7a3261) does `or [record+0xb], bl` with `bl = 0x40` (0x7a3ad2) **on every person** (loop 0x7a3c0c..0x7a3c22). `create_game` reads the file with mask 0x203b, which includes 0x20 (0x828344). Neither the factory `player_setup.cfg` nor the CLZ one has this line [observed]. A modified database with it would mark everyone; the editor spots this case because the bit shows up on most people.
+**b) The `"ARSE"` line of `player_setup.cfg`**, in `player_setup_apply_line` 0x7a3a10: type 0x20 (0x7a324f..0x7a3261) does `or [record+0xb], bl` with `bl = 0x40` (0x7a3ad2) **on every person** (loop 0x7a3c0c..0x7a3c22). The line acts **at the end of `create_game`**: 0x5cc850 (called at 0x829fd9) reads the file again with mask 0x203b (0x5ccc9c), which includes 0x20, once the 79-byte table exists. The read at the start of `create_game` (0x828344/0x828349, same mask) runs before the table exists and marks no one. Neither the factory `player_setup.cfg` nor the CLZ one has this line [observed].
+
+**Confirmed in the game (04/11/2026, Tweaks session, factory database):** with the line, the save had 26,781 of 26,781 people with the bit, including the 15 human managers; without it, none. **How to spot it without counting:** a regen is always born a player (+0x5f = 2), so a human manager (+0x5f = 0, in the last slots) with the bit can only come from ARSE. Do not use the count: in a long career almost everyone really becomes a regen. This is what `CM0102-Rust-Tweaks` does since commit ed44220.
 
 ### Who does not clear it
 
@@ -146,7 +148,7 @@ In `TesteTelas` there is no player without the bit and without a name in the dat
 
 1. **Player regen** ⇔ bit 0x40 in `general.dat[0xfa7 + 79 × id + 0xb]`.
    - First check that `i32 general.dat[0xfa3]` = the number of people in `staff.dat` (size ÷ 110).
-   - If the bit shows up on most people, the database used `"ARSE"` in `player_setup.cfg`: do not trust the filter, and warn.
+   - If a human manager (+0x5f = 0) has the bit, the career was created with `"ARSE"` in `player_setup.cfg`: do not trust the filter, and warn (§1b; do not decide by the count).
    - No `Data` folder, names or dates needed. Namesakes and drawn birth dates stop mattering.
 2. Live (game memory): the same bit at `[0xAE2D0C] + 79 × id + 0xb`.
 

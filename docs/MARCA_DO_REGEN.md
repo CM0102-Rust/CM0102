@@ -40,7 +40,9 @@ Todo o `.text` foi varrido (capstone; cada acesso a `[0xAE2D0C]` e as escritas d
 
 Depois a mesma rotina faz `and 0x7f` (0x7abba2), `and 0xf0` (0x7abc94) e `and 0xcf` (0x7abe82). Nenhuma dessas máscaras apaga o 0x40.
 
-**b) A linha `"ARSE"` do `player_setup.cfg`**, em `player_setup_apply_line` 0x7a3a10: o tipo 0x20 (0x7a324f..0x7a3261) faz `or [registro+0xb], bl` com `bl = 0x40` (0x7a3ad2) **em todas as pessoas** (laço 0x7a3c0c..0x7a3c22). A `create_game` lê o arquivo com a máscara 0x203b, que inclui o 0x20 (0x828344). Nem o `player_setup.cfg` de fábrica nem o da CLZ têm essa linha [observado]. Uma base modificada que a tenha marcaria todo mundo; o editor reconhece esse caso porque o bit aparece na maioria das pessoas.
+**b) A linha `"ARSE"` do `player_setup.cfg`**, em `player_setup_apply_line` 0x7a3a10: o tipo 0x20 (0x7a324f..0x7a3261) faz `or [registro+0xb], bl` com `bl = 0x40` (0x7a3ad2) **em todas as pessoas** (laço 0x7a3c0c..0x7a3c22). A linha age **no fim da `create_game`**: a 0x5cc850 (chamada em 0x829fd9) lê o arquivo de novo com a máscara 0x203b (0x5ccc9c), que inclui o 0x20, já com a tabela de 79 bytes montada. A leitura do começo da `create_game` (0x828344/0x828349, mesma máscara) roda antes de a tabela existir e não marca ninguém. Nem o `player_setup.cfg` de fábrica nem o da CLZ têm essa linha [observado].
+
+**Confirmado no jogo (04/11/2026, sessão dos Tweaks, base de fábrica):** com a linha, o save trouxe 26.781 de 26.781 pessoas com o bit, inclusive os 15 técnicos humanos; sem ela, nenhuma. **Como reconhecer sem contar:** o regen nasce sempre jogador (+0x5f = 2), então um técnico humano (+0x5f = 0, nas últimas vagas) com o bit só pode ser obra do ARSE. Não usar a quantidade: numa carreira longa quase todo mundo vira regen de verdade. É o que o `CM0102-Rust-Tweaks` faz desde o commit ed44220.
 
 ### Quem não desliga
 
@@ -146,7 +148,7 @@ O `+0x5f` não é marca de regen: é a classificação (0 técnico humano, 1 nã
 
 1. **Regen jogador** ⇔ bit 0x40 em `general.dat[0xfa7 + 79 × id + 0xb]`.
    - Antes, conferir que `i32 general.dat[0xfa3]` = número de pessoas do `staff.dat` (tamanho ÷ 110).
-   - Se o bit aparecer na maior parte das pessoas, a base usou `"ARSE"` no `player_setup.cfg`: não confiar no filtro e avisar.
+   - Se um técnico humano (+0x5f = 0) tiver o bit, a carreira foi criada com `"ARSE"` no `player_setup.cfg`: não confiar no filtro e avisar (§1b; não decidir pela quantidade).
    - Não precisa da pasta `Data`, de nomes nem de datas. Homônimos e nascimentos sorteados deixam de importar.
 2. Ao vivo (memória do jogo): o mesmo bit em `[0xAE2D0C] + 79 × id + 0xb`.
 
