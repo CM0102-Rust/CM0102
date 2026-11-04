@@ -10,6 +10,8 @@
 #   3. carreiras Rust x2 (iguais entre si) e original ate 2002-06-01 (desde 31/10/2026 a original e so registrada);
 #      depois das Rust x2, o detector de lixo (simular.py --detector, 01/11/2026): uma terceira com a pilha particular
 #      envenenada, so registro ("detector de lixo: igual" ou "DIFERENTE (...)"); nao decide a cadeia.
+#   Leva de competicoes (levas/N/LIGAS, criado pelo fila.py, 03/11/2026): mutacoes, jogo real e carreiras com essas
+#   ligas, e o jogo real comparando ate 2002-06-01 (fim de temporada: acessos, copas, vagas).
 # Saida completa em levas/N/cadeia.txt. Com a base divergindo, o mutacoes.py sai com erro e o resto
 # nao roda. Testes pesados passam pela trava do laboratorio (laboratorio.py).
 RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
@@ -20,7 +22,10 @@ cd "$RAIZ/engenharia-reversa"
 CONF="--confirmar $DATA"; [ "$DATA" = "-" ] && CONF=""
 SAVE=""; [ -f "$RAIZ/levas/$N/SAVE" ] && SAVE=1
 MODO="--carreira 2002-06-01 $CONF --confirmar-pt"; [ -n "$SAVE" ] && MODO="--prova-save $N"
-(if python -u mutacoes.py mutacoes/leva$N.py $MODO; then
+LIGAS=""; ATE_REAL=2002-01-01; LIM_REAL=3600
+if [ -f "$RAIZ/levas/$N/LIGAS" ]; then LIGAS="$(head -1 "$RAIZ/levas/$N/LIGAS" | tr -d '\r')"; ATE_REAL=2002-06-01; LIM_REAL=30000; fi
+L=(); M=(); [ -n "$LIGAS" ] && L=(--ligas "$LIGAS") && M=(--ligas "$LIGAS" --limite 3600)
+(if python -u mutacoes.py mutacoes/leva$N.py $MODO "${M[@]}"; then
   if [ -n "$SAVE" ]; then
     python laboratorio.py | head -1
     echo "=== PROVA DO SAVE"
@@ -28,13 +33,13 @@ MODO="--carreira 2002-06-01 $CONF --confirmar-pt"; [ -n "$SAVE" ] && MODO="--pro
   fi
   python laboratorio.py | head -1
   echo "=== JOGO REAL"
-  python -u simular.py --ate 2002-01-01 --motor sim --modo comparar --limite 3600
+  python -u simular.py --ate $ATE_REAL --motor sim --modo comparar --limite $LIM_REAL "${L[@]}"
   grep -aE "DIVERG|EXCECAO" ../jogo_testes/ddraw.log | head -5 | cut -c1-300
   grep -aE "comparacoes" ../jogo_testes/ddraw.log | tail -3
   grep -a "sonda_lixo" ../jogo_testes/ddraw.log | tail -1
   python laboratorio.py | head -1
   echo "=== CARREIRA"
-  python -u simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2 --detector --limite 2400 && python -u simular.py --ate 2002-06-01 --motor sim --modo original --limite 2400
+  python -u simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2 --detector --limite 2400 "${L[@]}" && python -u simular.py --ate 2002-06-01 --motor sim --modo original --limite 2400 "${L[@]}"
   python laboratorio.py | head -1
 else
   echo "=== MUTACOES FALHARAM"

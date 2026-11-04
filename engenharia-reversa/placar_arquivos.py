@@ -18,15 +18,22 @@ def barra(p):
     return '🟩' * cheios + '🟨' * meio + '⬜' * (10 - cheios - meio)
 
 
+def falsa(r):
+    """Entrada que o proprio mapa marca como falsa (fragmento, meio de instrucao, enchimento)."""
+    return bool(re.search(r'fragment|mid_instruction|nop_padding', r['name'])) or r['purpose'].startswith(
+        ('Holds no function', 'Is an address in the middle', 'Misread entry', 'Marks a false entry', 'Is a tail block', 'Falls in the middle'))
+
+
+def mapa():
+    return list(csv.DictReader(open(os.path.join(R, 'referencias', 'cm0102-function-map', 'map', 'functions.tsv'), encoding='utf-8'), delimiter='\t'))
+
+
 def calcular():
     feitas = {int(x, 16) for x in re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+)', open(os.path.join(R, 'rust', 'src', 'motor.rs'), encoding='utf-8').read())}
     por = collections.defaultdict(lambda: [0, 0, 0, 0])  # funções, portadas, bytes, bytes portados
-    linhas = list(csv.DictReader(open(os.path.join(R, 'referencias', 'cm0102-function-map', 'map', 'functions.tsv'), encoding='utf-8'), delimiter='\t'))
+    linhas = mapa()
     # o campo size do mapa conta instrucoes; o tamanho em bytes vai ate o proximo inicio verdadeiro. As entradas
-    # que o proprio mapa marca como falsas (fragmento, meio de instrucao, enchimento) ficam com a funcao anterior.
-    def falsa(r):
-        return bool(re.search(r'fragment|mid_instruction|nop_padding', r['name'])) or r['purpose'].startswith(
-            ('Holds no function', 'Is an address in the middle', 'Misread entry', 'Marks a false entry', 'Is a tail block', 'Falls in the middle'))
+    # falsas ficam com a funcao anterior.
     reais = sorted(int(r['address'], 16) for r in linhas if not falsa(r))
     fim = dict(zip(reais, reais[1:] + [0x967000]))
     for r in linhas:

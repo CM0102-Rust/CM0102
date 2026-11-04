@@ -42,6 +42,11 @@ def main():
     # inicio se atropelam (o trampolim fica vazio e o Rust chama o endereco 0; 17/10/2026).
     import re
     feitas = {int(x, 16) for x in re.findall(r'endereco: (0x[0-9a-f]+)', open(os.path.join(AQUI, '..', 'rust', 'src', 'motor.rs'), encoding='utf-8').read())}
+    # Os pedacos que o mapa de maxevans60 marca como falsos (fragmento do meio de uma rotina, sem quadro proprio)
+    # nao levam contador: um saltava para dentro dos 5 bytes do desvio (0x585e50, Liga dos Campeoes; 03/11/2026).
+    import placar_arquivos
+    falsos = {int(r['address'], 16) for r in placar_arquivos.mapa() if placar_arquivos.falsa(r)}
+    verdadeiros = {int(r['address'], 16) for r in placar_arquivos.mapa() if not placar_arquivos.falsa(r)}
     linhas, recusadas = [], []
     for r in csv.DictReader(open(os.path.join(AQUI, '..', 'docs', 'mapa_funcoes.csv'))):
         # argumentos 0x... sao enderecos avulsos (rotinas sem modulo no mapa, como as do motor que o mapa de
@@ -50,7 +55,10 @@ def main():
         if int(r['endereco'], 16) not in avulsos and not any(m in r['arquivo'] for m in sys.argv[1:] if not m.startswith('0x')):
             continue
         va = int(r['endereco'], 16)
-        if va in feitas:
+        # e os rotulados por vizinhanca nos modulos de competicao: sao pedacos do meio de rotina (585ab2, 585dea...)
+        # e o jogo continuou caindo em 0x585e8e com eles
+        # nos modulos de competicao, so os inicios verdadeiros do mapa de maxevans60
+        if va in feitas or va in falsos or ('/comp/' in r['arquivo'] and va not in verdadeiros):
             continue
         try:
             if va not in chamados and va not in ponteiros:
