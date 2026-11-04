@@ -13,3 +13,12 @@ cqj_9
 cqk_7
 cqk_8
 cqk_9
+cqi_4
+cqi_5
+cqi_6
+cqj_4
+cqj_5
+cqj_6
+cqk_4
+cqk_5
+cqk_6
