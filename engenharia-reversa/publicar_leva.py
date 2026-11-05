@@ -42,8 +42,10 @@ def main():
           os.path.join('engenharia-reversa', 'fila.py'), os.path.join('engenharia-reversa', 'molde_docs.py'), os.path.join('levas', 'fila'),
           os.path.join('rust', 'src', 'motor.rs'), os.path.join('rust', 'src', 'assinaturas.rs'), os.path.join('levas', 'carreira_ampla', 'pendentes.txt'), os.path.join('engenharia-reversa', 'fila_continua.sh'))
     prefixo = 'Motor' if 'Motor de partidas' in open(os.path.join(RAIZ, 'levas', str(n), 'docs.py'), encoding='utf-8').read() else 'Simulacao'
+    adiado = '=== JOGO REAL ADIADO' in open(os.path.join(RAIZ, 'levas', str(n), 'cadeia.txt'), encoding='utf-8', errors='replace').read()
+    real = 'jogo real adiado para a comparacao acumulada da auditoria (05/11/2026)' if adiado else 'jogo real 0 divergencias'
     msg = (f'{prefixo}: {n}a leva ({total} rotinas): {titulo}\n\nComparacao de verdade em cada rotina; cadeia completa '
-           f'(levas/{n}/cadeia.txt): jogo real 0 divergencias, carreiras Rust x2 iguais (criterio de 31/10/2026: a original so registrada).\n\n'
+           f'(levas/{n}/cadeia.txt): {real}, carreiras Rust x2 iguais (criterio de 31/10/2026: a original so registrada).\n\n'
            'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n')
     rodar('git', 'commit', '-q', '-m', msg)
     rodar('git', 'push', '-q')

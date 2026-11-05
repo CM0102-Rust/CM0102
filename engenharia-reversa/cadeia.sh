@@ -11,7 +11,9 @@
 #      depois das Rust x2, o detector de lixo (simular.py --detector, 01/11/2026): uma terceira com a pilha particular
 #      envenenada, so registro ("detector de lixo: igual" ou "DIFERENTE (...)"); nao decide a cadeia.
 #   Leva de competicoes (levas/N/LIGAS, criado pelo fila.py, 03/11/2026): mutacoes, jogo real e carreiras com essas
-#   ligas, e o jogo real comparando ate 2002-06-01 (fim de temporada: acessos, copas, vagas).
+#   ligas, e o jogo real comparando ate 2002-06-01 (fim de temporada: acessos, copas, vagas). Desde 05/11/2026 (Lucas)
+#   esse jogo real fica adiado ("=== JOGO REAL ADIADO") e roda uma vez so, acumulado, na auditoria das 8 ligas;
+#   COMPARAR_LIGAS=1 o roda na cadeia.
 # Saida completa em levas/N/cadeia.txt. Com a base divergindo, o mutacoes.py sai com erro e o resto
 # nao roda. Testes pesados passam pela trava do laboratorio (laboratorio.py).
 RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
@@ -31,12 +33,17 @@ L=(); M=(); [ -n "$LIGAS" ] && L=(--ligas "$LIGAS") && M=(--ligas "$LIGAS" --lim
     echo "=== PROVA DO SAVE"
     python -u prova_save.py --leva $N
   fi
+  if [ -n "$LIGAS" ] && [ "$COMPARAR_LIGAS" != 1 ]; then
+    # 05/11/2026 (Lucas): a comparacao longa de 8 ligas roda uma vez so, depois de muitas levas (auditoria.ps1, de madrugada)
+    echo "=== JOGO REAL ADIADO (comparacao de 8 ligas ate 2002-06-01 acumulada na auditoria; COMPARAR_LIGAS=1 roda aqui)"
+  else
   python laboratorio.py | head -1
   echo "=== JOGO REAL"
   python -u simular.py --ate $ATE_REAL --motor sim --modo comparar --limite $LIM_REAL "${L[@]}"
   grep -aE "DIVERG|EXCECAO" ../jogo_testes/ddraw.log | head -5 | cut -c1-300
   grep -aE "comparacoes" ../jogo_testes/ddraw.log | tail -3
   grep -a "sonda_lixo" ../jogo_testes/ddraw.log | tail -1
+  fi
   python laboratorio.py | head -1
   echo "=== CARREIRA"
   python -u simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2 --detector --limite 2400 "${L[@]}" && python -u simular.py --ate 2002-06-01 --motor sim --modo original --limite 2400 "${L[@]}"

@@ -173,7 +173,8 @@ def cadeia(n):
     # desde 31/10/2026 (Lucas): sem referência fixa; ok = jogo real comparando sem divergência e as carreiras
     # chegando à data (Rust ×2 iguais entre si); a carreira original só é registrada
     imp = impressoes(n)
-    ok = (imp['jogo'] is not None and len(imp['rust']) >= 2 and len(set(imp['rust'])) == 1 and bool(imp['original'])
+    # 05/11/2026 (Lucas): na leva de competições o jogo real fica adiado para a auditoria (comparação acumulada)
+    ok = ((imp['jogo'] is not None or '=== JOGO REAL ADIADO' in t) and len(imp['rust']) >= 2 and len(set(imp['rust'])) == 1 and bool(imp['original'])
           and not re.search(r'\b[1-9]\d* divergencias|DIVERGENCIA ', t.split('=== JOGO REAL')[-1].split('=== CARREIRA')[0]))
     # a linha DIVERGENCIA do ddraw.log também barra: o total de comparações só é impresso em marcos, e uma
     # divergência depois do último marco não entra nele (a 268ª, 02/11/2026)
@@ -207,5 +208,8 @@ def resultado_pt_en(n):
     # o detector de lixo é só registro (não decide a leva); entra no texto quando a cadeia o rodou
     d_pt = ' Detector de lixo: %s.' % i['detector'] if i['detector'] else ''
     d_en = ' Garbage detector: %s.' % i['detector'].replace('igual', 'equal').replace('DIFERENTE', 'DIFFERENT') if i['detector'] else ''
+    if '=== JOGO REAL ADIADO' in open(os.path.join(R, 'levas', str(n), 'cadeia.txt'), encoding='utf-8', errors='replace').read():
+        return (f"Jogo real comparando 8 ligas até 2002-06-01: adiado para a comparação acumulada da auditoria (decisão de 05/11/2026). Carreiras até 2002-06-01: Rust ×2 {r[:8]}, original {o_pt}.{d_pt}",
+                f"Real game comparing 8 leagues to 2002-06-01: deferred to the audit's accumulated comparison (decision of 5 Nov 2026). Careers to 2002-06-01: Rust ×2 {r[:8]}, original {o_en}.{d_en}")
     return (f"Jogo real comparando até 2002-01-01: 0 divergências ({j}). Carreiras até 2002-06-01: Rust ×2 {r[:8]}, original {o_pt}.{d_pt}",
             f"Real game comparing to 2002-01-01: 0 divergences ({j}). Careers to 2002-06-01: Rust ×2 {r[:8]}, original {o_en}.{d_en}")
