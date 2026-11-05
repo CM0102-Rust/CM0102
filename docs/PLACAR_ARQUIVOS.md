@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologo` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 1756 de 6709 funções, 1383.7 de 5528.0 KB (**25.03%**) · 116 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 1791 de 6709 funções, 1392.4 de 5528.0 KB (**25.19%**) · 130 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -55,9 +55,12 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `italy_rules.cpp` | 2/9 | 0.7/2.4 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.7%** |
 | `manager_manager.cpp` | 44/98 | 35.3/129.4 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.2%** |
 | `human_manager.cpp` | 20/61 | 6.2/25.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.4%** |
+| `eng_second.cpp` | 5/10 | 1.5/6.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.3%** |
 | `Setup.cpp` | 10/107 | 28.1/120.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.3%** |
 | `stadium.cpp` | 7/17 | 2.4/11.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.5%** |
+| `eng_first.cpp` | 5/10 | 1.5/7.2 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.0%** |
 | `news.cpp` | 26/33 | 9.8/49.0 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.0%** |
+| `eng_third.cpp` | 4/11 | 1.3/6.4 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **19.7%** |
 | `fifa_rankings.cpp` | 8/20 | 1.8/9.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **18.6%** |
 | `conmebol_liber.cpp` | 4/16 | 1.1/5.9 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **18.4%** |
 | `host_country.cpp` | 4/12 | 1.3/7.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.8%** |
@@ -65,36 +68,43 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `media.cpp` | 37/69 | 34.4/202.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.0%** |
 | `key_nation.cpp` | 9/27 | 2.2/12.9 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **16.8%** |
 | `main.cpp` | 5/16 | 0.5/3.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.9%** |
-| `eng_second.cpp` | 3/10 | 1.0/6.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.6%** |
 | `intertoto_cup.cpp` | 2/13 | 0.7/4.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.5%** |
 | `african_nations.cpp` | 5/20 | 1.0/6.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **14.7%** |
+| `fra_second.cpp` | 2/7 | 0.6/4.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **14.5%** |
 | `germany_rules.cpp` | 1/7 | 0.2/1.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **14.4%** |
 | `bra_nat_third.cpp` | 3/16 | 1.1/8.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **14.0%** |
 | `discipline.cpp` | 21/38 | 5.3/38.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.6%** |
-| `eng_first.cpp` | 3/10 | 0.9/7.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.3%** |
+| `fra_third.cpp` | 2/7 | 0.5/3.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.6%** |
 | `month_award.cpp` | 2/10 | 0.4/3.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.1%** |
-| `eng_third.cpp` | 2/11 | 0.8/6.4 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.9%** |
 | `staff_contracts.cpp` | 18/45 | 4.7/39.9 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.9%** |
 | `france_rules.cpp` | 1/10 | 0.3/2.5 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.8%** |
 | `club_records.cpp` | 35/56 | 7.2/61.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.7%** |
 | `record_utils.cpp` | 6/32 | 1.4/12.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.6%** |
 | `bra_reg_central.cpp` | 2/11 | 0.5/4.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **9.5%** |
+| `usa_mls.cpp` | 5/22 | 1.1/12.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.9%** |
 | `award_manager.cpp` | 1/22 | 0.6/7.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.9%** |
+| `fra_first.cpp` | 2/14 | 0.5/6.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.8%** |
 | `player_search.cpp` | 14/61 | 6.0/70.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.5%** |
 | `club_history.cpp` | 1/11 | 0.6/6.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.5%** |
 | `game.cpp` | 14/34 | 3.7/43.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.5%** |
 | `comp_util.cpp` | 23/38 | 5.7/68.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.3%** |
 | `utils.cpp` | 1/23 | 0.5/5.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.0%** |
+| `fra_lower.cpp` | 1/5 | 0.2/3.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **7.6%** |
 | `bra_reg_minas_gerais.cpp` | 2/14 | 0.4/5.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **7.4%** |
 | `bra_reg_bahia.cpp` | 1/10 | 0.3/4.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.6%** |
+| `fra_cfa.cpp` | 1/8 | 0.2/3.9 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.5%** |
 | `file_screens.cpp` | 1/10 | 0.7/11.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.2%** |
 | `aus_nsl.cpp` | 2/16 | 0.3/5.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.1%** |
 | `wc_oceania_league.cpp` | 2/21 | 0.5/8.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.0%** |
 | `simulated_stats.cpp` | 1/19 | 0.3/5.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.9%** |
+| `eng_prm.cpp` | 2/11 | 0.5/8.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.8%** |
 | `Fine.cpp` | 2/19 | 0.9/15.9 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.7%** |
+| `spa_first.cpp` | 3/15 | 0.6/11.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.3%** |
 | `printouts.cpp` | 3/20 | 1.4/27.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.0%** |
 | `fog_of_war.cpp` | 4/34 | 0.6/12.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.9%** |
 | `jap_j2.cpp` | 1/7 | 0.2/3.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.7%** |
+| `ita_ser_c1b.cpp` | 3/12 | 0.7/16.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.2%** |
+| `ita_ser_c1a.cpp` | 3/11 | 0.7/16.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.2%** |
 | `bra_reg_goias.cpp` | 1/11 | 0.2/4.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.8%** |
 | `bra_reg_pern.cpp` | 1/10 | 0.2/4.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.6%** |
 | `bra_reg_santa.cpp` | 1/10 | 0.2/4.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.6%** |
@@ -105,17 +115,21 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `bra_nat_first.cpp` | 2/16 | 0.3/9.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.5%** |
 | `wc_south_american_league.cpp` | 1/17 | 0.3/9.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.1%** |
 | `bra_nat_second.cpp` | 1/12 | 0.2/5.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.0%** |
+| `ita_ser_c2a.cpp` | 1/13 | 0.5/17.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.0%** |
 | `bra_reg_parana.cpp` | 1/13 | 0.2/5.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.0%** |
-| `usa_mls.cpp` | 2/22 | 0.4/12.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.9%** |
 | `bra_reg_rio.cpp` | 1/14 | 0.2/5.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.7%** |
 | `jap_j1.cpp` | 1/15 | 0.2/6.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.7%** |
 | `dispute.cpp` | 1/11 | 0.1/4.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.4%** |
+| `ita_ser_a.cpp` | 2/18 | 0.5/20.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.4%** |
+| `ita_ser_b.cpp` | 2/14 | 0.5/20.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.3%** |
 | `bra_champ_cup.cpp` | 1/16 | 0.1/6.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.1%** |
+| `spa_second.cpp` | 1/7 | 0.2/9.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.0%** |
 | `ita_c_cup.cpp` | 1/17 | 0.1/7.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **2.0%** |
 | `ita_cup.cpp` | 1/17 | 0.1/7.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **1.9%** |
 | `goldcup.cpp` | 2/57 | 0.6/32.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **1.8%** |
 | `wc_asia_league.cpp` | 1/23 | 0.2/11.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **1.8%** |
 | `uefa_cup.cpp` | 1/11 | 0.1/4.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **1.5%** |
+| `spa_lower.cpp` | 1/7 | 0.2/10.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **1.5%** |
 | `wc_europe_league.cpp` | 1/30 | 0.2/23.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.9%** |
 | `cash.cpp` | 2/15 | 0.1/14.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.9%** |
 | `scrman.cpp` | 1/69 | 0.2/29.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.6%** |
@@ -123,4 +137,4 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `library_without_asserts` | 1/243 | 0.3/205.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
 | `arg_second.cpp` | 1/18 | 0.0/13.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
 
-Os outros 277 arquivos ainda não têm rotina em Rust.
+Os outros 263 arquivos ainda não têm rotina em Rust.
