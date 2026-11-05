@@ -139,8 +139,12 @@ def jogo(data):
         os.remove(LOG)
     # a mutacao ja e acusada na primeira divergencia: a rodada para ali (a base vai ate o fim)
     extra = ['--parar-na-divergencia'] if PARAR_NA_DIVERGENCIA else []
-    r = subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'comparar', '--limite', LIMITE_CARREIRA] + LIGAS + extra + SEM_TRAVA,
-                       cwd=AQUI, capture_output=True, text=True, encoding='utf-8', errors='replace')
+    while True:  # trava ocupada: tenta de novo (ver carreira)
+        r = subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'comparar', '--limite', LIMITE_CARREIRA] + LIGAS + extra + SEM_TRAVA,
+                           cwd=AQUI, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        if 'trava do laboratorio ocupada' not in r.stdout + r.stderr:
+            break
+        print('  trava do laboratorio ocupada: tentando de novo', flush=True)
     if r.returncode != 0 and not os.path.exists(LOG):
         return ['SIMULACAO RECUSADA: ' + (r.stdout + r.stderr).strip().splitlines()[-1:][0] if (r.stdout + r.stderr).strip() else 'SIMULACAO RECUSADA']
     texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
@@ -160,8 +164,13 @@ def carreira(data):
     if os.path.exists(LOG):
         os.remove(LOG)
     extra = ['--referencia', DIAS] if PARAR_NA_DIVERGENCIA and os.path.exists(DIAS) else []
-    r = subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'rust', '--limite', LIMITE_CARREIRA] + LIGAS + extra + SEM_TRAVA,
-                       cwd=AQUI, capture_output=True, text=True, encoding='utf-8', errors='replace')
+    # trava do laboratório ocupada não é acusação: tenta de novo (05/11, a 274a "acusou" 8 mutações que nem rodaram)
+    while True:
+        r = subprocess.run([sys.executable, os.path.join(AQUI, 'simular.py'), '--ate', data, '--motor', 'sim', '--modo', 'rust', '--limite', LIMITE_CARREIRA] + LIGAS + extra + SEM_TRAVA,
+                           cwd=AQUI, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        if 'trava do laboratorio ocupada' not in r.stdout + r.stderr:
+            break
+        print('  trava do laboratorio ocupada: tentando de novo', flush=True)
     texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
     quedas = [l for l in texto.splitlines() if 'EXCECAO' in l]
     fim = [l.split(': ', 1)[1].rsplit(', ', 1)[0] for l in r.stdout.splitlines() if l.startswith('execucao 1:')]

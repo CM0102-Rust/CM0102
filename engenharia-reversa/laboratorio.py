@@ -57,7 +57,7 @@ def pode_rodar():
 class Trava:
     """Trava exclusiva entre processos (e entre sessoes). Espera ate `espera` segundos."""
 
-    def __init__(self, dono, espera=1800):
+    def __init__(self, dono, espera=6 * 3600):  # 05/11: com agentes e bancadas juntos, 30 min de espera não bastavam
         self.dono, self.espera, self.f = dono, espera, None
 
     def __enter__(self):
