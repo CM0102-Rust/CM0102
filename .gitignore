@@ -33,3 +33,6 @@ copias/
 /despejo_regens/
 # rascunhos antigos e registros fora do git (antes ficavam soltos em D:\Sistemas)
 arquivo/
+
+# protótipos internos (06/11/2026: competições por arquivo, não divulgar)
+prototipos/
