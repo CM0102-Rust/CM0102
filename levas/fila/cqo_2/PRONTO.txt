@@ -1,0 +1,1 @@
+comparação de 8 ligas até 2001-10-01 0 div (com cqo_1, cqo_3, cqp_1); Rust x2 até 2002-06-01 iguais, detector de lixo igual; mutações 3/3 (clássico 2001-041, primeiros 2001-195, sorteio do total 2001-041)

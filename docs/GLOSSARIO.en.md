@@ -201,6 +201,10 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x5ac3b0 | `calendario_carregar_ano` | FIXTURE_MANAGER::load_fixtures |
 | 0x5fa850 | `calendario_das_sedes` | HostCountry::daily_update |
 | 0x5aaf00 | `calendario_dia` | FIXTURE_MANAGER::daily_update |
+| 0x64be90 | `calendario_fixo_da_c1a` | ItaSerC1a::set_up_fixed_fixtures |
+| 0x650100 | `calendario_fixo_da_c1b` | ItaSerC1b::set_up_fixed_fixtures |
+| 0x642a70 | `calendario_fixo_da_serie_a` | ItaSerA::create_fixed_fixtures |
+| 0x647230 | `calendario_fixo_da_serie_b` | ItaSerB::set_up_fixed_fixtures |
 | 0x5abf10 | `calendario_lista` | FIXTURE_MANAGER::get_fixture_list |
 | 0x6bd5b0 | `caminho_livre` | clear_path |
 | 0x6c41b0 | `caminho_livre_ate` | clear_path_to |
@@ -343,10 +347,20 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x4c61b0 | `conmebol_virada_do_ano` | ConmebolSeeding::update_for_new_season |
 | 0x6f9f90 | `consegue_jogar` | can_play |
 | 0x6e9460 | `construir_arbitro` | construct_referee |
+| 0x64aa70 | `construir_c1a` | ItaSerC1a::ItaSerC1a |
+| 0x64ec20 | `construir_c1b` | ItaSerC1b::ItaSerC1b |
+| 0x5b91c0 | `construir_cfa` | FraCfa::FraCfa |
+| 0x851020 | `construir_divisao_de_baixo_espanhola` | SpaLower::SpaLower |
+| 0x5bd600 | `construir_divisao_de_baixo_francesa` | FraLower::FraLower |
 | 0x6d5bf0 | `construir_fila_da_narracao` | construct_commentary_queue |
+| 0x571680 | `construir_first` | EngFirst::EngFirst |
+| 0x5be330 | `construir_franca_2` | FraSecond::FraSecond |
+| 0x5bfb40 | `construir_franca_3` | FraThird::FraThird |
 | 0x6eada0 | `construir_jogador_da_partida` | construct_match_player |
 | 0x6b7e50 | `construir_motor` | build_engine |
 | 0x77bbe0 | `construir_noticia` | NewsItem::NewsItem |
+| 0x573380 | `construir_premier` | EngPrm::EngPrm |
+| 0x84e130 | `construir_primera` | SpaFirst::SpaFirst |
 | 0x450d30 | `construir_recorde_de_contagem` | count_record_construct |
 | 0x450b20 | `construir_recorde_de_derrotas_seguidas` | lost_run_record_construct |
 | 0x450c10 | `construir_recorde_de_gols_na_partida` | goals_in_match_record_construct |
@@ -360,6 +374,11 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x450cd0 | `construir_recorde_do_mais_velho` | oldest_player_record_construct |
 | 0x450bc0 | `construir_recorde_sem_vencer` | winless_run_record_construct |
 | 0x450d40 | `construir_recordista` | record_holder_construct |
+| 0x5754a0 | `construir_second` | EngSecond::EngSecond |
+| 0x8539a0 | `construir_segunda` | SpaSecond::SpaSecond |
+| 0x6406d0 | `construir_serie_a` | ItaSerA::ItaSerA |
+| 0x645810 | `construir_serie_b` | ItaSerB::ItaSerB |
+| 0x576dd0 | `construir_third` | EngThird::EngThird |
 | 0x48e360 | `conta_para_conflito_de_datas` | Comp::counts_for_fixture_clash |
 | 0x8c3e50 | `contagem_da_clausula` | TRANSFER_MANAGER::get_clause_count |
 | 0x6cbbb0 | `contar_ativos` | count_active |
@@ -557,6 +576,9 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x43bf50 | `cqn8_mata_mata_do_catarinense` | BraRegSanta::create_semi_final_stage |
 | 0x43cf80 | `cqn8_mata_mata_do_paulista` | BraRegSp::create_semi_final_stage |
 | 0x439710 | `cqn8_mata_mata_do_pernambucano` | BraRegPern::create_semi_final_stage |
+| 0x4312d0 | `cqn9_mata_mata_do_centro_oeste` | BraRegCentral::create_knockout_stage |
+| 0x4325b0 | `cqn9_mata_mata_do_gaucho` | BraRegGaucho::create_knockout_stage |
+| 0x433930 | `cqn9_mata_mata_do_goiano` | BraRegGoias::create_knockout_stage |
 | 0x527f60 | `crescer_historico_de_competicoes` | database_grow_comp_history_table |
 | 0x5c2ae0 | `criar_amistosos_planejados` | Friendly::create_due_planned_friendlies |
 | 0x54d5b0 | `criar_arquivo_do_banco` | db_files_open_for_write |
@@ -592,6 +614,8 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x4cc0f0 | `descer_para_os_reservas` | CONTRACT_MANAGER::move_to_reserves |
 | 0x5465a0 | `descricao_do_jogador` | write_player_description |
 | 0x933320 | `desempacotar_do_conteiner` | zextract_matching_files |
+| 0x642880 | `desempate_da_serie_a` | ItaSerA::update_for_date |
+| 0x647050 | `desempate_da_serie_b` | ItaSerB::update_for_date |
 | 0x6eecb0 | `desempenho_na_partida` | match_performance |
 | 0x402e70 | `desenhar_area` | Area::draw |
 | 0x7260f0 | `desenhar_conferencia_da_escalacao` | match_screens_draw_team_selection |
@@ -605,6 +629,8 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x84aeb0 | `desmarcar_lances_pelo_jogador` | Shortlist_Manager::clear_bid_markers_for_player |
 | 0x7293c0 | `desmontar_estatisticas_da_partida` | Match_Stats::~Match_Stats |
 | 0x717470 | `destaque_do_jogador` | player_highlight |
+| 0x5b9460 | `destruir_cfa` | FraCfa::~FraCfa |
+| 0x5bd870 | `destruir_divisao_de_baixo_francesa` | FraLower::~FraLower |
 | 0x6ebd60 | `destruir_jogador_da_partida` | destroy_match_player |
 | 0x6b97a0 | `destruir_motor` | destroy_engine |
 | 0x6cd770 | `desviar_bola` | deflect_ball |
@@ -743,8 +769,13 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x4190d0 | `faltas_do_dia` | AWOL::daily_update |
 | 0x540520 | `familia_da_cor` | database_get_colour_family |
 | 0x48d200 | `fase_da_competicao` | Comp::get_stage |
+| 0x64b9e0 | `fase_seguinte_da_c1a` | ItaSerC1a::advance_stage |
+| 0x64fba0 | `fase_seguinte_da_c1b` | ItaSerC1b::advance_stage |
 | 0x572ff0 | `fase_seguinte_da_first` | EngFirst::advance_stage |
 | 0x5769e0 | `fase_seguinte_da_second` | EngSecond::advance_stage |
+| 0x578330 | `fase_seguinte_da_third` | EngThird::advance_stage |
+| 0x64ba70 | `fases_do_fim_da_c1a` | ItaSerC1a::create_playoff_stages |
+| 0x64fc30 | `fases_do_fim_da_c1b` | ItaSerC1b::create_play_off_stages |
 | 0x85d8a0 | `fator_da_distancia` | Stadium::get_travel_distance_factor |
 | 0x8b41d0 | `fator_do_treinador` | TRAINING_MANAGER::get_coaching_factor |
 | 0x547790 | `favorito_de` | favourite_of |
@@ -1339,6 +1370,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x540020 | `ordem_dos_clubes_pela_reputacao` | qsort comparator (club ids by reputation) |
 | 0x540080 | `ordem_dos_clubes_pelo_nome_curto` | database_compare_clubs_by_short_name |
 | 0x4afba0 | `ordem_dos_coeficientes_das_nacoes` | compare_nation_coefficients_desc |
+| 0x6471a0 | `ordem_dos_empatados_na_italia` | ita_league_sort_clubs_level_on_points |
 | 0x72b160 | `ordem_dos_eventos` | match_stats_compare_events |
 | 0x7c6d40 | `ordem_dos_idiomas` | player_stats_compare_language_entries |
 | 0x6bd760 | `ordem_dos_jogadores` | player_order |
@@ -1582,6 +1614,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x518500 | `regras_croacia` | CROATIA_RULES::CROATIA_RULES |
 | 0x64b770 | `regras_da_c1a` | ItaSerC1a::set_up_rules |
 | 0x64f920 | `regras_da_c1b` | ItaSerC1b::set_up_rules |
+| 0x5ba0a0 | `regras_da_cfa` | FraCfa::set_up_rules |
 | 0x853790 | `regras_da_divisao_de_baixo` | SpaLower::set_up_rules |
 | 0x572d90 | `regras_da_first` | EngFirst::set_up_rules |
 | 0x5bc410 | `regras_da_franca_1` | FraFirst::set_up_rules |
@@ -1648,6 +1681,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x8cfc90 | `restricoes_da_oferta` | TRANSFER_MANAGER::check_offer_restrictions |
 | 0x8cf6b0 | `restricoes_da_partida` | TRANSFER_MANAGER::fill_squad_restrictions |
 | 0x4b0890 | `resultado_da_eliminatoria_na_noticia` | comp_util_classify_tie_result_for_news |
+| 0x641dc0 | `resultado_do_desempate_da_serie_a` | ItaSerA::update_staff_records_for_status |
 | 0x76b600 | `resultado_entre_selecoes` | NationalTeams::record_international_result |
 | 0x58dea0 | `resultado_no_historico` | FIFA_RANKINGS::append_result |
 | 0x868830 | `resultado_nos_registros_dos_tecnicos` | Staff_Records::record_match_result |
@@ -1714,6 +1748,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x717450 | `tabela_b_do_jogador` | player_table_b |
 | 0x64b670 | `tabela_da_c1a` | ItaSerC1a::create_table |
 | 0x64f820 | `tabela_da_c1b` | ItaSerC1b::create_table |
+| 0x8533d0 | `tabela_da_divisao_de_baixo_espanhola` | SpaLower::create_table |
 | 0x5be230 | `tabela_da_divisao_de_baixo_francesa` | FraLower::create_table |
 | 0x572bf0 | `tabela_da_first` | EngFirst::create_table |
 | 0x5bc2b0 | `tabela_da_franca_1` | FraFirst::create_table |
@@ -1724,6 +1759,7 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x84fc70 | `tabela_da_primera` | SpaFirst::create_table |
 | 0x584990 | `tabela_da_qualificacao_da_liga_dos_campeoes` | EuropeanCup::build_qualifying_entry_table |
 | 0x576630 | `tabela_da_second` | EngSecond::create_table |
+| 0x855b40 | `tabela_da_segunda` | SpaSecond::create_table |
 | 0x641510 | `tabela_da_serie_a` | ItaSerA::create_table |
 | 0x646780 | `tabela_da_serie_b` | ItaSerB::create_table |
 | 0x577f70 | `tabela_da_third` | EngThird::create_table |
@@ -1827,6 +1863,8 @@ The code (Rust and Python) is written with Portuguese names. This glossary gives
 | 0x8cbf70 | `tirar_transferencia_futura` | TRANSFER_MANAGER::remove_future_transfer |
 | 0x549d60 | `tirar_vinculo_de_opiniao` | staff_remove_opinion_link |
 | 0x6dbb80 | `titulares` | starters |
+| 0x5bb540 | `toco_um_com_dois` | stub_return_one_ret8 |
+| 0x5bb550 | `toco_um_com_um` | stub_return_one_ret4 |
 | 0x5c6830 | `torneio_do_clube_humano` | Friendly::find_human_club_tournament |
 | 0x6ccb60 | `tracar_lance` | trace_move |
 | 0x8cca10 | `transferencia_futura_do_jogador` | TRANSFER_MANAGER::get_future_transfer |

@@ -1,0 +1,1 @@
+comparação de 8 ligas até 2001-10-01 0 div (com cqo_2, cqo_3, cqp_1); Rust x2 até 2002-06-01 iguais, detector de lixo igual; mutações 3/3 (mandante neutro 2001-041, primeiro neutro 2001-209, rodízio sem reserva 2002-018)
