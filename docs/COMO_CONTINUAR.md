@@ -104,6 +104,8 @@ Uma leva tem de 1 a 10 rotinas do motor de partidas (`match_eng.cpp`, `match_pl.
 
 **A 0x76c120 corrigida (01/11/2026, 266ª).** A escolha do elenco da seleção (`NationalTeams::select_squad`) só tem tabelas de códigos de posição para 26 e 24 jogadores; qualquer outro tamanho cai na de 22, e nos elencos de 23 (a Copa de 2002) e 25 as vagas a partir da 22ª ficam com lixo de pilha, que vai à escala (0x6e2000). Com a convocação rodando mais fundo na pilha particular (a `dia_das_selecoes` 0x76b100 em Rust), o lixo mudava a cada execução e as carreiras Rust ×2 saíam diferentes. **Correção do original aprovada pelo Lucas, que já está no exe atual:** a cópia em Rust (item `cqc_12`) dá a essas vagas, em ordem, as que a tabela de 24 tem a mais que a de 22 (0x202, 0x88, 0x808); o comparador confere as 22 primeiras e conta o resto no ramo "cqc_12 correção do elenco de 23/25". Ver `levas/fila/cqc_12/FORA.md`. O mesmo mal (uma original lendo sobra da pilha particular) tirou a `cqc_6` da 266ª; a saída aprovada é a opção (c), as alocações da DLL numa região fixa no modo simulação (`levas/fila/cqc_6/FORA.md`).
 
+**Defeito do original achado ao portar** (06/11/2026): vai numa linha de `docs/DEFEITOS_DO_ORIGINAL.md` e do `.en.md` (endereço, rotina, o defeito, o efeito, a situação e a fonte), na mesma leva. A cópia Rust o reproduz; a correção é para o exe todo em Rust, salvo aprovação do Lucas para corrigir já.
+
 ## Memória da DLL, trampolins e detector de lixo (01/11/2026)
 
 A opção (c) do estudo da cqc_6, aprovada pelo Lucas. Só no modo simulação (`CM_PARAR_EM`); o jogo normal e o `JOGAR_COMPARANDO` não mudam (fora os trampolins, que valem sempre).

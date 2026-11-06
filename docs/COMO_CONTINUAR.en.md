@@ -106,6 +106,8 @@ A batch has from 1 to 10 match engine routines (`match_eng.cpp`, `match_pl.cpp`,
 
 **0x76c120 fixed (2026-11-01, 266th batch).** The national squad selection (`NationalTeams::select_squad`) only has position code tables for 26 and 24 players; any other size falls back to the 22 table, and in 23-man (the 2002 World Cup) and 25-man squads the slots from the 22nd on keep stack garbage, which goes to the line-up (0x6e2000). With the call-up running deeper in the private stack (`dia_das_selecoes` 0x76b100 in Rust), the garbage changed on every run and the two Rust careers came out different. **Fix to the original approved by Lucas, already in the current exe:** the Rust copy (item `cqc_12`) gives those slots, in order, the ones the 24 table has beyond the 22 table (0x202, 0x88, 0x808); the comparator checks the first 22 and counts the rest in the "cqc_12 correção do elenco de 23/25" branch. See `levas/fila/cqc_12/FORA.en.md`. The same problem (an original routine reading a private stack leftover) took `cqc_6` out of the 266th batch; the approved way out is option (c), the DLL's allocations in a fixed region in simulation mode (`levas/fila/cqc_6/FORA.en.md`).
 
+**Defect of the original found while porting** (2026-11-06): it goes into a row of `docs/DEFEITOS_DO_ORIGINAL.md` and of the `.en.md` (address, routine, the defect, the effect, the status and the source), in the same batch. The Rust copy reproduces it; the fix is for the all-Rust exe, unless Lucas approves fixing it now.
+
 ## DLL memory, trampolines and garbage detector (2026-11-01)
 
 Option (c) of the cqc_6 study, approved by Lucas. Only in simulation mode (`CM_PARAR_EM`); the normal game and `JOGAR_COMPARANDO` do not change (except for the trampolines, which apply always).

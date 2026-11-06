@@ -1,0 +1,97 @@
+# Defects of the original
+
+The list of the defects (bugs) of CM 01/02 3.9.68 that we found while porting, or that the community documented and we checked in the binary. The fix goes into the all-Rust exe, at the end of the migration.
+
+**Rule.** While the original exe runs alongside, the Rust copy reproduces the defect: the test criterion is the result the game produces, and the routine-by-routine comparison accepts no divergence. Exception: the rows marked "already fixed", which Lucas approved fixing now. Each batch that finds a defect adds a row here and in `DEFEITOS_DO_ORIGINAL.md`.
+
+**Status:**
+- **reproduced 1:1:** the Rust copy does the same as the original.
+- **reproduced (copy uses 0):** the original reads stack leftovers; the Rust copy cannot repeat that value and uses 0, a value the game also produces.
+- **in the original:** the routine has not been ported yet.
+- **already fixed:** the Rust copy already fixes it, with Lucas's approval.
+- **fix at the end, approved:** Lucas has already decided the fix, which goes into the all-Rust exe.
+- For the other rows the fix is decided at the end.
+
+[inference] marks what was not proven in the binary or in the game. "Community" means a defect published on the forum or fixed by `CM0102Patcher` (`referencias/CM0102Patcher`, only cited, no code copied).
+
+## Names and texts
+
+| Address (VA) | Routine/file | The defect | Effect in the game | Status | Source |
+|---|---|---|---|---|---|
+| 0x79cee0 (the call at 0x79d098) | `renovar_arbitros`, officials_manager.cpp | When renewing an old referee, it draws the first name and the surname with the first-name function (0x539c60) twice. The surname one is 0x53a1b0. | Renewed referees get two first names. This is the referees' "swapped surnames" bug. | reproduced 1:1 (261st) | `docs/CAMPOS.md` (community, checked); `motor.rs` `renovar_arbitros`. `CM0102Patcher` does not fix it: its RefereePatcher only changes `officials.dat`. |
+| 0x539750 | `montar_indice_de_nomes`, Database.cpp | Builds the per-nation name index and does not write the last group of each table (first, second and common names). | [inference] The nation of the last row of each table has no name index, and people generated for it do not take names from its own list. | reproduced 1:1 | `motor.rs` `montar_indice_de_nomes` |
+| — (people pass of the load, `load_database`) | Database.cpp | A person with a null name gets the empty first common name, and this holds for all three names: a null first name and a null surname also go to the common names table. | [inference] A person without a name in the database shows a wrong or empty name. | in the original | `docs/MAPA_DATABASE.md` §2 and the risk table |
+
+## Arithmetic and rounding
+
+| Address (VA) | Routine/file | The defect | Effect in the game | Status | Source |
+|---|---|---|---|---|---|
+| 0x868830 | `resultado_nos_registros_dos_tecnicos`, staff_records.cpp | For the away side, +0xbe/+0xba receive the routine's [esp+0x10], which is the home manager's rating (or his bonus, without a record). | The away manager's points (national team or not) come out with the other manager's rating. | reproduced 1:1 (263rd) | `motor.rs` `resultado_nos_registros_dos_tecnicos` |
+| — (database load) | Database.cpp | The club reputation (+0x80) is written as `(char)(random(4000)+1)`: a draw up to 4000 truncated to 8 bits. | [inference] A club that takes this path ends with a reputation between −128 and 127 instead of up to 4000. | in the original | `docs/MAPA_DATABASE.md` (risk table, "errors of the original to copy") |
+| 0x5986b0 (the point 0x5986e3) | `faixa_de_riqueza`, finance.cpp | Community: the "EnsureCashDoesNotResetToZero" patch hooks 0x5986e3 and puts back 2 billion when the balance falls below −1.5 billion. | [inference, from the patch] The 32-bit balance of a very rich club wraps around and goes negative. | reproduced 1:1 | `CM0102Patcher` (Patcher.cs, "bugfixes"; file offset 0x1986e3) |
+
+## Attributes and players
+
+| Address (VA) | Routine/file | The defect | Effect in the game | Status | Source |
+|---|---|---|---|---|---|
+| 0x6ec010 (the jump at 0x6eda39) | `atualizar_atributos`, match_pl.cpp | With CA of 125 or more, the jump at 0x6eda39 skips the creativity calculation, which keeps the value of the previous attribute. | A good player's creativity in the match comes out wrong. | reproduced 1:1 | `docs/ENDERECOS_COMUNIDADE.md` (MadScientist); `CM0102Patcher` "Unlock your creativity" (file offset 0x2eda3a) |
+| 0x6ef644, 0x6ef692 (in routine 0x6ef372) | match_pl.cpp [inference] | Community: the "MarkingAndPositionClampTo100" patch caps two marking and positioning values at 100. | [inference, from the patch name] The values go above 100 and distort marking and positioning. | in the original | `CM0102Patcher` (Patcher.cs, "bugfixes") |
+| 0x6d1cc0 | `fechamento`, match_eng.cpp | A side without minutes played keeps the previous side's rating average; for the first side, the average is stack leftover. | Reputation (0x6d3610, 0x6d3de0) gets an average that is not the team's. | reproduced (copy uses 0) | `motor.rs` `fechamento_com`; `ZERADAS` (history) |
+| 0x7a65d0 | `fila_de_regens`, player_regen.cpp | The player who becomes player-coach goes into every empty coach slot of the club: a `break` is missing in the loop. | The club counts the same coach several times, has no slot to hire a coach and gets no other player-coach. | reproduced 1:1 | `docs/COMISSAO_REPETIDA.md` §1 and §2 |
+| 0x53c190, 0x53bd10, 0x53b9a0 | Database.cpp | Leaving the club (0x53c190) removes only the first occurrence of the person. Adding (0x53bd10) does not check whether the person is already in the list, and 0x53b9a0 treats "already here" as a free slot. | Together with the row above: the coach who leaves leaves "ghost" copies in the other slots. | in the original | `docs/COMISSAO_REPETIDA.md` §1 and §2 |
+| — | — | Community: a called-up player gets stuck with the national team and never returns to the club. | The player disappears from the club. | in the original | `CM0102Patcher` (GoHome tool) |
+
+## Stack garbage / variable read before written
+
+| Address (VA) | Routine/file | The defect | Effect in the game | Status | Source |
+|---|---|---|---|---|---|
+| 0x697c40 (reads at 0x6984ad, 0x6986ff, 0x6987d6) | `MANAGER_MANAGER::weekly_board_confidence_update` | The number of clubs in the league (N, [esp+0x2b]) is read before it is written (0x6989d0). The 1st club reads garbage; the following ones, the N of the previous club's league. | N is the board's position yardstick (pressure if position ≥ N/4; bonus below N/5 or 3N/10). Board confidence is biased. | fix at the end, approved (26/10): use the N of the club's own league | `docs/COMO_CONTINUAR.md`; memory `correcoes-do-original` |
+| 0x76c120 | `escolher_elenco_da_selecao`, national_teams.cpp | There are position codes only for squads of 22, 24 and 26. In squads of 23 (2002 World Cup) and 25, the slots from the 22nd on keep stack garbage, which goes to the scale (0x6e2000). | The national team's line-up at the World Cup depends on garbage. | already fixed (266th, approved on 01/11): the slots get 0x202, 0x88 and 0x808 | `levas/fila/cqc_12/FORA.md`; `docs/COMO_CONTINUAR.md` |
+| 0x6c9cd0 (decision at 0x6e9820) | `disputa`, match_eng.cpp | The referee's decision returns before writing the advantage on several paths; the contest reads what was left on the stack ([esp+0x16]). | In a watched match with commentary, the garbage decides commentary 0x2168 and a random draw. | already fixed (copy uses 0; Lucas's decision of 14/10) | `docs/COMO_CONTINUAR.md`; `wiki/log.md` (14/10) |
+| 0x6dbc50 | `escalar_automatico`, match_man.cpp | In mode 2, it never writes the short of the 1st extra slot and passes it to the scale (0x6e2000 → 0x6e2f20). | Line-up bonuses added from garbage bits. | reproduced (copy uses 0) | `docs/COMO_CONTINUAR.md` |
+| 0x84be20 (read by 0x6beeb0) | simulated_stats.cpp | The simulated match record is built on the stack and the word +0x38 is never written. The quick simulation reads it as the extra-time and penalties rule. | The tie-break rule of the simulated match comes from garbage. | in the original | `docs/COMO_CONTINUAR.md` (212th, history) |
+| 0x70c040 | `desfecho_do_chute`, match_pl.cpp | With the goalkeeper himself shooting, it reads the rebound and the defence clearance (b13/b16) without a value. | The outcome of the move comes from garbage. | reproduced (copy uses 0) | `motor.rs` `desfecho_do_chute` |
+| 0x7c1e30 | `estatistica_da_categoria`, player_stats.cpp | In the combined categories (100 to 102), without record 4 or 5 it reads locals without a value. | It feeds the line-up (0x6e2f20), MATCH_PLAYER::setup and the club reputation. | reproduced (copy uses 0; the comparator leaves these cases to the original) | `motor.rs` `estatistica_da_categoria` |
+| 0x62c080 | `efeitos_fisicos_da_partida`, injury.cpp | The severity is a local carried from one knock to the next; without an earlier knock above 51, it reads stack leftover. | The injury severity comes from garbage. | reproduced (copy uses 0) | `motor.rs` `efeitos_fisicos_da_partida` |
+| 0x7a79c0 | `aposentadoria_no_inicio`, player_regen.cpp | Without a job (+0x3d) and without +0x28, the age limit of a non-player uses the low byte of the output pointer, read from the wrong stack slot. | Arbitrary retirement age. | reproduced 1:1 | `motor.rs` `cpr8_limite_sem_jogador` |
+| 0x85a850 | `gravar_numero_de_camisa`, squad_manager.cpp | With no good position on the record, it reads the 4-byte list of preferred numbers without a value on the stack. | Arbitrary preferred shirt number. | reproduced (copy uses the empty list) | `motor.rs` `cql2_preferidos` |
+| 0x69ba50 | `vaga_de_tecnico`, manager_manager.cpp | The previous rating (+0x12) has no value when the chosen one is the assistant or the one at +0x19f. | [inference] Writes an arbitrary rating. | reproduced (copy uses 0) | `motor.rs` `vaga_de_tecnico` |
+| 0x754a30 | `boatos_de_transferencia`, media.cpp | With a player without a contract, the owner's manager is the one from the previous iteration; in the first iteration it is stack leftover. | [inference] A rumour with the wrong manager. | reproduced (copy uses 0) | `motor.rs` `boatos_de_transferencia` |
+| 0x6ab2d0 | `texto_da_diretoria_sobre_os_jogadores`, manager_manager.cpp | With the 1st id −1 and another valid, it reads slot 0 without a value. | [inference] Board text with the wrong player. | reproduced 1:1 (this case runs the original) | `motor.rs` `texto_da_diretoria_sobre_os_jogadores` |
+| 0x8bed60 | `fazer_oferta_de_emprestimo` | Bytes of the local offer (0x8e5680) and contract (0x85e410) that the constructors do not fill go into the stored offer. | Who reads them was not mapped. | ported (253rd); what the copy writes in these bytes was not checked here | `docs/PENDENCIAS.md` |
+
+## Competitions and calendar
+
+| Address (VA) | Routine/file | The defect | Effect in the game | Status | Source |
+|---|---|---|---|---|---|
+| 0x411ce0 (the point 0x411d82) | `cqj8_regras_da_nsl`, aus_nsl.cpp | The competition is not reset at the end of the season (−1 is not written at +0x30 of the stage), and the opening/closing split comes out 36/5 matches instead of 24/10 (+0x3c). | Australian league with the same champion every year. | reproduced 1:1 | `docs/CAMPOS.md` (community, topic 1540 p. 9, checked) |
+| 0x797474, 0x40aede, 0x40cfce | oceania_club_champ.cpp, asia_club_champ.cpp, asia_cup_winner.cpp | Third-place play-off (3 final rounds), sometimes scheduled after the final. | It can lock up the competition. | in the original | `docs/CAMPOS.md` (community, checked) |
+| 0x585a5a (checked), 0x5862a4, 0x633e03 | european_cup.cpp (0x585a5a, 0x5862a4); 0x633e03 [file not checked] | They add entrants to the cup mid-season without checking the book's capacity (+0x38). | [inference] Writing past the entrants book. | in the original | `docs/CAMPOS.md` (community) |
+| 0x91df0e (years at 0x911c4d...0x92036e) | World Cup qualifiers | In databases with an earlier start, Asia draws before Europe and 0x91df0e reads an empty group. | Only with edited databases; `CM0102Patcher` has "fixworldcuppre2000". | in the original | `docs/CAMPOS.md` (topic 10790) |
+| 0x584990 | `tabela_da_qualificacao_da_liga_dos_campeoes`, european_cup.cpp | With +0x36 = 0, it reads before the list (negative index). | [inference] A garbage club in qualifying, if the case happens. | reproduced 1:1 | `motor.rs` `cpy5_qualificacao` |
+| 0x641dc0 | `resultado_do_desempate_da_serie_a`, ita_ser_a.cpp | Reads the club of the next row even on the last row (4 bytes past the table). | [inference] A comparison with a value from outside the table. | reproduced 1:1 | `motor.rs` (comment in the routine) |
+| 0x6624f0 | `cqn12_copa_do_imperador_inscritos`, jap_emp_cup.cpp | Without clubs, it reads the vector at index −1. | [inference] A garbage entrant. | the copy uses 0 and falls into the error box | `motor.rs` (comment in the routine) |
+| 0x4c11a0 | `cqi11_concacaf_classificados` | With too few clubs in a list (Mexican, Central American, Caribbean, MLS), it reads stack leftover. | [inference] A garbage qualifier, only in a database with few clubs. | reproduced (copy uses 0) | `motor.rs` `comparar_cqi11_concacaf_classificados` |
+| 0x5b91c0, 0x5bd600 | `construir_cfa`, `construir_divisao_de_baixo_francesa` | The local list of 72 or 40 pointers is not zeroed; without enough clubs, it reads garbage. | [inference] Only in a database with few clubs. | reproduced (copy uses 0) | `motor.rs` `cqn4_construir` |
+
+## Save and database
+
+| Address (VA) | Routine/file | The defect | Effect in the game | Status | Source |
+|---|---|---|---|---|---|
+| 0x5315a0 | `resolver_indices_do_banco`, Database.cpp | With the club's last division (+0x5b) above the count, it zeroes +0x60 (which becomes competition 0) and leaves +0x5b with the raw id. | The club is linked to competition 0 and has a field that is not a pointer. | reproduced 1:1 | `motor.rs` (comment "erro do original"); `docs/MAPA_DATABASE.md` |
+| 0x5315a0 | `resolver_indices_do_banco`, Database.cpp | With the neighbouring stadium (+0x48) above the count, it zeroes the city (+0x38) and leaves +0x48 with the raw id. | The save reads `[ptr]` of every non-null field: [inference] it dereferences the id as an address and crashes. | reproduced 1:1 | `docs/MEMORIA_PREFERENCIAS_ESTADIO.md` |
+| 0x8e7bec | — | Reads the player data (+0x61) of a person with a club without testing for null. | A database with a person without that data crashes the game. | in the original | `docs/CAMPOS.md` (community protection, checked) |
+| 0x52dad0 | `save_database` | Writes into `index.dat` 408 bytes of locals without a value (pointer garbage, from +0x5cb). | No effect in the game; saves do not come out equal. | in the original | `motor.rs` (`save_database_for_game`); `docs/PENDENCIAS.md` |
+| 0x82e430 | `gravar_jogo` (`save_game_data`), Setup.cpp | What 0x591f80 does not write in the summary (the club of the 16 non-human managers, the rest of the texts) is stack leftover written into `general.dat`. | No effect in the game; 13 bytes of `general.dat` change with each save. | reproduced (copy uses 0) | `motor.rs` `gravar_jogo`; `docs/COMO_CONTINUAR.md` |
+| 0x5c5f40, 0x51a150, 0x51cb90 | friendly and cup match | The match record is built in a 0x4f local without writing everything; the leftover goes into `fixtures_<year>.tmp`. | No effect in the game. | in the original | `docs/MAPA_SAVE.md` |
+| 0x828548..0x828561 | `create_game` | Each person record starts with `+0xb = garbage & 0x80`. | [inference] Bit 0x80 of +0xb starts arbitrary; bit 0x40 (the regen mark) starts cleared. | in the original | `docs/MARCA_DO_REGEN.md` |
+| 0x5fb810 | `HUMAN_MANAGER::reset_human_record` | The temporary `STAFF_CONTRACT` (constructor 0x85e410 writes only part of it) is copied whole into the human manager's offer draft. | No effect in the game (the screen rewrites the draft); the leftover goes into `human_manager.dat`. | in the original | `docs/COMO_CONTINUAR.md` |
+| 0x933320 | `desempacotar_do_conteiner`, zipdir.cpp | On the error paths (no memory, container that does not open or of a strange type), it closes the item from a local never written. | [inference] It may close an invalid item when loading a broken save. | reproduced (copy uses 0) | `motor.rs` `desempacotar_do_conteiner` |
+
+## Others
+
+| Address (VA) | Routine/file | The defect | Effect in the game | Status | Source |
+|---|---|---|---|---|---|
+| 0x8ca8a0 | `pagar_transferencia_e_clausulas`, transfer_manager.cpp | Without a seller, it reads the finances from a place without a value and crashes further on at [seller]. | [inference] Game crash; the case does not show up in the careers. | the Rust copy pays nobody and does not crash | `motor.rs` (comment in the routine) |
+| 0x71f500 | `painel_das_zonas_de_acao`, match_screens.cpp | With the view outside 0 to 4, it passes the text of a local without a value. | Title with garbage on the screen, outside normal use. | reproduced (copy uses empty text) | `motor.rs` (comment in the routine) |
+| 0x721cd0 | `preencher_estatisticas_do_time`, match_screens.cpp | With parameter 0x1c outside 1 and 2, it reads the table without a value. | Outside normal use. | reproduced 1:1 (this case runs the original) | `motor.rs` (comment in the routine) |
