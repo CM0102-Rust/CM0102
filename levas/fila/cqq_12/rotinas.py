@@ -18,6 +18,17 @@
 # liberada); fora das fases só a original. Os times: o +0x3e e o [0xb67a34]; a tabela da cópia comparada nas 16 vagas e
 # liberada.
 # Determinismo: nada lê pilha, heap ou endereço como valor.
+# Provas (05-06/11/2026, cópia fora do projeto: motor.rs da principal com a 277a publicada e a 278a integrada + os 12
+# itens cqo_10..13, cqp_10..13, cqq_10..13, 39 rotinas):
+# - jogo comparando com ENG ESP ITA FRA BRA JPN AUS USA até 2001-10-01 (parou em 2001-273): 0 linhas DIVERGENCIA fora
+#   da cqo11_copa_c_inscritos (8 dezenas embaralhadas, não 9: corrigida e conferida de novo até 2001-01-05, 0
+#   divergências), 0 EXCECAO, nenhuma caixa;
+# - duas carreiras Rust com as 8 ligas até 2002-06-01 iguais entre si e ao detector (simular.py --repetir 2
+#   --detector: "detector de lixo: igual"), impressão b690295afd222f6a; os contadores das mutações rodaram;
+# - jogo comparando estendido até 2002-06-01 (o mata-mata da Oceania de 2002 roda em janeiro de 2002): 0 DIVERGENCIA
+#   nas três rotinas;
+# - mutações (carreira Rust de 8 ligas até 2002-06-01 contra a base f29c85195c2a534f): as três ACUSADAS (os grupos da
+#   Oceania de 2002 em 2002-001, os times da Liga dos Campeões e da Recopa asiáticas de trás para a frente em 2001-233).
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqq12_oceania_tabela', 0x797230, [0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),

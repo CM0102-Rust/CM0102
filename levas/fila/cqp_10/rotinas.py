@@ -3,10 +3,10 @@
 # asia_super_cup.cpp). Frente das competições (Agente D, 05-06/11/2026), carreira de 8 ligas (começa em janeiro de
 # 2001).
 # - 0x425c10 (BraChampCup::create_schedule, 952 bytes; 5 chamadas até 2002-06-01 com as 8 ligas): a preliminar, os
-#   grupos e o mata-mata da Copa dos Campeões. Uma mutação.
+#   grupos e o mata-mata da Copa dos Campeões (passageira: as mutações escapam, ver as provas).
 # - 0x4c1960 (ConMercCup::create_schedule, 857 bytes; 7 chamadas): os grupos e o mata-mata da Merconorte. Uma mutação.
 # - 0x57a3c0 (EurSuperCup::create_round_table, 311 bytes; 1 chamada): o jogo da Supercopa Europeia. Uma mutação.
-# - 0x410910 (AsiaSuperCup::create_round_table, 308 bytes; 1 chamada): a Supercopa Asiática (passageira).
+# - 0x410910 (AsiaSuperCup::create_round_table, 308 bytes; 1 chamada): a Supercopa Asiática. Uma mutação.
 # Reaproveita do motor.rs os ajudantes da 276a (cql10_rodada, cql10_tabela, cql10_gravados, cql10_comparar, Cql10R); as
 # fases de grupo (rodadas de 0x41 bytes pela 0x68a160 e 0x68a1c0) e a escolha da fase são o cqp10_tabela (a fase de cada
 # copa decide entre nada, grupos com o seu extra e mata-mata). As tabelas foram extraídas da desmontagem.

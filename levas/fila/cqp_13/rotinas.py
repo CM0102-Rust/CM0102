@@ -17,6 +17,16 @@
 # Comparadores: lado a lado como as copas inglesas (cql10_comparar: saídas e bytes gravados; a tabela da cópia
 # liberada); na CONCACAF o dia 0 dos confrontos da tabela da original é conferido à parte contra o valor fixo.
 # Determinismo: nada lê pilha, heap ou endereço como valor.
+# Provas (05-06/11/2026, cópia fora do projeto: motor.rs da principal com a 277a publicada e a 278a integrada + os 12
+# itens cqo_10..13, cqp_10..13, cqq_10..13, 39 rotinas):
+# - jogo comparando com ENG ESP ITA FRA BRA JPN AUS USA até 2001-10-01 (parou em 2001-273): 0 linhas DIVERGENCIA fora
+#   da cqo11_copa_c_inscritos (8 dezenas embaralhadas, não 9: corrigida e conferida de novo até 2001-01-05, 0
+#   divergências), 0 EXCECAO, nenhuma caixa;
+# - duas carreiras Rust com as 8 ligas até 2002-06-01 iguais entre si e ao detector (simular.py --repetir 2
+#   --detector: "detector de lixo: igual"), impressão b690295afd222f6a; os contadores das mutações rodaram;
+# - mutações (carreira Rust de 8 ligas até 2002-06-01 contra a base f29c85195c2a534f): as três ACUSADAS (a Intertoto
+#   em 2001-165, a Intercontinental em 2001-345, a CONCACAF em 2001-260). A Interamericana é passageira (roda: contador
+#   1). As primeiras mutações de 1 ou 2 dias escapavam: as datas são levadas ao dia da semana; as finais mudam 7 dias.
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqp13_intertoto_tabela', 0x633300, [0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),

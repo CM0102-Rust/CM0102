@@ -23,6 +23,17 @@
 # [0xb67a34]); as saídas e os bytes gravados pelas operações nas duas tabelas têm de ser iguais; a tabela da cópia é
 # liberada. Fora das fases só a original (nenhuma grava nada).
 # Determinismo: nada lê pilha, heap ou endereço como valor.
+# Provas (05-06/11/2026, cópia fora do projeto: motor.rs da principal com a 277a publicada e a 278a integrada + os 12
+# itens cqo_10..13, cqp_10..13, cqq_10..13, 39 rotinas):
+# - jogo comparando com ENG ESP ITA FRA BRA JPN AUS USA até 2001-10-01 (parou em 2001-273): 0 linhas DIVERGENCIA fora
+#   da cqo11_copa_c_inscritos (8 dezenas embaralhadas, não 9: corrigida e conferida de novo até 2001-01-05, 0
+#   divergências), 0 EXCECAO, nenhuma caixa;
+# - duas carreiras Rust com as 8 ligas até 2002-06-01 iguais entre si e ao detector (simular.py --repetir 2
+#   --detector: "detector de lixo: igual"), impressão b690295afd222f6a; os contadores das mutações rodaram;
+# - jogo comparando estendido até 2002-06-01 (parou em 2002-151; as fases finais asiáticas e a final do LDV rodam de
+#   março a maio de 2002): 0 linhas DIVERGENCIA, 0 EXCECAO (motor: 10^10 comparações, 0 divergências);
+# - mutações (carreira Rust de 8 ligas até 2002-06-01 contra a base f29c85195c2a534f): as três ACUSADAS (os grupos
+#   finais asiáticos em 2002-069, as quartas da Recopa asiática em 2002-076, as chaves do LDV em 2001-335).
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqp11_asia_clubes_tabela', 0x40ae90, [0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),

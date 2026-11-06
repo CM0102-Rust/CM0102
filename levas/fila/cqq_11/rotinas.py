@@ -15,6 +15,16 @@
 # liberada.
 # Determinismo: nada lê pilha, heap ou endereço como valor (a 0x4afd80 ordena o histórico da competição; a segunda
 # passada acha o histórico já ordenado e escolhe o mesmo clube).
+# Provas (05-06/11/2026, cópia fora do projeto: motor.rs da principal com a 277a publicada e a 278a integrada + os 12
+# itens cqo_10..13, cqp_10..13, cqq_10..13, 39 rotinas):
+# - jogo comparando com ENG ESP ITA FRA BRA JPN AUS USA até 2001-10-01 (parou em 2001-273): 0 linhas DIVERGENCIA fora
+#   da cqo11_copa_c_inscritos (8 dezenas embaralhadas, não 9: corrigida e conferida de novo até 2001-01-05, 0
+#   divergências), 0 EXCECAO, nenhuma caixa;
+# - duas carreiras Rust com as 8 ligas até 2002-06-01 iguais entre si e ao detector (simular.py --repetir 2
+#   --detector: "detector de lixo: igual"), impressão b690295afd222f6a; os contadores das mutações rodaram;
+# - mutações (carreira Rust de 8 ligas até 2002-06-01 contra a base f29c85195c2a534f): as três ACUSADAS (o vice da Liga
+#   dos Campeões em 2001-231, o vice da Copa da UEFA em 2001-206, o vice da Recopa asiática em 2001-215). A Supercopa da
+#   C1 é passageira (roda: contador 1).
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqq11_europeia_clubes', 0x57a500, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),

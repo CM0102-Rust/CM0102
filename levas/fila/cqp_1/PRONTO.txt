@@ -1,0 +1,1 @@
+comparação de 8 ligas até 2002-02-01 0 div (a cadeia roda em 2002-025; com cqo_1..3); Rust x2 até 2002-06-01 iguais, detector de lixo igual; mutações 3/3 (sem troca, ligas trocadas, sem fechar a de baixo: todas 2002-025)
