@@ -2,18 +2,18 @@
 
 Gerado por `python engenharia-reversa/competicoes.py` (o mapa de funções de maxevans60, CC BY 4.0, e a cobertura de uma carreira com as 8 ligas `ENG ESP ITA FRA BRA JPN AUS USA` até 2002-06-01, `levas/competicoes/`; as rotinas já em Rust não levam contador). "falta" = chamada ao menos uma vez nessa carreira e ainda não está em Rust (a lista para `candidatos.py --competicoes` fica em `docs/cobertura_competicoes.txt`). Como cada competição funciona por dentro (objeto, vtable, estágios, vagas): `docs/.md`.
 
-**Total:** 2695 funções, 1475.7 KB; em Rust 412 (12.9% dos bytes); faltam 540 (491.1 KB).
+**Total:** 2695 funções, 1475.7 KB; em Rust 450 (14.7% dos bytes); faltam 502 (465.2 KB).
 
 | Grupo | Funções | KB | Rust | Falta (KB) | Progresso |
 |---|---|---|---|---|---|
-| Base: Liga, Copa, comp, calendário, sorteios | 396 | 272.6 | 239 | 40 (90.4) | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **43.3%** |
+| Base: Liga, Copa, comp, calendário, sorteios | 396 | 272.6 | 247 | 32 (86.4) | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **44.7%** |
 | Ligas nacionais (formato de cada divisão) | 1048 | 647.8 | 102 | 201 (213.8) | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.2%** |
-| Copas nacionais | 526 | 228.3 | 3 | 106 (69.9) | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.2%** |
+| Copas nacionais | 526 | 228.3 | 30 | 79 (48.8) | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **9.5%** |
 | Competições europeias | 221 | 98.2 | 29 | 87 (47.9) | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **16.3%** |
 | Continentais fora da Europa | 203 | 105.2 | 7 | 57 (37.3) | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **1.5%** |
 | Copa do Mundo e eliminatórias | 158 | 92.4 | 14 | 34 (27.5) | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **9.6%** |
 | Torneios amistosos | 17 | 4.5 | 0 | 0 (0.0) | ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.0%** |
-| Regras de transferência por nação (`transfer/*_rules.cpp`) | 126 | 26.7 | 18 | 15 (4.2) | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **18.4%** |
+| Regras de transferência por nação (`transfer/*_rules.cpp`) | 126 | 26.7 | 21 | 12 (3.3) | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.6%** |
 
 ## Por arquivo
 
@@ -27,12 +27,12 @@ Só os arquivos com alguma rotina que falta; ordem: grupo, depois o que falta.
 | `friendly.cpp` | (raiz) | 67 | 48 | 3 (6.7) |
 | `league.cpp` | (raiz) | 61 | 50 | 2 (5.8) |
 | `host_country.cpp` | (raiz) | 12 | 4 | 4 (5.0) |
-| `squad_manager.cpp` | (raiz) | 16 | 1 | 9 (4.2) |
 | `fix_man.cpp` | (raiz) | 37 | 31 | 3 (4.0) |
 | `fifa_rankings.cpp` | (raiz) | 20 | 8 | 2 (1.6) |
 | `uefa_seeding.cpp` | (raiz) | 26 | 10 | 2 (1.0) |
 | `comp.cpp` | (raiz) | 46 | 14 | 2 (0.6) |
 | `conmebol_seeding.cpp` | (raiz) | 9 | 7 | 1 (0.5) |
+| `squad_manager.cpp` | (raiz) | 16 | 9 | 1 (0.3) |
 | `ita_ser_b.cpp` | leagues | 14 | 2 | 4 (18.1) |
 | `ita_ser_a.cpp` | leagues | 18 | 2 | 5 (15.8) |
 | `ita_ser_c1a.cpp` | leagues | 11 | 3 | 5 (15.1) |
@@ -75,24 +75,24 @@ Só os arquivos com alguma rotina que falta; ordem: grupo, depois o que falta.
 | `bra_cup.cpp` | cups | 8 | 0 | 6 (8.8) |
 | `ita_cup.cpp` | cups | 17 | 1 | 10 (5.6) |
 | `ita_c_cup.cpp` | cups | 17 | 1 | 10 (5.4) |
-| `eng_fa_cup.cpp` | cups | 12 | 0 | 4 (5.3) |
-| `eng_auto_cup.cpp` | cups | 15 | 0 | 9 (4.8) |
+| `eng_auto_cup.cpp` | cups | 15 | 1 | 8 (4.6) |
 | `bra_champ_cup.cpp` | cups | 16 | 1 | 11 (4.5) |
-| `spa_cup.cpp` | cups | 7 | 0 | 4 (3.8) |
 | `cup_stage.cpp` | cups | 7 | 0 | 3 (3.5) |
-| `eng_cc_cup.cpp` | cups | 8 | 0 | 4 (3.4) |
-| `jap_emp_cup.cpp` | cups | 7 | 0 | 4 (3.2) |
-| `usa_mls_all_stars.cpp` | cups | 8 | 0 | 6 (3.1) |
-| `fra_cup.cpp` | cups | 9 | 0 | 3 (3.0) |
-| `fra_lge_cup.cpp` | cups | 7 | 0 | 3 (2.4) |
-| `usa_open_cup.cpp` | cups | 6 | 0 | 4 (2.4) |
-| `jap_j_cup.cpp` | cups | 6 | 0 | 4 (2.2) |
-| `jap_super.cpp` | cups | 6 | 0 | 4 (2.0) |
-| `fra_super.cpp` | cups | 6 | 0 | 3 (1.4) |
-| `eng_charity.cpp` | cups | 6 | 0 | 3 (1.3) |
+| `eng_fa_cup.cpp` | cups | 12 | 2 | 2 (2.7) |
+| `usa_mls_all_stars.cpp` | cups | 8 | 2 | 4 (2.7) |
+| `spa_cup.cpp` | cups | 7 | 1 | 3 (2.5) |
 | `ita_super.cpp` | cups | 6 | 0 | 3 (1.3) |
-| `spa_super.cpp` | cups | 7 | 0 | 3 (1.3) |
 | `ita_c1_super.cpp` | cups | 6 | 0 | 3 (1.0) |
+| `jap_emp_cup.cpp` | cups | 7 | 2 | 2 (0.9) |
+| `jap_j_cup.cpp` | cups | 6 | 2 | 2 (0.9) |
+| `usa_open_cup.cpp` | cups | 6 | 2 | 2 (0.9) |
+| `jap_super.cpp` | cups | 6 | 2 | 2 (0.9) |
+| `eng_cc_cup.cpp` | cups | 8 | 3 | 1 (0.5) |
+| `eng_charity.cpp` | cups | 6 | 2 | 1 (0.5) |
+| `fra_cup.cpp` | cups | 9 | 2 | 1 (0.5) |
+| `fra_lge_cup.cpp` | cups | 7 | 2 | 1 (0.5) |
+| `fra_super.cpp` | cups | 6 | 2 | 1 (0.4) |
+| `spa_super.cpp` | cups | 7 | 2 | 1 (0.4) |
 | `gre_cup.cpp` | cups | 19 | 0 | 1 (0.0) |
 | `ire_lge_cup.cpp` | cups | 17 | 0 | 1 (0.0) |
 | `asia_club_champ.cpp` | eurocomp | 15 | 0 | 10 (6.5) |
@@ -127,11 +127,8 @@ Só os arquivos com alguma rotina que falta; ordem: grupo, depois o que falta.
 | `wc_europe_league.cpp` | worldcup | 30 | 1 | 3 (2.4) |
 | `belgium_rules.cpp` | rules | 10 | 0 | 1 (0.3) |
 | `finland_rules.cpp` | rules | 4 | 0 | 1 (0.3) |
-| `holland_rules.cpp` | rules | 1 | 0 | 1 (0.3) |
 | `poland_rules.cpp` | rules | 2 | 0 | 1 (0.3) |
 | `turkey_rules.cpp` | rules | 3 | 0 | 1 (0.3) |
-| `croatia_rules.cpp` | rules | 2 | 0 | 1 (0.3) |
-| `ireland_rules.cpp` | rules | 6 | 1 | 1 (0.3) |
 | `korea_rules.cpp` | rules | 3 | 0 | 1 (0.3) |
 | `northern_ireland_rules.cpp` | rules | 4 | 0 | 1 (0.3) |
 | `norway_rules.cpp` | rules | 6 | 0 | 1 (0.3) |
@@ -142,9 +139,12 @@ Só os arquivos com alguma rotina que falta; ordem: grupo, depois o que falta.
 | `argentina_rules.cpp` | rules | 12 | 0 | 1 (0.2) |
 | `australia_rules.cpp` | rules | 3 | 1 | 0 (0.0) |
 | `brazil_rules.cpp` | rules | 3 | 1 | 0 (0.0) |
+| `croatia_rules.cpp` | rules | 2 | 1 | 0 (0.0) |
 | `england_rules.cpp` | rules | 7 | 5 | 0 (0.0) |
 | `france_rules.cpp` | rules | 10 | 1 | 0 (0.0) |
 | `germany_rules.cpp` | rules | 7 | 1 | 0 (0.0) |
+| `holland_rules.cpp` | rules | 1 | 1 | 0 (0.0) |
+| `ireland_rules.cpp` | rules | 6 | 2 | 0 (0.0) |
 | `italy_rules.cpp` | rules | 9 | 2 | 0 (0.0) |
 | `scotland_rules.cpp` | rules | 5 | 3 | 0 (0.0) |
 | `spain_rules.cpp` | rules | 7 | 2 | 0 (0.0) |
