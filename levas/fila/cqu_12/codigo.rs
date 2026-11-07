@@ -16,10 +16,11 @@ unsafe fn cqu12_pd(a: usize, v: usize) {
 /// +0xb6 e o ano +0xb8 + +0x40 (words), devolvidos como (dia, ano).
 unsafe fn cqu12_comeco(this: usize) -> (u16, u16) {
     let montar: unsafe extern "thiscall" fn(*mut u32, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
-    let mut data = 0u32;
+    // a data tem 8 bytes: o dia, o ano e o dword +4 do ano bissexto, que a 0x549ef0 também grava
+    let mut data = [0u32; 2];
     let ano = (cqu12_w(this + 0xb8) as u16).wrapping_add(cqu12_w(this + 0x40) as u16);
-    montar(&mut data, cqu12_w(this + 0xb6) as u16 as u32, ano as u32);
-    (data as u16, (data >> 16) as u16)
+    montar(data.as_mut_ptr(), cqu12_w(this + 0xb6) as u16 as u32, ano as u32);
+    (data[0] as u16, (data[0] >> 16) as u16)
 }
 
 /// { 0x91f3d0 } (thiscall, ret 8, wc_oceania_league.cpp; a virtual +0x14; quadro SEH só das datas locais, sem

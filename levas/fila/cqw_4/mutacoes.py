@@ -22,3 +22,4 @@ MUTACOES = [
      'const CQW4_NSL_1: [Cqp11Op; 48] = [\n    Cqp11D(0, 5, 9, 0, 5, 1, 0), Cqp11L(0, 0, -1, -1, -1, 0), Cqp11D(1, 0xc, 9, 0, 4, 1, 0) /* mutacao: a 2a rodada num dia da semana antes */',
      'cqw_4 nsl liga'),
 ]
+# Prova do agente (07/11, carreira Rust de 8 ligas ate 2002-06-01 com motor de lances; base com os 10 itens finais): as quatro ACUSADAS (2001-217, 2001-219, 2001-074, 2001-284).

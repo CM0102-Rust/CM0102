@@ -24,3 +24,4 @@ MUTACOES = [
      'let fase: i8 = (rodada >= if turno == 0x43afa0 { segundo + 1 } else { segundo }) as i8; // mutacao: o Carioca com o segundo turno na 12a',
      'cqu_3 turno do carioca'),
 ]
+# Prova do agente (07/11, carreira Rust de 8 ligas ate 2002-06-01 com motor de lances): mineiro, paranaense e j1 ACUSADAS (2001-098, 2001-094, 2001-174; base com 12 itens, f29c85195c2a534f); a do Carioca sem devolver a marca escapou (cada jogo passa uma vez so pelo resultado) e foi trocada pelo segundo turno na 12a: ACUSADA (2001-097; base com os 10 itens finais).

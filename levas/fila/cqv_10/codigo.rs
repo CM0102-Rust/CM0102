@@ -16,10 +16,11 @@ unsafe fn cqv10_pd(a: usize, v: usize) {
 /// +0xb8 + +0x40 (words), devolvidos como (dia, ano).
 unsafe fn cqv10_data_do_sorteio(this: usize) -> (u16, u16) {
     let montar: unsafe extern "thiscall" fn(*mut u32, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
-    let mut data = 0u32;
+    // a data tem 8 bytes: o dia, o ano e o dword +4 do ano bissexto, que a 0x549ef0 também grava
+    let mut data = [0u32; 2];
     let ano = (cqv10_w(this + 0xb8) as u16).wrapping_add(cqv10_w(this + 0x40) as u16);
-    montar(&mut data, cqv10_w(this + 0xb6) as u16 as u32, ano as u32);
-    (data as u16, (data >> 16) as u16)
+    montar(data.as_mut_ptr(), cqv10_w(this + 0xb6) as u16 as u32, ano as u32);
+    (data[0] as u16, (data[0] >> 16) as u16)
 }
 
 /// { 0x79a100 } (thiscall, ret 8, oceania_nations.cpp; a virtual +0x14; quadro SEH só das datas locais, sem destrutor):
