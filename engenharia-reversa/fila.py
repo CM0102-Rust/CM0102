@@ -30,6 +30,13 @@ import sys
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FILA = os.path.join(R, 'levas', 'fila')
 
+
+def texto_do_motor(raiz):
+    """O motor.rs e os arquivos que ele inclui (rust/src/motor/, etapa 3 da reorganização, 07/11/2026)."""
+    src = os.path.join(raiz, 'rust', 'src')
+    fs = sorted(os.path.join(d, f) for d, _, n in os.walk(os.path.join(src, 'motor')) for f in n if f.endswith('.rs'))
+    return '\n'.join(open(f, encoding='utf-8').read() for f in [os.path.join(src, 'motor.rs')] + fs)
+
 INTEGRAR = r'''"""Integra a {n}a leva ao motor.rs (gerado por fila.py: as âncoras são achadas no motor.rs)."""
 import os
 import re
@@ -113,7 +120,7 @@ def materializar(nomes, n, base, antes):
     assert len({m[0] for m in mutacoes}) == len(mutacoes), 'mutações com o mesmo nome em itens diferentes'
     # o trecho de cada mutação tem de aparecer uma vez só no motor.rs com a leva (24/10: a dq10_contar casava 8
     # vezes e a cadeia da 225a parou sem rodar as mutações)
-    junto = open(os.path.join(R, 'rust', 'src', 'motor.rs'), encoding='utf-8').read() + '\n'.join(codigos)
+    junto = texto_do_motor(R) + '\n'.join(codigos)
     repetidas = [(m[0], junto.count(m[1])) for m in mutacoes if junto.count(m[1]) != 1]
     assert not repetidas, ('trecho de mutação que não aparece uma vez só', repetidas)
     open(os.path.join(destino, 'codigo.rs'), 'w', encoding='utf-8').write('\n'.join(codigos))
@@ -172,7 +179,7 @@ def main():
         import tempfile
         tmp = tempfile.mkdtemp()
         shutil.copytree(os.path.join(R, 'rust', 'src'), os.path.join(tmp, 'rust', 'src'))
-        m = open(os.path.join(tmp, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
+        m = texto_do_motor(tmp)
         base = int(re.search(r'\];\nconst N: usize = (\d+);', m).group(1))
         # o exe de trabalho (1920x1080) é o cm0102.exe com patches (resolucao.py): rotina alterada nele não
         # se porta igual à original (187a: a 0x5e5cd0, altura da fonte, salta para um trecho novo)

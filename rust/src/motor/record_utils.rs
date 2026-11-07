@@ -1,0 +1,326 @@
+// ---------- 262a leva: os registros de partida e de nome: a partida vista por um clube, a referência ao nome da pessoa e o código do resultado (record_utils.cpp) ----------
+
+unsafe fn cpz7_d(a: usize) -> u32 {
+    core::ptr::read_unaligned(a as *const u32)
+}
+
+unsafe fn cpz7_w(a: usize) -> u16 {
+    core::ptr::read_unaligned(a as *const u16)
+}
+
+unsafe fn cpz7_b(a: usize) -> u8 {
+    *(a as *const u8)
+}
+
+/// { 0x7e4750 } (cdecl, record_utils.cpp): `fill_match_record_from_fixture(jogo, clube, saida)`, da estatística da tática
+/// (0x896290, no fim de cada partida sem humano) e dos recordes. Jogo, clube ou saída nulos: a caixa (linhas 0x29, 0x31,
+/// 0x39) e 0. Senão a data (+0, 0x417c10 da Date(dia +0x2a, ano +0x28) da 0x549ef0), +8 o id do jogo (+0), +0xc a
+/// palavra +0x32, +0xe a +0x30, +0x10 o lado (0x4afa80, cdecl(clube, jogo)), +0x11 o id do clube, +0x1b o dword +8 do
+/// jogo; mandante (+0x1c): +0x15 o +0x10 do jogo e o placar (+0x19 pró, +0x1a contra) pelo da prorrogação (+0x47/+0x48)
+/// se ele não for negativo, senão o normal (+0x43/+0x44); visitante: +0x15 o +0xc e o placar ao contrário. Devolve 1.
+unsafe extern "C" fn registro_da_partida_pelo_clube(jogo: usize, clube: usize, saida: usize) -> u32 {
+    if jogo == 0 {
+        aviso_em(0xa7a088, 0x29);
+        return 0;
+    }
+    if clube == 0 {
+        aviso_em(0xa7a088, 0x31);
+        return 0;
+    }
+    if saida == 0 {
+        aviso_em(0xa7a088, 0x39);
+        return 0;
+    }
+    let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
+    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
+    let lado: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(0x4afa80usize);
+    let (mut t0, mut t1) = ([0u8; 8], [0u8; 8]);
+    let (p0, p1) = (t0.as_mut_ptr() as usize, t1.as_mut_ptr() as usize);
+    let d = data_nova(p0, cpz7_w(jogo + 0x2a) as u32, cpz7_w(jogo + 0x28) as u32);
+    copiar(saida, p1, d);
+    let s = |o: usize| (saida + o) as *mut u8;
+    core::ptr::write_unaligned(s(8) as *mut u32, cpz7_d(jogo));
+    core::ptr::write_unaligned(s(0xc) as *mut u16, cpz7_w(jogo + 0x32));
+    core::ptr::write_unaligned(s(0xe) as *mut u16, cpz7_w(jogo + 0x30));
+    *s(0x10) = lado(clube, jogo);
+    core::ptr::write_unaligned(s(0x11) as *mut u32, cpz7_d(clube));
+    core::ptr::write_unaligned(s(0x1b) as *mut u32, cpz7_d(jogo + 8));
+    if clube as u32 == cpz7_d(jogo + 0x1c) { // cpz7: o clube é o mandante
+        core::ptr::write_unaligned(s(0x15) as *mut u32, cpz7_d(jogo + 0x10));
+        if cpz7_b(jogo + 0x47) as i8 > -1 {
+            *s(0x19) = cpz7_b(jogo + 0x47);
+            *s(0x1a) = cpz7_b(jogo + 0x48);
+        } else {
+            crate::comparacao::ramo("cpz_7 placar do mandante");
+            *s(0x19) = cpz7_b(jogo + 0x43); // cpz7: os gols do mandante
+            *s(0x1a) = cpz7_b(jogo + 0x44);
+        }
+    } else {
+        core::ptr::write_unaligned(s(0x15) as *mut u32, cpz7_d(jogo + 0xc));
+        if cpz7_b(jogo + 0x48) as i8 > -1 {
+            *s(0x19) = cpz7_b(jogo + 0x48);
+            *s(0x1a) = cpz7_b(jogo + 0x47);
+        } else {
+            crate::comparacao::ramo("cpz_7 placar do visitante");
+            *s(0x19) = cpz7_b(jogo + 0x44);
+            *s(0x1a) = cpz7_b(jogo + 0x43); // cpz7: os gols sofridos pelo visitante
+        }
+    }
+    1
+}
+
+/// Comparador da 0x7e4750: lado a lado (leve) no registro de saída (0x1f bytes) e na devolução; ponteiro nulo: a caixa,
+/// só a original.
+unsafe extern "C" fn comparar_registro_da_partida_pelo_clube(jogo: usize, clube: usize, saida: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(1398);
+    if jogo == 0 || clube == 0 || saida == 0 {
+        return o(jogo, clube, saida);
+    }
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida, 0x1f)], || o(jogo, clube, saida), || registro_da_partida_pelo_clube(jogo, clube, saida));
+    PLACAR.registrar(igual && r == n, || format!("registro_da_partida_pelo_clube(jogo {:x}, clube {:x}) original={} rust={} {:x?} x {:x?}", jogo, clube, r, n, mo, mr));
+    r
+}
+
+/// O id do nome (+0x33 do registro de nome) ou −1 sem nome.
+unsafe fn cpz7_nome(p: u32) -> u32 {
+    if p != 0 { cpz7_d(p as usize + 0x33) } else { u32::MAX }
+}
+
+/// { 0x7e4920 } (cdecl, record_utils.cpp): `fill_staff_name_ref(pessoa, saida)`, dos recordes do clube e da competição,
+/// da notícia da suspensão, do prêmio e da busca de jogadores. Pessoa ou saída nulas: a caixa (linhas 0x80, 0x88) e 0.
+/// Senão +0, +4, +8 os ids dos nomes (+4, +8, +0xc da pessoa; −1 sem nome), +0xc o id da pessoa e +0x10 a data de
+/// nascimento (+0x10, 0x417c10); devolve 1.
+unsafe extern "C" fn referencia_ao_nome(pessoa: usize, saida: usize) -> u32 {
+    if pessoa == 0 {
+        aviso_em(0xa7a088, 0x80);
+        return 0;
+    }
+    if saida == 0 {
+        aviso_em(0xa7a088, 0x88);
+        return 0;
+    }
+    for k in 0..3 {
+        core::ptr::write_unaligned((saida + 4 * k) as *mut u32, cpz7_nome(cpz7_d(pessoa + 4 + 4 * k)));
+    }
+    core::ptr::write_unaligned((saida + 0xc) as *mut u32, cpz7_d(pessoa));
+    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
+    let mut t = [0u8; 8];
+    copiar(saida + 0x10, t.as_mut_ptr() as usize, pessoa + 0x10);
+    1
+}
+
+/// Comparador da 0x7e4920: lado a lado (leve) na referência (0x18 bytes) e na devolução; ponteiro nulo: só a original.
+unsafe extern "C" fn comparar_referencia_ao_nome(pessoa: usize, saida: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(1399);
+    if pessoa == 0 || saida == 0 {
+        return o(pessoa, saida);
+    }
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida, 0x18)], || o(pessoa, saida), || referencia_ao_nome(pessoa, saida));
+    PLACAR.registrar(igual && r == n, || format!("referencia_ao_nome(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    r
+}
+
+/// { 0x7e56d0 } (cdecl, record_utils.cpp): `match_record_result_code(registro)`, da estatística da competição
+/// (0x49f570, a cada partida). Registro nulo: a caixa (linha 0x25a) e 0. Pró (+0x19) > contra (+0x1a), com sinal: 3;
+/// empate com gols: 2; empate sem gols: 1; derrota: −3 (só o byte conta: quem chama lê al).
+unsafe extern "C" fn codigo_do_resultado(registro: usize) -> u8 {
+    if registro == 0 {
+        aviso_em(0xa7a088, 0x25a);
+        return 0;
+    }
+    let (p, c) = (cpz7_b(registro + 0x19) as i8, cpz7_b(registro + 0x1a) as i8);
+    if p > c {
+        3
+    } else if p == c && p > 0 {
+        2
+    } else if p == c {
+        1
+    } else {
+        (-3i8) as u8
+    }
+}
+
+/// Comparador da 0x7e56d0: pelo byte devolvido (só lê); registro nulo: só a original.
+unsafe extern "C" fn comparar_codigo_do_resultado(registro: usize) -> u8 {
+    let o = orig::<unsafe extern "C" fn(usize) -> u8>(1400);
+    if registro == 0 {
+        return o(registro);
+    }
+    let r = o(registro);
+    let n = codigo_do_resultado(registro);
+    PLACAR.registrar(r == n, || format!("codigo_do_resultado(registro {:x}) original={} rust={}", registro, r as i8, n as i8));
+    r
+}
+
+// ---------- 261a leva: o prêmio do ano no histórico (o técnico conta, o jogador premiado agradece ou renova) e os recordes de vitória e de derrota (staff_records.cpp, record_utils.cpp) ----------
+
+unsafe fn cpy10_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+unsafe fn cpy10_b(a: usize) -> u8 {
+    *(a as *const u8)
+}
+
+/// O corpo da 0x86c390; sem `gravar` (a cópia pelo comparador), sem a entrada no arquivo do histórico.
+unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32, gravar: bool) {
+    let mut e = cpq4_entrada();
+    cpq4_datar(e.as_mut_ptr());
+    e[0xc] = 0x34;
+    cpq4_por(&mut e, 8, if clube != 0 { cpy10_d(clube) as i32 } else { -1 });
+    cpq4_por(&mut e, 0xd, cpy10_d(premio) as i32);
+    cpq4_por(&mut e, 0x11, (a4 & 0xffff) as i32);
+    cpq4_por(&mut e, 0x15, a5 as u8 as i8 as i32);
+    cpq4_por(&mut e, 0x19, credito as u8 as i8 as i32);
+    cpq4_historico(gravar, this, cpy10_d(p), &e);
+    let (t3d, t28) = (cpy10_b(p + 0x3d), cpy10_b(p + 0x28));
+    if t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc {
+        let r = cpq4_registro(this, p);
+        if r != 0 {
+            crate::comparacao::ramo("cpy_10 prêmio do técnico");
+            let a = (r + 0x9e) as *mut u16;
+            core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1));
+        }
+        return;
+    }
+    if cpy10_d(p + 0x61) == 0 {
+        return;
+    }
+    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contrato(cpy10_d(0xae1050), p);
+    *(0xae1080 as *mut usize) = c;
+    if c == 0 || cpy10_b(c + 0x35) & 0x3f == 5 {
+        return;
+    }
+    if cpy10_d(0xae23b4).wrapping_add(cpy10_d(c + 4).wrapping_mul(0x245)) == 0 {
+        return;
+    }
+    let do_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let k = do_clube(cpy10_d(0xae1050), p, cpv13_clube_do_contrato(p));
+    if k == 0 {
+        return;
+    }
+    if cpy10_d(0xde1f54) != 0 {
+        let dias: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(0x54cdb0usize);
+        if dias(0xae2c90, cpy10_d(k + 0x25), cpy10_d(k + 0x29)) > 0x12c { // cpy10: mais de 300 dias
+            let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
+            let dono = cpv13_clube_do_contrato(p);
+            let x = entrada(cpy10_d(cpy10_d(0xde1f54) + 0x856), dono, p, 0, 0);
+            if x != 0 && cpy10_d(x + 0xf) == cpy10_d(p) {
+                crate::comparacao::ramo("cpy_10 renovação");
+                cpq3_renovar(p);
+            }
+        }
+    }
+    if credito as u8 != 1 {
+        crate::comparacao::ramo("cpy_10 sem crédito");
+        return; // cpy10: só o creditado
+    }
+    if cpy10_d(k + 0x45) != 0 {
+        return;
+    }
+    let v59 = cpy10_b(p + 0x59) as i8;
+    if v59 <= 0xf { // cpy10: o +0x59
+        return;
+    }
+    if cpy10_b(p + 0x5b) as i8 <= 0xa {
+        return;
+    }
+    crate::comparacao::ramo("cpy_10 sorteio do agradecimento");
+    if sortear(v59 as i32) <= 5 {
+        return;
+    }
+    let agradece: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x58a070usize);
+    agradece(p, clube, premio);
+}
+
+/// { 0x86c390 } (thiscall, ret 0x18, staff_records.cpp, quadro SEH sem destrutor): `Staff_Records::add_year_award_record(
+/// p, clube, premio, a4, a5, credito)`, pelo registro dos vencedores do prêmio do ano (YEAR_AWARD::record_winners
+/// 0x9302f0: o primeiro, o segundo e o terceiro). A entrada 0x34 do histórico da pessoa (data do jogo, clube ou −1, o id
+/// do prêmio, a4 na palavra, a5 e o crédito em bytes com sinal; 0x58e340). Técnico (+0x3d ou +0x28 = 5 ou 0xc): +1 na
+/// palavra +0x9e do registro dele (0x86f5b0). Jogador com ficha (+0x61) e contrato (0x4cf5a0, fora do tipo 5) com o
+/// clube (0x4cf5f0): com o gerente de transferências, contrato de mais de 300 dias e o jogador na lista do clube
+/// (0x849ce0), a renovação (0x4cda70); depois, só com o crédito 1, sem a marca +0x45 do contrato, com +0x59 acima de 15
+/// e +0x5b acima de 10, sorteio(+0x59) acima de 5: a notícia do agradecimento ao técnico (0x58a070). Sem pessoa ou sem
+/// prêmio: a original (caixa "Error").
+unsafe extern "thiscall" fn registrar_premio_do_ano(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
+    if p == 0 || premio == 0 {
+        return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(1368)(this, p, clube, premio, a4, a5, credito);
+    }
+    cpy10_premio(this, p, clube, premio, a4, a5, credito, true)
+}
+
+/// Comparador: o técnico lado a lado pelo registro de pontos dele (criado antes pela 0x86f5b0, como a original faria;
+/// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
+/// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
+unsafe extern "thiscall" fn comparar_registrar_premio_do_ano(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(1368);
+    if p == 0 || premio == 0 {
+        return o(this, p, clube, premio, a4, a5, credito);
+    }
+    let (t3d, t28) = (cpy10_b(p + 0x3d), cpy10_b(p + 0x28));
+    if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
+        crate::comparacao::ramo("registrar_premio_do_ano jogador");
+        return o(this, p, clube, premio, a4, a5, credito);
+    }
+    let r = cpq4_registro(this, p);
+    if r == 0 {
+        return o(this, p, clube, premio, a4, a5, credito);
+    }
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, p, clube, premio, a4, a5, credito),
+        || cpy10_premio(this, p, clube, premio, a4, a5, credito, false));
+    PLACAR.registrar(igual, || format!("registrar_premio_do_ano({:x}, prêmio {:x}) {:x?} x {:x?}", p, cpy10_d(premio), mo, mr));
+}
+
+/// { 0x7e4a30 } (cdecl, record_utils.cpp): `match_record_is_bigger_win(a, b)`, pelos recordes do clube depois de cada
+/// jogo (0x444930) e pelos da competição (0x49fb93): 1 se `a` é vitória (gols +0x19 > +0x1a, bytes com sinal) por
+/// diferença maior que a de `b`, ou igual com mais gols feitos. Registro nulo: a original (caixa "Error", 0).
+unsafe extern "C" fn vitoria_maior(a: usize, b: usize) -> u32 {
+    if a == 0 || b == 0 {
+        return orig::<unsafe extern "C" fn(usize, usize) -> u32>(1369)(a, b);
+    }
+    let (fa, sa, fb, sb) = (cpy10_b(a + 0x19) as i8, cpy10_b(a + 0x1a) as i8, cpy10_b(b + 0x19) as i8, cpy10_b(b + 0x1a) as i8);
+    if fa <= sa {
+        return 0;
+    }
+    let (da, db) = (fa as i32 - sa as i32, fb as i32 - sb as i32);
+    (da > db || (da == db && fa > fb)) as u32
+}
+
+/// Comparador: pura; registro nulo (a caixa), só a original.
+unsafe extern "C" fn comparar_vitoria_maior(a: usize, b: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(1369)(a, b);
+    if a == 0 || b == 0 {
+        return r;
+    }
+    let n = vitoria_maior(a, b);
+    PLACAR.registrar(r == n, || format!("vitoria_maior({:x}, {:x}) original={} rust={}", a, b, r, n));
+    r
+}
+
+/// { 0x7e4b00 } (cdecl, record_utils.cpp): `match_record_is_bigger_defeat(a, b)`, pelos recordes do clube depois de cada
+/// jogo (0x444930): 1 se `a` é derrota (+0x19 < +0x1a) por diferença maior que a de `b`, ou igual com mais gols
+/// sofridos. Registro nulo: a original (caixa "Error", 0).
+unsafe extern "C" fn derrota_maior(a: usize, b: usize) -> u32 {
+    if a == 0 || b == 0 {
+        return orig::<unsafe extern "C" fn(usize, usize) -> u32>(1370)(a, b);
+    }
+    let (fa, sa, fb, sb) = (cpy10_b(a + 0x19) as i8, cpy10_b(a + 0x1a) as i8, cpy10_b(b + 0x19) as i8, cpy10_b(b + 0x1a) as i8);
+    if fa >= sa {
+        return 0;
+    }
+    let (da, db) = (sa as i32 - fa as i32, sb as i32 - fb as i32);
+    (da > db || (da == db && sa > sb)) as u32
+}
+
+/// Comparador: pura; registro nulo (a caixa), só a original.
+unsafe extern "C" fn comparar_derrota_maior(a: usize, b: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(1370)(a, b);
+    if a == 0 || b == 0 {
+        return r;
+    }
+    let n = derrota_maior(a, b);
+    PLACAR.registrar(r == n, || format!("derrota_maior({:x}, {:x}) original={} rust={}", a, b, r, n));
+    r
+}
+

@@ -60,6 +60,24 @@ LOG = os.path.join(JOGO, 'ddraw.log')
 LIMITE = 2400  # segundos; o autoteste completo passa de 20 minutos (cresce a cada leva)
 
 
+def fontes_do_motor(raiz=None):
+    """Os arquivos que o motor.rs inclui (rust/src/motor/, etapa 3 da reorganização)."""
+    base = os.path.join(raiz or RAIZ, 'rust', 'src', 'motor')
+    return sorted(os.path.join(d, f) for d, _, fs in os.walk(base) for f in fs if f.endswith('.rs'))
+
+
+def texto_do_motor(raiz=None):
+    """O motor inteiro como texto: o motor.rs e os arquivos que ele inclui."""
+    fs = [os.path.join(raiz or RAIZ, 'rust', 'src', 'motor.rs')] + fontes_do_motor(raiz)
+    return '\n'.join(open(f, encoding='utf-8').read() for f in fs)
+
+
+def restaurar(textos):
+    for f, t in textos.items():
+        if open(f, encoding='utf-8').read() != t:
+            open(f, 'w', encoding='utf-8').write(t)
+
+
 def compilar():
     os.utime(SRC)  # o cargo nao recompila se a data nao mudar (ver CLAUDE.md)
     for tentativa in range(3):
@@ -243,7 +261,10 @@ def main():
         rodar = lambda: [prova_save.contra_a_base(opcoes, base_save, 'mutacao')[1]]
     base = None
     confirmar = sys.argv[sys.argv.index('--confirmar') + 1] if '--confirmar' in sys.argv else None
-    original = open(SRC, encoding='utf-8').read()
+    # o motor.rs inclui os arquivos de rust/src/motor/ (etapa 3, 07/11/2026): o trecho é procurado em todos
+    fontes = [SRC] + (fontes_do_motor() if os.path.basename(SRC) == 'motor.rs' else [])
+    textos = {f: open(f, encoding='utf-8').read() for f in fontes}
+    original = '\n'.join(textos.values())
     ruins = [(m[0], original.count(m[1])) for m in mutacoes if original.count(m[1]) != 1]
     if ruins:
         sys.exit('trechos que nao aparecem exatamente uma vez: %s' % ruins)
@@ -280,7 +301,9 @@ def main():
             if len(m) > 3 and ramos is not None and ramos.get(m[3], 0) == 0:
                 print('mutacao %-18s    0s ramo "%s" nao rodou na base: lacuna (pulada)' % (nome, m[3]), flush=True)
                 continue
-            open(SRC, 'w', encoding='utf-8').write(original.replace(velho, novo))
+            restaurar(textos)
+            SRC = next(f for f, t in textos.items() if velho in t)
+            open(SRC, 'w', encoding='utf-8').write(textos[SRC].replace(velho, novo))
             compilar()
             t0 = time.time()
             r = rodar() if rodar else autoteste('motor:%d' % casos)
@@ -300,7 +323,7 @@ def main():
                     r = [fora_do_item(nome, r[0])]
             print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, r[0][:150] if r else 'SEM RESULTADO'), flush=True)
     finally:
-        open(SRC, 'w', encoding='utf-8').write(original)
+        restaurar(textos)
         compilar()
         print('restaurado e recompilado')
 

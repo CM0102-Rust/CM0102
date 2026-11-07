@@ -1,0 +1,535 @@
+// ---------- 280a leva: o calendário da primeira divisão e da Premiership inglesas: as rodadas com o Natal conforme o dia da semana e os play-offs de acesso (eng_first.cpp, eng_prm.cpp) ----------
+
+
+/// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
+/// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
+/// quantos jogos; a lista termina em −1).
+type Cqp5Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
+
+/// As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
+/// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
+/// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
+unsafe fn cqp5_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqp5Rodada]) {
+    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(0x68a160usize);
+    let faixa: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(0x68a1c0usize);
+    for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
+        let i = primeira + k as i32;
+        data(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, ano, 0);
+        for (j, &(a, b, c)) in faixas.iter().enumerate() {
+            faixa(t, i, j as i32, a as i32, b as i32, c as i32, 0);
+        }
+    }
+}
+
+/// Os bytes que a tabela de `n` rodadas tem gravados e que o jogo lê: de cada rodada, a data (+0..+4) e +0x3d..+0x40,
+/// e as faixas até a que termina a lista (a de dia −1 na tabela `guia`, a da original); o resto da memória alocada não
+/// é escrito.
+unsafe fn cqp5_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
+    let mut v = Vec::new();
+    for r in 0..n {
+        let e = t + r * 0x41;
+        v.extend_from_slice(core::slice::from_raw_parts(e as *const u8, 5));
+        v.extend_from_slice(core::slice::from_raw_parts((e + 0x3d) as *const u8, 4));
+        for j in 0..8usize {
+            v.extend_from_slice(core::slice::from_raw_parts((e + 5 + j * 7) as *const u8, 7));
+            if *((guia + r * 0x41 + 5 + j * 7 + 4) as *const i8) == -1 {
+                break;
+            }
+        }
+    }
+    v
+}
+
+/// A fase principal com as rodadas do Natal: as do começo em sequência; depois a data de 1º de dezembro do ano
+/// (Date::Date 0x549f70: push −1; push ano; push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) e o caso pelo dia
+/// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
+/// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
+/// caso padrão (o oitavo); depois as do fim.
+struct Cqp5Natal {
+    comeco: &'static [Cqp5Rodada],
+    referencia: usize,
+    ajuste: i32,
+    casos: [&'static [Cqp5Rodada]; 8],
+    fim: &'static [Cqp5Rodada],
+    linha: u32,
+}
+
+unsafe fn cqp5_natal(t: usize, ano: u32, n: &Cqp5Natal, arquivo: usize) {
+    let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
+    cqp5_rodadas(t, ano, 0, n.comeco);
+    let mut d = [0u16; 4];
+    construir(&mut d, 1, 0xb, ano, 0xffff_ffff);
+    let dia = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
+    let k = (dia.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
+    let caso = if k as u32 > 6 {
+        aviso_em(arquivo, n.linha);
+        7
+    } else {
+        k as usize
+    };
+    let meio = n.casos[caso];
+    cqp5_rodadas(t, ano, n.comeco.len() as i32, meio);
+    cqp5_rodadas(t, ano, (n.comeco.len() + meio.len()) as i32, n.fim);
+}
+
+/// Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
+/// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
+/// `cqp5_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
+unsafe fn cqp5_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+                       original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
+    let reg = [(0xb67a34usize, 4usize)];
+    let pl2 = if liga.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copia(&mut r2, &mut e2, pl2));
+    let gravou = a != 0 || b != 0;
+    let saidas = !gravou || (*rodadas == r2 && *extra == e2 && (liga.is_null() || *liga == l2));
+    let tabela = if a != 0 && b != 0 {
+        if fase as u8 == 0xff {
+            let n = *rodadas as usize;
+            cqp5_gravados(a, a, n) == cqp5_gravados(b, a, n)
+        } else {
+            cql10_gravados(a, *rodadas) == cql10_gravados(b, *rodadas)
+        }
+    } else {
+        a == 0 && b == 0
+    };
+    if b != 0 {
+        soltar(b);
+    }
+    PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} tabela {}", nome, fase as u8 as i8, saidas, tabela));
+    a
+}
+
+/// a primeira divisão inglesa: as rodadas antes do Natal
+const CQP5_PRIMEIRA_COMECO: [Cqp5Rodada; 23] = [
+    (12, 7, 0, 5, 1, &[(6, 1, 2), (-1, -1, -1)]), // 0: 12/ago
+    (19, 7, 0, 5, 1, &[(6, 1, 2), (-1, -1, -1)]), // 1: 19/ago
+    (26, 7, 0, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 2: 26/ago
+    (28, 7, 0, 0, 2, &[(-1, -1, -1)]), // 3: 28/ago
+    (2, 8, 0, 5, 1, &[(4, 2, 2), (-1, -1, -1)]), // 4: 2/set
+    (9, 8, 0, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 5: 9/set
+    (13, 8, 0, 2, 2, &[(-1, -1, -1)]), // 6: 13/set
+    (16, 8, 0, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 7: 16/set
+    (23, 8, 0, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 8: 23/set
+    (30, 8, 0, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 9: 30/set
+    (7, 9, 0, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 10: 7/out
+    (14, 9, 0, 5, 1, &[(6, 1, 2), (-1, -1, -1)]), // 11: 14/out
+    (17, 9, 0, 1, 2, &[(2, 2, 2), (2, 2, 2), (-1, -1, -1)]), // 12: 17/out
+    (21, 9, 0, 5, 1, &[(4, 2, 2), (-1, -1, -1)]), // 13: 21/out
+    (24, 9, 0, 1, 2, &[(2, 2, 2), (2, 2, 2), (-1, -1, -1)]), // 14: 24/out
+    (28, 9, 0, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 15: 28/out
+    (4, 10, 0, 5, 1, &[(6, 1, 2), (-1, -1, -1)]), // 16: 4/nov
+    (11, 10, 0, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 17: 11/nov
+    (18, 10, 0, 5, 1, &[(4, 2, 2), (-1, -1, -1)]), // 18: 18/nov
+    (25, 10, 0, 5, 1, &[(4, 2, 2), (-1, -1, -1)]), // 19: 25/nov
+    (2, 11, 0, 5, 1, &[(6, 1, 2), (-1, -1, -1)]), // 20: 2/dez
+    (9, 11, 0, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 21: 9/dez
+    (16, 11, 0, 5, 1, &[(6, 1, 2), (-1, -1, -1)]), // 22: 16/dez
+];
+
+/// as rodadas do Natal quando a rodada 22 (a de referência) cai em 13/dez
+const CQP5_PRIMEIRA_NATAL_0: [Cqp5Rodada; 4] = [
+    (20, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 20/dez
+    (27, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 27/dez
+    (30, 11, 0, -1, 2, &[(-1, -1, -1)]), // 25: 30/dez
+    (3, 0, 1, -1, 1, &[(-1, -1, -1)]), // 26: 3/jan (+1 ano)
+];
+
+/// as rodadas do Natal quando a rodada 22 (a de referência) cai em 14/dez
+const CQP5_PRIMEIRA_NATAL_1: [Cqp5Rodada; 4] = [
+    (21, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 21/dez
+    (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
+    (28, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 28/dez
+    (1, 0, 1, -1, 1, &[(-1, -1, -1)]), // 26: 1/jan (+1 ano)
+];
+
+/// as rodadas do Natal quando a rodada 22 (a de referência) cai em 15/dez
+const CQP5_PRIMEIRA_NATAL_2: [Cqp5Rodada; 4] = [
+    (22, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 22/dez
+    (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
+    (29, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 29/dez
+    (1, 0, 1, -1, 1, &[(-1, -1, -1)]), // 26: 1/jan (+1 ano)
+];
+
+/// as rodadas do Natal quando a rodada 22 (a de referência) cai em 16/dez
+const CQP5_PRIMEIRA_NATAL_3: [Cqp5Rodada; 4] = [
+    (23, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 23/dez
+    (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
+    (30, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 30/dez
+    (1, 0, 1, -1, 1, &[(-1, -1, -1)]), // 26: 1/jan (+1 ano)
+];
+
+/// as rodadas do Natal quando a rodada 22 (a de referência) cai em 17/dez
+const CQP5_PRIMEIRA_NATAL_4: [Cqp5Rodada; 4] = [
+    (21, 11, 0, -1, 2, &[(-1, -1, -1)]), // 23: 21/dez
+    (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
+    (31, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 31/dez
+    (4, 0, 1, -1, 2, &[(-1, -1, -1)]), // 26: 4/jan (+1 ano)
+];
+
+/// as rodadas do Natal quando a rodada 22 (a de referência) cai em 18/dez
+const CQP5_PRIMEIRA_NATAL_5: [Cqp5Rodada; 4] = [
+    (22, 11, 0, -1, 2, &[(-1, -1, -1)]), // 23: 22/dez
+    (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
+    (28, 11, 0, -1, 2, &[(-1, -1, -1)]), // 25: 28/dez
+    (1, 0, 1, -1, 1, &[(-1, -1, -1)]), // 26: 1/jan (+1 ano)
+];
+
+/// as rodadas do Natal quando a rodada 22 (a de referência) cai em 19/dez
+const CQP5_PRIMEIRA_NATAL_6: [Cqp5Rodada; 4] = [
+    (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 26/dez
+    (28, 11, 0, -1, 2, &[(-1, -1, -1)]), // 24: 28/dez
+    (2, 0, 1, -1, 1, &[(-1, -1, -1)]), // 25: 2/jan (+1 ano)
+    (5, 0, 1, -1, 2, &[(-1, -1, -1)]), // 26: 5/jan (+1 ano)
+];
+
+/// as rodadas do Natal no caso padrão (a rodada 22 fora de 13 a 19/dez: a caixa)
+const CQP5_PRIMEIRA_NATAL_PADRAO: [Cqp5Rodada; 4] = [
+    (26, 11, 0, 5, 1, &[(-1, -1, -1)]), // 23: 26/dez
+    (28, 11, 0, 0, 2, &[(-1, -1, -1)]), // 24: 28/dez
+    (2, 0, 1, -1, 1, &[(-1, -1, -1)]), // 25: 2/jan (+1 ano)
+    (5, 0, 1, -1, 2, &[(-1, -1, -1)]), // 26: 5/jan (+1 ano)
+];
+
+/// a primeira divisão inglesa: as rodadas depois do Natal
+const CQP5_PRIMEIRA_FIM: [Cqp5Rodada; 19] = [
+    (13, 0, 1, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 27: 13/jan (+1 ano)
+    (20, 0, 1, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 28: 20/jan (+1 ano)
+    (3, 1, 1, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 29: 3/fev (+1 ano)
+    (10, 1, 1, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 30: 10/fev (+1 ano)
+    (17, 1, 1, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 31: 17/fev (+1 ano)
+    (20, 1, 1, 1, 2, &[(2, 2, 2), (-1, -1, -1)]), // 32: 20/fev (+1 ano)
+    (24, 1, 1, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 33: 24/fev (+1 ano)
+    (3, 2, 1, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 34: 3/mar (+1 ano)
+    (7, 2, 1, 2, 2, &[(-1, -1, -1)]), // 35: 7/mar (+1 ano)
+    (10, 2, 1, 5, 1, &[(-1, -1, -1)]), // 36: 10/mar (+1 ano)
+    (17, 2, 1, 1, 2, &[(2, 2, 2), (2, 2, 2), (-1, -1, -1)]), // 37: 17/mar (+1 ano)
+    (24, 2, 1, 5, 1, &[(4, 2, 2), (-1, -1, -1)]), // 38: 24/mar (+1 ano)
+    (31, 2, 1, 5, 1, &[(4, 2, 2), (-1, -1, -1)]), // 39: 31/mar (+1 ano)
+    (7, 3, 1, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 40: 7/abr (+1 ano)
+    (14, 3, 1, 5, 1, &[(4, 2, 2), (-1, -1, -1)]), // 41: 14/abr (+1 ano)
+    (16, 3, 1, 0, 2, &[(-1, -1, -1)]), // 42: 16/abr (+1 ano)
+    (21, 3, 1, 5, 1, &[(4, 2, 2), (-1, -1, -1)]), // 43: 21/abr (+1 ano)
+    (28, 3, 1, 5, 1, &[(4, 2, 2), (-1, -1, -1)]), // 44: 28/abr (+1 ano)
+    (6, 4, 1, 6, 1, &[(-1, -1, -1)]), // 45: 6/mai (+1 ano)
+];
+
+/// a Premiership: as rodadas antes do Natal
+const CQP5_PREMIERSHIP_COMECO: [Cqp5Rodada; 18] = [
+    (19, 7, 0, 5, 1, &[(-1, -1, -1)]), // 0: 19/ago
+    (23, 7, 0, 2, 2, &[(1, 2, 2), (-1, -1, -1)]), // 1: 23/ago
+    (26, 7, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 2: 26/ago
+    (6, 8, 0, 2, 2, &[(1, 2, 2), (-1, -1, -1)]), // 3: 6/set
+    (9, 8, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 4: 9/set
+    (16, 8, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 5: 16/set
+    (23, 8, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 6: 23/set
+    (30, 8, 0, 5, 1, &[(6, 1, 2), (-1, -1, -1)]), // 7: 30/set
+    (13, 9, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 8: 13/out
+    (21, 9, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 9: 21/out
+    (28, 9, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 10: 28/out
+    (4, 10, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 11: 4/nov
+    (11, 10, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 12: 11/nov
+    (18, 10, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 13: 18/nov
+    (25, 10, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 14: 25/nov
+    (2, 11, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 15: 2/dez
+    (9, 11, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 16: 9/dez
+    (16, 11, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 17: 16/dez
+];
+
+/// as rodadas do Natal quando a rodada 17 (a de referência) cai em 13/dez
+const CQP5_PREMIERSHIP_NATAL_0: [Cqp5Rodada; 4] = [
+    (20, 11, 0, -1, 1, &[(-1, -1, -1)]), // 18: 20/dez
+    (27, 11, 0, -1, 1, &[(-1, -1, -1)]), // 19: 27/dez
+    (30, 11, 0, -1, 2, &[(-1, -1, -1)]), // 20: 30/dez
+    (3, 0, 1, -1, 1, &[(-1, -1, -1)]), // 21: 3/jan (+1 ano)
+];
+
+/// as rodadas do Natal quando a rodada 17 (a de referência) cai em 14/dez
+const CQP5_PREMIERSHIP_NATAL_1: [Cqp5Rodada; 4] = [
+    (21, 11, 0, -1, 1, &[(-1, -1, -1)]), // 18: 21/dez
+    (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 19: 26/dez
+    (28, 11, 0, -1, 1, &[(-1, -1, -1)]), // 20: 28/dez
+    (1, 0, 1, -1, 1, &[(-1, -1, -1)]), // 21: 1/jan (+1 ano)
+];
+
+/// as rodadas do Natal quando a rodada 17 (a de referência) cai em 15/dez
+const CQP5_PREMIERSHIP_NATAL_2: [Cqp5Rodada; 4] = [
+    (22, 11, 0, -1, 1, &[(-1, -1, -1)]), // 18: 22/dez
+    (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 19: 26/dez
+    (29, 11, 0, -1, 1, &[(-1, -1, -1)]), // 20: 29/dez
+    (1, 0, 1, -1, 1, &[(-1, -1, -1)]), // 21: 1/jan (+1 ano)
+];
+
+/// as rodadas do Natal quando a rodada 17 (a de referência) cai em 16/dez
+const CQP5_PREMIERSHIP_NATAL_3: [Cqp5Rodada; 4] = [
+    (23, 11, 0, -1, 1, &[(-1, -1, -1)]), // 18: 23/dez
+    (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 19: 26/dez
+    (30, 11, 0, -1, 1, &[(-1, -1, -1)]), // 20: 30/dez
+    (1, 0, 1, -1, 1, &[(-1, -1, -1)]), // 21: 1/jan (+1 ano)
+];
+
+/// as rodadas do Natal quando a rodada 17 (a de referência) cai em 17/dez
+const CQP5_PREMIERSHIP_NATAL_4: [Cqp5Rodada; 4] = [
+    (21, 11, 0, -1, 2, &[(-1, -1, -1)]), // 18: 21/dez
+    (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 19: 26/dez
+    (31, 11, 0, -1, 1, &[(-1, -1, -1)]), // 20: 31/dez
+    (4, 0, 1, -1, 2, &[(-1, -1, -1)]), // 21: 4/jan (+1 ano)
+];
+
+/// as rodadas do Natal quando a rodada 17 (a de referência) cai em 18/dez
+const CQP5_PREMIERSHIP_NATAL_5: [Cqp5Rodada; 4] = [
+    (22, 11, 0, -1, 2, &[(-1, -1, -1)]), // 18: 22/dez
+    (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 19: 26/dez
+    (28, 11, 0, -1, 2, &[(-1, -1, -1)]), // 20: 28/dez
+    (1, 0, 1, -1, 1, &[(-1, -1, -1)]), // 21: 1/jan (+1 ano)
+];
+
+/// as rodadas do Natal quando a rodada 17 (a de referência) cai em 19/dez
+const CQP5_PREMIERSHIP_NATAL_6: [Cqp5Rodada; 4] = [
+    (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 18: 26/dez
+    (28, 11, 0, -1, 2, &[(-1, -1, -1)]), // 19: 28/dez
+    (2, 0, 1, -1, 1, &[(-1, -1, -1)]), // 20: 2/jan (+1 ano)
+    (5, 0, 1, -1, 2, &[(-1, -1, -1)]), // 21: 5/jan (+1 ano)
+];
+
+/// as rodadas do Natal no caso padrão (a rodada 17 fora de 13 a 19/dez: a caixa)
+const CQP5_PREMIERSHIP_NATAL_PADRAO: [Cqp5Rodada; 4] = [
+    (26, 11, 0, 5, 1, &[(-1, -1, -1)]), // 18: 26/dez
+    (28, 11, 0, 0, 2, &[(-1, -1, -1)]), // 19: 28/dez
+    (2, 0, 1, -1, 1, &[(-1, -1, -1)]), // 20: 2/jan (+1 ano)
+    (5, 0, 1, -1, 2, &[(-1, -1, -1)]), // 21: 5/jan (+1 ano)
+];
+
+/// a Premiership: as rodadas depois do Natal
+const CQP5_PREMIERSHIP_FIM: [Cqp5Rodada; 16] = [
+    (13, 0, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 22: 13/jan (+1 ano)
+    (20, 0, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 23: 20/jan (+1 ano)
+    (31, 0, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 24: 31/jan (+1 ano)
+    (3, 1, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 25: 3/fev (+1 ano)
+    (10, 1, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 26: 10/fev (+1 ano)
+    (24, 1, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 27: 24/fev (+1 ano)
+    (3, 2, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 28: 3/mar (+1 ano)
+    (17, 2, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 29: 17/mar (+1 ano)
+    (31, 2, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 30: 31/mar (+1 ano)
+    (7, 3, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 31: 7/abr (+1 ano)
+    (14, 3, 1, 5, 1, &[(-1, -1, -1)]), // 32: 14/abr (+1 ano)
+    (18, 3, 1, 2, 2, &[(-1, -1, -1)]), // 33: 18/abr (+1 ano)
+    (21, 3, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 34: 21/abr (+1 ano)
+    (28, 3, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 35: 28/abr (+1 ano)
+    (5, 4, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 36: 5/mai (+1 ano)
+    (20, 4, 1, 6, 1, &[(-1, -1, -1)]), // 37: 20/mai (+1 ano)
+];
+
+const CQP5_PRIMEIRA_NATAL: Cqp5Natal = Cqp5Natal { comeco: &CQP5_PRIMEIRA_COMECO, referencia: 22, ajuste: 13, casos: [&CQP5_PRIMEIRA_NATAL_0, &CQP5_PRIMEIRA_NATAL_1, &CQP5_PRIMEIRA_NATAL_2, &CQP5_PRIMEIRA_NATAL_3, &CQP5_PRIMEIRA_NATAL_4, &CQP5_PRIMEIRA_NATAL_5, &CQP5_PRIMEIRA_NATAL_6, &CQP5_PRIMEIRA_NATAL_PADRAO], fim: &CQP5_PRIMEIRA_FIM, linha: 0x17c };
+const CQP5_PRIMEIRA_PLAYOFF_0: Cql10R = cql10r((7, 4, 1, 0), (0xc, 4, 1, 5, 1, 0), 0x82, (0, 0x204, 3), 5, (4, 2, 4, 0), (0, 2, 4), (0, 0, 0));
+const CQP5_PRIMEIRA_PLAYOFF_1: Cql10R = cql10r((0x11, 4, 1, 3), (0x1c, 4, 1, 0, 2, 4), 0x96, (0, 3, 0), 5, (2, 1, 0, 0), (0, 1, 0), (0, 0, 0));
+const CQP5_PREMIERSHIP_NATAL: Cqp5Natal = Cqp5Natal { comeco: &CQP5_PREMIERSHIP_COMECO, referencia: 17, ajuste: 13, casos: [&CQP5_PREMIERSHIP_NATAL_0, &CQP5_PREMIERSHIP_NATAL_1, &CQP5_PREMIERSHIP_NATAL_2, &CQP5_PREMIERSHIP_NATAL_3, &CQP5_PREMIERSHIP_NATAL_4, &CQP5_PREMIERSHIP_NATAL_5, &CQP5_PREMIERSHIP_NATAL_6, &CQP5_PREMIERSHIP_NATAL_PADRAO], fim: &CQP5_PREMIERSHIP_FIM, linha: 0x173 };
+
+/// { 0x571980 } (thiscall, ret 0x10, eng_first.cpp, 4.688 bytes, método +0x3c): `EngFirst::create_schedule(fase,
+/// &rodadas, &extra, &é_liga)`: a fase −1, 46 rodadas (`CQP5_PRIMEIRA_NATAL`, as datas da segunda com faixas de TV);
+/// a fase 0, os play-offs; as outras devolvem 0. Fonte 0x9c4374.
+unsafe extern "thiscall" fn calendario_da_primeira_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    match fase as u8 {
+        0xff => {
+            if !liga.is_null() {
+                *liga = 1;
+            }
+            *rodadas = 46;
+            *extra = 0;
+            let t = alocar(0xbae);
+            if t == 0 {
+                aviso_em(0x9c4374, 0xae);
+                return 0;
+            }
+            crate::comparacao::ramo("cqp_5 calendario da primeira inglesa");
+            let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+            cqp5_natal(t, ano, &CQP5_PRIMEIRA_NATAL, 0x9c4374);
+            t
+        }
+        0 => {
+            if !liga.is_null() {
+                *liga = 0;
+            }
+            *rodadas = 2;
+            *extra = 0xa0;
+            let t = alocar(0xd0);
+            if t == 0 {
+                aviso_em(0x9c4374, 0x1ed);
+                return 0;
+            }
+            crate::comparacao::ramo("cqp_5 play-offs da primeira inglesa");
+            let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+            cql10_rodada(t, 0, &CQP5_PRIMEIRA_PLAYOFF_0, ano);
+            cql10_rodada(t, 1, &CQP5_PRIMEIRA_PLAYOFF_1, ano);
+            t
+        }
+        _ => 0,
+    }
+}
+
+unsafe extern "thiscall" fn comparar_calendario_da_primeira_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1923);
+    cqp5_comparar("calendario_da_primeira_inglesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_primeira_inglesa(this, fase, r, e, l))
+}
+
+/// { 0x573660 } (thiscall, ret 0x10, eng_prm.cpp, 5.019 bytes, método +0x3c): `EngPrm::create_schedule(fase, &rodadas,
+/// &extra, &é_liga)`: só a fase −1, 38 rodadas (`CQP5_PREMIERSHIP_NATAL`); as outras devolvem 0. Fonte 0x9c43b0.
+unsafe extern "thiscall" fn calendario_da_premiership(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    match fase as u8 {
+        0xff => {
+            if !liga.is_null() {
+                *liga = 1;
+            }
+            *rodadas = 38;
+            *extra = 0;
+            let t = alocar(0x9a6);
+            if t == 0 {
+                aviso_em(0x9c43b0, 0xa7);
+                return 0;
+            }
+            crate::comparacao::ramo("cqp_5 calendario da premiership");
+            let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+            cqp5_natal(t, ano, &CQP5_PREMIERSHIP_NATAL, 0x9c43b0);
+            t
+        }
+        _ => 0,
+    }
+}
+
+unsafe extern "thiscall" fn comparar_calendario_da_premiership(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1924);
+    cqp5_comparar("calendario_da_premiership", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_premiership(this, fase, r, e, l))
+}
+
+// ---------- 262a leva: os play-offs das divisões inglesas: o mata-mata da First, da Second e da Third (eng_first.cpp, eng_second.cpp, eng_third.cpp) ----------
+
+unsafe fn cpz1_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+unsafe fn cpz1_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cpz1_b(a: usize) -> u8 {
+    *(a as *const u8)
+}
+
+/// O clube da linha `k` da tabela da liga (+0xb1, linhas de 0x3b bytes; o clube no +0).
+unsafe fn cpz1_clube(liga: usize, k: usize) -> usize {
+    cpz1_d(cpz1_d(liga + 0xb1) + k * 0x3b)
+}
+
+/// O mata-mata das três divisões (o corpo de 0x573080, 0x576a70 e 0x5783c0, que só mudam nas linhas, no fonte e no
+/// +0x3a da fase). A lista de `+0xbf` clubes (malloc 0x944e46 de 4 × o byte com sinal; sem memória: a caixa
+/// `linha_sem_lista` e nada mais) leva os clubes das 4 `linhas` da tabela, nesta ordem (as chaves: 0 × 1 e 2 × 3).
+/// A virtual +0x3c (create_round_table: thiscall(this, fase 0, &rodadas, &extra, nulo), ret 0x10) monta a tabela de
+/// rodadas; a fase nova (operator new 0x944cf1 de 0xb2 bytes; Cup_Stage::Cup_Stage 0x522e00, thiscall com 15
+/// argumentos, ret 0x3c: a liga, a conta, a lista, as rodadas, +4, a tabela de rodadas, a palavra +0x40, 0, 1,
+/// `a10` (ou o extra da virtual), 0x14, 0, 0, 0, 0) vai para a primeira vaga de fases ([+0xc]); a lista e a tabela de
+/// rodadas são liberadas (free 0x9452ca). Sem fase: a caixa `linha_sem_fase`; senão Cup::set_up_round (0x51c800,
+/// thiscall(fase, 0), ret 4). O quadro SEH da original só cobre o construtor (sem destrutor).
+unsafe fn cpz1_mata_mata(this: usize, linhas: [usize; 4], arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, a10: Option<u32>, nome: &'static str) {
+    let n = cpz1_b(this + 0xbf) as i8 as i32;
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let lista = alocar((n << 2) as u32);
+    if lista == 0 {
+        return aviso_em(arquivo, linha_sem_lista);
+    }
+    for (k, &l) in linhas.iter().enumerate() {
+        core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cpz1_clube(this, l));
+    }
+    crate::comparacao::ramo(nome);
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cpz1_d(cpz1_d(this) + 0x3c));
+    let (mut rodadas, mut extra) = (0i16, 0i16);
+    let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let p = novo(0xb2);
+    // ponytail: a original empurra a conta, as rodadas e a palavra +0x40 em registradores inteiros com lixo nos 16 bits
+    // altos; o construtor só lê as palavras ([esp+0x230], [esp+0x238], [esp+0x244] e [esp+0x250] com mov ax/dx).
+    let fase = if p != 0 {
+        let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
+            core::mem::transmute(0x522e00usize);
+        let a10 = a10.unwrap_or(extra as u16 as u32);
+        construir(p, this, n as u16 as u32, lista, rodadas as u16 as u32, cpz1_d(this + 4), t, cpz1_w(this + 0x40) as u16 as u32, 0, 1, a10, 0x14, 0, 0, 0, 0)
+    } else {
+        0
+    };
+    core::ptr::write_unaligned(cpz1_d(this + 0xc) as *mut usize, fase);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    liberar(lista);
+    liberar(t);
+    let fase = cpz1_d(cpz1_d(this + 0xc));
+    if fase == 0 {
+        return aviso_em(arquivo, linha_sem_fase);
+    }
+    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
+    montar(fase, 0);
+}
+
+/// { 0x573080 } (thiscall, ret 0, eng_first.cpp): `EngFirst::create_playoff_stage()`, da fase seguinte da First
+/// (0x572ff0, quando a fase passa de −1 a 0). As chaves: o 6º contra o 3º e o 5º contra o 4º (linhas 5, 2, 4 e 3);
+/// +0x3a da fase = 0xa0. Fonte 0x9c4374, linhas 0x2f0 (sem lista) e 0x306 (sem fase).
+unsafe extern "thiscall" fn mata_mata_da_first(this: usize) {
+    cpz1_mata_mata(this, [5, 2, 4, 3], 0x9c4374, 0x2f0, 0x306, Some(0xa0), "cpz_1 mata-mata da first"); // cpz1: 6º × 3º e 5º × 4º da First
+}
+
+/// { 0x576a70 } (thiscall, ret 0, eng_second.cpp): `EngSecond::create_play_off_stage()` (de 0x5769e0). As chaves da
+/// First (linhas 5, 2, 4 e 3); +0x3a da fase = o extra da virtual +0x3c. Fonte 0x9c43e8, linhas 0x2b6 e 0x2cc.
+unsafe extern "thiscall" fn mata_mata_da_second(this: usize) {
+    cpz1_mata_mata(this, [5, 2, 4, 3], 0x9c43e8, 0x2b6, 0x2cc, None, "cpz_1 mata-mata da second"); // cpz1: 6º × 3º e 5º × 4º da Second
+}
+
+/// { 0x5783c0 } (thiscall, ret 0, eng_third.cpp): `EngThird::create_play_off_stage()` (de 0x578330). As chaves: o 7º
+/// contra o 4º e o 6º contra o 5º (linhas 6, 3, 5 e 4); +0x3a = o extra da virtual. Fonte 0x9c4424, linhas 0x2be e
+/// 0x2d5.
+unsafe extern "thiscall" fn mata_mata_da_third(this: usize) {
+    cpz1_mata_mata(this, [6, 3, 5, 4], 0x9c4424, 0x2be, 0x2d5, None, "cpz_1 mata-mata da third"); // cpz1: 7º × 4º e 6º × 5º da Third
+}
+
+/// O comparador dos três: a original aloca a lista, a tabela de rodadas e a fase e monta a rodada (só ela roda). O
+/// plano, feito antes: os clubes das 4 linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = a conta
+/// (+0xbf), +4 = o +4 da liga e os 4 primeiros clubes da lista dela (+0xa7, 6 bytes) iguais aos do plano (como
+/// conjunto: o sorteio da rodada 0x51c800 pode reordenar as chaves).
+unsafe fn cpz1_comparar(nome: &str, this: usize, linhas: [usize; 4], original: impl FnOnce()) {
+    let mut plano: [usize; 4] = [0; 4];
+    for (k, &l) in linhas.iter().enumerate() {
+        plano[k] = cpz1_clube(this, l);
+    }
+    let n = cpz1_b(this + 0xbf) as i8 as i16;
+    original();
+    let fase = cpz1_d(cpz1_d(this + 0xc));
+    if fase == 0 {
+        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", nome, this));
+        return;
+    }
+    let lista = cpz1_d(fase + 0xa7);
+    let mut achou: [usize; 4] = [0; 4];
+    for (k, a) in achou.iter_mut().enumerate() {
+        *a = cpz1_d(lista + 6 * k);
+    }
+    let (mut x, mut y) = (plano, achou);
+    x.sort_unstable();
+    y.sort_unstable();
+    let igual = x == y && cpz1_w(fase + 0x3e) == n && cpz1_d(fase + 4) == cpz1_d(this + 4);
+    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", nome, this, plano, fase, achou, cpz1_w(fase + 0x3e), n));
+}
+
+unsafe extern "thiscall" fn comparar_mata_mata_da_first(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(1380);
+    cpz1_comparar("mata_mata_da_first", this, [5, 2, 4, 3], || o(this))
+}
+
+unsafe extern "thiscall" fn comparar_mata_mata_da_second(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(1381);
+    cpz1_comparar("mata_mata_da_second", this, [5, 2, 4, 3], || o(this))
+}
+
+unsafe extern "thiscall" fn comparar_mata_mata_da_third(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(1382);
+    cpz1_comparar("mata_mata_da_third", this, [6, 3, 5, 4], || o(this))
+}
+
