@@ -16,7 +16,7 @@
 # Comparadores: só a original, com o plano: o dia confere na montagem +0x45, a fase e +0x30; o primeiro grupo as 5
 # linhas na ordem; o segundo a fase, +0x30, os times, o ano e as seleções da tabela dela.
 # Determinismo: nada lê pilha, heap ou endereço como valor (o vetor local {1, 0, 0, 0} do construtor é montado igual).
-# Provas: em curso.
+# Provas: comparação de 8 ligas até 2002-06-01 (os 12 itens do agente E) 0 div; Rust x2 iguais e detector igual (ab5806e63c96b235); mutações 3/3.
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqu12_oceania_dia', 0x91f3d0, [0x6a, 0xff, 0x68, 0x46, 0x5b, 0x96, 0x00]),

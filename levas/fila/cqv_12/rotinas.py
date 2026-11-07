@@ -12,7 +12,7 @@
 # Comparadores: só a original (liberam e arquivam), com o plano: +0x4c e +0xba zerados, o ano + 1 e +0x45 zerado (na
 # Libertadores e na Mercosul).
 # Determinismo: nada lê pilha, heap ou endereço como valor.
-# Provas: em curso.
+# Provas: comparação de 8 ligas até 2002-06-01 (os 12 itens do agente E) 0 div; Rust x2 iguais e detector igual (ab5806e63c96b235); mutações 3/3.
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqv12_libertadores_virada', 0x4c3980, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),

@@ -19,6 +19,7 @@ CLZ Leagues Patch*.rar
 
 # DLL so do save (save/): saida da compilacao
 /save/target/
+/cm0102-base/target/
 # Copia da instalacao da CLZ para testes
 /clz_teste/
 

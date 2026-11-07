@@ -76,7 +76,7 @@ unsafe extern "C" fn cqv3_acesso_dos_estaduais() {
         i += 1;
     }
     embaralhar(lista, n as u16 as u32, 0x19);
-    for k in 0..n.max(0) as usize {
+    for k in 0..n.max(0) as usize { // cqv3: a lista na ordem
         let c = cqv3_d(lista + 4 * k);
         let d = cqv3_d(c + 0x60);
         let e = match baixo.iter().position(|&b| b == d) {

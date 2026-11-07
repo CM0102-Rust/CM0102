@@ -22,3 +22,4 @@ MUTACOES = [
      'const CQW1_GOIANO_0: [Cqp11Op; 52] = [\n    Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),\n    Cqp11D(1, 0x12, 1, 0, 5, 2, 0) /* mutacao: a 2a rodada num dia da semana antes */',
      'cqw_1 goiano liga'),
 ]
+# Prova do agente (07/11, carreira Rust de 8 ligas ate 2002-06-01 com motor de lances; base com os 10 itens finais): as quatro ACUSADAS (2001-020 nas quatro).

@@ -15,7 +15,7 @@
 # sorteio a Austrália e a Nova Zelândia nas vagas 0 e 3; o grupo as 3 linhas na ordem.
 # Determinismo: as listas locais de melanésias e polinésias só são lidas até a conta (e as vagas 0 e 1 de cada uma,
 # que existem nas bases do jogo).
-# Provas: em curso.
+# Provas: comparação de 8 ligas até 2002-06-01 (os 12 itens do agente E) 0 div; Rust x2 iguais e detector igual (ab5806e63c96b235); mutações 3/3.
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqv10_oceania_nacoes_dia', 0x79a100, [0x6a, 0xff, 0x68, 0x26, 0xec, 0x95, 0x00]),

@@ -37,6 +37,7 @@ def sincronizar(k):
             shutil.copy2(os.path.join(RAIZ, 'rust', f), os.path.join(b, 'rust', f))
     if os.path.isdir(os.path.join(RAIZ, 'rust', '.cargo')):
         espelhar(os.path.join(RAIZ, 'rust', '.cargo'), os.path.join(b, 'rust', '.cargo'))
+    espelhar(os.path.join(RAIZ, 'cm0102-base'), os.path.join(b, 'cm0102-base'), 'target')  # a base comum (rust/ depende dela)
     espelhar(os.path.join(RAIZ, 'engenharia-reversa'), os.path.join(b, 'engenharia-reversa'), '__pycache__')
     espelhar(os.path.join(RAIZ, 'levas'), os.path.join(b, 'levas'))
     # o save de férias (só lido) que as mutações carregam para confirmar no modo comparação (prova_save.JOGO_LUCAS)

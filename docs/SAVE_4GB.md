@@ -4,7 +4,7 @@ Planejamento pedido pelo Lucas (25/10/2026): modelar as mudanças na DLL e no ar
 
 Marcas: **[observado]** = visto na desmontagem do `cm0102.exe` 3.9.68, no código do projeto ou nos arquivos; **[inferência]** = conclusão ou estimativa ainda não provada.
 
-Fontes: desmontagem (`desmonta.py`, `refs.py`, `textos.py`), mapa da comunidade (`referencias/cm0102-function-map`; o "size" de lá não é em bytes), `rust/src/conteiner.rs`, `save/src/lib.rs` e a leitura **só do índice** (cabeçalho e entradas, mais os 4 bytes da data do jogo no `general.dat` + 0xF68) de 8 saves do Lucas. Nada foi copiado, gravado nem executado.
+Fontes: desmontagem (`desmonta.py`, `refs.py`, `textos.py`), mapa da comunidade (`referencias/cm0102-function-map`; o "size" de lá não é em bytes), `cm0102-base/src/conteiner.rs`, `save/src/lib.rs` e a leitura **só do índice** (cabeçalho e entradas, mais os 4 bytes da data do jogo no `general.dat` + 0xF68) de 8 saves do Lucas. Nada foi copiado, gravado nem executado.
 
 ## Resumo
 

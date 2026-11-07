@@ -4,31 +4,15 @@
 //! primeiro na pasta do exe). Ao carregar, confere a assinatura do código de que depende
 //! (`TRECHOS`, a mesma de `engenharia-reversa/assinatura_save.py`) e, se bater com o 3.9.68, desvia
 //! as três rotinas do contêiner (`zopen` 0x9326e0, `zseek` 0x933080, `ztell` 0x933170) para as
-//! versões em Rust de `rust/src/conteiner.rs`. Se não bater, não toca em nada. O `DirectDrawCreate`
+//! versões em Rust de `cm0102-base/src/conteiner.rs`. Se não bater, não toca em nada. O `DirectDrawCreate`
 //! é repassado a `ddraw_chain.dll` na pasta do jogo (outro wrapper de vídeo renomeado), se existir,
-//! senão à `ddraw.dll` do Windows. O registro vai para `save2gb.log`, ao lado do exe.
+//! senão à `ddraw.dll` do Windows. O registro vai para `save2gb.log`, ao lado do exe (recriado a cada execução; o anterior fica em `save2gb.anterior.log`).
 
 #![allow(linker_messages)]
 
 use core::ffi::c_void;
 
-#[path = "../../rust/src/conteiner.rs"]
-mod conteiner;
-
-/// Os contadores de ramo do projeto: aqui não contam nada.
-mod comparacao {
-    pub fn ramo(_: &'static str) {}
-}
-
-mod registro {
-    use std::io::Write;
-    pub fn linha(texto: &str) {
-        let caminho = std::env::current_exe().map(|p| p.with_file_name("save2gb.log")).unwrap_or_else(|_| "save2gb.log".into());
-        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(caminho) {
-            let _ = writeln!(f, "{}", texto);
-        }
-    }
-}
+use cm0102_base::{conteiner, registro};
 
 #[link(name = "kernel32")]
 extern "system" {
@@ -72,6 +56,7 @@ unsafe fn desviar(de: usize, para: usize) {
 #[no_mangle]
 pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reservado: *mut c_void) -> i32 {
     if motivo == 1 {
+        registro::definir_nome("save2gb.log");
         let a = assinatura();
         if a == ASSINATURA {
             desviar(0x9326e0, conteiner::abrir_no_conteiner as *const () as usize);

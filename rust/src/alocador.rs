@@ -327,6 +327,16 @@ static VISIVEL: Mutex<Alocador> = Mutex::new(Alocador::novo(0, 0));
 static NA_VISIVEL: AtomicBool = AtomicBool::new(false);
 
 /// Aloca o que `f` criar na regiao visivel ao jogo (quando a simulacao a ligou).
+/// The `visivel` pair for the hook of `cm0102-base` (the video layer's allocations).
+pub fn entrar_visivel() -> bool {
+    NA_VISIVEL.swap(true, Ordering::Relaxed)
+}
+
+pub fn sair_visivel(antes: bool) {
+    NA_VISIVEL.store(antes, Ordering::Relaxed);
+}
+
+#[allow(dead_code)]
 pub fn visivel<R>(f: impl FnOnce() -> R) -> R {
     let antes = NA_VISIVEL.swap(true, Ordering::Relaxed);
     let r = f();

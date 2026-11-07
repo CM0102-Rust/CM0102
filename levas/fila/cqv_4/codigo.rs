@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: as fases de liga e as minitabelas: o construtor e o destrutor de League_Stage e o construtor de SubLeague (league_stage.cpp, sub_league.cpp) ----------
+// ---------- %%LEVA%%a leva: as fases de liga: o construtor e o destrutor de League_Stage (league_stage.cpp) ----------
 
 unsafe fn cqv4_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const usize)
@@ -153,86 +153,6 @@ unsafe extern "thiscall" fn comparar_cqv4_construir_fase(this: usize, liga: usiz
     r
 }
 
-/// { 0x88c6d0 } (thiscall, ret 0x30, sub_league.cpp, 664 bytes; quadro SEH sem destrutor no caminho normal):
-/// `SubLeague::SubLeague(n, ids, filtro, arg, de, até, competição, pv, pe, critérios, varredura, jogos)`, a minitabela
-/// dos clubes dados com os jogos entre eles (a tabela dos segundos colocados das eliminatórias europeias, da Euro e da
-/// Copa). League::League (0x682200); +0xc2 / +0xc3 = os pontos por vitória / por empate; a vtable 0x96ff90; os 4
-/// critérios copiados em +0xc5..+0xc8; +0xbe = +0x2c = +0xc = +8 = 0, +0x30 = −1, +0x44 = 0xfe, +0x3c = 0 (word), +0xdd
-/// = 1; +4 = o registro da competição (0 ≤ competição < [0xae2378]: [0xae23d0] + competição × 0x6b; senão 0); +0x3e = n
-/// e a tabela (malloc 0x944e46 de 0x3b × n; sem memória: a caixa da linha 0x56 e fim) com o clube ids[i] (o registro
-/// [0xae23b4] + id × 0x245) na linha i (League::init_table_row 0x687430, thiscall(this, i, clube, 0, 0), ret 0x10);
-/// os jogos entre eles (SubLeague::add_results_between_members 0x88c9f0, thiscall(this, filtro, arg, de, até,
-/// competição, varredura, jogos), ret 0x1c; 0: a caixa 0x63 e fim) e a ordem (0x6827d0, thiscall(this, 0), ret 4; 0: a
-/// caixa 0x68). Devolve this.
-#[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn cqv4_construir_minitabela(this: usize, n: u32, ids: usize, filtro: u32, arg: u32, de: usize, ate: usize,
-                                                    comp: i32, pv: u32, pe: u32, criterios: usize, varredura: u32, lista: usize) -> usize {
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
-    let somar: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize, i32, u32, usize) -> u32 = core::mem::transmute(0x88c9f0usize);
-    let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x6827d0usize);
-    base(this);
-    *((this + 0xc2) as *mut u8) = pv as u8;
-    *((this + 0xc3) as *mut u8) = pe as u8;
-    core::ptr::write_unaligned(this as *mut usize, 0x96ff90);
-    for i in 0..4 {
-        *((this + 0xc5 + i) as *mut u8) = cqv4_b(criterios + i);
-    }
-    let x = |o: usize, v: u32| core::ptr::write_unaligned((this + o) as *mut u32, v);
-    x(0xbe, 0);
-    x(0x2c, 0);
-    x(0x30, 0xffff_ffff);
-    *((this + 0x44) as *mut u8) = 0xfe;
-    core::ptr::write_unaligned((this + 0x3c) as *mut u16, 0);
-    x(0xc, 0);
-    x(8, 0);
-    x(0xdd, 1);
-    let reg = if comp >= 0 && comp < cqv4_d(0xae2378) as i32 { cqv4_d(0xae23d0) + comp as usize * 0x6b } else { 0 };
-    x(4, reg as u32);
-    core::ptr::write_unaligned((this + 0x3e) as *mut u16, n as u16);
-    let t = alocar((n as u16 as i16 as i32 * 0x3b) as u32);
-    x(0xb1, t as u32);
-    if t == 0 {
-        aviso_em(0xa8b464, 0x56);
-        return this;
-    }
-    let total = cqv4_w(this + 0x3e) as i32;
-    let mut i: i8 = 0;
-    while (i as i32) < total {
-        let id = cqv4_d(ids + 4 * i as usize);
-        linha(this, i as u8 as u32, cqv4_d(0xae23b4) + id * 0x245, 0, 0);
-        i = i.wrapping_add(1);
-    }
-    crate::comparacao::ramo("cqv_4 minitabela");
-    if somar(this, filtro, arg, de, ate, comp, varredura, lista) == 0 { // cqv4: os jogos entre os clubes da minitabela
-        aviso_em(0xa8b464, 0x63);
-        return this;
-    }
-    if ordenar(this, 0) == 0 {
-        aviso_em(0xa8b464, 0x68);
-    }
-    this
-}
-
-/// O comparador da minitabela: só a original (aloca a tabela), conferindo a devolução, a vtable, os pontos, os
-/// critérios, +0x44 = 0xfe, o registro, n, a tabela alocada e os clubes dela (como conjunto) iguais aos dos ids dados.
-#[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_cqv4_construir_minitabela(this: usize, n: u32, ids: usize, filtro: u32, arg: u32, de: usize, ate: usize,
-                                                             comp: i32, pv: u32, pe: u32, criterios: usize, varredura: u32, lista: usize) -> usize {
-    let mut clubes: Vec<usize> = (0..(n as u16 as i16).max(0) as usize).map(|i| cqv4_d(0xae23b4) + cqv4_d(ids + 4 * i) * 0x245).collect();
-    clubes.sort_unstable();
-    let crit: [u8; 4] = core::array::from_fn(|i| cqv4_b(criterios + i));
-    let reg = if comp >= 0 && comp < cqv4_d(0xae2378) as i32 { cqv4_d(0xae23d0) + comp as usize * 0x6b } else { 0 };
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize, u32, u32, usize, usize, i32, u32, u32, usize, u32, usize) -> usize>(%%I1%%)(
-        this, n, ids, filtro, arg, de, ate, comp, pv, pe, criterios, varredura, lista);
-    let ok = r == this && cqv4_d(this) == 0x96ff90 && cqv4_b(this + 0xc2) == pv as u8 && cqv4_b(this + 0xc3) == pe as u8
-        && (0..4).all(|i| cqv4_b(this + 0xc5 + i) == crit[i]) && cqv4_b(this + 0x44) == 0xfe && cqv4_d(this + 4) == reg
-        && cqv4_w(this + 0x3e) == n as i16 && cqv4_d(this + 0xb1) != 0 && cqv4_clubes_da_tabela(this) == clubes;
-    PLACAR.registrar(ok, || format!("cqv4_construir_minitabela({:#x}): devolveu {:#x}, vtable {:#x}, +0x3e {}, +4 {:#x} (esperado {:#x})", this, r, cqv4_d(this), cqv4_w(this + 0x3e), cqv4_d(this + 4), reg));
-    r
-}
-
 /// { 0x68b6a0 } (thiscall, ret 0, league_stage.cpp, 123 bytes; quadro SEH sem destrutor no caminho normal):
 /// `League_Stage::~League_Stage()`: a vtable 0x96d0f0, a tabela liberada (League::free_table 0x687970, thiscall(this,
 /// 0), ret 4), as rodadas (+0xba) liberadas (free 0x9452ca, sem zerar), o vetor +0x18 liberado e zerado, e o destrutor
@@ -257,6 +177,6 @@ unsafe extern "thiscall" fn cqv4_destruir_fase(this: usize) {
 
 /// O comparador do destrutor: só a original (libera; não roda duas vezes), conferindo o vetor +0x18 zerado.
 unsafe extern "thiscall" fn comparar_cqv4_destruir_fase(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     PLACAR.registrar(cqv4_d(this + 0x18) == 0, || format!("cqv4_destruir_fase({:#x}): +0x18 = {:#x}", this, cqv4_d(this + 0x18)));
 }

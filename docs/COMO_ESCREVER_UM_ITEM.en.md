@@ -29,6 +29,7 @@ An item is a package of up to 3 ported routines, written ahead of time in `levas
 
 ## Proving (in your own copy, never in the benches)
 
+- The copy takes `rust/` and `cm0102-base/` side by side (`rust/` depends on the base through the path `../cm0102-base`).
 - **Comparison** with `simular.py --modo comparar` (with `--ligas "ENG ESP ITA FRA BRA JPN AUS USA"` for competition items) up to the date the routine runs; any `DIVERGENCIA` or `EXCECAO` line blocks the item.
 - **Rust careers ×2** with `--repetir 2 --detector` up to 2002-06-01: equal, and "detector de lixo: igual".
 - **Mutations** through the career up to 2002-06-01, with the bid engine on (like the chain's `mutacoes.py`; use `--limite 3000`, since the 8-league one takes over 900 s):

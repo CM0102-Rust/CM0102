@@ -1,0 +1,10 @@
+[package]
+name = "cm0102-base"
+version = "0.1.0"
+edition = "2021"
+description = "Shared base of the CM 01/02 DLLs: video layer, window presentation, log, Windows API and the save container"
+publish = false
+
+[lib]
+name = "cm0102_base"
+path = "src/lib.rs"

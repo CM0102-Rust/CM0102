@@ -14,7 +14,7 @@
 # Comparadores: só a original, com o plano: as dez da Oceania sem as duas de fora, sem repetição e pela reputação; a
 # final com os dois campeões na ordem; o grupo com as seleções 3 a 5.
 # Determinismo: nada lê pilha, heap ou endereço como valor.
-# Provas: em curso.
+# Provas: comparação de 8 ligas até 2002-06-01 (os 12 itens do agente E) 0 div; Rust x2 iguais e detector igual (ab5806e63c96b235); mutações 3/3.
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqw11_eliminatoria_oceania_selecoes', 0x91fa80, [0x81, 0xec, 0x0c, 0x02, 0x00, 0x00]),

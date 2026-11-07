@@ -132,19 +132,6 @@ unsafe fn cqw12_dois_clubes(this: usize, ano: u32, comp: usize, vtable: usize, b
     this
 }
 
-/// { 0x632080 } (thiscall, ret 8, inter_amer_cup.cpp; SEH só para exceções): `InterAmerCup::InterAmerCup(ano, comp)`: a
-/// Copa Interamericana (vtable 0x96bad8, +0x52 = 2, +0x4a = 3) do ano do jogo, com os dois clubes de 0x632480.
-unsafe extern "thiscall" fn cqw12_interamericana(this: usize, ano: u32, comp: usize) -> usize {
-    crate::comparacao::ramo("cqw_12 copa interamericana");
-    let ano = ano; // cqw12: a Interamericana do ano do jogo
-    cqw12_dois_clubes(this, ano, comp, 0x96bad8, 2, 3, 0x632480, 0x9e9d94)
-}
-
-unsafe extern "thiscall" fn comparar_cqw12_interamericana(this: usize, ano: u32, comp: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
-    cqw12_comparar("cqw12_interamericana", this, ano, comp, 0x96bad8, || o(this, ano, comp))
-}
-
 /// { 0x92b4b0 } (thiscall, ret 8, world_club_cup.cpp; SEH só para exceções): `WorldClubCup::WorldClubCup(ano, comp)`: a
 /// Copa Intercontinental (vtable 0x971250, +0x52 = 3, +0x4a = 3) do ano do jogo, com os dois clubes de 0x92b8b0.
 unsafe extern "thiscall" fn cqw12_intercontinental(this: usize, ano: u32, comp: usize) -> usize {
@@ -154,6 +141,6 @@ unsafe extern "thiscall" fn cqw12_intercontinental(this: usize, ano: u32, comp: 
 }
 
 unsafe extern "thiscall" fn comparar_cqw12_intercontinental(this: usize, ano: u32, comp: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
     cqw12_comparar("cqw12_intercontinental", this, ano, comp, 0x971250, || o(this, ano, comp))
 }

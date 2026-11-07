@@ -29,6 +29,7 @@ Um item é um pacote de até 3 rotinas portadas, escrito antes da hora em `levas
 
 ## Provar (na sua cópia, nunca nas bancadas)
 
+- A cópia leva `rust/` e `cm0102-base/` lado a lado (o `rust/` depende da base pelo caminho `../cm0102-base`).
 - **Comparação** com `simular.py --modo comparar` (com `--ligas "ENG ESP ITA FRA BRA JPN AUS USA"` nos itens de competições) até a data em que a rotina roda; qualquer `DIVERGENCIA` ou `EXCECAO` barra o item.
 - **Carreiras Rust ×2** com `--repetir 2 --detector` até 2002-06-01: iguais e "detector de lixo: igual".
 - **Mutações** pela carreira até 2002-06-01, com o motor de lances ligado (como o `mutacoes.py` da cadeia; use `--limite 3000`, porque a de 8 ligas passa de 900 s):

@@ -13,7 +13,7 @@
 # Comparadores: só a original, com o plano: as posições gravadas pela reputação (empates podem trocar) e, no sorteio
 # da Oceania, a lista depois uma permutação da de antes.
 # Determinismo: nada lê pilha, heap ou endereço como valor.
-# Provas: em curso.
+# Provas: comparação de 8 ligas até 2002-06-01 (os 12 itens do agente E) 0 div; Rust x2 iguais e detector igual (ab5806e63c96b235); mutações 3/3.
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqv13_oceania_clubes_previstas', 0x798640, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),

@@ -13,14 +13,14 @@
 #![allow(linker_messages)]
 
 mod alocador;
+// the shared base (cm0102-base): same paths as before (crate::video, crate::registro...)
+use cm0102_base::{apresentacao, conteiner, registro, video, win};
 mod assinaturas;
 
 #[global_allocator]
 static GLOBAL: alocador::Global = alocador::Global;
 mod aleatorio;
-mod apresentacao;
 mod comparacao;
-mod conteiner;
 mod data;
 mod desvios;
 mod espiao;
@@ -28,13 +28,9 @@ mod extensao;
 mod ganchos;
 mod jogo;
 mod motor;
-mod reducao;
-mod registro;
 mod resolucao;
 mod simulacao;
 mod sonda_pilha;
-mod video;
-mod win;
 
 use core::ffi::c_void;
 
@@ -73,6 +69,8 @@ unsafe fn ddraw_do_sistema() -> Option<FnDirectDrawCreate> {
 pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reservado: *mut c_void) -> i32 {
     const DLL_PROCESS_ATTACH: u32 = 1;
     if motivo == DLL_PROCESS_ATTACH {
+        cm0102_base::ganchos::definir_ramo(comparacao::ramo);
+        cm0102_base::ganchos::definir_visivel(alocador::entrar_visivel, alocador::sair_visivel);
         desvios::aplicar_resolucao(); // CM_RESOLUCAO=1080 (experimento): antes de tudo
     }
     if motivo == DLL_PROCESS_ATTACH && !win::ambiente("CM_ESPIAO") {

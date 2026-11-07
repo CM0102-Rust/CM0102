@@ -11,7 +11,7 @@
 # Comparadores: só a original (alocam as fases e as estatísticas), com o plano: o this, a vtable, o registro +4, o ano
 # da edição e +0x51.
 # Determinismo: nada lê pilha, heap ou endereço como valor.
-# Provas: em curso.
+# Provas: comparação de 8 ligas até 2002-06-01 (os 12 itens do agente E) 0 div; Rust x2 iguais e detector igual (ab5806e63c96b235); mutações 3/3.
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqw10_africana', 0x401000, [0x6a, 0xff, 0x68, 0x99, 0x34, 0x95, 0x00]),

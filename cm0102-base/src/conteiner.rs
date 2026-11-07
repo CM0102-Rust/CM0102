@@ -1,7 +1,7 @@
 //! O contêiner do jogo (`si/code/zipdir.cpp`): o formato dos `.sav` e `.qst`. Rotinas da 158ª leva
 //! (o save acima de 2 GB). Este arquivo é usado por duas DLLs: a `ddraw.dll` do projeto (`rust/`) e a
 //! DLL só do save (`save/`, para os exes do NickPatcher), por isso não depende de nada do motor:
-//! só de `crate::comparacao::ramo` e `crate::registro::linha`.
+//! só de `crate::ganchos::ramo` e `crate::registro::linha` (ambos do `cm0102-base`).
 
 use core::ffi::c_void;
 
@@ -151,7 +151,7 @@ pub unsafe extern "C" fn abrir_no_conteiner(caminho: usize, nome: *const u8, mod
             por(z, 0x19, tipo);
             por(z, 0x1d, a4);
             por(z, 0x21, 0);
-            crate::comparacao::ramo("conteiner criado");
+            crate::ganchos::ramo("conteiner criado");
             escrever(z + 0x19, 0x416ec, 1, g);
             f = g;
         } else {
@@ -195,7 +195,7 @@ pub unsafe extern "C" fn abrir_no_conteiner(caminho: usize, nome: *const u8, mod
     if modo == 0 {
         match achado {
             Some(k) => {
-                crate::comparacao::ramo("conteiner lido");
+                crate::ganchos::ramo("conteiner lido");
                 por(z, 0xc, k);
                 // a posição sem sinal: o item pode estar entre 2 e 4 GB
                 buscar_64(f, u(item(z, k), 0) as u64);
@@ -215,7 +215,7 @@ pub unsafe extern "C" fn abrir_no_conteiner(caminho: usize, nome: *const u8, mod
         if quantos >= 0x3e7 {
             return desistir(z);
         }
-        crate::comparacao::ramo("conteiner gravado");
+        crate::ganchos::ramo("conteiner gravado");
         let k = quantos as u32;
         por(z, 0xc, k);
         por(z, 0x21, k + 1);
@@ -260,10 +260,10 @@ pub unsafe extern "C" fn buscar_no_conteiner(z: usize, desloc: i32, origem: u32)
     }
     core::ptr::write_unaligned((z + 8) as *mut u32, alvo - pos);
     if u(0x19) != 4 {
-        crate::comparacao::ramo("conteiner busca direta");
+        crate::ganchos::ramo("conteiner busca direta");
         return buscar_64(u(0) as usize, alvo as u64);
     }
-    crate::comparacao::ramo("conteiner busca relendo");
+    crate::ganchos::ramo("conteiner busca relendo");
     buscar_64(u(0) as usize, pos as u64);
     core::ptr::write_unaligned((z + 0x14) as *mut u32, 0);
     core::ptr::write_unaligned((z + 0x10) as *mut u32, 0);
@@ -285,7 +285,7 @@ pub unsafe extern "C" fn posicao_no_conteiner(z: usize) -> i32 {
     }
     let u = |o: usize| core::ptr::read_unaligned((z + o) as *const u32);
     let pos = u(0x25 + 0x10c * u(0xc) as usize);
-    crate::comparacao::ramo("conteiner posicao");
+    crate::ganchos::ramo("conteiner posicao");
     if u(0x19) == 4 {
         return pos.wrapping_add(u(8)) as i32;
     }

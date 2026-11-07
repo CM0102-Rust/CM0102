@@ -10,6 +10,9 @@ name = "ddraw"
 crate-type = ["cdylib"]
 path = "src/lib.rs"
 
+[dependencies]
+cm0102-base = { path = "../cm0102-base" }
+
 [profile.release]
 panic = "abort"
 opt-level = 2

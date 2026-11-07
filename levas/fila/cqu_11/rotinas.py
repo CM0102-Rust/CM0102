@@ -12,7 +12,7 @@
 # Comparadores: só a original, com o plano (como a cqu_10; os classificados também conferem que nenhum joga a Liga dos
 # Campeões asiática).
 # Determinismo: nada lê pilha, heap ou endereço como valor.
-# Provas: em curso.
+# Provas: comparação de 8 ligas até 2002-06-01 (os 12 itens do agente E) 0 div; Rust x2 iguais e detector igual (ab5806e63c96b235); mutações 3/3.
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqu11_recopa_classificados', 0x40d830, [0xb8, 0x98, 0x15, 0x00, 0x00]),

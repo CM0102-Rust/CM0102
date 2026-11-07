@@ -4,7 +4,7 @@ Planning requested by Lucas (2026-10-25): model the changes to the DLL and to th
 
 Marks: **[observed]** = seen in the disassembly of `cm0102.exe` 3.9.68, in the project code or in the files; **[inference]** = a conclusion or estimate not yet proven.
 
-Sources: disassembly (`desmonta.py`, `refs.py`, `textos.py`), the community map (`referencias/cm0102-function-map`; its "size" is not in bytes), `rust/src/conteiner.rs`, `save/src/lib.rs`, and a read of **only the index** (header and entries, plus the 4 bytes of the game date at `general.dat` + 0xF68) of 8 of Lucas's saves. Nothing was copied, written or run.
+Sources: disassembly (`desmonta.py`, `refs.py`, `textos.py`), the community map (`referencias/cm0102-function-map`; its "size" is not in bytes), `cm0102-base/src/conteiner.rs`, `save/src/lib.rs`, and a read of **only the index** (header and entries, plus the 4 bytes of the game date at `general.dat` + 0xF68) of 8 of Lucas's saves. Nothing was copied, written or run.
 
 ## Summary
 

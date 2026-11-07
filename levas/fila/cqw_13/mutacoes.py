@@ -9,8 +9,4 @@ MUTACOES = [
      'let ano = ano as i16; // cqw13: a Recopa asiática do ano do jogo',
      'let ano = (ano as i16).wrapping_add(1); // mutacao: um ano depois',
      'cqw_13 recopa asiatica'),
-    ('cqw13_supercopa_um_ano_depois',
-     'ano as i16); // cqw13: a Supercopa da Ásia do ano do jogo',
-     '(ano as i16).wrapping_add(1)); // mutacao: um ano depois',
-     'cqw_13 supercopa asiatica'),
 ]

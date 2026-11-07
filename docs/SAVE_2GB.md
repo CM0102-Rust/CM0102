@@ -32,7 +32,7 @@ As outras funções do contêiner (`zread` 0x932c30, `zwrite` 0x932e10, `zclose`
 
 ## A correção
 
-As três rotinas foram reescritas em Rust (`rust/src/conteiner.rs`):
+As três rotinas foram reescritas em Rust (`cm0102-base/src/conteiner.rs`):
 - posições tratadas como sem sinal;
 - busca e posição pelo `SetFilePointer` do Windows, com a parte alta de 64 bits, repetindo o que o `fseek`/`ftell` da CRT fazem com o `FILE`: esvaziar o buffer, marcas de leitura e escrita, fim de arquivo na tabela de arquivos, desconto do buffer na posição;
 - **o formato não muda**: um save de até 2 GB gravado com a correção abre num jogo sem ela;
@@ -40,7 +40,7 @@ As três rotinas foram reescritas em Rust (`rust/src/conteiner.rs`):
 
 ## A DLL só do save
 
-`save/` gera uma `ddraw.dll` de ~190 KB. **Distribuição pública:** repositório [`CM0102-Rust/cm0102-save2gb`](https://github.com/CM0102-Rust/cm0102-save2gb) (público; com o código-fonte de cada release: `save/` e `rust/src/conteiner.rs`, atualizado só nas releases), release `v1.0` com o `save2gb-1.0.zip`: a DLL, LEIAME/README e esta documentação sem os caminhos do repositório privado. Ao mudar este documento, atualizar a cópia de lá.
+`save/` gera uma `ddraw.dll` de ~190 KB. **Distribuição pública:** repositório [`CM0102-Rust/cm0102-save2gb`](https://github.com/CM0102-Rust/cm0102-save2gb) (público; com o código-fonte de cada release: `save/` e `cm0102-base/src/conteiner.rs`, atualizado só nas releases), release `v1.0` com o `save2gb-1.0.zip`: a DLL, LEIAME/README e esta documentação sem os caminhos do repositório privado. Ao mudar este documento, atualizar a cópia de lá.
 
 **Instalar:**
 1. Copie a `ddraw.dll` para a pasta do exe do jogo.
@@ -69,7 +69,7 @@ As três rotinas foram reescritas em Rust (`rust/src/conteiner.rs`):
 Há três formas de integrar:
 1. **Distribuir a DLL como está**, junto do patch.
 2. **Carregar a DLL de dentro do seu código.** O desvio acontece no carregamento, seja qual for o nome do arquivo. Renomeie para, por exemplo, `save2gb.dll` e chame `LoadLibrary("save2gb.dll")` da sua DLL, como a `NickDLL`. Nesse caso o `DirectDrawCreate` dela não é usado.
-3. **Reescrever as três rotinas no seu código**, com a descrição acima e `rust/src/conteiner.rs` como referência: no `fseek`/`ftell`, troque o `long` por posição sem sinal e use 64 bits.
+3. **Reescrever as três rotinas no seu código**, com a descrição acima e `cm0102-base/src/conteiner.rs` como referência: no `fseek`/`ftell`, troque o `long` por posição sem sinal e use 64 bits.
 
 Se o seu patch altera bytes em 0x9326e0–0x933860, a assinatura não bate e a DLL fica inerte. Nesse caso, fale com a gente.
 

@@ -17,7 +17,7 @@
 # Comparadores: só a original, com o plano: os dois clubes nos seus continentes e os bytes de estado zerados; as
 # previstas conferem cada posição gravada (a tabela das rodadas pedida de novo e liberada).
 # Determinismo: nada lê pilha, heap ou endereço como valor.
-# Provas: em curso.
+# Provas: comparação de 8 ligas até 2002-06-01 (os 12 itens do agente E) 0 div; Rust x2 iguais e detector igual (ab5806e63c96b235); mutações 3/3.
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqu13_intercontinental_clubes', 0x92b8b0, [0xb8, 0xa4, 0x11, 0x00, 0x00]),
