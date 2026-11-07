@@ -1,41 +1,32 @@
 // ---------- 274a leva: as regras dos estaduais do Centro-Oeste, Gaúcho (Nordeste, Paulista), Baiano e Catarinense (bra_reg_central.cpp, bra_reg_gaucho.cpp, bra_reg_santa.cpp) ----------
 
-unsafe fn cqi8_b(o: usize, d: usize, v: u8) {
-    *((o + d) as *mut u8) = v;
-}
 
-unsafe fn cqi8_w(o: usize, d: usize, v: u16) {
-    core::ptr::write_unaligned((o + d) as *mut u16, v);
-}
 
-unsafe fn cqi8_d(o: usize, d: usize, v: u32) {
-    core::ptr::write_unaligned((o + d) as *mut u32, v);
-}
 
 /// As regras comuns dos estaduais (as três rotinas gravam o mesmo conjunto; mudam os turnos +0x3c, as vagas de cima
 /// +0xbe e os rebaixados +0xc1): vitória 3, empate 1, categoria 2 (liga), clube nacional, desempates confronto
 /// direto e saldo, sem play-offs na tabela, sem liga acima nem abaixo, palavra de regras 8, 7 reservas e
 /// 3 substituições, e as palavras +0xab e +0xdb (copiadas em cada partida: +0x38 e +0x36) em 0.
 unsafe fn cqi8_regras(o: usize, turnos: u16, cima: u8, rebaixados: u8) {
-    cqi8_w(o, 0xab, 0);
-    cqi8_w(o, 0xdb, 0);
-    cqi8_b(o, 0xc7, 0);
-    cqi8_b(o, 0xbf, 0);
-    cqi8_b(o, 0xc0, 0);
-    cqi8_b(o, 0xc2, 3);
-    cqi8_b(o, 0xc5, 3);
-    cqi8_b(o, 0xc1, rebaixados);
-    cqi8_b(o, 0x4a, 3);
-    cqi8_b(o, 0xbe, cima);
-    cqi8_w(o, 0xd9, 8);
-    cqi8_w(o, 0x3c, turnos);
-    cqi8_b(o, 0xc3, 1);
-    cqi8_b(o, 0xc4, 2);
-    cqi8_b(o, 0x42, 1);
-    cqi8_b(o, 0xc6, 1);
-    cqi8_d(o, 0x1c, 0xffff_ffff);
-    cqi8_d(o, 0x20, 0xffff_ffff);
-    cqi8_b(o, 0x49, 7);
+    write_u16_at(o, 0xab, 0);
+    write_u16_at(o, 0xdb, 0);
+    write_u8_at(o, 0xc7, 0);
+    write_u8_at(o, 0xbf, 0);
+    write_u8_at(o, 0xc0, 0);
+    write_u8_at(o, 0xc2, 3);
+    write_u8_at(o, 0xc5, 3);
+    write_u8_at(o, 0xc1, rebaixados);
+    write_u8_at(o, 0x4a, 3);
+    write_u8_at(o, 0xbe, cima);
+    write_u16_at(o, 0xd9, 8);
+    write_u16_at(o, 0x3c, turnos);
+    write_u8_at(o, 0xc3, 1);
+    write_u8_at(o, 0xc4, 2);
+    write_u8_at(o, 0x42, 1);
+    write_u8_at(o, 0xc6, 1);
+    write_u32_at(o, 0x1c, 0xffff_ffff);
+    write_u32_at(o, 0x20, 0xffff_ffff);
+    write_u8_at(o, 0x49, 7);
 }
 
 /// O Centro-Oeste (0x430ff0): turno único, 8 vagas de cima (o mata-mata de 8), 3 rebaixados.
@@ -59,7 +50,7 @@ unsafe fn cqi8_calendario(o: usize) {
     let vt = *(o as *const usize);
     let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
     let r = f(o, -1, o + 0xa9, o + 0x3a, 0);
-    cqi8_d(o, 0xba, r as u32);
+    write_u32_at(o, 0xba, r as u32);
 }
 
 /// O objeto da liga (0xee bytes) menos as saídas do calendário (+0x3a, +0xa9, +0xba): os calendários não gravam nada
@@ -131,37 +122,31 @@ unsafe extern "thiscall" fn comparar_cqi8_regras_do_catarinense(this: usize) -> 
 
 // ---------- 274a leva: o destino de cada clube no fim das fases do Centro-Oeste e do Goiano, do Mineiro, Paranaense e Carioca, e da NSL (bra_reg_central.cpp, bra_reg_minas_gerais.cpp, aus_nsl.cpp) ----------
 
-unsafe fn cqk7_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqk7_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// Os registros de carreira (Staff_Records em [0xdd7f00], thiscall, já em Rust): 0x86bdd0 classificou-se (clube, comp,
 /// fase, rodada, peso; ret 0x14).
 unsafe fn cqk7_classificou(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x86bdd0usize);
-    f(cqk7_d(0xdd7f00), clube, comp, fase, rodada, peso);
+    f(read_u32_as_usize(0xdd7f00), clube, comp, fase, rodada, peso);
 }
 
 /// 0x86a1c0 rebaixado (clube, liga; ret 8).
 unsafe fn cqk7_rebaixado(clube: usize, comp: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x86a1c0usize);
-    f(cqk7_d(0xdd7f00), clube, comp);
+    f(read_u32_as_usize(0xdd7f00), clube, comp);
 }
 
 /// 0x868c50 campeão da liga (clube, liga; ret 8).
 unsafe fn cqk7_campeao(clube: usize, comp: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x868c50usize);
-    f(cqk7_d(0xdd7f00), clube, comp);
+    f(read_u32_as_usize(0xdd7f00), clube, comp);
 }
 
 /// A fase de pontos corridos (fase -1) dos estaduais: os classificados (6) ganham o registro de classificação (rodada
 /// 0x82, peso 0x32), os rebaixados (3) o de rebaixamento. Igual nas duas rotinas dos estaduais.
 unsafe fn cqk7_pontos_corridos(this: usize, clube: usize, st: u8, fazer: bool) {
-    let comp = cqk7_d(this + 4);
+    let comp = read_u32_as_usize(this + 4);
     if st == 6 {
         if fazer {
             crate::comparacao::ramo("cqk_7 classificado do estadual");
@@ -177,17 +162,17 @@ unsafe fn cqk7_pontos_corridos(this: usize, clube: usize, st: u8, fazer: bool) {
 /// campeão e o destino 5; os eliminados (2 ou -1), o registro de eliminação (0x86c000) com o peso da escala 0x4bf850
 /// (30 a 50 pela rodada do jogo em `rodadas`) e o destino -2. Devolve (linha gravada ou 0, destino).
 unsafe fn cqk7_mata_mata(this: usize, clube: usize, st: u8, jogo: usize, rodadas: u32, fazer: bool) -> (usize, u8) {
-    let comp = cqk7_d(this + 4);
-    let n = cqk7_w(this + 0x3e) as i32;
+    let comp = read_u32_as_usize(this + 4);
+    let n = read_i16(this + 0x3e) as i32;
     let mut i = 0i32;
     while i < n {
-        if cqk7_d(cqk7_d(this + 0xb1) + 0x3b * i as usize) == clube {
+        if read_u32_as_usize(read_u32_as_usize(this + 0xb1) + 0x3b * i as usize) == clube {
             if st == 1 {
                 if fazer {
                     crate::comparacao::ramo("cqk_7 campeao do estadual");
                     cqk7_campeao(clube, comp); // cqk7: o registro do campeão do estadual
                 }
-                let l = cqk7_d(this + 0xb1) + 0x3b * i as usize;
+                let l = read_u32_as_usize(this + 0xb1) + 0x3b * i as usize;
                 if fazer {
                     *((l + 0x37) as *mut u8) = 5;
                 }
@@ -199,11 +184,11 @@ unsafe fn cqk7_mata_mata(this: usize, clube: usize, st: u8, jogo: usize, rodadas
                     // 0x4bf850 e a 0x86c000 só leem as palavras: vão as palavras.
                     let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(0x4bf850usize);
                     crate::comparacao::ramo("cqk_7 eliminado do estadual");
-                    let peso = escala(0x1e, 0x32, cqk7_w(jogo + 0x34) as u16 as u32, rodadas);
+                    let peso = escala(0x1e, 0x32, read_i16(jogo + 0x34) as u16 as u32, rodadas);
                     let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x86c000usize);
-                    elim(cqk7_d(0xdd7f00), clube, comp, cqk7_w(jogo + 0x32) as u16 as u32, cqk7_w(jogo + 0x30) as u16 as u32, peso); // cqk7: o registro do eliminado
+                    elim(read_u32_as_usize(0xdd7f00), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, peso); // cqk7: o registro do eliminado
                 }
-                let l = cqk7_d(this + 0xb1) + 0x3b * i as usize;
+                let l = read_u32_as_usize(this + 0xb1) + 0x3b * i as usize;
                 if fazer {
                     *((l + 0x37) as *mut u8) = 0xfe;
                 }
@@ -251,7 +236,7 @@ unsafe fn cqk7_mineiro(this: usize, clube: usize, situacao: u32, fase: u32, jogo
 /// A NSL (0x411980). Devolve (devolução, 0, 0): não grava na tabela.
 unsafe fn cqk7_nsl(this: usize, clube: usize, situacao: u32, fase: u32, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (situacao as u8, fase as u8);
-    let comp = cqk7_d(this + 4);
+    let comp = read_u32_as_usize(this + 4);
     if fa == 0xff {
         // a temporada regular
         if st == 6 {
@@ -277,7 +262,7 @@ unsafe fn cqk7_nsl(this: usize, clube: usize, situacao: u32, fase: u32, fazer: b
         if st == 0xfe {
             if fazer {
                 let nao: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x86c1d0usize);
-                nao(cqk7_d(0xdd7f00), clube, comp, 0x435, 0x28);
+                nao(read_u32_as_usize(0xdd7f00), clube, comp, 0x435, 0x28);
             }
             return (u32::MAX, 0, 0);
         }

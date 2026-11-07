@@ -113,13 +113,7 @@ unsafe extern "C" fn e_selecao(clube: usize) -> u32 {
 
 // ---------- 256a leva: as posições previstas da copa: as posições pela rodada de saída, ordenar os clubes pela força e gravar a posição do clube na estatística (Cup.cpp, comp_util.cpp, comp_stats.cpp) ----------
 
-unsafe fn cpt13_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cpt13_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O núcleo da 0x4c08f0 sobre os `n` clubes em `v` e as chaves em `k`: a chave de cada clube é a força
 /// (0x4c0720; clube nulo, 0); depois, para cada i, todo j > i com chave maior troca de lugar com i (chave e clube),
@@ -188,20 +182,20 @@ unsafe fn cpt13_posicoes(this: usize, v: *const u32, gravar: usize) -> Vec<(usiz
     let mut s: i16 = 0; // o índice no vetor (bp com sinal)
     let mut b: u8 = 1; // o contador de posições
     let mut a: u8 = 1; // a posição empurrada (só o byte de baixo conta; a original empurra a dword com sobra em cima)
-    let mut r = cpt13_w(this + 0x3c).wrapping_sub(2) as i32;
+    let mut r = read_i16(this + 0x3c).wrapping_sub(2) as i32;
     while r >= 0 {
         if *v.offset(s as isize) == 0 {
             break;
         }
-        let conta = |r: i32| cpt13_w(cpt13_d(this + 0xa3) + r as usize * 0x68 + 0x1a) as i32;
-        if r == cpt13_w(this + 0x3c) as i32 - 2 {
+        let conta = |r: i32| read_i16(read_u32_as_usize(this + 0xa3) + r as usize * 0x68 + 0x1a) as i32;
+        if r == read_i16(this + 0x3c) as i32 - 2 {
             let mut j = 0;
             while j < conta(r) {
                 let c = *v.offset(s as isize) as usize;
                 s = s.wrapping_add(1);
                 chamadas.push((c, a));
                 if gravar != 0 {
-                    gravar_posicao(cpt13_d(this + 8), c, a as u32);
+                    gravar_posicao(read_u32_as_usize(this + 8), c, a as u32);
                 }
                 b = b.wrapping_add(1);
                 j += 1;
@@ -216,7 +210,7 @@ unsafe fn cpt13_posicoes(this: usize, v: *const u32, gravar: usize) -> Vec<(usiz
                 chamadas.push((c, a));
                 if gravar != 0 {
                     crate::comparacao::ramo("cpt_13 posição pela rodada");
-                    gravar_posicao(cpt13_d(this + 8), c, a as u32);
+                    gravar_posicao(read_u32_as_usize(this + 8), c, a as u32);
                 }
             }
             b = b.wrapping_add(1);
@@ -232,19 +226,19 @@ unsafe fn cpt13_posicoes(this: usize, v: *const u32, gravar: usize) -> Vec<(usiz
 /// rodada em que sai (0x4a2540 na estatística [+8]); libera o vetor (0x9452ca). Sem estatística: a caixa (linha
 /// 0x1827); sem memória: a original (a caixa da falta de memória e o fim do jogo).
 unsafe extern "thiscall" fn posicoes_previstas_da_copa(this: usize) {
-    if cpt13_d(this + 8) == 0 {
+    if read_u32_as_usize(this + 8) == 0 {
         return aviso_em(0x9b55ac, 0x1827);
     }
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let ordenar: unsafe extern "C" fn(usize, i32) = core::mem::transmute(0x4c08f0usize);
-    let n = cpt13_w(this + 0x3e) as i32;
+    let n = read_i16(this + 0x3e) as i32;
     let v = alocar((n << 2) as u32);
     if v == 0 {
         return orig::<unsafe extern "thiscall" fn(usize)>(1191)(this);
     }
     for i in 0..n.max(0) as usize {
-        *((v + i * 4) as *mut u32) = cpt13_d(cpt13_d(this + 0xa7) + i * 6) as u32;
+        *((v + i * 4) as *mut u32) = read_u32_as_usize(read_u32_as_usize(this + 0xa7) + i * 6) as u32;
     }
     ordenar(v, n);
     cpt13_posicoes(this, v as *const u32, 1);
@@ -256,11 +250,11 @@ unsafe extern "thiscall" fn posicoes_previstas_da_copa(this: usize) {
 /// de ter em +0x72 a última posição dele.
 unsafe extern "thiscall" fn comparar_posicoes_previstas_da_copa(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1191);
-    let n = cpt13_w(this + 0x3e) as i32;
-    if cpt13_d(this + 8) == 0 || n <= 0 {
+    let n = read_i16(this + 0x3e) as i32;
+    if read_u32_as_usize(this + 8) == 0 || n <= 0 {
         return o(this); // ponytail: a caixa ou nada a ordenar, só a original
     }
-    let mut v: Vec<u32> = (0..n as usize).map(|i| cpt13_d(cpt13_d(this + 0xa7) + i * 6) as u32).collect();
+    let mut v: Vec<u32> = (0..n as usize).map(|i| read_u32_as_usize(read_u32_as_usize(this + 0xa7) + i * 6) as u32).collect();
     let mut k = vec![0i32; n as usize];
     cpt13_ordenar_com(v.as_mut_ptr(), k.as_mut_ptr(), n);
     // ponytail: com mais vagas nas rodadas que clubes, a original lê além do vetor (sobra do bloco); o plano lê 0
@@ -273,7 +267,7 @@ unsafe extern "thiscall" fn comparar_posicoes_previstas_da_copa(this: usize) {
         if c == 0 || plano[i + 1..].iter().any(|x| x.0 == c) {
             continue;
         }
-        let e = buscar(cpt13_d(this + 8), c);
+        let e = buscar(read_u32_as_usize(this + 8), c);
         if e == 0 || *((e + 0x72) as *const u8) != p {
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + 0x72) as *const u8) as i32 }));
         }
@@ -313,12 +307,9 @@ unsafe extern "thiscall" fn comparar_gravar_posicao_do_clube(this: usize, clube:
 
 // ---------- 253a leva: o lado do jogo, a ordem dos coeficientes das nações e o pedido de observação (comp_util.cpp, scout_manager.cpp) ----------
 
-unsafe fn cpq12_d(a: usize) -> u32 {
-    core::ptr::read_unaligned(a as *const u32)
-}
 
 unsafe fn cpq12_us(a: usize) -> usize {
-    cpq12_d(a) as usize
+    read_u32(a) as usize
 }
 
 /// { 0x4afa80 } (cdecl, comp_util.cpp): `comp_util_get_fixture_venue_side(clube, jogo)`: o lado do clube no jogo:
@@ -327,10 +318,10 @@ unsafe fn cpq12_us(a: usize) -> usize {
 /// (+0x53), 2 se é a do adversário, senão 3. Clube: o campo é o estádio do clube e não o do adversário, 1; dos dois,
 /// 1 para o mandante e 2 para o outro; só do adversário, 2; de nenhum, 3. Quem chama lê só o al.
 unsafe extern "C" fn lado_do_jogo_para_o_clube(clube: usize, jogo: usize) -> u8 {
-    let campo = cpq12_d(jogo + 0x18);
+    let campo = read_u32(jogo + 0x18);
     let casa = cpq12_us(jogo + 0x1c);
     if campo == 0 {
-        if cpq12_d(casa + 0x69) == 0 {
+        if read_u32(casa + 0x69) == 0 {
             return 3;
         }
         return if clube != casa { 2 } else { 1 };
@@ -338,23 +329,23 @@ unsafe extern "C" fn lado_do_jogo_para_o_clube(clube: usize, jogo: usize) -> u8 
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     if selecao(clube) != 0 {
         let nacao = cpq12_us(campo as usize + 0x38);
-        if nacao != 0 && cpq12_d(nacao + 0x1f) == cpq12_d(clube + 0x53) {
+        if nacao != 0 && read_u32(nacao + 0x1f) == read_u32(clube + 0x53) {
             return 1;
         }
         let casa = cpq12_us(jogo + 0x1c);
         let outro = if casa == clube { cpq12_us(jogo + 0x20) } else { casa };
-        if nacao != 0 && cpq12_d(nacao + 0x1f) == cpq12_d(outro + 0x53) {
+        if nacao != 0 && read_u32(nacao + 0x1f) == read_u32(outro + 0x53) {
             return 2;
         }
         return 3;
     }
     let casa = cpq12_us(jogo + 0x1c);
     let outro = if casa == clube { cpq12_us(jogo + 0x20) } else { casa };
-    let campo = cpq12_d(jogo + 0x18);
-    if campo != cpq12_d(clube + 0x69) {
-        return if campo != cpq12_d(outro + 0x69) { 3 } else { 2 };
+    let campo = read_u32(jogo + 0x18);
+    if campo != read_u32(clube + 0x69) {
+        return if campo != read_u32(outro + 0x69) { 3 } else { 2 };
     }
-    if campo == cpq12_d(outro + 0x69) {
+    if campo == read_u32(outro + 0x69) {
         return if clube != casa { 2 } else { 1 }; // o mesmo estádio dos dois
     }
     crate::comparacao::ramo("cpq_12 em casa");
@@ -423,9 +414,9 @@ unsafe extern "thiscall" fn pedido_de_observacao(this: usize, jogador: usize, cl
         let buscar: unsafe extern "C" fn(*const u8, usize, u32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
         let mut chave = [0u8; 16];
         data(chave.as_mut_ptr().add(8));
-        chave[4..8].copy_from_slice(&cpq12_d(jogador).to_le_bytes());
-        chave[0..4].copy_from_slice(&cpq12_d(clube).to_le_bytes());
-        buscar(chave.as_ptr(), lista, cpq12_d(this + 0x64), 0x11, 0x7fc270)
+        chave[4..8].copy_from_slice(&read_u32(jogador).to_le_bytes());
+        chave[0..4].copy_from_slice(&read_u32(clube).to_le_bytes());
+        buscar(chave.as_ptr(), lista, read_u32(this + 0x64), 0x11, 0x7fc270)
     };
     if achado == 0 {
         crate::comparacao::ramo("cpq_12 sem pedido");
@@ -461,9 +452,6 @@ unsafe extern "thiscall" fn comparar_pedido_de_observacao(this: usize, jogador: 
 
 // ---------- 249a leva: a mudança de divisão do clube e os embaralhamentos das listas de clubes (league.cpp, comp_util.cpp) ----------
 
-unsafe fn cpm3_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cpm3_sorteio(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
@@ -481,36 +469,36 @@ unsafe extern "thiscall" fn mudar_clube_de_divisao(_this: usize, clube: usize, d
     crate::comparacao::ramo("cpm_3 mudar de divisao");
     let usa_numeros: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x85add0usize);
     let limpar_clausulas: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x4cd120usize);
-    let antes = usa_numeros(cpm3_d(0xdd7ef0), clube, 0);
-    cpm3_por(clube + 0x5b, cpm3_d(clube + 0x57)); // a divisão da última temporada
+    let antes = usa_numeros(read_usize(0xdd7ef0), clube, 0);
+    cpm3_por(clube + 0x5b, read_usize(clube + 0x57)); // a divisão da última temporada
     cpm3_por(clube + 0x57, divisao);
-    let numeros = (antes == 0 && usa_numeros(cpm3_d(0xdd7ef0), clube, 0) != 0) as u32;
-    limpar_clausulas(cpm3_d(0xae1050), clube, numeros);
-    if vaga != 0 && cpm3_d(clube + 0xcf) == 0 {
+    let numeros = (antes == 0 && usa_numeros(read_usize(0xdd7ef0), clube, 0) != 0) as u32;
+    limpar_clausulas(read_usize(0xae1050), clube, numeros);
+    if vaga != 0 && read_usize(clube + 0xcf) == 0 {
         let abrir_vaga: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x69ba50usize);
-        abrir_vaga(cpm3_d(0xb67a44), clube, 0);
+        abrir_vaga(read_usize(0xb67a44), clube, 0);
     }
     if divisao == 0 {
         return;
     }
-    let comps = cpm3_d(0xadadfc);
-    let id = cpm3_d(divisao);
+    let comps = read_usize(0xadadfc);
+    let id = read_usize(divisao);
     if comps != 0 {
-        let comp = cpm3_d(comps + 4 * id);
-        if comp != 0 && cpm3_d(clube + 0x69) != 0 && *((comp + 0x43) as *const u8) == 2 {
+        let comp = read_usize(comps + 4 * id);
+        if comp != 0 && read_usize(clube + 0x69) != 0 && *((comp + 0x43) as *const u8) == 2 {
             let lugares = core::ptr::read_unaligned((comp + 0xe2) as *const i16);
             if lugares != -1 {
                 crate::comparacao::ramo("cpm_3 estadio da divisao");
                 let capacidade = core::ptr::read_unaligned((comp + 0xe4) as *const i16);
                 let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
                 let obra: unsafe extern "thiscall" fn(usize, i32, i32, usize, u32) -> u32 = core::mem::transmute(0x599e00usize);
-                let f = financas(cpm3_d(0xae2a38), clube);
+                let f = financas(read_usize(0xae2a38), clube);
                 obra(f, capacidade as i32, lugares as i32, id, 0); // a obra do estádio
             }
         }
     }
     // a original relê [0xadadfc] depois da obra (sem a obra, o mesmo valor; nulo, ela lê do endereço 0 também)
-    if cpm3_d(cpm3_d(0xadadfc) + 4 * id) != 0 && *((clube + 0x64) as *const u8) == 3 {
+    if read_usize(read_usize(0xadadfc) + 4 * id) != 0 && *((clube + 0x64) as *const u8) == 3 {
         *((clube + 0x64) as *mut u8) = 2;
     }
 }
@@ -526,7 +514,7 @@ unsafe fn cpm3_trocar(itens: usize, n: i32) {
     let b = cpm3_sorteio(n) as i16 as isize;
     let pa = (itens as isize + 4 * a) as usize;
     let pb = (itens as isize + 4 * b) as usize;
-    let (va, vb) = (cpm3_d(pa), cpm3_d(pb));
+    let (va, vb) = (read_usize(pa), read_usize(pb));
     cpm3_por(pa, vb);
     cpm3_por(pb, va);
 }
@@ -615,26 +603,20 @@ unsafe extern "C" fn comparar_ordenar_e_embaralhar_os_melhores(clubes: usize, n:
 
 // ---------- 241a leva: os auxiliares de competição: o tipo de confronto na liga, a força do clube e o colocado mais recente (comp_util.cpp) ----------
 
-unsafe fn cpa3_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cpa3_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 /// A nota de um clube na estatística da liga (0x4b02e0): pesos 1 nos 4 atributos (+0x72..+0x75; +0x75 e +0x74 com
 /// o peso [0x968968]) ou, com menos de 25 jogos (+4), proporcionais aos jogos; a média ponderada, na ordem do x87.
 unsafe fn cpa3_nota(e: usize, b73: f64) -> f64 {
     let (mut p, mut k73, mut k72) = (f64_em(0x968968), 1.0f64, 1.0f64);
-    let jogos = cpa3_b(e + 4);
+    let jogos = read_u8(e + 4);
     if jogos < 0x19 {
         let v = jogos as f64;
         p = v * f64_em(0x968a98);
         k73 = v * f64_em(0x968a90);
         k72 = f64_em(0x968938) - v * f64_em(0x968a88);
     }
-    let s = cpa3_b(e + 0x75) as f64 * p + cpa3_b(e + 0x72) as f64 * k72 + b73 * k73 + cpa3_b(e + 0x74) as f64 * p;
+    let s = read_u8(e + 0x75) as f64 * p + read_u8(e + 0x72) as f64 * k72 + b73 * k73 + read_u8(e + 0x74) as f64 * p;
     s / (p + p + k72 + k73)
 }
 
@@ -646,33 +628,33 @@ unsafe fn cpa3_nota(e: usize, b73: f64) -> f64 {
 /// + +0xbe + +0xbf, e o mesmo cruzamento do +0x74); senão 0. Devolve só `al`. Sem SEH, sem sorteio; a virtual +0x98
 /// é chamada até três vezes, como na original.
 unsafe extern "C" fn tipo_de_confronto_na_liga(a: usize, b: usize) -> u8 {
-    let comp = cpa3_d(a + 0x57);
-    if comp == 0 || comp != cpa3_d(b + 0x57) {
+    let comp = read_usize(a + 0x57);
+    if comp == 0 || comp != read_usize(b + 0x57) {
         return 0;
     }
     let menor: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7e6f20usize);
     if menor(comp) != 0 {
         return 0;
     }
-    let liga = cpa3_d((*(0xadadfc as *const usize)).wrapping_add(4 * *(cpa3_d(a + 0x57) as *const u32) as usize));
-    if liga == 0 || cpa3_d(liga + 8) == 0 {
+    let liga = read_usize((*(0xadadfc as *const usize)).wrapping_add(4 * *(read_usize(a + 0x57) as *const u32) as usize));
+    if liga == 0 || read_usize(liga + 8) == 0 {
         return 0;
     }
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
-    let ea = achar(cpa3_d(liga + 8), a);
-    let eb = achar(cpa3_d(liga + 8), b);
-    if ea == 0 || eb == 0 || cpa3_d(liga + 0x30) as i32 != -1 || cpa3_b(liga + 0x43) != 2 {
+    let ea = achar(read_usize(liga + 8), a);
+    let eb = achar(read_usize(liga + 8), b);
+    if ea == 0 || eb == 0 || read_usize(liga + 0x30) as i32 != -1 || read_u8(liga + 0x43) != 2 {
         return 0;
     }
-    let (a73, b73) = (cpa3_b(ea + 0x73) as i32, cpa3_b(eb + 0x73) as i32);
+    let (a73, b73) = (read_u8(ea + 0x73) as i32, read_u8(eb + 0x73) as i32);
     let clubes = core::ptr::read_unaligned((liga + 0x3e) as *const i16) as i32;
     if (a73 - b73).abs() > ftol(clubes as f64 * f64_em(0x9689e0)) as i16 as i32 {
         return 0;
     }
     let (na, nb) = (cpa3_nota(ea, a73 as f64), cpa3_nota(eb, b73 as f64));
-    let (a74, b74) = (cpa3_b(ea + 0x74) as f64, cpa3_b(eb + 0x74) as f64);
+    let (a74, b74) = (read_u8(ea + 0x74) as f64, read_u8(eb + 0x74) as f64);
     let virtual98 = || {
-        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cpa3_d(cpa3_d(liga) + 0x98));
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(liga) + 0x98));
         f(liga)
     };
     // as comparações do x87: NaN conta como "menor" (C0) e "menor ou igual" (C0|C3)
@@ -683,7 +665,7 @@ unsafe extern "C" fn tipo_de_confronto_na_liga(a: usize, b: usize) -> u8 {
             return 1; // briga pelo título
         }
     }
-    let be = cpa3_b(liga + 0xbe) as i8 as f64;
+    let be = read_u8(liga + 0xbe) as i8 as f64;
     if virtual98() != 0 {
         let t = clubes as f64 * f64_em(0x968918) + be;
         if !(na > t) && !(nb > t) && cruzadas {
@@ -693,7 +675,7 @@ unsafe extern "C" fn tipo_de_confronto_na_liga(a: usize, b: usize) -> u8 {
     if virtual98() == 0 {
         return 0;
     }
-    let bf = cpa3_b(liga + 0xbf) as i8;
+    let bf = read_u8(liga + 0xbf) as i8;
     if bf == 0 {
         return 0;
     }
@@ -744,7 +726,7 @@ unsafe extern "C" fn forca_do_clube(clube: usize) -> i32 {
     reunir(clube, elenco.as_mut_ptr(), 0);
     let mut k: i8 = 0;
     for &p in elenco.iter() {
-        if p != 0 && cpa3_d(p + 0x61) != 0 {
+        if p != 0 && read_usize(p + 0x61) != 0 {
             jogadores[k as usize] = p;
             k = k.wrapping_add(1);
         }
@@ -798,7 +780,7 @@ unsafe extern "C" fn clube_colocado_mais_recente(comp: usize, lugar: u32) -> usi
             break;
         }
     }
-    cpa3_d(p + [0xa, 0xe, 0x12][lugar as usize]) // campeão, vice, terceiro
+    read_usize(p + [0xa, 0xe, 0x12][lugar as usize]) // campeão, vice, terceiro
 }
 
 unsafe extern "C" fn comparar_clube_colocado_mais_recente(comp: usize, lugar: u32) -> usize {

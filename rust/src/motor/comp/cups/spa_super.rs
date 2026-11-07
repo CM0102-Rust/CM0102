@@ -1,14 +1,11 @@
 // ---------- 276a leva: as supercopas e o Jogo das Estrelas: os clubes da Supercopa da Espanha e do Japão e o calendário do Jogo das Estrelas da MLS (spa_super.cpp, jap_super.cpp, usa_mls_all_stars.cpp) ----------
 
-unsafe fn cqm12_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
 /// O clube que terminou em `lugar` (0 o campeão, 1 o vice) na última temporada da competição de id [id] (0x4afd80: push
 /// lugar; push competição do banco [0xae23d0] + 0x6b × id; add esp, 8 -> cdecl).
 unsafe fn cqm12_colocado(id: usize, lugar: u32) -> usize {
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
-    colocado(cqm12_d(0xae23d0).wrapping_add(cqm12_d(id).wrapping_mul(0x6b)), lugar)
+    colocado(read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b)), lugar)
 }
 
 /// O começo comum: +0x3e = 2 e a lista de dois (0x944e46 de 0xc em +0xa7); sem memória, a caixa `linha` e None.
@@ -82,11 +79,11 @@ unsafe fn cqm12_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: im
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
         let r = o();
-        lo.set(cqm12_d(this + 0xa7));
+        lo.set(read_u32_as_usize(this + 0xa7));
         r
     }, || {
         let (r, _) = c();
-        lr.set(cqm12_d(this + 0xa7));
+        lr.set(read_u32_as_usize(this + 0xa7));
         core::ptr::write_unaligned((this + 0xa7) as *mut u32, lo.get() as u32);
         r
     });
@@ -125,22 +122,22 @@ unsafe fn cqm12_japao(this: usize) -> (i32, i32) {
     if !cqm12_vaga(l, 0, a, F, 0xca) {
         return (0, 0);
     }
-    if cqm12_d(a + 0x53) == 0 && !cqm12_vaga(l, 0, cqm12_colocado(0x9cf65c, 1), F, 0xd6) {
+    if read_u32_as_usize(a + 0x53) == 0 && !cqm12_vaga(l, 0, cqm12_colocado(0x9cf65c, 1), F, 0xd6) {
         return (0, 0);
     }
     let b = cqm12_colocado(0x9cf660, 0);
     if !cqm12_vaga(l, 1, b, F, 0xe0) {
         return (0, 0);
     }
-    if cqm12_d(b + 0x53) == 0 && !cqm12_vaga(l, 1, cqm12_colocado(0x9cf660, 1), F, 0xec) {
+    if read_u32_as_usize(b + 0x53) == 0 && !cqm12_vaga(l, 1, cqm12_colocado(0x9cf660, 1), F, 0xec) {
         return (0, 0);
     }
-    if cqm12_d(l) == cqm12_d(l + 6) {
+    if read_u32_as_usize(l) == read_u32_as_usize(l + 6) {
         crate::comparacao::ramo("cqm_12 dobradinha japonesa");
         if !cqm12_vaga(l, 1, cqm12_colocado(0x9cf660, 1), F, 0xf9) {
             return (0, 0);
         }
-        if cqm12_d(l) == cqm12_d(l + 6) && !cqm12_vaga(l, 0, cqm12_colocado(0x9cf65c, 1), F, 0x105) {
+        if read_u32_as_usize(l) == read_u32_as_usize(l + 6) && !cqm12_vaga(l, 0, cqm12_colocado(0x9cf65c, 1), F, 0x105) {
             return (0, 0);
         }
     }

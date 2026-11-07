@@ -1,30 +1,15 @@
 // ---------- 256a leva: os coeficientes das nações (o bônus de dezembro e a história de cinco anos), o dia das aposentadorias e a soma presa de dois bytes (game.cpp) ----------
 
-unsafe fn cpt6_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cpt6_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
-unsafe fn cpt6_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cpt6_f(a: usize) -> f64 {
-    core::ptr::read_unaligned(a as *const f64)
-}
 
-unsafe fn cpt6_pf(a: usize, v: f64) {
-    core::ptr::write_unaligned(a as *mut f64, v);
-}
 
 /// A história do coeficiente da nação: +0xb0, +0xb8, +0xc0, +0xc8, +0xd0 (cinco anos) e +0xd8 (o ano corrente).
 unsafe fn cpt6_historia(na: usize) -> [f64; 6] {
     let mut h = [0f64; 6];
     for (k, x) in h.iter_mut().enumerate() {
-        *x = cpt6_f(na + 0xb0 + k * 8);
+        *x = read_f64(na + 0xb0 + k * 8);
     }
     h
 }
@@ -41,7 +26,7 @@ unsafe fn cpt6_dezembro(na: usize, h: &mut [f64; 6], marca: &mut u8) {
     crate::comparacao::ramo("cpt_6 dezembro");
     if (*marca as i8) < 0xc {
         crate::comparacao::ramo("cpt_6 bonus de dezembro");
-        h[5] = cpt6_w(na + 0x8e) as i32 as f64 * f64_em(0x967888) * (0xc - *marca as i8 as i32) as f64 * f64_em(0x968930) + h[5]; // cpt6: o bônus de dezembro
+        h[5] = read_i16(na + 0x8e) as i32 as f64 * f64_em(0x967888) * (0xc - *marca as i8 as i32) as f64 * f64_em(0x968930) + h[5]; // cpt6: o bônus de dezembro
     }
     h[0] = h[1];
     h[1] = h[2];
@@ -61,56 +46,56 @@ unsafe extern "C" fn coeficientes_das_nacoes() {
     let malloc: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x944e46usize);
     let qsort: unsafe extern "C" fn(usize, usize, usize, usize) = core::mem::transmute(0x945333usize);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    if cpt6_b(0x9cd218) != 0 {
-        if (cpt6_d(0xae2350) as i32) > 0 {
-            let mut p = cpt6_d(0xae23a8) + 0xd0;
+    if read_u8(0x9cd218) != 0 {
+        if (read_usize(0xae2350) as i32) > 0 {
+            let mut p = read_usize(0xae23a8) + 0xd0;
             let mut i = 0i16;
             loop {
-                let v = cpt6_f(p - 0x28);
+                let v = read_f64(p - 0x28);
                 for k in 0..5usize {
-                    cpt6_pf(p - k * 8, v);
+                    write_f64(p - k * 8, v);
                 }
                 i = i.wrapping_add(1);
                 p += 0x122;
-                if i as i32 >= cpt6_d(0xae2350) as i32 {
+                if i as i32 >= read_usize(0xae2350) as i32 {
                     break;
                 }
             }
         }
         *(0x9cd218 as *mut u8) = 0;
     }
-    let hoje = cpt6_d(0xae2c90) as i16;
-    if cpt6_w(0x9cd200 + (cpt6_mes() * 2) as usize) != hoje {
+    let hoje = read_usize(0xae2c90) as i16;
+    if read_i16(0x9cd200 + (cpt6_mes() * 2) as usize) != hoje {
         return;
     }
-    let vetor = malloc(cpt6_d(0xae2350).wrapping_mul(0xc));
+    let vetor = malloc(read_usize(0xae2350).wrapping_mul(0xc));
     if vetor == 0 {
         aviso_em(0x9cd2a4, 0x156d);
         return;
     }
-    let dez = cpt6_w(0x9cd216) == cpt6_w(0xae2c90); // cpt6: o dia de dezembro
-    let mut n = cpt6_d(0xae2350) as i32;
+    let dez = read_i16(0x9cd216) == read_i16(0xae2c90); // cpt6: o dia de dezembro
+    let mut n = read_usize(0xae2350) as i32;
     if n > 0 {
-        let mut na = cpt6_d(0xae23a8);
+        let mut na = read_usize(0xae23a8);
         let mut i = 0i16;
         loop {
             let e = vetor + i as i32 as usize * 0xc;
             *(e as *mut usize) = na;
-            let s = cpt6_f(na + 0xc0) * f64_em(0x968e48) + cpt6_f(na + 0xb8) * f64_em(0x968e00) + cpt6_f(na + 0xb0) * f64_em(0x968918)
-                + cpt6_f(na + 0xc8) * f64_em(0x9689b0) + cpt6_f(na + 0xd8) + cpt6_f(na + 0xd0);
-            cpt6_pf(e + 4, s);
+            let s = read_f64(na + 0xc0) * f64_em(0x968e48) + read_f64(na + 0xb8) * f64_em(0x968e00) + read_f64(na + 0xb0) * f64_em(0x968918)
+                + read_f64(na + 0xc8) * f64_em(0x9689b0) + read_f64(na + 0xd8) + read_f64(na + 0xd0);
+            write_f64(e + 4, s);
             if dez {
                 let mut h = cpt6_historia(na);
-                let mut marca = cpt6_b(na + 0x121);
+                let mut marca = read_u8(na + 0x121);
                 cpt6_dezembro(na, &mut h, &mut marca);
                 for (k, x) in h.iter().enumerate() {
-                    cpt6_pf(na + 0xb0 + k * 8, *x);
+                    write_f64(na + 0xb0 + k * 8, *x);
                 }
                 *((na + 0x121) as *mut u8) = marca;
             }
             i = i.wrapping_add(1);
             na += 0x122;
-            n = cpt6_d(0xae2350) as i32;
+            n = read_usize(0xae2350) as i32;
             if i as i32 >= n {
                 break;
             }
@@ -124,22 +109,22 @@ unsafe extern "C" fn coeficientes_das_nacoes() {
 /// pelas mesmas contas da cópia: a história (+0xb0..+0xd8) e a marca (+0x121) de cada nação e [0x9cd218] zerado.
 unsafe extern "C" fn comparar_coeficientes_das_nacoes() {
     let o = orig::<unsafe extern "C" fn()>(1170);
-    let iniciar = cpt6_b(0x9cd218) != 0;
-    let hoje = cpt6_d(0xae2c90) as i16;
-    let dez = cpt6_w(0x9cd200 + (cpt6_mes() * 2) as usize) == hoje && cpt6_w(0x9cd216) == hoje;
-    let n = cpt6_d(0xae2350) as i32;
-    let base = cpt6_d(0xae23a8);
+    let iniciar = read_u8(0x9cd218) != 0;
+    let hoje = read_usize(0xae2c90) as i16;
+    let dez = read_i16(0x9cd200 + (cpt6_mes() * 2) as usize) == hoje && read_i16(0x9cd216) == hoje;
+    let n = read_usize(0xae2350) as i32;
+    let base = read_usize(0xae23a8);
     let mut plano = Vec::new();
     for k in 0..n.max(0) as usize {
         let na = base + k * 0x122;
         let mut h = cpt6_historia(na);
         if iniciar {
-            let v = cpt6_f(na + 0xa8);
+            let v = read_f64(na + 0xa8);
             for x in h.iter_mut().take(5) {
                 *x = v;
             }
         }
-        let mut marca = cpt6_b(na + 0x121);
+        let mut marca = read_u8(na + 0x121);
         if dez {
             cpt6_dezembro(na, &mut h, &mut marca);
         }
@@ -150,13 +135,13 @@ unsafe extern "C" fn comparar_coeficientes_das_nacoes() {
     for (k, (h, marca)) in plano.iter().enumerate() {
         let na = base + k * 0x122;
         let g = cpt6_historia(na);
-        if (0..6).any(|j| g[j].to_bits() != h[j].to_bits()) || cpt6_b(na + 0x121) != *marca {
-            erro = Some(format!("nação {} ({:x}): {:?}/{} x plano {:?}/{}", k, na, g, cpt6_b(na + 0x121), h, marca));
+        if (0..6).any(|j| g[j].to_bits() != h[j].to_bits()) || read_u8(na + 0x121) != *marca {
+            erro = Some(format!("nação {} ({:x}): {:?}/{} x plano {:?}/{}", k, na, g, read_u8(na + 0x121), h, marca));
             break;
         }
     }
-    if cpt6_b(0x9cd218) != 0 {
-        erro = Some(format!("[0x9cd218] = {}", cpt6_b(0x9cd218)));
+    if read_u8(0x9cd218) != 0 {
+        erro = Some(format!("[0x9cd218] = {}", read_u8(0x9cd218)));
     }
     PLACAR.registrar(erro.is_none(), || format!("coeficientes_das_nacoes(dezembro {}): {}", dez, erro.clone().unwrap_or_default()));
 }
@@ -203,17 +188,11 @@ unsafe extern "C" fn comparar_soma_presa(a: u32, b: u32, min: u32, max: u32) -> 
 
 // ---------- 255a leva: as relações do elenco no dia a dia: as brigas e preferências entre colegas, o atrito com o técnico e o moral espalhado pela liderança (game.cpp) ----------
 
-unsafe fn cps5_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cps5_sb(a: usize) -> i32 {
     *(a as *const i8) as i32
 }
 
-unsafe fn cps5_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 unsafe fn cps5_sortear(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
@@ -222,13 +201,13 @@ unsafe fn cps5_sortear(n: i32) -> i32 {
 
 /// O clube de índice `i` (registros de 0x245 bytes em [0xae23b4]; a conta em 32 bits, como a original).
 unsafe fn cps5_clube(i: usize) -> usize {
-    cps5_d(0xae23b4).wrapping_add(i.wrapping_mul(0x245))
+    read_usize(0xae23b4).wrapping_add(i.wrapping_mul(0x245))
 }
 
 /// O contrato da pessoa (0x4cf5a0), guardado em [0xae1080] como a original faz a cada chamada.
 unsafe fn cps5_contrato(p: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = f(cps5_d(0xae1050), p);
+    let c = f(read_usize(0xae1050), p);
     core::ptr::write_unaligned(0xae1080 as *mut usize, c);
     c
 }
@@ -238,14 +217,14 @@ unsafe fn cps5_clube_do_contrato(c: usize) -> usize {
     if c == 0 {
         0
     } else {
-        cps5_clube(cps5_d(c + 4))
+        cps5_clube(read_usize(c + 4))
     }
 }
 
 /// O vínculo da pessoa com o clube (0x4cf5f0).
 unsafe fn cps5_vinculo(p: usize, clube: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
-    f(cps5_d(0xae1050), p, clube)
+    f(read_usize(0xae1050), p, clube)
 }
 
 /// `pessoa` não gosta de `alvo` (0x547840)?
@@ -264,25 +243,25 @@ unsafe fn cps5_atrito(p: usize, clube: usize, k: usize) {
         if j >= 0x32 {
             return;
         }
-        let q = cps5_d(clube + 0xd7 + j * 4);
+        let q = read_usize(clube + 0xd7 + j * 4);
         if q != p && q != 0 && cps5_nao_gosta(q, p) != 0 {
             break;
         }
         j += 1;
     }
-    let q = cps5_d(clube + 0xd7 + j * 4);
+    let q = read_usize(clube + 0xd7 + j * 4);
     if q == 0 {
         return;
     }
-    if ((cps5_w(0xae2c90) as i32) % 0xe).wrapping_add(cps5_d(p) as i32) != 0 {
+    if ((read_i16(0xae2c90) as i32) % 0xe).wrapping_add(read_usize(p) as i32) != 0 {
         return;
     }
     crate::comparacao::ramo("cps_5 atrito com o tecnico");
     let queixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x587c60usize);
     let marcar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x867700usize);
-    let (tipo, marca) = if q == cps5_d(clube + 0xcf) {
+    let (tipo, marca) = if q == read_usize(clube + 0xcf) {
         (0, 0x2000)
-    } else if q == cps5_d(clube + 0xd3) {
+    } else if q == read_usize(clube + 0xd3) {
         (1, 0x1000)
     } else {
         (2, 0x800)
@@ -307,9 +286,9 @@ unsafe extern "C" fn relacoes_do_elenco() {
     let favorecer: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547a10usize);
     let tirar_favorita: unsafe extern "C" fn(usize, usize) = core::mem::transmute(0x547c10usize);
     for _ in 0..10 {
-        let clube = cps5_clube(cps5_sortear(cps5_d(0xae235c) as i32) as usize);
-        let a = cps5_d(clube.wrapping_add(cps5_sortear(0x32) as usize * 4) + 0xd7);
-        let b = cps5_d(clube.wrapping_add(cps5_sortear(0x32) as usize * 4) + 0xd7);
+        let clube = cps5_clube(cps5_sortear(read_usize(0xae235c) as i32) as usize);
+        let a = read_usize(clube.wrapping_add(cps5_sortear(0x32) as usize * 4) + 0xd7);
+        let b = read_usize(clube.wrapping_add(cps5_sortear(0x32) as usize * 4) + 0xd7);
         if a == 0 || b == 0 || a == b {
             continue;
         }
@@ -328,7 +307,7 @@ unsafe extern "C" fn relacoes_do_elenco() {
                 continue;
             }
             let k = cps5_vinculo(a, cps5_clube_do_contrato(cps5_contrato(a)));
-            if k == 0 || cps5_d(k + 0x45) & 0x800 == 0 {
+            if k == 0 || read_usize(k + 0x45) & 0x800 == 0 {
                 continue;
             }
             briga(a, b);
@@ -340,17 +319,17 @@ unsafe extern "C" fn relacoes_do_elenco() {
             tirar_favorita(a, b);
         }
     }
-    if (cps5_w(0xae2c90) as i32) % 0x32 == 0 {
+    if (read_i16(0xae2c90) as i32) % 0x32 == 0 {
         let atrito: unsafe extern "C" fn(usize) = core::mem::transmute(0x5d7190usize);
         let mut i = 0i32;
-        while i < cps5_d(0xae235c) as i32 / 100 {
-            atrito(cps5_clube(cps5_sortear(cps5_d(0xae235c) as i32) as usize));
+        while i < read_usize(0xae235c) as i32 / 100 {
+            atrito(cps5_clube(cps5_sortear(read_usize(0xae235c) as i32) as usize));
             i += 1;
         }
         return;
     }
-    let base = cps5_d(0xae23bc);
-    let fim = base.wrapping_add((cps5_d(0xae2364).wrapping_sub(17)).wrapping_mul(0x6e));
+    let base = read_usize(0xae23bc);
+    let fim = base.wrapping_add((read_usize(0xae2364).wrapping_sub(17)).wrapping_mul(0x6e));
     let mut p = base;
     while p < fim {
         cps5_pessoa_e_tecnico(p);
@@ -360,7 +339,7 @@ unsafe extern "C" fn relacoes_do_elenco() {
 
 /// Uma pessoa do laço de fora dos dias múltiplos de 50 (0x5d6f15..0x5d7115).
 unsafe fn cps5_pessoa_e_tecnico(p: usize) {
-    if cps5_d(p + 0x61) == 0 || cps5_d(p + 0x65) == 0 {
+    if read_usize(p + 0x61) == 0 || read_usize(p + 0x65) == 0 {
         return;
     }
     let c = cps5_contrato(p);
@@ -371,7 +350,7 @@ unsafe fn cps5_pessoa_e_tecnico(p: usize) {
     if clube == 0 {
         return;
     }
-    let k = cps5_vinculo(cps5_d(clube + 0xff), clube);
+    let k = cps5_vinculo(read_usize(clube + 0xff), clube);
     if k == 0 {
         return;
     }
@@ -386,7 +365,7 @@ unsafe fn cps5_pessoa_e_tecnico(p: usize) {
     if cps5_sortear(cps5_sb(p + 0x5a)) == 0 {
         e -= 5;
     }
-    if cps5_d(k + 0x45) != 0 || cps5_sortear(0x64) == 0 {
+    if read_usize(k + 0x45) != 0 || cps5_sortear(0x64) == 0 {
         if cps5_sortear(cps5_sb(p + 0x5b)) == 0 {
             e -= 0xf;
         }
@@ -394,14 +373,14 @@ unsafe fn cps5_pessoa_e_tecnico(p: usize) {
             e -= 0xf;
         }
     }
-    let rep = cps5_w(cps5_d(p + 0x61) + 0xb);
-    if rep > 0x1194 && rep > cps5_w(clube + 0x80) {
+    let rep = read_i16(read_usize(p + 0x61) + 0xb);
+    if rep > 0x1194 && rep > read_i16(clube + 0x80) {
         e -= 5;
     }
     if cps5_sortear(e) >= 1 {
         return;
     }
-    if cps5_d(p + 0x65) == 0 {
+    if read_usize(p + 0x65) == 0 {
         return;
     }
     cps5_atrito(p, clube, k);
@@ -418,7 +397,7 @@ unsafe extern "C" fn comparar_relacoes_do_elenco() {
 /// de quem não gosta; a queixa só com dia % 14 + id = 0). Pelas relações do elenco (0x5d6d10) nos dias múltiplos de 50.
 unsafe extern "C" fn atrito_com_o_tecnico(clube: usize) {
     for i in 0..0x32usize {
-        let p = cps5_d(clube + 0xd7 + i * 4);
+        let p = read_usize(clube + 0xd7 + i * 4);
         if p == 0 {
             continue;
         }
@@ -426,7 +405,7 @@ unsafe extern "C" fn atrito_com_o_tecnico(clube: usize) {
         if k == 0 {
             continue;
         }
-        if cps5_d(p + 0x65) == 0 {
+        if read_usize(p + 0x65) == 0 {
             continue;
         }
         cps5_atrito(p, clube, k);
@@ -441,7 +420,7 @@ unsafe extern "C" fn comparar_atrito_com_o_tecnico(clube: usize) {
 
 /// A pessoa conta para a liderança do clube: id válido (< [0xae2364]), contrato com o clube (+0x39) e ficha de jogador.
 unsafe fn cps5_do_elenco(p: usize, clube: usize) -> bool {
-    p != 0 && (cps5_d(p) as i32) < cps5_d(0xae2364) as i32 && cps5_d(p + 0x39) == clube && cps5_d(p + 0x61) != 0
+    p != 0 && (read_usize(p) as i32) < read_usize(0xae2364) as i32 && read_usize(p + 0x39) == clube && read_usize(p + 0x61) != 0
 }
 
 /// { 0x5ce0b0 } (cdecl, game.cpp): `game_spread_squad_morale_by_leadership()`, todo dia pelo laço do dia do jogo. Cada
@@ -452,15 +431,15 @@ unsafe fn cps5_do_elenco(p: usize, clube: usize) -> bool {
 unsafe extern "C" fn moral_pela_lideranca() {
     let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let moral: unsafe extern "C" fn(usize, i32, u32) -> u32 = core::mem::transmute(0x544710usize);
-    let n = cps5_d(0xae235c);
-    let mut clube = cps5_d(0xae23b4);
+    let n = read_usize(0xae235c);
+    let mut clube = read_usize(0xae23b4);
     let fim = clube.wrapping_add(n.wrapping_mul(0x245));
     while clube < fim {
         let vagas = clube + 0xd7;
         if e_selecao(clube) == 0 && cps5_sortear(7) == 0 {
             let (mut soma, mut lideranca, mut q) = (0i32, 0i32, 0i32);
             for i in 0..0x32usize {
-                let p = cps5_d(vagas + i * 4);
+                let p = read_usize(vagas + i * 4);
                 if !cps5_do_elenco(p, clube) {
                     continue;
                 }
@@ -468,7 +447,7 @@ unsafe extern "C" fn moral_pela_lideranca() {
                 if c == 0 {
                     continue;
                 }
-                let l = cps5_sb(cps5_d(p + 0x61) + 0x2f);
+                let l = cps5_sb(read_usize(p + 0x61) + 0x2f);
                 soma = soma.wrapping_add(cps5_sb(c + 0x44) * l);
                 lideranca += l;
                 q += 1;
@@ -480,13 +459,13 @@ unsafe extern "C" fn moral_pela_lideranca() {
                 if lideranca == 0 {
                     break;
                 }
-                let p = cps5_d(vagas + i * 4);
+                let p = read_usize(vagas + i * 4);
                 if !cps5_do_elenco(p, clube) {
                     continue;
                 }
                 let c = cps5_vinculo(p, clube);
                 let m = if c == 0 { 0 } else { cps5_sb(c + 0x44) };
-                let l = cps5_sb(cps5_d(p + 0x61) + 0x2f);
+                let l = cps5_sb(read_usize(p + 0x61) + 0x2f);
                 crate::comparacao::ramo("cps_5 moral sorteado");
                 let r1 = cps5_sortear(soma.wrapping_mul(2) / (l + lideranca));
                 let r2 = cps5_sortear(m / 12); // cps5: a parte do moral
@@ -516,25 +495,13 @@ unsafe extern "C" fn comparar_moral_pela_lideranca() {
 
 // ---------- 255a leva: o dia do jogo: as faltas ao treino, as competições do dia e a confiança da diretoria no clube (game.cpp) ----------
 
-unsafe fn cps6_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cps6_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 unsafe fn cps6_sb(a: usize) -> i32 {
     *(a as *const i8) as i32
 }
 
-unsafe fn cps6_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cps6_pw(a: usize, v: i16) {
-    core::ptr::write_unaligned(a as *mut i16, v);
-}
 
 unsafe fn cps6_sortear(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
@@ -544,7 +511,7 @@ unsafe fn cps6_sortear(n: i32) -> i32 {
 /// O contrato da pessoa (0x4cf5a0), guardado em [0xae1080] como a original faz a cada chamada.
 unsafe fn cps6_contrato(p: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = f(cps6_d(0xae1050), p);
+    let c = f(read_usize(0xae1050), p);
     core::ptr::write_unaligned(0xae1080 as *mut usize, c);
     c
 }
@@ -554,14 +521,14 @@ unsafe fn cps6_clube_do_contrato(c: usize) -> usize {
     if c == 0 {
         0
     } else {
-        cps6_d(0xae23b4).wrapping_add(cps6_d(c + 4).wrapping_mul(0x245))
+        read_usize(0xae23b4).wrapping_add(read_usize(c + 4).wrapping_mul(0x245))
     }
 }
 
 /// Dias desde a data de +0x3e da pessoa até hoje (0x54cdb0 sobre a data do jogo 0xae2c90, a outra por valor).
 unsafe fn cps6_dias_desde(p: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
-    f(0xae2c90, cps6_d(p + 0x3e) as u32, cps6_d(p + 0x42) as u32)
+    f(0xae2c90, read_usize(p + 0x3e) as u32, read_usize(p + 0x42) as u32)
 }
 
 /// { 0x5d6aa0 } (cdecl, game.cpp): `game_check_players_missing_training()`, todo dia pelo laço do dia do jogo. A partir
@@ -579,15 +546,15 @@ unsafe extern "C" fn faltas_ao_treino() {
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547810usize);
     let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let falta: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x41a360usize);
-    let n = cps6_d(0xae2364) as i32;
+    let n = read_usize(0xae2364) as i32;
     let q = n / 250;
     crate::comparacao::ramo("cps_6 faltas do dia");
     let r = cps6_sortear(n - q - 1); // cps6: a primeira pessoa
-    let mut atual = cps6_d(0xae23bc).wrapping_add((r as usize).wrapping_mul(0x6e));
+    let mut atual = read_usize(0xae23bc).wrapping_add((r as usize).wrapping_mul(0x6e));
     for _ in 0..q {
         let p = atual;
         atual = atual.wrapping_add(0x6e);
-        if cps6_d(p + 0x61) == 0 || cps6_b(p + 0x3d) != 0xb {
+        if read_usize(p + 0x61) == 0 || read_u8(p + 0x3d) != 0xb {
             continue;
         }
         let c = cps6_contrato(p);
@@ -598,35 +565,35 @@ unsafe extern "C" fn faltas_ao_treino() {
         if clube == 0 {
             continue;
         }
-        if ausente(cps6_d(0xad9c6c), p, 0) != 0 {
+        if ausente(read_usize(0xad9c6c), p, 0) != 0 {
             continue;
         }
-        let t = treino(cps6_d(0xde1f44), p);
-        if t == 0 || cps6_b(t + 0x15) == 0 {
+        let t = treino(read_usize(0xde1f44), p);
+        if t == 0 || read_u8(t + 0x15) == 0 {
             continue;
         }
-        if lesao(cps6_d(0xb63d28), p) == 2 {
+        if lesao(read_usize(0xb63d28), p) == 2 {
             continue;
         }
-        let jog = cps6_d(p + 0x61);
-        let cl = cps6_b(p + 0x5b);
-        let dl = cps6_b(jog + 0x44);
-        let mut bl = cps6_b(jog + 0x2f).wrapping_add(cps6_b(p + 0x18)).wrapping_add(cl).wrapping_add(dl);
+        let jog = read_usize(p + 0x61);
+        let cl = read_u8(p + 0x5b);
+        let dl = read_u8(jog + 0x44);
+        let mut bl = read_u8(jog + 0x2f).wrapping_add(read_u8(p + 0x18)).wrapping_add(cl).wrapping_add(dl);
         if cl == 1 {
             bl = bl.wrapping_add(0xfb);
         }
         if dl == 1 {
             bl = bl.wrapping_add(0xfb);
         }
-        if nao_gosta(cps6_d(clube + 0xcf), p) != 0 {
+        if nao_gosta(read_usize(clube + 0xcf), p) != 0 {
             bl = bl.wrapping_add(0xfb);
         }
-        if gosta(cps6_d(clube + 0xcf), p) != 0 {
+        if gosta(read_usize(clube + 0xcf), p) != 0 {
             bl = bl.wrapping_add(2);
         }
         let mut e_falta = false;
-        let a = cps6_b(p + 0x5b);
-        if (a as i8) < 8 && (cps6_b(cps6_d(p + 0x61) + 0x2f) as i8) < 8 && (bl as i8) < 0x2b {
+        let a = read_u8(p + 0x5b);
+        if (a as i8) < 8 && (read_u8(read_usize(p + 0x61) + 0x2f) as i8) < 8 && (bl as i8) < 0x2b {
             let mut s = a;
             if cps6_dias_desde(p) < 0x1e {
                 s = s.wrapping_add(0x64);
@@ -645,17 +612,17 @@ unsafe extern "C" fn faltas_ao_treino() {
                 continue;
             }
             let clube = cps6_clube_do_contrato(cps6_contrato(p));
-            let v = vinculo(cps6_d(0xae1050), p, clube);
+            let v = vinculo(read_usize(0xae1050), p, clube);
             if v == 0 {
                 continue;
             }
-            if cps6_d(v + 0x45) & 0x8000 != 0 && cps6_sortear(cps6_sb(p + 0x5b)) == 0 {
+            if read_usize(v + 0x45) & 0x8000 != 0 && cps6_sortear(cps6_sb(p + 0x5b)) == 0 {
                 e_falta = true;
-            } else if cps6_d(v + 0x45) & 0x30000 != 0 && cps6_sortear(cps6_sb(p + 0x5b)) == 0 {
+            } else if read_usize(v + 0x45) & 0x30000 != 0 && cps6_sortear(cps6_sb(p + 0x5b)) == 0 {
                 e_falta = true;
             } else {
                 let a = cps6_sb(p + 0x5b);
-                if a >= 5 || cps6_d(v + 0x45) & 0x7800 == 0 || cps6_sortear(a) != 0 {
+                if a >= 5 || read_usize(v + 0x45) & 0x7800 == 0 || cps6_sortear(a) != 0 {
                     continue;
                 }
                 e_falta = true;
@@ -663,7 +630,7 @@ unsafe extern "C" fn faltas_ao_treino() {
         }
         if e_falta {
             crate::comparacao::ramo("cps_6 falta ao treino");
-            falta(cps6_d(0xad9c6c), p); // cps6: a falta
+            falta(read_usize(0xad9c6c), p); // cps6: a falta
         }
     }
 }
@@ -679,10 +646,10 @@ unsafe extern "C" fn comparar_faltas_ao_treino() {
 unsafe extern "C" fn competicoes_do_dia(marca: u32) {
     let m = marca as u8 as i8;
     let mut i = 0i32;
-    while i < cps6_d(0xadadf8) as i32 {
-        let c = cps6_d(cps6_d(0xadadfc) + i as usize * 4);
+    while i < read_usize(0xadadf8) as i32 {
+        let c = read_usize(read_usize(0xadadfc) + i as usize * 4);
         if c != 0 {
-            let dia: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(cps6_d(cps6_d(c) + 0x14));
+            let dia: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(read_usize(read_usize(c) + 0x14));
             dia(c, 0xae2c90, m as i32);
         }
         i += 1;
@@ -690,7 +657,7 @@ unsafe extern "C" fn competicoes_do_dia(marca: u32) {
     if m != 0 {
         crate::comparacao::ramo("cps_6 competicoes do dia");
         let seguinte: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5aaf00usize);
-        seguinte(cps6_d(0xae2a58));
+        seguinte(read_usize(0xae2a58));
     }
 }
 
@@ -701,7 +668,7 @@ unsafe extern "C" fn comparar_competicoes_do_dia(marca: u32) {
 
 /// A confiança da diretoria no clube: a palavra +6 da linha do clube (73 bytes por id em [this]).
 unsafe fn cps6_confianca(this: usize, clube: usize) -> usize {
-    cps6_d(this).wrapping_add(cps6_d(clube).wrapping_mul(0x49)) + 6
+    read_usize(this).wrapping_add(read_usize(clube).wrapping_mul(0x49)) + 6
 }
 
 /// { 0x5cdde0 } (thiscall, ret 8, game.cpp): `manager_manager_adjust_board_confidence(clube, delta)`: soma `delta`
@@ -712,12 +679,12 @@ unsafe extern "thiscall" fn mudar_confianca_da_diretoria(this: usize, clube: usi
         return;
     }
     let c = cps6_confianca(this, clube);
-    cps6_pw(c, cps6_w(c).wrapping_add(delta as u16 as i16));
-    let v = cps6_w(c);
+    write_i16(c, read_i16(c).wrapping_add(delta as u16 as i16));
+    let v = read_i16(c);
     if v < 1 {
-        cps6_pw(c, 1);
+        write_i16(c, 1);
     } else if v > 0x2710 {
-        cps6_pw(c, 0x2710);
+        write_i16(c, 0x2710);
     }
 }
 

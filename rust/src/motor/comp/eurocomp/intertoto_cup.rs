@@ -189,13 +189,7 @@ unsafe extern "thiscall" fn comparar_cqq10_uefa_tabela(this: usize, fase: u32, r
         |r, e, s| cqq10_uefa_tabela(this, fase, r, e, s))
 }
 
-unsafe fn cqq10_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqq10_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// { 0x6336c0 } (thiscall, ret 0, intertoto_cup.cpp): `IntertotoCup::collect_entrants()`: +0x3e = 60; um vetor local de
 /// 60 ponteiros (0x944e46 de 0xf0; sem memória, a caixa da linha 0x161 e 0) com os clubes da tabela ([0xae23b4], até
@@ -214,18 +208,18 @@ unsafe fn cqq10_intertoto(this: usize) -> (i32, i32) {
     }
     let mut k = 0i32;
     let mut i: i16 = 0;
-    while (i as i32) < cqq10_d(0xae235c) as i32 {
-        if k >= cqq10_w(this + 0x3e) as i32 {
+    while (i as i32) < read_u32_as_usize(0xae235c) as i32 {
+        if k >= read_i16(this + 0x3e) as i32 {
             break;
         }
-        let c = cqq10_d(0xae23b4).wrapping_add((i as isize * 0x245) as usize);
-        if cqq10_d(c + 0x1db) == cqq10_d(0x9cf6f8) {
+        let c = read_u32_as_usize(0xae23b4).wrapping_add((i as isize * 0x245) as usize);
+        if read_u32_as_usize(c + 0x1db) == read_u32_as_usize(0x9cf6f8) {
             core::ptr::write_unaligned((v + k as usize * 4) as *mut u32, c as u32);
             k += 1;
         }
         i = i.wrapping_add(1);
     }
-    let n = cqq10_w(this + 0x3e) as i32;
+    let n = read_i16(this + 0x3e) as i32;
     if k < n {
         aviso_em(F, 0x172);
         return (0, 0);
@@ -238,19 +232,19 @@ unsafe fn cqq10_intertoto(this: usize) -> (i32, i32) {
     }
     crate::comparacao::ramo("cqq_10 inscritos da intertoto");
     let mut j: i16 = 0;
-    while j < cqq10_w(this + 0x3e) {
-        let c = cqq10_d(v + j as usize * 4);
-        let e = cqq10_d(this + 0xa7) + j as usize * 6;
+    while j < read_i16(this + 0x3e) {
+        let c = read_u32_as_usize(v + j as usize * 4);
+        let e = read_u32_as_usize(this + 0xa7) + j as usize * 6;
         core::ptr::write_unaligned(e as *mut u32, c as u32);
         *((e + 4) as *mut u8) = *((c + 0x1df) as *const u8); // cqq10: a classe pelo coeficiente
         *((e + 5) as *mut u8) = 0;
         j = j.wrapping_add(1);
     }
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    ordenar(cqq10_d(this + 0xa7), cqq10_w(this + 0x3e) as i32 as u32, 6, 0x522190);
+    ordenar(read_u32_as_usize(this + 0xa7), read_i16(this + 0x3e) as i32 as u32, 6, 0x522190);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     soltar(v);
-    ((k == cqq10_w(this + 0x3e) as i32) as i32, cqq10_w(this + 0x3e) as i32)
+    ((k == read_i16(this + 0x3e) as i32) as i32, read_i16(this + 0x3e) as i32)
 }
 
 unsafe extern "thiscall" fn cqq10_intertoto_inscritos(this: usize) -> i32 {
@@ -265,15 +259,15 @@ unsafe extern "thiscall" fn comparar_cqq10_intertoto_inscritos(this: usize) -> i
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
-    let antes = cqq10_d(this + 0xa7);
+    let antes = read_u32_as_usize(this + 0xa7);
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
         let r = o(this);
-        lo.set(cqq10_d(this + 0xa7));
+        lo.set(read_u32_as_usize(this + 0xa7));
         core::ptr::write_unaligned((this + 0xa7) as *mut u32, antes as u32);
         r
     }, || {
         let (r, n) = cqq10_intertoto(this);
-        lr.set(cqq10_d(this + 0xa7));
+        lr.set(read_u32_as_usize(this + 0xa7));
         nr.set(n);
         core::ptr::write_unaligned((this + 0xa7) as *mut u32, lo.get() as u32);
         r
@@ -298,7 +292,7 @@ unsafe extern "thiscall" fn comparar_cqq10_intertoto_inscritos(this: usize) -> i
 /// lista +0xa7 (não nulos, até +0x3e): com `ativos`, só os de situação (+5) 0 ou 1. Grava a lista em saida e devolve a
 /// conta (palavra).
 unsafe fn cqq10_lista(this: usize, saida: *mut usize, ativos: u32) -> u16 {
-    let n = cqq10_w(this + 0x3e);
+    let n = read_i16(this + 0x3e);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let l = alocar((n as i32 * 4) as u32);
     if l == 0 {
@@ -309,10 +303,10 @@ unsafe fn cqq10_lista(this: usize, saida: *mut usize, ativos: u32) -> u16 {
     crate::comparacao::ramo("cqq_10 lista da intertoto");
     let mut k: i16 = 0;
     let mut i: i16 = 0;
-    while i < cqq10_w(this + 0x3e) {
-        let e = cqq10_d(this + 0xa7) + i as usize * 6;
+    while i < read_i16(this + 0x3e) {
+        let e = read_u32_as_usize(this + 0xa7) + i as usize * 6;
         let s = *((e + 5) as *const u8);
-        let c = cqq10_d(e);
+        let c = read_u32_as_usize(e);
         if (ativos as u8 == 0 || s == 1 || s == 0) && c != 0 && k < n { // cqq10: os clubes da lista
             core::ptr::write_unaligned((l + k as usize * 4) as *mut u32, c as u32);
             k = k.wrapping_add(1);
@@ -350,21 +344,12 @@ unsafe extern "thiscall" fn comparar_cqq10_intertoto_lista(this: usize, saida: *
 
 // ---------- 273a leva: a Copa Intertoto e a Copa da UEFA: os três vencedores do Intertoto na Copa da UEFA e o destino de cada clube nas duas (intertoto_cup.cpp, uefa_cup.cpp) ----------
 
-unsafe fn cqi10_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqi10_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqi10_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 /// O objeto da Copa da UEFA ([[0xadadfc] + 4 × [0x9cf6f0]]), ou 0.
 unsafe fn cqi10_uefa() -> usize {
-    cqi10_d(cqi10_d(0xadadfc).wrapping_add(cqi10_d(0x9cf6f0).wrapping_mul(4)))
+    read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(0x9cf6f0).wrapping_mul(4)))
 }
 
 /// Os vencedores do Intertoto (+5 = 1 no registro de 6 bytes de +0xa7) que cabem nas três últimas vagas da UEFA, na
@@ -372,22 +357,22 @@ unsafe fn cqi10_uefa() -> usize {
 unsafe fn cqi10_vencedores(this: usize, uefa: usize) -> ([usize; 3], usize) {
     let mut v = [0usize; 3];
     let mut k = 0usize;
-    let mut vaga = cqi10_w(uefa + 0x3e).wrapping_sub(0x1b);
+    let mut vaga = read_i16(uefa + 0x3e).wrapping_sub(0x1b);
     let limite = vaga.wrapping_add(3);
     let mut i = 0i16;
-    if cqi10_w(this + 0x3e) > 0 {
+    if read_i16(this + 0x3e) > 0 {
         loop {
             if vaga >= limite {
                 break;
             }
-            let e = cqi10_d(this + 0xa7).wrapping_add((i as isize * 6) as usize);
-            if cqi10_b(e + 5) == 1 {
-                v[k] = cqi10_d(e);
+            let e = read_u32_as_usize(this + 0xa7).wrapping_add((i as isize * 6) as usize);
+            if read_u8(e + 5) == 1 {
+                v[k] = read_u32_as_usize(e);
                 k += 1;
                 vaga = vaga.wrapping_add(1);
             }
             i = i.wrapping_add(1);
-            if i >= cqi10_w(this + 0x3e) {
+            if i >= read_i16(this + 0x3e) {
                 break;
             }
         }
@@ -404,45 +389,45 @@ unsafe fn cqi10_vencedores(this: usize, uefa: usize) -> ([usize; 3], usize) {
 /// novo as posições previstas (a original relê a UEFA). Sempre, no fim, a atualização da copa (0x51f890: push fase;
 /// push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução sai.
 unsafe extern "thiscall" fn cqi10_intertoto_dia(this: usize, hoje: usize, fase: u32) -> u32 {
-    if cqi10_d(this + 0xb2) == 0 {
-        let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(cqi10_d(cqi10_d(this) + 0x10));
+    if read_u32_as_usize(this + 0xb2) == 0 {
+        let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x10));
         if acabou(this, 0, 1) as u8 != 0 {
             let uefa = cqi10_uefa();
             if uefa == 0 {
                 aviso_em(0x9e9e14, 0x29e);
             } else {
-                let mut vaga = cqi10_w(uefa + 0x3e).wrapping_sub(0x1b);
+                let mut vaga = read_i16(uefa + 0x3e).wrapping_sub(0x1b);
                 let limite = vaga.wrapping_add(3);
                 let mut i = 0i16;
-                if cqi10_w(this + 0x3e) > 0 {
+                if read_i16(this + 0x3e) > 0 {
                     loop {
                         if vaga >= limite {
                             break;
                         }
-                        let e = cqi10_d(this + 0xa7).wrapping_add((i as isize * 6) as usize);
-                        if cqi10_b(e + 5) == 1 {
+                        let e = read_u32_as_usize(this + 0xa7).wrapping_add((i as isize * 6) as usize);
+                        if read_u8(e + 5) == 1 {
                             crate::comparacao::ramo("cqi_10 vencedor na uefa");
-                            let s = cqi10_d(uefa + 0xa7).wrapping_add((vaga as isize * 6) as usize);
-                            core::ptr::write_unaligned(s as *mut u32, cqi10_d(e) as u32);
+                            let s = read_u32_as_usize(uefa + 0xa7).wrapping_add((vaga as isize * 6) as usize);
+                            core::ptr::write_unaligned(s as *mut u32, read_u32_as_usize(e) as u32);
                             *((s + 4) as *mut u8) = 0;
                             *((s + 5) as *mut u8) = 0;
-                            let l = cqi10_d(uefa + 0x14).wrapping_add((cqi10_w(uefa + 0x36) as isize * 6) as usize);
-                            core::ptr::write_unaligned(l as *mut u32, cqi10_d(s) as u32);
+                            let l = read_u32_as_usize(uefa + 0x14).wrapping_add((read_i16(uefa + 0x36) as isize * 6) as usize);
+                            core::ptr::write_unaligned(l as *mut u32, read_u32_as_usize(s) as u32);
                             *((l + 4) as *mut u8) = 4; // cqi10: a situação do vencedor do Intertoto no livro da UEFA
-                            core::ptr::write_unaligned((uefa + 0x36) as *mut i16, cqi10_w(uefa + 0x36).wrapping_add(1));
+                            core::ptr::write_unaligned((uefa + 0x36) as *mut i16, read_i16(uefa + 0x36).wrapping_add(1));
                             vaga = vaga.wrapping_add(1);
                         }
                         i = i.wrapping_add(1);
-                        if i >= cqi10_w(this + 0x3e) {
+                        if i >= read_i16(this + 0x3e) {
                             break;
                         }
                     }
                 }
-                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqi10_d(cqi10_d(uefa) + 0x5c));
+                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(uefa) + 0x5c));
                 prever(uefa);
                 core::ptr::write_unaligned((this + 0xb2) as *mut u32, 1);
                 let uefa = cqi10_uefa();
-                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqi10_d(cqi10_d(uefa) + 0x5c));
+                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(uefa) + 0x5c));
                 prever(uefa);
                 let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x51f890usize);
                 return base(this, hoje, fase);
@@ -460,22 +445,22 @@ unsafe extern "thiscall" fn cqi10_intertoto_dia(this: usize, hoje: usize, fase: 
 unsafe extern "thiscall" fn comparar_cqi10_intertoto_dia(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(1685);
     let uefa = cqi10_uefa();
-    if uefa == 0 || cqi10_d(this + 0xb2) != 0 {
+    if uefa == 0 || read_u32_as_usize(this + 0xb2) != 0 {
         return o(this, hoje, fase);
     }
     let (v, k) = cqi10_vencedores(this, uefa);
-    let n36 = cqi10_w(uefa + 0x36);
+    let n36 = read_i16(uefa + 0x36);
     let r = o(this, hoje, fase);
-    let passou = cqi10_d(this + 0xb2) == 1;
+    let passou = read_u32_as_usize(this + 0xb2) == 1;
     let previsto = if passou { n36.wrapping_add(k as i16) } else { n36 };
-    let mut igual = cqi10_w(uefa + 0x36) == previsto;
+    let mut igual = read_i16(uefa + 0x36) == previsto;
     if passou && igual {
         for (j, &c) in v.iter().enumerate().take(k) {
-            let l = cqi10_d(uefa + 0x14).wrapping_add(((n36 as isize) + j as isize) as usize * 6);
-            igual &= cqi10_d(l) == c && cqi10_b(l + 4) == 4;
+            let l = read_u32_as_usize(uefa + 0x14).wrapping_add(((n36 as isize) + j as isize) as usize * 6);
+            igual &= read_u32_as_usize(l) == c && read_u8(l + 4) == 4;
         }
     }
-    PLACAR.registrar(igual, || format!("cqi10_intertoto_dia({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passou, n36, cqi10_w(uefa + 0x36), previsto, &v[..k]));
+    PLACAR.registrar(igual, || format!("cqi10_intertoto_dia({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passou, n36, read_i16(uefa + 0x36), previsto, &v[..k]));
     r
 }
 
@@ -492,15 +477,15 @@ unsafe extern "thiscall" fn comparar_cqi10_intertoto_dia(this: usize, hoje: usiz
 unsafe extern "thiscall" fn cqi10_intertoto_registros(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     match desfecho as u8 {
         1 => {
-            let peso = cpz4_escala(0x3c, 0x64, cqi10_w(jogo + 0x34), cqi10_w(this + 0x3c) as u16 as u32);
-            let uefa = cqi10_d(0xae23d0).wrapping_add(cqi10_d(0x9cf6f0).wrapping_mul(0x6b));
+            let peso = cpz4_escala(0x3c, 0x64, read_i16(jogo + 0x34), read_i16(this + 0x3c) as u16 as u32);
+            let uefa = read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(0x9cf6f0).wrapping_mul(0x6b));
             cpz4_classificado(clube, uefa, 0, 0xa, peso);
             crate::comparacao::ramo("cqi_10 vencedor do intertoto");
-            core::ptr::write_unaligned((clube + 0x1db) as *mut u32, cqi10_d(0x9cf6f0) as u32); // cqi10: o vencedor passa à UEFA
+            core::ptr::write_unaligned((clube + 0x1db) as *mut u32, read_u32_as_usize(0x9cf6f0) as u32); // cqi10: o vencedor passa à UEFA
         }
         0 => {
-            let r = cqi10_w(jogo + 0x34);
-            let n = cqi10_w(this + 0x3c);
+            let r = read_i16(jogo + 0x34);
+            let n = read_i16(this + 0x3c);
             let seguinte = r.wrapping_add(1);
             if seguinte >= n {
                 return 0;
@@ -511,14 +496,14 @@ unsafe extern "thiscall" fn cqi10_intertoto_registros(this: usize, clube: usize,
             }
             let q = (r as i32 * 99) / div;
             let peso = (q as u32 & !0xff) | (q as u8).wrapping_add(1) as u32; // inc al
-            let rodada = core::ptr::read_unaligned((cqi10_d(this + 0xa3).wrapping_add((seguinte as isize * 0x68) as usize) + 7) as *const u16) as u32;
+            let rodada = core::ptr::read_unaligned((read_u32_as_usize(this + 0xa3).wrapping_add((seguinte as isize * 0x68) as usize) + 7) as *const u16) as u32;
             // ponytail: a fase vai num registrador cujos 16 bits altos são os do movsx da rodada seguinte (zero); limpa
-            cpz4_classificado(clube, cqi10_d(this + 4), core::ptr::read_unaligned((jogo + 0x32) as *const u16) as u32, rodada, peso);
+            cpz4_classificado(clube, read_u32_as_usize(this + 4), core::ptr::read_unaligned((jogo + 0x32) as *const u16) as u32, rodada, peso);
         }
         0xff | 2 => {
-            let peso = cpz4_escala(0x14, 0x50, cqi10_w(jogo + 0x34), cqi10_w(this + 0x3c) as u16 as u32);
+            let peso = cpz4_escala(0x14, 0x50, read_i16(jogo + 0x34), read_i16(this + 0x3c) as u16 as u32);
             // ponytail: a rodada +0x30 vai num registrador com lixo nos 16 bits altos; a 0x86c000 só usa a palavra
-            cpz4_eliminado(clube, cqi10_d(this + 4), 0, core::ptr::read_unaligned((jogo + 0x30) as *const u16) as u32, peso);
+            cpz4_eliminado(clube, read_u32_as_usize(this + 4), 0, core::ptr::read_unaligned((jogo + 0x30) as *const u16) as u32, peso);
             crate::comparacao::ramo("cqi_10 caiu no intertoto");
             cpz4_sair(clube); // cqi10: quem cai no Intertoto sai da competição europeia
         }
@@ -534,14 +519,14 @@ unsafe extern "thiscall" fn comparar_cqi10_intertoto_registros(this: usize, club
     if clube == 0 {
         return o(this, clube, desfecho, a3, a4, jogo, a6);
     }
-    let antes = cqi10_d(clube + 0x1db);
+    let antes = read_u32_as_usize(clube + 0x1db);
     let previsto = match desfecho as u8 {
-        1 => cqi10_d(0x9cf6f0),
+        1 => read_u32_as_usize(0x9cf6f0),
         0xff | 2 => 0xffff_ffff,
         _ => antes,
     };
     let r = o(this, clube, desfecho, a3, a4, jogo, a6);
-    let depois = cqi10_d(clube + 0x1db);
+    let depois = read_u32_as_usize(clube + 0x1db);
     PLACAR.registrar(r == 0 && depois == previsto, || format!("cqi10_intertoto_registros({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, desfecho as u8, antes, depois, previsto, r));
     r
 }
@@ -570,10 +555,10 @@ unsafe extern "thiscall" fn comparar_cqi10_uefa_registros(this: usize, clube: us
         return o(this, clube, desfecho, a3, a4, jogo, a6);
     }
     let d = desfecho as u8;
-    let antes = cqi10_d(clube + 0x1db);
+    let antes = read_u32_as_usize(clube + 0x1db);
     let previsto = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { antes };
     let r = o(this, clube, desfecho, a3, a4, jogo, a6);
-    let depois = cqi10_d(clube + 0x1db);
+    let depois = read_u32_as_usize(clube + 0x1db);
     PLACAR.registrar(r == 0 && depois == previsto, || format!("cqi10_uefa_registros({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, d, antes, depois, previsto, r));
     r
 }

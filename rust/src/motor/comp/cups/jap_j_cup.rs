@@ -187,28 +187,22 @@ unsafe extern "thiscall" fn comparar_cqn11_copa_dos_eua_tabela(this: usize, fase
 }
 // ---------- 276a leva: os inscritos das copas do Japão e dos EUA: a Copa da Liga japonesa, a Copa dos EUA e a Copa do Imperador (jap_j_cup.cpp, usa_open_cup.cpp, jap_emp_cup.cpp) ----------
 
-unsafe fn cqn12_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqn12_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
 unsafe fn cqn12_clube(i: i32) -> usize {
-    cqn12_d(0xae23b4).wrapping_add((i as isize * 0x245) as usize)
+    read_u32_as_usize(0xae23b4).wrapping_add((i as isize * 0x245) as usize)
 }
 
 /// O id da competição apontada por `c + o` (+0 do registro), ou None sem ela.
 unsafe fn cqn12_comp(c: usize, o: usize) -> Option<usize> {
-    let d = cqn12_d(c + o);
-    if d == 0 { None } else { Some(cqn12_d(d)) }
+    let d = read_u32_as_usize(c + o);
+    if d == 0 { None } else { Some(read_u32_as_usize(d)) }
 }
 
 /// Grava a inscrição `k` da lista (+0xa7, 6 bytes: o clube, +4 a classe, +5 a situação 0).
 unsafe fn cqn12_inscrever(this: usize, k: i32, clube: usize, classe: u8) {
-    let e = cqn12_d(this + 0xa7) + k as usize * 6;
+    let e = read_u32_as_usize(this + 0xa7) + k as usize * 6;
     core::ptr::write_unaligned(e as *mut u32, clube as u32);
     *((e + 4) as *mut u8) = classe;
     *((e + 5) as *mut u8) = 0;
@@ -250,36 +244,36 @@ unsafe fn cqn12_copa_da_liga(this: usize) -> (i32, i32) {
     }
     let mut n = 0i32;
     let mut i: i16 = 0;
-    while (i as i32) < cqn12_d(0xae235c) as i32 {
+    while (i as i32) < read_u32_as_usize(0xae235c) as i32 {
         let c = cqn12_clube(i as i32);
-        if cqn12_comp(c, 0x57) == Some(cqn12_d(0x9cf768)) && n < cqn12_w(this + 0x3e) as i32 {
+        if cqn12_comp(c, 0x57) == Some(read_u32_as_usize(0x9cf768)) && n < read_i16(this + 0x3e) as i32 {
             cqn12_inscrever(this, n, c, 0);
             n += 1;
-            if n == cqn12_w(this + 0x3e) as i32 {
+            if n == read_i16(this + 0x3e) as i32 {
                 break;
             }
         }
         i = i.wrapping_add(1);
     }
     let mut i: i16 = 0;
-    while (i as i32) < cqn12_d(0xae235c) as i32 {
+    while (i as i32) < read_u32_as_usize(0xae235c) as i32 {
         let c = cqn12_clube(i as i32);
-        if cqn12_comp(c, 0x57) == Some(cqn12_d(0x9cf65c)) && n < cqn12_w(this + 0x3e) as i32 {
-            let e = cqn12_d(this + 0xa7) + n as usize * 6;
+        if cqn12_comp(c, 0x57) == Some(read_u32_as_usize(0x9cf65c)) && n < read_i16(this + 0x3e) as i32 {
+            let e = read_u32_as_usize(this + 0xa7) + n as usize * 6;
             core::ptr::write_unaligned(e as *mut u32, c as u32);
             crate::comparacao::ramo("cqn_12 semente da j1");
             let s = cqn12_sortear(0x14); // cqn12: a classe sorteada dos clubes da J1
             *((e + 4) as *mut u8) = s as u8;
             *((e + 5) as *mut u8) = 0;
             n += 1;
-            if n == cqn12_w(this + 0x3e) as i32 {
+            if n == read_i16(this + 0x3e) as i32 {
                 break;
             }
         }
         i = i.wrapping_add(1);
     }
-    cqn12_ordenar(cqn12_d(this + 0xa7) + 0x42, 0x10);
-    ((n == cqn12_w(this + 0x3e) as i32) as i32, n)
+    cqn12_ordenar(read_u32_as_usize(this + 0xa7) + 0x42, 0x10);
+    ((n == read_i16(this + 0x3e) as i32) as i32, n)
 }
 
 unsafe extern "thiscall" fn cqn12_copa_da_liga_inscritos(this: usize) -> i32 {
@@ -297,11 +291,11 @@ unsafe fn cqn12_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: im
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4), a_[0], a_[1]];
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
         let r = o();
-        lo.set(cqn12_d(this + 0xa7));
+        lo.set(read_u32_as_usize(this + 0xa7));
         r
     }, || {
         let (r, n) = crate::aleatorio::sem_contar(c);
-        lr.set(cqn12_d(this + 0xa7));
+        lr.set(read_u32_as_usize(this + 0xa7));
         nr.set(n);
         core::ptr::write_unaligned((this + 0xa7) as *mut u32, lo.get() as u32);
         r
@@ -333,7 +327,7 @@ unsafe extern "thiscall" fn comparar_cqn12_copa_da_liga_inscritos(this: usize) -
 /// vetor com a classe 2 e depois todos os clubes da MLS ([0x9cf590]) com a classe 1 (sem conferir o espaço). Devolve 1.
 unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x20);
-    let comp = |id: usize| cqn12_d(0xae23d0).wrapping_add(cqn12_d(id).wrapping_mul(0x6b));
+    let comp = |id: usize| read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b));
     let (a, b) = (comp(0x9cf594), comp(0x9cf598));
     // ponytail: os vetores locais da original começam com o que estava na pilha; com menos de 10 clubes numa das
     // ligas ela copiaria essa sobra (e a 0x4afbd0 já daria a caixa): a cópia começa com zero
@@ -341,12 +335,12 @@ unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
     let mut vb = [0usize; 50];
     let (mut na, mut nb) = (0i8, 0i8);
     let mut i = 0i32;
-    while i < cqn12_d(0xae235c) as i32 {
+    while i < read_u32_as_usize(0xae235c) as i32 {
         if na == 0x32 && nb == 0x32 {
             break;
         }
         let c = cqn12_clube(i);
-        let d = cqn12_d(c + 0x57);
+        let d = read_u32_as_usize(c + 0x57);
         if d == a && na < 0x32 {
             va[na as usize] = c;
             na += 1;
@@ -359,7 +353,7 @@ unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
     cqn12_embaralhar(va.as_mut_ptr(), na as i32, 10);
     cqn12_embaralhar(vb.as_mut_ptr(), nb as i32, 10);
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
-    let l = calloc(cqn12_w(this + 0x3e) as i32 as u32, 6);
+    let l = calloc(read_i16(this + 0x3e) as i32 as u32, 6);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
         aviso_em(0xaa20e0, 0x138);
@@ -372,9 +366,9 @@ unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
     }
     crate::comparacao::ramo("cqn_12 inscritos da copa dos eua");
     let mut i = 0i32;
-    while i < cqn12_d(0xae235c) as i32 {
+    while i < read_u32_as_usize(0xae235c) as i32 {
         let c = cqn12_clube(i);
-        if cqn12_comp(c, 0x57) == Some(cqn12_d(0x9cf590)) {
+        if cqn12_comp(c, 0x57) == Some(read_u32_as_usize(0x9cf590)) {
             cqn12_inscrever(this, k as i32, c, 1);
             k = k.wrapping_add(1);
         }
@@ -414,28 +408,28 @@ unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
     let mut vc = [0usize; 30];
     let mut vd = [0usize; 6];
     let (mut na, mut nb, mut nc, mut nd) = (0i8, 0i8, 0i8, 0i8);
-    if cqn12_d(0xae235c) as i32 > 0 {
+    if read_u32_as_usize(0xae235c) as i32 > 0 {
         let mut i: i16 = 0;
-        while (i as i32) < cqn12_d(0xae235c) as i32 {
+        while (i as i32) < read_u32_as_usize(0xae235c) as i32 {
             let c = cqn12_clube(i as i32);
-            if cqn12_d(c + 0x57) != 0 && cqn12_comp(c, 0x53) == Some(cqn12_d(0x9cf36c)) {
-                let d = cqn12_d(cqn12_d(c + 0x57));
-                if d == cqn12_d(0x9cf678) {
+            if read_u32_as_usize(c + 0x57) != 0 && cqn12_comp(c, 0x53) == Some(read_u32_as_usize(0x9cf36c)) {
+                let d = read_u32_as_usize(read_u32_as_usize(c + 0x57));
+                if d == read_u32_as_usize(0x9cf678) {
                     if na < 0x64 {
                         va[na as usize] = c;
                         na += 1;
                     }
-                } else if d == cqn12_d(0x9cf674) {
+                } else if d == read_u32_as_usize(0x9cf674) {
                     if nb < 0x1e {
                         vb[nb as usize] = c;
                         nb += 1;
                     }
-                } else if d == cqn12_d(0x9cf670) {
+                } else if d == read_u32_as_usize(0x9cf670) {
                     if nc < 0x1e {
                         vc[nc as usize] = c;
                         nc += 1;
                     }
-                } else if d != cqn12_d(0x9cf768) && d != cqn12_d(0x9cf65c) && nd < 6 {
+                } else if d != read_u32_as_usize(0x9cf768) && d != read_u32_as_usize(0x9cf65c) && nd < 6 {
                     vd[nd as usize] = c;
                     nd += 1;
                 }
@@ -468,29 +462,29 @@ unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
         n += 1;
     }
     let mut i: i16 = 0;
-    while (i as i32) < cqn12_d(0xae235c) as i32 {
+    while (i as i32) < read_u32_as_usize(0xae235c) as i32 {
         let c = cqn12_clube(i as i32);
-        if cqn12_comp(c, 0x57) == Some(cqn12_d(0x9cf768)) && n < cqn12_w(this + 0x3e) as i32 {
+        if cqn12_comp(c, 0x57) == Some(read_u32_as_usize(0x9cf768)) && n < read_i16(this + 0x3e) as i32 {
             cqn12_inscrever(this, n, c, 0);
             n += 1;
         }
         i = i.wrapping_add(1);
     }
     let mut i: i16 = 0;
-    while (i as i32) < cqn12_d(0xae235c) as i32 {
+    while (i as i32) < read_u32_as_usize(0xae235c) as i32 {
         let c = cqn12_clube(i as i32);
-        if cqn12_comp(c, 0x57) == Some(cqn12_d(0x9cf65c)) && n < cqn12_w(this + 0x3e) as i32 {
+        if cqn12_comp(c, 0x57) == Some(read_u32_as_usize(0x9cf65c)) && n < read_i16(this + 0x3e) as i32 {
             crate::comparacao::ramo("cqn_12 classe da j1 na copa do imperador");
             cqn12_inscrever(this, n, c, *((c + 0x5f) as *const u8)); // cqn12: a classe dos clubes da J1 na Copa do Imperador
             n += 1;
-            if n == cqn12_w(this + 0x3e) as i32 {
+            if n == read_i16(this + 0x3e) as i32 {
                 break;
             }
         }
         i = i.wrapping_add(1);
     }
-    cqn12_ordenar(cqn12_d(this + 0xa7).wrapping_add(((n * 3 - 0x30) * 2) as isize as usize), 0x10);
-    ((n == cqn12_w(this + 0x3e) as i32) as i32, n)
+    cqn12_ordenar(read_u32_as_usize(this + 0xa7).wrapping_add(((n * 3 - 0x30) * 2) as isize as usize), 0x10);
+    ((n == read_i16(this + 0x3e) as i32) as i32, n)
 }
 
 unsafe extern "thiscall" fn cqn12_copa_do_imperador_inscritos(this: usize) -> i32 {

@@ -1,28 +1,13 @@
 // ---------- 271a leva: o regen jovem: a pessoa aposentada refeita como jogador novo do banco de fichas (nação, nomes, idiomas, idade, habilidade, reputações, personalidade) e posta num clube; a saída da disputa (player_regen.cpp, dispute.cpp) ----------
 
-unsafe fn cqg7_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
 unsafe fn cqg7_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cqg7_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqg7_pw(a: usize, v: i16) {
-    core::ptr::write_unaligned(a as *mut i16, v);
-}
 
-unsafe fn cqg7_b(a: usize) -> i8 {
-    *(a as *const i8)
-}
 
-unsafe fn cqg7_pb(a: usize, v: i8) {
-    *(a as *mut i8) = v;
-}
 
 unsafe fn cqg7_sortear(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
@@ -37,7 +22,7 @@ unsafe fn cqg7_com(rotina: usize, this: usize, a: usize) {
 
 /// O byte `k` do registro de 79 bytes da pessoa ([0xae2d0c] + 0x4f × id).
 unsafe fn cqg7_r79(p: usize, k: usize) -> *mut u8 {
-    (cqg7_d(0xae2d0c) as isize + cqg7_i(p) as isize * 0x4f + k as isize) as *mut u8
+    (read_u32_as_usize(0xae2d0c) as isize + cqg7_i(p) as isize * 0x4f + k as isize) as *mut u8
 }
 
 /// O inteiro × a constante double do .rdata, truncado (fild; fmul qword; _ftol), em 16 bits.
@@ -48,46 +33,46 @@ unsafe fn cqg7_mul(v: i16, k: usize) -> i16 {
 /// A habilidade (ficha +5) pelo sorteio: r = sorteio(trunc(PA × m1)); trunc(r + PA × m2) (fild r; fild PA; fmul m2;
 /// faddp; _ftol), a PA na ficha +7.
 unsafe fn cqg7_habilidade(f: usize, m1: usize, m2: usize) {
-    let pa = cqg7_w(f + 7) as f64;
+    let pa = read_i16(f + 7) as f64;
     let r = cqg7_sortear(ftol(pa * f64_em(m1)));
     crate::comparacao::ramo("cqg_7 habilidade");
-    cqg7_pw(f + 5, ftol(r as f64 + pa * f64_em(m2)) as i16); // cqg7: a habilidade sorteada pela PA
+    write_i16(f + 5, ftol(r as f64 + pa * f64_em(m2)) as i16); // cqg7: a habilidade sorteada pela PA
 }
 
 /// O acerto de um atributo de personalidade de 1..20: acima de 15 cai sorteio(`cai`); abaixo de `a1` sobe sorteio(`s1`);
 /// abaixo de `a2` sobe sorteio(`s2`) (0 = nada).
 unsafe fn cqg7_acertar(a: usize, cai: i32, a1: i8, s1: i32, a2: i8, s2: i32) {
-    let v = cqg7_b(a);
+    let v = read_i8(a);
     if v > 0xf {
         let r = cqg7_sortear(cai);
-        cqg7_pb(a, cqg7_b(a).wrapping_sub(r as i8));
+        write_i8(a, read_i8(a).wrapping_sub(r as i8));
     } else if v < a1 {
         let r = cqg7_sortear(s1);
-        cqg7_pb(a, cqg7_b(a).wrapping_add(r as i8));
+        write_i8(a, read_i8(a).wrapping_add(r as i8));
     } else if s2 != 0 && v < a2 {
         let r = cqg7_sortear(s2);
-        cqg7_pb(a, cqg7_b(a).wrapping_add(r as i8));
+        write_i8(a, read_i8(a).wrapping_add(r as i8));
     }
 }
 
 /// Abaixo de `lim`: soma sorteio(n).
 unsafe fn cqg7_subir_abaixo(a: usize, lim: i8, n: i32) {
-    if cqg7_b(a) < lim {
+    if read_i8(a) < lim {
         let r = cqg7_sortear(n);
-        cqg7_pb(a, cqg7_b(a).wrapping_add(r as i8));
+        write_i8(a, read_i8(a).wrapping_add(r as i8));
     }
 }
 
 /// Tira sorteio(n).
 unsafe fn cqg7_tirar(a: usize, n: i32) {
     let r = cqg7_sortear(n);
-    cqg7_pb(a, cqg7_b(a).wrapping_sub(r as i8));
+    write_i8(a, read_i8(a).wrapping_sub(r as i8));
 }
 
 /// O teto da habilidade: acima de `teto` e sorteio(n) diferente de 0, o teto.
 unsafe fn cqg7_teto(f: usize, teto: i16, n: i32) {
-    if cqg7_w(f + 5) > teto && cqg7_sortear(n) != 0 {
-        cqg7_pw(f + 5, teto);
+    if read_i16(f + 5) > teto && cqg7_sortear(n) != 0 {
+        write_i16(f + 5, teto);
     }
 }
 
@@ -110,50 +95,50 @@ unsafe fn cqg7_teto(f: usize, teto: i16, n: i32) {
 unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
     let marca = cqg7_r79(p, 0xb);
     let b = *marca;
-    if b & 0x30 == 0 || cqg7_d(p + 0x39) != 0 {
+    if b & 0x30 == 0 || read_u32_as_usize(p + 0x39) != 0 {
         *marca = b & 0xcf;
         return;
     }
-    cqg7_com(0x775ba0, cqg7_d(0xb74318), p);
-    let banco = cqg7_d(this + 0x3c);
+    cqg7_com(0x775ba0, read_u32_as_usize(0xb74318), p);
+    let banco = read_u32_as_usize(this + 0x3c);
     let (ficha_id, nacao_id, nacao2_id) = (cqg7_i(banco), cqg7_i(banco + 4), cqg7_i(banco + 8));
     let tirar_do_banco: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(0x7a8470usize);
     tirar_do_banco(this, ficha_id);
     *((p + 0x5f) as *mut u8) = 2;
-    core::ptr::write_unaligned((p + 0x61) as *mut usize, cqg7_d(0xae23c4).wrapping_add((ficha_id as isize * 0x46) as usize));
+    core::ptr::write_unaligned((p + 0x61) as *mut usize, read_u32_as_usize(0xae23c4).wrapping_add((ficha_id as isize * 0x46) as usize));
     *cqg7_r79(p, 0xb) |= 0x40;
     *cqg7_r79(p, 0xd) = 0;
     *cqg7_r79(p, 0xc) &= 0xfd;
     *cqg7_r79(p, 0xb) &= 0x7f;
     *cqg7_r79(p, 0xc) &= 0xfe;
     *cqg7_r79(p, 9) = 0x9c;
-    if cqg7_d(0xae2a60) != 0 && *(0x9cc270 as *const u8) != 0 {
-        cqg7_com(0x5afd00, cqg7_d(0xae2a60), p);
+    if read_u32_as_usize(0xae2a60) != 0 && *(0x9cc270 as *const u8) != 0 {
+        cqg7_com(0x5afd00, read_u32_as_usize(0xae2a60), p);
     }
-    cqg7_com(0x7c6650, cqg7_d(0xb74350), p);
-    cqg7_com(0x86fb80, cqg7_d(0xdd7f00), p);
-    cqg7_com(0x55e1d0, cqg7_d(0xae28f0), p);
-    cqg7_com(0x631f90, cqg7_d(0xb63d28), p);
-    cqg7_com(0x56a090, cqg7_d(0xae2a30), p);
-    cqg7_com(0x556830, cqg7_d(0xae28f0), cqg7_d(p));
-    cqg7_com(0x62bfa0, cqg7_d(0xb63d28), cqg7_d(p));
-    cqg7_com(0x4d0b50, cqg7_d(0xae1050), p);
-    cqg7_com(0x4d0bd0, cqg7_d(0xae1050), p);
+    cqg7_com(0x7c6650, read_u32_as_usize(0xb74350), p);
+    cqg7_com(0x86fb80, read_u32_as_usize(0xdd7f00), p);
+    cqg7_com(0x55e1d0, read_u32_as_usize(0xae28f0), p);
+    cqg7_com(0x631f90, read_u32_as_usize(0xb63d28), p);
+    cqg7_com(0x56a090, read_u32_as_usize(0xae2a30), p);
+    cqg7_com(0x556830, read_u32_as_usize(0xae28f0), read_u32_as_usize(p));
+    cqg7_com(0x62bfa0, read_u32_as_usize(0xb63d28), read_u32_as_usize(p));
+    cqg7_com(0x4d0b50, read_u32_as_usize(0xae1050), p);
+    cqg7_com(0x4d0bd0, read_u32_as_usize(0xae1050), p);
     *((p + 0x22) as *mut u8) = 0;
     *((p + 0x23) as *mut u8) = 0;
-    if cqg7_d(p + 0x69) != 0 {
+    if read_u32_as_usize(p + 0x69) != 0 {
         core::ptr::write_unaligned((p + 0x69) as *mut u32, 0);
     }
     *cqg7_r79(p, 0xb) &= 0xf0;
     *cqg7_r79(p, 8) = 0;
     *cqg7_r79(p, 9) = 0x9c;
-    let nacoes = cqg7_d(0xae23a8);
+    let nacoes = read_u32_as_usize(0xae23a8);
     let nac = nacoes.wrapping_add((nacao_id as isize * 0x122) as usize);
     core::ptr::write_unaligned((p + 0x1a) as *mut usize, nac);
     if cqg7_i(nac + 0x88) < 100 && cqg7_sortear(4) == 0 {
         let k = cqg7_sortear(cqg7_i(0xae2350));
-        let outra = cqg7_d(0xae23a8).wrapping_add((k as isize * 0x122) as usize);
-        if cqg7_d(outra + 0x71) != 0 && cqg7_i(outra + 0x88) < 100 {
+        let outra = read_u32_as_usize(0xae23a8).wrapping_add((k as isize * 0x122) as usize);
+        if read_u32_as_usize(outra + 0x71) != 0 && cqg7_i(outra + 0x88) < 100 {
             core::ptr::write_unaligned((p + 0x1a) as *mut usize, outra);
         }
     }
@@ -162,7 +147,7 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
             if nacao2_id != cqg7_i(0x9cf424) && cqg7_sortear(3) != 0 {
                 core::ptr::write_unaligned((p + 0x1e) as *mut u32, 0);
             } else {
-                core::ptr::write_unaligned((p + 0x1e) as *mut usize, cqg7_d(0xae23a8).wrapping_add((nacao2_id as isize * 0x122) as usize));
+                core::ptr::write_unaligned((p + 0x1e) as *mut usize, read_u32_as_usize(0xae23a8).wrapping_add((nacao2_id as isize * 0x122) as usize));
             }
         }
     } else {
@@ -171,15 +156,15 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
     let nome1: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x539c60usize);
     let nome2: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53a1b0usize);
     let nome3: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53a5b0usize);
-    let v = nome1(cqg7_d(p + 0x1a));
+    let v = nome1(read_u32_as_usize(p + 0x1a));
     core::ptr::write_unaligned((p + 4) as *mut usize, v);
-    let v = nome2(cqg7_d(p + 0x1a));
+    let v = nome2(read_u32_as_usize(p + 0x1a));
     core::ptr::write_unaligned((p + 8) as *mut usize, v);
-    let v = nome3(cqg7_d(p + 0x1a));
+    let v = nome3(read_u32_as_usize(p + 0x1a));
     core::ptr::write_unaligned((p + 0xc) as *mut usize, v);
-    cqg7_com(0x5fff30, cqg7_d(0xb63c98), p);
-    cqg7_pw(p + 0x40, cqg7_w(0xae2c92));
-    cqg7_pw(p + 0x3e, cqg7_w(0xae2c90));
+    cqg7_com(0x5fff30, read_u32_as_usize(0xb63c98), p);
+    write_i16(p + 0x40, read_i16(0xae2c92));
+    write_i16(p + 0x3e, read_i16(0xae2c90));
     core::ptr::write_unaligned((p + 0x39) as *mut u32, 0);
     core::ptr::write_unaligned((p + 0x24) as *mut u32, 0);
     core::ptr::write_unaligned((p + 0x4e) as *mut u32, 0);
@@ -187,25 +172,25 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
     // os idiomas: a original empurra o dword do argumento com o byte de baixo trocado (as chamadas leem o byte)
     let tirar_idioma: unsafe extern "thiscall" fn(usize, usize, i8) = core::mem::transmute(0x7c6bf0usize);
     for k in 1..=0x40i8 {
-        tirar_idioma(cqg7_d(0xb74350), p, k);
+        tirar_idioma(read_u32_as_usize(0xb74350), p, k);
     }
     let peso: unsafe extern "stdcall" fn(usize, i8) -> i16 = core::mem::transmute(0x7c6930usize);
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(0x7c6a30usize);
-    let base = (0x14i16.wrapping_sub(cqg7_b(p + 0x56) as i16)).wrapping_mul(10);
+    let base = (0x14i16.wrapping_sub(read_i8(p + 0x56) as i16)).wrapping_mul(10);
     for k in 1..=0x40i8 {
         let v = peso(p, k);
         if v != 0 && v >= base {
             let q = (v as i32 - base as i32) / 0x4b;
             // ponytail: a fluência vai num dword da pilha com só o byte de baixo gravado (a 0x7c6a30 lê o byte)
             let nivel = if q > 0xa { 0xa } else { q as u8 };
-            acrescentar(cqg7_d(0xb74350), p, k as u8 as u32, nivel as u32, 1);
+            acrescentar(read_u32_as_usize(0xb74350), p, k as u8 as u32, nivel as u32, 1);
         }
     }
     *((p + 0x3d) as *mut u8) = 0xb;
     *((p + 0x28) as *mut u8) = 0xb;
     *cqg7_r79(p, 0xb) &= 0xcf;
-    let f = cqg7_d(p + 0x61);
-    let nac = cqg7_d(p + 0x1a);
+    let f = read_u32_as_usize(p + 0x61);
+    let nac = read_u32_as_usize(p + 0x1a);
     let idade: i8;
     if nac != 0 && *((nac + 0x11c) as *const u8) == 0 && cqg7_i(nac + 0x88) < 0x15e {
         // a nação pequena: a idade pela reputação dela e a habilidade pela PA
@@ -227,61 +212,61 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
             cqg7_habilidade(f, 0x968e48, 0x9689e0);
         }
         let r = cqg7_sortear(0x2ee);
-        cqg7_pw(f + 9, (r as i16).wrapping_add(cqg7_w(f + 5).wrapping_mul(0x1e)).wrapping_add(0xfa));
+        write_i16(f + 9, (r as i16).wrapping_add(read_i16(f + 5).wrapping_mul(0x1e)).wrapping_add(0xfa));
         let mut l121 = idade <= 0x12;
-        if !l121 && cqg7_w(f + 7) > 0x8c && cqg7_w(f + 5) > 0x64 && cqg7_w(f + 9) < 0x1964 && idade < 0x16 && cqg7_sortear(4) != 0 {
-            cqg7_pw(f + 9, cqg7_mul(cqg7_w(f + 9), 0x968978));
+        if !l121 && read_i16(f + 7) > 0x8c && read_i16(f + 5) > 0x64 && read_i16(f + 9) < 0x1964 && idade < 0x16 && cqg7_sortear(4) != 0 {
+            write_i16(f + 9, cqg7_mul(read_i16(f + 9), 0x968978));
         }
         if idade <= 0x12 {
             l121 = true;
         }
         if l121 {
-            let a = cqg7_w(f + 5);
+            let a = read_i16(f + 5);
             let r = cqg7_sortear(0xc8) as i16;
             let v = if a < 0x8c {
-                r.wrapping_add(cqg7_w(f + 5).wrapping_mul(5)).wrapping_add(1)
+                r.wrapping_add(read_i16(f + 5).wrapping_mul(5)).wrapping_add(1)
             } else {
-                r.wrapping_add(cqg7_w(f + 5).wrapping_add(0x19).wrapping_mul(10))
+                r.wrapping_add(read_i16(f + 5).wrapping_add(0x19).wrapping_mul(10))
             };
-            cqg7_pw(f + 0xd, v);
+            write_i16(f + 0xd, v);
         } else {
-            let a = cqg7_w(f + 5);
+            let a = read_i16(f + 5);
             if a < 0x78 {
                 let r = cqg7_sortear(0xc8) as i16;
-                cqg7_pw(f + 0xd, r.wrapping_add(cqg7_w(f + 5).wrapping_mul(0xf)).wrapping_add(1));
+                write_i16(f + 0xd, r.wrapping_add(read_i16(f + 5).wrapping_mul(0xf)).wrapping_add(1));
             } else if idade > 0x15 && a > 0x78 {
                 let r = cqg7_sortear(0xc8) as i16;
-                cqg7_pw(f + 0xd, r.wrapping_add(cqg7_w(f + 5).wrapping_add(0xa).wrapping_mul(0x19)));
+                write_i16(f + 0xd, r.wrapping_add(read_i16(f + 5).wrapping_add(0xa).wrapping_mul(0x19)));
             } else {
                 let r = cqg7_sortear(0xc8) as i16;
                 let soma = if a < 0x8c { 1 } else { 0xfa };
-                cqg7_pw(f + 0xd, r.wrapping_add(cqg7_w(f + 5).wrapping_mul(0x14)).wrapping_add(soma));
+                write_i16(f + 0xd, r.wrapping_add(read_i16(f + 5).wrapping_mul(0x14)).wrapping_add(soma));
             }
         }
-        if cqg7_w(f + 9) < 0x8ca {
+        if read_i16(f + 9) < 0x8ca {
             let r = cqg7_sortear(5);
-            cqg7_pw(f + 0xd, (r as i16).wrapping_add(1));
+            write_i16(f + 0xd, (r as i16).wrapping_add(1));
         }
-        if cqg7_w(f + 9) < cqg7_w(f + 0xd) {
-            cqg7_pw(f + 9, cqg7_w(f + 0xd).wrapping_add(0xa));
-            cqg7_pw(f + 0xd, 1);
+        if read_i16(f + 9) < read_i16(f + 0xd) {
+            write_i16(f + 9, read_i16(f + 0xd).wrapping_add(0xa));
+            write_i16(f + 0xd, 1);
         }
         let r = cqg7_sortear(0x32);
-        cqg7_pw(f + 0xb, (r as i16).wrapping_add(cqg7_w(f + 9)));
+        write_i16(f + 0xb, (r as i16).wrapping_add(read_i16(f + 9)));
         if idade > 0x17 {
-            if cqg7_w(f + 9) < 0x1770 {
-                cqg7_pw(f + 9, cqg7_mul(cqg7_w(f + 9), 0x969588));
+            if read_i16(f + 9) < 0x1770 {
+                write_i16(f + 9, cqg7_mul(read_i16(f + 9), 0x969588));
             }
-            if cqg7_w(f + 0xb) < 0x1770 {
-                cqg7_pw(f + 0xb, cqg7_mul(cqg7_w(f + 0xb), 0x969588));
+            if read_i16(f + 0xb) < 0x1770 {
+                write_i16(f + 0xb, cqg7_mul(read_i16(f + 0xb), 0x969588));
             }
-            let a = cqg7_w(f + 5);
+            let a = read_i16(f + 5);
             if a < cqg7_mul(a, 0x96a5d0) && cqg7_sortear(4) != 0 {
-                cqg7_pw(f + 5, cqg7_mul(cqg7_w(f + 5), 0x96a5d0));
+                write_i16(f + 5, cqg7_mul(read_i16(f + 5), 0x96a5d0));
             }
         } else if idade < 0x14 {
-            if cqg7_w(f + 5) < cqg7_mul(cqg7_w(f + 7), 0x968968) && cqg7_sortear(4) != 0 {
-                cqg7_pw(f + 5, cqg7_mul(cqg7_w(f + 7), 0x968968));
+            if read_i16(f + 5) < cqg7_mul(read_i16(f + 7), 0x968968) && cqg7_sortear(4) != 0 {
+                write_i16(f + 5, cqg7_mul(read_i16(f + 7), 0x968968));
             }
             if idade < 0x12 {
                 cqg7_teto(f, 0x78, 0x96);
@@ -289,14 +274,14 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
                 cqg7_teto(f, 0x78, 0x32);
             }
         } else {
-            if cqg7_w(f + 9) < 0x1676 {
-                cqg7_pw(f + 9, cqg7_mul(cqg7_w(f + 9), 0x968928));
+            if read_i16(f + 9) < 0x1676 {
+                write_i16(f + 9, cqg7_mul(read_i16(f + 9), 0x968928));
             }
-            if cqg7_w(f + 0xb) < 0x1676 {
-                cqg7_pw(f + 0xb, cqg7_mul(cqg7_w(f + 0xb), 0x968928));
+            if read_i16(f + 0xb) < 0x1676 {
+                write_i16(f + 0xb, cqg7_mul(read_i16(f + 0xb), 0x968928));
             }
-            if cqg7_w(f + 5) < cqg7_mul(cqg7_w(f + 7), 0x968e48) && cqg7_sortear(4) != 0 {
-                cqg7_pw(f + 5, cqg7_mul(cqg7_w(f + 7), 0x968e48));
+            if read_i16(f + 5) < cqg7_mul(read_i16(f + 7), 0x968e48) && cqg7_sortear(4) != 0 {
+                write_i16(f + 5, cqg7_mul(read_i16(f + 7), 0x968e48));
             }
             cqg7_teto(f, 0x8c, 0x32);
         }
@@ -313,21 +298,21 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
         }
         if cqg7_sortear(0xfa) != 0 {
             let r = cqg7_sortear(0x2ee) as i16;
-            cqg7_pw(f + 9, r.wrapping_add(cqg7_w(f + 5).wrapping_mul(0x14)).wrapping_add(0xfa)); // cqg7: a reputação +9 do regen
+            write_i16(f + 9, r.wrapping_add(read_i16(f + 5).wrapping_mul(0x14)).wrapping_add(0xfa)); // cqg7: a reputação +9 do regen
             crate::comparacao::ramo("cqg_7 reputacao do regen");
             let r = cqg7_sortear(0x14) as i16;
-            cqg7_pw(f + 0xd, r.wrapping_add(cqg7_w(f + 5).wrapping_mul(5)).wrapping_add(1));
+            write_i16(f + 0xd, r.wrapping_add(read_i16(f + 5).wrapping_mul(5)).wrapping_add(1));
         } else {
             let r = cqg7_sortear(0x2ee) as i16;
-            cqg7_pw(f + 9, r.wrapping_add(cqg7_w(f + 5).wrapping_mul(0xf)).wrapping_add(0x7d));
-            cqg7_pw(f + 0xd, 1);
+            write_i16(f + 9, r.wrapping_add(read_i16(f + 5).wrapping_mul(0xf)).wrapping_add(0x7d));
+            write_i16(f + 0xd, 1);
         }
-        if cqg7_w(f + 9) < cqg7_w(f + 0xd) {
-            cqg7_pw(f + 9, cqg7_w(f + 0xd).wrapping_add(0xa));
-            cqg7_pw(f + 0xd, 1);
+        if read_i16(f + 9) < read_i16(f + 0xd) {
+            write_i16(f + 9, read_i16(f + 0xd).wrapping_add(0xa));
+            write_i16(f + 0xd, 1);
         }
         let r = cqg7_sortear(0x32);
-        cqg7_pw(f + 0xb, (r as i16).wrapping_add(cqg7_w(f + 9)));
+        write_i16(f + 0xb, (r as i16).wrapping_add(read_i16(f + 9)));
         let s = cqg7_sortear(0x2710);
         crate::comparacao::ramo("cqg_7 nacao grande");
         if s == 0 {
@@ -357,41 +342,41 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
         }
     }
     let grande: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x549ea0usize);
-    if grande(cqg7_d(p + 0x1a)) == 0 {
-        if idade < 0x19 && cqg7_w(f + 5) < 0x78 {
-            cqg7_pw(f + 0xd, 1);
+    if grande(read_u32_as_usize(p + 0x1a)) == 0 {
+        if idade < 0x19 && read_i16(f + 5) < 0x78 {
+            write_i16(f + 0xd, 1);
         } else {
-            cqg7_pw(f + 0xd, cqg7_mul(cqg7_w(f + 0xd), 0x96a5d0));
+            write_i16(f + 0xd, cqg7_mul(read_i16(f + 0xd), 0x96a5d0));
         }
     }
-    cqg7_pw(p + 0x12, cqg7_w(0xae2c92).wrapping_sub(idade as i16)); // cqg7: o ano do nascimento
+    write_i16(p + 0x12, read_i16(0xae2c92).wrapping_sub(idade as i16)); // cqg7: o ano do nascimento
     let r = cqg7_sortear(0x16d);
-    cqg7_pw(p + 0x10, r as i16);
+    write_i16(p + 0x10, r as i16);
     let anos: unsafe extern "C" fn(usize, *const u16) -> u16 = core::mem::transmute(0x53ab90usize);
     let a = anos(p, 0xae2c90 as *const u16);
-    cqg7_pw(p + 0x18, a as u8 as i8 as i16);
+    write_i16(p + 0x18, a as u8 as i8 as i16);
     // +0x1b
-    if cqg7_w(f + 7) > 0x64 && (cqg7_b(f + 0x15) >= 0xf || cqg7_b(f + 0x14) >= 0xf) {
+    if read_i16(f + 7) > 0x64 && (read_i8(f + 0x15) >= 0xf || read_i8(f + 0x14) >= 0xf) {
         if cqg7_sortear(3) != 0 {
             let r = cqg7_sortear(0xb);
-            cqg7_pb(f + 0x1b, (r as i8).wrapping_add(0xa));
+            write_i8(f + 0x1b, (r as i8).wrapping_add(0xa));
         } else if cqg7_sortear(3) == 0 {
             let r = cqg7_sortear(7);
-            cqg7_pb(f + 0x1b, (r as i8).wrapping_add(0xe));
+            write_i8(f + 0x1b, (r as i8).wrapping_add(0xe));
         } else {
             let r = cqg7_sortear(0x10);
-            cqg7_pb(f + 0x1b, (r as i8).wrapping_add(5));
+            write_i8(f + 0x1b, (r as i8).wrapping_add(5));
         }
     } else if cqg7_sortear(4) != 0 {
         let r = cqg7_sortear(0xa);
-        cqg7_pb(f + 0x1b, (r as i8).wrapping_add(8));
+        write_i8(f + 0x1b, (r as i8).wrapping_add(8));
     } else {
         let r = cqg7_sortear(0x10);
-        cqg7_pb(f + 0x1b, (r as i8).wrapping_add(5));
+        write_i8(f + 0x1b, (r as i8).wrapping_add(5));
     }
     cqg7_acertar(f + 0x1b, 5, 5, 0xa, 0xa, 8);
     // +0x36 pelo +0x1b
-    let a = cqg7_b(f + 0x1b);
+    let a = read_i8(f + 0x1b);
     let v = if a > 0xf {
         (cqg7_sortear(0xb) as i8).wrapping_add(0xa)
     } else if a > 0xa {
@@ -403,47 +388,47 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
     } else {
         (cqg7_sortear(0xa) as i8).wrapping_add(5)
     };
-    cqg7_pb(f + 0x36, v);
+    write_i8(f + 0x36, v);
     // +0x1d (o goleiro de 20 com 4/5 pela PA)
-    if cqg7_b(f + 0xf) == 0x14 && cqg7_sortear(5) != 0 {
+    if read_i8(f + 0xf) == 0x14 && cqg7_sortear(5) != 0 {
         let r = cqg7_sortear(0x14);
-        let v = if cqg7_w(f + 7) as i32 > r + 0x64 {
+        let v = if read_i16(f + 7) as i32 > r + 0x64 {
             (cqg7_sortear(0xb) as i8).wrapping_add(0xa)
         } else {
             (cqg7_sortear(0x10) as i8).wrapping_add(5)
         };
-        cqg7_pb(f + 0x1d, v);
+        write_i8(f + 0x1d, v);
     } else {
         let r = cqg7_sortear(0x14);
-        cqg7_pb(f + 0x1d, (r as i8).wrapping_add(1));
+        write_i8(f + 0x1d, (r as i8).wrapping_add(1));
         cqg7_acertar(f + 0x1d, 6, 5, 6, 0, 0);
     }
     // +0x2e
     let mut k: i8 = -5;
-    if cqg7_b(f + 0x11) >= 0xf {
-        k = if cqg7_b(f + 0x19) >= 0xf { 5 } else { 0 };
-    } else if ((cqg7_b(f + 0x13) >= 0xf || cqg7_b(f + 0x12) >= 0xf) && cqg7_b(f + 0x19) >= 0xf)
-        || cqg7_b(f + 0xf) >= 0xf
-        || cqg7_b(f + 0x15) >= 0xf
+    if read_i8(f + 0x11) >= 0xf {
+        k = if read_i8(f + 0x19) >= 0xf { 5 } else { 0 };
+    } else if ((read_i8(f + 0x13) >= 0xf || read_i8(f + 0x12) >= 0xf) && read_i8(f + 0x19) >= 0xf)
+        || read_i8(f + 0xf) >= 0xf
+        || read_i8(f + 0x15) >= 0xf
     {
         k = 0;
     }
     let r1 = cqg7_sortear(k as i32 * 3);
     let r2 = cqg7_sortear(0x14);
-    cqg7_pb(f + 0x2e, (r1 as i8).wrapping_add(r2 as i8));
-    let a = cqg7_b(f + 0x2e);
-    cqg7_pb(f + 0x2e, if a < 1 { 1 } else if a > 0x14 { 0x14 } else { a });
+    write_i8(f + 0x2e, (r1 as i8).wrapping_add(r2 as i8));
+    let a = read_i8(f + 0x2e);
+    write_i8(f + 0x2e, if a < 1 { 1 } else if a > 0x14 { 0x14 } else { a });
     // +0x34
     let r = cqg7_sortear(0x14);
-    cqg7_pb(f + 0x34, (r as i8).wrapping_add(1));
+    write_i8(f + 0x34, (r as i8).wrapping_add(1));
     cqg7_acertar(f + 0x34, 6, 8, 0xa, 0, 0);
     // +0x44
     let r = cqg7_sortear(0x14);
-    cqg7_pb(f + 0x44, (r as i8).wrapping_add(1));
-    if cqg7_b(f + 0x44) > 0xf && cqg7_sortear(3) != 0 {
+    write_i8(f + 0x44, (r as i8).wrapping_add(1));
+    if read_i8(f + 0x44) > 0xf && cqg7_sortear(3) != 0 {
         cqg7_tirar(f + 0x44, 5);
     } else {
-        let a = cqg7_b(f + 0x44);
+        let a = read_i8(f + 0x44);
         if a < 5 {
             cqg7_subir_abaixo(f + 0x44, 5, 0xa);
         } else if a < 0xa {
@@ -453,24 +438,24 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
     // +0x3c pela idade
     if idade < 0x12 {
         let r = cqg7_sortear(0x14);
-        cqg7_pb(f + 0x3c, (r as i8).wrapping_add(1));
+        write_i8(f + 0x3c, (r as i8).wrapping_add(1));
         cqg7_acertar(f + 0x3c, 8, 5, 8, 0xa, 6);
     } else if idade < 0x18 {
         let r = cqg7_sortear(0x12);
-        cqg7_pb(f + 0x3c, (r as i8).wrapping_add(3));
+        write_i8(f + 0x3c, (r as i8).wrapping_add(3));
         cqg7_acertar(f + 0x3c, 5, 5, 0xa, 0xa, 5);
     } else {
         let r = cqg7_sortear(0xf);
-        cqg7_pb(f + 0x3c, (r as i8).wrapping_add(6));
+        write_i8(f + 0x3c, (r as i8).wrapping_add(6));
         cqg7_acertar(f + 0x3c, 3, 0xa, 8, 0, 0);
     }
-    if cqg7_b(f + 0x3c) < 0xa && cqg7_b(f + 0x44) > 0xf {
+    if read_i8(f + 0x3c) < 0xa && read_i8(f + 0x44) > 0xf {
         let r = cqg7_sortear(5);
-        cqg7_pb(f + 0x3c, cqg7_b(f + 0x3c).wrapping_add(r as i8));
+        write_i8(f + 0x3c, read_i8(f + 0x3c).wrapping_add(r as i8));
     }
     // +0x3d pela idade
     let r = cqg7_sortear(0x14);
-    cqg7_pb(f + 0x3d, (r as i8).wrapping_add(1));
+    write_i8(f + 0x3d, (r as i8).wrapping_add(1));
     if idade < 0x12 {
         cqg7_acertar(f + 0x3d, 0xa, 5, 6, 0, 0);
     } else if idade < 0x18 {
@@ -478,26 +463,26 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
     } else {
         cqg7_acertar(f + 0x3d, 5, 5, 0xa, 0, 0);
     }
-    if (cqg7_b(f + 0x11) == 0x14 || cqg7_b(f + 0x12) == 0x14) && cqg7_b(f + 0x3d) < 0xa {
+    if (read_i8(f + 0x11) == 0x14 || read_i8(f + 0x12) == 0x14) && read_i8(f + 0x3d) < 0xa {
         let r = cqg7_sortear(5);
-        cqg7_pb(f + 0x3d, cqg7_b(f + 0x3d).wrapping_add(r as i8));
+        write_i8(f + 0x3d, read_i8(f + 0x3d).wrapping_add(r as i8));
     }
-    if cqg7_b(f + 0x2e) > 0xf && cqg7_b(f + 0x3d) < 0xa {
+    if read_i8(f + 0x2e) > 0xf && read_i8(f + 0x3d) < 0xa {
         let r = cqg7_sortear(5);
-        cqg7_pb(f + 0x3d, cqg7_b(f + 0x3d).wrapping_add(r as i8));
+        write_i8(f + 0x3d, read_i8(f + 0x3d).wrapping_add(r as i8));
     }
     // +0x1e, +0x24, +0x2c, +0x2f (e +0x21) pela idade
     if idade < 0x18 {
         if idade < 0x12 {
             cqg7_tirar(f + 0x1e, 0x28);
             cqg7_tirar(f + 0x24, 0x28);
-            let a = cqg7_b(f + 0x2c);
+            let a = read_i8(f + 0x2c);
             if a > 0xf {
                 cqg7_tirar(f + 0x2c, 8);
             } else if a > 0xa {
                 cqg7_tirar(f + 0x2c, 5);
             }
-            let a = cqg7_b(f + 0x2f);
+            let a = read_i8(f + 0x2f);
             if a > 0xf {
                 cqg7_tirar(f + 0x2f, 0xa);
             } else if a > 0xa {
@@ -506,17 +491,17 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
         } else {
             cqg7_tirar(f + 0x1e, 0x14);
             cqg7_tirar(f + 0x24, 0x14);
-            if cqg7_b(f + 0x2c) > 0xf {
+            if read_i8(f + 0x2c) > 0xf {
                 cqg7_tirar(f + 0x2c, 5);
             }
-            let a = cqg7_b(f + 0x2f);
+            let a = read_i8(f + 0x2f);
             if a > 0xf {
                 cqg7_tirar(f + 0x2f, 8);
             } else if a > 0xa {
                 cqg7_tirar(f + 0x2f, 5);
             }
         }
-        if cqg7_b(f + 0x2f) > 0xf {
+        if read_i8(f + 0x2f) > 0xf {
             cqg7_tirar(f + 0x2f, 8);
         }
     } else if idade > 0x19 && idade < 0x1d {
@@ -526,7 +511,7 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
         cqg7_tirar(f + 0x1e, 0xa);
         cqg7_tirar(f + 0x24, 0xa);
         cqg7_subir_abaixo(f + 0x2c, 5, 8);
-        let a = cqg7_b(f + 0x2f);
+        let a = read_i8(f + 0x2f);
         if a > 0xf {
             cqg7_tirar(f + 0x2f, 5);
         } else if a > 0xa {
@@ -534,7 +519,7 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
         }
     }
     // o clube
-    let nac = cqg7_d(p + 0x1a);
+    let nac = read_u32_as_usize(p + 0x1a);
     if idade < 0x13 && nac != 0 && *((nac + 0x11c) as *const u8) != 0 && cqg7_sortear(4) != 0 {
         let melhor: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x7ad0e0usize);
         let contratar: unsafe extern "stdcall" fn(usize, usize) -> u8 = core::mem::transmute(0x7a6f10usize);
@@ -546,11 +531,11 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
                 let noticia: unsafe extern "stdcall" fn(usize, usize) = core::mem::transmute(0x7a8ba0usize);
                 noticia(p, c);
             }
-            if cqg7_w(cqg7_d(p + 0x61) + 7) > 0x50 {
-                let t = cqg7_d(c + 0xbf);
-                if t != 0 && cqg7_d(t + 0x69) != 0 {
+            if read_i16(read_u32_as_usize(p + 0x61) + 7) > 0x50 {
+                let t = read_u32_as_usize(c + 0xbf);
+                if t != 0 && read_u32_as_usize(t + 0x69) != 0 {
                     let r = cqg7_sortear(100);
-                    if cqg7_b(cqg7_d(t + 0x69) + 0x16) as i32 > r {
+                    if read_i8(read_u32_as_usize(t + 0x69) + 0x16) as i32 > r {
                         let gostar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547a10usize);
                         gostar(t, p, 0);
                     }
@@ -565,15 +550,15 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
             contratar(p, c);
         }
     }
-    if cqg7_d(p + 0x39) == 0 && idade < 0x14 {
-        let f = cqg7_d(p + 0x61);
-        if cqg7_w(f + 0xb) > 0x4e2 {
-            cqg7_pw(f + 0xb, 0x4e2);
+    if read_u32_as_usize(p + 0x39) == 0 && idade < 0x14 {
+        let f = read_u32_as_usize(p + 0x61);
+        if read_i16(f + 0xb) > 0x4e2 {
+            write_i16(f + 0xb, 0x4e2);
         }
-        if cqg7_w(f + 9) > 0x4e2 {
-            cqg7_pw(f + 9, 0x4e2);
+        if read_i16(f + 9) > 0x4e2 {
+            write_i16(f + 9, 0x4e2);
         }
-        cqg7_pw(f + 0xd, 1);
+        write_i16(f + 0xd, 1);
     }
     let fisicos: unsafe extern "C" fn(usize) = core::mem::transmute(0x538ec0usize);
     let atributos: unsafe extern "C" fn(usize) = core::mem::transmute(0x538bc0usize);
@@ -592,30 +577,30 @@ unsafe extern "thiscall" fn comparar_refazer_como_jovem(this: usize, p: usize) {
 /// (+4), ou com a marca da pessoa zerada: nada. Senão zera a marca e, com a lista (+0), volta o cursor ao começo (+0xa =
 /// +2) e procura, nas `conta` (+0, palavra) primeiras, a entrada do id da pessoa (0x68d1b0): achando, tira-a (0x68d1f0).
 unsafe extern "thiscall" fn tirar_da_disputa(this: usize, p: usize) {
-    if p == 0 || cqg7_d(this + 4) == 0 {
+    if p == 0 || read_u32_as_usize(this + 4) == 0 {
         return;
     }
-    let m = (cqg7_d(this + 4) as isize + cqg7_i(p) as isize) as *mut u8;
+    let m = (read_u32_as_usize(this + 4) as isize + cqg7_i(p) as isize) as *mut u8;
     if *m == 0 {
         return;
     }
     *m = 0;
-    let lista = cqg7_d(this);
+    let lista = read_u32_as_usize(this);
     if lista == 0 {
         return;
     }
-    core::ptr::write_unaligned((lista + 0xa) as *mut u32, cqg7_d(lista + 2) as u32);
+    core::ptr::write_unaligned((lista + 0xa) as *mut u32, read_u32_as_usize(lista + 2) as u32);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let mut k = 0i32;
-    while (k as i16 as i32) < cqg7_w(cqg7_d(this)) as i32 {
-        let no = proximo(cqg7_d(this));
+    while (k as i16 as i32) < read_i16(read_u32_as_usize(this)) as i32 {
+        let no = proximo(read_u32_as_usize(this));
         if no == 0 {
             return;
         }
         if cqg7_i(no) == cqg7_i(p) {
             crate::comparacao::ramo("cqg_7 saiu da disputa");
             let tirar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x68d1f0usize);
-            tirar(cqg7_d(this), no);
+            tirar(read_u32_as_usize(this), no);
             return;
         }
         k += 1;
@@ -627,11 +612,11 @@ unsafe extern "thiscall" fn tirar_da_disputa(this: usize, p: usize) {
 /// devolvido).
 unsafe extern "thiscall" fn comparar_tirar_da_disputa(this: usize, p: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1631);
-    if p == 0 || cqg7_d(this + 4) == 0 {
+    if p == 0 || read_u32_as_usize(this + 4) == 0 {
         return o(this, p);
     }
-    let m = cqg7_d(this + 4).wrapping_add(cqg7_i(p) as isize as usize);
-    let lista = cqg7_d(this);
+    let m = read_u32_as_usize(this + 4).wrapping_add(cqg7_i(p) as isize as usize);
+    let lista = read_u32_as_usize(this);
     if *(m as *const u8) == 0 {
         let mut reg = vec![(m, 1)];
         if lista != 0 {
@@ -642,10 +627,10 @@ unsafe extern "thiscall" fn comparar_tirar_da_disputa(this: usize, p: usize) {
         return;
     }
     let mut achou = 0i16;
-    let conta_antes = if lista != 0 { cqg7_w(lista) } else { 0 };
+    let conta_antes = if lista != 0 { read_i16(lista) } else { 0 };
     if lista != 0 {
-        let cursor = cqg7_d(lista + 0xa);
-        core::ptr::write_unaligned((lista + 0xa) as *mut u32, cqg7_d(lista + 2) as u32);
+        let cursor = read_u32_as_usize(lista + 0xa);
+        core::ptr::write_unaligned((lista + 0xa) as *mut u32, read_u32_as_usize(lista + 2) as u32);
         let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
         for _ in 0..conta_antes.max(0) {
             let no = proximo(lista);
@@ -660,16 +645,13 @@ unsafe extern "thiscall" fn comparar_tirar_da_disputa(this: usize, p: usize) {
         core::ptr::write_unaligned((lista + 0xa) as *mut u32, cursor as u32);
     }
     o(this, p);
-    let conta_depois = if lista != 0 { cqg7_w(lista) } else { 0 };
+    let conta_depois = if lista != 0 { read_i16(lista) } else { 0 };
     PLACAR.registrar(*(m as *const u8) == 0 && conta_depois == conta_antes - achou,
         || format!("tirar_da_disputa(pessoa {:x}) conta {} -> {} (achou {})", p, conta_antes, conta_depois, achou));
 }
 
 // ---------- 271a leva: o player_setup.cfg: a pessoa pelo nome (no clube ou em todos), o texto entre aspas da linha e o tipo da linha pelo nome (player_regen.cpp) ----------
 
-unsafe fn cqh9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
 unsafe fn cqh9_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
@@ -684,7 +666,7 @@ unsafe fn cqh9_strncmp(a: usize, b: usize, n: u32) -> i32 {
 /// O nome `k` (+4 primeiro, +8 segundo, +0xc o comum; o registro do nome começa pelo texto) da pessoa bate com `texto`
 /// (até 26 caracteres)? `texto` vazio sempre bate.
 unsafe fn cqh9_bate(p: usize, k: usize, texto: usize) -> bool {
-    *(texto as *const u8) == 0 || cqh9_strncmp(cqh9_d(p + k), texto, 0x1a) == 0
+    *(texto as *const u8) == 0 || cqh9_strncmp(read_u32_as_usize(p + k), texto, 0x1a) == 0
 }
 
 /// { 0x7a50f0 } (cdecl, player_regen.cpp): `player_setup_find_staff(primeiro, comum, segundo, clube, no_elenco)`. Sem
@@ -694,11 +676,11 @@ unsafe fn cqh9_bate(p: usize, k: usize, texto: usize) -> bool {
 /// senão (ou nenhum do elenco), o técnico do clube (+0xcf) se os nomes batem; senão 0.
 unsafe extern "C" fn pessoa_pelo_nome(primeiro: usize, comum: usize, segundo: usize, clube: usize, no_elenco: u32) -> usize {
     if clube == 0 || *(clube as *const u8) == 0 {
-        let mut p = cqh9_d(0xae23bc);
+        let mut p = read_u32_as_usize(0xae23bc);
         for _ in 0..cqh9_i(0xae2364).max(0) {
-            let falha = (*(primeiro as *const u8) != 0 && cqh9_d(p + 4) != 0 && cqh9_strncmp(cqh9_d(p + 4), primeiro, 0x1a) != 0)
-                || (*(segundo as *const u8) != 0 && cqh9_d(p + 8) != 0 && cqh9_strncmp(cqh9_d(p + 8), segundo, 0x1a) != 0) // cqh9: o segundo nome
-                || (*(comum as *const u8) != 0 && cqh9_d(p + 0xc) != 0 && cqh9_strncmp(cqh9_d(p + 0xc), comum, 0x1a) != 0);
+            let falha = (*(primeiro as *const u8) != 0 && read_u32_as_usize(p + 4) != 0 && cqh9_strncmp(read_u32_as_usize(p + 4), primeiro, 0x1a) != 0)
+                || (*(segundo as *const u8) != 0 && read_u32_as_usize(p + 8) != 0 && cqh9_strncmp(read_u32_as_usize(p + 8), segundo, 0x1a) != 0) // cqh9: o segundo nome
+                || (*(comum as *const u8) != 0 && read_u32_as_usize(p + 0xc) != 0 && cqh9_strncmp(read_u32_as_usize(p + 0xc), comum, 0x1a) != 0);
             if !falha {
                 crate::comparacao::ramo("cqh_9 pessoa pelo nome");
                 return p;
@@ -710,7 +692,7 @@ unsafe extern "C" fn pessoa_pelo_nome(primeiro: usize, comum: usize, segundo: us
     let nome_do_clube: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x545880usize);
     let mut achado = 0usize;
     for k in 0..cqh9_i(0xae235c).max(0) {
-        let c = cqh9_d(0xae23b4).wrapping_add(k as usize * 0x245);
+        let c = read_u32_as_usize(0xae23b4).wrapping_add(k as usize * 0x245);
         if cqh9_strncmp(nome_do_clube(c), clube, 0x33) == 0 {
             achado = c;
             break;
@@ -722,14 +704,14 @@ unsafe extern "C" fn pessoa_pelo_nome(primeiro: usize, comum: usize, segundo: us
     let c = achado;
     if no_elenco as u8 == 1 {
         for k in 0..0x32usize {
-            let q = cqh9_d(c + 0xd7 + 4 * k);
+            let q = read_u32_as_usize(c + 0xd7 + 4 * k);
             if q != 0 && cqh9_bate(q, 4, primeiro) && cqh9_bate(q, 8, segundo) && cqh9_bate(q, 0xc, comum) {
                 crate::comparacao::ramo("cqh_9 jogador do clube pelo nome");
                 return q; // cqh9: o do elenco pelo nome
             }
         }
     }
-    let t = cqh9_d(c + 0xcf);
+    let t = read_u32_as_usize(c + 0xcf);
     if t == 0 {
         return 0;
     }
@@ -836,21 +818,12 @@ unsafe extern "C" fn comparar_tipo_da_linha(nome: usize) -> u32 {
 
 // ---------- 267a leva: as aposentadorias do dia: as anunciadas e as que vencem, a notícia da aposentadoria e a do jovem promovido (player_regen.cpp) ----------
 
-unsafe fn cqd10_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
 unsafe fn cqd10_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cqd10_b(a: usize) -> i8 {
-    *(a as *const i8)
-}
 
-unsafe fn cqd10_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 unsafe fn cqd10_sortear(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
@@ -859,13 +832,13 @@ unsafe fn cqd10_sortear(n: i32) -> i32 {
 
 /// O byte das marcas da aposentadoria da pessoa `id` (registros de 79 bytes em [0xae2d0c], +0xb).
 unsafe fn cqd10_marca(id: i32) -> *mut u8 {
-    cqd10_d(0xae2d0c).wrapping_add((id as isize * 0x4f + 0xb) as usize) as *mut u8
+    read_u32_as_usize(0xae2d0c).wrapping_add((id as isize * 0x4f + 0xb) as usize) as *mut u8
 }
 
 /// O contrato da pessoa (0x4cf5a0 no gerente [0xae1050]), sem guardar em [0xae1080] (a 0x7a59e0 não guarda).
 unsafe fn cqd10_contrato(p: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    f(cqd10_d(0xae1050), p)
+    f(read_u32_as_usize(0xae1050), p)
 }
 
 /// PLAYER_REGEN::remove_retirement (0x7a8690): tira a aposentadoria pendente (as seguintes sobem um lugar).
@@ -877,7 +850,7 @@ unsafe fn cqd10_tirar(this: usize, item: usize) {
 /// Uma rotina thiscall(gerente [g], pessoa).
 unsafe fn cqd10_com(rotina: usize, g: usize, p: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(rotina);
-    f(cqd10_d(g), p);
+    f(read_u32_as_usize(g), p);
 }
 
 /// O atributo do técnico que vira o jogador aposentado: min(max(P, X) × k, teto), truncado (as contas x87 da original
@@ -894,11 +867,11 @@ fn cqd10_teto(pv: f64, x: f64, k: f64, teto: f64) -> u16 {
 unsafe fn cqd10_atributos_do_tecnico(p: usize, f: usize, nj: usize, k: f64, tetos: [f64; 3]) {
     let r = *((p + 0x22) as *const u8) as f64;
     let q = pow_do_jogo(r, 2.0);
-    core::ptr::write_unaligned((nj + 0xa) as *mut u16, cqd10_teto(q, cqd10_w(f + 0xb) as f64, k, tetos[0]));
+    core::ptr::write_unaligned((nj + 0xa) as *mut u16, cqd10_teto(q, read_i16(f + 0xb) as f64, k, tetos[0]));
     let q = pow_do_jogo(r, 2.0);
-    core::ptr::write_unaligned((nj + 8) as *mut u16, cqd10_teto(q, cqd10_w(f + 9) as f64, k, tetos[1]));
+    core::ptr::write_unaligned((nj + 8) as *mut u16, cqd10_teto(q, read_i16(f + 9) as f64, k, tetos[1]));
     let q = pow_do_jogo(r, 2.0) * f64_em(0x969040);
-    core::ptr::write_unaligned((nj + 0xc) as *mut u16, cqd10_teto(q, cqd10_w(f + 0xd) as f64, k, tetos[2]));
+    core::ptr::write_unaligned((nj + 0xc) as *mut u16, cqd10_teto(q, read_i16(f + 0xd) as f64, k, tetos[2]));
 }
 
 /// O jogador aposentado sem registro de não jogador (+0x69) pode virar técnico: sorteio(+0x5b) acima de sorteio(100);
@@ -910,45 +883,45 @@ unsafe fn cqd10_atributos_do_tecnico(p: usize, f: usize, nj: usize, k: f64, teto
 /// 0,5/4500/1).
 unsafe fn cqd10_vira_tecnico(this: usize, p: usize) {
     let r = *((p + 0x22) as *const u8);
-    let ra = cqd10_sortear(cqd10_b(p + 0x5b) as i32);
+    let ra = cqd10_sortear(read_i8(p + 0x5b) as i32);
     if ra <= cqd10_sortear(100) {
         return;
     }
-    let f = cqd10_d(p + 0x61);
-    let t = ftol(cqd10_w(f + 0xb) as f64 + pow_do_jogo(r as f64, 3.0));
+    let f = read_u32_as_usize(p + 0x61);
+    let t = ftol(read_i16(f + 0xb) as f64 + pow_do_jogo(r as f64, 3.0));
     let r1 = cqd10_sortear(t);
     let passa = r1 > cqd10_sortear(50000) || { // cqd10: o sorteio de virar técnico
         let r3 = cqd10_sortear(0x30d40).wrapping_add(0x30d40);
-        let v = (cqd10_w(cqd10_d(p + 0x1a) + 0x8e) as i32).wrapping_mul(*((p + 0x22) as *const u8) as i32);
+        let v = (read_i16(read_u32_as_usize(p + 0x1a) + 0x8e) as i32).wrapping_mul(*((p + 0x22) as *const u8) as i32);
         v > r3
     };
     if !passa || cqd10_i(this + 0x20) <= 2 {
         return;
     }
     crate::comparacao::ramo("cqd_10 vira tecnico");
-    let id = cqd10_i(cqd10_d(this + 0x1c));
-    core::ptr::write_unaligned((p + 0x69) as *mut u32, cqd10_d(0xae23c0).wrapping_add((id as isize * 0x44) as usize) as u32);
+    let id = cqd10_i(read_u32_as_usize(this + 0x1c));
+    core::ptr::write_unaligned((p + 0x69) as *mut u32, read_u32_as_usize(0xae23c0).wrapping_add((id as isize * 0x44) as usize) as u32);
     let reserva: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(0x7a82b0usize);
-    reserva(this, cqd10_i(cqd10_d(this + 0x1c)));
-    if cqd10_b(cqd10_d(p + 0x61) + 0xf) == 0x14 {
-        let nj = cqd10_d(p + 0x69);
-        let (a, b) = (cqd10_b(nj + 0x10), cqd10_b(nj + 0x11));
+    reserva(this, cqd10_i(read_u32_as_usize(this + 0x1c)));
+    if read_i8(read_u32_as_usize(p + 0x61) + 0xf) == 0x14 {
+        let nj = read_u32_as_usize(p + 0x69);
+        let (a, b) = (read_i8(nj + 0x10), read_i8(nj + 0x11));
         if a > b {
             *((nj + 0x11) as *mut i8) = a;
-            *((cqd10_d(p + 0x69) + 0x10) as *mut i8) = b;
+            *((read_u32_as_usize(p + 0x69) + 0x10) as *mut i8) = b;
             if cqd10_sortear(4) == 0 {
                 let v = (cqd10_sortear(0x32) as u8).wrapping_add(0x32);
-                *((cqd10_d(p + 0x69) + 0x11) as *mut u8) = v;
+                *((read_u32_as_usize(p + 0x69) + 0x11) as *mut u8) = v;
             }
         }
     }
     let normalizar: unsafe extern "C" fn(usize) = core::mem::transmute(0x539490usize);
     normalizar(p);
-    let f = cqd10_d(p + 0x61);
-    let nj = cqd10_d(p + 0x69);
-    if cqd10_w(f + 0xb) > 0x1d4c {
+    let f = read_u32_as_usize(p + 0x61);
+    let nj = read_u32_as_usize(p + 0x69);
+    if read_i16(f + 0xb) > 0x1d4c {
         cqd10_atributos_do_tecnico(p, f, nj, f64_em(0x9689d8), [f64_em(0x9690b8), f64_em(0x9690b8), f64_em(0x96e298)]);
-    } else if cqd10_sortear(cqd10_b(p + 0x57) as i32) != 0 {
+    } else if cqd10_sortear(read_i8(p + 0x57) as i32) != 0 {
         cqd10_atributos_do_tecnico(p, f, nj, f64_em(0x969040), [f64_em(0x96d300), f64_em(0x96d300), f64_em(0x96e290)]);
     } else {
         cqd10_atributos_do_tecnico(p, f, nj, f64_em(0x968968), [f64_em(0x96e288), f64_em(0x96e288), f64_em(0x967890)]);
@@ -958,30 +931,30 @@ unsafe fn cqd10_vira_tecnico(this: usize, p: usize) {
 /// A aposentadoria que venceu (o item `item` da pessoa `p`).
 unsafe fn cqd10_aposentar(this: usize, item: usize, p: usize, vaga: &mut [u32; 3]) {
     let id = cqd10_i(item);
-    if cqd10_b(p + 0x18) < 0x1e && cqd10_b(item + 0x18) != 8 // cqd10: o jovem não se aposenta
-        && (cqd10_d(p + 0x39) != 0 || *cqd10_marca(cqd10_i(p)) & 0xf != 0) {
+    if read_i8(p + 0x18) < 0x1e && read_i8(item + 0x18) != 8 // cqd10: o jovem não se aposenta
+        && (read_u32_as_usize(p + 0x39) != 0 || *cqd10_marca(cqd10_i(p)) & 0xf != 0) {
         crate::comparacao::ramo("cqd_10 aposentadoria desfeita");
         cqd10_tirar(this, item);
         return;
     }
     let ficha: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
     let oferta: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x8cde70usize);
-    if ficha(cqd10_d(0xae1050), p) != 0 || oferta(cqd10_d(0xde1f54), p, 0) != 0 {
+    if ficha(read_u32_as_usize(0xae1050), p) != 0 || oferta(read_u32_as_usize(0xde1f54), p, 0) != 0 {
         *cqd10_marca(id) &= 0xcf;
         cqd10_tirar(this, item);
         return;
     }
     let antigo = cqd10_i(item + 4);
-    let clube = cqd10_d(p + 0x39);
+    let clube = read_u32_as_usize(p + 0x39);
     let mudou = if antigo != -1 { clube != 0 && cqd10_i(clube) != antigo } else { clube != 0 };
     let mut acertar = true;
     if mudou {
         let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
-        if dias(0xae2c90, cqd10_d(p + 0x3e) as u32, cqd10_d(p + 0x42) as u32) < 0xd2 && cqd10_b(p + 0x18) < 0x26 {
+        if dias(0xae2c90, read_u32_as_usize(p + 0x3e) as u32, read_u32_as_usize(p + 0x42) as u32) < 0xd2 && read_i8(p + 0x18) < 0x26 {
             acertar = false;
             let c = cqd10_contrato(p);
             let listado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544520usize);
-            if c != 0 && listado(p, 0) == 0 && cqd10_d(c + 0x45) == 0 {
+            if c != 0 && listado(p, 0) == 0 && read_u32_as_usize(c + 0x45) == 0 {
                 crate::comparacao::ramo("cqd_10 mudou de clube e fica");
                 *cqd10_marca(id) &= 0xcf;
                 cqd10_tirar(this, item);
@@ -989,7 +962,7 @@ unsafe fn cqd10_aposentar(this: usize, item: usize, p: usize, vaga: &mut [u32; 3
             }
         }
     }
-    if acertar && cqd10_d(p + 0x39) == 0 && cqd10_i(item + 4) != -1 {
+    if acertar && read_u32_as_usize(p + 0x39) == 0 && cqd10_i(item + 4) != -1 {
         core::ptr::write_unaligned((item + 4) as *mut i32, -1);
     }
     // ponytail: a original empurra o motivo e a marca de anunciada em registradores com bytes de cima que sobram; a
@@ -997,8 +970,8 @@ unsafe fn cqd10_aposentar(this: usize, item: usize, p: usize, vaga: &mut [u32; 3
     let noticia: unsafe extern "stdcall" fn(usize, u32, u32) = core::mem::transmute(0x7a92e0usize);
     noticia(p, *((item + 0x18) as *const u8) as u32, *((item + 0x19) as *const u8) as u32);
     let ofertas: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4ccbf0usize);
-    ofertas(cqd10_d(0xae1050), p);
-    if cqd10_d(p + 0x61) != 0 && cqd10_d(p + 0x69) != 0 {
+    ofertas(read_u32_as_usize(0xae1050), p);
+    if read_u32_as_usize(p + 0x61) != 0 && read_u32_as_usize(p + 0x69) != 0 {
         if cqd10_contrato(p) != 0 {
             let limpar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x85f800usize);
             limpar(cqd10_contrato(p));
@@ -1008,33 +981,33 @@ unsafe fn cqd10_aposentar(this: usize, item: usize, p: usize, vaga: &mut [u32; 3
         cqd10_com(0x4d0b50, 0xae1050, p); // cqd10: tira o contrato
     }
     cqd10_com(0x775ba0, 0xb74318, p);
-    let sm = cqd10_d(cqd10_d(0xde1f54) + 0x856);
+    let sm = read_u32_as_usize(read_u32_as_usize(0xde1f54) + 0x856);
     if sm != 0 {
-        let c = cqd10_d(p + 0x39);
+        let c = read_u32_as_usize(p + 0x39);
         if c != 0 {
             let situacao: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8 = core::mem::transmute(0x843e10usize);
             situacao(sm, p, c, 4, 2);
         }
         let suspender: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x842b00usize);
         suspender(sm, p, 0);
-        let c = cqd10_d(p + 0x39);
+        let c = read_u32_as_usize(p + 0x39);
         if c != 0 {
-            *(cqd10_d(sm + 0xdc).wrapping_add((cqd10_i(c) as isize * 9 + 8) as usize) as *mut u8) = 100;
+            *(read_u32_as_usize(sm + 0xdc).wrapping_add((cqd10_i(c) as isize * 9 + 8) as usize) as *mut u8) = 100;
         }
     }
     let mut banco = false;
-    if cqd10_d(p + 0x61) != 0 {
+    if read_u32_as_usize(p + 0x61) != 0 {
         let elenco: unsafe extern "stdcall" fn(usize) = core::mem::transmute(0x7aace0usize);
         crate::comparacao::ramo("cqd_10 sai do elenco");
         elenco(p); // cqd10: sai do elenco
-        if cqd10_d(p + 0x39) == 0 {
+        if read_u32_as_usize(p + 0x39) == 0 {
             cqd10_com(0x4d0b50, 0xae1050, p);
         }
         cqd10_com(0x4196a0, 0xad9c6c, p);
         cqd10_com(0x4197c0, 0xad9c6c, p);
         cqd10_com(0x56a090, 0xae2a30, p);
-        if cqd10_d(p + 0x61) != 0 {
-            if cqd10_d(p + 0x69) != 0 {
+        if read_u32_as_usize(p + 0x61) != 0 {
+            if read_u32_as_usize(p + 0x69) != 0 {
                 banco = true;
             } else {
                 cqd10_vira_tecnico(this, p);
@@ -1042,7 +1015,7 @@ unsafe fn cqd10_aposentar(this: usize, item: usize, p: usize, vaga: &mut [u32; 3
         }
     }
     if !banco {
-        banco = cqd10_d(p + 0x69) != 0 && cqd10_d(p + 0x61) != 0;
+        banco = read_u32_as_usize(p + 0x69) != 0 && read_u32_as_usize(p + 0x61) != 0;
     }
     if banco {
         // o jogador com registro de não jogador: a ficha vai para o banco dos regens e ele segue como não jogador
@@ -1051,19 +1024,19 @@ unsafe fn cqd10_aposentar(this: usize, item: usize, p: usize, vaga: &mut [u32; 3
         cqd10_com(0x55e1d0, 0xae28f0, p);
         cqd10_com(0x631f90, 0xb63d28, p);
         let guardar: unsafe extern "thiscall" fn(usize, i32, u32, u32) = core::mem::transmute(0x7a8350usize);
-        let pais = cqd10_d(p + 0x1a);
+        let pais = read_u32_as_usize(p + 0x1a);
         if pais == 0 {
             let n = cqd10_sortear(cqd10_i(0xae2350));
             guardar(this, cqd10_i(p), n as u32, u32::MAX);
-        } else if cqd10_d(p + 0x1e) == 0 {
-            guardar(this, cqd10_i(p), cqd10_d(pais) as u32, u32::MAX);
+        } else if read_u32_as_usize(p + 0x1e) == 0 {
+            guardar(this, cqd10_i(p), read_u32_as_usize(pais) as u32, u32::MAX);
         } else {
-            guardar(this, cqd10_i(p), cqd10_d(pais) as u32, cqd10_d(cqd10_d(p + 0x1e)) as u32);
+            guardar(this, cqd10_i(p), read_u32_as_usize(pais) as u32, read_u32_as_usize(read_u32_as_usize(p + 0x1e)) as u32);
         }
         core::ptr::write_unaligned((p + 0x61) as *mut u32, 0);
         *cqd10_marca(cqd10_i(item)) &= 0xcf;
         *((p + 0x5f) as *mut u8) = 1;
-        if cqd10_d(p + 0x39) != 0 {
+        if read_u32_as_usize(p + 0x39) != 0 {
             let c = cqd10_contrato(p);
             if c != 0 {
                 let inicial: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x85e960usize);
@@ -1076,16 +1049,16 @@ unsafe fn cqd10_aposentar(this: usize, item: usize, p: usize, vaga: &mut [u32; 3
     // a vaga para o regen: hoje (até 29 anos) ou de 1 a 65 dias depois (se passar do dia 365, sorteio(35) do ano
     // seguinte)
     vaga[0] = cqd10_i(item) as u32;
-    let hoje = cqd10_d(0xae2c90) as u32;
-    let (dia, ano) = if cqd10_b(p + 0x18) < 0x1e {
-        (hoje as u16, cqd10_w(0xae2c92) as u16)
+    let hoje = read_u32_as_usize(0xae2c90) as u32;
+    let (dia, ano) = if read_i8(p + 0x18) < 0x1e {
+        (hoje as u16, read_i16(0xae2c92) as u16)
     } else {
         let v = (cqd10_sortear(0x41) as u32).wrapping_add(hoje).wrapping_add(1) as u16; // cqd10: o dia do regen
         crate::comparacao::ramo("cqd_10 dia do regen sorteado");
         if v as i16 <= 0x16d {
-            (v, cqd10_w(0xae2c92) as u16)
+            (v, read_i16(0xae2c92) as u16)
         } else {
-            (cqd10_sortear(0x23) as u16, (cqd10_w(0xae2c92) as u16).wrapping_add(1))
+            (cqd10_sortear(0x23) as u16, (read_i16(0xae2c92) as u16).wrapping_add(1))
         }
     };
     vaga[1] = (vaga[1] & 0xffff_0000) | dia as u32;
@@ -1093,12 +1066,12 @@ unsafe fn cqd10_aposentar(this: usize, item: usize, p: usize, vaga: &mut [u32; 3
     let m = cqd10_marca(cqd10_i(item));
     *m = (*m & 0xef) | 0x20;
     let guardar_vaga: unsafe extern "thiscall" fn(usize, *const u32) = core::mem::transmute(0x7a87d0usize);
-    let nj = cqd10_d(p + 0x69);
+    let nj = read_u32_as_usize(p + 0x69);
     if nj != 0 {
         let limpar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x86fc20usize);
-        limpar(cqd10_d(0xdd7f00), nj);
-        let c = cqd10_d(p + 0x39);
-        let cargo = |p: usize| cqd10_b(p + 0x3d);
+        limpar(read_u32_as_usize(0xdd7f00), nj);
+        let c = read_u32_as_usize(p + 0x39);
+        let cargo = |p: usize| read_i8(p + 0x3d);
         let sair = if c == 0 || cargo(p) == 5 {
             true
         } else {
@@ -1146,22 +1119,22 @@ unsafe extern "thiscall" fn aposentadorias_do_dia(this: usize) {
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     padrao(vaga.as_mut_ptr() as usize + 4);
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    qsort(cqd10_d(this + 4), cqd10_d(this + 8) as u32, 0x1a, 0x7ae2a0);
+    qsort(read_u32_as_usize(this + 4), read_u32_as_usize(this + 8) as u32, 0x1a, 0x7ae2a0);
     let n = cqd10_i(this + 8);
-    let mut item = cqd10_d(this + 4);
+    let mut item = read_u32_as_usize(this + 4);
     let mut i = 0i32;
     while i < n {
-        let hoje = cqd10_d(0xae2c90) as u32;
+        let hoje = read_u32_as_usize(0xae2c90) as u32;
         let (dia, ano) = (hoje as u16 as i16, (hoje >> 16) as u16);
-        let (vdia, vano) = (cqd10_w(item + 0x10), cqd10_w(item + 0x12) as u16);
+        let (vdia, vano) = (read_i16(item + 0x10), read_i16(item + 0x12) as u16);
         if ano > vano || (ano == vano && dia > vdia) {
-            let p = cqd10_d(0xae23bc).wrapping_add((cqd10_i(item) as isize * 0x6e) as usize);
+            let p = read_u32_as_usize(0xae23bc).wrapping_add((cqd10_i(item) as isize * 0x6e) as usize);
             cqd10_aposentar(this, item, p, &mut vaga);
         } else {
             if *((item + 0x19) as *const u8) != 0 {
                 break;
             }
-            let (adia, aano) = (cqd10_w(item + 8), cqd10_w(item + 0xa) as u16);
+            let (adia, aano) = (read_i16(item + 8), read_i16(item + 0xa) as u16);
             if !(ano > aano || (ano == aano && dia > adia)) {
                 break;
             }
@@ -1170,7 +1143,7 @@ unsafe extern "thiscall" fn aposentadorias_do_dia(this: usize) {
             if *cqd10_marca(id) & 0x30 != 0x10 {
                 let anunciar: unsafe extern "stdcall" fn(usize, u32) = core::mem::transmute(0x7aa340usize);
                 // ponytail: a original empurra o motivo no edx com bytes de cima que sobram; a 0x7aa340 lê o byte
-                anunciar(cqd10_d(0xae23bc).wrapping_add((id as isize * 0x6e) as usize), *((item + 0x18) as *const u8) as u32);
+                anunciar(read_u32_as_usize(0xae23bc).wrapping_add((id as isize * 0x6e) as usize), *((item + 0x18) as *const u8) as u32);
             }
             let id = cqd10_i(item);
             *((item + 0x19) as *mut u8) = 1;
@@ -1180,7 +1153,7 @@ unsafe extern "thiscall" fn aposentadorias_do_dia(this: usize) {
         }
         i += 1;
     }
-    qsort(cqd10_d(this + 0x10), cqd10_d(this + 0x14) as u32, 0xc, 0x7ae240);
+    qsort(read_u32_as_usize(this + 0x10), read_u32_as_usize(this + 0x14) as u32, 0xc, 0x7ae240);
 }
 
 // ponytail: chama as notícias (alocam e entregam), o regen como não jogador, os contratos novos e as listas: o caminho
@@ -1204,10 +1177,10 @@ unsafe extern "stdcall" fn noticia_da_aposentadoria(p: usize, motivo: u32, anunc
     if p == 0 {
         return;
     }
-    if cqd10_d(p + 0x61) != 0 && matches!(cqd10_b(p + 0x3d), 8 | 5) {
+    if read_u32_as_usize(p + 0x61) != 0 && matches!(read_i8(p + 0x3d), 8 | 5) {
         return;
     }
-    let clube = cqd10_d(p + 0x39);
+    let clube = read_u32_as_usize(p + 0x39);
     if clube == 0 {
         return;
     }
@@ -1221,30 +1194,30 @@ unsafe extern "stdcall" fn noticia_da_aposentadoria(p: usize, motivo: u32, anunc
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nw = local.as_mut_ptr() as usize;
     construir(nw, 0xbba, 0);
-    gravar(nw, 0, cqd10_d(p) as u32);
+    gravar(nw, 0, read_u32_as_usize(p) as u32);
     for k in 1..4usize {
-        gravar(nw, k as i8, cqd10_d(cqd10_d(p + 4 * k) + 0x33) as u32);
+        gravar(nw, k as i8, read_u32_as_usize(read_u32_as_usize(p + 4 * k) + 0x33) as u32);
     }
     gravar(nw, 4, motivo as u8 as i8 as i32 as u32);
     gravar(nw, 5, anunciada as u8 as i8 as i32 as u32);
-    let c = cqd10_d(p + 0x39);
-    gravar(nw, 6, if c != 0 { cqd10_d(c) as u32 } else { u32::MAX });
-    gravar(nw, 7, if *((p + 0x22) as *const u8) != 0 { cqd10_d(cqd10_d(p + 0x1a)) as u32 } else { u32::MAX });
-    let cargo = match cqd10_b(p + 0x3d) {
+    let c = read_u32_as_usize(p + 0x39);
+    gravar(nw, 6, if c != 0 { read_u32_as_usize(c) as u32 } else { u32::MAX });
+    gravar(nw, 7, if *((p + 0x22) as *const u8) != 0 { read_u32_as_usize(read_u32_as_usize(p + 0x1a)) as u32 } else { u32::MAX });
+    let cargo = match read_i8(p + 0x3d) {
         0xf => 8,
         0xd => 6,
         v => v,
     };
     gravar(nw, 8, cargo as i32 as u32);
     gravar(nw, 9, *((p + 0x22) as *const u8) as u32);
-    gravar(nw, 0xa, cqd10_b(p + 0x28) as i32 as u32);
-    gravar(nw, 0xb, (cqd10_d(p + 0x61) != 0 && cqd10_d(p + 0x69) != 0) as u32);
-    gravar(nw, 0xc, cqd10_b(p + 0x18) as i32 as u32);
-    gravar(nw, 0xd, (cqd10_d(p + 0x69) != 0) as u32);
-    gravar(nw, 0xe, (cqd10_d(p + 0x61) != 0) as u32);
+    gravar(nw, 0xa, read_i8(p + 0x28) as i32 as u32);
+    gravar(nw, 0xb, (read_u32_as_usize(p + 0x61) != 0 && read_u32_as_usize(p + 0x69) != 0) as u32);
+    gravar(nw, 0xc, read_i8(p + 0x18) as i32 as u32);
+    gravar(nw, 0xd, (read_u32_as_usize(p + 0x69) != 0) as u32);
+    gravar(nw, 0xe, (read_u32_as_usize(p + 0x61) != 0) as u32);
     let mut clubes = [0usize; 30];
-    let tm = cqd10_d(0xde1f54);
-    let n = if tm != 0 && cqd10_d(p + 0x61) != 0 {
+    let tm = read_u32_as_usize(0xde1f54);
+    let n = if tm != 0 && read_u32_as_usize(p + 0x61) != 0 {
         let interessados: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(0x8d1da0usize);
         interessados(tm, p, 0xa, clubes.as_mut_ptr(), 0x1e) as i8
     } else {
@@ -1254,43 +1227,43 @@ unsafe extern "stdcall" fn noticia_da_aposentadoria(p: usize, motivo: u32, anunc
     let do_pais: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7863f0usize);
     let da_divisao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7862d0usize);
     let ao_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    let mn = cqd10_d(0xb7431c);
-    let pais = cqd10_d(p + 0x1a);
-    let f = cqd10_d(p + 0x61);
-    let nj = cqd10_d(p + 0x69);
-    let cargo5 = || cqd10_b(p + 0x3d) == 5;
-    if pais != 0 && cqd10_b(pais + 0x85) > 8
-        && ((f != 0 && cqd10_w(f + 0xd) > 0x2134) || (nj != 0 && cqd10_w(nj + 0xc) > 0x222e && cargo5())) {
+    let mn = read_u32_as_usize(0xb7431c);
+    let pais = read_u32_as_usize(p + 0x1a);
+    let f = read_u32_as_usize(p + 0x61);
+    let nj = read_u32_as_usize(p + 0x69);
+    let cargo5 = || read_i8(p + 0x3d) == 5;
+    if pais != 0 && read_i8(pais + 0x85) > 8
+        && ((f != 0 && read_i16(f + 0xd) > 0x2134) || (nj != 0 && read_i16(nj + 0xc) > 0x222e && cargo5())) {
         todos(mn, nw);
-    } else if (f != 0 && cqd10_w(f + 0xd) > 0x1d4c) || (nj != 0 && cqd10_w(nj + 0xa) > 0x1c52 && cargo5()) {
+    } else if (f != 0 && read_i16(f + 0xd) > 0x1d4c) || (nj != 0 && read_i16(nj + 0xa) > 0x1c52 && cargo5()) {
         do_pais(mn, nw, pais);
-        let c = cqd10_d(p + 0x39);
-        if c != 0 && cqd10_d(c + 0x53) != cqd10_d(p + 0x1a) {
-            do_pais(cqd10_d(0xb7431c), nw, cqd10_d(c + 0x53));
+        let c = read_u32_as_usize(p + 0x39);
+        if c != 0 && read_u32_as_usize(c + 0x53) != read_u32_as_usize(p + 0x1a) {
+            do_pais(read_u32_as_usize(0xb7431c), nw, read_u32_as_usize(c + 0x53));
         }
     } else {
-        let c = cqd10_d(p + 0x39);
-        if c != 0 && cqd10_d(c + 0x57) != 0 && cargo5() {
-            da_divisao(mn, nw, cqd10_d(c + 0x57));
+        let c = read_u32_as_usize(p + 0x39);
+        if c != 0 && read_u32_as_usize(c + 0x57) != 0 && cargo5() {
+            da_divisao(mn, nw, read_u32_as_usize(c + 0x57));
         } else if f == 0 {
             ao_clube(mn, nw, c);
         } else if n > 0 {
             for k in 0..n as usize {
-                ao_clube(cqd10_d(0xb7431c), nw, clubes[k]);
+                ao_clube(read_u32_as_usize(0xb7431c), nw, clubes[k]);
             }
         }
     }
     if motivo as u8 == 8 {
-        let f = cqd10_d(p + 0x61);
-        if f != 0 && cqd10_w(f + 0xb) > 0x109a {
+        let f = read_u32_as_usize(p + 0x61);
+        if f != 0 && read_i16(f + 0xb) > 0x109a {
             let c = cqd10_contrato(p);
             *(0xae1080 as *mut usize) = c;
             if c != 0 {
-                let clube = cqd10_d(0xae23b4).wrapping_add((cqd10_i(c + 4) as isize * 0x245) as usize);
+                let clube = read_u32_as_usize(0xae23b4).wrapping_add((cqd10_i(c + 4) as isize * 0x245) as usize);
                 if clube != 0 {
                     crate::comparacao::ramo("cqd_10 seguro da aposentadoria");
                     let seguro: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x58a980usize);
-                    seguro(clube, p, cqd10_d(p + 0x52) as u32);
+                    seguro(clube, p, read_u32_as_usize(p + 0x52) as u32);
                 }
             }
         }
@@ -1323,28 +1296,28 @@ unsafe extern "stdcall" fn noticia_do_jovem_promovido(j: usize, c: usize) {
     let (mut v1, mut v2) = (0i8, 0i8);
     let mut quem = 0usize;
     construir(nw, 0xbce, 0);
-    gravar(nw, 0, cqd10_d(j) as u32);
+    gravar(nw, 0, read_u32_as_usize(j) as u32);
     for k in 1..4usize {
-        gravar(nw, k as i8, cqd10_d(cqd10_d(j + 4 * k) + 0x33) as u32);
+        gravar(nw, k as i8, read_u32_as_usize(read_u32_as_usize(j + 4 * k) + 0x33) as u32);
     }
-    gravar(nw, 4, cqd10_d(c) as u32);
-    gravar(nw, 5, cqd10_b(j + 0x18) as i32 as u32);
-    gravar(nw, 6, (cqd10_b(c + 0x7f) > 0xf) as u32);
+    gravar(nw, 4, read_u32_as_usize(c) as u32);
+    gravar(nw, 5, read_i8(j + 0x18) as i32 as u32);
+    gravar(nw, 6, (read_i8(c + 0x7f) > 0xf) as u32);
     let mut atual = 0usize;
     let mut k = -1i8;
     loop {
         if atual != 0 {
             break;
         }
-        let t = if k == -1 { cqd10_d(c + 0xd3) } else { cqd10_d(c + 0x19f + 4 * k as usize) };
+        let t = if k == -1 { read_u32_as_usize(c + 0xd3) } else { read_u32_as_usize(c + 0x19f + 4 * k as usize) };
         if t != 0 {
             let r = cqd10_sortear(0x9c4);
-            let v = r.wrapping_add(cqd10_w(c + 0x80) as i32 / 2);
-            let x = ftol(v as f64 + cqd10_b(c + 0x7f) as f64 * f64_em(0x96afc8));
+            let v = r.wrapping_add(read_i16(c + 0x80) as i32 / 2);
+            let x = ftol(v as f64 + read_i8(c + 0x7f) as f64 * f64_em(0x96afc8));
             // ponytail: a original empurra o eax inteiro do _ftol e o da primeira vista; a 0x6e86d0 lê a palavra
             let a = vista(t, j, c, 2, x as i16);
             let b = vista(t, j, c, 1, a);
-            let rep = cqd10_w(c + 0x80) as i32;
+            let rep = read_i16(c + 0x80) as i32;
             let alto = rep / 50 + 0x4b;
             if a as i32 > alto {
                 v1 = 2;
@@ -1368,10 +1341,10 @@ unsafe extern "stdcall" fn noticia_do_jovem_promovido(j: usize, c: usize) {
         }
     }
     if atual != 0 {
-        gravar(nw, 7, (atual == cqd10_d(c + 0xd3)) as u32);
-        gravar(nw, 8, cqd10_d(atual) as u32);
+        gravar(nw, 7, (atual == read_u32_as_usize(c + 0xd3)) as u32);
+        gravar(nw, 8, read_u32_as_usize(atual) as u32);
         for k in 1..4usize {
-            gravar(nw, 8 + k as i8, cqd10_d(cqd10_d(atual + 4 * k) + 0x33) as u32);
+            gravar(nw, 8 + k as i8, read_u32_as_usize(read_u32_as_usize(atual + 4 * k) + 0x33) as u32);
         }
         gravar(nw, 0xc, v1 as i32 as u32);
         gravar(nw, 0xd, v2 as i32 as u32);
@@ -1381,7 +1354,7 @@ unsafe extern "stdcall" fn noticia_do_jovem_promovido(j: usize, c: usize) {
         }
     }
     let alcance: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32 = core::mem::transmute(0x786090usize);
-    alcance(cqd10_d(0xb7431c), nw, c, 0, 0, 0, 0);
+    alcance(read_u32_as_usize(0xb7431c), nw, c, 0, 0, 0, 0);
 }
 
 // ponytail: aloca e entrega a notícia e sorteia a opinião: só a original; a cópia leva o ramo.
@@ -1391,9 +1364,6 @@ unsafe extern "stdcall" fn comparar_noticia_do_jovem_promovido(j: usize, c: usiz
 
 // ---------- 258a leva: o regen no clube: a vaga no elenco, o valor e o contrato do jovem; a aposentadoria pela lesão e a notícia da aposentadoria anunciada (player_regen.cpp) ----------
 
-unsafe fn cpv9_d(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i32)
-}
 
 unsafe fn cpv9_por(a: usize, v: i32) {
     core::ptr::write_unaligned(a as *mut i32, v);
@@ -1401,7 +1371,7 @@ unsafe fn cpv9_por(a: usize, v: i32) {
 
 /// A primeira vaga livre (dword 0) das 50 do elenco do clube (+0xd7); 0x32 sem vaga.
 unsafe fn cpv9_vaga_livre(clube: usize) -> usize {
-    (0..0x32usize).find(|&k| cpv9_d(clube + 0xd7 + 4 * k) == 0).unwrap_or(0x32)
+    (0..0x32usize).find(|&k| read_i32(clube + 0xd7 + 4 * k) == 0).unwrap_or(0x32)
 }
 
 /// { 0x7a6f10 } (stdcall, ret 8, player_regen.cpp, quadro SEH só das datas locais): `player_regen_sign_for_club(pessoa,
@@ -1418,7 +1388,7 @@ unsafe extern "stdcall" fn contratar_o_regen(pessoa: usize, clube: usize) -> u8 
     if k == 0x32 {
         return 0;
     }
-    let gerente = cpv9_d(0xae1050) as usize;
+    let gerente = read_i32(0xae1050) as usize;
     let valor: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) -> i32 = core::mem::transmute(0x4d0c60usize);
     let elenco: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x540980usize);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
@@ -1444,7 +1414,7 @@ unsafe extern "stdcall" fn contratar_o_regen(pessoa: usize, clube: usize) -> u8 
         crate::comparacao::ramo("cpv_9 uma em quatro");
         f547d90(pessoa, clube, 0);
     }
-    if *((clube + 0x64) as *const u8) == 3 && cpv9_d(pessoa + 0x52) > 0x1388 {
+    if *((clube + 0x64) as *const u8) == 3 && read_i32(pessoa + 0x52) > 0x1388 {
         cpv9_por(pessoa + 0x52, 0x1388);
     }
     // ponytail: a original grava o ano na palavra de baixo do argumento `clube` e empurra o dword; a 0x549f70 lê 16 bits
@@ -1463,15 +1433,15 @@ unsafe extern "stdcall" fn contratar_o_regen(pessoa: usize, clube: usize) -> u8 
     let dia = (dia_e_ano.0 as u8).wrapping_add(1) as i8 as i16 as u16 as u32;
     let p = data_dma(d.as_mut_ptr(), dia, dia_e_ano.1, dia_e_ano.2, 0xffff_ffff);
     copia(pessoa + 0x46, ret.as_mut_ptr(), p);
-    contrato_novo(gerente, pessoa, cpv9_d(pessoa + 0x52) as u32);
+    contrato_novo(gerente, pessoa, read_i32(pessoa + 0x52) as u32);
     if humano(clube, 1, 1, 0, 0) != 0 {
-        reservas(cpv9_d(0xae1050) as usize, pessoa, clube);
-        let c = contrato(cpv9_d(0xae1050) as usize, pessoa);
+        reservas(read_i32(0xae1050) as usize, pessoa, clube);
+        let c = contrato(read_i32(0xae1050) as usize, pessoa);
         *((c + 0x4f) as *mut u8) = *((c + 0x4f) as *const u8) & 0xf | 0x60;
-        let c = contrato(cpv9_d(0xae1050) as usize, pessoa);
+        let c = contrato(read_i32(0xae1050) as usize, pessoa);
         *((c + 0x35) as *mut u8) = *((c + 0x35) as *const u8) & 0xc1 | 1;
     }
-    let c = contrato(cpv9_d(0xae1050) as usize, pessoa);
+    let c = contrato(read_i32(0xae1050) as usize, pessoa);
     if c != 0 {
         salario(c, pessoa);
         *((c + 0x3a) as *mut u8) = 0;
@@ -1483,8 +1453,8 @@ unsafe extern "stdcall" fn contratar_o_regen(pessoa: usize, clube: usize) -> u8 
             }
         }
     }
-    if usa_numeros(cpv9_d(0xdd7ef0) as usize, clube, 0) != 0 {
-        dar_numero(cpv9_d(0xdd7ef0) as usize, clube, 0);
+    if usa_numeros(read_i32(0xdd7ef0) as usize, clube, 0) != 0 {
+        dar_numero(read_i32(0xdd7ef0) as usize, clube, 0);
     }
     1
 }
@@ -1500,8 +1470,8 @@ unsafe extern "stdcall" fn comparar_contratar_o_regen(pessoa: usize, clube: usiz
         return r;
     }
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato(cpv9_d(0xae1050) as usize, pessoa);
-    let ok = r == 1 && cpv9_d(clube + 0xd7 + 4 * k) == pessoa as i32 && cpv9_d(pessoa + 0x39) == clube as i32 && (c == 0 || *((c + 0x3a) as *const u8) == 0);
+    let c = contrato(read_i32(0xae1050) as usize, pessoa);
+    let ok = r == 1 && read_i32(clube + 0xd7 + 4 * k) == pessoa as i32 && read_i32(pessoa + 0x39) == clube as i32 && (c == 0 || *((c + 0x3a) as *const u8) == 0);
     PLACAR.registrar(ok, || format!("contratar_o_regen({:x}, {:x}) vaga {} original={}", pessoa, clube, k, r));
     r
 }
@@ -1517,20 +1487,20 @@ unsafe extern "thiscall" fn aposentar_pela_lesao(this: usize, pessoa: usize, dia
     let mais: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> *mut u8 = core::mem::transmute(0x54c5b0usize);
     let copia: unsafe extern "thiscall" fn(*mut u8, *mut u8, *const u8) -> *mut u8 = core::mem::transmute(0x417c10usize);
     let acrescentar: unsafe extern "thiscall" fn(usize, *const u8) = core::mem::transmute(0x7a8510usize);
-    let n = cpv9_d(this + 8);
+    let n = read_i32(this + 8);
     if pessoa != 0 && n > 0 {
-        let base = cpv9_d(this + 4) as usize;
-        let id = cpv9_d(pessoa);
-        if let Some(i) = (0..n as usize).find(|&i| cpv9_d(base + 0x1a * i) == id) {
+        let base = read_i32(this + 4) as usize;
+        let id = read_i32(pessoa);
+        if let Some(i) = (0..n as usize).find(|&i| read_i32(base + 0x1a * i) == id) {
             crate::comparacao::ramo("cpv_9 tira a aposentadoria pendente");
             tirar(this, base + 0x1a * i);
         }
     }
     let mut r = [0u8; 0x1a];
-    let clube = cpv9_d(pessoa + 0x39) as usize;
+    let clube = read_i32(pessoa + 0x39) as usize;
     let rp = r.as_mut_ptr();
-    core::ptr::write_unaligned(rp as *mut i32, cpv9_d(pessoa));
-    core::ptr::write_unaligned(rp.add(4) as *mut i32, if clube == 0 { -1 } else { cpv9_d(clube) });
+    core::ptr::write_unaligned(rp as *mut i32, read_i32(pessoa));
+    core::ptr::write_unaligned(rp.add(4) as *mut i32, if clube == 0 { -1 } else { read_i32(clube) });
     let q = sorteio(dias as i32 / 2);
     let (mut t, mut t2) = ([0u8; 8], [0u8; 8]);
     let d = mais(0xae2c90, t.as_mut_ptr(), q.wrapping_add(1) as u32);
@@ -1545,13 +1515,13 @@ unsafe extern "thiscall" fn aposentar_pela_lesao(this: usize, pessoa: usize, dia
 /// capacidade). Com a tabela cheia (conta = capacidade − 1, a 0x7a8510 realoca): só a original.
 unsafe extern "thiscall" fn comparar_aposentar_pela_lesao(this: usize, pessoa: usize, dias: i16) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, i16)>(1258);
-    let (n, cap) = (cpv9_d(this + 8), cpv9_d(this + 0xc));
+    let (n, cap) = (read_i32(this + 8), read_i32(this + 0xc));
     if pessoa == 0 || n >= cap.wrapping_sub(1) || cap <= 0 {
         return o(this, pessoa, dias);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((this + 4, 12));
-    reg.push((cpv9_d(this + 4) as usize, cap as usize * 0x1a));
+    reg.push((read_i32(this + 4) as usize, cap as usize * 0x1a));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, dias), || crate::aleatorio::sem_contar(|| aposentar_pela_lesao(this, pessoa, dias)));
     PLACAR.registrar(igual, || {
         let (a, b) = (&mo.0, &mr.0);
@@ -1570,7 +1540,7 @@ unsafe extern "stdcall" fn noticia_da_aposentadoria_anunciada(pessoa: usize, mot
     if pessoa == 0 {
         return;
     }
-    if cpv9_d(pessoa + 0x61) != 0 && matches!(*((pessoa + 0x3d) as *const u8), 8 | 5) {
+    if read_i32(pessoa + 0x61) != 0 && matches!(*((pessoa + 0x3d) as *const u8), 8 | 5) {
         return;
     }
     crate::comparacao::ramo("noticia_da_aposentadoria_anunciada");
@@ -1582,27 +1552,27 @@ unsafe extern "stdcall" fn noticia_da_aposentadoria_anunciada(pessoa: usize, mot
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xbbb, 0);
-    gravar(n, 0, cpv9_d(pessoa) as u32);
+    gravar(n, 0, read_i32(pessoa) as u32);
     for (k, o) in [(1i8, 4usize), (2, 8), (3, 0xc)] {
-        gravar(n, k, cpv9_d(cpv9_d(pessoa + o) as usize + 0x33) as u32);
+        gravar(n, k, read_i32(read_i32(pessoa + o) as usize + 0x33) as u32);
     }
     gravar(n, 4, motivo as i32 as u32);
-    let c = contrato(cpv9_d(0xae1050) as usize, pessoa);
+    let c = contrato(read_i32(0xae1050) as usize, pessoa);
     cpv9_por(0xae1080, c as i32);
     let mut clube = -1i32;
     if c != 0 && *((c + 0x35) as *const u8) & 0x3f != 5 {
-        let idx = cpv9_d(c + 4) as u32;
-        let registro = (cpv9_d(0xae23b4) as u32).wrapping_add(idx.wrapping_mul(0x245)) as usize;
+        let idx = read_i32(c + 4) as u32;
+        let registro = (read_i32(0xae23b4) as u32).wrapping_add(idx.wrapping_mul(0x245)) as usize;
         if registro != 0 {
-            clube = cpv9_d(registro);
+            clube = read_i32(registro);
         }
     }
     gravar(n, 5, clube as u32);
     gravar(n, 6, *((pessoa + 0x18) as *const i8) as i32 as u32);
     let mut lista = [0usize; 0x1e];
-    let q = if cpv9_d(0xde1f54) != 0 { interessados(cpv9_d(0xde1f54) as usize, pessoa, 0xa, lista.as_mut_ptr(), 0x1e) } else { 0 };
+    let q = if read_i32(0xde1f54) != 0 { interessados(read_i32(0xde1f54) as usize, pessoa, 0xa, lista.as_mut_ptr(), 0x1e) } else { 0 };
     for i in 0..(q as i8).max(0) as usize {
-        ao_tecnico(cpv9_d(0xb7431c) as usize, n, lista[i]);
+        ao_tecnico(read_i32(0xb7431c) as usize, n, lista[i]);
     }
 }
 
@@ -1613,9 +1583,6 @@ unsafe extern "stdcall" fn comparar_noticia_da_aposentadoria_anunciada(pessoa: u
 
 // ---------- 257a leva: as fichas de treino iniciais dos jogadores, o banco de jogadores livres do regen e se há reserva de não jogador (training_manager.cpp, player_regen.cpp) ----------
 
-unsafe fn cpu9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
 unsafe fn cpu9_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
@@ -1629,16 +1596,16 @@ unsafe fn cpu9_i(a: usize) -> i32 {
 /// (0x8b1750, que só depois refaz a vaga dos jogadores do computador) e todo o treino do clube humano usam essa vaga.
 unsafe extern "thiscall" fn fichas_de_treino_iniciais(this: usize) {
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
-    let p = calloc(cpu9_d(0xae236c) as u32, 6);
+    let p = calloc(read_u32_as_usize(0xae236c) as u32, 6);
     *((this + 0x651d) as *mut u32) = p as u32;
     if p == 0 {
         aviso_em(0xa8ccd0, 0x6e3);
         return;
     }
-    let mut f = cpu9_d(0xae23c4);
+    let mut f = read_u32_as_usize(0xae23c4);
     let mut i = 0i32;
     while i < cpu9_i(0xae236c) {
-        let ficha = || cpu9_d(this + 0x651d).wrapping_add((cpu9_i(f) as usize).wrapping_mul(6));
+        let ficha = || read_u32_as_usize(this + 0x651d).wrapping_add((cpu9_i(f) as usize).wrapping_mul(6));
         *((ficha() + 5) as *mut u8) &= 0xdf;
         let gol = *((f + 0xf) as *const i8);
         if gol >= 0xf { // cpu9: goleiro de 15 para cima
@@ -1657,14 +1624,14 @@ unsafe extern "thiscall" fn fichas_de_treino_iniciais(this: usize) {
 /// ou 1 pela nota de goleiro e o bit 0x20 do +5 apagado).
 unsafe extern "thiscall" fn comparar_fichas_de_treino_iniciais(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(1218)(this);
-    let base = cpu9_d(this + 0x651d);
+    let base = read_u32_as_usize(this + 0x651d);
     if base == 0 {
         return;
     }
     let mut erradas = 0usize;
     let mut primeira = None;
     for k in 0..cpu9_i(0xae236c).max(0) as usize {
-        let f = cpu9_d(0xae23c4) + 0x46 * k;
+        let f = read_u32_as_usize(0xae23c4) + 0x46 * k;
         let e = base.wrapping_add((cpu9_i(f) as usize).wrapping_mul(6));
         let vaga = if *((f + 0xf) as *const i8) >= 0xf { 6 } else { 1 };
         if *(e as *const u8) != vaga || *((e + 5) as *const u8) & 0x20 != 0 {
@@ -1682,32 +1649,32 @@ unsafe extern "thiscall" fn comparar_fichas_de_treino_iniciais(this: usize) {
 /// caixa 0xa0a e fim). Pela process_retirements (0x7a59e0), quando um jogador que também tem ficha de não jogador
 /// deixa de jogar.
 unsafe extern "thiscall" fn guardar_jogador_no_banco(this: usize, pessoa: i32, nacao: u32, segunda: u32) {
-    if cpk2_d(this + 0x40) == cpk2_d(this + 0x44).wrapping_sub(1) {
-        let p = cpk2_realocar(cpk2_d(this + 0x3c), cpk2_d(this + 0x44).wrapping_add(250) << 4);
+    if read_usize(this + 0x40) == read_usize(this + 0x44).wrapping_sub(1) {
+        let p = cpk2_realocar(read_usize(this + 0x3c), read_usize(this + 0x44).wrapping_add(250) << 4);
         cpk2_por(this + 0x3c, p);
-        cpk2_por(this + 0x44, cpk2_d(this + 0x44).wrapping_add(250));
+        cpk2_por(this + 0x44, read_usize(this + 0x44).wrapping_add(250));
         if p == 0 {
             cpk2_sem_memoria(0xa0a);
         }
     }
     crate::comparacao::ramo("cpu_9 banco de jogadores");
-    let registro = cpk2_d(0xae23bc).wrapping_add((pessoa as u32).wrapping_mul(0x6e) as usize);
-    let item = cpk2_d(this + 0x3c).wrapping_add(cpk2_d(this + 0x40) << 4);
-    cpk2_por(item, cpk2_d(cpk2_d(registro + 0x61)));
+    let registro = read_usize(0xae23bc).wrapping_add((pessoa as u32).wrapping_mul(0x6e) as usize);
+    let item = read_usize(this + 0x3c).wrapping_add(read_usize(this + 0x40) << 4);
+    cpk2_por(item, read_usize(read_usize(registro + 0x61)));
     cpk2_por(item + 4, nacao as usize);
     cpk2_por(item + 8, segunda as usize);
-    cpk2_por(this + 0x40, cpk2_d(this + 0x40).wrapping_add(1));
+    cpk2_por(this + 0x40, read_usize(this + 0x40).wrapping_add(1));
 }
 
 /// Comparador: o id da ficha antes; a original acrescenta (pode realocar); confere a conta e o item novo.
 unsafe extern "thiscall" fn comparar_guardar_jogador_no_banco(this: usize, pessoa: i32, nacao: u32, segunda: u32) {
-    let n = cpk2_d(this + 0x40);
-    let id = cpk2_d(cpk2_d(cpk2_d(0xae23bc).wrapping_add((pessoa as u32).wrapping_mul(0x6e) as usize) + 0x61)) as u32;
+    let n = read_usize(this + 0x40);
+    let id = read_usize(read_usize(read_usize(0xae23bc).wrapping_add((pessoa as u32).wrapping_mul(0x6e) as usize) + 0x61)) as u32;
     orig::<unsafe extern "thiscall" fn(usize, i32, u32, u32)>(1219)(this, pessoa, nacao, segunda);
-    let item = cpk2_d(this + 0x3c).wrapping_add(n << 4);
-    let g = [cpk2_d(item) as u32, cpk2_d(item + 4) as u32, cpk2_d(item + 8) as u32];
-    PLACAR.registrar(cpk2_d(this + 0x40) == n.wrapping_add(1) && g == [id, nacao, segunda], || {
-        format!("guardar_jogador_no_banco({}, {}, {}) conta {} -> {}, item {:?} (id {})", pessoa, nacao, segunda, n, cpk2_d(this + 0x40), g, id)
+    let item = read_usize(this + 0x3c).wrapping_add(n << 4);
+    let g = [read_usize(item) as u32, read_usize(item + 4) as u32, read_usize(item + 8) as u32];
+    PLACAR.registrar(read_usize(this + 0x40) == n.wrapping_add(1) && g == [id, nacao, segunda], || {
+        format!("guardar_jogador_no_banco({}, {}, {}) conta {} -> {}, item {:?} (id {})", pessoa, nacao, segunda, n, read_usize(this + 0x40), g, id)
     });
 }
 
@@ -1715,7 +1682,7 @@ unsafe extern "thiscall" fn comparar_guardar_jogador_no_banco(this: usize, pesso
 /// fichas de não jogador (conta em +0x20) tem alguma. O eax leva os 24 bits altos da conta (setne no al), como na
 /// original.
 unsafe extern "thiscall" fn tem_reserva_de_tecnico(this: usize) -> u32 {
-    let c = cpu9_d(this + 0x20) as u32;
+    let c = read_u32_as_usize(this + 0x20) as u32;
     (c & 0xffff_ff00) | (c != 0) as u32
 }
 
@@ -1729,35 +1696,23 @@ unsafe extern "thiscall" fn comparar_tem_reserva_de_tecnico(this: usize) -> u32 
 
 // ---------- 254a leva: as aposentadorias: quem se aposenta no começo do jogo, quem se aposenta pela idade e a lista inicial (player_regen.cpp) ----------
 
-unsafe fn cpr8_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cpr8_b(a: usize) -> i8 {
-    *(a as *const i8)
-}
 
-unsafe fn cpr8_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 unsafe fn cpr8_u(a: usize) -> u16 {
     core::ptr::read_unaligned(a as *const u16)
 }
 
-unsafe fn cpr8_pw(a: usize, v: u16) {
-    core::ptr::write_unaligned(a as *mut u16, v);
-}
 
 /// O contrato da pessoa (0x4cf5a0, guardado em [0xae1080]) e, pelo clube dele (registro de 0x245 bytes pelo +4; sem
 /// contrato, 0), o contrato da pessoa com esse clube (0x4cf5f0), que a rotina devolve.
 unsafe fn cpr8_contratos(pessoa: usize) -> usize {
     let de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = de(cpr8_d(0xae1050), pessoa);
+    let c = de(read_u32_as_usize(0xae1050), pessoa);
     *(0xae1080 as *mut usize) = c;
-    let clube = if c != 0 { cpr8_d(0xae23b4).wrapping_add(cpr8_d(c + 4).wrapping_mul(0x245)) } else { 0 };
+    let clube = if c != 0 { read_u32_as_usize(0xae23b4).wrapping_add(read_u32_as_usize(c + 4).wrapping_mul(0x245)) } else { 0 };
     let com: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
-    com(cpr8_d(0xae1050), pessoa, clube)
+    com(read_u32_as_usize(0xae1050), pessoa, clube)
 }
 
 /// O estatuto do contrato com o clube (+0x3d); sem ele, −100 (0x9c).
@@ -1765,7 +1720,7 @@ unsafe fn cpr8_estatuto(c2: usize) -> i8 {
     if c2 == 0 {
         0x9cu8 as i8
     } else {
-        cpr8_b(c2 + 0x3d)
+        read_i8(c2 + 0x3d)
     }
 }
 
@@ -1773,9 +1728,9 @@ unsafe fn cpr8_estatuto(c2: usize) -> i8 {
 /// o byte baixo do ponteiro da saída, que ela lê da vaga errada da pilha): 1, 2 e 4: 70 + sorteio(10); 8 e 9:
 /// 60 + sorteio(5); os outros: 61 + sorteio(5) com clube (+0x39) ou seleção (+0x24), senão 55 + sorteio(10). Byte.
 unsafe fn cpr8_limite_sem_jogador(pessoa: usize, saida: usize) -> i8 {
-    let mut t = cpr8_b(pessoa + 0x3d);
+    let mut t = read_i8(pessoa + 0x3d);
     if t == 0 {
-        t = cpr8_b(pessoa + 0x28);
+        t = read_i8(pessoa + 0x28);
         if t == 0 {
             t = saida as u8 as i8; // ponytail: a original lê aqui o byte baixo do argumento `saida`
         }
@@ -1784,7 +1739,7 @@ unsafe fn cpr8_limite_sem_jogador(pessoa: usize, saida: usize) -> i8 {
         1 | 2 | 4 => (10, 0x46u8),
         8 | 9 => (5, 0x3c),
         _ => {
-            if cpr8_d(pessoa + 0x39) != 0 || cpr8_d(pessoa + 0x24) != 0 {
+            if read_u32_as_usize(pessoa + 0x39) != 0 || read_u32_as_usize(pessoa + 0x24) != 0 {
                 (5, 0x3d)
             } else {
                 (10, 0x37)
@@ -1797,11 +1752,11 @@ unsafe fn cpr8_limite_sem_jogador(pessoa: usize, saida: usize) -> i8 {
 /// O limite de idade do jogador pela ficha: 34 com +0xf ≥ 15; senão 30 com +0x15 ≥ 15; senão 31 com +0x14 < 15;
 /// senão 30 (bytes com sinal).
 unsafe fn cpr8_limite_do_jogador(j: usize) -> i8 {
-    if cpr8_b(j + 0xf) >= 15 {
+    if read_i8(j + 0xf) >= 15 {
         0x22
-    } else if cpr8_b(j + 0x15) >= 15 {
+    } else if read_i8(j + 0x15) >= 15 {
         0x1e
-    } else if cpr8_b(j + 0x14) < 15 {
+    } else if read_i8(j + 0x14) < 15 {
         0x1f
     } else {
         0x1e
@@ -1812,36 +1767,36 @@ unsafe fn cpr8_limite_do_jogador(j: usize) -> i8 {
 unsafe fn cpr8_preencher(pessoa: usize, saida: usize, motivo: u8) {
     *((saida + 0x18) as *mut u8) = motivo;
     *((saida + 0x19) as *mut u8) = 0;
-    core::ptr::write_unaligned(saida as *mut u32, cpr8_d(pessoa) as u32);
-    let c = cpr8_d(pessoa + 0x39);
-    core::ptr::write_unaligned((saida + 4) as *mut u32, if c != 0 { cpr8_d(c) as u32 } else { u32::MAX });
+    core::ptr::write_unaligned(saida as *mut u32, read_u32_as_usize(pessoa) as u32);
+    let c = read_u32_as_usize(pessoa + 0x39);
+    core::ptr::write_unaligned((saida + 4) as *mut u32, if c != 0 { read_u32_as_usize(c) as u32 } else { u32::MAX });
 }
 
 /// Amanhã (dia + 1, só a palavra) nas duas datas da saída (+8 e +0x10; ano em +0xa e +0x12).
 unsafe fn cpr8_amanha(saida: usize) {
     let (dia, ano) = (cpr8_u(0xae2c90).wrapping_add(1), cpr8_u(0xae2c92));
-    cpr8_pw(saida + 8, dia);
-    cpr8_pw(saida + 0xa, ano);
-    cpr8_pw(saida + 0x10, dia);
-    cpr8_pw(saida + 0x12, ano);
+    write_u16(saida + 8, dia);
+    write_u16(saida + 0xa, ano);
+    write_u16(saida + 0x10, dia);
+    write_u16(saida + 0x12, ano);
 }
 
 /// Sem nação-chave válida na aposentadoria pela idade: hoje + sorteio(20) nas duas datas; passando de 365, o dia
 /// sorteio(10) do ano seguinte.
 unsafe fn cpr8_fora_por_idade(saida: usize) {
-    let a = (sortear(20) as u32).wrapping_add(cpr8_d(0xae2c90) as u32) as u16;
+    let a = (sortear(20) as u32).wrapping_add(read_u32_as_usize(0xae2c90) as u32) as u16;
     let ano = cpr8_u(0xae2c92);
     if a as i16 > 0x16d {
         let d = sortear(10) as u16;
-        cpr8_pw(saida + 0x10, d);
-        cpr8_pw(saida + 0x12, ano.wrapping_add(1));
-        cpr8_pw(saida + 8, d);
-        cpr8_pw(saida + 0xa, ano.wrapping_add(1));
+        write_u16(saida + 0x10, d);
+        write_u16(saida + 0x12, ano.wrapping_add(1));
+        write_u16(saida + 8, d);
+        write_u16(saida + 0xa, ano.wrapping_add(1));
     } else {
-        cpr8_pw(saida + 8, a);
-        cpr8_pw(saida + 0xa, ano);
-        cpr8_pw(saida + 0x10, a);
-        cpr8_pw(saida + 0x12, ano);
+        write_u16(saida + 8, a);
+        write_u16(saida + 0xa, ano);
+        write_u16(saida + 0x10, a);
+        write_u16(saida + 0x12, ano);
     }
 }
 
@@ -1852,12 +1807,12 @@ unsafe fn cpr8_fora_por_idade(saida: usize) {
 /// 365, sorteio(30) do ano seguinte; com +0x1d, um ano a mais); a aposentadoria antes do anúncio fica no anúncio, e a
 /// menos de 45 dias dele (0x54cdb0) o anúncio vai para ela. Índice fora: `fora` (cada rotina tem a sua).
 unsafe fn cpr8_datas(pessoa: usize, saida: usize, fora: unsafe fn(usize)) {
-    let clube = cpr8_d(pessoa + 0x39);
+    let clube = read_u32_as_usize(pessoa + 0x39);
     let k = if clube != 0 {
         let pelo_clube: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x669360usize);
         pelo_clube(clube) as u8 as i8
     } else {
-        let nacao = cpr8_d(pessoa + 0x1a);
+        let nacao = read_u32_as_usize(pessoa + 0x1a);
         if nacao == 0 {
             return cpr8_amanha(saida);
         }
@@ -1869,29 +1824,29 @@ unsafe fn cpr8_datas(pessoa: usize, saida: usize, fora: unsafe fn(usize)) {
     }
     crate::comparacao::ramo("cpr_8 datas pela nacao");
     let ano = cpr8_u(0xae2c92);
-    let a = (sortear(95) as u32).wrapping_add(cpr8_d(0xae2c90) as u32).wrapping_add(1) as u16;
+    let a = (sortear(95) as u32).wrapping_add(read_u32_as_usize(0xae2c90) as u32).wrapping_add(1) as u16;
     let (dia1, ano1) = if a as i16 > 0x16d { (sortear(60) as u16, ano.wrapping_add(1)) } else { (a, ano) };
-    cpr8_pw(saida + 0xa, ano1);
-    cpr8_pw(saida + 8, dia1);
+    write_u16(saida + 0xa, ano1);
+    write_u16(saida + 8, dia1);
     let t = 0xb63d60usize.wrapping_add((k as usize) * 0x48);
     let d2 = (sortear(30) as u16).wrapping_add(cpr8_u(t + 0x15)); // o fim de temporada da nação
-    cpr8_pw(saida + 0x10, d2);
+    write_u16(saida + 0x10, d2);
     let mais_um = *((t + 0x1d) as *const u8) != 0;
     if d2 as i16 > 0x16d {
-        cpr8_pw(saida + 0x10, sortear(30) as u16);
-        cpr8_pw(saida + 0x12, ano.wrapping_add(if mais_um { 2 } else { 1 }));
+        write_u16(saida + 0x10, sortear(30) as u16);
+        write_u16(saida + 0x12, ano.wrapping_add(if mais_um { 2 } else { 1 }));
     } else {
-        cpr8_pw(saida + 0x12, if mais_um { ano.wrapping_add(1) } else { ano });
+        write_u16(saida + 0x12, if mais_um { ano.wrapping_add(1) } else { ano });
     }
     let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut t8 = [0u8; 8];
     let (da, aa) = (cpr8_u(saida + 0x12), cpr8_u(saida + 0xa));
-    if da < aa || (da == aa && cpr8_w(saida + 0x10) < cpr8_w(saida + 8)) {
+    if da < aa || (da == aa && read_i16(saida + 0x10) < read_i16(saida + 8)) {
         copia(saida + 0x10, t8.as_mut_ptr(), saida + 8);
         return;
     }
     let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
-    if dias(saida + 0x10, cpr8_d(saida + 8) as u32, cpr8_d(saida + 0xc) as u32) >= 0x2d {
+    if dias(saida + 0x10, read_u32_as_usize(saida + 8) as u32, read_u32_as_usize(saida + 0xc) as u32) >= 0x2d {
         return;
     }
     copia(saida + 8, t8.as_mut_ptr(), saida + 0x10);
@@ -1907,16 +1862,16 @@ unsafe fn cpr8_datas(pessoa: usize, saida: usize, fora: unsafe fn(usize)) {
 /// sem clube, motivo 2 com sorteio(25 × +0x3c) = 0. Quem se aposenta: a saída (cpr8_preencher) e as datas
 /// (cpr8_datas; sem nação-chave válida, amanhã); devolve 1.
 unsafe extern "thiscall" fn aposentadoria_no_inicio(_this: usize, pessoa: usize, saida: usize) -> u8 {
-    if cpr8_d(pessoa + 0x39) == 0 {
+    if read_u32_as_usize(pessoa + 0x39) == 0 {
         return 0;
     }
     let c2 = cpr8_contratos(pessoa);
     let estatuto = cpr8_estatuto(c2);
-    let idade = cpr8_b(pessoa + 0x18);
-    let j = cpr8_d(pessoa + 0x61);
+    let idade = read_i8(pessoa + 0x18);
+    let j = read_u32_as_usize(pessoa + 0x61);
     let motivo: u8 = 'm: {
         if j == 0 {
-            if cpr8_d(pessoa + 0x69) != 0 && idade <= cpr8_limite_sem_jogador(pessoa, saida) {
+            if read_u32_as_usize(pessoa + 0x69) != 0 && idade <= cpr8_limite_sem_jogador(pessoa, saida) {
                 return 0;
             }
             break 'm 0x20;
@@ -1926,15 +1881,15 @@ unsafe extern "thiscall" fn aposentadoria_no_inicio(_this: usize, pessoa: usize,
             return 0;
         }
         let f = ftol(f64_em(0x967890) - (idade as i32 - lim as i32) as f64 * f64_em(0x967880)) as i16;
-        let v = ftol(f as f64 * cpr8_w(j + 0xb) as f64) as i16;
+        let v = ftol(f as f64 * read_i16(j + 0xb) as f64) as i16;
         if idade > 0x2d {
             break 'm 1;
         }
-        let clube = cpr8_d(pessoa + 0x39);
+        let clube = read_u32_as_usize(pessoa + 0x39);
         let sorteia = if clube != 0 {
-            cpr8_d(clube + 0x57) == 0
+            read_u32_as_usize(clube + 0x57) == 0
         } else {
-            let n = cpr8_d(pessoa + 0x1a);
+            let n = read_u32_as_usize(pessoa + 0x1a);
             n != 0 && *((n + 0x11c) as *const u8) == 0
         };
         if sorteia {
@@ -1949,7 +1904,7 @@ unsafe extern "thiscall" fn aposentadoria_no_inicio(_this: usize, pessoa: usize,
         if v >= 0x1388 {
             return 0;
         }
-        let hab = cpr8_w(j + 5);
+        let hab = read_i16(j + 5);
         if hab > 0x50 {
             return 0; // cpr8: a habilidade alta segura o jogador
         }
@@ -1963,7 +1918,7 @@ unsafe extern "thiscall" fn aposentadoria_no_inicio(_this: usize, pessoa: usize,
             }
             return 0;
         }
-        if sortear(25 * cpr8_b(j + 0x3c) as i32) != 0 {
+        if sortear(25 * read_i8(j + 0x3c) as i32) != 0 {
             return 0;
         }
         2
@@ -1989,11 +1944,11 @@ unsafe extern "thiscall" fn aposentadoria_no_inicio(_this: usize, pessoa: usize,
 unsafe extern "thiscall" fn aposentadoria_por_idade(_this: usize, pessoa: usize, saida: usize) -> u8 {
     let c2 = cpr8_contratos(pessoa);
     let estatuto = cpr8_estatuto(c2);
-    let idade = cpr8_b(pessoa + 0x18);
-    let j = cpr8_d(pessoa + 0x61);
+    let idade = read_i8(pessoa + 0x18);
+    let j = read_u32_as_usize(pessoa + 0x61);
     let motivo: u8 = 'm: {
         if j == 0 {
-            if cpr8_d(pessoa + 0x69) != 0 && idade <= cpr8_limite_sem_jogador(pessoa, saida) {
+            if read_u32_as_usize(pessoa + 0x69) != 0 && idade <= cpr8_limite_sem_jogador(pessoa, saida) {
                 return 0;
             }
             break 'm 0x20;
@@ -2005,46 +1960,46 @@ unsafe extern "thiscall" fn aposentadoria_por_idade(_this: usize, pessoa: usize,
         if idade > 0x21 {
             if c2 == 0 {
                 lim = lim.wrapping_sub(1);
-            } else if cpr8_d(c2 + 0x45) != 0
-                && (cpr8_b(j + 0x15) == 0x14 || cpr8_b(j + 0x14) == 0x14 || *((c2 + 0x4f) as *const u8) & 0xf0 == 0x70)
+            } else if read_u32_as_usize(c2 + 0x45) != 0
+                && (read_i8(j + 0x15) == 0x14 || read_i8(j + 0x14) == 0x14 || *((c2 + 0x4f) as *const u8) & 0xf0 == 0x70)
             {
                 lim = lim.wrapping_sub(1);
             }
         }
-        if cpr8_d(pessoa + 0x39) != 0 && c2 != 0 {
-            let x = cpr8_b(pessoa + 0x59) as i32;
-            if (cpr8_d(c2 + 0xc) as i32) > (x + 10).wrapping_mul(750) && cpr8_u(c2 + 0x2f) > cpr8_u(0xae2c92) {
+        if read_u32_as_usize(pessoa + 0x39) != 0 && c2 != 0 {
+            let x = read_i8(pessoa + 0x59) as i32;
+            if (read_u32_as_usize(c2 + 0xc) as i32) > (x + 10).wrapping_mul(750) && cpr8_u(c2 + 0x2f) > cpr8_u(0xae2c92) {
                 lim = lim.wrapping_sub(1);
                 if x < 6 {
                     lim = lim.wrapping_sub(1);
                 }
             }
         }
-        let v = ftol((f64_em(0x967890) - (idade as i32 - lim as i32) as f64 * f64_em(0x96a730)) * cpr8_w(j + 0xb) as f64) as i16;
+        let v = ftol((f64_em(0x967890) - (idade as i32 - lim as i32) as f64 * f64_em(0x96a730)) * read_i16(j + 0xb) as f64) as i16;
         if idade > 0x2d {
             break 'm 1;
         }
-        if idade > 0x22 && cpr8_d(pessoa + 0x39) == 0 {
+        if idade > 0x22 && read_u32_as_usize(pessoa + 0x39) == 0 {
             let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
-            if dias(0xae2c90, cpr8_d(pessoa + 0x3e) as u32, cpr8_d(pessoa + 0x42) as u32) > 0x41 {
+            if dias(0xae2c90, read_u32_as_usize(pessoa + 0x3e) as u32, read_u32_as_usize(pessoa + 0x42) as u32) > 0x41 {
                 break 'm 1;
             }
         }
         let (i, l) = (idade as i32, lim as i32);
-        if i > l + 2 && idade > 0x1f && c2 != 0 && cpr8_b(c2 + 0x3e) > 5 {
+        if i > l + 2 && idade > 0x1f && c2 != 0 && read_i8(c2 + 0x3e) > 5 {
             break 'm 1;
         }
         if i > l + 3 {
-            if cpr8_d(pessoa + 0x39) == 0 {
+            if read_u32_as_usize(pessoa + 0x39) == 0 {
                 break 'm 1;
             }
             let fim: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x85fa00usize);
             if c2 != 0 && (fim(c2) as i16) < 300 && estatuto < 0x32 {
-                if cpr8_d(pessoa + 0x69) != 0 {
+                if read_u32_as_usize(pessoa + 0x69) != 0 {
                     break 'm 1;
                 }
-                if cpr8_b(pessoa + 0x57) as i32 > sortear(20) {
-                    let (cur, pot) = (cpr8_w(j + 5) as f64, cpr8_w(j + 7) as f64);
+                if read_i8(pessoa + 0x57) as i32 > sortear(20) {
+                    let (cur, pot) = (read_i16(j + 5) as f64, read_i16(j + 7) as f64);
                     if !(pot * f64_em(0x969520) <= cur) {
                         break 'm 1;
                     }
@@ -2054,12 +2009,12 @@ unsafe extern "thiscall" fn aposentadoria_por_idade(_this: usize, pessoa: usize,
         if v > 0x157c {
             return 0;
         }
-        let clube = cpr8_d(pessoa + 0x39);
+        let clube = read_u32_as_usize(pessoa + 0x39);
         let sorteia = if clube != 0 {
-            let lg = cpr8_d(clube + 0x57);
-            lg == 0 || cpr8_d(cpr8_d(0xadadfc).wrapping_add(cpr8_d(lg).wrapping_mul(4))) == 0
+            let lg = read_u32_as_usize(clube + 0x57);
+            lg == 0 || read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(lg).wrapping_mul(4))) == 0
         } else {
-            let n = cpr8_d(pessoa + 0x1a);
+            let n = read_u32_as_usize(pessoa + 0x1a);
             n != 0 && *((n + 0x11c) as *const u8) == 0
         };
         if sorteia {
@@ -2067,7 +2022,7 @@ unsafe extern "thiscall" fn aposentadoria_por_idade(_this: usize, pessoa: usize,
             if sortear(3) == 0 {
                 break 'm 1; // cpr8: um em três se aposenta
             }
-            if cpr8_d(pessoa + 0x39) != 0 && estatuto < 0 {
+            if read_u32_as_usize(pessoa + 0x39) != 0 && estatuto < 0 {
                 break 'm 1;
             }
             if v >= 0xdac {
@@ -2075,7 +2030,7 @@ unsafe extern "thiscall" fn aposentadoria_por_idade(_this: usize, pessoa: usize,
             }
             break 'm 1;
         }
-        let cur = cpr8_w(j + 5);
+        let cur = read_i16(j + 5);
         if cur > 0x64 {
             return 0;
         }
@@ -2088,7 +2043,7 @@ unsafe extern "thiscall" fn aposentadoria_por_idade(_this: usize, pessoa: usize,
             }
             return 0;
         }
-        if sortear(25 * cpr8_b(j + 0x3c) as i32) != 0 {
+        if sortear(25 * read_i8(j + 0x3c) as i32) != 0 {
             return 0;
         }
         2
@@ -2114,14 +2069,14 @@ unsafe extern "thiscall" fn lista_inicial_de_aposentadorias(this: usize) {
     let de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let testar: unsafe extern "thiscall" fn(usize, usize, *mut u8) -> u8 = core::mem::transmute(0x7a79c0usize);
     let acrescentar: unsafe extern "thiscall" fn(usize, *const u8) = core::mem::transmute(0x7a8510usize);
-    let mut p = cpr8_d(0xae23bc);
+    let mut p = read_u32_as_usize(0xae23bc);
     let mut i = 0i32;
-    while i < cpr8_d(0xae2364) as i32 {
-        let id = cpr8_d(p) as i32;
-        if id < (cpr8_d(0xae2364) as i32).wrapping_sub(0x10)
-            && *((cpr8_d(0xae2d0c).wrapping_add((id as usize).wrapping_mul(79)) + 0xb) as *const u8) & 0x30 == 0
+    while i < read_u32_as_usize(0xae2364) as i32 {
+        let id = read_u32_as_usize(p) as i32;
+        if id < (read_u32_as_usize(0xae2364) as i32).wrapping_sub(0x10)
+            && *((read_u32_as_usize(0xae2d0c).wrapping_add((id as usize).wrapping_mul(79)) + 0xb) as *const u8) & 0x30 == 0
         {
-            let c = de(cpr8_d(0xae1050), p);
+            let c = de(read_u32_as_usize(0xae1050), p);
             if (c == 0 || *((c + 0x49) as *const u8) == 0) && testar(this, p, e.as_mut_ptr()) != 0 {
                 acrescentar(this, e.as_ptr());
             }
@@ -2130,7 +2085,7 @@ unsafe extern "thiscall" fn lista_inicial_de_aposentadorias(this: usize) {
         p = p.wrapping_add(0x6e);
     }
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    qsort(cpr8_d(this + 4), cpr8_d(this + 8) as u32, 0x1a, 0x7ae2a0);
+    qsort(read_u32_as_usize(this + 4), read_u32_as_usize(this + 8) as u32, 0x1a, 0x7ae2a0);
 }
 
 /// As regiões que as duas decisões mudam: o sorteio, [0xae1080], a saída e a data estática da 0x54cdb0.
@@ -2166,13 +2121,7 @@ unsafe extern "thiscall" fn comparar_lista_inicial_de_aposentadorias(this: usize
 
 // ---------- 254a leva: a busca de novas aposentadorias, a saída dos cargos de quem se aposenta e o registro da liberação (player_regen.cpp, staff_records.cpp) ----------
 
-unsafe fn cpr9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cpr9_b(a: usize) -> i8 {
-    *(a as *const i8)
-}
 
 unsafe fn cpr9_zerar(a: usize) {
     core::ptr::write_unaligned(a as *mut u32, 0);
@@ -2196,36 +2145,36 @@ unsafe extern "thiscall" fn novas_aposentadorias(this: usize) {
     let pela_idade: unsafe extern "thiscall" fn(usize, usize, *mut u8) -> u8 = core::mem::transmute(0x7a7310usize);
     let desempregado: unsafe extern "stdcall" fn(usize, *mut u8) -> u8 = core::mem::transmute(0x7a8050usize);
     let acrescentar: unsafe extern "thiscall" fn(usize, *const u8) = core::mem::transmute(0x7a8510usize);
-    let mut p = cpr9_d(0xae23bc);
-    let fim = p.wrapping_add(cpr9_d(0xae2364).wrapping_mul(0x6e));
+    let mut p = read_u32_as_usize(0xae23bc);
+    let fim = p.wrapping_add(read_u32_as_usize(0xae2364).wrapping_mul(0x6e));
     while p < fim {
         'x: {
-            if cpr9_b(p + 0x18) < 0x1e {
-                let c = cpr9_d(p + 0x39);
+            if read_i8(p + 0x18) < 0x1e {
+                let c = read_u32_as_usize(p + 0x39);
                 if c != 0 {
-                    let lg = cpr9_d(c + 0x57);
-                    if lg != 0 && cpr9_d(cpr9_d(0xadadfc).wrapping_add(cpr9_d(lg).wrapping_mul(4))) != 0 {
+                    let lg = read_u32_as_usize(c + 0x57);
+                    if lg != 0 && read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(lg).wrapping_mul(4))) != 0 {
                         break 'x;
                     }
                 }
             }
-            let id = cpr9_d(p) as i32;
-            if id >= (cpr9_d(0xae2364) as i32).wrapping_sub(0x10) {
+            let id = read_u32_as_usize(p) as i32;
+            if id >= (read_u32_as_usize(0xae2364) as i32).wrapping_sub(0x10) {
                 break 'x;
             }
-            if *((cpr9_d(0xae2d0c).wrapping_add((id as usize).wrapping_mul(79)) + 0xb) as *const u8) & 0x30 != 0 {
+            if *((read_u32_as_usize(0xae2d0c).wrapping_add((id as usize).wrapping_mul(79)) + 0xb) as *const u8) & 0x30 != 0 {
                 break 'x;
             }
-            let k = cpr9_d(this + 8) as i32;
+            let k = read_u32_as_usize(this + 8) as i32;
             if k != 0 {
-                let l = cpr9_d(this + 4);
+                let l = read_u32_as_usize(this + 4);
                 for i in 0..k.max(0) as usize {
-                    if cpr9_d(l + i * 0x1a) as i32 == id {
+                    if read_u32_as_usize(l + i * 0x1a) as i32 == id {
                         break 'x;
                     }
                 }
             }
-            let c = de(cpr9_d(0xae1050), p);
+            let c = de(read_u32_as_usize(0xae1050), p);
             if c != 0 && *((c + 0x49) as *const u8) != 0 {
                 break 'x;
             }
@@ -2239,7 +2188,7 @@ unsafe extern "thiscall" fn novas_aposentadorias(this: usize) {
         p = p.wrapping_add(0x6e);
     }
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    qsort(cpr9_d(this + 4), cpr9_d(this + 8) as u32, 0x1a, 0x7ae2a0);
+    qsort(read_u32_as_usize(this + 4), read_u32_as_usize(this + 8) as u32, 0x1a, 0x7ae2a0);
 }
 
 /// Tira a pessoa da vaga do `cargo` (tipo com sinal) no clube `c` (o da pessoa em +`campo`: 0x39 o clube, 0x24 a
@@ -2252,7 +2201,7 @@ unsafe fn cpr9_sair_da_vaga(pessoa: usize, c: usize, cargo: i8, campo: usize) {
     let limpar = |base: usize, n: usize| {
         for k in 0..n {
             let a = c + base + 4 * k;
-            if cpr9_d(a) == pessoa {
+            if read_u32_as_usize(a) == pessoa {
                 cpr9_zerar(a);
             }
         }
@@ -2265,27 +2214,27 @@ unsafe fn cpr9_sair_da_vaga(pessoa: usize, c: usize, cargo: i8, campo: usize) {
         1 => cpr9_zerar(c + 0xbf),
         2 => limpar(0xc3, 3),
         5 | 12 => {
-            if cpr9_d(c + 0xcf) != pessoa {
+            if read_u32_as_usize(c + 0xcf) != pessoa {
                 return;
             }
             crate::comparacao::ramo("cpr_9 tecnico");
-            if cargo == 5 && (cpr9_d(pessoa) as i32) >= (cpr9_d(0xae2364) as i32).wrapping_sub(0x10) {
+            if cargo == 5 && (read_u32_as_usize(pessoa) as i32) >= (read_u32_as_usize(0xae2364) as i32).wrapping_sub(0x10) {
                 let cancelar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8c4950usize);
-                cancelar(cpr9_d(0xde1f54), c);
+                cancelar(read_u32_as_usize(0xde1f54), c);
             }
             let sair: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(0x69b790usize);
-            sair(cpr9_d(0xb67a44), c, 3, 0, 0);
+            sair(read_u32_as_usize(0xb67a44), c, 3, 0, 0);
             let pode: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x544820usize);
             if pode(c) as u8 != 0 {
                 let abrir: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x69ba50usize);
-                abrir(cpr9_d(0xb67a44), c, pessoa); // cpr9: a vaga do técnico abre
+                abrir(read_u32_as_usize(0xb67a44), c, pessoa); // cpr9: a vaga do técnico abre
             }
         }
         6 => cpr9_zerar(c + 0xd3),
         8 | 15 => {
             if humano() {
                 let treinadores: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8b2880usize);
-                treinadores(cpr9_d(0xde1f44), c, 0);
+                treinadores(read_u32_as_usize(0xde1f44), c, 0);
             }
             crate::comparacao::ramo("cpr_9 treinador");
             limpar(0x19f, 5); // cpr9: as vagas de treinador
@@ -2295,7 +2244,7 @@ unsafe fn cpr9_sair_da_vaga(pessoa: usize, c: usize, cargo: i8, campo: usize) {
             if humano() {
                 cpr9_zerar(pessoa + campo);
                 let listas: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x7f7270usize);
-                listas(cpr9_d(0xb74448), cpr9_d(c + 0xcf));
+                listas(read_u32_as_usize(0xb74448), read_u32_as_usize(c + 0xcf));
             }
         }
         10 => limpar(0x1cf, 3),
@@ -2307,14 +2256,14 @@ unsafe fn cpr9_sair_da_vaga(pessoa: usize, c: usize, cargo: i8, campo: usize) {
 /// 0x7a59e0, na aposentadoria): sai da vaga do cargo (+0x3d) no clube (+0x39) e da do cargo na seleção (+0x28) na
 /// seleção (+0x24) (cpr9_sair_da_vaga); clube e seleção zerados, e os dois tipos de cargo.
 unsafe extern "stdcall" fn sair_dos_cargos(pessoa: usize) {
-    let c = cpr9_d(pessoa + 0x39);
+    let c = read_u32_as_usize(pessoa + 0x39);
     if c != 0 {
-        cpr9_sair_da_vaga(pessoa, c, cpr9_b(pessoa + 0x3d), 0x39);
+        cpr9_sair_da_vaga(pessoa, c, read_i8(pessoa + 0x3d), 0x39);
         cpr9_zerar(pessoa + 0x39);
     }
-    let s = cpr9_d(pessoa + 0x24);
+    let s = read_u32_as_usize(pessoa + 0x24);
     if s != 0 {
-        cpr9_sair_da_vaga(pessoa, s, cpr9_b(pessoa + 0x28), 0x24);
+        cpr9_sair_da_vaga(pessoa, s, read_i8(pessoa + 0x28), 0x24);
         cpr9_zerar(pessoa + 0x24);
     }
     *((pessoa + 0x3d) as *mut u8) = 0;
@@ -2330,21 +2279,21 @@ unsafe extern "thiscall" fn registrar_a_liberacao(this: usize, pessoa: usize) {
     crate::comparacao::ramo("cpr_9 liberado");
     let mut e = cpq4_entrada();
     let de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = de(cpr9_d(0xae1050), pessoa);
+    let c = de(read_u32_as_usize(0xae1050), pessoa);
     *(0xae1080 as *mut usize) = c;
-    let clube = if c != 0 { cpr9_d(0xae23b4).wrapping_add(cpr9_d(c + 4).wrapping_mul(0x245)) } else { 0 };
-    if clube != 0 && cpr9_d(clube + 0xcf) != 0 {
+    let clube = if c != 0 { read_u32_as_usize(0xae23b4).wrapping_add(read_u32_as_usize(c + 4).wrapping_mul(0x245)) } else { 0 };
+    if clube != 0 && read_u32_as_usize(clube + 0xcf) != 0 {
         cpq4_datar(e.as_mut_ptr());
         e[0xc] = 0x68;
         cpq4_por(&mut e, 8, cpq4_i(clube));
         cpq4_quem(&mut e, 0xd, pessoa);
-        cpq4_historico(true, this, cpr9_d(cpr9_d(clube + 0xcf)), &e);
+        cpq4_historico(true, this, read_u32_as_usize(read_u32_as_usize(clube + 0xcf)), &e);
     }
     cpq4_datar(e.as_mut_ptr());
     e[0xc] = 0x67;
     cpq4_por(&mut e, 8, cpq4_id_ou_menos_1(clube));
     if pessoa != 0 {
-        cpq4_historico(true, this, cpr9_d(pessoa), &e);
+        cpq4_historico(true, this, read_u32_as_usize(pessoa), &e);
     } else {
         aviso_em(0xa83b78, 0x1010);
     }
@@ -2360,13 +2309,13 @@ unsafe extern "thiscall" fn comparar_novas_aposentadorias(this: usize) {
 /// chamam rotinas do clube humano (8, 15, 9).
 unsafe fn cpr9_so_memoria(pessoa: usize) -> bool {
     for (campo, tipo) in [(0x39usize, 0x3dusize), (0x24, 0x28)] {
-        let c = cpr9_d(pessoa + campo);
+        let c = read_u32_as_usize(pessoa + campo);
         if c == 0 {
             continue;
         }
         let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
-        match cpr9_b(pessoa + tipo) {
-            5 | 12 if cpr9_d(c + 0xcf) == pessoa => return false,
+        match read_i8(pessoa + tipo) {
+            5 | 12 if read_u32_as_usize(c + 0xcf) == pessoa => return false,
             8 | 15 | 9 if humano(c, 1, 1, 0, 0) != 0 => return false,
             _ => {}
         }
@@ -2388,7 +2337,7 @@ unsafe extern "stdcall" fn comparar_sair_dos_cargos(pessoa: usize) {
 }
 
 unsafe fn cpr9_regioes(pessoa: usize) -> Vec<(usize, usize)> {
-    vec![(pessoa, 0x6e), (cpr9_d(pessoa + 0x39), 0x245), (cpr9_d(pessoa + 0x24), 0x245)]
+    vec![(pessoa, 0x6e), (read_u32_as_usize(pessoa + 0x39), 0x245), (read_u32_as_usize(pessoa + 0x24), 0x245)]
 }
 
 // ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia sem ele só grava [0xae1080]: só a
@@ -2399,17 +2348,8 @@ unsafe extern "thiscall" fn comparar_registrar_a_liberacao(this: usize, pessoa: 
 
 // ---------- 253a leva: os regens: a nota do doador de dados de não jogador, a ordem das aposentadorias e a ordem da fila de regens (player_regen.cpp) ----------
 
-unsafe fn cpq9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cpq9_b(a: usize) -> i32 {
-    *(a as *const i8) as i32
-}
 
-unsafe fn cpq9_w(a: usize) -> i32 {
-    core::ptr::read_unaligned(a as *const i16) as i32
-}
 
 unsafe fn cpq9_u(a: usize) -> u16 {
     core::ptr::read_unaligned(a as *const u16)
@@ -2424,43 +2364,43 @@ unsafe fn cpq9_u(a: usize) -> u16 {
 /// nota (+75 se o clube não tem +0xcf); sem clube: + (+0x22)², e a nota dobra se o +0xd do jogador passa de um
 /// sorteio(10000) (lê o jogador sem conferir, como a original). Quente (todas as pessoas a cada chamada): sem contador.
 unsafe extern "stdcall" fn nota_do_doador_de_dados(pessoa: usize) -> i32 {
-    if cpq9_d(pessoa + 0x69) != 0 {
+    if read_usize(pessoa + 0x69) != 0 {
         return -10000;
     }
-    let id = cpq9_d(pessoa);
-    if *((cpq9_d(0xae2d0c).wrapping_add(id.wrapping_mul(79)) + 0xb) as *const u8) & 0x30 != 0 {
+    let id = read_usize(pessoa);
+    if *((read_usize(0xae2d0c).wrapping_add(id.wrapping_mul(79)) + 0xb) as *const u8) & 0x30 != 0 {
         return -10000;
     }
-    let idade = cpq9_b(pessoa + 0x18);
+    let idade = read_i8_as_i32(pessoa + 0x18);
     if idade < 31 {
         return -10000;
     }
     let mut nota = sortear((idade - 31) * 150); // a idade
-    let clube = cpq9_d(pessoa + 0x39);
+    let clube = read_usize(pessoa + 0x39);
     if clube != 0 {
-        let reputacao = cpq9_w(clube + 0x80);
-        let jogador = cpq9_d(pessoa + 0x61);
+        let reputacao = read_i16_as_i32(clube + 0x80);
+        let jogador = read_usize(pessoa + 0x61);
         if reputacao != 0 && jogador != 0 {
-            nota = nota.wrapping_add((cpq9_w(jogador + 0xb) / reputacao).wrapping_mul(250));
+            nota = nota.wrapping_add((read_i16_as_i32(jogador + 0xb) / reputacao).wrapping_mul(250));
         }
     }
-    let jogador = cpq9_d(pessoa + 0x61);
+    let jogador = read_usize(pessoa + 0x61);
     if jogador != 0 {
-        let v = cpq9_b(jogador + 0x2f) / 2;
+        let v = read_i8_as_i32(jogador + 0x2f) / 2;
         nota = nota.wrapping_add(sortear(ftol(pow_do_jogo(v as f64, 3.0))));
-        if cpq9_w(jogador + 0xd) > 7500 {
+        if read_i16_as_i32(jogador + 0xd) > 7500 {
             nota = nota.wrapping_add(100);
         }
-        if cpq9_w(jogador + 0xb) > 7500 {
+        if read_i16_as_i32(jogador + 0xb) > 7500 {
             nota = nota.wrapping_add(50);
         }
     }
-    let quadrados = ftol(pow_do_jogo(cpq9_b(pessoa + 0x5b) as f64, 2.0)).wrapping_add(ftol(pow_do_jogo(cpq9_b(pessoa + 0x57) as f64, 2.0)));
-    let soma = 3 * (cpq9_b(pessoa + 0x5d) + cpq9_b(pessoa + 0x5a)) + 2 * (cpq9_b(pessoa + 0x59) + cpq9_b(pessoa + 0x58)) + cpq9_b(pessoa + 0x56);
+    let quadrados = ftol(pow_do_jogo(read_i8_as_i32(pessoa + 0x5b) as f64, 2.0)).wrapping_add(ftol(pow_do_jogo(read_i8_as_i32(pessoa + 0x57) as f64, 2.0)));
+    let soma = 3 * (read_i8_as_i32(pessoa + 0x5d) + read_i8_as_i32(pessoa + 0x5a)) + 2 * (read_i8_as_i32(pessoa + 0x59) + read_i8_as_i32(pessoa + 0x58)) + read_i8_as_i32(pessoa + 0x56);
     nota = nota.wrapping_add(soma * 5).wrapping_add(quadrados);
-    let clube = cpq9_d(pessoa + 0x39);
+    let clube = read_usize(pessoa + 0x39);
     if clube != 0 {
-        if cpq9_d(clube + 0xcf) == 0 {
+        if read_usize(clube + 0xcf) == 0 {
             nota = nota.wrapping_add(75);
         }
         return sortear(nota);
@@ -2468,7 +2408,7 @@ unsafe extern "stdcall" fn nota_do_doador_de_dados(pessoa: usize) -> i32 {
     let b = *((pessoa + 0x22) as *const u8) as i32;
     nota = nota.wrapping_add(b * b);
     let r = sortear(10000); // sem clube
-    if cpq9_w(cpq9_d(pessoa + 0x61) + 0xd) > r {
+    if read_i16_as_i32(read_usize(pessoa + 0x61) + 0xd) > r {
         nota = nota.wrapping_add(nota);
     }
     sortear(nota)
@@ -2477,9 +2417,9 @@ unsafe extern "stdcall" fn nota_do_doador_de_dados(pessoa: usize) -> i32 {
 /// A data que vale numa entrada da lista de aposentadorias: a do anúncio (+8: dia +0, ano +2) se ainda não passou da
 /// data do jogo ([0xae2c90] dia, [0xae2c92] ano: o ano sem sinal, o dia com sinal), senão a da aposentadoria (+0x10).
 unsafe fn cpq9_data_da_entrada(e: usize) -> usize {
-    let (dia, ano) = (cpq9_w(0xae2c90), cpq9_u(0xae2c92));
+    let (dia, ano) = (read_i16_as_i32(0xae2c90), cpq9_u(0xae2c92));
     let a = cpq9_u(e + 0xa);
-    if a < ano || (a == ano && cpq9_w(e + 8) < dia) {
+    if a < ano || (a == ano && read_i16_as_i32(e + 8) < dia) {
         e + 0x10
     } else {
         e + 8
@@ -2502,9 +2442,9 @@ unsafe extern "C" fn ordem_das_aposentadorias(a: usize, b: usize) -> i32 {
     if aa != ab {
         return aa as i32 - ab as i32; // o ano mais cedo primeiro
     }
-    let (ja, jb) = (cpq9_w(da), cpq9_w(db));
+    let (ja, jb) = (read_i16_as_i32(da), read_i16_as_i32(db));
     if ja == jb {
-        return (cpq9_d(a) as i32).wrapping_sub(cpq9_d(b) as i32);
+        return (read_usize(a) as i32).wrapping_sub(read_usize(b) as i32);
     }
     ja - jb
 }
@@ -2527,9 +2467,9 @@ unsafe extern "C" fn ordem_da_fila_de_regens(a: usize, b: usize) -> i32 {
     if aa < ab {
         return -1;
     }
-    let (ja, jb) = (cpq9_w(a + 4), cpq9_w(b + 4));
+    let (ja, jb) = (read_i16_as_i32(a + 4), read_i16_as_i32(b + 4));
     if ja == jb {
-        return (cpq9_d(a) as i32).wrapping_sub(cpq9_d(b) as i32);
+        return (read_usize(a) as i32).wrapping_sub(read_usize(b) as i32);
     }
     ja - jb
 }
@@ -2562,17 +2502,8 @@ unsafe extern "C" fn comparar_ordem_da_fila_de_regens(a: usize, b: usize) -> i32
 
 // ---------- 250a leva: o jogador que se aposenta sai dos elencos e a escolha do clube do jovem: o de maior nota entre todos e o sorteado da lista da nação (player_regen.cpp) ----------
 
-unsafe fn cpn4_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cpn4_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cpn4_b(a: usize) -> i8 {
-    *(a as *const i8)
-}
 
 unsafe fn cpn4_por(a: usize, v: i8) {
     *(a as *mut i8) = v;
@@ -2583,10 +2514,10 @@ unsafe fn cpn4_por(a: usize, v: i8) {
 /// cada chamada, como na original.
 unsafe fn cpn4_tirar_do_time(p: usize, campo: usize) {
     let tirar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x896c60usize);
-    tirar(cpn4_d(0xde1d08), cpn4_d(p + campo), p, 0, 1);
-    tirar(cpn4_d(0xde1d08), cpn4_d(p + campo), p, 1, 1);
-    let time = cpn4_d(p + campo);
-    if let Some(k) = (0..0x32usize).find(|&k| cpn4_d(time + 0xd7 + 4 * k) == p) {
+    tirar(read_usize(0xde1d08), read_usize(p + campo), p, 0, 1);
+    tirar(read_usize(0xde1d08), read_usize(p + campo), p, 1, 1);
+    let time = read_usize(p + campo);
+    if let Some(k) = (0..0x32usize).find(|&k| read_usize(time + 0xd7 + 4 * k) == p) {
         core::ptr::write_unaligned((time + 0xd7 + 4 * k) as *mut usize, 0);
     }
 }
@@ -2594,7 +2525,7 @@ unsafe fn cpn4_tirar_do_time(p: usize, campo: usize) {
 /// O aviso "already retired" no buffer [0xde1f64] (nome +4, sobrenome +8, id +0).
 unsafe fn cpn4_ja_aposentado(p: usize) {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    formatar(0xde1f64, 0xa70150, cpn4_d(p + 4), cpn4_d(p + 8), cpn4_d(p));
+    formatar(0xde1f64, 0xa70150, read_usize(p + 4), read_usize(p + 8), read_usize(p));
 }
 
 /// { 0x7aace0 } (stdcall, ret 4, player_regen.cpp): `PLAYER_REGEN::retire_from_playing_staff(p)`: tira `p` do clube
@@ -2604,13 +2535,13 @@ unsafe fn cpn4_ja_aposentado(p: usize) {
 /// cargo na seleção (+0x28) do mesmo jeito, mas 12/13/15 gravam no +0x3d (a original grava ali, não no +0x28) e o
 /// padrão grava 0x10 no +0x28. Sem cargo que fica, o clube (+0x39) e a seleção (+0x24) zeram. Sem SEH, sem sorteio.
 unsafe extern "stdcall" fn aposentar_do_elenco(p: usize) {
-    if cpn4_d(p + 0x39) != 0 {
+    if read_usize(p + 0x39) != 0 {
         cpn4_tirar_do_time(p, 0x39);
     }
-    if cpn4_d(p + 0x24) != 0 {
+    if read_usize(p + 0x24) != 0 {
         cpn4_tirar_do_time(p, 0x24);
     }
-    let fica_no_clube = match cpn4_b(p + 0x3d) as i32 {
+    let fica_no_clube = match read_i8(p + 0x3d) as i32 {
         0 => false,
         1..=10 => return, // comissão: a original sai pelo fim da rotina
         12 => {
@@ -2635,7 +2566,7 @@ unsafe extern "stdcall" fn aposentar_do_elenco(p: usize) {
             false
         }
     };
-    let fica_na_selecao = match cpn4_b(p + 0x28) as i32 {
+    let fica_na_selecao = match read_i8(p + 0x28) as i32 {
         0 => false,
         1..=10 => return,
         12 => {
@@ -2670,12 +2601,12 @@ unsafe extern "stdcall" fn aposentar_do_elenco(p: usize) {
 /// O jovem com a segunda nacionalidade (+0x1e) igual a [0x9cf424] só vai para os clubes de id [0x9d0120], [0x9d0134],
 /// [0x9d0128], [0x9d01a0] e [0x9d0124]: `true` para os outros clubes.
 unsafe fn cpn4_vetado(jogador: usize, clube: usize) -> bool {
-    let e = cpn4_d(jogador + 0x1e);
-    if e == 0 || cpn4_d(e) != cpn4_d(0x9cf424) {
+    let e = read_usize(jogador + 0x1e);
+    if e == 0 || read_usize(e) != read_usize(0x9cf424) {
         return false;
     }
-    let id = cpn4_d(clube);
-    ![0x9d0120usize, 0x9d0134, 0x9d0128, 0x9d01a0, 0x9d0124].iter().any(|&g| cpn4_d(g) == id)
+    let id = read_usize(clube);
+    ![0x9d0120usize, 0x9d0134, 0x9d0128, 0x9d01a0, 0x9d0124].iter().any(|&g| read_usize(g) == id)
 }
 
 /// O clube pode chegar ao jogador (0x8ce990 de [0xde1f54], sem ignorar as ofertas abertas)? O motivo fica numa local
@@ -2683,7 +2614,7 @@ unsafe fn cpn4_vetado(jogador: usize, clube: usize) -> bool {
 unsafe fn cpn4_pode_contratar(jogador: usize, clube: usize) -> bool {
     let pode: unsafe extern "thiscall" fn(usize, usize, usize, *mut i16, u32) -> u32 = core::mem::transmute(0x8ce990usize);
     let mut motivo = 0i16;
-    pode(cpn4_d(0xde1f54), jogador, clube, &mut motivo, 0) != 0
+    pode(read_usize(0xde1f54), jogador, clube, &mut motivo, 0) != 0
 }
 
 /// { 0x7ad0e0 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::pick_best_club_for_player(jogador)`: entre os
@@ -2697,13 +2628,13 @@ unsafe extern "thiscall" fn melhor_clube_para_o_jovem(_this: usize, jogador: usi
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let elenco_de: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(0x53c590usize);
     let nota_de: unsafe extern "stdcall" fn(usize, usize, u32) -> i32 = core::mem::transmute(0x7ad220usize);
-    let total = || (cpn4_d(0xae235c) as i32).wrapping_sub((cpn4_d(0xae2350) as i32).wrapping_mul(2));
+    let total = || (read_usize(0xae235c) as i32).wrapping_sub((read_usize(0xae2350) as i32).wrapping_mul(2));
     let (mut melhor, mut melhor_nota) = (0usize, -25000i16);
     let mut eh_a = 0u32;
-    let mut clube = cpn4_d(0xae23b4);
+    let mut clube = read_usize(0xae23b4);
     let mut i = 0i32;
     while i < total() {
-        let candidato = estrangeiro(jogador, cpn4_d(clube + 0x53), 1) == 0
+        let candidato = estrangeiro(jogador, read_usize(clube + 0x53), 1) == 0
             && (parceiro(clube, &mut eh_a, 1) == 0 || eh_a != 0)
             && !cpn4_vetado(jogador, clube);
         if candidato {
@@ -2728,16 +2659,16 @@ unsafe extern "thiscall" fn melhor_clube_para_o_jovem(_this: usize, jogador: usi
 /// com sorteio(5) < 2.
 unsafe fn cpn4_nacao_da_lista(jogador: usize) -> usize {
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
-    let n = cpn4_d(cpn4_d(jogador + 0x1a));
-    if n == cpn4_d(0x9cf510) || n == cpn4_d(0x9cf2dc) || (n == cpn4_d(0x9cf3e4) && sorteio(5) < 2) {
-        return cpn4_d(0x9cf2e4);
+    let n = read_usize(read_usize(jogador + 0x1a));
+    if n == read_usize(0x9cf510) || n == read_usize(0x9cf2dc) || (n == read_usize(0x9cf3e4) && sorteio(5) < 2) {
+        return read_usize(0x9cf2e4);
     }
     n
 }
 
 /// A lista de clubes da nação `n`: [[this] + 4n].
 unsafe fn cpn4_lista(this: usize, n: usize) -> usize {
-    cpn4_d(cpn4_d(this).wrapping_add(n.wrapping_mul(4)))
+    read_usize(read_usize(this).wrapping_add(n.wrapping_mul(4)))
 }
 
 /// { 0x7ad590 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::pick_club_from_nation_list(jogador)`: percorre a
@@ -2752,12 +2683,12 @@ unsafe extern "thiscall" fn clube_da_nacao_para_o_jovem(this: usize, jogador: us
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let n = cpn4_nacao_da_lista(jogador);
     let l = cpn4_lista(this, n);
-    if l == 0 || cpn4_w(l) == 0 {
+    if l == 0 || read_i16(l) == 0 {
         return 0;
     }
-    core::ptr::write_unaligned((l + 0xa) as *mut usize, cpn4_d(l + 2));
+    core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2));
     let (mut melhor, mut melhor_nota) = (0usize, -25000i16);
-    if cpn4_w(cpn4_lista(this, n)) <= 0 {
+    if read_i16(cpn4_lista(this, n)) <= 0 {
         return 0;
     }
     let mut i = 0i32;
@@ -2767,14 +2698,14 @@ unsafe extern "thiscall" fn clube_da_nacao_para_o_jovem(this: usize, jogador: us
             aviso_em(0xa6bf9c, 0x19e9);
             return 0;
         }
-        let clube = cpn4_d(0xae23b4).wrapping_add(cpn4_d(item).wrapping_mul(0x245));
+        let clube = read_usize(0xae23b4).wrapping_add(read_usize(item).wrapping_mul(0x245));
         if !cpn4_vetado(jogador, clube) && cpn4_pode_contratar(jogador, clube) && (elenco_de(clube, 0, 0) as i8) < 0x32 {
-            let ficha = cpn4_d(jogador + 0x61);
-            let rep = cpn4_w(clube + 0x80) as i32;
+            let ficha = read_usize(jogador + 0x61);
+            let rep = read_i16(clube + 0x80) as i32;
             let c = rep
-                .wrapping_sub((cpn4_w(ficha + 0xb) as i32).wrapping_sub(rep).wrapping_abs())
-                .wrapping_sub((cpn4_w(ficha + 7) as i32).wrapping_mul(50).wrapping_sub(rep).wrapping_abs())
-                .wrapping_sub((cpn4_w(ficha + 5) as i32).wrapping_mul(50).wrapping_sub(rep).wrapping_abs())
+                .wrapping_sub((read_i16(ficha + 0xb) as i32).wrapping_sub(rep).wrapping_abs())
+                .wrapping_sub((read_i16(ficha + 7) as i32).wrapping_mul(50).wrapping_sub(rep).wrapping_abs())
+                .wrapping_sub((read_i16(ficha + 5) as i32).wrapping_mul(50).wrapping_sub(rep).wrapping_abs())
                 .wrapping_add(0x1388);
             crate::comparacao::ramo("cpn_4 sorteio do clube da nacao");
             let nota = sorteio(c as i16 as i32) as i16;
@@ -2784,7 +2715,7 @@ unsafe extern "thiscall" fn clube_da_nacao_para_o_jovem(this: usize, jogador: us
             }
         }
         i += 1;
-        if i as i16 >= cpn4_w(cpn4_lista(this, n)) {
+        if i as i16 >= read_i16(cpn4_lista(this, n)) {
             break;
         }
     }
@@ -2797,14 +2728,14 @@ unsafe extern "stdcall" fn comparar_aposentar_do_elenco(p: usize) {
     let o = orig::<unsafe extern "stdcall" fn(usize)>(955);
     let mut reg = vec![(p + 0x24, 0x1a), (0xde1f64, 0x80)];
     for campo in [0x39usize, 0x24] {
-        let time = cpn4_d(p + campo);
+        let time = read_usize(p + campo);
         if time != 0 {
             reg.push((time + 0xd7, 200));
         }
     }
-    let (antes_clube, antes_cargo) = (cpn4_d(p + 0x39), cpn4_b(p + 0x3d));
+    let (antes_clube, antes_cargo) = (read_usize(p + 0x39), read_i8(p + 0x3d));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(p), || aposentar_do_elenco(p));
-    PLACAR.registrar(igual, || format!("aposentar_do_elenco(id {}, clube {:x}, cargo {}) {:x?} x {:x?}", cpn4_d(p), antes_clube, antes_cargo, mo, mr));
+    PLACAR.registrar(igual, || format!("aposentar_do_elenco(id {}, clube {:x}, cargo {}) {:x?} x {:x?}", read_usize(p), antes_clube, antes_cargo, mo, mr));
 }
 
 /// Comparador: lado a lado a partir do mesmo estado do sorteio (a 0x7ad220 sorteia), pelo clube devolvido.
@@ -2812,7 +2743,7 @@ unsafe extern "thiscall" fn comparar_melhor_clube_para_o_jovem(this: usize, joga
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(956);
     let reg = crate::aleatorio::REGIOES_DO_ESTADO;
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, jogador), || crate::aleatorio::sem_contar(|| melhor_clube_para_o_jovem(this, jogador)));
-    PLACAR.registrar(igual && r == n, || format!("melhor_clube_para_o_jovem(id {}) original={:x} rust={:x} {:x?} x {:x?}", cpn4_d(jogador), r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("melhor_clube_para_o_jovem(id {}) original={:x} rust={:x} {:x?} x {:x?}", read_usize(jogador), r, n, mo, mr));
     r
 }
 
@@ -2821,22 +2752,19 @@ unsafe extern "thiscall" fn comparar_melhor_clube_para_o_jovem(this: usize, joga
 unsafe extern "thiscall" fn comparar_clube_da_nacao_para_o_jovem(this: usize, jogador: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(957);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    for n in [cpn4_d(cpn4_d(jogador + 0x1a)), cpn4_d(0x9cf2e4)] {
+    for n in [read_usize(read_usize(jogador + 0x1a)), read_usize(0x9cf2e4)] {
         let l = cpn4_lista(this, n);
         if l != 0 {
             reg.push((l + 0xa, 4));
         }
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogador), || crate::aleatorio::sem_contar(|| clube_da_nacao_para_o_jovem(this, jogador)));
-    PLACAR.registrar(igual && r == n, || format!("clube_da_nacao_para_o_jovem(id {}) original={:x} rust={:x} {:x?} x {:x?}", cpn4_d(jogador), r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("clube_da_nacao_para_o_jovem(id {}) original={:x} rust={:x} {:x?} x {:x?}", read_usize(jogador), r, n, mo, mr));
     r
 }
 
 // ---------- 247a leva: as listas do regen: a reserva de técnico, a aposentadoria pendente e a vaga para o regen ----------
 
-unsafe fn cpk2_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cpk2_por(a: usize, v: usize) {
     core::ptr::write_unaligned(a as *mut usize, v);
@@ -2864,16 +2792,16 @@ unsafe fn cpk2_sem_memoria(linha: u32) -> ! {
 /// sem memória, caixa 0x9c4 e fim).
 unsafe extern "thiscall" fn acrescentar_reserva_de_tecnico(this: usize, id: u32, nacao: u32, segunda: u32) {
     crate::comparacao::ramo("cpk_2 reserva de tecnico");
-    if cpk2_d(this + 0x40) == cpk2_d(this + 0x44).wrapping_sub(1) {
-        let p = cpk2_realocar(cpk2_d(this + 0x1c), cpk2_d(this + 0x24).wrapping_add(250) << 4);
+    if read_usize(this + 0x40) == read_usize(this + 0x44).wrapping_sub(1) {
+        let p = cpk2_realocar(read_usize(this + 0x1c), read_usize(this + 0x24).wrapping_add(250) << 4);
         cpk2_por(this + 0x1c, p);
-        cpk2_por(this + 0x24, cpk2_d(this + 0x24).wrapping_add(250));
+        cpk2_por(this + 0x24, read_usize(this + 0x24).wrapping_add(250));
         if p == 0 {
             cpk2_sem_memoria(0x9c4);
         }
     }
-    let n = cpk2_d(this + 0x20);
-    let item = cpk2_d(this + 0x1c).wrapping_add(n << 4);
+    let n = read_usize(this + 0x20);
+    let item = read_usize(this + 0x1c).wrapping_add(n << 4);
     cpk2_por(item, id as usize);
     cpk2_por(item + 4, nacao as usize);
     cpk2_por(item + 8, segunda as usize);
@@ -2886,24 +2814,24 @@ unsafe extern "thiscall" fn acrescentar_reserva_de_tecnico(this: usize, id: u32,
 /// ficam como estão). Conta = capacidade − 1: cresce 250 (realloc 0x945667; sem memória, caixa 0xa53 e fim).
 unsafe extern "thiscall" fn acrescentar_aposentadoria(this: usize, r: usize) {
     crate::comparacao::ramo("cpk_2 aposentadoria");
-    let cap = cpk2_d(this + 0xc);
-    if cpk2_d(this + 8) == cap.wrapping_sub(1) {
-        let p = cpk2_realocar(cpk2_d(this + 4), cap.wrapping_add(250).wrapping_mul(26));
+    let cap = read_usize(this + 0xc);
+    if read_usize(this + 8) == cap.wrapping_sub(1) {
+        let p = cpk2_realocar(read_usize(this + 4), cap.wrapping_add(250).wrapping_mul(26));
         cpk2_por(this + 4, p);
-        cpk2_por(this + 0xc, cpk2_d(this + 0xc).wrapping_add(250));
+        cpk2_por(this + 0xc, read_usize(this + 0xc).wrapping_add(250));
         if p == 0 {
             cpk2_sem_memoria(0xa53);
         }
     }
-    let item = || cpk2_d(this + 4).wrapping_add(cpk2_d(this + 8).wrapping_mul(26));
-    cpk2_por(item(), cpk2_d(r));
-    cpk2_por(item() + 4, cpk2_d(r + 4));
+    let item = || read_usize(this + 4).wrapping_add(read_usize(this + 8).wrapping_mul(26));
+    cpk2_por(item(), read_usize(r));
+    cpk2_por(item() + 4, read_usize(r + 4));
     *((item() + 0x18) as *mut u8) = *((r + 0x18) as *const u8);
     for o in [8usize, 0xa, 0x10, 0x12] {
         cpk2_por16(item() + o, core::ptr::read_unaligned((r + o) as *const u16));
     }
     *((item() + 0x19) as *mut u8) = *((r + 0x19) as *const u8);
-    cpk2_por(this + 8, cpk2_d(this + 8).wrapping_add(1)); // mais uma aposentadoria
+    cpk2_por(this + 8, read_usize(this + 8).wrapping_add(1)); // mais uma aposentadoria
 }
 
 /// { 0x7a87d0 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::queue_staff_for_regen(entrada)`: a pessoa de id
@@ -2916,74 +2844,74 @@ unsafe extern "thiscall" fn acrescentar_aposentadoria(this: usize, r: usize) {
 /// 0xac5, 0xae9 e fim; na terceira o original confere a conta, não o ponteiro: fiel). Id fora de 0..=[0xae2364]: a
 /// original (caixa 0xa9d).
 unsafe extern "thiscall" fn guardar_vaga_para_regen(this: usize, entrada: usize) {
-    let id = cpk2_d(entrada) as i32;
+    let id = read_usize(entrada) as i32;
     if id < 0 || id > *(0xae2364 as *const i32) {
         return orig::<unsafe extern "thiscall" fn(usize, usize)>(888)(this, entrada);
     }
     crate::comparacao::ramo("cpk_2 vaga para o regen");
-    let pessoa = cpk2_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
-    let cap = cpk2_d(this + 0x18);
-    if cpk2_d(this + 0x14) == cap.wrapping_sub(1) {
-        let p = cpk2_realocar(cpk2_d(this + 0x10), cap.wrapping_add(250).wrapping_mul(12));
+    let pessoa = read_usize(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
+    let cap = read_usize(this + 0x18);
+    if read_usize(this + 0x14) == cap.wrapping_sub(1) {
+        let p = cpk2_realocar(read_usize(this + 0x10), cap.wrapping_add(250).wrapping_mul(12));
         cpk2_por(this + 0x10, p);
-        cpk2_por(this + 0x18, cpk2_d(this + 0x18).wrapping_add(250));
+        cpk2_por(this + 0x18, read_usize(this + 0x18).wrapping_add(250));
         if p == 0 {
             cpk2_sem_memoria(0xaac);
         }
     }
-    let fila = cpk2_d(this + 0x10).wrapping_add(cpk2_d(this + 0x14).wrapping_mul(12));
+    let fila = read_usize(this + 0x10).wrapping_add(read_usize(this + 0x14).wrapping_mul(12));
     cpk2_por(fila, id as usize);
     cpk2_por16(fila + 4, core::ptr::read_unaligned((entrada + 4) as *const u16));
     cpk2_por16(fila + 6, core::ptr::read_unaligned((entrada + 6) as *const u16));
-    cpk2_por(this + 0x14, cpk2_d(this + 0x14).wrapping_add(1)); // mais uma na fila do regen
-    if cpk2_d(pessoa + 0x69) != 0 {
-        if cpk2_d(this + 0x20) == cpk2_d(this + 0x24).wrapping_sub(1) {
-            let p = cpk2_realocar(cpk2_d(this + 0x1c), cpk2_d(this + 0x24).wrapping_add(250) << 4);
+    cpk2_por(this + 0x14, read_usize(this + 0x14).wrapping_add(1)); // mais uma na fila do regen
+    if read_usize(pessoa + 0x69) != 0 {
+        if read_usize(this + 0x20) == read_usize(this + 0x24).wrapping_sub(1) {
+            let p = cpk2_realocar(read_usize(this + 0x1c), read_usize(this + 0x24).wrapping_add(250) << 4);
             cpk2_por(this + 0x1c, p);
-            cpk2_por(this + 0x24, cpk2_d(this + 0x24).wrapping_add(250));
+            cpk2_por(this + 0x24, read_usize(this + 0x24).wrapping_add(250));
             if p == 0 {
                 cpk2_sem_memoria(0xac5);
             }
         }
-        let item = || cpk2_d(this + 0x1c).wrapping_add(cpk2_d(this + 0x20) << 4);
-        cpk2_por(item(), cpk2_d(cpk2_d(pessoa + 0x69)));
-        let nacao = cpk2_d(pessoa + 0x1a);
+        let item = || read_usize(this + 0x1c).wrapping_add(read_usize(this + 0x20) << 4);
+        cpk2_por(item(), read_usize(read_usize(pessoa + 0x69)));
+        let nacao = read_usize(pessoa + 0x1a);
         if nacao != 0 {
-            cpk2_por(item() + 4, cpk2_d(nacao));
+            cpk2_por(item() + 4, read_usize(nacao));
         } else {
             let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
             let s = sorteio(*(0xae2350 as *const i32));
             cpk2_por(item() + 4, s as usize);
         }
-        cpk2_por(item() + 0xc, cpk2_d(pessoa));
-        cpk2_por(this + 0x20, cpk2_d(this + 0x20).wrapping_add(1));
+        cpk2_por(item() + 0xc, read_usize(pessoa));
+        cpk2_por(this + 0x20, read_usize(this + 0x20).wrapping_add(1));
     }
-    if cpk2_d(pessoa + 0x61) != 0 {
-        let cap = cpk2_d(this + 0x44);
-        if cpk2_d(this + 0x40) == cap.wrapping_sub(1) {
-            let p = cpk2_realocar(cpk2_d(this + 0x3c), cap.wrapping_add(250) << 4);
+    if read_usize(pessoa + 0x61) != 0 {
+        let cap = read_usize(this + 0x44);
+        if read_usize(this + 0x40) == cap.wrapping_sub(1) {
+            let p = cpk2_realocar(read_usize(this + 0x3c), cap.wrapping_add(250) << 4);
             cpk2_por(this + 0x3c, p);
-            cpk2_por(this + 0x44, cpk2_d(this + 0x44).wrapping_add(250));
-            if cpk2_d(this + 0x40) == 0 {
+            cpk2_por(this + 0x44, read_usize(this + 0x44).wrapping_add(250));
+            if read_usize(this + 0x40) == 0 {
                 cpk2_sem_memoria(0xae9); // a original confere a conta (+0x40), não o ponteiro
             }
         }
-        let item = || cpk2_d(this + 0x3c).wrapping_add(cpk2_d(this + 0x40) << 4);
-        cpk2_por(item(), cpk2_d(cpk2_d(pessoa + 0x61)));
-        cpk2_por(item() + 4, cpk2_d(cpk2_d(pessoa + 0x1a)));
-        cpk2_por(item() + 0xc, cpk2_d(pessoa));
-        cpk2_por(this + 0x40, cpk2_d(this + 0x40).wrapping_add(1));
+        let item = || read_usize(this + 0x3c).wrapping_add(read_usize(this + 0x40) << 4);
+        cpk2_por(item(), read_usize(read_usize(pessoa + 0x61)));
+        cpk2_por(item() + 4, read_usize(read_usize(pessoa + 0x1a)));
+        cpk2_por(item() + 0xc, read_usize(pessoa));
+        cpk2_por(this + 0x40, read_usize(this + 0x40).wrapping_add(1));
     }
 }
 
 /// Comparador: a original acrescenta (pode realocar); confere a conta e o item novo.
 unsafe extern "thiscall" fn comparar_acrescentar_reserva_de_tecnico(this: usize, id: u32, nacao: u32, segunda: u32) {
-    let n = cpk2_d(this + 0x20);
+    let n = read_usize(this + 0x20);
     orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(886)(this, id, nacao, segunda);
-    let item = cpk2_d(this + 0x1c).wrapping_add(n << 4);
-    let g = [cpk2_d(item) as u32, cpk2_d(item + 4) as u32, cpk2_d(item + 8) as u32];
-    PLACAR.registrar(cpk2_d(this + 0x20) == n.wrapping_add(1) && g == [id, nacao, segunda], || {
-        format!("acrescentar_reserva_de_tecnico({}, {}, {}) conta {} -> {}, item {:?}", id, nacao, segunda, n, cpk2_d(this + 0x20), g)
+    let item = read_usize(this + 0x1c).wrapping_add(n << 4);
+    let g = [read_usize(item) as u32, read_usize(item + 4) as u32, read_usize(item + 8) as u32];
+    PLACAR.registrar(read_usize(this + 0x20) == n.wrapping_add(1) && g == [id, nacao, segunda], || {
+        format!("acrescentar_reserva_de_tecnico({}, {}, {}) conta {} -> {}, item {:?}", id, nacao, segunda, n, read_usize(this + 0x20), g)
     });
 }
 
@@ -2998,13 +2926,13 @@ unsafe fn cpk2_campos_da_aposentadoria(r: usize) -> [u8; 26] {
 
 /// Comparador: o registro copiado antes; a original acrescenta (pode realocar); confere a conta e os campos.
 unsafe extern "thiscall" fn comparar_acrescentar_aposentadoria(this: usize, r: usize) {
-    let n = cpk2_d(this + 8);
+    let n = read_usize(this + 8);
     let esperado = cpk2_campos_da_aposentadoria(r);
     orig::<unsafe extern "thiscall" fn(usize, usize)>(887)(this, r);
-    let item = cpk2_d(this + 4).wrapping_add(n.wrapping_mul(26));
+    let item = read_usize(this + 4).wrapping_add(n.wrapping_mul(26));
     let g = cpk2_campos_da_aposentadoria(item);
-    PLACAR.registrar(cpk2_d(this + 8) == n.wrapping_add(1) && g == esperado, || {
-        format!("acrescentar_aposentadoria conta {} -> {}, item {:x?} (esperava {:x?})", n, cpk2_d(this + 8), g, esperado)
+    PLACAR.registrar(read_usize(this + 8) == n.wrapping_add(1) && g == esperado, || {
+        format!("acrescentar_aposentadoria conta {} -> {}, item {:x?} (esperava {:x?})", n, read_usize(this + 8), g, esperado)
     });
 }
 
@@ -3012,44 +2940,41 @@ unsafe extern "thiscall" fn comparar_acrescentar_aposentadoria(this: usize, r: u
 /// confere as contas e os itens (a nação sorteada só pela faixa).
 unsafe extern "thiscall" fn comparar_guardar_vaga_para_regen(this: usize, entrada: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(888);
-    let id = cpk2_d(entrada) as i32;
+    let id = read_usize(entrada) as i32;
     if id < 0 || id > *(0xae2364 as *const i32) {
         return o(this, entrada);
     }
-    let pessoa = cpk2_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
-    let (n1, n2, n3) = (cpk2_d(this + 0x14), cpk2_d(this + 0x20), cpk2_d(this + 0x40));
-    let datas = cpk2_d(entrada + 4) as u32;
-    let np = cpk2_d(pessoa + 0x69);
-    let jp = cpk2_d(pessoa + 0x61);
-    let nac = cpk2_d(pessoa + 0x1a);
-    let reserva = (np != 0).then(|| (cpk2_d(np) as u32, (nac != 0).then(|| cpk2_d(nac) as u32), cpk2_d(pessoa) as u32));
-    let banco = (jp != 0).then(|| (cpk2_d(jp) as u32, cpk2_d(nac) as u32, cpk2_d(pessoa) as u32));
+    let pessoa = read_usize(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
+    let (n1, n2, n3) = (read_usize(this + 0x14), read_usize(this + 0x20), read_usize(this + 0x40));
+    let datas = read_usize(entrada + 4) as u32;
+    let np = read_usize(pessoa + 0x69);
+    let jp = read_usize(pessoa + 0x61);
+    let nac = read_usize(pessoa + 0x1a);
+    let reserva = (np != 0).then(|| (read_usize(np) as u32, (nac != 0).then(|| read_usize(nac) as u32), read_usize(pessoa) as u32));
+    let banco = (jp != 0).then(|| (read_usize(jp) as u32, read_usize(nac) as u32, read_usize(pessoa) as u32));
     o(this, entrada);
-    let fila = cpk2_d(this + 0x10).wrapping_add(n1.wrapping_mul(12));
-    let mut ok = cpk2_d(this + 0x14) == n1 + 1 && cpk2_d(fila) as i32 == id && cpk2_d(fila + 4) as u32 == datas;
-    ok &= cpk2_d(this + 0x20) == n2 + reserva.is_some() as usize;
+    let fila = read_usize(this + 0x10).wrapping_add(n1.wrapping_mul(12));
+    let mut ok = read_usize(this + 0x14) == n1 + 1 && read_usize(fila) as i32 == id && read_usize(fila + 4) as u32 == datas;
+    ok &= read_usize(this + 0x20) == n2 + reserva.is_some() as usize;
     if let Some((rid, rnac, rp)) = reserva {
-        let i = cpk2_d(this + 0x1c).wrapping_add(n2 << 4);
-        let gn = cpk2_d(i + 4) as u32;
-        ok &= cpk2_d(i) as u32 == rid && cpk2_d(i + 0xc) as u32 == rp
+        let i = read_usize(this + 0x1c).wrapping_add(n2 << 4);
+        let gn = read_usize(i + 4) as u32;
+        ok &= read_usize(i) as u32 == rid && read_usize(i + 0xc) as u32 == rp
             && rnac.map_or(gn < (*(0xae2350 as *const i32)).max(1) as u32, |v| gn == v);
     }
-    ok &= cpk2_d(this + 0x40) == n3 + banco.is_some() as usize;
+    ok &= read_usize(this + 0x40) == n3 + banco.is_some() as usize;
     if let Some((bid, bnac, bp)) = banco {
-        let i = cpk2_d(this + 0x3c).wrapping_add(n3 << 4);
-        ok &= cpk2_d(i) as u32 == bid && cpk2_d(i + 4) as u32 == bnac && cpk2_d(i + 0xc) as u32 == bp;
+        let i = read_usize(this + 0x3c).wrapping_add(n3 << 4);
+        ok &= read_usize(i) as u32 == bid && read_usize(i + 4) as u32 == bnac && read_usize(i + 0xc) as u32 == bp;
     }
     PLACAR.registrar(ok, || {
         format!("guardar_vaga_para_regen({}) contas {} {} {} -> {} {} {}, reserva {:?}, banco {:?}", id, n1, n2, n3,
-            cpk2_d(this + 0x14), cpk2_d(this + 0x20), cpk2_d(this + 0x40), reserva, banco)
+            read_usize(this + 0x14), read_usize(this + 0x20), read_usize(this + 0x40), reserva, banco)
     });
 }
 
 // ---------- 244a leva: as aposentadorias (player_regen.cpp): tirar a pendente e a decisão do desempregado ----------
 
-unsafe fn cph5_d(a: usize) -> u32 {
-    core::ptr::read_unaligned(a as *const u32)
-}
 
 /// { 0x7a8690 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::remove_retirement(chave)`: busca (bsearch 0x946464
 /// com 0x7ae2a0) a aposentadoria pendente no vetor ([this+4], [this+8] registros de 26 bytes); achou: puxa as
@@ -3057,31 +2982,31 @@ unsafe fn cph5_d(a: usize) -> u32 {
 /// zerados, e a contagem desce. Sem reordenar.
 unsafe extern "thiscall" fn tirar_aposentadoria_pendente(this: usize, chave: usize) {
     let bsearch: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
-    let vetor = cph5_d(this + 4) as usize;
-    let s = bsearch(chave, vetor, cph5_d(this + 8), 0x1a, 0x7ae2a0);
+    let vetor = read_u32(this + 4) as usize;
+    let s = bsearch(chave, vetor, read_u32(this + 8), 0x1a, 0x7ae2a0);
     if s == 0 {
         return;
     }
     let mut k = ((s.wrapping_sub(vetor) as u32 as u64 * 0x4ec4ec4f) >> 35) as i32; // o lugar (/ 26)
     let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x7a8780usize);
-    while k < cph5_d(this + 8) as i32 - 1 {
-        let r = (cph5_d(this + 4) as usize).wrapping_add(k as usize * 26);
+    while k < read_u32(this + 8) as i32 - 1 {
+        let r = (read_u32(this + 4) as usize).wrapping_add(k as usize * 26);
         copiar(r, r + 0x1a);
         k += 1;
     }
-    let fim = (cph5_d(this + 4) as usize).wrapping_add((cph5_d(this + 8) as usize).wrapping_mul(26)).wrapping_sub(26);
+    let fim = (read_u32(this + 4) as usize).wrapping_add((read_u32(this + 8) as usize).wrapping_mul(26)).wrapping_sub(26);
     core::ptr::write_unaligned(fim as *mut u32, u32::MAX); // a última sem pessoa
     *((fim + 0x18) as *mut u8) = 0;
     for o in [8usize, 0xa, 0x10, 0x12] {
         core::ptr::write_unaligned((fim + o) as *mut u16, 0);
     }
-    core::ptr::write_unaligned((this + 8) as *mut u32, cph5_d(this + 8).wrapping_sub(1));
+    core::ptr::write_unaligned((this + 8) as *mut u32, read_u32(this + 8).wrapping_sub(1));
 }
 
 /// Está na lista de observados (0x842080 no gerente da lista [[0xde1f54]+0x856], sem clube)?
 unsafe fn cph5_observado(pessoa: usize) -> bool {
     let observado: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x842080usize);
-    observado(cph5_d(cph5_d(0xde1f54) as usize + 0x856) as usize, pessoa, 0) != 0
+    observado(read_u32(read_u32(0xde1f54) as usize + 0x856) as usize, pessoa, 0) != 0
 }
 
 unsafe fn cph5_sortear(n: i32) -> i32 {
@@ -3100,28 +3025,28 @@ unsafe extern "stdcall" fn aposentadoria_do_desempregado(pessoa: usize, saida: u
     if cph5_observado(pessoa) {
         return 0;
     }
-    let tecnico = cph5_d(pessoa + 0x69) as usize;
-    if tecnico == 0 && cph5_d(pessoa + 0x61) == 0 {
+    let tecnico = read_u32(pessoa + 0x69) as usize;
+    if tecnico == 0 && read_u32(pessoa + 0x61) == 0 {
         sem_registro = true;
     }
     let aposenta = if tecnico != 0 {
-        if cph5_d(pessoa + 0x39) != 0 || cph5_d(pessoa + 0x24) != 0 {
+        if read_u32(pessoa + 0x39) != 0 || read_u32(pessoa + 0x24) != 0 {
             return 0;
         }
         *((tecnico + 0xa) as *const i16) < 50 && cph5_sortear(5) == 0 // o técnico fraco
-    } else if cph5_d(pessoa + 0x61) == 0 {
+    } else if read_u32(pessoa + 0x61) == 0 {
         false
     } else {
         if cph5_observado(pessoa) {
             return 0;
         }
-        if cph5_d(pessoa + 0x39) != 0 || cph5_d(pessoa + 0x24) != 0 {
+        if read_u32(pessoa + 0x39) != 0 || read_u32(pessoa + 0x24) != 0 {
             false
         } else {
             let anos = (*(0xae2c92 as *const u16) as i32).wrapping_sub(*((pessoa + 0x40) as *const u16) as i32);
             let dias = anos.wrapping_mul(365).wrapping_sub(*((pessoa + 0x3e) as *const i16) as i32).wrapping_add(*(0xae2c90 as *const i16) as i32);
             if dias > 0x16d {
-                let nota = *((cph5_d(pessoa + 0x61) as usize + 0xb) as *const i16) as i32;
+                let nota = *((read_u32(pessoa + 0x61) as usize + 0xb) as *const i16) as i32;
                 cph5_sortear(nota) < 0x2ee // o sorteio pela nota
             } else {
                 false
@@ -3131,11 +3056,11 @@ unsafe extern "stdcall" fn aposentadoria_do_desempregado(pessoa: usize, saida: u
     if !aposenta && !sem_registro {
         return 0;
     }
-    core::ptr::write_unaligned(saida as *mut u32, cph5_d(pessoa));
+    core::ptr::write_unaligned(saida as *mut u32, read_u32(pessoa));
     *((saida + 0x18) as *mut u8) = 0x10; // o motivo: desempregado
     *((saida + 0x19) as *mut u8) = 0;
-    let clube = cph5_d(pessoa + 0x39) as usize;
-    core::ptr::write_unaligned((saida + 4) as *mut u32, if clube != 0 { cph5_d(clube) } else { u32::MAX });
+    let clube = read_u32(pessoa + 0x39) as usize;
+    core::ptr::write_unaligned((saida + 4) as *mut u32, if clube != 0 { read_u32(clube) } else { u32::MAX });
     for o in [8usize, 0x10] {
         core::ptr::write_unaligned((saida + o) as *mut u16, *(0xae2c90 as *const u16));
         core::ptr::write_unaligned((saida + o + 2) as *mut u16, *(0xae2c92 as *const u16));
@@ -3146,7 +3071,7 @@ unsafe extern "stdcall" fn aposentadoria_do_desempregado(pessoa: usize, saida: u
 unsafe extern "thiscall" fn comparar_tirar_aposentadoria_pendente(this: usize, chave: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(838);
     let n = (*((this + 8) as *const i32)).max(0) as usize;
-    let reg = [(this + 4, 8), (cph5_d(this + 4) as usize, n * 26)];
+    let reg = [(this + 4, 8), (read_u32(this + 4) as usize, n * 26)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, chave), || tirar_aposentadoria_pendente(this, chave));
     PLACAR.registrar(igual, || format!("tirar_aposentadoria_pendente {:x?} x {:x?}", mo, mr));
 }
@@ -3164,9 +3089,6 @@ unsafe extern "stdcall" fn comparar_aposentadoria_do_desempregado(pessoa: usize,
 
 // ---------- 243a leva: a cópia da entrada da fila de regens e a escolha do doador de dados (player_regen.cpp) e a busca na lista de observados (shortlist_manager.cpp) ----------
 
-unsafe fn cpg2_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 /// { 0x7a8b70 } (thiscall, ret 4, player_regen.cpp): `regen_queue_entry_assign`: copia a entrada da fila de regens
 /// (0xc bytes) de `origem`: a pessoa (+0) e a data do regen em +4 (0x417c10, retorno numa local). Devolve `this`.
@@ -3183,13 +3105,13 @@ unsafe extern "thiscall" fn copiar_entrada_da_fila_de_regens(this: usize, origem
 /// 0x757ea0) a chave (id do jogador, id do clube ou −1 sem clube). O al é 1 se achou; os 3 bytes altos do eax são os do
 /// ponteiro achado (setne al sobre o retorno do bsearch), e a cópia os reproduz.
 unsafe extern "thiscall" fn esta_na_lista_de_observados(this: usize, jogador: usize, clube: usize) -> u32 {
-    let v = cpg2_d(this);
+    let v = read_usize(this);
     if v == 0 {
         return 0;
     }
-    let chave: [u32; 2] = [cpg2_d(jogador) as u32, if clube != 0 { cpg2_d(clube) as u32 } else { u32::MAX }]; // sem clube: −1
+    let chave: [u32; 2] = [read_usize(jogador) as u32, if clube != 0 { read_usize(clube) as u32 } else { u32::MAX }]; // sem clube: −1
     let bsearch: unsafe extern "C" fn(*const [u32; 2], usize, usize, usize, usize) -> usize = core::mem::transmute(0x946464usize);
-    let p = bsearch(&chave, v, cpg2_d(this + 0x10), 8, 0x757ea0);
+    let p = bsearch(&chave, v, read_usize(this + 0x10), 8, 0x757ea0);
     (p as u32 & !0xff) | (p != 0) as u32
 }
 
@@ -3200,13 +3122,13 @@ unsafe extern "thiscall" fn esta_na_lista_de_observados(this: usize, jogador: us
 unsafe extern "thiscall" fn escolher_doador_de_dados(this: usize, nacao: usize) -> usize {
     let nota: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(0x7a7150usize);
     let quantas = || (*(0xae2364 as *const i32)).wrapping_sub(0x10);
-    let base = cpg2_d(0xae23bc);
+    let base = read_usize(0xae23bc);
     let (mut melhor, mut escolhida) = (-1000i32, 0usize);
     let mut i = 0;
     while i < quantas() {
         let p = base + 0x6e * i as usize;
-        let n = cpg2_d(p + 0x1a);
-        if n != 0 && cpg2_d(n) == nacao {
+        let n = read_usize(p + 0x1a);
+        if n != 0 && read_usize(n) == nacao {
             let s = nota(this, p);
             if s > melhor && s > 0 { // a melhor da nação
                 melhor = s;
@@ -3220,7 +3142,7 @@ unsafe extern "thiscall" fn escolher_doador_de_dados(this: usize, nacao: usize) 
     }
     crate::comparacao::ramo("doador de qualquer nação");
     melhor = -15000;
-    let base = cpg2_d(0xae23bc); // relida, como na original
+    let base = read_usize(0xae23bc); // relida, como na original
     i = 0;
     while i < quantas() {
         let p = base + 0x6e * i as usize;

@@ -27,7 +27,7 @@ MUTACOES = [
     ('cqk5_primera_sem_premio', '*((this + 0xe1) as *mut u8) = 1; // cqk5: o prêmio pela tabela no fim da liga', '*((this + 0xe1) as *mut u8) = 2; // mutacao: sem premio no fim', 'cqk_5 tabela da primera'),
     ('cqk5_cota_da_primera_metade', 'let f = premio(this, 0x3d090); // cqk5: a cota da Primera', 'let f = premio(this, 0x1e848); // mutacao: a metade', 'cqk_5 tabela da primera'),
     ('cqk5_sem_registro_do_rebaixamento', 'cair(cqk5_registros(), clube, comp); // cqk5: o rebaixamento pela tabela da C2/A', 'let _ = (clube, comp); // mutacao: sem o registro', 'cqk_5 rebaixamento na c2a'),
-    ('cqk6_marca_invertida', 'let marca = marcadas.iter().any(|&g| cqk6_d(g) == id) as u32; // cqk6: a marca dos clubes de divisão maior', 'let marca = (!marcadas.iter().any(|&g| cqk6_d(g) == id)) as u32; // mutacao: a marca invertida', 'cqk_6 tabela francesa de baixo'),
+    ('cqk6_marca_invertida', 'let marca = marcadas.iter().any(|&g| read_usize(g) == id) as u32; // cqk6: a marca dos clubes de divisão maior', 'let marca = (!marcadas.iter().any(|&g| read_usize(g) == id)) as u32; // mutacao: a marca invertida', 'cqk_6 tabela francesa de baixo'),
     ('cqk6_cfa_so_a_primeira_marcada', 'cqk6_tabela(this, clubes, 0x12, 0x9ccaf0, 0x185, &[0x9cf5cc, 0x9cf5d0])', 'cqk6_tabela(this, clubes, 0x12, 0x9ccaf0, 0x185, &[0x9cf5cc])', 'cqk_6 tabela francesa de baixo'),
     ('cqk6_baixo_sem_marca', 'cqk6_tabela(this, clubes, 0x14, 0x9ccbd0, 0x175, &[0x9cf5d4])', 'cqk6_tabela(this, clubes, 0x14, 0x9ccbd0, 0x175, &[])', 'cqk_6 tabela francesa de baixo'),
 ]

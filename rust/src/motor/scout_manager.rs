@@ -1,32 +1,23 @@
 // ---------- 270a leva: os olheiros do dia, os relatórios deles e a notícia do relatório (scout_manager.cpp) ----------
 
-unsafe fn cqf12_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cqf12_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cqf12_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqf12_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 unsafe fn cqf12_pessoa(id: usize) -> usize {
-    cqf12_d(0xae23bc).wrapping_add(id.wrapping_mul(0x6e))
+    read_usize(0xae23bc).wrapping_add(id.wrapping_mul(0x6e))
 }
 
 unsafe fn cqf12_clube(id: usize) -> usize {
-    cqf12_d(0xae23b4).wrapping_add(id.wrapping_mul(0x245))
+    read_usize(0xae23b4).wrapping_add(id.wrapping_mul(0x245))
 }
 
 /// `a` depois de `b` (datas: ano sem sinal em +2, dia com sinal em +0), como as comparações da original.
 unsafe fn cqf12_depois(dia: i16, ano: u16, data: usize) -> bool {
-    let (d, a) = (cqf12_w(data), cqf12_w(data + 2) as u16);
+    let (d, a) = (read_i16(data), read_i16(data + 2) as u16);
     ano > a || (ano == a && dia > d)
 }
 
@@ -48,28 +39,28 @@ unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool, usize, usi
     // thiscall, ret 4; 0x54c5b0: push n; push &saída; lea ecx, [pedido+8] -> thiscall, ret 8; 0x62c400: push jogador;
     // mov ecx, [0xb63d28] -> thiscall, ret 4 (al); 0x4cf5f0: push clube; push jogador; mov ecx, [0xae1050] -> thiscall,
     // ret 8; 0x5acbe0: 9 pushes; mov ecx, [0xae2a58] -> thiscall, ret 0x24 (ax)
-    let jogador = cqf12_pessoa(cqf12_d(pedido + 4));
-    let clube = cqf12_clube(cqf12_d(pedido));
+    let jogador = cqf12_pessoa(read_usize(pedido + 4));
+    let clube = cqf12_clube(read_usize(pedido));
     if humano(clube, 1, 1, 0, 0) == 0 {
         return (true, false, 0, 0, 0);
     }
-    let tecnico = cqf12_d(clube + 0xcf);
-    if cqf12_d(jogador + 0x39) == clube {
+    let tecnico = read_usize(clube + 0xcf);
+    if read_usize(jogador + 0x39) == clube {
         return (true, false, 0, 0, 0);
     }
-    let c = contrato_de(cqf12_d(0xae1050), jogador);
+    let c = contrato_de(read_usize(0xae1050), jogador);
     core::ptr::write_unaligned(0xae1080 as *mut usize, c);
-    let do_contrato = if c != 0 { cqf12_clube(cqf12_d(c + 4)) } else { 0 };
+    let do_contrato = if c != 0 { cqf12_clube(read_usize(c + 4)) } else { 0 };
     if do_contrato == clube {
         return (true, false, 0, 0, 0);
     }
-    let (dia, ano) = (cqf12_w(0xae2c90), cqf12_w(0xae2c92) as u16);
+    let (dia, ano) = (read_i16(0xae2c90), read_i16(0xae2c92) as u16);
     let mut t = [0u32; 2];
     let ano_depois = mais(pedido + 8, t.as_mut_ptr() as usize, 0x16d); // cqf12: um ano
     if cqf12_depois(dia, ano, ano_depois) {
         return (true, false, 0, 0, 0);
     }
-    if (cqf12_b(pedido + 0x10) as i8) >= 3 { // cqf12: três relatórios
+    if (read_u8(pedido + 0x10) as i8) >= 3 { // cqf12: três relatórios
         return (true, false, 0, 0, 0);
     }
     let mut t2 = [0u32; 2];
@@ -77,33 +68,33 @@ unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool, usize, usi
     if !cqf12_depois(dia, ano, mes_depois) {
         return (false, false, 0, 0, 0);
     }
-    if lesao(cqf12_d(0xb63d28), jogador) == 2 {
+    if lesao(read_usize(0xb63d28), jogador) == 2 {
         return (true, false, 0, 0, 0);
     }
-    let seu = cqf12_d(jogador + 0x39);
-    let mut nacao = if seu != 0 { cqf12_d(seu + 0x53) } else { 0 };
+    let seu = read_usize(jogador + 0x39);
+    let mut nacao = if seu != 0 { read_usize(seu + 0x53) } else { 0 };
     if nacao == 0 {
-        nacao = cqf12_d(jogador + 0x1a);
+        nacao = read_usize(jogador + 0x1a);
         if nacao == 0 {
             return (false, false, 0, 0, 0);
         }
     }
     let mut direto = false;
     if seu != 0 {
-        let k = contrato_com(cqf12_d(0xae1050), jogador, seu);
+        let k = contrato_com(read_usize(0xae1050), jogador, seu);
         if k != 0 {
-            let s = cqf12_b(k + 0x4f) & 0xf0;
+            let s = read_u8(k + 0x4f) & 0xf0;
             direto = s == 0x60 || s == 0x70 || s == 0;
         }
     }
     if !direto && seu != 0 {
         // o clube do jogador joga de hoje até 14 dias depois? (sem lista; a parte alta do 2º dword é sobra da pilha na
         // original e a 0x5acbe0 só lê a palavra baixa)
-        let ultimo = cqf12_d(catorze) as u32;
+        let ultimo = read_usize(catorze) as u32;
         let ultimo_alto = core::ptr::read_unaligned((catorze + 2) as *const u32);
         let a1 = (ultimo_alto & 0xffff_0000) | dia as u16 as u32;
         let a2 = ano as u32;
-        if achar(cqf12_d(0xae2a58), a1, a2, ultimo, ultimo_alto, cqf12_d(seu) as u32, 0, -1, -2, 1) != 0 {
+        if achar(read_usize(0xae2a58), a1, a2, ultimo, ultimo_alto, read_usize(seu) as u32, 0, -1, -2, 1) != 0 {
             return (false, false, 0, 0, 0);
         }
     }
@@ -135,7 +126,7 @@ unsafe extern "thiscall" fn cqf12_olheiros_do_dia(this: usize) -> u32 {
     let mut lista = [0u8; 16];
     let l = lista.as_mut_ptr() as usize;
     nova(l);
-    if cqf12_b(0xae2c88) != 2 {
+    if read_u8(0xae2c88) != 2 {
         soltar(l);
         return 0;
     }
@@ -153,7 +144,7 @@ unsafe extern "thiscall" fn cqf12_olheiros_do_dia(this: usize) -> u32 {
     // lista -> thiscall, ret 0
     let mut i: i32 = 0;
     while i < cqf12_i(this + 0x64) {
-        let pedido = cqf12_d(this + 0x5c) + i as usize * 0x11;
+        let pedido = read_usize(this + 0x5c) + i as usize * 0x11;
         let (tirar, processar, jogador, tecnico, nacao) = cqf12_julgar(pedido, catorze);
         if processar && !CQF12_ENSAIO {
             crate::comparacao::ramo("cqf_12 pedido processado");
@@ -166,7 +157,7 @@ unsafe extern "thiscall" fn cqf12_olheiros_do_dia(this: usize) -> u32 {
                 if cobre(lo, nacao) != 0 {
                     relatorio(lo, jogador, reg, -1000, 1, 0, 0, 1);
                     feitos += 1;
-                    if (cqf12_b(reg + 0x66) as i8) > -1 {
+                    if (read_u8(reg + 0x66) as i8) > -1 {
                         crate::comparacao::ramo("cqf_12 relatorio do pedido");
                         acrescentar(l, reg, 0x67);
                     }
@@ -175,7 +166,7 @@ unsafe extern "thiscall" fn cqf12_olheiros_do_dia(this: usize) -> u32 {
         }
         if tirar {
             let n = cqf12_i(this + 0x64);
-            let base = cqf12_d(this + 0x5c);
+            let base = read_usize(this + 0x5c);
             core::ptr::copy(base.wrapping_add((n as usize).wrapping_mul(0x11)).wrapping_sub(0x11) as *const u8, pedido as *mut u8, 0x11);
             core::ptr::write_unaligned((this + 0x64) as *mut i32, n - 1);
             i -= 1;
@@ -187,10 +178,10 @@ unsafe extern "thiscall" fn cqf12_olheiros_do_dia(this: usize) -> u32 {
         return 1;
     }
     relatorios(this, l);
-    ordenar(cqf12_d(this + 0x5c), cqf12_i(this + 0x64), 0x11, 0x7fc270);
+    ordenar(read_usize(this + 0x5c), cqf12_i(this + 0x64), 0x11, 0x7fc270);
     for k in 0..0x10i32 {
         let p = cqf12_pessoa((cqf12_i(0xae2364) - k - 1) as usize);
-        if cqf12_b(p + 0x5f) == 1 {
+        if read_u8(p + 0x5f) == 1 {
             crate::comparacao::ramo("cqf_12 busca do humano");
             for j in 0..10u32 {
                 buscar(registro_do_olheiro(this, j, p)); // cqf12: a busca de cada lista
@@ -206,18 +197,18 @@ unsafe extern "thiscall" fn cqf12_olheiros_do_dia(this: usize) -> u32 {
 /// pedidos que a original deixa (conta e os 0x11 bytes de cada) têm de ser esses.
 unsafe extern "thiscall" fn comparar_cqf12_olheiros_do_dia(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1626);
-    if cqf12_b(0xae2c88) != 2 {
+    if read_u8(0xae2c88) != 2 {
         return o(this);
     }
     let n0 = cqf12_i(this + 0x64).max(0) as usize;
-    let base = cqf12_d(this + 0x5c);
-    let mut copia: Vec<u8> = (0..n0 * 0x11).map(|k| cqf12_b(base + k)).collect();
+    let base = read_usize(this + 0x5c);
+    let mut copia: Vec<u8> = (0..n0 * 0x11).map(|k| read_u8(base + k)).collect();
     copia.push(0);
     // o ensaio poda a cópia: troca o vetor e a conta do `this` pelos da cópia e devolve depois
-    let (b0, c0) = (cqf12_d(this + 0x5c), cqf12_i(this + 0x64));
+    let (b0, c0) = (read_usize(this + 0x5c), cqf12_i(this + 0x64));
     core::ptr::write_unaligned((this + 0x5c) as *mut usize, copia.as_mut_ptr() as usize);
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let a1080 = cqf12_d(0xae1080);
+    let a1080 = read_usize(0xae1080);
     CQF12_ENSAIO = true;
     crate::aleatorio::sem_contar(|| cqf12_olheiros_do_dia(this));
     CQF12_ENSAIO = false;
@@ -231,7 +222,7 @@ unsafe extern "thiscall" fn comparar_cqf12_olheiros_do_dia(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x64) as *mut i32, c0);
     let r = o(this);
     let n2 = cqf12_i(this + 0x64).max(0) as usize;
-    let agora: Vec<u8> = (0..n2 * 0x11).map(|k| cqf12_b(cqf12_d(this + 0x5c) + k)).collect();
+    let agora: Vec<u8> = (0..n2 * 0x11).map(|k| read_u8(read_usize(this + 0x5c) + k)).collect();
     PLACAR.registrar(r == 1 && agora == plano, || format!("cqf12_olheiros_do_dia: pedidos {} -> original {} ensaio {}; {:x?} x {:x?}", n0, n2, n1, agora, plano));
     r
 }
@@ -246,7 +237,7 @@ static mut CQF12_GRUPOS: Option<Vec<(u32, u32, u8)>> = None;
 /// mesmo jogador (+0x2b) e do mesmo clube (+0x50) vira uma notícia de relatório (0x7f9a60 com o primeiro e quantos).
 /// Libera o vetor (0x9452ca). A lista fica com o cursor no começo.
 unsafe extern "thiscall" fn cqf12_relatorios_dos_olheiros(this: usize, lista: usize) {
-    let conta = cqf12_w(lista);
+    let conta = read_i16(lista);
     if conta == 0 {
         return;
     }
@@ -264,7 +255,7 @@ unsafe extern "thiscall" fn cqf12_relatorios_dos_olheiros(this: usize, lista: us
         aviso_em(0xa7b094, 0x7dd);
         return;
     }
-    core::ptr::write_unaligned((lista + 0xa) as *mut usize, cqf12_d(lista + 2));
+    core::ptr::write_unaligned((lista + 0xa) as *mut usize, read_usize(lista + 2));
     let mut dst = v;
     let mut item = proximo(lista);
     while item != 0 {
@@ -276,14 +267,14 @@ unsafe extern "thiscall" fn cqf12_relatorios_dos_olheiros(this: usize, lista: us
     let mut i: i32 = 0;
     while i < n {
         let r = v + i as usize * 0x67;
-        let clube_id = cqf12_d(cqf12_clube(cqf12_d(r + 0x50)));
-        let jogador_id = cqf12_d(cqf12_pessoa(cqf12_d(r + 0x2b)));
+        let clube_id = read_usize(cqf12_clube(read_usize(r + 0x50)));
+        let jogador_id = read_usize(cqf12_pessoa(read_usize(r + 0x2b)));
         let inicio = i;
         let mut quantos: u8 = 1;
         let mut j = i + 1;
         while j < n {
             let s = v + j as usize * 0x67;
-            if cqf12_d(s + 0x50) != clube_id || cqf12_d(s + 0x2b) != jogador_id {
+            if read_usize(s + 0x50) != clube_id || read_usize(s + 0x2b) != jogador_id {
                 break;
             }
             quantos = quantos.wrapping_add(1);
@@ -293,7 +284,7 @@ unsafe extern "thiscall" fn cqf12_relatorios_dos_olheiros(this: usize, lista: us
         let primeiro = v + inicio as usize * 0x67;
         if CQF12_ENSAIO {
             if let Some(g) = &mut *core::ptr::addr_of_mut!(CQF12_GRUPOS) {
-                g.push((cqf12_d(primeiro + 0x2b) as u32, cqf12_d(primeiro + 0x50) as u32, quantos));
+                g.push((read_usize(primeiro + 0x2b) as u32, read_usize(primeiro + 0x50) as u32, quantos));
             }
         } else {
             noticia(this, primeiro, quantos as u32);
@@ -308,7 +299,7 @@ unsafe extern "thiscall" fn cqf12_relatorios_dos_olheiros(this: usize, lista: us
 /// chamadas da original têm de ser essas.
 unsafe extern "thiscall" fn comparar_cqf12_relatorios_dos_olheiros(this: usize, lista: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1627);
-    let cursor = cqf12_d(lista + 0xa);
+    let cursor = read_usize(lista + 0xa);
     *core::ptr::addr_of_mut!(CQF12_GRUPOS) = Some(Vec::new());
     CQF12_ENSAIO = true;
     cqf12_relatorios_dos_olheiros(this, lista);
@@ -346,23 +337,23 @@ unsafe extern "thiscall" fn cqf12_noticia_do_relatorio(this: usize, r: usize, qu
         gravar(nt, *idx as u32, v);
         *idx = idx.wrapping_add(1);
     };
-    pr(&mut idx, cqf12_b(r + 0x66) as i8 as i32 as u32);
+    pr(&mut idx, read_u8(r + 0x66) as i8 as i32 as u32);
     olheiro(r + 0x1f, nt, &mut idx);
-    pr(&mut idx, cqf12_b(r + 0x59) as i8 as i32 as u32);
-    pr(&mut idx, cqf12_w(r + 0x5a) as i32 as u32);
-    pr(&mut idx, cqf12_d(r + 0x50) as u32);
+    pr(&mut idx, read_u8(r + 0x59) as i8 as i32 as u32);
+    pr(&mut idx, read_i16(r + 0x5a) as i32 as u32);
+    pr(&mut idx, read_usize(r + 0x50) as u32);
     dados(r, nt, &mut idx);
-    pr(&mut idx, cqf12_d(r + 0x5e) as u32);
-    pr(&mut idx, cqf12_d(r + 0x62) as u32);
-    pr(&mut idx, cqf12_b(r + 0x58) as i8 as i32 as u32);
-    pr(&mut idx, cqf12_d(r + 0x54) as u32);
+    pr(&mut idx, read_usize(r + 0x5e) as u32);
+    pr(&mut idx, read_usize(r + 0x62) as u32);
+    pr(&mut idx, read_u8(r + 0x58) as i8 as i32 as u32);
+    pr(&mut idx, read_usize(r + 0x54) as u32);
     for k in 0..n.max(0) as usize {
         let p = r + 0x37 + k * 0x67;
-        pr(&mut idx, cqf12_d(p + 0xc) as u32);
-        pr(&mut idx, cqf12_d(p) as u32);
-        pr(&mut idx, cqf12_d(p + 4) as u32);
-        pr(&mut idx, cqf12_d(p + 8) as u32);
-        pr(&mut idx, ((cqf12_b(p + 0x26) as i8 as i32) + (cqf12_b(p + 0x25) as i8 as i32) * 8) as u32);
+        pr(&mut idx, read_usize(p + 0xc) as u32);
+        pr(&mut idx, read_usize(p) as u32);
+        pr(&mut idx, read_usize(p + 4) as u32);
+        pr(&mut idx, read_usize(p + 8) as u32);
+        pr(&mut idx, ((read_u8(p + 0x26) as i8 as i32) + (read_u8(p + 0x25) as i8 as i32) * 8) as u32);
     }
     pr(&mut idx, 0x420e9);
     let c = cqf12_i(r + 0x50);
@@ -370,40 +361,31 @@ unsafe extern "thiscall" fn cqf12_noticia_do_relatorio(this: usize, r: usize, qu
     let k = idx;
     idx = idx.wrapping_add(1);
     let _ = idx;
-    gravar(nt, k as u32, forcas(cqf12_pessoa(cqf12_d(r + 0x2b)), clube));
-    entregar(cqf12_d(0xb7431c), nt, cqf12_clube(cqf12_d(r + 0x50)));
+    gravar(nt, k as u32, forcas(cqf12_pessoa(read_usize(r + 0x2b)), clube));
+    entregar(read_usize(0xb7431c), nt, cqf12_clube(read_usize(r + 0x50)));
 }
 
 /// Comparador da 0x7f9a60: a notícia é entregue (aloca na caixa do humano): só a original roda (ponytail: o efeito é a
 /// caixa de entrada; os grupos que chegam aqui são conferidos pela 0x7f9890). Com o registro ligado, anota a chamada.
 unsafe extern "thiscall" fn comparar_cqf12_noticia_do_relatorio(this: usize, r: usize, quantos: u32) {
     if let Some(g) = &mut *core::ptr::addr_of_mut!(CQF12_GRUPOS) {
-        g.push((cqf12_d(r + 0x2b) as u32, cqf12_d(r + 0x50) as u32, quantos as u8));
+        g.push((read_usize(r + 0x2b) as u32, read_usize(r + 0x50) as u32, quantos as u8));
     }
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(1628)(this, r, quantos);
 }
 
 // ---------- 266a leva: o dia das seleções e as buscas da sessão do técnico humano (national_teams.cpp, scout_manager.cpp) ----------
 
-unsafe fn cqc12_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cqc12_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 unsafe fn cqc12_uw(a: usize) -> u16 {
     core::ptr::read_unaligned(a as *const u16)
 }
 
-unsafe fn cqc12_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut usize, v);
-}
 
 /// A data `r` é a de hoje (o ano e o dia)?
 unsafe fn cqc12_e_hoje(r: usize, hoje: usize) -> bool {
-    cqc12_uw(r + 2) == cqc12_uw(hoje + 2) && cqc12_w(r) == cqc12_w(hoje)
+    cqc12_uw(r + 2) == cqc12_uw(hoje + 2) && read_i16(r) == read_i16(hoje)
 }
 
 /// Marca os clubes com jogo na data `d` e nos dias vizinhos (0x7775c0 na data, na véspera e no dia seguinte; a data
@@ -438,27 +420,27 @@ unsafe fn cqc12_jogos(this: usize, l: usize) {
     let registrar: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(0x7771c0usize);
     // 0x76bab0: push p; mov ecx, edi -> thiscall ret 4; 0x5409b0 e 0x53b4f0: push; add esp, 4 -> cdecl;
     // 0x7771c0: push p; push b; push time; mov ecx, edi -> thiscall ret 0xc
-    cqc12_pd(l + 0xa, cqc12_d(l + 2));
+    write_usize(l + 0xa, read_usize(l + 2));
     let mut p = proximo(l);
     while p != 0 {
         crate::comparacao::ramo("cqc_12 convoca");
         convocar(this, p); // cqc12: as convocações para o jogo
-        let comp = cqc12_d(p + 0x14);
+        let comp = read_usize(p + 0x14);
         let final_ = comp != 0
             && [0x9cf79cusize, 0x9cf7a0, 0x9cf7a4, 0x9cf7a8, 0x9cf7ac, 0x9cf790, 0x9cf8a0, 0x9cf78c, 0x9cf964]
-                .iter().any(|&k| cqc12_d(comp) == cqc12_d(k));
-        if !final_ && segunda(cqc12_d(p + 0x1c)) == 0 && *((p + 0x40) as *const u8) != 0 {
-            registrar(this, cqc12_d(p + 0x1c), 0, p);
-            registrar(this, cqc12_d(p + 0x20), 0, p);
+                .iter().any(|&k| read_usize(comp) == read_usize(k));
+        if !final_ && segunda(read_usize(p + 0x1c)) == 0 && *((p + 0x40) as *const u8) != 0 {
+            registrar(this, read_usize(p + 0x1c), 0, p);
+            registrar(this, read_usize(p + 0x20), 0, p);
             let f = cqc12_uw(p + 0x4d);
             if f & 0x200 != 0 {
-                let b1 = selecao_b(cqc12_d(cqc12_d(p + 0x1c) + 0x53));
+                let b1 = selecao_b(read_usize(read_usize(p + 0x1c) + 0x53));
                 registrar(this, b1, 0, p);
-                let b2 = selecao_b(cqc12_d(cqc12_d(p + 0x20) + 0x53));
+                let b2 = selecao_b(read_usize(read_usize(p + 0x20) + 0x53));
                 registrar(this, b2, 0, p);
             } else if f & 0x100 != 0 {
-                registrar(this, cqc12_d(p + 0x1c), 1, p);
-                registrar(this, cqc12_d(p + 0x20), 1, p);
+                registrar(this, read_usize(p + 0x1c), 1, p);
+                registrar(this, read_usize(p + 0x20), 1, p);
             }
         }
         p = proximo(l);
@@ -494,9 +476,9 @@ unsafe extern "thiscall" fn dia_das_selecoes(this: usize, hoje: usize) {
     let mut dd = [0u8; 8];
     let d = dd.as_mut_ptr() as usize;
     semanas(hoje, d, 2);
-    if cqc12_d(this + 0x24) != 0 {
-        liberar(cqc12_d(this + 0x24));
-        cqc12_pd(this + 0x24, 0);
+    if read_usize(this + 0x24) != 0 {
+        liberar(read_usize(this + 0x24));
+        write_usize(this + 0x24, 0);
     }
     // ponytail: a original empurra o ano (palavra) e a semana com sobra de registrador em cima; a 0x549f70 lê as palavras
     let ano = cqc12_uw(hoje + 2) as u32;
@@ -509,13 +491,13 @@ unsafe extern "thiscall" fn dia_das_selecoes(this: usize, hoje: usize) {
         crate::comparacao::ramo("cqc_12 refaz as reservas");
         refazer(this);
     }
-    let fixman = cqc12_d(0xae2a58);
+    let fixman = read_usize(0xae2a58);
     for fatia in 0u32..3 {
         // os dwords da original: o ano (com os 2 bytes seguintes da data) e o dia (com o ano em cima); ponytail: a
         // fatia vai sem a sobra de pilha dos bytes de cima (a 0x5abf10 faz and 0xff)
-        let l0 = lista(fixman, cqc12_d(d + 2) as u32, cqc12_d(d) as u32, fatia, 0);
-        let l1 = lista(fixman, cqc12_d(d + 2) as u32, cqc12_d(d) as u32, fatia, 1);
-        if ((l0 != 0 && cqc12_w(l0) != 0) || (l1 != 0 && cqc12_w(l1) != 0)) && cqc12_d(this + 0x24) == 0 {
+        let l0 = lista(fixman, read_usize(d + 2) as u32, read_usize(d) as u32, fatia, 0);
+        let l1 = lista(fixman, read_usize(d + 2) as u32, read_usize(d) as u32, fatia, 1);
+        if ((l0 != 0 && read_i16(l0) != 0) || (l1 != 0 && read_i16(l1) != 0)) && read_usize(this + 0x24) == 0 {
             cqc12_marcar_tres_dias(this, d); // cqc12: os clubes com jogo em volta da data
         }
         if l0 != 0 {
@@ -525,25 +507,25 @@ unsafe extern "thiscall" fn dia_das_selecoes(this: usize, hoje: usize) {
             cqc12_jogos(this, l1);
         }
     }
-    if cqc12_d(this + 0x24) != 0 {
+    if read_usize(this + 0x24) != 0 {
         remarcar(this, d);
     }
-    if cqc12_d(this) != 0 {
-        let dia = cqc12_w(hoje);
-        let l = cqc12_d(this);
-        cqc12_pd(l + 0xa, cqc12_d(l + 2));
-        let mut p = proximo(cqc12_d(this));
+    if read_usize(this) != 0 {
+        let dia = read_i16(hoje);
+        let l = read_usize(this);
+        write_usize(l + 0xa, read_usize(l + 2));
+        let mut p = proximo(read_usize(this));
         while p != 0 {
-            if cqc12_w(p + 0x10) == dia {
-                tirar(cqc12_d(this), p);
+            if read_i16(p + 0x10) == dia {
+                tirar(read_usize(this), p);
             }
-            p = proximo(cqc12_d(this));
+            p = proximo(read_usize(this));
         }
     }
-    if cqc12_d(this + 0x1c) != 0 {
-        ranking(cqc12_d(this + 0x1c), hoje);
+    if read_usize(this + 0x1c) != 0 {
+        ranking(read_usize(this + 0x1c), hoje);
     }
-    if cqc12_w(hoje) as i32 % 0x46 == 0 {
+    if read_i16(hoje) as i32 % 0x46 == 0 {
         podar(this);
     }
     classificados(this);
@@ -551,17 +533,17 @@ unsafe extern "thiscall" fn dia_das_selecoes(this: usize, hoje: usize) {
 
 /// Quantos itens da lista em +0 são do dia `dia` (+0x10), percorrendo os nós sem mexer no cursor.
 unsafe fn cqc12_do_dia(this: usize, dia: i16) -> u32 {
-    let l = cqc12_d(this);
+    let l = read_usize(this);
     if l == 0 {
         return 0;
     }
     let mut n = 0;
-    let mut no = cqc12_d(l + 2);
+    let mut no = read_usize(l + 2);
     while no != 0 {
-        if cqc12_w(cqc12_d(no) + 0x10) == dia {
+        if read_i16(read_usize(no) + 0x10) == dia {
             n += 1;
         }
-        no = cqc12_d(no + 6);
+        no = read_usize(no + 6);
     }
     n
 }
@@ -571,7 +553,7 @@ unsafe fn cqc12_do_dia(this: usize, dia: i16) -> u32 {
 /// nenhum item do dia de hoje sobra na lista em +0.
 unsafe extern "thiscall" fn comparar_dia_das_selecoes(this: usize, hoje: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1539);
-    let dia = cqc12_w(hoje);
+    let dia = read_i16(hoje);
     let antes = cqc12_do_dia(this, dia);
     o(this, hoje);
     let sobra = cqc12_do_dia(this, dia);
@@ -581,7 +563,7 @@ unsafe extern "thiscall" fn comparar_dia_das_selecoes(this: usize, hoje: usize) 
 /// O índice (0..15) do técnico humano da vez ([0xb74c26 + 0x300 × [0xb77c7a]]) pela conta de um byte da original
 /// ((id − [0xae2364]) + 16 em 8 bits); Err(()) sem técnico, Ok(None) fora (a caixa).
 unsafe fn cqc12_indice() -> Result<Option<usize>, ()> {
-    let t = cqc12_d(0xb74c26usize.wrapping_add((*(0xb77c7a as *const i16) as i32 as usize).wrapping_mul(0x300)));
+    let t = read_usize(0xb74c26usize.wrapping_add((*(0xb77c7a as *const i16) as i32 as usize).wrapping_mul(0x300)));
     if t == 0 {
         return Err(());
     }
@@ -604,11 +586,11 @@ unsafe extern "thiscall" fn busca_atual_sem_clube(this: usize) -> u32 {
         Ok(None) => return orig::<unsafe extern "thiscall" fn(usize) -> u32>(1540)(this), // a caixa
         Ok(Some(i)) => i,
     };
-    let s = cqc12_d(this + 0xc + i * 4);
+    let s = read_usize(this + 0xc + i * 4);
     if s == 0 {
         return 0;
     }
-    (cqc12_d(cqc12_busca(s, *(s as *const i8) as i32) + 0x191) as i32 == -2) as u32
+    (read_usize(cqc12_busca(s, *(s as *const i8) as i32) + 0x191) as i32 == -2) as u32
 }
 
 /// Comparador: pelo valor (só lê); com a caixa, só a original.
@@ -632,13 +614,13 @@ unsafe extern "thiscall" fn clube_nas_buscas_da_sessao(this: usize, clube: usize
         Ok(None) => return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1541)(this, clube), // a caixa
         Ok(Some(i)) => i,
     };
-    let s = cqc12_d(this + 0xc + i * 4);
+    let s = read_usize(this + 0xc + i * 4);
     if s == 0 {
         return 0;
     }
-    let id = cqc12_d(clube);
+    let id = read_usize(clube);
     // ponytail: a original testa o contador contra 0xff (nunca) para usar a busca atual (+0); fica o contador
-    (0..10).any(|k| cqc12_d(cqc12_busca(s, k) + 0x191) == id) as u32
+    (0..10).any(|k| read_usize(cqc12_busca(s, k) + 0x191) == id) as u32
 }
 
 /// Comparador: pelo valor (só lê); com a caixa, só a original.
@@ -655,9 +637,6 @@ unsafe extern "thiscall" fn comparar_clube_nas_buscas_da_sessao(this: usize, clu
 
 // ---------- 266a leva: os olheiros dos técnicos humanos na partida e a sessão de edição das buscas (scout_manager.cpp) ----------
 
-unsafe fn cqc13_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 /// { 0x7f8c00 } (thiscall, ret 8, scout_manager.cpp, quadro SEH da LLIST local 0x68d020/0x68d040):
 /// `SCOUT_MANAGER::scout_match(partida, resultado)`, pelo fechamento da partida do dia (0x6b5f00, Rust). Para cada um
@@ -685,8 +664,8 @@ unsafe extern "thiscall" fn olheiros_na_partida(this: usize, p: usize, resultado
     let lista = l.as_mut_ptr() as usize;
     nova(lista);
     for k in 0..16i32 {
-        let idx = (cqc13_d(0xae2364) as i32).wrapping_sub(k).wrapping_sub(1);
-        let pessoa = cqc13_d(0xae23bc).wrapping_add((idx as usize).wrapping_mul(0x6e));
+        let idx = (read_usize(0xae2364) as i32).wrapping_sub(k).wrapping_sub(1);
+        let pessoa = read_usize(0xae23bc).wrapping_add((idx as usize).wrapping_mul(0x6e));
         if *((pessoa + 0x5f) as *const u8) != 1 {
             continue;
         }
@@ -695,7 +674,7 @@ unsafe extern "thiscall" fn olheiros_na_partida(this: usize, p: usize, resultado
         for _ in 0..10 { // cqc13: os 10 observadores
             let q = loop {
                 let q = sortear(10) as i8; // cqc13: o observador sorteado
-                if cqc13_d(marcas.wrapping_add((q as isize * 4) as usize)) == 0 {
+                if read_usize(marcas.wrapping_add((q as isize * 4) as usize)) == 0 {
                     break q; // cqc13: um ainda não marcado
                 }
             };
@@ -703,9 +682,9 @@ unsafe extern "thiscall" fn olheiros_na_partida(this: usize, p: usize, resultado
             // ponytail: a original empurra o dword com o byte do observador e sobra de pilha em cima; a 0x7f6cd0 lê o
             // byte
             let r = registro(this, q as u8 as u32, pessoa);
-            if cqc13_d(r + 0x19d) != 0 && *((p + 0x40) as *const u8) != 0 && *((p + 0x41) as *const u8) != 0 {
-                let clube = cqc13_d(pessoa + 0x39);
-                if cqc13_d(p + 0x1c) == clube || cqc13_d(p + 0x20) == clube {
+            if read_usize(r + 0x19d) != 0 && *((p + 0x40) as *const u8) != 0 && *((p + 0x41) as *const u8) != 0 {
+                let clube = read_usize(pessoa + 0x39);
+                if read_usize(p + 0x1c) == clube || read_usize(p + 0x20) == clube {
                     comecar(r, u32::MAX, u32::MAX, u32::MAX, 0, 1);
                 }
             }
@@ -733,7 +712,7 @@ unsafe fn cqc13_indice(tecnico: usize) -> Option<usize> {
     let t = if tecnico != 0 {
         tecnico
     } else {
-        cqc13_d(0xb74c26usize.wrapping_add((*(0xb77c7a as *const i16) as i32 as usize).wrapping_mul(0x300)))
+        read_usize(0xb74c26usize.wrapping_add((*(0xb77c7a as *const i16) as i32 as usize).wrapping_mul(0x300)))
     };
     if t == 0 {
         return None;
@@ -749,7 +728,7 @@ unsafe extern "thiscall" fn sessao_de_edicao(this: usize, tecnico: usize) -> usi
     let Some(i) = cqc13_indice(tecnico) else {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(1544)(this, tecnico); // a caixa
     };
-    cqc13_d(this + 0xc + i * 4)
+    read_usize(this + 0xc + i * 4)
 }
 
 /// Comparador: pelo valor (só lê); com a caixa, só a original.
@@ -791,13 +770,7 @@ unsafe extern "thiscall" fn comparar_escolher_sessao_de_edicao(this: usize, sess
 
 // ---------- 261a leva: os amistosos internacionais do dia e a lista escolhida do olheiro do técnico humano (friendly.cpp, scout_manager.cpp) ----------
 
-unsafe fn cpy4_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cpy4_w(a: usize) -> u16 {
-    core::ptr::read_unaligned(a as *const u16)
-}
 
 /// As datas estáticas da 0x54c770 (valor e guarda) e da 0x54c5b0, 0x54c8e0 e 0x54cdb0.
 const CPY4_ESTATICAS: [(usize, usize); 8] = [(0xae2420, 8), (0xae2469, 1), (0xae24c0, 8), (0xae249e, 1), (0xae2410, 8), (0xae2430, 1), (0xae2470, 8), (0xae2418, 1)];
@@ -827,54 +800,54 @@ unsafe fn cpy4_amistosos(this: usize, ensaio: bool) -> Option<(usize, u32)> {
     data_padrao(d);
     let mut lim = [0u8; 8];
     semanas(0xae2c90, &mut lim, 0xc); // cpy4: hoje + 12 semanas
-    let hoje = cpy4_w(0xae2c90);
+    let hoje = read_u16(0xae2c90);
     if hoje == 0 && !ensaio {
         crate::comparacao::ramo("cpy_4 virada do ano");
         let mut i = 0i32;
-        while i < cpy4_d(0xae2350) as i32 {
-            let l = cpy4_d(cpy4_d(this + 0x34f6).wrapping_add(i as usize * 4));
+        while i < read_usize(0xae2350) as i32 {
+            let l = read_usize(read_usize(this + 0x34f6).wrapping_add(i as usize * 4));
             if l != 0 {
                 limpar(l);
             }
             i += 1;
         }
-        ordenar(cpy4_d(this + 0x34fa), cpy4_d(this + 0x34fe) as u32, 4, 0x5cc5f0); // cpy4: as nações pela reputação
+        ordenar(read_usize(this + 0x34fa), read_usize(this + 0x34fe) as u32, 4, 0x5cc5f0); // cpy4: as nações pela reputação
         // o primeiro ano de Copa (ano − 2 múltiplo de 4) a partir deste; a metade alta do dword que a original soma é
         // sobra de pilha: aqui, zero
-        let mut ano = cpy4_w(0xae2c92) as u32;
+        let mut ano = read_u16(0xae2c92) as u32;
         while ((ano & 0xffff) as i32 - 2) % 4 != 0 {
             ano = ano.wrapping_add(1);
         }
         let mut k = 0i32;
-        while k < cpy4_d(this + 0x34f0) as i32 {
-            let e = cpy4_d(this + 0x34ec).wrapping_add(k as usize * 0x14);
+        while k < read_usize(this + 0x34f0) as i32 {
+            let e = read_usize(this + 0x34ec).wrapping_add(k as usize * 0x14);
             let mut a = ((*((e + 0xb) as *const i8)) as i16 as u16 as u32).wrapping_add(ano);
-            if (a & 0xffff) as i32 - cpy4_w(0xae2c92) as i32 > 3 {
+            if (a & 0xffff) as i32 - read_u16(0xae2c92) as i32 > 3 {
                 a = a.wrapping_add(0xfffc);
             }
             data_da_entrada(e, a);
             k += 1;
         }
-        ordenar(cpy4_d(this + 0x34ec), cpy4_d(this + 0x34f0) as u32, 0x14, 0x5cc610);
+        ordenar(read_usize(this + 0x34ec), read_usize(this + 0x34f0) as u32, 0x14, 0x5cc610);
     }
     // a data de 0xdd6ec8 depois de hoje + 12 semanas: nada
-    let x_ano = cpy4_w(0xdd6eca);
+    let x_ano = read_u16(0xdd6eca);
     let l_ano = core::ptr::read_unaligned(lim.as_ptr().add(2) as *const u16);
     if x_ano > l_ano || (x_ano == l_ano && *(0xdd6ec8 as *const i16) > core::ptr::read_unaligned(lim.as_ptr() as *const i16)) {
         return None;
     }
-    if cpy4_w(this + 0x34f4) as u32 == hoje as i16 as i32 as u32 {
+    if read_u16(this + 0x34f4) as u32 == hoje as i16 as i32 as u32 {
         return None;
     }
     let mut lixo = [0u8; 8];
     copiar(d, &mut lixo, lim.as_ptr() as usize);
-    let base = cpy4_d(this + 0x34ec);
-    let n = cpy4_d(this + 0x34f0);
+    let base = read_usize(this + 0x34ec);
+    let n = read_usize(this + 0x34f0);
     let p = bsearch(chave.as_ptr() as usize, base, n as u32, 0x14, 0x5cc610);
     if p == 0 {
         return None;
     }
-    let igual = |e: usize| antes(d, cpy4_d(e + 3) as u32, cpy4_d(e + 7) as u32) == 0 && depois(d, cpy4_d(e + 3) as u32, cpy4_d(e + 7) as u32) == 0;
+    let igual = |e: usize| antes(d, read_usize(e + 3) as u32, read_usize(e + 7) as u32) == 0 && depois(d, read_usize(e + 3) as u32, read_usize(e + 7) as u32) == 0;
     // volta até a primeira entrada da data
     let mut e = p;
     while e > base {
@@ -895,7 +868,7 @@ unsafe fn cpy4_amistosos(this: usize, ensaio: bool) -> Option<(usize, u32)> {
     }
     crate::comparacao::ramo("cpy_4 amistosos marcados");
     marcar(this, primeira, quantas); // cpy4: marcar os amistosos da data
-    *((this + 0x34f4) as *mut u16) = cpy4_w(0xae2c90);
+    *((this + 0x34f4) as *mut u16) = read_u16(0xae2c90);
     Some((primeira, quantas))
 }
 
@@ -916,13 +889,13 @@ unsafe extern "thiscall" fn amistosos_internacionais_do_dia(this: usize) {
 /// pelo dia marcado e pelas datas estáticas.
 unsafe extern "thiscall" fn comparar_amistosos_internacionais_do_dia(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1353);
-    if cpy4_w(0xae2c90) == 0 {
+    if read_u16(0xae2c90) == 0 {
         return o(this);
     }
     if let Some((primeira, quantas)) = cpy4_amistosos(this, true) {
         o(this);
-        let dia = cpy4_w(this + 0x34f4);
-        PLACAR.registrar(dia == cpy4_w(0xae2c90), || format!("amistosos_internacionais_do_dia(primeira {:x}, quantas {}) dia marcado={} hoje={}", primeira, quantas, dia, cpy4_w(0xae2c90)));
+        let dia = read_u16(this + 0x34f4);
+        PLACAR.registrar(dia == read_u16(0xae2c90), || format!("amistosos_internacionais_do_dia(primeira {:x}, quantas {}) dia marcado={} hoje={}", primeira, quantas, dia, read_u16(0xae2c90)));
         return;
     }
     let mut reg = CPY4_ESTATICAS.to_vec();
@@ -937,12 +910,12 @@ unsafe fn cpy4_indice(tecnico: usize) -> Option<usize> {
     let t = if tecnico != 0 {
         tecnico
     } else {
-        cpy4_d(0xb74c26usize.wrapping_add((*(0xb77c7a as *const i16) as i32 as usize).wrapping_mul(0x300)))
+        read_usize(0xb74c26usize.wrapping_add((*(0xb77c7a as *const i16) as i32 as usize).wrapping_mul(0x300)))
     };
     if t == 0 {
         return None;
     }
-    let i = (cpy4_d(t) as i32).wrapping_sub(cpy4_d(0xae2364) as i32).wrapping_add(0x10);
+    let i = (read_usize(t) as i32).wrapping_sub(read_usize(0xae2364) as i32).wrapping_add(0x10);
     if !(0..=0xf).contains(&i) {
         return None;
     }
@@ -996,9 +969,6 @@ unsafe extern "thiscall" fn comparar_escolher_lista_do_tecnico(this: usize, list
 
 // ---------- 255a leva: o jogo com jogador observado, a lista do olheiro do humano e o registro da primeira convocação (scout_manager.cpp, staff_records.cpp) ----------
 
-unsafe fn cps8_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
 unsafe fn cps8_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
@@ -1012,22 +982,22 @@ unsafe fn cps8_i(a: usize) -> i32 {
 /// nem lesionada (0x62c400 = 2), nem suspensa (0x55d270), nem impedida (0x7757d0), e que ainda não jogou (0x8cf5e0
 /// = 0), dá 1. Senão 0.
 unsafe extern "thiscall" fn jogo_com_observado(this: usize, partida: usize) -> u32 {
-    let (c1, c2) = (cps8_d(partida + 0x1c), cps8_d(partida + 0x20));
+    let (c1, c2) = (read_u32_as_usize(partida + 0x1c), read_u32_as_usize(partida + 0x20));
     if cps8_i(partida) < 0 {
         crate::comparacao::ramo("cps_8 competicao negativa");
         return 0; // cps8: competição negativa
     }
-    core::ptr::write_unaligned(0xb74442 as *mut u32, cps8_d(0xb7443a) as u32);
+    core::ptr::write_unaligned(0xb74442 as *mut u32, read_u32_as_usize(0xb7443a) as u32);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let mut e = proximo(0xb74438);
     while e != 0 {
-        let v = cps8_d(e);
-        if cps8_d(partida + 0xc) == v || cps8_d(partida + 0x10) == v {
+        let v = read_u32_as_usize(e);
+        if read_u32_as_usize(partida + 0xc) == v || read_u32_as_usize(partida + 0x10) == v {
             return 1;
         }
         e = proximo(0xb74438);
     }
-    if cps8_d(this + 0x5c) == 0 || cps8_i(this + 0x64) <= 0 {
+    if read_u32_as_usize(this + 0x5c) == 0 || cps8_i(this + 0x64) <= 0 {
         crate::comparacao::ramo("cps_8 sem pedidos");
         return 0; // cps8: sem pedidos de observação
     }
@@ -1039,13 +1009,13 @@ unsafe extern "thiscall" fn jogo_com_observado(this: usize, partida: usize) -> u
     let ja_jogou: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x8cf5e0usize);
     let mut k = 0i32;
     while k < cps8_i(this + 0x64) {
-        let id = cps8_i(cps8_d(this + 0x5c).wrapping_add(k as usize * 0x11) + 4);
+        let id = cps8_i(read_u32_as_usize(this + 0x5c).wrapping_add(k as usize * 0x11) + 4);
         k += 1;
         if id <= -1 {
             continue;
         }
-        let p = cps8_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
-        let (clube, sel) = (cps8_d(p + 0x39), cps8_d(p + 0x24));
+        let p = read_u32_as_usize(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
+        let (clube, sel) = (read_u32_as_usize(p + 0x39), read_u32_as_usize(p + 0x24));
         let x = if c1 == clube || c1 == sel {
             c1
         } else if c2 == clube || c2 == sel {
@@ -1053,19 +1023,19 @@ unsafe extern "thiscall" fn jogo_com_observado(this: usize, partida: usize) -> u
         } else {
             continue;
         };
-        if selecao(x) == 0 && cedido(cps8_d(0xde1f54), p, x, 0) != 0 {
+        if selecao(x) == 0 && cedido(read_u32_as_usize(0xde1f54), p, x, 0) != 0 {
             continue;
         }
-        if lesao(cps8_d(0xb63d28), p) == 2 {
+        if lesao(read_u32_as_usize(0xb63d28), p) == 2 {
             continue;
         }
-        if suspenso(cps8_d(0xae28f0), p, cps8_d(partida + 0x14), 1, 0) != 0 {
+        if suspenso(read_u32_as_usize(0xae28f0), p, read_u32_as_usize(partida + 0x14), 1, 0) != 0 {
             continue;
         }
-        if impedido(cps8_d(0xb74318), p, 0xae2c90, x, 0, 0) != 0 {
+        if impedido(read_u32_as_usize(0xb74318), p, 0xae2c90, x, 0, 0) != 0 {
             continue;
         }
-        if ja_jogou(cps8_d(0xde1f54), p, partida) == 0 {
+        if ja_jogou(read_u32_as_usize(0xde1f54), p, partida) == 0 {
             return 1;
         }
     }
@@ -1082,7 +1052,7 @@ unsafe extern "thiscall" fn comparar_jogo_com_observado(this: usize, partida: us
 /// O gerente do humano da vez ([0xb74c26 + 0x300 × (i16)[0xb77c7a]]).
 unsafe fn cps8_gerente_da_vez() -> usize {
     let k = core::ptr::read_unaligned(0xb77c7a as *const i16) as isize;
-    cps8_d((0xb74c26isize + 0x300 * k) as usize)
+    read_u32_as_usize((0xb74c26isize + 0x300 * k) as usize)
 }
 
 /// { 0x7f7490 } (thiscall, ret 8, scout_manager.cpp): `SCOUT_MANAGER::is_player_shortlisted(pessoa, gerente)` (pelos
@@ -1104,7 +1074,7 @@ unsafe extern "thiscall" fn na_lista_do_olheiro(this: usize, pessoa: usize, gere
     if !(0..=15).contains(&vaga) {
         return 0;
     }
-    let s = cps8_d(this + vaga as usize * 4 + 0xc);
+    let s = read_u32_as_usize(this + vaga as usize * 4 + 0xc);
     if s != 0 {
         let da_edicao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x804540usize);
         return da_edicao(s, pessoa);
@@ -1147,7 +1117,7 @@ unsafe extern "thiscall" fn registrar_a_primeira_convocacao(this: usize, pessoa:
     cpq4_por(&mut e, 0xd, cps8_i(adversario));
     cpq4_por(&mut e, 0x11, *((pessoa + 0x18) as *const i8) as i32);
     if pessoa != 0 {
-        cpq4_historico(true, this, cps8_d(pessoa), &e);
+        cpq4_historico(true, this, read_u32_as_usize(pessoa), &e);
     } else {
         aviso_em(0xa83b78, 0x1010);
     }

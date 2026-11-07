@@ -1,24 +1,18 @@
 // ---------- 280a leva: a J1: a fase seguinte, a final entre os campeões dos dois turnos e a virada da temporada (jap_j1.cpp) ----------
 
-unsafe fn cqq9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cqq9_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O campeão de um turno: o clube da primeira linha da tabela (+0xb1) da fase `k` ([+0xc][k], um League_Stage).
 unsafe fn cqq9_campeao_do_turno(this: usize, k: usize) -> usize {
-    cqq9_d(cqq9_d(cqq9_d(cqq9_d(this + 0xc) + 4 * k) + 0xb1))
+    read_usize(read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1))
 }
 
 /// { 0x6639c0 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::advance_stage()`, a fase seguinte da J1 (dois turnos, as fases 0
 /// e 1, e a final, a fase 2). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa da linha 0x223 e nada mais. Senão
 /// +0x30 sobe um e, ao chegar a 2, monta a final (0x663a50, call direto com o ecx da liga).
 unsafe extern "thiscall" fn cqq9_fase_seguinte_da_j1(this: usize) {
-    let fase = cqq9_d(this + 0x30) as i32;
-    if fase >= (cqq9_d(this + 0x2c) as i32).wrapping_sub(1) {
+    let fase = read_usize(this + 0x30) as i32;
+    if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x9eabc8, 0x223);
     }
     let fase = fase + 1;
@@ -47,7 +41,7 @@ unsafe extern "thiscall" fn cqq9_final_da_j1(this: usize) {
     }
     core::ptr::write_unaligned(lista as *mut usize, cqq9_campeao_do_turno(this, 0)); // cqq9: o campeão do primeiro turno
     core::ptr::write_unaligned((lista + 4) as *mut usize, cqq9_campeao_do_turno(this, 1)); // cqq9: o campeão do segundo turno
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqq9_d(cqq9_d(this) + 0x3c));
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 2, &mut rodadas, &mut extra, 0);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -58,16 +52,16 @@ unsafe extern "thiscall" fn cqq9_final_da_j1(this: usize) {
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(0x522e00usize);
-        construir(p, this, 2, lista, rodadas as u16 as u32, cqq9_d(this + 4), t, cqq9_w(this + 0x40) as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construir(p, this, 2, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    core::ptr::write_unaligned((cqq9_d(this + 0xc) + 8) as *mut usize, fase);
+    core::ptr::write_unaligned((read_usize(this + 0xc) + 8) as *mut usize, fase);
     liberar(lista);
     liberar(t);
     let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
-    montar(cqq9_d(cqq9_d(this + 0xc) + 8), 0);
-    if cqq9_d(cqq9_d(this + 0xc) + 8) == 0 {
+    montar(read_usize(read_usize(this + 0xc) + 8), 0);
+    if read_usize(read_usize(this + 0xc) + 8) == 0 {
         return aviso_em(0x9eabc8, 0x25c);
     }
     crate::comparacao::ramo("cqq_9 final");
@@ -87,40 +81,40 @@ unsafe extern "thiscall" fn cqq9_final_da_j1(this: usize) {
 /// árbitros (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), cujo eax ela devolve.
 unsafe extern "thiscall" fn cqq9_virada_da_j1(this: usize) -> u32 {
     let virtual_ = |c: usize, desl: usize| -> u32 {
-        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqq9_d(cqq9_d(c) + desl));
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(c) + desl));
         f(c)
     };
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
-    let cadeia: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(cqq9_d(cqq9_d(this) + 0xb0));
+    let cadeia: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0xb0));
     cadeia(this, 1);
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x687970usize);
     liberar_tabela(this, 0);
-    let l = cqq9_d(this + 0xba);
+    let l = read_usize(this + 0xba);
     if l != 0 {
         liberar(l);
         core::ptr::write_unaligned((this + 0xba) as *mut usize, 0);
     }
-    let estatisticas = cqq9_d(this + 8);
+    let estatisticas = read_usize(this + 8);
     if estatisticas != 0 {
         let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
         arquivar(estatisticas, 1);
     }
-    if (cqq9_d(this + 0x30) as i32) >= 0 {
+    if (read_usize(this + 0x30) as i32) >= 0 {
         let mut i = 0i32;
         loop {
-            let f = cqq9_d(cqq9_d(this + 0xc) + 4 * i as usize);
+            let f = read_usize(read_usize(this + 0xc) + 4 * i as usize);
             if f != 0 {
-                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(cqq9_d(cqq9_d(f)));
+                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
                 destruir(f, 1);
             }
             i += 1;
-            if i > cqq9_d(this + 0x30) as i32 {
+            if i > read_usize(this + 0x30) as i32 {
                 break;
             }
         }
     }
-    liberar(cqq9_d(this + 0xc));
+    liberar(read_usize(this + 0xc));
     core::ptr::write_unaligned((this + 0x2c) as *mut u32, 3);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let v = alocar(0xc);
@@ -153,21 +147,21 @@ unsafe extern "thiscall" fn cqq9_virada_da_j1(this: usize) -> u32 {
         aviso_em(0x9eabc8, erro);
         return 0;
     }
-    virtual_(cqq9_d(cqq9_d(0xadadfc) + 4 * cqq9_d(0x9cf768)), 8);
+    virtual_(read_usize(read_usize(0xadadfc) + 4 * read_usize(0x9cf768)), 8);
     virtual_(this, 0x5c);
     let expectativas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68aa80usize);
     expectativas(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x79cee0usize);
-    renovar(cqq9_d(0xb74340), cqq9_d(this + 4))
+    renovar(read_usize(0xb74340), read_usize(this + 4))
 }
 
 /// O comparador da fase seguinte: só a original (ponytail: ao chegar a 2 monta a final, que aloca e sorteia), com o
 /// plano: na última fase, +0x30 igual; senão +0x30 + 1 (a final grava 2, o mesmo valor).
 unsafe extern "thiscall" fn comparar_cqq9_fase_seguinte_da_j1(this: usize) {
-    let antes = cqq9_d(this + 0x30) as i32;
-    let ultima = antes >= (cqq9_d(this + 0x2c) as i32).wrapping_sub(1);
+    let antes = read_usize(this + 0x30) as i32;
+    let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     orig::<unsafe extern "thiscall" fn(usize)>(1954)(this);
-    let depois = cqq9_d(this + 0x30) as i32;
+    let depois = read_usize(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("cqq9_fase_seguinte_da_j1({:#x}) antes={} depois={}", this, antes, depois));
 }
 
@@ -177,39 +171,33 @@ unsafe extern "thiscall" fn comparar_cqq9_fase_seguinte_da_j1(this: usize) {
 unsafe extern "thiscall" fn comparar_cqq9_final_da_j1(this: usize) {
     let (a, b) = (cqq9_campeao_do_turno(this, 0), cqq9_campeao_do_turno(this, 1));
     orig::<unsafe extern "thiscall" fn(usize)>(1955)(this);
-    let fase = cqq9_d(cqq9_d(this + 0xc) + 8);
+    let fase = read_usize(read_usize(this + 0xc) + 8);
     let igual = fase != 0 && {
-        let l = cqq9_d(fase + 0xa7);
-        let (x, y) = (cqq9_d(l), cqq9_d(l + 6));
-        cqq9_w(fase + 0x3e) == 2 && cqq9_d(fase + 4) == cqq9_d(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && cqq9_d(this + 0x30) == 2
+        let l = read_usize(fase + 0xa7);
+        let (x, y) = (read_usize(l), read_usize(l + 6));
+        read_i16(fase + 0x3e) == 2 && read_usize(fase + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + 0x30) == 2
     };
-    PLACAR.registrar(igual, || format!("cqq9_final_da_j1({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, fase, cqq9_d(this + 0x30)));
+    PLACAR.registrar(igual, || format!("cqq9_final_da_j1({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, fase, read_usize(this + 0x30)));
 }
 
 /// O comparador da virada: só a original (ponytail: libera e aloca tabelas e fases, sorteia jogos e árbitros e vira a
 /// J2; não pode rodar duas vezes), conferindo o que só ela garante: o ano sobe um e +0x2c = 3.
 unsafe extern "thiscall" fn comparar_cqq9_virada_da_j1(this: usize) -> u32 {
-    let antes = cqq9_w(this + 0x40);
+    let antes = read_i16(this + 0x40);
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1956)(this);
-    let depois = cqq9_w(this + 0x40);
-    PLACAR.registrar(depois == antes.wrapping_add(1) && cqq9_d(this + 0x2c) == 3, || format!("cqq9_virada_da_j1({:#x}) ano antes={} depois={} +0x2c={}", this, antes, depois, cqq9_d(this + 0x2c)));
+    let depois = read_i16(this + 0x40);
+    PLACAR.registrar(depois == antes.wrapping_add(1) && read_usize(this + 0x2c) == 3, || format!("cqq9_virada_da_j1({:#x}) ano antes={} depois={} +0x2c={}", this, antes, depois, read_usize(this + 0x2c)));
     r
 }
 
 // ---------- 277a leva: a tabela das ligas do Japão e da Austrália: os 16 clubes da J1 (o fundo de prêmios e a TV), os 12 da J2 (os que sobram saem da divisão) e os 13 da NSL (jap_j1.cpp, jap_j2.cpp, aus_nsl.cpp) ----------
 
-unsafe fn cqm9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cqm9_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O clube é da divisão do global `g`: a divisão do clube (+0x57) não é nula e o id do registro (+0) é o do global.
 unsafe fn cqm9_da_divisao(clube: usize, g: usize) -> bool {
-    let comp = cqm9_d(clube + 0x57);
-    comp != 0 && cqm9_d(comp) == cqm9_d(g)
+    let comp = read_usize(clube + 0x57);
+    comp != 0 && read_usize(comp) == read_usize(g)
 }
 
 /// +0x3e = `n` e a tabela (malloc 0x944e46 de n × 0x3b, em +0xb1; sem memória: a caixa do fonte `arquivo` na linha
@@ -239,11 +227,11 @@ unsafe fn cqm9_linha(this: usize, k: u8, n: i16, girar: u8, clube: usize) {
 unsafe fn cqm9_japao(this: usize, g: usize, girar: u8, ramo: &'static str) -> u32 {
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = cqm9_d(0xae23b4);
-    while (i as i32) < cqm9_d(0xae235c) as i32 {
+    let mut clube = read_usize(0xae23b4);
+    while (i as i32) < read_usize(0xae235c) as i32 {
         if cqm9_da_divisao(clube, g) {
-            if (k as i8 as i16) < cqm9_w(this + 0x3e) {
-                cqm9_linha(this, k, cqm9_w(this + 0x3e), girar, clube);
+            if (k as i8 as i16) < read_i16(this + 0x3e) {
+                cqm9_linha(this, k, read_i16(this + 0x3e), girar, clube);
                 k = k.wrapping_add(1);
             } else {
                 core::ptr::write_unaligned((clube + 0x57) as *mut usize, 0);
@@ -252,7 +240,7 @@ unsafe fn cqm9_japao(this: usize, g: usize, girar: u8, ramo: &'static str) -> u3
         i = i.wrapping_add(1);
         clube = clube.wrapping_add(0x245);
     }
-    if k as i8 as i16 != cqm9_w(this + 0x3e) {
+    if k as i8 as i16 != read_i16(this + 0x3e) {
         return 0;
     }
     crate::comparacao::ramo(ramo);
@@ -298,19 +286,19 @@ unsafe extern "thiscall" fn cqm9_tabela_da_nsl(this: usize) -> u32 {
     }
     let mut k: u32 = 0;
     let mut i: i16 = 0;
-    let mut clube = cqm9_d(0xae23b4);
-    while (i as i32) < cqm9_d(0xae235c) as i32 {
-        if (k as i16) >= cqm9_w(this + 0x3e) {
+    let mut clube = read_usize(0xae23b4);
+    while (i as i32) < read_usize(0xae235c) as i32 {
+        if (k as i16) >= read_i16(this + 0x3e) {
             break;
         }
         if cqm9_da_divisao(clube, 0x9cf89c) {
-            cqm9_linha(this, k as u8, cqm9_w(this + 0x3e), 0, clube); // cqm9: a linha da NSL
+            cqm9_linha(this, k as u8, read_i16(this + 0x3e), 0, clube); // cqm9: a linha da NSL
             k = k.wrapping_add(1);
         }
         i = i.wrapping_add(1);
         clube = clube.wrapping_add(0x245);
     }
-    if k as i16 != cqm9_w(this + 0x3e) {
+    if k as i16 != read_i16(this + 0x3e) {
         aviso_em(0x987c20, 0x252);
         return 0;
     }
@@ -325,24 +313,24 @@ unsafe extern "thiscall" fn cqm9_tabela_da_nsl(this: usize) -> u32 {
 unsafe fn cqm9_comparar(nome: &str, this: usize, n: i16, g: usize, limpar: bool, cota: i32, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
-    while i < cqm9_d(0xae235c) as i32 {
-        let clube = cqm9_d(0xae23b4) + (i as usize) * 0x245;
+    while i < read_usize(0xae235c) as i32 {
+        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
         if cqm9_da_divisao(clube, g) {
             plano.push(clube);
         }
         i += 1;
     }
     let r = original();
-    let t = cqm9_d(this + 0xb1);
+    let t = read_usize(this + 0xb1);
     let cabem = plano.len().min(n as usize);
     let esperado = (plano.len() >= n as usize) as u32;
-    let mut igual = r == esperado && cqm9_w(this + 0x3e) == n && t != 0;
+    let mut igual = r == esperado && read_i16(this + 0x3e) == n && t != 0;
     let mut achou: Vec<usize> = Vec::new();
     if igual {
-        achou = (0..cabem).map(|k| cqm9_d(t + k * 0x3b)).collect();
+        achou = (0..cabem).map(|k| read_usize(t + k * 0x3b)).collect();
         igual = achou[..] == plano[..cabem];
         if limpar {
-            igual = igual && plano[cabem..].iter().all(|&c| cqm9_d(c + 0x57) == 0);
+            igual = igual && plano[cabem..].iter().all(|&c| read_usize(c + 0x57) == 0);
         }
         if r == 1 && cota != 0 {
             let premio: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(0x682f70usize);

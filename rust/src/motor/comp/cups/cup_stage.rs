@@ -1,24 +1,9 @@
 // ---------- 283a leva: a fase de mata-mata das copas (Cup_Stage): o construtor (a tabela das rodadas copiada, os times com as sementes e a árvore dos confrontos) e o destrutor (cup_stage.cpp) ----------
 
-unsafe fn cqs7_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqs7_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqs7_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
-unsafe fn cqs7_pw(a: usize, v: u16) {
-    core::ptr::write_unaligned(a as *mut u16, v)
-}
 
-unsafe fn cqs7_pb(a: usize, v: u8) {
-    *(a as *mut u8) = v
-}
 
 /// { 0x522e00 } (thiscall, ret 0x3c, cup_stage.cpp; quadro SEH sem destrutor no caminho normal): `Cup_Stage::Cup_Stage(pai,
 /// n, times, rodadas, a5, modelo, ano, fase, b2, id, b3, arvore, por_ordem, a14, sementes)`: a base (Cup::Cup 0x518640,
@@ -36,47 +21,47 @@ unsafe extern "thiscall" fn cqs7_fase_de_copa(this: usize, pai: usize, n: u32, t
     const F: usize = 0x9b5944;
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
     base(this);
-    cqs7_pd(this + 4, a5 as usize);
-    cqs7_pw(this + 0x40, ano as u16); // cqs7: o ano da fase
-    cqs7_pb(this + 0x42, b2 as u8);
-    cqs7_pb(this + 0x44, fase as u8);
-    cqs7_pd(this + 0x30, usize::MAX);
-    cqs7_pd(this + 0x2c, usize::MAX);
-    cqs7_pb(this + 0x51, b3 as u8);
-    cqs7_pd(this, 0x969468);
-    cqs7_pb(this + 0x43, 1);
-    cqs7_pb(this + 0xb1, 0);
-    cqs7_pb(this + 0xab, 0);
-    cqs7_pb(this + 0xac, 0);
-    cqs7_pw(this + 0x3c, rodadas as u16);
-    cqs7_pw(this + 0x3a, id as u16);
-    cqs7_pb(this + 0x49, *((pai + 0x49) as *const u8));
-    cqs7_pb(this + 0x4a, *((pai + 0x4a) as *const u8));
-    cqs7_pd(this + 0x28, a14 as usize);
+    write_u32_from_usize(this + 4, a5 as usize);
+    write_u16(this + 0x40, ano as u16); // cqs7: o ano da fase
+    write_u8(this + 0x42, b2 as u8);
+    write_u8(this + 0x44, fase as u8);
+    write_u32_from_usize(this + 0x30, usize::MAX);
+    write_u32_from_usize(this + 0x2c, usize::MAX);
+    write_u8(this + 0x51, b3 as u8);
+    write_u32_from_usize(this, 0x969468);
+    write_u8(this + 0x43, 1);
+    write_u8(this + 0xb1, 0);
+    write_u8(this + 0xab, 0);
+    write_u8(this + 0xac, 0);
+    write_u16(this + 0x3c, rodadas as u16);
+    write_u16(this + 0x3a, id as u16);
+    write_u8(this + 0x49, *((pai + 0x49) as *const u8));
+    write_u8(this + 0x4a, *((pai + 0x4a) as *const u8));
+    write_u32_from_usize(this + 0x28, a14 as usize);
     let tamanho = (rodadas as u16 as i16 as i32 * 0x68) as u32;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = alocar(tamanho);
-    cqs7_pd(this + 0xa3, t);
+    write_u32_from_usize(this + 0xa3, t);
     if t == 0 {
         aviso_em(F, 0x48);
         return this;
     }
     core::ptr::copy_nonoverlapping(modelo as *const u8, t as *mut u8, tamanho as usize);
-    cqs7_pw(this + 0x3e, n as u16);
+    write_u16(this + 0x3e, n as u16);
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let l = zerada(n as u16 as i16 as i32 as u32, 6);
-    cqs7_pd(this + 0xa7, l);
+    write_u32_from_usize(this + 0xa7, l);
     if l == 0 {
         aviso_em(F, 0x53);
         return this;
     }
     crate::comparacao::ramo("cqs_7 fase de copa");
-    let m = cqs7_w(this + 0x3e) as i32;
+    let m = read_i16(this + 0x3e) as i32;
     let mut i = 0i32;
     while i < m {
         let e = i as usize * 6;
-        cqs7_pd(cqs7_d(this + 0xa7) + e, cqs7_d(times + i as usize * 4)); // cqs7: o time i
-        cqs7_pb(cqs7_d(this + 0xa7) + e + 5, 0);
+        write_u32_from_usize(read_u32_as_usize(this + 0xa7) + e, read_u32_as_usize(times + i as usize * 4)); // cqs7: o time i
+        write_u8(read_u32_as_usize(this + 0xa7) + e + 5, 0);
         let s = if sementes != 0 {
             *((sementes + i as usize) as *const u8) // cqs7: a semente do vetor
         } else if por_ordem != 0 {
@@ -84,7 +69,7 @@ unsafe extern "thiscall" fn cqs7_fase_de_copa(this: usize, pai: usize, n: u32, t
         } else {
             0
         };
-        cqs7_pb(cqs7_d(this + 0xa7) + e + 4, s);
+        write_u8(read_u32_as_usize(this + 0xa7) + e + 4, s);
         i += 1;
     }
     let (mapa, linha) = if arvore != 0 { (0x5241e0usize, 0x62) } else { (0x518790usize, 0x6a) };
@@ -105,19 +90,19 @@ unsafe extern "thiscall" fn comparar_cqs7_fase_de_copa(this: usize, pai: usize, 
     let k = (n as u16 as i16).max(0) as usize;
     let plano: Vec<(usize, u8)> = (0..k).map(|i| {
         let s = if sementes != 0 { *((sementes + i) as *const u8) } else if por_ordem != 0 { i as u8 } else { 0 };
-        (cqs7_d(times + i * 4), s)
+        (read_u32_as_usize(times + i * 4), s)
     }).collect();
     let tamanho = (rodadas as u16 as i16 as i32 * 0x68).max(0) as usize;
     let modelo_antes: Vec<u8> = core::slice::from_raw_parts(modelo as *const u8, tamanho).to_vec();
     let r = o(this, pai, n, times, rodadas, a5, modelo, ano, fase, b2, id, b3, arvore, por_ordem, a14, sementes);
-    let l = cqs7_d(this + 0xa7);
-    let t = cqs7_d(this + 0xa3);
+    let l = read_u32_as_usize(this + 0xa7);
+    let t = read_u32_as_usize(this + 0xa3);
     // a árvore (chamada no fim) reescreve partes da tabela das rodadas e da lista (na comparação de 06/11 as duas
     // diferiam do que o construtor grava): confere os campos fixos, a tabela montada e o conjunto dos clubes da lista
     let _ = &modelo_antes;
-    let ok = r == this && cqs7_w(this + 0x3e) as u16 == n as u16 && cqs7_w(this + 0x3c) as u16 == rodadas as u16 && cqs7_w(this + 0x40) as u16 == ano as u16
+    let ok = r == this && read_i16(this + 0x3e) as u16 == n as u16 && read_i16(this + 0x3c) as u16 == rodadas as u16 && read_i16(this + 0x40) as u16 == ano as u16
         && t != 0 && l != 0 && {
-            let mut a: Vec<usize> = (0..plano.len()).map(|i| cqs7_d(l + i * 6)).collect();
+            let mut a: Vec<usize> = (0..plano.len()).map(|i| read_u32_as_usize(l + i * 6)).collect();
             let mut b: Vec<usize> = plano.iter().map(|x| x.0).collect();
             a.sort_unstable();
             b.sort_unstable();
@@ -133,23 +118,23 @@ unsafe extern "thiscall" fn comparar_cqs7_fase_de_copa(this: usize, pai: usize, 
 /// (Cup::~Cup 0x518690, mov ecx -> thiscall, ret 0), cujo eax ela devolve.
 unsafe extern "thiscall" fn cqs7_fim_da_fase_de_copa(this: usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    cqs7_pd(this, 0x969468);
-    if cqs7_d(this + 0xa7) != 0 {
-        soltar(cqs7_d(this + 0xa7));
+    write_u32_from_usize(this, 0x969468);
+    if read_u32_as_usize(this + 0xa7) != 0 {
+        soltar(read_u32_as_usize(this + 0xa7));
     }
-    if cqs7_d(this + 0xa3) != 0 {
-        soltar(cqs7_d(this + 0xa3));
+    if read_u32_as_usize(this + 0xa3) != 0 {
+        soltar(read_u32_as_usize(this + 0xa3));
     }
-    if cqs7_d(this + 0xad) != 0 {
+    if read_u32_as_usize(this + 0xad) != 0 {
         let mut i = 0i32;
-        while i < cqs7_w(this + 0x3c) as i32 {
-            let p = cqs7_d(cqs7_d(this + 0xad) + i as usize * 4);
+        while i < read_i16(this + 0x3c) as i32 {
+            let p = read_u32_as_usize(read_u32_as_usize(this + 0xad) + i as usize * 4);
             if p != 0 {
                 soltar(p);
             }
             i += 1;
         }
-        soltar(cqs7_d(this + 0xad));
+        soltar(read_u32_as_usize(this + 0xad));
     }
     crate::comparacao::ramo("cqs_7 fim da fase de copa");
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518690usize);

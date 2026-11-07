@@ -1,12 +1,6 @@
 // ---------- 284a leva: a Copa da Itália e a Copa da Itália da Série C: a tabela do grupo 1 (o próprio objeto da copa) e a fase seguinte (o mata-mata depois do último grupo) (ita_cup.cpp, ita_c_cup.cpp) ----------
 
-unsafe fn cqr7_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqr7_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// A tabela do grupo 1 de uma copa italiana (`create_first_group_table`; a copa é ela mesma a liga do grupo 1): +0x3e =
 /// `n` times; a tabela (0x944e46 de n × 0x3b, cdecl) em +0xb1; sem memória, a caixa da linha `linha` e 0. Cada um dos n
@@ -27,10 +21,10 @@ unsafe fn cqr7_grupo_um(this: usize, n: i16, arquivo: usize, linha: u32, ramo: &
     crate::comparacao::ramo(ramo);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let mut i: i8 = 0;
-    while (i as i16) < cqr7_w(this + 0x3e) {
-        let vaga = cqr7_d(this + 0xee) + i as isize as usize * 4;
-        iniciar(this, i as u8 as u32, cqr7_d(vaga), 0, 0);
-        core::ptr::write_unaligned((cqr7_d(this + 0xee) + i as isize as usize * 4) as *mut u32, 0); // cqr7: a vaga do grupo 1 sai da lista
+    while (i as i16) < read_i16(this + 0x3e) {
+        let vaga = read_u32_as_usize(this + 0xee) + i as isize as usize * 4;
+        iniciar(this, i as u8 as u32, read_u32_as_usize(vaga), 0, 0);
+        core::ptr::write_unaligned((read_u32_as_usize(this + 0xee) + i as isize as usize * 4) as *mut u32, 0); // cqr7: a vaga do grupo 1 sai da lista
         i = i.wrapping_add(1);
     }
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
@@ -42,11 +36,11 @@ unsafe fn cqr7_grupo_um(this: usize, n: i16, arquivo: usize, linha: u32, ramo: &
 /// pode rodar duas vezes), conferindo o plano feito antes: devolve 1, +0x3e = n, a tabela em +0xb1 com os n primeiros
 /// inscritos nas linhas (de 0x3b bytes), na ordem, e as n primeiras vagas de +0xee zeradas.
 unsafe fn cqr7_comparar_grupo_um(nome: &str, this: usize, n: i16, original: impl FnOnce() -> u32) -> u32 {
-    let plano: Vec<usize> = (0..n as usize).map(|k| cqr7_d(cqr7_d(this + 0xee) + k * 4)).collect();
+    let plano: Vec<usize> = (0..n as usize).map(|k| read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4)).collect();
     let r = original();
-    let t = cqr7_d(this + 0xb1);
-    let ok = r == 1 && cqr7_w(this + 0x3e) == n && t != 0
-        && plano.iter().enumerate().all(|(k, &c)| cqr7_d(t + k * 0x3b) == c && cqr7_d(cqr7_d(this + 0xee) + k * 4) == 0);
+    let t = read_u32_as_usize(this + 0xb1);
+    let ok = r == 1 && read_i16(this + 0x3e) == n && t != 0
+        && plano.iter().enumerate().all(|(k, &c)| read_u32_as_usize(t + k * 0x3b) == c && read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4) == 0);
     PLACAR.registrar(ok, || format!("{}({:#x}) devolveu {}; plano {:x?}", nome, this, r, plano));
     r
 }
@@ -77,8 +71,8 @@ unsafe extern "thiscall" fn comparar_cqr7_copa_da_serie_c_grupo_um(this: usize) 
 /// sinal), a caixa de erro e nada mais; senão +0x30 sobe um e, ao chegar a `ultimo_grupo` + 1 (o fim dos grupos), monta o
 /// mata-mata (`mata_mata`, call direto com o ecx da copa -> thiscall, ret 0).
 unsafe fn cqr7_fase_seguinte(this: usize, arquivo: usize, linha: u32, fim_dos_grupos: i32, mata_mata: usize) {
-    let fase = cqr7_d(this + 0x30) as i32;
-    if fase >= (cqr7_d(this + 0x2c) as i32).wrapping_sub(1) {
+    let fase = read_u32_as_usize(this + 0x30) as i32;
+    if fase >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(arquivo, linha);
     }
     let fase = fase + 1;
@@ -93,10 +87,10 @@ unsafe fn cqr7_fase_seguinte(this: usize, arquivo: usize, linha: u32, fim_dos_gr
 /// O comparador da fase seguinte: só a original (ponytail: o mata-mata aloca a fase e sorteia; não pode rodar duas vezes),
 /// conferindo o plano: +0x30 sobe um fora da última fase e fica na última.
 unsafe fn cqr7_comparar_fase(nome: &str, this: usize, original: impl FnOnce()) {
-    let antes = cqr7_d(this + 0x30) as i32;
-    let ultima = antes >= (cqr7_d(this + 0x2c) as i32).wrapping_sub(1);
+    let antes = read_u32_as_usize(this + 0x30) as i32;
+    let ultima = antes >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     original();
-    let depois = cqr7_d(this + 0x30) as i32;
+    let depois = read_u32_as_usize(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) fase {} -> {}", nome, this, antes, depois));
 }
 
@@ -126,21 +120,9 @@ unsafe extern "thiscall" fn comparar_cqr7_copa_da_serie_c_fase_seguinte(this: us
 
 // ---------- 284a leva: a Copa da Itália e a Copa da Itália da Série C: a fase de cada grupo (os times tirados da lista dos inscritos, as rodadas e a liga do grupo) (ita_cup.cpp, ita_c_cup.cpp) ----------
 
-unsafe fn cqr8_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqr8_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqr8_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
-unsafe fn cqr8_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
 /// A fase do grupo `g` de uma copa italiana (`create_group_stage(g)`, quadro SEH só para o new: sem destrutor no caminho
 /// normal; o molde da Copa da Itália e da Série C, conferido instrução a instrução: só mudam o fonte e as linhas das
@@ -161,27 +143,27 @@ unsafe fn cqr8_fase_do_grupo(this: usize, g: u32, arquivo: usize, linhas: [u32; 
     #[allow(clippy::type_complexity)]
     let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(0x68b100usize);
-    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqr8_d(cqr8_d(this) + 0x3c));
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let tabela = rodadas_da_copa(this, g, &mut rodadas, &mut id, 0);
-    let times = alocar(((cqr8_w(this + 0x3e) as i32) << 2) as u32);
+    let times = alocar(((read_i16(this + 0x3e) as i32) << 2) as u32);
     if times == 0 {
         aviso_em(arquivo, linhas[0]);
         return 0;
     }
-    if cqr8_w(this + 0x3e) > 0 {
+    if read_i16(this + 0x3e) > 0 {
         let mut k = 0i32;
         let mut o = 0usize;
         loop {
-            let c = cqr8_d(cqr8_d(this + 0xee) + o);
+            let c = read_u32_as_usize(read_u32_as_usize(this + 0xee) + o);
             if c != 0 {
                 crate::comparacao::ramo(ramo);
-                cqr8_pd(times + k as usize * 4, c); // cqr8: o time na vaga k do grupo
-                cqr8_pd(cqr8_d(this + 0xee) + o, 0);
+                write_u32_from_usize(times + k as usize * 4, c); // cqr8: o time na vaga k do grupo
+                write_u32_from_usize(read_u32_as_usize(this + 0xee) + o, 0);
                 k += 1;
             }
             o += 4;
-            if k >= cqr8_w(this + 0x3e) as i32 {
+            if k >= read_i16(this + 0x3e) as i32 {
                 break;
             }
         }
@@ -191,24 +173,24 @@ unsafe fn cqr8_fase_do_grupo(this: usize, g: u32, arquivo: usize, linhas: [u32; 
         construir(
             p,
             this,
-            cqr8_w(this + 0x3e) as u16 as u32,
+            read_i16(this + 0x3e) as u16 as u32,
             times,
             1,
-            cqr8_d(this + 4),
+            read_u32_as_usize(this + 4),
             tabela,
             rodadas as u16 as u32,
-            cqr8_b(this + 0xc2) as u32,
-            cqr8_b(this + 0xc3) as u32,
-            cqr8_b(this + 0xc4) as u32,
+            read_u8(this + 0xc2) as u32,
+            read_u8(this + 0xc3) as u32,
+            read_u8(this + 0xc4) as u32,
             this + 0xc5,
             this + 0xbe,
-            cqr8_w(this + 0x40) as u16 as u32,
+            read_i16(this + 0x40) as u16 as u32,
             g,
             id as u16 as u32,
-            cqr8_b(this + 0x51) as u32,
+            read_u8(this + 0x51) as u32,
             1,
             0,
-            cqr8_w(this + 0xd9) as u16 as u32,
+            read_i16(this + 0xd9) as u16 as u32,
             -1,
             0,
             2,
@@ -216,16 +198,16 @@ unsafe fn cqr8_fase_do_grupo(this: usize, g: u32, arquivo: usize, linhas: [u32; 
     } else {
         0
     };
-    cqr8_pd(cqr8_d(this + 0xc) + g as usize * 4, fase);
+    write_u32_from_usize(read_u32_as_usize(this + 0xc) + g as usize * 4, fase);
     soltar(times);
     soltar(tabela);
-    let f = cqr8_d(cqr8_d(this + 0xc) + g as usize * 4);
+    let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4);
     if f == 0 {
         aviso_em(arquivo, linhas[1]);
         return 0;
     }
     noticia(f);
-    cqr8_pd(this + 0x30, g as usize);
+    write_u32_from_usize(this + 0x30, g as usize);
     1
 }
 
@@ -234,12 +216,12 @@ unsafe fn cqr8_fase_do_grupo(this: usize, g: u32, arquivo: usize, linhas: [u32; 
 /// primeiros +0x3e inscritos não nulos de +0xee zerados e, na tabela da fase (+0xb1, linhas de 0x3b bytes), esses clubes
 /// (em qualquer ordem: a fase ordena a tabela dela [inferência, como na fase dos grupos da Copa do Mundo]).
 unsafe fn cqr8_comparar(nome: &str, this: usize, g: u32, original: impl FnOnce() -> u32) -> u32 {
-    let n = cqr8_w(this + 0x3e).max(0) as usize;
+    let n = read_i16(this + 0x3e).max(0) as usize;
     let mut plano = Vec::new();
     let mut vagas = Vec::new();
     let mut o = 0usize;
     while plano.len() < n && o < 0x400 {
-        let c = cqr8_d(cqr8_d(this + 0xee) + o);
+        let c = read_u32_as_usize(read_u32_as_usize(this + 0xee) + o);
         if c != 0 {
             plano.push(c);
             vagas.push(o);
@@ -249,12 +231,12 @@ unsafe fn cqr8_comparar(nome: &str, this: usize, g: u32, original: impl FnOnce()
     let r = original();
     let mut ok = r == 1;
     if ok {
-        let f = cqr8_d(cqr8_d(this + 0xc) + g as usize * 4);
-        let t = cqr8_d(f + 0xb1);
-        ok = f != 0 && cqr8_d(this + 0x30) == g as usize && cqr8_w(f + 0x3e) == cqr8_w(this + 0x3e) && cqr8_w(f + 0x40) == cqr8_w(this + 0x40)
-            && vagas.iter().all(|&o| cqr8_d(cqr8_d(this + 0xee) + o) == 0)
+        let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4);
+        let t = read_u32_as_usize(f + 0xb1);
+        ok = f != 0 && read_u32_as_usize(this + 0x30) == g as usize && read_i16(f + 0x3e) == read_i16(this + 0x3e) && read_i16(f + 0x40) == read_i16(this + 0x40)
+            && vagas.iter().all(|&o| read_u32_as_usize(read_u32_as_usize(this + 0xee) + o) == 0)
             && (t == 0 || {
-                let mut a: Vec<usize> = (0..plano.len()).map(|k| cqr8_d(t + k * 0x3b)).collect();
+                let mut a: Vec<usize> = (0..plano.len()).map(|k| read_u32_as_usize(t + k * 0x3b)).collect();
                 let mut b = plano.clone();
                 a.sort_unstable();
                 b.sort_unstable();
@@ -289,25 +271,16 @@ unsafe extern "thiscall" fn comparar_cqr8_copa_da_serie_c_grupo(this: usize, g: 
 
 // ---------- 284a leva: a Copa da Itália e a Copa da Itália da Série C: o mata-mata depois dos grupos (os campeões dos grupos, os melhores segundos e os cabeças de chave que entram direto) (ita_cup.cpp, ita_c_cup.cpp) ----------
 
-unsafe fn cqr9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqr9_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqr9_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
 /// A tabela (+0xb1, linhas de 0x3b bytes) do grupo `i` de uma copa italiana: o grupo 0 é a própria copa; o grupo i ≥ 1 é
 /// a fase [+0xc][i − 1].
 unsafe fn cqr9_tabela(this: usize, i: usize) -> usize {
     if i == 0 {
-        cqr9_d(this + 0xb1)
+        read_u32_as_usize(this + 0xb1)
     } else {
-        cqr9_d(cqr9_d(cqr9_d(this + 0xc) + (i - 1) * 4) + 0xb1)
+        read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + 0xc) + (i - 1) * 4) + 0xb1)
     }
 }
 
@@ -315,21 +288,21 @@ unsafe fn cqr9_tabela(this: usize, i: usize) -> usize {
 /// até +0xf2 vagas: os não nulos, na ordem), cada um zerado ao sair.
 unsafe fn cqr9_cabecas(this: usize, times: usize, mut k: usize, fim: usize) {
     let mut j = 0i32;
-    if (cqr9_d(this + 0xf2) as i32) <= 0 {
+    if (read_u32_as_usize(this + 0xf2) as i32) <= 0 {
         return;
     }
     loop {
         if k >= fim {
             break;
         }
-        let c = cqr9_d(cqr9_d(this + 0xee) + j as usize * 4);
+        let c = read_u32_as_usize(read_u32_as_usize(this + 0xee) + j as usize * 4);
         if c != 0 {
-            cqr9_pd(times + k * 4, c);
-            cqr9_pd(cqr9_d(this + 0xee) + j as usize * 4, 0);
+            write_u32_from_usize(times + k * 4, c);
+            write_u32_from_usize(read_u32_as_usize(this + 0xee) + j as usize * 4, 0);
             k += 1;
         }
         j += 1;
-        if j >= cqr9_d(this + 0xf2) as i32 {
+        if j >= read_u32_as_usize(this + 0xf2) as i32 {
             break;
         }
     }
@@ -343,7 +316,7 @@ unsafe fn cqr9_cabecas(this: usize, times: usize, mut k: usize, fim: usize) {
 /// `linha`; com ela, o sorteio da primeira rodada (Cup::draw_round 0x51c410: push 0; mov ecx, fase -> thiscall, ret 4).
 unsafe fn cqr9_mata_mata(this: usize, n: u32, times: usize, fase: u32, sementes: *const u8, arquivo: usize, linha: u32) {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqr9_d(cqr9_d(this) + 0x3c));
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let tabela = rodadas_da_copa(this, fase, &mut rodadas, &mut extra, 0);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -352,14 +325,14 @@ unsafe fn cqr9_mata_mata(this: usize, n: u32, times: usize, fase: u32, sementes:
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(0x522e00usize);
-        construir(p, this, n, times, rodadas as u16 as u32, cqr9_d(this + 4), tabela, cqr9_w(this + 0x40) as u16 as u32, fase, 1, extra as u16 as u32, 0x14, 0, 0, 0, sementes)
+        construir(p, this, n, times, rodadas as u16 as u32, read_u32_as_usize(this + 4), tabela, read_i16(this + 0x40) as u16 as u32, fase, 1, extra as u16 as u32, 0x14, 0, 0, 0, sementes)
     } else {
         0
     };
-    cqr9_pd(cqr9_d(this + 0xc) + fase as usize * 4, f);
+    write_u32_from_usize(read_u32_as_usize(this + 0xc) + fase as usize * 4, f);
     soltar(times);
     soltar(tabela);
-    let f = cqr9_d(cqr9_d(this + 0xc) + fase as usize * 4);
+    let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + fase as usize * 4);
     if f == 0 {
         return aviso_em(arquivo, linha);
     }
@@ -385,7 +358,7 @@ unsafe extern "thiscall" fn cqr9_copa_da_italia_mata_mata(this: usize) {
     }
     crate::comparacao::ramo("cqr_9 mata-mata da copa da italia");
     for i in 0..8usize {
-        cqr9_pd(times + i * 4, cqr9_d(cqr9_tabela(this, i))); // cqr9: o campeão do grupo i
+        write_u32_from_usize(times + i * 4, read_u32_as_usize(cqr9_tabela(this, i))); // cqr9: o campeão do grupo i
     }
     cqr9_cabecas(this, times, 8, 0x18);
     cqr9_mata_mata(this, 0x18, times, 7, sementes.as_ptr(), 0x9ea23c, 0x2c0);
@@ -396,15 +369,15 @@ unsafe extern "thiscall" fn cqr9_copa_da_italia_mata_mata(this: usize) {
 unsafe fn cqr9_comparar(nome: &str, this: usize, fase: usize, cabem: usize, original: impl FnOnce()) {
     let mut vagas = Vec::new();
     let mut j = 0usize;
-    while vagas.len() < cabem && (j as i32) < cqr9_d(this + 0xf2) as i32 {
-        if cqr9_d(cqr9_d(this + 0xee) + j * 4) != 0 {
+    while vagas.len() < cabem && (j as i32) < read_u32_as_usize(this + 0xf2) as i32 {
+        if read_u32_as_usize(read_u32_as_usize(this + 0xee) + j * 4) != 0 {
             vagas.push(j);
         }
         j += 1;
     }
     original();
-    let f = cqr9_d(cqr9_d(this + 0xc) + fase * 4);
-    let ok = f != 0 && vagas.iter().all(|&j| cqr9_d(cqr9_d(this + 0xee) + j * 4) == 0);
+    let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + fase * 4);
+    let ok = f != 0 && vagas.iter().all(|&j| read_u32_as_usize(read_u32_as_usize(this + 0xee) + j * 4) == 0);
     PLACAR.registrar(ok, || format!("{}({:#x}) fase {:#x}, vagas tiradas {:?}", nome, this, f, vagas));
 }
 
@@ -433,17 +406,17 @@ unsafe extern "thiscall" fn cqr9_copa_da_serie_c_mata_mata(this: usize) {
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, i32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
             core::mem::transmute(0x68b100usize);
-        construir(p, this, 0x10, 0, 0, cqr9_d(this + 4), 0, 0, *((this + 0xc2) as *const u8) as u32, *((this + 0xc3) as *const u8) as u32, 0,
-            desempate.as_ptr() as usize, this + 0xbe, cqr9_w(this + 0x40) as u16 as u32, -2, 0, 0, 1, 0, 2, -1, 0, 2)
+        construir(p, this, 0x10, 0, 0, read_u32_as_usize(this + 4), 0, 0, *((this + 0xc2) as *const u8) as u32, *((this + 0xc3) as *const u8) as u32, 0,
+            desempate.as_ptr() as usize, this + 0xbe, read_i16(this + 0x40) as u16 as u32, -2, 0, 0, 1, 0, 2, -1, 0, 2)
     } else {
         0
     };
     for i in 0..16usize {
         let de = cqr9_tabela(this, i) + 0x3b;
-        let para = cqr9_d(liga + 0xb1) + i * 0x3b;
+        let para = read_u32_as_usize(liga + 0xb1) + i * 0x3b;
         core::ptr::copy_nonoverlapping(de as *const u8, para as *mut u8, 0x3b); // cqr9: o segundo do grupo i
-        cqr9_pd(cqr9_d(liga + 0xb1) + i * 0x3b + 9, 0);
-        cqr9_pd(cqr9_d(liga + 0xb1) + i * 0x3b + 5, 0);
+        write_u32_from_usize(read_u32_as_usize(liga + 0xb1) + i * 0x3b + 9, 0);
+        write_u32_from_usize(read_u32_as_usize(liga + 0xb1) + i * 0x3b + 5, 0);
     }
     let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
     ordenar(liga, 0); // cqr9: a classificação dos segundos
@@ -454,21 +427,21 @@ unsafe extern "thiscall" fn cqr9_copa_da_serie_c_mata_mata(this: usize) {
     }
     crate::comparacao::ramo("cqr_9 mata-mata da copa da serie c");
     for i in 0..16usize {
-        cqr9_pd(times + i * 4, cqr9_d(cqr9_tabela(this, i)));
+        write_u32_from_usize(times + i * 4, read_u32_as_usize(cqr9_tabela(this, i)));
     }
     let mut l = 0usize;
     while l < 0x162 {
-        let c = cqr9_d(cqr9_d(liga + 0xb1) + l);
-        cqr9_pd(times + 0x40 + (l / 0x3b) * 4, c); // cqr9: os 6 melhores segundos
+        let c = read_u32_as_usize(read_u32_as_usize(liga + 0xb1) + l);
+        write_u32_from_usize(times + 0x40 + (l / 0x3b) * 4, c); // cqr9: os 6 melhores segundos
         let mut g = 0usize;
         while g < 0x10 {
-            let grupo = if g == 0 { this } else { cqr9_d(cqr9_d(this + 0xc) + (g - 1) * 4) };
-            let n = cqr9_w(grupo + 0x3e) as i32;
+            let grupo = if g == 0 { this } else { read_u32_as_usize(read_u32_as_usize(this + 0xc) + (g - 1) * 4) };
+            let n = read_i16(grupo + 0x3e) as i32;
             let mut r = 0i32;
             while r < n {
-                if cqr9_d(cqr9_d(grupo + 0xb1) + r as usize * 0x3b) == cqr9_d(cqr9_d(liga + 0xb1) + l) {
+                if read_u32_as_usize(read_u32_as_usize(grupo + 0xb1) + r as usize * 0x3b) == read_u32_as_usize(read_u32_as_usize(liga + 0xb1) + l) {
                     *((grupo + 0xbe) as *mut u8) = 2;
-                    *((cqr9_d(grupo + 0xb1) + r as usize * 0x3b + 0x37) as *mut u8) = 6;
+                    *((read_u32_as_usize(grupo + 0xb1) + r as usize * 0x3b + 0x37) as *mut u8) = 6;
                     g = 0x10;
                     break;
                 }
@@ -479,7 +452,7 @@ unsafe extern "thiscall" fn cqr9_copa_da_serie_c_mata_mata(this: usize) {
         l += 0x3b;
     }
     if liga != 0 {
-        let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(cqr9_d(cqr9_d(liga)));
+        let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(liga)));
         destruir(liga, 1);
     }
     cqr9_cabecas(this, times, 0x16, 0x20);
@@ -684,29 +657,26 @@ unsafe extern "thiscall" fn comparar_cqo10_supercopa_c1_tabela(this: usize, fase
 
 // ---------- 279a leva: os inscritos das copas italianas: a Copa da Itália, a Copa da Série C e os dois clubes da Supercopa (ita_cup.cpp, ita_c_cup.cpp, ita_super.cpp) ----------
 
-unsafe fn cqo11_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
 /// Os clubes da tabela de clubes ([0xae23b4], 0x245 bytes) que a passada olha: [0xae235c] − 2 × [0xae2350] (sem as
 /// seleções [inferência]).
 unsafe fn cqo11_clubes() -> i32 {
-    (cqo11_d(0xae235c) as i32).wrapping_sub((cqo11_d(0xae2350) as i32).wrapping_mul(2))
+    (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2))
 }
 
 unsafe fn cqo11_clube(i: i32) -> usize {
-    cqo11_d(0xae23b4).wrapping_add((i as isize * 0x245) as usize)
+    read_u32_as_usize(0xae23b4).wrapping_add((i as isize * 0x245) as usize)
 }
 
 /// O id da competição apontada por `c + o` (+0x57 a divisão, +0x5b a da temporada anterior [inferência]), ou None.
 unsafe fn cqo11_comp(c: usize, o: usize) -> Option<usize> {
-    let d = cqo11_d(c + o);
-    if d == 0 { None } else { Some(cqo11_d(d)) }
+    let d = read_u32_as_usize(c + o);
+    if d == 0 { None } else { Some(read_u32_as_usize(d)) }
 }
 
 /// O clube é da Itália (+0x53 a nação; [0x9cf360] o id da Itália).
 unsafe fn cqo11_italiano(c: usize) -> bool {
-    cqo11_comp(c, 0x53) == Some(cqo11_d(0x9cf360))
+    cqo11_comp(c, 0x53) == Some(read_u32_as_usize(0x9cf360))
 }
 
 /// A posição na temporada anterior (+0x5f, byte com sinal; 0 o campeão [inferência]).
@@ -748,8 +718,8 @@ unsafe fn cqo11_lista(this: usize, max: u32, arquivo: usize, linha: u32) -> Opti
 /// Põe `c` no fim da lista (+0xee) e devolve verdadeiro quando a conta chega ao máximo +0xf2 (dword).
 unsafe fn cqo11_por(this: usize, n: &mut i32, c: usize) -> bool {
     *n += 1;
-    core::ptr::write_unaligned((cqo11_d(this + 0xee) + (*n as usize - 1) * 4) as *mut u32, c as u32);
-    *n == cqo11_d(this + 0xf2) as i32
+    core::ptr::write_unaligned((read_u32_as_usize(this + 0xee) + (*n as usize - 1) * 4) as *mut u32, c as u32);
+    *n == read_u32_as_usize(this + 0xf2) as i32
 }
 
 /// { 0x63faf0 } (thiscall, ret 0, ita_cup.cpp): `ItaCup::select_entrants()`: os 48 inscritos da Copa da Itália (+0xf2 =
@@ -766,7 +736,7 @@ unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
         Some(l) => l,
         None => return (0, 0),
     };
-    let (serie_a, serie_b, c1a, c1b) = (cqo11_d(0x9cf570), cqo11_d(0x9cf574), cqo11_d(0x9cf578), cqo11_d(0x9cf57c));
+    let (serie_a, serie_b, c1a, c1b) = (read_u32_as_usize(0x9cf570), read_u32_as_usize(0x9cf574), read_u32_as_usize(0x9cf578), read_u32_as_usize(0x9cf57c));
     let mut v = [0usize; 32];
     let mut k = 0usize;
     let n = cqo11_clubes();
@@ -894,11 +864,11 @@ unsafe fn cqo11_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: im
     let reg = [(this + 0xf2, 4usize), (0xb67a34, 4), a_[0], a_[1]];
     let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || {
         let r = o();
-        lo.set(cqo11_d(this + 0xee));
+        lo.set(read_u32_as_usize(this + 0xee));
         r
     }, || {
         let (r, n) = crate::aleatorio::sem_contar(c);
-        lr.set(cqo11_d(this + 0xee));
+        lr.set(read_u32_as_usize(this + 0xee));
         nr.set(n);
         core::ptr::write_unaligned((this + 0xee) as *mut u32, lo.get() as u32);
         r
@@ -936,7 +906,7 @@ unsafe fn cqo11_copa_c(this: usize) -> (i32, i32) {
         Some(l) => l,
         None => return (0, 0),
     };
-    let divisoes = [cqo11_d(0x9cf578), cqo11_d(0x9cf57c), cqo11_d(0x9cf580), cqo11_d(0x9cf584), cqo11_d(0x9cf588)];
+    let divisoes = [read_u32_as_usize(0x9cf578), read_u32_as_usize(0x9cf57c), read_u32_as_usize(0x9cf580), read_u32_as_usize(0x9cf584), read_u32_as_usize(0x9cf588)];
     let mut m = 0i32;
     let mut i = 0;
     while i < cqo11_clubes() {
@@ -954,10 +924,10 @@ unsafe fn cqo11_copa_c(this: usize) -> (i32, i32) {
             _ => {}
         }
     }
-    let (serie_b, c1a, c1b) = (cqo11_d(0x9cf574), cqo11_d(0x9cf578), cqo11_d(0x9cf57c));
+    let (serie_b, c1a, c1b) = (read_u32_as_usize(0x9cf574), read_u32_as_usize(0x9cf578), read_u32_as_usize(0x9cf57c));
     let mut j = 0x50i32;
     for idx in 0..0x50usize {
-        let c = cqo11_d(l + idx * 4);
+        let c = read_u32_as_usize(l + idx * 4);
         let antes = match cqo11_comp(c, 0x5b) {
             Some(x) => x,
             None => continue,
@@ -966,11 +936,11 @@ unsafe fn cqo11_copa_c(this: usize) -> (i32, i32) {
         if antes == serie_b || (antes == c1a || antes == c1b) && (p == 3 || p == 4 || p == 5) {
             crate::comparacao::ramo("cqo_11 vagas do fim da copa da serie c");
             let e = l + (j as i16 as isize * 4) as usize;
-            let t = cqo11_d(e);
+            let t = read_u32_as_usize(e);
             core::ptr::write_unaligned(e as *mut u32, c as u32);
             j += 1;
             core::ptr::write_unaligned((l + idx * 4) as *mut u32, t as u32);
-            if j as i16 as i32 >= cqo11_d(this + 0xf2) as i32 {
+            if j as i16 as i32 >= read_u32_as_usize(this + 0xf2) as i32 {
                 break;
             }
         }

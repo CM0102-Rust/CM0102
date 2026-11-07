@@ -876,20 +876,14 @@ unsafe extern "thiscall" fn byte_tatico(this: usize, clube: usize, pos: i8, huma
 
 // ---------- 262a leva: as estatísticas das táticas: o resultado de cada partida na linha da tática do clube do computador, o capitão guardado e o capitão escolhido (tactics.cpp) ----------
 
-unsafe fn cpz5_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cpz5_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// A linha da tabela de estatísticas das táticas ([this], 0x28 bytes por tática) usada pelo clube: a palavra +0 do
 /// registro de 0x91 bytes do clube (id em +0) na tabela tática (+0x601).
 unsafe fn cpz5_linha(this: usize, clube: usize) -> usize {
-    let id = cpz5_d(clube);
-    let k = cpz5_w(cpz5_d(this + 0x601).wrapping_add(id.wrapping_mul(0x91))) as i32;
-    cpz5_d(this).wrapping_add((k as isize * 0x28) as usize)
+    let id = read_usize(clube);
+    let k = read_i16(read_usize(this + 0x601).wrapping_add(id.wrapping_mul(0x91))) as i32;
+    read_usize(this).wrapping_add((k as isize * 0x28) as usize)
 }
 
 /// x < 1 vale 1 (palavra com sinal), como as três comparações antes de cada `fild`.
@@ -913,7 +907,7 @@ unsafe extern "thiscall" fn registrar_resultado_da_tatica(this: usize, jogo: usi
     }
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     for k in 0..2 {
-        let c = cpz5_d(jogo + 0x1c + 4 * k);
+        let c = read_usize(jogo + 0x1c + 4 * k);
         if c != 0 && humano(c, 0, 1, 0, 0) != 0 {
             return 0;
         }
@@ -924,7 +918,7 @@ unsafe extern "thiscall" fn registrar_resultado_da_tatica(this: usize, jogo: usi
     let pr = reg.as_mut_ptr() as usize;
     data_padrao(pr);
     for k in 0..2 {
-        let c = cpz5_d(jogo + 0x1c + 4 * k);
+        let c = read_usize(jogo + 0x1c + 4 * k);
         if c == 0 {
             aviso_em(0xa8b908, 0x20a);
             continue;
@@ -967,10 +961,10 @@ unsafe extern "thiscall" fn registrar_resultado_da_tatica(this: usize, jogo: usi
 /// registro da partida é local. Jogo ou clube nulos: a caixa, só a original.
 unsafe extern "thiscall" fn comparar_registrar_resultado_da_tatica(this: usize, jogo: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1392);
-    if jogo == 0 || cpz5_d(jogo + 0x1c) == 0 || cpz5_d(jogo + 0x20) == 0 {
+    if jogo == 0 || read_usize(jogo + 0x1c) == 0 || read_usize(jogo + 0x20) == 0 {
         return o(this, jogo);
     }
-    let reg = [(cpz5_linha(this, cpz5_d(jogo + 0x1c)), 0x28), (cpz5_linha(this, cpz5_d(jogo + 0x20)), 0x28)];
+    let reg = [(cpz5_linha(this, read_usize(jogo + 0x1c)), 0x28), (cpz5_linha(this, read_usize(jogo + 0x20)), 0x28)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo), || registrar_resultado_da_tatica(this, jogo));
     PLACAR.registrar(igual && r == n, || format!("registrar_resultado_da_tatica(jogo {:x}) original={} rust={} {:x?} x {:x?}", jogo, r, n, mo, mr));
     r
@@ -989,7 +983,7 @@ unsafe extern "thiscall" fn capitao_guardado(this: usize, clube: usize, time: u3
     if k == -1 {
         return 0;
     }
-    cpz5_d(cpz5_d(this + 0x601).wrapping_add((k as isize * 0x91) as usize) + 0x52) as u32
+    read_usize(read_usize(this + 0x601).wrapping_add((k as isize * 0x91) as usize) + 0x52) as u32
 }
 
 /// Comparador da 0x8976a0: pela devolução (só lê; a linha nula ou fora da faixa mostra a caixa nas duas).
@@ -1021,7 +1015,7 @@ unsafe extern "thiscall" fn escolher_capitao(this: usize, clube: usize, pessoa: 
     if k == -1 {
         return 0;
     }
-    let p = cpz5_d(this + 0x601).wrapping_add((k as isize * 0x91) as usize) + 0x52;
+    let p = read_usize(this + 0x601).wrapping_add((k as isize * 0x91) as usize) + 0x52;
     core::ptr::write_unaligned(p as *mut u32, core::ptr::read_unaligned(pessoa as *const u32));
     1
 }
@@ -1038,7 +1032,7 @@ unsafe extern "thiscall" fn comparar_escolher_capitao(this: usize, clube: usize,
     if k == -1 {
         return o(this, clube, pessoa, time);
     }
-    let p = cpz5_d(this + 0x601).wrapping_add((k as isize * 0x91) as usize) + 0x52;
+    let p = read_usize(this + 0x601).wrapping_add((k as isize * 0x91) as usize) + 0x52;
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(p, 4)], || o(this, clube, pessoa, time), || escolher_capitao(this, clube, pessoa, time));
     PLACAR.registrar(igual && r == n, || format!("escolher_capitao(clube {:x}, time {}) original={} rust={} {:x?} x {:x?}", clube, time, r, n, mo, mr));
     r
@@ -1046,25 +1040,13 @@ unsafe extern "thiscall" fn comparar_escolher_capitao(this: usize, clube: usize,
 
 // ---------- 260a leva: a escalação guardada do clube: tirar o jogador da escalação, trocar duas vagas e a cópia para desfazer (tactics.cpp) ----------
 
-unsafe fn cpx9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cpx9_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cpx9_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cpx9_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
-unsafe fn cpx9_pd(a: usize, v: u32) {
-    core::ptr::write_unaligned(a as *mut u32, v);
-}
 
 /// A linha do clube na tabela tática (0x8982b0, stdcall(clube, humano); −1 sem linha).
 unsafe fn cpx9_linha(clube: usize, humano: u32) -> i32 {
@@ -1074,20 +1056,20 @@ unsafe fn cpx9_linha(clube: usize, humano: u32) -> i32 {
 
 /// O começo da linha `l` (0x91 bytes cada, a partir de [this+0x601]).
 unsafe fn cpx9_inicio(this: usize, l: i32) -> usize {
-    cpx9_d(this + 0x601).wrapping_add(l.wrapping_mul(0x91) as usize)
+    read_usize(this + 0x601).wrapping_add(l.wrapping_mul(0x91) as usize)
 }
 
 /// As 16 cópias para desfazer (0x5c bytes a partir de this+0x30: +0 clube, +4 time, +8 a cópia; conta em +0x5f0): a do
 /// clube e do time some (+8 = 0) e a conta desce.
 unsafe fn cpx9_soltar_copias(this: usize, clube: usize, time: u32) {
-    if cpx9_b(this + 0x5f0) == 0 {
+    if read_u8(this + 0x5f0) == 0 {
         return;
     }
     for k in 0..0x10usize {
         let e = this + 0x30 + k * 0x5c;
-        if cpx9_d(e + 8) != 0 && cpx9_d(e) == clube && cpx9_d(e + 4) as u32 == time {
-            cpx9_pd(e + 8, 0);
-            *((this + 0x5f0) as *mut u8) = cpx9_b(this + 0x5f0).wrapping_sub(1);
+        if read_usize(e + 8) != 0 && read_usize(e) == clube && read_usize(e + 4) as u32 == time {
+            write_u32(e + 8, 0);
+            *((this + 0x5f0) as *mut u8) = read_u8(this + 0x5f0).wrapping_sub(1);
         }
     }
 }
@@ -1122,7 +1104,7 @@ unsafe extern "thiscall" fn tirar_da_escalacao(this: usize, clube: usize, pessoa
         let vaga = cpx9_inicio(this, l) + 2 + 4 * k;
         if cpx9_i(vaga) == cpx9_i(pessoa) {
             crate::comparacao::ramo(if k < 11 { "cpx_9 tirou titular" } else { "cpx_9 tirou reserva" });
-            cpx9_pd(vaga, u32::MAX); // cpx9: a vaga fica vazia
+            write_u32(vaga, u32::MAX); // cpx9: a vaga fica vazia
             achou = 1;
         }
     }
@@ -1203,10 +1185,10 @@ unsafe extern "thiscall" fn comparar_trocar_vagas_da_escalacao(this: usize, club
 /// (0x458a58). Com cópias (+0x5f0) e o humano da vez ([0xb74c26 + 0x300 × (i16)[0xb77c7a]]): a cópia dele (índice
 /// [0xae2364] − id − 1, de 0 a 15) existe (+8) e é deste clube (+0) e time (+4): 1; senão 0.
 unsafe extern "thiscall" fn tem_copia_da_escalacao(this: usize, clube: usize, time: u32) -> u32 {
-    if cpx9_b(this + 0x5f0) == 0 {
+    if read_u8(this + 0x5f0) == 0 {
         return 0;
     }
-    let t = cpx9_d((cpx9_w(0xb77c7a) as i32).wrapping_mul(0x300).wrapping_add(0xb74c26) as usize);
+    let t = read_usize((read_i16(0xb77c7a) as i32).wrapping_mul(0x300).wrapping_add(0xb74c26) as usize);
     if t == 0 {
         return 0;
     }
@@ -1215,7 +1197,7 @@ unsafe extern "thiscall" fn tem_copia_da_escalacao(this: usize, clube: usize, ti
         return 0;
     }
     let e = this + 0x30 + k as usize * 0x5c;
-    (cpx9_d(e + 8) != 0 && cpx9_d(e) == clube && cpx9_d(e + 4) as u32 == time) as u32
+    (read_usize(e + 8) != 0 && read_usize(e) == clube && read_usize(e + 4) as u32 == time) as u32
 }
 
 /// Comparador: a devolução (rotina pura).
@@ -1228,9 +1210,6 @@ unsafe extern "thiscall" fn comparar_tem_copia_da_escalacao(this: usize, clube: 
 
 // ---------- 253a leva: a escalação guardada: limpar uma vaga e o batedor de bola parada (tactics.cpp) ----------
 
-unsafe fn cpq13_d(a: usize) -> u32 {
-    core::ptr::read_unaligned(a as *const u32)
-}
 
 /// A linha do clube na tabela tática (0x8982b0, o `this` não é usado; −1 sem linha).
 unsafe fn cpq13_linha(clube: usize, time: u32) -> i32 {
@@ -1240,7 +1219,7 @@ unsafe fn cpq13_linha(clube: usize, time: u32) -> i32 {
 
 /// A célula `c` (dword) da linha `k` da tabela tática: [this + 0x601] + 0x91 × k + `c`.
 unsafe fn cpq13_celula(this: usize, k: i32, c: usize) -> usize {
-    (cpq13_d(this + 0x601) as usize).wrapping_add((k as isize * 0x91) as usize).wrapping_add(c)
+    (read_u32(this + 0x601) as usize).wrapping_add((k as isize * 0x91) as usize).wrapping_add(c)
 }
 
 /// { 0x896e90 } (thiscall, ret 0xc, tactics.cpp): `Tactics::clear_selection_slot(clube, vaga, time)`: a vaga (0..=19)
@@ -1261,7 +1240,7 @@ unsafe extern "thiscall" fn limpar_vaga_da_escalacao(this: usize, clube: usize, 
     if *((this + 0x5f0) as *const u8) != 0 {
         for e in 0..16 {
             let a = this + 0x30 + 0x5c * e;
-            if cpq13_d(a + 8) != 0 && cpq13_d(a) as usize == clube && cpq13_d(a + 4) == time {
+            if read_u32(a + 8) != 0 && read_u32(a) as usize == clube && read_u32(a + 4) == time {
                 core::ptr::write_unaligned((a + 8) as *mut u32, 0);
                 *((this + 0x5f0) as *mut u8) = (*((this + 0x5f0) as *const u8)).wrapping_sub(1);
             }
@@ -1304,7 +1283,7 @@ unsafe extern "thiscall" fn marcar_batedor_de_bola_parada(this: usize, clube: us
     }
     let celula = |j: i8| cpq13_celula(this, k, 0x5e + 4 * (j as i32 + 2 * p as i32) as usize) as *mut i32;
     if pessoa != 0 {
-        core::ptr::write_unaligned(celula(e), cpq13_d(pessoa) as i32);
+        core::ptr::write_unaligned(celula(e), read_u32(pessoa) as i32);
         return 1;
     }
     crate::comparacao::ramo("cpq_13 batedor limpo");

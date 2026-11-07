@@ -1,16 +1,10 @@
 // ---------- 282a leva: a virada das copas: a Copa do Brasil, a Copa do Imperador e a Copa da Liga japonesa (a temporada nova: as tabelas liberadas, o ano, os inscritos, as rodadas e a árvore) (bra_cup.cpp, jap_emp_cup.cpp, jap_j_cup.cpp) ----------
 
-unsafe fn cqr5_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqr5_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// A virtual `o` da copa (thiscall, sem argumentos; mov edx, [esi]; mov ecx, esi; call [edx + o]).
 unsafe fn cqr5_virtual(this: usize, o: usize) -> i32 {
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(cqr5_d(cqr5_d(this) + o));
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + o));
     f(this)
 }
 
@@ -26,31 +20,31 @@ unsafe fn cqr5_virada(this: usize, inscritos: usize, arquivo: usize, linhas: [u3
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     for o in [0xa7usize, 0xa3] {
-        let l = cqr5_d(this + o);
+        let l = read_u32_as_usize(this + o);
         if l != 0 {
             soltar(l);
             core::ptr::write_unaligned((this + o) as *mut u32, 0);
         }
     }
-    if cqr5_d(this + 0xad) != 0 {
+    if read_u32_as_usize(this + 0xad) != 0 {
         let mut i = 0i32;
-        while i < cqr5_w(this + 0x3c) as i32 {
-            let p = cqr5_d(cqr5_d(this + 0xad) + i as usize * 4);
+        while i < read_i16(this + 0x3c) as i32 {
+            let p = read_u32_as_usize(read_u32_as_usize(this + 0xad) + i as usize * 4);
             if p != 0 {
                 soltar(p);
-                core::ptr::write_unaligned((cqr5_d(this + 0xad) + i as usize * 4) as *mut u32, 0);
+                core::ptr::write_unaligned((read_u32_as_usize(this + 0xad) + i as usize * 4) as *mut u32, 0);
             }
             i += 1;
         }
-        soltar(cqr5_d(this + 0xad));
+        soltar(read_u32_as_usize(this + 0xad));
         core::ptr::write_unaligned((this + 0xad) as *mut u32, 0);
     }
-    let e = cqr5_d(this + 8);
+    let e = read_u32_as_usize(this + 8);
     if e != 0 {
         let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
         arquivar(e, 1);
     }
-    let a = cqr5_w(this + 0x40);
+    let a = read_i16(this + 0x40);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
     crate::comparacao::ramo(ramo);
     *((this + 0xab) as *mut u8) = 0;
@@ -75,9 +69,9 @@ unsafe fn cqr5_virada(this: usize, inscritos: usize, arquivo: usize, linhas: [u3
 /// O comparador da virada: só a original (ponytail: libera as tabelas e refaz os inscritos, as rodadas e a árvore, que
 /// alocam e sorteiam; não pode rodar duas vezes), conferindo o que só ela garante: o ano (+0x40) sobe um.
 unsafe fn cqr5_comparar(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
-    let antes = cqr5_w(this + 0x40);
+    let antes = read_i16(this + 0x40);
     let r = original();
-    let depois = cqr5_w(this + 0x40);
+    let depois = read_i16(this + 0x40);
     PLACAR.registrar(depois == antes.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", nome, this, antes, depois));
     r
 }
@@ -144,13 +138,7 @@ unsafe extern "thiscall" fn comparar_cqo12_copa_do_brasil_tabela(this: usize, fa
         |r, e, s| cqo12_copa_do_brasil_tabela(this, fase, r, e, s))
 }
 
-unsafe fn cqo12_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqo12_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// { 0x427c20 } (thiscall, ret 0, bra_cup.cpp): `BraCup::build_team_table()`: +0x3e = 71 e a tabela dos times (0x944e46
 /// de 0x1aa em +0xa7; sem memória, a caixa da linha 0x143 e −1); cada vaga i (6 bytes) recebe o clube da inscrição i da
@@ -166,11 +154,11 @@ unsafe fn cqo12_times(this: usize) -> i32 {
     }
     crate::comparacao::ramo("cqo_12 times da copa do brasil");
     let mut i = 0i16;
-    while i < cqo12_w(this + 0x3e) {
+    while i < read_i16(this + 0x3e) {
         let o = i as usize * 6;
         let fonte = o; // cqo12: a inscrição de cada vaga
-        let c = cqo12_d(cqo12_d(this + 0x14) + fonte);
-        let e = cqo12_d(this + 0xa7) + o;
+        let c = read_u32_as_usize(read_u32_as_usize(this + 0x14) + fonte);
+        let e = read_u32_as_usize(this + 0xa7) + o;
         core::ptr::write_unaligned(e as *mut u32, c as u32);
         *((e + 5) as *mut u8) = 0xff;
         *((e + 4) as *mut u8) = 0;
@@ -192,16 +180,16 @@ unsafe extern "thiscall" fn comparar_cqo12_times_da_copa(this: usize) -> i32 {
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
         let r = o(this);
-        lo.set(cqo12_d(this + 0xa7));
+        lo.set(read_u32_as_usize(this + 0xa7));
         r
     }, || {
         let r = cqo12_times(this);
-        lr.set(cqo12_d(this + 0xa7));
+        lr.set(read_u32_as_usize(this + 0xa7));
         core::ptr::write_unaligned((this + 0xa7) as *mut u32, lo.get() as u32);
         r
     });
     let (lo, lr) = (lo.get(), lr.get());
-    let k = if a == 1 { cqo12_w(this + 0x3e).max(0) as usize * 6 } else { 0 };
+    let k = if a == 1 { read_i16(this + 0x3e).max(0) as usize * 6 } else { 0 };
     let lista = if lo != 0 && lr != 0 {
         core::slice::from_raw_parts(lo as *const u8, k) == core::slice::from_raw_parts(lr as *const u8, k)
     } else {
@@ -223,7 +211,7 @@ unsafe fn cqo12_regras(this: usize) -> i32 {
     *((this + 0x49) as *mut u8) = 7;
     *((this + 0x4a) as *mut u8) = 3; // cqo12: as substituições da Copa do Brasil
     core::ptr::write_unaligned((this + 0x28) as *mut u32, 0x7a120);
-    let tabela: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(cqo12_d(cqo12_d(this) + 0x3c));
+    let tabela: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let t = tabela(this, 0xffff_ffff, this + 0x3c, this + 0x3a, 0);
     core::ptr::write_unaligned((this + 0xa3) as *mut u32, t as u32);
     1
@@ -239,21 +227,21 @@ unsafe extern "thiscall" fn comparar_cqo12_regras_da_copa(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1917);
     let to = core::cell::Cell::new(0usize);
     let tr = core::cell::Cell::new(0usize);
-    let antes = cqo12_d(this + 0xa3);
+    let antes = read_u32_as_usize(this + 0xa3);
     let reg = [(this + 0x28, 4usize), (this + 0x3a, 4), (this + 0x49, 2), (0xb67a34, 4)];
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
         let r = o(this);
-        to.set(cqo12_d(this + 0xa3));
+        to.set(read_u32_as_usize(this + 0xa3));
         core::ptr::write_unaligned((this + 0xa3) as *mut u32, antes as u32);
         r
     }, || {
         let r = cqo12_regras(this);
-        tr.set(cqo12_d(this + 0xa3));
+        tr.set(read_u32_as_usize(this + 0xa3));
         core::ptr::write_unaligned((this + 0xa3) as *mut u32, to.get() as u32);
         r
     });
     let (to, tr) = (to.get(), tr.get());
-    let n = cqo12_w(this + 0x3c);
+    let n = read_i16(this + 0x3c);
     let tabela = if to != 0 && tr != 0 { cql10_gravados(to, n) == cql10_gravados(tr, n) } else { to == 0 && tr == 0 };
     if tr != 0 && tr != to {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);

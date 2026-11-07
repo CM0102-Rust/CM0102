@@ -1,12 +1,6 @@
 // ---------- 278a leva: os construtores da segunda e da terceira divisões francesas e da Primera e da Segunda espanholas (as regras, a tabela, os jogos, as estatísticas, as posições previstas e a divisão de baixo espanhola na criação) (fra_second.cpp, fra_third.cpp, spa_second.cpp, spa_first.cpp) ----------
 
-unsafe fn cqm5_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqm5_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
 /// O que muda de uma divisão para outra no construtor.
 struct Cqm5Divisao {
@@ -45,8 +39,8 @@ unsafe fn cqm5_construir(this: usize, ano: u32, registro: usize, p: &Cqm5Divisao
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68a850usize);
     let baixo: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x851020usize);
     base(this);
-    cqm5_pd(this + 4, registro);
-    cqm5_pd(this, p.vtabela);
+    write_u32_from_usize(this + 4, registro);
+    write_u32_from_usize(this, p.vtabela);
     core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
     *((this + 0x50) as *mut u8) = p.disciplina;
     if carregar(this, 1) != 0 {
@@ -54,9 +48,9 @@ unsafe fn cqm5_construir(this: usize, ano: u32, registro: usize, p: &Cqm5Divisao
     }
     crate::comparacao::ramo("cqm_5 divisao nova");
     *((this + 0x44) as *mut u8) = 0xff;
-    cqm5_pd(this + 0x30, 0xffff_ffff);
-    cqm5_pd(this + 0x2c, 0);
-    cqm5_pd(this + 0xc, 0);
+    write_u32_from_usize(this + 0x30, 0xffff_ffff);
+    write_u32_from_usize(this + 0x2c, 0);
+    write_u32_from_usize(this + 0xc, 0);
     if regras(this) == 0 {
         aviso_em(p.arquivo, p.linhas[0]);
         return this;
@@ -75,23 +69,23 @@ unsafe fn cqm5_construir(this: usize, ano: u32, registro: usize, p: &Cqm5Divisao
     }
     let e = novo(0x5ce);
     let s = if e != 0 { estatisticas(e, this) } else { 0 };
-    cqm5_pd(this + 8, s);
+    write_u32_from_usize(this + 8, s);
     if s == 0 {
         aviso_em(p.arquivo, p.linhas[4]);
         return this;
     }
     previstas(this);
     if p.baixo {
-        let nacao = cqm5_d(cqm5_d(this + 4) + 0x5d);
+        let nacao = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
         if *((nacao + 0x11c) as *const u8) & 4 == 0 { // cqm5: a divisão de baixo espanhola
             crate::comparacao::ramo("cqm_5 divisao de baixo espanhola");
             let e = novo(0xee);
             // ponytail: a original empurra o ano na palavra de baixo do ecx, com o resto do ponteiro do registro em
             // cima; a 0x851020 só lê a palavra (mov ax, word ptr [esp + 0x21c]).
             let b = if e != 0 { baixo(e, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32) } else { 0 };
-            cqm5_pd(this + 0xee, b);
+            write_u32_from_usize(this + 0xee, b);
         } else {
-            cqm5_pd(this + 0xee, 0);
+            write_u32_from_usize(this + 0xee, 0);
         }
     }
     this
@@ -163,17 +157,17 @@ unsafe extern "thiscall" fn construir_primera(this: usize, ano: u32, registro: u
 /// conforme o bit 4 da nação.
 unsafe fn cqm5_comparar(nome: &str, this: usize, ano: u32, registro: usize, p: &Cqm5Divisao, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && cqm5_d(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && cqm5_d(this + 4) == registro && *((this + 0x50) as *const u8) == p.disciplina;
-    if *((this + 0x44) as *const u8) == 0xff && cqm5_d(this + 8) != 0 {
-        ok = ok && cqm5_d(this + 0x2c) == 0 && cqm5_d(this + 0xc) == 0;
+    let mut ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
+        && read_u32_as_usize(this + 4) == registro && *((this + 0x50) as *const u8) == p.disciplina;
+    if *((this + 0x44) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
+        ok = ok && read_u32_as_usize(this + 0x2c) == 0 && read_u32_as_usize(this + 0xc) == 0;
         if p.baixo {
-            let nacao = cqm5_d(cqm5_d(this + 4) + 0x5d);
-            let tem = cqm5_d(this + 0xee) != 0;
+            let nacao = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
+            let tem = read_u32_as_usize(this + 0xee) != 0;
             ok = ok && tem == (*((nacao + 0x11c) as *const u8) & 4 == 0);
         }
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", nome, this, r, cqm5_d(this), cqm5_d(this + 0x2c), cqm5_d(this + 8)));
+    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", nome, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0x2c), read_u32_as_usize(this + 8)));
     r
 }
 

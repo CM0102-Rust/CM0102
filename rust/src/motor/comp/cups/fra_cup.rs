@@ -192,28 +192,22 @@ unsafe extern "thiscall" fn comparar_cql11_copa_do_rei_tabela(this: usize, fase:
 }
 // ---------- 276a leva: os inscritos das copas francesas: a Copa da França, a Copa da Liga francesa e os dois clubes da Supercopa (fra_cup.cpp, fra_lge_cup.cpp, fra_super.cpp) ----------
 
-unsafe fn cqm11_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqm11_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
 unsafe fn cqm11_clube(i: i16) -> usize {
-    cqm11_d(0xae23b4) + i as isize as usize * 0x245
+    read_u32_as_usize(0xae23b4) + i as isize as usize * 0x245
 }
 
 /// O id da competição apontada por `c + o` (+0 do registro), ou None sem ela.
 unsafe fn cqm11_comp(c: usize, o: usize) -> Option<usize> {
-    let d = cqm11_d(c + o);
-    if d == 0 { None } else { Some(cqm11_d(d)) }
+    let d = read_u32_as_usize(c + o);
+    if d == 0 { None } else { Some(read_u32_as_usize(d)) }
 }
 
 /// Grava a inscrição `n` da lista (+0xa7, 6 bytes: o clube, +4 classe 0, +5 situação 0) e conta.
 unsafe fn cqm11_inscrever(this: usize, n: &mut i32, clube: usize) {
-    let e = cqm11_d(this + 0xa7) + *n as usize * 6;
+    let e = read_u32_as_usize(this + 0xa7) + *n as usize * 6;
     core::ptr::write_unaligned(e as *mut u32, clube as u32);
     *((e + 4) as *mut u8) = 0;
     *((e + 5) as *mut u8) = 0;
@@ -228,7 +222,7 @@ unsafe fn cqm11_passada(this: usize, n: &mut i32, ate: impl Fn() -> i32, para: b
         let c = cqm11_clube(i);
         if entra(c, *n) {
             cqm11_inscrever(this, n, c);
-            if para && *n == cqm11_w(this + 0x3e) as i32 {
+            if para && *n == read_i16(this + 0x3e) as i32 {
                 return;
             }
         }
@@ -238,12 +232,12 @@ unsafe fn cqm11_passada(this: usize, n: &mut i32, ate: impl Fn() -> i32, para: b
 
 /// Os clubes da divisão [id] enquanto cabem (n < +0x3e), até encher.
 unsafe fn cqm11_divisao(this: usize, n: &mut i32, id: usize) {
-    cqm11_passada(this, n, || cqm11_d(0xae235c) as i32, true, |c, n| cqm11_comp(c, 0x57) == Some(cqm11_d(id)) && n < cqm11_w(this + 0x3e) as i32);
+    cqm11_passada(this, n, || read_u32_as_usize(0xae235c) as i32, true, |c, n| cqm11_comp(c, 0x57) == Some(read_u32_as_usize(id)) && n < read_i16(this + 0x3e) as i32);
 }
 
 /// O limite dos amadores da Copa da França: 0xb8 em 2001 (+0x40 = 0x7d1), 0xb6 nos outros anos.
 unsafe fn cqm11_limite_franca(this: usize) -> i32 {
-    if cqm11_w(this + 0x40) == 0x7d1 { 0xb8 } else { 0xb6 }
+    if read_i16(this + 0x40) == 0x7d1 { 0xb8 } else { 0xb6 }
 }
 
 /// { 0x5baa50 } (thiscall, ret 0, fra_cup.cpp): `FraCup::collect_entrants()`: +0x3e = 222; a lista (0x944e46 de 0x534 em
@@ -262,24 +256,24 @@ unsafe fn cqm11_copa_da_franca(this: usize) -> (i32, i32) {
         return (-1, 0);
     }
     let mut n = 0i32;
-    let todos = || cqm11_d(0xae235c) as i32;
-    cqm11_passada(this, &mut n, todos, false, |c, _| cqm11_comp(c, 0x57) == Some(cqm11_d(0x9cf5d4)));
+    let todos = || read_u32_as_usize(0xae235c) as i32;
+    cqm11_passada(this, &mut n, todos, false, |c, _| cqm11_comp(c, 0x57) == Some(read_u32_as_usize(0x9cf5d4)));
     cqm11_passada(this, &mut n, todos, true, |c, n| {
-        cqm11_comp(c, 0x57) == Some(cqm11_d(0x9cf764)) && cqm11_comp(c, 0x60) == Some(cqm11_d(0x9cf5d8)) && n < cqm11_limite_franca(this)
+        cqm11_comp(c, 0x57) == Some(read_u32_as_usize(0x9cf764)) && cqm11_comp(c, 0x60) == Some(read_u32_as_usize(0x9cf5d8)) && n < cqm11_limite_franca(this)
     });
     cqm11_passada(this, &mut n, todos, true, |c, n| {
-        cqm11_comp(c, 0x53) == Some(cqm11_d(0x9cf300)) && cqm11_comp(c, 0x57) == Some(cqm11_d(0x9cf764)) && cqm11_d(c + 0x60) == 0
+        cqm11_comp(c, 0x53) == Some(read_u32_as_usize(0x9cf300)) && cqm11_comp(c, 0x57) == Some(read_u32_as_usize(0x9cf764)) && read_u32_as_usize(c + 0x60) == 0
             && n < cqm11_limite_franca(this)
     });
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    cqm11_passada(this, &mut n, || cqm11_d(0xae235c) as i32 - 2 * cqm11_d(0xae2350) as i32, true, |c, n| {
-        cqm11_d(c + 0x53) != 0 && selecao(c) == 0 && cqm11_d(c + 0x57) == 0 && cqm11_comp(c, 0x53) == Some(cqm11_d(0x9cf300))
+    cqm11_passada(this, &mut n, || read_u32_as_usize(0xae235c) as i32 - 2 * read_u32_as_usize(0xae2350) as i32, true, |c, n| {
+        read_u32_as_usize(c + 0x53) != 0 && selecao(c) == 0 && read_u32_as_usize(c + 0x57) == 0 && cqm11_comp(c, 0x53) == Some(read_u32_as_usize(0x9cf300))
             && n < cqm11_limite_franca(this)
     });
     crate::comparacao::ramo("cqm_11 inscritos da copa da franca");
     cqm11_divisao(this, &mut n, 0x9cf5d0); // cqm11: a Segunda francesa na Copa da França
     cqm11_divisao(this, &mut n, 0x9cf5cc); // cqm11: a Primeira francesa na Copa da França
-    ((n == cqm11_w(this + 0x3e) as i32) as i32, n)
+    ((n == read_i16(this + 0x3e) as i32) as i32, n)
 }
 
 unsafe extern "thiscall" fn cqm11_copa_da_franca_inscritos(this: usize) -> i32 {
@@ -295,11 +289,11 @@ unsafe fn cqm11_comparar(nome: &str, this: usize, reg: &[(usize, usize)], o: imp
     let nr = core::cell::Cell::new(0i32);
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(reg, || {
         let r = o();
-        lo.set(cqm11_d(this + 0xa7));
+        lo.set(read_u32_as_usize(this + 0xa7));
         r
     }, || {
         let (r, n) = c();
-        lr.set(cqm11_d(this + 0xa7));
+        lr.set(read_u32_as_usize(this + 0xa7));
         nr.set(n);
         core::ptr::write_unaligned((this + 0xa7) as *mut u32, lo.get() as u32);
         r
@@ -340,18 +334,18 @@ unsafe fn cqm11_copa_da_liga(this: usize) -> (i32, i32) {
         return (-1, 0);
     }
     let mut n = 0i32;
-    let todos = || cqm11_d(0xae235c) as i32;
-    let limite = if cqm11_w(this + 0x40) == 0x7d1 { 0x10 } else { 0xe };
+    let todos = || read_u32_as_usize(0xae235c) as i32;
+    let limite = if read_i16(this + 0x40) == 0x7d1 { 0x10 } else { 0xe };
     cqm11_passada(this, &mut n, todos, true, |c, n| {
-        cqm11_comp(c, 0x57) == Some(cqm11_d(0x9cf5d4)) && cqm11_d(c + 0x5b) != 0 && cqm11_comp(c, 0x5b) != Some(cqm11_d(0x9cf5d8)) && n < limite
+        cqm11_comp(c, 0x57) == Some(read_u32_as_usize(0x9cf5d4)) && read_u32_as_usize(c + 0x5b) != 0 && cqm11_comp(c, 0x5b) != Some(read_u32_as_usize(0x9cf5d8)) && n < limite
     });
     // a original testa o tamanho antes de cada clube: a passada para quando a lista chega a 16
     let mut i: i16 = 0;
-    while (i as i32) < cqm11_d(0xae235c) as i32 && n * 6 < 0x60 {
+    while (i as i32) < read_u32_as_usize(0xae235c) as i32 && n * 6 < 0x60 {
         let c = cqm11_clube(i);
-        if cqm11_comp(c, 0x57) == Some(cqm11_d(0x9cf5d4)) && cqm11_comp(c, 0x5b) == Some(cqm11_d(0x9cf5d8)) {
+        if cqm11_comp(c, 0x57) == Some(read_u32_as_usize(0x9cf5d4)) && cqm11_comp(c, 0x5b) == Some(read_u32_as_usize(0x9cf5d8)) {
             cqm11_inscrever(this, &mut n, c);
-            if n == cqm11_w(this + 0x3e) as i32 {
+            if n == read_i16(this + 0x3e) as i32 {
                 break;
             }
         }
@@ -360,7 +354,7 @@ unsafe fn cqm11_copa_da_liga(this: usize) -> (i32, i32) {
     crate::comparacao::ramo("cqm_11 inscritos da copa da liga francesa");
     cqm11_divisao(this, &mut n, 0x9cf5d0); // cqm11: a Segunda francesa na Copa da Liga
     cqm11_divisao(this, &mut n, 0x9cf5cc); // cqm11: a Primeira francesa na Copa da Liga
-    ((n == cqm11_w(this + 0x3e) as i32) as i32, n)
+    ((n == read_i16(this + 0x3e) as i32) as i32, n)
 }
 
 unsafe extern "thiscall" fn cqm11_copa_da_liga_inscritos(this: usize) -> i32 {
@@ -377,7 +371,7 @@ unsafe extern "thiscall" fn comparar_cqm11_copa_da_liga_inscritos(this: usize) -
 /// lugar; push competição do banco [0xae23d0] + 0x6b × id; add esp, 8 -> cdecl).
 unsafe fn cqm11_colocado(id: usize, lugar: u32) -> usize {
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
-    colocado(cqm11_d(0xae23d0).wrapping_add(cqm11_d(id).wrapping_mul(0x6b)), lugar)
+    colocado(read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b)), lugar)
 }
 
 /// { 0x5bf770 } (thiscall, ret 0, fra_super.cpp): `FraSuper::select_teams()`: +0x3e = 2; a lista (0x944e46 de 0xc em

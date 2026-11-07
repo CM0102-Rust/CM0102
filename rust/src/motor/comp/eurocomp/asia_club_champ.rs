@@ -1,28 +1,19 @@
 // ---------- 284a leva: a Liga dos Campeões asiática: a fase seguinte, os dois grupos e as semifinais (asia_club_champ.cpp) ----------
 
-unsafe fn cqt12_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqt12_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqt12_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
 /// { 0x40c070 } (thiscall, ret 0, asia_club_champ.cpp; a virtual +0x28): `AsiaClubChamp::advance_stage()`: na última
 /// fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x355; senão +0x30 sobe e, chegando a 1 (depois dos mata-matas
 /// das duas zonas), os dois grupos (0x40c110), chegando a 3 (depois dos grupos), as semifinais (0x40c3d0); as duas mov
 /// ecx, this -> thiscall, ret 0.
 unsafe extern "thiscall" fn cqt12_asia_fase_seguinte(this: usize) {
-    let f = cqt12_d(this + 0x30) as i32;
-    if f >= (cqt12_d(this + 0x2c) as i32).wrapping_sub(1) {
+    let f = read_u32_as_usize(this + 0x30) as i32;
+    if f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x987a40, 0x355);
     }
     let f = f + 1;
-    cqt12_pd(this + 0x30, f as usize);
+    write_u32_from_usize(this + 0x30, f as usize);
     if f == 1 {
         crate::comparacao::ramo("cqt_12 grupos da asia");
         let grupos: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x40c110usize);
@@ -37,10 +28,10 @@ unsafe extern "thiscall" fn cqt12_asia_fase_seguinte(this: usize) {
 // (os grupos gravam 2, o mesmo valor) fora da última fase, que dá a caixa e não muda nada.
 unsafe extern "thiscall" fn comparar_cqt12_asia_fase_seguinte(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2065);
-    let f = cqt12_d(this + 0x30) as i32;
-    let ultima = f >= (cqt12_d(this + 0x2c) as i32).wrapping_sub(1);
+    let f = read_u32_as_usize(this + 0x30) as i32;
+    let ultima = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
-    let depois = cqt12_d(this + 0x30) as i32;
+    let depois = read_u32_as_usize(this + 0x30) as i32;
     let esperado = if ultima { f } else if f + 1 == 1 { 2 } else { f + 1 };
     PLACAR.registrar(depois == esperado, || format!("cqt12_asia_fase_seguinte({:#x}) fase {} -> {}", this, f, depois));
 }
@@ -51,21 +42,21 @@ unsafe extern "thiscall" fn comparar_cqt12_asia_fase_seguinte(this: usize) {
 unsafe fn cqt12_vivos(this: usize) -> [usize; 8] {
     let mut v = [0usize; 8];
     let mut n = 0usize;
-    let times = cqt12_w(this + 0x3e);
+    let times = read_i16(this + 0x3e);
     let mut i = 0i16;
     while i < times && n < 4 {
-        let e = cqt12_d(this + 0xa7) + i as usize * 6;
+        let e = read_u32_as_usize(this + 0xa7) + i as usize * 6;
         if *((e + 5) as *const u8) == 1 {
-            v[n] = cqt12_d(e); // cqt12: um vivo da primeira zona
+            v[n] = read_u32_as_usize(e); // cqt12: um vivo da primeira zona
             n += 1;
         }
         i += 1;
     }
     let mut i = 0i16;
     while i < times && n < 8 {
-        let e = cqt12_d(cqt12_d(cqt12_d(this + 0xc)) + 0xa7) + i as usize * 6;
+        let e = read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + 0xc)) + 0xa7) + i as usize * 6;
         if *((e + 5) as *const u8) == 1 {
-            v[n] = cqt12_d(e);
+            v[n] = read_u32_as_usize(e);
             n += 1;
         }
         i += 1;
@@ -86,7 +77,7 @@ unsafe fn cqt12_grupo(this: usize, g: u32, times: *const usize, a17: u32) -> usi
         core::mem::transmute(0x68b100usize);
     let regras_a: [u8; 4] = [1, 2, 0, 0];
     let regras_b: [u8; 4] = [2, 0, 0, 0];
-    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqt12_d(cqt12_d(this) + 0x3c));
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let tabela = rodadas_da_copa(this, g, &mut rodadas, &mut id, 0);
     let p = novo(0xee);
@@ -97,7 +88,7 @@ unsafe fn cqt12_grupo(this: usize, g: u32, times: *const usize, a17: u32) -> usi
             4,
             times,
             1,
-            cqt12_d(this + 4),
+            read_u32_as_usize(this + 4),
             tabela,
             rodadas as u16 as u32,
             3,
@@ -105,7 +96,7 @@ unsafe fn cqt12_grupo(this: usize, g: u32, times: *const usize, a17: u32) -> usi
             8,
             regras_a.as_ptr(),
             regras_b.as_ptr(),
-            cqt12_w(this + 0x40) as u16 as u32,
+            read_i16(this + 0x40) as u16 as u32,
             g,
             id as u16 as u32,
             *((this + 0x51) as *const u8) as u32,
@@ -119,9 +110,9 @@ unsafe fn cqt12_grupo(this: usize, g: u32, times: *const usize, a17: u32) -> usi
     } else {
         0
     };
-    cqt12_pd(cqt12_d(this + 0xc) + g as usize * 4, fase);
+    write_u32_from_usize(read_u32_as_usize(this + 0xc) + g as usize * 4, fase);
     soltar(tabela);
-    cqt12_d(cqt12_d(this + 0xc) + g as usize * 4)
+    read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4)
 }
 
 /// { 0x40c110 } (thiscall, ret 0, asia_club_champ.cpp; quadro SEH só para o new das fases: sem destrutor no caminho
@@ -145,7 +136,7 @@ unsafe extern "thiscall" fn cqt12_asia_grupos(this: usize) {
         return aviso_em(0x987a40, 0x3b4);
     }
     noticia(f);
-    cqt12_pd(this + 0x30, 2);
+    write_u32_from_usize(this + 0x30, 2);
 }
 
 // ponytail: as fases são alocadas e as notícias vão aos técnicos: não roda duas vezes. Só a original; o plano: os vivos
@@ -153,31 +144,31 @@ unsafe extern "thiscall" fn cqt12_asia_grupos(this: usize) {
 // o construtor ordena a tabela) e +0x30 = 2.
 unsafe extern "thiscall" fn comparar_cqt12_asia_grupos(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2066);
-    if cqt12_d(this + 0xc) == 0 || cqt12_d(cqt12_d(this + 0xc)) == 0 {
+    if read_u32_as_usize(this + 0xc) == 0 || read_u32_as_usize(read_u32_as_usize(this + 0xc)) == 0 {
         return o(this);
     }
     let v = cqt12_vivos(this);
     o(this);
     let confere = |g: usize, de: &[usize]| {
-        let f = cqt12_d(cqt12_d(this + 0xc) + g * 4);
-        let t = if f != 0 { cqt12_d(f + 0xb1) } else { 0 };
-        if t == 0 || cqt12_w(f + 0x3e) != 4 || cqt12_w(f + 0x40) != cqt12_w(this + 0x40) {
+        let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + g * 4);
+        let t = if f != 0 { read_u32_as_usize(f + 0xb1) } else { 0 };
+        if t == 0 || read_i16(f + 0x3e) != 4 || read_i16(f + 0x40) != read_i16(this + 0x40) {
             return false;
         }
-        let mut a: Vec<usize> = (0..4).map(|k| cqt12_d(t + k * 0x3b)).collect();
+        let mut a: Vec<usize> = (0..4).map(|k| read_u32_as_usize(t + k * 0x3b)).collect();
         let mut b = de.to_vec();
         a.sort_unstable();
         b.sort_unstable();
         a == b
     };
-    let ok = confere(1, &v[..4]) && confere(2, &v[4..]) && cqt12_d(this + 0x30) == 2;
+    let ok = confere(1, &v[..4]) && confere(2, &v[4..]) && read_u32_as_usize(this + 0x30) == 2;
     PLACAR.registrar(ok, || format!("cqt12_asia_grupos({:#x}): os grupos não batem com os vivos {:x?}", this, v));
 }
 
 /// Os 4 das semifinais, na ordem da lista: o 1º do grupo 1 ([+0xc][1], tabela +0xb1), o 2º do grupo 2 ([+0xc][2]), o
 /// 1º do grupo 2 e o 2º do grupo 1 (os cruzamentos: as chaves são os pares da lista).
 unsafe fn cqt12_semifinalistas(this: usize) -> [usize; 4] {
-    let l = |g: usize, p: usize| cqt12_d(cqt12_d(cqt12_d(cqt12_d(this + 0xc) + g * 4) + 0xb1) + p * 0x3b);
+    let l = |g: usize, p: usize| read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + 0xc) + g * 4) + 0xb1) + p * 0x3b);
     [l(1, 0), l(2, 1), l(2, 0), l(1, 1)] // cqt12: 1º do 1 × 2º do 2, 1º do 2 × 2º do 1
 }
 
@@ -201,9 +192,9 @@ unsafe extern "thiscall" fn cqt12_asia_semifinais(this: usize) {
     }
     crate::comparacao::ramo("cqt_12 cruzamentos da asia");
     for (k, &c) in cqt12_semifinalistas(this).iter().enumerate() {
-        cqt12_pd(lista + k * 4, c);
+        write_u32_from_usize(lista + k * 4, c);
     }
-    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqt12_d(cqt12_d(this) + 0x3c));
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let tabela = rodadas_da_copa(this, 3, &mut rodadas, &mut id, 0);
     let p = novo(0xb2);
@@ -211,13 +202,13 @@ unsafe extern "thiscall" fn cqt12_asia_semifinais(this: usize) {
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(0x522e00usize);
-        construir(p, this, 4, lista, rodadas as u16 as u32, cqt12_d(this + 4), tabela, cqt12_w(this + 0x40) as u16 as u32, 3, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construir(p, this, 4, lista, rodadas as u16 as u32, read_u32_as_usize(this + 4), tabela, read_i16(this + 0x40) as u16 as u32, 3, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    cqt12_pd(cqt12_d(this + 0xc) + 0xc, fase);
+    write_u32_from_usize(read_u32_as_usize(this + 0xc) + 0xc, fase);
     soltar(tabela);
-    let f = cqt12_d(cqt12_d(this + 0xc) + 0xc);
+    let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 0xc);
     if f == 0 {
         return aviso_em(0x987a40, 0x3e6);
     }
@@ -230,23 +221,23 @@ unsafe extern "thiscall" fn cqt12_asia_semifinais(this: usize) {
 // reordenar).
 unsafe extern "thiscall" fn comparar_cqt12_asia_semifinais(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2067);
-    let fases = cqt12_d(this + 0xc);
-    if fases == 0 || cqt12_d(fases + 4) == 0 || cqt12_d(fases + 8) == 0 {
+    let fases = read_u32_as_usize(this + 0xc);
+    if fases == 0 || read_u32_as_usize(fases + 4) == 0 || read_u32_as_usize(fases + 8) == 0 {
         return o(this);
     }
     let mut plano = cqt12_semifinalistas(this).to_vec();
     o(this);
-    let fase = cqt12_d(cqt12_d(this + 0xc) + 0xc);
+    let fase = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 0xc);
     if fase == 0 {
         PLACAR.registrar(false, || format!("cqt12_asia_semifinais({:#x}) sem fase", this));
         return;
     }
-    let lista = cqt12_d(fase + 0xa7);
-    let mut achou: Vec<usize> = (0..4).map(|k| cqt12_d(lista + 6 * k)).collect();
+    let lista = read_u32_as_usize(fase + 0xa7);
+    let mut achou: Vec<usize> = (0..4).map(|k| read_u32_as_usize(lista + 6 * k)).collect();
     let (pl, ac) = (plano.clone(), achou.clone());
     plano.sort_unstable();
     achou.sort_unstable();
-    let igual = plano == achou && cqt12_w(fase + 0x3e) == 4 && cqt12_d(fase + 4) == cqt12_d(this + 4);
+    let igual = plano == achou && read_i16(fase + 0x3e) == 4 && read_u32_as_usize(fase + 4) == read_u32_as_usize(this + 4);
     PLACAR.registrar(igual, || format!("cqt12_asia_semifinais({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }
 

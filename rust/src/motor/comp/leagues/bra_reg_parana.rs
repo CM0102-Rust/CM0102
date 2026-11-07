@@ -1,16 +1,10 @@
 // ---------- 279a leva: o Paranaense: a fase seguinte, a final entre os campeões dos dois turnos e o fim da temporada (bra_reg_parana.cpp) ----------
 
-unsafe fn cqo8_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cqo8_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O campeão de um turno: o clube da primeira linha da tabela (+0xb1) da fase `k` ([+0xc][k], um League_Stage).
 unsafe fn cqo8_campeao_do_turno(this: usize, k: usize) -> usize {
-    cqo8_d(cqo8_d(cqo8_d(cqo8_d(this + 0xc) + 4 * k) + 0xb1))
+    read_usize(read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1))
 }
 
 /// { 0x438230 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::advance_stage()`, a fase seguinte do Paranaense (dois turnos, as fases 0
@@ -18,8 +12,8 @@ unsafe fn cqo8_campeao_do_turno(this: usize, k: usize) -> usize {
 /// erro da linha 0x202 e nada mais. Senão +0x30 sobe um e, ao chegar a 2 (o fim do segundo turno), monta a final
 /// (0x4382c0, call direto com o ecx da liga).
 unsafe extern "thiscall" fn cqo8_fase_seguinte_do_paranaense(this: usize) {
-    let fase = cqo8_d(this + 0x30) as i32;
-    if fase >= (cqo8_d(this + 0x2c) as i32).wrapping_sub(1) {
+    let fase = read_usize(this + 0x30) as i32;
+    if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x98af98, 0x202);
     }
     let fase = fase + 1;
@@ -59,12 +53,12 @@ unsafe extern "thiscall" fn cqo8_final_do_paranaense(this: usize) {
         core::ptr::write_unaligned((this + 0x30) as *mut u32, 1);
         core::ptr::write_unaligned((this + 0x2c) as *mut u32, 2);
         for k in 0..2 {
-            *((cqo8_d(cqo8_d(cqo8_d(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *mut u8) = 5; // cqo8: campeão dos dois turnos
+            *((read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *mut u8) = 5; // cqo8: campeão dos dois turnos
         }
         let mut i: i16 = 0;
-        while i < cqo8_w(this + 0x3e) {
-            let linha = cqo8_d(this + 0xb1) + i as usize * 0x3b;
-            if cqo8_d(linha) == cqo8_d(lista) {
+        while i < read_i16(this + 0x3e) {
+            let linha = read_usize(this + 0xb1) + i as usize * 0x3b;
+            if read_usize(linha) == read_usize(lista) {
                 *((linha + 0x37) as *mut u8) = 5;
             }
             i += 1;
@@ -72,7 +66,7 @@ unsafe extern "thiscall" fn cqo8_final_do_paranaense(this: usize) {
         // ponytail: a lista de 8 bytes fica sem liberar, como na original.
         return;
     }
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqo8_d(cqo8_d(this) + 0x3c));
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 2, &mut rodadas, &mut extra, 0);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -83,12 +77,12 @@ unsafe extern "thiscall" fn cqo8_final_do_paranaense(this: usize) {
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(0x522e00usize);
-        construir(p, this, 2, lista, rodadas as u16 as u32, cqo8_d(this + 4), t, cqo8_w(this + 0x40) as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 1, 0, sementes.as_ptr())
+        construir(p, this, 2, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 1, 0, sementes.as_ptr())
     } else {
         0
     };
-    core::ptr::write_unaligned((cqo8_d(this + 0xc) + 8) as *mut usize, fase);
-    let fase = cqo8_d(cqo8_d(this + 0xc) + 8);
+    core::ptr::write_unaligned((read_usize(this + 0xc) + 8) as *mut usize, fase);
+    let fase = read_usize(read_usize(this + 0xc) + 8);
     if fase == 0 {
         return aviso_em(0x98af98, 0x250);
     }
@@ -112,9 +106,9 @@ unsafe extern "thiscall" fn cqo8_final_do_paranaense(this: usize) {
 ///   bits, posição 1 ou 2, rodada 0, partida 0, tipo −2), ret 0x1c); depois a 0x42bba0, como acima.
 unsafe extern "thiscall" fn cqo8_fim_da_temporada_do_paranaense(this: usize) -> u32 {
     let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x42bba0usize);
-    if cqo8_d(this + 0x30) == 2 {
-        let f = cqo8_d(cqo8_d(this + 0xc) + 8);
-        let historico: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqo8_d(cqo8_d(f) + 0x30));
+    if read_usize(this + 0x30) == 2 {
+        let f = read_usize(read_usize(this + 0xc) + 8);
+        let historico: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x30));
         historico(f);
         crate::comparacao::ramo("cqo_8 historico da final");
         return campeoes();
@@ -125,9 +119,9 @@ unsafe extern "thiscall" fn cqo8_fim_da_temporada_do_paranaense(this: usize) -> 
     let premio: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(0x5999a0usize);
     let noticia: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(0x48e3e0usize);
     for (linha, valor, posicao) in [(0usize, 175000i32, 1i32), (0x3b, 100000, 2)] {
-        let c = cqo8_d(cqo8_d(this + 0xb1) + linha);
-        premio(financas(cqo8_d(0xae2a38), c), valor);
-        noticia(this, cqo8_d(cqo8_d(this + 0xb1) + linha), valor, 0, posicao, 0, 0, -2);
+        let c = read_usize(read_usize(this + 0xb1) + linha);
+        premio(financas(read_usize(0xae2a38), c), valor);
+        noticia(this, read_usize(read_usize(this + 0xb1) + linha), valor, 0, posicao, 0, 0, -2);
     }
     crate::comparacao::ramo("cqo_8 premios");
     campeoes()
@@ -137,10 +131,10 @@ unsafe extern "thiscall" fn cqo8_fim_da_temporada_do_paranaense(this: usize) -> 
 /// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
 /// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
 unsafe extern "thiscall" fn comparar_cqo8_fase_seguinte_do_paranaense(this: usize) {
-    let antes = cqo8_d(this + 0x30) as i32;
-    let ultima = antes >= (cqo8_d(this + 0x2c) as i32).wrapping_sub(1);
+    let antes = read_usize(this + 0x30) as i32;
+    let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     orig::<unsafe extern "thiscall" fn(usize)>(1902)(this);
-    let depois = cqo8_d(this + 0x30) as i32;
+    let depois = read_usize(this + 0x30) as i32;
     let igual = if ultima { depois == antes } else if antes + 1 == 2 { depois == 2 || depois == 1 } else { depois == antes + 1 };
     PLACAR.registrar(igual, || format!("cqo8_fase_seguinte_do_paranaense({:#x}) antes={} depois={}", this, antes, depois));
 }
@@ -153,23 +147,23 @@ unsafe extern "thiscall" fn comparar_cqo8_final_do_paranaense(this: usize) {
     let (a, b) = (cqo8_campeao_do_turno(this, 0), cqo8_campeao_do_turno(this, 1));
     orig::<unsafe extern "thiscall" fn(usize)>(1903)(this);
     let igual = if a == b {
-        let marca = |k: usize| *((cqo8_d(cqo8_d(cqo8_d(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
-        let na_liga = (0..cqo8_w(this + 0x3e).max(0) as usize).all(|i| {
-            let linha = cqo8_d(this + 0xb1) + i * 0x3b;
-            cqo8_d(linha) != a || *((linha + 0x37) as *const u8) == 5
+        let marca = |k: usize| *((read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
+        let na_liga = (0..read_i16(this + 0x3e).max(0) as usize).all(|i| {
+            let linha = read_usize(this + 0xb1) + i * 0x3b;
+            read_usize(linha) != a || *((linha + 0x37) as *const u8) == 5
         });
-        cqo8_d(this + 0x30) == 1 && cqo8_d(this + 0x2c) == 2 && marca(0) && marca(1) && na_liga
+        read_usize(this + 0x30) == 1 && read_usize(this + 0x2c) == 2 && marca(0) && marca(1) && na_liga
     } else {
-        let fase = cqo8_d(cqo8_d(this + 0xc) + 8);
+        let fase = read_usize(read_usize(this + 0xc) + 8);
         if fase == 0 {
             false
         } else {
-            let l = cqo8_d(fase + 0xa7);
-            let (x, y) = (cqo8_d(l), cqo8_d(l + 6));
-            cqo8_w(fase + 0x3e) == 2 && cqo8_d(fase + 4) == cqo8_d(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && cqo8_d(this + 0x30) == 2
+            let l = read_usize(fase + 0xa7);
+            let (x, y) = (read_usize(l), read_usize(l + 6));
+            read_i16(fase + 0x3e) == 2 && read_usize(fase + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + 0x30) == 2
         }
     };
-    PLACAR.registrar(igual, || format!("cqo8_final_do_paranaense({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, cqo8_d(this + 0x30), cqo8_d(this + 0x2c)));
+    PLACAR.registrar(igual, || format!("cqo8_final_do_paranaense({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
 }
 
 /// Comparador do fim da temporada: só a original (ponytail: grava o histórico, que aloca o registro, paga os prêmios e
@@ -181,42 +175,33 @@ unsafe extern "thiscall" fn comparar_cqo8_fim_da_temporada_do_paranaense(this: u
 
 // ---------- 274a leva: as regras dos estaduais Paranaense, Pernambucano (Norte), Carioca e Mineiro (bra_reg_parana.cpp, bra_reg_pern.cpp, bra_reg_rio.cpp) ----------
 
-unsafe fn cqi9_b(o: usize, d: usize, v: u8) {
-    *((o + d) as *mut u8) = v;
-}
 
-unsafe fn cqi9_w(o: usize, d: usize, v: u16) {
-    core::ptr::write_unaligned((o + d) as *mut u16, v);
-}
 
-unsafe fn cqi9_d(o: usize, d: usize, v: u32) {
-    core::ptr::write_unaligned((o + d) as *mut u32, v);
-}
 
 /// As regras comuns destes estaduais (as três rotinas gravam o mesmo conjunto; mudam as vagas de cima +0xbe e os
 /// rebaixados +0xc1; os três têm dois turnos): vitória 3, empate 1, categoria 2 (liga), clube nacional, desempates
 /// confronto direto e saldo, sem play-offs na tabela, sem liga acima nem abaixo, palavra de regras 8, 7 reservas e
 /// 3 substituições, e as palavras +0xab e +0xdb em 0.
 unsafe fn cqi9_regras(o: usize, cima: u8, rebaixados: u8) {
-    cqi9_w(o, 0x3c, 2);
-    cqi9_b(o, 0xc4, 2);
-    cqi9_w(o, 0xab, 0);
-    cqi9_w(o, 0xdb, 0);
-    cqi9_b(o, 0xc7, 0);
-    cqi9_b(o, 0xbe, cima);
-    cqi9_b(o, 0xbf, 0);
-    cqi9_b(o, 0xc0, 0);
-    cqi9_b(o, 0xc2, 3);
-    cqi9_b(o, 0xc5, 3);
-    cqi9_b(o, 0x4a, 3);
-    cqi9_b(o, 0xc3, 1);
-    cqi9_b(o, 0x42, 1);
-    cqi9_b(o, 0xc6, 1);
-    cqi9_b(o, 0xc1, rebaixados);
-    cqi9_d(o, 0x1c, 0xffff_ffff);
-    cqi9_d(o, 0x20, 0xffff_ffff);
-    cqi9_b(o, 0x49, 7);
-    cqi9_w(o, 0xd9, 8);
+    write_u16_at(o, 0x3c, 2);
+    write_u8_at(o, 0xc4, 2);
+    write_u16_at(o, 0xab, 0);
+    write_u16_at(o, 0xdb, 0);
+    write_u8_at(o, 0xc7, 0);
+    write_u8_at(o, 0xbe, cima);
+    write_u8_at(o, 0xbf, 0);
+    write_u8_at(o, 0xc0, 0);
+    write_u8_at(o, 0xc2, 3);
+    write_u8_at(o, 0xc5, 3);
+    write_u8_at(o, 0x4a, 3);
+    write_u8_at(o, 0xc3, 1);
+    write_u8_at(o, 0x42, 1);
+    write_u8_at(o, 0xc6, 1);
+    write_u8_at(o, 0xc1, rebaixados);
+    write_u32_at(o, 0x1c, 0xffff_ffff);
+    write_u32_at(o, 0x20, 0xffff_ffff);
+    write_u8_at(o, 0x49, 7);
+    write_u16_at(o, 0xd9, 8);
 }
 
 /// O Paranaense (0x437fc0): nenhuma vaga de cima na tabela geral (os turnos têm estágios próprios), 4 rebaixados.
@@ -240,7 +225,7 @@ unsafe fn cqi9_calendario(o: usize) {
     let vt = *(o as *const usize);
     let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
     let r = f(o, -1, o + 0xa9, o + 0x3a, 0);
-    cqi9_d(o, 0xba, r as u32);
+    write_u32_at(o, 0xba, r as u32);
 }
 
 /// O objeto da liga (0xee bytes) menos as saídas do calendário (+0x3a, +0xa9, +0xba): os calendários não gravam nada

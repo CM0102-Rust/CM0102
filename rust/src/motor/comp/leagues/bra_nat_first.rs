@@ -1,16 +1,10 @@
 // ---------- 280a leva: os play-offs das Séries A e B: a fase seguinte e o mata-mata dos 4 primeiros (bra_nat_first.cpp, bra_nat_second.cpp) ----------
 
-unsafe fn cqq7_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cqq7_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O clube da linha `l` da tabela (+0xb1, linhas de 0x3b bytes, +0 o clube).
 unsafe fn cqq7_clube(liga: usize, l: usize) -> usize {
-    cqq7_d(cqq7_d(liga + 0xb1) + l * 0x3b)
+    read_usize(read_usize(liga + 0xb1) + l * 0x3b)
 }
 
 /// O play-off de uma Série (o mesmo molde na A e na B, conferido instrução a instrução: só mudam o fonte e as linhas
@@ -32,7 +26,7 @@ unsafe fn cqq7_play_off(this: usize, linhas: &[usize; 4], arquivo: usize, linha_
     for (k, &l) in linhas.iter().enumerate() {
         core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cqq7_clube(this, l));
     }
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqq7_d(cqq7_d(this) + 0x3c));
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -43,13 +37,13 @@ unsafe fn cqq7_play_off(this: usize, linhas: &[usize; 4], arquivo: usize, linha_
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(0x522e00usize);
-        construir(p, this, 4, lista, rodadas as u16 as u32, cqq7_d(this + 4), t, cqq7_w(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construir(p, this, 4, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    core::ptr::write_unaligned(cqq7_d(this + 0xc) as *mut usize, fase);
+    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, fase);
     liberar(t);
-    let fase = cqq7_d(cqq7_d(this + 0xc));
+    let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
         aviso_em(arquivo, linha_sem_fase);
         liberar(lista);
@@ -66,8 +60,8 @@ unsafe fn cqq7_play_off(this: usize, linhas: &[usize; 4], arquivo: usize, linha_
 /// caixa de erro e nada mais; senão +0x30 sobe um e, ao chegar a 0 (o fim dos pontos corridos), monta o play-off
 /// (`play_off`, call direto com o ecx da liga -> thiscall, ret 0).
 unsafe fn cqq7_fase_seguinte(this: usize, arquivo: usize, linha: u32, play_off: usize) {
-    let fase = cqq7_d(this + 0x30) as i32;
-    if fase >= (cqq7_d(this + 0x2c) as i32).wrapping_sub(1) {
+    let fase = read_usize(this + 0x30) as i32;
+    if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(arquivo, linha);
     }
     let fase = fase + 1;
@@ -105,10 +99,10 @@ unsafe extern "thiscall" fn cqq7_play_off_da_serie_b(this: usize) {
 /// O comparador da fase seguinte: só a original (ponytail: ao chegar a 0 monta o play-off, que aloca e sorteia), com o
 /// plano: na última fase, +0x30 igual; senão +0x30 + 1 (o play-off grava 0, o mesmo valor).
 unsafe fn cqq7_comparar_fase_seguinte(nome: &str, this: usize, original: impl FnOnce()) {
-    let antes = cqq7_d(this + 0x30) as i32;
-    let ultima = antes >= (cqq7_d(this + 0x2c) as i32).wrapping_sub(1);
+    let antes = read_usize(this + 0x30) as i32;
+    let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original();
-    let depois = cqq7_d(this + 0x30) as i32;
+    let depois = read_usize(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) antes={} depois={}", nome, this, antes, depois));
 }
 
@@ -119,18 +113,18 @@ unsafe fn cqq7_comparar_fase_seguinte(nome: &str, this: usize, original: impl Fn
 unsafe fn cqq7_comparar_play_off(nome: &str, this: usize, linhas: &[usize; 4], original: impl FnOnce()) {
     let mut plano: Vec<usize> = linhas.iter().map(|&l| cqq7_clube(this, l)).collect();
     original();
-    let fase = cqq7_d(cqq7_d(this + 0xc));
+    let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
         PLACAR.registrar(false, || format!("{}({:#x}) sem fase", nome, this));
         return;
     }
-    let lista = cqq7_d(fase + 0xa7);
-    let mut achou: Vec<usize> = (0..4).map(|k| cqq7_d(lista + 6 * k)).collect();
+    let lista = read_usize(fase + 0xa7);
+    let mut achou: Vec<usize> = (0..4).map(|k| read_usize(lista + 6 * k)).collect();
     let (pl, ac) = (plano.clone(), achou.clone());
     plano.sort_unstable();
     achou.sort_unstable();
-    let igual = plano == achou && cqq7_w(fase + 0x3e) == 4 && cqq7_d(fase + 4) == cqq7_d(this + 4) && cqq7_d(this + 0x30) == 0;
-    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqq7_w(fase + 0x3e)));
+    let igual = plano == achou && read_i16(fase + 0x3e) == 4 && read_usize(fase + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0;
+    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
 }
 
 unsafe extern "thiscall" fn comparar_cqq7_fase_seguinte_da_serie_a(this: usize) {
@@ -155,18 +149,15 @@ unsafe extern "thiscall" fn comparar_cqq7_play_off_da_serie_b(this: usize) {
 
 // ---------- 280a leva: a virada do futebol brasileiro: a Série A, o acesso e o rebaixamento em cadeia e a Série B (bra_nat_first.cpp, bra_nat_second.cpp) ----------
 
-unsafe fn cqq8_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 /// A competição de id [`global`] (a tabela das competições [0xadadfc]).
 unsafe fn cqq8_comp(global: usize) -> usize {
-    cqq8_d(cqq8_d(0xadadfc) + 4 * cqq8_d(global))
+    read_usize(read_usize(0xadadfc) + 4 * read_usize(global))
 }
 
 /// A virtual `deslocamento` de `c`, thiscall sem argumentos.
 unsafe fn cqq8_virtual(c: usize, deslocamento: usize) -> u32 {
-    let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqq8_d(cqq8_d(c) + deslocamento));
+    let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(c) + deslocamento));
     f(c)
 }
 
@@ -181,26 +172,26 @@ unsafe fn cqq8_refazer(this: usize, tabela: usize, arquivo: usize, linhas: [u32;
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x687970usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     liberar_tabela(this, 0);
-    let l = cqq8_d(this + 0xba);
+    let l = read_usize(this + 0xba);
     if l != 0 {
         liberar(l);
         core::ptr::write_unaligned((this + 0xba) as *mut usize, 0);
     }
-    let estatisticas = cqq8_d(this + 8);
+    let estatisticas = read_usize(this + 8);
     if estatisticas != 0 {
         let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
         arquivar(estatisticas, 1);
     }
-    if (cqq8_d(this + 0x30) as i32) >= 0 {
+    if (read_usize(this + 0x30) as i32) >= 0 {
         let mut i = 0i32;
         loop {
-            let f = cqq8_d(cqq8_d(this + 0xc) + 4 * i as usize);
+            let f = read_usize(read_usize(this + 0xc) + 4 * i as usize);
             if f != 0 {
-                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(cqq8_d(cqq8_d(f)));
+                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
                 destruir(f, 1);
             }
             i += 1;
-            if i > cqq8_d(this + 0x30) as i32 {
+            if i > read_usize(this + 0x30) as i32 {
                 break;
             }
         }
@@ -238,7 +229,7 @@ unsafe fn cqq8_expectativas_e_arbitros(this: usize) -> u32 {
     let expectativas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68aa80usize);
     expectativas(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x79cee0usize);
-    renovar(cqq8_d(0xb74340), cqq8_d(this + 4)) // cqq8: os árbitros
+    renovar(read_usize(0xb74340), read_usize(this + 4)) // cqq8: os árbitros
 }
 
 /// As viradas das outras catorze competições do Brasil, na ordem da original: a Série B, a Série C e os doze estaduais
@@ -257,7 +248,7 @@ const CQQ8_VIRADAS: [usize; 14] = [0x9cf9e0, 0x9cf9ac, 0x9cf9c0, 0x9cf998, 0x9cf
 /// as expectativas e os árbitros.
 unsafe extern "thiscall" fn cqq8_virada_da_serie_a(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
-    let cadeia: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(cqq8_d(cqq8_d(this) + 0xb0));
+    let cadeia: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0xb0));
     cadeia(this, 1);
     for f in [0x42b760usize, 0x42b520, 0x42b130] {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(f);
@@ -290,14 +281,14 @@ unsafe extern "thiscall" fn cqq8_acesso_e_rebaixamento(this: usize, _pares: u32)
     cqq8_virtual(cqq8_comp(b), 0xa4);
     cqq8_virtual(cqq8_comp(c), 0xa4);
     for k in 0..7 {
-        cqq8_virtual(cqq8_d(cqq8_d(cqq8_comp(c) + 0xc) + 4 * k), 0xa4);
+        cqq8_virtual(read_usize(read_usize(cqq8_comp(c) + 0xc) + 4 * k), 0xa4);
     }
     let trocar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, i32, i32) -> u32 = core::mem::transmute(0x689c80usize);
     crate::comparacao::ramo("cqq_8 acesso e rebaixamento");
     trocar(this, cqq8_comp(a), cqq8_comp(b), 1, 1, -1, -1); // cqq8: A e B
     let mut r = trocar(this, cqq8_comp(b), cqq8_comp(c), 1, 1, -1, -1); // cqq8: B e C
     for k in 0..7 {
-        r = trocar(this, cqq8_comp(b), cqq8_d(cqq8_d(cqq8_comp(c) + 0xc) + 4 * k), 1, 1, -1, -1);
+        r = trocar(this, cqq8_comp(b), read_usize(read_usize(cqq8_comp(c) + 0xc) + 4 * k), 1, 1, -1, -1);
     }
     r
 }
@@ -342,19 +333,13 @@ unsafe extern "thiscall" fn comparar_cqq8_virada_da_serie_b(this: usize) -> u32 
 
 // ---------- 277a leva: a tabela das três divisões nacionais do Brasil: os 28 clubes da Série A (e o dinheiro da TV), os 28 da Série B e o sorteio dos 56 da Série C (bra_nat_first.cpp, bra_nat_second.cpp, bra_nat_third.cpp) ----------
 
-unsafe fn cql7_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cql7_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O clube está na competição do global `g`: o ponteiro do clube em `campo` (+0x57 a divisão nacional) não é nulo e o
 /// id do registro (+0) é o do global.
 unsafe fn cql7_da_divisao(clube: usize, campo: usize, g: usize) -> bool {
-    let comp = cql7_d(clube + campo);
-    comp != 0 && cql7_d(comp) == cql7_d(g)
+    let comp = read_usize(clube + campo);
+    comp != 0 && read_usize(comp) == read_usize(g)
 }
 
 /// O corpo comum da Série A e da Série B (o mesmo molde dos estaduais): +0x3e = `n` clubes; a tabela (malloc 0x944e46
@@ -374,22 +359,22 @@ unsafe fn cql7_tabela(this: usize, n: i16, arquivo: usize, linha: u32, campo: us
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = cql7_d(0xae23b4);
-    while (i as i32) < cql7_d(0xae235c) as i32 {
+    let mut clube = read_usize(0xae23b4);
+    while (i as i32) < read_usize(0xae235c) as i32 {
         if cql7_da_divisao(clube, campo, g) {
             // ponytail: a original empurra a linha no eax com os bits de cima do id da competição; a 0x687430 só lê
             // o byte. Com girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
             iniciar(this, l as u32, clube, 0, 0);
             k = k.wrapping_add(1);
-            if k as i8 as i16 == cql7_w(this + 0x3e) {
+            if k as i8 as i16 == read_i16(this + 0x3e) {
                 break;
             }
         }
         i = i.wrapping_add(1);
         clube = clube.wrapping_add(0x245);
     }
-    if k as i8 as i16 != cql7_w(this + 0x3e) {
+    if k as i8 as i16 != read_i16(this + 0x3e) {
         return 0;
     }
     crate::comparacao::ramo(ramo);
@@ -428,7 +413,7 @@ unsafe extern "thiscall" fn cql7_tabela_da_serie_c(this: usize) -> u32 {
     let embaralhar: unsafe extern "C" fn(usize, i32) = core::mem::transmute(0x4afb40usize);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 7);
-    let velha = cql7_d(this + 0xee);
+    let velha = read_usize(this + 0xee);
     if velha != 0 {
         soltar(velha);
     }
@@ -438,7 +423,7 @@ unsafe extern "thiscall" fn cql7_tabela_da_serie_c(this: usize) -> u32 {
         aviso_em(0x98aba4, 0x18f);
         return 1;
     }
-    let t = alocar((cql7_w(this + 0x3e) as i32 as u32).wrapping_mul(0x3b));
+    let t = alocar((read_i16(this + 0x3e) as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
         aviso_em(0x98aba4, 0x196);
@@ -446,22 +431,22 @@ unsafe extern "thiscall" fn cql7_tabela_da_serie_c(this: usize) -> u32 {
     }
     let mut k: u8 = 0;
     let mut i: i32 = 0;
-    let mut clube = cql7_d(0xae23b4);
-    while i < cql7_d(0xae235c) as i32 {
+    let mut clube = read_usize(0xae23b4);
+    while i < read_usize(0xae235c) as i32 {
         if (k as i8) >= 0x38 {
             break;
         }
-        if cql7_d(clube + 0x57) == cql7_d(this + 4) {
-            core::ptr::write_unaligned((cql7_d(this + 0xee) + (k as i8 as isize as usize) * 4) as *mut usize, clube);
+        if read_usize(clube + 0x57) == read_usize(this + 4) {
+            core::ptr::write_unaligned((read_usize(this + 0xee) + (k as i8 as isize as usize) * 4) as *mut usize, clube);
             k = k.wrapping_add(1);
         }
         i += 1;
         clube = clube.wrapping_add(0x245);
     }
     crate::comparacao::ramo("cql_7 serie c sorteio");
-    embaralhar(cql7_d(this + 0xee), k as i8 as i32); // cql7: o sorteio dos clubes da Série C
+    embaralhar(read_usize(this + 0xee), k as i8 as i32); // cql7: o sorteio dos clubes da Série C
     for j in 0..7usize {
-        iniciar(this, j as u32, cql7_d(cql7_d(this + 0xee) + j * 4), 0, 0);
+        iniciar(this, j as u32, read_usize(read_usize(this + 0xee) + j * 4), 0, 0);
     }
     1
 }
@@ -470,8 +455,8 @@ unsafe extern "thiscall" fn cql7_tabela_da_serie_c(this: usize) -> u32 {
 unsafe fn cql7_plano(n: usize, campo: usize, g: usize) -> Vec<usize> {
     let mut plano = Vec::new();
     let mut i: i32 = 0;
-    while i < cql7_d(0xae235c) as i32 && plano.len() < n {
-        let clube = cql7_d(0xae23b4) + (i as usize) * 0x245;
+    while i < read_usize(0xae235c) as i32 && plano.len() < n {
+        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
         if cql7_da_divisao(clube, campo, g) {
             plano.push(clube);
         }
@@ -486,12 +471,12 @@ unsafe fn cql7_plano(n: usize, campo: usize, g: usize) -> Vec<usize> {
 unsafe fn cql7_comparar(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
     let plano = cql7_plano(n as usize, 0x57, g);
     let r = original();
-    let t = cql7_d(this + 0xb1);
+    let t = read_usize(this + 0xb1);
     let esperado = (plano.len() as i16 == n) as u32;
-    let mut igual = r == esperado && cql7_w(this + 0x3e) == n && t != 0;
+    let mut igual = r == esperado && read_i16(this + 0x3e) == n && t != 0;
     let mut achou: Vec<usize> = Vec::new();
     if igual {
-        achou = (0..plano.len()).map(|k| cql7_d(t + k * 0x3b)).collect();
+        achou = (0..plano.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         igual = achou == plano;
     }
     PLACAR.registrar(igual, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", nome, this, r, plano, achou));
@@ -515,20 +500,20 @@ unsafe extern "thiscall" fn comparar_cql7_tabela_da_serie_c(this: usize) -> u32 
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1827);
     let mut plano = Vec::new();
     let mut i: i32 = 0;
-    while i < cql7_d(0xae235c) as i32 && plano.len() < 0x38 {
-        let clube = cql7_d(0xae23b4) + (i as usize) * 0x245;
-        if cql7_d(clube + 0x57) == cql7_d(this + 4) {
+    while i < read_usize(0xae235c) as i32 && plano.len() < 0x38 {
+        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
+        if read_usize(clube + 0x57) == read_usize(this + 4) {
             plano.push(clube);
         }
         i += 1;
     }
     let r = o(this);
-    let (lista, t) = (cql7_d(this + 0xee), cql7_d(this + 0xb1));
-    let mut igual = r == 1 && cql7_w(this + 0x3e) == 7 && lista != 0 && t != 0 && plano.len() >= 7;
+    let (lista, t) = (read_usize(this + 0xee), read_usize(this + 0xb1));
+    let mut igual = r == 1 && read_i16(this + 0x3e) == 7 && lista != 0 && t != 0 && plano.len() >= 7;
     let mut sorteados: Vec<usize> = Vec::new();
     if igual {
-        sorteados = (0..plano.len()).map(|k| cql7_d(lista + k * 4)).collect();
-        let linhas_ok = (0..7usize).all(|j| cql7_d(t + j * 0x3b) == sorteados[j]);
+        sorteados = (0..plano.len()).map(|k| read_usize(lista + k * 4)).collect();
+        let linhas_ok = (0..7usize).all(|j| read_usize(t + j * 0x3b) == sorteados[j]);
         let (mut a, mut b) = (sorteados.clone(), plano.clone());
         a.sort_unstable();
         b.sort_unstable();
@@ -540,17 +525,8 @@ unsafe extern "thiscall" fn comparar_cql7_tabela_da_serie_c(this: usize) -> u32 
 
 // ---------- 274a leva: as regras das três divisões nacionais do Brasil (bra_nat_first.cpp, bra_nat_second.cpp, bra_nat_third.cpp) ----------
 
-unsafe fn cqi7_b(o: usize, d: usize, v: u8) {
-    *((o + d) as *mut u8) = v;
-}
 
-unsafe fn cqi7_w(o: usize, d: usize, v: u16) {
-    core::ptr::write_unaligned((o + d) as *mut u16, v);
-}
 
-unsafe fn cqi7_d(o: usize, d: usize, v: u32) {
-    core::ptr::write_unaligned((o + d) as *mut u32, v);
-}
 
 /// O calendário da fase principal pelo slot 16 da vtable (`create_schedule`, thiscall, ret 0x10, conferido nos três
 /// alvos: 0x429b50, 0x42c140, 0x42d620): estágio -1, as saídas +0xa9 e +0x3a (palavras), sem a marca (0); o ponteiro
@@ -559,7 +535,7 @@ unsafe fn cqi7_calendario(o: usize) {
     let vt = *(o as *const usize);
     let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
     let r = f(o, -1, o + 0xa9, o + 0x3a, 0);
-    cqi7_d(o, 0xba, r as u32);
+    write_u32_at(o, 0xba, r as u32);
 }
 
 /// O objeto da liga (0xee bytes) menos as saídas do calendário (+0x3a, +0xa9, +0xba), que o ensaio não chama: os
@@ -570,68 +546,68 @@ fn cqi7_regioes(o: usize) -> [(usize, usize); 4] {
 
 /// As regras da Série A (o que a 0x42a5a0 grava antes do calendário).
 unsafe fn cqi7_regras_serie_a(o: usize) {
-    cqi7_w(o, 0x3c, 1); // um turno
-    cqi7_b(o, 0xc2, 3); // cqi7: os pontos por vitória da Série A
-    cqi7_b(o, 0xc3, 1); // pontos por empate
-    cqi7_b(o, 0xc4, 2); // categoria das partidas: liga
-    cqi7_b(o, 0x42, 1); // clube nacional
-    cqi7_b(o, 0xc5, 3); // desempates: confronto direto, saldo, nenhum
-    cqi7_b(o, 0xc6, 1);
-    cqi7_b(o, 0xc7, 0);
-    cqi7_b(o, 0xbe, 4); // vagas de cima
-    cqi7_b(o, 0xbf, 0);
-    cqi7_b(o, 0xc0, 0);
-    cqi7_b(o, 0xc1, 4); // rebaixados
-    cqi7_d(o, 0x1c, 0xffff_ffff); // nenhuma liga acima
-    cqi7_b(o, 0x4a, 3); // substituições
-    cqi7_d(o, 0x20, *(0x9cf9e0 as *const u32)); // cai para a Série B
-    cqi7_w(o, 0xd9, 8); // bit 0x8: os de cima vão para a fase seguinte (sem acesso, sem faixa de campeão)
-    cqi7_b(o, 0x52, 2); // numeração fixa do elenco
-    cqi7_b(o, 0x49, 7); // reservas no banco
+    write_u16_at(o, 0x3c, 1); // um turno
+    write_u8_at(o, 0xc2, 3); // cqi7: os pontos por vitória da Série A
+    write_u8_at(o, 0xc3, 1); // pontos por empate
+    write_u8_at(o, 0xc4, 2); // categoria das partidas: liga
+    write_u8_at(o, 0x42, 1); // clube nacional
+    write_u8_at(o, 0xc5, 3); // desempates: confronto direto, saldo, nenhum
+    write_u8_at(o, 0xc6, 1);
+    write_u8_at(o, 0xc7, 0);
+    write_u8_at(o, 0xbe, 4); // vagas de cima
+    write_u8_at(o, 0xbf, 0);
+    write_u8_at(o, 0xc0, 0);
+    write_u8_at(o, 0xc1, 4); // rebaixados
+    write_u32_at(o, 0x1c, 0xffff_ffff); // nenhuma liga acima
+    write_u8_at(o, 0x4a, 3); // substituições
+    write_u32_at(o, 0x20, *(0x9cf9e0 as *const u32)); // cai para a Série B
+    write_u16_at(o, 0xd9, 8); // bit 0x8: os de cima vão para a fase seguinte (sem acesso, sem faixa de campeão)
+    write_u8_at(o, 0x52, 2); // numeração fixa do elenco
+    write_u8_at(o, 0x49, 7); // reservas no banco
 }
 
 /// As regras da Série B (0x42cb70).
 unsafe fn cqi7_regras_serie_b(o: usize) {
-    cqi7_w(o, 0x3c, 1);
-    cqi7_b(o, 0xc2, 3);
-    cqi7_b(o, 0xc3, 1); // cqi7: os pontos por empate da Série B
-    cqi7_b(o, 0xc4, 2);
-    cqi7_b(o, 0x42, 1);
-    cqi7_b(o, 0xc5, 3);
-    cqi7_b(o, 0xc6, 1);
-    cqi7_b(o, 0xc7, 0);
-    cqi7_b(o, 0xbe, 4); // quatro sobem
-    cqi7_b(o, 0xbf, 0);
-    cqi7_b(o, 0xc0, 0);
-    cqi7_b(o, 0xc1, 4); // quatro caem
-    cqi7_d(o, 0x1c, *(0x9cf9ec as *const u32)); // sobe para a Série A
-    cqi7_w(o, 0xd9, 2); // bit 0x2: as vagas de cima são de acesso
-    cqi7_b(o, 0x52, 2);
-    cqi7_b(o, 0x4a, 3);
-    cqi7_d(o, 0x20, *(0x9cf9ac as *const u32)); // cai para a Série C
-    cqi7_b(o, 0x49, 7);
+    write_u16_at(o, 0x3c, 1);
+    write_u8_at(o, 0xc2, 3);
+    write_u8_at(o, 0xc3, 1); // cqi7: os pontos por empate da Série B
+    write_u8_at(o, 0xc4, 2);
+    write_u8_at(o, 0x42, 1);
+    write_u8_at(o, 0xc5, 3);
+    write_u8_at(o, 0xc6, 1);
+    write_u8_at(o, 0xc7, 0);
+    write_u8_at(o, 0xbe, 4); // quatro sobem
+    write_u8_at(o, 0xbf, 0);
+    write_u8_at(o, 0xc0, 0);
+    write_u8_at(o, 0xc1, 4); // quatro caem
+    write_u32_at(o, 0x1c, *(0x9cf9ec as *const u32)); // sobe para a Série A
+    write_u16_at(o, 0xd9, 2); // bit 0x2: as vagas de cima são de acesso
+    write_u8_at(o, 0x52, 2);
+    write_u8_at(o, 0x4a, 3);
+    write_u32_at(o, 0x20, *(0x9cf9ac as *const u32)); // cai para a Série C
+    write_u8_at(o, 0x49, 7);
 }
 
 /// As regras da Série C (0x42de50).
 unsafe fn cqi7_regras_serie_c(o: usize) {
-    cqi7_w(o, 0x3c, 2); // cqi7: os turnos da Série C
-    cqi7_b(o, 0xc2, 3);
-    cqi7_b(o, 0xc3, 1);
-    cqi7_b(o, 0xc4, 2);
-    cqi7_b(o, 0x42, 1);
-    cqi7_b(o, 0xc5, 1); // desempates: saldo, gols pró, gols fora
-    cqi7_b(o, 0xc6, 2);
-    cqi7_b(o, 0xc7, 4);
-    cqi7_b(o, 0xbe, 2);
-    cqi7_b(o, 0xbf, 0);
-    cqi7_b(o, 0xc0, 0);
-    cqi7_b(o, 0xc1, 2);
-    cqi7_b(o, 0x4a, 3);
-    cqi7_b(o, 0x52, 2);
-    cqi7_d(o, 0x1c, *(0x9cf9e0 as *const u32)); // sobe para a Série B
-    cqi7_d(o, 0x20, 0xffff_ffff); // nenhuma liga abaixo
-    cqi7_w(o, 0xd9, 8);
-    cqi7_b(o, 0x49, 7);
+    write_u16_at(o, 0x3c, 2); // cqi7: os turnos da Série C
+    write_u8_at(o, 0xc2, 3);
+    write_u8_at(o, 0xc3, 1);
+    write_u8_at(o, 0xc4, 2);
+    write_u8_at(o, 0x42, 1);
+    write_u8_at(o, 0xc5, 1); // desempates: saldo, gols pró, gols fora
+    write_u8_at(o, 0xc6, 2);
+    write_u8_at(o, 0xc7, 4);
+    write_u8_at(o, 0xbe, 2);
+    write_u8_at(o, 0xbf, 0);
+    write_u8_at(o, 0xc0, 0);
+    write_u8_at(o, 0xc1, 2);
+    write_u8_at(o, 0x4a, 3);
+    write_u8_at(o, 0x52, 2);
+    write_u32_at(o, 0x1c, *(0x9cf9e0 as *const u32)); // sobe para a Série B
+    write_u32_at(o, 0x20, 0xffff_ffff); // nenhuma liga abaixo
+    write_u16_at(o, 0xd9, 8);
+    write_u8_at(o, 0x49, 7);
 }
 
 /// { 0x42a5a0 } (thiscall, bra_nat_first.cpp): `BraNatFirst::set_up_rules` (slot 36), as regras da Série A e o
@@ -695,37 +671,31 @@ unsafe extern "thiscall" fn comparar_cqi7_regras_da_serie_c(this: usize) -> u32 
 
 // ---------- 274a leva: o destino de cada clube no fim das fases da Série A, da Série C e do Baiano (bra_nat_first.cpp, bra_nat_third.cpp, bra_reg_bahia.cpp) ----------
 
-unsafe fn cqj9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqj9_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// Os registros de carreira (Staff_Records em [0xdd7f00], thiscall, todos já em Rust):
 /// 0x86bdd0 classificou-se (clube, comp, fase, rodada, peso; ret 0x14).
 unsafe fn cqj9_classificou(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x86bdd0usize);
-    f(cqj9_d(0xdd7f00), clube, comp, fase, rodada, peso);
+    f(read_u32_as_usize(0xdd7f00), clube, comp, fase, rodada, peso);
 }
 
 /// 0x86a1c0 rebaixado (clube, liga; ret 8).
 unsafe fn cqj9_rebaixado(clube: usize, comp: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x86a1c0usize);
-    f(cqj9_d(0xdd7f00), clube, comp);
+    f(read_u32_as_usize(0xdd7f00), clube, comp);
 }
 
 /// 0x868c50 campeão da liga (clube, liga; ret 8).
 unsafe fn cqj9_campeao(clube: usize, comp: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x868c50usize);
-    f(cqj9_d(0xdd7f00), clube, comp);
+    f(read_u32_as_usize(0xdd7f00), clube, comp);
 }
 
 /// 0x869480 promovido (clube, liga, peso; ret 0xc).
 unsafe fn cqj9_promovido(clube: usize, comp: usize, peso: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x869480usize);
-    f(cqj9_d(0xdd7f00), clube, comp, peso);
+    f(read_u32_as_usize(0xdd7f00), clube, comp, peso);
 }
 
 /// 0x68ab70 `League::find_club_row(clube, 0)` (thiscall, ret 8): a linha do clube na tabela da liga.
@@ -738,7 +708,7 @@ unsafe fn cqj9_linha(liga: usize, clube: usize) -> usize {
 /// (devolução, linha gravada ou 0, destino gravado).
 unsafe fn cqj9_serie_a(this: usize, clube: usize, situacao: u32, fase: u32, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (situacao as u8, fase as u8);
-    let comp = cqj9_d(this + 4);
+    let comp = read_u32_as_usize(this + 4);
     if fa == 0xff {
         // a fase de pontos corridos
         if st == 6 {
@@ -777,7 +747,7 @@ unsafe fn cqj9_serie_a(this: usize, clube: usize, situacao: u32, fase: u32, faze
 /// A Série C (0x42eb00); como a da Série A.
 unsafe fn cqj9_serie_c(this: usize, clube: usize, situacao: u32, fase: u32, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (situacao as u8, fase as u8 as i8);
-    let comp = cqj9_d(this + 4);
+    let comp = read_u32_as_usize(this + 4);
     if fa < 7 {
         // os grupos
         if st == 6 && fazer {
@@ -807,14 +777,14 @@ unsafe fn cqj9_serie_c(this: usize, clube: usize, situacao: u32, fase: u32, faze
         let mut k: i8 = -1;
         let mut achada = 0;
         while k < 7 {
-            let liga = if k == -1 { this } else { cqj9_d(cqj9_d(this + 0xc) + 4 * k as i32 as usize) };
-            let n = cqj9_w(liga + 0x3e);
+            let liga = if k == -1 { this } else { read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4 * k as i32 as usize) };
+            let n = read_i16(liga + 0x3e);
             if n > 0 {
-                let t = cqj9_d(liga + 0xb1);
+                let t = read_u32_as_usize(liga + 0xb1);
                 let mut i: i8 = 0;
                 while (i as i16) < n {
                     let r = t.wrapping_add(0x3b * i as i32 as usize);
-                    if cqj9_d(r) == clube {
+                    if read_u32_as_usize(r) == clube {
                         achada = r;
                         break;
                     }
@@ -847,7 +817,7 @@ unsafe fn cqj9_serie_c(this: usize, clube: usize, situacao: u32, fase: u32, faze
 /// O Baiano (0x430210); como a da Série A. O clube vem da tabela (+0xb1, +0x3e linhas), não da 0x68ab70.
 unsafe fn cqj9_baiano(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (situacao as u8, fase as u8);
-    let comp = cqj9_d(this + 4);
+    let comp = read_u32_as_usize(this + 4);
     if fa == 0xff {
         if st == 6 {
             if fazer {
@@ -862,15 +832,15 @@ unsafe fn cqj9_baiano(this: usize, clube: usize, situacao: u32, fase: u32, jogo:
     if fa != 0 {
         return (0, 0, 0);
     }
-    let n = cqj9_w(this + 0x3e) as i32;
+    let n = read_i16(this + 0x3e) as i32;
     let mut i = 0i32;
     while i < n {
-        if cqj9_d(cqj9_d(this + 0xb1) + 0x3b * i as usize) == clube {
+        if read_u32_as_usize(read_u32_as_usize(this + 0xb1) + 0x3b * i as usize) == clube {
             if st == 1 {
                 if fazer {
                     cqj9_campeao(clube, comp);
                 }
-                let l = cqj9_d(this + 0xb1) + 0x3b * i as usize;
+                let l = read_u32_as_usize(this + 0xb1) + 0x3b * i as usize;
                 if fazer {
                     *((l + 0x37) as *mut u8) = 5;
                 }
@@ -882,11 +852,11 @@ unsafe fn cqj9_baiano(this: usize, clube: usize, situacao: u32, fase: u32, jogo:
                     // palavra, ecx com a metade de cima do ponteiro da tabela); a 0x4bf850 e a 0x86c000 só leem as
                     // palavras (0x4b0870 / `as u16`): vão as palavras.
                     let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(0x4bf850usize);
-                    let peso = escala(0x1e, 0x32, cqj9_w(jogo + 0x34) as u16 as u32, 2);
+                    let peso = escala(0x1e, 0x32, read_i16(jogo + 0x34) as u16 as u32, 2);
                     let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x86c000usize);
-                    elim(cqj9_d(0xdd7f00), clube, comp, cqj9_w(jogo + 0x32) as u16 as u32, cqj9_w(jogo + 0x30) as u16 as u32, peso);
+                    elim(read_u32_as_usize(0xdd7f00), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, peso);
                 }
-                let l = cqj9_d(this + 0xb1) + 0x3b * i as usize;
+                let l = read_u32_as_usize(this + 0xb1) + 0x3b * i as usize;
                 if fazer {
                     *((l + 0x37) as *mut u8) = 0xfe;
                 }

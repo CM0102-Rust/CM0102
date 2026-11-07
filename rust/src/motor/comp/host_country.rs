@@ -1,20 +1,8 @@
 // ---------- 280a leva: as sedes dos torneios: a tabela padrão, a notícia das candidaturas e a carga do HostCountry.tmp (host_country.cpp) ----------
 
-unsafe fn cqo3_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqo3_pd(a: usize, v: u32) {
-    core::ptr::write_unaligned(a as *mut u32, v)
-}
 
-unsafe fn cqo3_w(a: usize) -> u16 {
-    core::ptr::read_unaligned(a as *const u16)
-}
 
-unsafe fn cqo3_pw(a: usize, v: u16) {
-    core::ptr::write_unaligned(a as *mut u16, v)
-}
 
 /// As datas de referência das decisões (Date::set 0x54a130: dia do mês, mês a partir de 0, ano 1997, sem dia da
 /// semana): o dia do ano delas vai ao +0x1f das entradas do laço seguinte.
@@ -108,24 +96,24 @@ unsafe extern "thiscall" fn tabela_das_sedes(this: usize) {
     let definir: unsafe extern "thiscall" fn(*mut crate::data::Data, u32, u32, u32, u32) -> usize = core::mem::transmute(0x54a130usize);
     let mut d = crate::data::Data { dia: 40, ano: 1972, bissexto: 1 };
     for &(off, t, v) in CQO3_TABELA.iter() {
-        let e = cqo3_d(this) + off as usize;
+        let e = read_u32_as_usize(this) + off as usize;
         match t {
-            0 => cqo3_pd(e, cqo3_d(v as usize) as u32),
-            1 => cqo3_pd(e, v),
+            0 => write_u32(e, read_u32_as_usize(v as usize) as u32),
+            1 => write_u32(e, v),
             2 => *(e as *mut u8) = v as u8,
-            3 => cqo3_pw(e, v as u16),
+            3 => write_u16(e, v as u16),
             4 => {
                 let a = CQO3_DATAS[v as usize];
                 definir(&mut d, a[0], a[1], a[2], a[3]);
             }
             _ => {
                 let (ini, n, g, ano, passo, intervalo) = CQO3_LACOS[v as usize];
-                let mut e = cqo3_d(this) + ini as usize;
+                let mut e = read_u32_as_usize(this) + ini as usize;
                 let mut y = ano;
                 for _ in 0..n {
-                    cqo3_pw(e + 4, y);
-                    cqo3_pd(e, cqo3_d(g as usize) as u32);
-                    cqo3_pw(e + 0x1f, d.dia as u16);
+                    write_u16(e + 4, y);
+                    write_u32(e, read_u32_as_usize(g as usize) as u32);
+                    write_u16(e + 0x1f, d.dia as u16);
                     *((e + 0x21) as *mut u8) = intervalo;
                     e += 0x22;
                     y = y.wrapping_add(passo);
@@ -134,19 +122,19 @@ unsafe extern "thiscall" fn tabela_das_sedes(this: usize) {
         }
     }
     let sortear: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x90cfc0usize);
-    let n = cqo3_w(this + 4) as i16;
+    let n = read_u16(this + 4) as i16;
     let mut k: i16 = 0;
     while k < n {
         let o = (k as i32 * 0x22) as usize;
-        let p = cqo3_d(this) + o + 0x1f;
+        let p = read_u32_as_usize(this) + o + 0x1f;
         crate::comparacao::ramo("cqo_3 sorteio do dia");
         let r = sortear(0x46); // cqo3: o sorteio do dia da decisão
-        cqo3_pw(p, cqo3_w(p).wrapping_add((r - 0x23) as u16));
-        let e = cqo3_d(this) + o;
-        if *((e + 0x1e) as *const u8) != 0xfd && (cqo3_d(e + 0x12) as u32 != u32::MAX || cqo3_d(e + 0x1a) as u32 != u32::MAX) {
+        write_u16(p, read_u16(p).wrapping_add((r - 0x23) as u16));
+        let e = read_u32_as_usize(this) + o;
+        if *((e + 0x1e) as *const u8) != 0xfd && (read_u32_as_usize(e + 0x12) as u32 != u32::MAX || read_u32_as_usize(e + 0x1a) as u32 != u32::MAX) {
             aviso_em(0x9cf0d8, 0x226);
-            cqo3_pd(cqo3_d(this) + o + 0x12, u32::MAX);
-            cqo3_pd(cqo3_d(this) + o + 0x1a, u32::MAX);
+            write_u32(read_u32_as_usize(this) + o + 0x12, u32::MAX);
+            write_u32(read_u32_as_usize(this) + o + 0x1a, u32::MAX);
         }
         k += 1;
     }
@@ -156,12 +144,12 @@ unsafe extern "thiscall" fn tabela_das_sedes(this: usize) {
 /// [0xb67a34].
 unsafe extern "thiscall" fn comparar_tabela_das_sedes(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1957);
-    let n = cqo3_w(this + 4) as i16;
-    if cqo3_d(this) == 0 || n <= 0 {
+    let n = read_u16(this + 4) as i16;
+    if read_u32_as_usize(this) == 0 || n <= 0 {
         return o(this);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.extend([(cqo3_d(this), n as usize * 0x22), (0xb67a34, 4)]);
+    reg.extend([(read_u32_as_usize(this), n as usize * 0x22), (0xb67a34, 4)]);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| tabela_das_sedes(this)));
     PLACAR.registrar(igual, || format!("tabela_das_sedes: {:x?} x {:x?}", mo, mr).chars().take(4000).collect());
 }
@@ -180,43 +168,43 @@ unsafe extern "thiscall" fn noticia_das_sedes(_this: usize, lista: usize) {
     let continente: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x786640usize);
     let todos: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x786780usize);
     crate::comparacao::ramo("cqo_3 noticia das sedes");
-    cqo3_pd(lista + 0xa, cqo3_d(lista + 2) as u32);
+    write_u32(lista + 0xa, read_u32_as_usize(lista + 2) as u32);
     let mut it = proximo(lista);
     while it != 0 {
-        let e = cqo3_d(it);
+        let e = read_u32_as_usize(it);
         let k = *((e + 0x1e) as *const i8);
-        let pular = ((k > 0 || k == -3) && cqo3_w(0xae2c92) as u32 == (cqo3_w(e + 4) as u32).wrapping_sub(8))
-            || cqo3_d(e) == cqo3_d(0x9cf7a0)
-            || (cqo3_d(e) == cqo3_d(0x9cf79c) && cqo3_w(e + 4) == 0x7d6 && cqo3_d(e + 6) == cqo3_d(0x9cf314));
+        let pular = ((k > 0 || k == -3) && read_u16(0xae2c92) as u32 == (read_u16(e + 4) as u32).wrapping_sub(8))
+            || read_u32_as_usize(e) == read_u32_as_usize(0x9cf7a0)
+            || (read_u32_as_usize(e) == read_u32_as_usize(0x9cf79c) && read_u16(e + 4) == 0x7d6 && read_u32_as_usize(e + 6) == read_u32_as_usize(0x9cf314));
         if !pular {
             // a notícia local (0xe8 bytes, como nas outras cópias)
             let mut n = [0u8; 0xe8];
             let p = n.as_mut_ptr() as usize;
             if k == -1 {
                 construir(p, 4, 0);
-                dado(p, 0, cqo3_d(cqo3_d(it)) as u32);
-                dado(p, 1, cqo3_w(cqo3_d(it) + 4) as u32);
+                dado(p, 0, read_u32_as_usize(read_u32_as_usize(it)) as u32);
+                dado(p, 1, read_u16(read_u32_as_usize(it) + 4) as u32);
                 for (i, off) in [6usize, 0xa, 0xe, 0x12, 0x16, 0x1a].iter().enumerate() {
-                    dado(p, 2 + i as u32, cqo3_d(cqo3_d(it) + off) as u32);
+                    dado(p, 2 + i as u32, read_u32_as_usize(read_u32_as_usize(it) + off) as u32);
                 }
             } else {
                 construir(p, 5, 0);
-                let mut b = *((cqo3_d(it) + 0x1e) as *const i8);
+                let mut b = *((read_u32_as_usize(it) + 0x1e) as *const i8);
                 if b == -3 {
                     b = 0;
                 }
-                dado(p, 0, cqo3_d(cqo3_d(it)) as u32);
-                dado(p, 1, cqo3_w(cqo3_d(it) + 4) as u32);
+                dado(p, 0, read_u32_as_usize(read_u32_as_usize(it)) as u32);
+                dado(p, 1, read_u16(read_u32_as_usize(it) + 4) as u32);
                 let o = (b as i32 * 8) as usize;
-                dado(p, 2, cqo3_d(cqo3_d(it).wrapping_add(o) + 6) as u32);
-                dado(p, 3, cqo3_d(cqo3_d(it).wrapping_add(o) + 0xa) as u32);
+                dado(p, 2, read_u32_as_usize(read_u32_as_usize(it).wrapping_add(o) + 6) as u32);
+                dado(p, 3, read_u32_as_usize(read_u32_as_usize(it).wrapping_add(o) + 0xa) as u32);
             }
-            let id = cqo3_d(cqo3_d(it));
-            let c = cqo3_d(cqo3_d(0xae23d0).wrapping_add(id.wrapping_mul(0x6b)) + 0x59);
+            let id = read_u32_as_usize(read_u32_as_usize(it));
+            let c = read_u32_as_usize(read_u32_as_usize(0xae23d0).wrapping_add(id.wrapping_mul(0x6b)) + 0x59);
             if c != 0 {
-                continente(cqo3_d(0xb7431c), p, c);
+                continente(read_u32_as_usize(0xb7431c), p, c);
             } else {
-                todos(cqo3_d(0xb7431c), p);
+                todos(read_u32_as_usize(0xb7431c), p);
             }
         }
         it = proximo(lista);
@@ -249,19 +237,19 @@ unsafe extern "thiscall" fn carregar_sedes(this: usize) -> u32 {
         fechar(f);
         return 0;
     }
-    let n = cqo3_w(this + 4) as i16 as i32;
+    let n = read_u16(this + 4) as i16 as i32;
     let b = alocar((n * 0x22) as u32);
-    cqo3_pd(this, b as u32);
+    write_u32(this, b as u32);
     if b == 0 {
         aviso_em(0x9cf0d8, 0x452);
         fechar(f);
         return 0;
     }
-    let n = cqo3_w(this + 4) as i16 as i32 as u32;
-    if ler(b, 0x22, n, f) != cqo3_w(this + 4) as i16 as i32 as u32 {
+    let n = read_u16(this + 4) as i16 as i32 as u32;
+    if ler(b, 0x22, n, f) != read_u16(this + 4) as i16 as i32 as u32 {
         aviso_em(0x9cf0d8, 0x45c);
         fechar(f);
-        soltar(cqo3_d(this));
+        soltar(read_u32_as_usize(this));
         return 0;
     }
     fechar(f);
@@ -275,13 +263,7 @@ unsafe extern "thiscall" fn comparar_carregar_sedes(this: usize) -> u32 {
 
 // ---------- 273a leva: as sedes das competições: a sede de uma edição, a próxima sede e o calendário das candidaturas (host_country.cpp) ----------
 
-unsafe fn cqj3_d(a: usize) -> u32 {
-    core::ptr::read_unaligned(a as *const u32)
-}
 
-unsafe fn cqj3_w(a: usize) -> u16 {
-    core::ptr::read_unaligned(a as *const u16)
-}
 
 /// As duas sedes da entrada `e` (registros de 0x22 bytes: +0 id da competição, +4 ano, +6 a sede padrão e a segunda
 /// (+0xa), +6 + 8 × k as candidaturas k = 0..2 (sede e segunda), +0x1e a escolhida (0..2; −3 a padrão fixa, −1 a
@@ -289,8 +271,8 @@ unsafe fn cqj3_w(a: usize) -> u16 {
 /// candidatura `k` (a padrão com `k` < 0): grava as duas e devolve quantas valem (≠ −1).
 unsafe fn cqj3_sedes(e: usize, k: i8, a: *mut u32, b: *mut u32) -> u8 {
     let off = if k >= 0 { k as i32 * 8 } else { 0 } as usize;
-    *a = cqj3_d(e + 6 + off);
-    let segunda = cqj3_d(e + 0xa + off);
+    *a = read_u32(e + 6 + off);
+    let segunda = read_u32(e + 0xa + off);
     *b = segunda;
     (*a != u32::MAX) as u8 + (segunda != u32::MAX) as u8
 }
@@ -300,12 +282,12 @@ unsafe fn cqj3_sedes(e: usize, k: i8, a: *mut u32, b: *mut u32) -> u8 {
 /// sedes dela), a padrão fixa ou a votação aberta (a sede padrão), ou, com `padrao`, a votação ainda fechada (a padrão).
 /// Grava as duas e devolve quantas valem; sem entrada, 0 sem gravar.
 unsafe extern "thiscall" fn sede_da_edicao(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
-    let n = cqj3_w(this + 4) as i16;
-    let mut e = cqj3_d(this) as usize;
+    let n = read_u16(this + 4) as i16;
+    let mut e = read_u32(this) as usize;
     let mut i = 0i16;
     while i < n {
-        if cqj3_d(e) == comp {
-            let ae = cqj3_w(e + 4);
+        if read_u32(e) == comp {
+            let ae = read_u16(e + 4);
             if ae == ano as u16 || ae == 0 {
                 let k = *((e + 0x1e) as *const i8);
                 if k > -1 {
@@ -340,11 +322,11 @@ unsafe extern "thiscall" fn comparar_sede_da_edicao(this: usize, comp: u32, ano:
 /// competição `comp`: a primeira entrada dela com a candidatura escolhida (as duas sedes) ou com a padrão fixa (a
 /// padrão). Grava as duas e devolve quantas valem; sem entrada, 0 sem gravar.
 unsafe extern "thiscall" fn proxima_sede(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
-    let n = cqj3_w(this + 4) as i16;
-    let mut e = cqj3_d(this) as usize;
+    let n = read_u16(this + 4) as i16;
+    let mut e = read_u32(this) as usize;
     let mut i = 0i16;
     while i < n {
-        if cqj3_d(e) == comp {
+        if read_u32(e) == comp {
             let k = *((e + 0x1e) as *const i8);
             if k > -1 {
                 return cqj3_sedes(e, k, a, b) as u32;
@@ -375,11 +357,11 @@ unsafe extern "thiscall" fn comparar_proxima_sede(this: usize, comp: u32, a: *mu
 /// A chave da busca (a 0x5fb3f0 compara o ano +4 e depois o dia +0x1f, sem sinal).
 fn cqj3_compara(e: usize, ano: u16, dia: u16) -> i32 {
     unsafe {
-        let ae = cqj3_w(e + 4);
+        let ae = read_u16(e + 4);
         if ae != ano {
             ae as i32 - ano as i32
         } else {
-            cqj3_w(e + 0x1f) as i32 - dia as i32
+            read_u16(e + 0x1f) as i32 - dia as i32
         }
     }
 }
@@ -417,14 +399,14 @@ unsafe extern "thiscall" fn calendario_das_sedes(this: usize, hoje: usize) {
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
     let noticia: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x5faec0usize);
-    let n = cqj3_w(this + 4) as i16;
-    let inicio = cqj3_d(this) as usize;
+    let n = read_u16(this + 4) as i16;
+    let inicio = read_u32(this) as usize;
     let fim = inicio.wrapping_add((n as i32 * 0x22 - 0x22) as usize);
     let mut lista = [0u8; 0x10];
     let l = lista.as_mut_ptr() as usize;
     lista_nova(l);
-    let ano = cqj3_w(hoje + 2);
-    let dia = cqj3_w(hoje);
+    let ano = read_u16(hoje + 2);
+    let dia = read_u16(hoje);
     if ano != 0x7d1 {
         let mut d = [0u16; 4];
         let r = *data(&mut d, 1, 6, ano as u32, u32::MAX);
@@ -460,9 +442,9 @@ unsafe extern "thiscall" fn calendario_das_sedes(this: usize, hoje: usize) {
     }
     if dia == 0 {
         let mut i = 0i16;
-        while i < cqj3_w(this + 4) as i16 {
-            let e = (cqj3_d(this) as usize).wrapping_add(i as i32 as usize * 0x22);
-            let ae = cqj3_w(e + 4);
+        while i < read_u16(this + 4) as i16 {
+            let e = (read_u32(this) as usize).wrapping_add(i as i32 as usize * 0x22);
+            let ae = read_u16(e + 4);
             if ae < ano && ae != 0 {
                 crate::comparacao::ramo("cqj_3 edicao seguinte");
                 core::ptr::write_unaligned((e + 4) as *mut u16, ae.wrapping_add(*((e + 0x21) as *const i8) as i16 as u16)); // cqj3: o intervalo
@@ -472,7 +454,7 @@ unsafe extern "thiscall" fn calendario_das_sedes(this: usize, hoje: usize) {
             }
             i += 1;
         }
-        ordenar(cqj3_d(this) as usize, cqj3_w(this + 4) as i16 as i32, 0x22, 0x5fb3f0);
+        ordenar(read_u32(this) as usize, read_u16(this + 4) as i16 as i32, 0x22, 0x5fb3f0);
     }
     noticia(this, l);
     destruir(l);

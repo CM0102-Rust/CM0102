@@ -1,8 +1,5 @@
 // ---------- 283a leva: os construtores dos estaduais: Baiano, Centro-Oeste e Gaúcho (as regras, a tabela, os jogos, as estatísticas e as posições previstas na criação) (bra_reg_bahia.cpp, bra_reg_central.cpp, bra_reg_gaucho.cpp) ----------
 
-unsafe fn cqt1_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 /// Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
 /// final; o vetor [+0xc] = malloc de 4 × fases), as regras (thiscall, ret 0), a tabela (thiscall, ret 0), as posições
@@ -87,12 +84,12 @@ unsafe fn cqt1_construir(this: usize, ano: u32, registro: usize, e: &Cqt1Estadua
 /// fases e a importância +0x51 = 0xf.
 unsafe fn cqt1_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt1Estadual, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && cqt1_d(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && cqt1_d(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
-    if *((this + 0x44) as *const u8) == 0xff && cqt1_d(this + 8) != 0 {
-        ok = ok && cqt1_d(this + 0x2c) == e.fases as usize && cqt1_d(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
+    let mut ok = r == this && read_usize(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
+        && read_usize(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
+    if *((this + 0x44) as *const u8) == 0xff && read_usize(this + 8) != 0 {
+        ok = ok && read_usize(this + 0x2c) == e.fases as usize && read_usize(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt1_d(this), cqt1_d(this + 0x2c), cqt1_d(this + 0xc), cqt1_d(this + 8)));
+    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, read_usize(this), read_usize(this + 0x2c), read_usize(this + 0xc), read_usize(this + 8)));
     r
 }
 
@@ -158,9 +155,6 @@ unsafe extern "thiscall" fn comparar_cqt1_construir_gaucho(this: usize, ano: u32
 
 // ---------- 280a leva: a virada da temporada e a fase seguinte dos estaduais: Baiano, Centro-Oeste e Gaúcho (bra_reg_bahia.cpp, bra_reg_central.cpp, bra_reg_gaucho.cpp) ----------
 
-unsafe fn cqp7_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 /// A virada da temporada de um estadual (`start_new_season`, slot 3, +0x08; o mesmo molde nos nove estaduais de pontos
 /// corridos com mata-mata: só mudam o fonte, as linhas das caixas e a rotina da tabela, conferido instrução a instrução):
@@ -177,26 +171,26 @@ unsafe fn cqp7_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     liberar_tabela(this, 0);
-    let l = cqp7_d(this + 0xba);
+    let l = read_usize(this + 0xba);
     if l != 0 {
         liberar(l);
         core::ptr::write_unaligned((this + 0xba) as *mut usize, 0);
     }
-    let estatisticas = cqp7_d(this + 8);
+    let estatisticas = read_usize(this + 8);
     if estatisticas != 0 {
         let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
         arquivar(estatisticas, 1);
     }
-    if (cqp7_d(this + 0x30) as i32) >= 0 {
+    if (read_usize(this + 0x30) as i32) >= 0 {
         let mut i = 0i32;
         loop {
-            let f = cqp7_d(cqp7_d(this + 0xc) + 4 * i as usize);
+            let f = read_usize(read_usize(this + 0xc) + 4 * i as usize);
             if f != 0 {
-                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(cqp7_d(cqp7_d(f)));
+                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
                 destruir(f, 1);
             }
             i += 1;
-            if i > cqp7_d(this + 0x30) as i32 {
+            if i > read_usize(this + 0x30) as i32 {
                 break;
             }
         }
@@ -205,7 +199,7 @@ unsafe fn cqp7_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
     crate::comparacao::ramo(ramo);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
-    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqp7_d(cqp7_d(this) + 0x8c));
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
     if regras(this) == 0 {
         aviso_em(arquivo, linhas[0]);
         return 0;
@@ -225,18 +219,18 @@ unsafe fn cqp7_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 
         aviso_em(arquivo, linhas[3]);
         return 0;
     }
-    let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqp7_d(cqp7_d(this) + 0x5c));
+    let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
     previstas(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x79cee0usize);
-    renovar(cqp7_d(0xb74340), cqp7_d(this + 4))
+    renovar(read_usize(0xb74340), read_usize(this + 4))
 }
 
 /// A fase seguinte de um estadual (`advance_stage`, slot 11, +0x28): na última fase (+0x30 ≥ +0x2c − 1, com sinal), a
 /// caixa de erro e nada mais; senão +0x30 sobe um e, ao chegar a 0 (o fim dos pontos corridos), monta o mata-mata
 /// (`mata_mata`, call direto com o ecx da liga -> thiscall, ret 0).
 unsafe fn cqp7_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata_mata: usize) {
-    let fase = cqp7_d(this + 0x30) as i32;
-    if fase >= (cqp7_d(this + 0x2c) as i32).wrapping_sub(1) {
+    let fase = read_usize(this + 0x30) as i32;
+    if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(arquivo, linha);
     }
     let fase = fase + 1;
@@ -260,10 +254,10 @@ unsafe fn cqp7_comparar_virada(nome: &str, this: usize, original: impl FnOnce() 
 /// O comparador da fase seguinte: só a original (ponytail: ao chegar a 0 monta o mata-mata, que aloca e sorteia), com o
 /// plano: na última fase, +0x30 igual; senão +0x30 + 1 (o mata-mata grava 0, o mesmo valor).
 unsafe fn cqp7_comparar_fase_seguinte(nome: &str, this: usize, original: impl FnOnce()) {
-    let antes = cqp7_d(this + 0x30) as i32;
-    let ultima = antes >= (cqp7_d(this + 0x2c) as i32).wrapping_sub(1);
+    let antes = read_usize(this + 0x30) as i32;
+    let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original();
-    let depois = cqp7_d(this + 0x30) as i32;
+    let depois = read_usize(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) antes={} depois={}", nome, this, antes, depois));
 }
 
@@ -335,19 +329,13 @@ unsafe extern "thiscall" fn comparar_cqp7_fase_seguinte_do_gaucho(this: usize) {
 
 // ---------- 277a leva: a tabela dos estaduais: Baiano, Centro-Oeste e Gaúcho (bra_reg_bahia.cpp, bra_reg_central.cpp, bra_reg_gaucho.cpp) ----------
 
-unsafe fn cql8_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cql8_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O clube é do estadual do global `g`: a divisão reserva do clube (+0x60, ReserveDivision, que no Brasil guarda o
 /// estadual) não é nula e o id do registro (+0) é o do global.
 unsafe fn cql8_do_estadual(clube: usize, g: usize) -> bool {
-    let comp = cql8_d(clube + 0x60);
-    comp != 0 && cql8_d(comp) == cql8_d(g)
+    let comp = read_usize(clube + 0x60);
+    comp != 0 && read_usize(comp) == read_usize(g)
 }
 
 /// O corpo comum dos estaduais (o mesmo molde nos doze, só mudam as constantes): +0x3e = `n` clubes; a tabela
@@ -367,22 +355,22 @@ unsafe fn cql8_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = cql8_d(0xae23b4);
-    while (i as i32) < cql8_d(0xae235c) as i32 {
+    let mut clube = read_usize(0xae23b4);
+    while (i as i32) < read_usize(0xae235c) as i32 {
         if cql8_do_estadual(clube, g) {
             // ponytail: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
             // byte. Com girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
             iniciar(this, l as u32, clube, 0, 0);
             k = k.wrapping_add(1);
-            if k as i8 as i16 == cql8_w(this + 0x3e) {
+            if k as i8 as i16 == read_i16(this + 0x3e) {
                 break;
             }
         }
         i = i.wrapping_add(1);
         clube = clube.wrapping_add(0x245);
     }
-    if k as i8 as i16 != cql8_w(this + 0x3e) {
+    if k as i8 as i16 != read_i16(this + 0x3e) {
         return 0;
     }
     crate::comparacao::ramo(ramo);
@@ -413,20 +401,20 @@ unsafe extern "thiscall" fn cql8_tabela_do_gaucho(this: usize) -> u32 {
 unsafe fn cql8_comparar(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
-    while i < cql8_d(0xae235c) as i32 && (plano.len() as i16) < n {
-        let clube = cql8_d(0xae23b4) + (i as usize) * 0x245;
+    while i < read_usize(0xae235c) as i32 && (plano.len() as i16) < n {
+        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
         if cql8_do_estadual(clube, g) {
             plano.push(clube);
         }
         i += 1;
     }
     let r = original();
-    let t = cql8_d(this + 0xb1);
+    let t = read_usize(this + 0xb1);
     let esperado = (plano.len() as i16 == n) as u32;
-    let mut igual = r == esperado && cql8_w(this + 0x3e) == n && t != 0;
+    let mut igual = r == esperado && read_i16(this + 0x3e) == n && t != 0;
     let mut achou: Vec<usize> = Vec::new();
     if igual {
-        achou = (0..plano.len()).map(|k| cql8_d(t + k * 0x3b)).collect();
+        achou = (0..plano.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         igual = achou == plano;
     }
     PLACAR.registrar(igual, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", nome, this, r, plano, achou));
@@ -450,17 +438,11 @@ unsafe extern "thiscall" fn comparar_cql8_tabela_do_gaucho(this: usize) -> u32 {
 
 // ---------- 277a leva: as semifinais dos estaduais e regionais: Baiano, Norte e Nordeste (bra_reg_bahia.cpp, bra_reg_north.cpp, bra_reg_northeast.cpp) ----------
 
-unsafe fn cqn7_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cqn7_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O clube da linha `l` da tabela (+0xb1, linhas de 0x3b bytes, +0 o clube).
 unsafe fn cqn7_clube(liga: usize, l: usize) -> usize {
-    cqn7_d(cqn7_d(liga + 0xb1) + l * 0x3b)
+    read_usize(read_usize(liga + 0xb1) + l * 0x3b)
 }
 
 /// O mata-mata montado da tabela (o mesmo molde nas semifinais e nos mata-matas dos estaduais; só mudam o fonte, as
@@ -488,7 +470,7 @@ unsafe fn cqn7_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
         core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cqn7_clube(this, l));
     }
     crate::comparacao::ramo(ramo);
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqn7_d(cqn7_d(this) + 0x3c));
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -499,12 +481,12 @@ unsafe fn cqn7_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(0x522e00usize);
-        construir(p, this, n as u32, lista, rodadas as u16 as u32, cqn7_d(this + 4), t, cqn7_w(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
+        construir(p, this, n as u32, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
     } else {
         0
     };
-    core::ptr::write_unaligned(cqn7_d(this + 0xc) as *mut usize, fase);
-    let fase = cqn7_d(cqn7_d(this + 0xc));
+    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, fase);
+    let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
         return aviso_em(arquivo, linha_sem_fase);
     }
@@ -541,18 +523,18 @@ unsafe extern "thiscall" fn cqn7_mata_mata_do_nordeste(this: usize) {
 unsafe fn cqn7_comparar(nome: &str, this: usize, linhas: &[usize], original: impl FnOnce()) {
     let mut plano: Vec<usize> = linhas.iter().map(|&l| cqn7_clube(this, l)).collect();
     original();
-    let fase = cqn7_d(cqn7_d(this + 0xc));
+    let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
         PLACAR.registrar(false, || format!("{}({:#x}) sem fase", nome, this));
         return;
     }
-    let lista = cqn7_d(fase + 0xa7);
-    let mut achou: Vec<usize> = (0..linhas.len()).map(|k| cqn7_d(lista + 6 * k)).collect();
+    let lista = read_usize(fase + 0xa7);
+    let mut achou: Vec<usize> = (0..linhas.len()).map(|k| read_usize(lista + 6 * k)).collect();
     let (pl, ac) = (plano.clone(), achou.clone());
     plano.sort_unstable();
     achou.sort_unstable();
-    let igual = plano == achou && cqn7_w(fase + 0x3e) as usize == linhas.len() && cqn7_d(fase + 4) == cqn7_d(this + 4) && cqn7_d(this + 0x30) == 0;
-    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqn7_w(fase + 0x3e)));
+    let igual = plano == achou && read_i16(fase + 0x3e) as usize == linhas.len() && read_usize(fase + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0;
+    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
 }
 
 unsafe extern "thiscall" fn comparar_cqn7_mata_mata_do_baiano(this: usize) {

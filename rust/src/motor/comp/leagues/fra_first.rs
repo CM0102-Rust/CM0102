@@ -1,16 +1,10 @@
 // ---------- 280a leva: o construtor da primeira divisão francesa: as duas competições-marcador, os clubes da CFA e da divisão de baixo levados à divisão genérica e as duas ligas de fundo montadas e soltas (fra_first.cpp) ----------
 
-unsafe fn cqq6_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqq6_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
 /// O registro de competição de id [g] (vetor [0xae23d0], 0x6b bytes; a original faz id × 3 × 9 × 4 − id).
 unsafe fn cqq6_registro(g: usize) -> usize {
-    cqq6_d(0xae23d0).wrapping_add(cqq6_d(g).wrapping_mul(0x6b))
+    read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(g).wrapping_mul(0x6b))
 }
 
 /// Uma competição-marcador (operator new 0x944cf1 de 0xa3: push; add esp, 4 -> cdecl; sem memória: 0): Comp::Comp
@@ -24,9 +18,9 @@ unsafe fn cqq6_marcador(vtabela: usize, g: usize) -> usize {
         return 0;
     }
     comp(c);
-    cqq6_pd(c, vtabela);
+    write_u32_from_usize(c, vtabela);
     *((c + 0x42) as *mut u8) = 1;
-    cqq6_pd(c + 4, cqq6_registro(g));
+    write_u32_from_usize(c + 4, cqq6_registro(g));
     *((c + 0x50) as *mut u8) = 0xff;
     c
 }
@@ -59,31 +53,31 @@ unsafe extern "thiscall" fn construir_primeira_francesa(this: usize, ano: u32, r
     let cfa: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x5b91c0usize);
     let baixo: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x5bd600usize);
     base(this);
-    cqq6_pd(this, 0x96aa24);
+    write_u32_from_usize(this, 0x96aa24);
     core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
-    cqq6_pd(this + 4, registro);
+    write_u32_from_usize(this + 4, registro);
     *((this + 0x50) as *mut u8) = 0xc; // cqq6: a disciplina da primeira francesa
     let m = cqq6_marcador(0x96a994, 0x9cf5d8);
-    cqq6_pd(this + 0xee, m);
+    write_u32_from_usize(this + 0xee, m);
     let m = cqq6_marcador(0x96a904, 0x9cf548);
-    cqq6_pd(this + 0xf2, m);
+    write_u32_from_usize(this + 0xf2, m);
     if carregar(this, 1) != 0 {
         return this;
     }
     crate::comparacao::ramo("cqq_6 primeira francesa nova");
-    let n = || (cqq6_d(0xae235c) as i32).wrapping_sub((cqq6_d(0xae2350) as i32).wrapping_mul(2));
+    let n = || (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
     if n() > 0 {
-        let mut p = cqq6_d(0xae23b4) + 0x57;
+        let mut p = read_u32_as_usize(0xae23b4) + 0x57;
         let mut i: i32 = 0;
         loop {
-            let comp = cqq6_d(p);
+            let comp = read_u32_as_usize(p);
             if comp != 0 {
-                if cqq6_d(comp) == cqq6_d(0x9cf5d8) {
-                    cqq6_pd(p + 9, comp); // cqq6: a CFA vira a competição de reserva
-                    cqq6_pd(p, cqq6_registro(0x9cf764));
-                } else if cqq6_d(comp) == cqq6_d(0x9cf548) {
-                    cqq6_pd(p + 9, 0); // cqq6: a divisão de baixo fica sem reserva
-                    cqq6_pd(p, cqq6_registro(0x9cf764));
+                if read_u32_as_usize(comp) == read_u32_as_usize(0x9cf5d8) {
+                    write_u32_from_usize(p + 9, comp); // cqq6: a CFA vira a competição de reserva
+                    write_u32_from_usize(p, cqq6_registro(0x9cf764));
+                } else if read_u32_as_usize(comp) == read_u32_as_usize(0x9cf548) {
+                    write_u32_from_usize(p + 9, 0); // cqq6: a divisão de baixo fica sem reserva
+                    write_u32_from_usize(p, cqq6_registro(0x9cf764));
                 }
             }
             i += 1;
@@ -94,9 +88,9 @@ unsafe extern "thiscall" fn construir_primeira_francesa(this: usize, ano: u32, r
         }
     }
     *((this + 0x44) as *mut u8) = 0xff;
-    cqq6_pd(this + 0x30, 0xffff_ffff);
-    cqq6_pd(this + 0x2c, 0);
-    cqq6_pd(this + 0xc, 0);
+    write_u32_from_usize(this + 0x30, 0xffff_ffff);
+    write_u32_from_usize(this + 0x2c, 0);
+    write_u32_from_usize(this + 0xc, 0);
     if regras(this) == 0 {
         aviso_em(0x9ccb5c, 0x65);
         return this;
@@ -115,7 +109,7 @@ unsafe extern "thiscall" fn construir_primeira_francesa(this: usize, ano: u32, r
     }
     let e = novo(0x5ce);
     let s = if e != 0 { estatisticas(e, this) } else { 0 };
-    cqq6_pd(this + 8, s);
+    write_u32_from_usize(this + 8, s);
     if s == 0 {
         aviso_em(0x9ccb5c, 0x83);
         return this;
@@ -128,7 +122,7 @@ unsafe extern "thiscall" fn construir_primeira_francesa(this: usize, ano: u32, r
     let ligas_baixo = if b != 0 { baixo(b, ano) } else { 0 };
     for l in [ligas_cfa, ligas_baixo] {
         if l != 0 {
-            let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(cqq6_d(cqq6_d(l)));
+            let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(l)));
             destruir(l, 1);
         }
     }
@@ -141,26 +135,20 @@ unsafe extern "thiscall" fn construir_primeira_francesa(this: usize, ano: u32, r
 unsafe extern "thiscall" fn comparar_construir_primeira_francesa(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1946);
     let r = o(this, ano, registro);
-    let marcador = |m: usize, vt: usize, g: usize| m == 0 || (cqq6_d(m) == vt && cqq6_d(m + 4) == cqq6_registro(g) && *((m + 0x50) as *const u8) == 0xff);
-    let mut ok = r == this && cqq6_d(this) == 0x96aa24 && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && cqq6_d(this + 4) == registro && *((this + 0x50) as *const u8) == 0xc
-        && marcador(cqq6_d(this + 0xee), 0x96a994, 0x9cf5d8) && marcador(cqq6_d(this + 0xf2), 0x96a904, 0x9cf548);
-    if *((this + 0x44) as *const u8) == 0xff && cqq6_d(this + 8) != 0 {
-        ok = ok && cqq6_d(this + 0x2c) == 0 && cqq6_d(this + 0xc) == 0;
+    let marcador = |m: usize, vt: usize, g: usize| m == 0 || (read_u32_as_usize(m) == vt && read_u32_as_usize(m + 4) == cqq6_registro(g) && *((m + 0x50) as *const u8) == 0xff);
+    let mut ok = r == this && read_u32_as_usize(this) == 0x96aa24 && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
+        && read_u32_as_usize(this + 4) == registro && *((this + 0x50) as *const u8) == 0xc
+        && marcador(read_u32_as_usize(this + 0xee), 0x96a994, 0x9cf5d8) && marcador(read_u32_as_usize(this + 0xf2), 0x96a904, 0x9cf548);
+    if *((this + 0x44) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
+        ok = ok && read_u32_as_usize(this + 0x2c) == 0 && read_u32_as_usize(this + 0xc) == 0;
     }
-    PLACAR.registrar(ok, || format!("construir_primeira_francesa({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this, r, cqq6_d(this), cqq6_d(this + 0xee), cqq6_d(this + 0xf2), cqq6_d(this + 8)));
+    PLACAR.registrar(ok, || format!("construir_primeira_francesa({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0xee), read_u32_as_usize(this + 0xf2), read_u32_as_usize(this + 8)));
     r
 }
 
 // ---------- 278a leva: o calendário real de 2001/02 dos dois grupos da Série C1 italiana (os jogos fixos pelo nome dos clubes) e os dois tocos que devolvem 1 (ita_ser_c1a.cpp, ita_ser_c1b.cpp, fra_first.cpp) ----------
 
-unsafe fn cqn6_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqn6_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
 /// Quantos jogos a liga tem: (clubes +0x3e / 2, com sinal, para zero) × rodadas +0xa9.
 unsafe fn cqn6_jogos(liga: usize) -> i32 {
@@ -189,34 +177,34 @@ unsafe fn cqn6_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: u
     let n = cqn6_jogos(this);
     let bloco = novo((n as u32).wrapping_mul(16).wrapping_add(4));
     let vetor = if bloco != 0 {
-        cqn6_pd(bloco, n as usize);
+        write_u32_from_usize(bloco, n as usize);
         construir(bloco + 4, 0x10, n as u32, 0x645800, 0x5a53c0);
         bloco + 4
     } else {
         0
     };
-    cqn6_pd(this + 0xea, vetor);
+    write_u32_from_usize(this + 0xea, vetor);
     if vetor == 0 {
         aviso_em(arquivo, linha);
         return;
     }
     for (k, &(dia, mes, ano, casa, fora)) in tabela.iter().enumerate() {
-        jogo(cqn6_d(this + 0xea) + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn6: cada jogo fixo
+        jogo(read_u32_as_usize(this + 0xea) + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn6: cada jogo fixo
     }
     crate::comparacao::ramo("cqn_6 calendario fixo");
     let n = cqn6_jogos(this);
     if n <= 0 {
         return;
     }
-    let v = cqn6_d(this + 0xea);
+    let v = read_u32_as_usize(this + 0xea);
     for i in 0..n as usize {
         let f = v + i * 0x10;
-        if cqn6_d(f + 8) == 0xffff_ffff || cqn6_d(f + 0xc) == 0xffff_ffff { // cqn6: um clube sem achar derruba a lista
+        if read_u32_as_usize(f + 8) == 0xffff_ffff || read_u32_as_usize(f + 0xc) == 0xffff_ffff { // cqn6: um clube sem achar derruba a lista
             if v != 0 {
-                destruir(v, 0x10, cqn6_d(v - 4) as u32, 0x5a53c0);
+                destruir(v, 0x10, read_u32_as_usize(v - 4) as u32, 0x5a53c0);
                 apagar(v - 4);
             }
-            cqn6_pd(this + 0xea, 0);
+            write_u32_from_usize(this + 0xea, 0);
             return;
         }
     }
@@ -237,9 +225,9 @@ unsafe extern "thiscall" fn calendario_fixo_da_c1b(this: usize) {
 /// cada jogo com os dois clubes achados), ou foi derrubada (+0xea = 0).
 unsafe fn cqn6_comparar(nome: &str, this: usize, original: impl FnOnce()) {
     original();
-    let v = cqn6_d(this + 0xea);
+    let v = read_u32_as_usize(this + 0xea);
     let n = cqn6_jogos(this);
-    let ok = v == 0 || (cqn6_d(v - 4) as i32 == n && (0..n.max(0) as usize).all(|i| cqn6_d(v + i * 0x10 + 8) != 0xffff_ffff && cqn6_d(v + i * 0x10 + 0xc) != 0xffff_ffff));
+    let ok = v == 0 || (read_u32_as_usize(v - 4) as i32 == n && (0..n.max(0) as usize).all(|i| read_u32_as_usize(v + i * 0x10 + 8) != 0xffff_ffff && read_u32_as_usize(v + i * 0x10 + 0xc) != 0xffff_ffff));
     PLACAR.registrar(ok, || format!("{}({:#x}): a lista dos jogos fixos (+0xea = {:#x}) fora do esperado", nome, this, v));
 }
 
@@ -902,9 +890,6 @@ const CQN6_C1B: [(u8, u8, u16, u32, u32); 306] = [
 
 // ---------- 275a leva: as regras das três divisões francesas: turnos, pontos, acesso e rebaixamento pelo ano (a virada para 20 clubes em 2002), desempates e a tabela de rodadas (fra_first.cpp, fra_second.cpp, fra_third.cpp) ----------
 
-unsafe fn cqj5_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 /// No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
 static mut CQJ5_ENSAIO: bool = false;
@@ -921,7 +906,7 @@ unsafe fn cqj5_regras(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
         }
     }
     if !CQJ5_ENSAIO {
-        let rodadas: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(cqj5_d(cqj5_d(this) + 0x3c));
+        let rodadas: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
         let t = rodadas(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
         core::ptr::write_unaligned((this + 0xba) as *mut usize, t);
     }
@@ -953,7 +938,7 @@ unsafe fn cqj5_primeira(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = cqj5_comuns();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3), (0xab, 2, 0), (0xdb, 2, 0), (0xbe, 1, 0)]);
     let caem = if cqj5_em_2001(this) { 2 } else { 3 }; // cqj5: a primeira rebaixa 2 em 2001
-    v.extend_from_slice(&[(0xc1, 1, caem), (0x49, 1, 5), (0x1c, 4, 0xffff_ffff), (0x52, 1, 2), (0x20, 4, cqj5_d(0x9cf5d0) as u32)]);
+    v.extend_from_slice(&[(0xc1, 1, caem), (0x49, 1, 5), (0x1c, 4, 0xffff_ffff), (0x52, 1, 2), (0x20, 4, read_usize(0x9cf5d0) as u32)]);
     v
 }
 
@@ -969,7 +954,7 @@ unsafe fn cqj5_segunda(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = cqj5_comuns();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqj5: a segunda dá 3 pontos pela vitória
     let (sobem, caem) = if cqj5_em_2001(this) { (4, 2) } else { (3, 3) };
-    v.extend_from_slice(&[(0xbe, 1, sobem), (0xc1, 1, caem), (0x1c, 4, cqj5_d(0x9cf5cc) as u32), (0x52, 1, 2), (0x20, 4, cqj5_d(0x9cf5d4) as u32), (0x49, 1, 5)]);
+    v.extend_from_slice(&[(0xbe, 1, sobem), (0xc1, 1, caem), (0x1c, 4, read_usize(0x9cf5cc) as u32), (0x52, 1, 2), (0x20, 4, read_usize(0x9cf5d4) as u32), (0x49, 1, 5)]);
     v
 }
 
@@ -985,7 +970,7 @@ unsafe fn cqj5_terceira(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = cqj5_comuns();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqj5: o National joga 2 turnos
     let sobem = if cqj5_em_2001(this) { 4 } else { 3 };
-    v.extend_from_slice(&[(0xbe, 1, sobem), (0xc1, 1, 4), (0x1c, 4, cqj5_d(0x9cf5d0) as u32), (0x49, 1, 3), (0x20, 4, 0xffff_ffff), (0xa7, 2, 0xffff)]);
+    v.extend_from_slice(&[(0xbe, 1, sobem), (0xc1, 1, 4), (0x1c, 4, read_usize(0x9cf5d0) as u32), (0x49, 1, 3), (0x20, 4, 0xffff_ffff), (0xa7, 2, 0xffff)]);
     v
 }
 
@@ -1033,17 +1018,11 @@ unsafe extern "thiscall" fn comparar_regras_da_franca_3(this: usize) -> u32 {
 
 // ---------- 275a leva: a tabela das três divisões francesas: os clubes (18 ou 20 na primeira, pelo ano), o fundo de prêmios e o dinheiro da TV, na segunda pela divisão de onde o clube veio (fra_first.cpp, fra_second.cpp, fra_third.cpp) ----------
 
-unsafe fn cqj6_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cqj6_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O registro de competição (0x6b bytes em [0xae23d0]) do id guardado no global `g`.
 unsafe fn cqj6_registro(g: usize) -> usize {
-    cqj6_d(0xae23d0).wrapping_add((cqj6_d(g) as i32 as usize).wrapping_mul(0x6b))
+    read_usize(0xae23d0).wrapping_add((read_usize(g) as i32 as usize).wrapping_mul(0x6b))
 }
 
 /// League::pay_tv_rights (0x683010: thiscall(liga, valor, filtro), ret 8).
@@ -1067,7 +1046,7 @@ unsafe fn cqj6_fundo(this: usize, cota: i32) {
 /// 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve se encheu.
 unsafe fn cqj6_encher(this: usize, arquivo: usize, linha: u32, g: usize) -> Option<bool> {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let t = alocar((cqj6_w(this + 0x3e) as i32 as u32).wrapping_mul(0x3b));
+    let t = alocar((read_i16(this + 0x3e) as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
         aviso_em(arquivo, linha);
@@ -1076,23 +1055,23 @@ unsafe fn cqj6_encher(this: usize, arquivo: usize, linha: u32, g: usize) -> Opti
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = cqj6_d(0xae23b4);
-    while (i as i32) < cqj6_d(0xae235c) as i32 {
-        let comp = cqj6_d(clube + 0x57);
-        if comp != 0 && cqj6_d(comp) == cqj6_d(g) {
+    let mut clube = read_usize(0xae23b4);
+    while (i as i32) < read_usize(0xae235c) as i32 {
+        let comp = read_usize(clube + 0x57);
+        if comp != 0 && read_usize(comp) == read_usize(g) {
             let linha = k; // cqj6: a linha k recebe o k-ésimo clube da divisão
             // ponytail: a original empurra a linha no eax com os bits de cima do id da competição; a 0x687430 só lê
             // o byte.
             iniciar(this, linha as u32, clube, 0, 0);
             k = k.wrapping_add(1);
-            if k as i8 as i16 == cqj6_w(this + 0x3e) {
+            if k as i8 as i16 == read_i16(this + 0x3e) {
                 break;
             }
         }
         i = i.wrapping_add(1);
         clube = clube.wrapping_add(0x245);
     }
-    Some(k as i8 as i16 == cqj6_w(this + 0x3e))
+    Some(k as i8 as i16 == read_i16(this + 0x3e))
 }
 
 /// { 0x5bc2b0 } (thiscall, ret 0, fra_first.cpp): `FraFirst::create_table()`: 18 clubes na temporada 2001 (+0x40 =
@@ -1148,20 +1127,20 @@ unsafe extern "thiscall" fn tabela_da_franca_3(this: usize) -> u32 {
 unsafe fn cqj6_comparar(nome: &str, this: usize, n: i16, g: usize, cota: Option<i32>, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
-    while i < cqj6_d(0xae235c) as i32 && (plano.len() as i16) < n {
-        let clube = cqj6_d(0xae23b4) + (i as usize) * 0x245;
-        let comp = cqj6_d(clube + 0x57);
-        if comp != 0 && cqj6_d(comp) == cqj6_d(g) {
+    while i < read_usize(0xae235c) as i32 && (plano.len() as i16) < n {
+        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
+        let comp = read_usize(clube + 0x57);
+        if comp != 0 && read_usize(comp) == read_usize(g) {
             plano.push(clube);
         }
         i += 1;
     }
     let r = original();
-    let t = cqj6_d(this + 0xb1);
-    let mut igual = r == (plano.len() as i16 == n) as u32 && cqj6_w(this + 0x3e) == n && t != 0;
+    let t = read_usize(this + 0xb1);
+    let mut igual = r == (plano.len() as i16 == n) as u32 && read_i16(this + 0x3e) == n && t != 0;
     let mut achou: Vec<usize> = Vec::new();
     if igual {
-        achou = (0..plano.len()).map(|k| cqj6_d(t + k * 0x3b)).collect();
+        achou = (0..plano.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         igual = achou == plano;
         if r == 1 {
             let e1 = *((this + 0xe1) as *const u8);

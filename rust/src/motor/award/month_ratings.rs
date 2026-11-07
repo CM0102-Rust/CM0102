@@ -1,24 +1,15 @@
 // ---------- 259a leva: as notas do mês: as notas da partida, a nota do jogador no mês e o melhor do mês (month_ratings.cpp) ----------
 
-unsafe fn cpw5_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cpw5_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cpw5_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
-unsafe fn cpw5_pd(a: usize, v: u32) {
-    core::ptr::write_unaligned(a as *mut u32, v);
-}
 
 /// A pessoa `id` da tabela de pessoas ([0xae23bc], 0x6e bytes cada).
 unsafe fn cpw5_pessoa(id: i32) -> usize {
-    cpw5_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e))
+    read_usize(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e))
 }
 
 /// { 0x767ee0 } (thiscall, ret 8, month_ratings.cpp): `MONTH_RATINGS::record_match_ratings(jogo, partida)`, pelo
@@ -32,10 +23,10 @@ unsafe extern "thiscall" fn guardar_notas_da_partida(this: usize, jogo: usize, p
     for l in 0..2 { // cpw5: os dois lados
         for k in 0..0x14usize {
             let e = lado + k * 0x49;
-            if cpw5_b(e + 0x1d) == 0xfb {
+            if read_u8(e + 0x1d) == 0xfb {
                 continue;
             }
-            if k >= 0xb && cpw5_b(e + 0x32) == 0xff {
+            if k >= 0xb && read_u8(e + 0x32) == 0xff {
                 continue;
             }
             let p = cpw5_pessoa(cpw5_i(e));
@@ -55,7 +46,7 @@ unsafe extern "thiscall" fn guardar_notas_da_partida(this: usize, jogo: usize, p
 /// vagas sem crescer a tabela; senão só a original (a 0x767fa0 realoca e a original não pode rodar duas vezes).
 unsafe extern "thiscall" fn comparar_guardar_notas_da_partida(this: usize, jogo: usize, partida: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1284);
-    let (tab, n, cap) = (cpw5_d(this), cpw5_i(this + 4), cpw5_i(this + 8));
+    let (tab, n, cap) = (read_usize(this), cpw5_i(this + 4), cpw5_i(this + 8));
     if tab == 0 || n < 0 || cap.wrapping_sub(n) < 40 {
         // ponytail: a tabela pode crescer (realloc): só a original; a 0x767fa0 compara cada nota
         return o(this, jogo, partida);
@@ -69,8 +60,8 @@ unsafe extern "thiscall" fn comparar_guardar_notas_da_partida(this: usize, jogo:
 /// jogo.
 unsafe fn cpw5_somar(r: usize, e: usize) {
     let s = (r + 8) as *mut u16;
-    core::ptr::write_unaligned(s, core::ptr::read_unaligned(s).wrapping_add(cpw5_b(e + 0x35) as u16));
-    *((r + 0xa) as *mut u8) = cpw5_b(r + 0xa).wrapping_add(1);
+    core::ptr::write_unaligned(s, core::ptr::read_unaligned(s).wrapping_add(read_u8(e + 0x35) as u16));
+    *((r + 0xa) as *mut u8) = read_u8(r + 0xa).wrapping_add(1);
 }
 
 /// { 0x767fa0 } (thiscall, ret 4, month_ratings.cpp): `MONTH_RATINGS::add_player_rating(vaga)`. A tabela em [this]
@@ -80,7 +71,7 @@ unsafe fn cpw5_somar(r: usize, e: usize) {
 unsafe extern "thiscall" fn nota_do_jogador_no_mes(this: usize, e: usize) {
     let id = cpw5_i(e);
     let n = cpw5_i(this + 4);
-    let mut tab = cpw5_d(this);
+    let mut tab = read_usize(this);
     for k in 0..n.max(0) as usize {
         let r = tab + k * 12;
         if cpw5_i(r) == id {
@@ -90,7 +81,7 @@ unsafe extern "thiscall" fn nota_do_jogador_no_mes(this: usize, e: usize) {
     let cap = cpw5_i(this + 8);
     if n == cap {
         let novo = cap.wrapping_add(300);
-        cpw5_pd(this + 8, novo as u32);
+        write_u32(this + 8, novo as u32);
         let bytes = (novo as u32).wrapping_mul(12);
         tab = if tab == 0 {
             let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
@@ -101,28 +92,28 @@ unsafe extern "thiscall" fn nota_do_jogador_no_mes(this: usize, e: usize) {
         };
         if tab == 0 {
             // ponytail: sem memória (a caixa "Error" da original): volta a capacidade e deixa a original refazer
-            cpw5_pd(this + 8, cap as u32);
+            write_u32(this + 8, cap as u32);
             return orig::<unsafe extern "thiscall" fn(usize, usize)>(1285)(this, e);
         }
-        cpw5_pd(this, tab as u32);
+        write_u32(this, tab as u32);
     }
     let p = cpw5_pessoa(id);
-    let clube = cpw5_d(p + 0x39);
+    let clube = read_usize(p + 0x39);
     let mut liga = -1i32;
     if clube != 0 {
-        let l = cpw5_d(clube + 0x57);
+        let l = read_usize(clube + 0x57);
         if l != 0 {
             liga = cpw5_i(l);
         }
     }
     let r = tab + (n as usize) * 12;
-    cpw5_pd(r, id as u32);
-    cpw5_pd(r + 4, liga as u32);
+    write_u32(r, id as u32);
+    write_u32(r + 4, liga as u32);
     core::ptr::write_unaligned((r + 8) as *mut u16, 0);
-    *((r + 0xb) as *mut u8) = cpw5_b(p + 0x18);
+    *((r + 0xb) as *mut u8) = read_u8(p + 0x18);
     crate::comparacao::ramo("cpw_5 jogador novo no mes");
     *((r + 0xa) as *mut u8) = 0; // cpw5: começa sem jogos
-    cpw5_pd(this + 4, n.wrapping_add(1) as u32);
+    write_u32(this + 4, n.wrapping_add(1) as u32);
     cpw5_somar(r, e);
 }
 
@@ -130,7 +121,7 @@ unsafe extern "thiscall" fn nota_do_jogador_no_mes(this: usize, e: usize) {
 /// senão só a original (realloc).
 unsafe extern "thiscall" fn comparar_nota_do_jogador_no_mes(this: usize, e: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1285);
-    let (tab, n, cap) = (cpw5_d(this), cpw5_i(this + 4), cpw5_i(this + 8));
+    let (tab, n, cap) = (read_usize(this), cpw5_i(this + 4), cpw5_i(this + 8));
     let achou = tab != 0 && (0..n.max(0) as usize).any(|k| cpw5_i(tab + k * 12) == cpw5_i(e));
     if tab == 0 || n < 0 || (n >= cap && !achou) {
         // ponytail: a tabela cresce (malloc/realloc): só a original
@@ -150,8 +141,8 @@ unsafe extern "thiscall" fn comparar_nota_do_jogador_no_mes(this: usize, e: usiz
 unsafe extern "thiscall" fn melhor_do_mes(this: usize, liga: i32, idade: u32) -> usize {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     crate::comparacao::ramo("cpw_5 ordenou as notas");
-    ordenar(cpw5_d(this), cpw5_d(this + 4) as u32, 0xc, 0x768200); // cpw5: ordena pela média
-    let tab = cpw5_d(this);
+    ordenar(read_usize(this), read_usize(this + 4) as u32, 0xc, 0x768200); // cpw5: ordena pela média
+    let tab = read_usize(this);
     let n = cpw5_i(this + 4);
     let idade = idade as u8;
     let mut contados = 0i32;
@@ -162,11 +153,11 @@ unsafe extern "thiscall" fn melhor_do_mes(this: usize, liga: i32, idade: u32) ->
             if liga != -1 && cpw5_i(r + 4) != liga {
                 continue;
             }
-            if (cpw5_b(r + 0xa) as i8) < minimo {
+            if (read_u8(r + 0xa) as i8) < minimo {
                 continue;
             }
             if idade != 0xff {
-                if cpw5_b(r + 0xb) as i8 > idade as i8 {
+                if read_u8(r + 0xb) as i8 > idade as i8 {
                     contados += 1;
                     continue;
                 }
@@ -177,9 +168,9 @@ unsafe extern "thiscall" fn melhor_do_mes(this: usize, liga: i32, idade: u32) ->
             if liga == -1 {
                 return r;
             }
-            let c = cpw5_d(cpw5_pessoa(cpw5_i(r)) + 0x39);
+            let c = read_usize(cpw5_pessoa(cpw5_i(r)) + 0x39);
             if c != 0 {
-                let l = cpw5_d(c + 0x57);
+                let l = read_usize(c + 0x57);
                 if l != 0 && cpw5_i(l) == liga {
                     return r;
                 }
@@ -195,7 +186,7 @@ unsafe extern "thiscall" fn melhor_do_mes(this: usize, liga: i32, idade: u32) ->
 /// O comparador do melhor do mês: lado a lado pela tabela ordenada e pelo registro devolvido.
 unsafe extern "thiscall" fn comparar_melhor_do_mes(this: usize, liga: i32, idade: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, u32) -> usize>(1286);
-    let (tab, n) = (cpw5_d(this), cpw5_i(this + 4));
+    let (tab, n) = (read_usize(this), cpw5_i(this + 4));
     let regioes: Vec<(usize, usize)> = if tab != 0 && n > 0 { vec![(tab, n as usize * 12)] } else { Vec::new() };
     let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, liga, idade), || melhor_do_mes(this, liga, idade));
     PLACAR.registrar(igual && r == m, || format!("melhor_do_mes(liga {}, idade {}) original={:#x} {:x?} rust={:#x} {:x?}", liga, idade as u8 as i8, r, mo, m, mr));

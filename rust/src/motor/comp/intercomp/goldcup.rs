@@ -1,22 +1,13 @@
 // ---------- 283a leva: a Copa América: as 12 seleções, as posições previstas e a temporada nova (goldcup.cpp) ----------
 
-unsafe fn cqs12_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqs12_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqs12_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
 /// A seleção (o clube da seleção principal) da nação de id [`global`]: 0x53b3d0 database_get_national_team (push nação;
 /// add esp -> cdecl) com a nação da tabela [0xae23a8] (0x122 bytes cada).
 unsafe fn cqs12_selecao(id: usize) -> usize {
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    selecao(cqs12_d(0xae23a8) + id * 0x122)
+    selecao(read_u32_as_usize(0xae23a8) + id * 0x122)
 }
 
 /// As 12 da Copa América de 2001, na ordem da lista (os grupos intercalados: A nas vagas 0, 3, 6 e 9; B nas 1, 4, 7 e
@@ -41,18 +32,18 @@ unsafe fn cqs12_selecoes(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    cqs12_pd(this + 0xf2, 0xc);
+    write_u32_from_usize(this + 0xf2, 0xc);
     let lista = alocar(0x30);
-    cqs12_pd(this + 0xee, lista);
+    write_u32_from_usize(this + 0xee, lista);
     if lista == 0 {
         aviso_em(0x9cd640, 0x37b);
         return 0;
     }
-    let ano = cqs12_w(this + 0x40) as u16;
+    let ano = read_i16(this + 0x40) as u16;
     if ano == 0x7d1 {
         crate::comparacao::ramo("cqs_12 selecoes de 2001");
         for (k, &g) in CQS12_DE_2001.iter().enumerate() {
-            cqs12_pd(cqs12_d(this + 0xee) + k * 4, cqs12_selecao(cqs12_d(g)));
+            write_u32_from_usize(read_u32_as_usize(this + 0xee) + k * 4, cqs12_selecao(read_u32_as_usize(g)));
         }
         return 1;
     }
@@ -60,37 +51,37 @@ unsafe fn cqs12_selecoes(this: usize) -> u32 {
     let mut ids = [-1i32; 2];
     let (a, b) = ids.split_at_mut(1);
     // ponytail: a original empurra o eax com o ano nos 16 bits baixos e sobra nos altos; a 0x5fa730 só lê o word
-    let quantas = sedes(cqs12_d(0xb5e134), cqs12_d(0x9cf7a8), ano as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as u8 as i8;
+    let quantas = sedes(read_u32_as_usize(0xb5e134), read_u32_as_usize(0x9cf7a8), ano as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as u8 as i8;
     let mut k = 0i16;
     while k < quantas as i16 {
-        cqs12_pd(cqs12_d(this + 0xee) + k as usize * 4, cqs12_selecao(ids[k as usize] as usize));
+        write_u32_from_usize(read_u32_as_usize(this + 0xee) + k as usize * 4, cqs12_selecao(ids[k as usize] as usize));
         k += 1;
     }
     let mut i = 0i16;
-    let mut nacao = cqs12_d(0xae23a8);
-    while (i as i32) < cqs12_d(0xae2350) as i32 && (k as i32) < cqs12_d(this + 0xf2) as i32 {
-        let continente = cqs12_d(nacao + 0x71);
-        let id = cqs12_d(nacao);
-        let entra = (continente != 0 && cqs12_d(continente) == cqs12_d(0x9cfa1c))
-            || (ano == 0x7cf && id == cqs12_d(0x9cf36c))
-            || (ano != 0x7cf && id == cqs12_d(0x9cf280))
-            || id == cqs12_d(0x9cf3d0);
+    let mut nacao = read_u32_as_usize(0xae23a8);
+    while (i as i32) < read_u32_as_usize(0xae2350) as i32 && (k as i32) < read_u32_as_usize(this + 0xf2) as i32 {
+        let continente = read_u32_as_usize(nacao + 0x71);
+        let id = read_u32_as_usize(nacao);
+        let entra = (continente != 0 && read_u32_as_usize(continente) == read_u32_as_usize(0x9cfa1c))
+            || (ano == 0x7cf && id == read_u32_as_usize(0x9cf36c))
+            || (ano != 0x7cf && id == read_u32_as_usize(0x9cf280))
+            || id == read_u32_as_usize(0x9cf3d0);
         if entra {
-            let l = cqs12_d(this + 0xee);
-            let sede = (0..quantas.max(0) as usize).any(|j| cqs12_d(cqs12_d(l + j * 4) + 0x53) == nacao);
+            let l = read_u32_as_usize(this + 0xee);
+            let sede = (0..quantas.max(0) as usize).any(|j| read_u32_as_usize(read_u32_as_usize(l + j * 4) + 0x53) == nacao);
             if !sede {
-                cqs12_pd(cqs12_d(this + 0xee) + k as usize * 4, selecao(nacao));
+                write_u32_from_usize(read_u32_as_usize(this + 0xee) + k as usize * 4, selecao(nacao));
                 k += 1;
             }
         }
         i = i.wrapping_add(1);
         nacao += 0x122;
     }
-    if k as i32 != cqs12_d(this + 0xf2) as i32 {
+    if k as i32 != read_u32_as_usize(this + 0xf2) as i32 {
         aviso_em(0x9cd640, 0x3bc);
         return 0;
     }
-    ordenar(cqs12_d(this + 0xee), k as i32 as u32, 4, 0x4b07d0);
+    ordenar(read_u32_as_usize(this + 0xee), k as i32 as u32, 4, 0x4b07d0);
     1
 }
 
@@ -107,12 +98,12 @@ unsafe extern "thiscall" fn comparar_cqs12_copa_america_selecoes(this: usize) ->
     let reg = [(this + 0xf2, 4usize), (0xb67a34, 4)];
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
         let r = o(this);
-        lo.set(cqs12_d(this + 0xee));
+        lo.set(read_u32_as_usize(this + 0xee));
         r
     }, || {
         let r = cqs12_selecoes(this);
-        lr.set(cqs12_d(this + 0xee));
-        cqs12_pd(this + 0xee, lo.get());
+        lr.set(read_u32_as_usize(this + 0xee));
+        write_u32_from_usize(this + 0xee, lo.get());
         r
     });
     let (lo, lr) = (lo.get(), lr.get());
@@ -142,19 +133,19 @@ unsafe extern "thiscall" fn cqs12_copa_america_previstas(this: usize) {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4a2540usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    if cqs12_d(this + 8) == 0 {
+    if read_u32_as_usize(this + 8) == 0 {
         return aviso_em(0x9cd640, 0x419);
     }
-    let v = alocar((cqs12_d(this + 0xf2) << 2) as u32);
+    let v = alocar((read_u32_as_usize(this + 0xf2) << 2) as u32);
     if v == 0 {
         return aviso_em(0x9cd640, 0x421);
     }
-    let n = cqs12_d(this + 0xf2) << 2;
-    core::ptr::copy_nonoverlapping(cqs12_d(this + 0xee) as *const u8, v as *mut u8, n);
-    ordenar(v, cqs12_d(this + 0xf2) as u32, 4, 0x4b07d0);
+    let n = read_u32_as_usize(this + 0xf2) << 2;
+    core::ptr::copy_nonoverlapping(read_u32_as_usize(this + 0xee) as *const u8, v as *mut u8, n);
+    ordenar(v, read_u32_as_usize(this + 0xf2) as u32, 4, 0x4b07d0);
     crate::comparacao::ramo("cqs_12 previstas da copa america");
     for (k, &p) in CQS12_PREVISTAS.iter().enumerate() {
-        posicao(cqs12_d(this + 8), cqs12_d(v + k * 4), p);
+        posicao(read_u32_as_usize(this + 8), read_u32_as_usize(v + k * 4), p);
     }
     soltar(v);
 }
@@ -164,16 +155,16 @@ unsafe extern "thiscall" fn cqs12_copa_america_previstas(this: usize) {
 // cada uma das 12 igual à da faixa.
 unsafe extern "thiscall" fn comparar_cqs12_copa_america_previstas(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2044);
-    if cqs12_d(this + 8) == 0 || cqs12_d(this + 0xee) == 0 || cqs12_d(this + 0xf2) != 0xc {
+    if read_u32_as_usize(this + 8) == 0 || read_u32_as_usize(this + 0xee) == 0 || read_u32_as_usize(this + 0xf2) != 0xc {
         return o(this);
     }
     let ordenar: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
-    let mut v: Vec<usize> = (0..12).map(|i| cqs12_d(cqs12_d(this + 0xee) + i * 4)).collect();
+    let mut v: Vec<usize> = (0..12).map(|i| read_u32_as_usize(read_u32_as_usize(this + 0xee) + i * 4)).collect();
     ordenar(v.as_mut_ptr(), 12, 4, 0x4b07d0);
     o(this);
     let errado = (0..12).find(|&k| {
-        let e = if v[k] != 0 { achar(cqs12_d(this + 8), v[k]) } else { 0 };
+        let e = if v[k] != 0 { achar(read_u32_as_usize(this + 8), v[k]) } else { 0 };
         e == 0 || *((e + 0x72) as *const u8) as u32 != CQS12_PREVISTAS[k]
     });
     PLACAR.registrar(errado.is_none(), || format!("cqs12_copa_america_previstas: a posição prevista da vaga {:?} não bate", errado));
@@ -189,34 +180,34 @@ unsafe extern "thiscall" fn cqs12_copa_america_temporada_nova(this: usize) {
     let soltar_tabela: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x687970usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
-    cqs12_pd(this + 0x4c, 0);
+    write_u32_from_usize(this + 0x4c, 0);
     soltar_tabela(this, 0);
-    if cqs12_d(this + 0xba) != 0 {
-        soltar(cqs12_d(this + 0xba));
-        cqs12_pd(this + 0xba, 0);
+    if read_u32_as_usize(this + 0xba) != 0 {
+        soltar(read_u32_as_usize(this + 0xba));
+        write_u32_from_usize(this + 0xba, 0);
     }
-    if cqs12_d(this + 8) != 0 {
-        arquivar(cqs12_d(this + 8), 1);
+    if read_u32_as_usize(this + 8) != 0 {
+        arquivar(read_u32_as_usize(this + 8), 1);
     }
-    if (cqs12_d(this + 0x30) as i32) >= 0 {
+    if (read_u32_as_usize(this + 0x30) as i32) >= 0 {
         let mut i = 0i32;
         loop {
-            let f = cqs12_d(cqs12_d(this + 0xc) + i as usize * 4);
+            let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + i as usize * 4);
             if f != 0 {
-                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(cqs12_d(cqs12_d(f)));
+                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(f)));
                 destruir(f, 1);
             }
             i += 1;
-            if i > cqs12_d(this + 0x30) as i32 {
+            if i > read_u32_as_usize(this + 0x30) as i32 {
                 break;
             }
         }
     }
     crate::comparacao::ramo("cqs_12 temporada nova da copa america");
-    core::ptr::write_unaligned((this + 0x40) as *mut i16, cqs12_w(this + 0x40).wrapping_add(2)); // cqs12: a Copa América a cada 2 anos
-    cqs12_pd(this + 0x45, 0);
-    cqs12_pd(this + 0x30, usize::MAX);
-    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqs12_d(cqs12_d(this) + 0x8c));
+    core::ptr::write_unaligned((this + 0x40) as *mut i16, read_i16(this + 0x40).wrapping_add(2)); // cqs12: a Copa América a cada 2 anos
+    write_u32_from_usize(this + 0x45, 0);
+    write_u32_from_usize(this + 0x30, usize::MAX);
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x8c));
     if regras(this) == 0 {
         aviso_em(0x9cd640, 0x28b);
     }
@@ -227,30 +218,21 @@ unsafe extern "thiscall" fn cqs12_copa_america_temporada_nova(this: usize) {
 // quando havia antes).
 unsafe extern "thiscall" fn comparar_cqs12_copa_america_temporada_nova(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2045);
-    let ano = cqs12_w(this + 0x40);
+    let ano = read_i16(this + 0x40);
     o(this);
-    let ok = cqs12_w(this + 0x40) == ano.wrapping_add(2) && cqs12_d(this + 0x45) == 0 && cqs12_d(this + 0x30) as i32 == -1 && cqs12_d(this + 0x4c) == 0;
-    PLACAR.registrar(ok, || format!("cqs12_copa_america_temporada_nova({:#x}): ano {} -> {}, +0x45 {}, +0x30 {}", this, ano, cqs12_w(this + 0x40), cqs12_d(this + 0x45), cqs12_d(this + 0x30) as i32));
+    let ok = read_i16(this + 0x40) == ano.wrapping_add(2) && read_u32_as_usize(this + 0x45) == 0 && read_u32_as_usize(this + 0x30) as i32 == -1 && read_u32_as_usize(this + 0x4c) == 0;
+    PLACAR.registrar(ok, || format!("cqs12_copa_america_temporada_nova({:#x}): ano {} -> {}, +0x45 {}, +0x30 {}", this, ano, read_i16(this + 0x40), read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
 }
 
 // ---------- 282a leva: a Copa América: o dia do sorteio, a tabela do primeiro grupo e as fases dos outros dois grupos (goldcup.cpp) ----------
 
-unsafe fn cqr13_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqr13_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqr13_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
 /// A seleção k da lista dos sorteados (+0xee, ponteiros: os 12 em grupos intercalados, o grupo j nas vagas j, j + 3,
 /// j + 6 e j + 9), a que o primeiro grupo e as fases dos outros leem.
 unsafe fn cqr13_sorteado(this: usize, k: usize) -> usize {
-    cqr13_d(cqr13_d(this + 0xee) + k * 4) // cqr13: o sorteado k
+    read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4) // cqr13: o sorteado k
 }
 
 /// { 0x5e2120 } (thiscall, ret 8, goldcup.cpp; a virtual +0x14; quadro SEH só das datas locais, sem destrutor):
@@ -273,8 +255,8 @@ unsafe extern "thiscall" fn cqr13_copa_america_dia(this: usize, hoje: usize, com
     let fase: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(0x5e16b0usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x6847c0usize);
-    let dia = cqr13_w(this + 0xb6) as u16; // cqr13: o dia do sorteio
-    let ano = (cqr13_w(this + 0xb8) as u16).wrapping_add(cqr13_w(this + 0x40) as u16);
+    let dia = read_i16(this + 0xb6) as u16; // cqr13: o dia do sorteio
+    let ano = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16);
     let dia_de_hoje = core::ptr::read_unaligned(hoje as *const u16);
     let ano_de_hoje = core::ptr::read_unaligned((hoje + 2) as *const u16);
     // ponytail: nas duas voltas antes do sorteio e nos erros a original devolve só o al = 0 (o resto do eax é sobra das
@@ -282,10 +264,10 @@ unsafe extern "thiscall" fn cqr13_copa_america_dia(this: usize, hoje: usize, com
     if ano_de_hoje < ano || (ano_de_hoje == ano && (dia_de_hoje as i16) < dia as i16) {
         return 0;
     }
-    if ano_de_hoje == ano && dia_de_hoje == dia && cqr13_d(this + 0x45) == 0 && completo == 0 {
+    if ano_de_hoje == ano && dia_de_hoje == dia && read_u32_as_usize(this + 0x45) == 0 && completo == 0 {
         crate::comparacao::ramo("cqr_13 sorteio da copa america");
         selecoes(this);
-        let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqr13_d(cqr13_d(this) + 0x5c));
+        let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
         previstas(this);
         if primeiro(this) == 0 {
             aviso_em(0x9cd640, 0x3e7);
@@ -302,10 +284,10 @@ unsafe extern "thiscall" fn cqr13_copa_america_dia(this: usize, hoje: usize, com
         for g in 0..2i32 {
             fase(this, g);
         }
-        soltar(cqr13_d(this + 0xee));
-        cqr13_pd(this + 0xee, 0);
-        cqr13_pd(this + 0xf2, 0);
-        cqr13_pd(this + 0x45, 1);
+        soltar(read_u32_as_usize(this + 0xee));
+        write_u32_from_usize(this + 0xee, 0);
+        write_u32_from_usize(this + 0xf2, 0);
+        write_u32_from_usize(this + 0x45, 1);
     }
     liga(this, hoje, completo)
 }
@@ -315,21 +297,21 @@ unsafe extern "thiscall" fn cqr13_copa_america_dia(this: usize, hoje: usize, com
 // fases criadas e a fase atual (+0x30) a última delas (1).
 unsafe extern "thiscall" fn comparar_cqr13_copa_america_dia(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(2015);
-    let sorteia = cqr13_d(this + 0x45) == 0
+    let sorteia = read_u32_as_usize(this + 0x45) == 0
         && completo == 0
-        && (cqr13_w(this + 0xb8) as u16).wrapping_add(cqr13_w(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
-        && cqr13_w(this + 0xb6) as u16 == core::ptr::read_unaligned(hoje as *const u16);
+        && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
+        && read_i16(this + 0xb6) as u16 == core::ptr::read_unaligned(hoje as *const u16);
     let r = o(this, hoje, completo);
     if sorteia {
-        let fases = cqr13_d(this + 0xc);
-        let ok = cqr13_d(this + 0x45) == 1
-            && cqr13_d(this + 0xee) == 0
-            && cqr13_d(this + 0xf2) == 0
-            && cqr13_d(this + 0xb1) != 0
+        let fases = read_u32_as_usize(this + 0xc);
+        let ok = read_u32_as_usize(this + 0x45) == 1
+            && read_u32_as_usize(this + 0xee) == 0
+            && read_u32_as_usize(this + 0xf2) == 0
+            && read_u32_as_usize(this + 0xb1) != 0
             && fases != 0
-            && (0..2).all(|g| cqr13_d(fases + g * 4) != 0)
-            && cqr13_d(this + 0x30) == 1;
-        PLACAR.registrar(ok, || format!("cqr13_copa_america_dia({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqr13_d(this + 0x45), cqr13_d(this + 0x30) as i32));
+            && (0..2).all(|g| read_u32_as_usize(fases + g * 4) != 0)
+            && read_u32_as_usize(this + 0x30) == 1;
+        PLACAR.registrar(ok, || format!("cqr13_copa_america_dia({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
     }
     r
 }
@@ -345,13 +327,13 @@ unsafe extern "thiscall" fn cqr13_copa_america_primeiro_grupo(this: usize) -> u3
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 4);
     let t = novo(0xec);
-    cqr13_pd(this + 0xb1, t);
+    write_u32_from_usize(this + 0xb1, t);
     if t == 0 {
         aviso_em(0x9cd640, 0x1d4);
         return 0;
     }
     let mut i = 0i8;
-    while (i as i16) < cqr13_w(this + 0x3e) {
+    while (i as i16) < read_i16(this + 0x3e) {
         crate::comparacao::ramo("cqr_13 linha do primeiro grupo");
         // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
         linha(this, i as u8 as u32, cqr13_sorteado(this, i as usize * 3), 0, 0);
@@ -365,20 +347,20 @@ unsafe extern "thiscall" fn cqr13_copa_america_primeiro_grupo(this: usize) -> u3
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado 3i com a posição i (+4).
 unsafe extern "thiscall" fn comparar_cqr13_copa_america_primeiro_grupo(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2016);
-    let lista = cqr13_d(this + 0xee);
+    let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 {
         return o(this);
     }
-    let previstos: [usize; 4] = core::array::from_fn(|i| cqr13_d(lista + i * 12));
+    let previstos: [usize; 4] = core::array::from_fn(|i| read_u32_as_usize(lista + i * 12));
     let r = o(this);
-    let t = cqr13_d(this + 0xb1);
+    let t = read_u32_as_usize(this + 0xb1);
     let mut lidos = [(0usize, 0u8); 4];
     if t != 0 {
         for (i, l) in lidos.iter_mut().enumerate() {
-            *l = (cqr13_d(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
+            *l = (read_u32_as_usize(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
         }
     }
-    let igual = r == 1 && cqr13_w(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
+    let igual = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
     PLACAR.registrar(igual, || format!("cqr13_copa_america_primeiro_grupo({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
     r
 }
@@ -408,9 +390,9 @@ unsafe extern "thiscall" fn cqr13_copa_america_grupo(this: usize, g: i32) -> u32
     }
     for n in 0..4usize {
         crate::comparacao::ramo("cqr_13 time do grupo");
-        cqr13_pd(times + n * 4, cqr13_sorteado(this, (g + 1) as usize + n * 3)); // cqr13: o time na vaga do grupo
+        write_u32_from_usize(times + n * 4, cqr13_sorteado(this, (g + 1) as usize + n * 3)); // cqr13: o time na vaga do grupo
     }
-    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqr13_d(cqr13_d(this) + 0x3c));
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let tabela = rodadas_da_copa(this, g, &mut rodadas, &mut id, 0);
     let p = novo(0xee);
@@ -422,7 +404,7 @@ unsafe extern "thiscall" fn cqr13_copa_america_grupo(this: usize, g: i32) -> u32
             4,
             times,
             1,
-            cqr13_d(this + 4),
+            read_u32_as_usize(this + 4),
             tabela,
             rodadas as u16 as u32,
             b(0xc2),
@@ -430,13 +412,13 @@ unsafe extern "thiscall" fn cqr13_copa_america_grupo(this: usize, g: i32) -> u32
             b(0xc4),
             this + 0xc5,
             this + 0xbe,
-            cqr13_w(this + 0x40) as u16 as u32,
+            read_i16(this + 0x40) as u16 as u32,
             g as u32,
             id as u16 as u32,
             b(0x51),
             4,
             0,
-            cqr13_w(this + 0xd9) as u16 as u32,
+            read_i16(this + 0xd9) as u16 as u32,
             -1,
             0,
             2,
@@ -444,15 +426,15 @@ unsafe extern "thiscall" fn cqr13_copa_america_grupo(this: usize, g: i32) -> u32
     } else {
         0
     };
-    cqr13_pd(cqr13_d(this + 0xc) + g as usize * 4, fase);
+    write_u32_from_usize(read_u32_as_usize(this + 0xc) + g as usize * 4, fase);
     soltar(times);
     soltar(tabela);
-    let f = cqr13_d(cqr13_d(this + 0xc) + g as usize * 4);
+    let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4);
     if f == 0 {
         aviso_em(0x9cd640, 0x2d6);
         return 0;
     }
-    cqr13_pd(this + 0x30, g as usize);
+    write_u32_from_usize(this + 0x30, g as usize);
     noticia(f);
     1
 }
@@ -462,19 +444,19 @@ unsafe extern "thiscall" fn cqr13_copa_america_grupo(this: usize, g: i32) -> u32
 // sorteados g + 1, g + 4, g + 7 e g + 10 (em qualquer ordem: o construtor ordena a tabela).
 unsafe extern "thiscall" fn comparar_cqr13_copa_america_grupo(this: usize, g: i32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(2017);
-    let lista = cqr13_d(this + 0xee);
+    let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 || !(0..2).contains(&g) {
         return o(this, g);
     }
-    let mut plano: Vec<usize> = (0..4).map(|n| cqr13_d(lista + ((g + 1) as usize + n * 3) * 4)).collect();
+    let mut plano: Vec<usize> = (0..4).map(|n| read_u32_as_usize(lista + ((g + 1) as usize + n * 3) * 4)).collect();
     let r = o(this, g);
     if r == 1 {
-        let f = cqr13_d(cqr13_d(this + 0xc) + g as usize * 4);
-        let t = if f != 0 { cqr13_d(f + 0xb1) } else { 0 };
-        let mut a: Vec<usize> = if t != 0 { (0..4).map(|k| cqr13_d(t + k * 0x3b)).collect() } else { Vec::new() };
+        let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4);
+        let t = if f != 0 { read_u32_as_usize(f + 0xb1) } else { 0 };
+        let mut a: Vec<usize> = if t != 0 { (0..4).map(|k| read_u32_as_usize(t + k * 0x3b)).collect() } else { Vec::new() };
         a.sort_unstable();
         plano.sort_unstable();
-        let ok = f != 0 && cqr13_d(this + 0x30) as i32 == g && cqr13_w(f + 0x3e) == 4 && cqr13_w(f + 0x40) == cqr13_w(this + 0x40) && a == plano;
+        let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plano;
         PLACAR.registrar(ok, || format!("cqr13_copa_america_grupo({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
     }
     r

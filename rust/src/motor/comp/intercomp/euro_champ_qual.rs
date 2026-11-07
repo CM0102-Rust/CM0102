@@ -1,16 +1,7 @@
 // ---------- 284a leva: as eliminatórias da Eurocopa: as regras e a data do sorteio, o tamanho de cada grupo, a situação de um clube e a tabela do grupo 1 (euro_champ_qual.cpp) ----------
 
-unsafe fn cqs8_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqs8_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqs8_pb(a: usize, v: u8) {
-    *(a as *mut u8) = v
-}
 
 /// { 0x57e8f0 } (thiscall, ret 0, euro_champ_qual.cpp; a virtual +0x8c, do construtor em 2001-000; quadro SEH pela Date
 /// local, sem destrutor): `EuroChampQual::set_up_rules()`: 3 pontos pela vitória (+0xc2) e 1 pelo empate (+0xc3), +0x4a =
@@ -21,29 +12,29 @@ unsafe fn cqs8_pb(a: usize, v: u8) {
 /// tabela das rodadas pela virtual +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx -> thiscall, ret 0x10) em
 /// +0xba. Devolve 1.
 unsafe fn cqs8_regras(this: usize) -> u32 {
-    cqs8_pb(this + 0xc2, 3);
-    cqs8_pb(this + 0x4a, 3);
+    write_u8(this + 0xc2, 3);
+    write_u8(this + 0x4a, 3);
     core::ptr::write_unaligned((this + 0x3c) as *mut i16, 2); // cqs8: dois turnos
-    cqs8_pb(this + 0xc3, 1);
-    cqs8_pb(this + 0xc4, 0xa);
-    cqs8_pb(this + 0x43, 2);
+    write_u8(this + 0xc3, 1);
+    write_u8(this + 0xc4, 0xa);
+    write_u8(this + 0x43, 2);
     for (k, v) in [1u8, 2, 4, 5].into_iter().enumerate() {
-        cqs8_pb(this + 0xc5 + k, v);
+        write_u8(this + 0xc5 + k, v);
     }
-    cqs8_pb(this + 0xbe, 1);
-    cqs8_pb(this + 0xbf, 1);
-    cqs8_pb(this + 0xc0, 0);
-    cqs8_pb(this + 0xc1, 0);
-    cqs8_pb(this + 0x49, 7);
+    write_u8(this + 0xbe, 1);
+    write_u8(this + 0xbf, 1);
+    write_u8(this + 0xc0, 0);
+    write_u8(this + 0xc1, 0);
+    write_u8(this + 0x49, 7);
     core::ptr::write_unaligned((this + 0xa7) as *mut u16, 0xffff);
     let construir: unsafe extern "thiscall" fn(*mut [u32; 2], u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
     let mut data = [0u32; 2];
     // ponytail: a original empurra o ano no ecx com os 16 bits altos do ponteiro da copa; a 0x549f70 lê a palavra
-    construir(&mut data, 0xa, 2, cqs8_w(this + 0x40) as u16 as u32, 5); // cqs8: a data do sorteio
+    construir(&mut data, 0xa, 2, read_i16(this + 0x40) as u16 as u32, 5); // cqs8: a data do sorteio
     core::ptr::write_unaligned((this + 0xb6) as *mut u16, data[0] as u16);
     core::ptr::write_unaligned((this + 0xb8) as *mut u16, 0);
     crate::comparacao::ramo("cqs_8 regras da eurocopa");
-    let rodadas: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(cqs8_d(cqs8_d(this) + 0x3c));
+    let rodadas: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let t = rodadas(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
     core::ptr::write_unaligned((this + 0xba) as *mut u32, t as u32);
     1
@@ -57,18 +48,18 @@ unsafe extern "thiscall" fn cqs8_eurocopa_regras(this: usize) -> u32 {
 /// cada lado aloca em +0xba (pela virtual +0x3c, original) só é conferida como montada, e a da cópia é liberada.
 unsafe extern "thiscall" fn comparar_cqs8_eurocopa_regras(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2082);
-    let antes = cqs8_d(this + 0xba);
+    let antes = read_u32_as_usize(this + 0xba);
     let reg = [(this + 0x3a, 0x80usize), (this + 0xbe, 0xb)];
     let to = core::cell::Cell::new(0usize);
     let tr = core::cell::Cell::new(0usize);
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
         let r = o(this);
-        to.set(cqs8_d(this + 0xba));
+        to.set(read_u32_as_usize(this + 0xba));
         core::ptr::write_unaligned((this + 0xba) as *mut u32, antes as u32);
         r
     }, || {
         let r = cqs8_regras(this);
-        tr.set(cqs8_d(this + 0xba));
+        tr.set(read_u32_as_usize(this + 0xba));
         core::ptr::write_unaligned((this + 0xba) as *mut u32, to.get() as u32);
         r
     });
@@ -120,7 +111,7 @@ unsafe extern "thiscall" fn comparar_cqs8_eurocopa_tamanho_do_grupo(this: usize,
 /// byte de baixo menor que 14 (com sinal), −2; senão −3 (word).
 unsafe fn cqs8_situacao(this: usize, clube: usize) -> i16 {
     let estatistica: unsafe extern "thiscall" fn(usize, usize, u32) -> f64 = core::mem::transmute(0x4a2e10usize);
-    let x = ftol(estatistica(cqs8_d(this + 8), clube, 0x12));
+    let x = ftol(estatistica(read_u32_as_usize(this + 8), clube, 0x12));
     ((((x as u8 as i8) < 0xe) as i32) - 3) as i16 // cqs8: a situação pela estatística 0x12
 }
 
@@ -153,17 +144,17 @@ unsafe extern "thiscall" fn cqs8_eurocopa_grupo_um(this: usize) -> u32 {
         aviso_em(0x9c4674, 0x2d2);
         return 0;
     }
-    let n = cqs8_w(this + 0x3e);
-    core::ptr::write_unaligned((this + 0xa7) as *mut i16, n.wrapping_sub(1).wrapping_mul(cqs8_w(this + 0x3c))); // cqs8: as rodadas do grupo 1
+    let n = read_i16(this + 0x3e);
+    core::ptr::write_unaligned((this + 0xa7) as *mut i16, n.wrapping_sub(1).wrapping_mul(read_i16(this + 0x3c))); // cqs8: as rodadas do grupo 1
     crate::comparacao::ramo("cqs_8 grupo 1 da eurocopa");
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let mut i: i8 = 0;
     if n > 0 {
         loop {
-            let c = cqs8_d(cqs8_d(this + 0xf7) + i as isize as usize * 4);
+            let c = read_u32_as_usize(read_u32_as_usize(this + 0xf7) + i as isize as usize * 4);
             iniciar(this, i as u8 as u32, c, 0, 0);
             i = i.wrapping_add(1);
-            if (i as i16) >= cqs8_w(this + 0x3e) {
+            if (i as i16) >= read_i16(this + 0x3e) {
                 break;
             }
         }
@@ -179,11 +170,11 @@ unsafe extern "thiscall" fn cqs8_eurocopa_grupo_um(this: usize) -> u32 {
 unsafe extern "thiscall" fn comparar_cqs8_eurocopa_grupo_um(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2085);
     let n = if matches!(*((this + 0xf6) as *const i8), 1 | 2) { 5i16 } else { return o(this) };
-    let plano: Vec<usize> = (0..n as usize).map(|k| cqs8_d(cqs8_d(this + 0xf7) + k * 4)).collect();
+    let plano: Vec<usize> = (0..n as usize).map(|k| read_u32_as_usize(read_u32_as_usize(this + 0xf7) + k * 4)).collect();
     let r = o(this);
-    let t = cqs8_d(this + 0xb1);
-    let ok = r == 1 && cqs8_w(this + 0x3e) == n && cqs8_w(this + 0xa7) == (n - 1).wrapping_mul(cqs8_w(this + 0x3c)) && t != 0
-        && plano.iter().enumerate().all(|(k, &c)| cqs8_d(t + k * 0x3b) == c);
+    let t = read_u32_as_usize(this + 0xb1);
+    let ok = r == 1 && read_i16(this + 0x3e) == n && read_i16(this + 0xa7) == (n - 1).wrapping_mul(read_i16(this + 0x3c)) && t != 0
+        && plano.iter().enumerate().all(|(k, &c)| read_u32_as_usize(t + k * 0x3b) == c);
     PLACAR.registrar(ok, || format!("cqs8_eurocopa_grupo_um({:#x}) devolveu {}; plano {:x?}", this, r, plano));
     r
 }

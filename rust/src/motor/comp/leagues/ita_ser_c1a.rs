@@ -1,29 +1,23 @@
 // ---------- 278a leva: o play-off de acesso e o play-out da Série C1 italiana (os dois grupos) e a passagem de fase da Third Division inglesa (ita_ser_c1a.cpp, ita_ser_c1b.cpp, eng_third.cpp) ----------
 
-unsafe fn cql5_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cql5_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
 /// O clube da linha `i` da tabela [+0xb1] (0x3b bytes).
 unsafe fn cql5_clube(liga: usize, i: usize) -> usize {
-    cql5_d(cql5_d(liga + 0xb1) + i * 0x3b)
+    read_u32_as_usize(read_u32_as_usize(liga + 0xb1) + i * 0x3b)
 }
 
 /// A passagem de fase das três (League::advance_stage, o slot +0x28; o corpo de 0x64b9e0, 0x64fba0 e 0x578330): com a
 /// fase atual (+0x30) já na última (+0x2c − 1, com sinal), a caixa do fonte `arquivo` na linha `linha`; senão +0x30 + 1
 /// e, ao chegar à fase 0 (a primeira depois da liga), cria as fases (`criar`: mov ecx, this -> thiscall, ret 0).
 unsafe fn cql5_passar_de_fase(this: usize, arquivo: usize, linha: u32, criar: usize) {
-    let fase = cql5_d(this + 0x30) as i32;
-    if fase >= (cql5_d(this + 0x2c) as i32).wrapping_sub(1) {
+    let fase = read_u32_as_usize(this + 0x30) as i32;
+    if fase >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
         aviso_em(arquivo, linha);
         return;
     }
     let nova = fase.wrapping_add(1);
-    cql5_pd(this + 0x30, nova as usize);
+    write_u32_from_usize(this + 0x30, nova as usize);
     if nova == 0 {
         crate::comparacao::ramo("cql_5 fases do fim da liga");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(criar);
@@ -52,8 +46,8 @@ unsafe extern "thiscall" fn fase_seguinte_da_third(this: usize) {
 /// O comparador das três: sem criar fase (a fase atual só sobe), lado a lado em +0x30; na caixa ou ao criar as fases
 /// (alocam), só a original (a criação tem o seu comparador).
 unsafe fn cql5_comparar_passagem(nome: &str, this: usize, original: impl FnOnce(), copia: impl FnOnce()) {
-    let fase = cql5_d(this + 0x30) as i32;
-    if fase >= (cql5_d(this + 0x2c) as i32).wrapping_sub(1) || fase.wrapping_add(1) == 0 {
+    let fase = read_u32_as_usize(this + 0x30) as i32;
+    if fase >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) || fase.wrapping_add(1) == 0 {
         return original();
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0x30, 4)], original, copia);
@@ -106,15 +100,15 @@ unsafe fn cql5_criar_fases(this: usize, arquivo: usize, linhas: [u32; 3], lista_
     let fase_de_copa: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
         core::mem::transmute(0x522e00usize);
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
-    let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(cql5_d(cql5_d(this) + 0x3c));
+    let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     // a Supercopa da Série C1
-    let copa = cql5_d(cql5_d(0xadadfc) + cql5_d(0x9cf938) * 4);
-    let inscritos = cql5_d(copa + 0xa7);
+    let copa = read_u32_as_usize(read_u32_as_usize(0xadadfc) + read_u32_as_usize(0x9cf938) * 4);
+    let inscritos = read_u32_as_usize(copa + 0xa7);
     let campeao = cql5_clube(this, 0);
-    if cql5_d(inscritos) != 0 {
-        cql5_pd(inscritos + 6, campeao);
+    if read_u32_as_usize(inscritos) != 0 {
+        write_u32_from_usize(inscritos + 6, campeao);
     } else {
-        cql5_pd(inscritos, campeao);
+        write_u32_from_usize(inscritos, campeao);
     }
     let lista = alocar(0x10);
     if lista == 0 {
@@ -122,11 +116,11 @@ unsafe fn cql5_criar_fases(this: usize, arquivo: usize, linhas: [u32; 3], lista_
         return;
     }
     for (k, &i) in CQL5_PLAYOFF.iter().enumerate() {
-        cql5_pd(lista + k * 4, cql5_clube(this, i));
+        write_u32_from_usize(lista + k * 4, cql5_clube(this, i));
     }
     let clubes = *((this + 0xbf) as *const i8) as i16 as u16 as u32;
     let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
-    let registro = cql5_d(this + 4);
+    let registro = read_u32_as_usize(this + 4);
     let (mut rodadas, mut extra) = (0u32, 0u32);
     let gabarito = calendario(this, 0, &mut rodadas, &mut extra, 0);
     let posicoes: [u8; 4] = [4, 1, 3, 2]; // cql5: as posições do play-off
@@ -134,25 +128,25 @@ unsafe fn cql5_criar_fases(this: usize, arquivo: usize, linhas: [u32; 3], lista_
     if fase != 0 {
         fase = fase_de_copa(fase, this, clubes, lista, rodadas & 0xffff, registro, gabarito, ano, 0, 1, extra & 0xffff, 0x14, 0, 0, 0, posicoes.as_ptr());
     }
-    cql5_pd(cql5_d(this + 0xc), fase);
-    if cql5_d(cql5_d(this + 0xc)) == 0 {
+    write_u32_from_usize(read_u32_as_usize(this + 0xc), fase);
+    if read_u32_as_usize(read_u32_as_usize(this + 0xc)) == 0 {
         aviso_em(arquivo, linhas[1]);
         return;
     }
-    sortear(cql5_d(cql5_d(this + 0xc)), 0);
+    sortear(read_u32_as_usize(read_u32_as_usize(this + 0xc)), 0);
     soltar(gabarito);
     let (mut rodadas, mut extra) = (0u32, 0u32);
-    let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(cql5_d(cql5_d(this) + 0x3c));
+    let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let gabarito = calendario(this, 1, &mut rodadas, &mut extra, 0);
     for (k, &i) in CQL5_PLAYOUT.iter().enumerate() {
-        cql5_pd(lista + k * 4, cql5_clube(this, i));
+        write_u32_from_usize(lista + k * 4, cql5_clube(this, i));
     }
     let posicoes: [u8; 4] = [0x10, 0xd, 0xf, 0xe];
     let mut fase = novo(0xb2);
     if fase != 0 {
         fase = fase_de_copa(fase, this, clubes, lista, rodadas & 0xffff, registro, gabarito, ano, 1, 1, extra & 0xffff, 0x14, 0, 0, 0, posicoes.as_ptr());
     }
-    cql5_pd(cql5_d(this + 0xc) + 4, fase);
+    write_u32_from_usize(read_u32_as_usize(this + 0xc) + 4, fase);
     if lista_primeiro {
         soltar(lista);
         soltar(gabarito);
@@ -160,12 +154,12 @@ unsafe fn cql5_criar_fases(this: usize, arquivo: usize, linhas: [u32; 3], lista_
         soltar(gabarito);
         soltar(lista);
     }
-    if cql5_d(cql5_d(this + 0xc) + 4) == 0 {
+    if read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4) == 0 {
         aviso_em(arquivo, linhas[2]);
         return;
     }
-    sortear(cql5_d(cql5_d(this + 0xc) + 4), 0);
-    cql5_pd(this + 0x30, 1);
+    sortear(read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4), 0);
+    write_u32_from_usize(this + 0x30, 1);
 }
 
 /// { 0x64ba70 } (thiscall, ret 0, ita_ser_c1a.cpp, quadro SEH só para o operator new): `ItaSerC1a::create_playoff_stages()`.
@@ -185,14 +179,14 @@ unsafe extern "thiscall" fn fases_do_fim_da_c1b(this: usize) {
 /// O comparador das duas: alocam e sorteiam: só a original. O plano, feito antes: o campeão e a vaga da Supercopa. Depois:
 /// a vaga com o campeão, as duas fases em [+0xc] e +0x30 = 1.
 unsafe fn cql5_comparar_fases(nome: &str, this: usize, original: impl FnOnce()) {
-    let copa = cql5_d(cql5_d(0xadadfc) + cql5_d(0x9cf938) * 4);
-    let inscritos = cql5_d(copa + 0xa7);
+    let copa = read_u32_as_usize(read_u32_as_usize(0xadadfc) + read_u32_as_usize(0x9cf938) * 4);
+    let inscritos = read_u32_as_usize(copa + 0xa7);
     let campeao = cql5_clube(this, 0);
-    let vaga = if cql5_d(inscritos) != 0 { inscritos + 6 } else { inscritos };
+    let vaga = if read_u32_as_usize(inscritos) != 0 { inscritos + 6 } else { inscritos };
     original();
-    let fases = cql5_d(this + 0xc);
-    let ok = cql5_d(vaga) == campeao && fases != 0 && cql5_d(fases) != 0 && cql5_d(fases + 4) != 0 && cql5_d(this + 0x30) == 1;
-    PLACAR.registrar(ok, || format!("{}({:#x}): vaga da Supercopa {:#x} (campeão {:#x}), fases {:#x}, +0x30 = {}", nome, this, cql5_d(vaga), campeao, fases, cql5_d(this + 0x30) as i32));
+    let fases = read_u32_as_usize(this + 0xc);
+    let ok = read_u32_as_usize(vaga) == campeao && fases != 0 && read_u32_as_usize(fases) != 0 && read_u32_as_usize(fases + 4) != 0 && read_u32_as_usize(this + 0x30) == 1;
+    PLACAR.registrar(ok, || format!("{}({:#x}): vaga da Supercopa {:#x} (campeão {:#x}), fases {:#x}, +0x30 = {}", nome, this, read_u32_as_usize(vaga), campeao, fases, read_u32_as_usize(this + 0x30) as i32));
 }
 
 unsafe extern "thiscall" fn comparar_fases_do_fim_da_c1a(this: usize) {

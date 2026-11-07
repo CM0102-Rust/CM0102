@@ -2396,6 +2396,7 @@ unsafe extern "thiscall" fn apontar(this: usize, a: i8, b: i8, c: i8, d: i8) {
 // The rest of the engine, one file per source file of the game (stage 3 of the reorganisation, 07/11/2026).
 // [pt] O resto do motor, um arquivo por arquivo de origem do jogo (etapa 3 da reorganização, 07/11/2026).
 include!("motor/macros.rs");
+include!("motor/mem.rs");
 include!("motor/area.rs");
 include!("motor/award/month_award.rs");
 include!("motor/award/month_ratings.rs");

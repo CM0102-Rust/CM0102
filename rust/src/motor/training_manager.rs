@@ -1,8 +1,5 @@
 // ---------- 270a leva: a comissão de treino do técnico humano: as notas dos treinadores por categoria, os programas do elenco na troca de clube e os nomes padrão dos programas (training_manager.cpp) ----------
 
-unsafe fn cqf7_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
 unsafe fn cqf7_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
@@ -14,7 +11,7 @@ unsafe fn cqf7_sb(a: usize) -> i8 {
 
 /// O registro da pessoa `id` (tabela [0xae23bc], 0x6e bytes).
 unsafe fn cqf7_pessoa(id: i32) -> usize {
-    cqf7_d(0xae23bc).wrapping_add((id as isize * 0x6e) as usize)
+    read_u32_as_usize(0xae23bc).wrapping_add((id as isize * 0x6e) as usize)
 }
 
 /// A vaga de 9 bytes da comissão (+0 id do treinador, +4..+8 as notas das cinco categorias) volta a vazia: −1, 0, 0.
@@ -54,7 +51,7 @@ unsafe extern "thiscall" fn distribuir_os_treinadores(this: usize, clube: usize,
     if selecao(clube) != 0 {
         return;
     }
-    let tec = if tecnico == 0 { cqf7_d(clube + 0xcf) } else { tecnico };
+    let tec = if tecnico == 0 { read_u32_as_usize(clube + 0xcf) } else { tecnico };
     let comissao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x8b4cd0usize);
     let auxiliar: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53cb80usize);
     let treinadores: unsafe extern "C" fn(usize, *mut usize) -> u32 = core::mem::transmute(0x53cc30usize);
@@ -69,7 +66,7 @@ unsafe extern "thiscall" fn distribuir_os_treinadores(this: usize, clube: usize,
         if id == -1 {
             continue;
         }
-        if cqf7_d(cqf7_pessoa(id) + 0x69) == 0 {
+        if read_u32_as_usize(cqf7_pessoa(id) + 0x69) == 0 {
             cqf7_limpar(e);
             continue;
         }
@@ -82,7 +79,7 @@ unsafe extern "thiscall" fn distribuir_os_treinadores(this: usize, clube: usize,
     }
     for k in -1..5 {
         let p = candidato(k);
-        if p == 0 || cqf7_d(p + 0x69) == 0 {
+        if p == 0 || read_u32_as_usize(p + 0x69) == 0 {
             continue;
         }
         if (0..6).any(|v| cqf7_i(t + 9 * v) == cqf7_i(p)) {
@@ -101,7 +98,7 @@ unsafe extern "thiscall" fn distribuir_os_treinadores(this: usize, clube: usize,
         if id == -1 {
             continue;
         }
-        let f = cqf7_d(cqf7_pessoa(id) + 0x69);
+        let f = read_u32_as_usize(cqf7_pessoa(id) + 0x69);
         if f == 0 {
             cqf7_limpar(e);
             continue;
@@ -142,7 +139,7 @@ unsafe extern "thiscall" fn comparar_distribuir_os_treinadores(this: usize, club
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let mut reg = vec![(clube + 0x244, 1)];
     if (tecnico != 0 || humano(clube, 1, 1, 0, 0) != 0) && selecao(clube) == 0 {
-        let tec = if tecnico == 0 { cqf7_d(clube + 0xcf) } else { tecnico };
+        let tec = if tecnico == 0 { read_u32_as_usize(clube + 0xcf) } else { tecnico };
         if tec == 0 || !(0..0x10).contains(&cqf7_i(0xae2364).wrapping_sub(cqf7_i(tec)).wrapping_sub(1)) {
             return o(this, clube, tecnico);
         }
@@ -166,7 +163,7 @@ unsafe fn cqf7_programa(this: usize, tec: usize, vaga: i8) -> usize {
 
 /// A entrada de 6 bytes do treino da ficha `f` (+0 a vaga do programa).
 unsafe fn cqf7_entrada(this: usize, f: usize) -> usize {
-    cqf7_d(this + 0x651d).wrapping_add((cqf7_i(f) as isize * 6) as usize)
+    read_u32_as_usize(this + 0x651d).wrapping_add((cqf7_i(f) as isize * 6) as usize)
 }
 
 /// { 0x8b2470 } (thiscall, ret 0xc, training_manager.cpp): `TRAINING_MANAGER::reassign_squad_schedules(técnico, antigo,
@@ -188,8 +185,8 @@ unsafe extern "thiscall" fn trocar_os_programas_do_elenco(this: usize, tec: usiz
             if p == 0 || cqf7_i(p) >= cqf7_i(0xae2364) {
                 continue;
             }
-            gravar_carga(cqf7_d(0xb63d28), p, 0x32);
-            let f = cqf7_d(p + 0x61);
+            gravar_carga(read_u32_as_usize(0xb63d28), p, 0x32);
+            let f = read_u32_as_usize(p + 0x61);
             if f == 0 {
                 aviso_em(0xa8ccd0, 0x34c);
                 continue;
@@ -214,7 +211,7 @@ unsafe extern "thiscall" fn trocar_os_programas_do_elenco(this: usize, tec: usiz
         if p == 0 {
             continue;
         }
-        let f = cqf7_d(p + 0x61);
+        let f = read_u32_as_usize(p + 0x61);
         if f == 0 || cqf7_i(p) >= cqf7_i(0xae2364) {
             continue;
         }
@@ -228,7 +225,7 @@ unsafe extern "thiscall" fn trocar_os_programas_do_elenco(this: usize, tec: usiz
         };
         crate::comparacao::ramo("cqf_7 programa do elenco novo");
         let c = carga(cqf7_programa(this, tec, *e));
-        gravar_carga(cqf7_d(0xb63d28), p, c as u32);
+        gravar_carga(read_u32_as_usize(0xb63d28), p, c as u32);
     }
     let comissao: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x8b2880usize);
     comissao(this, novo, tec);
@@ -244,7 +241,7 @@ unsafe extern "thiscall" fn comparar_trocar_os_programas_do_elenco(this: usize, 
         return o(this, tec, antigo, novo);
     }
     let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
-    let les = cqf7_d(cqf7_d(0xb63d28));
+    let les = read_u32_as_usize(read_u32_as_usize(0xb63d28));
     let mut reg = Vec::new();
     for (clube, antigo_) in [(antigo, true), (novo, false)] {
         if clube == 0 {
@@ -257,7 +254,7 @@ unsafe extern "thiscall" fn comparar_trocar_os_programas_do_elenco(this: usize, 
             if p == 0 || cqf7_i(p) >= cqf7_i(0xae2364) {
                 continue;
             }
-            let f = cqf7_d(p + 0x61);
+            let f = read_u32_as_usize(p + 0x61);
             if f == 0 {
                 if antigo_ {
                     return o(this, tec, antigo, novo);
@@ -293,21 +290,12 @@ unsafe extern "thiscall" fn comparar_nomes_padrao_dos_programas(this: usize) {
 
 // ---------- 267a leva: o treino do jogador posto em dia: o progresso das semanas, o programa do jogador e o nível da categoria (training_manager.cpp) ----------
 
-unsafe fn cqd8_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
 unsafe fn cqd8_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cqd8_b(a: usize) -> i8 {
-    *(a as *const i8)
-}
 
-unsafe fn cqd8_w(a: usize) -> u16 {
-    core::ptr::read_unaligned(a as *const u16)
-}
 
 unsafe fn cqd8_sortear(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
@@ -316,14 +304,14 @@ unsafe fn cqd8_sortear(n: i32) -> i32 {
 
 /// A entrada de 6 bytes do treino do jogador: [this+0x651d] + 6 × id da ficha (+0x61).
 unsafe fn cqd8_entrada(this: usize, p: usize) -> usize {
-    cqd8_d(this + 0x651d).wrapping_add((cqd8_i(cqd8_d(p + 0x61)) as isize * 6) as usize)
+    read_u32_as_usize(this + 0x651d).wrapping_add((cqd8_i(read_u32_as_usize(p + 0x61)) as isize * 6) as usize)
 }
 
 /// O contrato da pessoa (CONTRACT_MANAGER 0x4cf5a0, thiscall no gerente [0xae1050]), guardado em [0xae1080] como a
 /// original faz a cada consulta.
 unsafe fn cqd8_contrato(p: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = f(cqd8_d(0xae1050), p);
+    let c = f(read_u32_as_usize(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
     c
 }
@@ -333,7 +321,7 @@ unsafe fn cqd8_clube(c: usize) -> usize {
     if c == 0 {
         0
     } else {
-        cqd8_d(0xae23b4).wrapping_add((cqd8_i(c + 4) as isize * 0x245) as usize)
+        read_u32_as_usize(0xae23b4).wrapping_add((cqd8_i(c + 4) as isize * 0x245) as usize)
     }
 }
 
@@ -391,7 +379,7 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
     if cqd8_i(p) >= cqd8_i(0xae2364) {
         return;
     }
-    if cqd8_d(p + 0x61) == 0 {
+    if read_u32_as_usize(p + 0x61) == 0 {
         aviso_em(0xa8ccd0, 0x195);
         return;
     }
@@ -408,9 +396,9 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
     let marca = (e + 5) as *mut u8;
     if *marca & 0x20 == 0 {
         let c = cqd8_contrato(p);
-        if c != 0 && cqd8_clube(c) != 0 && cqd8_d(cqd8_clube(cqd8_contrato(p)) + 0xcf) != 0
-            && cqd8_humano(cqd8_d(cqd8_clube(cqd8_contrato(p)) + 0xcf)) {
-            let tec = cqd8_d(cqd8_clube(cqd8_contrato(p)) + 0xcf);
+        if c != 0 && cqd8_clube(c) != 0 && read_u32_as_usize(cqd8_clube(cqd8_contrato(p)) + 0xcf) != 0
+            && cqd8_humano(read_u32_as_usize(cqd8_clube(cqd8_contrato(p)) + 0xcf)) {
+            let tec = read_u32_as_usize(cqd8_clube(cqd8_contrato(p)) + 0xcf);
             *marca |= 0x20;
             let (mut goleiro, mut geral) = (-1i8, -1i8);
             for k in 0..10i8 {
@@ -420,7 +408,7 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
                     geral = k;
                 }
             }
-            let vaga = if cqd8_b(cqd8_d(p + 0x61) + 0xf) >= 0xf && goleiro != -1 {
+            let vaga = if read_i8(read_u32_as_usize(p + 0x61) + 0xf) >= 0xf && goleiro != -1 {
                 goleiro
             } else if geral != -1 {
                 geral
@@ -431,24 +419,24 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
             let carga: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x8b4f60usize);
             let v = carga(cqd8_programa_do_humano(this, tec, vaga));
             crate::comparacao::ramo("cqd_8 programa do humano");
-            gravar_carga(cqd8_d(0xb63d28), p, v as u32);
+            gravar_carga(read_u32_as_usize(0xb63d28), p, v as u32);
         }
     }
-    let mut semanas = cqd8_w(this + 0x688d).wrapping_sub(cqd8_w(e + 1));
+    let mut semanas = read_u16(this + 0x688d).wrapping_sub(read_u16(e + 1));
     let pular = pular as u16;
     if semanas == 0 && pular == 0 {
         return;
     }
     if *marca & 0x20 != 0 {
         let c = cqd8_contrato(p);
-        let ainda = c != 0 && cqd8_clube(c) != 0 && cqd8_d(cqd8_clube(cqd8_contrato(p)) + 0xcf) != 0
-            && cqd8_humano(cqd8_d(cqd8_clube(cqd8_contrato(p)) + 0xcf));
+        let ainda = c != 0 && cqd8_clube(c) != 0 && read_u32_as_usize(cqd8_clube(cqd8_contrato(p)) + 0xcf) != 0
+            && cqd8_humano(read_u32_as_usize(cqd8_clube(cqd8_contrato(p)) + 0xcf));
         if !ainda {
             crate::comparacao::ramo("cqd_8 saiu do clube humano");
             *marca &= 0xdf;
-            gravar_carga(cqd8_d(0xb63d28), p, 0x32);
-            let f = cqd8_d(p + 0x61);
-            *(cqd8_entrada(this, p) as *mut u8) = if cqd8_b(f + 0xf) >= 0xf { 6 } else { 1 };
+            gravar_carga(read_u32_as_usize(0xb63d28), p, 0x32);
+            let f = read_u32_as_usize(p + 0x61);
+            *(cqd8_entrada(this, p) as *mut u8) = if read_i8(f + 0xf) >= 0xf { 6 } else { 1 };
             let mut q = 0usize;
             let n = achar(this, p, &mut q);
             let parar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8b4450usize);
@@ -467,7 +455,7 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
     if semanas > 0x1e {
         semanas = 0x1e;
     }
-    core::ptr::write_unaligned((e + 1) as *mut u16, cqd8_w(this + 0x688d));
+    core::ptr::write_unaligned((e + 1) as *mut u16, read_u16(this + 0x688d));
     let mut q = 0usize;
     let npos = achar(this, p, &mut q);
     if *marca & 0x10 != 0 && npos == 0 {
@@ -484,12 +472,12 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
         let fa = fator(this, clube, k as u32) as u16 as i16 as i32;
         let x = base.wrapping_add(((fa - 100) / 5) as i16);
         let peso: i16 = if x < 0 { 0 } else if x > 200 { 200 } else { x };
-        let piso = ((cqd8_b(p + 0x5b) as i32 / 3) as i8).wrapping_sub(6);
-        let teto = (cqd8_b(p + 0x58) as i32 / 3) as i8;
+        let piso = ((read_i8(p + 0x5b) as i32 / 3) as i8).wrapping_sub(6);
+        let teto = (read_i8(p + 0x58) as i32 / 3) as i8;
         let meio = cqd8_meio_byte(e, k);
         for _ in 0..semanas {
             let v = meio.wrapping_add(d[k]);
-            if cqd8_b(cqd8_d(p + 0x61) + 0xf) > 0x12 {
+            if read_i8(read_u32_as_usize(p + 0x61) + 0xf) > 0x12 {
                 let r = if k == 4 { cqd8_sortear(2) } else { cqd8_sortear(4) };
                 if r != 0 {
                     continue; // goleiro: a categoria quase não anda
@@ -523,7 +511,7 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
             voltas = 1;
         }
         let ficha: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4cf5f0usize);
-        contrato_do_clube = ficha(cqd8_d(0xae1050), p, cqd8_d(p + 0x39) as u32);
+        contrato_do_clube = ficha(read_u32_as_usize(0xae1050), p, read_u32_as_usize(p + 0x39) as u32);
     }
     let mut acabou = false;
     if npos > 0 {
@@ -535,22 +523,22 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
         let mut it = q + 7; // a taxa do item (+7); a nota em +6, a máscara em +4
         loop {
             for _ in 0..voltas {
-                let taxa = cqd8_b(it);
-                if (pular != 0 && cqd8_w(it - 3) == pular) || taxa > 0 {
-                    if cqd8_sortear(cqd8_b(it) as i32) < 5 {
-                        let n = cqd8_b(it - 1).wrapping_add(2);
+                let taxa = read_i8(it);
+                if (pular != 0 && read_u16(it - 3) == pular) || taxa > 0 {
+                    if cqd8_sortear(read_i8(it) as i32) < 5 {
+                        let n = read_i8(it - 1).wrapping_add(2);
                         *((it - 1) as *mut i8) = if n > 0x14 { 0x14 } else { n };
                     }
                     let c = contrato_do_clube;
-                    if c != 0 && cqd8_d(c + 0x45) & 0x8000 == 0 {
+                    if c != 0 && read_u32_as_usize(c + 0x45) & 0x8000 == 0 {
                         // ponytail: a original empurra a máscara no ecx com os 16 bits de cima que sobram; a 0x8b4770
                         // lê a palavra
-                        let apt = aptidao(this, p, cqd8_w(it - 3) as u32) as u8 as i8;
-                        let t = cqd8_b(it);
+                        let apt = aptidao(this, p, read_u16(it - 3) as u32) as u8 as i8;
+                        let t = read_i8(it);
                         let quer = (t > 0x32 && cqd8_sortear(100 - t as i32) < 10) || (apt < 0xc && cqd8_sortear(apt as i32) < 2);
-                        let a = cqd8_b(p + 0x5b);
-                        if quer && a < 0xf && cqd8_sortear(a as i32) < 10 && cqd8_d(0xb63d28) != 0
-                            && estado(cqd8_d(0xb63d28), p) == 0 {
+                        let a = read_i8(p + 0x5b);
+                        if quer && a < 0xf && cqd8_sortear(a as i32) < 10 && read_u32_as_usize(0xb63d28) != 0
+                            && estado(read_u32_as_usize(0xb63d28), p) == 0 {
                             crate::comparacao::ramo("cqd_8 reclama do treino de posicao");
                             reclamar(c, 0x8000, 0);
                             let m = (c + 0x44) as *mut i8;
@@ -561,7 +549,7 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
                         }
                     }
                 } else if taxa < 0 && cqd8_sortear((taxa as i32).abs()) < 5 {
-                    let n = cqd8_b(it - 1).wrapping_sub(2);
+                    let n = read_i8(it - 1).wrapping_sub(2);
                     *((it - 1) as *mut i8) = n;
                     if n < 1 {
                         *(it as *mut i8) = 0;
@@ -585,13 +573,13 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
         let mut i = 0i32;
         if n0 > 0 {
             loop {
-                let base = cqd8_d(this + 0x6521);
+                let base = read_u32_as_usize(this + 0x6521);
                 let n = cqd8_i(this + 0x6525);
                 let item = base.wrapping_add((i as isize * 8) as usize);
                 if *((item + 7) as *const u8) == 0 {
                     let ultimo = base.wrapping_add((n as isize * 8 - 8) as usize);
-                    core::ptr::write_unaligned(item as *mut u32, cqd8_d(ultimo) as u32);
-                    core::ptr::write_unaligned((item + 4) as *mut u32, cqd8_d(ultimo + 4) as u32);
+                    core::ptr::write_unaligned(item as *mut u32, read_u32_as_usize(ultimo) as u32);
+                    core::ptr::write_unaligned((item + 4) as *mut u32, read_u32_as_usize(ultimo + 4) as u32);
                     core::ptr::write_unaligned((this + 0x6525) as *mut i32, cqd8_i(this + 0x6525) - 1);
                 }
                 i += 1;
@@ -602,7 +590,7 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
         }
         if n0 != cqd8_i(this + 0x6525) {
             let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-            qsort(cqd8_d(this + 0x6521), cqd8_d(this + 0x6525) as u32, 8, 0x8b4e00);
+            qsort(read_u32_as_usize(this + 0x6521), read_u32_as_usize(this + 0x6525) as u32, 8, 0x8b4e00);
         }
     }
 }
@@ -613,7 +601,7 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
 /// rodar): ali a 0x8b4450, a marca do contrato (0x867700) e a 0x5885c0 mexem fora dessas regiões.
 unsafe extern "thiscall" fn comparar_atualizar_o_treino_do_jogador(this: usize, p: usize, pular: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(1561);
-    if p == 0 || cqd8_i(p) >= cqd8_i(0xae2364) || cqd8_d(p + 0x61) == 0 {
+    if p == 0 || cqd8_i(p) >= cqd8_i(0xae2364) || read_u32_as_usize(p + 0x61) == 0 {
         return o(this, p, pular);
     }
     let programa: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x8b39f0usize);
@@ -622,12 +610,12 @@ unsafe extern "thiscall" fn comparar_atualizar_o_treino_do_jogador(this: usize, 
     if programa(this, p) == 0 || achar(this, p, &mut q) > 0 {
         return o(this, p, pular);
     }
-    let f = cqd8_d(p + 0x61);
+    let f = read_u32_as_usize(p + 0x61);
     let mut reg = Vec::from(crate::aleatorio::REGIOES_DO_ESTADO);
     reg.extend_from_slice(&[(0xae1080, 4), (cqd8_entrada(this, p), 6), (f + 0xf, 0x33)]);
-    let les = cqd8_d(0xb63d28);
+    let les = read_u32_as_usize(0xb63d28);
     if les != 0 {
-        reg.push((cqd8_d(les).wrapping_add((cqd8_i(p) as isize * 31 + 0x1e) as usize), 1));
+        reg.push((read_u32_as_usize(les).wrapping_add((cqd8_i(p) as isize * 31 + 0x1e) as usize), 1));
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, p, pular),
         || crate::aleatorio::sem_contar(|| atualizar_o_treino_do_jogador(this, p, pular)));
@@ -641,16 +629,16 @@ unsafe extern "thiscall" fn comparar_atualizar_o_treino_do_jogador(this: usize, 
 /// 0x60e × ([0xae2364] − id − 1); senão o da vaga da entrada do treino (+0, fora de 0..9 a 1); fora dos 16, a caixa
 /// (linha 0x68f) e 0. Senão: lesionado, o programa 0 (this); senão this + 0x9b × vaga (com sinal).
 unsafe extern "thiscall" fn programa_de_treino_do_jogador(this: usize, p: usize) -> usize {
-    if p == 0 || cqd8_d(p + 0x61) == 0 {
+    if p == 0 || read_u32_as_usize(p + 0x61) == 0 {
         aviso_em(0xa8ccd0, 0x6ad);
         return 0;
     }
     let estado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
     let c = cqd8_contrato(p);
     if c != 0 && cqd8_clube(c) != 0 {
-        let tec = cqd8_d(cqd8_clube(cqd8_contrato(p)) + 0xcf);
+        let tec = read_u32_as_usize(cqd8_clube(cqd8_contrato(p)) + 0xcf);
         if tec != 0 && cqd8_humano(tec) {
-            if estado(cqd8_d(0xb63d28), p) == 2 {
+            if estado(read_u32_as_usize(0xb63d28), p) == 2 {
                 let k = cqd8_i(0xae2364).wrapping_sub(cqd8_i(tec)).wrapping_sub(1);
                 if !(0..0x10).contains(&k) {
                     aviso_em(0xa8ccd0, 0x68f);
@@ -661,7 +649,7 @@ unsafe extern "thiscall" fn programa_de_treino_do_jogador(this: usize, p: usize)
             return cqd8_programa_do_humano(this, tec, *(cqd8_entrada(this, p) as *const i8));
         }
     }
-    if estado(cqd8_d(0xb63d28), p) == 2 {
+    if estado(read_u32_as_usize(0xb63d28), p) == 2 {
         return this;
     }
     this.wrapping_add((*(cqd8_entrada(this, p) as *const i8) as isize * 0x9b) as usize)
@@ -670,7 +658,7 @@ unsafe extern "thiscall" fn programa_de_treino_do_jogador(this: usize, p: usize)
 /// Comparador: a devolução e [0xae1080] lado a lado; sem pessoa ou sem ficha (a caixa), só a original.
 unsafe extern "thiscall" fn comparar_programa_de_treino_do_jogador(this: usize, p: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(1562);
-    if p == 0 || cqd8_d(p + 0x61) == 0 {
+    if p == 0 || read_u32_as_usize(p + 0x61) == 0 {
         return o(this, p);
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, p), || programa_de_treino_do_jogador(this, p));
@@ -697,17 +685,11 @@ unsafe extern "thiscall" fn comparar_nivel_da_categoria_do_programa(this: usize,
 
 // ---------- 267a leva: o progresso do treino guardado: tirar e devolver o progresso, o quanto o treino soma a um atributo e a aptidão para uma posição (training_manager.cpp) ----------
 
-unsafe fn cqd9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqd9_b(a: usize) -> i8 {
-    *(a as *const i8)
-}
 
 /// A entrada de 6 bytes do treino do jogador: [this+0x651d] + 6 × id da ficha (+0x61).
 unsafe fn cqd9_entrada(this: usize, p: usize) -> usize {
-    cqd9_d(this + 0x651d).wrapping_add((*(cqd9_d(p + 0x61) as *const i32) as isize * 6) as usize)
+    read_u32_as_usize(this + 0x651d).wrapping_add((*(read_u32_as_usize(p + 0x61) as *const i32) as isize * 6) as usize)
 }
 
 /// O meio byte com sinal da categoria `k` na entrada do treino: 0 o baixo de +3, 1 o alto de +3, 2 o baixo de +4, 3 o
@@ -733,7 +715,7 @@ unsafe fn cqd9_aplicar(this: usize, p: usize, d: &[i8; 8]) {
 /// entrada do treino em 0xde1f3c..0xde1f40 (categoria 3, 2, 4, 0, 1) e aplica o progresso negado (0x8b2be0); devolver:
 /// aplica o guardado.
 unsafe extern "thiscall" fn tirar_ou_devolver_o_progresso(this: usize, p: usize, devolver: u32) {
-    if p == 0 || cqd9_d(p + 0x61) == 0 {
+    if p == 0 || read_u32_as_usize(p + 0x61) == 0 {
         aviso_em(0xa8ccd0, 0x621);
         return;
     }
@@ -765,10 +747,10 @@ unsafe extern "thiscall" fn tirar_ou_devolver_o_progresso(this: usize, p: usize,
 /// sem pessoa ou sem ficha (a caixa), só a original.
 unsafe extern "thiscall" fn comparar_tirar_ou_devolver_o_progresso(this: usize, p: usize, devolver: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(1564);
-    if p == 0 || cqd9_d(p + 0x61) == 0 {
+    if p == 0 || read_u32_as_usize(p + 0x61) == 0 {
         return o(this, p, devolver);
     }
-    let f = cqd9_d(p + 0x61);
+    let f = read_u32_as_usize(p + 0x61);
     let reg = [(f + 0xf, 0x33), (cqd9_entrada(this, p), 6), (0xde1f3c, 5)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, p, devolver), || tirar_ou_devolver_o_progresso(this, p, devolver));
     PLACAR.registrar(igual, || format!("tirar_ou_devolver_o_progresso(pessoa {:x}, devolver {}) {:x?} x {:x?}", p, devolver, mo.0, mr.0));
@@ -779,7 +761,7 @@ unsafe extern "thiscall" fn comparar_tirar_ou_devolver_o_progresso(this: usize, 
 /// (aplica o progresso negado, lê e reaplica o progresso), no al. Pessoa nula ou sem a ficha: a caixa "Error" (linha
 /// 0x657) e 0.
 unsafe extern "thiscall" fn mudanca_do_atributo_pelo_treino(this: usize, p: usize, atributo: u32) -> u8 {
-    if p == 0 || cqd9_d(p + 0x61) == 0 {
+    if p == 0 || read_u32_as_usize(p + 0x61) == 0 {
         aviso_em(0xa8ccd0, 0x657);
         return 0;
     }
@@ -803,10 +785,10 @@ unsafe extern "thiscall" fn mudanca_do_atributo_pelo_treino(this: usize, p: usiz
 /// Comparador: lado a lado na ficha e na entrada do treino, com a devolução; sem pessoa ou sem ficha, só a original.
 unsafe extern "thiscall" fn comparar_mudanca_do_atributo_pelo_treino(this: usize, p: usize, atributo: u32) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(1565);
-    if p == 0 || cqd9_d(p + 0x61) == 0 {
+    if p == 0 || read_u32_as_usize(p + 0x61) == 0 {
         return o(this, p, atributo);
     }
-    let f = cqd9_d(p + 0x61);
+    let f = read_u32_as_usize(p + 0x61);
     let reg = [(f + 0xf, 0x33), (cqd9_entrada(this, p), 6)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, p, atributo), || mudanca_do_atributo_pelo_treino(this, p, atributo));
     PLACAR.registrar(igual && r == n, || format!("mudanca_do_atributo_pelo_treino(pessoa {:x}, atributo {}) original={} rust={} {:x?} x {:x?}", p, atributo as u8 as i8, r as i8, n as i8, mo.0, mr.0));
@@ -832,13 +814,13 @@ unsafe extern "thiscall" fn aptidao_para_a_posicao(this: usize, p: usize, mascar
         aviso_em(0xa8ccd0, 0x945);
         return 0;
     }
-    let f = cqd9_d(p + 0x61);
+    let f = read_u32_as_usize(p + 0x61);
     let nota_de: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(0x544380usize);
     // ponytail: a original empurra o byte do atributo num registrador com os bytes de cima que sobram; a 0x544380 lê
     // o byte
     let nota = |o: usize| nota_de(f, *((f + o) as *const u8) as u32) as u8 as i8 as i32;
-    let b = |o: usize| cqd9_b(f + o) as i32;
-    let adapt = cqd9_b(p + 0x56) as i32;
+    let b = |o: usize| read_i8(f + o) as i32;
+    let adapt = read_i8(p + 0x56) as i32;
     let r = match m {
         1 => {
             let x = nota(0x39);
@@ -1007,9 +989,6 @@ unsafe extern "thiscall" fn comparar_programa_do_humano(this: usize, tecnico: us
 
 // ---------- 256a leva: a força dos treinadores no treino: o fator do treinador por categoria, a comissão de treino do técnico humano e a carga do programa de treino (training_manager.cpp) ----------
 
-unsafe fn cpt8_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
 unsafe fn cpt8_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
@@ -1034,7 +1013,7 @@ unsafe extern "thiscall" fn fator_do_treinador(this: usize, clube: usize, catego
     if clube == 0 {
         return 0;
     }
-    let t = cpt8_d(clube + 0xcf);
+    let t = read_u32_as_usize(clube + 0xcf);
     if t == 0 {
         crate::comparacao::ramo("cpt_8 sem tecnico");
         return 100; // cpt8: sem técnico
@@ -1132,26 +1111,20 @@ unsafe extern "thiscall" fn comparar_carga_do_programa(this: usize) -> i32 {
 
 // ---------- 256a leva: o progresso do treino nos atributos: aplicar o progresso das cinco categorias, achar o treino de posição do jogador e se ele aprende uma posição depressa (training_manager.cpp) ----------
 
-unsafe fn cpt9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
 unsafe fn cpt9_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cpt9_b(a: usize) -> i8 {
-    *(a as *const i8)
-}
 
 /// O atributo de 1 a 20 em `a` mais `v`, entre 1 e 20.
 unsafe fn cpt9_soma20(a: usize, v: i32) {
-    *(a as *mut i8) = (cpt9_b(a) as i32 + v).clamp(1, 20) as i8;
+    *(a as *mut i8) = (read_i8(a) as i32 + v).clamp(1, 20) as i8;
 }
 
 /// O atributo de −125 a 125 em `a` mais `v`, entre −125 e 125.
 unsafe fn cpt9_soma125(a: usize, v: i32) {
-    *(a as *mut i8) = (cpt9_b(a) as i32 + v).clamp(-125, 125) as i8;
+    *(a as *mut i8) = (read_i8(a) as i32 + v).clamp(-125, 125) as i8;
 }
 
 /// Quanto o atributo anda com o progresso `d` sobre o meio byte guardado `n` (com sinal): (d + n) / 2 − n / 2, as
@@ -1186,7 +1159,7 @@ unsafe extern "thiscall" fn aplicar_o_progresso(this: usize, pessoa: usize, d: u
         aviso_em(0xa8ccd0, 0x4b3);
         return;
     }
-    let f = cpt9_d(pessoa + 0x61);
+    let f = read_u32_as_usize(pessoa + 0x61);
     if f == 0 {
         aviso_em(0xa8ccd0, 0x4ba);
         return;
@@ -1194,11 +1167,11 @@ unsafe extern "thiscall" fn aplicar_o_progresso(this: usize, pessoa: usize, d: u
     if cpt9_i(pessoa) >= cpt9_i(0xae2364) {
         return;
     }
-    let e = cpt9_d(this + 0x651d) + 6 * cpt9_i(f) as usize;
+    let e = read_u32_as_usize(this + 0x651d) + 6 * cpt9_i(f) as usize;
     // a categoria 3 (o meio byte alto de +4)
-    let k = cpt9_b(d + 3);
+    let k = read_i8(d + 3);
     if k != 0 {
-        let dd = cpt9_passo(k, (cpt9_b(e + 4) >> 4) as i32);
+        let dd = cpt9_passo(k, (read_i8(e + 4) >> 4) as i32);
         if dd != 0 {
             let seis = dd * 6;
             cpt9_soma20(f + 0x22, dd);
@@ -1214,9 +1187,9 @@ unsafe extern "thiscall" fn aplicar_o_progresso(this: usize, pessoa: usize, d: u
         cpt9_alto(e + 4, k); // cpt9: guarda o progresso da categoria 3
     }
     // a categoria 0 (o meio byte baixo de +3)
-    let k = cpt9_b(d);
+    let k = read_i8(d);
     if k != 0 {
-        let dd = cpt9_passo(k, (cpt9_b(e + 3) << 4 >> 4) as i32);
+        let dd = cpt9_passo(k, (read_i8(e + 3) << 4 >> 4) as i32);
         if dd != 0 {
             cpt9_soma20(f + 0x1b, dd); // cpt9: o primeiro atributo da categoria 0
             cpt9_soma20(f + 0x1d, dd);
@@ -1230,9 +1203,9 @@ unsafe extern "thiscall" fn aplicar_o_progresso(this: usize, pessoa: usize, d: u
         cpt9_baixo(e + 3, k);
     }
     // a categoria 2 (o meio byte baixo de +4)
-    let k = cpt9_b(d + 2);
+    let k = read_i8(d + 2);
     if k != 0 {
-        let dd = cpt9_passo(k, (cpt9_b(e + 4) << 4 >> 4) as i32);
+        let dd = cpt9_passo(k, (read_i8(e + 4) << 4 >> 4) as i32);
         if dd != 0 {
             let seis = dd * 6;
             cpt9_soma125(f + 0x27, seis);
@@ -1242,9 +1215,9 @@ unsafe extern "thiscall" fn aplicar_o_progresso(this: usize, pessoa: usize, d: u
         cpt9_baixo(e + 4, k);
     }
     // a categoria 1 (o meio byte alto de +3)
-    let k = cpt9_b(d + 1);
+    let k = read_i8(d + 1);
     if k != 0 {
-        let dd = cpt9_passo(k, (cpt9_b(e + 3) >> 4) as i32);
+        let dd = cpt9_passo(k, (read_i8(e + 3) >> 4) as i32);
         if dd != 0 {
             let seis = dd * 6; // cpt9: a categoria 1, seis vezes o passo
             cpt9_soma125(f + 0x24, seis);
@@ -1256,9 +1229,9 @@ unsafe extern "thiscall" fn aplicar_o_progresso(this: usize, pessoa: usize, d: u
         cpt9_alto(e + 3, k);
     }
     // a categoria 4 (o meio byte baixo de +5)
-    let k = cpt9_b(d + 4);
+    let k = read_i8(d + 4);
     if k != 0 {
-        let dd = cpt9_passo(k, (cpt9_b(e + 5) << 4 >> 4) as i32);
+        let dd = cpt9_passo(k, (read_i8(e + 5) << 4 >> 4) as i32);
         if dd != 0 {
             let seis = dd * 6;
             cpt9_soma125(f + 0x2a, seis);
@@ -1273,7 +1246,7 @@ unsafe extern "thiscall" fn aplicar_o_progresso(this: usize, pessoa: usize, d: u
     if n <= 0 {
         return;
     }
-    let de15 = |o: usize| (cpt9_b(f + o) >= 0xf) as i8;
+    let de15 = |o: usize| (read_i8(f + o) >= 0xf) as i8;
     let mut posicoes = de15(0xf) + de15(0x10) + de15(0x11) + de15(0x12) + de15(0x13) + de15(0x14) + de15(0x15);
     let mut lados = de15(0x18) + de15(0x19) + de15(0x17);
     for j in 0..n as usize {
@@ -1291,7 +1264,7 @@ unsafe extern "thiscall" fn aplicar_o_progresso(this: usize, pessoa: usize, d: u
             0x800 => 0x17,
             _ => continue,
         };
-        if cpt9_b(item + 6) >= 0xf {
+        if read_i8(item + 6) >= 0xf {
             *((f + campo) as *mut u8) = 0x14;
         } else if campo == 0x18 || campo == 0x19 || campo == 0x17 {
             if lados > 1 {
@@ -1309,11 +1282,11 @@ unsafe extern "thiscall" fn aplicar_o_progresso(this: usize, pessoa: usize, d: u
 /// sem as pessoas que não são jogadores (só a original).
 unsafe extern "thiscall" fn comparar_aplicar_o_progresso(this: usize, pessoa: usize, d: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1179);
-    if pessoa == 0 || cpt9_d(pessoa + 0x61) == 0 || cpt9_i(pessoa) >= cpt9_i(0xae2364) {
+    if pessoa == 0 || read_u32_as_usize(pessoa + 0x61) == 0 || cpt9_i(pessoa) >= cpt9_i(0xae2364) {
         return o(this, pessoa, d);
     }
-    let f = cpt9_d(pessoa + 0x61);
-    let e = cpt9_d(this + 0x651d) + 6 * cpt9_i(f) as usize;
+    let f = read_u32_as_usize(pessoa + 0x61);
+    let e = read_u32_as_usize(this + 0x651d) + 6 * cpt9_i(f) as usize;
     let regioes = [(f + 0xf, 0x33), (e, 6)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, pessoa, d), || aplicar_o_progresso(this, pessoa, d));
     PLACAR.registrar(igual, || format!("aplicar_o_progresso(pessoa {:x}, d {:x?}) {:x?} x {:x?}", pessoa, core::slice::from_raw_parts(d as *const i8, 5), mo.0, mr.0));
@@ -1334,18 +1307,18 @@ unsafe extern "thiscall" fn achar_o_treino_de_posicao(this: usize, pessoa: usize
         aviso_em(0xa8ccd0, 0x99c);
         return 0;
     }
-    let f = cpt9_d(pessoa + 0x61);
+    let f = read_u32_as_usize(pessoa + 0x61);
     if f == 0 {
         aviso_em(0xa8ccd0, 0x9a3);
         return 0;
     }
-    if *((cpt9_d(this + 0x651d) + 6 * cpt9_i(f) as usize + 5) as *const u8) & 0x10 == 0 {
+    if *((read_u32_as_usize(this + 0x651d) + 6 * cpt9_i(f) as usize + 5) as *const u8) & 0x10 == 0 {
         return 0;
     }
     let chave = cpt9_i(pessoa);
     let busca: unsafe extern "C" fn(*const i32, usize, usize, usize, usize) -> usize = core::mem::transmute(0x946464usize);
-    let base = cpt9_d(this + 0x6521);
-    let mut a = busca(&chave, base, cpt9_d(this + 0x6525), 8, 0x8b4e00);
+    let base = read_u32_as_usize(this + 0x6521);
+    let mut a = busca(&chave, base, read_u32_as_usize(this + 0x6525), 8, 0x8b4e00);
     if a == 0 {
         return 0;
     }
@@ -1356,7 +1329,7 @@ unsafe extern "thiscall" fn achar_o_treino_de_posicao(this: usize, pessoa: usize
         a -= 8;
     }
     *saida = a;
-    let ultimo = cpt9_d(this + 0x6521) + cpt9_d(this + 0x6525) * 8 - 8;
+    let ultimo = read_u32_as_usize(this + 0x6521) + read_u32_as_usize(this + 0x6525) * 8 - 8;
     let mut n = 0i32;
     while a <= ultimo && cpt9_i(a) == chave {
         a += 8;
@@ -1368,7 +1341,7 @@ unsafe extern "thiscall" fn achar_o_treino_de_posicao(this: usize, pessoa: usize
 /// Comparador: a devolução e a saída (reposta entre as duas), sem os casos de erro (só a original).
 unsafe extern "thiscall" fn comparar_achar_o_treino_de_posicao(this: usize, pessoa: usize, saida: *mut usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32>(1180);
-    if pessoa == 0 || saida.is_null() || cpt9_d(pessoa + 0x61) == 0 {
+    if pessoa == 0 || saida.is_null() || read_u32_as_usize(pessoa + 0x61) == 0 {
         return o(this, pessoa, saida);
     }
     let antes = *saida;
@@ -1390,7 +1363,7 @@ unsafe extern "thiscall" fn aprende_depressa(this: usize, pessoa: usize) -> u32 
     let mut p = 0usize;
     let n = achar(this, pessoa, &mut p);
     for j in 0..n.max(0) as usize {
-        if cpt9_b(p + 8 * j + 7) > 0x32 {
+        if read_i8(p + 8 * j + 7) > 0x32 {
             return 1;
         }
     }
@@ -1407,9 +1380,6 @@ unsafe extern "thiscall" fn comparar_aprende_depressa(this: usize, pessoa: usize
 
 // ---------- 256a leva: a semana do treino, a reserva de ficha de não jogador e a lesão que volta (training_manager.cpp, player_regen.cpp, injury.cpp) ----------
 
-unsafe fn cpt10_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
 /// { 0x8b1730 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::advance_week_counter(&dia)`, todo dia pelo
 /// laço do dia (game_main_day_loop 0x5cccd0, com o dia do ano da data do jogo 0xae2c90): no dia múltiplo de 7 (resto
@@ -1441,9 +1411,9 @@ unsafe extern "thiscall" fn comparar_avancar_a_semana(this: usize, dia: *const i
 /// (PLAYER_REGEN::remove_spare_non_player_record 0x7a82b0 com o id lido da saída); devolve o eax dela.
 unsafe extern "thiscall" fn tirar_a_ficha_reservada(this: usize, id: *mut u32, nacao: *mut u32, segunda: *mut u32) -> u32 {
     crate::comparacao::ramo("cpt_10 ficha reservada");
-    *id = cpt10_d(cpt10_d(this + 0x1c)) as u32;
-    *nacao = cpt10_d(cpt10_d(this + 0x1c) + 4) as u32;
-    *segunda = cpt10_d(cpt10_d(this + 0x1c) + 8) as u32;
+    *id = read_u32_as_usize(read_u32_as_usize(this + 0x1c)) as u32;
+    *nacao = read_u32_as_usize(read_u32_as_usize(this + 0x1c) + 4) as u32;
+    *segunda = read_u32_as_usize(read_u32_as_usize(this + 0x1c) + 8) as u32;
     let tirar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x7a82b0usize);
     tirar(this, *id)
 }
@@ -1458,10 +1428,10 @@ unsafe extern "thiscall" fn comparar_tirar_a_ficha_reservada(this: usize, id: *m
 /// bytes da pessoa, em [this]); pessoa nula, id a partir de [0xae2364] ou sem a ficha de jogador (+0x61): 0xff. Os
 /// chamadores leem só o al.
 unsafe extern "thiscall" fn lesao_que_volta(this: usize, pessoa: usize) -> u8 {
-    if pessoa == 0 || cpt10_d(pessoa) as i32 >= cpt10_d(0xae2364) as i32 || cpt10_d(pessoa + 0x61) == 0 {
+    if pessoa == 0 || read_u32_as_usize(pessoa) as i32 >= read_u32_as_usize(0xae2364) as i32 || read_u32_as_usize(pessoa + 0x61) == 0 {
         return 0xff;
     }
-    *((cpt10_d(this) + 31 * cpt10_d(pessoa)) as *const u8).add(0x12)
+    *((read_u32_as_usize(this) + 31 * read_u32_as_usize(pessoa)) as *const u8).add(0x12)
 }
 
 /// Comparador: o al devolvido.

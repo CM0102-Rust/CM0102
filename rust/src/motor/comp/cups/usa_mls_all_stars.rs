@@ -1,20 +1,11 @@
 // ---------- 282a leva: a virada das copas: a Supercopa japonesa, a Copa dos EUA e o Jogo das Estrelas da MLS (com os dois times das estrelas e o estádio sorteado) (jap_super.cpp, usa_open_cup.cpp, usa_mls_all_stars.cpp) ----------
 
-unsafe fn cqr6_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqr6_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqr6_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
 /// A virtual `o` da copa (thiscall, sem argumentos; mov edx, [esi]; mov ecx, esi; call [edx + o]).
 unsafe fn cqr6_virtual(this: usize, o: usize) -> i32 {
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(cqr6_d(cqr6_d(this) + o));
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + o));
     f(this)
 }
 
@@ -29,33 +20,33 @@ unsafe fn cqr6_virtual(this: usize, o: usize) -> i32 {
 /// Estrelas não as tem: devolve o eax da árvore).
 unsafe fn cqr6_virada(this: usize, inscritos: usize, arquivo: usize, linhas: [u32; 3], ano: i16, previstas: bool, ramo: &'static str) -> u32 {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    cqr6_pd(this + 0x4c, 0);
+    write_u32_from_usize(this + 0x4c, 0);
     for o in [0xa7usize, 0xa3] {
-        let l = cqr6_d(this + o);
+        let l = read_u32_as_usize(this + o);
         if l != 0 {
             soltar(l);
-            cqr6_pd(this + o, 0);
+            write_u32_from_usize(this + o, 0);
         }
     }
-    if cqr6_d(this + 0xad) != 0 {
+    if read_u32_as_usize(this + 0xad) != 0 {
         let mut i = 0i32;
-        while i < cqr6_w(this + 0x3c) as i32 {
-            let p = cqr6_d(cqr6_d(this + 0xad) + i as usize * 4);
+        while i < read_i16(this + 0x3c) as i32 {
+            let p = read_u32_as_usize(read_u32_as_usize(this + 0xad) + i as usize * 4);
             if p != 0 {
                 soltar(p);
-                cqr6_pd(cqr6_d(this + 0xad) + i as usize * 4, 0);
+                write_u32_from_usize(read_u32_as_usize(this + 0xad) + i as usize * 4, 0);
             }
             i += 1;
         }
-        soltar(cqr6_d(this + 0xad));
-        cqr6_pd(this + 0xad, 0);
+        soltar(read_u32_as_usize(this + 0xad));
+        write_u32_from_usize(this + 0xad, 0);
     }
-    let e = cqr6_d(this + 8);
+    let e = read_u32_as_usize(this + 8);
     if e != 0 {
         let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
         arquivar(e, 1);
     }
-    let a = cqr6_w(this + 0x40);
+    let a = read_i16(this + 0x40);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
     crate::comparacao::ramo(ramo);
     *((this + 0xab) as *mut u8) = 0;
@@ -84,9 +75,9 @@ unsafe fn cqr6_virada(this: usize, inscritos: usize, arquivo: usize, linhas: [u3
 /// O comparador da virada: só a original (ponytail: libera as tabelas e refaz os inscritos, as rodadas e a árvore, que
 /// alocam e sorteiam; não pode rodar duas vezes), conferindo o que só ela garante: o ano (+0x40) sobe um.
 unsafe fn cqr6_comparar(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
-    let antes = cqr6_w(this + 0x40);
+    let antes = read_i16(this + 0x40);
     let r = original();
-    let depois = cqr6_w(this + 0x40);
+    let depois = read_i16(this + 0x40);
     PLACAR.registrar(depois == antes.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", nome, this, antes, depois));
     r
 }
@@ -129,7 +120,7 @@ unsafe extern "thiscall" fn comparar_cqr6_virada_jogo_das_estrelas(this: usize) 
 
 /// O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
 unsafe fn cqr6_clube(i: usize) -> usize {
-    cqr6_d(0xae23b4).wrapping_add(i.wrapping_mul(0x245))
+    read_u32_as_usize(0xae23b4).wrapping_add(i.wrapping_mul(0x245))
 }
 
 /// { 0x90a540 } (thiscall, ret 0, usa_mls_all_stars.cpp): `UsaMlsAllStars::set_up_teams()`, os dois times do Jogo das
@@ -145,46 +136,46 @@ unsafe fn cqr6_times(this: usize) -> i32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 2);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let l = alocar(0xc);
-    cqr6_pd(this + 0xa7, l);
+    write_u32_from_usize(this + 0xa7, l);
     if l == 0 {
         aviso_em(0xaa20a0, 0xc6);
         return -1;
     }
-    let (a, b) = (cqr6_d(0x9d00a4), cqr6_d(0x9d00a8));
-    let conferencia = if cqr6_w(this + 0x40) % 2 != 0 {
-        cqr6_pd(l, cqr6_clube(a));
-        cqr6_pd(cqr6_d(this + 0xa7) + 6, cqr6_clube(b));
+    let (a, b) = (read_u32_as_usize(0x9d00a4), read_u32_as_usize(0x9d00a8));
+    let conferencia = if read_i16(this + 0x40) % 2 != 0 {
+        write_u32_from_usize(l, cqr6_clube(a));
+        write_u32_from_usize(read_u32_as_usize(this + 0xa7) + 6, cqr6_clube(b));
         0x413
     } else {
-        cqr6_pd(l + 6, cqr6_clube(a));
-        cqr6_pd(cqr6_d(this + 0xa7), cqr6_clube(b));
+        write_u32_from_usize(l + 6, cqr6_clube(a));
+        write_u32_from_usize(read_u32_as_usize(this + 0xa7), cqr6_clube(b));
         0x414
     };
     let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let mut k = sortear(6) as u8; // cqr6: o estádio sorteado entre 6
     let divisao: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(0x909ec0usize);
     let mut i = 0usize;
-    while (i as i32) < cqr6_d(0xae235c) as i32 {
+    while (i as i32) < read_u32_as_usize(0xae235c) as i32 {
         let c = cqr6_clube(i);
-        let liga = cqr6_d(c + 0x57);
-        if liga != 0 && cqr6_d(liga) == cqr6_d(0x9cf590) && divisao(c) as i32 == conferencia {
+        let liga = read_u32_as_usize(c + 0x57);
+        if liga != 0 && read_u32_as_usize(liga) == read_u32_as_usize(0x9cf590) && divisao(c) as i32 == conferencia {
             if k == 0 {
                 crate::comparacao::ramo("cqr_6 estadio do jogo das estrelas");
-                let primeiro = cqr6_d(cqr6_d(this + 0xa7));
-                cqr6_pd(primeiro + 0x69, cqr6_d(c + 0x69)); // cqr6: o estádio do clube sorteado
-                *((cqr6_d(cqr6_d(this + 0xa7)) + 0x6d) as *mut u8) = 0;
+                let primeiro = read_u32_as_usize(read_u32_as_usize(this + 0xa7));
+                write_u32_from_usize(primeiro + 0x69, read_u32_as_usize(c + 0x69)); // cqr6: o estádio do clube sorteado
+                *((read_u32_as_usize(read_u32_as_usize(this + 0xa7)) + 0x6d) as *mut u8) = 0;
                 break;
             }
             k = k.wrapping_sub(1);
         }
         i += 1;
     }
-    let nacao = cqr6_d(0xae23a8).wrapping_add(cqr6_d(0x9cf4f8).wrapping_mul(0x122));
-    let l = cqr6_d(this + 0xa7);
-    cqr6_pd(cqr6_d(l + 6) + 0x53, nacao);
-    cqr6_pd(cqr6_d(l) + 0x53, cqr6_d(cqr6_d(l + 6) + 0x53));
+    let nacao = read_u32_as_usize(0xae23a8).wrapping_add(read_u32_as_usize(0x9cf4f8).wrapping_mul(0x122));
+    let l = read_u32_as_usize(this + 0xa7);
+    write_u32_from_usize(read_u32_as_usize(l + 6) + 0x53, nacao);
+    write_u32_from_usize(read_u32_as_usize(l) + 0x53, read_u32_as_usize(read_u32_as_usize(l + 6) + 0x53));
     for o in [4usize, 5, 0xa, 0xb] {
-        *((cqr6_d(this + 0xa7) + o) as *mut u8) = 0;
+        *((read_u32_as_usize(this + 0xa7) + o) as *mut u8) = 0;
     }
     1
 }
@@ -198,20 +189,20 @@ unsafe extern "thiscall" fn cqr6_times_do_jogo_das_estrelas(this: usize) -> i32 
 /// (+0xa7 na entrada) não é liberada por nenhuma das duas (a virada já a liberou).
 unsafe extern "thiscall" fn comparar_cqr6_times_do_jogo_das_estrelas(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(2005);
-    let antes = cqr6_d(this + 0xa7);
+    let antes = read_u32_as_usize(this + 0xa7);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.extend([(this + 0x3e, 2usize), (0xb67a34, 4), (cqr6_clube(cqr6_d(0x9d00a4)), 0x245), (cqr6_clube(cqr6_d(0x9d00a8)), 0x245)]);
+    reg.extend([(this + 0x3e, 2usize), (0xb67a34, 4), (cqr6_clube(read_u32_as_usize(0x9d00a4)), 0x245), (cqr6_clube(read_u32_as_usize(0x9d00a8)), 0x245)]);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
         let r = o(this);
-        lo.set(cqr6_d(this + 0xa7));
-        cqr6_pd(this + 0xa7, antes);
+        lo.set(read_u32_as_usize(this + 0xa7));
+        write_u32_from_usize(this + 0xa7, antes);
         r
     }, || {
         let r = crate::aleatorio::sem_contar(|| cqr6_times(this));
-        lr.set(cqr6_d(this + 0xa7));
-        cqr6_pd(this + 0xa7, lo.get());
+        lr.set(read_u32_as_usize(this + 0xa7));
+        write_u32_from_usize(this + 0xa7, lo.get());
         r
     });
     let (lo, lr) = (lo.get(), lr.get());

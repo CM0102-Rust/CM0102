@@ -406,21 +406,12 @@ unsafe extern "thiscall" fn comparar_calendario_da_premiership(this: usize, fase
 
 // ---------- 262a leva: os play-offs das divisões inglesas: o mata-mata da First, da Second e da Third (eng_first.cpp, eng_second.cpp, eng_third.cpp) ----------
 
-unsafe fn cpz1_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cpz1_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cpz1_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 /// O clube da linha `k` da tabela da liga (+0xb1, linhas de 0x3b bytes; o clube no +0).
 unsafe fn cpz1_clube(liga: usize, k: usize) -> usize {
-    cpz1_d(cpz1_d(liga + 0xb1) + k * 0x3b)
+    read_usize(read_usize(liga + 0xb1) + k * 0x3b)
 }
 
 /// O mata-mata das três divisões (o corpo de 0x573080, 0x576a70 e 0x5783c0, que só mudam nas linhas, no fonte e no
@@ -433,7 +424,7 @@ unsafe fn cpz1_clube(liga: usize, k: usize) -> usize {
 /// rodadas são liberadas (free 0x9452ca). Sem fase: a caixa `linha_sem_fase`; senão Cup::set_up_round (0x51c800,
 /// thiscall(fase, 0), ret 4). O quadro SEH da original só cobre o construtor (sem destrutor).
 unsafe fn cpz1_mata_mata(this: usize, linhas: [usize; 4], arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, a10: Option<u32>, nome: &'static str) {
-    let n = cpz1_b(this + 0xbf) as i8 as i32;
+    let n = read_u8(this + 0xbf) as i8 as i32;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let lista = alocar((n << 2) as u32);
     if lista == 0 {
@@ -443,7 +434,7 @@ unsafe fn cpz1_mata_mata(this: usize, linhas: [usize; 4], arquivo: usize, linha_
         core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cpz1_clube(this, l));
     }
     crate::comparacao::ramo(nome);
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cpz1_d(cpz1_d(this) + 0x3c));
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -454,15 +445,15 @@ unsafe fn cpz1_mata_mata(this: usize, linhas: [usize; 4], arquivo: usize, linha_
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
             core::mem::transmute(0x522e00usize);
         let a10 = a10.unwrap_or(extra as u16 as u32);
-        construir(p, this, n as u16 as u32, lista, rodadas as u16 as u32, cpz1_d(this + 4), t, cpz1_w(this + 0x40) as u16 as u32, 0, 1, a10, 0x14, 0, 0, 0, 0)
+        construir(p, this, n as u16 as u32, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, a10, 0x14, 0, 0, 0, 0)
     } else {
         0
     };
-    core::ptr::write_unaligned(cpz1_d(this + 0xc) as *mut usize, fase);
+    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, fase);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     liberar(lista);
     liberar(t);
-    let fase = cpz1_d(cpz1_d(this + 0xc));
+    let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
         return aviso_em(arquivo, linha_sem_fase);
     }
@@ -499,23 +490,23 @@ unsafe fn cpz1_comparar(nome: &str, this: usize, linhas: [usize; 4], original: i
     for (k, &l) in linhas.iter().enumerate() {
         plano[k] = cpz1_clube(this, l);
     }
-    let n = cpz1_b(this + 0xbf) as i8 as i16;
+    let n = read_u8(this + 0xbf) as i8 as i16;
     original();
-    let fase = cpz1_d(cpz1_d(this + 0xc));
+    let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
         PLACAR.registrar(false, || format!("{}({:#x}) sem fase", nome, this));
         return;
     }
-    let lista = cpz1_d(fase + 0xa7);
+    let lista = read_usize(fase + 0xa7);
     let mut achou: [usize; 4] = [0; 4];
     for (k, a) in achou.iter_mut().enumerate() {
-        *a = cpz1_d(lista + 6 * k);
+        *a = read_usize(lista + 6 * k);
     }
     let (mut x, mut y) = (plano, achou);
     x.sort_unstable();
     y.sort_unstable();
-    let igual = x == y && cpz1_w(fase + 0x3e) == n && cpz1_d(fase + 4) == cpz1_d(this + 4);
-    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", nome, this, plano, fase, achou, cpz1_w(fase + 0x3e), n));
+    let igual = x == y && read_i16(fase + 0x3e) == n && read_usize(fase + 4) == read_usize(this + 4);
+    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", nome, this, plano, fase, achou, read_i16(fase + 0x3e), n));
 }
 
 unsafe extern "thiscall" fn comparar_mata_mata_da_first(this: usize) {

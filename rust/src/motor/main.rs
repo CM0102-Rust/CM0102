@@ -1,8 +1,5 @@
 // ---------- 264a leva: a lista encadeada do jogo: tirar o item pelo conteúdo, esvaziar e o item do cursor (LLIST, vizinhança de manager_manager.cpp) ----------
 
-unsafe fn cqb10_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cqb10_por(a: usize, v: usize) {
     core::ptr::write_unaligned(a as *mut usize, v);
@@ -12,10 +9,10 @@ unsafe fn cqb10_por(a: usize, v: usize) {
 /// os mesmos bytes que `dado`, a partir da cabeça (+2). O tamanho vai como na original (movsx para o ecx do repe
 /// cmpsb): 0 é igual (o repe não roda e o ZF vem do xor de antes).
 unsafe fn cqb10_achar(this: usize, dado: usize) -> usize {
-    let mut no = cqb10_d(this + 2); // cqb10: a busca começa na cabeça
+    let mut no = read_usize(this + 2); // cqb10: a busca começa na cabeça
     while no != 0 {
         let n = core::ptr::read_unaligned((no + 4) as *const i16) as i32 as u32;
-        let item = cqb10_d(no);
+        let item = read_usize(no);
         let mut k = 0u32;
         while k < n && *((item + k as usize) as *const u8) == *((dado + k as usize) as *const u8) {
             k += 1;
@@ -23,7 +20,7 @@ unsafe fn cqb10_achar(this: usize, dado: usize) -> usize {
         if k == n {
             return no;
         }
-        no = cqb10_d(no + 6);
+        no = read_usize(no + 6);
     }
     0
 }
@@ -40,13 +37,13 @@ unsafe extern "thiscall" fn tirar_da_lista(this: usize, dado: usize) -> u32 {
         return 0;
     }
     crate::comparacao::ramo("cqb_10 tirado");
-    let (prox, ant) = (cqb10_d(no + 6), cqb10_d(no + 0xa));
-    if no == cqb10_d(this + 2) {
+    let (prox, ant) = (read_usize(no + 6), read_usize(no + 0xa));
+    if no == read_usize(this + 2) {
         cqb10_por(this + 2, prox);
     } else {
         cqb10_por(ant + 6, prox);
     }
-    if no == cqb10_d(this + 6) {
+    if no == read_usize(this + 6) {
         crate::comparacao::ramo("cqb_10 cauda");
         cqb10_por(this + 6, ant); // cqb10: a cauda volta ao anterior
     } else {
@@ -54,9 +51,9 @@ unsafe extern "thiscall" fn tirar_da_lista(this: usize, dado: usize) -> u32 {
     }
     let conta = core::ptr::read_unaligned(this as *const i16);
     core::ptr::write_unaligned(this as *mut i16, conta.wrapping_sub(1));
-    if no == cqb10_d(this + 0xa) {
+    if no == read_usize(this + 0xa) {
         crate::comparacao::ramo("cqb_10 cursor");
-        cqb10_por(this + 0xa, cqb10_d(no + 6)); // cqb10: o cursor anda
+        cqb10_por(this + 0xa, read_usize(no + 6)); // cqb10: o cursor anda
     }
     liberar_item(no);
     liberar(no);
@@ -69,8 +66,8 @@ unsafe extern "thiscall" fn tirar_da_lista(this: usize, dado: usize) -> u32 {
 unsafe extern "thiscall" fn comparar_tirar_da_lista(this: usize, dado: usize) -> u32 {
     let no = cqb10_achar(this, dado);
     let antes: [u8; 14] = core::ptr::read_unaligned(this as *const [u8; 14]);
-    let (prox, ant) = if no != 0 { (cqb10_d(no + 6), cqb10_d(no + 0xa)) } else { (0, 0) };
-    let (cabeca, cauda, cursor) = (cqb10_d(this + 2), cqb10_d(this + 6), cqb10_d(this + 0xa));
+    let (prox, ant) = if no != 0 { (read_usize(no + 6), read_usize(no + 0xa)) } else { (0, 0) };
+    let (cabeca, cauda, cursor) = (read_usize(this + 2), read_usize(this + 6), read_usize(this + 0xa));
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1485)(this, dado);
     let depois: [u8; 14] = core::ptr::read_unaligned(this as *const [u8; 14]);
     let ok = if no == 0 {
@@ -79,11 +76,11 @@ unsafe extern "thiscall" fn comparar_tirar_da_lista(this: usize, dado: usize) ->
         let conta = core::ptr::read_unaligned(antes.as_ptr() as *const i16).wrapping_sub(1);
         r == 1
             && core::ptr::read_unaligned(this as *const i16) == conta
-            && cqb10_d(this + 2) == if no == cabeca { prox } else { cabeca }
-            && cqb10_d(this + 6) == if no == cauda { ant } else { cauda }
-            && cqb10_d(this + 0xa) == if no == cursor { prox } else { cursor }
-            && (no == cabeca || cqb10_d(ant + 6) == prox)
-            && (no == cauda || cqb10_d(prox + 0xa) == ant)
+            && read_usize(this + 2) == if no == cabeca { prox } else { cabeca }
+            && read_usize(this + 6) == if no == cauda { ant } else { cauda }
+            && read_usize(this + 0xa) == if no == cursor { prox } else { cursor }
+            && (no == cabeca || read_usize(ant + 6) == prox)
+            && (no == cauda || read_usize(prox + 0xa) == ant)
     };
     PLACAR.registrar(ok, || format!("tirar_da_lista({:#x}, {:#x}) original={} nó {:#x} cabeçalho {:x?} -> {:x?}", this, dado, r, no, antes, depois));
     r
@@ -94,9 +91,9 @@ unsafe extern "thiscall" fn comparar_tirar_da_lista(this: usize, dado: usize) ->
 unsafe extern "thiscall" fn esvaziar_lista(this: usize) {
     let liberar_item: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d010usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
-    while cqb10_d(this + 2) != 0 {
-        let no = cqb10_d(this + 2);
-        let prox = cqb10_d(no + 6);
+    while read_usize(this + 2) != 0 {
+        let no = read_usize(this + 2);
+        let prox = read_usize(no + 6);
         liberar_item(no);
         liberar(no);
         cqb10_por(this + 2, prox);
@@ -116,11 +113,11 @@ unsafe extern "thiscall" fn comparar_esvaziar_lista(this: usize) {
 
 /// { 0x68d2e0 } (thiscall, ret 0): `LLIST::get_current()`: o item do nó do cursor (+0xa), sem andar; sem cursor, 0.
 unsafe extern "thiscall" fn item_do_cursor(this: usize) -> usize {
-    let no = cqb10_d(this + 0xa);
+    let no = read_usize(this + 0xa);
     if no == 0 {
         return 0;
     }
-    cqb10_d(no)
+    read_usize(no)
 }
 
 unsafe extern "thiscall" fn comparar_item_do_cursor(this: usize) -> usize {

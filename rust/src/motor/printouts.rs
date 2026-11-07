@@ -1,8 +1,5 @@
 // ---------- 262a leva: os veículos da imprensa: o comentarista sorteado, o nome do veículo e a notícia da queixa do técnico à federação (printouts.cpp, media.cpp) ----------
 
-unsafe fn cpz10_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cpz10_u(a: usize) -> u32 {
     core::ptr::read_unaligned(a as *const u32)
@@ -37,11 +34,11 @@ unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: usize, tipo
     let mut ids = [0i16; 20];
     let mut n = 0usize;
     if t == 2 || t == 4 {
-        let est = cpz10_d(clube + 0x69);
-        if est == 0 || cpz10_d(est + 0x38) == 0 {
+        let est = read_usize(clube + 0x69);
+        if est == 0 || read_usize(est + 0x38) == 0 {
             return -1;
         }
-        let l = cpz10_d(this + 4);
+        let l = read_usize(this + 4);
         cpz10_inicio(l);
         if cpz10_sw(l) <= 0 {
             return -1;
@@ -52,7 +49,7 @@ unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: usize, tipo
             if p == 0 {
                 break;
             }
-            if cpz10_u(p + 0xcb) == cpz10_u(cpz10_d(cpz10_d(clube + 0x69) + 0x38)) { // cpz10: o comentarista local
+            if cpz10_u(p + 0xcb) == cpz10_u(read_usize(read_usize(clube + 0x69) + 0x38)) { // cpz10: o comentarista local
                 crate::comparacao::ramo("cpz_10 comentarista local");
                 ids[n] = cpz10_sw(p) as i16;
                 n += 1;
@@ -61,12 +58,12 @@ unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: usize, tipo
                 }
             }
             i += 1;
-            if i >= cpz10_sw(cpz10_d(this + 4)) {
+            if i >= cpz10_sw(read_usize(this + 4)) {
                 break;
             }
         }
     } else {
-        let l = cpz10_d(this);
+        let l = read_usize(this);
         cpz10_inicio(l);
         if cpz10_sw(l) <= 0 {
             return -1;
@@ -93,7 +90,7 @@ unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: usize, tipo
                 }
             }
             i += 1;
-            if i >= cpz10_sw(cpz10_d(this)) {
+            if i >= cpz10_sw(read_usize(this)) {
                 break;
             }
         }
@@ -111,7 +108,7 @@ unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: usize, tipo
 unsafe extern "thiscall" fn comparar_sortear_comentarista(this: usize, clube: usize, tipo: u32, nacao: i32) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32) -> i32>(1407);
     let mut regioes = Vec::new();
-    for l in [cpz10_d(this), cpz10_d(this + 4)] {
+    for l in [read_usize(this), read_usize(this + 4)] {
         if l != 0 {
             regioes.push((l, 0xe));
         }
@@ -151,7 +148,7 @@ unsafe extern "thiscall" fn nome_do_veiculo(this: usize, tipo: u32, id: u32, nom
     let t = tipo as i8;
     let id = id as i16;
     if id != -1 {
-        let l = cpz10_d(this + if t == 2 || t == 4 { 4 } else { 0 });
+        let l = read_usize(this + if t == 2 || t == 4 { 4 } else { 0 });
         cpz10_inicio(l);
         if cpz10_sw(l) > 0 {
             let mut i = 0;
@@ -184,7 +181,7 @@ unsafe extern "thiscall" fn comparar_nome_do_veiculo(this: usize, tipo: u32, id:
     if nome != 0 {
         regioes.push((nome, 0xd4));
     }
-    for l in [cpz10_d(this), cpz10_d(this + 4)] {
+    for l in [read_usize(this), read_usize(this + 4)] {
         if l != 0 {
             regioes.push((l, 0xe));
         }
@@ -200,7 +197,7 @@ unsafe extern "thiscall" fn comparar_nome_do_veiculo(this: usize, tipo: u32, id:
 /// reputação (+0x80) passar de 4750, senão ao clube (0x7861e0).
 unsafe extern "thiscall" fn noticia_queixa_a_federacao(this: usize, clube: usize, pessoa: usize, tipo: u32, a: u32, b: u32, c: u32) {
     let _ = this;
-    if clube == 0 || cpz10_d(clube + 0x53) == 0 || cpz10_d(clube + 0xcf) == 0 || pessoa == 0 {
+    if clube == 0 || read_usize(clube + 0x53) == 0 || read_usize(clube + 0xcf) == 0 || pessoa == 0 {
         return;
     }
     crate::comparacao::ramo("cpz_10 noticia da queixa a federacao");
@@ -210,12 +207,12 @@ unsafe extern "thiscall" fn noticia_queixa_a_federacao(this: usize, clube: usize
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0x178e, 0);
     gravar(nt, 0, cpz10_u(clube));
-    let tecnico = cpz10_d(clube + 0xcf);
+    let tecnico = read_usize(clube + 0xcf);
     if tecnico != 0 {
         gravar(nt, 1, cpz10_u(tecnico));
-        gravar(nt, 2, cpz10_u(cpz10_d(tecnico + 4) + 0x33));
-        gravar(nt, 3, cpz10_u(cpz10_d(tecnico + 8) + 0x33));
-        gravar(nt, 4, cpz10_u(cpz10_d(tecnico + 0xc) + 0x33));
+        gravar(nt, 2, cpz10_u(read_usize(tecnico + 4) + 0x33));
+        gravar(nt, 3, cpz10_u(read_usize(tecnico + 8) + 0x33));
+        gravar(nt, 4, cpz10_u(read_usize(tecnico + 0xc) + 0x33));
     } else {
         for k in 1..5 {
             gravar(nt, k, u32::MAX);
@@ -223,21 +220,21 @@ unsafe extern "thiscall" fn noticia_queixa_a_federacao(this: usize, clube: usize
     }
     gravar(nt, 5, tipo as i8 as u32);
     gravar(nt, 6, cpz10_u(pessoa));
-    gravar(nt, 7, cpz10_u(cpz10_d(pessoa + 4) + 0x33));
-    gravar(nt, 8, cpz10_u(cpz10_d(pessoa + 8) + 0x33));
-    gravar(nt, 9, cpz10_u(cpz10_d(pessoa + 0xc) + 0x33));
+    gravar(nt, 7, cpz10_u(read_usize(pessoa + 4) + 0x33));
+    gravar(nt, 8, cpz10_u(read_usize(pessoa + 8) + 0x33));
+    gravar(nt, 9, cpz10_u(read_usize(pessoa + 0xc) + 0x33));
     gravar(nt, 0xa, a as i8 as u32);
     gravar(nt, 0xb, b as i16 as u32);
-    let nacao = cpz10_d(clube + 0x53);
+    let nacao = read_usize(clube + 0x53);
     gravar(nt, 0xc, if nacao != 0 { cpz10_u(nacao) } else { u32::MAX });
     gravar(nt, 0xd, c as i8 as u32);
-    let nacao = cpz10_d(clube + 0x53);
+    let nacao = read_usize(clube + 0x53);
     if nacao != 0 && cpz10_sw(clube + 0x80) > 0x128e {
         let aos_da_nacao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7863f0usize);
-        aos_da_nacao(cpz10_d(0xb7431c), nt, nacao);
+        aos_da_nacao(read_usize(0xb7431c), nt, nacao);
     } else {
         let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-        entregar(cpz10_d(0xb7431c), nt, clube);
+        entregar(read_usize(0xb7431c), nt, clube);
     }
 }
 

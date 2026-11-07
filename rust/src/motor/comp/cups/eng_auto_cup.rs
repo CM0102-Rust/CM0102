@@ -1,27 +1,18 @@
 // ---------- 283a leva: o Troféu da Liga inglesa (LDV Vans Trophy): os 56 clubes das duas chaves (Norte e Sul), a fase das chaves e a fase seguinte (eng_auto_cup.cpp) ----------
 
-unsafe fn cqs5_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqs5_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqs5_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
 /// O clube `c` está na competição de id [`g`] (+0x57 a divisão, ponteiro para o registro; +0 o id)?
 unsafe fn cqs5_na(c: usize, g: usize) -> bool {
-    let l = cqs5_d(c + 0x57);
-    l != 0 && cqs5_d(l) == cqs5_d(g)
+    let l = read_u32_as_usize(c + 0x57);
+    l != 0 && read_u32_as_usize(l) == read_u32_as_usize(g)
 }
 
 /// Põe o clube `c` na vaga `k` da lista (+0xb2, relida a cada vez) e conta.
 unsafe fn cqs5_por(this: usize, k: &mut i32, c: usize) {
     *k += 1;
-    cqs5_pd(cqs5_d(this + 0xb2) + (*k as usize - 1) * 4, c);
+    write_u32_from_usize(read_u32_as_usize(this + 0xb2) + (*k as usize - 1) * 4, c);
 }
 
 /// { 0x56b730 } (thiscall, ret 0, eng_auto_cup.cpp; da virada, n = 1 até 2002-06-01): `EngAutoCup::select_section_clubs()`:
@@ -40,17 +31,17 @@ unsafe fn cqs5_por(this: usize, k: &mut i32, c: usize) {
 /// Cheia, a lista é ordenada pela latitude da cidade do estádio (qsort 0x945333 com 0x53fd40) e cada metade (a do Norte e
 /// a do Sul [inferência]) pela reputação, da menor para a maior (qsort com 0x4b0810); devolve 1. Sem encher, 0.
 unsafe fn cqs5_selecao(this: usize) -> u32 {
-    cqs5_pd(this + 0xb6, 0x38);
+    write_u32_from_usize(this + 0xb6, 0x38);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let l = alocar(0xe0);
-    cqs5_pd(this + 0xb2, l);
+    write_u32_from_usize(this + 0xb2, l);
     if l == 0 {
         aviso_em(0x9c4180, 0x24c);
         return 0;
     }
-    let base = cqs5_d(0xae23b4);
-    let n = cqs5_d(0xae235c) as i32;
-    let cheia = |k: i32| k == cqs5_d(this + 0xb6) as i32;
+    let base = read_u32_as_usize(0xae23b4);
+    let n = read_u32_as_usize(0xae235c) as i32;
+    let cheia = |k: i32| k == read_u32_as_usize(this + 0xb6) as i32;
     let mut k = 0i32;
     // 1) a segunda e a terceira divisões
     let mut i: i16 = 0;
@@ -76,8 +67,8 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
     if n > 0 {
         loop {
             let c = base + i as u16 as usize * 0x245;
-            let antes = cqs5_d(c + 0x5b);
-            if cqs5_na(c, 0x9cf69c) && antes != 0 && cqs5_d(antes) == cqs5_d(0x9cf5c8) {
+            let antes = read_u32_as_usize(c + 0x5b);
+            if cqs5_na(c, 0x9cf69c) && antes != 0 && read_u32_as_usize(antes) == read_u32_as_usize(0x9cf5c8) {
                 crate::comparacao::ramo("cqs_5 rebaixado para a conference");
                 cqs5_por(this, &mut k, c); // cqs5: o rebaixado entra
                 achado = c;
@@ -92,21 +83,21 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
             }
         }
     }
-    let nacao = cqs5_d(cqs5_d(this + 4) + 0x5d);
+    let nacao = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
     if *((nacao + 0x11c) as *const u8) & 4 != 0 {
         // 3a) a Conference pela categoria
         let mut cat: i8 = 6;
-        if k < cqs5_d(this + 0xb6) as i32 {
+        if k < read_u32_as_usize(this + 0xb6) as i32 {
             loop {
                 let mut i: i16 = 0;
                 if n > 0 {
                     loop {
-                        if k >= cqs5_d(this + 0xb6) as i32 {
+                        if k >= read_u32_as_usize(this + 0xb6) as i32 {
                             break;
                         }
                         let c = base + i as u16 as usize * 0x245;
-                        let antes = cqs5_d(c + 0x5b);
-                        if antes != 0 && cqs5_d(antes) == cqs5_d(0x9cf69c) && cqs5_na(c, 0x9cf69c) {
+                        let antes = read_u32_as_usize(c + 0x5b);
+                        if antes != 0 && read_u32_as_usize(antes) == read_u32_as_usize(0x9cf69c) && cqs5_na(c, 0x9cf69c) {
                             let v = *((c + 0x5f) as *const i8);
                             if ((cat == 6 && v <= cat) || v == cat) && c != 0 && c != achado {
                                 cqs5_por(this, &mut k, c);
@@ -119,7 +110,7 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
                     }
                 }
                 cat = cat.wrapping_add(1);
-                if k >= cqs5_d(this + 0xb6) as i32 {
+                if k >= read_u32_as_usize(this + 0xb6) as i32 {
                     break;
                 }
             }
@@ -145,14 +136,14 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
                 }
             }
         }
-        if (m as i32) < cqs5_d(this + 0xb6) as i32 - k {
-            let lim = n.wrapping_sub((cqs5_d(0xae2350) as i32).wrapping_mul(2));
+        if (m as i32) < read_u32_as_usize(this + 0xb6) as i32 - k {
+            let lim = n.wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
             let mut j: i16 = 0;
             if lim > 0 {
                 loop {
                     let c = base + j as u16 as usize * 0x245;
-                    let nac = cqs5_d(c + 0x53);
-                    if nac != 0 && cqs5_d(nac) == cqs5_d(0x9cf2e4) && !cqs5_na(c, 0x9cf764) {
+                    let nac = read_u32_as_usize(c + 0x53);
+                    if nac != 0 && read_u32_as_usize(nac) == read_u32_as_usize(0x9cf2e4) && !cqs5_na(c, 0x9cf764) {
                         local[m as u8 as usize] = c;
                         m = m.wrapping_add(1);
                         if m == 0x1e {
@@ -168,23 +159,23 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
         }
         let embaralhar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(0x4afbd0usize);
         // ponytail: a original empurra as duas palavras em dwords com lixo nos 16 bits altos; a 0x4afbd0 lê as palavras
-        embaralhar(local.as_mut_ptr() as usize, m as i16 as u16 as u32, (cqs5_w(this + 0xb6).wrapping_sub(k as i16)) as u16 as u32);
+        embaralhar(local.as_mut_ptr() as usize, m as i16 as u16 as u32, (read_i16(this + 0xb6).wrapping_sub(k as i16)) as u16 as u32);
         let mut a: i16 = 0;
-        while k < cqs5_d(this + 0xb6) as i32 {
+        while k < read_u32_as_usize(this + 0xb6) as i32 {
             cqs5_por(this, &mut k, local[a as u16 as usize]);
             a = a.wrapping_add(1);
         }
     }
-    if k != cqs5_d(this + 0xb6) as i32 {
+    if k != read_u32_as_usize(this + 0xb6) as i32 {
         return 0;
     }
     crate::comparacao::ramo("cqs_5 chaves do trofeu da liga");
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    ordenar(cqs5_d(this + 0xb2), cqs5_d(this + 0xb6) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude
-    let metade = (cqs5_d(this + 0xb6) as i32) / 2;
-    ordenar(cqs5_d(this + 0xb2), metade as u32, 4, 0x4b0810);
-    let metade = (cqs5_d(this + 0xb6) as i32) / 2;
-    ordenar(cqs5_d(this + 0xb2) + metade as usize * 4, metade as u32, 4, 0x4b0810);
+    ordenar(read_u32_as_usize(this + 0xb2), read_u32_as_usize(this + 0xb6) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude
+    let metade = (read_u32_as_usize(this + 0xb6) as i32) / 2;
+    ordenar(read_u32_as_usize(this + 0xb2), metade as u32, 4, 0x4b0810);
+    let metade = (read_u32_as_usize(this + 0xb6) as i32) / 2;
+    ordenar(read_u32_as_usize(this + 0xb2) + metade as usize * 4, metade as u32, 4, 0x4b0810);
     1
 }
 
@@ -197,33 +188,33 @@ unsafe extern "thiscall" fn cqs5_trofeu_clubes(this: usize) -> u32 {
 /// caso em que ela lê a dword sem valor da pilha), só a original.
 unsafe extern "thiscall" fn comparar_cqs5_trofeu_clubes(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2030);
-    let base = cqs5_d(0xae23b4);
-    let tem_rebaixado = (0..cqs5_d(0xae235c) as i32).any(|i| {
+    let base = read_u32_as_usize(0xae23b4);
+    let tem_rebaixado = (0..read_u32_as_usize(0xae235c) as i32).any(|i| {
         let c = base + i as usize * 0x245;
-        let antes = cqs5_d(c + 0x5b);
-        cqs5_na(c, 0x9cf69c) && antes != 0 && cqs5_d(antes) == cqs5_d(0x9cf5c8)
+        let antes = read_u32_as_usize(c + 0x5b);
+        cqs5_na(c, 0x9cf69c) && antes != 0 && read_u32_as_usize(antes) == read_u32_as_usize(0x9cf5c8)
     });
     if !tem_rebaixado {
         return o(this);
     }
-    let antes = cqs5_d(this + 0xb2);
+    let antes = read_u32_as_usize(this + 0xb2);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(this + 0xb6, 4usize), (0xb67a34, 4)]);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
         let r = o(this);
-        lo.set(cqs5_d(this + 0xb2));
-        cqs5_pd(this + 0xb2, antes);
+        lo.set(read_u32_as_usize(this + 0xb2));
+        write_u32_from_usize(this + 0xb2, antes);
         r
     }, || {
         let r = crate::aleatorio::sem_contar(|| cqs5_selecao(this));
-        lr.set(cqs5_d(this + 0xb2));
-        cqs5_pd(this + 0xb2, lo.get());
+        lr.set(read_u32_as_usize(this + 0xb2));
+        write_u32_from_usize(this + 0xb2, lo.get());
         r
     });
     let (lo, lr) = (lo.get(), lr.get());
-    let k = 4 * cqs5_d(this + 0xb6).min(0x38);
+    let k = 4 * read_u32_as_usize(this + 0xb6).min(0x38);
     let lista = if lo != 0 && lr != 0 && a == 1 {
         core::slice::from_raw_parts(lo as *const u8, k) == core::slice::from_raw_parts(lr as *const u8, k)
     } else {
@@ -247,16 +238,16 @@ unsafe extern "thiscall" fn comparar_cqs5_trofeu_clubes(this: usize) -> u32 {
 unsafe extern "thiscall" fn cqs5_trofeu_fase_das_chaves(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let times = alocar(((cqs5_w(this + 0x3e) as i32) << 2) as u32);
+    let times = alocar(((read_i16(this + 0x3e) as i32) << 2) as u32);
     if times == 0 {
         return aviso_em(0x9c4180, 0x2e9);
     }
     let mut i = 0i32;
-    while i < cqs5_w(this + 0x3e) as i32 {
-        cqs5_pd(times + i as usize * 4, cqs5_d(cqs5_d(this + 0xb2) + i as usize * 4)); // cqs5: a ordem das chaves
+    while i < read_i16(this + 0x3e) as i32 {
+        write_u32_from_usize(times + i as usize * 4, read_u32_as_usize(read_u32_as_usize(this + 0xb2) + i as usize * 4)); // cqs5: a ordem das chaves
         i += 1;
     }
-    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqs5_d(cqs5_d(this) + 0x3c));
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let tabela = rodadas_da_copa(this, 0, &mut rodadas, &mut extra, 0);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -265,39 +256,39 @@ unsafe extern "thiscall" fn cqs5_trofeu_fase_das_chaves(this: usize) {
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(0x522e00usize);
-        construir(p, this, cqs5_w(this + 0x3e) as u16 as u32, times, rodadas as u16 as u32, cqs5_d(this + 4), tabela, cqs5_w(this + 0x40) as u16 as u32, 0, 1,
+        construir(p, this, read_i16(this + 0x3e) as u16 as u32, times, rodadas as u16 as u32, read_u32_as_usize(this + 4), tabela, read_i16(this + 0x40) as u16 as u32, 0, 1,
             extra as u16 as u32, *((this + 0x51) as *const u8) as u32, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    cqs5_pd(cqs5_d(this + 0xc), f);
+    write_u32_from_usize(read_u32_as_usize(this + 0xc), f);
     soltar(times);
     soltar(tabela);
-    if cqs5_d(cqs5_d(this + 0xc)) == 0 {
+    if read_u32_as_usize(read_u32_as_usize(this + 0xc)) == 0 {
         return aviso_em(0x9c4180, 0x300);
     }
     crate::comparacao::ramo("cqs_5 fase das chaves do trofeu");
-    cqs5_pd(this + 0x30, 0);
+    write_u32_from_usize(this + 0x30, 0);
 }
 
 /// Só a original (aloca a fase), conferindo o plano: a fase em [+0xc][0] e +0x30 = 0.
 unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_das_chaves(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2031);
     o(this);
-    let f = cqs5_d(cqs5_d(this + 0xc));
-    PLACAR.registrar(f != 0 && cqs5_d(this + 0x30) == 0, || format!("cqs5_trofeu_fase_das_chaves({:#x}) fase {:#x} +0x30 {}", this, f, cqs5_d(this + 0x30) as i32));
+    let f = read_u32_as_usize(read_u32_as_usize(this + 0xc));
+    PLACAR.registrar(f != 0 && read_u32_as_usize(this + 0x30) == 0, || format!("cqs5_trofeu_fase_das_chaves({:#x}) fase {:#x} +0x30 {}", this, f, read_u32_as_usize(this + 0x30) as i32));
 }
 
 /// { 0x56bc50 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual +0x28): `EngAutoCup::advance_stage()`: na última fase
 /// (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x314 e nada mais; senão +0x30 sobe um e, ao chegar a 1 (o fim das
 /// chaves), monta a final (EngAutoCup::create_final_stage 0x56bce0, call direto com o ecx da copa -> thiscall, ret 0).
 unsafe extern "thiscall" fn cqs5_trofeu_fase_seguinte(this: usize) {
-    let fase = cqs5_d(this + 0x30) as i32;
-    if fase >= (cqs5_d(this + 0x2c) as i32).wrapping_sub(1) {
+    let fase = read_u32_as_usize(this + 0x30) as i32;
+    if fase >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x9c4180, 0x314);
     }
     let fase = fase + 1;
-    cqs5_pd(this + 0x30, fase as usize);
+    write_u32_from_usize(this + 0x30, fase as usize);
     if fase == 1 {
         crate::comparacao::ramo("cqs_5 final do trofeu");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x56bce0usize);
@@ -308,31 +299,22 @@ unsafe extern "thiscall" fn cqs5_trofeu_fase_seguinte(this: usize) {
 /// Só a original (a final aloca e sorteia), conferindo o plano: +0x30 sobe um fora da última fase e fica na última.
 unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_seguinte(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2032);
-    let antes = cqs5_d(this + 0x30) as i32;
-    let ultima = antes >= (cqs5_d(this + 0x2c) as i32).wrapping_sub(1);
+    let antes = read_u32_as_usize(this + 0x30) as i32;
+    let ultima = antes >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
-    let depois = cqs5_d(this + 0x30) as i32;
+    let depois = read_u32_as_usize(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("cqs5_trofeu_fase_seguinte({:#x}) fase {} -> {}", this, antes, depois));
 }
 
 // ---------- 283a leva: o Troféu da Liga inglesa (LDV Vans Trophy): a final entre os campeões das duas chaves e a classificação final da copa nas estatísticas (eng_auto_cup.cpp) ----------
 
-unsafe fn cqs6_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqs6_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqs6_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
 /// O primeiro clube da lista de inscritos `l` (entradas de 6 bytes: +0 o clube, +5 a situação) com a situação `s`, entre
 /// as `n` primeiras (n = +0x3e da copa, word com sinal); sem ele, None.
 unsafe fn cqs6_vivo(l: usize, n: i32, s: u8) -> Option<usize> {
-    (0..n.max(0) as usize).find(|&i| *((l + i * 6 + 5) as *const u8) == s).map(|i| cqs6_d(l + i * 6))
+    (0..n.max(0) as usize).find(|&i| *((l + i * 6 + 5) as *const u8) == s).map(|i| read_u32_as_usize(l + i * 6))
 }
 
 /// { 0x56bce0 } (thiscall, ret 0, eng_auto_cup.cpp; da fase seguinte, quadro SEH só para o new, sem destrutor):
@@ -351,13 +333,13 @@ unsafe extern "thiscall" fn cqs6_trofeu_final(this: usize) {
     if l == 0 {
         return aviso_em(0x9c4180, 0x337);
     }
-    if let Some(c) = cqs6_vivo(cqs6_d(this + 0xa7), cqs6_w(this + 0x3e) as i32, 1) { // cqs6: o finalista da copa
-        cqs6_pd(l, c);
+    if let Some(c) = cqs6_vivo(read_u32_as_usize(this + 0xa7), read_i16(this + 0x3e) as i32, 1) { // cqs6: o finalista da copa
+        write_u32_from_usize(l, c);
     }
-    if let Some(c) = cqs6_vivo(cqs6_d(cqs6_d(cqs6_d(this + 0xc)) + 0xa7), cqs6_w(this + 0x3e) as i32, 1) { // cqs6: o finalista das chaves
-        cqs6_pd(l + 4, c);
+    if let Some(c) = cqs6_vivo(read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + 0xc)) + 0xa7), read_i16(this + 0x3e) as i32, 1) { // cqs6: o finalista das chaves
+        write_u32_from_usize(l + 4, c);
     }
-    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqs6_d(cqs6_d(this) + 0x3c));
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let tabela = rodadas_da_copa(this, 1, &mut rodadas, &mut extra, 0);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -366,14 +348,14 @@ unsafe extern "thiscall" fn cqs6_trofeu_final(this: usize) {
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(0x522e00usize);
-        construir(p, this, 2, l, rodadas as u16 as u32, cqs6_d(this + 4), tabela, cqs6_w(this + 0x40) as u16 as u32, 1, 1, // cqs6: o ano da final
+        construir(p, this, 2, l, rodadas as u16 as u32, read_u32_as_usize(this + 4), tabela, read_i16(this + 0x40) as u16 as u32, 1, 1, // cqs6: o ano da final
              extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    cqs6_pd(cqs6_d(this + 0xc) + 4, f);
+    write_u32_from_usize(read_u32_as_usize(this + 0xc) + 4, f);
     soltar(tabela);
-    let f = cqs6_d(cqs6_d(this + 0xc) + 4);
+    let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4);
     if f == 0 {
         return aviso_em(0x9c4180, 0x35a);
     }
@@ -388,7 +370,7 @@ unsafe extern "thiscall" fn cqs6_trofeu_final(this: usize) {
 unsafe extern "thiscall" fn comparar_cqs6_trofeu_final(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2033);
     o(this);
-    let f = cqs6_d(cqs6_d(this + 0xc) + 4);
+    let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4);
     PLACAR.registrar(f != 0, || format!("cqs6_trofeu_final({:#x}) sem a fase da final", this));
 }
 
@@ -403,42 +385,42 @@ unsafe extern "thiscall" fn comparar_cqs6_trofeu_final(this: usize) {
 /// tem em +0x1a da tabela das rodadas (+0xa3, 0x68 bytes por rodada), com as posições 3, 5, 7... (a original empurra o
 /// dword do byte da posição com lixo da pilha em cima; a 0x4a2540 só lê o byte). O vetor é liberado.
 unsafe extern "thiscall" fn cqs6_trofeu_classificacao(this: usize) {
-    if cqs6_d(this + 8) == 0 {
+    if read_u32_as_usize(this + 8) == 0 {
         return aviso_em(0x9c4180, 0x3bb);
     }
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let v = alocar(((cqs6_w(this + 0x3e) as i32) << 3) as u32);
+    let v = alocar(((read_i16(this + 0x3e) as i32) << 3) as u32);
     if v == 0 {
         return aviso_em(0x9c4180, 0x3c3);
     }
     let mut d: i16 = 0;
-    while d < cqs6_w(this + 0x3e) {
+    while d < read_i16(this + 0x3e) {
         let e = d as i32 as usize * 6;
-        cqs6_pd(v + d as i32 as usize * 4, cqs6_d(cqs6_d(this + 0xa7) + e));
-        let n = cqs6_w(this + 0x3e) as i32;
-        cqs6_pd(v + (n + d as i32) as usize * 4, cqs6_d(cqs6_d(cqs6_d(cqs6_d(this + 0xc)) + 0xa7) + e));
+        write_u32_from_usize(v + d as i32 as usize * 4, read_u32_as_usize(read_u32_as_usize(this + 0xa7) + e));
+        let n = read_i16(this + 0x3e) as i32;
+        write_u32_from_usize(v + (n + d as i32) as usize * 4, read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + 0xc)) + 0xa7) + e));
         d = d.wrapping_add(1);
     }
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    let n = cqs6_w(this + 0x3e) as i32;
+    let n = read_i16(this + 0x3e) as i32;
     ordenar(v, n as u32, 4, 0x4b07d0);
-    let n = cqs6_w(this + 0x3e) as i32;
+    let n = read_i16(this + 0x3e) as i32;
     ordenar(v + n as usize * 4, n as u32, 4, 0x4b07d0);
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4a2540usize);
-    let a = cqs6_d(v);
-    let b = cqs6_d(v + cqs6_w(this + 0x3e) as i32 as usize * 4);
+    let a = read_u32_as_usize(v);
+    let b = read_u32_as_usize(v + read_i16(this + 0x3e) as i32 as usize * 4);
     crate::comparacao::ramo("cqs_6 classificacao do trofeu");
-    if cqs6_w(a + 0x80) > cqs6_w(b + 0x80) {
-        posicao(cqs6_d(this + 8), a, 1);
-        posicao(cqs6_d(this + 8), cqs6_d(v + cqs6_w(this + 0x3e) as i32 as usize * 4), 2);
+    if read_i16(a + 0x80) > read_i16(b + 0x80) {
+        posicao(read_u32_as_usize(this + 8), a, 1);
+        posicao(read_u32_as_usize(this + 8), read_u32_as_usize(v + read_i16(this + 0x3e) as i32 as usize * 4), 2);
     } else {
-        posicao(cqs6_d(this + 8), a, 2);
-        posicao(cqs6_d(this + 8), cqs6_d(v + cqs6_w(this + 0x3e) as i32 as usize * 4), 1);
+        posicao(read_u32_as_usize(this + 8), a, 2);
+        posicao(read_u32_as_usize(this + 8), read_u32_as_usize(v + read_i16(this + 0x3e) as i32 as usize * 4), 1);
     }
     for lado in 0..2u8 {
-        let mut k: i16 = if lado == 0 { 1 } else { cqs6_w(this + 0x3e).wrapping_add(1) };
+        let mut k: i16 = if lado == 0 { 1 } else { read_i16(this + 0x3e).wrapping_add(1) };
         let mut pos: u8 = 3;
-        let ultima = cqs6_w(this + 0x3c).wrapping_sub(1);
+        let ultima = read_i16(this + 0x3c).wrapping_sub(1);
         if ultima < 0 {
             continue;
         }
@@ -446,10 +428,10 @@ unsafe extern "thiscall" fn cqs6_trofeu_classificacao(this: usize) {
         while r >= 0 {
             let p = pos;
             let mut j: i16 = 0;
-            while j < cqs6_w(cqs6_d(this + 0xa3) + r as usize * 0x68 + 0x1a) {
-                let c = cqs6_d(v + k as i32 as usize * 4);
+            while j < read_i16(read_u32_as_usize(this + 0xa3) + r as usize * 0x68 + 0x1a) {
+                let c = read_u32_as_usize(v + k as i32 as usize * 4);
                 k = k.wrapping_add(1);
-                posicao(cqs6_d(this + 8), c, p as u32);
+                posicao(read_u32_as_usize(this + 8), c, p as u32);
                 pos = pos.wrapping_add(2);
                 j = j.wrapping_add(1);
             }

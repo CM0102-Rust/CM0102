@@ -1,8 +1,5 @@
 // ---------- 283a leva: os construtores dos estaduais: Nordeste, Paranaense e Pernambucano (as regras, a tabela, os jogos, as estatísticas e as posições previstas na criação) (bra_reg_northeast.cpp, bra_reg_parana.cpp, bra_reg_pern.cpp) ----------
 
-unsafe fn cqt3_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 /// Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
 /// final; o vetor [+0xc] = malloc de 4 × fases), as regras (thiscall, ret 0), a tabela (thiscall, ret 0), as posições
@@ -87,12 +84,12 @@ unsafe fn cqt3_construir(this: usize, ano: u32, registro: usize, e: &Cqt3Estadua
 /// fases e a importância +0x51 = 0xf.
 unsafe fn cqt3_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt3Estadual, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && cqt3_d(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && cqt3_d(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
-    if *((this + 0x44) as *const u8) == 0xff && cqt3_d(this + 8) != 0 {
-        ok = ok && cqt3_d(this + 0x2c) == e.fases as usize && cqt3_d(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
+    let mut ok = r == this && read_usize(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
+        && read_usize(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
+    if *((this + 0x44) as *const u8) == 0xff && read_usize(this + 8) != 0 {
+        ok = ok && read_usize(this + 0x2c) == e.fases as usize && read_usize(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt3_d(this), cqt3_d(this + 0x2c), cqt3_d(this + 0xc), cqt3_d(this + 8)));
+    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, read_usize(this), read_usize(this + 0x2c), read_usize(this + 0xc), read_usize(this + 8)));
     r
 }
 
@@ -158,19 +155,13 @@ unsafe extern "thiscall" fn comparar_cqt3_construir_pernambucano(this: usize, an
 
 // ---------- 277a leva: a tabela dos estaduais: Nordeste, Paranaense e Pernambucano (bra_reg_northeast.cpp, bra_reg_parana.cpp, bra_reg_pern.cpp) ----------
 
-unsafe fn cqm7_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cqm7_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O clube é do estadual do global `g`: a divisão reserva do clube (+0x60, ReserveDivision, que no Brasil guarda o
 /// estadual) não é nula e o id do registro (+0) é o do global.
 unsafe fn cqm7_do_estadual(clube: usize, g: usize) -> bool {
-    let comp = cqm7_d(clube + 0x60);
-    comp != 0 && cqm7_d(comp) == cqm7_d(g)
+    let comp = read_usize(clube + 0x60);
+    comp != 0 && read_usize(comp) == read_usize(g)
 }
 
 /// O corpo comum dos estaduais (o mesmo molde nos doze, só mudam as constantes): +0x3e = `n` clubes; a tabela
@@ -190,22 +181,22 @@ unsafe fn cqm7_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = cqm7_d(0xae23b4);
-    while (i as i32) < cqm7_d(0xae235c) as i32 {
+    let mut clube = read_usize(0xae23b4);
+    while (i as i32) < read_usize(0xae235c) as i32 {
         if cqm7_do_estadual(clube, g) {
             // ponytail: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
             // byte. Com girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
             iniciar(this, l as u32, clube, 0, 0);
             k = k.wrapping_add(1);
-            if k as i8 as i16 == cqm7_w(this + 0x3e) {
+            if k as i8 as i16 == read_i16(this + 0x3e) {
                 break;
             }
         }
         i = i.wrapping_add(1);
         clube = clube.wrapping_add(0x245);
     }
-    if k as i8 as i16 != cqm7_w(this + 0x3e) {
+    if k as i8 as i16 != read_i16(this + 0x3e) {
         return 0;
     }
     crate::comparacao::ramo(ramo);
@@ -236,20 +227,20 @@ unsafe extern "thiscall" fn cqm7_tabela_do_pernambucano(this: usize) -> u32 {
 unsafe fn cqm7_comparar(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
-    while i < cqm7_d(0xae235c) as i32 && (plano.len() as i16) < n {
-        let clube = cqm7_d(0xae23b4) + (i as usize) * 0x245;
+    while i < read_usize(0xae235c) as i32 && (plano.len() as i16) < n {
+        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
         if cqm7_do_estadual(clube, g) {
             plano.push(clube);
         }
         i += 1;
     }
     let r = original();
-    let t = cqm7_d(this + 0xb1);
+    let t = read_usize(this + 0xb1);
     let esperado = (plano.len() as i16 == n) as u32;
-    let mut igual = r == esperado && cqm7_w(this + 0x3e) == n && t != 0;
+    let mut igual = r == esperado && read_i16(this + 0x3e) == n && t != 0;
     let mut achou: Vec<usize> = Vec::new();
     if igual {
-        achou = (0..plano.len()).map(|k| cqm7_d(t + k * 0x3b)).collect();
+        achou = (0..plano.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         igual = achou == plano;
     }
     PLACAR.registrar(igual, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", nome, this, r, plano, achou));

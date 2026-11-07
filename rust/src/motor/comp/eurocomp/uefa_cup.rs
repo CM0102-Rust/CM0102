@@ -1,16 +1,7 @@
 // ---------- 284a leva: a Copa da UEFA: os inscritos (os clubes das vagas da classificação da UEFA, completados até 118 com clubes de nações fracas, e a lista dos que vêm da Intertoto) (uefa_cup.cpp) ----------
 
-unsafe fn cqs9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqs9_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqs9_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
 /// Os inscritos menos a metade (truncada, com sinal) dos clubes da preliminar (+0xb2, byte com sinal).
 unsafe fn cqs9_conta(this: usize, k: i16) -> i32 {
@@ -36,36 +27,36 @@ unsafe fn cqs9_inscritos(this: usize) -> i32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x91);
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let l = zerada(0xa1, 6);
-    cqs9_pd(this + 0xa7, l);
+    write_u32_from_usize(this + 0xa7, l);
     if l == 0 {
         aviso_em(F, 0x1bf);
         return -1;
     }
     *((this + 0xb2) as *mut u8) = 0;
-    let base = cqs9_d(0xae23b4);
+    let base = read_u32_as_usize(0xae23b4);
     let mut k: i16 = 0;
     let mut i: i16 = 0;
-    if (cqs9_d(0xae235c) as i32) > 0 {
+    if (read_u32_as_usize(0xae235c) as i32) > 0 {
         loop {
             let c = base + i as u16 as usize * 0x245;
-            if cqs9_d(c + 0x1db) == cqs9_d(0x9cf6f0) {
+            if read_u32_as_usize(c + 0x1db) == read_u32_as_usize(0x9cf6f0) {
                 let e = k as i32 as usize * 6;
                 k = k.wrapping_add(1);
-                cqs9_pd(cqs9_d(this + 0xa7) + e, c);
-                *((cqs9_d(this + 0xa7) + e + 4) as *mut u8) = *((c + 0x1df) as *const u8);
-                *((cqs9_d(this + 0xa7) + e + 5) as *mut u8) = 0;
+                write_u32_from_usize(read_u32_as_usize(this + 0xa7) + e, c);
+                *((read_u32_as_usize(this + 0xa7) + e + 4) as *mut u8) = *((c + 0x1df) as *const u8);
+                *((read_u32_as_usize(this + 0xa7) + e + 5) as *mut u8) = 0;
                 if *((c + 0x1df) as *const i8) >= 0xa { // cqs9: os da preliminar
                     *((this + 0xb2) as *mut u8) = (*((this + 0xb2) as *const u8)).wrapping_add(1);
                 }
             }
             i = i.wrapping_add(1);
-            if i as i32 >= cqs9_d(0xae235c) as i32 {
+            if i as i32 >= read_u32_as_usize(0xae235c) as i32 {
                 break;
             }
         }
     }
     if cqs9_conta(this, k) < 0x76 {
-        let lim = |_: ()| (cqs9_d(0xae235c) as i32).wrapping_sub((cqs9_d(0xae2350) as i32).wrapping_mul(2));
+        let lim = |_: ()| (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
         let mut j: i16 = 0;
         if lim(()) > 0 {
             loop {
@@ -73,15 +64,15 @@ unsafe fn cqs9_inscritos(this: usize) -> i32 {
                     break;
                 }
                 let c = base + j as u16 as usize * 0x245;
-                let nac = cqs9_d(c + 0x53);
-                if nac != 0 && *((nac + 0x11c) as *const u8) == 0 && cqs9_w(nac + 0x8e) < 0x7d0 && cqs9_d(c + 0x1db) as i32 == -1 {
+                let nac = read_u32_as_usize(c + 0x53);
+                if nac != 0 && *((nac + 0x11c) as *const u8) == 0 && read_i16(nac + 0x8e) < 0x7d0 && read_u32_as_usize(c + 0x1db) as i32 == -1 {
                     crate::comparacao::ramo("cqs_9 clube completando a uefa");
                     let e = k as i32 as usize * 6;
                     k = k.wrapping_add(1);
-                    cqs9_pd(cqs9_d(this + 0xa7) + e, c);
-                    *((cqs9_d(this + 0xa7) + e + 4) as *mut u8) = 3; // cqs9: a classe de quem completa
-                    *((cqs9_d(this + 0xa7) + e + 5) as *mut u8) = 0;
-                    cqs9_pd(c + 0x1db, cqs9_d(cqs9_d(this + 4)));
+                    write_u32_from_usize(read_u32_as_usize(this + 0xa7) + e, c);
+                    *((read_u32_as_usize(this + 0xa7) + e + 4) as *mut u8) = 3; // cqs9: a classe de quem completa
+                    *((read_u32_as_usize(this + 0xa7) + e + 5) as *mut u8) = 0;
+                    write_u32_from_usize(c + 0x1db, read_u32_as_usize(read_u32_as_usize(this + 4)));
                 }
                 j = j.wrapping_add(1);
                 if j as i32 >= lim(()) {
@@ -91,11 +82,11 @@ unsafe fn cqs9_inscritos(this: usize) -> i32 {
         }
     }
     while cqs9_conta(this, k) > 0x76 {
-        cqs9_pd(cqs9_d(this + 0xa7) + k as i32 as usize * 6 - 6, 0);
+        write_u32_from_usize(read_u32_as_usize(this + 0xa7) + k as i32 as usize * 6 - 6, 0);
         k = k.wrapping_sub(1);
     }
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    ordenar(cqs9_d(this + 0xa7), k as i32 as u32, 6, 0x522190);
+    ordenar(read_u32_as_usize(this + 0xa7), k as i32 as u32, 6, 0x522190);
     let b2 = *((this + 0xb2) as *const i8);
     if b2 < 0 || b2 % 2 != 0 {
         return 0;
@@ -106,20 +97,20 @@ unsafe fn cqs9_inscritos(this: usize) -> i32 {
     core::ptr::write_unaligned((this + 0x38) as *mut i16, n);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = alocar((n as i32 * 6) as u32);
-    cqs9_pd(this + 0x14, t);
+    write_u32_from_usize(this + 0x14, t);
     if t == 0 {
         aviso_em(F, 0x21a);
         return 0;
     }
     if k > 0 {
         for q in 0..k as usize {
-            let e = cqs9_d(this + 0xa7) + q * 6;
-            let c = cqs9_d(e);
+            let e = read_u32_as_usize(this + 0xa7) + q * 6;
+            let c = read_u32_as_usize(e);
             if *((e + 4) as *const u8) == 1 && c != 0 {
-                let m = cqs9_w(this + 0x36) as i32 as usize * 6;
-                cqs9_pd(cqs9_d(this + 0x14) + m, c);
-                *((cqs9_d(this + 0x14) + cqs9_w(this + 0x36) as i32 as usize * 6 + 4) as *mut u8) = 3;
-                core::ptr::write_unaligned((this + 0x36) as *mut i16, cqs9_w(this + 0x36).wrapping_add(1));
+                let m = read_i16(this + 0x36) as i32 as usize * 6;
+                write_u32_from_usize(read_u32_as_usize(this + 0x14) + m, c);
+                *((read_u32_as_usize(this + 0x14) + read_i16(this + 0x36) as i32 as usize * 6 + 4) as *mut u8) = 3;
+                core::ptr::write_unaligned((this + 0x36) as *mut i16, read_i16(this + 0x36).wrapping_add(1));
             }
         }
     }
@@ -135,28 +126,28 @@ unsafe extern "thiscall" fn cqs9_uefa_inscritos(this: usize) -> i32 {
 /// listas (+0xa7 com 161 vagas e +0x14 com +0x38 vagas) de cada lado comparadas e as da cópia liberadas.
 unsafe extern "thiscall" fn comparar_cqs9_uefa_inscritos(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(2086);
-    let (a0, t0) = (cqs9_d(this + 0xa7), cqs9_d(this + 0x14));
-    let base = cqs9_d(0xae23b4);
+    let (a0, t0) = (read_u32_as_usize(this + 0xa7), read_u32_as_usize(this + 0x14));
+    let base = read_u32_as_usize(0xae23b4);
     let mut reg: Vec<(usize, usize)> = vec![(this + 0x36, 4), (this + 0x3e, 2), (this + 0xb2, 1), (0xb67a34, 4)];
-    reg.extend((0..cqs9_d(0xae235c)).map(|i| (base + i * 0x245 + 0x1db, 4)));
+    reg.extend((0..read_u32_as_usize(0xae235c)).map(|i| (base + i * 0x245 + 0x1db, 4)));
     let lo = core::cell::Cell::new((0usize, 0usize));
     let lr = core::cell::Cell::new((0usize, 0usize));
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
         let r = o(this);
-        lo.set((cqs9_d(this + 0xa7), cqs9_d(this + 0x14)));
-        cqs9_pd(this + 0xa7, a0);
-        cqs9_pd(this + 0x14, t0);
+        lo.set((read_u32_as_usize(this + 0xa7), read_u32_as_usize(this + 0x14)));
+        write_u32_from_usize(this + 0xa7, a0);
+        write_u32_from_usize(this + 0x14, t0);
         r
     }, || {
         let r = cqs9_inscritos(this);
-        lr.set((cqs9_d(this + 0xa7), cqs9_d(this + 0x14)));
-        cqs9_pd(this + 0xa7, lo.get().0);
-        cqs9_pd(this + 0x14, lo.get().1);
+        lr.set((read_u32_as_usize(this + 0xa7), read_u32_as_usize(this + 0x14)));
+        write_u32_from_usize(this + 0xa7, lo.get().0);
+        write_u32_from_usize(this + 0x14, lo.get().1);
         r
     });
     let ((ao, to), (ar, tr)) = (lo.get(), lr.get());
     let igual_em = |x: usize, y: usize, n: usize| (x == 0 && y == 0) || (x != 0 && y != 0 && core::slice::from_raw_parts(x as *const u8, n) == core::slice::from_raw_parts(y as *const u8, n));
-    let listas = igual_em(ao, ar, 0xa1 * 6) && (a != 1 || igual_em(to, tr, cqs9_w(this + 0x36).max(0) as usize * 6));
+    let listas = igual_em(ao, ar, 0xa1 * 6) && (a != 1 || igual_em(to, tr, read_i16(this + 0x36).max(0) as usize * 6));
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     if ar != 0 && ar != ao {
         soltar(ar);

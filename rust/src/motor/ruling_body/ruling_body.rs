@@ -1,8 +1,5 @@
 // ---------- 257a leva: as suspensões dos órgãos disciplinares: a suspensão do cartão vermelho, a virada da temporada do órgão e a compactação das suas entradas (ruling_body.cpp) ----------
 
-unsafe fn cpu10_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
 unsafe fn cpu10_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
@@ -77,7 +74,7 @@ unsafe extern "thiscall" fn suspensao_do_vermelho(this: usize, r: usize, j: usiz
     let mut hoje = [0u32; 2];
     copiar(r + 4, hoje.as_mut_ptr() as usize, 0xae2c90);
     *((r + 0x10) as *mut u8) = 3;
-    *((r + 0x1c) as *mut u32) = cpu10_d(j) as u32;
+    *((r + 0x1c) as *mut u32) = read_u32_as_usize(j) as u32;
     *((r + 0x6f) as *mut u8) = (*((j + 0x48) as *const u8) == 0) as u8;
     1 // cpu10: a punição feita
 }
@@ -87,7 +84,7 @@ unsafe extern "thiscall" fn comparar_suspensao_do_vermelho(this: usize, r: usize
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(1221);
     let regioes = [(r, 0x70)];
     let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, r, j, por_jogos), || suspensao_do_vermelho(this, r, j, por_jogos));
-    PLACAR.registrar(igual && a == b, || format!("suspensao_do_vermelho(jogador {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", cpu10_d(j), por_jogos, a, b, mo, mr));
+    PLACAR.registrar(igual && a == b, || format!("suspensao_do_vermelho(jogador {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", read_u32_as_usize(j), por_jogos, a, b, mo, mr));
     a
 }
 
@@ -103,7 +100,7 @@ unsafe extern "thiscall" fn nova_temporada_do_orgao(this: usize) {
     let gravar: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(0x55cb20usize);
     let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x556d00usize);
     crate::comparacao::ramo("cpu_10 nova temporada");
-    let mut e = cpu10_d(this + 0xb);
+    let mut e = read_u32_as_usize(this + 0xb);
     let mut i = 0i32;
     while i < cpu10_i(this + 0x13) {
         let id = cpu10_i(e);
@@ -112,13 +109,13 @@ unsafe extern "thiscall" fn nova_temporada_do_orgao(this: usize) {
             let liberar = if s == -1 {
                 true
             } else {
-                let ban = cpu10_d(cpu10_d(0xae28f0) + 4).wrapping_add((s as i32 as usize).wrapping_mul(20));
+                let ban = read_u32_as_usize(read_u32_as_usize(0xae28f0) + 4).wrapping_add((s as i32 as usize).wrapping_mul(20));
                 let anos = if cpu10_i(this + 0x17) == -1 && cpu10_i(this + 0x1b) == -1 { 4 } else { 2 };
                 let ano = *((ban + 6) as *const u16) as i32;
                 if *(0xae2c92 as *const u16) as i32 - ano >= anos {
                     crate::comparacao::ramo("cpu_10 suspensao velha");
                     // ponytail: a original empurra o índice com os 16 bits altos do edx de antes; a 0x556d00 lê só a palavra.
-                    soltar(cpu10_d(0xae28f0), id as u32, s as u16 as u32);
+                    soltar(read_u32_as_usize(0xae28f0), id as u32, s as u16 as u32);
                     true
                 } else {
                     false
@@ -126,11 +123,11 @@ unsafe extern "thiscall" fn nova_temporada_do_orgao(this: usize) {
             };
             if liberar {
                 let id = cpu10_i(e);
-                let g = guardada(cpu10_d(0xae28f0), id, *((this + 4) as *const i8));
+                let g = guardada(read_u32_as_usize(0xae28f0), id, *((this + 4) as *const i8));
                 if g != 0 && *((g + 5) as *const u8) == *((this + 5) as *const u8) {
                     *((g + 6) as *mut u32) = 0xffff_ffff;
                 } else {
-                    gravar(cpu10_d(0xae28f0), cpu10_i(e), *((this + 4) as *const i8), *((this + 5) as *const u8), 0xffff_ffff);
+                    gravar(read_u32_as_usize(0xae28f0), cpu10_i(e), *((this + 4) as *const i8), *((this + 5) as *const u8), 0xffff_ffff);
                 }
                 *(e as *mut u32) = 0xffff_ffff;
             } else {
@@ -162,7 +159,7 @@ unsafe extern "thiscall" fn comparar_nova_temporada_do_orgao(this: usize) {
 unsafe extern "thiscall" fn compactar_disciplina_do_orgao(this: usize) {
     let guardada: unsafe extern "thiscall" fn(usize, i32, i8) -> usize = core::mem::transmute(0x55cb60usize);
     let gravar: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(0x55cb20usize);
-    let mut destino = cpu10_d(this + 0xb);
+    let mut destino = read_u32_as_usize(this + 0xb);
     let mut origem = destino;
     let mut n = 0u32;
     let mut i = 0i32;
@@ -170,11 +167,11 @@ unsafe extern "thiscall" fn compactar_disciplina_do_orgao(this: usize) {
         if cpu10_i(origem) != -1 {
             if origem != destino {
                 core::ptr::copy(origem as *const u8, destino as *mut u8, 0xe);
-                let g = guardada(cpu10_d(0xae28f0), cpu10_i(origem), *((this + 4) as *const i8));
+                let g = guardada(read_u32_as_usize(0xae28f0), cpu10_i(origem), *((this + 4) as *const i8));
                 if g != 0 && *((g + 5) as *const u8) == *((this + 5) as *const u8) {
                     *((g + 6) as *mut u32) = n;
                 } else {
-                    gravar(cpu10_d(0xae28f0), cpu10_i(origem), *((this + 4) as *const i8), *((this + 5) as *const u8), n);
+                    gravar(read_u32_as_usize(0xae28f0), cpu10_i(origem), *((this + 4) as *const i8), *((this + 5) as *const u8), n);
                 }
             }
             destino += 0xe;
@@ -186,7 +183,7 @@ unsafe extern "thiscall" fn compactar_disciplina_do_orgao(this: usize) {
     *((this + 0x13) as *mut u32) = n;
     *((this + 0xf) as *mut u32) = n + 100;
     let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
-    let p = realocar(cpu10_d(this + 0xb), (n + 100) * 14);
+    let p = realocar(read_u32_as_usize(this + 0xb), (n + 100) * 14);
     *((this + 0xb) as *mut u32) = p as u32;
     if p == 0 {
         aviso_em(0xa7a858, 0x594);
@@ -197,7 +194,7 @@ unsafe extern "thiscall" fn compactar_disciplina_do_orgao(this: usize) {
 /// original e confere a conta, a capacidade e as entradas na nova ordem.
 unsafe extern "thiscall" fn comparar_compactar_disciplina_do_orgao(this: usize) {
     let mut esperado: Vec<u8> = Vec::new();
-    let base = cpu10_d(this + 0xb);
+    let base = read_u32_as_usize(this + 0xb);
     for k in 0..cpu10_i(this + 0x13).max(0) as usize {
         let e = base + 0xe * k;
         if cpu10_i(e) != -1 {
@@ -206,10 +203,10 @@ unsafe extern "thiscall" fn comparar_compactar_disciplina_do_orgao(this: usize) 
     }
     orig::<unsafe extern "thiscall" fn(usize)>(1223)(this);
     let n = (esperado.len() / 0xe) as u32;
-    let p = cpu10_d(this + 0xb);
+    let p = read_u32_as_usize(this + 0xb);
     let iguais = p != 0 && core::slice::from_raw_parts(p as *const u8, esperado.len()) == &esperado[..];
-    PLACAR.registrar(cpu10_d(this + 0x13) as u32 == n && cpu10_d(this + 0xf) as u32 == n + 100 && iguais, || {
-        format!("compactar_disciplina_do_orgao: conta {} (esperava {}), capacidade {}, entradas iguais {}", cpu10_d(this + 0x13), n, cpu10_d(this + 0xf), iguais)
+    PLACAR.registrar(read_u32_as_usize(this + 0x13) as u32 == n && read_u32_as_usize(this + 0xf) as u32 == n + 100 && iguais, || {
+        format!("compactar_disciplina_do_orgao: conta {} (esperava {}), capacidade {}, entradas iguais {}", read_u32_as_usize(this + 0x13), n, read_u32_as_usize(this + 0xf), iguais)
     });
 }
 

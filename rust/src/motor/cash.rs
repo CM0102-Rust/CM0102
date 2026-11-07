@@ -1,12 +1,6 @@
 // ---------- 271a leva: a formação lida do arquivo .pct (as táticas da IA e as do humano) e a troca da ordem dos bytes de palavras e dwords (formation.cpp, cash.cpp) ----------
 
-unsafe fn cqg8_d(a: usize) -> u32 {
-    core::ptr::read_unaligned(a as *const u32)
-}
 
-unsafe fn cqg8_pd(a: usize, v: u32) {
-    core::ptr::write_unaligned(a as *mut u32, v);
-}
 
 /// fread (0x945bfe, cdecl): `n` registros de `tam` bytes; devolve quantos leu.
 unsafe fn cqg8_ler(buf: usize, tam: u32, f: usize) -> u32 {
@@ -115,10 +109,10 @@ unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, q
             return cqg8_falhou(quieto, 0x920, f);
         }
         if !nativo {
-            cqg8_pd(this + 0x187b, cqg8_inverter(cqg8_d(this + 0x187b)));
+            write_u32(this + 0x187b, cqg8_inverter(read_u32(this + 0x187b)));
         }
     } else {
-        cqg8_pd(this + 0x187b, 0);
+        write_u32(this + 0x187b, 0);
     }
     if cqg8_ler(this + 0x12d, 0x16, f) != 1 {
         return cqg8_falhou(quieto, 0x930, f);
@@ -159,7 +153,7 @@ unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, q
     let time = this + 0x584;
     if cqg8_ler(time, 4, f) == 1 {
         if !nativo {
-            cqg8_pd(time, cqg8_inverter(cqg8_d(time)));
+            write_u32(time, cqg8_inverter(read_u32(time)));
         }
     } else if quieto == 0 {
         cqg8_erro(0x971);
@@ -177,8 +171,8 @@ unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, q
             cqg8_erro(0x97b);
         }
         for (k, x) in v.iter().enumerate() {
-            cqg8_pd(this + 0x188b + 8 * k, *x);
-            cqg8_pd(this + 0x188b + 8 * k + 4, 0xa); // cqg8: a instrução padrão das versões antigas
+            write_u32(this + 0x188b + 8 * k, *x);
+            write_u32(this + 0x188b + 8 * k + 4, 0xa); // cqg8: a instrução padrão das versões antigas
         }
         crate::comparacao::ramo("cqg_8 instrucoes antigas");
     } else if cqg8_ler(this + 0x188b, 0x58, f) == 1 {
@@ -192,14 +186,14 @@ unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, q
     if cqg8_ler(this + 0x5b4, 0xb, f) != 1 && quieto == 0 {
         cqg8_erro(0x98f);
     }
-    let mut v = cqg8_d(time);
+    let mut v = read_u32(time);
     if v & 0x4000 == 0 {
         v |= 0x2000; // cqg8: a instrução 0x2000 sem a 0x4000
-        cqg8_pd(time, v);
+        write_u32(time, v);
         crate::comparacao::ramo("cqg_8 instrucao 0x2000");
     }
     if id < 0x98ec5d {
-        cqg8_pd(time, cqg8_d(time) | 0x20000);
+        write_u32(time, read_u32(time) | 0x20000);
     }
     let guardada: unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32 = core::mem::transmute(0x5b3c70usize);
     let refazer: unsafe extern "thiscall" fn(usize, i32, i32, u32, u32) -> u32 = core::mem::transmute(0x5b3560usize);
@@ -213,9 +207,9 @@ unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, q
     separar(caminho, 0, 0, this, 0);
     let mapa: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x5b7160usize);
     mapa(this);
-    cqg8_pd(this + 0x187f, 1);
-    cqg8_pd(this + 0x1883, (*((this + 0x33) as *const u8) != 0) as u32);
-    cqg8_pd(this + 0x1887, 1);
+    write_u32(this + 0x187f, 1);
+    write_u32(this + 0x1883, (*((this + 0x33) as *const u8) != 0) as u32);
+    write_u32(this + 0x1887, 1);
     cqg8_fechar(f);
     1
 }
@@ -258,7 +252,7 @@ unsafe extern "C" fn comparar_trocar_bytes_das_palavras(p: usize, conta: u32) {
 /// { 0x43f300 } (cdecl, cash.cpp): `swap_bytes_32_array(dwords, conta)`: inverte os quatro bytes de cada dword.
 unsafe extern "C" fn trocar_bytes_dos_dwords(p: usize, conta: u32) {
     for k in 0..conta as usize {
-        cqg8_pd(p + 4 * k, cqg8_inverter(cqg8_d(p + 4 * k)));
+        write_u32(p + 4 * k, cqg8_inverter(read_u32(p + 4 * k)));
     }
 }
 

@@ -14,6 +14,7 @@ An item is a package of up to 3 ported routines, written ahead of time in `levas
 
 ## Porting
 
+- **Memory access:** use the functions in `rust/src/motor/mem.rs` (`read_u32`, `write_u8`...); don't create `<item>_d/_b/_w` copies in the item (since 11/07/2026).
 - **Calling conventions checked at the call site** (thiscall/stdcall/cdecl, `ret N`); `engenharia-reversa/aridade.py` helps. Note them in `rotinas.py`.
 - **Size of what is written:** 0x549ef0 writes 8 bytes (the date and the leap-year flag); a 4-byte local corrupts the stack. Use the size the original writes.
 - **Shuffles and counts:** check the exact number of slots (one copy shuffled 9 and the original 8).

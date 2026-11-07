@@ -1,20 +1,11 @@
 // ---------- 266a leva: o fim de temporada das finanças: o fim de temporada da nação, as obras, o centro de treino e o dividendo de cada clube e a notícia do dividendo (fin_prm.cpp) ----------
 
-unsafe fn cqc1_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cqc1_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cqc1_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqc1_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 unsafe fn cqc1_somar(a: usize, v: i32) {
     core::ptr::write_unaligned(a as *mut i32, cqc1_i(a).wrapping_add(v));
@@ -48,7 +39,7 @@ unsafe fn cqc1_financas_do_parceiro(this: usize, clube: usize, a: &mut u32) -> u
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let p = parceiro(clube, a, 1);
     let c = if p != 0 && *a == 0 { p } else { clube };
-    cqc1_d(this).wrapping_add((cqc1_i(c) as u32).wrapping_mul(0x167) as usize)
+    read_usize(this).wrapping_add((cqc1_i(c) as u32).wrapping_mul(0x167) as usize)
 }
 
 /// A notícia das obras e do treino (0x59ffb0: ecx = tabela; 3 pushes (tipo, valor, clube); sem add esp -> thiscall,
@@ -68,12 +59,12 @@ unsafe fn cqc1_recusa(this: usize, clube: usize, assunto: i32, motivo: i32) {
 /// A linha do clube na tabela dos técnicos ([[0xb67a44]] + id × 0x49); o byte +2 tem os pedidos à diretoria (bit 6:
 /// estádio; bit 7: centro de treino).
 unsafe fn cqc1_linha_dos_pedidos(clube: usize) -> usize {
-    cqc1_d(cqc1_d(0xb67a44)).wrapping_add((cqc1_i(clube) as u32).wrapping_mul(0x49) as usize)
+    read_usize(read_usize(0xb67a44)).wrapping_add((cqc1_i(clube) as u32).wrapping_mul(0x49) as usize)
 }
 
 /// O técnico do clube (+0xcf) é humano (entre as 16 últimas pessoas): a notícia vai para ele (0x7861e0).
 unsafe fn cqc1_tecnico_humano(clube: usize) -> bool {
-    let t = cqc1_d(clube + 0xcf);
+    let t = read_usize(clube + 0xcf);
     t != 0 && cqc1_i(t) >= cqc1_i(0xae2364).wrapping_sub(0x10)
 }
 
@@ -87,7 +78,7 @@ unsafe fn cqc1_tecnico_humano(clube: usize) -> bool {
 /// passam para os do ano anterior (+0xc0) e zeram, no registro de índice igual ao do clube.
 unsafe extern "thiscall" fn fim_de_temporada_da_nacao(this: usize, entrada: usize) {
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
-    if depois(0xae2c90, cqc1_d(0xdd6ec8) as u32, cqc1_d(0xdd6ecc) as u32) != 0 {
+    if depois(0xae2c90, read_usize(0xdd6ec8) as u32, read_usize(0xdd6ecc) as u32) != 0 {
         return;
     }
     if entrada == 0 {
@@ -96,24 +87,24 @@ unsafe extern "thiscall" fn fim_de_temporada_da_nacao(this: usize, entrada: usiz
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let linha: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x669360usize);
     let do_clube: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x59cfa0usize);
-    let mut clube = cqc1_d(0xae23b4);
+    let mut clube = read_usize(0xae23b4);
     let mut k = 0i32;
     let mut desloc = 0usize;
     while k < cqc1_i(0xae235c) {
         if selecao(clube) != 0 {
             return;
         }
-        let nacao = cqc1_d(clube + 0x53);
-        if cqc1_d(clube + 0x57) != 0 && nacao != 0 {
-            let ativa = cqc1_b(nacao + 0x11c) != 0;
-            if ativa || cqc1_w(clube + 0x80) >= 0x1388 { // cqc1: o clube de nação inativa pela reputação
+        let nacao = read_usize(clube + 0x53);
+        if read_usize(clube + 0x57) != 0 && nacao != 0 {
+            let ativa = read_u8(nacao + 0x11c) != 0;
+            if ativa || read_i16(clube + 0x80) >= 0x1388 { // cqc1: o clube de nação inativa pela reputação
                 let l = linha(clube) as i8 as i32;
                 if (0xb63d60 + l * 72) as usize == entrada {
-                    if !ativa && cqc1_w(clube + 0x80) < 0x1770 {
+                    if !ativa && read_i16(clube + 0x80) < 0x1770 {
                         crate::comparacao::ramo("cqc_1 nacao inativa abaixo de 6000");
                     }
                     do_clube(this, clube);
-                    let f = cqc1_d(this).wrapping_add(desloc);
+                    let f = read_usize(this).wrapping_add(desloc);
                     core::ptr::copy_nonoverlapping((f + 0x110) as *const u8, (f + 0xc0) as *mut u8, 0x50); // cqc1: os totais do ano passam para o ano anterior
                     core::ptr::write_bytes((f + 0x110) as *mut u8, 0, 0x50);
                 }
@@ -133,26 +124,26 @@ unsafe extern "thiscall" fn fim_de_temporada_da_nacao(this: usize, entrada: usiz
 unsafe extern "thiscall" fn comparar_fim_de_temporada_da_nacao(this: usize, entrada: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1509);
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
-    if entrada == 0 || depois(0xae2c90, cqc1_d(0xdd6ec8) as u32, cqc1_d(0xdd6ecc) as u32) != 0 {
+    if entrada == 0 || depois(0xae2c90, read_usize(0xdd6ec8) as u32, read_usize(0xdd6ecc) as u32) != 0 {
         return o(this, entrada);
     }
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let linha: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x669360usize);
     let mut ultimo = None;
-    let mut clube = cqc1_d(0xae23b4);
+    let mut clube = read_usize(0xae23b4);
     for k in 0..cqc1_i(0xae235c).max(0) as usize {
         if selecao(clube) != 0 {
             break;
         }
-        let nacao = cqc1_d(clube + 0x53);
-        if cqc1_d(clube + 0x57) != 0 && nacao != 0 && (cqc1_b(nacao + 0x11c) != 0 || cqc1_w(clube + 0x80) >= 0x1388) && (0xb63d60 + (linha(clube) as i8 as i32) * 72) as usize == entrada {
+        let nacao = read_usize(clube + 0x53);
+        if read_usize(clube + 0x57) != 0 && nacao != 0 && (read_u8(nacao + 0x11c) != 0 || read_i16(clube + 0x80) >= 0x1388) && (0xb63d60 + (linha(clube) as i8 as i32) * 72) as usize == entrada {
             ultimo = Some(k);
         }
         clube += 0x245;
     }
     o(this, entrada);
     if let Some(k) = ultimo {
-        let f = cqc1_d(this) + k * 0x167 + 0x110;
+        let f = read_usize(this) + k * 0x167 + 0x110;
         let zerado = core::slice::from_raw_parts(f as *const u8, 0x50).iter().all(|&x| x == 0);
         PLACAR.registrar(zerado, || format!("fim_de_temporada_da_nacao(entrada {:#x}) clube {} sem zerar os totais do ano", entrada, k));
     }
@@ -194,20 +185,20 @@ unsafe extern "thiscall" fn fim_de_temporada_do_clube(this: usize, clube: usize)
     }
     let mut saldo = cqc1_i(fin);
     let mut aviso = false;
-    let estadio = cqc1_d(clube + 0x69);
+    let estadio = read_usize(clube + 0x69);
     'obras: {
         if estadio == 0 {
             break 'obras;
         }
-        if cqc1_b(clube + 0x6d) == 0 && cqc1_d(clube + 0x57) != 0 {
+        if read_u8(clube + 0x6d) == 0 && read_usize(clube + 0x57) != 0 {
             if saldo <= 0x2160ec0 {
                 break 'obras;
             }
             let mut dono = 0usize;
-            let mut outro = cqc1_d(0xae23b4);
+            let mut outro = read_usize(0xae23b4);
             let mut k = 0i32;
             while k < cqc1_i(0xae235c) {
-                if outro != clube && cqc1_d(outro + 0x69) == estadio && cqc1_b(outro + 0x6d) != 0 {
+                if outro != clube && read_usize(outro + 0x69) == estadio && read_u8(outro + 0x6d) != 0 {
                     dono = outro;
                     break;
                 }
@@ -218,23 +209,23 @@ unsafe extern "thiscall" fn fim_de_temporada_do_clube(this: usize, clube: usize)
             if dono == 0 || f2 == 0 {
                 *((clube + 0x6d) as *mut u8) = 1;
                 cqc1_cobrar(fin, 0x8c, 0x12c, 20_000_000);
-                cqc1_noticia(this, clube, cqc1_i(cqc1_d(clube + 0x69)), 4);
-            } else if cqc1_b(f2 + 0x165) == 1 || cqc1_b(f2 + 0x165) == 2 {
+                cqc1_noticia(this, clube, cqc1_i(read_usize(clube + 0x69)), 4);
+            } else if read_u8(f2 + 0x165) == 1 || read_u8(f2 + 0x165) == 2 {
                 *((clube + 0x6d) as *mut u8) = 1;
                 *((dono + 0x6d) as *mut u8) = 0;
                 cqc1_cobrar(fin, 0x8c, 0x12c, 20_000_000);
                 cqc1_somar(f2 + 0xb4, 20_000_000);
                 cqc1_somar(f2 + 0x154, 20_000_000);
                 core::ptr::write_unaligned(f2 as *mut i64, cqc1_saldo(f2).wrapping_add(20_000_000));
-                cqc1_noticia(this, clube, cqc1_i(cqc1_d(clube + 0x69)), 4);
-                cqc1_noticia(this, dono, cqc1_i(cqc1_d(clube + 0x69)), 5);
+                cqc1_noticia(this, clube, cqc1_i(read_usize(clube + 0x69)), 4);
+                cqc1_noticia(this, dono, cqc1_i(read_usize(clube + 0x69)), 5);
             }
             break 'obras;
         }
-        if cqc1_b(clube + 0x6d) == 0 || cqc1_d(clube + 0x57) == 0 {
+        if read_u8(clube + 0x6d) == 0 || read_usize(clube + 0x57) == 0 {
             break 'obras;
         }
-        let aperto = cqc1_b(fin + 0x166) as i8;
+        let aperto = read_u8(fin + 0x166) as i8;
         if saldo > 0xb71b0 && aperto > 10 {
             let v = 10i32.wrapping_sub((aperto as i32).wrapping_mul(10000));
             cqc1_somar(fin + 0x12c, v);
@@ -244,56 +235,56 @@ unsafe extern "thiscall" fn fim_de_temporada_do_clube(this: usize, clube: usize)
         }
         cqc1_centro_de_treino(this, clube, saldo);
         let pedidos = cqc1_linha_dos_pedidos(clube) + 2;
-        if cqc1_b(pedidos) & 0x40 != 0 && cqc1_humano(clube) != 0 {
+        if read_u8(pedidos) & 0x40 != 0 && cqc1_humano(clube) != 0 {
             aviso = true;
             *(pedidos as *mut u8) &= 0xbf;
         }
-        let est = cqc1_d(clube + 0x69);
+        let est = read_usize(clube + 0x69);
         if est != 0 {
-            if saldo > 0x10b0760 && cqc1_w(clube + 0x80) > 0x1d4c && cqc1_i(est + 0x3c) > 0x61a8 && cqc1_b(est + 0x4d) == 0 {
+            if saldo > 0x10b0760 && read_i16(clube + 0x80) > 0x1d4c && cqc1_i(est + 0x3c) > 0x61a8 && read_u8(est + 0x4d) == 0 {
                 *((est + 0x4d) as *mut u8) = 1;
                 cqc1_cobrar(fin, 0x8c, 0x12c, 1_500_000);
-                cqc1_noticia(this, clube, cqc1_i(cqc1_d(clube + 0x69)), 6);
+                cqc1_noticia(this, clube, cqc1_i(read_usize(clube + 0x69)), 6);
                 break 'obras;
             }
-            if saldo > 0x47868c0 && cqc1_w(clube + 0x80) > 0x2422 && cqc1_i(est + 0x3c) > 0xe09c && cqc1_b(clube + 0x7f) == 0x14 && cqc1_b(est + 0x4c) == 0 {
+            if saldo > 0x47868c0 && read_i16(clube + 0x80) > 0x2422 && cqc1_i(est + 0x3c) > 0xe09c && read_u8(clube + 0x7f) == 0x14 && read_u8(est + 0x4c) == 0 {
                 *((est + 0x4c) as *mut u8) = 1;
                 cqc1_cobrar(fin, 0x8c, 0x12c, 7_500_000);
                 break 'obras;
             }
         }
-        let pode = saldo > 0x501bd0 || (cqc1_humano(clube) != 0 && saldo.wrapping_add((cqc1_w(clube + 0x80) as i32).wrapping_mul(1000)) > 0x501bd0);
+        let pode = saldo > 0x501bd0 || (cqc1_humano(clube) != 0 && saldo.wrapping_add((read_i16(clube + 0x80) as i32).wrapping_mul(1000)) > 0x501bd0);
         if !pode {
             if aviso {
                 cqc1_recusa(this, clube, 2, -1);
             }
             break 'obras;
         }
-        let liga = cqc1_d(clube + 0x57);
+        let liga = read_usize(clube + 0x57);
         if liga != 0 {
-            let comp = cqc1_d(cqc1_d(0xadadfc).wrapping_add(cqc1_d(liga).wrapping_mul(4)));
-            if comp != 0 && cqc1_d(comp + 8) != 0 {
+            let comp = read_usize(read_usize(0xadadfc).wrapping_add(read_usize(liga).wrapping_mul(4)));
+            if comp != 0 && read_usize(comp + 8) != 0 {
                 let busca: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
-                let l = busca(cqc1_d(comp + 8), clube);
-                if l != 0 && cqc1_b(l + 5) != 0 {
-                    local = cqc1_i(l + 6).wrapping_div(cqc1_b(l + 5) as i32) as u32;
+                let l = busca(read_usize(comp + 8), clube);
+                if l != 0 && read_u8(l + 5) != 0 {
+                    local = cqc1_i(l + 6).wrapping_div(read_u8(l + 5) as i32) as u32;
                 }
             }
         }
-        let est = cqc1_d(clube + 0x69);
+        let est = read_usize(clube + 0x69);
         let cap = cqc1_i(est + 0x3c);
         if cap > 0x1e848 {
             break 'obras;
         }
-        let rep = cqc1_w(clube + 0x80);
+        let rep = read_i16(clube + 0x80);
         let expandir = aviso
             || (cap as f64 * f64_em(0x96a720)) < (local as i16 as i32) as f64
             || (rep.wrapping_mul(2) as i32 > cap && rep > 0x109a);
         if !expandir {
-            if cqc1_sortear(0x14).wrapping_add(5) >= cqc1_w(cqc1_d(clube + 0x57) + 0x69) as i32 {
+            if cqc1_sortear(0x14).wrapping_add(5) >= read_i16(read_usize(clube + 0x57) + 0x69) as i32 {
                 break 'obras;
             }
-            let est = cqc1_d(clube + 0x69);
+            let est = read_usize(clube + 0x69);
             let livre = cqc1_i(est + 0x3c).wrapping_sub(cqc1_i(est + 0x40));
             if livre <= 0 {
                 break 'obras;
@@ -313,13 +304,13 @@ unsafe extern "thiscall" fn fim_de_temporada_do_clube(this: usize, clube: usize)
             }
             let v = v as i16 as i32;
             cqc1_somar(est + 0x3c, v);
-            cqc1_somar(cqc1_d(clube + 0x69) + 0x40, v);
+            cqc1_somar(read_usize(clube + 0x69) + 0x40, v);
             crate::comparacao::ramo("cqc_1 lugares sentados");
             cqc1_cobrar(fin, 0x8c, 0x12c, (v / 1000 + 1).wrapping_mul(50000).wrapping_add(v.wrapping_mul(75))); // cqc1: os lugares sentados
             cqc1_noticia(this, clube, v, 3);
             break 'obras;
         }
-        let tipo1 = cqc1_b(clube + 0x64) == 1;
+        let tipo1 = read_u8(clube + 0x64) == 1;
         let base = if saldo > 0x1312d00 {
             if tipo1 { 16000 } else { 21000 }
         } else if tipo1 {
@@ -354,7 +345,7 @@ unsafe extern "thiscall" fn fim_de_temporada_do_clube(this: usize, clube: usize)
         let n = n as i16 as i32;
         core::ptr::write_unaligned((est + 0x3c) as *mut i32, n.wrapping_add(cap));
         if tipo1 {
-            cqc1_somar(cqc1_d(clube + 0x69) + 0x40, n);
+            cqc1_somar(read_usize(clube + 0x69) + 0x40, n);
             cqc1_cobrar(fin, 0x8c, 0x12c, (n / 1000 + 1).wrapping_mul(6000).wrapping_add(n).wrapping_mul(125));
             cqc1_noticia(this, clube, n, 1);
         } else {
@@ -363,8 +354,8 @@ unsafe extern "thiscall" fn fim_de_temporada_do_clube(this: usize, clube: usize)
         }
     }
     let pedidos = cqc1_linha_dos_pedidos(clube) + 2;
-    if cqc1_b(pedidos) & 0x80 != 0 {
-        if saldo > (500 - cqc1_w(clube + 0x80) as i32).wrapping_mul(500) {
+    if read_u8(pedidos) & 0x80 != 0 {
+        if saldo > (500 - read_i16(clube + 0x80) as i32).wrapping_mul(500) {
             let melhorar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x59b630usize);
             melhorar(this, clube);
             cqc1_noticia(this, clube, -1, 8);
@@ -379,22 +370,22 @@ unsafe extern "thiscall" fn fim_de_temporada_do_clube(this: usize, clube: usize)
 /// O centro de treino do clube da máquina no fim da temporada (o trecho 0x59d32a..0x59d54d da 0x59cfa0), cobrado nas
 /// finanças do próprio clube ([tabela] + id × 0x167, sem o parceiro).
 unsafe fn cqc1_centro_de_treino(this: usize, clube: usize, saldo: i32) {
-    let tecnico = cqc1_d(clube + 0xcf);
-    if tecnico == 0 || cqc1_w(clube + 0x80) == 0 || cqc1_b(clube + 0x7f) as i8 >= 0x14 || cqc1_d(tecnico + 0x69) == 0 {
+    let tecnico = read_usize(clube + 0xcf);
+    if tecnico == 0 || read_i16(clube + 0x80) == 0 || read_u8(clube + 0x7f) as i8 >= 0x14 || read_usize(tecnico + 0x69) == 0 {
         return;
     }
     if cqc1_humano(clube) != 0 {
         return;
     }
-    let q = ((cqc1_w(clube + 0x80) as i32) / 500) as i8 as i32 + 8;
-    if (cqc1_b(clube + 0x7f) as i8 as i32) <= q || saldo <= 0x225510 {
+    let q = ((read_i16(clube + 0x80) as i32) / 500) as i8 as i32 + 8;
+    if (read_u8(clube + 0x7f) as i8 as i32) <= q || saldo <= 0x225510 {
         return;
     }
-    if cqc1_sortear(0x28) >= cqc1_b(cqc1_d(cqc1_d(clube + 0xcf) + 0x69) + 0x22) as i8 as i32 {
+    if cqc1_sortear(0x28) >= read_u8(read_usize(read_usize(clube + 0xcf) + 0x69) + 0x22) as i8 as i32 {
         return;
     }
     let nivel = (clube + 0x7f) as *mut i8;
-    let proprio = || cqc1_d(this).wrapping_add((cqc1_i(clube) as u32).wrapping_mul(0x167) as usize);
+    let proprio = || read_usize(this).wrapping_add((cqc1_i(clube) as u32).wrapping_mul(0x167) as usize);
     let cl = *nivel;
     let custo = (cl as i32) * 50000 + 75000;
     if cl < 0x14 {
@@ -402,7 +393,7 @@ unsafe fn cqc1_centro_de_treino(this: usize, clube: usize, saldo: i32) {
     }
     cqc1_cobrar(proprio(), 0x8c, 0x12c, custo);
     let cl = *nivel;
-    let rep = cqc1_w(clube + 0x80);
+    let rep = read_i16(clube + 0x80);
     if cl < 0x14 && (rep > 0x203a || cqc1_saldo(proprio()) > 0xe4e1c0) {
         let custo = (4_500_000 - 200_000 * cl as i32).max(1_000_000);
         *nivel = 0x14;
@@ -418,14 +409,14 @@ unsafe fn cqc1_centro_de_treino(this: usize, clube: usize, saldo: i32) {
 
 /// O dividendo do fim da temporada (o trecho 0x59db6f..0x59dd25 da 0x59cfa0), pelo saldo i64 das finanças.
 unsafe fn cqc1_dividendo(this: usize, clube: usize, fin: usize) {
-    let rep = cqc1_w(clube + 0x80) as i32;
+    let rep = read_i16(clube + 0x80) as i32;
     let mut lim = rep.wrapping_mul(8000);
     if lim < 0x7a120 {
         lim = 0x7a120;
     }
     let s = cqc1_saldo(fin);
     let v;
-    if s > lim as i64 && cqc1_b(clube + 0x82) != 0 {
+    if s > lim as i64 && read_u8(clube + 0x82) != 0 {
         let r = cqc1_sortear(0x1f5);
         if (rep as i16) < 0xfa0 {
             v = r.wrapping_add(0x5dc).wrapping_mul(rep).max(0xc350);
@@ -434,9 +425,9 @@ unsafe fn cqc1_dividendo(this: usize, clube: usize, fin: usize) {
         }
     } else {
         let mut s16 = rep as i16;
-        let pres = cqc1_d(clube + 0xbf);
-        if pres != 0 && cqc1_d(pres + 0x69) != 0 {
-            let e = (7i16.wrapping_sub(cqc1_b(pres + 0x59) as i8 as i16)).wrapping_mul(3).wrapping_sub(cqc1_b(cqc1_d(pres + 0x69) + 0x20) as i8 as i16);
+        let pres = read_usize(clube + 0xbf);
+        if pres != 0 && read_usize(pres + 0x69) != 0 {
+            let e = (7i16.wrapping_sub(read_u8(pres + 0x59) as i8 as i16)).wrapping_mul(3).wrapping_sub(read_u8(read_usize(pres + 0x69) + 0x20) as i8 as i16);
             s16 = (rep as i16).wrapping_add(e.wrapping_mul(5));
             if s16 < 0x1f4 {
                 s16 = 0x1f4;
@@ -445,14 +436,14 @@ unsafe fn cqc1_dividendo(this: usize, clube: usize, fin: usize) {
         let sv = s16 as i32;
         if s > sv.wrapping_mul(6000) as i64 {
             let r = cqc1_sortear(0x1f5);
-            if cqc1_w(clube + 0x80) < 0xfa0 {
+            if read_i16(clube + 0x80) < 0xfa0 {
                 crate::comparacao::ramo("cqc_1 dividendo do pequeno pelo presidente");
                 v = r.wrapping_add(0x3e8).wrapping_mul(rep); // cqc1: o dividendo do pequeno pelo presidente
             } else {
                 v = r.wrapping_add(0x5dc).wrapping_mul(rep);
             }
         } else if s > sv.wrapping_mul(3000) as i64 {
-            v = if cqc1_w(clube + 0x80) < 0xfa0 { rep.wrapping_mul(500) } else { rep.wrapping_mul(750) };
+            v = if read_i16(clube + 0x80) < 0xfa0 { rep.wrapping_mul(500) } else { rep.wrapping_mul(750) };
         } else {
             return;
         }
@@ -478,11 +469,11 @@ unsafe extern "thiscall" fn comparar_fim_de_temporada_do_clube(this: usize, club
     }
     let mut a = 0u32;
     let fin = cqc1_financas_do_parceiro(this, clube, &mut a);
-    let estadio = cqc1_d(clube + 0x69);
-    if fin == 0 || (estadio != 0 && cqc1_b(clube + 0x6d) == 0 && cqc1_d(clube + 0x57) != 0 && cqc1_i(fin) > 0x2160ec0) {
+    let estadio = read_usize(clube + 0x69);
+    if fin == 0 || (estadio != 0 && read_u8(clube + 0x6d) == 0 && read_usize(clube + 0x57) != 0 && cqc1_i(fin) > 0x2160ec0) {
         return o(this, clube); // ponytail: a compra do estádio pode mexer no dono; só a original
     }
-    let proprio = cqc1_d(this).wrapping_add((cqc1_i(clube) as u32).wrapping_mul(0x167) as usize);
+    let proprio = read_usize(this).wrapping_add((cqc1_i(clube) as u32).wrapping_mul(0x167) as usize);
     let mut reg = vec![(fin, 0x167), (clube, 0x245), (cqc1_linha_dos_pedidos(clube), 0x49)];
     if proprio != fin {
         reg.push((proprio, 0x167));
@@ -506,10 +497,10 @@ unsafe extern "thiscall" fn noticia_do_dividendo(_this: usize, clube: usize, val
     let mut n = [0u8; 0xe0];
     let p = n.as_mut_ptr() as usize;
     construir(p, 0x177c, 0);
-    gravar(p, 0, cqc1_d(clube) as u32);
+    gravar(p, 0, read_usize(clube) as u32);
     gravar(p, 1, valor as u32);
-    gravar(p, 2, cqc1_b(clube + 0x82) as i8 as i32 as u32);
-    entregar(cqc1_d(0xb7431c), p, clube);
+    gravar(p, 2, read_u8(clube + 0x82) as i8 as i32 as u32);
+    entregar(read_usize(0xb7431c), p, clube);
 }
 
 /// O comparador da notícia do dividendo: só a original (ponytail: a notícia vai para a caixa do técnico humano e não
@@ -520,21 +511,12 @@ unsafe extern "thiscall" fn comparar_noticia_do_dividendo(this: usize, clube: us
 
 // ---------- 266a leva: o teto salarial: o salário máximo que o clube oferece e as notícias das obras e das obras recusadas (fin_prm.cpp) ----------
 
-unsafe fn cqc2_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cqc2_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cqc2_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqc2_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 unsafe fn cqc2_q(a: usize) -> i64 {
     core::ptr::read_unaligned(a as *const i64)
@@ -566,13 +548,13 @@ unsafe fn cqc2_selecao(clube: usize) -> bool {
 /// O valor do contrato da pessoa (0x4d0c20: mov ecx, [0xae1050]; push pessoa -> thiscall, ret 4), com sinal.
 unsafe fn cqc2_valor(pessoa: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x4d0c20usize);
-    f(cqc2_d(0xae1050), pessoa) as i32
+    f(read_usize(0xae1050), pessoa) as i32
 }
 
 /// O bônus de quem paga mais (o trecho 0x596c0d..0x597238): clube da Inglaterra, Itália ou Espanha, reputação acima
 /// de 4750, faixa 0 a 2, pelo fator salarial `w` (a palavra, com sinal) e pela marca +0x82.
 unsafe fn cqc2_bonus(clube: usize, faixa: i8, w: i32) -> i32 {
-    let nac = cqc2_d(clube + 0x53);
+    let nac = read_usize(clube + 0x53);
     if nac == 0 {
         return 0;
     }
@@ -580,12 +562,12 @@ unsafe fn cqc2_bonus(clube: usize, faixa: i8, w: i32) -> i32 {
     if n != cqc2_i(0x9cf2e4) && n != cqc2_i(0x9cf360) && n != cqc2_i(0x9cf488) {
         return 0;
     }
-    if cqc2_w(clube + 0x80) <= 0x128e || !(faixa == 2 || faixa == 1 || faixa == 0) {
+    if read_i16(clube + 0x80) <= 0x128e || !(faixa == 2 || faixa == 1 || faixa == 0) {
         return 0;
     }
     let w16 = w as i16;
     let x = w16 as i32;
-    let (base, oito) = if cqc2_b(clube + 0x82) != 0 { (0x4e2, 0x2710) } else { (0x2ee, 0x1770) };
+    let (base, oito) = if read_u8(clube + 0x82) != 0 { (0x4e2, 0x2710) } else { (0x2ee, 0x1770) };
     if w16 < 0x1676 || faixa == 0 {
         x.wrapping_sub(base).wrapping_mul(6)
     } else if faixa == 1 {
@@ -598,12 +580,12 @@ unsafe fn cqc2_bonus(clube: usize, faixa: i8, w: i32) -> i32 {
 /// O teto do técnico humano pelas reputações (+0xb, +0xd) e pela experiência (+5) do não-jogador `np`, pela idade
 /// (+0x18) e pela marca +0x22 da pessoa e pelo cargo (o trecho 0x597405..0x597566).
 unsafe fn cqc2_teto_do_humano(pessoa: usize, np: usize, cargo: i8) -> i32 {
-    let idade = cqc2_b(pessoa + 0x18) as i8;
-    let marca = cqc2_b(pessoa + 0x22) != 0;
-    let cx = cqc2_w(np + 0xb);
+    let idade = read_u8(pessoa + 0x18) as i8;
+    let marca = read_u8(pessoa + 0x22) != 0;
+    let cx = read_i16(np + 0xb);
     let tecnico = cargo < 4 && cargo != 0 && cargo != 7;
     if cx < 0xea6 {
-        let ax = cqc2_w(np + 5);
+        let ax = read_i16(np + 5);
         if ax < 0x3c {
             if idade <= 0x17 { 0x1388 } else { 0x1388 + 0x9c4 }
         } else if ax < 0x64 {
@@ -612,13 +594,13 @@ unsafe fn cqc2_teto_do_humano(pessoa: usize, np: usize, cargo: i8) -> i32 {
             0x61a8
         }
     } else if cx < 0x1482 {
-        if cqc2_w(np + 5) >= 0x64 { 0x7530 } else { 0x7530 - 5000 }
+        if read_i16(np + 5) >= 0x64 { 0x7530 } else { 0x7530 - 5000 }
     } else if cx < 0x1c52 {
-        if idade > 0x22 && cqc2_w(np + 5) < 0x78 {
+        if idade > 0x22 && read_i16(np + 5) < 0x78 {
             if tecnico { 0x927c } else { 0x7ef4 }
         } else {
-            let cx2 = cqc2_w(np + 5);
-            if cx2 < 0x8c && cqc2_w(np + 0xd) < 0xea6 {
+            let cx2 = read_i16(np + 5);
+            if cx2 < 0x8c && read_i16(np + 0xd) < 0xea6 {
                 0x9c40 + if marca { 0x1388 } else { 0 }
             } else if tecnico {
                 if marca { 0xe09c } else if cx2 >= 0x8c { 0x13880 } else { 0x13880 - 15000 }
@@ -626,7 +608,7 @@ unsafe fn cqc2_teto_do_humano(pessoa: usize, np: usize, cargo: i8) -> i32 {
                 0xafc8
             }
         }
-    } else if cqc2_w(np + 0xd) < 0x1a5e {
+    } else if read_i16(np + 0xd) < 0x1a5e {
         0x186a0 + if marca { 0x61a8 } else { 0 }
     } else {
         0x2ab98
@@ -647,24 +629,24 @@ unsafe fn cqc2_teto_do_humano(pessoa: usize, np: usize, cargo: i8) -> i32 {
 /// 0x9c83e8 ou 0x9c8338, a faixa e a nação. Depois o clube de +0x64 1 e 2, o mínimo da liga + 100 e o menor dos dois.
 unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: u32) -> i32 {
     let mut cargo = cargo_arg as u8;
-    let clube = cqc2_d(0xae23b4).wrapping_add((cqc2_i(fin + 8) as u32).wrapping_mul(0x245) as usize);
+    let clube = read_usize(0xae23b4).wrapping_add((cqc2_i(fin + 8) as u32).wrapping_mul(0x245) as usize);
     let verba = ftol(cqc2_q(fin) as f64 * f64_em(0x968de8));
     let mut liga: i32 = 100;
     let mut fator: f64 = 0.25; // [esp + 0x3c]: 0x3fd00000_00000000
     let mut contrato: usize = 0;
-    if cqc2_b(clube + 0x64) == 3 {
+    if read_u8(clube + 0x64) == 3 {
         return 0;
     }
-    let rep = cqc2_w(clube + 0x80);
+    let rep = read_i16(clube + 0x80);
     let mut di: i32 = rep as i32 / 50;
     let faixa: i8 = if cqc2_selecao(clube) { 0 } else { cqc2_faixa(fin) };
-    let nac = cqc2_d(clube + 0x53);
+    let nac = read_usize(clube + 0x53);
     let e = |g: usize| cqc2_i(nac) == cqc2_i(g);
     let tabela: usize = if nac == 0 || e(0x9cf510) || e(0x9cf2dc) || e(0x9cf3e4) || e(0x9cf224) {
         0x9c8498
     } else if [0x9cf36c, 0x9cf4a8, 0x9cf2ac, 0x9cf430, 0x9cf408, 0x9cf4f8, 0x9cf434, 0x9cf2c0, 0x9cf2fc, 0x9cf45c, 0x9cf314].iter().any(|&g| e(g)) {
         0x9c8548
-    } else if e(0x9cf300) || (cqc2_b(clube + 0x82) != 0 && faixa != 2 && faixa != 1) {
+    } else if e(0x9cf300) || (read_u8(clube + 0x82) != 0 && faixa != 2 && faixa != 1) {
         0x9c85f8
     } else {
         0x9c86a8
@@ -694,16 +676,16 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
     let humano = cqc2_humano(clube, 0);
     if humano != 0 && cargo == 0xff {
         let com_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
-        contrato = com_clube(cqc2_d(0xae1050), pessoa, clube);
+        contrato = com_clube(read_usize(0xae1050), pessoa, clube);
         if contrato != 0 {
-            cargo = cqc2_b(contrato + 0x4f) >> 4;
+            cargo = read_u8(contrato + 0x4f) >> 4;
         }
     }
     let mut r: i32; // [esp + 0x18]: o teto que sai
     let b20: i32;
     if pessoa != 0 {
         r = 0;
-        if cqc2_d(pessoa + 0x39) == clube {
+        if read_usize(pessoa + 0x39) == clube {
             r = cqc2_valor(pessoa);
             let t = cqc2_i(fin + 0x14).wrapping_mul(2);
             if r > t {
@@ -713,8 +695,8 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
         if cqc2_i(fin + 0x14) > r {
             r = cqc2_i(fin + 0x14);
         }
-        if cqc2_d(pessoa + 0x69) != 0 && cqc2_d(pessoa + 0x61) == 0 {
-            let cap = match (cqc2_b(pessoa + 0x3d) as i8 as i32).wrapping_sub(5) {
+        if read_usize(pessoa + 0x69) != 0 && read_usize(pessoa + 0x61) == 0 {
+            let cap = match (read_u8(pessoa + 0x3d) as i8 as i32).wrapping_sub(5) {
                 0 | 1 | 2 => 0x88b8,
                 3 => 0x4e20,
                 4 => 0x5dc,
@@ -729,13 +711,13 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
     } else {
         let mut f = fator;
         if nac != 0 {
-            let mut dl = cqc2_b(nac + 0x7e) as i8;
+            let mut dl = read_u8(nac + 0x7e) as i8;
             if dl < 1 {
                 dl = 1;
             } else if dl > 3 {
                 dl = 3;
             }
-            let bl = cqc2_b(nac + 0x85) as i8;
+            let bl = read_u8(nac + 0x85) as i8;
             let q = bl as i32 as f64 / (dl as i32 * 20) as f64;
             f = q;
             if dl == 1 {
@@ -770,14 +752,14 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
                 f = q * m;
             }
             fator = f;
-            let lc = cqc2_d(clube + 0x57);
+            let lc = read_usize(clube + 0x57);
             if lc != 0 {
-                let d2 = cqc2_d(clube + 0x5b);
-                let c16 = cqc2_w(lc + 0x69);
+                let d2 = read_usize(clube + 0x5b);
+                let c16 = read_i16(lc + 0x69);
                 let cubo = |x: i32| x.wrapping_mul(x).wrapping_mul(x);
-                let v = if d2 != 0 && cqc2_w(d2 + 0x69) > c16 {
+                let v = if d2 != 0 && read_i16(d2 + 0x69) > c16 {
                     let t1 = ftol(cubo(c16 as i32) as f64 * f * f64_em(0x96a5c8));
-                    let t2 = ftol(cubo(cqc2_w(d2 + 0x69) as i32) as f64 * f * f64_em(0x968928));
+                    let t2 = ftol(cubo(read_i16(d2 + 0x69) as i32) as f64 * f * f64_em(0x968928));
                     t2.wrapping_sub(t1)
                 } else {
                     ftol(cubo(c16 as i32) as f64 * f * f64_em(0x968e18))
@@ -813,7 +795,7 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
                 } else if e(0x9cf2e4) && rep > 0x1e46 {
                     r = cqc2_vezes(r, 0x968fa0);
                 }
-                if cqc2_b(clube + 0x82) == 0 && rep > 0x1e46 && ita_esp {
+                if read_u8(clube + 0x82) == 0 && rep > 0x1e46 && ita_esp {
                     r = cqc2_vezes(r, 0x9689b8);
                 }
             }
@@ -830,27 +812,27 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
         } else {
             cqc2_valor(pessoa)
         };
-        let np = cqc2_d(pessoa + 0x61);
+        let np = read_usize(pessoa + 0x61);
         let c = cargo as i8;
-        if np != 0 && cqc2_w(np + 0xb) > 0x1482 && (c == 3 || c == 2 || c == 1) && (cqc2_b(pessoa + 0x18) as i8) < 0x20 {
-            let np2 = || cqc2_d(pessoa + 0x61);
+        if np != 0 && read_i16(np + 0xb) > 0x1482 && (c == 3 || c == 2 || c == 1) && (read_u8(pessoa + 0x18) as i8) < 0x20 {
+            let np2 = || read_usize(pessoa + 0x61);
             if c == 3 {
                 let bf = b20 as f64;
                 let lim = bf * f64_em(0x9689b0);
                 if (r as f64) < lim {
-                    r = if cqc2_humano(clube, 0) == 0 && np2() != 0 && cqc2_w(np2() + 0xb) > 0x1c52 { ftol(bf * f64_em(0x9689d8)) } else { ftol(lim) };
+                    r = if cqc2_humano(clube, 0) == 0 && np2() != 0 && read_i16(np2() + 0xb) > 0x1c52 { ftol(bf * f64_em(0x9689d8)) } else { ftol(lim) };
                 }
             } else if c == 2 {
                 let lim = b20 as f64 * f64_em(0x9689d8);
                 if (r as f64) < lim {
-                    r = if cqc2_humano(clube, 0) == 0 && np2() != 0 && cqc2_w(np2() + 0xb) > 0x1e46 { b20 } else { ftol(lim) };
+                    r = if cqc2_humano(clube, 0) == 0 && np2() != 0 && read_i16(np2() + 0xb) > 0x1e46 { b20 } else { ftol(lim) };
                 }
             } else if r < b20 {
                 r = b20;
             }
         }
         if cqc2_humano(clube, 0) != 0 {
-            let np = cqc2_d(pessoa + 0x61);
+            let np = read_usize(pessoa + 0x61);
             if np != 0 {
                 let teto = cqc2_teto_do_humano(pessoa, np, cargo as i8);
                 if teto < r {
@@ -858,19 +840,19 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
                 }
             }
         }
-        let np = cqc2_d(pessoa + 0x61);
+        let np = read_usize(pessoa + 0x61);
         if np != 0 {
             if nac != 0 && (e(0x9cf360) || e(0x9cf2e4) || e(0x9cf314) || e(0x9cf300) || e(0x9cf488)) {
                 let basco: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53d7f0usize);
                 if basco(clube) != 0 {
                     s = cqc2_vezes(s, 0x9689b8);
                 }
-                let tm = cqc2_d(0xde1f54);
+                let tm = read_usize(0xde1f54);
                 if tm != 0 {
-                    let rr = cqc2_w(clube + 0x80);
+                    let rr = read_i16(clube + 0x80);
                     let div: i32 = if rr < 0x3e8 { 0x3e8 } else { rr as i32 };
-                    let tab = cqc2_d(cqc2_d(tm + 0x856) + 0xdc);
-                    let x = cqc2_w(tab.wrapping_add((cqc2_i(clube) as usize).wrapping_mul(9)) + 5) as i32;
+                    let tab = read_usize(read_usize(tm + 0x856) + 0xdc);
+                    let x = read_i16(tab.wrapping_add((cqc2_i(clube) as usize).wrapping_mul(9)) + 5) as i32;
                     let mut m = x as f64 / div as f64;
                     if !(f64_em(0x967890) < m || f64_em(0x967890) == m) {
                         m = f64_em(0x967890);
@@ -883,18 +865,18 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
                 // thiscall, ret 8), menos de 200 dias
                 let perto = || {
                     let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
-                    contrato != 0 && cqc2_d(pessoa + 0x39) == clube && dias(contrato + 0x2d, cqc2_d(0xae2c90) as u32, cqc2_d(0xae2c94) as u32) < 0xc8
+                    contrato != 0 && read_usize(pessoa + 0x39) == clube && dias(contrato + 0x2d, read_usize(0xae2c90) as u32, read_usize(0xae2c94) as u32) < 0xc8
                 };
-                let rr = cqc2_w(clube + 0x80);
+                let rr = read_i16(clube + 0x80);
                 let k: Option<usize> = if rr > 0x186a {
-                    let np = cqc2_d(pessoa + 0x61);
+                    let np = read_usize(pessoa + 0x61);
                     if perto() {
-                        let np = cqc2_d(pessoa + 0x61);
-                        if cqc2_w(np + 0xd) > 0x1482 {
+                        let np = read_usize(pessoa + 0x61);
+                        if read_i16(np + 0xd) > 0x1482 {
                             Some(0x968978)
                         } else {
-                            let ax = cqc2_w(np + 0xb);
-                            let cl = cqc2_b(contrato + 0x4f) & 0xf0;
+                            let ax = read_i16(np + 0xb);
+                            let cl = read_u8(contrato + 0x4f) & 0xf0;
                             if ax > 0x1c52 {
                                 Some(0x9689c0)
                             } else if (cl == 0x30 && ax > 0x1482) || cl == 0x10 || cl == 0x20 {
@@ -903,17 +885,17 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
                                 None
                             }
                         }
-                    } else if cqc2_w(np + 0xd) > 0x1482 {
+                    } else if read_i16(np + 0xd) > 0x1482 {
                         Some(0x9689c0)
-                    } else if cqc2_w(np + 0xb) > 0x1a5e {
+                    } else if read_i16(np + 0xb) > 0x1a5e {
                         Some(0x9689b8)
                     } else {
                         None
                     }
                 } else if rr > 0x109a {
                     if perto() {
-                        let cx = cqc2_w(cqc2_d(pessoa + 0x61) + 0xb);
-                        let al = cqc2_b(contrato + 0x4f) & 0xf0;
+                        let cx = read_i16(read_usize(pessoa + 0x61) + 0xb);
+                        let al = read_u8(contrato + 0x4f) & 0xf0;
                         if cx > 0x1a5e {
                             Some(0x9689b8)
                         } else if (al == 0x30 && cx > 0x1482) || al == 0x10 || al == 0x20 {
@@ -921,7 +903,7 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
                         } else {
                             None
                         }
-                    } else if cqc2_w(cqc2_d(pessoa + 0x61) + 0xb) > 0x1e46 {
+                    } else if read_i16(read_usize(pessoa + 0x61) + 0xb) > 0x1e46 {
                         Some(0x968f88)
                     } else {
                         None
@@ -933,29 +915,29 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
                     s = cqc2_vezes(s, k);
                 }
             }
-            let pres = cqc2_d(clube + 0xbf);
-            if pres != 0 && cqc2_d(pres + 0x69) != 0 && (cqc2_w(clube + 0x80) as i32) < cqc2_w(cqc2_d(pessoa + 0x61) + 0xb) as i32 + 0x4e2 {
+            let pres = read_usize(clube + 0xbf);
+            if pres != 0 && read_usize(pres + 0x69) != 0 && (read_i16(clube + 0x80) as i32) < read_i16(read_usize(pessoa + 0x61) + 0xb) as i32 + 0x4e2 {
                 crate::comparacao::ramo("cqc_2 presidente");
-                s = ftol(((cqc2_b(pres + 0x57) as i8 as i32) as f64 * f64_em(0x967898) + f64_em(0x9689d8)) * s as f64); // cqc2: o presidente
+                s = ftol(((read_u8(pres + 0x57) as i8 as i32) as f64 * f64_em(0x967898) + f64_em(0x9689d8)) * s as f64); // cqc2: o presidente
                 // 0x547810 (push pres; push pessoa; add esp, 8 -> cdecl), 0x547790 (push clube; push pessoa; add esp, 8 -> cdecl)
                 let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547810usize);
                 let favorito: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547790usize);
                 if gosta(pessoa, pres) != 0 || favorito(pessoa, clube) != 0 {
-                    s = ftol(((cqc2_b(cqc2_d(clube + 0xbf) + 0x57) as i8 as i32) as f64 * f64_em(0x967898) + f64_em(0x967890)) * s as f64);
+                    s = ftol(((read_u8(read_usize(clube + 0xbf) + 0x57) as i8 as i32) as f64 * f64_em(0x967898) + f64_em(0x967890)) * s as f64);
                 }
-                let pres = cqc2_d(clube + 0xbf);
-                let pc = cqc2_d(pres + 0x69);
-                let perfil = cqc2_b(pc + 0xf) as i8;
+                let pres = read_usize(clube + 0xbf);
+                let pc = read_usize(pres + 0x69);
+                let perfil = read_u8(pc + 0xf) as i8;
                 if perfil < 6 {
-                    let t = cqc2_d(clube + 0xcf);
-                    let k = if t != 0 && (cqc2_b(t + 0x57) as i8) > 0xf && cqc2_d(t + 0x69) != 0 && cqc2_w(cqc2_d(t + 0x69) + 0xa) > 0x1c52 { 0x9689c0 } else { 0x9689b8 };
+                    let t = read_usize(clube + 0xcf);
+                    let k = if t != 0 && (read_u8(t + 0x57) as i8) > 0xf && read_usize(t + 0x69) != 0 && read_i16(read_usize(t + 0x69) + 0xa) > 0x1c52 { 0x9689c0 } else { 0x9689b8 };
                     s = cqc2_vezes(s, k);
                 } else if perfil > 0xf {
                     s = cqc2_vezes(s, 0x9689d0);
                 }
-                if cqc2_b(clube + 0x82) == 0 && (cqc2_b(pc + 0x20) as i8) > 0xf && (cqc2_b(pres + 0x57) as i8) > 0xf {
-                    let rr = cqc2_w(clube + 0x80);
-                    let k = if rr >= 0xabe && cqc2_w(cqc2_d(pessoa + 0x61) + 0xb) >= 0x1c52 {
+                if read_u8(clube + 0x82) == 0 && (read_u8(pc + 0x20) as i8) > 0xf && (read_u8(pres + 0x57) as i8) > 0xf {
+                    let rr = read_i16(clube + 0x80);
+                    let k = if rr >= 0xabe && read_i16(read_usize(pessoa + 0x61) + 0xb) >= 0x1c52 {
                         if rr < 0x1676 { 0x9689c0 } else { 0x96a5a8 }
                     } else {
                         0x9689b8
@@ -964,17 +946,17 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
                 }
             }
             let c = cargo as i8;
-            let np = cqc2_d(pessoa + 0x61);
+            let np = read_usize(pessoa + 0x61);
             match c {
                 1 => s = cqc2_vezes(s, 0x968928),
                 2 => {
-                    if cqc2_humano(clube, 1) == 0 && cqc2_w(np + 0xb) > 0x1a5e {
+                    if cqc2_humano(clube, 1) == 0 && read_i16(np + 0xb) > 0x1a5e {
                         s = cqc2_vezes(s, 0x968928);
                     } else {
                         s = ftol(s as f64);
                         let ok = cqc2_humano(clube, 1) != 0 || {
-                            let np = cqc2_d(pessoa + 0x61);
-                            np != 0 && cqc2_w(np + 0xb) < 0x1e46
+                            let np = read_usize(pessoa + 0x61);
+                            np != 0 && read_i16(np + 0xb) < 0x1e46
                         };
                         if ok && s > 0x14c08 {
                             s = ftol(s.wrapping_sub(0x14c08) as f64 * f64_em(0x968918) + f64_em(0x96a5a0));
@@ -982,7 +964,7 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
                     }
                 }
                 3 => {
-                    if cqc2_humano(clube, 1) == 0 && cqc2_w(np + 0xb) > 0x1a5e {
+                    if cqc2_humano(clube, 1) == 0 && read_i16(np + 0xb) > 0x1a5e {
                         s = cqc2_vezes(s, 0x968928);
                     } else {
                         s = cqc2_vezes(s, 0x9689d0);
@@ -992,7 +974,7 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
                     }
                 }
                 4 => {
-                    let k = if cqc2_humano(clube, 1) == 0 && cqc2_w(np + 0xb) > 0x1a5e { 0x9689d0 } else { 0x969040 };
+                    let k = if cqc2_humano(clube, 1) == 0 && read_i16(np + 0xb) > 0x1a5e { 0x9689d0 } else { 0x969040 };
                     s = cqc2_vezes(s, k);
                     if s > 0x927c {
                         s = 0x927c;
@@ -1029,7 +1011,7 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
             } else if e(0x9cf360) || e(0x9cf2e4) || e(0x9cf488) {
                 match cqc2_faixa(fin) {
                     0 => {
-                        if cqc2_w(clube + 0x80) > 0x109a {
+                        if read_i16(clube + 0x80) > 0x109a {
                             s = cqc2_vezes(s, 0x968fa0);
                         }
                     }
@@ -1040,17 +1022,17 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
             }
         }
     }
-    let tipo = cqc2_b(clube + 0x64);
+    let tipo = read_u8(clube + 0x64);
     if tipo == 1 {
         if s < 0xfa {
             s = 0xfa;
         }
-        if cqc2_w(clube + 0x80) < 0x8ca && s > 0x834 {
+        if read_i16(clube + 0x80) < 0x8ca && s > 0x834 {
             s = ftol((s as f64 - f32_em(0x96a5b8) as f64) * f64_em(0x968918) + f64_em(0x96a5b0));
         }
     } else if tipo == 2 {
         s = cqc2_vezes(s, 0x969040);
-        if cqc2_w(clube + 0x80) < 0xabe && s > 0x4b0 {
+        if read_i16(clube + 0x80) < 0xabe && s > 0x4b0 {
             s = ftol((s as f64 - f32_em(0x96a588) as f64) * f64_em(0x968918) + f64_em(0x96a580));
         }
         if s < 0x96 {
@@ -1087,10 +1069,10 @@ unsafe extern "thiscall" fn noticia_das_obras(_this: usize, clube: usize, valor:
     let mut n = [0u8; 0xe0];
     let p = n.as_mut_ptr() as usize;
     construir(p, 0x177d, 0);
-    gravar(p, 0, cqc2_d(clube) as u32);
+    gravar(p, 0, read_usize(clube) as u32);
     gravar(p, 1, valor);
     gravar(p, 2, tipo as u8 as i8 as i32 as u32);
-    entregar(cqc2_d(0xb7431c), p, clube);
+    entregar(read_usize(0xb7431c), p, clube);
 }
 
 /// O comparador da notícia das obras: só a original (ponytail: a notícia vai para a caixa do técnico humano e não pode
@@ -1118,7 +1100,7 @@ unsafe extern "thiscall" fn noticia_da_obra_recusada(_this: usize, clube: usize,
     gravar(p, 1, assunto as u16 as i16 as i32 as u32);
     let v = if motivo as u16 == 2 { 2 } else { sortear(2) };
     gravar(p, 2, v as u16 as i16 as i32 as u32);
-    entregar(cqc2_d(0xb7431c), p, clube);
+    entregar(read_usize(0xb7431c), p, clube);
 }
 
 /// O comparador da notícia da obra recusada: só a original (ponytail: entrega ao técnico humano e sorteia; não pode
@@ -1129,9 +1111,6 @@ unsafe extern "thiscall" fn comparar_noticia_da_obra_recusada(this: usize, clube
 
 // ---------- 265a leva: o save das finanças e do gerente de elencos: gravar e carregar o finance.dat e gravar o squad_manager.dat (fin_prm.cpp, squad_manager.cpp) ----------
 
-unsafe fn cpx5_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cpx5_clubes() -> u32 {
     *(0xae235c as *const u32)
@@ -1154,7 +1133,7 @@ unsafe extern "thiscall" fn gravar_financas(this: usize, save: usize) {
         aviso_em(0x9c8784, 0x115e);
         return;
     }
-    if gravar_item(cpx5_d(this), 0x167, cpx5_clubes(), z) != cpx5_clubes() { // cpx5: os registros das finanças
+    if gravar_item(read_usize(this), 0x167, cpx5_clubes(), z) != cpx5_clubes() { // cpx5: os registros das finanças
         aviso_em(0x9c8784, 0x1166);
         return;
     }
@@ -1185,7 +1164,7 @@ unsafe extern "thiscall" fn carregar_financas(this: usize, save: usize) -> u32 {
         aviso_em(0x9c8784, 0x1137);
         return 0;
     }
-    if ler_item(cpx5_d(this), 0x167, cpx5_clubes(), z) != cpx5_clubes() {
+    if ler_item(read_usize(this), 0x167, cpx5_clubes(), z) != cpx5_clubes() {
         aviso_em(0x9c8784, 0x113f);
         return 0;
     }
@@ -1231,21 +1210,12 @@ unsafe extern "thiscall" fn comparar_gravar_gerente_de_elencos(this: usize, save
 
 // ---------- 264a leva: a renda das partidas: a renda da partida nas finanças dos dois clubes, a renda do estádio e a multa da liga (fin_prm.cpp) ----------
 
-unsafe fn cqb1_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cqb1_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cqb1_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqb1_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 unsafe fn cqb1_sortear(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
@@ -1257,7 +1227,7 @@ unsafe fn cqb1_sortear(n: i32) -> i32 {
 /// existe e o clube é o B (a = 0), e [tabela] + id × 0x167. Some(0) sem clube; None se for seleção (0x53b900: push;
 /// add esp, 4 -> cdecl): a original sai sem fazer nada.
 unsafe fn cqb1_financas(tabela: usize, partida: usize, campo: usize) -> Option<usize> {
-    let clube = cqb1_d(partida + campo);
+    let clube = read_usize(partida + campo);
     if clube == 0 {
         return Some(0);
     }
@@ -1269,7 +1239,7 @@ unsafe fn cqb1_financas(tabela: usize, partida: usize, campo: usize) -> Option<u
     let mut eh_a = 0u32;
     let p = parceiro(clube, &mut eh_a, 1);
     let c = if p != 0 && eh_a == 0 { p } else { clube };
-    Some(cqb1_d(tabela).wrapping_add((cqb1_i(c) as usize).wrapping_mul(0x167)))
+    Some(read_usize(tabela).wrapping_add((cqb1_i(c) as usize).wrapping_mul(0x167)))
 }
 
 /// A divisão com o arredondamento para zero da original (os imul por constante mágica e o cdq/sar).
@@ -1303,13 +1273,13 @@ unsafe extern "thiscall" fn renda_da_partida(tabela: usize, partida: usize, resu
         crate::comparacao::ramo("cqb_1 publico pagante");
         tv = ftol((q as f64 + f64_em(0x968f98)) * publico as f64); // cqb1: a TV pelo público (1,75)
     }
-    let casa = cqb1_d(partida + 0x1c);
-    let fora = cqb1_d(partida + 0x20);
+    let casa = read_usize(partida + 0x1c);
+    let fora = read_usize(partida + 0x20);
     let mut custo; // o ebp da original
-    if cqb1_b(casa + 0x64) != 1 && cqb1_b(fora + 0x64) != 1 {
+    if read_u8(casa + 0x64) != 1 && read_u8(fora + 0x64) != 1 {
         custo = ftol(publico as f64 * f64_em(0x9689e0));
     } else {
-        let est = cqb1_d(partida + 0x18);
+        let est = read_usize(partida + 0x18);
         let x = if est == 0 {
             let k = if publico > 20000 {
                 0x96a6a0
@@ -1335,14 +1305,14 @@ unsafe extern "thiscall" fn renda_da_partida(tabela: usize, partida: usize, resu
             cap as f64 * f64_em(k)
         };
         custo = ftol(x);
-        if cqb1_b(partida + 0x40) != 0 && custo < 500 {
+        if read_u8(partida + 0x40) != 0 && custo < 500 {
             custo = 500;
         }
     }
-    let casa = cqb1_d(partida + 0x1c);
+    let casa = read_usize(partida + 0x1c);
     let mut gastos; // o [esp+0x10] da original (começa com o público)
-    if cqb1_b(casa + 0x64) == 1 {
-        let rep = cqb1_w(casa + 0x80);
+    if read_u8(casa + 0x64) == 1 {
+        let rep = read_i16(casa + 0x80);
         if rep != 0 {
             let r = cqb1_sortear(0xc8);
             let x = (r as f64 + publico as f64 * f64_em(0x968928)) + rep as f64 * f64_em(0x968968) + f64_em(0x96a6b0);
@@ -1355,14 +1325,14 @@ unsafe extern "thiscall" fn renda_da_partida(tabela: usize, partida: usize, resu
             gastos = ftol((r as f64 + publico as f64 * f64_em(0x968928)) + f64_em(0x96a690));
         }
     } else {
-        let rep = cqb1_w(casa + 0x80);
+        let rep = read_i16(casa + 0x80);
         let r1 = if rep != 0 { cqb1_sortear(ftol(rep as i32 as f64 * f64_em(0x9689e0))) } else { cqb1_sortear(0xfa) };
         let r1f = r1 as f32; // fstp dword: o primeiro sorteio guardado em float
         let r2 = cqb1_sortear(0xfa);
         gastos = ftol((r2 as f64 + r1f as f64) + publico as f64);
     }
     let mut dinheiro = 0i32; // o [esp+0x1c] da original
-    let tipo_ok = match (cqb1_b(partida + 0x3b) as i8 as i32).wrapping_add(1) as u32 {
+    let tipo_ok = match (read_u8(partida + 0x3b) as i8 as i32).wrapping_add(1) as u32 {
         1 => {
             dinheiro = 25000;
             true
@@ -1378,9 +1348,9 @@ unsafe extern "thiscall" fn renda_da_partida(tabela: usize, partida: usize, resu
         _ => false, // 0 (fase −1) e fora da tabela: pelo tipo
     };
     if !tipo_ok {
-        let t = cqb1_b(partida + 0x3a);
+        let t = read_u8(partida + 0x3a);
         if t == 8 || t == 7 {
-            let soma = cqb1_w(casa + 0x80) as i32 + cqb1_w(fora + 0x80) as i32;
+            let soma = read_i16(casa + 0x80) as i32 + read_i16(fora + 0x80) as i32;
             dinheiro = if soma > 10000 {
                 125000
             } else if soma <= 7500 {
@@ -1389,13 +1359,13 @@ unsafe extern "thiscall" fn renda_da_partida(tabela: usize, partida: usize, resu
                 75000
             };
         } else if t == 6 || t == 4 {
-            let w = cqb1_w(cqb1_d(partida + 0x14) + 0x69);
+            let w = read_i16(read_usize(partida + 0x14) + 0x69);
             let m = if w > 5 { w as i32 } else { 5 };
             dinheiro = cqb1_div(m.wrapping_mul(if t == 6 { 125000 } else { 25000 }), 20);
         }
     }
-    let nac = cqb1_d(casa + 0x53);
-    let tipo = if nac != 0 { cqb1_b(nac + 0x7e) as i8 } else { 3 };
+    let nac = read_usize(casa + 0x53);
+    let tipo = if nac != 0 { read_u8(nac + 0x7e) as i8 } else { 3 };
     if tipo == 2 {
         dinheiro = cqb1_div(dinheiro, 5);
         tv = cqb1_div(tv, 2);
@@ -1422,15 +1392,15 @@ unsafe extern "thiscall" fn renda_da_partida(tabela: usize, partida: usize, resu
         cpz13_somar32(fin + b, v);
         cpz13_somar_saldo(fin, v as i64);
     };
-    if cqb1_b(partida + 0x3c) == 0 && cqb1_d(cqb1_d(partida + 0x1c) + 0x57) == cqb1_d(partida + 0x14) {
+    if read_u8(partida + 0x3c) == 0 && read_usize(read_usize(partida + 0x1c) + 0x57) == read_usize(partida + 0x14) {
         let x = dinheiro as f64;
         somar(mandante, 0x158, 0xb8, ftol(x * f64_em(0x969040)));
         somar(visitante, 0x158, 0xb8, ftol(x * f64_em(0x9689e0)));
         crate::comparacao::ramo("cqb_1 liquido ao mandante");
         somar(mandante, 0x140, 0xa0, liquido); // cqb1: o líquido ao mandante
-        let casa = cqb1_d(partida + 0x1c);
-        let est = cqb1_d(casa + 0x69);
-        if cqb1_b(casa + 0x6d) != 0 && est != 0 {
+        let casa = read_usize(partida + 0x1c);
+        let est = read_usize(casa + 0x69);
+        if read_u8(casa + 0x6d) != 0 && est != 0 {
             let base = cqb1_i(est + 0x3c);
             let r = cqb1_sortear(0xf).wrapping_add(1);
             let c = ftol((r as f64 * f64_em(0x967898) + f64_em(0x969520)) * base as f64);
@@ -1452,7 +1422,7 @@ unsafe extern "thiscall" fn renda_da_partida(tabela: usize, partida: usize, resu
 /// gastos e da manutenção). Sem resultado, sem partida, sem um dos clubes ou com seleção: só a original.
 unsafe extern "thiscall" fn comparar_renda_da_partida(tabela: usize, partida: usize, resultado: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1458);
-    if resultado == 0 || partida == 0 || cqb1_d(partida + 0x1c) == 0 || cqb1_d(partida + 0x20) == 0 {
+    if resultado == 0 || partida == 0 || read_usize(partida + 0x1c) == 0 || read_usize(partida + 0x20) == 0 {
         return o(tabela, partida, resultado);
     }
     let (Some(fm), Some(fv)) = (cqb1_financas(tabela, partida, 0x1c), cqb1_financas(tabela, partida, 0x20)) else {
@@ -1483,39 +1453,39 @@ unsafe extern "thiscall" fn renda_do_estadio(tabela: usize, partida: usize, publ
         return 0;
     }
     let Some(fin) = cqb1_financas(tabela, partida, 0x1c) else { return 0 };
-    let comp = cqb1_d(partida + 0x14);
+    let comp = read_usize(partida + 0x14);
     let mut v: i32;
-    if cqb1_b(partida + 0x3c) != 0 && comp != 0 {
-        v = (cqb1_w(comp + 0x69) as i32).wrapping_add(8).wrapping_mul(publico);
+    if read_u8(partida + 0x3c) != 0 && comp != 0 {
+        v = (read_i16(comp + 0x69) as i32).wrapping_add(8).wrapping_mul(publico);
     } else {
-        let casa = cqb1_d(partida + 0x1c);
+        let casa = read_usize(partida + 0x1c);
         crate::comparacao::ramo("cqb_1 preco pela reputacao");
-        let preco = cqb1_div(cqb1_w(casa + 0x80) as i32, 500); // cqb1: o preço pela reputação
+        let preco = cqb1_div(read_i16(casa + 0x80) as i32, 500); // cqb1: o preço pela reputação
         let amistoso = comp != 0 && {
             let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
-            f(cqb1_d(0xae2c74), comp) != 0
+            f(read_usize(0xae2c74), comp) != 0
         };
         if comp == 0 || amistoso {
             v = ftol(preco as f64 * f64_em(0x968968) * publico as f64);
-        } else if cqb1_b(casa + 0x64) == 1 || cqb1_b(cqb1_d(partida + 0x20) + 0x64) == 1 {
+        } else if read_u8(casa + 0x64) == 1 || read_u8(read_usize(partida + 0x20) + 0x64) == 1 {
             v = preco.wrapping_add(4).wrapping_mul(publico);
         } else {
             v = preco.wrapping_add(3).wrapping_mul(publico);
         }
-        if fin != 0 && cqb1_d(casa + 0x57) == comp {
+        if fin != 0 && read_usize(casa + 0x57) == comp {
             let desconto = *((fin + 0x160) as *const f32) as f64;
             v = ftol(v as f64 - desconto * v as f64);
         }
     }
-    let casa = cqb1_d(partida + 0x1c);
-    let nac = cqb1_d(casa + 0x53);
-    let tipo = if nac != 0 { cqb1_b(nac + 0x7e) as i8 } else { 3 };
+    let casa = read_usize(partida + 0x1c);
+    let nac = read_usize(casa + 0x53);
+    let tipo = if nac != 0 { read_u8(nac + 0x7e) as i8 } else { 3 };
     if tipo == 2 {
         v = cqb1_div(v, 4);
     } else if tipo != 1 {
         v = cqb1_div(v, 10);
     }
-    let liga = cqb1_d(casa + 0x57);
+    let liga = read_usize(casa + 0x57);
     let k = if liga != 0 && cqb1_i(liga) == cqb1_i(0x9cf570) {
         Some(0x968928)
     } else {
@@ -1573,9 +1543,6 @@ unsafe extern "thiscall" fn comparar_pagar_multa_da_liga(this: usize, valor: i32
 
 // ---------- 264a leva: os eventos raros das finanças: o impulso das finanças, a troca do presidente e os outros custos (fin_prm.cpp) ----------
 
-unsafe fn cqb2_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 /// O byte com sinal em `a`.
 unsafe fn cqb2_c(a: usize) -> i8 {
@@ -1596,7 +1563,7 @@ unsafe fn cqb2_creditar(fin: usize, v: i32) {
 
 /// A nação do clube é uma das de 0x9cf4a8, 0x9cf408 ou 0x9cf2c0 (o valor do evento cai a um terço).
 unsafe fn cqb2_nacao_de_um_terco(clube: usize) -> bool {
-    let nac = cqb2_d(clube + 0x53);
+    let nac = read_usize(clube + 0x53);
     if nac == 0 {
         return false;
     }
@@ -1617,27 +1584,27 @@ unsafe fn cqb2_nacao_de_um_terco(clube: usize) -> bool {
 /// 6, 7 com +0x82 = 1, ou 1); com a ficha, o +0x20 dela cai 1 acima de 5; encerra a crise (+0x165 = 0); devolve 1.
 unsafe extern "thiscall" fn impulso_das_financas(this: usize, clube: usize, fin: usize) -> u32 {
     if clube != 0 {
-        let nac = cqb2_d(clube + 0x53);
+        let nac = read_usize(clube + 0x53);
         if nac != 0 {
             let n = cpv6_i(nac);
             if [0x9cf510usize, 0x9cf2dc, 0x9cf3e4, 0x9cf408, 0x9cf2c0, 0x9cf4a8, 0x9cf244].iter().any(|&g| n == cpv6_i(g)) {
                 return 0;
             }
-            let m = cpv6_b(clube + 0x64);
+            let m = read_u8(clube + 0x64);
             if m == 2 || m == 3 {
                 return 0;
             }
         }
     }
-    let rep = cpv6_w(clube + 0x80);
-    let pres = cqb2_d(clube + 0xbf);
+    let rep = read_i16(clube + 0x80);
+    let pres = read_usize(clube + 0xbf);
     let forte = |a: usize, b: usize| a != 0 && b != 0; // (ponteiros conferidos antes dos bytes)
     let div = match cpv6_faixa(fin) {
         -2 => f64_em(if rep > 0xea6 { 0x968fd0 } else { 0x96a730 }),
         -1 => f64_em(if rep > 0x1482 { 0x967880 } else if rep > 0xcb2 { 0x96a730 } else { 0x967878 }),
         0 => {
             if rep <= 0x109a {
-                let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
+                let ficha = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
                 if forte(pres, ficha) && cqb2_c(pres + 0x57) > 0xf && cqb2_c(ficha + 0x20) > 0xf {
                     f64_em(0x96a740)
                 } else {
@@ -1645,7 +1612,7 @@ unsafe extern "thiscall" fn impulso_das_financas(this: usize, clube: usize, fin:
                     f64_em(0x96a738) // cqb2: o divisor da faixa 0 de reputação baixa
                 }
             } else if rep < 0x186a {
-                let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
+                let ficha = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
                 if forte(pres, ficha) && cqb2_c(ficha + 0x20) > 0xf && cqb2_c(pres + 0x57) > 0xf {
                     f64_em(0x967888)
                 } else {
@@ -1657,7 +1624,7 @@ unsafe extern "thiscall" fn impulso_das_financas(this: usize, clube: usize, fin:
         }
         _ => f64_em(0x96a350),
     };
-    let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
+    let ficha = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
     let valor;
     if pres != 0 && ficha != 0 {
         crate::comparacao::ramo("cqb_2 com a ficha");
@@ -1667,21 +1634,21 @@ unsafe extern "thiscall" fn impulso_das_financas(this: usize, clube: usize, fin:
             return 0;
         }
         let (lo, hi) = cqb2_saldo(fin);
-        let n = cqb2_c(cqb2_d(cqb2_d(clube + 0xbf) + 0x69) + 0x20) as i32;
+        let n = cqb2_c(read_usize(read_usize(clube + 0xbf) + 0x69) + 0x20) as i32;
         let r3 = cpv6_sortear(n.wrapping_mul(1_000_000)) as i64;
         let divida = ((hi as i64) << 32 | lo as i64).wrapping_neg();
         if r3 <= divida {
             return 0;
         }
         let rep = rep as i32;
-        let n = cqb2_c(cqb2_d(cqb2_d(clube + 0xbf) + 0x69) + 0x20) as i32;
+        let n = cqb2_c(read_usize(read_usize(clube + 0xbf) + 0x69) + 0x20) as i32;
         if rep >= n.wrapping_mul(750) {
             return 0;
         }
         // ponytail: a original faz pow(+0x20, 2,0) (0x945ff0); o quadrado de um byte é exato nos dois
         let mut v = ftol(((n as f64 * n as f64) * f64_em(0x968930) + f64_em(0x96a5f0)) * rep as f64 + f64_em(0x9688d8));
         v = if hi < 0 { v.wrapping_sub(lo as i32) } else { v.wrapping_add(lo as i32) };
-        if cpv6_w(clube + 0x80) < 0x7d0 {
+        if read_i16(clube + 0x80) < 0x7d0 {
             let teto = rep.wrapping_mul(rep).wrapping_add(0x16e360);
             if v > teto {
                 v = teto;
@@ -1700,7 +1667,7 @@ unsafe extern "thiscall" fn impulso_das_financas(this: usize, clube: usize, fin:
         if cpv6_sortear(8) != 0 {
             return 0;
         }
-        let mut v = (cpv6_w(clube + 0x80) as i32).wrapping_add(1000).wrapping_mul(1000);
+        let mut v = (read_i16(clube + 0x80) as i32).wrapping_add(1000).wrapping_mul(1000);
         if cqb2_nacao_de_um_terco(clube) {
             v /= 3;
         }
@@ -1708,7 +1675,7 @@ unsafe extern "thiscall" fn impulso_das_financas(this: usize, clube: usize, fin:
     }
     cqb2_creditar(fin, valor);
     let verba = cpv6_verba(fin) as i32;
-    let marca = cpv6_b(clube + 0x82);
+    let marca = read_u8(clube + 0x82);
     let com_ficha = pres != 0 && ficha != 0;
     let mut tipo = 0u32;
     if verba <= 0 && marca == 0 {
@@ -1719,7 +1686,7 @@ unsafe extern "thiscall" fn impulso_das_financas(this: usize, clube: usize, fin:
     if tipo == 0 {
         if cpv6_sortear(4) == 0 {
             if com_ficha {
-                let r2 = cpv6_w(clube + 0x80) as i32;
+                let r2 = read_i16(clube + 0x80) as i32;
                 let t = ftol(r2.wrapping_mul(r2) as f64 * f64_em(0x968e80));
                 if valor < t && valor > 50000 {
                     tipo = 6;
@@ -1730,8 +1697,8 @@ unsafe extern "thiscall" fn impulso_das_financas(this: usize, clube: usize, fin:
         }
     }
     if tipo == 0 {
-        let nac = cqb2_d(clube + 0x53);
-        if cpv6_b(clube + 0x82) == 0 && cpv6_w(clube + 0x80) > 0x128e && cpv6_sortear(4) == 0
+        let nac = read_usize(clube + 0x53);
+        if read_u8(clube + 0x82) == 0 && read_i16(clube + 0x80) > 0x128e && cpv6_sortear(4) == 0
             && (!com_ficha || (nac != 0 && cpv6_i(nac) != cpv6_i(0x9cf360)))
         {
             cpv6_noticia(this, clube, valor, verba as u32, 7);
@@ -1745,7 +1712,7 @@ unsafe extern "thiscall" fn impulso_das_financas(this: usize, clube: usize, fin:
         cpv6_noticia(this, clube, valor, verba as u32, tipo);
     }
     if com_ficha {
-        let f = cqb2_d(cqb2_d(clube + 0xbf) + 0x69);
+        let f = read_usize(read_usize(clube + 0xbf) + 0x69);
         let x = cqb2_c(f + 0x20);
         if x > 5 {
             *((f + 0x20) as *mut i8) = x - 1;
@@ -1784,8 +1751,8 @@ unsafe fn cqb2_comparar(nome: &str, fin: usize, extras: &[(usize, usize)], confe
 
 unsafe extern "thiscall" fn comparar_impulso_das_financas(this: usize, clube: usize, fin: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(1461);
-    let pres = if clube != 0 { cqb2_d(clube + 0xbf) } else { 0 };
-    let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
+    let pres = if clube != 0 { read_usize(clube + 0xbf) } else { 0 };
+    let ficha = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
     if clube == 0 || fin == 0 {
         return o(this, clube, fin); // ponytail: sem clube ou sem finanças, só a original
     }
@@ -1808,37 +1775,37 @@ unsafe extern "thiscall" fn comparar_impulso_das_financas(this: usize, clube: us
 /// 0x53a5b0, 0x53a1b0) e a ficha (+0x1d, +0xf, +0x16, +0x20 = sorteio(20) + 1; o +0x20 de novo se ficou abaixo de 5); a
 /// notícia (0x59f300, tipo 2, com a verba 0x598800); encerra a crise (+0x165 = 0); devolve 1.
 unsafe extern "thiscall" fn troca_do_presidente(this: usize, clube: usize, fin: usize) -> u32 {
-    let rep = cpv6_w(clube + 0x80);
+    let rep = read_i16(clube + 0x80);
     let div = match cpv6_faixa(fin) {
         -2 => if rep > 0x109a { 0.4f64 } else { 0.25 },
         -1 => if rep > 0x109a { 0.2 } else { 0.05 },
         _ => 0.001,
     };
-    let liga = cqb2_d(clube + 0x57);
+    let liga = read_usize(clube + 0x57);
     let mut fator = if liga != 0 {
-        let k = rep as i32 as f64 * f64_em(0x969048) / cpv6_w(liga + 0x69) as i32 as f64;
+        let k = rep as i32 as f64 * f64_em(0x969048) / read_i16(liga + 0x69) as i32 as f64;
         if !(k >= f64_em(0x969040)) { f64_em(0x969040) } else { k } // fcomp: menor ou sem ordem (NaN) vira 0,75
     } else {
         0.5
     };
-    let pres = cqb2_d(clube + 0xbf);
-    let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
+    let pres = read_usize(clube + 0xbf);
+    let ficha = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
     let com_ficha = pres != 0 && ficha != 0;
     let primeiro = if com_ficha { cpv6_sortear(cqb2_c(ficha + 0x16) as i32) } else { cpv6_sortear(0x14) };
     if primeiro != 0 {
         return 0;
     }
-    fator *= cpv6_w(clube + 0x80) as i32 as f64;
+    fator *= read_i16(clube + 0x80) as i32 as f64;
     let r = cpv6_sortear(ftol(f64_em(0x96a728) / div));
     if r as f64 >= fator {
         return 0;
     }
     crate::comparacao::ramo("cqb_2 troca do presidente");
     let (lo, _) = cqb2_saldo(fin);
-    let mut v = (cpv6_w(clube + 0x80) as i32).wrapping_add(1000).wrapping_mul(1000).wrapping_sub(lo as i32);
+    let mut v = (read_i16(clube + 0x80) as i32).wrapping_add(1000).wrapping_mul(1000).wrapping_sub(lo as i32);
     if v > 0x2625a00 {
         let s = cpv6_sortear(0x9c4);
-        if (cpv6_w(clube + 0x80) as i32) < s.wrapping_add(0x7d0) {
+        if (read_i16(clube + 0x80) as i32) < s.wrapping_add(0x7d0) {
             v = (cqb2_saldo(fin).0 as i32).wrapping_neg();
         }
     }
@@ -1847,33 +1814,33 @@ unsafe extern "thiscall" fn troca_do_presidente(this: usize, clube: usize, fin: 
     cpv6_somar_saldo(fin, v);
     let verba = cpv6_verba(fin);
     if com_ficha && !CPV6_ENSAIO {
-        let pres = cqb2_d(clube + 0xbf);
-        let nac = cqb2_d(clube + 0x53);
+        let pres = read_usize(clube + 0xbf);
+        let nac = read_usize(clube + 0x53);
         let nova = if nac != 0 && cpv6_sortear(0x3e8) != 0 {
             nac
         } else {
             let k = cpv6_sortear(cpv6_i(0xae2350));
-            cqb2_d(0xae23a8).wrapping_add((k as usize).wrapping_mul(0x122))
+            read_usize(0xae23a8).wrapping_add((k as usize).wrapping_mul(0x122))
         };
         core::ptr::write_unaligned((pres + 0x1a) as *mut usize, nova);
         // 0x539c60, 0x53a5b0, 0x53a1b0: push nação; call (add esp, 0xc depois das três) -> cdecl(nação)
         let nome1: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x539c60usize);
         let nome3: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53a5b0usize);
         let nome2: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53a1b0usize);
-        let x = nome1(cqb2_d(cqb2_d(clube + 0xbf) + 0x1a));
-        core::ptr::write_unaligned((cqb2_d(clube + 0xbf) + 4) as *mut u32, x);
-        let x = nome3(cqb2_d(cqb2_d(clube + 0xbf) + 0x1a));
-        core::ptr::write_unaligned((cqb2_d(clube + 0xbf) + 0xc) as *mut u32, x);
-        let x = nome2(cqb2_d(cqb2_d(clube + 0xbf) + 0x1a));
-        core::ptr::write_unaligned((cqb2_d(clube + 0xbf) + 8) as *mut u32, x);
-        if cqb2_d(cqb2_d(clube + 0xbf) + 0x69) != 0 {
+        let x = nome1(read_usize(read_usize(clube + 0xbf) + 0x1a));
+        core::ptr::write_unaligned((read_usize(clube + 0xbf) + 4) as *mut u32, x);
+        let x = nome3(read_usize(read_usize(clube + 0xbf) + 0x1a));
+        core::ptr::write_unaligned((read_usize(clube + 0xbf) + 0xc) as *mut u32, x);
+        let x = nome2(read_usize(read_usize(clube + 0xbf) + 0x1a));
+        core::ptr::write_unaligned((read_usize(clube + 0xbf) + 8) as *mut u32, x);
+        if read_usize(read_usize(clube + 0xbf) + 0x69) != 0 {
             for o in [0x1dusize, 0xf, 0x16, 0x20] {
                 let x = (cpv6_sortear(0x14) as u8).wrapping_add(1);
-                *((cqb2_d(cqb2_d(clube + 0xbf) + 0x69) + o) as *mut u8) = x;
+                *((read_usize(read_usize(clube + 0xbf) + 0x69) + o) as *mut u8) = x;
             }
-            if cqb2_c(cqb2_d(cqb2_d(clube + 0xbf) + 0x69) + 0x20) < 5 {
+            if cqb2_c(read_usize(read_usize(clube + 0xbf) + 0x69) + 0x20) < 5 {
                 let x = (cpv6_sortear(0x14) as u8).wrapping_add(1);
-                *((cqb2_d(cqb2_d(clube + 0xbf) + 0x69) + 0x20) as *mut u8) = x;
+                *((read_usize(read_usize(clube + 0xbf) + 0x69) + 0x20) as *mut u8) = x;
             }
         }
     }
@@ -1907,21 +1874,12 @@ unsafe extern "thiscall" fn comparar_pagar_outros_custos(this: usize, valor: i32
 
 // ---------- 262a leva: a folha salarial e a janela dos ingressos: a folha do clube, as folhas refeitas na criação e os dias até a temporada (finance.cpp) ----------
 
-unsafe fn cpz11_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cpz11_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cpz11_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cpz11_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 unsafe fn cpz11_por(a: usize, v: i32) {
     core::ptr::write_unaligned(a as *mut i32, v);
@@ -1945,15 +1903,15 @@ unsafe extern "thiscall" fn folha_salarial_do_clube(this: usize) {
     let teto: unsafe extern "thiscall" fn(usize, u32, i32) -> i32 = core::mem::transmute(0x5968d0usize);
     cpz11_por(this + 0x10, 0);
     cpz11_por(this + 0xc, 0);
-    let clube = cpz11_d(0xae23b4).wrapping_add(cpz11_d(this + 8).wrapping_mul(0x245));
+    let clube = read_usize(0xae23b4).wrapping_add(read_usize(this + 8).wrapping_mul(0x245));
     let mut ocupadas: i8 = 0;
     for k in 0..50usize {
-        let p = cpz11_d(clube + 0xd7 + 4 * k);
+        let p = read_usize(clube + 0xd7 + 4 * k);
         if p == 0 {
             continue;
         }
         ocupadas = ocupadas.wrapping_add(1);
-        let c = com_clube(cpz11_d(0xae1050), p, clube);
+        let c = com_clube(read_usize(0xae1050), p, clube);
         if c == 0 {
             continue;
         }
@@ -1961,8 +1919,8 @@ unsafe extern "thiscall" fn folha_salarial_do_clube(this: usize) {
         if w == -1 {
             w = ftol(padrao(c, p, clube, 0, -1, 0xb, 0));
         }
-        if ficha(cpz11_d(0xae1050), p) != 0 && cpz11_b(c + 0x35) & 0x3f != 6 {
-            w = w.wrapping_sub(cpz11_i(ficha(cpz11_d(0xae1050), p) + 0xc)); // a parte do outro contrato
+        if ficha(read_usize(0xae1050), p) != 0 && read_u8(c + 0x35) & 0x3f != 6 {
+            w = w.wrapping_sub(cpz11_i(ficha(read_usize(0xae1050), p) + 0xc)); // a parte do outro contrato
         }
         if w > cpz11_i(this + 0x10) {
             cpz11_por(this + 0x10, w);
@@ -1973,11 +1931,11 @@ unsafe extern "thiscall" fn folha_salarial_do_clube(this: usize) {
     let mut comissao = 0i32;
     for (base, n) in [(0x19fusize, 5usize), (0x1b3, 7), (0x1cf, 3)] {
         for k in 0..n {
-            let p = cpz11_d(clube + base + 4 * k);
+            let p = read_usize(clube + base + 4 * k);
             if p == 0 {
                 continue;
             }
-            let c = contrato_de(cpz11_d(0xae1050), p);
+            let c = contrato_de(read_usize(0xae1050), p);
             if c == 0 {
                 continue;
             }
@@ -1992,8 +1950,8 @@ unsafe extern "thiscall" fn folha_salarial_do_clube(this: usize) {
         crate::comparacao::ramo("cpz_11 folha do pessoal");
         cpz11_por(this + 0xc, cpz11_i(this + 0xc).wrapping_add(comissao)); // cpz11: o pessoal na folha
     }
-    let tipo1 = cpz11_b(clube + 0x64) == 1;
-    let rep = cpz11_w(clube + 0x80) as i32;
+    let tipo1 = read_u8(clube + 0x64) == 1;
+    let rep = read_i16(clube + 0x80) as i32;
     if ocupadas < 15 {
         let mut v = if rep > 0x128e {
             rep - 0x79e
@@ -2005,16 +1963,16 @@ unsafe extern "thiscall" fn folha_salarial_do_clube(this: usize) {
         if !tipo1 {
             v = ftol(v as f64 * f64_em(0x968968));
         }
-        let nacao = cpz11_d(clube + 0x53);
+        let nacao = read_usize(clube + 0x53);
         if nacao != 0 {
-            let t = (cpz11_b(nacao + 0x7e) as i8).clamp(1, 3) as i32;
+            let t = (read_u8(nacao + 0x7e) as i8).clamp(1, 3) as i32;
             v = v.wrapping_div(t);
         }
         let falta = 15 - ocupadas as i32;
         cpz11_por(this + 0xc, cpz11_i(this + 0xc).wrapping_add(falta.wrapping_mul(v)));
     }
     let k = if tipo1 {
-        let nacao = cpz11_d(clube + 0x53);
+        let nacao = read_usize(clube + 0x53);
         let grande = nacao != 0 && (cpz11_i(nacao) == cpz11_i(0x9cf2e4) || cpz11_i(nacao) == cpz11_i(0x9cf360));
         if !grande {
             0x96a608
@@ -2051,10 +2009,10 @@ unsafe extern "thiscall" fn comparar_folha_salarial_do_clube(this: usize) {
 unsafe extern "thiscall" fn refazer_todas_as_folhas(this: usize) {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let folha: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x598370usize);
-    let mut fin = cpz11_d(this);
+    let mut fin = read_usize(this);
     let mut i = 0i32;
     while i < cpz11_i(0xae235c) {
-        let clube = cpz11_d(0xae23b4).wrapping_add((i as usize).wrapping_mul(0x245));
+        let clube = read_usize(0xae23b4).wrapping_add((i as usize).wrapping_mul(0x245));
         if selecao(clube) != 0 {
             break;
         }
@@ -2068,7 +2026,7 @@ unsafe extern "thiscall" fn refazer_todas_as_folhas(this: usize) {
 unsafe extern "thiscall" fn comparar_refazer_todas_as_folhas(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1411);
     let n = (cpz11_i(0xae235c).max(0) as usize).wrapping_mul(0x167);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(cpz11_d(this), n), (0xae1080, 4)], || o(this), || refazer_todas_as_folhas(this));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(read_usize(this), n), (0xae1080, 4)], || o(this), || refazer_todas_as_folhas(this));
     PLACAR.registrar(igual, || format!("refazer_todas_as_folhas({:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
@@ -2089,15 +2047,15 @@ unsafe extern "thiscall" fn dias_ate_a_temporada(_this: usize, clube: usize, pas
         return 0;
     }
     let e = 0xb63d60usize.wrapping_add((k as isize * 72) as usize);
-    let ano: u16 = if cpz11_d(e + 0x17) != 0 { 0x7d2 } else { (cpz11_w(0xdd6eca) as u16).wrapping_add(1) };
-    if cpz11_w(0xae2c92) as u16 >= ano {
+    let ano: u16 = if read_usize(e + 0x17) != 0 { 0x7d2 } else { (read_i16(0xdd6eca) as u16).wrapping_add(1) };
+    if read_i16(0xae2c92) as u16 >= ano {
         *passou = 1;
     }
-    let inicio = cpz11_b(e + 0x34) as i8;
-    let ano_do_inicio = cpz11_w(e + 0x2c) as u16;
+    let inicio = read_u8(e + 0x34) as i8;
+    let ano_do_inicio = read_i16(e + 0x2c) as u16;
     let mes = mes_de(0xae2c90) as i8;
     let janela = if inicio < 2 {
-        if ano_do_inicio == cpz11_w(0xae2c92) as u16 {
+        if ano_do_inicio == read_i16(0xae2c92) as u16 {
             mes as i32 > 12 - inicio as i32
         } else {
             mes < inicio
@@ -2109,7 +2067,7 @@ unsafe extern "thiscall" fn dias_ate_a_temporada(_this: usize, clube: usize, pas
     if !janela {
         return 0;
     }
-    let r = dias_ate(e + 0x2a, cpz11_d(0xae2c90) as u32, cpz11_d(0xae2c94) as u32);
+    let r = dias_ate(e + 0x2a, read_usize(0xae2c90) as u32, read_usize(0xae2c94) as u32);
     if r > 0 {
         crate::comparacao::ramo("cpz_11 dias ate a temporada");
         return r; // cpz11: os dias até a temporada
@@ -2278,21 +2236,12 @@ unsafe extern "thiscall" fn comparar_pagar_salarios(this: usize, valor: i32) {
 
 // ---------- 258a leva: as receitas da semana e o centro de treino: o merchandising, os ingressos da temporada e a obra do centro de treino (finance.cpp) ----------
 
-unsafe fn cpv5_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cpv5_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cpv5_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cpv5_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 unsafe fn cpv5_somar(a: usize, v: i32) {
     core::ptr::write_unaligned(a as *mut i32, cpv5_i(a).wrapping_add(v));
@@ -2311,7 +2260,7 @@ unsafe fn cpv5_sortear(n: i32) -> i32 {
 
 /// O registro de finanças (0x167 bytes) do clube na tabela `this` (FinanceTable), pelo id (+0) do clube.
 unsafe fn cpv5_financas(this: usize, clube: usize) -> usize {
-    cpv5_d(this).wrapping_add((cpv5_d(clube) as u32).wrapping_mul(0x167) as usize)
+    read_usize(this).wrapping_add((read_usize(clube) as u32).wrapping_mul(0x167) as usize)
 }
 
 /// { 0x59b7e0 } (thiscall, ret 4, finance.cpp): `FinanceTable::add_weekly_merchandising_income(clube)`, pelo passe
@@ -2320,13 +2269,13 @@ unsafe fn cpv5_financas(this: usize, clube: usize) -> usize {
 /// 5500 e 4000; sem eles, a reputação escolhe por 5250 e 3750 (um degrau acima na nação do Japão 0x9cf36c). Público
 /// (+0x73) × reputação × fator, truncado; × (sorteio(11) + 95) × 0,01, truncado, soma em +0xbc, +0x15c e no saldo.
 unsafe extern "thiscall" fn receita_do_merchandising(this: usize, clube: usize) {
-    let outro = cpv5_d(clube + 0xbf);
-    let est = if outro != 0 { cpv5_d(outro + 0x69) } else { 0 };
-    let rep = cpv5_w(clube + 0x80) as i32;
+    let outro = read_usize(clube + 0xbf);
+    let est = if outro != 0 { read_usize(outro + 0x69) } else { 0 };
+    let rep = read_i16(clube + 0x80) as i32;
     let fator = if est != 0 {
-        let s = (cpv5_b(est + 0xf) as i8 as i32).wrapping_mul(25);
+        let s = (read_u8(est + 0xf) as i8 as i32).wrapping_mul(25);
         let mut v = rep.wrapping_add(s);
-        if cpv5_b(clube + 0x6d) == 0 {
+        if read_u8(clube + 0x6d) == 0 {
             v = ftol(v as f64 * f64_em(0x96a5d0));
         }
         if v > 0x157c {
@@ -2337,7 +2286,7 @@ unsafe extern "thiscall" fn receita_do_merchandising(this: usize, clube: usize) 
             0x96a6b8
         }
     } else {
-        let nac = cpv5_d(clube + 0x53);
+        let nac = read_usize(clube + 0x53);
         let japao = nac != 0 && cpv5_i(nac) == cpv5_i(0x9cf36c);
         if rep > 0x1482 {
             if japao { 0x96a6c0 } else { 0x96a6d0 }
@@ -2378,22 +2327,22 @@ unsafe extern "thiscall" fn comparar_receita_do_merchandising(this: usize, clube
 /// /4 ou /10 pelo tipo da nação +0x7e; × 1,25 na série A, Chelsea 1,5, Arsenal e Tottenham 1,3, Everton 0,75, Liverpool
 /// 0,9, Alemanha 1,2) entra só com `aplicar`; depois (sorteio(rep) + sorteio(rep) + 1) × 0,001 + 1, × novos, em +0x15c.
 unsafe extern "thiscall" fn ingressos_da_temporada(this: usize, aplicar: i32) {
-    let id = cpv5_d(this + 8);
-    let clube = cpv5_d(0xae23b4).wrapping_add(id.wrapping_mul(0x245));
+    let id = read_usize(this + 8);
+    let clube = read_usize(0xae23b4).wrapping_add(id.wrapping_mul(0x245));
     if clube == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, i32)>(1246)(this, aplicar);
     }
-    let rep = cpv5_w(clube + 0x80) as i32;
-    let est = cpv5_d(clube + 0x69);
+    let rep = read_i16(clube + 0x80) as i32;
+    let est = read_usize(clube + 0x69);
     if est != 0 && cpv5_i(est + 0x3c) < 0x5dc {
         core::ptr::write_unaligned((est + 0x3c) as *mut i32, ftol(rep as f64 * f64_em(0x968e18)));
-        let est = cpv5_d(clube + 0x69);
+        let est = read_usize(clube + 0x69);
         if cpv5_i(est + 0x3c) < 0x5dc {
             core::ptr::write_unaligned((est + 0x3c) as *mut i32, 0x5dc);
         }
     }
-    let gerente = cpv5_d(cpv5_d(0xb67a44));
-    let valor = cpv5_w(gerente.wrapping_add((cpv5_d(clube) as u32).wrapping_mul(73) as usize) + 8);
+    let gerente = read_usize(read_usize(0xb67a44));
+    let valor = read_i16(gerente.wrapping_add((read_usize(clube) as u32).wrapping_mul(73) as usize) + 8);
     let mut f = valor as f64 * f64_em(0x96a5c0);
     if !(f > f64_em(0x968f20)) {
         f = f64_em(0x968f20);
@@ -2404,7 +2353,7 @@ unsafe extern "thiscall" fn ingressos_da_temporada(this: usize, aplicar: i32) {
         g = f64_em(0x968968);
     }
     let u = ftol(t as f64 * g);
-    let est = cpv5_d(clube + 0x69);
+    let est = read_usize(clube + 0x69);
     let teto = |e: usize| if e != 0 { cpv5_i(e + 0x3c) as f64 * f64_em(0x96a678) } else { f64_em(0x96a5e8) };
     let n = ftol(if (u as f64) < teto(est) { u as f64 } else { teto(est) });
     if n == 0 {
@@ -2414,7 +2363,7 @@ unsafe extern "thiscall" fn ingressos_da_temporada(this: usize, aplicar: i32) {
     if ja >= n {
         return;
     }
-    let mut passo = (cpv5_b(this + 0x164) as i8).wrapping_add(1);
+    let mut passo = (read_u8(this + 0x164) as i8).wrapping_add(1);
     if passo < 0 || passo > 8 {
         passo = 8;
     }
@@ -2427,7 +2376,7 @@ unsafe extern "thiscall" fn ingressos_da_temporada(this: usize, aplicar: i32) {
     core::ptr::write_unaligned((this + 0x18) as *mut i32, total); // cpv5: os ingressos vendidos
     let preco = ftol((rep as f64 * f64_em(0x969048) + f64_em(0x968938)) * f64_em(0x968ea8));
     let mut receita = preco.wrapping_mul(novos);
-    let est = cpv5_d(clube + 0x69);
+    let est = read_usize(clube + 0x69);
     let lugares = if est != 0 { cpv5_i(est + 0x3c) } else { 0 };
     let den = if lugares != 0 { lugares as f64 * f64_em(0x96a678) } else { f64_em(0x96a5e8) };
     let razao = total as f64 / den;
@@ -2435,14 +2384,14 @@ unsafe extern "thiscall" fn ingressos_da_temporada(this: usize, aplicar: i32) {
     if razao > f64_em(0x96a678) {
         core::ptr::write_unaligned((this + 0x160) as *mut u32, 0x3f600000);
     }
-    let nac = cpv5_d(clube + 0x53);
-    let tipo = if nac != 0 { cpv5_b(nac + 0x7e) as i8 } else { 3 };
+    let nac = read_usize(clube + 0x53);
+    let tipo = if nac != 0 { read_u8(nac + 0x7e) as i8 } else { 3 };
     match tipo {
         1 => {}
         2 => receita /= 4,
         _ => receita /= 10,
     }
-    let liga = cpv5_d(clube + 0x57);
+    let liga = read_usize(clube + 0x57);
     let cid = cpv5_i(clube);
     let fator = if liga != 0 && cpv5_i(liga) == cpv5_i(0x9cf570) {
         0x968928
@@ -2482,12 +2431,12 @@ unsafe extern "thiscall" fn ingressos_da_temporada(this: usize, aplicar: i32) {
 /// (clube nulo: só a original).
 unsafe extern "thiscall" fn comparar_ingressos_da_temporada(this: usize, aplicar: i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(1246);
-    let clube = cpv5_d(0xae23b4).wrapping_add(cpv5_d(this + 8).wrapping_mul(0x245));
+    let clube = read_usize(0xae23b4).wrapping_add(read_usize(this + 8).wrapping_mul(0x245));
     if clube == 0 {
         return o(this, aplicar);
     }
     let mut regioes = vec![(this, 0x167)];
-    let est = cpv5_d(clube + 0x69);
+    let est = read_usize(clube + 0x69);
     if est != 0 {
         regioes.push((est + 0x3c, 4));
     }
@@ -2516,7 +2465,7 @@ unsafe extern "thiscall" fn melhorar_o_centro_de_treino(this: usize, clube: usiz
     *nivel = if *nivel < 0x13 { (*nivel).wrapping_add(2) } else { (*nivel).wrapping_add(1) };
     cpv5_cobrar_obra(this, clube, custo);
     let n = *nivel;
-    let rep = cpv5_w(clube + 0x80);
+    let rep = read_i16(clube + 0x80);
     let segundo = if n < 0x14 && rep > 0x203a {
         *nivel = 0x14;
         Some((0x16 - n as i32).wrapping_mul(250000).max(2000000))
@@ -2558,21 +2507,12 @@ unsafe extern "thiscall" fn comparar_melhorar_o_centro_de_treino(this: usize, cl
 
 // ---------- 258a leva: os eventos financeiros da semana: o passe dos eventos do clube, a diretoria que paga a dívida e a injeção de dinheiro (finance.cpp) ----------
 
-unsafe fn cpv6_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cpv6_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cpv6_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cpv6_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 unsafe fn cpv6_somar(a: usize, v: i32) {
     core::ptr::write_unaligned(a as *mut i32, cpv6_i(a).wrapping_add(v));
@@ -2629,12 +2569,12 @@ unsafe fn cpv6_verba(fin: usize) -> u32 {
 /// O fim da semana do clube no estado de crise (0x5a02f0: thiscall(tabela, id)).
 unsafe fn cpv6_fim_da_crise(this: usize, clube: usize) {
     let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x5a02f0usize);
-    f(this, cpv6_d(clube) as u32);
+    f(this, read_usize(clube) as u32);
 }
 
 /// O estado (+0x165) volta a 0; se era 1 (crise), a notícia do fim da crise (0x5a02f0) antes.
 unsafe fn cpv6_sair_da_crise(this: usize, clube: usize, fin: usize) {
-    let s = cpv6_b(fin + 0x165);
+    let s = read_u8(fin + 0x165);
     if s == 1 {
         cpv6_fim_da_crise(this, clube);
     }
@@ -2646,7 +2586,7 @@ unsafe fn cpv6_sair_da_crise(this: usize, clube: usize, fin: usize) {
 /// O centro de treino no máximo (20) cai um nível com sorteio(10) zero, se a reputação for menor que 7250.
 unsafe fn cpv6_desgaste_do_centro(clube: usize) {
     let nivel = (clube + 0x7f) as *mut i8;
-    if *nivel == 0x14 && cpv6_w(clube + 0x80) < 0x1c52 && cpv6_sortear(10) == 0 {
+    if *nivel == 0x14 && read_i16(clube + 0x80) < 0x1c52 && cpv6_sortear(10) == 0 {
         *nivel = (*nivel).wrapping_sub(1);
     }
 }
@@ -2670,11 +2610,11 @@ unsafe extern "thiscall" fn eventos_financeiros_da_semana(this: usize, clube: us
     let mut eh_a: u32 = 0;
     let p = parceiro(clube, &mut eh_a, 1);
     let c = if p != 0 && eh_a == 0 { p } else { clube };
-    let fin = cpv6_d(this).wrapping_add((cpv6_d(c) as u32).wrapping_mul(0x167) as usize);
+    let fin = read_usize(this).wrapping_add((read_usize(c) as u32).wrapping_mul(0x167) as usize);
     let aperto = (fin + 0x166) as *mut i8;
     match cpv6_faixa(fin) {
         -1 => {
-            let s = cpv6_b(fin + 0x165);
+            let s = read_u8(fin + 0x165);
             if s != 2 {
                 if s == 1 {
                     cpv6_fim_da_crise(this, clube);
@@ -2684,7 +2624,7 @@ unsafe extern "thiscall" fn eventos_financeiros_da_semana(this: usize, clube: us
             if semana == 0 {
                 return;
             }
-            if cpv6_b(clube + 0x6d) != 0 {
+            if read_u8(clube + 0x6d) != 0 {
                 *aperto = (*aperto).wrapping_add(1);
             }
             cpv6_desgaste_do_centro(clube);
@@ -2693,7 +2633,7 @@ unsafe extern "thiscall" fn eventos_financeiros_da_semana(this: usize, clube: us
             }
         }
         -2 => {
-            if cpv6_b(fin + 0x165) != 1 {
+            if read_u8(fin + 0x165) != 1 {
                 let noticia: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x59fc60usize);
                 let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
                 let reunir: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
@@ -2701,7 +2641,7 @@ unsafe extern "thiscall" fn eventos_financeiros_da_semana(this: usize, clube: us
                 let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
                 let valor: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) -> i32 = core::mem::transmute(0x4d0c60usize);
                 noticia(this, clube);
-                if cpv6_b(clube + 0x82) != 0 {
+                if read_u8(clube + 0x82) != 0 {
                     *((clube + 0x82) as *mut u8) = 0;
                 }
                 *((fin + 0x165) as *mut u8) = 1;
@@ -2711,16 +2651,16 @@ unsafe extern "thiscall" fn eventos_financeiros_da_semana(this: usize, clube: us
                 let mut elenco = [0usize; 64];
                 reunir(clube, elenco.as_mut_ptr(), 0);
                 for &j in elenco.iter().take(50) {
-                    if j == 0 || cpv6_d(j + 0x61) == 0 {
+                    if j == 0 || read_usize(j + 0x61) == 0 {
                         continue;
                     }
-                    let g = cpv6_d(0xae1050);
+                    let g = read_usize(0xae1050);
                     let k = contrato_de(g, j);
                     *(0xae1080 as *mut usize) = k;
-                    let dono = if k != 0 { cpv6_d(0xae23b4).wrapping_add(cpv6_d(k + 4).wrapping_mul(0x245)) } else { 0 };
-                    let ct = contrato(cpv6_d(0xae1050), j, dono);
+                    let dono = if k != 0 { read_usize(0xae23b4).wrapping_add(read_usize(k + 4).wrapping_mul(0x245)) } else { 0 };
+                    let ct = contrato(read_usize(0xae1050), j, dono);
                     if dono == clube && ct != 0 {
-                        let v = valor(cpv6_d(0xae1050), j, dono, 0, -1, 1);
+                        let v = valor(read_usize(0xae1050), j, dono, 0, -1, 1);
                         if v < cpv6_i(j + 0x52) {
                             *((ct + 0x4e) as *mut u8) |= 4;
                             core::ptr::write_unaligned((j + 0x52) as *mut i32, v);
@@ -2736,7 +2676,7 @@ unsafe extern "thiscall" fn eventos_financeiros_da_semana(this: usize, clube: us
                 cpv6_evento(0x59e050, this, clube, fin);
             }
             cpv6_desgaste_do_centro(clube);
-            if cpv6_b(clube + 0x6d) != 0 {
+            if read_u8(clube + 0x6d) != 0 {
                 *aperto = (*aperto).wrapping_add(3);
             }
         }
@@ -2777,19 +2717,19 @@ unsafe extern "thiscall" fn eventos_financeiros_da_semana(this: usize, clube: us
         }
     }
     // a crise prolongada
-    let liga = cpv6_d(clube + 0x57);
-    if liga == 0 || cpv6_i(cpv6_d(0xadadfc) + cpv6_d(liga).wrapping_mul(4)) == 0 || *aperto <= 0x32 {
+    let liga = read_usize(clube + 0x57);
+    if liga == 0 || cpv6_i(read_usize(0xadadfc) + read_usize(liga).wrapping_mul(4)) == 0 || *aperto <= 0x32 {
         return;
     }
-    let est = cpv6_d(clube + 0x69);
+    let est = read_usize(clube + 0x69);
     if est == 0 {
         return;
     }
     let nivel = (clube + 0x7f) as *mut i8;
-    if cpv6_b(est + 0x4d) != 0 && cpv6_w(clube + 0x80) < 0x109a {
+    if read_u8(est + 0x4d) != 0 && read_i16(clube + 0x80) < 0x109a {
         let aquecimento: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x59ffb0usize);
         aquecimento(this, clube, 0, 7);
-        *((cpv6_d(clube + 0x69) + 0x4d) as *mut u8) = 0;
+        *((read_usize(clube + 0x69) + 0x4d) as *mut u8) = 0;
         let n = *nivel;
         if n == 0x14 {
             let r = cpv6_sortear(4) as u8;
@@ -2803,7 +2743,7 @@ unsafe extern "thiscall" fn eventos_financeiros_da_semana(this: usize, clube: us
         return;
     }
     let lugares = cpv6_i(est + 0x3c);
-    if lugares <= 0xabe || cpv6_sortear(cpv6_w(clube + 0x80) as i32) >= lugares {
+    if lugares <= 0xabe || cpv6_sortear(read_i16(clube + 0x80) as i32) >= lugares {
         return;
     }
     let t = ftol(lugares as f64 * f64_em(0x967880)) as i16 as i32;
@@ -2818,9 +2758,9 @@ unsafe extern "thiscall" fn eventos_financeiros_da_semana(this: usize, clube: us
     };
     let fechados: unsafe extern "thiscall" fn(usize, usize, i32, u32) = core::mem::transmute(0x59f900usize);
     fechados(this, clube, dez, tirou);
-    let est = cpv6_d(clube + 0x69);
+    let est = read_usize(clube + 0x69);
     cpv6_somar(est + 0x3c, fechar.wrapping_neg());
-    let est = cpv6_d(clube + 0x69);
+    let est = read_usize(clube + 0x69);
     cpv6_somar(est + 0x44, fechar);
     *aperto = 0x14;
     let n = *nivel;
@@ -2847,7 +2787,7 @@ unsafe extern "thiscall" fn comparar_eventos_financeiros_da_semana(this: usize, 
 /// 1250 com saldo abaixo de −450 × reputação), 300 × (saldo abaixo de −300 × reputação) ou 150 ×: em +0x154, +0xb4 e no
 /// saldo; a notícia (0x59f300, tipo 4); devolve 1.
 unsafe extern "thiscall" fn diretoria_paga_a_divida(this: usize, clube: usize, fin: usize) -> u32 {
-    let rep = cpv6_w(clube + 0x80) as i32;
+    let rep = read_i16(clube + 0x80) as i32;
     let div = match cpv6_faixa(fin) {
         -2 => 2.0f64,
         -1 => {
@@ -2871,13 +2811,13 @@ unsafe extern "thiscall" fn diretoria_paga_a_divida(this: usize, clube: usize, f
         return 0;
     }
     let n = ftol(f64_em(0x969000) / div);
-    let outro = cpv6_d(clube + 0xbf);
-    if outro != 0 && cpv6_d(outro + 0x69) != 0 {
+    let outro = read_usize(clube + 0xbf);
+    if outro != 0 && read_usize(outro + 0x69) != 0 {
         if cpv6_sortear(n) != 0 {
             return 0;
         }
-        let est = cpv6_d(cpv6_d(clube + 0xbf) + 0x69);
-        if cpv6_sortear(cpv6_b(est + 0x20) as i8 as i32) == 0 {
+        let est = read_usize(read_usize(clube + 0xbf) + 0x69);
+        if cpv6_sortear(read_u8(est + 0x20) as i8 as i32) == 0 {
             return 0;
         }
     } else {
@@ -2888,7 +2828,7 @@ unsafe extern "thiscall" fn diretoria_paga_a_divida(this: usize, clube: usize, f
             return 0;
         }
     }
-    let rep = cpv6_w(clube + 0x80) as i32;
+    let rep = read_i16(clube + 0x80) as i32;
     let saldo = cpv6_saldo(fin);
     let valor = if rep < 0x4e2 && saldo < rep.wrapping_mul(-450) as i64 {
         rep.wrapping_mul(450)
@@ -2941,14 +2881,14 @@ unsafe extern "thiscall" fn comparar_diretoria_paga_a_divida(this: usize, clube:
 /// milhão abaixo de 2000; senão 4 milhões (+1 se o valor passar de reputação² / 4). Em +0x154, +0xb4 e no saldo; a
 /// notícia (0x59f300, tipo 3, com a verba 0x598800); encerra a crise (+0x165 = 0); devolve 1.
 unsafe extern "thiscall" fn injecao_de_dinheiro(this: usize, clube: usize, fin: usize) -> u32 {
-    if cpv6_w(clube + 0x80) < 0x128e { // cpv6: o filtro da injeção
+    if read_i16(clube + 0x80) < 0x128e { // cpv6: o filtro da injeção
         return 0;
     }
-    if cpv6_b(clube + 0x82) != 0 {
+    if read_u8(clube + 0x82) != 0 {
         return 0;
     }
     if clube != 0 {
-        let nac = cpv6_d(clube + 0x53);
+        let nac = read_usize(clube + 0x53);
         if nac != 0 {
             let n = cpv6_i(nac);
             if n == cpv6_i(0x9cf510) || n == cpv6_i(0x9cf2dc) || n == cpv6_i(0x9cf3e4) {
@@ -2962,16 +2902,16 @@ unsafe extern "thiscall" fn injecao_de_dinheiro(this: usize, clube: usize, fin: 
         -1 => f64_em(0x967880),
         _ => f64_em(0x96a350),
     };
-    let rep = cpv6_w(clube + 0x80) as i32;
-    let outro = cpv6_d(clube + 0xbf);
+    let rep = read_i16(clube + 0x80) as i32;
+    let outro = read_usize(clube + 0xbf);
     let mut valor;
-    if outro != 0 && cpv6_d(outro + 0x69) != 0 && cpv6_b(clube + 0x82) == 0 {
+    if outro != 0 && read_usize(outro + 0x69) != 0 && read_u8(clube + 0x82) == 0 {
         let r = cpv6_sortear(ftol(f64_em(0x968dd8) / div));
-        let est = cpv6_d(cpv6_d(clube + 0xbf) + 0x69);
-        if (cpv6_b(est + 0xf) as i8 as i32) <= r {
+        let est = read_usize(read_usize(clube + 0xbf) + 0x69);
+        if (read_u8(est + 0xf) as i8 as i32) <= r {
             return 0;
         }
-        let e = cpv6_b(cpv6_d(cpv6_d(clube + 0xbf) + 0x69) + 0x20) as i8 as i32;
+        let e = read_u8(read_usize(read_usize(clube + 0xbf) + 0x69) + 0x20) as i8 as i32;
         if e <= cpv6_sortear(5).wrapping_add(10) {
             return 0;
         }
@@ -2980,7 +2920,7 @@ unsafe extern "thiscall" fn injecao_de_dinheiro(this: usize, clube: usize, fin: 
         if cpv6_sortear(ftol(f64_em(0x968938) / div)) != 0 {
             return 0;
         }
-        if cpv6_b(clube + 0x82) != 0 {
+        if read_u8(clube + 0x82) != 0 {
             return 0;
         }
         valor = rep.wrapping_mul(5).wrapping_add(0x3a98).wrapping_mul(50);
@@ -2989,7 +2929,7 @@ unsafe extern "thiscall" fn injecao_de_dinheiro(this: usize, clube: usize, fin: 
     if (valor.wrapping_mul(10) as i64) < saldo.wrapping_neg() {
         valor = ftol(-(saldo as f64 * f64_em(0x967880)));
     }
-    if cpv6_w(clube + 0x80) < 0x7d0 {
+    if read_i16(clube + 0x80) < 0x7d0 {
         let teto = rep.wrapping_mul(rep).wrapping_add(0x16e360);
         if valor > teto {
             valor = teto;
@@ -3016,21 +2956,12 @@ unsafe extern "thiscall" fn comparar_injecao_de_dinheiro(this: usize, clube: usi
 
 // ---------- 258a leva: os salários do pessoal e os bônus: o teto salarial do pessoal, o pagamento dos bônus e o ajuste do teto salarial (finance.cpp) ----------
 
-unsafe fn cpv7_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cpv7_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cpv7_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cpv7_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 /// { 0x597db0 } (thiscall, ret 4, finance.cpp): `Finance::get_max_staff_wage(cargo)`, o maior salário semanal que o
 /// clube oferece a um membro do pessoal (renovação 0x4cda70, interesse pelo cargo 0x844780, telas de contrato). Clube
@@ -3043,12 +2974,12 @@ unsafe fn cpv7_b(a: usize) -> u8 {
 unsafe extern "thiscall" fn teto_salarial_do_pessoal(this: usize, cargo: i8) -> i32 {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
-    let id = cpv7_d(this + 8);
-    let clube = cpv7_d(0xae23b4).wrapping_add(id.wrapping_mul(0x245));
-    if cpv7_b(clube + 0x64) == 3 {
+    let id = read_usize(this + 8);
+    let clube = read_usize(0xae23b4).wrapping_add(id.wrapping_mul(0x245));
+    if read_u8(clube + 0x64) == 3 {
         return 0;
     }
-    let r50 = cpv7_w(clube + 0x80) as i32 / 50;
+    let r50 = read_i16(clube + 0x80) as i32 / 50;
     let idx = (cargo as i32).wrapping_sub(5);
     let padrao: i32 = match idx {
         0..=2 => 35000,
@@ -3060,19 +2991,19 @@ unsafe extern "thiscall" fn teto_salarial_do_pessoal(this: usize, cargo: i8) -> 
     if selecao(clube) != 0 {
         return padrao;
     }
-    let nac = cpv7_d(clube + 0x53);
+    let nac = read_usize(clube + 0x53);
     let mut w;
     if nac == 0 {
         w = ftol(padrao as f64 * f64_em(0x9689e0));
     } else {
-        let tipo = (cpv7_b(nac + 0x7e) as i8).clamp(1, 3);
-        let k = cpv7_b(nac + 0x85) as i8 as i32;
+        let tipo = (read_u8(nac + 0x7e) as i8).clamp(1, 3);
+        let k = read_u8(nac + 0x85) as i8 as i32;
         w = ftol(k as f64 / (tipo as i32 * 20) as f64 * padrao as f64);
         if tipo == 1 {
             let n = cpv7_i(nac);
             let e = |a: usize| n == cpv7_i(a);
             if e(0x9cf2e4) || e(0x9cf360) || e(0x9cf488) {
-                if cpv7_w(clube + 0x80) > 0x1c52 {
+                if read_i16(clube + 0x80) > 0x1c52 {
                     crate::comparacao::ramo("cpv_7 clube grande");
                     w = ftol(w as f64 * f64_em(0x9689b8)); // cpv7: o clube grande da Inglaterra, Itália e Espanha
                 }
@@ -3102,10 +3033,10 @@ unsafe extern "thiscall" fn teto_salarial_do_pessoal(this: usize, cargo: i8) -> 
                 }
             }
         }
-        let liga = cpv7_d(clube + 0x57);
+        let liga = read_usize(clube + 0x57);
         if liga != 0 {
             crate::comparacao::ramo("cpv_7 peso da liga");
-            w = ftol(cpv7_w(liga + 0x69) as f64 * w as f64 * f64_em(0x968918)); // cpv7: o peso da liga
+            w = ftol(read_i16(liga + 0x69) as f64 * w as f64 * f64_em(0x968918)); // cpv7: o peso da liga
         }
     }
     match faixa(this) as i8 {

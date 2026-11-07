@@ -319,27 +319,18 @@ unsafe extern "thiscall" fn comparar_calendario_da_divisao_de_baixo_espanhola(th
 
 // ---------- 278a leva: a divisão de baixo espanhola (o construtor e a tabela com os times B e os melhores da Segunda B) e a tabela da Segunda espanhola (os times B que não sobem) (spa_lower.cpp, spa_second.cpp) ----------
 
-unsafe fn cqm6_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqm6_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
-unsafe fn cqm6_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O registro de competição de id [g] (vetor [0xae23d0], 0x6b bytes).
 unsafe fn cqm6_registro(g: usize) -> usize {
-    cqm6_d(0xae23d0).wrapping_add(cqm6_d(g).wrapping_mul(0x6b))
+    read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(g).wrapping_mul(0x6b))
 }
 
 /// A competição do clube (+0x57, o id no +0) é a de id [g]?
 unsafe fn cqm6_na(c: usize, g: usize) -> bool {
-    let comp = cqm6_d(c + 0x57);
-    comp != 0 && cqm6_d(comp) == cqm6_d(g)
+    let comp = read_u32_as_usize(c + 0x57);
+    comp != 0 && read_u32_as_usize(comp) == read_u32_as_usize(g)
 }
 
 /// { 0x851020 } (thiscall, ret 4, spa_lower.cpp, quadro SEH só no caminho de exceção): `SpaLower::SpaLower(ano)`, a
@@ -356,17 +347,17 @@ unsafe extern "thiscall" fn construir_divisao_de_baixo_espanhola(this: usize, an
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x8533d0usize);
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
     base(this);
-    cqm6_pd(this, 0x96fb1c);
+    write_u32_from_usize(this, 0x96fb1c);
     core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
     *((this + 0x50) as *mut u8) = 0xff;
-    cqm6_pd(this + 4, cqm6_registro(0x9cf6b0));
+    write_u32_from_usize(this + 4, cqm6_registro(0x9cf6b0));
     if carregar(this, 1) != 0 {
         return this;
     }
     crate::comparacao::ramo("cqm_6 divisao de baixo nova");
     *((this + 0x44) as *mut u8) = 0xff;
-    cqm6_pd(this + 0x30, 0xffff_ffff);
-    cqm6_pd(this + 0x2c, 0);
+    write_u32_from_usize(this + 0x30, 0xffff_ffff);
+    write_u32_from_usize(this + 0x2c, 0);
     if regras(this) == 0 {
         aviso_em(0xa82880, 0x3f);
         return this;
@@ -385,9 +376,9 @@ unsafe extern "thiscall" fn construir_divisao_de_baixo_espanhola(this: usize, an
 unsafe extern "thiscall" fn comparar_construir_divisao_de_baixo_espanhola(this: usize, ano: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(1873);
     let r = o(this, ano);
-    let ok = r == this && cqm6_d(this) == 0x96fb1c && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && *((this + 0x50) as *const u8) == 0xff && cqm6_d(this + 4) == cqm6_registro(0x9cf6b0);
-    PLACAR.registrar(ok, || format!("construir_divisao_de_baixo_espanhola({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this, r, cqm6_d(this), cqm6_d(this + 4)));
+    let ok = r == this && read_u32_as_usize(this) == 0x96fb1c && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
+        && *((this + 0x50) as *const u8) == 0xff && read_u32_as_usize(this + 4) == cqm6_registro(0x9cf6b0);
+    PLACAR.registrar(ok, || format!("construir_divisao_de_baixo_espanhola({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this, r, read_u32_as_usize(this), read_u32_as_usize(this + 4)));
     r
 }
 
@@ -413,14 +404,14 @@ unsafe extern "thiscall" fn tabela_da_segunda(this: usize) -> u32 {
     let premios: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x682f70usize);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x16);
     let t = alocar(0x512);
-    cqm6_pd(this + 0xb1, t);
+    write_u32_from_usize(this + 0xb1, t);
     if t == 0 {
         aviso_em(0xa828bc, 0x298);
         return 0;
     }
     let mut k: u8 = 0;
-    let n = cqm6_d(0xae235c) as i32;
-    let base = cqm6_d(0xae23b4);
+    let n = read_u32_as_usize(0xae235c) as i32;
+    let base = read_u32_as_usize(0xae23b4);
     let mut i: i16 = 0;
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * 0x245; // cqm6: o clube i do banco
@@ -428,21 +419,21 @@ unsafe extern "thiscall" fn tabela_da_segunda(this: usize) -> u32 {
             iniciar(this, k as u32, c, 0, 0);
             if cqm6_time_b_de(c, 0x9cf624) {
                 crate::comparacao::ramo("cqm_6 time b na segunda");
-                *((cqm6_d(this + 0xb1) + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
+                *((read_u32_as_usize(this + 0xb1) + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
             }
             k = k.wrapping_add(1);
-            if k as i8 as i16 == cqm6_w(this + 0x3e) {
+            if k as i8 as i16 == read_i16(this + 0x3e) {
                 break;
             }
         }
         i = i.wrapping_add(1);
     }
     crate::comparacao::ramo("cqm_6 tabela da segunda");
-    if k as i8 as i16 != cqm6_w(this + 0x3e) {
+    if k as i8 as i16 != read_i16(this + 0x3e) {
         return 0;
     }
     let f = premios(this, 0xc350);
-    cqm6_pd(this + 0x28, f as usize);
+    write_u32_from_usize(this + 0x28, f as usize);
     *((this + 0xe1) as *mut u8) = 1;
     1
 }
@@ -451,8 +442,8 @@ unsafe extern "thiscall" fn tabela_da_segunda(this: usize) -> u32 {
 /// Depois: a devolução, +0x3e e as linhas (o clube e o destino −4 dos marcados).
 unsafe extern "thiscall" fn comparar_tabela_da_segunda(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1874);
-    let n = cqm6_d(0xae235c) as i32;
-    let base = cqm6_d(0xae23b4);
+    let n = read_u32_as_usize(0xae235c) as i32;
+    let base = read_u32_as_usize(0xae23b4);
     let mut plano: Vec<(usize, bool)> = Vec::new();
     for i in 0..n.max(0) as usize {
         let c = base + i * 0x245;
@@ -464,12 +455,12 @@ unsafe extern "thiscall" fn comparar_tabela_da_segunda(this: usize) -> u32 {
         }
     }
     let r = o(this);
-    let t = cqm6_d(this + 0xb1);
-    let mut ok = r == (plano.len() == 0x16) as u32 && cqm6_w(this + 0x3e) == 0x16 && t != 0;
+    let t = read_u32_as_usize(this + 0xb1);
+    let mut ok = r == (plano.len() == 0x16) as u32 && read_i16(this + 0x3e) == 0x16 && t != 0;
     if ok {
         for (k, &(c, b)) in plano.iter().enumerate() {
             let l = t + k * 0x3b;
-            ok = ok && cqm6_d(l) == c && (!b || *((l + 0x37) as *const u8) == 0xfc);
+            ok = ok && read_u32_as_usize(l) == c && (!b || *((l + 0x37) as *const u8) == 0xfc);
         }
     }
     PLACAR.registrar(ok, || format!("tabela_da_segunda({:#x}): devolveu {}, plano {:x?}", this, r, plano));
@@ -483,17 +474,17 @@ unsafe extern "thiscall" fn comparar_tabela_da_segunda(this: usize) -> u32 {
 unsafe fn cqm6_candidatos() -> Vec<usize> {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let mut v = Vec::new();
-    let n = cqm6_d(0xae235c) as i32;
-    let base = cqm6_d(0xae23b4);
+    let n = read_u32_as_usize(0xae235c) as i32;
+    let base = read_u32_as_usize(0xae23b4);
     let mut i: i16 = 0;
     while (i as i32) < n && v.len() < 100 {
         let c = base + (i as u16 as usize) * 0x245;
-        let comp = cqm6_d(c + 0x57);
-        let nacao = cqm6_d(c + 0x53);
+        let comp = read_u32_as_usize(c + 0x57);
+        let nacao = read_u32_as_usize(c + 0x53);
         if comp != 0 && nacao != 0 {
-            let id = cqm6_d(comp);
-            let grupo = [0x9cf62c, 0x9cf630, 0x9cf634, 0x9cf638].iter().any(|&g| id == cqm6_d(g));
-            if grupo || (cqm6_d(nacao) == cqm6_d(0x9cf488) && id == cqm6_d(0x9cf764)) {
+            let id = read_u32_as_usize(comp);
+            let grupo = [0x9cf62c, 0x9cf630, 0x9cf634, 0x9cf638].iter().any(|&g| id == read_u32_as_usize(g));
+            if grupo || (read_u32_as_usize(nacao) == read_u32_as_usize(0x9cf488) && id == read_u32_as_usize(0x9cf764)) {
                 let mut eh_a: u32 = 0;
                 if parceiro(c, &mut eh_a, 1) == 0 {
                     v.push(c);
@@ -509,18 +500,18 @@ unsafe fn cqm6_candidatos() -> Vec<usize> {
 /// banco, até 22 linhas (`k` já usadas). Os últimos `2 × [0xae2350]` clubes do banco ficam de fora [inferência: os
 /// clubes criados depois, sem divisão].
 unsafe fn cqm6_times_b(g: usize, k: &mut u8, linhas: i16, mut por: impl FnMut(usize, bool)) {
-    let n = (cqm6_d(0xae235c) as i32).wrapping_sub((cqm6_d(0xae2350) as i32).wrapping_mul(2));
-    let base = cqm6_d(0xae23b4);
+    let n = (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
+    let base = read_u32_as_usize(0xae23b4);
     let mut i: i16 = 0;
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * 0x245;
-        let comp = cqm6_d(c + 0x57);
-        let nacao = cqm6_d(c + 0x53);
-        if comp != 0 && nacao != 0 && cqm6_d(nacao) == cqm6_d(0x9cf488) && cqm6_d(comp) != cqm6_d(0x9cf624) && cqm6_d(comp) != cqm6_d(0x9cf628) {
+        let comp = read_u32_as_usize(c + 0x57);
+        let nacao = read_u32_as_usize(c + 0x53);
+        if comp != 0 && nacao != 0 && read_u32_as_usize(nacao) == read_u32_as_usize(0x9cf488) && read_u32_as_usize(comp) != read_u32_as_usize(0x9cf624) && read_u32_as_usize(comp) != read_u32_as_usize(0x9cf628) {
             let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
             let mut eh_a: u32 = 0;
             let p = parceiro(c, &mut eh_a, 1);
-            let entra = p != 0 && eh_a == 0 && cqm6_d(p + 0x57) != 0 && (*k as i8 as i16) < linhas && cqm6_d(cqm6_d(p + 0x57)) == cqm6_d(g);
+            let entra = p != 0 && eh_a == 0 && read_u32_as_usize(p + 0x57) != 0 && (*k as i8 as i16) < linhas && read_u32_as_usize(read_u32_as_usize(p + 0x57)) == read_u32_as_usize(g);
             if entra {
                 *k = k.wrapping_add(1);
             }
@@ -546,52 +537,52 @@ unsafe extern "thiscall" fn tabela_da_divisao_de_baixo_espanhola(this: usize) ->
     let embaralhar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(0x4afbd0usize);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x16);
     let t = alocar(0x512);
-    cqm6_pd(this + 0xb1, t);
+    write_u32_from_usize(this + 0xb1, t);
     if t == 0 {
         aviso_em(0xa82880, 0x2ac);
         return 0;
     }
     // os clubes desta divisão passam à genérica
-    let n = (cqm6_d(0xae235c) as i32).wrapping_sub((cqm6_d(0xae2350) as i32).wrapping_mul(2));
-    let base = cqm6_d(0xae23b4);
+    let n = (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
+    let base = read_u32_as_usize(0xae23b4);
     let mut i: i16 = 0;
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * 0x245;
         if cqm6_na(c, 0x9cf6b0) {
-            cqm6_pd(c + 0x57, cqm6_registro(0x9cf764));
+            write_u32_from_usize(c + 0x57, cqm6_registro(0x9cf764));
         }
         i = i.wrapping_add(1);
     }
     let mut k: u8 = 0;
     for g in [0x9cf624usize, 0x9cf628] { // cqm6: os times B da Primera e da Segunda
-        let linhas = cqm6_w(this + 0x3e);
+        let linhas = read_i16(this + 0x3e);
         // a conta das linhas para a condição anda junto com `k`
         let mut kk = k;
         cqm6_times_b(g, &mut kk, linhas, |c, entra| {
             if entra {
                 iniciar(this, k as u32, c, 0, 0);
                 k = k.wrapping_add(1);
-                cqm6_pd(c + 0x60, cqm6_d(this + 4));
+                write_u32_from_usize(c + 0x60, read_u32_as_usize(this + 4));
             } else {
-                cqm6_pd(c + 0x60, 0);
+                write_u32_from_usize(c + 0x60, 0);
             }
         });
     }
     crate::comparacao::ramo("cqm_6 tabela da divisao de baixo");
     let mut lista = cqm6_candidatos();
     let quantos = lista.len() as u16 as u32;
-    let faltam = (cqm6_w(this + 0x3e) as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam
+    let faltam = (read_i16(this + 0x3e) as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam
     lista.resize(100, 0);
     embaralhar(lista.as_mut_ptr() as usize, quantos, faltam);
     let mut j: i16 = 0;
-    while j < quantos as u16 as i16 && (k as i8 as i16) < cqm6_w(this + 0x3e) {
+    while j < quantos as u16 as i16 && (k as i8 as i16) < read_i16(this + 0x3e) {
         let c = lista[j as usize];
         iniciar(this, k as u32, c, 0, 0);
         k = k.wrapping_add(1);
-        cqm6_pd(c + 0x60, cqm6_d(this + 4));
+        write_u32_from_usize(c + 0x60, read_u32_as_usize(this + 4));
         j += 1;
     }
-    (k as i8 as i16 == cqm6_w(this + 0x3e)) as u32
+    (k as i8 as i16 == read_i16(this + 0x3e)) as u32
 }
 
 /// Aloca e sorteia: só a original. O plano, feito antes: os times B (da Primera e da Segunda) das primeiras linhas.
@@ -610,15 +601,15 @@ unsafe extern "thiscall" fn comparar_tabela_da_divisao_de_baixo_espanhola(this: 
         });
     }
     let r = o(this);
-    let t = cqm6_d(this + 0xb1);
-    let mut ok = cqm6_w(this + 0x3e) == 0x16 && t != 0;
+    let t = read_u32_as_usize(this + 0xb1);
+    let mut ok = read_i16(this + 0x3e) == 0x16 && t != 0;
     if ok {
         for (i, &c) in plano.iter().enumerate() {
-            ok = ok && cqm6_d(t + i * 0x3b) == c;
+            ok = ok && read_u32_as_usize(t + i * 0x3b) == c;
         }
     }
     PLACAR.registrar(ok, || format!("tabela_da_divisao_de_baixo_espanhola({:#x}): devolveu {}, plano {:x?}, tabela {:x?}", this, r, plano,
-        (0..plano.len()).map(|i| if t != 0 { cqm6_d(t + i * 0x3b) } else { 0 }).collect::<Vec<_>>()));
+        (0..plano.len()).map(|i| if t != 0 { read_u32_as_usize(t + i * 0x3b) } else { 0 }).collect::<Vec<_>>()));
     r
 }
 

@@ -1,31 +1,25 @@
 // ---------- 264a leva: as suspensões internacionais cumpridas no jogo da seleção, o recurso da suspensão e o texto da vaga da suspensão (discipline.cpp) ----------
 
-unsafe fn cqb9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cqb9_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// Os itens (8 bytes: +0 id da pessoa, +4 id da nação) do índice das nações da disciplina ([this+0xc], conta +0x12
 /// com sinal) da nação do `time` (+0x53), na ordem do índice: bsearch (0x946464 com 0x55e5f0, cdecl) pela chave (−1,
 /// nação), que iguala qualquer pessoa da nação; volta até o primeiro igual e segue até o último. 0 itens sem achar.
 unsafe fn cqb9_itens(this: usize, time: usize) -> (usize, usize) {
     let bsearch: unsafe extern "C" fn(*const u32, usize, i32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
-    let chave = [u32::MAX, cqb9_d(cqb9_d(time + 0x53)) as u32];
-    let base = cqb9_d(this + 0xc);
-    let mut e = bsearch(chave.as_ptr(), base, cqb9_w(this + 0x12) as i32, 8, 0x55e5f0);
+    let chave = [u32::MAX, read_usize(read_usize(time + 0x53)) as u32];
+    let base = read_usize(this + 0xc);
+    let mut e = bsearch(chave.as_ptr(), base, read_i16(this + 0x12) as i32, 8, 0x55e5f0);
     if e == 0 {
         return (0, 0);
     }
     // os itens são iguais à chave pela nação (+4): a chave tem −1 no id
-    let igual = |x: usize| cqb9_d(x + 4) as u32 == chave[1];
+    let igual = |x: usize| read_usize(x + 4) as u32 == chave[1];
     while e > base && igual(e - 8) {
         e -= 8;
     }
     let mut fim = e;
-    while fim <= base.wrapping_add((cqb9_w(this + 0x12) as i32 as usize).wrapping_mul(8)).wrapping_sub(8) && igual(fim) {
+    while fim <= base.wrapping_add((read_i16(this + 0x12) as i32 as usize).wrapping_mul(8)).wrapping_sub(8) && igual(fim) {
         fim += 8;
     }
     (e, fim)
@@ -53,11 +47,11 @@ unsafe extern "thiscall" fn cumprir_suspensoes_internacionais(this: usize, time:
             e += 8;
         }
         // o cursor (+0xa) no começo (+2)
-        core::ptr::write_unaligned((lista + 0xa) as *mut usize, cqb9_d(lista + 2));
+        core::ptr::write_unaligned((lista + 0xa) as *mut usize, read_usize(lista + 2));
         let mut p = proximo(lista);
         while p != 0 {
             crate::comparacao::ramo("cqb_9 jogo cumprido");
-            contar(this, cqb9_d(p) as u32, 0, 1); // cqb9: o jogo cumprido na regra 0
+            contar(this, read_usize(p) as u32, 0, 1); // cqb9: o jogo cumprido na regra 0
             p = proximo(lista);
         }
     }
@@ -72,7 +66,7 @@ unsafe extern "thiscall" fn comparar_cumprir_suspensoes_internacionais(this: usi
     let mut plano = Vec::new();
     let mut e = ini;
     while ini != 0 && e < fim {
-        let id = cqb9_d(e) as u32;
+        let id = read_usize(e) as u32;
         let j = cpm4_jogo(this, id, 0, 1);
         let antes = if j.suspensao != 0 { *((j.suspensao + 1) as *const u8) } else { 0 };
         plano.push((id, j, antes));
@@ -85,7 +79,7 @@ unsafe extern "thiscall" fn comparar_cumprir_suspensoes_internacionais(this: usi
             continue;
         }
         let s = j.suspensao;
-        let (jogos, contador, dias) = (*(s as *const u8), *((s + 1) as *const u8), cqb9_w(s + 2));
+        let (jogos, contador, dias) = (*(s as *const u8), *((s + 1) as *const u8), read_i16(s + 2));
         let ok = if j.cumprida { jogos == 0xff && dias == -1 } else { contador == j.contador.unwrap_or(*antes) };
         if !ok && erro.is_none() {
             erro = Some(format!("pessoa {} contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{}", id, contador, j.contador, antes, j.cumprida, jogos, dias));
@@ -107,16 +101,16 @@ struct Cqb9Recurso {
 
 unsafe fn cqb9_recurso(this: usize, id: u32, regra: u32, reduz: u32, menos_jogos: u32, menos_dias: u32, novo: u32, dias_fixo: u32) -> Cqb9Recurso {
     let achar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x7e82e0usize);
-    let orgao = cqb9_d(cqb9_d(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4)));
+    let orgao = read_usize(read_usize(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4)));
     let entrada = achar(orgao, id, 0);
     let mut r = Cqb9Recurso { orgao, entrada, suspensao: 0, jogos: 0, dias: 0, solta: false };
-    if entrada == 0 || cqb9_w(entrada + 6) == -1 {
+    if entrada == 0 || read_i16(entrada + 6) == -1 {
         return r;
     }
-    let s = cqb9_d(this + 4).wrapping_add((cqb9_w(entrada + 6) as i32 as usize).wrapping_mul(20));
+    let s = read_usize(this + 4).wrapping_add((read_i16(entrada + 6) as i32 as usize).wrapping_mul(20));
     r.suspensao = s;
     r.jogos = *(s as *const u8);
-    r.dias = cqb9_w(s + 2);
+    r.dias = read_i16(s + 2);
     if r.jogos != 0xff {
         if novo as u8 != 0xff {
             r.jogos = r.jogos.wrapping_sub(novo as u8);
@@ -166,7 +160,7 @@ unsafe extern "thiscall" fn recurso_da_suspensao(this: usize, id: u32, regra: u3
     if r.solta {
         // ponytail: a original empurra o registrador com o índice na palavra baixa (o alto é sobra); a 0x556d00 só lê
         // a palavra
-        soltar(this, id, cqb9_w(r.entrada + 6) as u16 as u32);
+        soltar(this, id, read_i16(r.entrada + 6) as u16 as u32);
     }
 }
 
@@ -180,7 +174,7 @@ unsafe extern "thiscall" fn comparar_recurso_da_suspensao(this: usize, id: u32, 
         return;
     }
     let s = r.suspensao;
-    let (jogos, dias) = (*(s as *const u8), cqb9_w(s + 2));
+    let (jogos, dias) = (*(s as *const u8), read_i16(s + 2));
     let ok = if r.solta { jogos == 0xff && dias == -1 } else { jogos == r.jogos && dias == r.dias };
     PLACAR.registrar(ok, || format!("recurso_da_suspensao({}, regra {}) jogos {:#x} dias {} (esperava {:#x}/{}, solta={})", id, regra as i8, jogos, dias, r.jogos, r.dias, r.solta));
 }
@@ -188,8 +182,8 @@ unsafe extern "thiscall" fn comparar_recurso_da_suspensao(this: usize, id: u32, 
 /// A vaga `vaga` (byte com sinal) da suspensão da pessoa no registro de 29 bytes ([this+0x14]: 5 bytes por vaga): o
 /// órgão da regra (0xff = sem vaga).
 unsafe fn cqb9_vaga(this: usize, pessoa: usize, vaga: u32) -> u8 {
-    let id = cqb9_d(pessoa);
-    *((cqb9_d(this + 0x14) + id.wrapping_mul(29) + (vaga as i8 as isize as usize).wrapping_mul(5)) as *const u8)
+    let id = read_usize(pessoa);
+    *((read_usize(this + 0x14) + id.wrapping_mul(29) + (vaga as i8 as isize as usize).wrapping_mul(5)) as *const u8)
 }
 
 /// { 0x55d3c0 } (thiscall, ret 0x10, discipline.cpp): `Discipline::get_slot_text(pessoa, vaga, saída, tamanho)`, pela
@@ -200,7 +194,7 @@ unsafe extern "thiscall" fn texto_da_vaga_da_suspensao(this: usize, pessoa: usiz
     if pessoa == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u32>(1484)(this, pessoa, vaga, saida, tamanho);
     }
-    if cqb9_d(pessoa) as i32 >= cqb9_d(0xae2364) as i32 {
+    if read_usize(pessoa) as i32 >= read_usize(0xae2364) as i32 {
         return 0;
     }
     let regra = cqb9_vaga(this, pessoa, vaga);
@@ -208,14 +202,14 @@ unsafe extern "thiscall" fn texto_da_vaga_da_suspensao(this: usize, pessoa: usiz
         return 0;
     }
     let texto: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x7e88d0usize);
-    texto(cqb9_d(cqb9_d(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4))), pessoa, saida, tamanho)
+    texto(read_usize(read_usize(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4))), pessoa, saida, tamanho)
 }
 
 /// Comparador: sem regra na vaga (ou pessoa fora da tabela), a devolução (0, sem gravar nada); com regra, o texto do órgão
 /// (0x7e88d0) pode contar a suspensão por dias (0x556e90, que grava o histórico no arquivo): só a original.
 unsafe extern "thiscall" fn comparar_texto_da_vaga_da_suspensao(this: usize, pessoa: usize, vaga: u32, saida: usize, tamanho: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u32>(1484);
-    if pessoa == 0 || (cqb9_d(pessoa) as i32) < cqb9_d(0xae2364) as i32 && cqb9_vaga(this, pessoa, vaga) != 0xff {
+    if pessoa == 0 || (read_usize(pessoa) as i32) < read_usize(0xae2364) as i32 && cqb9_vaga(this, pessoa, vaga) != 0xff {
         // ponytail: o texto do órgão não roda duas vezes; a cópia só repassa a ele
         return o(this, pessoa, vaga, saida, tamanho);
     }
@@ -227,25 +221,16 @@ unsafe extern "thiscall" fn comparar_texto_da_vaga_da_suspensao(this: usize, pes
 
 // ---------- 251a leva: as suspensões na troca de clube: acrescentar a suspensão, soltar as vagas que não valem no clube novo e devolver as suspensões guardadas no fim do empréstimo (discipline.cpp) ----------
 
-unsafe fn cpo11_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cpo11_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 unsafe fn cpo11_por(a: usize, v: u32) {
     core::ptr::write_unaligned(a as *mut u32, v);
 }
 
-unsafe fn cpo11_por_w(a: usize, v: u16) {
-    core::ptr::write_unaligned(a as *mut u16, v);
-}
 
 /// O órgão disciplinar da regra `regra` (byte com sinal): [[this] + 4 × regra].
 unsafe fn cpo11_orgao(this: usize, regra: u8) -> usize {
-    cpo11_d(cpo11_d(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4)))
+    read_u32_as_usize(read_u32_as_usize(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4)))
 }
 
 /// A entrada (14 bytes; +0 livre = −1, +6 o índice da suspensão, −1 sem) da pessoa no órgão: 0x7e82e0 sem criar
@@ -258,31 +243,31 @@ unsafe fn cpo11_entrada(orgao: usize, id: u32) -> usize {
 /// O registro de 29 bytes da pessoa `id` em [this+0x14] (4 vagas de 5 bytes: a regra e o índice da entrada; +0x14/+0x18
 /// o histórico; +0x1c quantas suspensões guardadas).
 unsafe fn cpo11_registro(this: usize, id: u32) -> usize {
-    cpo11_d(this + 0x14).wrapping_add((id as usize).wrapping_mul(29))
+    read_u32_as_usize(this + 0x14).wrapping_add((id as usize).wrapping_mul(29))
 }
 
 /// O órgão vale para o clube? Com nação (+0x17 ≠ −1): a nação do clube (+0x53) é ela; sem nação, com continente
 /// (+0x1b ≠ −1): o continente da nação do clube (+0x71) é ele; sem os dois, vale sempre. Clube nulo ou sem nação: não.
 unsafe fn cpo11_cobre(orgao: usize, clube: usize) -> bool {
-    let nacao = cpo11_d(orgao + 0x17) as u32;
+    let nacao = read_u32_as_usize(orgao + 0x17) as u32;
     if nacao == 0xffff_ffff {
-        let continente = cpo11_d(orgao + 0x1b) as u32;
+        let continente = read_u32_as_usize(orgao + 0x1b) as u32;
         if continente == 0xffff_ffff {
             return true;
         }
-        if clube == 0 || cpo11_d(clube + 0x53) == 0 {
+        if clube == 0 || read_u32_as_usize(clube + 0x53) == 0 {
             return false;
         }
-        let c = cpo11_d(cpo11_d(clube + 0x53) + 0x71);
-        return c != 0 && cpo11_d(c) as u32 == continente;
+        let c = read_u32_as_usize(read_u32_as_usize(clube + 0x53) + 0x71);
+        return c != 0 && read_u32_as_usize(c) as u32 == continente;
     }
-    clube != 0 && cpo11_d(clube + 0x53) != 0 && cpo11_d(cpo11_d(clube + 0x53)) as u32 == nacao
+    clube != 0 && read_u32_as_usize(clube + 0x53) != 0 && read_u32_as_usize(read_u32_as_usize(clube + 0x53)) as u32 == nacao
 }
 
 /// Solta a suspensão da entrada (se tem: +6 > −1) e libera a vaga `k` do registro da pessoa (regra 0xff, índice −1) e a
 /// entrada (+0 = −1). O índice vai no ax; o alto do eax é o do ponteiro da entrada (a 0x556d00 só lê a palavra).
 unsafe fn cpo11_liberar(this: usize, id: u32, e: usize) {
-    let i = cpo11_w(e + 6);
+    let i = read_i16(e + 6);
     if i > -1 {
         let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x556d00usize);
         soltar(this, id, (e as u32 & 0xffff_0000) | i as u16 as u32);
@@ -310,15 +295,15 @@ unsafe extern "thiscall" fn acrescentar_suspensao(this: usize, id: u32, ban: usi
             continue;
         }
         let e = cpo11_entrada(cpo11_orgao(this, regra), id);
-        if e != 0 && cpo11_w(e + 6) > -1 {
+        if e != 0 && read_i16(e + 6) > -1 {
             crate::comparacao::ramo("cpo_11 suspensao estendida");
-            let s = cpo11_d(this + 4).wrapping_add((cpo11_w(e + 6) as i32 as usize).wrapping_mul(20));
+            let s = read_u32_as_usize(this + 4).wrapping_add((read_i16(e + 6) as i32 as usize).wrapping_mul(20));
             let jogos = *(s as *const u8);
             let novos = *(ban as *const u8);
             if jogos != 0xff && novos != 0xff {
                 *(s as *mut u8) = novos.wrapping_add(jogos);
             } else {
-                cpo11_por_w(s + 2, (cpo11_w(s + 2) as u16).wrapping_add(cpo11_w(ban + 2) as u16));
+                write_u16(s + 2, (read_i16(s + 2) as u16).wrapping_add(read_i16(ban + 2) as u16));
             }
             *((ban + 0x13) as *mut u8) |= 1;
             *((s + 0x13) as *mut u8) |= 1;
@@ -327,51 +312,51 @@ unsafe extern "thiscall" fn acrescentar_suspensao(this: usize, id: u32, ban: usi
         *((ban + 0x13) as *mut u8) &= 0xfe;
     }
     let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x556c70usize);
-    let n = cpo11_w(this + 0xa);
+    let n = read_i16(this + 0xa);
     let mut vaga: i16 = -1;
     for i in 0..n.max(0) {
-        let s = cpo11_d(this + 4).wrapping_add(i as usize * 20);
-        if *(s as *const u8) == 0xff && cpo11_w(s + 2) == -1 {
+        let s = read_u32_as_usize(this + 4).wrapping_add(i as usize * 20);
+        if *(s as *const u8) == 0xff && read_i16(s + 2) == -1 {
             vaga = i;
             copiar(s, ban);
             break;
         }
     }
     if vaga == -1 {
-        let conta = cpo11_w(this + 0xa);
-        let cap = cpo11_w(this + 8);
+        let conta = read_i16(this + 0xa);
+        let cap = read_i16(this + 8);
         if conta < cap {
-            cpo11_por_w(this + 0xa, conta.wrapping_add(1) as u16);
-            copiar(cpo11_d(this + 4).wrapping_add((conta as i32 as usize).wrapping_mul(20)), ban);
-            vaga = cpo11_w(this + 0xa).wrapping_sub(1);
+            write_u16(this + 0xa, conta.wrapping_add(1) as u16);
+            copiar(read_u32_as_usize(this + 4).wrapping_add((conta as i32 as usize).wrapping_mul(20)), ban);
+            vaga = read_i16(this + 0xa).wrapping_sub(1);
         } else {
             if cap >= 0x7d00 {
                 aviso_em(0x9b8f18, 0x401);
                 return;
             }
             let nova = cap.wrapping_add(100);
-            cpo11_por_w(this + 8, nova as u16);
+            write_u16(this + 8, nova as u16);
             let tamanho = (nova as i32 as u32).wrapping_mul(20);
-            let p = if cpo11_d(this + 4) == 0 {
+            let p = if read_u32_as_usize(this + 4) == 0 {
                 let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
                 malloc(tamanho)
             } else {
                 let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
-                realloc(cpo11_d(this + 4), tamanho)
+                realloc(read_u32_as_usize(this + 4), tamanho)
             };
             cpo11_por(this + 4, p as u32);
             if p == 0 {
                 aviso_em(0x9b8f18, 0x410);
                 return;
             }
-            vaga = cpo11_w(this + 0xa);
-            cpo11_por_w(this + 0xa, vaga.wrapping_add(1) as u16);
+            vaga = read_i16(this + 0xa);
+            write_u16(this + 0xa, vaga.wrapping_add(1) as u16);
             copiar(p.wrapping_add((vaga as i32 as usize).wrapping_mul(20)), ban);
-            let mut i = cpo11_w(this + 0xa);
-            while i < cpo11_w(this + 8) {
-                let s = cpo11_d(this + 4).wrapping_add((i as i32 as usize).wrapping_mul(20));
+            let mut i = read_i16(this + 0xa);
+            while i < read_i16(this + 8) {
+                let s = read_u32_as_usize(this + 4).wrapping_add((i as i32 as usize).wrapping_mul(20));
                 *(s as *mut u8) = 0xff;
-                cpo11_por_w(s + 2, 0xffff);
+                write_u16(s + 2, 0xffff);
                 i = i.wrapping_add(1);
             }
         }
@@ -387,26 +372,26 @@ unsafe extern "thiscall" fn acrescentar_suspensao(this: usize, id: u32, ban: usi
     if *((ban + 0xf) as *const u8) == 0xff {
         return;
     }
-    let cap = cpo11_w(this + 0x10);
-    if cap == cpo11_w(this + 0x12) {
+    let cap = read_i16(this + 0x10);
+    if cap == read_i16(this + 0x12) {
         let nova = cap.wrapping_add(0x14);
-        cpo11_por_w(this + 0x10, nova as u16);
+        write_u16(this + 0x10, nova as u16);
         let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
-        let p = realloc(cpo11_d(this + 0xc), (nova as i32 as u32).wrapping_mul(8));
+        let p = realloc(read_u32_as_usize(this + 0xc), (nova as i32 as u32).wrapping_mul(8));
         cpo11_por(this + 0xc, p as u32);
         if p == 0 {
             aviso_em(0x9b8f18, 0x43e);
             return;
         }
     }
-    let n = cpo11_w(this + 0x12);
-    let item = cpo11_d(this + 0xc).wrapping_add((n as i32 as usize).wrapping_mul(8));
+    let n = read_i16(this + 0x12);
+    let item = read_u32_as_usize(this + 0xc).wrapping_add((n as i32 as usize).wrapping_mul(8));
     cpo11_por(item, id);
-    let pessoa = cpo11_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
-    cpo11_por(item + 4, cpo11_d(cpo11_d(pessoa + 0x1a)) as u32); // a nação
-    cpo11_por_w(this + 0x12, n.wrapping_add(1) as u16);
+    let pessoa = read_u32_as_usize(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
+    cpo11_por(item + 4, read_u32_as_usize(read_u32_as_usize(pessoa + 0x1a)) as u32); // a nação
+    write_u16(this + 0x12, n.wrapping_add(1) as u16);
     let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
-    qsort(cpo11_d(this + 0xc), cpo11_w(this + 0x12) as i32, 8, 0x55e5f0);
+    qsort(read_u32_as_usize(this + 0xc), read_i16(this + 0x12) as i32, 8, 0x55e5f0);
 }
 
 /// { 0x556270 } (thiscall, ret 0xc, discipline.cpp): `Discipline::clear_bans_invalid_for_club(pessoa, _, clube)`: cada
@@ -414,7 +399,7 @@ unsafe extern "thiscall" fn acrescentar_suspensao(this: usize, id: u32, ban: usi
 /// suspensão solta (0x556d00), a vaga livre e a entrada do órgão livre. Com suspensões guardadas (+0x1c ≠ 0), a caixa
 /// "Error" antes (e segue). Da troca de clube (0x8c9720).
 unsafe extern "thiscall" fn tirar_suspensoes_de_fora_do_clube(this: usize, pessoa: usize, _nada: u32, clube: usize) {
-    let id = cpo11_d(pessoa) as u32;
+    let id = read_u32_as_usize(pessoa) as u32;
     let r = cpo11_registro(this, id);
     for k in 0..4usize {
         let regra = *((r + k * 5) as *const u8);
@@ -450,21 +435,21 @@ struct Cpo11Devolver {
 
 /// O plano da 0x556570 (o cursor da lista é zerado pela original na entrada; a busca sem criar só lê).
 unsafe fn cpo11_plano_devolver(this: usize, pessoa: usize) -> Cpo11Devolver {
-    let id = cpo11_d(pessoa) as u32;
+    let id = read_u32_as_usize(pessoa) as u32;
     let r = cpo11_registro(this, id);
     let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let contrato = contrato_de(cpo11_d(0xae1050), pessoa);
-    let clube = if contrato == 0 { 0 } else { cpo11_d(0xae23b4).wrapping_add(cpo11_d(contrato + 4).wrapping_mul(0x245)) };
+    let contrato = contrato_de(read_u32_as_usize(0xae1050), pessoa);
+    let clube = if contrato == 0 { 0 } else { read_u32_as_usize(0xae23b4).wrapping_add(read_u32_as_usize(contrato + 4).wrapping_mul(0x245)) };
     let mut p = Cpo11Devolver { contrato, clube, guardadas: Vec::new(), resto: *((r + 0x1c) as *const u8), soltas: Vec::new() };
     let lista = this + 0x1c;
-    cpo11_por(lista + 0xa, cpo11_d(this + 0x1e) as u32);
+    cpo11_por(lista + 0xa, read_u32_as_usize(this + 0x1e) as u32);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let mut vagas = [0u8; 20];
     core::ptr::copy_nonoverlapping(r as *const u8, vagas.as_mut_ptr(), 20);
     let mut marcas = [false; 4];
     let mut item = proximo(lista);
     while item != 0 && (p.resto as i8) > 0 {
-        if cpo11_d(item) as u32 == id {
+        if read_u32_as_usize(item) as u32 == id {
             let k = (*((item + 4) as *const u8) as i8 as isize as usize) & 3;
             let mut b = [0u8; 5];
             core::ptr::copy_nonoverlapping((item + 5) as *const u8, b.as_mut_ptr(), 5);
@@ -497,20 +482,20 @@ unsafe fn cpo11_plano_devolver(this: usize, pessoa: usize) -> Cpo11Devolver {
 /// conta cai. Depois, as vagas 0..2 não devolvidas (a quarta nunca: `k != 3` da original) cujo órgão não vale para o
 /// clube são liberadas.
 unsafe extern "thiscall" fn restaurar_suspensoes_guardadas(this: usize, pessoa: usize) {
-    let id = cpo11_d(pessoa) as u32;
+    let id = read_u32_as_usize(pessoa) as u32;
     let r = cpo11_registro(this, id);
     let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let contrato = contrato_de(cpo11_d(0xae1050), pessoa);
+    let contrato = contrato_de(read_u32_as_usize(0xae1050), pessoa);
     cpo11_por(0xae1080, contrato as u32);
-    let clube = if contrato == 0 { 0 } else { cpo11_d(0xae23b4).wrapping_add(cpo11_d(contrato + 4).wrapping_mul(0x245)) };
+    let clube = if contrato == 0 { 0 } else { read_u32_as_usize(0xae23b4).wrapping_add(read_u32_as_usize(contrato + 4).wrapping_mul(0x245)) };
     let lista = this + 0x1c;
-    cpo11_por(lista + 0xa, cpo11_d(this + 0x1e) as u32);
+    cpo11_por(lista + 0xa, read_u32_as_usize(this + 0x1e) as u32);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let remover: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x68d1f0usize);
     let mut marcas = [0u32; 4];
     let mut item = proximo(lista);
     while item != 0 && *((r + 0x1c) as *const i8) > 0 {
-        if cpo11_d(item) as u32 == id {
+        if read_u32_as_usize(item) as u32 == id {
             let k = *((item + 4) as *const u8) as i8 as isize as usize;
             let regra = *(r.wrapping_add(k.wrapping_mul(5)) as *const u8);
             if regra != 0xff {
@@ -523,7 +508,7 @@ unsafe extern "thiscall" fn restaurar_suspensoes_guardadas(this: usize, pessoa: 
             crate::comparacao::ramo("cpo_11 guardada devolvida");
             marcas[k & 3] = 1;
             let v = r.wrapping_add(k.wrapping_mul(5));
-            cpo11_por(v, cpo11_d(item + 5) as u32);
+            cpo11_por(v, read_u32_as_usize(item + 5) as u32);
             *((v + 4) as *mut u8) = *((item + 9) as *const u8);
             remover(lista, item); // libera o item
             *((r + 0x1c) as *mut u8) = (*((r + 0x1c) as *const u8)).wrapping_sub(1);
@@ -563,24 +548,24 @@ unsafe fn cpo11_plano_suspensao(this: usize, id: u32, ban: usize) -> Cpo11Plano 
             continue;
         }
         let e = cpo11_entrada(cpo11_orgao(this, regra), id);
-        if e != 0 && cpo11_w(e + 6) > -1 {
-            let s = cpo11_d(this + 4).wrapping_add((cpo11_w(e + 6) as i32 as usize).wrapping_mul(20));
+        if e != 0 && read_i16(e + 6) > -1 {
+            let s = read_u32_as_usize(this + 4).wrapping_add((read_i16(e + 6) as i32 as usize).wrapping_mul(20));
             let (jogos, novos) = (*(s as *const u8), *(ban as *const u8));
             return if jogos != 0xff && novos != 0xff {
-                Cpo11Plano::Estender { s, jogos: novos.wrapping_add(jogos), dias: cpo11_w(s + 2) }
+                Cpo11Plano::Estender { s, jogos: novos.wrapping_add(jogos), dias: read_i16(s + 2) }
             } else {
-                Cpo11Plano::Estender { s, jogos, dias: cpo11_w(s + 2).wrapping_add(cpo11_w(ban + 2)) }
+                Cpo11Plano::Estender { s, jogos, dias: read_i16(s + 2).wrapping_add(read_i16(ban + 2)) }
             };
         }
     }
-    let n = cpo11_w(this + 0xa);
+    let n = read_i16(this + 0xa);
     for i in 0..n.max(0) {
-        let s = cpo11_d(this + 4).wrapping_add(i as usize * 20);
-        if *(s as *const u8) == 0xff && cpo11_w(s + 2) == -1 {
+        let s = read_u32_as_usize(this + 4).wrapping_add(i as usize * 20);
+        if *(s as *const u8) == 0xff && read_i16(s + 2) == -1 {
             return Cpo11Plano::Nova { vaga: i, conta: n };
         }
     }
-    if n < cpo11_w(this + 8) || cpo11_w(this + 8) < 0x7d00 {
+    if n < read_i16(this + 8) || read_i16(this + 8) < 0x7d00 {
         return Cpo11Plano::Nova { vaga: n, conta: n.wrapping_add(1) };
     }
     Cpo11Plano::Caixa
@@ -591,31 +576,31 @@ unsafe fn cpo11_plano_suspensao(this: usize, id: u32, ban: usize) -> Cpo11Plano 
 /// conta, as entradas das regras apontando para a vaga e, com a quarta regra, o índice das nações com um a mais.
 unsafe extern "thiscall" fn comparar_acrescentar_suspensao(this: usize, id: u32, ban: usize) {
     let plano = cpo11_plano_suspensao(this, id, ban);
-    let indice = cpo11_w(this + 0x12);
+    let indice = read_i16(this + 0x12);
     let mut regras = [0u8; 4];
     core::ptr::copy_nonoverlapping((ban + 0xc) as *const u8, regras.as_mut_ptr(), 4);
     orig::<unsafe extern "thiscall" fn(usize, u32, usize)>(997)(this, id, ban);
     let (ok, detalhe) = match plano {
         Cpo11Plano::Caixa => return,
         Cpo11Plano::Estender { s, jogos, dias } => {
-            let ok = *(s as *const u8) == jogos && cpo11_w(s + 2) == dias && *((s + 0x13) as *const u8) & 1 == 1
+            let ok = *(s as *const u8) == jogos && read_i16(s + 2) == dias && *((s + 0x13) as *const u8) & 1 == 1
                 && *((ban + 0x13) as *const u8) & 1 == 1;
-            (ok, format!("estender: jogos {} (esperava {}), dias {} (esperava {})", *(s as *const u8), jogos, cpo11_w(s + 2), dias))
+            (ok, format!("estender: jogos {} (esperava {}), dias {} (esperava {})", *(s as *const u8), jogos, read_i16(s + 2), dias))
         }
         Cpo11Plano::Nova { vaga, conta } => {
-            let s = cpo11_d(this + 4).wrapping_add((vaga as i32 as usize).wrapping_mul(20));
-            let mut ok = cpo11_w(this + 0xa) == conta && *(s as *const u8) == *(ban as *const u8) && cpo11_w(s + 2) == cpo11_w(ban + 2);
+            let s = read_u32_as_usize(this + 4).wrapping_add((vaga as i32 as usize).wrapping_mul(20));
+            let mut ok = read_i16(this + 0xa) == conta && *(s as *const u8) == *(ban as *const u8) && read_i16(s + 2) == read_i16(ban + 2);
             for k in 0..4usize {
                 ok &= *((s + 0xc + k) as *const u8) == regras[k];
                 if regras[k] != 0xff {
                     let e = cpo11_entrada(cpo11_orgao(this, regras[k]), id);
-                    ok &= e != 0 && cpo11_w(e + 6) == vaga;
+                    ok &= e != 0 && read_i16(e + 6) == vaga;
                 }
             }
             if regras[3] != 0xff {
-                ok &= cpo11_w(this + 0x12) == indice.wrapping_add(1);
+                ok &= read_i16(this + 0x12) == indice.wrapping_add(1);
             }
-            (ok, format!("nova: vaga {} conta {} (esperava {}), índice {} (antes {})", vaga, cpo11_w(this + 0xa), conta, cpo11_w(this + 0x12), indice))
+            (ok, format!("nova: vaga {} conta {} (esperava {}), índice {} (antes {})", vaga, read_i16(this + 0xa), conta, read_i16(this + 0x12), indice))
         }
     };
     PLACAR.registrar(ok, || format!("acrescentar_suspensao({}) {}", id, detalhe));
@@ -625,7 +610,7 @@ unsafe extern "thiscall" fn comparar_acrescentar_suspensao(this: usize, id: u32,
 /// e as entradas), a original roda; confere as vagas liberadas (0xff, −1, a entrada −1) e as outras intactas. Uma
 /// entrada repetida em duas vagas não entra na conferência da segunda.
 unsafe extern "thiscall" fn comparar_tirar_suspensoes_de_fora_do_clube(this: usize, pessoa: usize, nada: u32, clube: usize) {
-    let id = cpo11_d(pessoa) as u32;
+    let id = read_u32_as_usize(pessoa) as u32;
     let r = cpo11_registro(this, id);
     let mut antes = [0u8; 29];
     core::ptr::copy_nonoverlapping(r as *const u8, antes.as_mut_ptr(), 29);
@@ -655,7 +640,7 @@ unsafe extern "thiscall" fn comparar_tirar_suspensoes_de_fora_do_clube(this: usi
         }
         let v = &depois[k * 5..k * 5 + 5];
         ok &= match plano[k] {
-            Some(e) => v == [0xff; 5] && cpo11_d(e) as u32 == 0xffff_ffff,
+            Some(e) => v == [0xff; 5] && read_u32_as_usize(e) as u32 == 0xffff_ffff,
             None => *v == antes[k * 5..k * 5 + 5],
         };
     }
@@ -666,7 +651,7 @@ unsafe extern "thiscall" fn comparar_tirar_suspensoes_de_fora_do_clube(this: usi
 /// e solta suspensões: o plano antes, a original roda; confere [0xae1080], as vagas devolvidas (os 5 bytes guardados), as
 /// soltas (0xff, −1, a entrada −1), a conta de guardadas e as outras vagas intactas.
 unsafe extern "thiscall" fn comparar_restaurar_suspensoes_guardadas(this: usize, pessoa: usize) {
-    let id = cpo11_d(pessoa) as u32;
+    let id = read_u32_as_usize(pessoa) as u32;
     let r = cpo11_registro(this, id);
     let p = cpo11_plano_devolver(this, pessoa);
     let mut antes = [0u8; 29];
@@ -678,10 +663,10 @@ unsafe extern "thiscall" fn comparar_restaurar_suspensoes_guardadas(this: usize,
     for (k, b) in &p.guardadas {
         esperado[k * 5..k * 5 + 5].copy_from_slice(b);
     }
-    let mut ok = cpo11_d(0xae1080) == p.contrato;
+    let mut ok = read_u32_as_usize(0xae1080) == p.contrato;
     for (k, e) in &p.soltas {
         esperado[k * 5..k * 5 + 5].copy_from_slice(&[0xff; 5]);
-        ok &= cpo11_d(*e) as u32 == 0xffff_ffff;
+        ok &= read_u32_as_usize(*e) as u32 == 0xffff_ffff;
     }
     esperado[0x1c] = p.resto;
     ok &= depois == esperado;
@@ -690,22 +675,16 @@ unsafe extern "thiscall" fn comparar_restaurar_suspensoes_guardadas(this: usize,
 
 // ---------- 249a leva: a disciplina: contar o jogo cumprido da suspensão, soltar a suspensão e apagar o histórico de suspensões da pessoa (discipline.cpp) ----------
 
-unsafe fn cpm4_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cpm4_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O registro de 29 bytes da pessoa `id` em [this+0x14] (+0x14/+0x18: o começo e o último deslocamento do histórico).
 unsafe fn cpm4_registro(this: usize, id: usize) -> usize {
-    cpm4_d(this + 0x14).wrapping_add(id.wrapping_mul(29))
+    read_usize(this + 0x14).wrapping_add(id.wrapping_mul(29))
 }
 
 /// O órgão disciplinar da regra `regra` (byte com sinal): [[this] + 4 × regra].
 unsafe fn cpm4_orgao(this: usize, regra: u8) -> usize {
-    cpm4_d(cpm4_d(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4)))
+    read_usize(read_usize(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4)))
 }
 
 /// A entrada (14 bytes; +6 o índice da suspensão, −1 sem) da pessoa no órgão: 0x7e82e0 sem criar (só lê).
@@ -718,18 +697,18 @@ unsafe fn cpm4_entrada(orgao: usize, id: u32) -> usize {
 /// (0x946464 com 0x55e5f0) pela nação (+0x1a) e, sem achar, pela segunda nação (+0x1e, se houver). 0 sem achar.
 unsafe fn cpm4_no_indice(this: usize, id: u32) -> usize {
     let bsearch: unsafe extern "C" fn(*const u32, usize, i32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
-    let pessoa = cpm4_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
-    let mut chave = [id, cpm4_d(cpm4_d(pessoa + 0x1a)) as u32];
-    let e = bsearch(chave.as_ptr(), cpm4_d(this + 0xc), cpm4_w(this + 0x12) as i32, 8, 0x55e5f0);
+    let pessoa = read_usize(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
+    let mut chave = [id, read_usize(read_usize(pessoa + 0x1a)) as u32];
+    let e = bsearch(chave.as_ptr(), read_usize(this + 0xc), read_i16(this + 0x12) as i32, 8, 0x55e5f0);
     if e != 0 {
         return e;
     }
-    let segunda = cpm4_d(cpm4_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e)) + 0x1e);
+    let segunda = read_usize(read_usize(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e)) + 0x1e);
     if segunda == 0 {
         return 0;
     }
-    chave[1] = cpm4_d(segunda) as u32;
-    bsearch(chave.as_ptr(), cpm4_d(this + 0xc), cpm4_w(this + 0x12) as i32, 8, 0x55e5f0)
+    chave[1] = read_usize(segunda) as u32;
+    bsearch(chave.as_ptr(), read_usize(this + 0xc), read_i16(this + 0x12) as i32, 8, 0x55e5f0)
 }
 
 /// O que a 0x556e90 faz com o jogo: a entrada no órgão, a suspensão (20 bytes em [this+4]), o contador novo de jogos
@@ -748,18 +727,18 @@ struct Cpm4Jogo {
 unsafe fn cpm4_jogo(this: usize, id: u32, regra: u32, conta: u32) -> Cpm4Jogo {
     let mut j = Cpm4Jogo { entrada: 0, suspensao: 0, contador: None, cumprida: false };
     let e = cpm4_entrada(cpm4_orgao(this, regra as u8), id);
-    if e == 0 || cpm4_w(e + 6) == -1 {
+    if e == 0 || read_i16(e + 6) == -1 {
         return j;
     }
     j.entrada = e;
-    let cinco = (cpm4_w(e + 6) as i32 as u32).wrapping_mul(5); // o lea da original (o alto vai no edx abaixo)
-    let s = cpm4_d(this + 4).wrapping_add((cinco as usize).wrapping_mul(4));
+    let cinco = (read_i16(e + 6) as i32 as u32).wrapping_mul(5); // o lea da original (o alto vai no edx abaixo)
+    let s = read_usize(this + 4).wrapping_add((cinco as usize).wrapping_mul(4));
     j.suspensao = s;
-    let hoje = cpm4_d(0xae2c90) as u32;
+    let hoje = read_usize(0xae2c90) as u32;
     let (dia, ano) = (hoje as u16 as i16, (hoje >> 16) as u16);
     let jogos = *(s as *const u8);
     if jogos != 0xff {
-        let (dia0, ano0) = (cpm4_w(s + 4), cpm4_w(s + 6) as u16);
+        let (dia0, ano0) = (read_i16(s + 4), read_i16(s + 6) as u16);
         if ano < ano0 || (ano == ano0 && dia < dia0) { // ainda não começou
             crate::comparacao::ramo("cpm_4 antes do inicio");
             return j;
@@ -775,8 +754,8 @@ unsafe fn cpm4_jogo(this: usize, id: u32, regra: u32, conta: u32) -> Cpm4Jogo {
         let mut fim = [0u8; 8];
         let mais_dias: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(0x54c5b0usize);
         // a original empurra o edx com os dias no dx e, no alto, o do índice × 5 (zero abaixo de 13108 suspensões)
-        let f = mais_dias(s + 4, fim.as_mut_ptr(), (cinco & 0xffff_0000) | cpm4_w(s + 2) as u16 as u32);
-        let (dia1, ano1) = (cpm4_w(f), cpm4_w(f + 2) as u16);
+        let f = mais_dias(s + 4, fim.as_mut_ptr(), (cinco & 0xffff_0000) | read_i16(s + 2) as u16 as u32);
+        let (dia1, ano1) = (read_i16(f), read_i16(f + 2) as u16);
         if ano < ano1 || (ano == ano1 && dia < dia1) {
             return j;
         }
@@ -799,10 +778,10 @@ unsafe extern "thiscall" fn contar_jogo_da_suspensao(this: usize, id: u32, regra
     }
     let r = cpm4_registro(this, id as usize);
     let historico: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> usize = core::mem::transmute(0x58e340usize);
-    let g = historico(cpm4_d(this + 0x18), r + 0x14, r + 0x18, j.suspensao);
+    let g = historico(read_usize(this + 0x18), r + 0x14, r + 0x18, j.suspensao);
     let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x556d00usize);
     // o índice vai no ax; o alto do eax é o da devolução da 0x58e340 (a 0x556d00 só lê a palavra)
-    soltar(this, id, (g as u32 & 0xffff_0000) | cpm4_w(j.entrada + 6) as u16 as u32);
+    soltar(this, id, (g as u32 & 0xffff_0000) | read_i16(j.entrada + 6) as u16 as u32);
 }
 
 /// { 0x556d00 } (thiscall, ret 8, discipline.cpp): `Discipline::release_ban(id, indice)`: a suspensão `indice` (20
@@ -811,7 +790,7 @@ unsafe extern "thiscall" fn contar_jogo_da_suspensao(this: usize, id: u32, regra
 /// 0x945333 com 0x55e5f0; sem achar, caixa "Error" e segue). Por fim a suspensão fica livre (+0 = 0xff, +2 = −1).
 /// Devolve a suspensão.
 unsafe extern "thiscall" fn soltar_suspensao(this: usize, id: u32, indice: u32) -> usize {
-    let s = cpm4_d(this + 4).wrapping_add((indice as u16 as i16 as i32 as usize).wrapping_mul(20));
+    let s = read_usize(this + 4).wrapping_add((indice as u16 as i16 as i32 as usize).wrapping_mul(20));
     let esquecer: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x7e8590usize);
     for k in 0..4usize {
         let regra = *((s + 0xc + k) as *const u8);
@@ -828,13 +807,13 @@ unsafe extern "thiscall" fn soltar_suspensao(this: usize, id: u32, indice: u32) 
             aviso_em(0x9b8f18, 0x47d);
             continue;
         }
-        let n = cpm4_w(this + 0x12).wrapping_sub(1);
+        let n = read_i16(this + 0x12).wrapping_sub(1);
         core::ptr::write_unaligned((this + 0x12) as *mut i16, n);
-        let ultimo = cpm4_d(this + 0xc).wrapping_add((n as i32 as usize).wrapping_mul(8));
-        core::ptr::write_unaligned(e as *mut u32, cpm4_d(ultimo) as u32);
-        core::ptr::write_unaligned((e + 4) as *mut u32, cpm4_d(ultimo + 4) as u32);
+        let ultimo = read_usize(this + 0xc).wrapping_add((n as i32 as usize).wrapping_mul(8));
+        core::ptr::write_unaligned(e as *mut u32, read_usize(ultimo) as u32);
+        core::ptr::write_unaligned((e + 4) as *mut u32, read_usize(ultimo + 4) as u32);
         let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
-        qsort(cpm4_d(this + 0xc), cpm4_w(this + 0x12) as i32, 8, 0x55e5f0);
+        qsort(read_usize(this + 0xc), read_i16(this + 0x12) as i32, 8, 0x55e5f0);
     }
     *(s as *mut u8) = 0xff;
     core::ptr::write_unaligned((s + 2) as *mut u16, 0xffff);
@@ -845,12 +824,12 @@ unsafe extern "thiscall" fn soltar_suspensao(this: usize, id: u32, indice: u32) 
 /// da pessoa (registro de 29 bytes do id em [this+0x14]) fica sem o último (0x58f110 sobre [this+0x18]: +0x18 = −1).
 /// Devolve o que a 0x58f110 devolve. Pessoa nula ou não jogadora (+0x61): a original (caixa fatal).
 unsafe extern "thiscall" fn apagar_historico_de_suspensoes(this: usize, pessoa: usize) -> usize {
-    if pessoa == 0 || cpm4_d(pessoa + 0x61) == 0 {
+    if pessoa == 0 || read_usize(pessoa + 0x61) == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(936)(this, pessoa); // caixa fatal: só a original
     }
-    let r = cpm4_registro(this, cpm4_d(pessoa));
+    let r = cpm4_registro(this, read_usize(pessoa));
     let sem_ultimo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x58f110usize);
-    sem_ultimo(cpm4_d(this + 0x18), r + 0x14, r + 0x18)
+    sem_ultimo(read_usize(this + 0x18), r + 0x14, r + 0x18)
 }
 
 /// Comparador: a 0x58e340 grava o histórico no arquivo (não pode rodar duas vezes): o plano antes, a original roda;
@@ -863,15 +842,15 @@ unsafe extern "thiscall" fn comparar_contar_jogo_da_suspensao(this: usize, id: u
         return;
     }
     let s = j.suspensao;
-    let (jogos, contador, dias) = (*(s as *const u8), *((s + 1) as *const u8), cpm4_w(s + 2));
+    let (jogos, contador, dias) = (*(s as *const u8), *((s + 1) as *const u8), read_i16(s + 2));
     let ok = if j.cumprida {
-        jogos == 0xff && dias == -1 && cpm4_w(j.entrada + 6) == -1
+        jogos == 0xff && dias == -1 && read_i16(j.entrada + 6) == -1
     } else {
         contador == j.contador.unwrap_or(antes)
     };
     PLACAR.registrar(ok, || {
         format!("contar_jogo_da_suspensao({}, {}, {}) contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{} entrada {}",
-            id, regra as u8, conta, contador, j.contador, antes, j.cumprida, jogos, dias, cpm4_w(j.entrada + 6))
+            id, regra as u8, conta, contador, j.contador, antes, j.cumprida, jogos, dias, read_i16(j.entrada + 6))
     });
 }
 
@@ -879,14 +858,14 @@ unsafe extern "thiscall" fn comparar_contar_jogo_da_suspensao(this: usize, id: u
 /// regras (achadas antes, sem criar). Quarta regra sem o item no índice: só a original (caixa).
 unsafe extern "thiscall" fn comparar_soltar_suspensao(this: usize, id: u32, indice: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(935);
-    let s = cpm4_d(this + 4).wrapping_add((indice as u16 as i16 as i32 as usize).wrapping_mul(20));
+    let s = read_usize(this + 4).wrapping_add((indice as u16 as i16 as i32 as usize).wrapping_mul(20));
     if *((s + 0xf) as *const u8) != 0xff && cpm4_no_indice(this, id) == 0 {
         return o(this, id, indice);
     }
     let mut reg = vec![(s, 20), (this + 0x10, 4)];
-    let n = cpm4_w(this + 0x12);
+    let n = read_i16(this + 0x12);
     if n > 0 {
-        reg.push((cpm4_d(this + 0xc), n as usize * 8));
+        reg.push((read_usize(this + 0xc), n as usize * 8));
     }
     for k in 0..4usize {
         let regra = *((s + 0xc + k) as *const u8);
@@ -905,12 +884,12 @@ unsafe extern "thiscall" fn comparar_soltar_suspensao(this: usize, id: u32, indi
 /// Comparador: lado a lado pelo começo e o último deslocamento do histórico (8 bytes; a 0x58f110 só grava o segundo).
 unsafe extern "thiscall" fn comparar_apagar_historico_de_suspensoes(this: usize, pessoa: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(936);
-    if pessoa == 0 || cpm4_d(pessoa + 0x61) == 0 {
+    if pessoa == 0 || read_usize(pessoa + 0x61) == 0 {
         return o(this, pessoa);
     }
-    let r = cpm4_registro(this, cpm4_d(pessoa));
+    let r = cpm4_registro(this, read_usize(pessoa));
     let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r + 0x14, 8)], || o(this, pessoa), || apagar_historico_de_suspensoes(this, pessoa));
-    PLACAR.registrar(igual && a == b, || format!("apagar_historico_de_suspensoes({}) {:x?} x {:x?}", cpm4_d(pessoa), mo, mr));
+    PLACAR.registrar(igual && a == b, || format!("apagar_historico_de_suspensoes({}) {:x?} x {:x?}", read_usize(pessoa), mo, mr));
     a
 }
 

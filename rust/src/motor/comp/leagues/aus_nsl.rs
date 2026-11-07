@@ -1,20 +1,11 @@
 // ---------- 282a leva: a NSL australiana: a fase seguinte, a série final dos seis primeiros e a grande final (aus_nsl.cpp) ----------
 
-unsafe fn cqr3_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cqr3_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqr3_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 /// O clube da linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`.
 unsafe fn cqr3_linha(t: usize, i: usize) -> usize {
-    cqr3_d(cqr3_d(t + 0xb1) + i * 0x3b)
+    read_usize(read_usize(t + 0xb1) + i * 0x3b)
 }
 
 /// { 0x411f70 } (thiscall, ret 0, aus_nsl.cpp): `AusNsl::advance_stage()`, a fase seguinte da NSL (a temporada regular,
@@ -22,8 +13,8 @@ unsafe fn cqr3_linha(t: usize, i: usize) -> usize {
 /// com sinal): a caixa de erro da linha 0x2f0 e nada mais. Senão +0x30 sobe um; ao chegar a 0 monta a série final
 /// (0x412010) e a 1, a grande final (0x4121c0), as duas em call direto com o ecx da liga.
 unsafe extern "thiscall" fn cqr3_fase_seguinte_da_nsl(this: usize) {
-    let fase = cqr3_d(this + 0x30) as i32;
-    if fase >= (cqr3_d(this + 0x2c) as i32).wrapping_sub(1) {
+    let fase = read_usize(this + 0x30) as i32;
+    if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x987c20, 0x2f0);
     }
     let fase = fase + 1;
@@ -61,20 +52,20 @@ unsafe extern "thiscall" fn cqr3_serie_final_da_nsl(this: usize) -> u32 {
     for (i, c) in clubes.iter_mut().enumerate() {
         *c = cqr3_linha(this, i); // cqr3: os seis primeiros da tabela
     }
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqr3_d(cqr3_d(this) + 0x3c));
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
     let p = novo(0xee);
     let fase = if p != 0 {
-        construir(p, this, 6, clubes.as_ptr(), 1, cqr3_d(this + 4), t, rodadas as u16 as u32, cqr3_b(this + 0xc2) as u32,
-                  cqr3_b(this + 0xc3) as u32, cqr3_b(this + 0xc4) as u32, this + 0xc5, vagas.as_ptr(), cqr3_w(this + 0x40) as u16 as u32, 0,
-                  extra as u16 as u32, cqr3_b(this + 0x51) as u32, 1, 0, cqr3_w(this + 0xd9) as u16 as u32, -1, 0, 2)
+        construir(p, this, 6, clubes.as_ptr(), 1, read_usize(this + 4), t, rodadas as u16 as u32, read_u8(this + 0xc2) as u32,
+                  read_u8(this + 0xc3) as u32, read_u8(this + 0xc4) as u32, this + 0xc5, vagas.as_ptr(), read_i16(this + 0x40) as u16 as u32, 0,
+                  extra as u16 as u32, read_u8(this + 0x51) as u32, 1, 0, read_i16(this + 0xd9) as u16 as u32, -1, 0, 2)
     } else {
         0
     };
-    core::ptr::write_unaligned(cqr3_d(this + 0xc) as *mut usize, fase);
+    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, fase);
     soltar(t);
-    let fase = cqr3_d(cqr3_d(this + 0xc));
+    let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
         aviso_em(0x987c20, 0x328);
         return 0;
@@ -106,22 +97,22 @@ unsafe extern "thiscall" fn cqr3_grande_final_da_nsl(this: usize) {
     if lista == 0 {
         return aviso_em(0x987c20, 0x348);
     }
-    let serie = cqr3_d(cqr3_d(this + 0xc));
+    let serie = read_usize(read_usize(this + 0xc));
     core::ptr::write_unaligned(lista as *mut usize, cqr3_linha(serie, 0)); // cqr3: o primeiro da série final
     core::ptr::write_unaligned((lista + 4) as *mut usize, cqr3_linha(serie, 1)); // cqr3: o segundo da série final
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqr3_d(cqr3_d(this) + 0x3c));
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 1, &mut rodadas, &mut extra, 0);
     let p = novo(0xb2);
     let fase = if p != 0 {
-        construir(p, this, 2, lista, rodadas as u16 as u32, cqr3_d(this + 4), t, cqr3_w(this + 0x40) as u16 as u32, 1, 1,
+        construir(p, this, 2, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 1, 1,
                   extra as u16 as u32, 0x14, 0, 0, 0, 0)
     } else {
         0
     };
-    core::ptr::write_unaligned((cqr3_d(this + 0xc) + 4) as *mut usize, fase);
+    core::ptr::write_unaligned((read_usize(this + 0xc) + 4) as *mut usize, fase);
     soltar(t);
-    let fase = cqr3_d(cqr3_d(this + 0xc) + 4);
+    let fase = read_usize(read_usize(this + 0xc) + 4);
     if fase == 0 {
         return aviso_em(0x987c20, 0x35c);
     }
@@ -131,10 +122,10 @@ unsafe extern "thiscall" fn cqr3_grande_final_da_nsl(this: usize) {
 }
 
 unsafe extern "thiscall" fn comparar_cqr3_fase_seguinte_da_nsl(this: usize) {
-    let antes = cqr3_d(this + 0x30) as i32;
-    let ultima = antes >= (cqr3_d(this + 0x2c) as i32).wrapping_sub(1);
+    let antes = read_usize(this + 0x30) as i32;
+    let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     orig::<unsafe extern "thiscall" fn(usize)>(1993)(this);
-    let depois = cqr3_d(this + 0x30) as i32;
+    let depois = read_usize(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("cqr3_fase_seguinte_da_nsl({:#x}) antes={} depois={}", this, antes, depois));
 }
 
@@ -147,8 +138,8 @@ unsafe extern "thiscall" fn comparar_cqr3_serie_final_da_nsl(this: usize) -> u32
         *c = cqr3_linha(this, i);
     }
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1994)(this);
-    let fase = cqr3_d(cqr3_d(this + 0xc));
-    let igual = r == 1 && fase != 0 && cqr3_w(fase + 0x3e) == 6 && cqr3_d(fase + 4) == cqr3_d(this + 4) && cqr3_d(this + 0x30) == 0 && {
+    let fase = read_usize(read_usize(this + 0xc));
+    let igual = r == 1 && fase != 0 && read_i16(fase + 0x3e) == 6 && read_usize(fase + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0 && {
         let mut nela = [0usize; 6];
         for (i, c) in nela.iter_mut().enumerate() {
             *c = cqr3_linha(fase, i);
@@ -166,76 +157,67 @@ unsafe extern "thiscall" fn comparar_cqr3_serie_final_da_nsl(this: usize) -> u32
 /// antes: os dois primeiros da série final. Depois, a fase da segunda vaga existe, com +0x3e = 2, +4 = o +4 da liga e
 /// os dois na lista dela (+0xa7, 6 bytes; como conjunto).
 unsafe extern "thiscall" fn comparar_cqr3_grande_final_da_nsl(this: usize) {
-    let serie = cqr3_d(cqr3_d(this + 0xc));
+    let serie = read_usize(read_usize(this + 0xc));
     let (a, b) = (cqr3_linha(serie, 0), cqr3_linha(serie, 1));
     orig::<unsafe extern "thiscall" fn(usize)>(1995)(this);
-    let fase = cqr3_d(cqr3_d(this + 0xc) + 4);
+    let fase = read_usize(read_usize(this + 0xc) + 4);
     let igual = fase != 0 && {
-        let l = cqr3_d(fase + 0xa7);
-        let (x, y) = (cqr3_d(l), cqr3_d(l + 6));
-        cqr3_w(fase + 0x3e) == 2 && cqr3_d(fase + 4) == cqr3_d(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a))
+        let l = read_usize(fase + 0xa7);
+        let (x, y) = (read_usize(l), read_usize(l + 6));
+        read_i16(fase + 0x3e) == 2 && read_usize(fase + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a))
     };
     PLACAR.registrar(igual, || format!("cqr3_grande_final_da_nsl({:#x}) finalistas={:#x},{:#x} fase={:#x}", this, a, b, fase));
 }
 
 // ---------- 274a leva: as regras da NSL australiana e da MLS, e o histórico da temporada dos estaduais e das Séries A e B (aus_nsl.cpp, usa_mls.cpp, bra_reg_gaucho.cpp, arg_second.cpp) ----------
 
-unsafe fn cqj8_b(o: usize, d: usize, v: u8) {
-    *((o + d) as *mut u8) = v;
-}
 
-unsafe fn cqj8_w(o: usize, d: usize, v: u16) {
-    core::ptr::write_unaligned((o + d) as *mut u16, v);
-}
 
-unsafe fn cqj8_d(o: usize, d: usize, v: u32) {
-    core::ptr::write_unaligned((o + d) as *mut u32, v);
-}
 
 /// As regras da NSL (o que a 0x411ce0 grava antes do calendário).
 unsafe fn cqj8_regras_nsl(o: usize) {
-    cqj8_w(o, 0xab, 0);
-    cqj8_b(o, 0xc8, 0);
-    cqj8_b(o, 0xbf, 0);
-    cqj8_b(o, 0xc0, 0);
-    cqj8_b(o, 0xc1, 0);
-    cqj8_b(o, 0xc4, 2);
-    cqj8_b(o, 0xc6, 2);
-    cqj8_b(o, 0x52, 2);
-    cqj8_w(o, 0x3c, 3); // três turnos
-    cqj8_b(o, 0xc2, 3); // cqj8: os pontos por vitória da NSL
-    cqj8_b(o, 0x4a, 3);
-    cqj8_b(o, 0xc3, 1);
-    cqj8_b(o, 0x42, 1);
-    cqj8_b(o, 0xc5, 1); // desempates: saldo, gols pró, gols fora
-    cqj8_b(o, 0xc7, 4);
-    cqj8_b(o, 0xbe, 6); // os seis da fase final
-    cqj8_d(o, 0x1c, 0xffff_ffff);
-    cqj8_d(o, 0x20, 0xffff_ffff);
-    cqj8_w(o, 0xd9, 0x28); // 0x8 fase seguinte, 0x20 eliminados marcados
-    cqj8_b(o, 0x49, 4);
+    write_u16_at(o, 0xab, 0);
+    write_u8_at(o, 0xc8, 0);
+    write_u8_at(o, 0xbf, 0);
+    write_u8_at(o, 0xc0, 0);
+    write_u8_at(o, 0xc1, 0);
+    write_u8_at(o, 0xc4, 2);
+    write_u8_at(o, 0xc6, 2);
+    write_u8_at(o, 0x52, 2);
+    write_u16_at(o, 0x3c, 3); // três turnos
+    write_u8_at(o, 0xc2, 3); // cqj8: os pontos por vitória da NSL
+    write_u8_at(o, 0x4a, 3);
+    write_u8_at(o, 0xc3, 1);
+    write_u8_at(o, 0x42, 1);
+    write_u8_at(o, 0xc5, 1); // desempates: saldo, gols pró, gols fora
+    write_u8_at(o, 0xc7, 4);
+    write_u8_at(o, 0xbe, 6); // os seis da fase final
+    write_u32_at(o, 0x1c, 0xffff_ffff);
+    write_u32_at(o, 0x20, 0xffff_ffff);
+    write_u16_at(o, 0xd9, 0x28); // 0x8 fase seguinte, 0x20 eliminados marcados
+    write_u8_at(o, 0x49, 4);
 }
 
 /// As regras da MLS (0x908660; sem calendário: os jogos da MLS são montados à mão pela 0x9086e0).
 unsafe fn cqj8_regras_mls(o: usize) {
-    cqj8_b(o, 0xc4, 2);
-    cqj8_b(o, 0xc6, 2);
-    cqj8_b(o, 0xc2, 3);
-    cqj8_b(o, 0xc8, 0);
-    cqj8_b(o, 0xbf, 0);
-    cqj8_b(o, 0xc0, 0);
-    cqj8_b(o, 0xc1, 0);
-    cqj8_b(o, 0xc3, 1); // cqj8: os pontos por empate da MLS
-    cqj8_w(o, 0xab, 0xc2);
-    cqj8_b(o, 0x42, 1);
-    cqj8_b(o, 0xc5, 1); // desempates: saldo, gols pró, confronto direto
-    cqj8_b(o, 0xc7, 3);
-    cqj8_b(o, 0xbe, 1);
-    cqj8_d(o, 0x1c, 0xffff_ffff);
-    cqj8_d(o, 0x20, 0xffff_ffff);
-    cqj8_w(o, 0xd9, 0x48); // 0x8 fase seguinte, 0x40 rodadas em ordem fixa
-    cqj8_w(o, 0x3c, 4);
-    cqj8_w(o, 0xa7, 0x20); // 32 jogos por time
+    write_u8_at(o, 0xc4, 2);
+    write_u8_at(o, 0xc6, 2);
+    write_u8_at(o, 0xc2, 3);
+    write_u8_at(o, 0xc8, 0);
+    write_u8_at(o, 0xbf, 0);
+    write_u8_at(o, 0xc0, 0);
+    write_u8_at(o, 0xc1, 0);
+    write_u8_at(o, 0xc3, 1); // cqj8: os pontos por empate da MLS
+    write_u16_at(o, 0xab, 0xc2);
+    write_u8_at(o, 0x42, 1);
+    write_u8_at(o, 0xc5, 1); // desempates: saldo, gols pró, confronto direto
+    write_u8_at(o, 0xc7, 3);
+    write_u8_at(o, 0xbe, 1);
+    write_u32_at(o, 0x1c, 0xffff_ffff);
+    write_u32_at(o, 0x20, 0xffff_ffff);
+    write_u16_at(o, 0xd9, 0x48); // 0x8 fase seguinte, 0x40 rodadas em ordem fixa
+    write_u16_at(o, 0x3c, 4);
+    write_u16_at(o, 0xa7, 0x20); // 32 jogos por time
 }
 
 /// { 0x411ce0 } (thiscall, aus_nsl.cpp): `AusNsl::set_up_rules` (slot 36), as regras da NSL e o calendário da fase
@@ -247,7 +229,7 @@ unsafe extern "thiscall" fn cqj8_regras_da_nsl(this: usize) -> u32 {
     let vt = *(this as *const usize);
     let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
     let r = f(this, -1, this + 0xa9, this + 0x3a, 0);
-    cqj8_d(this, 0xba, r as u32);
+    write_u32_at(this, 0xba, r as u32);
     1
 }
 

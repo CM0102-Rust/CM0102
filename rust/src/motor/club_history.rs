@@ -1,8 +1,5 @@
 // ---------- 265a leva: o save dos históricos: o histórico dos clubes, as estatísticas dos árbitros e as estatísticas simuladas (club_history.cpp, officials_manager.cpp, simulated_stats.cpp) ----------
 
-unsafe fn cpx7_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cpx7_abrir(save: usize, nome: usize) -> usize {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
@@ -36,7 +33,7 @@ unsafe extern "thiscall" fn gravar_historico_dos_clubes(this: usize, save: usize
     if cpx7_gravar(this + 0xc, 4, 1, z) != 1 {
         erro_em(FONTE, 0x338);
     }
-    if cpx7_gravar(cpx7_d(this + 8), 0x10, cpx7_d(this + 0xc) as u32, z) != cpx7_d(this + 0xc) as u32 { // cpx7: os registros do histórico
+    if cpx7_gravar(read_usize(this + 8), 0x10, read_usize(this + 0xc) as u32, z) != read_usize(this + 0xc) as u32 { // cpx7: os registros do histórico
         erro_em(FONTE, 0x340);
     }
     cpx7_fechar(&mut z);
@@ -81,16 +78,16 @@ unsafe extern "thiscall" fn gravar_estatisticas_dos_arbitros(this: usize, save: 
     if arbitros() == 0 {
         return cpx7_falha_dos_arbitros(0x156, &mut z);
     }
-    if cpx7_gravar(cpx7_d(this), 0x11, arbitros(), z) != arbitros() {
+    if cpx7_gravar(read_usize(this), 0x11, arbitros(), z) != arbitros() {
         return cpx7_falha_dos_arbitros(0x15c, &mut z);
     }
     if cpx7_gravar(0xae2350, 4, 1, z) != 1 {
         return cpx7_falha_dos_arbitros(0x164, &mut z);
     }
-    if cpx7_gravar(cpx7_d(this + 0xc), 0x102, nacoes(), z) != nacoes() { // cpx7: os registros das nações
+    if cpx7_gravar(read_usize(this + 0xc), 0x102, nacoes(), z) != nacoes() { // cpx7: os registros das nações
         return cpx7_falha_dos_arbitros(0x16c, &mut z);
     }
-    if cpx7_gravar(cpx7_d(this + 8), 1, arbitros(), z) != arbitros() {
+    if cpx7_gravar(read_usize(this + 8), 1, arbitros(), z) != arbitros() {
         return cpx7_falha_dos_arbitros(0x174, &mut z);
     }
     cpx7_fechar(&mut z);
@@ -118,7 +115,7 @@ unsafe extern "thiscall" fn gravar_estatisticas_simuladas(this: usize, save: usi
         aviso_em(FONTE, 0x210);
         return;
     }
-    if cpx7_gravar(cpx7_d(this + 4), 0x44, cpx7_d(this) as u32, z) != cpx7_d(this) as u32 { // cpx7: os registros simulados
+    if cpx7_gravar(read_usize(this + 4), 0x44, read_usize(this) as u32, z) != read_usize(this) as u32 { // cpx7: os registros simulados
         aviso_em(FONTE, 0x218);
         return;
     }

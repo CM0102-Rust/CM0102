@@ -1,8 +1,5 @@
 // ---------- 257a leva: as linhas da nação-chave: a linha de uma nação, a linha do clube e o ano da temporada do clube (key_nation.cpp) ----------
 
-unsafe fn cpu1_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 /// { 0x669340 } (cdecl, key_nation.cpp): `key_nation_index_of_nation(nação)`: a primeira linha da tabela das 35
 /// nações-chave (0xb63d60, 72 bytes, nação em +0) com a nação dada (sem conferir a nula), ou 4. Pela moral do jogo
@@ -10,7 +7,7 @@ unsafe fn cpu1_d(a: usize) -> usize {
 /// da UEFA. Chamada a cada jogador: sem contador.
 unsafe extern "C" fn linha_da_nacao(nacao: usize) -> u8 {
     for k in 0..0x23usize {
-        if cpu1_d(0xb63d60 + 72 * k) == nacao {
+        if read_usize(0xb63d60 + 72 * k) == nacao {
             return k as u8; // cpu1: a linha da nacao dada
         }
     }
@@ -32,10 +29,10 @@ unsafe extern "C" fn comparar_linha_da_nacao(nacao: usize) -> u8 {
 unsafe extern "C" fn linha_da_nacao_do_clube(clube: usize) -> u8 {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     if selecao(clube) == 0 {
-        let nacao = cpu1_d(clube + 0x53);
+        let nacao = read_usize(clube + 0x53);
         if nacao != 0 && *((nacao + 0x11c) as *const u8) != 0 {
             for k in 0..0x23usize {
-                if cpu1_d(0xb63d60 + 72 * k) == nacao {
+                if read_usize(0xb63d60 + 72 * k) == nacao {
                     return k as u8; // cpu1: a linha da nacao escolhida
                 }
             }
@@ -46,9 +43,9 @@ unsafe extern "C" fn linha_da_nacao_do_clube(clube: usize) -> u8 {
     if selecao(clube) != 0 {
         return 1;
     }
-    let nacao = cpu1_d(clube + 0x53); // cpu1: a nacao do continente
+    let nacao = read_usize(clube + 0x53); // cpu1: a nacao do continente
     for k in 0..0x23usize {
-        if nacao != 0 && cpu1_d(0xb63d64 + 72 * k) == cpu1_d(nacao + 0x71) {
+        if nacao != 0 && read_usize(0xb63d64 + 72 * k) == read_usize(nacao + 0x71) {
             return k as u8; // cpu1: a linha do continente
         }
     }
@@ -58,11 +55,11 @@ unsafe extern "C" fn linha_da_nacao_do_clube(clube: usize) -> u8 {
 /// Se o clube cai na caixa "Error" da 0x669360 (não é seleção, nação escolhida fora da tabela).
 unsafe fn cpu1_caixa(clube: usize) -> bool {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    let nacao = cpu1_d(clube + 0x53);
+    let nacao = read_usize(clube + 0x53);
     selecao(clube) == 0
         && nacao != 0
         && *((nacao + 0x11c) as *const u8) != 0
-        && !(0..0x23usize).any(|k| cpu1_d(0xb63d60 + 72 * k) == nacao)
+        && !(0..0x23usize).any(|k| read_usize(0xb63d60 + 72 * k) == nacao)
 }
 
 unsafe extern "C" fn comparar_linha_da_nacao_do_clube(clube: usize) -> u8 {
@@ -89,7 +86,7 @@ unsafe extern "C" fn ano_da_temporada_do_clube(clube: usize) -> u16 {
         let k = linha(clube) as i8 as isize;
         let e = (0xb63d60isize + 72 * k) as usize;
         let inicio = core::ptr::read_unaligned((e + 0x15) as *const u16);
-        if (cpu1_d(e + 0x17) != 0 || inicio < 0x3c) && (*(0xae2c90 as *const i16) as i32) < inicio as i32 {
+        if (read_usize(e + 0x17) != 0 || inicio < 0x3c) && (*(0xae2c90 as *const i16) as i32) < inicio as i32 {
             return ano.wrapping_sub(1); // cpu1: o ano anterior
         }
     }
@@ -109,13 +106,7 @@ unsafe extern "C" fn comparar_ano_da_temporada_do_clube(clube: usize) -> u16 {
 
 // ---------- 257a leva: a temporada do clube e a nação principal: se o clube está na temporada e as datas dela, o continente principal e a nação principal (key_nation.cpp) ----------
 
-unsafe fn cpu2_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cpu2_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// Grava em `dst` (se não nulo) a data (dia, ano) montada pela 0x549ef0 (com o bissexto), como a cópia 0x417c10.
 unsafe fn cpu2_data(dst: usize, dia: i16, ano: u16) {
@@ -141,14 +132,14 @@ unsafe fn cpu2_data(dst: usize, dia: i16, ano: u16) {
 unsafe extern "C" fn clube_na_temporada(clube: usize, inicio: usize, fim: usize) -> u32 {
     let mut linha = 0xb63e38usize;
     let mut c: i16 = 0x28;
-    let nacao = cpu2_d(clube + 0x53);
+    let nacao = read_usize(clube + 0x53);
     if nacao != 0 {
-        if let Some(k) = (0..0x23usize).find(|&k| cpu2_d(0xb63d60 + 72 * k) == nacao) {
+        if let Some(k) = (0..0x23usize).find(|&k| read_usize(0xb63d60 + 72 * k) == nacao) {
             linha = 0xb63d60 + 72 * k;
-            c = cpu2_w(linha + 0x39);
+            c = read_i16(linha + 0x39);
         }
     }
-    let a = cpu2_w(linha + 0x2a);
+    let a = read_i16(linha + 0x2a);
     let t = *(0xae2c90 as *const i16);
     let y = *(0xae2c92 as *const u16);
     if a > c {
@@ -203,14 +194,14 @@ unsafe extern "C" fn comparar_clube_na_temporada(clube: usize, inicio: usize, fi
 /// { 0x6695c0 } (cdecl, key_nation.cpp): `key_nation_get_main_continent()`: o continente (+0x71) da nação do humano
 /// ([0xae2d08]); sem ela ou sem continente, o da primeira nação da tabela com o bit 2 de +0x11c, ou 0. Pelo menu do jogo.
 unsafe extern "C" fn continente_principal() -> usize {
-    let h = cpu2_d(0xae2d08);
-    if h != 0 && cpu2_d(h + 0x71) != 0 {
-        return cpu2_d(h + 0x71);
+    let h = read_usize(0xae2d08);
+    if h != 0 && read_usize(h + 0x71) != 0 {
+        return read_usize(h + 0x71);
     }
     for k in 0..0x23usize {
-        let n = cpu2_d(0xb63d60 + 72 * k);
+        let n = read_usize(0xb63d60 + 72 * k);
         if n != 0 && *((n + 0x11c) as *const u8) & 2 != 0 {
-            return cpu2_d(n + 0x71);
+            return read_usize(n + 0x71);
         }
     }
     0
@@ -226,12 +217,12 @@ unsafe extern "C" fn comparar_continente_principal() -> usize {
 /// { 0x669600 } (cdecl, key_nation.cpp): `key_nation_get_main_nation()`: a nação do humano ([0xae2d08]); sem ela, a
 /// primeira nação da tabela com o bit 2 de +0x11c, ou 0. Pelo menu do jogo.
 unsafe extern "C" fn nacao_principal() -> usize {
-    let h = cpu2_d(0xae2d08);
+    let h = read_usize(0xae2d08);
     if h != 0 {
         return h;
     }
     for k in 0..0x23usize {
-        let n = cpu2_d(0xb63d60 + 72 * k);
+        let n = read_usize(0xb63d60 + 72 * k);
         if n != 0 && *((n + 0x11c) as *const u8) & 2 != 0 {
             return n;
         }
@@ -248,9 +239,6 @@ unsafe extern "C" fn comparar_nacao_principal() -> usize {
 
 // ---------- 256a leva: a nação-chave do jogo: a nação-chave ativa de uma competição ou jogo, se a competição é a Copa do Mundo e se é um torneio internacional (comp.cpp, key_nation.cpp) ----------
 
-unsafe fn cpt3_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 /// { 0x48dd70 } (cdecl, comp.cpp): `comp_active_key_nation_of_fixture(competição, partida)`, a chave das listas de jogos
 /// do FIXTURE_MANAGER (add_fixture 0x5aa680, find_fixtures 0x5acbe0, ...), da simulação rápida (0x6b66a0) e do peso do
@@ -264,20 +252,20 @@ unsafe extern "C" fn nacao_chave_do_jogo(comp: usize, partida: usize) -> u8 {
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let linha = |nacao: usize| (0..0x23usize).find(|&k| {
-        let n = cpt3_d(0xb63d60 + 72 * k);
+        let n = read_usize(0xb63d60 + 72 * k);
         n != 0 && *((n + 0x11c) as *const u8) != 0 && n == nacao
     });
-    let nacao = cpt3_d(comp + 0x5d);
-    let reservas = cpt3_d(0x9cf684);
-    if (amistoso(cpt3_d(0xae2c74), comp) != 0 || cpt3_d(comp) == reservas) && partida != 0 {
-        let pc = cpt3_d(partida + 0x14);
-        if pc == cpt3_d(cpt3_d(0xae2c74) + 4) || cpt3_d(pc) == reservas {
-            if selecao(cpt3_d(partida + 0x1c)) != 0 || selecao(cpt3_d(partida + 0x20)) != 0 {
+    let nacao = read_usize(comp + 0x5d);
+    let reservas = read_usize(0x9cf684);
+    if (amistoso(read_usize(0xae2c74), comp) != 0 || read_usize(comp) == reservas) && partida != 0 {
+        let pc = read_usize(partida + 0x14);
+        if pc == read_usize(read_usize(0xae2c74) + 4) || read_usize(pc) == reservas {
+            if selecao(read_usize(partida + 0x1c)) != 0 || selecao(read_usize(partida + 0x20)) != 0 {
                 return 1;
             }
-            let casa = cpt3_d(partida + 0x1c);
-            let a = cpt3_d(casa + 0x53);
-            if a != cpt3_d(cpt3_d(partida + 0x20) + 0x53) || *((a + 0x11c) as *const u8) == 0 {
+            let casa = read_usize(partida + 0x1c);
+            let a = read_usize(casa + 0x53);
+            if a != read_usize(read_usize(partida + 0x20) + 0x53) || *((a + 0x11c) as *const u8) == 0 {
                 return 3;
             }
             if let Some(k) = linha(a) {
@@ -286,7 +274,7 @@ unsafe extern "C" fn nacao_chave_do_jogo(comp: usize, partida: usize) -> u8 {
             return if selecao(casa) != 0 { 0 } else { 3 };
         }
     }
-    if cpt3_d(comp + 0x5d) != 0 {
+    if read_usize(comp + 0x5d) != 0 {
         return match linha(nacao) {
             Some(k) => *((0xb63d74 + 72 * k) as *const u8), // cpt3: a nacao-chave da competicao
             None => 3,
@@ -307,7 +295,7 @@ unsafe extern "C" fn nacao_chave_do_jogo(comp: usize, partida: usize) -> u8 {
 unsafe extern "C" fn comparar_nacao_chave_do_jogo(comp: usize, partida: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(1161)(comp, partida);
     let n = nacao_chave_do_jogo(comp, partida);
-    PLACAR.registrar(r == n, || format!("nacao_chave_do_jogo(competição {}, partida {:x}) original={} rust={}", cpt3_d(comp) as i32, partida, r, n));
+    PLACAR.registrar(r == n, || format!("nacao_chave_do_jogo(competição {}, partida {:x}) original={} rust={}", read_usize(comp) as i32, partida, r, n));
     r
 }
 
@@ -326,8 +314,8 @@ unsafe extern "C" fn e_copa_do_mundo(comp: usize) -> u32 {
         aviso_em(0x9eaff4, 0x3d7);
         return 0;
     }
-    let id = cpt3_d(comp);
-    CPT3_COPA.iter().any(|&g| cpt3_d(g) == id) as u32
+    let id = read_usize(comp);
+    CPT3_COPA.iter().any(|&g| read_usize(g) == id) as u32
 }
 
 unsafe extern "C" fn comparar_e_copa_do_mundo(comp: usize) -> u32 {
@@ -337,7 +325,7 @@ unsafe extern "C" fn comparar_e_copa_do_mundo(comp: usize) -> u32 {
     }
     let r = o(comp);
     let n = e_copa_do_mundo(comp);
-    PLACAR.registrar(r == n, || format!("e_copa_do_mundo(competição {}) original={} rust={}", cpt3_d(comp) as i32, r, n));
+    PLACAR.registrar(r == n, || format!("e_copa_do_mundo(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
     r
 }
 
@@ -348,8 +336,8 @@ unsafe extern "C" fn e_torneio_internacional(comp: usize) -> u32 {
         aviso_em(0x9eaff4, 0x3ef);
         return 0;
     }
-    let id = cpt3_d(comp);
-    CPT3_INTERNACIONAIS.iter().any(|&g| cpt3_d(g) == id) as u32
+    let id = read_usize(comp);
+    CPT3_INTERNACIONAIS.iter().any(|&g| read_usize(g) == id) as u32
 }
 
 unsafe extern "C" fn comparar_e_torneio_internacional(comp: usize) -> u32 {
@@ -359,7 +347,7 @@ unsafe extern "C" fn comparar_e_torneio_internacional(comp: usize) -> u32 {
     }
     let r = o(comp);
     let n = e_torneio_internacional(comp);
-    PLACAR.registrar(r == n, || format!("e_torneio_internacional(competição {}) original={} rust={}", cpt3_d(comp) as i32, r, n));
+    PLACAR.registrar(r == n, || format!("e_torneio_internacional(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
     r
 }
 

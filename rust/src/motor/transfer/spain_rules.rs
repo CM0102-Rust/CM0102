@@ -1,8 +1,5 @@
 // ---------- 273a leva: as regras de transferência da Espanha, da Itália e da França: as janelas de transferência (france_rules.cpp, italy_rules.cpp, spain_rules.cpp) ----------
 
-unsafe fn cqk2_d(a: usize) -> u32 {
-    core::ptr::read_unaligned(a as *const u32)
-}
 
 /// As janelas de transferência: +8 = o número de janelas; a tabela (`t`, datas de 6 bytes: +0 a regra, +1 o número da
 /// janela, +2 o dia da semana para o qual a data anda (0xff nenhum) [inferência], +3 o dia, +4 o mês (0 = janeiro), +5 1
@@ -42,7 +39,7 @@ unsafe fn cqk2_comparar(nome: &str, this: usize, o: impl FnOnce(), c: impl FnOnc
     c(r);
     let a = core::slice::from_raw_parts(this as *const u8, 0x19);
     let campos = a[..4] == s[..4] && a[8..] == s[8..0x19];
-    let (ja, jb) = (cqk2_d(this + 4) as usize, cqk2_d(r + 4) as usize);
+    let (ja, jb) = (read_u32(this + 4) as usize, read_u32(r + 4) as usize);
     let n = s[8] as usize * 12;
     let janelas = if ja != 0 && jb != 0 {
         core::slice::from_raw_parts(ja as *const u8, n) == core::slice::from_raw_parts(jb as *const u8, n)

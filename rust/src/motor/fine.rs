@@ -1,8 +1,5 @@
 // ---------- 262a leva: a forma ruim do jogador e as notícias das multas: o incidente de forma com a multa da IA, a reação à multa e o retorno do treinador (awol.cpp, Fine.cpp) ----------
 
-unsafe fn cpz9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cpz9_u(a: usize) -> u32 {
     core::ptr::read_unaligned(a as *const u32)
@@ -25,9 +22,9 @@ unsafe fn cpz9_gravar(n: usize, k: i8, v: u32) {
 /// O id e as três chaves (+0x33 de +4, +8, +0xc) da pessoa `p` nos dados `k`..`k + 3`.
 unsafe fn cpz9_pessoa_nos_dados(n: usize, k: i8, p: usize) {
     cpz9_gravar(n, k, cpz9_u(p));
-    cpz9_gravar(n, k + 1, cpz9_u(cpz9_d(p + 4) + 0x33));
-    cpz9_gravar(n, k + 2, cpz9_u(cpz9_d(p + 8) + 0x33));
-    cpz9_gravar(n, k + 3, cpz9_u(cpz9_d(p + 0xc) + 0x33));
+    cpz9_gravar(n, k + 1, cpz9_u(read_usize(p + 4) + 0x33));
+    cpz9_gravar(n, k + 2, cpz9_u(read_usize(p + 8) + 0x33));
+    cpz9_gravar(n, k + 3, cpz9_u(read_usize(p + 0xc) + 0x33));
 }
 
 /// Um humano dirige o clube? (news_club_has_human_manager 0x7875e0: stdcall, 1 arg; a original deixa o News em ecx.)
@@ -61,12 +58,12 @@ unsafe extern "thiscall" fn incidente_de_forma(this: usize, jogador: usize, club
     atribuir(reg.as_mut_ptr() as usize + 8, temporaria.as_mut_ptr() as usize, 0xae2c90);
     // ponytail: o byte +0x10 do registro é sobra de pilha na original; a cópia grava 0 (ninguém o lê)
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
-    acrescentar(cpz9_d(this + 8), reg.as_ptr() as usize, 0x11);
+    acrescentar(read_usize(this + 8), reg.as_ptr() as usize, 0x11);
     if cpz9_clube_humano(clube) {
         let mut treinador;
         loop {
             let r = cpz9_sortear(5);
-            treinador = cpz9_d(clube.wrapping_add((r as usize).wrapping_mul(4)) + 0x19f);
+            treinador = read_usize(clube.wrapping_add((r as usize).wrapping_mul(4)) + 0x19f);
             if cpz9_sortear(0x14) == 0 || treinador != 0 {
                 break;
             }
@@ -80,9 +77,9 @@ unsafe extern "thiscall" fn incidente_de_forma(this: usize, jogador: usize, club
         cpz9_gravar(nt, 1, cpz9_u(clube));
         let r = cpz9_sortear(2);
         cpz9_gravar(nt, 2, r as u32);
-        cpz9_gravar(nt, 3, cpz9_u(cpz9_d(jogador + 4) + 0x33));
-        cpz9_gravar(nt, 4, cpz9_u(cpz9_d(jogador + 8) + 0x33));
-        cpz9_gravar(nt, 5, cpz9_u(cpz9_d(jogador + 0xc) + 0x33));
+        cpz9_gravar(nt, 3, cpz9_u(read_usize(jogador + 4) + 0x33));
+        cpz9_gravar(nt, 4, cpz9_u(read_usize(jogador + 8) + 0x33));
+        cpz9_gravar(nt, 5, cpz9_u(read_usize(jogador + 0xc) + 0x33));
         if treinador != 0 {
             cpz9_pessoa_nos_dados(nt, 6, treinador);
         } else {
@@ -90,17 +87,17 @@ unsafe extern "thiscall" fn incidente_de_forma(this: usize, jogador: usize, club
                 cpz9_gravar(nt, k, u32::MAX);
             }
         }
-        entregar(cpz9_d(0xb7431c), nt, clube);
+        entregar(read_usize(0xb7431c), nt, clube);
     }
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     if humano(clube, 0, 1, 0, 0) != 0 {
         return;
     }
-    let tecnico = cpz9_d(clube + 0xcf);
+    let tecnico = read_usize(clube + 0xcf);
     if tecnico == 0 {
         return;
     }
-    let np = cpz9_d(tecnico + 0x69);
+    let np = read_usize(tecnico + 0x69);
     if np == 0 {
         return;
     }
@@ -110,7 +107,7 @@ unsafe extern "thiscall" fn incidente_de_forma(this: usize, jogador: usize, club
     if a <= b {
         return;
     }
-    let np = cpz9_d(cpz9_d(clube + 0xcf) + 0x69);
+    let np = read_usize(read_usize(clube + 0xcf) + 0x69);
     crate::comparacao::ramo("cpz_9 multa pela forma");
     let nota: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(0x544410usize);
     // ponytail: a original empurra ecx com o byte +0x19 só no cl (os altos são sobra); a 0x544410 só lê o byte
@@ -118,7 +115,7 @@ unsafe extern "thiscall" fn incidente_de_forma(this: usize, jogador: usize, club
     let e = cpz9_sortear(5); // cpz9: o sorteio do prazo
     let prazo = if c > e { 1 } else { 2 }; // cpz9: o prazo da multa
     let multar: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x5a5980usize);
-    multar(cpz9_d(0xae2a3c), jogador, prazo, 1);
+    multar(read_usize(0xae2a3c), jogador, prazo, 1);
 }
 
 /// O comparador do incidente: a original roda sozinha (põe o registro na lista, dá a notícia e multa) e confere o
@@ -126,18 +123,18 @@ unsafe extern "thiscall" fn incidente_de_forma(this: usize, jogador: usize, club
 /// jogador, o clube e a data de hoje (16 bytes; o byte +0x10 é sobra de pilha).
 unsafe extern "thiscall" fn comparar_incidente_de_forma(this: usize, jogador: usize, clube: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1404);
-    let l = cpz9_d(this + 8);
+    let l = read_usize(this + 8);
     if jogador == 0 || clube == 0 || l == 0 {
         return o(this, jogador, clube);
     }
-    let cauda = cpz9_d(l + 6);
+    let cauda = read_usize(l + 6);
     let mut plano = [0u8; 0x10];
     plano[..4].copy_from_slice(&cpz9_u(jogador).to_le_bytes());
     plano[4..8].copy_from_slice(&cpz9_u(clube).to_le_bytes());
     plano[8..].copy_from_slice(core::slice::from_raw_parts(0xae2c90 as *const u8, 8));
     o(this, jogador, clube);
-    let no = if cauda != 0 { cpz9_d(cauda + 6) } else { cpz9_d(l + 2) };
-    let dados = if no != 0 { cpz9_d(no) } else { 0 };
+    let no = if cauda != 0 { read_usize(cauda + 6) } else { read_usize(l + 2) };
+    let dados = if no != 0 { read_usize(no) } else { 0 };
     let igual = dados != 0 && core::slice::from_raw_parts(dados as *const u8, 0x10) == plano;
     PLACAR.registrar(igual, || format!("incidente_de_forma(jogador {:#x}, clube {:#x}) plano={:x?} lista: no {:#x} dados {:#x}", jogador, clube, plano, no, dados));
 }
@@ -154,21 +151,21 @@ unsafe extern "stdcall" fn noticia_reacao_a_multa(jogador: usize, motivo: u32, r
         return;
     }
     let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let k = contrato_de(cpz9_d(0xae1050), jogador);
+    let k = contrato_de(read_usize(0xae1050), jogador);
     *(0xae1080 as *mut usize) = k;
     if k == 0 {
         return;
     }
-    let clube = cpz9_d(0xae23b4).wrapping_add(cpz9_d(k + 4).wrapping_mul(0x245));
+    let clube = read_usize(0xae23b4).wrapping_add(read_usize(k + 4).wrapping_mul(0x245));
     if clube == 0 {
         return;
     }
     let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
-    let c = contrato(cpz9_d(0xae1050), jogador, clube);
+    let c = contrato(read_usize(0xae1050), jogador, clube);
     if c == 0 {
         return;
     }
-    let atual = cpz9_d(jogador + 0x39);
+    let atual = read_usize(jogador + 0x39);
     if atual != 0 && !cpz9_clube_humano(atual) {
         return;
     }
@@ -190,16 +187,16 @@ unsafe extern "stdcall" fn noticia_reacao_a_multa(jogador: usize, motivo: u32, r
     cpz9_gravar(nt, 6, r as u32);
     let p = cpz9_sb(jogador + 0x5d) + cpz9_sb(jogador + 0x5b) < 0xc
         && cpz9_sb(jogador + 0x59) < 6
-        && core::ptr::read_unaligned((cpz9_d(jogador + 0x61) + 0xb) as *const i16) > 0x1482;
+        && core::ptr::read_unaligned((read_usize(jogador + 0x61) + 0xb) as *const i16) > 0x1482;
     cpz9_gravar(nt, 7, p as u32);
     cpz9_gravar(nt, 8, (prazo as u8 == 1) as u32);
     let tipo = *((c + 0x4f) as *const u8) & 0xf0;
     cpz9_gravar(nt, 9, (tipo == 0x70) as u32);
-    cpz9_gravar(nt, 0xa, (futura(cpz9_d(0xde1f54), jogador, 0) != 0) as u32);
+    cpz9_gravar(nt, 0xa, (futura(read_usize(0xde1f54), jogador, 0) != 0) as u32);
     cpz9_gravar(nt, 0xb, efeitos as i8 as u32);
     let jogo = (cpz9_sb(jogador + 0x18) > 0x17 && tipo == 0x10) || tipo == 0x20;
     cpz9_gravar(nt, 0xc, jogo as u32);
-    entregar(cpz9_d(0xb7431c), nt, clube);
+    entregar(read_usize(0xb7431c), nt, clube);
 }
 
 /// O comparador em ensaio: a cópia para antes da notícia; a original roda a partir do mesmo estado ([0xae1080] e
@@ -227,10 +224,10 @@ unsafe extern "stdcall" fn comparar_noticia_reacao_a_multa(jogador: usize, motiv
 /// casa e sem lesão grave; a original deixa o Fine em ecx). Os dois com ficha (+0x61) e nação (+0x1a), o jogador com
 /// clube (+0x39): a notícia 0x1394 (o jogador e o treinador, id e chaves; o desfecho; sorteio(5)) ao clube do jogador.
 unsafe extern "stdcall" fn noticia_retorno_do_treinador(jogador: usize, treinador: usize, desfecho: u32) {
-    if jogador == 0 || cpz9_d(jogador + 0x61) == 0 || cpz9_d(jogador + 0x1a) == 0 || cpz9_d(jogador + 0x39) == 0 {
+    if jogador == 0 || read_usize(jogador + 0x61) == 0 || read_usize(jogador + 0x1a) == 0 || read_usize(jogador + 0x39) == 0 {
         return;
     }
-    if treinador == 0 || cpz9_d(treinador + 0x61) == 0 || cpz9_d(treinador + 0x1a) == 0 {
+    if treinador == 0 || read_usize(treinador + 0x61) == 0 || read_usize(treinador + 0x1a) == 0 {
         return;
     }
     crate::comparacao::ramo("cpz_9 noticia do retorno do treinador");
@@ -244,7 +241,7 @@ unsafe extern "stdcall" fn noticia_retorno_do_treinador(jogador: usize, treinado
     cpz9_gravar(nt, 8, desfecho as i8 as u32);
     let r = cpz9_sortear(5);
     cpz9_gravar(nt, 9, r as u32);
-    entregar(cpz9_d(0xb7431c), nt, cpz9_d(jogador + 0x39));
+    entregar(read_usize(0xb7431c), nt, read_usize(jogador + 0x39));
 }
 
 // ponytail: a notícia sorteia e vai às caixas dos técnicos (aloca): só a original, com a cópia levando o ramo; sem

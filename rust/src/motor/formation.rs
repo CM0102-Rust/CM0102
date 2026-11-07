@@ -451,13 +451,7 @@ comparar_valor!(comparar_vagas_sem_conflito, vagas_sem_conflito, 351, () -> u8);
 
 // ---------- 257a leva: as casas da formação: gravar a coordenada da casa e escolher as posições, a posição repetida e o tipo de marcação (formation.cpp) ----------
 
-unsafe fn cpu11_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cpu11_pw(a: usize, v: u16) {
-    core::ptr::write_unaligned(a as *mut u16, v);
-}
 
 /// { 0x5b3560 } (thiscall, ret 0x10, formation.cpp): `Formation::set_slot_coordinate(casa, fase, faixa, coord)`:
 /// grava a coordenada (dword: x 0..0x1a, y 0..0x23) da casa na fase e na faixa da bola (+0x164, 11 × 2 × 3 × 4
@@ -494,8 +488,8 @@ unsafe extern "thiscall" fn coordenada_da_casa(this: usize, casa: u32, fase: u32
     for p in 0..2usize {
         melhor[p] = 0x7fffffff;
         let mut lista = 0x9cc368usize;
-        while cpu11_w(lista) != -1 {
-            let pos = cpu11_w(lista) as u16;
+        while read_i16(lista) != -1 {
+            let pos = read_i16(lista) as u16;
             let base = this + 0x164 + su * 0x60 + p * 0x30;
             let mut dist: i32 = 0;
             for zx in 0..3u32 {
@@ -503,8 +497,8 @@ unsafe extern "thiscall" fn coordenada_da_casa(this: usize, casa: u32, fase: u32
                     // a máscara vai com a altura da faixa nos 16 bits de cima (o ecx da original); a 0x5b7e60 não os lê
                     casa_no(pos as u32 | zy << 16, p as i8, zx | zy << 16, saida.as_mut_ptr());
                     let c = base + 4 * (zx as usize * 4 + zy as usize);
-                    let dy = ((cpu11_w(c + 2) as i32 * 12) / 36 - (saida[1] as i32 * 12) / 36).wrapping_abs();
-                    let dx = ((cpu11_w(c) as i32 * 9) / 27 - (saida[0] as i32 * 9) / 27).wrapping_abs();
+                    let dy = ((read_i16(c + 2) as i32 * 12) / 36 - (saida[1] as i32 * 12) / 36).wrapping_abs();
+                    let dx = ((read_i16(c) as i32 * 9) / 27 - (saida[0] as i32 * 9) / 27).wrapping_abs();
                     ultimo_dy = dy;
                     dist = dx.wrapping_add(dist).wrapping_add(dy);
                 }
@@ -533,7 +527,7 @@ unsafe extern "thiscall" fn coordenada_da_casa(this: usize, casa: u32, fase: u32
     for q in 0..2i8 {
         let mut a: i8 = 0;
         while a < conta[q as usize] {
-            if cand[(a as i32 + q as i32 * 11) as usize] == cpu11_w(geral) as u16 {
+            if cand[(a as i32 + q as i32 * 11) as usize] == read_i16(geral) as u16 {
                 sf = q;
                 si = a;
                 break;
@@ -542,12 +536,12 @@ unsafe extern "thiscall" fn coordenada_da_casa(this: usize, casa: u32, fase: u32
         }
     }
     let novo = cand[(sf as i32 * 11 + si as i32) as usize];
-    if cpu11_w(geral) as u16 != novo {
-        cpu11_pw(geral, novo);
+    if read_i16(geral) as u16 != novo {
+        write_u16(geral, novo);
         mascara(this);
         *((this + 0x143 + su) as *mut u8) = 1;
         for k in 0..11i8 {
-            if k != s && cpu11_w(this + 0x12d + k as usize * 2) as u16 == novo {
+            if k != s && read_i16(this + 0x12d + k as usize * 2) as u16 == novo {
                 *((this + 0x143 + k as usize) as *mut u8) = 0;
             }
         }
@@ -555,10 +549,10 @@ unsafe extern "thiscall" fn coordenada_da_casa(this: usize, casa: u32, fase: u32
     let extra = this + 0x14e + su * 2;
     let o = (1 - sf as i32) * 11; // o começo da lista da outra fase
     let no = conta[(1 - sf) as usize];
-    let atual = cpu11_w(geral) as u16;
+    let atual = read_i16(geral) as u16;
     for a in 0..no.max(0) as i32 {
         if cand[(o + a) as usize] == atual {
-            cpu11_pw(extra, cand[(o + a) as usize]);
+            write_u16(extra, cand[(o + a) as usize]);
             return 1;
         }
     }
@@ -566,14 +560,14 @@ unsafe extern "thiscall" fn coordenada_da_casa(this: usize, casa: u32, fase: u32
     let (mut setor, mut lado_c, mut lado_a) = (0u16, 0u16, 0u16);
     for b in 0..no.max(0) as i32 {
         separar(cand[(o + b) as usize] as u32, &mut setor, &mut lado_c);
-        separar(cpu11_w(geral) as u16 as u32, &mut setor, &mut lado_a);
+        separar(read_i16(geral) as u16 as u32, &mut setor, &mut lado_a);
         if lado_c == lado_a {
-            cpu11_pw(extra, cand[(o + b) as usize]);
+            write_u16(extra, cand[(o + b) as usize]);
             return 1;
         }
     }
     if no != 2 {
-        cpu11_pw(extra, cand[o as usize]);
+        write_u16(extra, cand[o as usize]);
         return 1;
     }
     // duas na outra fase: o meio dos bits de setor (1..0x40) e de lado (0x80..0x800) das duas. As palavras do quadro a
@@ -611,7 +605,7 @@ unsafe extern "thiscall" fn coordenada_da_casa(this: usize, casa: u32, fase: u32
     }
     let ib = (v13 as i32 + dl as i32) / 2;
     let ia = (v12 as i32 + v1a as i32) / 2;
-    cpu11_pw(extra, q[ib as usize & 0xff] | q[(12 + ia) as usize & 0xff]);
+    write_u16(extra, q[ib as usize & 0xff] | q[(12 + ia) as usize & 0xff]);
     1
 }
 
@@ -626,7 +620,7 @@ unsafe extern "thiscall" fn posicao_repetida_na_formacao(this: usize, casa: u32,
     *saida = 0;
     let su = s as usize;
     for k in 0..11usize {
-        if k != su && cpu11_w(this + 0x12d + k * 2) == cpu11_w(this + 0x12d + su * 2) {
+        if k != su && read_i16(this + 0x12d + k * 2) == read_i16(this + 0x12d + su * 2) {
             if *((this + 0x143 + k) as *const i8) < *((this + 0x143 + su) as *const i8) {
                 *saida = 1;
                 return 1;

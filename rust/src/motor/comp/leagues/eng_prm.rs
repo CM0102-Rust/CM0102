@@ -1,12 +1,6 @@
 // ---------- 278a leva: os construtores das quatro divisões inglesas (a Premier, a First, a Second e a Third Division: as regras, a tabela, os jogos, as estatísticas e as posições previstas na criação) (eng_prm.cpp, eng_first.cpp, eng_second.cpp, eng_third.cpp) ----------
 
-unsafe fn cql6_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cql6_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
 
 /// O que muda de uma divisão inglesa para outra no construtor.
 struct Cql6Divisao {
@@ -46,8 +40,8 @@ unsafe fn cql6_construir(this: usize, ano: u32, registro: usize, p: &Cql6Divisao
     let estatisticas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x49ee70usize);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68a850usize);
     base(this);
-    cql6_pd(this + 4, registro);
-    cql6_pd(this, p.vtabela);
+    write_u32_from_usize(this + 4, registro);
+    write_u32_from_usize(this, p.vtabela);
     core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
     *((this + 0x50) as *mut u8) = 9; // cql6: a regra de disciplina das ligas inglesas
     if let Some((capacidade, sentados)) = p.estadio {
@@ -59,13 +53,13 @@ unsafe fn cql6_construir(this: usize, ano: u32, registro: usize, p: &Cql6Divisao
     }
     crate::comparacao::ramo("cql_6 divisao inglesa nova");
     *((this + 0x44) as *mut u8) = 0xff;
-    cql6_pd(this + 0x30, 0xffff_ffff);
-    cql6_pd(this + 0x2c, p.fases as usize);
+    write_u32_from_usize(this + 0x30, 0xffff_ffff);
+    write_u32_from_usize(this + 0x2c, p.fases as usize);
     if p.fases != 0 {
         let v = alocar(4);
-        cql6_pd(this + 0xc, v);
+        write_u32_from_usize(this + 0xc, v);
     } else {
-        cql6_pd(this + 0xc, 0);
+        write_u32_from_usize(this + 0xc, 0);
     }
     if regras(this) == 0 {
         aviso_em(p.arquivo, p.linhas[0]);
@@ -85,7 +79,7 @@ unsafe fn cql6_construir(this: usize, ano: u32, registro: usize, p: &Cql6Divisao
     }
     let e = novo(0x5ce);
     let s = if e != 0 { estatisticas(e, this) } else { 0 };
-    cql6_pd(this + 8, s);
+    write_u32_from_usize(this + 8, s);
     if s == 0 {
         aviso_em(p.arquivo, p.linhas[4]);
         return this;
@@ -160,15 +154,15 @@ unsafe extern "thiscall" fn construir_third(this: usize, ano: u32, registro: usi
 /// fases, a fase atual −1 e as estatísticas em +8.
 unsafe fn cql6_comparar(nome: &str, this: usize, ano: u32, registro: usize, p: &Cql6Divisao, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && cql6_d(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && cql6_d(this + 4) == registro && *((this + 0x50) as *const u8) == 9;
+    let mut ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
+        && read_u32_as_usize(this + 4) == registro && *((this + 0x50) as *const u8) == 9;
     if let Some((c, s)) = p.estadio {
         ok = ok && core::ptr::read_unaligned((this + 0xe2) as *const u16) == c && core::ptr::read_unaligned((this + 0xe4) as *const u16) == s;
     }
-    if *((this + 0x44) as *const u8) == 0xff && cql6_d(this + 8) != 0 {
-        ok = ok && cql6_d(this + 0x2c) == p.fases as usize && (cql6_d(this + 0xc) != 0) == (p.fases != 0);
+    if *((this + 0x44) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
+        ok = ok && read_u32_as_usize(this + 0x2c) == p.fases as usize && (read_u32_as_usize(this + 0xc) != 0) == (p.fases != 0);
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cql6_d(this), cql6_d(this + 0x2c), cql6_d(this + 0xc), cql6_d(this + 8)));
+    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0x2c), read_u32_as_usize(this + 0xc), read_u32_as_usize(this + 8)));
     r
 }
 
@@ -194,9 +188,6 @@ unsafe extern "thiscall" fn comparar_construir_third(this: usize, ano: u32, regi
 
 // ---------- 275a leva: as regras das quatro divisões inglesas: turnos, pontos, vagas de acesso, mata-mata e rebaixamento, desempates e a tabela de rodadas (eng_prm.cpp, eng_first.cpp, eng_second.cpp, eng_third.cpp) ----------
 
-unsafe fn cqi4_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 /// No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
 static mut CQI4_ENSAIO: bool = false;
@@ -213,7 +204,7 @@ unsafe fn cqi4_regras(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
         }
     }
     if !CQI4_ENSAIO {
-        let rodadas: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(cqi4_d(cqi4_d(this) + 0x3c));
+        let rodadas: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
         let t = rodadas(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
         core::ptr::write_unaligned((this + 0xba) as *mut usize, t);
     }
@@ -240,7 +231,7 @@ unsafe fn cqi4_premier() -> Vec<(usize, u8, u32)> {
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a Premier, 2 turnos e 3 pontos
     v.extend_from_slice(&[(0xab, 2, 0), (0xdb, 2, 0), (0xbe, 1, 0), (0xbf, 1, 0), (0xc0, 1, 0)]);
     v.push((0xc1, 1, 3)); // cqi4: a Premier rebaixa 3
-    v.extend_from_slice(&[(0x1c, 4, 0xffff_ffff), (0x20, 4, cqi4_d(0x9cf5c0) as u32)]);
+    v.extend_from_slice(&[(0x1c, 4, 0xffff_ffff), (0x20, 4, read_usize(0x9cf5c0) as u32)]);
     v
 }
 
@@ -256,7 +247,7 @@ unsafe extern "thiscall" fn regras_da_first(this: usize) -> u32 {
 unsafe fn cqi4_first() -> Vec<(usize, u8, u32)> {
     let mut v = cqi4_comuns();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a First joga 2 turnos
-    v.extend_from_slice(&[(0xbe, 1, 2), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 3), (0x1c, 4, cqi4_d(0x9cf5bc) as u32), (0x4a, 1, 3), (0x20, 4, cqi4_d(0x9cf5c4) as u32), (0x49, 1, 5)]);
+    v.extend_from_slice(&[(0xbe, 1, 2), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 3), (0x1c, 4, read_usize(0x9cf5bc) as u32), (0x4a, 1, 3), (0x20, 4, read_usize(0x9cf5c4) as u32), (0x49, 1, 5)]);
     v
 }
 
@@ -270,7 +261,7 @@ unsafe extern "thiscall" fn regras_da_second(this: usize) -> u32 {
 unsafe fn cqi4_second() -> Vec<(usize, u8, u32)> {
     let mut v = cqi4_comuns();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a Second dá 3 pontos pela vitória
-    v.extend_from_slice(&[(0xbe, 1, 2), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 4), (0x1c, 4, cqi4_d(0x9cf5c0) as u32), (0x4a, 1, 3), (0x20, 4, cqi4_d(0x9cf5c8) as u32), (0x49, 1, 5)]);
+    v.extend_from_slice(&[(0xbe, 1, 2), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 4), (0x1c, 4, read_usize(0x9cf5c0) as u32), (0x4a, 1, 3), (0x20, 4, read_usize(0x9cf5c8) as u32), (0x49, 1, 5)]);
     v
 }
 
@@ -286,9 +277,9 @@ unsafe extern "thiscall" fn regras_da_third(this: usize) -> u32 {
 unsafe fn cqi4_third(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = cqi4_comuns();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a Third, 2 turnos e 3 pontos
-    v.extend_from_slice(&[(0xbe, 1, 3), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 1), (0x1c, 4, cqi4_d(0x9cf5c4) as u32)]);
-    let nacao = cqi4_d(cqi4_d(this + 4) + 0x5d);
-    let abaixo = if *((nacao + 0x11c) as *const u8) & 4 != 0 { cqi4_d(0x9cf69c) as u32 } else { 0xffff_ffff };
+    v.extend_from_slice(&[(0xbe, 1, 3), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 1), (0x1c, 4, read_usize(0x9cf5c4) as u32)]);
+    let nacao = read_usize(read_usize(this + 4) + 0x5d);
+    let abaixo = if *((nacao + 0x11c) as *const u8) & 4 != 0 { read_usize(0x9cf69c) as u32 } else { 0xffff_ffff };
     v.extend_from_slice(&[(0x20, 4, abaixo), (0x4a, 1, 3), (0x49, 1, 5)]);
     v
 }
@@ -343,17 +334,11 @@ unsafe extern "thiscall" fn comparar_regras_da_third(this: usize) -> u32 {
 
 // ---------- 275a leva: a tabela das quatro divisões inglesas: os clubes de cada divisão, o fundo de prêmios e o dinheiro da TV no início da temporada (eng_prm.cpp, eng_second.cpp, eng_third.cpp, eng_first.cpp) ----------
 
-unsafe fn cqi5_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cqi5_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O registro de competição (0x6b bytes em [0xae23d0]) do id guardado no global `g`.
 unsafe fn cqi5_registro(g: usize) -> usize {
-    cqi5_d(0xae23d0).wrapping_add((cqi5_d(g) as i32 as usize).wrapping_mul(0x6b))
+    read_usize(0xae23d0).wrapping_add((read_usize(g) as i32 as usize).wrapping_mul(0x6b))
 }
 
 /// O ano do jogo ([0xae2c92]) passou de 1999 (o dinheiro da TV maior).
@@ -385,23 +370,23 @@ unsafe fn cqi5_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = cqi5_d(0xae23b4);
-    while (i as i32) < cqi5_d(0xae235c) as i32 {
-        let comp = cqi5_d(clube + 0x57);
-        if comp != 0 && cqi5_d(comp) == cqi5_d(g) {
+    let mut clube = read_usize(0xae23b4);
+    while (i as i32) < read_usize(0xae235c) as i32 {
+        let comp = read_usize(clube + 0x57);
+        if comp != 0 && read_usize(comp) == read_usize(g) {
             let linha = k; // cqi5: a linha k recebe o k-ésimo clube da divisão
             // ponytail: a original empurra a linha no eax com os bits de cima do id da competição; a 0x687430 só lê
             // o byte.
             iniciar(this, linha as u32, clube, 0, 0);
             k = k.wrapping_add(1);
-            if k as i8 as i16 == cqi5_w(this + 0x3e) {
+            if k as i8 as i16 == read_i16(this + 0x3e) {
                 break;
             }
         }
         i = i.wrapping_add(1);
         clube = clube.wrapping_add(0x245);
     }
-    if k as i8 as i16 != cqi5_w(this + 0x3e) {
+    if k as i8 as i16 != read_i16(this + 0x3e) {
         return 0;
     }
     crate::comparacao::ramo("cqi_5 tabela cheia");
@@ -442,7 +427,7 @@ unsafe extern "thiscall" fn tabela_da_first(this: usize) -> u32 {
     cqi5_tabela(this, 0x18, 0x9c4374, 0x22d, 0x9cf5c0, 0x11170, || {
         if cqi5_depois_de_1999() {
             cqi5_pagar(this, 0x59b011, cqi5_registro(0x9cf5bc)); // cqi5: a TV de quem caiu da Premier
-            cqi5_pagar(this, 0x3e8fa0, cqi5_d(this + 4));
+            cqi5_pagar(this, 0x3e8fa0, read_usize(this + 4));
             cqi5_pagar(this, 0x3e8fa0, cqi5_registro(0x9cf5c4));
         } else {
             cqi5_pagar(this, 0xf4240, 0);
@@ -456,21 +441,21 @@ unsafe extern "thiscall" fn tabela_da_first(this: usize) -> u32 {
 unsafe fn cqi5_comparar(nome: &str, this: usize, n: i16, g: usize, cota: i32, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
-    while i < cqi5_d(0xae235c) as i32 && (plano.len() as i16) < n {
-        let clube = cqi5_d(0xae23b4) + (i as usize) * 0x245;
-        let comp = cqi5_d(clube + 0x57);
-        if comp != 0 && cqi5_d(comp) == cqi5_d(g) {
+    while i < read_usize(0xae235c) as i32 && (plano.len() as i16) < n {
+        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
+        let comp = read_usize(clube + 0x57);
+        if comp != 0 && read_usize(comp) == read_usize(g) {
             plano.push(clube);
         }
         i += 1;
     }
     let r = original();
-    let t = cqi5_d(this + 0xb1);
+    let t = read_usize(this + 0xb1);
     let esperado = (plano.len() as i16 == n) as u32;
-    let mut igual = r == esperado && cqi5_w(this + 0x3e) == n && t != 0;
+    let mut igual = r == esperado && read_i16(this + 0x3e) == n && t != 0;
     let mut achou: Vec<usize> = Vec::new();
     if igual {
-        achou = (0..plano.len()).map(|k| cqi5_d(t + k * 0x3b)).collect();
+        achou = (0..plano.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         igual = achou == plano;
         if r == 1 {
             let premio: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(0x682f70usize);

@@ -1,8 +1,5 @@
 // ---------- 283a leva: os construtores dos estaduais: Goiano, Mineiro e Norte (as regras, a tabela, os jogos, as estatísticas e as posições previstas na criação) (bra_reg_goias.cpp, bra_reg_minas_gerais.cpp, bra_reg_north.cpp) ----------
 
-unsafe fn cqt2_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 /// Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
 /// final; o vetor [+0xc] = malloc de 4 × fases), as regras (thiscall, ret 0), a tabela (thiscall, ret 0), as posições
@@ -87,12 +84,12 @@ unsafe fn cqt2_construir(this: usize, ano: u32, registro: usize, e: &Cqt2Estadua
 /// fases e a importância +0x51 = 0xf.
 unsafe fn cqt2_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt2Estadual, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && cqt2_d(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && cqt2_d(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
-    if *((this + 0x44) as *const u8) == 0xff && cqt2_d(this + 8) != 0 {
-        ok = ok && cqt2_d(this + 0x2c) == e.fases as usize && cqt2_d(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
+    let mut ok = r == this && read_usize(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
+        && read_usize(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
+    if *((this + 0x44) as *const u8) == 0xff && read_usize(this + 8) != 0 {
+        ok = ok && read_usize(this + 0x2c) == e.fases as usize && read_usize(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt2_d(this), cqt2_d(this + 0x2c), cqt2_d(this + 0xc), cqt2_d(this + 8)));
+    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, read_usize(this), read_usize(this + 0x2c), read_usize(this + 0xc), read_usize(this + 8)));
     r
 }
 
@@ -158,9 +155,6 @@ unsafe extern "thiscall" fn comparar_cqt2_construir_norte(this: usize, ano: u32,
 
 // ---------- 280a leva: a virada da temporada e a fase seguinte dos estaduais: Goiano, Norte e Nordeste (bra_reg_goias.cpp, bra_reg_north.cpp, bra_reg_northeast.cpp) ----------
 
-unsafe fn cqp8_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 /// A virada da temporada de um estadual (`start_new_season`, slot 3, +0x08; o mesmo molde nos nove estaduais de pontos
 /// corridos com mata-mata: só mudam o fonte, as linhas das caixas e a rotina da tabela, conferido instrução a instrução):
@@ -177,26 +171,26 @@ unsafe fn cqp8_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     liberar_tabela(this, 0);
-    let l = cqp8_d(this + 0xba);
+    let l = read_usize(this + 0xba);
     if l != 0 {
         liberar(l);
         core::ptr::write_unaligned((this + 0xba) as *mut usize, 0);
     }
-    let estatisticas = cqp8_d(this + 8);
+    let estatisticas = read_usize(this + 8);
     if estatisticas != 0 {
         let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
         arquivar(estatisticas, 1);
     }
-    if (cqp8_d(this + 0x30) as i32) >= 0 {
+    if (read_usize(this + 0x30) as i32) >= 0 {
         let mut i = 0i32;
         loop {
-            let f = cqp8_d(cqp8_d(this + 0xc) + 4 * i as usize);
+            let f = read_usize(read_usize(this + 0xc) + 4 * i as usize);
             if f != 0 {
-                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(cqp8_d(cqp8_d(f)));
+                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
                 destruir(f, 1);
             }
             i += 1;
-            if i > cqp8_d(this + 0x30) as i32 {
+            if i > read_usize(this + 0x30) as i32 {
                 break;
             }
         }
@@ -205,7 +199,7 @@ unsafe fn cqp8_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
     crate::comparacao::ramo(ramo);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
-    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqp8_d(cqp8_d(this) + 0x8c));
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
     if regras(this) == 0 {
         aviso_em(arquivo, linhas[0]);
         return 0;
@@ -225,18 +219,18 @@ unsafe fn cqp8_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 
         aviso_em(arquivo, linhas[3]);
         return 0;
     }
-    let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqp8_d(cqp8_d(this) + 0x5c));
+    let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
     previstas(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x79cee0usize);
-    renovar(cqp8_d(0xb74340), cqp8_d(this + 4))
+    renovar(read_usize(0xb74340), read_usize(this + 4))
 }
 
 /// A fase seguinte de um estadual (`advance_stage`, slot 11, +0x28): na última fase (+0x30 ≥ +0x2c − 1, com sinal), a
 /// caixa de erro e nada mais; senão +0x30 sobe um e, ao chegar a 0 (o fim dos pontos corridos), monta o mata-mata
 /// (`mata_mata`, call direto com o ecx da liga -> thiscall, ret 0).
 unsafe fn cqp8_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata_mata: usize) {
-    let fase = cqp8_d(this + 0x30) as i32;
-    if fase >= (cqp8_d(this + 0x2c) as i32).wrapping_sub(1) {
+    let fase = read_usize(this + 0x30) as i32;
+    if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(arquivo, linha);
     }
     let fase = fase + 1;
@@ -260,10 +254,10 @@ unsafe fn cqp8_comparar_virada(nome: &str, this: usize, original: impl FnOnce() 
 /// O comparador da fase seguinte: só a original (ponytail: ao chegar a 0 monta o mata-mata, que aloca e sorteia), com o
 /// plano: na última fase, +0x30 igual; senão +0x30 + 1 (o mata-mata grava 0, o mesmo valor).
 unsafe fn cqp8_comparar_fase_seguinte(nome: &str, this: usize, original: impl FnOnce()) {
-    let antes = cqp8_d(this + 0x30) as i32;
-    let ultima = antes >= (cqp8_d(this + 0x2c) as i32).wrapping_sub(1);
+    let antes = read_usize(this + 0x30) as i32;
+    let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original();
-    let depois = cqp8_d(this + 0x30) as i32;
+    let depois = read_usize(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) antes={} depois={}", nome, this, antes, depois));
 }
 
@@ -335,19 +329,13 @@ unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_nordeste(this: usize)
 
 // ---------- 277a leva: a tabela dos estaduais: Goiano, Mineiro e Norte (bra_reg_goias.cpp, bra_reg_minas_gerais.cpp, bra_reg_north.cpp) ----------
 
-unsafe fn cql9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cql9_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O clube é do estadual do global `g`: a divisão reserva do clube (+0x60, ReserveDivision, que no Brasil guarda o
 /// estadual) não é nula e o id do registro (+0) é o do global.
 unsafe fn cql9_do_estadual(clube: usize, g: usize) -> bool {
-    let comp = cql9_d(clube + 0x60);
-    comp != 0 && cql9_d(comp) == cql9_d(g)
+    let comp = read_usize(clube + 0x60);
+    comp != 0 && read_usize(comp) == read_usize(g)
 }
 
 /// O corpo comum dos estaduais (o mesmo molde nos doze, só mudam as constantes): +0x3e = `n` clubes; a tabela
@@ -367,22 +355,22 @@ unsafe fn cql9_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = cql9_d(0xae23b4);
-    while (i as i32) < cql9_d(0xae235c) as i32 {
+    let mut clube = read_usize(0xae23b4);
+    while (i as i32) < read_usize(0xae235c) as i32 {
         if cql9_do_estadual(clube, g) {
             // ponytail: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
             // byte. Com girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
             iniciar(this, l as u32, clube, 0, 0);
             k = k.wrapping_add(1);
-            if k as i8 as i16 == cql9_w(this + 0x3e) {
+            if k as i8 as i16 == read_i16(this + 0x3e) {
                 break;
             }
         }
         i = i.wrapping_add(1);
         clube = clube.wrapping_add(0x245);
     }
-    if k as i8 as i16 != cql9_w(this + 0x3e) {
+    if k as i8 as i16 != read_i16(this + 0x3e) {
         return 0;
     }
     crate::comparacao::ramo(ramo);
@@ -413,20 +401,20 @@ unsafe extern "thiscall" fn cql9_tabela_do_norte(this: usize) -> u32 {
 unsafe fn cql9_comparar(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
-    while i < cql9_d(0xae235c) as i32 && (plano.len() as i16) < n {
-        let clube = cql9_d(0xae23b4) + (i as usize) * 0x245;
+    while i < read_usize(0xae235c) as i32 && (plano.len() as i16) < n {
+        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
         if cql9_do_estadual(clube, g) {
             plano.push(clube);
         }
         i += 1;
     }
     let r = original();
-    let t = cql9_d(this + 0xb1);
+    let t = read_usize(this + 0xb1);
     let esperado = (plano.len() as i16 == n) as u32;
-    let mut igual = r == esperado && cql9_w(this + 0x3e) == n && t != 0;
+    let mut igual = r == esperado && read_i16(this + 0x3e) == n && t != 0;
     let mut achou: Vec<usize> = Vec::new();
     if igual {
-        achou = (0..plano.len()).map(|k| cql9_d(t + k * 0x3b)).collect();
+        achou = (0..plano.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         igual = achou == plano;
     }
     PLACAR.registrar(igual, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", nome, this, r, plano, achou));
@@ -450,17 +438,8 @@ unsafe extern "thiscall" fn comparar_cql9_tabela_do_norte(this: usize) -> u32 {
 
 // ---------- 274a leva: as regras do Goiano e das duas divisões da J-League (bra_reg_goias.cpp, jap_j1.cpp, jap_j2.cpp) ----------
 
-unsafe fn cqj7_b(o: usize, d: usize, v: u8) {
-    *((o + d) as *mut u8) = v;
-}
 
-unsafe fn cqj7_w(o: usize, d: usize, v: u16) {
-    core::ptr::write_unaligned((o + d) as *mut u16, v);
-}
 
-unsafe fn cqj7_d(o: usize, d: usize, v: u32) {
-    core::ptr::write_unaligned((o + d) as *mut u32, v);
-}
 
 /// O calendário da fase principal pelo slot 16 da vtable (`create_schedule`, thiscall, ret 0x10, conferido nos três
 /// alvos: 0x432e50, 0x662e30, 0x664780): estágio -1, as saídas +0xa9 e +0x3a, sem a marca; o ponteiro vai para +0xba.
@@ -468,7 +447,7 @@ unsafe fn cqj7_calendario(o: usize) {
     let vt = *(o as *const usize);
     let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
     let r = f(o, -1, o + 0xa9, o + 0x3a, 0);
-    cqj7_d(o, 0xba, r as u32);
+    write_u32_at(o, 0xba, r as u32);
 }
 
 /// O objeto da liga (0xee bytes) menos as saídas do calendário (+0x3a, +0xa9, +0xba): os três calendários não gravam
@@ -479,73 +458,73 @@ fn cqj7_regioes(o: usize) -> [(usize, usize); 4] {
 
 /// As regras do Goiano (o que a 0x433640 grava antes do calendário).
 unsafe fn cqj7_regras_goiano(o: usize) {
-    cqj7_w(o, 0xab, 0);
-    cqj7_w(o, 0xdb, 0);
-    cqj7_b(o, 0xc7, 0);
-    cqj7_b(o, 0xbf, 0);
-    cqj7_b(o, 0xc0, 0);
-    cqj7_b(o, 0xc2, 3);
-    cqj7_b(o, 0xc5, 3); // cqj7: o primeiro desempate do Goiano
-    cqj7_b(o, 0x4a, 3);
-    cqj7_b(o, 0xbe, 8); // os 8 classificados
-    cqj7_w(o, 0xd9, 8);
-    cqj7_w(o, 0x3c, 1);
-    cqj7_b(o, 0xc3, 1);
-    cqj7_b(o, 0xc4, 2);
-    cqj7_b(o, 0x42, 1);
-    cqj7_b(o, 0xc6, 1);
-    cqj7_b(o, 0xc1, 4);
-    cqj7_d(o, 0x1c, 0xffff_ffff);
-    cqj7_d(o, 0x20, 0xffff_ffff);
-    cqj7_b(o, 0x49, 7);
+    write_u16_at(o, 0xab, 0);
+    write_u16_at(o, 0xdb, 0);
+    write_u8_at(o, 0xc7, 0);
+    write_u8_at(o, 0xbf, 0);
+    write_u8_at(o, 0xc0, 0);
+    write_u8_at(o, 0xc2, 3);
+    write_u8_at(o, 0xc5, 3); // cqj7: o primeiro desempate do Goiano
+    write_u8_at(o, 0x4a, 3);
+    write_u8_at(o, 0xbe, 8); // os 8 classificados
+    write_u16_at(o, 0xd9, 8);
+    write_u16_at(o, 0x3c, 1);
+    write_u8_at(o, 0xc3, 1);
+    write_u8_at(o, 0xc4, 2);
+    write_u8_at(o, 0x42, 1);
+    write_u8_at(o, 0xc6, 1);
+    write_u8_at(o, 0xc1, 4);
+    write_u32_at(o, 0x1c, 0xffff_ffff);
+    write_u32_at(o, 0x20, 0xffff_ffff);
+    write_u8_at(o, 0x49, 7);
 }
 
 /// As regras da J1 (0x663620).
 unsafe fn cqj7_regras_j1(o: usize) {
-    cqj7_w(o, 0x3c, 2);
-    cqj7_b(o, 0xc2, 3);
-    cqj7_b(o, 0xc3, 1); // cqj7: os pontos por empate da J1
-    cqj7_b(o, 0xc4, 2);
-    cqj7_w(o, 0xab, 0x82);
-    cqj7_w(o, 0xdb, 0);
-    cqj7_b(o, 0x42, 1);
-    cqj7_b(o, 0xc5, 1); // desempates: saldo, gols pró, gols fora, nenhum
-    cqj7_b(o, 0xc6, 2);
-    cqj7_b(o, 0xc7, 4);
-    cqj7_b(o, 0xc8, 0);
-    cqj7_b(o, 0xbe, 0);
-    cqj7_b(o, 0xbf, 0);
-    cqj7_b(o, 0xc0, 0);
-    cqj7_b(o, 0xc1, 2); // dois caem para a J2
-    cqj7_d(o, 0x1c, 0xffff_ffff);
-    cqj7_b(o, 0x52, 2);
-    cqj7_b(o, 0x4a, 3);
-    cqj7_d(o, 0x20, *(0x9cf768 as *const u32)); // cai para a J2
-    cqj7_w(o, 0xd9, 8);
-    cqj7_b(o, 0x49, 5);
+    write_u16_at(o, 0x3c, 2);
+    write_u8_at(o, 0xc2, 3);
+    write_u8_at(o, 0xc3, 1); // cqj7: os pontos por empate da J1
+    write_u8_at(o, 0xc4, 2);
+    write_u16_at(o, 0xab, 0x82);
+    write_u16_at(o, 0xdb, 0);
+    write_u8_at(o, 0x42, 1);
+    write_u8_at(o, 0xc5, 1); // desempates: saldo, gols pró, gols fora, nenhum
+    write_u8_at(o, 0xc6, 2);
+    write_u8_at(o, 0xc7, 4);
+    write_u8_at(o, 0xc8, 0);
+    write_u8_at(o, 0xbe, 0);
+    write_u8_at(o, 0xbf, 0);
+    write_u8_at(o, 0xc0, 0);
+    write_u8_at(o, 0xc1, 2); // dois caem para a J2
+    write_u32_at(o, 0x1c, 0xffff_ffff);
+    write_u8_at(o, 0x52, 2);
+    write_u8_at(o, 0x4a, 3);
+    write_u32_at(o, 0x20, *(0x9cf768 as *const u32)); // cai para a J2
+    write_u16_at(o, 0xd9, 8);
+    write_u8_at(o, 0x49, 5);
 }
 
 /// As regras da J2 (0x665140): não grava +0x52 nem a palavra +0xd9 (fica a de `League::League`).
 unsafe fn cqj7_regras_j2(o: usize) {
-    cqj7_w(o, 0x3c, 4); // quatro turnos
-    cqj7_b(o, 0xc2, 3); // cqj7: os pontos por vitória da J2
-    cqj7_b(o, 0xc3, 1);
-    cqj7_b(o, 0xc4, 2);
-    cqj7_w(o, 0xab, 0x82);
-    cqj7_w(o, 0xdb, 0);
-    cqj7_b(o, 0x42, 1);
-    cqj7_b(o, 0xc5, 1);
-    cqj7_b(o, 0xc6, 2);
-    cqj7_b(o, 0xc7, 4);
-    cqj7_b(o, 0xc8, 0);
-    cqj7_b(o, 0xbe, 2); // dois sobem para a J1
-    cqj7_b(o, 0xbf, 0);
-    cqj7_b(o, 0xc0, 0);
-    cqj7_b(o, 0xc1, 0);
-    cqj7_d(o, 0x1c, *(0x9cf65c as *const u32)); // sobe para a J1
-    cqj7_b(o, 0x4a, 3);
-    cqj7_d(o, 0x20, 0xffff_ffff);
-    cqj7_b(o, 0x49, 5);
+    write_u16_at(o, 0x3c, 4); // quatro turnos
+    write_u8_at(o, 0xc2, 3); // cqj7: os pontos por vitória da J2
+    write_u8_at(o, 0xc3, 1);
+    write_u8_at(o, 0xc4, 2);
+    write_u16_at(o, 0xab, 0x82);
+    write_u16_at(o, 0xdb, 0);
+    write_u8_at(o, 0x42, 1);
+    write_u8_at(o, 0xc5, 1);
+    write_u8_at(o, 0xc6, 2);
+    write_u8_at(o, 0xc7, 4);
+    write_u8_at(o, 0xc8, 0);
+    write_u8_at(o, 0xbe, 2); // dois sobem para a J1
+    write_u8_at(o, 0xbf, 0);
+    write_u8_at(o, 0xc0, 0);
+    write_u8_at(o, 0xc1, 0);
+    write_u32_at(o, 0x1c, *(0x9cf65c as *const u32)); // sobe para a J1
+    write_u8_at(o, 0x4a, 3);
+    write_u32_at(o, 0x20, 0xffff_ffff);
+    write_u8_at(o, 0x49, 5);
 }
 
 /// { 0x433640 } (thiscall, bra_reg_goias.cpp): `BraRegGoias::set_up_rules` (slot 36), as regras do Goiano e o

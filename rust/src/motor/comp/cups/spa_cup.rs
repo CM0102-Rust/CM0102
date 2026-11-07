@@ -1,16 +1,10 @@
 // ---------- 284a leva: o dia da Copa do Rei (a copa refeita uma vez no ano dela) e o histórico da temporada de quatro copas (o da última fase): a Liga dos Campeões, a Copa da Grécia, a Copa da Liga irlandesa e a Copa da Série C italiana (spa_cup.cpp, european_cup.cpp, gre_cup.cpp, ire_lge_cup.cpp, ita_c_cup.cpp) ----------
 
-unsafe fn cqt5_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
-unsafe fn cqt5_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// A virtual `o` de `this` (thiscall, sem argumentos).
 unsafe fn cqt5_virtual(this: usize, o: usize) -> i32 {
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(cqt5_d(cqt5_d(this) + o));
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + o));
     f(this)
 }
 
@@ -22,23 +16,23 @@ unsafe fn cqt5_virtual(this: usize, o: usize) -> i32 {
 /// dá a caixa (linhas 0x161, 0x168, 0x16f) e 0 — e as posições previstas (virtual +0x5c). Sempre, no fim, a atualização da
 /// copa (0x51f890: push fase; push hoje; mov ecx -> thiscall, ret 8), cuja devolução sai.
 unsafe extern "thiscall" fn cqt5_copa_do_rei_dia(this: usize, hoje: usize, fase: u32) -> u32 {
-    if cqt5_d(this + 0x45) == 0 && cqt5_w(cqt5_d(0xde1f58) + 0x439) as u16 as i32 == cqt5_w(this + 0x40) as i32 && fase != 0 { // cqt5: o ano da Copa do Rei
+    if read_u32_as_usize(this + 0x45) == 0 && read_i16(read_u32_as_usize(0xde1f58) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && fase != 0 { // cqt5: o ano da Copa do Rei
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         for o in [0xa7usize, 0xa3] {
-            if cqt5_d(this + o) != 0 {
-                soltar(cqt5_d(this + o));
+            if read_u32_as_usize(this + o) != 0 {
+                soltar(read_u32_as_usize(this + o));
             }
         }
-        if cqt5_d(this + 0xad) != 0 {
+        if read_u32_as_usize(this + 0xad) != 0 {
             let mut i = 0i32;
-            while i < cqt5_w(this + 0x3c) as i32 {
-                let p = cqt5_d(cqt5_d(this + 0xad) + i as usize * 4);
+            while i < read_i16(this + 0x3c) as i32 {
+                let p = read_u32_as_usize(read_u32_as_usize(this + 0xad) + i as usize * 4);
                 if p != 0 {
                     soltar(p);
                 }
                 i += 1;
             }
-            soltar(cqt5_d(this + 0xad));
+            soltar(read_u32_as_usize(this + 0xad));
         }
         crate::comparacao::ramo("cqt_5 copa do rei refeita");
         core::ptr::write_unaligned((this + 0x45) as *mut u32, 1); // cqt5: a Copa do Rei refeita uma vez
@@ -66,10 +60,10 @@ unsafe extern "thiscall" fn cqt5_copa_do_rei_dia(this: usize, hoje: usize, fase:
 // original; o plano: +0x45 vai a 1 quando a condição vale, senão fica.
 unsafe extern "thiscall" fn comparar_cqt5_copa_do_rei_dia(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(2087);
-    let antes = cqt5_d(this + 0x45);
-    let vira = antes == 0 && cqt5_w(cqt5_d(0xde1f58) + 0x439) as u16 as i32 == cqt5_w(this + 0x40) as i32 && fase != 0;
+    let antes = read_u32_as_usize(this + 0x45);
+    let vira = antes == 0 && read_i16(read_u32_as_usize(0xde1f58) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && fase != 0;
     let r = o(this, hoje, fase);
-    let depois = cqt5_d(this + 0x45);
+    let depois = read_u32_as_usize(this + 0x45);
     PLACAR.registrar(depois == if vira { 1 } else { antes }, || format!("cqt5_copa_do_rei_dia({:#x}) vira {} +0x45 {} -> {}", this, vira, antes, depois));
     r
 }
@@ -78,7 +72,7 @@ unsafe extern "thiscall" fn comparar_cqt5_copa_do_rei_dia(this: usize, hoje: usi
 /// edx, [ecx]; jmp [edx+0x30]): a virtual +0x30 da fase [+0xc][o/4] (a última fase da copa: a final), com o eax dela.
 unsafe fn cqt5_historico(this: usize, o: usize, ramo: &'static str) -> i32 {
     crate::comparacao::ramo(ramo);
-    let fase = cqt5_d(cqt5_d(this + 0xc) + o);
+    let fase = read_u32_as_usize(read_u32_as_usize(this + 0xc) + o);
     cqt5_virtual(fase, 0x30)
 }
 

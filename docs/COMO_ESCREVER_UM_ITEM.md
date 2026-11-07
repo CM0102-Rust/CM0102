@@ -14,6 +14,7 @@ Um item é um pacote de até 3 rotinas portadas, escrito antes da hora em `levas
 
 ## Portar
 
+- **Acesso à memória:** use as funções de `rust/src/motor/mem.rs` (`read_u32`, `write_u8`...); não crie cópias `<item>_d/_b/_w` no item (desde 07/11/2026).
 - **Convenções conferidas no ponto de chamada** (thiscall/stdcall/cdecl, `ret N`); `engenharia-reversa/aridade.py` ajuda. Anote no `rotinas.py`.
 - **Tamanho do que se grava:** a 0x549ef0 grava 8 bytes (a data e o ano bissexto); um local de 4 bytes corrompe a pilha. Use o tamanho que a original escreve.
 - **Embaralhamento e contagens:** confira o número exato de vagas (uma cópia embaralhava 9 e a original 8).

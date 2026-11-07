@@ -124,25 +124,13 @@ unsafe extern "thiscall" fn comparar_nota_do_arbitro(m: usize) {
 
 // ---------- 271a leva: os árbitros do jogo novo: os que ficam por nação, as vagas das competições e a parte de cada uma; a ordem das vagas pelo nível da competição (officials_manager.cpp) ----------
 
-unsafe fn cqg9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
 
 unsafe fn cqg9_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cqg9_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cqg9_pd(a: usize, v: u32) {
-    core::ptr::write_unaligned(a as *mut u32, v);
-}
 
-unsafe fn cqg9_pw(a: usize, v: i16) {
-    core::ptr::write_unaligned(a as *mut i16, v);
-}
 
 unsafe fn cqg9_sortear(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
@@ -151,7 +139,7 @@ unsafe fn cqg9_sortear(n: i32) -> i32 {
 
 /// O registro do árbitro `i` (0x2b bytes em [0xae23e8], [0xae2390] deles).
 unsafe fn cqg9_arbitro(i: i32) -> usize {
-    cqg9_d(0xae23e8).wrapping_add((i as isize * 0x2b) as usize)
+    read_u32_as_usize(0xae23e8).wrapping_add((i as isize * 0x2b) as usize)
 }
 
 /// O fim fatal da original sem memória: a caixa (linha `linha` de officials_manager.cpp, 0xa6a22c), 0x5cc7d0, 0x5a8f60
@@ -196,15 +184,15 @@ unsafe fn cqg9_liberar(p: usize) {
 unsafe extern "thiscall" fn montar_os_arbitros(this: usize) {
     let rever: unsafe extern "C" fn() = core::mem::transmute(0x79caa0usize);
     rever();
-    cqg9_ordenar(cqg9_d(0xae23e8), cqg9_i(0xae2390) as u32, 0x2b, 0x79d4e0);
+    cqg9_ordenar(read_u32_as_usize(0xae23e8), cqg9_i(0xae2390) as u32, 0x2b, 0x79d4e0);
     let n = cqg9_i(0xae2390);
     let marcas = cqg9_calloc(n as u32, 1);
     let mut ficam = 0i32;
     if n > 0 {
-        let mut atual = cqg9_d(cqg9_arbitro(0) + 0x16);
+        let mut atual = read_u32_as_usize(cqg9_arbitro(0) + 0x16);
         let mut grupo = 0i32;
         for i in 0..n {
-            let nac = cqg9_d(cqg9_arbitro(i) + 0x16);
+            let nac = read_u32_as_usize(cqg9_arbitro(i) + 0x16);
             if nac != atual {
                 grupo = 0;
                 atual = nac;
@@ -237,110 +225,110 @@ unsafe extern "thiscall" fn montar_os_arbitros(this: usize) {
         }
         i += 1;
     }
-    cqg9_liberar(cqg9_d(0xae23e8));
-    cqg9_pd(0xae23e8, nova as u32);
-    cqg9_pd(0xae2390, ficam as u32);
+    cqg9_liberar(read_u32_as_usize(0xae23e8));
+    write_u32(0xae23e8, nova as u32);
+    write_u32(0xae2390, ficam as u32);
     let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let nacoes = cqg9_i(0xae2350);
     let blocos = malloc((nacoes as u32).wrapping_mul(0x102));
-    cqg9_pd(this + 0xc, blocos as u32);
+    write_u32(this + 0xc, blocos as u32);
     if blocos == 0 {
         cqg9_fatal(0x1ff);
     }
     for k in 0..nacoes.max(0) {
         let b = blocos + k as usize * 0x102;
-        cqg9_pw(b + 0x10, 0);
-        cqg9_pd(b + 4, 0);
-        cqg9_pd(b + 8, 1_000_000);
-        cqg9_pd(b + 0xc, 0);
-        cqg9_pd(b, k as u32);
+        write_i16(b + 0x10, 0);
+        write_u32(b + 4, 0);
+        write_u32(b + 8, 1_000_000);
+        write_u32(b + 0xc, 0);
+        write_u32(b, k as u32);
         for j in 0..0xf {
             let v = b + 0x12 + 16 * j;
-            cqg9_pd(v, 1_000_000);
-            cqg9_pd(v + 4, 0);
-            cqg9_pd(v + 8, 0);
-            cqg9_pd(v + 0xc, 0xffff_ffff);
+            write_u32(v, 1_000_000);
+            write_u32(v + 4, 0);
+            write_u32(v + 8, 0);
+            write_u32(v + 0xc, 0xffff_ffff);
         }
     }
     let ativa: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(0x4b0700usize);
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
     for k in 0..cqg9_i(0xadadf8).max(0) {
-        if cqg9_d(cqg9_d(0xadadfc) + 4 * k as usize) == 0 || ativa(k) == 0 {
+        if read_u32_as_usize(read_u32_as_usize(0xadadfc) + 4 * k as usize) == 0 || ativa(k) == 0 {
             continue;
         }
-        let comp = cqg9_d(0xae23d0).wrapping_add(k as usize * 0x6b);
-        if amistoso(cqg9_d(0xae2c74), comp) != 0 {
+        let comp = read_u32_as_usize(0xae23d0).wrapping_add(k as usize * 0x6b);
+        if amistoso(read_u32_as_usize(0xae2c74), comp) != 0 {
             continue;
         }
-        let nac = cqg9_d(comp + 0x5d);
+        let nac = read_u32_as_usize(comp + 0x5d);
         if nac == 0 {
             continue;
         }
         let b = blocos.wrapping_add((cqg9_i(nac) as isize * 0x102) as usize);
-        let v = b.wrapping_add((cqg9_w(b + 0x10) as isize * 0x10) as usize);
-        cqg9_pd(v + 0x1e, k as u32);
-        let pedido = cqg9_w(cqg9_d(cqg9_d(0xadadfc) + 4 * k as usize) + 0x3e) as i32 / 2 + 0xa; // cqg9: o pedido da vaga
+        let v = b.wrapping_add((read_i16(b + 0x10) as isize * 0x10) as usize);
+        write_u32(v + 0x1e, k as u32);
+        let pedido = read_i16(read_u32_as_usize(read_u32_as_usize(0xadadfc) + 4 * k as usize) + 0x3e) as i32 / 2 + 0xa; // cqg9: o pedido da vaga
         crate::comparacao::ramo("cqg_9 vaga de competicao");
-        cqg9_pd(v + 0x1a, pedido as u32);
+        write_u32(v + 0x1a, pedido as u32);
         if cqg9_i(v + 0x1a) > cqg9_i(b + 0xc) {
-            cqg9_pd(b + 0xc, cqg9_d(v + 0x1a) as u32);
+            write_u32(b + 0xc, read_u32_as_usize(v + 0x1a) as u32);
         }
-        cqg9_pw(b + 0x10, cqg9_w(b + 0x10).wrapping_add(1));
+        write_i16(b + 0x10, read_i16(b + 0x10).wrapping_add(1));
     }
     for i in 0..cqg9_i(0xae2390).max(0) {
-        let b = blocos.wrapping_add((cqg9_i(cqg9_d(cqg9_arbitro(i) + 0x16)) as isize * 0x102) as usize);
-        cqg9_pd(b + 4, cqg9_d(b + 4).wrapping_add(1) as u32);
+        let b = blocos.wrapping_add((cqg9_i(read_u32_as_usize(cqg9_arbitro(i) + 0x16)) as isize * 0x102) as usize);
+        write_u32(b + 4, read_u32_as_usize(b + 4).wrapping_add(1) as u32);
     }
     let novos: unsafe extern "stdcall" fn(i32, usize) = core::mem::transmute(0x79c5c0usize);
     for k in 0..cqg9_i(0xae2350).max(0) {
         let b = blocos + k as usize * 0x102;
-        let nac = cqg9_d(0xae23a8).wrapping_add(k as usize * 0x122);
-        let c = cqg9_w(b + 0x10);
+        let nac = read_u32_as_usize(0xae23a8).wrapping_add(k as usize * 0x122);
+        let c = read_i16(b + 0x10);
         if c > 0 {
-            cqg9_pd(b + 0xc, (c as i32).wrapping_mul(cqg9_i(b + 0xc)) as u32);
+            write_u32(b + 0xc, (c as i32).wrapping_mul(cqg9_i(b + 0xc)) as u32);
             if cqg9_i(b + 0xc) > cqg9_i(b + 4) {
                 novos(cqg9_i(b + 0xc) - cqg9_i(b + 4), nac);
-                cqg9_pd(b + 4, cqg9_d(b + 0xc) as u32);
+                write_u32(b + 4, read_u32_as_usize(b + 0xc) as u32);
             }
         } else if cqg9_i(b + 4) < 5 {
-            if cqg9_w(nac + 0x8e) == 0 {
-                cqg9_pw(nac + 0x8e, 1);
+            if read_i16(nac + 0x8e) == 0 {
+                write_i16(nac + 0x8e, 1);
             }
-            novos((cqg9_w(nac + 0x8e) as i32).min(5), nac);
-            cqg9_pd(b + 4, (cqg9_w(cqg9_d(0xae23a8).wrapping_add(k as usize * 0x122) + 0x8e) as i32).min(5) as u32);
+            novos((read_i16(nac + 0x8e) as i32).min(5), nac);
+            write_u32(b + 4, (read_i16(read_u32_as_usize(0xae23a8).wrapping_add(k as usize * 0x122) + 0x8e) as i32).min(5) as u32);
         }
     }
     for i in 0..cqg9_i(0xae2390).max(0) {
-        cqg9_pd(cqg9_arbitro(i), i as u32);
+        write_u32(cqg9_arbitro(i), i as u32);
     }
     for i in 0..cqg9_i(0xae2390).max(0) {
         let r = cqg9_arbitro(i);
-        let b = blocos.wrapping_add((cqg9_i(cqg9_d(r + 0x16)) as isize * 0x102) as usize);
+        let b = blocos.wrapping_add((cqg9_i(read_u32_as_usize(r + 0x16)) as isize * 0x102) as usize);
         if cqg9_i(r) < cqg9_i(b + 8) {
-            cqg9_pd(b + 8, cqg9_d(r) as u32);
+            write_u32(b + 8, read_u32_as_usize(r) as u32);
         }
     }
     for k in 0..cqg9_i(0xae2350).max(0) {
-        let b = cqg9_d(this + 0xc) + k as usize * 0x102;
-        let c = cqg9_w(b + 0x10);
+        let b = read_u32_as_usize(this + 0xc) + k as usize * 0x102;
+        let c = read_i16(b + 0x10);
         if c == 0 {
             continue;
         }
         cqg9_ordenar(b + 0x12, c as i32 as u32, 0x10, 0x79d410);
         let mut j = 0i32;
-        while j < cqg9_w(b + 0x10) as i32 {
-            let c = cqg9_w(b + 0x10) as i32;
+        while j < read_i16(b + 0x10) as i32 {
+            let c = read_i16(b + 0x10) as i32;
             crate::comparacao::ramo("cqg_9 parte da vaga");
-            cqg9_pd(b + 0x16 + 16 * j as usize, (cqg9_i(b + 4) / c) as u32); // cqg9: a parte de cada vaga
-            let c = cqg9_w(b + 0x10) as i32;
-            cqg9_pd(b + 0x12 + 16 * j as usize, (cqg9_i(b + 4).wrapping_mul(j) / c).wrapping_add(cqg9_i(b + 8)) as u32);
+            write_u32(b + 0x16 + 16 * j as usize, (cqg9_i(b + 4) / c) as u32); // cqg9: a parte de cada vaga
+            let c = read_i16(b + 0x10) as i32;
+            write_u32(b + 0x12 + 16 * j as usize, (cqg9_i(b + 4).wrapping_mul(j) / c).wrapping_add(cqg9_i(b + 8)) as u32);
             j += 1;
         }
     }
     let total = cqg9_i(0xae2390);
-    cqg9_pd(this + 4, total as u32);
+    write_u32(this + 4, total as u32);
     let m = cqg9_calloc(total as u32, 1);
-    cqg9_pd(this + 8, m as u32);
+    write_u32(this + 8, m as u32);
     if m == 0 {
         cqg9_fatal(0x2dd);
     }
@@ -351,17 +339,14 @@ unsafe extern "thiscall" fn montar_os_arbitros(this: usize) {
 /// rodar duas vezes), com o plano: os blocos por nação (this+0xc), a conta (this+4) igual à da tabela e as marcas (this+8).
 unsafe extern "thiscall" fn comparar_montar_os_arbitros(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(1635)(this);
-    PLACAR.registrar(cqg9_d(this + 0xc) != 0 && cqg9_i(this + 4) == cqg9_i(0xae2390) && cqg9_d(this + 8) != 0,
-        || format!("montar_os_arbitros: blocos {:x}, conta {} x {}", cqg9_d(this + 0xc), cqg9_i(this + 4), cqg9_i(0xae2390)));
+    PLACAR.registrar(read_u32_as_usize(this + 0xc) != 0 && cqg9_i(this + 4) == cqg9_i(0xae2390) && read_u32_as_usize(this + 8) != 0,
+        || format!("montar_os_arbitros: blocos {:x}, conta {} x {}", read_u32_as_usize(this + 0xc), cqg9_i(this + 4), cqg9_i(0xae2390)));
 }
 
 unsafe fn cqg9v_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cqg9v_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// { 0x79d410 } (cdecl, officials_manager.cpp): `officials_manager_compare_comp_level(a, b)`, a ordem das vagas de
 /// competição de uma nação (qsort da 0x79bf60, entradas de 16 bytes com a competição em +0xc): competição de `a` fora de
@@ -377,8 +362,8 @@ unsafe extern "C" fn ordem_das_vagas_de_competicao(a: usize, b: usize) -> i32 {
         return -1;
     }
     let base = cqg9v_i(0xae23d0) as u32 as usize;
-    let sa = cqg9v_w(base.wrapping_add((ca as isize * 0x6b + 0x69) as usize));
-    let sb = cqg9v_w(base.wrapping_add((cb as isize * 0x6b + 0x69) as usize));
+    let sa = read_i16(base.wrapping_add((ca as isize * 0x6b + 0x69) as usize));
+    let sb = read_i16(base.wrapping_add((cb as isize * 0x6b + 0x69) as usize));
     if sa == sb {
         return ca.wrapping_sub(cb);
     }
@@ -399,13 +384,10 @@ unsafe fn cqh7_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cqh7_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// A qualidade do árbitro na ordem: o byte +0x28 × 50 + a palavra +0x22, em 16 bits.
 unsafe fn cqh7_qualidade(r: usize) -> i16 {
-    (*((r + 0x28) as *const i8) as i16).wrapping_mul(0x32).wrapping_add(cqh7_w(r + 0x22)) // cqh7: o peso da qualidade
+    (*((r + 0x28) as *const i8) as i16).wrapping_mul(0x32).wrapping_add(read_i16(r + 0x22)) // cqh7: o peso da qualidade
 }
 
 /// O id da nação do árbitro ([+0x16] + 0).
@@ -463,31 +445,22 @@ unsafe extern "C" fn comparar_ordem_dos_arbitros_crescente(a: usize, b: usize) -
 
 // ---------- 261a leva: o árbitro de cada jogo: a escolha do árbitro, as marcas de ocupado do dia e a renovação dos árbitros da liga (officials_manager.cpp) ----------
 
-unsafe fn cpy8_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cpy8_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cpy8_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cpy8_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 /// O bloco de árbitros da nação `nacao` no gerenciador (0x102 bytes em [this+0xc]: +4 conta, +8 primeiro índice, +0x10
 /// palavra com o número de faixas de liga, +0x12 faixas de 16 bytes: +0 primeiro, +4 conta, +0xc id da competição).
 unsafe fn cpy8_bloco(this: usize, nacao: i32) -> usize {
-    cpy8_d(this + 0xc).wrapping_add(nacao.wrapping_mul(0x102) as usize)
+    read_usize(this + 0xc).wrapping_add(nacao.wrapping_mul(0x102) as usize)
 }
 
 /// O id da nação do clube (+0x53, ponteiro) ou, sem nação, `sem`.
 unsafe fn cpy8_nacao_do_clube(clube: usize) -> Option<i32> {
-    let n = cpy8_d(clube + 0x53);
+    let n = read_usize(clube + 0x53);
     if n != 0 { Some(cpy8_i(n)) } else { None }
 }
 
@@ -506,9 +479,9 @@ unsafe extern "thiscall" fn escolher_arbitro_da_partida(this: usize, jogo: usize
         return 0xffff_ff00;
     }
     let nacoes = cpy8_i(0xae2350);
-    let mandante = cpy8_d(jogo + 0x1c);
-    let visitante = cpy8_d(jogo + 0x20);
-    let comp = cpy8_d(jogo + 0x14);
+    let mandante = read_usize(jogo + 0x1c);
+    let visitante = read_usize(jogo + 0x20);
+    let comp = read_usize(jogo + 0x14);
     let faixa_da_nacao = |nacao: i32| {
         let b = cpy8_bloco(this, nacao);
         (cpy8_i(b + 8), cpy8_i(b + 4))
@@ -517,21 +490,21 @@ unsafe extern "thiscall" fn escolher_arbitro_da_partida(this: usize, jogo: usize
         faixa_da_nacao(cpy8_nacao_do_clube(mandante).unwrap_or_else(|| sortear(nacoes)))
     } else {
         let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
-        if amistoso(cpy8_d(0xae2c74), comp) != 0 {
-            faixa_da_nacao(cpy8_i(cpy8_d(mandante + 0x53))) // como a original, sem conferir a nação
+        if amistoso(read_usize(0xae2c74), comp) != 0 {
+            faixa_da_nacao(cpy8_i(read_usize(mandante + 0x53))) // como a original, sem conferir a nação
         } else {
-            let c = cpy8_d(cpy8_d(0xadadfc).wrapping_add(cpy8_i(comp).wrapping_mul(4) as usize));
+            let c = read_usize(read_usize(0xadadfc).wrapping_add(cpy8_i(comp).wrapping_mul(4) as usize));
             if c == 0 {
                 faixa_da_nacao(cpy8_nacao_do_clube(mandante).unwrap_or_else(|| sortear(nacoes)))
             } else {
-                let tipo = cpy8_b(c + 0x42) as i8;
+                let tipo = read_u8(c + 0x42) as i8;
                 if tipo == 2 || tipo == 4 {
                     let continente_do = |clube: usize| {
-                        let n = cpy8_d(clube + 0x53);
-                        if n != 0 && cpy8_d(n + 0x71) != 0 { Some(cpy8_i(cpy8_d(n + 0x71))) } else { None }
+                        let n = read_usize(clube + 0x53);
+                        if n != 0 && read_usize(n + 0x71) != 0 { Some(cpy8_i(read_usize(n + 0x71))) } else { None }
                     };
-                    let continente = if cpy8_d(comp + 0x59) != 0 {
-                        cpy8_i(cpy8_d(comp + 0x59))
+                    let continente = if read_usize(comp + 0x59) != 0 {
+                        cpy8_i(read_usize(comp + 0x59))
                     } else if let Some(k) = continente_do(mandante) {
                         k
                     } else if let Some(k) = continente_do(visitante) {
@@ -542,8 +515,8 @@ unsafe extern "thiscall" fn escolher_arbitro_da_partida(this: usize, jogo: usize
                     let inicio = sortear(nacoes);
                     let mut k = inicio;
                     loop {
-                        let nac = cpy8_d(0xae23a8).wrapping_add(k.wrapping_mul(0x122) as usize);
-                        let cont = cpy8_d(nac + 0x71);
+                        let nac = read_usize(0xae23a8).wrapping_add(k.wrapping_mul(0x122) as usize);
+                        let cont = read_usize(nac + 0x71);
                         if cont != 0 && cpy8_i(cont) == continente
                             && cpy8_nacao_do_clube(mandante) != Some(cpy8_i(nac))
                             && cpy8_nacao_do_clube(visitante) != Some(cpy8_i(nac))
@@ -563,8 +536,8 @@ unsafe extern "thiscall" fn escolher_arbitro_da_partida(this: usize, jogo: usize
                     crate::comparacao::ramo("cpy_8 arbitro neutro");
                     (cpy8_i(b + 8).wrapping_sub(ftol(conta * -0.75)), ftol(conta * 0.25)) // cpy8: o quarto de cima
                 } else {
-                    let nacao = if cpy8_d(comp + 0x5d) != 0 {
-                        cpy8_i(cpy8_d(comp + 0x5d))
+                    let nacao = if read_usize(comp + 0x5d) != 0 {
+                        cpy8_i(read_usize(comp + 0x5d))
                     } else if let Some(k) = cpy8_nacao_do_clube(mandante) {
                         k
                     } else if let Some(k) = cpy8_nacao_do_clube(visitante) {
@@ -575,7 +548,7 @@ unsafe extern "thiscall" fn escolher_arbitro_da_partida(this: usize, jogo: usize
                     let b = cpy8_bloco(this, nacao);
                     let id = cpy8_i(comp);
                     let mut achou = None;
-                    for f in 0..cpy8_w(b + 0x10).max(0) as usize {
+                    for f in 0..read_i16(b + 0x10).max(0) as usize {
                         let e = b + 0x12 + f * 0x10;
                         if cpy8_i(e + 0xc) == id {
                             achou = Some((cpy8_i(e), cpy8_i(e + 4)));
@@ -599,8 +572,8 @@ unsafe extern "thiscall" fn escolher_arbitro_da_partida(this: usize, jogo: usize
         ini.wrapping_add(sortear(n.wrapping_sub(1))) // cpy8: o sorteio na faixa
     };
     let ocupado = |k: i32| {
-        let ficha = cpy8_d(0xae23e8).wrapping_add(k.wrapping_mul(0x2b) as usize);
-        cpy8_b(cpy8_d(this + 8).wrapping_add(cpy8_d(ficha))) != 0
+        let ficha = read_usize(0xae23e8).wrapping_add(k.wrapping_mul(0x2b) as usize);
+        read_u8(read_usize(this + 8).wrapping_add(read_usize(ficha))) != 0
     };
     let mut k = sorteado;
     if ocupado(k) {
@@ -636,7 +609,7 @@ unsafe extern "thiscall" fn comparar_escolher_arbitro_da_partida(this: usize, jo
 unsafe extern "thiscall" fn limpar_arbitros_ocupados(this: usize) -> u32 {
     let mut i = 0i32;
     while i < cpy8_i(this + 4) {
-        *(cpy8_d(this + 8).wrapping_add(i as usize) as *mut u8) = 0;
+        *(read_usize(this + 8).wrapping_add(i as usize) as *mut u8) = 0;
         i += 1;
     }
     i as u32
@@ -646,7 +619,7 @@ unsafe extern "thiscall" fn limpar_arbitros_ocupados(this: usize) -> u32 {
 unsafe extern "thiscall" fn comparar_limpar_arbitros_ocupados(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1363);
     let n = cpy8_i(this + 4);
-    let reg = if n > 0 && cpy8_d(this + 8) != 0 { vec![(cpy8_d(this + 8), n as usize)] } else { Vec::new() };
+    let reg = if n > 0 && read_usize(this + 8) != 0 { vec![(read_usize(this + 8), n as usize)] } else { Vec::new() };
     let (r, m, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || limpar_arbitros_ocupados(this));
     PLACAR.registrar(igual && r == m, || format!("limpar_arbitros_ocupados(conta {}) original={} rust={} memoria igual {}", n, r, m, igual));
     r
@@ -665,18 +638,18 @@ unsafe extern "thiscall" fn renovar_arbitros(this: usize, comp: usize) -> u8 {
     if comp == 0 {
         return 0;
     }
-    let c = cpy8_d(cpy8_d(0xadadfc).wrapping_add(cpy8_i(comp).wrapping_mul(4) as usize));
-    if c == 0 || cpy8_b(c + 0x42) == 4 || cpy8_b(c + 0x42) == 2 {
+    let c = read_usize(read_usize(0xadadfc).wrapping_add(cpy8_i(comp).wrapping_mul(4) as usize));
+    if c == 0 || read_u8(c + 0x42) == 4 || read_u8(c + 0x42) == 2 {
         return 0;
     }
     let conta: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(0x4b0700usize);
     if conta(cpy8_i(comp)) == 0 {
         return 0;
     }
-    let nacao = if cpy8_d(comp + 0x5d) != 0 { cpy8_i(cpy8_d(comp + 0x5d)) } else { sortear(cpy8_i(0xae2350)) };
+    let nacao = if read_usize(comp + 0x5d) != 0 { cpy8_i(read_usize(comp + 0x5d)) } else { sortear(cpy8_i(0xae2350)) };
     let b = cpy8_bloco(this, nacao);
     let mut faixa = None;
-    for f in 0..cpy8_w(b + 0x10).max(0) as usize {
+    for f in 0..read_i16(b + 0x10).max(0) as usize {
         let e = b + 0x12 + f * 0x10;
         if cpy8_i(e + 0xc) == cpy8_i(comp) {
             faixa = Some((cpy8_i(e), cpy8_i(e + 4)));
@@ -686,22 +659,22 @@ unsafe extern "thiscall" fn renovar_arbitros(this: usize, comp: usize) -> u8 {
     let (ini, n) = faixa.unwrap_or((cpy8_i(b + 8), cpy8_i(b + 4)));
     let nome: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x539c60usize);
     for k in 0..n.max(0) {
-        let ficha = cpy8_d(0xae23e8).wrapping_add(ini.wrapping_add(k).wrapping_mul(0x2b) as usize);
+        let ficha = read_usize(0xae23e8).wrapping_add(ini.wrapping_add(k).wrapping_mul(0x2b) as usize);
         if ficha == 0 {
             aviso_em(0xa6a22c, 0xa61);
             continue;
         }
-        let ano = cpy8_b(0xae2c92);
-        let dif = (cpy8_w(ficha + 0xc) as i32).wrapping_sub(cpy8_w(0xae2c90) as i32);
-        let idade = if dif > 0 { ano.wrapping_sub(cpy8_b(ficha + 0xe)).wrapping_sub(1) } else { ano.wrapping_sub(cpy8_b(ficha + 0xe)) } as i8;
+        let ano = read_u8(0xae2c92);
+        let dif = (read_i16(ficha + 0xc) as i32).wrapping_sub(read_i16(0xae2c90) as i32);
+        let idade = if dif > 0 { ano.wrapping_sub(read_u8(ficha + 0xe)).wrapping_sub(1) } else { ano.wrapping_sub(read_u8(ficha + 0xe)) } as i8;
         if idade <= 0x28 || (idade <= 0x2d && sortear(3) != 0) {
             continue;
         }
         crate::comparacao::ramo("cpy_8 arbitro renovado");
-        let nac = cpy8_d(ficha + 0x16);
+        let nac = read_usize(ficha + 0x16);
         let n1 = nome(nac);
         core::ptr::write_unaligned((ficha + 4) as *mut usize, n1);
-        let n2 = nome(cpy8_d(ficha + 0x16));
+        let n2 = nome(read_usize(ficha + 0x16));
         core::ptr::write_unaligned((ficha + 8) as *mut usize, n2);
         *((ficha + 0x25) as *mut u8) = if sortear(10) != 0 {
             (sortear(0x10) as u8).wrapping_add(5)
@@ -710,12 +683,12 @@ unsafe extern "thiscall" fn renovar_arbitros(this: usize, comp: usize) -> u8 {
             a.wrapping_add(sortear(0xb) as u8)
         };
         let r5 = sortear(5);
-        let base = (cpy8_w(0xae2c92) as u16).wrapping_sub(0x1b);
+        let base = (read_i16(0xae2c92) as u16).wrapping_sub(0x1b);
         core::ptr::write_unaligned((ficha + 0xe) as *mut u16, (r5 as u16).wrapping_add(base));
         core::ptr::write_unaligned((ficha + 0xc) as *mut u16, sortear(0x154) as u16);
     }
     for k in 0..n.max(0) {
-        let linha = cpy8_d(this).wrapping_add(ini.wrapping_add(k).wrapping_mul(0x11) as usize);
+        let linha = read_usize(this).wrapping_add(ini.wrapping_add(k).wrapping_mul(0x11) as usize);
         *((linha + 0xf) as *mut u8) = 0;
         core::ptr::write_unaligned((linha + 8) as *mut u16, 0);
         core::ptr::write_unaligned((linha + 0xa) as *mut u16, 0);
@@ -731,11 +704,11 @@ unsafe extern "thiscall" fn renovar_arbitros(this: usize, comp: usize) -> u8 {
 unsafe extern "thiscall" fn comparar_renovar_arbitros(this: usize, comp: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1364);
     let total = cpy8_i(0xae2390).max(0) as usize;
-    if cpy8_d(0xae23e8) == 0 || cpy8_d(this) == 0 {
+    if read_usize(0xae23e8) == 0 || read_usize(this) == 0 {
         return o(this, comp);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.extend([(cpy8_d(0xae23e8), total * 0x2b), (cpy8_d(this), total * 0x11), (0xb67a34, 4)]);
+    reg.extend([(read_usize(0xae23e8), total * 0x2b), (read_usize(this), total * 0x11), (0xb67a34, 4)]);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, comp),
         || crate::aleatorio::sem_contar(|| renovar_arbitros(this, comp)));
     PLACAR.registrar(igual && r == n, || {
@@ -748,33 +721,15 @@ unsafe extern "thiscall" fn comparar_renovar_arbitros(this: usize, comp: usize) 
 
 // ---------- 261a leva: os árbitros do jogo novo: os árbitros sorteados de uma nação, o conserto das fichas dos árbitros e a cópia de uma ficha (officials_manager.cpp) ----------
 
-unsafe fn cpy9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 unsafe fn cpy9_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cpy9_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
-unsafe fn cpy9_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
-unsafe fn cpy9_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut usize, v);
-}
 
-unsafe fn cpy9_pw(a: usize, v: i16) {
-    core::ptr::write_unaligned(a as *mut i16, v);
-}
 
-unsafe fn cpy9_pb(a: usize, v: u8) {
-    *(a as *mut u8) = v;
-}
 
 /// Um byte sorteado: sorteio(n) + k no al.
 unsafe fn cpy9_s(n: i32, k: u8) -> u8 {
@@ -789,22 +744,22 @@ unsafe fn cpy9_s(n: i32, k: u8) -> u8 {
 unsafe fn cpy9_gerar(r: usize, nacao: usize) {
     let primeiro: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x539b90usize);
     let segundo: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53a0e0usize);
-    cpy9_pd(r + 4, primeiro(nacao));
-    cpy9_pd(r + 8, segundo(nacao));
-    cpy9_pd(r + 0x16, nacao);
-    cpy9_pw(r + 0x22, cpy9_s(0x50, 1) as i8 as i16); // cpy9: a nota +0x22
-    cpy9_pw(r + 0x1e, cpy9_s(0x50, 0x28) as i8 as i16);
-    cpy9_pw(r + 0x20, cpy9_s(0x50, 0x28) as i8 as i16);
+    write_usize(r + 4, primeiro(nacao));
+    write_usize(r + 8, segundo(nacao));
+    write_usize(r + 0x16, nacao);
+    write_i16(r + 0x22, cpy9_s(0x50, 1) as i8 as i16); // cpy9: a nota +0x22
+    write_i16(r + 0x1e, cpy9_s(0x50, 0x28) as i8 as i16);
+    write_i16(r + 0x20, cpy9_s(0x50, 0x28) as i8 as i16);
     for o in [0x24usize, 0x25, 0x26] {
-        cpy9_pb(r + o, cpy9_s(10, 5));
+        write_u8(r + o, cpy9_s(10, 5));
     }
-    cpy9_pb(r + 0x27, cpy9_s(10, 7));
-    cpy9_pb(r + 0x28, cpy9_s(10, 7)); // cpy9: o atributo +0x28
-    cpy9_pb(r + 0x29, cpy9_s(10, 7));
-    cpy9_pb(r + 0x2a, cpy9_s(10, 7));
-    cpy9_pd(r + 0x1a, 0);
-    cpy9_pw(r + 0xe, sortear(10).wrapping_add(0x7a8) as i16);
-    cpy9_pw(r + 0xc, sortear(0x12c).wrapping_add(1) as i16);
+    write_u8(r + 0x27, cpy9_s(10, 7));
+    write_u8(r + 0x28, cpy9_s(10, 7)); // cpy9: o atributo +0x28
+    write_u8(r + 0x29, cpy9_s(10, 7));
+    write_u8(r + 0x2a, cpy9_s(10, 7));
+    write_usize(r + 0x1a, 0);
+    write_i16(r + 0xe, sortear(10).wrapping_add(0x7a8) as i16);
+    write_i16(r + 0xc, sortear(0x12c).wrapping_add(1) as i16);
 }
 
 /// { 0x79c5c0 } (thiscall com o this sem uso, ret 8, officials_manager.cpp): `officials_manager_add_random_officials(
@@ -813,12 +768,12 @@ unsafe fn cpy9_gerar(r: usize, nacao: usize) {
 /// e o jogo para), gera `conta` fichas novas no fim (cpy9_gerar), soma a conta em [0xae2390] e ordena a tabela inteira
 /// (qsort 0x945333 com 0x79d480: nação, +0x28 × 50 + +0x22, id).
 unsafe extern "thiscall" fn arbitros_sorteados(_this: usize, conta: i32, nacao: usize) {
-    if nacao != 0 && cpy9_d(nacao + 0x71) == 0 {
+    if nacao != 0 && read_usize(nacao + 0x71) == 0 {
         return;
     }
     let realocar: unsafe extern "C" fn(usize, i32) -> usize = core::mem::transmute(0x945667usize);
     let antes = cpy9_i(0xae2390);
-    let t = realocar(cpy9_d(0xae23e8), antes.wrapping_add(conta).wrapping_mul(0x2b));
+    let t = realocar(read_usize(0xae23e8), antes.wrapping_add(conta).wrapping_mul(0x2b));
     *(0xae23e8 as *mut usize) = t;
     if t == 0 {
         erro_em(0xa6a22c, 0x342);
@@ -833,7 +788,7 @@ unsafe extern "thiscall" fn arbitros_sorteados(_this: usize, conta: i32, nacao: 
     *(0xae2390 as *mut i32) = n;
     let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
     crate::comparacao::ramo("cpy_9 ordenar");
-    ordenar(cpy9_d(0xae23e8), n, 0x2b, 0x79d480); // cpy9: ordenar a tabela
+    ordenar(read_usize(0xae23e8), n, 0x2b, 0x79d480); // cpy9: ordenar a tabela
 }
 
 /// A ficha `g` (gerada no ensaio) bate com a `f` da tabela nos campos que a 0x79c5c0 grava (+4..+0x10, +0x16..+0x2b)?
@@ -849,7 +804,7 @@ unsafe fn cpy9_mesma_ficha(g: &[u8; 0x2b], f: usize) -> bool {
 /// continente: só a original.
 unsafe extern "thiscall" fn comparar_arbitros_sorteados(this: usize, conta: i32, nacao: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize)>(1365);
-    if conta <= 0 || (nacao != 0 && cpy9_d(nacao + 0x71) == 0) {
+    if conta <= 0 || (nacao != 0 && read_usize(nacao + 0x71) == 0) {
         return o(this, conta, nacao);
     }
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
@@ -865,7 +820,7 @@ unsafe extern "thiscall" fn comparar_arbitros_sorteados(this: usize, conta: i32,
     o(this, conta, nacao);
     let estado_orig = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     let total = cpy9_i(0xae2390);
-    let t = cpy9_d(0xae23e8);
+    let t = read_usize(0xae23e8);
     let mut usada = vec![false; total.max(0) as usize];
     let mut faltam = Vec::new();
     for (k, g) in novas.iter().enumerate() {
@@ -881,9 +836,9 @@ unsafe extern "thiscall" fn comparar_arbitros_sorteados(this: usize, conta: i32,
 
 /// O ajuste de um atributo em byte (+0x24..+0x2a) fora de 1..20: o valor sorteado por `f` (lê a ficha antes).
 unsafe fn cpy9_atributo(e: usize, o: usize, f: impl FnOnce() -> u8) {
-    let v = cpy9_b(e + o) as i8;
+    let v = read_u8(e + o) as i8;
     if v <= 0 || v > 0x14 {
-        cpy9_pb(e + o, f());
+        write_u8(e + o, f());
     }
 }
 
@@ -895,12 +850,12 @@ unsafe fn cpy9_atributo(e: usize, o: usize, f: impl FnOnce() -> u8) {
 /// 120, de 80); nascido antes da data 0x549f70(1, 1, 1910, −1) (ano sem sinal, depois o dia com sinal), ano 1960 +
 /// sorteio(10) e dia sorteio(300) + 1.
 unsafe extern "C" fn validar_arbitros() {
-    let base = cpy9_d(0xae23e8);
+    let base = read_usize(0xae23e8);
     let mut i = 0i32;
     while i < cpy9_i(0xae2390) {
         let e = base.wrapping_add((i as usize).wrapping_mul(0x2b));
-        if cpy9_d(e + 0x16) == 0 {
-            let (n1, n2) = (cpy9_d(e + 4), cpy9_d(e + 8));
+        if read_usize(e + 0x16) == 0 {
+            let (n1, n2) = (read_usize(e + 4), read_usize(e + 8));
             let k = if cpy9_i(n1 + 0x37) >= 0 {
                 cpy9_i(n1 + 0x37)
             } else if cpy9_i(n2 + 0x37) >= 0 {
@@ -908,58 +863,58 @@ unsafe extern "C" fn validar_arbitros() {
             } else {
                 sortear(cpy9_i(0xae2350))
             };
-            cpy9_pd(e + 0x16, cpy9_d(0xae23a8).wrapping_add(k.wrapping_mul(0x122) as usize));
+            write_usize(e + 0x16, read_usize(0xae23a8).wrapping_add(k.wrapping_mul(0x122) as usize));
         }
         let fora = |o: usize| {
-            let v = cpy9_w(e + o);
+            let v = read_i16(e + o);
             v <= 0 || v > 0xc8
         };
         if fora(0x22) {
-            let nac = cpy9_d(e + 0x16);
+            let nac = read_usize(e + 0x16);
             let v = if nac != 0 {
                 let s = sortear(0x50) as u8;
-                s.wrapping_add(cpy9_b(cpy9_d(e + 0x16) + 0x8e)).wrapping_add(1)
+                s.wrapping_add(read_u8(read_usize(e + 0x16) + 0x8e)).wrapping_add(1)
             } else {
                 (sortear(0x50) as u8).wrapping_add(1)
             };
-            cpy9_pw(e + 0x22, v as i8 as i16);
+            write_i16(e + 0x22, v as i8 as i16);
         }
         for o in [0x1eusize, 0x20] {
             if fora(o) {
                 crate::comparacao::ramo("cpy_9 nota consertada");
-                let nac = cpy9_d(e + 0x16);
+                let nac = read_usize(e + 0x16);
                 let v = if nac != 0 {
                     let s = sortear(0x50) as u8;
-                    s.wrapping_add(cpy9_b(cpy9_d(e + 0x16) + 0x8e) << 2).wrapping_add(1)
+                    s.wrapping_add(read_u8(read_usize(e + 0x16) + 0x8e) << 2).wrapping_add(1)
                 } else {
                     (sortear(0x50) as u8).wrapping_add(1)
                 };
-                cpy9_pw(e + o, v as i8 as i16);
-                if o == 0x20 && cpy9_w(e + 0x20) < cpy9_w(e + 0x1e) {
-                    cpy9_pw(e + 0x20, cpy9_w(e + 0x1e));
+                write_i16(e + o, v as i8 as i16);
+                if o == 0x20 && read_i16(e + 0x20) < read_i16(e + 0x1e) {
+                    write_i16(e + 0x20, read_i16(e + 0x1e));
                 }
             }
         }
         let faixa = |alto: (i32, u8), medio: (i32, u8), baixo: (i32, u8)| {
-            let w = cpy9_w(e + 0x1e);
+            let w = read_i16(e + 0x1e);
             let (n, k) = if w > 0x78 { alto } else if w > 0x50 { medio } else { baixo };
             cpy9_s(n, k)
         };
-        cpy9_atributo(e, 0x24, || if cpy9_w(e + 0x1e) > 0x64 { cpy9_s(0xc, 7) } else { cpy9_s(0xa, 5) });
+        cpy9_atributo(e, 0x24, || if read_i16(e + 0x1e) > 0x64 { cpy9_s(0xc, 7) } else { cpy9_s(0xa, 5) });
         cpy9_atributo(e, 0x25, || faixa((0xe, 7), (0xf, 5), (0xa, 5)));
         cpy9_atributo(e, 0x26, || faixa((0xb, 0xa), (0xf, 5), (0xa, 5)));
-        cpy9_atributo(e, 0x27, || if cpy9_w(e + 0x1e) > 0x50 { cpy9_s(0xf, 6) } else { cpy9_s(0x14, 1) });
+        cpy9_atributo(e, 0x27, || if read_i16(e + 0x1e) > 0x50 { cpy9_s(0xf, 6) } else { cpy9_s(0x14, 1) });
         cpy9_atributo(e, 0x28, || faixa((0xa, 0xb), (0xf, 5), (0xa, 7)));
         cpy9_atributo(e, 0x29, || faixa((0xd, 8), (0xe, 7), (0xf, 6)));
         cpy9_atributo(e, 0x2a, || if sortear(0x64) != 0 { cpy9_s(0xa, 0xb) } else { cpy9_s(0xa, 5) });
         let mut limite = [0u8; 8];
         let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> *const u8 = core::mem::transmute(0x549f70usize);
         let d = data(limite.as_mut_ptr(), 1, 1, 0x776, -1);
-        let (dia, ano) = (cpy9_w(d as usize), cpy9_w(d as usize + 2) as u16);
-        let ano_e = cpy9_w(e + 0xe) as u16;
-        if ano > ano_e || (ano == ano_e && dia > cpy9_w(e + 0xc)) {
-            cpy9_pw(e + 0xe, sortear(10).wrapping_add(0x7a8) as i16);
-            cpy9_pw(e + 0xc, sortear(0x12c).wrapping_add(1) as i16);
+        let (dia, ano) = (read_i16(d as usize), read_i16(d as usize + 2) as u16);
+        let ano_e = read_i16(e + 0xe) as u16;
+        if ano > ano_e || (ano == ano_e && dia > read_i16(e + 0xc)) {
+            write_i16(e + 0xe, sortear(10).wrapping_add(0x7a8) as i16);
+            write_i16(e + 0xc, sortear(0x12c).wrapping_add(1) as i16);
         }
         i += 1;
     }
@@ -969,11 +924,11 @@ unsafe extern "C" fn validar_arbitros() {
 unsafe extern "C" fn comparar_validar_arbitros() {
     let o = orig::<unsafe extern "C" fn()>(1366);
     let total = cpy9_i(0xae2390).max(0) as usize;
-    if cpy9_d(0xae23e8) == 0 {
+    if read_usize(0xae23e8) == 0 {
         return o();
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.push((cpy9_d(0xae23e8), total * 0x2b));
+    reg.push((read_usize(0xae23e8), total * 0x2b));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || crate::aleatorio::sem_contar(|| validar_arbitros()));
     PLACAR.registrar(igual, || {
         let (a, b) = (&mo.0, &mr.0);
@@ -987,19 +942,19 @@ unsafe extern "C" fn comparar_validar_arbitros() {
 /// pela 0x417c10; +0x14, +0x16, +0x1a, +0x1e, +0x20, +0x22, os bytes +0x24..+0x2a). Devolve `this`.
 unsafe extern "thiscall" fn copiar_ficha_de_arbitro(this: usize, src: usize) -> usize {
     for o in [0usize, 4, 8] {
-        cpy9_pd(this + o, cpy9_d(src + o));
+        write_usize(this + o, read_usize(src + o));
     }
     let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut t = [0u8; 8];
     copia(this + 0xc, t.as_mut_ptr(), src + 0xc);
-    cpy9_pw(this + 0x14, cpy9_w(src + 0x14));
-    cpy9_pd(this + 0x16, cpy9_d(src + 0x16));
-    cpy9_pd(this + 0x1a, cpy9_d(src + 0x1a));
+    write_i16(this + 0x14, read_i16(src + 0x14));
+    write_usize(this + 0x16, read_usize(src + 0x16));
+    write_usize(this + 0x1a, read_usize(src + 0x1a));
     for o in [0x1eusize, 0x20, 0x22] {
-        cpy9_pw(this + o, cpy9_w(src + o));
+        write_i16(this + o, read_i16(src + o));
     }
     for o in 0x24usize..0x2b {
-        cpy9_pb(this + o, cpy9_b(src + o));
+        write_u8(this + o, read_u8(src + o));
     }
     this
 }

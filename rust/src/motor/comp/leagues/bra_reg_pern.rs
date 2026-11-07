@@ -1,8 +1,5 @@
 // ---------- 280a leva: a virada da temporada e a fase seguinte dos estaduais: Pernambucano, Catarinense e Paulista (bra_reg_pern.cpp, bra_reg_santa.cpp, bra_reg_sp.cpp) ----------
 
-unsafe fn cqp9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
 /// A virada da temporada de um estadual (`start_new_season`, slot 3, +0x08; o mesmo molde nos nove estaduais de pontos
 /// corridos com mata-mata: só mudam o fonte, as linhas das caixas e a rotina da tabela, conferido instrução a instrução):
@@ -19,26 +16,26 @@ unsafe fn cqp9_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     liberar_tabela(this, 0);
-    let l = cqp9_d(this + 0xba);
+    let l = read_usize(this + 0xba);
     if l != 0 {
         liberar(l);
         core::ptr::write_unaligned((this + 0xba) as *mut usize, 0);
     }
-    let estatisticas = cqp9_d(this + 8);
+    let estatisticas = read_usize(this + 8);
     if estatisticas != 0 {
         let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
         arquivar(estatisticas, 1);
     }
-    if (cqp9_d(this + 0x30) as i32) >= 0 {
+    if (read_usize(this + 0x30) as i32) >= 0 {
         let mut i = 0i32;
         loop {
-            let f = cqp9_d(cqp9_d(this + 0xc) + 4 * i as usize);
+            let f = read_usize(read_usize(this + 0xc) + 4 * i as usize);
             if f != 0 {
-                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(cqp9_d(cqp9_d(f)));
+                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
                 destruir(f, 1);
             }
             i += 1;
-            if i > cqp9_d(this + 0x30) as i32 {
+            if i > read_usize(this + 0x30) as i32 {
                 break;
             }
         }
@@ -47,7 +44,7 @@ unsafe fn cqp9_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
     crate::comparacao::ramo(ramo);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
-    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqp9_d(cqp9_d(this) + 0x8c));
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
     if regras(this) == 0 {
         aviso_em(arquivo, linhas[0]);
         return 0;
@@ -67,18 +64,18 @@ unsafe fn cqp9_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 
         aviso_em(arquivo, linhas[3]);
         return 0;
     }
-    let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqp9_d(cqp9_d(this) + 0x5c));
+    let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
     previstas(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x79cee0usize);
-    renovar(cqp9_d(0xb74340), cqp9_d(this + 4))
+    renovar(read_usize(0xb74340), read_usize(this + 4))
 }
 
 /// A fase seguinte de um estadual (`advance_stage`, slot 11, +0x28): na última fase (+0x30 ≥ +0x2c − 1, com sinal), a
 /// caixa de erro e nada mais; senão +0x30 sobe um e, ao chegar a 0 (o fim dos pontos corridos), monta o mata-mata
 /// (`mata_mata`, call direto com o ecx da liga -> thiscall, ret 0).
 unsafe fn cqp9_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata_mata: usize) {
-    let fase = cqp9_d(this + 0x30) as i32;
-    if fase >= (cqp9_d(this + 0x2c) as i32).wrapping_sub(1) {
+    let fase = read_usize(this + 0x30) as i32;
+    if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(arquivo, linha);
     }
     let fase = fase + 1;
@@ -102,10 +99,10 @@ unsafe fn cqp9_comparar_virada(nome: &str, this: usize, original: impl FnOnce() 
 /// O comparador da fase seguinte: só a original (ponytail: ao chegar a 0 monta o mata-mata, que aloca e sorteia), com o
 /// plano: na última fase, +0x30 igual; senão +0x30 + 1 (o mata-mata grava 0, o mesmo valor).
 unsafe fn cqp9_comparar_fase_seguinte(nome: &str, this: usize, original: impl FnOnce()) {
-    let antes = cqp9_d(this + 0x30) as i32;
-    let ultima = antes >= (cqp9_d(this + 0x2c) as i32).wrapping_sub(1);
+    let antes = read_usize(this + 0x30) as i32;
+    let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original();
-    let depois = cqp9_d(this + 0x30) as i32;
+    let depois = read_usize(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) antes={} depois={}", nome, this, antes, depois));
 }
 
@@ -177,17 +174,11 @@ unsafe extern "thiscall" fn comparar_cqp9_fase_seguinte_do_paulista(this: usize)
 
 // ---------- 277a leva: as semifinais dos estaduais e regionais: Pernambucano, Catarinense e Paulista (bra_reg_pern.cpp, bra_reg_santa.cpp, bra_reg_sp.cpp) ----------
 
-unsafe fn cqn8_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cqn8_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O clube da linha `l` da tabela (+0xb1, linhas de 0x3b bytes, +0 o clube).
 unsafe fn cqn8_clube(liga: usize, l: usize) -> usize {
-    cqn8_d(cqn8_d(liga + 0xb1) + l * 0x3b)
+    read_usize(read_usize(liga + 0xb1) + l * 0x3b)
 }
 
 /// O mata-mata montado da tabela (o mesmo molde nas semifinais e nos mata-matas dos estaduais; só mudam o fonte, as
@@ -215,7 +206,7 @@ unsafe fn cqn8_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
         core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cqn8_clube(this, l));
     }
     crate::comparacao::ramo(ramo);
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqn8_d(cqn8_d(this) + 0x3c));
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -226,12 +217,12 @@ unsafe fn cqn8_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(0x522e00usize);
-        construir(p, this, n as u32, lista, rodadas as u16 as u32, cqn8_d(this + 4), t, cqn8_w(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
+        construir(p, this, n as u32, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
     } else {
         0
     };
-    core::ptr::write_unaligned(cqn8_d(this + 0xc) as *mut usize, fase);
-    let fase = cqn8_d(cqn8_d(this + 0xc));
+    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, fase);
+    let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
         return aviso_em(arquivo, linha_sem_fase);
     }
@@ -268,18 +259,18 @@ unsafe extern "thiscall" fn cqn8_mata_mata_do_paulista(this: usize) {
 unsafe fn cqn8_comparar(nome: &str, this: usize, linhas: &[usize], original: impl FnOnce()) {
     let mut plano: Vec<usize> = linhas.iter().map(|&l| cqn8_clube(this, l)).collect();
     original();
-    let fase = cqn8_d(cqn8_d(this + 0xc));
+    let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
         PLACAR.registrar(false, || format!("{}({:#x}) sem fase", nome, this));
         return;
     }
-    let lista = cqn8_d(fase + 0xa7);
-    let mut achou: Vec<usize> = (0..linhas.len()).map(|k| cqn8_d(lista + 6 * k)).collect();
+    let lista = read_usize(fase + 0xa7);
+    let mut achou: Vec<usize> = (0..linhas.len()).map(|k| read_usize(lista + 6 * k)).collect();
     let (pl, ac) = (plano.clone(), achou.clone());
     plano.sort_unstable();
     achou.sort_unstable();
-    let igual = plano == achou && cqn8_w(fase + 0x3e) as usize == linhas.len() && cqn8_d(fase + 4) == cqn8_d(this + 4) && cqn8_d(this + 0x30) == 0;
-    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqn8_w(fase + 0x3e)));
+    let igual = plano == achou && read_i16(fase + 0x3e) as usize == linhas.len() && read_usize(fase + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0;
+    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
 }
 
 unsafe extern "thiscall" fn comparar_cqn8_mata_mata_do_pernambucano(this: usize) {

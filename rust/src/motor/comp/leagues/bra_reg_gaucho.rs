@@ -1,16 +1,10 @@
 // ---------- 278a leva: o mata-mata dos estaduais e regionais: Gaúcho, Centro-Oeste e Goiano (bra_reg_gaucho.cpp, bra_reg_central.cpp, bra_reg_goias.cpp) ----------
 
-unsafe fn cqn9_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cqn9_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
 
 /// O clube da linha `l` da tabela (+0xb1, linhas de 0x3b bytes, +0 o clube).
 unsafe fn cqn9_clube(liga: usize, l: usize) -> usize {
-    cqn9_d(cqn9_d(liga + 0xb1) + l * 0x3b)
+    read_usize(read_usize(liga + 0xb1) + l * 0x3b)
 }
 
 /// O mata-mata montado da tabela (o mesmo molde nas semifinais e nos mata-matas dos estaduais; só mudam o fonte, as
@@ -38,7 +32,7 @@ unsafe fn cqn9_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
         core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cqn9_clube(this, l));
     }
     crate::comparacao::ramo(ramo);
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqn9_d(cqn9_d(this) + 0x3c));
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -49,12 +43,12 @@ unsafe fn cqn9_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(0x522e00usize);
-        construir(p, this, n as u32, lista, rodadas as u16 as u32, cqn9_d(this + 4), t, cqn9_w(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
+        construir(p, this, n as u32, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
     } else {
         0
     };
-    core::ptr::write_unaligned(cqn9_d(this + 0xc) as *mut usize, fase);
-    let fase = cqn9_d(cqn9_d(this + 0xc));
+    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, fase);
+    let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
         return aviso_em(arquivo, linha_sem_fase);
     }
@@ -91,18 +85,18 @@ unsafe extern "thiscall" fn cqn9_mata_mata_do_goiano(this: usize) {
 unsafe fn cqn9_comparar(nome: &str, this: usize, linhas: &[usize], original: impl FnOnce()) {
     let mut plano: Vec<usize> = linhas.iter().map(|&l| cqn9_clube(this, l)).collect();
     original();
-    let fase = cqn9_d(cqn9_d(this + 0xc));
+    let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
         PLACAR.registrar(false, || format!("{}({:#x}) sem fase", nome, this));
         return;
     }
-    let lista = cqn9_d(fase + 0xa7);
-    let mut achou: Vec<usize> = (0..linhas.len()).map(|k| cqn9_d(lista + 6 * k)).collect();
+    let lista = read_usize(fase + 0xa7);
+    let mut achou: Vec<usize> = (0..linhas.len()).map(|k| read_usize(lista + 6 * k)).collect();
     let (pl, ac) = (plano.clone(), achou.clone());
     plano.sort_unstable();
     achou.sort_unstable();
-    let igual = plano == achou && cqn9_w(fase + 0x3e) as usize == linhas.len() && cqn9_d(fase + 4) == cqn9_d(this + 4) && cqn9_d(this + 0x30) == 0;
-    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqn9_w(fase + 0x3e)));
+    let igual = plano == achou && read_i16(fase + 0x3e) as usize == linhas.len() && read_usize(fase + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0;
+    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
 }
 
 unsafe extern "thiscall" fn comparar_cqn9_mata_mata_do_gaucho(this: usize) {

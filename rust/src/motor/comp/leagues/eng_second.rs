@@ -383,17 +383,11 @@ unsafe extern "thiscall" fn comparar_calendario_da_terceira_inglesa(this: usize,
 
 // ---------- 262a leva: as divisões inglesas no fim da temporada: os registros pela situação na tabela e no mata-mata, e a situação do clube na First e na Third (eng_second.cpp, eng_first.cpp, eng_third.cpp) ----------
 
-unsafe fn cpz2_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
-}
 
-unsafe fn cpz2_b(a: usize) -> u8 {
-    *(a as *const u8)
-}
 
 /// O registro de staff ([0xdd7f00]).
 unsafe fn cpz2_registros() -> usize {
-    cpz2_d(0xdd7f00)
+    read_usize(0xdd7f00)
 }
 
 /// { 0x576c50 } (thiscall, ret 0x18, eng_second.cpp): `EngSecond::update_staff_records_for_status(clube, situação,
@@ -406,7 +400,7 @@ unsafe fn cpz2_registros() -> usize {
 /// (passou da rodada), a classificação (0xa0, 0x96, 0xf) e segue procurando; 0xff ou 2 (caiu), +0x37 = 0xfe.
 unsafe extern "thiscall" fn registros_pela_situacao_inglesa(this: usize, clube: usize, situacao: u32, fase: u32, saiu: usize, _a: u32, _b: u32) -> u32 {
     let s = situacao as u8;
-    let comp = cpz2_d(this + 4);
+    let comp = read_usize(this + 4);
     if fase as u8 == 0xff {
         match s {
             5 => {
@@ -434,14 +428,14 @@ unsafe extern "thiscall" fn registros_pela_situacao_inglesa(this: usize, clube: 
     }
     let mut i: i32 = 0;
     while i < *((this + 0x3e) as *const i16) as i32 {
-        let linha = cpz2_d(this + 0xb1) + (i as usize) * 0x3b;
-        if cpz2_d(linha) == clube {
+        let linha = read_usize(this + 0xb1) + (i as usize) * 0x3b;
+        if read_usize(linha) == clube {
             match s {
                 1 => {
                     crate::comparacao::ramo("cpz_2 venceu o mata-mata");
                     let acesso: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x869480usize);
                     acesso(cpz2_registros(), clube, comp, 0x32);
-                    *((cpz2_d(this + 0xb1) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
+                    *((read_usize(this + 0xb1) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
                     *(saiu as *mut u8) = 1;
                     return 0;
                 }
@@ -450,7 +444,7 @@ unsafe extern "thiscall" fn registros_pela_situacao_inglesa(this: usize, clube: 
                     vaga(cpz2_registros(), clube, comp, 0xa0, 0x96, 0xf);
                 }
                 0xff | 2 => {
-                    *((cpz2_d(this + 0xb1) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
+                    *((read_usize(this + 0xb1) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
                     return 0;
                 }
                 _ => {}
@@ -470,12 +464,12 @@ unsafe extern "thiscall" fn comparar_registros_pela_situacao_inglesa(this: usize
     let s = situacao as u8;
     let mut plano: Option<(usize, u8, bool)> = None;
     if fase as u8 != 0xff {
-        let tab = cpz2_d(this + 0xb1);
+        let tab = read_usize(this + 0xb1);
         let n = *((this + 0x3e) as *const i16) as i32;
         let mut i: i32 = 0;
         while i < n {
             let linha = tab + (i as usize) * 0x3b;
-            if cpz2_d(linha) == clube {
+            if read_usize(linha) == clube {
                 match s {
                     1 => {
                         plano = Some((linha, 0, true));
@@ -494,7 +488,7 @@ unsafe extern "thiscall" fn comparar_registros_pela_situacao_inglesa(this: usize
     let r = o(this, clube, situacao, fase, saiu, a, b);
     let igual = r == 0
         && match plano {
-            Some((linha, v, marca)) => cpz2_b(linha + 0x37) == v && (!marca || cpz2_b(saiu) == 1),
+            Some((linha, v, marca)) => read_u8(linha + 0x37) == v && (!marca || read_u8(saiu) == 1),
             None => true,
         };
     PLACAR.registrar(igual, || format!("registros_pela_situacao_inglesa({:#x}, {:#x}, {}, {}) original={} plano={:x?}", this, clube, s, fase as u8, r, plano));
@@ -505,7 +499,7 @@ unsafe extern "thiscall" fn comparar_registros_pela_situacao_inglesa(this: usize
 /// põe a tabela na ordem dos clubes se precisa e procura).
 unsafe fn cpz2_entrada(this: usize, clube: usize) -> usize {
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
-    achar(cpz2_d(this + 8), clube)
+    achar(read_usize(this + 8), clube)
 }
 
 /// A situação do clube nas estatísticas (+0x73 a fase, +0x74 a melhor, +0x75 a pior), comum à First e à Third: na liga
