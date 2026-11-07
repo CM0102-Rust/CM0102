@@ -15,9 +15,8 @@ Este repositório o mantém jogável no Windows 11 e prepara a reescrita do jogo
 | `original/` | Downloads intocados (ISO, zips, patch 3.9.68) e cópia de segurança dos dois exe 3.9.68. | não |
 | `referencias/` | Projetos de terceiros consultados (ex.: `CM0102Patcher` do nckstwrt). | não |
 | `engenharia-reversa/` | Ferramentas de análise (Python) e o gerador dos exe portáteis. | sim |
-| `docs/` | Documentação técnica; comece por [`DESCOMPILACAO.md`](docs/DESCOMPILACAO.md). Para continuar a reescrita: [`COMO_CONTINUAR.md`](docs/COMO_CONTINUAR.md). Nomes do código em inglês: [`GLOSSARIO.md`](docs/GLOSSARIO.md). Campos dos registros: [`CAMPOS.md`](docs/CAMPOS.md). | sim |
+| `docs/` | Documentação técnica; créditos em [`CREDITOS.md`](CREDITOS.md); comece por [`DESCOMPILACAO.md`](docs/DESCOMPILACAO.md). Para continuar a reescrita: [`COMO_CONTINUAR.md`](docs/COMO_CONTINUAR.md). Nomes do código em inglês: [`GLOSSARIO.md`](docs/GLOSSARIO.md). Campos dos registros: [`CAMPOS.md`](docs/CAMPOS.md). | sim |
 | `levas/` | Uma pasta por leva da reescrita: o código, a integração e o resultado dos testes. | sim |
-| `wiki/` | Estado do projeto, decisões e histórico. | sim |
 | `CLAUDE.md` | Instruções para continuar o trabalho no Claude Code. | sim |
 
 **Estado:** 283 levas, 2065 rotinas em Rust, cada uma comparada com a original (o motor de partidas sem as telas está 100% em Rust; o save passa de 2 GB, até 4 GB); quanto falta, módulo a módulo: [`docs/PLACAR.md`](docs/PLACAR.md).

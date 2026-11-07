@@ -37,7 +37,7 @@ def main():
     rodar(sys.executable, os.path.join('engenharia-reversa', 'competicoes.py'))  # o mapa das competições acompanha cada leva
     titulo = open(os.path.join(RAIZ, 'levas', str(n), 'LEIA.md'), encoding='utf-8').readline().split('—', 1)[1].strip()
     total = re.search(r'\*\*Estado:\*\* \d+ levas, (\d+) rotinas', open(os.path.join(RAIZ, 'README.md'), encoding='utf-8').read()).group(1)
-    rodar('git', 'add', '-A', 'docs', 'README.md', 'README.en.md', 'wiki', os.path.join('levas', str(n)),
+    rodar('git', 'add', '-A', 'docs', 'README.md', 'README.en.md', os.path.join('levas', str(n)),
           os.path.join('engenharia-reversa', 'glossario.py'), os.path.join('engenharia-reversa', 'mutacoes', f'leva{n}.py'),
           'CLAUDE.md', 'CLAUDE.en.md', os.path.join('engenharia-reversa', 'gen_docs.py'), os.path.join('engenharia-reversa', 'publicar_leva.py'),
           os.path.join('engenharia-reversa', 'fila.py'), os.path.join('engenharia-reversa', 'molde_docs.py'), os.path.join('levas', 'fila'),

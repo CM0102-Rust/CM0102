@@ -15,9 +15,8 @@ This repository keeps it playable on Windows 11 and prepares the rewrite of the 
 | `original/` | Untouched downloads (ISO, zips, 3.9.68 patch) and a backup of the two 3.9.68 exes. | no |
 | `referencias/` | Third-party projects consulted (e.g. nckstwrt's `CM0102Patcher`). | no |
 | `engenharia-reversa/` | Analysis tools (Python) and the generator of the portable exes. | yes |
-| `docs/` | Technical documentation; start with [`DESCOMPILACAO.md`](docs/DESCOMPILACAO.en.md). To continue the rewrite: [`COMO_CONTINUAR.md`](docs/COMO_CONTINUAR.en.md). English meaning of the code's names: [`GLOSSARIO.en.md`](docs/GLOSSARIO.en.md). Record fields: [`CAMPOS.en.md`](docs/CAMPOS.en.md). | yes |
+| `docs/` | Technical documentation; credits in [`CREDITOS.en.md`](CREDITOS.en.md); start with [`DESCOMPILACAO.md`](docs/DESCOMPILACAO.en.md). To continue the rewrite: [`COMO_CONTINUAR.md`](docs/COMO_CONTINUAR.en.md). English meaning of the code's names: [`GLOSSARIO.en.md`](docs/GLOSSARIO.en.md). Record fields: [`CAMPOS.en.md`](docs/CAMPOS.en.md). | yes |
 | `levas/` | One folder per batch of the rewrite: the code, the integration and the test results. | yes |
-| `wiki/` | Project state, decisions and history. | yes |
 | `CLAUDE.md` | Instructions for continuing the work in Claude Code. | yes |
 
 **State:** 283 batches, 2065 routines in Rust, each one compared with the original (the match engine without the screens is 100% in Rust; saves go beyond 2 GB, up to 4 GB); how much is left, module by module: [`docs/PLACAR.en.md`](docs/PLACAR.en.md).
