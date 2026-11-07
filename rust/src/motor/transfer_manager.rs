@@ -281,7 +281,10 @@ unsafe extern "thiscall" fn comparar_por_oferta_de_transferencia(this: usize, of
         return;
     }
     let (v, s, s2) = (read_u32_as_usize(oferta + 0x20) as i32, read_u32_as_usize(oferta + 0x24), read_u32_as_usize(this + 0x85a));
-    PLACAR.registrar(v == vaga && s == serie && s2 == serie.wrapping_add(1), || format!(
+    // the serial goes up at least once: a nested offer made inside the call (news, scheduling) raises it again
+    // (8-league audit of 07/11/2026, ENG SCO IRL ITA ESP, 2002-050: 4625 against 4624)
+    // [pt] a série sobe pelo menos uma vez: uma oferta aninhada feita dentro da chamada (notícia, agenda) a sobe de novo
+    PLACAR.registrar(v == vaga && s == serie && s2 > serie, || format!(
         "por_oferta_de_transferencia(alvo {}, comprador {}): vaga original {} plano {}, série {} plano {}, próxima {} plano {}",
         alvo, comprador, v, vaga, s, serie, s2, serie.wrapping_add(1)));
 }
