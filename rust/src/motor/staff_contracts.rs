@@ -40,8 +40,8 @@ unsafe extern "thiscall" fn periodo_protegido(c: usize, _x: usize, no_limite: *m
     if rano > cano || (rano == cano && rdia > cdia) {
         return 1;
     }
-    let diferenca: unsafe extern "thiscall" fn(usize, *mut u8, u32, u32) -> usize = core::mem::transmute(0x54cc30usize);
-    let idade: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x53ab90usize);
+    let diferenca: unsafe extern "thiscall" fn(usize, *mut u8, u32, u32) -> usize = core::mem::transmute(FN_DATE_GET_DIFFERENCE);
+    let idade: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_STAFF_AGE);
     let (d0, d1) = (read_usize(d) as u32, read_usize(d + 4) as u32);
     let mut t = [0u8; 8];
     diferenca(0xae2c90, t.as_mut_ptr(), d0, d1);
@@ -118,14 +118,14 @@ unsafe fn cpl5_zerar_moral(this: usize, pessoa: usize, clube: usize) {
     write_u8(this + 0x44, 0);
     write_u8(this + 0x4e, 0);
     cpl5_por(this + 0x45, 0);
-    let limpar: unsafe extern "C" fn(usize) = core::mem::transmute(0x549c90usize);
+    let limpar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_STAFF_CLEAR_OPINION_LINKS);
     limpar(read_usize(0xae23bc).wrapping_add(read_usize(this).wrapping_mul(0x6e)));
     cpl5_por(this + 0x40, 0);
     write_u8(this + 0x4e, 4);
     write_u8(this + 0x3f, 0); // a felicidade
     write_u8(this + 0x3e, 0);
     if clube != 0 && read_usize(clube + 0x53) != 0 {
-        let fluencia: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8 = core::mem::transmute(0x7c6830usize);
+        let fluencia: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8 = core::mem::transmute(FN_PLAYERSTATS_GET_LANGUAGE_FLUENCY);
         let r = fluencia(read_usize(0xb74350), pessoa, clube, read_u8(read_usize(clube + 0x53) + 0x77) as u32, 0) as i8;
         let c = if r > 10 { 10 } else { r } as u8;
         let b = read_u8(this + 0x4f);
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn zerar_moral_do_contrato(this: usize, pessoa: usize, 
 /// mínima. As cópias das datas (0x417c10, sem outro efeito) viram cópias de 8 bytes.
 #[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn contrato_pelo_atual(this: usize, pessoa: usize, clube: usize, fim: usize, percentual: u32, sem_acesso: u32, multa: u32) {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let c = contrato_de(read_usize(0xae1050), pessoa);
     if c == 0 {
         aviso_em(0xa8360c, 0xf5);
@@ -189,8 +189,8 @@ unsafe extern "thiscall" fn contrato_pelo_atual(this: usize, pessoa: usize, club
 /// exato do limite de cima: 0x4a7f20) e, antes de 0xae1030, 11 no dia, 13 no dia de 0xae1048, senão 12. "Depois"
 /// pela 0x456740. Chamada a cada contrato no passe diário (0x4c7ac0): sem contador.
 unsafe extern "thiscall" fn faixa_do_vencimento(this: usize) -> u8 {
-    let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
-    let mesmo_dia: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x4a7f20usize);
+    let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
+    let mesmo_dia: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3D_3D);
     let fim = this + 0x2d;
     let m = |g: usize| depois(fim, read_usize(g) as u32, read_usize(g + 4) as u32) != 0;
     let q = |g: usize| mesmo_dia(fim, read_usize(g) as u32, read_usize(g + 4) as u32) != 0;
@@ -250,7 +250,7 @@ unsafe extern "thiscall" fn comparar_zerar_moral_do_contrato(this: usize, pessoa
 #[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn comparar_contrato_pelo_atual(this: usize, pessoa: usize, clube: usize, fim: usize, percentual: u32, sem_acesso: u32, multa: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(917);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     if contrato_de(read_usize(0xae1050), pessoa) == 0 {
         return o(this, pessoa, clube, fim, percentual, sem_acesso, multa);
     }
@@ -284,7 +284,7 @@ unsafe fn cph1_pessoa(contrato: usize) -> usize {
 /// (0xae2c90) até a data do fim do contrato (+0x2d), pela 0x54cdb0 (`dias_ate`, a data do jogo por valor). O jogo lê
 /// só a palavra; devolve o eax inteiro da 0x54cdb0.
 unsafe extern "thiscall" fn dias_ate_o_fim_do_contrato(this: usize) -> u32 {
-    let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x54cdb0usize);
+    let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     dias(this + 0x2d, read_u32(0xae2c90), read_u32(0xae2c94)) // a data do fim do contrato
 }
 
@@ -293,10 +293,10 @@ unsafe extern "thiscall" fn dias_ate_o_fim_do_contrato(this: usize) -> u32 {
 /// transferência (0x867240 com 0).
 unsafe extern "thiscall" fn limpar_todas_as_queixas(this: usize, conferir: u32) {
     core::ptr::write_unaligned((this + 0x45) as *mut u32, 0); // as queixas
-    let vinculos: unsafe extern "C" fn(usize) = core::mem::transmute(0x549c90usize);
+    let vinculos: unsafe extern "C" fn(usize) = core::mem::transmute(FN_STAFF_CLEAR_OPINION_LINKS);
     vinculos(cph1_pessoa(this));
     if conferir != 0 {
-        let retirada: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x867240usize);
+        let retirada: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_STAFF_CONTRACT_CHECK_TRANSFER_REQUEST_WITHDRAWAL);
         retirada(this, 0);
     }
 }
@@ -307,7 +307,7 @@ unsafe extern "thiscall" fn limpar_todas_as_queixas(this: usize, conferir: u32) 
 /// contrato acertado com outro clube (0x8c5450 em [0xde1f54]). Devolve a pessoa quando retira.
 unsafe fn cph1_retira(this: usize) -> Option<usize> {
     let pessoa = cph1_pessoa(this);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let c = contrato_de(read_u32(0xae1050) as usize, pessoa);
     *(0xae1080 as *mut usize) = c; // a ficha do contrato
     let clube = if c != 0 && read_u8(c + 0x35) & 0x3f != 5 {
@@ -322,11 +322,11 @@ unsafe fn cph1_retira(this: usize) -> Option<usize> {
     if read_u8(this + 0x4e) & 8 == 0 || read_u8(this + 0x49) != 0 {
         return None; // sem pedido de transferência
     }
-    let criterio: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x866f60usize);
+    let criterio: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_CONTRACT_WANTS_TO_LEAVE);
     if criterio(this) != 0 || read_u8(this + 0x4f) & 0xf0 == 0x70 {
         return None;
     }
-    let acertado: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x8c5450usize);
+    let acertado: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_AGREED_CONTRACT_CLUB);
     if acertado(read_u32(0xde1f54) as usize, pessoa, 0) != 0 {
         return None;
     }
@@ -340,7 +340,7 @@ unsafe fn cph1_retira(this: usize) -> Option<usize> {
 /// +0x45 de antes) e tira o vínculo de opinião (0x549d60 com o bit). Sem SEH, sem caixa, sem sorteio.
 unsafe extern "thiscall" fn conferir_retirada_do_pedido(this: usize, ctx: u32) {
     let Some(pessoa) = cph1_retira(this) else { return };
-    let retirar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4d9460usize);
+    let retirar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_CONTRACT_MANAGER_POST_TRANSFER_REQUEST_WITHDRAWN_NEWS);
     retirar(read_u32(0xae1050) as usize, this, ctx);
     *((this + 0x4e) as *mut u8) &= 0xf7; // o pedido retirado
     *((this + 0x44) as *mut u8) = read_u8(pessoa + 0x5b).wrapping_add(read_u8(pessoa + 0x59)).wrapping_add(5);
@@ -350,8 +350,8 @@ unsafe extern "thiscall" fn conferir_retirada_do_pedido(this: usize, ctx: u32) {
     if (read_u8(this + 0x3d) as i8) < 15 {
         *((this + 0x3d) as *mut u8) = 15; // a felicidade mínima
     }
-    let conferir: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x867240usize);
-    let vinculo: unsafe extern "C" fn(usize, i32) = core::mem::transmute(0x549d60usize);
+    let conferir: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_STAFF_CONTRACT_CHECK_TRANSFER_REQUEST_WITHDRAWAL);
+    let vinculo: unsafe extern "C" fn(usize, i32) = core::mem::transmute(FN_STAFF_REMOVE_OPINION_LINK);
     for bit in [0x10u32, 1, 4, 8, 0x100, 0x80, 0x10000] {
         let q = read_u32(this + 0x45);
         if q & bit != 0 {

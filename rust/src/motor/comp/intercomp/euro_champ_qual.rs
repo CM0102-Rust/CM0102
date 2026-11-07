@@ -27,7 +27,7 @@ unsafe fn cqs8_regras(this: usize) -> u32 {
     write_u8(this + 0xc1, 0);
     write_u8(this + 0x49, 7);
     core::ptr::write_unaligned((this + 0xa7) as *mut u16, 0xffff);
-    let construir: unsafe extern "thiscall" fn(*mut [u32; 2], u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
+    let construir: unsafe extern "thiscall" fn(*mut [u32; 2], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut data = [0u32; 2];
     // ponytail: a original empurra o ano no ecx com os 16 bits altos do ponteiro da copa; a 0x549f70 lê a palavra
     construir(&mut data, 0xa, 2, read_i16(this + 0x40) as u16 as u32, 5); // cqs8: a data do sorteio
@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn comparar_cqs8_eurocopa_regras(this: usize) -> u32 {
     // confere só que os dois lados a montaram
     let tabela = to != 0 && tr != 0;
     if tr != 0 && tr != to {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(tr);
     }
     PLACAR.registrar(igual && a == b && tabela, || format!("cqs8_eurocopa_regras({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn comparar_cqs8_eurocopa_tamanho_do_grupo(this: usize,
 /// 0x4a2e10: push 0x12; push clube; mov ecx, [this+8] -> thiscall, ret 8, devolve float), truncada (_ftol 0x945640): com o
 /// byte de baixo menor que 14 (com sinal), −2; senão −3 (word).
 unsafe fn cqs8_situacao(this: usize, clube: usize) -> i16 {
-    let estatistica: unsafe extern "thiscall" fn(usize, usize, u32) -> f64 = core::mem::transmute(0x4a2e10usize);
+    let estatistica: unsafe extern "thiscall" fn(usize, usize, u32) -> f64 = core::mem::transmute(FN_COMP_STATS_GET_CLUB_STAT);
     let x = ftol(estatistica(read_u32_as_usize(this + 8), clube, 0x12));
     ((((x as u8 as i8) < 0xe) as i32) - 3) as i16 // cqs8: a situação pela estatística 0x12
 }
@@ -134,10 +134,10 @@ unsafe extern "thiscall" fn comparar_cqs8_eurocopa_situacao(this: usize, clube: 
 /// (League::init_table_row 0x687430: push 0; push 0; push clube; push o dword do byte i com lixo em cima (só o byte é lido);
 /// mov ecx -> thiscall, ret 0x10); a notícia do grupo (0x684230, thiscall). Devolve 1.
 unsafe extern "thiscall" fn cqs8_eurocopa_grupo_um(this: usize) -> u32 {
-    let tamanho: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(0x57d9d0usize);
+    let tamanho: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(FN_EUROCHAMPQUAL_GET_GROUP_TEAM_COUNT);
     let n = tamanho(this, 0xffff_ffff);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar((n as i32 * 0x3b) as u32);
     core::ptr::write_unaligned((this + 0xb1) as *mut u32, t as u32);
     if t == 0 {
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn cqs8_eurocopa_grupo_um(this: usize) -> u32 {
     let n = read_i16(this + 0x3e);
     core::ptr::write_unaligned((this + 0xa7) as *mut i16, n.wrapping_sub(1).wrapping_mul(read_i16(this + 0x3c))); // cqs8: as rodadas do grupo 1
     crate::comparacao::ramo("cqs_8 grupo 1 da eurocopa");
-    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
+    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut i: i8 = 0;
     if n > 0 {
         loop {
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn cqs8_eurocopa_grupo_um(this: usize) -> u32 {
             }
         }
     }
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     noticia(this);
     1
 }

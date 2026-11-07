@@ -15,7 +15,7 @@ unsafe fn cqj12_campos(this: usize, campos: &[(usize, u8, u32)]) {
 /// A primeira palavra da Date(dia, mês, ano da competição +0x40, dia da semana) (0x549f70: push semana; push ano; push
 /// mês; push dia; lea ecx, local -> thiscall, ret 0x10).
 unsafe fn cqj12_data(this: usize, dia: u32, mes: u32, semana: u32) -> u16 {
-    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
+    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     // ponytail: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
     data(d.as_mut_ptr(), dia, mes, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32, semana);
@@ -87,7 +87,7 @@ const CQJ12_SUL: [(usize, u8, u32); 16] = [(0x3c, 2, 2), (0x43, 1, 2), (0xc6, 1,
 unsafe extern "thiscall" fn cqj12_eliminatoria_sul_americana_regras(this: usize) -> u32 {
     let lista = core::ptr::read_unaligned(0xadadfc as *const usize);
     if lista != 0 {
-        let o = core::ptr::read_unaligned((lista + core::ptr::read_unaligned(0x9cf76c as *const usize).wrapping_mul(4)) as *const usize);
+        let o = core::ptr::read_unaligned((lista + core::ptr::read_unaligned(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION as *const usize).wrapping_mul(4)) as *const usize);
         if o != 0 {
             *((this + 0xef) as *mut u8) = *((o + 0xee) as *const u8);
         }
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn comparar_cqj12_eliminatoria_sul_americana_regras(thi
     let lista = core::ptr::read_unaligned(0xadadfc as *const usize);
     let mut ef = *((this + 0xef) as *const u8);
     if lista != 0 {
-        let c = core::ptr::read_unaligned((lista + core::ptr::read_unaligned(0x9cf76c as *const usize).wrapping_mul(4)) as *const usize);
+        let c = core::ptr::read_unaligned((lista + core::ptr::read_unaligned(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION as *const usize).wrapping_mul(4)) as *const usize);
         if c != 0 {
             ef = *((c + 0xee) as *const u8);
         }

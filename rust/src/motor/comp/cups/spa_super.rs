@@ -4,14 +4,14 @@
 /// O clube que terminou em `lugar` (0 o campeão, 1 o vice) na última temporada da competição de id [id] (0x4afd80: push
 /// lugar; push competição do banco [0xae23d0] + 0x6b × id; add esp, 8 -> cdecl).
 unsafe fn cqm12_colocado(id: usize, lugar: u32) -> usize {
-    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
+    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     colocado(read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b)), lugar)
 }
 
 /// O começo comum: +0x3e = 2 e a lista de dois (0x944e46 de 0xc em +0xa7); sem memória, a caixa `linha` e None.
 unsafe fn cqm12_lista(this: usize, arquivo: usize, linha: u32) -> Option<usize> {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 2);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0xc);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
@@ -49,17 +49,17 @@ unsafe fn cqm12_espanha(this: usize) -> (i32, i32) {
         Some(l) => l,
         None => return (-1, 0),
     };
-    let a = cqm12_colocado(0x9cf740, 0); // cqm12: o campeão da Copa do Rei
+    let a = cqm12_colocado(KEY_CLUB_COMP_SPANISH_CUP, 0); // cqm12: o campeão da Copa do Rei
     if !cqm12_vaga(l, 0, a, F, 0xcb) {
         return (0, 0);
     }
-    let b = cqm12_colocado(0x9cf624, 0);
+    let b = cqm12_colocado(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION, 0);
     if !cqm12_vaga(l, 1, b, F, 0xd4) {
         return (0, 0);
     }
     if a == b {
         crate::comparacao::ramo("cqm_12 dobradinha espanhola");
-        if !cqm12_vaga(l, 0, cqm12_colocado(0x9cf740, 1), F, 0xe0) {
+        if !cqm12_vaga(l, 0, cqm12_colocado(KEY_CLUB_COMP_SPANISH_CUP, 1), F, 0xe0) {
             return (0, 0);
         }
     }
@@ -95,7 +95,7 @@ unsafe fn cqm12_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: im
         lo == 0 && lr == 0
     };
     if lr != 0 && lr != lo {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
     PLACAR.registrar(igual && a == b && lista, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", nome, this, a, b, igual, lista));
@@ -118,26 +118,26 @@ unsafe fn cqm12_japao(this: usize) -> (i32, i32) {
         Some(l) => l,
         None => return (-1, 0),
     };
-    let a = cqm12_colocado(0x9cf65c, 0); // cqm12: o campeão da J1
+    let a = cqm12_colocado(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 0); // cqm12: o campeão da J1
     if !cqm12_vaga(l, 0, a, F, 0xca) {
         return (0, 0);
     }
-    if read_u32_as_usize(a + 0x53) == 0 && !cqm12_vaga(l, 0, cqm12_colocado(0x9cf65c, 1), F, 0xd6) {
+    if read_u32_as_usize(a + 0x53) == 0 && !cqm12_vaga(l, 0, cqm12_colocado(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 1), F, 0xd6) {
         return (0, 0);
     }
-    let b = cqm12_colocado(0x9cf660, 0);
+    let b = cqm12_colocado(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 0);
     if !cqm12_vaga(l, 1, b, F, 0xe0) {
         return (0, 0);
     }
-    if read_u32_as_usize(b + 0x53) == 0 && !cqm12_vaga(l, 1, cqm12_colocado(0x9cf660, 1), F, 0xec) {
+    if read_u32_as_usize(b + 0x53) == 0 && !cqm12_vaga(l, 1, cqm12_colocado(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xec) {
         return (0, 0);
     }
     if read_u32_as_usize(l) == read_u32_as_usize(l + 6) {
         crate::comparacao::ramo("cqm_12 dobradinha japonesa");
-        if !cqm12_vaga(l, 1, cqm12_colocado(0x9cf660, 1), F, 0xf9) {
+        if !cqm12_vaga(l, 1, cqm12_colocado(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xf9) {
             return (0, 0);
         }
-        if read_u32_as_usize(l) == read_u32_as_usize(l + 6) && !cqm12_vaga(l, 0, cqm12_colocado(0x9cf65c, 1), F, 0x105) {
+        if read_u32_as_usize(l) == read_u32_as_usize(l + 6) && !cqm12_vaga(l, 0, cqm12_colocado(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 1), F, 0x105) {
             return (0, 0);
         }
     }
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn cqm12_jogo_das_estrelas_tabela(this: usize, fase: u3
     }
     *rodadas = 1;
     *extra = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar(0x68);
     if t == 0 {
         aviso_em(0xaa20a0, 0x9a);
@@ -177,8 +177,8 @@ unsafe extern "thiscall" fn cqm12_jogo_das_estrelas_tabela(this: usize, fase: u3
     }
     crate::comparacao::ramo("cqm_12 tabela do jogo das estrelas");
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
-    let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521e60usize);
-    let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521eb0usize);
+    let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
+    let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
     sorteio(t, 0, 0xf, 5, 0, 5, ano);
     jogo(t, 0, 2, 7, 0, 6, 1, ano, 0); // cqm12: o Jogo das Estrelas em 2 de agosto
     let w = |o: usize, v: u16| core::ptr::write_unaligned((t + o) as *mut u16, v);
@@ -229,7 +229,7 @@ unsafe extern "thiscall" fn comparar_cqm12_jogo_das_estrelas_tabela(this: usize,
     let saidas = *rodadas == r2 && *extra == e2 && (saida.is_null() || *saida == s2);
     let tabela = if a != 0 && b != 0 { cqm12_gravados(a) == cqm12_gravados(b) } else { a == 0 && b == 0 };
     if b != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
     PLACAR.registrar(igual && saidas && tabela, || format!("cqm12_jogo_das_estrelas_tabela: saídas {} tabela {}", saidas, tabela));

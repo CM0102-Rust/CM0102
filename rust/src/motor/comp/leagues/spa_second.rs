@@ -10,8 +10,8 @@ type Cqq4Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
 unsafe fn cqq4_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqq4Rodada]) {
-    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(0x68a160usize);
-    let faixa: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(0x68a1c0usize);
+    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
+    let faixa: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
         let i = primeira + k as i32;
         data(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, ano, 0);
@@ -55,7 +55,7 @@ struct Cqq4Natal {
 }
 
 unsafe fn cqq4_natal(t: usize, ano: u32, n: &Cqq4Natal, arquivo: usize) {
-    let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
+    let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     cqq4_rodadas(t, ano, 0, n.comeco);
     let mut d = [0u16; 4];
     construir(&mut d, 1, 0xb, ano, 0xffff_ffff);
@@ -77,7 +77,7 @@ unsafe fn cqq4_natal(t: usize, ano: u32, n: &Cqq4Natal, arquivo: usize) {
 /// `cqq4_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
 unsafe fn cqq4_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
                        original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
     let pl2 = if liga.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
@@ -242,7 +242,7 @@ const CQQ4_SEGUNDA_PAR_NATAL: Cqq4Natal = Cqq4Natal { comeco: &CQQ4_SEGUNDA_PAR_
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 42 rodadas, a tabela pela paridade do ano +0x40 (no ano par com a rodada
 /// do Natal; no ímpar sem); as outras devolvem 0. Fonte 0xa829bc.
 unsafe extern "thiscall" fn calendario_da_segunda_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match fase as u8 {
         0xff => {
             if !liga.is_null() {

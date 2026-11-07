@@ -30,8 +30,8 @@ unsafe fn cqb10_achar(this: usize, dado: usize) -> usize {
 /// cursor (+0xa) anda se estava nele; o item (0x68d010) e o nó (0x944c94) são liberados. Devolve 1; sem achar, 0. Por
 /// ~77 chamadores (listas de ofertas, faltas, ultimatos, vagas de técnico, amistosos...).
 unsafe extern "thiscall" fn tirar_da_lista(this: usize, dado: usize) -> u32 {
-    let liberar_item: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d010usize);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
+    let liberar_item: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_NODE_DESTRUCTOR_LLIST_NODE);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     let no = cqb10_achar(this, dado);
     if no == 0 {
         return 0;
@@ -89,8 +89,8 @@ unsafe extern "thiscall" fn comparar_tirar_da_lista(this: usize, dado: usize) ->
 /// { 0x68d080 } (thiscall, ret 0): `LLIST::clear()`: libera, da cabeça (+2) em diante, o item (0x68d010) e o nó
 /// (0x944c94) de cada um (a cabeça vai andando) e zera a conta (+0, palavra), a cabeça, a cauda (+6) e o cursor (+0xa).
 unsafe extern "thiscall" fn esvaziar_lista(this: usize) {
-    let liberar_item: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d010usize);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
+    let liberar_item: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_NODE_DESTRUCTOR_LLIST_NODE);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     while read_usize(this + 2) != 0 {
         let no = read_usize(this + 2);
         let prox = read_usize(no + 6);

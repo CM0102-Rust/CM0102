@@ -9,11 +9,11 @@ unsafe fn cqq11_europeia(this: usize) -> (i32, i32) {
         Some(l) => l,
         None => return (-1, 0),
     };
-    let a = cqm12_colocado(0x9cf6e8, 0); // cqq11: o campeão da Liga dos Campeões
+    let a = cqm12_colocado(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE, 0); // cqq11: o campeão da Liga dos Campeões
     if !cqm12_vaga(l, 0, a, F, 0xca) {
         return (0, 0);
     }
-    let copa = if core::ptr::read_unaligned((this + 0x40) as *const i16) == 0x7cf { 0x9cf6ec } else { 0x9cf6f0 };
+    let copa = if core::ptr::read_unaligned((this + 0x40) as *const i16) == 0x7cf { KEY_CLUB_COMP_EUROPEAN_CUP_WINNERS_CUP } else { KEY_CLUB_COMP_UEFA_CUP };
     let b = cqm12_colocado(copa, 0); // cqq11: o campeão da Copa da UEFA
     if !cqm12_vaga(l, 1, b, F, 0xd5) {
         return (0, 0);
@@ -41,17 +41,17 @@ unsafe fn cqq11_asiatica(this: usize) -> (i32, i32) {
         Some(l) => l,
         None => return (-1, 0),
     };
-    let a = cqm12_colocado(0x9cf64c, 0);
+    let a = cqm12_colocado(KEY_CLUB_COMP_ASIAN_CHAMPIONS_CUP, 0);
     if !cqm12_vaga(l, 0, a, F, 0xc9) {
         return (0, 0);
     }
-    let b = cqm12_colocado(0x9cf650, 0); // cqq11: o campeão da Recopa asiática
+    let b = cqm12_colocado(KEY_CLUB_COMP_ASIAN_CUP_WINNERS_CUP, 0); // cqq11: o campeão da Recopa asiática
     if !cqm12_vaga(l, 1, b, F, 0xd1) {
         return (0, 0);
     }
     if a == b {
         crate::comparacao::ramo("cqq_11 dobradinha asiatica");
-        core::ptr::write_unaligned(l as *mut u32, cqm12_colocado(0x9cf64c, 1) as u32);
+        core::ptr::write_unaligned(l as *mut u32, cqm12_colocado(KEY_CLUB_COMP_ASIAN_CHAMPIONS_CUP, 1) as u32);
     }
     crate::comparacao::ramo("cqq_11 clubes da supercopa asiatica");
     cqm12_fim(l)

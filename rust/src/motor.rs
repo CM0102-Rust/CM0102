@@ -2280,7 +2280,7 @@ unsafe extern "thiscall" fn tabela_do_jogador(jogador: usize) -> u16 {
     if motor == 0 {
         return 0;
     }
-    let f: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+    let f: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
     f(motor, jogador)
 }
 
@@ -2301,7 +2301,7 @@ unsafe extern "thiscall" fn diferenca_jogador(this: usize, jogador: usize) -> u8
 /// { 0x6cfda0 } (match_eng.cpp)
 unsafe extern "thiscall" fn byte_do_lado(this: usize, jogador: usize) -> u8 {
     let s = lado(jogador);
-    let f: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    let f: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(FN_MATCH_PLAYER_GET_POSITION);
     if f(jogador) == 1 {
         if s == 1 {
             return byte(this, 0x8ead) as u8;
@@ -2337,7 +2337,7 @@ unsafe extern "thiscall" fn byte_da_posicao(this: usize, i: i8) -> u8 {
 unsafe extern "thiscall" fn campo_pela_posicao(this: usize) -> u8 {
     let motor = *((this + 0x19e) as *const usize);
     let bloco = (motor as isize + 0x91e2 + 6371 * lado(this) as isize) as usize;
-    let f: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x5b57c0usize);
+    let f: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_FORMATION_GET_MARKING_TYPE);
     if f(bloco, byte(this, 0x19)) & 2 != 0 { byte(this, 0x10a) as u8 } else { byte(this, 0x108) as u8 }
 }
 
@@ -2351,12 +2351,12 @@ unsafe extern "thiscall" fn pode_escolher(this: usize, j: usize, b: i8, c: i8) -
     if j == *((this + 0xf582) as *const usize) || j == *((this + 0xf57a) as *const usize) {
         return 0;
     }
-    let f: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x6f4600usize);
+    let f: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_GET_MARKING_RATING);
     (f(j) != 0 && byte(this, 0x8eb2) == 0) as u32
 }
 
 unsafe fn sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     f(n)
 }
 
@@ -2397,6 +2397,8 @@ unsafe extern "thiscall" fn apontar(this: usize, a: i8, b: i8, c: i8, d: i8) {
 // [pt] O resto do motor, um arquivo por arquivo de origem do jogo (etapa 3 da reorganização, 07/11/2026).
 include!("motor/macros.rs");
 include!("motor/mem.rs");
+include!("motor/keys.rs");
+include!("motor/exe_fns.rs");
 include!("motor/area.rs");
 include!("motor/award/month_award.rs");
 include!("motor/award/month_ratings.rs");
@@ -2560,7 +2562,7 @@ unsafe extern "stdcall" fn serve_para_a_vaga(j: usize, vaga: i8) -> u8 {
         _ => {
             let tecnico = core::ptr::read_unaligned((j + 0x39) as *const usize);
             if tecnico != 0 && matches!(*((j + 0x3d) as *const u8), 0xb | 0xf | 0xd) {
-                let f: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+                let f: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
                 if f(tecnico, 0, 1, 0, 0) != 0 {
                     return 0;
                 }
@@ -2731,7 +2733,7 @@ unsafe extern "thiscall" fn gravar_vaga_tatica(t: usize, clube: usize, vaga: i8,
     if clube == 0 || !(0..=19).contains(&vaga) || pessoa.is_null() {
         return orig::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(358)(t, clube, vaga, pessoa, humano);
     }
-    let linha_tatica: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha_tatica: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let l = linha_tatica(clube, humano);
     if l == -1 {
         return 0;
@@ -2759,8 +2761,8 @@ unsafe extern "thiscall" fn pessoa_da_vaga_tatica(t: usize, clube: usize, vaga: 
     if clube == 0 || !(0..=19).contains(&vaga) {
         return orig::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> usize>(359)(t, clube, vaga, humano);
     }
-    let linha_tatica: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let linha_tatica: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let l = linha_tatica(clube, humano);
     if l == -1 {
         return 0;
@@ -2796,7 +2798,7 @@ unsafe extern "thiscall" fn gravar_formacao_tatica(t: usize, clube: usize, forma
     if clube == 0 || formacao < 0 || formacao as i32 > limite {
         return orig::<unsafe extern "thiscall" fn(usize, usize, i16, u32) -> u32>(360)(t, clube, formacao, humano);
     }
-    let linha_tatica: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha_tatica: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let l = linha_tatica(clube, humano);
     if l == -1 {
         return 0;
@@ -2810,7 +2812,7 @@ unsafe extern "thiscall" fn gravar_formacao_tatica(t: usize, clube: usize, forma
 unsafe fn regioes_da_tabela(t: usize, clube: usize, humano: u32) -> Vec<(usize, usize)> {
     let mut r = vec![(t + 0x30, 0x5c1)];
     if clube != 0 {
-        let linha_tatica: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+        let linha_tatica: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
         let l = linha_tatica(clube, humano);
         if l != -1 {
             r.push((linha_da_tabela(t, l), 0x91));
@@ -3902,7 +3904,7 @@ unsafe extern "thiscall" fn comparar_escolher_formacao(c: usize, fichas: usize, 
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (*((c + 0x2b) as *const usize), 0x18e3), (0xb67a34, 4), (0xae2470, 8), (0xae2418, 1), (0xae24c0, 8), (0xae249e, 1), (0xadae10, 4)]);
     let taticas = *(0xde1d08 as *const usize);
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let clube = *((c + 0x2f) as *const usize);
     for humano in 0..2u32 {
         let l = if clube == 0 { -1 } else { linha(clube, humano) };
@@ -3928,7 +3930,7 @@ unsafe extern "thiscall" fn comparar_instrucoes(c: usize) {
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (*((c + 0x2b) as *const usize), 0x18e3), (0xb67a34, 4)]);
     let taticas = *(0xde1d08 as *const usize);
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let clube = *((c + 0x2f) as *const usize);
     for humano in 0..2u32 {
         let l = if clube == 0 { -1 } else { linha(clube, humano) };
@@ -3947,7 +3949,7 @@ unsafe extern "thiscall" fn comparar_instrucoes(c: usize) {
 /// As linhas do clube da comissao no banco de taticas (0x8982b0 por tecnico humano ou nao).
 unsafe fn linhas_do_clube(clube: usize) -> Vec<(usize, usize)> {
     let taticas = *(0xde1d08 as *const usize);
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let mut v = Vec::new();
     for humano in 0..2u32 {
         let l = if clube == 0 || taticas == 0 { -1 } else { linha(clube, humano) };
@@ -4255,7 +4257,7 @@ unsafe extern "thiscall" fn comparar_jogador_saiu(m: usize, j: usize, ja_fora: u
     // o capitao guardado na linha da tatica (+0x52) dos dois clubes: a substituicao (0x6e1090) o troca
     // antes de a comparada conferir se quem saiu era o capitao
     let taticas = *(0xde1d08 as *const usize);
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let t = *((m + 0x4792) as *const usize);
     for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
         for humano in 0..2u32 {
@@ -4679,7 +4681,7 @@ unsafe extern "thiscall" fn comparar_conhecer_pessoa(this: usize, pessoa: usize,
 unsafe extern "stdcall" fn comparar_nevoa_apos_partida(partida: usize, dados: usize) {
     let o = orig::<unsafe extern "stdcall" fn(usize, usize)>(202);
     // os registros que a rotina pode mexer (mesmos testes, sem o 0x32 das reservas: sobra nao atrapalha)
-    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let n = *(0xae2364 as *const i32);
     let mut reg: Vec<(usize, usize)> = Vec::new();
     for lado in 0..2usize {
@@ -4789,7 +4791,7 @@ unsafe extern "thiscall" fn comparar_marcar_vaga(this: usize, clube: usize, vaga
     }
     let tabela = *((this + 0x601) as *const usize);
     // a linha pode ser qualquer uma da tabela: compara as 0x52..0x56 de todas as linhas possiveis
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let l = linha(clube, humano);
     let reg: Vec<(usize, usize)> = if l == -1 || clube == 0 { vec![] } else { vec![(tabela.wrapping_add((l as usize).wrapping_mul(0x91)) + 0x52, 4)] };
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, vaga, humano), || marcar_vaga(this, clube, vaga, humano));
@@ -9489,7 +9491,7 @@ unsafe fn diag_amostra(c: usize, qual: &str) {
     if !DIAG_CHAMADAS.is_power_of_two() {
         return;
     }
-    let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let p = (*(0xae23bc as *const usize)).wrapping_add(DIAG_PESSOA.wrapping_mul(110));
     let k = achar(*(0xae1050 as *const usize), p);
     linha(&format!("diag {} chamada {}: contrato da vez +0 {} +4 {}; contrato da pessoa {}: {}", qual, DIAG_CHAMADAS,
@@ -9515,7 +9517,7 @@ unsafe extern "thiscall" fn diag_queixa(c: usize, f: u32, z: u32) -> u32 {
     if !FORCADA {
         if let Some(q) = std::env::var("CM_DIAG_FORCAR").ok().and_then(|v| u32::from_str_radix(v.trim_start_matches("0x"), 16).ok()) {
             FORCADA = true;
-            let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+            let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
             let k = achar(*(0xae1050 as *const usize), (*(0xae23bc as *const usize)).wrapping_add(DIAG_PESSOA.wrapping_mul(110)));
             if k != 0 {
                 linha(&format!("diag queixa forcada {:#x} pessoa {} antes: {}", q, DIAG_PESSOA, diag_contrato(k)));
@@ -10663,7 +10665,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((pa + 0x20) as *mut usize) = if (h48 >> 46) % 8 == 0 { 0 } else { f42 };
             *((c42 + 0x53) as *mut usize) = if (h48 >> 49) % 8 == 0 { 0 } else { x42 };
             *((j42 + 0x5d) as *mut usize) = if (h48 >> 52) % 4 == 0 { 0 } else { x42 };
-            let ids = [0x9cf314usize, 0x9cf45c, 0x9cf244, 0x9cf4a8, 0x9cf408, 0x9cf2e4, 0x9cf338, 0x9cf2c0, 0x9cf434, 0x9cf300];
+            let ids = [KEY_NATION_GERMANY, KEY_NATION_SCOTLAND, KEY_NATION_BELGIUM, KEY_NATION_SWEDEN, KEY_NATION_NORWAY, KEY_NATION_ENGLAND, KEY_NATION_HOLLAND, KEY_NATION_DENMARK, KEY_NATION_PORTUGAL, KEY_NATION_FRANCE];
             // as competicoes do jogo podem estar vazias no inicio: valores distintos durante o teste
             let ids_antes: Vec<u32> = ids.iter().map(|&a| *(a as *const u32)).collect();
             for (i, &a) in ids.iter().enumerate() {
@@ -11213,7 +11215,7 @@ pub unsafe fn autoteste(casos: u64) {
                     comparar_palavra_0c(tab77.as_ptr() as usize, id77);
                     let v77 = [(h77 >> 10) as i32, 990 + ((h77 >> 20) % 20) as i32, -(((h77 >> 30) % 30000) as i32), ((h77 >> 3) as i32 & !0xffff) | 999][((h77 >> 56) % 4) as usize];
                     comparar_arredondar(v77);
-                    let globais77 = [0x9cf794usize, 0x9cf684, 0x9cf798, 0x9cf6b0, 0x9cf5d8, 0x9cf548];
+                    let globais77 = [KEY_CLUB_COMP_B_INTERNATIONAL, KEY_CLUB_COMP_RESERVE, KEY_CLUB_COMP_UNDER_21_INTERNATIONAL, KEY_CLUB_COMP_SPANISH_LOWER_DIVISION, KEY_CLUB_COMP_FRENCH_CFA, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION];
                     let antes77: Vec<u32> = globais77.iter().map(|&a| *(a as *const u32)).collect();
                     for (k, &a) in globais77.iter().enumerate() {
                         *(a as *mut u32) = 60 + k as u32;
@@ -11226,7 +11228,7 @@ pub unsafe fn autoteste(casos: u64) {
                     // septuagesima oitava leva: competicao que conta (3 globais, tabela de 107 bytes,
                     // objetos com fase, rodadas e a primeira rodada) e as comparacoes de ordenacao
                     let h78 = s.proximo();
-                    let globais78 = [0x9cf6b0usize, 0x9cf5d8, 0x9cf548, 0xae23d0, 0xadadfc];
+                    let globais78 = [KEY_CLUB_COMP_SPANISH_LOWER_DIVISION, KEY_CLUB_COMP_FRENCH_CFA, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION, 0xae23d0, 0xadadfc];
                     let antes78: Vec<u32> = globais78.iter().map(|&a| *(a as *const u32)).collect();
                     for k in 0..3usize {
                         *(globais78[k] as *mut i32) = 10 + k as i32;
@@ -11503,7 +11505,7 @@ pub unsafe fn autoteste(casos: u64) {
                     comparar_clube_na_competicao(comp69.as_mut_ptr() as usize, alvo69);
                     // clube especial: o id de um dos nove guardados, ou outro
                     // (antes de carregar a base os nove ids sao 0: valores distintos durante o teste)
-                    let guardados = [0x9cf79cusize, 0x9cf7a0, 0x9cf7a4, 0x9cf7a8, 0x9cf7ac, 0x9cf790, 0x9cf8a0, 0x9cf78c, 0x9cf964];
+                    let guardados = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_ASIAN_CUP, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_ASIAN_GAMES, KEY_CLUB_COMP_CONFEDERATIONS_CUP];
                     let antes_g69: Vec<u32> = guardados.iter().map(|&a| *(a as *const u32)).collect();
                     for (k, &a) in guardados.iter().enumerate() {
                         *(a as *mut u32) = 3000 + 7 * k as u32;
@@ -11515,7 +11517,7 @@ pub unsafe fn autoteste(casos: u64) {
                     // valores distintos; alguns parceiros -1 e -5 para os dois testes de aceite)
                     {
                         let h73 = s.proximo();
-                        let nac73 = [0x9cf488usize, 0x9cf314, 0x9cf434];
+                        let nac73 = [KEY_NATION_SPAIN, KEY_NATION_GERMANY, KEY_NATION_PORTUGAL];
                         let mut todos73: Vec<usize> = nac73.to_vec();
                         for &(a, b) in PARES_A_B.iter().chain(PARES_B_A.iter()) {
                             todos73.push(a);

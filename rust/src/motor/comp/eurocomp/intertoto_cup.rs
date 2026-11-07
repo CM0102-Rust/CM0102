@@ -75,14 +75,14 @@ unsafe extern "thiscall" fn cqp13_concacaf_tabela(this: usize, fase: u32, rodada
     }
     *rodadas = 3;
     *extra = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar(0x138);
     if t == 0 {
         aviso_em(0x9a7d30, 0x97);
         return 0;
     }
     crate::comparacao::ramo("cqp_13 tabela da concacaf");
-    let elo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) -> u32 = core::mem::transmute(0x521f10usize);
+    let elo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) -> u32 = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DAY);
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     for (i, r) in CQP13_CONCACAF.iter().enumerate() {
         cql10_rodada(t, i as u32, r, ano);
@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn cqq10_uefa_tabela(this: usize, fase: u32, rodadas: *
     }
     *rodadas = 9;
     *extra = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar(0x3a8);
     if t == 0 {
         aviso_em(0xaa19e0, 0xe0);
@@ -200,7 +200,7 @@ unsafe extern "thiscall" fn comparar_cqq10_uefa_tabela(this: usize, fase: u32, r
 unsafe fn cqq10_intertoto(this: usize) -> (i32, i32) {
     const F: usize = 0x9e9e14;
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x3c);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let v = alocar(0xf0);
     if v == 0 {
         aviso_em(F, 0x161);
@@ -213,7 +213,7 @@ unsafe fn cqq10_intertoto(this: usize) -> (i32, i32) {
             break;
         }
         let c = read_u32_as_usize(0xae23b4).wrapping_add((i as isize * 0x245) as usize);
-        if read_u32_as_usize(c + 0x1db) == read_u32_as_usize(0x9cf6f8) {
+        if read_u32_as_usize(c + 0x1db) == read_u32_as_usize(KEY_CLUB_COMP_INTER_TOTO_CUP) {
             core::ptr::write_unaligned((v + k as usize * 4) as *mut u32, c as u32);
             k += 1;
         }
@@ -240,9 +240,9 @@ unsafe fn cqq10_intertoto(this: usize) -> (i32, i32) {
         *((e + 5) as *mut u8) = 0;
         j = j.wrapping_add(1);
     }
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     ordenar(read_u32_as_usize(this + 0xa7), read_i16(this + 0x3e) as i32 as u32, 6, 0x522190);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     soltar(v);
     ((k == read_i16(this + 0x3e) as i32) as i32, read_i16(this + 0x3e) as i32)
 }
@@ -280,7 +280,7 @@ unsafe extern "thiscall" fn comparar_cqq10_intertoto_inscritos(this: usize) -> i
         lo == lr || k == 0
     };
     if lr != 0 && lr != lo && lr != antes {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
     PLACAR.registrar(igual && a == b && lista, || format!("cqq10_intertoto_inscritos({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
@@ -293,7 +293,7 @@ unsafe extern "thiscall" fn comparar_cqq10_intertoto_inscritos(this: usize) -> i
 /// conta (palavra).
 unsafe fn cqq10_lista(this: usize, saida: *mut usize, ativos: u32) -> u16 {
     let n = read_i16(this + 0x3e);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar((n as i32 * 4) as u32);
     if l == 0 {
         aviso_em(0x9e9e14, 0x2fb);
@@ -335,7 +335,7 @@ unsafe extern "thiscall" fn comparar_cqq10_intertoto_lista(this: usize, saida: *
         lo == 0 && s2 == 0
     };
     if s2 != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(s2);
     }
     PLACAR.registrar(igual && a == b && lista, || format!("cqq10_intertoto_lista({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, lista));
@@ -349,7 +349,7 @@ unsafe extern "thiscall" fn comparar_cqq10_intertoto_lista(this: usize, saida: *
 
 /// O objeto da Copa da UEFA ([[0xadadfc] + 4 × [0x9cf6f0]]), ou 0.
 unsafe fn cqi10_uefa() -> usize {
-    read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(0x9cf6f0).wrapping_mul(4)))
+    read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(4)))
 }
 
 /// Os vencedores do Intertoto (+5 = 1 no registro de 6 bytes de +0xa7) que cabem nas três últimas vagas da UEFA, na
@@ -429,13 +429,13 @@ unsafe extern "thiscall" fn cqi10_intertoto_dia(this: usize, hoje: usize, fase: 
                 let uefa = cqi10_uefa();
                 let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(uefa) + 0x5c));
                 prever(uefa);
-                let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x51f890usize);
+                let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_FOR_DATE);
                 return base(this, hoje, fase);
             }
             core::ptr::write_unaligned((this + 0xb2) as *mut u32, 1);
         }
     }
-    let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x51f890usize);
+    let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_FOR_DATE);
     base(this, hoje, fase)
 }
 
@@ -478,10 +478,10 @@ unsafe extern "thiscall" fn cqi10_intertoto_registros(this: usize, clube: usize,
     match desfecho as u8 {
         1 => {
             let peso = cpz4_escala(0x3c, 0x64, read_i16(jogo + 0x34), read_i16(this + 0x3c) as u16 as u32);
-            let uefa = read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(0x9cf6f0).wrapping_mul(0x6b));
+            let uefa = read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(0x6b));
             cpz4_classificado(clube, uefa, 0, 0xa, peso);
             crate::comparacao::ramo("cqi_10 vencedor do intertoto");
-            core::ptr::write_unaligned((clube + 0x1db) as *mut u32, read_u32_as_usize(0x9cf6f0) as u32); // cqi10: o vencedor passa à UEFA
+            core::ptr::write_unaligned((clube + 0x1db) as *mut u32, read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) as u32); // cqi10: o vencedor passa à UEFA
         }
         0 => {
             let r = read_i16(jogo + 0x34);
@@ -521,7 +521,7 @@ unsafe extern "thiscall" fn comparar_cqi10_intertoto_registros(this: usize, club
     }
     let antes = read_u32_as_usize(clube + 0x1db);
     let previsto = match desfecho as u8 {
-        1 => read_u32_as_usize(0x9cf6f0),
+        1 => read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP),
         0xff | 2 => 0xffff_ffff,
         _ => antes,
     };
@@ -543,7 +543,7 @@ unsafe extern "thiscall" fn cqi10_uefa_registros(this: usize, clube: usize, desf
         }
         core::ptr::write_unaligned((clube + 0x1db) as *mut i32, -1); // cqi10: quem termina na UEFA sai da competição europeia
     }
-    let base: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32 = core::mem::transmute(0x519890usize);
+    let base: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     base(this, clube, desfecho, a3, a4, jogo, a6)
 }
 

@@ -16,10 +16,10 @@ unsafe extern "thiscall" fn cqt12_asia_fase_seguinte(this: usize) {
     write_u32_from_usize(this + 0x30, f as usize);
     if f == 1 {
         crate::comparacao::ramo("cqt_12 grupos da asia");
-        let grupos: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x40c110usize);
+        let grupos: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_ASIACLUBCHAMP_CREATE_GROUP_STAGES);
         grupos(this);
     } else if f == 3 {
-        let semifinais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x40c3d0usize);
+        let semifinais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_ASIACLUBCHAMP_CREATE_SEMI_FINAL_STAGE);
         semifinais(this);
     }
 }
@@ -70,11 +70,11 @@ unsafe fn cqt12_vivos(this: usize) -> [usize; 8] {
 /// 0}, &{2, 0, 0, 0}, o ano +0x40 (word), `g`, o id (word), +0x51, `a17`, 0, 0x28, −1, 0, 2; a original empurra os words
 /// e bytes com lixo nos bytes altos, que o construtor não lê) em [+0xc][`g`]; a tabela liberada (0x9452ca). Devolve a fase.
 unsafe fn cqt12_grupo(this: usize, g: u32, times: *const usize, a17: u32) -> usize {
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     #[allow(clippy::type_complexity)]
     let construir: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, *const u8, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
-        core::mem::transmute(0x68b100usize);
+        core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let regras_a: [u8; 4] = [1, 2, 0, 0];
     let regras_b: [u8; 4] = [2, 0, 0, 0];
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
@@ -121,7 +121,7 @@ unsafe fn cqt12_grupo(this: usize, g: u32, times: *const usize, a17: u32) -> usi
 /// ret 0); o grupo 2 (fase 2, os 4 seguintes, o 17º argumento 1; sem fase, a caixa da linha 0x3b4 e volta), a notícia e
 /// +0x30 = 2.
 unsafe extern "thiscall" fn cqt12_asia_grupos(this: usize) {
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     let v = cqt12_vivos(this);
     let grupo_1 = [v[0], v[1], v[2], v[3]]; // cqt12: o grupo 1
     let f = cqt12_grupo(this, 1, grupo_1.as_ptr(), 2);
@@ -182,10 +182,10 @@ unsafe fn cqt12_semifinalistas(this: usize) -> [usize; 4] {
 /// não é liberada, como na original). Com ela: o sorteio da rodada 0 (0x51c410 Cup::draw_round: push 0; mov ecx, fase ->
 /// thiscall, ret 4) e a lista liberada.
 unsafe extern "thiscall" fn cqt12_asia_semifinais(this: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c410usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_DRAW_ROUND);
     let lista = alocar(0x10);
     if lista == 0 {
         return aviso_em(0x987a40, 0x3d1);
@@ -201,7 +201,7 @@ unsafe extern "thiscall" fn cqt12_asia_semifinais(this: usize) {
     let fase = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
-            core::mem::transmute(0x522e00usize);
+            core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
         construir(p, this, 4, lista, rodadas as u16 as u32, read_u32_as_usize(this + 4), tabela, read_i16(this + 0x40) as u16 as u32, 3, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
@@ -292,18 +292,18 @@ unsafe fn cqp11_tabela(this: usize, f: Option<Cqp11Fase>, rodadas: *mut i16, ext
     if !f.extra_checa || !extra.is_null() {
         *extra = f.extra;
     }
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar(f.tamanho);
     if t == 0 {
         aviso_em(arquivo, f.linha);
         return 0;
     }
     crate::comparacao::ramo(f.nome);
-    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(0x68a160usize);
-    let jogo_l: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(0x68a1c0usize);
-    let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521e60usize);
-    let jogo_c: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521eb0usize);
-    let elo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) -> u32 = core::mem::transmute(0x521f10usize);
+    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
+    let jogo_l: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
+    let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
+    let jogo_c: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
+    let elo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) -> u32 = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DAY);
     let ano16 = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     for op in f.ops {
@@ -375,7 +375,7 @@ unsafe fn cqp11_comparar(nome: &str, fase: u32, f: Option<Cqp11Fase>, rodadas: *
     let saidas = *rodadas == r2 && (extra.is_null() || *extra == e2) && (liga.is_null() || *liga == l2);
     let tabela = if a != 0 && b != 0 { cqp11_gravados(f.ops, a) == cqp11_gravados(f.ops, b) } else { a == 0 && b == 0 };
     if b != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
     PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, fase as u8 as i8, saidas, *rodadas, r2, tabela));

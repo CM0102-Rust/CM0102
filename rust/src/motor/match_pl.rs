@@ -106,11 +106,11 @@ unsafe extern "thiscall" fn distancia_ao_gol(this: usize) -> f32 {
 /// 1,0 fora da area (arredondado para float a cada passo, como o `fstp` do original). Os blocos
 /// de 20 jogadores de cada lado ficam em motor + 0x4796 + 8920 x lado, de 0x1be em 0x1be.
 unsafe extern "thiscall" fn mais_perto_do_gol(this: usize, j: usize) -> u8 {
-    let f6f4650: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x6f4650usize);
-    let f70dfa0: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x70dfa0usize);
-    let f6fa1e0: unsafe extern "thiscall" fn(usize) -> f32 = core::mem::transmute(0x6fa1e0usize);
-    let f717410: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
-    let f6f09b0: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(0x6f09b0usize);
+    let f6f4650: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_CAN_SEE_OPPONENT_GOAL);
+    let f70dfa0: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_OWN_HALF);
+    let f6fa1e0: unsafe extern "thiscall" fn(usize) -> f32 = core::mem::transmute(FN_MATCH_PLAYER_DISTANCE_TO_OPPONENT_GOAL);
+    let f717410: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(FN_MATCH_PLAYER_GET_POSITION);
+    let f6f09b0: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(FN_MATCH_PLAYER_DISTANCE_TO_CELL);
     if f70dfa0(j) != 0 {
         return 0;
     }
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn marcas_da_posicao(this: usize, posicao: i8) -> u64 {
 
 /// Marcas da posicao do jogador no bloco do lado dele (0x91e2 + 6371 x lado), por 0x5b5270.
 unsafe fn marcas_do_jogador(j: usize) -> u64 {
-    let f: unsafe extern "thiscall" fn(usize, i8) -> u64 = core::mem::transmute(0x5b5270usize);
+    let f: unsafe extern "thiscall" fn(usize, i8) -> u64 = core::mem::transmute(FN_FORMATION_GET_PLAYER_INSTRUCTIONS);
     let bloco = (*((j + 0x19e) as *const usize) as isize + 0x91e2 + 6371 * lado(j) as isize) as usize;
     f(bloco, byte(j, 0x19))
 }
@@ -158,7 +158,7 @@ unsafe fn marcas_do_jogador(j: usize) -> u64 {
 /// `tabela_a` do motor do jogador e 1 (pelo endereco do jogo); sem motor, nao.
 unsafe fn tabela_e_um(j: usize) -> bool {
     let motor = *((j + 0x19e) as *const usize);
-    let f: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+    let f: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
     motor != 0 && f(motor, j) == 1
 }
 
@@ -242,7 +242,7 @@ unsafe extern "thiscall" fn posicionar(this: usize, j: usize, saida_x: *mut i8, 
     let c = formacao(by as usize);
     *saida_x = (c & 0xf) as i8;
     *saida_y = (c >> 4) as i8;
-    let f717410: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    let f717410: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(FN_MATCH_PLAYER_GET_POSITION);
     if f717410(j) == 1 {
         return;
     }
@@ -295,7 +295,7 @@ unsafe extern "thiscall" fn posicionar(this: usize, j: usize, saida_x: *mut i8, 
 /// 0x8eb0. Ativo: posicao >= 0 e `tabela_do_jogador` (pelo endereco) diferente de 1. O original tem
 /// os dois lacos de 20 jogadores desenrolados.
 unsafe extern "thiscall" fn linhas_defensivas(this: usize) {
-    let f717410: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x717410usize);
+    let f717410: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(FN_MATCH_PLAYER_GET_POSITION);
     let ativos = |lado: usize| {
         (0..20).map(move |k| (this + 0x4796 + 8920 * lado + k * 0x1be) as usize).filter(move |&p| byte(p, 0x19) >= 0 && f717410(p) != 1)
     };
@@ -397,7 +397,7 @@ unsafe extern "thiscall" fn atualizar_jogador(this: usize) {
     };
     let quieto = || u(6) == 0 && u(9) == 0 && u(3) == 0 && u(0x10) == 0;
     let motor = *((this + 0x19e) as *const usize);
-    let f6c38c0: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+    let f6c38c0: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
     let papel = if motor != 0 { f6c38c0(motor, this) as u8 } else { 0 };
     let estado_lado = || {
         if lado(this) != 0 { *((motor + 0xf5bd) as *const i8) } else { *((motor + 0xf5f3) as *const i8) }
@@ -998,7 +998,7 @@ unsafe extern "thiscall" fn pegar_bola(this: usize) {
     *b(0x1cd) = 0;
     *w(0x4786) = 0;
     let tabela_a = || {
-        let f: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+        let f: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
         f(m(), this)
     };
     let passe = *w(0xf576) as usize;
@@ -1097,7 +1097,7 @@ unsafe extern "thiscall" fn defesa_do_goleiro(this: usize, a: i8, b: i8, a3: u8,
     if byte(this, 0x2b) > 1 || motor == 0 {
         return 0;
     }
-    let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+    let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
     if tabela(motor, this) != 1 {
         return 0;
     }
@@ -1117,7 +1117,7 @@ unsafe extern "thiscall" fn defesa_do_goleiro(this: usize, a: i8, b: i8, a3: u8,
             *saida = 3;
             0
         } else {
-            let alcanca: unsafe extern "thiscall" fn(usize, i8, i8) -> u8 = core::mem::transmute(0x713d90usize);
+            let alcanca: unsafe extern "thiscall" fn(usize, i8, i8) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_IS_GOAL_SIDE_OF_CELL);
             if alcanca(this, a, b) == 0 {
                 *saida = 2;
                 sorte_da_defesa(this, base) - 200
@@ -1200,7 +1200,7 @@ unsafe extern "thiscall" fn mover_para(this: usize, x: i8, y: i8) {
         *vaga = *quantos(nova, l);
         *quantos(nova, l) = (*quantos(nova, l)).wrapping_add(1);
         if *quantos(nova, lado(this)) > 11 {
-            let sair: unsafe extern "C" fn(i32) = core::mem::transmute(0x945934usize);
+            let sair: unsafe extern "C" fn(i32) = core::mem::transmute(FN_CRT_EXIT);
             sair(-1);
         }
         *lista(nova, l, *vaga as isize) = this;
@@ -1251,9 +1251,9 @@ unsafe extern "thiscall" fn dominio_do_lance(this: usize, codigo: *mut i8, a: *m
     let dono = *((motor + 0xf582) as *const usize);
     if dono == 0 {
         let c = *codigo;
-        let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(0x6cb650usize);
+        let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
         if c != 0x15 && c != 0x25 && especial(c) == 0 {
-            let sair: unsafe extern "C" fn(i32) = core::mem::transmute(0x945934usize);
+            let sair: unsafe extern "C" fn(i32) = core::mem::transmute(FN_CRT_EXIT);
             sair(-1);
         }
     }
@@ -1274,7 +1274,7 @@ unsafe extern "thiscall" fn dominio_do_lance(this: usize, codigo: *mut i8, a: *m
     let motor = *((this + 0x19e) as *const usize);
     let g = (byte(motor, 0x8eaa) as u8).wrapping_sub(1) as i8 as i16 as u16;
     let cubo = g.wrapping_mul(g).wrapping_mul(g).wrapping_mul(20);
-    let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+    let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
     let w = |o: usize| *((this + o) as *const u16);
     let si: u16 = if tabela(motor, this) == 1 && na_propria_area(this) {
         let novo: i8 = if c8ea9 != 4 { 0x29 } else { 1 };
@@ -1337,7 +1337,7 @@ type ChamarComentario<'a> = &'a mut dyn FnMut(usize, [u32; 7]);
 
 /// 0x6d6f70 pelo endereco do jogo.
 unsafe fn comentar(this: usize, a: [u32; 7]) {
-    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) = core::mem::transmute(0x6d6f70usize);
+    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) = core::mem::transmute(FN_MATCH_EVENTS_ADD_EVENT);
     f(this, a[0], a[1], a[2], a[3], a[4], a[5], a[6])
 }
 
@@ -1369,12 +1369,12 @@ unsafe extern "thiscall" fn comentario_b(this: usize, a1: u32, a2: u32, a3: u32,
 /// e o cansaco; no fim `e` perde 25 de folego. `ramos`: penalti, expulsao, cobrador, vantagem.
 #[allow(clippy::too_many_arguments)]
 unsafe fn punir_desafiante_com(m: usize, e: usize, j: usize, mut tipo: u8, cartao: u8, grav: i8, arriscado: i8, vantagem: u8, lance: i8, ajustar_no_penalti: bool, ramos: &[&'static str; 4], chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(0x6cb650usize);
-    let punir: unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8) = core::mem::transmute(0x6cfcd0usize);
-    let cobrador: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(0x6ceb90usize);
-    let ao_time: unsafe extern "thiscall" fn(usize, usize, f32) = core::mem::transmute(0x6bb8d0usize);
-    let ajustar: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x7172d0usize);
-    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(0x6eecb0usize);
+    let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
+    let punir: unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_DECIDE_FOUL_PUNISHMENT);
+    let cobrador: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_PICK_RESTART_TAKER);
+    let ao_time: unsafe extern "thiscall" fn(usize, usize, f32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SCALE_SIDE_ANGER_FROM_PLAYER);
+    let ajustar: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_ADJUST_MORALE);
+    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(FN_MATCH_PLAYER_CALC_RATINGS);
     let b = |p: usize, o: usize| (p + o) as *mut u8;
     let w = |p: usize, o: usize| (p + o) as *mut i16;
     let ub = |p: usize, o: usize| *((p + o) as *const u8) as u32;
@@ -1558,14 +1558,14 @@ fn narracao_da_falta(lance: i8) -> u32 {
 /// nota (+-200), o desafiante soma o segundo byte; fora de bola parada e do lance 0x10 narra 0x2133
 /// (com `forte`), 0x216d (com desafiante), 0x21de ou 0x1f40, e zera +0x8ea9.
 unsafe fn dividida_com(j: usize, forte: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let aplicar_ao_lado: unsafe extern "thiscall" fn(usize, i8, f32) = core::mem::transmute(0x6bb950usize);
-    let desafio: unsafe extern "thiscall" fn(usize, usize, i8, i8, *mut u8, *mut u8, *mut i16, *mut i8, *mut i8, u8) -> usize = core::mem::transmute(0x6c87e0usize);
-    let falta: unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8 = core::mem::transmute(0x6cfc60usize);
-    let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(0x6cb650usize);
-    let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(0x6bb9a0usize);
-    let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
-    let apontar_: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) = core::mem::transmute(0x6f4920usize);
-    let pressao: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) -> u8 = core::mem::transmute(0x6c3a00usize);
+    let aplicar_ao_lado: unsafe extern "thiscall" fn(usize, i8, f32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SCALE_SIDE_ANGER);
+    let desafio: unsafe extern "thiscall" fn(usize, usize, i8, i8, *mut u8, *mut u8, *mut i16, *mut i8, *mut i8, u8) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_OPPOSITION_CHALLENGE);
+    let falta: unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_JUDGE_TACKLE);
+    let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
+    let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SET_PENDING_FOUL);
+    let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
+    let apontar_: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) = core::mem::transmute(FN_MATCH_PLAYER_SET_FACING_DIRECTION);
+    let pressao: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_COUNT_PLAYERS_NEAR_CELL);
     let b = |p: usize, o: usize| (p + o) as *mut u8;
     let w = |p: usize, o: usize| (p + o) as *mut i16;
     let ub = |p: usize, o: usize| *((p + o) as *const u8) as u32;
@@ -1795,23 +1795,23 @@ unsafe fn despachar_dividida(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
             f(this);
         }
         0x6cd490 => {
-            let f: unsafe extern "thiscall" fn(usize, u8) -> u8 = core::mem::transmute(0x6cd490usize);
+            let f: unsafe extern "thiscall" fn(usize, u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_BALL_OUT_OF_PLAY);
             return f(this, a[0] as u8) as u32;
         }
         0x6cd770 => {
-            let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8, u8, u8, usize) = core::mem::transmute(0x6cd770usize);
+            let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8, u8, u8, usize) = core::mem::transmute(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL);
             f(this, a[0] as i8, a[1] as i8, a[2] as u8 as i8, (a[2] >> 8) as u8 as i8, a[3] as u8, 1, a[4] as usize);
         }
         0x62ed70 => {
-            let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
+            let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY);
             return f(this, a[0] as usize) as u32;
         }
         0x6d0980 => {
-            let f: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(0x6d0980usize);
+            let f: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CM3_MATCH_ENGINE_INJURE_PLAYER);
             f(this, a[0], a[1], a[2] as usize, a[3] as usize);
         }
         _ => {
-            let f: unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32 = core::mem::transmute(0x897760usize);
+            let f: unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32 = core::mem::transmute(FN_TACTICS_SET_CAPTAIN_FROM_SLOT);
             return f(this, a[0] as usize, a[1] as u8 as i8, a[2]);
         }
     }
@@ -1839,12 +1839,12 @@ fn sujar() {
 }
 
 unsafe fn punir_falta_de_quem_disputa_com(j: usize, mut t: u8, cartao: u8, grav: u8, codigo: i16, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> bool {
-    let punir: unsafe extern "thiscall" fn(usize, usize, *mut u8, i8, i8, u8, *mut f32) = core::mem::transmute(0x6cfd10usize);
-    let ajustar: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x7172d0usize);
-    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(0x6eecb0usize);
-    let cobrador: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(0x6ceb90usize);
-    let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(0x6cb650usize);
-    let ao_time: unsafe extern "thiscall" fn(usize, usize, f32) = core::mem::transmute(0x6bb8d0usize);
+    let punir: unsafe extern "thiscall" fn(usize, usize, *mut u8, i8, i8, u8, *mut f32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_DECIDE_BOOKING);
+    let ajustar: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_ADJUST_MORALE);
+    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(FN_MATCH_PLAYER_CALC_RATINGS);
+    let cobrador: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_PICK_RESTART_TAKER);
+    let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
+    let ao_time: unsafe extern "thiscall" fn(usize, usize, f32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SCALE_SIDE_ANGER_FROM_PLAYER);
     let b = |p: usize, o: usize| (p + o) as *mut u8;
     let w = |p: usize, o: usize| (p + o) as *mut i16;
     let ub = |p: usize, o: usize| *((p + o) as *const u8) as u32;
@@ -1981,16 +1981,16 @@ unsafe fn punir_falta_de_quem_disputa_com(j: usize, mut t: u8, cartao: u8, grav:
 /// perde (0x20d4 do goleiro na area, ou 0x213e/0x1f71) e a bola espirra (0x6cd770). Com `conta`, +1
 /// em +0x12 e folego (+0x1c ou +10).
 unsafe fn responder_com(j: usize, forca: i16, tipo_in: i8, p4: f32, conta: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
-    let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
-    let limite_: unsafe extern "stdcall" fn(u8, i8) -> u8 = core::mem::transmute(0x6cb930usize);
-    let decidir: unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8 = core::mem::transmute(0x6cfca0usize);
-    let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(0x6bb9a0usize);
-    let punir: unsafe extern "thiscall" fn(usize, usize, *mut u8, i8, i8, u8, *mut f32) = core::mem::transmute(0x6cfd10usize);
-    let ajustar: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x7172d0usize);
-    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(0x6eecb0usize);
-    let cobrador: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(0x6ceb90usize);
-    let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(0x6cb650usize);
-    let ao_time: unsafe extern "thiscall" fn(usize, usize, f32) = core::mem::transmute(0x6bb8d0usize);
+    let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
+    let limite_: unsafe extern "stdcall" fn(u8, i8) -> u8 = core::mem::transmute(FN_IS_IN_ATTACKING_THIRD);
+    let decidir: unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_CHECK_FOUL);
+    let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SET_PENDING_FOUL);
+    let punir: unsafe extern "thiscall" fn(usize, usize, *mut u8, i8, i8, u8, *mut f32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_DECIDE_BOOKING);
+    let ajustar: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_ADJUST_MORALE);
+    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(FN_MATCH_PLAYER_CALC_RATINGS);
+    let cobrador: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_PICK_RESTART_TAKER);
+    let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
+    let ao_time: unsafe extern "thiscall" fn(usize, usize, f32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SCALE_SIDE_ANGER_FROM_PLAYER);
     let b = |p: usize, o: usize| (p + o) as *mut u8;
     let w = |p: usize, o: usize| (p + o) as *mut i16;
     let ub = |p: usize, o: usize| *((p + o) as *const u8) as u32;
@@ -2294,23 +2294,23 @@ unsafe extern "thiscall" fn responder(j: usize, forca: u32, tipo: u32, p4: u32, 
 /// nota - a do desafiante - 200 (+-200) e por sorteio(+0x19c) contra sorteio(200) 0x7103e0 (com
 /// +0x1a7 e +100 de posse). Fora da area de ataque, sorteio(+0x31) < -10 faz o jogador crescer (0x211d).
 unsafe fn chute_com(j: usize, forca_in: i16, x_in: i8, y_in: i8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let dist_ponto: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(0x6f09b0usize);
-    let caminho: unsafe extern "thiscall" fn(usize, usize, i8) -> u8 = core::mem::transmute(0x6bd5b0usize);
-    let apontar_: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) = core::mem::transmute(0x6f4920usize);
-    let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
-    let livre: unsafe extern "thiscall" fn(usize, i8, i8, i8) -> u8 = core::mem::transmute(0x6c41b0usize);
-    let desgastar: unsafe extern "thiscall" fn(usize, f32, i16) = core::mem::transmute(0x6f56c0usize);
-    let decidir: unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8 = core::mem::transmute(0x6cfca0usize);
-    let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(0x6bb9a0usize);
-    let desafio: unsafe extern "thiscall" fn(usize, usize, i8, i8, *mut u8, *mut u8, *mut i16, *mut i8, *mut i8, u8) -> usize = core::mem::transmute(0x6c87e0usize);
-    let falta: unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8 = core::mem::transmute(0x6cfc60usize);
-    let punir: unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8) = core::mem::transmute(0x6cfcd0usize);
-    let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(0x6cb650usize);
-    let cobrador: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(0x6ceb90usize);
-    let ao_time: unsafe extern "thiscall" fn(usize, usize, f32) = core::mem::transmute(0x6bb8d0usize);
-    let ajustar: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x7172d0usize);
-    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(0x6eecb0usize);
-    let atras: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x6cd5f0usize);
+    let dist_ponto: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(FN_MATCH_PLAYER_DISTANCE_TO_CELL);
+    let caminho: unsafe extern "thiscall" fn(usize, usize, i8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_PATH_AHEAD_CLEAR);
+    let apontar_: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) = core::mem::transmute(FN_MATCH_PLAYER_SET_FACING_DIRECTION);
+    let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
+    let livre: unsafe extern "thiscall" fn(usize, i8, i8, i8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_CLEAR_AHEAD_OF_CELL);
+    let desgastar: unsafe extern "thiscall" fn(usize, f32, i16) = core::mem::transmute(FN_MATCH_PLAYER_DRAIN_STAMINA);
+    let decidir: unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_CHECK_FOUL);
+    let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SET_PENDING_FOUL);
+    let desafio: unsafe extern "thiscall" fn(usize, usize, i8, i8, *mut u8, *mut u8, *mut i16, *mut i8, *mut i8, u8) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_OPPOSITION_CHALLENGE);
+    let falta: unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_JUDGE_TACKLE);
+    let punir: unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_DECIDE_FOUL_PUNISHMENT);
+    let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
+    let cobrador: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_PICK_RESTART_TAKER);
+    let ao_time: unsafe extern "thiscall" fn(usize, usize, f32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SCALE_SIDE_ANGER_FROM_PLAYER);
+    let ajustar: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_ADJUST_MORALE);
+    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(FN_MATCH_PLAYER_CALC_RATINGS);
+    let atras: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_BEHIND_OWN_BACK_LINE);
     let b = |p: usize, o: usize| (p + o) as *mut u8;
     let w = |p: usize, o: usize| (p + o) as *mut i16;
     let ub = |p: usize, o: usize| *((p + o) as *const u8) as u32;
@@ -4278,8 +4278,8 @@ unsafe fn punir_no_movimento_com(m: usize, e: usize, p: usize, mut tipo: u8, car
     let expulso = matches!(tipo, 3..=6);
     if cor as i16 > -1 {
         // o evento 0x82 (cartao 4/5 pelos motivos 5, 10, 11 e o historico do jogador)
-        let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(0x7c1e30usize);
-        let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+        let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
+        let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
         let v = ftol(media(u(0xb74350, 0), u(e, 0x6d), 0xb, 2, 6.5)) as i8;
         let base = *(0xae2364 as *const i32);
         let lista = if m != 0 { u(m, 0x478e) } else { 0 };
@@ -4565,7 +4565,7 @@ unsafe fn andar_com(m: usize, p: usize, ox: i8, oy: i8, nx: i8, ny: i8, perdeu: 
 unsafe fn despachar_movimento(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
     match rotina {
         0x714d40 => {
-            let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x714d40usize);
+            let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_PLAYER_CHOOSE_DEFENSIVE_OFF_BALL_MOVE);
             f(this);
             0
         }
@@ -5432,7 +5432,7 @@ unsafe fn conduzir_com(p: usize, modo: u8, chamar: &mut dyn FnMut(usize, usize, 
         }
     }
     // o destrutor da lista (0x68d040): na copia Rust da comparacao ela fica vazia
-    let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
+    let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     destruir(la);
     volta
 }
@@ -5587,7 +5587,7 @@ unsafe fn nota_do_passe_pela_posicao(p: usize, base: i16, l20: i32, l14: i32) ->
     let m = *((p + 0x19e) as *const usize);
     let ta = || if m != 0 { tabela_a(m, p) } else { 0 };
     let tb = || if m != 0 { tabela_b(m, p) } else { 0 };
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let clube = *((p + 0xf9) as *const usize);
     let dirigido = || clube != 0 && humano(clube, 0, 1, 0, 0) != 0;
     let y = byte(p, 0x103);
@@ -5759,8 +5759,8 @@ unsafe fn falta_no_passe_com(m: usize, e: usize, p: usize, mut tipo: u8, cartao:
         }
     };
     // o evento 0x82 (cartao 4/5 pelos motivos 5, 10, 11 e o historico do jogador)
-    let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(0x7c1e30usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let v = ftol(media(u(0xb74350, 0), u(e, 0x6d), 0xb, 2, 6.5)) as i8;
     let base = *(0xae2364 as *const i32);
     let lista = if m != 0 { u(m, 0x478e) } else { 0 };
@@ -6238,7 +6238,7 @@ unsafe fn executar_passe_com(p: usize, x: i8, y: i8, tipo_in: i8, saida: *mut u8
             if (ty >= 0xc && lado == 1) || (ty < 0 && lado == 0) {
                 n(chamar, if tx != 4 && sortear(4) != 0 { 0x210e } else { 0x211a });
             } else {
-                let f: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(0x6f5b20usize);
+                let f: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
                 n(chamar, if f(p, lado as u8) as u8 == 0 { 0x2157 } else { 0x1f70 });
             }
         }
@@ -6327,7 +6327,7 @@ unsafe fn executar_passe_com(p: usize, x: i8, y: i8, tipo_in: i8, saida: *mut u8
             }
         }
         0xb => {
-            let area: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(0x6f5b20usize);
+            let area: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
             if bl & 0x80 != 0 && bl & 1 == 0 {
                 nr(chamar, 0x214a, 0);
             } else if area(receptor, (lado == 0) as u8) as u8 != 0 && area(p, (lado == 0) as u8) as u8 != 0 && (d as f64) < f64_em(0x968950) {
@@ -6568,9 +6568,9 @@ unsafe fn fita_do_passe(p: usize, x: u32, y: u32, tipo: u32, saida: *mut u8, rec
 /// Os outros: por sorteio(+0x5a) < sorteio(15, 8 ou 6 pela idade +0x18 e +0x5b) o 0x40000, e a
 /// noticia com o tipo.
 unsafe fn eventos_do_pos_jogo_com(partida: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    let marcas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x8676f0usize);
-    let protegido: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x735840usize);
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
+    let marcas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_CONTRACT_GET_FLAGS);
+    let protegido: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_MEDIA_HAS_STORY_FOR_PLAYER);
     // as que mexem no banco vao por `chamar` (no modo Rust a rotina do jogo; na comparacao, a fita)
     let ch = core::cell::RefCell::new(chamar);
     let duas = |n: usize, a: usize, b: usize, p: usize| (ch.borrow_mut())(0x759610, n, [a as u32, b as u32, p as u32, 0, 0]);
@@ -6730,9 +6730,9 @@ unsafe extern "thiscall" fn jogada(j: usize, forca: u32, altura: u32, estilo: u3
 /// no banco o teto e o folego. Fora de jogo (+0x1c zero) e com pessoa, se a lesao (0x62c590,
 /// ate 6500) passar do teto, o teto vira 6500. Por fim o teto soma +0x59 e para em 10000.
 unsafe extern "thiscall" fn recuperar_folego(j: usize, teto: u8) {
-    let lesao: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(0x62c3d0usize);
-    let limite: unsafe extern "thiscall" fn(usize, usize, u32) -> i16 = core::mem::transmute(0x62c590usize);
-    let papel: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+    let lesao: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(FN_INJURY_GET_FATIGUE);
+    let limite: unsafe extern "thiscall" fn(usize, usize, u32) -> i16 = core::mem::transmute(FN_INJURY_GET_CONDITION);
+    let papel: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
     let f = |o: usize| (j + o) as *mut f32;
     let ficha = *((j + 0x6d) as *const usize);
     if ficha == 0 {
@@ -6798,8 +6798,8 @@ unsafe extern "thiscall" fn recuperar_folego(j: usize, teto: u8) {
 /// sorteio(200) der zero. Rebatendo, cansa (+0x35 - 250) e, com sorteio(30 x +0x5a da ficha +0x69 +
 /// 20) zero, perde sorteio(3) em +0x17 (0x7172d0) e o desempenho e refeito (0x6eecb0).
 unsafe fn defender_com(j: usize, forca: i16, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u32 {
-    let ajustar_17: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x7172d0usize);
-    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(0x6eecb0usize);
+    let ajustar_17: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_ADJUST_MORALE);
+    let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(FN_MATCH_PLAYER_CALC_RATINGS);
     let m = *((j + 0x19e) as *const usize);
     let dir = byte(j, 0x27);
     let narra = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32| {
@@ -6840,7 +6840,7 @@ unsafe fn defender_com(j: usize, forca: i16, chamar: &mut dyn FnMut(usize, usize
 unsafe extern "thiscall" fn defender(j: usize, forca: i16) -> u32 {
     defender_com(j, forca, &mut |rotina, this, a| match rotina {
         0x6cd770 => {
-            let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8, u8, u8, usize) = core::mem::transmute(0x6cd770usize);
+            let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8, u8, u8, usize) = core::mem::transmute(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL);
             f(this, a[0] as i8, a[1] as i8, a[2] as u8 as i8, (a[2] >> 8) as u8 as i8, a[3] as u8, 1, a[4] as usize);
             0
         }
@@ -6865,9 +6865,9 @@ unsafe extern "thiscall" fn defender(j: usize, forca: i16) -> u32 {
 /// a ate 5, ou 3 no modo 4). Executa (0x6fad40, tipo, alvo); impedimento como 0x6fa250; bola fora da
 /// grade sem +0x8eb2: 0x6cd490.
 unsafe fn lancar_com(j: usize, modo: i8, refinar: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let impedido_de: unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize = core::mem::transmute(0x6cfd70usize);
-    let dist_ponto: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(0x6f09b0usize);
-    let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(0x6bb9a0usize);
+    let impedido_de: unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_CHECK_OFFSIDE);
+    let dist_ponto: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(FN_MATCH_PLAYER_DISTANCE_TO_CELL);
+    let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SET_PENDING_FOUL);
     let m = || *((j + 0x19e) as *const usize);
     let b = |p: usize, o: usize| (p + o) as *mut i8;
     let s = |n: i32| sortear(n) as i8;
@@ -7055,13 +7055,13 @@ unsafe fn lancar_com(j: usize, modo: i8, refinar: u8, chamar: &mut dyn FnMut(usi
 unsafe extern "thiscall" fn lancar(j: usize, modo: i8, refinar: u8) {
     lancar_com(j, modo, refinar, &mut |rotina, this, a| match rotina {
         0x6fad40 => {
-            let f: unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u8, usize, u32, u32) -> u8 = core::mem::transmute(0x6fad40usize);
+            let f: unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u8, usize, u32, u32) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_PASS);
             let mut saida = 1u8;
             let r = f(this, a[0] as i8, a[1] as i8, a[2], &mut saida, 0, a[3], a[4]);
             r as u32 | ((saida as u32) << 8)
         }
         0x6cd490 => {
-            let f: unsafe extern "thiscall" fn(usize, u8) -> u8 = core::mem::transmute(0x6cd490usize);
+            let f: unsafe extern "thiscall" fn(usize, u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_BALL_OUT_OF_PLAY);
             f(this, a[0] as u8) as u32
         }
         _ => {
@@ -7084,9 +7084,9 @@ unsafe extern "thiscall" fn lancar(j: usize, modo: i8, refinar: u8) {
 /// (+0xf57a), o lado conta a posse (+0x8d46: o dele sobe, o outro cai 10) e o receptor decide ja
 /// (0x7103e0) se sorteio(80) nao passar de +0x105 x +0x107.
 unsafe fn passar_com(j: usize, tipo: u8, receptor: usize, a4: u32, a5: u32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let impedido_de: unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize = core::mem::transmute(0x6cfd70usize);
-    let dist_ponto: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(0x6f09b0usize);
-    let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(0x6bb9a0usize);
+    let impedido_de: unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_CHECK_OFFSIDE);
+    let dist_ponto: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(FN_MATCH_PLAYER_DISTANCE_TO_CELL);
+    let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SET_PENDING_FOUL);
     let m = || *((j + 0x19e) as *const usize);
     let b = |p: usize, o: usize| (p + o) as *mut i8;
     *b(j, 0x2b) = (*b(j, 0x2b)).wrapping_add(1);
@@ -7147,12 +7147,12 @@ unsafe fn passar_com(j: usize, tipo: u8, receptor: usize, a4: u32, a5: u32, cham
 unsafe extern "thiscall" fn passar(j: usize, tipo: u8, receptor: usize, mut a3: u32, a4: u32, a5: u32) {
     passar_com(j, tipo, receptor, a4, a5, &mut |rotina, this, a| match rotina {
         0x6fad40 => {
-            let f: unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32, usize, u32, u32) -> u8 = core::mem::transmute(0x6fad40usize);
+            let f: unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32, usize, u32, u32) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_PASS);
             let r = f(this, a[0] as i8, a[1] as i8, a[2], &mut a3, a[3] as usize, a[4], a5);
             r as u32 | ((a3 as u8 as u32) << 8)
         }
         0x7103e0 => {
-            let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x7103e0usize);
+            let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_PLAYER_TAKE_TURN);
             f(this);
             0
         }
@@ -7177,9 +7177,9 @@ unsafe extern "thiscall" fn passar(j: usize, tipo: u8, receptor: usize, mut a3: 
 /// 50. O dono da bola conduz (0x7109f0) e pode decidir de novo (sorteio(+0x7d) contra sorteio(5));
 /// os outros vao a 0x713fc0 (bola com o lado dele, na faixa, em jogo) ou a 0x714d40.
 unsafe fn decidir_jogador_com(j: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let pode: unsafe extern "thiscall" fn(usize, usize, i8, i8) -> u32 = core::mem::transmute(0x6bce20usize);
-    let faixa: unsafe extern "stdcall" fn(u8, i8, i8) -> u8 = core::mem::transmute(0x6cb960usize);
-    let dist_ponto: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(0x6f09b0usize);
+    let pode: unsafe extern "thiscall" fn(usize, usize, i8, i8) -> u32 = core::mem::transmute(FN_CM3_MATCH_ENGINE_CAN_MARKER_CHALLENGE);
+    let faixa: unsafe extern "stdcall" fn(u8, i8, i8) -> u8 = core::mem::transmute(FN_IS_IN_OWN_PENALTY_AREA);
+    let dist_ponto: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(FN_MATCH_PLAYER_DISTANCE_TO_CELL);
     let w = |o: usize| (j + o) as *mut u16;
     let b = |o: usize| byte(j, o);
     let u = |a: usize| *(a as *const usize);
@@ -7296,17 +7296,17 @@ unsafe fn decidir_jogador_com(j: usize, chamar: &mut dyn FnMut(usize, usize, [u3
 unsafe extern "thiscall" fn decidir_jogador(j: usize) {
     decidir_jogador_com(j, &mut |rotina, this, _a| match rotina {
         0x713fc0 => {
-            let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x713fc0usize);
+            let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_MATCH_PLAYER_CHOOSE_ATTACKING_OFF_BALL_MOVE);
             f(this, 1);
             0
         }
         0x714d40 => {
-            let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x714d40usize);
+            let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_PLAYER_CHOOSE_DEFENSIVE_OFF_BALL_MOVE);
             f(this);
             0
         }
         _ => {
-            let f: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x7109f0usize);
+            let f: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_DECIDE_BALL_ACTION);
             f(this, 0)
         }
     })
@@ -7340,21 +7340,21 @@ unsafe fn mover_sem_bola_com(j: usize, chamar: &mut dyn FnMut(usize, usize, [u32
     let w = |o: usize| (j + o) as *mut u16;
     let u = |a: usize| *(a as *const usize);
     let b = |o: usize| byte(j, o);
-    let byte_pos: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x5b57c0usize);
-    let marcas: unsafe extern "thiscall" fn(usize, i8) -> u64 = core::mem::transmute(0x5b5270usize);
-    let formacao: unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x6c2a40usize);
-    let do_lado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x6cfda0usize);
-    let posicionar: unsafe extern "thiscall" fn(usize, usize, *mut i8, *mut i8, u32) = core::mem::transmute(0x6c2be0usize);
-    let nota: unsafe extern "thiscall" fn(usize, i8) -> i32 = core::mem::transmute(0x715f50usize);
-    let dif_lado: unsafe extern "thiscall" fn(usize, u8, u8) -> u8 = core::mem::transmute(0x6c4180usize);
-    let limite: unsafe extern "stdcall" fn(u8, i8) -> u8 = core::mem::transmute(0x6cb930usize);
-    let dif_jogador: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x6c4130usize);
-    let atras: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x6cd5f0usize);
-    let faixa: unsafe extern "stdcall" fn(u8, i8, i8) -> u8 = core::mem::transmute(0x6cb960usize);
-    let manter: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(0x6ce110usize);
-    let menor_dist: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) -> f32 = core::mem::transmute(0x6c3950usize);
-    let dist_entre: unsafe extern "stdcall" fn(i8, i8, i8, i8) -> f32 = core::mem::transmute(0x6cc4e0usize);
-    let apontar: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) = core::mem::transmute(0x6f4920usize);
+    let byte_pos: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_FORMATION_GET_MARKING_TYPE);
+    let marcas: unsafe extern "thiscall" fn(usize, i8) -> u64 = core::mem::transmute(FN_FORMATION_GET_PLAYER_INSTRUCTIONS);
+    let formacao: unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_REFERENCE_TACTIC_CELL);
+    let do_lado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_PLAYER_NEAREST_TO_BALL);
+    let posicionar: unsafe extern "thiscall" fn(usize, usize, *mut i8, *mut i8, u32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_TARGET_CELL);
+    let nota: unsafe extern "thiscall" fn(usize, i8) -> i32 = core::mem::transmute(FN_MATCH_PLAYER_BIAS_TARGET_COLUMN);
+    let dif_lado: unsafe extern "thiscall" fn(usize, u8, u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_OFFSIDE_MARGIN_FOR_ROW);
+    let limite: unsafe extern "stdcall" fn(u8, i8) -> u8 = core::mem::transmute(FN_IS_IN_ATTACKING_THIRD);
+    let dif_jogador: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_OFFSIDE_MARGIN);
+    let atras: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_BEHIND_OWN_BACK_LINE);
+    let faixa: unsafe extern "stdcall" fn(u8, i8, i8) -> u8 = core::mem::transmute(FN_IS_IN_OWN_PENALTY_AREA);
+    let manter: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_GOALKEEPER);
+    let menor_dist: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) -> f32 = core::mem::transmute(FN_CM3_MATCH_ENGINE_MIN_OUTFIELD_DISTANCE_TO_CELL);
+    let dist_entre: unsafe extern "stdcall" fn(i8, i8, i8, i8) -> f32 = core::mem::transmute(FN_GET_CELL_DISTANCE);
+    let apontar: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) = core::mem::transmute(FN_MATCH_PLAYER_SET_FACING_DIRECTION);
     let ta = || if m == 0 { 0 } else { tabela_a(m, j) };
     let rep = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, x: i8, y: i8, a: i32| {
         c(0x6f09f0, j, [x as u8 as u32, y as u8 as u32, a as u32, 0, 0]);
@@ -7585,9 +7585,9 @@ unsafe fn mover_sem_bola_com(j: usize, chamar: &mut dyn FnMut(usize, usize, [u32
         let q = manter(m, dir);
         if q == 0 {
             // a original mostra a caixa de erro e encerra o jogo (0x5cc7d0, 0x5a8f60, exit(-1))
-            let f1: unsafe extern "C" fn() = core::mem::transmute(0x5cc7d0usize);
-            let f2: unsafe extern "C" fn() = core::mem::transmute(0x5a8f60usize);
-            let sair: unsafe extern "C" fn(i32) = core::mem::transmute(0x945934usize);
+            let f1: unsafe extern "C" fn() = core::mem::transmute(FN_GAME_FATAL_CLEANUP);
+            let f2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
+            let sair: unsafe extern "C" fn(i32) = core::mem::transmute(FN_CRT_EXIT);
             f1();
             f2();
             sair(-1);
@@ -7652,16 +7652,16 @@ unsafe fn mover_sem_bola_com(j: usize, chamar: &mut dyn FnMut(usize, usize, [u32
 unsafe extern "thiscall" fn mover_sem_bola(j: usize) {
     mover_sem_bola_com(j, &mut |rotina, this, a| match rotina {
         0x6f46b0 => {
-            let f: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(0x6f46b0usize);
+            let f: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL);
             f(this, a[0] as i8, a[1] as i8);
             0
         }
         0x6f5b80 => {
-            let f: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(0x6f5b80usize);
+            let f: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_DROP_BACK_ONE_ROW);
             f(this, 0)
         }
         0x6f0630 => {
-            let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6f0630usize);
+            let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_PLAYER_TAKE_POSSESSION);
             f(this);
             0
         }
@@ -7670,7 +7670,7 @@ unsafe extern "thiscall" fn mover_sem_bola(j: usize) {
             0
         }
         _ => {
-            let f: unsafe extern "thiscall" fn(usize, i8, i8, i32, u32, u32) -> u32 = core::mem::transmute(0x6f09f0usize);
+            let f: unsafe extern "thiscall" fn(usize, i8, i8, i32, u32, u32) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_MOVE_TO);
             f(this, a[0] as i8, a[1] as i8, a[2] as i32, 0, 0)
         }
     })
@@ -7699,18 +7699,18 @@ unsafe fn decidir_sem_bola_com(j: usize, chamar: &mut dyn FnMut(usize, [u32; 5])
     let dir = byte(j, 0x27);
     let bloco = (m as isize + 0x91e2 + 6371 * dir as isize) as usize;
     let w = |o: usize| (j + o) as *mut u16;
-    let byte_pos: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x5b57c0usize);
-    let marcas: unsafe extern "thiscall" fn(usize, i8) -> u64 = core::mem::transmute(0x5b5270usize);
-    let formacao: unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x6c2a40usize);
-    let escolher: unsafe extern "thiscall" fn(usize, usize, *mut i8, *mut i8, u32) -> u8 = core::mem::transmute(0x6bce80usize);
-    let do_lado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x6cfda0usize);
-    let posicionar: unsafe extern "thiscall" fn(usize, usize, *mut i8, *mut i8, u32) = core::mem::transmute(0x6c2be0usize);
-    let nota: unsafe extern "thiscall" fn(usize, i8) -> i32 = core::mem::transmute(0x715f50usize);
-    let dif_lado: unsafe extern "thiscall" fn(usize, u8, u8) -> u8 = core::mem::transmute(0x6c4180usize);
-    let alem: unsafe extern "thiscall" fn(usize, i8, i8, i8) -> u8 = core::mem::transmute(0x6cb700usize);
-    let limite: unsafe extern "stdcall" fn(u8, i8) -> u8 = core::mem::transmute(0x6cb930usize);
-    let dif_jogador: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x6c4130usize);
-    let atras: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x6cd5f0usize);
+    let byte_pos: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_FORMATION_GET_MARKING_TYPE);
+    let marcas: unsafe extern "thiscall" fn(usize, i8) -> u64 = core::mem::transmute(FN_FORMATION_GET_PLAYER_INSTRUCTIONS);
+    let formacao: unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_REFERENCE_TACTIC_CELL);
+    let escolher: unsafe extern "thiscall" fn(usize, usize, *mut i8, *mut i8, u32) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_CHOOSE_MOVE_CELL);
+    let do_lado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_PLAYER_NEAREST_TO_BALL);
+    let posicionar: unsafe extern "thiscall" fn(usize, usize, *mut i8, *mut i8, u32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_TARGET_CELL);
+    let nota: unsafe extern "thiscall" fn(usize, i8) -> i32 = core::mem::transmute(FN_MATCH_PLAYER_BIAS_TARGET_COLUMN);
+    let dif_lado: unsafe extern "thiscall" fn(usize, u8, u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_OFFSIDE_MARGIN_FOR_ROW);
+    let alem: unsafe extern "thiscall" fn(usize, i8, i8, i8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_COUNT_PLAYERS_AHEAD_OF_ROW);
+    let limite: unsafe extern "stdcall" fn(u8, i8) -> u8 = core::mem::transmute(FN_IS_IN_ATTACKING_THIRD);
+    let dif_jogador: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_OFFSIDE_MARGIN);
+    let atras: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_BEHIND_OWN_BACK_LINE);
     let ta = || if m == 0 { 0 } else { tabela_a(m, j) };
     let reposicionar = |c: &mut dyn FnMut(usize, [u32; 5]) -> u32, x: i8, y: i8, a: i32| {
         c(0x6f09f0, [x as u8 as u32, y as u8 as u32, a as u32, 0, 0]);
@@ -7909,16 +7909,16 @@ unsafe fn decidir_sem_bola_com(j: usize, chamar: &mut dyn FnMut(usize, [u32; 5])
 unsafe extern "thiscall" fn decidir_sem_bola(j: usize, _a: u32) {
     decidir_sem_bola_com(j, &mut |rotina, a| match rotina {
         0x6f46b0 => {
-            let f: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(0x6f46b0usize);
+            let f: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL);
             f(j, a[0] as i8, a[1] as i8);
             0
         }
         0x6f5b80 => {
-            let f: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(0x6f5b80usize);
+            let f: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_DROP_BACK_ONE_ROW);
             f(j, 0)
         }
         _ => {
-            let f: unsafe extern "thiscall" fn(usize, i8, i8, i32, u32, u32) -> u32 = core::mem::transmute(0x6f09f0usize);
+            let f: unsafe extern "thiscall" fn(usize, i8, i8, i32, u32, u32) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_MOVE_TO);
             f(j, a[0] as i8, a[1] as i8, a[2] as i32, 0, 0)
         }
     })
@@ -7953,10 +7953,10 @@ unsafe fn avancar_linha_com(this: usize, direto: u8, chamar: &mut dyn FnMut(usiz
 unsafe extern "thiscall" fn avancar_linha(this: usize, direto: u8) -> u32 {
     avancar_linha_com(this, direto, &mut |rotina, a| {
         if rotina == 0x6f46b0 {
-            let f: unsafe extern "thiscall" fn(usize, i8, i8) -> u32 = core::mem::transmute(0x6f46b0usize);
+            let f: unsafe extern "thiscall" fn(usize, i8, i8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL);
             f(this, a[0] as i8, a[1] as i8)
         } else {
-            let f: unsafe extern "thiscall" fn(usize, i8, i8, i32, u32, u32) -> u32 = core::mem::transmute(0x6f09f0usize);
+            let f: unsafe extern "thiscall" fn(usize, i8, i8, i32, u32, u32) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_MOVE_TO);
             f(this, a[0] as i8, a[1] as i8, -1, 0, 0)
         }
     })
@@ -7969,7 +7969,7 @@ unsafe extern "thiscall" fn avancar_linha(this: usize, direto: u8) -> u32 {
 /// senao cai a metade); acima de 50 em +1, tira (+1 - 50)^1,25 / 4 (no maximo 25); +0x4d fica em
 /// 1..10000.
 unsafe extern "thiscall" fn evoluir_momento(this: usize) {
-    let momento: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6f44a0usize);
+    let momento: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_PLAYER_ROLL_CURRENT_RATINGS);
     momento(this);
     if sortear(11) != 0 {
         return;
@@ -8010,20 +8010,20 @@ unsafe extern "C" fn partida_de_interesse(p: usize) -> u32 {
     let g = |a: usize| *(a as *const i32);
     let comp = || *((p + 0x14) as *const usize);
     let id = *(comp() as *const i32);
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let na_competicao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x48db80usize);
-    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
-    let rodada: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x4b0870usize);
-    let do_grupo: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7e6f20usize);
+    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let na_competicao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_INCLUDES_CLUB);
+    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
+    let rodada: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_COMP_UTIL_GET_BASE_ROUND_ID);
+    let do_grupo: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
     let objeto = || *((*(0xadadfc as *const usize)).wrapping_add((*(comp() as *const i32) as usize).wrapping_mul(4)) as *const usize);
     let tecnico = |s: i32| (*(0xae23bc as *const usize)).wrapping_add(((g(0xae2364) - s - 1) as usize).wrapping_mul(110));
     let u = |a: usize| *(a as *const usize);
-    if id == g(0x9cf668) || id == g(0x9cf684) {
+    if id == g(KEY_CLUB_COMP_FRIENDLY) || id == g(KEY_CLUB_COMP_RESERVE) {
         let sel = |o: usize| e_selecao(u(p + o)) != 0 && *((u(u(p + o) + 0x53) + 0x11c) as *const u8) != 0;
         return (sel(0x1c) || sel(0x20)) as u32;
     }
-    if id == g(0x9cf794) || id == g(0x9cf798) {
+    if id == g(KEY_CLUB_COMP_B_INTERNATIONAL) || id == g(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) {
         return 0;
     }
     if amistoso(u(0xae2c74), comp()) != 0 {
@@ -8035,7 +8035,7 @@ unsafe extern "C" fn partida_de_interesse(p: usize) -> u32 {
         }
         return 0;
     }
-    if id == g(0x9cf6f8) && rodada(*((p + 0x30) as *const u16) as i32) as i16 != 150 {
+    if id == g(KEY_CLUB_COMP_INTER_TOTO_CUP) && rodada(*((p + 0x30) as *const u16) as i32) as i16 != 150 {
         return 0;
     }
     if u(comp() + 0x5d) != 0 {
@@ -8058,25 +8058,25 @@ unsafe extern "C" fn partida_de_interesse(p: usize) -> u32 {
     }
     let mut edi = u(comp() + 0x59);
     if edi == 0 {
-        let k = if id == g(0x9cf77c) || id == g(0x9cf7ac) {
-            Some(g(0x9cfa08))
-        } else if id == g(0x9cf774) {
-            Some(g(0x9cfa0c))
-        } else if id == g(0x9cf770) {
-            Some(g(0x9cfa14))
-        } else if id == g(0x9cf780) || id == g(0x9cf7a4) || id == g(0x9cf784) {
-            Some(g(0x9cfa10))
-        } else if id == g(0x9cf76c) {
-            Some(g(0x9cfa18))
-        } else if id == g(0x9cf778) || id == g(0x9cf7a8) {
-            Some(g(0x9cfa1c))
+        let k = if id == g(KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION) || id == g(KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS) {
+            Some(g(KEY_CONTINENT_AFRICA))
+        } else if id == g(KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION) {
+            Some(g(KEY_CONTINENT_ASIA))
+        } else if id == g(KEY_CLUB_COMP_WORLD_CUP_CONCACAF_QUALIFYING_SECTION) {
+            Some(g(KEY_CONTINENT_NORTH_AMERICA))
+        } else if id == g(KEY_CLUB_COMP_WORLD_CUP_EUROPEAN_QUALIFYING_SECTION) || id == g(KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP) || id == g(KEY_CLUB_COMP_EUROPEAN_CHAMPIONSHIP_QUALIFYING) {
+            Some(g(KEY_CONTINENT_EUROPE))
+        } else if id == g(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION) {
+            Some(g(KEY_CONTINENT_OCEANIA))
+        } else if id == g(KEY_CLUB_COMP_WORLD_CUP_SOUTH_AMERICAN_QUALIFYING_SECT) || id == g(KEY_CLUB_COMP_COPA_AMERICA) {
+            Some(g(KEY_CONTINENT_SOUTH_AMERICA))
         } else {
             None
         };
         if let Some(k) = k {
             edi = (*(0xae23a4 as *const usize)).wrapping_add((k as usize).wrapping_mul(0xc6));
         }
-        if edi == 0 && id != g(0x9cf7a0) {
+        if edi == 0 && id != g(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES) {
             return 1;
         }
     }
@@ -8121,7 +8121,7 @@ unsafe extern "thiscall" fn desempenho_na_partida(this: usize, marcar: u8) {
     let p37 = (this + 0x37) as *mut i16;
     let soma37 = move |v: i32| *p37 = (*p37).wrapping_add(v as i16);
     let palavra = |o: usize, v: i32| *((this + o) as *mut i16) = v as i16;
-    let atributos: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6ec010usize);
+    let atributos: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_PLAYER_CALC_MATCH_ATTRIBUTES);
     atributos(this);
     let bl: i8 = if b(ficha(), 0xf) > 15 { 20 } else { ftol(b(ficha(), 0xf) as f64 * q(0x969040) + q(0x9688a0)) as i8 };
     *p37 = 0;
@@ -8154,7 +8154,7 @@ unsafe extern "thiscall" fn desempenho_na_partida(this: usize, marcar: u8) {
             Some((20 - fb(0x14)) as f64)
         } else {
             let lado = byte(this, 0x27) as isize;
-            let marcas: unsafe extern "thiscall" fn(usize, i8) -> u64 = core::mem::transmute(0x5b5270usize);
+            let marcas: unsafe extern "thiscall" fn(usize, i8) -> u64 = core::mem::transmute(FN_FORMATION_GET_PLAYER_INSTRUCTIONS);
             let m = marcas((motor() as isize + 0x91e2 + 0x18e3 * lado) as usize, byte(this, 0x19));
             let v = if m as u32 & 0x200000 != 0 { fb(0x1a) * fb(0x14) } else { fb(0x15) * fb(0x14) };
             Some(q(0x968ea8) - v as f64 * q(0x967888) + q(0x968968))
@@ -8342,7 +8342,7 @@ unsafe extern "thiscall" fn desempenho_na_partida(this: usize, marcar: u8) {
         };
         *p = ftol(v) as i16;
     }
-    let momento: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6f44a0usize);
+    let momento: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_PLAYER_ROLL_CURRENT_RATINGS);
     momento(this);
 }
 
@@ -8366,9 +8366,9 @@ unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
         let t = *((motor() + 0x4792) as *const usize);
         *((t + if byte(this, 0x27) != 0 { 0x20 } else { 0x1c }) as *const usize)
     };
-    let nota: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x6ebd70usize);
+    let nota: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_MATCH_PLAYER_CALC_INFLUENCE_SCORE);
     let nota = |j: usize| nota(j) as i8 as i32;
-    let vaga: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8 = core::mem::transmute(0x897590usize);
+    let vaga: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8 = core::mem::transmute(FN_TACTICS_FIND_CAPTAIN_SLOT);
     let designado = |m: usize| {
         let t = *((m + 0x4792) as *const usize);
         let l = byte(this, 0x27);
@@ -8376,8 +8376,8 @@ unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
         let k = vaga(*(0xde1d08 as *const usize), c, fl, 0) as i32;
         (m as isize + 0x4796 + 0x1be * (k + 20 * l as i32) as isize) as usize
     };
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    let nivel: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x53ce90usize);
+    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let nivel: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_CONTRACT_RATING_MODIFIER);
 
     let (mut l28, mut l18, mut l24, mut l1c, mut l14) = (0f32, 0f32, 0f32, 0f32, 0f32);
     let l12 = byte(pessoa(), 0x18) as i32;
@@ -8415,7 +8415,7 @@ unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
             l18 = m(l18, 0x96d3b8);
         }
         let pj = *((j + 0x69) as *const usize);
-        let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
+        let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
         let ler = |o: usize| core::ptr::read_unaligned((pj + o) as *const u32);
         if dias(0xae2c90, ler(0x3e), ler(0x42)) < (50 - b(pj, 0x59)) * 10 {
             l18 = m(l18, 0x96a32c);
@@ -8425,7 +8425,7 @@ unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
         }
     }
     let l2c = if e_selecao(clube_lado()) == 0 {
-        let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+        let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
         contrato(*(0xae1050 as *const usize), pessoa(), clube_lado())
     } else {
         0
@@ -8560,8 +8560,8 @@ unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
         }
     };
     let pow = |o: usize, limiar: f64, e: f64| wr(o, pow_do_jogo(rd(o) - limiar, e) + limiar);
-    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let chance: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(0x544410usize);
+    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let chance: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
     let jx = |l: i32| *((motor() as isize + 0x904d + 208 * l as isize) as *const usize);
     let do_banco = || {
         // o tecnico do lado (+0x904d) e a pessoa dele, quando o clube nao e humano
@@ -8571,8 +8571,8 @@ unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
         let x = jx(byte(this, 0x27) as i32);
         if x == 0 { 0 } else { *((x + 0x69) as *const usize) }
     };
-    let t5b20: unsafe extern "thiscall" fn(usize, u8) -> u8 = core::mem::transmute(0x6d5b20usize);
-    let t5af0: unsafe extern "thiscall" fn(usize, u8) -> u8 = core::mem::transmute(0x6d5af0usize);
+    let t5b20: unsafe extern "thiscall" fn(usize, u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_SIDE_HAS_NO_WIDE_DEFENDERS);
+    let t5af0: unsafe extern "thiscall" fn(usize, u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_SIDE_HAS_NO_WIDE_MIDFIELD_OR_ATTACK);
     let par_880 = || ta() & 0x880 != 0 && tb() & 0x880 != 0;
     let forma_b20 = || t5b20(motor(), (byte(this, 0x27) == 0) as u8) != 0 && par_880() && (ta() & 0x60 != 0 || tb() & 0x60 != 0);
     let forma_af0 = || t5af0(motor(), byte(this, 0x27) as u8) != 0 && (ta() & 0x78 != 0 || tb() & 0x78 != 0);
@@ -8891,13 +8891,13 @@ unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
     wr(0xed, fb(0x42));
     if ta() != 1 && t != 0 {
         let t14 = *((t + 0x14) as *const usize);
-        if t14 != 0 && *(t14 as *const u32) == *(0x9cf590 as *const u32) {
+        if t14 != 0 && *(t14 as *const u32) == *(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE as *const u32) {
             let pn = *((pessoa() + 0x1a) as *const usize);
             if pn != 0 {
                 let id = *(pn as *const u32);
                 let g = |a: usize| *(a as *const u32);
                 // a original so poupa a nacao igual as tres globais ao mesmo tempo
-                if !(id == g(0x9cf4f8) && id == g(0x9cf280) && id == g(0x9cf3d0)) {
+                if !(id == g(KEY_NATION_UNITED_STATES) && id == g(KEY_NATION_CANADA) && id == g(KEY_NATION_MEXICO)) {
                     wr(0xf5, rd(0xf5) * f(0x96a32c));
                 }
             }
@@ -8998,10 +8998,10 @@ unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
     if byte(t, 0x40) == 0 {
         return;
     }
-    let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d60usize);
-    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d30usize);
-    let gosta_de: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547810usize);
-    let nao_gosta_de: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547840usize);
+    let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_FAVOURS_CLUB);
+    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_DISLIKES_CLUB);
+    let gosta_de: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_FAVOURED_BY);
+    let nao_gosta_de: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_DISLIKED_BY);
     let menos = |o: usize, k: i32, c: usize| wr(o, rd(o) - k as f64 * f(c));
     let clube_outro = || {
         let t = *((motor() + 0x4792) as *const usize);
@@ -9077,7 +9077,7 @@ unsafe extern "thiscall" fn nota_do_jogador(this: usize) -> i32 {
     };
     let pessoa = *((this + 0x69) as *const usize);
     let ficha = *((this + 0x6d) as *const usize);
-    let nivel: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x53ce90usize);
+    let nivel: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_CONTRACT_RATING_MODIFIER);
     let n = nivel(pessoa, clube()) as i8 as f64;
     let mut forma = (*((ficha + 0xd) as *const i16) as i32 - *((clube() + 0x80) as *const i16) as i32) as f64 * 0.002 + 1.5;
     if forma < -4.0 {
@@ -9085,7 +9085,7 @@ unsafe extern "thiscall" fn nota_do_jogador(this: usize) -> i32 {
     } else if forma > 4.0 {
         forma = 4.0;
     }
-    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let r = contrato(*(0xae1050 as *const usize), pessoa, clube());
     let mut c = 0.0;
     if r != 0 {
@@ -9101,11 +9101,11 @@ unsafe extern "thiscall" fn nota_do_jogador(this: usize) -> i32 {
             _ => c,
         };
     }
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let x = if e_selecao(clube()) != 0 {
         byte(pessoa, 0x22) as u8 as f64 * 75.0
     } else {
-        let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
+        let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
         let ler = |o: usize| core::ptr::read_unaligned((pessoa + o) as *const u32);
         dias(0xae2c90, ler(0x3e), ler(0x42)) as f64
     };
@@ -9166,7 +9166,7 @@ unsafe fn pode_bater(j: usize) -> bool {
     if y == fundo && (3..=5).contains(&x) {
         return true;
     }
-    let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, f32, f32, *mut u8) -> u8 = core::mem::transmute(0x6f9f90usize);
+    let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, f32, f32, *mut u8) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_IS_CELL_IN_VIEW);
     f(j, 4, fundo, 0, 0.0, 0.0, core::ptr::null_mut()) != 0
 }
 
@@ -9188,7 +9188,7 @@ unsafe extern "thiscall" fn valor_do_chute(this: usize, tipo: *mut i8, som: *mut
         *som = 0x1f81;
         0xfc18u16
     };
-    let manter: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(0x6ce110usize);
+    let manter: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_GOALKEEPER);
     let gk = manter(*((j + 0x19e) as *const usize), (lado(j) == 0) as i8);
     let mut b13 = 0xfbu8.wrapping_sub(byte(j, 0x10b) as u8).wrapping_mul(2) as i8;
     let mut angulo_fechado = false;
@@ -9534,7 +9534,7 @@ unsafe fn papel_word(motor: usize, j: usize) -> u16 {
     if motor == 0 {
         return 0;
     }
-    let f: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x6c38c0usize);
+    let f: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
     f(motor, j)
 }
 

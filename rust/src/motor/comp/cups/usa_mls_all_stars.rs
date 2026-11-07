@@ -19,7 +19,7 @@ unsafe fn cqr6_virtual(this: usize, o: usize) -> i32 {
 /// (virtual +0x94); por fim, com `previstas`, as posições previstas (virtual +0x5c), cujo eax ela devolve (o Jogo das
 /// Estrelas não as tem: devolve o eax da árvore).
 unsafe fn cqr6_virada(this: usize, inscritos: usize, arquivo: usize, linhas: [u32; 3], ano: i16, previstas: bool, ramo: &'static str) -> u32 {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     write_u32_from_usize(this + 0x4c, 0);
     for o in [0xa7usize, 0xa3] {
         let l = read_u32_as_usize(this + o);
@@ -43,7 +43,7 @@ unsafe fn cqr6_virada(this: usize, inscritos: usize, arquivo: usize, linhas: [u3
     }
     let e = read_u32_as_usize(this + 8);
     if e != 0 {
-        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
+        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
         arquivar(e, 1);
     }
     let a = read_i16(this + 0x40);
@@ -134,7 +134,7 @@ unsafe fn cqr6_clube(i: usize) -> usize {
 /// +5, +0xa, +0xb) zerados. Devolve 1.
 unsafe fn cqr6_times(this: usize) -> i32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 2);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0xc);
     write_u32_from_usize(this + 0xa7, l);
     if l == 0 {
@@ -151,14 +151,14 @@ unsafe fn cqr6_times(this: usize) -> i32 {
         write_u32_from_usize(read_u32_as_usize(this + 0xa7), cqr6_clube(b));
         0x414
     };
-    let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let mut k = sortear(6) as u8; // cqr6: o estádio sorteado entre 6
-    let divisao: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(0x909ec0usize);
+    let divisao: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(FN_USA_MLS_GET_CLUB_DIVISION);
     let mut i = 0usize;
     while (i as i32) < read_u32_as_usize(0xae235c) as i32 {
         let c = cqr6_clube(i);
         let liga = read_u32_as_usize(c + 0x57);
-        if liga != 0 && read_u32_as_usize(liga) == read_u32_as_usize(0x9cf590) && divisao(c) as i32 == conferencia {
+        if liga != 0 && read_u32_as_usize(liga) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && divisao(c) as i32 == conferencia {
             if k == 0 {
                 crate::comparacao::ramo("cqr_6 estadio do jogo das estrelas");
                 let primeiro = read_u32_as_usize(read_u32_as_usize(this + 0xa7));
@@ -170,7 +170,7 @@ unsafe fn cqr6_times(this: usize) -> i32 {
         }
         i += 1;
     }
-    let nacao = read_u32_as_usize(0xae23a8).wrapping_add(read_u32_as_usize(0x9cf4f8).wrapping_mul(0x122));
+    let nacao = read_u32_as_usize(0xae23a8).wrapping_add(read_u32_as_usize(KEY_NATION_UNITED_STATES).wrapping_mul(0x122));
     let l = read_u32_as_usize(this + 0xa7);
     write_u32_from_usize(read_u32_as_usize(l + 6) + 0x53, nacao);
     write_u32_from_usize(read_u32_as_usize(l) + 0x53, read_u32_as_usize(read_u32_as_usize(l + 6) + 0x53));
@@ -212,7 +212,7 @@ unsafe extern "thiscall" fn comparar_cqr6_times_do_jogo_das_estrelas(this: usize
         lo == lr
     };
     if lr != 0 && lr != lo {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
     PLACAR.registrar(igual && a == b && lista, || format!("cqr6_times_do_jogo_das_estrelas({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));

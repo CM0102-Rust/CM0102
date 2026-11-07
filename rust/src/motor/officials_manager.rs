@@ -47,7 +47,7 @@ unsafe extern "thiscall" fn nota_do_arbitro(m: usize) {
     }
     let amistosos = *(0xae2c74 as *const usize);
     if amistosos != 0 {
-        let amistosa: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
+        let amistosa: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
         if amistosa(amistosos, comp) != 0 {
             crate::comparacao::ramo("nota do arbitro amistoso");
             return;
@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn nota_do_arbitro(m: usize) {
     r[4] = cartoes as u8;
     r[5] = faltas as u8;
     r[6] = nota as u8;
-    let registrar: unsafe extern "thiscall" fn(usize, *const u8) = core::mem::transmute(0x79ce10usize);
+    let registrar: unsafe extern "thiscall" fn(usize, *const u8) = core::mem::transmute(FN_OFFICIALSMANAGER_RECORD_MATCH_STATS);
     registrar(*(0xb74340 as *const usize), r.as_ptr());
 }
 
@@ -133,7 +133,7 @@ unsafe fn cqg9_i(a: usize) -> i32 {
 
 
 unsafe fn cqg9_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     f(n)
 }
 
@@ -146,9 +146,9 @@ unsafe fn cqg9_arbitro(i: i32) -> usize {
 /// e exit(−1) (0x945934).
 unsafe fn cqg9_fatal(linha: u32) -> ! {
     aviso_em(0xa6a22c, linha);
-    let f1: unsafe extern "C" fn() = core::mem::transmute(0x5cc7d0usize);
-    let f2: unsafe extern "C" fn() = core::mem::transmute(0x5a8f60usize);
-    let sair: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(0x945934usize);
+    let f1: unsafe extern "C" fn() = core::mem::transmute(FN_GAME_FATAL_CLEANUP);
+    let f2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
+    let sair: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     f1();
     f2();
     sair(-1)
@@ -156,19 +156,19 @@ unsafe fn cqg9_fatal(linha: u32) -> ! {
 
 /// O qsort do jogo (0x945333) pela rotina de comparação `cmp`.
 unsafe fn cqg9_ordenar(base: usize, n: u32, tam: u32, cmp: usize) {
-    let q: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let q: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     q(base, n, tam, cmp);
 }
 
 /// calloc (0x945501, cdecl).
 unsafe fn cqg9_calloc(n: u32, tam: u32) -> usize {
-    let f: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
+    let f: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
     f(n, tam)
 }
 
 /// free (0x9452ca, cdecl).
 unsafe fn cqg9_liberar(p: usize) {
-    let f: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let f: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     f(p);
 }
 
@@ -182,7 +182,7 @@ unsafe fn cqg9_liberar(p: usize) {
 /// 5, sorteia até o +0x8e da nação (1..5). Os índices (+0), o primeiro de cada nação e, por nação, as vagas ordenadas
 /// (qsort 0x79d410) com a parte de cada uma; this+4 a conta e this+8 as marcas (calloc).
 unsafe extern "thiscall" fn montar_os_arbitros(this: usize) {
-    let rever: unsafe extern "C" fn() = core::mem::transmute(0x79caa0usize);
+    let rever: unsafe extern "C" fn() = core::mem::transmute(FN_OFFICIALS_MANAGER_VALIDATE_OFFICIALS);
     rever();
     cqg9_ordenar(read_u32_as_usize(0xae23e8), cqg9_i(0xae2390) as u32, 0x2b, 0x79d4e0);
     let n = cqg9_i(0xae2390);
@@ -216,7 +216,7 @@ unsafe extern "thiscall" fn montar_os_arbitros(this: usize) {
     }
     let nova = cqg9_calloc(ficam as u32, 0x2b);
     let mut dst = nova;
-    let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x79c530usize);
+    let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_OFFICIAL_OPERATOR_3D);
     let mut i = 0i32;
     while i < cqg9_i(0xae2390) {
         if *((marcas + i as usize) as *const u8) != 0 {
@@ -228,7 +228,7 @@ unsafe extern "thiscall" fn montar_os_arbitros(this: usize) {
     cqg9_liberar(read_u32_as_usize(0xae23e8));
     write_u32(0xae23e8, nova as u32);
     write_u32(0xae2390, ficam as u32);
-    let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let nacoes = cqg9_i(0xae2350);
     let blocos = malloc((nacoes as u32).wrapping_mul(0x102));
     write_u32(this + 0xc, blocos as u32);
@@ -250,8 +250,8 @@ unsafe extern "thiscall" fn montar_os_arbitros(this: usize) {
             write_u32(v + 0xc, 0xffff_ffff);
         }
     }
-    let ativa: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(0x4b0700usize);
-    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
+    let ativa: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(FN_COMP_UTIL_IS_LEAGUE_DIVISION);
+    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     for k in 0..cqg9_i(0xadadf8).max(0) {
         if read_u32_as_usize(read_u32_as_usize(0xadadfc) + 4 * k as usize) == 0 || ativa(k) == 0 {
             continue;
@@ -279,7 +279,7 @@ unsafe extern "thiscall" fn montar_os_arbitros(this: usize) {
         let b = blocos.wrapping_add((cqg9_i(read_u32_as_usize(cqg9_arbitro(i) + 0x16)) as isize * 0x102) as usize);
         write_u32(b + 4, read_u32_as_usize(b + 4).wrapping_add(1) as u32);
     }
-    let novos: unsafe extern "stdcall" fn(i32, usize) = core::mem::transmute(0x79c5c0usize);
+    let novos: unsafe extern "stdcall" fn(i32, usize) = core::mem::transmute(FN_OFFICIALS_MANAGER_ADD_RANDOM_OFFICIALS);
     for k in 0..cqg9_i(0xae2350).max(0) {
         let b = blocos + k as usize * 0x102;
         let nac = read_u32_as_usize(0xae23a8).wrapping_add(k as usize * 0x122);
@@ -489,7 +489,7 @@ unsafe extern "thiscall" fn escolher_arbitro_da_partida(this: usize, jogo: usize
     let (ini, n) = if comp == 0 {
         faixa_da_nacao(cpy8_nacao_do_clube(mandante).unwrap_or_else(|| sortear(nacoes)))
     } else {
-        let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
+        let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
         if amistoso(read_usize(0xae2c74), comp) != 0 {
             faixa_da_nacao(cpy8_i(read_usize(mandante + 0x53))) // como a original, sem conferir a nação
         } else {
@@ -642,7 +642,7 @@ unsafe extern "thiscall" fn renovar_arbitros(this: usize, comp: usize) -> u8 {
     if c == 0 || read_u8(c + 0x42) == 4 || read_u8(c + 0x42) == 2 {
         return 0;
     }
-    let conta: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(0x4b0700usize);
+    let conta: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(FN_COMP_UTIL_IS_LEAGUE_DIVISION);
     if conta(cpy8_i(comp)) == 0 {
         return 0;
     }
@@ -657,7 +657,7 @@ unsafe extern "thiscall" fn renovar_arbitros(this: usize, comp: usize) -> u8 {
         }
     }
     let (ini, n) = faixa.unwrap_or((cpy8_i(b + 8), cpy8_i(b + 4)));
-    let nome: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x539c60usize);
+    let nome: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_PICK_FIRST_NAME_FOR_NATION);
     for k in 0..n.max(0) {
         let ficha = read_usize(0xae23e8).wrapping_add(ini.wrapping_add(k).wrapping_mul(0x2b) as usize);
         if ficha == 0 {
@@ -742,8 +742,8 @@ unsafe fn cpy9_s(n: i32, k: u8) -> u8 {
 /// 1960 + sorteio(10) e o dia (+0xc) sorteio(300) + 1. Não grava +0, +0x10..+0x15 (a original deixa o que o realloc
 /// trouxe).
 unsafe fn cpy9_gerar(r: usize, nacao: usize) {
-    let primeiro: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x539b90usize);
-    let segundo: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53a0e0usize);
+    let primeiro: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_PICK_FIRST_NAME_BY_WEIGHT);
+    let segundo: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_PICK_SECOND_NAME_BY_WEIGHT);
     write_usize(r + 4, primeiro(nacao));
     write_usize(r + 8, segundo(nacao));
     write_usize(r + 0x16, nacao);
@@ -771,7 +771,7 @@ unsafe extern "thiscall" fn arbitros_sorteados(_this: usize, conta: i32, nacao: 
     if nacao != 0 && read_usize(nacao + 0x71) == 0 {
         return;
     }
-    let realocar: unsafe extern "C" fn(usize, i32) -> usize = core::mem::transmute(0x945667usize);
+    let realocar: unsafe extern "C" fn(usize, i32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
     let antes = cpy9_i(0xae2390);
     let t = realocar(read_usize(0xae23e8), antes.wrapping_add(conta).wrapping_mul(0x2b));
     *(0xae23e8 as *mut usize) = t;
@@ -786,7 +786,7 @@ unsafe extern "thiscall" fn arbitros_sorteados(_this: usize, conta: i32, nacao: 
     }
     let n = cpy9_i(0xae2390).wrapping_add(conta);
     *(0xae2390 as *mut i32) = n;
-    let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
+    let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     crate::comparacao::ramo("cpy_9 ordenar");
     ordenar(read_usize(0xae23e8), n, 0x2b, 0x79d480); // cpy9: ordenar a tabela
 }
@@ -908,7 +908,7 @@ unsafe extern "C" fn validar_arbitros() {
         cpy9_atributo(e, 0x29, || faixa((0xd, 8), (0xe, 7), (0xf, 6)));
         cpy9_atributo(e, 0x2a, || if sortear(0x64) != 0 { cpy9_s(0xa, 0xb) } else { cpy9_s(0xa, 5) });
         let mut limite = [0u8; 8];
-        let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> *const u8 = core::mem::transmute(0x549f70usize);
+        let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> *const u8 = core::mem::transmute(FN_DATE_DATE_549F70);
         let d = data(limite.as_mut_ptr(), 1, 1, 0x776, -1);
         let (dia, ano) = (read_i16(d as usize), read_i16(d as usize + 2) as u16);
         let ano_e = read_i16(e + 0xe) as u16;
@@ -944,7 +944,7 @@ unsafe extern "thiscall" fn copiar_ficha_de_arbitro(this: usize, src: usize) -> 
     for o in [0usize, 4, 8] {
         write_usize(this + o, read_usize(src + o));
     }
-    let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
+    let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u8; 8];
     copia(this + 0xc, t.as_mut_ptr(), src + 0xc);
     write_i16(this + 0x14, read_i16(src + 0x14));

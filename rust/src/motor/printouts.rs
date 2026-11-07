@@ -14,7 +14,7 @@ unsafe fn cpz10_inicio(l: usize) {
 }
 
 unsafe fn cpz10_proximo(l: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
+    let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     f(l)
 }
 
@@ -26,7 +26,7 @@ unsafe fn cpz10_proximo(l: usize) -> usize {
 unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: usize, tipo: u32, nacao: i32) -> i32 {
     let mut t = tipo as i8;
     if t == 1 {
-        let semana: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x54a3f0usize);
+        let semana: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
         if semana(0xae2c90) as i16 == 6 {
             t = 7;
         }
@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: usize, tipo
     if n == 0 {
         return -1;
     }
-    let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     crate::comparacao::ramo("cpz_10 sorteio do comentarista");
     let r = sortear(n as i32); // cpz10: o sorteio do comentarista
     ids[r as usize] as i32
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn nome_do_veiculo(this: usize, tipo: u32, id: u32, nom
         *marca = 0;
         return;
     }
-    let sprintf: unsafe extern "C" fn(usize, usize, usize) -> i32 = core::mem::transmute(0x944c9fusize);
+    let sprintf: unsafe extern "C" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let t = tipo as i8;
     let id = id as i16;
     if id != -1 {
@@ -201,8 +201,8 @@ unsafe extern "thiscall" fn noticia_queixa_a_federacao(this: usize, clube: usize
         return;
     }
     crate::comparacao::ramo("cpz_10 noticia da queixa a federacao");
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
-    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
+    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0x178e, 0);
@@ -230,10 +230,10 @@ unsafe extern "thiscall" fn noticia_queixa_a_federacao(this: usize, clube: usize
     gravar(nt, 0xd, c as i8 as u32);
     let nacao = read_usize(clube + 0x53);
     if nacao != 0 && cpz10_sw(clube + 0x80) > 0x128e {
-        let aos_da_nacao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7863f0usize);
+        let aos_da_nacao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_NATION_MANAGERS);
         aos_da_nacao(read_usize(0xb7431c), nt, nacao);
     } else {
-        let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
+        let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
         entregar(read_usize(0xb7431c), nt, clube);
     }
 }

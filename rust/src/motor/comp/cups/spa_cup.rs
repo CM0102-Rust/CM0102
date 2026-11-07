@@ -17,7 +17,7 @@ unsafe fn cqt5_virtual(this: usize, o: usize) -> i32 {
 /// copa (0x51f890: push fase; push hoje; mov ecx -> thiscall, ret 8), cuja devolução sai.
 unsafe extern "thiscall" fn cqt5_copa_do_rei_dia(this: usize, hoje: usize, fase: u32) -> u32 {
     if read_u32_as_usize(this + 0x45) == 0 && read_i16(read_u32_as_usize(0xde1f58) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && fase != 0 { // cqt5: o ano da Copa do Rei
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         for o in [0xa7usize, 0xa3] {
             if read_u32_as_usize(this + o) != 0 {
                 soltar(read_u32_as_usize(this + o));
@@ -36,7 +36,7 @@ unsafe extern "thiscall" fn cqt5_copa_do_rei_dia(this: usize, hoje: usize, fase:
         }
         crate::comparacao::ramo("cqt_5 copa do rei refeita");
         core::ptr::write_unaligned((this + 0x45) as *mut u32, 1); // cqt5: a Copa do Rei refeita uma vez
-        let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x84d910usize);
+        let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_SPACUP_COLLECT_ENTRANTS);
         // ponytail: nas caixas a original zera só o al (o resto do eax vem da caixa); quem chama lê o byte
         if inscritos(this) < 0 {
             aviso_em(0xa82810, 0x161);
@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn cqt5_copa_do_rei_dia(this: usize, hoje: usize, fase:
         }
         cqt5_virtual(this, 0x5c);
     }
-    let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x51f890usize);
+    let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_FOR_DATE);
     base(this, hoje, fase)
 }
 

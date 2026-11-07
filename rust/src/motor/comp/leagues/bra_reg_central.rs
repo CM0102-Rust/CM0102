@@ -127,19 +127,19 @@ unsafe extern "thiscall" fn comparar_cqi8_regras_do_catarinense(this: usize) -> 
 /// Os registros de carreira (Staff_Records em [0xdd7f00], thiscall, já em Rust): 0x86bdd0 classificou-se (clube, comp,
 /// fase, rodada, peso; ret 0x14).
 unsafe fn cqk7_classificou(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x86bdd0usize);
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
     f(read_u32_as_usize(0xdd7f00), clube, comp, fase, rodada, peso);
 }
 
 /// 0x86a1c0 rebaixado (clube, liga; ret 8).
 unsafe fn cqk7_rebaixado(clube: usize, comp: usize) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x86a1c0usize);
+    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
     f(read_u32_as_usize(0xdd7f00), clube, comp);
 }
 
 /// 0x868c50 campeão da liga (clube, liga; ret 8).
 unsafe fn cqk7_campeao(clube: usize, comp: usize) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x868c50usize);
+    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_LEAGUE_CHAMPIONS_RECORD);
     f(read_u32_as_usize(0xdd7f00), clube, comp);
 }
 
@@ -182,10 +182,10 @@ unsafe fn cqk7_mata_mata(this: usize, clube: usize, st: u8, jogo: usize, rodadas
                 if fazer {
                     // ponytail: a original empurra eax (lixo do chamador acima da palavra) e ecx/edx inteiros; a
                     // 0x4bf850 e a 0x86c000 só leem as palavras: vão as palavras.
-                    let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(0x4bf850usize);
+                    let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
                     crate::comparacao::ramo("cqk_7 eliminado do estadual");
                     let peso = escala(0x1e, 0x32, read_i16(jogo + 0x34) as u16 as u32, rodadas);
-                    let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x86c000usize);
+                    let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
                     elim(read_u32_as_usize(0xdd7f00), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, peso); // cqk7: o registro do eliminado
                 }
                 let l = read_u32_as_usize(this + 0xb1) + 0x3b * i as usize;
@@ -261,7 +261,7 @@ unsafe fn cqk7_nsl(this: usize, clube: usize, situacao: u32, fase: u32, fazer: b
         }
         if st == 0xfe {
             if fazer {
-                let nao: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x86c1d0usize);
+                let nao: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_FAILED_TO_QUALIFY_RECORD);
                 nao(read_u32_as_usize(0xdd7f00), clube, comp, 0x435, 0x28);
             }
             return (u32::MAX, 0, 0);

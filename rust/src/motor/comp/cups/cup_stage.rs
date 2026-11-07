@@ -19,7 +19,7 @@
 unsafe extern "thiscall" fn cqs7_fase_de_copa(this: usize, pai: usize, n: u32, times: usize, rodadas: u32, a5: u32, modelo: usize, ano: u32, fase: u32, b2: u32,
     id: u32, b3: u32, arvore: u32, por_ordem: u32, a14: u32, sementes: usize) -> usize {
     const F: usize = 0x9b5944;
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
+    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CUP_CUP);
     base(this);
     write_u32_from_usize(this + 4, a5 as usize);
     write_u16(this + 0x40, ano as u16); // cqs7: o ano da fase
@@ -39,7 +39,7 @@ unsafe extern "thiscall" fn cqs7_fase_de_copa(this: usize, pai: usize, n: u32, t
     write_u8(this + 0x4a, *((pai + 0x4a) as *const u8));
     write_u32_from_usize(this + 0x28, a14 as usize);
     let tamanho = (rodadas as u16 as i16 as i32 * 0x68) as u32;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar(tamanho);
     write_u32_from_usize(this + 0xa3, t);
     if t == 0 {
@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn cqs7_fase_de_copa(this: usize, pai: usize, n: u32, t
     }
     core::ptr::copy_nonoverlapping(modelo as *const u8, t as *mut u8, tamanho as usize);
     write_u16(this + 0x3e, n as u16);
-    let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
+    let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
     let l = zerada(n as u16 as i16 as i32 as u32, 6);
     write_u32_from_usize(this + 0xa7, l);
     if l == 0 {
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn comparar_cqs7_fase_de_copa(this: usize, pai: usize, 
 /// confrontos das +0x3c rodadas e o próprio vetor liberados (0x9452ca, cdecl; os ponteiros ficam); por fim a base
 /// (Cup::~Cup 0x518690, mov ecx -> thiscall, ret 0), cujo eax ela devolve.
 unsafe extern "thiscall" fn cqs7_fim_da_fase_de_copa(this: usize) -> usize {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     write_u32_from_usize(this, 0x969468);
     if read_u32_as_usize(this + 0xa7) != 0 {
         soltar(read_u32_as_usize(this + 0xa7));
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn cqs7_fim_da_fase_de_copa(this: usize) -> usize {
         soltar(read_u32_as_usize(this + 0xad));
     }
     crate::comparacao::ramo("cqs_7 fim da fase de copa");
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518690usize);
+    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CUP_DESTRUCTOR_CUP);
     base(this)
 }
 

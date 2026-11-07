@@ -11,7 +11,7 @@ unsafe extern "thiscall" fn batedor_guardado(this: usize, clube: usize, tipo: u3
     if clube == 0 || !(0..=4).contains(&t) || !(0..=1).contains(&l) {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> usize>(304)(this, clube, tipo, lado, humano);
     }
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = linha(clube, humano);
     if k == -1 {
         crate::comparacao::ramo("batedor sem linha");
@@ -38,8 +38,8 @@ unsafe extern "thiscall" fn batedor_guardado(this: usize, clube: usize, tipo: u3
         crate::comparacao::ramo("batedor do clube");
         return pessoa;
     }
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    let vinculo: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x775790usize);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let vinculo: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONALTEAMS_IS_NATIONAL_OR_ALL_STAR_TEAM);
     if selecao(clube) != 0 || vinculo(*(0xb74318 as *const usize), clube) != 0 {
         crate::comparacao::ramo("batedor de fora do clube");
         return pessoa;
@@ -61,7 +61,7 @@ unsafe extern "thiscall" fn guardar_instrucoes(this: usize, clube: usize, pessoa
     if clube == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(305)(this, clube, pessoa, usar, volta);
     }
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = linha(clube, pessoa);
     if k == -1 {
         return 0;
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn comparar_batedor_guardado(this: usize, clube: usize,
     if gravando_no_topo() || clube == 0 || !(0..=4).contains(&t) || !(0..=1).contains(&l) {
         return o(this, clube, tipo, lado, humano);
     }
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = linha(clube, humano);
     let mut reg = vec![(0xb67a34, 4)];
     if k != -1 {
@@ -166,7 +166,7 @@ unsafe extern "thiscall" fn comparar_guardar_instrucoes(this: usize, clube: usiz
     if gravando_no_topo() || clube == 0 {
         return o(this, clube, pessoa, usar, volta);
     }
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = linha(clube, pessoa);
     // os 16 espacos e o contador, e a linha de instrucoes do clube
     let mut reg = vec![(this + 0x30, 0x5c * 16), (this + 0x5f0, 1)];
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn ler_linha_tatica(this: usize, clube: usize, destino:
     if clube == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u32) -> u32>(310)(this, clube, destino, humano);
     }
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = linha(clube, humano);
     if k == -1 {
         return 0;
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn gravar_linha_tatica(this: usize, clube: usize, orige
     if clube == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, *const u8, u32) -> u32>(311)(this, clube, origem, humano);
     }
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = linha(clube, humano);
     if k == -1 || k >= *((this + 0x605) as *const i32) {
         return 0;
@@ -225,7 +225,7 @@ unsafe extern "thiscall" fn gravar_linha_tatica(this: usize, clube: usize, orige
 
 /// Regioes das duas: o destino/origem e a linha do clube (se houver).
 unsafe fn regioes_da_linha_tatica(this: usize, clube: usize, p: usize, humano: u32) -> Vec<(usize, usize)> {
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = linha(clube, humano);
     let mut reg = vec![(0xb67a34, 4), (p, 0x91)];
     if k != -1 && k < *((this + 0x605) as *const i32) {
@@ -775,7 +775,7 @@ unsafe extern "thiscall" fn comparar_simulacao_rapida(m: usize) {
 /// Linha tatica do clube (0x8982b0) e o inicio dela na tabela em +0x601 (0x91 bytes por linha), ou
 /// `None` na linha -1.
 unsafe fn linha_na_tabela(this: usize, clube: usize, humano: u32) -> Option<usize> {
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let l = linha(clube, humano);
     (l != -1).then(|| (*((this + 0x601) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)))
 }
@@ -836,9 +836,9 @@ unsafe extern "thiscall" fn pessoa_da_linha(this: usize, clube: usize, qual: i8,
 /// (+0xcf) - 1, ou + 15 numa selecao (0x53b900), fora da faixa: a original (caixa de erro). Nos
 /// outros casos, o id do clube.
 unsafe extern "stdcall" fn linha_tatica(clube: usize, humano: u32) -> i32 {
-    let e_humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let e_humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     if e_humano(clube, 1, 1, 0, 0) != 0 && humano != 0 {
-        let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
+        let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
         if segunda(clube) != 0 {
             return -1;
         }
@@ -846,7 +846,7 @@ unsafe extern "stdcall" fn linha_tatica(clube: usize, humano: u32) -> i32 {
         if tecnico == 0 {
             return orig::<unsafe extern "stdcall" fn(usize, u32) -> i32>(182)(clube, humano);
         }
-        let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+        let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
         let clubes = *(0xae235c as *const i32);
         let base = (*(0xae2364 as *const i32)).wrapping_sub(*(tecnico as *const i32));
         let i = base.wrapping_add(if e_selecao(clube) != 0 { 0xf } else { -1 }).wrapping_add(clubes);
@@ -865,7 +865,7 @@ unsafe extern "thiscall" fn byte_tatico(this: usize, clube: usize, pos: i8, huma
     if clube == 0 || !(0..=10).contains(&pos) {
         return orig::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u8>(183)(this, clube, pos, humano);
     }
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let l = linha(clube, humano);
     if l == -1 {
         return 0;
@@ -905,15 +905,15 @@ unsafe extern "thiscall" fn registrar_resultado_da_tatica(this: usize, jogo: usi
         aviso_em(0xa8b908, 0x1f9);
         return 0;
     }
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     for k in 0..2 {
         let c = read_usize(jogo + 0x1c + 4 * k);
         if c != 0 && humano(c, 0, 1, 0, 0) != 0 {
             return 0;
         }
     }
-    let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
-    let registro: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7e4750usize);
+    let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
+    let registro: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_FILL_MATCH_RECORD_FROM_FIXTURE);
     let mut reg = [0u8; 0x20];
     let pr = reg.as_mut_ptr() as usize;
     data_padrao(pr);
@@ -978,7 +978,7 @@ unsafe extern "thiscall" fn capitao_guardado(this: usize, clube: usize, time: u3
         aviso_em(0xa8b908, 0x527);
         return 0;
     }
-    let linha: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = linha(this, clube, time);
     if k == -1 {
         return 0;
@@ -1010,7 +1010,7 @@ unsafe extern "thiscall" fn escolher_capitao(this: usize, clube: usize, pessoa: 
         aviso_em(0xa8b908, 0x581);
         return 0;
     }
-    let linha: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = linha(this, clube, time);
     if k == -1 {
         return 0;
@@ -1027,7 +1027,7 @@ unsafe extern "thiscall" fn comparar_escolher_capitao(this: usize, clube: usize,
     if clube == 0 || pessoa == 0 {
         return o(this, clube, pessoa, time);
     }
-    let linha: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = linha(this, clube, time);
     if k == -1 {
         return o(this, clube, pessoa, time);
@@ -1050,7 +1050,7 @@ unsafe fn cpx9_i(a: usize) -> i32 {
 
 /// A linha do clube na tabela tática (0x8982b0, stdcall(clube, humano); −1 sem linha).
 unsafe fn cpx9_linha(clube: usize, humano: u32) -> i32 {
-    let f: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let f: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     f(clube, humano)
 }
 
@@ -1109,12 +1109,12 @@ unsafe extern "thiscall" fn tirar_da_escalacao(this: usize, clube: usize, pessoa
         }
     }
     if papeis != 0 {
-        let da_linha: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> usize = core::mem::transmute(0x897dc0usize);
-        let extra: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x897ee0usize);
+        let da_linha: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> usize = core::mem::transmute(FN_TACTICS_GET_PLAYMAKER);
+        let extra: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(FN_TACTICS_SET_PLAYMAKER);
         // ponytail: a original empurra o tipo e o lado com sobra nos bytes altos (o deslocamento da linha e a pilha);
         // as chamadas leem só o byte baixo, e a cópia passa os valores limpos
-        let batedor: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x897990usize);
-        let marcar: unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(0x897bb0usize);
+        let batedor: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_TACTICS_GET_SET_PIECE_TAKER);
+        let marcar: unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_TACTICS_SET_SET_PIECE_TAKER);
         for qual in 0..2u32 {
             if da_linha(this, clube, qual, time) == pessoa {
                 extra(this, clube, qual, 0, time);
@@ -1160,7 +1160,7 @@ unsafe extern "thiscall" fn trocar_vagas_da_escalacao(this: usize, clube: usize,
     if l == -1 {
         return 0;
     }
-    let trocar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x90ba90usize);
+    let trocar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_UTILS_SWAP_BYTES);
     let inicio = cpx9_inicio(this, l);
     trocar(inicio + 2 + 4 * va as usize, inicio + 2 + 4 * vb as usize, 4);
     cpx9_soltar_copias(this, clube, time);
@@ -1213,7 +1213,7 @@ unsafe extern "thiscall" fn comparar_tem_copia_da_escalacao(this: usize, clube: 
 
 /// A linha do clube na tabela tática (0x8982b0, o `this` não é usado; −1 sem linha).
 unsafe fn cpq13_linha(clube: usize, time: u32) -> i32 {
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     linha(clube, time)
 }
 
@@ -1348,13 +1348,13 @@ unsafe extern "stdcall" fn peso_da_competicao(p: usize, cod: i8) -> u16 {
     let k = |a: usize| *(a as *const i32);
     // como na original: a primeira constante igual ao id decide (sem o código certo, vai aos códigos)
     let especial = |id: i32| -> u8 {
-        if id == k(0x9cf4a8) {
+        if id == k(KEY_NATION_SWEDEN) {
             (cod == 0x16 || cod == 0x20) as u8
-        } else if id == k(0x9cf408) {
+        } else if id == k(KEY_NATION_NORWAY) {
             (cod == 0x1e || cod == 0x20) as u8
-        } else if id == k(0x9cf2c0) {
+        } else if id == k(KEY_NATION_DENMARK) {
             (cod == 0x16 || cod == 0x1e) as u8
-        } else if id == k(0x9cf244) && cod == 7 {
+        } else if id == k(KEY_NATION_BELGIUM) && cod == 7 {
             2
         } else {
             0
@@ -1427,7 +1427,7 @@ unsafe extern "thiscall" fn vaga_extra_tatica(t: usize, clube: usize, qual: i8, 
     if clube == 0 || !(0..=1).contains(&qual) {
         return orig::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(367)(t, clube, qual, pessoa, humano);
     }
-    let linha_tatica: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha_tatica: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let l = linha_tatica(clube, humano);
     if l == -1 {
         return 0;
@@ -1461,7 +1461,7 @@ unsafe extern "stdcall" fn idades_da_selecao(comp: usize, tipo: i8, minima: *mut
         let c = *((comp + 0x14) as *const usize);
         if c != 0 {
             let id = *(c as *const i32);
-            if [0x9cf79c, 0x9cf7a0, 0x9cf7a4, 0x9cf7a8, 0x9cf7ac, 0x9cf790, 0x9cf8a0, 0x9cf78c, 0x9cf964usize]
+            if [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_ASIAN_CUP, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_ASIAN_GAMES, KEY_CLUB_COMP_CONFEDERATIONS_CUP]
                 .iter()
                 .any(|&a| *(a as *const i32) == id)
             {

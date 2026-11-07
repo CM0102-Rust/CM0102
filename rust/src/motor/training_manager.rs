@@ -28,7 +28,7 @@ const CQF7_DIVISORES: [u32; 5] = [0x3f80_0000, 0x3f99_999a, 0x3fb3_3333, 0x3fcc_
 /// A chance de conhecer (0x544410, cdecl: a ficha de não jogador e o byte do atributo; a original empurra o
 /// registrador com lixo em cima: a chamada lê o byte).
 unsafe fn cqf7_chance(f: usize, k: usize) -> i32 {
-    let c: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(0x544410usize);
+    let c: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
     c(f, cqf7_sb(f + k)) as i8 as i32 // a original estende o al (movsx)
 }
 
@@ -43,8 +43,8 @@ unsafe fn cqf7_chance(f: usize, k: usize) -> i32 {
 /// 3 (+0x10) (chance + +0x12) / 2; 4 (+0x11) a chance (divisões truncadas para zero; a chance 0x544410), o byte com
 /// sinal dividido pelo divisor da quantidade de categorias marcadas (1,0 a 2,0, float), truncado e posto em 1..20.
 unsafe extern "thiscall" fn distribuir_os_treinadores(this: usize, clube: usize, tecnico: usize) {
-    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if tecnico == 0 && humano(clube, 1, 1, 0, 0) == 0 {
         return;
     }
@@ -52,9 +52,9 @@ unsafe extern "thiscall" fn distribuir_os_treinadores(this: usize, clube: usize,
         return;
     }
     let tec = if tecnico == 0 { read_u32_as_usize(clube + 0xcf) } else { tecnico };
-    let comissao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x8b4cd0usize);
-    let auxiliar: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53cb80usize);
-    let treinadores: unsafe extern "C" fn(usize, *mut usize) -> u32 = core::mem::transmute(0x53cc30usize);
+    let comissao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACH_ASSIGNMENTS);
+    let auxiliar: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_CLUB_ASSISTANT);
+    let treinadores: unsafe extern "C" fn(usize, *mut usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_CLUB_COACHES);
     let t = comissao(this, tec);
     let aux = auxiliar(clube);
     let mut tr = [0usize; 5];
@@ -135,8 +135,8 @@ unsafe extern "thiscall" fn comparar_distribuir_os_treinadores(this: usize, club
     if clube == 0 {
         return o(this, clube, tecnico);
     }
-    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let mut reg = vec![(clube + 0x244, 1)];
     if (tecnico != 0 || humano(clube, 1, 1, 0, 0) != 0) && selecao(clube) == 0 {
         let tec = if tecnico == 0 { read_u32_as_usize(clube + 0xcf) } else { tecnico };
@@ -175,8 +175,8 @@ unsafe fn cqf7_entrada(this: usize, f: usize) -> usize {
 /// a vaga 1, com a carga do programa (0x8b4f60) na ficha de forma; por fim a comissão (0x8b2880 com o clube novo e o
 /// técnico).
 unsafe extern "thiscall" fn trocar_os_programas_do_elenco(this: usize, tec: usize, antigo: usize, novo: usize) {
-    let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
-    let gravar_carga: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x62c660usize);
+    let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
+    let gravar_carga: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_INJURY_SET_TRAINING_LOAD);
     let (mut gol, mut geral) = (-1i8, -1i8);
     if antigo != 0 {
         let mut v = [0usize; 50];
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn trocar_os_programas_do_elenco(this: usize, tec: usiz
     }
     let mut v = [0usize; 50];
     elenco(novo, v.as_mut_ptr(), 0);
-    let carga: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x8b4f60usize);
+    let carga: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_TRAINING_SCHEDULE_GET_TRAINING_LOAD);
     for &p in &v {
         if p == 0 {
             continue;
@@ -227,7 +227,7 @@ unsafe extern "thiscall" fn trocar_os_programas_do_elenco(this: usize, tec: usiz
         let c = carga(cqf7_programa(this, tec, *e));
         gravar_carga(read_u32_as_usize(0xb63d28), p, c as u32);
     }
-    let comissao: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x8b2880usize);
+    let comissao: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_TRAINING_MANAGER_UPDATE_COACH_ASSIGNMENTS);
     comissao(this, novo, tec);
 }
 
@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn comparar_trocar_os_programas_do_elenco(this: usize, 
     if novo != 0 && !(0..0x10).contains(&k) {
         return o(this, tec, antigo, novo);
     }
-    let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
+    let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
     let les = read_u32_as_usize(read_u32_as_usize(0xb63d28));
     let mut reg = Vec::new();
     for (clube, antigo_) in [(antigo, true), (novo, false)] {
@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn comparar_trocar_os_programas_do_elenco(this: usize, 
 /// { 0x8b2230 } (thiscall, ret 0, training_manager.cpp): os nomes padrão dos 167 programas de treino (0x8b50f0 em cada
 /// um, de 0x9b em 0x9b bytes), pela criação dos programas padrão (0x8b3930).
 unsafe extern "thiscall" fn nomes_padrao_dos_programas(this: usize) {
-    let nome: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x8b50f0usize);
+    let nome: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_TRAINING_SCHEDULE_SET_DEFAULT_NAME);
     for k in 0..0xa7 {
         nome(this + k * 0x9b);
     }
@@ -298,7 +298,7 @@ unsafe fn cqd8_i(a: usize) -> i32 {
 
 
 unsafe fn cqd8_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     f(n)
 }
 
@@ -310,7 +310,7 @@ unsafe fn cqd8_entrada(this: usize, p: usize) -> usize {
 /// O contrato da pessoa (CONTRACT_MANAGER 0x4cf5a0, thiscall no gerente [0xae1050]), guardado em [0xae1080] como a
 /// original faz a cada consulta.
 unsafe fn cqd8_contrato(p: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let c = f(read_u32_as_usize(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
     c
@@ -385,14 +385,14 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
     }
     let mut d = [0i8; 8]; // o progresso das cinco categorias (a original zera um dword e um byte)
     let e = cqd8_entrada(this, p);
-    let programa: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x8b39f0usize);
+    let programa: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_PLAYER_SCHEDULE);
     let prog = programa(this, p);
     if prog == 0 {
         aviso_em(0xa8ccd0, 0x1a3);
         return;
     }
-    let gravar_carga: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x62c660usize);
-    let achar: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(0x8b4b20usize);
+    let gravar_carga: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_INJURY_SET_TRAINING_LOAD);
+    let achar: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(FN_TRAINING_MANAGER_FIND_POSITION_TRAINING);
     let marca = (e + 5) as *mut u8;
     if *marca & 0x20 == 0 {
         let c = cqd8_contrato(p);
@@ -416,7 +416,7 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
                 1
             };
             *(e as *mut i8) = vaga;
-            let carga: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x8b4f60usize);
+            let carga: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_TRAINING_SCHEDULE_GET_TRAINING_LOAD);
             let v = carga(cqd8_programa_do_humano(this, tec, vaga));
             crate::comparacao::ramo("cqd_8 programa do humano");
             gravar_carga(read_u32_as_usize(0xb63d28), p, v as u32);
@@ -439,7 +439,7 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
             *(cqd8_entrada(this, p) as *mut u8) = if read_i8(f + 0xf) >= 0xf { 6 } else { 1 };
             let mut q = 0usize;
             let n = achar(this, p, &mut q);
-            let parar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8b4450usize);
+            let parar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_TRAINING_MANAGER_SET_POSITION_TRAINING_RATE);
             let mut k = 0i8;
             if n > 0 {
                 loop {
@@ -461,8 +461,8 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
     if *marca & 0x10 != 0 && npos == 0 {
         *marca &= 0xef;
     }
-    let nivel: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x8b4f50usize);
-    let fator: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x8b41d0usize);
+    let nivel: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_TRAINING_SCHEDULE_GET_CATEGORY_LEVEL);
+    let fator: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACHING_FACTOR);
     for k in 0..5usize {
         // ponytail: a original empurra a categoria num dword cujos bytes de cima sobram da pilha; a 0x8b4f50 e a
         // 0x8b41d0 leem o byte
@@ -510,15 +510,15 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
         if pular != 0 {
             voltas = 1;
         }
-        let ficha: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4cf5f0usize);
+        let ficha: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
         contrato_do_clube = ficha(read_u32_as_usize(0xae1050), p, read_u32_as_usize(p + 0x39) as u32);
     }
     let mut acabou = false;
     if npos > 0 {
-        let aptidao: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x8b4770usize);
-        let estado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
-        let reclamar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x867700usize);
-        let infeliz: unsafe extern "C" fn(usize) = core::mem::transmute(0x5885c0usize);
+        let aptidao: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRAINING_MANAGER_GET_POSITION_APTITUDE);
+        let estado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
+        let reclamar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_APPLY_EVENT_FLAGS);
+        let infeliz: unsafe extern "C" fn(usize) = core::mem::transmute(FN_NEWS_POST_PLAYER_UNHAPPY_WITH_TRAINING);
         let mut k = 0i8;
         let mut it = q + 7; // a taxa do item (+7); a nota em +6, a máscara em +4
         loop {
@@ -565,7 +565,7 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
             }
         }
     }
-    let aplicar: unsafe extern "thiscall" fn(usize, usize, *const i8) = core::mem::transmute(0x8b2be0usize);
+    let aplicar: unsafe extern "thiscall" fn(usize, usize, *const i8) = core::mem::transmute(FN_TRAINING_MANAGER_APPLY_TRAINING_PROGRESS);
     aplicar(this, p, d.as_ptr());
     if acabou {
         crate::comparacao::ramo("cqd_8 treino de posicao acabou");
@@ -589,7 +589,7 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
             }
         }
         if n0 != cqd8_i(this + 0x6525) {
-            let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+            let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
             qsort(read_u32_as_usize(this + 0x6521), read_u32_as_usize(this + 0x6525) as u32, 8, 0x8b4e00);
         }
     }
@@ -604,8 +604,8 @@ unsafe extern "thiscall" fn comparar_atualizar_o_treino_do_jogador(this: usize, 
     if p == 0 || cqd8_i(p) >= cqd8_i(0xae2364) || read_u32_as_usize(p + 0x61) == 0 {
         return o(this, p, pular);
     }
-    let programa: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x8b39f0usize);
-    let achar: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(0x8b4b20usize);
+    let programa: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_PLAYER_SCHEDULE);
+    let achar: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(FN_TRAINING_MANAGER_FIND_POSITION_TRAINING);
     let mut q = 0usize;
     if programa(this, p) == 0 || achar(this, p, &mut q) > 0 {
         return o(this, p, pular);
@@ -633,7 +633,7 @@ unsafe extern "thiscall" fn programa_de_treino_do_jogador(this: usize, p: usize)
         aviso_em(0xa8ccd0, 0x6ad);
         return 0;
     }
-    let estado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
+    let estado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
     let c = cqd8_contrato(p);
     if c != 0 && cqd8_clube(c) != 0 {
         let tec = read_u32_as_usize(cqd8_clube(cqd8_contrato(p)) + 0xcf);
@@ -704,7 +704,7 @@ unsafe fn cqd9_meio(e: usize, k: usize) -> i8 {
 }
 
 unsafe fn cqd9_aplicar(this: usize, p: usize, d: &[i8; 8]) {
-    let f: unsafe extern "thiscall" fn(usize, usize, *const i8) = core::mem::transmute(0x8b2be0usize);
+    let f: unsafe extern "thiscall" fn(usize, usize, *const i8) = core::mem::transmute(FN_TRAINING_MANAGER_APPLY_TRAINING_PROGRESS);
     f(this, p, d.as_ptr());
 }
 
@@ -766,7 +766,7 @@ unsafe extern "thiscall" fn mudanca_do_atributo_pelo_treino(this: usize, p: usiz
         return 0;
     }
     let e = cqd9_entrada(this, p);
-    let ler: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(0x5431e0usize);
+    let ler: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(FN_STAFF_GET_PLAYER_ATTRIBUTE);
     let antes = ler(p, atributo);
     let mut d = [0i8; 8];
     for k in 0..5 {
@@ -815,7 +815,7 @@ unsafe extern "thiscall" fn aptidao_para_a_posicao(this: usize, p: usize, mascar
         return 0;
     }
     let f = read_u32_as_usize(p + 0x61);
-    let nota_de: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(0x544380usize);
+    let nota_de: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_PLAYER_ATTRIBUTE_RATING);
     // ponytail: a original empurra o byte do atributo num registrador com os bytes de cima que sobram; a 0x544380 lê
     // o byte
     let nota = |o: usize| nota_de(f, *((f + o) as *const u8) as u32) as u8 as i8 as i32;
@@ -927,8 +927,8 @@ unsafe fn cpu8_vaga_do_humano(this: usize, pessoa: usize, vaga: usize) -> usize 
 /// [0xae23bc]), os dez programas: vagas 0 a 5 calculadas aqui (tipos −1, 0, 1, 2, 3, 4), 6 a 9 pela 0x8b3930 (tipos
 /// 5, 6, 7, 7). No fim os nomes padrão (0x8b2230). Chamadas pelo endereço (0x8b4e50 e 0x8b3930 nesta leva).
 unsafe extern "thiscall" fn programas_padrao(this: usize) {
-    let tipo: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(0x8b4e50usize);
-    let humano: unsafe extern "thiscall" fn(usize, usize, i8) -> usize = core::mem::transmute(0x8b3930usize);
+    let tipo: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(FN_TRAINING_SCHEDULE_SET_TYPE);
+    let humano: unsafe extern "thiscall" fn(usize, usize, i8) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_MANAGER_SCHEDULE);
     tipo(this, 0, 0);
     crate::comparacao::ramo("cpu_8 programas padrao");
     tipo(this + 0x9b, 1, 1); // cpu8: o programa geral do computador
@@ -946,7 +946,7 @@ unsafe extern "thiscall" fn programas_padrao(this: usize) {
             tipo(humano(this, pessoa, vaga), vaga, t);
         }
     }
-    let nomes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x8b2230usize);
+    let nomes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_TRAINING_MANAGER_SET_DEFAULT_SCHEDULE_NAMES);
     nomes(this);
 }
 
@@ -1021,7 +1021,7 @@ unsafe extern "thiscall" fn fator_do_treinador(this: usize, clube: usize, catego
     if cpt8_i(t) < cpt8_i(0xae2364).wrapping_sub(0x10) {
         return (t as u32 & 0xffff_0000) | 100; // cpt8: técnico do computador
     }
-    let comissao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x8b4cd0usize);
+    let comissao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACH_ASSIGNMENTS);
     let s = comissao(this, t);
     let (mut n, mut soma) = (0i8, 0i16);
     for k in 0..6usize {
@@ -1240,7 +1240,7 @@ unsafe extern "thiscall" fn aplicar_o_progresso(this: usize, pessoa: usize, d: u
         cpt9_baixo(e + 5, k);
     }
     // o treino de posição
-    let achar: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(0x8b4b20usize);
+    let achar: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(FN_TRAINING_MANAGER_FIND_POSITION_TRAINING);
     let mut p = 0usize;
     let n = achar(this, pessoa, &mut p);
     if n <= 0 {
@@ -1316,7 +1316,7 @@ unsafe extern "thiscall" fn achar_o_treino_de_posicao(this: usize, pessoa: usize
         return 0;
     }
     let chave = cpt9_i(pessoa);
-    let busca: unsafe extern "C" fn(*const i32, usize, usize, usize, usize) -> usize = core::mem::transmute(0x946464usize);
+    let busca: unsafe extern "C" fn(*const i32, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let base = read_u32_as_usize(this + 0x6521);
     let mut a = busca(&chave, base, read_u32_as_usize(this + 0x6525), 8, 0x8b4e00);
     if a == 0 {
@@ -1359,7 +1359,7 @@ unsafe extern "thiscall" fn comparar_achar_o_treino_de_posicao(this: usize, pess
 /// diário das pessoas (game_daily_staff_update 0x5ce2d0): 1 se algum item do treino de posição da pessoa (0x8b4b20) tem
 /// aprendizado (+7) acima de 50; senão 0.
 unsafe extern "thiscall" fn aprende_depressa(this: usize, pessoa: usize) -> u32 {
-    let achar: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(0x8b4b20usize);
+    let achar: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(FN_TRAINING_MANAGER_FIND_POSITION_TRAINING);
     let mut p = 0usize;
     let n = achar(this, pessoa, &mut p);
     for j in 0..n.max(0) as usize {
@@ -1414,7 +1414,7 @@ unsafe extern "thiscall" fn tirar_a_ficha_reservada(this: usize, id: *mut u32, n
     *id = read_u32_as_usize(read_u32_as_usize(this + 0x1c)) as u32;
     *nacao = read_u32_as_usize(read_u32_as_usize(this + 0x1c) + 4) as u32;
     *segunda = read_u32_as_usize(read_u32_as_usize(this + 0x1c) + 8) as u32;
-    let tirar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x7a82b0usize);
+    let tirar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_PLAYER_REGEN_REMOVE_SPARE_NON_PLAYER_RECORD);
     tirar(this, *id)
 }
 

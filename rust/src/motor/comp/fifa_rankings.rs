@@ -47,13 +47,13 @@ unsafe extern "thiscall" fn comparar_jogos_da_selecao_no_periodo(this: usize, na
 /// os totais dos anos andam uma casa (+0x14 → +0x28) e +0x14 zera. Por fim as pontuações (0x58dfc0) e as posições:
 /// a ordem (0x58d610) dá a posição + 1 em +0x10, com a anterior em +0x12; o vetor da ordem é liberado (0x9452ca).
 unsafe extern "thiscall" fn atualizar_ranking_da_fifa(this: usize, data: usize) {
-    let dia: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(0x54cf70usize);
-    let mes_de: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x54cfb0usize);
-    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    let pontuar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x58dfc0usize);
-    let ordem: unsafe extern "thiscall" fn(usize, *mut i32) -> usize = core::mem::transmute(0x58d610usize);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let dia: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(FN_DATE_GET_DAY_OF_MONTH);
+    let mes_de: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
+    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let pontuar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_FIFA_RANKINGS_RECALCULATE_SCORES);
+    let ordem: unsafe extern "thiscall" fn(usize, *mut i32) -> usize = core::mem::transmute(FN_FIFA_RANKINGS_COLLECT_RANKED_ORDER);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     if dia(data) != 0x12 {
         return;
     }
@@ -154,8 +154,8 @@ unsafe fn cpt2_entrada(this: usize, nacao: usize) -> usize {
 
 /// O mês e o ano do jogo `partida`: a data (0x549ef0) do dia do ano (+0x2a) e do ano (+0x28), o mês dela (0x54cfb0).
 unsafe fn cpt2_mes_e_ano(partida: usize) -> (u8, u16) {
-    let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
-    let mes_de: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x54cfb0usize);
+    let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
+    let mes_de: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
     let mut d = [0u8; 8];
     let p = data_nova(d.as_mut_ptr(), read_u16(partida + 0x2a) as u32, read_u16(partida + 0x28) as u32);
     (mes_de(p), read_u16(partida + 0x28))
@@ -173,10 +173,10 @@ unsafe extern "thiscall" fn resultado_no_historico(this: usize, nacao: usize, po
         let h = read_usize(e + 4);
         let n = cpt2_h(e + 8) as i32 * 5;
         let novo = if h != 0 {
-            let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
+            let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
             realocar(h, n as u32)
         } else {
-            let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+            let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
             alocar(n as u32)
         };
         *((e + 4) as *mut usize) = novo;
@@ -243,7 +243,7 @@ unsafe extern "thiscall" fn comparar_faixa_da_selecao(this: usize, nacao: usize)
 /// (sem resultados, o +0x18). A pontuação (+0xc, f32): (+0x14 + 5/6 de +0x18 + 4/6 de +0x1c + 3/6 de +0x20 + 2/6 de
 /// +0x24 + 1/6 de +0x28, cada parte truncada) × [0x96a350].
 unsafe extern "thiscall" fn pontuacoes_do_ranking(this: usize) {
-    let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54c8e0usize);
+    let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
     let fator = core::ptr::read_unaligned(0x96a350 as *const f64);
     let mut i = 0i32;
     if read_usize(0xae2350) as i32 <= 0 {
@@ -329,15 +329,15 @@ unsafe extern "C" fn indice_da_nacao_chave(comp: usize) -> u8 {
         };
     }
     let id = read_usize(comp);
-    let copa = [0x9cf79c, 0x9cf77c, 0x9cf774, 0x9cf770, 0x9cf780, 0x9cf76c, 0x9cf778]; // cpt4: a Copa e as eliminatorias
+    let copa = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_CONCACAF_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_EUROPEAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_SOUTH_AMERICAN_QUALIFYING_SECT]; // cpt4: a Copa e as eliminatorias
     if copa.iter().any(|&g| read_usize(g) == id) {
         return 0;
     }
-    let internacional: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x669ae0usize);
+    let internacional: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_IS_INTERNATIONAL_COMP);
     if internacional(comp) != 0 {
         return 1;
     }
-    if id == read_usize(0x9cf6e4) || id == read_usize(0x9cf7bc) {
+    if id == read_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP) || id == read_usize(KEY_CLUB_COMP_FIFA_CLUB_WORLD_CHAMPIONSHIP) {
         return 2;
     }
     for k in 0..0x23usize {
@@ -361,8 +361,8 @@ unsafe extern "C" fn comparar_indice_da_nacao_chave(comp: usize) -> u8 {
 /// (linha 0x1e3) e 0, sem gravar a conta. As entradas da tabela (0x2c bytes) das nações com seleção (+0x71 da nação,
 /// registros de 0x122 bytes em [0xae23a8]), ordenadas pela pontuação (qsort 0x945333 com 0x58e240); a conta em `conta`.
 unsafe extern "thiscall" fn ordem_do_ranking(this: usize, conta: *mut i32) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let v = alocar((read_usize(0xae2350) as u32).wrapping_mul(4));
     if v == 0 {
         aviso_em(0x9c74f4, 0x1e3);
@@ -392,7 +392,7 @@ unsafe extern "thiscall" fn comparar_ordem_do_ranking(this: usize, conta: *mut i
     }
     let mut c = 0i32;
     let v = ordem_do_ranking(this, &mut c);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let igual = v != 0 && c == *conta && (0..c as usize).all(|k| read_usize(r + k * 4) == read_usize(v + k * 4));
     PLACAR.registrar(igual, || format!("ordem_do_ranking conta original={} rust={}", *conta, c));
     liberar(v);

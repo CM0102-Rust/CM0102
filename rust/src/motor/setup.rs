@@ -3,9 +3,9 @@
 /// A caixa "Error" da carga sem volta (memória para os dados de execução): `aviso_do_setup(linha)`,
 /// 0x5cc7d0, 0x5a8f60 e `exit(-1)` (0x945934).
 unsafe fn fatal_da_carga(linha: u32) -> ! {
-    let fechar1: unsafe extern "C" fn() = core::mem::transmute(0x5cc7d0usize);
-    let fechar2: unsafe extern "C" fn() = core::mem::transmute(0x5a8f60usize);
-    let sair: unsafe extern "C" fn(i32) = core::mem::transmute(0x945934usize);
+    let fechar1: unsafe extern "C" fn() = core::mem::transmute(FN_GAME_FATAL_CLEANUP);
+    let fechar2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
+    let sair: unsafe extern "C" fn(i32) = core::mem::transmute(FN_CRT_EXIT);
     aviso_do_setup(linha);
     fechar1();
     fechar2();
@@ -16,7 +16,7 @@ unsafe fn fatal_da_carga(linha: u32) -> ! {
 /// A leitura do `general.dat` que falhou: a caixa "Load Game Error" com a linha e o texto (como a
 /// `caixa_do_save`) e o item fechado (0x932b00). Devolve 0, a resposta da carga.
 unsafe fn erro_na_carga(linha: u32, texto: usize, z: &mut usize) -> u32 {
-    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
+    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
     caixa_do_save(linha, texto, 0x9af3e0, 0x9af334);
     fechar_item(z);
     0
@@ -147,11 +147,11 @@ const PASSOS_DA_CARGA: [PassoDaCarga; 0x2b] = [
 unsafe fn cd_da_carga(exigir: bool) {
     let unidades: unsafe extern "system" fn(u32, *mut u8) -> u32 = core::mem::transmute(*(0x9670f8 as *const usize));
     let tipo: unsafe extern "system" fn(usize) -> u32 = core::mem::transmute(*(0x967100 as *const usize));
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let procurar: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(0x4c0aa0usize);
-    let fechar_busca: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x4c0c10usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x5e8290usize);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let procurar: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_FILE_FIND_FIRST);
+    let fechar_busca: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_FILE_FIND_CLOSE);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_GUI_SHOW_MESSAGE_BOX);
     // o cm0102-1080 vem sem a exigência do CD só na busca do começo: o jne do tipo (0x82aac4, 75 55) virou
     // nop e o test do achado (0x82ab07, 85 c0) virou xor (31 c0)
     let qualquer_unidade = exigir && *(0x82aac4 as *const u8) == 0x90;
@@ -229,29 +229,29 @@ unsafe fn cd_da_carga(exigir: bool) {
 /// 0x3e034 (0xc) não são alcançáveis (as comparações estão encadeadas em `jge`): ficam de fora. O laço
 /// de duas voltas da original ([esp+0x24]; a 1ª só põe o total 0x2d) roda o corpo uma vez.
 unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
-    let disco: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7a1820usize);
-    let memoria: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x7a1710usize);
-    let pasta: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(0x90bde0usize);
-    let data_padrao: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(0x54a110usize);
-    let copia_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
-    let liberar_tabelas: unsafe extern "C" fn() = core::mem::transmute(0x528080usize);
-    let carregar_banco: unsafe extern "C" fn(*const u8, u32) -> u32 = core::mem::transmute(0x524d10usize);
-    let traduzir: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let barra: unsafe extern "thiscall" fn(usize, *const u8, u32, u32, i32) = core::mem::transmute(0x802f80usize);
-    let limpar_temporarios: unsafe extern "C" fn(usize) = core::mem::transmute(0x90cd50usize);
-    let tamanho: unsafe extern "C" fn(*const u8, usize) -> i32 = core::mem::transmute(0x933860usize);
-    let desempacotar: unsafe extern "C" fn(*const u8, *const u8, usize) -> i32 = core::mem::transmute(0x933320usize);
-    let abrir_item: unsafe extern "C" fn(*const u8, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
-    let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> i32 = core::mem::transmute(0x932c30usize);
-    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
-    let relogio: unsafe extern "C" fn(*mut i32) -> i32 = core::mem::transmute(0x946ebbusize);
-    let reservar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let reputacao_inicial: unsafe extern "C" fn(u32) = core::mem::transmute(0x53db40usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let regras_fifa: unsafe extern "C" fn(*const u8) = core::mem::transmute(0x839760usize);
-    let ligar_regras: unsafe extern "C" fn(u32) = core::mem::transmute(0x58a890usize);
-    let existe: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x90c120usize);
+    let disco: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_OS_GET_FREE_DISK_SPACE_MB);
+    let memoria: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_OS_GET_FREE_MEMORY_MB);
+    let pasta: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
+    let data_padrao: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
+    let copia_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+    let liberar_tabelas: unsafe extern "C" fn() = core::mem::transmute(FN_DATABASE_FREE_ALL_TABLES);
+    let carregar_banco: unsafe extern "C" fn(*const u8, u32) -> u32 = core::mem::transmute(FN_LOAD_DATABASE_FROM_STREAM);
+    let traduzir: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let barra: unsafe extern "thiscall" fn(usize, *const u8, u32, u32, i32) = core::mem::transmute(FN_SCREENMANAGER_SEND_NETWORK_STATUS_MESSAGE);
+    let limpar_temporarios: unsafe extern "C" fn(usize) = core::mem::transmute(FN_UTILS_CLEAR_TEMP_FOLDER);
+    let tamanho: unsafe extern "C" fn(*const u8, usize) -> i32 = core::mem::transmute(FN_ZGET_MATCHING_SIZE);
+    let desempacotar: unsafe extern "C" fn(*const u8, *const u8, usize) -> i32 = core::mem::transmute(FN_ZEXTRACT_MATCHING_FILES);
+    let abrir_item: unsafe extern "C" fn(*const u8, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
+    let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> i32 = core::mem::transmute(FN_ZREAD);
+    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
+    let relogio: unsafe extern "C" fn(*mut i32) -> i32 = core::mem::transmute(FN_946EBB);
+    let reservar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let reputacao_inicial: unsafe extern "C" fn(u32) = core::mem::transmute(FN_DATABASE_SORT_CLUBS_BY_REPUTATION);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let regras_fifa: unsafe extern "C" fn(*const u8) = core::mem::transmute(FN_LOAD_FIFA_TRANSFER_RULES);
+    let ligar_regras: unsafe extern "C" fn(u32) = core::mem::transmute(FN_NEWS_POST_TRANSFER_SYSTEM_CHANGE);
+    let existe: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_UTILS_FILE_EXISTS);
     crate::comparacao::ramo("save carregar jogo");
     let u = |a: usize| *(a as *const u32);
     let sem_memoria = |minimo: i32| u(0x9cd1fc) != 0 && memoria() < minimo;
@@ -426,7 +426,7 @@ unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
             tecnicos_de_ferias_desfeitos();
         }
         if i == PASSOS_DA_CARGA.len() - 1 && v < 0x3e032 {
-            let acertar: unsafe extern "C" fn(usize) = core::mem::transmute(0x538bc0usize);
+            let acertar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_STAFF_NORMALISE_PLAYER_ATTRIBUTES);
             for p in 0..u(0xae2364) as i32 {
                 acertar(u(0xae23bc) as usize + 0x6e * p as usize);
             }
@@ -486,7 +486,7 @@ unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
                     return 0;
                 }
                 if k == 0x22 {
-                    let iniciar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x7e61c0usize);
+                    let iniciar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_RESERVECOMP_CREATE_SUB_COMPS);
                     iniciar(o);
                 }
             }
@@ -533,7 +533,7 @@ unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
 /// (gerente de telas, pessoa, −1).
 unsafe fn tecnicos_de_ferias_desfeitos() {
     let u = |a: usize| *(a as *const usize);
-    let um: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x787630usize);
+    let um: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWS_CLEAR_INBOX);
     for i in 0..0x10usize {
         let s = u(0xae23bc).wrapping_add(0x6e * ((*(0xae2364 as *const i32)).wrapping_sub(i as i32).wrapping_sub(1) as usize));
         if *((s + 0x5f) as *const u8) != 5 {
@@ -553,12 +553,12 @@ unsafe fn tecnicos_de_ferias_desfeitos() {
         *(u(s + 4) as *mut u8) = 0;
         *(u(s + 8) as *mut u8) = 0;
         *(u(s + 0xc) as *mut u8) = 0;
-        let acertar_data: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32) -> usize = core::mem::transmute(0x54a130usize);
+        let acertar_data: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32) -> usize = core::mem::transmute(FN_DATE_SET);
         acertar_data(s + 0x10, 1, 0, 0x7ae, -1);
         *((s + 0x18) as *mut u16) = 0x7ae;
         core::ptr::write_unaligned((s + 0x24) as *mut u32, 0);
         core::ptr::write_unaligned((s + 0x39) as *mut u32, 0);
-        let tela: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(0x7ff990usize);
+        let tela: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(FN_SCREENMANAGER_REMOVE_MANAGER_RECORD);
         tela(0xb74450, s, -1);
     }
 }
@@ -574,9 +574,9 @@ unsafe extern "C" fn comparar_carregar_jogo(caminho: *const u8) -> u32 {
 /// A caixa "Error" de Setup.cpp (`aviso_do_setup`) e o jogo para, como a original: 0x5cc7d0,
 /// 0x5a8f60 e `exit(-1)` (0x945934).
 unsafe fn erro_fatal_do_setup(linha: u32) -> ! {
-    let fechar1: unsafe extern "C" fn() = core::mem::transmute(0x5cc7d0usize);
-    let fechar2: unsafe extern "C" fn() = core::mem::transmute(0x5a8f60usize);
-    let sair: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(0x945934usize);
+    let fechar1: unsafe extern "C" fn() = core::mem::transmute(FN_GAME_FATAL_CLEANUP);
+    let fechar2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
+    let sair: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     aviso_do_setup(linha);
     fechar1();
     fechar2();
@@ -614,37 +614,37 @@ unsafe fn erro_fatal_do_setup(linha: u32) -> ! {
 ///   um fora de seleção (0x53b900) com nação de liga de frente (bit 2) e aceito por 0x544820: a
 ///   nação dele em +0x1a, os nomes (0x539c60, 0x53a1b0) em +4 e +8, e 0x826f20(pessoa, clube). 1.
 unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst: *const u8) -> u32 {
-    let pasta: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(0x90bde0usize);
-    let abrir: unsafe extern "C" fn(*const u8, usize) -> usize = core::mem::transmute(0x945b00usize);
-    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
-    let ler_linha: unsafe extern "C" fn(usize, *mut u8) -> i32 = core::mem::transmute(0x90cba0usize);
-    let ajeitar: unsafe extern "C" fn(*mut u8) = core::mem::transmute(0x90bb70usize);
-    let comeca: unsafe extern "C" fn(*const u8, usize, u32) -> i32 = core::mem::transmute(0x947120usize);
-    let procurar: unsafe extern "C" fn(*const u8, usize) -> usize = core::mem::transmute(0x945a60usize);
-    let comparar_n: unsafe extern "C" fn(*const u8, *const u8, u32) -> i32 = core::mem::transmute(0x946fa0usize);
-    let opcao: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x5d7c60usize);
-    let aplicar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5d8480usize);
-    let trocar_idioma: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x5d8020usize);
-    let carregar_banco: unsafe extern "C" fn(*const u8, u32) -> i32 = core::mem::transmute(0x524d50usize);
-    let nacoes_chave: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x667150usize);
-    let nome_da_nacao: unsafe extern "C" fn(usize) -> *const u8 = core::mem::transmute(0x5454c0usize);
-    let nacao_casa: unsafe extern "C" fn(usize, *const u8) -> i32 = core::mem::transmute(0x839340usize);
-    let idioma_existe: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x66ea50usize);
-    let idioma_no_banco: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x535930usize);
-    let criar_jogo: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x828110usize);
-    let juntar: unsafe extern "C" fn(*mut u8, usize, *const u8, *const u8, usize) = core::mem::transmute(0x945b13usize);
-    let gravar_jogo: unsafe extern "C" fn(*const u8, u32) -> u32 = core::mem::transmute(0x82e430usize);
-    let liberar: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x82ff40usize);
-    let copia_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
-    let acertar_data: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32) -> usize = core::mem::transmute(0x54a130usize);
-    let novo_humano: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x5fb810usize);
-    let ferias_do_humano: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x5fd2f0usize);
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    let aceita: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x544820usize);
-    let primeiro_nome: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x539c60usize);
-    let segundo_nome: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53a1b0usize);
-    let pos_humano: unsafe extern "C" fn(usize, usize) = core::mem::transmute(0x826f20usize);
+    let pasta: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
+    let abrir: unsafe extern "C" fn(*const u8, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
+    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
+    let ler_linha: unsafe extern "C" fn(usize, *mut u8) -> i32 = core::mem::transmute(FN_UTILS_READ_CONFIG_LINE);
+    let ajeitar: unsafe extern "C" fn(*mut u8) = core::mem::transmute(FN_UTILS_TRIM_CONTROL_CHARS);
+    let comeca: unsafe extern "C" fn(*const u8, usize, u32) -> i32 = core::mem::transmute(FN_947120);
+    let procurar: unsafe extern "C" fn(*const u8, usize) -> usize = core::mem::transmute(FN_CRT_STRSTR);
+    let comparar_n: unsafe extern "C" fn(*const u8, *const u8, u32) -> i32 = core::mem::transmute(FN_CRT_STRNCMP);
+    let opcao: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CONFIG_SET_OPTION);
+    let aplicar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CONFIG_APPLY_AND_SAVE);
+    let trocar_idioma: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CONFIG_SET_LANGUAGE);
+    let carregar_banco: unsafe extern "C" fn(*const u8, u32) -> i32 = core::mem::transmute(FN_LOAD_DATABASE_FROM_FILES);
+    let nacoes_chave: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_KEY_NATION_BUILD_TABLE);
+    let nome_da_nacao: unsafe extern "C" fn(usize) -> *const u8 = core::mem::transmute(FN_NATION_GET_ENGLISH_THREE_LETTER_NAME);
+    let nacao_casa: unsafe extern "C" fn(usize, *const u8) -> i32 = core::mem::transmute(FN_NATION_MATCHES_REGION_FILTER);
+    let idioma_existe: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_LANGLIB_IS_LANGUAGE_AVAILABLE);
+    let idioma_no_banco: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_DATABASE_LANGUAGE_FILE_EXISTS);
+    let criar_jogo: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_CREATE_GAME);
+    let juntar: unsafe extern "C" fn(*mut u8, usize, *const u8, *const u8, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
+    let gravar_jogo: unsafe extern "C" fn(*const u8, u32) -> u32 = core::mem::transmute(FN_SAVE_GAME_DATA);
+    let liberar: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_FREE_GAME_DATA);
+    let copia_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+    let acertar_data: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32) -> usize = core::mem::transmute(FN_DATE_SET);
+    let novo_humano: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_HUMAN_MANAGER_RESET_HUMAN_RECORD);
+    let ferias_do_humano: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SET_ON_HOLIDAY);
+    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let aceita: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_CLUB_CAN_BE_MANAGED);
+    let primeiro_nome: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_PICK_FIRST_NAME_FOR_NATION);
+    let segundo_nome: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_PICK_SECOND_NAME_FOR_NATION);
+    let pos_humano: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_APPOINT_HUMAN_MANAGER_TO_CLUB);
     crate::comparacao::ramo("save criar jogo pela configuracao");
     let opcoes = || *(0xae3138 as *const usize);
     let u = |a: usize| *(a as *const u32);
@@ -893,11 +893,11 @@ unsafe extern "C" fn comparar_criar_jogo_pela_configuracao(cfg: *const u8, qst: 
 /// `corpo` (com o texto de 0xae24d0) traduzido em 0xae26c4 e a caixa 0x5e8290. O jogo segue
 /// ([0xb67a34] fica como está, ao contrário do `aviso_do_setup`).
 unsafe fn caixa_do_save(linha: u32, texto: usize, titulo: usize, corpo: usize) {
-    let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
-    let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x90d130usize);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let traduzir: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x5e8290usize);
+    let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
+    let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let traduzir: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_GUI_SHOW_MESSAGE_BOX);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
     separar(0xa801dc, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
     let s = versao(nome.as_mut_ptr(), ext.as_mut_ptr(), linha);
@@ -990,26 +990,26 @@ const PASSOS_DO_SAVE: [PassoDoSave; 0x23] = [
 /// O resumo é um buffer zerado aqui; na original, o que o 0x591f80 não escreve (o clube dos 16
 /// técnicos não humanos, o resto dos textos) é sobra da pilha dela, gravada no `general.dat`.
 unsafe extern "C" fn gravar_jogo(caminho: *const u8, a4: u32) -> u32 {
-    let disco: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7a1820usize);
-    let memoria: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x7a1710usize);
-    let apagar: unsafe extern "C" fn(*const u8) -> i32 = core::mem::transmute(0x94643ausize);
-    let pasta: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(0x90bde0usize);
-    let existe: unsafe extern "C" fn(*const u8) -> i32 = core::mem::transmute(0x90c120usize);
-    let separar: unsafe extern "C" fn(*const u8, *mut u8, *mut u8, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
-    let juntar: unsafe extern "C" fn(*mut u8, *const u8, *const u8, usize, *const u8) = core::mem::transmute(0x945b13usize);
-    let renomear: unsafe extern "C" fn(*const u8, *const u8) -> i32 = core::mem::transmute(0x945ba4usize);
-    let gravar_banco: unsafe extern "C" fn(*const u8, u32, u32) -> u32 = core::mem::transmute(0x524d30usize);
-    let traduzir: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let barra: unsafe extern "thiscall" fn(usize, *const u8, u32, u32, i32) = core::mem::transmute(0x802f80usize);
-    let abrir_item: unsafe extern "C" fn(*const u8, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
-    let gravar: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
-    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
-    let montar_resumo: unsafe extern "C" fn(*mut u8) = core::mem::transmute(0x591f80usize);
-    let empacotar: unsafe extern "C" fn(*const u8, *const u8, usize, u32, u32) -> i32 = core::mem::transmute(0x933610usize);
-    let competicoes: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x6692f0usize);
-    let hall_da_fama: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5f00c0usize);
-    let regras_fifa: unsafe extern "C" fn(*const u8) = core::mem::transmute(0x8395b0usize);
-    let copia_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
+    let disco: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_OS_GET_FREE_DISK_SPACE_MB);
+    let memoria: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_OS_GET_FREE_MEMORY_MB);
+    let apagar: unsafe extern "C" fn(*const u8) -> i32 = core::mem::transmute(FN_CRT_REMOVE);
+    let pasta: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
+    let existe: unsafe extern "C" fn(*const u8) -> i32 = core::mem::transmute(FN_UTILS_FILE_EXISTS);
+    let separar: unsafe extern "C" fn(*const u8, *mut u8, *mut u8, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
+    let juntar: unsafe extern "C" fn(*mut u8, *const u8, *const u8, usize, *const u8) = core::mem::transmute(FN_CRT_MAKEPATH);
+    let renomear: unsafe extern "C" fn(*const u8, *const u8) -> i32 = core::mem::transmute(FN_CRT_RENAME);
+    let gravar_banco: unsafe extern "C" fn(*const u8, u32, u32) -> u32 = core::mem::transmute(FN_SAVE_DATABASE_FOR_GAME);
+    let traduzir: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let barra: unsafe extern "thiscall" fn(usize, *const u8, u32, u32, i32) = core::mem::transmute(FN_SCREENMANAGER_SEND_NETWORK_STATUS_MESSAGE);
+    let abrir_item: unsafe extern "C" fn(*const u8, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
+    let gravar: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
+    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
+    let montar_resumo: unsafe extern "C" fn(*mut u8) = core::mem::transmute(FN_BUILD_SAVE_GAME_SUMMARY);
+    let empacotar: unsafe extern "C" fn(*const u8, *const u8, usize, u32, u32) -> i32 = core::mem::transmute(FN_ZADD_MATCHING_FILES);
+    let competicoes: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_KEY_NATION_SAVE_ALL_COMPS);
+    let hall_da_fama: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_HALLOFFAME_SAVE);
+    let regras_fifa: unsafe extern "C" fn(*const u8) = core::mem::transmute(FN_SAVE_FIFA_TRANSFER_RULES);
+    let copia_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     crate::comparacao::ramo("save gravar jogo");
     let opcoes = || *((*(0xae3138 as *const usize) + 4) as *const u32);
     let tipo = || if opcoes() & 0x8000 != 0 { 3u32 } else { 4 };
@@ -1225,7 +1225,7 @@ unsafe extern "C" fn filtro_do_jogo_salvo(caminho: usize) -> u32 {
     if caminho == 0 {
         return orig::<unsafe extern "C" fn(usize) -> u32>(565)(caminho);
     }
-    let id_do_conteiner: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x9331c0usize);
+    let id_do_conteiner: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_ZGET_ARCHIVE_ID);
     let id = id_do_conteiner(caminho);
     (id & 0xffff0000) | if id != 0x16 { 2 } else { 1 }
 }
@@ -1250,8 +1250,8 @@ unsafe extern "C" fn filtro_do_inicio_rapido(caminho: usize) -> u32 {
     if caminho == 0 {
         return orig::<unsafe extern "C" fn(usize) -> u32>(566)(caminho);
     }
-    let id_do_conteiner: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x9331c0usize);
-    let versao_valida: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x838eb0usize);
+    let id_do_conteiner: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_ZGET_ARCHIVE_ID);
+    let versao_valida: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_VALID_SAVED_GAME_VERSION);
     crate::comparacao::ramo("save filtro do inicio rapido");
     let id = id_do_conteiner(caminho);
     if id != 0x17 {
@@ -1273,11 +1273,11 @@ unsafe extern "C" fn comparar_filtro_do_inicio_rapido(caminho: usize) -> u32 {
 /// 0xae28bc, a mensagem traduzida (0x9af334) em 0xae26c4 e a caixa 0x5e8290. Ao contrário do
 /// `aviso_em`, não zera [0xb67a34].
 unsafe fn erro_de_carga_do_setup(linha: u32, motivo: usize) {
-    let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
-    let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x90d130usize);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let traduzir: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x5e8290usize);
+    let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
+    let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let traduzir: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_GUI_SHOW_MESSAGE_BOX);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
     separar(0xa801dc, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
     // a 0x90d130 ignora os argumentos (devolve a versão); o sprintf da original lê nome, extensão,
@@ -1297,11 +1297,11 @@ unsafe fn erro_de_carga_do_setup(linha: u32, motivo: usize) {
 /// NÃO é fechado (o ZFILE e o arquivo ficam abertos). O quadro SEH da original só protege a data
 /// local (0x54a110, sem destrutor), que cai dentro do resumo (+0xf64) e é sobrescrita pela leitura.
 unsafe extern "C" fn versao_do_jogo_salvo_valida(caminho: usize) -> u32 {
-    let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
-    let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
-    let ler_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(0x932c30usize);
-    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
-    let versao: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(0x90d130usize);
+    let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
+    let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
+    let ler_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZREAD);
+    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
+    let versao: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     crate::comparacao::ramo("save versao do jogo salvo");
     let mut resumo = [0u8; 0xf74];
     let mut v = 0i32;
@@ -1347,10 +1347,10 @@ unsafe extern "C" fn comparar_versao_do_jogo_salvo_valida(caminho: usize) -> u32
 /// Setup.cpp, linha) em 0xae24d0, a caixa 0x5e8290 e [0xb67a34] = 0. Como o `aviso_em`, mas com os
 /// argumentos que o sprintf da original lê da pilha (nome, extensão e linha) passados explícitos.
 unsafe fn aviso_do_setup(linha: u32) {
-    let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
-    let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x90d130usize);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x5e8290usize);
+    let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
+    let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_GUI_SHOW_MESSAGE_BOX);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
     separar(0xa801dc, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
     let s = versao(nome.as_mut_ptr(), ext.as_mut_ptr(), linha);
@@ -1365,9 +1365,9 @@ unsafe fn aviso_do_setup(linha: u32) {
 /// ou escrita que falha: a caixa "Error" (Setup.cpp 0x3b24, 0x3b2c, 0x3b32, 0x3b38); nas escritas,
 /// depois da caixa o item é fechado. A original não devolve nada (`eax` sobra).
 unsafe extern "C" fn gravar_regras_fifa(save: usize) {
-    let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
-    let gravar: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(0x932e10usize);
-    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
+    let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
+    let gravar: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZWRITE);
+    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
     crate::comparacao::ramo("save gravar regras fifa");
     if save == 0 {
         aviso_do_setup(0x3b24);
@@ -1402,9 +1402,9 @@ unsafe extern "C" fn comparar_gravar_regras_fifa(save: usize) {
 /// regra em vigor [0xa83608] vira 5. Fecha o item. Erros: a caixa "Error" (Setup.cpp 0x3b4f, 0x3b57,
 /// 0x3b5d, 0x3b63), como na gravação.
 unsafe extern "C" fn carregar_regras_fifa(save: usize) {
-    let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
-    let ler_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(0x932c30usize);
-    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
+    let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
+    let ler_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZREAD);
+    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
     crate::comparacao::ramo("save carregar regras fifa");
     if save == 0 {
         aviso_do_setup(0x3b4f);
@@ -1461,12 +1461,12 @@ unsafe fn copiar_texto(destino: *mut u8, fonte: *const u8) {
 /// - +0xf64 a data do jogo (0x417c10 de 0xae2c90), +0x7d0 a versão (0x90d130), +0xf6c o tempo de
 ///   jogo ([0xdd7140] += time() − [0xdd7144]; [0xdd7144] = time()) e +0xf70 o time().
 unsafe extern "C" fn montar_resumo_do_save(resumo: *mut u8) {
-    let formatar: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let traduzir: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let nome_do: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(0x53dba0usize);
-    let copia_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
-    let versao: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(0x90d130usize);
-    let relogio: unsafe extern "C" fn(*mut i32) -> i32 = core::mem::transmute(0x946ebbusize);
+    let formatar: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let traduzir: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let nome_do: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
+    let copia_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+    let versao: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
+    let relogio: unsafe extern "C" fn(*mut i32) -> i32 = core::mem::transmute(FN_946EBB);
     let mut nacao = [0u8; 100];
     *resumo = 0;
     *resumo.add(0x3e8) = 0;

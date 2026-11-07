@@ -18,7 +18,7 @@ unsafe fn cpw5_pessoa(id: i32) -> usize {
 /// pessoa (id em +0) abaixo da conta de pessoas [0xae2364] vai para as notas do mês (0x767fa0).
 unsafe extern "thiscall" fn guardar_notas_da_partida(this: usize, jogo: usize, partida: usize) {
     let _ = jogo;
-    let nota: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x767fa0usize);
+    let nota: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_MONTH_RATINGS_ADD_PLAYER_RATING);
     let mut lado = partida.wrapping_add(0x190);
     for l in 0..2 { // cpw5: os dois lados
         for k in 0..0x14usize {
@@ -84,10 +84,10 @@ unsafe extern "thiscall" fn nota_do_jogador_no_mes(this: usize, e: usize) {
         write_u32(this + 8, novo as u32);
         let bytes = (novo as u32).wrapping_mul(12);
         tab = if tab == 0 {
-            let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+            let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
             malloc(bytes)
         } else {
-            let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
+            let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
             realloc(tab, bytes)
         };
         if tab == 0 {
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn comparar_nota_do_jogador_no_mes(this: usize, e: usiz
 /// os acima dela só contam e o mais novo só vale depois de 3 contados; com liga, a liga atual do clube da pessoa (+0x39,
 /// +0x57) também tem de ser a pedida. Nenhum: 0.
 unsafe extern "thiscall" fn melhor_do_mes(this: usize, liga: i32, idade: u32) -> usize {
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     crate::comparacao::ramo("cpw_5 ordenou as notas");
     ordenar(read_usize(this), read_usize(this + 4) as u32, 0xc, 0x768200); // cpw5: ordena pela média
     let tab = read_usize(this);

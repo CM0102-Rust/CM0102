@@ -25,7 +25,7 @@ unsafe fn cqs9_conta(this: usize, k: i16) -> i32 {
 unsafe fn cqs9_inscritos(this: usize) -> i32 {
     const F: usize = 0xaa19e0;
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x91);
-    let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
+    let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
     let l = zerada(0xa1, 6);
     write_u32_from_usize(this + 0xa7, l);
     if l == 0 {
@@ -39,7 +39,7 @@ unsafe fn cqs9_inscritos(this: usize) -> i32 {
     if (read_u32_as_usize(0xae235c) as i32) > 0 {
         loop {
             let c = base + i as u16 as usize * 0x245;
-            if read_u32_as_usize(c + 0x1db) == read_u32_as_usize(0x9cf6f0) {
+            if read_u32_as_usize(c + 0x1db) == read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) {
                 let e = k as i32 as usize * 6;
                 k = k.wrapping_add(1);
                 write_u32_from_usize(read_u32_as_usize(this + 0xa7) + e, c);
@@ -85,7 +85,7 @@ unsafe fn cqs9_inscritos(this: usize) -> i32 {
         write_u32_from_usize(read_u32_as_usize(this + 0xa7) + k as i32 as usize * 6 - 6, 0);
         k = k.wrapping_sub(1);
     }
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     ordenar(read_u32_as_usize(this + 0xa7), k as i32 as u32, 6, 0x522190);
     let b2 = *((this + 0xb2) as *const i8);
     if b2 < 0 || b2 % 2 != 0 {
@@ -95,7 +95,7 @@ unsafe fn cqs9_inscritos(this: usize) -> i32 {
     core::ptr::write_unaligned((this + 0x36) as *mut i16, 0);
     let n = k.wrapping_add(0x1b);
     core::ptr::write_unaligned((this + 0x38) as *mut i16, n);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar((n as i32 * 6) as u32);
     write_u32_from_usize(this + 0x14, t);
     if t == 0 {
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn comparar_cqs9_uefa_inscritos(this: usize) -> i32 {
     let ((ao, to), (ar, tr)) = (lo.get(), lr.get());
     let igual_em = |x: usize, y: usize, n: usize| (x == 0 && y == 0) || (x != 0 && y != 0 && core::slice::from_raw_parts(x as *const u8, n) == core::slice::from_raw_parts(y as *const u8, n));
     let listas = igual_em(ao, ar, 0xa1 * 6) && (a != 1 || igual_em(to, tr, read_i16(this + 0x36).max(0) as usize * 6));
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     if ar != 0 && ar != ao {
         soltar(ar);
     }

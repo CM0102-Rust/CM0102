@@ -18,13 +18,13 @@ unsafe fn cqr10_sorteado(this: usize, k: usize) -> usize {
 /// push; add esp, 4 -> cdecl) e zerada e +0x45 = 1. Um erro dá a caixa da linha e segue. Depois o dia de liga (0x6847c0: push completo; push
 /// hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela repassa.
 unsafe extern "thiscall" fn cqr10_libertadores_dia(this: usize, hoje: usize, completo: u32) -> u32 {
-    let clubes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4c3f40usize);
-    let primeiro: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x4c37a0usize);
-    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
-    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
-    let fase: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(0x4c3b10usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x6847c0usize);
+    let clubes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CONMEBOLLIBER_SELECT_QUALIFIED_CLUBS);
+    let primeiro: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_CONMEBOLLIBER_BUILD_FIRST_GROUP_TABLE);
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
+    let fase: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(FN_CONMEBOLLIBER_CREATE_GROUP_STAGE);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     if read_u32_as_usize(this + 0x45) == 0 && completo != 0 {
         let dia = read_i16(this + 0xb6) as u16; // cqr10: o dia do sorteio
         let ano = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16);
@@ -82,9 +82,9 @@ unsafe extern "thiscall" fn comparar_cqr10_libertadores_dia(this: usize, hoje: u
 /// i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0)
 /// e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
 unsafe extern "thiscall" fn cqr10_libertadores_primeiro_grupo(this: usize) -> u32 {
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 4);
     let t = novo(0xec);
     write_u32_from_usize(this + 0xb1, t);
@@ -135,13 +135,13 @@ unsafe extern "thiscall" fn comparar_cqr10_libertadores_primeiro_grupo(this: usi
 /// que o construtor não lê: a cópia passa os valores limpos) em [+0xc][g]; o vetor e a tabela das rodadas liberados
 /// (0x9452ca). Sem fase: a caixa da linha 0x22e e 0. Com ela: a notícia do grupo (0x684230 na fase), +0x30 = g e 1.
 unsafe extern "thiscall" fn cqr10_libertadores_grupo(this: usize, g: i32) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
-        core::mem::transmute(0x68b100usize);
+        core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let times = alocar(((read_i16(this + 0x3e) as i32) << 2) as u32);
     if times == 0 {
         aviso_em(0x9a7de4, 0x218);
@@ -252,7 +252,7 @@ unsafe fn cqj11_regras(this: usize, g: &Cqj11Regras, dia: u32, vitoria: u8) -> u
             core::ptr::write_unaligned((this + o) as *mut u32, v);
         }
     }
-    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
+    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     // ponytail: o ano vai num registrador que pode ter lixo nos 16 bits altos; a 0x549f70 o lê como palavra
     data(d.as_mut_ptr(), dia, g.mes, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32, g.semana);
@@ -271,7 +271,7 @@ unsafe fn cqj11_regras(this: usize, g: &Cqj11Regras, dia: u32, vitoria: u8) -> u
 /// O plano: os campos de `g`, a palavra da data (calculada antes numa Date local pela 0x549f70, sem efeito fora dela),
 /// +0xb8 = 0, o prêmio e a devolução 1.
 unsafe fn cqj11_confere(nome: &str, this: usize, g: &Cqj11Regras, o: impl FnOnce() -> u32) -> u32 {
-    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
+    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     data(d.as_mut_ptr(), g.dia, g.mes, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32, g.semana);
     let palavra = core::ptr::read_unaligned(d.as_ptr() as *const u16);
@@ -396,8 +396,8 @@ unsafe fn cqk11_inscritos(this: usize, max: i32, saida: &mut [usize; 32]) -> i32
 /// linha 0x297 e devolve 0; senão a lista embaralhada (0x4afb40(lista, 32): push n; push lista; add esp, 8 -> cdecl; 3 ×
 /// 32 trocas sorteadas) e devolve 1.
 unsafe extern "thiscall" fn cqk11_libertadores_classificados(this: usize) -> u32 {
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x4afb40usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x20);
     let lista = novo(0x80);
     core::ptr::write_unaligned((this + 0xee) as *mut u32, lista as u32);
@@ -428,7 +428,7 @@ unsafe extern "thiscall" fn comparar_cqk11_libertadores_classificados(this: usiz
     if cqk11_inscritos(this, 0x20, &mut v) != 0x20 {
         return o(this); // ponytail: as caixas de erro: só a original
     }
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     let (ee, f2) = (read_u32_as_usize(this + 0xee), read_u32_as_usize(this + 0xf2));
     let r = o(this);
@@ -490,16 +490,16 @@ unsafe extern "thiscall" fn cqk11_libertadores_registros(this: usize, clube: usi
             }
             1 => {
                 final_(0x86a800);
-                let mundial = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(0x9cf6e4).wrapping_mul(4)));
+                let mundial = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4)));
                 let t = read_u32_as_usize(mundial + 0xa7);
                 let nacao = read_u32_as_usize(read_u32_as_usize(t) + 0x53);
                 crate::comparacao::ramo("cqk_11 campeao da libertadores");
-                if nacao != 0 && read_u32_as_usize(read_u32_as_usize(nacao + 0x71)) == read_u32_as_usize(0x9cfa1c) {
+                if nacao != 0 && read_u32_as_usize(read_u32_as_usize(nacao + 0x71)) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA) {
                     core::ptr::write_unaligned(t as *mut u32, clube as u32); // cqk11: o campeão na vaga sul-americana
                 } else {
                     core::ptr::write_unaligned((t + 6) as *mut u32, clube as u32);
                 }
-                let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
+                let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
                 arquivar(read_u32_as_usize(mundial + 8), 1);
                 let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(mundial) + 0x5c));
                 prever(mundial);
@@ -519,10 +519,10 @@ unsafe extern "thiscall" fn comparar_cqk11_libertadores_registros(this: usize, c
     let titulo = fase as u8 == 7 && desfecho as u8 == 1;
     let mut vaga = 0usize;
     if titulo {
-        let mundial = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(0x9cf6e4).wrapping_mul(4)));
+        let mundial = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4)));
         let t = read_u32_as_usize(mundial + 0xa7);
         let nacao = read_u32_as_usize(read_u32_as_usize(t) + 0x53);
-        vaga = if nacao != 0 && read_u32_as_usize(read_u32_as_usize(nacao + 0x71)) == read_u32_as_usize(0x9cfa1c) { t } else { t + 6 };
+        vaga = if nacao != 0 && read_u32_as_usize(read_u32_as_usize(nacao + 0x71)) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA) { t } else { t + 6 };
     }
     let r = o(this, clube, desfecho, fase, a4, jogo, a6);
     let igual = r == 0 && (!titulo || read_u32_as_usize(vaga) == clube);
@@ -543,7 +543,7 @@ unsafe extern "thiscall" fn cqk11_libertadores_fase_seguinte(this: usize) {
     core::ptr::write_unaligned((this + 0x30) as *mut i32, f);
     if f == 7 { // cqk11: o mata-mata depois dos sete grupos
         crate::comparacao::ramo("cqk_11 mata-mata da libertadores");
-        let mata: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4c3d10usize);
+        let mata: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CONMEBOLLIBER_CREATE_KNOCKOUT_STAGE);
         mata(this);
     }
 }

@@ -1,6 +1,6 @@
 # Mutacoes da leva78 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva78.py
 MUTACOES = [
-    ('c_tres', "    if id == g(0x9cf6b0) || id == g(0x9cf5d8) || id == g(0x9cf548) {", "    if id == g(0x9cf6b0) || id == g(0x9cf5d8) {"),
+    ('c_tres', "    if id == g(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) || id == g(KEY_CLUB_COMP_FRENCH_CFA) || id == g(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION) {", "    if id == g(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) || id == g(KEY_CLUB_COMP_FRENCH_CFA) {"),
     ('c_107', "(id as usize).wrapping_mul(107)).wrapping_add(0x5d)", "(id as usize).wrapping_mul(108)).wrapping_add(0x5d)"),
     ('c_fase', "    if c == 0 || byte(c, 0x43) != 2 || *((c + 0x3e) as *const u16) == 0 {", "    if c == 0 || *((c + 0x3e) as *const u16) == 0 {"),
     ('c_rodadas', "    if c == 0 || byte(c, 0x43) != 2 || *((c + 0x3e) as *const u16) == 0 {", "    if c == 0 || byte(c, 0x43) != 2 {"),

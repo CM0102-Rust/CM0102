@@ -37,7 +37,7 @@ unsafe extern "thiscall" fn premiar_o_melhor_do_mes(this: usize, notas: usize, i
             -1
         }
     };
-    let melhor: unsafe extern "thiscall" fn(usize, i32, u32) -> usize = core::mem::transmute(0x768130usize);
+    let melhor: unsafe extern "thiscall" fn(usize, i32, u32) -> usize = core::mem::transmute(FN_MONTH_RATINGS_FIND_BEST_PLAYER);
     let r = melhor(notas, liga, idade);
     if r == 0 {
         return;
@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn premiar_o_melhor_do_mes(this: usize, notas: usize, i
     let clube = read_usize(cpw6_pessoa(id) + 0x39);
     let ano = (tabela & 0xffff0000) | read_i16(notas + 0xd) as u16 as u32;
     let mes = read_u8(notas + 0xc) as u32;
-    let gravar: unsafe extern "thiscall" fn(usize, i32, i32, u32, u32) = core::mem::transmute(0x7671c0usize);
+    let gravar: unsafe extern "thiscall" fn(usize, i32, i32, u32, u32) = core::mem::transmute(FN_MONTH_AWARD_SET_WINNER);
     if clube != 0 {
         gravar(this, id, cpw6_i(clube), (ano & 0xffffff00) | mes, ano);
     } else {
@@ -67,7 +67,7 @@ unsafe fn cpw6_reputacao(pessoa: usize, clube: usize, nac: u32, mundo: u32, joga
     if CPW6_ENSAIO {
         return reputacao_do_premiado(pessoa, clube, nac, mundo, jogador);
     }
-    let f: unsafe extern "C" fn(usize, usize, u32, u32, u32) = core::mem::transmute(0x412f00usize);
+    let f: unsafe extern "C" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_AWARD_RAISE_WINNER_REPUTATION);
     f(pessoa, clube, nac, mundo, jogador);
 }
 
@@ -102,11 +102,11 @@ unsafe extern "thiscall" fn gravar_vencedor_do_mes(this: usize, id: i32, clube_i
     if CPW6_ENSAIO {
         return;
     }
-    let noticia: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x767330usize);
+    let noticia: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_MONTH_AWARD_POST_WINNER_NEWS);
     noticia(this, (this as u32 & 0xffffff00) | k as u32);
     let cid = cpw6_i(v + 0x21);
     let clube = if cid != -1 { cpw6_clube(cid) } else { 0 };
-    let registro: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x86c8c0usize);
+    let registro: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_MONTH_AWARD_RECORD);
     registro(read_usize(0xdd7f00), cpw6_pessoa(cpw6_i(v + 0x1d)), clube, read_usize(this + 5) as u32, mes, ano);
 }
 
@@ -202,7 +202,7 @@ unsafe extern "C" fn reputacao_do_premiado(pessoa: usize, clube: usize, nac: u32
         cpw6_teto_e_piso(p + 0xb, nac);
         let listas = read_usize(read_usize(0xde1f54) + 0x856);
         if listas != 0 && !CPW6_ENSAIO {
-            let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x842c00usize);
+            let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_SHORTLIST_MANAGER_ADD_PLAYER_TO_CLUB_SHORTLISTS);
             f(listas, pessoa, 1);
         }
         return;

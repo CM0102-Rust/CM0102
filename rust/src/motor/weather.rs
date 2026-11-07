@@ -7,7 +7,7 @@ unsafe fn cpu5_i(a: usize) -> i32 {
 
 
 unsafe fn cpu5_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     f(n)
 }
 
@@ -38,10 +38,10 @@ unsafe fn cpu5_adiar_se_nao_zero(n: i32) -> u8 {
 /// graus, estádio descoberto (+0x4d) de até 20000 lugares: sorteio por lugares e mandante (+0x64), zero = 9; chuva 8
 /// (até 15000 lugares) e 9 (pelo vento 4 e por 10000 lugares): uma cadeia de sorteios que devolve 0, 5 ou 6.
 unsafe extern "thiscall" fn adiar_pelo_clima(this: usize, jogo: usize) -> u8 {
-    let chave: unsafe extern "C" fn(usize) -> i8 = core::mem::transmute(0x669360usize);
-    let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
-    let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
-    let clima: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x923010usize);
+    let chave: unsafe extern "C" fn(usize) -> i8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
+    let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
+    let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_FINANCE_GET_WEALTH_BAND);
+    let clima: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_WEATHER_GET_MATCH_WEATHER);
     let est = read_usize(jogo + 0x18);
     if est == 0 || read_usize(est + 0x38) == 0 || read_usize(est + 0x3c) == 0 || read_usize(jogo + 0x14) == 0 {
         return 0;
@@ -183,7 +183,7 @@ unsafe extern "thiscall" fn financas_do_clube(this: usize, clube: usize) -> usiz
     if clube == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(1207)(this, clube);
     }
-    let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
+    let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut eh_a: u32 = 0;
     let mut c = clube;
     let p = parceiro(clube, &mut eh_a, 1);
@@ -209,8 +209,8 @@ unsafe extern "thiscall" fn comparar_financas_do_clube(this: usize, clube: usize
 /// 0x85ba1b, 0x85c4ba, 0x85ddf3, 0x85df26): pela data (+4, Date::operator< 0x456770 e > 0x456740), depois pelo id do
 /// estádio (+0).
 unsafe extern "C" fn ordem_das_reservas_do_estadio(a: usize, b: usize) -> i32 {
-    let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
-    let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
+    let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3C);
+    let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     let (d0, d1) = (read_usize(b + 4) as u32, read_usize(b + 8) as u32);
     if antes(a + 4, d0, d1) != 0 {
         return -1;
@@ -261,7 +261,7 @@ unsafe fn cpu6_regiao(this: usize, cidade: usize) -> Option<usize> {
 /// Sem cidade: saida[3], [0] e [1] = 0 e a faixa 2. saida[2] = a temperatura (0x9232c0); abaixo de zero, a chuva vira
 /// neve/gelo: 1 → 6, 2 e 3 → 6/7/8 e 5 → 8/7/9 pelo vento da cidade 0/1/outro.
 unsafe extern "thiscall" fn clima_da_partida(this: usize, s: *mut u8, jogo: usize) {
-    let temperatura: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(0x9232c0usize);
+    let temperatura: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(FN_WEATHER_GET_TEMPERATURE);
     if read_usize(this) == 0 || read_usize(this + 8) == 0 {
         return;
     }
@@ -536,13 +536,13 @@ unsafe extern "thiscall" fn comparar_gramado_do_jogo(this: usize, clima: *const 
 
 
 unsafe fn cpt5_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     f(n)
 }
 
 /// A linha seguinte do arquivo (0x90cba0: FILE*, buffer), 0 no fim.
 unsafe fn cpt5_ler_linha(f: usize, buf: *mut u8) -> i32 {
-    let ler: unsafe extern "C" fn(usize, *mut u8) -> i32 = core::mem::transmute(0x90cba0usize);
+    let ler: unsafe extern "C" fn(usize, *mut u8) -> i32 = core::mem::transmute(FN_UTILS_READ_CONFIG_LINE);
     ler(f, buf)
 }
 
@@ -590,8 +590,8 @@ unsafe extern "thiscall" fn comparar_tempo_das_cidades(this: usize) {
 /// buffer de 2000) com "%ld %s" (0xad4e24) no id (+0) e no nome (+4) da região (0x6e bytes); depois os quatro
 /// períodos (0x922d20) em +0x1e, +0x31, +0x44 e +0x57. Devolve 1 se leu tudo (só o al, como a original).
 unsafe extern "thiscall" fn ler_regiao_do_clima(this: usize, f: usize, regiao: usize) -> u8 {
-    let ler: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(0x946fd8usize);
-    let periodo: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x922d20usize);
+    let ler: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
+    let periodo: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_WEATHER_READ_REGION_PERIOD);
     crate::comparacao::ramo("cpt_5 regiao do clima");
     let mut linha = [0u8; 2000];
     if cpt5_ler_linha(f, linha.as_mut_ptr()) == 0 {
@@ -618,7 +618,7 @@ unsafe extern "thiscall" fn comparar_ler_regiao_do_clima(this: usize, f: usize, 
 /// cinco W, cinco P e sete H); com os 19 lidos, o período (0x13 bytes) recebe o dia (palavra em +0) e os 17 bytes
 /// seguintes (+2..+0x12). Devolve 1 se leu (só o al).
 unsafe extern "thiscall" fn ler_periodo_do_clima(_this: usize, f: usize, periodo: usize) -> u8 {
-    let ler: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(0x946fd8usize);
+    let ler: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
     if f == 0 {
         aviso_em(0xad4dec, 0xea);
         return 0;

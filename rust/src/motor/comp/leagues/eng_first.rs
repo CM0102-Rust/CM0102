@@ -10,8 +10,8 @@ type Cqp5Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
 unsafe fn cqp5_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqp5Rodada]) {
-    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(0x68a160usize);
-    let faixa: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(0x68a1c0usize);
+    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
+    let faixa: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
         let i = primeira + k as i32;
         data(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, ano, 0);
@@ -55,7 +55,7 @@ struct Cqp5Natal {
 }
 
 unsafe fn cqp5_natal(t: usize, ano: u32, n: &Cqp5Natal, arquivo: usize) {
-    let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
+    let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     cqp5_rodadas(t, ano, 0, n.comeco);
     let mut d = [0u16; 4];
     construir(&mut d, 1, 0xb, ano, 0xffff_ffff);
@@ -77,7 +77,7 @@ unsafe fn cqp5_natal(t: usize, ano: u32, n: &Cqp5Natal, arquivo: usize) {
 /// `cqp5_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
 unsafe fn cqp5_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
                        original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
     let pl2 = if liga.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
@@ -330,7 +330,7 @@ const CQP5_PREMIERSHIP_NATAL: Cqp5Natal = Cqp5Natal { comeco: &CQP5_PREMIERSHIP_
 /// &rodadas, &extra, &é_liga)`: a fase −1, 46 rodadas (`CQP5_PRIMEIRA_NATAL`, as datas da segunda com faixas de TV);
 /// a fase 0, os play-offs; as outras devolvem 0. Fonte 0x9c4374.
 unsafe extern "thiscall" fn calendario_da_primeira_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match fase as u8 {
         0xff => {
             if !liga.is_null() {
@@ -377,7 +377,7 @@ unsafe extern "thiscall" fn comparar_calendario_da_primeira_inglesa(this: usize,
 /// { 0x573660 } (thiscall, ret 0x10, eng_prm.cpp, 5.019 bytes, método +0x3c): `EngPrm::create_schedule(fase, &rodadas,
 /// &extra, &é_liga)`: só a fase −1, 38 rodadas (`CQP5_PREMIERSHIP_NATAL`); as outras devolvem 0. Fonte 0x9c43b0.
 unsafe extern "thiscall" fn calendario_da_premiership(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match fase as u8 {
         0xff => {
             if !liga.is_null() {
@@ -425,7 +425,7 @@ unsafe fn cpz1_clube(liga: usize, k: usize) -> usize {
 /// thiscall(fase, 0), ret 4). O quadro SEH da original só cobre o construtor (sem destrutor).
 unsafe fn cpz1_mata_mata(this: usize, linhas: [usize; 4], arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, a10: Option<u32>, nome: &'static str) {
     let n = read_u8(this + 0xbf) as i8 as i32;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let lista = alocar((n << 2) as u32);
     if lista == 0 {
         return aviso_em(arquivo, linha_sem_lista);
@@ -437,27 +437,27 @@ unsafe fn cpz1_mata_mata(this: usize, linhas: [usize; 4], arquivo: usize, linha_
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let p = novo(0xb2);
     // ponytail: a original empurra a conta, as rodadas e a palavra +0x40 em registradores inteiros com lixo nos 16 bits
     // altos; o construtor só lê as palavras ([esp+0x230], [esp+0x238], [esp+0x244] e [esp+0x250] com mov ax/dx).
     let fase = if p != 0 {
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
-            core::mem::transmute(0x522e00usize);
+            core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
         let a10 = a10.unwrap_or(extra as u16 as u32);
         construir(p, this, n as u16 as u32, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, a10, 0x14, 0, 0, 0, 0)
     } else {
         0
     };
     core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, fase);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     liberar(lista);
     liberar(t);
     let fase = read_usize(read_usize(this + 0xc));
     if fase == 0 {
         return aviso_em(arquivo, linha_sem_fase);
     }
-    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
+    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     montar(fase, 0);
 }
 

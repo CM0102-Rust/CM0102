@@ -6,7 +6,7 @@
 /// no início da janela e 0 no fim; duas datas por janela) alocada em +4 (0x944e46; sem memória, a caixa da linha
 /// `linha` do fonte `arquivo`).
 unsafe fn cqk1_janelas(this: usize, n: u8, t: &[[u8; 6]], arquivo: usize, linha: u32) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     *((this + 8) as *mut u8) = n;
     let j = alocar((t.len() * 6) as u32);
     core::ptr::write_unaligned((this + 4) as *mut u32, j as u32);
@@ -22,7 +22,7 @@ unsafe fn cqk1_janelas(this: usize, n: u8, t: &[[u8; 6]], arquivo: usize, linha:
 /// O construtor das regras de uma nação: a base (0x8e84a0, original, thiscall com os 5 argumentos de quem chama), a
 /// vtable da nação e as janelas.
 unsafe fn cqk1_construir(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], arquivo: usize, linha: u32) {
-    let base: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x8e84a0usize);
+    let base: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_TRANSFER_RULES_TRANSFER_RULES);
     base(this, a[0], a[1], a[2], a[3], a[4]);
     core::ptr::write_unaligned(this as *mut u32, vtable);
     cqk1_janelas(this, n, t, arquivo, linha);
@@ -31,7 +31,7 @@ unsafe fn cqk1_construir(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8;
 /// Lado a lado à mão: a original no objeto de quem chama; a cópia num objeto de rascunho com o mesmo conteúdo de antes
 /// (os 0x19 bytes das regras); iguais os campos (fora o ponteiro +4) e as janelas alocadas (a do rascunho é solta).
 unsafe fn cqk1_comparar(nome: &str, this: usize, o: impl FnOnce(), c: impl FnOnce(usize)) {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut s = [0u8; 0x20];
     core::ptr::copy_nonoverlapping(this as *const u8, s.as_mut_ptr(), 0x19);
     o();
@@ -142,7 +142,7 @@ unsafe fn cqe5_clube_do_contrato(c: usize) -> usize {
 /// O contrato principal da pessoa (0x4cf5a0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4), que a original
 /// guarda em [0xae1080] a cada consulta.
 unsafe fn cqe5_contrato(p: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let c = f(read_usize(0xae1050), p);
     core::ptr::write_unaligned(0xae1080 as *mut usize, c);
     c
@@ -161,7 +161,7 @@ unsafe fn cqe5_conta(clube: usize) -> usize {
 /// contados só com o id do jogador abaixo de [0xae2364]): 0x26. Fora da janela (0x8e8e50): 9, com o adjetivo da nação.
 unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
     // 0x66f4e0: o texto da mensagem (push ...; push formato; push destino; add esp, 0x14) -> cdecl variádica
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let c = cqe5_contrato(jogador);
     if c == 0 || cqe5_clube_do_contrato(c) == 0 {
         return 1;
@@ -169,10 +169,10 @@ unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: usize, jogad
     let c2 = cqe5_contrato(jogador);
     let dono = if c2 != 0 { cqe5_clube_do_contrato(c2) } else { 0 };
     let comp = read_usize(clube + 0x57);
-    if comp == read_usize(dono + 0x57) && comp != 0 && read_usize(comp) == read_usize(0x9cf5bc) {
+    if comp == read_usize(dono + 0x57) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
         crate::comparacao::ramo("cqe_5 mesma divisao");
         if msg != 0 {
-            let id = read_usize(0x9cf5bc);
+            let id = read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION);
             let r = read_usize(0xae23d0).wrapping_add(id.wrapping_mul(0x6b));
             let g = read_u8(r + 0x37) as i8 as i32;
             texto(msg, 0x9c4590, g, g, r + 4);
@@ -195,7 +195,7 @@ unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: usize, jogad
         return 0;
     }
     // 0x4cf6d0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4 (o contrato de empréstimo)
-    let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
+    let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let mut n: i8 = 0;
     for k in 0..50usize {
         let p = read_usize(clube + 0xd7 + 4 * k);
@@ -226,14 +226,14 @@ unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: usize, jogad
         return 0;
     }
     // 0x8e8e50: push 0; push 0xae2c90; mov ecx, edi (this) -> thiscall, ret 8 (a janela aberta hoje)
-    let janela: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x8e8e50usize);
+    let janela: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_RULES_FIND_OPEN_WINDOW);
     if janela(this, 0xae2c90, 0) != 0 {
         return 1;
     }
     crate::comparacao::ramo("cqe_5 fora da janela");
     if msg != 0 {
         // 0x6181d0: push 2; push 100; push buffer; push nação; add esp, 0x10 -> cdecl (o adjetivo da nação)
-        let adjetivo: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(0x6181d0usize);
+        let adjetivo: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_NATION_GET_NATIONALITY_ADJECTIVE);
         let mut buf = [0u8; 100];
         adjetivo(read_usize(this + 0xa), buf.as_mut_ptr(), 100, 2);
         texto(msg, 0x987d38, 100, 100, buf.as_ptr());
@@ -250,7 +250,7 @@ unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: usize, jogad
 unsafe extern "thiscall" fn cqe5_registrar_emprestimo(_this: usize, oferta: usize) {
     let clube = read_usize(0xae23b4).wrapping_add(read_usize(oferta + 8).wrapping_mul(0x245));
     let nacao = read_usize(clube + 0x53);
-    if nacao != 0 && read_usize(nacao) == read_usize(0x9cf2e4) {
+    if nacao != 0 && read_usize(nacao) == read_usize(KEY_NATION_ENGLAND) {
         crate::comparacao::ramo("cqe_5 emprestimo contado");
         let p = cqe5_conta(clube);
         *(p as *mut u8) = read_u8(p).wrapping_add(1); // cqe5: a conta da temporada
@@ -261,7 +261,7 @@ unsafe extern "thiscall" fn cqe5_registrar_emprestimo(_this: usize, oferta: usiz
 /// 20 de junho (só o dia do ano, 0x549f70 com 1998), a conta da temporada de cada clube ([0xae235c] em [0xae23b4]) da
 /// nação destas regras (+0xa) volta a zero.
 unsafe extern "thiscall" fn cqe5_dia_das_regras(this: usize, data: usize) {
-    let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(0x549f70usize);
+    let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     let r = data_de(d.as_mut_ptr() as usize, 0x14, 5, 0x7ce, -1);
     if cqe5_h(data) != cqe5_h(r) {
@@ -339,7 +339,7 @@ unsafe extern "thiscall" fn comparar_cqe5_registrar_emprestimo(this: usize, ofer
 /// de junho); nos outros dias as duas rodam sem gravar nada e só a original fica valendo.
 unsafe extern "thiscall" fn comparar_cqe5_dia_das_regras(this: usize, data: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1588);
-    let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(0x549f70usize);
+    let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     let r = data_de(d.as_mut_ptr() as usize, 0x14, 5, 0x7ce, -1);
     if cqe5_h(data) != cqe5_h(r) {

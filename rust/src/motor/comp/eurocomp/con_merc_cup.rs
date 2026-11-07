@@ -16,7 +16,7 @@ unsafe fn cqs10_do_grupo_um(this: usize, i: usize) -> usize {
 /// O clube da posição j da fase f ([+0xc][f], um League_Stage): a linha pela 0x6826d0 (League::get_table_row: push j;
 /// mov ecx, fase -> thiscall, ret 4) e o clube no +0 dela.
 unsafe fn cqs10_da_fase(this: usize, f: usize, j: i32) -> usize {
-    let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x6826d0usize);
+    let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
     let fase = read_u32_as_usize(read_u32_as_usize(this + 0xc) + f * 4);
     read_u32_as_usize(linha(fase, j)) // cqs10: a posição j da fase
 }
@@ -32,10 +32,10 @@ unsafe fn cqs10_da_fase(this: usize, f: usize, j: i32) -> usize {
 /// liberadas (0x9452ca). Sem fase: a caixa `linha_sem_fase`. Com ela: o sorteio da rodada 0 (0x51c410 Cup::draw_round:
 /// push 0; mov ecx, fase -> thiscall, ret 4). O quadro SEH da original só cobre o construtor (sem destrutor).
 unsafe fn cqs10_mata_mata(this: usize, times: u32, fases: usize, mata: u32, arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, ramo: &'static str) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c410usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_DRAW_ROUND);
     let lista = alocar(times * 4);
     if lista == 0 {
         return aviso_em(arquivo, linha_sem_lista);
@@ -63,7 +63,7 @@ unsafe fn cqs10_mata_mata(this: usize, times: u32, fases: usize, mata: u32, arqu
     let fase = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
-            core::mem::transmute(0x522e00usize);
+            core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
         construir(p, this, times, lista, rodadas as u16 as u32, read_u32_as_usize(this + 4), tabela, read_i16(this + 0x40) as u16 as u32, mata, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn cqs10_merconorte_fase_seguinte(this: usize) {
     write_u32_from_usize(this + 0x30, f as usize);
     if f == 3 { // cqs10: as semifinais da Merconorte depois dos grupos
         crate::comparacao::ramo("cqs_10 semifinais da merconorte");
-        let semifinais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4c2330usize);
+        let semifinais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CONMERCCUP_CREATE_SEMI_FINAL_STAGE);
         semifinais(this);
     }
 }
@@ -198,13 +198,13 @@ impl Cqs11Nacao {
 /// A original guarda as listas na pilha sem zerá-las: com menos clubes que as vagas, ela lê sobra; a cópia lê zero
 /// [inferência: nesta carreira as quatro nações e a MLS têm clubes que bastam; o comparador confere a lista].
 unsafe fn cqs11_convidados(this: usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    let ordenar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(0x4afbd0usize);
-    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
-    let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x4afb40usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
+    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
+    let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     write_u32_from_usize(this + 0xf2, 0x10);
-    let americana = read_u32_as_usize(read_u32_as_usize(0xadadfc) + read_u32_as_usize(0x9cf728) * 4);
+    let americana = read_u32_as_usize(read_u32_as_usize(0xadadfc) + read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP) * 4);
     let lista = alocar(0x40);
     write_u32_from_usize(this + 0xee, lista);
     if lista == 0 {
@@ -223,17 +223,17 @@ unsafe fn cqs11_convidados(this: usize) -> u32 {
         let nacao = read_u32_as_usize(c + 0x53);
         if nacao != 0 {
             let id = read_u32_as_usize(nacao);
-            if id == read_u32_as_usize(0x9cf3d0) {
+            if id == read_u32_as_usize(KEY_NATION_MEXICO) {
                 mexico.por(c);
-            } else if id == read_u32_as_usize(0x9cf29c) {
+            } else if id == read_u32_as_usize(KEY_NATION_COLOMBIA) {
                 colombia.por(c);
-            } else if id == read_u32_as_usize(0x9cf428) {
+            } else if id == read_u32_as_usize(KEY_NATION_PERU) {
                 peru.por(c);
-            } else if id == read_u32_as_usize(0x9cf254) {
+            } else if id == read_u32_as_usize(KEY_NATION_BOLIVIA) {
                 bolivia.por(c);
             } else {
                 let liga = read_u32_as_usize(c + 0x57);
-                if liga != 0 && read_u32_as_usize(liga) == read_u32_as_usize(0x9cf590) && n_mls < 0xc {
+                if liga != 0 && read_u32_as_usize(liga) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && n_mls < 0xc {
                     mls[n_mls as usize] = c;
                     n_mls += 1;
                 }
@@ -265,7 +265,7 @@ unsafe fn cqs11_convidados(this: usize) -> u32 {
         vaga(0, mls[0]);
         vaga(1, mls[1]);
     } else {
-        let registro = read_u32_as_usize(0xae23d0) + read_u32_as_usize(0x9cf590) * 0x6b;
+        let registro = read_u32_as_usize(0xae23d0) + read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) * 0x6b;
         crate::comparacao::ramo("cqs_11 campeao da liga americana");
         vaga(0, colocado(registro, 0)); // cqs11: o campeão da liga americana
         vaga(1, colocado(read_u32_as_usize(americana + 4), 0));
@@ -308,7 +308,7 @@ unsafe extern "thiscall" fn comparar_cqs11_merconorte_convidados(this: usize) ->
         lo == 0 && lr == 0
     };
     if lr != 0 && lr != lo {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
     PLACAR.registrar(igual && a == b && lista, || format!("cqs11_merconorte_convidados({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
@@ -384,13 +384,13 @@ unsafe fn cqr12_sorteado(this: usize, k: usize) -> usize {
 /// push; add esp, 4 -> cdecl) e zerada e +0x45 = 1. Um erro dá a caixa da linha e volta 0 sem o dia de liga. Depois o dia de liga (0x6847c0: push completo; push
 /// hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela repassa.
 unsafe extern "thiscall" fn cqr12_merconorte_dia(this: usize, hoje: usize, completo: u32) -> u32 {
-    let clubes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4c2560usize);
-    let primeiro: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x4c1de0usize);
-    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
-    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
-    let fase: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(0x4c2140usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x6847c0usize);
+    let clubes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CONMERCCUP_SELECT_INVITED_CLUBS);
+    let primeiro: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_CONMERCCUP_CREATE_FIRST_GROUP_TABLE);
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
+    let fase: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(FN_CONMERCCUP_CREATE_GROUP_STAGE);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     if read_u32_as_usize(this + 0x45) == 0 && completo != 0 {
         let dia = read_i16(this + 0xb6) as u16; // cqr12: o dia do sorteio
         let ano = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16);
@@ -454,9 +454,9 @@ unsafe extern "thiscall" fn comparar_cqr12_merconorte_dia(this: usize, hoje: usi
 /// i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0)
 /// e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
 unsafe extern "thiscall" fn cqr12_merconorte_primeiro_grupo(this: usize) -> u32 {
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 4);
     let t = novo(0xec);
     write_u32_from_usize(this + 0xb1, t);
@@ -507,13 +507,13 @@ unsafe extern "thiscall" fn comparar_cqr12_merconorte_primeiro_grupo(this: usize
 /// que o construtor não lê: a cópia passa os valores limpos) em [+0xc][g]; o vetor e a tabela das rodadas liberados
 /// (0x9452ca). Sem fase: a caixa da linha 0x1ff e 0. Com ela: a notícia do grupo (0x684230 na fase), +0x30 = g e 1.
 unsafe extern "thiscall" fn cqr12_merconorte_grupo(this: usize, g: i32) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
-        core::mem::transmute(0x68b100usize);
+        core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let times = alocar(0x10);
     if times == 0 {
         aviso_em(0x9a7d6c, 0x1e9);

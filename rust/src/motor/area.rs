@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn organizar_area(area: usize) {
     let mut largura = area_i32(area, 8).wrapping_sub(2 * lado).wrapping_sub(area_i32(area, 0)).wrapping_add(1);
     let altura = (-2 * cima).wrapping_sub(area_i32(area, 4)).wrapping_add(area_i32(area, 0xc)).wrapping_add(1);
     if area_i32(area, 0x14).wrapping_add(1) > linhas as i32 {
-        let barra: unsafe extern "thiscall" fn(usize, i32, i32) = core::mem::transmute(0x403600usize);
+        let barra: unsafe extern "thiscall" fn(usize, i32, i32) = core::mem::transmute(FN_AREA_SETUP_SCROLLBAR);
         barra(area, lado, cima);
         largura = largura.wrapping_sub(0x16);
     }
@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn iniciar_area(
         pesos_colunas = 0;
         pesos_linhas = 0;
     } else {
-        let trocar: unsafe extern "C" fn(*mut i32, *mut i32, u32) = core::mem::transmute(0x90ba90usize);
+        let trocar: unsafe extern "C" fn(*mut i32, *mut i32, u32) = core::mem::transmute(FN_UTILS_SWAP_BYTES);
         if x1 > x2 {
             trocar(&mut x1, &mut x2, 4);
         }
@@ -255,8 +255,8 @@ unsafe extern "thiscall" fn desenhar_area(area: usize, redesenhar: u32) {
         return orig::<unsafe extern "thiscall" fn(usize, u32)>(498)(area, redesenhar);
     }
     crate::comparacao::ramo("telas desenhar a area");
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x5e42b0usize);
-    let guardar: unsafe extern "C" fn(i32, i32, i32, i32, usize) -> usize = core::mem::transmute(0x5e3dd0usize);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_GUI_FREE_IMAGE);
+    let guardar: unsafe extern "C" fn(i32, i32, i32, i32, usize) -> usize = core::mem::transmute(FN_GUI_SAVE_SCREEN_IMAGE);
     let imagem = (area + 0x200) as *mut usize;
     if redesenhar != 0 && *imagem != 0 {
         liberar(*imagem);
@@ -267,11 +267,11 @@ unsafe extern "thiscall" fn desenhar_area(area: usize, redesenhar: u32) {
     }
     // ponytail: a original empurra edx com a cor em dx e, em cima, sobra de chamadas anteriores
     // (imprevisível); a cor é u16 para o painel, aqui estendida com zero
-    let painel: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32, u32) = core::mem::transmute(0x5e5df0usize);
+    let painel: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32, u32) = core::mem::transmute(FN_GUI_DRAW_PANEL);
     let cor = core::ptr::read_unaligned((area + 0x20c) as *const u16) as u32;
     painel(area_i32(area, 0), area_i32(area, 4), area_i32(area, 8), area_i32(area, 0xc), *((area + 0x18) as *const u32), cor, 0);
     if *((area + 0x18) as *const u32) & 0x80000 != 0 {
-        let linha: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32) = core::mem::transmute(0x5e3730usize);
+        let linha: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32) = core::mem::transmute(FN_GRAPHICS_DRAW_LINE);
         let mut k: i16 = 1;
         while *((area + 0xbac) as *const u8) > 1 && k < *((area + 0xbac) as *const u8) as i16 {
             let y1 = area_i32(area, 4);
@@ -293,7 +293,7 @@ unsafe extern "thiscall" fn desenhar_area(area: usize, redesenhar: u32) {
     if area_i32(area, 0xbed) != 0 && *imagem == 0 {
         *imagem = guardar(area_i32(area, 0), area_i32(area, 4), area_i32(area, 8).wrapping_sub(0x16), area_i32(area, 0xc), 0);
     }
-    let desenhar_item: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x5ee590usize);
+    let desenhar_item: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_GUIO_DRAW);
     let total = || core::ptr::read_unaligned((area + 0xb74) as *const i16);
     let mut i = core::ptr::read_unaligned((area + 0xb76) as *const i16);
     let mut parar = false;
@@ -310,7 +310,7 @@ unsafe extern "thiscall" fn desenhar_area(area: usize, redesenhar: u32) {
         i = i.wrapping_add(1);
     }
     if area_i32(area, 0xbed) != 0 {
-        let barra: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x403c80usize);
+        let barra: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_AREA_DRAW_SCROLLBAR);
         barra(area);
     }
 }

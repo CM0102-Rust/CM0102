@@ -27,7 +27,7 @@ unsafe extern "C" fn comparar_linha_da_nacao(nacao: usize) -> u8 {
 /// (+0x71), ou 3 (sem nação, 3). Pelas aposentadorias 0x7a7310, pelo adiamento pelo tempo 0x923630, pelos dias até a
 /// temporada 0x59b4c0, pelo contrato desejado 0x85fc50, pelo ano da temporada 0x669950 e outras. Sem contador.
 unsafe extern "C" fn linha_da_nacao_do_clube(clube: usize) -> u8 {
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if selecao(clube) == 0 {
         let nacao = read_usize(clube + 0x53);
         if nacao != 0 && *((nacao + 0x11c) as *const u8) != 0 {
@@ -54,7 +54,7 @@ unsafe extern "C" fn linha_da_nacao_do_clube(clube: usize) -> u8 {
 
 /// Se o clube cai na caixa "Error" da 0x669360 (não é seleção, nação escolhida fora da tabela).
 unsafe fn cpu1_caixa(clube: usize) -> bool {
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let nacao = read_usize(clube + 0x53);
     selecao(clube) == 0
         && nacao != 0
@@ -79,8 +79,8 @@ unsafe extern "C" fn comparar_linha_da_nacao_do_clube(clube: usize) -> u8 {
 /// original devolve só os 16 bits baixos com sentido (os altos são a sobra da vaga empurrada). Pelos registros do clube
 /// 0x444930/0x447430/0x448ad0 e pela história do jogador 0x7c3e40/0x7c5fe0.
 unsafe extern "C" fn ano_da_temporada_do_clube(clube: usize) -> u16 {
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    let linha: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x669360usize);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let linha: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
     let ano = *(0xae2c92 as *const u16);
     if clube != 0 && selecao(clube) == 0 {
         let k = linha(clube) as i8 as isize;
@@ -113,7 +113,7 @@ unsafe fn cpu2_data(dst: usize, dia: i16, ano: u16) {
     if dst == 0 {
         return;
     }
-    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
+    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let mut b = [0u8; 8];
     data(b.as_mut_ptr(), dia as u16 as u32, ano as u32);
     core::ptr::copy_nonoverlapping(b.as_ptr(), dst as *mut u8, 8);
@@ -249,14 +249,14 @@ unsafe extern "C" fn comparar_nacao_principal() -> usize {
 /// nação (+0x5d): o byte +0x14 da linha dela, ou 3. Sem nação: Copa do Mundo e eliminatórias (0x669a10), 0; torneio
 /// internacional (0x669ae0), 1; senão o índice da nação-chave (0x669470). Chamada a cada jogo procurado: sem contador.
 unsafe extern "C" fn nacao_chave_do_jogo(comp: usize, partida: usize) -> u8 {
-    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let linha = |nacao: usize| (0..0x23usize).find(|&k| {
         let n = read_usize(0xb63d60 + 72 * k);
         n != 0 && *((n + 0x11c) as *const u8) != 0 && n == nacao
     });
     let nacao = read_usize(comp + 0x5d);
-    let reservas = read_usize(0x9cf684);
+    let reservas = read_usize(KEY_CLUB_COMP_RESERVE);
     if (amistoso(read_usize(0xae2c74), comp) != 0 || read_usize(comp) == reservas) && partida != 0 {
         let pc = read_usize(partida + 0x14);
         if pc == read_usize(read_usize(0xae2c74) + 4) || read_usize(pc) == reservas {
@@ -280,9 +280,9 @@ unsafe extern "C" fn nacao_chave_do_jogo(comp: usize, partida: usize) -> u8 {
             None => 3,
         };
     }
-    let copa: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x669a10usize);
-    let internacional: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x669ae0usize);
-    let indice: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x669470usize);
+    let copa: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_IS_WORLD_CUP_COMP);
+    let internacional: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_IS_INTERNATIONAL_COMP);
+    let indice: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_COMP);
     if copa(comp) != 0 {
         return 0; // cpt3: Copa do Mundo e eliminatorias
     }
@@ -301,11 +301,11 @@ unsafe extern "C" fn comparar_nacao_chave_do_jogo(comp: usize, partida: usize) -
 
 /// Os ids das competições da Copa do Mundo: a final e as seis eliminatórias (Europa [0x9cf780], África, Ásia,
 /// CONCACAF, Oceania, América do Sul).
-const CPT3_COPA: [usize; 7] = [0x9cf79c, 0x9cf77c, 0x9cf774, 0x9cf770, 0x9cf780, 0x9cf76c, 0x9cf778];
+const CPT3_COPA: [usize; 7] = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_CONCACAF_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_EUROPEAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_SOUTH_AMERICAN_QUALIFYING_SECT];
 
 /// Os ids dos torneios de seleções fora da Copa do Mundo: Olimpíada, Eurocopa, eliminatórias da Eurocopa, Copa
 /// Africana [0x9cf7ac], Copa América, seleção B, sub-21, Copa da Oceania, Copa das Confederações e Copa da Ásia.
-const CPT3_INTERNACIONAIS: [usize; 10] = [0x9cf7a0, 0x9cf7a4, 0x9cf784, 0x9cf7ac, 0x9cf7a8, 0x9cf794, 0x9cf798, 0x9cf8a0, 0x9cf964, 0x9cf790];
+const CPT3_INTERNACIONAIS: [usize; 10] = [KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_EUROPEAN_CHAMPIONSHIP_QUALIFYING, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_B_INTERNATIONAL, KEY_CLUB_COMP_UNDER_21_INTERNATIONAL, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_CONFEDERATIONS_CUP, KEY_CLUB_COMP_ASIAN_CUP];
 
 /// { 0x669a10 } (cdecl, key_nation.cpp): `key_nation_is_world_cup_comp(competição)`: o id (+0) é a Copa do Mundo ou uma
 /// das eliminatórias, 1; senão 0. Competição nula: a caixa "Error" (linha 0x3d7) e 0.

@@ -29,8 +29,8 @@ const fn cql12r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, u32, u32, u
 /// Grava a rodada `i` da tabela `t` (ano-base `ano`, a palavra +0x40 da copa com sinal): as duas datas (0x521e60 e
 /// 0x521eb0, cdecl, 7 e 9 argumentos; add esp, 0x1c / 0x24) e os campos.
 unsafe fn cql12_rodada(t: usize, i: u32, r: &Cql12R, ano: u32) {
-    let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521e60usize);
-    let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521eb0usize);
+    let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
+    let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
     sorteio(t, i, r.sorteio.0, r.sorteio.1, r.sorteio.2, r.sorteio.3, ano);
     jogo(t, i, r.jogo.0, r.jogo.1, r.jogo.2, r.jogo.3, r.jogo.4, ano, r.jogo.5);
     let e = t + i as usize * 0x68;
@@ -69,7 +69,7 @@ unsafe fn cql12_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i1
     }
     *rodadas = tabela.len() as i16;
     *extra = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar(tabela.len() as u32 * 0x68);
     if t == 0 {
         aviso_em(arquivo, linha);
@@ -115,7 +115,7 @@ unsafe fn cql12_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i
     let saidas = *rodadas == r2 && *extra == e2 && (saida.is_null() || *saida == s2);
     let tabela = if a != 0 && b != 0 { cql12_gravados(a, *rodadas) == cql12_gravados(b, r2) } else { a == 0 && b == 0 };
     if b != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
     PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, fase as u8 as i8, saidas, *rodadas, r2, tabela));
@@ -133,7 +133,7 @@ unsafe fn cql12_mando_da_franca(this: usize) -> u32 {
     if core::ptr::read_unaligned((this + 0x40) as *const i16) == 0x7d1 {
         return 0x400;
     }
-    let sortear: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let sortear: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     const MANDOS: [i16; 6] = [0x200, 0x400, 0x800, 0x1000, 0x2000, 0x4000];
     MANDOS[sortear(6) as usize] as i32 as u32
 }

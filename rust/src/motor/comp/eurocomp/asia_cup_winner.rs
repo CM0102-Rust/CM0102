@@ -14,7 +14,7 @@ const CQT13_QUARTAS: [(i32, i32); 8] = [
 
 /// O clube da posição `p` do grupo `g` (pela 0x6826d0 League::get_table_row: push p; mov ecx, grupo -> thiscall, ret 4).
 unsafe fn cqt13_do_grupo(this: usize, g: i32, p: i32) -> usize {
-    let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x6826d0usize);
+    let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
     let grupo = if g < 0 { this } else { read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4) };
     read_u32_as_usize(linha(grupo, p))
 }
@@ -29,10 +29,10 @@ unsafe fn cqt13_do_grupo(this: usize, g: i32, p: i32) -> usize {
 /// construtor não lê) em [+0xc][3]; a lista e a tabela liberadas (0x9452ca). Sem fase: a caixa da linha 0x32c e volta.
 /// Com ela: a rodada montada (0x51c800 Cup::set_up_round: push 0; mov ecx, fase -> thiscall, ret 4) e +0x30 = 3.
 unsafe extern "thiscall" fn cqt13_africana_quartas(this: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     let lista = alocar(0x20);
     if lista == 0 {
         return aviso_em(0x9870f8, 0x311);
@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn cqt13_africana_quartas(this: usize) {
     let fase = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
-            core::mem::transmute(0x522e00usize);
+            core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
         construir(p, this, 8, lista, rodadas as u16 as u32, read_u32_as_usize(this + 4), tabela, read_i16(this + 0x40) as u16 as u32, 3, 4, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn cqt13_recopa_asiatica_fase_seguinte(this: usize) {
     write_u32_from_usize(this + 0x30, f as usize);
     if f == 1 {
         crate::comparacao::ramo("cqt_13 finais da recopa asiatica");
-        let finais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x40e030usize);
+        let finais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_ASIACUPWINNER_CREATE_FINALS_STAGE);
         finais(this);
     }
 }
@@ -151,10 +151,10 @@ unsafe fn cqt13_finalistas(this: usize) -> [usize; 4] {
 /// é liberada, como na original). Com ela: o sorteio da rodada 0 (0x51c410 Cup::draw_round: push 0; mov ecx, fase ->
 /// thiscall, ret 4) e a lista liberada.
 unsafe extern "thiscall" fn cqt13_recopa_asiatica_finais(this: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c410usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_DRAW_ROUND);
     let lista = alocar(0x10);
     if lista == 0 {
         return aviso_em(0x987b60, 0x34b);
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn cqt13_recopa_asiatica_finais(this: usize) {
     let fase = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
-            core::mem::transmute(0x522e00usize);
+            core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
         construir(p, this, 4, lista, rodadas as u16 as u32, read_u32_as_usize(this + 4), tabela, read_i16(this + 0x40) as u16 as u32, 1, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0

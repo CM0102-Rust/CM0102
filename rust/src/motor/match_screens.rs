@@ -11,21 +11,21 @@
 /// original. Devolve `this`.
 unsafe extern "thiscall" fn montar_estatisticas_da_partida(estat: usize, zip: usize, n: i32) -> usize {
     crate::comparacao::ramo("estatisticas montar");
-    let vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(0x9463afusize);
-    let fim_do_vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(0x9462bbusize);
+    let vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
+    let fim_do_vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_VECTOR_DESTRUCTOR_ITERATOR);
     let unidades: unsafe extern "system" fn(u32, *mut u8) -> u32 = core::mem::transmute(*(0x9670f8 as *const usize));
     let tipo: unsafe extern "system" fn(usize) -> u32 = core::mem::transmute(*(0x967100 as *const usize));
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let procurar: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(0x4c0aa0usize);
-    let fechar_busca: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x4c0c10usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x5e8290usize);
-    let carregar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x72aa80usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
-    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
-    let escrever: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
-    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let procurar: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_FILE_FIND_FIRST);
+    let fechar_busca: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_FILE_FIND_CLOSE);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_GUI_SHOW_MESSAGE_BOX);
+    let carregar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_MATCH_STATS_LOAD);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
+    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
+    let escrever: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
+    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     let d = |o: usize| (estat + o) as *mut i32;
 
     let mut registro = [0u8; 0xd7a];
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn montar_estatisticas_da_partida(estat: usize, zip: us
 /// ([this]) e zera o ponteiro e a quantidade (+4).
 unsafe extern "thiscall" fn desmontar_estatisticas_da_partida(estat: usize) {
     crate::comparacao::ramo("estatisticas desmontar");
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     let t = *(estat as *const usize);
     if t != 0 {
         liberar(t);
@@ -155,17 +155,17 @@ unsafe extern "thiscall" fn preencher_registro_da_partida(estat: usize, m: usize
     let pb = |p: usize, v: u8| *(p as *mut u8) = v;
     let pw = |p: usize, v: u16| core::ptr::write_unaligned(p as *mut u16, v);
     let pd = |p: usize, v: u32| core::ptr::write_unaligned(p as *mut u32, v);
-    let data: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
-    let atexit: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x94627ausize);
-    let clima: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x923010usize);
-    let renda: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x59af40usize);
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    let usa_numeros: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x85add0usize);
-    let capitao: unsafe extern "thiscall" fn(usize, usize, i32, i32) -> i8 = core::mem::transmute(0x897590usize);
-    let posicao: unsafe extern "thiscall" fn(usize, i32, i32) -> u16 = core::mem::transmute(0x5b2ae0usize);
-    let numero: unsafe extern "thiscall" fn(usize, usize, usize) -> i8 = core::mem::transmute(0x85a760usize);
-    let dar_numero: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x85a470usize);
-    let copiar_data: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
+    let data: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
+    let atexit: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_ATEXIT);
+    let clima: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_WEATHER_GET_MATCH_WEATHER);
+    let renda: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_FINANCETABLE_CALC_GATE_RECEIPTS);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let usa_numeros: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_SQUAD_MANAGER_CLUB_USES_SQUAD_NUMBERS);
+    let capitao: unsafe extern "thiscall" fn(usize, usize, i32, i32) -> i8 = core::mem::transmute(FN_TACTICS_FIND_CAPTAIN_SLOT);
+    let posicao: unsafe extern "thiscall" fn(usize, i32, i32) -> u16 = core::mem::transmute(FN_FORMATION_GET_SLOT_POSITION);
+    let numero: unsafe extern "thiscall" fn(usize, usize, usize) -> i8 = core::mem::transmute(FN_SQUAD_MANAGER_GET_SQUAD_NUMBER);
+    let dar_numero: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SQUAD_MANAGER_ALLOCATE_SQUAD_NUMBER);
+    let copiar_data: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     // a data estática (dia 0x29 de 1972) da primeira chamada: a marca antes da construção, como na original
     if b(0xb6b7c4) & 1 == 0 {
         pb(0xb6b7c4, b(0xb6b7c4) | 1);
@@ -374,7 +374,7 @@ unsafe extern "thiscall" fn tirar_idioma_do_jogador(estat: usize, ficha: usize, 
     if tabela == 0 {
         return;
     }
-    let buscar: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
+    let buscar: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     // ponytail: o byte 5 da chave fica com lixo de pilha na original; o comparador 0x7c6d40 só lê id e idioma
     let mut chave = [0u8; 6];
     chave[..4].copy_from_slice(&(*(ficha as *const u32)).to_le_bytes());
@@ -441,12 +441,12 @@ unsafe extern "thiscall" fn comparar_tirar_idioma_do_jogador(estat: usize, ficha
 type AbasDaPartida = [u32; 0x14b4 / 4];
 
 unsafe fn construir_abas_da_partida(abas: &mut AbasDaPartida) {
-    let vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(0x9463afusize);
+    let vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
     vetor(abas.as_mut_ptr() as usize, 0xd4, 0x19, 0x4568f0, 0x5a53c0);
 }
 
 unsafe fn destruir_abas_da_partida(abas: &mut AbasDaPartida) {
-    let fim_do_vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(0x9462bbusize);
+    let fim_do_vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_VECTOR_DESTRUCTOR_ITERATOR);
     fim_do_vetor(abas.as_mut_ptr() as usize, 0xd4, 0x19, 0x5a53c0);
 }
 
@@ -465,8 +465,8 @@ unsafe fn liberar_foto_da_partida() {
     if parametro_da_tela(0x1d) != 0 {
         let f = parametro_da_tela(0x1d);
         if f != 0 {
-            let fim_do_vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(0x9462bbusize);
-            let apagar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
+            let fim_do_vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_VECTOR_DESTRUCTOR_ITERATOR);
+            let apagar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
             fim_do_vetor(f + 0x11f, 0x625, 2, 0x453c10);
             apagar(f);
         }
@@ -478,10 +478,10 @@ unsafe fn liberar_foto_da_partida() {
 /// (0x41c250 e 0x41bfb0). Devolve o `eax` da última chamada (a original empilha o byte da cor do
 /// uniforme por cima dele).
 unsafe fn fundo_da_partida(foto: usize, competicao: usize, clube: usize) -> usize {
-    let pela_foto: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x41c670usize);
-    let pela_competicao: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x41c410usize);
-    let pelo_clube: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x41c250usize);
-    let aplicar: unsafe extern "C" fn() -> usize = core::mem::transmute(0x41bfb0usize);
+    let pela_foto: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_BACKGROUND_SET_STADIUM_PICTURE);
+    let pela_competicao: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_BACKGROUND_SET_COMP_PICTURE);
+    let pelo_clube: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_BACKGROUND_SET_CLUB_PICTURE);
+    let aplicar: unsafe extern "C" fn() -> usize = core::mem::transmute(FN_BACKGROUND_SET_RANDOM_PICTURE);
     if foto != 0 {
         let r = pela_foto(foto, 0, 1);
         if r != 0 {
@@ -498,10 +498,10 @@ unsafe fn fundo_da_partida(foto: usize, competicao: usize, clube: usize) -> usiz
 
 /// A caixa "Error" de match_screens.cpp na linha `linha` (sem parar o jogo) e [0xb67a34] = 0.
 unsafe fn erro_das_telas_da_partida(linha: u32) {
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
-    let juntar: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x90d130usize);
-    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x5e8290usize);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
+    let juntar: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
+    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_GUI_SHOW_MESSAGE_BOX);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
     separar(0xa161d4, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
     let s = juntar(nome.as_mut_ptr(), ext.as_mut_ptr(), linha);
@@ -513,9 +513,9 @@ unsafe fn erro_das_telas_da_partida(linha: u32) {
 /// O nome do time no texto 0xde1f64 do cabeçalho da partida: só o nome ("  %s") com `so_o_nome`;
 /// senão a seleção B ("'B'", 0x53b900) ou o time reserva ("Res.").
 unsafe fn nome_do_time_na_partida(time: usize, so_o_nome: u8) {
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let selecao_b: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let selecao_b: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if so_o_nome != 0 {
         formatar(0xde1f64, 0x987ff0, time + 0x38);
     } else if selecao_b(time) != 0 {
@@ -532,7 +532,7 @@ unsafe fn nome_do_time_na_partida(time: usize, so_o_nome: u8) {
 /// ordem) no `eax` que sobrou de 0x5fcff0 (os 16 bits de cima conhecidos) e as outras em registradores
 /// sujos (aqui estendidas); `sujo` diz qual, (marcada, não marcada).
 unsafe fn linha_de_velocidade(lista: usize, valor: u16, v: u32, sujo: (usize, usize)) -> usize {
-    let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
+    let linha: LinhaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_ITEM);
     let marcada = v as u16 == valor;
     let k = if marcada { sujo.0 } else { sujo.1 };
     let enderecos = [0xae31aausize, 0xaebdec, 0xaebdea];
@@ -560,21 +560,21 @@ unsafe extern "C" fn montar_tela_da_partida() {
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
     const MENOS1: usize = usize::MAX;
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let texto_do_gerente: TextoDoGerente = core::mem::transmute(0x803fd0usize);
-    let caixa: CaixaDoGerente = core::mem::transmute(0x804030usize);
-    let celula: CelulaDaLista = core::mem::transmute(0x8040a0usize);
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
-    let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
-    let cores: unsafe extern "C" fn(usize, usize, *mut u32, *mut u32) = core::mem::transmute(0x53b640usize);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let texto_do_gerente: TextoDoGerente = core::mem::transmute(FN_SCREENMANAGER_ADD_TEXT_ITEM);
+    let caixa: CaixaDoGerente = core::mem::transmute(FN_SCREENMANAGER_ADD_BUTTON_ITEM);
+    let celula: CelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_BUTTON);
+    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
+    let lista: ListaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_AREA);
+    let linha: LinhaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_ITEM);
+    let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_GET_HUMAN_MANAGER_RECORD);
+    let cores: unsafe extern "C" fn(usize, usize, *mut u32, *mut u32) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let rb = |a: usize| *(a as *const u8);
     let sx = |a: usize| *(a as *const i8) as i32;
     let velocidade = || {
-        let f: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x5fcff0usize);
+        let f: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_GET_COMMENTARY_SPEED);
         f(*(0xb63c98 as *const usize), 0)
     };
     let gravar_item = |k: u32, r: usize| gravar_parametro_da_tela(k, r as i16 as isize as usize);
@@ -589,7 +589,7 @@ unsafe extern "C" fn montar_tela_da_partida() {
     let p15 = parametro_da_tela(0x15);
     parametro_da_tela(0xe);
     if modo == 1 {
-        let figura: unsafe extern "C" fn(usize) = core::mem::transmute(0x41c0d0usize);
+        let figura: unsafe extern "C" fn(usize) = core::mem::transmute(FN_BACKGROUND_SET_PICTURE);
         figura(0);
         destruir_abas_da_partida(&mut abas);
         return;
@@ -635,7 +635,7 @@ unsafe extern "C" fn montar_tela_da_partida() {
     // o y2 e o imediato do push em 0x719345: 0x257 no exe 800x600, 0x437 no cm0102-1080 (resolucao.py)
     let y2 = core::ptr::read_unaligned(0x719346 as *const u32) as usize;
     let narracao = lista(display_do_humano(), 0, 0, 0x59, y2, 1, 0, 1, 0, 1, 0, MENOS1);
-    let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
+    let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let fundo = caminho(0x9b5348, 0xa16448);
     linha(display_do_humano(), 0x400, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0xc, 1, 0, fundo, 0, 0, 0, narracao);
     let relogio = lista(display_do_humano(), 5, 0xa, 0x55, 0x24e, 1, 0, 0xd, 0, 1, 0, MENOS1);
@@ -659,7 +659,7 @@ unsafe extern "C" fn montar_tela_da_partida() {
 
     // o controle da partida (0x725a70 lê só o byte do modo; a cor da original fica nos 16 bits de baixo
     // da variável que guardava os espectadores)
-    let rotulo: unsafe extern "C" fn(u32, usize, usize, u32, *mut u32) -> u32 = core::mem::transmute(0x725a70usize);
+    let rotulo: unsafe extern "C" fn(u32, usize, usize, u32, *mut u32) -> u32 = core::mem::transmute(FN_MATCH_SCREENS_GET_MATCH_CONTROL_LABEL);
     let mut marcas: u32 = 0;
     rotulo(modo as u32, espectadores, BUF, 0x7d0, &mut marcas);
     let r = linha(display_do_humano(), 2, 0, 0, 0, 0, 0, 2, marcas as usize, 0, 0, 0xc, 1, cor_sobre(espectadores, 0xae3184), BUF, 0, 2, 0, relogio);
@@ -681,8 +681,8 @@ unsafe extern "C" fn montar_tela_da_partida() {
     }
 
     // as velocidades da narração
-    let manda: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x600c90usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let manda: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CURRENT_CONTROLS_CLUB);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let mostrar = manda(rd(p + 0x20), 0, 1) != 0
         || manda(rd(p + 0x24), 0, 1) != 0
         || (humano(rd(p + 0x20), 0, 1, 0, 0) == 0 && humano(rd(p + 0x24), 0, 1, 0, 0) == 0);
@@ -739,15 +739,15 @@ unsafe extern "C" fn montar_tela_da_partida() {
     let entrada = ligas(comp);
     let mut liga: usize = 0;
     if entrada != 0 {
-        let selecoes = *(0x9cf590 as *const i32) as isize;
+        let selecoes = *(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE as *const i32) as isize;
         let candidata = if comp == selecoes {
             if sx(p + 0x46) >= 2 {
                 None
             } else {
                 let vaga = rd((0xb74c26 + h * 0x300) as usize);
                 let lado = if rd(rd(p + 0x24) + 0xcf) == vaga { rd(p + 0x24) } else { rd(p + 0x20) };
-                let continente: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x909ec0usize);
-                let selecoes = || *(0x9cf590 as *const i32) as isize;
+                let continente: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_USA_MLS_GET_CLUB_DIVISION);
+                let selecoes = || *(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE as *const i32) as isize;
                 Some(if continente(lado) as u16 == 0x414 {
                     rd(rd(ligas(selecoes()) + 0xc) + 4)
                 } else if continente(lado) as u16 == 0x47b {
@@ -762,7 +762,7 @@ unsafe extern "C" fn montar_tela_da_partida() {
         };
         if let Some(l) = candidata {
             liga = l;
-            let selecao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7e6f20usize);
+            let selecao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
             if l != 0 && rb(l + 0x43) == 2 && selecao(*(0xb74434 as *const usize), rd(l + 4)) == 0 {
                 texto(titulo_da_aba(&mut abas, 7), 0x99c280);
                 marcar_aba(&mut abas, 7, 3, 0xa);
@@ -774,7 +774,7 @@ unsafe extern "C" fn montar_tela_da_partida() {
     texto(titulo_da_aba(&mut abas, n), 0xa16364, sx(t2 + 0x52), sx(t2 + 0x52), t2 + 0x38);
     marcar_aba(&mut abas, n, 3, 9);
     let (mut topo, mut base) = (0x50i32, 0x221i32);
-    let barra: unsafe extern "C" fn(usize, u32, i32, *mut i32, *mut i32, u32) -> u32 = core::mem::transmute(0x5ed780usize);
+    let barra: unsafe extern "C" fn(usize, u32, i32, *mut i32, *mut i32, u32) -> u32 = core::mem::transmute(FN_GUI_ADD_TAB_BAR);
     let aba = aba as i8 as i32;
     barra(abas.as_mut_ptr() as usize, n as u32 + 1, aba, &mut topo, &mut base, 0);
     gravar_parametro_da_tela(8, MENOS1);
@@ -782,7 +782,7 @@ unsafe extern "C" fn montar_tela_da_partida() {
         let g: unsafe extern "C" fn(*mut i32, *mut i32) = core::mem::transmute(f);
         g(topo, base)
     };
-    let estatisticas_do_time: unsafe extern "C" fn(u32, *mut i32, *mut i32) = core::mem::transmute(0x7217a0usize);
+    let estatisticas_do_time: unsafe extern "C" fn(u32, *mut i32, *mut i32) = core::mem::transmute(FN_DRAW_TEAM_STATS_PANEL);
     match aba {
         1 => painel(0x71c270, &mut topo, &mut base),
         2 => painel(0x71e040, &mut topo, &mut base),
@@ -793,7 +793,7 @@ unsafe extern "C" fn montar_tela_da_partida() {
         8 => painel(0x723d20, &mut topo, &mut base),
         9 => estatisticas_do_time(1, &mut topo, &mut base),
         10 => {
-            let tabela: unsafe extern "C" fn(usize, i32, i32) = core::mem::transmute(0x7280e0usize);
+            let tabela: unsafe extern "C" fn(usize, i32, i32) = core::mem::transmute(FN_MATCH_SCREENS_DRAW_LIVE_LEAGUE_TABLE);
             tabela(liga, topo, base);
         }
         _ => {}
@@ -821,7 +821,7 @@ unsafe extern "C" fn montar_tela_da_partida() {
         if parametro_da_tela(7) != 0 {
             let narrador = rd(rd(p + 0x57) + 0x8f7a);
             let r = texto_do_gerente(sm, 0x64, 0x22b, 0x316, 0x24e, 1, 0, 0xc, 3, 0, 0, 1);
-            let narrar: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x6d7b00usize);
+            let narrar: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_MATCH_EVENTS_SHOW_EVENT_TEXT);
             narrar(narrador, rd(rd(p + 0x5b) + 1), st, rd(p + 4), r, 0x2b2, 0, 3, 0);
             gravar_item(8, r);
         } else {
@@ -857,14 +857,14 @@ unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let rb = |a: usize| *(a as *const u8);
     let h = || *(0xb77c7a as *const i16);
-    let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
-    let margem: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x800d30usize);
-    let texto_do_item: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x801c70usize);
-    let humano_no_time: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let usa: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53ca90usize);
-    let indice: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x7fffa0usize);
-    let parar: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(0x802a50usize);
-    let rotulo: unsafe extern "C" fn(u32, usize, usize, u32, *mut u32) -> u32 = core::mem::transmute(0x725a70usize);
+    let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_GET_HUMAN_MANAGER_RECORD);
+    let margem: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_STYLE);
+    let texto_do_item: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
+    let humano_no_time: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let usa: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_CLUB_MANAGER);
+    let indice: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_SCREENMANAGER_FIND_MANAGER_CHANNEL);
+    let parar: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_SCREENMANAGER_STOP_SOUND);
+    let rotulo: unsafe extern "C" fn(u32, usize, usize, u32, *mut u32) -> u32 = core::mem::transmute(FN_MATCH_SCREENS_GET_MATCH_CONTROL_LABEL);
     if g(0xb77c84) != 0 {
         return 0;
     }
@@ -883,7 +883,7 @@ unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
     }
     if modo == 1 {
         if rd(p + 0x57) == 0 {
-            let confirmar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x6b5260usize);
+            let confirmar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_MATCH_DAY_START_WATCHED_MATCH);
             confirmar(*(0xb67a50 as *const usize), p);
         }
         if rd(p + 0x57) == 0 {
@@ -901,10 +901,10 @@ unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
         *((rd(pm + 0x8f7a) + 0x2db0) as *mut u8) = v;
     }
     let volume = rb(rd(pm + 0x8f7a) + 0x2db0);
-    let velocidade: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x5fcff0usize);
+    let velocidade: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_GET_COMMENTARY_SPEED);
     if volume as u16 != velocidade(*(0xb63c98 as *const usize), 0) as u16 {
         // a original empilha o ecx com os 16 bits de cima do que sobrou de 0x5fcff0 (aqui estendido)
-        let repassar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x5fd100usize);
+        let repassar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_HUMAN_MANAGER_SET_COMMENTARY_SPEED);
         repassar(*(0xb63c98 as *const usize), rb(rd(pm + 0x8f7a) + 0x2db0) as u32, 0);
         return -11;
     }
@@ -941,7 +941,7 @@ unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
     let alvo: Option<usize> = if item16 == -1 {
         let mut ao_lance = false;
         if rd((0xb74c26 + h() as isize * 0x300) as usize) != 0 {
-            let conectado: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x5fd210usize);
+            let conectado: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
             if conectado(*(0xb63c98 as *const usize), 0) != 0 {
                 if modo == 2 || modo == 3 {
                     gravar_parametro_da_tela(1, 4);
@@ -959,7 +959,7 @@ unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
         if !ao_lance && modo == 4 {
             ao_lance = true;
         }
-        let lance: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6b55c0usize);
+        let lance: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_MATCH_DAY_STEP_LIVE_MATCH);
         if ao_lance && lance(*(0xb67a50 as *const usize), p) != 0 {
             let marcas = || rb(m);
             if marcas() & 1 != 0 {
@@ -969,7 +969,7 @@ unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
                 por(0xb6b7b0, 1);
             }
             if marcas() & 4 != 0 && g(0xb6b7b0) == 0 {
-                let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
+                let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
                 formatar(BUF, 0x98806c, *((st + 0x4d) as *const i16) as i32);
                 texto_do_item(sm, p3, BUF);
                 por(0xb6b7a8, 1);
@@ -980,7 +980,7 @@ unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
                     // (largura, quebrar, fonte, modo); o modo da original é um sete em dl sobre um edx sujo
                     let (largura, quebrar, fonte, modo_n) = if aba == 1 && rd(st + 0x53) == 0 { (0x262, 1, 5, 0) } else { (0x2b2, 0, 3, (aba == 5) as u32) };
                     let comp = rd(rd(pm + 0x4792));
-                    let narrar: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x6d7b00usize);
+                    let narrar: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_MATCH_EVENTS_SHOW_EVENT_TEXT);
                     narrar(narrador, rd(m + 1), st, comp, p8, largura, quebrar, fonte, modo_n);
                     por(0xb6b7a8, 1);
                 }
@@ -1059,7 +1059,7 @@ unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
                 if usa(alvo) != vaga() {
                     let v = vaga();
                     let u = usa(alvo);
-                    let trocar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x7ff810usize);
+                    let trocar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SCREENMANAGER_SWAP_MANAGER_KEYS);
                     trocar(sm, v, u);
                 }
             }
@@ -1069,7 +1069,7 @@ unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
             gravar_parametro_da_tela(0x15, 0);
             assistir();
             *((ficha(0) + 0xea) as *mut u32) = 0;
-            let tatica: unsafe extern "C" fn(usize, u32, usize, u32, i32, u32) = core::mem::transmute(0x899a50usize);
+            let tatica: unsafe extern "C" fn(usize, u32, usize, u32, i32, u32) = core::mem::transmute(FN_TACTICS_SCREEN_OPEN);
             let fase = rb(pm + 0x8eb3);
             if (fase == 1 || fase == 4) && humano_no_time(alvo, 0, 1, 0, 0) != 0 && indice(sm, usa(alvo)) == h() as u16 {
                 let k = if alvo == t_do_menu(0x1c) { 0x2f } else { 0x30 };
@@ -1128,7 +1128,7 @@ unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
         }
     }
 
-    let ligacao: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7643d0usize);
+    let ligacao: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_MENUBAR_HANDLE_OBJECT_LINK);
     if ligacao(item) == -4 {
         if core::ptr::read_unaligned(espectador()) == 0 {
             core::ptr::write_unaligned(espectador(), -911);
@@ -1191,7 +1191,7 @@ unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
             }
         }
         6 | 9 => {
-            let estatisticas_do_time: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x722dc0usize);
+            let estatisticas_do_time: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_HANDLE_TEAM_STATS_INPUT);
             let r = estatisticas_do_time(item);
             if r != 0 {
                 return r;
@@ -1206,14 +1206,14 @@ unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
             }
         }
         8 => {
-            let trocar: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x725860usize);
+            let trocar: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_MATCH_SCREENS_HANDLE_LATEST_SCORES_CYCLE);
             let r = trocar(item);
             if r != 0 {
                 return r;
             }
         }
         10 => {
-            let converter: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x803320usize);
+            let converter: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_SCREENMANAGER_GET_AREA_SCROLL_ROW);
             let v = parametro_da_tela(0x26);
             let r = converter(sm, v);
             gravar_parametro_da_tela(0x25, r);
@@ -1228,7 +1228,7 @@ unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
         return -11;
     }
     if g(0xb6b7a8) != 0 {
-        let redesenhar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x802d00usize);
+        let redesenhar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_REDRAW_SCREEN);
         redesenhar(sm, 0, 0);
     }
     0
@@ -1244,13 +1244,13 @@ unsafe extern "C" fn montar_detalhes_da_partida() {
     crate::comparacao::ramo("telas montar os detalhes");
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let texto_do_gerente: TextoDoGerente = core::mem::transmute(0x803fd0usize);
-    let caixa: CaixaDoGerente = core::mem::transmute(0x804030usize);
-    let cores: unsafe extern "C" fn(usize, usize, *mut u32, *mut u32) = core::mem::transmute(0x53b640usize);
-    let novo: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x944cf1usize);
-    let apagar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let texto_do_gerente: TextoDoGerente = core::mem::transmute(FN_SCREENMANAGER_ADD_TEXT_ITEM);
+    let caixa: CaixaDoGerente = core::mem::transmute(FN_SCREENMANAGER_ADD_BUTTON_ITEM);
+    let cores: unsafe extern "C" fn(usize, usize, *mut u32, *mut u32) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
+    let novo: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let apagar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let rb = |a: usize| *(a as *const u8);
     let sx = |a: usize| *(a as *const i8) as i32;
@@ -1265,7 +1265,7 @@ unsafe extern "C" fn montar_detalhes_da_partida() {
     let estatisticas = *(0xb6b7c0 as *const usize);
     if reg == 0 {
         reg = novo(0x4f);
-        let ler: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x729e30usize);
+        let ler: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_MATCH_STATS_FIND_RECORD_FIXTURE);
         if ler(estatisticas, indice, reg) == 0 {
             erro_das_telas_da_partida(0x90a);
             apagar(reg);
@@ -1277,14 +1277,14 @@ unsafe extern "C" fn montar_detalhes_da_partida() {
     if foto == 0 {
         let f = novo(0xd7a);
         if f != 0 {
-            let vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(0x9463afusize);
+            let vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
             vetor(f + 0x11f, 0x625, 2, 0x453c30, 0x453c10);
         }
-        let montar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x729600usize);
+        let montar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_MATCH_STATS_READ_MATCH_RECORD);
         if montar(*(0xb6b7c0 as *const usize), indice, f) == 0 {
             erro_das_telas_da_partida(0x91a);
             if f != 0 {
-                let fim_do_vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(0x9462bbusize);
+                let fim_do_vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_VECTOR_DESTRUCTOR_ITERATOR);
                 fim_do_vetor(f + 0x11f, 0x625, 2, 0x453c10);
                 apagar(f);
             }
@@ -1315,7 +1315,7 @@ unsafe extern "C" fn montar_detalhes_da_partida() {
         texto(BUF, 0xa16454, agregado, sx(reg + 0x4c));
         texto_do_gerente(sm, 0x1c3, 0x37, 0x2e4, 0x41, 1, 0, 0x40, 1, cor_a as usize, BUF, 1);
     }
-    let menu: unsafe extern "C" fn(u32, u32) = core::mem::transmute(0x75db00usize);
+    let menu: unsafe extern "C" fn(u32, u32) = core::mem::transmute(FN_MENUBAR_BUILD);
     menu(4, 0);
 
     texto(titulo_da_aba(&mut abas, 0), 0xa163a8);
@@ -1335,20 +1335,20 @@ unsafe extern "C" fn montar_detalhes_da_partida() {
     texto(titulo_da_aba(&mut abas, 6), 0xa16364, sx(t2 + 0x52), sx(t2 + 0x52), t2 + 0x38);
     marcar_aba(&mut abas, 6, 1, 7);
     let (mut topo, mut base) = (0x50i32, 0x221i32);
-    let barra: unsafe extern "C" fn(usize, u32, i32, *mut i32, *mut i32, u32) -> u32 = core::mem::transmute(0x5ed780usize);
+    let barra: unsafe extern "C" fn(usize, u32, i32, *mut i32, *mut i32, u32) -> u32 = core::mem::transmute(FN_GUI_ADD_TAB_BAR);
     let aba = aba as i8 as i32;
     barra(abas.as_mut_ptr() as usize, 7, aba, &mut topo, &mut base, 1);
-    let sem_avancar: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x7febb0usize);
-    let sem_voltar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x7fec60usize);
+    let sem_avancar: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_FORWARD_UNAVAILABLE);
+    let sem_voltar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_BACK_UNAVAILABLE);
     let avancar = (sem_avancar(sm) == 0) as u32;
     let voltar = (sem_voltar(sm, 0) == 0) as u32;
-    let botoes: unsafe extern "C" fn(u32, u32) -> u32 = core::mem::transmute(0x5edcc0usize);
+    let botoes: unsafe extern "C" fn(u32, u32) -> u32 = core::mem::transmute(FN_GUI_ADD_BACK_NEXT_BUTTONS);
     botoes(voltar, avancar);
     let painel = |f: usize, topo: *mut i32, base: *mut i32| {
         let g: unsafe extern "C" fn(*mut i32, *mut i32) = core::mem::transmute(f);
         g(topo, base)
     };
-    let estatisticas_do_time: unsafe extern "C" fn(u32, *mut i32, *mut i32) = core::mem::transmute(0x7217a0usize);
+    let estatisticas_do_time: unsafe extern "C" fn(u32, *mut i32, *mut i32) = core::mem::transmute(FN_DRAW_TEAM_STATS_PANEL);
     match aba {
         1 => painel(0x71c270, &mut topo, &mut base),
         2 => painel(0x71e040, &mut topo, &mut base),
@@ -1397,7 +1397,7 @@ unsafe extern "C" fn comparar_montar_tela_da_partida() {
         // ponytail: liberar, narrar com som e alocar não rodam duas vezes; esses casos se provam no modo Rust
         return o();
     }
-    let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
+    let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_GET_HUMAN_MANAGER_RECORD);
     let f = ficha(0);
     let mut extra = Vec::new();
     if display_do_humano() != 0 {
@@ -1450,11 +1450,11 @@ unsafe extern "C" fn comparar_montar_detalhes_da_partida() {
 /// do parâmetro 0x21, repartidos de 0x115 a 0x2c9 na altura do parâmetro 0x22, e a cor do clube que tem
 /// mais posse no item 5. No fim guarda o estado na cópia (que nasce aqui se não existe).
 unsafe extern "C" fn atualizar_barra_da_posse() {
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let texto: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x801c70usize);
-    let retangulo: unsafe extern "thiscall" fn(usize, u32, i32, i32, i32, i32) = core::mem::transmute(0x800890usize);
-    let fundo: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801040usize);
-    let cores_do_clube: unsafe extern "C" fn(usize, u32, *mut u32, *mut u32) = core::mem::transmute(0x53b640usize);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let texto: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
+    let retangulo: unsafe extern "thiscall" fn(usize, u32, i32, i32, i32, i32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_RECT);
+    let fundo: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_COLOUR);
+    let cores_do_clube: unsafe extern "C" fn(usize, u32, *mut u32, *mut u32) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
 
@@ -1529,29 +1529,29 @@ unsafe extern "C" fn painel_da_visao_geral_da_partida(topo: *mut i32, base: *mut
     if visao_geral_avisa_erro() {
         return orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(503)(topo, base);
     }
-    let txt: TextoDoGerente = core::mem::transmute(0x803fd0usize);
-    let caixa: CaixaDoGerente = core::mem::transmute(0x804030usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
-    let celula: CelulaDaLista = core::mem::transmute(0x8040a0usize);
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let largura_do_texto: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x5e5ad0usize);
-    let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x5e5cd0usize);
-    let rgb: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(0x5e4800usize);
-    let nome_do_jogador: unsafe extern "C" fn(usize, i32, i32, *mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(0x6db2d0usize);
-    let confere: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(0x53e990usize);
-    let nome_do_arbitro: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(0x53eab0usize);
-    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c2990usize);
-    let selecao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7e6f20usize);
-    let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
-    let data_texto: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x54ba20usize);
-    let placar: unsafe extern "C" fn(usize, u32, usize, u32) = core::mem::transmute(0x4bf930usize);
-    let clima: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x9233a0usize);
-    let narrar: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x6d7b00usize);
-    let cores_do_clube: unsafe extern "C" fn(usize, u32, *mut u32, *mut u32) = core::mem::transmute(0x53b640usize);
-    let barra: unsafe extern "C" fn() = core::mem::transmute(0x71d9e0usize);
+    let txt: TextoDoGerente = core::mem::transmute(FN_SCREENMANAGER_ADD_TEXT_ITEM);
+    let caixa: CaixaDoGerente = core::mem::transmute(FN_SCREENMANAGER_ADD_BUTTON_ITEM);
+    let lista: ListaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_AREA);
+    let linha: LinhaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_ITEM);
+    let celula: CelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_BUTTON);
+    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let largura_do_texto: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_FONT_TEXT_WIDTH);
+    let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_FONT_GET_HEIGHT);
+    let rgb: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_GRAPHICS_RGB_TO_PIXEL);
+    let nome_do_jogador: unsafe extern "C" fn(usize, i32, i32, *mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_MATCH_EVENTS_FORMAT_PLAYER_NAME);
+    let confere: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
+    let nome_do_arbitro: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_OFFICIAL_NAME);
+    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_OWN_COMP_RECORD);
+    let selecao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
+    let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
+    let data_texto: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_DATE_GET_LONG_DATE_STRING);
+    let placar: unsafe extern "C" fn(usize, u32, usize, u32) = core::mem::transmute(FN_COMP_UTIL_FORMAT_FIXTURE_ROUND_LABEL);
+    let clima: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_WEATHER_FORMAT_DESCRIPTION);
+    let narrar: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_MATCH_EVENTS_SHOW_EVENT_TEXT);
+    let cores_do_clube: unsafe extern "C" fn(usize, u32, *mut u32, *mut u32) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
+    let barra: unsafe extern "C" fn() = core::mem::transmute(FN_REFRESH_POSSESSION_BAR);
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
     const MAX: usize = usize::MAX;
@@ -1930,35 +1930,35 @@ unsafe extern "C" fn tabela_da_liga_ao_vivo(liga: usize, topo: i32, base: i32) {
     if liga == 0 || parametro_da_tela(0xe) == 0 {
         return orig::<unsafe extern "C" fn(usize, i32, i32)>(504)(liga, topo, base);
     }
-    let txt: TextoDoGerente = core::mem::transmute(0x803fd0usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
-    let celula: CelulaDaLista = core::mem::transmute(0x8040a0usize);
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x5e5cd0usize);
+    let txt: TextoDoGerente = core::mem::transmute(FN_SCREENMANAGER_ADD_TEXT_ITEM);
+    let lista: ListaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_AREA);
+    let linha: LinhaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_ITEM);
+    let celula: CelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_BUTTON);
+    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_FONT_GET_HEIGHT);
     let mensagem: unsafe extern "C" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize =
-        core::mem::transmute(0x5ed070usize);
-    let liga_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
-    let liga_fim: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x682300usize);
-    let copiar_liga: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x682380usize);
-    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
-    let registro: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x6826d0usize);
-    let aplicar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize, usize) = core::mem::transmute(0x685f60usize);
-    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x687970usize);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let contar: unsafe extern "C" fn(usize, u32, usize) = core::mem::transmute(0x728e90usize);
-    let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
-    let data_texto: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x54ba20usize);
-    let dia_da_semana: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x54a3f0usize);
-    let idioma: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x66f4d0usize);
-    let genero_do_dia: unsafe extern "C" fn(u32, u32) -> u32 = core::mem::transmute(0x54d550usize);
-    let competicao_curta: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x4b01d0usize);
-    let nome_da_competicao: unsafe extern "C" fn(usize, u32, u32, u32) = core::mem::transmute(0x4b4850usize);
-    let por_extenso: unsafe extern "C" fn(i32, i32) -> usize = core::mem::transmute(0x90c310usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let rolar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x403320usize);
+        core::mem::transmute(FN_GUI_ADD_TEXT_AREA);
+    let liga_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
+    let liga_fim: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_DESTRUCTOR_LEAGUE);
+    let copiar_liga: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_LEAGUE_COPY_FOR_DISPLAY);
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
+    let registro: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
+    let aplicar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize, usize) = core::mem::transmute(FN_LEAGUE_APPLY_RESULT_TO_TABLE);
+    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let contar: unsafe extern "C" fn(usize, u32, usize) = core::mem::transmute(FN_MATCH_SCREENS_TALLY_LIVE_SCORE);
+    let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
+    let data_texto: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_DATE_GET_LONG_DATE_STRING);
+    let dia_da_semana: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
+    let idioma: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
+    let genero_do_dia: unsafe extern "C" fn(u32, u32) -> u32 = core::mem::transmute(FN_DATE_GET_WEEKDAY_GENDER);
+    let competicao_curta: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_COMP_UTIL_GET_PARENT_STAGE_ID);
+    let nome_da_competicao: unsafe extern "C" fn(usize, u32, u32, u32) = core::mem::transmute(FN_COMP_UTIL_GET_STAGE_NAME);
+    let por_extenso: unsafe extern "C" fn(i32, i32) -> usize = core::mem::transmute(FN_UTILS_FORMAT_ORDINAL);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let rolar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_AREA_SET_SCROLL_ROW);
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
     const MAX: usize = usize::MAX;
@@ -2071,7 +2071,7 @@ unsafe extern "C" fn tabela_da_liga_ao_vivo(liga: usize, topo: i32, base: i32) {
     let y = topo + 0x28;
     let clubes = core::ptr::read_unaligned((liga + 0x3e) as *const i16);
     let (alto, n);
-    if clubes <= 8 && core::ptr::read_unaligned((liga + 0x3c) as *const i16) > 0 && u(u(liga + 4)) != u(0x9cf590) {
+    if clubes <= 8 && core::ptr::read_unaligned((liga + 0x3c) as *const i16) > 0 && u(u(liga + 4)) != u(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
         let mut k = (clubes as u8).wrapping_add(1);
         if b8(liga + 0xbe) != 0 || b8(liga + 0xd9) & 1 != 0 {
             k = k.wrapping_add(1);
@@ -2303,8 +2303,8 @@ unsafe fn escalacao_juntar(d: *mut u8, s: *const u8) {
 /// O subtítulo da conferência ("Team Selection" ou "Please Confirm"): o texto traduzido em 0xde1f64 e
 /// 0x803f80 no gerente.
 unsafe fn titulo_da_escalacao(t: usize) {
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let subtitulo: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x803f80usize);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let subtitulo: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_ADD_SCREEN_SUBTITLE);
     texto(0xde1f64, t);
     subtitulo(GERENTE_DE_TELAS, 0xde1f64, 1);
 }
@@ -2313,10 +2313,10 @@ unsafe fn titulo_da_escalacao(t: usize) {
 /// textos traduzidos) e, para cada um, a ligação no Text `texto_obj` (0x4ae8a0, tipo 0x7dc na seleção,
 /// senão 0x7d7).
 unsafe fn nomes_da_escalacao(texto_obj: usize, lista: &[usize], n: i8, clube: usize) {
-    let nome_do: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(0x53dba0usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    let ligacao: unsafe extern "thiscall" fn(usize, *const u8, u32, usize) -> i32 = core::mem::transmute(0x4ae8a0usize);
+    let nome_do: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let ligacao: unsafe extern "thiscall" fn(usize, *const u8, u32, usize) -> i32 = core::mem::transmute(FN_TEXT_ADD_LINK);
     let mut nome = [0u8; 0xc8];
     let mut juntos = [0u8; 0x7d0];
     let mut k: i8 = 0;
@@ -2340,11 +2340,11 @@ unsafe fn nomes_da_escalacao(texto_obj: usize, lista: &[usize], n: i8, clube: us
 /// (0x55f990). `caixa_sobre`/`ok_sobre`: onde a original empurra a cor da caixa / a cor do texto do
 /// botão com os 16 bits de cima da devolução da chamada anterior (varia por ramo).
 unsafe fn aviso_da_escalacao(texto_obj: usize, msg: *const u8, caixa_sobre: bool, ok_sobre: bool) {
-    let definir: unsafe extern "thiscall" fn(usize, *const u8) -> usize = core::mem::transmute(0x4ae660usize);
+    let definir: unsafe extern "thiscall" fn(usize, *const u8) -> usize = core::mem::transmute(FN_TEXT_SET_STRING);
     let area: unsafe extern "C" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize =
-        core::mem::transmute(0x5ed200usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
+        core::mem::transmute(FN_GUI_ADD_TEXT_AREA_FROM_TEXT);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let linha: LinhaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_ITEM);
     let r = definir(texto_obj, msg);
     let cor = if caixa_sobre { cor_sobre(r, 0xae3184) } else { cor_em(0xae3184) };
     area(0x6e, 0x91, 0x30c, 0x217, 2, 0, 0x10, 4, cor, texto_obj);
@@ -2368,40 +2368,40 @@ unsafe fn aviso_da_escalacao(texto_obj: usize, msg: *const u8, caixa_sobre: bool
 /// com "No" e "Yes".
 unsafe extern "C" fn desenhar_conferencia_da_escalacao() {
     crate::comparacao::ramo("telas conferencia da escalacao");
-    let criar: unsafe extern "thiscall" fn(*mut usize, usize) -> usize = core::mem::transmute(0x4ae590usize);
-    let destruir: unsafe extern "thiscall" fn(*mut usize) = core::mem::transmute(0x4ae630usize);
-    let definir: unsafe extern "thiscall" fn(usize, *const u8) -> usize = core::mem::transmute(0x4ae660usize);
-    let ligacao: unsafe extern "thiscall" fn(usize, *const u8, u32, usize) -> i32 = core::mem::transmute(0x4ae8a0usize);
-    let escolhido: unsafe extern "thiscall" fn(usize, usize, u32, usize) -> usize = core::mem::transmute(0x8968f0usize);
-    let convocado: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize) -> usize = core::mem::transmute(0x7757d0usize);
-    let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
-    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let inelegivel: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x8cf5e0usize);
-    let suspenso: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x55d270usize);
-    let estado_da_lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
-    let lesao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
-    let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x66f4d0usize);
-    let sem_permissao: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x8c7560usize);
-    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    let fundo: unsafe extern "C" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x41c250usize);
-    let menu: unsafe extern "C" fn(u32, u32) = core::mem::transmute(0x75db00usize);
-    let cores: unsafe extern "C" fn(usize, u32, *mut u32, *mut u32) = core::mem::transmute(0x53b640usize);
-    let nome_da_equipe: unsafe extern "C" fn(usize, usize, usize, u32, u32, u32) -> i32 = core::mem::transmute(0x542100usize);
-    let titulo: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x803f30usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let limite_do_banco: unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, usize, u32, usize) -> u32 = core::mem::transmute(0x8cf880usize);
-    let por_extenso: unsafe extern "C" fn(i32, *mut u8, u32, u32) -> i32 = core::mem::transmute(0x90c520usize);
-    let vaga_do_capitao: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u8 = core::mem::transmute(0x897590usize);
-    let melhor_titular: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(0x727e20usize);
-    let cobrador: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize) -> usize = core::mem::transmute(0x897990usize);
-    let vaga_do_jogador: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u8 = core::mem::transmute(0x8972c0usize);
-    let nome_do: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(0x53dba0usize);
+    let criar: unsafe extern "thiscall" fn(*mut usize, usize) -> usize = core::mem::transmute(FN_TEXT_TEXT);
+    let destruir: unsafe extern "thiscall" fn(*mut usize) = core::mem::transmute(FN_TEXT_DESTRUCTOR_TEXT);
+    let definir: unsafe extern "thiscall" fn(usize, *const u8) -> usize = core::mem::transmute(FN_TEXT_SET_STRING);
+    let ligacao: unsafe extern "thiscall" fn(usize, *const u8, u32, usize) -> i32 = core::mem::transmute(FN_TEXT_ADD_LINK);
+    let escolhido: unsafe extern "thiscall" fn(usize, usize, u32, usize) -> usize = core::mem::transmute(FN_TACTICS_GET_SELECTED_PLAYER);
+    let convocado: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_NATIONALTEAMS_GET_INTERNATIONAL_DUTY_CLUB);
+    let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
+    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let inelegivel: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_INELIGIBILITY_CODE);
+    let suspenso: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_DISCIPLINE_IS_PLAYER_BANNED);
+    let estado_da_lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
+    let lesao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY);
+    let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
+    let sem_permissao: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_PLAYER_NEEDS_WORK_PERMIT);
+    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let fundo: unsafe extern "C" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_BACKGROUND_SET_CLUB_PICTURE);
+    let menu: unsafe extern "C" fn(u32, u32) = core::mem::transmute(FN_MENUBAR_BUILD);
+    let cores: unsafe extern "C" fn(usize, u32, *mut u32, *mut u32) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
+    let nome_da_equipe: unsafe extern "C" fn(usize, usize, usize, u32, u32, u32) -> i32 = core::mem::transmute(FN_CLUB_GET_NATIONAL_TEAM_NAME);
+    let titulo: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(FN_SCREENMANAGER_ADD_SCREEN_TITLE);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let limite_do_banco: unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, usize, u32, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_CHECK_MATCHDAY_SQUAD_LIMIT);
+    let por_extenso: unsafe extern "C" fn(i32, *mut u8, u32, u32) -> i32 = core::mem::transmute(FN_UTILS_NUMBER_TO_WORDS);
+    let vaga_do_capitao: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u8 = core::mem::transmute(FN_TACTICS_FIND_CAPTAIN_SLOT);
+    let melhor_titular: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_MATCH_SCREENS_FIND_BEST_RATED_STARTER_SLOT);
+    let cobrador: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_TACTICS_GET_SET_PIECE_TAKER);
+    let vaga_do_jogador: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u8 = core::mem::transmute(FN_TACTICS_FIND_SELECTION_SLOT);
+    let nome_do: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
     let area: unsafe extern "C" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize =
-        core::mem::transmute(0x5ed200usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let celula: CelulaDaLista = core::mem::transmute(0x8040a0usize);
+        core::mem::transmute(FN_GUI_ADD_TEXT_AREA_FROM_TEXT);
+    let lista: ListaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_AREA);
+    let celula: CelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_BUTTON);
     let g = |a: usize| *(a as *const usize);
     const BUF: usize = 0xde1f64;
     const SEPARADOR: usize = 0x9ed918; // "\n\n"
@@ -2486,7 +2486,7 @@ unsafe extern "C" fn desenhar_conferencia_da_escalacao() {
             }
         }
         if sem_permissao(g(0xde1f54), p, clube, 0) != 0
-            && *(competicao() as *const i32) != *(0x9cf684 as *const i32)
+            && *(competicao() as *const i32) != *(KEY_CLUB_COMP_RESERVE as *const i32)
             && amistoso(g(0xae2c74), competicao()) == 0
         {
             por(&mut sem_visto, p);
@@ -2654,10 +2654,10 @@ unsafe extern "thiscall" fn carregar_estatisticas_da_partida(estat: usize, zip: 
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(494)(estat, zip);
     }
     crate::comparacao::ramo("telas estatisticas carregar");
-    let abrir: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
-    let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
-    let fechar: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let abrir: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
+    let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
+    let fechar: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let mut h = abrir(zip, 0xa17bd0, 0, 0x16, 4);
     if h == 0 {
         aviso_em(0xa17ba0, 0x49e);
@@ -2702,9 +2702,9 @@ unsafe extern "thiscall" fn salvar_estatisticas_da_partida(estat: usize, zip: us
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(495)(estat, zip);
     }
     crate::comparacao::ramo("telas estatisticas salvar");
-    let abrir: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
-    let escrever: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
-    let fechar: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
+    let abrir: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
+    let escrever: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
+    let fechar: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
     let mut h = abrir(zip, 0xa17bd0, 1, 0x16, 4);
     if h == 0 {
         erro_em(0xa17ba0, 0x4f1);
@@ -2765,11 +2765,11 @@ unsafe extern "thiscall" fn ler_registro_da_partida(estat: usize, k: i32, saida:
         return orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(490)(estat, k, saida);
     }
     crate::comparacao::ramo("estatisticas ler registro");
-    let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
-    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
-    let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
-    let buscar: unsafe extern "C" fn(usize, i32, u32) -> i32 = core::mem::transmute(0x946a22usize);
-    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
+    let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
+    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
+    let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
+    let buscar: unsafe extern "C" fn(usize, i32, u32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
+    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     let f = abrir(caminho(0x987da0, 0xa17b88), 0x98f928);
     if f == 0 {
         aviso_em(0xa17ba0, 0x128);
@@ -2798,11 +2798,11 @@ unsafe extern "thiscall" fn registrar_partida(estat: usize, m: usize, r: usize) 
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(491)(estat, m, r);
     }
     crate::comparacao::ramo("estatisticas registrar partida");
-    let preencher: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x729ff0usize);
-    let gravar: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(0x729820usize);
+    let preencher: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_MATCH_STATS_FILL_MATCH_RECORD);
+    let gravar: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_MATCH_STATS_WRITE_MATCH_RECORD);
     preencher(estat, m, r, 0);
     let jogo = core::ptr::read_unaligned((m + 0x4792) as *const usize);
-    if *(jogo as *const i32) != *(0x9cf684 as *const i32) || *((r + 0x4c) as *const u8) == 0 {
+    if *(jogo as *const i32) != *(KEY_CLUB_COMP_RESERVE as *const i32) || *((r + 0x4c) as *const u8) == 0 {
         gravar(estat, jogo, r, core::ptr::read_unaligned((m + 0x8f7a) as *const usize));
     }
     1
@@ -2820,14 +2820,14 @@ unsafe extern "thiscall" fn gravar_registro_da_partida(estat: usize, jogo: usize
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(492)(estat, jogo, r, eventos);
     }
     crate::comparacao::ramo("estatisticas gravar registro");
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let gravar_eventos: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(0x6d98b0usize);
-    let balde: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x729bd0usize);
-    let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
-    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
-    let escrever: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
-    let buscar: unsafe extern "C" fn(usize, i32, u32) -> i32 = core::mem::transmute(0x946a22usize);
-    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let gravar_eventos: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_MATCH_EVENTS_SAVE_EVENT_LOG);
+    let balde: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_MATCH_STATS_GET_RECORD_BUCKET);
+    let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
+    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
+    let escrever: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
+    let buscar: unsafe extern "C" fn(usize, i32, u32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
+    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     let d = |o: usize| (estat + o) as *mut i32;
     let j = |o: usize| (jogo + o) as *mut i32;
 
@@ -2966,16 +2966,16 @@ const CAMPOS_DAS_ESTATISTICAS: [(usize, usize); 20] = [
 unsafe extern "C" fn preencher_estatisticas_do_time(modo: u32, area: usize) {
     type T9 = unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, u32, u32, u32, usize) -> u32;
     type T11 = unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, u32, u32, u32, usize, u32, usize) -> u32;
-    let celula: T11 = core::mem::transmute(0x8040a0usize);
-    let texto_da_celula: T9 = core::mem::transmute(0x804100usize);
-    let texto_do_item: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x801c70usize);
-    let margem: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x800d30usize);
-    let cor_do_texto: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801960usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let rgb: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(0x5e4800usize);
-    let nome_de: unsafe extern "C" fn(u32, u32, u32, *mut u8, u32, u32, u32) = core::mem::transmute(0x53e140usize);
-    let confere: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(0x53e990usize);
+    let celula: T11 = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_BUTTON);
+    let texto_da_celula: T9 = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
+    let texto_do_item: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
+    let margem: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_STYLE);
+    let cor_do_texto: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT_COLOUR);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let rgb: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_GRAPHICS_RGB_TO_PIXEL);
+    let nome_de: unsafe extern "C" fn(u32, u32, u32, *mut u8, u32, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_NAME_FROM_IDS);
+    let confere: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
     const BUF: usize = 0xde1f64;
     let sm = GERENTE_DE_TELAS;
 
@@ -3167,27 +3167,27 @@ unsafe extern "C" fn preencher_estatisticas_do_time(modo: u32, area: usize) {
 /// minutos do mesmo jogador juntos) e o agregado. Só a página mostrada é escrita (segunda passada).
 /// No rodapé "<< Página x/y >>" (ou "Hold") com mais de uma página; no fim a hora no parâmetro 0x14.
 unsafe extern "C" fn atualizar_ultimos_placares() {
-    let texto_do_item: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x801c70usize);
-    let margem: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x800d30usize);
-    let cor_do_texto: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801960usize);
-    let cor_de_fundo: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801040usize);
-    let fonte_do_item: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801660usize);
-    let ligar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801fc0usize);
-    let dado: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x8022d0usize);
-    let posicionar: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32, u32) = core::mem::transmute(0x800890usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let rgb: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(0x5e4800usize);
-    let nome_da_fase: unsafe extern "C" fn(i32, i32, usize, u32, u32) -> i32 = core::mem::transmute(0x4bffc0usize);
-    let largura_do_texto: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x5e5ad0usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let fase: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(0x6b6570usize);
-    let abandono: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x6d5930usize);
-    let nome_do_jogador: unsafe extern "C" fn(usize, i32, i32, *mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(0x6db2d0usize);
-    let confere: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(0x53e990usize);
-    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c2990usize);
-    let selecao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7e6f20usize);
-    let agora: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x90c510usize);
+    let texto_do_item: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
+    let margem: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_STYLE);
+    let cor_do_texto: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT_COLOUR);
+    let cor_de_fundo: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_COLOUR);
+    let fonte_do_item: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_FONT);
+    let ligar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_ID);
+    let dado: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_DATA);
+    let posicionar: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_RECT);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let rgb: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_GRAPHICS_RGB_TO_PIXEL);
+    let nome_da_fase: unsafe extern "C" fn(i32, i32, usize, u32, u32) -> i32 = core::mem::transmute(FN_COMP_UTIL_FORMAT_STAGE_ROUND_NAME);
+    let largura_do_texto: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_FONT_TEXT_WIDTH);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let fase: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_MATCH_DAY_GET_PERIOD_RANK);
+    let abandono: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_MATCH_ABANDONED);
+    let nome_do_jogador: unsafe extern "C" fn(usize, i32, i32, *mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_MATCH_EVENTS_FORMAT_PLAYER_NAME);
+    let confere: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
+    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_OWN_COMP_RECORD);
+    let selecao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
+    let agora: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
     const BUF: usize = 0xde1f64;
     let sm = GERENTE_DE_TELAS;
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
@@ -3599,13 +3599,13 @@ unsafe extern "C" fn atualizar_ultimos_placares() {
 /// partida (0x718aa0) na vaga do humano: −4.
 unsafe extern "C" fn esperar_os_outros_jogadores() -> i32 {
     crate::comparacao::ramo("telas espera dos outros jogadores");
-    let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
-    let humanos: unsafe extern "thiscall" fn(usize, *mut usize, *mut i16, i32) = core::mem::transmute(0x7ffd80usize);
-    let ausente: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7ffdd0usize);
-    let fechar_tudo: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x803d80usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let mostrar: unsafe extern "thiscall" fn(usize, usize, i32, u32, i32) = core::mem::transmute(0x802f80usize);
-    let abrir_partida: unsafe extern "C" fn(usize, usize) = core::mem::transmute(0x718aa0usize);
+    let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_GET_HUMAN_MANAGER_RECORD);
+    let humanos: unsafe extern "thiscall" fn(usize, *mut usize, *mut i16, i32) = core::mem::transmute(FN_SCREENMANAGER_GET_CHANNEL_MANAGER_KEYS);
+    let ausente: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_MANAGER_AWAY);
+    let fechar_tudo: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_SCREENMANAGER_CLOSE_ALL_SCREENS_803D80);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let mostrar: unsafe extern "thiscall" fn(usize, usize, i32, u32, i32) = core::mem::transmute(FN_SCREENMANAGER_SEND_NETWORK_STATUS_MESSAGE);
+    let abrir_partida: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_OPEN_MATCH_SCREEN);
     let sm = GERENTE_DE_TELAS;
     let h = || *(0xb77c7a as *const i16);
     let chave_atual = || core::ptr::read_unaligned((0xb74c26 + h() as isize * 0x300) as *const usize);
@@ -3693,10 +3693,10 @@ unsafe fn cor_sobre(x: usize, a: usize) -> usize {
 
 /// A mensagem de "não há" dos painéis da partida (0x5ed070 com as linhas que cabem na fonte 3).
 unsafe fn mensagem_do_painel(topo: *mut i32, base: *mut i32, texto_id: usize) {
-    let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x5e5cd0usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_FONT_GET_HEIGHT);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let mensagem: unsafe extern "C" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize =
-        core::mem::transmute(0x5ed070usize);
+        core::mem::transmute(FN_GUI_ADD_TEXT_AREA);
     let a = altura(3);
     let n = ((*base - *topo - 0x10) / a) as u8;
     texto(0xde1f64, texto_id);
@@ -3713,11 +3713,11 @@ unsafe fn mensagem_do_painel(topo: *mut i32, base: *mut i32, texto_id: usize) {
 /// 0x19, `*base` no 0xc e os valores (0x720320).
 unsafe extern "C" fn painel_das_zonas_de_acao(topo: *mut i32, base: *mut i32) {
     crate::comparacao::ramo("telas painel das zonas de acao");
-    let caixa: CaixaDoGerente = core::mem::transmute(0x804030usize);
-    let txt: TextoDoGerente = core::mem::transmute(0x803fd0usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    let caixa: CaixaDoGerente = core::mem::transmute(FN_SCREENMANAGER_ADD_BUTTON_ITEM);
+    let txt: TextoDoGerente = core::mem::transmute(FN_SCREENMANAGER_ADD_TEXT_ITEM);
+    let lista: ListaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_AREA);
+    let linha: LinhaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_ITEM);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
 
@@ -3765,7 +3765,7 @@ unsafe extern "C" fn painel_das_zonas_de_acao(topo: *mut i32, base: *mut i32) {
     lista(display_do_humano(), 0x6e, *topo as usize, 0x30c, *base as usize, 1, 0, 1, 0, 2, 0, usize::MAX);
     let (mut x0, mut y0, mut x1, mut y1) = (0i32, 0i32, 0i32, 0i32);
     let campo: unsafe extern "C" fn(i32, i32, i32, i32, *mut i32, *mut i32, *mut i32, *mut i32, u32, i32, u32) =
-        core::mem::transmute(0x8ac600usize);
+        core::mem::transmute(FN_DRAW_PITCH);
     campo(0xb9, *topo + 10, 0x2c1, *base - 0x37, &mut x0, &mut y0, &mut x1, &mut y1, 1, -1, 0x4080_0000);
     let w = x1 - x0;
     let terco = w / 3;
@@ -3782,7 +3782,7 @@ unsafe extern "C" fn painel_das_zonas_de_acao(topo: *mut i32, base: *mut i32) {
     txt(sm, u(x0 + dois + 10), u(y0 + 5), u(x1 - 10), u(y0 + 0x19), 1, 0, 0xc, 1, cor_em(0xaebdec), 0, 1);
 
     // as cores dos dois clubes (0x53b640 grava u16; o resto da variável da original é lixo da pilha, aqui 0)
-    let cores_do_clube: unsafe extern "C" fn(usize, u32, *mut u32, *mut u32) = core::mem::transmute(0x53b640usize);
+    let cores_do_clube: unsafe extern "C" fn(usize, u32, *mut u32, *mut u32) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
     let (mut c1a, mut c1b, mut c2a, mut c2b) = (0u32, 0u32, 0u32, 0u32);
     let clubes = *(0xae23b4 as *const usize);
     let id1 = core::ptr::read_unaligned(dados as *const i32);
@@ -3817,7 +3817,7 @@ unsafe extern "C" fn painel_das_zonas_de_acao(topo: *mut i32, base: *mut i32) {
     gravar_parametro_da_tela(0x18, u(x1));
     gravar_parametro_da_tela(0x19, u(y1));
     gravar_parametro_da_tela(0xc, u(*base));
-    let valores: unsafe extern "C" fn() = core::mem::transmute(0x720320usize);
+    let valores: unsafe extern "C" fn() = core::mem::transmute(FN_REFRESH_ACTION_ZONES_VALUES);
     valores();
 }
 
@@ -3832,10 +3832,10 @@ unsafe extern "C" fn painel_das_zonas_de_acao(topo: *mut i32, base: *mut i32) {
 /// sem memória: a original (caixa de erro).
 unsafe extern "C" fn painel_do_relatorio_da_partida(topo: *mut i32, base: *mut i32) {
     let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(485);
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
+    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
+    let lista: ListaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_AREA);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
     const SEM_RELATORIO: usize = 0xa16900;
@@ -3850,7 +3850,7 @@ unsafe extern "C" fn painel_do_relatorio_da_partida(topo: *mut i32, base: *mut i
             return mensagem_do_painel(topo, base, SEM_RELATORIO);
         }
         if parametro_da_tela(0x2d) == 0 {
-            let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+            let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
             let memoria = novo(0x2db1);
             if memoria == 0 {
                 // ponytail: sem memória a original mostra o erro (e tenta alocar de novo, sem efeito)
@@ -3858,15 +3858,15 @@ unsafe extern "C" fn painel_do_relatorio_da_partida(topo: *mut i32, base: *mut i
             }
             crate::comparacao::ramo("telas painel do relatorio da partida (montar)");
             // ponytail: o quadro SEH da original só libera a memória se o construtor lançar exceção, o que ele não faz
-            let construir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x6d5bf0usize);
+            let construir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_MATCH_EVENTS_MATCH_EVENTS);
             let r = construir(memoria, 0);
             gravar_parametro_da_tela(0x2d, r);
-            let montar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6d9c40usize);
+            let montar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_MATCH_EVENTS_LOAD_EVENT_LOG);
             if montar(r, dados + 0xd69) as u8 == 0 {
                 mensagem_do_painel(topo, base, SEM_RELATORIO);
-                let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5a8f60usize);
+                let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
                 destruir(r);
-                let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
+                let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
                 liberar(r);
                 gravar_parametro_da_tela(0x2d, 0);
                 return;
@@ -3908,7 +3908,7 @@ unsafe extern "C" fn painel_do_relatorio_da_partida(topo: *mut i32, base: *mut i
             let mut j: u32 = 0;
             loop {
                 let id = if partida != 0 { *(partida as *const u32) } else { u32::MAX };
-                let texto_do_lance: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x6d8d10usize);
+                let texto_do_lance: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_MATCH_EVENTS_BUILD_REPORT_TEXT);
                 let t = texto_do_lance(relatorio, entrada, dados, id, j);
                 j += 1;
                 if t == 0 {
@@ -3916,12 +3916,12 @@ unsafe extern "C" fn painel_do_relatorio_da_partida(topo: *mut i32, base: *mut i
                 }
                 if linhas == 0 {
                     let (b, a) = (*base, *topo);
-                    let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x5e5cd0usize);
+                    let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_FONT_GET_HEIGHT);
                     let n = ((b - a) / altura(2)) as u8;
                     // ponytail: os 3 bytes de cima das linhas são lixo da pilha na original; aqui 0
                     tabela = lista(display_do_humano(), 0x6e, a as usize, 0x30c, b as usize, 2, colunas.as_mut_ptr() as usize, n as usize, 0, 1, 0, usize::MAX);
                 }
-                let cor_rgb: unsafe extern "C" fn(u32, u32, u32, u32) -> usize = core::mem::transmute(0x5e4800usize);
+                let cor_rgb: unsafe extern "C" fn(u32, u32, u32, u32) -> usize = core::mem::transmute(FN_GRAPHICS_RGB_TO_PIXEL);
                 let k = *(entrada as *const i16) as i32;
                 let palavra = |a: usize| (cor & 0xffff_0000) | cor_em(a);
                 cor = match k {
@@ -3944,11 +3944,11 @@ unsafe extern "C" fn painel_do_relatorio_da_partida(topo: *mut i32, base: *mut i
                 let mut k = primeira;
                 if ultimo_minuto != minuto {
                     ultimo_minuto = minuto;
-                    let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x66f4d0usize);
+                    let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
                     if idioma() != 2 {
                         texto(BUF, 0xa168ec, minuto as u32 + 1);
                     } else {
-                        let por_extenso: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x90c310usize);
+                        let por_extenso: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_UTILS_FORMAT_ORDINAL);
                         formatar(BUF, 0xa168e4, por_extenso(minuto.wrapping_add(1) as u32, 2));
                     }
                     texto_da_celula(sm, tabela, 0, k as usize, 2, 0, 0xc, 2, cor_em(0xaebdec), BUF);
@@ -3986,14 +3986,14 @@ unsafe extern "C" fn painel_do_relatorio_da_partida(topo: *mut i32, base: *mut i
 /// parâmetro 2 e a marca de vista do humano da vez no grupo (+0x14 + 4h).
 unsafe extern "C" fn montar_jogos_do_dia() {
     crate::comparacao::ramo("telas montar os jogos do dia");
-    let caixa: CaixaDoGerente = core::mem::transmute(0x804030usize);
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let selecao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7e6f20usize);
+    let caixa: CaixaDoGerente = core::mem::transmute(FN_SCREENMANAGER_ADD_BUTTON_ITEM);
+    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
+    let lista: ListaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_AREA);
+    let linha: LinhaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_ITEM);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let selecao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
     let sem_selo = |c: usize| {
-        let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c2990usize);
+        let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_OWN_COMP_RECORD);
         amistoso(*(0xae2c74 as *const usize), c) == 0 && selecao(*(0xb74434 as *const usize), c) == 0
     };
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
@@ -4004,27 +4004,27 @@ unsafe extern "C" fn montar_jogos_do_dia() {
     let mut colunas: [u8; 9] = [3, 2, 0x12, 1, 4, 1, 0x12, 2, 3];
     let grupo = parametro_da_tela(1);
     let comp = (*(0xae23d0 as *const usize) as isize + rd32(grupo) as isize * 107) as usize;
-    let fundo: unsafe extern "C" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x41c410usize);
+    let fundo: unsafe extern "C" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_BACKGROUND_SET_COMP_PICTURE);
     fundo(comp, 0, 0);
     // as cores da competição (0x53b7c0 grava u16; o resto da variável da original é lixo da pilha, aqui 0)
     let (mut ca, mut cb) = (0u32, 0u32);
-    let cores: unsafe extern "C" fn(usize, *mut u32, *mut u32) = core::mem::transmute(0x53b7c0usize);
+    let cores: unsafe extern "C" fn(usize, *mut u32, *mut u32) = core::mem::transmute(FN_DATABASE_GET_COMP_COLOURS);
     cores(comp, &mut ca, &mut cb);
     let mais_de_uma = rd32(grupo + 8) > rd32(grupo + 4);
     let chave = *(comp as *const usize);
-    if chave == *(0x9cf668 as *const usize) && mais_de_uma {
+    if chave == *(KEY_CLUB_COMP_FRIENDLY as *const usize) && mais_de_uma {
         texto(BUF, 0xa1631c);
-    } else if chave == *(0x9cf684 as *const usize) && mais_de_uma {
+    } else if chave == *(KEY_CLUB_COMP_RESERVE as *const usize) && mais_de_uma {
         texto(BUF, 0xa16310);
     } else {
         copiar_para_o_texto(comp + 4);
     }
-    let titulo: unsafe extern "thiscall" fn(usize, u32, u32, usize) = core::mem::transmute(0x803f30usize);
+    let titulo: unsafe extern "thiscall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_ADD_SCREEN_TITLE);
     titulo(sm, cb, ca, BUF);
     if sem_selo(comp) {
         linha(display_do_humano(), 6, 0x7d, 0xa, 0x316, 0x46, 0, 0, 1, 0, 0, 0xc, 7, 0, 0, 0, 0x7d0, comp, usize::MAX);
     }
-    let menu: unsafe extern "C" fn(u32, u32) = core::mem::transmute(0x75db00usize);
+    let menu: unsafe extern "C" fn(u32, u32) = core::mem::transmute(FN_MENUBAR_BUILD);
     menu(4, 0);
 
     // o título do dia; o byte da data vai inteiro (as rotinas só leem o byte)
@@ -4037,13 +4037,13 @@ unsafe extern "C" fn montar_jogos_do_dia() {
         (true, true) => 0xa162b0,
         (true, false) => 0xa16290,
     };
-    let dia_a: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x54d040usize);
-    let dia_b: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x54d130usize);
+    let dia_a: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_DATE_GET_TIME_OF_DAY_NAME);
+    let dia_b: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_DATE_GET_TIME_OF_DAY_GENDER);
     let r1 = dia_a(*(rd(0xb67a50) as *const u8) as u32, 1);
     let r2 = dia_b(*(rd(0xb67a50) as *const u8) as u32) as u8 as i8 as i32;
     let r3 = dia_b(*(rd(0xb67a50) as *const u8) as u32) as u8 as i8 as i32;
     texto(BUF, formato, r3, r2, r1);
-    let titulo_do_dia: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x803f80usize);
+    let titulo_do_dia: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_ADD_SCREEN_SUBTITLE);
     titulo_do_dia(sm, BUF, 1);
 
     // os 3 bytes de cima do número de linhas da tabela: o contador dos grupos que a original deixou na pilha
@@ -4075,7 +4075,7 @@ unsafe extern "C" fn montar_jogos_do_dia() {
                     }
                     3..=7 => {
                         let mut nome = [0u8; 0x64];
-                        let continente: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(0x6177f0usize);
+                        let continente: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_GET_CONTINENT_ADJECTIVE);
                         continente(*((0xb63d64 + tipo as isize * 72) as *const usize), nome.as_mut_ptr(), 0x64, 6);
                         copiar_para_o_texto(nome.as_ptr() as usize);
                     }
@@ -4113,15 +4113,15 @@ unsafe extern "C" fn montar_jogos_do_dia() {
         caixa(sm, 0x28f, 0x91, 0x30c, 0xa5, 0x30, cor_sobre(r, 0xae317e), 0xc, 1, cor_em(0xae3184), BUF, 0x7d0, comp);
         esquerda = 0xaa;
     }
-    let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x5e5cd0usize);
+    let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_FONT_GET_HEIGHT);
     let n = ((0x207 - esquerda as i32) / altura(3)) as u8;
     let tabela = lista(display_do_humano(), 0x6e, esquerda, 0x30c, 0x217, 9, colunas.as_mut_ptr() as usize, (resto & !0xff) | n as usize, 0, 2, 0, usize::MAX);
 
     let mut k: i32 = 0;
     let mut alvo: i32 = -1;
     let mut anterior: usize = 0;
-    let humano_manda: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x600c90usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let humano_manda: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CURRENT_CONTROLS_CLUB);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let mut j = rd32(grupo + 4);
     while j <= rd32(grupo + 8) {
         let partidas = rd(rd(0xb67a50) + 0x19);
@@ -4135,9 +4135,9 @@ unsafe extern "C" fn montar_jogos_do_dia() {
                 texto_da_celula(sm, tabela, 0, k as usize, 1, 0, 1, 1, cor_sobre(partidas, 0xae3184), 0);
                 k += 1;
             }
-            let rodada: unsafe extern "C" fn(i32, i32, usize, u32, u32) = core::mem::transmute(0x4bffc0usize);
+            let rodada: unsafe extern "C" fn(i32, i32, usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_FORMAT_STAGE_ROUND_NAME);
             rodada(w32 as i32, w30 as i32, BUF, 0x7d0, 0);
-            let largura_do_texto: unsafe extern "C" fn(usize, *const u8) -> i32 = core::mem::transmute(0x5e5ad0usize);
+            let largura_do_texto: unsafe extern "C" fn(usize, *const u8) -> i32 = core::mem::transmute(FN_FONT_TEXT_WIDTH);
             let mut largura = largura_do_texto(3, BUF as *const u8) + 0x73;
             if largura >= 0x2f1 {
                 largura = 0x2f1;
@@ -4159,23 +4159,23 @@ unsafe extern "C" fn montar_jogos_do_dia() {
         } else if alvo == -1 && (humano(c1, 0, 1, 0, 0) != 0 || humano(c2, 0, 1, 0, 0) != 0) {
             alvo = k;
         }
-        let partida_na_tabela: unsafe extern "C" fn(usize, usize, *mut i32, u32) = core::mem::transmute(0x49db00usize);
+        let partida_na_tabela: unsafe extern "C" fn(usize, usize, *mut i32, u32) = core::mem::transmute(FN_COMP_SCREENS_ADD_FIXTURE_ROW);
         partida_na_tabela(fx, tabela, &mut k, 2);
         anterior = fx;
         j += 1;
     }
 
-    let sem_avancar: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x7febb0usize);
-    let sem_voltar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x7fec60usize);
+    let sem_avancar: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_FORWARD_UNAVAILABLE);
+    let sem_voltar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_BACK_UNAVAILABLE);
     let avancar = (sem_avancar(sm) == 0) as u32;
     let voltar = (sem_voltar(sm, 0) == 0) as u32;
-    let botoes: unsafe extern "C" fn(u32, u32) -> u32 = core::mem::transmute(0x5edcc0usize);
+    let botoes: unsafe extern "C" fn(u32, u32) -> u32 = core::mem::transmute(FN_GUI_ADD_BACK_NEXT_BUTTONS);
     botoes(voltar, avancar);
 
     let item = tabela as u16 as i16;
     let rolar = |pos: usize| {
         if item != -1 {
-            let ir: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x403320usize);
+            let ir: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_AREA_SET_SCROLL_ROW);
             ir((display_do_humano() as isize + item as isize * 3057 + 4) as usize, pos);
         }
     };
@@ -4256,8 +4256,8 @@ unsafe extern "C" fn comparar_montar_jogos_do_dia() {
 unsafe fn guardar_estado_da_partida(mut copia: usize, estado: usize) {
     if copia == 0 {
         crate::comparacao::ramo("telas cria a copia do estado da partida");
-        let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-        let vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(0x9463afusize);
+        let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+        let vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
         copia = novo(0xd7a);
         if copia != 0 {
             vetor(copia + 0x11f, 0x625, 2, 0x453c30, 0x453c10);
@@ -4307,8 +4307,8 @@ const FORMATO_PCT: usize = 0x98e8d4; // "%d%%"
 /// +0x74c − +0x74d e seis percentuais (num × 100 / den, "%d%%", ou "-" com den 0; o último compara
 /// +0x75d mas mostra 100 − o do +0x138, como a original). No fim guarda o estado na cópia.
 unsafe extern "C" fn valores_das_estatisticas_da_partida() {
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let texto: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x801c70usize);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let texto: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
 
@@ -4373,14 +4373,14 @@ unsafe extern "C" fn valores_das_estatisticas_da_partida() {
 /// marca +0x768/+0x76d/+0x772) em barras entre os parâmetros 0x16 e 0x18 na altura do 0x19; e a barra
 /// da posse (+0x13e/+0x763) de 0xd4 a 0x2a6 na altura do parâmetro 0xc. No fim guarda o estado.
 unsafe extern "C" fn valores_das_zonas_de_acao() {
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let traduzido: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let texto: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x801c70usize);
-    let retangulo: unsafe extern "thiscall" fn(usize, u32, i32, i32, i32, i32) = core::mem::transmute(0x800890usize);
-    let fundo: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801040usize);
-    let ligar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801350usize);
-    let estilo: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801fc0usize);
-    let cores_do_clube: unsafe extern "C" fn(usize, u32, *mut u8, *mut u8) = core::mem::transmute(0x53b640usize);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let traduzido: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let texto: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
+    let retangulo: unsafe extern "thiscall" fn(usize, u32, i32, i32, i32, i32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_RECT);
+    let fundo: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_COLOUR);
+    let ligar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT_FLAGS);
+    let estilo: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_ID);
+    let cores_do_clube: unsafe extern "C" fn(usize, u32, *mut u8, *mut u8) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
 
@@ -4475,12 +4475,12 @@ unsafe extern "C" fn valores_das_zonas_de_acao() {
 /// cor do nome (o jogador em +4 igual ao [estado + 0x3c], quem saiu, o reserva que não entrou). No fim
 /// guarda o estado.
 unsafe extern "C" fn valores_das_notas_dos_jogadores() {
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let traduzido: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let texto: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x801c70usize);
-    let fundo: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801040usize);
-    let margem: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x800d30usize);
-    let cor_do_texto: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801960usize);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let traduzido: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let texto: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
+    let fundo: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_COLOUR);
+    let margem: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_STYLE);
+    let cor_do_texto: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT_COLOUR);
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
 
@@ -4658,11 +4658,11 @@ unsafe fn cor_em(a: usize) -> usize {
 /// preenchimento (0x721cd0).
 unsafe extern "C" fn painel_das_estatisticas_do_time(lado: u32, topo: *mut i32, base: *mut i32) {
     crate::comparacao::ramo("telas painel das estatisticas do time");
-    let celula: CelulaDaLista = core::mem::transmute(0x8040a0usize);
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
+    let celula: CelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_BUTTON);
+    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
+    let lista: ListaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_AREA);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
 
@@ -4670,12 +4670,12 @@ unsafe extern "C" fn painel_das_estatisticas_do_time(lado: u32, topo: *mut i32, 
     let mut cabecalho: [u8; 22] = [1, 1, 1, 0x49, 8, 8, 3, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xe, 0];
     let mut valores: [u8; 22] = [0, 0xe, 1, 5, 1, 0x35, 0x15, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 0xb, 7, 7];
     if parametro_da_tela(0) == 0 && *((parametro_da_tela(0x20) + 0x4c) as *const u8) != 0 {
-        let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x5e5cd0usize);
+        let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_FONT_GET_HEIGHT);
         let a = altura(3);
         let n = ((*base - *topo - 0x10) / a) as u8;
         texto(BUF, 0xa16a08);
         let mensagem: unsafe extern "C" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize =
-            core::mem::transmute(0x5ed070usize);
+            core::mem::transmute(FN_GUI_ADD_TEXT_AREA);
         mensagem(0x6e, *topo as usize, 0x30c, *base as usize, 2, 0, n as usize, 3, cor_em(0xae3184), BUF, 0);
         return;
     }
@@ -4703,7 +4703,7 @@ unsafe extern "C" fn painel_das_estatisticas_do_time(lado: u32, topo: *mut i32, 
         2 => (0xa1618c, r.wrapping_add(1)),
         _ => (base as usize, r.wrapping_add(1)),
     };
-    let desligar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x800580usize);
+    let desligar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_FLAGS);
     desligar(sm, seta, 1);
     for c in 7..0x14usize {
         let k = *((colunas + c - 2) as *const u8) as usize;
@@ -4740,7 +4740,7 @@ unsafe extern "C" fn painel_das_estatisticas_do_time(lado: u32, topo: *mut i32, 
     let tabela_dos_valores = lista(display_do_humano(), 0x6e, *topo as usize, 0x30c, *base as usize, 0x16, valores.as_mut_ptr() as usize, 0x15, 0, 1, 0, usize::MAX);
     gravar_parametro_da_tela(0x1b, lado as u8 as i8 as i32 as usize);
     gravar_parametro_da_tela(0x1a, usize::MAX);
-    let preencher: unsafe extern "C" fn(u32, usize) = core::mem::transmute(0x721cd0usize);
+    let preencher: unsafe extern "C" fn(u32, usize) = core::mem::transmute(FN_FILL_TEAM_STATS_ROWS);
     preencher(1, tabela_dos_valores);
 }
 
@@ -4754,14 +4754,14 @@ unsafe extern "C" fn painel_das_estatisticas_do_time(lado: u32, topo: *mut i32, 
 /// senão texto; vazio (0xfb em +0x1d) sem nome; e as três células da nota. No fim, 0x723350.
 unsafe extern "C" fn painel_das_notas_dos_jogadores(topo: *mut i32, base: *mut i32) {
     crate::comparacao::ramo("telas painel das notas dos jogadores");
-    let celula: CelulaDaLista = core::mem::transmute(0x8040a0usize);
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let cor_reserva: unsafe extern "C" fn(u32, u32, u32, u32) -> usize = core::mem::transmute(0x5e4800usize);
-    let nome_da_pessoa: unsafe extern "C" fn(u32, u32, u32, usize, u32, u32, i32) = core::mem::transmute(0x53e140usize);
-    let pessoa_vale: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(0x53e990usize);
+    let celula: CelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_BUTTON);
+    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
+    let lista: ListaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_AREA);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let cor_reserva: unsafe extern "C" fn(u32, u32, u32, u32) -> usize = core::mem::transmute(FN_GRAPHICS_RGB_TO_PIXEL);
+    let nome_da_pessoa: unsafe extern "C" fn(u32, u32, u32, usize, u32, u32, i32) = core::mem::transmute(FN_DATABASE_FORMAT_NAME_FROM_IDS);
+    let pessoa_vale: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
 
@@ -4828,7 +4828,7 @@ unsafe extern "C" fn painel_das_notas_dos_jogadores(topo: *mut i32, base: *mut i
             texto_da_celula(sm, tabela, col + 7, j, 1, 0, 0xc, 1, cor_em(0xaebdec), 0);
         }
     }
-    let preencher: unsafe extern "C" fn() = core::mem::transmute(0x723350usize);
+    let preencher: unsafe extern "C" fn() = core::mem::transmute(FN_REFRESH_PLAYER_RATINGS_ROWS);
     preencher();
 }
 
@@ -4854,9 +4854,9 @@ const ROTULOS_DAS_ESTATISTICAS_DA_PARTIDA: [(usize, usize); 13] = [
 /// o item da primeira no parâmetro 9) e o rótulo no meio; depois os valores (0x71e750).
 unsafe extern "C" fn painel_das_estatisticas_da_partida(topo: *mut i32, base: *mut i32) {
     crate::comparacao::ramo("telas painel das estatisticas da partida");
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
+    let lista: ListaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_AREA);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
 
@@ -4871,7 +4871,7 @@ unsafe extern "C" fn painel_das_estatisticas_da_partida(topo: *mut i32, base: *m
         texto_da_celula(sm, tabela, 1, k, 1, 0, 0xc, 4, cor_em(cor), BUF);
         texto_da_celula(sm, tabela, 2, k, 0x30, cor_em(0xaebe04), 0xc, 3, cor_em(0xaebde8), 0);
     }
-    let preencher: unsafe extern "C" fn() = core::mem::transmute(0x71e750usize);
+    let preencher: unsafe extern "C" fn() = core::mem::transmute(FN_REFRESH_MATCH_STATS_VALUES);
     preencher();
 }
 
@@ -4945,8 +4945,8 @@ unsafe extern "C" fn responder_continuar_da_partida(item: u32) -> i32 {
     crate::comparacao::ramo("telas responder ao continuar");
     let g = |a: usize| *(a as *const u32);
     let humano = || *(0xb77c7a as *const i16);
-    let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
-    let abrir_escalacao: unsafe extern "C" fn() = core::mem::transmute(0x725f70usize);
+    let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_GET_HUMAN_MANAGER_RECORD);
+    let abrir_escalacao: unsafe extern "C" fn() = core::mem::transmute(FN_MATCH_SCREENS_OPEN_TEAM_SELECTION);
     let r = ficha(0);
     let clube = if r != 0 { core::ptr::read_unaligned((r + 0xe2) as *const usize) } else { 0 };
     if g(0xb77c84) != 0 {
@@ -4956,8 +4956,8 @@ unsafe extern "C" fn responder_continuar_da_partida(item: u32) -> i32 {
             *(0xdd6be0 as *mut u32) = 0;
             *(0xdd6be4 as *mut u32) = 0;
             if escolha == 3 {
-                let listar: unsafe extern "thiscall" fn(usize, *mut usize, *mut i16, u32) = core::mem::transmute(0x7ffd80usize);
-                let ocupada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7ffdd0usize);
+                let listar: unsafe extern "thiscall" fn(usize, *mut usize, *mut i16, u32) = core::mem::transmute(FN_SCREENMANAGER_GET_CHANNEL_MANAGER_KEYS);
+                let ocupada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_MANAGER_AWAY);
                 let (mut n, mut lista) = (0i16, [0usize; 16]);
                 // a original empurra eax inteiro: os 16 bits altos são os da ficha devolvida por 0x765480
                 listar(GERENTE_DE_TELAS, lista.as_mut_ptr(), &mut n, (r as u32 & 0xffff_0000) | humano() as u16 as u32);
@@ -4978,16 +4978,16 @@ unsafe extern "C" fn responder_continuar_da_partida(item: u32) -> i32 {
                         }
                     }
                 }
-                let esperando: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x803d80usize);
+                let esperando: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_SCREENMANAGER_CLOSE_ALL_SCREENS_803D80);
                 if esperando(GERENTE_DE_TELAS) == 0 {
                     return -11;
                 }
-                let formatar_texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+                let formatar_texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
                 formatar_texto(0xde1f64, 0xa16d94);
-                let aviso: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(0x802f80usize);
+                let aviso: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SEND_NETWORK_STATUS_MESSAGE);
                 // ponytail: a original empurra ecx com 16 bits altos que sobram de 0x66f4e0 (imprevisíveis); aqui zero
                 aviso(GERENTE_DE_TELAS, 0xde1f64, 0, 0, humano() as u16 as u32);
-                let abrir_partida: unsafe extern "C" fn(usize, usize) = core::mem::transmute(0x718aa0usize);
+                let abrir_partida: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_OPEN_MATCH_SCREEN);
                 abrir_partida(vaga_de_tela_do_humano(), clube);
                 return -4;
             }
@@ -5012,7 +5012,7 @@ unsafe extern "C" fn responder_continuar_da_partida(item: u32) -> i32 {
                     if core::ptr::read_unaligned((e + campo) as *const u32) != 0
                         && core::ptr::read_unaligned((e as isize + humano() as isize * 4 + 0x14) as *const u32) == 0
                     {
-                        let abrir: unsafe extern "C" fn(usize, usize) = core::mem::transmute(0x717cc0usize);
+                        let abrir: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_OPEN_DAY_FIXTURES_SCREEN);
                         abrir(vaga_de_tela_do_humano(), e);
                         return -4;
                     }
@@ -5026,7 +5026,7 @@ unsafe extern "C" fn responder_continuar_da_partida(item: u32) -> i32 {
         return -8;
     }
     if r != 0 && clube != 0 {
-        let pronta: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x474e00usize);
+        let pronta: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_OPEN_SQUAD_NUMBERS_SCREEN_FOR_MATCH);
         if pronta(r) == 0 {
             abrir_escalacao();
         }
@@ -5042,12 +5042,12 @@ unsafe extern "C" fn responder_continuar_da_partida(item: u32) -> i32 {
 /// como a original (a tela já ficou aberta).
 unsafe extern "C" fn abrir_escalacao_da_partida() {
     crate::comparacao::ramo("telas abrir a escalacao");
-    let abrir: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x7fe600usize);
+    let abrir: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_OPEN_SCREEN);
     if abrir(GERENTE_DE_TELAS, 0x7260f0, 0x727c30, 1, 0, 0) == 0 {
         return;
     }
     const FONTE: usize = 0xa161d4; // match_screens.cpp
-    let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
+    let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_GET_HUMAN_MANAGER_RECORD);
     let r = ficha(0);
     if r == 0 {
         return aviso_em(FONTE, 0x1e1c);
@@ -5080,23 +5080,23 @@ unsafe extern "C" fn responder_escalacao_da_partida(item: u32) -> i32 {
     let item16 = item as u16 as i16;
     let id = id_do_item_ou_padrao(item16);
     if id != 1 && id != 2 && id != 3 {
-        let comum: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7615d0usize);
+        let comum: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_MENUBAR_HANDLE_COMMAND);
         let r = comum(item);
         if r != 0 {
             return r;
         }
-        let outra: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7643d0usize);
+        let outra: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_MENUBAR_HANDLE_OBJECT_LINK);
         return outra(item);
     }
     if id == 3 {
-        let capitao: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x897590usize);
+        let capitao: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_TACTICS_FIND_CAPTAIN_SLOT);
         let tatica = || *(0xde1d08 as *const usize);
         if (capitao(tatica(), clube, p2, 1) as u8 as i8) < 0 || (capitao(tatica(), clube, p2, 0) as u8 as i8) >= 11 {
-            let melhor: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x727e20usize);
+            let melhor: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_MATCH_SCREENS_FIND_BEST_RATED_STARTER_SLOT);
             let m = melhor(clube, p2) as u8;
             if (m as i8) > -1 {
                 // a original grava o byte por cima do argumento e empurra a palavra inteira
-                let nomear: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(0x897760usize);
+                let nomear: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(FN_TACTICS_SET_CAPTAIN_FROM_SLOT);
                 nomear(tatica(), clube, (item & 0xffff_ff00) | m as u32, p2);
             }
         }
@@ -5146,7 +5146,7 @@ unsafe extern "thiscall" fn atribuir_bloco_do_time(this: usize, src: usize) -> u
     copiar_campos(this, src, 0x35, 0x61, 2);
     copiar_campos(this, src, 0x61, 0x69, 4);
     copiar_campos(this, src, 0x69, 0x71, 2);
-    let linha: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x71df00usize);
+    let linha: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_MATCH_PLAYER_ROW_ASSIGN);
     for i in 0..20 {
         linha(this + 0x71 + i * 0x49, src + 0x71 + i * 0x49);
     }
@@ -5165,7 +5165,7 @@ unsafe extern "thiscall" fn comparar_atribuir_bloco_do_time(this: usize, src: us
 /// 0x1c..0x36, palavras 0x36..0x3e e bytes 0x3e..0x49. Devolve `this`.
 unsafe extern "thiscall" fn atribuir_linha_do_jogador(this: usize, src: usize) -> usize {
     copiar_campos(this, src, 0, 0x14, 4);
-    let atribuir_data: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(0x417c10usize);
+    let atribuir_data: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut volta = [0u8; 8];
     atribuir_data(this + 0x14, &mut volta, src + 0x14);
     copiar_campos(this, src, 0x1c, 0x36, 1);
@@ -5295,7 +5295,7 @@ unsafe extern "stdcall" fn balde_do_registro(jogo: usize, registro: usize) -> u8
     if *((jogo + 0x40) as *const u8) == 0 {
         return (*((jogo + 0x3a) as *const u8) == 1) as u8 + 2;
     }
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if selecao(*((jogo + 0x1c) as *const usize)) != 0 {
         if *((jogo + 0x40) as *const u8) == 0 {
             return 2;
@@ -5372,11 +5372,11 @@ unsafe extern "C" fn abrir_jogos_do_dia(vaga: u32, grupo: usize) {
         return orig::<unsafe extern "C" fn(u32, usize)>(466)(vaga, grupo);
     }
     crate::comparacao::ramo("telas abrir os jogos do dia");
-    let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x7fe4a0usize);
+    let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_OPEN_SCREEN_FOR_EACH_RECORD);
     if abrir(GERENTE_DE_TELAS, vaga, 0x717db0, 0x718930, 0, 0, 0) == 0 {
         return;
     }
-    let gravar: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32) = core::mem::transmute(0x7ff130usize);
+    let gravar: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_SCREEN_PARAM_FOR_EACH_RECORD);
     for (k, v) in [(1u32, grupo), (2, 0), (3, 0), (4, 1)] {
         gravar(GERENTE_DE_TELAS, vaga, k, v, 0);
     }
@@ -5399,28 +5399,28 @@ unsafe extern "C" fn responder_jogos_do_dia(item: u32) -> i32 {
         core::ptr::read_unaligned((display as isize + i as isize * 0x18c + 0xba9a6) as *const usize)
     };
     if i != -1 {
-        let converter: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x803320usize);
+        let converter: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_SCREENMANAGER_GET_AREA_SCROLL_ROW);
         gravar_parametro_da_tela(2, converter(GERENTE_DE_TELAS, parametro_da_tela(3)));
     }
     match id(i) {
         1 => {
             let vaga = *((0xb74c26 + *(0xb77c7a as *const i16) as isize * 0x300) as *const u32);
-            let abrir: unsafe extern "C" fn(u32, usize) = core::mem::transmute(0x717cc0usize);
+            let abrir: unsafe extern "C" fn(u32, usize) = core::mem::transmute(FN_OPEN_DAY_FIXTURES_SCREEN);
             abrir(vaga, dado(i));
             -11
         }
         2 => {
-            let andamento: unsafe extern "C" fn(usize) = core::mem::transmute(0x49b830usize);
+            let andamento: unsafe extern "C" fn(usize) = core::mem::transmute(FN_COMP_OPEN_LEAGUE_PROGRESS_FOR_FIXTURE);
             andamento(dado(i));
             -11
         }
         _ => {
-            let comando: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7615d0usize);
+            let comando: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_MENUBAR_HANDLE_COMMAND);
             let r = comando(item);
             if r != 0 {
                 return r;
             }
-            let ligacao: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7643d0usize);
+            let ligacao: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_MENUBAR_HANDLE_OBJECT_LINK);
             ligacao(item)
         }
     }
@@ -5434,8 +5434,8 @@ unsafe extern "C" fn vaga_do_mais_bem_avaliado(tatica: usize, contexto: i32) -> 
     if tatica == 0 {
         return orig::<unsafe extern "C" fn(usize, i32) -> u8>(468)(tatica, contexto);
     }
-    let da_tatica: unsafe extern "thiscall" fn(usize, usize, u32, i32) -> usize = core::mem::transmute(0x8968f0usize);
-    let avaliar: unsafe extern "C" fn(usize, usize, usize) -> i16 = core::mem::transmute(0x6e1cf0usize);
+    let da_tatica: unsafe extern "thiscall" fn(usize, usize, u32, i32) -> usize = core::mem::transmute(FN_TACTICS_GET_SELECTED_PLAYER);
+    let avaliar: unsafe extern "C" fn(usize, usize, usize) -> i16 = core::mem::transmute(FN_MATCH_MAN_GET_CAPTAIN_SCORE);
     let mut vaga = 0xffu8;
     let mut melhor = 0i16;
     for k in 0..11u32 {
@@ -5503,11 +5503,11 @@ unsafe extern "C" fn abrir_tela_da_partida(vaga: u32, partida: usize) {
         return orig::<unsafe extern "C" fn(u32, usize)>(430)(vaga, partida);
     }
     crate::comparacao::ramo("telas abrir a partida");
-    let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x7fe4a0usize);
+    let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_OPEN_SCREEN_FOR_EACH_RECORD);
     if abrir(GERENTE_DE_TELAS, vaga, 0x718e90, 0x71a240, 1, 0x71b120, 0) == 0 {
         return;
     }
-    let gravar: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32) = core::mem::transmute(0x7ff130usize);
+    let gravar: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_SCREEN_PARAM_FOR_EACH_RECORD);
     const M: usize = usize::MAX;
     let e = *((partida + 0x63) as *const usize);
     for (k, v) in [
@@ -5526,10 +5526,10 @@ unsafe extern "C" fn abrir_tela_da_partida(vaga: u32, partida: usize) {
         *n = (*n).wrapping_add(1);
     }
     if *((partida + 0x57) as *const u32) == 0 {
-        let confirmar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x6b5260usize);
+        let confirmar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_MATCH_DAY_START_WATCHED_MATCH);
         confirmar(*(0xb67a50 as *const usize), partida);
         if *((partida + 0x57) as *const u32) != 0 {
-            let gravar_atual: unsafe extern "thiscall" fn(usize, u32, usize, u32) = core::mem::transmute(0x7ff270usize);
+            let gravar_atual: unsafe extern "thiscall" fn(usize, u32, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_SCREEN_PARAM);
             gravar_atual(GERENTE_DE_TELAS, 1, 2, 0);
         }
     }
@@ -5546,14 +5546,14 @@ unsafe extern "C" fn responder_ultimos_placares_da_partida(item: u32) -> i32 {
     let parado = parametro_da_tela(0x12);
     let paginas = parametro_da_tela(0x13) as u8 as i8;
     let quando = parametro_da_tela(0x14) as u32;
-    let agora: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x90c510usize);
+    let agora: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
     let seguinte = if pagina == paginas { 1 } else { (pagina as i32 + 1) as usize };
     if agora() >= quando.wrapping_add(5000) {
         if paginas > 1 && parado == 0 {
             gravar_parametro_da_tela(0x11, seguinte);
         }
         if *(0xb6b7b0 as *const u32) == 0 {
-            let redesenhar: unsafe extern "C" fn() = core::mem::transmute(0x724520usize);
+            let redesenhar: unsafe extern "C" fn() = core::mem::transmute(FN_REFRESH_LATEST_SCORES_ROWS);
             redesenhar();
             *(0xb6b7a8 as *mut u32) = 1;
         }
@@ -5595,7 +5595,7 @@ unsafe extern "C" fn responder_estatisticas_do_time(item: u32) -> i32 {
     let p0 = parametro_da_tela(0);
     let linha = parametro_da_tela(0x1c) as u8 as i8;
     if *(0xb6b7ac as *const u32) != 0 && *(*((p0 + 0x5b) as *const usize) as *const u8) & 4 != 0 && *(0xb6b7b0 as *const u32) == 0 {
-        let redesenhar: unsafe extern "C" fn(u32, i32) = core::mem::transmute(0x721cd0usize);
+        let redesenhar: unsafe extern "C" fn(u32, i32) = core::mem::transmute(FN_FILL_TEAM_STATS_ROWS);
         redesenhar(0, -1);
         *(0xb6b7a8 as *mut u32) = 1;
     }
@@ -5633,7 +5633,7 @@ unsafe fn comparar_resposta(nome: &str, item: u32, o: unsafe extern "C" fn(u32) 
 }
 
 unsafe extern "C" fn comparar_responder_ultimos_placares_da_partida(item: u32) -> i32 {
-    let agora: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x90c510usize);
+    let agora: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
     // folga de 1 s: a hora pode virar entre os dois lados
     let redesenha = agora().wrapping_add(1000) >= (parametro_da_tela(0x14) as u32).wrapping_add(5000);
     comparar_resposta("responder_ultimos_placares_da_partida", item, orig(431), responder_ultimos_placares_da_partida, redesenha)
@@ -5649,11 +5649,11 @@ unsafe extern "C" fn comparar_responder_estatisticas_do_time(item: u32) -> i32 {
 
 /// Lê e grava os parâmetros da tela atual do gerente de telas [0xb74450] (0x7ff010, 0x7ff270).
 unsafe fn parametro_da_tela(k: u32) -> usize {
-    let ler: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x7ff010usize);
+    let ler: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_SCREENMANAGER_GET_SCREEN_PARAM);
     ler(0xb74450, k)
 }
 unsafe fn gravar_parametro_da_tela(k: u32, v: usize) {
-    let gravar: unsafe extern "thiscall" fn(usize, u32, usize, u32) = core::mem::transmute(0x7ff270usize);
+    let gravar: unsafe extern "thiscall" fn(usize, u32, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_SCREEN_PARAM);
     gravar(0xb74450, k, v, 0);
 }
 
@@ -5662,7 +5662,7 @@ unsafe fn gravar_parametro_da_tela(k: u32, v: usize) {
 /// partida em 0x1e; a aba 2 começa em 6).
 unsafe extern "C" fn abrir_detalhes_da_partida(partida: usize) {
     crate::comparacao::ramo("telas abrir os detalhes");
-    let abrir: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x7fe600usize);
+    let abrir: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_OPEN_SCREEN);
     if abrir(0xb74450, 0x71b630, 0x71bdc0, 0, 0x71c170, 0) == 0 {
         return;
     }
@@ -5710,7 +5710,7 @@ unsafe extern "C" fn responder_detalhes_da_partida(item: u32) -> i32 {
             if id_ou_padrao(core::ptr::read_unaligned((e + 0xba966) as *const u16)) == 2 {
                 let clube = core::ptr::read_unaligned((e + 0xba9a6) as *const usize);
                 let marca = if clube == *((p1f + 0x1c) as *const usize) { *((p1f + 0x40) as *const u8) } else { *((p1f + 0x41) as *const u8) };
-                let tatica: unsafe extern "C" fn(usize, u32, u32, u32, usize, u32) = core::mem::transmute(0x899a50usize);
+                let tatica: unsafe extern "C" fn(usize, u32, u32, u32, usize, u32) = core::mem::transmute(FN_TACTICS_SCREEN_OPEN);
                 tatica(clube, (marca == 0) as u32, 0, 0, v1e, 0);
                 return -4;
             }
@@ -5729,7 +5729,7 @@ unsafe extern "C" fn responder_detalhes_da_partida(item: u32) -> i32 {
             *(0xb6b7a8 as *mut u32) = 1;
             false
         };
-        let estatisticas_do_time: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x722dc0usize);
+        let estatisticas_do_time: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_HANDLE_TEAM_STATS_INPUT);
         match aba {
             1 => {
                 let p = parametro_da_tela(0);
@@ -5754,11 +5754,11 @@ unsafe extern "C" fn responder_detalhes_da_partida(item: u32) -> i32 {
                 }
                 if item16 != -1 {
                     let d = display_do_humano();
-                    let id: unsafe extern "thiscall" fn(usize, u32) -> u16 = core::mem::transmute(0x468b10usize);
+                    let id: unsafe extern "thiscall" fn(usize, u32) -> u16 = core::mem::transmute(FN_DISPLAY_GET_WIDGET_ID);
                     if id_ou_padrao(id(d, item)) == 4 {
-                        let dado: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x4739a0usize);
+                        let dado: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_DISPLAY_GET_WIDGET_DATA);
                         if dado(d, item) != parametro_da_tela(0xa) {
-                            let acao: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x468b90usize);
+                            let acao: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_SCREENMANAGER_GET_WIDGET_ACTION_DATA);
                             gravar_parametro_da_tela(0xa, acao(0xb74450, item));
                             *(0xb6b7b0 as *mut u32) = 1;
                             return -11;
@@ -5789,16 +5789,16 @@ unsafe extern "C" fn responder_detalhes_da_partida(item: u32) -> i32 {
             return -11;
         }
         if g(0xb6b7a8) != 0 {
-            let redesenhar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x802d00usize);
+            let redesenhar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_REDRAW_SCREEN);
             redesenhar(0xb74450, 0, 0);
         }
     }
-    let comando: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7615d0usize);
+    let comando: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_MENUBAR_HANDLE_COMMAND);
     let r = comando(item);
     if r != 0 {
         return r;
     }
-    let ligacao: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7643d0usize);
+    let ligacao: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_MENUBAR_HANDLE_OBJECT_LINK);
     ligacao(item)
 }
 
@@ -5806,7 +5806,7 @@ unsafe extern "C" fn responder_detalhes_da_partida(item: u32) -> i32 {
 /// 0x1d e 0x20 (0x453bc0) são destruídos e liberados, o 0x1f só liberado (0x944c94), e todos zerados.
 unsafe extern "C" fn fechar_detalhes_da_partida() {
     crate::comparacao::ramo("telas fechar os detalhes");
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     for (k, destrutor) in [(0x2du32, Some(0x5a8f60usize)), (0x1d, Some(0x453bc0)), (0x1f, None), (0x20, Some(0x453bc0))] {
         if parametro_da_tela(k) == 0 {
             continue;
@@ -5869,11 +5869,11 @@ unsafe extern "C" fn abrir_ultimos_placares(vaga: u32, entrada: usize) {
         return orig::<unsafe extern "C" fn(u32, usize)>(418)(vaga, entrada);
     }
     crate::comparacao::ramo("telas abrir os ultimos placares");
-    let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(0x7fe4a0usize);
+    let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_OPEN_SCREEN_FOR_EACH_RECORD);
     if abrir(GERENTE_DE_TELAS, vaga, 0x71b300, 0x71b3d0, 0, 0, 0) == 0 {
         return;
     }
-    let gravar: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32) = core::mem::transmute(0x7ff130usize);
+    let gravar: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_SCREEN_PARAM_FOR_EACH_RECORD);
     for (k, v) in [(0u32, 0usize), (0xe, entrada), (0xf, 0), (0x10, usize::MAX), (0x11, 1), (0x12, 0), (0x13, 1), (0x14, 0)] {
         gravar(GERENTE_DE_TELAS, vaga, k, v, 0);
     }
@@ -5886,27 +5886,27 @@ unsafe extern "C" fn abrir_ultimos_placares(vaga: u32, entrada: usize) {
 /// gerente não tem para onde ir).
 unsafe extern "C" fn montar_ultimos_placares() {
     crate::comparacao::ramo("telas montar os ultimos placares");
-    let ler: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x7ff010usize);
+    let ler: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_SCREENMANAGER_GET_SCREEN_PARAM);
     let entrada = ler(GERENTE_DE_TELAS, 0xe);
     let id = *(entrada as *const i32);
-    let fundo: unsafe extern "C" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x41c410usize);
+    let fundo: unsafe extern "C" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_BACKGROUND_SET_COMP_PICTURE);
     fundo((*(0xae23d0 as *const usize) as isize + id as isize * 107) as usize, 0, 0);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     texto(0xde1f64, 0xa16328, 0xad9c64);
-    let cor: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x839590usize);
+    let cor: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_GET_HEADING_COLOUR);
     let (c1, c0) = (cor(1), cor(0));
-    let titulo: unsafe extern "thiscall" fn(usize, u32, u32, usize) = core::mem::transmute(0x803f30usize);
+    let titulo: unsafe extern "thiscall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_ADD_SCREEN_TITLE);
     titulo(GERENTE_DE_TELAS, c0, c1, 0xde1f64);
-    let menu: unsafe extern "C" fn(u32, u32) = core::mem::transmute(0x75db00usize);
+    let menu: unsafe extern "C" fn(u32, u32) = core::mem::transmute(FN_MENUBAR_BUILD);
     menu(4, 0);
     let (mut topo, mut base) = (0x50i32, 0x217i32);
-    let painel: unsafe extern "C" fn(*mut i32, *mut i32) = core::mem::transmute(0x723d20usize);
+    let painel: unsafe extern "C" fn(*mut i32, *mut i32) = core::mem::transmute(FN_DRAW_LATEST_SCORES_PANEL);
     painel(&mut topo, &mut base);
-    let sem_avancar: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x7febb0usize);
-    let sem_voltar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x7fec60usize);
+    let sem_avancar: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_FORWARD_UNAVAILABLE);
+    let sem_voltar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_BACK_UNAVAILABLE);
     let avancar = (sem_avancar(GERENTE_DE_TELAS) == 0) as u32;
     let voltar = (sem_voltar(GERENTE_DE_TELAS, 0) == 0) as u32;
-    let botoes: unsafe extern "C" fn(u32, u32) -> u32 = core::mem::transmute(0x5edcc0usize);
+    let botoes: unsafe extern "C" fn(u32, u32) -> u32 = core::mem::transmute(FN_GUI_ADD_BACK_NEXT_BUTTONS);
     botoes(voltar, avancar);
 }
 
@@ -5927,15 +5927,15 @@ unsafe extern "C" fn responder_ultimos_placares(item: u32) -> i32 {
             let humano = *(0xb77c7a as *const i16) as isize;
             if *((0xb74c26 + humano * 0x300) as *const u32) != 0 {
                 let tecnicos = g(0xb63c98) as usize;
-                let conectado: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd210usize);
+                let conectado: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
                 if conectado(tecnicos, 0) != 0 {
-                    let agora: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x90c510usize);
-                    let marcar: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x5fdd30usize);
+                    let agora: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
+                    let marcar: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SET_HOLIDAY_STAMP);
                     marcar(tecnicos, agora(), 0);
                 }
             }
         }
-        let trocar: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x725860usize);
+        let trocar: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_MATCH_SCREENS_HANDLE_LATEST_SCORES_CYCLE);
         let r = trocar(item);
         if r != 0 {
             return r;
@@ -5944,16 +5944,16 @@ unsafe extern "C" fn responder_ultimos_placares(item: u32) -> i32 {
             return -11;
         }
         if g(0xb6b7a8) != 0 {
-            let redesenhar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x802d00usize);
+            let redesenhar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_REDRAW_SCREEN);
             redesenhar(GERENTE_DE_TELAS, 0, 0);
         }
     }
-    let comando: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7615d0usize);
+    let comando: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_MENUBAR_HANDLE_COMMAND);
     let r = comando(item);
     if r != 0 {
         return r;
     }
-    let ligacao: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7643d0usize);
+    let ligacao: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_MENUBAR_HANDLE_OBJECT_LINK);
     ligacao(item)
 }
 
@@ -6002,7 +6002,7 @@ unsafe extern "C" fn rotulo_do_controle(estado: u8, m: usize, saida: *mut u8, ta
     if m == 0 || saida.is_null() || tam < 100 || !(1..=5).contains(&estado) {
         return o(estado, m, saida, tam, marcas);
     }
-    let texto: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    let texto: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     *saida = 0;
     *marcas = 0x1021;
     let humano = *(0xb77c7a as *const i16) as isize;
@@ -6020,7 +6020,7 @@ unsafe extern "C" fn rotulo_do_controle(estado: u8, m: usize, saida: *mut u8, ta
             }
         }
         _ => {
-            let esperando: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x7ffe40usize);
+            let esperando: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_MANAGER_DONE);
             let jogador = *((0xb74c26 + humano * 0x300) as *const u32);
             if esperando(0xb74450, jogador) != 0 { (0xa16d34, true) } else { (0xa16d24, false) }
         }
@@ -6038,9 +6038,9 @@ unsafe extern "C" fn rotulo_do_controle(estado: u8, m: usize, saida: *mut u8, ta
 /// (0x944c94) e zerados (0x7ff270).
 unsafe extern "C" fn fechar_tela_da_partida() {
     crate::comparacao::ramo("telas fechar a partida");
-    let ler: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x7ff010usize);
-    let gravar: unsafe extern "thiscall" fn(usize, u32, usize, u32) = core::mem::transmute(0x7ff270usize);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
+    let ler: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_SCREENMANAGER_GET_SCREEN_PARAM);
+    let gravar: unsafe extern "thiscall" fn(usize, u32, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_SCREEN_PARAM);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     for (k, destrutor) in [(0x2du32, 0x5a8f60usize), (0x1d, 0x453bc0)] {
         if ler(0xb74450, k) == 0 {
             continue;
@@ -6062,7 +6062,7 @@ unsafe extern "C" fn abrir_tela_de_espera(vaga: u32) {
         return orig::<unsafe extern "C" fn(u32)>(414)(vaga);
     }
     crate::comparacao::ramo("telas abrir a espera");
-    let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, u32, u32) = core::mem::transmute(0x7fe4a0usize);
+    let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_OPEN_SCREEN_FOR_EACH_RECORD);
     abrir(0xb74450, vaga, 0x727fa0, 0x727fb0, 0, 0, 0);
 }
 

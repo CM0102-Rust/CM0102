@@ -6,7 +6,7 @@
 /// mês (0 = janeiro), +5 1 no início da janela e 0 no fim; duas datas por janela) alocada em +4 (0x944e46; sem memória,
 /// a caixa da linha `linha` do fonte `arquivo`).
 unsafe fn cqn2_janelas(this: usize, n: u8, t: &[[u8; 6]], arquivo: usize, linha: u32) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     *((this + 8) as *mut u8) = n;
     let j = alocar((t.len() * 6) as u32);
     core::ptr::write_unaligned((this + 4) as *mut u32, j as u32);
@@ -22,7 +22,7 @@ unsafe fn cqn2_janelas(this: usize, n: u8, t: &[[u8; 6]], arquivo: usize, linha:
 /// Lado a lado à mão: a original no objeto de quem chama; a cópia num objeto de rascunho com o mesmo conteúdo de antes
 /// (os 0x19 bytes das regras); iguais os campos (fora o ponteiro +4) e as janelas alocadas (a do rascunho é solta).
 unsafe fn cqn2_comparar(nome: &str, this: usize, o: impl FnOnce(), c: impl FnOnce(usize)) {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut s = [0u8; 0x20];
     core::ptr::copy_nonoverlapping(this as *const u8, s.as_mut_ptr(), 0x19);
     o();

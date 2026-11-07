@@ -1,8 +1,8 @@
 # Mutações da 233a leva (itens dbl_1, dbl_2, dbl_3, dbm_1, dbm_2, dbn_1, dbn_2). Uso: python mutacoes.py mutacoes\leva233.py --prova-save 233
 MUTACOES = [
     ('dbl_clube_em_temporada', '    temporada(clube, 0, 0) // a temporada da nação do clube', '    (temporada(clube, 0, 0) == 0) as u32 // mutacao: a resposta invertida'),
-    ('dbl_clube_em_nacao_grande', '0x9cf488, 0x9cf338]; // Holanda (clube)', '0x9cf488, 0x9cf488]; // mutacao: sem a Holanda (clube)'),
-    ('dbl_nacao_grande', '0x9cf488, 0x9cf338]; // Holanda (nação)', '0x9cf488, 0x9cf488]; // mutacao: sem a Holanda (nação)'),
+    ('dbl_clube_em_nacao_grande', 'KEY_NATION_SPAIN, KEY_NATION_HOLLAND]; // Holanda (clube)', '0x9cf488, 0x9cf488]; // mutacao: sem a Holanda (clube)'),
+    ('dbl_nacao_grande', 'KEY_NATION_SPAIN, KEY_NATION_HOLLAND]; // Holanda (nação)', '0x9cf488, 0x9cf488]; // mutacao: sem a Holanda (nação)'),
     ('dbl_limpar_vinculos', '            opiniao_gravar(c, k + 0x37, -1); // o valor do vínculo vazio', '            opiniao_gravar(c, k + 0x37, -2); // mutacao: o valor do vínculo vazio -2'),
     ('dbl_juntar_vinculo', '        opiniao_gravar(c, 0x3b, id); // o segundo vínculo', '        // mutacao: o segundo vínculo sem o id'),
     ('dbl_tirar_vinculo', '        opiniao_gravar(c, 0x3b, -1); // esvazia o segundo vínculo', '        // mutacao: o segundo vínculo fica com o id'),

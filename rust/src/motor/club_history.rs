@@ -2,17 +2,17 @@
 
 
 unsafe fn cpx7_abrir(save: usize, nome: usize) -> usize {
-    let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
+    let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
     abrir_item(save, nome, 1, 0x16, 4)
 }
 
 unsafe fn cpx7_gravar(dados: usize, tamanho: u32, quantos: u32, z: usize) -> u32 {
-    let gravar_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+    let gravar_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
     gravar_item(dados, tamanho, quantos, z)
 }
 
 unsafe fn cpx7_fechar(z: &mut usize) {
-    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
+    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
     fechar_item(z);
 }
 

@@ -10,12 +10,12 @@ unsafe fn cpz9_sb(a: usize) -> i32 {
 }
 
 unsafe fn cpz9_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     f(n)
 }
 
 unsafe fn cpz9_gravar(n: usize, k: i8, v: u32) {
-    let f: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
+    let f: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     f(n, k, v);
 }
 
@@ -29,7 +29,7 @@ unsafe fn cpz9_pessoa_nos_dados(n: usize, k: i8, p: usize) {
 
 /// Um humano dirige o clube? (news_club_has_human_manager 0x7875e0: stdcall, 1 arg; a original deixa o News em ecx.)
 unsafe fn cpz9_clube_humano(clube: usize) -> bool {
-    let f: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7875e0usize);
+    let f: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     f(clube) != 0
 }
 
@@ -45,7 +45,7 @@ static mut CPZ9_MONTARIA: bool = false;
 /// Clube da IA (0x600a50) com técnico (+0xcf, +0x69): sorteio(+0x14 dele) acima de sorteio(10) leva à multa (0x5a5980,
 /// prazo 1 se sorteio(nota 0x544410 com o +0x19) passar de sorteio(5), senão 2; motivo 1).
 unsafe extern "thiscall" fn incidente_de_forma(this: usize, jogador: usize, clube: usize) {
-    let iniciar_data: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
+    let iniciar_data: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     let mut reg = [0u8; 0x11];
     iniciar_data(reg.as_mut_ptr() as usize + 8);
     if jogador == 0 || clube == 0 {
@@ -53,11 +53,11 @@ unsafe extern "thiscall" fn incidente_de_forma(this: usize, jogador: usize, club
     }
     reg[..4].copy_from_slice(&cpz9_u(jogador).to_le_bytes());
     reg[4..8].copy_from_slice(&cpz9_u(clube).to_le_bytes());
-    let atribuir: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
+    let atribuir: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut temporaria = [0u8; 8];
     atribuir(reg.as_mut_ptr() as usize + 8, temporaria.as_mut_ptr() as usize, 0xae2c90);
     // ponytail: o byte +0x10 do registro é sobra de pilha na original; a cópia grava 0 (ninguém o lê)
-    let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
+    let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     acrescentar(read_usize(this + 8), reg.as_ptr() as usize, 0x11);
     if cpz9_clube_humano(clube) {
         let mut treinador;
@@ -68,8 +68,8 @@ unsafe extern "thiscall" fn incidente_de_forma(this: usize, jogador: usize, club
                 break;
             }
         }
-        let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
-        let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
+        let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+        let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
         let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
         let nt = local.as_mut_ptr() as usize;
         construir(nt, 0x138f, 0);
@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn incidente_de_forma(this: usize, jogador: usize, club
         }
         entregar(read_usize(0xb7431c), nt, clube);
     }
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     if humano(clube, 0, 1, 0, 0) != 0 {
         return;
     }
@@ -109,12 +109,12 @@ unsafe extern "thiscall" fn incidente_de_forma(this: usize, jogador: usize, club
     }
     let np = read_usize(read_usize(clube + 0xcf) + 0x69);
     crate::comparacao::ramo("cpz_9 multa pela forma");
-    let nota: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(0x544410usize);
+    let nota: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
     // ponytail: a original empurra ecx com o byte +0x19 só no cl (os altos são sobra); a 0x544410 só lê o byte
     let c =cpz9_sortear(nota(np, *((np + 0x19) as *const u8) as u32) as i32);
     let e = cpz9_sortear(5); // cpz9: o sorteio do prazo
     let prazo = if c > e { 1 } else { 2 }; // cpz9: o prazo da multa
-    let multar: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x5a5980usize);
+    let multar: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_FINE_FINE_PLAYER);
     multar(read_usize(0xae2a3c), jogador, prazo, 1);
 }
 
@@ -150,7 +150,7 @@ unsafe extern "stdcall" fn noticia_reacao_a_multa(jogador: usize, motivo: u32, r
     if jogador == 0 {
         return;
     }
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let k = contrato_de(read_usize(0xae1050), jogador);
     *(0xae1080 as *mut usize) = k;
     if k == 0 {
@@ -160,7 +160,7 @@ unsafe extern "stdcall" fn noticia_reacao_a_multa(jogador: usize, motivo: u32, r
     if clube == 0 {
         return;
     }
-    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let c = contrato(read_usize(0xae1050), jogador, clube);
     if c == 0 {
         return;
@@ -174,9 +174,9 @@ unsafe extern "stdcall" fn noticia_reacao_a_multa(jogador: usize, motivo: u32, r
         CPZ9_MONTARIA = true;
         return;
     }
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
-    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    let futura: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x8cca10usize);
+    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
+    let futura: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0xbc6, 0);
@@ -231,8 +231,8 @@ unsafe extern "stdcall" fn noticia_retorno_do_treinador(jogador: usize, treinado
         return;
     }
     crate::comparacao::ramo("cpz_9 noticia do retorno do treinador");
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
-    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
+    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0x1394, 0);

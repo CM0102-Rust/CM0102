@@ -22,9 +22,9 @@ unsafe extern "C" fn registro_da_partida_pelo_clube(jogo: usize, clube: usize, s
         aviso_em(0xa7a088, 0x39);
         return 0;
     }
-    let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
-    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
-    let lado: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(0x4afa80usize);
+    let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
+    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+    let lado: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
     let (mut t0, mut t1) = ([0u8; 8], [0u8; 8]);
     let (p0, p1) = (t0.as_mut_ptr() as usize, t1.as_mut_ptr() as usize);
     let d = data_nova(p0, read_u16(jogo + 0x2a) as u32, read_u16(jogo + 0x28) as u32);
@@ -94,7 +94,7 @@ unsafe extern "C" fn referencia_ao_nome(pessoa: usize, saida: usize) -> u32 {
         core::ptr::write_unaligned((saida + 4 * k) as *mut u32, cpz7_nome(read_u32(pessoa + 4 + 4 * k)));
     }
     core::ptr::write_unaligned((saida + 0xc) as *mut u32, read_u32(pessoa));
-    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
+    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u8; 8];
     copiar(saida + 0x10, t.as_mut_ptr() as usize, pessoa + 0x10);
     1
@@ -171,7 +171,7 @@ unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u
     if read_usize(p + 0x61) == 0 {
         return;
     }
-    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let c = contrato(read_usize(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
     if c == 0 || read_u8(c + 0x35) & 0x3f == 5 {
@@ -180,15 +180,15 @@ unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u
     if read_usize(0xae23b4).wrapping_add(read_usize(c + 4).wrapping_mul(0x245)) == 0 {
         return;
     }
-    let do_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let do_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let k = do_clube(read_usize(0xae1050), p, cpv13_clube_do_contrato(p));
     if k == 0 {
         return;
     }
     if read_usize(0xde1f54) != 0 {
-        let dias: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(0x54cdb0usize);
+        let dias: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
         if dias(0xae2c90, read_usize(k + 0x25), read_usize(k + 0x29)) > 0x12c { // cpy10: mais de 300 dias
-            let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
+            let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_FIND_CLUB_SHORTLIST_ENTRY);
             let dono = cpv13_clube_do_contrato(p);
             let x = entrada(read_usize(read_usize(0xde1f54) + 0x856), dono, p, 0, 0);
             if x != 0 && read_usize(x + 0xf) == read_usize(p) {
@@ -215,7 +215,7 @@ unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u
     if sortear(v59 as i32) <= 5 {
         return;
     }
-    let agradece: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x58a070usize);
+    let agradece: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_POST_PLAYER_CREDITS_MANAGER_FOR_AWARD);
     agradece(p, clube, premio);
 }
 

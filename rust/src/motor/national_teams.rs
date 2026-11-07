@@ -17,7 +17,7 @@ unsafe extern "thiscall" fn competicao_da_pessoa(this: usize, pessoa: usize) -> 
 /// O byte `o` do bloco da classe (0x76d780: 1 com `flag`, 2 para a segunda selecao, senao 0) da
 /// nacao do clube (+0x53) nos registros de [this+4]. A original chama 0x5409b0 duas vezes.
 unsafe fn byte_da_selecao(this: usize, clube: usize, flag: u32, o: usize) -> u8 {
-    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
+    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
     let classe: usize = if segunda(clube) == 0 {
         if flag == 0 { 0 } else { 1 }
     } else if flag == 0 {
@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn byte_43_da_selecao(this: usize, clube: usize, flag: 
 
 /// { 0x775790 } (stdcall): selecao (0x53b900) ou um dos clubes de 0x9d00a4 e 0x9d00a8?
 unsafe extern "stdcall" fn selecao_ou_especial(clube: usize) -> u32 {
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if e_selecao(clube) != 0 {
         return 1;
     }
@@ -52,8 +52,8 @@ unsafe extern "stdcall" fn selecao_ou_especial(clube: usize) -> u32 {
 
 /// { 0x776380 } (stdcall): a pessoa nao gosta (0x547d30) da selecao principal (0x53b3d0) da nacao +0x1a?
 unsafe extern "stdcall" fn nao_gosta_da_selecao(pessoa: usize) -> u32 {
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d30usize);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_DISLIKES_CLUB);
     let s = principal(*((pessoa + 0x1a) as *const usize));
     (nao_gosta(pessoa, s) != 0) as u32
 }
@@ -61,7 +61,7 @@ unsafe extern "stdcall" fn nao_gosta_da_selecao(pessoa: usize) -> u32 {
 /// { 0x777590 } (ret 4): copia a data (0x417c10) e o byte +8 de `origem`; devolve `this`.
 unsafe extern "thiscall" fn copiar_data_e_marca(this: usize, origem: usize) -> usize {
     let mut tmp = [0u8; 8];
-    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
+    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     copiar(this, tmp.as_mut_ptr() as usize, origem);
     *((this + 8) as *mut u8) = *((origem + 8) as *const u8);
     this
@@ -98,7 +98,7 @@ unsafe extern "stdcall" fn classe_pela_selecao(pessoa: usize) -> u8 {
     if selecao == 0 {
         return 0xff;
     }
-    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
+    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
     if segunda(selecao) != 0 {
         return 2;
     }
@@ -145,7 +145,7 @@ unsafe fn cqf11_sortear(n: i32) -> i32 {
             }
         },
         None => {
-            let s: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+            let s: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
             s(n)
         }
     }
@@ -192,12 +192,12 @@ unsafe fn cqf11_codigo(resultado: usize, lado: usize, jogador: usize) -> u32 {
 unsafe extern "thiscall" fn cqf11_relatorio_da_selecao(this: usize, clube: usize, jogo: usize, resultado: usize, destaque: usize, elenco: *mut usize, conta: u32) {
     let _ = this;
     let q = conta as u8 as i8;
-    let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
-    let gravar: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x785790usize);
-    let registro_da_partida: unsafe extern "C" fn(usize, usize, usize) = core::mem::transmute(0x7e4750usize);
-    let dados_da_partida: unsafe extern "C" fn(usize, usize, *mut u8) = core::mem::transmute(0x7e4de0usize);
-    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
+    let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let gravar: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
+    let registro_da_partida: unsafe extern "C" fn(usize, usize, usize) = core::mem::transmute(FN_FILL_MATCH_RECORD_FROM_FIXTURE);
+    let dados_da_partida: unsafe extern "C" fn(usize, usize, *mut u8) = core::mem::transmute(FN_WRITE_MATCH_RECORD_TO_NEWS);
+    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     // 0x945333 (qsort): push 0x778ef0; push 4; push conta; push elenco; add esp, 0x10 -> cdecl; 0x77bbe0: push 0; push
     // 0x24; lea ecx, notícia -> thiscall; 0x785790: push valor; push índice; lea ecx, notícia -> thiscall, ret 8;
     // 0x7e4750: push &registro; push clube; push jogo; add esp, 0xc -> cdecl; 0x7e4de0: push &índice; push &notícia;
@@ -209,7 +209,7 @@ unsafe extern "thiscall" fn cqf11_relatorio_da_selecao(this: usize, clube: usize
     let lado = (clube != read_usize(jogo + 0x1c)) as usize;
     let mut registro = [0u8; 0x20]; // a Data em +0 (0x54a110 na entrada), o resto a 0x7e4750 preenche
     let reg = registro.as_mut_ptr() as usize;
-    let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
+    let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     data_padrao(reg);
     let mut montado = false;
     let mut noticia = [0u32; 0x38]; // a notícia local (0xe0 bytes)
@@ -357,14 +357,14 @@ unsafe extern "thiscall" fn comparar_cqf11_relatorio_da_selecao(this: usize, clu
 /// 0x76d560 com o jogo, sem lista e sem `sem_adversarios`), e até 3 jogadores (id e chaves). A lista montada aqui é
 /// destruída e liberada no fim (0x68d040, 0x944c94).
 unsafe extern "thiscall" fn cqf11_noticia_da_convocacao(this: usize, selecao: usize, segunda: u32, jogo: usize, tipo: u32, sem_adversarios: u32, adversarios: usize, conta: u32) {
-    let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
-    let montar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x76d560usize);
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
-    let gravar: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x785790usize);
-    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
-    let apagar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
+    let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
+    let montar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_NATIONAL_TEAMS_COLLECT_FIXTURE_OPPONENTS);
+    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let gravar: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
+    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
+    let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
+    let apagar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     // 0x7875e0: push clube; mov ecx, [0xb7431c] -> thiscall, ret 4; 0x76d560: push jogo; push seleção; mov ecx, this ->
     // thiscall, ret 8; 0x77bbe0 / 0x785790 / 0x68d1b0 / 0x68d040: lea ecx (ou mov ecx, lista) -> thiscall; 0x7861e0:
     // push clube; push &notícia; mov ecx, [0xb7431c] -> thiscall, ret 8; 0x944c94 (delete): push; add esp, 4 -> cdecl
@@ -456,16 +456,16 @@ static mut CQF11_PLANO: Option<Vec<u32>> = None;
 /// competições de seleções). Devolve a lista.
 unsafe extern "thiscall" fn cqf11_adversarios_da_selecao(this: usize, selecao: usize, jogo: usize) -> usize {
     let _ = this;
-    let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
-    let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
-    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
-    let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
-    let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
-    let achar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, i32, i32, u32) -> u32 = core::mem::transmute(0x5acbe0usize);
-    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
+    let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
+    let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
+    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
+    let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
+    let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
+    let achar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, i32, i32, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     // 0x68d020 / 0x68d040 / 0x68d1b0: lea ecx (ou mov ecx, bloco) -> thiscall; 0x944cf1 (new): push 0xe; add esp, 4 ->
     // cdecl; 0x68d0d0: push 4; push &valor; mov ecx, lista -> thiscall, ret 8; 0x5409b0 / 0x53b4f0: push; add esp, 4 ->
     // cdecl; 0x549ef0: push +0x28; push +0x2a; lea ecx -> thiscall, ret 8; 0x54c5b0: push n; push &saída; mov ecx, data
@@ -518,7 +518,7 @@ unsafe extern "thiscall" fn cqf11_adversarios_da_selecao(this: usize, selecao: u
     let (a3, a4) = dia_ano(p2);
     achar(read_usize(0xae2a58), a1, a2, a3, a4, read_usize(selecao) as u32, l, -1, -2, celula as u32);
     core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2));
-    let finais = [0x9cf79cusize, 0x9cf7a0, 0x9cf7a4, 0x9cf7a8, 0x9cf7ac, 0x9cf790, 0x9cf8a0, 0x9cf78c, 0x9cf964];
+    let finais = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_ASIAN_CUP, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_ASIAN_GAMES, KEY_CLUB_COMP_CONFEDERATIONS_CUP];
     let mut item = proximo(l);
     while item != 0 {
         let c = read_usize(item + 0x14);
@@ -602,22 +602,22 @@ unsafe fn cqc12_registro(this: usize, nacao: usize) -> usize {
 /// Copa das Confederações 0xabe/0x222e; eliminatórias da Oceania 0x8ca e 9000, 8000 ou 10001 pelo byte +0x42; Copa
 /// do Mundo 0xabe/10000).
 unsafe fn cqc12_limites(nacao: usize, p: usize) -> (i16, i16) {
-    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
+    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     // 0x5c6710: push [p + 0x14]; mov ecx, [0xae2c74] -> thiscall ret 4
-    if read_usize(nacao) != read_usize(0x9cf224) {
+    if read_usize(nacao) != read_usize(KEY_NATION_AUSTRALIA) {
         return (-1, 0x2711);
     }
     if p == 0 || (read_usize(0xae2c74) != 0 && amistoso(read_usize(0xae2c74), read_usize(p + 0x14)) != 0) {
         return (0x8ca, 0x2134);
     }
     let k = read_usize(read_usize(p + 0x14));
-    if k == read_usize(0x9cf8a0) {
+    if k == read_usize(KEY_CLUB_COMP_OCEANIA_NATIONS_CUP) {
         (0x8ca, 0x2134)
-    } else if k == read_usize(0x9cf964) {
+    } else if k == read_usize(KEY_CLUB_COMP_CONFEDERATIONS_CUP) {
         (0xabe, 0x222e)
-    } else if k == read_usize(0x9cf76c) {
+    } else if k == read_usize(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION) {
         (0x8ca, match read_u8(p + 0x42) { 1 => 0x1f40, 2 => 0x2711, _ => 0x2328 })
-    } else if k == read_usize(0x9cf79c) {
+    } else if k == read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) {
         (0xabe, 0x2710)
     } else {
         (-1, 0x2711)
@@ -627,8 +627,8 @@ unsafe fn cqc12_limites(nacao: usize, p: usize) -> (i16, i16) {
 /// O time do tipo (0x53b3d0 a principal nos tipos 0 e 1, 0x53b4f0 o sub-21), a marca de elenco (+0x5e: 8 no tipo
 /// 1, 4 nos outros) e o time da tática (1 no tipo 1).
 unsafe fn cqc12_time(nacao: usize, t: i8) -> (usize, u8, u32) {
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
     // 0x53b3d0 e 0x53b4f0: push nacao; add esp, 4 -> cdecl
     match t {
         1 => (principal(nacao), 8, 1),
@@ -642,7 +642,7 @@ unsafe fn cqc12_time(nacao: usize, t: i8) -> (usize, u8, u32) {
 unsafe fn cqc12_faixa(t: i8, p: usize) -> (usize, usize) {
     if t != 2 {
         (0, 0)
-    } else if p != 0 && read_usize(p) == read_usize(0x9cf7a0) {
+    } else if p != 0 && read_usize(p) == read_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES) {
         (0, 1)
     } else {
         (1, 1)
@@ -665,15 +665,15 @@ unsafe fn cqc12_grupo(this: usize, reg: usize, k: usize, g: usize) -> (usize, i3
 /// O jogador `j` das reservas entra na lista da escala? (0x76cb84..0x76cf6c)
 #[allow(clippy::too_many_arguments)]
 unsafe fn cqc12_candidato(this: usize, nacao: usize, t: i8, data: usize, p: usize, elenco: usize, reg: usize, lim: (i16, i16), j: usize) -> bool {
-    let tipo_ok: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x53b620usize);
-    let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
-    let bits: unsafe extern "stdcall" fn(usize) -> u8 = core::mem::transmute(0x7a7eb0usize);
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
-    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d30usize);
-    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let suspenso: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x55d270usize);
-    let pode_mudar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32) -> u32 = core::mem::transmute(0x76db00usize);
+    let tipo_ok: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_PLAYER_JOB);
+    let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
+    let bits: unsafe extern "stdcall" fn(usize) -> u8 = core::mem::transmute(FN_PLAYER_REGEN_GET_RETIREMENT_STATUS);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
+    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_DISLIKES_CLUB);
+    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let suspenso: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_DISCIPLINE_IS_PLAYER_BANNED);
+    let pode_mudar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_CAN_CHANGE_SQUAD);
     // 0x53b620: push byte +0x3d; add esp, 4 -> cdecl; 0x62c400: push j; mov ecx, [0xb63d28] -> thiscall ret 4 (al);
     // 0x7a7eb0: push j; mov ecx, [0xb7434c] -> stdcall ret 4 (al); 0x547d30: push clube; push j; add esp, 0xc (junto
     // com o da 0x53b3d0) -> cdecl; 0x4cf5a0: push j; mov ecx, [0xae1050] -> thiscall ret 4; 0x55d270: push 0; push 1;
@@ -697,11 +697,11 @@ unsafe fn cqc12_candidato(this: usize, nacao: usize, t: i8, data: usize, p: usiz
         let c = read_usize(j + 0x39);
         let outra_nacao = |c: usize| c != 0 && read_usize(c + 0x53) != 0 && read_usize(read_usize(c + 0x53) + 0x71) != read_usize(nacao + 0x71);
         let mut contrato_ok = true;
-        if k == read_usize(0x9cf668) || k == read_usize(0x9cf794) || k == read_usize(0x9cf798) {
+        if k == read_usize(KEY_CLUB_COMP_FRIENDLY) || k == read_usize(KEY_CLUB_COMP_B_INTERNATIONAL) || k == read_usize(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) {
             if outra_nacao(c) {
                 // amistoso, B e sub-21 internacionais: clube de outra nação só com reputação (+0x80) até 0.8 da do
                 // adversário (o mandante +0x1c é o próprio time: o visitante +0x20); fora dos amistosos, não
-                if k != read_usize(0x9cf668) {
+                if k != read_usize(KEY_CLUB_COMP_FRIENDLY) {
                     return false;
                 }
                 let s = read_usize(p + 0x1c);
@@ -744,7 +744,7 @@ unsafe fn cqc12_candidato(this: usize, nacao: usize, t: i8, data: usize, p: usiz
         if pode_mudar(this, nacao, 0, j, 0, 0, 0) == 0 {
             return false;
         }
-        if !(p != 0 && read_usize(p) == read_usize(0x9cf7a0)) && t != 0 {
+        if !(p != 0 && read_usize(p) == read_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES)) && t != 0 {
             return false;
         }
     }
@@ -834,32 +834,32 @@ unsafe fn cqc12_candidatos(this: usize, nacao: usize, t: i8, data: usize, p: usi
 /// elenco é ordenado (0x945333 com 0x778ef0), a notícia (0x76e0b0) e as vagas da tática com quem não é do time saem.
 /// As caixas de erro (linhas 0x748 e 0x76b) como a original.
 unsafe extern "thiscall" fn escolher_elenco_da_selecao(this: usize, nacao: usize, tipo: u32, data: usize, p: usize, forcado: u32) {
-    let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
-    let menos: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c8e0usize);
-    let copia: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
-    let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
-    let inserir: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x68d0d0usize);
-    let dispensar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x76d880usize);
-    let idades: unsafe extern "stdcall" fn(usize, u32, usize, usize) = core::mem::transmute(0x76d430usize);
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let t9a06: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x5fd6b0usize);
-    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
-    let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
-    let dias_de_lesao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
-    let tirar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x896c60usize);
-    let pedir: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(0x76f1a0usize);
+    let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
+    let menos: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
+    let copia: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+    let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
+    let inserir: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_LLIST_ADD_TAIL);
+    let dispensar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_RELEASE_OVERAGE_U21_PLAYERS);
+    let idades: unsafe extern "stdcall" fn(usize, u32, usize, usize) = core::mem::transmute(FN_NATIONAL_TEAMS_GET_SQUAD_SIZE_LIMITS);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let t9a06: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_ALL_NATIONAL_TEAMS);
+    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
+    let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
+    let dias_de_lesao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY);
+    let tirar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_TACTICS_REMOVE_PLAYER_FROM_SELECTION);
+    let pedir: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(FN_NATIONAL_TEAMS_POST_SQUAD_REQUEST_NEWS);
     let escalar: unsafe extern "C" fn(usize, u32, usize, u32, u32, usize, u32, usize, u32, u32, u32, u32, u32, u32, u32) -> u8 =
-        core::mem::transmute(0x6e2000usize);
-    let mascara: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(0x5b7d20usize);
-    let pode_mudar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32) -> u32 = core::mem::transmute(0x76db00usize);
-    let da_vaga: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> usize = core::mem::transmute(0x8968f0usize);
-    let limpar_vaga: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x896e90usize);
-    let marcar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x540980usize);
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    let noticia: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32, u32) = core::mem::transmute(0x76e0b0usize);
+        core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
+    let mascara: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(FN_FORMATION_GET_POSITION_MASK);
+    let pode_mudar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_CAN_CHANGE_SQUAD);
+    let da_vaga: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> usize = core::mem::transmute(FN_TACTICS_GET_SELECTED_PLAYER);
+    let limpar_vaga: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_TACTICS_CLEAR_SELECTION_SLOT);
+    let marcar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_STAFF_SET_SQUAD_FLAGS);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let noticia: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32, u32) = core::mem::transmute(FN_NATIONAL_TEAMS_POST_CALL_UP_NEWS);
     // 0x549ef0: push +0x28; push +0x2a; lea ecx, saida -> thiscall ret 8 (palavras); 0x54c8e0: push n; push saida; mov
     // ecx, data -> thiscall ret 8; 0x417c10: push origem; push saida; lea ecx, destino -> thiscall ret 8; 0x54a110: lea
     // ecx -> thiscall; 0x944cf1 (new): push 0xe; add esp, 4 -> cdecl; 0x68d020: mov ecx, bloco -> thiscall ret 0;
@@ -876,7 +876,7 @@ unsafe extern "thiscall" fn escolher_elenco_da_selecao(this: usize, nacao: usize
     let reg = cqc12_registro(this, nacao);
     let lim = cqc12_limites(nacao, p);
     let (elenco, marca, time) = cqc12_time(nacao, t);
-    let chaves = [0x9cf79cusize, 0x9cf7a0, 0x9cf7a4, 0x9cf7a8, 0x9cf7ac, 0x9cf790, 0x9cf8a0, 0x9cf78c, 0x9cf964];
+    let chaves = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_ASIAN_CUP, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_ASIAN_GAMES, KEY_CLUB_COMP_CONFEDERATIONS_CUP];
     let finais = p != 0 && read_usize(p + 0x14) != 0 && chaves.iter().any(|&k| read_usize(read_usize(p + 0x14)) == read_usize(k));
     let r = reg.wrapping_add((t as i32 * 0x14) as usize);
     let tatica = || read_usize(0xde1d08);
@@ -911,7 +911,7 @@ unsafe extern "thiscall" fn escolher_elenco_da_selecao(this: usize, nacao: usize
             // a nação de cada lado (+0x53 do time) e a casa dela no vetor [this + 0x36]
             let nac = |o: usize| read_usize(read_usize(p + o) + 0x53);
             let casa = |o: usize| read_usize(nac(o)).wrapping_add(read_usize(this + 0x36));
-            if read_usize(p) == read_usize(0x9cf7a0) {
+            if read_usize(p) == read_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES) {
                 write_u8(casa(0x1c), 1);
                 write_u8(casa(0x20), 1);
             } else {
@@ -1159,10 +1159,10 @@ unsafe fn cpz6_estrelas(g: usize) -> usize {
 /// (primeiro [0x9d00a8]; o texto 0xa62fa4 em 0xde1f64 se há `comentario`). Senão 0.
 unsafe extern "thiscall" fn selecao_que_tem_o_jogador(this: usize, jogador: usize, data: usize, clube: usize, comentario: usize,
                                                       adversario: usize) -> usize {
-    let criar: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
-    let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
-    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    let criar: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
+    let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let mut lista = [0u8; 0x10];
     let pl = lista.as_mut_ptr() as usize;
     criar(pl);
@@ -1171,7 +1171,7 @@ unsafe extern "thiscall" fn selecao_que_tem_o_jogador(this: usize, jogador: usiz
         r
     };
     if clube != 0 {
-        let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+        let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
         if selecao(clube) != 0 {
             return sai(0);
         }
@@ -1180,8 +1180,8 @@ unsafe extern "thiscall" fn selecao_que_tem_o_jogador(this: usize, jogador: usiz
             return sai(0);
         }
     }
-    let menos: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c8e0usize);
-    let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
+    let menos: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
+    let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let (mut lo, mut hi) = ([0u8; 8], [0u8; 8]);
     let (plo, phi) = (lo.as_mut_ptr() as usize, hi.as_mut_ptr() as usize);
     menos(data, plo, 1); // cpz6: a véspera
@@ -1191,7 +1191,7 @@ unsafe extern "thiscall" fn selecao_que_tem_o_jogador(this: usize, jogador: usiz
         let sem_bit = (read_u8(jogador + 0x5e) & 4 == 0) as u32;
         // ponytail: a original empurra o lado com os 24 bits altos de ecx sobrando; a 0x5acbe0 só lê o byte
         let jogos: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32 =
-            core::mem::transmute(0x5acbe0usize);
+            core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
         let n = jogos(read_usize(0xae2a58), read_usize(plo) as u32, read_usize(plo + 2) as u32, read_usize(phi) as u32, read_usize(phi + 2) as u32,
             read_usize(nacional) as u32, pl, u32::MAX, 0xffff_fffe, (sem_bit == 0) as u32);
         let mut servico = false;
@@ -1245,13 +1245,13 @@ unsafe extern "thiscall" fn selecao_que_tem_o_jogador(this: usize, jogador: usiz
             }
         }
     }
-    let comp = read_usize(read_usize(0xadadfc).wrapping_add(read_usize(0x9cf690).wrapping_mul(4)));
+    let comp = read_usize(read_usize(0xadadfc).wrapping_add(read_usize(KEY_CLUB_COMP_AMERICAN_MLS_ALL_STARS).wrapping_mul(4)));
     if comp == 0 {
         return sai(0);
     }
     let reg = read_usize(comp + 0xa3);
     let ano = (read_u8(reg + 5) as i8 as i16).wrapping_add(read_u16(comp + 0x40) as i16) as u16;
-    let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
+    let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let mut jogo = [0u8; 8];
     let pj = jogo.as_mut_ptr() as usize;
     data_nova(pj, read_u16(reg + 3) as u32, ano as u32);
@@ -1260,7 +1260,7 @@ unsafe extern "thiscall" fn selecao_que_tem_o_jogador(this: usize, jogador: usiz
         return sai(0);
     }
     let liga = read_usize(cj + 0x57);
-    if liga == 0 || read_usize(liga) != read_usize(0x9cf590) {
+    if liga == 0 || read_usize(liga) != read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
         return sai(0);
     }
     let (jd, ja) = (read_u16(pj) as i16, read_u16(pj + 2));
@@ -1312,14 +1312,14 @@ unsafe extern "stdcall" fn jogador_serve_a_selecao(jogador: usize, tecnico: usiz
     if read_usize(jogador + 0x61) == 0 || sel == 0 {
         return 0;
     }
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if selecao(sel) == 0 {
         return 0;
     }
     if read_usize(jogador + 0x24) == sel {
         return 1;
     }
-    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
+    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
     if segunda(sel) != 0 && read_u8(jogador + 0x18) as i8 > 0x15 {
         return 0;
     }
@@ -1340,7 +1340,7 @@ unsafe extern "stdcall" fn jogador_serve_a_selecao(jogador: usize, tecnico: usiz
     if primeira != nacao && read_usize(jogador + 0x1e) != nacao {
         return 0;
     }
-    let x = read_usize(0x9cf434);
+    let x = read_usize(KEY_NATION_PORTUGAL);
     if read_usize(nacao) == x {
         let s = read_usize(jogador + 0x1e);
         if s != 0 && read_usize(s) == x {
@@ -1366,8 +1366,8 @@ unsafe extern "thiscall" fn juntar_competicoes_das_convocacoes(this: usize, said
     if conv == 0 || saida == 0 {
         return 0;
     }
-    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x68d0d0usize);
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
+    let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LLIST_ADD_TAIL);
     let mut n: u8 = 0;
     core::ptr::write_unaligned((conv + 0xa) as *mut usize, read_usize(conv + 2));
     let mut e = proximo(read_usize(this));
@@ -1451,9 +1451,9 @@ unsafe fn cpx13_registro(this: usize, clube: usize) -> usize {
 /// sobre hoje) e a marca (e `extra`), grava hoje (0x417c10) e leva a data do elenco até a data do jogo (+0x2a/+0x28)
 /// se ela for anterior; senão pede o elenco (0x76c120 com a nação, o tipo, hoje, a partida e 0).
 unsafe fn cpx13_elenco(this: usize, p: usize, clube: usize, reg: usize, tipo: u32, extra: impl FnOnce() -> bool) {
-    let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
-    let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
-    let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
+    let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
+    let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+    let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let base = reg + [0x32usize, 0x46, 0x5a][tipo as usize];
     let data = base + 8;
     let d = dias(0xae2c90, read_usize(data) as u32, read_usize(data + 4) as u32);
@@ -1474,7 +1474,7 @@ unsafe fn cpx13_elenco(this: usize, p: usize, clube: usize, reg: usize, tipo: u3
         CPX13_PEDIU = true;
         return;
     }
-    let escolher: unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, u32) = core::mem::transmute(0x76c120usize);
+    let escolher: unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, u32) = core::mem::transmute(FN_NATIONALTEAMS_SELECT_SQUAD);
     crate::comparacao::ramo("cpx_13 elenco pedido");
     escolher(this, read_usize(clube + 0x53), tipo, 0xae2c90, p, 0); // cpx13: o elenco
 }
@@ -1482,13 +1482,13 @@ unsafe fn cpx13_elenco(this: usize, p: usize, clube: usize, reg: usize, tipo: u3
 /// Os elencos B/olímpico (+0x4e da partida, bit 0x100) ou sub-21 (bit 0x200, ou o clube é seleção B 0x5409b0) do lado
 /// `clube`; o sub-21 só sem convocado: competição [0x9cf7a0] ou a nação fora do vetor [this+0x36].
 unsafe fn cpx13_elencos_menores(this: usize, p: usize, clube: usize, reg: usize) {
-    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
+    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
     let m = read_i16(p + 0x4d) as u16;
     if m & 0x100 != 0 {
         cpx13_elenco(this, p, clube, reg, 1, || true);
     } else if m & 0x200 != 0 || segunda(clube) != 0 {
         cpx13_elenco(this, p, clube, reg, 2, || {
-            read_usize(p) == read_usize(0x9cf7a0) || read_u8(read_usize(read_usize(clube + 0x53)).wrapping_add(read_usize(this + 0x36))) == 0
+            read_usize(p) == read_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES) || read_u8(read_usize(read_usize(clube + 0x53)).wrapping_add(read_usize(this + 0x36))) == 0
         });
     }
 }
@@ -1497,10 +1497,10 @@ unsafe fn cpx13_elencos_menores(this: usize, p: usize, clube: usize, reg: usize)
 /// hoje), zera a marca +0x6b.
 unsafe fn cpx13_dispensar(this: usize, clube: usize) {
     if !CPX13_ENSAIO {
-        let dispensar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x76d880usize);
+        let dispensar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_RELEASE_OVERAGE_U21_PLAYERS);
         return dispensar(this, read_usize(clube + 0x53));
     }
-    let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
+    let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     let reg = cpx13_registro(this, clube);
     if depois(0xae2c90, read_usize(reg + 0x62) as u32, read_usize(reg + 0x66) as u32) != 0 {
         *((reg + 0x6b) as *mut u8) = 0;
@@ -1513,10 +1513,10 @@ unsafe fn cpx13_dispensar(this: usize, clube: usize) {
 /// principal (cpx13_elenco tipo 0) e, sem o bit 2, a dispensa do sub-21 (0x76d880) das duas nações; os elencos
 /// menores (cpx13_elencos_menores). Visitante: o mesmo sem a dispensa. Por fim apaga os repetidos (0x76c060) das duas.
 unsafe extern "thiscall" fn convocar_selecoes_para_o_jogo(this: usize, p: usize) {
-    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
-    let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
-    let semanas_antes: unsafe extern "thiscall" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x54cab0usize);
-    let repetidos: unsafe extern "stdcall" fn(usize) = core::mem::transmute(0x76c060usize);
+    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
+    let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
+    let semanas_antes: unsafe extern "thiscall" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_SUB_WEEKS);
+    let repetidos: unsafe extern "stdcall" fn(usize) = core::mem::transmute(FN_NATIONAL_TEAMS_REMOVE_DUPLICATE_SQUAD_ENTRIES);
     if read_u8(p + 0x40) == 0 && read_u8(p + 0x4e) & 1 != 0 {
         return;
     }
@@ -1577,7 +1577,7 @@ unsafe extern "thiscall" fn comparar_convocar_selecoes_para_o_jogo(this: usize, 
 /// O clube do contrato da pessoa (0x4cf5a0 de [0xae1050], gravado em [0xae1080]; clube +4 em [0xae23b4], 0x245
 /// bytes), ou 0.
 unsafe fn cpx13_clube_do_contrato(pessoa: usize) -> usize {
-    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let c = contrato(read_usize(0xae1050), pessoa);
     *(0xae1080 as *mut usize) = c;
     if c == 0 {
@@ -1595,12 +1595,12 @@ static mut CPX13_ENSAIO_NOTICIA: bool = false;
 /// +0xc; vaga 0: 4 a seleção principal (0x53b3d0), 5 = 0; vaga 1: a principal e 1; outra: a B (0x53b4f0) e 0.
 /// Entregue ao técnico (0x7861e0) do +0x39, se houver, e ao do clube do contrato quando é outro.
 unsafe extern "stdcall" fn noticia_do_convocado(jogador: usize, nacao: usize, vaga: u32) {
-    let humano: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7875e0usize);
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
-    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
-    let ao_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
+    let humano: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
+    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
+    let ao_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
     let c39 = read_usize(jogador + 0x39);
     if c39 == 0 || humano(c39) == 0 {
         if cpx13_clube_do_contrato(jogador) == 0 {
@@ -1670,14 +1670,14 @@ unsafe extern "stdcall" fn comparar_noticia_do_convocado(jogador: usize, nacao: 
 /// ou fora: −1). Saída ≠ 0xff: a entrega pelo alcance (0x786090). Desfecho 1 na rodada 0x96 ou 3 na 0x8c (+0x30): à
 /// região da competição (0x786860); senão ao técnico do clube (0x7861e0). Devolve 1.
 unsafe extern "thiscall" fn noticia_do_desfecho_na_copa(copa: usize, clube: usize, desfecho: u32, a3: u32, p: usize, a5: u32) -> u32 {
-    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
-    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
-    let categoria: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(0x4b0890usize);
-    let gravar_jogo: unsafe extern "C" fn(usize, usize, *mut u8) -> u32 = core::mem::transmute(0x4afeb0usize);
-    let ao_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    let a_regiao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x786860usize);
-    let pelo_alcance: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32 = core::mem::transmute(0x786090usize);
+    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
+    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
+    let categoria: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_CLASSIFY_TIE_RESULT_FOR_NEWS);
+    let gravar_jogo: unsafe extern "C" fn(usize, usize, *mut u8) -> u32 = core::mem::transmute(FN_COMP_UTIL_WRITE_FIXTURE_TO_NEWS_SLOTS);
+    let ao_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
+    let a_regiao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_COMP_REGION);
+    let pelo_alcance: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_NEWS_SEND_BY_SCOPE);
     // ponytail: a original grava só o byte da saída num dword da pilha e empurra o dword; a 0x786090 lê o byte
     let mut saida: u32 = 0xff;
     if amistoso(read_usize(0xae2c74), read_usize(copa + 4)) != 0 {
@@ -1802,22 +1802,22 @@ unsafe fn cpw12_lados(this: usize, p: usize, m: usize, mut f: impl FnMut(usize, 
 /// tipo, 0x4a7f20 com a de hoje) zera +0x44 + 20 × tipo; a notícia aos clubes (0x7706c0) com o destaque (vaga +0x153) e
 /// a lista de quem jogou. Sem SEH, sem caixa, sem sorteio.
 unsafe extern "thiscall" fn resultado_entre_selecoes(this: usize, p: usize, m: usize) {
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if e_selecao(read_usize(p + 0x1c)) == 0 || e_selecao(read_usize(p + 0x20)) == 0 {
         return;
     }
     let comp = read_usize(read_usize(p + 0x14));
-    if comp == read_usize(0x9cf794) {
+    if comp == read_usize(KEY_CLUB_COMP_B_INTERNATIONAL) {
         cpw12_lados(this, p, m, |_, _, _, pessoa| *((cpw12_geral(pessoa) + 0xd) as *mut u8) = 1);
-    } else if comp == read_usize(0x9cf798) {
+    } else if comp == read_usize(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) {
         cpw12_lados(this, p, m, |clube, _, _, pessoa| {
             *((cpw12_geral(pessoa) + 0xc) as *mut u8) |= 2;
             cpw12_trocar_nacao(pessoa, clube);
         });
-    } else if comp != read_usize(0x9cf7a0) {
-        let fifa: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x58cf70usize);
-        let primeira: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x86cc50usize);
-        let jogo_pela_selecao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8ce920usize);
+    } else if comp != read_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES) {
+        let fifa: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_FIFA_RANKINGS_RECORD_MATCH_RESULT);
+        let primeira: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_FIRST_CAP_RECORD);
+        let jogo_pela_selecao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_TRANSFER_MANAGER_RECORD_INTERNATIONAL_APPEARANCE);
         if !CPW12_ENSAIO {
             fifa(read_usize(this + 0x1c), p);
         }
@@ -1858,9 +1858,9 @@ unsafe extern "thiscall" fn resultado_entre_selecoes(this: usize, p: usize, m: u
             }
         }
     }
-    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
-    let mesma_data: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x4a7f20usize);
-    let noticia: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, *mut usize, u32) = core::mem::transmute(0x7706c0usize);
+    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
+    let mesma_data: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3D_3D);
+    let noticia: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, *mut usize, u32) = core::mem::transmute(FN_NATIONALTEAMS_SEND_CLUB_INTERNATIONAL_REPORT_NEWS);
     for lado in 0..2usize {
         let clube = read_usize(p + if lado == 0 { 0x1c } else { 0x20 });
         let b = *((p + 0x40) as *const u8) == 0;
@@ -1916,7 +1916,7 @@ unsafe fn cpw12_regioes(this: usize, p: usize, m: usize) -> Vec<(usize, usize)> 
 /// rotina grava por conta própria (cpw12_regioes). Fora de jogo entre seleções: só a original.
 unsafe extern "thiscall" fn comparar_resultado_entre_selecoes(this: usize, p: usize, m: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1302);
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if e_selecao(read_usize(p + 0x1c)) == 0 || e_selecao(read_usize(p + 0x20)) == 0 {
         return o(this, p, m); // ponytail: não grava nada, só a original
     }
@@ -1939,7 +1939,7 @@ unsafe extern "thiscall" fn nome_do_elenco_da_selecao(this: usize, tipo: u32, su
     if tamanho < 0x14 {
         return orig::<unsafe extern "thiscall" fn(usize, u32, u32, usize, i32, u32) -> u32>(1303)(this, tipo, sub23, saida, tamanho, minusculo);
     }
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> u32 = core::mem::transmute(0x66f4e0usize);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> u32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let s = match (minusculo as u8 == 1, tipo as u8, sub23 != 0) {
         (true, 0, _) => 0x9cd9b4,
         (true, 1, _) => 0xa62fa0,
@@ -2020,7 +2020,7 @@ unsafe fn cpv11_registro(this: usize, nacao: usize) -> usize {
 /// O tipo de convocação do jogador no clube da seleção `clube`: 2 no segundo conjunto de seleções (0x5409b0), senão o
 /// bit 3 das marcas de elenco (+0x5e).
 unsafe fn cpv11_tipo(clube: usize, p: usize) -> u8 {
-    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
+    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
     if segunda(clube) != 0 {
         2
     } else {
@@ -2030,7 +2030,7 @@ unsafe fn cpv11_tipo(clube: usize, p: usize) -> u8 {
 
 /// Os dados 0..3 da notícia: o id do jogador e os de +4, +8 e +0xc dele (+0x33 de cada).
 unsafe fn cpv11_quem(n: usize, p: usize) {
-    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
+    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     gravar(n, 0, read_usize(p) as u32);
     for k in 0..3usize {
         gravar(n, 1 + k as i8, read_usize(read_usize(p + 4 + 4 * k) + 0x33) as u32);
@@ -2039,9 +2039,9 @@ unsafe fn cpv11_quem(n: usize, p: usize) {
 
 /// O dado 6 da notícia: a gravidade da lesão do jogador (0x62ec00 sobre o tipo do registro 0x62ed70), ou 0.
 unsafe fn cpv11_gravidade(n: usize, p: usize) {
-    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
-    let lesao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
-    let gravidade: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x62ec00usize);
+    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
+    let lesao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY);
+    let gravidade: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_INJURY_GET_TYPE_CATEGORY);
     let v = if lesao(read_usize(0xb63d28), p) != 0 {
         let t = read_u8(lesao(read_usize(0xb63d28), p)) as i8;
         gravidade(read_usize(0xb63d28), t) as i8 as i32
@@ -2053,7 +2053,7 @@ unsafe fn cpv11_gravidade(n: usize, p: usize) {
 
 /// O clube do contrato do jogador (0x4cf5a0, guardado em [0xae1080]; registros de 0x245 bytes), ou 0.
 unsafe fn cpv11_clube_do_contrato(p: usize) -> usize {
-    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let c = contrato(read_usize(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
     if c == 0 {
@@ -2082,19 +2082,19 @@ unsafe extern "thiscall" fn tirar_convocado_machucado(this: usize, p: usize, dia
     if read_u8(p + 0x28) != 0xb {
         return;
     }
-    let lesao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
-    let marcar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x896c60usize);
-    let tirar: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(0x7762f0usize);
-    let maior: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
-    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    let noticia: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x76f7d0usize);
-    let nivel_de: unsafe extern "stdcall" fn(usize, usize, u32) -> u8 = core::mem::transmute(0x76d810usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let t9a06: unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8 = core::mem::transmute(0x5fd6b0usize);
-    let pedido: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x7701f0usize);
-    let substituto: unsafe extern "thiscall" fn(usize, usize, u32, u32, usize) = core::mem::transmute(0x775f90usize);
-    let repetidos: unsafe extern "stdcall" fn(usize) = core::mem::transmute(0x76c060usize);
+    let lesao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY);
+    let marcar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_TACTICS_REMOVE_PLAYER_FROM_SELECTION);
+    let tirar: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(FN_NATIONALTEAMS_REMOVE_PLAYER_FROM_SQUAD);
+    let maior: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
+    let noticia: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_NATIONAL_TEAMS_POST_PLAYER_WITHDRAWN_NEWS);
+    let nivel_de: unsafe extern "stdcall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_NATIONAL_TEAMS_GET_POSITION_GROUP);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let t9a06: unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_ALL_NATIONAL_TEAMS);
+    let pedido: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_NATIONAL_TEAMS_POST_REPLACEMENT_NEEDED_NEWS);
+    let substituto: unsafe extern "thiscall" fn(usize, usize, u32, u32, usize) = core::mem::transmute(FN_NATIONALTEAMS_CALL_UP_REPLACEMENT);
+    let repetidos: unsafe extern "stdcall" fn(usize) = core::mem::transmute(FN_NATIONAL_TEAMS_REMOVE_DUPLICATE_SQUAD_ENTRIES);
     let nacao = read_usize(clube + 0x53);
     let rec = cpv11_registro(this, nacao);
     // ponytail: a original empurra o dword da local com o tipo só no byte de baixo (os outros são sobra de pilha); as
@@ -2164,8 +2164,8 @@ unsafe fn cpv11_plano(this: usize, p: usize, dias: u32) -> u8 {
     if (dias as u16 as i16) < 0xe || read_u8(p + 0x28) != 0xb {
         return 0;
     }
-    let lesao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
-    let maior: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
+    let lesao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY);
+    let maior: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     let clube = read_usize(p + 0x24);
     let tipo = cpv11_tipo(clube, p);
     let inj = lesao(read_usize(0xb63d28), p);
@@ -2199,12 +2199,12 @@ unsafe fn cpv11_plano(this: usize, p: usize, dias: u32) -> u8 {
 /// e os de +4/+8/+0xc, 4 o id da seleção (principal 0x53b3d0 nos tipos 0 e 1, senão 0x53b4f0), 5 = (tipo == 1), 6 a
 /// gravidade da lesão; entrega ao clube +0x39 e, se for outro, ao do contrato (0x7861e0).
 unsafe extern "thiscall" fn noticia_da_saida_do_convocado(_this: usize, p: usize, nacao: usize, tipo: u32) {
-    let humano: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7875e0usize);
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
-    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
-    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let selecao_b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
+    let humano: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
+    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
+    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let selecao_b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
     if read_usize(p + 0x39) == 0 || humano(read_usize(p + 0x39)) == 0 {
         if cpv11_clube_do_contrato(p) == 0 {
             return;
@@ -2241,13 +2241,13 @@ unsafe extern "thiscall" fn noticia_da_saida_do_convocado(_this: usize, p: usize
 /// marca 4 e 5 = 0), 6 a gravidade da lesão, 7 = 0, 8 os do elenco com a marca (0x53c590), 9 o nível, 0xa o tipo e 0xb
 /// o id da nação. Entrega ao time se o técnico dele é humano (0x600a50), senão ao principal se o dele for.
 unsafe extern "thiscall" fn noticia_do_pedido_de_substituto(_this: usize, p: usize, nacao: usize, tipo: u32, nivel: u32) {
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
-    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
-    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let selecao_b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
-    let contar: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(0x53c590usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
+    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let selecao_b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
+    let contar: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(FN_DATABASE_COUNT_CLUB_SQUAD);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     crate::comparacao::ramo("cpv_11 notícia do pedido");
     let (time, um, marca) = match tipo as u8 {
         0 => (principal(nacao), 0u32, 4u32),
@@ -2316,7 +2316,7 @@ unsafe extern "thiscall" fn comparar_noticia_do_pedido_de_substituto(this: usize
 
 /// O nome do time (0x542100: time, marca de segundo time, destino de 0x47 bytes, 2, 1) e o byte de gramática (+0x52).
 unsafe fn cpv12_nome_do_time(time: usize, segundo: u32, buf: &mut [u8; 0x48]) -> i32 {
-    let nome: unsafe extern "C" fn(usize, u32, *mut u8, u32, u32, u32) -> u32 = core::mem::transmute(0x542100usize);
+    let nome: unsafe extern "C" fn(usize, u32, *mut u8, u32, u32, u32) -> u32 = core::mem::transmute(FN_CLUB_GET_NATIONAL_TEAM_NAME);
     nome(time, segundo, buf.as_mut_ptr(), 0x47, 2, 1);
     read_u8(time + 0x52) as i8 as i32
 }
@@ -2334,16 +2334,16 @@ unsafe extern "thiscall" fn pode_mudar_a_convocacao(this: usize, nacao: usize, t
     if nacao == 0 || (msg != 0 && tam < 0x32) {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, i32) -> u32>(1266)(this, nacao, tipo, p, entrando, msg, tam);
     }
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let selecao_b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
-    let aposentado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d30usize);
-    let nome_do_jogador: unsafe extern "C" fn(usize, *mut u8, u32, u32) -> u32 = core::mem::transmute(0x53dba0usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let contar: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(0x53c590usize);
-    let estado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
-    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    let t9a06: unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8 = core::mem::transmute(0x5fd6b0usize);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let selecao_b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
+    let aposentado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_DISLIKES_CLUB);
+    let nome_do_jogador: unsafe extern "C" fn(usize, *mut u8, u32, u32) -> u32 = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let contar: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(FN_DATABASE_COUNT_CLUB_SQUAD);
+    let estado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
+    let t9a06: unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_ALL_NATIONAL_TEAMS);
     if p != 0 {
         if aposentado(p, principal(read_usize(p + 0x1a))) != 0 { // cpv12: aposentado
             crate::comparacao::ramo("cpv_12 aposentado");
@@ -2435,10 +2435,10 @@ unsafe extern "thiscall" fn pode_mudar_a_convocacao(this: usize, nacao: usize, t
     }
     if a == ano && dd as u16 == dia as u16 {
         crate::comparacao::ramo("cpv_12 jogo hoje");
-        let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
-        let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
+        let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
+        let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
         let buscar: unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, u32, i32, i32, i32, u32, i32, u32, u32, u32, u32, usize, u32, i32, u32, u32) -> u16 =
-            core::mem::transmute(0x5acee0usize);
+            core::mem::transmute(FN_FIXTURE_MANAGER_SCAN_FIXTURES);
         // as vagas da data que a busca lê (a palavra do ano, o dword do dia, o byte da fatia), como a original monta
         let mut v_ano: u32 = ano as u32;
         let mut v_dia: u32 = hoje;
@@ -2468,8 +2468,8 @@ unsafe extern "stdcall" fn esta_na_convocacao(p: usize, nacao: usize, tipo: u32)
     if read_usize(p + 0x24) == 0 {
         return 0;
     }
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let selecao_b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let selecao_b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
     let (time, marca) = match tipo as u8 {
         0 => (principal(nacao), 4u8),
         1 => (principal(nacao), 8),
@@ -2586,10 +2586,10 @@ unsafe fn cpp12_muitos_convocados(this: usize, clube: usize, a: usize, b: usize)
 /// amistosa (0x5c6710 em [0xae2c74] com +0x14): 1. Senão 0 quando o mandante (+0x1c) ou o visitante (+0x20) tem mais
 /// de 2 convocados na janela; senão 1. O quadro SEH só guarda o estado (as datas não têm destrutor).
 unsafe extern "thiscall" fn pode_marcar_jogo_do_clube(this: usize, jogo: usize) -> u32 {
-    let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) = core::mem::transmute(0x549ef0usize);
-    let menos_dias: unsafe extern "thiscall" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x54c8e0usize);
-    let mais_dias: unsafe extern "thiscall" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x54c5b0usize);
-    let amistosa: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
+    let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) = core::mem::transmute(FN_DATE_DATE);
+    let menos_dias: unsafe extern "thiscall" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
+    let mais_dias: unsafe extern "thiscall" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
+    let amistosa: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     let (mut d, mut a, mut b) = ([0u8; 8], [0u8; 8], [0u8; 8]);
     // ponytail: a original empurra as palavras +0x2a e +0x28 com o alto do registro (lixo); a 0x549ef0 só lê as
     // palavras baixas: a cópia passa as palavras limpas.
@@ -2614,8 +2614,8 @@ unsafe extern "thiscall" fn pode_marcar_jogo_do_clube(this: usize, jogo: usize) 
 /// em +0 (as convocações de 9 bytes, as lesões, as transferências): −1 se a de `a` é antes (0x456770), 1 se é depois
 /// (0x456740), senão 0. Quente (qsort): sem contador.
 unsafe extern "C" fn ordem_das_convocacoes_pela_data(a: usize, b: usize) -> i32 {
-    let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
-    let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
+    let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3C);
+    let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     let (d0, d1) = (read_usize(b) as u32, read_usize(b + 4) as u32);
     let r = if antes(a, d0, d1) != 0 { -1 } else { (depois(a, d0, d1) != 0) as i32 };
     r // a convocação mais cedo primeiro
@@ -2631,7 +2631,7 @@ unsafe extern "thiscall" fn acrescentar_nacao_classificada(this: usize, nacao: u
     let mut reg = [0u8; 8];
     reg[..4].copy_from_slice(&(nacao as u32).to_le_bytes());
     reg[4..].copy_from_slice(&(fase_final as u32).to_le_bytes());
-    let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x68d0d0usize);
+    let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_LLIST_ADD_TAIL);
     acrescentar(this + 0x28, reg.as_mut_ptr() as usize, 8);
 }
 
@@ -2671,7 +2671,7 @@ unsafe fn cpo13_por(a: usize, v: u32) {
 /// A competição (id) é uma das fases finais grandes ([0x9cf79c], [0x9cf7a0], [0x9cf7a4], [0x9cf7a8], [0x9cf7ac],
 /// [0x9cf790], [0x9cf8a0], [0x9cf78c], [0x9cf964])?
 unsafe fn cpo13_final(id: u32) -> bool {
-    [0x9cf79c, 0x9cf7a0, 0x9cf7a4, 0x9cf7a8, 0x9cf7ac, 0x9cf790, 0x9cf8a0, 0x9cf78c, 0x9cf964usize]
+    [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_ASIAN_CUP, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_ASIAN_GAMES, KEY_CLUB_COMP_CONFEDERATIONS_CUP]
         .iter()
         .any(|&g| read_u32_as_usize(g) as u32 == id)
 }
@@ -2729,8 +2729,8 @@ unsafe extern "thiscall" fn definir_competicao_da_selecao(this: usize, nacao: us
     cpo13_por(p.vaga, nova);
     let g = read_u32_as_usize(0xb67a44);
     if g != 0 {
-        let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-        let avisar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x6a3770usize);
+        let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+        let avisar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_MANAGER_MANAGER_SET_SEASON_EXPECTATIONS);
         avisar(g, principal(nacao), 1);
     }
 }
@@ -2773,7 +2773,7 @@ unsafe fn cpo13_nacao_marcada(c: usize) -> bool {
 unsafe extern "thiscall" fn marcar_clubes_com_jogo(this: usize, data: usize) {
     let n = (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
     if read_u32_as_usize(this + 0x24) == 0 {
-        let calloc: unsafe extern "C" fn(i32, u32) -> usize = core::mem::transmute(0x945501usize);
+        let calloc: unsafe extern "C" fn(i32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
         let p = calloc(n, 1);
         cpo13_por(this + 0x24, p as u32);
         if p == 0 {
@@ -2781,9 +2781,9 @@ unsafe extern "thiscall" fn marcar_clubes_com_jogo(this: usize, data: usize) {
             return;
         }
     }
-    let lista_da_data: unsafe extern "stdcall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x5ae6a0usize);
-    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
+    let lista_da_data: unsafe extern "stdcall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_FIX_MAN_GET_FIXTURE_LIST_FOR_DATE);
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
+    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     for i in 0..0x21usize {
         let e = 0xb63df0 + i * 0x48;
         let nacao = read_u32_as_usize(e);
@@ -2846,7 +2846,7 @@ unsafe fn cpo13_orgao(this: usize, regra: u8) -> usize {
 
 /// A entrada da pessoa no órgão pela vaga dela (0x7e82e0 sem criar: só lê).
 unsafe fn cpo13_entrada(orgao: usize, id: u32) -> usize {
-    let achar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x7e82e0usize);
+    let achar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_RULINGBODY_FIND_OR_ADD_DISCIPLINE_ENTRY);
     achar(orgao, id, 0)
 }
 
@@ -2856,7 +2856,7 @@ unsafe fn cpo13_entrada(orgao: usize, id: u32) -> usize {
 /// (0x68d1f0, enquanto a conta +0x1c > 0) e o registro fica 0xff com a conta 0.
 unsafe extern "thiscall" fn tirar_jogador_da_disciplina(this: usize, id: u32) {
     let r = read_u32_as_usize(this + 0x14).wrapping_add((id as usize).wrapping_mul(29));
-    let apagar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x55e1d0usize);
+    let apagar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_DISCIPLINE_CLEAR_BAN_HISTORY);
     apagar(this, read_u32_as_usize(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e)));
     for k in 0..4usize {
         let regra = *((r + k * 5) as *const u8);
@@ -2871,7 +2871,7 @@ unsafe extern "thiscall" fn tirar_jogador_da_disciplina(this: usize, id: u32) {
         let i = core::ptr::read_unaligned((e + 6) as *const i16);
         if i > -1 {
             // o índice no ax; o alto do eax é o do ponteiro da entrada (a 0x556d00 só lê a palavra)
-            let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x556d00usize);
+            let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DISCIPLINE_RELEASE_BAN);
             soltar(this, id, (e as u32 & 0xffff_0000) | i as u16 as u32);
         }
         let v = read_u32_as_usize(this + 0x14).wrapping_add((id as usize).wrapping_mul(29) + k * 5);
@@ -2881,8 +2881,8 @@ unsafe extern "thiscall" fn tirar_jogador_da_disciplina(this: usize, id: u32) {
     }
     let lista = this + 0x1c;
     cpo13_por(lista + 0xa, read_u32_as_usize(this + 0x1e) as u32);
-    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    let remover: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x68d1f0usize);
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
+    let remover: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
     let mut item = proximo(lista);
     while item != 0 && *((r + 0x1c) as *const i8) > 0 {
         if read_u32_as_usize(item) as u32 == id {
@@ -2939,8 +2939,8 @@ unsafe fn cpd1_encerrar(this: usize, passa: impl Fn(usize) -> bool) {
         return;
     }
     core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2));
-    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    let mais_dias: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> *const u16 = core::mem::transmute(0x54c5b0usize);
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
+    let mais_dias: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> *const u16 = core::mem::transmute(FN_DATE_ADD_DAYS);
     let mut r = proximo(read_usize(this));
     while r != 0 {
         if passa(r) {
@@ -3006,9 +3006,9 @@ unsafe extern "thiscall" fn podar_registros_de_convocacao(this: usize) {
     if n <= 0 {
         return;
     }
-    let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
-    let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x777590usize);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3C);
+    let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CALL_UP_RECORD_ASSIGN);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let conta = |rec: usize| *((rec + 5) as *const i8);
     for _ in 0..n {
         let mut vencidas: i8 = 0;
@@ -3054,7 +3054,7 @@ unsafe extern "thiscall" fn podar_registros_de_convocacao(this: usize) {
 /// O registro `rec` da 0x7774b0 terminaria sem entradas e com vetor (a original solta o vetor)? Escrito à parte da
 /// cópia, para o comparador.
 unsafe fn cpd1_soltaria(rec: usize) -> bool {
-    let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
+    let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3C);
     let n = *((rec + 5) as *const i8);
     let v = read_usize(rec);
     let vencidas = (0..n.max(0) as usize).filter(|&k| antes(v + 9 * k, *(0xae2c90 as *const u32), *(0xae2c94 as *const u32)) != 0).count();
@@ -3086,15 +3086,15 @@ unsafe extern "thiscall" fn comparar_podar_registros_de_convocacao(this: usize) 
 
 /// O time da nação para o tipo de convocação: 0 e 1 a seleção principal (0x53b3d0), os outros o sub-21 (0x53b4f0).
 unsafe fn cpd2_time(nacao: usize, tipo: u8) -> usize {
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
     if tipo == 0 || tipo == 1 { principal(nacao) } else { sub21(nacao) }
 }
 
 /// Tira a pessoa `p` da tática do time (0x896c60 de [0xde1d08], com 1 e com 0 no 3º argumento), como as originais
 /// fazem antes de esvaziar a vaga.
 unsafe fn cpd2_tirar_da_tatica(time: usize, p: usize) {
-    let marcar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x896c60usize);
+    let marcar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_TACTICS_REMOVE_PLAYER_FROM_SELECTION);
     marcar(*(0xde1d08 as *const usize), time, p, 1, 1);
     marcar(*(0xde1d08 as *const usize), time, p, 0, 1);
 }
@@ -3120,11 +3120,11 @@ unsafe extern "thiscall" fn por_no_elenco_da_selecao(_this: usize, nacao: usize,
     };
     core::ptr::write_unaligned(vaga as *mut usize, p); // a vaga
     core::ptr::write_unaligned((p + 0x24) as *mut usize, time);
-    let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
+    let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut data = [0u8; 8];
     copia(p + 0x29, data.as_mut_ptr(), 0xae2c90);
     *((p + 0x28) as *mut u8) = 0xb;
-    let marcar_elenco: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x540980usize);
+    let marcar_elenco: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_STAFF_SET_SQUAD_FLAGS);
     marcar_elenco(p, elenco);
 }
 
@@ -3180,12 +3180,12 @@ unsafe fn cpd2_registro(this: usize, nacao: usize) -> usize {
 /// +0x5e & 3) e a vaga esvazia; por fim zera o byte +0x6b do registro. Sem SEH, sem sorteio; a local é o `this`.
 unsafe extern "thiscall" fn dispensar_acima_da_idade_do_sub21(this: usize, nacao: usize) {
     let rec = cpd2_registro(this, nacao);
-    let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
+    let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     if depois(0xae2c90, read_usize(rec + 0x62) as u32, read_usize(rec + 0x66) as u32) == 0 {
         return;
     }
     crate::comparacao::ramo("sub-21 dispensar acima da idade");
-    let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
+    let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
     let time = sub21(nacao);
     for c in 0..50usize {
         let vaga = time + 0xd7 + 4 * c;
@@ -3204,7 +3204,7 @@ unsafe extern "thiscall" fn dispensar_acima_da_idade_do_sub21(this: usize, nacao
 /// só a original.
 unsafe extern "thiscall" fn comparar_dispensar_acima_da_idade_do_sub21(this: usize, nacao: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(793);
-    let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
+    let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
     let time = sub21(nacao);
     if time == 0 {
         return o(this, nacao);
@@ -3223,8 +3223,8 @@ unsafe extern "thiscall" fn comparar_dispensar_acima_da_idade_do_sub21(this: usi
 unsafe fn cpd3_avisar_tecnicos(nacao: usize) {
     let g = *(0xb67a44 as *const usize);
     if g != 0 {
-        let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-        let avisar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x6a3770usize);
+        let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+        let avisar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_MANAGER_MANAGER_SET_SEASON_EXPECTATIONS);
         avisar(g, principal(nacao), 1);
     }
 }
@@ -3265,7 +3265,7 @@ unsafe extern "thiscall" fn comparar_limpar_competicao_atual(this: usize, nacao:
 unsafe fn cpd3_acabou(v: i32, fim_de_fase: bool) -> bool {
     let c = read_usize((*(0xae23d0 as *const usize)).wrapping_add(v.wrapping_mul(107) as usize) + 0x59);
     if fim_de_fase {
-        c == (*(0xae23a4 as *const usize)).wrapping_add((*(0x9cfa10 as *const i32)).wrapping_mul(0xc6) as usize)
+        c == (*(0xae23a4 as *const usize)).wrapping_add((*(KEY_CONTINENT_EUROPE as *const i32)).wrapping_mul(0xc6) as usize)
     } else {
         c == 0
     }
@@ -3320,18 +3320,18 @@ unsafe extern "thiscall" fn comparar_liberar_competicoes_do_continente(this: usi
 /// sai de lá (0x7762f0). Entra (0x776250), a vaga do tipo (+0x45) desce 1 e sai a notícia (0x76fd10). Ninguém: zera
 /// +0x45. Sem SEH, sem sorteio; a local do tipo do outro elenco é gravada antes de ler (só o byte vale).
 unsafe extern "thiscall" fn convocar_substituto(this: usize, nacao: usize, tipo: u32, nivel: u32, saindo: usize) {
-    let posicoes: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(0x5b7d20usize);
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d30usize);
-    let estado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
-    let regen: unsafe extern "stdcall" fn(usize) -> u8 = core::mem::transmute(0x7a7eb0usize);
-    let suspenso: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x55d270usize);
-    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
-    let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let tirar: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(0x7762f0usize);
-    let por: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(0x776250usize);
-    let noticia: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x76fd10usize);
+    let posicoes: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(FN_FORMATION_GET_POSITION_MASK);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_DISLIKES_CLUB);
+    let estado: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
+    let regen: unsafe extern "stdcall" fn(usize) -> u8 = core::mem::transmute(FN_PLAYER_REGEN_GET_RETIREMENT_STATUS);
+    let suspenso: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_DISCIPLINE_IS_PLAYER_BANNED);
+    let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
+    let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3C);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let tirar: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(FN_NATIONALTEAMS_REMOVE_PLAYER_FROM_SQUAD);
+    let por: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(FN_NATIONALTEAMS_ADD_PLAYER_TO_SQUAD);
+    let noticia: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_NATIONAL_TEAMS_POST_PLAYER_CALLED_UP_NEWS);
     let mascara = posicoes(read_usize(saindo + 0x61)) as u8;
     let t = tipo as u8 as i8;
     let nivel = nivel as u8 as i8;
@@ -3368,7 +3368,7 @@ unsafe extern "thiscall" fn convocar_substituto(this: usize, nacao: usize, tipo:
                 continue;
             }
         }
-        let comp = (*(0xae23d0 as *const usize)).wrapping_add((*(0x9cf79c as *const i32)).wrapping_mul(107) as usize);
+        let comp = (*(0xae23d0 as *const usize)).wrapping_add((*(KEY_CLUB_COMP_FIFA_WORLD_CUP as *const i32)).wrapping_mul(107) as usize);
         if suspenso(*(0xae28f0 as *const usize), q, comp, 1, 0) != 0 {
             continue;
         }
@@ -3436,8 +3436,8 @@ unsafe fn cpd4_inicio(rec: usize, o: usize, nivel: i8) -> i32 {
 /// iguais), empurrando o último para fora, e a menor nota vira a do último. Trecho cheio: ordena (qsort 0x945333 com
 /// 0x778ed0).
 unsafe fn cpd4_reservar(this: usize, p: usize, rec: usize, sub: u32) {
-    let nivel_de: unsafe extern "stdcall" fn(usize, usize, u32) -> u8 = core::mem::transmute(0x76d810usize);
-    let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let nivel_de: unsafe extern "stdcall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_NATIONAL_TEAMS_GET_POSITION_GROUP);
+    let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let o = 0x15 * sub as usize;
     let nivel = nivel_de(p, rec, sub) as i8;
     let c = rec.wrapping_add(o).wrapping_add((4 * nivel as i32) as usize);
@@ -3498,7 +3498,7 @@ unsafe extern "thiscall" fn montar_reservas_das_selecoes(this: usize) {
         }
         i += 1;
     }
-    let jogador: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x53b620usize);
+    let jogador: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_PLAYER_JOB);
     let mut p = *(0xae23bc as *const usize);
     let mut n = 0i32;
     while n < *(0xae2364 as *const i32) {
@@ -3514,7 +3514,7 @@ unsafe extern "thiscall" fn montar_reservas_das_selecoes(this: usize) {
                     *(read_usize(p + 0x1a) as *const i32)
                 } else {
                     let n2 = read_usize(p + 0x1e);
-                    if n2 == 0 || read_u8(p + 0x22) != 0 || n2 == read_usize(p + 0x1a) || *(n2 as *const i32) == *(0x9cf434 as *const i32) {
+                    if n2 == 0 || read_u8(p + 0x22) != 0 || n2 == read_usize(p + 0x1a) || *(n2 as *const i32) == *(KEY_NATION_PORTUGAL as *const i32) {
                         continue;
                     }
                     crate::comparacao::ramo("reservas segunda nacionalidade");
@@ -3615,7 +3615,7 @@ unsafe extern "thiscall" fn tirar_jogador_da_selecao(this: usize, jogador: usize
     if nacao == 0 || u(jogador + 0x61) == 0 {
         return;
     }
-    let nivel: unsafe extern "stdcall" fn(usize, *const i16, u8) -> u8 = core::mem::transmute(0x76d810usize);
+    let nivel: unsafe extern "stdcall" fn(usize, *const i16, u8) -> u8 = core::mem::transmute(FN_NATIONAL_TEAMS_GET_POSITION_GROUP);
     let reg = u(this + 4).wrapping_add((*(nacao as *const u32) as usize).wrapping_mul(110));
     let n = nivel(jogador, reg as *const i16, 0) as i8 as isize;
     let campo = |o: isize| (reg as isize).wrapping_add(n * 4 + o) as usize;
@@ -3658,7 +3658,7 @@ unsafe extern "thiscall" fn faixa_do_horario(_this: usize, comp: usize, dia: u32
         let nacao = core::ptr::read_unaligned((comp + 0x5d) as *const usize);
         if nacao != 0 {
             let id = *(nacao as *const u32);
-            if [0x9cf338usize, 0x9cf2dc, 0x9cf244, 0x9cf300].iter().any(|&g| id == *(g as *const u32)) {
+            if [KEY_NATION_HOLLAND, KEY_NATION_REPUBLIC_OF_IRELAND, KEY_NATION_BELGIUM, KEY_NATION_FRANCE].iter().any(|&g| id == *(g as *const u32)) {
                 return if dia != 6 { 2 } else { 1 };
             }
         }
@@ -3677,9 +3677,9 @@ unsafe extern "stdcall" fn teto_da_observacao(clube: usize, _posicoes: u32, tipo
         4 => {
             let nacao = core::ptr::read_unaligned((clube + 0x53) as *const usize);
             let eh = |gs: &[usize]| nacao != 0 && gs.iter().any(|&g| *(nacao as *const u32) == *(g as *const u32));
-            if eh(&[0x9cf360, 0x9cf2e4, 0x9cf488]) {
+            if eh(&[KEY_NATION_ITALY, KEY_NATION_ENGLAND, KEY_NATION_SPAIN]) {
                 rep.wrapping_mul(550)
-            } else if eh(&[0x9cf314, 0x9cf300]) {
+            } else if eh(&[KEY_NATION_GERMANY, KEY_NATION_FRANCE]) {
                 rep.wrapping_mul(475)
             } else {
                 rep.wrapping_mul(330)
@@ -3700,7 +3700,7 @@ unsafe extern "thiscall" fn comparar_tirar_jogador_da_selecao(this: usize, jogad
     }
     // as regiões: o jogador, o registro da nação, a faixa do nível na lista e a seleção (o nível,
     // 0x76d810, só lê)
-    let nivel: unsafe extern "stdcall" fn(usize, *const i16, u8) -> u8 = core::mem::transmute(0x76d810usize);
+    let nivel: unsafe extern "stdcall" fn(usize, *const i16, u8) -> u8 = core::mem::transmute(FN_NATIONAL_TEAMS_GET_POSITION_GROUP);
     let reg = u(this + 4).wrapping_add((*(nacao as *const u32) as usize).wrapping_mul(110));
     let n = nivel(jogador, reg as *const i16, 0) as i8 as isize;
     let mut regioes = [(jogador, 110), (reg, 110), (jogador, 0), (jogador, 0)];
@@ -3737,8 +3737,8 @@ unsafe extern "stdcall" fn comparar_teto_da_observacao(clube: usize, posicoes: u
 /// As 50 vagas de convocação (dwords desalinhados em +0xd7) das duas seleções da nação: a principal
 /// (0x53b3d0) e a B (0x53b4f0), nessa ordem.
 unsafe fn convocacoes_das_selecoes(nacao: usize) -> [usize; 2] {
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
     [principal(nacao).wrapping_add(0xd7), b(nacao).wrapping_add(0xd7)]
 }
 
@@ -3769,7 +3769,7 @@ unsafe extern "thiscall" fn vaga_do_escalado(tatica: usize, clube: usize, pessoa
     if clube == 0 || pessoa.is_null() {
         return orig::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32) -> u8>(509)(tatica, clube, pessoa, time);
     }
-    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(0x8982b0usize);
+    let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = linha(clube, time);
     if k == -1 {
         return 0;
@@ -3795,8 +3795,8 @@ unsafe extern "thiscall" fn escolher_comentarista(_this: usize, clube: usize, as
     if assunto == 0 && clube == 0 {
         return 0;
     }
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
-    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547840usize);
+    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
+    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_DISLIKED_BY);
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
     let reputacao = |nacao: usize| core::ptr::read_unaligned((nacao + 0x8e) as *const i16) as i32;
     let (mut melhor, mut maior) = (0usize, 0i32);

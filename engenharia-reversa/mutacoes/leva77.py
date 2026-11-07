@@ -8,7 +8,7 @@ MUTACOES = [
     ('a_1000', "    v.wrapping_sub(if w < 1000 { w as i32 % 10 } else { 0 })", "    v.wrapping_sub(if w <= 1000 { w as i32 % 10 } else { 0 })"),
     ('a_sinal', "    v.wrapping_sub(if w < 1000 { w as i32 % 10 } else { 0 })", "    v.wrapping_sub(if w < 1000 { w as i32 % 10 } else { 0 }) & 0xffff | v & !0xffff"),
     ('a_rem', "    v.wrapping_sub(if w < 1000 { w as i32 % 10 } else { 0 })", "    v.wrapping_sub(if w < 1000 { w as i32 - w as i32 / 10 * 10 + (w < 0) as i32 * 10 } else { 0 })"),
-    ('g_seis', "[0x9cf794usize, 0x9cf684, 0x9cf798, 0x9cf6b0, 0x9cf5d8, 0x9cf548].iter().any", "[0x9cf794usize, 0x9cf684, 0x9cf798, 0x9cf6b0, 0x9cf5d8].iter().any"),
+    ('g_seis', "[KEY_CLUB_COMP_B_INTERNATIONAL, KEY_CLUB_COMP_RESERVE, KEY_CLUB_COMP_UNDER_21_INTERNATIONAL, KEY_CLUB_COMP_SPANISH_LOWER_DIVISION, KEY_CLUB_COMP_FRENCH_CFA, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION].iter().any", "[KEY_CLUB_COMP_B_INTERNATIONAL, KEY_CLUB_COMP_RESERVE, KEY_CLUB_COMP_UNDER_21_INTERNATIONAL, KEY_CLUB_COMP_SPANISH_LOWER_DIVISION, KEY_CLUB_COMP_FRENCH_CFA].iter().any"),
     ('m_outro', "    let outro = (lado(alvo) == 0) as i8;\n    (0..20)", "    let outro = lado(alvo);\n    (0..20)"),
     ('m_ativo', "        *((j + 0x19) as *const i8) >= 0 && marcado(j) == alvo\n    }).count()", "        *((j + 0x19) as *const i8) > 0 && marcado(j) == alvo\n    }).count()"),
     ('q_outro', "    let outro = (lado(alvo) == 0) as i8;\n    for k in 0..20", "    let outro = lado(alvo);\n    for k in 0..20"),

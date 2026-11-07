@@ -18,12 +18,12 @@ enum Cqp10F {
 /// 0) com as datas, o ano +0x40 em 16 bits. No mata-mata: é_liga = 0, rodadas, extra = 0; a tabela de 0x68 bytes por
 /// rodada (sem memória, a caixa e 0), as rodadas pela `cql10_rodada` com o ano +0x40 com sinal e as palavras a mais.
 unsafe fn cqp10_tabela(this: usize, f: Cqp10F, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match f {
         Cqp10F::Nada => 0,
         Cqp10F::Grupos(grupos, id, linha, nome) => {
-            let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(0x68a160usize);
-            let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(0x68a1c0usize);
+            let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
+            let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
             if !liga.is_null() {
                 *liga = 1;
             }
@@ -109,7 +109,7 @@ unsafe fn cqp10_comparar(nome: &str, fase: u32, f: Cqp10F, rodadas: *mut i16, ex
     let saidas = *rodadas == r2 && *extra == e2 && (liga.is_null() || *liga == l2);
     let tabela = if a != 0 && b != 0 { cqp10_gravados(f, a, *rodadas) == cqp10_gravados(f, b, r2) } else { a == 0 && b == 0 };
     if b != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
     PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, fase as u8 as i8, saidas, *rodadas, r2, tabela));

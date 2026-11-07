@@ -4,13 +4,13 @@
 
 /// fread (0x945bfe, cdecl): `n` registros de `tam` bytes; devolve quantos leu.
 unsafe fn cqg8_ler(buf: usize, tam: u32, f: usize) -> u32 {
-    let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+    let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
     fread(buf, tam, 1, f)
 }
 
 /// fclose (0x945a09, cdecl).
 unsafe fn cqg8_fechar(f: usize) {
-    let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
+    let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     fclose(f);
 }
 
@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, q
         }
         return 0;
     }
-    let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
+    let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     let f = fopen(caminho, 0x98f928);
     if f == 0 {
         if quieto == 0 {
@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, q
         }
         return 0;
     }
-    let marcador: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x90c140usize);
+    let marcador: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_UTILS_READ_FILE_FORMAT_MARKER);
     let nativo = marcador(f) != 0xf1ff_fff1;
     let mut id_ = [0u8; 4];
     if cqg8_ler(id_.as_mut_ptr() as usize, 4, f) != 1 {
@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, q
     if cqg8_ler(this + 0x65, 200, f) != 1 {
         return cqg8_falhou(quieto, 0x915, f);
     }
-    let troca16: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x43f2d0usize);
+    let troca16: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_SWAP_BYTES_16_ARRAY);
     if id >= 0x98ec5a {
         if cqg8_ler(this + 0x187b, 4, f) != 1 {
             return cqg8_falhou(quieto, 0x920, f);
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, q
     if !nativo {
         troca16(this + 0x12d, 0xb);
     }
-    let mascara: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x5b59a0usize);
+    let mascara: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FORMATION_UPDATE_SHAPE_CODE);
     mascara(this);
     if id >= 0x98ec5c {
         if cqg8_ler(this + 0x143, 0xb, f) != 1 {
@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, q
         let mut v = [0u32; 11];
         if cqg8_ler(v.as_mut_ptr() as usize, 0x2c, f) == 1 {
             if !nativo {
-                let troca32: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x43f300usize);
+                let troca32: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_SWAP_BYTES_32_ARRAY);
                 troca32(v.as_mut_ptr() as usize, 0xb);
             }
         } else if quieto == 0 {
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, q
         crate::comparacao::ramo("cqg_8 instrucoes antigas");
     } else if cqg8_ler(this + 0x188b, 0x58, f) == 1 {
         if !nativo {
-            let troca64: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x43f350usize);
+            let troca64: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_SWAP_BYTES_64_ARRAY);
             troca64(this + 0x188b, 0xb);
         }
     } else if quieto == 0 {
@@ -195,17 +195,17 @@ unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, q
     if id < 0x98ec5d {
         write_u32(time, read_u32(time) | 0x20000);
     }
-    let guardada: unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32 = core::mem::transmute(0x5b3c70usize);
-    let refazer: unsafe extern "thiscall" fn(usize, i32, i32, u32, u32) -> u32 = core::mem::transmute(0x5b3560usize);
+    let guardada: unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32 = core::mem::transmute(FN_FORMATION_GET_SLOT_COORDINATE);
+    let refazer: unsafe extern "thiscall" fn(usize, i32, i32, u32, u32) -> u32 = core::mem::transmute(FN_FORMATION_SET_SLOT_COORDINATE);
     let mut c = 0u32;
     for vaga in 0..0xbi32 {
         guardada(this, vaga as i8, 0, 0, &mut c); // cqg8: a casa guardada da fase 0
         crate::comparacao::ramo("cqg_8 posicoes refeitas");
         refazer(this, vaga, 0, 0, c); // cqg8: as posições refeitas pela casa
     }
-    let separar: unsafe extern "C" fn(usize, usize, usize, usize, usize) = core::mem::transmute(0x944cffusize);
+    let separar: unsafe extern "C" fn(usize, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_STRTOK);
     separar(caminho, 0, 0, this, 0);
-    let mapa: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x5b7160usize);
+    let mapa: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FORMATION_BUILD_POSITION_LOOKUP);
     mapa(this);
     write_u32(this + 0x187f, 1);
     write_u32(this + 0x1883, (*((this + 0x33) as *const u8) != 0) as u32);

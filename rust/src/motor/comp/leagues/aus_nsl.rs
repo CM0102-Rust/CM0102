@@ -20,10 +20,10 @@ unsafe extern "thiscall" fn cqr3_fase_seguinte_da_nsl(this: usize) {
     let fase = fase + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
     if fase == 0 {
-        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x412010usize);
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_AUSNSL_CREATE_FINALS_SERIES_STAGE);
         f(this);
     } else if fase == 1 {
-        let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4121c0usize);
+        let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_AUSNSL_CREATE_GRAND_FINAL_STAGE);
         f(this);
     }
 }
@@ -41,12 +41,12 @@ unsafe extern "thiscall" fn cqr3_fase_seguinte_da_nsl(this: usize) {
 ///    ela: a notícia do sorteio (0x684230 na fase, thiscall, ret 0), +0x30 = 0 e 1.
 /// [inferência] A série final é uma liga curta dos seis; os dois primeiros dela vão à grande final.
 unsafe extern "thiscall" fn cqr3_serie_final_da_nsl(this: usize) -> u32 {
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construir: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, usize, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
-        core::mem::transmute(0x68b100usize);
+        core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let vagas: [u8; 4] = [2, 0, 0, 0];
     let mut clubes = [0usize; 6];
     for (i, c) in clubes.iter_mut().enumerate() {
@@ -86,13 +86,13 @@ unsafe extern "thiscall" fn cqr3_serie_final_da_nsl(this: usize) -> u32 {
 /// thiscall(fase, 0), ret 4) e a lista liberada. A fase atual (+0x30 = 1) já foi gravada pela fase seguinte.
 /// [inferência] A grande final é um jogo só, com o primeiro da série final como mandante.
 unsafe extern "thiscall" fn cqr3_grande_final_da_nsl(this: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     #[allow(clippy::type_complexity)]
     let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
-        core::mem::transmute(0x522e00usize);
+        core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
     let lista = alocar(8);
     if lista == 0 {
         return aviso_em(0x987c20, 0x348);
@@ -278,7 +278,7 @@ unsafe fn cqj8_historico_do_estagio(this: usize) -> u32 {
 unsafe extern "thiscall" fn cqj8_historico_do_estadual(this: usize) -> u32 {
     cqj8_historico_do_estagio(this); // cqj8: o histórico do estadual
     crate::comparacao::ramo("cqj_8 historico do estadual");
-    let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x42bba0usize);
+    let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_BRA_NAT_FIRST_FILL_CHAMPIONS_CUP_ENTRANTS);
     campeoes()
 }
 

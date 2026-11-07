@@ -14,7 +14,7 @@ unsafe extern "thiscall" fn casa_da_vaga(this: usize, vaga: i8, segunda: u32) ->
 /// { 0x4bff70 } (comp_util.cpp): com a palavra baixa de `b` (ou, sem ela, a de `a`), o resultado
 /// de 0x4ba8f0(palavra, 0); senao o byte +0x37 (`tipo` 1) ou +0x52 do registro; sem registro, 1.
 unsafe extern "C" fn criterio_da_competicao(registro: usize, a: u32, b: u32, tipo: u8) -> u8 {
-    let texto: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(0x4ba8f0usize);
+    let texto: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_STAGE_NAME_GENDER);
     if b as u16 != 0 {
         return texto(b, 0);
     }
@@ -58,7 +58,7 @@ unsafe extern "thiscall" fn quadro_do_tecnico(this: usize, tecnico: usize) -> us
 /// (0x5b73a0) e o bit 0x200; sem ela, 0. Sem `jogadores`, 1; senao 1 se algum dos 20 (+0x19, ou
 /// +0x1a com 0xfe em +0x19) esta naquela vaga.
 unsafe extern "thiscall" fn casa_do_setor_ocupada(this: usize, mascara: u32, jogadores: usize) -> u32 {
-    let separar: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(0x5b73a0usize);
+    let separar: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(FN_FORMATION_SPLIT_POSITION_CODE);
     let (mut setor, mut lado) = (0u16, 0u16);
     separar(mascara, &mut setor, &mut lado);
     let casa = |k: usize| core::ptr::read_unaligned((this + 0x12d + 2 * k) as *const u16);
@@ -99,7 +99,7 @@ unsafe extern "thiscall" fn limpar_designados(this: usize) -> u32 {
 /// (0x5b5a60), com onze mascaras trocadas por quatro formacoes de referencia. Devolve a mascara
 /// antes da troca (o eax da original).
 unsafe extern "thiscall" fn mascara_da_formacao(this: usize) -> u32 {
-    let bit: unsafe extern "stdcall" fn(i16) -> u32 = core::mem::transmute(0x5b5a60usize);
+    let bit: unsafe extern "stdcall" fn(i16) -> u32 = core::mem::transmute(FN_FORMATION_POSITION_TO_SHAPE_BIT);
     let m = (this + 0x187b) as *mut u32;
     core::ptr::write_unaligned(m, 0);
     for k in 0..11usize {
@@ -139,8 +139,8 @@ unsafe extern "thiscall" fn designado_da_posicao(this: usize, posicao: i8) -> us
 /// jogador com 0x106 nao marca; e, se o marcado tem as tabelas A e B diferentes e sem a marca 0x40
 /// na B, o jogador com 0x106 tambem nao marca.
 unsafe extern "thiscall" fn marcado_designado(this: usize) -> usize {
-    let marca: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(0x5b57c0usize);
-    let designado: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(0x5b58e0usize);
+    let marca: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_FORMATION_GET_MARKING_TYPE);
+    let designado: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(FN_FORMATION_GET_MARKING_TARGET);
     let motor = *((this + 0x19e) as *const usize);
     let lado = byte(this, 0x27);
     let formacao = (motor as isize + 0x91e2 + 0x18e3 * lado as isize) as usize;
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn marcar_craques(this: usize, lado: i8) {
             v += 2000;
         }
         if v as i16 > 8500 {
-            let gravar: unsafe extern "thiscall" fn(usize, i8, u64) -> u32 = core::mem::transmute(0x5b5290usize);
+            let gravar: unsafe extern "thiscall" fn(usize, i8, u64) -> u32 = core::mem::transmute(FN_FORMATION_SET_PLAYER_INSTRUCTION);
             gravar((this as isize + 0x91e2 + 0x18e3 * lado as isize) as usize, byte(j, 0x19), 0x80_0000);
         }
     }
@@ -306,7 +306,7 @@ unsafe extern "C" fn casa_no_campo(mascara: u32, ataque: i8, faixa: u32, saida: 
     if !(0..=1).contains(&ataque) || !(0..=2).contains(&baixo) || !(0..=3).contains(&alto) {
         return orig::<unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32>(350)(mascara, ataque, faixa, saida);
     }
-    let separar: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(0x5b73a0usize);
+    let separar: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(FN_FORMATION_SPLIT_POSITION_CODE);
     let (mut setor, mut lado) = (0u16, 0u16);
     separar(mascara, &mut setor, &mut lado);
     let a = alto as usize;
@@ -402,7 +402,7 @@ unsafe extern "C" fn casa_no_campo(mascara: u32, ataque: i8, faixa: u32, saida: 
 /// atacante (0x40, nas duas), de meia (0x20 na +0x12d e na +0x14e pela 0x5b2ae0) ou de volante e
 /// meia-atacante pela 0x5b2ae0 (8 e 0x10); senão 1. Devolve só `al`.
 unsafe extern "thiscall" fn vagas_sem_conflito(this: usize) -> u8 {
-    let casa: unsafe extern "thiscall" fn(usize, u32, u32) -> u16 = core::mem::transmute(0x5b2ae0usize);
+    let casa: unsafe extern "thiscall" fn(usize, u32, u32) -> u16 = core::mem::transmute(FN_FORMATION_GET_SLOT_POSITION);
     let w = |o: usize| core::ptr::read_unaligned((this + o) as *const u16);
     for i in 0..=10u32 {
         let a = w(0x12d + 2 * i as usize);
@@ -471,9 +471,9 @@ unsafe extern "thiscall" fn coordenada_da_casa(this: usize, casa: u32, fase: u32
     {
         return orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(1224)(this, casa, fase, faixa, coord);
     }
-    let casa_no: unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32 = core::mem::transmute(0x5b7e60usize);
-    let separar: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(0x5b73a0usize);
-    let mascara: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x5b59a0usize);
+    let casa_no: unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32 = core::mem::transmute(FN_FORMATION_GET_DEFAULT_COORDINATE);
+    let separar: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(FN_FORMATION_SPLIT_POSITION_CODE);
+    let mascara: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FORMATION_UPDATE_SHAPE_CODE);
     let su = s as usize;
     let cel = this + 0x164 + 4 * (zy as usize + 4 * (zx as usize + 3 * (f as usize + 2 * su)));
     crate::comparacao::ramo("cpu_11 coordenada gravada");
@@ -728,9 +728,9 @@ unsafe extern "thiscall" fn mapa_de_casas_da_formacao(this: usize) -> u32 {
 /// → +0x69) do clube do computador (0x600a50) ou o bônus do humano; a mesma nação (+0x1a/+0x53) e os
 /// clubes galeses (Swansea, Cardiff, Wrexham) e a Escócia. Só os 16 bits baixos da nota contam.
 unsafe extern "stdcall" fn nota_do_clube_para_o_jovem(jogador: usize, clube: usize, elenco: i8) -> i32 {
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let chance: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(0x544410usize);
+    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let chance: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
     let w = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const i16);
     let u = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const usize);
     let ficha = u(jogador, 0x61);
@@ -800,7 +800,7 @@ unsafe extern "stdcall" fn nota_do_clube_para_o_jovem(jogador: usize, clube: usi
         s = s.wrapping_add(0x3e8); // mesma nação
     }
     let g = |a: usize| *(a as *const u32);
-    let (gales, inglaterra, escocia) = (g(0x9cf510), g(0x9cf2e4), g(0x9cf45c));
+    let (gales, inglaterra, escocia) = (g(KEY_NATION_WALES), g(KEY_NATION_ENGLAND), g(KEY_NATION_SCOTLAND));
     let id = g(clube);
     if id == g(0x9d0430) || id == g(0x9d0434) || (id == g(0x9d043c) && nacao != 0) {
         let n = g(nacao);

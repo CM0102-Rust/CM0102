@@ -5,7 +5,7 @@ MUTACOES = [
     ('cpq1_tecnico_com_contrato', '        sem_contrato(read_usize(0xae1050), tec);', '        let _ = (sem_contrato, tec); // mutacao: o tecnico fica com o contrato', 'cpq_1 tirar o tecnico'),
     ('cpq2_apuro_sem_saldo', '    (core::ptr::read_unaligned(f as *const i64) < 0) as u8', '    1 // mutacao: sem olhar o saldo'),
     ('cpq2_selecao_sem_piso', '        write_i16(cpq2_linha(this, selecao) + 6, 0x1964); // técnico novo', '        // mutacao: sem o piso do tecnico novo', 'cpq_2 selecao avaliada'),
-    ('cpq2_federacao_demite', '    let pensar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x69aba0usize);\n    pensar(this, selecao, 0);', '    cpq2_saida(this, selecao, 0); // mutacao: demite em vez de pensar', 'cpq_2 a federacao pensa'),
+    ('cpq2_federacao_demite', '    let pensar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_MANAGER_MANAGER_CONSIDER_SACKING_MANAGER);\n    pensar(this, selecao, 0);', '    cpq2_saida(this, selecao, 0); // mutacao: demite em vez de pensar', 'cpq_2 a federacao pensa'),
     ('cpq3_acesso_400', '    write_i16(clube + 0x80, read_i16(clube + 0x80).wrapping_add(500));', '    write_i16(clube + 0x80, read_i16(clube + 0x80).wrapping_add(400)); // mutacao: +400', 'cpq_3 acesso'),
     ('cpq3_rebaixamento_sem_moral', '        cpq3_moral(p, -0xf);', '        // mutacao: sem o moral', 'cpq_3 rebaixamento'),
     ('cpq3_classificado_na_copa', '        crate::comparacao::ramo("cpq_3 classificado clube");\n        cpq3_somar(r + 0xba, pontos);', '        crate::comparacao::ramo("cpq_3 classificado clube");\n        cpq3_somar(r + 0xbe, pontos); // mutacao: na copa', 'cpq_3 classificado clube'),

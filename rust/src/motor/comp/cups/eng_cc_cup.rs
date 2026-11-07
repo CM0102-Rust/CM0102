@@ -28,8 +28,8 @@ const fn cql10r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, u32, u32, u
 /// Grava a rodada `i` da tabela `t` (ano-base `ano`, a palavra +0x40 da copa com sinal): as duas datas (0x521e60 e
 /// 0x521eb0, cdecl, 7 e 9 argumentos; add esp, 0x1c / 0x24) e os campos.
 unsafe fn cql10_rodada(t: usize, i: u32, r: &Cql10R, ano: u32) {
-    let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521e60usize);
-    let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521eb0usize);
+    let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
+    let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
     sorteio(t, i, r.sorteio.0, r.sorteio.1, r.sorteio.2, r.sorteio.3, ano);
     jogo(t, i, r.jogo.0, r.jogo.1, r.jogo.2, r.jogo.3, r.jogo.4, ano, r.jogo.5);
     let e = t + i as usize * 0x68;
@@ -66,7 +66,7 @@ unsafe fn cql10_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i1
     }
     *rodadas = tabela.len() as i16;
     *extra = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar(tabela.len() as u32 * 0x68);
     if t == 0 {
         aviso_em(arquivo, linha);
@@ -110,7 +110,7 @@ unsafe fn cql10_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i
     let saidas = *rodadas == r2 && *extra == e2 && (saida.is_null() || *saida == s2);
     let tabela = if a != 0 && b != 0 { cql10_gravados(a, *rodadas) == cql10_gravados(b, r2) } else { a == 0 && b == 0 };
     if b != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
     PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, fase as u8 as i8, saidas, *rodadas, r2, tabela));
@@ -286,7 +286,7 @@ unsafe fn cqm10_veio(c: usize, de: usize) -> bool {
 unsafe fn cqm10_copa_da_liga(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x5c);
     *((this + 0xb2) as *mut u8) = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0x228);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
@@ -294,24 +294,24 @@ unsafe fn cqm10_copa_da_liga(this: usize) -> (i32, i32) {
         return (-1, 0);
     }
     let mut n = 0i32;
-    cqm10_passada(this, &mut n, 0x9cf5c8, |_| 0);
-    cqm10_passada(this, &mut n, 0x9cf5c4, |_| 0);
-    cqm10_passada(this, &mut n, 0x9cf5c0, |c| {
+    cqm10_passada(this, &mut n, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION, |_| 0);
+    cqm10_passada(this, &mut n, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, |_| 0);
+    cqm10_passada(this, &mut n, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION, |c| {
         let pos = *((c + 0x5f) as *const u8);
-        if cqm10_veio(c, 0x9cf5bc) {
+        if cqm10_veio(c, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
             crate::comparacao::ramo("cqm_10 caiu da premier");
             0x46u8.wrapping_sub(pos) // cqm10: quem caiu da Premier
-        } else if cqm10_veio(c, 0x9cf5c0) {
+        } else if cqm10_veio(c, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION) {
             0x28u8.wrapping_sub(pos)
         } else {
             0
         }
     });
-    cqm10_passada(this, &mut n, 0x9cf5bc, |c| {
+    cqm10_passada(this, &mut n, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, |c| {
         let pos = *((c + 0x5f) as *const u8);
-        if cqm10_veio(c, 0x9cf5bc) {
+        if cqm10_veio(c, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
             0x78u8.wrapping_sub(pos)
-        } else if cqm10_veio(c, 0x9cf5c0) {
+        } else if cqm10_veio(c, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION) {
             0x64u8.wrapping_sub(pos)
         } else {
             0
@@ -322,7 +322,7 @@ unsafe fn cqm10_copa_da_liga(this: usize) -> (i32, i32) {
         let c = cqm10_clube(i);
         if let Some(d) = cqm10_divisao(c) {
             if n != read_i16(this + 0x3e) as i32
-                && (d == read_u32_as_usize(0x9cf5bc) || d == read_u32_as_usize(0x9cf5c0) || d == read_u32_as_usize(0x9cf5c4) || d == read_u32_as_usize(0x9cf5c8))
+                && (d == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) || d == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION) || d == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION) || d == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION))
                 && read_u32_as_usize(c + 0x1db) as i32 != -1
             {
                 crate::comparacao::ramo("cqm_10 clube nas copas europeias");
@@ -336,7 +336,7 @@ unsafe fn cqm10_copa_da_liga(this: usize) -> (i32, i32) {
         }
         i = i.wrapping_add(1);
     }
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     ordenar(read_u32_as_usize(this + 0xa7), n as u32, 6, 0x5221c0);
     crate::comparacao::ramo("cqm_10 inscritos da copa da liga");
     let mut k: i16 = 0;
@@ -345,8 +345,8 @@ unsafe fn cqm10_copa_da_liga(this: usize) -> (i32, i32) {
         let c = read_u32_as_usize(e);
         let d = if c != 0 { cqm10_divisao(c) } else { None };
         *((e + 4) as *mut u8) = match d {
-            Some(x) if x == read_u32_as_usize(0x9cf5bc) => 1, // cqm10: a classe da Premier
-            Some(x) if x == read_u32_as_usize(0x9cf5c0) => 2,
+            Some(x) if x == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) => 1, // cqm10: a classe da Premier
+            Some(x) if x == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION) => 2,
             _ => 3,
         };
         k = k.wrapping_add(1);
@@ -391,7 +391,7 @@ unsafe fn cqm10_comparar(nome: &str, this: usize, reg: &[(usize, usize)], o: imp
         lo == 0 && lr == 0
     };
     if lr != 0 && lr != lo {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
     PLACAR.registrar(igual && a == b && lista, || format!("{}({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", nome, this, a, b, igual, lista, k));
@@ -409,7 +409,7 @@ unsafe extern "thiscall" fn comparar_cqm10_copa_da_liga_inscritos(this: usize) -
 /// ponteiros em +0xb2, a partir do 28º: +0x70), classe e situação 0. Devolve 1.
 unsafe fn cqm10_trofeu(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x1c);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0xa8);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
@@ -443,7 +443,7 @@ unsafe extern "thiscall" fn comparar_cqm10_trofeu_inscritos(this: usize) -> i32 
 /// O clube que terminou em `lugar` (0 o campeão, 1 o vice) na última temporada da competição de id [id] (a competição do
 /// banco: [0xae23d0] + 0x6b × id; 0x4afd80: push lugar; push competição; add esp, 8 -> cdecl).
 unsafe fn cqm10_colocado(id: usize, lugar: u32) -> usize {
-    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
+    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     colocado(read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b)), lugar)
 }
 
@@ -453,20 +453,20 @@ unsafe fn cqm10_colocado(id: usize, lugar: u32) -> usize {
 /// 0xe3 e 0). Classe e situação 0 nos dois; devolve 1.
 unsafe fn cqm10_supercopa(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 2);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0xc);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
         aviso_em(0x9c425c, 0xc5);
         return (-1, 0);
     }
-    let a = cqm10_colocado(0x9cf5bc, 0); // cqm10: o campeão inglês
+    let a = cqm10_colocado(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 0); // cqm10: o campeão inglês
     core::ptr::write_unaligned(l as *mut u32, a as u32);
     if a == 0 {
         aviso_em(0x9c425c, 0xce);
         return (0, 0);
     }
-    let b = cqm10_colocado(0x9cf74c, 0);
+    let b = cqm10_colocado(KEY_CLUB_COMP_ENGLISH_FA_CUP, 0);
     core::ptr::write_unaligned((l + 6) as *mut u32, b as u32);
     if b == 0 {
         aviso_em(0x9c425c, 0xd7);
@@ -474,7 +474,7 @@ unsafe fn cqm10_supercopa(this: usize) -> (i32, i32) {
     }
     if a == b {
         crate::comparacao::ramo("cqm_10 dobradinha inglesa");
-        let b = cqm10_colocado(0x9cf5bc, 1);
+        let b = cqm10_colocado(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 1);
         core::ptr::write_unaligned((l + 6) as *mut u32, b as u32);
         if b == 0 {
             aviso_em(0x9c425c, 0xe3);
@@ -506,7 +506,7 @@ unsafe extern "thiscall" fn comparar_cqm10_supercopa_clubes(this: usize) -> i32 
 /// A primeira dword de Date(dia, mês, ano, dia da semana) (0x549f70: push semana; push ano; push mês; push dia; lea ecx,
 /// local -> thiscall, ret 0x10): a palavra de baixo é o dia do ano, a de cima o ano.
 unsafe fn cqn10_data(dia: u32, mes: u32, ano: u32, semana: u32) -> u32 {
-    let construir: unsafe extern "thiscall" fn(*mut [u32; 2], u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
+    let construir: unsafe extern "thiscall" fn(*mut [u32; 2], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u32; 2];
     construir(&mut d, dia, mes, ano, semana);
     d[0]
@@ -522,7 +522,7 @@ unsafe fn cqn10_e_hoje(d: u32, hoje: usize) -> bool {
 /// por rodada (+0xad, um vetor por rodada, +0x3c rodadas), cada um se existe (0x9452ca, cdecl). Os ponteiros ficam como
 /// estão (as rotinas seguintes os refazem).
 unsafe fn cqn10_liberar(this: usize) {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     if read_u32_as_usize(this + 0xa7) != 0 {
         soltar(read_u32_as_usize(this + 0xa7));
     }
@@ -550,7 +550,7 @@ unsafe fn cqn10_virtual(this: usize, o: usize) -> i32 {
 
 /// A atualização da copa (0x51f890: push fase; push hoje; mov ecx, copa -> thiscall, ret 8), cuja devolução sai.
 unsafe fn cqn10_base(this: usize, hoje: usize, fase: u32) -> u32 {
-    let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x51f890usize);
+    let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_FOR_DATE);
     base(this, hoje, fase)
 }
 
@@ -564,7 +564,7 @@ unsafe extern "thiscall" fn cqn10_copa_da_liga_dia(this: usize, hoje: usize, fas
         cqn10_liberar(this);
         crate::comparacao::ramo("cqn_10 virada da copa da liga");
         core::ptr::write_unaligned((this + 0x45) as *mut u32, 1); // cqn10: a Copa da Liga refeita uma vez
-        let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x56ccc0usize);
+        let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGCCCUP_COLLECT_ENTRANTS);
         // ponytail: nas caixas a original zera só o al (o resto do eax vem da caixa); quem chama lê o byte
         if inscritos(this) < 0 {
             aviso_em(0x9c4224, 0x161);
@@ -613,7 +613,7 @@ unsafe extern "thiscall" fn cqn10_copa_da_inglaterra_dia(this: usize, hoje: usiz
             cqn10_liberar(this);
             crate::comparacao::ramo("cqn_10 inscricoes da copa da inglaterra");
             core::ptr::write_unaligned((this + 0x45) as *mut u32, 1);
-            let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x56fab0usize);
+            let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGFACUP_COLLECT_ENTRANTS);
             if inscritos(this) < 0 {
                 aviso_em(0x9c42cc, 0x3d6);
                 return 1;
@@ -627,7 +627,7 @@ unsafe extern "thiscall" fn cqn10_copa_da_inglaterra_dia(this: usize, hoje: usiz
                 return 1;
             }
             cqn10_virtual(this, 0x5c);
-            let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
+            let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
             sortear(this, 0);
         }
     }
@@ -657,7 +657,7 @@ unsafe extern "thiscall" fn cqn10_jogo_das_estrelas_dia(this: usize, hoje: usize
     let d = cqn10_data(0x1a, 6, ano, 6); // cqn10: a convocação do Jogo das Estrelas
     if fase != 0 && cqn10_e_hoje(d, hoje) {
         crate::comparacao::ramo("cqn_10 convocacao do jogo das estrelas");
-        let convocar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x90a980usize);
+        let convocar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_USAMLSALLSTARS_SELECT_SQUADS);
         convocar(this);
     }
     cqn10_base(this, hoje, fase)

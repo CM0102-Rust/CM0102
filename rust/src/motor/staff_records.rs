@@ -55,7 +55,7 @@ unsafe fn cqd13_renovar(clube: usize, p: usize, k: usize) {
     if cqa12_dias(0xae2c90, k + 0x25) <= 300 {
         return;
     }
-    let vaga_de: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
+    let vaga_de: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_FIND_CLUB_SHORTLIST_ENTRY);
     // 0x849ce0: push 0; push 0; push p; push clube; mov ecx, [[0xde1f54]+0x856] -> thiscall (ret 0x10)
     let v = vaga_de(read_usize(read_usize(0xde1f54) + 0x856), clube, p, 0, 0);
     if v == 0 || cqd13_i(v + 0xf) != cqd13_i(p) {
@@ -66,7 +66,7 @@ unsafe fn cqd13_renovar(clube: usize, p: usize, k: usize) {
         CQD13_DATA_SOLTA = true;
         return;
     }
-    let oferecer: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, f64, u32) -> u32 = core::mem::transmute(0x4cda70usize);
+    let oferecer: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, f64, u32) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_OFFER_CONTRACT);
     // 0x4cda70: push 1; push 0x3ff00000; push 0; push −1; push 0; push 0; push p; mov ecx, [0xae1050] -> thiscall
     // (p, 0, 0, −1, 1.0 em dois dwords, 1)
     oferecer(read_usize(0xae1050), p, 0, 0, -1, 1.0, 1);
@@ -102,7 +102,7 @@ unsafe fn cqd13_historico_do_clube(this: usize, clube: usize, tipo: u8, comp: us
     e[8] = tipo;
     cpq4_por(&mut e, 9, cqd13_i(comp));
     if !CQD13_ENSAIO {
-        let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(0x58e340usize);
+        let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
         let p = read_usize(this + 0x10).wrapping_add(read_usize(clube).wrapping_mul(8));
         f(read_usize(this + 4), p, p + 4, e.as_ptr());
     }
@@ -114,7 +114,7 @@ unsafe fn cqd13_elogio(clube: usize, comp: usize, marca: u32) {
         CQD13_DATA_SOLTA = true;
         return;
     }
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x75c390usize);
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_MEDIA_QUEUE_TROPHY_PRAISE_STORY);
     // 0x75c390: push marca; push comp; push clube; mov ecx, [0xb6b7c8] -> thiscall (ret 0xc)
     f(read_usize(0xb6b7c8), clube, comp, marca);
 }
@@ -126,7 +126,7 @@ unsafe fn cqd13_notas(t: usize, clube: usize, id_comp: usize) -> (i32, i32) {
     if *((c + 0x42) as *const i8) != 1 {
         (400, 400)
     } else {
-        let estrangeiro: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x53d980usize);
+        let estrangeiro: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
         // 0x53d980: 3 pushes; add esp, 0xc -> cdecl
         (if estrangeiro(t, read_usize(clube + 0x53), 1) != 0 { 200 } else { 400 }, 200)
     }
@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn campeao_da_liga_nos_registros(this: usize, clube: us
             cqa12_subir(np + 0xc, peso, k2);
         }
         cpq4_historico(!CQD13_ENSAIO, this, read_usize(t), &e);
-        let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
+        let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
         // 0x86f5b0: push 1; push técnico; mov ecx, edi (o this) -> thiscall (ret 8)
         let r = registro(this, read_usize(clube + 0xcf), 1);
         if r != 0 {
@@ -199,9 +199,9 @@ unsafe extern "thiscall" fn campeao_da_liga_nos_registros(this: usize, clube: us
     if presidente != 0 {
         cpq4_historico(!CQD13_ENSAIO, this, read_usize(presidente), &e);
     }
-    let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(0x7c1e30usize);
-    let moral: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x544710usize);
-    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
+    let moral: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
+    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     // 0x7c1e30: push 6,5f; push 1; push 2; push ficha; mov ecx, [0xb74350] -> thiscall (ret 0x10, x87); 0x544710: 3
     // pushes; add esp, 0xc -> cdecl; 0x4cf5f0: push clube; push p; mov ecx, [0xae1050] -> thiscall (ret 8)
     for j in 0..50usize {
@@ -272,7 +272,7 @@ unsafe extern "thiscall" fn campeao_da_copa_nos_registros(this: usize, clube: us
             cqa12_subir(lado + 4, peso, k2);
         }
         cpq4_historico(!CQD13_ENSAIO, this, read_usize(read_usize(clube + 0xcf)), &e);
-        let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
+        let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
         let r = registro(this, read_usize(clube + 0xcf), 1);
         if r != 0 {
             core::ptr::write_unaligned((r + 0x8a) as *mut i16, read_i16(r + 0x8a).wrapping_add(1));
@@ -293,8 +293,8 @@ unsafe extern "thiscall" fn campeao_da_copa_nos_registros(this: usize, clube: us
     }
     let escalacao = partida + 0x190 + 0x625 * (clube != read_usize(jogo + 0x1c)) as usize;
     cqd13_escalacao(this, clube, escalacao, &e);
-    let moral: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x544710usize);
-    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let moral: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
+    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     for j in 0..50usize {
         if (read_i16(comp + 0x69) as i32).wrapping_mul(400) < read_i16(clube + 0x80) as i32 {
             break;
@@ -317,13 +317,13 @@ unsafe extern "thiscall" fn campeao_da_copa_nos_registros(this: usize, clube: us
         }
         cqd13_renovar(clube, p, k);
     }
-    let guardada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x76d940usize);
+    let guardada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
     // 0x76d940 e 0x774f30: push comp; mov ecx, [0xb74318] (a 0x76d940 não lê o ecx e só compara o id; ret 4 nas duas)
     if guardada(read_usize(0xb74318), read_usize(jogo + 0x14)) != 0 {
         if CQD13_ENSAIO {
             CQD13_DATA_SOLTA = true;
         } else {
-            let acabar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x774f30usize);
+            let acabar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_END_DUTY_FOR_COMPETITION);
             acabar(read_usize(0xb74318), read_usize(jogo + 0x14));
         }
     }
@@ -350,7 +350,7 @@ unsafe fn cqd13_comparar(nome: &str, this: usize, clube: usize, notas: (usize, u
     let mut fixas: Vec<(usize, usize)> = vec![(clube + 0x80, 2), (0xae2470, 8), notas];
     let t = read_usize(clube + 0xcf);
     if t != 0 {
-        let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
+        let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
         let r = registro(this, t, 1);
         if r != 0 {
             fixas.push((r, 0xd2));
@@ -360,7 +360,7 @@ unsafe fn cqd13_comparar(nome: &str, this: usize, clube: usize, notas: (usize, u
         fixas.push((clube + 0x7b, 4));
         fixas.push((read_usize(clube + 0x69) + 0x44, 4));
     }
-    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let mut contratos = Vec::new();
     let mut fichas = Vec::new(); // (moral da ficha, contrato ou 0, moral de antes), na ordem do elenco
     for j in 0..50usize {
@@ -488,7 +488,7 @@ unsafe fn cqa11_mais1(a: usize) {
 }
 
 unsafe fn cqa11_sortear(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     f(n)
 }
 
@@ -498,7 +498,7 @@ unsafe fn cqa11_registro(this: usize, clube: usize) -> usize {
     if t == 0 {
         return 0;
     }
-    let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
+    let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
     f(this, t, 1)
 }
 
@@ -515,7 +515,7 @@ unsafe fn cqa11_pontos(m: usize, a: usize, b: usize, c: usize, d: usize) -> i32 
 /// dividido por 100000 (divisões com sinal truncadas, como as multiplicações mágicas da original; produtos em 32 bits).
 unsafe fn cqa11_nota(p: usize, lado: u32, saida: &mut u32, adversario: usize, pontos: i32) -> i32 {
     let comp = read_usize(read_usize(0xadadfc).wrapping_add(4 * read_usize(p)));
-    let importancia: unsafe extern "thiscall" fn(usize, usize, u32, *mut u32) -> u32 = core::mem::transmute(0x48e190usize);
+    let importancia: unsafe extern "thiscall" fn(usize, usize, u32, *mut u32) -> u32 = core::mem::transmute(FN_COMP_GET_FIXTURE_MATCH_IMPORTANCE);
     let i = importancia(comp, p, lado, saida as *mut u32) as u8 as i8 as i32;
     let x = i
         .wrapping_mul(read_i16(adversario + 0x80) as i32 / 500)
@@ -647,7 +647,7 @@ unsafe extern "thiscall" fn comparar_resultado_nos_registros_dos_tecnicos(this: 
 /// (0x58e340).
 unsafe extern "thiscall" fn posicoes_no_fim_da_liga(this: usize, liga: usize) {
     crate::comparacao::ramo("cqa_11 fim da liga");
-    let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x6826d0usize);
+    let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
     let mut e = cpq4_entrada();
     cpq4_datar(e.as_mut_ptr());
     e[0xc] = 0xa;
@@ -693,8 +693,8 @@ unsafe extern "thiscall" fn jogador_do_ano_da_torcida_no_registro(this: usize, p
     let r1 = cqa11_sortear(0x15 - cqa11_c(pessoa + 0x59));
     if r1 < cqa11_sortear(10) {
         crate::comparacao::ramo("cqa_11 torcida favorita");
-        let gosta: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547d90usize);
-        let favorita: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547870usize);
+        let gosta: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_STAFF_ADD_FAVOURED_CLUB);
+        let favorita: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_CLUB_ADD_FAVOURED_STAFF);
         gosta(pessoa, clube, cqa11_sortear(2) as u32);
         favorita(clube, pessoa, cqa11_sortear(2) as u32);
     }
@@ -747,7 +747,7 @@ unsafe fn cqa12_historico_do_clube(this: usize, id: usize, e: &[u8; 0x40]) {
     if CQA12_ENSAIO {
         return;
     }
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(0x58e340usize);
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
     let p = read_usize(this + 0x10).wrapping_add(id.wrapping_mul(8));
     f(read_usize(this + 4), p, p + 4, e.as_ptr());
 }
@@ -800,7 +800,7 @@ unsafe fn cqa12_colocado(this: usize, clube: usize, jogo: usize, partida: usize,
             let (k1, k2) = if *((c + 0x42) as *const i8) != 1 {
                 (k, k)
             } else {
-                let estrangeiro: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x53d980usize);
+                let estrangeiro: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
                 (if estrangeiro(t, read_usize(clube + 0x53), 1) != 0 { metade } else { k }, metade)
             };
             let lado = partida + 0x188 + 0x625 * (read_usize(jogo + 0x20) == clube) as usize;
@@ -834,9 +834,9 @@ unsafe fn cqa12_colocado(this: usize, clube: usize, jogo: usize, partida: usize,
         cpq4_historico(!CQA12_ENSAIO, this, read_usize(p), &e);
     }
     if tipo == 2 && !CQA12_ENSAIO {
-        let guardada: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x76d940usize);
+        let guardada: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
         if guardada(read_usize(jogo + 0x14)) != 0 {
-            let acabar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x774f90usize);
+            let acabar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_END_DUTY_FOR_NATION_IN_COMPETITION);
             acabar(read_usize(0xb74318), read_usize(jogo + 0x1c), read_usize(jogo + 0x14));
             acabar(read_usize(0xb74318), read_usize(jogo + 0x20), read_usize(jogo + 0x14));
         }
@@ -900,14 +900,14 @@ unsafe extern "thiscall" fn comparar_terceiro_da_copa_nos_registros(this: usize,
 
 /// A data em `src` copiada para `dst` (0x417c10; a cópia de retorno vai para uma data local).
 unsafe fn cqa12_copiar(dst: usize, src: usize) {
-    let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
+    let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u8; 8];
     copia(dst, t.as_mut_ptr(), src);
 }
 
 /// Os dias da data `a` menos a `b` (0x54cdb0, `b` por valor; grava a data estática 0xae2470).
 unsafe fn cqa12_dias(a: usize, b: usize) -> i32 {
-    let f: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
+    let f: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     f(a, read_usize(b) as u32, read_usize(b + 4) as u32)
 }
 
@@ -926,7 +926,7 @@ unsafe extern "thiscall" fn troca_de_tecnico_nos_registros(this: usize, tecnico:
         return aviso_em(0xa83b78, 0x3b1);
     }
     let contratado = contratado as u8 as i8;
-    let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
+    let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
     if e_selecao(clube) == 0 {
         let r = registro(this, tecnico, 1);
         if r != 0 {
@@ -969,7 +969,7 @@ unsafe extern "thiscall" fn troca_de_tecnico_nos_registros(this: usize, tecnico:
                 crate::comparacao::ramo("cqa_12 passagem nova");
                 cqa12_pi(r + 0x4a, cqa12_i(clube));
                 cqa12_copiar(r + 0x4e, hoje);
-                let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
+                let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
                 let mut t = [0u8; 8];
                 let d = data(t.as_mut_ptr(), 0xd, 0xb, 0x7b7, u32::MAX);
                 cqa12_copiar(r + 0x56, d);
@@ -1015,7 +1015,7 @@ unsafe extern "thiscall" fn comparar_troca_de_tecnico_nos_registros(this: usize,
     }
     let mut reg = vec![(0xae2470usize, 8usize)];
     if e_selecao(clube) == 0 || contratado as u8 == 1 {
-        let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
+        let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
         let r = registro(this, tecnico, 1);
         if r != 0 {
             reg.push((r, 0xd2));
@@ -1062,8 +1062,8 @@ unsafe extern "stdcall" fn gols_pelo_clube(pessoa: usize, clube: usize) -> u16 {
         aviso_em(0xa78310, 0xb1e);
         return 0;
     }
-    let montar: unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize = core::mem::transmute(0x7c3e40usize);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let montar: unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize = core::mem::transmute(FN_PLAYERSTATS_BUILD_CAREER_HISTORY);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut n = 0i32;
     let t = montar(read_u32_as_usize(0xb74350), pessoa, &mut n);
     let mut s = 0u16;
@@ -1126,7 +1126,7 @@ unsafe fn cps10_registro(clube: usize) -> usize {
     if tecnico == 0 {
         return 0;
     }
-    let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
+    let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
     registro(read_u32_as_usize(0xdd7f00), tecnico, 1)
 }
 
@@ -1184,8 +1184,8 @@ unsafe fn cpq3_k(a: usize) -> f64 {
 /// histórico (FILE_LLIST), que a carreira não lê de volta.
 unsafe fn cpq3_entrada() -> [u8; 0x40] {
     let mut e = [0u8; 0x40];
-    let nova: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(0x54a110usize);
-    let copia: unsafe extern "thiscall" fn(*mut u8, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
+    let nova: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
+    let copia: unsafe extern "thiscall" fn(*mut u8, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u8; 8];
     nova(e.as_mut_ptr());
     copia(e.as_mut_ptr(), t.as_mut_ptr(), 0xae2c90);
@@ -1202,7 +1202,7 @@ unsafe fn cpq3_historico(gravar: bool, arq: usize, base: usize, id: usize, e: &[
     if !gravar {
         return;
     }
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(0x58e340usize);
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
     let p = base.wrapping_add(id.wrapping_mul(8));
     f(arq, p, p + 4, e.as_ptr());
 }
@@ -1243,7 +1243,7 @@ unsafe fn cpq3_elenco(clube: usize) -> impl Iterator<Item = usize> {
 }
 
 unsafe fn cpq3_contrato(p: usize, clube: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let f: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     f(read_usize(0xae1050), p, clube)
 }
 
@@ -1254,11 +1254,11 @@ unsafe fn cpq3_vai_renovar(clube: usize, p: usize, c: usize) -> bool {
     if gt == 0 {
         return false;
     }
-    let dias: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(0x54cdb0usize);
+    let dias: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     if dias(0xae2c90, read_usize(c + 0x25), read_usize(c + 0x29)) <= 0x12c {
         return false;
     }
-    let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
+    let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_FIND_CLUB_SHORTLIST_ENTRY);
     let e = entrada(read_usize(gt + 0x856), clube, p, 0, 0);
     e != 0 && read_usize(e + 0xf) == read_usize(p)
 }
@@ -1266,12 +1266,12 @@ unsafe fn cpq3_vai_renovar(clube: usize, p: usize, c: usize) -> bool {
 /// A oferta de renovação do contrato (0x4cda70 do gerente de contratos: o jogador, sem clube nem termos, vaga −1,
 /// fator 1,0, modo 1).
 unsafe fn cpq3_renovar(p: usize) {
-    let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, u32, u32, u32) -> u32 = core::mem::transmute(0x4cda70usize);
+    let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, u32, u32, u32) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_OFFER_CONTRACT);
     f(read_usize(0xae1050), p, 0, 0, -1, 0, 0x3ff0_0000, 1);
 }
 
 unsafe fn cpq3_moral(p: usize, delta: i32) {
-    let f: unsafe extern "C" fn(usize, i32, u32) -> u32 = core::mem::transmute(0x544710usize);
+    let f: unsafe extern "C" fn(usize, i32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
     f(p, delta, 1);
 }
 
@@ -1311,7 +1311,7 @@ unsafe fn cpq3_acesso(this: usize, clube: usize, comp: usize, peso: u32, gravar:
             let (p1, p2) = if read_u8(objeto + 0x42) as i8 != 1 {
                 (400, 400)
             } else {
-                let estrangeira: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x53d980usize);
+                let estrangeira: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
                 (200, if estrangeira(tec, read_usize(clube + 0x53), 1) != 0 { 200 } else { 400 })
             };
             let x = read_i16(pela + 0x69) as i32;
@@ -1322,7 +1322,7 @@ unsafe fn cpq3_acesso(this: usize, clube: usize, comp: usize, peso: u32, gravar:
             cpq3_nota_do_acesso(nj() + 0xc, x, p1);
         }
         cpq3_da_pessoa(gravar, this, read_usize(clube + 0xcf), &e);
-        let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
+        let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
         let r = registro(this, read_usize(clube + 0xcf), 1);
         if r != 0 {
             let pontos = (read_i16(comp + 0x69) as i32).wrapping_mul(peso as u8 as i8 as i32).wrapping_mul(2500) / 100;
@@ -1380,7 +1380,7 @@ unsafe fn cpq3_regioes(this: usize, clube: usize, acesso: bool) -> Option<Vec<(u
             reg.push((read_usize(tec + 0x69), 0x10));
         }
         if acesso {
-            let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
+            let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
             let r = registro(this, tec, 1);
             if r != 0 {
                 reg.push((r, 0xd2));
@@ -1444,7 +1444,7 @@ unsafe fn cpq3_rebaixamento(this: usize, clube: usize, comp: usize, gravar: bool
     if read_usize(clube + 0xcf) != 0 {
         let tec = read_usize(clube + 0xcf);
         if read_usize(tec + 0x69) != 0 {
-            let estrangeira: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x53d980usize);
+            let estrangeira: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
             let fator: i16 = if estrangeira(tec, read_usize(clube + 0x53), 1) != 0 { -8 } else { -16 };
             let nj = || read_usize(read_usize(clube + 0xcf) + 0x69);
             let x = || read_i16(comp + 0x69);
@@ -1517,13 +1517,13 @@ unsafe fn cpq3_classificacao(this: usize, clube: usize, comp: usize, fase: u32, 
     }
     let mut e = cpq3_entrada_do_clube(clube, 3, if comp != 0 { read_usize(comp) as u32 } else { u32::MAX });
     cpq3_por(&mut e, 0x11, fase as u16 as i16 as i32 as u32);
-    let base: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x4b0870usize);
+    let base: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_GET_BASE_ROUND_ID);
     cpq3_por(&mut e, 0x15, base(rodada) as u16 as i16 as i32 as u32);
     if read_usize(clube + 0xcf) == 0 {
         return;
     }
     cpq3_da_pessoa(gravar, this, read_usize(clube + 0xcf), &e);
-    let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
+    let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
     let r = registro(this, read_usize(clube + 0xcf), 1);
     if r == 0 {
         return;
@@ -1533,7 +1533,7 @@ unsafe fn cpq3_classificacao(this: usize, clube: usize, comp: usize, fase: u32, 
     let pontos = ftol(x * x * (peso as u8 as i8 as i32) as f64);
     cpq3_somar(r + 0xb6, pontos);
     cpq3_somar(r + 0xca, pontos);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if selecao(clube) != 0 {
         crate::comparacao::ramo("cpq_3 classificado selecao");
         cpq3_somar(r + 0xbe, pontos);
@@ -1558,7 +1558,7 @@ unsafe extern "thiscall" fn comparar_registrar_a_classificacao_na_fase(this: usi
     if clube == 0 || read_usize(clube + 0xcf) == 0 {
         return o(this, clube, comp, fase, rodada, peso);
     }
-    let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
+    let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
     let r = registro(this, read_usize(clube + 0xcf), 1);
     if r == 0 {
         return o(this, clube, comp, fase, rodada, peso);
@@ -1599,7 +1599,7 @@ unsafe fn cpq4_pessoa(id: usize) -> usize {
 
 /// A data do jogo copiada (0x417c10) em `a` (a cópia também vai para uma data local).
 unsafe fn cpq4_datar(a: *mut u8) {
-    let copia: unsafe extern "thiscall" fn(*mut u8, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
+    let copia: unsafe extern "thiscall" fn(*mut u8, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u8; 8];
     copia(a, t.as_mut_ptr(), 0xae2c90);
 }
@@ -1609,7 +1609,7 @@ unsafe fn cpq4_datar(a: *mut u8) {
 /// histórico (FILE_LLIST), que a carreira não lê de volta.
 unsafe fn cpq4_entrada() -> [u8; 0x40] {
     let mut e = [0u8; 0x40];
-    let nova: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(0x54a110usize);
+    let nova: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     nova(e.as_mut_ptr());
     e
 }
@@ -1620,7 +1620,7 @@ unsafe fn cpq4_historico(gravar: bool, this: usize, id: usize, e: &[u8; 0x40]) {
     if !gravar {
         return;
     }
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(0x58e340usize);
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
     let p = read_usize(this + 0xc).wrapping_add(id.wrapping_mul(8));
     f(read_usize(this), p, p + 4, e.as_ptr());
 }
@@ -1658,7 +1658,7 @@ unsafe fn cpq4_troca(t: usize, mut f: impl FnMut(usize)) {
         return;
     }
     core::ptr::write_unaligned((l + 0xa) as *mut u32, read_usize(l + 2) as u32);
-    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut e = proximo(read_usize(t + 4));
     while e != 0 {
         f(e);
@@ -1668,19 +1668,19 @@ unsafe fn cpq4_troca(t: usize, mut f: impl FnMut(usize)) {
 
 /// O tipo do cargo é de jogador (0x53b620: 11, 12, 13 ou 15)?
 unsafe fn cpq4_jogador(cargo: u8) -> bool {
-    let f: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x53b620usize);
+    let f: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_PLAYER_JOB);
     f(cargo as u32) != 0 // ponytail: a original empurra o registro com o byte no al; a 0x53b620 lê só o byte
 }
 
 unsafe fn cpq4_registro(this: usize, tec: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
+    let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
     f(this, tec, 1)
 }
 
 /// Os lados da transferência: (pessoa, contrato da pessoa 0x4cf5a0, vendedor ou 0, comprador).
 unsafe fn cpq4_lados(t: usize) -> (usize, usize, usize, usize) {
     let pessoa = cpq4_pessoa(read_usize(t + 0xc));
-    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let c = contrato(read_usize(0xae1050), pessoa);
     let vendedor = if c != 0 && read_u8(c + 0x35) & 0x3f != 5 {
         read_usize(0xae23b4).wrapping_add(read_usize(c + 4).wrapping_mul(0x245))
@@ -1694,7 +1694,7 @@ unsafe fn cpq4_transferencia(this: usize, t: usize, gravar: bool) {
     let (pessoa, c, vendedor, comprador) = cpq4_lados(t);
     *(0xae1080 as *mut usize) = c;
     let mut e = cpq4_entrada();
-    let total: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x8e7a70usize);
+    let total: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(FN_TRANSFER_OFFER_GET_TOTAL_VALUE);
     let valor = total(t, 1, 0, 0, 1);
     let com_troca = || (read_usize(t + 4) != 0) as i32;
     let tipo = read_u8(t + 0x11) as i8 as i32;
@@ -1860,10 +1860,10 @@ unsafe fn cpq4_entrada_da_fase(clube: usize, tipo: u8, comp: usize, fase: u32) -
 
 /// Na competição de seleção guardada (0x76d940 de [0xb74318]), as convocações da seleção para ela acabam (0x774f90).
 unsafe fn cpq4_fim_das_convocacoes(clube: usize, comp: usize) {
-    let especial: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x76d940usize);
+    let especial: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
     if especial(read_usize(0xb74318), comp) != 0 {
         crate::comparacao::ramo("cpq_4 fim das convocacoes");
-        let encerrar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x774f90usize);
+        let encerrar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_END_DUTY_FOR_NATION_IN_COMPETITION);
         encerrar(read_usize(0xb74318), clube, comp);
     }
 }
@@ -1877,7 +1877,7 @@ unsafe extern "thiscall" fn registrar_a_eliminacao(this: usize, clube: usize, co
     }
     crate::comparacao::ramo("cpq_4 eliminado");
     let mut e = cpq4_entrada_da_fase(clube, 4, comp, fase);
-    let base: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x4b0870usize);
+    let base: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_GET_BASE_ROUND_ID);
     cpq4_por(&mut e, 0x15, base(rodada) as u16 as i16 as i32);
     if read_usize(clube + 0xcf) != 0 {
         cpq4_historico(true, this, read_usize(read_usize(clube + 0xcf)), &e);
@@ -1943,7 +1943,7 @@ unsafe fn cpo3_pessoa(id: usize) -> usize {
 
 /// O mês da data (0x54cfb0, o al com sinal).
 unsafe fn cpo3_mes(data: usize) -> i16 {
-    let mes: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x54cfb0usize);
+    let mes: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_DATE_GET_MONTH);
     mes(data) as u8 as i8 as i16
 }
 
@@ -1967,7 +1967,7 @@ unsafe extern "thiscall" fn pontos_dos_tecnicos_no_dia(this: usize, data: usize)
     }
     if read_i16(data) == 0 {
         let base = read_usize(this + 8);
-        let hall: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x5ef270usize);
+        let hall: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_HALLOFFAME_ADD_CALENDAR_YEAR_ENTRY);
         let mut k = 0i32;
         while k < cpo3_quantos() {
             let e = base.wrapping_add((k as usize).wrapping_mul(CPO3_REGISTRO));
@@ -1988,13 +1988,13 @@ unsafe extern "thiscall" fn pontos_dos_tecnicos_no_dia(this: usize, data: usize)
 /// competição: passa +0xbe, zera e +0xc6 = −1.
 unsafe extern "thiscall" fn pontos_dos_tecnicos_no_fim_da_competicao(this: usize, entrada: usize) {
     let p = read_usize(entrada + 4);
-    let pela_global = p != 0 && read_usize(p) == read_usize(0x9cfa10);
+    let pela_global = p != 0 && read_usize(p) == read_usize(KEY_CONTINENT_EUROPE);
     if !pela_global && read_usize(entrada) == 0 {
         return;
     }
     let comp = read_usize(entrada);
     let id = if comp != 0 { cpo3_i(comp) } else { -1 };
-    let hall: unsafe extern "thiscall" fn(usize, usize, i32, usize) = core::mem::transmute(0x5ef330usize);
+    let hall: unsafe extern "thiscall" fn(usize, usize, i32, usize) = core::mem::transmute(FN_HALLOFFAME_ADD_LEAGUE_ENTRY);
     let guarda = |c: usize| c != 0 && *((c + 0x11c) as *const u8) != 0;
     let base = read_usize(this + 8);
     let mut k = 0i32;
@@ -2035,8 +2035,8 @@ unsafe extern "thiscall" fn tecnico_do_mes_na_liga(this: usize, indice: i32) -> 
         aviso_em(0xa83b78, 0x104e);
         return 0;
     }
-    let antes: unsafe extern "thiscall" fn(usize, *mut u32, i32) -> usize = core::mem::transmute(0x54cab0usize);
-    let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
+    let antes: unsafe extern "thiscall" fn(usize, *mut u32, i32) -> usize = core::mem::transmute(FN_DATE_SUB_WEEKS);
+    let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
     let mut melhor_pontos = 0i32;
     let mut melhor = 0usize;
     let mut k = 0i32;
@@ -2098,7 +2098,7 @@ unsafe extern "thiscall" fn comparar_pontos_dos_tecnicos_no_dia(this: usize, dat
 unsafe extern "thiscall" fn comparar_pontos_dos_tecnicos_no_fim_da_competicao(this: usize, entrada: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(974);
     let p = read_usize(entrada + 4);
-    if !(p != 0 && read_usize(p) == read_usize(0x9cfa10)) && read_usize(entrada) == 0 {
+    if !(p != 0 && read_usize(p) == read_usize(KEY_CONTINENT_EUROPE)) && read_usize(entrada) == 0 {
         return o(this, entrada);
     }
     let comp = read_usize(entrada);

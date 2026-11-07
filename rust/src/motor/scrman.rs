@@ -35,12 +35,12 @@ unsafe fn copiar_para_o_texto(origem: usize) {
 /// e "Reserves" para as dos amistosos ([0x9cf668]) e reservas ([0x9cf684]) com mais de uma rodada
 /// (+8 > +4 de `rodadas`); senão o nome (+0x38).
 unsafe fn nome_da_competicao_no_painel(c: usize, rodadas: usize) {
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let mais_de_uma = core::ptr::read_unaligned((rodadas + 8) as *const i32) > core::ptr::read_unaligned((rodadas + 4) as *const i32);
     let chave = *(c as *const usize);
-    if chave == *(0x9cf668 as *const usize) && mais_de_uma {
+    if chave == *(KEY_CLUB_COMP_FRIENDLY as *const usize) && mais_de_uma {
         texto(0xde1f64, 0xa1631c);
-    } else if chave == *(0x9cf684 as *const usize) && mais_de_uma {
+    } else if chave == *(KEY_CLUB_COMP_RESERVE as *const usize) && mais_de_uma {
         texto(0xde1f64, 0xa16310);
     } else {
         copiar_para_o_texto(c + 0x38);
@@ -62,20 +62,20 @@ unsafe extern "C" fn painel_dos_ultimos_placares(topo: *mut i32, base: *mut i32)
     type T11 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
     type T12 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
     type T18 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
-    let titulo: T11 = core::mem::transmute(0x803fd0usize);
-    let caixa: T12 = core::mem::transmute(0x804030usize);
-    let celula: T11 = core::mem::transmute(0x8040a0usize);
-    let texto_da_celula: T9 = core::mem::transmute(0x804100usize);
-    let linha: T18 = core::mem::transmute(0x55f990usize);
-    let lista: T11 = core::mem::transmute(0x55fba0usize);
-    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
+    let titulo: T11 = core::mem::transmute(FN_SCREENMANAGER_ADD_TEXT_ITEM);
+    let caixa: T12 = core::mem::transmute(FN_SCREENMANAGER_ADD_BUTTON_ITEM);
+    let celula: T11 = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_BUTTON);
+    let texto_da_celula: T9 = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
+    let linha: T18 = core::mem::transmute(FN_DISPLAY_ADD_ITEM);
+    let lista: T11 = core::mem::transmute(FN_DISPLAY_ADD_AREA);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let cor = |a: usize| *(a as *const u16) as usize;
     let display = || *((0xb74c4c + *(0xb77c7a as *const i16) as isize * 0x300) as *const usize);
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
     let sem_selo = |c: usize| {
-        let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c2990usize);
-        let selecao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7e6f20usize);
+        let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_OWN_COMP_RECORD);
+        let selecao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
         amistoso(*(0xae2c74 as *const usize), c) == 0 && selecao(*(0xb74434 as *const usize), c) == 0
     };
 
@@ -89,9 +89,9 @@ unsafe extern "C" fn painel_dos_ultimos_placares(topo: *mut i32, base: *mut i32)
         largura = 0x30c;
         let mais_de_uma = core::ptr::read_unaligned((entrada + 8) as *const i32) > core::ptr::read_unaligned((entrada + 4) as *const i32);
         let chave = *(comp as *const usize);
-        if chave == *(0x9cf668 as *const usize) && mais_de_uma {
+        if chave == *(KEY_CLUB_COMP_FRIENDLY as *const usize) && mais_de_uma {
             texto(BUF, 0xa16b28, 0xad9c64);
-        } else if chave == *(0x9cf684 as *const usize) && mais_de_uma {
+        } else if chave == *(KEY_CLUB_COMP_RESERVE as *const usize) && mais_de_uma {
             texto(BUF, 0xa16aec, 0xad9c64);
         } else {
             let g = *((comp + 0x52) as *const i8) as i32;
@@ -162,7 +162,7 @@ unsafe extern "C" fn painel_dos_ultimos_placares(topo: *mut i32, base: *mut i32)
         }
     }
 
-    let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x5e5cd0usize);
+    let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_FONT_GET_HEIGHT);
     let a = altura(3);
     let n = ((*base - *topo - 0x10) / a) as u8;
     gravar_parametro_da_tela(0xf, n as usize);
@@ -185,7 +185,7 @@ unsafe extern "C" fn painel_dos_ultimos_placares(topo: *mut i32, base: *mut i32)
     caixa(sm, largura - 0x7c, t + 5, largura - 0x68, t + 0x19, 1, cor(0xaebe04), 0xc, marca, cor(0xae3184), 0, 6, 0);
     caixa(sm, largura - 0x66, t + 5, largura - 0x1b, t + 0x19, 1, 0, 0xc, 2, cor(0xaebdec), 0, 7, 0);
     caixa(sm, largura - 0x19, t + 5, largura - 5, t + 0x19, 1, cor(0xaebe04), 0xc, marca, cor(0xae3184), 0, 8, 0);
-    let redesenhar: unsafe extern "C" fn() = core::mem::transmute(0x724520usize);
+    let redesenhar: unsafe extern "C" fn() = core::mem::transmute(FN_REFRESH_LATEST_SCORES_ROWS);
     redesenhar();
 }
 

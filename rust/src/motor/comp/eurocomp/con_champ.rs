@@ -19,7 +19,7 @@ struct Cqi11Listas {
 }
 
 unsafe fn cqi11_listas() -> Cqi11Listas {
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     // ponytail: as quatro listas começam zeradas na cópia (na original, sobra de pilha que só é lida quando falta clube;
     // o comparador manda esse caso para a original sozinha)
     let mut l = Cqi11Listas { mex: [0; 200], centro: [0; 200], caribe: [0; 200], mls: [0; 12], n: [0; 4] };
@@ -33,19 +33,19 @@ unsafe fn cqi11_listas() -> Cqi11Listas {
         let nacao = read_u32_as_usize(clube + 0x53);
         if nacao != 0 {
             let id = read_u32_as_usize(nacao);
-            if id == read_u32_as_usize(0x9cf3d0) {
+            if id == read_u32_as_usize(KEY_NATION_MEXICO) {
                 if a < 0xc8 {
                     l.mex[a as usize] = clube;
                     a += 1;
                 }
             } else {
                 let div = read_u32_as_usize(clube + 0x57);
-                if div != 0 && read_u32_as_usize(div) == read_u32_as_usize(0x9cf590) {
+                if div != 0 && read_u32_as_usize(div) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
                     if m < 0xc {
                         l.mls[m as usize] = clube;
                         m += 1;
                     }
-                } else if id != read_u32_as_usize(0x9cf4f8) && read_u8(nacao + 0x75) == 7 {
+                } else if id != read_u32_as_usize(KEY_NATION_UNITED_STATES) && read_u8(nacao + 0x75) == 7 {
                     if b < 0xc8 {
                         l.centro[b as usize] = clube;
                         b += 1;
@@ -73,10 +73,10 @@ unsafe fn cqi11_listas() -> Cqi11Listas {
 /// (0x4afd80(competição [0x9cf590], 0): push 0; push comp; add esp, 8 -> cdecl) e o da [0x9cf728] (a mesma com +4 do
 /// objeto) e, se for o mesmo clube, o 0 passa ao último vice da MLS (lugar 1). Depois +4 e +5 de cada time zerados.
 unsafe extern "thiscall" fn cqi11_concacaf_classificados(this: usize) -> u32 {
-    let ordenar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(0x4afbd0usize);
-    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
+    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 8);
-    let outro = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(0x9cf728).wrapping_mul(4)));
+    let outro = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
     let mut l = cqi11_listas();
     ordenar(l.mex.as_mut_ptr() as usize, l.n[0], 2);
     ordenar(l.centro.as_mut_ptr() as usize, l.n[1], 3); // cqi11: três centro-americanos
@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn cqi11_concacaf_classificados(this: usize) -> u32 {
         pd(t(1), l.mls[1]);
     } else {
         crate::comparacao::ramo("cqi_11 campeao da mls");
-        let mls = cqi11_comp(read_u32_as_usize(0x9cf590));
+        let mls = cqi11_comp(read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE));
         pd(t(0), colocado(mls, 0));
         pd(t(1), colocado(read_u32_as_usize(outro + 4), 0));
         if read_u32_as_usize(t(0)) == read_u32_as_usize(t(1)) { // cqi11: o campeão das duas dá a vaga ao vice da MLS
@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn cqi11_concacaf_classificados(this: usize) -> u32 {
 unsafe extern "thiscall" fn comparar_cqi11_concacaf_classificados(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1688);
     let l = cqi11_listas();
-    let outro = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(0x9cf728).wrapping_mul(4)));
+    let outro = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
     if l.n[0] < 2 || l.n[1] < 3 || l.n[2] < 1 || (outro == 0 && l.n[3] < 2) || read_u32_as_usize(this + 0xa7) == 0 {
         return o(this); // ponytail: lista curta (a original lê sobra de pilha) ou sem tabela: só a original
     }
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn comparar_cqi11_concacaf_classificados(this: usize) -
 /// atualização da copa (0x51f890: push fase; push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução sai.
 unsafe extern "thiscall" fn cqi11_concacaf_dia(this: usize, hoje: usize, fase: u32) -> u32 {
     if read_u32_as_usize(read_u32_as_usize(this + 0xa7)) == 0 && fase != 0 {
-        let classificar: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x4c11a0usize);
+        let classificar: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CONCHAMP_SELECT_QUALIFIED_CLUBS);
         if classificar(this) < 0 {
             // ponytail: a 0x4c11a0 sempre devolve 1; o caso de erro fica com a caixa e o 0 da original
             aviso_em(0x9a7d30, 0x1ba);
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn cqi11_concacaf_dia(this: usize, hoje: usize, fase: u
         let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
         prever(this);
     }
-    let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x51f890usize);
+    let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_FOR_DATE);
     base(this, hoje, fase)
 }
 

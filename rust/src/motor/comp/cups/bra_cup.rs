@@ -17,7 +17,7 @@ unsafe fn cqr5_virtual(this: usize, o: usize) -> i32 {
 /// (`inscritos`, mov ecx, esi; call direto -> thiscall, ret 0), as rodadas (virtual +0x8c, create_round_table pela fase
 /// −1) e a árvore dos confrontos (virtual +0x94); por fim as posições previstas (virtual +0x5c), cujo eax ela devolve.
 unsafe fn cqr5_virada(this: usize, inscritos: usize, arquivo: usize, linhas: [u32; 3], ano: i16, ramo: &'static str) -> u32 {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     for o in [0xa7usize, 0xa3] {
         let l = read_u32_as_usize(this + o);
@@ -41,7 +41,7 @@ unsafe fn cqr5_virada(this: usize, inscritos: usize, arquivo: usize, linhas: [u3
     }
     let e = read_u32_as_usize(this + 8);
     if e != 0 {
-        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
+        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
         arquivar(e, 1);
     }
     let a = read_i16(this + 0x40);
@@ -145,7 +145,7 @@ unsafe extern "thiscall" fn comparar_cqo12_copa_do_brasil_tabela(this: usize, fa
 /// lista +0x14 (6 bytes), a situação +5 = 0xff e a classe +4 = 0. Devolve 1.
 unsafe fn cqo12_times(this: usize) -> i32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x47);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0x1aa);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
@@ -196,7 +196,7 @@ unsafe extern "thiscall" fn comparar_cqo12_times_da_copa(this: usize) -> i32 {
         lo == 0 && lr == 0
     };
     if lr != 0 && lr != lo {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
     PLACAR.registrar(igual && a == b && lista, || format!("cqo12_times_da_copa({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn comparar_cqo12_regras_da_copa(this: usize) -> i32 {
     let n = read_i16(this + 0x3c);
     let tabela = if to != 0 && tr != 0 { cql10_gravados(to, n) == cql10_gravados(tr, n) } else { to == 0 && tr == 0 };
     if tr != 0 && tr != to {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(tr);
     }
     PLACAR.registrar(igual && a == b && tabela, || format!("cqo12_regras_da_copa({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));

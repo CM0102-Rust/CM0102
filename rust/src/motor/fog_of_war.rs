@@ -18,7 +18,7 @@ unsafe extern "thiscall" fn conhecer_pessoa(this: usize, pessoa: usize, fonte: u
     }
     let reg = (*(this as *const usize)).wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(9));
     let mut data = [0u8; 8];
-    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
+    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     copiar(reg + 1, data.as_mut_ptr() as usize, 0xae2c90);
     let obs = if fonte == 0 { 0 } else { *((fonte + 0x69) as *const usize) };
     let nivel = reg as *mut u8;
@@ -29,7 +29,7 @@ unsafe extern "thiscall" fn conhecer_pessoa(this: usize, pessoa: usize, fonte: u
     if *nivel == 3 {
         return;
     }
-    let chance: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(0x544410usize);
+    let chance: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
     let c = chance(obs, *((obs + 0x17) as *const i8)) as i8;
     let r = sortear(c as i32) as i8;
     *nivel = if c < 15 && r == 0 {
@@ -46,8 +46,8 @@ unsafe extern "thiscall" fn conhecer_pessoa(this: usize, pessoa: usize, fonte: u
 /// id do tecnico): as 20 vagas da escalacao (`dados` + lado x 0x625 + 0x190, 0x49 bytes cada) com
 /// pessoa e +4 validos (reservas, da 11a em diante, so com +0x32 != 0xff) ficam conhecidas (0x5b09d0).
 unsafe extern "stdcall" fn nevoa_apos_partida(partida: usize, dados: usize) {
-    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let conhecer: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x5b09d0usize);
+    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let conhecer: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_FOG_OF_WAR_MAP_RAISE_KNOWLEDGE);
     let n = || *(0xae2364 as *const i32);
     for lado in 0..2usize {
         let clube = *((partida + if lado == 0 { 0x20 } else { 0x1c }) as *const usize);

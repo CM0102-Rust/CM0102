@@ -16,8 +16,8 @@ fn cqi1_e(this: usize, i: i32) -> usize {
 /// float) e os pontos e os clubes zeram. Depois ordena a tabela pelo coeficiente (qsort 0x945333 com 0x905cb0, do
 /// maior para o menor) e grava a posição de cada nação no +0x1df da seleção dela (0x53b3d0).
 unsafe extern "thiscall" fn uefa_rodar_coeficientes(this: usize) {
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     let conta = || *((this + 0x438) as *const i8);
     let ano = *(0xae2c92 as *const i16);
     let mut i = 0i8;
@@ -60,7 +60,7 @@ fn cqi1_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) ->
 
 /// A tabela das nações e, de cada nação, as 5 temporadas (+0xe0..+0x110) e o +0x1df da seleção.
 unsafe fn cqi1_regioes(this: usize) -> Vec<(usize, usize)> {
-    let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
+    let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     let n = (*((this + 0x438) as *const i8)).max(0) as i32;
     let mut reg = vec![(this, 0x43b)];
     for i in 0..n {
@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn comparar_uefa_rodar_coeficientes(this: usize) {
 /// uma delas na tabela, a caixa da linha 0x285 e o sorteio); fora de 2001, três sorteadas (0x90cfc0 com o número de
 /// nações, de três em três) distintas e fora a Itália.
 unsafe extern "thiscall" fn uefa_vagas_por_nacao(this: usize) {
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let g = |a: usize| read_u32(a);
     let conta = || *((this + 0x438) as *const i8);
     let ano = *(0xae2c92 as *const i16);
@@ -99,14 +99,14 @@ unsafe extern "thiscall" fn uefa_vagas_por_nacao(this: usize) {
     while i < conta() {
         let e = cqi1_e(this, i as i32);
         let id = read_u32(e);
-        if id == g(0x9cf2fc) {
+        if id == g(KEY_NATION_FINLAND) {
             fa = i;
-        } else if id == g(0x9cf470) {
+        } else if id == g(KEY_NATION_SLOVAKIA) {
             fb = i;
-        } else if id == g(0x9cf240) {
+        } else if id == g(KEY_NATION_BELARUS) {
             fc = i;
         }
-        if id == g(0x9cf3a0) {
+        if id == g(KEY_NATION_LIECHTENSTEIN) {
             *((e + 0xc) as *mut u8) = 0;
         }
         *((e + 0xc) as *mut u8) = if i < 3 {
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn uefa_vagas_por_nacao(this: usize) {
             0
         };
         let id = read_u32(e);
-        if id == g(0x9cf3a0) || id == g(0x9cf450) {
+        if id == g(KEY_NATION_LIECHTENSTEIN) || id == g(KEY_NATION_SAN_MARINO) {
             *((e + 0xd) as *mut u8) = 0;
         }
         let uefa = if i < 6 {
@@ -143,22 +143,22 @@ unsafe extern "thiscall" fn uefa_vagas_por_nacao(this: usize) {
             *((e + 0xd) as *mut u8) = v;
         }
         let id = read_u32(e);
-        let intertoto = if id == g(0x9cf3d4) || id == g(0x9cf450) || id == g(0x9cf20c) || id == g(0x9cf258) || id == g(0x9cf3a0) {
+        let intertoto = if id == g(KEY_NATION_MOLDOVA) || id == g(KEY_NATION_SAN_MARINO) || id == g(KEY_NATION_ANDORRA) || id == g(KEY_NATION_BOSNIA_HERZEGOVINA) || id == g(KEY_NATION_LIECHTENSTEIN) {
             0
-        } else if id == g(0x9cf45c) {
+        } else if id == g(KEY_NATION_SCOTLAND) {
             1
-        } else if id == g(0x9cf300) && ano == 0x7d1 {
+        } else if id == g(KEY_NATION_FRANCE) && ano == 0x7d1 {
             crate::comparacao::ramo("cqi_1 intertoto da franca");
             4 // cqi1: a França na Intertoto em 2001
-        } else if id == g(0x9cf314) && ano == 0x7d1 {
+        } else if id == g(KEY_NATION_GERMANY) && ano == 0x7d1 {
             3
-        } else if (id == g(0x9cf434) || id == g(0x9cf408) || id == g(0x9cf488) || id == g(0x9cf448)) && ano == 0x7d1 {
+        } else if (id == g(KEY_NATION_PORTUGAL) || id == g(KEY_NATION_NORWAY) || id == g(KEY_NATION_SPAIN) || id == g(KEY_NATION_RUSSIA)) && ano == 0x7d1 {
             0
-        } else if id == g(0x9cf2e4) && ano != 0x7d1 {
+        } else if id == g(KEY_NATION_ENGLAND) && ano != 0x7d1 {
             1
-        } else if (id == g(0x9cf360) || id == g(0x9cf434)) && ano == 0x7d1 {
+        } else if (id == g(KEY_NATION_ITALY) || id == g(KEY_NATION_PORTUGAL)) && ano == 0x7d1 {
             1
-        } else if cont < 0x10 || (id == g(0x9cf244) && ano == 0x7d0) {
+        } else if cont < 0x10 || (id == g(KEY_NATION_BELGIUM) && ano == 0x7d0) {
             cont += 1;
             2
         } else if cont < 0x2b {
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn uefa_vagas_por_nacao(this: usize) {
         *((e + 0xe) as *mut u8) = intertoto;
         i += 1;
     }
-    let italia = |k: i8| read_u32(cqi1_e(this, k as i32)) == g(0x9cf360);
+    let italia = |k: i8| read_u32(cqi1_e(this, k as i32)) == g(KEY_NATION_ITALY);
     if ano == 0x7d1 {
         if fa == -1 || fb == -1 || fc == -1 {
             aviso_em(0xaa1a1c, 0x285);
@@ -207,8 +207,8 @@ unsafe extern "thiscall" fn comparar_uefa_vagas_por_nacao(this: usize) {
 /// 1, 0, 0)). O último registro da tabela nunca é examinado pela volta: se ela chega nele com a conta zerada, ele é o
 /// escolhido sem os testes. Devolve o clube se for da nação, senão 0.
 unsafe extern "thiscall" fn uefa_enesimo_clube_da_nacao(_this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
-    let busca: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let busca: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let k = conta as u16 as i16 as i32;
     let ultimo = clubes.wrapping_add((k * 12 - 12) as usize);
     let mut chave = [0u8; 12];
@@ -299,10 +299,10 @@ unsafe fn cqi2_vaga(this: usize, c: usize, comp: u32, fase: u8, i: i32) -> bool 
 /// 0x905ce0) e, em 2001, aplica a ordem do euro.cfg (0x9059e0, original). Devolve o número de clubes (só os 16 bits
 /// baixos contam: quem chama lê o si).
 unsafe extern "thiscall" fn uefa_juntar_clubes_europeus(this: usize, saida: *mut usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
-    let euro_cfg: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x9059e0usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let euro_cfg: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_UEFASEEDING_APPLY_EURO_CFG_ORDER);
     let t = alocar((read_u32(0xae235c) as i32).wrapping_mul(12) as u32);
     *saida = t;
     if t == 0 {
@@ -317,7 +317,7 @@ unsafe extern "thiscall" fn uefa_juntar_clubes_europeus(this: usize, saida: *mut
             let nacao = read_u32(c + 0x53) as usize;
             if nacao != 0 && selecao(c) == 0 {
                 let cont = read_u32(nacao + 0x71) as usize;
-                if cont != 0 && read_u32(cont) == read_u32(0x9cfa10) {
+                if cont != 0 && read_u32(cont) == read_u32(KEY_CONTINENT_EUROPE) {
                     *((c + 0x1db) as *mut u32) = u32::MAX;
                     core::ptr::write_unaligned((read_u32(0xae2d14) as usize).wrapping_add((read_u32(c) as usize).wrapping_mul(6)) as *mut u32, u32::MAX);
                     let r = t.wrapping_add((k as u16 as i16 as i32 * 12) as usize);
@@ -372,7 +372,7 @@ unsafe fn cqi2_regioes_dos_clubes() -> Vec<(usize, usize)> {
 /// linha de cada um em [0xae2d14], a devolução e os registros das duas tabelas.
 unsafe extern "thiscall" fn comparar_uefa_juntar_clubes_europeus(this: usize, saida: *mut usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize) -> u32>(1661);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut t2 = 0usize;
     let reg = cqi2_regioes_dos_clubes();
     let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, saida), || uefa_juntar_clubes_europeus(this, &mut t2));
@@ -396,9 +396,9 @@ unsafe extern "thiscall" fn comparar_uefa_juntar_clubes_europeus(this: usize, sa
 /// (0x9050d0, sem pular ninguém) vai à primeira fase com vaga pedida; fase cheia (as capacidades 16/15, 18, 19 e 18) passa
 /// uma vaga para a fase seguinte; clube sem nação ou já com vaga perde a vaga.
 unsafe extern "thiscall" fn uefa_vagas_liga_dos_campeoes(this: usize, clubes: usize, conta: u32) {
-    let campeao: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
-    let enesimo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x9050d0usize);
-    let lc = read_u32(0x9cf6e8);
+    let campeao: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
+    let enesimo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_UEFA_FIND_NTH_UNPLACED_CLUB_OF_NATION);
+    let lc = read_u32(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE);
     let mut cap: [u8; 5] = [0, 0x10, 0x12, 0x13, 0x12];
     let h = campeao((read_u32(0xae23d0) as usize).wrapping_add(lc.wrapping_mul(0x6b) as usize), 0);
     if h != 0 && read_u32(h + 0x53) != 0 && read_u32(h + 0x1db) == u32::MAX {
@@ -485,10 +485,10 @@ unsafe extern "thiscall" fn comparar_uefa_vagas_liga_dos_campeoes(this: usize, c
 /// fase seguinte; depois solta a lista dos voluntários (+0x43b, +0x43f). As outras: tantos clubes quanto as vagas +0xe,
 /// o primeiro sem vaga de cada vez (humanos podem), na fase + a ordem do clube, enquanto houver menos de 60.
 unsafe extern "thiscall" fn uefa_vagas_intertoto(this: usize, clubes: usize, conta: u32) {
-    let voluntario: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x903890usize);
-    let enesimo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x9050d0usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let it = read_u32(0x9cf6f8);
+    let voluntario: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_UEFASEEDING_PICK_ENGLISH_INTERTOTO_CLUB);
+    let enesimo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_UEFA_FIND_NTH_UNPLACED_CLUB_OF_NATION);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let it = read_u32(KEY_CLUB_COMP_INTER_TOTO_CUP);
     let mut colocados = 0i32;
     let mut cl = 0u8;
     loop {
@@ -498,7 +498,7 @@ unsafe extern "thiscall" fn uefa_vagas_intertoto(this: usize, clubes: usize, con
             i = 0;
         }
         let e = cqi2_e(this, i as i8 as i32);
-        if read_u32(e) == read_u32(0x9cf2e4) {
+        if read_u32(e) == read_u32(KEY_NATION_ENGLAND) {
             let mut c = voluntario(this);
             if c == 0 {
                 c = enesimo(this, clubes, conta, read_u32(e), 1, 1, 1);
@@ -577,7 +577,7 @@ unsafe fn cqi3_entra(this: usize, c: usize, fase: u8, r: i32, colocados: &mut i3
     if read_u32(c + 0x53) == 0 || read_u32(c + 0x1db) != u32::MAX {
         return false;
     }
-    *((c + 0x1db) as *mut u32) = read_u32(0x9cf6f0);
+    *((c + 0x1db) as *mut u32) = read_u32(KEY_CLUB_COMP_UEFA_CUP);
     *((c + 0x1df) as *mut u8) = fase;
     *colocados += 1;
     let p = cqi3_e(this, r) + 0x11;
@@ -600,12 +600,12 @@ unsafe fn cqi3_entra(this: usize, c: usize, fase: u8, r: i32, colocados: &mut i3
 /// na fase 10 × a conta + 3; os dois com vaga, o primeiro sem vaga da tabela). Para quando os colocados menos a conta
 /// passam de 116.
 unsafe extern "thiscall" fn uefa_vagas_copa_da_uefa(this: usize, clubes: usize, conta: u32) {
-    let campeao: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
-    let enesimo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x9050d0usize);
-    let linha: unsafe extern "C" fn(usize) -> i8 = core::mem::transmute(0x669340usize);
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let campeao: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
+    let enesimo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_UEFA_FIND_NTH_UNPLACED_CLUB_OF_NATION);
+    let linha: unsafe extern "C" fn(usize) -> i8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_NATION);
+    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let n8 = || *((this + 0x438) as *const i8);
-    let uc = read_u32(0x9cf6f0);
+    let uc = read_u32(KEY_CLUB_COMP_UEFA_CUP);
     let mut conta_extra = 1i8;
     let mut colocados = 0i32;
     let mut nacao_do_campeao = 0usize;
@@ -691,7 +691,7 @@ unsafe extern "thiscall" fn uefa_vagas_copa_da_uefa(this: usize, clubes: usize, 
                                     c
                                 } else {
                                     let mut c = campeao(copa, 1);
-                                    if c == 0 || read_u32(c + 0x53) == 0 || read_u32(nacao) == read_u32(0x9cf244) {
+                                    if c == 0 || read_u32(c + 0x53) == 0 || read_u32(nacao) == read_u32(KEY_NATION_BELGIUM) {
                                         c = um();
                                     }
                                     if read_u32(c + 0x1db) == u32::MAX {
@@ -702,7 +702,7 @@ unsafe extern "thiscall" fn uefa_vagas_copa_da_uefa(this: usize, clubes: usize, 
                                         let id = read_u32(copa);
                                         let ano = core::ptr::read_unaligned((0xb63d7b + (linha(nacao) as i32 * 0x48) as usize) as *const u16) as i32;
                                         let comp = read_u32((read_u32(0xadadfc) as usize).wrapping_add(id as usize * 4)) as usize;
-                                        if read_i16(comp + 0x40) as i32 == ano || read_u32(nacao) == read_u32(0x9cf488) || read_u32(nacao) == read_u32(0x9cf244) {
+                                        if read_i16(comp + 0x40) as i32 == ano || read_u32(nacao) == read_u32(KEY_NATION_SPAIN) || read_u32(nacao) == read_u32(KEY_NATION_BELGIUM) {
                                             um()
                                         } else {
                                             let (mut v1, mut v2) = (-1i32, -1i32);
@@ -822,17 +822,17 @@ unsafe extern "thiscall" fn uefa_voluntario_ingles(this: usize) -> usize {
     if tabela == 0 {
         return 0;
     }
-    let liga = read_u32(tabela.wrapping_add(read_u32(0x9cf5bc) as usize * 4)) as usize;
+    let liga = read_u32(tabela.wrapping_add(read_u32(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) as usize * 4)) as usize;
     if liga == 0 {
         return 0;
     }
     crate::comparacao::ramo("cqi_3 voluntario ingles");
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
-    let gravar: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x785790usize);
-    let a_divisao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7862d0usize);
+    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let gravar: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
+    let a_divisao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_DIVISION_MANAGERS);
     let clube_sorteado = || {
         let s = sorteio(read_i16(liga + 0x3e) as i32) as i16 as i32;
         read_u32((read_u32(liga + 0xb1) as usize).wrapping_add((s * 0x3b) as usize)) as usize
@@ -922,14 +922,14 @@ unsafe extern "thiscall" fn uefa_virada_da_classificacao(this: usize, diario: u3
         }
         crate::comparacao::ramo("cqi_3 virada da classificacao");
         core::ptr::write_unaligned((this + 0x439) as *mut i16, ano);
-        let coeficientes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x903b50usize);
-        let vagas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x903cc0usize);
-        let juntar: unsafe extern "thiscall" fn(usize, *mut usize) -> u32 = core::mem::transmute(0x904040usize);
-        let campeoes: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x904210usize);
-        let copa_uefa: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x904580usize);
-        let intertoto: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x904e30usize);
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-        let classificados: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x905f00usize);
+        let coeficientes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_UEFASEEDING_ROLL_COEFFICIENTS);
+        let vagas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_UEFASEEDING_SET_PLACE_COUNTS);
+        let juntar: unsafe extern "thiscall" fn(usize, *mut usize) -> u32 = core::mem::transmute(FN_UEFASEEDING_COLLECT_EUROPEAN_CLUBS);
+        let campeoes: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_UEFASEEDING_ASSIGN_CHAMPIONS_LEAGUE_PLACES);
+        let copa_uefa: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_UEFASEEDING_ASSIGN_UEFA_CUP_PLACES);
+        let intertoto: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_UEFASEEDING_ASSIGN_INTERTOTO_PLACES);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+        let classificados: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_UEFA_POST_QUALIFIERS_NEWS);
         coeficientes(this);
         vagas(this);
         let mut t = 0usize;
@@ -947,15 +947,15 @@ unsafe extern "thiscall" fn uefa_virada_da_classificacao(this: usize, diario: u3
     }
     if *(0xae2c90 as *const i16) == 100 {
         let tabela = read_u32(0xadadfc) as usize;
-        let liga = read_u32(tabela.wrapping_add(read_u32(0x9cf5bc) as usize * 4)) as usize;
+        let liga = read_u32(tabela.wrapping_add(read_u32(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) as usize * 4)) as usize;
         if liga == 0 {
             return;
         }
-        if read_u32(tabela.wrapping_add(read_u32(0x9cf6f8) as usize * 4)) != 0 {
-            let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
-            let gravar: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x785790usize);
-            let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
-            let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
+        if read_u32(tabela.wrapping_add(read_u32(KEY_CLUB_COMP_INTER_TOTO_CUP) as usize * 4)) != 0 {
+            let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+            let gravar: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
+            let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
+            let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
             let mut noticia = [0u8; 0xe8];
             let p = noticia.as_mut_ptr() as usize;
             construir(p, 0x16, 0);
@@ -972,7 +972,7 @@ unsafe extern "thiscall" fn uefa_virada_da_classificacao(this: usize, diario: u3
             }
         }
     }
-    let prazos: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x9058e0usize);
+    let prazos: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_UEFA_CHECK_REGISTRATION_DEADLINES);
     prazos(this);
 }
 
@@ -992,18 +992,18 @@ unsafe fn cpx6_n8(a: usize) -> u32 {
 
 /// Abre `CM3_TEMP\<nome>` para gravar ("wb"): o caminho pela 0x90bde0 e o fopen do jogo (0x945b00).
 unsafe fn cpx6_abrir(nome: usize) -> usize {
-    let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
-    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
+    let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
+    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     abrir(caminho(0x987da0, nome), 0x9a7f28)
 }
 
 unsafe fn cpx6_escrever(dados: usize, tamanho: u32, quantos: u32, f: usize) -> u32 {
-    let escrever: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+    let escrever: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
     escrever(dados, tamanho, quantos, f)
 }
 
 unsafe fn cpx6_fechar(f: usize) {
-    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
+    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     fechar(f);
 }
 

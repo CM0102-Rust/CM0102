@@ -82,8 +82,8 @@ unsafe fn comparar_conversor_v1(nome: &str, o: ConversorV1, rust: ConversorV1, s
     if use_zip != 0 {
         return o(stream, use_zip, registros, n);
     }
-    let ftell: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x946aaeusize);
-    let fseek: unsafe extern "C" fn(usize, i32, i32) -> i32 = core::mem::transmute(0x946a22usize);
+    let ftell: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FTELL);
+    let fseek: unsafe extern "C" fn(usize, i32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
     let pos = ftell(stream);
     let (mut fim_o, mut fim_r) = (0, 0);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(registros, n as usize * tamanho)],
@@ -125,8 +125,8 @@ unsafe extern "C" fn comparar_ler_jogadores_v1(stream: usize, use_zip: i32, regi
 /// buracos do registro entram na comparação).
 pub unsafe fn autoteste_dbj_1() {
     const ARQ: &str = "autoteste_banco_v1.tmp";
-    let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
-    let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
+    let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
+    let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     let (t0, d0) = PLACAR.contagem();
     let mut s = Sorteio(0x5631_4442_4a31);
     let casos: [(ConversorV1, &[(usize, u32, usize)], usize); 3] = [(comparar_ler_clubes_v1, &CLUBE_V1, 581),
@@ -162,10 +162,10 @@ pub unsafe fn autoteste_dbj_1() {
 unsafe extern "C" fn gravar_historico_de_pessoas(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar histórico de pessoas");
     let escritos = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 17, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 17, n, stream)
     };
     (escritos == n) as i32 // gravar histórico de pessoas
@@ -183,10 +183,10 @@ unsafe extern "C" fn comparar_gravar_historico_de_pessoas(stream: usize, use_zip
 unsafe extern "C" fn gravar_competicoes(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar competições");
     let escritos = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 107, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 107, n, stream)
     };
     (escritos == n) as i32 // gravar competições
@@ -204,10 +204,10 @@ unsafe extern "C" fn comparar_gravar_competicoes(stream: usize, use_zip: i32, re
 unsafe extern "C" fn gravar_historicos_de_competicao(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar históricos de competição");
     let escritos = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 26, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 26, n, stream)
     };
     (escritos == n) as i32 // gravar históricos de competição
@@ -227,10 +227,10 @@ unsafe extern "C" fn comparar_gravar_historicos_de_competicao(stream: usize, use
 unsafe extern "C" fn gravar_competicoes_de_pessoal(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar competições de pessoal");
     let escritos = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 101, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 101, n, stream)
     };
     (escritos == n) as i32 // gravar competições de pessoal
@@ -248,10 +248,10 @@ unsafe extern "C" fn comparar_gravar_competicoes_de_pessoal(stream: usize, use_z
 unsafe extern "C" fn gravar_arbitros(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar árbitros");
     let escritos = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 43, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 43, n, stream)
     };
     (escritos == n) as i32 // gravar árbitros
@@ -269,10 +269,10 @@ unsafe extern "C" fn comparar_gravar_arbitros(stream: usize, use_zip: i32, regis
 unsafe extern "C" fn gravar_registros_58(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar registros de 58 bytes");
     let escritos = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 58, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 58, n, stream)
     };
     (escritos == n) as i32 // gravar registros de 58 bytes
@@ -291,10 +291,10 @@ unsafe extern "C" fn comparar_gravar_registros_58(stream: usize, use_zip: i32, r
 unsafe extern "C" fn gravar_nomes(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar nomes");
     let escritos = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 60, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 60, n, stream)
     };
     (escritos == n) as i32 // gravar nomes
@@ -310,7 +310,7 @@ unsafe extern "C" fn comparar_gravar_nomes(stream: usize, use_zip: i32, registro
 /// se faltar e o nome. Sem efeito fora de `destino`: o comparador de abrir/criar refaz o caminho num buffer
 /// próprio.
 unsafe fn caminho_do_banco(destino: usize, pasta: usize, nome: usize) {
-    let juntar: unsafe extern "C" fn(usize, usize, usize, usize, usize) = core::mem::transmute(0x945b13usize);
+    let juntar: unsafe extern "C" fn(usize, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
     juntar(destino, 0, pasta, nome, 0);
 }
 
@@ -330,7 +330,7 @@ unsafe fn conferir_caminho_do_banco(rotina: &str, pasta: usize, nome: usize) {
 unsafe extern "C" fn abrir_arquivo_do_banco(pasta: usize, nome: usize) -> usize {
     crate::comparacao::ramo("banco abrir .dat");
     caminho_do_banco(0xde1f64, pasta, nome); // abrir (rb)
-    let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
+    let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     fopen(0xde1f64, 0x98f928)
 }
 
@@ -348,7 +348,7 @@ unsafe extern "C" fn comparar_abrir_arquivo_do_banco(pasta: usize, nome: usize) 
 unsafe extern "C" fn criar_arquivo_do_banco(pasta: usize, nome: usize) -> usize {
     crate::comparacao::ramo("banco criar .dat");
     caminho_do_banco(0xde1f64, pasta, nome);
-    let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
+    let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     fopen(0xde1f64, 0x9a7f28) // criar (wb)
 }
 
@@ -369,10 +369,10 @@ unsafe extern "C" fn comparar_criar_arquivo_do_banco(pasta: usize, nome: usize) 
 unsafe extern "C" fn gravar_continentes(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar continentes");
     let gravados = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 198, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 198, n, stream)
     };
     (gravados == n) as i32
@@ -391,10 +391,10 @@ unsafe extern "C" fn comparar_gravar_continentes(stream: usize, use_zip: i32, re
 unsafe extern "C" fn gravar_nacoes(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar nações");
     let gravados = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 290, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 290, n, stream)
     };
     (gravados == n) as i32
@@ -413,10 +413,10 @@ unsafe extern "C" fn comparar_gravar_nacoes(stream: usize, use_zip: i32, registr
 unsafe extern "C" fn gravar_cidades(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar cidades");
     let gravados = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 56, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 56, n, stream)
     };
     (gravados == n) as i32
@@ -437,10 +437,10 @@ unsafe extern "C" fn comparar_gravar_cidades(stream: usize, use_zip: i32, regist
 unsafe extern "C" fn gravar_estadios(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar estádios");
     let gravados = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 78, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 78, n, stream)
     };
     (gravados == n) as i32
@@ -459,10 +459,10 @@ unsafe extern "C" fn comparar_gravar_estadios(stream: usize, use_zip: i32, regis
 unsafe extern "C" fn gravar_clubes(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar clubes");
     let gravados = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 581, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 581, n, stream)
     };
     (gravados == n) as i32
@@ -481,10 +481,10 @@ unsafe extern "C" fn comparar_gravar_clubes(stream: usize, use_zip: i32, registr
 unsafe extern "C" fn gravar_pessoas_110(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar pessoas 110");
     let gravados = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 110, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 110, n, stream)
     };
     (gravados == n) as i32
@@ -505,10 +505,10 @@ unsafe extern "C" fn comparar_gravar_pessoas_110(stream: usize, use_zip: i32, re
 unsafe extern "C" fn gravar_nao_jogadores(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar não jogadores");
     let gravados = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 68, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 68, n, stream)
     };
     (gravados == n) as i32
@@ -527,10 +527,10 @@ unsafe extern "C" fn comparar_gravar_nao_jogadores(stream: usize, use_zip: i32, 
 unsafe extern "C" fn gravar_jogadores(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar jogadores");
     let gravados = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 70, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 70, n, stream)
     };
     (gravados == n) as i32
@@ -549,10 +549,10 @@ unsafe extern "C" fn comparar_gravar_jogadores(stream: usize, use_zip: i32, regi
 unsafe extern "C" fn gravar_preferencias(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar preferências");
     let gravados = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
+        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(registros, 52, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
+        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(registros, 52, n, stream)
     };
     (gravados == n) as i32
@@ -579,10 +579,10 @@ unsafe extern "C" fn ler_arbitros(stream: usize, use_zip: i32, registros: usize,
     }
     crate::comparacao::ramo("banco ler árbitros");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 43, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 43, n, stream)
     };
     (lidos == n) as i32 // árbitros
@@ -607,10 +607,10 @@ unsafe extern "C" fn ler_cores(stream: usize, use_zip: i32, registros: usize, en
     }
     crate::comparacao::ramo("banco ler cores");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 58, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 58, n, stream)
     };
     (lidos == n) as i32 // cores
@@ -636,10 +636,10 @@ unsafe extern "C" fn ler_nomes(stream: usize, use_zip: i32, registros: usize, en
     }
     crate::comparacao::ramo("banco ler nomes");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 60, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 60, n, stream)
     };
     (lidos == n) as i32 // nomes
@@ -665,7 +665,7 @@ unsafe extern "C" fn ler_clubes(stream: usize, use_zip: i32, registros: usize, e
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao == 1 {
         crate::comparacao::ramo("banco ler clubes versão 1");
-        let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(0x54dc90usize);
+        let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(FN_DB_FILES_READ_CLUBS_V1);
         return converter(stream, use_zip, registros, n);
     }
     if versao != 2 {
@@ -673,10 +673,10 @@ unsafe extern "C" fn ler_clubes(stream: usize, use_zip: i32, registros: usize, e
     }
     crate::comparacao::ramo("banco ler clubes");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 581, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 581, n, stream)
     };
     if lidos != n {
@@ -708,7 +708,7 @@ unsafe extern "C" fn ler_competicoes(stream: usize, use_zip: i32, registros: usi
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao == 1 {
         crate::comparacao::ramo("banco ler competições versão 1");
-        let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(0x54ffd0usize);
+        let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(FN_DB_FILES_READ_COMPS_V1);
         return converter(stream, use_zip, registros, n);
     }
     if versao != 2 {
@@ -716,10 +716,10 @@ unsafe extern "C" fn ler_competicoes(stream: usize, use_zip: i32, registros: usi
     }
     crate::comparacao::ramo("banco ler competições");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 107, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 107, n, stream)
     };
     (lidos == n) as i32 // competições de clube
@@ -743,7 +743,7 @@ unsafe extern "C" fn ler_nao_jogadores(stream: usize, use_zip: i32, registros: u
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao == 1 {
         crate::comparacao::ramo("banco ler não jogadores versão 1");
-        let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(0x54e9a0usize);
+        let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(FN_DB_FILES_READ_PLAYERS_V1);
         return converter(stream, use_zip, registros, n);
     }
     if versao != 2 {
@@ -751,10 +751,10 @@ unsafe extern "C" fn ler_nao_jogadores(stream: usize, use_zip: i32, registros: u
     }
     crate::comparacao::ramo("banco ler não jogadores");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 68, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 68, n, stream)
     };
     (lidos == n) as i32 // não jogadores
@@ -780,7 +780,7 @@ unsafe extern "C" fn ler_jogadores(stream: usize, use_zip: i32, registros: usize
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao == 1 {
         crate::comparacao::ramo("banco ler jogadores versão 1");
-        let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(0x54f150usize);
+        let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(FN_DB_FILES_READ_NON_PLAYERS_V1);
         return converter(stream, use_zip, registros, n);
     }
     if versao != 2 {
@@ -788,10 +788,10 @@ unsafe extern "C" fn ler_jogadores(stream: usize, use_zip: i32, registros: usize
     }
     crate::comparacao::ramo("banco ler jogadores");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 70, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 70, n, stream)
     };
     (lidos == n) as i32 // jogadores
@@ -817,10 +817,10 @@ unsafe extern "C" fn ler_pessoas_110(stream: usize, use_zip: i32, registros: usi
     }
     crate::comparacao::ramo("banco ler pessoas 110");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 110, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 110, n, stream)
     };
     (lidos == n) as i32 // pessoas 110
@@ -846,10 +846,10 @@ unsafe extern "C" fn ler_preferencias(stream: usize, use_zip: i32, registros: us
     }
     crate::comparacao::ramo("banco ler preferências");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 52, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 52, n, stream)
     };
     (lidos == n) as i32 // preferências
@@ -876,10 +876,10 @@ unsafe extern "C" fn ler_continentes(stream: usize, use_zip: i32, registros: usi
     }
     crate::comparacao::ramo("banco ler continentes");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 198, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 198, n, stream)
     };
     (lidos == n) as i32 // continentes
@@ -904,10 +904,10 @@ unsafe extern "C" fn ler_nacoes(stream: usize, use_zip: i32, registros: usize, e
     }
     crate::comparacao::ramo("banco ler nações");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 290, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 290, n, stream)
     };
     (lidos == n) as i32 // nações
@@ -932,10 +932,10 @@ unsafe extern "C" fn ler_cidades(stream: usize, use_zip: i32, registros: usize, 
     }
     crate::comparacao::ramo("banco ler cidades");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 56, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 56, n, stream)
     };
     (lidos == n) as i32 // cidades
@@ -962,10 +962,10 @@ unsafe extern "C" fn ler_estadios(stream: usize, use_zip: i32, registros: usize,
     }
     crate::comparacao::ramo("banco ler estádios");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 78, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 78, n, stream)
     };
     (lidos == n) as i32 // estádios
@@ -990,10 +990,10 @@ unsafe extern "C" fn ler_pessoas_157(stream: usize, use_zip: i32, registros: usi
     }
     crate::comparacao::ramo("banco ler pessoas 157");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 157, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 157, n, stream)
     };
     (lidos == n) as i32 // pessoas 157
@@ -1018,10 +1018,10 @@ unsafe extern "C" fn ler_historico_de_pessoas(stream: usize, use_zip: i32, regis
     }
     crate::comparacao::ramo("banco ler histórico de pessoas");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 17, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 17, n, stream)
     };
     (lidos == n) as i32 // histórico de pessoas
@@ -1048,10 +1048,10 @@ unsafe extern "C" fn ler_historicos_de_competicao(stream: usize, use_zip: i32, r
     }
     crate::comparacao::ramo("banco ler históricos de competição");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 26, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 26, n, stream)
     };
     (lidos == n) as i32 // históricos de competição
@@ -1076,10 +1076,10 @@ unsafe extern "C" fn ler_competicoes_de_pessoal(stream: usize, use_zip: i32, reg
     }
     crate::comparacao::ramo("banco ler competições de pessoal");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 101, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 101, n, stream)
     };
     (lidos == n) as i32 // competições de pessoal
@@ -1104,10 +1104,10 @@ unsafe extern "C" fn ler_historico_de_competicoes_de_pessoal(stream: usize, use_
     }
     crate::comparacao::ramo("banco ler histórico de competições de pessoal");
     let lidos = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
+        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(registros, 58, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
+        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(registros, 58, n, stream)
     };
     (lidos == n) as i32 // histórico de competições de pessoal

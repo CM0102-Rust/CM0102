@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn suspensao_do_vermelho(this: usize, r: usize, j: usiz
     *(r as *mut u8) = jogos; // cpu10: os jogos da suspensão
     *((r + 1) as *mut u8) = 0;
     *((r + 2) as *mut u16) = dias;
-    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
+    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut hoje = [0u32; 2];
     copiar(r + 4, hoje.as_mut_ptr() as usize, 0xae2c90);
     *((r + 0x10) as *mut u8) = 3;
@@ -96,9 +96,9 @@ unsafe extern "thiscall" fn comparar_suspensao_do_vermelho(this: usize, r: usize
 /// órgão (0x55cb60 pela vaga +4) com o mesmo +5 fica com −1 em +6; sem ela, grava a vaga (0x55cb20, tipo +5, −1); o id
 /// da entrada vira −1. No fim compacta as entradas (0x7e9050, nesta leva).
 unsafe extern "thiscall" fn nova_temporada_do_orgao(this: usize) {
-    let guardada: unsafe extern "thiscall" fn(usize, i32, i8) -> usize = core::mem::transmute(0x55cb60usize);
-    let gravar: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(0x55cb20usize);
-    let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x556d00usize);
+    let guardada: unsafe extern "thiscall" fn(usize, i32, i8) -> usize = core::mem::transmute(FN_DISCIPLINE_FIND_HELD_BAN);
+    let gravar: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(FN_DISCIPLINE_SET_SLOT);
+    let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DISCIPLINE_RELEASE_BAN);
     crate::comparacao::ramo("cpu_10 nova temporada");
     let mut e = read_u32_as_usize(this + 0xb);
     let mut i = 0i32;
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn nova_temporada_do_orgao(this: usize) {
         i += 1;
         e += 0xe;
     }
-    let compactar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x7e9050usize);
+    let compactar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_RULINGBODY_COMPACT_ENTRIES);
     compactar(this);
 }
 
@@ -157,8 +157,8 @@ unsafe extern "thiscall" fn comparar_nova_temporada_do_orgao(this: usize) {
 /// o índice). Conta +0x13 = n, capacidade +0xf = n + 100 e realoca (0x945667) com (n + 100) × 14 bytes; sem memória, a
 /// caixa (linha 0x594) e segue.
 unsafe extern "thiscall" fn compactar_disciplina_do_orgao(this: usize) {
-    let guardada: unsafe extern "thiscall" fn(usize, i32, i8) -> usize = core::mem::transmute(0x55cb60usize);
-    let gravar: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(0x55cb20usize);
+    let guardada: unsafe extern "thiscall" fn(usize, i32, i8) -> usize = core::mem::transmute(FN_DISCIPLINE_FIND_HELD_BAN);
+    let gravar: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(FN_DISCIPLINE_SET_SLOT);
     let mut destino = read_u32_as_usize(this + 0xb);
     let mut origem = destino;
     let mut n = 0u32;
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn compactar_disciplina_do_orgao(this: usize) {
     }
     *((this + 0x13) as *mut u32) = n;
     *((this + 0xf) as *mut u32) = n + 100;
-    let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
+    let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
     let p = realocar(read_u32_as_usize(this + 0xb), (n + 100) * 14);
     *((this + 0xb) as *mut u32) = p as u32;
     if p == 0 {

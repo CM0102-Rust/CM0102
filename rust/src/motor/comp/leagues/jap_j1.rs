@@ -18,7 +18,7 @@ unsafe extern "thiscall" fn cqq9_fase_seguinte_da_j1(this: usize) {
     let fase = fase + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
     if fase == 2 {
-        let final_: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x663a50usize);
+        let final_: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_JAPJ1_CREATE_CHAMPIONSHIP_FINAL_STAGE);
         final_(this);
     }
 }
@@ -33,8 +33,8 @@ unsafe extern "thiscall" fn cqq9_fase_seguinte_da_j1(this: usize) {
 /// vaga mesmo nula (como na original); sem fase, a caixa da linha 0x25c; com ela, +0x30 = 2. O quadro SEH da original
 /// só cobre o construtor (sem destrutor).
 unsafe extern "thiscall" fn cqq9_final_da_j1(this: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let lista = alocar(8);
     if lista == 0 {
         return aviso_em(0x9eabc8, 0x245);
@@ -44,14 +44,14 @@ unsafe extern "thiscall" fn cqq9_final_da_j1(this: usize) {
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 2, &mut rodadas, &mut extra, 0);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let p = novo(0xb2);
     // ponytail: a original empurra as rodadas, o extra e o ano em dwords com lixo nos 16 bits altos (as saídas da
     // virtual são words na pilha; o ano vai no dx); o construtor só lê as palavras.
     let fase = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
-            core::mem::transmute(0x522e00usize);
+            core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
         construir(p, this, 2, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
@@ -59,7 +59,7 @@ unsafe extern "thiscall" fn cqq9_final_da_j1(this: usize) {
     core::ptr::write_unaligned((read_usize(this + 0xc) + 8) as *mut usize, fase);
     liberar(lista);
     liberar(t);
-    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
+    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     montar(read_usize(read_usize(this + 0xc) + 8), 0);
     if read_usize(read_usize(this + 0xc) + 8) == 0 {
         return aviso_em(0x9eabc8, 0x25c);
@@ -84,11 +84,11 @@ unsafe extern "thiscall" fn cqq9_virada_da_j1(this: usize) -> u32 {
         let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(c) + desl));
         f(c)
     };
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     let cadeia: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0xb0));
     cadeia(this, 1);
-    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x687970usize);
+    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     liberar_tabela(this, 0);
     let l = read_usize(this + 0xba);
     if l != 0 {
@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn cqq9_virada_da_j1(this: usize) -> u32 {
     }
     let estatisticas = read_usize(this + 8);
     if estatisticas != 0 {
-        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
+        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
         arquivar(estatisticas, 1);
     }
     if (read_usize(this + 0x30) as i32) >= 0 {
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn cqq9_virada_da_j1(this: usize) -> u32 {
     }
     liberar(read_usize(this + 0xc));
     core::ptr::write_unaligned((this + 0x2c) as *mut u32, 3);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let v = alocar(0xc);
     core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
     if v == 0 {
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn cqq9_virada_da_j1(this: usize) -> u32 {
             let f: unsafe extern "C" fn() = core::mem::transmute(f);
             f();
         }
-        let sair: unsafe extern "C" fn(i32) = core::mem::transmute(0x945934usize);
+        let sair: unsafe extern "C" fn(i32) = core::mem::transmute(FN_CRT_EXIT);
         sair(-1);
     }
     let a = core::ptr::read_unaligned((this + 0x40) as *const i16);
@@ -147,11 +147,11 @@ unsafe extern "thiscall" fn cqq9_virada_da_j1(this: usize) -> u32 {
         aviso_em(0x9eabc8, erro);
         return 0;
     }
-    virtual_(read_usize(read_usize(0xadadfc) + 4 * read_usize(0x9cf768)), 8);
+    virtual_(read_usize(read_usize(0xadadfc) + 4 * read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)), 8);
     virtual_(this, 0x5c);
-    let expectativas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68aa80usize);
+    let expectativas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectativas(this);
-    let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x79cee0usize);
+    let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
     renovar(read_usize(0xb74340), read_usize(this + 4))
 }
 
@@ -204,7 +204,7 @@ unsafe fn cqm9_da_divisao(clube: usize, g: usize) -> bool {
 /// `linha`). Devolve a tabela (0 sem memória).
 unsafe fn cqm9_alocar(this: usize, n: i16, arquivo: usize, linha: u32) -> usize {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
@@ -217,7 +217,7 @@ unsafe fn cqm9_alocar(this: usize, n: i16, arquivo: usize, linha: u32) -> usize 
 /// k); existe só para as mutações de cada liga. ponytail: a original empurra a linha no eax com bits de cima de sobra;
 /// a 0x687430 só lê o byte.
 unsafe fn cqm9_linha(this: usize, k: u8, n: i16, girar: u8, clube: usize) {
-    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
+    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     iniciar(this, (k as u32 + girar as u32) % n as u32, clube, 0, 0);
 }
 
@@ -256,11 +256,11 @@ unsafe extern "thiscall" fn cqm9_tabela_da_j1(this: usize) -> u32 {
     if cqm9_alocar(this, 0x10, 0x9eabc8, 0x148) == 0 {
         return 0;
     }
-    if cqm9_japao(this, 0x9cf65c, 0, "cqm_9 j1 cheia") == 0 {
+    if cqm9_japao(this, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 0, "cqm_9 j1 cheia") == 0 {
         return 0;
     }
-    let premio: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(0x682f70usize);
-    let pagar: unsafe extern "thiscall" fn(usize, i32, usize) = core::mem::transmute(0x683010usize);
+    let premio: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
+    let pagar: unsafe extern "thiscall" fn(usize, i32, usize) = core::mem::transmute(FN_LEAGUE_PAY_TV_RIGHTS);
     let f = premio(this, 0x186a0);
     core::ptr::write_unaligned((this + 0x28) as *mut i32, f);
     *((this + 0xe1) as *mut u8) = 1;
@@ -274,7 +274,7 @@ unsafe extern "thiscall" fn cqm9_tabela_da_j2(this: usize) -> u32 {
     if cqm9_alocar(this, 0xc, 0x9eaedc, 0x13a) == 0 {
         return 0;
     }
-    cqm9_japao(this, 0x9cf768, 0, "cqm_9 j2 cheia")
+    cqm9_japao(this, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, 0, "cqm_9 j2 cheia")
 }
 
 /// { 0x411b70 } (thiscall, ret 0, aus_nsl.cpp): `AusNsl::create_table()`: a NSL tem 13 clubes (+0x57 = [0x9cf89c]), na
@@ -291,7 +291,7 @@ unsafe extern "thiscall" fn cqm9_tabela_da_nsl(this: usize) -> u32 {
         if (k as i16) >= read_i16(this + 0x3e) {
             break;
         }
-        if cqm9_da_divisao(clube, 0x9cf89c) {
+        if cqm9_da_divisao(clube, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) {
             cqm9_linha(this, k as u8, read_i16(this + 0x3e), 0, clube); // cqm9: a linha da NSL
             k = k.wrapping_add(1);
         }
@@ -333,7 +333,7 @@ unsafe fn cqm9_comparar(nome: &str, this: usize, n: i16, g: usize, limpar: bool,
             igual = igual && plano[cabem..].iter().all(|&c| read_usize(c + 0x57) == 0);
         }
         if r == 1 && cota != 0 {
-            let premio: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(0x682f70usize);
+            let premio: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
             igual = igual && *((this + 0xe1) as *const u8) == 1 && core::ptr::read_unaligned((this + 0x28) as *const i32) == premio(this, cota);
         }
     }
@@ -343,16 +343,16 @@ unsafe fn cqm9_comparar(nome: &str, this: usize, n: i16, g: usize, limpar: bool,
 
 unsafe extern "thiscall" fn comparar_cqm9_tabela_da_j1(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1840);
-    cqm9_comparar("cqm9_tabela_da_j1", this, 0x10, 0x9cf65c, true, 0x186a0, || o(this))
+    cqm9_comparar("cqm9_tabela_da_j1", this, 0x10, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, true, 0x186a0, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_cqm9_tabela_da_j2(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1841);
-    cqm9_comparar("cqm9_tabela_da_j2", this, 0xc, 0x9cf768, true, 0, || o(this))
+    cqm9_comparar("cqm9_tabela_da_j2", this, 0xc, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, true, 0, || o(this))
 }
 
 unsafe extern "thiscall" fn comparar_cqm9_tabela_da_nsl(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1842);
-    cqm9_comparar("cqm9_tabela_da_nsl", this, 0xd, 0x9cf89c, false, 0, || o(this))
+    cqm9_comparar("cqm9_tabela_da_nsl", this, 0xd, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE, false, 0, || o(this))
 }
 

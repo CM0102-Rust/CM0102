@@ -21,14 +21,14 @@ unsafe fn cqr11_sorteado(this: usize, k: usize) -> usize {
 /// push; add esp, 4 -> cdecl) e zerada e +0x45 = 1. Um erro dá a caixa da linha e segue. Depois o dia de liga (0x6847c0: push completo; push
 /// hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela repassa.
 unsafe extern "thiscall" fn cqr11_mercosul_dia(this: usize, hoje: usize, completo: u32) -> u32 {
-    let clubes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4c5850usize);
-    let primeiro: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x4c4e60usize);
-    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
-    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
-    let fase: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(0x4c51d0usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x6847c0usize);
-    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> usize = core::mem::transmute(0x549f70usize);
+    let clubes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CONMEBOLMERC_SELECT_INVITED_CLUBS);
+    let primeiro: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_CONMEBOLMERC_CREATE_FIRST_GROUP_TABLE);
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
+    let fase: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(FN_CONMEBOLMERC_CREATE_GROUP_STAGE);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
+    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let ano_de_hoje = core::ptr::read_unaligned((hoje + 2) as *const u16);
     let mut junho = [0u8; 8];
     data(junho.as_mut_ptr(), 1, 5, ano_de_hoje as u32, -1);
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn comparar_cqr11_mercosul_dia(this: usize, hoje: usize
 
 /// O dia da virada (1º de junho do ano de hoje, com a copa de outro ano): o comparador não confere o sorteio nesse dia.
 unsafe fn cqr11_virada_hoje(this: usize, hoje: usize) -> bool {
-    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> usize = core::mem::transmute(0x549f70usize);
+    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let ano_de_hoje = core::ptr::read_unaligned((hoje + 2) as *const u16);
     let mut junho = [0u8; 8];
     data(junho.as_mut_ptr(), 1, 5, ano_de_hoje as u32, -1);
@@ -105,9 +105,9 @@ unsafe fn cqr11_virada_hoje(this: usize, hoje: usize) -> bool {
 /// i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0)
 /// e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
 unsafe extern "thiscall" fn cqr11_mercosul_primeiro_grupo(this: usize) -> u32 {
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 4);
     let t = novo(0xec);
     write_u32_from_usize(this + 0xb1, t);
@@ -158,13 +158,13 @@ unsafe extern "thiscall" fn comparar_cqr11_mercosul_primeiro_grupo(this: usize) 
 /// que o construtor não lê: a cópia passa os valores limpos) em [+0xc][g]; o vetor e a tabela das rodadas liberados
 /// (0x9452ca). Sem fase: a caixa da linha 0x211 e 0. Com ela: a notícia do grupo (0x684230 na fase), +0x30 = g e 1.
 unsafe extern "thiscall" fn cqr11_mercosul_grupo(this: usize, g: i32) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
-        core::mem::transmute(0x68b100usize);
+        core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let times = alocar(((read_i16(this + 0x3e) as i32) << 2) as u32);
     if times == 0 {
         aviso_em(0x9a7e5c, 0x1fb);
@@ -263,10 +263,10 @@ type Cqo13G = (u32, u32, u32, u32);
 unsafe fn cqo13_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, limite: i8, grupos: &[Cqo13G],
     mata: &[Cql10R], a_mais: &[(usize, usize, u16)], arquivo: usize, linha_g: u32, linha_m: u32, nome_g: &'static str, nome: &'static str) -> usize {
     let f = fase as u8 as i8;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     if f < limite {
-        let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(0x68a160usize);
-        let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(0x68a1c0usize);
+        let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
+        let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
         if !liga.is_null() {
             *liga = 1;
         }
@@ -351,7 +351,7 @@ unsafe fn cqo13_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i
         a == 0 && b == 0
     };
     if b != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
     PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, f, saidas, *rodadas, r2, tabela));
@@ -419,15 +419,15 @@ unsafe extern "thiscall" fn comparar_cqo13_mercosul_tabela(this: usize, fase: u3
 /// conferir o espaço; a lista é embaralhada (0x4afb40 com +0xf2). Devolve 1.
 unsafe fn cqo13_convidados(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x14);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0x50);
     core::ptr::write_unaligned((this + 0xee) as *mut u32, l as u32);
     if l == 0 {
         aviso_em(0x9a7e5c, 0x2c6);
         return (0, 0);
     }
-    let convidado: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x4c6890usize);
-    let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x4afb40usize);
+    let convidado: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_CONMEBOLSEEDING_IS_MERCOSUR_INVITED_CLUB);
+    let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     let clubes = || (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
     let mut k = 0i16;
     let mut i = 0i32;
@@ -477,7 +477,7 @@ unsafe extern "thiscall" fn comparar_cqo13_mercosul_convidados(this: usize) -> i
         lo == 0 && lr == 0
     };
     if lr != 0 && lr != lo {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
     PLACAR.registrar(igual && a == b && lista, || format!("cqo13_mercosul_convidados({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", this, a, b, igual, lista, k));

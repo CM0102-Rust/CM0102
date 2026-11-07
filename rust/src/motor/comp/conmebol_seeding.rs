@@ -11,7 +11,7 @@ unsafe fn cqj1_entra(c: usize, fase: u8) -> bool {
     if c == 0 || read_u32(c + 0x1db) != u32::MAX {
         return false;
     }
-    *((c + 0x1db) as *mut u32) = read_u32(0x9cf63c);
+    *((c + 0x1db) as *mut u32) = read_u32(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES);
     *((c + 0x1df) as *mut u8) = fase;
     true
 }
@@ -24,24 +24,24 @@ unsafe fn cqj1_entra(c: usize, fase: u8) -> bool {
 /// campeão da Copa dos Campeões (+0x71); e sempre o campeão e o vice do Brasileirão (0x9cf9ec); cada nação completa a
 /// cota com os primeiros da tabela ainda sem vaga (0x4c6730(.., 1, 1, 0)), uma tentativa por vaga.
 unsafe extern "thiscall" fn conmebol_vagas_libertadores(this: usize, clubes: usize, conta: u32) {
-    let campeao: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
-    let enesimo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x4c6730usize);
+    let campeao: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
+    let enesimo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CONMEBOLSEEDING_FIND_NTH_UNQUALIFIED_CLUB_OF_NATION);
     let linha = |chave: usize| (read_u32(0xae23d0) as usize).wrapping_add(read_u32(chave).wrapping_mul(0x6b) as usize);
-    let h = campeao(linha(0x9cf63c), 0);
+    let h = campeao(linha(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES), 0);
     if h != 0 && read_u32(h + 0x1db) == u32::MAX {
         *((h + 0x1df) as *mut u8) = 1;
-        *((h + 0x1db) as *mut u32) = read_u32(0x9cf63c);
+        *((h + 0x1db) as *mut u32) = read_u32(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES);
     } else {
         aviso_em(0x9a7ed8, 0x114);
     }
     for k in 0..0xbusize {
         let e = this + k * 10;
         let mut n = 0u8;
-        if read_u32(e) == read_u32(0x9cf260) {
+        if read_u32(e) == read_u32(KEY_NATION_BRAZIL) {
             if *(0xae2c92 as *const u16) > 0x7d2 {
-                let mut c = campeao(linha(0x9cf9e8), 0);
+                let mut c = campeao(linha(KEY_CLUB_COMP_BRAZILIAN_CUP), 0);
                 if c == 0 || read_u32(c + 0x1db) != u32::MAX {
-                    c = campeao(linha(0x9cf9e8), 1);
+                    c = campeao(linha(KEY_CLUB_COMP_BRAZILIAN_CUP), 1);
                 }
                 if cqj1_entra(c, 2) {
                     n = 1;
@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn conmebol_vagas_libertadores(this: usize, clubes: usi
                 }
             }
             for lugar in [0u32, 1] {
-                if cqj1_entra(campeao(linha(0x9cf9ec), lugar), 2) {
+                if cqj1_entra(campeao(linha(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION), lugar), 2) {
                     n = n.wrapping_add(1);
                 }
             }
@@ -111,8 +111,8 @@ unsafe extern "thiscall" fn comparar_conmebol_vagas_libertadores(this: usize, cl
 /// O último registro da tabela nunca é examinado pela volta (se ela chega nele com a conta zerada, ele é o escolhido sem
 /// os testes). Devolve o clube se for da nação, senão 0.
 unsafe extern "thiscall" fn conmebol_enesimo_clube_da_nacao(_this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
-    let busca: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let busca: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
+    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let k = conta as u16 as i16 as i32;
     let ultimo = clubes.wrapping_add((k * 12 - 12) as usize);
     let mut chave = [0u8; 12];
@@ -210,9 +210,9 @@ unsafe extern "thiscall" fn comparar_conmebol_convidado_da_mercosul(this: usize,
 /// divisão de uma competição sem o +0x11c, a divisão e o +0x5f do clube zeram). Ordena pela nação (qsort 0x945333 com
 /// 0x905ce0). Devolve o número de clubes (só os 16 bits baixos contam).
 unsafe extern "stdcall" fn conmebol_juntar_clubes(saida: *mut usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let t = alocar((read_u32(0xae235c) as i32).wrapping_mul(12) as u32);
     *saida = t;
     if t == 0 {
@@ -226,9 +226,9 @@ unsafe extern "stdcall" fn conmebol_juntar_clubes(saida: *mut usize) -> u32 {
         loop {
             let nacao = read_u32(c + 0x53) as usize;
             if nacao != 0 && selecao(c) == 0 {
-                let mexico = read_u32(nacao) == read_u32(0x9cf3d0); // cqj2: o México entra
+                let mexico = read_u32(nacao) == read_u32(KEY_NATION_MEXICO); // cqj2: o México entra
                 let cont = if mexico { 0 } else { read_u32(nacao + 0x71) as usize };
-                if mexico || (cont != 0 && read_u32(cont) == read_u32(0x9cfa1c)) {
+                if mexico || (cont != 0 && read_u32(cont) == read_u32(KEY_CONTINENT_SOUTH_AMERICA)) {
                     if mexico {
                         crate::comparacao::ramo("cqj_2 clube mexicano");
                     }
@@ -283,7 +283,7 @@ unsafe fn cqj2_regioes_dos_clubes() -> Vec<(usize, usize)> {
 /// devolução e os registros das duas tabelas.
 unsafe extern "stdcall" fn comparar_conmebol_juntar_clubes(saida: *mut usize) -> u32 {
     let o = orig::<unsafe extern "stdcall" fn(*mut usize) -> u32>(1670);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut t2 = 0usize;
     let reg = cqj2_regioes_dos_clubes();
     let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(saida), || conmebol_juntar_clubes(&mut t2));
@@ -311,9 +311,9 @@ unsafe extern "thiscall" fn conmebol_virada_do_ano(this: usize, pular: u32) {
     }
     crate::comparacao::ramo("cqj_2 virada do ano");
     core::ptr::write_unaligned((this + 0x6f) as *mut u16, ano);
-    let juntar: unsafe extern "stdcall" fn(*mut usize) -> u32 = core::mem::transmute(0x4c6280usize);
-    let vagas: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4c6430usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let juntar: unsafe extern "stdcall" fn(*mut usize) -> u32 = core::mem::transmute(FN_COLLECT_CONMEBOL_CLUBS);
+    let vagas: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_CONMEBOLSEEDING_ASSIGN_LIBERTADORES_PLACES);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut t = 0usize;
     let n = juntar(&mut t);
     if n as u16 == 0 {

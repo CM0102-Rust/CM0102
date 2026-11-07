@@ -17,11 +17,11 @@ unsafe fn cqs4_primeiro(this: usize, k: i32) -> usize {
 /// liberar a tabela). Com ela: a tabela liberada (free 0x9452ca) e +0x30 = 10. [inferência] A final decide o campeão
 /// da Série C, em ida e volta.
 unsafe extern "thiscall" fn cqs4_final_da_serie_c(this: usize) {
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     #[allow(clippy::type_complexity)]
     let construir: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
-        core::mem::transmute(0x522e00usize);
+        core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
     let mut lista = [0usize; 2];
     lista[0] = cqs4_primeiro(this, 8); // cqs4: o campeão do grupo A
     lista[1] = cqs4_primeiro(this, 9);
@@ -58,9 +58,9 @@ unsafe extern "thiscall" fn cqs4_final_da_serie_c(this: usize) {
 /// dos 56 (+0xee) liberada (se houver) e zerada. Com caixa, a cópia devolve 0 (a original devolve o eax da caixa, que
 /// a virada do Brasil não lê); no fim, o eax do free ou o +0xee (a cópia devolve 0: ninguém lê).
 unsafe extern "thiscall" fn cqs4_virada_da_serie_c(this: usize) -> u32 {
-    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x687970usize);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     liberar_tabela(this, 0);
     let l = read_usize(this + 0xba);
@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn cqs4_virada_da_serie_c(this: usize) -> u32 {
     }
     let estatisticas = read_usize(this + 8);
     if estatisticas != 0 {
-        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
+        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
         arquivar(estatisticas, 1);
     }
     if (read_usize(this + 0x30) as i32) >= 0 {
@@ -100,26 +100,26 @@ unsafe extern "thiscall" fn cqs4_virada_da_serie_c(this: usize) -> u32 {
         aviso_em(0x98aba4, 0x202);
         return 0;
     }
-    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x42dc90usize);
+    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_BRANATTHIRD_CREATE_TABLE);
     if tabela(this) == 0 {
         aviso_em(0x98aba4, 0x209);
         return 0;
     }
-    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
     if jogos(this) == 0 {
         aviso_em(0x98aba4, 0x20f);
         return 0;
     }
-    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     if ordenar(this, 0) == 0 {
         aviso_em(0x98aba4, 0x216);
         return 0;
     }
-    let expectativas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x68aa80usize);
+    let expectativas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectativas(this);
-    let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x79cee0usize);
+    let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
     renovar(read_usize(0xb74340), read_usize(this + 4)); // cqs4: a renovação dos árbitros da Série C
-    let grupo: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x42ee80usize);
+    let grupo: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_BRANATTHIRD_CREATE_GROUP_STAGE);
     for g in 0..7 {
         grupo(this, g);
     }
@@ -148,8 +148,8 @@ fn cqs4_lugar(k: usize) -> u8 {
 /// thiscall(+8, clube, posição), ret 8; a original empurra a faixa dos quarenta num dword com o byte da faixa e lixo
 /// da pilha em cima; a 0x4a2540 só lê o byte: a cópia passa o byte limpo).
 unsafe extern "thiscall" fn cqs4_posicoes_previstas_da_serie_c(this: usize) {
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    let posicao: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let posicao: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     if read_usize(this + 8) == 0 {
         return aviso_em(0x98aba4, 0x4a2);
     }
@@ -195,8 +195,8 @@ unsafe extern "thiscall" fn comparar_cqs4_posicoes_previstas_da_serie_c(this: us
     if read_usize(this + 8) == 0 || read_usize(this + 0xee) == 0 {
         return o(this);
     }
-    let ordenar: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
+    let ordenar: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let mut v = [0usize; 0x38];
     for (k, c) in v.iter_mut().enumerate() {
         *c = read_usize(read_usize(this + 0xee) + 4 * k);
@@ -232,10 +232,10 @@ type Cqs3Fase = unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize
 /// 4) [+0xc][g] = a fase. Sem fase: a caixa da linha 0x487 e volta (sem liberar o vetor nem a tabela). Com ela: o vetor
 ///    e a tabela liberados (free 0x9452ca) e +0x30 = g (o byte com sinal).
 unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let construir: Cqs3Fase = core::mem::transmute(0x68b100usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let construir: Cqs3Fase = core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, g, &mut rodadas, &mut extra, 0);
@@ -286,12 +286,12 @@ const CQS3_SEMENTES: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5,
 ///    tabela, o ano, 7, 1, o extra, 0x14, 0, 0, 0, sementes nulas; words limpas) em [+0xc][7]. Sem fase: a caixa da
 ///    linha 0x31b e volta. Com ela: a tabela e a lista liberadas (free 0x9452ca) e +0x30 = 7.
 unsafe extern "thiscall" fn cqs3_segunda_fase_da_serie_c(this: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     #[allow(clippy::type_complexity)]
     let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
-        core::mem::transmute(0x522e00usize);
+        core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
     let lista = alocar(0x40);
     if lista == 0 {
         return aviso_em(0x98aba4, 0x2e6);
@@ -353,12 +353,12 @@ unsafe extern "thiscall" fn cqs3_segunda_fase_da_serie_c(this: usize) {
 /// sem fase: a caixa da linha 0x353 ou 0x363 e volta; com ela, a tabela liberada (free 0x9452ca). Depois do segundo,
 /// +0x30 = 9. [inferência] Os dois primeiros de cada grupo sobem à Série B; os campeões dos grupos fazem a final.
 unsafe extern "thiscall" fn cqs3_terceira_fase_da_serie_c(this: usize) {
-    let embaralhar: unsafe extern "C" fn(*mut usize, u32) = core::mem::transmute(0x4afb40usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let embaralhar: unsafe extern "C" fn(*mut usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     #[allow(clippy::type_complexity)]
     let construir: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, *const u8, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
-        core::mem::transmute(0x68b100usize);
+        core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let vagas: [u8; 4] = [2, 0, 0, 0];
     let desempate: [u8; 4] = [1, 2, 4, 0];
     let mut v = [0usize; 8];

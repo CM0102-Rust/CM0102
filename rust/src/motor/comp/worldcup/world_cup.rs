@@ -9,14 +9,14 @@
 /// As chaves das 32 nações do sorteio real de 2002 (os globais g_key_nation_*, índice na tabela de nações [0xae23a8],
 /// 0x122 bytes cada), na ordem em que a original as grava na lista: grupos A a H, quatro por grupo.
 const CQF4_SORTEIO_2002: [usize; 32] = [
-    0x9cf300, 0x9cf460, 0x9cf4f4, 0x9cf2c0, // A: França, Senegal, Uruguai, Dinamarca
-    0x9cf488, 0x9cf474, 0x9cf420, 0x9cf480, // B: Espanha, Eslovênia, Paraguai, África do Sul
-    0x9cf260, 0x9cf4dc, 0x9cf298, 0x9cf2a8, // C: Brasil, Turquia, China, Costa Rica
-    0x9cf484, 0x9cf430, 0x9cf4f8, 0x9cf434, // D: Coreia do Sul, Polônia, Estados Unidos, Portugal
-    0x9cf314, 0x9cf458, 0x9cf2dc, 0x9cf27c, // E: Alemanha, Arábia Saudita, Irlanda, Camarões
-    0x9cf218, 0x9cf400, 0x9cf2e4, 0x9cf4a8, // F: Argentina, Nigéria, Inglaterra, Suécia
-    0x9cf360, 0x9cf2d4, 0x9cf2ac, 0x9cf3d0, // G: Itália, Equador, Croácia, México
-    0x9cf36c, 0x9cf244, 0x9cf448, 0x9cf4d8, // H: Japão, Bélgica, Rússia, Tunísia
+    KEY_NATION_FRANCE, KEY_NATION_SENEGAL, KEY_NATION_URUGUAY, KEY_NATION_DENMARK, // A: França, Senegal, Uruguai, Dinamarca
+    KEY_NATION_SPAIN, KEY_NATION_SLOVENIA, KEY_NATION_PARAGUAY, KEY_NATION_SOUTH_AFRICA, // B: Espanha, Eslovênia, Paraguai, África do Sul
+    KEY_NATION_BRAZIL, KEY_NATION_TURKEY, KEY_NATION_CHINA, KEY_NATION_COSTA_RICA, // C: Brasil, Turquia, China, Costa Rica
+    KEY_NATION_SOUTH_KOREA, KEY_NATION_POLAND, KEY_NATION_UNITED_STATES, KEY_NATION_PORTUGAL, // D: Coreia do Sul, Polônia, Estados Unidos, Portugal
+    KEY_NATION_GERMANY, KEY_NATION_SAUDI_ARABIA, KEY_NATION_REPUBLIC_OF_IRELAND, KEY_NATION_CAMEROON, // E: Alemanha, Arábia Saudita, Irlanda, Camarões
+    KEY_NATION_ARGENTINA, KEY_NATION_NIGERIA, KEY_NATION_ENGLAND, KEY_NATION_SWEDEN, // F: Argentina, Nigéria, Inglaterra, Suécia
+    KEY_NATION_ITALY, KEY_NATION_ECUADOR, KEY_NATION_CROATIA, KEY_NATION_MEXICO, // G: Itália, Equador, Croácia, México
+    KEY_NATION_JAPAN, KEY_NATION_BELGIUM, KEY_NATION_RUSSIA, KEY_NATION_TUNISIA, // H: Japão, Bélgica, Rússia, Tunísia
 ];
 
 /// { 0x92e940 } (thiscall, ret 0, world_cup.cpp, sem SEH): `WorldCup::draw_groups()`, do sorteio feito no dia
@@ -36,9 +36,9 @@ const CQF4_SORTEIO_2002: [usize; 32] = [
 ///    2, a Coreia e o Japão (sedes) 1; +0x36 (quantas) = 32.
 /// Devolve a lista.
 unsafe extern "thiscall" fn mundial_sortear_grupos(this: usize) -> usize {
-    let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
+    let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
+    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     let mut conta = [0i8; 8];
     let lista = zerada(0x20, 5);
     if lista == 0 {
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn mundial_sortear_grupos(this: usize) -> usize {
 /// listas alocadas têm de ser iguais byte a byte (a da cópia é liberada, 0x9452ca).
 unsafe extern "thiscall" fn comparar_mundial_sortear_grupos(this: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(1603);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend_from_slice(&[(this + 0xee, 0xa0), (this + 0x36, 2), (0xb67a34, 4)]);
     if read_i16(this + 0x40) == 0x7d2 && read_u32_as_usize(this + 0x14) != 0 {
@@ -143,13 +143,13 @@ unsafe extern "thiscall" fn comparar_mundial_sortear_grupos(this: usize) -> usiz
 /// zerados no órgão da competição (0x7e9180 push 0; ecx = [[0xae28f0] + 4 × (char)+0x50] -> thiscall, ret 4).
 /// Num erro a lista não é liberada (como a original).
 unsafe extern "thiscall" fn mundial_sorteio_dos_grupos(this: usize) {
-    let sortear: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x92e940usize);
-    let grupo_um: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x92d0f0usize);
-    let criar: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
-    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
-    let fase: unsafe extern "thiscall" fn(usize, i32, usize) -> u32 = core::mem::transmute(0x92d540usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let cartoes: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x7e9180usize);
+    let sortear: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_WORLDCUP_DRAW_GROUPS);
+    let grupo_um: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_WORLDCUP_CREATE_GROUP_TABLE);
+    let criar: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
+    let fase: unsafe extern "thiscall" fn(usize, i32, usize) -> u32 = core::mem::transmute(FN_WORLDCUP_CREATE_GROUP_STAGE);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let cartoes: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_RULINGBODY_RESET_BOOKINGS_FOR_CLUB);
     let lista = sortear(this);
     if grupo_um(this, lista) == 0 {
         aviso_em(0xad5888, 0x46d);
@@ -192,9 +192,9 @@ unsafe extern "thiscall" fn comparar_mundial_sorteio_dos_grupos(this: usize) {
 /// = 0), o sorteio (0x92e7f0 mov ecx -> thiscall, ret 0). Depois o dia de liga (0x6847c0 push completo; push hoje; mov
 /// ecx -> thiscall, ret 8), cuja devolução (eax) ela repassa. A data: +0 o dia do ano, +2 o ano (sem sinal).
 unsafe extern "thiscall" fn mundial_dia(this: usize, hoje: usize, completo: u32) -> u32 {
-    let semear: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x92f230usize);
-    let sortear: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x92e7f0usize);
-    let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x6847c0usize);
+    let semear: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_WORLDCUP_SEED_TEAMS);
+    let sortear: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_WORLDCUP_RUN_GROUP_DRAW);
+    let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     let ano = core::ptr::read_unaligned((hoje + 2) as *const u16) as i32;
     let dia = core::ptr::read_unaligned(hoje as *const u16);
     if read_i16(this + 0x18e) as u16 == dia && read_i16(this + 0x190) as i32 + read_i16(this + 0x40) as i32 == ano && completo != 0 {
@@ -242,9 +242,9 @@ unsafe fn cqf5_clube(lista: usize, i: usize) -> usize {
 /// limpo), até 4 linhas ou o fim das 32 entradas; depois a notícia dos grupos (0x684230 mov ecx, this -> thiscall).
 /// Devolve 1.
 unsafe extern "thiscall" fn mundial_tabela_do_grupo_um(this: usize, lista: usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let linha_da_tabela: unsafe extern "thiscall" fn(usize, u32, usize, u32, usize) = core::mem::transmute(0x687430usize);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let linha_da_tabela: unsafe extern "thiscall" fn(usize, u32, usize, u32, usize) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     write_u16(this + 0x3e, 4);
     let t = alocar(0xec);
     write_u32_from_usize(this + 0xb1, t);
@@ -302,13 +302,13 @@ unsafe extern "thiscall" fn comparar_mundial_tabela_do_grupo_um(this: usize, lis
 /// rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x380 e 0. Com ela: +0x30 = g e a notícia do grupo
 /// (0x684230 na fase). Devolve 1.
 unsafe extern "thiscall" fn mundial_fase_do_grupo(this: usize, g: i32, lista: usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
-        core::mem::transmute(0x68b100usize);
+        core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let times = alocar(((read_i16(this + 0x3e) as i32) << 2) as u32);
     if times == 0 {
         aviso_em(0xad5888, 0x366);
@@ -409,11 +409,11 @@ unsafe extern "thiscall" fn comparar_mundial_fase_do_grupo(this: usize, g: i32, 
 /// da nação de cada clube (+0x53) vira a Copa (0x775220 push [+4]; push nação; mov ecx, [0xb74318] -> thiscall, ret 8)
 /// e o vetor é liberado (0x9452ca).
 unsafe extern "thiscall" fn mundial_posicoes_previstas(this: usize) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    let posicao: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
-    let competicao: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x775220usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let posicao: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
+    let competicao: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_SET_CURRENT_COMPETITION);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     if read_u32_as_usize(this + 8) == 0 {
         aviso_em(0xad5888, 0x671);
         return;
@@ -454,8 +454,8 @@ unsafe extern "thiscall" fn comparar_mundial_posicoes_previstas(this: usize) {
     if read_u32_as_usize(this + 8) == 0 || read_i16(this + 0x36) < 0x20 || read_u32_as_usize(this + 0x14) == 0 {
         return o(this);
     }
-    let ordenar: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
+    let ordenar: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let n = read_i16(this + 0x36) as usize;
     let mut v: Vec<usize> = (0..n).map(|i| read_u32_as_usize(read_u32_as_usize(this + 0x14) + i * 6)).collect();
     ordenar(v.as_mut_ptr(), n as u32, 4, 0x4b07d0);
@@ -501,9 +501,9 @@ unsafe extern "thiscall" fn mundial_rodadas_da_fase(this: usize, fase: u32, roda
     if f >= 7 {
         return orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1609)(this, fase, rodadas, id, liga);
     }
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(0x68a160usize);
-    let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(0x68a1c0usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
+    let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     if !liga.is_null() {
         *liga = 1;
     }
@@ -556,7 +556,7 @@ unsafe extern "thiscall" fn comparar_mundial_rodadas_da_fase(this: usize, fase: 
     if fase as u8 as i8 >= 7 {
         return o(this, fase, rodadas, id, liga);
     }
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut i2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(
@@ -620,10 +620,10 @@ unsafe extern "thiscall" fn mundial_cabecas_de_chave(this: usize) {
         crate::comparacao::ramo("cqf_6 sem cabeças de chave em 2002");
         return;
     }
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    let sedes: unsafe extern "thiscall" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u8 = core::mem::transmute(0x5fa730usize);
-    let campeao: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
+    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let sedes: unsafe extern "thiscall" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u8 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
+    let campeao: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     write_u8(this + 0x4b, 0);
     if read_i16(this + 0x36) < 0x20 {
         aviso_em(0xad5888, 0x59e);
@@ -658,10 +658,10 @@ unsafe extern "thiscall" fn mundial_cabecas_de_chave(this: usize) {
     // ponytail: as duas saídas começam em −1 (sem sede); a original as deixa com o resto da pilha quando a 0x5fa730 não
     // acha a Copa (ela só as grava achando)
     let (mut a, mut b) = (-1i32, -1i32);
-    sedes(read_u32_as_usize(0xb5e134), read_u32_as_usize(0x9cf79c), read_i16(this + 0x40) as u16 as u32, &mut a, &mut b, 1);
+    sedes(read_u32_as_usize(0xb5e134), read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP), read_i16(this + 0x40) as u16 as u32, &mut a, &mut b, 1);
     let sede1 = if a != -1 { principal(read_u32_as_usize(0xae23a8).wrapping_add(a.wrapping_mul(0x122) as usize)) } else { 0 };
     let sede2 = if b != -1 { principal(read_u32_as_usize(0xae23a8).wrapping_add(b.wrapping_mul(0x122) as usize)) } else { 0 };
-    let detentor = campeao(read_u32_as_usize(0xae23d0).wrapping_add((read_u32_as_usize(0x9cf79c) as i32).wrapping_mul(0x6b) as usize), 0);
+    let detentor = campeao(read_u32_as_usize(0xae23d0).wrapping_add((read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) as i32).wrapping_mul(0x6b) as usize), 0);
     let mut fixos = 0i8;
     for i in 0..32usize {
         for (vaga, alvo) in [(0usize, detentor), (1, sede1), (2, sede2)] {
@@ -705,11 +705,11 @@ unsafe extern "thiscall" fn mundial_cabecas_de_chave(this: usize) {
             continue;
         }
         let c = read_u32_as_usize(cont);
-        let (p, s) = if c == read_u32_as_usize(0x9cfa10) {
+        let (p, s) = if c == read_u32_as_usize(KEY_CONTINENT_EUROPE) {
             (1, 0xa)
-        } else if c == read_u32_as_usize(0x9cfa18) || c == read_u32_as_usize(0x9cfa0c) || c == read_u32_as_usize(0x9cfa1c) {
+        } else if c == read_u32_as_usize(KEY_CONTINENT_OCEANIA) || c == read_u32_as_usize(KEY_CONTINENT_ASIA) || c == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA) {
             (2, 0xb)
-        } else if c == read_u32_as_usize(0x9cfa08) || c == read_u32_as_usize(0x9cfa14) {
+        } else if c == read_u32_as_usize(KEY_CONTINENT_AFRICA) || c == read_u32_as_usize(KEY_CONTINENT_NORTH_AMERICA) {
             (3, 0xc)
         } else {
             continue;
