@@ -19,7 +19,12 @@ const CQF4_SORTEIO_2002: [usize; 32] = [
     KEY_NATION_JAPAN, KEY_NATION_BELGIUM, KEY_NATION_RUSSIA, KEY_NATION_TUNISIA, // H: Japão, Bélgica, Rússia, Tunísia
 ];
 
-/// { 0x92e940 } (thiscall, ret 0, world_cup.cpp, sem SEH): `WorldCup::draw_groups()`, do sorteio feito no dia
+/// the draw list: the seeds in groups 1..8 (drawn among the slots still standing: the loop that hangs the game on
+/// 27/12/2001 when none is), the other 24 in drawn groups with a limit; in 2002, the real draw and the nation table
+/// with the holder and the hosts
+/// Original: `WorldCup::draw_groups` (0x92e940, world_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x92e940 } (thiscall, ret 0, world_cup.cpp, sem SEH): `WorldCup::draw_groups()`, do sorteio feito no dia
 /// (0x92e7f0). A lista do sorteio: 32 entradas de 5 bytes (+0 o id do clube da seleção, +4 o grupo 1..8), zerada
 /// (0x945501(0x20, 5): push 5; push 0x20; add esp, 8 -> cdecl; sem memória, a caixa da linha 0x4b5 e devolve 0).
 /// 1) Os cabeças de chave (8 vagas de 5 bytes em +0xee: +0 o id, +4 o pote; 0xff = já tirada): a vaga 0 vai para o
@@ -134,7 +139,11 @@ unsafe extern "thiscall" fn comparar_mundial_sortear_grupos(this: usize) -> usiz
     a
 }
 
-/// { 0x92e7f0 } (thiscall, ret 0, world_cup.cpp, sem SEH): `WorldCup::run_group_draw()`, do dia do sorteio (0x92f1a0).
+/// the draw day: the list, group 1 in the World Cup itself with its fixtures and sorted table, the group 2..8 stages,
+/// the predicted positions and the bookings reset
+/// Original: `WorldCup::run_group_draw` (0x92e7f0, world_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x92e7f0 } (thiscall, ret 0, world_cup.cpp, sem SEH): `WorldCup::run_group_draw()`, do dia do sorteio (0x92f1a0).
 /// A lista do sorteio (0x92e940, mov ecx, this -> thiscall); o grupo 1 na tabela da própria Copa (0x92d0f0 push lista;
 /// mov ecx -> thiscall, ret 4; 0: a caixa da linha 0x46d e fim); os jogos dele (0x6835c0 mov ecx -> thiscall, ret 0;
 /// 0: a linha 0x473); a tabela ordenada (0x6827d0 push 0; mov ecx -> thiscall, ret 4; 0: a linha 0x47a). Com tudo
@@ -185,7 +194,10 @@ unsafe extern "thiscall" fn comparar_mundial_sorteio_dos_grupos(this: usize) {
     }
 }
 
-/// { 0x92f1a0 } (thiscall, ret 8, world_cup.cpp, método +0x14 da Copa do Mundo): `WorldCup::update_for_date(hoje,
+/// the World Cup day: the seeding on the seeding date, the draw on its date (no table yet) and the league day
+/// Original: `WorldCup::update_for_date` (0x92f1a0, world_cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x92f1a0 } (thiscall, ret 8, world_cup.cpp, método +0x14 da Copa do Mundo): `WorldCup::update_for_date(hoje,
 /// completo)`, o dia da Copa pelo dia das competições. Na data das cabeças de chave (+0x18e o dia do ano, +0x190 o ano
 /// relativo a +0x40: 15/12 do ano anterior, gravados pela 0x92d200) e com `completo`, semeia (0x92f230 mov ecx ->
 /// thiscall, ret 0); na data do sorteio (+0xb6, +0xb8: 27/12 do ano anterior), com `completo` e sem tabela ainda (+0xb1
@@ -234,7 +246,11 @@ unsafe fn cqf5_clube(lista: usize, i: usize) -> usize {
     read_u32_as_usize(0xae23b4).wrapping_add(read_u32_as_usize(lista + i * 5).wrapping_mul(0x245))
 }
 
-/// { 0x92d0f0 } (thiscall, ret 4, world_cup.cpp, sem SEH): `WorldCup::create_group_table(lista)`, do sorteio
+/// the World Cup itself becomes group 1: four teams, the allocated table, the group 1 teams of the list in the rows and
+/// the group draw news
+/// Original: `WorldCup::create_group_table` (0x92d0f0, world_cup.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x92d0f0 } (thiscall, ret 4, world_cup.cpp, sem SEH): `WorldCup::create_group_table(lista)`, do sorteio
 /// (0x92e7f0). A própria Copa vira o grupo 1: +0x3e (times) = 4, a tabela [+0xb1] alocada com 0xec bytes (0x944e46 push;
 /// add esp -> cdecl; sem memória, a caixa da linha 0x2b1 e devolve 0); as entradas da lista do grupo 1 (+4 = 1), na
 /// ordem, entram nas linhas 0..3 (0x687430 push 0; push 0; push clube; push linha; mov ecx, this -> thiscall, ret 0x10;
@@ -290,7 +306,11 @@ unsafe extern "thiscall" fn comparar_mundial_tabela_do_grupo_um(this: usize, lis
     r
 }
 
-/// { 0x92d540 } (thiscall, ret 8, world_cup.cpp, quadro SEH só para o new: sem destrutor no caminho normal):
+/// the stage of one of groups 2 to 8: its teams, the round schedule, the stage constructor, the current stage and the
+/// group news
+/// Original: `WorldCup::create_group_stage` (0x92d540, world_cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x92d540 } (thiscall, ret 8, world_cup.cpp, quadro SEH só para o new: sem destrutor no caminho normal):
 /// `WorldCup::create_group_stage(g, lista)`, do sorteio (0x92e7f0, g de 0 a 6: os grupos 2 a 8). Os times do grupo g+2
 /// (até 4, na ordem da lista) num vetor de +0x3e ponteiros (0x944e46; sem memória, a caixa da linha 0x366 e 0); a tabela
 /// das rodadas pelo método +0x3c da Copa (push 0; push &id; push &rodadas; push g; mov ecx -> thiscall, ret 0x10: a
@@ -400,7 +420,11 @@ unsafe extern "thiscall" fn comparar_mundial_fase_do_grupo(this: usize, g: i32, 
     r
 }
 
-/// { 0x92f680 } (thiscall, ret 0, world_cup.cpp, método +0x5c da Copa do Mundo): `WorldCup::set_predicted_positions()`,
+/// the 32 nations sorted by reputation, each one's predicted position (1, 2, 3, 4, 5, 9, 17, 25 by the stage bands) and
+/// the World Cup as the nation's current competition
+/// Original: `WorldCup::set_predicted_positions` (0x92f680, world_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x92f680 } (thiscall, ret 0, world_cup.cpp, método +0x5c da Copa do Mundo): `WorldCup::set_predicted_positions()`,
 /// do sorteio (0x92e7f0). Sem estatística (+8): a caixa da linha 0x671 e volta. Menos de 32 nações (+0x36): a caixa da
 /// linha 0x678 e +0x36 = 32. Os clubes da tabela das nações ([+0x14], 6 bytes) num vetor (0x944e46; sem memória, a
 /// caixa da linha 0x680 e volta), ordenado pela reputação (qsort 0x945333 com 0x4b07d0: push; add esp, 0x10 -> cdecl),
@@ -489,7 +513,11 @@ const CQF6_JOGOS: [[(i32, i32, i32, i32, i32, u32); 6]; 8] = [
     [(0, 0, 6, 1, 3, 0x800), (0, 1, 6, 2, 3, 0x200), (1, 0, 5, 1, 3, 0x400), (1, 1, 6, 1, 3, 0x80), (2, 0, 4, 1, 3, 0x1000), (2, 1, 4, 1, 3, 0x100)],
 ];
 
-/// { 0x92c290 } (thiscall, ret 0x10, world_cup.cpp, método +0x3c da Copa do Mundo): `WorldCup::create_schedule(fase,
+/// the three-round schedule of a group stage (12, 19 and 24 June, moved to the weekday) with the two fixtures of each
+/// round; the knockout stays with the original
+/// Original: `WorldCup::create_schedule` (0x92c290, world_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x92c290 } (thiscall, ret 0x10, world_cup.cpp, método +0x3c da Copa do Mundo): `WorldCup::create_schedule(fase,
 /// &rodadas, &id, &é_liga)`, da criação das regras (0x92d200, fase −1) e das fases dos grupos (0x92d540, 0..6). Nas
 /// fases de grupos (char < 7): é_liga (se pedido) = 1, rodadas = 3, id = 0x420 + fase; a tabela de 3 rodadas de 0x41
 /// bytes (0x944e46(0xc3); sem memória, a caixa da linha 0xcc e devolve 0), as datas (0x68a160: 12, 19 e 24 de junho
@@ -573,7 +601,10 @@ unsafe extern "thiscall" fn comparar_mundial_rodadas_da_fase(this: usize, fase: 
     a
 }
 
-/// { 0x92e740 } (thiscall, ret 4, world_cup.cpp, sem SEH): `WorldCup::add_qualified_team(clube)`, das eliminatórias
+/// the qualified nation enters the World Cup nation table (status 6), or the box when the list is full
+/// Original: `WorldCup::add_qualified_team` (0x92e740, world_cup.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x92e740 } (thiscall, ret 4, world_cup.cpp, sem SEH): `WorldCup::add_qualified_team(clube)`, das eliminatórias
 /// (0x90f4f0, 0x911e10, 0x91538e, 0x9184c0, 0x91e200, 0x920500): com a lista das nações (+0x36) abaixo do máximo
 /// (+0x38), a vaga +0x36 da tabela [+0x14] (6 bytes) recebe a situação 6 e o clube, e +0x36 sobe; cheia, a caixa da
 /// linha 0x456.
@@ -602,7 +633,10 @@ unsafe extern "thiscall" fn comparar_mundial_nacao_classificada(this: usize, clu
     PLACAR.registrar(igual, || format!("mundial_nacao_classificada: {:x?} x {:x?}", mo, mr));
 }
 
-/// { 0x92f230 } (thiscall, ret 0, world_cup.cpp, sem SEH): `WorldCup::seed_teams()`, do dia da Copa (0x92f1a0, na
+/// the seeds (holder, hosts, reputation) and the pots by continent; does nothing for the 2002 World Cup
+/// Original: `WorldCup::seed_teams` (0x92f230, world_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x92f230 } (thiscall, ret 0, world_cup.cpp, sem SEH): `WorldCup::seed_teams()`, do dia da Copa (0x92f1a0, na
 /// data das cabeças de chave). Na Copa de 2002 (+0x40 = 2002) volta sem fazer nada: as vagas do sorteio dela vêm do
 /// banco de dados, e é por isso que uma Copa de 2002 criada por outro caminho trava o sorteio (o laço da 0x92e940, cqf_4).
 /// Nas outras: +0x4b = 0; com menos de 32 nações (+0x36), a caixa da linha 0x59e e completa a lista com a seleção

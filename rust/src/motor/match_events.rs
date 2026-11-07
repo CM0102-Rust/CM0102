@@ -5,7 +5,12 @@ fn arquivos_de_eventos(humano: bool) -> (usize, usize) {
     if humano { (0xa15a8c, 0xa15a78) } else { (0xa15a60, 0xa15a48) }
 }
 
-/// { 0x6d98b0 } (thiscall, ret 8, match_events.cpp): grava os +6 eventos (0xe bytes cada, em +0x720)
+/// records the events (+0x720, 0xe bytes each) in one of the two "events1/2.tmp" files (human or computer) in CM3_TEMP;
+/// header version 1, number, count; with both full (2500), recreates the oldest. In `desc`: position, count, number,
+/// human
+/// Original: `record_events` (0x6d98b0, match_events.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x6d98b0 } (thiscall, ret 8, match_events.cpp): grava os +6 eventos (0xe bytes cada, em +0x720)
 /// do registro `e` num dos dois arquivos "events1/2.tmp" (humano ou computador). Cabecalho: versao 1
 /// (senao erro 0xb5c/0xb7b), numero, quantos. Usa o primeiro com menos de 2500; cheios os dois,
 /// recria o mais antigo com o numero seguinte de [0xb6b7c0]+0x18 (sem abrir, erro 0xba4). Em `desc`:
@@ -81,7 +86,10 @@ unsafe extern "thiscall" fn gravar_eventos(e: usize, desc: *mut u32, humano: u8)
     (r != 0) as u8
 }
 
-/// { 0x6d9c40 } (thiscall, ret 4, match_events.cpp): le de volta os eventos descritos em `desc`
+/// reads back the events described in `desc` from the file with the right number
+/// Original: `read_events` (0x6d9c40, match_events.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x6d9c40 } (thiscall, ret 4, match_events.cpp): le de volta os eventos descritos em `desc`
 /// (posicao, quantos, numero, humano) para +0x720 do registro `e` (+6 = quantos): procura o arquivo
 /// com o numero (versao 1, senao erro 0xbf6/0xc11, com o arquivo aberto como na original). Devolve
 /// se leu.
@@ -124,7 +132,11 @@ unsafe extern "thiscall" fn ler_eventos(e: usize, desc: *const u32) -> u8 {
     0
 }
 
-/// { 0x6b55c0 } (thiscall, ret 4, match_day.cpp): um passo da partida do humano `p` em rede, pelo
+/// one step of the human's match on a network, by the clock and the humans' scoreboard (everyone sees each state;
+/// sounds, events, engine step, end, half time, goals, minute); records it (0x729ff0) and picks the day's human match
+/// Original: `network_step` (0x6b55c0, match_day.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x6b55c0 } (thiscall, ret 4, match_day.cpp): um passo da partida do humano `p` em rede, pelo
 /// relogio (0x90c510) e pelo placar dos humanos (+0x5b: +0 estado, +1 evento, +0x85 quem ja viu,
 /// +0x105 humanos, +0x107 vistos, +0x108 pausa, +0x109 espera, +0x10d hora, +0x111 pode andar,
 /// +0x115 lance). Sem `p`, anda a atual (0x6b5ce0) e comeca a proxima (0x6b5a70). Espera todos verem
@@ -310,7 +322,13 @@ unsafe fn erro_em(arquivo: usize, linha: u32) -> ! {
     sair(-1)
 }
 
-/// { 0x6d9e50 } (match_events.cpp, ~5,2 KB): le o `events_<idioma>.cfg` (CM3_DATA; sem ele, o
+/// reads the `events_<language>.cfg` (or `events_eng.cfg`) into the table of the 677 event codes at [0xb68788] (7
+/// option bytes, the 0x110-byte sounds with weight, type, name and the two texts `G`/`R`); checks `<X` tokens, events
+/// without text and, with `-verifysounds`, the sound files; at the end converts the weights and gives the default sound
+/// to those without one
+/// Original: `read_events_cfg` (0x6d9e50, match_events.cpp (~5.2 KB), cdecl).
+///
+/// [pt] { 0x6d9e50 } (match_events.cpp, ~5,2 KB): le o `events_<idioma>.cfg` (CM3_DATA; sem ele, o
 /// `events_eng.cfg`, e sem este o jogo para, erro 0xcc4) para a tabela dos 677 codigos de evento em
 /// [0xb68788] (0x12 bytes: 7 bytes de opcoes, +8 os sons de 0x110 bytes, +0xc quantos, +0xe o peso).
 /// Com outro idioma desde a ultima leitura, 0x6d5b50 limpa antes; ja lida ([0xb6b723]), nada.
@@ -592,7 +610,12 @@ unsafe extern "C" fn comparar_ler_eventos_cfg() {
 
 // ---------- centesima quinquagesima sexta leva: o texto dos eventos e o comeco da partida assistida (0x6d8d10, 0x6b5260) ----------
 
-/// { 0x6d8d10 } (stdcall, ret 0x10, match_events.cpp): o texto do evento `ev` (+0 codigo, +2 qual
+/// the event sound's `R` text with the tokens replaced (`<P1>` player, `<T1>`/`<T2>` club, `<C>` competition, `<F>`
+/// stage, `<D>`/`<N>` number, `<rf>`/`<Rf>` referee), `{...}` prefix and suffix (0x6701f0) and upper case; writes to
+/// [0xb67ea0]
+/// Original: `event_text` (0x6d8d10, match_events.cpp, stdcall, ret 0x10).
+///
+/// [pt] { 0x6d8d10 } (stdcall, ret 0x10, match_events.cpp): o texto do evento `ev` (+0 codigo, +2 qual
 /// som, +5/+6 e +7/+8 os dois jogadores (lado, indice), +9 um numero) da partida `ctx` (+0/+4 os
 /// clubes, +0x40 o arbitro), com `comp` a competicao (-1 sem) e `variante` o trecho entre `|` (0 o
 /// primeiro). Le o texto `R` (+0x10c) do som escolhido (no maximo o ultimo) e troca as marcas:
@@ -869,7 +892,11 @@ unsafe extern "stdcall" fn texto_do_evento(ev: usize, ctx: usize, comp: i32, var
     BUF
 }
 
-/// { 0x6b5260 } (thiscall, ret 4, match_day.cpp): o humano da vez ([0xb77c7a]) confirma a partida
+/// each human confirms the network match; with all of them, creates the engine and prepares it for watching, or plays
+/// it to the end and records it
+/// Original: `confirm_network_match` (0x6b5260, match_day.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x6b5260 } (thiscall, ret 4, match_day.cpp): o humano da vez ([0xb77c7a]) confirma a partida
 /// `p` em rede (placar dos humanos +0x5b: +0x45 quem confirmou, +0x105 humanos, +0x106 confirmados).
 /// Com todos: cria o motor (0x6b7e50) e o prepara para ver (0x6b7f20 com o ultimo 1). Se ele nao
 /// for de ver (devolve 0), joga ate o fim (contando em [0xb67a50]+0x25), cria o resumo, registra
@@ -978,7 +1005,12 @@ unsafe extern "thiscall" fn comparar_confirmar_partida_em_rede(dia: usize, p: us
 
 // ---------- centesima quinquagesima setima leva: a narracao no painel (0x6d7b00) ----------
 
-/// { 0x6d7b00 } (thiscall, ret 0x20, match_events.cpp, ~4,4 KB): o narrador `nar` escreve o evento `ev`
+/// restores the crowd sound, builds the event's `G` text (like 0x6d8d10) into a line with the club colours (`<O>` the
+/// other's, `<Y>`/`<R>` the default ones), wraps or cuts with "..." by the width (0x5e5ad0, 0x90cb20), draws on the
+/// panel (0x801040…0x800580), plays the event sound (0x8025e0) and marks the time and duration (+0x2d6c, +0x2dac)
+/// Original: `commentate_on_panel` (0x6d7b00, match_events.cpp (~4.4 KB), thiscall, ret 0x20).
+///
+/// [pt] { 0x6d7b00 } (thiscall, ret 0x20, match_events.cpp, ~4,4 KB): o narrador `nar` escreve o evento `ev`
 /// da partida `ctx` no `painel` (0xb74450) e toca o som dele. Antes, o ruido da torcida do humano da
 /// vez ([0xb77c7a]; canal +0x20, "fxloop2.wav") e reposto se parou. Com o codigo valido e a opcao 1
 /// zerada, monta o texto `G` (+0x108) do som escolhido (o trecho +0xd entre `|`) como a 0x6d8d10, mas
@@ -1425,7 +1457,10 @@ unsafe fn avancar_leitura(t: usize) -> bool {
     desligou
 }
 
-/// { 0x6d78b0 } (thiscall, ret 4, match_events.cpp): o próximo evento da narração a mostrar (0 com a
+/// the next commentary event to show, part by part of the text (split by |), advancing the queue reading
+/// Original: `next_event` (0x6d78b0, match_events.cpp, thiscall).
+///
+/// [pt] { 0x6d78b0 } (thiscall, ret 4, match_events.cpp): o próximo evento da narração a mostrar (0 com a
 /// fila desligada, +5): pula as vagas vazias; no texto do evento (tabela [0xb68790 + 0x12 × (evento
 /// − 8000)], registro +2 de 0x110 bytes, +0x108) anda até a próxima parte separada por `|` (a parte
 /// atual em +0xd; o bit 0x8000 marca que há mais) e, acabado o texto, avança a leitura. Em `saida`,
@@ -1488,7 +1523,11 @@ unsafe extern "thiscall" fn proximo_evento(t: usize, saida: *mut usize) -> usize
     p
 }
 
-/// { 0x6db2d0 } (cdecl, match_events.cpp): escreve em `buf` (`tam` bytes) o nome do jogador `jogador`
+/// the player name in the commentary: the short form, or the long one when another player of either club has the same
+/// short name
+/// Original: `commentary_player_name` (0x6db2d0, match_events.cpp, cdecl).
+///
+/// [pt] { 0x6db2d0 } (cdecl, match_events.cpp): escreve em `buf` (`tam` bytes) o nome do jogador `jogador`
 /// do lado `lado` da partida `pt` (registro de 0x49 bytes em +0x190: id e os três nomes +0x198..+0x1a0,
 /// lados de 0x625 bytes) pela 0x53e140: com `curto` e sorteio(5) = 0 a forma 1; senão a forma 5, e se
 /// algum dos 100 jogadores de um dos dois clubes (+0, +4; lista da 0x541f90) com outro id ou outro
@@ -1529,7 +1568,10 @@ unsafe extern "C" fn nome_do_jogador_na_narracao(pt: usize, jogador: i8, lado: i
     }
 }
 
-/// { 0x6e86d0 } (cdecl, match_man.cpp): a habilidade do jogador `p` (2 = atual, senão potencial) como
+/// a player's current or potential ability as an observer sees it (reputation, noise and the observer's knowledge)
+/// Original: `perceived_ability` (0x6e86d0, match_man.cpp, cdecl).
+///
+/// [pt] { 0x6e86d0 } (cdecl, match_man.cpp): a habilidade do jogador `p` (2 = atual, senão potencial) como
 /// o observador `o` (0 = o técnico do clube `c`, +0xcf) a vê: a reputação `rep` (negativa: pela
 /// 0x5407e0) / 50 mistura com a habilidade verdadeira (ficha +0x61: +5 atual, +7 potencial) e um
 /// ruído pseudoaleatório (id do jogador + [0xdd7120] + id do observador) que encolhe com o
@@ -1627,7 +1669,11 @@ enum Rotulo {
     Copiar,
 }
 
-/// { 0x6d60b0 } (thiscall, ret 8, match_events.cpp): combina o evento novo `e` (14 bytes: palavra do
+/// combines the new commentary event with the last queued one (returns the combined event and copies the previous
+/// player, side and value)
+/// Original: `combine_with_previous` (0x6d60b0, match_events.cpp, thiscall).
+///
+/// [pt] { 0x6d60b0 } (thiscall, ret 8, match_events.cpp): combina o evento novo `e` (14 bytes: palavra do
 /// evento; +5, +6 jogador e lado; +7, +8 o outro; +9 inteiro) com o último da fila (posição +8 − 1
 /// no anel de 12, registros de 14 bytes em +0x30): devolve o evento combinado (negativo = troca o
 /// anterior; 0 = sem combinação) e, nas combinações, copia o jogador, o lado, o outro e o inteiro do
@@ -1958,7 +2004,10 @@ unsafe extern "thiscall" fn combinar_com_o_anterior(t: usize, e: usize, m: usize
     }
 }
 
-/// { 0x6d4b70 } (thiscall, ret 0xc, match_eng.cpp): o comentário de contexto `evento` (0x21a3..=0x21af:
+/// decides whether a context commentary (league race, club news) may play now
+/// Original: `context_commentary` (0x6d4b70, match_eng.cpp, thiscall).
+///
+/// [pt] { 0x6d4b70 } (thiscall, ret 0xc, match_eng.cpp): o comentário de contexto `evento` (0x21a3..=0x21af:
 /// a corrida da liga, as notícias recentes do clube) pode tocar agora para o `lado`? Fora da faixa
 /// 8000..=0x21e4, já tocado (tabela de +0x21e por lado) ou sem competição (+0x4792 → +0x14), não. Pesa
 /// o placar agregado (0x6ce310), a linha do clube na tabela da liga (0x4a4850: +0x19/+0x41 e
@@ -2239,7 +2288,10 @@ unsafe fn sonda_do_comentario(m: usize, o: unsafe extern "thiscall" fn(usize, u3
     estado.escrever();
 }
 
-/// { 0x6eada0 } (thiscall, match_pl.cpp): o construtor do jogador da partida (0x1bc bytes): zera os
+/// the match player constructor (clears the fields, with initial values for some)
+/// Original: `construct_match_player` (0x6eada0, match_pl.cpp, thiscall).
+///
+/// [pt] { 0x6eada0 } (thiscall, match_pl.cpp): o construtor do jogador da partida (0x1bc bytes): zera os
 /// campos, com −1 em +0, +0x28, +0x2b e +0x5d/+0x61/+0x65, 0xfb em +0x19, 6 em +0x1b e 0x17d4 em +0x35.
 /// Devolve `this`.
 unsafe extern "thiscall" fn construir_jogador_da_partida(j: usize) -> usize {
@@ -2279,7 +2331,11 @@ unsafe extern "thiscall" fn comparar_construir_jogador_da_partida(j: usize) -> u
 
 // ---------- 169a leva: o fechamento do motor (3): a fila da narracao (match_events.cpp) ----------
 
-/// { 0x6d5d00 } (thiscall, ret 0x1c, match_events.cpp): põe um evento na frente da fila da narração:
+/// puts an event at the front of the commentary queue (steps the 12-slot ring back, drops the repeat) and queues it via
+/// 0x6d6f70
+/// Original: `event_at_front` (0x6d5d00, match_events.cpp, thiscall).
+///
+/// [pt] { 0x6d5d00 } (thiscall, ret 0x1c, match_events.cpp): põe um evento na frente da fila da narração:
 /// a posição de escrita (+8, anel de 12) recua uma casa (de 0 vai a 11); se o último da fila (+6
 /// itens, palavra +0x712 de 14 bytes) é o mesmo evento da nova posição (+0x30), a fila perde um;
 /// depois enfileira pela 0x6d6f70 com os mesmos 7 argumentos.
@@ -2296,7 +2352,10 @@ unsafe extern "thiscall" fn evento_na_frente(t: usize, a: u32, b: u32, c: u32, d
     enfileirar(t, a, b, c, d, e, f, g)
 }
 
-/// { 0x6d5bf0 } (thiscall, ret 4, match_events.cpp): o construtor da fila da narração: zera a fila e
+/// the commentary queue constructor: clears the queue, reads the events and, if asked, plays the crowd loop
+/// Original: `construct_commentary_queue` (0x6d5bf0, match_events.cpp, thiscall).
+///
+/// [pt] { 0x6d5bf0 } (thiscall, ret 4, match_events.cpp): o construtor da fila da narração: zera a fila e
 /// os campos (+0x2db0 = 125, +1 e +0xa = −1, +0x2d68 = −1), os globais de evento (0xb68670..), lê os
 /// eventos (0x6d9e50), marca as 16 vagas (+0x10, +0x20) com −1 e zera os 16 tempos (+0x2d6c); com
 /// `torcida`, toca o loop da torcida do lado da vez ([0xb77c7a]) pela 0x8025e0. Devolve `this`.
@@ -2338,7 +2397,10 @@ unsafe extern "thiscall" fn construir_fila_da_narracao(t: usize, torcida: u8) ->
     t
 }
 
-/// { 0x6d5b50 } (cdecl, match_events.cpp): libera as tabelas de eventos carregadas: em cada uma das
+/// frees the loaded event tables and each record's texts
+/// Original: `free_event_tables` (0x6d5b50, match_events.cpp, cdecl).
+///
+/// [pt] { 0x6d5b50 } (cdecl, match_events.cpp): libera as tabelas de eventos carregadas: em cada uma das
 /// entradas de 0x12 bytes de 0xb68790 a 0xb6b72a com tabela própria (nem nula, nem a padrão
 /// 0xb68670), os dois textos (+0x108, +0x10c) de cada registro de 0x110 bytes e a tabela; depois
 /// zera 0xb6b723 e põe −1 em 0xa1599c.

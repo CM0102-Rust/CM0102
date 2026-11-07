@@ -34,7 +34,13 @@ unsafe fn cqg8_falhou(quieto: u32, linha: u32, f: usize) -> u32 {
     0
 }
 
-/// { 0x5b5d10 } (thiscall, ret 0xc, formation.cpp): `Formation::load_from_disk(caminho, quieto, ofuscado)`, pela
+/// reads a formation from a .pct file (the identifier and version, the inverted password, the creator, the general and
+/// extra positions, the coordinates per phase and zone, the team and player instructions, the marking), fixes the
+/// instructions of the old versions, redoes the positions of the 11 slots from the coordinates and builds the
+/// coordinate map
+/// Original: `Formation::load_from_disk` (0x5b5d10, formation.cpp, thiscall).
+///
+/// [pt] { 0x5b5d10 } (thiscall, ret 0xc, formation.cpp): `Formation::load_from_disk(caminho, quieto, ofuscado)`, pela
 /// criação das táticas (0x893dc0: as formações da IA e as pré-definidas, 45 na carreira) e pelas telas de tática.
 /// Caminho nulo (linha 0x8d8) ou o arquivo que não abre (0x8e0): 0 (sem `quieto`, a caixa). Lê o identificador (4 bytes;
 /// invertido se o marcador do arquivo 0x90c140 não é o nativo; menos 123456789 se ofuscado): fora de 0x98ec54..0x98ec5e
@@ -231,7 +237,10 @@ unsafe extern "thiscall" fn comparar_ler_formacao_do_disco(this: usize, caminho:
     r
 }
 
-/// { 0x43f2d0 } (cdecl, cash.cpp): `swap_bytes_16_array(palavras, conta)`: troca os dois bytes de cada palavra.
+/// swaps the two bytes of each word of an array
+/// Original: `swap_bytes_16_array` (0x43f2d0, cash.cpp, cdecl).
+///
+/// [pt] { 0x43f2d0 } (cdecl, cash.cpp): `swap_bytes_16_array(palavras, conta)`: troca os dois bytes de cada palavra.
 unsafe extern "C" fn trocar_bytes_das_palavras(p: usize, conta: u32) {
     for k in 0..conta as usize {
         let a = (p + 2 * k) as *mut u16;
@@ -249,7 +258,10 @@ unsafe extern "C" fn comparar_trocar_bytes_das_palavras(p: usize, conta: u32) {
     PLACAR.registrar(igual, || format!("trocar_bytes_das_palavras({:x}, {})", p, conta));
 }
 
-/// { 0x43f300 } (cdecl, cash.cpp): `swap_bytes_32_array(dwords, conta)`: inverte os quatro bytes de cada dword.
+/// reverses the four bytes of each dword of an array
+/// Original: `swap_bytes_32_array` (0x43f300, cash.cpp, cdecl).
+///
+/// [pt] { 0x43f300 } (cdecl, cash.cpp): `swap_bytes_32_array(dwords, conta)`: inverte os quatro bytes de cada dword.
 unsafe extern "C" fn trocar_bytes_dos_dwords(p: usize, conta: u32) {
     for k in 0..conta as usize {
         write_u32(p + 4 * k, cqg8_inverter(read_u32(p + 4 * k)));

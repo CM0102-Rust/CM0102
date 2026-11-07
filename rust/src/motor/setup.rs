@@ -200,7 +200,13 @@ unsafe fn cd_da_carga(exigir: bool) {
     }
 }
 
-/// { 0x82a9c0 } (cdecl, Setup.cpp, ~14,6 KB, SEH): `load_game_data(caminho)`: carrega o save inteiro.
+/// loads the saved game: disk, memory, CD, the database (0x524d10), unpacks the *.tmp files, general.dat (version,
+/// summary, ids, dates, leagues, default nation, the runtime data of people, clubs and reputation, converting old
+/// saves), the subsystem constructors in the original order with disk and memory checks between them, the FIFA rules
+/// and the last save date
+/// Original: `load_game_data` (0x82a9c0, Setup.cpp, cdecl).
+///
+/// [pt] { 0x82a9c0 } (cdecl, Setup.cpp, ~14,6 KB, SEH): `load_game_data(caminho)`: carrega o save inteiro.
 /// Devolve 1 se carregou.
 /// - Disco (0x7a1820(0) < 25 liga [0xdd7134]) e memória ([0x9cd1fc] e 0x7a1710() < 50 liga [0xdd7138]);
 ///   a pasta temporária (0x90bde0 "CM3_TEMP"); o CD (`cd_da_carga`); `caminho` nulo dá a caixa "Error"
@@ -583,7 +589,12 @@ unsafe fn erro_fatal_do_setup(linha: u32) -> ! {
     sair(-1)
 }
 
-/// { 0x827110 } (cdecl, Setup.cpp, ~3 KB): `create_game_from_setup_file(cfg, qst)`: lê o arquivo de
+/// reads auto_setup.cfg/quick_start.cfg (database, stats, foreground and background leagues, language, engine, bids,
+/// holiday), creates the game (0x828110) and saves the .qst (0x82e430 with 0x17) and frees everything, or puts the
+/// human manager on holiday at a drawn club
+/// Original: `create_game_from_setup_file` (0x827110, Setup.cpp, cdecl).
+///
+/// [pt] { 0x827110 } (cdecl, Setup.cpp, ~3 KB): `create_game_from_setup_file(cfg, qst)`: lê o arquivo de
 /// configuração `cfg` (`auto_setup.cfg` ou `quick_start.cfg`), cria o jogo e, com `qst`, grava o
 /// início rápido `CM3_QSTART\<qst>.qst`; sem `qst`, põe o técnico humano de férias num clube
 /// sorteado. Devolve 1 se criou.
@@ -965,7 +976,12 @@ const PASSOS_DO_SAVE: [PassoDoSave; 0x23] = [
     PassoDoSave::Caminho(0xdd7ef0, 0x859cc0), // 0x24 SQUAD_MANAGER
 ];
 
-/// { 0x82e430 } (cdecl, Setup.cpp, ~6,8 KB, SEH): `save_game_data(caminho, a4)`: grava o jogo
+/// saves the game: deletes the old file, the database (0x524d30), general.dat (16 fields and the summary), the
+/// subsystem saves in the original order with disk and memory checks between them, packs the *.tmp files, the FIFA
+/// rules; on a network game, writes to temp_save_file and renames
+/// Original: `save_game_data` (0x82e430, Setup.cpp, cdecl).
+///
+/// [pt] { 0x82e430 } (cdecl, Setup.cpp, ~6,8 KB, SEH): `save_game_data(caminho, a4)`: grava o jogo
 /// inteiro no contêiner `caminho` (a4 0x16 `.sav`, 0x17 `.qst`; tipo 3 com o bit 0x8000 do
 /// `game.cfg` [[0xae3138]+4], senão 4 = RLE). Devolve 1 se gravou.
 /// - [0xdd7110] = 0xfffc1fb9 (a versão do save). Em rede (bit 0x20000000), antes de tudo, disco
@@ -1217,7 +1233,11 @@ unsafe extern "C" fn comparar_gravar_jogo(caminho: *const u8, a4: u32) -> u32 {
 
 // ---------- 219a leva: o save: os filtros da caixa de arquivos (o jogo salvo, o início rápido e a versão) (Setup.cpp) ----------
 
-/// { 0x838e10 } (cdecl, Setup.cpp): `check_saved_game_file(caminho)`: filtro da caixa de arquivos
+/// file box filter for saved games: 1 if the container has id 0x16 (.sav), else 2 (ax only); a null path gives the
+/// error box
+/// Original: `check_saved_game_file` (0x838e10, Setup.cpp, cdecl).
+///
+/// [pt] { 0x838e10 } (cdecl, Setup.cpp): `check_saved_game_file(caminho)`: filtro da caixa de arquivos
 /// dos jogos salvos: 1 se o contêiner tem o id 0x16 (`.sav`, 0x9331c0), senão 2. A original só
 /// acerta `ax`: os 16 bits altos de `eax` ficam os da resposta do id, como aqui. Caminho nulo é o
 /// erro de Setup.cpp 0x3a1b (caixa "Error"): a cópia chama a original.
@@ -1242,7 +1262,11 @@ unsafe extern "C" fn comparar_filtro_do_jogo_salvo(caminho: usize) -> u32 {
     r
 }
 
-/// { 0x839290 } (cdecl, Setup.cpp): `check_quick_start_file(caminho)`: filtro da caixa de arquivos
+/// file box filter for quick starts: 1 if the container has id 0x17 (.qst) and the saved version is the exe one, else 2
+/// (ax only)
+/// Original: `check_quick_start_file` (0x839290, Setup.cpp, cdecl).
+///
+/// [pt] { 0x839290 } (cdecl, Setup.cpp): `check_quick_start_file(caminho)`: filtro da caixa de arquivos
 /// do início rápido: 1 se o contêiner tem o id 0x17 (`.qst`) e a versão gravada é a do exe
 /// (0x838eb0), senão 2. Os 16 bits altos de `eax` são os da última chamada (o id, ou a versão).
 /// Caminho nulo: erro de Setup.cpp 0x3a6d, a cópia chama a original.
@@ -1289,7 +1313,11 @@ unsafe fn erro_de_carga_do_setup(linha: u32, motivo: usize) {
     caixa(0xae28bc, 0xae26c4, 0);
 }
 
-/// { 0x838eb0 } (cdecl, Setup.cpp): `valid_saved_game_version(caminho)`: abre o item `general.dat`
+/// opens the container general.dat, reads the version and the summary (0xf70 or 0xf74 bytes) and returns 1 if the
+/// summary version text is the exe one; on success it does not close the item (as the original)
+/// Original: `valid_saved_game_version` (0x838eb0, Setup.cpp, cdecl).
+///
+/// [pt] { 0x838eb0 } (cdecl, Setup.cpp): `valid_saved_game_version(caminho)`: abre o item `general.dat`
 /// do contêiner (0x9326e0 lendo, a4 0x15, tipo 4), lê a versão gravada (4 bytes) e o resumo do save
 /// (0xf70 bytes se |versão| < 0x3e027, senão 0xf74) e devolve 1 se o texto da versão do resumo
 /// (+0x7d0) é igual ao do exe (0x90d130), senão 0. Cada leitura que falha dá a caixa "Load Game
@@ -1359,7 +1387,11 @@ unsafe fn aviso_do_setup(linha: u32) {
     *(0xb67a34 as *mut u32) = 0;
 }
 
-/// { 0x8395b0 } (cdecl, Setup.cpp): `save_fifa_transfer_rules(save)`: o último item do save,
+/// writes the last saved game item, fifa_transfer_rules.zip: 2 bytes ([0xae233c] and the rule in force [0xa83608]);
+/// errors give the "Error" box
+/// Original: `save_fifa_transfer_rules` (0x8395b0, Setup.cpp, cdecl).
+///
+/// [pt] { 0x8395b0 } (cdecl, Setup.cpp): `save_fifa_transfer_rules(save)`: o último item do save,
 /// `fifa_transfer_rules.zip` (0x9326e0 gravando, a4 0x16, tipo 4; no contêiner já criado vale o
 /// cabeçalho dele): 2 bytes, [0xae233c] e [0xa83608], e `zclose`. Caminho nulo, item que não abre
 /// ou escrita que falha: a caixa "Error" (Setup.cpp 0x3b24, 0x3b2c, 0x3b32, 0x3b38); nas escritas,
@@ -1397,7 +1429,10 @@ unsafe extern "C" fn comparar_gravar_regras_fifa(save: usize) {
     orig::<unsafe extern "C" fn(usize)>(568)(save)
 }
 
-/// { 0x839760 } (cdecl, Setup.cpp): `load_fifa_transfer_rules(save)`: lê os 2 bytes do item
+/// reads the 2 bytes of fifa_transfer_rules.zip; if the first is 1, the rule in force becomes 5
+/// Original: `load_fifa_transfer_rules` (0x839760, Setup.cpp, cdecl).
+///
+/// [pt] { 0x839760 } (cdecl, Setup.cpp): `load_fifa_transfer_rules(save)`: lê os 2 bytes do item
 /// `fifa_transfer_rules.zip` (0x9326e0 lendo) em [0xae233c] e [0xa83608]; se [0xae233c] = 1, a
 /// regra em vigor [0xa83608] vira 5. Fecha o item. Erros: a caixa "Error" (Setup.cpp 0x3b4f, 0x3b57,
 /// 0x3b5d, 0x3b63), como na gravação.
@@ -1449,7 +1484,11 @@ unsafe fn copiar_texto(destino: *mut u8, fonte: *const u8) {
     core::ptr::copy(fonte, destino, n);
 }
 
-/// { 0x591f80 } (cdecl, file_screens.cpp): `build_save_game_summary(resumo)`: o resumo que o
+/// builds the general.dat summary: the active nations (two groups), the human managers with club and nation, the game
+/// date, the version, the play time and time()
+/// Original: `build_save_game_summary` (0x591f80, file_screens.cpp, cdecl).
+///
+/// [pt] { 0x591f80 } (cdecl, file_screens.cpp): `build_save_game_summary(resumo)`: o resumo que o
 /// `save_game_data` grava no `general.dat` (logo depois da versão):
 /// - +0: as nações da tabela de ligas (0xb63d60, 0x23 de 0x48 bytes) com o bit 2 em +0x11c, a
 ///   primeira pelo sprintf com o próprio nome como formato (0x944c9f), as outras por ", <%s>"

@@ -142,7 +142,15 @@ fn cql10_copa_da_liga_rodadas(b: i16) -> [Cql10R; 7] {
     t
 }
 
-/// { 0x56c570 } (thiscall, ret 0x10, eng_cc_cup.cpp; a virtual +0x3c da Copa da Liga): `EngCcCup::create_round_table(
+/// rule: the English League Cup has 7 single-leg rounds, except the two-legged semi-final (21 days apart): 1st round
+/// drawn on 23/7 and played on 22/8; 2nd draw 23/8, match 20/9; 3rd 28/9 and 28/10; 4th 29/10 and 11/11; quarter-finals
+/// 12/11 and 2/12; semi-final 3/12 and 27/1 of the next year; final drawn 18/2, played on 1/4 at a neutral ground
+/// [inference: venue 4], dates moved to each one's weekday; clubs in Europe (+0xb2) only enter in the 3rd round (1st
+/// round 2b + 56 teams, 2nd (32 − b) × 2, (12 − b) × 3 new entrants; the b enter in the 3rd); category 4 up to the 4th
+/// round and 6 after; no prize per round (−1)
+/// Original: `EngCcCup::create_round_table` (0x56c570, eng_cc_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x56c570 } (thiscall, ret 0x10, eng_cc_cup.cpp; a virtual +0x3c da Copa da Liga): `EngCcCup::create_round_table(
 /// fase, &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas (`cql10_copa_da_liga_rodadas` com o +0xb2); a caixa da
 /// linha 0xa2 sem memória.
 unsafe extern "thiscall" fn cql10_copa_da_liga_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
@@ -195,7 +203,16 @@ fn cql10_copa_da_inglaterra_rodadas(b: i16, entrada: u8, inscritos: i16) -> [Cql
     t
 }
 
-/// { 0x56f320 } (thiscall, ret 0x10, eng_fa_cup.cpp; a virtual +0x3c da Copa da Inglaterra): `EngFaCup::
+/// rule: the FA Cup has 9 single-leg rounds with replays (+0x20 = 1, 10 days later) up to the quarter-finals:
+/// preliminary (code 0xdc) drawn 9/10, played 16/10, 56 teams; 1st round 17/10 and 18/11; 2nd 19/11 and 9/12; 3rd 10/12
+/// and 6/1; 4th 7/1 and 27/1; 5th 28/1 and 17/2; quarter-finals 18/2 and 10/3; semi-final 11/3 and 8/4 at its own
+/// ground (venue 0x2a, no replay); final 9/4 and 12/5 at a neutral ground; the team counts from the 2nd to the 5th
+/// round depend on the exemptions (+0xb3) and on the choice of entering at the 5th round (+0xb4 = 1); prize for winning
+/// a round from 10 thousand to 400 thousand, and the final 2 million to the winner and 1 million to the runner-up;
+/// category 4 up to the 5th round and 6 from the quarter-finals
+/// Original: `EngFaCup::create_round_table` (0x56f320, eng_fa_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x56f320 } (thiscall, ret 0x10, eng_fa_cup.cpp; a virtual +0x3c da Copa da Inglaterra): `EngFaCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 9 rodadas (`cql10_copa_da_inglaterra_rodadas`);
 /// a caixa da linha 0xb6 sem memória.
 unsafe extern "thiscall" fn cql10_copa_da_inglaterra_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
@@ -214,7 +231,11 @@ const CQL10_SUPERCOPA: [Cql10R; 1] = [
     cql10r((5, 6, 0, 5), (0xd, 7, 0, 6, 1, 4), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cql10: o jogo da Supercopa inglesa
 ];
 
-/// { 0x56d640 } (thiscall, ret 0x10, eng_charity.cpp; a virtual +0x3c da Supercopa): `EngCharity::create_round_table(
+/// rule: the Charity Shield is a single match between 2 clubs, drawn on 5/7 and played on 13/8 (moved to weekday 6) at
+/// a neutral ground [inference: venue 4], decided on penalties [inference: tiebreak 1]; category 6; no prize
+/// Original: `EngCharity::create_round_table` (0x56d640, eng_charity.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x56d640 } (thiscall, ret 0x10, eng_charity.cpp; a virtual +0x3c da Supercopa): `EngCharity::create_round_table(
 /// fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x9c sem memória.
 unsafe extern "thiscall" fn cql10_supercopa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql10_tabela(this, fase, rodadas, extra, saida, &CQL10_SUPERCOPA, 0x9c425c, 0x9c, "cql_10 tabela da supercopa inglesa")
@@ -360,6 +381,20 @@ unsafe fn cqm10_copa_da_liga(this: usize) -> (i32, i32) {
     (1, n)
 }
 
+/// rule: the League Cup takes the 92 clubs of the four English divisions, in the order Third, Second, First and Premier
+/// (outside the European cups), then those in European cups (counted in +0xb2, at most 12: they enter in the 3rd
+/// round); each one's class orders the list (qsort, smallest first, ties by smallest reputation): 0 in the Third and
+/// Second, in the First 0x46 − position for clubs relegated from the Premier and 0x28 − position for the others, in the
+/// Premier 0x78 − position for clubs that stayed and 0x64 − position for promoted ones, 0x78 for the European clubs;
+/// after sorting the class becomes 1 (Premier), 2 (First) or 3
+/// Original: `EngCcCup::collect_entrants` (0x56ccc0, eng_cc_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: entram na Copa da Liga os 92 clubes das quatro divisões inglesas, na ordem Third, Second, First e Premier
+/// (fora das copas europeias), e depois os das copas europeias (contados em +0xb2, no máximo 12: são os que entram na
+/// 3ª rodada); a classe de cada um ordena a lista (qsort, a menor primeiro, no empate a menor reputação): 0 na Third e
+/// na Second, na First 0x46 − posição para quem caiu da Premier e 0x28 − posição para quem ficou, na Premier 0x78 −
+/// posição para quem ficou e 0x64 − posição para quem subiu, 0x78 nas copas europeias; depois da ordem a classe vira 1
+/// (Premier), 2 (First) ou 3
 unsafe extern "thiscall" fn cqm10_copa_da_liga_inscritos(this: usize) -> i32 {
     cqm10_copa_da_liga(this).0
 }
@@ -431,6 +466,14 @@ unsafe fn cqm10_trofeu(this: usize) -> (i32, i32) {
     (1, k as i32)
 }
 
+/// rule: the League Trophy (Auto Windscreens) has two 28-club sections; the second takes the last 28 of the 56 chosen
+/// clubs (the array at +0xb2, already sorted by latitude and reputation: the southern section [inference]), in order,
+/// class and status 0
+/// Original: `EngAutoCup::collect_entrants` (0x56b3c0, eng_auto_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: o Troféu da Liga (Auto Windscreens) tem duas chaves de 28 clubes; a segunda leva os 28 últimos dos 56
+/// escolhidos (o vetor em +0xb2, já ordenado pela latitude e pela reputação: a chave do sul [inferência]), na ordem,
+/// classe e situação 0
 unsafe extern "thiscall" fn cqm10_trofeu_inscritos(this: usize) -> i32 {
     cqm10_trofeu(this).0
 }
@@ -489,6 +532,12 @@ unsafe fn cqm10_supercopa(this: usize) -> (i32, i32) {
     (1, 2)
 }
 
+/// rule: the Charity Shield is between the Premier champion and the FA Cup winner; if the same club won both, the
+/// Premier runner-up takes its place; if one is missing, the error box
+/// Original: `EngCharity::select_teams` (0x56d780, eng_charity.cpp, thiscall, ret 0).
+///
+/// [pt] regra: a Supercopa inglesa (Charity Shield) é entre o campeão da Premier e o da Copa da Inglaterra; se o mesmo clube
+/// ganhou as duas, entra o vice da Premier; sem algum deles, a caixa de erro
 unsafe extern "thiscall" fn cqm10_supercopa_clubes(this: usize) -> i32 {
     cqm10_supercopa(this).0
 }
@@ -554,7 +603,12 @@ unsafe fn cqn10_base(this: usize, hoje: usize, fase: u32) -> u32 {
     base(this, hoje, fase)
 }
 
-/// { 0x56caf0 } (thiscall, ret 8, eng_cc_cup.cpp; a virtual +0x14 da Copa da Liga): `EngCcCup::update_for_date(hoje,
+/// rule: the English League Cup is rebuilt once per season (+0x45), on the first day the game year reaches the cup
+/// year: the old tables are freed and the 92 entrants, the 7 rounds, the tie tree and the predicted order are built;
+/// then, every day, the cup update (draws and matches on the table dates)
+/// Original: `EngCcCup::update_for_date` (0x56caf0, eng_cc_cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x56caf0 } (thiscall, ret 8, eng_cc_cup.cpp; a virtual +0x14 da Copa da Liga): `EngCcCup::update_for_date(hoje,
 /// fase)`. Uma vez (+0x45 = 0), quando o ano do jogo ([0xde1f58] +0x439, palavra sem sinal) chega ao da copa (+0x40, com
 /// sinal) e a fase não é 0: libera as tabelas (`cqn10_liberar`), +0x45 = 1, os inscritos (0x56ccc0, thiscall), as
 /// rodadas (virtual +0x8c), a árvore dos confrontos (virtual +0x94) e a ordem prevista (virtual +0x5c); uma devolução
@@ -595,7 +649,13 @@ unsafe extern "thiscall" fn comparar_cqn10_copa_da_liga_dia(this: usize, hoje: u
     r
 }
 
-/// { 0x570550 } (thiscall, ret 8, eng_fa_cup.cpp; a virtual +0x14 da Copa da Inglaterra; quadro SEH pela notícia do
+/// rule: the FA Cup gathers its entrants on 3 October each year (Date(3, 9): month 9 is October; the community map says
+/// September), rebuilds the rounds and the tree and draws the preliminary round, once per season (+0x45); on 1 October
+/// 1999 it asked the human manager whether the club enters at the 5th round (+0xb2 marks the question); then, every
+/// day, the cup update
+/// Original: `EngFaCup::update_for_date` (0x570550, eng_fa_cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x570550 } (thiscall, ret 8, eng_fa_cup.cpp; a virtual +0x14 da Copa da Inglaterra; quadro SEH pela notícia do
 /// caminho de 1999, sem destrutor no caminho normal): `EngFaCup::update_for_date(hoje, fase)`. Com +0x45 = 0 e a fase
 /// diferente de 0: em Date(1, 9, 1999) (o mês 9 é outubro) com +0xb2 = 0, a pergunta ao técnico humano sobre a entrada na
 /// 5ª rodada (só em 1999: a original pelo trampolim); em Date(3, 9, ano de hoje) (3 de outubro), libera as tabelas, +0x45
@@ -647,7 +707,11 @@ unsafe extern "thiscall" fn comparar_cqn10_copa_da_inglaterra_dia(this: usize, h
     r
 }
 
-/// { 0x90a900 } (thiscall, ret 8, usa_mls_all_stars.cpp; a virtual +0x14 do Jogo das Estrelas; quadro SEH pela Date
+/// rule: the two MLS All-Star selections are called up on the day of Date(26, 6, year, 6): 26 July moved to weekday 6
+/// [inference: the following Saturday]; the match is on 2 August (see cqm_12); then, every day, the cup update
+/// Original: `UsaMlsAllStars::update_for_date` (0x90a900, usa_mls_all_stars.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x90a900 } (thiscall, ret 8, usa_mls_all_stars.cpp; a virtual +0x14 do Jogo das Estrelas; quadro SEH pela Date
 /// local, sem destrutor): `UsaMlsAllStars::update_for_date(hoje, fase)`: com a fase diferente de 0, no dia de Date(26, 6,
 /// ano de hoje, dia da semana 6) (o sábado de 26 de julho em diante [inferência]), a convocação das duas seleções
 /// (0x90a980, mov ecx -> thiscall, ret 0); depois a atualização da copa.

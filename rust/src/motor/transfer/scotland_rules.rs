@@ -61,7 +61,10 @@ unsafe fn cqe6_recusa(msg: usize, motivo: *mut u16, formato: usize, r: usize, m:
     0
 }
 
-/// { 0x579c70 } (thiscall, ret 0x1c, england_rules.cpp): `ENGLAND_RULES::get_loan_period(clube, a2, início_mês,
+/// after 19 June and with the player under 24, the base rule period; otherwise from next month to three months later
+/// Original: `ENGLAND_RULES::get_loan_period` (0x579c70, england_rules.cpp, thiscall, ret 0x1c).
+///
+/// [pt] { 0x579c70 } (thiscall, ret 0x1c, england_rules.cpp): `ENGLAND_RULES::get_loan_period(clube, a2, início_mês,
 /// início_ano, fim_mês, fim_ano, jogador)`, pelo período do empréstimo (0x8d0590). Depois de 19 de junho (só o dia do
 /// ano, 0x549f70 com 1998) e com o jogador abaixo de 24 anos (+0x18): o período da regra base (0x8e8bd0). Senão começa
 /// no mês seguinte e acaba três meses depois.
@@ -94,7 +97,10 @@ unsafe extern "thiscall" fn cqe6_periodo_inglaterra(this: usize, clube: usize, a
     }
 }
 
-/// { 0x7f6650 } (thiscall, ret 0x10, scotland_rules.cpp): `SCOTLAND_RULES::can_loan_player(clube, jogador, mensagem,
+/// refuses (0x1d) between two clubs of the same Scottish division
+/// Original: `SCOTLAND_RULES::can_loan_player` (0x7f6650, scotland_rules.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x7f6650 } (thiscall, ret 0x10, scotland_rules.cpp): `SCOTLAND_RULES::can_loan_player(clube, jogador, mensagem,
 /// motivo)`: com contrato, o clube que pede e o dono na mesma divisão escocesa ([0x9cf5dc]) não podem (0x1d).
 unsafe extern "thiscall" fn cqe6_pode_emprestar_escocia(_this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
     let dono = match cqe6_dono(jogador) {
@@ -110,7 +116,10 @@ unsafe extern "thiscall" fn cqe6_pode_emprestar_escocia(_this: usize, clube: usi
     1
 }
 
-/// { 0x7f6530 } (thiscall, ret 0x1c, scotland_rules.cpp): `SCOTLAND_RULES::get_loan_period(a1, a2, início_mês,
+/// starts next month; under 22 it ends in the season end month (this year or next), otherwise three months later
+/// Original: `SCOTLAND_RULES::get_loan_period` (0x7f6530, scotland_rules.cpp, thiscall, ret 0x1c).
+///
+/// [pt] { 0x7f6530 } (thiscall, ret 0x1c, scotland_rules.cpp): `SCOTLAND_RULES::get_loan_period(a1, a2, início_mês,
 /// início_ano, fim_mês, fim_ano, jogador)`: começa no mês seguinte; o fim é o mês do fim de temporada da nação a1
 /// (0x4d45f0) para quem tem menos de 22 anos (+0x18), neste ano se o começo vem antes dele, senão no ano seguinte;
 /// para os outros, três meses depois do começo.
@@ -144,7 +153,11 @@ unsafe extern "thiscall" fn cqe6_periodo_escocia(_this: usize, a1: usize, _a2: u
     }
 }
 
-/// { 0x661770 } (thiscall, ret 0x10, italy_rules.cpp): `ITALY_RULES::can_loan_player(clube, jogador, mensagem,
+/// refuses outside the first two windows (9) and, in the five listed divisions, with four players on loan from other
+/// clubs (0x25)
+/// Original: `ITALY_RULES::can_loan_player` (0x661770, italy_rules.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x661770 } (thiscall, ret 0x10, italy_rules.cpp): `ITALY_RULES::can_loan_player(clube, jogador, mensagem,
 /// motivo)`: fora das duas primeiras janelas (0x8e8c40 com [this+4] e [this+4] + 0xc): motivo 9. Um clube de uma das
 /// cinco divisões ([0x9cf578] a [0x9cf588]) com quatro jogadores emprestados de outros clubes (ids abaixo de
 /// [0xae2364], contrato de empréstimo 0x4cf6d0) não pode (0x25).
@@ -192,7 +205,10 @@ unsafe extern "thiscall" fn cqe6_pode_emprestar_italia(this: usize, clube: usize
     1
 }
 
-/// { 0x63c3d0 } (thiscall, ret 0x10, ireland_rules.cpp): `IRELAND_RULES::can_loan_player(clube, jogador, mensagem,
+/// refuses with five loans this season (0x1e) and between clubs of the same division (0x1d)
+/// Original: `IRELAND_RULES::can_loan_player` (0x63c3d0, ireland_rules.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x63c3d0 } (thiscall, ret 0x10, ireland_rules.cpp): `IRELAND_RULES::can_loan_player(clube, jogador, mensagem,
 /// motivo)`: cinco empréstimos na temporada (a conta de 16 bytes em [[0xde1f54] + 0x91c]): 0x1e; com contrato, o
 /// clube que pede e o dono na mesma divisão (+0x57, sem conferir o nulo, como a original): 0x1d, com o nome da nação.
 unsafe extern "thiscall" fn cqe6_pode_emprestar_irlanda(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
@@ -220,7 +236,10 @@ unsafe extern "thiscall" fn cqe6_pode_emprestar_irlanda(this: usize, clube: usiz
     1
 }
 
-/// { 0x859630 } (thiscall, ret 0x10, spain_rules.cpp): `SPAIN_RULES::can_loan_player(clube, jogador, mensagem,
+/// refuses outside the window (9) and between clubs of the same division after five league games of the player (0x1f)
+/// Original: `SPAIN_RULES::can_loan_player` (0x859630, spain_rules.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x859630 } (thiscall, ret 0x10, spain_rules.cpp): `SPAIN_RULES::can_loan_player(clube, jogador, mensagem,
 /// motivo)`: fora da janela (0x8e8e50): 9; com contrato, entre clubes da mesma divisão (+0x57) depois de mais de
 /// [0x968990] jogos do jogador na liga (0x7c1e30 da ficha +0x61, tipo 2, 1, 6,5): 0x1f.
 unsafe extern "thiscall" fn cqe6_pode_emprestar_espanha(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {

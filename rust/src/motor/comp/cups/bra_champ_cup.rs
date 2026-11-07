@@ -142,7 +142,14 @@ fn cqp10_campeoes_fase(fase: u32) -> Cqp10F {
     }
 }
 
-/// { 0x425c10 } (thiscall, ret 0x10, bra_champ_cup.cpp; a virtual +0x3c da Copa dos Campeões): `BraChampCup::
+/// rule: the Copa dos Campeões has a preliminary stage (stage −1, id 0xe6) of three rounds on Mondays [inference:
+/// weekday 1], 19 and 26 June and 3 July; then two groups (stages 0 and 1, id 0x3fd + stage) of three rounds, 9, 16 and
+/// 20 July; the knockout (stage 2 on): semi-final drawn on 21/7 and played on 23/7, return 2 days later, and final
+/// drawn on 26/7, match on 27/7, return 3 days later; category 6; two-leg tie-break 1; final prize 800 thousand to the
+/// winner and 400 thousand to the runner-up
+/// Original: `BraChampCup::create_schedule` (0x425c10, bra_champ_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x425c10 } (thiscall, ret 0x10, bra_champ_cup.cpp; a virtual +0x3c da Copa dos Campeões): `BraChampCup::
 /// create_schedule(fase, &rodadas, &extra, &é_liga)`: a preliminar, os grupos ou o mata-mata (`cqp10_campeoes_fase`).
 unsafe extern "thiscall" fn cqp10_copa_dos_campeoes_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqp10_tabela(this, cqp10_campeoes_fase(fase), rodadas, extra, liga, 0x98a1e8)
@@ -176,7 +183,12 @@ fn cqp10_merconorte_fase(fase: u32) -> Cqp10F {
     }
 }
 
-/// { 0x4c1960 } (thiscall, ret 0x10, con_merc_cup.cpp; a virtual +0x3c da Merconorte): `ConMercCup::create_schedule(fase,
+/// rule: the Copa Merconorte starts with groups (stages below 3, id 0x3e9 + stage: 4 groups [inference]) of six rounds
+/// on Tuesdays every 15 days, from 9/9 to 18/11; the knockout (stage 3): semi-final drawn on 19/11 and played on 25/11
+/// over two legs (7 days), final drawn on 3/12 and a single match on 9/12; category 8; tie-break 3
+/// Original: `ConMercCup::create_schedule` (0x4c1960, con_merc_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x4c1960 } (thiscall, ret 0x10, con_merc_cup.cpp; a virtual +0x3c da Merconorte): `ConMercCup::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: os grupos ou o mata-mata (`cqp10_merconorte_fase`).
 unsafe extern "thiscall" fn cqp10_merconorte_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqp10_tabela(this, cqp10_merconorte_fase(fase), rodadas, extra, liga, 0x9a7d6c)
@@ -193,7 +205,11 @@ const CQP10_SUPERCOPA_EUROPEIA: [Cql10R; 1] = [
     cql10r((4, 6, 0, 5), (0x18, 7, 0, 4, 2, 0x8000), 0, (0, 0x83, 0), 8, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cqp10: a Supercopa Europeia
 ];
 
-/// { 0x57a3c0 } (thiscall, ret 0x10, eur_super_cup.cpp; a virtual +0x3c da Supercopa Europeia): `EurSuperCup::
+/// rule: the European Super Cup is a single match on 24 August (drawn on 4 July) on neutral ground (venue 0x8000:
+/// Monaco [inference]), category 8, tie-break 0x83, no prizes
+/// Original: `EurSuperCup::create_round_table` (0x57a3c0, eur_super_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x57a3c0 } (thiscall, ret 0x10, eur_super_cup.cpp; a virtual +0x3c da Supercopa Europeia): `EurSuperCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x98 sem memória.
 unsafe extern "thiscall" fn cqp10_supercopa_europeia_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql10_tabela(this, fase, rodadas, extra, saida, &CQP10_SUPERCOPA_EUROPEIA, 0x9c45f8, 0x98, "cqp_10 tabela da supercopa europeia")
@@ -210,7 +226,11 @@ const CQP10_SUPERCOPA_ASIATICA: [Cql10R; 1] = [
     cql10r((4, 6, 0, 5), (4, 7, 0, 5, 2, 0), 0, (0, 0, 0x83), 6, (2, 1, 2, 0), (0, 2, 0xe), (0, 0, 0)), // cqp10: a Supercopa Asiática
 ];
 
-/// { 0x410910 } (thiscall, ret 0x10, asia_super_cup.cpp; a virtual +0x3c da Supercopa Asiática): `AsiaSuperCup::
+/// rule: the Asian Super Cup is two-legged, the first match on 4 August (drawn on 4 July) and the return 14 days later,
+/// category 6, two-leg tie-break 0x83, no prizes
+/// Original: `AsiaSuperCup::create_round_table` (0x410910, asia_super_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x410910 } (thiscall, ret 0x10, asia_super_cup.cpp; a virtual +0x3c da Supercopa Asiática): `AsiaSuperCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x97 sem memória.
 unsafe extern "thiscall" fn cqp10_supercopa_asiatica_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql10_tabela(this, fase, rodadas, extra, saida, &CQP10_SUPERCOPA_ASIATICA, 0x987be0, 0x97, "cqp_10 tabela da supercopa asiatica")

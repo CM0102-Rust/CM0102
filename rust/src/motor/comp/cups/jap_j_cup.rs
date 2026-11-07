@@ -128,7 +128,13 @@ const CQN11_COPA_DA_LIGA_JAPONESA: [Cqn11R; 5] = [
     cqn11r((0x13, 9, 0, 3), (4, 0xa, 0, 5, 1, 4), 0x96, (0, 3, 0), 6, (2, 1, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
 ];
 
-/// { 0x665640 } (thiscall, ret 0x10, jap_j_cup.cpp; a virtual +0x3c da Copa da Liga japonesa): `JapJCup::
+/// rule: the J League Cup has 5 rounds, the first four over two legs (7 days apart): 1st round (24 teams) drawn on 10/2
+/// (no fixed weekday) and played on 12/4; 2nd (16 teams, 4 enter) 20/4 and 5/7; quarter-finals 13/7 and 30/8;
+/// semi-final 7/9 and 11/10; single-match final, drawn 19/10, played 4/11 at a neutral ground [inference: venue 4]; no
+/// prize per round (−1); category 4 up to the quarter-finals and 6 after
+/// Original: `JapJCup::create_round_table` (0x665640, jap_j_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x665640 } (thiscall, ret 0x10, jap_j_cup.cpp; a virtual +0x3c da Copa da Liga japonesa): `JapJCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0x9e sem memória.
 unsafe extern "thiscall" fn cqn11_copa_da_liga_japonesa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cqn11_tabela(this, fase, rodadas, extra, saida, &CQN11_COPA_DA_LIGA_JAPONESA, 0x9eaf14, 0x9e, "cqn_11 tabela da copa da liga japonesa")
@@ -152,7 +158,13 @@ const CQN11_COPA_DO_IMPERADOR: [Cqn11R; 7] = [
     cqn11r((0x1c, 0xb, 0, 0), (2, 0, 1, 5, 1, 4), 0x96, (0, 0x83, 0), 6, (2, 1, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
 ];
 
-/// { 0x661ff0 } (thiscall, ret 0x10, jap_emp_cup.cpp; a virtual +0x3c da Copa do Imperador): `JapEmpCup::
+/// rule: the Emperor's Cup has 7 single-leg rounds with a seeded draw (+0xd = 0x83): 1st round (64 teams) drawn 1/11,
+/// played 29/11; 2nd 30/11 and 6/12; 3rd (16 enter) 7/12 and 13/12; 4th 14/12 and 20/12; quarter-finals 21/12 and
+/// 23/12; semi-final 24/12 and 27/12; final drawn 28/12, played on 2/1 of the next year at a neutral ground [inference:
+/// venue 4]; no prize per round (−1)
+/// Original: `JapEmpCup::create_round_table` (0x661ff0, jap_emp_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x661ff0 } (thiscall, ret 0x10, jap_emp_cup.cpp; a virtual +0x3c da Copa do Imperador): `JapEmpCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa0 sem memória.
 unsafe extern "thiscall" fn cqn11_copa_do_imperador_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cqn11_tabela(this, fase, rodadas, extra, saida, &CQN11_COPA_DO_IMPERADOR, 0x9eab90, 0xa0, "cqn_11 tabela da copa do imperador")
@@ -174,7 +186,13 @@ const CQN11_COPA_DOS_EUA: [Cqn11R; 5] = [
     cqn11r((0x18, 7, 0, 3), (0x16, 9, 0, 6, 1, 4), 0x96, (0, 0x83, 0), 6, (2, 1, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
 ];
 
-/// { 0x90b170 } (thiscall, ret 0x10, usa_open_cup.cpp; a virtual +0x3c da Copa dos EUA): `UsaOpenCup::
+/// rule: the US Open Cup has 5 single-leg rounds (+0x21 = 0): 2nd round (32 teams, code 0x14) drawn 1/6, played 14/6,
+/// with bit 0x400 in the draw; 3rd 15/6 and 25/6; quarter-finals 26/6 and 9/8; semi-final 10/8 and 23/8; final drawn
+/// 24/8, played 22/10 at a neutral ground [inference: venue 4]; no prize per round (−1); category 4 in the first two
+/// and 6 after
+/// Original: `UsaOpenCup::create_round_table` (0x90b170, usa_open_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x90b170 } (thiscall, ret 0x10, usa_open_cup.cpp; a virtual +0x3c da Copa dos EUA): `UsaOpenCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0x9c sem memória.
 unsafe extern "thiscall" fn cqn11_copa_dos_eua_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cqn11_tabela(this, fase, rodadas, extra, saida, &CQN11_COPA_DOS_EUA, 0xaa20e0, 0x9c, "cqn_11 tabela da copa dos eua")
@@ -276,6 +294,14 @@ unsafe fn cqn12_copa_da_liga(this: usize) -> (i32, i32) {
     ((n == read_i16(this + 0x3e) as i32) as i32, n)
 }
 
+/// rule: the J League Cup takes 28 clubs: the J2 ones, class 0, and the J1 ones, each with a class drawn from 0 to 19
+/// (the seed); the 16 entries from the 11th on are sorted by class (ties by reputation); with an incomplete list it
+/// returns 0
+/// Original: `JapJCup::collect_entrants` (0x665a00, jap_j_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: entram na Copa da Liga japonesa 28 clubes: os da J2, classe 0, e os da J1, cada um com uma classe sorteada de
+/// 0 a 19 (a semente); as 16 inscrições a partir da 11ª vão ao qsort pela classe (no empate a reputação); com a lista
+/// incompleta, devolve 0
 unsafe extern "thiscall" fn cqn12_copa_da_liga_inscritos(this: usize) -> i32 {
     cqn12_copa_da_liga(this).0
 }
@@ -377,6 +403,13 @@ unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
     (1, k as i32)
 }
 
+/// rule: the US Open Cup takes 32 clubs: 10 from each of the two lower leagues ([0x9cf594] and [0x9cf598], up to 50
+/// looked at in each, sorted by reputation and shuffled among the best), with class 2, and all MLS clubs with class 1
+/// Original: `UsaOpenCup::collect_entrants` (0x90b530, usa_open_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: entram na Copa dos EUA 32 clubes: 10 de cada uma das duas ligas de baixo ([0x9cf594] e [0x9cf598], até 50
+/// olhados em cada uma, ordenados pela reputação e embaralhados entre os melhores), com a classe 2, e todos os da MLS
+/// com a classe 1
 unsafe extern "thiscall" fn cqn12_copa_dos_eua_inscritos(this: usize) -> i32 {
     cqn12_copa_dos_eua(this).0
 }
@@ -487,6 +520,18 @@ unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
     ((n == read_i16(this + 0x3e) as i32) as i32, n)
 }
 
+/// rule: the Emperor's Cup takes 80 clubs: 47 from the regional divisions ([0x9cf678], sorted by reputation and
+/// shuffled), 2 from the university league ([0x9cf674] [inference]), 3 from the football league ([0x9cf670]
+/// [inference]) — those drawn from other Japanese divisions (up to 6) do not enter —, the J2 clubs (class 0) and the J1
+/// clubs with class = last season's position; the last 16 entries are sorted by class; if the lower divisions lack
+/// clubs, the error box
+/// Original: `JapEmpCup::collect_entrants` (0x6624f0, jap_emp_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: entram na Copa do Imperador 80 clubes: 47 das divisões regionais ([0x9cf678], ordenadas pela reputação e
+/// embaralhadas), 2 da liga universitária ([0x9cf674] [inferência]), 3 da liga de futebol ([0x9cf670] [inferência]) —
+/// os sorteados dos clubes de outra divisão japonesa (até 6) não entram —, os da J2 (classe 0) e os da J1 com a classe
+/// = a posição da temporada anterior; as 16 últimas inscrições vão ao qsort pela classe; faltando clubes nas divisões
+/// de baixo, a caixa de erro
 unsafe extern "thiscall" fn cqn12_copa_do_imperador_inscritos(this: usize) -> i32 {
     cqn12_copa_do_imperador(this).0
 }

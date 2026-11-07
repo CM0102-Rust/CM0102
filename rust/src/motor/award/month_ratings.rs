@@ -12,7 +12,11 @@ unsafe fn cpw5_pessoa(id: i32) -> usize {
     read_usize(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e))
 }
 
-/// { 0x767ee0 } (thiscall, ret 8, month_ratings.cpp): `MONTH_RATINGS::record_match_ratings(jogo, partida)`, pelo
+/// both sides of the match, 20 slots each: except the empty slot (0xfb) and the substitute who did not come on, each
+/// person rating goes to the month ratings
+/// Original: `MONTH_RATINGS::record_match_ratings` (0x767ee0, month_ratings.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x767ee0 } (thiscall, ret 8, month_ratings.cpp): `MONTH_RATINGS::record_match_ratings(jogo, partida)`, pelo
 /// 0x7683a0 a cada partida das ligas com prêmio do mês. Os dois lados da partida (+0x190 e +0x190 + 0x625), 20 vagas de
 /// 0x49 bytes cada: fora a vaga marcada 0xfb em +0x1d e, da 12ª em diante, a reserva que não entrou (+0x32 = 0xff), a
 /// pessoa (id em +0) abaixo da conta de pessoas [0xae2364] vai para as notas do mês (0x767fa0).
@@ -64,7 +68,11 @@ unsafe fn cpw5_somar(r: usize, e: usize) {
     *((r + 0xa) as *mut u8) = read_u8(r + 0xa).wrapping_add(1);
 }
 
-/// { 0x767fa0 } (thiscall, ret 4, month_ratings.cpp): `MONTH_RATINGS::add_player_rating(vaga)`. A tabela em [this]
+/// finds or appends the 12-byte record of the person (grows by 300 when full; the club league and the age), adds the
+/// rating and counts one match
+/// Original: `MONTH_RATINGS::add_player_rating` (0x767fa0, month_ratings.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x767fa0 } (thiscall, ret 4, month_ratings.cpp): `MONTH_RATINGS::add_player_rating(vaga)`. A tabela em [this]
 /// (conta em +4, capacidade em +8) tem registros de 12 bytes: +0 pessoa, +4 liga do clube (ou −1), +8 soma das notas,
 /// +0xa jogos, +0xb idade. Acha a pessoa da vaga (+0) ou acrescenta (cresce 300 com malloc 0x944e46 ou realloc
 /// 0x945667 quando cheia; a liga pelo clube +0x39 da pessoa e o +0x57 dele; a idade pelo +0x18 da pessoa) e soma a nota.
@@ -133,7 +141,11 @@ unsafe extern "thiscall" fn comparar_nota_do_jogador_no_mes(this: usize, e: usiz
     PLACAR.registrar(igual, || format!("nota_do_jogador_no_mes(pessoa {}) original={:x?} rust={:x?}", cpw5_i(e), mo, mr));
 }
 
-/// { 0x768130 } (thiscall, ret 8, month_ratings.cpp): `MONTH_RATINGS::find_best_player(liga, idade)`, pelo prêmio do
+/// sorts by average and returns the first of the league with 3 matches (then 2, 1, 0), with the age filter and the
+/// current club league
+/// Original: `MONTH_RATINGS::find_best_player` (0x768130, month_ratings.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x768130 } (thiscall, ret 8, month_ratings.cpp): `MONTH_RATINGS::find_best_player(liga, idade)`, pelo prêmio do
 /// mês (0x767150). Ordena a tabela pela média (qsort 0x945333 com 0x768200: quem tem menos de 3 jogos vai para o fim) e
 /// devolve o primeiro registro da liga (−1: qualquer) com pelo menos 3 jogos (depois 2, 1 e 0); com idade (não 0xff),
 /// os acima dela só contam e o mais novo só vale depois de 3 contados; com liga, a liga atual do clube da pessoa (+0x39,

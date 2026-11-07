@@ -8,7 +8,11 @@ unsafe fn cqs4_primeiro(this: usize, k: i32) -> usize {
     read_usize(read_usize(t + 0xb1))
 }
 
-/// { 0x42e980 } (thiscall, ret 0, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_final_stage()`, a
+/// The Series C final: the winner of third-round group A against the winner of group B, in a two-club cup stage
+/// [inference: home and away]; the winner is the Series C champion
+/// Original: `BraNatThird::create_final_stage` (0x42e980, bra_nat_third.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42e980 } (thiscall, ret 0, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_final_stage()`, a
 /// final da Série C, do fim da terceira fase: os campeões dos dois grupos da terceira fase (o primeiro da tabela da
 /// fase 8 e o da fase 9, nessa ordem) numa lista local de 2; a tabela das rodadas pela virtual +0x3c
 /// (create_round_table: thiscall(this, 10, &rodadas, &extra, 0), ret 0x10); a fase (operator new 0x944cf1(0xb2) e o
@@ -44,7 +48,12 @@ unsafe extern "thiscall" fn cqs4_final_da_serie_c(this: usize) {
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 10);
 }
 
-/// { 0x42def0 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::start_new_season()`, a virada da Série C (chamada
+/// The Series C turnover: archives the season, clears the table, the schedule and the stages, moves to the next year
+/// and rebuilds the rules, the 56-club list and the table, the fixtures and the order; then the board expectations, the
+/// referee renewal, the seven first-round groups and the predicted positions; the 56-club list is discarded at the end
+/// Original: `BraNatThird::start_new_season` (0x42def0, bra_nat_third.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42def0 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::start_new_season()`, a virada da Série C (chamada
 /// pela virada da Série A): +0x4c = 0 e a tabela liberada (League::free_table 0x687970, thiscall(this, 0), ret 4); o
 /// calendário (+0xba) liberado (free 0x9452ca) e zerado; com estatísticas (+8), Comp_Stats::archive_season_and_reset
 /// (0x4a1c50, thiscall(+8, 1), ret 4); com a fase atual ≥ 0, as fases 0..=+0x30 que existem destruídas (a virtual 0,
@@ -141,7 +150,12 @@ fn cqs4_lugar(k: usize) -> u8 {
     if k < 16 { CQS4_LUGARES[k] } else { (16 + 8 * ((k - 16) / 8)) as u8 }
 }
 
-/// { 0x42f0a0 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::set_predicted_positions()`, as posições previstas da
+/// The Series C predicted positions: the 56 ordered by reputation; the favourite 1st, the second 2nd, the next two 3rd
+/// (the semi-finals), two 5th and two 7th, eight 9th (the second round) and the other forty in bands of eight: 16th,
+/// 24th, 32nd, 40th and 48th
+/// Original: `BraNatThird::set_predicted_positions` (0x42f0a0, bra_nat_third.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42f0a0 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::set_predicted_positions()`, as posições previstas da
 /// Série C (do construtor e da virada, depois dos grupos). Sem estatísticas (+8): a caixa da linha 0x4a2 e volta. A
 /// lista dos 56 (+0xee) é ordenada no lugar pela reputação (qsort 0x945333 com 0x4b07d0, a maior primeiro, nulos no
 /// fim) e cada clube, na ordem, ganha a posição prevista de `cqs4_lugar` (Comp_Stats::set_club_final_position 0x4a2540,
@@ -265,7 +279,12 @@ unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
     core::ptr::write_unaligned((this + 0x30) as *mut i32, k);
 }
 
-/// { 0x42ee80 } (acima): o grupo g da primeira fase da Série C.
+/// A Series C first-round group: seven clubs of the 56-club list (the first seven slots are the league's own group;
+/// group g takes slots 7(g+1) to 7(g+1)+6), home and away round robin, with the league points, tie-breakers and places;
+/// the top two of each of the eight groups go to the second round
+/// Original: `BraNatThird::create_group_stage` (0x42ee80, bra_nat_third.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x42ee80 } (acima): o grupo g da primeira fase da Série C.
 unsafe extern "thiscall" fn cqs3_grupo_da_serie_c(this: usize, g: u32) {
     cqs3_grupo(this, g, 0xc2) // cqs3: os pontos por vitória nos grupos
 }
@@ -273,7 +292,12 @@ unsafe extern "thiscall" fn cqs3_grupo_da_serie_c(this: usize, g: u32) {
 /// A ordem da segunda fase: o k-ésimo melhor (pelos pontos) vai à vaga `CQS3_SEMENTES[k]` da lista dos dezesseis.
 const CQS3_SEMENTES: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5, 3, 1]; // cqs3: as vagas da segunda fase
 
-/// { 0x42e430 } (thiscall, ret 0, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_second_round_stage()`,
+/// The Series C second round: the sixteen (the top two of each group) seeded by first-round points (ties go to the
+/// earlier one: the league, then groups 0 to 6, first before second), in a knockout where the best meets the 16th, the
+/// 2nd the 15th and so on [inference: pairs follow the list]
+/// Original: `BraNatThird::create_second_round_stage` (0x42e430, bra_nat_third.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42e430 } (thiscall, ret 0, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_second_round_stage()`,
 /// a segunda fase da Série C, do fim dos grupos.
 /// 1) Uma lista de 16 (malloc 0x944e46 de 0x40; sem memória: a caixa da linha 0x2e6 e volta).
 /// 2) Os dois primeiros de cada um dos oito grupos (a tabela da liga e as das fases 0 a 6, nessa ordem), em registros de
@@ -342,7 +366,12 @@ unsafe extern "thiscall" fn cqs3_segunda_fase_da_serie_c(this: usize) {
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 7);
 }
 
-/// { 0x42e700 } (thiscall, ret 0, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_third_round_groups()`,
+/// The Series C third round: the eight second-round winners, drawn (shuffled) into two groups of four, home and away,
+/// with 3 points for a win, 1 for a draw, tie-breakers {1, 2, 4} and two top places in each group [inference: the top
+/// two of each group go up to Series B and the group winners play the final]
+/// Original: `BraNatThird::create_third_round_groups` (0x42e700, bra_nat_third.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42e700 } (thiscall, ret 0, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_third_round_groups()`,
 /// a terceira fase da Série C, do fim da segunda: os vencedores da segunda fase ([+0xc][7], os registros de 6 bytes de
 /// +0xa7 com +5 = 1, na ordem) numa lista local de 8, embaralhada (comp_util_shuffle_pointer_array 0x4afb40, cdecl(v,
 /// 8)); os quatro primeiros formam o grupo A (fase 8) e os outros quatro o grupo B (fase 9). Cada grupo: a tabela das

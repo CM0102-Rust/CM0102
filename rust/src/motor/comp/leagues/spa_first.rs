@@ -274,7 +274,13 @@ const CQP6_PRIMERA_IMPAR_FIM: [Cqp6Rodada; 21] = [
 const CQP6_PRIMERA_PAR_NATAL: Cqp6Natal = Cqp6Natal { comeco: &CQP6_PRIMERA_PAR_COMECO, referencia: 14, ajuste: 17, casos: [&CQP6_PRIMERA_PAR_NATAL_0, &CQP6_PRIMERA_PAR_NATAL_1, &CQP6_PRIMERA_PAR_NATAL_2, &CQP6_PRIMERA_PAR_NATAL_3, &CQP6_PRIMERA_PAR_NATAL_4, &CQP6_PRIMERA_PAR_NATAL_5, &CQP6_PRIMERA_PAR_NATAL_6, &CQP6_PRIMERA_PAR_NATAL_PADRAO], fim: &CQP6_PRIMERA_PAR_FIM, linha: 0x11b };
 const CQP6_PRIMERA_IMPAR_NATAL: Cqp6Natal = Cqp6Natal { comeco: &CQP6_PRIMERA_IMPAR_COMECO, referencia: 15, ajuste: 16, casos: [&CQP6_PRIMERA_IMPAR_NATAL_0, &CQP6_PRIMERA_IMPAR_NATAL_1, &CQP6_PRIMERA_IMPAR_NATAL_2, &CQP6_PRIMERA_IMPAR_NATAL_3, &CQP6_PRIMERA_IMPAR_NATAL_4, &CQP6_PRIMERA_IMPAR_NATAL_5, &CQP6_PRIMERA_IMPAR_NATAL_6, &CQP6_PRIMERA_IMPAR_NATAL_PADRAO], fim: &CQP6_PRIMERA_IMPAR_FIM, linha: 0x1e1 };
 
-/// { 0x84e450 } (thiscall, ret 0x10, spa_first.cpp, 6.107 bytes, método +0x3c): `SpaFirst::create_schedule(fase,
+/// the Primera schedule: 38 rounds (20 clubs), nearly all on Sunday (day 6) with one TV slot (one match on day 5); two
+/// tables, by the parity of the year: in odd years (2001/02) from 22 August to 21 May, in even years from 30 August to
+/// 6 June; in each, one fixed-date Christmas round (between 20 and 30 December, or 3 January) chosen by the day the
+/// mid-December round falls on
+/// Original: `SpaFirst::create_schedule` (0x84e450, spa_first.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x84e450 } (thiscall, ret 0x10, spa_first.cpp, 6.107 bytes, método +0x3c): `SpaFirst::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 38 rodadas, a tabela pela paridade do ano +0x40 (o resto da divisão com
 /// sinal: `movsx; and 0x80000001; jns`), cada uma com a rodada do Natal; as outras devolvem 0. Fonte 0xa82944.
 unsafe extern "thiscall" fn calendario_da_primera(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
@@ -342,7 +348,12 @@ fn cqk4_comuns() -> Vec<(usize, u8, u32)> {
     vec![(0xc3, 1, 1), (0xc4, 1, 2), (0x42, 1, 1), (0xc5, 1, 4), (0xc6, 1, 1), (0xc7, 1, 2), (0xc0, 1, 0), (0xd9, 2, 0x43), (0x49, 1, 7), (0x4a, 1, 3)]
 }
 
-/// { 0x84fdf0 } (thiscall, ret 0, spa_first.cpp): `SpaFirst::set_up_rules()`. A Primera: +0xa9 = 38 (as rodadas;
+/// La Primera (20 clubs, 38 rounds): 2 rounds, 3 points for a win and 1 for a draw; nobody goes up, the bottom 3 go
+/// down to the Segunda; tie-breaks 4, 1, 2 and 3 [codes; inference: head to head, goal difference, goals for, wins]; 7
+/// substitutes and 3 substitutions; fixed round order
+/// Original: `SpaFirst::set_up_rules` (0x84fdf0, spa_first.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x84fdf0 } (thiscall, ret 0, spa_first.cpp): `SpaFirst::set_up_rules()`. A Primera: +0xa9 = 38 (as rodadas;
 /// a virtual reescreve), as comuns, 2 turnos, 3 pontos, o 4º desempate 3 (+0xc8), +0xab e +0xdb = 0, ninguém sobe
 /// (+0xbe = +0xbf = 0), 3 caem (+0xc1), nenhuma liga acima (+0x1c = −1), a Segunda abaixo (+0x20 = [0x9cf628]) e
 /// +0x52 = 2 [sem nome].
@@ -360,7 +371,11 @@ unsafe fn cqk4_primera() -> Vec<(usize, u8, u32)> {
     v
 }
 
-/// { 0x855cc0 } (thiscall, ret 0, spa_second.cpp): `SpaSecond::set_up_rules()`. A Segunda: as comuns, 2 turnos, 3
+/// La Segunda (22): the top 3 go up directly, the bottom 4 go down to Segunda B when it is loaded [inference from
+/// nation bit 4]; B teams cannot go up (marked by the table, 0x855b40)
+/// Original: `SpaSecond::set_up_rules` (0x855cc0, spa_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x855cc0 } (thiscall, ret 0, spa_second.cpp): `SpaSecond::set_up_rules()`. A Segunda: as comuns, 2 turnos, 3
 /// pontos, o 4º desempate 3, 3 sobem direto (+0xbe), nenhum play-off de acesso, 4 caem (+0xc1), a Primera acima
 /// ([0x9cf624]) e abaixo a Segunda B ([0x9cf7b8]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c
 /// da nação [inferência]), senão −1; +0x52 = 2.
@@ -379,7 +394,11 @@ unsafe fn cqk4_segunda(this: usize) -> Vec<(usize, u8, u32)> {
     v
 }
 
-/// { 0x853790 } (thiscall, ret 0, spa_lower.cpp): `SpaLower::set_up_rules()`. A divisão de baixo (os times B e os
+/// the lower division (22: B teams and the best minor clubs by reputation): 2 go up directly and 2 go to the promotion
+/// play-off, 4 go down; the league above stored is La Primera (as in the original)
+/// Original: `SpaLower::set_up_rules` (0x853790, spa_lower.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x853790 } (thiscall, ret 0, spa_lower.cpp): `SpaLower::set_up_rules()`. A divisão de baixo (os times B e os
 /// melhores das divisões menores): as comuns, 2 turnos, 3 pontos, 2 sobem direto (+0xbe) e 2 vão ao play-off de
 /// acesso (+0xbf), 4 caem (+0xc1), a Primera como liga de cima ([0x9cf624], assim no original) e nenhuma abaixo.
 unsafe extern "thiscall" fn regras_da_divisao_de_baixo(this: usize) -> u32 {
@@ -445,7 +464,11 @@ unsafe fn cqk5_registro(g: usize) -> usize {
     read_usize(0xae23d0).wrapping_add((read_usize(g) as i32 as usize).wrapping_mul(0x6b))
 }
 
-/// { 0x84fc70 } (thiscall, ret 0, spa_first.cpp): `SpaFirst::create_table()`. +0x3e = 20 e a tabela (malloc 0x944e46
+/// La Primera has 20 clubs; first, the clubs of the Spanish lower division move to the generic lower division; prize
+/// fund of 250,000 per place; TV pays 5,000,000 to each club
+/// Original: `SpaFirst::create_table` (0x84fc70, spa_first.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x84fc70 } (thiscall, ret 0, spa_first.cpp): `SpaFirst::create_table()`. +0x3e = 20 e a tabela (malloc 0x944e46
 /// de 0x49c; sem memória: a caixa do fonte 0xa82844, linha 0x250, e 0). Antes de encher, os clubes da divisão de
 /// baixo espanhola ([0x9cf6b0]) passam à divisão de baixo genérica (+0x57 = o registro de [0x9cf764]). Depois os
 /// clubes da Primera ([0x9cf624]) na ordem do banco, cada um na linha seguinte (League::init_table_row 0x687430:
@@ -542,7 +565,12 @@ unsafe fn cqk5_registros() -> usize {
     read_usize(0xdd7f00)
 }
 
-/// { 0x654180 } (thiscall, ret 0x18, ita_ser_c2a.cpp): `ItaSerC2a::update_staff_records_for_status(clube, situação,
+/// Serie C2/A records: in the table, the title, promotion (weight 100), the play-off place (weight 40) and relegation;
+/// in the promotion play-off, the winner goes up (weight 50) and the loser gets the knock-out record (weight by round);
+/// in the play-out, the winner stays up and the loser goes down
+/// Original: `ItaSerC2a::update_staff_records_for_status` (0x654180, ita_ser_c2a.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x654180 } (thiscall, ret 0x18, ita_ser_c2a.cpp): `ItaSerC2a::update_staff_records_for_status(clube, situação,
 /// fase, _, jogo, _)`, a virtual +0x44 (anunciada pela 0x686670). Devolve 0. Na liga (fase 0xff), pela situação: 5,
 /// o título (Staff_Records::add_league_champions_record 0x868c50: thiscall(registros, clube, comp +4), ret 8); 0, o
 /// acesso (0x869480: thiscall(registros, clube, comp, 0x64), ret 0xc); 1, a vaga no play-off (0x86bdd0:
@@ -658,7 +686,11 @@ unsafe extern "thiscall" fn comparar_registros_pela_situacao_na_c2a(this: usize,
     r
 }
 
-/// { 0x850880 } (thiscall, ret 0x14, spa_first.cpp): `SpaFirst::set_club_progress(clube, fase, atual, melhor, pior)`,
+/// the club's current, best and worst possible position in La Primera stats; places 17 and 18 become 16 for the best
+/// and 19 for the worst [inference: they are not a band of their own]
+/// Original: `SpaFirst::set_club_progress` (0x850880, spa_first.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x850880 } (thiscall, ret 0x14, spa_first.cpp): `SpaFirst::set_club_progress(clube, fase, atual, melhor, pior)`,
 /// a virtual +0x68 (da 0x684cd0 a cada linha da tabela): na entrada do clube nas estatísticas (Comp_Stats::
 /// find_club_entry 0x4a4850: thiscall(+8, clube), ret 4) grava a posição atual (+0x73), a melhor possível (+0x74;
 /// 17 e 18 viram 16) e a pior (+0x75; 17 e 18 viram 19): a faixa de 17 a 18 da Primera não conta como faixa própria

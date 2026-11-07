@@ -68,14 +68,21 @@ unsafe fn cqd11_tirar(this: usize, pessoa: usize, bit: u8, lista: usize, falta: 
     }
 }
 
-/// { 0x4196a0 } (thiscall, ret 4, awol.cpp): `AWOL::clear_awol(pessoa)`, pelo fim da ausência sem contrato (0x418f60),
+/// the absence ends: with bit 1 of the person's flag, the bit flips and her record leaves the absence list
+/// Original: `AWOL::clear_awol` (0x4196a0, awol.cpp, thiscall).
+///
+/// [pt] { 0x4196a0 } (thiscall, ret 4, awol.cpp): `AWOL::clear_awol(pessoa)`, pelo fim da ausência sem contrato (0x418f60),
 /// pelas aposentadorias (0x7a59e0) e pelas transferências (0x8c1af0, 0x8c2180, 0x8c9720). Pessoa e tabela de marcas
 /// ([this+0xc]) não nulas e o bit 1 da marca: troca o bit e tira o registro da pessoa da lista das ausências ([this]).
 unsafe extern "thiscall" fn limpar_ausencia(this: usize, pessoa: usize) {
     cqd11_tirar(this, pessoa, 1, 0, false);
 }
 
-/// { 0x4197c0 } (thiscall, ret 4, awol.cpp): `AWOL::clear_missed_training(pessoa)`, pela falta ao treino de quem ficou
+/// the missed training ends: with bit 2 of the person's flag, the bit flips and her record leaves the missed training
+/// list
+/// Original: `AWOL::clear_missed_training` (0x4197c0, awol.cpp, thiscall).
+///
+/// [pt] { 0x4197c0 } (thiscall, ret 4, awol.cpp): `AWOL::clear_missed_training(pessoa)`, pela falta ao treino de quem ficou
 /// sem contrato (0x418ff0, que os jogadores do dia consultam) e pelas aposentadorias (0x7a59e0). Pessoa e tabela de
 /// marcas não nulas e o bit 2 da marca: troca o bit e tira o registro da pessoa da lista das faltas ([this+4]).
 unsafe extern "thiscall" fn limpar_falta_ao_treino(this: usize, pessoa: usize) {
@@ -150,7 +157,12 @@ unsafe fn cqd11_sortear(n: i32) -> i32 {
     }
 }
 
-/// { 0x41a630 } (thiscall, ret 8, awol.cpp, SEH da notícia local, sem destrutor): `awol_post_missed_training_news(jogador,
+/// the 0xbc9 missed training news: the player, the club, a draw of 3, whether the club is human-run and who reports it
+/// (the AI club's manager, or by draw one of the 5 coaches or the assistant); to the player's club if it is human-run,
+/// else to the nation when the player's reputation is above 7250
+/// Original: `awol_post_missed_training_news` (0x41a630, awol.cpp, thiscall).
+///
+/// [pt] { 0x41a630 } (thiscall, ret 8, awol.cpp, SEH da notícia local, sem destrutor): `awol_post_missed_training_news(jogador,
 /// clube)`, pela falta ao treino (0x41a360). Jogador com ficha (+0x61) e clube com técnico (+0xcf): a notícia 0xbc9
 /// (0x77bbe0) com o jogador (id e as chaves +0x33 de +4, +8, +0xc), o id do clube, sorteio(3), o clube de humano que
 /// decide (0x600a50 com 0, 1) e quem relata: o técnico, se o clube tem técnico e não é de humano (0x600a50 com 1, 1;
@@ -327,7 +339,12 @@ unsafe fn cpw7_faltou(this: usize, pessoa: usize) {
     f(this, pessoa);
 }
 
-/// { 0x4190d0 } (thiscall, awol.cpp): `AWOL::daily_update()`, todo dia pelo laço do jogo (0x5cccd0). Três listas com o
+/// ends the first expired AWOL; resolves the first missed training from a week ago (repeat case: draws and a new miss;
+/// new case: teammates who ask to leave or lose professionalism, morale and temperament, and the offender who loses
+/// professionalism and morale and falls out with the club); resolves the first expired late arrival by the draws
+/// Original: `AWOL::daily_update` (0x4190d0, awol.cpp, thiscall).
+///
+/// [pt] { 0x4190d0 } (thiscall, awol.cpp): `AWOL::daily_update()`, todo dia pelo laço do jogo (0x5cccd0). Três listas com o
 /// cursor em +0xa: (1) ausências ([this]): a primeira cuja volta (data em +4) já passou acaba (0x419710); (2) faltas ao
 /// treino ([this+4]): a primeira com uma semana passada da data (+4) é resolvida: caso repetido (byte +0xc) com dois
 /// sorteios zero pelo profissionalismo (+0x5b) e pelo temperamento (+0x5d) da pessoa, os dois caem pelo sorteio e ela
@@ -519,7 +536,10 @@ unsafe extern "thiscall" fn comparar_faltas_do_dia(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(1308)(this)
 }
 
-/// { 0x418ff0 } (thiscall, ret 4, awol.cpp): `AWOL::has_missed_training(pessoa)`, pelos jogadores do dia (0x5a69b0) e
+/// bit 2 of the person flag; without a contract, clears the miss first
+/// Original: `AWOL::has_missed_training` (0x418ff0, awol.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x418ff0 } (thiscall, ret 4, awol.cpp): `AWOL::has_missed_training(pessoa)`, pelos jogadores do dia (0x5a69b0) e
 /// pelas telas. Pessoa nula ou fora da conta [0xae2364]: falso. Com o bit 2 da marca dela ([this+0xc] + id) e sem
 /// contrato (0x4cf5a0, guardado em [0xae1080]), tira a falta (0x4197c0) antes. Devolve o bit 2 da marca.
 unsafe extern "thiscall" fn teve_falta_ao_treino(this: usize, pessoa: usize) -> u32 {
@@ -559,7 +579,10 @@ unsafe extern "thiscall" fn comparar_teve_falta_ao_treino(this: usize, pessoa: u
     r
 }
 
-/// { 0x419070 } (thiscall, ret 4, awol.cpp): `AWOL::has_fitness_incident(pessoa)`, pelos jogadores do dia (0x5a69b0).
+/// true when the person has a record in the late arrival list
+/// Original: `AWOL::has_fitness_incident` (0x419070, awol.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x419070 } (thiscall, ret 4, awol.cpp): `AWOL::has_fitness_incident(pessoa)`, pelos jogadores do dia (0x5a69b0).
 /// Pessoa nula, fora da conta [0xae2364] ou sem a lista dos atrasos ([this+8]): falso; senão percorre a lista (cursor em
 /// +0xa) atrás do registro da pessoa (id em +0). Verdadeiro no byte baixo; os altos como a original deixa no registrador.
 unsafe extern "thiscall" fn teve_incidente_de_forma(this: usize, pessoa: usize) -> u32 {
@@ -627,7 +650,11 @@ unsafe fn cpw7_clube_do_contrato(k: usize) -> usize {
 /// repetido); o comparador não o compara (o da original é resíduo de verdade).
 const CPW7_BYTE_DO_CASO: u8 = 0x90;
 
-/// { 0x41a360 } (thiscall, ret 4, awol.cpp, SEH só com a data local, sem destrutor): `AWOL::miss_training(pessoa)`,
+/// the very unhappy player may go AWOL (0x419840); otherwise marks the miss, posts the news, lowers the condition,
+/// joins the missed training list (the case byte, unset in the original, goes 0x90) and the AI manager may fine him
+/// Original: `AWOL::miss_training` (0x41a360, awol.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x41a360 } (thiscall, ret 4, awol.cpp, SEH só com a data local, sem destrutor): `AWOL::miss_training(pessoa)`,
 /// pelas faltas ao treino do dia (0x5d6aa0) e pela faltas_do_dia. Jogador (+0x61) dentro da conta, com contrato
 /// (0x4cf5a0, em [0xae1080]) num clube e sem a marca 2: contrato com moral (+0x44) até −100 e o bit 0x2000 (depois o
 /// 0x800) em +0x45, com sorteio(profissionalismo + 10) e sorteio(+0x59 + 10) zero, some (0x419840 com 0, 0). Senão
@@ -747,7 +774,10 @@ unsafe extern "thiscall" fn comparar_marcar_falta_ao_treino(this: usize, pessoa:
     PLACAR.registrar(igual, || format!("marcar_falta_ao_treino(pessoa {:#x}) original={} {:x?} rust={} {:x?}", pessoa, r, mo, n, mr));
 }
 
-/// { 0x419710 } (thiscall, ret 4, awol.cpp): `AWOL::end_absence(registro)`, pela faltas_do_dia. Registro com a marca
+/// with a contract at a club, the return news; toggles bit 1 of the flag and removes the record from the absence list
+/// Original: `AWOL::end_absence` (0x419710, awol.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x419710 } (thiscall, ret 4, awol.cpp): `AWOL::end_absence(registro)`, pela faltas_do_dia. Registro com a marca
 /// da pessoa (+0 id; [this+0xc] + id) não zero: com contrato (0x4cf5a0, em [0xae1080]) num clube, a notícia da volta
 /// (0x419ad0 com o clube +0x39 da pessoa, 0 e −1); troca o bit 1 da marca (o `or 1` da original nunca dá zero) e tira o
 /// registro da lista das ausências ([this], 0x68d1f0). Não lê local sem valor.
@@ -805,7 +835,11 @@ unsafe extern "thiscall" fn comparar_fim_da_ausencia(this: usize, r: usize) {
     PLACAR.registrar(igual, || format!("fim_da_ausencia(marca {:#x}) original={:x?} rust={:x?}", m, mo, mr));
 }
 
-/// { 0x867560 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::set_flags(marcas)`, chamada por muitas rotinas
+/// sets the flags at +0x40 and, when the person now wants to leave and nothing prevents it, the transfer request
+/// (0x4d8610)
+/// Original: `STAFF_CONTRACT::set_flags` (0x867560, staff_contracts.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x867560 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::set_flags(marcas)`, chamada por muitas rotinas
 /// (no motor.rs pelo endereço; antes só a porta do pós-jogo a desviava, no modo comparação). Marcas acima de 0x1000: a
 /// caixa "Error" e segue (aqui: a original inteira). Liga as marcas em +0x40; pessoa (+0 id) que não é das funções
 /// 0xc, 0xd e 0xf, contrato com +0x44 positivo, sem +0x49, que quer sair (0x866f60), sem transferência futura

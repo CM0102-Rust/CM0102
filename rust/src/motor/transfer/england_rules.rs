@@ -58,7 +58,12 @@ const CQK1_INGLATERRA: [[u8; 6]; 2] = [
     [0x07, 0x00, 0x04, 0x1a, 0x02, 0x00],
 ];
 
-/// { 0x579b30 } (thiscall, ret 0x14, england_rules.cpp, `ENGLAND_RULES::ENGLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
+/// the English rule (7): one transfer window, from 2 June (moved to the Monday [inference]) to 26 March (moved to the
+/// Thursday [inference]); England's other rules (non-EU players, loans: 5 a season and 2 at once, same league) live in
+/// the vtable 0x969f4c methods
+/// Original: `ENGLAND_RULES::ENGLAND_RULES` (0x579b30, england_rules.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x579b30 } (thiscall, ret 0x14, england_rules.cpp, `ENGLAND_RULES::ENGLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência da Inglaterra (regra 7): a base (0x8e84a0), a vtable 0x969f4c, 1 janela(s) de `CQK1_INGLATERRA`. Devolve o objeto.
 unsafe extern "thiscall" fn regras_inglaterra(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqk_1 inglaterra");
@@ -82,7 +87,11 @@ const CQK1_EUA: [[u8; 6]; 2] = [
     [0x19, 0x00, 0xff, 0x0f, 0x07, 0x00], // cqk1: os EUA fecham em agosto
 ];
 
-/// { 0x90b940 } (thiscall, ret 0x14, usa_rules.cpp, `USA_RULES::USA_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
+/// the USA rule (25): one window, from 7 January (moved to the Wednesday [inference]) to 15 August; +0x13 = 4 (default
+/// 50) [inference: the foreign squad limit]
+/// Original: `USA_RULES::USA_RULES` (0x90b940, usa_rules.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x90b940 } (thiscall, ret 0x14, usa_rules.cpp, `USA_RULES::USA_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência dos EUA (regra 25): a base (0x8e84a0), a vtable 0x970a38, 1 janela(s) de `CQK1_EUA` e o +0x13 = 4 (o padrão da base é 50) [inferência: o limite de estrangeiros]. Devolve o objeto.
 unsafe extern "thiscall" fn regras_eua(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqk_1 eua");
@@ -107,7 +116,11 @@ const CQK1_AUSTRALIA: [[u8; 6]; 2] = [
     [0x02, 0x00, 0xff, 0x11, 0x03, 0x00],
 ];
 
-/// { 0x412c80 } (thiscall, ret 0x14, australia_rules.cpp, `AUSTRALIA_RULES::Australia_rules`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
+/// the Australian rule (2): one window, from 11 June (moved to the Saturday [inference]) to 17 April; +0x13 = 6
+/// [inference: the foreign squad limit]
+/// Original: `AUSTRALIA_RULES::Australia_rules` (0x412c80, australia_rules.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x412c80 } (thiscall, ret 0x14, australia_rules.cpp, `AUSTRALIA_RULES::Australia_rules`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência da Austrália (regra 2): a base (0x8e84a0), a vtable 0x967830, 1 janela(s) de `CQK1_AUSTRALIA` e o +0x13 = 6 [inferência: o limite de estrangeiros]. Devolve o objeto.
 unsafe extern "thiscall" fn regras_australia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqk_1 australia");
@@ -154,7 +167,12 @@ unsafe fn cqe5_conta(clube: usize) -> usize {
     read_usize(read_usize(0xde1f54) + 0x91c).wrapping_add(read_usize(clube).wrapping_mul(16))
 }
 
-/// { 0x579d60 } (thiscall, ret 0x10, england_rules.cpp): `ENGLAND_RULES::can_loan_player(clube, jogador, mensagem,
+/// refuses (0, with the message and the reason) between clubs of the same English division (0x1d), with five loans this
+/// season (0x1e), with more than one player on loan from another club in the squad (0x26) and outside the window (9);
+/// otherwise 1
+/// Original: `ENGLAND_RULES::can_loan_player` (0x579d60, england_rules.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x579d60 } (thiscall, ret 0x10, england_rules.cpp): `ENGLAND_RULES::can_loan_player(clube, jogador, mensagem,
 /// motivo)`, pelas regras da nação em `TRANSFER_MANAGER::can_loan_player` (0x8d0040). Sem contrato (ou sem clube do
 /// contrato): pode. O clube que pede e o dono na mesma divisão inglesa ([0x9cf5bc]): motivo 0x1d. Cinco empréstimos na
 /// temporada (a tabela [[0xde1f54] + 0x91c]): 0x1e. Mais de um jogador de outro clube no elenco (as 50 vagas em +0xd7,
@@ -244,7 +262,10 @@ unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: usize, jogad
     0
 }
 
-/// { 0x579fd0 } (thiscall, ret 4, england_rules.cpp): `ENGLAND_RULES::record_loan(oferta)`, quando um empréstimo se
+/// adds 1 to the season loan count of the borrowing club when it is English
+/// Original: `ENGLAND_RULES::record_loan` (0x579fd0, england_rules.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x579fd0 } (thiscall, ret 4, england_rules.cpp): `ENGLAND_RULES::record_loan(oferta)`, quando um empréstimo se
 /// conclui (0x8c9390): o clube da oferta (+8, índice em [0xae23b4]) da nação inglesa ([0x9cf2e4]) soma 1 na conta da
 /// temporada.
 unsafe extern "thiscall" fn cqe5_registrar_emprestimo(_this: usize, oferta: usize) {
@@ -257,7 +278,10 @@ unsafe extern "thiscall" fn cqe5_registrar_emprestimo(_this: usize, oferta: usiz
     }
 }
 
-/// { 0x57a020 } (thiscall, ret 4, england_rules.cpp): `ENGLAND_RULES::daily_update(data)`, pelo dia das regras: em
+/// on 20 June, resets the season loan count of every club of this rule set nation
+/// Original: `ENGLAND_RULES::daily_update` (0x57a020, england_rules.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x57a020 } (thiscall, ret 4, england_rules.cpp): `ENGLAND_RULES::daily_update(data)`, pelo dia das regras: em
 /// 20 de junho (só o dia do ano, 0x549f70 com 1998), a conta da temporada de cada clube ([0xae235c] em [0xae23b4]) da
 /// nação destas regras (+0xa) volta a zero.
 unsafe extern "thiscall" fn cqe5_dia_das_regras(this: usize, data: usize) {

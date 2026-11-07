@@ -60,7 +60,11 @@ const CQK2_ESPANHA: [[u8; 6]; 4] = [
     [0x16, 0x01, 0xff, 0x1f, 0x00, 0x00],
 ];
 
-/// { 0x859470 } (thiscall, ret 0, spain_rules.cpp, `SPAIN_RULES::init_transfer_windows`; chamada pelo construtor das regras da Espanha (regra 22), depois da base e da vtable): as
+/// the Spanish rule (22): two windows, from 17 June (moved to the Wednesday [inference]) to 20 August (moved to the
+/// Thursday [inference]) and from 15 December to 31 January
+/// Original: `SPAIN_RULES::init_transfer_windows` (0x859470, spain_rules.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x859470 } (thiscall, ret 0, spain_rules.cpp, `SPAIN_RULES::init_transfer_windows`; chamada pelo construtor das regras da Espanha (regra 22), depois da base e da vtable): as
 /// 2 janelas de transferência de `CQK2_ESPANHA`.
 unsafe extern "thiscall" fn janelas_espanha(this: usize) {
     crate::comparacao::ramo("cqk_2 espanha");
@@ -83,7 +87,11 @@ const CQK2_ITALIA: [[u8; 6]; 6] = [
     [0x0e, 0x02, 0xff, 0x1e, 0x03, 0x00],
 ];
 
-/// { 0x6613f0 } (thiscall, ret 0, italy_rules.cpp, `ITALY_RULES::init_transfer_windows`; chamada pelo construtor das regras da Itália (regra 14), depois da base e da vtable): as
+/// the Italian rule (14): three windows, from 1 July to 27 September (moved to the Thursday [inference]), from 2 to 31
+/// January, and from 1 July to 30 April [inference: the free-agent one]
+/// Original: `ITALY_RULES::init_transfer_windows` (0x6613f0, italy_rules.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x6613f0 } (thiscall, ret 0, italy_rules.cpp, `ITALY_RULES::init_transfer_windows`; chamada pelo construtor das regras da Itália (regra 14), depois da base e da vtable): as
 /// 3 janelas de transferência de `CQK2_ITALIA`.
 unsafe extern "thiscall" fn janelas_italia(this: usize) {
     crate::comparacao::ramo("cqk_2 italia");
@@ -106,7 +114,11 @@ const CQK2_FRANCA: [[u8; 6]; 6] = [
     [0x09, 0x02, 0x04, 0x0a, 0x00, 0x00],
 ];
 
-/// { 0x5c15e0 } (thiscall, ret 0, france_rules.cpp, `FRANCE_RULES::init_transfer_windows`; chamada pelo construtor das regras da França (regra 9), depois da base e da vtable): as
+/// the French rule (9): three windows, from 30 May to 31 August, from 1 September to 20 December and from 21 December
+/// to 10 January (the dates move to weekdays [inference])
+/// Original: `FRANCE_RULES::init_transfer_windows` (0x5c15e0, france_rules.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5c15e0 } (thiscall, ret 0, france_rules.cpp, `FRANCE_RULES::init_transfer_windows`; chamada pelo construtor das regras da França (regra 9), depois da base e da vtable): as
 /// 3 janelas de transferência de `CQK2_FRANCA`.
 unsafe extern "thiscall" fn janelas_franca(this: usize) {
     crate::comparacao::ramo("cqk_2 franca");

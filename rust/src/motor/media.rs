@@ -48,7 +48,12 @@ fn cqc10_acrescentar(dest: &mut [usize; 30], n: &mut u8, c: usize) {
     }
 }
 
-/// { 0x754a30 } (thiscall, ret 0, media.cpp, quadro SEH sem destrutor no caminho normal):
+/// drops transfer interest older than 31 days and, by chance, publishes the rumour linking the player to the interested
+/// clubs, with the transfer request, the AI manager response, the squad reaction and the rival warning; the AI owner
+/// may say he will not sell
+/// Original: `Media::process_transfer_interest` (0x754a30, media.cpp, thiscall).
+///
+/// [pt] { 0x754a30 } (thiscall, ret 0, media.cpp, quadro SEH sem destrutor no caminho normal):
 /// `Media::process_transfer_interest()`, pela rotina diária (0x5cdd8f). Para cada registro de interesse (vetor de 25
 /// bytes em [this+0xc], conta [this+0x14]: +0 jogador, +4 clube, +8 data, +0x10 estado, +0x11, +0x15): vencido (mais de
 /// 31 dias, 0x54c5b0), sem técnico no clube dono (o +0xcf do clube do contrato do jogador, guardado da volta anterior
@@ -283,7 +288,11 @@ unsafe extern "thiscall" fn comparar_boatos_de_transferencia(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(1533)(this)
 }
 
-/// { 0x587600 } (cdecl, media.cpp no fluxo; european_cup.cpp no mapa, sem outro chamador; quadro SEH sem destrutor no
+/// news item 0xfbe that the club will not sell the player, with the chairman when he likes the player; to every manager
+/// for a famous player, else to the interested human managers
+/// Original: `news_create_not_for_sale_story` (0x587600, media.cpp, cdecl).
+///
+/// [pt] { 0x587600 } (cdecl, media.cpp no fluxo; european_cup.cpp no mapa, sem outro chamador; quadro SEH sem destrutor no
 /// caminho normal): `news_create_not_for_sale_story(jogador, clube, presidente, outro)`: com ficha e clube, a notícia
 /// 0xfbe (0x77bbe0) com o jogador, o outro clube (ou −1), o clube e um sorteio(3); o presidente, se gosta do jogador
 /// (0x547810) ou com sorteio(+0x16 da ficha dele) acima de sorteio(20), senão −1 no 7; reputação (+0xd da ficha) acima de
@@ -332,7 +341,11 @@ unsafe extern "C" fn comparar_noticia_nao_vende(jogador: usize, clube: usize, pr
     orig::<unsafe extern "C" fn(usize, usize, usize, usize)>(1534)(jogador, clube, presidente, outro)
 }
 
-/// { 0x75c390 } (thiscall, ret 0xc, media.cpp, quadro SEH sem destrutor no caminho normal):
+/// news item 0x2e with the board and fans praising the manager for the title, with the outlet and the pundit, for a
+/// manager with 180 days or more at the club
+/// Original: `Media::queue_trophy_praise_story` (0x75c390, media.cpp, thiscall).
+///
+/// [pt] { 0x75c390 } (thiscall, ret 0xc, media.cpp, quadro SEH sem destrutor no caminho normal):
 /// `Media::queue_trophy_praise_story(clube, competição, marca)`, pelos registros do título (0x8693e2, 0x86b000). Clube
 /// com técnico, competição e fora das seleções: a notícia 0x2e (0x77bbe0) com o técnico, o clube, a competição, um
 /// sorteio(2), o veículo (0x757f30), o comentarista (0x7dab90 com a nação ou −1), a marca, a confiança da diretoria
@@ -626,6 +639,16 @@ unsafe fn cqb8_reacao_com(topico: u32, jogador: usize, clube: usize, ids: usize,
     }
 }
 
+/// after a story about the player (the transfer rumour): the dislike chance from the interested clubs (Old Firm, league
+/// fixture, rival, same division), the club rejecting him and, for each squad, staff and board member, a score from
+/// squad status, ambition, loyalty and preferences; when drawn, the person comes to dislike the player and his contract
+/// gets flag 1 or the 0x800 complaints
+/// Original: `Media::apply_squad_reaction_to_player_story` (0x755340, media.cpp, thiscall).
+///
+/// [pt] depois de uma história sobre o jogador (o boato de transferência): a chance de desafeição pelos clubes interessados
+/// (clássico de Glasgow, confronto na liga, rival, mesma divisão), a rejeição pelo clube e, para cada pessoa do elenco,
+/// da comissão e da diretoria, a nota pela posição no elenco, ambição, lealdade e preferências; sorteada, a pessoa
+/// passa a não gostar do jogador e o contrato dela ganha a marca 1 ou as queixas 0x800
 unsafe extern "thiscall" fn reacao_do_elenco_a_historia(_this: usize, topico: u32, jogador: usize, clube: usize, ids: usize, n: u32) {
     cqb8_reacao_com(topico, jogador, clube, ids, n, &mut |r, t, a| despachar_pos(r, t, a))
 }
@@ -735,6 +758,13 @@ unsafe fn cqb8_rival_com(jogador: usize, clube: usize, chamar: &mut dyn FnMut(us
     }
 }
 
+/// with a high-reputation player linked to the club and more than two squad players in his position: the unsettled
+/// position rivals (by ambition and loyalty, by a draw) get contract flag 0x800, and the first one gives story 0x25
+/// Original: `Media::warn_squad_of_position_rival` (0x758010, media.cpp, thiscall).
+///
+/// [pt] com o jogador de reputação alta ligado ao clube e mais de dois do elenco na posição dele: os rivais de posição
+/// insatisfeitos (pela ambição e pela lealdade, por sorteio) ganham a marca 0x800 no contrato, e o primeiro dá a
+/// história 0x25
 unsafe extern "thiscall" fn aviso_ao_rival_de_posicao(_this: usize, jogador: usize, clube: usize, _a: u32, _b: u32) {
     cqb8_rival_com(jogador, clube, &mut |r, t, a| despachar_pos(r, t, a))
 }
@@ -767,7 +797,11 @@ const CQB8_RESPOSTAS: [(usize, usize); 22] = [
     (0xa27798, 0xa277c8), (0xa2740c, 0xa2741c),
 ];
 
-/// { 0x735160 } (stdcall, ret 0x10, media.cpp): `media_format_response_option_label(tipo, opção, saída, tamanho)`: o
+/// the label of a media story response option ("Deny rumour", "Defend Player", "No Comment"...), from the 22-case table
+/// by story kind
+/// Original: `media_format_response_option_label` (0x735160, media.cpp, stdcall).
+///
+/// [pt] { 0x735160 } (stdcall, ret 0x10, media.cpp): `media_format_response_option_label(tipo, opção, saída, tamanho)`: o
 /// rótulo da opção de resposta a uma história ("Deny rumour", "Defend Player", "No Comment"...) na saída (0x66f4e0),
 /// pela tela das histórias (0x742b3b, com 0xde1f64 e 0x7d0). Saída nula ou tamanho abaixo de 15: nada.
 unsafe extern "stdcall" fn rotulo_da_resposta_da_midia(tipo: u32, opcao: u32, saida: usize, tamanho: u32) {
@@ -984,7 +1018,12 @@ unsafe fn cqa13_porta_voz(clube: usize, p: usize) -> usize {
     quem
 }
 
-/// { 0x758200 } (thiscall, ret 0x10, media.cpp): `Media::process_transfer_squad_reactions(jogador, novo, velho, flag)`,
+/// after the transfer of a player aged 19 or more with reputation 4250: in the new squad, the contract flags and
+/// grievances by position and squad strength, the supporters (+500) and the celebration of a star signing; in the old
+/// squad, the grievances at the team mate leaving, morale −25, cleared flags and the unsettled team mate news
+/// Original: `Media::process_transfer_squad_reactions` (0x758200, media.cpp, thiscall).
+///
+/// [pt] { 0x758200 } (thiscall, ret 0x10, media.cpp): `Media::process_transfer_squad_reactions(jogador, novo, velho, flag)`,
 /// no fim de cada transferência (TRANSFER_MANAGER::move_player_to_club, 0x8ca879). Só para o jogador (ficha +0x61) de 19
 /// anos ou mais com reputação de 4250. (A) A história da mídia na frente da fila (0xbd0, +0x11 = 0x25, novo clube de id
 /// 0x25; nunca na prática): queixas no contrato da pessoa dela. (B) No elenco do novo clube (50 vagas +0xd7), quem está
@@ -1332,7 +1371,10 @@ unsafe extern "thiscall" fn comparar_reacoes_dos_elencos_a_transferencia(this: u
     });
 }
 
-/// { 0x75b6e0 } (thiscall, ret 0x14, media.cpp, quadro SEH da notícia local): `Media::queue_signing_celebration_story(
+/// news 0xbe5 of the fans or a squad spokesman celebrating the signing, to the club manager
+/// Original: `Media::queue_signing_celebration_story` (0x75b6e0, media.cpp, thiscall).
+///
+/// [pt] { 0x75b6e0 } (thiscall, ret 0x14, media.cpp, quadro SEH da notícia local): `Media::queue_signing_celebration_story(
 /// jogador, clube, tipo, a, porta_voz)`, pelas reações à transferência (0x758200). Jogador com +0x1a, clube atual
 /// (+0x39) com técnico (+0xcf) e +0x69, ficha (+0x61); tipo 2 sem porta-voz: nada. A notícia 0xbe5: o jogador (id e as
 /// três chaves), o id do clube dele, sorteio(2), o veículo (0x757fa0), o comentarista (0x7dab90 com o clube, o veículo e
@@ -1403,7 +1445,10 @@ unsafe extern "thiscall" fn comparar_noticia_da_comemoracao_da_contratacao(this:
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize)>(1456)(this, p, clube, tipo, a, porta_voz)
 }
 
-/// { 0x75cfc0 } (thiscall, ret 0x10, media.cpp, quadro SEH da notícia local): `Media::queue_sale_unrest_story(velho,
+/// news 0xbe4 of the team mate unhappy at the sale, to the old club's manager
+/// Original: `Media::queue_sale_unrest_story` (0x75cfc0, media.cpp, thiscall).
+///
+/// [pt] { 0x75cfc0 } (thiscall, ret 0x10, media.cpp, quadro SEH da notícia local): `Media::queue_sale_unrest_story(velho,
 /// novo, jogador, companheiro)`, pelas reações à transferência (0x758200). Velho clube com técnico (+0xcf), fora da
 /// seleção (0x53b900), companheiro e jogador com ficha (+0x61). A notícia 0xbe4: o técnico, o companheiro e o jogador
 /// (id e as três chaves de cada), os ids dos dois clubes, sorteio(2) (+2 se +0x5b do companheiro não passar de
@@ -1530,7 +1575,13 @@ unsafe fn cpw10_cargo_no_clube(s: usize) {
     *((s + 0x3d) as *mut u8) = 0xd;
 }
 
-/// { 0x7a65d0 } (thiscall, ret 0, player_regen.cpp): `PLAYER_REGEN::process_regen_queue()`, pelo laço do dia (0x5cccd0),
+/// from the front of the youth regen queue (12 bytes: id and date), while the date is before today, the youth regen
+/// (0x7abac0) and the entry leaves; with more than 2 reserve coaches, rebuilds count − 2 of them: the person lending
+/// the data (0x7a6e60) gets the non-player record, the job at the AI club and the ratings from reputation (pow and
+/// bands) or drawn; the reserve leaves (0x7a82b0)
+/// Original: `PLAYER_REGEN::process_regen_queue` (0x7a65d0, player_regen.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x7a65d0 } (thiscall, ret 0, player_regen.cpp): `PLAYER_REGEN::process_regen_queue()`, pelo laço do dia (0x5cccd0),
 /// todo dia. A fila dos regens jovens ([+0x10], 12 bytes: +0 id, +4 data; conta +0x14): da frente, enquanto a data da
 /// primeira for antes de hoje (0x456770) e +0x40 não for zero, o regen jovem (0x7abac0) da pessoa (id fora de 0..[0xae2364]:
 /// caixa "Invalid staff_id for regen" e fim), as seguintes sobem uma casa (0x7a8b70) e a última fica com id −1. Depois, com
@@ -1690,7 +1741,10 @@ unsafe fn cpw10_veiculo_menor() -> u32 {
     }
 }
 
-/// { 0x757f30 } (cdecl, media.cpp): `media_pick_outlet_type_for_club(clube)`: reputação (+0x80) acima de 6250: o
+/// club reputation above 6250: outlet 0 to 6 from random(100); otherwise 2 or 4 from random(4)
+/// Original: `media_pick_outlet_type_for_club` (0x757f30, media.cpp, cdecl).
+///
+/// [pt] { 0x757f30 } (cdecl, media.cpp): `media_pick_outlet_type_for_club(clube)`: reputação (+0x80) acima de 6250: o
 /// veículo dos grandes pelo sorteio(100); senão o dos menores (sorteio(4)). Pelas notícias do troféu (0x75c390) e da venda
 /// (0x75cfc0).
 unsafe extern "C" fn veiculo_pelo_clube(clube: usize) -> u32 {
@@ -1708,7 +1762,10 @@ unsafe extern "C" fn comparar_veiculo_pelo_clube(clube: usize) -> u32 {
     r
 }
 
-/// { 0x757fa0 } (cdecl, media.cpp): `media_pick_outlet_type_for_person(pessoa)`: como o do clube, pela reputação do
+/// the same from the player's reputation (player data +0xb)
+/// Original: `media_pick_outlet_type_for_person` (0x757fa0, media.cpp, cdecl).
+///
+/// [pt] { 0x757fa0 } (cdecl, media.cpp): `media_pick_outlet_type_for_person(pessoa)`: como o do clube, pela reputação do
 /// jogador (+0xb da ficha +0x61). Pelas histórias do jogador (0x72c1f0), do desabafo, do elogio, de querer jogar e da
 /// comemoração da contratação (0x75b6e0, nas transferências).
 unsafe extern "C" fn veiculo_pela_pessoa(pessoa: usize) -> u32 {
@@ -1804,7 +1861,14 @@ unsafe fn cpo5_somar(p: usize, v: i16) {
     core::ptr::write_unaligned(p as *mut i16, x.clamp(1, 10000));
 }
 
-/// { 0x77bbe0 } (thiscall, ret 8, news.cpp, quadro SEH só da data, destrutor vazio 0x5a53c0): `NewsItem::NewsItem(tipo,
+/// builds the news item: type (+0), important byte (+4), the 50 data slots cleared, today's date (+0xcd), byte
+/// [0xae2c88] at +0xd5, id and +0xda cleared; in DESLIGADAS since 2026-10-29: with the detour the career in Rust mode
+/// left the reference be54a138 (bisection of batch 251's 39 routines; with 0x77bbe0, the news constructor, the game
+/// later crashed in 0x7c6650 on a broken index); the cause (stack residue or a difference in the copy) is not isolated
+/// yet; the copy stays in the code and does not run
+/// Original: `NewsItem::NewsItem` (0x77bbe0, news.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x77bbe0 } (thiscall, ret 8, news.cpp, quadro SEH só da data, destrutor vazio 0x5a53c0): `NewsItem::NewsItem(tipo,
 /// importante)`: inicia a data (+0xcd, 0x54a110), grava o tipo (+0), o byte importante (+4) e zera os 50 dados (+5);
 /// a data de hoje ([0xae2c90], pela atribuição 0x417c10 com retorno numa temporária), o byte [0xae2c88] em +0xd5, o id
 /// (+0xd6) e +0xda zerados. Devolve a notícia.
@@ -1833,7 +1897,12 @@ unsafe fn cpo5_dados_da_pessoa(gravar: unsafe extern "thiscall" fn(usize, i8, u3
     gravar(n, k + 3, read_usize(read_usize(p + 0xc) + 0x33) as u32);
 }
 
-/// { 0x738340 } (thiscall, ret 0x14, media.cpp, quadro SEH sem destrutor): `Media::adjust_supporter_confidence(clube,
+/// adds to the supporters' confidence (+8 of the club row in [[0xb67a44]], 1..10000) the target minus the current
+/// confidence, × 0.75, damped by a favoured or rejected manager and beyond ±1000; beyond ±500, news 0xbe0 to the
+/// manager
+/// Original: `Media::adjust_supporter_confidence` (0x738340, media.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x738340 } (thiscall, ret 0x14, media.cpp, quadro SEH sem destrutor): `Media::adjust_supporter_confidence(clube,
 /// sujeito, tópico, alvo, variante)`: soma na confiança da torcida (+8 da linha do clube, entre 1 e 10000) a variação
 /// (ver `cpo5_variacao_da_torcida`). Fora de ±500, a notícia 0xbe0 (local) ao técnico do clube (0x7861e0): 0 = 0, 1 =
 /// tópico, 2 = variante, 3 = sorteio(4), 4 = id do clube, 5 = o grau (5 abaixo de −750, 4 negativa, 3 até 750, 2
@@ -1888,7 +1957,11 @@ unsafe extern "thiscall" fn ajustar_confianca_da_torcida(_this: usize, clube: us
     entregar(read_usize(0xb7431c), n, clube);
 }
 
-/// { 0x7386f0 } (thiscall, ret 0x18, media.cpp, quadro SEH sem destrutor): `Media::adjust_board_confidence(clube,
+/// adds to the board's confidence (+6 of the club row) (confidence − 6000)/20 + target, × 0.75, damped by a chairman
+/// who likes or dislikes the manager and beyond ±1000; beyond ±500, news 0xbe0 to the manager with the subject's flags
+/// Original: `Media::adjust_board_confidence` (0x7386f0, media.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x7386f0 } (thiscall, ret 0x18, media.cpp, quadro SEH sem destrutor): `Media::adjust_board_confidence(clube,
 /// sujeito, tópico, alvo, variante, sexto)`: soma na confiança da diretoria (+6 da linha do clube, entre 1 e 10000) a
 /// variação (ver `cpo5_variacao_da_diretoria`). Fora de ±500, a notícia 0xbe0 (local) ao técnico do clube (0x7861e0):
 /// 0 = 1, 1 = tópico, 2 = variante, 3 = sorteio(4), 4 = id do clube, 5 = o grau (5 abaixo de −750 com confiança abaixo
@@ -2090,7 +2163,12 @@ unsafe fn cpo7_dias(p: usize) -> i32 {
 /// os 2 e 30 (sorteio(2)); 2 os 4, 9, 33, 34 e 37 (sorteio(3)); 3 os 5 e 7 (sorteio(4)); o resto 0.
 const CPO7_CASO: [u8; 0x26] = [0, 5, 1, 5, 2, 3, 0, 3, 5, 2, 5, 5, 5, 4, 0, 5, 5, 0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5, 5, 2, 2, 4, 5, 2];
 
-/// { 0x732c80 } (thiscall, ret 0x10, media.cpp, quadro SEH sem destrutor): `Media::queue_player_gratitude_news(jogador,
+/// news 0xbda to the manager: the player, the club, the type (0x12/0x21 by a draw for a player on the media list or
+/// with a flagged contract, 0xc when injured), the variant, the type's draw (which may raise +0x44 of the player
+/// record), the manager and the assistant
+/// Original: `Media::queue_player_gratitude_news` (0x732c80, media.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x732c80 } (thiscall, ret 0x10, media.cpp, quadro SEH sem destrutor): `Media::queue_player_gratitude_news(jogador,
 /// clube, tipo, variante)`: com jogador com ficha (+0x61), clube com técnico (+0xcf) e o contrato dele com o clube
 /// (0x4cf5f0), a notícia 0xbda (local) ao técnico (0x7861e0): 0..3 o jogador (3 = −1 sem +0xc), 4 = id do clube, 5 =
 /// o tipo, 6 = a variante, 7 = o sorteio do tipo, 8..0xb o técnico, 0xc = 0x420e9, 0xd..0x10 o auxiliar (+0xd3) ou −1.
@@ -2179,7 +2257,11 @@ unsafe extern "thiscall" fn noticia_de_gratidao_do_jogador(this: usize, jogador:
     entregar(read_usize(0xb7431c), n, clube);
 }
 
-/// { 0x743370 } (thiscall, ret 0x10, media.cpp, quadro SEH sem destrutor): `Media::post_player_backing_request_news(
+/// for a human club, news 0xbcf to the manager: the player, the club, the reputation band and the request level by
+/// attributes, the type, the fourth argument and whether he is transfer-listed
+/// Original: `Media::post_player_backing_request_news` (0x743370, media.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x743370 } (thiscall, ret 0x10, media.cpp, quadro SEH sem destrutor): `Media::post_player_backing_request_news(
 /// jogador, clube, tipo, quarto)`: com jogador com ficha (+0x61) e clube humano (0x600a50), a notícia 0xbcf (local) ao
 /// técnico do clube (0x7861e0): 0..3 o jogador (3 = −1 sem +0xc), 4 = id do clube, 5/6 = (1, ·) com reputação (+0xb da
 /// ficha) acima de 4250, senão (2, ·): o segundo 1 se (+0x57 > 15 e +0x5d < 6, ou +0x5b < 10 e +0x59 < 6 na faixa de
@@ -2227,7 +2309,12 @@ unsafe extern "thiscall" fn noticia_de_pedido_de_apoio(_this: usize, jogador: us
     entregar(read_usize(0xb7431c), n, clube);
 }
 
-/// { 0x743a50 } (thiscall, ret 0x10, media.cpp, quadro SEH sem destrutor): `Media::post_player_criticism_reaction_news(
+/// news 0xbdc: the player, the club, the reaction (0..4 by reputation, contract category, age, attributes and the
+/// response), the response, board confidence below 4000, the topic and the manager, delivered to the managers of the
+/// interested clubs (0x8d1da0)
+/// Original: `Media::post_player_criticism_reaction_news` (0x743a50, media.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x743a50 } (thiscall, ret 0x10, media.cpp, quadro SEH sem destrutor): `Media::post_player_criticism_reaction_news(
 /// jogador, clube, tópico, resposta)`: com jogador com ficha, clube com técnico e o contrato (0x4cf5f0), a notícia 0xbdc
 /// (local): 0..3 o jogador, 4 = id do clube, 5 = a reação (com reputação acima de 4250 e da do clube, categoria
 /// 0x4ca470 1 ou 2 e mais de 22 anos: 1 ou 3 se +0x59 < 10, +0x57 > 15 e +0x5d < 6; 2 ou 4 com mais de 1000 dias, +0x59
@@ -2344,7 +2431,11 @@ fn cpn3_caso(tipo: i16) -> u8 {
     }
 }
 
-/// { 0x736720 } (thiscall, ret 0x18, media.cpp): `Media::rate_player_form_for_story(jogador, clube, contrato, tipo,
+/// the player's rating for a story kind: stats and the average of ratings against the league average, the weight, the
+/// games and the reputation; then, by kind, the contract, age, days at the club and attributes
+/// Original: `Media::rate_player_form_for_story` (0x736720, media.cpp, thiscall, ret 0x18, st0).
+///
+/// [pt] { 0x736720 } (thiscall, ret 0x18, media.cpp): `Media::rate_player_form_for_story(jogador, clube, contrato, tipo,
 /// modo, peso)`: a nota (x87, em st0) do jogador para uma história da mídia. Sem contrato, o do jogador com o clube
 /// (0x4cf5f0); sem nenhum, 0. Base: a nota média da liga x ([0xb74350] +0x10 / +0x18, sem jogos 6,8), as estatísticas
 /// do jogador (0x7c1e30, categoria 6: s1 campo 1, s2 campo 0x11, s3 campo 2, padrão 6,5) e a média das notas
@@ -2443,7 +2534,10 @@ unsafe extern "thiscall" fn nota_do_jogador_para_a_historia(_this: usize, jogado
     }
 }
 
-/// { 0x74af60 } (thiscall, ret 0xc, media.cpp): `Media::write_financial_trouble_news_text(noticia, corpo, saida)`: o
+/// the headline or body of the club in financial trouble story, by severity, with the club name linked
+/// Original: `Media::write_financial_trouble_news_text` (0x74af60, media.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x74af60 } (thiscall, ret 0xc, media.cpp): `Media::write_financial_trouble_news_text(noticia, corpo, saida)`: o
 /// título ou o corpo da notícia do clube em crise: lê os campos 0 (o clube), 1 (a gravidade) e 2 da notícia (0x785830),
 /// monta em 0xde1f64 (0x66f4e0) o texto pela gravidade (> 0x1a5e, > 0xcb2 no corpo; > 0x1a5e no título) com o nome do
 /// clube (+0x38) e o gênero (+0x52), põe na `saida` (0x4ae660) e liga o nome ao clube (0x4ae8a0, tipo 0x7d5).
@@ -2477,7 +2571,10 @@ unsafe extern "thiscall" fn texto_da_crise_financeira(_this: usize, noticia: usi
     ligar(saida, nome, 0x7d5, clube);
 }
 
-/// { 0x786960 } (thiscall, ret 0xc, news.cpp): `News::get_inbox_items(tecnico, conta, categoria)`: um vetor novo de 100
+/// a new array with the human's inbox items, newest first, only those of one category when asked, and the count
+/// Original: `News::get_inbox_items` (0x786960, news.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x786960 } (thiscall, ret 0xc, news.cpp): `News::get_inbox_items(tecnico, conta, categoria)`: um vetor novo de 100
 /// notícias (malloc 0x944e46 de 0x571c, na primeira achada; `*conta` = 0) com as notícias do anel do humano, da mais nova
 /// para a mais antiga até a vaga vazia, só as da `categoria` (0x785670) se ela não for 0, copiadas (0x786010); `*conta`
 /// soma uma por notícia. Devolve o vetor (0 sem nenhuma; `*conta` intocada). Sem técnico ou técnico da máquina: a caixa
@@ -2623,7 +2720,10 @@ unsafe fn cpl6_ordenar(base: usize, n: usize) {
     qsort(base, n as u32, 0x17, 0x757ee0);
 }
 
-/// { 0x757a50 } (thiscall, ret 0x14, media.cpp): `Media::log_story(a, b, tipo, subtipo, resposta)`: acrescenta ao
+/// appends the story (today, subject ids or −1, type, subtype, response) and sorts again (0x757ee0); grows by 20
+/// Original: `Media::log_story` (0x757a50, media.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x757a50 } (thiscall, ret 0x14, media.cpp): `Media::log_story(a, b, tipo, subtipo, resposta)`: acrescenta ao
 /// registro de histórias ([this], capacidade +4, conta +8; registros de 23 bytes) a data de hoje (+0, 0x417c10 de
 /// [0xae2c90]), o id de `a` (+8) e o de `b` (+0xc) (−1 sem eles), o `tipo` (+0x13), o `subtipo` (byte com sinal, em
 /// palavra +0x11) e a `resposta` (+0x10); a conta sobe e o registro é reordenado (qsort 0x945333 com 0x757ee0). Sem
@@ -2663,7 +2763,11 @@ unsafe extern "thiscall" fn registrar_historia_da_midia(this: usize, a: usize, b
     cpl6_ordenar(read_usize(this), n);
 }
 
-/// { 0x757c70 } (thiscall, ret 0, media.cpp): `Media::expire_story_log()`: cada história do registro anterior ao
+/// removes stories older than 100 days (team ones, 0xbdf, older than 40 + random(40)) moving the last one into the gap;
+/// sorts again
+/// Original: `Media::expire_story_log` (0x757c70, media.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x757c70 } (thiscall, ret 0, media.cpp): `Media::expire_story_log()`: cada história do registro anterior ao
 /// limite (hoje − 100 dias; a do time, tipo 0xbdf, hoje − (40 + sorteio(40)), um sorteio 0x90cfc0 por história dessas
 /// a cada passada; datas da 0x54c8e0 sobre [0xae2c90]) recebe por cima a última (23 bytes), a conta desce e o mesmo
 /// lugar é visto de novo. Sobrando alguma, reordena (qsort com 0x757ee0). Sem registro, nada.
@@ -2699,7 +2803,11 @@ unsafe extern "thiscall" fn expirar_historias_da_midia(this: usize) {
     }
 }
 
-/// { 0x757da0 } (thiscall, ret 0x14, media.cpp): `Media::has_logged_story(a, b, tipo, subtipo, desde)`: a história do
+/// team story: linear search by second subject id and subtype; the others: binary search by the key and, with a date,
+/// whether it is not older
+/// Original: `Media::has_logged_story` (0x757da0, media.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x757da0 } (thiscall, ret 0x14, media.cpp): `Media::has_logged_story(a, b, tipo, subtipo, desde)`: a história do
 /// time (tipo 0xbdf): procura em ordem a de tipo 0xbdf com o id de `b` (+0xc) e o `subtipo` (palavra +0x11), sem olhar
 /// `a` nem a data: 1 se achou. As outras: busca binária (bsearch 0x946464 com 0x757ee0) pela chave {id de `a` ou −1,
 /// id de `b`, tipo, subtipo} (a data padrão 0x54a110 na chave, que a comparação não lê); achou e sem `desde`, 1; com
@@ -2800,7 +2908,11 @@ fn cpl7_valor(valor: i32) -> i32 {
     if valor < 0x2faf080 { valor } else { 0x2faf080 }
 }
 
-/// { 0x754740 } (thiscall, ret 0x14, media.cpp): `Media::add_transfer_interest(jogador, clube, valor, avaliacao)`: com
+/// if the {player, club} key is missing, appends the interest (today, fee up to 50 million, valuation × 100) and sorts
+/// again; grows by 20
+/// Original: `Media::add_transfer_interest` (0x754740, media.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x754740 } (thiscall, ret 0x14, media.cpp): `Media::add_transfer_interest(jogador, clube, valor, avaliacao)`: com
 /// o vetor de interesses ([this+0xc], capacidade +0x10, conta +0x14; registros de 25 bytes), procura (bsearch 0x946464
 /// com 0x757ea0) a chave {id do jogador, id do clube ou −1}: já está, nada. Senão acrescenta: id do jogador (+0), id do
 /// clube (+4, lido sem conferir), a data de hoje (+8, 0x417c10 de [0xae2c90]), 0 (+0x10, o boato ainda não saiu), o
@@ -2851,7 +2963,10 @@ unsafe extern "thiscall" fn acrescentar_interesse_de_transferencia(this: usize, 
     qsort(read_usize(this + 0xc), n as u32, 0x19, 0x757ea0);
 }
 
-/// { 0x757ea0 } (cdecl, media.cpp): `compare_id_pair_keys(a, b)` do qsort e do bsearch: nulo antes (`a` nulo −1, `b`
+/// null first; by the +0 id and, when equal, by +4 (−1 matches anything)
+/// Original: `compare_id_pair_keys` (0x757ea0, media.cpp, cdecl).
+///
+/// [pt] { 0x757ea0 } (cdecl, media.cpp): `compare_id_pair_keys(a, b)` do qsort e do bsearch: nulo antes (`a` nulo −1, `b`
 /// nulo 1); ids +0 diferentes, a diferença; iguais, 0 se um dos +4 é −1 (o coringa), senão a diferença dos +4.
 unsafe extern "C" fn ordem_das_chaves_de_ids(a: usize, b: usize) -> i32 {
     if a == 0 {
@@ -2871,7 +2986,10 @@ unsafe extern "C" fn ordem_das_chaves_de_ids(a: usize, b: usize) -> i32 {
     x.wrapping_sub(y)
 }
 
-/// { 0x757ee0 } (cdecl, media.cpp): `compare_story_log_records(a, b)` do qsort e do bsearch do registro de histórias:
+/// null first; by subjects +8 and +0xc, type +0x13 and subtype +0x11
+/// Original: `compare_story_log_records` (0x757ee0, media.cpp, cdecl).
+///
+/// [pt] { 0x757ee0 } (cdecl, media.cpp): `compare_story_log_records(a, b)` do qsort e do bsearch do registro de histórias:
 /// nulo antes (`a` nulo −1, `b` nulo 1); pelo sujeito a (+8), o sujeito b (+0xc) e o tipo (+0x13), a diferença do
 /// primeiro diferente; iguais, a diferença dos subtipos (palavras +0x11 com sinal).
 unsafe extern "C" fn ordem_das_historias(a: usize, b: usize) -> i32 {
@@ -2948,7 +3066,10 @@ unsafe fn cph4_bsearch(chave: usize, base: usize, n: u32, tamanho: u32, comparar
     bsearch(chave, base, n, tamanho, comparar)
 }
 
-/// { 0x7549b0 } (thiscall, ret 4, media.cpp): `Media::remove_transfer_interest(pessoa)`: no vetor de interesses
+/// removes the person interests (25 bytes) moving the last one into the gap; sorts again (0x757ea0)
+/// Original: `Media::remove_transfer_interest` (0x7549b0, media.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7549b0 } (thiscall, ret 4, media.cpp): `Media::remove_transfer_interest(pessoa)`: no vetor de interesses
 /// ([this+0xc], [this+0x14] registros de 25 bytes), cada um da pessoa (+0 = id) recebe por cima o último (6 duplas e um
 /// byte), a contagem desce e o mesmo lugar é visto de novo. Sobrando algum, reordena (qsort 0x945333 com 0x757ea0).
 unsafe extern "thiscall" fn tirar_interesses_de_transferencia(this: usize, pessoa: usize) {
@@ -2978,7 +3099,11 @@ unsafe extern "thiscall" fn tirar_interesses_de_transferencia(this: usize, pesso
     }
 }
 
-/// { 0x7f8ee0 } (thiscall, ret 8, scout_manager.cpp): `SCOUT_MANAGER::remove_scout_request(pessoa, clube)`: o clube
+/// finds the request (club, person; 17 bytes), pulls the next ones up and sorts again (0x7fc270); null club = the
+/// current human manager club
+/// Original: `SCOUT_MANAGER::remove_scout_request` (0x7f8ee0, scout_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7f8ee0 } (thiscall, ret 8, scout_manager.cpp): `SCOUT_MANAGER::remove_scout_request(pessoa, clube)`: o clube
 /// nulo é o do técnico humano atual ([0xb74c26 + 0x300 × [0xb77c7a]], +0x39; sem ele, nada). Com a pessoa, busca
 /// (bsearch 0x946464 com 0x7fc270, que lê só +0 clube e +4 pessoa; a data padrão da chave em +8, o byte +0x10 sem valor
 /// e a cópia usa zero) o pedido no vetor ([this+0x5c], [this+0x64] registros de 17 bytes); achou: puxa os seguintes um
@@ -3028,7 +3153,11 @@ unsafe extern "thiscall" fn tirar_pedido_de_observacao(this: usize, pessoa: usiz
     }
 }
 
-/// { 0x5fff30 } (thiscall, ret 4, human_manager.cpp): `HUMAN_MANAGER::remove_nickname_from_all(id)`: em cada técnico
+/// in each human manager, finds the person nickname (30 bytes), pulls the next ones up, blanks the last one and lowers
+/// the count; sorts the last manager array
+/// Original: `HUMAN_MANAGER::remove_nickname_from_all` (0x5fff30, human_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x5fff30 } (thiscall, ret 4, human_manager.cpp): `HUMAN_MANAGER::remove_nickname_from_all(id)`: em cada técnico
 /// humano ([this], [this+4] registros de 0xa6ef bytes; contador em byte com sinal) não nulo, sem vetor de apelidos
 /// (+0xa6e3) sai de vez; senão busca (bsearch com 0x601a10, que lê só o id em +0; a chave tem o byte +4 zerado e o resto
 /// sem valor, a cópia usa zero) o apelido da pessoa `*id` entre os [+0xa6eb] de 30 bytes; achou: puxa os seguintes um
@@ -3118,6 +3247,10 @@ unsafe extern "thiscall" fn comparar_tirar_apelido_de_todos(this: usize, id: usi
 /// vetor de 0x17 bytes, [+8] quantas; em +8 o id do jogador, em +0x11 o tipo (palavra). Jogador nulo ou
 /// com +0x39 zerado: 0.
 // ponytail: só o ax é fiel; os 16 bits altos do eax da original são resto de registrador (quem chama usa ax)
+/// the kind of the media story about the player when it is a misbehaviour kind, else 0
+/// Original: `Media::get_finable_story_kind` (0x7357c0, media.cpp, thiscall).
+///
+/// [pt] o tipo da história da imprensa sobre o jogador quando é de indisciplina, senão 0
 unsafe extern "thiscall" fn historia_punivel_do_jogador(midia: usize, jogador: usize) -> u16 {
     if jogador == 0 || *((jogador + 0x39) as *const u32) == 0 {
         return 0;
@@ -3152,6 +3285,10 @@ unsafe extern "thiscall" fn historia_punivel_do_jogador(midia: usize, jogador: u
 /// qualquer) e fica com o menor sorteio (menor que 100); o tipo recorrente do jogador ([this] + 31 × id +
 /// 0x12) sorteia só 0..2 − 1. Gravidade 3: nenhum (0xff).
 // ponytail: só o al é fiel (a original devolve char)
+/// draws the injury type for the body part and severity, keeping the current injury or preferring the recurring one
+/// Original: `Injury::choose_injury_type` (0x62d140, injury.cpp, thiscall).
+///
+/// [pt] sorteia o tipo de lesão da parte do corpo e da gravidade, mantendo a lesão atual ou preferindo a recorrente
 unsafe extern "thiscall" fn escolher_tipo_de_lesao(lesoes: usize, categoria: i8, gravidade: i8, jogador: usize) -> u8 {
     let atual: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
@@ -3200,7 +3337,10 @@ unsafe extern "thiscall" fn escolher_tipo_de_lesao(lesoes: usize, categoria: i8,
     }
 }
 
-/// { 0x785670 } (thiscall, news.cpp): a categoria da notícia pelo milhar do tipo (+0): 1..999 → 2,
+/// the news category by the thousands range of its type
+/// Original: `NewsItem::get_category` (0x785670, news.cpp, thiscall).
+///
+/// [pt] { 0x785670 } (thiscall, news.cpp): a categoria da notícia pelo milhar do tipo (+0): 1..999 → 2,
 /// 1000.. → 7, 2000.. → 3, 3000.. → 4, 4000.. → 5, 5000.. → 1, 6000..0x1790 → 6. Fora disso: a original
 /// (caixa de erro). Devolve o eax inteiro como a original (o tipo com o al trocado).
 unsafe extern "thiscall" fn categoria_da_noticia(noticia: usize) -> u32 {
@@ -3267,17 +3407,26 @@ unsafe fn alguma_noticia(midia: usize, id: i32, aceita: impl Fn(usize) -> bool) 
     })
 }
 
-/// { 0x735780 } (thiscall, ret 4, media.cpp): o jogador `*id` tem uma notícia com a resposta 2 (+0x10)?
+/// whether the player has a story with response 2 in the media log
+/// Original: `story_with_response_two` (0x735780, media.cpp, thiscall).
+///
+/// [pt] { 0x735780 } (thiscall, ret 4, media.cpp): o jogador `*id` tem uma notícia com a resposta 2 (+0x10)?
 unsafe extern "thiscall" fn noticia_com_resposta_2(midia: usize, id: *const i32) -> u32 {
     alguma_noticia(midia, *id, |r| *((r + 0x10) as *const u8) == 2) as u32
 }
 
-/// { 0x735840 } (thiscall, ret 4, media.cpp): o jogador `*id` tem alguma notícia? Devolve só `al`.
+/// whether the player has any story in the media log
+/// Original: `has_story` (0x735840, media.cpp, thiscall).
+///
+/// [pt] { 0x735840 } (thiscall, ret 4, media.cpp): o jogador `*id` tem alguma notícia? Devolve só `al`.
 unsafe extern "thiscall" fn tem_noticia(midia: usize, id: *const i32) -> u8 {
     alguma_noticia(midia, *id, |_| true) as u8
 }
 
-/// { 0x5221f0 } (thiscall, ret 0xc, Cup.cpp): a importância da partida da copa (a fase +0x34 da
+/// the cup match importance by round and the first-leg score difference
+/// Original: `cup_match_importance` (0x5221f0, Cup.cpp, thiscall).
+///
+/// [pt] { 0x5221f0 } (thiscall, ret 0xc, Cup.cpp): a importância da partida da copa (a fase +0x34 da
 /// partida menos +0x3c mais +0x51 da copa, pelo menos 1) e em `margem` a diferença do placar da ida
 /// (+0x4b/+0x4c, 0xff sem ida) para o lado `segundo`, mais 1 (0xff abaixo de 1). Devolve só `al`.
 unsafe extern "thiscall" fn importancia_da_partida(copa: usize, partida: usize, segundo: u8, margem: *mut u8) -> u8 {

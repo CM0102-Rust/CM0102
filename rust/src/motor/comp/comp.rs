@@ -71,7 +71,12 @@ unsafe fn cqp1_fechar(liga: usize) {
     f(liga)
 }
 
-/// { 0x689c20 } (thiscall, ret 4, league.cpp, `League::process_promotion_relegation_chain(aos_pares)`; pelo slot do
+/// at the season end, only the top league of the pyramid (no league above) closes its table and walks down the chain of
+/// divisions: for each pair (upper and lower), closes the lower one and swaps the promoted and relegated clubs
+/// (0x689c80, with contract clauses, pairwise or as a block, without checking counts)
+/// Original: `League::process_promotion_relegation_chain` (0x689c20, league.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x689c20 } (thiscall, ret 4, league.cpp, `League::process_promotion_relegation_chain(aos_pares)`; pelo slot do
 /// fim de temporada da liga): só na liga do topo da pirâmide (+0x1c, a liga de cima, negativo): fecha a temporada
 /// dela (slot 0xa4) e, descendo a cadeia (+0x20 o índice da liga de baixo na tabela [0xadadfc], até negativo), fecha a
 /// de baixo e troca os que sobem e descem entre as duas (0x689c80 com contratos = 1, `aos_pares`, sem contagem
@@ -106,7 +111,12 @@ unsafe fn cqp1_humano(clube: usize) -> bool {
     f(clube) != 0
 }
 
-/// { 0x48e3e0 } (thiscall, ret 0x1c, comp.cpp, `Comp::send_prize_money_news(clube, valor (i64), posição, rodada, partida,
+/// the prize money news to the club's human manager, only when the prize exceeds 50 × the club reputation: the
+/// competition, the amount, the position, the round, the kind and, with the fixture, the opponent and whether the club
+/// won
+/// Original: `Comp::send_prize_money_news` (0x48e3e0, comp.cpp, thiscall, ret 0x1c).
+///
+/// [pt] { 0x48e3e0 } (thiscall, ret 0x1c, comp.cpp, `Comp::send_prize_money_news(clube, valor (i64), posição, rodada, partida,
 /// tipo)`; quadro SEH só pela notícia local): para o técnico humano do clube (0x7875e0), com o valor de pelo menos 50 ×
 /// a reputação (+0x80), a notícia 0x1a (0x77bbe0): 0 a competição ([this+4]), 1 o valor, 2 o clube, 3 a posição, 4 a
 /// rodada, 7 o tipo; com a partida, 5 o adversário e 6 se o clube venceu (+0x3d/+0x3e o vencedor nos pênaltis
@@ -155,7 +165,10 @@ unsafe extern "thiscall" fn comparar_noticia_do_premio(this: usize, clube: usize
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, usize, u32)>(1961)(this, clube, lo, hi, posicao, rodada, partida, tipo)
 }
 
-/// { 0x48ea40 } (thiscall, ret 8, comp.cpp, `Comp::send_tv_rights_news(clube, valor)`; quadro SEH só pela notícia local):
+/// the TV rights news to the club's human manager: the club, the competition, the amount and the year
+/// Original: `Comp::send_tv_rights_news` (0x48ea40, comp.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x48ea40 } (thiscall, ret 8, comp.cpp, `Comp::send_tv_rights_news(clube, valor)`; quadro SEH só pela notícia local):
 /// para o técnico humano do clube (0x7875e0), a notícia 0x1f (0x77bbe0): 0 o clube, 1 a competição ([this+4]), 2 o
 /// valor, 3 o ano da competição (+0x40), entregue a ele (0x7861e0).
 unsafe extern "thiscall" fn noticia_da_tv(this: usize, clube: usize, valor: u32) {
@@ -186,7 +199,10 @@ unsafe extern "thiscall" fn comparar_noticia_da_tv(this: usize, clube: usize, va
 
 
 
-/// { 0x48ce10 } (thiscall, ret 0, comp.cpp, método +0xc das competições): `Comp::all_stages_complete()`: só na
+/// in the top competition, whether it and every one down the chain are complete
+/// Original: `Comp::all_stages_complete` (0x48ce10, comp.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x48ce10 } (thiscall, ret 0, comp.cpp, método +0xc das competições): `Comp::all_stages_complete()`: só na
 /// competição do topo (+0x1c ≤ −1), completa (método +0x10 com 1, 1: push 1; push 1; mov ecx -> thiscall, ret 8) ela e
 /// cada uma da cadeia de baixo (+0x20, o índice em [0xadadfc]); devolve 1 ou 0 (no al).
 unsafe extern "thiscall" fn competicao_todas_completas(this: usize) -> u8 {
@@ -218,7 +234,10 @@ unsafe extern "thiscall" fn comparar_competicao_todas_completas(this: usize) -> 
     orig::<unsafe extern "thiscall" fn(usize) -> u8>(1655)(this)
 }
 
-/// { 0x48e1c0 } (thiscall, ret 8, comp.cpp, método +0x58 das competições): `Comp::collect_club_list(&lista, _)`: um
+/// the vector of the distinct clubs of all stages (up to 200) and the count
+/// Original: `Comp::collect_club_list` (0x48e1c0, comp.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x48e1c0 } (thiscall, ret 8, comp.cpp, método +0x58 das competições): `Comp::collect_club_list(&lista, _)`: um
 /// vetor de 200 ponteiros (0x944e46(0x320); sem memória, a caixa da linha 0x681, a lista nula e 0) com os clubes
 /// distintos de todas as fases (−1 a própria até +0x30; as outras em [+0xc]): numa liga (+0x43 = 2) os da tabela +0xb1
 /// (linhas de 0x3b bytes), noutra os de +0xa7 (6 bytes), sem os nulos e os repetidos, até 200; grava o vetor em
@@ -267,7 +286,10 @@ unsafe extern "thiscall" fn comparar_competicao_lista_de_clubes(this: usize, lis
     PLACAR.registrar(igual && mesmas, || format!("competicao_lista_de_clubes: conta original={} rust={}", a, b));
     a
 }
-/// { 0x48cc70 } (thiscall, ret 0x10, comp.cpp): `Comp::find_club_progress(clube, &fase, &rodada, &situação)`: das
+/// the stage id, the status and the round the club reached, from the last stage back
+/// Original: `Comp::find_club_progress` (0x48cc70, comp.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x48cc70 } (thiscall, ret 0x10, comp.cpp): `Comp::find_club_progress(clube, &fase, &rodada, &situação)`: das
 /// fases da última (+0x30) para a primeira (−1 a própria; as outras em [+0xc]), pulando as de id 0x3fc: numa liga
 /// (+0x43 = 2), a linha da tabela do clube (0x6826d0 push i; mov ecx, fase -> thiscall, ret 4): fase = o id (+0x3a) e
 /// situação = +0x37 da linha, e volta; numa copa, o último time da tabela +0xa7 (6 bytes) que é o clube dá fase = o id
@@ -352,7 +374,12 @@ unsafe fn cqd7_rodada(copa: usize, r: i32) -> usize {
     read_u32_as_usize(copa + 0xa3).wrapping_add((r as isize * 0x68) as usize)
 }
 
-/// { 0x518790 } (thiscall, ret 0, Cup.cpp): `Cup::map_fixture_tree()`, da criação das copas (22 chamadas até
+/// allocates the ties of each round, clears them, links each tie to a slot in the next round (by pair or drawn, the
+/// side by a coin; with no slot, two rounds ahead), puts each round's teams into its ties (drawn, the cup nation's club
+/// at home) and numbers the first tie of each round
+/// Original: `Cup::map_fixture_tree` (0x518790, Cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x518790 } (thiscall, ret 0, Cup.cpp): `Cup::map_fixture_tree()`, da criação das copas (22 chamadas até
 /// 2002-06-01). Os vetores dos confrontos de cada rodada (0x944e46: 4 por rodada e 0x35 por confronto; sem memória, a
 /// caixa "Memory Allocation Error" da linha 0x8b ou 0x9e e o jogo para; rodada sem confrontos, a caixa da linha 0x95 e
 /// -1); a marca +5 de cada time (+0xa7, 6 bytes) e +0xab/+0xac zeradas. Com clubes (+0x45): cada confronto vazio (os
@@ -704,7 +731,10 @@ unsafe fn cqd7_fase(comp: usize, k: i32) -> usize {
     if k == -1 { comp } else { read_u32_as_usize(read_u32_as_usize(comp + 0xc) + k as usize * 4) }
 }
 
-/// { 0x48d2b0 } (thiscall, ret 4, comp.cpp): `Comp::get_first_stage_of_group(k)`, das telas das competições
+/// from the given stage backwards, the index of the first stage of the same group
+/// Original: `Comp::get_first_stage_of_group` (0x48d2b0, comp.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x48d2b0 } (thiscall, ret 4, comp.cpp): `Comp::get_first_stage_of_group(k)`, das telas das competições
 /// (0x4947a0): da fase `k` para trás, enquanto as fases têm o mesmo grupo (0x4b01d0 do id +0x3a: push id; add esp, 4 ->
 /// cdecl) e o índice é maior que −1, o índice da primeira delas (o próprio k sem grupo).
 unsafe extern "thiscall" fn competicao_primeira_fase_do_grupo(this: usize, k: i32) -> i32 {
@@ -739,7 +769,11 @@ unsafe extern "thiscall" fn comparar_competicao_primeira_fase_do_grupo(this: usi
     r
 }
 
-/// { 0x48cec0 } (thiscall, ret 0, comp.cpp): `Comp::get_current_stage()`, das telas das competições (0x48f8e0): a
+/// the first stage not finished (in a cup not yet started, the start of its group); all finished, the start of the last
+/// one's group
+/// Original: `Comp::get_current_stage` (0x48cec0, comp.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x48cec0 } (thiscall, ret 0, comp.cpp): `Comp::get_current_stage()`, das telas das competições (0x48f8e0): a
 /// primeira fase (−1 a própria, até +0x30) que não acabou (método 0x10 com (0, 1) = 0); se é uma copa (+0x43 = 1) que
 /// não começou (+0xab = 0), volta ao começo do grupo dela pela fase anterior (0x4b01d0 e 0x48d200: push k; mov ecx,
 /// this -> thiscall, ret 4). Todas acabadas: o começo do grupo da última. Fase inválida no fim: a caixa da linha 0x36e
@@ -821,7 +855,11 @@ unsafe fn cqb12_achar(nacao: usize) -> Option<i8> {
     None
 }
 
-/// { 0x48dee0 } (cdecl, comp.cpp): `comp_active_key_nation_of_club(clube)`: o índice ativo (+0x14 da entrada) da
+/// the active index of the club's nation among the active key nations; otherwise 0 for a national team and 3 for a club
+/// (the type used by the fixture search and the date clash check)
+/// Original: `comp_active_key_nation_of_club` (0x48dee0, comp.cpp, cdecl).
+///
+/// [pt] { 0x48dee0 } (cdecl, comp.cpp): `comp_active_key_nation_of_club(clube)`: o índice ativo (+0x14 da entrada) da
 /// nação do clube (+0x53) entre as nações-chave ativas; sem nação ou fora da tabela, 0 para uma seleção (0x53b900) e 3
 /// para um clube. Devolve só `al` (os chamadores gravam o byte).
 unsafe extern "C" fn nacao_chave_do_clube(clube: usize) -> u8 {
@@ -849,7 +887,10 @@ unsafe extern "C" fn comparar_nacao_chave_do_clube(clube: usize) -> u8 {
     r
 }
 
-/// { 0x48df40 } (cdecl, comp.cpp): `comp_active_key_nation_of_stadium(estadio)`: o índice ativo da nação da cidade
+/// the active index of the stadium city's nation among the active key nations, or 3
+/// Original: `comp_active_key_nation_of_stadium` (0x48df40, comp.cpp, cdecl).
+///
+/// [pt] { 0x48df40 } (cdecl, comp.cpp): `comp_active_key_nation_of_stadium(estadio)`: o índice ativo da nação da cidade
 /// do estádio (+0x38 a cidade, +0x1f a nação) entre as nações-chave ativas; sem estádio, cidade, nação ou fora da
 /// tabela, 3. Devolve só `al`.
 unsafe extern "C" fn nacao_chave_do_estadio(estadio: usize) -> u8 {
@@ -879,7 +920,10 @@ unsafe fn cqb12_pelo_ativo(ativo: i8) -> Option<i8> {
     (0..0x23i8).find(|&k| *((cqb12_entrada(k) + 0x14) as *const i8) == ativo)
 }
 
-/// { 0x48dcd0 } (cdecl, comp.cpp): `comp_key_nation_entry_from_active_index(ativo)`: a primeira entrada da tabela das
+/// the first key nation table entry with that active index; none, the error box and 3
+/// Original: `comp_key_nation_entry_from_active_index` (0x48dcd0, comp.cpp, cdecl).
+///
+/// [pt] { 0x48dcd0 } (cdecl, comp.cpp): `comp_key_nation_entry_from_active_index(ativo)`: a primeira entrada da tabela das
 /// nações-chave com aquele índice ativo; nenhuma, a caixa da linha 0x543 de comp.cpp (o jogo segue) e 3.
 unsafe extern "C" fn entrada_da_nacao_chave_ativa(ativo: i8) -> i32 {
     match cqb12_pelo_ativo(ativo) {
@@ -967,7 +1011,11 @@ unsafe fn cpw13_somar(this: usize, c: usize, conta: u8, d: *mut u8) -> bool {
     true
 }
 
-/// { 0x7771c0 } (thiscall, ret 0xc, national_teams.cpp; quadro SEH só do estado, as datas não têm destrutor):
+/// sorts the national squad by club and adds, on the match date, how many players each club gives up (the record that
+/// stops club fixtures near that date)
+/// Original: `NationalTeams::record_club_call_ups` (0x7771c0, national_teams.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x7771c0 } (thiscall, ret 0xc, national_teams.cpp; quadro SEH só do estado, as datas não têm destrutor):
 /// `NationalTeams::record_club_call_ups(time, b, partida)`: ordena o elenco do time (+0xd7, 50 vagas) pelo clube (qsort
 /// com 0x778ef0). Com a partida: a data dela (+0x2a, +0x28; um dia antes no segundo time 0x5409b0 ou com `b`); conta os
 /// convocados seguidos de cada clube (+0x39), pulando as vagas vazias, as pessoas fora da faixa ([0xae2364]) e as de
@@ -1075,7 +1123,10 @@ unsafe extern "thiscall" fn comparar_registrar_convocados_por_clube(this: usize,
     PLACAR.registrar(igual, || format!("registrar_convocados_por_clube({:x}, b {}, partida {:x}) {:x?} x {:x?}", time, b, p, mo, mr));
 }
 
-/// { 0x48e190 } (thiscall, ret 0xc, comp.cpp): `Comp::get_fixture_match_importance(partida, a, b)`: a fase da partida
+/// forwards the match importance query to the fixture's stage (virtual +0x54)
+/// Original: `Comp::get_fixture_match_importance` (0x48e190, comp.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x48e190 } (thiscall, ret 0xc, comp.cpp): `Comp::get_fixture_match_importance(partida, a, b)`: a fase da partida
 /// (+0x42; 0xff = a própria competição, senão [+0xc] + 4 × fase) responde pela virtual +0x54 com os mesmos argumentos.
 unsafe extern "thiscall" fn importancia_do_jogo_na_competicao(this: usize, p: usize, a: u32, b: u32) -> u32 {
     let fase = *((p + 0x42) as *const u8);
@@ -1092,7 +1143,10 @@ unsafe extern "thiscall" fn comparar_importancia_do_jogo_na_competicao(this: usi
     r
 }
 
-/// { 0x48d200 } (thiscall, ret 4, comp.cpp): `Comp::get_stage(k)`: −1 a própria competição, 0..+0x30 a fase
+/// returns stage k of the competition (-1 = itself); out of range, the error box and 0
+/// Original: `Comp::get_stage` (0x48d200, comp.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x48d200 } (thiscall, ret 4, comp.cpp): `Comp::get_stage(k)`: −1 a própria competição, 0..+0x30 a fase
 /// [+0xc] + 4 × k; fora disso a caixa (linha 0x36e) e 0, pela original.
 unsafe extern "thiscall" fn fase_da_competicao(this: usize, k: i32) -> usize {
     if k < -1 || k > read_usize(this + 0x30) as i32 {

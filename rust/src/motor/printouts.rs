@@ -18,7 +18,11 @@ unsafe fn cpz10_proximo(l: usize) -> usize {
     f(l)
 }
 
-/// { 0x7dab90 } (thiscall, ret 0xc, printouts.cpp, quadro de 0x1094 bytes pela 0x945610): `PunditList::
+/// type 1 on Sunday becomes 7; local types (2, 4): the club's pundits; the others: of the type and nation (−1 any); up
+/// to 20, draw(n) and the id, or −1
+/// Original: `PunditList::pick_random_pundit` (0x7dab90, printouts.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x7dab90 } (thiscall, ret 0xc, printouts.cpp, quadro de 0x1094 bytes pela 0x945610): `PunditList::
 /// pick_random_pundit(clube, tipo, nação)`, pelas histórias da imprensa (0x72c1f0, 0x733a60) e pelos textos das
 /// notícias. Tipo 1 no domingo (0x54a3f0 = 6) vira 7. Tipos 2 e 4 (locais): os da lista [this+4] cujo +0xcb é o id de
 /// [[clube+0x69]+0x38] (sem eles: −1); os outros: os da lista [this] do tipo (+0xca) e da nação (+0xcf; −1 aceita
@@ -135,7 +139,10 @@ fn cpz10_veiculo_padrao(tipo: i8) -> usize {
     }
 }
 
-/// { 0x7dad20 } (thiscall, ret 0x10, printouts.cpp): `PunditList::get_pundit_name(tipo, id, nome, marca)`, pelos textos
+/// the name (+2) and flag (+0xd3) of the pundit with the id, or the default outlet type name and flag 0
+/// Original: `PunditList::get_pundit_name` (0x7dad20, printouts.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x7dad20 } (thiscall, ret 0x10, printouts.cpp): `PunditList::get_pundit_name(tipo, id, nome, marca)`, pelos textos
 /// das notícias. Sem `nome`: marca 0. Id −1: o nome padrão do tipo e marca 0. Senão o comentarista do id (palavra +0)
 /// na lista [this+4] (tipos 2 e 4) ou [this]: o nome (+2, sprintf "%s" 0x944c9f) e a marca (+0xd3); sem ele, o nome
 /// padrão e marca 0.
@@ -190,7 +197,11 @@ unsafe extern "thiscall" fn comparar_nome_do_veiculo(this: usize, tipo: u32, id:
     PLACAR.registrar(igual, || format!("nome_do_veiculo(tipo {}, id {}) original={:x?} rust={:x?}", tipo as i8, id as i16, mo, mr));
 }
 
-/// { 0x758de0 } (thiscall, ret 0x18, media.cpp, SEH da notícia local, sem destrutor): `Media::
+/// club with a nation and manager: news 0x178e (club, manager, type, person, a, b, nation, c) to the nation's managers
+/// if the reputation is above 4750, else to the club
+/// Original: `Media::queue_manager_fa_complaint_story` (0x758de0, media.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x758de0 } (thiscall, ret 0x18, media.cpp, SEH da notícia local, sem destrutor): `Media::
 /// queue_manager_fa_complaint_story(clube, pessoa, tipo, a, b, c)`, pela disciplina (0x55e300) e pelo MANAGER_MANAGER
 /// (0x6a9e60, 0x6ab800). Clube com nação (+0x53) e técnico (+0xcf), e pessoa: a notícia 0x178e (o clube; o técnico, id
 /// e chaves, ou −1; o tipo; a pessoa, id e chaves; a; b; a nação ou −1; c) aos técnicos da nação (0x7863f0) se a

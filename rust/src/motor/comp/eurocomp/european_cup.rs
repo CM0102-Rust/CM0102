@@ -11,7 +11,12 @@ unsafe fn cqg4_nacao(clube: usize) -> usize {
     read_u32_as_usize(clube + 0x53)
 }
 
-/// { 0x585290 } (thiscall, ret 0, european_cup.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
+/// the 32 clubs sorted by pot, the same-nation partners in opposite halves, the draw of the 8 groups pot by pot, the
+/// swap of same-nation clubs in a group, the coefficient, the 1,800,000 prize and its news, the 8 stages and the third
+/// qualifying round losers into the UEFA Cup
+/// Original: `EuropeanCup::draw_phase1_groups` (0x585290, european_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x585290 } (thiscall, ret 0, european_cup.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
 /// normal): `EuropeanCup::draw_phase1_groups()`, da fase seguinte da Liga dos Campeões (0x5851d0, fase 0).
 /// 1) A lista dos 32 (0x945501(0x20, 9) push 9; push 0x20; add esp, 8 -> cdecl; 9 bytes: +0 o clube, +4 o parceiro da
 ///    mesma nação, +8 a metade: 1 grupos A..D, 2 grupos E..H; sem memória, a caixa da linha 0x4cc): os 16 primeiros da
@@ -320,7 +325,10 @@ unsafe extern "thiscall" fn comparar_campeoes_sortear_grupos(this: usize) {
     PLACAR.registrar(ok, || format!("campeoes_sortear_grupos: as fases não têm os 32 clubes do plano (+0x30 = {})", read_u32_as_usize(this + 0x30) as i32));
 }
 
-/// { 0x586f60 } (cdecl, european_cup.cpp): `european_cup_compare_clubs_by_seed(a, b)`, a comparação da qsort dos potes
+/// the pot comparison: the club's European seed (+0x1df), and on a tie the higher reputation first
+/// Original: `european_cup_compare_clubs_by_seed` (0x586f60, european_cup.cpp, cdecl).
+///
+/// [pt] { 0x586f60 } (cdecl, european_cup.cpp): `european_cup_compare_clubs_by_seed(a, b)`, a comparação da qsort dos potes
 /// do sorteio (0x585290): o byte +0x1df (a semente europeia) de a menos o de b; empate: a reputação (+0x80, word) de b
 /// menos a de a.
 unsafe extern "C" fn campeoes_ordem_dos_potes(a: *const usize, b: *const usize) -> i32 {
@@ -403,7 +411,11 @@ unsafe fn cqg4p_plano(this: usize, mata: usize, nm: i16) -> (Vec<(i16, u8)>, usi
     (v, n_mata)
 }
 
-/// { 0x586900 } (thiscall, ret 0, european_cup.cpp, método +0x5c da Liga dos Campeões): `EuropeanCup::rank_teams()`, as
+/// the entrants sorted by strength and each one's predicted position: the knockout from the final back, the second and
+/// first group phases and the qualifying rounds
+/// Original: `EuropeanCup::rank_teams` (0x586900, european_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x586900 } (thiscall, ret 0, european_cup.cpp, método +0x5c da Liga dos Campeões): `EuropeanCup::rank_teams()`, as
 /// posições previstas. Sem estatística (+8): a caixa da linha 0x81b. Os inscritos da tabela [+0x14] (6 bytes, +0x36
 /// deles) num vetor (0x944e46; sem memória, a caixa da linha 0x823), ordenado pela força (0x4c08f0: push n; push vetor;
 /// add esp, 8 -> cdecl); a tabela do mata-mata pelo método +0x3c (push 0; push &id; push &rodadas; push 0xc; mov ecx ->
@@ -501,7 +513,12 @@ unsafe fn cqg6_copiar(para: usize, de: usize) {
     write_u8(para + 6, read_u8(de + 6));
 }
 
-/// { 0x585ab0 } (thiscall, ret 4, european_cup.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
+/// the 16 qualifiers sorted, the same-group pairs, each one's group choice (shuffled order, fewest teams, no same group
+/// nor nation), the redraw up to 20 times, the coefficient, the 1,200,000 prize and its news, stages 8 to 11 and the
+/// third places into the UEFA Cup
+/// Original: `EuropeanCup::draw_phase2_groups` (0x585ab0, european_cup.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x585ab0 } (thiscall, ret 4, european_cup.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
 /// normal): `EuropeanCup::draw_phase2_groups(tentativa)`, da fase seguinte da Liga dos Campeões (0x5851d0, fase 8,
 /// tentativa 0).
 /// 1) Os 16 classificados (0x945501(0x10, 7); sem memória, a caixa da linha 0x61c): de cada grupo b da primeira fase
@@ -789,7 +806,11 @@ unsafe extern "thiscall" fn comparar_campeoes_sortear_segunda_fase(this: usize, 
     PLACAR.registrar(ok, || format!("campeoes_sortear_segunda_fase: as fases não têm os 16 classificados (+0x30 = {})", read_u32_as_usize(this + 0x30) as i32));
 }
 
-/// { 0x5871e0 } (cdecl, european_cup.cpp): `european_cup_compare_phase2_draw_entries(a, b)`, a comparação da qsort dos
+/// the qualifiers comparison: more same-nation clubs first, then the higher nation word +0x8e, then the group winner
+/// before the runner-up
+/// Original: `european_cup_compare_phase2_draw_entries` (0x5871e0, european_cup.cpp, cdecl).
+///
+/// [pt] { 0x5871e0 } (cdecl, european_cup.cpp): `european_cup_compare_phase2_draw_entries(a, b)`, a comparação da qsort dos
 /// classificados (0x585ab0): os da mesma nação (+4) de b menos os de a; empate: o word +0x8e da nação (+0x53 do clube) de
 /// b menos o de a; empate: +6 (o segundo) de a menos o de b.
 unsafe extern "C" fn campeoes_ordem_da_segunda_fase(a: usize, b: usize) -> i32 {
@@ -812,7 +833,10 @@ unsafe extern "C" fn comparar_campeoes_ordem_da_segunda_fase(a: usize, b: usize)
     r
 }
 
-/// { 0x4b01d0 } (cdecl, comp_util.cpp): `comp_util_get_parent_stage_id(id)`, o grupo de uma fase pelo id: 0x3e8..0x3fb,
+/// the group (the containing stage) of a stage or round by id, by the fixed ranges; −1 without a group
+/// Original: `comp_util_get_parent_stage_id` (0x4b01d0, comp_util.cpp, cdecl).
+///
+/// [pt] { 0x4b01d0 } (cdecl, comp_util.cpp): `comp_util_get_parent_stage_id(id)`, o grupo de uma fase pelo id: 0x3e8..0x3fb,
 /// 0x41f..0x42e, 0x413, 0x414, 0x47b e 0x3fc -> 0x41c; 0x473..0x474 -> 0x410; 0x475..0x479 -> 0x47a; 0x3fd..0x406 ->
 /// 0xa; 0x407..0x40b e 0x472 -> 0x14; 0x47e..0x47f -> 0x1e; 0x40c..0x40e -> 0x82; 0x43d..0x444 -> 0x449; 0x445..0x448
 /// -> 0x44a; 0x44d..0x450 -> 0x451; o resto −1 (na ordem dos testes da original).
@@ -907,7 +931,12 @@ unsafe fn cpz4_sair(clube: usize) {
     core::ptr::write_unaligned((clube + 0x1db) as *mut i32, -1);
 }
 
-/// { 0x584ae0 } (thiscall, ret 0x18, european_cup.cpp): `EuropeanCup::update_staff_records_for_status(clube,
+/// by outcome and stage: in qualifying, the qualified (0x86bdd0) or knocked-out (0x86c000) record weighted by round
+/// (0x4bf850); in the group stages, qualified (6) or failed to qualify (0xfe, 0x86c1d0); in the knockout, winners
+/// (0x86a800), runners-up (0x86b0b0), qualified or knocked out; whoever leaves gets +0x1db = -1; returns 0
+/// Original: `EuropeanCup::update_staff_records_for_status` (0x584ae0, european_cup.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x584ae0 } (thiscall, ret 0x18, european_cup.cpp): `EuropeanCup::update_staff_records_for_status(clube,
 /// desfecho, fase, _, jogo, final)`, a virtual +0x44 da Liga dos Campeões. Devolve 0. Comp = +4.
 /// - Na qualificação (fase 0xff): desfecho 0 ou 1, a classificação pela rodada do jogo (+0x34): na rodada 0, com a
 ///   fase +0x3a e o +0x6f da primeira rodada (+0xa3) e o peso 0x4bf850(1, 0x14, 0, 2); noutra, 0x41c, 0 e
@@ -1044,7 +1073,12 @@ unsafe fn cpz4_do_grupo(this: usize, g: i8, k: u32) -> usize {
     read_usize(linha(read_usize(read_usize(this + 0xc) + 0x20 + 4 * (g as i32 as usize)), k))
 }
 
-/// { 0x586330 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::draw_quarter_finals()`, da fase seguinte 0x5851d0
+/// draws the order of the 4 phase 2 groups (0x90cfc0) and pairs the quarter-finals (1st of a v 2nd of b, 2nd of a v 1st
+/// of b, same for c and d), resets the 8 clubs bookings (0x7e9180), creates the knockout stage (0x522e00) in slot
+/// +0x30, drops the 3rd and 4th of each group (+0x1db = -1), sets up the round (0x51c800) and +0x30 = 12
+/// Original: `EuropeanCup::draw_quarter_finals` (0x586330, european_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x586330 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::draw_quarter_finals()`, da fase seguinte 0x5851d0
 /// na fase 12. A lista das 8 (calloc 0x945501 de 8 × 4; sem memória: a caixa da linha 0x762) com os grupos sorteados
 /// a, b, c e d: o 1º de a × o 2º de b, o 2º de a × o 1º de b, o 1º de c × o 2º de d e o 2º de c × o 1º de d. Cada um
 /// passa pela 0x7e9180 (thiscall(o objeto [[0xae28f0]] + 4 × +0x50, clube), ret 4). A virtual +0x3c (create_round_table:
@@ -1146,7 +1180,11 @@ unsafe fn cpz4_inscritos(this: usize, sem_7: bool, v: *mut usize) -> i16 {
     n
 }
 
-/// { 0x586660 } (thiscall, ret 8, european_cup.cpp): `EuropeanCup::collect_club_list(&lista, tipo)`, a virtual +0x58
+/// allocates the list (0x11c bytes) of the entrants (+0x14) still in the cup (+0x1db = its id): kind 1 without the
+/// round 7 entries, kind 2 all, kind 3 at stage 11; otherwise the competition one (0x48e1c0); returns the count
+/// Original: `EuropeanCup::collect_club_list` (0x586660, european_cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x586660 } (thiscall, ret 8, european_cup.cpp): `EuropeanCup::collect_club_list(&lista, tipo)`, a virtual +0x58
 /// da Liga dos Campeões. Tipo 1: os inscritos que seguem, fora os da rodada 7; tipo 2: todos os que seguem; tipo 3 na
 /// fase 11: os que seguem; noutro caso a da competição (Comp::collect_club_list 0x48e1c0, thiscall(this, &lista, 0),
 /// ret 8). A lista (malloc 0x944e46 de 0x11c bytes; sem memória: a caixa das linhas 0x7b5, 0x7cf ou 0x7e9, lista
@@ -1286,7 +1324,12 @@ unsafe fn cpy5_preencher(t: usize) -> i32 {
     n1 + n2 + n3 + n4
 }
 
-/// { 0x584fa0 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::collect_entrants()`, do construtor (0x583888, na
+/// allocates the 71-entry list of 6-byte entries (+0x14) and fills it with the Champions League clubs (+0x1db =
+/// [0x9cf6e8]) by band (+0x1df): 1 up to 16 (round 7), 2 up to 18 (8), 3 up to 19 (0xd), 4 up to 18 (0); short of 71,
+/// +0x36 = 0 and returns 0
+/// Original: `EuropeanCup::collect_entrants` (0x584fa0, european_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x584fa0 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::collect_entrants()`, do construtor (0x583888, na
 /// carreira nova) e do começo da temporada (0x584e5d). +0x36 e +0x38 = 71; libera a lista antiga (+0x14, free
 /// 0x9452ca) e aloca 6 × 71 bytes (0x944e46; sem memória: a caixa da linha 0x44e e 0, com +0x14 nulo); preenche as
 /// quatro bandas (cpy5_preencher). Sem as 71 entradas: +0x36 = 0 e 0; senão 1.
@@ -1356,7 +1399,11 @@ unsafe fn cpy5_qualificacao(this: usize, t: usize) {
     }
 }
 
-/// { 0x584990 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::build_qualifying_entry_table()`, logo depois da
+/// allocates the 55 qualifying rows (+0xa7, +0x3e = 55): row i takes the club of entry 70 - i and its entry round (8 ->
+/// 2, 0xd -> 1, other -> 0); out of memory, -1
+/// Original: `EuropeanCup::build_qualifying_entry_table` (0x584990, european_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x584990 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::build_qualifying_entry_table()`, logo depois da
 /// 0x584fa0 (0x58388f, 0x584e9a). +0x3e = 55; aloca 6 × 55 bytes em +0xa7 (sem memória: a caixa da linha 0x2f6 e −1)
 /// e monta as linhas da qualificação de trás para a frente (cpy5_qualificacao); devolve 1.
 unsafe extern "thiscall" fn tabela_da_qualificacao_da_liga_dos_campeoes(this: usize) -> i32 {
@@ -1387,7 +1434,11 @@ unsafe extern "thiscall" fn comparar_tabela_da_qualificacao_da_liga_dos_campeoes
     r
 }
 
-/// { 0x5851d0 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::advance_stage()` (a virtual +0x28, do passe da
+/// moves to the next stage (+0x30) and draws the phase 1 groups (stage 0), the phase 2 groups (8) or the quarter-finals
+/// (12); at the last stage, the error box
+/// Original: `EuropeanCup::advance_stage` (0x5851d0, european_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5851d0 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::advance_stage()` (a virtual +0x28, do passe da
 /// copa 0x51f904). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa da linha 0x495. Senão +0x30 + 1 e, na fase
 /// 0, o sorteio dos grupos da fase 1 (0x585290, thiscall(this)); na 8, os da fase 2 (0x585ab0, thiscall(this, 0),
 /// ret 4); na 12, as quartas (0x586330, thiscall(this)). Quem chama não lê a devolução.
@@ -1462,7 +1513,12 @@ unsafe fn cpy6_noticia(this: usize, clube: usize, valor: u32, jogo: usize) {
     f(this, clube, valor, 0, -1, 0, jogo, -2);
 }
 
-/// { 0x583b10 } (thiscall, ret 8, european_cup.cpp): `EuropeanCup::process_fixture(jogo, arg)` (a virtual +4 da Liga dos
+/// by the score (+0x47/+0x48, or +0x43/+0x44), 2 UEFA coefficient points to the winner's nation or 1 each on a draw
+/// (0x9058b0); in the group stage (+0x42 from 0 to 11), 200 thousand to the winner or 100 thousand each, with the prize
+/// news item (0x48e3e0); then the cup base (0x51a150)
+/// Original: `EuropeanCup::process_fixture` (0x583b10, european_cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x583b10 } (thiscall, ret 8, european_cup.cpp): `EuropeanCup::process_fixture(jogo, arg)` (a virtual +4 da Liga dos
 /// Campeões, a cada jogo dela). O placar: +0x47/+0x48 (com +0x47 = −1, +0x43/+0x44), com sinal. O vencedor ganha 2
 /// pontos no coeficiente da sua nação (+0x53; 0x9058b0), o empate 1 para cada. Na fase de grupos (+0x42 de 0 a 11):
 /// 200 mil ao vencedor ou 100 mil a cada um no empate (0x5a0590 + 0x5999a0), com a notícia do prêmio (0x48e3e0;
@@ -1556,7 +1612,11 @@ unsafe extern "thiscall" fn comparar_processar_jogo_da_liga_dos_campeoes(this: u
     PLACAR.registrar(mo == mr, || format!("processar_jogo_da_liga_dos_campeoes(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
 }
 
-/// { 0x586c00 } (thiscall, ret 0x14, european_cup.cpp): `EuropeanCup::set_club_progress(clube, fase, p1, p2, p3)` (a
+/// converts the three progress codes by stage (qualifying, phase 1, phase 2) and writes them to +0x73..+0x75 of the
+/// club's competition stats entry
+/// Original: `EuropeanCup::set_club_progress` (0x586c00, european_cup.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x586c00 } (thiscall, ret 0x14, european_cup.cpp): `EuropeanCup::set_club_progress(clube, fase, p1, p2, p3)` (a
 /// virtual +0x68, da base da copa 0x521b30): converte os três códigos de progresso pela fase e grava no registro do
 /// clube na estatística da competição (0x4a4850 de +8, sem conferir o nulo, como a original) +0x73 ← p1, +0x74 ← p2,
 /// +0x75 ← p3. Fase −1 (a qualificação): 1 → 0x19 (p2: 1), 17 → 0x21, 33 → 0x31, 47 → 0x3f; fase abaixo de 8 (com
@@ -1616,7 +1676,10 @@ unsafe extern "thiscall" fn comparar_progresso_do_clube_na_liga_dos_campeoes(thi
     PLACAR.registrar(igual, || format!("progresso_do_clube_na_liga_dos_campeoes(fase {} {} {} {}) original={:x?} rust={:x?}", fase as u8 as i8, p1 as u8, p2 as u8, p3 as u8, mo, mr));
 }
 
-/// { 0x48e360 } (thiscall, ret 8, comp.cpp): `Comp::counts_for_fixture_clash(jogo, outro)` (a virtual +0x60 das
+/// 1 when the match round (+0x30) ends in 0 or is above 999, else 0
+/// Original: `Comp::counts_for_fixture_clash` (0x48e360, comp.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x48e360 } (thiscall, ret 8, comp.cpp): `Comp::counts_for_fixture_clash(jogo, outro)` (a virtual +0x60 das
 /// competições, do conflito de datas 0x5adba0): 1 se o algarismo das unidades (0x4b0850) da rodada (+0x30, com sinal)
 /// é 0 (rodada de 1000 em diante também dá 0), senão 0. `outro` não é lido.
 unsafe extern "thiscall" fn conta_para_conflito_de_datas(_this: usize, jogo: usize, _outro: usize) -> u32 {

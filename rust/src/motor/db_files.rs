@@ -46,7 +46,11 @@ const NAO_JOGADOR_V1: [(usize, u32, usize); 6] = [(0, 4, 1), (4, 2, 2), (8, 0, 3
 /// Jogador (70 bytes, id 10) versão 1 (67 no arquivo): as três reputações (+9, +0xb, +0xd) vêm em bytes.
 const JOGADOR_V1: [(usize, u32, usize); 5] = [(0, 4, 1), (4, 1, 1), (5, 2, 2), (9, 0, 3), (0xf, 1, 55)];
 
-/// { 0x54dc90 } (cdecl, Db_files.cpp): `db_files_read_clubs_v1(stream, use_zip, registros, n)`: o club.dat
+/// reads version 1 club.dat field by field (577 bytes on file for 581-byte records, holes at +0x37, +0x52 and +0x244),
+/// the reputation in one byte (0 becomes 1) × 500; 0 at the first read that does not come, 1 if everything came
+/// Original: `db_files_read_clubs_v1` (0x54dc90, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54dc90 } (cdecl, Db_files.cpp): `db_files_read_clubs_v1(stream, use_zip, registros, n)`: o club.dat
 /// versão 1 campo a campo (`CLUBE_V1`); a reputação lida num byte, 0 vira 1, × 500 (u16, como o `imul ax`).
 /// Chamado por `db_files_read_clubs` 0x54db50 com a versão da entrada igual a 1; a base de fábrica e o save
 /// são versão 2. Sem SEH e sem variável local lida sem valor.
@@ -55,7 +59,11 @@ unsafe extern "C" fn ler_clubes_v1(stream: usize, use_zip: i32, registros: usize
     converter_v1(stream, use_zip, registros, n, 581, &CLUBE_V1, |b| (b.max(1) as u16).wrapping_mul(500))
 }
 
-/// { 0x54e9a0 } (cdecl, Db_files.cpp): `db_files_read_players_v1(stream, use_zip, registros, n)` (o mapa da
+/// reads the version 1 non-player table (id 9; the community map calls it players) field by field (65 bytes on file for
+/// 68-byte records), the three reputations in bytes; 0 at the first read that does not come, 1 if everything came
+/// Original: `db_files_read_players_v1` (0x54e9a0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54e9a0 } (cdecl, Db_files.cpp): `db_files_read_players_v1(stream, use_zip, registros, n)` (o mapa da
 /// comunidade troca os nomes: é a tabela id 9, a dos não jogadores, 68 bytes): campo a campo
 /// (`NAO_JOGADOR_V1`); as reputações lidas em bytes, sem conta. Chamado por 0x54e880 com a versão 1.
 unsafe extern "C" fn ler_nao_jogadores_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
@@ -63,7 +71,11 @@ unsafe extern "C" fn ler_nao_jogadores_v1(stream: usize, use_zip: i32, registros
     converter_v1(stream, use_zip, registros, n, 68, &NAO_JOGADOR_V1, |b| b as u16)
 }
 
-/// { 0x54f150 } (cdecl, Db_files.cpp): `db_files_read_non_players_v1(stream, use_zip, registros, n)` (o mapa
+/// reads the version 1 player table (id 10; the community map calls it non_players) field by field (67 bytes on file
+/// for 70-byte records), the three reputations in bytes; 0 at the first read that does not come, 1 if everything came
+/// Original: `db_files_read_non_players_v1` (0x54f150, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54f150 } (cdecl, Db_files.cpp): `db_files_read_non_players_v1(stream, use_zip, registros, n)` (o mapa
 /// troca os nomes: é a tabela id 10, a dos jogadores, 70 bytes): campo a campo (`JOGADOR_V1`); as reputações
 /// lidas em bytes, sem conta. Chamado por 0x54f030 com a versão 1.
 unsafe extern "C" fn ler_jogadores_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
@@ -156,7 +168,11 @@ pub unsafe fn autoteste_dbj_1() {
 
 // ---------- 231a leva: a gravação dos .dat: histórico de pessoas, competições, históricos de competição (Db_files.cpp) ----------
 
-/// { 0x54fe50 } (cdecl, Db_files.cpp): `db_files_write_staff_history(stream, use_zip, registros, n)`: grava de uma vez `n`
+/// writes n 17-byte records (staff_history.dat, id 17) in one go, through zwrite (save) or fwrite (Data folder); 1 if
+/// everything went
+/// Original: `db_files_write_staff_history` (0x54fe50, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54fe50 } (cdecl, Db_files.cpp): `db_files_write_staff_history(stream, use_zip, registros, n)`: grava de uma vez `n`
 /// registros de 17 bytes (staff_history.dat, id 17) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 unsafe extern "C" fn gravar_historico_de_pessoas(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
@@ -177,7 +193,11 @@ unsafe extern "C" fn comparar_gravar_historico_de_pessoas(stream: usize, use_zip
     orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(652)(stream, use_zip, registros, n)
 }
 
-/// { 0x5501d0 } (cdecl, Db_files.cpp): `db_files_write_comps(stream, use_zip, registros, n)`: grava de uma vez `n`
+/// writes n 107-byte records (club_comp.dat, in two calls: the competitions and the 127 reserve ones; nation_comp.dat)
+/// in one go, through zwrite (save) or fwrite (Data folder); 1 if everything went
+/// Original: `db_files_write_comps` (0x5501d0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x5501d0 } (cdecl, Db_files.cpp): `db_files_write_comps(stream, use_zip, registros, n)`: grava de uma vez `n`
 /// registros de 107 bytes (club_comp.dat em duas chamadas, as competições e as 127 de reserva, e nation_comp.dat; ids 12 e 16) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 unsafe extern "C" fn gravar_competicoes(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
@@ -198,7 +218,11 @@ unsafe extern "C" fn comparar_gravar_competicoes(stream: usize, use_zip: i32, re
     orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(653)(stream, use_zip, registros, n)
 }
 
-/// { 0x550320 } (cdecl, Db_files.cpp): `db_files_write_comp_history(stream, use_zip, registros, n)`: grava de uma vez `n`
+/// writes n 26-byte records (club_comp_history.dat and nation_comp_history.dat, ids 19 and 20) in one go, through
+/// zwrite (save) or fwrite (Data folder); 1 if everything went
+/// Original: `db_files_write_comp_history` (0x550320, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x550320 } (cdecl, Db_files.cpp): `db_files_write_comp_history(stream, use_zip, registros, n)`: grava de uma vez `n`
 /// registros de 26 bytes (club_comp_history.dat e nation_comp_history.dat, ids 19 e 20) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 unsafe extern "C" fn gravar_historicos_de_competicao(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
@@ -221,7 +245,11 @@ unsafe extern "C" fn comparar_gravar_historicos_de_competicao(stream: usize, use
 
 // ---------- 231a leva: a gravação dos .dat: competições de pessoal, árbitros, cores (Db_files.cpp) ----------
 
-/// { 0x550470 } (cdecl, Db_files.cpp): `db_files_write_staff_comps(stream, use_zip, registros, n)`: grava de uma vez `n`
+/// writes n 101-byte records (staff_comp.dat, id 11) in one go, through zwrite (save) or fwrite (Data folder); 1 if
+/// everything went
+/// Original: `db_files_write_staff_comps` (0x550470, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x550470 } (cdecl, Db_files.cpp): `db_files_write_staff_comps(stream, use_zip, registros, n)`: grava de uma vez `n`
 /// registros de 101 bytes (staff_comp.dat, id 11) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 unsafe extern "C" fn gravar_competicoes_de_pessoal(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
@@ -242,7 +270,11 @@ unsafe extern "C" fn comparar_gravar_competicoes_de_pessoal(stream: usize, use_z
     orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(655)(stream, use_zip, registros, n)
 }
 
-/// { 0x5506b0 } (cdecl, Db_files.cpp): `db_files_write_officials(stream, use_zip, registros, n)`: grava de uma vez `n`
+/// writes n 43-byte records (officials.dat, id 7) in one go, through zwrite (save) or fwrite (Data folder); 1 if
+/// everything went
+/// Original: `db_files_write_officials` (0x5506b0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x5506b0 } (cdecl, Db_files.cpp): `db_files_write_officials(stream, use_zip, registros, n)`: grava de uma vez `n`
 /// registros de 43 bytes (officials.dat, id 7) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 unsafe extern "C" fn gravar_arbitros(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
@@ -263,7 +295,11 @@ unsafe extern "C" fn comparar_gravar_arbitros(stream: usize, use_zip: i32, regis
     orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(656)(stream, use_zip, registros, n)
 }
 
-/// { 0x550800 } (cdecl, Db_files.cpp): `db_files_write_records_0x3a(stream, use_zip, registros, n)`: grava de uma vez `n`
+/// writes n 58-byte records (colour.dat, id 2, and staff_comp_history.dat, id 18: the same routine for both) in one go,
+/// through zwrite (save) or fwrite (Data folder); 1 if everything went
+/// Original: `db_files_write_records_0x3a` (0x550800, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x550800 } (cdecl, Db_files.cpp): `db_files_write_records_0x3a(stream, use_zip, registros, n)`: grava de uma vez `n`
 /// registros de 58 bytes (colour.dat, id 2, e staff_comp_history.dat, id 18: a mesma rotina para os dois) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 unsafe extern "C" fn gravar_registros_58(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
@@ -285,7 +321,11 @@ unsafe extern "C" fn comparar_gravar_registros_58(stream: usize, use_zip: i32, r
 }
 
 // ---------- 231a leva: a gravação dos .dat: nomes; abrir e criar os .dat (Db_files.cpp) ----------
-/// { 0x550950 } (cdecl, Db_files.cpp): `db_files_write_or_read_records_0x3c(stream, use_zip, registros, n)`: grava de uma vez `n`
+/// writes n 60-byte records (first_names.dat, second_names.dat and common_names.dat, ids 13 to 15) in one go, through
+/// zwrite (save) or fwrite (Data folder); 1 if everything went (it only writes, despite the community name)
+/// Original: `db_files_write_or_read_records_0x3c` (0x550950, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x550950 } (cdecl, Db_files.cpp): `db_files_write_or_read_records_0x3c(stream, use_zip, registros, n)`: grava de uma vez `n`
 /// registros de 60 bytes (first_names.dat, second_names.dat e common_names.dat, ids 13 a 15: a mesma rotina para os três) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 unsafe extern "C" fn gravar_nomes(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
@@ -324,7 +364,10 @@ unsafe fn conferir_caminho_do_banco(rotina: &str, pasta: usize, nome: usize) {
     PLACAR.registrar(a == b, || format!("{} caminho {:?} x {:?}", rotina, String::from_utf8_lossy(a), String::from_utf8_lossy(b)));
 }
 
-/// { 0x54d580 } (cdecl, Db_files.cpp): `db_files_open_for_read(pasta, nome)`: monta o caminho em 0xde1f64
+/// builds folder + name at 0xde1f64 (_makepath) and returns fopen(path, "rb"); the comparator checks the path
+/// Original: `db_files_open_for_read` (0x54d580, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54d580 } (cdecl, Db_files.cpp): `db_files_open_for_read(pasta, nome)`: monta o caminho em 0xde1f64
 /// (`_makepath`, ver `caminho_do_banco`) e devolve `fopen(0xde1f64, "rb")` (0x945b00; "rb" em 0x98f928). Na
 /// criação do jogo, `load_database` abre assim o index.dat e cada tabela da pasta Data.
 unsafe extern "C" fn abrir_arquivo_do_banco(pasta: usize, nome: usize) -> usize {
@@ -342,7 +385,11 @@ unsafe extern "C" fn comparar_abrir_arquivo_do_banco(pasta: usize, nome: usize) 
     r
 }
 
-/// { 0x54d5b0 } (cdecl, Db_files.cpp): `db_files_open_for_write(pasta, nome)`: o mesmo caminho em 0xde1f64 e
+/// builds folder + name at 0xde1f64 (_makepath) and returns fopen(path, "wb"); only when writing the database to the
+/// folder; the comparator checks the path
+/// Original: `db_files_open_for_write` (0x54d5b0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54d5b0 } (cdecl, Db_files.cpp): `db_files_open_for_write(pasta, nome)`: o mesmo caminho em 0xde1f64 e
 /// `fopen(0xde1f64, "wb")` ("wb" em 0x9a7f28). Só `save_database(…, 0, …)` (gravar a base na pasta) chama:
 /// no save (use_zip ≠ 0) as tabelas vão por `zopen` 0x9326e0.
 unsafe extern "C" fn criar_arquivo_do_banco(pasta: usize, nome: usize) -> usize {
@@ -362,7 +409,11 @@ unsafe extern "C" fn comparar_criar_arquivo_do_banco(pasta: usize, nome: usize) 
 
 // ---------- 230a leva: a gravação dos .dat: continentes, nações, cidades (Db_files.cpp) ----------
 
-/// { 0x54d6e0 } (cdecl, Db_files.cpp): `db_files_write_continents(stream, use_zip, registros, quantidade)`: grava de uma vez
+/// writes the continent.dat (id 3) table of 198-byte records in one go, through zwrite (save) or fwrite (Data); 1 if
+/// everything went out
+/// Original: `db_files_write_continents` (0x54d6e0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54d6e0 } (cdecl, Db_files.cpp): `db_files_write_continents(stream, use_zip, registros, quantidade)`: grava de uma vez
 /// `quantidade` registros de 198 bytes (continent.dat (id 3)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
@@ -384,7 +435,11 @@ unsafe extern "C" fn comparar_gravar_continentes(stream: usize, use_zip: i32, re
     orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(643)(stream, use_zip, registros, n)
 }
 
-/// { 0x54d840 } (cdecl, Db_files.cpp): `db_files_write_nations(stream, use_zip, registros, quantidade)`: grava de uma vez
+/// writes the nation.dat (id 4) table of 290-byte records in one go, through zwrite (save) or fwrite (Data); 1 if
+/// everything went out
+/// Original: `db_files_write_nations` (0x54d840, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54d840 } (cdecl, Db_files.cpp): `db_files_write_nations(stream, use_zip, registros, quantidade)`: grava de uma vez
 /// `quantidade` registros de 290 bytes (nation.dat (id 4)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
@@ -406,7 +461,11 @@ unsafe extern "C" fn comparar_gravar_nacoes(stream: usize, use_zip: i32, registr
     orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(644)(stream, use_zip, registros, n)
 }
 
-/// { 0x54d9a0 } (cdecl, Db_files.cpp): `db_files_write_cities(stream, use_zip, registros, quantidade)`: grava de uma vez
+/// writes the city.dat (id 21) table of 56-byte records in one go, through zwrite (save) or fwrite (Data); 1 if
+/// everything went out
+/// Original: `db_files_write_cities` (0x54d9a0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54d9a0 } (cdecl, Db_files.cpp): `db_files_write_cities(stream, use_zip, registros, quantidade)`: grava de uma vez
 /// `quantidade` registros de 56 bytes (city.dat (id 21)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
@@ -430,7 +489,11 @@ unsafe extern "C" fn comparar_gravar_cidades(stream: usize, use_zip: i32, regist
 
 // ---------- 230a leva: a gravação dos .dat: estádios, clubes, pessoas 110 (Db_files.cpp) ----------
 
-/// { 0x54daf0 } (cdecl, Db_files.cpp): `db_files_write_stadiums(stream, use_zip, registros, quantidade)`: grava de uma vez
+/// writes the stadium.dat table of 78-byte records in one go, through zwrite (save) or fwrite (Data); 1 if everything
+/// went out
+/// Original: `db_files_write_stadiums` (0x54daf0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54daf0 } (cdecl, Db_files.cpp): `db_files_write_stadiums(stream, use_zip, registros, quantidade)`: grava de uma vez
 /// `quantidade` registros de 78 bytes (stadium.dat) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
@@ -452,7 +515,11 @@ unsafe extern "C" fn comparar_gravar_estadios(stream: usize, use_zip: i32, regis
     orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(646)(stream, use_zip, registros, n)
 }
 
-/// { 0x54e5d0 } (cdecl, Db_files.cpp): `db_files_write_clubs(stream, use_zip, registros, quantidade)`: grava de uma vez
+/// writes the club.dat and nat_club.dat (ids 0, 1) table of 581-byte records in one go, through zwrite (save) or fwrite
+/// (Data); 1 if everything went out
+/// Original: `db_files_write_clubs` (0x54e5d0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54e5d0 } (cdecl, Db_files.cpp): `db_files_write_clubs(stream, use_zip, registros, quantidade)`: grava de uma vez
 /// `quantidade` registros de 581 bytes (club.dat e nat_club.dat (ids 0, 1)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
@@ -474,7 +541,11 @@ unsafe extern "C" fn comparar_gravar_clubes(stream: usize, use_zip: i32, registr
     orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(647)(stream, use_zip, registros, n)
 }
 
-/// { 0x54e720 } (cdecl, Db_files.cpp): `db_files_write_staff(stream, use_zip, registros, quantidade)`: grava de uma vez
+/// writes the staff.dat (staff, 110 bytes; id 6) table of 110-byte records in one go, through zwrite (save) or fwrite
+/// (Data); 1 if everything went out
+/// Original: `db_files_write_staff` (0x54e720, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54e720 } (cdecl, Db_files.cpp): `db_files_write_staff(stream, use_zip, registros, quantidade)`: grava de uma vez
 /// `quantidade` registros de 110 bytes (staff.dat (pessoas, 110 bytes; id 6)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
@@ -498,7 +569,11 @@ unsafe extern "C" fn comparar_gravar_pessoas_110(stream: usize, use_zip: i32, re
 
 // ---------- 230a leva: a gravação dos .dat: não jogadores, jogadores, preferências (Db_files.cpp) ----------
 
-/// { 0x54efd0 } (cdecl, Db_files.cpp): `db_files_write_players(stream, use_zip, registros, quantidade)`: grava de uma vez
+/// writes the staff.dat non-player (id 9; the community map calls it players) table of 68-byte records in one go,
+/// through zwrite (save) or fwrite (Data); 1 if everything went out
+/// Original: `db_files_write_players` (0x54efd0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54efd0 } (cdecl, Db_files.cpp): `db_files_write_players(stream, use_zip, registros, quantidade)`: grava de uma vez
 /// `quantidade` registros de 68 bytes (dos não jogadores do staff.dat (id 9; o mapa da comunidade a chama de players)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
@@ -520,7 +595,11 @@ unsafe extern "C" fn comparar_gravar_nao_jogadores(stream: usize, use_zip: i32, 
     orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(649)(stream, use_zip, registros, n)
 }
 
-/// { 0x54fbb0 } (cdecl, Db_files.cpp): `db_files_write_non_players(stream, use_zip, registros, quantidade)`: grava de uma vez
+/// writes the staff.dat player (id 10; the community map calls it non_players) table of 70-byte records in one go,
+/// through zwrite (save) or fwrite (Data); 1 if everything went out
+/// Original: `db_files_write_non_players` (0x54fbb0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54fbb0 } (cdecl, Db_files.cpp): `db_files_write_non_players(stream, use_zip, registros, quantidade)`: grava de uma vez
 /// `quantidade` registros de 70 bytes (dos jogadores do staff.dat (id 10; o mapa da comunidade a chama de non_players)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
@@ -542,7 +621,11 @@ unsafe extern "C" fn comparar_gravar_jogadores(stream: usize, use_zip: i32, regi
     orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(650)(stream, use_zip, registros, n)
 }
 
-/// { 0x54fd00 } (cdecl, Db_files.cpp): `db_files_write_staff_extra(stream, use_zip, registros, quantidade)`: grava de uma vez
+/// writes the staff preferences (id 22) table of 52-byte records in one go, through zwrite (save) or fwrite (Data); 1
+/// if everything went out
+/// Original: `db_files_write_staff_extra` (0x54fd00, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54fd00 } (cdecl, Db_files.cpp): `db_files_write_staff_extra(stream, use_zip, registros, quantidade)`: grava de uma vez
 /// `quantidade` registros de 52 bytes (das preferências das pessoas (id 22)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
@@ -566,7 +649,11 @@ unsafe extern "C" fn comparar_gravar_preferencias(stream: usize, use_zip: i32, r
 
 // ---------- 229a leva: a leitura dos .dat: árbitros, cores, nomes (Db_files.cpp) ----------
 
-/// { 0x5505c0 } (cdecl, Db_files.cpp): `db_files_read_officials(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the officials.dat table (id 7) of 43-byte records in one go, through zread (save) or fread (Data), with the
+/// entry version 1 (other: box and exit); 1 if everything came
+/// Original: `db_files_read_officials` (0x5505c0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x5505c0 } (cdecl, Db_files.cpp): `db_files_read_officials(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) igual a 1, lê de uma vez a quantidade (+0x37) de registros de 43 bytes
 /// (officials.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
@@ -594,7 +681,11 @@ unsafe extern "C" fn comparar_ler_arbitros(stream: usize, use_zip: i32, registro
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(634)(stream, use_zip, registros, entrada)
 }
 
-/// { 0x550710 } (cdecl, Db_files.cpp): `db_files_read_colours(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the colour.dat table (id 2) of 58-byte records in one go, through zread (save) or fread (Data), with the entry
+/// version 1 (other: box and exit); 1 if everything came
+/// Original: `db_files_read_colours` (0x550710, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x550710 } (cdecl, Db_files.cpp): `db_files_read_colours(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) igual a 1, lê de uma vez a quantidade (+0x37) de registros de 58 bytes
 /// (colour.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
@@ -622,7 +713,11 @@ unsafe extern "C" fn comparar_ler_cores(stream: usize, use_zip: i32, registros: 
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(635)(stream, use_zip, registros, entrada)
 }
 
-/// { 0x550860 } (cdecl, Db_files.cpp): `db_files_read_names(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the first_names.dat, second_names.dat and common_names.dat tables (ids 13, 14, 15) of 60-byte records in one
+/// go, through zread (save) or fread (Data), with the entry version 1 (other: box and exit); 1 if everything came
+/// Original: `db_files_read_names` (0x550860, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x550860 } (cdecl, Db_files.cpp): `db_files_read_names(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) igual a 1, lê de uma vez a quantidade (+0x37) de registros de 60 bytes
 /// (first_names.dat, second_names.dat e common_names.dat: a mesma rotina para os três) por `zread` 0x932c30
 /// (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio tudo. Outra versão: a caixa "Error"
@@ -653,7 +748,12 @@ unsafe extern "C" fn comparar_ler_nomes(stream: usize, use_zip: i32, registros: 
 
 // ---------- 229a leva: a leitura dos .dat com conversor: clubes, competições, não jogadores (Db_files.cpp) ----------
 
-/// { 0x54db50 } (cdecl, Db_files.cpp): `db_files_read_clubs(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the club.dat and nat_club.dat table (ids 0, 1) of 581-byte records in one go, through zread (save) or fread
+/// (Data), with the entry version 2, and turns reputation 0 into 1; version 1: the 0x54dc90 converter (other: box and
+/// exit); 1 if everything came
+/// Original: `db_files_read_clubs` (0x54db50, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54db50 } (cdecl, Db_files.cpp): `db_files_read_clubs(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) igual a 2, lê de uma vez a quantidade (+0x37) de registros de 581 bytes
 /// (club.dat e nat_club.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data);
 /// se não veio tudo, 0; se veio, troca a reputação (+0x80, u16) 0 por 1 em todos e dá 1. Versão 1: o
@@ -697,7 +797,12 @@ unsafe extern "C" fn comparar_ler_clubes(stream: usize, use_zip: i32, registros:
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(637)(stream, use_zip, registros, entrada)
 }
 
-/// { 0x54feb0 } (cdecl, Db_files.cpp): `db_files_read_comps(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the club_comp.dat and nation_comp.dat table (ids 12, 16) of 107-byte records in one go, through zread (save)
+/// or fread (Data), with the entry version 2; version 1: the 0x54ffd0 converter (other: box and exit); 1 if everything
+/// came
+/// Original: `db_files_read_comps` (0x54feb0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54feb0 } (cdecl, Db_files.cpp): `db_files_read_comps(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) igual a 2, lê de uma vez a quantidade (+0x37) de registros de 107 bytes
 /// (club_comp.dat e nation_comp.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta
 /// Data); 1 se veio tudo. Versão 1: o conversor campo a campo 0x54ffd0 (stream, use_zip, registros,
@@ -731,7 +836,12 @@ unsafe extern "C" fn comparar_ler_competicoes(stream: usize, use_zip: i32, regis
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(638)(stream, use_zip, registros, entrada)
 }
 
-/// { 0x54e880 } (cdecl, Db_files.cpp): `db_files_read_players(stream, use_zip, registros, entrada)` (o mapa da
+/// reads the non-player table of staff.dat (id 9; the community map calls it players) of 68-byte records in one go,
+/// through zread (save) or fread (Data), with the entry version 2; version 1: the 0x54e9a0 converter (other: box and
+/// exit); 1 if everything came
+/// Original: `db_files_read_players` (0x54e880, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54e880 } (cdecl, Db_files.cpp): `db_files_read_players(stream, use_zip, registros, entrada)` (o mapa da
 /// comunidade troca os nomes: é a tabela id 9, a dos não jogadores, 0xae23c0): com a versão da entrada do
 /// index (+0x3f) igual a 2, lê de uma vez a quantidade (+0x37) de registros de 68 bytes por `zread` 0x932c30
 /// (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio tudo. Versão 1: o conversor campo a
@@ -768,7 +878,12 @@ unsafe extern "C" fn comparar_ler_nao_jogadores(stream: usize, use_zip: i32, reg
 
 // ---------- 229a leva: a leitura dos .dat: jogadores, pessoas 110, preferências (Db_files.cpp) ----------
 
-/// { 0x54f030 } (cdecl, Db_files.cpp): `db_files_read_non_players(stream, use_zip, registros, entrada)` (o mapa
+/// reads the player table of staff.dat (id 10; the community map calls it non_players) of 70-byte records in one go,
+/// through zread (save) or fread (Data), with the entry version 2; version 1: the 0x54f150 converter (other: box and
+/// exit); 1 if everything came
+/// Original: `db_files_read_non_players` (0x54f030, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54f030 } (cdecl, Db_files.cpp): `db_files_read_non_players(stream, use_zip, registros, entrada)` (o mapa
 /// da comunidade troca os nomes: é a tabela id 10, a dos jogadores, 0xae23c4): com a versão da entrada do
 /// index (+0x3f) igual a 2, lê de uma vez a quantidade (+0x37) de registros de 70 bytes por `zread` 0x932c30
 /// (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio tudo. Versão 1: o conversor campo a
@@ -803,7 +918,12 @@ unsafe extern "C" fn comparar_ler_jogadores(stream: usize, use_zip: i32, registr
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(640)(stream, use_zip, registros, entrada)
 }
 
-/// { 0x54e630 } (cdecl, Db_files.cpp): `db_files_read_staff(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the staff.dat (staff, 110-byte file version: the save and community databases) table (id 6) of 110-byte
+/// records in one go, through zread (save) or fread (Data), with the entry version 2 (other: box and exit); 1 if
+/// everything came
+/// Original: `db_files_read_staff` (0x54e630, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54e630 } (cdecl, Db_files.cpp): `db_files_read_staff(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) igual a 2, lê de uma vez a quantidade (+0x37) de registros de 110 bytes
 /// (staff.dat na versão 2: o save e as bases da comunidade; a base de fábrica é a versão 1, 0x54e780) por
 /// `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio tudo. Outra versão: a
@@ -832,7 +952,11 @@ unsafe extern "C" fn comparar_ler_pessoas_110(stream: usize, use_zip: i32, regis
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(641)(stream, use_zip, registros, entrada)
 }
 
-/// { 0x54fc10 } (cdecl, Db_files.cpp): `db_files_read_staff_extra(stream, use_zip, registros, entrada)`: com a
+/// reads the staff preferences table (id 22: the save and community databases) of 52-byte records in one go, through
+/// zread (save) or fread (Data), with the entry version 1 (other: box and exit); 1 if everything came
+/// Original: `db_files_read_staff_extra` (0x54fc10, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54fc10 } (cdecl, Db_files.cpp): `db_files_read_staff_extra(stream, use_zip, registros, entrada)`: com a
 /// versão da entrada do index (+0x3f) igual a 1, lê de uma vez a quantidade (+0x37) de registros de 52 bytes
 /// (as preferências, id 22: o save e as bases da comunidade; na base de fábrica elas saem da conversão das
 /// pessoas de 157 bytes) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se
@@ -863,7 +987,11 @@ unsafe extern "C" fn comparar_ler_preferencias(stream: usize, use_zip: i32, regi
 
 // ---------- 228a leva: a leitura dos .dat: continentes, nações, cidades (Db_files.cpp) ----------
 
-/// { 0x54d5e0 } (cdecl, Db_files.cpp): `db_files_read_continents(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the continent.dat table (id 3) of 198-byte records in one go, through zread (save) or fread (Data), with the
+/// entry version 1 (other: box and exit); 1 if everything came
+/// Original: `db_files_read_continents` (0x54d5e0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54d5e0 } (cdecl, Db_files.cpp): `db_files_read_continents(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) igual a 1, lê de uma vez a quantidade (+0x37) de registros de 198 bytes
 /// (continent.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
@@ -891,7 +1019,11 @@ unsafe extern "C" fn comparar_ler_continentes(stream: usize, use_zip: i32, regis
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(625)(stream, use_zip, registros, entrada)
 }
 
-/// { 0x54d740 } (cdecl, Db_files.cpp): `db_files_read_nations(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the nation.dat table (id 4) of 290-byte records in one go, through zread (save) or fread (Data), with the
+/// entry version 2 (other: box and exit); 1 if everything came
+/// Original: `db_files_read_nations` (0x54d740, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54d740 } (cdecl, Db_files.cpp): `db_files_read_nations(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) igual a 2, lê de uma vez a quantidade (+0x37) de registros de 290 bytes
 /// (nation.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
@@ -919,7 +1051,11 @@ unsafe extern "C" fn comparar_ler_nacoes(stream: usize, use_zip: i32, registros:
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(626)(stream, use_zip, registros, entrada)
 }
 
-/// { 0x54d8a0 } (cdecl, Db_files.cpp): `db_files_read_cities(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the city.dat table (id 21) of 56-byte records in one go, through zread (save) or fread (Data), with the entry
+/// version 1 to 2 (other: box and exit); 1 if everything came
+/// Original: `db_files_read_cities` (0x54d8a0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54d8a0 } (cdecl, Db_files.cpp): `db_files_read_cities(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) de 1 a 2 (com sinal), lê de uma vez a quantidade (+0x37) de registros de 56 bytes
 /// (city.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
@@ -949,7 +1085,11 @@ unsafe extern "C" fn comparar_ler_cidades(stream: usize, use_zip: i32, registros
 
 // ---------- 228a leva: a leitura dos .dat: estádios, pessoas 157, histórico de pessoas (Db_files.cpp) ----------
 
-/// { 0x54da00 } (cdecl, Db_files.cpp): `db_files_read_stadiums(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the stadium.dat table (id 5) of 78-byte records in one go, through zread (save) or fread (Data), with the
+/// entry version 1 (other: box and exit); 1 if everything came
+/// Original: `db_files_read_stadiums` (0x54da00, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54da00 } (cdecl, Db_files.cpp): `db_files_read_stadiums(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) igual a 1, lê de uma vez a quantidade (+0x37) de registros de 78 bytes
 /// (stadium.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
@@ -977,7 +1117,11 @@ unsafe extern "C" fn comparar_ler_estadios(stream: usize, use_zip: i32, registro
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(628)(stream, use_zip, registros, entrada)
 }
 
-/// { 0x54e780 } (cdecl, Db_files.cpp): `db_files_read_staff_v1(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the staff.dat (staff, 157-byte file version) table (id 6) of 157-byte records in one go, through zread (save)
+/// or fread (Data), with the entry version 1 (other: box and exit); 1 if everything came
+/// Original: `db_files_read_staff_v1` (0x54e780, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54e780 } (cdecl, Db_files.cpp): `db_files_read_staff_v1(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) igual a 1, lê de uma vez a quantidade (+0x37) de registros de 157 bytes
 /// (staff.dat (pessoas, versão de arquivo de 157 bytes)) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
@@ -1005,7 +1149,11 @@ unsafe extern "C" fn comparar_ler_pessoas_157(stream: usize, use_zip: i32, regis
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(629)(stream, use_zip, registros, entrada)
 }
 
-/// { 0x54fd60 } (cdecl, Db_files.cpp): `db_files_read_staff_history(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the staff_history.dat table (id 17) of 17-byte records in one go, through zread (save) or fread (Data), with
+/// the entry version 1 (other: box and exit); 1 if everything came
+/// Original: `db_files_read_staff_history` (0x54fd60, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54fd60 } (cdecl, Db_files.cpp): `db_files_read_staff_history(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) igual a 1, lê de uma vez a quantidade (+0x37) de registros de 17 bytes
 /// (staff_history.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
@@ -1035,7 +1183,11 @@ unsafe extern "C" fn comparar_ler_historico_de_pessoas(stream: usize, use_zip: i
 
 // ---------- 228a leva: a leitura dos .dat: históricos de competição, competições de pessoal, histórico de competições de pessoal (Db_files.cpp) ----------
 
-/// { 0x550230 } (cdecl, Db_files.cpp): `db_files_read_comp_history(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the club_comp_history.dat and nation_comp_history.dat table (id 19, 20) of 26-byte records in one go, through
+/// zread (save) or fread (Data), with the entry version 1 (other: box and exit); 1 if everything came
+/// Original: `db_files_read_comp_history` (0x550230, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x550230 } (cdecl, Db_files.cpp): `db_files_read_comp_history(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) igual a 1, lê de uma vez a quantidade (+0x37) de registros de 26 bytes
 /// (club_comp_history.dat e nation_comp_history.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
@@ -1063,7 +1215,11 @@ unsafe extern "C" fn comparar_ler_historicos_de_competicao(stream: usize, use_zi
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(631)(stream, use_zip, registros, entrada)
 }
 
-/// { 0x550380 } (cdecl, Db_files.cpp): `db_files_read_staff_comps(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the staff_comp.dat table (id 11) of 101-byte records in one go, through zread (save) or fread (Data), with the
+/// entry version 2 (other: box and exit); 1 if everything came
+/// Original: `db_files_read_staff_comps` (0x550380, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x550380 } (cdecl, Db_files.cpp): `db_files_read_staff_comps(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) igual a 2, lê de uma vez a quantidade (+0x37) de registros de 101 bytes
 /// (staff_comp.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
@@ -1091,7 +1247,11 @@ unsafe extern "C" fn comparar_ler_competicoes_de_pessoal(stream: usize, use_zip:
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(632)(stream, use_zip, registros, entrada)
 }
 
-/// { 0x5504d0 } (cdecl, Db_files.cpp): `db_files_read_staff_comp_history(stream, use_zip, registros, entrada)`: com a versão da
+/// reads the staff_comp_history.dat table (id 18) of 58-byte records in one go, through zread (save) or fread (Data),
+/// with the entry version 1 (other: box and exit); 1 if everything came
+/// Original: `db_files_read_staff_comp_history` (0x5504d0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x5504d0 } (cdecl, Db_files.cpp): `db_files_read_staff_comp_history(stream, use_zip, registros, entrada)`: com a versão da
 /// entrada do index (+0x3f) igual a 1, lê de uma vez a quantidade (+0x37) de registros de 58 bytes
 /// (staff_comp_history.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro

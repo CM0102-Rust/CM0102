@@ -76,7 +76,13 @@ unsafe fn cqg7_teto(f: usize, teto: i16, n: i32) {
     }
 }
 
-/// { 0x7abac0 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::regenerate_as_youth_player(pessoa)`, pela fila dos
+/// rebuilds the retired person of the regen queue as a young player: the front record of the pool, the nation (or
+/// another small one), the second nation, the nation names and languages, the age and ability (by the small nation
+/// reputation or by position and by draw), the reputations and their caps, the birth, the personality attributes by age
+/// and, by chance, the best club or a club of the nation
+/// Original: `PLAYER_REGEN::regenerate_as_youth_player` (0x7abac0, player_regen.cpp, thiscall).
+///
+/// [pt] { 0x7abac0 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::regenerate_as_youth_player(pessoa)`, pela fila dos
 /// regens (0x7a65d0) em todo regen jovem. Pessoa não aposentada (bits 0x30 do +0xb do registro de 79 bytes) ou com
 /// clube: só limpa os bits. Senão: sai da seleção (0x775ba0), pega a ficha da frente do banco de fichas (this+0x3c,
 /// entradas de 16 bytes: ficha, nação, segunda nação; 0x7a8470), vira jogador (+0x5f = 2, +0x61 a ficha) e o registro
@@ -573,7 +579,10 @@ unsafe extern "thiscall" fn comparar_refazer_como_jovem(this: usize, p: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(1630)(this, p)
 }
 
-/// { 0x56a090 } (thiscall, ret 4, dispute.cpp): `DISPUTE::remove_dispute(pessoa)`: sem pessoa ou sem a tabela de marcas
+/// clears the person dispute flag and removes her entry from the dispute list
+/// Original: `DISPUTE::remove_dispute` (0x56a090, dispute.cpp, thiscall).
+///
+/// [pt] { 0x56a090 } (thiscall, ret 4, dispute.cpp): `DISPUTE::remove_dispute(pessoa)`: sem pessoa ou sem a tabela de marcas
 /// (+4), ou com a marca da pessoa zerada: nada. Senão zera a marca e, com a lista (+0), volta o cursor ao começo (+0xa =
 /// +2) e procura, nas `conta` (+0, palavra) primeiras, a entrada do id da pessoa (0x68d1b0): achando, tira-a (0x68d1f0).
 unsafe extern "thiscall" fn tirar_da_disputa(this: usize, p: usize) {
@@ -669,7 +678,11 @@ unsafe fn cqh9_bate(p: usize, k: usize, texto: usize) -> bool {
     *(texto as *const u8) == 0 || cqh9_strncmp(read_u32_as_usize(p + k), texto, 0x1a) == 0
 }
 
-/// { 0x7a50f0 } (cdecl, player_regen.cpp): `player_setup_find_staff(primeiro, comum, segundo, clube, no_elenco)`. Sem
+/// finds the person of a player_setup.cfg line by the three names: among all people or, with the club name, in its
+/// squad (when asked) and its manager
+/// Original: `player_setup_find_staff` (0x7a50f0, player_regen.cpp, cdecl).
+///
+/// [pt] { 0x7a50f0 } (cdecl, player_regen.cpp): `player_setup_find_staff(primeiro, comum, segundo, clube, no_elenco)`. Sem
 /// `clube` (nulo ou vazio): a primeira das [0xae2364] pessoas ([0xae23bc], 0x6e bytes) cujos nomes não vazios batem
 /// (cada nome conferido só se o texto e o nome da pessoa existem). Com `clube`: o clube com esse nome (0x545880, 51
 /// caracteres); sem achar, 0. Com `no_elenco` 1: o primeiro das 50 vagas do elenco (+0xd7) com os nomes que batem;
@@ -729,7 +742,10 @@ unsafe extern "C" fn comparar_pessoa_pelo_nome(primeiro: usize, comum: usize, se
     r
 }
 
-/// { 0x7a5090 } (cdecl, player_regen.cpp): `player_setup_read_quoted_token(origem, destino)`: copia para `destino` o
+/// copies the next quoted text of the line (skipping spaces and line breaks before it) and returns where to continue
+/// Original: `player_setup_read_quoted_token` (0x7a5090, player_regen.cpp, cdecl).
+///
+/// [pt] { 0x7a5090 } (cdecl, player_regen.cpp): `player_setup_read_quoted_token(origem, destino)`: copia para `destino` o
 /// texto entre as primeiras aspas de `origem`: espaços e '\r' no começo do texto e '\n' antes dele são pulados; termina
 /// nas aspas de fecho ou no zero (o destino ganha o zero) e devolve o ponteiro dois depois do fim.
 unsafe extern "C" fn texto_entre_aspas(origem: usize, destino: usize) -> usize {
@@ -794,7 +810,11 @@ const CQH9_TIPOS: [(usize, u32); 14] = [
     (0xa6b300, 0x80),   // GERMAN
 ];
 
-/// { 0x7a3140 } (cdecl, player_regen.cpp): `player_setup_type_from_name(nome)`: o bit do tipo da linha (INJURY 1,
+/// the type bit of a player_setup.cfg line (injury, manager, retirement, transfer, loan, doping, misconduct, passport,
+/// tactics, colour blindness, language, absence)
+/// Original: `player_setup_type_from_name` (0x7a3140, player_regen.cpp, cdecl).
+///
+/// [pt] { 0x7a3140 } (cdecl, player_regen.cpp): `player_setup_type_from_name(nome)`: o bit do tipo da linha (INJURY 1,
 /// MANAGER_CONF 2, RETIREMENT 0x200, INT_RETIREMENT 4, FUTURE_TRANSFER 8, LOAN 0x10, NANDROLONE e DRUGS 0x100,
 /// MISCONDUCT 0x1000, FALSE_PASSPORT 0x800, ARSE 0x20, PRESET_TACTICS 0x2000, COLOURBLIND 0x400, GERMAN 0x80, AWOL 0x40;
 /// nenhum 0), pela aplicação das linhas (0x7a3a10) na criação do jogo.
@@ -1100,7 +1120,13 @@ unsafe fn cqd10_aposentar(this: usize, item: usize, p: usize, vaga: &mut [u32; 3
     cqd10_tirar(this, item);
 }
 
-/// { 0x7a59e0 } (thiscall, ret 0, player_regen.cpp; quadro SEH sem destrutor no caminho normal):
+/// the pending retirements of the day: drops those of young players with a club, of players with a pending contract,
+/// under offer or recently moved; retires (news, contract, national team, squad), may turn the player into a coach
+/// (attributes from reputation and record), stores the record in the regen bank or queues the regen slot, and announces
+/// the future ones
+/// Original: `PLAYER_REGEN::process_retirements` (0x7a59e0, player_regen.cpp, thiscall).
+///
+/// [pt] { 0x7a59e0 } (thiscall, ret 0, player_regen.cpp; quadro SEH sem destrutor no caminho normal):
 /// `PLAYER_REGEN::process_retirements()`, todo dia pelo laço do dia. A vaga local para o regen (id e a data padrão
 /// 0x54a110, que deixa o bissexto 1 nela); ordena as aposentadorias pendentes ([this+4], [this+8] de 26 bytes: +0 a
 /// pessoa, +4 o clube ou −1, +8/+0xa o dia e o ano do anúncio, +0x10/+0x12 os da aposentadoria, +0x18 o motivo, +0x19
@@ -1162,7 +1188,11 @@ unsafe extern "thiscall" fn comparar_aposentadorias_do_dia(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(1567)(this)
 }
 
-/// { 0x7a92e0 } (stdcall, ret 0xc, player_regen.cpp; a 0x7a59e0 põe o this no ecx, sem uso; quadro SEH sem destrutor
+/// news item 0xbba about the retirement for the managers (all, the country, the division, the club or the interested
+/// clubs, by fame) and the club insurance payout when injury retires a valuable player
+/// Original: `player_regen_post_retirement_news` (0x7a92e0, player_regen.cpp, stdcall).
+///
+/// [pt] { 0x7a92e0 } (stdcall, ret 0xc, player_regen.cpp; a 0x7a59e0 põe o this no ecx, sem uso; quadro SEH sem destrutor
 /// no caminho normal): `player_regen_post_retirement_news(pessoa, motivo, anunciada)`. Sem pessoa, jogador com cargo 8
 /// ou 5, sem clube ou clube sem técnico humano (0x7875e0): nada. A notícia 0xbba (local): 0..3 a pessoa (id e os +0x33
 /// de +4/+8/+0xc), 4 o motivo, 5 anunciada, 6 o clube (−1 sem), 7 a nação (+0x1a) com os jogos pela seleção (+0x22) ou −1, 8 o
@@ -1275,7 +1305,11 @@ unsafe extern "stdcall" fn comparar_noticia_da_aposentadoria(p: usize, motivo: u
     orig::<unsafe extern "stdcall" fn(usize, u32, u32)>(1568)(p, motivo, anunciada)
 }
 
-/// { 0x7a8ba0 } (stdcall, ret 8, player_regen.cpp; quadro SEH sem destrutor no caminho normal):
+/// news item 0xbce about the youth player joining the club, with the assistant manager or a coach verdict on his
+/// ability
+/// Original: `player_regen_post_youth_promotion_news` (0x7a8ba0, player_regen.cpp, stdcall).
+///
+/// [pt] { 0x7a8ba0 } (stdcall, ret 8, player_regen.cpp; quadro SEH sem destrutor no caminho normal):
 /// `player_regen_post_youth_promotion_news(jogador, clube)`, pelo regen jovem (0x7abac0). Sem jogador ou clube: nada.
 /// A notícia 0xbce (local): 0..3 o jogador (id e os +0x33 de +4/+8/+0xc), 4 o id do clube, 5 a idade, 6 a força do
 /// clube (+0x7f) acima de 15. O auxiliar (+0xd3) e os cinco treinadores (+0x19f) opinam até o primeiro que der
@@ -1374,7 +1408,13 @@ unsafe fn cpv9_vaga_livre(clube: usize) -> usize {
     (0..0x32usize).find(|&k| read_i32(clube + 0xd7 + 4 * k) == 0).unwrap_or(0x32)
 }
 
-/// { 0x7a6f10 } (stdcall, ret 8, player_regen.cpp, quadro SEH só das datas locais): `player_regen_sign_for_club(pessoa,
+/// puts the regen in the first free slot of the 50 in the squad, with the value (0x4d0c60; at most 5000 at a club with
+/// +0x64 = 3), the contract end (below 19 years, two years from now; otherwise random(6) + 1) in the club's season end
+/// month on a random day, the contract, the default wage and, outside the human club, an end at most five years ahead;
+/// returns 1 (0 without a slot)
+/// Original: `player_regen_sign_for_club` (0x7a6f10, player_regen.cpp, stdcall, ret 8).
+///
+/// [pt] { 0x7a6f10 } (stdcall, ret 8, player_regen.cpp, quadro SEH só das datas locais): `player_regen_sign_for_club(pessoa,
 /// clube)`, pela PLAYER_REGEN::regenerate_as_youth_player (0x7abac0) em todo regen jovem: na primeira vaga livre das 50
 /// do elenco (+0xd7; sem vaga, 0) a pessoa, o clube dela (+0x39) e +0x4e = 0; o valor (+0x52) pela 0x4d0c60 (clube, 1,
 /// −1, 0), o elenco (0x540980 com 1), uma vez em quatro (sorteio(4) = 0) a 0x547d90 (pessoa, clube, 0); clube com +0x64
@@ -1476,7 +1516,11 @@ unsafe extern "stdcall" fn comparar_contratar_o_regen(pessoa: usize, clube: usiz
     r
 }
 
-/// { 0x7a7f20 } (thiscall, ret 8, player_regen.cpp, quadro SEH só das datas locais):
+/// removes the person's pending retirement and adds the new one, through injury (reason 8), random(days / 2) + 1 days
+/// ahead
+/// Original: `PLAYER_REGEN::schedule_injury_retirement` (0x7a7f20, player_regen.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7a7f20 } (thiscall, ret 8, player_regen.cpp, quadro SEH só das datas locais):
 /// `PLAYER_REGEN::schedule_injury_retirement(pessoa, dias)`, pela lesão nova (0x62d250) que encerra a carreira: tira a
 /// aposentadoria pendente da pessoa (a primeira com o id dela na tabela de 26 bytes [this+4], conta +8; 0x7a8690) e
 /// acrescenta (0x7a8510) a nova: id, id do clube (+0x39, ou −1), a data de hoje + sorteio(dias / 2) + 1 (0x54c5b0) em
@@ -1530,7 +1574,10 @@ unsafe extern "thiscall" fn comparar_aposentar_pela_lesao(this: usize, pessoa: u
     });
 }
 
-/// { 0x7aa340 } (stdcall, ret 8, player_regen.cpp, quadro SEH sem destrutor): `player_regen_post_retirement_announcement_news(
+/// builds news 0xbbb (id, names, reason, contract club, age) and sends it to the managers of the interested clubs
+/// Original: `player_regen_post_retirement_announcement_news` (0x7aa340, player_regen.cpp, stdcall, ret 8).
+///
+/// [pt] { 0x7aa340 } (stdcall, ret 8, player_regen.cpp, quadro SEH sem destrutor): `player_regen_post_retirement_announcement_news(
 /// pessoa, motivo)`, pela PLAYER_REGEN::process_retirements (0x7a59e0): fora do jogador (+0x61) com motivo +0x3d 8 ou
 /// 5, a notícia 0xbbb numa local (0x77bbe0 com 0) com os dados 0 = id, 1 a 3 = os nomes (+0x33 de +4, +8 e +0xc), 4 =
 /// motivo, 5 = o id do clube do contrato (0x4cf5a0, guardado em [0xae1080]; clube do registro de 0x245 bytes em
@@ -1588,7 +1635,11 @@ unsafe fn cpu9_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-/// { 0x8b3c50 } (thiscall, ret 0, training_manager.cpp): `TRAINING_MANAGER::init_player_entries()`, pelo construtor
+/// allocates the 6-byte training entry of every player data record and puts goalkeepers (goalkeeping rating 15 or more)
+/// on schedule 6 and the others on 1
+/// Original: `TRAINING_MANAGER::init_player_entries` (0x8b3c50, training_manager.cpp, thiscall).
+///
+/// [pt] { 0x8b3c50 } (thiscall, ret 0, training_manager.cpp): `TRAINING_MANAGER::init_player_entries()`, pelo construtor
 /// (0x8b0ec0) num jogo novo: aloca (calloc 0x945501) as fichas de treino de 6 bytes, uma por ficha de jogador
 /// ([0xae236c] fichas de 0x46 bytes em [0xae23c4], a ficha pelo id +0), em this + 0x651d; sem memória, a caixa (linha
 /// 0x6e3) e volta. Em cada ficha apaga o bit 0x20 do +5 e põe a vaga do programa (+0): 6 (goleiros) com a nota de
@@ -1642,7 +1693,11 @@ unsafe extern "thiscall" fn comparar_fichas_de_treino_iniciais(this: usize) {
     PLACAR.registrar(erradas == 0, || format!("fichas_de_treino_iniciais: {} fichas fora da regra (a primeira {:?})", erradas, primeira));
 }
 
-/// { 0x7a8350 } (thiscall, ret 0xc, player_regen.cpp): `PLAYER_REGEN::add_player_data_to_pool(pessoa, nacao,
+/// appends to the pool of free player records the player data id of a person who stops playing, with the nation and
+/// second nation, growing the table by 250
+/// Original: `PLAYER_REGEN::add_player_data_to_pool` (0x7a8350, player_regen.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x7a8350 } (thiscall, ret 0xc, player_regen.cpp): `PLAYER_REGEN::add_player_data_to_pool(pessoa, nacao,
 /// segunda)`: acrescenta ao banco de jogadores livres (16 bytes em [this+0x3c], conta +0x40, capacidade +0x44) o id da
 /// ficha de jogador (+0x61) da pessoa de índice `pessoa` (registro de 0x6e bytes em [0xae23bc]) em +0, a nação em +4 e
 /// a segunda nação em +8 (+0xc fica como está). Conta = capacidade − 1: cresce 250 (realloc 0x945667; sem memória,
@@ -1678,7 +1733,10 @@ unsafe extern "thiscall" fn comparar_guardar_jogador_no_banco(this: usize, pesso
     });
 }
 
-/// { 0x7a6e20 } (thiscall, ret 0, player_regen.cpp): `PLAYER_REGEN::has_spare_non_player_record()`: se a reserva de
+/// whether the spare non-player record list holds any entry
+/// Original: `PLAYER_REGEN::has_spare_non_player_record` (0x7a6e20, player_regen.cpp, thiscall).
+///
+/// [pt] { 0x7a6e20 } (thiscall, ret 0, player_regen.cpp): `PLAYER_REGEN::has_spare_non_player_record()`: se a reserva de
 /// fichas de não jogador (conta em +0x20) tem alguma. O eax leva os 24 bits altos da conta (setne no al), como na
 /// original.
 unsafe extern "thiscall" fn tem_reserva_de_tecnico(this: usize) -> u32 {
@@ -1852,7 +1910,12 @@ unsafe fn cpr8_datas(pessoa: usize, saida: usize, fora: unsafe fn(usize)) {
     copia(saida + 8, t8.as_mut_ptr(), saida + 0x10);
 }
 
-/// { 0x7a79c0 } (thiscall sem ler o this, ret 8, player_regen.cpp): `player_regen_check_initial_retirement(pessoa,
+/// at a new game, does the person with a club retire? Non-players by the job age limit; players by the profile limit,
+/// the ability, the club competition and the contract status; the output (id, club, reason) and the announcement and
+/// retirement dates by the key nation
+/// Original: `player_regen_check_initial_retirement` (0x7a79c0, player_regen.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7a79c0 } (thiscall sem ler o this, ret 8, player_regen.cpp): `player_regen_check_initial_retirement(pessoa,
 /// saida)`: no jogo novo (pela 0x7a58f0), a pessoa com clube (+0x39) se aposenta nesta temporada? O contrato
 /// (cpr8_contratos) e o estatuto (cpr8_estatuto). Sem ficha de jogador (+0x61): sem ficha de técnico (+0x69) sempre;
 /// com ela, passando do limite (cpr8_limite_sem_jogador); motivo 0x20. Jogador: passando do limite da ficha
@@ -1928,7 +1991,11 @@ unsafe extern "thiscall" fn aposentadoria_no_inicio(_this: usize, pessoa: usize,
     1
 }
 
-/// { 0x7a7310 } (thiscall sem ler o this, ret 8, player_regen.cpp): `player_regen_check_retirement(pessoa, saida)`:
+/// in the search for new retirements, does the person retire? Like the start one, with the limit adjusted by contract
+/// and wage, unemployment, contract end and potential; without a key nation, dates drawn near today
+/// Original: `player_regen_check_retirement` (0x7a7310, player_regen.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7a7310 } (thiscall sem ler o this, ret 8, player_regen.cpp): `player_regen_check_retirement(pessoa, saida)`:
 /// na busca de novas aposentadorias (0x7a5790), a pessoa se aposenta? Sem ficha de jogador: como na 0x7a79c0 (motivo
 /// 0x20). Jogador acima do limite da ficha: acima de 33 anos, o limite cai 1 sem contrato com o clube, ou com +0x45 no
 /// contrato e +0x15/+0x14 da ficha = 20 ou o nibble alto de +0x4f = 7; com clube e contrato de salário (+0xc) acima de
@@ -2053,7 +2120,10 @@ unsafe extern "thiscall" fn aposentadoria_por_idade(_this: usize, pessoa: usize,
     1
 }
 
-/// { 0x7a58f0 } (thiscall, player_regen.cpp, SEH só das datas locais, de destrutor vazio):
+/// at a new game, tests every eligible person (0x7a79c0), adds those who retire and sorts the list
+/// Original: `PLAYER_REGEN::build_initial_retirement_list` (0x7a58f0, player_regen.cpp, thiscall).
+///
+/// [pt] { 0x7a58f0 } (thiscall, player_regen.cpp, SEH só das datas locais, de destrutor vazio):
 /// `PLAYER_REGEN::build_initial_retirement_list`: no jogo novo, cada pessoa (0x6e bytes em [0xae23bc], até [0xae2364],
 /// relida a cada passo) de id abaixo de [0xae2364] − 16, sem os bits 0x30 do +0xb do registro de 79 bytes
 /// ([0xae2d0c]) e sem contrato (0x4cf5a0) com +0x49 é testada (0x7a79c0); quem se aposenta entra na lista
@@ -2127,7 +2197,11 @@ unsafe fn cpr9_zerar(a: usize) {
     core::ptr::write_unaligned(a as *mut u32, 0);
 }
 
-/// { 0x7a5790 } (thiscall, player_regen.cpp, SEH só das datas locais, de destrutor vazio):
+/// tests every eligible person (except the young ones in game competitions, the flagged, those already listed and those
+/// with a flagged contract) by age (0x7a7310) or unemployment (0x7a8050), adds those who retire and sorts the list
+/// Original: `PLAYER_REGEN::find_new_retirements` (0x7a5790, player_regen.cpp, thiscall).
+///
+/// [pt] { 0x7a5790 } (thiscall, player_regen.cpp, SEH só das datas locais, de destrutor vazio):
 /// `PLAYER_REGEN::find_new_retirements` (nos dias da 0x5d6250): cada pessoa (0x6e bytes em [0xae23bc], até o fim
 /// calculado com a conta [0xae2364] do começo). Ficam de fora: menos de 30 anos (+0x18) em clube de competição que roda
 /// no jogo ([[0xadadfc] + id × 4] da competição +0x57); id a partir de [0xae2364] − 16 (relida a cada passo); os bits
@@ -2252,7 +2326,11 @@ unsafe fn cpr9_sair_da_vaga(pessoa: usize, c: usize, cargo: i8, campo: usize) {
     }
 }
 
-/// { 0x7aaeb0 } (stdcall, ret 4, player_regen.cpp): `player_regen_retire_from_non_playing_staff(pessoa)` (pela
+/// removes the person from the job slots at the club and national team (chairman, directors, manager with the vacancy
+/// opened, assistant, coaches, scouts, physios) and clears the club, the national team and the job types
+/// Original: `player_regen_retire_from_non_playing_staff` (0x7aaeb0, player_regen.cpp, stdcall, ret 4).
+///
+/// [pt] { 0x7aaeb0 } (stdcall, ret 4, player_regen.cpp): `player_regen_retire_from_non_playing_staff(pessoa)` (pela
 /// 0x7a59e0, na aposentadoria): sai da vaga do cargo (+0x3d) no clube (+0x39) e da do cargo na seleção (+0x28) na
 /// seleção (+0x24) (cpr9_sair_da_vaga); clube e seleção zerados, e os dois tipos de cargo.
 unsafe extern "stdcall" fn sair_dos_cargos(pessoa: usize) {
@@ -2270,7 +2348,10 @@ unsafe extern "stdcall" fn sair_dos_cargos(pessoa: usize) {
     *((pessoa + 0x28) as *mut u8) = 0;
 }
 
-/// { 0x86d800 } (thiscall, ret 4, staff_records.cpp, SEH só da data local, de destrutor vazio):
+/// the free release histories: the club manager one (type 0x68) and the person one (type 0x67)
+/// Original: `Staff_Records::add_free_release_records` (0x86d800, staff_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x86d800 } (thiscall, ret 4, staff_records.cpp, SEH só da data local, de destrutor vazio):
 /// `Staff_Records::add_free_release_records(pessoa)`: o contrato da pessoa (0x4cf5a0) vai para [0xae1080] e dá o clube
 /// (registro de 0x245 bytes pelo +4). Com técnico no clube (+0xcf), o histórico dele (tipo 0x68: o clube, a pessoa e os
 /// três ids +0x33 de +4, +8 e +0xc dela); depois o da pessoa (tipo 0x67: o clube ou −1), no arquivo (0x58e340).
@@ -2355,7 +2436,12 @@ unsafe fn cpq9_u(a: usize) -> u16 {
     core::ptr::read_unaligned(a as *const u16)
 }
 
-/// { 0x7a7150 } (stdcall, ret 4, player_regen.cpp): `player_regen_score_non_player_candidate(pessoa)`: a nota da pessoa
+/// −10000 when under 31 or flagged; else a draw by age, ability over the club reputation, a draw by the cube of +0x2f,
+/// the attributes and the squares of +0x5b and +0x57, and the final draw (+75 without club +0xcf; without a club, +
+/// (+0x22)² and doubled against a 10000 draw)
+/// Original: `player_regen_score_non_player_candidate` (0x7a7150, player_regen.cpp, stdcall, ret 4).
+///
+/// [pt] { 0x7a7150 } (stdcall, ret 4, player_regen.cpp): `player_regen_score_non_player_candidate(pessoa)`: a nota da pessoa
 /// como doadora dos dados de não jogador (pela 0x7a6e60, a cada pessoa não jogadora). −10000 com +0x69, com os bits
 /// 0x30 do +0xb do registro de 79 bytes ([0xae2d0c]) ou abaixo de 31 anos (+0x18). Senão sorteia 150 × (idade − 31);
 /// com clube (+0x39) de reputação (+0x80) e jogador (+0x61), + 250 × (habilidade atual +0xb ÷ reputação); com
@@ -2426,7 +2512,11 @@ unsafe fn cpq9_data_da_entrada(e: usize) -> usize {
     }
 }
 
-/// { 0x7ae2a0 } (cdecl, player_regen.cpp): `player_regen_compare_retirements(a, b)`: o qsort da lista de aposentadorias
+/// qsort comparator of the retirement list: by the effective date (the announcement +8 if not past yet, else the
+/// retirement +0x10), year and day; on a tie by id
+/// Original: `player_regen_compare_retirements` (0x7ae2a0, player_regen.cpp, cdecl).
+///
+/// [pt] { 0x7ae2a0 } (cdecl, player_regen.cpp): `player_regen_compare_retirements(a, b)`: o qsort da lista de aposentadorias
 /// (registros de 0x1a bytes; pela 0x7a59e0 todo dia, que para na primeira entrada futura, e pelas listas iniciais
 /// 0x7a5790/0x7a58f0 e pela 0x7a8690): pela data que vale (cpq9_data_da_entrada), o ano sem sinal e o dia com sinal;
 /// no empate pelo id (+0). Sem `a`, −1; sem `b`, 1. Quente (qsort): sem contador.
@@ -2449,7 +2539,10 @@ unsafe extern "C" fn ordem_das_aposentadorias(a: usize, b: usize) -> i32 {
     ja - jb
 }
 
-/// { 0x7ae240 } (cdecl, player_regen.cpp): `player_regen_compare_queue_entries(a, b)`: o qsort da fila de regens
+/// qsort comparator of the regen queue: by year (+6), day (+4) and id (+0)
+/// Original: `player_regen_compare_queue_entries` (0x7ae240, player_regen.cpp, cdecl).
+///
+/// [pt] { 0x7ae240 } (cdecl, player_regen.cpp): `player_regen_compare_queue_entries(a, b)`: o qsort da fila de regens
 /// (registros de 0xc bytes, no fim da 0x7a59e0 todo dia; a 0x7a65d0 cria os regens das entradas vencidas): pelo ano
 /// (+6, sem sinal), depois pelo dia (+4, com sinal), depois pelo id (+0). Sem `a`, −1; sem `b`, 1. Quente (qsort):
 /// sem contador.
@@ -2528,7 +2621,12 @@ unsafe fn cpn4_ja_aposentado(p: usize) {
     formatar(0xde1f64, 0xa70150, read_usize(p + 4), read_usize(p + 8), read_usize(p));
 }
 
-/// { 0x7aace0 } (stdcall, ret 4, player_regen.cpp): `PLAYER_REGEN::retire_from_playing_staff(p)`: tira `p` do clube
+/// removes the player from the tactics and the 50 slots of his club (+0x39) and national team (+0x24) and changes the
+/// player job to the staff job (12 → 5, 13 → 6, 15 → 8, the others 0x10 retired); without a kept job, clears the club
+/// and the national team
+/// Original: `PLAYER_REGEN::retire_from_playing_staff` (0x7aace0, player_regen.cpp, stdcall, ret 4).
+///
+/// [pt] { 0x7aace0 } (stdcall, ret 4, player_regen.cpp): `PLAYER_REGEN::retire_from_playing_staff(p)`: tira `p` do clube
 /// (+0x39) e da seleção (+0x24) (`cpn4_tirar_do_time`) e troca o cargo de jogador pelo da comissão (tabelas 0x7aae60 e
 /// 0x7aae90): pelo cargo no clube (+0x3d, byte com sinal; fora de 0..16 vale o padrão) 12 → 5, 13 → 6, 15 → 8 (fica no
 /// clube), 0 e 16 (aviso "already retired") nada, 1 a 10 a rotina acaba ali, os outros 0x10 (aposentado). Depois pelo
@@ -2617,7 +2715,11 @@ unsafe fn cpn4_pode_contratar(jogador: usize, clube: usize) -> bool {
     pode(read_usize(0xde1f54), jogador, clube, &mut motivo, 0) != 0
 }
 
-/// { 0x7ad0e0 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::pick_best_club_for_player(jogador)`: entre os
+/// among the clubs where the youngster is not a foreigner, that are not a B team, that may approach him and with a
+/// squad under 50, the best scored one (0x7ad220)
+/// Original: `PLAYER_REGEN::pick_best_club_for_player` (0x7ad0e0, player_regen.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7ad0e0 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::pick_best_club_for_player(jogador)`: entre os
 /// clubes ([0xae23b4], 0x245 bytes; os [0xae235c] − 2 × [0xae2350] primeiros, relidos a cada volta) em que o jogador
 /// não é estrangeiro (0x53d980 com a nação +0x53 e 1), que não são o time B de um par (0x540a50 com 1 achando o
 /// parceiro com 0), não vetados (`cpn4_vetado`), que podem chegar a ele (0x8ce990) e com elenco (0x53c590) abaixo de 50,
@@ -2671,7 +2773,11 @@ unsafe fn cpn4_lista(this: usize, n: usize) -> usize {
     read_usize(read_usize(this).wrapping_add(n.wrapping_mul(4)))
 }
 
-/// { 0x7ad590 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::pick_club_from_nation_list(jogador)`: percorre a
+/// in the club list of the youngster's nation (some nations mapped to [0x9cf2e4]), the one with the highest draw of the
+/// score by reputation against ability, among those that may approach him and with a squad under 50
+/// Original: `PLAYER_REGEN::pick_club_from_nation_list` (0x7ad590, player_regen.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7ad590 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::pick_club_from_nation_list(jogador)`: percorre a
 /// lista de clubes da nação do jovem (`cpn4_nacao_da_lista`; a palavra +0 é a conta, o cursor +0xa recomeça de +2, o
 /// iterador 0x68d1b0 devolve o id) e, entre os clubes não vetados (`cpn4_vetado`), que podem chegar a ele (0x8ce990) e
 /// com elenco (0x53c590) abaixo de 50, fica com o de maior sorteio da nota (5000 + reputação +0x80 menos as distâncias
@@ -2785,7 +2891,11 @@ unsafe fn cpk2_sem_memoria(linha: u32) -> ! {
     erro_fatal()
 }
 
-/// { 0x7a81a0 } (thiscall, ret 0xc, player_regen.cpp): `PLAYER_REGEN::add_spare_non_player_record(id, nação,
+/// appends (id, nation, second nation) to the 16-byte spare non-player list (+0x1c); grows by 250 when the player pool
+/// (+0x40/+0x44) is full, as the original
+/// Original: `PLAYER_REGEN::add_spare_non_player_record` (0x7a81a0, player_regen.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x7a81a0 } (thiscall, ret 0xc, player_regen.cpp): `PLAYER_REGEN::add_spare_non_player_record(id, nação,
 /// segunda)`: acrescenta (id +0, nação +4, segunda nação +8) à lista de 16 bytes das reservas de não jogador
 /// ([this+0x1c], conta +0x20, capacidade +0x24; tirada pela 0x7a82b0). O original decide crescer pelo banco de
 /// jogadores livres (conta +0x40 = capacidade +0x44 − 1), não por esta lista: fiel. Cresce 250 (realloc 0x945667;
@@ -2808,7 +2918,10 @@ unsafe extern "thiscall" fn acrescentar_reserva_de_tecnico(this: usize, id: u32,
     cpk2_por(this + 0x20, n.wrapping_add(1)); // mais uma reserva
 }
 
-/// { 0x7a8510 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::add_retirement(registro)`: acrescenta à tabela de
+/// appends the record fields to the 26-byte pending retirement table (+4), growing by 250
+/// Original: `PLAYER_REGEN::add_retirement` (0x7a8510, player_regen.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7a8510 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::add_retirement(registro)`: acrescenta à tabela de
 /// 26 bytes das aposentadorias pendentes ([this+4], conta +8, capacidade +0xc) os campos +0, +4 (dwords), +0x18
 /// (byte), +8, +0xa, +0x10, +0x12 (palavras) e +0x19 (byte) do registro, nessa ordem (+0xc..+0x10 e +0x14..+0x18
 /// ficam como estão). Conta = capacidade − 1: cresce 250 (realloc 0x945667; sem memória, caixa 0xa53 e fim).
@@ -2834,7 +2947,11 @@ unsafe extern "thiscall" fn acrescentar_aposentadoria(this: usize, r: usize) {
     cpk2_por(this + 8, read_usize(this + 8).wrapping_add(1)); // mais uma aposentadoria
 }
 
-/// { 0x7a87d0 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::queue_staff_for_regen(entrada)`: a pessoa de id
+/// the person enters the regen queue (+0x10) with the dates; the non-player data in the spare list (+0x1c, random
+/// nation if none) and the player data in the free pool (+0x3c)
+/// Original: `PLAYER_REGEN::queue_staff_for_regen` (0x7a87d0, player_regen.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7a87d0 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::queue_staff_for_regen(entrada)`: a pessoa de id
 /// +0 da entrada (registro de 0x6e bytes em [0xae23bc]) entra na fila do regen (12 bytes em [this+0x10], conta
 /// +0x14, capacidade +0x18: id +0, palavras +4 e +6 da entrada). Com dados de não jogador (+0x69): na lista de 16
 /// bytes [this+0x1c] (conta +0x20, capacidade +0x24) o id deles +0, a nação (+0x1a; sem nação, um sorteio
@@ -2976,7 +3093,11 @@ unsafe extern "thiscall" fn comparar_guardar_vaga_para_regen(this: usize, entrad
 // ---------- 244a leva: as aposentadorias (player_regen.cpp): tirar a pendente e a decisão do desempregado ----------
 
 
-/// { 0x7a8690 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::remove_retirement(chave)`: busca (bsearch 0x946464
+/// finds the pending one (26 bytes), pulls the next ones up (0x7a8780), blanks the last one (person −1) and lowers the
+/// count
+/// Original: `PLAYER_REGEN::remove_retirement` (0x7a8690, player_regen.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7a8690 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::remove_retirement(chave)`: busca (bsearch 0x946464
 /// com 0x7ae2a0) a aposentadoria pendente no vetor ([this+4], [this+8] registros de 26 bytes); achou: puxa as
 /// seguintes um lugar (0x7a8780, a cópia do registro), a última fica com pessoa −1 e +0x18, +8, +0xa, +0x10, +0x12
 /// zerados, e a contagem desce. Sem reordenar.
@@ -3014,7 +3135,11 @@ unsafe fn cph5_sortear(n: i32) -> i32 {
     f(n)
 }
 
-/// { 0x7a8050 } (stdcall, ret 8, player_regen.cpp): `player_regen_check_unemployed_retirement(pessoa, saida)`: quem
+/// outside the shortlist: the weak manager without a club (draw of 5), the player unemployed for over a year (draw by
+/// rating < 750) or whoever has no record retires: fills the entry (reason 0x10, the game date) and returns 1
+/// Original: `player_regen_check_unemployed_retirement` (0x7a8050, player_regen.cpp, stdcall, ret 8).
+///
+/// [pt] { 0x7a8050 } (stdcall, ret 8, player_regen.cpp): `player_regen_check_unemployed_retirement(pessoa, saida)`: quem
 /// está na lista de observados não se aposenta. Com registro de técnico (+0x69): sem clube (+0x39) e sem +0x24, com
 /// +0xa do registro abaixo de 50 e sorteio(5) = 0. Sem ele, com registro de jogador (+0x61): fora da lista (conferida
 /// de novo), sem clube e sem +0x24, desempregado há mais de 365 dias (365 × (ano − ano de +0x40) − dia de +0x3e + dia)
@@ -3090,7 +3215,10 @@ unsafe extern "stdcall" fn comparar_aposentadoria_do_desempregado(pessoa: usize,
 // ---------- 243a leva: a cópia da entrada da fila de regens e a escolha do doador de dados (player_regen.cpp) e a busca na lista de observados (shortlist_manager.cpp) ----------
 
 
-/// { 0x7a8b70 } (thiscall, ret 4, player_regen.cpp): `regen_queue_entry_assign`: copia a entrada da fila de regens
+/// copies the regen queue entry (0xc bytes): the person (+0) and the regen date (+4)
+/// Original: `regen_queue_entry_assign` (0x7a8b70, player_regen.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7a8b70 } (thiscall, ret 4, player_regen.cpp): `regen_queue_entry_assign`: copia a entrada da fila de regens
 /// (0xc bytes) de `origem`: a pessoa (+0) e a data do regen em +4 (0x417c10, retorno numa local). Devolve `this`.
 unsafe extern "thiscall" fn copiar_entrada_da_fila_de_regens(this: usize, origem: usize) -> usize {
     core::ptr::write_unaligned(this as *mut u32, core::ptr::read_unaligned(origem as *const u32)); // a pessoa do regen
@@ -3100,7 +3228,10 @@ unsafe extern "thiscall" fn copiar_entrada_da_fila_de_regens(this: usize, origem
     this
 }
 
-/// { 0x842080 } (thiscall, ret 8, shortlist_manager.cpp): `Shortlist_Manager::is_on_shortlist(jogador, clube)`: sem
+/// is the (player, club or −1) pair in the shortlist pairs? bsearch with 0x757ea0
+/// Original: `Shortlist_Manager::is_on_shortlist` (0x842080, shortlist_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x842080 } (thiscall, ret 8, shortlist_manager.cpp): `Shortlist_Manager::is_on_shortlist(jogador, clube)`: sem
 /// vetor de pares ([this]) devolve 0; senão procura (bsearch 0x946464, [this+0x10] pares de 8 bytes, comparação
 /// 0x757ea0) a chave (id do jogador, id do clube ou −1 sem clube). O al é 1 se achou; os 3 bytes altos do eax são os do
 /// ponteiro achado (setne al sobre o retorno do bsearch), e a cópia os reproduz.
@@ -3115,7 +3246,10 @@ unsafe extern "thiscall" fn esta_na_lista_de_observados(this: usize, jogador: us
     (p as u32 & !0xff) | (p != 0) as u32
 }
 
-/// { 0x7a6e60 } (thiscall, ret 4, player_regen.cpp): `player_regen_pick_staff_for_non_player_data(nacao)`: entre as
+/// the non-player with the highest positive score (0x7a7150) of the nation; with none, of any nation; else 0
+/// Original: `player_regen_pick_staff_for_non_player_data` (0x7a6e60, player_regen.cpp, stdcall, ret 4).
+///
+/// [pt] { 0x7a6e60 } (thiscall, ret 4, player_regen.cpp): `player_regen_pick_staff_for_non_player_data(nacao)`: entre as
 /// pessoas não jogadoras ([0xae23bc], 0x6e bytes, [0xae2364] − 16 delas, contagem relida a cada volta), a de maior
 /// nota positiva da 0x7a7150 (sorteia; o ecx de entrada vai junto, como na original) da nação `nacao` ([+0x1a]+0 =
 /// nacao; nota inicial −1000); sem nenhuma, a de maior nota positiva de qualquer nação (inicial −15000); senão 0.
@@ -3198,19 +3332,28 @@ unsafe fn tirar_da_lista_de_16(regen: usize, id: i32, lista: usize, quantos: usi
     *((regen + quantos) as *mut i32) -= 1;
 }
 
-/// { 0x7a82b0 } (thiscall, ret 4, player_regen.cpp): tira o registro de reserva de não jogador (técnicos
+/// removes a non-player record from the spare list by id
+/// Original: `PLAYER_REGEN::remove_spare_non_player_record` (0x7a82b0, player_regen.cpp, thiscall).
+///
+/// [pt] { 0x7a82b0 } (thiscall, ret 4, player_regen.cpp): tira o registro de reserva de não jogador (técnicos
 /// e afins) de id `id` (lista +0x1c, quantos +0x20).
 unsafe extern "thiscall" fn tirar_reserva_de_tecnico(regen: usize, id: i32) {
     tirar_da_lista_de_16(regen, id, 0x1c, 0x20);
 }
 
-/// { 0x7a8470 } (thiscall, ret 4, player_regen.cpp): tira do banco de jogadores livres o registro dos
+/// removes the player data record from the free player pool
+/// Original: `PLAYER_REGEN::remove_player_data_from_pool` (0x7a8470, player_regen.cpp, thiscall).
+///
+/// [pt] { 0x7a8470 } (thiscall, ret 4, player_regen.cpp): tira do banco de jogadores livres o registro dos
 /// dados de jogador `id` (lista +0x3c, quantos +0x40).
 unsafe extern "thiscall" fn tirar_jogador_do_banco(regen: usize, id: i32) {
     tirar_da_lista_de_16(regen, id, 0x3c, 0x40);
 }
 
-/// { 0x682f70 } (thiscall, ret 4, league.cpp): o prêmio total da liga: `cota` para o último colocado e
+/// the league total prize fund (one more share per place above the last)
+/// Original: `League::calc_prize_fund` (0x682f70, league.cpp, thiscall).
+///
+/// [pt] { 0x682f70 } (thiscall, ret 4, league.cpp): o prêmio total da liga: `cota` para o último colocado e
 /// uma cota a mais por posição acima (cota × (1 + 2 + … + times), times = +0x3e). Sem times: a
 /// original (caixa de erro, devolve 0).
 unsafe extern "thiscall" fn premio_da_liga(liga: usize, cota: i32) -> i32 {
@@ -3261,7 +3404,10 @@ unsafe extern "thiscall" fn comparar_premio_da_liga(liga: usize, cota: i32) -> i
 
 // ---------- 192a leva: a entrada da aposentadoria, as competições do amistoso e a vaga da notícia (player_regen.cpp, friendly.cpp, news.cpp) ----------
 
-/// { 0x7a7ed0 } (thiscall, ret 8, player_regen.cpp): a entrada da pessoa `*id` na lista das
+/// the person's entry in the retirement list (by injury or already announced)
+/// Original: `PLAYER_REGEN::find_retirement_entry` (0x7a7ed0, player_regen.cpp, thiscall).
+///
+/// [pt] { 0x7a7ed0 } (thiscall, ret 8, player_regen.cpp): a entrada da pessoa `*id` na lista das
 /// aposentadorias ([+4], 0x1a bytes cada, [+8] quantas): com `por_lesao`, só se o motivo (+0x18) for 8;
 /// senão só se já anunciada (+0x19). Fora isso, 0.
 unsafe extern "thiscall" fn entrada_da_aposentadoria(regen: usize, id: *const i32, por_lesao: u32) -> usize {
@@ -3277,7 +3423,10 @@ unsafe extern "thiscall" fn entrada_da_aposentadoria(regen: usize, id: *const i3
     0
 }
 
-/// { 0x5ca030 } (thiscall, friendly.cpp): grava na tabela das competições ([0xadadfc]) o objeto dos
+/// stores the friendly and tournament objects in the competition table
+/// Original: `Friendly::register_comp_objects` (0x5ca030, friendly.cpp, thiscall).
+///
+/// [pt] { 0x5ca030 } (thiscall, friendly.cpp): grava na tabela das competições ([0xadadfc]) o objeto dos
 /// amistosos ([0xae2c74]) na chave [0x9cf668] e os torneios do amistoso (127 vagas de 0x69 bytes a partir
 /// de +0xb1; com +0xb1 e +0x116 não nulos, +0x116 vai para a chave [+0xaf] + vaga).
 unsafe extern "thiscall" fn registrar_competicoes_do_amistoso(amistoso: usize) {
@@ -3293,7 +3442,10 @@ unsafe extern "thiscall" fn registrar_competicoes_do_amistoso(amistoso: usize) {
     }
 }
 
-/// { 0x785830 } (thiscall, ret 4, news.cpp): o valor da vaga `vaga` (0 a 49) da notícia (+5, 4 bytes
+/// the value of one of the 50 news item slots
+/// Original: `NewsItem::get_slot` (0x785830, news.cpp, thiscall).
+///
+/// [pt] { 0x785830 } (thiscall, ret 4, news.cpp): o valor da vaga `vaga` (0 a 49) da notícia (+5, 4 bytes
 /// cada). Fora da faixa: a original (caixa de erro, devolve 0).
 unsafe extern "thiscall" fn vaga_da_noticia(noticia: usize, vaga: i8) -> u32 {
     if !(0..0x32).contains(&vaga) {

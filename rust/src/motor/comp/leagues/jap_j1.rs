@@ -7,7 +7,11 @@ unsafe fn cqq9_campeao_do_turno(this: usize, k: usize) -> usize {
     read_usize(read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1))
 }
 
-/// { 0x6639c0 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::advance_stage()`, a fase seguinte da J1 (dois turnos, as fases 0
+/// The J1 has two stages (0 and 1, each a round-robin league) and the final (stage 2): the next stage moves the current
+/// stage on and, at the end of the second stage, builds the final; past the last stage it is an error (the box)
+/// Original: `JapJ1::advance_stage` (0x6639c0, jap_j1.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x6639c0 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::advance_stage()`, a fase seguinte da J1 (dois turnos, as fases 0
 /// e 1, e a final, a fase 2). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa da linha 0x223 e nada mais. Senão
 /// +0x30 sobe um e, ao chegar a 2, monta a final (0x663a50, call direto com o ecx da liga).
 unsafe extern "thiscall" fn cqq9_fase_seguinte_da_j1(this: usize) {
@@ -23,7 +27,12 @@ unsafe extern "thiscall" fn cqq9_fase_seguinte_da_j1(this: usize) {
     }
 }
 
-/// { 0x663a50 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::create_championship_final_stage()`, a final da J1 entre os
+/// The J1 championship final: the first-stage winner against the second-stage winner, over two games [inference: home
+/// and away], with no seeds; unlike the Brazilian state leagues, it does not check for the same club (the final is
+/// built anyway)
+/// Original: `JapJ1::create_championship_final_stage` (0x663a50, jap_j1.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x663a50 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::create_championship_final_stage()`, a final da J1 entre os
 /// campeões dos dois turnos (o clube da primeira linha da tabela de cada um), sempre (sem conferir se é o mesmo clube):
 /// a lista de 2 (malloc 0x944e46 de 8; sem memória: a caixa da linha 0x245 e volta); a virtual +0x3c
 /// (create_round_table: thiscall(this, fase 2, &rodadas, &extra, 0), ret 0x10); a fase nova (operator new 0x944cf1 de
@@ -68,7 +77,12 @@ unsafe extern "thiscall" fn cqq9_final_da_j1(this: usize) {
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 2);
 }
 
-/// { 0x6636d0 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::start_new_season()`, a virada do futebol japonês (a J1 comanda):
+/// The Japanese turnover, led by the J1: first promotion and relegation with the J2; then the J1 is rebuilt with three
+/// stages (the two halves and the final), next year, rules, the table and the fixtures; then the J2 turns over,
+/// followed by the predicted positions, the board expectations and the referee renewal
+/// Original: `JapJ1::start_new_season` (0x6636d0, jap_j1.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x6636d0 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::start_new_season()`, a virada do futebol japonês (a J1 comanda):
 /// +0x4c = 0; o acesso e o rebaixamento (a virtual +0xb0, thiscall(this, 1), ret 4); a tabela liberada
 /// (League::free_table 0x687970, thiscall(this, 0), ret 4); a lista de +0xba liberada e zerada; com estatísticas (+8),
 /// Comp_Stats::archive_season_and_reset (0x4a1c50, thiscall(+8, 1), ret 4); com a fase atual ≥ 0, as fases 0..=+0x30
@@ -247,7 +261,11 @@ unsafe fn cqm9_japao(this: usize, g: usize, girar: u8, ramo: &'static str) -> u3
     1
 }
 
-/// { 0x6634e0 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::create_table()`: a J1 tem 16 clubes (+0x57 = [0x9cf65c]; os que
+/// J1 has 16 clubs, those of the division in database order; those beyond 16 lose their division (left with no league);
+/// when full, the prize fund starts at 100,000 per place and TV pays 3,000,000 to each club
+/// Original: `JapJ1::create_table` (0x6634e0, jap_j1.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x6634e0 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::create_table()`: a J1 tem 16 clubes (+0x57 = [0x9cf65c]; os que
 /// sobram perdem a divisão); cheia, o fundo de prêmios com a cota 100.000 (League::calc_prize_fund 0x682f70: push
 /// 0x186a0; mov ecx, edi -> thiscall, ret 4) em +0x28, +0xe1 = 1, a TV 3.000.000 a cada clube (League::pay_tv_rights
 /// 0x683010: push 0; push 0x2dc6c0; mov ecx, edi -> thiscall, ret 8; manda a notícia da TV) e 1. Fonte 0x9eabc8, linha
@@ -268,7 +286,11 @@ unsafe extern "thiscall" fn cqm9_tabela_da_j1(this: usize) -> u32 {
     1
 }
 
-/// { 0x665030 } (thiscall, ret 0, jap_j2.cpp): `JapJ2::create_table()`: a J2 tem 12 clubes (+0x57 = [0x9cf768]; os que
+/// J2 has 12 clubs, those of the division in database order; those beyond 12 lose their division; no prize fund nor TV
+/// money
+/// Original: `JapJ2::create_table` (0x665030, jap_j2.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x665030 } (thiscall, ret 0, jap_j2.cpp): `JapJ2::create_table()`: a J2 tem 12 clubes (+0x57 = [0x9cf768]; os que
 /// sobram perdem a divisão), sem fundo de prêmios nem TV. Fonte 0x9eaedc, linha 0x13a. Devolve 1 se encheu.
 unsafe extern "thiscall" fn cqm9_tabela_da_j2(this: usize) -> u32 {
     if cqm9_alocar(this, 0xc, 0x9eaedc, 0x13a) == 0 {
@@ -277,7 +299,11 @@ unsafe extern "thiscall" fn cqm9_tabela_da_j2(this: usize) -> u32 {
     cqm9_japao(this, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, 0, "cqm_9 j2 cheia")
 }
 
-/// { 0x411b70 } (thiscall, ret 0, aus_nsl.cpp): `AusNsl::create_table()`: a NSL tem 13 clubes (+0x57 = [0x9cf89c]), na
+/// the Australian NSL has 13 clubs, those of the division in database order; with fewer, the game shows the error box;
+/// no prize fund nor TV money
+/// Original: `AusNsl::create_table` (0x411b70, aus_nsl.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x411b70 } (thiscall, ret 0, aus_nsl.cpp): `AusNsl::create_table()`: a NSL tem 13 clubes (+0x57 = [0x9cf89c]), na
 /// ordem do banco, até encher (o contador num int, comparado no word); sem encher: a caixa da linha 0x252 e 0; cheia: 1,
 /// sem fundo de prêmios nem TV. Fonte 0x987c20 (a caixa de memória na linha 0x241).
 unsafe extern "thiscall" fn cqm9_tabela_da_nsl(this: usize) -> u32 {

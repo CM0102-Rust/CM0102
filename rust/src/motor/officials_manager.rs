@@ -1,6 +1,11 @@
 // ---------- centesima trigesima setima leva: a nota do arbitro (0x6d4a20, 0x79ce10) ----------
 
-/// { 0x79ce10 } (ret 4, officials_manager.cpp): soma a nota `r` (dword id, bytes: cartoes, faltas,
+/// adds the grade to the referee's record (17 bytes at [this] + id × 17, id in 0..[0xae2390]): +0xf the cards, words +8
+/// and +0xa the fouls and the grade, +0x10 the last grade, +0xc the matches and +4 the average (+0xa / +0xc, float).
+/// Compared side by side (the record)
+/// Original: `record_referee_grade` (0x79ce10, officials_manager.cpp (208 bytes), thiscall, ret 4).
+///
+/// [pt] { 0x79ce10 } (ret 4, officials_manager.cpp): soma a nota `r` (dword id, bytes: cartoes, faltas,
 /// nota) na ficha do arbitro (17 bytes em [this] + id x 17, id em 0..[0xae2390]): +0xf os cartoes,
 /// as palavras +8 e +0xa as faltas e a nota, +0x10 a ultima nota, +0xc os jogos e +4 a media
 /// (+0xa / +0xc, float).
@@ -26,7 +31,15 @@ unsafe extern "thiscall" fn registrar_nota_do_arbitro(this: usize, r: *const u8)
     }
 }
 
-/// { 0x6d4a20 } (match_eng.cpp, chamada pela 0x6b98c0): a nota do arbitro da partida (+0xf5b6, id
+/// the match referee (+0xf5b6, id ≠ −1), except in friendly competitions (0x5c6710 on [0xae2c74]). Cards (+0xf5cb and
+/// +0xf601 on both sides) and fouls (+0xf5cc and +0xf602); the grade starts at +0xf5ba / 1000, loses 2 with more than 2
+/// cards, 1 with 2, gains 1 with none; loses 1 with more than 5 fouls, gains 1 with fewer than 3; below 4 becomes 4
+/// (except 1 in 500), above 8 becomes 8 (except 1 in 25), and stays within 1 to 10. Records through 0x79ce10 on
+/// [0xb74340] (8-byte record: id, cards, fouls, grade; the 8th byte is stack garbage and is not read). Compared side by
+/// side (draws and the referee's record)
+/// Original: `referee_grade` (0x6d4a20, match_eng.cpp (336 bytes, called by 0x6b98c0), thiscall).
+///
+/// [pt] { 0x6d4a20 } (match_eng.cpp, chamada pela 0x6b98c0): a nota do arbitro da partida (+0xf5b6, id
 /// != -1), fora das competicoes amistosas (0x5c6710 em [0xae2c74]). Os cartoes (+0xf5cb e +0xf601 dos
 /// dois lados) e as faltas (+0xf5cc e +0xf602); a nota parte de +0xf5ba / 1000, perde 2 com mais de 2
 /// cartoes, 1 com 2, ganha 1 sem cartao; perde 1 com mais de 5 faltas, ganha 1 com menos de 3. Abaixo
@@ -172,7 +185,12 @@ unsafe fn cqg9_liberar(p: usize) {
     f(p);
 }
 
-/// { 0x79bf60 } (thiscall, ret 0, officials_manager.cpp): `OfficialsManager::set_up_officials()`, pelo construtor
+/// on a new game: reviews the officials, sorts them by nation and quality, keeps 6 per nation (61 in the youth club
+/// nations), builds the per-nation blocks with one slot per league (the demand from the competition), draws the missing
+/// ones and shares the nation officials among the slots
+/// Original: `OfficialsManager::set_up_officials` (0x79bf60, officials_manager.cpp, thiscall).
+///
+/// [pt] { 0x79bf60 } (thiscall, ret 0, officials_manager.cpp): `OfficialsManager::set_up_officials()`, pelo construtor
 /// (0x79b580) no jogo novo. Revê os registros (0x79caa0), ordena por nação e pela qualidade (qsort 0x79d4e0) e, por
 /// nação, fica com os 6 primeiros (nação com +0x11c zero) ou 61 (o primeiro de cada nação depois da primeira não fica:
 /// a conta recomeça nele), copiados (0x79c530) numa tabela nova; os blocos por nação (this+0xc, 0x102 bytes: +0 a nação,
@@ -348,7 +366,10 @@ unsafe fn cqg9v_i(a: usize) -> i32 {
 }
 
 
-/// { 0x79d410 } (cdecl, officials_manager.cpp): `officials_manager_compare_comp_level(a, b)`, a ordem das vagas de
+/// orders the official slots of a nation by competition level (the invalid ones last or first), tie by id
+/// Original: `officials_manager_compare_comp_level` (0x79d410, officials_manager.cpp, cdecl).
+///
+/// [pt] { 0x79d410 } (cdecl, officials_manager.cpp): `officials_manager_compare_comp_level(a, b)`, a ordem das vagas de
 /// competição de uma nação (qsort da 0x79bf60, entradas de 16 bytes com a competição em +0xc): competição de `a` fora de
 /// 0..[0xae2378]: 1; a de `b` fora: −1; pelo nível (+0x69, palavra, da competição de 0x6b bytes em [0xae23d0]); mesmo
 /// nível: a diferença dos ids.
@@ -395,7 +416,11 @@ unsafe fn cqh7_nacao(r: usize) -> i32 {
     cqh7_i(cqh7_i(r + 0x16) as u32 as usize)
 }
 
-/// { 0x79d4e0 } (cdecl, officials_manager.cpp): `officials_manager_compare_nation_then_quality_desc(a, b)`, a ordem do
+/// orders the officials by nation and, within it, by quality (+0x28 × 50 + +0x22) from highest to lowest; tie by index,
+/// descending
+/// Original: `officials_manager_compare_nation_then_quality_desc` (0x79d4e0, officials_manager.cpp, cdecl).
+///
+/// [pt] { 0x79d4e0 } (cdecl, officials_manager.cpp): `officials_manager_compare_nation_then_quality_desc(a, b)`, a ordem do
 /// qsort da 0x79bf60 (os que ficam por nação): pela nação (id) e, na mesma, pela qualidade da maior para a menor; empate:
 /// o índice +0 de `b` menos o de `a`.
 unsafe extern "C" fn ordem_dos_arbitros_decrescente(a: usize, b: usize) -> i32 {
@@ -419,7 +444,10 @@ unsafe extern "C" fn comparar_ordem_dos_arbitros_decrescente(a: usize, b: usize)
     r
 }
 
-/// { 0x79d480 } (cdecl, officials_manager.cpp): `officials_manager_compare_nation_then_quality_asc(a, b)`, a ordem do
+/// orders the officials by nation and by quality from lowest to highest; tie by index, ascending
+/// Original: `officials_manager_compare_nation_then_quality_asc` (0x79d480, officials_manager.cpp, cdecl).
+///
+/// [pt] { 0x79d480 } (cdecl, officials_manager.cpp): `officials_manager_compare_nation_then_quality_asc(a, b)`, a ordem do
 /// qsort da 0x79c5c0 (depois dos árbitros novos): pela nação e pela qualidade da menor para a maior; empate: o índice +0
 /// de `a` menos o de `b`.
 unsafe extern "C" fn ordem_dos_arbitros_crescente(a: usize, b: usize) -> i32 {
@@ -464,7 +492,12 @@ unsafe fn cpy8_nacao_do_clube(clube: usize) -> Option<i32> {
     if n != 0 { Some(cpy8_i(n)) } else { None }
 }
 
-/// { 0x79c7b0 } (thiscall, ret 8, officials_manager.cpp): `OfficialsManager::choose_match_official(jogo, saida)`, pela
+/// the referee range for the competition (the league range in the nation block, the top quarter of a neutral nation of
+/// the continent in type 2 and 4 competitions, the home nation for a friendly), a random one in it and the next free
+/// one
+/// Original: `OfficialsManager::choose_match_official` (0x79c7b0, officials_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x79c7b0 } (thiscall, ret 8, officials_manager.cpp): `OfficialsManager::choose_match_official(jogo, saida)`, pela
 /// montagem do dia (0x6b3c10, saída em +0x2e do jogo). Jogo tirado (−2): 0 (eax 0xffffff00, como a original). A faixa
 /// de árbitros: sem competição, a nação do mandante (+0x1c, +0x53) ou uma sorteada; amistoso (0x5c6710 em [0xae2c74]),
 /// a do mandante; competição sem objeto ([0xadadfc]), como sem competição; competição dos tipos 2 e 4 (+0x42), o quarto
@@ -603,7 +636,10 @@ unsafe extern "thiscall" fn comparar_escolher_arbitro_da_partida(this: usize, jo
     r
 }
 
-/// { 0x79bf40 } (thiscall, ret 0, officials_manager.cpp): `OfficialsManager::clear_busy_flags`, no laço do dia
+/// clears the daily referee busy bytes
+/// Original: `OfficialsManager::clear_busy_flags` (0x79bf40, officials_manager.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x79bf40 } (thiscall, ret 0, officials_manager.cpp): `OfficialsManager::clear_busy_flags`, no laço do dia
 /// (0x5cccd0) e na corrida até a data de início (0x5cc850): zera os [this+4] bytes de ocupado em [this+8] (a conta e o
 /// vetor relidos a cada passo). Devolve a conta (0 se não positiva), como o eax da original.
 unsafe extern "thiscall" fn limpar_arbitros_ocupados(this: usize) -> u32 {
@@ -625,7 +661,11 @@ unsafe extern "thiscall" fn comparar_limpar_arbitros_ocupados(this: usize) -> u3
     r
 }
 
-/// { 0x79cee0 } (thiscall, ret 4, officials_manager.cpp): `OfficialsManager::renew_officials(comp)`, no começo da
+/// at the league season start, replaces the referees of the range over 45 (or over 40, one in three) with new random
+/// ones and clears the stats row of the first one
+/// Original: `OfficialsManager::renew_officials` (0x79cee0, officials_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x79cee0 } (thiscall, ret 4, officials_manager.cpp): `OfficialsManager::renew_officials(comp)`, no começo da
 /// temporada de cada liga (83 chamadores). Sem competição, sem objeto ([0xadadfc]), dos tipos 4 e 2 (+0x42) ou sem
 /// conta (0x4b0700): 0. A faixa da competição no bloco da nação dela (+0x5d, ou uma sorteada), a primeira que bater,
 /// ou o bloco inteiro. Cada árbitro da faixa (fichas de 0x2b bytes em [0xae23e8]; ficha nula: a caixa "Error"): com
@@ -762,7 +802,11 @@ unsafe fn cpy9_gerar(r: usize, nacao: usize) {
     write_i16(r + 0xc, sortear(0x12c).wrapping_add(1) as i16);
 }
 
-/// { 0x79c5c0 } (thiscall com o this sem uso, ret 8, officials_manager.cpp): `officials_manager_add_random_officials(
+/// reallocates the referee table, generates `count` new referees of the nation (names by weight, random ratings and
+/// attributes, born in the 1960s) and sorts the table by nation and quality
+/// Original: `officials_manager_add_random_officials` (0x79c5c0, officials_manager.cpp, thiscall (this sem uso), ret 8).
+///
+/// [pt] { 0x79c5c0 } (thiscall com o this sem uso, ret 8, officials_manager.cpp): `officials_manager_add_random_officials(
 /// conta, nacao)`, pela montagem dos árbitros do jogo novo (0x79bf60, nas nações com poucos árbitros). Nação sem
 /// continente (+0x71): nada. Realoca a tabela ([0xae23e8], 0x945667) para [0xae2390] + conta fichas (sem memória: erro
 /// e o jogo para), gera `conta` fichas novas no fim (cpy9_gerar), soma a conta em [0xae2390] e ordena a tabela inteira
@@ -842,7 +886,11 @@ unsafe fn cpy9_atributo(e: usize, o: usize, f: impl FnOnce() -> u8) {
     }
 }
 
-/// { 0x79caa0 } (cdecl, officials_manager.cpp): `officials_manager_validate_officials()`, no começo da montagem dos
+/// repairs each referee record: the nation from the names, out-of-range ratings and attributes drawn again and a too
+/// old birth date
+/// Original: `officials_manager_validate_officials` (0x79caa0, officials_manager.cpp, cdecl).
+///
+/// [pt] { 0x79caa0 } (cdecl, officials_manager.cpp): `officials_manager_validate_officials()`, no começo da montagem dos
 /// árbitros do jogo novo (0x79bf60). Para cada uma das [0xae2390] fichas (0x2b bytes em [0xae23e8]): sem nação (+0x16),
 /// a da tabela das nações pelo índice (+0x37) do primeiro nome (+4), do segundo (+8) ou sorteado; as palavras +0x22,
 /// +0x1e e +0x20 fora de 1..200: sorteio(80) + 1 mais o byte +0x8e da nação (+0x22) ou 4 vezes ele (+0x1e, +0x20; a
@@ -937,7 +985,10 @@ unsafe extern "C" fn comparar_validar_arbitros() {
     });
 }
 
-/// { 0x79c530 } (thiscall, ret 4, officials_manager.cpp): `Official::operator=(src)`, pela montagem dos árbitros do
+/// copies a 0x2b-byte referee record field by field, the date through the date copy
+/// Original: `Official::operator=` (0x79c530, officials_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x79c530 } (thiscall, ret 4, officials_manager.cpp): `Official::operator=(src)`, pela montagem dos árbitros do
 /// jogo novo (0x79bf60, as fichas que ficam). Copia a ficha de 0x2b bytes campo a campo (+0, +4, +8; a data de +0xc
 /// pela 0x417c10; +0x14, +0x16, +0x1a, +0x1e, +0x20, +0x22, os bytes +0x24..+0x2a). Devolve `this`.
 unsafe extern "thiscall" fn copiar_ficha_de_arbitro(this: usize, src: usize) -> usize {

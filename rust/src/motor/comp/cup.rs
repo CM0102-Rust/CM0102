@@ -35,7 +35,12 @@ unsafe fn cqc5_ao_calendario(p: usize) {
     juntar(read_u32_as_usize(0xae2a58), p, 1);
 }
 
-/// { 0x51cb90 } (thiscall, ret 0xc, Cup.cpp, quadro SEH sem destrutor no caminho normal: as datas e a notícia locais):
+/// creates the fixture of the tie (or only marks it as deferred): competition, round, rules, clubs, date (tomorrow if
+/// already past), slot, stadium and calendar; the news to human managers; in a two-legged round, the second leg +0x22
+/// days later, with home and away swapped
+/// Original: `Cup::create_tie_fixtures` (0x51cb90, Cup.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x51cb90 } (thiscall, ret 0xc, Cup.cpp, quadro SEH sem destrutor no caminho normal: as datas e a notícia locais):
 /// `Cup::create_tie_fixtures(rodada, confronto, adiar)`, da montagem da rodada (0x51c800) e da tela da competição.
 /// Confronto −1: o primeiro da rodada com a marca +0x34 = 1 (adiar) ou 2 (criar); nenhum: 0. Adiar: marca 2. Criar:
 /// marca 3; com time faltando (+0/+2 = −1), a notícia do confronto pendente (0x522950: push confronto; push rodada;
@@ -308,7 +313,10 @@ unsafe extern "thiscall" fn comparar_copa_criar_jogos_do_confronto(this: usize, 
     r
 }
 
-/// { 0x522950 } (thiscall, ret 8, Cup.cpp, quadro SEH sem destrutor no caminho normal: a notícia local):
+/// news 0x26 of a tie with an undecided team: the cup, the round and the possible teams, to the managers of each
+/// Original: `Cup::post_draw_news` (0x522950, Cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x522950 } (thiscall, ret 8, Cup.cpp, quadro SEH sem destrutor no caminho normal: a notícia local):
 /// `Cup::post_draw_news(rodada, confronto)`, só da 0x51cb90. Com os dois times definidos, ou rodada (0x68 bytes em
 /// +0xa3) com menos de 2 confrontos (+0x1a): nada. Cada lado sem time (+0/+2 = −1) vem do confronto de origem (rodada
 /// +0xe/+0x10, confronto +0xa/+0xc; sem origem ou com time faltando lá: nada): os dois clubes possíveis; com time, o
@@ -411,7 +419,11 @@ unsafe extern "thiscall" fn comparar_copa_noticia_do_confronto_pendente(this: us
     orig::<unsafe extern "thiscall" fn(usize, u32, u32)>(1522)(this, rodada, confronto) // ponytail: só a notícia
 }
 
-/// { 0x8c6bc0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH sem destrutor no caminho normal: as datas locais):
+/// checks each transfer window in the previous, current and next months: on the day, the opening or closing notice; the
+/// day after the opening, the notice and the waiting offers of the nation; a week before the opening, the notice
+/// Original: `TRANSFER_MANAGER::update_transfer_window_news` (0x8c6bc0, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8c6bc0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH sem destrutor no caminho normal: as datas locais):
 /// `TRANSFER_MANAGER::update_transfer_window_news(hoje)`, do dia das transferências. Os meses anterior, atual e
 /// seguinte (0x54cfb0: mov ecx, hoje -> thiscall, ret 0; o anterior de janeiro é dezembro do ano −1, o seguinte de
 /// dezembro é janeiro do ano +1), hoje + 1 semana (0x54c770: push 1; push saída; mov ecx, hoje -> thiscall, ret 8) e
@@ -581,7 +593,12 @@ unsafe fn cqb11_passo(copa: usize, r: i32, cur: &mut i32, inicio: i16, segunda: 
     true
 }
 
-/// { 0x51d2d0 } (thiscall, ret 4, Cup.cpp): `Cup::sort_round_teams(rodada)`: o sorteio pela semente (regra 0x400 da
+/// the round draw by seeding: the teams leave the ties, sorted by seed (highest first), and each goes to a drawn tie;
+/// on the first pass only empty ties (with both slots free, the side is drawn), then any free slot, with rule 4 keeping
+/// clubs of one nation apart until there is no way
+/// Original: `Cup::sort_round_teams` (0x51d2d0, Cup.cpp, thiscall).
+///
+/// [pt] { 0x51d2d0 } (thiscall, ret 4, Cup.cpp): `Cup::sort_round_teams(rodada)`: o sorteio pela semente (regra 0x400 da
 /// rodada). 1) Tira os times dos confrontos para o vetor de 7 bytes (malloc 0x944e46 de 7 × vagas +0x18; sem memória,
 /// a caixa da linha 0xbf8 e o jogo para), cada um com a semente (+4 do time). 2) Ordena pela semente, a maior primeiro
 /// (qsort 0x945333 com 0x51ebc0). 3) Cada entrada com time (até a primeira sem, nível 0xff) vai a um confronto
@@ -674,7 +691,12 @@ unsafe extern "thiscall" fn comparar_copa_sortear_pela_semente(copa: usize, roda
     });
 }
 
-/// { 0x51d9f0 } (thiscall, ret 4, Cup.cpp): `Cup::check_round_teams_for_nation(rodada)`: o sorteio que separa as nações
+/// the round draw that keeps nations apart: each team's level becomes how many teams of its nation are in the round
+/// (the bigger nations go first) and, from the second pass on, a team does not land in a tie with another of its nation
+/// while possible
+/// Original: `Cup::check_round_teams_for_nation` (0x51d9f0, Cup.cpp, thiscall).
+///
+/// [pt] { 0x51d9f0 } (thiscall, ret 4, Cup.cpp): `Cup::check_round_teams_for_nation(rodada)`: o sorteio que separa as nações
 /// (regra 4 da rodada sem a 0x400). Conta os times de cada nação num vetor zerado de [0xae2350] bytes (0x945501;
 /// sem memória, a caixa da linha 0xd27 e o jogo para) enquanto tira os times dos confrontos (malloc de 7 × vagas, a
 /// caixa da linha 0xd34), pelo +0 da nação (+0x53) do clube; o nível de cada entrada com time vira a conta da nação
@@ -810,7 +832,10 @@ unsafe extern "thiscall" fn comparar_copa_sortear_separando_nacoes(copa: usize, 
     });
 }
 
-/// { 0x518780 } (thiscall, ret 0, Cup.cpp): `Cup::start_new_season()` da classe base: só zera o byte +0xb1 da copa
+/// the base cup season start: clears byte +0xb1
+/// Original: `Cup::start_new_season` (0x518780, Cup.cpp, thiscall).
+///
+/// [pt] { 0x518780 } (thiscall, ret 0, Cup.cpp): `Cup::start_new_season()` da classe base: só zera o byte +0xb1 da copa
 /// (as copas derivadas liberam as tabelas delas).
 unsafe extern "thiscall" fn copa_comeco_da_temporada(copa: usize) {
     *((copa + 0xb1) as *mut u8) = 0;
@@ -905,7 +930,12 @@ unsafe fn cqa1_premios(copa: usize, r: i32, contar: bool) -> Option<(i32, i32)> 
     Some((ao_vencedor, ao_perdedor))
 }
 
-/// { 0x522240 } (thiscall, ret 0x10, Cup.cpp): `Cup::pay_round_prize_money(vencedor, perdedor, rodada, partida)`
+/// pays the round prize money (+0x60 to the winner, +0x64 to the loser; with -1, from the fund +0x28 over the remaining
+/// rounds and the ties, 3/4 and 1/4 when both are -1): the winner with the news item (0x48e3e0) and the money
+/// (0x5999a0), the loser only the money; the fund loses both
+/// Original: `Cup::pay_round_prize_money` (0x522240, Cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x522240 } (thiscall, ret 0x10, Cup.cpp): `Cup::pay_round_prize_money(vencedor, perdedor, rodada, partida)`
 /// (entradas de 6 bytes dos dois times). Os prêmios da rodada (+0x60 o do vencedor, +0x64 o do perdedor); com −1 no
 /// do vencedor, o fundo (+0x28) / (rodadas +0x3c − rodada) / confrontos (+0x1a), e com −1 também no do perdedor, 3/4
 /// para o vencedor e 1/4 para o perdedor. O vencedor (se o prêmio não é zero) recebe a notícia (0x48e3e0: o
@@ -986,7 +1016,11 @@ unsafe fn cqa1_inverter(t: usize) {
     }
 }
 
-/// { 0x51e870 } (thiscall, ret 8, Cup.cpp): `Cup::set_home_teams_for_round(rodada, laco)`: num confronto (`laco`) ou
+/// swaps home and away in one tie or in every tie of the round by the round rule: the club in the higher division
+/// (virtual +0x90), the team level or the cup stadium
+/// Original: `Cup::set_home_teams_for_round` (0x51e870, Cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x51e870 } (thiscall, ret 8, Cup.cpp): `Cup::set_home_teams_for_round(rodada, laco)`: num confronto (`laco`) ou
 /// em todos os da rodada (−1), com os dois times definidos (≠ −1), inverte mandante e visitante pela regra da rodada
 /// (byte baixo de +0xb): bit 1, se a virtual +0x90 (club_in_higher_division(clube a, clube b)) devolve o clube b;
 /// senão bit 8, se o nível (+4 do time, com sinal) de a é menor que o de b; senão, com o estádio da copa (+0x24) ≠
@@ -1090,7 +1124,11 @@ unsafe fn cqa1_progresso(copa: usize, t: i32, r: i32) -> Option<(u8, u8, u8)> {
     Some((v, 1, v))
 }
 
-/// { 0x521b30 } (thiscall, ret 8, Cup.cpp): `Cup::record_team_progress(time, rodada)`: quanto o time foi na copa,
+/// how far the team went in the cup, by outcome and round (with or without the third place round), handed to virtual
+/// +0x68 (set_club_progress) with competition +0x44
+/// Original: `Cup::record_team_progress` (0x521b30, Cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x521b30 } (thiscall, ret 8, Cup.cpp): `Cup::record_team_progress(time, rodada)`: quanto o time foi na copa,
 /// pela virtual +0x68 (`set_club_progress(clube, competição +0x44, p1, p2, p3)`). Com a última rodada do tipo 0x8c
 /// (terceiro lugar): na semifinal (rodadas − 2), desfecho 1 ou 2 → (d, d, d); na última, 3 ou 4 → (d, d, d); noutra
 /// rodada, desfecho ≠ 0 → o +0x5b da rodada três vezes; 0 → (4, 1, 4) antes da semifinal, senão (x, 1, x) com o +0x5b
@@ -1204,7 +1242,12 @@ unsafe fn cqa3_sem_noticia(copa: usize, r: u32) -> bool {
     false
 }
 
-/// { 0x51c410 } (thiscall, ret 4, Cup.cpp, quadro SEH sem destrutor no caminho normal): `Cup::draw_round(rodada)`;
+/// with some team still open it puts the draw off by 1 day (and the following rounds to at least that date); otherwise
+/// draws by the rule (seeded 0x51d2d0, nations apart 0x51d9f0 or open 0x51e220), sets the home teams (0x51e870) and the
+/// shared stadium (0x522610), marks the drawn ties and sends the draw news to the human managed teams; returns 1
+/// Original: `Cup::draw_round` (0x51c410, Cup.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x51c410 } (thiscall, ret 4, Cup.cpp, quadro SEH sem destrutor no caminho normal): `Cup::draw_round(rodada)`;
 /// devolve 1. Sem +0x45 ou com a rodada já sorteada (+0x34 do primeiro confronto): nada. Com um time de algum confronto
 /// ainda sem clube: a data do sorteio anda 1 dia (0x54c5b0, 0x417c10) e as das rodadas seguintes passam a ser, no
 /// mínimo, essa. Senão sorteia: regra 0x400 (+0xd) pela semente (0x51d2d0), regra 4 (+0xb) separando as nações
@@ -1359,7 +1402,11 @@ unsafe extern "thiscall" fn comparar_copa_sortear_rodada(copa: usize, rodada: u3
     r
 }
 
-/// { 0x4bffc0 } (cdecl, comp_util.cpp): `comp_util_format_stage_round_name(fase, rodada, saida, tamanho, estilo)`:
+/// writes the stage and round names (with their genders, through template 0x9a7cfc), or just one of them; without an
+/// output or under 200 bytes, the error box and 0
+/// Original: `comp_util_format_stage_round_name` (0x4bffc0, comp_util.cpp, cdecl).
+///
+/// [pt] { 0x4bffc0 } (cdecl, comp_util.cpp): `comp_util_format_stage_round_name(fase, rodada, saida, tamanho, estilo)`:
 /// sem saída ou com menos de 200 bytes, a caixa (linha 0x26a1) e 0. Zera a saída; com fase e rodada, "{fase} {rodada}"
 /// (0x66f4e0 com o modelo 0x9a7cfc, os nomes de 100 bytes da 0x4b4850 e os gêneros da 0x4ba8f0); só uma delas, o nome
 /// dela direto na saída (0x4b4850 com o tamanho); nenhuma, só o zero. Devolve 1 (0 na caixa).
@@ -1412,7 +1459,10 @@ unsafe fn cqa3_nivel(clube: usize) -> i16 {
     }
 }
 
-/// { 0x522360 } (thiscall, ret 8, Cup.cpp; o this não é lido; a virtual +0x90 da copa base):
+/// returns the club whose division level (+0x57 -> +0x69) is lower, or 0 when level
+/// Original: `Cup::club_in_higher_division` (0x522360, Cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x522360 } (thiscall, ret 8, Cup.cpp; o this não é lido; a virtual +0x90 da copa base):
 /// `Cup::club_in_higher_division(a, b)`: o clube de nível menor (+0x57 → +0x69, com sinal; 0 sem divisão); empate, 0.
 unsafe extern "thiscall" fn clube_da_divisao_mais_alta(_this: usize, a: usize, b: usize) -> usize {
     let (na, nb) = (cqa3_nivel(a), cqa3_nivel(b));
@@ -1502,7 +1552,11 @@ unsafe fn cqa4_registro_de_final(f: usize, clube: usize, jogo: usize, final_: u3
     g(read_usize(0xdd7f00), clube, jogo, final_);
 }
 
-/// { 0x519890 } (thiscall, ret 0x18, Cup.cpp; a virtual +0x44 das copas inglesas e da base):
+/// by the club outcome: the winners record (and the UEFA Cup place through the English League Cup or a European nation
+/// main cup), runners-up, third place, qualified for the next round or knocked out, weighted by round; returns 0
+/// Original: `Cup::update_staff_records_for_status` (0x519890, Cup.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x519890 } (thiscall, ret 0x18, Cup.cpp; a virtual +0x44 das copas inglesas e da base):
 /// `Cup::update_staff_records_for_status(clube, desfecho, _, _, jogo, final)`; devolve 0. Nada com o jogo +0x3a = 1,
 /// com +0x2c ou com +0x44 ≠ 0xff. Desfecho 1: o registro de campeão e, com a vaga (cqa4_vaga_na_uefa), o estado do
 /// clube recebe a Copa da UEFA ([0x9cf6f0]); 2: o de vice; 3: o de terceiro; 0: se a rodada seguinte (+0x34 + 1) existe
@@ -1645,7 +1699,11 @@ unsafe fn cqa4_honras(copa: usize) -> (usize, usize, usize, usize) {
     (campeao, vice, terceiro, anfitria)
 }
 
-/// { 0x519a90 } (thiscall, ret 0, Cup.cpp; a virtual +0x30 das copas inglesas e da base): `Cup::record_season_honours()`:
+/// finds the winner, runner-up, third (in the Welsh cup, through the statistics) and the host national team, writes the
+/// history row and, in the nation main cup, passes the semi-final losers to UEFA
+/// Original: `Cup::record_season_honours` (0x519a90, Cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x519a90 } (thiscall, ret 0, Cup.cpp; a virtual +0x30 das copas inglesas e da base): `Cup::record_season_honours()`:
 /// a linha do histórico (0x4afce0: 5 pushes; add esp, 0x14 -> cdecl(copa, campeão, vice, terceiro, anfitriã)) com os
 /// quatro de cqa4_honras; fora da competição amistosa, na copa principal da nação (cqa4_copa_principal), os
 /// semifinalistas para a UEFA (0x519fc0: ecx = a copa -> thiscall, ret 0).
@@ -1729,7 +1787,11 @@ unsafe fn cqa4_semifinalistas(copa: usize) -> Option<(i32, i32)> {
     Some((a, b))
 }
 
-/// { 0x519fc0 } (thiscall, ret 0, Cup.cpp): `Cup::register_semi_final_losers_for_uefa()`: os semifinalistas fora da
+/// finds the semi-finals (0x82) and the final (0x96) and sends the two semi-finalists not in the final to the UEFA
+/// seeding
+/// Original: `Cup::register_semi_final_losers_for_uefa` (0x519fc0, Cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x519fc0 } (thiscall, ret 0, Cup.cpp): `Cup::register_semi_final_losers_for_uefa()`: os semifinalistas fora da
 /// final (cqa4_semifinalistas) vão à semeadura da UEFA (0x905790: push b; push a; push id da competição; ecx =
 /// [0xde1f58]; sem add esp -> thiscall, ret 0xc).
 unsafe extern "thiscall" fn copa_semifinalistas_para_a_uefa(copa: usize) {
@@ -1775,7 +1837,11 @@ unsafe fn cpu12_par(grade: usize, posto: *mut u32, usado: *mut u32, tab: usize, 
     *k += 1;
 }
 
-/// { 0x686a70 } (thiscall, ret 4, league.cpp): `League::draw_team_order(clubes)`: embaralha a tabela da liga
+/// shuffles the league table with the seeded rand and puts clubs sharing a ground, clubs with linked grounds and Celtic
+/// and Rangers in paired slots
+/// Original: `League::draw_team_order` (0x686a70, league.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x686a70 } (thiscall, ret 4, league.cpp): `League::draw_team_order(clubes)`: embaralha a tabela da liga
 /// ([+0xb1], +0x3e registros de 59 bytes) para a grade de jogos: guarda um sorteio (0x90cfc0, 30000), semeia o rand
 /// da CRT com +0x40 + [0xdd7120] e troca n pares sorteados (rand × n / 0x8000), e volta a semente (sorteio + 1). Liga
 /// com a marca 0x100 em +0xd9: cada clube vai à vaga que a tabela virtual +0xa8 diz (se livre), os outros às
@@ -1993,7 +2059,10 @@ unsafe fn cpu12_coletar(this: usize, rodada: i32, jogo: i32, saida: *mut i16, co
     *conta
 }
 
-/// { 0x5219b0 } (thiscall, ret 0x10, Cup.cpp): `Cup::collect_possible_teams(rodada, jogo, saida, *conta)`: acrescenta
+/// appends to the output the teams that can play the fixture, walking down the fixtures the empty sides come from
+/// Original: `Cup::collect_possible_teams` (0x5219b0, Cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x5219b0 } (thiscall, ret 0x10, Cup.cpp): `Cup::collect_possible_teams(rodada, jogo, saida, *conta)`: acrescenta
 /// a `saida` os clubes que ainda podem jogar esse jogo, descendo pelos jogos de onde vêm os lados vazios. Saída ou
 /// conta nula: a original (a caixa).
 unsafe extern "thiscall" fn clubes_possiveis_do_jogo(this: usize, rodada: i32, jogo: i32, saida: *mut i16, conta: *mut i32) -> i32 {
@@ -2003,7 +2072,10 @@ unsafe extern "thiscall" fn clubes_possiveis_do_jogo(this: usize, rodada: i32, j
     cpu12_coletar(this, rodada, jogo, saida, conta, true)
 }
 
-/// { 0x521790 } (thiscall, ret 0x10, Cup.cpp): `Cup::get_fixture_side_teams(rodada, jogo, lado, saida)`: o clube de um
+/// the team on one side of the fixture or, if empty, the teams that can still reach it (count in global 0xae1880)
+/// Original: `Cup::get_fixture_side_teams` (0x521790, Cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x521790 } (thiscall, ret 0x10, Cup.cpp): `Cup::get_fixture_side_teams(rodada, jogo, lado, saida)`: o clube de um
 /// lado do jogo (lado ≠ 0: +0; 0: +2) ou, vazio, os clubes que podem chegar a ele (0x5219b0 com a conta no global
 /// 0xae1880). Devolve a conta (a caixa se nenhum). Rodada fora de 0..+0x3c, copa sem clubes (+0xa7) ou jogo −1: a
 /// original (a caixa e 0).
@@ -2119,7 +2191,11 @@ unsafe fn cps13_fase(this: usize, i: usize) -> usize {
     read_u32_as_usize(read_u32_as_usize(this + 0xc) + i * 4)
 }
 
-/// { 0x51f890 } (thiscall, ret 8, Cup.cpp; a atualização diária de cada copa): `Cup::update_for_date(hoje, fase)`. Copa
+/// moves on completed stages and ends the cup, gives each stage the day and, on the date, draws (phase 0) or sets up
+/// (phase ≠ 0) the rounds until none advances
+/// Original: `Cup::update_for_date` (0x51f890, Cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x51f890 } (thiscall, ret 8, Cup.cpp; a atualização diária de cada copa): `Cup::update_for_date(hoje, fase)`. Copa
 /// sem pai (+0x44 = 0xff): com +0xb1, se as fases 0..=+0x30 estão completas (virtual +0x10 com 0, 1), passa à fase
 /// seguinte (virtual +0x28, se +0x30 < +0x2c − 1) ou encerra uma vez (+0x4c: o histórico 0x442e80 de [0xad9da8], a
 /// virtual +0x30, os recordes 0x4a19f0 do Comp_Stats +8); depois as notícias dos recordes (0x4a2450). Ainda sem pai,
@@ -2245,7 +2321,11 @@ unsafe extern "thiscall" fn atualizar_copa_no_dia(this: usize, hoje: usize, fase
     }
 }
 
-/// { 0x51c800 } (thiscall, ret 4, Cup.cpp): `Cup::set_up_round(rodada)`: sem +0x45: 1. Rodada fora de 0..+0x3c − 1: a
+/// draws the round if needed, creates the fixtures of the marked ties, moves them to the round dates and moves on; a
+/// team without a club postpones the rounds by a day
+/// Original: `Cup::set_up_round` (0x51c800, Cup.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x51c800 } (thiscall, ret 4, Cup.cpp): `Cup::set_up_round(rodada)`: sem +0x45: 1. Rodada fora de 0..+0x3c − 1: a
 /// caixa (linha 0xa64) e −1. Sorteia a rodada se a fase dela não tem +0x34 (0x51c410). Na rodada atual (+0xab): se um
 /// confronto (0x35 bytes na fase, +0/+2 os times ou 0xffff) tem time sem clube (+0xa7, 6 bytes), adia a rodada pedida e
 /// as seguintes um dia (0x54c5b0, 0x417c10; as seguintes só se ficaram antes) e devolve 1. Senão cria os jogos de cada
@@ -2375,7 +2455,10 @@ unsafe fn cps13_doenca(f: usize, id: usize, nacao: usize, alto_dia: u32, alto_an
     doenca(read_u32_as_usize(0xb63d28), &mut d, 3, id, nacao);
 }
 
-/// { 0x5ab3c0 } (thiscall, ret 4, fix_man.cpp; o `this` não é usado): `FIXTURE_MANAGER::add_away_trip_illness_risk(jogo)`:
+/// with the stadium in a third-world country, gives the visiting clubs the illness risk on the day before the fixture
+/// Original: `FIXTURE_MANAGER::add_away_trip_illness_risk` (0x5ab3c0, fix_man.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x5ab3c0 } (thiscall, ret 4, fix_man.cpp; o `this` não é usado): `FIXTURE_MANAGER::add_away_trip_illness_risk(jogo)`:
 /// com o estádio do jogo (+0x18), a cidade (+0x38) e a nação dela (+0x1f) num país do terceiro mundo (+0x7e = 3), cada
 /// clube visitante de outra nação (+0x53) — o mandante (+0x1c, id +0xc) e o visitante (+0x20, id +0x10) — ganha o risco
 /// de doença na véspera do jogo.
@@ -2492,7 +2575,11 @@ unsafe fn cpq11_sem_memoria(linha: u32, texto: usize) -> ! {
     sair(-1)
 }
 
-/// { 0x51e220 } (thiscall, ret 4, Cup.cpp): `Cup::randomize_round_teams(rodada)`: o sorteio dos times da rodada.
+/// takes the teams out of the round ties, shuffles them and puts each one in a drawn tie (empty ones first), drawing
+/// the side when both slots are free, and sets the link to the next round
+/// Original: `Cup::randomize_round_teams` (0x51e220, Cup.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x51e220 } (thiscall, ret 4, Cup.cpp): `Cup::randomize_round_teams(rodada)`: o sorteio dos times da rodada.
 /// 1) Tira os times dos confrontos (+0x1a da rodada) para um vetor de 7 bytes por vaga (malloc de 7 × vagas +0x18;
 ///    sem memória, caixa da linha 0xe7f e o jogo para): o mandante (+0, com o vínculo +0xe/+0xa) e o visitante (+2,
 ///    com +0x10/+0xc), cada um com o nível do time (+4 do time); a vaga do confronto vira −2 (livre); sem time (−1),
@@ -2633,7 +2720,11 @@ unsafe fn cpq11_inverter(t: usize) {
     }
 }
 
-/// { 0x522610 } (thiscall, ret 4, Cup.cpp): `Cup::separate_shared_stadium_ties(rodada)`: para cada confronto `i` da
+/// swaps home and away in the later tie whose team shares a stadium with a team of an earlier tie of the round, and
+/// sets the side in the linked ties
+/// Original: `Cup::separate_shared_stadium_ties` (0x522610, Cup.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x522610 } (thiscall, ret 4, Cup.cpp): `Cup::separate_shared_stadium_ties(rodada)`: para cada confronto `i` da
 /// rodada, procura o primeiro `j > i` cujo mandante (ou, senão, o visitante) divide o estádio (+0x69 do clube, não
 /// nulo) com o mandante (ou o visitante) de `i`; achando, inverte o confronto `j` (mandante e visitante, +0xa/+0xc e
 /// +0xe/+0x10) e acerta o lado (+8) dos confrontos ligados na rodada seguinte: o de +0xe/+0xa fica 1 (mandante), o de
@@ -2709,7 +2800,11 @@ fn cpq11_escala(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> (u32, i8) {
     }
 }
 
-/// { 0x4bf850 } (cdecl, comp_util.cpp): `comp_util_scale_by_round(baixo, alto, rodada, rodadas)` (bytes e palavras com
+/// the round value between two limits: the average with a single round, otherwise (high − low) × round / (rounds − 1);
+/// outside 0..100, the error box
+/// Original: `comp_util_scale_by_round` (0x4bf850, comp_util.cpp, cdecl).
+///
+/// [pt] { 0x4bf850 } (cdecl, comp_util.cpp): `comp_util_scale_by_round(baixo, alto, rodada, rodadas)` (bytes e palavras com
 /// sinal; as palavras chegam em registradores com lixo acima, só a palavra é lida): com uma rodada só, a média
 /// (baixo + alto) / 2; senão (alto − baixo) × rodada / (rodadas − 1). Fora de 0..=100: a original (caixa da linha
 /// 0x256e, devolve 0 ou 100). Devolve o eax inteiro da original (quem chama empurra o registrador todo para
@@ -2749,7 +2844,10 @@ unsafe fn cpp13_reputacao(e: usize) -> i32 {
     *((read_usize(e) + 0x80) as *const i16) as i32
 }
 
-/// { 0x522190 } (cdecl, Cup.cpp): `cup_compare_entries_by_level_desc(a, b)`: o qsort das entradas das copas (sorteios da
+/// qsort comparator of cup entries by level (+4), highest first; on a tie by club reputation (+0x80), lowest first
+/// Original: `cup_compare_entries_by_level_desc` (0x522190, Cup.cpp, cdecl).
+///
+/// [pt] { 0x522190 } (cdecl, Cup.cpp): `cup_compare_entries_by_level_desc(a, b)`: o qsort das entradas das copas (sorteios da
 /// Copa da UEFA, Intertoto, copas do Japão e da Escócia) pelo nível, o maior primeiro; no empate pela reputação do
 /// clube, a menor primeiro. Quente (qsort): sem contador.
 unsafe extern "C" fn ordem_dos_cabecas_de_chave_decrescente(a: usize, b: usize) -> i32 {
@@ -2760,7 +2858,10 @@ unsafe extern "C" fn ordem_dos_cabecas_de_chave_decrescente(a: usize, b: usize) 
     cpp13_reputacao(a) - cpp13_reputacao(b)
 }
 
-/// { 0x5221c0 } (cdecl, Cup.cpp): `cup_compare_entries_by_level_asc(a, b)`: o qsort das entradas da copa da liga
+/// qsort comparator of cup entries by level (+4), lowest first; on a tie by club reputation (+0x80), lowest first
+/// Original: `cup_compare_entries_by_level_asc` (0x5221c0, Cup.cpp, cdecl).
+///
+/// [pt] { 0x5221c0 } (cdecl, Cup.cpp): `cup_compare_entries_by_level_asc(a, b)`: o qsort das entradas da copa da liga
 /// inglesa (0x56ccc0) pelo nível, o menor primeiro; no empate pela reputação do clube, a menor primeiro. Quente
 /// (qsort): sem contador.
 unsafe extern "C" fn ordem_dos_cabecas_de_chave_crescente(a: usize, b: usize) -> i32 {
@@ -2782,7 +2883,11 @@ unsafe fn cpp13_ajustar(clube: usize, valor: i8, baixar: u32) {
     }
 }
 
-/// { 0x68a980 } (thiscall, ret 0x10, league.cpp): `League::limit_club_division_tier(valor, fora, dentro, baixar)`
+/// for each table row, moves the club byte +0x64 to the value (down or up) when the row status is not the excluded one
+/// and when it is the included one (0xfd = none)
+/// Original: `League::limit_club_division_tier` (0x68a980, league.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x68a980 } (thiscall, ret 0x10, league.cpp): `League::limit_club_division_tier(valor, fora, dentro, baixar)`
 /// (chamada pelo fim de temporada de cada liga: Argentina, Bélgica, Brasil, Croácia, Dinamarca, Inglaterra, França,
 /// Alemanha, Holanda, Itália, Rússia, Escócia, Suécia e Turquia): para cada linha da tabela (+0xb1, 0x3b bytes, conta
 /// +0x3e), ajusta o byte +0x64 do clube (+0) a `valor` quando a situação da linha (+0x37) não é `fora` (0xfd = nenhuma)
@@ -2963,7 +3068,11 @@ unsafe fn cpm1_jogo(this: usize, f: usize) -> Option<u32> {
     Some(if s1 < s2 { 1 } else { 2 })
 }
 
-/// { 0x51c020 } (thiscall, ret 4, Cup.cpp): `Cup::decide_fixture_winner(jogo)`: quem passa num jogo de copa (1
+/// who goes through in a cup match (1 home, 2 away, 0 nobody) by the score, extra time, penalties, walkover and points
+/// of the rule (+0x38), storing each side's code (+0x3d/+0x3e)
+/// Original: `Cup::decide_fixture_winner` (0x51c020, Cup.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x51c020 } (thiscall, ret 4, Cup.cpp): `Cup::decide_fixture_winner(jogo)`: quem passa num jogo de copa (1
 /// mandante, 2 visitante, 0 ninguém) pela regra (+0x38): o placar (+0x43/+0x44), a prorrogação (bit 2, +0x47/+0x48), os
 /// pênaltis (bits 0x21, +0x49/+0x4a), o W.O. (0x800/0x1000) e os pontos (0x2000: os códigos −1 e o cabeça de chave),
 /// gravando o código de cada lado (+0x3d/+0x3e: 2 venceu, 3 na prorrogação, 4/5 nos pênaltis, 8 W.O.; −3 com 0x2000).
@@ -3122,7 +3231,11 @@ unsafe fn cpm1_confronto(conf: usize, j: usize) -> Option<u32> {
     None
 }
 
-/// { 0x51f2f0 } (thiscall, ret 8, Cup.cpp; `this` não é lido): `Cup::decide_tie_winner(confronto, jogo)`: no primeiro
+/// in the first leg marks the winner and returns 3; in the second leg decides by aggregate, walkover, extra time, away
+/// goals and penalties (1 or 2 the side through, 4 undecided)
+/// Original: `Cup::decide_tie_winner` (0x51f2f0, Cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x51f2f0 } (thiscall, ret 8, Cup.cpp; `this` não é lido): `Cup::decide_tie_winner(confronto, jogo)`: no primeiro
 /// jogo (+0x33 ≠ 1), só marca o vencedor (pontos 0x10: código 1; 0x2000: −3, ou −1 nos dois) e devolve 3. Na volta,
 /// pelo agregado (+0x14 + +0x1f contra +0x1e + +0x15): 2 o primeiro lado à frente, 1 o segundo; empatado: W.O.
 /// (0x800/0x1000, código 8), a prorrogação (bit 2 com +0x22 ≠ 0xff: com 0x4000 os gols fora dela; código 6, senão a
@@ -3136,7 +3249,10 @@ unsafe extern "thiscall" fn decidir_confronto_da_copa(this: usize, confronto: us
     }
 }
 
-/// { 0x51ebc0 } (cdecl, Cup.cpp): `cup_compare_draw_entries_by_seed(a, b)`: a comparação do qsort das entradas de 7
+/// the qsort comparison of the 7-byte draw entries: the higher seed (+6) first
+/// Original: `cup_compare_draw_entries_by_seed` (0x51ebc0, Cup.cpp, cdecl).
+///
+/// [pt] { 0x51ebc0 } (cdecl, Cup.cpp): `cup_compare_draw_entries_by_seed(a, b)`: a comparação do qsort das entradas de 7
 /// bytes do sorteio (0x51d2d0 e 0x51d9f0): o cabeça de chave (byte com sinal +6) de `b` menos o de `a` (maior primeiro).
 unsafe extern "C" fn ordem_dos_cabecas_de_chave(a: usize, b: usize) -> i32 {
     crate::comparacao::ramo("cpm_1 ordem dos cabecas de chave");
@@ -3197,7 +3313,10 @@ fn registro_da_rodada(rodadas: usize, rodada: u32) -> usize {
     rodadas.wrapping_add((rodada as i16 as isize * 104) as usize)
 }
 
-/// { 0x521e60 } (cdecl, Cup.cpp): a data do sorteio da rodada: dia do ano na palavra +0 e ano − ano-base
+/// stores the cup round draw date: the day number and the year offset from the base year
+/// Original: `cup_set_round_draw_date` (0x521e60, Cup.cpp, cdecl).
+///
+/// [pt] { 0x521e60 } (cdecl, Cup.cpp): a data do sorteio da rodada: dia do ano na palavra +0 e ano − ano-base
 /// (byte) em +2, da data de `dia`/`mes`/ano-base + `anos` levada ao dia da semana. Devolve o registro.
 unsafe extern "C" fn data_do_sorteio_da_rodada(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, base: u32) -> usize {
     let (d, a) = data_da_rodada(dia, mes, base.wrapping_add(anos), semana);
@@ -3207,7 +3326,10 @@ unsafe extern "C" fn data_do_sorteio_da_rodada(rodadas: usize, rodada: u32, dia:
     r
 }
 
-/// { 0x521eb0 } (cdecl, Cup.cpp): a data do jogo da rodada, como a do sorteio, em +3 (dia) e +5 (ano −
+/// stores the cup round match date, its match time and the venue flags
+/// Original: `cup_set_round_match_date` (0x521eb0, Cup.cpp, cdecl).
+///
+/// [pt] { 0x521eb0 } (cdecl, Cup.cpp): a data do jogo da rodada, como a do sorteio, em +3 (dia) e +5 (ano −
 /// ano-base); o horário (byte) em +6 e as marcas do mando em +0x13. Devolve o registro.
 unsafe extern "C" fn data_do_jogo_da_rodada(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, hora: u32, base: u32, mando: u32) -> usize {
     let (d, a) = data_da_rodada(dia, mes, base.wrapping_add(anos), semana);
@@ -3219,7 +3341,10 @@ unsafe extern "C" fn data_do_jogo_da_rodada(rodadas: usize, rodada: u32, dia: u3
     r
 }
 
-/// { 0x5c64e0 } (thiscall, ret 4, friendly.cpp): tira o `clube` dos amistosos planejados: no vetor
+/// removes the club from the planned AI friendlies and from the friendly lists
+/// Original: `Friendly::remove_club_from_ai_plans` (0x5c64e0, friendly.cpp, thiscall).
+///
+/// [pt] { 0x5c64e0 } (thiscall, ret 4, friendly.cpp): tira o `clube` dos amistosos planejados: no vetor
 /// [+0x34d8] ([+0x34e0] registros de 0x14 bytes) o id do clube em +8 vira −1; na lista [+0x34c8]
 /// (0x68d1b0), o ponteiro do clube em +0xc vira 0.
 unsafe extern "thiscall" fn tirar_clube_dos_amistosos(amistosos: usize, clube: usize) {
@@ -3315,7 +3440,10 @@ unsafe fn vaga_da_copa(copa: usize, v: i16) -> usize {
     (*((copa + 0xa7) as *const usize) as isize + v as isize * 6) as usize
 }
 
-/// { 0x521d60 } (thiscall, ret 8, Cup.cpp): passa as regras da rodada do jogo (palavra +0xf da rodada
+/// copies the round rules onto the match and, with a decision on a draw, marks who goes through by both sides' levels
+/// Original: `Cup::apply_round_rules_to_match` (0x521d60, Cup.cpp, thiscall).
+///
+/// [pt] { 0x521d60 } (thiscall, ret 8, Cup.cpp): passa as regras da rodada do jogo (palavra +0xf da rodada
 /// [jogo+0x34]) para as marcas do jogo (+0x38, OU). Com a marca 0x800 (decide quem passa no empate), o
 /// nível (byte +4 da vaga, com sinal) dos dois lados da chave `chave` decide: mandante menor tira 0x800 e
 /// põe 0x1000; maior mantém 0x800; igual tira 0x800 e põe 1.
@@ -3334,7 +3462,10 @@ unsafe extern "thiscall" fn regras_da_rodada_no_jogo(copa: usize, jogo: usize, c
     core::ptr::write_unaligned(marcas, m);
 }
 
-/// { 0x519c90 } (thiscall, ret 4, Cup.cpp): a chave da rodada do jogo (+0x34) em que está o clube
+/// the round tie that holds the match's home club (-1 if none)
+/// Original: `Cup::find_tree_slot_for_fixture` (0x519c90, Cup.cpp, thiscall).
+///
+/// [pt] { 0x519c90 } (thiscall, ret 4, Cup.cpp): a chave da rodada do jogo (+0x34) em que está o clube
 /// mandante do jogo (+0xc), olhando os dois lados de cada chave (53 bytes; vaga negativa é vazia); -1 se
 /// nenhuma. O número de chaves é a palavra +0x1a da rodada. Jogo nulo: a original (caixa de erro).
 unsafe extern "thiscall" fn chave_do_jogo_na_copa(copa: usize, jogo: usize) -> i32 {
@@ -3356,7 +3487,10 @@ unsafe extern "thiscall" fn chave_do_jogo_na_copa(copa: usize, jogo: usize) -> i
     -1
 }
 
-/// { 0x5c4680 } (thiscall, ret 4, friendly.cpp): sorteia o país da excursão do clube. Pela reputação
+/// draws the nation for a club tour, nearer the lower the reputation
+/// Original: `Friendly::pick_tour_nation` (0x5c4680, friendly.cpp, thiscall).
+///
+/// [pt] { 0x5c4680 } (thiscall, ret 4, friendly.cpp): sorteia o país da excursão do clube. Pela reputação
 /// (+0x80) o alcance: ≥ 8000 qualquer país, ≥ 6000 e ≥ 4000 o mesmo continente (+0x71), ≥ 2000 o mesmo
 /// continente e a mesma região (+0x75); abaixo, nenhum (0). Candidatos: os outros países (lista
 /// [0xae23a8], 0x122 bytes, [0xae2350] países) com +0x86 ≥ 20, +0x7e = 1, +0x84 ≤ 2 e +0x8e ≥ 5; cada um

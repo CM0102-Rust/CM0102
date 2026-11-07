@@ -25,7 +25,15 @@ unsafe fn cqq6_marcador(vtabela: usize, g: usize) -> usize {
     c
 }
 
-/// { 0x5bb160 } (thiscall, ret 8, fra_first.cpp, 988 bytes, quadro SEH só para os operator new): `FraFirst::FraFirst(ano,
+/// builds the French first division: discipline 0xc; two placeholder competitions (the CFA and the lower division),
+/// with no matches of their own; in a new career, every club whose league in the database is the CFA moves to the
+/// generic division with the CFA as reserve competition [inference: the B sides of the professional clubs], and every
+/// lower division club moves to the generic division with no reserve; then the rules, the table, the fixtures, the
+/// order, the statistics and the predicted positions; at last it builds the CFA (4 groups of 18) and the lower division
+/// (2 groups of 20), which leave their matches in the calendar, and frees both objects
+/// Original: `FraFirst::FraFirst` (0x5bb160, fra_first.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x5bb160 } (thiscall, ret 8, fra_first.cpp, 988 bytes, quadro SEH só para os operator new): `FraFirst::FraFirst(ano,
 /// registro)`: a base (League::League 0x682200: mov ecx -> thiscall, ret 0), a vtable 0x96aa24, o ano (+0x40, palavra),
 /// o registro (+4) e a disciplina 0xc (+0x50); em +0xee e +0xf2 as competições-marcador da CFA (vtable 0x96a994, id
 /// [0x9cf5d8]) e da divisão de baixo (0x96a904, id [0x9cf548]). Tenta carregar do arquivo temporário
@@ -210,13 +218,20 @@ unsafe fn cqn6_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: u
     }
 }
 
-/// { 0x64be90 } (thiscall, ret 0, ita_ser_c1a.cpp, 11.650 bytes): `ItaSerC1a::set_up_fixed_fixtures()`: os 306 jogos
+/// the 2001/02 C1/A: the 306 matches (34 rounds of 9) fixed by club name; with a name missing from the database, the
+/// list is dropped and the league draws its schedule
+/// Original: `ItaSerC1a::set_up_fixed_fixtures` (0x64be90, ita_ser_c1a.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x64be90 } (thiscall, ret 0, ita_ser_c1a.cpp, 11.650 bytes): `ItaSerC1a::set_up_fixed_fixtures()`: os 306 jogos
 /// da C1/A 2001/02 (34 rodadas de 9). Fonte 0x9ea474, linha 0x3fd.
 unsafe extern "thiscall" fn calendario_fixo_da_c1a(this: usize) {
     cqn6_fixos(this, &CQN6_C1A, 0x9ea474, 0x3fd)
 }
 
-/// { 0x650100 } (thiscall, ret 0, ita_ser_c1b.cpp, 11.650 bytes): `ItaSerC1b::set_up_fixed_fixtures()`: os 306 jogos
+/// the 2001/02 C1/B, with the same rule
+/// Original: `ItaSerC1b::set_up_fixed_fixtures` (0x650100, ita_ser_c1b.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x650100 } (thiscall, ret 0, ita_ser_c1b.cpp, 11.650 bytes): `ItaSerC1b::set_up_fixed_fixtures()`: os 306 jogos
 /// da C1/B 2001/02. Fonte 0x9ea558, linha 0x404.
 unsafe extern "thiscall" fn calendario_fixo_da_c1b(this: usize) {
     cqn6_fixos(this, &CQN6_C1B, 0x9ea558, 0x404)
@@ -241,13 +256,19 @@ unsafe extern "thiscall" fn comparar_calendario_fixo_da_c1b(this: usize) {
     cqn6_comparar("calendario_fixo_da_c1b", this, || o(this))
 }
 
-/// { 0x5bb540 } (thiscall, ret 8, fra_first.cpp, 8 bytes): `stub_return_one_ret8(a, b)`, o toco das competições que não
+/// the add_result stub of competitions that play no matches: returns 1
+/// Original: `stub_return_one_ret8` (0x5bb540, fra_first.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x5bb540 } (thiscall, ret 8, fra_first.cpp, 8 bytes): `stub_return_one_ret8(a, b)`, o toco das competições que não
 /// jogam partidas no lugar do add_result (o slot +4): ignora os dois e devolve 1.
 unsafe extern "thiscall" fn toco_um_com_dois(_this: usize, _a: u32, _b: u32) -> u32 {
     1 // cqn6: o toco devolve 1
 }
 
-/// { 0x5bb550 } (thiscall, ret 4, fra_first.cpp, 8 bytes): `stub_return_one_ret4(a)`, o padrão do slot 25 das
+/// the default of competition slot 25 and ruling body slot 6: returns 1
+/// Original: `stub_return_one_ret4` (0x5bb550, fra_first.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x5bb550 } (thiscall, ret 4, fra_first.cpp, 8 bytes): `stub_return_one_ret4(a)`, o padrão do slot 25 das
 /// competições e do slot 6 do órgão disciplinar: ignora o argumento e devolve 1.
 unsafe extern "thiscall" fn toco_um_com_um(_this: usize, _a: u32) -> u32 {
     1
@@ -926,7 +947,12 @@ fn cqj5_comuns() -> Vec<(usize, u8, u32)> {
     vec![(0xc3, 1, 1), (0xc4, 1, 2), (0x42, 1, 1), (0xc5, 1, 1), (0xc6, 1, 2), (0xc7, 1, 3), (0xbf, 1, 0), (0xc0, 1, 0), (0xd9, 2, 0x83), (0x4a, 1, 3)]
 }
 
-/// { 0x5bc410 } (thiscall, ret 0, fra_first.cpp): `FraFirst::set_up_rules()`. A primeira divisão: as comuns, 2
+/// the top division: 2 rounds, 3 points for a win and 1 for a draw; nobody goes up; 2 go down in the 2001 season (18
+/// clubs, the league grows to 20) and 3 afterwards; tie-breaks 1, 2 and 3 [codes]; 5 substitutes and 3 substitutions;
+/// round order split in halves (+0xd9 = 0x83)
+/// Original: `FraFirst::set_up_rules` (0x5bc410, fra_first.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5bc410 } (thiscall, ret 0, fra_first.cpp): `FraFirst::set_up_rules()`. A primeira divisão: as comuns, 2
 /// turnos, 3 pontos, +0xab e +0xdb = 0, ninguém sobe (+0xbe = 0), caem 2 em 2001 e 3 depois (+0xc1), 5 reservas
 /// (+0x49), nenhuma liga acima (+0x1c = −1), +0x52 = 2 [sem nome] e a segunda abaixo (+0x20 = [0x9cf5d0]).
 unsafe extern "thiscall" fn regras_da_franca_1(this: usize) -> u32 {
@@ -942,7 +968,10 @@ unsafe fn cqj5_primeira(this: usize) -> Vec<(usize, u8, u32)> {
     v
 }
 
-/// { 0x5bf0a0 } (thiscall, ret 0, fra_second.cpp): `FraSecond::set_up_rules()`. A segunda: as comuns, 2 turnos, 3
+/// the second: 4 go up and 2 go down in 2001, then 3 up and 3 down; the rest as the top division
+/// Original: `FraSecond::set_up_rules` (0x5bf0a0, fra_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5bf0a0 } (thiscall, ret 0, fra_second.cpp): `FraSecond::set_up_rules()`. A segunda: as comuns, 2 turnos, 3
 /// pontos; em 2001 sobem 4 (+0xbe) e caem 2 (+0xc1), depois sobem 3 e caem 3; a primeira acima ([0x9cf5cc]), a
 /// terceira abaixo ([0x9cf5d4]), +0x52 = 2 e 5 reservas.
 unsafe extern "thiscall" fn regras_da_franca_2(this: usize) -> u32 {
@@ -958,7 +987,11 @@ unsafe fn cqj5_segunda(this: usize) -> Vec<(usize, u8, u32)> {
     v
 }
 
-/// { 0x5c0700 } (thiscall, ret 0, fra_third.cpp): `FraThird::set_up_rules()`. O National: as comuns, 2 turnos, 3
+/// the National: 4 go up in 2001 and 3 afterwards, 4 go down (no league below in the game); 3 substitutes and 3
+/// substitutions
+/// Original: `FraThird::set_up_rules` (0x5c0700, fra_third.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5c0700 } (thiscall, ret 0, fra_third.cpp): `FraThird::set_up_rules()`. O National: as comuns, 2 turnos, 3
 /// pontos; sobem 4 em 2001 e 3 depois (+0xbe), caem 4 (+0xc1); a segunda acima ([0x9cf5d0]), nenhuma abaixo (+0x20
 /// = −1), +0xa7 (os jogos da temporada) = −1 (recalculado pela 0x687430) e 3 reservas (+0x49).
 unsafe extern "thiscall" fn regras_da_franca_3(this: usize) -> u32 {
@@ -1074,7 +1107,11 @@ unsafe fn cqj6_encher(this: usize, arquivo: usize, linha: u32, g: usize) -> Opti
     Some(k as i8 as i16 == read_i16(this + 0x3e))
 }
 
-/// { 0x5bc2b0 } (thiscall, ret 0, fra_first.cpp): `FraFirst::create_table()`: 18 clubes na temporada 2001 (+0x40 =
+/// the top division has 18 clubs in the 2001 season and 20 afterwards; prize fund of 200,000 per place; TV pays
+/// 6,000,000 to each club
+/// Original: `FraFirst::create_table` (0x5bc2b0, fra_first.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5bc2b0 } (thiscall, ret 0, fra_first.cpp): `FraFirst::create_table()`: 18 clubes na temporada 2001 (+0x40 =
 /// 0x7d1) e 20 depois ([0x9cf5cc]), +0xa7 = −1; cheia, o fundo pela cota de 200.000 e a TV de 6.000.000 a cada clube;
 /// 1 (0 sem encher). Fonte 0x9ccb5c, linha 0x1d3.
 unsafe extern "thiscall" fn tabela_da_franca_1(this: usize) -> u32 {
@@ -1090,7 +1127,11 @@ unsafe extern "thiscall" fn tabela_da_franca_1(this: usize) -> u32 {
     1
 }
 
-/// { 0x5bef10 } (thiscall, ret 0, fra_second.cpp): `FraSecond::create_table()`: 20 clubes ([0x9cf5d0]); cheia, sem
+/// the second has 20 clubs; no prize fund; TV pays by the division the club came from: 2,000,000 to those relegated
+/// from the top flight and 1,500,000 to those who stayed and those promoted from the National
+/// Original: `FraSecond::create_table` (0x5bef10, fra_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5bef10 } (thiscall, ret 0, fra_second.cpp): `FraSecond::create_table()`: 20 clubes ([0x9cf5d0]); cheia, sem
 /// fundo (+0x28 = 0, +0xe1 = 2: nada a pagar no fim) e a TV pela divisão de onde o clube veio (+0x5b): 2.000.000 aos
 /// que caíram da primeira ([0x9cf5cc]), 1.500.000 aos que ficaram ([0x9cf5d0]) e 1.500.000 aos que subiram do
 /// National ([0x9cf5d4]); 1. Fonte 0x9ccc0c, linha 0x171.
@@ -1108,7 +1149,10 @@ unsafe extern "thiscall" fn tabela_da_franca_2(this: usize) -> u32 {
     1
 }
 
-/// { 0x5c05d0 } (thiscall, ret 0, fra_third.cpp): `FraThird::create_table()`: 20 clubes ([0x9cf5d4]); cheia, o fundo
+/// the National has 20 clubs; prize fund of 20,000 per place; TV pays 200,000 to each club
+/// Original: `FraThird::create_table` (0x5c05d0, fra_third.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5c05d0 } (thiscall, ret 0, fra_third.cpp): `FraThird::create_table()`: 20 clubes ([0x9cf5d4]); cheia, o fundo
 /// pela cota de 20.000 e a TV de 200.000 a cada clube; 1. Fonte 0x9ccc80, linha 0x15d.
 unsafe extern "thiscall" fn tabela_da_franca_3(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);

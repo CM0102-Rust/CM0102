@@ -179,6 +179,18 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
     1
 }
 
+/// rule: the League Trophy (LDV Vans) has 56 clubs: all of the second and third divisions, the club relegated from the
+/// third to the Conference and, to complete it, Conference clubs (with the nation rule on, those already in it by
+/// category, 6 or less first; otherwise up to 30 Conference clubs or other English clubs outside the generic division,
+/// sorted by reputation with the best shuffled); the list is split into North and South by the latitude of the stadium
+/// city and each half goes from lowest reputation to highest
+/// Original: `EngAutoCup::select_section_clubs` (0x56b730, eng_auto_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: o Troféu da Liga (LDV Vans) tem 56 clubes: todos os da segunda e da terceira divisões, o rebaixado da
+/// terceira para a Conference e, para completar, clubes da Conference (com a regra da nação ligada, os que já estavam
+/// nela pela categoria, 6 ou menos primeiro; senão até 30 da Conference ou outros ingleses fora da divisão genérica,
+/// ordenados pela reputação e com os melhores embaralhados); a lista é dividida em Norte e Sul pela latitude da cidade
+/// do estádio e cada metade vai da menor reputação para a maior
 unsafe extern "thiscall" fn cqs5_trofeu_clubes(this: usize) -> u32 {
     cqs5_selecao(this)
 }
@@ -228,7 +240,11 @@ unsafe extern "thiscall" fn comparar_cqs5_trofeu_clubes(this: usize) -> u32 {
     a
 }
 
-/// { 0x56bab0 } (thiscall, ret 0, eng_auto_cup.cpp; quadro SEH só para o new, sem destrutor): `EngAutoCup::
+/// rule: the Trophy section stage is a knockout (Cup_Stage) with the 56 in list order (North, then South), with the
+/// rounds of stage 0 of the cup table, no seeding
+/// Original: `EngAutoCup::create_section_stage` (0x56bab0, eng_auto_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x56bab0 } (thiscall, ret 0, eng_auto_cup.cpp; quadro SEH só para o new, sem destrutor): `EngAutoCup::
 /// create_section_stage()`: a fase das chaves (Norte e Sul) com os +0x3e clubes da lista +0xb2, na ordem: um vetor
 /// (0x944e46 de 4 × +0x3e; sem memória, a caixa da linha 0x2e9) com eles; as rodadas pelo método +0x3c (push 0; push
 /// &extra; push &rodadas; push 0; mov ecx -> thiscall, ret 0x10); a fase (0x944cf1(0xb2); Cup_Stage::Cup_Stage 0x522e00,
@@ -279,7 +295,11 @@ unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_das_chaves(this: usize) {
     PLACAR.registrar(f != 0 && read_u32_as_usize(this + 0x30) == 0, || format!("cqs5_trofeu_fase_das_chaves({:#x}) fase {:#x} +0x30 {}", this, f, read_u32_as_usize(this + 0x30) as i32));
 }
 
-/// { 0x56bc50 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual +0x28): `EngAutoCup::advance_stage()`: na última fase
+/// rule: the Trophy stage moves on by one; when the sections end (stage 1), it builds the final between the North and
+/// South winners; at the last stage, the error box
+/// Original: `EngAutoCup::advance_stage` (0x56bc50, eng_auto_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x56bc50 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual +0x28): `EngAutoCup::advance_stage()`: na última fase
 /// (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x314 e nada mais; senão +0x30 sobe um e, ao chegar a 1 (o fim das
 /// chaves), monta a final (EngAutoCup::create_final_stage 0x56bce0, call direto com o ecx da copa -> thiscall, ret 0).
 unsafe extern "thiscall" fn cqs5_trofeu_fase_seguinte(this: usize) {
@@ -317,7 +337,12 @@ unsafe fn cqs6_vivo(l: usize, n: i32, s: u8) -> Option<usize> {
     (0..n.max(0) as usize).find(|&i| *((l + i * 6 + 5) as *const u8) == s).map(|i| read_u32_as_usize(l + i * 6))
 }
 
-/// { 0x56bce0 } (thiscall, ret 0, eng_auto_cup.cpp; da fase seguinte, quadro SEH só para o new, sem destrutor):
+/// rule: when the sections end, the Trophy final is a single tie (2-team Cup_Stage, stage 1) between the one still
+/// alive in the cup list (status 1) and the one still alive in the section stage; the round is drawn at once (home
+/// side)
+/// Original: `EngAutoCup::create_final_stage` (0x56bce0, eng_auto_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x56bce0 } (thiscall, ret 0, eng_auto_cup.cpp; da fase seguinte, quadro SEH só para o new, sem destrutor):
 /// `EngAutoCup::create_final_stage()`: a final do Troféu: um vetor de 2 (0x944e46 de 8; sem memória, a caixa da linha
 /// 0x337) com o primeiro clube de situação 1 (o que segue vivo [inferência]) da lista da copa (+0xa7) e o primeiro de
 /// situação 1 da lista da fase das chaves ([+0xc][0] +0xa7), ambos entre os +0x3e primeiros (da copa); as rodadas pelo
@@ -374,7 +399,12 @@ unsafe extern "thiscall" fn comparar_cqs6_trofeu_final(this: usize) {
     PLACAR.registrar(f != 0, || format!("cqs6_trofeu_final({:#x}) sem a fase da final", this));
 }
 
-/// { 0x56c010 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual da classificação final, n = 1 até 2002-06-01): `EngAutoCup::
+/// rule: the Trophy final ranking in the statistics: the highest-reputation club of each half takes 1st and 2nd (the
+/// one with the higher reputation is 1st); the others, round by round from the last to the first, share one position
+/// per round (3, then 3 + 2 × those already placed...)
+/// Original: `EngAutoCup::rank_teams` (0x56c010, eng_auto_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x56c010 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual da classificação final, n = 1 até 2002-06-01): `EngAutoCup::
 /// rank_teams()`: a posição final de cada clube nas estatísticas da copa (+8, Comp_Stats; sem elas, a caixa da linha 0x3bb).
 /// Um vetor de 2 × +0x3e ponteiros (0x944e46; sem memória, a caixa da linha 0x3c3): na primeira metade os clubes da lista
 /// da copa (+0xa7, entradas de 6 bytes), na segunda os da fase das chaves ([+0xc][0] +0xa7); cada metade ordenada pela

@@ -125,25 +125,39 @@ const CQL6_THIRD: Cql6Divisao = Cql6Divisao {
     linhas: [0x4e, 0x55, 0x5c, 0x65, 0x6d],
 };
 
-/// { 0x573380 } (thiscall, ret 8, eng_prm.cpp): `EngPrm::EngPrm(ano, registro)`. A Premier: sem fases além da liga
+/// the Premiership: discipline rule 9 (the English leagues one), minimum ground of 10,000 all seated, only the league
+/// (no play-off); with no saved state, the rules, the table, the fixtures, the order, the stats and the predicted
+/// positions
+/// Original: `EngPrm::EngPrm` (0x573380, eng_prm.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x573380 } (thiscall, ret 8, eng_prm.cpp): `EngPrm::EngPrm(ano, registro)`. A Premier: sem fases além da liga
 /// (+0x2c = 0, +0xc = 0) e o estádio mínimo de 10.000 lugares, todos sentados.
 unsafe extern "thiscall" fn construir_premier(this: usize, ano: u32, registro: usize) -> usize {
     cql6_construir(this, ano, registro, &CQL6_PREMIER)
 }
 
-/// { 0x571680 } (thiscall, ret 8, eng_first.cpp): `EngFirst::EngFirst(ano, registro)`. A First Division: 1 fase além da
+/// the First Division: discipline 9, no minimum ground, the league and 1 stage (the promotion play-off)
+/// Original: `EngFirst::EngFirst` (0x571680, eng_first.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x571680 } (thiscall, ret 8, eng_first.cpp): `EngFirst::EngFirst(ano, registro)`. A First Division: 1 fase além da
 /// liga (o play-off de acesso), sem estádio mínimo.
 unsafe extern "thiscall" fn construir_first(this: usize, ano: u32, registro: usize) -> usize {
     cql6_construir(this, ano, registro, &CQL6_FIRST)
 }
 
-/// { 0x5754a0 } (thiscall, ret 8, eng_second.cpp): `EngSecond::EngSecond(ano, registro)`. A Second Division: 1 fase além
+/// the Second Division: discipline 9, no minimum ground, the league and the play-off
+/// Original: `EngSecond::EngSecond` (0x5754a0, eng_second.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x5754a0 } (thiscall, ret 8, eng_second.cpp): `EngSecond::EngSecond(ano, registro)`. A Second Division: 1 fase além
 /// da liga (o play-off), sem estádio mínimo.
 unsafe extern "thiscall" fn construir_second(this: usize, ano: u32, registro: usize) -> usize {
     cql6_construir(this, ano, registro, &CQL6_SECOND)
 }
 
-/// { 0x576dd0 } (thiscall, ret 8, eng_third.cpp): `EngThird::EngThird(ano, registro)`. A Third Division: 1 fase além da
+/// the Third Division: discipline 9, minimum ground of 6,000 with 1,000 seated, the league and the play-off
+/// Original: `EngThird::EngThird` (0x576dd0, eng_third.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x576dd0 } (thiscall, ret 8, eng_third.cpp): `EngThird::EngThird(ano, registro)`. A Third Division: 1 fase além da
 /// liga (o play-off) e o estádio mínimo de 6.000 lugares, 1.000 sentados.
 unsafe extern "thiscall" fn construir_third(this: usize, ano: u32, registro: usize) -> usize {
     cql6_construir(this, ano, registro, &CQL6_THIRD)
@@ -218,7 +232,12 @@ fn cqi4_comuns() -> Vec<(usize, u8, u32)> {
     vec![(0xc3, 1, 1), (0xc4, 1, 2), (0x42, 1, 1), (0xc5, 1, 1), (0xc6, 1, 2), (0xc7, 1, 3), (0x52, 1, 2)]
 }
 
-/// { 0x574b70 } (thiscall, ret 0, eng_prm.cpp): `EngPrm::set_up_rules()`. A Premier: as comuns, +0xab e +0xdb = 0
+/// the Premier (20 clubs): 2 rounds, 3 points for a win and 1 for a draw; nobody goes up, the bottom 3 go straight down
+/// to the First; tie-breaks goal difference, goals for and position [inference from codes 1, 2, 3]; builds the round
+/// schedule
+/// Original: `EngPrm::set_up_rules` (0x574b70, eng_prm.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x574b70 } (thiscall, ret 0, eng_prm.cpp): `EngPrm::set_up_rules()`. A Premier: as comuns, +0xab e +0xdb = 0
 /// (as palavras copiadas em cada partida), ninguém sobe (+0xbe = 0, +0xbf = 0, +0xc0 = 0), 3 caem direto (+0xc1),
 /// nenhuma liga acima (+0x1c = −1) e a First abaixo (+0x20 = [0x9cf5c0]).
 unsafe extern "thiscall" fn regras_da_premier(this: usize) -> u32 {
@@ -235,7 +254,11 @@ unsafe fn cqi4_premier() -> Vec<(usize, u8, u32)> {
     v
 }
 
-/// { 0x572d90 } (thiscall, ret 0, eng_first.cpp): `EngFirst::set_up_rules()`. A First: as comuns, 2 sobem direto
+/// the First (24): the top 2 go up directly, 3rd to 6th go to the promotion play-offs, the bottom 3 go down to the
+/// Second; 5 substitutes and 3 substitutions; 2 rounds, 3 points
+/// Original: `EngFirst::set_up_rules` (0x572d90, eng_first.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x572d90 } (thiscall, ret 0, eng_first.cpp): `EngFirst::set_up_rules()`. A First: as comuns, 2 sobem direto
 /// (+0xbe), 4 vão ao mata-mata de acesso (+0xbf, do 3º ao 6º), nenhum play-off de permanência (+0xc0), 3 caem
 /// (+0xc1), a Premier acima (+0x1c = [0x9cf5bc]) e a Second abaixo (+0x20 = [0x9cf5c4]), 5 reservas no banco
 /// (+0x49) e 3 substituições (+0x4a).
@@ -251,7 +274,10 @@ unsafe fn cqi4_first() -> Vec<(usize, u8, u32)> {
     v
 }
 
-/// { 0x576780 } (thiscall, ret 0, eng_second.cpp): `EngSecond::set_up_rules()`. A Second: como a First, mas 4
+/// the Second (24): 2 go up directly, 3rd to 6th to the play-offs, the bottom 4 go down to the Third
+/// Original: `EngSecond::set_up_rules` (0x576780, eng_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x576780 } (thiscall, ret 0, eng_second.cpp): `EngSecond::set_up_rules()`. A Second: como a First, mas 4
 /// caem (+0xc1); a First acima ([0x9cf5c0]) e a Third abaixo ([0x9cf5c8]).
 unsafe extern "thiscall" fn regras_da_second(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_4 regras da second");
@@ -265,7 +291,11 @@ unsafe fn cqi4_second() -> Vec<(usize, u8, u32)> {
     v
 }
 
-/// { 0x5780c0 } (thiscall, ret 0, eng_third.cpp): `EngThird::set_up_rules()`. A Third: as comuns, 3 sobem direto
+/// the Third (24): 3 go up directly, 4th to 7th to the play-offs, the bottom club goes down to the Conference when the
+/// nation has its lower divisions loaded [inference from nation bit 4] (otherwise there is no league below)
+/// Original: `EngThird::set_up_rules` (0x5780c0, eng_third.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5780c0 } (thiscall, ret 0, eng_third.cpp): `EngThird::set_up_rules()`. A Third: as comuns, 3 sobem direto
 /// (+0xbe), 4 ao mata-mata (+0xbf, do 4º ao 7º), 1 cai (+0xc1), a Second acima ([0x9cf5c4]) e abaixo a Conference
 /// ([0x9cf69c]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c da nação, [[+4]+0x5d]
 /// [inferência]), senão −1; 5 reservas e 3 substituições.
@@ -398,7 +428,11 @@ unsafe fn cqi5_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
     1
 }
 
-/// { 0x574a20 } (thiscall, ret 0, eng_prm.cpp): `EngPrm::create_table()`: 20 clubes ([0x9cf5bc]), cota 250.000 do
+/// the Premier has 20 clubs; the prize fund starts at 250,000 per place; TV pays 12,000,000 to each club (5,000,000 up
+/// to 1999)
+/// Original: `EngPrm::create_table` (0x574a20, eng_prm.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x574a20 } (thiscall, ret 0, eng_prm.cpp): `EngPrm::create_table()`: 20 clubes ([0x9cf5bc]), cota 250.000 do
 /// fundo de prêmios e a TV: 12.000.000 a cada clube depois de 1999 (5.000.000 antes). Fonte 0x9c43b0, linha 0x1ee.
 unsafe extern "thiscall" fn tabela_da_premier(this: usize) -> u32 {
     cqi5_tabela(this, 0x14, 0x9c43b0, 0x1ee, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 0x3d090, || {
@@ -407,19 +441,30 @@ unsafe extern "thiscall" fn tabela_da_premier(this: usize) -> u32 {
     })
 }
 
-/// { 0x576630 } (thiscall, ret 0, eng_second.cpp): `EngSecond::create_table()`: 24 clubes ([0x9cf5c4]), cota 20.000
+/// the Second has 24 clubs; prize fund of 20,000 per place; TV pays 2,500,000 to each club (300,000 up to 1999)
+/// Original: `EngSecond::create_table` (0x576630, eng_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x576630 } (thiscall, ret 0, eng_second.cpp): `EngSecond::create_table()`: 24 clubes ([0x9cf5c4]), cota 20.000
 /// e a TV: 2.500.000 depois de 1999 (300.000 antes). Fonte 0x9c43e8, linha 0x1f5.
 unsafe extern "thiscall" fn tabela_da_second(this: usize) -> u32 {
     cqi5_tabela(this, 0x18, 0x9c43e8, 0x1f5, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, 0x4e20, || cqi5_pagar(this, if cqi5_depois_de_1999() { 0x2625a0 } else { 0x493e0 }, 0))
 }
 
-/// { 0x577f70 } (thiscall, ret 0, eng_third.cpp): `EngThird::create_table()`: 24 clubes ([0x9cf5c8]), cota 10.000
+/// the Third has 24 clubs; prize fund of 10,000 per place; TV pays 1,000,000 to each club (200,000 up to 1999)
+/// Original: `EngThird::create_table` (0x577f70, eng_third.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x577f70 } (thiscall, ret 0, eng_third.cpp): `EngThird::create_table()`: 24 clubes ([0x9cf5c8]), cota 10.000
 /// e a TV: 1.000.000 depois de 1999 (200.000 antes). Fonte 0x9c4424, linha 0x1fa.
 unsafe extern "thiscall" fn tabela_da_third(this: usize) -> u32 {
     cqi5_tabela(this, 0x18, 0x9c4424, 0x1fa, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION, 0x2710, || cqi5_pagar(this, if cqi5_depois_de_1999() { 0xf4240 } else { 0x30d40 }, 0))
 }
 
-/// { 0x572bf0 } (thiscall, ret 0, eng_first.cpp): `EngFirst::create_table()`: 24 clubes ([0x9cf5c0]), cota 70.000
+/// the First has 24 clubs; prize fund of 70,000 per place; TV pays by the division the club came from: 5,877,777 to
+/// those relegated from the Premier and 4,099,999 to those already in the First and those promoted from the Second
+/// (1,000,000 to all up to 1999)
+/// Original: `EngFirst::create_table` (0x572bf0, eng_first.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x572bf0 } (thiscall, ret 0, eng_first.cpp): `EngFirst::create_table()`: 24 clubes ([0x9cf5c0]), cota 70.000
 /// e a TV pela divisão de onde o clube veio (+0x5b): depois de 1999, 5.877.777 aos que caíram da Premier (o registro
 /// de [0x9cf5bc]), 4.099.999 aos que já estavam na First (o próprio registro, +4) e 4.099.999 aos que subiram da
 /// Second ([0x9cf5c4]); antes, 1.000.000 a todos. Fonte 0x9c4374, linha 0x22d.

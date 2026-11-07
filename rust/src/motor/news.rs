@@ -19,7 +19,12 @@ unsafe fn cpo6_tipo(contrato: usize) -> u8 {
 /// A notícia guardada: 0xdf bytes (+0xd6 id, +0xda lida).
 const CPO6_NOTICIA: usize = 0xdf;
 
-/// { 0x735870 } (thiscall, ret 0xc, media.cpp, 3,7 KB): `Media::pick_ai_manager_response(tecnico, jogador, tipo)`: a
+/// the AI manager's response 1, 2 or 3 to a story of the given type about the player: by the contract, the player's
+/// story rating (× 5), the manager's likes and dislikes and chains of draws per family of types; some types add the
+/// player to the manager's rejected list
+/// Original: `Media::pick_ai_manager_response` (0x735870, media.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x735870 } (thiscall, ret 0xc, media.cpp, 3,7 KB): `Media::pick_ai_manager_response(tecnico, jogador, tipo)`: a
 /// resposta (1, 2 ou 3) do técnico da máquina a uma história do `tipo` sobre o jogador. Sem técnico, sem a ficha de
 /// técnico (+0x69), jogador sem ficha (+0x61), o próprio técnico, sem clube (+0x39, senão a seleção +0x24) ou sem
 /// contrato do jogador com ele (0x4cf5f0): 3. A nota é trunc(5 × 0x736720(jogador, clube, contrato, tipo, 3, 0)); sem
@@ -447,7 +452,11 @@ unsafe extern "thiscall" fn resposta_do_tecnico_da_maquina(this: usize, tecnico:
     }
 }
 
-/// { 0x787140 } (thiscall, ret 0xc, news.cpp): `News::mark_item_read(tecnico, id, sincronizar)`: no anel de 100 vagas
+/// marks read the first unread item with the id in the human's ring unless it needs a reply (button 0x782b70), takes it
+/// off the count and, when asked, repeats it for the humans on the same network machine
+/// Original: `News::mark_item_read` (0x787140, news.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x787140 } (thiscall, ret 0xc, news.cpp): `News::mark_item_read(tecnico, id, sincronizar)`: no anel de 100 vagas
 /// do humano (News +8, pelo id − [0xae2364] + 16), a primeira vaga com o `id` ainda não lida (+0xda = 0) cujo botão
 /// (0x782b70 em 0xde1f64) não pede resposta (2) fica lida e sai da conta (+8 da entrada). Sem anel: 0. Senão (mesmo
 /// sem achar), com `sincronizar`, repete (sem sincronizar) para os outros humanos (+0x5f = 1) da mesma máquina da rede
@@ -502,7 +511,11 @@ unsafe extern "thiscall" fn marcar_noticia_lida(this: usize, tecnico: usize, id:
     1
 }
 
-/// { 0x786b70 } (thiscall, ret 0xc, news.cpp): `News::find_item_by_id(tecnico, id, saida)`: copia (0x786010) em `saida`
+/// copies the item with the id to the output: in the human manager's 100-slot ring or, without a manager, among all
+/// slots
+/// Original: `News::find_item_by_id` (0x786b70, news.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x786b70 } (thiscall, ret 0xc, news.cpp): `News::find_item_by_id(tecnico, id, saida)`: copia (0x786010) em `saida`
 /// a notícia com o `id`: com técnico, entre as 100 vagas do anel dele (sem anel: 0); sem técnico, entre todas as vagas
 /// (News +4). Achou: 1; senão 0. Sem id, sem saída ou técnico da máquina: a caixa "Error" e 0.
 unsafe extern "thiscall" fn achar_noticia_pelo_id(this: usize, tecnico: usize, id: u32, saida: usize) -> u32 {
@@ -604,7 +617,11 @@ unsafe fn cpn1_indice_humano(tecnico: usize) -> i32 {
     cpn1_i(tecnico).wrapping_sub(cpn1_i(0xae2364)).wrapping_add(0x10)
 }
 
-/// { 0x786090 } (thiscall, ret 0x18, news.cpp): `News::send_by_scope(noticia, clube, competicao, nacao, continente,
+/// delivers the news item by scope: 0 the club manager, 1 the division's managers, 2 the country's, 3 the continent's,
+/// 4 all, 5 the competition region's; anything else shows the "Error" box
+/// Original: `News::send_by_scope` (0x786090, news.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x786090 } (thiscall, ret 0x18, news.cpp): `News::send_by_scope(noticia, clube, competicao, nacao, continente,
 /// alcance)`: o alcance (char) escolhe a entrega: 0 o técnico do clube (0x7861e0), 1 os da divisão (0x7862d0, pela
 /// competição), 2 os do país (0x7863f0, pela nação), 3 os do continente (0x786640), 4 todos (0x786780), 5 os da região
 /// da competição (0x786860). Fora disso, a caixa "Error" e 0. Devolve o que a entrega devolve.
@@ -644,7 +661,12 @@ unsafe extern "thiscall" fn noticia_pelo_alcance(this: usize, noticia: usize, cl
     dois(this, noticia, alvo)
 }
 
-/// { 0x7861e0 } (thiscall, ret 8, news.cpp): `News::send_to_club_manager(noticia, clube)`: marca o alcance da notícia
+/// marks the scope as club (+0xde = 0) and delivers the item to the club manager (+0xcf) when he is human (among the
+/// last 16 people); in DESLIGADAS since 2026-10-29 (the detour, even passing through, changes the stack residue a later
+/// original reads: the career left be54a138); the copy stays in the code and does not run
+/// Original: `News::send_to_club_manager` (0x7861e0, news.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7861e0 } (thiscall, ret 8, news.cpp): `News::send_to_club_manager(noticia, clube)`: marca o alcance da notícia
 /// como clube (+0xde = 0) e a entrega (0x785d40) ao técnico do clube (+0xcf) se ele for humano (id entre as 16 últimas
 /// pessoas). Sem notícia ou sem clube: a caixa "Error" e 0; sem técnico ou técnico da máquina: 0.
 unsafe extern "thiscall" fn noticia_ao_tecnico_do_clube(this: usize, noticia: usize, clube: usize) -> u32 {
@@ -669,7 +691,13 @@ unsafe extern "thiscall" fn noticia_ao_tecnico_do_clube(this: usize, noticia: us
     entregar(this, noticia, tecnico, 0)
 }
 
-/// { 0x785d40 } (thiscall, ret 0xc, news.cpp): `News::deliver_to_manager(noticia, tecnico, _)`: grava se a notícia é
+/// copies the item into the human's 100-slot ring (created on the first, reallocating the array), gives it an id, skips
+/// a repeat of the last one and, with the manager on holiday, applies the automatic reply for the club and the national
+/// team; in DESLIGADAS since 2026-10-29 (the detour, even passing through, changes the stack residue a later original
+/// reads: the career left be54a138); the copy stays in the code and does not run
+/// Original: `News::deliver_to_manager` (0x785d40, news.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x785d40 } (thiscall, ret 0xc, news.cpp): `News::deliver_to_manager(noticia, tecnico, _)`: grava se a notícia é
 /// importante para ele (+4, 0x784eb0) e zera +0xda; acha a entrada do humano (News +8); na primeira notícia dele, o anel
 /// de 100 vagas no fim do vetor das notícias (News +0, conta de vagas em +4, realloc 0x945667; sem memória, caixa e 0)
 /// com as vagas zeradas (+0xd6 = 0, +0xda = 1). Notícia sem id (+0xd6) recebe o próximo (News +0x10). Se a vaga anterior
@@ -853,7 +881,11 @@ fn cpn2_volta(k: i32, inicio: i32) -> i32 {
     if k < inicio { inicio + 0x63 } else { k }
 }
 
-/// { 0x7874b0 } (thiscall, ret 8, news.cpp): `News::auto_respond_all(tecnico, clube)`: da notícia mais nova para a mais
+/// from the newest to the oldest item of the human's inbox, up to the empty slot, applies the automatic reply
+/// (0x784100) for the club
+/// Original: `News::auto_respond_all` (0x7874b0, news.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7874b0 } (thiscall, ret 8, news.cpp): `News::auto_respond_all(tecnico, clube)`: da notícia mais nova para a mais
 /// antiga do anel do humano, até a primeira vaga vazia (+0xd6 = 0), dá a resposta automática (0x784100) pelo `clube`.
 /// Sem técnico ou técnico da máquina: a caixa "Error" e 0; sem anel ou no fim: 1. Chamada ao sair de férias, ao ser
 /// demitido e ao ser contratado.
@@ -886,7 +918,11 @@ unsafe extern "thiscall" fn responder_todas_as_noticias(this: usize, tecnico: us
     }
 }
 
-/// { 0x787350 } (thiscall, ret 8, news.cpp): `News::has_urgent_items(tecnico, so_urgentes)`: sem `so_urgentes`, se há
+/// without "urgent only", whether there is an unread item; with it, whether an item needs a reply (the text returns 2)
+/// or is important and unread
+/// Original: `News::has_urgent_items` (0x787350, news.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x787350 } (thiscall, ret 8, news.cpp): `News::has_urgent_items(tecnico, so_urgentes)`: sem `so_urgentes`, se há
 /// notícia não lida (0x786fe0 > 0). Com ele, da mais nova para a mais antiga do anel do humano, até a primeira vaga vazia:
 /// 1 se uma pede resposta (o texto 0x782b70 em 0xde1f64 devolve 2) ou é importante (+4 = 1) e não lida (+0xda = 0).
 /// Técnico da máquina: a caixa "Error" e 0.
@@ -925,7 +961,10 @@ unsafe extern "thiscall" fn tecnico_tem_noticia_pendente(this: usize, tecnico: u
     }
 }
 
-/// { 0x7858c0 } (thiscall, ret 0xc, news.cpp): `NewsItem::set_slot_string(campo, texto, proximo)`: copia o `texto` nos
+/// copies the text into the item slots from the given slot and returns the first free slot after it (at most 50)
+/// Original: `NewsItem::set_slot_string` (0x7858c0, news.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x7858c0 } (thiscall, ret 0xc, news.cpp): `NewsItem::set_slot_string(campo, texto, proximo)`: copia o `texto` nos
 /// campos da notícia a partir do `campo` (strncpy 0x9466d0 em +5 + 4·campo, até 200 − 4·campo bytes), termina a área
 /// (+0xcc = 0) e, com `proximo`, grava o primeiro campo livre depois do texto (o tamanho com o zero arredondado para
 /// 4, em campos, mais o `campo`; no máximo 50). Campo fora de 0..49 ou sem texto: a caixa "Error" e 0; senão 1.
@@ -998,7 +1037,10 @@ unsafe extern "thiscall" fn comparar_gravar_texto_na_noticia(this: usize, campo:
 // ---------- 247a leva: as notícias para os técnicos humanos de um continente e da região da competição, e se a notícia é importante para a pessoa ----------
 
 
-/// { 0x786640 } (thiscall, ret 8, news.cpp): `News::send_to_continent_managers(noticia, continente)`: alcance do
+/// continent scope (+0xde = 3) and delivery to every active human manager whose club or nation is in the continent
+/// Original: `News::send_to_continent_managers` (0x786640, news.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x786640 } (thiscall, ret 8, news.cpp): `News::send_to_continent_managers(noticia, continente)`: alcance do
 /// continente (+0xde = 3) e a entrega (0x785d40 com 0) a cada técnico humano ativo cujo clube (+0x39) tem a nação
 /// (+0x53) no `continente` (+0x71) ou cuja nação (+0x1a) está nele. Devolve 1, ou 0 na primeira recusada. Notícia ou
 /// continente nulos: a original (caixa "Error").
@@ -1020,7 +1062,10 @@ unsafe extern "thiscall" fn noticia_para_os_tecnicos_do_continente(this: usize, 
     }) as u32
 }
 
-/// { 0x786860 } (thiscall, ret 8, news.cpp): `News::send_to_comp_region(noticia, comp)`: com a nação da competição
+/// to the managers of the competition's nation (0x786520), else of its continent (0x786640), else to all (0x786780)
+/// Original: `News::send_to_comp_region` (0x786860, news.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x786860 } (thiscall, ret 8, news.cpp): `News::send_to_comp_region(noticia, comp)`: com a nação da competição
 /// (+0x5d), para os técnicos da nação (0x786520); senão, com o continente (+0x59), para os do continente (0x786640);
 /// senão para todos (0x786780). Devolve o que a entrega devolve. Notícia ou competição nulas: a original (caixa
 /// "Error").
@@ -1048,7 +1093,10 @@ unsafe fn cpk5_tecnico_do_clube(noticia: usize, o: usize) -> usize {
     read_usize(read_usize(0xae23b4).wrapping_add(read_usize(noticia + o).wrapping_mul(0x245)) + 0xcf)
 }
 
-/// { 0x784eb0 } (thiscall, ret 4, news.cpp): `NewsItem::is_important_for(pessoa)`: a notícia é importante para a
+/// whether the news is important for the person, by category and type (bids on the person's club, the humans...)
+/// Original: `NewsItem::is_important_for` (0x784eb0, news.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x784eb0 } (thiscall, ret 4, news.cpp): `NewsItem::is_important_for(pessoa)`: a notícia é importante para a
 /// pessoa (o byte +4 que a entrega 0x785d40 grava)? Pela categoria (0x785670) e o tipo (+0): categoria 2, os tipos 7 a
 /// 0xb, 0x27 e 0x28; categoria 4, 0xbb8, 0xbb9 e 0xbc4; categoria 5, uma lista fixa, 0xfa1 se a pessoa é o técnico do
 /// clube do dado 5 (+0x19) e 0xfb6 se é o do dado 4 (+0x15) ou do 5; categoria 6, 0x1770 se o dado 0 (+5) é um dos
@@ -1107,7 +1155,10 @@ unsafe extern "thiscall" fn comparar_noticia_importante_para_a_pessoa(noticia: u
 
 
 
-/// { 0x785a20 } (thiscall, ret 0xc, news.cpp): `NewsItem::get_slot_string(dado, destino, n)`: copia o texto guardado a
+/// copies the text stored from the slot (+5 + 4 × slot) into the buffer (strncpy) and clears the last byte; returns 1
+/// Original: `NewsItem::get_slot_string` (0x785a20, news.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x785a20 } (thiscall, ret 0xc, news.cpp): `NewsItem::get_slot_string(dado, destino, n)`: copia o texto guardado a
 /// partir do dado `dado` (+5 + 4 × dado) para `destino` como o strncpy (0x9466d0: até o zero, completando com zeros
 /// até `n`) e zera o último byte (`destino[n − 1]`). Devolve 1. Dado fora de 0..49, destino nulo ou `n` < 1: a
 /// original (caixa "Error" e 0).
@@ -1128,7 +1179,10 @@ unsafe extern "thiscall" fn texto_do_dado_da_noticia(noticia: usize, dado: u32, 
     1
 }
 
-/// { 0x74ae60 } (thiscall, ret 4, media.cpp, quadro SEH sem destrutor): `Media::post_financial_trouble_news(clube)`:
+/// news 0x1790 (id, reputation, draw of 2) to the managers of the nation, or to all for a big club (9000+)
+/// Original: `Media::post_financial_trouble_news` (0x74ae60, media.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x74ae60 } (thiscall, ret 4, media.cpp, quadro SEH sem destrutor): `Media::post_financial_trouble_news(clube)`:
 /// com o clube, a nação (+0x53), a ficha (+0x69, com +0x38) e a divisão (+0x57), monta a notícia 0x1790 numa local
 /// (0x77bbe0 com 0) com os dados 0 = id do clube, 1 = reputação (+0x80) e 2 = sorteio(2) (0x90cfc0); clube de
 /// reputação 9000 ou mais numa divisão com +0x69 acima de 12: para todos os técnicos (0x786780); senão para os da
@@ -1171,7 +1225,10 @@ unsafe fn cpk6_clube(clube: usize) -> usize {
     read_usize(read_usize(0xb74c26 + 0x300 * *(0xb77c7a as *const i16) as isize as usize) + 0x39)
 }
 
-/// { 0x7f9190 } (thiscall, ret 8, scout_manager.cpp; `this` não é lido): `SCOUT_MANAGER::can_club_scout_nation(nacao,
+/// poor (balance < 1,000,000) and small (reputation < 5000) club outside the nation's region: 0; else 1
+/// Original: `SCOUT_MANAGER::can_club_scout_nation` (0x7f9190, scout_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7f9190 } (thiscall, ret 8, scout_manager.cpp; `this` não é lido): `SCOUT_MANAGER::can_club_scout_nation(nacao,
 /// clube)`: o clube (ou o do humano da vez) não cobre a nação só se tem as finanças (0x5a0590 em [0xae2a38]) com saldo
 /// de 64 bits abaixo de 1.000.000, reputação (+0x80) abaixo de 5000 e a região (+0x76) da nação dele (+0x53) diferente
 /// da região da `nacao`: 0. Senão 1. Sem clube nenhum: a original (caixa "Error" e 0).
@@ -1246,7 +1303,10 @@ unsafe fn cpj3_entregar(this: usize, noticia: usize, alcance: u8, passa: impl Fn
     true
 }
 
-/// { 0x786780 } (thiscall, ret 4, news.cpp): `News::send_to_all_managers(noticia)`: alcance de todos (+0xde = 4) e a
+/// all scope (+0xde = 4) and delivery (0x785d40) to every active human manager; 1, or 0 on the first refusal
+/// Original: `News::send_to_all_managers` (0x786780, news.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x786780 } (thiscall, ret 4, news.cpp): `News::send_to_all_managers(noticia)`: alcance de todos (+0xde = 4) e a
 /// entrega (0x785d40) a cada técnico humano ativo. Devolve 1, ou 0 na primeira recusada. Notícia nula: a original
 /// (caixa "Error").
 unsafe extern "thiscall" fn noticia_para_todos_os_tecnicos(this: usize, noticia: usize) -> u32 {
@@ -1256,7 +1316,11 @@ unsafe extern "thiscall" fn noticia_para_todos_os_tecnicos(this: usize, noticia:
     cpj3_entregar(this, noticia, 4, |_| true) as u32
 }
 
-/// { 0x7862d0 } (thiscall, ret 8, news.cpp): `News::send_to_division_managers(noticia, divisao)`: alcance da divisão
+/// division scope (+0xde = 1) and delivery to every active human manager with a club in the division (+0x57); 1, or 0
+/// on the first refusal
+/// Original: `News::send_to_division_managers` (0x7862d0, news.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7862d0 } (thiscall, ret 8, news.cpp): `News::send_to_division_managers(noticia, divisao)`: alcance da divisão
 /// (+0xde = 1) e a entrega a cada técnico humano ativo com clube (+0x39) na `divisao` (+0x57). Devolve 1, ou 0 na
 /// primeira recusada. Notícia ou divisão nulas: a original (caixa "Error").
 unsafe extern "thiscall" fn noticia_para_os_tecnicos_da_divisao(this: usize, noticia: usize, divisao: usize) -> u32 {
@@ -1269,7 +1333,11 @@ unsafe extern "thiscall" fn noticia_para_os_tecnicos_da_divisao(this: usize, not
     }) as u32
 }
 
-/// { 0x7863f0 } (thiscall, ret 8, news.cpp): `News::send_to_nation_managers(noticia, nacao)`: alcance da nação (+0xde
+/// nation scope (+0xde = 2) and delivery to every active human manager whose club or national side belongs to the
+/// nation (+0x53); returns 0
+/// Original: `News::send_to_nation_managers` (0x7863f0, news.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7863f0 } (thiscall, ret 8, news.cpp): `News::send_to_nation_managers(noticia, nacao)`: alcance da nação (+0xde
 /// = 2) e a entrega a cada técnico humano ativo cujo clube (+0x39) ou seleção (+0x24) é da `nacao` (+0x53). Devolve 0.
 /// Notícia ou nação nulas: a original (caixa "Error").
 unsafe extern "thiscall" fn noticia_para_os_tecnicos_do_pais(this: usize, noticia: usize, nacao: usize) -> u32 {
@@ -1303,7 +1371,11 @@ unsafe extern "thiscall" fn comparar_noticia_para_os_tecnicos_do_pais(this: usiz
 // ---------- 245a leva: a notícia para os técnicos humanos de uma nação, a missão do olheiro da busca e se a copa terminou ----------
 
 
-/// { 0x786520 } (thiscall, ret 8, news.cpp): `News::send_to_nation_club_managers(noticia, nacao)`: a notícia fica com
+/// nation scope (+0xde = 2) and delivery (0x785d40) to every active human manager with a club of the nation; the first
+/// refusal stops
+/// Original: `News::send_to_nation_club_managers` (0x786520, news.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x786520 } (thiscall, ret 8, news.cpp): `News::send_to_nation_club_managers(noticia, nacao)`: a notícia fica com
 /// o alcance da nação (+0xde = 2) e vai (0x785d40 com 0) para cada um dos 16 técnicos humanos (os últimos 16 de
 /// [0xae23bc], 0x6e bytes) ativos (+0x5f = 1) com clube (+0x39) da `nacao` (+0x53); a primeira entrega recusada (0)
 /// encerra. Devolve 0. Notícia ou nação nulas: a original (caixa "Error").
@@ -1344,7 +1416,11 @@ unsafe fn cpi6_olheiro(this: usize) -> Option<usize> {
     Some(p)
 }
 
-/// { 0x7aefd0 } (thiscall, ret 0x18, player_search.cpp): `PLAYER_SEARCH::get_scout_assignment(clube, nacao, regiao,
+/// with the scout checked and some assignment set (+0x190, +0x18c, +0x194, +0x195, +0x199, +0x19d), copies the six and
+/// returns 1; else 0
+/// Original: `PLAYER_SEARCH::get_scout_assignment` (0x7aefd0, player_search.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x7aefd0 } (thiscall, ret 0x18, player_search.cpp): `PLAYER_SEARCH::get_scout_assignment(clube, nacao, regiao,
 /// comp, base, adversario)`: com o olheiro conferido, se alguma das missões está marcada (clube +0x190, nação +0x18c,
 /// região +0x194 byte, competição +0x195 acima de −1; base +0x199, adversário +0x19d não nulos), copia as seis para
 /// as saídas e devolve 1; nenhuma: 0. Olheiro que não confere: a original (caixa "Error" e 0).
@@ -1370,7 +1446,11 @@ unsafe extern "thiscall" fn missao_do_olheiro(this: usize, clube: *mut u32, naca
     1
 }
 
-/// { 0x521e00 } (thiscall, ret 8, Cup.cpp): `Cup::check_complete(fases, _)`: 0 se a copa não começou (+0xb1). Com
+/// the cup started (+0xb1) and, asking for the stages with no stage set (+0x44), all up to the current complete and the
+/// current is the last
+/// Original: `Cup::check_complete` (0x521e00, Cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x521e00 } (thiscall, ret 8, Cup.cpp): `Cup::check_complete(fases, _)`: 0 se a copa não começou (+0xb1). Com
 /// `fases` = 1 e sem fase marcada (+0x44 = 0xff): cada fase de 0 até a atual (+0x30, vetor +0xc) tem de estar completa
 /// (método +0x10 com 0, 1) e a atual tem de ser a última (+0x2c − 1); senão 0. Fora isso, 1.
 unsafe extern "thiscall" fn copa_completa(this: usize, fases: u32, _x: u32) -> u8 {
@@ -1437,7 +1517,10 @@ unsafe fn noticia_da_caixa(noticias: usize, inicio: i32, k: i32) -> usize {
     (*(noticias as *const usize)).wrapping_add((inicio.wrapping_add(k) as usize).wrapping_mul(0xdf))
 }
 
-/// { 0x786fe0 } (thiscall, ret 8, news.cpp): as notícias não lidas do técnico humano. Sem categoria (0):
+/// the unread news in a human manager's inbox, in total or for one category
+/// Original: `News::count_unread` (0x786fe0, news.cpp, thiscall).
+///
+/// [pt] { 0x786fe0 } (thiscall, ret 8, news.cpp): as notícias não lidas do técnico humano. Sem categoria (0):
 /// o total da entrada (+8, negativo vira 0). Com categoria: das 100 notícias da caixa (início na entrada
 /// +0; −1 = vazia, 0), as ocupadas (+0xd6) da categoria (0x785670) ainda não lidas (+0xda = 0). Técnico
 /// nulo ou fora da faixa: a original (caixa de erro).
@@ -1493,7 +1576,10 @@ unsafe fn alvo_da_marca(noticias: usize, tecnico: usize, id: u32, vaga: i32, cop
         .ok_or(())
 }
 
-/// { 0x786d30 } (thiscall, ret 0x14, news.cpp): grava `valor` na vaga `vaga` (dword +5 + 4 × vaga) da
+/// writes a value into a slot of a news item in the human manager's inbox and into its local copy
+/// Original: `News::set_item_slot` (0x786d30, news.cpp, thiscall).
+///
+/// [pt] { 0x786d30 } (thiscall, ret 0x14, news.cpp): grava `valor` na vaga `vaga` (dword +5 + 4 × vaga) da
 /// notícia `id` (+0xd6) da caixa do técnico humano, primeiro na `copia` (se houver) e depois na da caixa;
 /// 1 se achou. Caixa vazia: só a cópia, 0. Casos de erro: a original.
 unsafe extern "thiscall" fn gravar_marca_da_noticia(noticias: usize, tecnico: usize, id: u32, vaga: i32, valor: u32, copia: usize) -> u32 {
@@ -1513,7 +1599,10 @@ unsafe extern "thiscall" fn gravar_marca_da_noticia(noticias: usize, tecnico: us
     }
 }
 
-/// { 0x7875e0 } (stdcall, ret 4, news.cpp): 1 se um humano dirige o `clube` (0x600a50 com férias
+/// whether a human manager runs the club, ignoring holidays
+/// Original: `news_club_has_human_manager` (0x7875e0, news.cpp, stdcall).
+///
+/// [pt] { 0x7875e0 } (stdcall, ret 4, news.cpp): 1 se um humano dirige o `clube` (0x600a50 com férias
 /// ignoradas); antes de devolver, consulta as férias (0x5fd210 em [0xb63c98]) do técnico do clube
 /// (0x53ca90), sem usar a resposta. Clube nulo: 0.
 unsafe extern "stdcall" fn clube_de_tecnico_humano(clube: usize) -> u32 {

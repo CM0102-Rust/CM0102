@@ -7,7 +7,12 @@ unsafe fn cqo8_campeao_do_turno(this: usize, k: usize) -> usize {
     read_usize(read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1))
 }
 
-/// { 0x438230 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::advance_stage()`, a fase seguinte do Paranaense (dois turnos, as fases 0
+/// The Parana state league has two halves (stages 0 and 1, each a round-robin league) and, if needed, a final (stage
+/// 2): the next stage moves the current stage on and, at the end of the second half, builds the final; past the last
+/// stage it is an error (the box)
+/// Original: `BraRegParana::advance_stage` (0x438230, bra_reg_parana.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x438230 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::advance_stage()`, a fase seguinte do Paranaense (dois turnos, as fases 0
 /// e 1, cada um um League_Stage, e a final, a fase 2). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa de
 /// erro da linha 0x202 e nada mais. Senão +0x30 sobe um e, ao chegar a 2 (o fim do segundo turno), monta a final
 /// (0x4382c0, call direto com o ecx da liga).
@@ -24,7 +29,12 @@ unsafe extern "thiscall" fn cqo8_fase_seguinte_do_paranaense(this: usize) {
     }
 }
 
-/// { 0x4382c0 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::create_final_stage()`, da fase seguinte quando o segundo turno
+/// The Parana final: the winners of the first and second halves meet over two games [inference: home and away], the
+/// first-half winner as seed 0; if the same club wins both halves, it is champion without a final (the season ends with
+/// the two stages and it gets status 5, champion, in the three tables)
+/// Original: `BraRegParana::create_final_stage` (0x4382c0, bra_reg_parana.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4382c0 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::create_final_stage()`, da fase seguinte quando o segundo turno
 /// acaba. Os dois campeões dos turnos (o clube da primeira linha da tabela de cada League_Stage) vão para uma lista
 /// de 2 (malloc 0x944e46 de 8; sem memória: a caixa da linha 0x226 e volta).
 /// - O mesmo clube nos dois turnos: é o campeão sem final. +0x30 = 1, +0x2c = 2 (a temporada acaba com as duas fases),
@@ -95,7 +105,12 @@ unsafe extern "thiscall" fn cqo8_final_do_paranaense(this: usize) {
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 2);
 }
 
-/// { 0x4384e0 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::record_season_honours()` (slot 13), o fim da temporada do Paranaense.
+/// The end of the Parana season: with a final, the honours come from the final; without one, from the league, and the
+/// champion gets 175,000 and the runner-up 100,000 in prize money (to the balance, with the prize money news). Then,
+/// once the twelve state leagues are over, the champions go into the Champions Cup
+/// Original: `BraRegParana::record_season_honours` (0x4384e0, bra_reg_parana.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4384e0 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::record_season_honours()` (slot 13), o fim da temporada do Paranaense.
 /// - Com final (+0x30 = 2): o histórico da final (o slot 13, +0x30, da fase [+0xc]+8) e, em salto final, a 0x42bba0
 ///   (`bra_nat_first_fill_champions_cup_entrants`, cdecl sem argumentos: quando os doze estaduais terminam, põe os
 ///   campeões na Copa dos Campeões); devolve o eax dela.
@@ -234,7 +249,14 @@ fn cqi9_regioes(o: usize) -> [(usize, usize); 4] {
     [(o, 0x3a), (o + 0x3c, 0xa9 - 0x3c), (o + 0xab, 0xba - 0xab), (o + 0xbe, 0xee - 0xbe)]
 }
 
-/// { 0x437fc0 } (thiscall, bra_reg_parana.cpp): `BraRegParana::set_up_rules` (slot 36), as regras e o calendário;
+/// Parana: no top places in the overall table (each half is a league stage of its own, created by add_result 0x4386e0,
+/// and decides the title [inference]); 4 relegated; double round robin; win 3, draw 1; tie-break by head-to-head, then
+/// goal difference; no play-offs in the table; no league above or below (the relegated go to the non-playable pool
+/// [inference]); rule word 8 (the top places lead to the next stage; no champion band); 7 bench substitutes and 3
+/// substitutions; category 2 (league) matches. Then the main stage schedule
+/// Original: `BraRegParana::set_up_rules` (0x437fc0, bra_reg_parana.cpp, thiscall).
+///
+/// [pt] { 0x437fc0 } (thiscall, bra_reg_parana.cpp): `BraRegParana::set_up_rules` (slot 36), as regras e o calendário;
 /// devolve 1.
 unsafe extern "thiscall" fn cqi9_regras_do_paranaense(this: usize) -> u32 {
     cqi9_regras_parana(this);
@@ -255,7 +277,14 @@ unsafe extern "thiscall" fn comparar_cqi9_regras_do_paranaense(this: usize) -> u
     r
 }
 
-/// { 0x439430 } (thiscall, bra_reg_pern.cpp): `BraRegPern::set_up_rules`, nas vtables do Norte (0x968338) e do
+/// North and Pernambuco (the same routine in the two vtables): 4 top places (the final stage of 4); 2 relegated; double
+/// round robin; win 3, draw 1; tie-break by head-to-head, then goal difference; no play-offs in the table; no league
+/// above or below (the relegated go to the non-playable pool [inference]); rule word 8 (the top places lead to the next
+/// stage; no champion band); 7 bench substitutes and 3 substitutions; category 2 (league) matches. Then the main stage
+/// schedule
+/// Original: `BraRegPern::set_up_rules` (0x439430, bra_reg_pern.cpp, thiscall).
+///
+/// [pt] { 0x439430 } (thiscall, bra_reg_pern.cpp): `BraRegPern::set_up_rules`, nas vtables do Norte (0x968338) e do
 /// Pernambucano (0x968554); devolve 1.
 unsafe extern "thiscall" fn cqi9_regras_do_pernambucano(this: usize) -> u32 {
     cqi9_regras_pernambucano(this);
@@ -275,7 +304,15 @@ unsafe extern "thiscall" fn comparar_cqi9_regras_do_pernambucano(this: usize) ->
     r
 }
 
-/// { 0x43a600 } (thiscall, bra_reg_rio.cpp): `BraRegRio::set_up_rules`, nas vtables do Mineiro (0x968284) e do
+/// Minas Gerais and Rio (the same routine in the two vtables): no top places in the overall table (the halves have
+/// stages of their own, created by add_result 0x43af20 / 0x435130 [inference: they decide the title]); 2 relegated;
+/// double round robin; win 3, draw 1; tie-break by head-to-head, then goal difference; no play-offs in the table; no
+/// league above or below (the relegated go to the non-playable pool [inference]); rule word 8 (the top places lead to
+/// the next stage; no champion band); 7 bench substitutes and 3 substitutions; category 2 (league) matches. Then the
+/// main stage schedule
+/// Original: `BraRegRio::set_up_rules` (0x43a600, bra_reg_rio.cpp, thiscall).
+///
+/// [pt] { 0x43a600 } (thiscall, bra_reg_rio.cpp): `BraRegRio::set_up_rules`, nas vtables do Mineiro (0x968284) e do
 /// Carioca (0x968608); devolve 1.
 unsafe extern "thiscall" fn cqi9_regras_do_carioca(this: usize) -> u32 {
     cqi9_regras_carioca(this);

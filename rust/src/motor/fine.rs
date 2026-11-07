@@ -37,7 +37,11 @@ unsafe fn cpz9_clube_humano(clube: usize) -> bool {
 static mut CPZ9_ENSAIO: bool = false;
 static mut CPZ9_MONTARIA: bool = false;
 
-/// { 0x41add0 } (thiscall, ret 8, awol.cpp, SEH da data e da notícia local, sem destrutor): `AWOL::
+/// the record (player, club, today) in the incident list; human club: a random coach and news 0x138f; AI club with a
+/// manager: draw(+0x14) above draw(10) leads to the fine, period by the manager's rating
+/// Original: `AWOL::report_poor_fitness` (0x41add0, awol.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x41add0 } (thiscall, ret 8, awol.cpp, SEH da data e da notícia local, sem destrutor): `AWOL::
 /// report_poor_fitness(jogador, clube)`, pelo diário das pessoas (0x5ce2d0: a queda de condição grande do dia). O
 /// registro (jogador, clube, hoje e um byte que na original é sobra de pilha) entra na lista dos incidentes ([this+8],
 /// 0x68d0d0, 0x11 bytes). Clube de humano (0x7875e0): um treinador das 5 vagas (+0x19f, sorteio(5), até achar um ou
@@ -139,7 +143,11 @@ unsafe extern "thiscall" fn comparar_incidente_de_forma(this: usize, jogador: us
     PLACAR.registrar(igual, || format!("incidente_de_forma(jogador {:#x}, clube {:#x}) plano={:x?} lista: no {:#x} dados {:#x}", jogador, clube, plano, no, dados));
 }
 
-/// { 0x5a74b0 } (stdcall, ret 0x14, Fine.cpp, SEH da notícia local, sem destrutor): `post_fine_reaction_news(jogador,
+/// player under contract at a human club: news 0xbc6 with reason, reaction, draw(2), personality, period, contract
+/// type, future transfer and effects
+/// Original: `post_fine_reaction_news` (0x5a74b0, Fine.cpp, stdcall, ret 0x14).
+///
+/// [pt] { 0x5a74b0 } (stdcall, ret 0x14, Fine.cpp, SEH da notícia local, sem destrutor): `post_fine_reaction_news(jogador,
 /// motivo, reação, prazo, efeitos)`, pela multa (0x5a5980, cinco chamadas). Sem jogador, sem contrato (0x4cf5a0, em
 /// [0xae1080]), sem o clube dele ou sem o contrato do clube (0x4cf5f0): nada; jogador de clube (+0x39) sem humano
 /// (0x7875e0): nada. A notícia 0xbc6 ao clube do contrato: o jogador (id e chaves), motivo, reação, sorteio(2), a
@@ -219,7 +227,10 @@ unsafe extern "stdcall" fn comparar_noticia_reacao_a_multa(jogador: usize, motiv
     PLACAR.registrar(igual, || format!("noticia_reacao_a_multa(jogador {:#x}) montaria={} original={:x?} rust={:x?}", jogador, montaria, mo, mr));
 }
 
-/// { 0x5a7f20 } (stdcall, ret 0xc, Fine.cpp, SEH da notícia local, sem destrutor): `post_coach_fine_feedback_news
+/// player and coach with a record and nation, player with a club: news 0x1394 with the outcome and draw(5)
+/// Original: `post_coach_fine_feedback_news` (0x5a7f20, Fine.cpp, stdcall, ret 0xc).
+///
+/// [pt] { 0x5a7f20 } (stdcall, ret 0xc, Fine.cpp, SEH da notícia local, sem destrutor): `post_coach_fine_feedback_news
 /// (jogador, treinador, desfecho)`, pelo diário das multas (0x5a5820: o retorno marcado vencido, mais de 30 dias de
 /// casa e sem lesão grave; a original deixa o Fine em ecx). Os dois com ficha (+0x61) e nação (+0x1a), o jogador com
 /// clube (+0x39): a notícia 0x1394 (o jogador e o treinador, id e chaves; o desfecho; sorteio(5)) ao clube do jogador.

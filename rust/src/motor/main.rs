@@ -25,7 +25,11 @@ unsafe fn cqb10_achar(this: usize, dado: usize) -> usize {
     0
 }
 
-/// { 0x68d1f0 } (thiscall, ret 4): `LLIST::remove(dado)`: o primeiro nó com os bytes do `dado` (cqb10_achar) sai da
+/// the first node whose item has the same bytes as the data leaves the list (head, tail, count and cursor fixed) and is
+/// freed with its item; 1 when removed
+/// Original: `LLIST::remove` (0x68d1f0, manager_manager.cpp, thiscall).
+///
+/// [pt] { 0x68d1f0 } (thiscall, ret 4): `LLIST::remove(dado)`: o primeiro nó com os bytes do `dado` (cqb10_achar) sai da
 /// lista: a cabeça (+2) ou o próximo do anterior, a cauda (+6) ou o anterior do próximo, a conta (+0, palavra) − 1, o
 /// cursor (+0xa) anda se estava nele; o item (0x68d010) e o nó (0x944c94) são liberados. Devolve 1; sem achar, 0. Por
 /// ~77 chamadores (listas de ofertas, faltas, ultimatos, vagas de técnico, amistosos...).
@@ -86,7 +90,10 @@ unsafe extern "thiscall" fn comparar_tirar_da_lista(this: usize, dado: usize) ->
     r
 }
 
-/// { 0x68d080 } (thiscall, ret 0): `LLIST::clear()`: libera, da cabeça (+2) em diante, o item (0x68d010) e o nó
+/// frees every node and item of the list and zeroes the count, head, tail and cursor
+/// Original: `LLIST::clear` (0x68d080, manager_manager.cpp, thiscall).
+///
+/// [pt] { 0x68d080 } (thiscall, ret 0): `LLIST::clear()`: libera, da cabeça (+2) em diante, o item (0x68d010) e o nó
 /// (0x944c94) de cada um (a cabeça vai andando) e zera a conta (+0, palavra), a cabeça, a cauda (+6) e o cursor (+0xa).
 unsafe extern "thiscall" fn esvaziar_lista(this: usize) {
     let liberar_item: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_NODE_DESTRUCTOR_LLIST_NODE);
@@ -111,7 +118,10 @@ unsafe extern "thiscall" fn comparar_esvaziar_lista(this: usize) {
     PLACAR.registrar(depois == [0u8; 14], || format!("esvaziar_lista({:#x}) cabeçalho {:x?}", this, depois));
 }
 
-/// { 0x68d2e0 } (thiscall, ret 0): `LLIST::get_current()`: o item do nó do cursor (+0xa), sem andar; sem cursor, 0.
+/// the item of the cursor node, without moving; with no cursor, 0
+/// Original: `LLIST::get_current` (0x68d2e0, manager_manager.cpp, thiscall).
+///
+/// [pt] { 0x68d2e0 } (thiscall, ret 0): `LLIST::get_current()`: o item do nó do cursor (+0xa), sem andar; sem cursor, 0.
 unsafe extern "thiscall" fn item_do_cursor(this: usize) -> usize {
     let no = read_usize(this + 0xa);
     if no == 0 {

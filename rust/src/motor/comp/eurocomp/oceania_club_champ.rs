@@ -8,7 +8,12 @@ unsafe fn cqt10_escolhido(this: usize, k: usize) -> usize {
     read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4) // cqt10: o escolhido k
 }
 
-/// { 0x797b40 } (thiscall, ret 8, oceania_club_champ.cpp; a virtual +0x14; quadro SEH só das datas locais, sem
+/// rule: the Oceania Club Championship is drawn on the start day (+0xb6/+0xb8) and only on the call without `completo`:
+/// the 8 clubs, the predicted positions, group A in the cup's own table, the fixtures and group B as a stage; before
+/// that day the cup does not even run the league day; an error while building returns 1 without the league day
+/// Original: `OceaniaClubChamp::update_for_date` (0x797b40, oceania_club_champ.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x797b40 } (thiscall, ret 8, oceania_club_champ.cpp; a virtual +0x14; quadro SEH só das datas locais, sem
 /// destrutor): `OceaniaClubChamp::update_for_date(hoje, completo)`, o dia do Campeonato de Clubes da Oceania. A data do
 /// sorteio é a de 0x549ef0(+0xb6, +0xb8 + +0x40) (lea ecx, local; push ano; push dia -> thiscall, ret 8, pura). Antes
 /// dela (o ano de hoje menor, sem sinal; ou o mesmo ano e o dia de hoje menor, com sinal) a rotina volta 0 sem o dia de
@@ -86,7 +91,11 @@ unsafe extern "thiscall" fn comparar_cqt10_oceania_dia(this: usize, hoje: usize,
     r
 }
 
-/// { 0x7978c0 } (thiscall, ret 0, oceania_club_champ.cpp): `OceaniaClubChamp::create_group_a_table()`: 4 times (+0x3e), a
+/// rule: group A of the Oceania Club Championship has the first 4 chosen clubs, each in the row of its order; human
+/// managers get the group draw news
+/// Original: `OceaniaClubChamp::create_group_a_table` (0x7978c0, oceania_club_champ.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x7978c0 } (thiscall, ret 0, oceania_club_champ.cpp): `OceaniaClubChamp::create_group_a_table()`: 4 times (+0x3e), a
 /// tabela +0xb1 (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 linhas de 0x3b bytes; sem memória, a caixa da linha
 /// 0x182 e devolve 0), cada linha i com o escolhido i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push
 /// clube; push i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this ->
@@ -135,7 +144,11 @@ unsafe extern "thiscall" fn comparar_cqt10_oceania_grupo_a(this: usize) -> u32 {
     r
 }
 
-/// { 0x797e80 } (thiscall, ret 0, oceania_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
+/// rule: group B of the Oceania Club Championship is a league stage with chosen clubs 4 to 7, the cup's rules and year
+/// and the cup's round table for stage 0 (10, 12 and 14 January); human managers get the news
+/// Original: `OceaniaClubChamp::create_group_b_stage` (0x797e80, oceania_club_champ.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x797e80 } (thiscall, ret 0, oceania_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
 /// normal): `OceaniaClubChamp::create_group_b_stage()`: os times num vetor de 4 ponteiros (0x944e46(0x10): push; add esp,
 /// 4 -> cdecl; sem memória, a caixa da linha 0x296 e 0): os escolhidos 4 a 7 (+0xee); a tabela das rodadas pela virtual
 /// +0x3c (push 0; push &id; push &rodadas; push 0; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xee) push; add
@@ -366,6 +379,16 @@ unsafe fn cqt11_clubes(this: usize) -> u32 {
     1
 }
 
+/// rule: the Oceania Club Championship has 8 clubs in 4 pairs, each pair split between groups A and B by a draw: the
+/// Australian league champion (without one, the best Australian club) and the best New Zealand club; the best of Fiji
+/// and of Tahiti; two Melanesian clubs of different nations; two Polynesian clubs of different nations (each list
+/// sorted by reputation, with the top band shuffled)
+/// Original: `OceaniaClubChamp::select_qualified_clubs` (0x798220, oceania_club_champ.cpp, thiscall, ret 0).
+///
+/// [pt] regra: o Campeonato de Clubes da Oceania tem 8 clubes em 4 pares, cada par dividido entre os grupos A e B por
+/// sorteio: o campeão da liga australiana (sem ele, o melhor australiano) e o melhor neozelandês; o melhor de Fiji e o
+/// do Taiti; dois melanésios de nações diferentes; dois polinésios de nações diferentes (cada lista ordenada pela
+/// reputação, com a faixa de cima embaralhada)
 unsafe extern "thiscall" fn cqt11_oceania_clubes(this: usize) -> u32 {
     cqt11_clubes(this)
 }
@@ -402,7 +425,11 @@ unsafe extern "thiscall" fn comparar_cqt11_oceania_clubes(this: usize) -> u32 {
     a
 }
 
-/// { 0x797df0 } (thiscall, ret 0, oceania_club_champ.cpp; a virtual +0x28): `OceaniaClubChamp::advance_stage()`: na
+/// rule: the Oceania Club Championship moves on one stage when the current one ends; after the groups (on reaching 1)
+/// it builds the semi-finals; going past the last stage is an error
+/// Original: `OceaniaClubChamp::advance_stage` (0x797df0, oceania_club_champ.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x797df0 } (thiscall, ret 0, oceania_club_champ.cpp; a virtual +0x28): `OceaniaClubChamp::advance_stage()`: na
 /// última fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x274; senão +0x30 sobe e, chegando a 1 (depois dos
 /// grupos), as semifinais (0x798050: mov ecx, this -> thiscall, ret 0).
 unsafe extern "thiscall" fn cqt11_oceania_fase_seguinte(this: usize) {
@@ -438,7 +465,11 @@ unsafe fn cqt11_semifinalistas(this: usize) -> [usize; 4] {
     [a(0), b(1), a(1), b(0)] // cqt11: 1º A × 2º B, 2º A × 1º B
 }
 
-/// { 0x798050 } (thiscall, ret 0, oceania_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
+/// rule: the Oceania Club Championship semi-finals cross the groups: A winner × B runner-up and A runner-up × B winner,
+/// in a cup stage (stage 1) with the first round set up at once
+/// Original: `OceaniaClubChamp::create_knockout_stage` (0x798050, oceania_club_champ.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x798050 } (thiscall, ret 0, oceania_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
 /// normal): `OceaniaClubChamp::create_knockout_stage()`, as semifinais: a lista dos 4 (0x944e46(0x10): push; add esp, 4
 /// -> cdecl; sem memória, a caixa da linha 0x2cb e volta), os cruzamentos de cqt11_semifinalistas; a tabela das rodadas
 /// pela virtual +0x3c (push 0; push &id; push &rodadas; push 1; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xb2)
@@ -697,7 +728,13 @@ fn cqq12_oceania_fase(fase: u32) -> Option<Cqq12Fase> {
     }
 }
 
-/// { 0x797230 } (thiscall, ret 0x10, oceania_club_champ.cpp; a virtual +0x3c): `OceaniaClubChamp::create_schedule(fase,
+/// rule: the Oceania Club Championship has two groups (stages −1 and 0, ids 0x41f and 0x420) of three rounds on 10, 12
+/// and 14 January of the year after the cup year, with each group's fixed matches; the knockout (stage 1) in single
+/// matches: semi-final on 17/1, third place and final on 19/1 (venue 4 in the final); category 8; tie-break 0x283 in
+/// the semi-final and 0x83 after; no prizes
+/// Original: `OceaniaClubChamp::create_schedule` (0x797230, oceania_club_champ.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x797230 } (thiscall, ret 0x10, oceania_club_champ.cpp; a virtual +0x3c): `OceaniaClubChamp::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a fase de `cqq12_oceania_fase`.
 unsafe extern "thiscall" fn cqq12_oceania_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqq12_tabela(this, cqq12_oceania_fase(fase), rodadas, extra, liga, 0xa6a068)
@@ -767,7 +804,11 @@ unsafe fn cqq12_comparar_times(nome: &str, this: usize, o: impl FnOnce() -> i32,
     a
 }
 
-/// { 0x40b620 } (thiscall, ret 0, asia_club_champ.cpp): `AsiaClubChamp::build_team_table()`: os 16 times (a caixa da
+/// rule: the Asian Club Championship has 16 teams, the qualified clubs (+0xb2) in the order they were picked, all with
+/// class and status 0
+/// Original: `AsiaClubChamp::build_team_table` (0x40b620, asia_club_champ.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x40b620 } (thiscall, ret 0, asia_club_champ.cpp): `AsiaClubChamp::build_team_table()`: os 16 times (a caixa da
 /// linha 0x1cd sem memória).
 unsafe extern "thiscall" fn cqq12_asia_clubes_times(this: usize) -> i32 {
     cqq12_times(this, 0x987a40, 0x1cd, "cqq_12 times da liga dos campeoes asiatica", |i| i) // cqq12: os times da Liga dos Campeões asiática
@@ -778,7 +819,11 @@ unsafe extern "thiscall" fn comparar_cqq12_asia_clubes_times(this: usize) -> i32
     cqq12_comparar_times("cqq12_asia_clubes_times", this, || o(this), || cqq12_asia_clubes_times(this))
 }
 
-/// { 0x40d4d0 } (thiscall, ret 0, asia_cup_winner.cpp): `AsiaCupWinner::create_team_entries()`: os 16 times (a caixa
+/// rule: the Asian Cup Winners' Cup has 16 teams, the qualified clubs (+0xb2) in the order they were picked, all with
+/// class and status 0
+/// Original: `AsiaCupWinner::create_team_entries` (0x40d4d0, asia_cup_winner.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x40d4d0 } (thiscall, ret 0, asia_cup_winner.cpp): `AsiaCupWinner::create_team_entries()`: os 16 times (a caixa
 /// da linha 0x185 sem memória).
 unsafe extern "thiscall" fn cqq12_asia_recopa_times(this: usize) -> i32 {
     cqq12_times(this, 0x987b60, 0x185, "cqq_12 times da recopa asiatica", |i| i) // cqq12: os times da Recopa asiática

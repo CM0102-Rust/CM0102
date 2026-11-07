@@ -203,7 +203,11 @@ const CQO5_C1: [Cqo5Rodada; 34] = [
 
 const CQO5_LIGA_CFA: Cqo5Liga = Cqo5Liga { rodadas: 0x22, arquivo: 0x9ccaf0, linha: 0xab, tabela: &CQO5_CFA, ramo: "cqo_5 calendario da cfa" };
 
-/// { 0x5b9510 } (thiscall, ret 0x10, fra_cfa.cpp, 2.703 bytes, método +0x3c): `FraCfa::create_schedule(fase, &rodadas, &extra,
+/// the CFA schedule (the French fourth level, background, 4 groups of 18): 34 rounds, from 31 July to 20 May of the
+/// next year; in 25 rounds two matches go to TV slots (mostly day 6 or 4, slots 1 and 2); main stage only
+/// Original: `FraCfa::create_schedule` (0x5b9510, fra_cfa.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x5b9510 } (thiscall, ret 0x10, fra_cfa.cpp, 2.703 bytes, método +0x3c): `FraCfa::create_schedule(fase, &rodadas, &extra,
 /// &é_liga)`: a CFA, 34 rodadas (`CQO5_CFA`). Fonte 0x9ccaf0, linha 0xab.
 unsafe extern "thiscall" fn calendario_da_cfa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqo5_calendario(this, fase, rodadas, extra, liga, &CQO5_LIGA_CFA)
@@ -270,7 +274,13 @@ unsafe fn cqo5_c1(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, li
     t
 }
 
-/// { 0x64ad80 } (thiscall, ret 0x10, ita_ser_c1a.cpp, 2.279 bytes, método +0x3c): `ItaSerC1a::create_schedule(fase,
+/// the Serie C1 schedule (each group of 18): 34 rounds from 5 September to 7 May, nearly all on the same weekday (6)
+/// and two midweek; no TV slots. The promotion play-offs (stage 0): two-legged semi-finals on 21 and 28 May (4 clubs,
+/// no draw) and the final on 4 and 11 June; the play-outs (stage 1) [inference: relegation]: 2 two-legged ties on the
+/// semi-final dates, no draw
+/// Original: `ItaSerC1a::create_schedule` (0x64ad80, ita_ser_c1a.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x64ad80 } (thiscall, ret 0x10, ita_ser_c1a.cpp, 2.279 bytes, método +0x3c): `ItaSerC1a::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a chave A da Série C1. Fonte 0x9ea474, linhas 0xab, 0x155, 0x18f.
 unsafe extern "thiscall" fn calendario_da_c1_a(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqo5_c1(this, fase, rodadas, extra, liga, &Cqo5C1 { arquivo: 0x9ea474, linhas: [0xab, 0x155, 0x18f] })
@@ -281,7 +291,10 @@ unsafe extern "thiscall" fn comparar_calendario_da_c1_a(this: usize, fase: u32, 
     cqo5_comparar_fases("calendario_da_c1_a", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_c1_a(this, fase, r, e, l))
 }
 
-/// { 0x64ef30 } (thiscall, ret 0x10, ita_ser_c1b.cpp, 2.279 bytes, método +0x3c): `ItaSerC1b::create_schedule`: a
+/// the same for the other Serie C1 group (the same table)
+/// Original: `ItaSerC1b::create_schedule` (0x64ef30, ita_ser_c1b.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x64ef30 } (thiscall, ret 0x10, ita_ser_c1b.cpp, 2.279 bytes, método +0x3c): `ItaSerC1b::create_schedule`: a
 /// chave B, o mesmo código. Fonte 0x9ea558, linhas 0xac, 0x156, 0x190.
 unsafe extern "thiscall" fn calendario_da_c1_b(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqo5_c1(this, fase, rodadas, extra, liga, &Cqo5C1 { arquivo: 0x9ea558, linhas: [0xac, 0x156, 0x190] })
@@ -301,7 +314,13 @@ unsafe fn cqn4_registro(g: usize) -> usize {
     read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(g).wrapping_mul(0x6b))
 }
 
-/// { 0x5ba0a0 } (thiscall, ret 0, fra_cfa.cpp; usada também pela divisão de baixo): `FraCfa::set_up_rules()`: turno e
+/// the rules of the two French background leagues: home and away, 3 points a win and 1 a draw, tie-breaks 4, 1, 2
+/// [inference: position, goal difference, goals], no promotion, play-off or relegation places, rule bits 0x43 (a
+/// champion, top places as promotion and fixed round order); the league above gets the id at [0x9cf624] (the same
+/// global the Spanish Segunda uses for the Primera) [inference: an original slip, harmless since there is no promotion]
+/// Original: `FraCfa::set_up_rules` (0x5ba0a0, fra_cfa.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5ba0a0 } (thiscall, ret 0, fra_cfa.cpp; usada também pela divisão de baixo): `FraCfa::set_up_rules()`: turno e
 /// returno (+0x3c = 2), 3 pontos por vitória (+0xc2) e 1 por empate (+0xc3), a categoria 2 das partidas (+0xc4), os
 /// desempates 4, 1, 2 (+0xc5..+0xc7: [inferência] a posição, o saldo, os gols), o tipo 1 (+0x42), nenhuma vaga de
 /// acesso, de play-off nem de rebaixamento (+0xbe..+0xc1 = 0), a liga de cima de id [0x9cf624] (+0x1c) e nenhuma de
@@ -477,7 +496,12 @@ const CQN4_BAIXO: Cqn4Fundo = Cqn4Fundo {
     linhas: [0x40, 0x62, 0x69],
 };
 
-/// { 0x5b91c0 } (thiscall, ret 4, fra_cfa.cpp, 596 bytes): `FraCfa::FraCfa(ano)`, a CFA (a quarta divisão francesa, de
+/// the CFA (the French fourth level, background): up to 72 clubs, all of the first and second divisions [inference: the
+/// reserve sides] and up to 34 of the generic division whose reserve competition is the CFA, drawn into 4 groups of 18;
+/// each group gets the table and the fixtures (in the game calendar) and the table is freed
+/// Original: `FraCfa::FraCfa` (0x5b91c0, fra_cfa.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x5b91c0 } (thiscall, ret 4, fra_cfa.cpp, 596 bytes): `FraCfa::FraCfa(ano)`, a CFA (a quarta divisão francesa, de
 /// fundo; competição de id [0x9cf5d8]): até 72 clubes, os da primeira e da segunda divisões ([0x9cf5cc], [0x9cf5d0];
 /// [inferência: os times reserva]) e até 34 da divisão genérica cuja competição de reserva é a CFA, embaralhados em 4
 /// grupos de 18. Fonte 0x9ccaf0, linhas 0x40, 0x64, 0x6b.
@@ -485,7 +509,11 @@ unsafe extern "thiscall" fn construir_cfa(this: usize, ano: u32) -> usize {
     cqn4_construir(this, ano, &CQN4_CFA)
 }
 
-/// { 0x5bd600 } (thiscall, ret 4, fra_lower.cpp, 578 bytes): `FraLower::FraLower(ano)`, a divisão de baixo francesa
+/// the French lower division (background): up to 40 clubs, those of the National and up to 20 French clubs of the
+/// generic division with no reserve competition, drawn into 2 groups of 20
+/// Original: `FraLower::FraLower` (0x5bd600, fra_lower.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x5bd600 } (thiscall, ret 4, fra_lower.cpp, 578 bytes): `FraLower::FraLower(ano)`, a divisão de baixo francesa
 /// (competição de id [0x9cf548]): até 40 clubes, os do National ([0x9cf5d4]) e até 20 franceses ([0x9cf300]) da divisão
 /// genérica sem competição de reserva, embaralhados em 2 grupos de 20. Fonte 0x9ccbd0, linhas 0x40, 0x62, 0x69.
 unsafe extern "thiscall" fn construir_divisao_de_baixo_francesa(this: usize, ano: u32) -> usize {
@@ -551,13 +579,19 @@ unsafe fn cqn4_destruir(this: usize, vtabela: usize) {
     base(this);
 }
 
-/// { 0x5b9460 } (thiscall, ret 0, fra_cfa.cpp): `FraCfa::~FraCfa()`.
+/// frees the table, the schedule, the stages and their vector and destroys the league
+/// Original: `FraCfa::~FraCfa` (0x5b9460, fra_cfa.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5b9460 } (thiscall, ret 0, fra_cfa.cpp): `FraCfa::~FraCfa()`.
 unsafe extern "thiscall" fn destruir_cfa(this: usize) {
     crate::comparacao::ramo("cqn_4 destrutor da cfa");
     cqn4_destruir(this, 0x96a7b0)
 }
 
-/// { 0x5bd870 } (thiscall, ret 0, fra_lower.cpp): `FraLower::~FraLower()`.
+/// the same for the lower division
+/// Original: `FraLower::~FraLower` (0x5bd870, fra_lower.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5bd870 } (thiscall, ret 0, fra_lower.cpp): `FraLower::~FraLower()`.
 unsafe extern "thiscall" fn destruir_divisao_de_baixo_francesa(this: usize) {
     crate::comparacao::ramo("cqn_4 destrutor da divisao de baixo");
     cqn4_destruir(this, 0x96ab78)
@@ -607,7 +641,11 @@ unsafe fn cqk6_tabela(this: usize, clubes: usize, n: i16, arquivo: usize, linha:
     (k as i8 as i16 == read_i16(this + 0x3e)) as u32
 }
 
-/// { 0x5b9fa0 } (thiscall, ret 4, fra_cfa.cpp): `FraCfa::create_group_table(clubes)`: um grupo da CFA com 18 clubes
+/// a CFA group has 18 clubs (4 groups, drawn by the constructor); clubs that are in the first or second division get
+/// the row mark [inference: the reserve sides of professional clubs, which cannot go up]
+/// Original: `FraCfa::create_group_table` (0x5b9fa0, fra_cfa.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x5b9fa0 } (thiscall, ret 4, fra_cfa.cpp): `FraCfa::create_group_table(clubes)`: um grupo da CFA com 18 clubes
 /// da lista (o construtor 0x5b91c0 sorteia os clubes dos 4 grupos), marcando os que estão na primeira ([0x9cf5cc]) ou
 /// na segunda ([0x9cf5d0]) divisão [inferência: os times reserva dos profissionais, que não sobem]. Fonte 0x9ccaf0,
 /// linha 0x185.
@@ -615,7 +653,10 @@ unsafe extern "thiscall" fn tabela_do_grupo_da_cfa(this: usize, clubes: usize) -
     cqk6_tabela(this, clubes, 0x12, 0x9ccaf0, 0x185, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION])
 }
 
-/// { 0x5be230 } (thiscall, ret 4, fra_lower.cpp): `FraLower::create_table(clubes)`: a divisão de baixo francesa com
+/// the French lower division has 20 clubs (chosen by the constructor); those in the National get the mark
+/// Original: `FraLower::create_table` (0x5be230, fra_lower.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x5be230 } (thiscall, ret 4, fra_lower.cpp): `FraLower::create_table(clubes)`: a divisão de baixo francesa com
 /// 20 clubes da lista (o construtor 0x5bd600 escolhe-os), marcando os que estão no National ([0x9cf5d4]). Fonte
 /// 0x9ccbd0, linha 0x175.
 unsafe extern "thiscall" fn tabela_da_divisao_de_baixo_francesa(this: usize, clubes: usize) -> u32 {
@@ -693,13 +734,21 @@ unsafe fn cqk6_situacao_na_c1(this: usize, clube: usize, fase: u8, atual: u8, me
     *((e + 0x75) as *mut u8) = p;
 }
 
-/// { 0x64bd80 } (thiscall, ret 0x14, ita_ser_c1a.cpp): `ItaSerC1a::set_club_progress(clube, fase, atual, melhor,
+/// the club's place forecast in C1/A: in the league, best and worst place become bands (2 to 5 = the promotion
+/// play-off: best 2, worst 5; 14 to 17 = the play-out: best 14, worst 17); in the play-off, places + 1; in the
+/// play-out, the winner stays at 14 and the loser at 16
+/// Original: `ItaSerC1a::set_club_progress` (0x64bd80, ita_ser_c1a.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x64bd80 } (thiscall, ret 0x14, ita_ser_c1a.cpp): `ItaSerC1a::set_club_progress(clube, fase, atual, melhor,
 /// pior)`, a virtual +0x68 da 0x684cd0 a cada linha da tabela.
 unsafe extern "thiscall" fn situacao_na_c1a(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     cqk6_situacao_na_c1(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8)
 }
 
-/// { 0x64ff40 } (thiscall, ret 0x14, ita_ser_c1b.cpp): `ItaSerC1b::set_club_progress(...)`, igual à da C1/A.
+/// the same rule in C1/B
+/// Original: `ItaSerC1b::set_club_progress` (0x64ff40, ita_ser_c1b.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x64ff40 } (thiscall, ret 0x14, ita_ser_c1b.cpp): `ItaSerC1b::set_club_progress(...)`, igual à da C1/A.
 unsafe extern "thiscall" fn situacao_na_c1b(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     cqk6_situacao_na_c1(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8)
 }

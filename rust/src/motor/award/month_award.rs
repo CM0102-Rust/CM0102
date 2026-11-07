@@ -23,7 +23,11 @@ unsafe fn cpw6_clube(id: i32) -> usize {
 /// listas dos clubes (0x842c00), que alocam e não podem rodar duas vezes.
 static mut CPW6_ENSAIO: bool = false;
 
-/// { 0x767150 } (thiscall, ret 8, month_award.cpp): `MONTH_AWARD::award_best_rated_player(notas, idade)`, na virada do
+/// the best of the month ratings (0x768130) in the award league and with the requested age becomes the month winner,
+/// with his club
+/// Original: `MONTH_AWARD::award_best_rated_player` (0x767150, month_award.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x767150 } (thiscall, ret 8, month_award.cpp): `MONTH_AWARD::award_best_rated_player(notas, idade)`, na virada do
 /// mês pelos prêmios das nações (os da Inglaterra em 0x579a37..0x579adc). O melhor das notas (0x768130) na liga do
 /// prêmio ([+9], ou −1) e com a idade pedida; achou: grava o vencedor (0x7671c0) com o clube da pessoa (+0x39, ou −1),
 /// o mês (+0xc) e o ano (+0xd) das notas. Os bytes altos do mês e do ano vão como a original os empurra (da tabela de
@@ -71,7 +75,11 @@ unsafe fn cpw6_reputacao(pessoa: usize, clube: usize, nac: u32, mundo: u32, joga
     f(pessoa, clube, nac, mundo, jogador);
 }
 
-/// { 0x7671c0 } (thiscall, ret 0x10, month_award.cpp): `MONTH_AWARD::set_winner(pessoa, clube, mês, ano)`. Acha a vaga
+/// finds the month slot, stores the person and the club, raises the winner reputation, sends the news and records the
+/// award in the history
+/// Original: `MONTH_AWARD::set_winner` (0x7671c0, month_award.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x7671c0 } (thiscall, ret 0x10, month_award.cpp): `MONTH_AWARD::set_winner(pessoa, clube, mês, ano)`. Acha a vaga
 /// do mês (12 vagas de 11 bytes: mês em +0x25, ano em +0x26); sem ela, nada. Grava a pessoa (+0x1d) e o clube (+0x21);
 /// com pessoa, a reputação do premiado (0x412f00, com as reputações +0x15 e +0x17 do prêmio e a marca de jogador
 /// +0x19); a notícia (0x767330) e o registro do prêmio (0x86c8c0 em [0xdd7f00], com o +5 do prêmio).
@@ -164,7 +172,11 @@ unsafe fn cpw6_teto_e_piso(a: usize, piso: i16) {
     }
 }
 
-/// { 0x412f00 } (cdecl, award_manager.cpp): `award_raise_winner_reputation(pessoa, clube, rep_nacional, rep_mundial,
+/// player: the world, home and current reputations rise by a fraction of the award ones, up to 10000 and at least them;
+/// non-player: they rise up to them and the board confidence gains 1000 (between 6500 and 10000)
+/// Original: `award_raise_winner_reputation` (0x412f00, award_manager.cpp, cdecl).
+///
+/// [pt] { 0x412f00 } (cdecl, award_manager.cpp): `award_raise_winner_reputation(pessoa, clube, rep_nacional, rep_mundial,
 /// de_jogador)`, pela vaga do vencedor do mês (0x7671c0) e pelos prêmios do ano e das seleções. Jogador (+0x61) num
 /// prêmio de jogador: mundial (+0xd) + 5% da mundial do prêmio, até 10000 e pelo menos ela; nacional (+9): do clube da
 /// nação dele (+0x53 = +0x1a da pessoa), + 10% da nacional e pelo menos ela; senão + 2,5% da soma e pelo menos a média;

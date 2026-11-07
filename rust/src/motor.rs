@@ -2273,7 +2273,10 @@ unsafe fn lado(jogador: usize) -> i8 {
     byte(jogador, 0x27)
 }
 
-/// { 0x717410 } (match_pl.cpp): `tabela_a` do motor do jogador (campo 0x19e), ou 0 sem motor.
+/// `tabela_a` of the player's engine (0x19e), called through the game's address
+/// Original: `player_table` (0x717410, thiscall).
+///
+/// [pt] { 0x717410 } (match_pl.cpp): `tabela_a` do motor do jogador (campo 0x19e), ou 0 sem motor.
 /// Chama 0x6c38c0 pelo endereco do jogo (Rust ou original, conforme o modo).
 unsafe extern "thiscall" fn tabela_do_jogador(jogador: usize) -> u16 {
     let motor = *((jogador + 0x19e) as *const usize);
@@ -2332,7 +2335,10 @@ unsafe extern "thiscall" fn byte_da_posicao(this: usize, i: i8) -> u8 {
     *((this as isize + 0x5b4 + i as isize) as *const u8)
 }
 
-/// { 0x6f4600 } (match_pl.cpp): pela marca da posicao do jogador (bit 2 do byte de 0x5b57c0 no
+/// 0x91e2 + 6371 × side
+/// Original: `field_by_position` (0x6f4600, the side's block in the engine, thiscall, `al`).
+///
+/// [pt] { 0x6f4600 } (match_pl.cpp): pela marca da posicao do jogador (bit 2 do byte de 0x5b57c0 no
 /// bloco do lado dele dentro do motor: 0x91e2 + 6371 x lado), devolve o campo 0x10a ou o 0x108.
 unsafe extern "thiscall" fn campo_pela_posicao(this: usize) -> u8 {
     let motor = *((this + 0x19e) as *const usize);
@@ -2528,7 +2534,11 @@ include!("motor/zipdir.rs");
 
 // ---------- centesima sexagesima primeira leva: lista de observacao, codigo da posicao e criterio da comissao ----------
 
-/// { 0x844300 } (stdcall, ret 8, shortlist_manager.cpp): o jogador `j` (ficha em [j+0x61]) serve
+/// the player fits shortlist slot 0..15 (rating 15 in sector and side; slot 15 needs a contract, an id and 0x600a50 at
+/// zero); returns only `al`
+/// Original: `shortlist_slot_fits` (0x844300, shortlist_manager.cpp, stdcall).
+///
+/// [pt] { 0x844300 } (stdcall, ret 8, shortlist_manager.cpp): o jogador `j` (ficha em [j+0x61]) serve
 /// para a vaga `vaga` 0..15 da lista de observação: 0..14 pedem nota 15 nas posições da vaga
 /// (setor e lado: +0xf..+0x16 e +0x17..+0x19); 15 pede ficha de contrato ([j+0x69]), id abaixo de
 /// [0xae2364]−16 e, com treinador em [j+0x39] de função 11, 13 ou 15 em +0x3d, a 0x600a50 em zero.
@@ -2574,7 +2584,10 @@ unsafe extern "stdcall" fn serve_para_a_vaga(j: usize, vaga: i8) -> u8 {
     (n(setor) && (lado == 0 || n(lado))) as u8
 }
 
-/// { 0x83bd00 } (stdcall, ret 4, shortlist_manager.cpp): o código da posição (0..13, 0x11..0x15)
+/// the position code from the sector and side mask (28 combinations; the rest 0xe); returns only `al`
+/// Original: `position_code` (0x83bd00, shortlist_manager.cpp, stdcall).
+///
+/// [pt] { 0x83bd00 } (stdcall, ret 4, shortlist_manager.cpp): o código da posição (0..13, 0x11..0x15)
 /// da máscara `m` de um bit de setor com um de lado (0x80, 0x100, 0x200, 0x400, 0x800); fora das
 /// combinações conhecidas, 0xe. Devolve só `al`.
 unsafe extern "stdcall" fn codigo_da_posicao(m: i16) -> u8 {
@@ -2602,7 +2615,11 @@ unsafe extern "stdcall" fn codigo_da_posicao(m: i16) -> u8 {
     }
 }
 
-/// { 0x866f60 } (thiscall, staff_contracts.cpp): o critério da comissão técnica `t` (pessoa [t] em
+/// the staff criterion: an 8-bit score (id mod 7, ratings, age, reputation, number of roles) decides by the roles
+/// whether it returns 1
+/// Original: `staff_criterion` (0x866f60, staff_contracts.cpp, thiscall).
+///
+/// [pt] { 0x866f60 } (thiscall, staff_contracts.cpp): o critério da comissão técnica `t` (pessoa [t] em
 /// [0xae23bc], 0x6e bytes; clube [t+4] em [0xae23b4], 0x245 bytes; funções em [t+0x45]): 0 se a
 /// pessoa é o técnico ou o auxiliar do clube (+0xcf, +0xd3) ou não tem função; senão uma nota em 8
 /// bits (id mod 7 + +0x59 + +0x5a + +0x5b, descontos pelas notas baixas e pela idade, +0x44 em
@@ -2725,7 +2742,10 @@ unsafe fn linha_da_tabela(t: usize, linha: i32) -> usize {
     core::ptr::read_unaligned((t + 0x601) as *const usize).wrapping_add((linha as usize).wrapping_mul(0x91))
 }
 
-/// { 0x896a90 } (thiscall, ret 0x10, tactics.cpp): grava `*pessoa` na vaga `vaga` 0..19 da linha do
+/// stores the person in slot 0..19 of the club row (0x8982b0) and clears the club's pending instructions
+/// Original: `set_tactic_slot` (0x896a90, tactics.cpp, thiscall).
+///
+/// [pt] { 0x896a90 } (thiscall, ret 0x10, tactics.cpp): grava `*pessoa` na vaga `vaga` 0..19 da linha do
 /// `clube` (0x8982b0 com `humano`; sem linha, 0) e apaga, entre as 16 instruções pendentes
 /// (+0x30, 0x5c bytes: clube, humano, ativa), as ativas desse clube e `humano`, descontando o
 /// contador +0x5f0. Devolve 1. `clube` ou `pessoa` nulos, vaga fora: a original (caixa de erro).
@@ -2753,7 +2773,10 @@ unsafe extern "thiscall" fn gravar_vaga_tatica(t: usize, clube: usize, vaga: i8,
     1
 }
 
-/// { 0x8968f0 } (thiscall, ret 0xc, tactics.cpp): a pessoa (em [0xae23bc], 0x6e bytes) da vaga `vaga`
+/// the slot's person; without a record or from another nation in a national team, the slot becomes −1
+/// Original: `tactic_slot_person` (0x8968f0, tactics.cpp, thiscall).
+///
+/// [pt] { 0x8968f0 } (thiscall, ret 0xc, tactics.cpp): a pessoa (em [0xae23bc], 0x6e bytes) da vaga `vaga`
 /// 0..19 da linha do `clube`; 0 sem linha ou vaga vazia (negativa). Vaga com pessoa sem ficha
 /// (+0x61), ou, numa seleção (0x53b900), pessoa sem nação (+0x24) ou de outra nação (+0x53): a vaga
 /// vira −1 e devolve 0. `clube` nulo ou vaga fora: a original (caixa de erro).
@@ -2788,7 +2811,10 @@ unsafe extern "thiscall" fn pessoa_da_vaga_tatica(t: usize, clube: usize, vaga: 
     p
 }
 
-/// { 0x8967d0 } (thiscall, ret 0xc, tactics.cpp): grava a formação `formacao` (palavra) na linha do
+/// stores the formation in the club row
+/// Original: `set_tactic_formation` (0x8967d0, tactics.cpp, thiscall).
+///
+/// [pt] { 0x8967d0 } (thiscall, ret 0xc, tactics.cpp): grava a formação `formacao` (palavra) na linha do
 /// `clube`; 0 sem linha, senão 1. `clube` nulo ou formação fora de 0..[+0x5fd]+[+0x5f5]−1: a
 /// original (caixa de erro).
 unsafe extern "thiscall" fn gravar_formacao_tatica(t: usize, clube: usize, formacao: i16, humano: u32) -> u32 {

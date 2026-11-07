@@ -300,7 +300,14 @@ unsafe fn cqo6_italia(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16
 const CQO6_SERIE_A_E_DESEMPATE: Cqo6Italia = Cqo6Italia { liga: &CQO6_LIGA_SERIE_A, sorteio: (0xd, 4, 1, 0), jogo: (0x13, 4, 1, 6, 1, 0), linha_desempate: 0x226 };
 const CQO6_SERIE_B_E_DESEMPATE: Cqo6Italia = Cqo6Italia { liga: &CQO6_LIGA_SERIE_B, sorteio: (0xf, 4, 1, 0), jogo: (0x15, 4, 1, 6, 1, 0), linha_desempate: 0x170 };
 
-/// { 0x6409b0 } (thiscall, ret 0x10, ita_ser_a.cpp, 2.901 bytes, método +0x3c): `ItaSerA::create_schedule(fase,
+/// the Serie A schedule: 34 rounds (18 clubs), from 28 August to 12 May of the next year, all on the same weekday (6)
+/// except two (6 January, 30 March); in nearly all, two matches go to each of two TV slots (days 6 and 5, slot 2)
+/// [inference: the televised weekend evening matches]. Stage 0, the play-off match (spareggio) [inference: clubs level
+/// on points for a place]: two legs 3 days apart, draw on 13 and match on 19 May, ties in fixed order, as many ties as
+/// the byte +0xee
+/// Original: `ItaSerA::create_schedule` (0x6409b0, ita_ser_a.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x6409b0 } (thiscall, ret 0x10, ita_ser_a.cpp, 2.901 bytes, método +0x3c): `ItaSerA::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a Série A, 34 rodadas (`CQO6_SERIE_A`), e o jogo-desempate. Fonte 0x9ea2a8, linhas 0xb0
 /// e 0x226.
 unsafe extern "thiscall" fn calendario_da_serie_a(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
@@ -312,7 +319,12 @@ unsafe extern "thiscall" fn comparar_calendario_da_serie_a(this: usize, fase: u3
     cqo6_comparar_fases("calendario_da_serie_a", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_serie_a(this, fase, r, e, l))
 }
 
-/// { 0x645af0 } (thiscall, ret 0x10, ita_ser_b.cpp, 3.215 bytes, método +0x3c): `ItaSerB::create_schedule`: a Série B,
+/// the Serie B schedule: 38 rounds (20 clubs), from 29 August to 14 May, on the same weekday (6) except one (6
+/// January); in nearly all, two matches in each of two TV slots (days 4 and 0, slot 2). The play-off match as in the
+/// Serie A, on 15 and 21 May
+/// Original: `ItaSerB::create_schedule` (0x645af0, ita_ser_b.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x645af0 } (thiscall, ret 0x10, ita_ser_b.cpp, 3.215 bytes, método +0x3c): `ItaSerB::create_schedule`: a Série B,
 /// 38 rodadas (`CQO6_SERIE_B`), e o jogo-desempate. Fonte 0x9ea384, linhas 0xa8 e 0x170.
 unsafe extern "thiscall" fn calendario_da_serie_b(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqo6_italia(this, fase, rodadas, extra, liga, &CQO6_SERIE_B_E_DESEMPATE)
@@ -323,7 +335,12 @@ unsafe extern "thiscall" fn comparar_calendario_da_serie_b(this: usize, fase: u3
     cqo6_comparar_fases("calendario_da_serie_b", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_serie_b(this, fase, r, e, l))
 }
 
-/// { 0x5bb690 } (thiscall, ret 0x10, fra_first.cpp, 3.090 bytes, método +0x3c): `FraFirst::create_schedule(fase,
+/// the French first division schedule: in 2001/02, 34 rounds (18 clubs) from 31 July to 20 May; from 2002/03, 38 rounds
+/// (20 clubs), with four extra dates in January and March (8 and 22 January, 4 and 18 March); nearly all with two
+/// matches in TV slots (days 6, 4 or 1, slots 1 and 2); main stage only
+/// Original: `FraFirst::create_schedule` (0x5bb690, fra_first.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x5bb690 } (thiscall, ret 0x10, fra_first.cpp, 3.090 bytes, método +0x3c): `FraFirst::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: só a fase −1 (as outras devolvem 0). Em 2001 (o ano +0x40 = 0x7d1) 34 rodadas (18
 /// clubes); nos outros anos 38 (20 clubes). é_liga (se pedido) = 1, as rodadas, extra 0, a tabela de rodadas × 0x41
 /// bytes (sem memória: a caixa da linha 0xd1 e 0); as rodadas de `CQO6_PRIMEIRA_FRANCESA` em sequência (as marcadas só
@@ -445,7 +462,13 @@ unsafe fn cql4_empate_na_fronteira(liga: usize, z: &[u8; 64]) -> bool {
     })
 }
 
-/// { 0x642880 } (thiscall, ret 8, ita_ser_a.cpp, slot +0x14): `ItaSerA::update_for_date(hoje, completo)`. Primeiro o
+/// the Serie A day; at season end, two clubs level on points in different bands (the title; Italy's Champions League
+/// places; the UEFA Cup places; the next two [inference: the Intertoto]; the relegated, the last +0xc1 of 18) are not
+/// split by goal difference: the first such pair from the top is ordered by head-to-head and goes to an extra match
+/// (the next stage); with no tie on a boundary, the season closes
+/// Original: `ItaSerA::update_for_date` (0x642880, ita_ser_a.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x642880 } (thiscall, ret 8, ita_ser_a.cpp, slot +0x14): `ItaSerA::update_for_date(hoje, completo)`. Primeiro o
 /// dia de liga (League::update_for_date 0x6847c0: push completo; push hoje; mov ecx, this -> thiscall, ret 8), cuja
 /// devolução ela repassa. Depois, no fim da temporada (+0xdd), na fase principal (+0x2c = 0, sem fases criadas), com
 /// `completo` e com +0xe6 [inferência: a tabela fechada]: zera +0x4c e procura, de cima para baixo, o primeiro par de
@@ -496,7 +519,11 @@ unsafe extern "thiscall" fn desempate_da_serie_a(this: usize, hoje: usize, compl
     r
 }
 
-/// { 0x647050 } (thiscall, ret 8, ita_ser_b.cpp, slot +0x14): `ItaSerB::update_for_date(hoje, completo)`. Como a da
+/// the Serie B day; the fixed bands are the champion, 3 more promotion places (4 go up) and the 4 relegated of 20; each
+/// tied pair on a boundary is ordered by head-to-head and, if any, the tie-break match
+/// Original: `ItaSerB::update_for_date` (0x647050, ita_ser_b.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x647050 } (thiscall, ret 8, ita_ser_b.cpp, slot +0x14): `ItaSerB::update_for_date(hoje, completo)`. Como a da
 /// Série A, com as faixas fixas da Série B (o campeão, mais 3 de acesso, os 4 rebaixados de 20) e sem parar no
 /// primeiro par: cada par vizinho empatado na fronteira é ordenado pelo confronto direto (0x6471a0: push edi, os
 /// pontos na palavra de baixo e o resto do `completo` nos bits de cima, que a 0x6471a0 não lê; mov ecx -> thiscall,
@@ -567,7 +594,11 @@ unsafe extern "thiscall" fn comparar_desempate_da_serie_b(this: usize, hoje: usi
     cql4_comparar("desempate_da_serie_b", this, completo, cql4_faixas_da_serie_b, || o(this, hoje, completo))
 }
 
-/// { 0x6471a0 } (thiscall, ret 4, ita_ser_b.cpp; chamada também pela da Série A): `ita_league_sort_clubs_level_on_points
+/// clubs level on points are ordered by the head-to-head among them (the mini-table 0x682b30) and the table positions
+/// are renumbered
+/// Original: `ita_league_sort_clubs_level_on_points` (0x6471a0, ita_ser_b.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x6471a0 } (thiscall, ret 4, ita_ser_b.cpp; chamada também pela da Série A): `ita_league_sort_clubs_level_on_points
 /// (pontos)`. Monta o confronto direto em +4 de cada linha (League::build_h2h_table 0x682b30: push [+0xb1]; mov ecx,
 /// this -> thiscall, ret 4), acha o bloco das linhas com esses pontos (a primeira e quantas; a tabela já está ordenada
 /// pelos pontos), ordena o bloco pela comparação do confronto (qsort 0x945333 com 0x683410, linhas de 0x3b: push;
@@ -612,7 +643,11 @@ unsafe extern "thiscall" fn comparar_ordem_dos_empatados_na_italia(this: usize, 
     PLACAR.registrar(igual, || format!("ordem_dos_empatados_na_italia({:#x}, {}) original={:x?} rust={:x?}", this, pontos as u16 as i16, mo, mr));
 }
 
-/// { 0x641dc0 } (thiscall, ret 0x18, ita_ser_a.cpp, slot +0x44): `ItaSerA::update_staff_records_for_status(clube,
+/// in the league, the base records; in the tie-break match, the winner (status 1 [inference]) is placed above the other
+/// in the table (rows swap if it was below) and, with no play-off pending, the season closes
+/// Original: `ItaSerA::update_staff_records_for_status` (0x641dc0, ita_ser_a.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x641dc0 } (thiscall, ret 0x18, ita_ser_a.cpp, slot +0x44): `ItaSerA::update_staff_records_for_status(clube,
 /// situação, fase, a4, jogo, a6)`. Na liga (fase 0xff): a da base (League::update_staff_records_for_status 0x686940:
 /// push a6; push jogo; push a4; push -1; push situação; push clube; mov ecx, this -> thiscall, ret 0x18), cuja devolução
 /// repassa. No jogo de desempate (outra fase), só com a situação 1 [inferência: o clube venceu]: +0xad = 0, ordena a
@@ -833,24 +868,39 @@ const CQM4_C1B: Cqm4Divisao = Cqm4Divisao {
     linhas: [0x4a, 0x51, 0x5b, 0x64, 0x6b],
 };
 
-/// { 0x6406d0 } (thiscall, ret 8, ita_ser_a.cpp): `ItaSerA::ItaSerA(ano, registro)`: a Série A, só a liga (o jogo de
+/// Serie A: discipline rule 0x11 (the Italian leagues one), only the league (the tie-break is born at season end); with
+/// no saved state, the rules, the table, the real 2001/02 fixture list by club name, the fixtures, the order, the stats
+/// and the predicted positions
+/// Original: `ItaSerA::ItaSerA` (0x6406d0, ita_ser_a.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x6406d0 } (thiscall, ret 8, ita_ser_a.cpp): `ItaSerA::ItaSerA(ano, registro)`: a Série A, só a liga (o jogo de
 /// desempate nasce no fim, pela 0x642880).
 unsafe extern "thiscall" fn construir_serie_a(this: usize, ano: u32, registro: usize) -> usize {
     cqm4_construir(this, ano, registro, &CQM4_SERIE_A)
 }
 
-/// { 0x645810 } (thiscall, ret 8, ita_ser_b.cpp): `ItaSerB::ItaSerB(ano, registro)`: a Série B, só a liga.
+/// Serie B: discipline 0x11, only the league, the real 2001/02 fixture list
+/// Original: `ItaSerB::ItaSerB` (0x645810, ita_ser_b.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x645810 } (thiscall, ret 8, ita_ser_b.cpp): `ItaSerB::ItaSerB(ano, registro)`: a Série B, só a liga.
 unsafe extern "thiscall" fn construir_serie_b(this: usize, ano: u32, registro: usize) -> usize {
     cqm4_construir(this, ano, registro, &CQM4_SERIE_B)
 }
 
-/// { 0x64aa70 } (thiscall, ret 8, ita_ser_c1a.cpp): `ItaSerC1a::ItaSerC1a(ano, registro)`: a C1/A, a liga e 2 fases
+/// C1/A: discipline 0x11, the league and 2 stages (the promotion play-off and the play-out), the real 2001/02 fixture
+/// list
+/// Original: `ItaSerC1a::ItaSerC1a` (0x64aa70, ita_ser_c1a.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x64aa70 } (thiscall, ret 8, ita_ser_c1a.cpp): `ItaSerC1a::ItaSerC1a(ano, registro)`: a C1/A, a liga e 2 fases
 /// (o play-off de acesso e o play-out).
 unsafe extern "thiscall" fn construir_c1a(this: usize, ano: u32, registro: usize) -> usize {
     cqm4_construir(this, ano, registro, &CQM4_C1A)
 }
 
-/// { 0x64ec20 } (thiscall, ret 8, ita_ser_c1b.cpp): `ItaSerC1b::ItaSerC1b(ano, registro)`: a C1/B, como a C1/A.
+/// C1/B, as C1/A
+/// Original: `ItaSerC1b::ItaSerC1b` (0x64ec20, ita_ser_c1b.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x64ec20 } (thiscall, ret 8, ita_ser_c1b.cpp): `ItaSerC1b::ItaSerC1b(ano, registro)`: a C1/B, como a C1/A.
 unsafe extern "thiscall" fn construir_c1b(this: usize, ano: u32, registro: usize) -> usize {
     cqm4_construir(this, ano, registro, &CQM4_C1B)
 }
@@ -956,13 +1006,21 @@ unsafe fn cqn5_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: u
     }
 }
 
-/// { 0x642a70 } (thiscall, ret 0, ita_ser_a.cpp, 11.650 bytes): `ItaSerA::create_fixed_fixtures()`: os 306 jogos da
+/// the 2001/02 Serie A does not draw its fixtures: the 306 matches (34 rounds of 9) are fixed, with date and both clubs
+/// by name; if any name is missing from the database, the whole list is dropped and the league falls back to the drawn
+/// schedule
+/// Original: `ItaSerA::create_fixed_fixtures` (0x642a70, ita_ser_a.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x642a70 } (thiscall, ret 0, ita_ser_a.cpp, 11.650 bytes): `ItaSerA::create_fixed_fixtures()`: os 306 jogos da
 /// Série A 2001/02 (34 rodadas de 9, com o dia, o mês (0 = janeiro) e o ano que a original empurra). Fonte 0x9ea2a8, linha 0x60f.
 unsafe extern "thiscall" fn calendario_fixo_da_serie_a(this: usize) {
     cqn5_fixos(this, &CQN5_SERIE_A, 0x9ea2a8, 0x60f)
 }
 
-/// { 0x647230 } (thiscall, ret 0, ita_ser_b.cpp, 14.388 bytes): `ItaSerB::set_up_fixed_fixtures()`: os 380 jogos da
+/// the 2001/02 Serie B: the 380 matches (38 rounds of 10) fixed, with the same rule
+/// Original: `ItaSerB::set_up_fixed_fixtures` (0x647230, ita_ser_b.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x647230 } (thiscall, ret 0, ita_ser_b.cpp, 14.388 bytes): `ItaSerB::set_up_fixed_fixtures()`: os 380 jogos da
 /// Série B 2001/02 (38 rodadas de 10). Fonte 0x9ea384, linha 0x39a.
 unsafe extern "thiscall" fn calendario_fixo_da_serie_b(this: usize) {
     cqn5_fixos(this, &CQN5_SERIE_B, 0x9ea384, 0x39a)
@@ -1717,7 +1775,12 @@ unsafe fn cqi6_comuns(this: usize) -> Vec<(usize, u8, u32)> {
     vec![(0xc3, 1, 1), (0xc4, 1, 2), (0xab, 2, 0), (0xdb, 2, 0), (0x42, 1, 1), (0xc5, 1, 1), (0xc6, 1, 2), (0xd9, 1, d9 as u32), (0x49, 1, 7), (0x4a, 1, 3)]
 }
 
-/// { 0x641640 } (thiscall, ret 0, ita_ser_a.cpp): `ItaSerA::set_up_rules()`. A Série A: as comuns, 2 turnos, 3
+/// Serie A (18 clubs): 2 rounds, 3 points for a win and 1 for a draw, nobody goes up, the bottom 4 go down to B; 7
+/// substitutes and 3 substitutions; tie-breaks 1, 2 and 4 [codes; inference: goal difference, goals for, head to head];
+/// a points tie across a place border goes to a tie-break match (+0xe6); fixed round order
+/// Original: `ItaSerA::set_up_rules` (0x641640, ita_ser_a.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x641640 } (thiscall, ret 0, ita_ser_a.cpp): `ItaSerA::set_up_rules()`. A Série A: as comuns, 2 turnos, 3
 /// pontos, os desempates 3º = 4 e 4º = 0 (+0xc7, +0xc8), ninguém sobe, nenhum play-off, 4 caem direto (+0xc1),
 /// nenhuma liga acima (+0x1c = −1), a Série B abaixo (+0x20 = [0x9cf574]), +0x52 = 2 [sem nome] e +0xe6 = 1 (o
 /// empate em pontos na fronteira de uma vaga não se decide pelos critérios: vai ao jogo-desempate, ver 0x642880).
@@ -1734,7 +1797,10 @@ unsafe fn cqi6_serie_a(this: usize) -> Vec<(usize, u8, u32)> {
     v
 }
 
-/// { 0x6468a0 } (thiscall, ret 0, ita_ser_b.cpp): `ItaSerB::set_up_rules()`. A Série B: como a A, mas 4 sobem
+/// Serie B (20): the top 4 go up to A, the bottom 4 go down to C1; the rest as in A (tie-break match too)
+/// Original: `ItaSerB::set_up_rules` (0x6468a0, ita_ser_b.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x6468a0 } (thiscall, ret 0, ita_ser_b.cpp): `ItaSerB::set_up_rules()`. A Série B: como a A, mas 4 sobem
 /// direto (+0xbe) e 4 caem (+0xc1); a A acima ([0x9cf570]) e a C1/A abaixo ([0x9cf578]).
 unsafe extern "thiscall" fn regras_da_serie_b(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_6 regras da serie b");
@@ -1748,7 +1814,11 @@ unsafe fn cqi6_serie_b(this: usize) -> Vec<(usize, u8, u32)> {
     v
 }
 
-/// { 0x64b770 } (thiscall, ret 0, ita_ser_c1a.cpp): `ItaSerC1a::set_up_rules()`. A C1/A: as comuns, 2 turnos, 3
+/// Serie C1/A (18): the champion goes up to B, 2nd to 5th go to the promotion play-off, 14th to 17th to the relegation
+/// play-out and the last goes down; tie-breaks 1 and 2; the league below stored is C1/B (as in the original)
+/// Original: `ItaSerC1a::set_up_rules` (0x64b770, ita_ser_c1a.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x64b770 } (thiscall, ret 0, ita_ser_c1a.cpp): `ItaSerC1a::set_up_rules()`. A C1/A: as comuns, 2 turnos, 3
 /// pontos, os desempates 3º = 0 (+0xc7), o campeão sobe direto (+0xbe = 1), do 2º ao 5º vão ao play-off de acesso
 /// (+0xbf = 4), do 14º ao 17º ao play-out de permanência (+0xc0 = 4), o último cai (+0xc1 = 1), a Série B acima
 /// ([0x9cf574]) e abaixo o id de [0x9cf57c] (o da C1/B, o outro grupo: assim no original).
@@ -1764,7 +1834,10 @@ unsafe fn cqi6_c1a(this: usize) -> Vec<(usize, u8, u32)> {
     v
 }
 
-/// { 0x64f920 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::set_up_rules()`. A C1/B: como a C1/A; acima o id de
+/// Serie C1/B (18): as C1/A; below it C2/A when the nation has its lower divisions loaded [inference from nation bit 4]
+/// Original: `ItaSerC1b::set_up_rules` (0x64f920, ita_ser_c1b.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x64f920 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::set_up_rules()`. A C1/B: como a C1/A; acima o id de
 /// [0x9cf578] e abaixo a C2/A ([0x9cf580]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c da
 /// nação [inferência]), senão −1.
 unsafe extern "thiscall" fn regras_da_c1b(this: usize) -> u32 {
@@ -1876,7 +1949,11 @@ unsafe fn cqj4_fundo(this: usize, cota: i32) {
     *((this + 0xe1) as *mut u8) = 1;
 }
 
-/// { 0x641510 } (thiscall, ret 0, ita_ser_a.cpp): `ItaSerA::create_table()`: 18 clubes ([0x9cf570]); cheia, o fundo
+/// Serie A has 18 clubs; the prize fund starts at 250,000 per place (paid by table position when the league ends); TV
+/// pays 5,000,000 to each club
+/// Original: `ItaSerA::create_table` (0x641510, ita_ser_a.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x641510 } (thiscall, ret 0, ita_ser_a.cpp): `ItaSerA::create_table()`: 18 clubes ([0x9cf570]); cheia, o fundo
 /// pela cota de 250.000 e a TV de 5.000.000 a cada clube (League::pay_tv_rights 0x683010: thiscall(liga, valor, 0),
 /// ret 8); devolve 1 (0 sem encher). Fonte 0x9ea2a8, linha 0x253.
 unsafe extern "thiscall" fn tabela_da_serie_a(this: usize) -> u32 {
@@ -1891,7 +1968,10 @@ unsafe extern "thiscall" fn tabela_da_serie_a(this: usize) -> u32 {
     1
 }
 
-/// { 0x646780 } (thiscall, ret 0, ita_ser_b.cpp): `ItaSerB::create_table()`: 20 clubes ([0x9cf574]); cheia, o fundo
+/// Serie B has 20 clubs; prize fund of 70,000 per place; no TV money
+/// Original: `ItaSerB::create_table` (0x646780, ita_ser_b.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x646780 } (thiscall, ret 0, ita_ser_b.cpp): `ItaSerB::create_table()`: 20 clubes ([0x9cf574]); cheia, o fundo
 /// pela cota de 70.000 (sem TV) e 1. Fonte 0x9ea384, linha 0x19d.
 unsafe extern "thiscall" fn tabela_da_serie_b(this: usize) -> u32 {
     match cqj4_encher(this, 0x14, 0x9ea384, 0x19d, KEY_CLUB_COMP_ITALIAN_SERIE_B) {
@@ -1902,13 +1982,19 @@ unsafe extern "thiscall" fn tabela_da_serie_b(this: usize) -> u32 {
     1
 }
 
-/// { 0x64b670 } (thiscall, ret 0, ita_ser_c1a.cpp): `ItaSerC1a::create_table()`: 18 clubes ([0x9cf578]), sem fundo
+/// Serie C1/A has 18 clubs; no prize fund and no TV money
+/// Original: `ItaSerC1a::create_table` (0x64b670, ita_ser_c1a.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x64b670 } (thiscall, ret 0, ita_ser_c1a.cpp): `ItaSerC1a::create_table()`: 18 clubes ([0x9cf578]), sem fundo
 /// nem TV; devolve se encheu. Fonte 0x9ea474, linha 0x1bd.
 unsafe extern "thiscall" fn tabela_da_c1a(this: usize) -> u32 {
     cqj4_encher(this, 0x12, 0x9ea474, 0x1bd, KEY_CLUB_COMP_ITALIAN_SERIE_C1_A).unwrap_or(false) as u32
 }
 
-/// { 0x64f820 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::create_table()`: 18 clubes ([0x9cf57c]); como a
+/// Serie C1/B has 18 clubs; no prize fund and no TV money
+/// Original: `ItaSerC1b::create_table` (0x64f820, ita_ser_c1b.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x64f820 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::create_table()`: 18 clubes ([0x9cf57c]); como a
 /// C1/A. Fonte 0x9ea558, linha 0x1be.
 unsafe extern "thiscall" fn tabela_da_c1b(this: usize) -> u32 {
     cqj4_encher(this, 0x12, 0x9ea558, 0x1be, KEY_CLUB_COMP_ITALIAN_SERIE_C1_B).unwrap_or(false) as u32

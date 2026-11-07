@@ -63,7 +63,13 @@ unsafe fn erro_de_match_man(linha: u32) -> ! {
     sair(-1)
 }
 
-/// { 0x6db500 } (ret 0x24, match_man.cpp): monta a tatica `t` de um lado (+0x9032 ou +0x9102 do
+/// sets up one side's tactics (manager, players, club, opponent, match, home side) and selects: at the human's club the
+/// stored lines (0x5fbe20/0x5fbd00) and the automatic 0x6dbc50 mode 1 or the regulars (0x6dbb80); otherwise the
+/// automatic mode 2 and the count of the home players; the substitutes by the bench and the club's tactical line.
+/// Returns how many it selected
+/// Original: `select_side` (0x6db500, match_man.cpp, thiscall, ret 0x24).
+///
+/// [pt] { 0x6db500 } (ret 0x24, match_man.cpp): monta a tatica `t` de um lado (+0x9032 ou +0x9102 do
 /// motor) e escala o time: o tecnico e a ficha dele, os jogadores do bloco, o lado, o clube, o
 /// adversario e a partida; o modo (+0x19 humano/+0x1a 3) pelo mando. No clube do humano, as linhas
 /// taticas guardadas (0x5fbe20/0x5fbd00) e, sem o tecnico humano, a escalacao automatica no modo 1
@@ -187,7 +193,11 @@ unsafe extern "thiscall" fn escalar_lado(t: usize, m: usize, tecnico: usize, lin
     n
 }
 
-/// { 0x6b4190 } (match_day.cpp): o fim do dia de jogos. Libera a lista global [0xb67dc8], os dois
+/// frees the global list, the day's vectors and, for each match, the engine (0x6b97a0), the summary and the +0x5f
+/// object
+/// Original: `end_day` (0x6b4190, match_day.cpp, thiscall).
+///
+/// [pt] { 0x6b4190 } (match_day.cpp): o fim do dia de jogos. Libera a lista global [0xb67dc8], os dois
 /// vetores do dia (+1, +0xd) e, para cada partida (+0x19, 0x69 bytes cada, +0x21 delas), o motor
 /// (0x6b97a0 e liberado; a partida sai de [0xde2f70] por 0x90d6b0), o resumo (+0x5b) e o objeto de
 /// +0x5f (0x453bc0); por fim o vetor das partidas.
@@ -245,7 +255,11 @@ unsafe extern "thiscall" fn encerrar_dia(dia: usize) {
     *d(0x21) = 0;
 }
 
-/// { 0x6b42a0 } (match_day.cpp): com partidas no dia (+0x2b), limpa os 0x40 bytes de cada uma
+/// clears each of the day's matches' fields and picks the human's (or the first marked) for the screen (0x717cc0,
+/// 0x7fc7e0)
+/// Original: `pick_day_match` (0x6b42a0, match_day.cpp, thiscall).
+///
+/// [pt] { 0x6b42a0 } (match_day.cpp): com partidas no dia (+0x2b), limpa os 0x40 bytes de cada uma
 /// (+0xd, 0x54 bytes, +0x15 delas) a partir de +0x14 e escolhe a do humano (+0x10; senao a primeira
 /// com +0xc) para a tela (0x717cc0 e 0x7fc7e0 com [0xb67a48] ligado). Devolve 1 se havia uma do
 /// humano.
@@ -296,7 +310,12 @@ unsafe extern "thiscall" fn comparar_escolher_partida_do_dia(dia: usize) -> u32 
 
 // ---------- centesima quinquagesima primeira leva: o andamento do dia de jogos (0x6b5a70, 0x6b5ce0, 0x6b5f00) ----------
 
-/// { 0x6b5a70 } (thiscall, match_day.cpp): comeca a proxima partida do dia (+0x19, 0x69 bytes cada,
+/// starts the day's next match after the current one (+0x2f): skips the decided ones, those of a human club and those
+/// already started; creates the engine (0x6b7e50) and prepares it (0x6b7f20); in the 1st round with none, moves to the
+/// 2nd. Returns 1 if it started one
+/// Original: `start_next_match` (0x6b5a70, match_day.cpp, thiscall).
+///
+/// [pt] { 0x6b5a70 } (thiscall, match_day.cpp): comeca a proxima partida do dia (+0x19, 0x69 bytes cada,
 /// +0x21 delas) depois da atual (+0x2f; -2 = acabou). A atual ainda com motor (+0x57) e erro 0x68d.
 /// Pula as ja decididas (+0x47 -2), as sem jogo marcado na 2a volta (+0x33 1 e +0x63.+0x10 zero), as
 /// de clube humano (0x600a50 com +0x44/+0x45) e as ja comecadas (+0x47 != -1, +0x57, +0x53). Na
@@ -359,7 +378,12 @@ unsafe extern "thiscall" fn iniciar_proxima_partida(dia: usize) -> u32 {
     }
 }
 
-/// { 0x6b5ce0 } (thiscall, ret 4, match_day.cpp): faz andar a partida atual do dia (+0x2f). Sem
+/// one engine step of the current match (1 in 3 or 6 calls, by the modes in [0xae3138]) or to the end; when it
+/// finishes, creates the summary, records it (0x7293f0), frees the engine and takes it off the queue. Returns 1 if it
+/// finished
+/// Original: `step_day_match` (0x6b5ce0, match_day.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x6b5ce0 } (thiscall, ret 4, match_day.cpp): faz andar a partida atual do dia (+0x2f). Sem
 /// `ate_o_fim`, so 1 de cada 3 (0x40000 em [0xae3138]+4) ou 6 (0x80000) chamadas, pelo contador
 /// [0xb67a54] (0..100), e um passo do motor (0x6b98c0 com 1); com `ate_o_fim`, passos (-1) ate o
 /// fim. O estado vai em +0x67; ao terminar (2 ou 8) conta em +0x25, cria o resumo (+0x5f, 0xd7a
@@ -439,7 +463,12 @@ unsafe extern "thiscall" fn andar_partida_do_dia(dia: usize, ate_o_fim: u32) -> 
     1
 }
 
-/// { 0x6b5f00 } (thiscall, ret 4, match_day.cpp): o fechamento de uma partida do dia `p` (0x69
+/// copies the day's match into the match, records the result in the competition (method 1, or 0x924050 and
+/// 0x5ab510/0x5aa680 for the away game) and runs the post-match: players, events, contracts, suspensions, states, the
+/// history and each side's club (0x6b79a0)
+/// Original: `close_day_match` (0x6b5f00, match_day.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x6b5f00 } (thiscall, ret 4, match_day.cpp): o fechamento de uma partida do dia `p` (0x69
 /// bytes): copia os 0x4f bytes de p+4 para a partida (+0) e, com competicao (+0x14), le o numero da
 /// rodada de um clube humano ([adadfc] da competicao +8, 0x4a4850, +0x2d acima de 1; como na
 /// original, olha so o visitante +0x20 nas duas voltas) e registra o resultado: p+0x47 = -3 (jogo de
@@ -552,7 +581,14 @@ unsafe extern "thiscall" fn comparar_fechar_partida_do_dia(dia: usize, p: usize)
 
 // ---------- centesima quinquagesima segunda leva: o laco do dia de jogos (0x6b4360) ----------
 
-/// { 0x6b4360 } (thiscall, match_day.cpp, ~3,3 KB): joga o dia `dia` (+0x19 partidas de 0x69 bytes,
+/// plays the day. On a network, ties the humans to their matches (0x11d-byte scoreboard, 0x765480, 0x5fcff0/0x5fd100)
+/// and plays them to the end; then each match without an engine: with a human on a network, steps the current one
+/// (0x6b5ce0) and restarts; otherwise creates the engine, plays to the end, creates the summary, records it and writes
+/// the score with the percentage on the bar (0x66f4e0, 0x802f80). Finally closes each match (0x6b5f00), redoes the
+/// humans' stored tactics and frees the summaries
+/// Original: `play_the_day` (0x6b4360, match_day.cpp (~3.3 KB), thiscall).
+///
+/// [pt] { 0x6b4360 } (thiscall, match_day.cpp, ~3,3 KB): joga o dia `dia` (+0x19 partidas de 0x69 bytes,
 /// +0x21 delas, +0x25 terminadas, +0x34 a do humano). Comeca a proxima (0x6b5a70). Em rede
 /// ([0xa5a390]): para cada partida pendente com humano (+0x53) cria o placar dos humanos (+0x5b,
 /// 0x11d bytes), liga cada humano ao seu lado (0x765480 +0xe2/+0xe6, 0x4542f0, 0x727f00), guarda o
@@ -900,7 +936,13 @@ unsafe extern "thiscall" fn comparar_jogar_o_dia(dia: usize) -> u32 {
 
 // ---------- centesima quinquagesima terceira leva: a montagem do dia de jogos (0x6b3c10, 0x714d30, 0x6d8c70) ----------
 
-/// { 0x6b3c10 } (thiscall, ret 8, match_day.cpp): monta o dia `dia` com as partidas da data `data`
+/// sets up the day (date, mode 0..2): zeroes the vectors, gathers the pending matches of each list (0x5ae6a0), records
+/// the already decided ones (0x923630/0x923cc0), groups by list and by competition (qsort 0x6b6510), points each match
+/// to its competition (+0x63), creates the global list [0xb67dc8] and works out the day's interest (0x6b5040). Returns
+/// the day
+/// Original: `set_up_the_day` (0x6b3c10, match_day.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x6b3c10 } (thiscall, ret 8, match_day.cpp): monta o dia `dia` com as partidas da data `data`
 /// no modo `modo` (0, 1 ou 2; fora disso ou sem data, erro 0x93). Zera o dia (+0 modo; vetores +1
 /// grupos de 24 bytes, +0xd competicoes de 0x54, +0x19 partidas de 0x69, cada um com capacidade e
 /// contagem; +0x2f -1, +0x33 1). Para cada uma das [0xb64738] listas (0x5ae6a0): as partidas
@@ -1072,12 +1114,19 @@ unsafe extern "thiscall" fn montar_o_dia(dia: usize, data: usize, modo: u32) -> 
     dia
 }
 
-/// { 0x714d30 } (thiscall, match_pl.cpp): o lado do jogador `j` (+0x27).
+/// the player's side (+0x27)
+/// Original: `player_side` (0x714d30, match_pl.cpp, thiscall).
+///
+/// [pt] { 0x714d30 } (thiscall, match_pl.cpp): o lado do jogador `j` (+0x27).
 unsafe extern "thiscall" fn lado_do_jogador(j: usize) -> u8 {
     *((j + 0x27) as *const u8)
 }
 
-/// { 0x6d8c70 } (thiscall, ret 4, match_events.cpp): os sons dos eventos `ativos` (16 marcas) ja
+/// have the sounds of the 16 marked events played and passed their window (clock 0x90c510; stops the finished channels,
+/// 0x802a50)?
+/// Original: `sounds_finished` (0x6d8c70, match_events.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x6d8c70 } (thiscall, ret 4, match_events.cpp): os sons dos eventos `ativos` (16 marcas) ja
 /// tocaram? Para cada marcado, o canal (+0x10 + k; -1 livre, -2 espera) que ainda toca (0x8029f0 em
 /// 0xb74450) segura; o que acabou e parado (0x802a50) e liberado. Devolve 1 so se todos os marcados
 /// ja passaram da janela (+0x2d6c + 4k ate + [+0x2dac], pelo relogio 0x90c510).
@@ -1723,7 +1772,11 @@ unsafe extern "C" fn comparar_clube_do_pos_jogo(clube: usize, outro: usize, part
 
 // ---------- 215a leva: o fim das telas da partida: a partida que o humano deixa e a ficha do jogo de um registro de estatística (match_day.cpp, match_screens.cpp) ----------
 
-/// { 0x6b6970 } (cdecl, match_day.cpp): o humano da vez ([0xb77c7a]) deixa a partida que assistia
+/// the current human leaves the match he was watching; with no other human watching, the match runs to the end, is
+/// recorded and leaves the queue
+/// Original: `match_day_drop_viewer_and_finish_match` (0x6b6970, match_day.cpp, cdecl).
+///
+/// [pt] { 0x6b6970 } (cdecl, match_day.cpp): o humano da vez ([0xb77c7a]) deixa a partida que assistia
 /// (chamada só quando um jogador da rede sai, 0x838c00). A partida dele ([0xb74c26 + 0x300 × vez],
 /// 0x765480 → +0xe2): se outro dos 16 humanos (as últimas 16 fichas de [0xae23bc], 110 bytes, +0x5f
 /// ativo) assiste a mesma e é a vez dele (0x7fffa0 no gerente), sai calado; senão tira a vez dos
@@ -1828,7 +1881,10 @@ unsafe extern "C" fn largar_partida_assistida() {
     tirar(u(0xde2f70, 0), jogo + 4);
 }
 
-/// { 0x729e30 } (thiscall, ret 8, match_stats.cpp): a ficha do jogo (0x4f bytes) do registro `k` do
+/// finds in the fixture list the match of a statistics record (date, competition and club) and copies the fixture
+/// Original: `Match_Stats::find_record_fixture` (0x729e30, match_stats.cpp, thiscall).
+///
+/// [pt] { 0x729e30 } (thiscall, ret 8, match_stats.cpp): a ficha do jogo (0x4f bytes) do registro `k` do
 /// índice de estatísticas ([this], 12 bytes: +0 competição, +4 um dos clubes, +8/+0xa a data): pede
 /// à agenda [0xae2a58] (0x5acbe0) os jogos daquela data e competição numa lista local (0x68d020) e copia
 /// para `saida` o primeiro com o clube +4 na casa (+0xc) ou fora (+0x10). Devolve 1 se achou. Índice
@@ -1884,7 +1940,10 @@ unsafe extern "thiscall" fn comparar_ficha_do_registro(estat: usize, k: i32, sai
 
 // ---------- 170a leva: o fechamento do motor (4): as ordens das partidas e dos jogadores e a troca do evento ----------
 
-/// { 0x6b6510 } (cdecl, qsort): a ordem das partidas do dia (registros de 0x69 bytes): pela
+/// the day's match order (qsort): competition, record fields and the club name
+/// Original: `day_match_order` (0x6b6510, match_eng.cpp, cdecl).
+///
+/// [pt] { 0x6b6510 } (cdecl, qsort): a ordem das partidas do dia (registros de 0x69 bytes): pela
 /// competição (+4), depois +0x46 (byte), +0x36, +0x38 e +0x34 (palavras) e, empatando tudo, pelo nome
 /// do primeiro clube (+0x20 → +0x38) na comparação de textos 0x90c1d0 (sem maiúsculas).
 unsafe extern "C" fn ordem_das_partidas_do_dia(a: usize, b: usize) -> i32 {
@@ -1907,7 +1966,10 @@ unsafe extern "C" fn ordem_das_partidas_do_dia(a: usize, b: usize) -> i32 {
     textos(nome(a), nome(b), 1, 0)
 }
 
-/// { 0x6bd840 } (cdecl, qsort, match_eng.cpp): a ordem dos jogadores na vez do motor ([0xb67a64]):
+/// the players' order on the engine's turn (qsort): the marked ones first, then by strength
+/// Original: `action_order` (0x6bd840, match_eng.cpp, cdecl).
+///
+/// [pt] { 0x6bd840 } (cdecl, qsort, match_eng.cpp): a ordem dos jogadores na vez do motor ([0xb67a64]):
 /// com +0x8eb2 ligado, o de +0xf582 vem primeiro; depois o de +0x91de; os demais pela força
 /// (+0x104 + +0x105) × (+0x3b × 0,005 + 0,5) × +0x4d (f32), truncada, do maior para o menor.
 unsafe extern "C" fn ordem_de_acao(a: *const usize, b: *const usize) -> i32 {
@@ -1937,7 +1999,10 @@ unsafe extern "C" fn ordem_de_acao(a: *const usize, b: *const usize) -> i32 {
     forca(pb).wrapping_sub(forca(pa))
 }
 
-/// { 0x6d5d80 } (stdcall, ret 0xc, match_events.cpp): troca o evento da narração por uma variante:
+/// swaps the commentary event for a variant, by a draw and by the play type
+/// Original: `event_variant` (0x6d5d80, match_events.cpp, stdcall).
+///
+/// [pt] { 0x6d5d80 } (stdcall, ret 0xc, match_events.cpp): troca o evento da narração por uma variante:
 /// com sorteio(3) ≠ 0 fica o mesmo; senão, pelo tipo do lance `tipo` (1, 2, 8, 0x10, 0x20 — este com
 /// outro sorteio(3)) há tabelas de troca; os lances 2..4 (byte baixo de `lados`) têm as suas, e o
 /// byte de cima 3..5 troca 0x1f4b por 0x217e.

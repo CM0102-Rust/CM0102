@@ -37,7 +37,12 @@ unsafe fn cpt6_dezembro(na: usize, h: &mut [f64; 6], marca: &mut u8) {
     *marca = 0;
 }
 
-/// { 0x5d5f20 } (cdecl, game.cpp): `game_update_nation_coefficients()`, todo dia pelo laço do dia do jogo (0x5cda10).
+/// the first time, each nation history gets the coefficient at +0xa8; on the table day of the month, the weighted
+/// history sum in an array that is sorted and freed; on the December day, the current year gets reputation × 0.05 × (12
+/// − mark) × 3 (mark < 12), the history moves one year and the current year and the mark are cleared
+/// Original: `game_update_nation_coefficients` (0x5d5f20, game.cpp, cdecl).
+///
+/// [pt] { 0x5d5f20 } (cdecl, game.cpp): `game_update_nation_coefficients()`, todo dia pelo laço do dia do jogo (0x5cda10).
 /// Na primeira vez ([0x9cd218]), a história de cada nação (+0xb0..+0xd0) recebe o coeficiente de +0xa8. No dia do
 /// mês da tabela 0x9cd200 (palavra pelo mês 0x54cfb0): um vetor (malloc de 12 bytes por nação: a nação e a soma
 /// 0,6·c0 + 0,4·b8 + 0,2·b0 + 0,8·c8 + d8 + d0), ordenado (qsort 0x945333 com 0x4afba0) e solto; no dia de dezembro
@@ -146,7 +151,10 @@ unsafe extern "C" fn comparar_coeficientes_das_nacoes() {
     PLACAR.registrar(erro.is_none(), || format!("coeficientes_das_nacoes(dezembro {}): {}", dez, erro.clone().unwrap_or_default()));
 }
 
-/// { 0x5d6250 } (cdecl, game.cpp): `is_player_regen_day(dia)`: 1 nos dias 0, 80, 173 e 250 do ano (a busca das
+/// 1 on days 0, 80, 173 and 250 of the year (the retirement scan days), otherwise 0
+/// Original: `is_player_regen_day` (0x5d6250, game.cpp, cdecl).
+///
+/// [pt] { 0x5d6250 } (cdecl, game.cpp): `is_player_regen_day(dia)`: 1 nos dias 0, 80, 173 e 250 do ano (a busca das
 /// aposentadorias), senão 0. Pelo laço do dia do jogo (0x5cda97, com a data inteira: o dia é a palavra baixa).
 /// A original só devolve o al (o ah fica com o byte alto do dia).
 unsafe extern "C" fn dia_das_aposentadorias(dia: u32) -> u32 {
@@ -162,7 +170,10 @@ unsafe extern "C" fn comparar_dia_das_aposentadorias(dia: u32) -> u32 {
     r
 }
 
-/// { 0x5d61d0 } (cdecl, game.cpp): `clamp_char_sum(a, b, min, max)`: a soma dos dois bytes com sinal (16 bits),
+/// the sum of two signed bytes clamped between the given minimum and maximum
+/// Original: `clamp_char_sum` (0x5d61d0, game.cpp, cdecl).
+///
+/// [pt] { 0x5d61d0 } (cdecl, game.cpp): `clamp_char_sum(a, b, min, max)`: a soma dos dois bytes com sinal (16 bits),
 /// presa entre os outros dois. Devolve o ax da original: `min` ou `max` estendidos, ou o byte alto do `max`
 /// estendido com a soma no al (os 26 chamadores, no diário dos jogadores, só gravam o al).
 unsafe extern "C" fn soma_presa(a: u32, b: u32, min: u32, max: u32) -> u32 {
@@ -270,7 +281,12 @@ unsafe fn cps5_atrito(p: usize, clube: usize, k: usize) {
     marcar(k, marca, 0);
 }
 
-/// { 0x5d6d10 } (cdecl, game.cpp): `game_update_squad_relationships()`, todo dia pelo laço do dia do jogo. (1) Dez
+/// ten random pairs of team-mates: a disliked one stops being disliked and may fight (0x5888a0); otherwise becomes
+/// disliked, liked or stops being liked; every 50 days, random clubs go through the dressing room friction; on the
+/// other days each player, by attribute draws, may reach the friction with the manager
+/// Original: `game_update_squad_relationships` (0x5d6d10, game.cpp, cdecl).
+///
+/// [pt] { 0x5d6d10 } (cdecl, game.cpp): `game_update_squad_relationships()`, todo dia pelo laço do dia do jogo. (1) Dez
 /// vezes: um clube sorteado e duas vagas do elenco sorteadas (50); pessoas diferentes e sorteio(+0x5b da primeira) = 0:
 /// se a primeira não gosta da segunda, deixa de não gostar (0x547c50) e, no mesmo clube de contrato e com o vínculo
 /// marcado em +0x45 & 0x800, a briga (0x5888a0); senão, 1/3 passa a não gostar (0x547af0), 1/3 do resto passa a gostar
@@ -392,7 +408,11 @@ unsafe extern "C" fn comparar_relacoes_do_elenco() {
     orig::<unsafe extern "C" fn()>(1128)()
 }
 
-/// { 0x5d7190 } (cdecl, game.cpp): `game_check_club_dressing_room_unrest(clube)`: cada pessoa do elenco (+0xd7, 50
+/// each squad player with a contract and preferences: the first team-mate he dislikes; with day % 14 + id = 0, the
+/// complaint against the manager, the assistant or another (0x587c60) and the flag on the contract (0x867700)
+/// Original: `game_check_club_dressing_room_unrest` (0x5d7190, game.cpp, cdecl).
+///
+/// [pt] { 0x5d7190 } (cdecl, game.cpp): `game_check_club_dressing_room_unrest(clube)`: cada pessoa do elenco (+0xd7, 50
 /// vagas) com vínculo com o clube (0x4cf5f0) e preferências (+0x65) passa pelo atrito com o técnico (o primeiro colega
 /// de quem não gosta; a queixa só com dia % 14 + id = 0). Pelas relações do elenco (0x5d6d10) nos dias múltiplos de 50.
 unsafe extern "C" fn atrito_com_o_tecnico(clube: usize) {
@@ -423,7 +443,11 @@ unsafe fn cps5_do_elenco(p: usize, clube: usize) -> bool {
     p != 0 && (read_usize(p) as i32) < read_usize(0xae2364) as i32 && read_usize(p + 0x39) == clube && read_usize(p + 0x61) != 0
 }
 
-/// { 0x5ce0b0 } (cdecl, game.cpp): `game_spread_squad_morale_by_leadership()`, todo dia pelo laço do dia do jogo. Cada
+/// one club in seven each day (not national teams): squad leadership and leadership × morale summed; each player draws
+/// from them and his own morale and the morale goes up or down by one (0x544710)
+/// Original: `game_spread_squad_morale_by_leadership` (0x5ce0b0, game.cpp, cdecl).
+///
+/// [pt] { 0x5ce0b0 } (cdecl, game.cpp): `game_spread_squad_morale_by_leadership()`, todo dia pelo laço do dia do jogo. Cada
 /// clube que não é seleção (0x53b900), com sorteio(7) = 0: soma a liderança (jogador +0x2f) e liderança × moral do
 /// vínculo (+0x44) do elenco (+0xd7, 50 vagas); menos de 16 jogadores contam 10 cada um que falta. Com soma não nula,
 /// cada jogador sorteia (2 × Σ liderança × moral) / (liderança dele + soma) mais sorteio(moral / 12), em byte com sinal:
@@ -531,7 +555,12 @@ unsafe fn cps6_dias_desde(p: usize) -> i32 {
     f(0xae2c90, read_usize(p + 0x3e) as u32, read_usize(p + 0x42) as u32)
 }
 
-/// { 0x5d6aa0 } (cdecl, game.cpp): `game_check_players_missing_training()`, todo dia pelo laço do dia do jogo. A partir
+/// n/250 consecutive people from a random one: a present player, with training and without a serious injury misses
+/// training (0x41a360) by a draw on the sum of attributes, morale and likes of the manager (more likely when newly
+/// arrived) or by the contract flags
+/// Original: `game_check_players_missing_training` (0x5d6aa0, game.cpp, cdecl).
+///
+/// [pt] { 0x5d6aa0 } (cdecl, game.cpp): `game_check_players_missing_training()`, todo dia pelo laço do dia do jogo. A partir
 /// de uma pessoa sorteada (sorteio(n − n/250 − 1)), n/250 pessoas seguidas: jogador (+0x61, função +0x3d = 11) com
 /// contrato e clube, presente (0x418f60), com o registro de treino (0x8b39f0, +0x15) e sem lesão grave (0x62c400 ≠ 2).
 /// (1) Com +0x5b < 8, jogador +0x2f < 8 e a soma (jogador +0x2f, +0x18, +0x5b, vínculo +0x44, −5 se +0x5b ou o moral
@@ -640,7 +669,11 @@ unsafe extern "C" fn comparar_faltas_ao_treino() {
     orig::<unsafe extern "C" fn()>(1131)()
 }
 
-/// { 0x5ce060 } (cdecl, game.cpp): `game_update_comps_for_date(marca)`: cada competição da lista ([0xadadfc], conta
+/// each competition in the list gets the day (virtual +0x14 with the game date and the flag); with the flag, the next
+/// step of [0xae2a58] (0x5aaf00)
+/// Original: `game_update_comps_for_date` (0x5ce060, game.cpp, cdecl).
+///
+/// [pt] { 0x5ce060 } (cdecl, game.cpp): `game_update_comps_for_date(marca)`: cada competição da lista ([0xadadfc], conta
 /// [0xadadf8] relida a cada volta) recebe o dia (virtual +0x14 com a data do jogo 0xae2c90 e a marca); com a marca, o
 /// passo seguinte do [0xae2a58] (0x5aaf00, que a original chama em salto de cauda). Pelo laço do dia do jogo (com 1).
 unsafe extern "C" fn competicoes_do_dia(marca: u32) {
@@ -671,7 +704,10 @@ unsafe fn cps6_confianca(this: usize, clube: usize) -> usize {
     read_usize(this).wrapping_add(read_usize(clube).wrapping_mul(0x49)) + 6
 }
 
-/// { 0x5cdde0 } (thiscall, ret 8, game.cpp): `manager_manager_adjust_board_confidence(clube, delta)`: soma `delta`
+/// adds the delta to the board confidence in the club (+6 of the 73-byte club row), held to 1..10000
+/// Original: `manager_manager_adjust_board_confidence` (0x5cdde0, game.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x5cdde0 } (thiscall, ret 8, game.cpp): `manager_manager_adjust_board_confidence(clube, delta)`: soma `delta`
 /// (palavra) à confiança da diretoria no clube (+6 da linha do MANAGER_MANAGER [0xb67a44]), presa em 1..10000. Clube
 /// nulo: nada. Pelo laço do dia do jogo (com −5).
 unsafe extern "thiscall" fn mudar_confianca_da_diretoria(this: usize, clube: usize, delta: u32) {
@@ -701,13 +737,19 @@ unsafe extern "thiscall" fn comparar_mudar_confianca_da_diretoria(this: usize, c
 
 // ---------- 188a leva: a lista de observados do gerente de transferências, a entrada do treino e a carga de treino (game.cpp, injury.cpp) ----------
 
-/// { 0x5d5ab0 } (thiscall, game.cpp): o gerente da lista de observados guardado em +0x856 do gerente
+/// the shortlist manager kept in the transfer manager
+/// Original: `transfer_manager_get_shortlist_manager` (0x5d5ab0, game.cpp, thiscall).
+///
+/// [pt] { 0x5d5ab0 } (thiscall, game.cpp): o gerente da lista de observados guardado em +0x856 do gerente
 /// de transferências.
 unsafe extern "thiscall" fn lista_de_observados(gerente: usize) -> usize {
     core::ptr::read_unaligned((gerente + 0x856) as *const usize)
 }
 
-/// { 0x5d5ac0 } (thiscall, ret 4, game.cpp): a entrada de 6 bytes do jogador na tabela do treino
+/// the player's 6-byte entry in the training table
+/// Original: `training_manager_get_player_entry` (0x5d5ac0, game.cpp, thiscall).
+///
+/// [pt] { 0x5d5ac0 } (thiscall, ret 4, game.cpp): a entrada de 6 bytes do jogador na tabela do treino
 /// ([treino+0x651d]), pelo id dos dados do jogador ([[jogador+0x61]]).
 unsafe extern "thiscall" fn entrada_do_treino(treino: usize, jogador: usize) -> usize {
     let tabela = core::ptr::read_unaligned((treino + 0x651d) as *const usize);
@@ -720,7 +762,10 @@ unsafe fn byte_da_carga(lesoes: usize, id: *const i32) -> *mut u8 {
     (*(lesoes as *const usize) as isize + *id as isize * 31 + 0x1e) as *mut u8
 }
 
-/// { 0x62c660 } (thiscall, ret 8, injury.cpp): grava a carga de treino `valor` do jogador `*id`.
+/// stores the player's training load in the fitness record
+/// Original: `Injury::set_training_load` (0x62c660, injury.cpp, thiscall).
+///
+/// [pt] { 0x62c660 } (thiscall, ret 8, injury.cpp): grava a carga de treino `valor` do jogador `*id`.
 unsafe extern "thiscall" fn gravar_carga_de_treino(lesoes: usize, id: *const i32, valor: u8) {
     *byte_da_carga(lesoes, id) = valor;
 }
@@ -748,7 +793,10 @@ unsafe extern "thiscall" fn comparar_gravar_carga_de_treino(lesoes: usize, id: *
 
 // ---------- 178a leva: a media do jogo, o valor do contrato e o nivel para a selecao ----------
 
-/// { 0x5d5a60 } (thiscall, ret 4, game.cpp): a média +0x20/+0x28 (com `segunda`) ou +0x10/+0x18 (f64,
+/// the f64 average +0x20/+0x28 or +0x10/+0x18 (zero divisor: 6.8)
+/// Original: `game_average` (0x5d5a60, game.cpp, thiscall).
+///
+/// [pt] { 0x5d5a60 } (thiscall, ret 4, game.cpp): a média +0x20/+0x28 (com `segunda`) ou +0x10/+0x18 (f64,
 /// como a original deixa no x87); com divisor zero (ou não comparável), 6.8.
 unsafe extern "thiscall" fn media_do_jogo(t: usize, segunda: u8) -> f64 {
     let d = |o: usize| core::ptr::read_unaligned((t + o) as *const f64);
@@ -759,7 +807,10 @@ unsafe extern "thiscall" fn media_do_jogo(t: usize, segunda: u8) -> f64 {
     n / q
 }
 
-/// { 0x4d0c20 } (thiscall, ret 4, contract_manager.cpp): o dword +0xc da ficha de contrato (0x50 bytes
+/// dword +0xc of the person's contract record
+/// Original: `contract_value` (0x4d0c20, contract_manager.cpp, thiscall).
+///
+/// [pt] { 0x4d0c20 } (thiscall, ret 4, contract_manager.cpp): o dword +0xc da ficha de contrato (0x50 bytes
 /// a partir de [this]) da pessoa `*p`, pelo índice em +0 do registro de 79 bytes em [0xae2d0c]; 0 sem
 /// pessoa, com id fora de [0xae2364], índice negativo ou ficha no endereço 0.
 unsafe extern "thiscall" fn valor_do_contrato(t: usize, p: *const i32) -> u32 {
@@ -777,7 +828,10 @@ unsafe extern "thiscall" fn valor_do_contrato(t: usize, p: *const i32) -> u32 {
     core::ptr::read_unaligned((ficha + 0xc) as *const u32)
 }
 
-/// { 0x76d810 } (stdcall, ret 0xc, national_teams.cpp): o nível 1..3 do jogador `j` para a seleção
+/// the player's level 1..3 for the national team by reputation and position ratings
+/// Original: `national_team_level` (0x76d810, national_teams.cpp, stdcall).
+///
+/// [pt] { 0x76d810 } (stdcall, ret 0xc, national_teams.cpp): o nível 1..3 do jogador `j` para a seleção
 /// (0 com reputação `*rep` abaixo de 100, ou 50 com `base`, ou goleiro de nota 15): 1 para líbero ou
 /// zagueiro, 2 para volante, meia ou meia-atacante (nota 15 em +0x10..+0x14 da ficha), senão 3.
 /// Devolve só `al`.

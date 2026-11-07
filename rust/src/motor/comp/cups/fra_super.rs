@@ -138,7 +138,13 @@ unsafe fn cql12_mando_da_franca(this: usize) -> u32 {
     MANDOS[sortear(6) as usize] as i32 as u32
 }
 
-/// { 0x5bf5d0 } (thiscall, ret 0x10, fra_super.cpp; a virtual +0x3c da Supercopa da França): `FraSuper::
+/// rule: the French Super Cup (Trophée des Champions) is a single match between 2 clubs, drawn on 5/7 and played on
+/// 24/7 (moved to weekday 5), decided on penalties [inference: tiebreak 1]; in 2001 at venue 0x400, in other years at
+/// one of six drawn venues (0x200 to 0x4000: [inference] the country's largest grounds); 60 thousand to each club for
+/// taking part; category 6
+/// Original: `FraSuper::create_round_table` (0x5bf5d0, fra_super.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x5bf5d0 } (thiscall, ret 0x10, fra_super.cpp; a virtual +0x3c da Supercopa da França): `FraSuper::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única com o mando de
 /// `cql12_mando_da_franca` (a original sorteia depois da data do sorteio, que não sorteia: a cópia sorteia logo antes);
 /// a caixa da linha 0x97 sem memória.
@@ -163,7 +169,12 @@ const CQL12_SUPERCOPA_DA_ESPANHA: [Cql12R; 1] = [
     cql12r((5, 6, 0, 5), (0x14, 7, 0, 6, 1, 0), 0, (0, 0x200, 1), 6, (2, 1, 2, 0), (0, 2, 7), (0, 0, 0)), // cql12: a ida da Supercopa da Espanha
 ];
 
-/// { 0x858960 } (thiscall, ret 0x10, spa_super.cpp; a virtual +0x3c da Supercopa da Espanha): `SpaSuper::
+/// rule: the Spanish Super Cup is played over two legs (7 days apart) between 2 clubs, without a draw (+0xd = 0x200:
+/// the built order), drawn on 5/7 with the first leg on 20/8 (moved to weekday 6) at the home side [inference: venue
+/// 0]; two-leg tiebreak 1 [inference: away goals and penalties]; no prize; category 6
+/// Original: `SpaSuper::create_round_table` (0x858960, spa_super.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x858960 } (thiscall, ret 0x10, spa_super.cpp; a virtual +0x3c da Supercopa da Espanha): `SpaSuper::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
 unsafe extern "thiscall" fn cql12_supercopa_da_espanha_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql12_tabela(this, fase, rodadas, extra, saida, &CQL12_SUPERCOPA_DA_ESPANHA, 0xa82a58, 0x99, "cql_12 tabela da supercopa da espanha", |_| {})
@@ -180,7 +191,12 @@ const CQL12_SUPERCOPA_DO_JAPAO: [Cql12R; 1] = [
     cql12r((1, 1, 0, 5), (4, 2, 0, 5, 1, 4), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0x249f0, 0)), // cql12: o jogo da Supercopa do Japão
 ];
 
-/// { 0x666020 } (thiscall, ret 0x10, jap_super.cpp; a virtual +0x3c da Supercopa do Japão): `JapSuper::
+/// rule: the Japanese Super Cup (Xerox Super Cup) is a single match between 2 clubs, drawn on 1/2 and played on 4/3
+/// (moved to weekday 5) at a neutral ground [inference: venue 4], decided on penalties [inference: tiebreak 1]; 150
+/// thousand to the winner; category 6
+/// Original: `JapSuper::create_round_table` (0x666020, jap_super.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x666020 } (thiscall, ret 0x10, jap_super.cpp; a virtual +0x3c da Supercopa do Japão): `JapSuper::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x98 sem memória.
 unsafe extern "thiscall" fn cql12_supercopa_do_japao_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql12_tabela(this, fase, rodadas, extra, saida, &CQL12_SUPERCOPA_DO_JAPAO, 0x9eaf4c, 0x98, "cql_12 tabela da supercopa do japao", |_| {})

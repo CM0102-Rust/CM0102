@@ -579,7 +579,14 @@ const CQO10_COPA_DA_ITALIA: [Cql10R; 5] = [
     cql10r((7, 1, 1, 3), (6, 2, 1, 2, 2, 0), 0x96, (0, 0, 3), 6, (2, 1, 0, 0), (0, 2, 0x39), (0, 0xffff_ffff, 0)),
 ];
 
-/// { 0x63ec50 } (thiscall, ret 0x10, ita_cup.cpp; a virtual +0x3c da Copa da Itália): `ItaCup::create_schedule(fase,
+/// rule: the Coppa Italia starts with three-round groups in August (12 and 19, Saturday [inference: weekday 6], and 29,
+/// Tuesday), each group a league stage (is_league = 1, id 0x3e9 + stage); then the knockout (stage 7) over two legs:
+/// 1st round drawn on 30/8 and played on 19/9 (16 teams from the groups and 16 new), 2nd draw 25/10, match 11/11 (8
+/// new), quarter-finals 29/11 and 12/12, semi-final 10/1 and 23/1, final draw 7/2 and legs on 6/3 and 57 days later;
+/// category 4 up to the 2nd round and 6 after; no per-round prize (−1)
+/// Original: `ItaCup::create_schedule` (0x63ec50, ita_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x63ec50 } (thiscall, ret 0x10, ita_cup.cpp; a virtual +0x3c da Copa da Itália): `ItaCup::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: grupos abaixo da fase 7 (extra = fase + 0x3e9; a caixa da linha 0xc1), o mata-mata na
 /// fase 7 (a caixa da linha 0xe1).
 unsafe extern "thiscall" fn cqo10_copa_da_italia_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
@@ -606,7 +613,13 @@ const CQO10_COPA_C: [Cql10R; 5] = [
     cql10r((0x1a, 3, 1, 3), (9, 4, 1, 2, 2, 0), 0x96, (0, 0, 3), 6, (2, 1, 0, 0), (0, 2, 7), (0, 0xffff_ffff, 0)),
 ];
 
-/// { 0x63cf90 } (thiscall, ret 0x10, ita_c_cup.cpp; a virtual +0x3c da Copa da Série C): `ItaCCup::create_schedule(fase,
+/// rule: the Serie C Cup starts with five-round groups in August (12, 19, 22, 26 and 29; id 0x420 + stage); the
+/// knockout (stage 0xf) over two legs: 1st round drawn on 30/8 and played on 11/10 (32 teams), 2nd 26/10 and 1/11,
+/// quarter-finals 9/11 and 15/11, semi-final 30/11 and 11 April, final draw 26/4 and match on 9 May; 14 days between
+/// legs, 7 in the 2nd round and the final; category 4 up to the 2nd round and 6 after
+/// Original: `ItaCCup::create_schedule` (0x63cf90, ita_c_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x63cf90 } (thiscall, ret 0x10, ita_c_cup.cpp; a virtual +0x3c da Copa da Série C): `ItaCCup::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: grupos abaixo da fase 0xf (extra = fase + 0x420; a caixa da linha 0xbc), o mata-mata na
 /// fase 0xf (a caixa da linha 0xe3).
 unsafe extern "thiscall" fn cqo10_copa_c_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
@@ -626,7 +639,11 @@ const CQO10_SUPERCOPA: [Cql10R; 1] = [
     cql10r((5, 6, 0, 5), (0x13, 7, 0, 6, 1, 0), 0, (0, 0x203, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cqo10: a Supercopa da Itália
 ];
 
-/// { 0x65f920 } (thiscall, ret 0x10, ita_super.cpp; a virtual +0x3c da Supercopa da Itália): `ItaSuper::
+/// rule: the Italian Super Cup is a single match (2 teams) on 19 August, drawn on 5 July, category 6, tie-break 0x203,
+/// no prizes
+/// Original: `ItaSuper::create_round_table` (0x65f920, ita_super.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x65f920 } (thiscall, ret 0x10, ita_super.cpp; a virtual +0x3c da Supercopa da Itália): `ItaSuper::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
 unsafe extern "thiscall" fn cqo10_supercopa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql10_tabela(this, fase, rodadas, extra, saida, &CQO10_SUPERCOPA, 0x9eac34, 0x99, "cqo_10 tabela da supercopa")
@@ -643,7 +660,11 @@ const CQO10_SUPERCOPA_C1: [Cql10R; 1] = [
     cql10r((0xf, 4, 1, 0), (0x15, 4, 1, 6, 1, 0), 0, (0, 0x203, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)),
 ];
 
-/// { 0x63c890 } (thiscall, ret 0x10, ita_c1_super.cpp; a virtual +0x3c da Supercopa da Série C1): `ItaC1Super::
+/// rule: the Serie C1 Super Cup is a single match on 21 May of the following year, drawn on 15 May, category 6, no
+/// prizes
+/// Original: `ItaC1Super::create_round_table` (0x63c890, ita_c1_super.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x63c890 } (thiscall, ret 0x10, ita_c1_super.cpp; a virtual +0x3c da Supercopa da Série C1): `ItaC1Super::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
 unsafe extern "thiscall" fn cqo10_supercopa_c1_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql10_tabela(this, fase, rodadas, extra, saida, &CQO10_SUPERCOPA_C1, 0x9ea1c8, 0x99, "cqo_10 tabela da supercopa c1")
@@ -849,6 +870,20 @@ unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
     (1, m)
 }
 
+/// rule: 48 Italian clubs enter the Coppa Italia. The 32 of the group stage: the season's Serie B clubs, those that
+/// came from Serie B in 4th, 5th or from 18th down and those that came from C1 in 4th, 5th or 6th (positions counted
+/// from 0 [inference]); if short, C1 clubs by position (6th, 7th...). The 32 are sorted (qsort 0x640590) and split into
+/// 4 pots of 8, and each of the 8 rounds draws one club from each pot. In the 2nd round enter the top 3 of last
+/// season's Serie B (the promoted) and the Serie A clubs from 10th to 15th; last, the top 9 of Serie A, up to 48 (the
+/// rest are left out by table order)
+/// Original: `ItaCup::select_entrants` (0x63faf0, ita_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: entram na Copa da Itália 48 clubes italianos. Os 32 da fase de grupos: os da Série B da temporada, os que
+/// vieram da Série B em 4º, 5º ou do 18º para baixo e os que vieram da C1 em 4º, 5º ou 6º (posições contadas de 0
+/// [inferência]); faltando, os da C1 pela posição (6º, 7º...). Os 32 são ordenados (qsort 0x640590) e repartidos em 4
+/// potes de 8, e cada uma das 8 voltas sorteia um clube de cada pote. Na 2ª rodada entram os 3 primeiros da Série B
+/// anterior (os que subiram) e os da Série A do 10º ao 15º; por último os 9 primeiros da Série A, até completar 48 (os
+/// que passam disso ficam de fora pela ordem da tabela)
 unsafe extern "thiscall" fn cqo11_copa_da_italia_inscritos(this: usize) -> i32 {
     cqo11_copa_da_italia(this).0
 }
@@ -954,6 +989,16 @@ unsafe fn cqo11_copa_c(this: usize) -> (i32, i32) {
     (1, m)
 }
 
+/// rule: the Serie C Cup takes the 90 Italian clubs of C1 and C2 (the two C1 groups and the three C2 ones). Those that
+/// came down from Serie B and those that came from C1 in 4th, 5th or 6th go to the last places (from the 81st); the
+/// first 80 are shuffled, sorted by the city's longitude and each of their 8 tens shuffled (the last 10 places stay in
+/// order): the groups are regional [inference]
+/// Original: `ItaCCup::select_entrants` (0x63dfe0, ita_c_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: entram na Copa da Série C os 90 clubes italianos da C1 e da C2 (as duas chaves da C1 e as três da C2). Os que
+/// vieram da Série B (rebaixados) e os que vieram da C1 em 4º, 5º ou 6º vão para as últimas vagas (a partir da 81ª); os
+/// 80 primeiros são embaralhados, ordenados pela longitude da cidade e cada uma das suas 8 dezenas embaralhada (as 10
+/// últimas vagas ficam na ordem): os grupos são regionais [inferência]
 unsafe extern "thiscall" fn cqo11_copa_c_inscritos(this: usize) -> i32 {
     cqo11_copa_c(this).0
 }
@@ -991,6 +1036,12 @@ unsafe fn cqo11_supercopa(this: usize) -> (i32, i32) {
     cqm12_fim(l)
 }
 
+/// rule: the Italian Super Cup is between the Serie A champion (the home side) and the Coppa Italia winner; if the same
+/// club won both, the Cup runner-up plays
+/// Original: `ItaSuper::init_team_list` (0x65fa60, ita_super.cpp, thiscall, ret 0).
+///
+/// [pt] regra: a Supercopa da Itália é entre o campeão da Série A (o mandante) e o campeão da Copa da Itália; se o mesmo
+/// clube ganhou as duas, entra o vice da Copa
 unsafe extern "thiscall" fn cqo11_supercopa_clubes(this: usize) -> i32 {
     cqo11_supercopa(this).0
 }
@@ -1063,7 +1114,12 @@ unsafe fn cqi12_confere(nome: &str, this: usize, g: &Cqi12Regras, r: u32) {
     PLACAR.registrar(r == 1 && lido == previsto && premio && bits, || format!("{}({:#x}) devolveu {} regras {:?} previstas {:?} prêmio ok {} bits ok {}", nome, this, r, lido, previsto, premio, bits));
 }
 
-/// { 0x63f350 } (thiscall, ret 0, ita_cup.cpp; a virtual +0x8c): `ItaCup::set_up_rules()`: os grupos da Copa da Itália
+/// rule: the Italian Cup groups are single round robin, 3 points a win and 1 a draw; tiebreak by codes 4, 1 and 2
+/// [inference: head-to-head, goal difference, goals for]; one qualifier per group (the winner); category 4 (national
+/// cup) on each match; no promotion or relegation; prize fund of 800,000
+/// Original: `ItaCup::set_up_rules` (0x63f350, ita_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x63f350 } (thiscall, ret 0, ita_cup.cpp; a virtual +0x8c): `ItaCup::set_up_rules()`: os grupos da Copa da Itália
 /// em turno único, 3 pontos a vitória e 1 o empate, a categoria 4 (copa nacional), o desempate (4, 1, 2), um
 /// classificado por grupo e o fundo de prêmios de 800.000; depois a tabela das rodadas.
 unsafe extern "thiscall" fn cqi12_copa_italia_regras(this: usize) -> u32 {
@@ -1081,7 +1137,11 @@ unsafe extern "thiscall" fn comparar_cqi12_copa_italia_regras(this: usize) -> u3
     r
 }
 
-/// { 0x63d6e0 } (thiscall, ret 0, ita_c_cup.cpp; a virtual +0x8c): `ItaCCup::set_up_rules()`: os grupos da Copa da
+/// rule: the Serie C Italian Cup groups follow the Italian Cup rules (single round robin, 3/1, tiebreak 4, 1, 2, one
+/// qualifier per group); prize fund of 300,000
+/// Original: `ItaCCup::set_up_rules` (0x63d6e0, ita_c_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x63d6e0 } (thiscall, ret 0, ita_c_cup.cpp; a virtual +0x8c): `ItaCCup::set_up_rules()`: os grupos da Copa da
 /// Itália da Série C, com as mesmas regras da Copa da Itália e o fundo de prêmios de 300.000.
 unsafe extern "thiscall" fn cqi12_copa_c_regras(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_12 regras da copa da serie c");
@@ -1096,7 +1156,12 @@ unsafe extern "thiscall" fn comparar_cqi12_copa_c_regras(this: usize) -> u32 {
     r
 }
 
-/// { 0x426230 } (thiscall, ret 0, bra_champ_cup.cpp; a virtual +0x8c): `BraChampCup::set_up_rules()`: o grupo da
+/// rule: the Brazilian Champions' Cup group is single round robin, 3 points a win and 1 a draw; tiebreak by codes 3, 1,
+/// 2 and 4 [inference: wins, goal difference, goals for, head-to-head]; two qualifiers; rule bits 8 (those who secure
+/// the places go to the next stage); category 23 on each match (the champions' finals one); no prize fund
+/// Original: `BraChampCup::set_up_rules` (0x426230, bra_champ_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x426230 } (thiscall, ret 0, bra_champ_cup.cpp; a virtual +0x8c): `BraChampCup::set_up_rules()`: o grupo da
 /// Copa dos Campeões do Brasil em turno único, 3 pontos a vitória e 1 o empate, a categoria 0x17 (23, a das finais de
 /// campeões), o desempate (3, 1, 2, 4), dois classificados e os bits de regra 8 (quem garante as vagas vai à fase
 /// seguinte); sem fundo de prêmios. Depois a tabela das rodadas.

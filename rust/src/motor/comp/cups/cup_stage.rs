@@ -5,7 +5,14 @@
 
 
 
-/// { 0x522e00 } (thiscall, ret 0x3c, cup_stage.cpp; quadro SEH sem destrutor no caminho normal): `Cup_Stage::Cup_Stage(pai,
+/// rule: a cup knockout stage takes the round table copied from the cup's template (dates, draws), the year, the stage,
+/// the id and the parent's rules (+0x49, +0x4a); each team enters with status 0 and its pot seed (given by the cup, or
+/// the list position when the cup asks for order, or 0); the fixture tree is built at once: the stage one
+/// (Cup_Stage::map_fixture_tree, which links the winners and places the seeds in the first round) or the cup one
+/// (Cup::map_fixture_tree, which links at random)
+/// Original: `Cup_Stage::Cup_Stage` (0x522e00, cup_stage.cpp, thiscall, ret 0x3c).
+///
+/// [pt] { 0x522e00 } (thiscall, ret 0x3c, cup_stage.cpp; quadro SEH sem destrutor no caminho normal): `Cup_Stage::Cup_Stage(pai,
 /// n, times, rodadas, a5, modelo, ano, fase, b2, id, b3, arvore, por_ordem, a14, sementes)`: a base (Cup::Cup 0x518640,
 /// mov ecx -> thiscall, ret 0); +4 = a5; +0x40 = o ano (word); +0x44 = a fase, +0x42 = b2 (bytes); +0x30 = +0x2c = −1;
 /// +0x51 = b3; a vtable 0x969468; +0x43 = 1; +0xb1 = +0xab = +0xac = 0; +0x3c = as rodadas e +0x3a = o id (words);
@@ -112,7 +119,11 @@ unsafe extern "thiscall" fn comparar_cqs7_fase_de_copa(this: usize, pai: usize, 
     r
 }
 
-/// { 0x523300 } (thiscall, ret 0, cup_stage.cpp; o destrutor, chamado pelo destrutor virtual): `Cup_Stage::~Cup_Stage()`:
+/// rule: the end of a knockout stage: the team list, the round table and each round's fixtures freed, and the base
+/// destroyed
+/// Original: `Cup_Stage::~Cup_Stage` (0x523300, cup_stage.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x523300 } (thiscall, ret 0, cup_stage.cpp; o destrutor, chamado pelo destrutor virtual): `Cup_Stage::~Cup_Stage()`:
 /// a vtable 0x969468; a lista dos times (+0xa7), a tabela das rodadas (+0xa3) e, com os confrontos (+0xad), cada vetor de
 /// confrontos das +0x3c rodadas e o próprio vetor liberados (0x9452ca, cdecl; os ponteiros ficam); por fim a base
 /// (Cup::~Cup 0x518690, mov ecx -> thiscall, ret 0), cujo eax ela devolve.

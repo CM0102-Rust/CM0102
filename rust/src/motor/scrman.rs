@@ -1,6 +1,9 @@
 // ---------- 187a leva: as telas da partida (5): o painel dos últimos placares, a tela seguinte e a cor do título (match_screens.cpp, scrman.cpp, Setup.cpp) ----------
 
-/// { 0x7febb0 } (thiscall, scrman.cpp): o gerente de telas não tem para onde avançar? (o bloco de
+/// the screen manager has no next screen to go forward to
+/// Original: `ScreenManager::is_forward_unavailable` (0x7febb0, scrman.cpp, thiscall).
+///
+/// [pt] { 0x7febb0 } (thiscall, scrman.cpp): o gerente de telas não tem para onde avançar? (o bloco de
 /// parâmetros da tela atual sem a tela seguinte em +0x1f8). Sem bloco: a original (caixa de erro e saída).
 unsafe extern "thiscall" fn sem_tela_seguinte(gerente: usize) -> u32 {
     let vaga = *((gerente + 0x382a) as *const i16) as isize;
@@ -11,7 +14,10 @@ unsafe extern "thiscall" fn sem_tela_seguinte(gerente: usize) -> u32 {
     (*((bloco + 0x1f8) as *const usize) == 0) as u32
 }
 
-/// { 0x839590 } (cdecl, Setup.cpp): a cor do título: [0xae3184] com `x` ≠ 0, senão [0xae31a8]. A
+/// the heading text colour (two colours by the flag)
+/// Original: `get_heading_colour` (0x839590, Setup.cpp, cdecl).
+///
+/// [pt] { 0x839590 } (cdecl, Setup.cpp): a cor do título: [0xae3184] com `x` ≠ 0, senão [0xae31a8]. A
 /// original só troca `ax`: os 16 bits de cima da devolução são os de `x`.
 unsafe extern "C" fn cor_do_titulo(x: u32) -> u32 {
     let c = if x != 0 { *(0xae3184 as *const u16) } else { *(0xae31a8 as *const u16) };
@@ -47,7 +53,10 @@ unsafe fn nome_da_competicao_no_painel(c: usize, rodadas: usize) {
     }
 }
 
-/// { 0x723d20 } (cdecl, match_screens.cpp): desenha o painel dos últimos placares a partir de `*topo`
+/// draws the latest scores panel: title, badge, the day's groups and matches, table and buttons
+/// Original: `draw_latest_scores_panel` (0x723d20, match_screens.cpp, cdecl).
+///
+/// [pt] { 0x723d20 } (cdecl, match_screens.cpp): desenha o painel dos últimos placares a partir de `*topo`
 /// até `*base`. Título (dentro da partida, parâmetro 0 ≠ 0: "<competição> Latest" à esquerda 0x6e e
 /// largura 0x30c, `*topo` += 0x28; na tela avulsa o nome em 0x64/0x316, += 0x41) e o selo da competição
 /// (0x804030, fora dos amistosos 0x5c2990 e das seleções 0x7e6f20). Com mais de uma rodada no dia

@@ -6,7 +6,11 @@ unsafe fn cpt1_h(a: usize) -> i16 {
 }
 
 
-/// { 0x58d710 } (thiscall, ret 0x14, fifa_rankings.cpp): `FIFA_RANKINGS::count_results_in_period(nação, mês_de, ano_de,
+/// counts the results of the national side's history between two months (year × 12 + month), from the end, for the work
+/// permit
+/// Original: `FIFA_RANKINGS::count_results_in_period` (0x58d710, fifa_rankings.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x58d710 } (thiscall, ret 0x14, fifa_rankings.cpp): `FIFA_RANKINGS::count_results_in_period(nação, mês_de, ano_de,
 /// mês_até, ano_até)` (pela permissão de trabalho 0x8c7950, com os dois anos até hoje): na entrada da nação (id [nação],
 /// 0x2c bytes na tabela [this]), o histórico (+4, entradas de 5 bytes: pontos, mês +2, ano +3; conta +0xa) do fim para o
 /// começo; ano × 12 + mês antes do começo do período para a busca, até o fim conta um. Em 16 bits. Chamada a cada
@@ -39,7 +43,11 @@ unsafe extern "thiscall" fn comparar_jogos_da_selecao_no_periodo(this: usize, na
     r
 }
 
-/// { 0x58d460 } (thiscall, ret 4, fifa_rankings.cpp): `FIFA_RANKINGS::update_rankings(data)` (pelo dia das seleções
+/// on the 18th: drops the results older than a year, sorts the histories, rolls the yearly totals and redoes scores and
+/// positions
+/// Original: `FIFA_RANKINGS::update_rankings` (0x58d460, fifa_rankings.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x58d460 } (thiscall, ret 4, fifa_rankings.cpp): `FIFA_RANKINGS::update_rankings(data)` (pelo dia das seleções
 /// 0x76b100): só no dia 18 (0x54cf70). Guarda a data em +5 (0x417c10) e, em cada nação ([0xae2350] entradas), tira do
 /// histórico os resultados de mais de um ano (ano + 1 antes do de hoje, ou o mesmo ano com o mês antes do de hoje,
 /// 0x54cfb0), pondo o último no lugar; o laço vai do byte baixo da conta − 1 até 0, como na original. Depois ordena o
@@ -126,7 +134,10 @@ unsafe extern "thiscall" fn comparar_atualizar_ranking_da_fifa(this: usize, data
     });
 }
 
-/// { 0x58e220 } (cdecl, fifa_rankings.cpp): `compare_result_points_desc(a, b)`, a ordem do qsort dos históricos na
+/// qsort order of the histories: the points of b minus those of a (highest first)
+/// Original: `compare_result_points_desc` (0x58e220, fifa_rankings.cpp, cdecl).
+///
+/// [pt] { 0x58e220 } (cdecl, fifa_rankings.cpp): `compare_result_points_desc(a, b)`, a ordem do qsort dos históricos na
 /// atualização do ranking: os pontos (palavra +0, com sinal) de `b` menos os de `a`.
 unsafe extern "C" fn ordem_dos_resultados_por_pontos(a: usize, b: usize) -> i32 {
     cpt1_h(b) as i32 - cpt1_h(a) as i32
@@ -161,7 +172,10 @@ unsafe fn cpt2_mes_e_ano(partida: usize) -> (u8, u16) {
     (mes_de(p), read_u16(partida + 0x28))
 }
 
-/// { 0x58dea0 } (thiscall, ret 0xc, fifa_rankings.cpp, SEH só da data local, de destrutor vazio):
+/// appends the points, month and year of the match to the national side's history, growing the array by 5 entries
+/// Original: `FIFA_RANKINGS::append_result` (0x58dea0, fifa_rankings.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x58dea0 } (thiscall, ret 0xc, fifa_rankings.cpp, SEH só da data local, de destrutor vazio):
 /// `FIFA_RANKINGS::append_result(nação, pontos, partida)` (pelo resultado internacional 0x58cf70, para cada seleção):
 /// com a conta (+0xa) igual à capacidade (+8), a capacidade cresce 5 e o histórico (+4) é realocado (0x945667) ou
 /// alocado (0x944e46) com capacidade × 5 bytes. A entrada nova, no lugar da conta antiga: os pontos (16 bits), o mês do
@@ -205,7 +219,10 @@ unsafe extern "thiscall" fn comparar_resultado_no_historico(this: usize, nacao: 
     PLACAR.registrar(lido == plano, || format!("resultado_no_historico(nação {}, pontos {}) original={:?} plano={:?}", read_usize(nacao), pontos as u16, lido, plano));
 }
 
-/// { 0x58e190 } (thiscall, ret 4, fifa_rankings.cpp): `FIFA_RANKINGS::get_nation_strength_tier(nação)` (duas vezes por
+/// the national side's strength tier from 1 to 4, by reputation and ranking position
+/// Original: `FIFA_RANKINGS::get_nation_strength_tier` (0x58e190, fifa_rankings.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x58e190 } (thiscall, ret 4, fifa_rankings.cpp): `FIFA_RANKINGS::get_nation_strength_tier(nação)` (duas vezes por
 /// resultado internacional 0x58cf70): reputação (+0x8e) abaixo de 3000 e posição (+0x10 da entrada) abaixo de 50: 3;
 /// reputação abaixo de 6000 e posição abaixo de 15: 2; senão pela posição: abaixo de 21, 1; de 61, 2; de 101, 3; 4.
 unsafe extern "thiscall" fn faixa_da_selecao(this: usize, nacao: usize) -> u8 {
@@ -236,7 +253,10 @@ unsafe extern "thiscall" fn comparar_faixa_da_selecao(this: usize, nacao: usize)
     r
 }
 
-/// { 0x58dfc0 } (thiscall, fifa_rankings.cpp): `FIFA_RANKINGS::recalculate_scores()` (pela atualização do dia 18
+/// the year total from the best eight results and the score from the totals of this year and the five before
+/// Original: `FIFA_RANKINGS::recalculate_scores` (0x58dfc0, fifa_rankings.cpp, thiscall).
+///
+/// [pt] { 0x58dfc0 } (thiscall, fifa_rankings.cpp): `FIFA_RANKINGS::recalculate_scores()` (pela atualização do dia 18
 /// 0x58d460): em cada nação, a soma dos pontos dos oito primeiros resultados (o histórico vem ordenado) e a de todos;
 /// com mais de oito, o total do ano (+0x14) é (todos × 8 / conta + oito) / 2, senão os oito. Se a data de [0xdd6ec8]
 /// passa da de hoje menos 365 dias (0x54c8e0), com menos de nove resultados o total é (+0x18 + oito) / (conta + 8) × 8
@@ -313,7 +333,11 @@ unsafe extern "thiscall" fn comparar_pontuacoes_do_ranking(this: usize) {
 // ---------- 256a leva: a nação-chave da competição e a ordem do ranking da FIFA: o índice da nação-chave da competição, a ordem das seleções no ranking e a comparação das pontuações (key_nation.cpp, fifa_rankings.cpp) ----------
 
 
-/// { 0x669470 } (cdecl, key_nation.cpp): `key_nation_index_of_comp(competição)` (pelo alcance das regras da partida
+/// the competition's key nation row: the nation's, 0 for the World Cup, 1 for national side tournaments, 2 for the club
+/// world cups, the continent's or 3
+/// Original: `key_nation_index_of_comp` (0x669470, key_nation.cpp, cdecl).
+///
+/// [pt] { 0x669470 } (cdecl, key_nation.cpp): `key_nation_index_of_comp(competição)` (pelo alcance das regras da partida
 /// 0x8d2fa0, pela liga do dia 0x6847c0, pelos registros da copa 0x519890 e pela nação-chave do jogo 0x48dd70 da cpt_3):
 /// competição de nação (+0x5d): a linha dela na tabela das 35 nações-chave (0xb63d60, 72 bytes), ou 4. Sem nação: Copa
 /// do Mundo e eliminatórias, 0; torneio de seleções (0x669ae0), 1; Copa do Mundo de Clubes e Mundial de Clubes da FIFA,
@@ -356,7 +380,10 @@ unsafe extern "C" fn comparar_indice_da_nacao_chave(comp: usize) -> u8 {
     r
 }
 
-/// { 0x58d610 } (thiscall, ret 4, fifa_rankings.cpp): `FIFA_RANKINGS::collect_ranked_order(&conta)` (pela atualização do
+/// a new array with the ranking entries of the nations with a national side, sorted by score, and the count
+/// Original: `FIFA_RANKINGS::collect_ranked_order` (0x58d610, fifa_rankings.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x58d610 } (thiscall, ret 4, fifa_rankings.cpp): `FIFA_RANKINGS::collect_ranked_order(&conta)` (pela atualização do
 /// dia 18 0x58d460 e pela tela do ranking): um vetor (0x944e46) de [0xae2350] ponteiros; sem ele, a caixa "Error"
 /// (linha 0x1e3) e 0, sem gravar a conta. As entradas da tabela (0x2c bytes) das nações com seleção (+0x71 da nação,
 /// registros de 0x122 bytes em [0xae23a8]), ordenadas pela pontuação (qsort 0x945333 com 0x58e240); a conta em `conta`.
@@ -399,7 +426,10 @@ unsafe extern "thiscall" fn comparar_ordem_do_ranking(this: usize, conta: *mut i
     r
 }
 
-/// { 0x58e240 } (cdecl, fifa_rankings.cpp): `compare_ranking_score_desc(a, b)`, a ordem do qsort da 0x58d610: as
+/// qsort order of the ranking: the highest score first
+/// Original: `compare_ranking_score_desc` (0x58e240, fifa_rankings.cpp, cdecl).
+///
+/// [pt] { 0x58e240 } (cdecl, fifa_rankings.cpp): `compare_ranking_score_desc(a, b)`, a ordem do qsort da 0x58d610: as
 /// pontuações (f32 +0xc das entradas apontadas): a menor que b (ou sem ordem), 1; iguais, 0; maior, −1.
 unsafe extern "C" fn ordem_das_pontuacoes(a: usize, b: usize) -> i32 {
     let fa = *((read_usize(a) + 0xc) as *const f32);

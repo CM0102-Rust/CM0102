@@ -20,7 +20,10 @@ unsafe extern "thiscall" fn iniciar_rigor(this: usize, motor: u32, pessoa: usize
     *v = 0x1482;
 }
 
-/// { 0x6bab90 } (match_eng.cpp): o lance registrado continua valendo? 0 sem lance; com o dono da
+/// does the recorded move continue? the ball crossing the move's line ends it (clears)
+/// Original: `move_counts` (0x6bab90, thiscall, `al`).
+///
+/// [pt] { 0x6bab90 } (match_eng.cpp): o lance registrado continua valendo? 0 sem lance; com o dono da
 /// bola (0xf582) do outro lado que o jogador do lance, a bola passando a linha do lance (0x475c)
 /// encerra o lance (limpa e da 0); nos demais casos, 1.
 unsafe extern "thiscall" fn lance_valendo(this: usize) -> u8 {

@@ -282,7 +282,12 @@ const CQQ5_BAIXO_IMPAR_FIM: [Cqq5Rodada; 21] = [
 const CQQ5_BAIXO_PAR_NATAL: Cqq5Natal = Cqq5Natal { comeco: &CQQ5_BAIXO_PAR_COMECO, referencia: 16, ajuste: 17, casos: [&CQQ5_BAIXO_PAR_NATAL_0, &CQQ5_BAIXO_PAR_NATAL_1, &CQQ5_BAIXO_PAR_NATAL_2, &CQQ5_BAIXO_PAR_NATAL_3, &CQQ5_BAIXO_PAR_NATAL_4, &CQQ5_BAIXO_PAR_NATAL_5, &CQQ5_BAIXO_PAR_NATAL_6, &CQQ5_BAIXO_PAR_NATAL_PADRAO], fim: &CQQ5_BAIXO_PAR_FIM, linha: 0x128 };
 const CQQ5_BAIXO_IMPAR_NATAL: Cqq5Natal = Cqq5Natal { comeco: &CQQ5_BAIXO_IMPAR_COMECO, referencia: 19, ajuste: 17, casos: [&CQQ5_BAIXO_IMPAR_NATAL_0, &CQQ5_BAIXO_IMPAR_NATAL_1, &CQQ5_BAIXO_IMPAR_NATAL_2, &CQQ5_BAIXO_IMPAR_NATAL_3, &CQQ5_BAIXO_IMPAR_NATAL_4, &CQQ5_BAIXO_IMPAR_NATAL_5, &CQQ5_BAIXO_IMPAR_NATAL_6, &CQQ5_BAIXO_IMPAR_NATAL_PADRAO], fim: &CQQ5_BAIXO_IMPAR_FIM, linha: 0x237 };
 
-/// { 0x851260 } (thiscall, ret 0x10, spa_lower.cpp, 8.495 bytes, método +0x3c): `SpaLower::create_schedule(fase,
+/// the Spanish lower division schedule (background): 42 rounds, nearly all on Sunday (day 6); in odd years (2001/02)
+/// from 16 August to 16 May, in even years from 30 August to 6 June; in each, one fixed-date Christmas round chosen by
+/// the day the mid-December round falls on
+/// Original: `SpaLower::create_schedule` (0x851260, spa_lower.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x851260 } (thiscall, ret 0x10, spa_lower.cpp, 8.495 bytes, método +0x3c): `SpaLower::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 42 rodadas, a tabela pela paridade do ano +0x40, cada uma com a rodada
 /// do Natal; as outras devolvem 0. Fonte 0xa82980.
 unsafe extern "thiscall" fn calendario_da_divisao_de_baixo_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
@@ -333,7 +338,11 @@ unsafe fn cqm6_na(c: usize, g: usize) -> bool {
     comp != 0 && read_u32_as_usize(comp) == read_u32_as_usize(g)
 }
 
-/// { 0x851020 } (thiscall, ret 4, spa_lower.cpp, quadro SEH só no caminho de exceção): `SpaLower::SpaLower(ano)`, a
+/// the Spanish lower division is a background league with no discipline (0xff), in the competition of id [0x9cf6b0];
+/// with no saved state, the rules, the table and the fixtures (no stats nor predicted positions)
+/// Original: `SpaLower::SpaLower` (0x851020, spa_lower.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x851020 } (thiscall, ret 4, spa_lower.cpp, quadro SEH só no caminho de exceção): `SpaLower::SpaLower(ano)`, a
 /// divisão de baixo espanhola (criada pela Primera quando a nação não tem o bit 4 de +0x11c): a base (League::League
 /// 0x682200: mov ecx -> thiscall, ret 0), a vtable 0x96fb1c, o ano (+0x40), a regra de disciplina 0xff (nenhuma) e o
 /// registro da competição de id [0x9cf6b0] (+4). Tenta carregar o estado (0x687b10: push 1 -> thiscall, ret 4);
@@ -391,7 +400,11 @@ unsafe fn cqm6_time_b_de(c: usize, g: usize) -> bool {
     p != 0 && eh_a == 0 && cqm6_na(p, g)
 }
 
-/// { 0x855b40 } (thiscall, ret 0, spa_second.cpp): `SpaSecond::create_table()`: a Segunda tem 22 clubes (+0x3e),
+/// the Segunda has 22 clubs (the competition's, in database order); the B team of a Primera club is marked as not
+/// promotable (fate −4); the prize fund starts from 50,000
+/// Original: `SpaSecond::create_table` (0x855b40, spa_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x855b40 } (thiscall, ret 0, spa_second.cpp): `SpaSecond::create_table()`: a Segunda tem 22 clubes (+0x3e),
 /// a tabela (malloc 0x944e46 de 0x512: push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x298 e 0) recebe, na
 /// ordem do banco ([0xae23b4], [0xae235c] clubes de 0x245 bytes), os clubes da competição de id [0x9cf628] até encher
 /// (League::init_table_row 0x687430: push 0; push 0; push clube; push linha (a palavra empurrada tem o byte da linha e o
@@ -521,7 +534,14 @@ unsafe fn cqm6_times_b(g: usize, k: &mut u8, linhas: i16, mut por: impl FnMut(us
     }
 }
 
-/// { 0x8533d0 } (thiscall, ret 0, spa_lower.cpp, 947 bytes): `SpaLower::create_table()`: a divisão de baixo tem 22
+/// the lower division has 22 clubs: first the Spanish B teams whose parent club is in the Primera, then those of the
+/// Segunda (database order); the rest come from the Segunda B clubs [inference: competitions [0x9cf62c..0x9cf638]] and
+/// the Spanish generic division that are not B teams, ordered by reputation with the best shuffled; each club placed
+/// keeps the competition at +0x60, but the Segunda B-team pass zeroes +0x60 of every Spanish side not entering it,
+/// including the Primera ones already placed [observed in the comparison]
+/// Original: `SpaLower::create_table` (0x8533d0, spa_lower.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x8533d0 } (thiscall, ret 0, spa_lower.cpp, 947 bytes): `SpaLower::create_table()`: a divisão de baixo tem 22
 /// clubes (+0x3e), a tabela (malloc de 0x512; sem memória, a caixa da linha 0x2ac e 0). Primeiro, os clubes que estão
 /// nela (a competição de id [0x9cf6b0]) passam à de id [0x9cf764] [inferência: a divisão genérica]. Depois enche, na
 /// ordem do banco: os times B espanhóis cujo clube de cima está na Primera, depois os da Segunda (cada um com +0x60 =

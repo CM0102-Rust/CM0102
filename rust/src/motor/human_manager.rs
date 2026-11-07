@@ -211,7 +211,10 @@ unsafe fn cpx8_registro(this: usize, k: usize) -> usize {
     read_usize(this).wrapping_add(k.wrapping_mul(0xa6ef))
 }
 
-/// { 0x5fbd00 } (thiscall, ret 4, human_manager.cpp): `HUMAN_MANAGER::get_active_tactic(tecnico)`, pela escalação
+/// the tactic block (0x1ecd bytes) of the active slot of the human manager record
+/// Original: `HUMAN_MANAGER::get_active_tactic` (0x5fbd00, human_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x5fbd00 } (thiscall, ret 4, human_manager.cpp): `HUMAN_MANAGER::get_active_tactic(tecnico)`, pela escalação
 /// (0x6db500), pela formação (0x6e0230), pelo dia de jogo (0x6b4360), pela tática do clube (0x896660) e pelas telas. O
 /// bloco de tática (0x1ecd bytes) da vaga ativa (byte com sinal em +0x9a69 do registro) do técnico (nulo: o humano da
 /// vez). Sem técnico ou fora da conta: a original (caixa "Error", 0).
@@ -237,7 +240,11 @@ unsafe extern "thiscall" fn comparar_tatica_ativa_do_humano(this: usize, tecnico
     r
 }
 
-/// { 0x5fbe20 } (thiscall, ret 0xc, human_manager.cpp): `HUMAN_MANAGER::select_tactic_slot(reserva, clube, tecnico)`,
+/// the human manager active slot: 4 for the second national team, 3 with reserve in a national team, 2 in a national
+/// team, 1 with reserve, 0 for the first team
+/// Original: `HUMAN_MANAGER::select_tactic_slot` (0x5fbe20, human_manager.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x5fbe20 } (thiscall, ret 0xc, human_manager.cpp): `HUMAN_MANAGER::select_tactic_slot(reserva, clube, tecnico)`,
 /// pelos mesmos chamadores da 0x5fbd00. Técnico nulo: o humano da vez (sem nenhum, nada); clube nulo: o do técnico
 /// (+0x39). A vaga ativa (+0x9a69 do registro): 4 na segunda seleção (0x5409b0), 3 com `reserva` numa seleção
 /// (0x53b900), 2 numa seleção, 1 com `reserva`, 0 no time principal. Fora da conta: a original (caixa "Error").
@@ -279,7 +286,11 @@ unsafe extern "thiscall" fn comparar_escolher_vaga_de_tatica(this: usize, reserv
     PLACAR.registrar(igual, || format!("escolher_vaga_de_tatica(reserva {}, clube {:#x}, tecnico {:#x}) {:x?} x {:x?}", reserva, clube, tecnico, mo, mr));
 }
 
-/// { 0x896660 } (thiscall, ret 8, tactics.cpp): `Tactics::get_club_tactic(clube, time)`, pela formação de cada jogo
+/// for a human club (without +0x9a01 or with holiday option 2), the slot for the team and the manager active block;
+/// otherwise, by the index in the club row, the preset block (below the preset count) or the own one
+/// Original: `Tactics::get_club_tactic` (0x896660, tactics.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x896660 } (thiscall, ret 8, tactics.cpp): `Tactics::get_club_tactic(clube, time)`, pela formação de cada jogo
 /// (0x6e0230), pelas fraquezas do jogador (0x5470d0), pela mídia e pelas telas. Clube humano (0x600a50 com 1, 1) cujo
 /// técnico (+0xcf) não tem +0x9a01 (0x5fd210) ou tem a opção 2 das férias (0x5fea50): a vaga pelo time (0x5fbe20) e o
 /// bloco ativo dele (0x5fbd00). Nos outros, o índice (palavra com sinal) na linha do clube (id × 0x91 em [this+0x601]):
@@ -342,7 +353,10 @@ unsafe fn cpj5_assistida(this: usize, i: usize) -> usize {
     read_usize(this).wrapping_add(0x9ad4).wrapping_add(i.wrapping_mul(0xa6ef))
 }
 
-/// { 0x5fe8d0 } (thiscall, human_manager.cpp): `HUMAN_MANAGER::clear_invalid_watched_fixtures()`: para cada um dos 16
+/// clears (79 bytes) the watched fixture of each active human manager who may no longer watch it (0x5fe700); returns 1
+/// Original: `HUMAN_MANAGER::clear_invalid_watched_fixtures` (0x5fe8d0, human_manager.cpp, thiscall).
+///
+/// [pt] { 0x5fe8d0 } (thiscall, human_manager.cpp): `HUMAN_MANAGER::clear_invalid_watched_fixtures()`: para cada um dos 16
 /// técnicos humanos (os últimos 16 de [0xae23bc]) ativo (+0x5f ≠ 0) que não pode mais ver a partida assistida dele
 /// (0x5fe700), zera os 79 bytes dela. Devolve 1.
 unsafe extern "thiscall" fn limpar_partidas_assistidas(this: usize) -> u32 {
@@ -374,7 +388,10 @@ unsafe fn cpj5_alvos(this: usize, id: u32) -> Vec<usize> {
     v
 }
 
-/// { 0x7f9690 } (thiscall, ret 8, scout_manager.cpp): `SCOUT_MANAGER::collect_club_scout_targets(clube, lista)`: com
+/// empties the list and adds the person of each scout request of the club; returns whether there is any
+/// Original: `SCOUT_MANAGER::collect_club_scout_targets` (0x7f9690, scout_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7f9690 } (thiscall, ret 8, scout_manager.cpp): `SCOUT_MANAGER::collect_club_scout_targets(clube, lista)`: com
 /// `lista`, esvazia-a (0x68d080) e acrescenta (0x68d0d0, 0x6e bytes) a pessoa de cada pedido de observação do clube
 /// `*clube`. Devolve se há algum. Clube nulo: 0 (a lista fica vazia).
 unsafe extern "thiscall" fn alvos_dos_olheiros_do_clube(this: usize, clube: *const u32, lista: usize) -> u32 {
@@ -395,7 +412,11 @@ unsafe extern "thiscall" fn alvos_dos_olheiros_do_clube(this: usize, clube: *con
     (!alvos.is_empty()) as u32
 }
 
-/// { 0x7ae8a0 } (thiscall, ret 4, player_search.cpp): `PLAYER_SEARCH::set_scout(olheiro)`: se o olheiro muda (o atual
+/// new scout: stores the ids (0x7e4920) or −1, and the nation, region and competition assignments go back to −1;
+/// returns 1
+/// Original: `PLAYER_SEARCH::set_scout` (0x7ae8a0, player_search.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7ae8a0 } (thiscall, ret 4, player_search.cpp): `PLAYER_SEARCH::set_scout(olheiro)`: se o olheiro muda (o atual
 /// pela 0x7ae950), grava os ids dele em +0x174 (0x7e4920) ou, sem olheiro, o índice +0x180 = −1; e as missões de nação
 /// (+0x18c), região (+0x194) e competição (+0x195) voltam a −1. Devolve 1.
 unsafe extern "thiscall" fn trocar_olheiro_da_busca(this: usize, olheiro: usize) -> u32 {
@@ -448,7 +469,10 @@ unsafe extern "thiscall" fn comparar_trocar_olheiro_da_busca(this: usize, olheir
 
 // ---------- 216a leva: a partida assistida por algum humano, o apelido dado pelo humano e a cópia da aposentadoria pendente (human_manager.cpp, player_regen.cpp) ----------
 
-/// { 0x5fe420 } (thiscall, ret 4, human_manager.cpp): 1 se algum dos 16 técnicos humanos ativos
+/// whether any of the active human managers chose to watch the fixture
+/// Original: `HUMAN_MANAGER::is_fixture_watched` (0x5fe420, human_manager.cpp, thiscall).
+///
+/// [pt] { 0x5fe420 } (thiscall, ret 4, human_manager.cpp): 1 se algum dos 16 técnicos humanos ativos
 /// (registros de 110 bytes em [0xae23bc], a partir de [0xae2364] − 16, +0x5f não nulo) escolheu
 /// assistir a `partida` (0x5fe290); senão 0. Partida nula: a original (caixa de erro e 0).
 unsafe extern "thiscall" fn humano_assiste_a_partida(this: usize, partida: usize) -> u32 {
@@ -484,7 +508,10 @@ unsafe fn indice_do_humano_do_apelido(this: usize, humano: usize) -> Option<Opti
     Some(Some(i as usize))
 }
 
-/// { 0x600740 } (thiscall, ret 8, human_manager.cpp): 1 se o técnico humano `humano` (0 = o da vez)
+/// whether the human manager (or the current one) gave the person a nickname, by binary search in his list
+/// Original: `HUMAN_MANAGER::has_nickname` (0x600740, human_manager.cpp, thiscall).
+///
+/// [pt] { 0x600740 } (thiscall, ret 8, human_manager.cpp): 1 se o técnico humano `humano` (0 = o da vez)
 /// deu apelido à pessoa de id [`pessoa`]: busca binária (0x946464 com 0x601a10, itens de 0x1e bytes)
 /// na lista +0xa6e3 (quantos em +0xa6eb) do registro dele (0xa6ef bytes em [this]). Pessoa ou humano
 /// nulos, ou lista vazia: 0. Humano fora da faixa: a original (caixa de erro e 0).
@@ -506,7 +533,10 @@ unsafe extern "thiscall" fn humano_deu_apelido(this: usize, pessoa: usize, human
     achou // apelido
 }
 
-/// { 0x7a8780 } (thiscall, ret 4, player_regen.cpp): copia a aposentadoria pendente (0x1a bytes) de
+/// copies the pending retirement record: the person, the club, the two dates, the reason and the announced flag
+/// Original: `retire_record_assign` (0x7a8780, player_regen.cpp, thiscall).
+///
+/// [pt] { 0x7a8780 } (thiscall, ret 4, player_regen.cpp): copia a aposentadoria pendente (0x1a bytes) de
 /// `origem`: o id da pessoa (+0) e do clube (+4), as datas em +8 e +0x10 (0x417c10, com o retorno numa
 /// local), o motivo (+0x18) e a marca de anunciada (+0x19). Devolve `this`.
 unsafe extern "thiscall" fn copiar_aposentadoria_pendente(this: usize, origem: usize) -> usize {
@@ -568,7 +598,10 @@ unsafe fn registro_do_tecnico_humano(gerente: usize, pessoa: usize) -> Option<us
     Some((*(gerente as *const usize) as isize + d as isize * 42735) as usize)
 }
 
-/// { 0x5fdc30 } (thiscall, ret 4, human_manager.cpp): a hora (relógio em ms) guardada quando o técnico
+/// the clock stamp stored when the human manager went on holiday
+/// Original: `HUMAN_MANAGER::get_holiday_stamp` (0x5fdc30, human_manager.cpp, thiscall).
+///
+/// [pt] { 0x5fdc30 } (thiscall, ret 4, human_manager.cpp): a hora (relógio em ms) guardada quando o técnico
 /// humano saiu de férias (+0x9a65 do registro). Fora da faixa: a original (caixa de erro, 0).
 unsafe extern "thiscall" fn hora_das_ferias(gerente: usize, pessoa: usize) -> u32 {
     match registro_do_tecnico_humano(gerente, pessoa) {
@@ -577,7 +610,10 @@ unsafe extern "thiscall" fn hora_das_ferias(gerente: usize, pessoa: usize) -> u3
     }
 }
 
-/// { 0x5fed50 } (thiscall, ret 4, human_manager.cpp): o endereço da escalação guardada do técnico
+/// the address of the human manager's saved line-up (16 pairs)
+/// Original: `HUMAN_MANAGER::get_saved_lineup` (0x5fed50, human_manager.cpp, thiscall).
+///
+/// [pt] { 0x5fed50 } (thiscall, ret 4, human_manager.cpp): o endereço da escalação guardada do técnico
 /// humano (16 pares jogador e posição, +0x9b28 do registro). Fora da faixa: a original (caixa de erro, 0).
 unsafe extern "thiscall" fn escalacao_guardada(gerente: usize, pessoa: usize) -> usize {
     match registro_do_tecnico_humano(gerente, pessoa) {
@@ -586,7 +622,10 @@ unsafe extern "thiscall" fn escalacao_guardada(gerente: usize, pessoa: usize) ->
     }
 }
 
-/// { 0x7ae570 } (thiscall, ret 4, player_search.cpp): grava na busca (+0) o id do técnico humano
+/// stores the human manager id in the player search
+/// Original: `PLAYER_SEARCH::set_manager` (0x7ae570, player_search.cpp, thiscall).
+///
+/// [pt] { 0x7ae570 } (thiscall, ret 4, player_search.cpp): grava na busca (+0) o id do técnico humano
 /// `pessoa` e devolve 1. Pessoa nula ou que não é humana (id abaixo de [0xae2364] − 16): a original
 /// (caixa de erro, 0).
 unsafe extern "thiscall" fn tecnico_da_busca(busca: usize, pessoa: usize) -> u32 {

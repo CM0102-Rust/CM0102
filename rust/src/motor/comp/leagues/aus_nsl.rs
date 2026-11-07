@@ -8,7 +8,12 @@ unsafe fn cqr3_linha(t: usize, i: usize) -> usize {
     read_usize(read_usize(t + 0xb1) + i * 0x3b)
 }
 
-/// { 0x411f70 } (thiscall, ret 0, aus_nsl.cpp): `AusNsl::advance_stage()`, a fase seguinte da NSL (a temporada regular,
+/// The NSL has the regular season (round robin), the finals series (stage 0) and the grand final (stage 1): the next
+/// stage moves the current stage on and builds the finals series at the end of the regular season and the grand final
+/// at the end of the finals series; past the last stage it is an error (the box)
+/// Original: `AusNsl::advance_stage` (0x411f70, aus_nsl.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x411f70 } (thiscall, ret 0, aus_nsl.cpp): `AusNsl::advance_stage()`, a fase seguinte da NSL (a temporada regular,
 /// a fase −1; a série final dos seis primeiros, a fase 0; a grande final, a fase 1). Na última fase (+0x30 ≥ +0x2c − 1,
 /// com sinal): a caixa de erro da linha 0x2f0 e nada mais. Senão +0x30 sobe um; ao chegar a 0 monta a série final
 /// (0x412010) e a 1, a grande final (0x4121c0), as duas em call direto com o ecx da liga.
@@ -28,7 +33,12 @@ unsafe extern "thiscall" fn cqr3_fase_seguinte_da_nsl(this: usize) {
     }
 }
 
-/// { 0x412010 } (thiscall, ret 0, aus_nsl.cpp; quadro SEH só para o new): `AusNsl::create_finals_series_stage()`, a
+/// The NSL finals series: the top six of the regular season play their own round-robin stage (with the league points
+/// and tie-breakers) and its top two go to the grand final; sends the draw news. [inference] The real NSL used a
+/// double-chance knockout; here it is a short league of the six
+/// Original: `AusNsl::create_finals_series_stage` (0x412010, aus_nsl.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x412010 } (thiscall, ret 0, aus_nsl.cpp; quadro SEH só para o new): `AusNsl::create_finals_series_stage()`, a
 /// série final da NSL, do fim da temporada regular.
 /// 1) Os seis primeiros da tabela da liga (as linhas 0 a 5, na ordem) num vetor local de 6.
 /// 2) A tabela das rodadas pela virtual +0x3c (create_round_table: thiscall(this, 0, &rodadas, &extra, 0), ret 0x10).
@@ -76,7 +86,11 @@ unsafe extern "thiscall" fn cqr3_serie_final_da_nsl(this: usize) -> u32 {
     1
 }
 
-/// { 0x4121c0 } (thiscall, ret 0, aus_nsl.cpp; quadro SEH só para o new): `AusNsl::create_grand_final_stage()`, a grande
+/// The NSL grand final: the top two of the finals series in a two-club cup stage [inference: a single game, the first
+/// as home side]; the winner is the Australian champion
+/// Original: `AusNsl::create_grand_final_stage` (0x4121c0, aus_nsl.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4121c0 } (thiscall, ret 0, aus_nsl.cpp; quadro SEH só para o new): `AusNsl::create_grand_final_stage()`, a grande
 /// final da NSL, do fim da série final: os dois primeiros da tabela da série final ([+0xc][0], linhas 0 e 1, nessa
 /// ordem) numa lista de 2 (malloc 0x944e46 de 8; sem memória: a caixa da linha 0x348 e volta); a tabela das rodadas
 /// pela virtual +0x3c (thiscall(this, 1, &rodadas, &extra, 0), ret 0x10); a fase (operator new 0x944cf1(0xb2) e o
@@ -220,7 +234,12 @@ unsafe fn cqj8_regras_mls(o: usize) {
     write_u16_at(o, 0xa7, 0x20); // 32 jogos por time
 }
 
-/// { 0x411ce0 } (thiscall, aus_nsl.cpp): `AusNsl::set_up_rules` (slot 36), as regras da NSL e o calendário da fase
+/// NSL: three round robins; win 3, draw 1; tie-break by goal difference, goals scored and away goals; the top 6 go to
+/// the finals series (rule word 0x28: 0x8 next stage, no champion band, and 0x20, clubs without a chance marked
+/// eliminated); nobody goes up or down; 4 bench substitutes and 3 substitutions; fixed squad numbers. Then the schedule
+/// Original: `AusNsl::set_up_rules` (0x411ce0, aus_nsl.cpp, thiscall).
+///
+/// [pt] { 0x411ce0 } (thiscall, aus_nsl.cpp): `AusNsl::set_up_rules` (slot 36), as regras da NSL e o calendário da fase
 /// principal pelo slot 16 (`create_schedule` 0x4111a0, thiscall, ret 0x10: estágio -1, as saídas +0xa9 e +0x3a, sem
 /// a marca; o ponteiro vai para +0xba); devolve 1.
 unsafe extern "thiscall" fn cqj8_regras_da_nsl(this: usize) -> u32 {
@@ -247,7 +266,13 @@ unsafe extern "thiscall" fn comparar_cqj8_regras_da_nsl(this: usize) -> u32 {
     r
 }
 
-/// { 0x908660 } (thiscall, usa_mls.cpp): `UsaMls::set_up_rules`, as regras da MLS; devolve 1 (o eax que ela usa como
+/// MLS: 32 games per team (+0xa7; four round robins in +0x3c); win 3, draw 1; tie-break by goal difference, goals
+/// scored and head-to-head; 1 top place in the overall table (rule word 0x48: 0x8 next stage, the play-offs; 0x40 fixed
+/// round order); nobody goes up or down; the word +0xab = 0xc2 copied to each match. No schedule here: the games are
+/// built by hand (0x9086e0)
+/// Original: `UsaMls::set_up_rules` (0x908660, usa_mls.cpp, thiscall).
+///
+/// [pt] { 0x908660 } (thiscall, usa_mls.cpp): `UsaMls::set_up_rules`, as regras da MLS; devolve 1 (o eax que ela usa como
 /// valor).
 unsafe extern "thiscall" fn cqj8_regras_da_mls(this: usize) -> u32 {
     cqj8_regras_mls(this);
@@ -271,7 +296,11 @@ unsafe fn cqj8_historico_do_estagio(this: usize) -> u32 {
     f(e)
 }
 
-/// { 0x432970 } (thiscall, bra_reg_gaucho.cpp): `BraRegGaucho::record_season_honours` (slot 13 de nove estaduais: Baiano,
+/// end of a state league (nine of them): records the honours of the first stage (the table) and calls 0x42bba0, which,
+/// once the twelve state leagues are over, puts the champions into the Champions Cup
+/// Original: `BraRegGaucho::record_season_honours` (0x432970, bra_reg_gaucho.cpp, thiscall).
+///
+/// [pt] { 0x432970 } (thiscall, bra_reg_gaucho.cpp): `BraRegGaucho::record_season_honours` (slot 13 de nove estaduais: Baiano,
 /// Centro-Oeste, Gaúcho, Goiano, Norte, Nordeste, Pernambucano, Catarinense e Paulista): o histórico do primeiro estágio
 /// e, em salto final, a 0x42bba0 (`bra_nat_first_fill_champions_cup_entrants`, cdecl sem argumentos: quando os doze
 /// estaduais terminam, põe os campeões na Copa dos Campeões); devolve o eax dela.
@@ -289,7 +318,11 @@ unsafe extern "thiscall" fn comparar_cqj8_historico_do_estadual(this: usize) -> 
     orig::<unsafe extern "thiscall" fn(usize) -> u32>(1726)(this)
 }
 
-/// { 0x408eb0 } (thiscall, arg_second.cpp): `ArgSecond::record_season_honours` (slot 13 da segunda divisão argentina e
+/// end of the Argentine second division and Series A and B: the honours come from the first stage, not the overall
+/// table
+/// Original: `ArgSecond::record_season_honours` (0x408eb0, arg_second.cpp, thiscall).
+///
+/// [pt] { 0x408eb0 } (thiscall, arg_second.cpp): `ArgSecond::record_season_honours` (slot 13 da segunda divisão argentina e
 /// das Séries A e B): só o histórico do primeiro estágio, em salto final; devolve o eax dele.
 unsafe extern "thiscall" fn cqj8_historico_do_primeiro_estagio(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_8 historico do primeiro estagio");

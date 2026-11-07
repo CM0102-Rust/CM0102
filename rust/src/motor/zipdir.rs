@@ -1,6 +1,10 @@
 // ---------- 218a leva: o contêiner do save: as consultas (o padrão do nome, o id e o tamanho dos itens) (zipdir.cpp) ----------
 
-/// { 0x933a00 } (cdecl, zipdir.cpp): `zipdir_match_filename_pattern(padrao, nome)`: 1 se o nome do
+/// matches a container item name against a pattern with `*` (`*.` goes to the last dot), case-insensitively; the "{
+/// Empty }" slot never matches
+/// Original: `zipdir_match_filename_pattern` (0x933a00, zipdir.cpp, cdecl).
+///
+/// [pt] { 0x933a00 } (cdecl, zipdir.cpp): `zipdir_match_filename_pattern(padrao, nome)`: 1 se o nome do
 /// item casa com o padrão. "{ Empty }" (0xad6ad8, a vaga vazia da lista do desempacotar) nunca casa;
 /// nome igual ao padrão, ou padrão vazio, casa; senão letra a letra sem diferenciar maiúsculas
 /// (0x90c2f0, só o byte baixo). `*.` pula o nome até o último ponto; `*` seguido de outra coisa só
@@ -80,7 +84,10 @@ unsafe fn ler_cabecalho_avulso(h: usize, f: usize) {
     ler(h + 0xc, 0x10c, if antigo { 0xfa } else { 0x3e8 }, f);
 }
 
-/// { 0x9331c0 } (cdecl, zipdir.cpp): `zget_archive_id(caminho)`: o dword +4 do cabeçalho do
+/// reads the container header and returns dword +4 (0x16 .sav, 0x17 .qst; 0x14 on failure)
+/// Original: `zget_archive_id` (0x9331c0, zipdir.cpp, cdecl).
+///
+/// [pt] { 0x9331c0 } (cdecl, zipdir.cpp): `zget_archive_id(caminho)`: o dword +4 do cabeçalho do
 /// contêiner (0x16 `.sav`, 0x17 `.qst`), ou 0x14 se não abrir ou o tipo não for 3/4. Sem memória,
 /// a caixa de erro (zipdir.cpp 592) e 0x14.
 unsafe extern "C" fn id_do_conteiner(caminho: usize) -> u32 {
@@ -118,7 +125,11 @@ unsafe extern "C" fn comparar_id_do_conteiner(caminho: usize) -> u32 {
     r
 }
 
-/// { 0x933860 } (cdecl, zipdir.cpp): `zget_matching_size(caminho, padrao)`: a soma dos tamanhos
+/// adds up the uncompressed sizes of the items matching the pattern (signed int: negative above 2 GB, as in the
+/// original)
+/// Original: `zget_matching_size` (0x933860, zipdir.cpp, cdecl).
+///
+/// [pt] { 0x933860 } (cdecl, zipdir.cpp): `zget_matching_size(caminho, padrao)`: a soma dos tamanhos
 /// (descomprimidos) dos itens cujo nome casa com o padrão (0x933a00). A soma é `int` com sinal, como
 /// na original: acima de 2 GB dá negativo e a conferência de espaço do `load_game_data` passa
 /// sempre (corrigir é outra decisão, como o save acima de 2 GB). Sem memória, a caixa de erro
@@ -180,7 +191,11 @@ unsafe fn juntar_texto_c(destino: *mut u8, origem: *const u8) {
     copiar_texto_c(destino.add(n), origem);
 }
 
-/// { 0x933610 } (cdecl, zipdir.cpp): `zadd_matching_files(caminho, pasta, padrao, a4, tipo)`: cada
+/// each folder file matching the pattern (FindFirstFile) becomes a container item: zopen for writing, fread/zwrite in
+/// 0x30d40 blocks, zclose
+/// Original: `zadd_matching_files` (0x933610, zipdir.cpp, cdecl).
+///
+/// [pt] { 0x933610 } (cdecl, zipdir.cpp): `zadd_matching_files(caminho, pasta, padrao, a4, tipo)`: cada
 /// arquivo da pasta que o `FindFirstFile` acha com o padrão (0x4c0aa0/0x4c0b50, só arquivos, na
 /// ordem do sistema) vira um item do contêiner: `zopen` gravando (0x9326e0, cria o contêiner com
 /// `a4`/`tipo` se não existir) + `fread` em blocos de 0x30d40 no buffer de leitura do item (+0x41705)
@@ -240,7 +255,11 @@ unsafe extern "C" fn comparar_empacotar_no_conteiner(caminho: usize, pasta: usiz
     orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(559)(caminho, pasta, padrao, a4, tipo)
 }
 
-/// { 0x933320 } (cdecl, zipdir.cpp): `zextract_matching_files(caminho, pasta, padrao)`: copia os nomes
+/// each container item whose name matches the pattern becomes a folder file (zopen for reading, zread in 0x30d40
+/// blocks, fwrite)
+/// Original: `zextract_matching_files` (0x933320, zipdir.cpp, cdecl).
+///
+/// [pt] { 0x933320 } (cdecl, zipdir.cpp): `zextract_matching_files(caminho, pasta, padrao)`: copia os nomes
 /// das 1000 vagas do índice (as vazias como "{ Empty }") numa lista de 0x104 por nome (malloc
 /// 0x944e46); cada nome que casa com o padrão (0x933a00) e abre (`zopen` lendo, a4 0x15, tipo 4)
 /// vira um arquivo da pasta ("wb"), em blocos de 0x30d40 lidos pelo `zread` (0x932c30) no buffer de
@@ -349,7 +368,10 @@ unsafe extern "C" fn comparar_desempacotar_do_conteiner(caminho: usize, pasta: u
     orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(560)(caminho, pasta, padrao)
 }
 
-/// { 0x90cd50 } (cdecl, utils.cpp): `utils_clear_temp_folder(padrao)`: monta em [0xde279c] a pasta
+/// builds the CM3_TEMP folder path in [0xde279c] and deletes its files matching the pattern, in groups of 100
+/// Original: `utils_clear_temp_folder` (0x90cd50, utils.cpp, cdecl).
+///
+/// [pt] { 0x90cd50 } (cdecl, utils.cpp): `utils_clear_temp_folder(padrao)`: monta em [0xde279c] a pasta
 /// temporária (a variável `CM3_TEMP` pela 0x90bc50 + "\", se houver, e o texto de [0xad9c64], copiado
 /// com limite pela 0x90cf20) e apaga (`remove` 0x94643a) os arquivos dela que casam com o padrão,
 /// em grupos de 100 nomes (a busca é fechada antes de apagar e refeita enquanto o grupo enche).
@@ -442,7 +464,10 @@ unsafe fn zf_proximo_byte(z: usize) -> u8 {
     b
 }
 
-/// { 0x932c30 } (cdecl, zipdir.cpp): `zread(buf, tam, quantos, z)` como o `fread`, dentro do item
+/// reads from the item like fread, clipped at the item end; on type 4 decodes the RLE (a run may span calls)
+/// Original: `zread` (0x932c30, zipdir.cpp, cdecl).
+///
+/// [pt] { 0x932c30 } (cdecl, zipdir.cpp): `zread(buf, tam, quantos, z)` como o `fread`, dentro do item
 /// aberto para leitura (senão 0): o pedido (`tam × quantos`, int) é cortado no fim do item e soma à
 /// posição lógica. Tipo 3: `fread` direto de `pedido / tam` itens. Tipo 4: decodifica o RLE; uma
 /// repetição pode atravessar chamadas (+0x10 de +0x14). Devolve `pedido / tam` (divisão com sinal,
@@ -541,7 +566,11 @@ unsafe fn zf_soltar(z: usize, b: u8) {
     *((z + 0x72445) as *mut u8) = b;
 }
 
-/// { 0x932e10 } (cdecl, zipdir.cpp): `zwrite(buf, tam, quantos, z)` como o `fwrite`, no item aberto
+/// writes to the item like fwrite and adds to the size in the index; on type 4 encodes the RLE (runs of up to 0x7f kept
+/// across calls)
+/// Original: `zwrite` (0x932e10, zipdir.cpp, cdecl).
+///
+/// [pt] { 0x932e10 } (cdecl, zipdir.cpp): `zwrite(buf, tam, quantos, z)` como o `fwrite`, no item aberto
 /// para gravar (senão 0): soma `tam × quantos` ao tamanho do item no índice e à posição lógica.
 /// Tipo 3: `fwrite` direto (devolve o que ele devolver). Tipo 4: codifica o RLE byte a byte,
 /// guardando a repetição em +0x18/+0x14 entre as chamadas; byte diferente fecha a repetição (1 com
@@ -596,7 +625,11 @@ unsafe extern "C" fn comparar_gravar_no_conteiner(buf: *const u8, tam: i32, quan
     orig::<unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32>(563)(buf, tam, quantos, z)
 }
 
-/// { 0x932b00 } (cdecl, zipdir.cpp): `zclose(&z)`. Gravando: esvazia o buffer de escrita; se o item
+/// when writing: flushes the buffer, closes the pending RLE run and rewrites header and index at the start; closes the
+/// file and frees the item
+/// Original: `zclose` (0x932b00, zipdir.cpp, cdecl).
+///
+/// [pt] { 0x932b00 } (cdecl, zipdir.cpp): `zclose(&z)`. Gravando: esvazia o buffer de escrita; se o item
 /// tem tamanho, no tipo 4 fecha a repetição pendente direto no arquivo (literal ou par, como no
 /// zwrite) e regrava cabeçalho + índice inteiros (0x416ec bytes) no começo (`fseek` 0). Lendo: zera
 /// os cursores de leitura. Fecha o FILE, libera o ZFILE e zera o ponteiro.

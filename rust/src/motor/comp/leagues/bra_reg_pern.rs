@@ -106,37 +106,64 @@ unsafe fn cqp9_comparar_fase_seguinte(nome: &str, this: usize, original: impl Fn
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) antes={} depois={}", nome, this, antes, depois));
 }
 
-/// { 0x4394d0 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::start_new_season()`, a virada da temporada do Pernambucano (a tabela:
+/// The Pernambuco turnover: archives the season in the statistics, clears the previous table and stages, moves to the
+/// next year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table order;
+/// then the predicted positions and the renewal of the state referees
+/// Original: `BraRegPern::start_new_season` (0x4394d0, bra_reg_pern.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4394d0 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::start_new_season()`, a virada da temporada do Pernambucano (a tabela:
 /// 0x439330; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
 unsafe extern "thiscall" fn cqp9_virada_do_pernambucano(this: usize) -> u32 {
     cqp9_virada(this, 0x439330, 0x98afd8, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_9 virada do pernambucano") // cqp9: o ano seguinte do Pernambucano
 }
 
-/// { 0x439680 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::advance_stage()`, a fase seguinte do Pernambucano: no fim dos pontos corridos,
+/// The Pernambuco next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the
+/// semi-finals (1st v 4th, 2nd v 3rd); past the last stage it is an error (the box)
+/// Original: `BraRegPern::advance_stage` (0x439680, bra_reg_pern.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x439680 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::advance_stage()`, a fase seguinte do Pernambucano: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x439710); a caixa da linha 0x1f8.
 unsafe extern "thiscall" fn cqp9_fase_seguinte_do_pernambucano(this: usize) {
     cqp9_fase_seguinte(this, 0x98afd8, 0x1f8, 0x439710);
 }
 
-/// { 0x43bd10 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::start_new_season()`, a virada da temporada do Catarinense (a tabela:
+/// The Santa Catarina turnover: archives the season in the statistics, clears the previous table and stages, moves to
+/// the next year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table
+/// order; then the predicted positions and the renewal of the state referees
+/// Original: `BraRegSanta::start_new_season` (0x43bd10, bra_reg_santa.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x43bd10 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::start_new_season()`, a virada da temporada do Catarinense (a tabela:
 /// 0x43bb70; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
 unsafe extern "thiscall" fn cqp9_virada_do_catarinense(this: usize) -> u32 {
     cqp9_virada(this, 0x43bb70, 0x98b050, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_9 virada do catarinense") // cqp9: o ano seguinte do Catarinense
 }
 
-/// { 0x43bec0 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::advance_stage()`, a fase seguinte do Catarinense: no fim dos pontos corridos,
+/// The Santa Catarina next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to
+/// the semi-finals (1st v 4th, 2nd v 3rd); past the last stage it is an error (the box)
+/// Original: `BraRegSanta::advance_stage` (0x43bec0, bra_reg_santa.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x43bec0 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::advance_stage()`, a fase seguinte do Catarinense: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x43bf50); a caixa da linha 0x1f8.
 unsafe extern "thiscall" fn cqp9_fase_seguinte_do_catarinense(this: usize) {
     cqp9_fase_seguinte(this, 0x98b050, 0x1f8, 0x43bf50);
 }
 
-/// { 0x43cd40 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::start_new_season()`, a virada da temporada do Paulista (a tabela:
+/// The Sao Paulo turnover: archives the season in the statistics, clears the previous table and stages, moves to the
+/// next year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table order;
+/// then the predicted positions and the renewal of the state referees
+/// Original: `BraRegSp::start_new_season` (0x43cd40, bra_reg_sp.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x43cd40 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::start_new_season()`, a virada da temporada do Paulista (a tabela:
 /// 0x43cc40; caixas nas linhas 0x1bc, 0x1c3, 0x1c9 e 0x1d0).
 unsafe extern "thiscall" fn cqp9_virada_do_paulista(this: usize) -> u32 {
     cqp9_virada(this, 0x43cc40, 0x98b090, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_9 virada do paulista") // cqp9: o ano seguinte do Paulista
 }
 
-/// { 0x43cef0 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::advance_stage()`, a fase seguinte do Paulista: no fim dos pontos corridos,
+/// The Sao Paulo next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the
+/// semi-finals (1st v 4th, 2nd v 3rd); past the last stage it is an error (the box)
+/// Original: `BraRegSp::advance_stage` (0x43cef0, bra_reg_sp.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x43cef0 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::advance_stage()`, a fase seguinte do Paulista: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x43cf80); a caixa da linha 0x1ea.
 unsafe extern "thiscall" fn cqp9_fase_seguinte_do_paulista(this: usize) {
     cqp9_fase_seguinte(this, 0x98b090, 0x1ea, 0x43cf80);
@@ -234,19 +261,31 @@ unsafe fn cqn8_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 0);
 }
 
-/// { 0x439710 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
+/// Pernambuco: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is the
+/// seed; the ties follow the seeds [inference: two legs, the decider at the better placed club])
+/// Original: `BraRegPern::create_semi_final_stage` (0x439710, bra_reg_pern.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x439710 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98afd8, linhas 0x21b (sem lista) e 0x22f (sem fase).
 unsafe extern "thiscall" fn cqn8_mata_mata_do_pernambucano(this: usize) {
     cqn8_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98afd8, 0x21b, 0x22f, "cqn_8 pernambucano"); // cqn8: 1º × 4º, 2º × 3º Pernambucano
 }
 
-/// { 0x43bf50 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
+/// Santa Catarina: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is
+/// the seed; the ties follow the seeds [inference: two legs, the decider at the better placed club])
+/// Original: `BraRegSanta::create_semi_final_stage` (0x43bf50, bra_reg_santa.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x43bf50 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98b050, linhas 0x21b (sem lista) e 0x22f (sem fase).
 unsafe extern "thiscall" fn cqn8_mata_mata_do_catarinense(this: usize) {
     cqn8_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b050, 0x21b, 0x22f, "cqn_8 catarinense"); // cqn8: 1º × 4º, 2º × 3º Catarinense
 }
 
-/// { 0x43cf80 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
+/// Sao Paulo: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is the
+/// seed; the ties follow the seeds [inference: two legs, the decider at the better placed club])
+/// Original: `BraRegSp::create_semi_final_stage` (0x43cf80, bra_reg_sp.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x43cf80 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98b090, linhas 0x20d (sem lista) e 0x221 (sem fase).
 unsafe extern "thiscall" fn cqn8_mata_mata_do_paulista(this: usize) {
     cqn8_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b090, 0x20d, 0x221, "cqn_8 paulista"); // cqn8: 1º × 4º, 2º × 3º Paulista

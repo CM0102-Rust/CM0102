@@ -315,7 +315,15 @@ unsafe extern "C" fn escalar(
 
 // ---------- centesima decima oitava leva: a postura do time (0x6df460) ----------
 
-/// { 0x6df460 } (thiscall, match_man.cpp): a postura que a comissao `c` (+0x12 motor, +0x18 lado,
+/// the stance the staff ask for (1 all-out attack … 5 park the bus). Starts from the sides' strength (with the engine
+/// running, +0x8ea5, the sum of the 0x6e86d0 scores of those on the pitch × 50 / 11; otherwise the +0x80 reputation),
+/// possession (+0x1fc/+0x206/+0x210), time (+0x8ed0), sendings-off (+0x1ad, 0x6cbbb0) and the aggregate score
+/// (0x6ce310); adjusts for the league (table positions through 0x4a4850 and dates through 0x54cdb0), the manager (+0xe)
+/// and the end of the match (+0x8ed4 = 0x3de). Stores the factor in engine+0x476a[side] (10 and −1 at the extremes);
+/// with the engine running and the factor within 0.5 of the stored one, keeps the current stance (+0x1ab)
+/// Original: `stance` (0x6df460, match_man.cpp (~3 KB), thiscall).
+///
+/// [pt] { 0x6df460 } (thiscall, match_man.cpp): a postura que a comissao `c` (+0x12 motor, +0x18 lado,
 /// +0x1f tecnico, +0x2f clube, +0x33 adversario, +0x37 partida) pede ao time: 1 ataque total, 2
 /// ataque, 3 equilibrio, 4 defesa, 5 retranca. Parte da forca dos dois lados (com o motor rodando
 /// (+0x8ea5), a soma das notas 0x6e86d0 dos que estao em campo * 50 / 11; senao a reputacao +0x80
@@ -861,7 +869,18 @@ unsafe fn julgar_formacoes(
 
 // ---------- centesima vigesima leva: as instrucoes individuais (0x6ddab0) ----------
 
-/// { 0x6ddab0 } (thiscall, match_man.cpp, ~6,4 KB): a comissao `c` acerta as instrucoes da tatica
+/// the staff set the instructions of the tactic copied at +0x2b (0x5b50d0 general, 0x5b2ba0 per position, 0x5b5290
+/// 64-bit marks, 0x5b5910 man-marking in the engine's tactic block) and in the tactics bank (0x897ee0). With a human
+/// manager to consult it does nothing. At home (or by a draw against the reputation gap in competitions +0x3a = 1 or 9)
+/// it asks for 0x20; the manager (+0x13, +0x1f, +0x1c) picks tempo and marking. A factor (reputations / 17000, manager
+/// +0xe and the remainder of the ids' sum by 13 − 0x544410/2) is compared with the attributes (0x5431e0) of each of the
+/// 20 on the side on the pitch: wing runs, man-marking the opponent from 0x6d4330 (with 0x7c1e30 for midfielders),
+/// passing, long shots, dribbling, tackling, offside, set pieces (minus the accumulated value of those with high
+/// +0x2e), crosses by table and the set-piece taker (0x897ee0 for whoever is at +6/+0xa/+0xe of the staff). Quirk kept:
+/// the marked player's side comes from the player's +0x19 (position 0 becomes the other side)
+/// Original: `instructions` (0x6ddab0, match_man.cpp (~6.4 KB), thiscall).
+///
+/// [pt] { 0x6ddab0 } (thiscall, match_man.cpp, ~6,4 KB): a comissao `c` acerta as instrucoes da tatica
 /// copiada em +0x2b (0x5b50d0 gerais, 0x5b2ba0 posicao, 0x5b5290 marcas de 64 bits, 0x5b5910 marcacao
 /// individual no motor) e no banco de taticas (0x897ee0). Com tecnico humano a ser consultado nao
 /// mexe. Em casa (ou com sorteio contra a diferenca de reputacao nas competicoes +0x3a = 1 ou 9) pede
@@ -1325,7 +1344,11 @@ unsafe extern "C" fn ordem_por_condicao(pa: *const usize, pb: *const usize) -> i
     condicao(a).wrapping_sub(vb)
 }
 
-/// { 0x6dbb80 } (thiscall, match_man.cpp): os titulares do inicio do jogo. Para cada vaga de 0 a
+/// for each place from 0 to 10 + (match +0x4d & 0xf), the person from the club's tactic (0x8968f0) comes in (0x6e0d00)
+/// if able to play (0x62c400 ≠ 2, 0x55d270 and 0x7757d0 without impediment); returns how many
+/// Original: `starters` (0x6dbb80, match_man.cpp, thiscall).
+///
+/// [pt] { 0x6dbb80 } (thiscall, match_man.cpp): os titulares do inicio do jogo. Para cada vaga de 0 a
 /// 10 + (partida +0x4d & 0xf), a pessoa da tatica do clube (0x8968f0) entra (0x6e0d00) se puder jogar:
 /// 0x62c400 diferente de 2, e (partida sem competicao, -2, ou 0x55d270 sem impedimento) e 0x7757d0 sem
 /// impedimento. Devolve quantos entraram.
@@ -1361,7 +1384,11 @@ unsafe fn titulares_com(c: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5])
     n
 }
 
-/// { 0x6dbb10 } (thiscall, match_man.cpp, virtual): guarda a tatica da comissao (+0x3f) no banco de
+/// stores the staff's tactic (+0x3f) in the bank (0x8984d0); with a human manager only when 0x600a50 denies or 0x5fd480
+/// confirms
+/// Original: `store_tactic` (0x6dbb10, match_man.cpp, thiscall, virtual).
+///
+/// [pt] { 0x6dbb10 } (thiscall, match_man.cpp, virtual): guarda a tatica da comissao (+0x3f) no banco de
 /// taticas (0x8984d0). Com tecnico humano (+0x19) so quando 0x600a50 nega ou 0x5fd480 confirma.
 unsafe extern "thiscall" fn guardar_tatica(c: usize) {
     let u = |p: usize, o: usize| *((p + o) as *const usize);
@@ -1397,7 +1424,15 @@ unsafe fn aviso_em(arquivo: usize, linha: u32) {
     *(0xb67a34 as *mut u32) = 0;
 }
 
-/// { 0x6dbc50 } (thiscall, ret 8, match_man.cpp, ~7,7 KB): a escalacao automatica da comissao `t`
+/// the staff selects the team against the opponent. Outside the human, weighs today's match against the next one on the
+/// list (0x5acbe0: competition reputation, rival, same city, days until it) to rest players (+0x1a 0/1/2 and the slot
+/// masks); filters the 50 of the lines (state, suspension, already played, barred, on loan), selects (0x6e2000), picks
+/// the formation (0x6e0230), the three references (+6/+0xa/+0xe), the rotation (0x8cf880/0x6e8910), the slots
+/// (0x6e0d00), the captain (0x897760), the instructions (0x6ddab0) and the general orders by the stance (0x5b50d0). The
+/// locals live in a frame with the original stack offsets (zeroed, like the determinised original)
+/// Original: `select_automatically` (0x6dbc50, match_man.cpp (~7.7 KB), thiscall, ret 8).
+///
+/// [pt] { 0x6dbc50 } (thiscall, ret 8, match_man.cpp, ~7,7 KB): a escalacao automatica da comissao `t`
 /// (+0x12 motor, +0x18 lado, +0x19 humano, +0x1a peso do jogo, +0x1b tecnico, +0x1f ficha, +0x27
 /// linhas, +0x2b tatica, +0x2f clube, +0x37 partida) contra `outro`; `modo` 1 respeita as vagas
 /// marcadas na tatica do clube (0x8972c0), 2 refaz tudo. Fora do humano, com clube de reputacao
@@ -2506,7 +2541,16 @@ unsafe fn refazer_time_com(c: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 
     }
 }
 
-/// { 0x6e1aa0 } (match_man.cpp): ver `refazer_time_com`.
+/// the staff redo the team. With 11 on the pitch and the line-up rejected (0x6e0230 with 0x8c1, 2) narrates 0x2007.
+/// Gathers the outfield players on the pitch (position +0x19, tables 0x717410/0x717450, position marks 0x5b5270 and
+/// byte 0x5b57c0, record +0x69), picks the team (0x6e2000 with 0x8800, or 0x408800 when a human manager is to be
+/// consulted: 0x600a50, 0x5fd210, 0x5fea50) and gives each picked record the position of the place it won, redoing
+/// performance (0x6eecb0). 0x6e0230 and 0x6e2000 (pick, recursive, allocates) are units with vectors: the tape records
+/// the bytes of the input and output vectors passed by pointer, checks the Rust copy's inputs and writes its outputs
+/// (`chamar_gravando_vetores`, `pedir_vetores`). The provisional 0x6e1aa0 port from batch 114 is gone
+/// Original: `redo_team` (0x6e1aa0, match_man.cpp, thiscall).
+///
+/// [pt] { 0x6e1aa0 } (match_man.cpp): ver `refazer_time_com`.
 unsafe extern "thiscall" fn refazer_time(c: usize) {
     refazer_time_com(c, &mut |rotina, this, a| match rotina {
         0x6e0230 => {
@@ -2559,7 +2603,12 @@ unsafe extern "thiscall" fn melhor_da_lista(this: usize, lista: *const usize, n:
 
 // ---------- centesima decima segunda leva: o mais bem avaliado do lado (0x6e1a40) ----------
 
-/// { 0x6e1a40 } (match_man.cpp): o indice (0..20) do jogador ativo (+0x19 >= 0) mais bem avaliado
+/// the index (0..20) of the active player (+0x19 ≥ 0) best rated by the staff (0x6e1cf0 with club +0x2f) among the 20
+/// in the block starting at +0x23; the first active one counts even with a negative rating, then only strictly higher;
+/// −1 with none active
+/// Original: `best_rated` (0x6e1a40, match_man.cpp, thiscall).
+///
+/// [pt] { 0x6e1a40 } (match_man.cpp): o indice (0..20) do jogador ativo (+0x19 >= 0) mais bem avaliado
 /// pela comissao (0x6e1cf0 com o clube +0x2f) entre os 20 do bloco que comeca em +0x23 (de 0x1be em
 /// 0x1be); o primeiro ativo entra mesmo com nota negativa, depois so nota estritamente maior. -1 sem
 /// nenhum ativo.
@@ -2663,7 +2712,11 @@ unsafe extern "C" fn avaliar_jogador(pessoa: usize, jogador: usize, clube: usize
 
 // ---------- 173a leva: o fechamento do motor (7): a regra do elenco e as notas do jogador (match_man.cpp) ----------
 
-/// { 0x6e8910 } (cdecl, match_man.cpp): cumpre a `regra` do elenco (byte 0: 1 estrangeiro de fora da
+/// applies the squad rule (foreigners, non-EU or age): swaps restricted players for the candidates with the smallest
+/// score loss
+/// Original: `apply_squad_rule` (0x6e8910, match_man.cpp, cdecl).
+///
+/// [pt] { 0x6e8910 } (cdecl, match_man.cpp): cumpre a `regra` do elenco (byte 0: 1 estrangeiro de fora da
 /// comunidade, 2 estrangeiro, 3 acima da idade em +1; +2 máximo em campo, +3 máximo no banco, +4 e +5
 /// o permitido e o atual) na escalação do `clube` (nação +0x53; 0x53d980/0x53d740): tira os restritos
 /// da lista de reserva (`reserva`, `nr`); se há mais restritos em campo que o máximo (+2), escolhe entre
@@ -3560,7 +3613,11 @@ fn combinar_nota(flags: u32, l40: i32, l4c: i32) -> i32 {
     }
 }
 
-/// { 0x6e6340 } (cdecl, match_man.cpp): a nota do jogador `p` para a posição `pos` fora da partida
+/// the player's score for a position outside a match (transfers and scouting): position, form, perceived ability,
+/// contract, age, scout knowledge
+/// Original: `off_match_score` (0x6e6340, match_man.cpp, cdecl).
+///
+/// [pt] { 0x6e6340 } (cdecl, match_man.cpp): a nota do jogador `p` para a posição `pos` fora da partida
 /// (transferências, observação), pelas `flags`, para o `clube`, com o `limite` de corte e o
 /// observador `o`: a nota da posição (tabela 0xa15d50) vezes o ajuste da reputação, forma,
 /// habilidade vista, idade, contrato e conhecimento do observador. -10000 sem ficha (+0x61) ou
@@ -3782,7 +3839,11 @@ unsafe fn fora_da_nacao(p: usize, clube: usize, flags: u32, l4c: i32) -> i32 {
     }
 }
 
-/// { 0x6e2f20 } (cdecl, match_man.cpp): a nota do jogador `p` (ficha `f`) para uma vaga da escalação
+/// the player's score for a lineup slot: like the off-match score, plus the second position, in-match stamina, tactics,
+/// veterans and holidays
+/// Original: `lineup_slot_score` (0x6e2f20, match_man.cpp, cdecl).
+///
+/// [pt] { 0x6e2f20 } (cdecl, match_man.cpp): a nota do jogador `p` (ficha `f`) para uma vaga da escalação
 /// (`pos`, e a segunda posição `pos2` com peso 1/3), pelas `flags`, no `clube`, com o lado `lado`
 /// (+0x1b observador, +0x1f conhecimento), o técnico `tecnico`, o `limite`, as marcas da tática
 /// (`marca` e `bytes`, `tatica`) e a lista das férias `ferias` (16 pares id, posição). Como a

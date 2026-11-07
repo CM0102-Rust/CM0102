@@ -24,7 +24,12 @@ unsafe fn cqf10_clube_do_contrato(pessoa: usize) -> usize {
     if c != 0 { cqf10_clube(read_usize(c + 4)) } else { 0 }
 }
 
-/// { 0x7bd310 } (thiscall, ret 8, player_search.cpp): `player_search_record_scouted_club_match(jogo, resultado)`, pela
+/// the slots of players who left the watched club are cleared; every club player who played gets a line in the 10-match
+/// history: goals, rating, date, opponent, score, side, statistics and the type (starter, substitute, rating from
+/// +0x30)
+/// Original: `player_search_record_scouted_club_match` (0x7bd310, player_search.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7bd310 } (thiscall, ret 8, player_search.cpp): `player_search_record_scouted_club_match(jogo, resultado)`, pela
 /// partida observada (0x7b5be0) quando a lista acompanha um clube (+0x190) que joga nela. `this` é o registro do clube
 /// observado ([lista+0x170]: +0 o id do clube, 50 vagas de 0x1a2 bytes a partir de +4). Primeiro as vagas de quem saiu
 /// do clube (id −1, o contador +4 e os bytes +0x1a0/+0x1a1 zerados); depois, do lado do clube no resultado (+0x190, 20
@@ -187,7 +192,13 @@ unsafe extern "thiscall" fn comparar_cqf10_historico_do_clube_observado(this: us
 static mut CQF10_ENSAIO: bool = false;
 static mut CQF10_RELATORIO: bool = false;
 
-/// { 0x7b5be0 } (thiscall, ret 0xc, player_search.cpp, quadro SEH da lista local e das datas): `PLAYER_SEARCH::
+/// the matching scout list (type 4) watches the played match: the history of the followed club; within the dates, with
+/// the followed player in the match or with the club asking for a player of either club, the list start moves to
+/// tomorrow and every player of another club rated at least 15 (and asked for, followed or with a seen reputation below
+/// 4000) becomes a report in the output
+/// Original: `PLAYER_SEARCH::scout_match` (0x7b5be0, player_search.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x7b5be0 } (thiscall, ret 0xc, player_search.cpp, quadro SEH da lista local e das datas): `PLAYER_SEARCH::
 /// scout_match(jogo, resultado, saida)`, pela partida observada (0x7f8c00). `this` é a lista de busca do olheiro: +0 o
 /// dono, +0xa o tipo (4 = observar partidas), +0x170 o registro do clube observado, +0x174..+0x184 os nomes do olheiro,
 /// +0x180 o id dele, +0x190 o clube acompanhado, +0x195 o jogador acompanhado, +0x1a5/+0x1ad o começo e o fim. Sem jogo
@@ -472,7 +483,10 @@ unsafe extern "thiscall" fn comparar_cqf10_olheiro_no_jogo(this: usize, jogo: us
 
 
 
-/// { 0x7af600 } (thiscall, ret 4, player_search.cpp, quadro SEH só pelas duas datas locais, sem destrutor):
+/// looks the player up in the search results (binary search by id) and returns 1 when found and not marked as removed
+/// Original: `PLAYER_SEARCH::contains_player` (0x7af600, player_search.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7af600 } (thiscall, ret 4, player_search.cpp, quadro SEH só pelas duas datas locais, sem destrutor):
 /// `PLAYER_SEARCH::contains_player(pessoa)`, da lista do olheiro do técnico humano (0x7f7490, que a avaliação dos
 /// jogadores e os clubes interessados consultam a cada dia) e de telas. A chave local de 0x2d bytes começa com as duas
 /// datas padrão (+0x10 e +0x18, 0x54a110); pessoa nula: a caixa da linha 0x33e e 0. Sem resultados (+0x1f6 = conta):
@@ -538,7 +552,11 @@ unsafe fn cqa6_trocar(l: usize, olheiro: usize) {
     f(l, olheiro);
 }
 
-/// { 0x7f7270 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::sync_scout_lists(técnico)`, quando a comissão do
+/// removes from the manager's scout lists the scouts no longer at the club and gives each club scout without a list the
+/// first free list; with the edit session open, it refreshes the scouts
+/// Original: `SCOUT_MANAGER::sync_scout_lists` (0x7f7270, scout_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7f7270 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::sync_scout_lists(técnico)`, quando a comissão do
 /// clube humano muda (a saída do cargo 0x690890 e a da vaga dos olheiros, as transferências e contratações de pessoal).
 /// Sem técnico, o humano da vez; sem ele, a caixa da linha 0x1ba e 0. Das 10 buscas do técnico, as listas de olheiro
 /// (+0xa = 4) cujo olheiro (0x7ae950) não é mais olheiro (+0x3d = 9) do clube do técnico (+0x39) ficam sem olheiro
@@ -633,7 +651,11 @@ unsafe extern "thiscall" fn comparar_sincronizar_listas_dos_olheiros(this: usize
     r
 }
 
-/// { 0x7bd700 } (thiscall, ret 8, player_search.cpp): `player_search_find_or_claim_player_slot(pessoa, reservar)`, do
+/// the player's slot among the 50 of the scouted club record; when claiming, the first free one gets the id and its
+/// counters are zeroed
+/// Original: `player_search_find_or_claim_player_slot` (0x7bd700, player_search.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7bd700 } (thiscall, ret 8, player_search.cpp): `player_search_find_or_claim_player_slot(pessoa, reservar)`, do
 /// registro de 50 vagas (0x1a2 bytes a partir de +4: +0 o id, −1 livre) do clube observado, pela partida dele
 /// (0x7bd310) e pelas telas (0x7f8610). A vaga com o id da pessoa; senão, com `reservar`, a primeira livre recebe o id
 /// (pessoa nula: −1), zera a palavra +4 e os bytes +0x1a0 e +0x1a1 e é devolvida (nenhuma livre: a caixa da linha
@@ -691,7 +713,11 @@ unsafe extern "thiscall" fn comparar_vaga_do_jogador_observado(this: usize, pess
 
 
 
-/// { 0x7bca90 } (cdecl, player_search.cpp): `player_search_get_club_target_rating(clube, *base, *forcada)`: a nota que
+/// the rating the club looks for: the base from reputation, money, nation and league, by bands, and the adjustments for
+/// squad size and wealth; at least 500
+/// Original: `player_search_get_club_target_rating` (0x7bca90, player_search.cpp, cdecl).
+///
+/// [pt] { 0x7bca90 } (cdecl, player_search.cpp): `player_search_get_club_target_rating(clube, *base, *forcada)`: a nota que
 /// o clube procura nos jogadores. A base (sem `forcada`): a reputação (+0x80), a do dinheiro (+0x77 × 0,43 − 430, até
 /// 10000, se maior que a reputação), a da nação (+0x57: +0x69 × 500, se maior que reputação / 500) e a da liga (+0x1db
 /// em [0xae23d0], 0x6b bytes: +0x69 × 600, idem), pesadas e / 16; metade no clube não profissional (+0x64 ≠ 1). A
@@ -811,7 +837,10 @@ unsafe extern "C" fn nota_alvo_do_clube(clube: usize, base: *mut i32, forcada: *
     edi
 }
 
-/// { 0x7bd830 } (thiscall, ret 4, player_search.cpp): `player_search_slot_get_match_entry(i)`: o jogo `i` (0x29
+/// match entry i (0x29 bytes) of the tracked player's ring of 10, or 0 past the count
+/// Original: `player_search_slot_get_match_entry` (0x7bd830, player_search.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7bd830 } (thiscall, ret 4, player_search.cpp): `player_search_slot_get_match_entry(i)`: o jogo `i` (0x29
 /// bytes, a partir de +6) do anel de 10 que começa em +0x1a0 (byte com sinal), ou 0 se `i` ≥ a conta (+0x1a1).
 unsafe extern "thiscall" fn jogo_do_historico(this: usize, i: u32) -> usize {
     let i = i as u8 as i8;
@@ -825,7 +854,10 @@ unsafe extern "thiscall" fn jogo_do_historico(this: usize, i: u32) -> usize {
     (this as isize + k as isize * 0x29 + 6) as usize
 }
 
-/// { 0x7bd870 } (thiscall, ret 0, player_search.cpp): `player_search_slot_sum_goals()`: a soma (16 bits) do byte com
+/// the sum of the goals of the matches stored in the ring
+/// Original: `player_search_slot_sum_goals` (0x7bd870, player_search.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x7bd870 } (thiscall, ret 0, player_search.cpp): `player_search_slot_sum_goals()`: a soma (16 bits) do byte com
 /// sinal +0x16 dos jogos do anel (+0x1a1 deles, a partir de +0x1a0, dando a volta em 10).
 unsafe extern "thiscall" fn gols_do_historico(this: usize) -> u16 {
     let n = *((this + 0x1a1) as *const i8);
@@ -879,7 +911,10 @@ unsafe fn cph7_sortear(n: i32) -> i32 {
     f(n)
 }
 
-/// { 0x7ae950 } (thiscall, player_search.cpp): `PLAYER_SEARCH::get_scout`: o olheiro da busca: o índice em +0x180 (> −1)
+/// the person at index +0x180 when it still matches the stored names and date (0x53e990); else 0
+/// Original: `PLAYER_SEARCH::get_scout` (0x7ae950, player_search.cpp, thiscall).
+///
+/// [pt] { 0x7ae950 } (thiscall, player_search.cpp): `PLAYER_SEARCH::get_scout`: o olheiro da busca: o índice em +0x180 (> −1)
 /// no vetor de pessoas [0xae23bc] (110 bytes), se ainda confere com os nomes e a data guardados (0x53e990 com +0x174,
 /// +0x178, +0x17c e a data em +0x184); senão 0.
 unsafe extern "thiscall" fn olheiro_da_busca(this: usize) -> usize {
@@ -895,7 +930,11 @@ unsafe extern "thiscall" fn olheiro_da_busca(this: usize) -> usize {
     pessoa
 }
 
-/// { 0x690c30 } (thiscall, ret 0xc, manager_manager.cpp): `MANAGER_MANAGER::get_current_run(clube, tipo, tamanho)`:
+/// the first run (types 1, 3, 4, 2) of more than 1 game with the last one under 10 days ago, from the club line in the
+/// league statistics; else 5 and 0
+/// Original: `MANAGER_MANAGER::get_current_run` (0x690c30, manager_manager.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x690c30 } (thiscall, ret 0xc, manager_manager.cpp): `MANAGER_MANAGER::get_current_run(clube, tipo, tamanho)`:
 /// a sequência atual do clube na liga (+0x57; a competição pelo id em [0xadadfc], estatísticas em +8, a linha do clube
 /// pela 0x4a4850): a primeira de mais de 1 jogo cujo último foi há menos de 10 dias (0x54cdb0 da data do jogo), na
 /// ordem +0x19 (tipo 1, data +0x25), +0x2d (3, +0x39), +0x55 (4, +0x61) e +0x41 (2, +0x4d): o tipo e o tamanho (byte).
@@ -922,7 +961,10 @@ unsafe extern "thiscall" fn sequencia_atual_do_clube(_this: usize, clube: usize,
     *tamanho = 0;
 }
 
-/// { 0x450d40 } (thiscall, club_records.cpp): `record_holder_construct`: constrói o recordista: só a data em +0x10
+/// builds the record holder: only the date at +0x10 (0x54a110)
+/// Original: `record_holder_construct` (0x450d40, club_records.cpp, thiscall).
+///
+/// [pt] { 0x450d40 } (thiscall, club_records.cpp): `record_holder_construct`: constrói o recordista: só a data em +0x10
 /// (0x54a110). Devolve `this`.
 unsafe extern "thiscall" fn construir_recordista(this: usize) -> usize {
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
@@ -936,7 +978,11 @@ unsafe fn cph7_sorteado(c: usize) -> bool {
         && cph7_sortear(*((read_u32(c + 0xcf) as usize + 0x57) as *const i8) as i32) > 5
 }
 
-/// { 0x72b940 } (thiscall, ret 4, media.cpp): `Media::pick_rival_manager_id(clube)`: com técnico (+0xcf) com contrato
+/// the manager of a rival (+0xb3/+0xb7/+0xbb) of the same league and much bigger, or of a drawn club in a league clash,
+/// who passes the draws; returns the id or −1
+/// Original: `Media::pick_rival_manager_id` (0x72b940, media.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x72b940 } (thiscall, ret 4, media.cpp): `Media::pick_rival_manager_id(clube)`: com técnico (+0xcf) com contrato
 /// (+0x69) e liga (+0x57; sem liga, só seleção, 0x53b900): o primeiro dos rejeitados do técnico (0x5480f0) com
 /// registro de técnico e nota + 750 < nota (nunca: o sorteio(3) dali não acontece); depois cada rival (+0xb3, +0xb7,
 /// +0xbb) com técnico que passa nos sorteios, da mesma liga e de reputação (+0x80) acima da do clube + 750, com
@@ -1031,7 +1077,10 @@ unsafe extern "thiscall" fn comparar_tecnico_rival_para_comentar(this: usize, cl
 
 // ---------- 195a leva: a última nota do jogador e a vaga e o tipo da busca de jogadores (player_stats.cpp, player_search.cpp) ----------
 
-/// { 0x7c1a60 } (thiscall, ret 4, player_stats.cpp): a nota da última partida do jogador `*id` (os 4
+/// the player's last match rating (6.5 with none)
+/// Original: `PlayerStats::get_last_match_rating` (0x7c1a60, player_stats.cpp, thiscall).
+///
+/// [pt] { 0x7c1a60 } (thiscall, ret 4, player_stats.cpp): a nota da última partida do jogador `*id` (os 4
 /// bits baixos do byte +0x26 do registro de 39 bytes em [estatisticas+0x30]); sem nota, 6,5
 /// ([0x96e2b8]). Jogador nulo: a original (caixa de erro). Devolve em st0.
 unsafe extern "thiscall" fn ultima_nota_do_jogador(estatisticas: usize, id: *const i32) -> f32 {
@@ -1043,7 +1092,10 @@ unsafe extern "thiscall" fn ultima_nota_do_jogador(estatisticas: usize, id: *con
     if nota != 0 { nota as f32 } else { *(0x96e2b8 as *const f32) }
 }
 
-/// { 0x7ae640 } (thiscall, ret 4, player_search.cpp): grava a vaga `vaga` (0 a 9) da busca em +4 e
+/// stores the player search slot (0 to 9)
+/// Original: `PLAYER_SEARCH::set_slot_index` (0x7ae640, player_search.cpp, thiscall).
+///
+/// [pt] { 0x7ae640 } (thiscall, ret 4, player_search.cpp): grava a vaga `vaga` (0 a 9) da busca em +4 e
 /// devolve 1. Fora da faixa: a original (caixa de erro, devolve 0).
 unsafe extern "thiscall" fn vaga_da_busca(busca: usize, vaga: i8) -> u32 {
     if !(0..=9).contains(&vaga) {
@@ -1053,7 +1105,10 @@ unsafe extern "thiscall" fn vaga_da_busca(busca: usize, vaga: i8) -> u32 {
     1
 }
 
-/// { 0x7ae6e0 } (thiscall, ret 4, player_search.cpp): grava o tipo de lista `tipo` (1 a 4) da busca em
+/// stores the player search list type (1 to 4)
+/// Original: `PLAYER_SEARCH::set_list_type` (0x7ae6e0, player_search.cpp, thiscall).
+///
+/// [pt] { 0x7ae6e0 } (thiscall, ret 4, player_search.cpp): grava o tipo de lista `tipo` (1 a 4) da busca em
 /// +0xa e devolve 1. Fora da faixa: a original (caixa de erro, devolve 0).
 unsafe extern "thiscall" fn tipo_da_lista_da_busca(busca: usize, tipo: i8) -> u32 {
     if !(1..=4).contains(&tipo) {

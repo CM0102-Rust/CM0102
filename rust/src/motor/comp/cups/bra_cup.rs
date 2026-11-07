@@ -76,7 +76,12 @@ unsafe fn cqr5_comparar(nome: &str, this: usize, original: impl FnOnce() -> u32)
     r
 }
 
-/// { 0x427d10 } (thiscall, ret 0, bra_cup.cpp; a virtual +0x08 da Copa do Brasil): `BraCup::start_new_season()`, a
+/// rule: at the season turn the Brazilian Cup is rebuilt from scratch: last edition's tables are freed, the season
+/// history is archived (Comp_Stats), the year goes up by one and the cup builds again its entrants (the team table),
+/// the rounds and the fixture tree, and the predicted positions
+/// Original: `BraCup::start_new_season` (0x427d10, bra_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x427d10 } (thiscall, ret 0, bra_cup.cpp; a virtual +0x08 da Copa do Brasil): `BraCup::start_new_season()`, a
 /// virada (`cqr5_virada`) com os inscritos de BraCup::build_team_table (0x427c20) e as caixas do bra_cup.cpp nas linhas
 /// 0x189, 0x190 e 0x197.
 unsafe extern "thiscall" fn cqr5_virada_copa_do_brasil(this: usize) -> u32 {
@@ -88,7 +93,11 @@ unsafe extern "thiscall" fn comparar_cqr5_virada_copa_do_brasil(this: usize) -> 
     cqr5_comparar("cqr5_virada_copa_do_brasil", this, || o(this))
 }
 
-/// { 0x662950 } (thiscall, ret 0, jap_emp_cup.cpp; a virtual +0x08 da Copa do Imperador): `JapEmpCup::start_new_season()`,
+/// rule: the same turn in the Emperor's Cup (Japan): tables freed, history archived, year +1, the entrants
+/// (JapEmpCup::collect_entrants), the rounds, the tree and the predicted positions
+/// Original: `JapEmpCup::start_new_season` (0x662950, jap_emp_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x662950 } (thiscall, ret 0, jap_emp_cup.cpp; a virtual +0x08 da Copa do Imperador): `JapEmpCup::start_new_season()`,
 /// a virada (`cqr5_virada`) com os inscritos de JapEmpCup::collect_entrants (0x6624f0) e as caixas do jap_emp_cup.cpp nas
 /// linhas 0x217, 0x21e e 0x225.
 unsafe extern "thiscall" fn cqr5_virada_copa_do_imperador(this: usize) -> u32 {
@@ -100,7 +109,11 @@ unsafe extern "thiscall" fn comparar_cqr5_virada_copa_do_imperador(this: usize) 
     cqr5_comparar("cqr5_virada_copa_do_imperador", this, || o(this))
 }
 
-/// { 0x665bc0 } (thiscall, ret 0, jap_j_cup.cpp; a virtual +0x08 da Copa da Liga japonesa): `JapJCup::start_new_season()`,
+/// rule: the same turn in the Japanese League Cup (J-League Cup): tables freed, history archived, year +1, the 28
+/// entrants (JapJCup::collect_entrants), the rounds, the tree and the predicted positions
+/// Original: `JapJCup::start_new_season` (0x665bc0, jap_j_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x665bc0 } (thiscall, ret 0, jap_j_cup.cpp; a virtual +0x08 da Copa da Liga japonesa): `JapJCup::start_new_season()`,
 /// a virada (`cqr5_virada`) com os inscritos de 0x665a00 (thiscall, ret 0) e as caixas do jap_j_cup.cpp nas linhas 0x1a3,
 /// 0x1aa e 0x1b1.
 unsafe extern "thiscall" fn cqr5_virada_copa_da_liga_japonesa(this: usize) -> u32 {
@@ -126,7 +139,16 @@ const CQO12_COPA_DO_BRASIL: [Cql10R; 7] = [
     cql10r((0x1d, 5, 0, 3), (1, 6, 0, 5, 1, 0), 0x96, (0, 0, 1), 6, (2, 1, 0, 0), (0, 2, 4), (0, 0xf4240, 0xc3500)),
 ];
 
-/// { 0x427700 } (thiscall, ret 0x10, bra_cup.cpp; a virtual +0x3c da Copa do Brasil): `BraCup::create_round_table(fase,
+/// rule: the Brazilian Cup has 7 two-legged rounds, all in the cup year: 1st drawn on 18/1 and played on 23/2 (54
+/// teams, 27 ties), 2nd draw 9/3, match 22/3 (34 teams: the 27 through and 7 entering now), 3rd 6/4 and 26/4 (22 teams:
+/// 17 and 5 new; return leg 21 days later), 4th 18/5 and 7/6 (16 teams: 11 and 5 new; return 7 days later); the late
+/// entrants are those exempt from the early rounds [inference: the clubs in the continental cups], quarter-finals 15/6
+/// and 17/6, semi-final 22/6 and 24/6, final draw 29/6 and match on 1/7 (return 4 days later in the last three);
+/// two-leg tie-break 1 (away goals [inference]); category 4 in the first two and 6 after; final prize 1 million to the
+/// winner and 800 thousand to the runner-up
+/// Original: `BraCup::create_round_table` (0x427700, bra_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x427700 } (thiscall, ret 0x10, bra_cup.cpp; a virtual +0x3c da Copa do Brasil): `BraCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa4 sem memória.
 unsafe extern "thiscall" fn cqo12_copa_do_brasil_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql10_tabela(this, fase, rodadas, extra, saida, &CQO12_COPA_DO_BRASIL, 0x98a3bc, 0xa4, "cqo_12 tabela da copa do brasil")
@@ -167,6 +189,12 @@ unsafe fn cqo12_times(this: usize) -> i32 {
     1
 }
 
+/// rule: the Brazilian Cup has 71 places, one per entrant, in the entrant list order, all with class 0 and status 0xff
+/// (no match yet [inference])
+/// Original: `BraCup::build_team_table` (0x427c20, bra_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: a Copa do Brasil tem 71 vagas, uma por inscrito, na ordem da lista dos inscritos, todas com a classe 0 e a
+/// situação 0xff (ainda sem jogo [inferência])
 unsafe extern "thiscall" fn cqo12_times_da_copa(this: usize) -> i32 {
     cqo12_times(this)
 }
@@ -217,6 +245,12 @@ unsafe fn cqo12_regras(this: usize) -> i32 {
     1
 }
 
+/// rule: Brazilian Cup matches have 7 substitutes on the bench and 3 substitutions; the prize fund is 500 thousand;
+/// builds the round table
+/// Original: `BraCup::set_up_rounds` (0x427ec0, bra_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: os jogos da Copa do Brasil têm 7 reservas no banco e 3 substituições; o fundo de prêmios é de 500 mil; monta
+/// a tabela das rodadas
 unsafe extern "thiscall" fn cqo12_regras_da_copa(this: usize) -> i32 {
     cqo12_regras(this)
 }

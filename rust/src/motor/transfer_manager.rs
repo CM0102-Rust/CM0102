@@ -71,7 +71,12 @@ unsafe fn cqf1_sem_memoria(linha: u32, texto: usize) {
     caixa(0xae28bc, 0xae26c4, 0);
 }
 
-/// { 0x8be300 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH sem destrutor no caminho normal: só os `new` da
+/// puts the offer in an array slot (the stored one, the same buyer's for the same target or the first empty one; grows
+/// by 50 when full), copies the fields, gives the serial number, links rival offers for the player, schedules the
+/// answer (28 days with a human, otherwise the reply deadline) and posts the news
+/// Original: `TRANSFER_MANAGER::add_transfer_offer` (0x8be300, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8be300 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH sem destrutor no caminho normal: só os `new` da
 /// oferta e das listas): `TRANSFER_MANAGER::add_transfer_offer(oferta, termos)`. A menor vaga livre guardada (+0x85e)
 /// é lida e volta a −1; a oferta sem valor (+0x1b = 0) perde o +0x40. Vetor cheio (+8 = +4): cresce 50 (calloc
 /// 0x945501 na primeira vez, senão realloc 0x945667 com as 50 novas zeradas; sem memória, a caixa (linha 0x4d2) e o
@@ -290,7 +295,11 @@ unsafe fn cqf1_segue(e: usize) -> bool {
     }
 }
 
-/// { 0x8c0660 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::accept_loan_offer(vaga, marcar)`, só pela
+/// screens only: the club accepts the loan request; the contract decision, the news, and without agreement status 0xf,
+/// the shortlists, the 10-day scheduling and bit 0 of the player record
+/// Original: `TRANSFER_MANAGER::accept_loan_offer` (0x8c0660, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8c0660 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::accept_loan_offer(vaga, marcar)`, só pela
 /// tela de transferências (0x8ef1e0) e pela notícia (0x784100). Com `marcar`, +0x2d = 1. A decisão do contrato
 /// (0x4cc930 em [0xae1050]), o status 8 e a notícia da oferta aceita (0x8d76d0); a decisão 0: nada mais. Senão a
 /// notícia da recusa em se mudar (0x8d8310 com 0), o status 0xf com +0x2e = 3, o jogador sai das listas de observação
@@ -427,7 +436,12 @@ unsafe fn cqf2_regra(this: usize, nacao: usize) -> Option<usize> {
     None
 }
 
-/// { 0x8c2180 } (thiscall, ret 0x14, transfer_manager.cpp, quadro SEH da data local sem destrutor):
+/// marks the agreement of the target (or the exchange player); outside loans, the reply news and the offer follow-up;
+/// for loans, a squad above 50 or the nation rule refuse, otherwise completes at once (contract, history, numbers,
+/// record, status 0x14 in 5 days)
+/// Original: `TRANSFER_MANAGER::handle_player_accepted_terms` (0x8c2180, transfer_manager.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x8c2180 } (thiscall, ret 0x14, transfer_manager.cpp, quadro SEH da data local sem destrutor):
 /// `TRANSFER_MANAGER::handle_player_accepted_terms(pessoa, vaga, contrato, tipo, noticia)`, pela aceitação de um
 /// contrato (0x4cf413). Vaga fora do vetor: a caixa "Error" (0xe0c, 0xe11) e nada; vaga vazia: nada. O +0x2e zera. O
 /// alvo da oferta aceitou: +0x10 = 2 e +0x11 = tipo; A = o comprador, B = o clube do contrato do alvo (tipo 5 não
@@ -599,7 +613,11 @@ unsafe extern "thiscall" fn comparar_termos_aceitos(this: usize, pessoa: usize, 
     orig::<unsafe extern "thiscall" fn(usize, usize, i32, usize, u32, u32)>(1600)(this, pessoa, vaga, contrato, tipo, noticia) // ponytail: só a original
 }
 
-/// { 0x4d71b0 } (thiscall, ret 8, contract_manager.cpp, quadro SEH da lista local): `CONTRACT_MANAGER::
+/// news 0xbea of a player on the transfer list: the price (the value, or the asking price times a drawn factor,
+/// rounded) and from 500 thousand up the up to 3 strongest interested clubs; posted to the interested human clubs
+/// Original: `CONTRACT_MANAGER::post_transfer_listed_news` (0x4d71b0, contract_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x4d71b0 } (thiscall, ret 8, contract_manager.cpp, quadro SEH da lista local): `CONTRACT_MANAGER::
 /// post_transfer_listed_news(jogador, clube)`, pelo pedido de transferência (0x4d8610), pelo jogador posto à venda
 /// (0x842320), pela notícia (0x784100) e por 0x4dc3a0. Sem jogador, sem ficha (+0x61), sem clube ou sem a comissão
 /// (+0xcf): nada. Sem contrato com o clube (0x4cf5f0): nada. A notícia 0xbea (local): 0 o clube, 1 o jogador, 2..4 os
@@ -788,7 +806,12 @@ unsafe fn cqe1_caixa(arquivo: usize, linha: u32) {
     write_u32_from_usize(0xb67a34, 0);
 }
 
-/// { 0x8c8090 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH sem destrutor: a data local da vaga):
+/// the computer seller answers a bid: loan bids are refused without looking at anything else; unless a rule makes it
+/// accept, the floor fee and the other offers, the exchange value, the cash, exchange and clause options; an option
+/// worth less than the bid / 0.85 accepts, the best one under the bid / 0.75 becomes a counter offer, otherwise refuses
+/// Original: `TRANSFER_MANAGER::ai_respond_to_bid` (0x8c8090, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8c8090 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH sem destrutor: a data local da vaga):
 /// `TRANSFER_MANAGER::ai_respond_to_bid(vaga, ensaio)`, a resposta do clube vendedor do computador a um lance. O alvo é
 /// o +0xc da oferta, o comprador o +8 e o vendedor o clube do contrato do alvo (0x4cf5a0, em [0xae1080]; fora o tipo 5).
 /// - Alvo sem ficha de jogador (+0x61): status 0x10 e a oferta na fatia seguinte (0x8c6220: push 0; push 1; push oferta).
@@ -1016,7 +1039,11 @@ unsafe extern "thiscall" fn comparar_resposta_da_ia_ao_lance(this: usize, vaga: 
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(1579)(this, vaga, ensaio) // ponytail: só a original
 }
 
-/// { 0x8bee50 } (thiscall, ret 0x14, transfer_manager.cpp, quadro SEH da oferta local): `TRANSFER_MANAGER::
+/// screens only: the offer copy without its lists, with the contract built from the new loan terms, becomes a
+/// negotiation; returns the copy index
+/// Original: `TRANSFER_MANAGER::add_loan_negotiation` (0x8bee50, transfer_manager.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x8bee50 } (thiscall, ret 0x14, transfer_manager.cpp, quadro SEH da oferta local): `TRANSFER_MANAGER::
 /// add_loan_negotiation(oferta, a2, a3, a4, a5)`, só pela tela de transferências (0x8fb5e0). Um STAFF_CONTRACT local
 /// (0x85e410) e uma oferta local (0x8e5680) com os campos da oferta (a data +0x12 pela 0x417c10; o nibble baixo de +0x30
 /// e de +0x31; as listas +0 e +4 vazias); o contrato pelo atual (0x85e590: push a5; push a4; push a3; push a2; push
@@ -1140,7 +1167,13 @@ unsafe fn cqe2_nota(pessoa: usize, posicao: u16, marcas: u32, vendedor: usize) -
     nota(pessoa, read_u32_as_usize(pessoa + 0x61), 0, posicao as u32, marcas, vendedor, 0, 0, -1, 0, 0, 0, 0, 0, 0)
 }
 
-/// { 0x8c8860 } (thiscall, ret 0x18, transfer_manager.cpp, quadro SEH da LLIST local): `TRANSFER_MANAGER::
+/// builds the exchange option: a new offer at the price with attraction 50; for the target and the 25 slots of the
+/// seller shortlist, buyer players in the same position, free of offers and exchanges, with interest of at least 3.15
+/// and rating above 0.9 of the candidate join the exchange (up to 3): attraction rises 20 or 5 and their value leaves
+/// the price
+/// Original: `TRANSFER_MANAGER::make_exchange_option` (0x8c8860, transfer_manager.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x8c8860 } (thiscall, ret 0x18, transfer_manager.cpp, quadro SEH da LLIST local): `TRANSFER_MANAGER::
 /// make_exchange_option(comprador, alvo, oferta, saida, atracao, valor)`, a opção de troca da resposta da IA ao lance
 /// (0x8c8090). O vendedor é o clube do contrato do alvo (0x4cf5a0, em [0xae1080]); a LLIST local (0x68d020/0x68d040). O
 /// contrato do alvo com o vendedor (0x4cf5f0). Sem a lista de observação do vendedor (o byte +4 do registro de 9 bytes em
@@ -1432,7 +1465,11 @@ unsafe fn cqe2_contrato(pessoa: usize, campo: usize, vetor: usize) -> usize {
     if k < 0 { 0 } else { (k as usize).wrapping_mul(0x50).wrapping_add(read_u32_as_usize(vetor)) }
 }
 
-/// { 0x4ccca0 } (thiscall, ret 8, contract_manager.cpp): `CONTRACT_MANAGER::schedule_loan_end(pessoa, clube)`, só pela
+/// screens only: the person loan contract ends tomorrow (type 7) and, with a human manager at the relevant club, the
+/// early return
+/// Original: `CONTRACT_MANAGER::schedule_loan_end` (0x4ccca0, contract_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x4ccca0 } (thiscall, ret 8, contract_manager.cpp): `CONTRACT_MANAGER::schedule_loan_end(pessoa, clube)`, só pela
 /// tela de transferências (0x8fbcc0). Sem pessoa, id fora do total ou sem o contrato de empréstimo (+4 do registro de 79
 /// bytes, no vetor de this): a caixa (linha 0xe4a). Senão o fim (+0x2d) vira amanhã (0x54c5b0 com 1; 0x417c10) e o tipo
 /// (+0x35) vira 7 (os bits 3..5 zerados). O contrato atual (+0 do registro, no vetor de [0xae1050]) em [0xae1080]: do
@@ -1543,7 +1580,12 @@ unsafe fn cqd2_soltar_troca_vazia(o: usize) {
     write_u32_from_usize(o + 4, 0);
 }
 
-/// { 0x8c0080 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH sem destrutor no caminho normal: o STAFF_CONTRACT
+/// the seller accepts the bid: status 5; on loans, target interest below 0.75 gives the refusal to move; exchange
+/// players wanting more than 1.5 times the seller wage cap leave, with their value added to the fee; the offer goes to
+/// the next slice
+/// Original: `TRANSFER_MANAGER::accept_transfer_bid` (0x8c0080, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8c0080 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH sem destrutor no caminho normal: o STAFF_CONTRACT
 /// local da 0x85e410): `TRANSFER_MANAGER::accept_transfer_bid(vaga, marcar)`, o clube vendedor aceita o lance. O alvo é
 /// o +0xc, o comprador o +8 e o vendedor o clube do contrato do alvo (fora o tipo 5). +0x2e = 0; com `marcar`, +0x2d = 1
 /// e o jogador sob oferta na lista de observação (0x84b580: push +0 da oferta; push comprador; push alvo; mov ecx,
@@ -1731,7 +1773,10 @@ unsafe extern "thiscall" fn comparar_aceitar_lance(this: usize, vaga: usize, mar
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(1549)(this, vaga, marcar) // ponytail: só a original
 }
 
-/// { 0x8d3090 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH sem destrutor no caminho normal: a notícia e a data
+/// news 0xfa0 of an offer made (target, clubs, values, exchange, contract, window) to the interested human managers
+/// Original: `TRANSFER_MANAGER::post_offer_made_news` (0x8d3090, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8d3090 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH sem destrutor no caminho normal: a notícia e a data
 /// locais): `TRANSFER_MANAGER::post_offer_made_news(oferta)`. O vendedor é o clube do contrato do alvo (fora o tipo 5).
 /// Os destinatários (0x8d1130: push 0x1e; push &vetor; push 0x3e; push oferta; mov ecx, this -> thiscall, ret 0x10);
 /// nenhum: nada. A notícia 0xfa0 (0x77bbe0: push 0; push 0xfa0; lea ecx, notícia, ret 8; os dados pela 0x785790: push
@@ -1870,7 +1915,12 @@ unsafe fn cqd2_regra_24(r: usize) -> unsafe extern "thiscall" fn(usize, usize, u
     core::mem::transmute(read_u32_as_usize(read_u32_as_usize(r) + 0x24))
 }
 
-/// { 0x8d0040 } (thiscall, ret 0xc, transfer_manager.cpp, quadro SEH sem destrutor: a data e os textos locais):
+/// whether the club can take the player on loan: current club, contract record, playing role, whether the club can
+/// reach him, the rule of the club nation and of the current club month by month over the loan period; the reason text
+/// in the message
+/// Original: `TRANSFER_MANAGER::can_loan_player` (0x8d0040, transfer_manager.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x8d0040 } (thiscall, ret 0xc, transfer_manager.cpp, quadro SEH sem destrutor: a data e os textos locais):
 /// `TRANSFER_MANAGER::can_loan_player(clube, jogador, mensagem)`, 1 pode e 0 não pode. O clube atual é o do contrato
 /// do jogador (0x4cf5a0, em [0xae1080]; fora o tipo 5); a data local padrão (0x54a110) e o dia do mês de hoje (0x54cf70:
 /// mov ecx, 0xae2c90 -> thiscall, ret 0). Sem clube atual, ou com ficha de contrato (0x4cf6d0: push jogador; mov ecx,
@@ -2128,7 +2178,11 @@ unsafe fn cqc7_na_data_da_rodada(copa: usize, e: usize, f: usize) -> bool {
         && read_u8(f + 0x42) == read_u8(copa + 0x44)
 }
 
-/// { 0x51ebe0 } (thiscall, ret 8, Cup.cpp, quadro SEH sem destrutor no caminho normal: as notícias, a data e a lista
+/// in rounds with set dates, each round fixture moves to the weekday and time slot of its slot, with the news, the
+/// stadium and the calendar; the used slot becomes empty
+/// Original: `Cup::move_round_fixtures_to_set_dates` (0x51ebe0, Cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x51ebe0 } (thiscall, ret 8, Cup.cpp, quadro SEH sem destrutor no caminho normal: as notícias, a data e a lista
 /// locais): `Cup::move_round_fixtures_to_set_dates(data, rodada)`, da montagem da rodada (0x51c800, em Rust). A notícia
 /// 0x14 local é montada logo (0x77bbe0). Rodada (0x68 bytes em +0xa3) com o bit 0x100 em +0xd e a primeira vaga
 /// marcada (+0x29 ≠ 0xff): os jogos da copa na data e fatia (cqc7_jogos_da_rodada). Com jogos, a notícia leva o id da
@@ -2303,7 +2357,11 @@ unsafe extern "thiscall" fn comparar_copa_levar_jogos_as_datas(this: usize, data
         rodada, depois, esperado));
 }
 
-/// { 0x8c41c0 } (thiscall, ret 0x10, transfer_manager.cpp, quadro SEH sem destrutor no caminho normal: a lista local):
+/// removes the player from the offer part exchange list (or from his other offers), his value goes to the price, the
+/// news, the computer seller reply and the offer goes on
+/// Original: `TRANSFER_MANAGER::remove_exchange_player` (0x8c41c0, transfer_manager.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x8c41c0 } (thiscall, ret 0x10, transfer_manager.cpp, quadro SEH sem destrutor no caminho normal: a lista local):
 /// `TRANSFER_MANAGER::remove_exchange_player(pessoa, oferta, só_esta, motivo)`, da oferta de contrato ao jogador
 /// (0x8c1e40), da confirmação pelo clube (0x8c3310), da soltura dos jogadores da oferta (0x8c6ae0) e da tela. Só esta:
 /// sem a lista da troca (+4), nada; com a pessoa nela (+0 de cada item = id), sai (0x68d1f0), o registro de 8 bytes dela
@@ -2428,7 +2486,12 @@ unsafe fn cqc7_permissao(this: usize, pessoa: usize, clube: usize) -> (bool, usi
     (true, r, concedida(this, pessoa, read_u32_as_usize(clube + 0x53), r, 0, 0) != 0)
 }
 
-/// { 0x8c7690 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::check_offer_work_permits(oferta, quieto)`,
+/// the work permit of the target at the buyer (refused: the offer collapses, status 0x10, rescheduled in 10 days,
+/// returns 0) and of each part exchange player at the seller (refused: he leaves the exchange and his value goes to the
+/// price); the news and the offer goes on
+/// Original: `TRANSFER_MANAGER::check_offer_work_permits` (0x8c7690, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8c7690 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::check_offer_work_permits(oferta, quieto)`,
 /// do processamento da oferta (status 0xa, 0x8c6880) e da conclusão (0x8cbc40). O dono do contrato do alvo (0x4cf5a0,
 /// [0xae1080]; qualquer tipo). Alvo (+0xc) com permissão a pedir no comprador (+8) e proposta, sem concessão
 /// (cqc7_permissao): a oferta desfeita (0x8de790 com 0x13), status 0x10, as propostas fechadas (0x8c6db0), as marcas de
@@ -2592,7 +2655,12 @@ unsafe fn cqd1_desmarcar(this: usize, o: usize) {
     }
 }
 
-/// { 0x8c5880 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH sem destrutor no caminho normal: as datas locais):
+/// one slice of the transfer day: window notices, overdue offers rescheduled, the slice bucket processed; in slice 2
+/// the base date moves to tomorrow, instalments at month end, nation rules; on day 100 the +0x1e of non-EU people at
+/// the club for years
+/// Original: `TRANSFER_MANAGER::daily_update` (0x8c5880, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8c5880 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH sem destrutor no caminho normal: as datas locais):
 /// `TRANSFER_MANAGER::daily_update(hoje, fatia)`. Sem data base (ano +0x84f zerado), ela vira hoje (0x417c10: push
 /// hoje; push saída; lea ecx, [this+0x84d] -> thiscall, ret 8) e a fatia +0x855 a de hoje. Só com hoje igual à base e a
 /// fatia igual a +0x855: na fatia 0 os avisos das janelas (0x8c6bc0: push hoje; mov ecx, this -> thiscall, ret 4); no
@@ -2818,7 +2886,11 @@ unsafe extern "thiscall" fn comparar_dia_das_transferencias(this: usize, hoje: u
         read_i16(hoje), f, f855, read_u8(this + 0x855), j84c, read_u8(this + 0x84c), erradas));
 }
 
-/// { 0x8c63a0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH: as listas locais, construídas pela 0x68d020 e
+/// dispatches the offer due today by its status: seller response, acceptance, player contract, permits, completion,
+/// removal or a new round of the offer
+/// Original: `TRANSFER_MANAGER::process_due_offer` (0x8c63a0, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8c63a0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH: as listas locais, construídas pela 0x68d020 e
 /// destruídas pela 0x68d040 na mesma ordem): `TRANSFER_MANAGER::process_due_offer(vaga)`, a oferta que vence hoje, pelo
 /// status +0x2c. O vendedor é o clube do contrato do alvo (+0xc; fora o tipo 5), o comprador o +8.
 /// - 0: sem vendedor, a aceitação do lance (0x8c0080: push 0; push vaga -> thiscall, ret 8). Vendedor humano: status 4,
@@ -3027,7 +3099,11 @@ unsafe extern "thiscall" fn comparar_processar_oferta_vencida(this: usize, vaga:
     orig::<unsafe extern "thiscall" fn(usize, usize)>(1547)(this, vaga) // ponytail: só a original
 }
 
-/// { 0x8cfc90 } (thiscall, ret 0x10, transfer_manager.cpp, quadro SEH: a data e a lista locais, a lista construída pela
+/// checks completion date, board veto, budget (1.1 times, plus the shortlist offers), squad room and the nation rule; 0
+/// allows, 1 or 2 block
+/// Original: `TRANSFER_MANAGER::check_offer_restrictions` (0x8cfc90, transfer_manager.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x8cfc90 } (thiscall, ret 0x10, transfer_manager.cpp, quadro SEH: a data e a lista locais, a lista construída pela
 /// 0x68d020 e destruída pela 0x68d040): `TRANSFER_MANAGER::check_offer_restrictions(oferta, decide, motivo, sem_elenco)`;
 /// 0 libera, 1 ou 2 barram. O comprador é o +8, o alvo o +0xc e o vendedor o clube do contrato dele (fora o tipo 5).
 /// - Com +0x30 & 0xf e status fora de 0x13: a data de conclusão (0x8cee70: push &data; push oferta, ret 8) vai ao
@@ -3230,7 +3306,11 @@ unsafe fn cqb6_entregar(n: usize, clube: usize) {
 static mut CQB6_ENSAIO: bool = false;
 static mut CQB6_ENTREGAS: u32 = 0;
 
-/// { 0x8e4f20 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH sem destrutor; o this não é usado):
+/// player over 22: (offer fee / 20) / sum of weights × weight of each of up to five former clubs goes into the buyer's
+/// sales; news 0xfc3 goes to the former club when the cut exceeds 11 × reputation − 10000
+/// Original: `TRANSFER_MANAGER::pay_former_club_fee_cuts` (0x8e4f20, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8e4f20 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH sem destrutor; o this não é usado):
 /// `TRANSFER_MANAGER::pay_former_club_fee_cuts(oferta)`, pela transferência efetivada com valor (+0x1b) de jogador sem
 /// +0x69 (0x8c9390). Jogador (+0xc da oferta) com mais de 22 anos (+0x18): a notícia 0xfc3 (local; 0 = id, 1..3 = os
 /// +0x33 de +4/+8/+0xc, 4 = o comprador +8, 7 = o clube do contrato ou −1); a soma (16 bits) dos pesos (byte +0x12)
@@ -3316,7 +3396,11 @@ unsafe extern "thiscall" fn comparar_parte_dos_clubes_anteriores(this: usize, o:
     PLACAR.registrar(igual, || format!("parte_dos_clubes_anteriores(oferta {:#x}) entregas={} original={:x?} rust={:x?}", o, entregas, mo, mr));
 }
 
-/// { 0x8cb0f0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::pay_next_sale_percentage(pessoa, oferta)`,
+/// binary-searches the person's clause with the contract club; the cut (percentage × offer fee plus exchange players,
+/// or the person's value) from 1000 up: news, transfer totals, paid into the clause club and out of the contract club
+/// Original: `TRANSFER_MANAGER::pay_next_sale_percentage` (0x8cb0f0, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8cb0f0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::pay_next_sale_percentage(pessoa, oferta)`,
 /// pela transferência efetivada com a marca 8 da pessoa (0x8c91e0). Com contrato (e clube do contrato), procura pela
 /// busca binária (0x946464, entradas de 0xd bytes em [this+0x880], conta [this+0x888], comparação 0x8e54d0) a
 /// cláusula com +1 = id do clube do contrato e +9 = id da pessoa. Achada: a base é o valor da oferta (+0x1b) mais o
@@ -3421,7 +3505,11 @@ unsafe extern "thiscall" fn comparar_percentual_da_proxima_venda_pago(this: usiz
     r
 }
 
-/// { 0x8db3a0 } (thiscall, ret 0x10, transfer_manager.cpp, quadro SEH sem destrutor; o this não é usado):
+/// news 0xfa7: the person, the percentage, the two clause clubs, the cut and the buyer (or the contract club), to the
+/// managers of the clause club and the seller
+/// Original: `TRANSFER_MANAGER::post_sale_percentage_news` (0x8db3a0, transfer_manager.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x8db3a0 } (thiscall, ret 0x10, transfer_manager.cpp, quadro SEH sem destrutor; o this não é usado):
 /// `TRANSFER_MANAGER::post_sale_percentage_news(cláusula, parte, oferta, da_oferta)`, pelo percentual pago (0x8cb0f0).
 /// A notícia 0xfa7 (local): 0..3 a pessoa da cláusula (+9: id e os +0x33 de +4/+8/+0xc), 4 = o percentual (byte +0),
 /// 5 = o clube da cláusula (+5), 6 = o clube vendedor (+1), 7 = a parte, 8 = `da_oferta`, 9 = o comprador (+8 da
@@ -3517,7 +3605,12 @@ unsafe fn cqb7_marcas(this: usize, p: usize) -> usize {
     read_usize(this + 0x86e).wrapping_add(read_usize(p).wrapping_mul(8))
 }
 
-/// { 0x8c7950 } (thiscall, ret 0x14, transfer_manager.cpp): `TRANSFER_MANAGER::is_work_permit_granted(pessoa, nação,
+/// decides the permit: by the permit record (matches and refusals), non-player by reputation, the 2001 exceptions,
+/// potential above 8500, wage above 34999, youth above 190, under 5 caps no, over 20 with a strong nation yes, and the
+/// 16-match national team history (over 11 or 70%), which advances with new matches
+/// Original: `TRANSFER_MANAGER::is_work_permit_granted` (0x8c7950, transfer_manager.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x8c7950 } (thiscall, ret 0x14, transfer_manager.cpp): `TRANSFER_MANAGER::is_work_permit_granted(pessoa, nação,
 /// oferta, registro, sorteio)`, pela permissão na lista de observação (0x84b180, sem oferta, registro nem sorteio),
 /// pela oferta de contrato aceita (0x8c38b0, com a oferta) e pelas permissões da oferta (0x8c7690). Contrato da pessoa
 /// (0x4cf5a0, sem gravar [0xae1080]): de tipo 2 é o "empréstimo", outro é o "contrato". Com o registro de permissão
@@ -3672,7 +3765,11 @@ unsafe extern "thiscall" fn comparar_permissao_concedida(this: usize, p: usize, 
     r
 }
 
-/// { 0x8c5800 } (thiscall, ret 8, transfer_manager.cpp; o this não é usado): `transfer_manager_get_squad_status_for_reason
+/// the squad status for the refusal reason (0x200: 1, 0x400: 2, 0x2000: 5) or the one of the contract with the club
+/// (+0x4f >> 4); no contract, 0
+/// Original: `transfer_manager_get_squad_status_for_reason` (0x8c5800, transfer_manager.cpp, thiscall (this sem uso), ret 8).
+///
+/// [pt] { 0x8c5800 } (thiscall, ret 8, transfer_manager.cpp; o this não é usado): `transfer_manager_get_squad_status_for_reason
 /// (pessoa, motivo)`, pela tela da oferta. O contrato da pessoa (0x4cf5a0, guardado em [0xae1080]) dá o clube; o
 /// contrato com ele (0x4cf5f0); sem ele, 0. O motivo (16 bits com sinal) 0x200 dá 1, 0x400 dá 2, 0x2000 dá 5; os
 /// outros, o estatuto do contrato (+0x4f >> 4). Devolve no al.
@@ -3701,7 +3798,10 @@ unsafe extern "thiscall" fn comparar_estatuto_pelo_motivo(this: usize, p: usize,
     r
 }
 
-/// { 0x8c6200 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::get_negotiation_slot(i)`, pela resposta
+/// the address of slot i of the negotiation array; out of range, the start of the array
+/// Original: `TRANSFER_MANAGER::get_negotiation_slot` (0x8c6200, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8c6200 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::get_negotiation_slot(i)`, pela resposta
 /// automática às notícias (0x782f70) e pelas telas: o endereço da vaga `i` do vetor de negociações ([this+0xc], conta
 /// [this+0x10], com sinal); fora da conta, o começo do vetor.
 unsafe extern "thiscall" fn vaga_da_negociacao(this: usize, i: i32) -> usize {
@@ -3724,7 +3824,12 @@ unsafe extern "thiscall" fn comparar_vaga_da_negociacao(this: usize, i: i32) -> 
 
 
 
-/// { 0x8bfa30 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::reject_loan_offer(vaga, marcar, motivo)`,
+/// the club rejects the loan offer: state 2, the bids unmarked, the news, the offer comes back in 10 days to be
+/// removed, the person's offer mark cleared with no open rival, the contract offers closed and the buyer's shortlist
+/// status
+/// Original: `TRANSFER_MANAGER::reject_loan_offer` (0x8bfa30, transfer_manager.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x8bfa30 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::reject_loan_offer(vaga, marcar, motivo)`,
 /// pelo vendedor do computador que recusa todo lance de empréstimo (0x8c8090, oferta com +0x1f = 1) e pela oferta
 /// agendada (0x8c63a0). Com `marcar`, +0x2d = 1; estado 2 (recusada) já de cara; o contrato da pessoa vai para
 /// [0xae1080] e dá o clube do contrato; os lances do comprador pelo jogador e os do clube do contrato pelos da troca
@@ -3820,7 +3925,12 @@ unsafe fn cqa5_na_fila_livre(p: usize) -> bool {
     false
 }
 
-/// { 0x8cd450 } (thiscall, ret 0x10, transfer_manager.cpp; o mapa a dá como stdcall, mas os dois pontos de chamada na
+/// checks that the offer keeps the club (with its partner) within 50 players and the coach (5), physio (3), scout (7)
+/// and assistant slots; a computer buyer without exchange releases for free the cheapest player who can leave;
+/// otherwise reason 4 or 0x22 (plus 1 for the seller) and 0
+/// Original: `TRANSFER_MANAGER::check_squad_limits` (0x8cd450, transfer_manager.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x8cd450 } (thiscall, ret 0x10, transfer_manager.cpp; o mapa a dá como stdcall, mas os dois pontos de chamada na
 /// 0x8cfc90 põem a gerência em ecx e ela o usa para a 0x8c1780 e a 0x8c1af0): `TRANSFER_MANAGER::check_squad_limits
 /// (clube, oferta, contar_fila, motivo)`, das restrições da oferta (0x8cfc90), pelo comprador e pelo vendedor. Clube
 /// nulo: a caixa da linha 0x2c3b e 0. O parceiro do clube (0x540a50 com 0 e 1). Pelo comprador (+8 da oferta = id do
@@ -4055,7 +4165,11 @@ unsafe extern "thiscall" fn comparar_vaga_no_elenco_para_a_oferta(this: usize, c
     r
 }
 
-/// { 0x8d0dd0 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::find_next_sale_percentage(pessoa)`, das
+/// with the person's flag 8, binary-searches the next-sale percentage clause of the person with the contract club; when
+/// not found, clears the flag
+/// Original: `TRANSFER_MANAGER::find_next_sale_percentage` (0x8d0dd0, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8d0dd0 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::find_next_sale_percentage(pessoa)`, das
 /// telas da pessoa (0x884ea2): sem a marca 8 da pessoa ([this+0x86e] + id × 8), 0. O contrato dela (0x4cf5a0, em
 /// [0xae1080]) e o clube; sem os dois, 0. A busca binária (0x946464: cdecl(chave, vetor [this+0x880], conta
 /// [this+0x888], 0xd, 0x8e54d0)) pela chave com o id do clube (+1, de novo pelo contrato) e o da pessoa (+9), os dois
@@ -4148,7 +4262,12 @@ unsafe fn cpy11_pagar(this: usize, p: usize, jogos: i32, tipo: u32) -> u32 {
     f(this, p, jogos, tipo, 0)
 }
 
-/// { 0x8c39f0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::update_appearance_clauses_after_match(jogo,
+/// after the match, on both sides: pays the appearance money at 1, 10, 20... 50 games (club by contract, national team
+/// by caps since the deal) and removes the paid bonus; in a counting match, adds an appearance to the work permit of
+/// who played and an absence to those left out without injury, ban, call-up or loan
+/// Original: `update_appearance_clauses_after_match` (0x8c39f0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c39f0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::update_appearance_clauses_after_match(jogo,
 /// partida)`, pelo fim de cada partida (0x6b5f00 e as estatísticas simuladas 0x84be20). Para os dois lados (+0x1c casa,
 /// +0x20 fora): o jogo conta para as permissões de trabalho com competição (+0x14) que não é de seleção (casa pela
 /// 0x53b900) nem amistoso (0x5c6710) e o byte do lado (+0x40/+0x41) ligado, ou com +0 = −2. Clube que não é seleção: o
@@ -4310,7 +4429,10 @@ unsafe extern "thiscall" fn comparar_jogos_das_permissoes_e_clausulas(this: usiz
     });
 }
 
-/// { 0x8cad90 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::add_international_team_appearance_money(
+/// appends the international appearance money (13 bytes) to the array, growing by 50, and sorts it by person
+/// Original: `add_international_team_appearance_money` (0x8cad90, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8cad90 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::add_international_team_appearance_money(
 /// registro)`: acrescenta o prêmio por jogos na seleção (13 bytes copiados de `registro`) ao vetor [this+0x898]
 /// (capacidade +0x89c, conta +0x8a0); cheio, cresce de 50 em 50 (sem memória: caixa 0x25af e nada). Reordena pela pessoa
 /// (qsort 0x945333 com 0x8b4e00). A gêmea do time principal é a 0x8cac40.
@@ -4340,7 +4462,10 @@ unsafe extern "thiscall" fn comparar_guardar_premio_por_jogos_na_selecao(this: u
     PLACAR.registrar(ok, || format!("guardar_premio_por_jogos_na_selecao: conta {} -> {}, registro {:x?}", n, conta, alvo));
 }
 
-/// { 0x8da5e0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH da data e da notícia locais): `TRANSFER_MANAGER::
+/// the 0xfa5 news of the agreed transfer, with the completion date, to the human seller and buyer
+/// Original: `post_transfer_finalised_news` (0x8da5e0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8da5e0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH da data e da notícia locais): `TRANSFER_MANAGER::
 /// post_transfer_finalised_news(oferta)`, pela transferência acertada (0x8c2f50). O vendedor: o clube do contrato da
 /// pessoa (0x4cf5a0, guardado em [0xae1080]) fora do tipo 5 (pedido de novo, sem guardar). A notícia 0xfa5: a pessoa (o
 /// id e as três chaves), o comprador, o vendedor (ou −1), +0x20, +0x24, o valor +0x1b, o estado +0x2c, o total
@@ -4442,7 +4567,11 @@ unsafe fn cpy13_hoje_em(destino: usize) {
     f(destino, resultado.as_mut_ptr(), 0xae2c90);
 }
 
-/// { 0x8c1af0 } (thiscall, ret 0x14, transfer_manager.cpp): `TRANSFER_MANAGER::free_transfer_staff(pessoa, clube, motivo,
+/// records the free transfer and, unless record only, pays the club's compensation, removes the person from shortlists,
+/// selections, squad, offers and contract, clauses and work permit
+/// Original: `free_transfer_staff` (0x8c1af0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c1af0 } (thiscall, ret 0x14, transfer_manager.cpp): `TRANSFER_MANAGER::free_transfer_staff(pessoa, clube, motivo,
 /// compensação, só_registro)`, pela fila das transferências livres (0x8c18c0), pelo fim dos contratos (0x4c7ac0) e pela
 /// 0x8cd450. Pessoa emprestada (0x4cf6d0): nada. A transferência passada (0x25 bytes no vetor [this+0x862], capacidade
 /// +0x866, conta +0x86a; cheio, cresce de 100 em 100; sem memória: a caixa 0xce9 e nada): +0x10 −1, +0x14 o clube ou −1,
@@ -4565,7 +4694,11 @@ unsafe extern "thiscall" fn comparar_liberar_sem_custo(this: usize, p: usize, cl
         n, read_usize(this + 0x86a), core::slice::from_raw_parts(r as *const u8, 0x1d)));
 }
 
-/// { 0x5fd2f0 } (thiscall, ret 8, human_manager.cpp): `HUMAN_MANAGER::set_on_holiday(férias, técnico)`: sem técnico, o
+/// turns the human manager's holiday on or off, keeping the count of humans on holiday; when turning on, answers
+/// pending news
+/// Original: `set_on_holiday` (0x5fd2f0, human_manager.cpp, thiscall).
+///
+/// [pt] { 0x5fd2f0 } (thiscall, ret 8, human_manager.cpp): `HUMAN_MANAGER::set_on_holiday(férias, técnico)`: sem técnico, o
 /// humano da vez ([0xb74c26 + 0x300 × [0xb77c7a]]); nenhum: a caixa da linha 0x41c. O índice do técnico (id − [0xae2364]
 /// + 16) fora de 0..[this+4]: a caixa da linha 0x428. A marca de férias (+0x9a01 do registro de 0xa6ef bytes em [this])
 /// passa a `férias`, com a conta dos humanos de férias (+0xc) subindo ao ligar e descendo ao desligar; ao ligar, as
@@ -4630,7 +4763,10 @@ unsafe extern "thiscall" fn comparar_ferias_do_humano(this: usize, ferias: u32, 
     PLACAR.registrar(depois == ferias && conta2 == esperada, || format!("ferias_do_humano({}, técnico {:x}): marca {:x} -> {:x}, conta {} -> {} (esperava {})", ferias, t, antes, depois, conta, conta2, esperada));
 }
 
-/// { 0x8d7cd0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH das notícias locais): `TRANSFER_MANAGER::
+/// the 0xfac news of permission to discuss a contract to the human buyer and, per exchange player, to the human seller
+/// Original: `post_contract_talks_news` (0x8d7cd0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8d7cd0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH das notícias locais): `TRANSFER_MANAGER::
 /// post_contract_talks_news(oferta)`, pela oferta aceita (0x8c0080). O vendedor: o clube do contrato da pessoa (0x4cf5a0,
 /// guardado em [0xae1080]) fora do tipo 5. Comprador humano (0x7875e0): a notícia 0xfac com a pessoa (o id e as três
 /// chaves), o vendedor (ou −1), o comprador, +0x20, +0x24, 0 e 0. Vendedor humano com troca (+4): uma 0xfac por jogador
@@ -4916,7 +5052,11 @@ unsafe fn cpx1_agendar(this: usize, o: usize, dias: u32) {
     f(this, o, dias, 0);
 }
 
-/// { 0x8bf680 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::reject_transfer_offer(vaga, marcar,
+/// rejects the offer: the player may become unsettled, state 2, bids unmarked, contract offers closed, the news, back
+/// in 25 days for removal and the person's offer flag
+/// Original: `reject_transfer_offer` (0x8bf680, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8bf680 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::reject_transfer_offer(vaga, marcar,
 /// motivo)`, pelo clube vendedor que recusa (0x8c36b0 e a avaliação dos lances). Com `marcar`, +0x2d da oferta = 1; o
 /// jogador pode se desassossegar (0x8c1290); transferência futura (estado 0x13): sai da lista (0x8cbf70). Estado 2
 /// (recusada); os lances do comprador pelo jogador e os do clube do contrato pelos da troca saem (0x84aeb0); as ofertas
@@ -4949,7 +5089,11 @@ unsafe extern "thiscall" fn recusar_oferta_de_transferencia(this: usize, vaga: *
     cpx1_ofertas_de_contrato(this, o, vendedor, comprador);
 }
 
-/// { 0x8bfcb0 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::withdraw_transfer_offer(vaga, marcar,
+/// withdraws the offer: state 3, held contract offers resubmitted, bids unmarked, back in 10 days; for reason 2, the
+/// unsettling; the news and the contract offers
+/// Original: `withdraw_transfer_offer` (0x8bfcb0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8bfcb0 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::withdraw_transfer_offer(vaga, marcar,
 /// motivo)`, pelo comprador que desiste (a revisão dos lances e as ofertas desfeitas). Com `marcar`, +0x2d = 1;
 /// transferência futura: sai da lista (0x8cbf70); estado de 0xb para cima: as ofertas de contrato guardadas voltam
 /// (0x4cf4a0). Estado 3 (retirada); as ofertas de contrato ligadas fecham (0x8c6db0); os lances saem (0x84aeb0); +0x10 =
@@ -5049,7 +5193,10 @@ unsafe extern "thiscall" fn comparar_retirar_oferta_de_transferencia(this: usize
     cpx1_comparar("retirar_oferta_de_transferencia", this, vaga, || o(this, vaga, marcar, motivo), || retirar_oferta_de_transferencia(this, vaga, marcar, motivo))
 }
 
-/// { 0x8d5170 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
+/// the 0xfa1 news of a rejected or withdrawn offer, with the reason, to the interested human clubs
+/// Original: `post_offer_rejected_news` (0x8d5170, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8d5170 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
 /// post_offer_rejected_news(oferta, motivo)`, pela recusa, pela retirada e pela recusa do empréstimo. Os clubes humanos
 /// que recebem (0x8d1130, com 0x2d se a oferta estiver recusada, senão 0x2e; até 30); sem nenhum, nada. A notícia 0xfa1:
 /// a pessoa (o id e as três chaves), o clube do contrato (sem contrato de tipo 5; nenhum no motivo 6 com +0x2f), o
@@ -5145,7 +5292,11 @@ unsafe fn cpx2_contrato(pessoa: usize) -> usize {
 static mut CPX2_ENSAIO: bool = false;
 static mut CPX2_CHEGOU: bool = false;
 
-/// { 0x8c1290 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::unsettle_player_after_bid(oferta)`, pela
+/// a draw against the buyer's reputation flags the player as unsettled; when flagged, a score from his attributes and
+/// interest leads to the 0x80 complaint, going missing and grudges
+/// Original: `unsettle_player_after_bid` (0x8c1290, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c1290 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::unsettle_player_after_bid(oferta)`, pela
 /// recusa (0x8bf680), pela retirada no motivo 2 (0x8bfcb0) e pelo clube que recusa (0x8c36b0). Sorteio(5750) + 4250
 /// abaixo da reputação do comprador (+0x80): +0x2d da oferta = 1. Com +0x2d = 1, clube do contrato, comprador e ficha: o
 /// interesse x (0x846920 pelo estatuto 0x849f00) e a nota n = (8 × ambição² − 1600) − reputação / 40 − min(x⁴, 300 ×
@@ -5270,7 +5421,10 @@ unsafe extern "thiscall" fn comparar_desassossegar_pelo_lance(this: usize, o: us
     PLACAR.registrar(mo == mr, || format!("desassossegar_pelo_lance(oferta {:#x}) original={:x?} rust={:x?}", o, mo, mr));
 }
 
-/// { 0x8de790 } (thiscall, ret 0xc, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
+/// the 0xfb0 news of a collapsed offer, with the club and the reason, to the interested human clubs
+/// Original: `post_offer_collapsed_news` (0x8de790, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8de790 } (thiscall, ret 0xc, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
 /// post_offer_collapsed_news(oferta, clube, motivo)`, pela oferta de contrato aceita (0x8c38b0), pela oferta desfeita
 /// (0x8c44e0), pelas permissões de trabalho (0x8c7690) e por 0x8c4950. Os clubes humanos que recebem (0x8d1130 com 0x2f,
 /// até 30); sem nenhum, nada. A notícia 0xfb0: o clube do contrato (sem contrato de tipo 5), o comprador, a pessoa (o id
@@ -5317,7 +5471,10 @@ unsafe extern "thiscall" fn comparar_noticia_oferta_desfeita(this: usize, o: usi
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(1318)(this, o, clube, motivo)
 }
 
-/// { 0x8db8a0 } (thiscall, ret 0x10, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
+/// the 0xfa6 news of appearance money paid, to the paying club and to the contract club
+/// Original: `post_appearance_money_news` (0x8db8a0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8db8a0 } (thiscall, ret 0x10, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
 /// post_appearance_money_news(cláusula, valor, tipo, calado)`, pelo prêmio por jogos (0x8cb340). Calado, sem contrato ou
 /// sem o clube dele: nada. Senão a notícia 0xfa6: a pessoa da cláusula (+0: o id e as três chaves), +4, o valor, o
 /// clube que paga (+9), o tipo e o clube do contrato; ao clube que paga e ao clube do contrato.
@@ -5434,7 +5591,11 @@ unsafe fn cpx3_numeros(clube: usize) {
     }
 }
 
-/// { 0x8c9390 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::finalise_transfer(oferta)`, pelo
+/// carries out the transfer: board confidence, nation rules, clauses, payment, records, former clubs' cut, the player
+/// and the exchange players moved, squad numbers, state 0x14 and back in 10 days
+/// Original: `finalise_transfer` (0x8c9390, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c9390 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::finalise_transfer(oferta)`, pelo
 /// fechamento da oferta (0x8c34e0) e pela transferência futura. A confiança das diretorias (0x6978f0); as regras da
 /// nação do comprador (as 28 de +0x8ac, pela nação +0xa): método 1 (sem +0x1f) ou 2 com a oferta; as cláusulas
 /// anteriores (0x8c91e0); com vendedor (contrato sem tipo 5), o pagamento (0x8ca8a0); sem +0x1f = 1, os registros do
@@ -5596,7 +5757,10 @@ unsafe fn cpx3_entregar(nt: usize, o: usize, lista: &[usize], n: i8) {
     }
 }
 
-/// { 0x8dbef0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
+/// the 0xfa8 news of a completed transfer, with the fee, the exchange players, a draw and the player's strong points
+/// Original: `post_transfer_completed_news` (0x8dbef0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8dbef0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
 /// post_transfer_completed_news(oferta)`, pelo fechamento da oferta (0x8c34e0). Os clubes humanos que recebem (0x8d1130
 /// com 0x5f, até 30); sem nenhum, nada. A notícia 0xfa8: a pessoa, o comprador, o clube do contrato, o valor (+0x1b), 0,
 /// o valor total (0x8e7a70 com 1, 1, 0, 1), +0x2f, +0x11, as cláusulas (0x8e7ef0); com +0x2f, contrato de clube e +0x30
@@ -5663,7 +5827,10 @@ unsafe extern "thiscall" fn comparar_noticia_transferencia_concluida(this: usize
     orig::<unsafe extern "thiscall" fn(usize, usize)>(1321)(this, o)
 }
 
-/// { 0x8e05d0 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
+/// the 0xfb3 news of the clubs' agreement, with the fee, the exchange players and the completion date
+/// Original: `post_transfer_agreed_news` (0x8e05d0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8e05d0 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
 /// post_transfer_agreed_news(oferta, data)`, pela aprovação dos clubes (0x8c3310). Os clubes humanos que recebem
 /// (0x8d1130 com 0xf, até 30); sem nenhum, nada. A notícia 0xfb3: a pessoa, o comprador, o clube do contrato, o valor
 /// (+0x1b), +0x2f, o valor total (0x8e7a70 com 0, 1, 0, 1), o nibble baixo de +0x30 com sinal, a data da conclusão (dia
@@ -5755,7 +5922,11 @@ unsafe fn cpx4_pode(p: usize, clube: usize, inicio: usize, fim: usize) -> Option
     Some(b)
 }
 
-/// { 0x8bf400 } (thiscall, ret 0x10, transfer_manager.cpp, quadro SEH do contrato local): `TRANSFER_MANAGER::
+/// a loan from the configuration file: the checks, the contract extended to its end, the loan contract, the squad, the
+/// squad numbers and the work permit
+/// Original: `add_config_loan` (0x8bf400, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8bf400 } (thiscall, ret 0x10, transfer_manager.cpp, quadro SEH do contrato local): `TRANSFER_MANAGER::
 /// add_config_loan(pessoa, clube, começo, fim)`, pelos empréstimos do arquivo de configuração no começo do jogo. Pelas
 /// condições (cpx4_pode), o empréstimo vai ao time B ligado ou ao clube: com o fim depois da data +0x46 da pessoa, a
 /// data e o fim do contrato (+0x2d) passam ao fim; o contrato local (0x85e410, 0x85e590 com o fim, 0, 1, 1; começo em
@@ -5859,7 +6030,11 @@ unsafe fn cpx4_interessados(p: usize, l: usize) -> Vec<usize> {
     v
 }
 
-/// { 0x4da590 } (thiscall, ret 0xc, contract_manager.cpp, quadro SEH da LLIST e da notícia locais): `CONTRACT_MANAGER::
+/// the 0xbb9 news of a contract, trial or loan ending, to the club, the interested clubs or, for famous players, the
+/// nation's managers or everyone
+/// Original: `post_contract_end_news` (0x4da590, contract_manager.cpp, thiscall).
+///
+/// [pt] { 0x4da590 } (thiscall, ret 0xc, contract_manager.cpp, quadro SEH da LLIST e da notícia locais): `CONTRACT_MANAGER::
 /// post_contract_end_news(pessoa, tipo, amplo)`, pelo fim de contrato, de teste ou de empréstimo (0x4c7ac0). Sem
 /// contrato ou sem o clube dele: nada. A notícia 0xbb9: o clube do contrato, a pessoa (o id e as três chaves), o tipo, o
 /// clube do contrato no tipo 6 (senão −1) e `amplo`. Ampla, com ficha: reputação mundial (+0xd) acima de 7000, a todos
@@ -5964,7 +6139,10 @@ unsafe extern "thiscall" fn comparar_noticia_fim_do_contrato(this: usize, p: usi
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(1324)(this, p, tipo, amplo)
 }
 
-/// { 0x8dda90 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
+/// the 0xfab news of a club asking to delay a transfer by a week, to the interested human clubs
+/// Original: `post_transfer_delay_request_news` (0x8dda90, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8dda90 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
 /// post_transfer_delay_request_news(oferta, motivo)`, pelo clube que pede para adiar a transferência uma semana. Os
 /// clubes humanos que recebem (0x8d1130 com 1, ou 2 fora do estado 0x11; até 30); sem nenhum, nada. A notícia 0xfab: o
 /// clube do contrato (sem tipo 5) ou −1, o comprador, a pessoa (o id e as três chaves), o estado, 0, 0, a vaga +0x20 e o
@@ -6067,7 +6245,11 @@ unsafe fn cpw2_estado_aprovado(oferta: usize, clube: usize) -> u8 {
     }
 }
 
-/// { 0x8c3310 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH da lista local): `TRANSFER_MANAGER::
+/// records one club's approval (states 0xb to 0xe); once both agree, schedules completion for today or, with the
+/// deadline still ahead, books a future transfer
+/// Original: `confirm_offer_by_club` (0x8c3310, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c3310 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH da lista local): `TRANSFER_MANAGER::
 /// confirm_offer_by_club(oferta, clube)`, pela oferta passada aos clubes (0x8c2f50), pelas notícias e pela tela: a
 /// aprovação do clube muda o estado (`cpw2_estado_aprovado`); com os dois de acordo (0xe): sem prazo (+0x30 & 0xf), a
 /// oferta é agendada para hoje (0x8c6220 com 0, 1); com prazo, a data de conclusão (0x8cee70) ainda por vir faz a
@@ -6138,7 +6320,11 @@ unsafe extern "thiscall" fn comparar_confirmar_oferta_pelo_clube(this: usize, of
     PLACAR.registrar(igual, || format!("confirmar_oferta_pelo_clube(oferta {:#x}, clube {:#x}) original={:x?} rust={:x?}", oferta, clube, mo, mr));
 }
 
-/// { 0x8c34e0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::try_complete_offer(oferta, no_prazo)`, pela
+/// rechecks buyer and seller; a refusal collapses or rejects the offer; with both agreeing, completes the transfer or
+/// defers it to the end of the contract
+/// Original: `try_complete_offer` (0x8c34e0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c34e0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::try_complete_offer(oferta, no_prazo)`, pela
 /// oferta agendada (0x8c63a0) e pelo fim da janela (0x8c4e10). O vendedor é o clube do contrato do jogador (+0xc;
 /// 0x4cf5a0, guardado em [0xae1080]; tipo 5 não conta); o comprador (+8) reconfirma (0x8cfc90, que dá o motivo): fora do
 /// prazo com motivo 9, não conta; comprador do computador com resposta 1: a recusa (0x8c36b0); resposta 1 ou 2: a oferta
@@ -6229,7 +6415,11 @@ unsafe fn cpw2_clausulas(this: usize, pessoa: usize, tirar: usize, oferta: usize
     }
 }
 
-/// { 0x8c91e0 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::settle_previous_transfer_clauses(oferta)`,
+/// pays and clears the old clauses (next sale percentage, club and international appearance money) of the player and
+/// the exchange players
+/// Original: `settle_previous_transfer_clauses` (0x8c91e0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c91e0 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::settle_previous_transfer_clauses(oferta)`,
 /// pela transferência concluída (0x8c9390): as cláusulas antigas do jogador (+0xc) e das pessoas da troca (lista +4,
 /// cursor recomeçado; a original tira o percentual da próxima venda do jogador da oferta, não o da pessoa da troca).
 unsafe extern "thiscall" fn acertar_clausulas_anteriores(this: usize, oferta: usize) {
@@ -6332,7 +6522,11 @@ unsafe fn cpv1_dados_da_pessoa(n: usize, k: i8, p: usize) {
     gravar(n, k + 3, read_usize(read_usize(p + 0xc) + 0x33) as u32);
 }
 
-/// { 0x8c2f50 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::advance_offer_to_club_approval(oferta)`:
+/// once every player agrees, cancels the rival offers (rescheduled in 20 days), waits for the work permit (18 to 24
+/// days) or passes the offer to the buyer's and the seller's decision
+/// Original: `advance_offer_to_club_approval` (0x8c2f50, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c2f50 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::advance_offer_to_club_approval(oferta)`:
 /// comprador = o clube +8; vendedor = o clube do contrato do jogador (+0xc), nenhum no contrato de tipo 5 (0x4cf5a0
 /// duas vezes, [0xae1080]). Fora do status 0xa (+0x2c): só com +0x10 = 2 e todos os jogadores da troca (+4) com +4 = 2.
 /// As outras ofertas pelo mesmo jogador (lista +0, índices no vetor [this]; menos a +0x20) caem: status 0xf, +0x2e = 3,
@@ -6456,7 +6650,10 @@ unsafe extern "thiscall" fn passar_a_oferta_aos_clubes(this: usize, oferta: usiz
     confirmar(this, vaga, vendedor); // cpv1: o vendedor confirma
 }
 
-/// { 0x8d76d0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH sem destrutor): `TRANSFER_MANAGER::
+/// the 0xfa3 news of an accepted offer to the human clubs involved
+/// Original: `post_offer_accepted_news` (0x8d76d0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8d76d0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH sem destrutor): `TRANSFER_MANAGER::
 /// post_offer_accepted_news(oferta)`: o dono do jogador (+0xc; contrato 0x4cf5a0, nenhum no tipo 5), os destinatários
 /// (0x8d1130 com 0x2d, até 30), a notícia 0xfa3 (local): 0..3 o jogador, 4 = o id do dono (ou −1), 5 = +8 (comprador),
 /// 6 = +4, 7 = +0x20, 8 = +0x24, 9 = +0x1f; entregue a cada destinatário (0x7861e0).
@@ -6485,7 +6682,10 @@ unsafe extern "thiscall" fn noticia_da_oferta_aceita(this: usize, oferta: usize)
     }
 }
 
-/// { 0x8e1780 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH sem destrutor): `TRANSFER_MANAGER::
+/// the 0xfb5 news of a loan offer to the human clubs involved; without a contract, the error box
+/// Original: `post_loan_offer_news` (0x8e1780, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8e1780 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH sem destrutor): `TRANSFER_MANAGER::
 /// post_loan_offer_news(oferta, termos)`: os destinatários (0x8d1130 com 0x2e, até 30); sem nenhum, nada. A notícia
 /// 0xfb5 (local): 0..3 o jogador (+0xc), 4 = +8, 5 = o id do clube do contrato (nenhum no tipo 5: a original lê o
 /// endereço 0), 6 = +0x20, 7 = +0x24, 8 = termos +0xc, 9 = +0x2c, 10 = termos +0x2d (palavra com sinal), 11 = termos
@@ -6558,7 +6758,11 @@ unsafe fn cpv4_pessoa(id: usize) -> usize {
     read_usize(0xae23bc).wrapping_add(id.wrapping_mul(0x6e))
 }
 
-/// { 0x8be9d0 } (thiscall, ret 0xc, transfer_manager.cpp, quadro SEH só dos `new`): `TRANSFER_MANAGER::
+/// stores the offer terms in a new negotiation (the array grows by 50; the next id) and schedules the offer in 2 days,
+/// or in 14 with news for a human buyer
+/// Original: `add_transfer_negotiation` (0x8be9d0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8be9d0 } (thiscall, ret 0xc, transfer_manager.cpp, quadro SEH só dos `new`): `TRANSFER_MANAGER::
 /// add_transfer_negotiation(oferta, termos, marcar)`: com `marcar`, +0x2d = 1 nas duas e o jogador marcado sob oferta
 /// (0x84b580, com a lista +0). Sem vaga (+0x28 = −1): o vetor das negociações (+0xc, capacidade +0x10, conta +0x14)
 /// cresce de 50 quando cheio (0x945667 zerando as novas; 0x945501 sem vetor), a primeira vaga vazia vai para +0x28 e a
@@ -6671,7 +6875,10 @@ unsafe extern "thiscall" fn guardar_a_negociacao(this: usize, oferta: usize, ter
     }
 }
 
-/// { 0x69fd50 } (thiscall, ret 8, manager_manager.cpp, quadro SEH sem destrutor): `MANAGER_MANAGER::
+/// on a one-in-four draw, the 0x1776 news of a rumour linking a manager with another club
+/// Original: `post_job_rumour_news` (0x69fd50, manager_manager.cpp, thiscall).
+///
+/// [pt] { 0x69fd50 } (thiscall, ret 8, manager_manager.cpp, quadro SEH sem destrutor): `MANAGER_MANAGER::
 /// post_job_rumour_news(pessoa, clube)`: sem pessoa ou sem clube dela (+0x39), nada; um sorteio(4) = 0, nada; antes da
 /// data das notícias ([0xdd6ec8]), nada. A notícia 0x1776 (local): 0..3 a pessoa, 4 = o cargo (+0x3d), 5 = o id do
 /// clube dela, 6 = o id do clube do boato, 7 = sorteio(4); aos destinatários (0x8d1da0 do gerente de transferências
@@ -6712,7 +6919,10 @@ unsafe extern "thiscall" fn noticia_do_boato_do_tecnico(_this: usize, pessoa: us
     }
 }
 
-/// { 0x8d8310 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH sem destrutor): `TRANSFER_MANAGER::
+/// the 0xfae news of the player refusing the move, with the reason and both clubs' managers
+/// Original: `post_player_rejects_move_news` (0x8d8310, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8d8310 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH sem destrutor): `TRANSFER_MANAGER::
 /// post_player_rejects_move_news(oferta, motivo)`: o dono do jogador (+0xc; contrato 0x4cf5a0, nenhum no tipo 5), os
 /// destinatários (0x8d1130 com 0x2f, até 30), a notícia 0xfae (local): 0..3 o jogador, 4 = o id do dono (ou −1), 5 =
 /// +8, 6 = +0x1f, 7 = o motivo, 8 = o técnico do dono, 9 = o técnico do comprador (+8 > −1); a cada destinatário.
@@ -6779,7 +6989,12 @@ unsafe extern "thiscall" fn comparar_noticia_da_recusa_em_se_mudar(this: usize, 
 
 
 
-/// { 0x8c6e60 } (thiscall, ret 0, transfer_manager.cpp, quadro SEH só da data local): `TRANSFER_MANAGER::
+/// marks 0x3fff/0x1fff by international caps; for a player needing a permit (0x8c7560), by the earliest year in the
+/// club nation (career 0x7c3e40): under 5 years, the permit (0x8c7070); otherwise the second nationality (+0x1e); sorts
+/// the permits
+/// Original: `TRANSFER_MANAGER::init_work_permits` (0x8c6e60, transfer_manager.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x8c6e60 } (thiscall, ret 0, transfer_manager.cpp, quadro SEH só da data local): `TRANSFER_MANAGER::
 /// init_work_permits()`: pela criação do jogo (0x8bba30). Para cada pessoa: com mais de 13 jogos pela seleção (+0x22),
 /// 0x3fff na palavra +3 do registro de 8 bytes ([this+0x86e] + i × 8); com mais de 5, 0x1fff. Jogador (+0x3d = 0xb) de
 /// clube (+0x39) que precisa de permissão de trabalho (0x8c7560 sem ignorar a dada): o ano mais antigo na nação do
@@ -6861,7 +7076,11 @@ unsafe extern "thiscall" fn iniciar_permissoes_de_trabalho(this: usize) {
     qsort(read_usize(this + 0x93a), read_usize(this + 0x93e) as u32, 0xe, 0x8e55c0);
 }
 
-/// { 0x8c3e50 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::get_clause_count(pessoa, tipo)`: no tipo 4,
+/// type 4: international caps since the deal (+0x22 minus byte +7 of the person record); otherwise club appearances
+/// (+0x3b of the contract)
+/// Original: `TRANSFER_MANAGER::get_clause_count` (0x8c3e50, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8c3e50 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::get_clause_count(pessoa, tipo)`: no tipo 4,
 /// os jogos pela seleção (+0x22) menos os da época do acordo (byte +7 do registro de 8 bytes [this+0x86e] + id × 8);
 /// senão os jogos pelo clube (+0x3b) do contrato (0x4cf5a0, pedido duas vezes como na original), ou 0 sem contrato.
 unsafe extern "thiscall" fn contagem_da_clausula(this: usize, pessoa: usize, tipo: u32) -> u16 {
@@ -6876,7 +7095,10 @@ unsafe extern "thiscall" fn contagem_da_clausula(this: usize, pessoa: usize, tip
     read_u16(contrato_de(read_usize(0xae1050), pessoa) + 0x3b)
 }
 
-/// { 0x8d0ea0 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::find_first_team_appearance_money(pessoa)`:
+/// with the person bit 2, searches the appearance money array +0x88c; when not found, clears the bit
+/// Original: `TRANSFER_MANAGER::find_first_team_appearance_money` (0x8d0ea0, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8d0ea0 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::find_first_team_appearance_money(pessoa)`:
 /// com o bit 2 do registro de 8 bytes ([this+0x86e] + id × 8), busca o prêmio por jogo da pessoa no vetor [this+0x88c]
 /// (conta +0x894; busca binária 0x946464 com 0x8b4e00, registros de 13 bytes) e o devolve; sem achar, tira o bit (soma
 /// 0xfe ao byte) e devolve 0.
@@ -6928,7 +7150,12 @@ unsafe fn cps3_por(a: usize, v: usize) {
     core::ptr::write_unaligned(a as *mut usize, v);
 }
 
-/// { 0x8c18c0 } (thiscall, ret 0, transfer_manager.cpp, quadro SEH das duas LLIST locais 0x68d020/0x68d040):
+/// for each queued player (+0x92c): at a human club the board may block it (0x696940); a draw adds the manager to the
+/// disliked staff (0x547af0); the records (0x86d800), the cancelled offers (0x8df9b0) and the release with the
+/// compensation (0x8c1af0); clears the queue
+/// Original: `TRANSFER_MANAGER::process_free_transfer_queue` (0x8c18c0, transfer_manager.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x8c18c0 } (thiscall, ret 0, transfer_manager.cpp, quadro SEH das duas LLIST locais 0x68d020/0x68d040):
 /// `TRANSFER_MANAGER::process_free_transfer_queue()`: pelo dia a dia das transferências (0x8c5880). Percorre uma cópia
 /// do cabeçalho da fila (+0x92c, 14 bytes, com o cursor no começo); para cada item (+0 id da pessoa, +4 motivo, +5
 /// compensação) com contrato (0x4cf5a0, guardado em [0xae1080]) e clube: no clube humano (0x7875e0) sem motivo, a
@@ -7012,7 +7239,11 @@ unsafe extern "thiscall" fn fila_da_transferencia_livre(this: usize) {
     soltar(a);
 }
 
-/// { 0x8cf470 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH só das datas locais): `TRANSFER_MANAGER::
+/// the first day, from today up to a year later, with the club nation window open (0x8e8e50; without a rule, today);
+/// when none, the "Error" box
+/// Original: `TRANSFER_MANAGER::find_next_window_open_date` (0x8cf470, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8cf470 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH só das datas locais): `TRANSFER_MANAGER::
 /// find_next_window_open_date(clube, saida)`: a regra da nação do clube (+0x53) entre as 28 de +0x8ac (+0xa); de hoje
 /// ([0xae2c90]) até um ano depois (0x54c5b0 com 365), o primeiro dia com a janela aberta (0x8e8e50; sem regra, hoje) vai
 /// para `saida`; sem achar, a caixa "Error" 0x32c6. A contratação desejada (0x85fc50) regrava a data com hoje logo depois.
@@ -7049,7 +7280,10 @@ unsafe extern "thiscall" fn proxima_janela_aberta(this: usize, clube: usize, sai
     }
 }
 
-/// { 0x8c72d0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::find_negotiated_loan_contract(pessoa,
+/// the +0x946 list item with the person and the club, or 0
+/// Original: `TRANSFER_MANAGER::find_negotiated_loan_contract` (0x8c72d0, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8c72d0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::find_negotiated_loan_contract(pessoa,
 /// clube)`: na lista [this+0x946] (o cursor +0xa volta ao começo), o item com a pessoa (+0) e o clube (+4) pelos ids;
 /// sem lista ou sem achar, 0.
 unsafe extern "thiscall" fn emprestimo_negociado(this: usize, pessoa: usize, clube: usize) -> usize {
@@ -7117,7 +7351,12 @@ unsafe fn cps4_clube_atual(pessoa: usize) -> usize {
     }
 }
 
-/// { 0x8c8fd0 } (thiscall com o `this` sem uso, ret 0x14, transfer_manager.cpp, quadro SEH do `new`):
+/// with a much bigger bidding club and a high-potential player up to 30: a new offer (0x8e5680, 0x8e78f0) with a 20%
+/// sell-on (appeal 80), international (70) or first-team (60) appearance money, and the fee × 0.8; none, frees the
+/// offer and 0
+/// Original: `TRANSFER_MANAGER::build_clause_offer_option` (0x8c8fd0, transfer_manager.cpp, thiscall (this sem uso), ret 0x14).
+///
+/// [pt] { 0x8c8fd0 } (thiscall com o `this` sem uso, ret 0x14, transfer_manager.cpp, quadro SEH do `new`):
 /// `TRANSFER_MANAGER::build_clause_offer_option(clube, jogador, saida, apelo, valor)`: pela resposta do clube do computador
 /// ao lance (0x8c8090). Com o clube do lance mais de 3 acima na reputação (+0x80) do clube atual (0x4cf5a0), ficha de
 /// jogador (+0x61) com potencial (+7) ao menos 25 acima da habilidade (+5) e até 30 anos (+0x18): uma oferta nova
@@ -7186,7 +7425,11 @@ unsafe extern "thiscall" fn oferta_com_clausula(_this: usize, clube: usize, joga
     0
 }
 
-/// { 0x8c5560 } (stdcall, ret 8, transfer_manager.cpp): `transfer_manager_is_rejection_reason_valid(motivo, oferta)`: 0
+/// 0 when the reason does not fit: hot prospect (0x2000) aged 24 or more, same division (0x1000), rival (0x800) without
+/// a fixture or link; otherwise 1
+/// Original: `transfer_manager_is_rejection_reason_valid` (0x8c5560, transfer_manager.cpp, stdcall, ret 8).
+///
+/// [pt] { 0x8c5560 } (stdcall, ret 8, transfer_manager.cpp): `transfer_manager_is_rejection_reason_valid(motivo, oferta)`: 0
 /// quando o motivo não cabe na oferta (pessoa +0xc, clube do lance +8): 0x2000 (promessa) com 24 anos ou mais (+0x18);
 /// 0x1000 com o clube atual (0x4cf5a0) e o do lance em divisões diferentes (+0x57); 0x800 (rival) com os dois clubes,
 /// sem os dois humanos (0x600a50), sem confronto na liga (0x4b02e0) e sem um ser parceiro (+0xb3/+0xb7/+0xbb) do outro.
@@ -7216,7 +7459,10 @@ unsafe extern "stdcall" fn motivo_da_recusa_vale(motivo: u32, oferta: usize) -> 
     r as u32
 }
 
-/// { 0x8c54c0 } (stdcall, ret 4, transfer_manager.cpp): `transfer_manager_get_squad_status_reason(oferta)`: o motivo de
+/// by the squad status of the current club contract: 1 → 0x200, 2 and 3 → 0x400, 5 → 0x2000; otherwise 0
+/// Original: `transfer_manager_get_squad_status_reason` (0x8c54c0, transfer_manager.cpp, stdcall, ret 4).
+///
+/// [pt] { 0x8c54c0 } (stdcall, ret 4, transfer_manager.cpp): `transfer_manager_get_squad_status_reason(oferta)`: o motivo de
 /// recusa pelo status no elenco (+0x4f >> 4) do contrato da pessoa (+0xc) com o clube atual (0x4cf5f0): 1 → 0x200, 2 e
 /// 3 → 0x400, 5 → 0x2000; senão 0.
 unsafe extern "stdcall" fn motivo_pelo_status_no_elenco(oferta: usize) -> u16 {
@@ -7265,7 +7511,11 @@ unsafe fn cpr1_limpar(t: *mut u8) {
     core::ptr::write_bytes(t, 0xff, 42);
 }
 
-/// { 0x8cf6b0 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::fill_squad_restrictions(partida, t,
+/// fills the 42-byte table with 0xff and, by the fixture rules scope (0x8d2fa0), lets the nation or continent rule fill
+/// it (virtual +0x1c); when asked, keeps only the first limit (+5/+3, +2/+0 or +0x16/+0x17)
+/// Original: `TRANSFER_MANAGER::fill_squad_restrictions` (0x8cf6b0, transfer_manager.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x8cf6b0 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::fill_squad_restrictions(partida, t,
 /// so_a_principal)`: enche os 42 bytes de `t` com 0xff. Com partida: o alcance das regras (0x8d2fa0); 0xff para aí. Fora
 /// do tipo 4, a primeira das 28 regras de +0x8ac do continente (+0xe, tipo 2) ou da nação (+0xa) com o mesmo tipo
 /// (+0x12) enche a tabela (virtual +0x1c com a partida e `t`). Com `so_a_principal`, fica só o primeiro limite que
@@ -7320,7 +7570,11 @@ unsafe extern "thiscall" fn restricoes_da_partida(this: usize, partida: usize, t
     }
 }
 
-/// { 0x8cf880 } (thiscall pelo `this` em ecx, que a original passa direto à 0x8cf7e0; ret 0x18, transfer_manager.cpp):
+/// counts, over the matchday squad slots (given players or the tactics 0x8968f0), the non-EU, foreign or over-age
+/// players of the fixture limit (0x8cf7e0); when over, 1 and the message
+/// Original: `transfer_manager_check_matchday_squad_limit` (0x8cf880, transfer_manager.cpp, thiscall (this em ecx), ret 0x18).
+///
+/// [pt] { 0x8cf880 } (thiscall pelo `this` em ecx, que a original passa direto à 0x8cf7e0; ret 0x18, transfer_manager.cpp):
 /// `transfer_manager_check_matchday_squad_limit(clube, partida, msg, jogadores, _, saida)`: o limite da partida
 /// (0x8cf7e0 em 6 bytes locais: +0 tipo, +1 idade, +5 quantidade); sem tipo, 0. O lado humano (+0x1c/+0x40 ou
 /// +0x20/+0x41) vai para a 0x8968f0. Pelas (+0x4d & 0xf) + 11 vagas, a pessoa da vaga (`jogadores[k]` ou a tática
@@ -7416,7 +7670,11 @@ unsafe extern "thiscall" fn limite_do_banco_do_dia(this: usize, clube: usize, pa
     1
 }
 
-/// { 0x8c7560 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::player_needs_work_permit(jogador, clube,
+/// 1 when the club nation uses work permits (+0x76 = 0xe), the player is not EU and holds no granted permit (type 2
+/// contract, 0x20 flag, search in the +0x93a array)
+/// Original: `TRANSFER_MANAGER::player_needs_work_permit` (0x8c7560, transfer_manager.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x8c7560 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::player_needs_work_permit(jogador, clube,
 /// ignorar_a_dada)`: 0 sem clube ou sem a nação dele (+0x53); jogador nulo: a caixa "Error" 0x1c23 e 0. Nação sem a marca
 /// 0xe (+0x76) ou jogador da UE (0x53d740 com nação 0): 0. Com `ignorar_a_dada`: 1. Senão 0 só se o contrato (0x4cf5a0)
 /// é do tipo 2 (+0x35 & 0x3f), o id cabe em [0xae2364], tem a marca 0x20 ([this+0x86e] + id × 8) e a permissão está no
@@ -7606,7 +7864,12 @@ unsafe fn cpr2_pode(this: usize, jogador: usize, clube: usize, ignorar_abertas: 
     (0, 1)
 }
 
-/// { 0x8ce990 } (thiscall, ret 0x10, transfer_manager.cpp, quadro SEH da LLIST local 0x68d020/0x68d040):
+/// cannot (0 and the reason): nation that keeps its players (0x27), agreed contract (0x21), open exchanges (7), free
+/// queue (1), offer in negotiation (0x12, flag +0x2d) or future transfer (0x20), the rules of the Basque club (0x19),
+/// of nation [0x9cf4dc] (0x28) and of clubs [0x9d0128]/[0x9d01a0] (0x1a); otherwise 1
+/// Original: `TRANSFER_MANAGER::can_club_bid_for_player` (0x8ce990, transfer_manager.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x8ce990 } (thiscall, ret 0x10, transfer_manager.cpp, quadro SEH da LLIST local 0x68d020/0x68d040):
 /// `TRANSFER_MANAGER::can_club_bid_for_player(jogador, clube, motivo, ignorar_abertas)`: não pode (0 e o motivo) se o
 /// jogador é da nação [0x9cf458] sem clube ou com clube dela e o clube é de fora (0x27); com a marca de contrato
 /// acertado (0x40) e o acerto (0x4cca30) (0x21; sem acerto, a marca sai); sem `ignorar_abertas`, com trocas que o
@@ -7629,7 +7892,10 @@ unsafe extern "thiscall" fn clube_pode_chegar_ao_jogador(this: usize, jogador: u
     r
 }
 
-/// { 0x8c2060 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::note_terms_offered_to_exchange_player(k,
+/// flags the exchange player sent terms; when none is flagged, the offer moves to state 8 (from 7) or 6
+/// Original: `TRANSFER_MANAGER::note_terms_offered_to_exchange_player` (0x8c2060, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8c2060 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::note_terms_offered_to_exchange_player(k,
 /// pessoa)`: `k` negativo ou fora da conta (+4): a caixa "Error" (0xdc3 ou 0xdc8). Na oferta `k` (vazia: nada), pela
 /// lista dos jogadores da troca (+4), marca (+4 do item) o da `pessoa`; nenhum item marcado: o estado (+0x2c) vira 8 (se
 /// era 7) ou 6.
@@ -7665,7 +7931,10 @@ unsafe extern "thiscall" fn termos_ao_jogador_da_troca(this: usize, k: i32, pess
     }
 }
 
-/// { 0x8c1780 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::count_club_free_transfer_queue(clube)`:
+/// counts the free transfer queue people of the club or of its partner club (0x540a50)
+/// Original: `TRANSFER_MANAGER::count_club_free_transfer_queue` (0x8c1780, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8c1780 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::count_club_free_transfer_queue(clube)`:
 /// clube nulo: a caixa "Error" 0xc04 e 0. Senão conta as pessoas da fila da transferência livre (+0x92c; o cursor volta
 /// ao começo) com o clube do contrato (+0x39) igual ao clube ou ao parceiro dele (0x540a50 com 0 e 1), não nulo.
 unsafe extern "thiscall" fn fila_livre_do_clube(this: usize, clube: usize) -> u8 {
@@ -7800,7 +8069,11 @@ unsafe fn cpr3_futura(this: usize, jogador: usize, saida: *mut usize, l: usize) 
     1 // a transferência futura existe
 }
 
-/// { 0x8cca10 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH da LLIST local 0x68d020/0x68d040):
+/// with the 0x10 flag, searches the offers for the player (0x8c5cf0) and the exchanges offering him (0x8c5e40) for a
+/// state 0x13 one; found, the +0x920 array entry and 1; otherwise clears the flag and 0
+/// Original: `TRANSFER_MANAGER::get_future_transfer` (0x8cca10, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8cca10 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH da LLIST local 0x68d020/0x68d040):
 /// `TRANSFER_MANAGER::get_future_transfer(jogador, saida)`: sem a marca 0x10 ([this+0x86e] + id × 8), 0. Pelas ofertas
 /// pelo jogador (0x8c5cf0) e, sem achar, pelas trocas que o oferecem (0x8c5e40, com a lista esvaziada por 0x68d080), a
 /// primeira de estado 0x13 com índice ≠ −1; com `saida`, o registro de 12 bytes do vetor [this+0x920] (conta +0x928)
@@ -7816,7 +8089,11 @@ unsafe extern "thiscall" fn transferencia_futura_do_jogador(this: usize, jogador
     r
 }
 
-/// { 0x8cbf70 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::remove_future_transfer(oferta)`: tira a
+/// clears the 0x10 flag of the player and the exchange players and removes the offer's entry from the +0x920 array (the
+/// next ones move down, 0x8cbf40)
+/// Original: `TRANSFER_MANAGER::remove_future_transfer` (0x8cbf70, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8cbf70 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::remove_future_transfer(oferta)`: tira a
 /// marca 0x10 do jogador (+0xc) e dos jogadores da troca (lista +4, o cursor volta ao começo); no vetor [this+0x920]
 /// (conta +0x928), o primeiro registro com a oferta (+0x20 da oferta, +8 do registro) sai: os seguintes descem um
 /// (0x8cbf40) e a conta cai de 1.
@@ -7850,7 +8127,11 @@ unsafe extern "thiscall" fn tirar_transferencia_futura(this: usize, oferta: usiz
     }
 }
 
-/// { 0x8cb9a0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::add_future_transfer(oferta, data)`:
+/// adds (date, offer) to the +0x920 array and sorts it; the offer moves to state 0x13; suspends the shortlists for the
+/// player and the exchange players (0x842b00) and sets their 0x10 flag; a flagged contract keeps the offer
+/// Original: `TRANSFER_MANAGER::add_future_transfer` (0x8cb9a0, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8cb9a0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::add_future_transfer(oferta, data)`:
 /// acrescenta ao vetor [this+0x920] (capacidade +0x924, conta +0x928; cheio, cresce de 10 em 10, sem memória: a caixa
 /// 0x27c3 e nada) o registro de 12 bytes com a `data` (0x417c10) e a oferta (+0x20 em +8) e reordena (qsort 0x945333
 /// com 0x778e90). A oferta fica com +0x2d = 1 e o estado 0x13. Suspende os clubes que miram o jogador (0x842b00 de
@@ -7964,7 +8245,11 @@ unsafe fn cpr4_clube(id: usize) -> usize {
     read_usize(0xae23b4).wrapping_add(id.wrapping_mul(0x245))
 }
 
-/// { 0x8c6100 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::get_open_offers_for_club_players(clube,
+/// counts (and lists the indices of) the open offers for players contracted to the club, except states 2, 3, 4, 0x10,
+/// 0x14, collapsed ones and loans
+/// Original: `TRANSFER_MANAGER::get_open_offers_for_club_players` (0x8c6100, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8c6100 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::get_open_offers_for_club_players(clube,
 /// lista)`: pelas ofertas (vetor [this], conta +4), fora das vazias e das de estado 2, 3, 4, 0x10 e 0x14 e das de estado
 /// 0xf com +0x2e ≥ 3: o contrato do jogador (+0xc; 0x4cf5a0, guardado em [0xae1080]) que não é de empréstimo (+0x35 &
 /// 0x3f ≠ 5) é do `clube`? Conta e, com `lista`, acrescenta o índice (4 bytes, 0x68d0d0). Devolve a conta.
@@ -8009,7 +8294,11 @@ unsafe extern "thiscall" fn ofertas_abertas_pelos_jogadores_do_clube(this: usize
     n
 }
 
-/// { 0x8c47d0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH da LLIST local 0x68d020/0x68d040):
+/// each offer for the player loses its future transfer (0x8cbf70), is collapsed (0xf, +0x2e = 3), clears the buyer's
+/// and seller's bid markers (0x84aeb0) and is scheduled (0x8c6220, 10 days)
+/// Original: `TRANSFER_MANAGER::collapse_offers_for_player` (0x8c47d0, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8c47d0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH da LLIST local 0x68d020/0x68d040):
 /// `TRANSFER_MANAGER::collapse_offers_for_player(pessoa)`: com ofertas pela pessoa (byte +1 do registro de 8 bytes em
 /// [this+0x86e]), pelas ofertas por ela (0x8c5cf0 na lista local): a de transferência futura (0x13) perde a futura
 /// (0x8cbf70); todas ficam no estado 0xf com +0x2e = 3; o vendedor é o clube do contrato do jogador da oferta (0x4cf5a0,
@@ -8060,7 +8349,10 @@ unsafe extern "thiscall" fn desfazer_ofertas_pelo_jogador(this: usize, pessoa: u
     soltar(l);
 }
 
-/// { 0x8caaf0 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::add_next_sale_percentage(registro)`:
+/// appends the 13-byte next sale percentage to the +0x880 array (growing by 50) and sorts it (0x8e54d0)
+/// Original: `TRANSFER_MANAGER::add_next_sale_percentage` (0x8caaf0, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8caaf0 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::add_next_sale_percentage(registro)`:
 /// acrescenta o percentual da próxima venda (13 bytes copiados de `registro`) ao vetor [this+0x880] (capacidade +0x884,
 /// conta +0x888); cheio, cresce de 50 em 50 (sem memória: caixa 0x2553 e nada). Reordena (qsort 0x945333 com 0x8e54d0,
 /// a ordem da busca 0x8cb0f0).
@@ -8184,7 +8476,11 @@ fn cpq5_motivo_que_libera(m: u32) -> bool {
     matches!(m as u16, 0x14 | 0x15 | 0x1f | 0x11)
 }
 
-/// { 0x8cee70 } (thiscall, ret 8, transfer_manager.cpp): `transfer_manager_get_offer_completion_date(oferta, saida)`:
+/// by the offer's timing type (+0x30): today, the first allowed day (0x8cf0e0), the seller's season end plus 7 days,
+/// the day after the contract ends (never before today) or the start of the fixed window; returns the reason
+/// Original: `transfer_manager_get_offer_completion_date` (0x8cee70, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8cee70 } (thiscall, ret 8, transfer_manager.cpp): `transfer_manager_get_offer_completion_date(oferta, saida)`:
 /// a data em que a oferta pode se concretizar, pelo tipo de prazo (+0x30 & 0xf): 0 hoje; 5 o início da janela fixa
 /// (0x8d0bb0); 1 e 4 o primeiro dia que as regras permitem (0x8cf0e0, que dá o motivo); 2 o fim da temporada da nação
 /// do clube vendedor mais 7 dias (0x669bd0; fora da temporada, hoje; sem vendedor, a caixa "Error" 0x31da); 3 o dia
@@ -8240,7 +8536,11 @@ unsafe extern "thiscall" fn data_de_conclusao_da_oferta(this: usize, oferta: usi
     0
 }
 
-/// { 0x8cf0e0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::find_next_allowed_transfer_date(oferta,
+/// steps day by day, from today (or the contract end, in type 4) up to a year, until the rules of the buyer's and
+/// seller's nations allow it (method +0xc); with no day, returns the first reason
+/// Original: `TRANSFER_MANAGER::find_next_allowed_transfer_date` (0x8cf0e0, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8cf0e0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::find_next_allowed_transfer_date(oferta,
 /// saida)`: grava hoje na saída e começa no maior entre hoje e, no tipo de prazo 4 (+0x30 & 0xf), o fim do contrato
 /// (+0x2d). Tipo 5: o início da janela fixa (0x8d0bb0) e o método +0xc da regra da nação do comprador (+8) dá o motivo
 /// (9 não conta). Pessoa sem ficha de jogador (+0x61): hoje. Senão anda dia a dia (até hoje + 365, sem chegar) pelas
@@ -8323,7 +8623,10 @@ unsafe extern "thiscall" fn primeiro_dia_permitido_da_oferta(this: usize, oferta
     motivo as u16
 }
 
-/// { 0x8d0bb0 } (stdcall, ret 8, transfer_manager.cpp): `transfer_manager_get_next_window_dates(inicio, fim)`: as
+/// the start (today, when inside) and the end of the current or next window: 1 to 31 July and 15 December to 15 January
+/// Original: `transfer_manager_get_next_window_dates` (0x8d0bb0, transfer_manager.cpp, stdcall, ret 8).
+///
+/// [pt] { 0x8d0bb0 } (stdcall, ret 8, transfer_manager.cpp): `transfer_manager_get_next_window_dates(inicio, fim)`: as
 /// janelas fixas do ano de hoje são 1º a 31 de julho e 15 de dezembro a 15 de janeiro (0x549f70; comparadas só pelo
 /// dia do ano, com sinal). Dentro de uma janela, o início é hoje e o fim o da janela (15 de janeiro do ano seguinte, se
 /// for a de dezembro); antes de julho, 1º a 31 de julho; entre agosto e 14 de dezembro, 15 de dezembro a 15 de janeiro
@@ -8442,7 +8745,11 @@ unsafe fn cpq6_por_u32(r: &mut [u8; 13], k: usize, v: usize) {
 /// As estáticas das operações de data (valor e guarda), para os comparadores.
 const CPQ6_ESTATICAS: [(usize, usize); 8] = [(0xae2420, 8), (0xae2469, 1), (0xae24c0, 8), (0xae249e, 1), (0xae2410, 8), (0xae2430, 1), (0xae2470, 8), (0xae2418, 1)];
 
-/// { 0x8d0780 } (stdcall, ret 0xc, transfer_manager.cpp, quadro SEH só da data local):
+/// staff on a type 2 contract: what is left of the contract (1000 to 1000000); new rules: the average with the player
+/// value; between clubs of nation [0x9cf4a8] or, under 24, between British nations: half the value (0x4d0c60)
+/// Original: `transfer_manager_calc_compensation_fee` (0x8d0780, transfer_manager.cpp, stdcall, ret 0xc).
+///
+/// [pt] { 0x8d0780 } (stdcall, ret 0xc, transfer_manager.cpp, quadro SEH só da data local):
 /// `transfer_manager_calc_compensation_fee(pessoa, comprador, sem_regras_novas)`: sem pessoa ou comprador, a caixa
 /// "Error" 0x372e e 0. Comissão técnica (sem ficha de jogador +0x61, com +0x69) de contrato tipo 2: o que falta do
 /// contrato (dias até o fim +0x2d × o salário +0xc / 7) entre 1000 e 1000000. Regras novas ([0xae233c] = 1, sem o
@@ -8515,7 +8822,11 @@ unsafe extern "stdcall" fn compensacao_pela_pessoa(pessoa: usize, comprador: usi
     valor(gerente(), pessoa, vendedor, 1, 0xffff_ffff, 0) / 2 // menor de 24 anos entre clubes britânicos
 }
 
-/// { 0x8ca8a0 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::pay_fee_and_record_clauses(oferta)`: soma o
+/// adds the fee to the totals, the buyer pays and the seller receives the first instalment, stores the remaining
+/// instalments (list +0x872) and the sell-on and appearance clauses, with the person's flags
+/// Original: `TRANSFER_MANAGER::pay_fee_and_record_clauses` (0x8ca8a0, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8ca8a0 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::pay_fee_and_record_clauses(oferta)`: soma o
 /// valor (+0x1b) aos totais das transferências (0x448ad0); o comprador (+8) paga e o vendedor (clube do contrato da
 /// pessoa +0xc, 0x4cf5a0) recebe a primeira parcela (o valor / parcelas +0x40, ou tudo), em 64 bits (0x599890,
 /// 0x599800). Com parcelas, guarda as que faltam (13 bytes: a parcela, os ids do comprador e do vendedor, parcelas − 1)
@@ -8601,7 +8912,11 @@ unsafe extern "thiscall" fn pagar_transferencia_e_clausulas(this: usize, oferta:
     }
 }
 
-/// { 0x8cd240 } (stdcall, ret 0xc, transfer_manager.cpp, quadro SEH só dos valores locais):
+/// 1 when the fee covers an active release clause (reason 0x1b) or the seller in financial trouble gets far more than
+/// the value (reason 0x1c); without a seller, 1
+/// Original: `transfer_manager_selling_club_must_accept` (0x8cd240, transfer_manager.cpp, stdcall, ret 0xc).
+///
+/// [pt] { 0x8cd240 } (stdcall, ret 0xc, transfer_manager.cpp, quadro SEH só dos valores locais):
 /// `transfer_manager_selling_club_must_accept(oferta, estrito, motivo)`: sem vendedor (clube do contrato da pessoa
 /// +0xc que não é de tipo 5, 0x4cf5a0), 1. Com cláusula de rescisão ativa (0x867b50), sem troca (+4) nem parcelas
 /// (+0x40) e o valor (+0x1b) não abaixo da multa (+0x21 do contrato; os dois por 0x43f460 com 4): motivo 0x1b e 1. Com
@@ -8711,7 +9026,11 @@ unsafe fn cpq7_permissao(this: usize, pessoa: usize) -> usize {
     bsearch(&id, read_usize(this + 0x93a), read_usize(this + 0x93e), 0xe, 0x8e55c0)
 }
 
-/// { 0x8c7e20 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH só da data local):
+/// when the new club needs a permit: updates the existing one (nation, year) or grants a new one (0x8c7070); otherwise:
+/// removes any permit and re-sorts the array
+/// Original: `TRANSFER_MANAGER::update_work_permit_on_move` (0x8c7e20, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8c7e20 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH só da data local):
 /// `TRANSFER_MANAGER::update_work_permit_on_move(pessoa, clube)`: se o jogador precisa de permissão no clube novo
 /// (0x8c7560 com 1) e já tem uma: troca a nação da permissão (+0xa) pela do clube (+0x53), zera +4 e +6 e, se mudou de
 /// nação e as duas não são da marca 0xe (+0x76), grava o ano de hoje (+8); clube sem nação: a caixa "Error" 0x1dc2. Sem
@@ -8766,7 +9085,11 @@ unsafe extern "thiscall" fn permissao_de_trabalho_na_mudanca(this: usize, pessoa
     qsort(read_usize(this + 0x93a), n as u32, 0xe, 0x8e55c0);
 }
 
-/// { 0x8c38b0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH da oferta local):
+/// without the work permit, the news of the collapsed offer or the refused permit and 0; otherwise signs (0x4cf720),
+/// the club pays the signing-on fee and 1
+/// Original: `TRANSFER_MANAGER::complete_accepted_contract_offer` (0x8c38b0, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8c38b0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH da oferta local):
 /// `TRANSFER_MANAGER::complete_accepted_contract_offer(oferta)`: oferta de contrato (+0 a pessoa, +4 o clube, +8 as
 /// luvas, +0x61 o cargo). Se o jogador precisa de permissão no clube (0x8c7560 com 1) e ela não sai (0x8c7950): com
 /// contrato de tipo 5 (0x4cf5a0, guardado em [0xae1080]), a notícia da oferta que caiu (0x8de790 com uma
@@ -8813,7 +9136,11 @@ unsafe extern "thiscall" fn concluir_oferta_de_contrato_aceita(this: usize, ofer
     1
 }
 
-/// { 0x8c1e40 } (thiscall, ret 0xc, transfer_manager.cpp, quadro SEH do contrato local):
+/// builds the club's contract (0x4cda70, factor 1) and adds the contract offer; without one, withdraws the offer (main
+/// player) or drops the player from the exchange adding his value
+/// Original: `TRANSFER_MANAGER::offer_contract_to_offer_player` (0x8c1e40, transfer_manager.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x8c1e40 } (thiscall, ret 0xc, transfer_manager.cpp, quadro SEH do contrato local):
 /// `TRANSFER_MANAGER::offer_contract_to_offer_player(clube, pessoa, oferta)`: monta o contrato (STAFF_CONTRACT local,
 /// 0x85e410) que o clube ofereceria (0x4cda70 com a vaga +0x20 da oferta, fator de salário 1 e modo 2). Montado:
 /// acrescenta a oferta de contrato (0x4cc490 com a vaga +0x20, o valor +0x24, 0xb, 0, 1, 0). Sem contrato: sendo o
@@ -8912,7 +9239,11 @@ unsafe fn cpq8_estado_encerrado(oferta: usize) -> bool {
     }
 }
 
-/// { 0x8c44e0 } (thiscall, ret 0x10, transfer_manager.cpp): `TRANSFER_MANAGER::collapse_offer(oferta, clube, motivo,
+/// state 0x10, closes the proposals, releases the bids, posts the news, schedules the removal, clears the flags, the
+/// contract offer and the exchange contracts
+/// Original: `TRANSFER_MANAGER::collapse_offer` (0x8c44e0, transfer_manager.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x8c44e0 } (thiscall, ret 0x10, transfer_manager.cpp): `TRANSFER_MANAGER::collapse_offer(oferta, clube, motivo,
 /// tirar_futura)`: na oferta de estado 0x13 tira a marca 0x10 da pessoa (+0xc) e dos jogadores da troca (lista +4) e,
 /// com `tirar_futura`, tira a transferência futura (0x8cbf70). Põe o estado 0x10, fecha as propostas (0x8c6db0), solta
 /// os lances do comprador (+8) pela pessoa e do vendedor (clube do contrato, guardado em [0xae1080]) pelos da troca
@@ -9009,7 +9340,14 @@ unsafe extern "thiscall" fn desfazer_oferta(this: usize, oferta: usize, clube: u
     }
 }
 
-/// { 0x8bed60 } (thiscall, ret 0x18, transfer_manager.cpp, quadro SEH da oferta local):
+/// builds the loan offer and the contract from the current one (wage percentage), adds both and returns the offer slot;
+/// in DESLIGADAS since 2026-10-30: with the detour the career in Rust mode left the reference be54a138 (bisection of
+/// the 38 routines of batch 253); the original builds the offer and the contract in locals the constructors (0x8e5680,
+/// 0x85e410) do not fully fill, and the stack residue of those bytes goes into the stored offer, where the copy puts
+/// zero; the copy stays in the code and does not run
+/// Original: `TRANSFER_MANAGER::make_loan_offer` (0x8bed60, transfer_manager.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x8bed60 } (thiscall, ret 0x18, transfer_manager.cpp, quadro SEH da oferta local):
 /// `TRANSFER_MANAGER::make_loan_offer(jogador, clube, fim, percentual, a5, a6)`: numa TRANSFER_OFFER local (0x8e5680)
 /// monta a oferta de empréstimo (0x8e7810) e, num STAFF_CONTRACT local (0x85e410), o contrato pelo atual (0x85e590 com o
 /// fim, a porcentagem do salário e as duas cláusulas); acrescenta a oferta (0x8be300 com o contrato) e a oferta de
@@ -9038,7 +9376,11 @@ unsafe extern "thiscall" fn fazer_oferta_de_emprestimo(this: usize, jogador: usi
     vaga
 }
 
-/// { 0x8cbbe0 } (thiscall, sem argumentos, transfer_manager.cpp): `TRANSFER_MANAGER::process_due_future_transfers()`:
+/// the future transfers whose date has come: collapses those the restrictions block, completes the others (0x8c9390)
+/// and removes them from the array
+/// Original: `TRANSFER_MANAGER::process_due_future_transfers` (0x8cbbe0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8cbbe0 } (thiscall, sem argumentos, transfer_manager.cpp): `TRANSFER_MANAGER::process_due_future_transfers()`:
 /// percorre as transferências futuras (12 bytes: +0 a data, +8 o índice da oferta; [this+0x920], conta +0x928) até a
 /// primeira depois de hoje (0x456740). Oferta nula: a caixa "Error" 0x2846. Com as permissões (0x8c7690 com 1): se as
 /// restrições (0x8cfc90) seguram pelo comprador ou, havendo vendedor, pelo vendedor (motivo 9 não conta), desfaz a
@@ -9138,7 +9480,11 @@ unsafe fn cpp7_clube(id: usize) -> usize {
     read_usize(0xae23b4).wrapping_add(id.wrapping_mul(0x245))
 }
 
-/// { 0x8c36b0 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::club_rejects_offer(oferta, clube,
+/// counts the offer's attempt; by the refusing side, a draw(2 × attempts) rejects or withdraws the offer, otherwise it
+/// is rescheduled with the delay news
+/// Original: `TRANSFER_MANAGER::club_rejects_offer` (0x8c36b0, transfer_manager.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x8c36b0 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::club_rejects_offer(oferta, clube,
 /// motivo)`: fora dos estados 0x11/0x12 (+0x2c), conta a tentativa (+0x2e). Recusa do clube vendedor (id = +8): estado
 /// 0x12; motivo 8 (16 bits) reagenda (0x8c6220 com 7, 0) e sai; senão, sem clube humano no contrato do jogador
 /// (+0xc; contrato em [0xae1080], +0x35 & 0x3f ≠ 5, 0x600a50) e com mais de uma tentativa, um sorteio(2 × tentativas)
@@ -9207,7 +9553,11 @@ unsafe extern "thiscall" fn clube_recusa_a_oferta(this: usize, oferta: usize, cl
     noticia(this, oferta, motivo);
 }
 
-/// { 0x8c6ae0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH da lista local): `TRANSFER_MANAGER::
+/// takes the offer's player and each exchange player out of other offers and collapses the offers for each exchange
+/// player
+/// Original: `TRANSFER_MANAGER::detach_offer_players` (0x8c6ae0, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8c6ae0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH da lista local): `TRANSFER_MANAGER::
 /// detach_offer_players(oferta)`: constrói uma LLIST local que não usa (0x68d020, destruída no fim por 0x68d040), tira
 /// das outras ofertas o jogador da oferta (+0xc; 0x8c41c0 com a oferta, 0, 0) e, pela lista dos jogadores de troca
 /// (+4, relida a cada chamada, cursor recomeçado), tira cada um (0x8c41c0) e desfaz as ofertas por ele (0x8c47d0). O
@@ -9235,7 +9585,11 @@ unsafe extern "thiscall" fn soltar_jogadores_da_oferta(this: usize, oferta: usiz
     destruir(local.as_mut_ptr() as usize);
 }
 
-/// { 0x8c8740 } (thiscall, ret 0x14, transfer_manager.cpp, quadro SEH só para a oferta nova):
+/// allocates and initialises a cash offer for the player at the given fee (0x8e78f0), stores it in the output, appeal
+/// 50, and returns 1
+/// Original: `TRANSFER_MANAGER::build_cash_offer_option` (0x8c8740, transfer_manager.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x8c8740 } (thiscall, ret 0x14, transfer_manager.cpp, quadro SEH só para a oferta nova):
 /// `TRANSFER_MANAGER::build_cash_offer_option(clube, jogador, saída, atração, valor)`: aloca a oferta (0x944cf1(0x41) e
 /// 0x8e5680), guarda em `saída`, inicia pelo jogador, o clube comprador e o valor (0x8e78f0, que pode sortear) e põe a
 /// atração em 50. Clube sem finanças (0x5a0590 = 0): a original (caixa "Error").
@@ -9313,7 +9667,12 @@ unsafe fn cpo10_regra(this: usize, nacao: usize) -> usize {
     0
 }
 
-/// { 0x8cc5b0 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::get_offer_response_delay(oferta, dias,
+/// from the time until the window closes (the rules of the buyer's and the player club's nations): 0 days, 1 or 2 days
+/// with drawn slices, or a value from the player's interest (0x846920) or drawn from the status; days = value / 3,
+/// slices = value % 3
+/// Original: `TRANSFER_MANAGER::get_offer_response_delay` (0x8cc5b0, transfer_manager.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x8cc5b0 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::get_offer_response_delay(oferta, dias,
 /// fatias)`: o prazo é o de fechar a janela (0x8e8ed0) da nação do comprador (+8; sem regra: 365) e, com o +4 da oferta,
 /// o menor com o da nação do clube do contrato do jogador (+0xc; contrato de tipo 5 não conta). Abaixo de 3: 0 dia e 1
 /// fatia; abaixo de 6 ou de 11: 1 ou 2 dias e 1..3 fatias sorteadas. Senão o valor pelo estatuto do contrato com o clube
@@ -9392,7 +9751,11 @@ unsafe extern "thiscall" fn prazo_da_resposta_a_oferta(this: usize, oferta: usiz
     *fatias = (v % 3) as u8;
 }
 
-/// { 0x8caee0 } (thiscall, ret 0, transfer_manager.cpp): `TRANSFER_MANAGER::pay_transfer_instalments()`: no fim do mês,
+/// pays each instalment (payer's and receiver's finances), adds the fractions to the instalment figure (+0x1c) in the
+/// last 8, removes the finished ones and zeroes the figure of clubs without an instalment in its direction
+/// Original: `TRANSFER_MANAGER::pay_transfer_instalments` (0x8caee0, transfer_manager.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x8caee0 } (thiscall, ret 0, transfer_manager.cpp): `TRANSFER_MANAGER::pay_transfer_instalments()`: no fim do mês,
 /// cada prestação da lista (+0x872; 13 bytes: +0 o valor, +4 o clube que paga, +8 o que recebe, +0xc as que faltam) é
 /// paga (0x599890 nas finanças do pagador, 0x599800 nas do recebedor, 0x5a0590) e conta uma a menos; faltando menos de
 /// 4 ou de 8, a figura das prestações (+0x1c das finanças) recebe as frações ([0x968918]/[0x968f30] ou
@@ -9460,7 +9823,12 @@ unsafe extern "thiscall" fn pagar_prestacoes_das_transferencias(this: usize) {
     }
 }
 
-/// { 0x8d0f60 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::remove_offer(oferta)`: a oferta ligada
+/// destroys the linked offer, removes the pair from the loan list and the contract offers of the exchange and of the
+/// player, lowers the player's (+0x86e) and the manager's offer counts, the lowest free slot follows and the offer is
+/// destroyed
+/// Original: `TRANSFER_MANAGER::remove_offer` (0x8d0f60, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8d0f60 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::remove_offer(oferta)`: a oferta ligada
 /// (+0x28 ≠ −1, em +0xc) é destruída (0x8e5710, 0x944c94), a vaga zera e a conta +0x14 baixa; com o +0x1f em 1, sai da
 /// lista de empréstimos (+0x946) o par (clube +8, jogador +0xc); para cada jogador da troca (+4): a proposta de contrato
 /// ligada à vaga +0x20 sai (0x4ccb30, se o jogador da oferta tem contrato) e o +2 do registro de 8 bytes dele (+0x86e)
@@ -9625,7 +9993,11 @@ unsafe fn cpl1_fora(pessoa: usize) -> bool {
     pessoa != 0 && read_usize(pessoa) as i32 >= read_usize(0xae2364) as i32
 }
 
-/// { 0x8cdc90 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::club_has_offer_for_player(pessoa,
+/// 1 when the person flagged as under offer (bit 0 of [+0x86e] + id × 8) has, among the open offers (0x8c5cf0), one
+/// from the club (offer +8); else 0
+/// Original: `TRANSFER_MANAGER::club_has_offer_for_player` (0x8cdc90, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8cdc90 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::club_has_offer_for_player(pessoa,
 /// clube)`: 1 se a pessoa marcada como sob oferta (bit 0 de [this+0x86e] + id × 8) tem, entre as ofertas em aberto
 /// (0x8c5cf0 sem `todas`), uma do clube (+8 da oferta = id do clube); senão 0 (id fora da tabela também).
 unsafe extern "thiscall" fn clube_tem_oferta_pelo_jogador(this: usize, pessoa: usize, clube: usize) -> u32 {
@@ -9644,7 +10016,10 @@ unsafe extern "thiscall" fn clube_tem_oferta_pelo_jogador(this: usize, pessoa: u
     })
 }
 
-/// { 0x8cdd80 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::find_club_offer_for_player(pessoa,
+/// the club offer for the person (with `all`, closed ones too and without requiring the flag), or 0
+/// Original: `TRANSFER_MANAGER::find_club_offer_for_player` (0x8cdd80, transfer_manager.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x8cdd80 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::find_club_offer_for_player(pessoa,
 /// clube, todas)`: a oferta do clube pela pessoa (a primeira da lista da 0x8c5cf0, com `todas` também as encerradas),
 /// ou 0. Sem `todas`, a pessoa tem de estar marcada como sob oferta; id fora da tabela: 0.
 unsafe extern "thiscall" fn oferta_do_clube_pelo_jogador(this: usize, pessoa: usize, clube: usize, todas: u32) -> usize {
@@ -9664,7 +10039,10 @@ unsafe extern "thiscall" fn oferta_do_clube_pelo_jogador(this: usize, pessoa: us
     })
 }
 
-/// { 0x8cd150 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::player_has_pending_offer(pessoa)`: 1 se
+/// 1 when the person is under offer (0x8cde70) and an open offer is in state (+0x2c) 0, 1, 5 or 6; else 0
+/// Original: `TRANSFER_MANAGER::player_has_pending_offer` (0x8cd150, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8cd150 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::player_has_pending_offer(pessoa)`: 1 se
 /// a pessoa está sob oferta (0x8cde70 sem a visão do humano) e uma das ofertas em aberto (0x8c5cf0) está na situação
 /// (+0x2c) 0, 1, 5 ou 6; senão 0. O índice além da conta (+4) lê a oferta 0, como a original.
 unsafe extern "thiscall" fn jogador_com_oferta_pendente(this: usize, pessoa: usize) -> u32 {
@@ -9814,7 +10192,12 @@ unsafe fn cpl2_sob_oferta(this: usize, pessoa: usize, visao: u32, lista: usize) 
     0
 }
 
-/// { 0x8cde70 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::is_player_under_offer(pessoa, visao)`: id
+/// without the human view, the "under offer" flag (bit 0 of [+0x86e] + id × 8); with it, 1 when an offer is known
+/// (+0x2d), comes from a club of the current human or is for a player of his club, when the person is on his shortlist
+/// or when he has an accepted contract offer for the person
+/// Original: `TRANSFER_MANAGER::is_player_under_offer` (0x8cde70, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8cde70 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::is_player_under_offer(pessoa, visao)`: id
 /// fora da tabela: 0. Sem `visao` (ou sem humano da vez), a marca "sob oferta" (bit 0 de [this+0x86e] + id × 8). Com
 /// ela: 1 se alguma oferta em aberto pela pessoa (0x8c5cf0, numa lista local) é conhecida (+0x2d), é de clube do
 /// humano da vez (0x600c90) ou o clube atual do jogador da oferta (+0xc; contrato 0x4cf5a0, que fica em [0xae1080]) é
@@ -9831,7 +10214,11 @@ unsafe extern "thiscall" fn jogador_sob_oferta(this: usize, pessoa: usize, visao
     r
 }
 
-/// { 0x8d0a70 } (stdcall, ret 4, transfer_manager.cpp): `player_club_uses_bosman(pessoa)`: 1 se o clube do contrato
+/// 1 when the nation of the club of the person contract has free transfers at contract expiry (0x544670); without
+/// contract, club or nation: 1
+/// Original: `player_club_uses_bosman` (0x8d0a70, transfer_manager.cpp, stdcall, ret 4).
+///
+/// [pt] { 0x8d0a70 } (stdcall, ret 4, transfer_manager.cpp): `player_club_uses_bosman(pessoa)`: 1 se o clube do contrato
 /// da pessoa (0x4cf5a0, guardado em [0xae1080]) é de nação com transferência livre no fim do contrato (0x544670);
 /// sem contrato que valha, sem clube ou sem nação (+0x53): 1. Pessoa nula: a original (caixa 0x3798 e 0). A data
 /// local da original (0x54a110) só serve ao quadro SEH. Quente (~31 milhões de chamadas): sem contador.
@@ -9851,7 +10238,12 @@ unsafe extern "stdcall" fn clube_do_jogador_com_lei_bosman(pessoa: usize) -> u32
     livre(read_usize(clube + 0x53)) // a nação do clube
 }
 
-/// { 0x8cdb80 } (thiscall, ret 0x18, transfer_manager.cpp): `TRANSFER_MANAGER::check_board_veto(oferta, comprador,
+/// with an empty exchange part, the deciding club board answers (0x696b10, by the 0x8e7b50 value); 0x2000: reason 0x24
+/// and the player loses 10% of his reputations (+0xb current, +9 home, +0xd world); 0x800: 0x17; 0x200: 0x18; each
+/// returns 1
+/// Original: `TRANSFER_MANAGER::check_board_veto` (0x8cdb80, transfer_manager.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x8cdb80 } (thiscall, ret 0x18, transfer_manager.cpp): `TRANSFER_MANAGER::check_board_veto(oferta, comprador,
 /// vendedor, jogador, decide, motivo)`: o valor da oferta (0x8e7b50 com 0, 0, 1, 0, 1); se a oferta tem a parte de
 /// troca (+4) vazia (nula ou palavra 0), a diretoria do clube que decide responde (0x696b10 em [0xb67a44] com o
 /// jogador, o clube, o valor e "é o comprador" no byte baixo do ponteiro do comprador, como a original empurra). Bit
@@ -9998,7 +10390,11 @@ unsafe fn cpl3_crescer(this: usize, v: usize, c: usize, passo: usize, tam: usize
     true
 }
 
-/// { 0x8cb810 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::add_past_transfer(registro)`: acrescenta
+/// appends the past transfer (0x25 bytes, 0x8cb940) to the +0x862 vector (capacity +0x866, count +0x86a), growing by
+/// 100; returns the new record
+/// Original: `TRANSFER_MANAGER::add_past_transfer` (0x8cb810, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8cb810 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::add_past_transfer(registro)`: acrescenta
 /// a transferência passada (0x25 bytes, cópia 0x8cb940) ao vetor [this+0x862] (capacidade +0x866, conta +0x86a, que
 /// sobe antes da cópia); cheio, cresce de 100 em 100 (sem memória: caixa 0x2794 e nada). Devolve o registro novo.
 unsafe extern "thiscall" fn guardar_transferencia_passada(this: usize, registro: usize) -> usize {
@@ -10014,7 +10410,11 @@ unsafe extern "thiscall" fn guardar_transferencia_passada(this: usize, registro:
     copiar(novo, registro)
 }
 
-/// { 0x8c7070 } (thiscall, ret 0x14, transfer_manager.cpp): `TRANSFER_MANAGER::add_work_permit(pessoa, nacao, ano, _,
+/// appends the permit (14 bytes: person, year +8, nation +0xa) to the +0x93a vector (growing by 30), sets the person
+/// 0x20 flag at +0x86e and, when asked, sorts (0x8e55c0)
+/// Original: `TRANSFER_MANAGER::add_work_permit` (0x8c7070, transfer_manager.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x8c7070 } (thiscall, ret 0x14, transfer_manager.cpp): `TRANSFER_MANAGER::add_work_permit(pessoa, nacao, ano, _,
 /// ordenar)`: acrescenta a permissão de trabalho (14 bytes: +0 id da pessoa, +4 e +6 zerados, +8 ano, +0xa id da
 /// nação) ao vetor [this+0x93a] (capacidade +0x942, conta +0x93e); cheio, cresce de 30 em 30 (sem memória: caixa
 /// 0x1b1b e nada). Liga a marca da permissão (bit 0x20 de [this+0x86e] + id × 8) e, com `ordenar`, reordena (qsort
@@ -10040,7 +10440,10 @@ unsafe extern "thiscall" fn dar_permissao_de_trabalho(this: usize, pessoa: usize
     }
 }
 
-/// { 0x8cac40 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::add_first_team_appearance_money(registro)`:
+/// appends the appearance money (13 bytes) to the +0x88c vector (growing by 50) and sorts by person (0x8b4e00)
+/// Original: `TRANSFER_MANAGER::add_first_team_appearance_money` (0x8cac40, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8cac40 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::add_first_team_appearance_money(registro)`:
 /// acrescenta o prêmio por jogo no time principal (13 bytes copiados de `registro`) ao vetor [this+0x88c] (capacidade
 /// +0x890, conta +0x894); cheio, cresce de 50 em 50 (sem memória: caixa 0x2581 e nada). Reordena pela pessoa (qsort
 /// 0x945333 com 0x8b4e00).
@@ -10113,7 +10516,11 @@ unsafe extern "thiscall" fn comparar_guardar_premio_por_jogo_no_time(this: usize
 // ---------- 247a leva: as regras da partida e o amistoso: o alcance das regras de escalação da partida, o motivo de um jogador não poder jogar e a vaga do amistoso marcado ----------
 
 
-/// { 0x8d2fa0 } (thiscall, ret 0x10, transfer_manager.cpp): `TRANSFER_MANAGER::get_fixture_rules_scope(partida, tipo,
+/// reserves: the home nation and type 1; friendly: 0xff; otherwise the key nation of the competition (0x669470), the
+/// continent (+0x59) and type 4 (0, 1), 2 (3 to 7) or 1
+/// Original: `TRANSFER_MANAGER::get_fixture_rules_scope` (0x8d2fa0, transfer_manager.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x8d2fa0 } (thiscall, ret 0x10, transfer_manager.cpp): `TRANSFER_MANAGER::get_fixture_rules_scope(partida, tipo,
 /// nação, continente)`: competição da partida (+0x14) de reservas ([0x9cf684]): a nação do mandante (+0x1c, +0x53), o
 /// continente dela (+0x71, ou 0) e tipo 1. Amistoso (0x5c6710 sobre [0xae2c74]): 0, 0 e 0xff. Senão, pela nação-chave
 /// da competição (0x669470, com sinal): a nação da tabela 0xb63d60 (72 bytes cada), o continente da competição (+0x59)
@@ -10148,7 +10555,11 @@ unsafe extern "thiscall" fn escopo_das_regras_da_partida(_this: usize, partida: 
     };
 }
 
-/// { 0x8cf5e0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::get_ineligibility_code(jogador, partida)`:
+/// 9 for an AWOL player (outside national teams); otherwise the first of the 28 rules (+0x8ac) of the continent or
+/// nation with the same type answers (virtual +0x18); none: 0
+/// Original: `TRANSFER_MANAGER::get_ineligibility_code` (0x8cf5e0, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8cf5e0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::get_ineligibility_code(jogador, partida)`:
 /// mandante (+0x1c) que não é seleção (0x53b900) e jogador ausente sem licença (AWOL: 0x418f60 sobre [0xad9c6c], com 0,
 /// que tira a marca de quem está sem clube): 9. Senão, pelo alcance das regras (0x8d2fa0; 0xff e 4: 0): a primeira das
 /// 28 regras de +0x8ac do continente (+0xe, tipo 2) ou da nação (+0xa) com o mesmo tipo (+0x12) responde (virtual
@@ -10185,7 +10596,10 @@ unsafe extern "thiscall" fn codigo_de_inelegibilidade(this: usize, jogador: usiz
     0
 }
 
-/// { 0x5c6740 } (thiscall, ret 0x10, friendly.cpp): `Friendly::find_scheduled_friendly_slot(dia, ano, clube,
+/// in the friendlies list (+0x34cc), the 25-byte slot of the club with the requested day, year and opponent, or 0
+/// Original: `Friendly::find_scheduled_friendly_slot` (0x5c6740, friendly.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x5c6740 } (thiscall, ret 0x10, friendly.cpp): `Friendly::find_scheduled_friendly_slot(dia, ano, clube,
 /// adversário)`: na lista dos amistosos (+0x34cc; o cursor volta ao começo), o primeiro registro do clube (+0) com uma
 /// vaga (25 bytes a partir de +9, [+8] delas, com sinal) do dia (+0), ano (+2) e adversário (+0x10): a vaga. Senão 0.
 unsafe extern "thiscall" fn vaga_do_amistoso(this: usize, dia: u32, ano: u32, clube: usize, adversario: usize) -> usize {
@@ -10251,7 +10665,10 @@ unsafe fn cpi4_regras(this: usize, i: usize) -> usize {
     read_usize(this + 0x8ac + i.wrapping_mul(4))
 }
 
-/// { 0x8e05a0 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::write_deadline_news_text(noticia,
+/// the deadline news text through the rules of the nation in news slot 0 (method +0x30)
+/// Original: `TRANSFER_MANAGER::write_deadline_news_text` (0x8e05a0, transfer_manager.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x8e05a0 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::write_deadline_news_text(noticia,
 /// completo, texto)`: o texto da notícia do fim do prazo de transferências fica com as regras da nação da vaga 0 da
 /// notícia (0x785830): o método +0x30 delas, com os mesmos argumentos. Devolve o que ele devolve.
 unsafe extern "thiscall" fn texto_do_fim_do_prazo(this: usize, noticia: usize, completo: u32, texto: usize) -> u32 {
@@ -10272,7 +10689,10 @@ unsafe fn cpi4_regras_do_emprestimo(this: usize, clube: usize, jogador: usize) -
     (0..0x1c).map(|i| cpi4_regras(this, i)).find(|&r| read_usize(r + 0xa) == nacao) // a nação das regras
 }
 
-/// { 0x8d0530 } (thiscall, ret 0x14, transfer_manager.cpp): `TRANSFER_MANAGER::can_end_loan(clube, jogador, a, b,
+/// with the player parent club in the same nation as the club, that nation rules answer (method +0x24); else 1
+/// Original: `TRANSFER_MANAGER::can_end_loan` (0x8d0530, transfer_manager.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x8d0530 } (thiscall, ret 0x14, transfer_manager.cpp): `TRANSFER_MANAGER::can_end_loan(clube, jogador, a, b,
 /// c)`: com o clube dono do jogador (+0x39) na mesma nação (+0x53) do `clube`, quem responde são as regras dessa nação
 /// (a primeira das 28 em +0x8ac com +0xa igual): o método +0x24 delas com `clube`, `jogador`, `a`, `b`, `c`. Senão 1.
 unsafe extern "thiscall" fn pode_encerrar_emprestimo(this: usize, clube: usize, jogador: usize, a: u32, b: u32, c: u32) -> u32 {
@@ -10285,7 +10705,10 @@ unsafe extern "thiscall" fn pode_encerrar_emprestimo(this: usize, clube: usize, 
     }
 }
 
-/// { 0x5d5a20 } (cdecl, game.cpp): `pow_double(base, expoente)`: o pow da CRT do jogo (0x945ff0), resultado em st0.
+/// the game CRT pow (0x945ff0) of two doubles, result in st0
+/// Original: `pow_double` (0x5d5a20, game.cpp, cdecl).
+///
+/// [pt] { 0x5d5a20 } (cdecl, game.cpp): `pow_double(base, expoente)`: o pow da CRT do jogo (0x945ff0), resultado em st0.
 unsafe extern "C" fn pow_do_game(base: f64, expoente: f64) -> f64 {
     pow_do_jogo(base, expoente)
 }
@@ -10333,7 +10756,11 @@ unsafe fn cph6_precisa(this: usize, pessoa: usize, clube: usize) -> bool {
     precisa(this, pessoa, clube, 0) != 0
 }
 
-/// { 0x8c7470 } (thiscall, ret 4, transfer_manager.cpp): `transfer_manager_offer_needs_work_permit(oferta)`: 1 se o
+/// 1 when the offer player needs a permit at the offer club (0x8c7560) or one of the exchange players at his contract
+/// club; else 0
+/// Original: `transfer_manager_offer_needs_work_permit` (0x8c7470, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8c7470 } (thiscall, ret 4, transfer_manager.cpp): `transfer_manager_offer_needs_work_permit(oferta)`: 1 se o
 /// jogador da oferta (+0xc) precisa de permissão no clube da oferta (+8), ou se algum dos jogadores de troca (a lista
 /// em +4, do começo: o cursor +0xa volta ao +2 e anda pela 0x68d1b0) precisa no clube do contrato dele (0x4cf5a0 em
 /// [0xae1050], gravado em [0xae1080]; sem contrato, clube nulo); senão 0.
@@ -10361,7 +10788,11 @@ unsafe extern "thiscall" fn oferta_precisa_de_permissao(this: usize, oferta: usi
     0
 }
 
-/// { 0x8c7330 } (thiscall, transfer_manager.cpp): `TRANSFER_MANAGER::update_work_permits`: no vetor de permissões
+/// clears the flag of whoever lacks bit 0x20; after more than 4 years grants the second nationality and drops the
+/// permit; drops the permit of non-players; sorts and trims the dropped ones from the end
+/// Original: `TRANSFER_MANAGER::update_work_permits` (0x8c7330, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c7330 } (thiscall, transfer_manager.cpp): `TRANSFER_MANAGER::update_work_permits`: no vetor de permissões
 /// ([this+0x93a], [this+0x93e] registros de 14 bytes: +0 pessoa, +8 ano, +0xa nação), a marca da pessoa (byte em
 /// [this+0x86e] + 8 × id) sem o bit 0x20 é zerada inteira; com mais de 4 anos (ano do jogo − +8) a pessoa ganha a
 /// segunda nacionalidade (+0x1e = nação +0xa, 0x122 bytes em [0xae23a8]), perde o bit 0x20 e a permissão sai (pessoa
@@ -10453,7 +10884,10 @@ unsafe fn cpg1_data(destino: usize, origem: usize) {
     copiar(destino, &mut local, origem);
 }
 
-/// { 0x786010 } (thiscall, ret 4, news.cpp): `NewsItem::operator=`: copia a notícia (0xdf bytes) de `origem`: +0
+/// copies the news item (0xdf bytes): +0, +4, the 50 tokens (+5), the date (+0xcd), +0xd5, +0xd6, +0xda and +0xde
+/// Original: `NewsItem::operator=` (0x786010, news.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x786010 } (thiscall, ret 4, news.cpp): `NewsItem::operator=`: copia a notícia (0xdf bytes) de `origem`: +0
 /// (dupla), +4 (byte), as 50 fichas de +5 (duplas, na ordem), a data em +0xcd, +0xd5 (byte), +0xd6 e +0xda (duplas) e
 /// +0xde (byte). Devolve `this`.
 unsafe extern "thiscall" fn copiar_noticia(this: usize, origem: usize) -> usize {
@@ -10472,7 +10906,10 @@ unsafe extern "thiscall" fn copiar_noticia(this: usize, origem: usize) -> usize 
     this
 }
 
-/// { 0x8cb940 } (thiscall, ret 4, transfer_manager.cpp): `past_transfer_copy_construct`: copia a transferência passada
+/// copies the past transfer (0x25 bytes): seven dwords, the byte +0x1c and the date (+0x1d)
+/// Original: `past_transfer_copy_construct` (0x8cb940, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8cb940 } (thiscall, ret 4, transfer_manager.cpp): `past_transfer_copy_construct`: copia a transferência passada
 /// (0x25 bytes) de `origem`: sete duplas (+0..+0x18), o byte +0x1c e a data em +0x1d. Devolve `this`.
 unsafe extern "thiscall" fn copiar_transferencia_passada(this: usize, origem: usize) -> usize {
     for k in 0..7 {
@@ -10483,7 +10920,10 @@ unsafe extern "thiscall" fn copiar_transferencia_passada(this: usize, origem: us
     this
 }
 
-/// { 0x8cbf40 } (thiscall, ret 4, transfer_manager.cpp): `future_transfer_assign`: copia a transferência futura (0xc
+/// copies the future transfer (0xc bytes): the date (+0) and the offer index (+8)
+/// Original: `future_transfer_assign` (0x8cbf40, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8cbf40 } (thiscall, ret 4, transfer_manager.cpp): `future_transfer_assign`: copia a transferência futura (0xc
 /// bytes) de `origem`: a data em +0 e o índice da oferta (+8). Devolve `this`.
 unsafe extern "thiscall" fn copiar_transferencia_futura(this: usize, origem: usize) -> usize {
     cpg1_data(this, origem);
@@ -10523,7 +10963,11 @@ unsafe fn regras_de_transferencia_da_nacao(gerente: usize, nacao: usize) -> usiz
         .unwrap_or(0)
 }
 
-/// { 0x8ced40 } (thiscall, ret 0x18, transfer_manager.cpp): se o `clube` pode contratar o `jogador`,
+/// whether the club may sign the player under the nation rules, with the refusal reason and the human club's second try
+/// on the foreign player limit
+/// Original: `TRANSFER_MANAGER::can_sign_player` (0x8ced40, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8ced40 } (thiscall, ret 0x18, transfer_manager.cpp): se o `clube` pode contratar o `jogador`,
 /// pelas regras da nação do clube (método +0x10 com clube, jogador, a4, a2 e o motivo); sem regras, 1. O
 /// motivo (palavra) vai para `saida` (zerada antes). Recusado com `a5`, clube humano (0x600a50) e motivo
 /// de estrangeiros (0x11, 0x14, 0x15, 0x1f): pergunta de novo com a nação do jogador (+0x1a) trocada pela
@@ -10571,7 +11015,10 @@ unsafe extern "thiscall" fn pode_contratar_jogador(gerente: usize, clube: usize,
     0
 }
 
-/// { 0x8c5e40 } (thiscall, ret 8, transfer_manager.cpp): quantas ofertas abertas do clube do contrato do
+/// how many of the club's open offers include the player in the exchange, listing their indices when asked
+/// Original: `TRANSFER_MANAGER::get_exchange_offers_for_player` (0x8c5e40, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c5e40 } (thiscall, ret 8, transfer_manager.cpp): quantas ofertas abertas do clube do contrato do
 /// `jogador` (0x4cf5a0) o oferecem na troca (lista +4 da oferta, nó com o id dele), anotando o índice
 /// (+0x20) em `saida` (0x68d0d0) se houver. Ofertas no estado (+0x2c) 2, 3, 4, 0x10, 0x14 ou 0xf com
 /// +0x2e ≥ 3 não contam. Para ao chegar ao número de trocas marcado ([+0x86e] + 8 × id + 2); marcado 0
@@ -10697,7 +11144,10 @@ unsafe fn clube_do_contrato(pessoa: usize) -> usize {
     (*(0xae23b4 as *const usize)).wrapping_add((*((c + 4) as *const usize)).wrapping_mul(581))
 }
 
-/// { 0x8c6db0 } (stdcall, ret 4, transfer_manager.cpp): fecha (estado +0x50 = 4) as propostas de contrato
+/// closes (state 4) the contract offers linked to the transfer offer: the target player and the exchange players
+/// Original: `transfer_manager_close_offer_contract_offers` (0x8c6db0, transfer_manager.cpp, stdcall).
+///
+/// [pt] { 0x8c6db0 } (stdcall, ret 4, transfer_manager.cpp): fecha (estado +0x50 = 4) as propostas de contrato
 /// ligadas à oferta: a do jogador-alvo (0x4cc9e0 com o id +0xc e o clube +8) e a de cada jogador da troca
 /// (lista +4, com o clube do contrato do alvo, 0x4cf5a0).
 unsafe extern "stdcall" fn fechar_propostas_da_oferta(oferta: usize) {
@@ -10742,6 +11192,10 @@ unsafe fn enfileirar_transferencia_livre_com(gerente: usize, pessoa: usize, moti
     true
 }
 
+/// queues the player for a free transfer (id, reason and compensation), refusing players out on loan
+/// Original: `TRANSFER_MANAGER::queue_free_transfer` (0x8c16b0, transfer_manager.cpp, thiscall).
+///
+/// [pt] põe o jogador na fila da transferência livre (id, motivo e compensação), recusando o emprestado
 unsafe extern "thiscall" fn enfileirar_transferencia_livre(gerente: usize, pessoa: usize, motivo: u8, compensacao: u32) {
     let anexar_9: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_LLIST_ADD_TAIL);
     if !enfileirar_transferencia_livre_com(gerente, pessoa, motivo, compensacao, &mut |l, r| anexar_9(l, r.as_ptr() as usize, 9)) {
@@ -10749,7 +11203,11 @@ unsafe extern "thiscall" fn enfileirar_transferencia_livre(gerente: usize, pesso
     }
 }
 
-/// { 0x8c5fc0 } (thiscall, ret 8, transfer_manager.cpp): conta as negociações ([+0xc], [+0x10] delas) do
+/// counts the open negotiations of the player's club that include him in a part exchange and, if asked, lists the offer
+/// indices
+/// Original: `TRANSFER_MANAGER::get_exchange_negotiations_for_player` (0x8c5fc0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c5fc0 } (thiscall, ret 8, transfer_manager.cpp): conta as negociações ([+0xc], [+0x10] delas) do
 /// clube do contrato do jogador (+8) cuja oferta ([gerente] + 4 × [+0x20]) segue aberta (estados 2, 3, 4,
 /// 0x10 e 0x14 não; 0xf só com +0x2e < 3) e que têm o jogador na lista da troca (+4); com `saida`, põe
 /// nela o índice da oferta (0x68d0d0, 4 bytes). Jogador fora do banco ou sem contrato: 0.
@@ -10895,7 +11353,10 @@ unsafe fn oferta_pelo_jogador(this: usize, id: i32) -> usize {
         .unwrap_or(0)
 }
 
-/// { 0x8c5cf0 } (thiscall, ret 0xc, transfer_manager.cpp): conta as ofertas pela pessoa e, com
+/// counts the transfer offers for a player (skipping closed ones unless asked) and may list their indices
+/// Original: `TRANSFER_MANAGER::get_offers_for_player` (0x8c5cf0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c5cf0 } (thiscall, ret 0xc, transfer_manager.cpp): conta as ofertas pela pessoa e, com
 /// `lista`, acrescenta nela (0x68d0d0, 4 bytes) o índice de cada uma. Id a partir de 0xae2364 ou sem
 /// oferta: 0. A oferta achada sem lista própria (+0) conta 1 (acrescenta +0x20); com lista, percorre
 /// os índices dela (cursor +0xa reiniciado de +2) e conta os que apontam para ofertas da mesma pessoa.
@@ -10950,7 +11411,10 @@ unsafe fn registro_da_lista_de_compras(this: usize, clube: usize) -> usize {
     (*(clube as *const i32) as usize).wrapping_mul(9).wrapping_add(*((this + 0xdc) as *const usize))
 }
 
-/// { 0x83bf40 } (thiscall, ret 4, shortlist_manager.cpp): a reputação que o clube procura nas
+/// the reputation a club aims for in signings, adjusted by manager and chairman, between the club floor and 10000
+/// Original: `Shortlist_Manager::update_club_target_reputation` (0x83bf40, shortlist_manager.cpp, thiscall).
+///
+/// [pt] { 0x83bf40 } (thiscall, ret 4, shortlist_manager.cpp): a reputação que o clube procura nas
 /// contratações, gravada na palavra +5 do registro dele: +0x73 / 10 + 4500; se não for de humano
 /// (0x600a50 com 1, 1), o técnico (+0xcf) ajusta por (+0x57 − ficha +0x1d) × 0,0125; o presidente
 /// (+0xbf, com ficha) por (+0x57 − ficha +0x1d) / 60 e por (ficha +0x20 − 10) × 0,025 (cada um
@@ -10985,7 +11449,10 @@ unsafe extern "thiscall" fn reputacao_alvo_do_clube(this: usize, clube: usize) -
     v as i32
 }
 
-/// { 0x4afeb0 } (cdecl, comp_util.cpp; a convenção do mapa dá o 2º argumento como sem uso, mas é a
+/// writes the fixture clubs, venue, competition, score and round into 18 consecutive news slots and advances the cursor
+/// Original: `comp_util_write_fixture_to_news_slots` (0x4afeb0, comp_util.cpp, cdecl).
+///
+/// [pt] { 0x4afeb0 } (cdecl, comp_util.cpp; a convenção do mapa dá o 2º argumento como sem uso, mas é a
 /// notícia): grava o jogo em 18 dados seguidos da notícia (0x785790), a partir do dado [cursor], e
 /// avança o cursor 18. Ordem: +0xc, +0x10, +0x3d, +0x3e, +4, +0, +0x42, +0x32, +0x30, +0x43, +0x44,
 /// +0x4b, +0x4c, +0x47, +0x48, +0x2a, +0x28, +8 (bytes e palavras +0x30/+0x32 com sinal; +0x28 e
@@ -11071,19 +11538,28 @@ unsafe fn tirar_da_lista_de_pagamentos(gerente: usize, id: *const i32, bit: u8, 
     *((gerente + quantos) as *mut i32) -= 1;
 }
 
-/// { 0x8cb4f0 } (thiscall, ret 4, transfer_manager.cpp): tira o percentual da próxima venda (bit 8;
+/// removes the player's next sale percentage (flag and list record)
+/// Original: `TRANSFER_MANAGER::remove_next_sale_percentage` (0x8cb4f0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8cb4f0 } (thiscall, ret 4, transfer_manager.cpp): tira o percentual da próxima venda (bit 8;
 /// lista +0x880, quantos +0x888, o id em +9).
 unsafe extern "thiscall" fn tirar_percentual_da_proxima_venda(gerente: usize, id: *const i32) {
     tirar_da_lista_de_pagamentos(gerente, id, 8, 0x880, 0x888, 9);
 }
 
-/// { 0x8cb590 } (thiscall, ret 4, transfer_manager.cpp): tira o bônus por jogo no time principal (bit 2;
+/// removes the first-team appearance bonus (flag and list record)
+/// Original: `TRANSFER_MANAGER::remove_first_team_appearance_money` (0x8cb590, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8cb590 } (thiscall, ret 4, transfer_manager.cpp): tira o bônus por jogo no time principal (bit 2;
 /// lista +0x88c, quantos +0x894, o id em +0).
 unsafe extern "thiscall" fn tirar_bonus_por_jogo(gerente: usize, id: *const i32) {
     tirar_da_lista_de_pagamentos(gerente, id, 2, 0x88c, 0x894, 0);
 }
 
-/// { 0x8cb630 } (thiscall, ret 4, transfer_manager.cpp): tira o bônus por jogo pela seleção (bit 4;
+/// removes the international appearance bonus (flag and list record)
+/// Original: `TRANSFER_MANAGER::remove_international_team_appearance_money` (0x8cb630, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8cb630 } (thiscall, ret 4, transfer_manager.cpp): tira o bônus por jogo pela seleção (bit 4;
 /// lista +0x898, quantos +0x8a0, o id em +0).
 unsafe extern "thiscall" fn tirar_bonus_pela_selecao(gerente: usize, id: *const i32) {
     tirar_da_lista_de_pagamentos(gerente, id, 4, 0x898, 0x8a0, 0);
@@ -11121,7 +11597,10 @@ unsafe extern "thiscall" fn comparar_tirar_bonus_pela_selecao(gerente: usize, id
 
 // ---------- 191a leva: o clube do contrato acertado, o jogo pela seleção e a punição guardada (transfer_manager.cpp, discipline.cpp) ----------
 
-/// { 0x8c5450 } (thiscall, ret 8, transfer_manager.cpp): com a marca de contrato acertado (0x40) da
+/// the club of the person's agreed contract (clears the flag when the contract is gone)
+/// Original: `TRANSFER_MANAGER::get_agreed_contract_club` (0x8c5450, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c5450 } (thiscall, ret 8, transfer_manager.cpp): com a marca de contrato acertado (0x40) da
 /// pessoa `*id`, procura o contrato (0x4cca30 em [0xae1050]): achou, grava em `clube` (se não nulo) o
 /// clube do contrato ([0xae23b4], 581 bytes por clube, pelo id em +4) e devolve 1; não achou, desliga a
 /// marca e devolve 0.
@@ -11147,7 +11626,10 @@ unsafe fn registro_da_pessoa(gerente: usize, id: *const i32) -> usize {
     (*((gerente + 0x86e) as *const usize) as isize + *id as isize * 8) as usize
 }
 
-/// { 0x8ce920 } (thiscall, ret 8, transfer_manager.cpp): registra que o jogador jogou o jogo `numero`
+/// records the player's national team match in the recent-matches bits
+/// Original: `TRANSFER_MANAGER::record_international_appearance` (0x8ce920, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8ce920 } (thiscall, ret 8, transfer_manager.cpp): registra que o jogador jogou o jogo `numero`
 /// da seleção: os bits dos últimos jogos (+3, 16 bits) andam um por jogo desde o último registrado
 /// (+5), o mais novo é ligado e o número fica em +5.
 unsafe extern "thiscall" fn registrar_jogo_pela_selecao(gerente: usize, id: *const i32, numero: i16) {
@@ -11163,7 +11645,10 @@ unsafe extern "thiscall" fn registrar_jogo_pela_selecao(gerente: usize, id: *con
     core::ptr::write_unaligned(ultimo, numero);
 }
 
-/// { 0x55cb60 } (thiscall, ret 8, discipline.cpp): a punição guardada do jogador `id` na vaga `vaga`:
+/// the player's held ban in a slot, or none
+/// Original: `Discipline::find_held_ban` (0x55cb60, discipline.cpp, thiscall).
+///
+/// [pt] { 0x55cb60 } (thiscall, ret 8, discipline.cpp): a punição guardada do jogador `id` na vaga `vaga`:
 /// percorre a lista das guardadas (+0x1c, do começo, 0x68d1b0) enquanto o jogador tem alguma
 /// (byte +0x1c do registro de 29 bytes em [+0x14]) e devolve a de mesmo jogador e vaga; 0 se nenhuma.
 unsafe extern "thiscall" fn punicao_guardada(disciplina: usize, id: i32, vaga: i8) -> usize {
@@ -11217,17 +11702,26 @@ unsafe fn marcas_da_pessoa(gerente: usize, id: *const i32) -> *mut u8 {
     (*((gerente + 0x86e) as *const usize) as isize + *id as isize * 8) as *mut u8
 }
 
-/// { 0x8c5410 } (thiscall, ret 4, transfer_manager.cpp): liga a marca de contrato acertado (0x40).
+/// sets the person's agreed-contract flag (0x40) in the transfer manager
+/// Original: `set_agreed_contract_flag` (0x8c5410, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c5410 } (thiscall, ret 4, transfer_manager.cpp): liga a marca de contrato acertado (0x40).
 unsafe extern "thiscall" fn marcar_contrato_acertado(gerente: usize, id: *const i32) {
     *marcas_da_pessoa(gerente, id) |= 0x40;
 }
 
-/// { 0x8c5430 } (thiscall, ret 4, transfer_manager.cpp): desliga a marca de contrato acertado.
+/// clears the person's agreed-contract flag
+/// Original: `clear_agreed_contract_flag` (0x8c5430, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c5430 } (thiscall, ret 4, transfer_manager.cpp): desliga a marca de contrato acertado.
 unsafe extern "thiscall" fn desmarcar_contrato_acertado(gerente: usize, id: *const i32) {
     *marcas_da_pessoa(gerente, id) &= 0xbf;
 }
 
-/// { 0x8c61e0 } (thiscall, ret 4, transfer_manager.cpp): o endereço da vaga `k` das ofertas (+0,
+/// the address of an offer slot (out of range, the table start)
+/// Original: `offer_slot` (0x8c61e0, transfer_manager.cpp, thiscall).
+///
+/// [pt] { 0x8c61e0 } (thiscall, ret 4, transfer_manager.cpp): o endereço da vaga `k` das ofertas (+0,
 /// +4 quantas); fora da faixa, o próprio começo da tabela (o valor de +0, não o endereço).
 unsafe extern "thiscall" fn vaga_da_oferta(tabela: usize, k: i32) -> usize {
     let base = *(tabela as *const usize);

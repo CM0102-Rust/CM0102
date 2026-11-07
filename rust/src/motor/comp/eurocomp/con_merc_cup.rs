@@ -106,7 +106,12 @@ unsafe fn cqs10_comparar_mata_mata(nome: &str, this: usize, times: usize, fases:
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
 }
 
-/// { 0x4c3d10 } (thiscall, ret 0, conmebol_liber.cpp): `ConmebolLiber::create_knockout_stage()`, o mata-mata da
+/// rule: the Libertadores knockout has 16 clubs: the top 2 (+0xbe) of each of the 8 groups (group 1 in table order, the
+/// others by position in each stage's table), in a cup stage (stage 7) with the cup's round table and year; the first
+/// round is drawn at once
+/// Original: `ConmebolLiber::create_knockout_stage` (0x4c3d10, conmebol_liber.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4c3d10 } (thiscall, ret 0, conmebol_liber.cpp): `ConmebolLiber::create_knockout_stage()`, o mata-mata da
 /// Libertadores: os 16 (os 2 primeiros do grupo 1 e das 7 fases de grupo) na fase 7; caixas nas linhas 0x24c (sem
 /// lista) e 0x26a (sem fase).
 unsafe extern "thiscall" fn cqs10_libertadores_mata_mata(this: usize) {
@@ -118,7 +123,11 @@ unsafe extern "thiscall" fn comparar_cqs10_libertadores_mata_mata(this: usize) {
     cqs10_comparar_mata_mata("cqs10_libertadores_mata_mata", this, 0x10, 7, 7, || o(this))
 }
 
-/// { 0x4c2330 } (thiscall, ret 0, con_merc_cup.cpp): `ConMercCup::create_semi_final_stage()`, as semifinais da
+/// rule: the Merconorte semi-finals have 4 clubs: the winner (+0xbe = 1) of each of the 4 groups, in a cup stage (stage
+/// 3); the first round is drawn at once
+/// Original: `ConMercCup::create_semi_final_stage` (0x4c2330, con_merc_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4c2330 } (thiscall, ret 0, con_merc_cup.cpp): `ConMercCup::create_semi_final_stage()`, as semifinais da
 /// Merconorte: os 4 (o primeiro do grupo 1 e das 3 fases de grupo) na fase 3; caixas nas linhas 0x21d (sem lista) e
 /// 0x23b (sem fase).
 unsafe extern "thiscall" fn cqs10_merconorte_semifinais(this: usize) {
@@ -130,7 +139,11 @@ unsafe extern "thiscall" fn comparar_cqs10_merconorte_semifinais(this: usize) {
     cqs10_comparar_mata_mata("cqs10_merconorte_semifinais", this, 4, 3, 3, || o(this))
 }
 
-/// { 0x4c20b0 } (thiscall, ret 0, con_merc_cup.cpp; a virtual +0x28): `ConMercCup::advance_stage()`, a fase seguinte da
+/// rule: the Merconorte moves on one stage when the current one ends; after the 3 group stages (on reaching 3) it
+/// builds the semi-finals; going past the last stage is an error
+/// Original: `ConMercCup::advance_stage` (0x4c20b0, con_merc_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4c20b0 } (thiscall, ret 0, con_merc_cup.cpp; a virtual +0x28): `ConMercCup::advance_stage()`, a fase seguinte da
 /// Merconorte: na última fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x1c7; senão +0x30 sobe e, chegando a 3
 /// (depois dos grupos), as semifinais (0x4c2330: mov ecx, this -> thiscall, ret 0).
 unsafe extern "thiscall" fn cqs10_merconorte_fase_seguinte(this: usize) {
@@ -278,6 +291,16 @@ unsafe fn cqs11_convidados(this: usize) -> u32 {
     1
 }
 
+/// rule: the Merconorte invites 16: the best 4 of Mexico, 5 of Colombia, 3 of Peru and 2 of Bolivia (each list sorted
+/// by reputation, with the top band shuffled: 3 times the places) and 2 from the American league (with its competition:
+/// the latest MLS champion and that of its other competition, and the MLS runner-up if they are the same club; without
+/// it, the 2 best MLS clubs); the final list is shuffled (3 × 16 swaps) before the groups
+/// Original: `ConMercCup::select_invited_clubs` (0x4c2560, con_merc_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: a Merconorte convida 16: os 4 melhores do México, os 5 da Colômbia, os 3 do Peru e os 2 da Bolívia (cada
+/// lista ordenada pela reputação, com a faixa de cima embaralhada: 3 vezes as vagas) e 2 da liga americana (com a
+/// competição dela: o campeão do último registro da MLS e o da outra competição dela, e o vice da MLS se forem o mesmo;
+/// sem ela, os 2 melhores clubes da MLS); a lista final é embaralhada (3 × 16 trocas) antes dos grupos
 unsafe extern "thiscall" fn cqs11_merconorte_convidados(this: usize) -> u32 {
     cqs11_convidados(this)
 }
@@ -342,7 +365,11 @@ unsafe fn cqs11_comparar_fase_seguinte(nome: &str, this: usize, original: impl F
     PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("{}({:#x}) fase {} -> {}", nome, this, f, depois));
 }
 
-/// { 0x4c5140 } (thiscall, ret 0, conmebol_merc.cpp; a virtual +0x28): `ConmebolMerc::advance_stage()`, a fase seguinte
+/// rule: the Mercosur moves on one stage when the current one ends; after the 4 group stages (on reaching 4) it builds
+/// the quarter-finals; going past the last stage is an error
+/// Original: `ConmebolMerc::advance_stage` (0x4c5140, conmebol_merc.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4c5140 } (thiscall, ret 0, conmebol_merc.cpp; a virtual +0x28): `ConmebolMerc::advance_stage()`, a fase seguinte
 /// da Mercosul: a caixa da linha 0x1d9 na última; chegando a 4 (depois dos 4 grupos-fase), as quartas (0x4c53d0).
 unsafe extern "thiscall" fn cqs11_mercosul_fase_seguinte(this: usize) {
     cqs11_fase_seguinte(this, 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
@@ -353,7 +380,11 @@ unsafe extern "thiscall" fn comparar_cqs11_mercosul_fase_seguinte(this: usize) {
     cqs11_comparar_fase_seguinte("cqs11_mercosul_fase_seguinte", this, || o(this))
 }
 
-/// { 0x5e1620 } (thiscall, ret 0, goldcup.cpp; a virtual +0x28): `GoldCup::advance_stage()`, a fase seguinte da Copa
+/// rule: the Copa América moves on one stage when the current one ends; after the 2 group stages (on reaching 2) it
+/// builds the knockout; going past the last stage is an error
+/// Original: `GoldCup::advance_stage` (0x5e1620, goldcup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5e1620 } (thiscall, ret 0, goldcup.cpp; a virtual +0x28): `GoldCup::advance_stage()`, a fase seguinte da Copa
 /// América: a caixa da linha 0x29d na última; chegando a 2 (depois dos 2 grupos-fase), o mata-mata (0x5e18a0).
 unsafe extern "thiscall" fn cqs11_copa_america_fase_seguinte(this: usize) {
     cqs11_fase_seguinte(this, 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
@@ -374,7 +405,15 @@ unsafe fn cqr12_sorteado(this: usize, k: usize) -> usize {
     read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4) // cqr12: o sorteado k
 }
 
-/// { 0x4c2c90 } (thiscall, ret 8, con_merc_cup.cpp; a virtual +0x14): `update_for_date(hoje, completo)`, o dia de a Merconorte.
+/// rule: the Merconorte has 16 invited clubs (the best of four nations and two clubs of the American league
+/// [inference], shuffled) in 4 groups of 4, home and away (3/1 points, one qualifies from each group, to the
+/// semi-finals); it starts on 1 August; on the draw day group 1 stays in the cup's own table (drawn clubs 0 to 3) and
+/// groups 2 to 4 are stages (4g + 4 to 4g + 7, always 4 teams); on the draw day: the clubs (0x4c2560 (the 16 invited
+/// clubs, shuffled)), the group 1 table, the fixtures, the sorted table, the other groups' stages and the predicted
+/// positions; then the league day
+/// Original: `ConMercCup::update_for_date` (0x4c2c90, con_merc_cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x4c2c90 } (thiscall, ret 8, con_merc_cup.cpp; a virtual +0x14): `update_for_date(hoje, completo)`, o dia de a Merconorte.
 /// Fora do sorteio feito (+0x45 = 0) e com `completo`, no dia do sorteio (a data de 0x549ef0(+0xb6, +0xb8 + +0x40): o
 /// dia do ano e o ano relativo; comparada com a de hoje, +0 o dia do ano e +2 o ano, sem sinal): os clubes (0x4c2560:
 /// mov ecx, this -> thiscall, ret 0), a tabela do primeiro grupo (0x4c1de0, thiscall, ret 0; 0: a caixa da linha 0x385),
@@ -448,7 +487,11 @@ unsafe extern "thiscall" fn comparar_cqr12_merconorte_dia(this: usize, hoje: usi
     r
 }
 
-/// { 0x4c1de0 } (thiscall, ret 0, con_merc_cup.cpp): a tabela do primeiro grupo da Merconorte: 4 times (+0x3e), a tabela +0xb1
+/// rule: group 1 of the Copa Merconorte has 4 clubs, the first 4 drawn, each in the row of its order; human managers
+/// get the group draw news
+/// Original: `ConMercCup::create_first_group_table` (0x4c1de0, con_merc_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4c1de0 } (thiscall, ret 0, con_merc_cup.cpp): a tabela do primeiro grupo da Merconorte: 4 times (+0x3e), a tabela +0xb1
 /// (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 linhas de 0x3b bytes; sem memória, a caixa da linha 0x145 e
 /// devolve 0), cada linha i com o sorteado i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push clube; push
 /// i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0)
@@ -497,7 +540,11 @@ unsafe extern "thiscall" fn comparar_cqr12_merconorte_primeiro_grupo(this: usize
     r
 }
 
-/// { 0x4c2140 } (thiscall, ret 4, con_merc_cup.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal): a fase
+/// rule: each of the other groups of the Copa Merconorte is a league stage with the next 4 drawn clubs (4g + 4 to 4g +
+/// 7), the cup's rules and year and the cup's round table for the group; human managers get the news
+/// Original: `ConMercCup::create_group_stage` (0x4c2140, con_merc_cup.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x4c2140 } (thiscall, ret 4, con_merc_cup.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal): a fase
 /// do grupo g + 1 (g de 0 a 2, do dia do sorteio). Os times num vetor de 4 ponteiros (0x944e46(0x10): push; add esp, 4 -> cdecl; sem
 /// memória, a caixa da linha 0x1e9 e 0): os sorteados 4g + 4 a 4g + 7 (+0xee); a tabela das rodadas pela virtual +0x3c
 /// (push 0; push &id; push &rodadas; push g; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xee) push; add

@@ -123,17 +123,32 @@ const CQT2_NORTE: Cqt2Estadual = Cqt2Estadual {
     linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
 };
 
-/// { 0x432b50 } (thiscall, ret 8, bra_reg_goias.cpp): `BraRegGoias::BraRegGoias(ano, registro)`: o Goiano (uma fase além da liga).
+/// The Goias state league at career creation: the year and the database competition, disciplinary rule 7 and, with no
+/// saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the table with
+/// the state clubs, the fixtures, the order, the statistics and the predicted positions
+/// Original: `BraRegGoias::BraRegGoias` (0x432b50, bra_reg_goias.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x432b50 } (thiscall, ret 8, bra_reg_goias.cpp): `BraRegGoias::BraRegGoias(ano, registro)`: o Goiano (uma fase além da liga).
 unsafe extern "thiscall" fn cqt2_construir_goiano(this: usize, ano: u32, registro: usize) -> usize {
     cqt2_construir(this, ano, registro, &CQT2_GOIANO, 7, true, "cqt_2 goiano novo") // cqt2: a disciplina e as posições previstas do Goiano
 }
 
-/// { 0x433d50 } (thiscall, ret 8, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::BraRegMinasGerais(ano, registro)`: o Mineiro (três fases além da liga).
+/// The Minas Gerais state league at career creation: the year and the database competition, disciplinary rule 7 and,
+/// with no saved state, importance 15, two halves and the final (three stages besides the league), the rules, the table
+/// with the state clubs, the fixtures, the order, the statistics and the predicted positions
+/// Original: `BraRegMinasGerais::BraRegMinasGerais` (0x433d50, bra_reg_minas_gerais.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x433d50 } (thiscall, ret 8, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::BraRegMinasGerais(ano, registro)`: o Mineiro (três fases além da liga).
 unsafe extern "thiscall" fn cqt2_construir_mineiro(this: usize, ano: u32, registro: usize) -> usize {
     cqt2_construir(this, ano, registro, &CQT2_MINEIRO, 7, true, "cqt_2 mineiro novo") // cqt2: a disciplina e as posições previstas do Mineiro
 }
 
-/// { 0x435340 } (thiscall, ret 8, bra_reg_north.cpp): `BraRegNorth::BraRegNorth(ano, registro)`: o Norte (uma fase além da liga).
+/// The North state league at career creation: the year and the database competition, disciplinary rule 7 and, with no
+/// saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the table with
+/// the state clubs, the fixtures, the order, the statistics and the predicted positions
+/// Original: `BraRegNorth::BraRegNorth` (0x435340, bra_reg_north.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x435340 } (thiscall, ret 8, bra_reg_north.cpp): `BraRegNorth::BraRegNorth(ano, registro)`: o Norte (uma fase além da liga).
 unsafe extern "thiscall" fn cqt2_construir_norte(this: usize, ano: u32, registro: usize) -> usize {
     cqt2_construir(this, ano, registro, &CQT2_NORTE, 7, true, "cqt_2 norte novo") // cqt2: a disciplina e as posições previstas do Norte
 }
@@ -261,37 +276,64 @@ unsafe fn cqp8_comparar_fase_seguinte(nome: &str, this: usize, original: impl Fn
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) antes={} depois={}", nome, this, antes, depois));
 }
 
-/// { 0x4336f0 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::start_new_season()`, a virada da temporada do Goiano (a tabela:
+/// The Goias turnover: archives the season in the statistics, clears the previous table and stages, moves to the next
+/// year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table order; then
+/// the predicted positions and the renewal of the state referees
+/// Original: `BraRegGoias::start_new_season` (0x4336f0, bra_reg_goias.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4336f0 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::start_new_season()`, a virada da temporada do Goiano (a tabela:
 /// 0x433540; caixas nas linhas 0x1c3, 0x1ca, 0x1d0 e 0x1d7).
 unsafe extern "thiscall" fn cqp8_virada_do_goiano(this: usize) -> u32 {
     cqp8_virada(this, 0x433540, 0x98ae90, [0x1c3, 0x1ca, 0x1d0, 0x1d7], 1, "cqp_8 virada do goiano") // cqp8: o ano seguinte do Goiano
 }
 
-/// { 0x4338a0 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::advance_stage()`, a fase seguinte do Goiano: no fim dos pontos corridos,
+/// The Goias next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 8 go to the
+/// quarter-finals (1st v 8th, 3rd v 6th, 7th v 2nd, 5th v 4th); past the last stage it is an error (the box)
+/// Original: `BraRegGoias::advance_stage` (0x4338a0, bra_reg_goias.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4338a0 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::advance_stage()`, a fase seguinte do Goiano: no fim dos pontos corridos,
 /// o mata-mata de 8 (0x433930); a caixa da linha 0x1f1.
 unsafe extern "thiscall" fn cqp8_fase_seguinte_do_goiano(this: usize) {
     cqp8_fase_seguinte(this, 0x98ae90, 0x1f1, 0x433930);
 }
 
-/// { 0x435e80 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::start_new_season()`, a virada da temporada do Norte (a tabela:
+/// The North turnover: archives the season in the statistics, clears the previous table and stages, moves to the next
+/// year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table order; then
+/// the predicted positions and the renewal of the state referees
+/// Original: `BraRegNorth::start_new_season` (0x435e80, bra_reg_north.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x435e80 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::start_new_season()`, a virada da temporada do Norte (a tabela:
 /// 0x435d80; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
 unsafe extern "thiscall" fn cqp8_virada_do_norte(this: usize) -> u32 {
     cqp8_virada(this, 0x435d80, 0x98af14, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_8 virada do norte") // cqp8: o ano seguinte do Norte
 }
 
-/// { 0x436030 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::advance_stage()`, a fase seguinte do Norte: no fim dos pontos corridos,
+/// The North next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the
+/// semi-finals (1st v 4th, 2nd v 3rd); past the last stage it is an error (the box)
+/// Original: `BraRegNorth::advance_stage` (0x436030, bra_reg_north.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x436030 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::advance_stage()`, a fase seguinte do Norte: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x4360c0); a caixa da linha 0x1f8.
 unsafe extern "thiscall" fn cqp8_fase_seguinte_do_norte(this: usize) {
     cqp8_fase_seguinte(this, 0x98af14, 0x1f8, 0x4360c0);
 }
 
-/// { 0x436e90 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::start_new_season()`, a virada da temporada do Nordeste (a tabela:
+/// The Northeast turnover: archives the season in the statistics, clears the previous table and stages, moves to the
+/// next year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table order;
+/// then the predicted positions and the renewal of the state referees
+/// Original: `BraRegNortheast::start_new_season` (0x436e90, bra_reg_northeast.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x436e90 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::start_new_season()`, a virada da temporada do Nordeste (a tabela:
 /// 0x436d90; caixas nas linhas 0x1bc, 0x1c3, 0x1c9 e 0x1d0).
 unsafe extern "thiscall" fn cqp8_virada_do_nordeste(this: usize) -> u32 {
     cqp8_virada(this, 0x436d90, 0x98af54, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_8 virada do nordeste") // cqp8: o ano seguinte do Nordeste
 }
 
-/// { 0x437040 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::advance_stage()`, a fase seguinte do Nordeste: no fim dos pontos corridos,
+/// The Northeast next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the
+/// semi-finals (1st v 4th, 2nd v 3rd); past the last stage it is an error (the box)
+/// Original: `BraRegNortheast::advance_stage` (0x437040, bra_reg_northeast.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x437040 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::advance_stage()`, a fase seguinte do Nordeste: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x4370d0); a caixa da linha 0x1ea.
 unsafe extern "thiscall" fn cqp8_fase_seguinte_do_nordeste(this: usize) {
     cqp8_fase_seguinte(this, 0x98af54, 0x1ea, 0x4370d0);
@@ -377,19 +419,31 @@ unsafe fn cql9_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
     1
 }
 
-/// { 0x433540 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::create_table()`: o Goiano tem 14 clubes (divisão reserva +0x60 = [0x9cf9b4]).
+/// the Goias league has 14 clubs: those with it as their reserve division in the database (the field that holds the
+/// state or regional league), in database order; the table only counts when full; no TV money nor prize fund
+/// Original: `BraRegGoias::create_table` (0x433540, bra_reg_goias.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x433540 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::create_table()`: o Goiano tem 14 clubes (divisão reserva +0x60 = [0x9cf9b4]).
 /// Fonte 0x98ae90, linha 0x160.
 unsafe extern "thiscall" fn cql9_tabela_do_goiano(this: usize) -> u32 {
     cql9_tabela(this, 0xe, 0x98ae90, 0x160, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, 0, "cql_9 goiano cheio")
 }
 
-/// { 0x434810 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_table()`: o Mineiro tem 12 clubes (divisão reserva +0x60 = [0x9cf9d4]).
+/// the Minas Gerais league has 12 clubs: those with it as their reserve division in the database (the field that holds
+/// the state or regional league), in database order; the table only counts when full; no TV money nor prize fund
+/// Original: `BraRegMinasGerais::create_table` (0x434810, bra_reg_minas_gerais.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x434810 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_table()`: o Mineiro tem 12 clubes (divisão reserva +0x60 = [0x9cf9d4]).
 /// Fonte 0x98aed0, linha 0x169.
 unsafe extern "thiscall" fn cql9_tabela_do_mineiro(this: usize) -> u32 {
     cql9_tabela(this, 0xc, 0x98aed0, 0x169, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, 0, "cql_9 mineiro cheio")
 }
 
-/// { 0x435d80 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::create_table()`: o Norte tem 10 clubes (divisão reserva +0x60 = [0x9cf994]).
+/// the North league has 10 clubs: those with it as their reserve division in the database (the field that holds the
+/// state or regional league), in database order; the table only counts when full; no TV money nor prize fund
+/// Original: `BraRegNorth::create_table` (0x435d80, bra_reg_north.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x435d80 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::create_table()`: o Norte tem 10 clubes (divisão reserva +0x60 = [0x9cf994]).
 /// Fonte 0x98af14, linha 0x167.
 unsafe extern "thiscall" fn cql9_tabela_do_norte(this: usize) -> u32 {
     cql9_tabela(this, 0xa, 0x98af14, 0x167, KEY_CLUB_COMP_BRAZILIAN_NORTH_STATE_CHAMPIONSHIP, 0, "cql_9 norte cheio")
@@ -527,7 +581,12 @@ unsafe fn cqj7_regras_j2(o: usize) {
     write_u8_at(o, 0x49, 5);
 }
 
-/// { 0x433640 } (thiscall, bra_reg_goias.cpp): `BraRegGoias::set_up_rules` (slot 36), as regras do Goiano e o
+/// Goias: single round robin; win 3, draw 1; tie-break by head-to-head, then goal difference; 8 top places (rule word
+/// 8: they lead to the next stage, the knockout [inference]); 4 relegated, no league above or below; 7 bench
+/// substitutes, 3 substitutions; category 2 matches. Then the schedule
+/// Original: `BraRegGoias::set_up_rules` (0x433640, bra_reg_goias.cpp, thiscall).
+///
+/// [pt] { 0x433640 } (thiscall, bra_reg_goias.cpp): `BraRegGoias::set_up_rules` (slot 36), as regras do Goiano e o
 /// calendário; devolve 1.
 unsafe extern "thiscall" fn cqj7_regras_do_goiano(this: usize) -> u32 {
     cqj7_regras_goiano(this);
@@ -548,7 +607,14 @@ unsafe extern "thiscall" fn comparar_cqj7_regras_do_goiano(this: usize) -> u32 {
     r
 }
 
-/// { 0x663620 } (thiscall, jap_j1.cpp): `JapJ1::set_up_rules`, as regras da J1 e o calendário; devolve 1.
+/// J1: double round robin (the two stages of the year, created by add_result 0x663940 [inference]); win 3, draw 1;
+/// tie-break by goal difference, goals scored and away goals; no top places in the overall table (rule word 8, no
+/// champion band: the champion comes from the final between the stage winners [inference]); 2 go down to J2; no league
+/// above; 5 bench substitutes and 3 substitutions; fixed squad numbers; the word +0xab = 0x82 copied to each match.
+/// Then the schedule
+/// Original: `JapJ1::set_up_rules` (0x663620, jap_j1.cpp, thiscall).
+///
+/// [pt] { 0x663620 } (thiscall, jap_j1.cpp): `JapJ1::set_up_rules`, as regras da J1 e o calendário; devolve 1.
 unsafe extern "thiscall" fn cqj7_regras_da_j1(this: usize) -> u32 {
     cqj7_regras_j1(this);
     crate::comparacao::ramo("cqj_7 regras da j1");
@@ -567,7 +633,12 @@ unsafe extern "thiscall" fn comparar_cqj7_regras_da_j1(this: usize) -> u32 {
     r
 }
 
-/// { 0x665140 } (thiscall, jap_j2.cpp): `JapJ2::set_up_rules`, as regras da J2 e o calendário; devolve 1.
+/// J2: four round robins; win 3, draw 1; tie-break by goal difference, goals scored and away goals; 2 go up to J1 (the
+/// rule word stays the base one, 3: champion and promotion), no relegation, no league below; 5 bench substitutes, 3
+/// substitutions. Then the schedule
+/// Original: `JapJ2::set_up_rules` (0x665140, jap_j2.cpp, thiscall).
+///
+/// [pt] { 0x665140 } (thiscall, jap_j2.cpp): `JapJ2::set_up_rules`, as regras da J2 e o calendário; devolve 1.
 unsafe extern "thiscall" fn cqj7_regras_da_j2(this: usize) -> u32 {
     cqj7_regras_j2(this);
     crate::comparacao::ramo("cqj_7 regras da j2");

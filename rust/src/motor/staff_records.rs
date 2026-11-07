@@ -132,7 +132,12 @@ unsafe fn cqd13_notas(t: usize, clube: usize, id_comp: usize) -> (i32, i32) {
     }
 }
 
-/// { 0x868c50 } (thiscall, ret 8, staff_records.cpp, SEH só das datas locais): `Staff_Records::
+/// the league champion: the club reputation (up to weight × 500), the +0x7b and the +0x69 block, the manager's ratings
+/// and record (weight × 5000), the histories (type 5), the squad morale by the player's average (above the threshold:
+/// +20 and +100 on the contract with the renewal; else +10 and +50) and the media praise
+/// Original: `Staff_Records::add_league_champions_record` (0x868c50, staff_records.cpp, thiscall).
+///
+/// [pt] { 0x868c50 } (thiscall, ret 8, staff_records.cpp, SEH só das datas locais): `Staff_Records::
 /// add_league_champions_record(clube, comp)`, pelos campeões das ligas no fim delas (25 chamadores, um por liga; 4
 /// chamadas até 2002-06-01). Clube ou competição nulos: a caixa (linha 0x21c); a competição sem objeto em [0xadadfc]
 /// (+ 4 × id): a caixa (0x224). A reputação (até peso × 500, +750 no máximo); com +0x57 e o bloco +0x69 do clube: o
@@ -240,7 +245,12 @@ unsafe extern "thiscall" fn campeao_da_liga_nos_registros(this: usize, clube: us
     }
 }
 
-/// { 0x86a800 } (thiscall, ret 0xc, staff_records.cpp, SEH só das datas locais): `Staff_Records::add_cup_winners_record(
+/// the cup winner: the club reputation, its side's ratings in the match, the manager's record (weight^4 × 0.5), the
+/// histories (type 0), the squad morale (+15 and +100 on the contract, with the renewal) while the reputation stays up
+/// to weight × 400, the end of the call-ups and the media praise
+/// Original: `Staff_Records::add_cup_winners_record` (0x86a800, staff_records.cpp, thiscall).
+///
+/// [pt] { 0x86a800 } (thiscall, ret 0xc, staff_records.cpp, SEH só das datas locais): `Staff_Records::add_cup_winners_record(
 /// clube, jogo, partida)`, pelas finais das copas (29 chamadores; 11 chamadas até 2002-06-01). Nulos: a caixa (linha
 /// 0x51e). A reputação (como na liga); com técnico (+0xcf) que tem registro de não jogador (+0x69): as três notas do lado
 /// do clube na partida (+0x188/+0x18a/+0x18c, lado 0x625 × visitante; peso × 400, × k1, × k2); o histórico do técnico
@@ -431,7 +441,10 @@ unsafe extern "thiscall" fn comparar_campeao_da_copa_nos_registros(this: usize, 
         || campeao_da_copa_nos_registros(this, clube, jogo, partida));
 }
 
-/// { 0x86fc70 } (thiscall, ret 4, staff_records.cpp): `Staff_Records::clear_human_manager_record(pessoa)`, pela
+/// the human manager record (one of the 16; else the person itself, as in the original) cleared, with −1 in the slots
+/// Original: `Staff_Records::clear_human_manager_record` (0x86fc70, staff_records.cpp, thiscall).
+///
+/// [pt] { 0x86fc70 } (thiscall, ret 4, staff_records.cpp): `Staff_Records::clear_human_manager_record(pessoa)`, pela
 /// aposentadoria do técnico humano (0x6b2b40) e pelo setup (0x82b9xx). Pessoa entre os 16 humanos (id de [0xae2364] − 16
 /// até [0xae2364]): o registro dele no vetor +8 (vaga id − [0xae2364] + [0xae2368] + 16, 0xd2 bytes); senão, como a
 /// original, a própria pessoa. Zera os 0xd2 bytes e põe −1 em +0x86, +0xc2, +0xc6, +0x4a, +0x5e e +0x72.
@@ -525,7 +538,12 @@ unsafe fn cqa11_nota(p: usize, lado: u32, saida: &mut u32, adversario: usize, po
     x / 100000
 }
 
-/// { 0x868830 } (thiscall, ret 8, staff_records.cpp): `Staff_Records::record_match_result(jogo, partida)`, pelo
+/// in both managers' records: the match, the goals, the win, draw or loss and the match rating (importance × opponent
+/// reputation × weight × points) in the month, the year, the club's league and the club or national season; the away
+/// manager gets the home rating in the season total (original bug)
+/// Original: `Staff_Records::record_match_result` (0x868830, staff_records.cpp, thiscall).
+///
+/// [pt] { 0x868830 } (thiscall, ret 8, staff_records.cpp): `Staff_Records::record_match_result(jogo, partida)`, pelo
 /// fechamento da partida do dia (0x6b5f00), a cada jogo. Jogo não disputado (+0x3a = 1): nada. Os registros dos dois
 /// técnicos (+0xcf do mandante +0x1c e do visitante +0x20; 0x86f5b0 com criar): +1 jogo (+0x8e); os gols pró (+0x96) e
 /// contra (+0x9a) pelo placar (+0x47/+0x48, ou +0x43/+0x44 com +0x47 = −1); vitória (+0x90, bônus 900), empate (+0x92,
@@ -641,7 +659,10 @@ unsafe extern "thiscall" fn comparar_resultado_nos_registros_dos_tecnicos(this: 
     PLACAR.registrar(igual, || format!("resultado_nos_registros_dos_tecnicos(jogo {:#x}) original={:x?} rust={:x?}", p, mo, mr));
 }
 
-/// { 0x86a070 } (thiscall, ret 4, staff_records.cpp, SEH só da data local): `Staff_Records::add_league_finish_records(
+/// at the end of the league, each club's final position in its manager's history
+/// Original: `Staff_Records::add_league_finish_records` (0x86a070, staff_records.cpp, thiscall).
+///
+/// [pt] { 0x86a070 } (thiscall, ret 4, staff_records.cpp, SEH só da data local): `Staff_Records::add_league_finish_records(
 /// liga)`, pela liga completa (0x689ad0), no fim da liga. Para cada linha da tabela (0x6826d0, até +0x3e), o histórico do
 /// técnico do clube (+0xcf; tipo 0xa: o id do clube, a competição de +4, o ano +0x3a e a posição k + 1), no arquivo
 /// (0x58e340).
@@ -674,7 +695,10 @@ unsafe extern "thiscall" fn comparar_posicoes_no_fim_da_liga(this: usize, liga: 
 /// O ensaio do comparador da 0x86dc30: a cópia sem o histórico (arquivo).
 static mut CQA11_ENSAIO: bool = false;
 
-/// { 0x86dc30 } (thiscall, ret 0x10, staff_records.cpp, SEH só da data local): `Staff_Records::
+/// the supporters' player of the year in his history and, by a draw, the favourite link between him and the club
+/// Original: `Staff_Records::add_supporters_player_of_year_record` (0x86dc30, staff_records.cpp, thiscall).
+///
+/// [pt] { 0x86dc30 } (thiscall, ret 0x10, staff_records.cpp, SEH só da data local): `Staff_Records::
 /// add_supporters_player_of_year_record(pessoa, clube, a, b)`, pelo fim da temporada dos recordes (0x447880). O histórico
 /// da pessoa (tipo 0x35: o id do clube, `a` em 16 bits sem sinal e `b`), no arquivo (0x58e340); depois, se sorteio(21 −
 /// +0x59 da pessoa) < sorteio(10), a pessoa gosta do clube (0x547d90 com sorteio(2)) e o clube dela (0x547870 com
@@ -848,7 +872,11 @@ unsafe fn cqa12_colocado(this: usize, clube: usize, jogo: usize, partida: usize,
     cqa12_historico_do_clube(this, read_usize(clube), &e2);
 }
 
-/// { 0x86b0b0 } (thiscall, ret 0xc, staff_records.cpp, SEH só das datas locais): `Staff_Records::
+/// the cup runner-up: the club reputation rises up to weight × 500 (at most 350 at once), its side's three match
+/// ratings by the weight, and the manager, chairman, line-up and club histories
+/// Original: `Staff_Records::add_cup_runners_up_record` (0x86b0b0, staff_records.cpp, thiscall).
+///
+/// [pt] { 0x86b0b0 } (thiscall, ret 0xc, staff_records.cpp, SEH só das datas locais): `Staff_Records::
 /// add_cup_runners_up_record(clube, jogo, partida)`, pela final das copas (Cup 0x519890, Liga dos Campeões 0x584ae0 e
 /// as copas de cada nação): `cqa12_colocado` com o tipo 1. Clube, jogo ou partida nulos: a caixa (linha 0x5f6).
 unsafe extern "thiscall" fn vice_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
@@ -858,7 +886,11 @@ unsafe extern "thiscall" fn vice_da_copa_nos_registros(this: usize, clube: usize
     cqa12_colocado(this, clube, jogo, partida, 1);
 }
 
-/// { 0x86b710 } (thiscall, ret 0xc, staff_records.cpp, SEH só das datas locais): `Staff_Records::
+/// the cup third place: the same with weight × 200 (at most 200) and smaller ratings; ends the call-ups in the stored
+/// competitions
+/// Original: `Staff_Records::add_cup_third_place_record` (0x86b710, staff_records.cpp, thiscall).
+///
+/// [pt] { 0x86b710 } (thiscall, ret 0xc, staff_records.cpp, SEH só das datas locais): `Staff_Records::
 /// add_cup_third_place_record(clube, jogo, partida)`, pelas copas com disputa de terceiro: `cqa12_colocado` com o tipo
 /// 2. Nulos: a caixa (linha 0x67b).
 unsafe extern "thiscall" fn terceiro_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
@@ -911,7 +943,11 @@ unsafe fn cqa12_dias(a: usize, b: usize) -> i32 {
     f(a, read_usize(b) as u32, read_usize(b + 4) as u32)
 }
 
-/// { 0x869aa0 } (thiscall, ret 0xc, staff_records.cpp, SEH só das datas locais): `Staff_Records::
+/// closes the manager's current spell (shortest and longest), opens the new one when hired and counts the spells; the
+/// manager, chairman and club histories
+/// Original: `Staff_Records::record_manager_job_change` (0x869aa0, staff_records.cpp, thiscall).
+///
+/// [pt] { 0x869aa0 } (thiscall, ret 0xc, staff_records.cpp, SEH só das datas locais): `Staff_Records::
 /// record_manager_job_change(técnico, clube, contratado)`, pela saída do técnico (0x69b790) e pelo técnico novo
 /// (0x694c80). Fora da seleção (0x53b900), no registro do técnico (0x86f5b0 com criar), quando o começo do jogo
 /// ([0xdd6ec8]) não é depois de hoje: a passagem atual (+0x4a clube, +0x4e começo) fecha; a mais curta (+0x72, +0x76
@@ -1039,7 +1075,10 @@ unsafe fn cps10_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-/// { 0x7c3bb0 } (stdcall, ret 8, player_stats.cpp; a original recebe o PlayerStats no ecx e não o lê):
+/// sums the goals of the player's seasons for the club in the career table (0x7c3e40), in 16 bits
+/// Original: `player_stats_get_goals_for_club` (0x7c3bb0, player_stats.cpp, stdcall, ret 8).
+///
+/// [pt] { 0x7c3bb0 } (stdcall, ret 8, player_stats.cpp; a original recebe o PlayerStats no ecx e não o lê):
 /// `player_stats_get_goals_for_club(pessoa, clube)` (pela MATCH_PLAYER::setup 0x6eaea0, que grava em +0x3d do jogador
 /// da partida): pessoa nula, a caixa "Error" (linha 0xb04) e 0; clube nulo, a da linha 0xb0c e 0; id a partir de
 /// [0xae2364], 0; sem a ficha de jogador (+0x61), a da linha 0xb1e e 0. Senão a tabela da carreira (0x7c3e40 do
@@ -1094,7 +1133,10 @@ unsafe extern "stdcall" fn comparar_gols_pelo_clube(pessoa: usize, clube: usize)
     r
 }
 
-/// { 0x86c730 } (thiscall, ret 0x14, staff_records.cpp, SEH só da data local, de destrutor vazio):
+/// the team of the year history of the person (type 0x32: the club, the award and two values)
+/// Original: `Staff_Records::add_team_of_year_record` (0x86c730, staff_records.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x86c730 } (thiscall, ret 0x14, staff_records.cpp, SEH só da data local, de destrutor vazio):
 /// `Staff_Records::add_team_of_year_record(pessoa, clube, prêmio, a, b)` (pela TEAM_AWARD::record_winners 0x8affb0):
 /// pessoa ou prêmio nulos, a caixa "Error" (linha 0x7ee). Senão o histórico da pessoa (tipo 0x32: o id do clube ou −1,
 /// o id do prêmio, `a` em 16 bits sem sinal e `b` como byte com sinal), no arquivo (0x58e340).
@@ -1130,7 +1172,10 @@ unsafe fn cps10_registro(clube: usize) -> usize {
     registro(read_u32_as_usize(0xdd7f00), tecnico, 1)
 }
 
-/// { 0x870220 } (cdecl, staff_records.cpp): `staff_records_compare_clubs_by_manager_points(a, b)`, a ordem do qsort dos
+/// orders two clubs by their manager's league season points (highest first; no record last)
+/// Original: `staff_records_compare_clubs_by_manager_points` (0x870220, staff_records.cpp, cdecl).
+///
+/// [pt] { 0x870220 } (cdecl, staff_records.cpp): `staff_records_compare_clubs_by_manager_points(a, b)`, a ordem do qsort dos
 /// candidatos a técnico do ano (0x86fab0): os registros dos técnicos dos dois clubes (cps10_registro); sem os dois, 0;
 /// só sem o de `a`, 1; só sem o de `b`, −1; com os dois, os pontos da temporada na liga (+0xba) de `b` menos os de
 /// `a` (mais pontos primeiro).
@@ -1353,7 +1398,12 @@ unsafe fn cpq3_acesso(this: usize, clube: usize, comp: usize, peso: u32, gravar:
     cpq3_do_clube(gravar, this, clube, 8, comp);
 }
 
-/// { 0x869480 } (thiscall, ret 0xc, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_promotion_record(clube,
+/// club reputation +500 (up to 10000) and +0x7b; the manager ratings by the competition importance (× 10/61, with a
+/// minimum); the manager, chairman and club histories (type 8); the manager points; squad morale +15 and bond +75 and
+/// renewal of the expiring contracts
+/// Original: `Staff_Records::add_promotion_record` (0x869480, staff_records.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x869480 } (thiscall, ret 0xc, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_promotion_record(clube,
 /// comp, peso)`: a reputação do clube (+0x80) sobe 500 (até 10000) e +0x7b sobe 10 × a importância da competição
 /// (+0x69) se está abaixo de 150000 e de +0x73 + 500. O técnico (+0xcf) com não jogador: as notas +0xa, +8 e +0xc sobem
 /// pela importância da competição (a do registro de competição de clube +0x1c dela, se há) × 400, × 200/400 (estrangeiro
@@ -1486,7 +1536,12 @@ unsafe fn cpq3_rebaixamento(this: usize, clube: usize, comp: usize, gravar: bool
     cpq3_do_clube(gravar, this, clube, 9, comp);
 }
 
-/// { 0x86a1c0 } (thiscall, ret 8, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_relegation_record(clube,
+/// club reputation −500 (minimum 750); the manager ratings drop by the competition importance (1..10000); the manager,
+/// chairman and club histories (type 9); squad morale −15, reputations × 0.9 (contracts 1 and 2, renewing the expiring
+/// ones) or × 0.95 (3 to 5)
+/// Original: `Staff_Records::add_relegation_record` (0x86a1c0, staff_records.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x86a1c0 } (thiscall, ret 8, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_relegation_record(clube,
 /// comp)`: a reputação do clube (+0x80) cai 500 (mínimo 750). O técnico com não jogador: as notas +0xa (−16), +8 (−8
 /// estrangeiro, 0x53d980, ou −16) e +0xc (−8) × a importância da competição (+0x69), presas a 1..10000; o histórico do
 /// técnico e do presidente (tipo 9). Cada jogador do elenco: moral −15 (0x544710) e, pelo tipo do contrato (+0x4f >> 4):
@@ -1543,7 +1598,11 @@ unsafe fn cpq3_classificacao(this: usize, clube: usize, comp: usize, fase: u32, 
     }
 }
 
-/// { 0x86bdd0 } (thiscall, ret 0x14, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_qualified_for_round_record(
+/// the manager history (type 3, with the round and the base round) and his points: importance² × weight in the year,
+/// the month and the cup (national team) or the league (club)
+/// Original: `Staff_Records::add_qualified_for_round_record` (0x86bdd0, staff_records.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x86bdd0 } (thiscall, ret 0x14, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_qualified_for_round_record(
 /// clube, comp, fase, rodada, peso)`: com técnico (+0xcf), o histórico dele (tipo 3: clube, competição ou −1, a fase com
 /// sinal e a rodada base 0x4b0870) e os pontos (0x86f5b0): importância² × peso somados em +0xb6, +0xca e, na seleção
 /// (0x53b900), +0xbe, ou no clube +0xba. Clube nulo: a caixa "Error" (linha 0x703).
@@ -1811,7 +1870,12 @@ unsafe fn cpq4_transferencia(this: usize, t: usize, gravar: bool) {
     });
 }
 
-/// { 0x86cd70 } (thiscall, ret 4, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_transfer_records(transf)`:
+/// in the buying and selling managers' records: the biggest signing or sale, the counts, the 64-bit totals and the
+/// exchange players; the buy (0x64), sale (0x65) and transfer (0x66) histories of the managers, the person and the
+/// exchange players
+/// Original: `Staff_Records::add_transfer_records` (0x86cd70, staff_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x86cd70 } (thiscall, ret 4, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_transfer_records(transf)`:
 /// o contrato da pessoa (0x4cf5a0) vai para [0xae1080] e dá o vendedor (fora do estado 5); o valor total da oferta
 /// (0x8e7a70 com 1, 0, 0, 1). O técnico do comprador, sendo de jogador o tipo da oferta (+0x11, 0x53b620): no registro
 /// (0x86f5b0) a maior compra (+0..+0x24 se o valor passa +0x18), as compras (+0xa0), o gasto (+0xa4, 64 bits), os
@@ -1868,7 +1932,11 @@ unsafe fn cpq4_fim_das_convocacoes(clube: usize, comp: usize) {
     }
 }
 
-/// { 0x86c000 } (thiscall, ret 0x14, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_knocked_out_record(clube,
+/// the manager history (type 4, with the round and the base round) and the end of the national team duty in the stored
+/// competition
+/// Original: `Staff_Records::add_knocked_out_record` (0x86c000, staff_records.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x86c000 } (thiscall, ret 0x14, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_knocked_out_record(clube,
 /// comp, fase, rodada, _)`: o histórico do técnico (+0xcf; tipo 4: clube, competição ou −1, a fase com sinal e a rodada
 /// base 0x4b0870) e o fim das convocações da seleção na competição guardada. Clube nulo: a caixa "Error" (linha 0x73b).
 unsafe extern "thiscall" fn registrar_a_eliminacao(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, _x: u32) {
@@ -1891,7 +1959,10 @@ unsafe extern "thiscall" fn comparar_registrar_a_eliminacao(this: usize, clube: 
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(1055)(this, clube, comp, fase, rodada, x)
 }
 
-/// { 0x86c1d0 } (thiscall, ret 0x10, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_failed_to_qualify_record(
+/// the manager history (type 7, with the round) and the end of the national team duty in the stored competition
+/// Original: `Staff_Records::add_failed_to_qualify_record` (0x86c1d0, staff_records.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x86c1d0 } (thiscall, ret 0x10, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_failed_to_qualify_record(
 /// clube, comp, fase, _)`: o histórico do técnico (tipo 7: clube, competição ou −1, a fase com sinal) e o fim das
 /// convocações da seleção na competição guardada. Clube nulo: a caixa "Error" (linha 0x768).
 unsafe extern "thiscall" fn registrar_a_nao_classificacao(this: usize, clube: usize, comp: usize, fase: u32, _x: u32) {
@@ -1947,7 +2018,11 @@ unsafe fn cpo3_mes(data: usize) -> i16 {
     mes(data) as u8 as i8 as i16
 }
 
-/// { 0x86dda0 } (thiscall, ret 4, staff_records.cpp): `Staff_Records::daily_update(data)`: se o mês (0x54cfb0) ou o ano
+/// at the turn of the month or year clears every manager's monthly points and stores the month and year; on the first
+/// day of the year passes the yearly points to the hall of fame and clears them
+/// Original: `Staff_Records::daily_update` (0x86dda0, staff_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x86dda0 } (thiscall, ret 4, staff_records.cpp): `Staff_Records::daily_update(data)`: se o mês (0x54cfb0) ou o ano
 /// (+2) da data não são os guardados (+0x14 mês, +0x16 ano), zera os pontos do mês (+0xca, +0xce) de todos os
 /// registros e guarda o mês e o ano novos. No primeiro dia do ano (dia +0 = 0) passa os pontos do ano (+0xb6) de cada
 /// registro com pessoa (+0x86) ao hall da fama (0x5ef270 em [0xb5ded8]) e os zera.
@@ -1981,7 +2056,11 @@ unsafe extern "thiscall" fn pontos_dos_tecnicos_no_dia(this: usize, data: usize)
     }
 }
 
-/// { 0x86d6e0 } (thiscall, ret 4, staff_records.cpp): `Staff_Records::end_season_for_nation(entrada)`: com a competição
+/// at the end of the competition's season passes its managers' league points (with the cup points of the same
+/// competition) and cup points to the hall of fame and clears them
+/// Original: `Staff_Records::end_season_for_nation` (0x86d6e0, staff_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x86d6e0 } (thiscall, ret 4, staff_records.cpp): `Staff_Records::end_season_for_nation(entrada)`: com a competição
 /// da entrada (+0, id em +0 dela; sem competição −1; sem competição e sem +4 igual a [0x9cfa10], nada), para cada
 /// registro: liga (+0xc2) da competição: soma a copa (+0xbe) se ela também é dessa competição (+0xc6 = −1, +0xbe = 0),
 /// passa os pontos (+0xba) ao hall da fama (0x5ef330) se a competição guarda (+0x11c), zera e +0xc2 = −1; só a copa da
@@ -2024,7 +2103,11 @@ unsafe extern "thiscall" fn pontos_dos_tecnicos_no_fim_da_competicao(this: usize
     }
 }
 
-/// { 0x86f950 } (thiscall, ret 4, staff_records.cpp): `Staff_Records::find_manager_of_the_month(indice)`: na liga
+/// the league manager with the most points this month (above 0) among those two weeks in the job; a league without a
+/// table: the "Error" box and 0
+/// Original: `Staff_Records::find_manager_of_the_month` (0x86f950, staff_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x86f950 } (thiscall, ret 4, staff_records.cpp): `Staff_Records::find_manager_of_the_month(indice)`: na liga
 /// ([0xadadfc] pelo índice; +0x43 tem de ser 2, senão a caixa "Error" e 0), entre os clubes da tabela (+0xb1, 0x3b
 /// bytes, conta +0x3e) com técnico (+0xcf) no clube (+0x39) desde duas semanas atrás (0x54cab0 da data do jogo; ano
 /// +0x40 sem sinal, dia +0x3e com sinal), o de mais pontos no mês (+0xce do registro 0x86f5b0, criado se falta), só

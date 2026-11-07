@@ -1,0 +1,25 @@
+Leitor de fora, rodada 1 (07/11/2026): agente sem contexto, só lendo uma amostra (README, CREDITOS, motor.rs,
+mem/keys/exe_fns, england_rules, eng_prm, game, match_eng). Os 10 maiores obstáculos, na ordem dele:
+
+1. Desvios ligados por posição em quatro listas paralelas (PROLOGOS, as rotinas Rust, os comparadores, os nomes);
+   orig::<..>(1676) só se liga ao endereço contando. Proposta: uma entrada por rotina {endereço, prólogo, rust,
+   comparador, nome}, montada por macro; orig por endereço ou constante com nome.
+2. Deslocamentos crus de registro em toda parte (clube + 0x57, p + 0x1be). Proposta: structs #[repr(C, packed)] ou
+   constantes de campo (CLUB_DIVISION = 0x57), começando por clube, pessoa, nação e jogador na partida.
+3. Globais centrais sem nome, 1.151 usos (0xae23b4 tabela de clubes, 0xae2c90 data, 0xae1050 contratos). Proposta:
+   globals.rs como o keys.rs, e acessores club(i), today().
+4. Nomes e comentários de auxiliares em português (cqe5_pode_emprestar, CQK1_INGLATERRA; match_eng.rs sem inglês).
+5. Prefixos de item (cql6_, cps5_) e faixas "Nª leva" como estrutura.
+6. include! em vez de módulos (sem fronteira de visibilidade, um espaço de nomes só: força os prefixos).
+7. Auxiliares repetidos (cps5_sortear/cps6_sortear/sortear; cqe5_contrato/cps5_contrato/cps6_contrato; cqe5_h).
+8. FN_* sem tipo e transmute em cada chamada: a convenção e a aridade nunca estão num lugar só. Proposta: um invólucro
+   tipado por função do exe, gerado ao lado do exe_fns.rs.
+9. Arquivo errado: regras dos EUA e da Austrália no england_rules.rs; as quatro divisões no eng_prm.rs; lesão, contrato
+   e seleção no game.rs; rotinas no motor.rs. Proposta: mover pela marca "Original: ... (arquivo.cpp)".
+10. Vocabulário do projeto sem explicação (Prologo, comparar_*, ramo, PLACAR, aviso_em, f64_em, ftol, as marcas de
+    mutação "// cqi4:", [inferência]). Proposta: nota "How to read a routine file" no motor.rs, ligada do README;
+    marca própria para os pontos de mutação.
+
+Menores: constantes f64 lidas do exe (mostrar o valor em comentário); variáveis como f717410; parâmetros de uma letra;
+o cabeçalho do motor.rs velho e só em português; README com pastas e docs em português, sem explicar leva nem o
+desvio; o CLAUDE.md como item de topo, sem guia para colaborador humano.

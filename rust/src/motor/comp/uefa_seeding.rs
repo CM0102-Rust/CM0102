@@ -9,7 +9,13 @@ fn cqi1_e(this: usize, i: i32) -> usize {
     this.wrapping_add((i * 0x12) as usize)
 }
 
-/// { 0x903b50 } (thiscall, ret 0, uefa_seeding.cpp, `UefaSeeding::roll_coefficients`): na virada do ano do jogo
+/// the UEFA coefficient rule: a nation adds up its last 5 seasons (each season = its clubs' points in the European cups
+/// ÷ the number of clubs); at the turn of the year the seasons shift by one (in 2001 the game uses the database ones,
+/// without shifting); the table is sorted from the highest coefficient down and the position is stored in the nation's
+/// national team
+/// Original: `UefaSeeding::roll_coefficients` (0x903b50, uefa_seeding.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x903b50 } (thiscall, ret 0, uefa_seeding.cpp, `UefaSeeding::roll_coefficients`): na virada do ano do jogo
 /// (0x9035a0), para cada nação da tabela (+0x438, char): fora de 2001, as 5 temporadas da nação (+0xe0..+0x108, double)
 /// andam uma casa e a última vira os pontos da temporada / os clubes nas copas (0 sem clubes); em todo ano, o
 /// coeficiente (+8, float) = a soma das 5 (na ordem +0x100, +0xf8, +0xf0, +0xe8, +0xe0, em double, arredondada para
@@ -79,7 +85,17 @@ unsafe extern "thiscall" fn comparar_uefa_rodar_coeficientes(this: usize) {
     PLACAR.registrar(igual, || format!("uefa_rodar_coeficientes: diferenças em {:x?}", cqi1_dif(&mo, &mr)));
 }
 
-/// { 0x903cc0 } (thiscall, ret 0, uefa_seeding.cpp, `UefaSeeding::set_place_counts`): as vagas de cada nação pela
+/// places by coefficient position. Champions League: 1st to 3rd 4 places, 4th to 6th 3, 7th to 15th 2, 16th to 48th 1.
+/// UEFA Cup: 1st to 6th 3, 7th and 8th 4, 9th to 15th 2, 16th to 21st 3, 22nd to 48th 2, 49th and 50th 1 (Liechtenstein
+/// and San Marino none). Intertoto: Moldova, San Marino, Andorra, Bosnia and Liechtenstein 0, Scotland 1; in 2001
+/// France 4, Germany 3, Italy 1, Portugal, Norway, Spain and Russia 0; outside 2001 England 1; the others, in
+/// coefficient order, 2 places up to the 16th of them, 1 up to the 43rd, then 0. Fair play: three nations get one extra
+/// UEFA Cup place (2001: Finland, Slovakia and Belarus; later, three drawn at random, never Italy). Only the Intertoto
+/// places are read by the distribution (0x904e30); the Champions League and UEFA Cup ones (and fair play) are stored,
+/// but the distribution uses fixed bands by position [inference: they feed the screens]
+/// Original: `UefaSeeding::set_place_counts` (0x903cc0, uefa_seeding.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x903cc0 } (thiscall, ret 0, uefa_seeding.cpp, `UefaSeeding::set_place_counts`): as vagas de cada nação pela
 /// posição `i` na tabela já ordenada (0x903b50). Liga dos Campeões (+0xc): 1ª a 3ª 4 vagas, 4ª a 6ª 3, 7ª a 15ª 2, 16ª
 /// a 48ª 1, o resto 0 (Liechtenstein antes zerado, mas a faixa grava por cima). Copa da UEFA (+0xd): Liechtenstein e
 /// San Marino 0, e por cima 1ª a 6ª 3, 7ª e 8ª 4, 9ª a 15ª 2, 16ª a 21ª 3, 22ª a 48ª 2, 49ª e 50ª 1 (da 51ª em diante
@@ -199,7 +215,12 @@ unsafe extern "thiscall" fn comparar_uefa_vagas_por_nacao(this: usize) {
     PLACAR.registrar(igual, || format!("uefa_vagas_por_nacao: diferenças em {:x?}", cqi1_dif(&mo, &mr)));
 }
 
-/// { 0x9050d0 } (thiscall, ret 0x18, uefa_seeding.cpp, `uefa_find_nth_unplaced_club_of_nation`; o this não é lido):
+/// in the European club table sorted by nation, the nth club of the nation, skipping on request those already holding a
+/// European place and those with a human manager; this is how each place goes to the nation's next club (the order
+/// within the nation comes from 0x904040)
+/// Original: `uefa_find_nth_unplaced_club_of_nation` (0x9050d0, uefa_seeding.cpp, thiscall, ret 0x18 (this não lido)).
+///
+/// [pt] { 0x9050d0 } (thiscall, ret 0x18, uefa_seeding.cpp, `uefa_find_nth_unplaced_club_of_nation`; o this não é lido):
 /// na tabela dos clubes europeus (registros de 12 bytes ordenados pela nação, 0x904040: +0 o clube, +4 o id da nação,
 /// +8, +9, +0xb), a busca binária (bsearch 0x946464 com 0x905ce0; a chave só com a nação e +8 = 0xff, então só a nação
 /// conta) acha um clube da nação; recua até o primeiro da nação; anda até o `n`-ésimo (char, 1 = o primeiro) que conta,
@@ -289,7 +310,12 @@ unsafe fn cqi2_vaga(this: usize, c: usize, comp: u32, fase: u8, i: i32) -> bool 
     true
 }
 
-/// { 0x904040 } (thiscall, ret 4, uefa_seeding.cpp, `UefaSeeding::collect_european_clubs`): a tabela dos clubes
+/// the table of European clubs (national teams excluded), each without a European place, sorted by nation and, within
+/// it, by division, position and reputation [inference: the division +0x69 and club +0x5f fields]; in 2001 euro.cfg can
+/// move clubs to the front of their nation
+/// Original: `UefaSeeding::collect_european_clubs` (0x904040, uefa_seeding.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x904040 } (thiscall, ret 4, uefa_seeding.cpp, `UefaSeeding::collect_european_clubs`): a tabela dos clubes
 /// europeus: aloca 12 bytes por clube do jogo (0x944e46; sem memória, a caixa da linha 0x2ed e devolve 0) e grava o
 /// ponteiro em `*saida`; para cada clube (registros de 0x245 em [0xae23b4], [0xae235c] clubes) com nação, que não é
 /// seleção (0x53b900) e cuja nação é da Europa (o continente +0x71 com o id de [0x9cfa10]): tira a vaga europeia (+0x1db
@@ -386,7 +412,16 @@ unsafe extern "thiscall" fn comparar_uefa_juntar_clubes_europeus(this: usize, sa
     a
 }
 
-/// { 0x904210 } (thiscall, ret 8, uefa_seeding.cpp, `UefaSeeding::assign_champions_league_places`): as vagas da Liga dos
+/// the Champions League rule (the game's rounds 1 to 4 read as groups, third, second and first qualifying round
+/// [inference]): the last winner goes straight to the groups; nations, by coefficient position: 1st to 3rd 2 clubs in
+/// the groups and 2 in the third qualifying round; 4th to 6th 2 and 1; 7th to 9th 1 and 1; 10th 1 in the groups and 1
+/// in the second qualifying round; 11th to 15th 1 in the third and 1 in the second; 16th 1 in the third; 17th to 29th 1
+/// in the second; 30th onwards the champion in the first qualifying round. Clubs go in the nation's table order
+/// (champion, runner-up...); each round has a capacity (groups 16, or 15 with the holder; third 18, second 19, first
+/// 18) and a place in a full round moves to the next one; a club that already has a place loses its own
+/// Original: `UefaSeeding::assign_champions_league_places` (0x904210, uefa_seeding.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x904210 } (thiscall, ret 8, uefa_seeding.cpp, `UefaSeeding::assign_champions_league_places`): as vagas da Liga dos
 /// Campeões ([0x9cf6e8]). O campeão da última edição (0x4afd80 com a linha da competição em [0xae23d0], 0x6b bytes, e o
 /// lugar 0) vai direto à fase de grupos (fase 1; a fase de grupos fica com 15 vagas); sem ele, a caixa da linha 0x35d.
 /// Depois, nação por nação na ordem do coeficiente (a posição `r`), as vagas por fase (1 = grupos, 2 = terceira
@@ -478,7 +513,13 @@ unsafe extern "thiscall" fn comparar_uefa_vagas_liga_dos_campeoes(this: usize, c
     PLACAR.registrar(igual, || format!("uefa_vagas_liga_dos_campeoes: diferenças em {:x?}", cqi2_dif(&mo, &mr)));
 }
 
-/// { 0x904e30 } (thiscall, ret 8, uefa_seeding.cpp, `UefaSeeding::assign_intertoto_places`): as vagas da Intertoto
+/// the Intertoto rule: 60 clubs; it cycles through the nations in coefficient order, each nation with its places (from
+/// 0x903cc0) and its first clubs still without a European place; the first 8 nations enter round 1, the 9th to 12th
+/// round 2, then round 3 (a nation's second club one round later). England puts in the volunteer club (0x903890) or the
+/// first one without a place and without a human manager, and a second one when it has 2 places
+/// Original: `UefaSeeding::assign_intertoto_places` (0x904e30, uefa_seeding.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x904e30 } (thiscall, ret 8, uefa_seeding.cpp, `UefaSeeding::assign_intertoto_places`): as vagas da Intertoto
 /// ([0x9cf6f8]) até 60 clubes: dá voltas pelas nações na ordem do coeficiente (a conta vai a `n` e volta a 0, e a fase
 /// sai da conta antes de voltar: abaixo de 8 a fase 1, de 8 a 11 a 2, de 12 em diante a 3). A Inglaterra: um clube (o
 /// voluntário da 0x903890; sem ele, o primeiro sem vaga e sem humano, 0x9050d0) e, com 2 vagas (+0xe), o segundo, na
@@ -585,7 +626,17 @@ unsafe fn cqi3_entra(this: usize, c: usize, fase: u8, r: i32, colocados: &mut i3
     true
 }
 
-/// { 0x904580 } (thiscall, ret 8, uefa_seeding.cpp, `UefaSeeding::assign_uefa_cup_places`): as vagas da Copa da UEFA
+/// the UEFA Cup rule (the game's round 1 = the first round, round 2 = the qualifying round [inference]): the last
+/// winner enters the first round and its nation loses one place in that round; three nations drawn at random (fair
+/// play) get one place in the qualifying round; by coefficient position, places in the first round and the qualifying
+/// round: 1st to 6th 3 and 0, 7th and 8th 4 and 0, 9th to 15th 1 and 1, 16th and 17th 1 and 2, 18th to 21st 0 and 3,
+/// 22nd to 48th 0 and 2, 49th onwards 0 and 1. A nation's first place goes to the national cup winner (or the runner-up
+/// if the winner is already in the Champions League; with both already qualified, to the finalists of the cup still to
+/// be played stored in the seeding, except Spain and Belgium), the second to the league cup winner, the others to the
+/// top clubs of the table still without a place
+/// Original: `UefaSeeding::assign_uefa_cup_places` (0x904580, uefa_seeding.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x904580 } (thiscall, ret 8, uefa_seeding.cpp, `UefaSeeding::assign_uefa_cup_places`): as vagas da Copa da UEFA
 /// ([0x9cf6f0]). O campeão da última edição (0x4afd80 com a linha da competição e o lugar 0) na fase 1, e a nação dele
 /// com uma vaga a menos na fase 1. Três nações sorteadas (0x90cfc0 com o número de nações; a 2ª e a 3ª de novo até as
 /// três serem distintas) ganham uma vaga a mais na preliminar (o fair play). Por posição da nação no coeficiente, as
@@ -807,7 +858,12 @@ unsafe extern "thiscall" fn comparar_uefa_vagas_copa_da_uefa(this: usize, clubes
     PLACAR.registrar(igual, || format!("uefa_vagas_copa_da_uefa: diferenças em {:x?}", cqi3_dif(&mo, &mr)));
 }
 
-/// { 0x903890 } (thiscall, ret 0, uefa_seeding.cpp, `UefaSeeding::pick_english_intertoto_club`; quadro SEH pela notícia
+/// England's Intertoto club: outside 2001, up to 6 volunteers drawn among Premier clubs without a human manager or a
+/// European place; the volunteer from the highest division goes (the best placed [inference: +0x5f]); without
+/// volunteers, a random club without a place; with the news to the division. In 2001 England uses the table (0x904e30)
+/// Original: `UefaSeeding::pick_english_intertoto_club` (0x903890, uefa_seeding.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x903890 } (thiscall, ret 0, uefa_seeding.cpp, `UefaSeeding::pick_english_intertoto_club`; quadro SEH pela notícia
 /// local, sem destrutor no caminho normal): o clube inglês da Intertoto. Em 2001, ou sem a Premier ([0xadadfc] +
 /// [0x9cf5bc] × 4), devolve 0. Senão completa a lista dos voluntários (+0x43b, 30 ids, alocada com 0x78 bytes; +0x43f a
 /// conta) até 6, sorteando clubes da Premier (0x90cfc0 com +0x3e, até 80 sorteios) sem técnico humano e sem vaga
@@ -907,7 +963,12 @@ unsafe extern "thiscall" fn comparar_uefa_voluntario_ingles(this: usize) -> usiz
     r
 }
 
-/// { 0x9035a0 } (thiscall, ret 4, uefa_seeding.cpp, `UefaSeeding::update_season`; quadro SEH pela notícia local, sem
+/// the seeding calendar: every new game year it redoes the coefficients, the places per nation and the Champions
+/// League, UEFA Cup and Intertoto places, and posts the qualifiers news; on day 100 of the year it asks Premier human
+/// managers for Intertoto volunteers; every day, the European registration deadline
+/// Original: `UefaSeeding::update_season` (0x9035a0, uefa_seeding.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x9035a0 } (thiscall, ret 4, uefa_seeding.cpp, `UefaSeeding::update_season`; quadro SEH pela notícia local, sem
 /// destrutor no caminho normal): chamada pelas copas europeias. Sem `diario`: quando o ano do jogo ([0xae2c92]) é outro
 /// que o +0x439, grava o ano e refaz a classificação: os coeficientes (0x903b50), as vagas por nação (0x903cc0), a tabela
 /// dos clubes (0x904040; vazia, a caixa da linha 0x2b7), as vagas da Liga dos Campeões (0x904210), da Copa da UEFA
@@ -1007,7 +1068,11 @@ unsafe fn cpx6_fechar(f: usize) {
     fechar(f);
 }
 
-/// { 0x905510 } (thiscall, ret 0, uefa_seeding.cpp): `UefaSeeding::save_to_temp_file`: grava `CM3_TEMP\uefa_seeding.tmp`:
+/// writes CM3_TEMP\uefa_seeding.tmp: the country count (+0x438), 0x12 bytes per country from +0, +0x439 (u16), as many
+/// u32 as +0x43f from [+0x43b] and 50 records of 0xc from +0x440; on error the "Error" box without closing the file
+/// Original: `UefaSeeding::save_to_temp_file` (0x905510, uefa_seeding.cpp, thiscall).
+///
+/// [pt] { 0x905510 } (thiscall, ret 0, uefa_seeding.cpp): `UefaSeeding::save_to_temp_file`: grava `CM3_TEMP\uefa_seeding.tmp`:
 /// a quantidade de países (+0x438, i8), os registros de 0x12 bytes de +0, +0x439 (u16), a quantidade +0x43f (i8) e, se
 /// não for zero, essa quantidade de u32 de [+0x43b], e os 50 registros fixos de 0xc bytes de +0x440. Erro ao abrir ou
 /// gravar: a caixa "Error" (uefa_seeding.cpp 0x64f, 0x657, 0x660, 0x668, 0x66f, 0x679, 0x682), sem fechar o arquivo
@@ -1054,7 +1119,11 @@ unsafe extern "thiscall" fn comparar_gravar_sementes_da_uefa(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(1500)(this)
 }
 
-/// { 0x4c6b70 } (thiscall, ret 0, conmebol_seeding.cpp): `ConmebolSeeding::save_to_temp_file`: grava
+/// writes CM3_TEMP\conmebol_seeding.tmp: the country count (+0x6e), 0xa bytes per country from +0, +0x6f (u16) and
+/// +0x71 (u32); on error the "Error" box without closing the file
+/// Original: `ConmebolSeeding::save_to_temp_file` (0x4c6b70, conmebol_seeding.cpp, thiscall).
+///
+/// [pt] { 0x4c6b70 } (thiscall, ret 0, conmebol_seeding.cpp): `ConmebolSeeding::save_to_temp_file`: grava
 /// `CM3_TEMP\conmebol_seeding.tmp`: a quantidade de países (+0x6e, i8), os registros de 0xa bytes de +0, +0x6f (u16) e
 /// +0x71 (u32). Erro: a caixa "Error" (conmebol_seeding.cpp 0x2ee, 0x2f6, 0x2ff, 0x307, 0x30f), sem fechar o arquivo.
 unsafe extern "thiscall" fn gravar_sementes_da_conmebol(this: usize) {
@@ -1090,7 +1159,11 @@ unsafe extern "thiscall" fn comparar_gravar_sementes_da_conmebol(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(1501)(this)
 }
 
-/// { 0x5fb320 } (thiscall, ret 0, host_country.cpp): `HostCountry::save_temp_file`: grava `CM3_TEMP\HostCountry.tmp`:
+/// writes CM3_TEMP\HostCountry.tmp: the count (+4, u16) and 0x22 bytes per host from [+0], without checking the writes;
+/// on open error the "Error" box
+/// Original: `HostCountry::save_temp_file` (0x5fb320, host_country.cpp, thiscall).
+///
+/// [pt] { 0x5fb320 } (thiscall, ret 0, host_country.cpp): `HostCountry::save_temp_file`: grava `CM3_TEMP\HostCountry.tmp`:
 /// a quantidade (+4, i16) e os registros de 0x22 bytes de [+0], sem conferir a gravação. Erro ao abrir: a caixa
 /// "Error" (host_country.cpp 0x475).
 unsafe extern "thiscall" fn gravar_paises_anfitrioes(this: usize) {

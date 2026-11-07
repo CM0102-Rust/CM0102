@@ -1,6 +1,10 @@
 // ---------- centesima sexagesima leva: estatisticas do jogador (player_stats.cpp) e zagueiros na formacao ----------
 
-/// { 0x7c2150 } (stdcall, ret 0xc, player_stats.cpp): a estatística `qual` do registro `r` (jogos
+/// statistic `qual` 1..22 of the record (bytes, percentages ×100.0f, per-match averages, the two ratings completed with
+/// under 20 matches ×0.05f), in x87 like the original
+/// Original: `player_statistic` (0x7c2150, player_stats.cpp, stdcall).
+///
+/// [pt] { 0x7c2150 } (stdcall, ret 0xc, player_stats.cpp): a estatística `qual` do registro `r` (jogos
 /// em +0, bytes +2..+0xd, palavras +0xe..+0x1a, +0x1c inteiro), como a original a deixa no x87:
 /// 1..12 os bytes; 13 e 16 as porcentagens (+0x12/+0x10 e +0x1a/+0x18, vezes 100.0f); 14, 15, 17 e
 /// 21 as médias por jogo; 18 a média de +0xe com menos de 20 jogos completada por `peso` (vezes
@@ -53,7 +57,10 @@ unsafe extern "stdcall" fn estatistica_do_jogador(r: *const u8, qual: i8, peso: 
     }
 }
 
-/// { 0x7c1950 } (thiscall, ret 4, player_stats.cpp): a média das cinco notas de 4 bits do registro
+/// the average of the record's five 4-bit ratings (zero counts 27), 16-bit, divided by 4
+/// Original: `ratings_average` (0x7c1950, player_stats.cpp, thiscall).
+///
+/// [pt] { 0x7c1950 } (thiscall, ret 4, player_stats.cpp): a média das cinco notas de 4 bits do registro
 /// `*indice` (0x27 bytes cada, a partir de [this+0x30]): os dois meios de +0x24 e de +0x25 e o meio
 /// baixo de +0x26, cada um ×4 (zero conta 27), somados em 16 bits e divididos por 4 (truncando).
 /// `indice` nulo: a original (caixa de erro).
@@ -72,7 +79,10 @@ unsafe extern "thiscall" fn media_das_notas(this: usize, indice: *const i32) -> 
     soma as i16 as i32 / 4
 }
 
-/// { 0x5b8dc0 } (thiscall, formation.cpp): como a 0x5b8960, para os zagueiros: devolve 0 se alguma
+/// 0 if any slot with an open side is a centre-back's or defensive midfielder's
+/// Original: `centre_backs_without_conflict` (0x5b8dc0, formation.cpp, thiscall).
+///
+/// [pt] { 0x5b8dc0 } (thiscall, formation.cpp): como a 0x5b8960, para os zagueiros: devolve 0 se alguma
 /// das 11 vagas com lado aberto (0x880) é de zagueiro (4, na casa +0x12d ou +0x14e) ou de volante
 /// (8 na +0x12d; na +0x14e pela 0x5b2ae0); senão 1. Devolve só `al`.
 unsafe extern "thiscall" fn zagueiros_sem_conflito(this: usize) -> u8 {
@@ -150,7 +160,12 @@ unsafe fn cqh8_gravar(this: usize, reg: usize, no: &[u8; 0x2b]) {
     f(read_u32_as_usize(this), reg + 0x18, reg + 0x1c, no.as_ptr());
 }
 
-/// { 0x7c5fe0 } (thiscall, ret 0x18, player_stats.cpp): `PlayerStats::archive_player_stats(pessoa, valor, empréstimo,
+/// when the player leaves a club: the stats of each category of the season go to the history file (with the year, the
+/// club, the fee and the kind of exit) and are cleared; an empty node when the last category is missing; and the games
+/// and goals for the club recounted from the history
+/// Original: `PlayerStats::archive_player_stats` (0x7c5fe0, player_stats.cpp, thiscall).
+///
+/// [pt] { 0x7c5fe0 } (thiscall, ret 0x18, player_stats.cpp): `PlayerStats::archive_player_stats(pessoa, valor, empréstimo,
 /// fim, clube, outro)`, pelas saídas de clube (contratos 0x4c7ac0/0x4cbd20/0x4d01e0/0x4d07e0, 0x690730 o elenco, 0x7c1350
 /// as seleções). O tipo do nó: 2 com `empréstimo`, 1 com `fim`, 3 com `outro`, senão 0. Pessoa nula: a caixa (linha
 /// 0xf28) e 0; sem ficha: 0. Cada uma das seis categorias com registro (o registro de 39 bytes da ficha em [this+0x30])
@@ -338,7 +353,12 @@ fn cqf8_lugar(buf: usize, n: i32, k: i32) -> usize {
     buf.wrapping_add(((n + k) as isize * CQF8_E as isize - CQF8_E as isize) as usize)
 }
 
-/// { 0x7c3e40 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::build_career_history(pessoa, &conta)`: a tabela
+/// the player career table, six entries (categories) per season and club: the current season, the ones from the history
+/// file from newest to oldest with the empty years filled, the repeated entries of the same season and club summed and
+/// the empty groups removed
+/// Original: `PlayerStats::build_career_history` (0x7c3e40, player_stats.cpp, thiscall).
+///
+/// [pt] { 0x7c3e40 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::build_career_history(pessoa, &conta)`: a tabela
 /// (malloc 0x944e46 de 500 entradas, realloc 0x945667 de 500 em 500; quem chama libera com 0x9452ca) com seis entradas
 /// por temporada e clube, e a conta em `*conta`. Pessoa nula (linha 0xb98) ou sem ficha (0xbaa): a caixa e 0; id a
 /// partir de [0xae2364]: 0; sem memória: a caixa (0xbb2, 0xc00, 0xc26, 0xc41) e 0.
@@ -608,7 +628,10 @@ unsafe extern "thiscall" fn comparar_historico_da_carreira(this: usize, p: usize
     r
 }
 
-/// { 0x7c6e30 } (stdcall, ret 8, player_stats.cpp): `player_stats_years_since_at_club(pessoa, clube)`: quantos anos
+/// how many years since the person played for the club: 0 when he is there, −1 when never
+/// Original: `player_stats_years_since_at_club` (0x7c6e30, player_stats.cpp, stdcall).
+///
+/// [pt] { 0x7c6e30 } (stdcall, ret 8, player_stats.cpp): `player_stats_years_since_at_club(pessoa, clube)`: quantos anos
 /// desde que a pessoa jogou pelo clube: 0 se está nele (+0x39), −1 se nunca; senão o ano de hoje (0xae2c92) menos o
 /// maior ano dos grupos do histórico (0x7c3e40 em [0xb74350]; a última entrada de cada grupo, +0xd7 o ano, +0xd9 o
 /// clube) com o clube. Pessoa nula (linha 0x133f), clube nulo (0x1347) ou sem ficha (0x135f): a caixa e −1; id a partir
@@ -669,7 +692,10 @@ unsafe extern "stdcall" fn comparar_anos_desde_o_clube(p: usize, clube: usize) -
     r
 }
 
-/// { 0x7c6de0 } (cdecl, player_stats.cpp): `player_stats_compare_history_by_staff(a, b)`, a ordem do qsort dos
+/// the qsort order of the history records: by person, by year and by the first field
+/// Original: `player_stats_compare_history_by_staff` (0x7c6de0, player_stats.cpp, cdecl).
+///
+/// [pt] { 0x7c6de0 } (cdecl, player_stats.cpp): `player_stats_compare_history_by_staff(a, b)`, a ordem do qsort dos
 /// registros do staff_history.dat na criação das estatísticas (0x7bfd50, ponteiro em 0x7c05ad): `a` nulo 1, `b` nulo −1;
 /// pela pessoa (+4, sem sinal), depois pelo ano (+8, palavra com sinal), depois a diferença do primeiro dword.
 unsafe extern "C" fn ordem_do_historico_por_pessoa(a: usize, b: usize) -> i32 {
@@ -708,7 +734,11 @@ unsafe extern "C" fn comparar_ordem_do_historico_por_pessoa(a: usize, b: usize) 
 
 
 
-/// { 0x7c1e30 } (thiscall, ret 0x10, player_stats.cpp): `PlayerStats::get_stat(jogador, categoria, qual, padrão)`, como
+/// the requested statistic of the category record (without a record, the default for the rating and the average), or
+/// the combined ratings of categories 2 to 5
+/// Original: `PlayerStats::get_stat` (0x7c1e30, player_stats.cpp, thiscall).
+///
+/// [pt] { 0x7c1e30 } (thiscall, ret 0x10, player_stats.cpp): `PlayerStats::get_stat(jogador, categoria, qual, padrão)`, como
 /// a original a deixa no x87. Sem jogador: a caixa "Error" (linha 0x659) e 0.0; id (+0) fora da tabela ([0xae236c]):
 /// 0.0. Com `qual` ≠ 0x13 e a categoria (byte com sinal) até 6: o registro da categoria (0x7c3920) dá a estatística
 /// (0x7c2150 com `qual` e `padrão`); sem registro, `padrão` para 0x12 e 0x14 e 0.0 para as outras. Senão as notas
@@ -800,7 +830,10 @@ unsafe extern "thiscall" fn comparar_estatistica_da_categoria(this: usize, jogad
     r
 }
 
-/// { 0x7c6d40 } (cdecl, player_stats.cpp): `player_stats_compare_language_entries(a, b)` (o qsort e o bsearch dos
+/// the order of the language records: by person id and by language, with 0xff matching any language
+/// Original: `player_stats_compare_language_entries` (0x7c6d40, player_stats.cpp, cdecl).
+///
+/// [pt] { 0x7c6d40 } (cdecl, player_stats.cpp): `player_stats_compare_language_entries(a, b)` (o qsort e o bsearch dos
 /// idiomas, registros de 6 bytes {id, idioma, fluência}): a nulo, −1; b nulo, 1; ids (+0) diferentes, a diferença;
 /// idioma 0xff em qualquer um, 0; senão a diferença dos idiomas (+4, com sinal). Pela fluência no idioma 0x7c6830 e pelos
 /// idiomas acrescentados, tirados e melhorados.
@@ -829,7 +862,10 @@ unsafe extern "C" fn comparar_ordem_dos_idiomas(a: usize, b: usize) -> i32 {
     r
 }
 
-/// { 0x7c6d90 } (cdecl, player_stats.cpp): `player_stats_compare_history_by_club(a, b)` (o qsort da história na carga
+/// the order of the player history by the dword +0xa and then by +4
+/// Original: `player_stats_compare_history_by_club` (0x7c6d90, player_stats.cpp, cdecl).
+///
+/// [pt] { 0x7c6d90 } (cdecl, player_stats.cpp): `player_stats_compare_history_by_club(a, b)` (o qsort da história na carga
 /// das estatísticas 0x7bfd50): a nula, 1; b nula, −1; pelo dword +0xa e depois pelo +4, sem sinal: maior 1, menor −1,
 /// iguais 0.
 unsafe extern "C" fn ordem_da_historia_por_clube(a: usize, b: usize) -> i32 {
@@ -867,7 +903,10 @@ unsafe fn cps9_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-/// { 0x7c3d20 } (stdcall, ret 4, player_stats.cpp; a original recebe o PlayerStats no ecx e não o lê):
+/// sums the goals of every season and club of the player's career table (0x7c3e40), in 16 bits
+/// Original: `player_stats_get_career_goals` (0x7c3d20, player_stats.cpp, stdcall, ret 4).
+///
+/// [pt] { 0x7c3d20 } (stdcall, ret 4, player_stats.cpp; a original recebe o PlayerStats no ecx e não o lê):
 /// `player_stats_get_career_goals(pessoa)` (pela MATCH_PLAYER::setup 0x6eaea0, que grava em +0x43 do jogador da
 /// partida): pessoa nula, a caixa "Error" (linha 0xb4b) e 0; id a partir de [0xae2364], 0; sem a ficha de jogador
 /// (+0x61), a caixa (linha 0xb5d) e 0. Senão a tabela da carreira (0x7c3e40 do [0xb74350]: entradas de 0x2b bytes,
@@ -913,7 +952,10 @@ unsafe extern "stdcall" fn comparar_gols_na_carreira(pessoa: usize) -> u16 {
     r
 }
 
-/// { 0x86da20 } (thiscall, ret 0xc, staff_records.cpp, SEH só da data local, de destrutor vazio):
+/// the loan histories: the one of the receiving club manager (type 0x69) and the one of the person (type 0x6a)
+/// Original: `Staff_Records::add_loan_records` (0x86da20, staff_records.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x86da20 } (thiscall, ret 0xc, staff_records.cpp, SEH só da data local, de destrutor vazio):
 /// `Staff_Records::add_loan_records(pessoa, de, clube)` (pela 0x8c2180, a transferência aceita): com o clube e o técnico
 /// dele (+0xcf), o histórico do técnico (tipo 0x69: o clube, a pessoa e os três ids +0x33 de +4, +8 e +0xc dela, e o id
 /// de `de`); depois, na mesma entrada, o da pessoa (tipo 0x6a: o clube e o id de `de`), no arquivo (0x58e340). O clube
@@ -947,7 +989,10 @@ unsafe extern "thiscall" fn comparar_registrar_o_emprestimo(this: usize, pessoa:
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(1141)(this, pessoa, de, clube)
 }
 
-/// { 0x632040 } (cdecl, injury.cpp): `injury_compare_entry_dates(chave, item)`, a ordem do bsearch (0x946464) da fila
+/// compares the key date with the one of a 0x16-byte return to training queue entry, for bsearch
+/// Original: `injury_compare_entry_dates` (0x632040, injury.cpp, cdecl).
+///
+/// [pt] { 0x632040 } (cdecl, injury.cpp): `injury_compare_entry_dates(chave, item)`, a ordem do bsearch (0x946464) da fila
 /// das voltas aos treinos (entradas de 0x16 bytes) em Injury::post_due_recovery_news (0x62e010, todo dia): a data em
 /// +8 da chave antes da do item (0x456770), −1; depois (0x456740), 1; igual, 0.
 unsafe extern "C" fn ordem_da_volta_aos_treinos(chave: usize, item: usize) -> i32 {
@@ -1005,7 +1050,11 @@ unsafe fn cpq10_sem_memoria(linha: u32, texto: usize) {
     caixa(0xae28bc, 0xae26c4, 0);
 }
 
-/// { 0x7c3920 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::get_category_record(jogador, categoria)`: o
+/// the 0x20-byte record of the player's category (1..6), through the index in the 39-byte entry of his id; 0 without an
+/// index
+/// Original: `PlayerStats::get_category_record` (0x7c3920, player_stats.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7c3920 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::get_category_record(jogador, categoria)`: o
 /// registro de 0x20 bytes ([this+4] + 32 × índice) da categoria do jogador (cpq10_vaga), ou 0 quando o índice é −1
 /// ou menor. Sem jogador ou fora de 1..6, a caixa "Error" e 0: a original. Pela PlayerStats::record_match 0x7c10e6 e
 /// pela PlayerStats::get_stat 0x7c1e30 (as médias do motor de partida). Quente: sem contador.
@@ -1021,7 +1070,11 @@ unsafe extern "thiscall" fn registro_da_categoria(this: usize, jogador: usize, c
     read_usize(this + 4).wrapping_add((i as usize) << 5)
 }
 
-/// { 0x7c5d80 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::create_stats(jogador, categoria)`: o registro da
+/// the player's category record; without an index, the first free record (+0xe = 0xffff) or a new one at the end (grows
+/// by 100), zeroed
+/// Original: `PlayerStats::create_stats` (0x7c5d80, player_stats.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7c5d80 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::create_stats(jogador, categoria)`: o registro da
 /// categoria do jogador (cpq10_vaga); sem índice (−1), com registros soltos ([this+0x38]), o primeiro registro de
 /// [this+4] (conta +0xc) com +0xe = 0xffff vira o dele (zerado; os soltos descem); senão um no fim (zerado; a conta
 /// sobe): cheio (capacidade +8), cresce de 100 em 100 (realloc 0x945667; sem memória, a caixa 0xef4 e 0). Sem
@@ -1069,7 +1122,10 @@ unsafe extern "thiscall" fn criar_estatisticas(this: usize, jogador: usize, cate
     r
 }
 
-/// { 0x7ae350 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::is_retirement_pending(pessoa)`: 1 quando o id da
+/// 1 when the person's id is on the retirement list, else 0
+/// Original: `PLAYER_REGEN::is_retirement_pending` (0x7ae350, player_regen.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7ae350 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::is_retirement_pending(pessoa)`: 1 quando o id da
 /// pessoa (+0) está na lista de aposentadorias ([this+4], registros de 0x1a bytes, conta +8 com sinal), senão 0 (e 0
 /// sem pessoa). Pela MANAGER_MANAGER::is_staff_suitable_for_job 0x69fa4b: quem não é jogador e vai se aposentar não
 /// serve para técnico.
@@ -1153,7 +1209,11 @@ unsafe fn cpo12_idioma(this: usize, pessoa: usize, idioma: u8) -> usize {
     bsearch(chave.as_ptr(), read_u32_as_usize(this + 0x3c), read_u32_as_usize(this + 0x44) as u32, 6, 0x7c6d40)
 }
 
-/// { 0x7c6a30 } (thiscall, ret 0x10, player_stats.cpp): `PlayerStats::add_language(pessoa, idioma, fluencia,
+/// appends the new entry to the language table (6 bytes: id, language, fluency up to 10; starts at 100, grows by 100)
+/// and sorts it when asked (qsort)
+/// Original: `PlayerStats::add_language` (0x7c6a30, player_stats.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x7c6a30 } (thiscall, ret 0x10, player_stats.cpp): `PlayerStats::add_language(pessoa, idioma, fluencia,
 /// ordenar)`: a tabela dos idiomas (6 bytes por registro em [this+0x3c], capacidade +0x40, conta +0x44) nasce com 100
 /// (malloc 0x258) e cresce 100 (realloc) quando cheia; o registro novo no fim: o id da pessoa, o idioma e a fluência
 /// (no máximo 10, com sinal); com `ordenar`, qsort pela comparação 0x7c6d40. Sem memória: caixa fatal.
@@ -1194,7 +1254,11 @@ unsafe extern "thiscall" fn acrescentar_idioma(this: usize, pessoa: usize, idiom
     }
 }
 
-/// { 0x7c6ca0 } (thiscall, ret 0x10, player_stats.cpp): `PlayerStats::improve_language(pessoa, idioma, aumento,
+/// finds the person's entry for the language (bsearch) and adds the increase to the fluency, up to 10; without one,
+/// adds the language with the increase as fluency
+/// Original: `PlayerStats::improve_language` (0x7c6ca0, player_stats.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x7c6ca0 } (thiscall, ret 0x10, player_stats.cpp): `PlayerStats::improve_language(pessoa, idioma, aumento,
 /// ordenar)`: sem tabela, ou sem o registro da pessoa no idioma (`cpo12_idioma`), acrescenta-o com a fluência
 /// `aumento` (0x7c6a30); com ele, soma o aumento à fluência (byte), no máximo 10 (com sinal).
 unsafe extern "thiscall" fn melhorar_idioma(this: usize, pessoa: usize, idioma: u32, aumento: u32, ordenar: u32) {
@@ -1216,7 +1280,14 @@ unsafe extern "thiscall" fn melhorar_idioma(this: usize, pessoa: usize, idioma: 
     }
 }
 
-/// { 0x7c6650 } (thiscall, ret 4, player_stats.cpp): `PlayerStats::reset_player(pessoa)`: no registro de 39 bytes da
+/// frees the player's 6 category records (+0xe = −1, +1 to the free count), clears the league totals and recent ratings
+/// and empties the history; in DESLIGADAS since 2026-10-29: with the detour the career in Rust mode left the reference
+/// be54a138 (bisection of batch 251's 39 routines; with 0x77bbe0, the news constructor, the game later crashed in
+/// 0x7c6650 on a broken index); the cause (stack residue or a difference in the copy) is not isolated yet; the copy
+/// stays in the code and does not run
+/// Original: `PlayerStats::reset_player` (0x7c6650, player_stats.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7c6650 } (thiscall, ret 4, player_stats.cpp): `PlayerStats::reset_player(pessoa)`: no registro de 39 bytes da
 /// pessoa ([this+0x30] + id da ficha de jogador [pessoa+0x61] × 39; corrigido em 31/10/2026, antes usava o id da pessoa), cada uma das 6 categorias (+0..+0x14) com registro (≠ −1) o libera (+0xe = −1 no
 /// registro de 32 bytes de [this+4]; +1 nos livres [this+0x38]) e fica −1; zera +0x20, +0x22 (palavras) e +0x24..+0x26
 /// (as notas recentes) e esvazia o histórico (0x58f110 sobre [this] com +0x18/+0x1c). Pessoa nula ou não jogadora
@@ -1305,7 +1376,11 @@ unsafe extern "thiscall" fn comparar_zerar_estatisticas_do_jogador(this: usize, 
 
 
 
-/// { 0x7c6830 } (thiscall, ret 0x10, player_stats.cpp): `PlayerStats::get_language_fluency(pessoa, clube, idioma,
+/// from 0 to 10: the contract level, 10 for a nation (or the second one) speaking the language, or the learned language
+/// (binary search)
+/// Original: `PlayerStats::get_language_fluency` (0x7c6830, player_stats.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x7c6830 } (thiscall, ret 0x10, player_stats.cpp): `PlayerStats::get_language_fluency(pessoa, clube, idioma,
 /// pelo_contrato)`: quanto a pessoa fala o `idioma` (0 a 10). Técnico humano (id ≥ [0xae2364]): 10 se é o idioma
 /// (+0x77) da nação dela (+0x1a), senão 0. Com `pelo_contrato`, o contrato com o clube (0x4cf5f0) de quem joga num
 /// clube (+0x39) da mesma nação do `clube` (+0x53): o nível do contrato (+0x4f & 0xf). 10 se a nação (+0x1a) ou a
@@ -1358,7 +1433,10 @@ unsafe extern "thiscall" fn fluencia_no_idioma(this: usize, pessoa: usize, clube
     read_u8(e + 5)
 }
 
-/// { 0x86fb80 } (thiscall, ret 4, staff_records.cpp): `Staff_Records::rewind_staff_history(pessoa)`: a lista do
+/// the last offset of the person's history list (+4 of the pair at [+0xc] + 8 × id) = −1 (0x58f110)
+/// Original: `Staff_Records::rewind_staff_history` (0x86fb80, staff_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x86fb80 } (thiscall, ret 4, staff_records.cpp): `Staff_Records::rewind_staff_history(pessoa)`: a lista do
 /// histórico da pessoa (o par de 8 bytes em [+0xc] + 8 × id) fica sem o último (0x58f110 sobre [this]: o segundo
 /// deslocamento = −1). Pessoa nula: a original (caixa fatal: o jogo termina).
 unsafe extern "thiscall" fn recomecar_historico_da_pessoa(this: usize, pessoa: usize) {
@@ -1371,7 +1449,11 @@ unsafe extern "thiscall" fn recomecar_historico_da_pessoa(this: usize, pessoa: u
     sem_ultimo(read_usize(this), par, par + 4); // o último deslocamento
 }
 
-/// { 0x5b2ba0 } (thiscall, ret 0xc, formation.cpp): `Formation::set_slot_position(casa, posicao, extra)`: sem `extra`,
+/// stores the general or extra position of the slot, the marks, and recomputes the pitch cells without and with the
+/// ball (0x5b7e60)
+/// Original: `Formation::set_slot_position` (0x5b2ba0, formation.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x5b2ba0 } (thiscall, ret 0xc, formation.cpp): `Formation::set_slot_position(casa, posicao, extra)`: sem `extra`,
 /// a posição geral da casa (+0x12d, palavras) muda para `posicao` (se mudar: a máscara 0x5b59a0, a marca +0x143 da casa
 /// = 1 e a das outras casas com a mesma posição = 0); com ou sem, a posição extra (+0x14e) = `posicao`. Depois, para
 /// cada faixa 0..2 e altura 0..3 (a palavra baixa e a alta do argumento da 0x5b7e60), as casas no campo sem e com a

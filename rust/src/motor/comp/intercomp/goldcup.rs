@@ -85,6 +85,18 @@ unsafe fn cqs12_selecoes(this: usize) -> u32 {
     1
 }
 
+/// rule: the Copa América has 12 nations; in 2001 a fixed list (the groups interleaved in the places: A = Colombia,
+/// Chile, Ecuador and Venezuela; B = Brazil, Mexico, Peru and Paraguay; C = Costa Rica, Honduras, Uruguay and Bolivia);
+/// in other years the hosts first, then the South American nations and the guests (Japan in 1999 [inference: the nation
+/// of 0x9cf36c], in other years that of 0x9cf280, and Mexico always), without repeating the hosts, up to 12, sorted by
+/// reputation; without 12, an error
+/// Original: `GoldCup::set_up_team_list` (0x5e1cd0, goldcup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: a Copa América tem 12 seleções; em 2001 uma lista fixa (os grupos intercalados nas vagas: A = Colômbia,
+/// Chile, Equador e Venezuela; B = Brasil, México, Peru e Paraguai; C = Costa Rica, Honduras, Uruguai e Bolívia); nos
+/// outros anos as sedes na frente, depois as sul-americanas e as convidadas (o Japão em 1999 [inferência: a nação de
+/// 0x9cf36c], nos outros anos a de 0x9cf280, e o México sempre), sem repetir as sedes, até 12, ordenadas pela
+/// reputação; sem 12, erro
 unsafe extern "thiscall" fn cqs12_copa_america_selecoes(this: usize) -> u32 {
     cqs12_selecoes(this)
 }
@@ -123,7 +135,10 @@ unsafe extern "thiscall" fn comparar_cqs12_copa_america_selecoes(this: usize) ->
 /// As posições previstas da Copa América, pela ordem de reputação das 12.
 const CQS12_PREVISTAS: [u32; 12] = [1, 2, 3, 3, 5, 5, 5, 5, 9, 0xa, 0xa, 0xa];
 
-/// { 0x5e2340 } (thiscall, ret 0, goldcup.cpp; a virtual +0x5c): `GoldCup::set_predicted_positions()`: sem estatística
+/// rule: the Copa América predicted positions by reputation: 1, 2, 3, 3, four 5ths, 9 and three 10ths
+/// Original: `GoldCup::set_predicted_positions` (0x5e2340, goldcup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5e2340 } (thiscall, ret 0, goldcup.cpp; a virtual +0x5c): `GoldCup::set_predicted_positions()`: sem estatística
 /// (+8), a caixa da linha 0x419 e volta; uma cópia da lista (0x944e46(+0xf2 × 4); sem memória, a caixa da linha 0x421 e
 /// volta), ordenada pela reputação (qsort 0x945333 com 0x4b07d0, +0xf2 itens), e a posição prevista de cada uma na
 /// estatística (0x4a2540 Comp_Stats::set_club_final_position: push posição; push clube; mov ecx, [+8] -> thiscall,
@@ -170,7 +185,11 @@ unsafe extern "thiscall" fn comparar_cqs12_copa_america_previstas(this: usize) {
     PLACAR.registrar(errado.is_none(), || format!("cqs12_copa_america_previstas: a posição prevista da vaga {:?} não bate", errado));
 }
 
-/// { 0x5e1530 } (thiscall, ret 0, goldcup.cpp; a virtual +8): `GoldCup::start_new_season()`, a Copa América seguinte:
+/// rule: the Copa América is every 2 years: when it ends, the table and stages are undone, the season goes to the
+/// statistics history, the year goes up 2 and the rules are set up again
+/// Original: `GoldCup::start_new_season` (0x5e1530, goldcup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5e1530 } (thiscall, ret 0, goldcup.cpp; a virtual +8): `GoldCup::start_new_season()`, a Copa América seguinte:
 /// +0x4c = 0, a tabela da copa liberada (0x687970 League::free_table: push 0; mov ecx, this -> thiscall, ret 4), a
 /// tabela das rodadas +0xba liberada (0x9452ca) e zerada, a temporada arquivada na estatística (0x4a1c50
 /// Comp_Stats::archive_season_and_reset: push 1; mov ecx, [+8] -> thiscall, ret 4), as fases 0..+0x30 destruídas (a
@@ -235,7 +254,13 @@ unsafe fn cqr13_sorteado(this: usize, k: usize) -> usize {
     read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4) // cqr13: o sorteado k
 }
 
-/// { 0x5e2120 } (thiscall, ret 8, goldcup.cpp; a virtual +0x14; quadro SEH só das datas locais, sem destrutor):
+/// rule: the Copa América has 12 nations in 3 groups of 4 (single round, 3/1 points, two qualify from each group plus
+/// the two best thirds to the quarter-finals); the draw is on the start day (20 March of the cup year, moved to weekday
+/// 5) and only on the call without `completo`: the list of 12, the predicted positions, group A in the cup's own table,
+/// the fixtures and groups B and C as stages; before that day the cup does not even run the league day
+/// Original: `GoldCup::update_for_date` (0x5e2120, goldcup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x5e2120 } (thiscall, ret 8, goldcup.cpp; a virtual +0x14; quadro SEH só das datas locais, sem destrutor):
 /// `GoldCup::update_for_date(hoje, completo)`, o dia da Copa América. A data do sorteio é a de 0x549ef0(+0xb6, +0xb8 +
 /// +0x40) (lea ecx, local; push ano; push dia -> thiscall, ret 8, pura: o dia do ano e o ano). Antes dela (o ano de
 /// hoje menor, sem sinal; ou o mesmo ano e o dia de hoje menor, com sinal) a rotina volta 0 sem o dia de liga. No dia
@@ -316,7 +341,11 @@ unsafe extern "thiscall" fn comparar_cqr13_copa_america_dia(this: usize, hoje: u
     r
 }
 
-/// { 0x5e11e0 } (thiscall, ret 0, goldcup.cpp): `GoldCup::create_group_table()`, o grupo A da Copa América: 4 times
+/// rule: group A of the Copa América has 4 nations, drawn entries 0, 3, 6 and 9 (the groups are interleaved in the
+/// list), each in the row of its order; human managers get the group draw news
+/// Original: `GoldCup::create_group_table` (0x5e11e0, goldcup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5e11e0 } (thiscall, ret 0, goldcup.cpp): `GoldCup::create_group_table()`, o grupo A da Copa América: 4 times
 /// (+0x3e), a tabela +0xb1 (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 linhas de 0x3b bytes; sem memória, a
 /// caixa da linha 0x1d4 e devolve 0), cada linha i com o sorteado 3i (+0xee: os grupos intercalados) (0x687430
 /// League::init_table_row: push 0; push 0; push seleção; push i; mov ecx, this -> thiscall, ret 0x10), a notícia do
@@ -365,7 +394,11 @@ unsafe extern "thiscall" fn comparar_cqr13_copa_america_primeiro_grupo(this: usi
     r
 }
 
-/// { 0x5e16b0 } (thiscall, ret 4, goldcup.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal):
+/// rule: groups B and C of the Copa América are league stages with drawn entries g + 1, g + 4, g + 7 and g + 10, the
+/// cup's rules and year and the cup's round table for the group (6, 10 and 13 July); human managers get the news
+/// Original: `GoldCup::create_group_stage` (0x5e16b0, goldcup.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x5e16b0 } (thiscall, ret 4, goldcup.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal):
 /// `GoldCup::create_group_stage(g)`, a fase do grupo g + 1 (g = 0 e 1, do dia do sorteio). Os times num vetor de 4
 /// ponteiros (0x944e46(0x10): push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x2bf e 0): os sorteados g + 1,
 /// g + 4, g + 7 e g + 10 (+0xee); a tabela das rodadas pela virtual +0x3c (push 0; push &id; push &rodadas; push g; mov
@@ -737,7 +770,14 @@ fn cqp12_copa_america_fase(fase: u32) -> Option<Cqp12Fase> {
     }
 }
 
-/// { 0x5e0900 } (thiscall, ret 0x10, goldcup.cpp; a virtual +0x3c da Copa América): `GoldCup::create_schedule(fase,
+/// rule: the Copa América has three groups (stages −1, 0 and 1, ids 0x41f to 0x421) of three rounds on 6, 10 and 13
+/// July, each round with the group's two fixed matches (pairings and venue); the knockout (stage 2) in single matches:
+/// quarter-finals on 16/7 with fixed pairings (the two best third-placed teams [inference]), semi-final on 19/7, third
+/// place on 22/7 and final on 23/7 (venue 4, neutral ground [inference]); category 10; tie-break 0x103 up to the
+/// semi-final and 3 in the final; no prizes
+/// Original: `GoldCup::create_schedule` (0x5e0900, goldcup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x5e0900 } (thiscall, ret 0x10, goldcup.cpp; a virtual +0x3c da Copa América): `GoldCup::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a fase de `cqp12_copa_america_fase`.
 unsafe extern "thiscall" fn cqp12_copa_america_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqp12_tabela(this, cqp12_copa_america_fase(fase), rodadas, extra, liga, 0x9cd640)
@@ -771,7 +811,13 @@ fn cqp12_africana_fase(fase: u32) -> Option<Cqp12Fase> {
     }
 }
 
-/// { 0x4012e0 } (thiscall, ret 0x10, african_nations.cpp; a virtual +0x3c da Copa Africana): `AfricanNations::
+/// rule: the African Nations Cup has four groups (stages −1 to 2, ids 0x3e8 to 0x3eb) of three rounds on 8, 12 and 16
+/// February, with each group's fixed matches; the knockout (stage 3) in single matches: quarter-finals on 21/2 with
+/// fixed pairings, semi-final on 25/2, third place on 27/2 and final on 28/2 (venue 4); category 10; tie-break 0x303 up
+/// to the semi-final and 0x203 in the final; no prizes
+/// Original: `AfricanNations::create_schedule` (0x4012e0, african_nations.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x4012e0 } (thiscall, ret 0x10, african_nations.cpp; a virtual +0x3c da Copa Africana): `AfricanNations::
 /// create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase de `cqp12_africana_fase`.
 unsafe extern "thiscall" fn cqp12_africana_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqp12_tabela(this, cqp12_africana_fase(fase), rodadas, extra, liga, 0x9870f8)
@@ -803,7 +849,12 @@ fn cqp12_confed_fase(fase: u32) -> Option<Cqp12Fase> {
     }
 }
 
-/// { 0x58b560 } (thiscall, ret 0x10, fifa_confed.cpp; a virtual +0x3c da Copa das Confederações): `FifaConfed::
+/// rule: the Confederations Cup has two groups (stages −1 and 0, ids 0x3e8 and 0x3e9) of three rounds on 29 July, 1 and
+/// 4 August, with fixed matches; the knockout (stage 1) in single matches: semi-final on 6/8, third place on 8/8 and
+/// final on 9/8 (venue 4); category 10; tie-break 0x383 in the semi-final and 0x83 after
+/// Original: `FifaConfed::create_schedule` (0x58b560, fifa_confed.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x58b560 } (thiscall, ret 0x10, fifa_confed.cpp; a virtual +0x3c da Copa das Confederações): `FifaConfed::
 /// create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase de `cqp12_confed_fase`.
 unsafe extern "thiscall" fn cqp12_confed_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqp12_tabela(this, cqp12_confed_fase(fase), rodadas, extra, liga, 0x9c7474)
@@ -874,7 +925,13 @@ unsafe fn cqk10_confere(nome: &str, this: usize, campos: &[(usize, u8, u32)], da
 const CQK10_COPA_AMERICA: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1), (0xc3, 1, 1), (0xc4, 1, 0xa), (0x43, 1, 2),
     (0xc5, 1, 1), (0xc6, 1, 2), (0xc8, 1, 0), (0xbe, 1, 2), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7)];
 
-/// { 0x5e12d0 } (thiscall, ret 0, goldcup.cpp; a virtual +0x8c; quadro SEH só da data local, sem destrutor):
+/// rule: the Copa America groups are single round robin, 3 points a win and 1 a draw, tiebreak by codes 1, 2 and 3
+/// [inference: goal difference, goals for, wins]; two qualifiers per group; national teams; category 10 on each match;
+/// 7 substitutes and 3 changes; the date of 20 of month 2 of the competition year on weekday 5 [inference: the draw
+/// date]
+/// Original: `GoldCup::set_up_rules` (0x5e12d0, goldcup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5e12d0 } (thiscall, ret 0, goldcup.cpp; a virtual +0x8c; quadro SEH só da data local, sem destrutor):
 /// `GoldCup::set_up_rules()`: os grupos da Copa América em turno único, 3 pontos a vitória e 1 o empate, a categoria 0xa
 /// (seleções), os desempates (1, 2, 3, 0), dois classificados por grupo, seleções (+0x43 = 2), 7 no banco e 3
 /// substituições, começo em 20 do mês 2 do ano da competição num dia da semana 5; depois a tabela das rodadas.
@@ -896,7 +953,12 @@ unsafe extern "thiscall" fn comparar_cqk10_copa_america_regras(this: usize) -> u
 const CQK10_AFRICANA: [(usize, u8, u32); 14] = [(0x43, 1, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1),
     (0xc3, 1, 1), (0xc4, 1, 0xa), (0xc5, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7)];
 
-/// { 0x401ab0 } (thiscall, ret 0, african_nations.cpp; a virtual +0x8c; quadro SEH só da data local):
+/// rule: the African Nations Cup groups are single round robin, 3/1 points, tiebreak 1, 2, 3, two qualifiers per group,
+/// category 10, 7 substitutes and 3 changes; the date of 5 of month 9 of the year before the tournament on weekday 5
+/// [inference: the draw in the previous year] and +0xb8 = −1
+/// Original: `AfricanNations::set_up_rules` (0x401ab0, african_nations.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x401ab0 } (thiscall, ret 0, african_nations.cpp; a virtual +0x8c; quadro SEH só da data local):
 /// `AfricanNations::set_up_rules()`: os grupos da Copa Africana em turno único, 3/1 pontos, a categoria 0xa, os
 /// desempates (1, 2, 3), dois classificados por grupo, seleções, 7 no banco e 3 substituições, a data em 5 do mês 9 do
 /// ano anterior ao da competição num dia da semana 5 [inferência: o sorteio] e +0xb8 = −1.
@@ -918,7 +980,11 @@ unsafe extern "thiscall" fn comparar_cqk10_copa_africana_regras(this: usize) -> 
 const CQK10_OCEANIA: [(usize, u8, u32); 14] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x43, 1, 2), (0xc6, 1, 2), (0x3c, 2, 1), (0xc3, 1, 1),
     (0xc4, 1, 0xa), (0xc5, 1, 1), (0xbe, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7)];
 
-/// { 0x91ecf0 } (thiscall, ret 0, wc_oceania_league.cpp; a virtual +0x8c; quadro SEH só da data local):
+/// rule: the Oceania qualifier groups are single round robin, 3/1 points, tiebreak 1, 2, 3, one qualifier per group (to
+/// the Oceania final), category 10, 7 substitutes and 3 changes, starting on 15 of month 0 on weekday 5
+/// Original: `WcOceaniaLeague::set_up_rules` (0x91ecf0, wc_oceania_league.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x91ecf0 } (thiscall, ret 0, wc_oceania_league.cpp; a virtual +0x8c; quadro SEH só da data local):
 /// `WcOceaniaLeague::set_up_rules()`: os grupos da eliminatória da Oceania em turno único, 3/1 pontos, a categoria 0xa,
 /// os desempates (1, 2, 3), um classificado por grupo, seleções, 7 no banco e 3 substituições, começo em 15 do mês 0
 /// do ano da competição num dia da semana 5.

@@ -483,7 +483,15 @@ fn cqp11_asia_clubes_fase(fase: u32) -> Option<Cqp11Fase> {
     }
 }
 
-/// { 0x40ae90 } (thiscall, ret 0x10, asia_club_champ.cpp; a virtual +0x3c): `AsiaClubChamp::create_round_table(fase,
+/// rule: the Asian Club Championship has, in each zone (stages −1 and 0, ids 0x480 and 0x481), two two-legged
+/// qualifying rounds (1st drawn on 1/8 and played on 23/8, 2nd on 14/9 and 20/9; 21 days between legs in the 1st, 7 in
+/// the 2nd); the final groups (stages 1 and 2, ids 0x482 and 0x483) of three rounds on 21, 23 and 25 March of the
+/// following year with fixed pairings (matches 0 and 1 of each round); the final stage (stage 3) in May: semi-final on
+/// 24/5, third place and final on 26/5, single matches (tie-break 0x383 and 0x83); category 4 in the qualifiers and 6
+/// after
+/// Original: `AsiaClubChamp::create_round_table` (0x40ae90, asia_club_champ.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x40ae90 } (thiscall, ret 0x10, asia_club_champ.cpp; a virtual +0x3c): `AsiaClubChamp::create_round_table(fase,
 /// &rodadas, &extra, &é_liga)`: a fase de `cqp11_asia_clubes_fase`.
 unsafe extern "thiscall" fn cqp11_asia_clubes_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqp11_tabela(this, cqp11_asia_clubes_fase(fase), rodadas, extra, liga, 0x987a40)
@@ -508,7 +516,13 @@ fn cqp11_asia_recopa_fase(fase: u32) -> Option<Cqp11Fase> {
     }
 }
 
-/// { 0x40cf90 } (thiscall, ret 0x10, asia_cup_winner.cpp; a virtual +0x3c): `AsiaCupWinner::create_round_table(fase,
+/// rule: the Asian Cup Winners' Cup has, in each zone (stages −1 and 0, ids 0x480 and 0x481), three two-legged
+/// qualifying rounds: 1st on 23/8, 2nd on 20/9, quarter-finals on 24 March of the following year (21 days between legs
+/// in the 1st, 7 after); the final stage (stage 1) in May: semi-final on 24/5, third place and final on 26/5, single
+/// matches; category 4 in the qualifiers and 6 after
+/// Original: `AsiaCupWinner::create_round_table` (0x40cf90, asia_cup_winner.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x40cf90 } (thiscall, ret 0x10, asia_cup_winner.cpp; a virtual +0x3c): `AsiaCupWinner::create_round_table(fase,
 /// &rodadas, &extra, &é_liga)`: a fase de `cqp11_asia_recopa_fase`.
 unsafe extern "thiscall" fn cqp11_asia_recopa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqp11_tabela(this, cqp11_asia_recopa_fase(fase), rodadas, extra, liga, 0x987b60)
@@ -533,7 +547,14 @@ fn cqp11_trofeu_fase(fase: u32) -> Option<Cqp11Fase> {
     }
 }
 
-/// { 0x56ade0 } (thiscall, ret 0x10, eng_auto_cup.cpp; a virtual +0x3c do LDV Vans Trophy): `EngAutoCup::
+/// rule: the LDV Vans Trophy has two sections (stages −1 and 0, North and South [inference], ids 0x41d and 0x41e) of
+/// five single-match rounds: 1st on 10/12 (24 teams), 2nd on 14/1 (16 teams, 4 new), quarter-finals on 4/2, semi-final
+/// on 18/2 and the section final over two legs from 4/3 (7 days); the final (stage 1) drawn on 12/3 and played on 20/4
+/// of the following year with venue 4 (neutral ground [inference]); category 4 in the sections and 6 in the finals; no
+/// per-round prizes
+/// Original: `EngAutoCup::create_round_table` (0x56ade0, eng_auto_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x56ade0 } (thiscall, ret 0x10, eng_auto_cup.cpp; a virtual +0x3c do LDV Vans Trophy): `EngAutoCup::
 /// create_round_table(fase, &rodadas, &extra, &é_liga)`: a fase de `cqp11_trofeu_fase`.
 unsafe extern "thiscall" fn cqp11_trofeu_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqp11_tabela(this, cqp11_trofeu_fase(fase), rodadas, extra, liga, 0x9c4180)

@@ -238,7 +238,12 @@ const CQQ4_SEGUNDA_IMPAR_TODAS: [Cqq4Rodada; 42] = [
 
 const CQQ4_SEGUNDA_PAR_NATAL: Cqq4Natal = Cqq4Natal { comeco: &CQQ4_SEGUNDA_PAR_COMECO, referencia: 16, ajuste: 17, casos: [&CQQ4_SEGUNDA_PAR_NATAL_0, &CQQ4_SEGUNDA_PAR_NATAL_1, &CQQ4_SEGUNDA_PAR_NATAL_2, &CQQ4_SEGUNDA_PAR_NATAL_3, &CQQ4_SEGUNDA_PAR_NATAL_4, &CQQ4_SEGUNDA_PAR_NATAL_5, &CQQ4_SEGUNDA_PAR_NATAL_6, &CQQ4_SEGUNDA_PAR_NATAL_PADRAO], fim: &CQQ4_SEGUNDA_PAR_FIM, linha: 0x146 };
 
-/// { 0x853c90 } (thiscall, ret 0x10, spa_second.cpp, 7.827 bytes, método +0x3c): `SpaSecond::create_schedule(fase,
+/// the Segunda schedule: 42 rounds (22 clubs), nearly all on Sunday (day 6); in odd years (2001/02) a fixed table from
+/// 22 August to 4 June, with one TV slot; in even years, from 30 August to 6 June, with three TV slots and one
+/// fixed-date Christmas round chosen by the day the mid-December round falls on
+/// Original: `SpaSecond::create_schedule` (0x853c90, spa_second.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x853c90 } (thiscall, ret 0x10, spa_second.cpp, 7.827 bytes, método +0x3c): `SpaSecond::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 42 rodadas, a tabela pela paridade do ano +0x40 (no ano par com a rodada
 /// do Natal; no ímpar sem); as outras devolvem 0. Fonte 0xa829bc.
 unsafe extern "thiscall" fn calendario_da_segunda_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {

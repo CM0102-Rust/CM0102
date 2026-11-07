@@ -63,7 +63,14 @@ unsafe fn cqi11_listas() -> Cqi11Listas {
     l
 }
 
-/// { 0x4c11a0 } (thiscall, ret 0, con_champ.cpp): `ConChamp::select_qualified_clubs()`; devolve 1. Oito times (+0x3e).
+/// rule: eight clubs. Two from Mexico (drawn among the 6 with the highest reputation), three from Central America
+/// (nation region 7, other than nation [0x9cf4f8]; among the top 9), one from the Caribbean (region 6; among the top 3)
+/// and two from the United States: with competition [0x9cf728] running [inference: the US Open Cup], the latest MLS
+/// champion and its champion (if the same club, the place goes to the MLS runner-up); without it, two MLS clubs among
+/// the top 3 by reputation. Up to 200 clubs per region and 12 from the MLS are considered
+/// Original: `ConChamp::select_qualified_clubs` (0x4c11a0, con_champ.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4c11a0 } (thiscall, ret 0, con_champ.cpp): `ConChamp::select_qualified_clubs()`; devolve 1. Oito times (+0x3e).
 /// Os clubes (até a primeira seleção) em quatro listas: os da nação [0x9cf3d0] (México, até 200); os da divisão
 /// [0x9cf590] (a MLS, +0x57 do clube; até 12); os de nação de região 7 (+0x75 da nação, América Central) fora da
 /// [0x9cf4f8] (até 200); os de região 6 (o Caribe, até 200). Cada lista ordenada pela reputação, com os 3 × k
@@ -135,7 +142,11 @@ unsafe extern "thiscall" fn comparar_cqi11_concacaf_classificados(this: usize) -
     r
 }
 
-/// { 0x4c1620 } (thiscall, ret 8, con_champ.cpp; a virtual +0x14 da copa): `ConChamp::update_for_date(hoje, fase)`.
+/// rule: on the first day of the cup season (empty team table), picks the qualified clubs and the predicted positions;
+/// every day, the cup update (draws and matches)
+/// Original: `ConChamp::update_for_date` (0x4c1620, con_champ.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x4c1620 } (thiscall, ret 8, con_champ.cpp; a virtual +0x14 da copa): `ConChamp::update_for_date(hoje, fase)`.
 /// Com a tabela de times vazia (o clube do time 0 = 0) e fase ≠ 0: os classificados (0x4c11a0: mov ecx, this ->
 /// thiscall, ret 0; negativo, a caixa da linha 0x1ba e devolve 0) e as posições previstas (virtual +0x5c). Depois a
 /// atualização da copa (0x51f890: push fase; push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução sai.
@@ -171,7 +182,10 @@ unsafe extern "thiscall" fn comparar_cqi11_concacaf_dia(this: usize, hoje: usize
     r
 }
 
-/// { 0x4c15f0 } (thiscall, ret 0, con_champ.cpp; a virtual +0x8c): `ConChamp::set_up_rounds()`; devolve 1. O fundo de
+/// rule: the cup prize fund is 2,000,000; the round table (three-round knockout) comes from virtual +0x3c
+/// Original: `ConChamp::set_up_rounds` (0x4c15f0, con_champ.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4c15f0 } (thiscall, ret 0, con_champ.cpp; a virtual +0x8c): `ConChamp::set_up_rounds()`; devolve 1. O fundo de
 /// prêmios (+0x28) de 2.000.000 e a tabela das rodadas (+0xa3) da virtual +0x3c (push 0; push &+0x3a; push &+0x3c;
 /// push −1; mov ecx, this -> thiscall, ret 0x10).
 unsafe extern "thiscall" fn cqi11_concacaf_rodadas(this: usize) -> u32 {

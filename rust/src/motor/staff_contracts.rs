@@ -2,7 +2,10 @@
 
 
 
-/// { 0x867b50 } (thiscall, staff_contracts.cpp): `STAFF_CONTRACT::has_active_release_clause()`: 1 com a cláusula +0x1c
+/// 1 when one of the three release clauses of the contract is active
+/// Original: `STAFF_CONTRACT::has_active_release_clause` (0x867b50, staff_contracts.cpp, thiscall).
+///
+/// [pt] { 0x867b50 } (thiscall, staff_contracts.cpp): `STAFF_CONTRACT::has_active_release_clause()`: 1 com a cláusula +0x1c
 /// = 2, a +0x1d = 1 ou a +0x1f = 2; senão 0. Pelo dia dos contratos 0x4c7ac0, pelo valor do jogador 0x4d0c60, pelo preço
 /// pedido 0x4d2070, pela resposta prevista do vendedor 0x84af00, pelo vendedor que tem de aceitar 0x8cd240 e pelo lance
 /// 0x8e5d60. Chamada a cada contrato: sem contador.
@@ -20,7 +23,11 @@ unsafe extern "thiscall" fn comparar_clausula_de_rescisao_ativa(c: usize) -> u32
     r
 }
 
-/// { 0x868210 } (thiscall, ret 0xc, staff_contracts.cpp, quadro SEH só da data local):
+/// whether the contract is still in the protected period of the new FIFA rules: 3 years under age 28 at signing,
+/// otherwise 2
+/// Original: `STAFF_CONTRACT::check_fifa_protected_period` (0x868210, staff_contracts.cpp, thiscall).
+///
+/// [pt] { 0x868210 } (thiscall, ret 0xc, staff_contracts.cpp, quadro SEH só da data local):
 /// `STAFF_CONTRACT::check_fifa_protected_period(_, &no_limite, &anos)`: zera `no_limite` (se não nulo). Sem as regras
 /// novas da FIFA ([0xae233c] ≠ 1), 1. Contrato (data +0x25) anterior à data das regras ([0xae2330]: ano sem sinal, dia
 /// com sinal), 1. Senão o período protegido: 3 anos com a idade da pessoa ([0xae23bc] + 110 × [+0]) na data do contrato
@@ -79,7 +86,10 @@ unsafe extern "thiscall" fn comparar_periodo_protegido(c: usize, x: usize, no_li
     r
 }
 
-/// { 0x867aa0 } (cdecl, staff_contracts.cpp): `staff_contract_is_bonus_type_allowed(pessoa, tipo)`: sem a ficha de
+/// whether the bonus type applies to the player: type 2 only for goalkeepers, the others only for non-goalkeepers
+/// Original: `staff_contract_is_bonus_type_allowed` (0x867aa0, staff_contracts.cpp, cdecl).
+///
+/// [pt] { 0x867aa0 } (cdecl, staff_contracts.cpp): `staff_contract_is_bonus_type_allowed(pessoa, tipo)`: sem a ficha de
 /// jogador (+0x61), 0; goleiro (+0xf da ficha = 0x14), 1 só para o tipo 2; senão 1 para os tipos que não são 2. Pela
 /// tela do contrato.
 unsafe extern "C" fn tipo_de_bonus_permitido(pessoa: usize, tipo: u32) -> u32 {
@@ -133,14 +143,22 @@ unsafe fn cpl5_zerar_moral(this: usize, pessoa: usize, clube: usize) {
     }
 }
 
-/// { 0x866ee0 } (thiscall, ret 8, staff_contracts.cpp): `STAFF_CONTRACT::reset_morale_state(pessoa, clube)`: o
+/// clears the contract morale, grievances and happiness, the person's opinion links (0x549c90), sets +0x4e to 4 and the
+/// club nation language level (0x7c6830, up to 10) in +0x4f
+/// Original: `STAFF_CONTRACT::reset_morale_state` (0x866ee0, staff_contracts.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x866ee0 } (thiscall, ret 8, staff_contracts.cpp): `STAFF_CONTRACT::reset_morale_state(pessoa, clube)`: o
 /// `cpl5_zerar_moral`. Pela assinatura do contrato (CONTRACT_MANAGER::sign_contract 0x4cf720, nos termos que
 /// depois são copiados para o contrato guardado).
 unsafe extern "thiscall" fn zerar_moral_do_contrato(this: usize, pessoa: usize, clube: usize) {
     cpl5_zerar_moral(this, pessoa, clube);
 }
 
-/// { 0x85e590 } (thiscall, ret 0x18, staff_contracts.cpp): `STAFF_CONTRACT::init_from_current_contract(pessoa, clube,
+/// the offer from the current contract: person, club, wage × percent / 100, today, the end date, flags, morale reset as
+/// 0x866ee0 and the two clauses; without contract, error box
+/// Original: `STAFF_CONTRACT::init_from_current_contract` (0x85e590, staff_contracts.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x85e590 } (thiscall, ret 0x18, staff_contracts.cpp): `STAFF_CONTRACT::init_from_current_contract(pessoa, clube,
 /// fim, percentual, sem_acesso, multa)`: a proposta de transferência ou empréstimo pelo contrato atual da pessoa
 /// (0x4cf5a0 em [0xae1050]; sem contrato, caixa 0xf5 e nada): id da pessoa +0, clube +4, 0 em +8, salário +0xc =
 /// salário atual × percentual (com sinal) / 100, a data de hoje (0xae2c90) em +0x25, o fim em +0x2d, os bits
@@ -182,7 +200,10 @@ unsafe extern "thiscall" fn contrato_pelo_atual(this: usize, pessoa: usize, club
     write_u8(this + 0x1d, multa as u8);
 }
 
-/// { 0x867d30 } (thiscall, staff_contracts.cpp): `STAFF_CONTRACT::get_expiry_band()`: a faixa 0..=14 do fim do contrato
+/// the 0..=14 band of the contract end date against today and the CONTRACT_MANAGER limit dates (0xae1010..0xae1090)
+/// Original: `STAFF_CONTRACT::get_expiry_band` (0x867d30, staff_contracts.cpp, thiscall).
+///
+/// [pt] { 0x867d30 } (thiscall, staff_contracts.cpp): `STAFF_CONTRACT::get_expiry_band()`: a faixa 0..=14 do fim do contrato
 /// (+0x2d) contra as datas de hoje (0xae2c90) e as 16 datas do CONTRACT_MANAGER (0xae1010..0xae1090, montadas na
 /// criação): tipo (+0x35 & 0x3f) 1 ou fim já passado, 14; tipo diferente de 2, 0; depois de [0xae1090], 0; os
 /// intervalos entre 0xae1040/0xae1060/0xae1010/0xae1058/0xae1030 dão os pares 1-2, 3-4, 5-6, 7-8, 9-10 (o ímpar no dia
@@ -280,7 +301,10 @@ unsafe fn cph1_pessoa(contrato: usize) -> usize {
     (read_u32(0xae23bc) as usize).wrapping_add((read_u32(contrato) as usize).wrapping_mul(110))
 }
 
-/// { 0x85fa00 } (thiscall, staff_contracts.cpp): `STAFF_CONTRACT::days_to_end_date`: os dias da data do jogo
+/// the days from the game date to the contract end date (+0x2d), through 0x54cdb0
+/// Original: `STAFF_CONTRACT::days_to_end_date` (0x85fa00, staff_contracts.cpp, thiscall).
+///
+/// [pt] { 0x85fa00 } (thiscall, staff_contracts.cpp): `STAFF_CONTRACT::days_to_end_date`: os dias da data do jogo
 /// (0xae2c90) até a data do fim do contrato (+0x2d), pela 0x54cdb0 (`dias_ate`, a data do jogo por valor). O jogo lê
 /// só a palavra; devolve o eax inteiro da 0x54cdb0.
 unsafe extern "thiscall" fn dias_ate_o_fim_do_contrato(this: usize) -> u32 {
@@ -288,7 +312,10 @@ unsafe extern "thiscall" fn dias_ate_o_fim_do_contrato(this: usize) -> u32 {
     dias(this + 0x2d, read_u32(0xae2c90), read_u32(0xae2c94)) // a data do fim do contrato
 }
 
-/// { 0x867520 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::clear_all_grievances(conferir)`: zera as
+/// clears the grievances (+0x45), the opinion links (0x549c90) and, when asked, checks the withdrawal (0x867240)
+/// Original: `STAFF_CONTRACT::clear_all_grievances` (0x867520, staff_contracts.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x867520 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::clear_all_grievances(conferir)`: zera as
 /// queixas (+0x45), tira os vínculos de opinião da pessoa (0x549c90) e, com `conferir`, confere a retirada do pedido de
 /// transferência (0x867240 com 0).
 unsafe extern "thiscall" fn limpar_todas_as_queixas(this: usize, conferir: u32) {
@@ -333,7 +360,12 @@ unsafe fn cph1_retira(this: usize) -> Option<usize> {
     Some(pessoa)
 }
 
-/// { 0x867240 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::check_transfer_request_withdrawal(ctx)`:
+/// a player of the contract club with a transfer request, no staff criterion and no agreed contract: withdraws the
+/// request (0x4d9460), morale becomes +0x5b + +0x59 + 5, +0x3e = 0, +0x3d at least 15, and clears each grievance
+/// checking again
+/// Original: `STAFF_CONTRACT::check_transfer_request_withdrawal` (0x867240, staff_contracts.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x867240 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::check_transfer_request_withdrawal(ctx)`:
 /// quando a decisão (`cph1_retira`) manda, retira o pedido (0x4d9460 em [0xae1050] com o contrato e `ctx`), apaga o
 /// bit 3 de +0x4e, a felicidade no contrato (+0x44) vira +0x5b + +0x59 + 5 da pessoa, zera +0x3e e sobe +0x3d a 15; e cada queixa
 /// acesa (bits 0x10, 1, 4, 8, 0x100, 0x80, 0x10000 de +0x45, nessa ordem) é apagada, confere de novo (0x867240 com o

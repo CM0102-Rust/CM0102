@@ -16,7 +16,14 @@ unsafe fn cqj1_entra(c: usize, fase: u8) -> bool {
     true
 }
 
-/// { 0x4c6430 } (thiscall, ret 8, conmebol_seeding.cpp, `ConmebolSeeding::assign_libertadores_places`): as vagas da
+/// the Libertadores rule: the last winner enters round 1 and the others round 2 [inference: groups and preliminary];
+/// the 11 nations of the seeding table (with Brazil, Mexico and the South American ones), each with its quota; Brazil,
+/// up to 2002, with Palmeiras and Cruzeiro fixed, from 2003 with the Copa do Brasil winner (or runner-up) and the Copa
+/// dos Campeões winner; and always with the Brasileirão champion and runner-up; each nation fills its quota with the
+/// top clubs of the table still without a place (no second try: an already qualified club makes the place be lost)
+/// Original: `ConmebolSeeding::assign_libertadores_places` (0x4c6430, conmebol_seeding.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x4c6430 } (thiscall, ret 8, conmebol_seeding.cpp, `ConmebolSeeding::assign_libertadores_places`): as vagas da
 /// Libertadores ([0x9cf63c]). O campeão da última edição (0x4afd80 com a linha da competição e o lugar 0) entra na fase 1
 /// (sem ele ou já com vaga, a caixa da linha 0x114). Depois, as 11 nações da tabela (registros de 10 bytes a partir do
 /// objeto: +0 id da nação, +8 a cota), cada uma até a cota, na fase 2: o Brasil, até 2002, o Palmeiras e o Cruzeiro (as
@@ -103,7 +110,11 @@ unsafe extern "thiscall" fn comparar_conmebol_vagas_libertadores(this: usize, cl
     });
 }
 
-/// { 0x4c6730 } (thiscall, ret 0x18, conmebol_seeding.cpp, `ConmebolSeeding::find_nth_unqualified_club_of_nation`; o
+/// in the South American club table sorted by nation (and, within it, by division, position and reputation), the nth
+/// club of the nation, skipping on request those already qualified and those with a human manager
+/// Original: `ConmebolSeeding::find_nth_unqualified_club_of_nation` (0x4c6730, conmebol_seeding.cpp, thiscall, ret 0x18 (this não lido)).
+///
+/// [pt] { 0x4c6730 } (thiscall, ret 0x18, conmebol_seeding.cpp, `ConmebolSeeding::find_nth_unqualified_club_of_nation`; o
 /// this não é lido; o mesmo código da 0x9050d0 da UEFA): na tabela dos clubes sul-americanos (registros de 12 bytes
 /// ordenados pela nação: +0 o clube, +4 o id da nação), a busca binária (bsearch 0x946464 com 0x905ce0; a chave só com a
 /// nação e +8 = 0xff) acha um clube da nação; recua até o primeiro da nação; anda até o `n`-ésimo (char, 1 = o primeiro)
@@ -174,7 +185,12 @@ const CQJ1_MERCOSUL: [usize; 20] = [
     0x9d00e0, 0x9d0354, 0x9d0280, 0x9d0284, 0x9d0288, 0x9d0298, 0x9d028c, 0x9d0290, 0x9d0294, 0x9d027c,
 ];
 
-/// { 0x4c6890 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::is_mercosur_invited_club`; o this não é
+/// the Copa Mercosur rule: the 20 fixed guests (River Plate, Boca Juniors, Independiente, San Lorenzo, Vélez Sarsfield,
+/// Rosario Central; Cruzeiro, São Paulo, Palmeiras, Corinthians, Flamengo, Vasco, Grêmio; Colo-Colo, Universidad de
+/// Chile, Universidad Católica; Peñarol, Nacional; Olimpia, Cerro Porteño)
+/// Original: `ConmebolSeeding::is_mercosur_invited_club` (0x4c6890, conmebol_seeding.cpp, thiscall, ret 4 (this não lido)).
+///
+/// [pt] { 0x4c6890 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::is_mercosur_invited_club`; o this não é
 /// lido): 1 se o id do clube é um dos 20 convidados da Copa Mercosul (`CQJ1_MERCOSUL`), senão 0 (sem clube, devolve o 0
 /// do próprio ponteiro).
 unsafe extern "thiscall" fn conmebol_convidado_da_mercosul(_this: usize, clube: usize) -> u32 {
@@ -202,7 +218,12 @@ unsafe extern "thiscall" fn comparar_conmebol_convidado_da_mercosul(this: usize,
 // ---------- 273a leva: a classificação da Conmebol: a tabela dos clubes sul-americanos, a virada do ano e o campeão da Copa dos Campeões (conmebol_seeding.cpp) ----------
 
 
-/// { 0x4c6280 } (stdcall, ret 4, conmebol_seeding.cpp, `collect_conmebol_clubs`): a tabela dos clubes da Conmebol: aloca
+/// the CONMEBOL club table: South American and Mexican clubs (national teams excluded), each without a continental
+/// place, sorted by nation and, within it, by division, position and reputation [inference: the division +0x69 and club
+/// +0x5f fields]
+/// Original: `collect_conmebol_clubs` (0x4c6280, conmebol_seeding.cpp, stdcall, ret 4).
+///
+/// [pt] { 0x4c6280 } (stdcall, ret 4, conmebol_seeding.cpp, `collect_conmebol_clubs`): a tabela dos clubes da Conmebol: aloca
 /// 12 bytes por clube do jogo (0x944e46; sem memória, a caixa da linha 0xbb e devolve 0) e grava o ponteiro em `*saida`;
 /// para cada clube com nação, que não é seleção (0x53b900), do México ([0x9cf3d0]) ou de nação da América do Sul (o
 /// continente +0x71 com o id de [0x9cfa1c]): tira a vaga continental (+0x1db = −1) e grava o registro (+0 o clube, +4 o
@@ -297,7 +318,10 @@ unsafe extern "stdcall" fn comparar_conmebol_juntar_clubes(saida: *mut usize) ->
     a
 }
 
-/// { 0x4c61b0 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::update_for_new_season`): chamada pela
+/// the Libertadores calendar: every new game year it builds the table and gives the places
+/// Original: `ConmebolSeeding::update_for_new_season` (0x4c61b0, conmebol_seeding.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x4c61b0 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::update_for_new_season`): chamada pela
 /// Libertadores e pela Mercosul; sem `pular` e com o ano do jogo ([0xae2c92]) outro que o +0x6f: grava o ano, monta a
 /// tabela dos clubes (0x4c6280; vazia, a caixa da linha 0x9b e volta sem soltar), dá as vagas da Libertadores (0x4c6430)
 /// e solta a tabela.
@@ -333,7 +357,10 @@ unsafe extern "thiscall" fn comparar_conmebol_virada_do_ano(this: usize, pular: 
     PLACAR.registrar(igual, || format!("conmebol_virada_do_ano({}): diferenças em {:x?}", pular, cqj2_dif(&mo, &mr)));
 }
 
-/// { 0x4c6960 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::set_bra_champ_cup_winner`): guarda o id do
+/// stores the Copa dos Campeões winner: from 2003 on it gets a Libertadores place
+/// Original: `ConmebolSeeding::set_bra_champ_cup_winner` (0x4c6960, conmebol_seeding.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x4c6960 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::set_bra_champ_cup_winner`): guarda o id do
 /// campeão da Copa dos Campeões em +0x71 (a vaga dele na Libertadores, de 2003 em diante).
 unsafe extern "thiscall" fn conmebol_campeao_dos_campeoes(this: usize, clube: usize) {
     core::ptr::write_unaligned((this + 0x71) as *mut u32, read_u32(clube));

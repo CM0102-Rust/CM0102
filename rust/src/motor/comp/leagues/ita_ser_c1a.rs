@@ -25,19 +25,30 @@ unsafe fn cql5_passar_de_fase(this: usize, arquivo: usize, linha: u32, criar: us
     }
 }
 
-/// { 0x64b9e0 } (thiscall, ret 0, ita_ser_c1a.cpp): `ItaSerC1a::advance_stage()`; cria o play-off e o play-out pela
+/// after the league, the current stage goes up; on the first, the play-off and the play-out are created; past the last,
+/// the error box
+/// Original: `ItaSerC1a::advance_stage` (0x64b9e0, ita_ser_c1a.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x64b9e0 } (thiscall, ret 0, ita_ser_c1a.cpp): `ItaSerC1a::advance_stage()`; cria o play-off e o play-out pela
 /// 0x64ba70. Fonte 0x9ea474, linha 0x250.
 unsafe extern "thiscall" fn fase_seguinte_da_c1a(this: usize) {
     cql5_passar_de_fase(this, 0x9ea474, 0x250, 0x64ba70)
 }
 
-/// { 0x64fba0 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::advance_stage()`; pela 0x64fc30. Fonte 0x9ea558, linha
+/// the same as C1/A
+/// Original: `ItaSerC1b::advance_stage` (0x64fba0, ita_ser_c1b.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x64fba0 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::advance_stage()`; pela 0x64fc30. Fonte 0x9ea558, linha
 /// 0x255.
 unsafe extern "thiscall" fn fase_seguinte_da_c1b(this: usize) {
     cql5_passar_de_fase(this, 0x9ea558, 0x255, 0x64fc30)
 }
 
-/// { 0x578330 } (thiscall, ret 0, eng_third.cpp): `EngThird::advance_stage()`; cria o play-off da Third Division pela
+/// after the Third Division league, the current stage goes up and, on the first, the promotion play-off is created
+/// (0x5783c0)
+/// Original: `EngThird::advance_stage` (0x578330, eng_third.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x578330 } (thiscall, ret 0, eng_third.cpp): `EngThird::advance_stage()`; cria o play-off da Third Division pela
 /// 0x5783c0 (já em Rust). Fonte 0x9c4424, linha 0x29c.
 unsafe extern "thiscall" fn fase_seguinte_da_third(this: usize) {
     cql5_passar_de_fase(this, 0x9c4424, 0x29c, 0x5783c0)
@@ -162,7 +173,12 @@ unsafe fn cql5_criar_fases(this: usize, arquivo: usize, linhas: [u32; 3], lista_
     write_u32_from_usize(this + 0x30, 1);
 }
 
-/// { 0x64ba70 } (thiscall, ret 0, ita_ser_c1a.cpp, quadro SEH só para o operator new): `ItaSerC1a::create_playoff_stages()`.
+/// the C1/A rule (18 clubs): the champion goes up directly and enters the Serie C1 Super Cup; 2nd v 5th and 3rd v 4th
+/// play the promotion play-off (the second place); 14th v 17th and 15th v 16th play the play-out (the losers go down
+/// with the 18th [inference]); each is a cup stage with the league's own schedule
+/// Original: `ItaSerC1a::create_playoff_stages` (0x64ba70, ita_ser_c1a.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x64ba70 } (thiscall, ret 0, ita_ser_c1a.cpp, quadro SEH só para o operator new): `ItaSerC1a::create_playoff_stages()`.
 /// A regra da C1/A: o campeão sobe direto (e vai à Supercopa da C1); do 2º ao 5º, um play-off de acesso (2º × 5º,
 /// 3º × 4º) dá a segunda vaga; do 14º ao 17º, um play-out (14º × 17º, 15º × 16º) decide quem cai junto com o 18º
 /// [inferência pelas faixas da cqk_6 e pelos nomes do mapa]. Fonte 0x9ea474, linhas 0x27c, 0x290, 0x2b3.
@@ -170,7 +186,10 @@ unsafe extern "thiscall" fn fases_do_fim_da_c1a(this: usize) {
     cql5_criar_fases(this, 0x9ea474, [0x27c, 0x290, 0x2b3], true)
 }
 
-/// { 0x64fc30 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::create_play_off_stages()`, a mesma regra na C1/B.
+/// the same rule in C1/B
+/// Original: `ItaSerC1b::create_play_off_stages` (0x64fc30, ita_ser_c1b.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x64fc30 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::create_play_off_stages()`, a mesma regra na C1/B.
 /// Fonte 0x9ea558, linhas 0x281, 0x295, 0x2b8; no fim solta o gabarito antes da lista.
 unsafe extern "thiscall" fn fases_do_fim_da_c1b(this: usize) {
     cql5_criar_fases(this, 0x9ea558, [0x281, 0x295, 0x2b8], false)

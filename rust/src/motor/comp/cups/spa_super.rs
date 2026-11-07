@@ -67,6 +67,12 @@ unsafe fn cqm12_espanha(this: usize) -> (i32, i32) {
     cqm12_fim(l)
 }
 
+/// rule: the Spanish Super Cup is between the Copa del Rey winner (home in the first leg [inference]) and the League
+/// champion; if the same club won both, the Copa del Rey runner-up takes its place; if one is missing, the error box
+/// Original: `SpaSuper::select_teams` (0x858aa0, spa_super.cpp, thiscall, ret 0).
+///
+/// [pt] regra: a Supercopa da Espanha é entre o campeão da Copa do Rei (o mandante da ida [inferência]) e o campeão da Liga;
+/// se o mesmo clube ganhou as duas, entra o vice da Copa do Rei; sem algum deles, a caixa de erro
 unsafe extern "thiscall" fn cqm12_supercopa_da_espanha_clubes(this: usize) -> i32 {
     cqm12_espanha(this).0
 }
@@ -145,6 +151,14 @@ unsafe fn cqm12_japao(this: usize) -> (i32, i32) {
     cqm12_fim(l)
 }
 
+/// rule: the Japanese Super Cup is between the J1 champion and the Emperor's Cup winner; a winner with no nation (+0x53
+/// = 0, a club that no longer exists [inference]) gives the place to the runner-up; if it is the same club, the
+/// Emperor's Cup runner-up comes in and, if they still coincide, the J1 runner-up; if one is missing, the error box
+/// Original: `JapSuper::select_teams` (0x666160, jap_super.cpp, thiscall, ret 0).
+///
+/// [pt] regra: a Supercopa do Japão é entre o campeão da J1 e o da Copa do Imperador; um campeão sem nação (+0x53 = 0, clube
+/// que não existe mais [inferência]) dá a vaga ao vice; se é o mesmo clube, entra o vice da Copa do Imperador e, se
+/// ainda coincidir, o vice da J1; sem algum deles, a caixa de erro
 unsafe extern "thiscall" fn cqm12_supercopa_do_japao_clubes(this: usize) -> i32 {
     cqm12_japao(this).0
 }
@@ -154,7 +168,12 @@ unsafe extern "thiscall" fn comparar_cqm12_supercopa_do_japao_clubes(this: usize
     cqm12_comparar("cqm12_supercopa_do_japao_clubes", this, || o(this), || cqm12_japao(this))
 }
 
-/// { 0x90a400 } (thiscall, ret 0x10, usa_mls_all_stars.cpp; a virtual +0x3c do Jogo das Estrelas): `UsaMlsAllStars::
+/// rule: the MLS All-Star game is a single match between the two conference selections, drawn on 15/6 and played on 2/8
+/// (moved to weekday 6) at the borrowed home ground [inference: venue 0], with no bracket draw (+0xd = 0x20
+/// [inference]); category 8; no prize
+/// Original: `UsaMlsAllStars::create_round_table` (0x90a400, usa_mls_all_stars.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x90a400 } (thiscall, ret 0x10, usa_mls_all_stars.cpp; a virtual +0x3c do Jogo das Estrelas): `UsaMlsAllStars::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: fora da fase −1 (o byte), 0. Na −1: saida (se pedida) = 0,
 /// rodadas = 1, extra = 0; a tabela (0x944e46 de 0x68; sem memória, a caixa da linha 0x9a e 0) com a rodada única: o
 /// sorteio em 15 do mês 5 (junho) levado ao dia da semana 5, o jogo em 2 do mês 7 (agosto) levado ao dia 6, turno 1,

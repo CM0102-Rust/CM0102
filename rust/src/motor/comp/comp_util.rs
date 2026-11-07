@@ -136,7 +136,10 @@ unsafe fn cpt13_ordenar_com(v: *mut u32, k: *mut i32, n: i32) {
     }
 }
 
-/// { 0x4c08f0 } (cdecl, comp_util.cpp): `comp_util_sort_clubs_by_strength(clubes, n)`: ordena o vetor de `n` clubes
+/// sorts an array of clubs by strength (0x4c0720), strongest first
+/// Original: `comp_util_sort_clubs_by_strength` (0x4c08f0, comp_util.cpp, cdecl).
+///
+/// [pt] { 0x4c08f0 } (cdecl, comp_util.cpp): `comp_util_sort_clubs_by_strength(clubes, n)`: ordena o vetor de `n` clubes
 /// pela força (0x4c0720), a maior primeiro, com as chaves num vetor temporário (0x944e46 / 0x9452ca; a original o
 /// enche de 0x60 antes, tudo sobrescrito). Sem memória: a caixa (linha 0x292d) e nada.
 unsafe extern "C" fn ordenar_clubes_pela_forca(v: usize, n: i32) {
@@ -153,7 +156,10 @@ unsafe extern "C" fn ordenar_clubes_pela_forca(v: usize, n: i32) {
     liberar(k);
 }
 
-/// { 0x4a2540 } (thiscall, ret 8, comp_stats.cpp): `Comp_Stats::set_club_final_position(clube, posição)`: acha
+/// finds or adds the club's record in the competition statistics and stores the position at +0x72
+/// Original: `Comp_Stats::set_club_final_position` (0x4a2540, comp_stats.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x4a2540 } (thiscall, ret 8, comp_stats.cpp): `Comp_Stats::set_club_final_position(clube, posição)`: acha
 /// (0x4a4850) ou acrescenta (0x4aceb0) o registro do clube na estatística da competição e grava a posição (byte) em
 /// +0x72; devolve o registro. Clube nulo: a caixa (linha 0x680).
 unsafe extern "thiscall" fn gravar_posicao_do_clube(this: usize, clube: usize, pos: u32) -> usize {
@@ -221,7 +227,11 @@ unsafe fn cpt13_posicoes(this: usize, v: *const u32, gravar: usize) -> Vec<(usiz
     chamadas
 }
 
-/// { 0x5223a0 } (thiscall, ret 0, Cup.cpp): `Cup::rank_teams()`: copia os clubes da copa ([+0xa7], registros de 6
+/// sorts the cup clubs by strength and gives each one the predicted position of the round it goes out in, in the cup
+/// statistics
+/// Original: `Cup::rank_teams` (0x5223a0, Cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5223a0 } (thiscall, ret 0, Cup.cpp): `Cup::rank_teams()`: copia os clubes da copa ([+0xa7], registros de 6
 /// bytes, +0x3e deles) para um vetor (0x944e46), ordena pela força (0x4c08f0) e dá a cada um a posição prevista pela
 /// rodada em que sai (0x4a2540 na estatística [+8]); libera o vetor (0x9452ca). Sem estatística: a caixa (linha
 /// 0x1827); sem memória: a original (a caixa da falta de memória e o fim do jogo).
@@ -312,7 +322,11 @@ unsafe fn cpq12_us(a: usize) -> usize {
     read_u32(a) as usize
 }
 
-/// { 0x4afa80 } (cdecl, comp_util.cpp): `comp_util_get_fixture_venue_side(clube, jogo)`: o lado do clube no jogo:
+/// the club side in the fixture: 1 home, 2 away, 3 neutral, by the fixture stadium and the two clubs' stadiums
+/// (national sides: by the stadium nation)
+/// Original: `comp_util_get_fixture_venue_side` (0x4afa80, comp_util.cpp, cdecl).
+///
+/// [pt] { 0x4afa80 } (cdecl, comp_util.cpp): `comp_util_get_fixture_venue_side(clube, jogo)`: o lado do clube no jogo:
 /// 1 em casa, 2 fora, 3 neutro. Sem campo no jogo (+0x18): pelo mandante (+0x1c), 3 se ele não tem estádio (+0x69),
 /// senão 1 para o mandante e 2 para o outro. Seleção (0x53b900): 1 se a nação do campo (+0x38, +0x1f) é a do clube
 /// (+0x53), 2 se é a do adversário, senão 3. Clube: o campo é o estádio do clube e não o do adversário, 1; dos dois,
@@ -361,7 +375,10 @@ unsafe extern "C" fn comparar_lado_do_jogo_para_o_clube(clube: usize, jogo: usiz
     r
 }
 
-/// { 0x4afba0 } (cdecl, comp_util.cpp): `compare_nation_coefficients_desc(a, b)`: a ordem do qsort (12 bytes por
+/// the qsort order of the nation coefficients: highest first
+/// Original: `compare_nation_coefficients_desc` (0x4afba0, comp_util.cpp, cdecl).
+///
+/// [pt] { 0x4afba0 } (cdecl, comp_util.cpp): `compare_nation_coefficients_desc(a, b)`: a ordem do qsort (12 bytes por
 /// entrada, o coeficiente em double em +4) da game_update_nation_coefficients 0x5d6187 (no dia do mês da tabela
 /// 0x9cd200): maior antes (−1); menor ou sem ordem (NaN, a flag C0 do fcomp), 1; igual, 0. Quente (o qsort): sem
 /// contador. A original ordena e libera o vetor logo depois: a ordem não chega ao jogo (só o comparando acusa).
@@ -385,7 +402,11 @@ unsafe extern "C" fn comparar_ordem_dos_coeficientes_das_nacoes(a: usize, b: usi
     r
 }
 
-/// { 0x7f8d70 } (thiscall, ret 0xc, scout_manager.cpp): `SCOUT_MANAGER::has_scout_request(jogador, clube, so_vencidos)`:
+/// whether the club (or the current human's) asked to scout the player, with fewer than 3 reports and, if asked, with
+/// the date already due
+/// Original: `SCOUT_MANAGER::has_scout_request` (0x7f8d70, scout_manager.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x7f8d70 } (thiscall, ret 0xc, scout_manager.cpp): `SCOUT_MANAGER::has_scout_request(jogador, clube, so_vencidos)`:
 /// se o clube (nulo: o do humano da vez, [0xb74c26 + 0x300 × [0xb77c7a]] +0x39) pediu a observação do jogador: busca
 /// binária (0x946464 com 0x7fc270) pelo par (id do clube, id do jogador) nos pedidos (+0x5c, conta +0x64, 17 bytes)
 /// com menos de 3 relatórios (+0x10, com sinal); com `so_vencidos`, só se a data do pedido (+8: dia, +0xa: ano) é
@@ -458,7 +479,12 @@ unsafe fn cpm3_sorteio(n: i32) -> i32 {
     f(n)
 }
 
-/// { 0x6830b0 } (thiscall, ret 0xc, league.cpp; `this` não é lido): `League::move_club_to_division(clube, divisao,
+/// the current division becomes last season's and the new one is set; clears the division clauses (and the squad
+/// numbers when the new one uses them), opens the requested manager vacancy, upgrades the stadium to the league minimum
+/// and turns status 3 into 2
+/// Original: `League::move_club_to_division` (0x6830b0, league.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x6830b0 } (thiscall, ret 0xc, league.cpp; `this` não é lido): `League::move_club_to_division(clube, divisao,
 /// vaga)`: a divisão atual (+0x57) vira a da última temporada (+0x5b) e a nova entra; as cláusulas de divisão dos
 /// jogadores são limpas (0x4cd120 em [0xae1050]), com os números da camisa também se a divisão velha não os usava e a
 /// nova usa (0x85add0 em [0xdd7ef0], antes e depois); com `vaga` e sem técnico (+0xcf), a vaga de técnico (0x69ba50 em
@@ -519,7 +545,10 @@ unsafe fn cpm3_trocar(itens: usize, n: i32) {
     cpm3_por(pb, va);
 }
 
-/// { 0x4afb40 } (cdecl, comp_util.cpp): `comp_util_shuffle_pointer_array(itens, n)`: embaralha o vetor de `n` (curto)
+/// shuffles an array of n pointers with 3 × n swaps of drawn pairs
+/// Original: `comp_util_shuffle_pointer_array` (0x4afb40, comp_util.cpp, cdecl).
+///
+/// [pt] { 0x4afb40 } (cdecl, comp_util.cpp): `comp_util_shuffle_pointer_array(itens, n)`: embaralha o vetor de `n` (curto)
 /// ponteiros com 3 × n trocas de pares sorteados (0x90cfc0(n) duas vezes cada).
 unsafe extern "C" fn embaralhar_ponteiros(itens: usize, n: u32) {
     let n = n as u16 as i16 as i32;
@@ -537,7 +566,10 @@ unsafe extern "C" fn embaralhar_ponteiros(itens: usize, n: u32) {
     }
 }
 
-/// { 0x4afbd0 } (cdecl, comp_util.cpp): `comp_util_sort_and_shuffle_top_clubs(clubes, n, escolhas)`: ordena os `n`
+/// sorts the clubs by reputation (nulls last) and shuffles the first min(3 × picks, n)
+/// Original: `comp_util_sort_and_shuffle_top_clubs` (0x4afbd0, comp_util.cpp, cdecl).
+///
+/// [pt] { 0x4afbd0 } (cdecl, comp_util.cpp): `comp_util_sort_and_shuffle_top_clubs(clubes, n, escolhas)`: ordena os `n`
 /// clubes pela reputação, maior primeiro e nulos no fim (qsort 0x945333 com 0x4b07d0), e embaralha os m = min(3 ×
 /// escolhas, n) primeiros com m trocas de pares sorteados entre eles. `n` negativo ou menor que `escolhas`: caixa
 /// "Error" (a original); `escolhas` < 1: nada.
@@ -620,7 +652,11 @@ unsafe fn cpa3_nota(e: usize, b73: f64) -> f64 {
     s / (p + p + k72 + k73)
 }
 
-/// { 0x4b02e0 } (cdecl, comp_util.cpp): `comp_util_get_league_clash_type(a, b)`: os dois clubes na mesma divisão
+/// 1 = title clash, 3 = zone clash, 0 = none, between two clubs of the same league, from the weighted statistics
+/// ratings (0x4a4850) against a third of the clubs or 0.2 × clubs + +0xbe (+ +0xbf)
+/// Original: `comp_util_get_league_clash_type` (0x4b02e0, comp_util.cpp, cdecl).
+///
+/// [pt] { 0x4b02e0 } (cdecl, comp_util.cpp): `comp_util_get_league_clash_type(a, b)`: os dois clubes na mesma divisão
 /// (+0x57, não reserva nem menor: 0x7e6f20), a liga dela ([0xadadfc][id]) com estatística (+8, 0x4a4850 dos dois),
 /// sem fases (+0x30 = −1) e com +0x43 = 2, e a diferença de +0x73 até um quarto dos clubes (+0x3e). Com as notas
 /// (cpa3_nota): 1 = briga pelo título (virtual +0x98 = 0, as duas abaixo de um terço dos clubes e cada uma não abaixo
@@ -696,7 +732,11 @@ unsafe extern "C" fn comparar_tipo_de_confronto_na_liga(a: usize, b: usize) -> u
     r
 }
 
-/// { 0x4c0720 } (cdecl, comp_util.cpp): `comp_util_get_club_strength_score(clube)`: o dinheiro (sem tabela de
+/// money (+0x65 / 400 or balance / 300) + 16 × reputation + the off-match ratings (0x6e6340) of the 15 picked
+/// (0x6e2000) from the squad; null club: −10,000,000
+/// Original: `comp_util_get_club_strength_score` (0x4c0720, comp_util.cpp, cdecl).
+///
+/// [pt] { 0x4c0720 } (cdecl, comp_util.cpp): `comp_util_get_club_strength_score(clube)`: o dinheiro (sem tabela de
 /// finanças [0xae2a38]: +0x65 / 400; com ela, o saldo de 64 bits / 300 pela 0x5a0590), mais 16 × a reputação (+0x80),
 /// mais a nota fora da partida (0x6e6340, 0x840, limite −1) dos 15 escalados (0x6e2000, códigos 1, 0x804, 0x84,
 /// 3 × 0x204, 0x810, 0x90, 3 × 0x210, 4 × 0x40) entre os jogadores (+0x61) do elenco (0x541f90). Clube nulo:
@@ -751,7 +791,11 @@ unsafe extern "C" fn comparar_forca_do_clube(clube: usize) -> i32 {
     r
 }
 
-/// { 0x4afd80 } (cdecl, comp_util.cpp): `comp_util_get_latest_placed_club(comp, lugar)`: ordena o histórico de
+/// sorts the competition history and returns the winner, runner-up or third (+0xa, +0xe, +0x12) of the first row of the
+/// competition; not found: 0
+/// Original: `comp_util_get_latest_placed_club` (0x4afd80, comp_util.cpp, cdecl).
+///
+/// [pt] { 0x4afd80 } (cdecl, comp_util.cpp): `comp_util_get_latest_placed_club(comp, lugar)`: ordena o histórico de
 /// competições (qsort 0x945333 com 0x540780), busca (bsearch 0x946464) a competição com ano −1 (qualquer), volta até a
 /// primeira linha dela e devolve o clube do `lugar` (0 campeão +0xa, 1 vice +0xe, 2 terceiro +0x12); não achou: 0.
 /// Outro lugar: a original (a caixa do comp_util.cpp). A chave na pilha da original só tem +4 e +8 gravados, e a
@@ -797,7 +841,10 @@ unsafe extern "C" fn comparar_clube_colocado_mais_recente(comp: usize, lugar: u3
 
 // ---------- 214a leva: a partida guardada na notícia, o resultado da eliminatória para a notícia e o dia da rodada da copa (comp_util.cpp, Cup.cpp) ----------
 
-/// { 0x4b0010 } (cdecl, comp_util.cpp): a partida (`partida`) refeita de 18 vagas seguidas da
+/// rebuilds the fixture from eighteen consecutive news slots and resolves its clubs, stadium and competition
+/// Original: `comp_util_read_fixture_from_news_slots` (0x4b0010, comp_util.cpp, cdecl).
+///
+/// [pt] { 0x4b0010 } (cdecl, comp_util.cpp): a partida (`partida`) refeita de 18 vagas seguidas da
 /// `noticia` (0x785830) a partir de `*cursor` (que avança 18): +0xc e +0x10 os clubes, +0x3d, +0x3e,
 /// +4 o estádio, +0 a competição, +0x42, +0x32, +0x30, +0x43/+0x44, +0x4b/+0x4c e +0x47/+0x48 os
 /// placares, +0x2a, +0x28 e +8. Depois os ponteiros: clubes (0xae23b4, 0x245 bytes) em +0x1c/+0x20,
@@ -844,7 +891,10 @@ unsafe extern "C" fn partida_das_vagas_da_noticia(noticia: usize, partida: usize
     d(0x14, ponteiro(0, 0xae23d0, 0x6b));
 }
 
-/// { 0x4b0890 } (cdecl, comp_util.cpp): a categoria (1 a 7) do resultado da eliminatória para o
+/// the category of the cup tie result for the club, from the final margin, the side and the reputation gap
+/// Original: `comp_util_classify_tie_result_for_news` (0x4b0890, comp_util.cpp, cdecl).
+///
+/// [pt] { 0x4b0890 } (cdecl, comp_util.cpp): a categoria (1 a 7) do resultado da eliminatória para o
 /// `clube` na `partida`: a margem final (placar +0x4b/+0x4c, ou +0x47/+0x48, ou +0x43/+0x44, o
 /// primeiro sem 0xff) do lado do clube (da casa = +0x1c) e as reputações (+0x80 / 500) dos clubes.
 /// 1 goleada, 2 e 3 vitórias contra mais fortes, 4 comum, 5 e 7 derrotas para mais fracos, 6
@@ -917,7 +967,10 @@ unsafe extern "C" fn resultado_da_eliminatoria_na_noticia(clube: usize, partida:
     4 // sem destaque
 }
 
-/// { 0x521f10 } (cdecl, Cup.cpp): o dia `vaga` (0 a 7) da rodada `rodada` (registros de 104 bytes):
+/// stores one of the eight cup round match days: the venue flags, the weekday, the time slot and the code
+/// Original: `cup_set_round_match_day` (0x521f10, Cup.cpp, cdecl).
+///
+/// [pt] { 0x521f10 } (cdecl, Cup.cpp): o dia `vaga` (0 a 7) da rodada `rodada` (registros de 104 bytes):
 /// em 7 bytes a partir de +0x23, o mando (4 bytes), o dia da semana (−1 a 6), o horário (−1 a 2) e o
 /// código (−1 a 3). Fora da faixa: a original (caixa de erro e fim do jogo). Devolve o mando.
 unsafe extern "C" fn dia_da_rodada_da_copa(rodadas: usize, rodada: i16, vaga: i16, semana: i16, hora: i8, codigo: i8, mando: u32) -> u32 {

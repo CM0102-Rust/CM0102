@@ -7,7 +7,12 @@ unsafe fn cqo7_campeao_do_turno(this: usize, k: usize) -> usize {
     read_usize(read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1))
 }
 
-/// { 0x434ae0 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::advance_stage()`, a fase seguinte do Mineiro (dois turnos, as fases 0
+/// The Minas Gerais state league has two halves (stages 0 and 1, each a round-robin league) and, if needed, a final
+/// (stage 2): the next stage moves the current stage on and, at the end of the second half, builds the final; past the
+/// last stage it is an error (the box)
+/// Original: `BraRegMinasGerais::advance_stage` (0x434ae0, bra_reg_minas_gerais.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x434ae0 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::advance_stage()`, a fase seguinte do Mineiro (dois turnos, as fases 0
 /// e 1, cada um um League_Stage, e a final, a fase 2). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa de
 /// erro da linha 0x202 e nada mais. Senão +0x30 sobe um e, ao chegar a 2 (o fim do segundo turno), monta a final
 /// (0x434b70, call direto com o ecx da liga).
@@ -24,7 +29,12 @@ unsafe extern "thiscall" fn cqo7_fase_seguinte_do_mineiro(this: usize) {
     }
 }
 
-/// { 0x434b70 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_final_stage()`, da fase seguinte quando o segundo turno
+/// The Minas Gerais final: the winners of the first and second halves meet over two games [inference: home and away],
+/// the first-half winner as seed 0; if the same club wins both halves, it is champion without a final (the season ends
+/// with the two stages and it gets status 5, champion, in the three tables)
+/// Original: `BraRegMinasGerais::create_final_stage` (0x434b70, bra_reg_minas_gerais.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x434b70 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_final_stage()`, da fase seguinte quando o segundo turno
 /// acaba. Os dois campeões dos turnos (o clube da primeira linha da tabela de cada League_Stage) vão para uma lista
 /// de 2 (malloc 0x944e46 de 8; sem memória: a caixa da linha 0x226 e volta).
 /// - O mesmo clube nos dois turnos: é o campeão sem final. +0x30 = 1, +0x2c = 2 (a temporada acaba com as duas fases),
@@ -95,7 +105,12 @@ unsafe extern "thiscall" fn cqo7_final_do_mineiro(this: usize) {
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 2);
 }
 
-/// { 0x434ed0 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::record_season_honours()` (slot 13), o fim da temporada do Mineiro.
+/// The end of the Minas Gerais season: with a final, the honours come from the final; without one, from the league, and
+/// the champion gets 350,000 and the runner-up 100,000 in prize money (to the balance, with the prize money news).
+/// Then, once the twelve state leagues are over, the champions go into the Champions Cup
+/// Original: `BraRegMinasGerais::record_season_honours` (0x434ed0, bra_reg_minas_gerais.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x434ed0 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::record_season_honours()` (slot 13), o fim da temporada do Mineiro.
 /// - Com final (+0x30 = 2): o histórico da final (o slot 13, +0x30, da fase [+0xc]+8) e, em salto final, a 0x42bba0
 ///   (`bra_nat_first_fill_champions_cup_entrants`, cdecl sem argumentos: quando os doze estaduais terminam, põe os
 ///   campeões na Copa dos Campeões); devolve o eax dela.
@@ -188,7 +203,12 @@ unsafe fn cqk8_gravar(e: usize, atual: u8, minima: u8, maxima: u8) {
     *((e + 0x75) as *mut u8) = maxima;
 }
 
-/// { 0x4350d0 } (thiscall, ret 0x14, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::set_club_progress(clube, fase, a,
+/// Minas Gerais, Parana and Rio: writes the club progress codes (current, lowest and highest position); in the round
+/// robin, the lowest under 3 becomes 1 and the highest under 3 becomes 2 [inference: the two halves have tables of
+/// their own and the overall one gives no title]
+/// Original: `BraRegMinasGerais::set_club_progress` (0x4350d0, bra_reg_minas_gerais.cpp, thiscall).
+///
+/// [pt] { 0x4350d0 } (thiscall, ret 0x14, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::set_club_progress(clube, fase, a,
 /// b, c)` (slot 27 do Mineiro, do Paranaense e do Carioca): grava os três códigos de progresso do clube na entrada dele
 /// (+0x73, +0x74, +0x75); na fase de pontos corridos (-1), o segundo abaixo de 3 vira 1 e o terceiro abaixo de 3 vira 2.
 /// Devolve a entrada.
@@ -228,7 +248,12 @@ fn cqk8_mls(x: u8, ate_3: u8) -> u8 {
     }
 }
 
-/// { 0x909dd0 } (thiscall, ret 0x14, usa_mls.cpp): `UsaMls::set_club_progress(clube, fase, a, b, c)`: nas fases 0 e 1
+/// MLS: in the regular season and play-off stages 0 and 1, the current position 1, 2, 3, 4 becomes 1, 3, 7, 10, the
+/// lowest 1 to 3 becomes 1 and 4 becomes 10, the highest 1 to 3 becomes 7 and 4 becomes 10 (positions on the
+/// whole-league scale [inference]); in stage 2, each code becomes 2 × code − 1; after that, as they come
+/// Original: `UsaMls::set_club_progress` (0x909dd0, usa_mls.cpp, thiscall).
+///
+/// [pt] { 0x909dd0 } (thiscall, ret 0x14, usa_mls.cpp): `UsaMls::set_club_progress(clube, fase, a, b, c)`: nas fases 0 e 1
 /// e na temporada (-1), a: 1 → 1, 2 → 3, 3 → 7, 4 → 10; b: 1..3 → 1, 4 → 10; c: 1..3 → 7, 4 → 10; na fase 2, cada
 /// código vira 2 × código − 1; depois, os códigos como vêm. Devolve a entrada.
 unsafe extern "thiscall" fn cqk8_progresso_na_mls(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
@@ -277,7 +302,12 @@ fn cqk8_serie_c(x: u8, um_dois: u8) -> u8 {
     }
 }
 
-/// { 0x42e100 } (thiscall, ret 0x14, bra_nat_third.cpp): `BraNatThird::set_club_progress(clube, fase, a, b, c)`: nos
+/// Series C: in the groups (stages up to 6), the group position becomes the position on the 49-place Series C scale
+/// [inference]: 1 and 2 → 1 (the highest → 9), 3 → 17, 4 → 25, 5 → 33, 6 → 41, 7 → 49; in later stages, the codes as
+/// they come
+/// Original: `BraNatThird::set_club_progress` (0x42e100, bra_nat_third.cpp, thiscall).
+///
+/// [pt] { 0x42e100 } (thiscall, ret 0x14, bra_nat_third.cpp): `BraNatThird::set_club_progress(clube, fase, a, b, c)`: nos
 /// grupos (fase < 7), a e b: 1, 2 → 1, 3 → 0x11 ... 7 → 0x31; c: 1, 2 → 9, depois igual; nas fases 7 em diante, os
 /// códigos como vêm (o trecho das fases 1 a 3 que a original tem depois do teste `fase >= 7` nunca roda). Devolve a
 /// entrada.

@@ -1,6 +1,13 @@
 // ---------- centesima trigesima oitava leva: o batedor guardado, as instrucoes guardadas e o codigo da competicao ----------
 
-/// { 0x897990 } (ret 0x10, tactics.cpp): quem bate a bola parada `tipo` (0..=4) no lado `lado`
+/// who takes set piece `tipo` (0..4) on `lado` (0..1): the cell (dword) in the club's tactics row (0x8982b0) at +0x601
+/// + row × 0x91 + 0x5e + (side + type × 2) × 4. Above [0xae2364] + 0x52d it becomes −1; negative, 0; a person (0x6e
+/// bytes at [0xae23bc]) without +0x61 clears the cell; from the club (+0x39), in a national team (0x53b900) or with
+/// link 0x775790 they are returned; otherwise it clears. Null club, type or side out of range: the original (error
+/// box). Compared side by side (the cell)
+/// Original: `stored_taker` (0x897990, tactics.cpp (544 bytes, called by the taker choice 0x6ceb90), thiscall, ret 0x10).
+///
+/// [pt] { 0x897990 } (ret 0x10, tactics.cpp): quem bate a bola parada `tipo` (0..=4) no lado `lado`
 /// (0..=1) pelo clube: a celula (dword) na linha tatica do clube (0x8982b0 com `humano`) em +0x601 +
 /// linha x 0x91 + 0x5e + (lado + tipo x 2) x 4. Acima de [0xae2364] + 0x52d a celula vira -1 (0);
 /// negativa, 0. A pessoa (0x6e bytes em [0xae23bc]) sem +0x61 apaga a celula (0); do clube (+0x39),
@@ -49,7 +56,12 @@ unsafe extern "thiscall" fn batedor_guardado(this: usize, clube: usize, tipo: u3
     0
 }
 
-/// { 0x896fe0 } (ret 0x10, tactics.cpp): guarda (`volta` 0) ou devolve (`volta` != 0) as 20
+/// saves or restores the club's 20 instructions (dwords of the tactics row + 2) in one of 16 slots of 0x5c bytes
+/// (+0x30; used count at +0x5f0), the current human's ([0xb74c26 + [0xb77c7a] × 0x300]; [0xae2364] − id − 1); when
+/// saving, the instructions become −1. Compared side by side (the slots and the row)
+/// Original: `store_instructions` (0x896fe0, tactics.cpp (624 bytes, called by the engine step 0x6b98c0 and others), thiscall, ret 0x10).
+///
+/// [pt] { 0x896fe0 } (ret 0x10, tactics.cpp): guarda (`volta` 0) ou devolve (`volta` != 0) as 20
 /// instrucoes (dwords em +0x601 + linha x 0x91 + 2, linha da 0x8982b0 com `pessoa`) do clube num dos
 /// 16 espacos de 0x5c bytes a partir de +0x30 (clube +0x30, pessoa +0x34, ocupado +0x38, instrucoes
 /// +0x3c; ocupados em +0x5f0). O espaco e o do humano da vez ([0xb74c26 + [0xb77c7a] x 0x300]):
@@ -127,7 +139,11 @@ unsafe extern "thiscall" fn guardar_instrucoes(this: usize, clube: usize, pessoa
     1
 }
 
-/// { 0x6b6570 } (cdecl, match_day.cpp): o numero da competicao pelo codigo (0: 5/4, 1: 11/10, 0x1ef:
+/// the number by code (0: 5/4, 1: 11/10, 0x1ef: 1/0, 0x3de: 3/2, 0x483: 7/6, 0x528: 9/8; the first with the second
+/// argument 1); any other code: the original (error box). Compared by the result
+/// Original: `competition_number` (0x6b6570, match_day.cpp (304 bytes), cdecl).
+///
+/// [pt] { 0x6b6570 } (cdecl, match_day.cpp): o numero da competicao pelo codigo (0: 5/4, 1: 11/10, 0x1ef:
 /// 1/0, 0x3de: 3/2, 0x483: 7/6, 0x528: 9/8; o primeiro com `segunda` 1). Outro codigo: a original
 /// (caixa de erro).
 unsafe extern "C" fn numero_da_competicao(codigo: u32, segunda: u32) -> u32 {
@@ -190,7 +206,11 @@ unsafe extern "C" fn comparar_numero_da_competicao(codigo: u32, segunda: u32) ->
 
 // ---------- centesima quadragesima leva: a linha tatica (0x8983f0, 0x8984d0) e a simulacao rapida (0x6beeb0) ----------
 
-/// { 0x8983f0 } (ret 0xc, tactics.cpp): copia a linha tatica do clube (0x91 bytes em +0x601 + linha
+/// copies the club's tactics row (0x91 bytes at +0x601, row from 0x8982b0) to the destination. Null club: the original
+/// (error box); row -1: 0. Compared side by side
+/// Original: `read_tactics_row` (0x8983f0, tactics.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x8983f0 } (ret 0xc, tactics.cpp): copia a linha tatica do clube (0x91 bytes em +0x601 + linha
 /// x 0x91, linha da 0x8982b0 com `humano`) para `destino`. Clube nulo: a original (caixa de erro);
 /// linha -1: 0; senao 1.
 unsafe extern "thiscall" fn ler_linha_tatica(this: usize, clube: usize, destino: *mut u8, humano: u32) -> u32 {
@@ -207,7 +227,11 @@ unsafe extern "thiscall" fn ler_linha_tatica(this: usize, clube: usize, destino:
     1
 }
 
-/// { 0x8984d0 } (ret 0xc, tactics.cpp): o inverso da 0x8983f0, grava `origem` (0x91 bytes) na linha
+/// the reverse, writes the 0x91 bytes into the row (row -1 or beyond the total +0x605: 0). Called by 0x6dbb10
+/// (`guardar_tatica`). Compared side by side
+/// Original: `write_tactics_row` (0x8984d0, tactics.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x8984d0 } (ret 0xc, tactics.cpp): o inverso da 0x8983f0, grava `origem` (0x91 bytes) na linha
 /// tatica do clube. Linha -1 ou alem do total (+0x605): 0.
 unsafe extern "thiscall" fn gravar_linha_tatica(this: usize, clube: usize, origem: *const u8, humano: u32) -> u32 {
     if clube == 0 {
@@ -730,7 +754,18 @@ unsafe fn simulacao_rapida_com(m: usize, chamar: &mut dyn FnMut(usize, usize, [u
     }
 }
 
-/// { 0x6beeb0 } (match_eng.cpp): ver `simulacao_rapida_com`.
+/// the match without moves, in periods of two rounds. Per period, the team strength (0x6c0c60) with four pairs clamped
+/// between half and double, and the side that starts; per round, three attacks with a duel of an active player, the
+/// second and third duel (0x6c2880), the wear (0x6c2750), the other side's cards (0x6c2310; the second yellow sends
+/// off, 0x6cda20; more than 4 sent off: abandonment 3-0), the score factor, the contest (0x6c06b0/0x6c07a0/0x6c0a70),
+/// the shot (0x6c23f0, 0x6c0890/0x6c0980) and the goal (0x6c2050, keepers 0x717410, commentary 0x1fcc/0x1fcf, or 0x1fce
+/// on a missed penalty). At minutes 45/90/105/120 the scores (+0x45/+0x43/+0x47), extra time, golden goal and
+/// penalties; the aggregate; the home goal; the injuries (0x6d0980); the ratings (friendly: by the club's reputation).
+/// Used to read high bytes of stack dwords with no value (determinized original). Compared through the tape
+/// (commentary, injuries and the player-leaving calls are units)
+/// Original: `quick_simulation` (0x6beeb0, match_eng.cpp (6 KB, called by the engine step 0x6b98c0), thiscall).
+///
+/// [pt] { 0x6beeb0 } (match_eng.cpp): ver `simulacao_rapida_com`.
 unsafe extern "thiscall" fn simulacao_rapida(m: usize) {
     simulacao_rapida_com(m, &mut |r, t, a| despachar_dividida(r, t, a))
 }
@@ -891,7 +926,12 @@ fn cpz5_pelo_menos_1(x: i16) -> f64 {
     if x < 1 { 1.0 } else { x as f64 }
 }
 
-/// { 0x896290 } (thiscall, ret 4, tactics.cpp): `Tactics::record_tactic_result(jogo)`, do fim de cada partida no laço
+/// at the end of a match with no human, adds to each club's tactic row (0x28 bytes) the games, wins, draws, losses,
+/// goals and points (3 per win, 1 per draw) and redoes the three double ratios (+0x10/+0x18/+0x20) that the AI
+/// formation choice reads
+/// Original: `Tactics::record_tactic_result` (0x896290, tactics.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x896290 } (thiscall, ret 4, tactics.cpp): `Tactics::record_tactic_result(jogo)`, do fim de cada partida no laço
 /// do motor (0x6ba9a0, com o placar agregado; fixture +0 ≠ −2). Jogo nulo: a caixa da linha 0x1f9 e 0. Mandante (+0x1c)
 /// ou visitante (+0x20) dirigido por humano (0x600a50 com 0, 1, 0, 0; cdecl 5): 0. Senão, para cada lado (clube nulo:
 /// a caixa da linha 0x20a e segue), o registro da partida pelo clube (0x7e4750, num registro local que começa com a
@@ -970,7 +1010,10 @@ unsafe extern "thiscall" fn comparar_registrar_resultado_da_tatica(this: usize, 
     r
 }
 
-/// { 0x8976a0 } (thiscall, ret 8, tactics.cpp): `Tactics::get_captain(clube, time)`, das telas de tática (0x8a7440). Clube
+/// the captain stored (+0x52) in the club and team row of the tactics table; no row, 0
+/// Original: `Tactics::get_captain` (0x8976a0, tactics.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8976a0 } (thiscall, ret 8, tactics.cpp): `Tactics::get_captain(clube, time)`, das telas de tática (0x8a7440). Clube
 /// nulo: a caixa da linha 0x527 e 0. A linha do clube (0x8982b0, thiscall(this, clube, time), ret 8; −1: 0); devolve o
 /// dword +0x52 do registro de 0x91 bytes da linha na tabela tática (+0x601).
 unsafe extern "thiscall" fn capitao_guardado(this: usize, clube: usize, time: u32) -> u32 {
@@ -998,7 +1041,10 @@ unsafe extern "thiscall" fn comparar_capitao_guardado(this: usize, clube: usize,
     r
 }
 
-/// { 0x897880 } (thiscall, ret 0xc, tactics.cpp): `Tactics::set_captain(clube, &pessoa, time)`, ao aplicar as mudanças da
+/// writes the captain (+0x52) in the club and team row of the tactics table and returns 1; no row, 0
+/// Original: `Tactics::set_captain` (0x897880, tactics.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x897880 } (thiscall, ret 0xc, tactics.cpp): `Tactics::set_captain(clube, &pessoa, time)`, ao aplicar as mudanças da
 /// tela de tática (0x8a80d0). Clube nulo: a caixa da linha 0x579; ponteiro nulo: a da 0x581; 0. A linha do clube
 /// (0x8982b0; −1: 0); grava o dword apontado em +0x52 do registro da linha (+0x601) e devolve 1.
 unsafe extern "thiscall" fn escolher_capitao(this: usize, clube: usize, pessoa: usize, time: u32) -> u32 {
@@ -1084,7 +1130,11 @@ unsafe fn cpx9_regioes(this: usize, clube: usize, time: u32) -> Vec<(usize, usiz
     reg
 }
 
-/// { 0x896c60 } (thiscall, ret 0x10, tactics.cpp): `Tactics::remove_player_from_selection(clube, pessoa, time,
+/// empties (−1) the selection slots holding the person; with roles, also the two extra slots and the set piece takers;
+/// the undo copies of the club and team are dropped; 1 when removed from a slot or set piece
+/// Original: `Tactics::remove_player_from_selection` (0x896c60, tactics.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x896c60 } (thiscall, ret 0x10, tactics.cpp): `Tactics::remove_player_from_selection(clube, pessoa, time,
 /// papeis)`, pelos contratos (troca de lugar no elenco, empréstimo e o fim dele), pelas saídas do elenco, pela escalação
 /// automática (0x6dbc50), pelas seleções, pela aposentadoria e pelas transferências. Sem linha tática (0x8982b0): 0. As
 /// 20 vagas da escalação (+2 da linha, ids) com a pessoa (id em +0) viram −1. Com `papeis`: as duas vagas extras (+0x56,
@@ -1147,7 +1197,10 @@ unsafe extern "thiscall" fn comparar_tirar_da_escalacao(this: usize, clube: usiz
     r
 }
 
-/// { 0x8973e0 } (thiscall, ret 0x10, tactics.cpp): `Tactics::swap_selection_slots(clube, a, b, time)`, pela tela do
+/// swaps the ids of two selection slots (0..19) and drops the undo copies of the club and team
+/// Original: `Tactics::swap_selection_slots` (0x8973e0, tactics.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x8973e0 } (thiscall, ret 0x10, tactics.cpp): `Tactics::swap_selection_slots(clube, a, b, time)`, pela tela do
 /// elenco (0x46835e). Vagas `a` e `b` (bytes com sinal, 0..19): troca os ids das duas vagas da escalação (+2 + 4 × vaga
 /// da linha tática, 0x90ba90 com 4 bytes) e as cópias para desfazer do clube e do time somem; devolve 1. Sem linha
 /// (0x8982b0): 0. Clube nulo ou vaga fora: a original (caixa "Error", 0).
@@ -1181,7 +1234,10 @@ unsafe extern "thiscall" fn comparar_trocar_vagas_da_escalacao(this: usize, club
     r
 }
 
-/// { 0x897250 } (thiscall, ret 8, tactics.cpp): `Tactics::has_selection_undo(clube, time)`, pela tela do elenco
+/// 1 when the current human holds the selection undo copy of this club and team
+/// Original: `Tactics::has_selection_undo` (0x897250, tactics.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x897250 } (thiscall, ret 8, tactics.cpp): `Tactics::has_selection_undo(clube, time)`, pela tela do elenco
 /// (0x458a58). Com cópias (+0x5f0) e o humano da vez ([0xb74c26 + 0x300 × (i16)[0xb77c7a]]): a cópia dele (índice
 /// [0xae2364] − id − 1, de 0 a 15) existe (+8) e é deste clube (+0) e time (+4): 1; senão 0.
 unsafe extern "thiscall" fn tem_copia_da_escalacao(this: usize, clube: usize, time: u32) -> u32 {
@@ -1222,7 +1278,11 @@ unsafe fn cpq13_celula(this: usize, k: i32, c: usize) -> usize {
     (read_u32(this + 0x601) as usize).wrapping_add((k as isize * 0x91) as usize).wrapping_add(c)
 }
 
-/// { 0x896e90 } (thiscall, ret 0xc, tactics.cpp): `Tactics::clear_selection_slot(clube, vaga, time)`: a vaga (0..=19)
+/// the club selection slot in the tactics table becomes empty (−1) and the stored slots of the same club and team are
+/// released
+/// Original: `Tactics::clear_selection_slot` (0x896e90, tactics.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x896e90 } (thiscall, ret 0xc, tactics.cpp): `Tactics::clear_selection_slot(clube, vaga, time)`: a vaga (0..=19)
 /// da escalação do clube na tabela tática (linha da 0x8982b0, dword em +2 + 4 × vaga) fica −1 e, com espaços guardados
 /// (+0x5f0), os do mesmo clube e time (16 espaços de 0x5c bytes a partir de +0x30: clube +0x30, time +0x34, ocupado
 /// +0x38) são soltos (+0x38 = 0, +0x5f0 − 1). Devolve 1; sem linha, 0. Clube nulo ou vaga fora: a original (caixa).
@@ -1267,7 +1327,11 @@ unsafe extern "thiscall" fn comparar_limpar_vaga_da_escalacao(this: usize, clube
     r
 }
 
-/// { 0x897bb0 } (thiscall, ret 0x14, tactics.cpp): `Tactics::set_set_piece_taker(clube, papel, escolha, pessoa, time)`:
+/// stores the taker of a set piece (first or second choice); without a person, clears it and the second choice moves up
+/// to the first
+/// Original: `Tactics::set_set_piece_taker` (0x897bb0, tactics.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x897bb0 } (thiscall, ret 0x14, tactics.cpp): `Tactics::set_set_piece_taker(clube, papel, escolha, pessoa, time)`:
 /// o batedor `escolha` (0..=1) da bola parada `papel` (0..=4) na linha tática do clube (0x8982b0; dword em +0x5e +
 /// 4 × (escolha + 2 × papel)). Com `pessoa` (ponteiro para o id), grava o id. Sem ela, a célula fica −1 e, sendo a
 /// primeira escolha, a seguinte com batedor (> −1) sobe para ela e fica −1. Devolve 1; sem linha, 0. Clube nulo,
@@ -1322,7 +1386,10 @@ unsafe extern "thiscall" fn comparar_marcar_batedor_de_bola_parada(this: usize, 
 
 // ---------- 175a leva: a formacao da tabela tatica, o peso das competicoes do jogador e o dado da noticia ----------
 
-/// { 0x896570 } (thiscall, ret 8, tactics.cpp): o registro (0x18e3 bytes) da formação `f`: as
+/// the formation record (0x18e3 bytes) in the two tables
+/// Original: `formation_record` (0x896570, tactics.cpp, thiscall).
+///
+/// [pt] { 0x896570 } (thiscall, ret 8, tactics.cpp): o registro (0x18e3 bytes) da formação `f`: as
 /// [+0x5fd] primeiras em [+0x5f9], as seguintes (até [+0x5f5] mais, só sem `humano`) em [+0x5f1].
 /// Formação negativa ou fora: a original (caixa de erro).
 unsafe extern "thiscall" fn registro_da_formacao(t: usize, f: i16, humano: u32) -> usize {
@@ -1339,7 +1406,10 @@ unsafe extern "thiscall" fn registro_da_formacao(t: usize, f: i16, humano: u32) 
     }
 }
 
-/// { 0x7c6930 } (stdcall, ret 8, player_stats.cpp): o peso da competição `cod` para o jogador `p`
+/// the competition weight by the club's two competitions (500/1000/300/100)
+/// Original: `competition_weight` (0x7c6930, player_stats.cpp, stdcall).
+///
+/// [pt] { 0x7c6930 } (stdcall, ret 8, player_stats.cpp): o peso da competição `cod` para o jogador `p`
 /// pelas duas competições do clube (+0x1a e +0x1e): nas quatro competições especiais ([0x9cf4a8]
 /// com 0x16/0x20, [0x9cf408] com 0x1e/0x20, [0x9cf2c0] com 0x16/0x1e, [0x9cf244] com 7) e nos códigos
 /// +0x78/+0x79 da competição: 500/1000/500/300 pela primeira, 300/500/300/100 pela segunda; sem
@@ -1390,7 +1460,10 @@ unsafe extern "stdcall" fn peso_da_competicao(p: usize, cod: i8) -> u16 {
     if *((c2 + 0x79) as *const i8) == cod { 100 } else { 0 }
 }
 
-/// { 0x785790 } (thiscall, ret 8, news.cpp): grava `valor` no dado `k` 0..49 da notícia (+5, 4 bytes
+/// stores news field 0..49
+/// Original: `set_news_field` (0x785790, news.cpp, thiscall).
+///
+/// [pt] { 0x785790 } (thiscall, ret 8, news.cpp): grava `valor` no dado `k` 0..49 da notícia (+5, 4 bytes
 /// cada). Devolve 1. `k` fora: a original (caixa de erro).
 unsafe extern "thiscall" fn gravar_dado_da_noticia(t: usize, k: i8, valor: u32) -> u32 {
     if !(0..0x32).contains(&k) {
@@ -1419,7 +1492,10 @@ unsafe extern "thiscall" fn comparar_gravar_dado_da_noticia(t: usize, k: i8, val
 
 // ---------- centesima sexagesima quinta leva: as vagas extras da tatica, as idades da selecao e o dado do tecnico humano ----------
 
-/// { 0x897ee0 } (thiscall, ret 0x10, tactics.cpp): as duas vagas extras (+0x56 e +0x5a) da linha do
+/// the two extra slots (+0x56, +0x5a) of the club row
+/// Original: `extra_tactic_slot` (0x897ee0, tactics.cpp, thiscall).
+///
+/// [pt] { 0x897ee0 } (thiscall, ret 0x10, tactics.cpp): as duas vagas extras (+0x56 e +0x5a) da linha do
 /// `clube` na tabela tática (0x8982b0 com `humano`; sem linha, 0): com `pessoa`, `*pessoa` na vaga
 /// `qual` 0/1; sem, a vaga vira −1 e, na 0, a 1 desce para a 0 e fica −1. Devolve 1. `clube` nulo ou
 /// `qual` fora: a original (caixa de erro).
@@ -1449,7 +1525,10 @@ unsafe extern "thiscall" fn vaga_extra_tatica(t: usize, clube: usize, qual: i8, 
     1
 }
 
-/// { 0x76d430 } (stdcall, ret 0x10, national_teams.cpp): as idades limite (`*minima`, `*maxima`) de
+/// the age limits (23/23 in youth competitions, 24/22, 26/22)
+/// Original: `national_team_ages` (0x76d430, national_teams.cpp, stdcall).
+///
+/// [pt] { 0x76d430 } (stdcall, ret 0x10, national_teams.cpp): as idades limite (`*minima`, `*maxima`) de
 /// uma seleção na competição `comp`: 23/23 nas competições olímpicas e de base ([comp+0x14] com id
 /// numa das 9 constantes 0x9cf78c…0x9cf964); 24/22 com `tipo` 1 ou acima de 2; senão 26/22.
 /// Ponteiros nulos: a original (caixa de erro).
@@ -1480,7 +1559,10 @@ unsafe extern "stdcall" fn idades_da_selecao(comp: usize, tipo: i8, minima: *mut
     }
 }
 
-/// { 0x5fdd30 } (thiscall, ret 8, human_manager.cpp): grava `valor` em +0x9a65 do registro do técnico
+/// stores +0x9a65 of the human manager record (0xa6ef bytes)
+/// Original: `set_human_field` (0x5fdd30, human_manager.cpp, thiscall).
+///
+/// [pt] { 0x5fdd30 } (thiscall, ret 8, human_manager.cpp): grava `valor` em +0x9a65 do registro do técnico
 /// humano `tecnico` (sem ele, o da vez em [0xb74c26 + 0x300 × [0xb77c7a]]) entre os humanos `this`
 /// ([this], 0xa6ef bytes cada; o índice é o id − [0xae2364] + 16, até [this+4] − 1). Devolve 1.
 /// Sem técnico ou índice fora: a original (caixa de erro).

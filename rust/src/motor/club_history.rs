@@ -16,7 +16,11 @@ unsafe fn cpx7_fechar(z: &mut usize) {
     fechar_item(z);
 }
 
-/// { 0x443f50 } (thiscall, ret 4, club_history.cpp): `Club_History::save(save)`: grava no item `club history.dat` a
+/// writes the count (+0xc) and the 0x10-byte records from [+8] into the "club history.dat" item and returns 1; no
+/// container the "Error" box and 0; on open or write error the box and the game stops
+/// Original: `Club_History::save` (0x443f50, club_history.cpp, thiscall).
+///
+/// [pt] { 0x443f50 } (thiscall, ret 4, club_history.cpp): `Club_History::save(save)`: grava no item `club history.dat` a
 /// quantidade (+0xc, u32) e os registros de 0x10 bytes de [+8], e devolve 1. Sem contêiner: a caixa "Error"
 /// (club_history.cpp 0x329) e 0; erro ao abrir ou gravar: a caixa (0x331, 0x338, 0x340) e o jogo para (`erro_em`).
 unsafe extern "thiscall" fn gravar_historico_dos_clubes(this: usize, save: usize) -> u32 {
@@ -53,7 +57,12 @@ unsafe fn cpx7_falha_dos_arbitros(linha: u32, z: &mut usize) -> u8 {
     0
 }
 
-/// { 0x79bb80 } (thiscall, ret 4, officials_manager.cpp): `OfficialsManager::save_official_stats(save)`: grava no item
+/// writes [0xae2390] officials (0x11 bytes from [+0]), [0xae2350] nations (0x102 bytes from [+0xc]) and one byte per
+/// official from [+8] into the off.dat item; returns 1 in the low byte; with no officials or on error the "Error" box,
+/// closes the item and 0
+/// Original: `OfficialsManager::save_official_stats` (0x79bb80, officials_manager.cpp, thiscall).
+///
+/// [pt] { 0x79bb80 } (thiscall, ret 4, officials_manager.cpp): `OfficialsManager::save_official_stats(save)`: grava no item
 /// `off.dat` a quantidade de árbitros [0xae2390], os registros de 0x11 bytes de [+0] (um por árbitro), a quantidade de
 /// nações [0xae2350], os registros de 0x102 bytes de [+0xc] (um por nação) e um byte por árbitro de [+8]; devolve 1
 /// (no byte baixo). Sem contêiner ou erro ao abrir: a caixa "Error" (officials_manager.cpp 0x142, 0x14a) e 0; sem
@@ -100,7 +109,11 @@ unsafe extern "thiscall" fn comparar_gravar_estatisticas_dos_arbitros(this: usiz
     orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1504)(this, save)
 }
 
-/// { 0x84c680 } (thiscall, ret 4, simulated_stats.cpp): `SimulatedStats::save(save)`: grava no item
+/// writes the count (+0) and the 0x44-byte records from [+4] into the simulated_stats.dat item; on error the "Error"
+/// box without closing the item
+/// Original: `SimulatedStats::save` (0x84c680, simulated_stats.cpp, thiscall).
+///
+/// [pt] { 0x84c680 } (thiscall, ret 4, simulated_stats.cpp): `SimulatedStats::save(save)`: grava no item
 /// `simulated_stats.dat` a quantidade (+0, u32) e os registros de 0x44 bytes de [+4]. Erro ao abrir ou gravar: a caixa
 /// "Error" (simulated_stats.cpp 0x209, 0x210, 0x218), sem fechar o item. Não confere o contêiner nulo.
 unsafe extern "thiscall" fn gravar_estatisticas_simuladas(this: usize, save: usize) {

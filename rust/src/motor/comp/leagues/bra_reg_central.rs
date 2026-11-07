@@ -59,7 +59,14 @@ fn cqi8_regioes(o: usize) -> [(usize, usize); 4] {
     [(o, 0x3a), (o + 0x3c, 0xa9 - 0x3c), (o + 0xab, 0xba - 0xab), (o + 0xbe, 0xee - 0xbe)]
 }
 
-/// { 0x430ff0 } (thiscall, bra_reg_central.cpp): `BraRegCentral::set_up_rules` (slot 36), as regras e o calendário;
+/// Centre-West: single round robin; 8 top places (the 8-club knockout [inference: the slot 11 stage]); 3 relegated; win
+/// 3, draw 1; tie-break by head-to-head, then goal difference; no play-offs in the table; no league above or below (the
+/// relegated go to the non-playable pool [inference]); rule word 8 (the top places lead to the next stage; no champion
+/// band: the champion comes from the final stage); 7 bench substitutes and 3 substitutions; category 2 (league)
+/// matches. Then the main stage schedule
+/// Original: `BraRegCentral::set_up_rules` (0x430ff0, bra_reg_central.cpp, thiscall).
+///
+/// [pt] { 0x430ff0 } (thiscall, bra_reg_central.cpp): `BraRegCentral::set_up_rules` (slot 36), as regras e o calendário;
 /// devolve 1.
 unsafe extern "thiscall" fn cqi8_regras_do_centro_oeste(this: usize) -> u32 {
     cqi8_regras_centro(this);
@@ -80,7 +87,14 @@ unsafe extern "thiscall" fn comparar_cqi8_regras_do_centro_oeste(this: usize) ->
     r
 }
 
-/// { 0x4322d0 } (thiscall, bra_reg_gaucho.cpp): `BraRegGaucho::set_up_rules`, nas vtables do Gaúcho (0x96811c), do
+/// Gaucho, Northeast Cup and Paulista (the same routine in the three vtables): single round robin; 4 top places (the
+/// 4-club knockout); 2 relegated; win 3, draw 1; tie-break by head-to-head, then goal difference; no play-offs in the
+/// table; no league above or below (the relegated go to the non-playable pool [inference]); rule word 8 (the top places
+/// lead to the next stage; no champion band: the champion comes from the final stage); 7 bench substitutes and 3
+/// substitutions; category 2 (league) matches. Then the main stage schedule
+/// Original: `BraRegGaucho::set_up_rules` (0x4322d0, bra_reg_gaucho.cpp, thiscall).
+///
+/// [pt] { 0x4322d0 } (thiscall, bra_reg_gaucho.cpp): `BraRegGaucho::set_up_rules`, nas vtables do Gaúcho (0x96811c), do
 /// Nordeste (0x9683ec) e do Paulista (0x968770); devolve 1.
 unsafe extern "thiscall" fn cqi8_regras_do_gaucho(this: usize) -> u32 {
     cqi8_regras_gaucho(this);
@@ -100,7 +114,14 @@ unsafe extern "thiscall" fn comparar_cqi8_regras_do_gaucho(this: usize) -> u32 {
     r
 }
 
-/// { 0x43bc70 } (thiscall, bra_reg_santa.cpp): `BraRegSanta::set_up_rules`, nas vtables do Baiano (0x967fb4) e do
+/// Bahia and Santa Catarina (the same routine in the two vtables): double round robin; 4 top places (the 4-club
+/// semi-final); 1 relegated; win 3, draw 1; tie-break by head-to-head, then goal difference; no play-offs in the table;
+/// no league above or below (the relegated go to the non-playable pool [inference]); rule word 8 (the top places lead
+/// to the next stage; no champion band: the champion comes from the final stage); 7 bench substitutes and 3
+/// substitutions; category 2 (league) matches. Then the main stage schedule
+/// Original: `BraRegSanta::set_up_rules` (0x43bc70, bra_reg_santa.cpp, thiscall).
+///
+/// [pt] { 0x43bc70 } (thiscall, bra_reg_santa.cpp): `BraRegSanta::set_up_rules`, nas vtables do Baiano (0x967fb4) e do
 /// Catarinense (0x9686bc); devolve 1.
 unsafe extern "thiscall" fn cqi8_regras_do_catarinense(this: usize) -> u32 {
     cqi8_regras_catarinense(this);
@@ -274,7 +295,13 @@ unsafe fn cqk7_nsl(this: usize, clube: usize, situacao: u32, fase: u32, fazer: b
     (0, 0, 0)
 }
 
-/// { 0x4314e0 } (thiscall, ret 0x18, bra_reg_central.cpp): `BraRegCentral::update_staff_records_for_status` (slot 18
+/// Centre-West and Goias: at the end of the round robin, the clubs through to the knockout get the qualification record
+/// (round 0x82, weight 0x32) and the relegated the relegation record; in the knockout (stage 0), the champion gets the
+/// champion record and fate 5; the eliminated, the knocked-out record weighted 30 to 50 by round (over 3 rounds:
+/// quarter-finals, semi-finals, final) and fate -2
+/// Original: `BraRegCentral::update_staff_records_for_status` (0x4314e0, bra_reg_central.cpp, thiscall).
+///
+/// [pt] { 0x4314e0 } (thiscall, ret 0x18, bra_reg_central.cpp): `BraRegCentral::update_staff_records_for_status` (slot 18
 /// do Centro-Oeste e do Goiano): os classificados e rebaixados dos pontos corridos; no mata-mata (fase 0), o campeão
 /// (destino 5) e os eliminados (destino -2, registro de eliminação com peso de 30 a 50 em 3 rodadas). Devolve 0.
 unsafe extern "thiscall" fn cqk7_destino_no_centro_oeste(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
@@ -292,7 +319,12 @@ unsafe extern "thiscall" fn comparar_cqk7_destino_no_centro_oeste(this: usize, c
     r
 }
 
-/// { 0x434d90 } (thiscall, ret 0x18, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::update_staff_records_for_status`
+/// Minas Gerais, Parana and Rio: the round robin as in the Centre-West; the two halves (stages 0 and 1) record nothing
+/// and return -1; the final knockout (stage 2, a single round: weight 40 for the loser) gives the champion (fate 5) and
+/// the runner-up (fate -2)
+/// Original: `BraRegMinasGerais::update_staff_records_for_status` (0x434d90, bra_reg_minas_gerais.cpp, thiscall).
+///
+/// [pt] { 0x434d90 } (thiscall, ret 0x18, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::update_staff_records_for_status`
 /// (slot 18 do Mineiro, do Paranaense e do Carioca): os pontos corridos como no Centro-Oeste; os turnos (fases 0 e 1)
 /// devolvem -1; o mata-mata na fase 2 (peso pela escala de uma rodada só: 40). Devolve 0 ou -1.
 unsafe extern "thiscall" fn cqk7_destino_no_mineiro(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
@@ -309,7 +341,12 @@ unsafe extern "thiscall" fn comparar_cqk7_destino_no_mineiro(this: usize, clube:
     r
 }
 
-/// { 0x411980 } (thiscall, ret 0x18, aus_nsl.cpp): `AusNsl::update_staff_records_for_status`: na temporada regular, os
+/// NSL: at the end of the regular season, the six clubs through to the finals series get the qualification record
+/// (stage 0x435, weight 0x28); in the finals, those who go through get the record (round 0x96) and those who fall the
+/// failed-to-qualify one; the champion (grand final) gets the champion record. No fate written to the table
+/// Original: `AusNsl::update_staff_records_for_status` (0x411980, aus_nsl.cpp, thiscall).
+///
+/// [pt] { 0x411980 } (thiscall, ret 0x18, aus_nsl.cpp): `AusNsl::update_staff_records_for_status`: na temporada regular, os
 /// seis classificados (6) ganham o registro de classificação para a fase final (fase 0x435); os de fora (-2) devolvem
 /// -1; na fase final (fase 0), quem avança (6) ganha o registro (rodada 0x96) e quem cai (-2) o de não classificado
 /// (fase 0x435) e -1; depois, o campeão (1) ganha o registro de campeão. Devolve 0 ou -1.

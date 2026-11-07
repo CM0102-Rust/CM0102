@@ -304,7 +304,11 @@ unsafe extern "thiscall" fn comparar_cqs13_africana_grupo(this: usize, g: i32) -
 
 
 
-/// { 0x401e10 } (thiscall, ret 0, african_nations.cpp; a virtual +0x28): `AfricanNations::advance_stage()`: na última
+/// rule: the African Nations Cup has three group stages (stages 0 to 2, one per group round [inference]) and, at stage
+/// 3, the knockout; going past the last stage is an error (the box)
+/// Original: `AfricanNations::advance_stage` (0x401e10, african_nations.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x401e10 } (thiscall, ret 0, african_nations.cpp; a virtual +0x28): `AfricanNations::advance_stage()`: na última
 /// fase (+0x30 ≥ +0x2c − 1), a caixa da linha 0x2ba; senão +0x30 sobe e, chegando a 3 (depois dos grupos), o mata-mata
 /// (0x402090: mov ecx, this -> thiscall, ret 0).
 unsafe extern "thiscall" fn cqk12_africana_fase_seguinte(this: usize) {
@@ -335,7 +339,10 @@ unsafe extern "thiscall" fn comparar_cqk12_africana_fase_seguinte(this: usize) {
     PLACAR.registrar(depois == f + 1, || format!("cqk12_africana_fase_seguinte({:#x}) fase {} -> {}", this, f, depois));
 }
 
-/// { 0x4019c0 } (thiscall, ret 0, african_nations.cpp): `AfricanNations::init_group_a_table()`: o grupo A com 4 times
+/// rule: group A has four national teams, the first four of the draw list, in order; the managers get the draw news
+/// Original: `AfricanNations::init_group_a_table` (0x4019c0, african_nations.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4019c0 } (thiscall, ret 0, african_nations.cpp): `AfricanNations::init_group_a_table()`: o grupo A com 4 times
 /// (+0x3e), a tabela +0xb1 (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 linhas de 0x3b bytes; sem memória, a caixa
 /// da linha 0x1f1 e devolve 0), cada linha i com a seleção i da lista dos sorteados (+0xee) (0x687430: push 0; push 0;
 /// push seleção; push i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this
@@ -387,7 +394,10 @@ unsafe extern "thiscall" fn comparar_cqk12_africana_grupo_a(this: usize) -> u32 
     r
 }
 
-/// { 0x401b90 } (thiscall, ret 0, african_nations.cpp; a virtual +0x30): `AfricanNations::record_season_honours()`: o
+/// rule: the season honours (winner, runner-up, third) are the knockout ones
+/// Original: `AfricanNations::record_season_honours` (0x401b90, african_nations.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x401b90 } (thiscall, ret 0, african_nations.cpp; a virtual +0x30): `AfricanNations::record_season_honours()`: o
 /// histórico vem do mata-mata: salta para a virtual +0x30 da fase 3 ([+0xc] + 0xc; jmp, sem quadro).
 unsafe extern "thiscall" fn cqk12_africana_historico(this: usize) {
     let fase = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 0xc);
@@ -461,7 +471,13 @@ unsafe fn cqj10_selecao(nome: u8, this: usize, clube: usize, desfecho: u32, fase
     0
 }
 
-/// { 0x401ba0 } (thiscall, ret 0x18, african_nations.cpp; a virtual +0x44): `AfricanNations::
+/// rule: in the three African Nations Cup group stages, a team going through gets the qualification record (weight 25)
+/// and one going out the failed-to-qualify record (weight 25), which ends the team's call-ups; in the knockout (stage
+/// 3), a team going through gets the qualification by round (weight 40 to 100), one going out the knocked-out record
+/// (which also ends the call-ups), and the winner, runner-up and third place the final records
+/// Original: `AfricanNations::update_staff_records_for_status` (0x401ba0, african_nations.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x401ba0 } (thiscall, ret 0x18, african_nations.cpp; a virtual +0x44): `AfricanNations::
 /// update_staff_records_for_status(seleção, desfecho, fase, _, jogo, a6)`: cqj10_selecao com 3 fases de grupos (o
 /// mata-mata na fase 3); o desfecho 4 não faz nada.
 unsafe extern "thiscall" fn cqj10_copa_africana_registros(this: usize, clube: usize, desfecho: u32, fase: u32, _a4: u32, jogo: usize, a6: u32) -> u32 {
@@ -476,7 +492,10 @@ unsafe extern "thiscall" fn comparar_cqj10_copa_africana_registros(this: usize, 
     r
 }
 
-/// { 0x5e13b0 } (thiscall, ret 0x18, goldcup.cpp; a virtual +0x44 da Copa América): `GoldCup::
+/// rule: the Copa America follows the African Nations Cup rule with two group stages (the knockout at stage 2)
+/// Original: `GoldCup::update_staff_records_for_status` (0x5e13b0, goldcup.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x5e13b0 } (thiscall, ret 0x18, goldcup.cpp; a virtual +0x44 da Copa América): `GoldCup::
 /// update_staff_records_for_status(seleção, desfecho, fase, _, jogo, a6)`: cqj10_selecao com 2 fases de grupos (o
 /// mata-mata na fase 2).
 unsafe extern "thiscall" fn cqj10_copa_america_registros(this: usize, clube: usize, desfecho: u32, fase: u32, _a4: u32, jogo: usize, a6: u32) -> u32 {
@@ -496,7 +515,14 @@ unsafe fn cqj10_fim_da_competicao(clube: usize) {
     f(read_u32_as_usize(0xb74318), read_u32_as_usize(clube + 0x53));
 }
 
-/// { 0x91e840 } (thiscall, ret 0x18, wc_oceania_league.cpp; a virtual +0x44): `WcOceaniaLeague::
+/// rule: in the Oceania qualifier groups, a team going through gets the qualification (weight 20) and one going out the
+/// failed-to-qualify record and ends its campaign; in the Oceania final, the winner gets the qualification (weight 30)
+/// and the loser the knock-out; in the play-off (against South America [inference]), the winner gets the World Cup
+/// place (weight 100 record, the entry in its list and status 4) and the loser the knock-out (weight 100) and the end
+/// of the campaign
+/// Original: `WcOceaniaLeague::update_staff_records_for_status` (0x91e840, wc_oceania_league.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x91e840 } (thiscall, ret 0x18, wc_oceania_league.cpp; a virtual +0x44): `WcOceaniaLeague::
 /// update_staff_records_for_status(seleção, desfecho, fase, saida, jogo, _)`; devolve 0. Fase (byte com sinal) 0 ou
 /// menos, os grupos: 6, a classificação (fase 0, rodada 0x82, peso 0x14); 0xfe, a não classificação (0x41c, 0x14) e a
 /// competição atual da seleção acaba. Fase 1 (a final da Oceania): 1, a classificação (0xa0, 0, 0x1e); 2 ou 0xff, a

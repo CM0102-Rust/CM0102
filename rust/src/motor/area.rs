@@ -29,7 +29,11 @@ unsafe fn area_gravar_i32(area: usize, desl: isize, v: i32) {
     core::ptr::write_unaligned((area as isize).wrapping_add(desl) as *mut i32, v)
 }
 
-/// { 0x403350 } (thiscall, Area.cpp): organiza a grade da área. Grava o índice da área no item dono
+/// splits the area width and height by the column and row weights (up to 30 each; more raises the Area.cpp 497/507 box)
+/// and sets up the scrollbar
+/// Original: `Area::layout` (0x403350, Area.cpp, thiscall).
+///
+/// [pt] { 0x403350 } (thiscall, Area.cpp): organiza a grade da área. Grava o índice da área no item dono
 /// (+0x7c, se houver; e zera +0xbe9) e zera o primeiro item à mostra; fora das áreas só de grade
 /// (marca 0x80000), com colunas e linhas, calcula as margens (marca 1: 0; senão 2 nas laterais e, em
 /// cima e embaixo, 2 com a marca 0x10 ou uma linha só, 8 nas outras), liga a barra de rolagem (0x403600)
@@ -135,7 +139,11 @@ unsafe extern "thiscall" fn comparar_organizar_area(area: usize) {
     PLACAR.registrar(igual, || format!("organizar_area {:#x}: diferencas em {:?}", area, diferencas_da_tela(&mo, &mr)));
 }
 
-/// { 0x402ac0 } (thiscall, Area.cpp): inicia a área. Área que abre por cima de um item (`dono` ≠ -1):
+/// initialises the area: rectangle clamped to the screen, fields, cleared scrollbar and the column and row weights; the
+/// visible rows clamped at 30 (the grid size), the rest goes to the scroll bar
+/// Original: `Area::init` (0x402ac0, Area.cpp, thiscall).
+///
+/// [pt] { 0x402ac0 } (thiscall, Area.cpp): inicia a área. Área que abre por cima de um item (`dono` ≠ -1):
 /// pesos 1 nas 30 colunas e linhas, retângulo zero, 1 coluna e 0 linhas. Nas outras: ordena x1/x2 e
 /// y1/y2 (troca 0x90ba90), x1/y1 no mínimo 0 e x2/y2 no máximo a tela (0x31f/0x257 no exe de 800x600; o
 /// exe de 1920x1080 troca esses imediatos, lidos aqui do próprio exe). Grava os campos, zera a barra
@@ -243,7 +251,10 @@ unsafe extern "thiscall" fn comparar_iniciar_area(
     PLACAR.registrar(igual, || format!("iniciar_area {:#x}: diferencas em {:?}", area, diferencas_da_tela(&mo, &mr)));
 }
 
-/// { 0x402e70 } (thiscall, Area.cpp): desenha a área. Com `redesenhar`, libera a imagem guardada
+/// draws the area: the panel, the grid lines or each visible widget in its cell, and the scrollbar
+/// Original: `Area::draw` (0x402e70, Area.cpp, thiscall).
+///
+/// [pt] { 0x402e70 } (thiscall, Area.cpp): desenha a área. Com `redesenhar`, libera a imagem guardada
 /// (0x5e42b0); área que abre por cima guarda o fundo (0x5e3dd0); desenha o painel (0x5e5df0). Área só
 /// de grade (0x80000): as linhas da grade (0x5e3730, cor [0xae317e]) e fim. Nas outras: guarda o fundo
 /// da barra de rolagem, põe cada item à mostra na sua célula (as grades +0x1c/+0x10c e +0x94/+0x184,

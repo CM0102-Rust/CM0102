@@ -72,25 +72,41 @@ unsafe fn cqq7_fase_seguinte(this: usize, arquivo: usize, linha: u32, play_off: 
     }
 }
 
-/// { 0x42a950 } (thiscall, ret 0, bra_nat_first.cpp): `BraNatFirst::advance_stage()`, a fase seguinte da Série A: no fim
+/// Series A has the round robin (stage −1) and the play-off (stage 0): when the round robin ends, the stage becomes 0
+/// and the play-off is built; past the last stage it is an error (the box)
+/// Original: `BraNatFirst::advance_stage` (0x42a950, bra_nat_first.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42a950 } (thiscall, ret 0, bra_nat_first.cpp): `BraNatFirst::advance_stage()`, a fase seguinte da Série A: no fim
 /// dos pontos corridos, o play-off (0x42a9e0); a caixa da linha 0x264.
 unsafe extern "thiscall" fn cqq7_fase_seguinte_da_serie_a(this: usize) {
     cqq7_fase_seguinte(this, 0x98aa30, 0x264, 0x42a9e0);
 }
 
-/// { 0x42a9e0 } (thiscall, ret 0, bra_nat_first.cpp): `BraNatFirst::create_play_off_stage()`, o play-off da Série A:
+/// The Series A play-off: the top 4 of the round robin, 1st v 4th and 2nd v 3rd, in a knockout (no seeds: the list
+/// order) [inference: two-legged semi-finals and final] that decides the Brazilian champion
+/// Original: `BraNatFirst::create_play_off_stage` (0x42a9e0, bra_nat_first.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42a9e0 } (thiscall, ret 0, bra_nat_first.cpp): `BraNatFirst::create_play_off_stage()`, o play-off da Série A:
 /// 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2); caixas nas linhas 0x286 (sem lista) e 0x29d (sem fase).
 unsafe extern "thiscall" fn cqq7_play_off_da_serie_a(this: usize) {
     cqq7_play_off(this, &[0, 3, 1, 2], 0x98aa30, 0x286, 0x29d, "cqq_7 serie a"); // cqq7: 1º × 4º, 2º × 3º Série A
 }
 
-/// { 0x42cdd0 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::advance_stage()`, a fase seguinte da Série B: no fim
+/// Series B has the round robin (stage −1) and the play-off (stage 0): when the round robin ends, the stage becomes 0
+/// and the play-off is built; past the last stage it is an error (the box)
+/// Original: `BraNatSecond::advance_stage` (0x42cdd0, bra_nat_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42cdd0 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::advance_stage()`, a fase seguinte da Série B: no fim
 /// dos pontos corridos, o play-off (0x42ce60); a caixa da linha 0x23d.
 unsafe extern "thiscall" fn cqq7_fase_seguinte_da_serie_b(this: usize) {
     cqq7_fase_seguinte(this, 0x98ab64, 0x23d, 0x42ce60);
 }
 
-/// { 0x42ce60 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::create_play_off_stage()`, o play-off da Série B:
+/// The Series B play-off: the top 4 of the round robin, 1st v 4th and 2nd v 3rd, in a knockout (no seeds) that decides
+/// the Series B champion [inference: the promotions to Series A come from it]
+/// Original: `BraNatSecond::create_play_off_stage` (0x42ce60, bra_nat_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42ce60 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::create_play_off_stage()`, o play-off da Série B:
 /// 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2); caixas nas linhas 0x25f (sem lista) e 0x276 (sem fase).
 unsafe extern "thiscall" fn cqq7_play_off_da_serie_b(this: usize) {
     cqq7_play_off(this, &[0, 3, 1, 2], 0x98ab64, 0x25f, 0x276, "cqq_7 serie b"); // cqq7: 1º × 4º, 2º × 3º Série B
@@ -238,7 +254,15 @@ unsafe fn cqq8_expectativas_e_arbitros(this: usize) -> u32 {
 /// 0x9cf9d0, 0x9cf9bc, 0x9cf9dc, 0x9cf9b0, 0x9cf9e4).
 const CQQ8_VIRADAS: [usize; 14] = [KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_THIRD_DIVISION, KEY_CLUB_COMP_BRAZILIAN_BAHIA_STATE_CHAMPIONSHIP, KEY_CLUB_COMP_BRAZILIAN_CENTRAL_STATE_CHAMPIONSHIP, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, KEY_CLUB_COMP_BRAZILIAN_NORTH_STATE_CHAMPIONSHIP, KEY_CLUB_COMP_BRAZILIAN_NORTHEAST_STATE_CHAMPIONSHIP, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, KEY_CLUB_COMP_BRAZILIAN_RIO_DE_JANEIRO_STATE_CHAMPIONS, KEY_CLUB_COMP_BRAZILIAN_SANTA_CATARINA_STATE_CHAMPIONS, KEY_CLUB_COMP_BRAZILIAN_SAO_PAULO_STATE_CHAMP];
 
-/// { 0x42a640 } (thiscall, ret 0, bra_nat_first.cpp): `BraNatFirst::start_new_season()`, a virada do futebol brasileiro
+/// The Brazilian turnover, led by Series A: first the promotion and relegation chain; then the Brazilian Cup entrants,
+/// the 16 best clubs without a national division into Series C and the swaps between the state leagues and their lower
+/// divisions; the division tier of the A and B clubs is capped; Series A is rebuilt (next year, rules, 28 clubs,
+/// fixtures); then Series B, Series C and the twelve state leagues turn over (Bahia, Centre-West, Rio Grande do Sul,
+/// Goias, Minas Gerais, North, Northeast, Parana, Pernambuco, Rio, Santa Catarina and Sao Paulo), with the board
+/// expectations and the referee renewal
+/// Original: `BraNatFirst::start_new_season` (0x42a640, bra_nat_first.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42a640 } (thiscall, ret 0, bra_nat_first.cpp): `BraNatFirst::start_new_season()`, a virada do futebol brasileiro
 /// (a Série A comanda): +0x4c = 0; o acesso e o rebaixamento em cadeia (a virtual +0xb0, 0x42ae90, thiscall(this, 1),
 /// ret 4); os inscritos da Copa do Brasil (0x42b760), a entrada de 16 clubes na Série C (0x42b520) e as trocas dos
 /// estaduais com as divisões de baixo (0x42b130), as três com mov ecx, esi e sem push (thiscall, ret 0; o mapa as diz
@@ -269,7 +293,12 @@ unsafe extern "thiscall" fn cqq8_virada_da_serie_a(this: usize) -> u32 {
     cqq8_expectativas_e_arbitros(this)
 }
 
-/// { 0x42ae90 } (thiscall, ret 4, bra_nat_first.cpp): `BraNatFirst::process_promotion_relegation_chain(int)` (slot 45,
+/// Promotion and relegation in Brazil: records the final positions of Series A, Series B, Series C and the seven Series
+/// C stages; then swaps the marked clubs between A and B, between B and C and between B and each C stage (who goes up
+/// and down comes from the end-of-season marks, with no fixed number here)
+/// Original: `BraNatFirst::process_promotion_relegation_chain` (0x42ae90, bra_nat_first.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x42ae90 } (thiscall, ret 4, bra_nat_first.cpp): `BraNatFirst::process_promotion_relegation_chain(int)` (slot 45,
 /// +0xb0; o argumento não é lido): as posições finais (a virtual +0xa4, record_final_positions, thiscall, ret 0) da
 /// Série A, da Série B, da Série C e das sete fases da Série C ([C+0xc][0..7]); depois o acesso e o rebaixamento
 /// (league_promote_and_relegate 0x689c80, thiscall(this, de cima, de baixo, 1, 1, −1, −1), ret 0x18: a original põe
@@ -293,7 +322,12 @@ unsafe extern "thiscall" fn cqq8_acesso_e_rebaixamento(this: usize, _pares: u32)
     r
 }
 
-/// { 0x42cc10 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::start_new_season()`, a virada da Série B (da
+/// The Series B turnover: archives the season in the statistics, clears the table and stages, moves to the next year
+/// and rebuilds the rules, the table with the 28 Series B clubs, the fixtures and the order; then the predicted
+/// positions, the board expectations and the referee renewal
+/// Original: `BraNatSecond::start_new_season` (0x42cc10, bra_nat_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42cc10 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::start_new_season()`, a virada da Série B (da
 /// virada da Série A): +0x4c = 0, o corpo comum (a tabela 0x42ca70, caixas nas linhas 0x20c, 0x213, 0x219 e 0x220), as
 /// expectativas e os árbitros.
 unsafe extern "thiscall" fn cqq8_virada_da_serie_b(this: usize) -> u32 {
@@ -381,7 +415,11 @@ unsafe fn cql7_tabela(this: usize, n: i16, arquivo: usize, linha: u32, campo: us
     1
 }
 
-/// { 0x42a480 } (thiscall, ret 0, bra_nat_first.cpp): `BraNatFirst::create_table()`: a Série A tem 28 clubes (os de
+/// Series A has 28 clubs: those whose national division is Series A, in database order; when full, TV pays 150,000 to
+/// each club (no prize fund)
+/// Original: `BraNatFirst::create_table` (0x42a480, bra_nat_first.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42a480 } (thiscall, ret 0, bra_nat_first.cpp): `BraNatFirst::create_table()`: a Série A tem 28 clubes (os de
 /// divisão nacional +0x57 = [0x9cf9ec]); cheia, a TV paga 150.000 a cada clube (League::pay_tv_rights 0x683010:
 /// push 0; push 0x249f0; mov ecx, edi -> thiscall(liga, valor, filtro), ret 8; manda a notícia da TV) e devolve 1.
 /// Fonte 0x98aa30, linha 0x1a1.
@@ -394,13 +432,21 @@ unsafe extern "thiscall" fn cql7_tabela_da_serie_a(this: usize) -> u32 {
     1
 }
 
-/// { 0x42ca70 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::create_table()`: a Série B tem 28 clubes (+0x57 =
+/// Series B has 28 clubs, those of the division in database order; no TV money nor prize fund
+/// Original: `BraNatSecond::create_table` (0x42ca70, bra_nat_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42ca70 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::create_table()`: a Série B tem 28 clubes (+0x57 =
 /// [0x9cf9e0]), sem dinheiro da TV. Fonte 0x98ab64, linha 0x1aa.
 unsafe extern "thiscall" fn cql7_tabela_da_serie_b(this: usize) -> u32 {
     cql7_tabela(this, 0x1c, 0x98ab64, 0x1aa, 0x57, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, 0, "cql_7 serie b cheia")
 }
 
-/// { 0x42dc90 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::create_table()`: +0x3e = 7; a lista dos
+/// Series C takes up to 56 clubs (those of the division, in database order), which are drawn (3 swaps per club); the
+/// first 7 of the draw make the first table, of 7 clubs, and the drawn list is kept for the other groups [inference: 8
+/// groups of 7 in the first stage]
+/// Original: `BraNatThird::create_table` (0x42dc90, bra_nat_third.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42dc90 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::create_table()`: +0x3e = 7; a lista dos
 /// participantes (+0xee) refeita (a velha liberada, 0x9452ca push; add esp -> cdecl; a nova com 0xe0 bytes = 56
 /// ponteiros; sem memória: a caixa da linha 0x18f e devolve 1, como a original); a tabela (+0xb1, 7 × 0x3b; sem
 /// memória: a caixa da linha 0x196 e 0); a lista recebe, na ordem do banco, até 56 clubes cuja divisão (+0x57) é a
@@ -610,7 +656,14 @@ unsafe fn cqi7_regras_serie_c(o: usize) {
     write_u8_at(o, 0x49, 7);
 }
 
-/// { 0x42a5a0 } (thiscall, bra_nat_first.cpp): `BraNatFirst::set_up_rules` (slot 36), as regras da Série A e o
+/// Series A: single round robin; win 3, draw 1; tie-break by head-to-head, then goal difference; no league above, drops
+/// to Series B; 4 top places that, by the rule word 8, lead to the next stage (the play-offs; no promotion and no
+/// champion band: the champion comes from the knockout) [inference: the next stage is the slot 11 one]; 4 relegated; 7
+/// substitutes on the bench and 3 substitutions; fixed squad numbers; category 2 (league) matches. Then the main stage
+/// schedule
+/// Original: `BraNatFirst::set_up_rules` (0x42a5a0, bra_nat_first.cpp, thiscall).
+///
+/// [pt] { 0x42a5a0 } (thiscall, bra_nat_first.cpp): `BraNatFirst::set_up_rules` (slot 36), as regras da Série A e o
 /// calendário da fase principal; devolve 1.
 unsafe extern "thiscall" fn cqi7_regras_da_serie_a(this: usize) -> u32 {
     cqi7_regras_serie_a(this);
@@ -631,7 +684,12 @@ unsafe extern "thiscall" fn comparar_cqi7_regras_da_serie_a(this: usize) -> u32 
     r
 }
 
-/// { 0x42cb70 } (thiscall, bra_nat_second.cpp): `BraNatSecond::set_up_rules`, as regras da Série B e o calendário.
+/// Series B: single round robin; win 3, draw 1; head-to-head and goal difference; promotes to Series A and relegates to
+/// Series C; 4 go up (rule word 2: the top places are promotion) and 4 go down; 7 substitutes, 3 substitutions, fixed
+/// numbers. Then the schedule
+/// Original: `BraNatSecond::set_up_rules` (0x42cb70, bra_nat_second.cpp, thiscall).
+///
+/// [pt] { 0x42cb70 } (thiscall, bra_nat_second.cpp): `BraNatSecond::set_up_rules`, as regras da Série B e o calendário.
 unsafe extern "thiscall" fn cqi7_regras_da_serie_b(this: usize) -> u32 {
     cqi7_regras_serie_b(this);
     crate::comparacao::ramo("cqi_7 regras da serie b");
@@ -650,7 +708,13 @@ unsafe extern "thiscall" fn comparar_cqi7_regras_da_serie_b(this: usize) -> u32 
     r
 }
 
-/// { 0x42de50 } (thiscall, bra_nat_third.cpp): `BraNatThird::set_up_rules`, as regras da Série C e o calendário.
+/// Series C: double round robin (home-and-away groups [inference: the groups of 7 of the 0x42d620 schedule]); win 3,
+/// draw 1; tie-break by goal difference, goals scored and away goals; promotes to Series B, no league below; 2 top
+/// places leading to the next stage (rule word 8) and 2 bottom ones [inference: no effect, there is no league below]; 7
+/// substitutes, 3 substitutions, fixed numbers. Then the schedule
+/// Original: `BraNatThird::set_up_rules` (0x42de50, bra_nat_third.cpp, thiscall).
+///
+/// [pt] { 0x42de50 } (thiscall, bra_nat_third.cpp): `BraNatThird::set_up_rules`, as regras da Série C e o calendário.
 unsafe extern "thiscall" fn cqi7_regras_da_serie_c(this: usize) -> u32 {
     cqi7_regras_serie_c(this);
     crate::comparacao::ramo("cqi_7 regras da serie c");
@@ -868,7 +932,12 @@ unsafe fn cqj9_baiano(this: usize, clube: usize, situacao: u32, fase: u32, jogo:
     (0, 0, 0)
 }
 
-/// { 0x42abc0 } (thiscall, ret 0x18, bra_nat_first.cpp): `BraNatFirst::update_staff_records_for_status` (slot 18):
+/// Series A: at the end of the round robin, the clubs through to the knockout get the qualification record (stage
+/// 0x41c, weight 0x28) and the relegated the relegation record; in the knockout, the champion gets the champion record
+/// and fate 5 in the table, the eliminated fate -2
+/// Original: `BraNatFirst::update_staff_records_for_status` (0x42abc0, bra_nat_first.cpp, thiscall).
+///
+/// [pt] { 0x42abc0 } (thiscall, ret 0x18, bra_nat_first.cpp): `BraNatFirst::update_staff_records_for_status` (slot 18):
 /// na fase de pontos corridos, os 8 classificados (situação 6) ganham o registro de classificação e os rebaixados (3) o
 /// de rebaixamento; no mata-mata (fase 0), o campeão (1) ganha o registro de campeão e o destino 5, os eliminados (2 ou
 /// -1) o destino -2. Devolve 0.
@@ -887,7 +956,12 @@ unsafe extern "thiscall" fn comparar_cqj9_destino_na_serie_a(this: usize, clube:
     r
 }
 
-/// { 0x42eb00 } (thiscall, ret 0x18, bra_nat_third.cpp): `BraNatThird::update_staff_records_for_status`: nos grupos
+/// Series C: in the groups, the qualified get the qualification record; in stage 7, those who go through; in the final
+/// group (stages 8 and 9), the two promoted get the promotion (weight 0x32) and qualification records and fate 0
+/// (promotion) in the first table that has them; in the final (stage 10), the champion gets the champion record
+/// Original: `BraNatThird::update_staff_records_for_status` (0x42eb00, bra_nat_third.cpp, thiscall).
+///
+/// [pt] { 0x42eb00 } (thiscall, ret 0x18, bra_nat_third.cpp): `BraNatThird::update_staff_records_for_status`: nos grupos
 /// (fase < 7), os classificados (6) ganham o registro de classificação; na fase 7, quem passa (1) também (os outros: -1);
 /// no quadrangular (fases 8 e 9), os que sobem (0) ganham os registros de acesso e de classificação e o destino 0 na
 /// primeira tabela que os tiver (a liga ou os estágios 0..6); na final (10), o campeão (1) ganha o registro de campeão.
@@ -906,7 +980,13 @@ unsafe extern "thiscall" fn comparar_cqj9_destino_na_serie_c(this: usize, clube:
     r
 }
 
-/// { 0x430210 } (thiscall, ret 0x18, bra_reg_bahia.cpp): `BraRegBahia::update_staff_records_for_status` (o slot 18 de
+/// Bahia, Gaucho, North, Northeast, Pernambuco, Santa Catarina and Paulista: at the end of the round robin, the clubs
+/// through to the final stage get the qualification record (round 0x82, weight 0x32) and the relegated the relegation
+/// record; in the knockout, the champion gets the champion record and fate 5; the eliminated, the knocked-out record
+/// weighted 30 to 50 by the round they fell in, and fate -2
+/// Original: `BraRegBahia::update_staff_records_for_status` (0x430210, bra_reg_bahia.cpp, thiscall).
+///
+/// [pt] { 0x430210 } (thiscall, ret 0x18, bra_reg_bahia.cpp): `BraRegBahia::update_staff_records_for_status` (o slot 18 de
 /// sete estaduais: Baiano, Gaúcho, Norte, Nordeste, Pernambucano, Catarinense e Paulista): na fase de pontos corridos, os
 /// classificados (6) ganham o registro de classificação (rodada 0x82, peso 0x32) e os rebaixados (3) o de rebaixamento;
 /// no mata-mata (fase 0), o campeão (1) ganha o registro de campeão e o destino 5; os eliminados (2 ou -1), o registro

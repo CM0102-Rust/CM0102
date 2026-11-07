@@ -60,7 +60,12 @@ const CQN1_ARGENTINA: [[u8; 6]; 4] = [
     [0x01, 0x01, 0x03, 0x04, 0x02, 0x00],
 ];
 
-/// { 0x40a620 } (thiscall, ret 0, argentina_rules.cpp, `ARGENTINA_RULES::init_transfer_windows`; chamada pelo construtor das regras da Argentina (regra 1), depois da base e da vtable): as
+/// the Argentina rule (1): two windows, from 24 July (moved to the Sunday [inference]) to 6 August (moved to the
+/// Wednesday [inference]); from 14 December (moved to the Sunday [inference]) to 4 March (moved to the Wednesday
+/// [inference])
+/// Original: `ARGENTINA_RULES::init_transfer_windows` (0x40a620, argentina_rules.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x40a620 } (thiscall, ret 0, argentina_rules.cpp, `ARGENTINA_RULES::init_transfer_windows`; chamada pelo construtor das regras da Argentina (regra 1), depois da base e da vtable): as
 /// 2 janelas de transferência de `CQN1_ARGENTINA`.
 unsafe extern "thiscall" fn janelas_argentina(this: usize) {
     crate::comparacao::ramo("cqn_1 argentina");
@@ -81,7 +86,10 @@ const CQN1_PORTUGAL: [[u8; 6]; 4] = [
     [0x13, 0x01, 0xff, 0x0f, 0x00, 0x00],
 ];
 
-/// { 0x7d3df0 } (thiscall, ret 0, portugal_rules.cpp, `PORTUGAL_RULES::init_transfer_windows`; chamada pelo construtor das regras de Portugal (regra 19), depois da base e da vtable): as
+/// the Portugal rule (19): two windows, from 1 June to 1 September; from 15 December to 15 January
+/// Original: `PORTUGAL_RULES::init_transfer_windows` (0x7d3df0, portugal_rules.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x7d3df0 } (thiscall, ret 0, portugal_rules.cpp, `PORTUGAL_RULES::init_transfer_windows`; chamada pelo construtor das regras de Portugal (regra 19), depois da base e da vtable): as
 /// 2 janelas de transferência de `CQN1_PORTUGAL`.
 unsafe extern "thiscall" fn janelas_portugal(this: usize) {
     crate::comparacao::ramo("cqn_1 portugal");
@@ -100,7 +108,11 @@ const CQN1_COREIA: [[u8; 6]; 2] = [
     [0x1b, 0x00, 0xff, 0x19, 0x06, 0x00], // cqn1: a Coreia do Sul
 ];
 
-/// { 0x66e630 } (thiscall, ret 0x14, korea_rules.cpp, `KOREA_RULES::KOREA_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Coreia do Sul (regra 27): a base (0x8e84a0), a vtable 0x96cfec, 1 janela(s) de `CQN1_COREIA`; o +0x13 = 7 (o padrão da base é 50) [inferência: o limite de estrangeiros]. Devolve o objeto.
+/// the South Korea rule (27): one window, from 25 November (moved to the Sunday [inference]) to 25 July; +0x13 = 7
+/// (base default 50) [inference: the foreign limit]
+/// Original: `KOREA_RULES::KOREA_RULES` (0x66e630, korea_rules.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x66e630 } (thiscall, ret 0x14, korea_rules.cpp, `KOREA_RULES::KOREA_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Coreia do Sul (regra 27): a base (0x8e84a0), a vtable 0x96cfec, 1 janela(s) de `CQN1_COREIA`; o +0x13 = 7 (o padrão da base é 50) [inferência: o limite de estrangeiros]. Devolve o objeto.
 unsafe extern "thiscall" fn regras_coreia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqn_1 coreia");
     cqn1_construir(this, [a1, a2, a3, a4, a5], 0x96cfec, 1, &CQN1_COREIA, 0x9eb20c, 0x51);

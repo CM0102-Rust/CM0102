@@ -51,7 +51,11 @@ const CQN2_GRECIA: [[u8; 6]; 4] = [
     [0x0b, 0x01, 0xff, 0x14, 0x00, 0x00],
 ];
 
-/// { 0x5ecf20 } (thiscall, ret 0, greece_rules.cpp, `GREECE_RULES::init_transfer_windows`; chamada pelo construtor das regras da Grécia (regra 11), depois da base e da vtable): as
+/// the Greece rule (11): two windows, from 22 May (moved to the Sunday [inference]) to 29 August (moved to the Saturday
+/// [inference]); from 1 January to 20 January
+/// Original: `GREECE_RULES::init_transfer_windows` (0x5ecf20, greece_rules.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5ecf20 } (thiscall, ret 0, greece_rules.cpp, `GREECE_RULES::init_transfer_windows`; chamada pelo construtor das regras da Grécia (regra 11), depois da base e da vtable): as
 /// 2 janelas de transferência de `CQN2_GRECIA`.
 unsafe extern "thiscall" fn janelas_grecia(this: usize) {
     crate::comparacao::ramo("cqn_2 grecia");
@@ -72,7 +76,11 @@ const CQN2_RUSSIA: [[u8; 6]; 4] = [
     [0x14, 0x01, 0xff, 0x04, 0x07, 0x00], // cqn2: a Rússia
 ];
 
-/// { 0x7ec7e0 } (thiscall, ret 0, russia_rules.cpp, `RUSSIA_RULES::init_transfer_windows`; chamada pelo construtor das regras da Rússia (regra 20), depois da base e da vtable): as
+/// the Russia rule (20): two windows, from 15 December to 24 March (moved to the Thursday [inference]); from 28 June
+/// (moved to the Tuesday [inference]) to 4 August
+/// Original: `RUSSIA_RULES::init_transfer_windows` (0x7ec7e0, russia_rules.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x7ec7e0 } (thiscall, ret 0, russia_rules.cpp, `RUSSIA_RULES::init_transfer_windows`; chamada pelo construtor das regras da Rússia (regra 20), depois da base e da vtable): as
 /// 2 janelas de transferência de `CQN2_RUSSIA`.
 unsafe extern "thiscall" fn janelas_russia(this: usize) {
     crate::comparacao::ramo("cqn_2 russia");
@@ -95,7 +103,10 @@ const CQN2_BELGICA: [[u8; 6]; 6] = [
     [0x03, 0x02, 0xff, 0x1f, 0x02, 0x00],
 ];
 
-/// { 0x424c00 } (thiscall, ret 0, belgium_rules.cpp, `BELGIUM_RULES::init_transfer_windows`; chamada pelo construtor das regras da Bélgica (regra 3), depois da base e da vtable): as
+/// the Belgium rule (3): three windows, from 1 June to 30 June; from 1 June to 31 December; from 1 June to 31 March
+/// Original: `BELGIUM_RULES::init_transfer_windows` (0x424c00, belgium_rules.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x424c00 } (thiscall, ret 0, belgium_rules.cpp, `BELGIUM_RULES::init_transfer_windows`; chamada pelo construtor das regras da Bélgica (regra 3), depois da base e da vtable): as
 /// 3 janelas de transferência de `CQN2_BELGICA`.
 unsafe extern "thiscall" fn janelas_belgica(this: usize) {
     crate::comparacao::ramo("cqn_2 belgica");

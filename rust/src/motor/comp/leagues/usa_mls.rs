@@ -19,7 +19,12 @@ fn cqr4_clube(r: &[u8], k: usize) -> usize {
     u32::from_le_bytes([r[6 * k], r[6 * k + 1], r[6 * k + 2], r[6 * k + 3]]) as usize
 }
 
-/// { 0x909400 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::advance_stage()`, a fase seguinte da MLS (as fases 0 e 1 são
+/// The MLS has three divisions of four (the league and stages 0 and 1, played together in the regular season), the
+/// play-off (stage 2) and the final (stage 3): the next stage goes from stage 1 to the play-off and from the play-off
+/// to the final, building each; past the last stage it is an error (the box)
+/// Original: `UsaMls::advance_stage` (0x909400, usa_mls.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x909400 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::advance_stage()`, a fase seguinte da MLS (as fases 0 e 1 são
 /// as duas outras divisões, que correm junto com a liga; a 2, o play-off; a 3, a final). Na última fase (+0x30 ≥
 /// +0x2c − 1, com sinal): a caixa de erro da linha 0x55b e nada mais. Senão: da fase 1 vai à 2 e da 2 à 3 (de outra
 /// fase, +0x30 fica); então, na 2, monta o play-off (0x9094c0) e, na 3, a final (0x9097d0), em call direto com o ecx da
@@ -47,7 +52,13 @@ unsafe extern "thiscall" fn cqr4_fase_seguinte_da_mls(this: usize) {
     }
 }
 
-/// { 0x9094c0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_playoff_stage()`, o play-off
+/// The MLS play-off: eight clubs. The three division winners, ordered by points, and the five best of the rest (second
+/// to fourth of each division, by points; ties with no own rule). The pairs: the best winner against the fifth best of
+/// the rest, the second winner against the fourth, the third winner against the third and the best of the rest against
+/// the second [inference: pairs follow the list]; the winners go to the final
+/// Original: `UsaMls::create_playoff_stage` (0x9094c0, usa_mls.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x9094c0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_playoff_stage()`, o play-off
 /// da MLS, da fase seguinte.
 /// 1) Uma lista de 8 (malloc 0x944e46 de 0x20; sem memória: a caixa da linha 0x58d e volta).
 /// 2) Os três campeões de divisão (o primeiro da tabela da liga, da fase 0 e da fase 1), em registros de 6 bytes (o
@@ -118,7 +129,11 @@ unsafe extern "thiscall" fn cqr4_play_off_da_mls(this: usize) {
     montar(fase, 0);
 }
 
-/// { 0x9097d0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_final_stage()`, a final da MLS
+/// The MLS Cup final: the two play-off winners (the first two with the winner mark, in play-off list order) in a
+/// two-club cup stage [inference: a single game]; the winner is the MLS champion
+/// Original: `UsaMls::create_final_stage` (0x9097d0, usa_mls.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x9097d0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_final_stage()`, a final da MLS
 /// Cup, da fase seguinte: os dois primeiros times do play-off ([+0xc][2], os registros de 6 bytes de +0xa7, na ordem)
 /// com a marca de vencedor (+5 = 1) numa lista de 2 (malloc 0x944e46 de 8; sem memória: a caixa da linha 0x5e5 e
 /// volta); a tabela das rodadas pela virtual +0x3c (thiscall(this, 3, &rodadas, &extra, 0), ret 0x10); a fase
@@ -258,7 +273,11 @@ unsafe fn cqs1_da_divisao(this: usize, c: usize, codigo: i16) -> bool {
     read_usize(c + 0x57) == read_usize(this + 4) && divisao(c) as u16 as i16 == codigo
 }
 
-/// { 0x908560 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::create_table()`, a tabela da MLS (a primeira divisão, código
+/// The MLS table is the first division one: the four clubs of the competition with division code 0x413, in database
+/// order; succeeds if it found all four
+/// Original: `UsaMls::create_table` (0x908560, usa_mls.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x908560 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::create_table()`, a tabela da MLS (a primeira divisão, código
 /// 0x413): +0x3e = 4; a tabela (malloc 0x944e46 de 0xec, 4 linhas de 0x3b; sem memória: a caixa da linha 0x2fe e 0)
 /// em +0xb1; na ordem do banco ([0xae23b4], [0xae235c] clubes de 0x245 bytes, contador i16), enquanto faltam linhas, cada
 /// clube da competição com o código 0x413 vai à linha seguinte (League::init_table_row 0x687430: push 0; push 0; push
@@ -347,13 +366,22 @@ unsafe fn cqs1_divisao(this: usize, codigo: i16, k: u32, atual: u32, pv: usize, 
     core::ptr::write_unaligned((fase + 0x3a) as *mut i16, codigo);
 }
 
-/// { 0x908fc0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_second_division_stage()`, a
+/// The second MLS division (code 0x47b): a round-robin stage with its four clubs (in database order), the same rounds,
+/// points, tie-breakers and places as the league, as stage 0; the three division winners and the five best of the rest
+/// go to the play-off
+/// Original: `UsaMls::create_second_division_stage` (0x908fc0, usa_mls.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x908fc0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_second_division_stage()`, a
 /// segunda divisão da MLS (código 0x47b) na fase 0; caixas nas linhas 0x4e6 e 0x506.
 unsafe extern "thiscall" fn cqs1_segunda_divisao_da_mls(this: usize) {
     cqs1_divisao(this, 0x47b, 0, 0, 0xc2, [0x4e6, 0x506], "cqs_1 segunda divisao") // cqs1: os pontos por vitória na segunda
 }
 
-/// { 0x9091e0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_third_division_stage()`, a
+/// The third MLS division (code 0x414): the same template as the second, as stage 1; the current stage becomes 1, from
+/// which the next stage goes to the play-off
+/// Original: `UsaMls::create_third_division_stage` (0x9091e0, usa_mls.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x9091e0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_third_division_stage()`, a
 /// terceira divisão da MLS (código 0x414) na fase 1; caixas nas linhas 0x524 e 0x544.
 unsafe extern "thiscall" fn cqs1_terceira_divisao_da_mls(this: usize) {
     cqs1_divisao(this, 0x414, 1, 1, 0xc2, [0x524, 0x544], "cqs_1 terceira divisao") // cqs1: a fase atual depois da terceira
@@ -504,12 +532,23 @@ unsafe fn cqs2_virada(this: usize, ano: i16) -> u32 {
     renovar(read_usize(0xb74340), read_usize(this + 4)) // cqs2: a renovação dos árbitros da MLS
 }
 
-/// { 0x908e00 } (thiscall, ret 0, usa_mls.cpp): a virada da MLS (acima), um ano adiante.
+/// The MLS turnover: clears the table, the schedule and the stages (the other two divisions, the play-off and the
+/// final), archives the season in the statistics, moves to the next year and rebuilds the rules, the first division,
+/// the season fixtures (with the other two division stages) and the order; then the predicted positions, the board
+/// expectations and the referee renewal
+/// Original: `UsaMls::start_new_season` (0x908e00, usa_mls.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x908e00 } (thiscall, ret 0, usa_mls.cpp): a virada da MLS (acima), um ano adiante.
 unsafe extern "thiscall" fn cqs2_virada_da_mls(this: usize) -> u32 {
     cqs2_virada(this, 1) // cqs2: o ano seguinte da MLS
 }
 
-/// { 0x909bb0 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::set_predicted_positions()`, as posições previstas da MLS. Sem
+/// The MLS predicted positions: in each division the four clubs are ordered by reputation and get positions 1, 4, 7 and
+/// 10 (each division favourite is predicted 1st, the second 4th, the third 7th and the last 10th), one scale shared by
+/// the three divisions
+/// Original: `UsaMls::set_predicted_positions` (0x909bb0, usa_mls.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x909bb0 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::set_predicted_positions()`, as posições previstas da MLS. Sem
 /// estatísticas (+8): a caixa da linha 0x675 e volta. Um vetor de 3 × +0x3e clubes (malloc 0x944e46; sem memória: a
 /// caixa da linha 0x67d e volta): os da tabela da liga, os da fase 0 e os da fase 1 (as três divisões, linha a linha),
 /// cada bloco de +0x3e ordenado pela reputação (qsort 0x945333 com 0x4b07d0, a maior primeiro, nulos no fim). Os doze
@@ -552,7 +591,11 @@ unsafe extern "thiscall" fn cqs2_posicoes_previstas_da_mls(this: usize) {
     soltar(v);
 }
 
-/// { 0x909a40 } (thiscall, ret 8, usa_mls.cpp): `UsaMls::get_club_array(&lista, &n)`, a lista dos clubes da MLS: *n = 12
+/// The list of the twelve MLS clubs: the four of the first division, then the four of the second and the four of the
+/// third, in table order [inference: used by the MLS All-Star game]
+/// Original: `UsaMls::get_club_array` (0x909a40, usa_mls.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x909a40 } (thiscall, ret 8, usa_mls.cpp): `UsaMls::get_club_array(&lista, &n)`, a lista dos clubes da MLS: *n = 12
 /// (word); *lista = malloc 0x944e46 de 0x30 (sem memória: a caixa da linha 0x64c, *n = 0 e volta); os +0x3e clubes da
 /// tabela da liga, depois os da fase 0 (a partir de +0x3e) e os da fase 1 (a partir de 2 × +0x3e), linha a linha.
 unsafe extern "thiscall" fn cqs2_clubes_da_mls(this: usize, lista: *mut usize, n: *mut i16) {
@@ -712,7 +755,12 @@ unsafe fn cqk9_destino(this: usize, clube: usize, situacao: u32, fase: u32, jogo
     0
 }
 
-/// { 0x908200 } (thiscall, ret 0x18, usa_mls.cpp): `UsaMls::update_staff_records_for_status` (slot 18): na temporada e
+/// MLS: in the season and the first two play-off rounds, those who go through get the qualification record (stage 0xa0,
+/// round 0x78, weight 0x28) and those left out the failed-to-qualify one; in the final, the winner gets the final
+/// record (weight 0x50) and the others the round one, weighted 50 to 70; then the champion gets the champion record
+/// Original: `UsaMls::update_staff_records_for_status` (0x908200, usa_mls.cpp, thiscall).
+///
+/// [pt] { 0x908200 } (thiscall, ret 0x18, usa_mls.cpp): `UsaMls::update_staff_records_for_status` (slot 18): na temporada e
 /// nas fases 0 e 1, quem avança (6) ganha o registro de classificação (fase 0xa0, rodada 0x78) e quem fica de fora (-2) o
 /// de não classificado (fase 0x413 na temporada, 0x47b na fase 0, 0x414 na 1) e -1; na fase 2, o vencedor (1) ganha
 /// o registro da final (0x417, 0x96, peso 0x50), quem passa (0) o da rodada do jogo e os eliminados (-1, 2) o de
@@ -731,7 +779,11 @@ unsafe extern "thiscall" fn comparar_cqk9_destino_na_mls(this: usize, clube: usi
     r
 }
 
-/// { 0x9099d0 } (thiscall, ret 8, usa_mls.cpp): `UsaMls::add_result(jogo, estatisticas)` (slot 2): o jogo vai para a
+/// MLS: each game goes to the overall table and, in the regular season, also to the two conference tables (East and
+/// West [inference]), without counting the statistics twice
+/// Original: `UsaMls::add_result` (0x9099d0, usa_mls.cpp, thiscall).
+///
+/// [pt] { 0x9099d0 } (thiscall, ret 8, usa_mls.cpp): `UsaMls::add_result(jogo, estatisticas)` (slot 2): o jogo vai para a
 /// tabela geral (`League::add_result` 0x685d30) com a marca +0x42 do jogo em -1 quando abaixo de 2; no estágio 1 (a
 /// temporada regular), vai também para as tabelas das duas conferências (os estágios 0 e 1, pelo slot 2 deles, com a
 /// marca 0 e 1 e sem o bloco de estatísticas +8, guardado e devolvido). Devolve 1.
@@ -773,7 +825,11 @@ unsafe extern "thiscall" fn comparar_cqk9_resultado_na_mls(this: usize, jogo: us
     r
 }
 
-/// { 0x90a000 } (cdecl, usa_mls.cpp): `usa_mls_get_club_all_star_conference(clube)`: a conferência do clube no Jogo das
+/// MLS All-Star game: East (0x413) for New England, MetroStars, Tampa Bay, D.C. United, Columbus and Miami; West
+/// (0x414) for Colorado, Dallas, Kansas City, Los Angeles, San Jose and Chicago; clubs outside the MLS, none
+/// Original: `usa_mls_get_club_all_star_conference` (0x90a000, usa_mls.cpp, cdecl).
+///
+/// [pt] { 0x90a000 } (cdecl, usa_mls.cpp): `usa_mls_get_club_all_star_conference(clube)`: a conferência do clube no Jogo das
 /// Estrelas: 0x413 (o Leste) para New England, MetroStars, Tampa Bay, D.C. United, Columbus e Miami (as chaves 0x9d0390,
 /// 0x9d0394, 0x9d0388, 0x9d0384, 0x9d03a4, 0x9d0380), 0x414 (o Oeste) para Colorado, Dallas, Kansas City, Los Angeles,
 /// San Jose e Chicago (0x9d03a8, 0x9d03a0, 0x9d039c, 0x9d0398, 0x9d038c, 0x9d037c); 0 para clube cuja liga (+0x57) não

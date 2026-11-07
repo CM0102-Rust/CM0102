@@ -82,7 +82,12 @@ unsafe fn cqr6_comparar(nome: &str, this: usize, original: impl FnOnce() -> u32)
     r
 }
 
-/// { 0x6664e0 } (thiscall, ret 0, jap_super.cpp; a virtual +0x08 da Supercopa japonesa): `JapSuper::start_new_season()`,
+/// rule: at the season turn the Japanese Super Cup is rebuilt: last edition's tables freed, history archived, year +1,
+/// the two clubs (JapSuper::select_teams: the J1 champion and the Emperor's Cup winner [inference]), the rounds, the
+/// tree and the predicted positions
+/// Original: `JapSuper::start_new_season` (0x6664e0, jap_super.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x6664e0 } (thiscall, ret 0, jap_super.cpp; a virtual +0x08 da Supercopa japonesa): `JapSuper::start_new_season()`,
 /// a virada (`cqr6_virada`) com os dois clubes de JapSuper::select_teams (0x666160) e as caixas do jap_super.cpp nas
 /// linhas 0x14b, 0x152 e 0x159.
 unsafe extern "thiscall" fn cqr6_virada_supercopa_japonesa(this: usize) -> u32 {
@@ -94,7 +99,11 @@ unsafe extern "thiscall" fn comparar_cqr6_virada_supercopa_japonesa(this: usize)
     cqr6_comparar("cqr6_virada_supercopa_japonesa", this, || o(this))
 }
 
-/// { 0x90b790 } (thiscall, ret 0, usa_open_cup.cpp; a virtual +0x08 da Copa dos EUA): `UsaOpenCup::start_new_season()`,
+/// rule: the same turn in the US Open Cup: tables freed, history archived, year +1, the entrants
+/// (UsaOpenCup::collect_entrants), the rounds, the tree and the predicted positions
+/// Original: `UsaOpenCup::start_new_season` (0x90b790, usa_open_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x90b790 } (thiscall, ret 0, usa_open_cup.cpp; a virtual +0x08 da Copa dos EUA): `UsaOpenCup::start_new_season()`,
 /// a virada (`cqr6_virada`) com os inscritos de UsaOpenCup::collect_entrants (0x90b530) e as caixas do usa_open_cup.cpp
 /// nas linhas 0x198, 0x19f e 0x1a6.
 unsafe extern "thiscall" fn cqr6_virada_copa_dos_eua(this: usize) -> u32 {
@@ -106,7 +115,11 @@ unsafe extern "thiscall" fn comparar_cqr6_virada_copa_dos_eua(this: usize) -> u3
     cqr6_comparar("cqr6_virada_copa_dos_eua", this, || o(this))
 }
 
-/// { 0x90a760 } (thiscall, ret 0, usa_mls_all_stars.cpp; a virtual +0x08 do Jogo das Estrelas): `UsaMlsAllStars::
+/// rule: the MLS All-Star Game turn: tables freed, history archived, year +1, the two all-star teams, the rounds and
+/// the tree (no predicted positions)
+/// Original: `UsaMlsAllStars::start_new_season` (0x90a760, usa_mls_all_stars.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x90a760 } (thiscall, ret 0, usa_mls_all_stars.cpp; a virtual +0x08 do Jogo das Estrelas): `UsaMlsAllStars::
 /// start_new_season()`, a virada (`cqr6_virada`) com os dois times de UsaMlsAllStars::set_up_teams (0x90a540) e as caixas
 /// do usa_mls_all_stars.cpp nas linhas 0x133, 0x13a e 0x141, sem as posições previstas.
 unsafe extern "thiscall" fn cqr6_virada_jogo_das_estrelas(this: usize) -> u32 {
@@ -180,6 +193,16 @@ unsafe fn cqr6_times(this: usize) -> i32 {
     1
 }
 
+/// rule: the MLS All-Star Game pits the two conference all-star teams ([0x9d00a4] and [0x9d00a8], clubs in the table);
+/// in odd years the [0x9d00a4] team is at home, in even years the [0x9d00a8] one; the stadium is that of an MLS club
+/// drawn (1 in 6, in table order) among the home conference's clubs (0x413 in odd years, 0x414 in even ones); both
+/// teams get the USA nation [inference]
+/// Original: `UsaMlsAllStars::set_up_teams` (0x90a540, usa_mls_all_stars.cpp, thiscall, ret 0).
+///
+/// [pt] regra: o Jogo das Estrelas da MLS opõe as duas seleções das conferências ([0x9d00a4] e [0x9d00a8], clubes da
+/// tabela); no ano ímpar a de [0x9d00a4] manda o jogo, no par a de [0x9d00a8]; o estádio é o de um clube da MLS
+/// sorteado (1 em 6, pela ordem da tabela) entre os da conferência do mandante (0x413 no ano ímpar, 0x414 no par); os
+/// dois times ficam com a nação dos EUA [inferência]
 unsafe extern "thiscall" fn cqr6_times_do_jogo_das_estrelas(this: usize) -> i32 {
     cqr6_times(this)
 }

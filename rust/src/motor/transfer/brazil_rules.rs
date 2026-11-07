@@ -58,7 +58,12 @@ const CQK3_BRASIL: [[u8; 6]; 2] = [
     [0x04, 0x00, 0x05, 0x08, 0x0a, 0x00], // cqk3: o Brasil fecha em novembro
 ];
 
-/// { 0x43f0e0 } (thiscall, ret 0x14, brazil_rules.cpp, `BRAZIL_RULES::BRAZIL_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
+/// the Brazilian rule (4): one window, from 11 December (moved to the Wednesday [inference]) to 8 November (moved to
+/// the Friday [inference]): closed only from November to December; +0x13 = 3 (default 50) [inference: the foreign
+/// signing limit]
+/// Original: `BRAZIL_RULES::BRAZIL_RULES` (0x43f0e0, brazil_rules.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x43f0e0 } (thiscall, ret 0x14, brazil_rules.cpp, `BRAZIL_RULES::BRAZIL_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência do Brasil (regra 4): a base (0x8e84a0), a vtable 0x968838, 1 janela(s) de `CQK3_BRASIL` e o +0x13 = 3 (o padrão da base é 50) [inferência: o limite de estrangeiros contratados]. Devolve o objeto.
 unsafe extern "thiscall" fn regras_brasil(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqk_3 brasil");
@@ -85,7 +90,11 @@ const CQK3_ALEMANHA: [[u8; 6]; 4] = [
     [0x0a, 0x01, 0xff, 0x0f, 0x00, 0x00],
 ];
 
-/// { 0x5dffe0 } (thiscall, ret 0, germany_rules.cpp, `GERMANY_RULES::init_transfer_windows`; chamada pelo construtor das regras da Alemanha (regra 10), depois da base e da vtable): as
+/// the German rule (10): two windows, from 1 July to 15 August and from 1 July to 15 January [inference: the second for
+/// free agents]
+/// Original: `GERMANY_RULES::init_transfer_windows` (0x5dffe0, germany_rules.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5dffe0 } (thiscall, ret 0, germany_rules.cpp, `GERMANY_RULES::init_transfer_windows`; chamada pelo construtor das regras da Alemanha (regra 10), depois da base e da vtable): as
 /// 2 janelas de transferência de `CQK3_ALEMANHA`.
 unsafe extern "thiscall" fn janelas_alemanha(this: usize) {
     crate::comparacao::ramo("cqk_3 alemanha");
@@ -104,7 +113,11 @@ const CQK3_ESCOCIA: [[u8; 6]; 2] = [
     [0x15, 0x00, 0x04, 0x1e, 0x02, 0x00],
 ];
 
-/// { 0x7f6390 } (thiscall, ret 0x14, scotland_rules.cpp, `SCOTLAND_RULES::SCOTLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
+/// the Scottish rule (21): one window, from 30 May (moved to the Saturday [inference]) to 30 March (moved to the
+/// Thursday [inference]); dword +0x15 = 1
+/// Original: `SCOTLAND_RULES::SCOTLAND_RULES` (0x7f6390, scotland_rules.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x7f6390 } (thiscall, ret 0x14, scotland_rules.cpp, `SCOTLAND_RULES::SCOTLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência da Escócia (regra 21): a base (0x8e84a0), a vtable 0x96f838, 1 janela(s) de `CQK3_ESCOCIA` e o dword +0x15 = 1. Devolve o objeto.
 unsafe extern "thiscall" fn regras_escocia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqk_3 escocia");

@@ -1,7 +1,10 @@
 // ---------- 257a leva: as linhas da nação-chave: a linha de uma nação, a linha do clube e o ano da temporada do clube (key_nation.cpp) ----------
 
 
-/// { 0x669340 } (cdecl, key_nation.cpp): `key_nation_index_of_nation(nação)`: a primeira linha da tabela das 35
+/// the first row of the 35 key nation table holding the given nation, or 4
+/// Original: `key_nation_index_of_nation` (0x669340, key_nation.cpp, cdecl).
+///
+/// [pt] { 0x669340 } (cdecl, key_nation.cpp): `key_nation_index_of_nation(nação)`: a primeira linha da tabela das 35
 /// nações-chave (0xb63d60, 72 bytes, nação em +0) com a nação dada (sem conferir a nula), ou 4. Pela moral do jogo
 /// 0x4cb250, pelas aposentadorias 0x7a7310, pelo amistoso livre 0x5c6b70, pelos prêmios do dia das nações e pelas vagas
 /// da UEFA. Chamada a cada jogador: sem contador.
@@ -21,7 +24,10 @@ unsafe extern "C" fn comparar_linha_da_nacao(nacao: usize) -> u8 {
     r
 }
 
-/// { 0x669360 } (cdecl, key_nation.cpp): `key_nation_index_of_club(clube)`. Clube que não é seleção (0x53b900), com
+/// the row of the club's chosen nation; national side, 1; nation not chosen, the row of its continent, or 3
+/// Original: `key_nation_index_of_club` (0x669360, key_nation.cpp, cdecl).
+///
+/// [pt] { 0x669360 } (cdecl, key_nation.cpp): `key_nation_index_of_club(clube)`. Clube que não é seleção (0x53b900), com
 /// nação (+0x53) escolhida para jogar (+0x11c da nação): a linha da nação na tabela, ou a caixa "Error" (linha 0x26d) e
 /// 0. Senão (a original chama 0x53b900 de novo): seleção, 1; a primeira linha cujo continente (+4) é o da nação do clube
 /// (+0x71), ou 3 (sem nação, 3). Pelas aposentadorias 0x7a7310, pelo adiamento pelo tempo 0x923630, pelos dias até a
@@ -73,7 +79,10 @@ unsafe extern "C" fn comparar_linha_da_nacao_do_clube(clube: usize) -> u8 {
     r
 }
 
-/// { 0x669950 } (cdecl, key_nation.cpp): `key_nation_get_club_season_year(clube)`: o ano de hoje ([0xae2c92]); para
+/// the club's season year: the previous year before the season start day of its row
+/// Original: `key_nation_get_club_season_year` (0x669950, key_nation.cpp, cdecl).
+///
+/// [pt] { 0x669950 } (cdecl, key_nation.cpp): `key_nation_get_club_season_year(clube)`: o ano de hoje ([0xae2c92]); para
 /// clube que não é seleção, pela linha do clube (0x669360): com o dword +0x17 da linha não zero ou o dia de início
 /// (+0x15, sem sinal) abaixo de 60, e o dia de hoje ([0xae2c90], com sinal) antes do dia de início, o ano anterior. A
 /// original devolve só os 16 bits baixos com sentido (os altos são a sobra da vaga empurrada). Pelos registros do clube
@@ -119,7 +128,11 @@ unsafe fn cpu2_data(dst: usize, dia: i16, ano: u16) {
     core::ptr::copy_nonoverlapping(b.as_ptr(), dst as *mut u8, 8);
 }
 
-/// { 0x669bd0 } (cdecl, key_nation.cpp, quadro SEH só das datas locais): `key_nation_club_in_season(clube, &início,
+/// by the start and end days of the club nation row and today: whether it is in season and the start and end dates with
+/// the right year
+/// Original: `key_nation_club_in_season` (0x669bd0, key_nation.cpp, cdecl).
+///
+/// [pt] { 0x669bd0 } (cdecl, key_nation.cpp, quadro SEH só das datas locais): `key_nation_club_in_season(clube, &início,
 /// &fim)`. A linha da nação do clube (+0x53) na tabela das 35 nações-chave (0xb63d60, 72 bytes; sem nação ou fora da
 /// tabela, a linha 3 0xb63e38 e o dia de fim da data padrão 0x54a110, 40). `a` = o dia +0x2a da linha (início), `c` = o
 /// dia da data +0x39 (fim; a original também copia os 7 bytes seguintes e, com o clube +0x1db ≠ −1 e o byte +0x43 3, 4
@@ -191,7 +204,10 @@ unsafe extern "C" fn comparar_clube_na_temporada(clube: usize, inicio: usize, fi
     r
 }
 
-/// { 0x6695c0 } (cdecl, key_nation.cpp): `key_nation_get_main_continent()`: o continente (+0x71) da nação do humano
+/// the continent of the human's nation, or that of the first main nation of the table
+/// Original: `key_nation_get_main_continent` (0x6695c0, key_nation.cpp, cdecl).
+///
+/// [pt] { 0x6695c0 } (cdecl, key_nation.cpp): `key_nation_get_main_continent()`: o continente (+0x71) da nação do humano
 /// ([0xae2d08]); sem ela ou sem continente, o da primeira nação da tabela com o bit 2 de +0x11c, ou 0. Pelo menu do jogo.
 unsafe extern "C" fn continente_principal() -> usize {
     let h = read_usize(0xae2d08);
@@ -214,7 +230,10 @@ unsafe extern "C" fn comparar_continente_principal() -> usize {
     r
 }
 
-/// { 0x669600 } (cdecl, key_nation.cpp): `key_nation_get_main_nation()`: a nação do humano ([0xae2d08]); sem ela, a
+/// the human's nation, or the first main nation of the table
+/// Original: `key_nation_get_main_nation` (0x669600, key_nation.cpp, cdecl).
+///
+/// [pt] { 0x669600 } (cdecl, key_nation.cpp): `key_nation_get_main_nation()`: a nação do humano ([0xae2d08]); sem ela, a
 /// primeira nação da tabela com o bit 2 de +0x11c, ou 0. Pelo menu do jogo.
 unsafe extern "C" fn nacao_principal() -> usize {
     let h = read_usize(0xae2d08);
@@ -240,7 +259,11 @@ unsafe extern "C" fn comparar_nacao_principal() -> usize {
 // ---------- 256a leva: a nação-chave do jogo: a nação-chave ativa de uma competição ou jogo, se a competição é a Copa do Mundo e se é um torneio internacional (comp.cpp, key_nation.cpp) ----------
 
 
-/// { 0x48dd70 } (cdecl, comp.cpp): `comp_active_key_nation_of_fixture(competição, partida)`, a chave das listas de jogos
+/// the active key of the key nation that owns the fixture: by the competition nation, by the nations of the friendly
+/// clubs, 0 for the World Cup, 1 for national side tournaments
+/// Original: `comp_active_key_nation_of_fixture` (0x48dd70, comp.cpp, cdecl).
+///
+/// [pt] { 0x48dd70 } (cdecl, comp.cpp): `comp_active_key_nation_of_fixture(competição, partida)`, a chave das listas de jogos
 /// do FIXTURE_MANAGER (add_fixture 0x5aa680, find_fixtures 0x5acbe0, ...), da simulação rápida (0x6b66a0) e do peso do
 /// ranking da FIFA (0x58cf70). Amistoso (0x5c6710 sobre [0xae2c74]) ou reservas ([0x9cf684]) com a partida dada e a
 /// competição dela amistosa ([0xae2c74]+4) ou de reservas: com uma das duas seleções (0x53b900 dos clubes +0x1c/+0x20),
@@ -307,7 +330,10 @@ const CPT3_COPA: [usize; 7] = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_WORLD
 /// Africana [0x9cf7ac], Copa América, seleção B, sub-21, Copa da Oceania, Copa das Confederações e Copa da Ásia.
 const CPT3_INTERNACIONAIS: [usize; 10] = [KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_EUROPEAN_CHAMPIONSHIP_QUALIFYING, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_B_INTERNATIONAL, KEY_CLUB_COMP_UNDER_21_INTERNATIONAL, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_CONFEDERATIONS_CUP, KEY_CLUB_COMP_ASIAN_CUP];
 
-/// { 0x669a10 } (cdecl, key_nation.cpp): `key_nation_is_world_cup_comp(competição)`: o id (+0) é a Copa do Mundo ou uma
+/// 1 when the competition id is the World Cup or one of its six qualifying sections
+/// Original: `key_nation_is_world_cup_comp` (0x669a10, key_nation.cpp, cdecl).
+///
+/// [pt] { 0x669a10 } (cdecl, key_nation.cpp): `key_nation_is_world_cup_comp(competição)`: o id (+0) é a Copa do Mundo ou uma
 /// das eliminatórias, 1; senão 0. Competição nula: a caixa "Error" (linha 0x3d7) e 0.
 unsafe extern "C" fn e_copa_do_mundo(comp: usize) -> u32 {
     if comp == 0 {
@@ -329,7 +355,10 @@ unsafe extern "C" fn comparar_e_copa_do_mundo(comp: usize) -> u32 {
     r
 }
 
-/// { 0x669ae0 } (cdecl, key_nation.cpp): `key_nation_is_international_comp(competição)`: o id é um dos dez torneios de
+/// 1 when the competition id is one of the ten national side tournaments outside the World Cup
+/// Original: `key_nation_is_international_comp` (0x669ae0, key_nation.cpp, cdecl).
+///
+/// [pt] { 0x669ae0 } (cdecl, key_nation.cpp): `key_nation_is_international_comp(competição)`: o id é um dos dez torneios de
 /// seleções fora da Copa do Mundo, 1; senão 0. Competição nula: a caixa (linha 0x3ef) e 0.
 unsafe extern "C" fn e_torneio_internacional(comp: usize) -> u32 {
     if comp == 0 {

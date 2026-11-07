@@ -326,7 +326,13 @@ const CQP5_PRIMEIRA_PLAYOFF_0: Cql10R = cql10r((7, 4, 1, 0), (0xc, 4, 1, 5, 1, 0
 const CQP5_PRIMEIRA_PLAYOFF_1: Cql10R = cql10r((0x11, 4, 1, 3), (0x1c, 4, 1, 0, 2, 4), 0x96, (0, 3, 0), 5, (2, 1, 0, 0), (0, 1, 0), (0, 0, 0));
 const CQP5_PREMIERSHIP_NATAL: Cqp5Natal = Cqp5Natal { comeco: &CQP5_PREMIERSHIP_COMECO, referencia: 17, ajuste: 13, casos: [&CQP5_PREMIERSHIP_NATAL_0, &CQP5_PREMIERSHIP_NATAL_1, &CQP5_PREMIERSHIP_NATAL_2, &CQP5_PREMIERSHIP_NATAL_3, &CQP5_PREMIERSHIP_NATAL_4, &CQP5_PREMIERSHIP_NATAL_5, &CQP5_PREMIERSHIP_NATAL_6, &CQP5_PREMIERSHIP_NATAL_PADRAO], fim: &CQP5_PREMIERSHIP_FIM, linha: 0x173 };
 
-/// { 0x571980 } (thiscall, ret 0x10, eng_first.cpp, 4.688 bytes, método +0x3c): `EngFirst::create_schedule(fase,
+/// the Division One schedule: the same 46 dates as Division Two, with TV slots (usually one or two matches on day 6 or
+/// 4, slot 1 or 2); the same Christmas by the day of the 16 December round. The promotion play-offs (stage 0):
+/// two-legged semi-finals (4 clubs, draw on 7 May, first leg on 12, 4 days apart) and a one-off final on 28 (weekday 0,
+/// slot 2) May [inference: venue 4 is the neutral ground]
+/// Original: `EngFirst::create_schedule` (0x571980, eng_first.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x571980 } (thiscall, ret 0x10, eng_first.cpp, 4.688 bytes, método +0x3c): `EngFirst::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a fase −1, 46 rodadas (`CQP5_PRIMEIRA_NATAL`, as datas da segunda com faixas de TV);
 /// a fase 0, os play-offs; as outras devolvem 0. Fonte 0x9c4374.
 unsafe extern "thiscall" fn calendario_da_primeira_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
@@ -374,7 +380,11 @@ unsafe extern "thiscall" fn comparar_calendario_da_primeira_inglesa(this: usize,
     cqp5_comparar("calendario_da_primeira_inglesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_primeira_inglesa(this, fase, r, e, l))
 }
 
-/// { 0x573660 } (thiscall, ret 0x10, eng_prm.cpp, 5.019 bytes, método +0x3c): `EngPrm::create_schedule(fase, &rodadas,
+/// the Premiership schedule: 38 rounds (20 clubs), from 19 August to 20 May; Christmas (four fixed-date rounds) by the
+/// day the 16 December round falls on; no play-offs (main stage only)
+/// Original: `EngPrm::create_schedule` (0x573660, eng_prm.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x573660 } (thiscall, ret 0x10, eng_prm.cpp, 5.019 bytes, método +0x3c): `EngPrm::create_schedule(fase, &rodadas,
 /// &extra, &é_liga)`: só a fase −1, 38 rodadas (`CQP5_PREMIERSHIP_NATAL`); as outras devolvem 0. Fonte 0x9c43b0.
 unsafe extern "thiscall" fn calendario_da_premiership(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -461,20 +471,31 @@ unsafe fn cpz1_mata_mata(this: usize, linhas: [usize; 4], arquivo: usize, linha_
     montar(fase, 0);
 }
 
-/// { 0x573080 } (thiscall, ret 0, eng_first.cpp): `EngFirst::create_playoff_stage()`, da fase seguinte da First
+/// builds the play-off stage with the 6th, 3rd, 5th and 4th of the table (ties 6th v 3rd and 5th v 4th), the round
+/// table from virtual +0x3c and +0x3a = 0xa0; puts the stage in the first slot (+0xc) and sets up the round (0x51c800);
+/// out of memory, the error box (lines 0x2f0 and 0x306)
+/// Original: `EngFirst::create_playoff_stage` (0x573080, eng_first.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x573080 } (thiscall, ret 0, eng_first.cpp): `EngFirst::create_playoff_stage()`, da fase seguinte da First
 /// (0x572ff0, quando a fase passa de −1 a 0). As chaves: o 6º contra o 3º e o 5º contra o 4º (linhas 5, 2, 4 e 3);
 /// +0x3a da fase = 0xa0. Fonte 0x9c4374, linhas 0x2f0 (sem lista) e 0x306 (sem fase).
 unsafe extern "thiscall" fn mata_mata_da_first(this: usize) {
     cpz1_mata_mata(this, [5, 2, 4, 3], 0x9c4374, 0x2f0, 0x306, Some(0xa0), "cpz_1 mata-mata da first"); // cpz1: 6º × 3º e 5º × 4º da First
 }
 
-/// { 0x576a70 } (thiscall, ret 0, eng_second.cpp): `EngSecond::create_play_off_stage()` (de 0x5769e0). As chaves da
+/// like the First one (6th, 3rd, 5th and 4th), with +0x3a = the extra from virtual +0x3c (lines 0x2b6 and 0x2cc)
+/// Original: `EngSecond::create_play_off_stage` (0x576a70, eng_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x576a70 } (thiscall, ret 0, eng_second.cpp): `EngSecond::create_play_off_stage()` (de 0x5769e0). As chaves da
 /// First (linhas 5, 2, 4 e 3); +0x3a da fase = o extra da virtual +0x3c. Fonte 0x9c43e8, linhas 0x2b6 e 0x2cc.
 unsafe extern "thiscall" fn mata_mata_da_second(this: usize) {
     cpz1_mata_mata(this, [5, 2, 4, 3], 0x9c43e8, 0x2b6, 0x2cc, None, "cpz_1 mata-mata da second"); // cpz1: 6º × 3º e 5º × 4º da Second
 }
 
-/// { 0x5783c0 } (thiscall, ret 0, eng_third.cpp): `EngThird::create_play_off_stage()` (de 0x578330). As chaves: o 7º
+/// like the Second one, with the 7th, 4th, 6th and 5th (ties 7th v 4th and 6th v 5th; lines 0x2be and 0x2d5)
+/// Original: `EngThird::create_play_off_stage` (0x5783c0, eng_third.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5783c0 } (thiscall, ret 0, eng_third.cpp): `EngThird::create_play_off_stage()` (de 0x578330). As chaves: o 7º
 /// contra o 4º e o 6º contra o 5º (linhas 6, 3, 5 e 4); +0x3a = o extra da virtual. Fonte 0x9c4424, linhas 0x2be e
 /// 0x2d5.
 unsafe extern "thiscall" fn mata_mata_da_third(this: usize) {

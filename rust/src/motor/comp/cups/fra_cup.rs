@@ -132,7 +132,16 @@ const CQL11_COPA_DA_FRANCA: [Cql11R; 9] = [
     cql11r((0xd, 3, 1, 3), (6, 4, 1, 5, 2, 4), 0x96, (0, 3, 0), 6, (2, 1, 0, 0), (0, 1, 0), (0, 0xf4240, 0xc3500)),
 ];
 
-/// { 0x5ba3f0 } (thiscall, ret 0x10, fra_cup.cpp; a virtual +0x3c da Copa da França): `FraCup::create_round_table(fase,
+/// rule: the Coupe de France has 9 single-leg rounds, from the 6th national round (40 teams) to the final: 6th drawn
+/// 10/10 (no fixed weekday), played 6/11; 7th 12/11 and 27/11 (164 clubs enter, 184 teams); 8th 3/12 and 18/12; last
+/// 128 6/1 and 22/1 (18 enter); last 64 27/1 and 12/2; last 16 20/2 and 4/3; quarter-finals 5/3 and 19/3; semi-final
+/// 20/3 and 12/4; final drawn 13/4, played 6/5 at a neutral ground [inference: venue 4]; from the 7th round to the
+/// semi-final the lower-division club plays at home (+0xb = 1); the prize (+0x64) of 100 thousand in the last 16, 200
+/// thousand in the quarter-finals, 400 thousand in the semi-final, and in the final 1 million (+0x60) and 800 thousand
+/// (+0x64); category 4 up to the last 16 and 6 after
+/// Original: `FraCup::create_round_table` (0x5ba3f0, fra_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x5ba3f0 } (thiscall, ret 0x10, fra_cup.cpp; a virtual +0x3c da Copa da França): `FraCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 9 rodadas; a caixa da linha 0xa6 sem memória.
 unsafe extern "thiscall" fn cql11_copa_da_franca_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql11_tabela(this, fase, rodadas, extra, saida, &CQL11_COPA_DA_FRANCA, 0x9ccb28, 0xa6, "cql_11 tabela da copa da franca")
@@ -155,7 +164,13 @@ const CQL11_COPA_DA_LIGA_FRANCESA: [Cql11R; 7] = [
     cql11r((2, 3, 1, 6), (0x16, 3, 1, 5, 2, 4), 0x96, (0, 3, 0), 6, (2, 1, 0, 0), (0, 1, 0), (0, 0x16e360, 0)),
 ];
 
-/// { 0x5bcc40 } (thiscall, ret 0x10, fra_lge_cup.cpp; a virtual +0x3c da Copa da Liga francesa): `FraLgeCup::
+/// rule: the French League Cup has 7 single-leg rounds: preliminary (code 0xe6, 16 teams) drawn 1/9, played 5/10; 1st
+/// round 15/10 and 16/11 (28 teams, 20 new); 2nd 26/11 and 8/1 (32 teams, 18 new); 3rd 14/1 and 29/1; quarter-finals
+/// 3/2 and 19/2; semi-final 4/3 and 1/4; final 2/4 and 22/4 at a neutral ground [inference: venue 4]; 300 thousand for
+/// winning each round and 1.5 million to the winner; category 4 up to the quarter-finals and 6 after
+/// Original: `FraLgeCup::create_round_table` (0x5bcc40, fra_lge_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x5bcc40 } (thiscall, ret 0x10, fra_lge_cup.cpp; a virtual +0x3c da Copa da Liga francesa): `FraLgeCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa2 sem memória.
 unsafe extern "thiscall" fn cql11_copa_da_liga_francesa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql11_tabela(this, fase, rodadas, extra, saida, &CQL11_COPA_DA_LIGA_FRANCESA, 0x9ccb98, 0xa2, "cql_11 tabela da copa da liga francesa")
@@ -179,7 +194,14 @@ const CQL11_COPA_DO_REI: [Cql11R; 7] = [
     cql11r((0x1a, 3, 1, 3), (0x1a, 4, 1, 5, 1, 4), 0x96, (0, 3, 0), 6, (2, 1, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
 ];
 
-/// { 0x84d220 } (thiscall, ret 0x10, spa_cup.cpp; a virtual +0x3c da Copa do Rei): `SpaCup::create_round_table(fase,
+/// rule: the Copa del Rey has 7 rounds: preliminary (code 0xe6, 38 teams, 7 days between legs) drawn 18/8, played 30/8;
+/// 1st round 8/9 and 13/12 (64 teams, 45 new); 2nd 15/12 and 3/1; 3rd (last 16) 5/1 and 10/1, quarter-finals 19/1 and
+/// 31/1 and semi-final 23/2 and 11/4 over two legs (7, 7 and 14 days apart); final drawn 26/4, played 26/5 at a neutral
+/// ground [inference: venue 4]; up to the semi-final the lower-division club plays at home and clubs of the same nation
+/// are kept apart in the draw (+0xb = 3); no prize per round (−1); category 4 up to the last 16 and 6 after
+/// Original: `SpaCup::create_round_table` (0x84d220, spa_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x84d220 } (thiscall, ret 0x10, spa_cup.cpp; a virtual +0x3c da Copa do Rei): `SpaCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa8 sem memória.
 unsafe extern "thiscall" fn cql11_copa_do_rei_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql11_tabela(this, fase, rodadas, extra, saida, &CQL11_COPA_DO_REI, 0xa82810, 0xa8, "cql_11 tabela da copa do rei")
@@ -276,6 +298,19 @@ unsafe fn cqm11_copa_da_franca(this: usize) -> (i32, i32) {
     ((n == read_i16(this + 0x3e) as i32) as i32, n)
 }
 
+/// rule: the Coupe de France takes 222 clubs, in this order (the order decides the entry round: the first 40 in the 6th
+/// round, the next 164 in the 7th and the last 18, the First Division, in the last 128): all clubs of division
+/// [0x9cf5d4] (the National [inference]); those of [0x9cf764] linked (+0x60) to [0x9cf5d8] (the CFA [inference]); the
+/// French ones of [0x9cf764] without a link; the French clubs with no division that are not national teams — these
+/// three groups up to 184 entrants in 2001 and 182 in other years; the Second and the First Division; with an
+/// incomplete list it returns 0
+/// Original: `FraCup::collect_entrants` (0x5baa50, fra_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: entram na Copa da França 222 clubes, nesta ordem (a ordem decide a rodada de entrada: os 40 primeiros na 6ª
+/// rodada, os 164 seguintes na 7ª e os 18 últimos, a Primeira, nos 64 avos): todos os da divisão [0x9cf5d4] (o National
+/// [inferência]); os da [0x9cf764] ligados (+0x60) à [0x9cf5d8] (o CFA [inferência]); os franceses da [0x9cf764] sem
+/// ligação; os franceses sem divisão que não são seleções — estes três grupos até 184 inscritos em 2001 e 182 nos
+/// outros anos; a Segunda e a Primeira; com a lista incompleta, devolve 0
 unsafe extern "thiscall" fn cqm11_copa_da_franca_inscritos(this: usize) -> i32 {
     cqm11_copa_da_franca(this).0
 }
@@ -357,6 +392,16 @@ unsafe fn cqm11_copa_da_liga(this: usize) -> (i32, i32) {
     ((n == read_i16(this + 0x3e) as i32) as i32, n)
 }
 
+/// rule: the French League Cup takes 54 clubs, in this order (the first 16 in the preliminary round, the next 20 in the
+/// 1st round and the last 18 in the 2nd): those of division [0x9cf5d4] that did not come from [0x9cf5d8] (up to 16 in
+/// 2001 and 14 in other years), topped up to 16 with those of [0x9cf5d4] that came from [0x9cf5d8] (the promoted ones
+/// [inference]); the Second and the First Division; with an incomplete list it returns 0
+/// Original: `FraLgeCup::collect_entrants` (0x5bd160, fra_lge_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: entram na Copa da Liga francesa 54 clubes, nesta ordem (os 16 primeiros na preliminar, os 20 seguintes na 1ª
+/// rodada e os 18 últimos na 2ª): os da divisão [0x9cf5d4] que não vieram da [0x9cf5d8] (até 16 em 2001 e 14 nos outros
+/// anos), completados até 16 com os da [0x9cf5d4] que vieram da [0x9cf5d8] (os promovidos [inferência]); a Segunda e a
+/// Primeira; com a lista incompleta, devolve 0
 unsafe extern "thiscall" fn cqm11_copa_da_liga_inscritos(this: usize) -> i32 {
     cqm11_copa_da_liga(this).0
 }
@@ -416,6 +461,12 @@ unsafe fn cqm11_supercopa(this: usize) -> (i32, i32) {
     (1, 2)
 }
 
+/// rule: the French Super Cup is between the First Division champion and the Coupe de France winner; if the same club
+/// won both, the First Division runner-up takes its place; if one is missing, the error box
+/// Original: `FraSuper::select_teams` (0x5bf770, fra_super.cpp, thiscall, ret 0).
+///
+/// [pt] regra: a Supercopa da França é entre o campeão da Primeira e o da Copa da França; se o mesmo clube ganhou as duas,
+/// entra o vice da Primeira; sem algum deles, a caixa de erro
 unsafe extern "thiscall" fn cqm11_supercopa_clubes(this: usize) -> i32 {
     cqm11_supercopa(this).0
 }

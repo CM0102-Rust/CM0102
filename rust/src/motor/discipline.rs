@@ -25,7 +25,11 @@ unsafe fn cqb9_itens(this: usize, time: usize) -> (usize, usize) {
     (e, fim)
 }
 
-/// { 0x557120 } (thiscall, ret 4, discipline.cpp, quadro SEH da LLIST local 0x68d020/0x68d040):
+/// in a national team match: the people of its nation in the nation index (binary search by nation) serve one match of
+/// their ban under rule 0, one by one from a list of the ids (the count can release the ban and reorder the index)
+/// Original: `Discipline::serve_international_bans` (0x557120, discipline.cpp, thiscall).
+///
+/// [pt] { 0x557120 } (thiscall, ret 4, discipline.cpp, quadro SEH da LLIST local 0x68d020/0x68d040):
 /// `Discipline::serve_international_bans(time)`, pelo jogo da seleção (0x7e8090, no órgão das suspensões). As pessoas da
 /// nação do time no índice das nações (cqb9_itens) vão para uma lista (0x68d0d0 com o item e 4: a cópia do id, porque
 /// a contagem pode soltar a suspensão e reordenar o índice) e, para cada uma, um jogo cumprido na regra 0
@@ -139,7 +143,11 @@ unsafe fn cqb9_recurso(this: usize, id: u32, regra: u32, reduz: u32, menos_jogos
     r
 }
 
-/// { 0x557000 } (thiscall, ret 0x20, discipline.cpp): `Discipline::apply_appeal_result(id, regra, reduz, menos_jogos,
+/// the result of a ban appeal: the ruling body drops the person's pending bans; a match ban loses matches (or stops at
+/// the counter) and a timed ban loses days, and it is released when over or when the appeal lifts it
+/// Original: `Discipline::apply_appeal_result` (0x557000, discipline.cpp, thiscall).
+///
+/// [pt] { 0x557000 } (thiscall, ret 0x20, discipline.cpp): `Discipline::apply_appeal_result(id, regra, reduz, menos_jogos,
 /// menos_dias, novo, dias_fixo, _)`, pelo resultado do recurso (0x6abf99, notícias do técnico humano). Com a entrada da
 /// pessoa no órgão (0x7e82e0 sem criar) e suspensão (+6): o órgão tira as suspensões pendentes dela (0x7e91d0); por
 /// jogos (+0 ≠ 0xff): `novo` ≠ 0xff tira `novo` jogos (abaixo de 0: zera e solta), senão `reduz` tira `menos_jogos` e
@@ -186,7 +194,10 @@ unsafe fn cqb9_vaga(this: usize, pessoa: usize, vaga: u32) -> u8 {
     *((read_usize(this + 0x14) + id.wrapping_mul(29) + (vaga as i8 as isize as usize).wrapping_mul(5)) as *const u8)
 }
 
-/// { 0x55d3c0 } (thiscall, ret 0x10, discipline.cpp): `Discipline::get_slot_text(pessoa, vaga, saída, tamanho)`, pela
+/// the text of the ban in the person's slot, from the ruling body of its rule; with no rule in the slot, 0
+/// Original: `Discipline::get_slot_text` (0x55d3c0, discipline.cpp, thiscall).
+///
+/// [pt] { 0x55d3c0 } (thiscall, ret 0x10, discipline.cpp): `Discipline::get_slot_text(pessoa, vaga, saída, tamanho)`, pela
 /// tela da pessoa (0x87618a, com 0xc8). Pessoa de id a partir de [0xae2364]: 0. A regra da vaga (cqb9_vaga) 0xff: 0;
 /// senão o texto do órgão dela ([[this] + 4 × regra], 0x7e88d0 com a pessoa, a saída e o tamanho). Pessoa nula: a
 /// original (lê o id de 0).
@@ -281,7 +292,12 @@ unsafe fn cpo11_limpar_vaga(this: usize, id: u32, k: usize, e: usize) {
     cpo11_por(e, 0xffff_ffff);
 }
 
-/// { 0x556940 } (thiscall, ret 8, discipline.cpp): `Discipline::add_ban(id, suspensao)`: se alguma das 4 regras da
+/// when the person already has a ban under one of the 4 rules, extends the old one (matches or days) and flags both;
+/// otherwise copies the new ban into the vector's first free slot (or the end, growing by 100 up to 0x7d00), links each
+/// rule to it (0x7e8510) and, with the fourth rule, adds {id, nation} to the nation index (qsort)
+/// Original: `Discipline::add_ban` (0x556940, discipline.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x556940 } (thiscall, ret 8, discipline.cpp): `Discipline::add_ban(id, suspensao)`: se alguma das 4 regras da
 /// suspensão nova (+0xc..+0xf) já tem suspensão da pessoa (a entrada do órgão com +6 > −1), estende a velha (jogos +0
 /// somados, ou, com algum dos dois por dias (0xff), os dias +2) e marca as duas (+0x13 bit 0); senão (o bit 0 da nova
 /// limpo a cada regra sem suspensão) copia a nova (0x556c70) na primeira vaga livre do vetor (+0 = 0xff e +2 = −1), ou
@@ -394,7 +410,11 @@ unsafe extern "thiscall" fn acrescentar_suspensao(this: usize, id: u32, ban: usi
     qsort(read_u32_as_usize(this + 0xc), read_i16(this + 0x12) as i32, 8, 0x55e5f0);
 }
 
-/// { 0x556270 } (thiscall, ret 0xc, discipline.cpp): `Discipline::clear_bans_invalid_for_club(pessoa, _, clube)`: cada
+/// on a club move, frees each of the person's 4 record slots whose ruling body (nation +0x17 or continent +0x1b) does
+/// not cover the new club: releases the ban, frees the slot and the entry; with held bans, shows the "Error" box
+/// Original: `Discipline::clear_bans_invalid_for_club` (0x556270, discipline.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x556270 } (thiscall, ret 0xc, discipline.cpp): `Discipline::clear_bans_invalid_for_club(pessoa, _, clube)`: cada
 /// vaga ocupada das 4 do registro da pessoa cujo órgão não vale para o clube novo (`cpo11_cobre`) é liberada: a
 /// suspensão solta (0x556d00), a vaga livre e a entrada do órgão livre. Com suspensões guardadas (+0x1c ≠ 0), a caixa
 /// "Error" antes (e segue). Da troca de clube (0x8c9720).
@@ -475,7 +495,11 @@ unsafe fn cpo11_plano_devolver(this: usize, pessoa: usize) -> Cpo11Devolver {
     p
 }
 
-/// { 0x556570 } (thiscall, ret 4, discipline.cpp): `Discipline::restore_held_bans(pessoa)`: no fim do empréstimo
+/// when a loan ends, puts the person's held bans back into their slots (freeing the occupied slot first; the item
+/// leaves the list) and frees slots 0..2 not restored whose ruling body does not cover the contract club
+/// Original: `Discipline::restore_held_bans` (0x556570, discipline.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x556570 } (thiscall, ret 4, discipline.cpp): `Discipline::restore_held_bans(pessoa)`: no fim do empréstimo
 /// (0x4d07e0): o contrato (0x4cf5a0, guardado em [0xae1080]) dá o clube; cada suspensão guardada da pessoa na lista
 /// [this+0x1c] (id, vaga +4, os 5 bytes +5), enquanto houver guardadas (+0x1c do registro, com sinal): a vaga ocupada é
 /// liberada antes (a suspensão solta, 0x556d00), a guardada volta para a vaga, sai da lista (0x68d1f0, que a libera) e a
@@ -764,7 +788,12 @@ unsafe fn cpm4_jogo(this: usize, id: u32, regra: u32, conta: u32) -> Cpm4Jogo {
     j
 }
 
-/// { 0x556e90 } (thiscall, ret 0xc, discipline.cpp): `Discipline::update_ban_progress(id, regra, conta)`: a suspensão
+/// the person's ban in the rule's ruling body: match bans, from the start date (+4/+6) and when counting, +1 to the
+/// counter (+1); on reaching the total (+0), or day bans once today reaches start + days (+2, 0x54c5b0), it goes to the
+/// history (0x58e340) and is released (0x556d00)
+/// Original: `Discipline::update_ban_progress` (0x556e90, discipline.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x556e90 } (thiscall, ret 0xc, discipline.cpp): `Discipline::update_ban_progress(id, regra, conta)`: a suspensão
 /// da pessoa no órgão da `regra` (plano em `cpm4_jogo`): por jogos, grava o contador novo (+1); cumprida, vai para o
 /// histórico (0x58e340 sobre [this+0x18] com o começo e o último deslocamento do registro de 29 bytes) e é solta
 /// (0x556d00). Sem SEH, sem sorteio, sem caixa.
@@ -784,7 +813,11 @@ unsafe extern "thiscall" fn contar_jogo_da_suspensao(this: usize, id: u32, regra
     soltar(this, id, (g as u32 & 0xffff_0000) | read_i16(j.entrada + 6) as u16 as u32);
 }
 
-/// { 0x556d00 } (thiscall, ret 8, discipline.cpp): `Discipline::release_ban(id, indice)`: a suspensão `indice` (20
+/// each ruling body of the ban's 4 rules (+0xc..+0xf) forgets it (0x7e8590); on the fourth, the person's item leaves
+/// the nation index (last one moved in, qsort); the ban becomes free (+0 = 0xff, +2 = −1)
+/// Original: `Discipline::release_ban` (0x556d00, discipline.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x556d00 } (thiscall, ret 8, discipline.cpp): `Discipline::release_ban(id, indice)`: a suspensão `indice` (20
 /// bytes em [this+4]; a palavra com sinal): para cada uma das 4 regras (+0xc..+0xf, 0xff = sem), o órgão a esquece
 /// (0x7e8590); na quarta, o item da pessoa sai do índice das nações (o último vem para o lugar, conta +0x12 − 1, qsort
 /// 0x945333 com 0x55e5f0; sem achar, caixa "Error" e segue). Por fim a suspensão fica livre (+0 = 0xff, +2 = −1).
@@ -820,7 +853,10 @@ unsafe extern "thiscall" fn soltar_suspensao(this: usize, id: u32, indice: u32) 
     s
 }
 
-/// { 0x55e1d0 } (thiscall, ret 4, discipline.cpp): `Discipline::clear_ban_history(pessoa)`: o histórico de suspensões
+/// the last offset of the person's ban history (+0x18 of the 29-byte record) = −1 (0x58f110)
+/// Original: `Discipline::clear_ban_history` (0x55e1d0, discipline.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x55e1d0 } (thiscall, ret 4, discipline.cpp): `Discipline::clear_ban_history(pessoa)`: o histórico de suspensões
 /// da pessoa (registro de 29 bytes do id em [this+0x14]) fica sem o último (0x58f110 sobre [this+0x18]: +0x18 = −1).
 /// Devolve o que a 0x58f110 devolve. Pessoa nula ou não jogadora (+0x61): a original (caixa fatal).
 unsafe extern "thiscall" fn apagar_historico_de_suspensoes(this: usize, pessoa: usize) -> usize {
@@ -895,7 +931,10 @@ unsafe extern "thiscall" fn comparar_apagar_historico_de_suspensoes(this: usize,
 
 // ---------- 243a leva: a cópia do registro de suspensão (discipline.cpp), o salário padrão do contrato (staff_contracts.cpp) e a condição de jogo (injury.cpp) ----------
 
-/// { 0x556c70 } (thiscall, ret 4, discipline.cpp): `BanRecord::operator=`: copia o registro de suspensão (0x14 bytes) de
+/// copies the ban record (0x14 bytes): fields, the date (+4) and bits 0..2 of +0x13
+/// Original: `BanRecord::operator=` (0x556c70, discipline.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x556c70 } (thiscall, ret 4, discipline.cpp): `BanRecord::operator=`: copia o registro de suspensão (0x14 bytes) de
 /// `origem`: +0 e +1 (bytes), +2 (palavra), a data em +4 (0x417c10, retorno numa local), +0xc..+0xf (byte a byte),
 /// +0x10 (byte), +0x11 (palavra) e os bits 0..2 de +0x13 (os outros bits ficam). Devolve `this`.
 unsafe extern "thiscall" fn copiar_registro_de_suspensao(this: usize, origem: usize) -> usize {
@@ -917,7 +956,10 @@ unsafe extern "thiscall" fn copiar_registro_de_suspensao(this: usize, origem: us
     this
 }
 
-/// { 0x8626e0 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::set_default_wage(pessoa)`: o salário (+0xc) é
+/// the wage (+0xc) = the default for the person at the club (0x862720) truncated, minimum 55
+/// Original: `STAFF_CONTRACT::set_default_wage` (0x8626e0, staff_contracts.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8626e0 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::set_default_wage(pessoa)`: o salário (+0xc) é
 /// o padrão da pessoa no clube dela ([+0x39]) pela 0x862720 (stdcall, 6 argumentos, float; o ecx vai junto, como na
 /// original), truncado (0x945640), com mínimo 55. Devolve o truncado (antes do mínimo).
 unsafe extern "thiscall" fn salario_padrao_do_contrato(this: usize, pessoa: usize) -> u32 {
@@ -927,7 +969,10 @@ unsafe extern "thiscall" fn salario_padrao_do_contrato(this: usize, pessoa: usiz
     v as u32
 }
 
-/// { 0x62c510 } (thiscall, ret 8, injury.cpp): `Injury::get_match_condition(jogador, em_porcento)`: sem jogador, 0; id
+/// updates the day fitness (0x62c680) and returns the match condition (out of 10000, or as a percentage)
+/// Original: `Injury::get_match_condition` (0x62c510, injury.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x62c510 } (thiscall, ret 8, injury.cpp): `Injury::get_match_condition(jogador, em_porcento)`: sem jogador, 0; id
 /// fora das pessoas ([0xae2364]): 10000 (100 em porcento); senão atualiza o físico do dia (0x62c680, uma vez por dia)
 /// e devolve a condição (registro de 31 bytes em [this], +0xa), em porcento × 0,01f truncado. Só o ax é o retorno.
 unsafe extern "thiscall" fn condicao_de_jogo_do_jogador(this: usize, jogador: usize, em_porcento: u32) -> u16 {
@@ -967,7 +1012,10 @@ comparar_valor!(comparar_condicao_de_jogo_do_jogador, condicao_de_jogo_do_jogado
 
 // ---------- 184a leva: a disciplina (discipline.cpp): a temporada nova, o dia e a vaga da tabela ----------
 
-/// { 0x556210 } (thiscall, ret 4, discipline.cpp): começa a temporada nova da competição `*id`: as
+/// starts the new season of the competition's discipline rules (virtual method 0)
+/// Original: `discipline_new_season` (0x556210, discipline.cpp, thiscall).
+///
+/// [pt] { 0x556210 } (thiscall, ret 4, discipline.cpp): começa a temporada nova da competição `*id`: as
 /// regras da disciplina dela (índice +0x50 da competição em [0xadadfc], 0xff sem) recebem o método 0
 /// da tabela virtual.
 unsafe extern "thiscall" fn disciplina_temporada_nova(this: usize, id: *const i32) {
@@ -986,7 +1034,10 @@ unsafe extern "thiscall" fn disciplina_temporada_nova(this: usize, id: *const i3
     }
 }
 
-/// { 0x556240 } (thiscall, ret 4, discipline.cpp): o dia da disciplina: cada uma das 43 regras ([this],
+/// the day of each of the 43 discipline rules (virtual method 1)
+/// Original: `discipline_daily_update` (0x556240, discipline.cpp, thiscall).
+///
+/// [pt] { 0x556240 } (thiscall, ret 4, discipline.cpp): o dia da disciplina: cada uma das 43 regras ([this],
 /// as não nulas) recebe o método 1 da tabela virtual com a data `hoje`.
 unsafe extern "thiscall" fn disciplina_do_dia(this: usize, hoje: usize) {
     for k in 0..43usize {
@@ -998,7 +1049,10 @@ unsafe extern "thiscall" fn disciplina_do_dia(this: usize, hoje: usize) {
     }
 }
 
-/// { 0x55cb20 } (thiscall, ret 0x10, discipline.cpp): grava a vaga `vaga` (5 bytes: o byte `tipo` e o
+/// writes the type and value of one of the person's slots in the discipline table
+/// Original: `discipline_set_slot` (0x55cb20, discipline.cpp, thiscall).
+///
+/// [pt] { 0x55cb20 } (thiscall, ret 0x10, discipline.cpp): grava a vaga `vaga` (5 bytes: o byte `tipo` e o
 /// valor) da pessoa `id` na tabela +0x14 (29 bytes por pessoa).
 unsafe extern "thiscall" fn disciplina_gravar_vaga(this: usize, id: i32, vaga: i8, tipo: u8, valor: u32) {
     let a = (*((this + 0x14) as *const usize) as isize + id as isize * 29 + vaga as isize * 5) as usize;

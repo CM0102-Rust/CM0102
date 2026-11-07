@@ -22,6 +22,12 @@ unsafe fn cqq11_europeia(this: usize) -> (i32, i32) {
     cqm12_fim(l)
 }
 
+/// rule: the European Super Cup is between the Champions League winner and the Cup Winners' Cup winner in the 1999
+/// edition (the last Cup Winners' Cup) and, in the others, the UEFA Cup winner; without either, the error box
+/// Original: `EurSuperCup::select_teams` (0x57a500, eur_super_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: a Supercopa Europeia é entre o campeão da Liga dos Campeões e o da Recopa na edição de 1999 (a última Recopa)
+/// e, nas outras, o da Copa da UEFA; sem um dos dois, a caixa de erro
 unsafe extern "thiscall" fn cqq11_europeia_clubes(this: usize) -> i32 {
     cqq11_europeia(this).0
 }
@@ -57,6 +63,12 @@ unsafe fn cqq11_asiatica(this: usize) -> (i32, i32) {
     cqm12_fim(l)
 }
 
+/// rule: the Asian Super Cup is between the Asian Club Championship winner and the Asian Cup Winners' Cup winner; if
+/// the same club won both, the Club Championship runner-up plays
+/// Original: `AsiaSuperCup::select_teams` (0x410a50, asia_super_cup.cpp, thiscall, ret 0).
+///
+/// [pt] regra: a Supercopa Asiática é entre o campeão da Liga dos Campeões asiática e o da Recopa asiática; se o mesmo clube
+/// ganhou as duas, entra o vice da Liga dos Campeões
 unsafe extern "thiscall" fn cqq11_asiatica_clubes(this: usize) -> i32 {
     cqq11_asiatica(this).0
 }
@@ -80,6 +92,12 @@ unsafe fn cqq11_c1(this: usize) -> (i32, i32) {
     cqm12_fim(l)
 }
 
+/// rule: the Serie C1 Super Cup starts with both places empty; the clubs enter at the end of the season [inference: the
+/// champions of the two C1 groups]
+/// Original: `ItaC1Super::init_team_list` (0x63c9d0, ita_c1_super.cpp, thiscall, ret 0).
+///
+/// [pt] regra: a Supercopa da Série C1 começa com as duas vagas vazias; os clubes entram no fim da temporada [inferência: os
+/// campeões das duas chaves da C1]
 unsafe extern "thiscall" fn cqq11_c1_vagas(this: usize) -> i32 {
     cqq11_c1(this).0
 }

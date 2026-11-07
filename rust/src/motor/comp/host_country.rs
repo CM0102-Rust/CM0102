@@ -86,7 +86,14 @@ const CQO3_TABELA: [(u16, u8, u32); 281] = [
     (0x78f, 3, 0x0), (0x791, 2, 0x0), (0x776, 0, KEY_NATION_SOUTH_KOREA as u32), (0x77a, 1, 0xffffffff), (0x78e, 2, 0xfd),
 ];
 
-/// { 0x5f9970 } (thiscall, ret 0, host_country.cpp, `HostCountry::init_default_table`; pelo construtor 0x5f97c0, sem o
+/// the default host table: 57 entries (World Cup 1998 to 2026 every 4 years, European Championship and Olympics 2000 to
+/// 2028, African Cup 2000 to 2014 every 2 years, Copa América 1999 to 2009, Asian Cup 2000 to 2016 and one-off
+/// editions), each with up to three bids of two nations, the chosen one (or open/closed voting, or a fixed host) and
+/// the decision day (10 July for the World Cup, 20 July or 20 September for the others [inference: the month counts
+/// from 0]) plus a random −35 to +34 days
+/// Original: `HostCountry::init_default_table` (0x5f9970, host_country.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5f9970 } (thiscall, ret 0, host_country.cpp, `HostCountry::init_default_table`; pelo construtor 0x5f97c0, sem o
 /// HostCountry.tmp; quadro SEH só pela Data local): a tabela padrão das sedes (57 entradas de 0x22 bytes em [this],
 /// conta em +4: +0 a competição, +4 o ano, +6/+0xa, +0xe/+0x12, +0x16/+0x1a as três candidaturas (duas nações cada),
 /// +0x1e a escolhida, +0x1f o dia da decisão, +0x21 o intervalo entre edições), pelas gravações de `CQO3_TABELA`;
@@ -154,7 +161,12 @@ unsafe extern "thiscall" fn comparar_tabela_das_sedes(this: usize) {
     PLACAR.registrar(igual, || format!("tabela_das_sedes: {:x?} x {:x?}", mo, mr).chars().take(4000).collect());
 }
 
-/// { 0x5faec0 } (thiscall, ret 4, host_country.cpp, `HostCountry::post_host_news(lista)`; pelo calendário das sedes
+/// the news of changed hosts: with open voting, the bids (news 4); with a chosen bid, the hosts (news 5); to the
+/// managers of the competition's continent or to everyone; except the Olympics, the 2006 World Cup in Germany and the
+/// chosen bid of the edition 8 years ahead
+/// Original: `HostCountry::post_host_news` (0x5faec0, host_country.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x5faec0 } (thiscall, ret 4, host_country.cpp, `HostCountry::post_host_news(lista)`; pelo calendário das sedes
 /// 0x5fa850; quadro SEH só pelas notícias locais, sem destrutor): para cada entrada da lista (cursor reposto, 0x68d1b0),
 /// fora a candidatura escolhida (ou a padrão fixa) da edição de daqui a 8 anos ([0xae2c92] + 8), as Olimpíadas
 /// ([0x9cf7a0]) e a Copa do Mundo de 2006 na Alemanha ([0x9cf79c], 0x7d6, [0x9cf314]): com a votação aberta (−1) a
@@ -216,7 +228,11 @@ unsafe extern "thiscall" fn comparar_noticia_das_sedes(this: usize, lista: usize
     orig::<unsafe extern "thiscall" fn(usize, usize)>(1958)(this, lista)
 }
 
-/// { 0x5fb160 } (thiscall, ret 0, host_country.cpp, `HostCountry::load_temp_file`; pelo construtor 0x5f97c0): lê o
+/// reads HostCountry.tmp (the count and the 0x22-byte entries into a new block); without the file 0 (a new game builds
+/// the default table); read errors with the error box
+/// Original: `HostCountry::load_temp_file` (0x5fb160, host_country.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5fb160 } (thiscall, ret 0, host_country.cpp, `HostCountry::load_temp_file`; pelo construtor 0x5f97c0): lê o
 /// HostCountry.tmp da pasta CM3_TEMP (0x90bde0, fopen 0x945b00 "rb"): a conta (word, +4) e as entradas de 0x22 bytes
 /// num bloco novo ([this], 0x944e46); falhando a leitura, a caixa (linhas 0x448/0x452/0x45c), fecha (0x945a09) e, com
 /// o bloco, o solta (0x9452ca). Devolve 1 com tudo lido, 0 sem o arquivo ou com erro.
@@ -277,7 +293,11 @@ unsafe fn cqj3_sedes(e: usize, k: i8, a: *mut u32, b: *mut u32) -> u8 {
     (*a != u32::MAX) as u8 + (segunda != u32::MAX) as u8
 }
 
-/// { 0x5fa730 } (thiscall, ret 0x14, host_country.cpp, `HostCountry::find_hosts`): as sedes da competição `comp` no ano
+/// the host (and the second host, for co-hosted editions) of a competition in a year: the winning bid, or the default
+/// host when the host is fixed or the bidding is open (or closed, on request)
+/// Original: `HostCountry::find_hosts` (0x5fa730, host_country.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x5fa730 } (thiscall, ret 0x14, host_country.cpp, `HostCountry::find_hosts`): as sedes da competição `comp` no ano
 /// `ano` (short): a primeira entrada da competição com o ano (ou ano 0) que já tem a candidatura escolhida (as duas
 /// sedes dela), a padrão fixa ou a votação aberta (a sede padrão), ou, com `padrao`, a votação ainda fechada (a padrão).
 /// Grava as duas e devolve quantas valem; sem entrada, 0 sem gravar.
@@ -318,7 +338,10 @@ unsafe extern "thiscall" fn comparar_sede_da_edicao(this: usize, comp: u32, ano:
     r
 }
 
-/// { 0x5fa7d0 } (thiscall, ret 0xc, host_country.cpp, `HostCountry::find_next_hosts`): as sedes da próxima edição da
+/// the hosts of the competition's next already decided edition (the winning bid or the fixed host)
+/// Original: `HostCountry::find_next_hosts` (0x5fa7d0, host_country.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x5fa7d0 } (thiscall, ret 0xc, host_country.cpp, `HostCountry::find_next_hosts`): as sedes da próxima edição da
 /// competição `comp`: a primeira entrada dela com a candidatura escolhida (as duas sedes) ou com a padrão fixa (a
 /// padrão). Grava as duas e devolve quantas valem; sem entrada, 0 sem gravar.
 unsafe extern "thiscall" fn proxima_sede(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
@@ -383,7 +406,13 @@ unsafe fn cqj3_primeira(inicio: usize, n: i16, ano: u16, dia: u16) -> usize {
     p
 }
 
-/// { 0x5fa850 } (thiscall, ret 4, host_country.cpp, `HostCountry::daily_update`; quadro SEH pela lista local, destruída
+/// the hosting rule: each edition (World Cup, European Championship and the others in the table) has a decision date in
+/// the year; 8 years ahead the bidding opens (news with the bids); 5 years ahead the host is drawn among the 3 bids
+/// (news); on 1 January past editions jump to the next one (the competition's interval, e.g. 4 years) with the bidding
+/// closed; outside 2001, on 1 July, the European finals hosts
+/// Original: `HostCountry::daily_update` (0x5fa850, host_country.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x5fa850 } (thiscall, ret 4, host_country.cpp, `HostCountry::daily_update`; quadro SEH pela lista local, destruída
 /// no fim pela 0x68d040): o calendário das sedes, a cada dia `hoje` (+0 o dia do ano, +2 o ano). Fora de 2001, no dia
 /// 1º de julho (0x549f70(1, 6, ano, −1)) as sedes das finais europeias (0x5fad20). As entradas com o dia de hoje e o ano
 /// + 8: a votação abre (−2 vira −1) e vão à lista. As com o ano + 5: vão à lista e, com a votação aberta ou fechada,

@@ -56,7 +56,13 @@ unsafe fn cqj12_confere(nome: &str, this: usize, campos: &[(usize, u8, u32)], da
 const CQJ12_EUROPA: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x4a, 1, 3), (0x3c, 2, 2), (0xc3, 1, 1), (0xc4, 1, 0xa), (0x43, 1, 2), (0xc5, 1, 1),
     (0xc6, 1, 2), (0xc7, 1, 4), (0xc8, 1, 5), (0xbe, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7)];
 
-/// { 0x9191e0 } (thiscall, ret 0, wc_europe_league.cpp; a virtual +0x8c; quadro SEH só da data local, sem destrutor):
+/// rule: the European groups are home and away, 3 points a win and 1 a draw, tiebreak by codes 1, 2, 4 and 5
+/// [inference: goal difference, goals for, head-to-head, away goals]; each group winner goes straight through; national
+/// teams (+0x43 = 2); category 10 (national teams) on each match; 7 substitutes and 3 changes; starts on 25 of month 2
+/// [inference: 25 March] moved to weekday 5
+/// Original: `WcEuropeLeague::set_up_rules` (0x9191e0, wc_europe_league.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x9191e0 } (thiscall, ret 0, wc_europe_league.cpp; a virtual +0x8c; quadro SEH só da data local, sem destrutor):
 /// `WcEuropeLeague::set_up_rules()`: os grupos europeus em dois turnos, 3 pontos a vitória e 1 o empate, a categoria
 /// 0xa (seleções), os desempates (1, 2, 4, 5), um classificado direto por grupo, seleções (+0x43 = 2), 7 no banco e 3
 /// substituições, começo em 25 do mês 2 num dia da semana 5; depois a tabela das rodadas.
@@ -79,7 +85,13 @@ unsafe extern "thiscall" fn comparar_cqj12_eliminatoria_europa_regras(this: usiz
 const CQJ12_SUL: [(usize, u8, u32); 16] = [(0x3c, 2, 2), (0x43, 1, 2), (0xc6, 1, 2), (0xc2, 1, 3), (0xc3, 1, 1), (0xc4, 1, 0xa), (0xab, 2, 0),
     (0xdb, 2, 0), (0xc5, 1, 1), (0xc7, 1, 3), (0xbf, 1, 1), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7), (0x4a, 1, 3), (0xa7, 2, 0xffff)];
 
-/// { 0x921040 } (thiscall, ret 0, wc_south_american_league.cpp; a virtual +0x8c; quadro SEH só da data local):
+/// rule: the South American qualifier is a single home and away league, 3/1 points, tiebreak 1, 2 and 3; the direct
+/// places are four minus the exempt nations (the world champion and South American hosts, counted in +0xee and +0xef
+/// [inference]); the fifth goes to the play-off (+0xbf = 1); category 10, 7 substitutes and 3 changes; starts on 25 of
+/// month 0 on weekday 5
+/// Original: `WcSouthAmericanLeague::set_up_rules` (0x921040, wc_south_american_league.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x921040 } (thiscall, ret 0, wc_south_american_league.cpp; a virtual +0x8c; quadro SEH só da data local):
 /// `WcSouthAmericanLeague::set_up_rules()`: com o objeto da competição [0x9cf76c], +0xef recebe o +0xee dele [inferência:
 /// as nações isentas por serem a campeã]; a liga única sul-americana em dois turnos, 3/1 pontos, a categoria 0xa, os
 /// desempates (1, 2, 3), vagas diretas 4 − +0xef − +0xee (as isentas saem das quatro), uma de repescagem, seleções, 7 no
@@ -123,7 +135,11 @@ unsafe extern "thiscall" fn comparar_cqj12_eliminatoria_sul_americana_regras(thi
 const CQJ12_ASIA: [(usize, u8, u32); 12] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x3c, 2, 2), (0xc3, 1, 1), (0xc4, 1, 0xa), (0x43, 1, 2), (0xc5, 1, 1),
     (0xc6, 1, 2), (0xbe, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0)];
 
-/// { 0x912eb0 } (thiscall, ret 0, wc_asia_league.cpp; a virtual +0x8c; quadro SEH só da data local):
+/// rule: the Asian groups are home and away, 3/1 points, tiebreak 1, 2 and 3, each group winner goes on, category 10,
+/// starts on 25 of month 2 on weekday 5, +0xb8 = 1 [inference: the stage starts the following year]
+/// Original: `WcAsiaLeague::set_up_rules` (0x912eb0, wc_asia_league.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x912eb0 } (thiscall, ret 0, wc_asia_league.cpp; a virtual +0x8c; quadro SEH só da data local):
 /// `WcAsiaLeague::set_up_rules()`: os grupos asiáticos em dois turnos, 3/1 pontos, a categoria 0xa, os desempates (1, 2,
 /// 3), um classificado por grupo, seleções, começo em 25 do mês 2 num dia da semana 5, +0xb8 = 1.
 unsafe extern "thiscall" fn cqj12_eliminatoria_asia_regras(this: usize) -> u32 {

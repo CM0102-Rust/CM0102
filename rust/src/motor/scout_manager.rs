@@ -101,7 +101,12 @@ unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool, usize, usi
     (true, true, jogador, tecnico, nacao)
 }
 
-/// { 0x7f8750 } (thiscall, ret 0, scout_manager.cpp, quadro SEH da lista local e das datas): `SCOUT_MANAGER::
+/// on day slice 2: prunes the scouting requests (non-human club, player already at the club, older than a year, 3
+/// reports, injured); a request older than 30 days becomes up to 3 reports from the manager's scouts covering the
+/// player's nation and leaves; then the reports, the request order and one search tick on every human manager list
+/// Original: `SCOUT_MANAGER::daily_update` (0x7f8750, scout_manager.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x7f8750 } (thiscall, ret 0, scout_manager.cpp, quadro SEH da lista local e das datas): `SCOUT_MANAGER::
 /// daily_update()`, pelo dia (só na fatia 2 do dia, [0xae2c88]; senão 0). Poda os pedidos de observação (+0x5c,
 /// conta +0x64, 0x11 bytes; o tirado recebe o último), e o pedido processado vira até 3 relatórios dos olheiros do
 /// técnico do clube (das 10 listas, 0x7f6cd0, a que cobre a nação do jogador, 0x7b7490): 0x7b62a0 com −1000, modo 1, e o
@@ -231,7 +236,10 @@ unsafe extern "thiscall" fn comparar_cqf12_olheiros_do_dia(this: usize) -> u32 {
 /// 0x7f9890 para conferir os grupos da original.
 static mut CQF12_GRUPOS: Option<Vec<(u32, u32, u8)>> = None;
 
-/// { 0x7f9890 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::send_scout_reports(lista)`, pelo dia dos olheiros
+/// copies the list records into an array, sorts it and sends one news item per run of the same player and club
+/// Original: `SCOUT_MANAGER::send_scout_reports` (0x7f9890, scout_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7f9890 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::send_scout_reports(lista)`, pelo dia dos olheiros
 /// (0x7f8750) e pela busca (0x7f8c00). Com a lista não vazia (+0 conta): um vetor de conta × 0x67 (0x944e46; sem
 /// memória, a caixa da linha 0x7dd) com cópias dos registros, ordenado (0x945333 com 0x7fc2a0); cada grupo seguido do
 /// mesmo jogador (+0x2b) e do mesmo clube (+0x50) vira uma notícia de relatório (0x7f9a60 com o primeiro e quantos).
@@ -311,7 +319,11 @@ unsafe extern "thiscall" fn comparar_cqf12_relatorios_dos_olheiros(this: usize, 
     PLACAR.registrar(feito == plano, || format!("cqf12_relatorios_dos_olheiros(lista {:#x}) original {:x?} ensaio {:x?}", lista, feito, plano));
 }
 
-/// { 0x7f9a60 } (thiscall, ret 8, scout_manager.cpp, quadro SEH da notícia local): `SCOUT_MANAGER::
+/// the 0x138e news item with up to 3 records, the scout, the match and the player's strengths for the club, to the club
+/// manager
+/// Original: `SCOUT_MANAGER::send_scout_report_news` (0x7f9a60, scout_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7f9a60 } (thiscall, ret 8, scout_manager.cpp, quadro SEH da notícia local): `SCOUT_MANAGER::
 /// send_scout_report_news(registro, quantos)`, pelos relatórios (0x7f9890). A notícia 0x138e (0x77bbe0): quantos (até
 /// 3), +0x66, o olheiro (0x7e5160 com +0x1f), +0x59, +0x5a, o clube +0x50, os dados do jogo (0x7e4de0), +0x5e, +0x62,
 /// +0x58, +0x54, de cada um dos registros (+0x37 + 0x67 × k) +0xc, +0, +4, +8 e +0x26 + 8 × +0x25, 0x420e9 e as forças
@@ -447,7 +459,14 @@ unsafe fn cqc12_jogos(this: usize, l: usize) {
     }
 }
 
-/// { 0x76b100 } (thiscall, ret 4, national_teams.cpp, quadro SEH só das datas locais, sem destrutor):
+/// the national teams day: the table of clubs with a match is freed; on 1 January, 15 April and 1 August the pools are
+/// rebuilt; for the matches two weeks ahead, the clubs playing around the date are marked, the national teams call up
+/// and the call-ups per club are recorded (outside the finals); with the table, the matches of clubs with called-up
+/// players are rescheduled; the day's items leave, the FIFA ranking moves, every 70 days the records are pruned and the
+/// qualified nations news goes out
+/// Original: `NationalTeams::daily_update` (0x76b100, national_teams.cpp, thiscall).
+///
+/// [pt] { 0x76b100 } (thiscall, ret 4, national_teams.cpp, quadro SEH só das datas locais, sem destrutor):
 /// `NationalTeams::daily_update(hoje)`, pelo dia do jogo ([0xb74318], 0x5ccb07). A data daqui a duas semanas
 /// (0x54c770); a tabela dos clubes com jogo (+0x24) sai (0x9452ca) e zera. Em 1º de janeiro, 15 de abril e 1º de agosto
 /// (0x549f70 no ano de hoje), as reservas das seleções se refazem (0x76abf0). Nas 3 fatias do dia daqui a duas
@@ -576,7 +595,10 @@ unsafe fn cqc12_busca(s: usize, k: i32) -> usize {
     s.wrapping_add((k as usize).wrapping_mul(0x2b0))
 }
 
-/// { 0x7f8420 } (thiscall, ret 0, scout_manager.cpp): `SCOUT_MANAGER::current_search_has_no_club()`, pelas telas das
+/// the current search of the current human manager session has no club (+0x191 = −2)
+/// Original: `SCOUT_MANAGER::current_search_has_no_club` (0x7f8420, scout_manager.cpp, thiscall).
+///
+/// [pt] { 0x7f8420 } (thiscall, ret 0, scout_manager.cpp): `SCOUT_MANAGER::current_search_has_no_club()`, pelas telas das
 /// buscas (0x482a9b). A sessão do técnico humano da vez ([this + 0xc + 4 × índice]): a busca atual (o byte com sinal
 /// em +0 da sessão) sem clube (+0x191 = −2). Sem técnico ou sem sessão: 0; índice fora: a caixa (linha 0x454; a
 /// original) e 0.
@@ -605,7 +627,10 @@ unsafe extern "thiscall" fn comparar_busca_atual_sem_clube(this: usize) -> u32 {
     r
 }
 
-/// { 0x7f8500 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::is_club_in_session_searches(clube)`, pelas telas
+/// one of the 10 searches of the current human manager session is for the club
+/// Original: `SCOUT_MANAGER::is_club_in_session_searches` (0x7f8500, scout_manager.cpp, thiscall).
+///
+/// [pt] { 0x7f8500 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::is_club_in_session_searches(clube)`, pelas telas
 /// (0x482aaf, 0x483040, 0x7b34e1). Alguma das 10 buscas da sessão do técnico humano da vez tem o clube (+0x191 = +0
 /// do clube): 1. Sem técnico ou sem sessão: 0; índice fora: a caixa (linha 0x480; a original) e 0.
 unsafe extern "thiscall" fn clube_nas_buscas_da_sessao(this: usize, clube: usize) -> u32 {
@@ -638,7 +663,11 @@ unsafe extern "thiscall" fn comparar_clube_nas_buscas_da_sessao(this: usize, clu
 // ---------- 266a leva: os olheiros dos técnicos humanos na partida e a sessão de edição das buscas (scout_manager.cpp) ----------
 
 
-/// { 0x7f8c00 } (thiscall, ret 8, scout_manager.cpp, quadro SEH da LLIST local 0x68d020/0x68d040):
+/// the scouts at the match: for each human manager, the 10 scouts in a drawn order; one for the playing club starts the
+/// assignment, and each watches the match; at the end the reports go out
+/// Original: `SCOUT_MANAGER::scout_match` (0x7f8c00, scout_manager.cpp, thiscall).
+///
+/// [pt] { 0x7f8c00 } (thiscall, ret 8, scout_manager.cpp, quadro SEH da LLIST local 0x68d020/0x68d040):
 /// `SCOUT_MANAGER::scout_match(partida, resultado)`, pelo fechamento da partida do dia (0x6b5f00, Rust). Para cada um
 /// dos 16 últimos registros de pessoa ([0xae23bc], 0x6e bytes, do último para trás) com +0x5f = 1 (o técnico humano):
 /// num vetor zerado de 10 marcas (0x945501), os 10 observadores numa ordem sorteada (0x90cfc0 de 10 até achar um não
@@ -721,7 +750,10 @@ unsafe fn cqc13_indice(tecnico: usize) -> Option<usize> {
     if (0..=0xf).contains(&i) { Some(i as usize) } else { None }
 }
 
-/// { 0x7f6be0 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::get_edit_session(tecnico)`, pela montagem dos
+/// the human manager's searches edit session
+/// Original: `SCOUT_MANAGER::get_edit_session` (0x7f6be0, scout_manager.cpp, thiscall).
+///
+/// [pt] { 0x7f6be0 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::get_edit_session(tecnico)`, pela montagem dos
 /// conhecidos da busca (0x7afeb7). A sessão de edição do técnico humano (+0xc + 4 × índice). Sem técnico ou índice
 /// fora: a caixa (linhas 0xde e 0xe8; a original) e 0.
 unsafe extern "thiscall" fn sessao_de_edicao(this: usize, tecnico: usize) -> usize {
@@ -743,7 +775,10 @@ unsafe extern "thiscall" fn comparar_sessao_de_edicao(this: usize, tecnico: usiz
     r
 }
 
-/// { 0x7f6af0 } (thiscall, ret 8, scout_manager.cpp): `SCOUT_MANAGER::set_edit_session(sessao, tecnico)`, pelas telas
+/// stores the human manager's searches edit session and returns 1
+/// Original: `SCOUT_MANAGER::set_edit_session` (0x7f6af0, scout_manager.cpp, thiscall).
+///
+/// [pt] { 0x7f6af0 } (thiscall, ret 8, scout_manager.cpp): `SCOUT_MANAGER::set_edit_session(sessao, tecnico)`, pelas telas
 /// das buscas (0x8085bc, 0x812d88...). Grava a sessão em +0xc + 4 × índice do técnico e devolve 1. Sem técnico ou
 /// índice fora: a caixa (linhas 0xb8 e 0xc2; a original) e 0.
 unsafe extern "thiscall" fn escolher_sessao_de_edicao(this: usize, sessao: usize, tecnico: usize) -> u32 {
@@ -872,7 +907,12 @@ unsafe fn cpy4_amistosos(this: usize, ensaio: bool) -> Option<(usize, u32)> {
     Some((primeira, quantas))
 }
 
-/// { 0x5cbb00 } (thiscall, ret 0, friendly.cpp, quadro SEH da data local de destrutor vazio): `Friendly::
+/// on the first day of the year empties the nation lists, sorts the nations by reputation and gives the international
+/// dates their year by the World Cup cycle; then arranges the friendlies of the dates equal to today + 12 weeks
+/// (0x5cbdf0), once a day
+/// Original: `Friendly::update_international_friendlies` (0x5cbb00, friendly.cpp, thiscall).
+///
+/// [pt] { 0x5cbb00 } (thiscall, ret 0, friendly.cpp, quadro SEH da data local de destrutor vazio): `Friendly::
 /// update_international_friendlies()`, pelo dia dos amistosos (0x5c2460, já em Rust). No primeiro dia do ano: as listas
 /// de nações ([+0x34f6], [0xae2350] delas) se esvaziam (0x68d080), a lista em +0x34fa (conta +0x34fe) se ordena pela
 /// reputação (0x5cc5f0) e cada data internacional (+0x34ec, 20 bytes, conta +0x34f0) ganha o ano pelo ciclo da Copa
@@ -922,7 +962,10 @@ unsafe fn cpy4_indice(tecnico: usize) -> Option<usize> {
     Some(i as usize)
 }
 
-/// { 0x7f6e30 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::get_selected_list(tecnico)`, pelas telas de
+/// the list selected by the human manager (null: the current one)
+/// Original: `SCOUT_MANAGER::get_selected_list` (0x7f6e30, scout_manager.cpp, thiscall).
+///
+/// [pt] { 0x7f6e30 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::get_selected_list(tecnico)`, pelas telas de
 /// busca (0x804248). A lista escolhida pelo técnico humano (byte em +0x4c + índice). Sem técnico ou fora de 0..15: a
 /// original (caixa "Error", 0xff).
 unsafe extern "thiscall" fn lista_escolhida_do_tecnico(this: usize, tecnico: usize) -> u8 {
@@ -944,7 +987,10 @@ unsafe extern "thiscall" fn comparar_lista_escolhida_do_tecnico(this: usize, tec
     r
 }
 
-/// { 0x7f6f20 } (thiscall, ret 8, scout_manager.cpp): `SCOUT_MANAGER::set_selected_list(lista, tecnico)`, pelas telas
+/// stores the list selected by the human manager (null: the current one)
+/// Original: `SCOUT_MANAGER::set_selected_list` (0x7f6f20, scout_manager.cpp, thiscall).
+///
+/// [pt] { 0x7f6f20 } (thiscall, ret 8, scout_manager.cpp): `SCOUT_MANAGER::set_selected_list(lista, tecnico)`, pelas telas
 /// de busca (0x804460). Grava a lista escolhida (byte) em +0x4c + índice do técnico humano e devolve 1. Sem técnico ou
 /// fora de 0..15: a original (caixa "Error", 0).
 unsafe extern "thiscall" fn escolher_lista_do_tecnico(this: usize, lista: u32, tecnico: usize) -> u32 {
@@ -974,7 +1020,11 @@ unsafe fn cps8_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-/// { 0x7f9720 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::fixture_has_scouted_player(partida)` (pela
+/// tells whether the fixture has a watched club or an available player with a scout request (at the club or national
+/// team, not loaned out, injured, suspended or barred, and not yet played)
+/// Original: `SCOUT_MANAGER::fixture_has_scouted_player` (0x7f9720, scout_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7f9720 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::fixture_has_scouted_player(partida)` (pela
 /// partida_sem_humano 0x6b66a0): competição (+0) negativa, 0. Um clube da lista vigiada (LLIST estática 0xb74438,
 /// cursor reposto; +0 do item) igual a +0xc ou +0x10 da partida, 1. Depois os pedidos de observação ([this+0x5c],
 /// 0x11 bytes, a pessoa em +4, conta [this+0x64], relidos a cada passo): a pessoa cujo clube (+0x39) ou seleção (+0x24)
@@ -1055,7 +1105,10 @@ unsafe fn cps8_gerente_da_vez() -> usize {
     read_u32_as_usize((0xb74c26isize + 0x300 * k) as usize)
 }
 
-/// { 0x7f7490 } (thiscall, ret 8, scout_manager.cpp): `SCOUT_MANAGER::is_player_shortlisted(pessoa, gerente)` (pelos
+/// tells whether the player is on the human scout shortlist (through the open edit session or the first type 1 search)
+/// Original: `SCOUT_MANAGER::is_player_shortlisted` (0x7f7490, scout_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7f7490 } (thiscall, ret 8, scout_manager.cpp): `SCOUT_MANAGER::is_player_shortlisted(pessoa, gerente)` (pelos
 /// clubes interessados 0x842180, pelo estatuto 0x849d60, pela 0x8cde70 e por telas): pessoa nula, a caixa "Error"
 /// (linha 0x231) e 0; sem gerente, o do humano da vez (sem ele, a caixa da linha 0x23b e 0). A vaga do humano (byte
 /// +0 do gerente − byte de [0xae2364] + 16, com sinal, 0..15): com a edição aberta ([this + vaga × 4 + 0xc]), a
@@ -1104,7 +1157,10 @@ unsafe extern "thiscall" fn comparar_na_lista_do_olheiro(this: usize, pessoa: us
     r
 }
 
-/// { 0x86cc50 } (thiscall, ret 8, staff_records.cpp, SEH só da data local, de destrutor vazio):
+/// the first cap history of the person (type 6: the club, the opponent and the age)
+/// Original: `Staff_Records::add_first_cap_record` (0x86cc50, staff_records.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x86cc50 } (thiscall, ret 8, staff_records.cpp, SEH só da data local, de destrutor vazio):
 /// `Staff_Records::add_first_cap_record(pessoa, adversário)` (pelo resultado internacional 0x76b600): o histórico da
 /// pessoa (tipo 6: o clube contratante +0x39 ou −1, o id do adversário na partida e a idade +0x18 com sinal), no arquivo (0x58e340).
 /// O clube é lido antes do teste da pessoa, como na original; pessoa nula: a caixa "Error" (linha 0x1010).
@@ -1131,7 +1187,10 @@ unsafe extern "thiscall" fn comparar_registrar_a_primeira_convocacao(this: usize
 
 // ---------- centesima sexagesima sexta leva: o observador do humano, o humano no clube e a categoria do contrato ----------
 
-/// { 0x7f6cd0 } (thiscall, ret 8, scout_manager.cpp): o registro de observação `qual` 0..9 do técnico
+/// the human manager's scouting record 0..9 (0x2b0 bytes)
+/// Original: `scout_record` (0x7f6cd0, scout_manager.cpp, thiscall).
+///
+/// [pt] { 0x7f6cd0 } (thiscall, ret 8, scout_manager.cpp): o registro de observação `qual` 0..9 do técnico
 /// humano `tecnico` (sem ele, o da vez em [0xb74c26 + 0x300 × [0xb77c7a]]): o índice (id −
 /// [0xae2364] + 16) × 10 + `qual`, até [this+8] − 1, com 0x2b0 bytes cada a partir de [this].
 /// `qual` fora, sem técnico ou índice fora: a original (caixa de erro).
@@ -1152,7 +1211,10 @@ unsafe extern "thiscall" fn registro_do_observador(t: usize, qual: i8, tecnico: 
     (*(t as *const usize)).wrapping_add(i as usize * 0x2b0)
 }
 
-/// { 0x600c90 } (cdecl, human_manager.cpp): o técnico humano da vez manda no `clube` (ou, nas
+/// does the current human manager run the club (or the nation's main team)?
+/// Original: `human_runs_club` (0x600c90, human_manager.cpp, cdecl).
+///
+/// [pt] { 0x600c90 } (cdecl, human_manager.cpp): o técnico humano da vez manda no `clube` (ou, nas
 /// segundas seleções, na seleção principal da nação, 0x53b3d0)? Precisa ser o técnico do clube
 /// (+0xcf); sem `qualquer`, não pode ter as marcas +0x9ace (0x5fe040) nem +0x9a01 no registro de
 /// humanos [0xb63c98]; e então basta `forcar`, o clube ser seleção (0x53b900) ou a marca +0x9a05
@@ -1200,7 +1262,10 @@ unsafe extern "C" fn humano_manda_no_clube(clube: usize, qualquer: u32, forcar: 
     }
 }
 
-/// { 0x4ca470 } (stdcall, ret 8, contract_manager.cpp): a categoria 1..8 do jogador `p` no contrato
+/// the player's category 1..8 in the contract (status, happiness, age, ambition, reputation)
+/// Original: `contract_category` (0x4ca470, contract_manager.cpp, stdcall).
+///
+/// [pt] { 0x4ca470 } (stdcall, ret 8, contract_manager.cpp): a categoria 1..8 do jogador `p` no contrato
 /// `c`: sem ficha (+0x61), 7; sem contrato, 4; contrato de tipo 5 (+0x35 & 0x3f), 8; senão pela
 /// situação (+0x4f >> 4, 0..6; acima, 7), a satisfação (+0x3d, com sinal), a idade (+0x18), a
 /// ambição (+0x57) e a reputação da ficha (+0xb, +0xd).

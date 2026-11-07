@@ -42,7 +42,11 @@ fn cpu10_dias(codigo: i32, e: i8) -> Option<u16> {
     })
 }
 
-/// { 0x7e8e10 } (thiscall, ret 0xc, ruling_body.cpp): `RulingBody::make_points_ban(registro, jogador, por_jogos)`, pelos
+/// builds the red card ban: the matches or days from the offence code (9 to 12) and the body scale, today's date and
+/// the player; 0 when there is no ban
+/// Original: `RulingBody::make_points_ban` (0x7e8e10, ruling_body.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x7e8e10 } (thiscall, ret 0xc, ruling_body.cpp): `RulingBody::make_points_ban(registro, jogador, por_jogos)`, pelos
 /// órgãos de cada país (rb_*.cpp, ao processar o cartão vermelho de uma partida): o código da falta (+0x2e com +0x2c =
 /// 0, +0x2f com +0x2c = 1; outro tipo: 0) dá, pela escala do órgão (+6), os jogos (por_jogos ≠ 0; os dias ficam
 /// 0xffff) ou os dias (os jogos ficam 0xff) da suspensão. No registro: +0 jogos, +1 = 0, +2 dias, +4 a data de hoje
@@ -88,7 +92,11 @@ unsafe extern "thiscall" fn comparar_suspensao_do_vermelho(this: usize, r: usize
     a
 }
 
-/// { 0x7e7ed0 } (thiscall, ret 0, ruling_body.cpp): `RulingBody::start_new_season()`: para cada entrada disciplinar
+/// at the new season, releases bans 2 (or 4) years old, frees the entries without a ban, clears the bookings of the
+/// others and compacts the table
+/// Original: `RulingBody::start_new_season` (0x7e7ed0, ruling_body.cpp, thiscall).
+///
+/// [pt] { 0x7e7ed0 } (thiscall, ret 0, ruling_body.cpp): `RulingBody::start_new_season()`: para cada entrada disciplinar
 /// ocupada (14 bytes em [this+0xb], conta +0x13; id −1 é vaga livre): com suspensão (+6, índice com sinal na tabela de
 /// 20 bytes da disciplina [[0xae28f0]+4]) de 2 anos ou mais (4 se o órgão não tem +0x17 nem +0x1b; o ano da suspensão
 /// em +6 contra o de hoje [0xae2c92]), solta a suspensão (0x556d00) e libera a entrada; sem suspensão, libera a
@@ -151,7 +159,11 @@ unsafe extern "thiscall" fn comparar_nova_temporada_do_orgao(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(1222)(this);
 }
 
-/// { 0x7e9050 } (thiscall, ret 0, ruling_body.cpp): `RulingBody::compact_entries()`: tira as entradas livres (id −1)
+/// removes the free entries from the body's discipline table, fixes the stored index of each moved player and
+/// reallocates with 100 spare rows
+/// Original: `RulingBody::compact_entries` (0x7e9050, ruling_body.cpp, thiscall).
+///
+/// [pt] { 0x7e9050 } (thiscall, ret 0, ruling_body.cpp): `RulingBody::compact_entries()`: tira as entradas livres (id −1)
 /// da tabela de 14 bytes [this+0xb], trazendo as ocupadas para a frente; cada uma que muda de lugar acerta o índice
 /// guardado do jogador (0x55cb60 pela vaga +4: com o mesmo +5, o novo índice em +6; sem ela, 0x55cb20 com o tipo +5 e
 /// o índice). Conta +0x13 = n, capacidade +0xf = n + 100 e realoca (0x945667) com (n + 100) × 14 bytes; sem memória, a

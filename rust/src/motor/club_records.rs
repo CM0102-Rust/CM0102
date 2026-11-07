@@ -100,7 +100,12 @@ fn cpx12_categorias(cat: u8) -> [Option<u8>; 2] {
     [Some(cat), if cat == 5 || cat == 1 { None } else { Some(6) }] // cpx12: a categoria geral
 }
 
-/// { 0x7c0d70 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::record_match(partida, jogo)`: partida ou jogo nulos,
+/// by each side's category (friendly, reserves, competition type; a draw in a simulated match), adds the rating and the
+/// match to the double sums and each player who played to the category records (games, goals, score, rating,
+/// minutes...), to the player's games and goals and to contract +0x3b; shifts the form half a byte
+/// Original: `PlayerStats::record_match` (0x7c0d70, player_stats.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x7c0d70 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::record_match(partida, jogo)`: partida ou jogo nulos,
 /// as caixas e 0. Competição −2 (jogo simulado): a categoria é sorteio(9) ≠ 0 ? 2 : 3 para os dois lados; senão a de
 /// cada lado (cpx12_categoria). Em cada linha que conta (cpx12_linha): a nota (+0x35) e um jogo nas somas em double
 /// do this (+0x20/+0x28 com a marca +0x4c do jogo, senão +0x10/+0x18); nos registros de 0x20 bytes das categorias
@@ -324,7 +329,11 @@ unsafe fn cpx12_cadeia(liga0: usize) -> Vec<usize> {
     }
 }
 
-/// { 0x447430 } (thiscall, ret 8, club_records.cpp): `Club_Records::update_league_position_records(liga, sempre)`:
+/// sorts the table of each league stage and stores each club's best and worst position for the season and, with the
+/// second argument, all time (queueing the news item for a human club or national side)
+/// Original: `Club_Records::update_league_position_records` (0x447430, club_records.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x447430 } (thiscall, ret 8, club_records.cpp): `Club_Records::update_league_position_records(liga, sempre)`:
 /// liga nula ou com +0x44 ≠ 0xff, as caixas e 0. Em cada liga da cadeia (cpx12_cadeia), ordena a tabela (0x6827d0) e,
 /// em cada linha com jogos (+0x11) e clube, pelos registros da temporada (0x4528d0) e de sempre (0x452710, criando):
 /// melhor posição (tipo 1, 0x449590) e pior (tipo 2): sem registro (−1), competição (o id da primeira liga) de
@@ -447,7 +456,11 @@ unsafe extern "thiscall" fn comparar_recordes_de_posicao_na_liga(this: usize, li
 /// O ensaio do comparador da 0x448e30: a cópia roda sem preencher nem entregar as notícias e sem soltar a fila.
 static mut CPX12_ENSAIO_FILA: bool = false;
 
-/// { 0x448e30 } (thiscall, ret 0, club_records.cpp, quadro SEH sem destrutor): `Club_Records::send_record_news()`: sem
+/// delivers the news item of each queued record (human club or national side) and empties the queue (freed at capacity
+/// 100 or more)
+/// Original: `Club_Records::send_record_news` (0x448e30, club_records.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x448e30 } (thiscall, ret 0, club_records.cpp, quadro SEH sem destrutor): `Club_Records::send_record_news()`: sem
 /// fila (+0x24), 1. Cada recorde da fila (6 bytes: id do clube, tipo, período em +5) de clube humano (0x7875e0) ou
 /// seleção (0x53b900): a notícia 0x3e8 (local) preenchida pela 0x453120 com o registro da temporada (período 2,
 /// 0x4528d0) ou de sempre (0x452710), sem criar; entregue à nação (0x7863f0) da seleção ou ao técnico do clube
@@ -568,7 +581,11 @@ unsafe fn cpp10_nota_da_torcida(p: usize, clube: usize, st: usize) -> f64 {
     }
 }
 
-/// { 0x452da0 } (thiscall, ret 8, club_records.cpp): `Club_Records::pick_fans_player_of_year(clube, registro)`: sem
+/// from the club's squad, with games above the minimum (factor 0.6 falling by 0.1 down to 0.3), the best score (average
+/// + 0.025 × +2 + 1/60 × +6, club and player likes); his reference at record +0x371 and 1, or 0
+/// Original: `Club_Records::pick_fans_player_of_year` (0x452da0, club_records.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x452da0 } (thiscall, ret 8, club_records.cpp): `Club_Records::pick_fans_player_of_year(clube, registro)`: sem
 /// jogos (+0x10 com sinal do registro de 106 bytes do clube em [this+0x1c]) e reputação (+0x80) abaixo de 3000, 0.
 /// Com o fator 0,6 caindo de 0,1 enquanto ninguém foi escolhido e passa de 0,2: o mínimo de jogos é +0x10 × fator
 /// (_ftol); dos 50 do elenco (+0xd7) jogadores (+0x61, id abaixo de [0xae2364]) do clube (+0x39) com a estatística 6
@@ -621,7 +638,11 @@ unsafe extern "thiscall" fn jogador_do_ano_da_torcida(this: usize, clube: usize,
     1
 }
 
-/// { 0x7c1350 } (thiscall, ret 4, player_stats.cpp): `PlayerStats::end_season_for_key_nation(nacao)`: sem nação, a
+/// for the nation's clubs (up to the first national team), archives (0x7c5fe0) the statistics of every squad player not
+/// on loan elsewhere; 1 (0 and the "Error" box without a nation)
+/// Original: `PlayerStats::end_season_for_key_nation` (0x7c1350, player_stats.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x7c1350 } (thiscall, ret 4, player_stats.cpp): `PlayerStats::end_season_for_key_nation(nacao)`: sem nação, a
 /// caixa "Error" da linha 0x396 e 0. Percorre os clubes de [0xae235c] até a primeira seleção (0x53b900: para ali);
 /// clube da nação (0x669360, registro de 72 bytes em 0xb63d60): cada jogador (+0x61, id abaixo de [0xae2364]) das 50
 /// vagas (+0xd7) sem empréstimo (0x4cf6d0 sobre [0xae1050]) ou emprestado ao próprio clube (+0x39) tem as estatísticas
@@ -682,7 +703,12 @@ unsafe fn cpp10_copiar_recorde(a: usize, o: usize, d: usize) {
     *((a + d + 0x28) as *mut u8) = read_u8(o + d + 0x28);
 }
 
-/// { 0x448760 } (thiscall, ret 4, club_records.cpp): `Club_Records::update_transfer_fee_records(transferencia)`: a
+/// the buyer's paid record and the seller's received record, for the season and all time (fee, reference, other club,
+/// date, loan); an all-time one above 1000 × (reputation + 300) goes to the news queue and, on the purchase, the
+/// manager comes to favour the player
+/// Original: `Club_Records::update_transfer_fee_records` (0x448760, club_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x448760 } (thiscall, ret 4, club_records.cpp): `Club_Records::update_transfer_fee_records(transferencia)`: a
 /// pessoa (+0xc) e o clube comprador (+8); o contrato dela (0x4cf5a0 sobre [0xae1050], guardado em [0xae1080]) dá o
 /// vendedor (+4). Os registros da temporada (0x4528d0) e de sempre (0x452710) do comprador (criados); sem vendedor,
 /// 1. Valor (+0x1b) acima do recorde pago da temporada (+0x313): ele, a referência da pessoa (0x7e4920), o vendedor,
@@ -834,7 +860,11 @@ unsafe fn cpm6_noticia_na_fila(this: usize, id: usize, tipo: u8) -> bool {
     (0..n.max(0) as usize).any(|k| read_usize(v + 6 * k) == id && *((v + 6 * k + 4) as *const u8) == tipo)
 }
 
-/// { 0x448ad0 } (thiscall, ret 0xc, club_records.cpp): `Club_Records::add_transfer_totals(valor, comprador,
+/// adds the fee to the seller's season income and the buyer's season spending, raises the all-time records and queues
+/// the record news (0x1f, 0x1e) above (+0x80 + 500) × 1000
+/// Original: `Club_Records::add_transfer_totals` (0x448ad0, club_records.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x448ad0 } (thiscall, ret 0xc, club_records.cpp): `Club_Records::add_transfer_totals(valor, comprador,
 /// vendedor)`: o vendedor soma o `valor` ao recebido na temporada (+0x36b do registro da temporada 0x4528d0; −1 =
 /// ainda nada: fica o valor) e zera o ano (+0x36f); acima do recorde de sempre (0x452710, mesmo campo), o recorde passa
 /// a ser o da temporada com o ano da temporada do clube (0x669950), e com o total no mínimo (+0x80 do clube + 500) ×
@@ -887,7 +917,11 @@ unsafe extern "thiscall" fn somar_totais_de_transferencia(this: usize, valor: i3
     1
 }
 
-/// { 0x448cb0 } (thiscall, ret 0x10, club_records.cpp): `club_records_update_career_records(jogador, clube, jogos,
+/// the club's all-time league appearances (+0x247) and goals (+0x261) records, with the player reference (0x7e4920),
+/// when the record type applies to the club (0x449590)
+/// Original: `club_records_update_career_records` (0x448cb0, club_records.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x448cb0 } (thiscall, ret 0x10, club_records.cpp): `club_records_update_career_records(jogador, clube, jogos,
 /// gols)`: nos recordes de sempre do clube (0x452710, criados se faltarem), se o tipo 0x17 vale para o clube (0x449590)
 /// e os `jogos` passam o recorde (+0x247; −1 = sem recorde), o recorde = `jogos` e a referência do jogador em +0x249
 /// (0x7e4920); o mesmo com o tipo 0x18 e os `gols` (+0x261, referência +0x263). Devolve 1. Jogador ou clube nulo, ou
@@ -917,7 +951,11 @@ unsafe extern "thiscall" fn recordes_de_carreira_no_clube(this: usize, jogador: 
     1
 }
 
-/// { 0x452a90 } (thiscall, ret 4, club_records.cpp): `Club_Records::update_season_rating_record(clube)`: com jogos
+/// the squad player with the best average rating (statistic 0x11) among those who played at least half the games
+/// becomes the season rating record
+/// Original: `Club_Records::update_season_rating_record` (0x452a90, club_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x452a90 } (thiscall, ret 4, club_records.cpp): `Club_Records::update_season_rating_record(clube)`: com jogos
 /// na temporada (o byte +0x10 da entrada do clube, [this+0x1c] + id × 0x6a) e o registro da temporada (0x4528d0, sem
 /// criar), a nota do recorde (+0x1f1) volta a −1.0 e, pelas 50 vagas do elenco (+0xd7), o jogador (não técnico humano:
 /// id < [0xae2364]) com estatísticas (+0x61) no clube (+0x39 = clube ou o ligado a ele, 0x540a50) e registro de
@@ -1050,7 +1088,11 @@ unsafe fn cpk1_sem_memoria(linha: u32) -> ! {
     erro_fatal()
 }
 
-/// { 0x452710 } (thiscall, ret 8, club_records.cpp): `Club_Records::get_all_time_record(clube, criar)`: os recordes
+/// the all-time records of the club (index +0 of the 0x6a-byte entry, 0x38b-byte vector at +4); with create, the new
+/// index is the count (+0xc), the vector grows by 50 and the record is reset (0x452fe0)
+/// Original: `Club_Records::get_all_time_record` (0x452710, club_records.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x452710 } (thiscall, ret 8, club_records.cpp): `Club_Records::get_all_time_record(clube, criar)`: os recordes
 /// de sempre do clube: o índice +0 da entrada dele ([this+0x1c] + id × 0x6a) no vetor [this+4] de 0x38b bytes. Sem
 /// índice (−1) e com `criar`: o índice novo é a conta (+0xc, que sobe), o vetor cresce de 50 em 50 (capacidade +8,
 /// realloc 0x945667; sem memória, caixa 0x1694 e fim) e o registro é reiniciado (0x452fe0). Devolve o registro, ou 0
@@ -1085,7 +1127,10 @@ unsafe extern "thiscall" fn recordes_de_sempre(this: usize, clube: usize, criar:
     read_usize(this + 4).wrapping_add((i as usize).wrapping_mul(0x38b))
 }
 
-/// { 0x4528d0 } (thiscall, ret 8, club_records.cpp): `Club_Records::get_season_record(clube, criar)`: o mesmo para os
+/// the same for the season records (index +4, vector +0x10, capacity +0x14, count +0x18)
+/// Original: `Club_Records::get_season_record` (0x4528d0, club_records.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x4528d0 } (thiscall, ret 8, club_records.cpp): `Club_Records::get_season_record(clube, criar)`: o mesmo para os
 /// recordes da temporada: índice +4 da entrada, vetor [this+0x10], capacidade +0x14, conta +0x18 (sem memória, caixa
 /// 0x16c9 e fim). Clube nulo: a original (caixa 0x16b5, 0).
 unsafe extern "thiscall" fn recordes_da_temporada(this: usize, clube: usize, criar: u32) -> usize {
@@ -1118,7 +1163,11 @@ unsafe extern "thiscall" fn recordes_da_temporada(this: usize, clube: usize, cri
     read_usize(this + 0x10).wrapping_add((i as usize).wrapping_mul(0x38b))
 }
 
-/// { 0x452cb0 } (thiscall, ret 8, club_records.cpp): `Club_Records::queue_record_news(id, tipo)`: acrescenta (id do
+/// appends (club id, record type) to the 6-byte record news vector (+0x24), growing by 5; without memory, error box and
+/// 0
+/// Original: `Club_Records::queue_record_news` (0x452cb0, club_records.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x452cb0 } (thiscall, ret 8, club_records.cpp): `Club_Records::queue_record_news(id, tipo)`: acrescenta (id do
 /// clube +0, tipo do recorde +4; o byte +5 fica como está) ao vetor de 6 bytes [this+0x24] das notícias de recorde,
 /// lidas pela 0x448e30. Cheio (conta +0x2c = capacidade +0x28): cresce de 5 em 5 (realloc 0x945667); sem memória,
 /// caixa 0x174f e devolve 0 (o jogo segue, sem o vetor). Devolve 1.
@@ -1207,7 +1256,11 @@ unsafe extern "thiscall" fn comparar_guardar_noticia_de_recorde(this: usize, id:
 // ---------- 246a leva: a oferta que bate o recorde de valor pago, a condição do jogador e o limite de escalação da partida ----------
 
 
-/// { 0x4486c0 } (thiscall, ret 8, club_records.cpp): `Club_Records::offer_breaks_fee_record(oferta, exigir)`: o valor
+/// the offer fee passes 50 × reputation + 500,000 (and reputation² × 0x967880 when required) and the record (+0x313) of
+/// the buyer all-time records
+/// Original: `Club_Records::offer_breaks_fee_record` (0x4486c0, club_records.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x4486c0 } (thiscall, ret 8, club_records.cpp): `Club_Records::offer_breaks_fee_record(oferta, exigir)`: o valor
 /// da oferta (+0x1b) bate o recorde de valor pago do clube comprador (+8; os recordes de sempre pela 0x452710, criando
 /// se preciso)? Tem de ser ao menos 50 × reputação (+0x80) + 500.000; com `exigir`, também ao menos reputação² × a
 /// constante 0x967880 (_ftol); e acima de zero e do recorde (+0x313). Oferta nula: 0.
@@ -1232,7 +1285,10 @@ unsafe extern "thiscall" fn oferta_bate_o_recorde(this: usize, oferta: usize, ex
     (valor != 0 && valor > read_usize(rec + 0x313) as i32) as u8
 }
 
-/// { 0x62c590 } (thiscall, ret 8, injury.cpp): `Injury::get_condition(jogador, em_porcento)`: a condição do jogador:
+/// fitness × condition / 10,000 (minimum 100, maximum 9000 while recovering), or as a percentage (maximum 100)
+/// Original: `Injury::get_condition` (0x62c590, injury.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x62c590 } (thiscall, ret 8, injury.cpp): `Injury::get_condition(jogador, em_porcento)`: a condição do jogador:
 /// forma (+0xa) × condição de jogo (+8) / 10.000 do registro de 31 bytes [this] do id, no mínimo 100 e no máximo 9000
 /// enquanto ele se recupera (0x62c400 = 1); em porcentagem (× 0x96bac8 + 0x968968, _ftol), no máximo 100. Pessoa fora
 /// dos jogadores ([0xae2364]): 100 ou 10.000. Jogador nulo: 0.
@@ -1264,7 +1320,11 @@ unsafe extern "thiscall" fn condicao_do_jogador(this: usize, jogador: usize, em_
     c as u16
 }
 
-/// { 0x8cf7e0 } (thiscall, ret 8, transfer_manager.cpp): `get_selection_limit(partida, saida)`: zera os 6 bytes da
+/// from the match restriction table (0x8cf6b0), the first one present: type at +0, count at +5 (and the age at +1 for
+/// type 3)
+/// Original: `get_selection_limit` (0x8cf7e0, transfer_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8cf7e0 } (thiscall, ret 8, transfer_manager.cpp): `get_selection_limit(partida, saida)`: zera os 6 bytes da
 /// saída, pede a tabela de 42 bytes das restrições da partida (0x8cf6b0 com 1; o `this` passa direto) e fica com a
 /// primeira que existe (≠ 0xff): +5 ou +3 (tipo 1), +2 ou +0 (tipo 2), +0x16 com a quantidade em +0x17 (tipo 3, a
 /// idade em +1). O tipo vai em +0 e a quantidade em +5.
@@ -1318,7 +1378,10 @@ unsafe extern "thiscall" fn comparar_limite_de_escalacao(this: usize, partida: u
 
 // ---------- 245a leva: os recordes do clube: a construção dos recordes de valor de transferência pago e recebido e do recorde de sequência ----------
 
-/// { 0x4485d0 } (thiscall, club_records.cpp): `transfer_fee_record_construct`: constrói o recorde de maior valor de
+/// constructs the highest fee paid record: the dates at +0x14 and +0x20 (0x54a110)
+/// Original: `transfer_fee_record_construct` (0x4485d0, club_records.cpp, thiscall).
+///
+/// [pt] { 0x4485d0 } (thiscall, club_records.cpp): `transfer_fee_record_construct`: constrói o recorde de maior valor de
 /// transferência pago: as datas em +0x14 e +0x20 (0x54a110). O quadro SEH do original só cobre a 2ª data (a 0x54a110
 /// não falha). Devolve `this`.
 unsafe extern "thiscall" fn construir_recorde_de_valor_pago(this: usize) -> usize {
@@ -1327,7 +1390,10 @@ unsafe extern "thiscall" fn construir_recorde_de_valor_pago(this: usize) -> usiz
     this
 }
 
-/// { 0x448620 } (thiscall, club_records.cpp): `transfer_fee_record_construct_2`: constrói o recorde de maior valor de
+/// constructs the highest fee received record: the dates at +0x14 and +0x20 (0x54a110)
+/// Original: `transfer_fee_record_construct_2` (0x448620, club_records.cpp, thiscall).
+///
+/// [pt] { 0x448620 } (thiscall, club_records.cpp): `transfer_fee_record_construct_2`: constrói o recorde de maior valor de
 /// transferência recebido: as datas em +0x14 e +0x20 (0x54a110). Devolve `this`.
 unsafe extern "thiscall" fn construir_recorde_de_valor_recebido(this: usize) -> usize {
     cpf2_data_padrao(this + 0x14);
@@ -1335,7 +1401,10 @@ unsafe extern "thiscall" fn construir_recorde_de_valor_recebido(this: usize) -> 
     this
 }
 
-/// { 0x448670 } (thiscall, club_records.cpp): `run_record_construct`: constrói o recorde de sequência: as datas do
+/// constructs the run record: the start (+4) and end (+0xc) dates (0x54a110)
+/// Original: `run_record_construct` (0x448670, club_records.cpp, thiscall).
+///
+/// [pt] { 0x448670 } (thiscall, club_records.cpp): `run_record_construct`: constrói o recorde de sequência: as datas do
 /// começo (+4) e do fim (+0xc) (0x54a110). Devolve `this`.
 unsafe extern "thiscall" fn construir_recorde_de_sequencia(this: usize) -> usize {
     cpf2_data_padrao(this + 4); // o começo da sequência
@@ -1366,7 +1435,10 @@ unsafe extern "thiscall" fn comparar_construir_recorde_de_sequencia(this: usize)
 
 // ---------- 245a leva: os recordes do clube: a construção dos recordes de vitórias, derrotas e invencibilidade seguidas ----------
 
-/// { 0x450ad0 } (thiscall, club_records.cpp): `won_run_record_construct`: constrói o recorde de vitórias seguidas: as
+/// constructs the won run record: the start (+4) and end (+0xc) dates (0x54a110)
+/// Original: `won_run_record_construct` (0x450ad0, club_records.cpp, thiscall).
+///
+/// [pt] { 0x450ad0 } (thiscall, club_records.cpp): `won_run_record_construct`: constrói o recorde de vitórias seguidas: as
 /// datas do começo (+4) e do fim (+0xc) (0x54a110). O quadro SEH do original não é preciso (a 0x54a110 não falha).
 /// Devolve `this`.
 unsafe extern "thiscall" fn construir_recorde_de_vitorias_seguidas(this: usize) -> usize {
@@ -1375,7 +1447,10 @@ unsafe extern "thiscall" fn construir_recorde_de_vitorias_seguidas(this: usize) 
     this
 }
 
-/// { 0x450b20 } (thiscall, club_records.cpp): `lost_run_record_construct`: constrói o recorde de derrotas seguidas: as
+/// constructs the lost run record: the start (+4) and end (+0xc) dates (0x54a110)
+/// Original: `lost_run_record_construct` (0x450b20, club_records.cpp, thiscall).
+///
+/// [pt] { 0x450b20 } (thiscall, club_records.cpp): `lost_run_record_construct`: constrói o recorde de derrotas seguidas: as
 /// datas do começo (+4) e do fim (+0xc) (0x54a110). Devolve `this`.
 unsafe extern "thiscall" fn construir_recorde_de_derrotas_seguidas(this: usize) -> usize {
     cpf2_data_padrao(this + 4);
@@ -1383,7 +1458,10 @@ unsafe extern "thiscall" fn construir_recorde_de_derrotas_seguidas(this: usize) 
     this
 }
 
-/// { 0x450b70 } (thiscall, club_records.cpp): `unbeaten_run_record_construct`: constrói o recorde de jogos sem perder:
+/// constructs the unbeaten run record: the start (+4) and end (+0xc) dates (0x54a110)
+/// Original: `unbeaten_run_record_construct` (0x450b70, club_records.cpp, thiscall).
+///
+/// [pt] { 0x450b70 } (thiscall, club_records.cpp): `unbeaten_run_record_construct`: constrói o recorde de jogos sem perder:
 /// as datas do começo (+4) e do fim (+0xc) (0x54a110). Devolve `this`.
 unsafe extern "thiscall" fn construir_recorde_de_invencibilidade(this: usize) -> usize {
     cpf2_data_padrao(this + 4); // o começo da invencibilidade
@@ -1414,7 +1492,10 @@ unsafe extern "thiscall" fn comparar_construir_recorde_de_invencibilidade(this: 
 
 // ---------- 245a leva: os recordes do clube: a construção dos recordes de jogos sem vencer, de gols numa partida e do jogador mais novo ----------
 
-/// { 0x450bc0 } (thiscall, club_records.cpp): `winless_run_record_construct`: constrói o recorde de jogos sem vencer:
+/// constructs the winless run record: the start (+4) and end (+0xc) dates (0x54a110)
+/// Original: `winless_run_record_construct` (0x450bc0, club_records.cpp, thiscall).
+///
+/// [pt] { 0x450bc0 } (thiscall, club_records.cpp): `winless_run_record_construct`: constrói o recorde de jogos sem vencer:
 /// as datas do começo (+4) e do fim (+0xc) (0x54a110). O quadro SEH do original não é preciso (a 0x54a110 não falha).
 /// Devolve `this`.
 unsafe extern "thiscall" fn construir_recorde_sem_vencer(this: usize) -> usize {
@@ -1423,7 +1504,10 @@ unsafe extern "thiscall" fn construir_recorde_sem_vencer(this: usize) -> usize {
     this
 }
 
-/// { 0x450c10 } (thiscall, club_records.cpp): `goals_in_match_record_construct`: constrói o recorde de gols numa
+/// constructs the goals in a match record: the holder date (+0x11) and the match date (+0x19) (0x54a110)
+/// Original: `goals_in_match_record_construct` (0x450c10, club_records.cpp, thiscall).
+///
+/// [pt] { 0x450c10 } (thiscall, club_records.cpp): `goals_in_match_record_construct`: constrói o recorde de gols numa
 /// partida: a data do recordista (+0x11) e a da partida (+0x19) (0x54a110). Devolve `this`.
 unsafe extern "thiscall" fn construir_recorde_de_gols_na_partida(this: usize) -> usize {
     cpf2_data_padrao(this + 0x11);
@@ -1431,7 +1515,10 @@ unsafe extern "thiscall" fn construir_recorde_de_gols_na_partida(this: usize) ->
     this
 }
 
-/// { 0x450c70 } (thiscall, club_records.cpp): `youngest_player_record_construct`: constrói o recorde do jogador mais
+/// constructs the youngest player record: the age (+0), the holder date (+0x18) and the match date (+0x20) (0x54a110)
+/// Original: `youngest_player_record_construct` (0x450c70, club_records.cpp, thiscall).
+///
+/// [pt] { 0x450c70 } (thiscall, club_records.cpp): `youngest_player_record_construct`: constrói o recorde do jogador mais
 /// novo: a idade (+0), a data do recordista (+0x18) e a da partida (+0x20) (0x54a110). Devolve `this`.
 unsafe extern "thiscall" fn construir_recorde_do_mais_novo(this: usize) -> usize {
     cpf2_data_padrao(this); // a idade do mais novo
@@ -1464,7 +1551,10 @@ unsafe extern "thiscall" fn comparar_construir_recorde_do_mais_novo(this: usize)
 // ---------- 245a leva: o recorde do jogador mais velho e as permissões de trabalho: achar a do jogador e se ele passa no limite de estrangeiros ----------
 
 
-/// { 0x450cd0 } (thiscall, club_records.cpp): `oldest_player_record_construct`: constrói o recorde do jogador mais
+/// constructs the oldest player record: the age (+0), the holder date (+0x18) and the match date (+0x20) (0x54a110)
+/// Original: `oldest_player_record_construct` (0x450cd0, club_records.cpp, thiscall).
+///
+/// [pt] { 0x450cd0 } (thiscall, club_records.cpp): `oldest_player_record_construct`: constrói o recorde do jogador mais
 /// velho: a idade (+0), a data do recordista (+0x18) e a da partida (+0x20) (0x54a110). O quadro SEH do original não
 /// é preciso (a 0x54a110 não falha). Devolve `this`.
 unsafe extern "thiscall" fn construir_recorde_do_mais_velho(this: usize) -> usize {
@@ -1474,7 +1564,10 @@ unsafe extern "thiscall" fn construir_recorde_do_mais_velho(this: usize) -> usiz
     this
 }
 
-/// { 0x8c7260 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::find_work_permit(pessoa)`: a permissão
+/// with the 0x20 flag of the id in [+0x86e], the binary search for the permit (0xe-byte entries in [+0x93a]); else 0
+/// Original: `TRANSFER_MANAGER::find_work_permit` (0x8c7260, transfer_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8c7260 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::find_work_permit(pessoa)`: a permissão
 /// de trabalho da pessoa: id fora dos [0xae2364] (com sinal), 0; sem a marca 0x20 no byte do id (8 bytes cada, em
 /// [+0x86e]), 0; senão a busca binária (bsearch 0x946464, registros de 0xe bytes em [+0x93a], [+0x93e] deles,
 /// comparação 0x8e55c0) pelo id. Pessoa nula: lê o endereço 0 como o original.
@@ -1491,7 +1584,11 @@ unsafe extern "thiscall" fn permissao_de_trabalho_de(this: usize, pessoa: *const
     bsearch(&chave, read_usize(this + 0x93a), read_usize(this + 0x93e), 0xe, 0x8e55c0)
 }
 
-/// { 0x84b180 } (stdcall, ret 0xc, shortlist_manager.cpp): `passes_work_permit_check(jogador, _, comprador)`: o
+/// without rule 0xe in the buyer nation, same nation, second nation or EU: yes; no national side: no; else the permit
+/// (0x8c7950)
+/// Original: `passes_work_permit_check` (0x84b180, shortlist_manager.cpp, stdcall, ret 0xc).
+///
+/// [pt] { 0x84b180 } (stdcall, ret 0xc, shortlist_manager.cpp): `passes_work_permit_check(jogador, _, comprador)`: o
 /// jogador pode ir para o clube comprador? Sem nação (+0x1a): não. Nação do comprador (+0x53) sem a regra 0xe (+0x76),
 /// a mesma nação, a 2ª nação (+0x1e) ou comunitário (0x53d740): sim. Sem seleção (+0x24) nem jogos por ela (+0x22):
 /// não. Senão a permissão de trabalho (0x8c7950 sobre [0xde1f54], sem oferta, registro nem sorteio). O 2º argumento
@@ -1549,7 +1646,10 @@ unsafe fn cpf1_recordista(destino: usize, origem: usize) {
     copiar(destino, origem);
 }
 
-/// { 0x448230 } (thiscall, ret 4, club_records.cpp): `rating_record_assign`: copia o recorde de nota (0x1f bytes) de
+/// copies the rating record (0x1f bytes): the rating (+0), the holder (+4, through 0x448490), +0x1c and +0x1d
+/// Original: `rating_record_assign` (0x448230, club_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x448230 } (thiscall, ret 4, club_records.cpp): `rating_record_assign`: copia o recorde de nota (0x1f bytes) de
 /// `origem`: a nota (+0, dupla), o recordista em +4, o byte +0x1c e a palavra +0x1d. Devolve `this`.
 unsafe extern "thiscall" fn copiar_recorde_de_nota(this: usize, origem: usize) -> usize {
     core::ptr::write_unaligned(this as *mut u32, core::ptr::read_unaligned(origem as *const u32)); // a nota
@@ -1559,7 +1659,10 @@ unsafe extern "thiscall" fn copiar_recorde_de_nota(this: usize, origem: usize) -
     this
 }
 
-/// { 0x4484d0 } (thiscall, ret 4, club_records.cpp): `man_of_match_record_assign`: copia o recorde de melhor em campo
+/// copies the man of the match record (0x1b bytes): the count (+0), the holder (+1) and the year (+0x19)
+/// Original: `man_of_match_record_assign` (0x4484d0, club_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x4484d0 } (thiscall, ret 4, club_records.cpp): `man_of_match_record_assign`: copia o recorde de melhor em campo
 /// (0x1b bytes) de `origem`: as vezes (+0, byte), o recordista em +1 e o ano da temporada (+0x19). Devolve `this`.
 unsafe extern "thiscall" fn copiar_recorde_de_melhor_em_campo(this: usize, origem: usize) -> usize {
     *(this as *mut u8) = *(origem as *const u8); // as vezes de melhor em campo
@@ -1568,7 +1671,10 @@ unsafe extern "thiscall" fn copiar_recorde_de_melhor_em_campo(this: usize, orige
     this
 }
 
-/// { 0x448500 } (thiscall, ret 4, club_records.cpp): `discipline_record_assign`: copia o recorde de disciplina (0x1c
+/// copies the discipline record (0x1c bytes): yellows (+0), reds (+1), the holder (+2) and the year (+0x1a)
+/// Original: `discipline_record_assign` (0x448500, club_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x448500 } (thiscall, ret 4, club_records.cpp): `discipline_record_assign`: copia o recorde de disciplina (0x1c
 /// bytes) de `origem`: os amarelos (+0) e vermelhos (+1), o recordista em +2 e o ano da temporada (+0x1a). Devolve `this`.
 unsafe extern "thiscall" fn copiar_recorde_de_disciplina(this: usize, origem: usize) -> usize {
     *(this as *mut u8) = *(origem as *const u8);
@@ -1601,7 +1707,10 @@ unsafe extern "thiscall" fn comparar_copiar_recorde_de_disciplina(this: usize, o
 
 // ---------- 243a leva: a cópia do recorde de contagem e do torcedor e a construção dos recordes de contagem (club_records.cpp) ----------
 
-/// { 0x448530 } (thiscall, ret 4, club_records.cpp): `count_record_assign`: copia o recorde de contagem (0x1a bytes) de
+/// copies the count record (0x1a bytes): the count (+0, word) and the holder (+2, through 0x448490)
+/// Original: `count_record_assign` (0x448530, club_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x448530 } (thiscall, ret 4, club_records.cpp): `count_record_assign`: copia o recorde de contagem (0x1a bytes) de
 /// `origem`: a contagem (+0, palavra) e o recordista em +2 (pela 0x448490, já em Rust). Devolve `this`.
 unsafe extern "thiscall" fn copiar_recorde_de_contagem(this: usize, origem: usize) -> usize {
     core::ptr::write_unaligned(this as *mut u16, core::ptr::read_unaligned(origem as *const u16)); // a contagem
@@ -1610,7 +1719,10 @@ unsafe extern "thiscall" fn copiar_recorde_de_contagem(this: usize, origem: usiz
     this
 }
 
-/// { 0x4485b0 } (thiscall, ret 4, club_records.cpp): `fans_player_record_assign`: copia o recorde de jogador da
+/// copies the fans player record (0x1a bytes): the holder (+0) and the year (+0x18)
+/// Original: `fans_player_record_assign` (0x4485b0, club_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x4485b0 } (thiscall, ret 4, club_records.cpp): `fans_player_record_assign`: copia o recorde de jogador da
 /// torcida (0x1a bytes) de `origem`: o recordista em +0 (pela 0x448490) e o ano da temporada (+0x18). Devolve `this`.
 unsafe extern "thiscall" fn copiar_recorde_do_torcedor(this: usize, origem: usize) -> usize {
     let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_RECORD_HOLDER_ASSIGN);
@@ -1625,14 +1737,20 @@ unsafe fn cpf2_data_padrao(a: usize) {
     data_padrao(a);
 }
 
-/// { 0x450c60 } (thiscall, club_records.cpp): `tally_record_construct`: constrói o recorde de ocorrências (contagem em
+/// constructs the tally record: the holder date at +0x11 (0x54a110)
+/// Original: `tally_record_construct` (0x450c60, club_records.cpp, thiscall).
+///
+/// [pt] { 0x450c60 } (thiscall, club_records.cpp): `tally_record_construct`: constrói o recorde de ocorrências (contagem em
 /// byte + recordista): só a data do recordista em +0x11 (0x54a110). Devolve `this`.
 unsafe extern "thiscall" fn construir_recorde_de_ocorrencias(this: usize) -> usize {
     cpf2_data_padrao(this + 0x11); // a data das ocorrências
     this
 }
 
-/// { 0x450d30 } (thiscall, club_records.cpp): `count_record_construct`: constrói o recorde de contagem (palavra +
+/// constructs the count record: the holder date at +0x12 (0x54a110)
+/// Original: `count_record_construct` (0x450d30, club_records.cpp, thiscall).
+///
+/// [pt] { 0x450d30 } (thiscall, club_records.cpp): `count_record_construct`: constrói o recorde de contagem (palavra +
 /// recordista): só a data do recordista em +0x12 (0x54a110). Devolve `this`.
 unsafe extern "thiscall" fn construir_recorde_de_contagem(this: usize) -> usize {
     cpf2_data_padrao(this + 0x12); // a data da contagem
@@ -1676,7 +1794,11 @@ unsafe fn cpf3_data(destino: usize, origem: usize) {
     copiar(destino, &mut local, origem);
 }
 
-/// { 0x448550 } (thiscall, ret 4, club_records.cpp): `transfer_fee_record_assign`: copia o recorde de valor de
+/// copies the transfer fee record (0x29 bytes): five dwords, the dates (+0x14, +0x20), +0x1c and the part-exchange flag
+/// (+0x28)
+/// Original: `transfer_fee_record_assign` (0x448550, club_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x448550 } (thiscall, ret 4, club_records.cpp): `transfer_fee_record_assign`: copia o recorde de valor de
 /// transferência (0x29 bytes) de `origem`: cinco duplas (+0..+0x10: o valor, o jogador, o outro clube...), a data em
 /// +0x14, a dupla +0x1c, a data em +0x20 e a marca de troca (+0x28). Devolve `this`.
 unsafe extern "thiscall" fn copiar_recorde_de_valor(this: usize, origem: usize) -> usize {
@@ -1691,7 +1813,10 @@ unsafe extern "thiscall" fn copiar_recorde_de_valor(this: usize, origem: usize) 
     this
 }
 
-/// { 0x451570 } (thiscall, ret 4, club_records.cpp): `goals_in_match_record_assign`: copia o recorde de gols numa
+/// copies the goals in a match record (0x38 bytes): the goals (+0), the holder (+1) and the match (+0x19)
+/// Original: `goals_in_match_record_assign` (0x451570, club_records.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x451570 } (thiscall, ret 4, club_records.cpp): `goals_in_match_record_assign`: copia o recorde de gols numa
 /// partida (0x38 bytes) de `origem`: os gols (+0, byte), o recordista em +1 (0x448490) e o registro da partida em +0x19
 /// (0x448110, ambos já em Rust). Devolve `this`.
 unsafe extern "thiscall" fn copiar_recorde_de_gols_na_partida(this: usize, origem: usize) -> usize {
@@ -1726,7 +1851,10 @@ unsafe fn copiar_data_do_recorde(destino: usize, origem: usize) {
     copiar(destino, &mut local, origem);
 }
 
-/// { 0x448490 } (thiscall, ret 4, club_records.cpp): copia o recordista (0x18 bytes) de `origem`:
+/// copies the record holder: four identity fields and the date
+/// Original: `record_holder_assign` (0x448490, club_records.cpp, thiscall).
+///
+/// [pt] { 0x448490 } (thiscall, ret 4, club_records.cpp): copia o recordista (0x18 bytes) de `origem`:
 /// quatro palavras duplas de identificação (+0..+0xc) e a data em +0x10. Devolve `this`.
 unsafe extern "thiscall" fn copiar_recordista(this: usize, origem: usize) -> usize {
     let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((origem + o) as *const u32));
@@ -1738,7 +1866,10 @@ unsafe extern "thiscall" fn copiar_recordista(this: usize, origem: usize) -> usi
     this
 }
 
-/// { 0x448110 } (thiscall, ret 4, club_records.cpp): copia o registro de partida (0x1f bytes) de
+/// copies the match record: the date, the opponent, the score and the fixture fields
+/// Original: `match_record_assign` (0x448110, club_records.cpp, thiscall).
+///
+/// [pt] { 0x448110 } (thiscall, ret 4, club_records.cpp): copia o registro de partida (0x1f bytes) de
 /// `origem`: a data em +0, depois +8 (dupla), +0xc e +0xe (palavras), +0x10 (byte), +0x11 e +0x15
 /// (duplas), +0x19 e +0x1a (bytes) e +0x1b (dupla). Devolve `this`.
 unsafe extern "thiscall" fn copiar_registro_de_partida(this: usize, origem: usize) -> usize {
@@ -1758,7 +1889,10 @@ unsafe extern "thiscall" fn copiar_registro_de_partida(this: usize, origem: usiz
     this
 }
 
-/// { 0x448170 } (thiscall, ret 4, club_records.cpp): copia o registro de sequência (0x14 bytes) de
+/// copies the run record: the game count and the start and end dates
+/// Original: `run_record_assign` (0x448170, club_records.cpp, thiscall).
+///
+/// [pt] { 0x448170 } (thiscall, ret 4, club_records.cpp): copia o registro de sequência (0x14 bytes) de
 /// `origem`: o número de jogos (+0) e as datas de início (+4) e fim (+0xc). Devolve `this`.
 unsafe extern "thiscall" fn copiar_registro_de_sequencia(this: usize, origem: usize) -> usize {
     *(this as *mut u32) = *(origem as *const u32); // jogos

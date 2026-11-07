@@ -32,7 +32,12 @@ unsafe fn cqf7_chance(f: usize, k: usize) -> i32 {
     c(f, cqf7_sb(f + k)) as i8 as i32 // a original estende o al (movsx)
 }
 
-/// { 0x8b2880 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::update_coach_assignments(clube, técnico)`,
+/// the six training staff slots of the human manager: drops who left the club, adds the new assistant and coaches with
+/// all five categories and recomputes each category rating (the chance from the coaching attributes, divided by the
+/// coach category count, 1 to 20)
+/// Original: `TRAINING_MANAGER::update_coach_assignments` (0x8b2880, training_manager.cpp, thiscall).
+///
+/// [pt] { 0x8b2880 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::update_coach_assignments(clube, técnico)`,
 /// pelas contratações e saídas de treinadores (0x4ce4e0, 0x4cf720, 0x8c9720, a regeneração 0x7aaeb0) e pela troca de
 /// clube (0x8b2470). Sem técnico e o clube sem humano (0x600a50 com 1, 1, 0, 0) ou clube de seleção (0x53b900): nada.
 /// Técnico nulo: o do clube (+0xcf). A comissão do humano (0x8b4cd0, seis vagas de 9 bytes): (1) a vaga cujo
@@ -166,7 +171,12 @@ unsafe fn cqf7_entrada(this: usize, f: usize) -> usize {
     read_u32_as_usize(this + 0x651d).wrapping_add((cqf7_i(f) as isize * 6) as usize)
 }
 
-/// { 0x8b2470 } (thiscall, ret 0xc, training_manager.cpp): `TRAINING_MANAGER::reassign_squad_schedules(técnico, antigo,
+/// on the human manager club change: the old squad goes back to the default schedules (goalkeeper or general) with load
+/// 50; the new one goes to the manager goalkeeper or general schedule, with the schedule load; and the new club
+/// training staff
+/// Original: `TRAINING_MANAGER::reassign_squad_schedules` (0x8b2470, training_manager.cpp, thiscall).
+///
+/// [pt] { 0x8b2470 } (thiscall, ret 0xc, training_manager.cpp): `TRAINING_MANAGER::reassign_squad_schedules(técnico, antigo,
 /// novo)`, quando o técnico humano troca de clube (0x690890 e 0x68f9c0/0x69ebc0, manager_manager.cpp). Elenco do clube
 /// antigo (0x541f90, 50): cada pessoa válida (id abaixo de [0xae2364]) leva carga 50 (0x62c660) e a vaga 6 (goleiro de
 /// 15 para cima, ficha +0xf) ou 1 na entrada do treino; sem ficha, a caixa (linha 0x34c). Com clube novo: dos dez
@@ -272,7 +282,10 @@ unsafe extern "thiscall" fn comparar_trocar_os_programas_do_elenco(this: usize, 
     PLACAR.registrar(igual, || format!("trocar_os_programas_do_elenco(tecnico {:x}, {:x} -> {:x}) {:x?} x {:x?}", tec, antigo, novo, mo.0, mr.0));
 }
 
-/// { 0x8b2230 } (thiscall, ret 0, training_manager.cpp): os nomes padrão dos 167 programas de treino (0x8b50f0 em cada
+/// the default names of the 167 training schedules
+/// Original: `(training_manager.cpp, 0x8b2230)` (0x8b2230, training_manager.cpp, thiscall).
+///
+/// [pt] { 0x8b2230 } (thiscall, ret 0, training_manager.cpp): os nomes padrão dos 167 programas de treino (0x8b50f0 em cada
 /// um, de 0x9b em 0x9b bytes), pela criação dos programas padrão (0x8b3930).
 unsafe extern "thiscall" fn nomes_padrao_dos_programas(this: usize) {
     let nome: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_TRAINING_SCHEDULE_SET_DEFAULT_NAME);
@@ -353,7 +366,12 @@ unsafe fn cqd8_meio_byte(e: usize, k: usize) -> i8 {
     }
 }
 
-/// { 0x8b1750 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::update_player_training(pessoa, pular)`,
+/// brings the player training weeks up to date (up to 30): the human club schedule, the progress rolls of each category
+/// by the schedule and coach weight, the position training (the rating, the end and the player complaint) and the
+/// progress on the attributes
+/// Original: `TRAINING_MANAGER::update_player_training` (0x8b1750, training_manager.cpp, thiscall).
+///
+/// [pt] { 0x8b1750 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::update_player_training(pessoa, pular)`,
 /// pela iniciação do jogador na partida (0x6eaea0, match_man.cpp, com 0: todo jogador de toda partida), pela lesão nova
 /// (0x62d250) e pelas telas. Pessoa nula (linha 0x18a), sem a ficha (0x195) ou sem programa (0x8b39f0 nulo, 0x1a3): a
 /// caixa "Error"; id a partir de [0xae2364]: nada. Jogador de clube de técnico humano sem a marca 0x20 em +5 da entrada
@@ -622,7 +640,11 @@ unsafe extern "thiscall" fn comparar_atualizar_o_treino_do_jogador(this: usize, 
     PLACAR.registrar(igual, || format!("atualizar_o_treino_do_jogador(pessoa {:x}, pular {:x}) {:x?} x {:x?}", p, pular as u16, mo.0, mr.0));
 }
 
-/// { 0x8b39f0 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::get_player_schedule(pessoa)`, pelo diário
+/// the player training schedule: the club human manager one by the entry slot (the rest one when injured) or the
+/// default schedule of the slot
+/// Original: `TRAINING_MANAGER::get_player_schedule` (0x8b39f0, training_manager.cpp, thiscall).
+///
+/// [pt] { 0x8b39f0 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::get_player_schedule(pessoa)`, pelo diário
 /// das pessoas (game_daily_staff_update 0x5ce2d0), pela 0x5d6aa0 e pela update_player_training (0x8b1750). Pessoa nula
 /// ou sem a ficha: a caixa "Error" (linha 0x6ad) e 0. No clube de técnico humano (contrato 0x4cf5a0, guardado em
 /// [0xae1080]; técnico +0xcf entre os 16 últimos ids): lesionado (0x62c400 = 2) o programa 1 do humano, this + 0x4d8 +
@@ -666,7 +688,10 @@ unsafe extern "thiscall" fn comparar_programa_de_treino_do_jogador(this: usize, 
     r
 }
 
-/// { 0x8b4f50 } (thiscall, ret 4, training_manager.cpp): `TRAINING_SCHEDULE::get_category_level(categoria)`: o nível da
+/// the level of one of the five training schedule categories
+/// Original: `TRAINING_SCHEDULE::get_category_level` (0x8b4f50, training_manager.cpp, thiscall).
+///
+/// [pt] { 0x8b4f50 } (thiscall, ret 4, training_manager.cpp): `TRAINING_SCHEDULE::get_category_level(categoria)`: o nível da
 /// categoria (+4 + categoria, com sinal) do programa, no al; os bytes de cima do eax ficam com a categoria estendida
 /// (movsx), como na original. Pela update_player_training (0x8b1750, as cinco categorias de cada atualização).
 unsafe extern "thiscall" fn nivel_da_categoria_do_programa(this: usize, categoria: u32) -> u32 {
@@ -708,7 +733,11 @@ unsafe fn cqd9_aplicar(this: usize, p: usize, d: &[i8; 8]) {
     f(this, p, d.as_ptr());
 }
 
-/// { 0x8b3640 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::remove_or_restore_training_progress(pessoa,
+/// takes the progress stored in the training entry off the attributes (keeping the five nibbles) or puts it back,
+/// around the player attribute normalisations
+/// Original: `TRAINING_MANAGER::remove_or_restore_training_progress` (0x8b3640, training_manager.cpp, thiscall).
+///
+/// [pt] { 0x8b3640 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::remove_or_restore_training_progress(pessoa,
 /// devolver)`, pelas normalizações dos atributos do jogador (0x538bc0 e 0x538ec0: no envelhecimento do diário das
 /// pessoas 0x5ce2d0, no regen jovem 0x7abac0 e na carga), que tiram o progresso antes e o devolvem depois. Pessoa nula
 /// ou sem a ficha: a caixa "Error" (linha 0x621). Tirar (`devolver` = 0): guarda os cinco meios bytes do progresso da
@@ -756,7 +785,10 @@ unsafe extern "thiscall" fn comparar_tirar_ou_devolver_o_progresso(this: usize, 
     PLACAR.registrar(igual, || format!("tirar_ou_devolver_o_progresso(pessoa {:x}, devolver {}) {:x?} x {:x?}", p, devolver, mo.0, mr.0));
 }
 
-/// { 0x8b37c0 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_training_attribute_change(pessoa,
+/// how much the training progress adds to an attribute: the attribute minus the same attribute without the progress
+/// Original: `TRAINING_MANAGER::get_training_attribute_change` (0x8b37c0, training_manager.cpp, thiscall).
+///
+/// [pt] { 0x8b37c0 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_training_attribute_change(pessoa,
 /// atributo)`, pela tela do treino (0x8b8184): o atributo (0x5431e0) menos o mesmo atributo sem o progresso do treino
 /// (aplica o progresso negado, lê e reaplica o progresso), no al. Pessoa nula ou sem a ficha: a caixa "Error" (linha
 /// 0x657) e 0.
@@ -800,7 +832,11 @@ fn cqd9_mascara_valida(m: i32) -> bool {
     matches!(m, 1 | 2 | 4 | 8 | 0x10 | 0x20 | 0x40 | 0x80 | 0x200 | 0x800)
 }
 
-/// { 0x8b4770 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_position_aptitude(pessoa, mascara)`
+/// the player aptitude to learn a position or side: the average of the adaptability and the attributes the position
+/// needs
+/// Original: `TRAINING_MANAGER::get_position_aptitude` (0x8b4770, training_manager.cpp, thiscall).
+///
+/// [pt] { 0x8b4770 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_position_aptitude(pessoa, mascara)`
 /// (this não usado), pela update_player_training (0x8b1750, a reclamação do treino de posição) e pela
 /// set_position_training_rate (0x8b4450): a média da adaptabilidade (+0x56 da pessoa) com os atributos que a posição
 /// pede (notas de 1 a 20 pela 0x544380 sobre a ficha +0x61): goleiro (1) +0x39, +0x2a e +0x35, por 4; defesa (2, 4)
@@ -875,7 +911,11 @@ unsafe fn cpu8_niveis(this: usize, n: [u8; 5]) {
     }
 }
 
-/// { 0x8b4e50 } (thiscall, ret 8, training_manager.cpp): `TRAINING_SCHEDULE::set_type(vaga, tipo)`: a vaga (com sinal,
+/// stores the schedule's slot and type and its five category levels from the type's mix (general, one strong category,
+/// goalkeepers or no training)
+/// Original: `TRAINING_SCHEDULE::set_type` (0x8b4e50, training_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8b4e50 } (thiscall, ret 8, training_manager.cpp): `TRAINING_SCHEDULE::set_type(vaga, tipo)`: a vaga (com sinal,
 /// em dword) em +0, o tipo em +0x15 e os cinco níveis das categorias (+4..+8) pela mistura do tipo (tabela de saltos
 /// 0x8b4f08): 1 geral (25 nas quatro primeiras), 2 a 5 uma categoria com 50 e as outras com 10, 6 goleiros (50 na quinta,
 /// 0 na terceira), 0 e 7 sem treino (tudo 0); fora de 0..=7 (o −1 da primeira vaga do humano) só a vaga e o tipo. Pela
@@ -920,7 +960,11 @@ unsafe fn cpu8_vaga_do_humano(this: usize, pessoa: usize, vaga: usize) -> usize 
     this + 0x43d + 0x9b * vaga + 0x60e * v as usize
 }
 
-/// { 0x8b3d40 } (thiscall, ret 0, training_manager.cpp): `TRAINING_MANAGER::set_default_schedules()`, pelo construtor
+/// sets up the computer's seven schedules (type k in slot k) and the ten schedules of each of the 16 human managers,
+/// then gives the default names
+/// Original: `TRAINING_MANAGER::set_default_schedules` (0x8b3d40, training_manager.cpp, thiscall).
+///
+/// [pt] { 0x8b3d40 } (thiscall, ret 0, training_manager.cpp): `TRAINING_MANAGER::set_default_schedules()`, pelo construtor
 /// (0x8b0ec0) num jogo novo (sem training.dat): os sete programas do computador (0x9b bytes cada a partir de this; o
 /// tipo k na vaga k: o computador treina pela vaga 1, geral, e pela 6, goleiros, conforme a ficha de treino do
 /// jogador) e, para cada um dos 16 técnicos humanos (pessoa [0xae2364] − h − 1, registro de 0x6e bytes em
@@ -962,7 +1006,10 @@ unsafe extern "thiscall" fn comparar_programas_padrao(this: usize) {
     });
 }
 
-/// { 0x8b3930 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_manager_schedule(tecnico, vaga)`: o
+/// a human manager's schedule for slot 0 to 9 (otherwise 1); outside the 16 human managers, the error box and 0
+/// Original: `TRAINING_MANAGER::get_manager_schedule` (0x8b3930, training_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8b3930 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_manager_schedule(tecnico, vaga)`: o
 /// programa da vaga (0..=9; fora disso, 1) do técnico humano: this + 0x9b × (vaga + 10 × humano + 7), humano =
 /// [0xae2364] − id − 1. Fora dos 16 humanos: a caixa (linha 0x68f) e 0. Pela 0x8b3d40 (vagas 6 a 9) e pelas telas.
 unsafe extern "thiscall" fn programa_do_humano(this: usize, tecnico: usize, vaga: i8) -> usize {
@@ -1001,7 +1048,11 @@ fn cpt8_divisor(n: i8) -> f64 {
     f32::from_bits(T[(n - 1) as usize]) as f64
 }
 
-/// { 0x8b41d0 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_coaching_factor(clube, categoria)`,
+/// the coaching factor of a training category: 100 without a manager or with a computer manager; at a human club, the
+/// average rating of the coach assignments (divided by the divisor for their number) × 40/7, at least 50
+/// Original: `TRAINING_MANAGER::get_coaching_factor` (0x8b41d0, training_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8b41d0 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_coaching_factor(clube, categoria)`,
 /// pela TRAINING_MANAGER::update_player_training (0x8b1750, cinco vezes por jogador em cada atualização do treino; o
 /// valor entra como (fator − 100) / 5 no peso do sorteio do progresso). Clube nulo: 0. Sem técnico (+0xcf) ou com técnico
 /// do computador (id abaixo de [0xae2364] − 16): 100 (o eax leva os 16 bits altos do ponteiro do técnico, como na
@@ -1054,7 +1105,10 @@ unsafe extern "thiscall" fn comparar_fator_do_treinador(this: usize, clube: usiz
     r
 }
 
-/// { 0x8b4cd0 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::get_coach_assignments(tecnico)`: a comissão
+/// the coach assignment table (six 9-byte slots) of one of the 16 human managers; otherwise the error box and 0
+/// Original: `TRAINING_MANAGER::get_coach_assignments` (0x8b4cd0, training_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8b4cd0 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::get_coach_assignments(tecnico)`: a comissão
 /// de treino (seis vagas de 9 bytes) de um dos 16 técnicos humanos, em this + 0x652d + 54 × ([0xae2364] − id − 1).
 /// Técnico nulo: a caixa "Error" (linha 0xa20) e 0; fora dos 16 humanos: a caixa (linha 0xa2a) e 0.
 unsafe extern "thiscall" fn comissao_do_humano(this: usize, tecnico: usize) -> usize {
@@ -1082,7 +1136,10 @@ unsafe extern "thiscall" fn comparar_comissao_do_humano(this: usize, tecnico: us
     r
 }
 
-/// { 0x8b4f60 } (thiscall, ret 0, training_manager.cpp): `TRAINING_SCHEDULE::get_training_load()`: a carga do
+/// the training schedule load from its five category levels with fixed weights, up to 100
+/// Original: `TRAINING_SCHEDULE::get_training_load` (0x8b4f60, training_manager.cpp, thiscall).
+///
+/// [pt] { 0x8b4f60 } (thiscall, ret 0, training_manager.cpp): `TRAINING_SCHEDULE::get_training_load()`: a carga do
 /// programa pelos cinco níveis (+4..+8, com sinal): trunc(+8 × 0,5) − trunc(+4 × −1,3) − trunc(+7 × −0,5) −
 /// trunc(+6 × −0,5) − trunc(+5 × −0,5) (constantes 0x968968, 0x96f878, 0x969540; _ftol 0x945640), em 16 bits; de 100
 /// para cima, 100. Pela update_player_training (0x8b1750, o jogador do clube humano), pela set_player_schedule
@@ -1145,7 +1202,12 @@ unsafe fn cpt9_baixo(a: usize, d: i8) {
     *(a as *mut u8) = (v & 0xf0) | (v.wrapping_add(d as u8) & 0x0f);
 }
 
-/// { 0x8b2be0 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::apply_training_progress(pessoa, d)`, pela
+/// adds each category's progress to the player's stored nibble; every two steps the category attributes move (1 to 20
+/// ones by one, −125 to 125 ones by six); then the trained position or side goes to 20 when learnt, or back to 1 when
+/// the training stops
+/// Original: `TRAINING_MANAGER::apply_training_progress` (0x8b2be0, training_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8b2be0 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::apply_training_progress(pessoa, d)`, pela
 /// update_player_training (0x8b1750, cada jogador em cada atualização do treino) e pelas 0x8b3640 e 0x8b37c0. Pessoa
 /// nula: a caixa "Error" (linha 0x4b3); sem a ficha (+0x61): a caixa (linha 0x4ba); id a partir de [0xae2364]: nada.
 /// Com a entrada de 6 bytes do jogador (this +0x651d + 6 × id da ficha), cada categoria com progresso `d[k]` diferente
@@ -1292,7 +1354,11 @@ unsafe extern "thiscall" fn comparar_aplicar_o_progresso(this: usize, pessoa: us
     PLACAR.registrar(igual, || format!("aplicar_o_progresso(pessoa {:x}, d {:x?}) {:x?} x {:x?}", pessoa, core::slice::from_raw_parts(d as *const i8, 5), mo.0, mr.0));
 }
 
-/// { 0x8b4b20 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::find_position_training(pessoa, &primeira)`:
+/// finds the player's first entry in the sorted position training list and returns how many are his (0 without the
+/// position training mark)
+/// Original: `TRAINING_MANAGER::find_position_training` (0x8b4b20, training_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8b4b20 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::find_position_training(pessoa, &primeira)`:
 /// pessoa nula, a caixa "Error" (linha 0x995); saída nula, a caixa (linha 0x99c); sem a ficha (+0x61), a caixa (linha
 /// 0x9a3): 0. Sem a marca 0x10 em +5 da entrada de treino do jogador (this +0x651d + 6 × id da ficha): 0. Senão a busca
 /// binária (0x946464, ordem 0x8b4e00) do id da pessoa na lista do treino de posição (this +0x6521, conta +0x6525, itens
@@ -1355,7 +1421,10 @@ unsafe extern "thiscall" fn comparar_achar_o_treino_de_posicao(this: usize, pess
     r
 }
 
-/// { 0x8b4db0 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::has_fast_position_training(pessoa)`, pelo
+/// 1 when one of the player position training entries has a learning rate above 50
+/// Original: `TRAINING_MANAGER::has_fast_position_training` (0x8b4db0, training_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8b4db0 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::has_fast_position_training(pessoa)`, pelo
 /// diário das pessoas (game_daily_staff_update 0x5ce2d0): 1 se algum item do treino de posição da pessoa (0x8b4b20) tem
 /// aprendizado (+7) acima de 50; senão 0.
 unsafe extern "thiscall" fn aprende_depressa(this: usize, pessoa: usize) -> u32 {
@@ -1381,7 +1450,11 @@ unsafe extern "thiscall" fn comparar_aprende_depressa(this: usize, pessoa: usize
 // ---------- 256a leva: a semana do treino, a reserva de ficha de não jogador e a lesão que volta (training_manager.cpp, player_regen.cpp, injury.cpp) ----------
 
 
-/// { 0x8b1730 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::advance_week_counter(&dia)`, todo dia pelo
+/// on a day of the year that is a multiple of 7 the training week goes up by 1 (each player training is caught up by
+/// the missing weeks); returns the day / 7
+/// Original: `TRAINING_MANAGER::advance_week_counter` (0x8b1730, training_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8b1730 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::advance_week_counter(&dia)`, todo dia pelo
 /// laço do dia (game_main_day_loop 0x5cccd0, com o dia do ano da data do jogo 0xae2c90): no dia múltiplo de 7 (resto
 /// com sinal), a semana do treino (+0x688d, 16 bits) sobe 1; a update_player_training (0x8b1750) põe em dia as semanas
 /// que faltam de cada jogador. Devolve dia / 7 (o chamador não lê).
@@ -1405,7 +1478,11 @@ unsafe extern "thiscall" fn comparar_avancar_a_semana(this: usize, dia: *const i
     r
 }
 
-/// { 0x7a6e30 } (thiscall, ret 0xc, player_regen.cpp): `PLAYER_REGEN::take_spare_non_player_record(&id, &nacao,
+/// copies the first spare non-player record entry (id, nation, second nation) to the outputs and removes it from the
+/// list
+/// Original: `PLAYER_REGEN::take_spare_non_player_record` (0x7a6e30, player_regen.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x7a6e30 } (thiscall, ret 0xc, player_regen.cpp): `PLAYER_REGEN::take_spare_non_player_record(&id, &nacao,
 /// &segunda)`, pela contract_manager (0x4ce4e0, duas chamadas): copia o primeiro item da reserva de fichas de não
 /// jogador (this +0x1c: id, nação e segunda nação) para as três saídas e tira-o da reserva
 /// (PLAYER_REGEN::remove_spare_non_player_record 0x7a82b0 com o id lido da saída); devolve o eax dela.
@@ -1423,7 +1500,10 @@ unsafe extern "thiscall" fn comparar_tirar_a_ficha_reservada(this: usize, id: *m
     orig::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u32) -> u32>(1183)(this, id, nacao, segunda)
 }
 
-/// { 0x62ed30 } (thiscall, ret 4, injury.cpp): `Injury::get_recurring_injury_type(pessoa)`, pelas notícias (0x77bc80),
+/// the player's recurring injury type, or 0xff when he has none or is not a player
+/// Original: `Injury::get_recurring_injury_type` (0x62ed30, injury.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x62ed30 } (thiscall, ret 4, injury.cpp): `Injury::get_recurring_injury_type(pessoa)`, pelas notícias (0x77bc80),
 /// pela avaliação do fisioterapeuta (0x7a2650) e pelas telas: o tipo da lesão que volta (+0x12 da ficha de forma de 31
 /// bytes da pessoa, em [this]); pessoa nula, id a partir de [0xae2364] ou sem a ficha de jogador (+0x61): 0xff. Os
 /// chamadores leem só o al.

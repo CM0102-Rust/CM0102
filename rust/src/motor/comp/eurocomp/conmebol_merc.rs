@@ -8,7 +8,15 @@ unsafe fn cqr11_sorteado(this: usize, k: usize) -> usize {
     read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4) // cqr11: o sorteado k
 }
 
-/// { 0x4c5c90 } (thiscall, ret 8, conmebol_merc.cpp; a virtual +0x14): `update_for_date(hoje, completo)`, o dia de a Mercosul.
+/// rule: the Mercosur has 20 invited clubs (the clubs the South American rules invite, shuffled) in 5 groups of 4
+/// [inference: six rounds on Tuesdays, from 29 July to 14 October]; the season turns on 1 June; on the draw day group 1
+/// stays in the cup's own table (drawn clubs 0 to 3) and groups 2 to 5 are stages (4g + 4 to 4g + 7); the 5 winners and
+/// the 3 best runners-up go to the quarter-finals; on the draw day: the clubs (0x4c5850 (the 20 invited clubs,
+/// shuffled)), the group 1 table, the fixtures, the sorted table, the other groups' stages and the predicted positions;
+/// then the league day
+/// Original: `ConmebolMerc::update_for_date` (0x4c5c90, conmebol_merc.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x4c5c90 } (thiscall, ret 8, conmebol_merc.cpp; a virtual +0x14): `update_for_date(hoje, completo)`, o dia de a Mercosul.
 /// Primeiro a virada: no dia 1º de junho do ano de hoje (a data de 0x549f70(1, 5, ano, −1): lea ecx, local; push −1;
 /// push ano; push 5; push 1 -> thiscall, ret 0x10, pura: o dia do ano pelas tabelas dos meses, o mês contado de 0), se o ano da copa (+0x40,
 /// com sinal) não é o de hoje, a virtual +8 (a temporada nova: mov ecx, this -> thiscall, ret 0).
@@ -99,7 +107,11 @@ unsafe fn cqr11_virada_hoje(this: usize, hoje: usize) -> bool {
     core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(hoje as *const u16) && read_i16(this + 0x40) as i32 != ano_de_hoje as i32
 }
 
-/// { 0x4c4e60 } (thiscall, ret 0, conmebol_merc.cpp): a tabela do primeiro grupo da Mercosul: 4 times (+0x3e), a tabela +0xb1
+/// rule: group 1 of the Copa Mercosur has 4 clubs, the first 4 drawn, each in the row of its order; human managers get
+/// the group draw news
+/// Original: `ConmebolMerc::create_first_group_table` (0x4c4e60, conmebol_merc.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4c4e60 } (thiscall, ret 0, conmebol_merc.cpp): a tabela do primeiro grupo da Mercosul: 4 times (+0x3e), a tabela +0xb1
 /// (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 linhas de 0x3b bytes; sem memória, a caixa da linha 0x155 e
 /// devolve 0), cada linha i com o sorteado i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push clube; push
 /// i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0)
@@ -148,7 +160,11 @@ unsafe extern "thiscall" fn comparar_cqr11_mercosul_primeiro_grupo(this: usize) 
     r
 }
 
-/// { 0x4c51d0 } (thiscall, ret 4, conmebol_merc.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal): a fase
+/// rule: each of the other groups of the Copa Mercosur is a league stage with the next 4 drawn clubs (4g + 4 to 4g +
+/// 7), the cup's rules and year and the cup's round table for the group; human managers get the news
+/// Original: `ConmebolMerc::create_group_stage` (0x4c51d0, conmebol_merc.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x4c51d0 } (thiscall, ret 4, conmebol_merc.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal): a fase
 /// do grupo g + 1 (g de 0 a 3, do dia do sorteio). Os times num vetor de +0x3e ponteiros (0x944e46(+0x3e << 2): push; add esp, 4 -> cdecl; sem
 /// memória, a caixa da linha 0x1fb e 0): os sorteados 4g + 4 a 4g + 7 (+0xee); a tabela das rodadas pela virtual +0x3c
 /// (push 0; push &id; push &rodadas; push g; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xee) push; add
@@ -370,7 +386,15 @@ const CQO13_LIBERTADORES: [Cql10R; 4] = [
     cql10r((0xb, 5, 0, 3), (0x11, 5, 0, 2, 2, 0), 0x96, (0, 4, 1), 8, (2, 1, 0, 0), (0, 2, 7), (0, 0x1e8480, 0xc3500)),
 ];
 
-/// { 0x4c31c0 } (thiscall, ret 0x10, conmebol_liber.cpp; a virtual +0x3c da Libertadores): `ConmebolLiber::
+/// rule: the Copa Libertadores starts with six-round groups on Tuesdays [inference: weekday 2], from 25/2 to 1/4 (each
+/// group a league stage, id 0x3e9 + stage, up to stage 6: 8 groups [inference]); then the knockout (stage 7) over two
+/// legs: round of 16 drawn on 2/4 and played on 15/4 (16 teams, return 14 days later), quarter-finals 30/4 and 20/5,
+/// semi-final 28/5 and 3/6, final draw 11/6 and match on 17/6 (return 7 days later); two-leg tie-break 1 and draw with
+/// bit 4; category 7 in the round of 16 and 8 after; final prize 2 million to the winner and 800 thousand to the
+/// runner-up
+/// Original: `ConmebolLiber::create_schedule` (0x4c31c0, conmebol_liber.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x4c31c0 } (thiscall, ret 0x10, conmebol_liber.cpp; a virtual +0x3c da Libertadores): `ConmebolLiber::
 /// create_schedule(fase, &rodadas, &extra, &é_liga)`: grupos abaixo da fase 7 (a caixa da linha 0x9f), o mata-mata na
 /// fase 7 (a caixa da linha 0xc5).
 unsafe extern "thiscall" fn cqo13_libertadores_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
@@ -398,7 +422,14 @@ const CQO13_MERCOSUL: [Cql10R; 3] = [
 /// A final da Mercosul grava ainda a palavra +0x11 = 3 [inferência: o desempate da final, pênaltis].
 const CQO13_MERCOSUL_A_MAIS: [(usize, usize, u16); 1] = [(2, 0x11, 3)];
 
-/// { 0x4c4930 } (thiscall, ret 0x10, conmebol_merc.cpp; a virtual +0x3c da Mercosul): `ConmebolMerc::create_schedule(
+/// rule: the Copa Mercosur starts with six-round groups on Tuesdays, from 29/7 to 14/10 (id 0x3e9 + stage, up to stage
+/// 3: 5 groups [inference]); the knockout (stage 4) over two legs: quarter-finals drawn on 15/10 and played on 28/10 (8
+/// teams, return 3 days later), semi-final 5/11 and 11/11 (return 3 days later), final draw 19/11 and match on 2/12
+/// (return 7 days later, tie-break 0x2000 and the word +0x11 = 3 [inference: penalties]); category 8; prize of 2
+/// million to the winner
+/// Original: `ConmebolMerc::create_schedule` (0x4c4930, conmebol_merc.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x4c4930 } (thiscall, ret 0x10, conmebol_merc.cpp; a virtual +0x3c da Mercosul): `ConmebolMerc::create_schedule(
 /// fase, &rodadas, &extra, &é_liga)`: grupos abaixo da fase 4 (a caixa da linha 0x97), o mata-mata na fase 4 (a caixa
 /// da linha 0xbd).
 unsafe extern "thiscall" fn cqo13_mercosul_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
@@ -445,6 +476,12 @@ unsafe fn cqo13_convidados(this: usize) -> (i32, i32) {
     (1, k as i32)
 }
 
+/// rule: the Copa Mercosur is invitation-only: the 20 clubs of the South American rules' fixed list (0x4c6890), in club
+/// table order, shuffled for the group draw
+/// Original: `ConmebolMerc::select_invited_clubs` (0x4c5850, conmebol_merc.cpp, thiscall, ret 0).
+///
+/// [pt] regra: a Mercosul é só de convidados: os 20 clubes da lista fixa das regras sul-americanas (0x4c6890), na ordem da
+/// tabela de clubes, embaralhados para o sorteio dos grupos
 unsafe extern "thiscall" fn cqo13_mercosul_convidados(this: usize) -> i32 {
     cqo13_convidados(this).0
 }

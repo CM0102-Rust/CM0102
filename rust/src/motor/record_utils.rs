@@ -3,7 +3,11 @@
 
 
 
-/// { 0x7e4750 } (cdecl, record_utils.cpp): `fill_match_record_from_fixture(jogo, clube, saida)`, da estatística da tática
+/// fills the match record as seen by the club: date, fixture id, competition, venue, club, opponent and goals for and
+/// against (the extra-time score, if any)
+/// Original: `fill_match_record_from_fixture` (0x7e4750, record_utils.cpp, cdecl).
+///
+/// [pt] { 0x7e4750 } (cdecl, record_utils.cpp): `fill_match_record_from_fixture(jogo, clube, saida)`, da estatística da tática
 /// (0x896290, no fim de cada partida sem humano) e dos recordes. Jogo, clube ou saída nulos: a caixa (linhas 0x29, 0x31,
 /// 0x39) e 0. Senão a data (+0, 0x417c10 da Date(dia +0x2a, ano +0x28) da 0x549ef0), +8 o id do jogo (+0), +0xc a
 /// palavra +0x32, +0xe a +0x30, +0x10 o lado (0x4afa80, cdecl(clube, jogo)), +0x11 o id do clube, +0x1b o dword +8 do
@@ -77,7 +81,10 @@ unsafe fn cpz7_nome(p: u32) -> u32 {
     if p != 0 { read_u32(p as usize + 0x33) } else { u32::MAX }
 }
 
-/// { 0x7e4920 } (cdecl, record_utils.cpp): `fill_staff_name_ref(pessoa, saida)`, dos recordes do clube e da competição,
+/// stores the three name ids (-1 when missing), the person's id and birth date in a compact reference
+/// Original: `fill_staff_name_ref` (0x7e4920, record_utils.cpp, cdecl).
+///
+/// [pt] { 0x7e4920 } (cdecl, record_utils.cpp): `fill_staff_name_ref(pessoa, saida)`, dos recordes do clube e da competição,
 /// da notícia da suspensão, do prêmio e da busca de jogadores. Pessoa ou saída nulas: a caixa (linhas 0x80, 0x88) e 0.
 /// Senão +0, +4, +8 os ids dos nomes (+4, +8, +0xc da pessoa; −1 sem nome), +0xc o id da pessoa e +0x10 a data de
 /// nascimento (+0x10, 0x417c10); devolve 1.
@@ -111,7 +118,10 @@ unsafe extern "C" fn comparar_referencia_ao_nome(pessoa: usize, saida: usize) ->
     r
 }
 
-/// { 0x7e56d0 } (cdecl, record_utils.cpp): `match_record_result_code(registro)`, da estatística da competição
+/// the result code of the record: 3 win, 2 score draw, 1 goalless draw, -3 defeat
+/// Original: `match_record_result_code` (0x7e56d0, record_utils.cpp, cdecl).
+///
+/// [pt] { 0x7e56d0 } (cdecl, record_utils.cpp): `match_record_result_code(registro)`, da estatística da competição
 /// (0x49f570, a cada partida). Registro nulo: a caixa (linha 0x25a) e 0. Pró (+0x19) > contra (+0x1a), com sinal: 3;
 /// empate com gols: 2; empate sem gols: 1; derrota: −3 (só o byte conta: quem chama lê al).
 unsafe extern "C" fn codigo_do_resultado(registro: usize) -> u8 {
@@ -219,7 +229,11 @@ unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u
     agradece(p, clube, premio);
 }
 
-/// { 0x86c390 } (thiscall, ret 0x18, staff_records.cpp, quadro SEH sem destrutor): `Staff_Records::add_year_award_record(
+/// the year award entry in the person history; the manager adds the award to his record; the player with a long
+/// contract on the club list gets the renewal offer and the winner may thank the manager (draw by loyalty)
+/// Original: `Staff_Records::add_year_award_record` (0x86c390, staff_records.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x86c390 } (thiscall, ret 0x18, staff_records.cpp, quadro SEH sem destrutor): `Staff_Records::add_year_award_record(
 /// p, clube, premio, a4, a5, credito)`, pelo registro dos vencedores do prêmio do ano (YEAR_AWARD::record_winners
 /// 0x9302f0: o primeiro, o segundo e o terceiro). A entrada 0x34 do histórico da pessoa (data do jogo, clube ou −1, o id
 /// do prêmio, a4 na palavra, a5 e o crédito em bytes com sinal; 0x58e340). Técnico (+0x3d ou +0x28 = 5 ou 0xc): +1 na
@@ -257,7 +271,10 @@ unsafe extern "thiscall" fn comparar_registrar_premio_do_ano(this: usize, p: usi
     PLACAR.registrar(igual, || format!("registrar_premio_do_ano({:x}, prêmio {:x}) {:x?} x {:x?}", p, read_usize(premio), mo, mr));
 }
 
-/// { 0x7e4a30 } (cdecl, record_utils.cpp): `match_record_is_bigger_win(a, b)`, pelos recordes do clube depois de cada
+/// the match record is a win by a larger margin than the other one, or the same with more goals scored
+/// Original: `match_record_is_bigger_win` (0x7e4a30, record_utils.cpp, cdecl).
+///
+/// [pt] { 0x7e4a30 } (cdecl, record_utils.cpp): `match_record_is_bigger_win(a, b)`, pelos recordes do clube depois de cada
 /// jogo (0x444930) e pelos da competição (0x49fb93): 1 se `a` é vitória (gols +0x19 > +0x1a, bytes com sinal) por
 /// diferença maior que a de `b`, ou igual com mais gols feitos. Registro nulo: a original (caixa "Error", 0).
 unsafe extern "C" fn vitoria_maior(a: usize, b: usize) -> u32 {
@@ -283,7 +300,10 @@ unsafe extern "C" fn comparar_vitoria_maior(a: usize, b: usize) -> u32 {
     r
 }
 
-/// { 0x7e4b00 } (cdecl, record_utils.cpp): `match_record_is_bigger_defeat(a, b)`, pelos recordes do clube depois de cada
+/// the match record is a defeat by a larger margin than the other one, or the same with more goals conceded
+/// Original: `match_record_is_bigger_defeat` (0x7e4b00, record_utils.cpp, cdecl).
+///
+/// [pt] { 0x7e4b00 } (cdecl, record_utils.cpp): `match_record_is_bigger_defeat(a, b)`, pelos recordes do clube depois de cada
 /// jogo (0x444930): 1 se `a` é derrota (+0x19 < +0x1a) por diferença maior que a de `b`, ou igual com mais gols
 /// sofridos. Registro nulo: a original (caixa "Error", 0).
 unsafe extern "C" fn derrota_maior(a: usize, b: usize) -> u32 {

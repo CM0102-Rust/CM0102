@@ -4,7 +4,13 @@
 // (rust/src/adjetivos_nacao.rs).
 include!("../adjetivos_nacao.rs");
 
-/// { 0x6181d0 } (cdecl, index.cpp; 0x6181d0..0x62a67a, o mapa de funções corta em 26.014 bytes):
+/// the nation's adjective into the text (size >= 50): with gender 0 or outside languages 9, 4, 5, 10 and 6 the nation's
+/// name; in those, the form from 0x545a60 and the chains of 937 nations (generated from the exe by adjetivos_nacao.py,
+/// texts by address), with the name if the text stays empty (except in languages 4 and 5); returns 1 (0 with a null
+/// nation or text or a short size)
+/// Original: `nation_get_nationality_adjective` (0x6181d0, index.cpp, cdecl).
+///
+/// [pt] { 0x6181d0 } (cdecl, index.cpp; 0x6181d0..0x62a67a, o mapa de funções corta em 26.014 bytes):
 /// `nation_get_nationality_adjective(nacao, texto, tamanho, genero)`: o adjetivo da nação em `texto`. Zera o texto
 /// antes de tudo; nação nula, texto nulo ou tamanho (curto com sinal) < 50: 0. Gênero (byte) 0: o nome da nação
 /// (+0x57). Nos idiomas 9, 4, 5, 10 e 6 (0x66f4d0) a forma vem da 0x545a60(gênero, idioma) e as cadeias da tabela dão o
@@ -240,7 +246,12 @@ unsafe fn menos_um_das_chaves_1080_dbw() {
     }
 }
 
-/// { 0x601a40 } (cdecl, index.cpp, set_key_ids): na carga da base (0x528540), as chaves fixas do jogo (cores,
+/// the fixed keys (colours, continents, nations, competitions, awards, clubs) set to -1 and then to the database row by
+/// name (from eng.lng or from the database); the ones left without a value go to the "Unable to find the %s index" box
+/// (7 fatal by nation); in cm0102-1080.exe through the 0x603834 entry, with -1 over the whole ranges
+/// Original: `set_key_ids` (0x601a40, index.cpp, cdecl).
+///
+/// [pt] { 0x601a40 } (cdecl, index.cpp, set_key_ids): na carga da base (0x528540), as chaves fixas do jogo (cores,
 /// continentes, nações, competições, prêmios, clubes) recebem a linha da base pelo nome; as que ficam sem valor vão ao
 /// relato. A entrada do cm0102.exe: o -1 nas 1.282 globais de MENOS_UM_DAS_CHAVES e o miolo `chaves_fixas`. Devolve 1.
 unsafe extern "C" fn definir_chaves_fixas() -> u32 {
@@ -317,7 +328,11 @@ const DBU3_REGIOES: [(usize, usize); 14] = [
     (0x9e1fa0, 0x9e1f1c), // UK & Irish / UK & Ireland
 ];
 
-/// { 0x616f20 } (cdecl, index.cpp): `get_region_name(regiao, texto, tamanho, forma)`: zera o texto e escreve o nome da
+/// the region name (1..14): from the language 4, 5 and 9 tables with the adjective form, else the translated adjective
+/// or noun by form
+/// Original: `get_region_name` (0x616f20, index.cpp, cdecl).
+///
+/// [pt] { 0x616f20 } (cdecl, index.cpp): `get_region_name(regiao, texto, tamanho, forma)`: zera o texto e escreve o nome da
 /// região (1..14, byte com sinal). Forma (byte) diferente de 0xff com o idioma (0x66f4d0) 4, 5 ou 9: o texto da
 /// tabela do idioma, lida pelo endereço ([0x9d0518 + 4 × (4 × região + f)], [0x9d06d4 + 4 × (5 × região + f)],
 /// [0x9d05f8 + 4 × (4 × região + f)], com f a forma do adjetivo 0x545a60, já em Rust, chamada pelo endereço do
@@ -412,7 +427,11 @@ const DBU3_CONTINENTES_4: [[usize; 5]; 6] = [
     [0x9d0e10, 0x9d0e00, 0x9d0df0, 0x9d0de0, 0x9d0de0],
 ];
 
-/// { 0x6177f0 } (cdecl, index.cpp; o mapa dá 629 bytes, a rotina vai até 0x6181c5: 2518): `get_continent_adjective(
+/// the continent adjective: the record one (+0x23) or, in languages 9, 5 and 4, the text by continent and adjective
+/// form
+/// Original: `get_continent_adjective` (0x6177f0, index.cpp, cdecl).
+///
+/// [pt] { 0x6177f0 } (cdecl, index.cpp; o mapa dá 629 bytes, a rotina vai até 0x6181c5: 2518): `get_continent_adjective(
 /// continente, texto, tamanho, forma)`: zera o texto e copia o adjetivo do continente. Forma (byte) 0 ou idioma
 /// (0x66f4d0) fora de 9, 5 e 4: o adjetivo do próprio registro (+0x23). Senão o texto do idioma pelo continente (o id
 /// +0 comparado às chaves [0x9cfa08..0x9cfa18], nessa ordem) e pela forma do adjetivo (0x545a60, já em Rust, pelo
@@ -1395,7 +1414,11 @@ static CHAVES_DE_CLUBE_NA_TROCA: &[u32] = &[
     0x9d0524, // stuttgarter kickers ii
 ];
 
-/// { 0x6146b0 } (cdecl, index.cpp, match_club_key_id): casa o nome de clube da base com as chaves fixas
+/// matches the database club name with the 313 fixed club keys (372 names in 4 chains, _stricmp): the first hit of each
+/// chain stores the row in the key global
+/// Original: `match_club_key_id` (0x6146b0, index.cpp, cdecl).
+///
+/// [pt] { 0x6146b0 } (cdecl, index.cpp, match_club_key_id): casa o nome de clube da base com as chaves fixas
 /// do jogo (CHAVES_DE_CLUBE): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
@@ -1415,7 +1438,10 @@ unsafe extern "C" fn casar_chave_de_clube(nome: usize, linha: u32) -> u32 {
     r as u32 // o eax do último _stricmp (chave de clube)
 }
 
-/// { 0x60ba80 } (cdecl, index.cpp, remap_club_key_id): depois do corte da tabela de clubes pelo
+/// after the club table trim, the first club key holding the old id gets the new one (returns 1; none: 0)
+/// Original: `remap_club_key_id` (0x60ba80, index.cpp, cdecl).
+///
+/// [pt] { 0x60ba80 } (cdecl, index.cpp, remap_club_key_id): depois do corte da tabela de clubes pelo
 /// tamanho da base (0x5267c0), a primeira chave de clube (na ordem de CHAVES_DE_CLUBE_NA_TROCA) que
 /// guarda o id `antigo` passa a guardar `novo` e devolve 1; nenhuma: 0.
 unsafe extern "C" fn remapear_chave_de_clube(antigo: u32, novo: u32) -> u32 {
@@ -1428,7 +1454,10 @@ unsafe extern "C" fn remapear_chave_de_clube(antigo: u32, novo: u32) -> u32 {
     0
 }
 
-/// { 0x60d810 } (cdecl, index.cpp, match_nation_key_id): casa o nome de nação da base com as chaves fixas
+/// matches the database nation name with the 209 fixed nation keys (217 names in 2 chains, _stricmp)
+/// Original: `match_nation_key_id` (0x60d810, index.cpp, cdecl).
+///
+/// [pt] { 0x60d810 } (cdecl, index.cpp, match_nation_key_id): casa o nome de nação da base com as chaves fixas
 /// do jogo (CHAVES_DE_NACAO): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
@@ -2321,7 +2350,11 @@ static CHAVES_DE_COMPETICAO_DE_PESSOA: &[&[(u32, u32)]] = &[
     ],
 ];
 
-/// { 0x60efd0 } (cdecl, index.cpp, match_club_comp_key_id): casa o nome de competição de clube da base com as chaves fixas
+/// matches the club competition long name with the 301 fixed keys (351 names in 3 chains, _stricmp; the two Croatian
+/// divisions also store 0x9cf8a4)
+/// Original: `match_club_comp_key_id` (0x60efd0, index.cpp, cdecl).
+///
+/// [pt] { 0x60efd0 } (cdecl, index.cpp, match_club_comp_key_id): casa o nome de competição de clube da base com as chaves fixas
 /// do jogo (CHAVES_DE_COMPETICAO_DE_CLUBE): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
@@ -2352,7 +2385,10 @@ unsafe extern "C" fn casar_chave_de_competicao_de_clube(nome: usize, linha: u32)
     r as u32 // o eax do último _stricmp (chave de competição de clube)
 }
 
-/// { 0x6115e0 } (cdecl, index.cpp, match_staff_comp_key_id): casa o nome de competição ou prêmio de pessoa da base com as chaves fixas
+/// matches the staff competition or award name with the 417 fixed keys (442 names in 5 chains, _stricmp)
+/// Original: `match_staff_comp_key_id` (0x6115e0, index.cpp, cdecl).
+///
+/// [pt] { 0x6115e0 } (cdecl, index.cpp, match_staff_comp_key_id): casa o nome de competição ou prêmio de pessoa da base com as chaves fixas
 /// do jogo (CHAVES_DE_COMPETICAO_DE_PESSOA): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia

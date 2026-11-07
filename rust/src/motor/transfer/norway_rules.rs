@@ -58,7 +58,10 @@ const CQM2_NORUEGA: [[u8; 6]; 2] = [
     [0x11, 0x00, 0xff, 0x1f, 0x07, 0x00], // cqm2: a Noruega
 ];
 
-/// { 0x7944f0 } (thiscall, ret 0x14, norway_rules.cpp, `NORWAY_RULES::NORWAY_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Noruega (regra 17): a base (0x8e84a0), a vtable 0x96dfe4, 1 janela(s) de `CQM2_NORUEGA`. Devolve o objeto.
+/// the Norway rule (17): one window, from 1 September to 31 August
+/// Original: `NORWAY_RULES::NORWAY_RULES` (0x7944f0, norway_rules.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x7944f0 } (thiscall, ret 0x14, norway_rules.cpp, `NORWAY_RULES::NORWAY_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Noruega (regra 17): a base (0x8e84a0), a vtable 0x96dfe4, 1 janela(s) de `CQM2_NORUEGA`. Devolve o objeto.
 unsafe extern "thiscall" fn regras_noruega(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqm_2 noruega");
     cqm2_construir(this, [a1, a2, a3, a4, a5], 0x96dfe4, 1, &CQM2_NORUEGA, 0xa69870, 0x51);
@@ -81,7 +84,10 @@ const CQM2_IRLANDA_DO_NORTE: [[u8; 6]; 2] = [
     [0x10, 0x00, 0xff, 0x14, 0x02, 0x00],
 ];
 
-/// { 0x7936d0 } (thiscall, ret 0x14, northern_ireland_rules.cpp, `NORTHERN_IRELAND_RULES::NORTHERN_IRELAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Irlanda do Norte (regra 16): a base (0x8e84a0), a vtable 0x96df9c, 1 janela(s) de `CQM2_IRLANDA_DO_NORTE`. Devolve o objeto.
+/// the Northern Ireland rule (16): one window, from 6 May (moved to the Saturday [inference]) to 20 March
+/// Original: `NORTHERN_IRELAND_RULES::NORTHERN_IRELAND_RULES` (0x7936d0, northern_ireland_rules.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x7936d0 } (thiscall, ret 0x14, northern_ireland_rules.cpp, `NORTHERN_IRELAND_RULES::NORTHERN_IRELAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Irlanda do Norte (regra 16): a base (0x8e84a0), a vtable 0x96df9c, 1 janela(s) de `CQM2_IRLANDA_DO_NORTE`. Devolve o objeto.
 unsafe extern "thiscall" fn regras_irlanda_do_norte(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqm_2 irlanda_do_norte");
     cqm2_construir(this, [a1, a2, a3, a4, a5], 0x96df9c, 1, &CQM2_IRLANDA_DO_NORTE, 0xa697f4, 0x4e);
@@ -104,7 +110,10 @@ const CQM2_PAIS_DE_GALES: [[u8; 6]; 2] = [
     [0x1a, 0x00, 0xff, 0x14, 0x02, 0x00],
 ];
 
-/// { 0x90f080 } (thiscall, ret 0x14, wales_rules.cpp, `WALES_RULES::WALES_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência do País de Gales (regra 26): a base (0x8e84a0), a vtable 0x970a9c, 1 janela(s) de `CQM2_PAIS_DE_GALES`. Devolve o objeto.
+/// the Wales rule (26): one window, from 7 May (moved to the Sunday [inference]) to 20 March
+/// Original: `WALES_RULES::WALES_RULES` (0x90f080, wales_rules.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x90f080 } (thiscall, ret 0x14, wales_rules.cpp, `WALES_RULES::WALES_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência do País de Gales (regra 26): a base (0x8e84a0), a vtable 0x970a9c, 1 janela(s) de `CQM2_PAIS_DE_GALES`. Devolve o objeto.
 unsafe extern "thiscall" fn regras_pais_de_gales(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqm_2 pais_de_gales");
     cqm2_construir(this, [a1, a2, a3, a4, a5], 0x970a9c, 1, &CQM2_PAIS_DE_GALES, 0xad4404, 0x4e);

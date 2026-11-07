@@ -123,17 +123,32 @@ const CQT3_PERNAMBUCANO: Cqt3Estadual = Cqt3Estadual {
     linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
 };
 
-/// { 0x4363f0 } (thiscall, ret 8, bra_reg_northeast.cpp): `BraRegNortheast::BraRegNortheast(ano, registro)`: o Nordeste (uma fase além da liga).
+/// The Northeast state league at career creation: the year and the database competition, disciplinary rule 7 and, with
+/// no saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the table
+/// with the state clubs, the fixtures, the order, the statistics and the predicted positions
+/// Original: `BraRegNortheast::BraRegNortheast` (0x4363f0, bra_reg_northeast.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x4363f0 } (thiscall, ret 8, bra_reg_northeast.cpp): `BraRegNortheast::BraRegNortheast(ano, registro)`: o Nordeste (uma fase além da liga).
 unsafe extern "thiscall" fn cqt3_construir_nordeste(this: usize, ano: u32, registro: usize) -> usize {
     cqt3_construir(this, ano, registro, &CQT3_NORDESTE, 7, true, "cqt_3 nordeste novo") // cqt3: a disciplina e as posições previstas do Nordeste
 }
 
-/// { 0x437400 } (thiscall, ret 8, bra_reg_parana.cpp): `BraRegParana::BraRegParana(ano, registro)`: o Paranaense (três fases além da liga).
+/// The Parana state league at career creation: the year and the database competition, disciplinary rule 7 and, with no
+/// saved state, importance 15, two halves and the final (three stages besides the league), the rules, the table with
+/// the state clubs, the fixtures, the order, the statistics and the predicted positions
+/// Original: `BraRegParana::BraRegParana` (0x437400, bra_reg_parana.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x437400 } (thiscall, ret 8, bra_reg_parana.cpp): `BraRegParana::BraRegParana(ano, registro)`: o Paranaense (três fases além da liga).
 unsafe extern "thiscall" fn cqt3_construir_paranaense(this: usize, ano: u32, registro: usize) -> usize {
     cqt3_construir(this, ano, registro, &CQT3_PARANAENSE, 7, true, "cqt_3 paranaense novo") // cqt3: a disciplina e as posições previstas do Paranaense
 }
 
-/// { 0x4388f0 } (thiscall, ret 8, bra_reg_pern.cpp): `BraRegPern::BraRegPern(ano, registro)`: o Pernambucano (uma fase além da liga).
+/// The Pernambuco state league at career creation: the year and the database competition, disciplinary rule 7 and, with
+/// no saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the table
+/// with the state clubs, the fixtures, the order, the statistics and the predicted positions
+/// Original: `BraRegPern::BraRegPern` (0x4388f0, bra_reg_pern.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x4388f0 } (thiscall, ret 8, bra_reg_pern.cpp): `BraRegPern::BraRegPern(ano, registro)`: o Pernambucano (uma fase além da liga).
 unsafe extern "thiscall" fn cqt3_construir_pernambucano(this: usize, ano: u32, registro: usize) -> usize {
     cqt3_construir(this, ano, registro, &CQT3_PERNAMBUCANO, 7, true, "cqt_3 pernambucano novo") // cqt3: a disciplina e as posições previstas do Pernambucano
 }
@@ -203,19 +218,31 @@ unsafe fn cqm7_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
     1
 }
 
-/// { 0x436d90 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::create_table()`: o Nordeste tem 16 clubes (divisão reserva +0x60 = [0x9cf9a4]).
+/// the Northeast league has 16 clubs: those with it as their reserve division in the database (the field that holds the
+/// state or regional league), in database order; the table only counts when full; no TV money nor prize fund
+/// Original: `BraRegNortheast::create_table` (0x436d90, bra_reg_northeast.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x436d90 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::create_table()`: o Nordeste tem 16 clubes (divisão reserva +0x60 = [0x9cf9a4]).
 /// Fonte 0x98af54, linha 0x159.
 unsafe extern "thiscall" fn cqm7_tabela_do_nordeste(this: usize) -> u32 {
     cqm7_tabela(this, 0x10, 0x98af54, 0x159, KEY_CLUB_COMP_BRAZILIAN_NORTHEAST_STATE_CHAMPIONSHIP, 0, "cqm_7 nordeste cheio")
 }
 
-/// { 0x437ec0 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::create_table()`: o Paranaense tem 12 clubes (divisão reserva +0x60 = [0x9cf9d0]).
+/// the Parana league has 12 clubs: those with it as their reserve division in the database (the field that holds the
+/// state or regional league), in database order; the table only counts when full; no TV money nor prize fund
+/// Original: `BraRegParana::create_table` (0x437ec0, bra_reg_parana.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x437ec0 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::create_table()`: o Paranaense tem 12 clubes (divisão reserva +0x60 = [0x9cf9d0]).
 /// Fonte 0x98af98, linha 0x169.
 unsafe extern "thiscall" fn cqm7_tabela_do_paranaense(this: usize) -> u32 {
     cqm7_tabela(this, 0xc, 0x98af98, 0x169, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, 0, "cqm_7 paranaense cheio")
 }
 
-/// { 0x439330 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::create_table()`: o Pernambucano tem 10 clubes (divisão reserva +0x60 = [0x9cf9bc]).
+/// the Pernambuco league has 10 clubs: those with it as their reserve division in the database (the field that holds
+/// the state or regional league), in database order; the table only counts when full; no TV money nor prize fund
+/// Original: `BraRegPern::create_table` (0x439330, bra_reg_pern.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x439330 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::create_table()`: o Pernambucano tem 10 clubes (divisão reserva +0x60 = [0x9cf9bc]).
 /// Fonte 0x98afd8, linha 0x167.
 unsafe extern "thiscall" fn cqm7_tabela_do_pernambucano(this: usize) -> u32 {
     cqm7_tabela(this, 0xa, 0x98afd8, 0x167, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, 0, "cqm_7 pernambucano cheio")

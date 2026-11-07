@@ -286,7 +286,13 @@ const CQP4_TERCEIRA_NATAL: Cqp4Natal = Cqp4Natal { comeco: &CQP4_SEGUNDA_COMECO,
 const CQP4_TERCEIRA_PLAYOFF_0: Cql10R = cql10r((7, 4, 1, 0), (0xc, 4, 1, 5, 1, 0), 0x82, (0, 0x204, 3), 5, (4, 2, 4, 0), (0, 2, 4), (0, 0, 0));
 const CQP4_TERCEIRA_PLAYOFF_1: Cql10R = cql10r((0x11, 4, 1, 3), (0x1a, 4, 1, 5, 1, 4), 0x96, (0, 3, 0), 5, (2, 1, 0, 0), (0, 1, 0), (0, 0, 0));
 
-/// { 0x5757a0 } (thiscall, ret 0x10, eng_second.cpp, 3.692 bytes, método +0x3c): `EngSecond::create_schedule(fase,
+/// the Division Two schedule: 46 rounds (24 clubs), from 12 August to 6 May, nearly all on the same weekday (5) and
+/// some midweek; at Christmas, four fixed-date rounds (20 December to 5 January) chosen by the day the 16 December
+/// round falls on. The promotion play-offs (stage 0): two-legged semi-finals (4 clubs, draw on 7 May, first leg on 12,
+/// 4 days apart) and a one-off final on 27 May [inference: venue 4 is the neutral ground]
+/// Original: `EngSecond::create_schedule` (0x5757a0, eng_second.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x5757a0 } (thiscall, ret 0x10, eng_second.cpp, 3.692 bytes, método +0x3c): `EngSecond::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a fase −1, 46 rodadas (`CQP4_SEGUNDA_NATAL`); a fase 0, os play-offs (semifinais e
 /// final); as outras devolvem 0. Fonte 0x9c43e8.
 unsafe extern "thiscall" fn calendario_da_segunda_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
@@ -334,7 +340,12 @@ unsafe extern "thiscall" fn comparar_calendario_da_segunda_inglesa(this: usize, 
     cqp4_comparar("calendario_da_segunda_inglesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_segunda_inglesa(this, fase, r, e, l))
 }
 
-/// { 0x5770e0 } (thiscall, ret 0x10, eng_third.cpp, 3.692 bytes, método +0x3c): `EngThird::create_schedule`: o mesmo
+/// the Division Three schedule: the same 46 rounds as Division Two. The promotion play-offs (stage 0): two-legged
+/// semi-finals (4 clubs, draw on 7 May, first leg on 12, 4 days apart) and a one-off final on 26 May [inference: venue
+/// 4 is the neutral ground]
+/// Original: `EngThird::create_schedule` (0x5770e0, eng_third.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x5770e0 } (thiscall, ret 0x10, eng_third.cpp, 3.692 bytes, método +0x3c): `EngThird::create_schedule`: o mesmo
 /// código da segunda (as mesmas rodadas), com a data da final dos play-offs um dia antes. Fonte 0x9c4424.
 unsafe extern "thiscall" fn calendario_da_terceira_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -390,7 +401,12 @@ unsafe fn cpz2_registros() -> usize {
     read_usize(0xdd7f00)
 }
 
-/// { 0x576c50 } (thiscall, ret 0x18, eng_second.cpp): `EngSecond::update_staff_records_for_status(clube, situação,
+/// in the league (stage 0xff): title (5) 0x868c50, promotion (0) 0x869480 with weight 0x64, play-off place (1) 0x86bdd0
+/// (0xa0, 0x82, 0x1e), relegation (3) 0x86a1c0; in the play-offs, on the club row: won (1) promotion with 0x32, +0x37 =
+/// 0 and removed = 1; went through (0) 0x86bdd0 (0xa0, 0x96, 0xf); out (0xff, 2) +0x37 = 0xfe; returns 0
+/// Original: `EngSecond::update_staff_records_for_status` (0x576c50, eng_second.cpp, thiscall, ret 0x18).
+///
+/// [pt] { 0x576c50 } (thiscall, ret 0x18, eng_second.cpp): `EngSecond::update_staff_records_for_status(clube, situação,
 /// fase, &saiu, _, _)`, a virtual +0x44 da First, da Second e da Third (anunciada pela 0x686670). Devolve 0.
 /// Na liga (fase 0xff), pela situação: 5, o título (Staff_Records::add_league_champions_record 0x868c50,
 /// thiscall(registros, clube, comp +4), ret 8); 0, o acesso (0x869480, thiscall(registros, clube, comp, 0x64), ret
@@ -532,13 +548,20 @@ unsafe fn cpz2_situacao(this: usize, clube: usize, fase: u8, atual: u8, melhor: 
     *((e + 0x75) as *mut u8) = p;
 }
 
-/// { 0x573260 } (thiscall, ret 0x14, eng_first.cpp): `EngFirst::set_club_progress(clube, fase, atual, melhor, pior)`,
+/// writes stage, best and worst in the club stats entry (+0x73..+0x75): in the league, best 3 to 6 becomes 3 and worst
+/// 3 to 6 becomes 6; in the play-offs (stage 0), 1, 2 and 3 become 3, 4 and 5
+/// Original: `EngFirst::set_club_progress` (0x573260, eng_first.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x573260 } (thiscall, ret 0x14, eng_first.cpp): `EngFirst::set_club_progress(clube, fase, atual, melhor, pior)`,
 /// a virtual +0x68 da First e da Second (da 0x684cd0 a cada linha da tabela): as vagas do mata-mata são 3 a 6.
 unsafe extern "thiscall" fn situacao_na_first(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     cpz2_situacao(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8, 3, 6)
 }
 
-/// { 0x578660 } (thiscall, ret 0x14, eng_third.cpp): `EngThird::set_club_progress(clube, fase, atual, melhor, pior)`,
+/// like the First one, with places 4 to 7 (4 and 7; in the play-offs, 4, 5 and 6)
+/// Original: `EngThird::set_club_progress` (0x578660, eng_third.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x578660 } (thiscall, ret 0x14, eng_third.cpp): `EngThird::set_club_progress(clube, fase, atual, melhor, pior)`,
 /// a virtual +0x68 da Third: as vagas do mata-mata são 4 a 7.
 unsafe extern "thiscall" fn situacao_na_third(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     cpz2_situacao(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8, 4, 7)

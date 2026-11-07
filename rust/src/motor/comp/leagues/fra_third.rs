@@ -226,7 +226,11 @@ const CQO4_LIGA_TERCEIRA: Cqo4Liga = Cqo4Liga { rodadas: 0x26, arquivo: 0x9ccc80
 const CQO4_LIGA_SEGUNDA: Cqo4Liga = Cqo4Liga { rodadas: 0x26, arquivo: 0x9ccc0c, linha: 0xa7, tabela: &CQO4_SEGUNDA, ramo: "cqo_4 calendario da segunda francesa" };
 const CQO4_LIGA_BAIXO: Cqo4Liga = Cqo4Liga { rodadas: 0x26, arquivo: 0x9ccbd0, linha: 0xa9, tabela: &CQO4_BAIXO, ramo: "cqo_4 calendario da divisao de baixo francesa" };
 
-/// { 0x5bfe30 } (thiscall, ret 0x10, fra_third.cpp, 1.948 bytes, método +0x3c): `FraThird::create_schedule(fase, &rodadas, &extra,
+/// the National schedule: 38 rounds (home and away with 20 clubs), from 7 August to 20 May of the next year, mostly at
+/// weekends and some midweek; round 21 already on 7 January; no TV slots (no match moves day); main stage only
+/// Original: `FraThird::create_schedule` (0x5bfe30, fra_third.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x5bfe30 } (thiscall, ret 0x10, fra_third.cpp, 1.948 bytes, método +0x3c): `FraThird::create_schedule(fase, &rodadas, &extra,
 /// &é_liga)`: o National, 38 rodadas (`CQO4_TERCEIRA`). Fonte 0x9ccc80, linha 0xa6.
 unsafe extern "thiscall" fn calendario_da_terceira_francesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqo4_calendario(this, fase, rodadas, extra, liga, &CQO4_LIGA_TERCEIRA)
@@ -237,7 +241,11 @@ unsafe extern "thiscall" fn comparar_calendario_da_terceira_francesa(this: usize
     cqo4_comparar("calendario_da_terceira_francesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_terceira_francesa(this, fase, r, e, l))
 }
 
-/// { 0x5be620 } (thiscall, ret 0x10, fra_second.cpp, 2.275 bytes, método +0x3c): `FraSecond::create_schedule`: a segunda divisão,
+/// the second division schedule: 38 rounds, from 31 July to 20 May; in 18 rounds one match goes to a TV slot (day 5,
+/// slot 1) [inference: the televised match]
+/// Original: `FraSecond::create_schedule` (0x5be620, fra_second.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x5be620 } (thiscall, ret 0x10, fra_second.cpp, 2.275 bytes, método +0x3c): `FraSecond::create_schedule`: a segunda divisão,
 /// 38 rodadas (`CQO4_SEGUNDA`). Fonte 0x9ccc0c, linha 0xa7.
 unsafe extern "thiscall" fn calendario_da_segunda_francesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqo4_calendario(this, fase, rodadas, extra, liga, &CQO4_LIGA_SEGUNDA)
@@ -248,7 +256,11 @@ unsafe extern "thiscall" fn comparar_calendario_da_segunda_francesa(this: usize,
     cqo4_comparar("calendario_da_segunda_francesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_segunda_francesa(this, fase, r, e, l))
 }
 
-/// { 0x5bd920 } (thiscall, ret 0x10, fra_lower.cpp, 2.311 bytes, método +0x3c): `FraLower::create_schedule`: a divisão de
+/// the lower division (background) schedule: the same 38 dates as the second division, with the TV slot also in the
+/// last two rounds
+/// Original: `FraLower::create_schedule` (0x5bd920, fra_lower.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x5bd920 } (thiscall, ret 0x10, fra_lower.cpp, 2.311 bytes, método +0x3c): `FraLower::create_schedule`: a divisão de
 /// baixo, 38 rodadas (`CQO4_BAIXO`). Fonte 0x9ccbd0, linha 0xa9.
 unsafe extern "thiscall" fn calendario_da_divisao_de_baixo_francesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqo4_calendario(this, fase, rodadas, extra, liga, &CQO4_LIGA_BAIXO)

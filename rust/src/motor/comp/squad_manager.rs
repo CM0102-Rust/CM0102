@@ -20,7 +20,12 @@ unsafe fn cqn3_clubes(comp: usize, etapa: u32, mut cada: impl FnMut(usize)) {
     }
 }
 
-/// { 0x85a9b0 } (thiscall, ret 4, squad_manager.cpp, `SQUAD_MANAGER::process_euro_registration`): a etapa `etapa`
+/// the rule: at the first stage everyone's registration is cleared; at each stage each club in the Champions League,
+/// the UEFA Cup or the third cup [inference: the Cup Winners' Cup] picks its registered players (human-managed clubs
+/// get the news and pick themselves); in the career, stage 3 runs in 2002 (not in 2001)
+/// Original: `SQUAD_MANAGER::process_euro_registration` (0x85a9b0, squad_manager.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x85a9b0 } (thiscall, ret 4, squad_manager.cpp, `SQUAD_MANAGER::process_euro_registration`): a etapa `etapa`
 /// (byte) da inscrição nas copas europeias. Na etapa 1, o ano das inscrições (+0, word) fica o ano do jogo e a marca de
 /// inscrição (+0x6d) de todas as pessoas com contrato (registros de 0x6e bytes em [0xae23bc]) é zerada. Depois, em cada
 /// uma das três copas (`CQN3_COPAS`; a competição pela tabela [0xadadfc]), cada clube da lista (o método +0x58 com a
@@ -96,7 +101,11 @@ unsafe extern "thiscall" fn comparar_inscricao_europeia(this: usize, etapa: u32)
     });
 }
 
-/// { 0x58dd50 } (thiscall, ret 0, fifa_rankings.cpp, `FIFA_RANKINGS::create_default_table`): a tabela inicial do
+/// the initial FIFA ranking rule: each nation's points are its database strength ÷ 35, repeated as the points of each
+/// of the 6 years [inference] (× 1000); the position comes from the points order
+/// Original: `FIFA_RANKINGS::create_default_table` (0x58dd50, fifa_rankings.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x58dd50 } (thiscall, ret 0, fifa_rankings.cpp, `FIFA_RANKINGS::create_default_table`): a tabela inicial do
 /// ranking da FIFA (registros de 0x2c bytes, um por nação, calloc 0x945501 de [0xae2350] × 0x2c em +0; sem memória, a
 /// caixa da linha 0x2da). Cada registro: +0 o índice da nação; a força da nação (+0xa8, double, nações de 0x122 bytes em
 /// [0xae23a8]) × 1/35 dá os pontos (+0xc, float) e, × 1000 (truncado, _ftol), os 6 dwords +0x14..+0x28 [inferência: os
@@ -162,7 +171,12 @@ unsafe extern "thiscall" fn comparar_ranking_fifa_inicial(this: usize) {
     PLACAR.registrar(igual, || format!("ranking_fifa_inicial: a primeira diferença na nação {:?}", dif.map(|i| (i / 0x2c, i % 0x2c))));
 }
 
-/// { 0x85dfc0 } (thiscall, ret 0, stadium.cpp, `Stadium::build_venue_list`): refaz a lista dos estádios para jogos
+/// the neutral venue rule (finals and semi-finals): grounds with a city, nation and continent qualify, except the City
+/// of Manchester Stadium (under construction) and, in nations with competitions, those under 5000 seats; each nation's
+/// national stadium is flagged
+/// Original: `Stadium::build_venue_list` (0x85dfc0, stadium.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x85dfc0 } (thiscall, ret 0, stadium.cpp, `Stadium::build_venue_list`): refaz a lista dos estádios para jogos
 /// em campo neutro (+0xc a lista de registros de 16 bytes, +0x10 a conta, +0x14 a capacidade; a velha é solta). As
 /// sedes das próximas edições de três competições (as chaves 0x9cf79c, 0x9cf7a4, 0x9cf7ac; 0x5fa7d0 no HostCountry
 /// [0xb5e134], sem ele a caixa da linha 0x858) são achadas, mas não mudam nada (o laço delas termina igual nos dois
@@ -287,7 +301,12 @@ unsafe fn cql1_vale_no_clube(k: usize, c: usize) -> bool {
     (read_u32(0xae23b4) as usize).wrapping_add(id.wrapping_mul(0x245)) == p
 }
 
-/// { 0x85a760 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::get_squad_number`; o this não é lido): o número
+/// the rule: the squad number lives in the contract (+0x3a), positive at human-managed clubs and negative elsewhere;
+/// the club's contract counts (or the parent club's [inference: B team]) and, failing it, the loan contract; a person
+/// outside the contracted-people table has the number in the player record
+/// Original: `SQUAD_MANAGER::get_squad_number` (0x85a760, squad_manager.cpp, thiscall, ret 8 (this não lido)).
+///
+/// [pt] { 0x85a760 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::get_squad_number`; o this não é lido): o número
 /// de camisa (char, negativo nos clubes sem técnico humano) da pessoa `p` no clube `c`. Sem um dos dois, 0. Pessoa fora
 /// da tabela das pessoas com contrato (id ≥ [0xae2364]): o byte +4 da ficha de jogador (+0x61). Senão o contrato
 /// (0x4cf5a0, thiscall em [0xae1050], push pessoa), se a pessoa é jogador (0x53b620 com o +0x3d, cdecl de 1) e o
@@ -324,7 +343,11 @@ unsafe extern "thiscall" fn comparar_numero_de_camisa(this: usize, p: usize, c: 
     r
 }
 
-/// { 0x85add0 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::club_uses_squad_numbers`; o this não é lido):
+/// the rule: a club uses fixed squad numbers when its division's league has bit 2 of its options (+0x52); with a second
+/// competition (e.g. a cup), it needs the bit too
+/// Original: `SQUAD_MANAGER::club_uses_squad_numbers` (0x85add0, squad_manager.cpp, thiscall, ret 8 (this não lido)).
+///
+/// [pt] { 0x85add0 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::club_uses_squad_numbers`; o this não é lido):
 /// 1 se o clube usa números de camisa: a competição da divisão do clube (o id em [[c+0x57]], o objeto na tabela
 /// [0xadadfc]) existe e tem o bit 2 do +0x52 e, com `outra` (Comp*), a outra competição (a da tabela pelo id [outra])
 /// também tem o bit. Sem divisão ou sem a competição, 0; sem clube, a caixa da linha 0x4b0 e 0.
@@ -367,7 +390,11 @@ unsafe extern "thiscall" fn comparar_clube_usa_numeros(this: usize, c: usize, ou
     r
 }
 
-/// { 0x85a850 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::set_squad_number`; o this não é lido): grava o
+/// the rule: numbers go from −50 to 50 (otherwise the error box); written to the contract valid at the club, or to the
+/// loan contract
+/// Original: `SQUAD_MANAGER::set_squad_number` (0x85a850, squad_manager.cpp, thiscall, ret 0xc (this não lido)).
+///
+/// [pt] { 0x85a850 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::set_squad_number`; o this não é lido): grava o
 /// número `n` (char de −50 a 50; fora disso a caixa da linha 0x332) no +0x3a do contrato da pessoa `p` (0x4cf5a0) se ele
 /// vale no clube `c`, senão no do contrato de empréstimo (0x4cf6d0) se ele vale no clube. Sem pessoa ou sem clube, nada.
 unsafe extern "thiscall" fn gravar_numero_de_camisa(_this: usize, p: usize, c: usize, n: u32) {
@@ -448,7 +475,13 @@ unsafe fn cql2_preferidos(f: usize) -> Option<[u8; 5]> {
     None
 }
 
-/// { 0x85a470 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::allocate_squad_number`): dá um número de camisa
+/// the rule: a new arrival gets the first free number for his position: goalkeeper 1; defender 2 (right back), 3 (left)
+/// or 4 to 6; defensive, central and attacking midfielder 6 to 8; striker 8 to 11 (good position = rating 15 or more);
+/// otherwise the first free from 12 to 50, and lastly the highest free from 11 down; positive with a human manager,
+/// negative without
+/// Original: `SQUAD_MANAGER::allocate_squad_number` (0x85a470, squad_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x85a470 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::allocate_squad_number`): dá um número de camisa
 /// à pessoa `p` que chega ao clube `c`. Marca os números ocupados pelo elenco (0x541f90(c, lista, 0), cdecl de 3; a
 /// lista ordenada pela idade com o qsort 0x945333 e a 0x540130; quem está fora da tabela das pessoas com contrato ou sem
 /// ficha de jogador não conta) com o número de cada um (0x85a760, em módulo). Se `p` está na tabela e ainda não tem
@@ -560,7 +593,15 @@ const CQL2_VAGAS: [u16; 20] = [
     0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x4, // os reservas
 ];
 
-/// { 0x859fe0 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::assign_club_squad_numbers`): numera o elenco do
+/// the rule: the squad (with the linked B team) is ordered by the reference line-up (11 starters and 9 substitutes) and
+/// the rest by age; whoever already has a number keeps it unless it is repeated (without `keep`, a starter's number, 1
+/// to 11, only stays with the first 11 and a reserve's only with the others); whoever has none gets his order number if
+/// free; from the 22nd on, without a contract with the club or with a youth/amateur contract [inference: types 6 and
+/// 7], he gets no number; the first 40 still without one get one by the new-arrival rule; at the end the kept numbers
+/// are rewritten (positive with a human manager, otherwise −1, −2... in number order)
+/// Original: `SQUAD_MANAGER::assign_club_squad_numbers` (0x859fe0, squad_manager.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x859fe0 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::assign_club_squad_numbers`): numera o elenco do
 /// clube `c`. Junta os jogadores do elenco (+0xd7, 50 vagas; só os da tabela das pessoas com contrato) e os do clube
 /// ligado (0x540a50(c, 0, 1), cdecl de 3; até 50 no total); escala os 11 titulares e os 9 reservas de referência
 /// (0x6e2000, cdecl de 15, com `CQL2_VAGAS` e os modos 0x5840) e põe os outros depois, nas vagas livres; ordena os 30
@@ -749,7 +790,11 @@ unsafe fn cql3_ligas_a_numerar(mut cada: impl FnMut(usize)) {
     }
 }
 
-/// { 0x859dc0 } (thiscall, ret 0, squad_manager.cpp, `SQUAD_MANAGER::init_new_game`): zera o ano das inscrições (+0,
+/// the rule: at the start of the game, each division league that uses squad numbers (bit 2 of its options) is numbered
+/// from the database
+/// Original: `SQUAD_MANAGER::init_new_game` (0x859dc0, squad_manager.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x859dc0 } (thiscall, ret 0, squad_manager.cpp, `SQUAD_MANAGER::init_new_game`): zera o ano das inscrições (+0,
 /// word) e numera (0x859e20(this, liga, 1, 0)) cada liga de divisão que usa números (`cql3_ligas_a_numerar`).
 unsafe extern "thiscall" fn numerar_no_comeco(this: usize) {
     let numerar: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_SQUAD_MANAGER_ASSIGN_LEAGUE_SQUAD_NUMBERS);
@@ -771,7 +816,12 @@ unsafe extern "thiscall" fn comparar_numerar_no_comeco(this: usize) {
     PLACAR.registrar(feito == plano && zerado, || format!("numerar_no_comeco: plano {:x?} original {:x?} ano zerado {}", plano, feito, zerado));
 }
 
-/// { 0x859e20 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::assign_league_squad_numbers`): numera os clubes
+/// the rule: each club of the league (except B teams) is numbered; at the start each player first gets the database
+/// number (0 to 50); a human-managed club is not numbered by the game: its numbers become positive and the manager gets
+/// the squad numbers request
+/// Original: `SQUAD_MANAGER::assign_league_squad_numbers` (0x859e20, squad_manager.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x859e20 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::assign_league_squad_numbers`): numera os clubes
 /// da liga `liga` (a lista do método +0x58 da competição, thiscall(liga, &lista, 0), devolve a conta em ax; a lista é
 /// solta no fim pela 0x9452ca). Em 1998 vale sempre `inicial`. Pula o time B (0x540a50(clube, &principal, 1) com o
 /// clube ligado e principal = 0). Clube de técnico humano (0x7875e0, com ecx = [0xb7431c]) sem `automatico`: os números
@@ -889,7 +939,13 @@ const CQL3_VAGAS: [u16; 25] = [
     0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, // os reservas
 ];
 
-/// { 0x85aae0 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::select_euro_registered_players`; o this não é
+/// the European cup registration rule: the best of the reference line-up are registered (11 starters and 14
+/// substitutes, or 9 at the first stage without the mark [inference: list B]); loaned players, type-5 contracts and
+/// those already marked 8 or 0x10 cannot be registered; at stage 3 up to 2 registered players outside the line-up drop
+/// out (minimum of 21 registered); after the first stage only those who fit the places get in
+/// Original: `SQUAD_MANAGER::select_euro_registered_players` (0x85aae0, squad_manager.cpp, thiscall, ret 0xc (this não lido)).
+///
+/// [pt] { 0x85aae0 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::select_euro_registered_players`; o this não é
 /// lido): a inscrição do clube `c` nas copas europeias na etapa `etapa` (1 a primeira; `marca` [inferência: a lista A
 /// ou B]), pela marca de inscrição da pessoa (+0x6d: 1 ou 2 inscrito, 4 e 8 outras marcas). Do elenco (0x541f90(c,
 /// lista, 0)), os candidatos são os da tabela das pessoas com contrato, sem contrato do tipo 5 (+0x35 & 0x3f; o

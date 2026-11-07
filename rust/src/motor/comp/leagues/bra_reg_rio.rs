@@ -123,17 +123,32 @@ const CQT4_PAULISTA: Cqt4Estadual = Cqt4Estadual {
     linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
 };
 
-/// { 0x439a40 } (thiscall, ret 8, bra_reg_rio.cpp): `BraRegRio::BraRegRio(ano, registro)`: o Carioca (três fases além da liga).
+/// The Rio state league at career creation: the year and the database competition, disciplinary rule 7 and, with no
+/// saved state, importance 15, two halves and the final (three stages besides the league), the rules, the table with
+/// the state clubs, the fixtures, the order, the statistics and the predicted positions
+/// Original: `BraRegRio::BraRegRio` (0x439a40, bra_reg_rio.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x439a40 } (thiscall, ret 8, bra_reg_rio.cpp): `BraRegRio::BraRegRio(ano, registro)`: o Carioca (três fases além da liga).
 unsafe extern "thiscall" fn cqt4_construir_carioca(this: usize, ano: u32, registro: usize) -> usize {
     cqt4_construir(this, ano, registro, &CQT4_CARIOCA, 7, true, "cqt_4 carioca novo") // cqt4: a disciplina e as posições previstas do Carioca
 }
 
-/// { 0x43b130 } (thiscall, ret 8, bra_reg_santa.cpp): `BraRegSanta::BraRegSanta(ano, registro)`: o Catarinense (uma fase além da liga).
+/// The Santa Catarina state league at career creation: the year and the database competition, disciplinary rule 7 and,
+/// with no saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the
+/// table with the state clubs, the fixtures, the order, the statistics and the predicted positions
+/// Original: `BraRegSanta::BraRegSanta` (0x43b130, bra_reg_santa.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x43b130 } (thiscall, ret 8, bra_reg_santa.cpp): `BraRegSanta::BraRegSanta(ano, registro)`: o Catarinense (uma fase além da liga).
 unsafe extern "thiscall" fn cqt4_construir_catarinense(this: usize, ano: u32, registro: usize) -> usize {
     cqt4_construir(this, ano, registro, &CQT4_CATARINENSE, 7, true, "cqt_4 catarinense novo") // cqt4: a disciplina e as posições previstas do Catarinense
 }
 
-/// { 0x43c280 } (thiscall, ret 8, bra_reg_sp.cpp): `BraRegSp::BraRegSp(ano, registro)`: o Paulista (uma fase além da liga).
+/// The Sao Paulo state league at career creation: the year and the database competition, disciplinary rule 7 and, with
+/// no saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the table
+/// with the state clubs, the fixtures, the order, the statistics and the predicted positions
+/// Original: `BraRegSp::BraRegSp` (0x43c280, bra_reg_sp.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x43c280 } (thiscall, ret 8, bra_reg_sp.cpp): `BraRegSp::BraRegSp(ano, registro)`: o Paulista (uma fase além da liga).
 unsafe extern "thiscall" fn cqt4_construir_paulista(this: usize, ano: u32, registro: usize) -> usize {
     cqt4_construir(this, ano, registro, &CQT4_PAULISTA, 7, true, "cqt_4 paulista novo") // cqt4: a disciplina e as posições previstas do Paulista
 }
@@ -200,7 +215,17 @@ unsafe fn cqt4_teto(c: usize, lim: i32) {
     }
 }
 
-/// { 0x5d6280 } (cdecl, game.cpp, sem nome no mapa): `atualizar_media_de_publico(liga)`, do laço das temporadas
+/// The clubs average attendance at the end of each league season: it moves with the final position against the
+/// predicted one and with the competition reputation, with a weight by nation (0.1, 0.25 or 0.5 in some, 1 in the
+/// others): the champion and runner-up without promotion gain (reputation + places above the prediction) × 200/100 or
+/// 125/65 (stadium owner or not); promoted clubs gain by club reputation and the reputation gap to the league above,
+/// with that league floor; relegated clubs lose by the gap to the league below, with its ceiling; promotion play-off
+/// and mid-table clubs gain or lose by a draw, mixed with the season real attendance (1/5 of the average home crowd +
+/// 4/5 of the average) and reputation floors and ceilings (2000, 3000 or 5000 times); at the end, at least 500 and
+/// between the club minimum and record
+/// Original: `atualizar_media_de_publico (sem nome no mapa)` (0x5d6280, game.cpp, cdecl).
+///
+/// [pt] { 0x5d6280 } (cdecl, game.cpp, sem nome no mapa): `atualizar_media_de_publico(liga)`, do laço das temporadas
 /// (0x5d5ae0, em 0x5d5cfb: push liga; call; add esp, 4), no fim da temporada de cada liga da nação (a de cima e as de
 /// baixo, pela +0x20). A média de público do clube (+0x73, Attendance) anda com o resultado da temporada, entre o
 /// mínimo (+0x77) e o recorde (+0x7b).
@@ -449,25 +474,49 @@ unsafe fn cqr1_comparar(nome: &str, this: usize, k: u32, original: impl FnOnce()
     PLACAR.registrar(igual, || format!("{}({:#x}, {}) fase={:#x} +0x30={}", nome, this, kk, fase, read_usize(this + 0x30) as i32));
 }
 
-/// { 0x43afa0 } (thiscall, ret 4, bra_reg_rio.cpp): `BraRegRio::create_half_season_stage(k)`, um turno do Carioca (os
+/// One half of the Rio state league: when the first game of a half is processed, it builds that half's round-robin
+/// stage (a league with all the clubs of the table, the same points for a win and a draw and the same tie-breakers as
+/// the league, and one top place, the half winner's); the first half goes to stage 0 and the second (from round 12, by
+/// the match +0x34) to stage 1; each half winner (the top of the stage table) goes to the final
+/// Original: `BraRegRio::create_half_season_stage` (0x43afa0, bra_reg_rio.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x43afa0 } (thiscall, ret 4, bra_reg_rio.cpp): `BraRegRio::create_half_season_stage(k)`, um turno do Carioca (os
 /// doze clubes; a caixa da linha 0x3d5).
 unsafe extern "thiscall" fn cqr1_turno_do_carioca(this: usize, k: u32) {
     cqr1_turno(this, k, 0x98b014, 0x3d5, 0xb, 0xc2, "cqr_1 turno do carioca") // cqr1: os pontos por vitória no Carioca
 }
 
-/// { 0x4351b0 } (thiscall, ret 4, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_half_season_stage(k)`, um turno
+/// One half of the Minas Gerais state league: when the first game of a half is processed, it builds that half's
+/// round-robin stage (a league with all the clubs of the table, the same points for a win and a draw and the same
+/// tie-breakers as the league, and one top place, the half winner's); the first half goes to stage 0 and the second
+/// (from round 12, by the match +0x34) to stage 1; each half winner (the top of the stage table) goes to the final
+/// Original: `BraRegMinasGerais::create_half_season_stage` (0x4351b0, bra_reg_minas_gerais.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x4351b0 } (thiscall, ret 4, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_half_season_stage(k)`, um turno
 /// do Mineiro (a caixa da linha 0x3d5).
 unsafe extern "thiscall" fn cqr1_turno_do_mineiro(this: usize, k: u32) {
     cqr1_turno(this, k, 0x98aed0, 0x3d5, 0xb, 0xc2, "cqr_1 turno do mineiro") // cqr1: os pontos por vitória no Mineiro
 }
 
-/// { 0x438760 } (thiscall, ret 4, bra_reg_parana.cpp): `BraRegParana::create_half_stage(k)`, um turno do Paranaense (a
+/// One half of the Parana state league: when the first game of a half is processed, it builds that half's round-robin
+/// stage (a league with all the clubs of the table, the same points for a win and a draw and the same tie-breakers as
+/// the league, and one top place, the half winner's); the first half goes to stage 0 and the second (from round 12, by
+/// the match +0x34) to stage 1; each half winner (the top of the stage table) goes to the final
+/// Original: `BraRegParana::create_half_stage` (0x438760, bra_reg_parana.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x438760 } (thiscall, ret 4, bra_reg_parana.cpp): `BraRegParana::create_half_stage(k)`, um turno do Paranaense (a
 /// caixa da linha 0x3d5).
 unsafe extern "thiscall" fn cqr1_turno_do_paranaense(this: usize, k: u32) {
     cqr1_turno(this, k, 0x98af98, 0x3d5, 0xb, 0xc2, "cqr_1 turno do paranaense") // cqr1: os pontos por vitória no Paranaense
 }
 
-/// { 0x663c20 } (thiscall, ret 4, jap_j1.cpp): `JapJ1::create_half_season_stage(k)`, um turno da J1 (a caixa da linha
+/// One half of the J1: when the first game of a half is processed, it builds that half's round-robin stage (a league
+/// with all the clubs of the table, the same points for a win and a draw and the same tie-breakers as the league, and
+/// one top place, the half winner's); the first half goes to stage 0 and the second (from round 16, by the match +0x34)
+/// to stage 1; each half winner (the top of the stage table) goes to the final
+/// Original: `JapJ1::create_half_season_stage` (0x663c20, jap_j1.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x663c20 } (thiscall, ret 4, jap_j1.cpp): `JapJ1::create_half_season_stage(k)`, um turno da J1 (a caixa da linha
 /// 0x278; o 20º argumento do construtor é 0xf).
 unsafe extern "thiscall" fn cqr1_turno_da_j1(this: usize, k: u32) {
     cqr1_turno(this, k, 0x9eabc8, 0x278, 0xf, 0xc2, "cqr_1 turno da j1") // cqr1: os pontos por vitória na J1
@@ -584,17 +633,35 @@ unsafe fn cqr2_comparar(nome: &str, this: usize, original: impl FnOnce() -> u32)
     r
 }
 
-/// { 0x43a6a0 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::start_new_season()`, a virada do Carioca (a tabela: 0x43a500).
+/// The Rio state league turnover: archives the season in the statistics, clears the table, the schedule and the stages
+/// (the two halves and the final) and prepares three new stage slots; moves to the next year and rebuilds the rules,
+/// the table with the twelve state clubs, the fixtures and the order; then the predicted positions and the referee
+/// renewal. The halves are only built at each one's first game (cqr_1)
+/// Original: `BraRegRio::start_new_season` (0x43a6a0, bra_reg_rio.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x43a6a0 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::start_new_season()`, a virada do Carioca (a tabela: 0x43a500).
 unsafe extern "thiscall" fn cqr2_virada_do_carioca(this: usize) -> u32 {
     cqr2_virada(this, 0x43a500, 0x98b014, 1, "cqr_2 virada do carioca") // cqr2: o ano seguinte do Carioca
 }
 
-/// { 0x434910 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::start_new_season()`, a virada do Mineiro (a tabela: 0x434810).
+/// The Minas Gerais state league turnover: archives the season in the statistics, clears the table, the schedule and
+/// the stages (the two halves and the final) and prepares three new stage slots; moves to the next year and rebuilds
+/// the rules, the table with the twelve state clubs, the fixtures and the order; then the predicted positions and the
+/// referee renewal. The halves are only built at each one's first game (cqr_1)
+/// Original: `BraRegMinasGerais::start_new_season` (0x434910, bra_reg_minas_gerais.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x434910 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::start_new_season()`, a virada do Mineiro (a tabela: 0x434810).
 unsafe extern "thiscall" fn cqr2_virada_do_mineiro(this: usize) -> u32 {
     cqr2_virada(this, 0x434810, 0x98aed0, 1, "cqr_2 virada do mineiro") // cqr2: o ano seguinte do Mineiro
 }
 
-/// { 0x438060 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::start_new_season()`, a virada do Paranaense (a tabela: 0x437ec0).
+/// The Parana state league turnover: archives the season in the statistics, clears the table, the schedule and the
+/// stages (the two halves and the final) and prepares three new stage slots; moves to the next year and rebuilds the
+/// rules, the table with the twelve state clubs, the fixtures and the order; then the predicted positions and the
+/// referee renewal. The halves are only built at each one's first game (cqr_1)
+/// Original: `BraRegParana::start_new_season` (0x438060, bra_reg_parana.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x438060 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::start_new_season()`, a virada do Paranaense (a tabela: 0x437ec0).
 unsafe extern "thiscall" fn cqr2_virada_do_paranaense(this: usize) -> u32 {
     cqr2_virada(this, 0x437ec0, 0x98af98, 1, "cqr_2 virada do paranaense") // cqr2: o ano seguinte do Paranaense
 }
@@ -623,7 +690,12 @@ unsafe fn cqo9_campeao_do_turno(this: usize, k: usize) -> usize {
     read_usize(read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1))
 }
 
-/// { 0x43a870 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::advance_stage()`, a fase seguinte do Carioca (dois turnos, as fases 0
+/// The Rio de Janeiro state league has two halves (stages 0 and 1, each a round-robin league) and, if needed, a final
+/// (stage 2): the next stage moves the current stage on and, at the end of the second half, builds the final; past the
+/// last stage it is an error (the box)
+/// Original: `BraRegRio::advance_stage` (0x43a870, bra_reg_rio.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x43a870 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::advance_stage()`, a fase seguinte do Carioca (dois turnos, as fases 0
 /// e 1, cada um um League_Stage, e a final, a fase 2). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa de
 /// erro da linha 0x202 e nada mais. Senão +0x30 sobe um e, ao chegar a 2 (o fim do segundo turno), monta a final
 /// (0x43a900, call direto com o ecx da liga).
@@ -640,7 +712,12 @@ unsafe extern "thiscall" fn cqo9_fase_seguinte_do_carioca(this: usize) {
     }
 }
 
-/// { 0x43a900 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::create_final_stage()`, da fase seguinte quando o segundo turno
+/// The Rio de Janeiro final: the winners of the first and second halves meet over two games [inference: home and away],
+/// the first-half winner as seed 0; if the same club wins both halves, it is champion without a final (the season ends
+/// with the two stages and it gets status 5, champion, in the three tables)
+/// Original: `BraRegRio::create_final_stage` (0x43a900, bra_reg_rio.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x43a900 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::create_final_stage()`, da fase seguinte quando o segundo turno
 /// acaba. Os dois campeões dos turnos (o clube da primeira linha da tabela de cada League_Stage) vão para uma lista
 /// de 2 (malloc 0x944e46 de 8; sem memória: a caixa da linha 0x226 e volta).
 /// - O mesmo clube nos dois turnos: é o campeão sem final. +0x30 = 1, +0x2c = 2 (a temporada acaba com as duas fases),
@@ -711,7 +788,12 @@ unsafe extern "thiscall" fn cqo9_final_do_carioca(this: usize) {
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 2);
 }
 
-/// { 0x43ad20 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::record_season_honours()` (slot 13), o fim da temporada do Carioca.
+/// The end of the Rio de Janeiro season: with a final, the honours come from the final; without one, from the league,
+/// and the champion gets 675,000 and the runner-up 250,000 in prize money (to the balance, with the prize money news).
+/// Then, once the twelve state leagues are over, the champions go into the Champions Cup
+/// Original: `BraRegRio::record_season_honours` (0x43ad20, bra_reg_rio.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x43ad20 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::record_season_honours()` (slot 13), o fim da temporada do Carioca.
 /// - Com final (+0x30 = 2): o histórico da final (o slot 13, +0x30, da fase [+0xc]+8) e, em salto final, a 0x42bba0
 ///   (`bra_nat_first_fill_champions_cup_entrants`, cdecl sem argumentos: quando os doze estaduais terminam, põe os
 ///   campeões na Copa dos Campeões); devolve o eax dela.
@@ -839,19 +921,31 @@ unsafe fn cqm8_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
     1
 }
 
-/// { 0x43a500 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::create_table()`: o Carioca tem 12 clubes (divisão reserva +0x60 = [0x9cf9dc]).
+/// the Rio league has 12 clubs: those with it as their reserve division in the database (the field that holds the state
+/// or regional league), in database order; the table only counts when full; no TV money nor prize fund
+/// Original: `BraRegRio::create_table` (0x43a500, bra_reg_rio.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x43a500 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::create_table()`: o Carioca tem 12 clubes (divisão reserva +0x60 = [0x9cf9dc]).
 /// Fonte 0x98b014, linha 0x169.
 unsafe extern "thiscall" fn cqm8_tabela_do_carioca(this: usize) -> u32 {
     cqm8_tabela(this, 0xc, 0x98b014, 0x169, KEY_CLUB_COMP_BRAZILIAN_RIO_DE_JANEIRO_STATE_CHAMPIONS, 0, "cqm_8 carioca cheio")
 }
 
-/// { 0x43bb70 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::create_table()`: o Catarinense tem 10 clubes (divisão reserva +0x60 = [0x9cf9b0]).
+/// the Santa Catarina league has 10 clubs: those with it as their reserve division in the database (the field that
+/// holds the state or regional league), in database order; the table only counts when full; no TV money nor prize fund
+/// Original: `BraRegSanta::create_table` (0x43bb70, bra_reg_santa.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x43bb70 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::create_table()`: o Catarinense tem 10 clubes (divisão reserva +0x60 = [0x9cf9b0]).
 /// Fonte 0x98b050, linha 0x167.
 unsafe extern "thiscall" fn cqm8_tabela_do_catarinense(this: usize) -> u32 {
     cqm8_tabela(this, 0xa, 0x98b050, 0x167, KEY_CLUB_COMP_BRAZILIAN_SANTA_CATARINA_STATE_CHAMPIONS, 0, "cqm_8 catarinense cheio")
 }
 
-/// { 0x43cc40 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::create_table()`: o Paulista tem 16 clubes (divisão reserva +0x60 = [0x9cf9e4]).
+/// the Sao Paulo league has 16 clubs: those with it as their reserve division in the database (the field that holds the
+/// state or regional league), in database order; the table only counts when full; no TV money nor prize fund
+/// Original: `BraRegSp::create_table` (0x43cc40, bra_reg_sp.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x43cc40 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::create_table()`: o Paulista tem 16 clubes (divisão reserva +0x60 = [0x9cf9e4]).
 /// Fonte 0x98b090, linha 0x159.
 unsafe extern "thiscall" fn cqm8_tabela_do_paulista(this: usize) -> u32 {
     cqm8_tabela(this, 0x10, 0x98b090, 0x159, KEY_CLUB_COMP_BRAZILIAN_SAO_PAULO_STATE_CHAMP, 0, "cqm_8 paulista cheio")
