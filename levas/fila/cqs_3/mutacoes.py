@@ -17,3 +17,4 @@ MUTACOES = [
      'embaralhar(v.as_mut_ptr(), 7); // mutacao: embaralha sete',
      'cqs_3 terceira fase'),
 ]
+# Prova do agente (06/11, carreira Rust de 8 ligas ate 2002-06-01; base com os 12 itens cqr/cqs/cqt_1..4, impressao b690295afd222f6a): as tres ACUSADAS (2001-246, 2001-286, 2001-294).

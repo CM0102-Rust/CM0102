@@ -1,0 +1,1 @@
+comparação de 8 ligas até 2002-06-01 (com os 12 itens do agente C, 38 rotinas) 0 div, 0 exceções (os grupos, a segunda e a terceira fases da Série C de 2001); Rust x2 iguais (b690295afd222f6a) e detector de lixo igual; mutações 3/3

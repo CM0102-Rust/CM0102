@@ -16,6 +16,17 @@
 # cruzados (lidos antes).
 # Determinismo: nada lê pilha, heap ou endereço como valor (os 8 vivos numa lista zerada; a original a deixa na pilha
 # e só lê as vagas gravadas).
+# Provas (06/11/2026, cópia fora do projeto em %TEMP%: motor.rs da principal com a 280a publicada e a 281a integrada,
+# 1.986 rotinas, + os 12 itens cqr_10..13, cqs_10..13, cqt_10..13, 36 rotinas):
+# - jogo comparando com ENG ESP ITA FRA BRA JPN AUS USA até 2001-10-01 só com os 4 cqr (parou em 2001-273) e até
+#   2002-06-01 com os 12 itens (parou em 2002-151; as copas de janeiro e fevereiro de 2002 e a Libertadores de 2002
+#   rodam depois de outubro): 0 linhas DIVERGENCIA, 0 EXCECAO, nenhuma caixa (data, motor e aleatorio: 0 divergências);
+# - duas carreiras Rust com as 8 ligas até 2002-06-01 iguais entre si e ao detector (simular.py --repetir 2
+#   --detector: "detector de lixo: igual"), impressão b690295afd222f6a (a mesma da base sem os itens: as cópias são
+#   fiéis); todos os contadores das mutações rodaram;
+# - mutações (mutacoes.py --carreira 2002-06-01 com as 8 ligas, base f29c85195c2a534f): as três ACUSADAS (os grupos 1 e
+#   2 de trás para a frente em 2002-079, as semifinais 1º × 1º em 2002-143: a Liga dos Campeões asiática desta janela é
+#   a de 2002, que acaba em maio).
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqt12_asia_fase_seguinte', 0x40c070, [0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30]),

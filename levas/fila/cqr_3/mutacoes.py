@@ -19,3 +19,4 @@ MUTACOES = [
      '        *c = cqr3_linha(this, if i == 5 { 6 } else { i }); // mutacao: o setimo no lugar do sexto\n',
      'cqr_3 serie final'),
 ]
+# Prova do agente (06/11, carreira Rust de 8 ligas ate 2002-06-01; base com os 12 itens cqr/cqs/cqt_1..4, impressao b690295afd222f6a): as tres ACUSADAS (a serie final em 2002-087).

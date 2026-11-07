@@ -18,3 +18,4 @@ MUTACOES = [
      'let _ = ordenar; // mutacao: sem ordenar pela reputacao',
      'cqs_4 posicoes previstas'),
 ]
+# Prova do agente (06/11, carreira Rust de 8 ligas ate 2002-06-01; base com os 12 itens cqr/cqs/cqt_1..4, impressao b690295afd222f6a): as tres ACUSADAS (a final em 2001-343, a virada em 2002-012, as previstas em 2001-001).

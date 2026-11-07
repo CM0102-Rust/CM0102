@@ -19,6 +19,17 @@
 # grupos da cópia comparados nas 16 vagas e liberados); o dia e a fase só a original (alocam e mandam notícia), com o
 # plano (o dia: +0x45, a lista, a tabela e as fases; a fase: a fase, +0x30, os times, o ano e as 4 seleções).
 # Determinismo: nada lê pilha, heap ou endereço como valor.
+# Provas (06/11/2026, cópia fora do projeto em %TEMP%: motor.rs da principal com a 280a publicada e a 281a integrada,
+# 1.986 rotinas, + os 12 itens cqr_10..13, cqs_10..13, cqt_10..13, 36 rotinas):
+# - jogo comparando com ENG ESP ITA FRA BRA JPN AUS USA até 2001-10-01 só com os 4 cqr (parou em 2001-273) e até
+#   2002-06-01 com os 12 itens (parou em 2002-151; as copas de janeiro e fevereiro de 2002 e a Libertadores de 2002
+#   rodam depois de outubro): 0 linhas DIVERGENCIA, 0 EXCECAO, nenhuma caixa (data, motor e aleatorio: 0 divergências);
+# - duas carreiras Rust com as 8 ligas até 2002-06-01 iguais entre si e ao detector (simular.py --repetir 2
+#   --detector: "detector de lixo: igual"), impressão b690295afd222f6a (a mesma da base sem os itens: as cópias são
+#   fiéis); todos os contadores das mutações rodaram;
+# - mutações (mutacoes.py --carreira 2002-06-01 com as 8 ligas, base f29c85195c2a534f): as três ACUSADAS (só 16
+#   africanas e sem a ordem pela reputação em 2002-026, os times de trás para a frente em 2002-041). O dia é passageiro
+#   (contador 1: roda).
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqs13_africana_dia', 0x4025a0, [0x6a, 0xff, 0x68, 0x46, 0x35, 0x95, 0x00]),

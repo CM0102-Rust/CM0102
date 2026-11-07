@@ -19,3 +19,4 @@ MUTACOES = [
      'let lugares: [u32; 12] = [10, 7, 4, 1, 1, 4, 7, 10, 1, 4, 7, 10]; // mutacao: a primeira divisao invertida',
      'cqs_2 posicoes previstas'),
 ]
+# Prova do agente (06/11, carreira Rust de 8 ligas ate 2002-06-01; base com os 12 itens cqr/cqs/cqt_1..4, impressao b690295afd222f6a): as tres ACUSADAS (a virada em 2002-068 e 2002-051; as previstas em 2001-001).

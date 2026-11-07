@@ -17,3 +17,4 @@ MUTACOES = [
      'cqt2_construir(this, ano + 1, registro, &CQT2_NORTE, /* mutacao: um ano adiante */',
      'cqt_2 norte novo'),
 ]
+# Prova do agente (06/11, carreira Rust de 8 ligas ate 2002-06-01; base com os 12 itens cqr/cqs/cqt_1..4, impressao b690295afd222f6a): as tres ACUSADAS (2001-014, 2001-055, 2001-014).

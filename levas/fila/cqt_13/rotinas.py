@@ -14,6 +14,17 @@
 # antes) e +0x30; a fase seguinte confere +0x30.
 # Determinismo: nada lê pilha, heap ou endereço como valor (com menos de 4 vivos a original deixa vagas com o que o
 # malloc deu; nesta carreira são 4).
+# Provas (06/11/2026, cópia fora do projeto em %TEMP%: motor.rs da principal com a 280a publicada e a 281a integrada,
+# 1.986 rotinas, + os 12 itens cqr_10..13, cqs_10..13, cqt_10..13, 36 rotinas):
+# - jogo comparando com ENG ESP ITA FRA BRA JPN AUS USA até 2001-10-01 só com os 4 cqr (parou em 2001-273) e até
+#   2002-06-01 com os 12 itens (parou em 2002-151; as copas de janeiro e fevereiro de 2002 e a Libertadores de 2002
+#   rodam depois de outubro): 0 linhas DIVERGENCIA, 0 EXCECAO, nenhuma caixa (data, motor e aleatorio: 0 divergências);
+# - duas carreiras Rust com as 8 ligas até 2002-06-01 iguais entre si e ao detector (simular.py --repetir 2
+#   --detector: "detector de lixo: igual"), impressão b690295afd222f6a (a mesma da base sem os itens: as cópias são
+#   fiéis); todos os contadores das mutações rodaram;
+# - mutações (mutacoes.py --carreira 2002-06-01 com as 8 ligas, base f29c85195c2a534f): as três ACUSADAS (as quartas
+#   1º A × 2º D em 2002-053 e 2º × 2º em 2002-054, as finais da Recopa asiática sem cruzar em 2002-143: a Recopa desta
+#   janela é a de 2002, que acaba em maio).
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
 ROTINAS = [('cqt13_africana_quartas', 0x402090, [0x64, 0xa1, 0x00, 0x00, 0x00, 0x00]),

@@ -2093,8 +2093,87 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x797230, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x40b620, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x40d4d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x43afa0, bytes: &[0x6a, 0xff, 0x68, 0x7e, 0x4a, 0x95, 0x00] },
+    Prologo { endereco: 0x4351b0, bytes: &[0x6a, 0xff, 0x68, 0x0e, 0x48, 0x95, 0x00] },
+    Prologo { endereco: 0x438760, bytes: &[0x6a, 0xff, 0x68, 0x7e, 0x49, 0x95, 0x00] },
+    Prologo { endereco: 0x663c20, bytes: &[0x6a, 0xff, 0x68, 0x5e, 0xc1, 0x95, 0x00] },
+    Prologo { endereco: 0x43a6a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x434910, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x438060, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x411f70, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
+    Prologo { endereco: 0x412010, bytes: &[0x6a, 0xff, 0x68, 0x1e, 0x3a, 0x95, 0x00] },
+    Prologo { endereco: 0x4121c0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x909400, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
+    Prologo { endereco: 0x9094c0, bytes: &[0x6a, 0xff, 0x68, 0x1e, 0x54, 0x96, 0x00] },
+    Prologo { endereco: 0x9097d0, bytes: &[0x6a, 0xff, 0x68, 0x3e, 0x54, 0x96, 0x00] },
+    Prologo { endereco: 0x427d10, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x662950, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x665bc0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x6664e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x90b790, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x90a760, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x90a540, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x4c4410, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x4c37a0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x4c3b10, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x4c5c90, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x4c4e60, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x4c51d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x4c2c90, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x4c1de0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x4c2140, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x5e2120, bytes: &[0x6a, 0xff, 0x68, 0xe6, 0xa8, 0x95, 0x00] },
+    Prologo { endereco: 0x5e11e0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x5e16b0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x908560, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x908fc0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x9091e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x908e00, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x909bb0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x909a40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x42ee80, bytes: &[0x6a, 0xff, 0x68, 0xbe, 0x45, 0x95, 0x00] },
+    Prologo { endereco: 0x42e430, bytes: &[0x6a, 0xff, 0x68, 0x4e, 0x45, 0x95, 0x00] },
+    Prologo { endereco: 0x42e700, bytes: &[0x6a, 0xff, 0x68, 0x7c, 0x45, 0x95, 0x00] },
+    Prologo { endereco: 0x42e980, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x42def0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x42f0a0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x56b730, bytes: &[0x81, 0xec, 0x80, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x56bab0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x56bc50, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
+    Prologo { endereco: 0x56bce0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x56c010, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x522e00, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x78, 0x95, 0x00] },
+    Prologo { endereco: 0x523300, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x86, 0xa7, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x4c3d10, bytes: &[0x6a, 0xff, 0x68, 0xbe, 0x6a, 0x95, 0x00] },
+    Prologo { endereco: 0x4c2330, bytes: &[0x6a, 0xff, 0x68, 0x0e, 0x6a, 0x95, 0x00] },
+    Prologo { endereco: 0x4c20b0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
+    Prologo { endereco: 0x4c2560, bytes: &[0x81, 0xec, 0x24, 0x04, 0x00, 0x00] },
+    Prologo { endereco: 0x4c5140, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
+    Prologo { endereco: 0x5e1620, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
+    Prologo { endereco: 0x5e1cd0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x5e2340, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x5e1530, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x42f2d0, bytes: &[0x6a, 0xff, 0x68, 0xe9, 0x45, 0x95, 0x00] },
+    Prologo { endereco: 0x4304b0, bytes: &[0x6a, 0xff, 0x68, 0x59, 0x46, 0x95, 0x00] },
+    Prologo { endereco: 0x4317c0, bytes: &[0x6a, 0xff, 0x68, 0xc9, 0x46, 0x95, 0x00] },
+    Prologo { endereco: 0x432b50, bytes: &[0x6a, 0xff, 0x68, 0x39, 0x47, 0x95, 0x00] },
+    Prologo { endereco: 0x433d50, bytes: &[0x6a, 0xff, 0x68, 0xa9, 0x47, 0x95, 0x00] },
+    Prologo { endereco: 0x435340, bytes: &[0x6a, 0xff, 0x68, 0x39, 0x48, 0x95, 0x00] },
+    Prologo { endereco: 0x4363f0, bytes: &[0x6a, 0xff, 0x68, 0xa9, 0x48, 0x95, 0x00] },
+    Prologo { endereco: 0x437400, bytes: &[0x6a, 0xff, 0x68, 0x19, 0x49, 0x95, 0x00] },
+    Prologo { endereco: 0x4388f0, bytes: &[0x6a, 0xff, 0x68, 0xa9, 0x49, 0x95, 0x00] },
+    Prologo { endereco: 0x439a40, bytes: &[0x6a, 0xff, 0x68, 0x19, 0x4a, 0x95, 0x00] },
+    Prologo { endereco: 0x43b130, bytes: &[0x6a, 0xff, 0x68, 0xa9, 0x4a, 0x95, 0x00] },
+    Prologo { endereco: 0x43c280, bytes: &[0x6a, 0xff, 0x68, 0x19, 0x4b, 0x95, 0x00] },
+    Prologo { endereco: 0x5d6280, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
+    Prologo { endereco: 0x797b40, bytes: &[0x6a, 0xff, 0x68, 0x16, 0xeb, 0x95, 0x00] },
+    Prologo { endereco: 0x7978c0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
+    Prologo { endereco: 0x797e80, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologo { endereco: 0x798220, bytes: &[0x81, 0xec, 0xfc, 0x03, 0x00, 0x00] },
+    Prologo { endereco: 0x797df0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
+    Prologo { endereco: 0x798050, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
 ];
-const N: usize = 1986;
+const N: usize = 2065;
 
 /// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
@@ -33547,6 +33626,5564 @@ unsafe extern "stdcall" fn comparar_codigo_da_posicao(m: i16) -> u8 {
 }
 
 comparar_valor!(comparar_criterio_da_comissao, criterio_da_comissao, 357, () -> u32);
+
+// ---------- 283a leva: a Série C: a final, a virada da temporada e as posições previstas (bra_nat_third.cpp) ----------
+
+unsafe fn cqs4_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+unsafe fn cqs4_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+/// O clube da primeira linha da tabela (+0xb1) da fase `k` da liga (k = −1: a própria liga).
+unsafe fn cqs4_primeiro(this: usize, k: i32) -> usize {
+    let t = if k == -1 { this } else { cqs4_d(cqs4_d(this + 0xc) + 4 * k as usize) };
+    cqs4_d(cqs4_d(t + 0xb1))
+}
+
+/// { 0x42e980 } (thiscall, ret 0, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_final_stage()`, a
+/// final da Série C, do fim da terceira fase: os campeões dos dois grupos da terceira fase (o primeiro da tabela da
+/// fase 8 e o da fase 9, nessa ordem) numa lista local de 2; a tabela das rodadas pela virtual +0x3c
+/// (create_round_table: thiscall(this, 10, &rodadas, &extra, 0), ret 0x10); a fase (operator new 0x944cf1(0xb2) e o
+/// construtor Cup_Stage 0x522e00, thiscall, ret 0x3c: a liga, 2, a lista, as rodadas, +4, a tabela, o ano, 10, 1, o
+/// extra, 0x14, 0, 0, 0, sementes nulas; words limpas) em [+0xc][10]. Sem fase: a caixa da linha 0x392 e volta (sem
+/// liberar a tabela). Com ela: a tabela liberada (free 0x9452ca) e +0x30 = 10. [inferência] A final decide o campeão
+/// da Série C, em ida e volta.
+unsafe extern "thiscall" fn cqs4_final_da_serie_c(this: usize) {
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    #[allow(clippy::type_complexity)]
+    let construir: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
+        core::mem::transmute(0x522e00usize);
+    let mut lista = [0usize; 2];
+    lista[0] = cqs4_primeiro(this, 8); // cqs4: o campeão do grupo A
+    lista[1] = cqs4_primeiro(this, 9);
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqs4_d(cqs4_d(this) + 0x3c));
+    let (mut rodadas, mut extra) = (0i16, 0i16);
+    let t = tabela(this, 10, &mut rodadas, &mut extra, 0);
+    let p = novo(0xb2);
+    let fase = if p != 0 {
+        construir(p, this, 2, lista.as_ptr(), rodadas as u16 as u32, cqs4_d(this + 4), t, cqs4_w(this + 0x40) as u16 as u32, 10, 1,
+                  extra as u16 as u32, 0x14, 0, 0, 0, 0)
+    } else {
+        0
+    };
+    core::ptr::write_unaligned((cqs4_d(this + 0xc) + 0x28) as *mut usize, fase);
+    if cqs4_d(cqs4_d(this + 0xc) + 0x28) == 0 {
+        return aviso_em(0x98aba4, 0x392);
+    }
+    crate::comparacao::ramo("cqs_4 final");
+    soltar(t);
+    core::ptr::write_unaligned((this + 0x30) as *mut u32, 10);
+}
+
+/// { 0x42def0 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::start_new_season()`, a virada da Série C (chamada
+/// pela virada da Série A): +0x4c = 0 e a tabela liberada (League::free_table 0x687970, thiscall(this, 0), ret 4); o
+/// calendário (+0xba) liberado (free 0x9452ca) e zerado; com estatísticas (+8), Comp_Stats::archive_season_and_reset
+/// (0x4a1c50, thiscall(+8, 1), ret 4); com a fase atual ≥ 0, as fases 0..=+0x30 que existem destruídas (a virtual 0,
+/// o destrutor com 1); +0x30 = −1; o vetor das fases liberado; o ano (+0x40, word) sobe um; um vetor novo de +0x2c
+/// fases (malloc de 4 × +0x2c, sem zerar; com +0x2c ≤ 0, nulo); então, cada um com a sua caixa (linhas 0x202, 0x209,
+/// 0x20f e 0x216) se devolver 0: as regras (virtual +0x8c), a tabela e a lista dos 56 (0x42dc90, thiscall, ret 0), os
+/// jogos (League::create_fixtures 0x6835c0) e a ordem da tabela (League::sort_table 0x6827d0, thiscall(this, 0), ret
+/// 4); por fim as expectativas das diretorias (League::set_club_season_expectations 0x68aa80, thiscall, ret 0), a
+/// renovação dos árbitros (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), os sete
+/// grupos da primeira fase (0x42ee80(g), thiscall, ret 4, g de 0 a 6), as posições previstas (virtual +0x5c) e a lista
+/// dos 56 (+0xee) liberada (se houver) e zerada. Com caixa, a cópia devolve 0 (a original devolve o eax da caixa, que
+/// a virada do Brasil não lê); no fim, o eax do free ou o +0xee (a cópia devolve 0: ninguém lê).
+unsafe extern "thiscall" fn cqs4_virada_da_serie_c(this: usize) -> u32 {
+    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x687970usize);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
+    liberar_tabela(this, 0);
+    let l = cqs4_d(this + 0xba);
+    if l != 0 {
+        liberar(l);
+        core::ptr::write_unaligned((this + 0xba) as *mut usize, 0);
+    }
+    let estatisticas = cqs4_d(this + 8);
+    if estatisticas != 0 {
+        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
+        arquivar(estatisticas, 1);
+    }
+    if (cqs4_d(this + 0x30) as i32) >= 0 {
+        let mut i = 0i32;
+        loop {
+            let f = cqs4_d(cqs4_d(this + 0xc) + 4 * i as usize);
+            if f != 0 {
+                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(cqs4_d(cqs4_d(f)));
+                destruir(f, 1);
+            }
+            i += 1;
+            if i > cqs4_d(this + 0x30) as i32 {
+                break;
+            }
+        }
+    }
+    core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
+    liberar(cqs4_d(this + 0xc));
+    let n = cqs4_d(this + 0x2c) as i32;
+    let a = cqs4_w(this + 0x40);
+    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(1));
+    crate::comparacao::ramo("cqs_4 virada da serie c");
+    let v = if n > 0 { alocar((n * 4) as u32) } else { 0 };
+    core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqs4_d(cqs4_d(this) + 0x8c));
+    if regras(this) == 0 {
+        aviso_em(0x98aba4, 0x202);
+        return 0;
+    }
+    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x42dc90usize);
+    if tabela(this) == 0 {
+        aviso_em(0x98aba4, 0x209);
+        return 0;
+    }
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
+    if jogos(this) == 0 {
+        aviso_em(0x98aba4, 0x20f);
+        return 0;
+    }
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
+    if ordenar(this, 0) == 0 {
+        aviso_em(0x98aba4, 0x216);
+        return 0;
+    }
+    let expectativas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x68aa80usize);
+    expectativas(this);
+    let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x79cee0usize);
+    renovar(cqs4_d(0xb74340), cqs4_d(this + 4)); // cqs4: a renovação dos árbitros da Série C
+    let grupo: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x42ee80usize);
+    for g in 0..7 {
+        grupo(this, g);
+    }
+    let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqs4_d(cqs4_d(this) + 0x5c));
+    previstas(this);
+    let l = cqs4_d(this + 0xee);
+    if l != 0 {
+        liberar(l);
+    }
+    core::ptr::write_unaligned((this + 0xee) as *mut usize, 0);
+    0
+}
+
+/// As posições previstas da Série C, na ordem da lista dos 56 depois de ordenada: 1, 2, 3, 3, 5, 5, 7, 7, oito vezes 9
+/// (as faixas do mata-mata) e, para os outros quarenta, a faixa de oito em oito: 16, 24, 32, 40 e 48.
+const CQS4_LUGARES: [u8; 16] = [1, 2, 3, 3, 5, 5, 7, 7, 9, 9, 9, 9, 9, 9, 9, 9]; // cqs4: as posições previstas do mata-mata
+
+fn cqs4_lugar(k: usize) -> u8 {
+    if k < 16 { CQS4_LUGARES[k] } else { (16 + 8 * ((k - 16) / 8)) as u8 }
+}
+
+/// { 0x42f0a0 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::set_predicted_positions()`, as posições previstas da
+/// Série C (do construtor e da virada, depois dos grupos). Sem estatísticas (+8): a caixa da linha 0x4a2 e volta. A
+/// lista dos 56 (+0xee) é ordenada no lugar pela reputação (qsort 0x945333 com 0x4b07d0, a maior primeiro, nulos no
+/// fim) e cada clube, na ordem, ganha a posição prevista de `cqs4_lugar` (Comp_Stats::set_club_final_position 0x4a2540,
+/// thiscall(+8, clube, posição), ret 8; a original empurra a faixa dos quarenta num dword com o byte da faixa e lixo
+/// da pilha em cima; a 0x4a2540 só lê o byte: a cópia passa o byte limpo).
+unsafe extern "thiscall" fn cqs4_posicoes_previstas_da_serie_c(this: usize) {
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let posicao: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
+    if cqs4_d(this + 8) == 0 {
+        return aviso_em(0x98aba4, 0x4a2);
+    }
+    ordenar(cqs4_d(this + 0xee), 0x38, 4, 0x4b07d0); // cqs4: a lista dos 56 pela reputação
+    for k in 0..0x38usize {
+        posicao(cqs4_d(this + 8), cqs4_d(cqs4_d(this + 0xee) + 4 * k), cqs4_lugar(k) as u32);
+    }
+    crate::comparacao::ramo("cqs_4 posicoes previstas");
+}
+
+/// O comparador da final: só a original (aloca a tabela e a fase e sorteia a rodada), com o plano feito antes: os
+/// campeões dos grupos da terceira fase. Depois, a fase da vaga 10 existe, com +0x3e = 2, os dois na lista dela (como
+/// conjunto) e +0x30 = 10.
+unsafe extern "thiscall" fn comparar_cqs4_final_da_serie_c(this: usize) {
+    let (a, b) = (cqs4_primeiro(this, 8), cqs4_primeiro(this, 9));
+    orig::<unsafe extern "thiscall" fn(usize)>(2027)(this);
+    let fase = cqs4_d(cqs4_d(this + 0xc) + 0x28);
+    let igual = fase != 0 && {
+        let l = cqs4_d(fase + 0xa7);
+        let (x, y) = (cqs4_d(l), cqs4_d(l + 6));
+        cqs4_w(fase + 0x3e) == 2 && cqs4_d(this + 0x30) == 10 && ((x, y) == (a, b) || (x, y) == (b, a))
+    };
+    PLACAR.registrar(igual, || format!("cqs4_final_da_serie_c({:#x}) campeoes={:#x},{:#x} fase={:#x}", this, a, b, fase));
+}
+
+/// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia jogos, árbitros e
+/// grupos; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1, os sete grupos nas vagas 0 a 6 e a
+/// lista dos 56 zerada.
+unsafe extern "thiscall" fn comparar_cqs4_virada_da_serie_c(this: usize) -> u32 {
+    let antes = cqs4_w(this + 0x40);
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2028)(this);
+    let depois = cqs4_w(this + 0x40);
+    let igual = depois == antes.wrapping_add(1) && cqs4_d(this + 0xee) == 0 && (0..7).all(|g| cqs4_d(cqs4_d(this + 0xc) + 4 * g) != 0);
+    PLACAR.registrar(igual, || format!("cqs4_virada_da_serie_c({:#x}) ano antes={} depois={} +0xee={:#x}", this, antes, depois, cqs4_d(this + 0xee)));
+    r
+}
+
+/// O comparador das posições previstas: só a original (a 0x4a2540 acrescenta o registro de um clube que não tem; não
+/// pode rodar duas vezes), com o plano feito antes: a lista dos 56 ordenada pela mesma qsort numa cópia; depois, a
+/// lista da liga na mesma ordem e a posição (+0x72 do registro achado por 0x4a4850) de cada clube.
+unsafe extern "thiscall" fn comparar_cqs4_posicoes_previstas_da_serie_c(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2029);
+    if cqs4_d(this + 8) == 0 || cqs4_d(this + 0xee) == 0 {
+        return o(this);
+    }
+    let ordenar: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
+    let mut v = [0usize; 0x38];
+    for (k, c) in v.iter_mut().enumerate() {
+        *c = cqs4_d(cqs4_d(this + 0xee) + 4 * k);
+    }
+    ordenar(v.as_mut_ptr(), 0x38, 4, 0x4b07d0);
+    o(this);
+    let errado = (0..0x38).find(|&k| {
+        let e = if v[k] != 0 { achar(cqs4_d(this + 8), v[k]) } else { 0 };
+        cqs4_d(cqs4_d(this + 0xee) + 4 * k) != v[k] || e == 0 || *((e + 0x72) as *const u8) != cqs4_lugar(k)
+    });
+    PLACAR.registrar(errado.is_none(), || format!("cqs4_posicoes_previstas_da_serie_c({:#x}): a vaga {:?} não bate", this, errado));
+}
+
+// ---------- 283a leva: o Troféu da Liga inglesa (LDV Vans Trophy): os 56 clubes das duas chaves (Norte e Sul), a fase das chaves e a fase seguinte (eng_auto_cup.cpp) ----------
+
+unsafe fn cqs5_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const u32) as usize
+}
+
+unsafe fn cqs5_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqs5_pd(a: usize, v: usize) {
+    core::ptr::write_unaligned(a as *mut u32, v as u32)
+}
+
+/// O clube `c` está na competição de id [`g`] (+0x57 a divisão, ponteiro para o registro; +0 o id)?
+unsafe fn cqs5_na(c: usize, g: usize) -> bool {
+    let l = cqs5_d(c + 0x57);
+    l != 0 && cqs5_d(l) == cqs5_d(g)
+}
+
+/// Põe o clube `c` na vaga `k` da lista (+0xb2, relida a cada vez) e conta.
+unsafe fn cqs5_por(this: usize, k: &mut i32, c: usize) {
+    *k += 1;
+    cqs5_pd(cqs5_d(this + 0xb2) + (*k as usize - 1) * 4, c);
+}
+
+/// { 0x56b730 } (thiscall, ret 0, eng_auto_cup.cpp; da virada, n = 1 até 2002-06-01): `EngAutoCup::select_section_clubs()`:
+/// os 56 clubes do Troféu da Liga (+0xb6 = 0x38) numa lista (0x944e46 de 0xe0 em +0xb2; sem memória, a caixa da linha
+/// 0x24c e 0), em quatro passos, cada um até a lista encher (conta == +0xb6):
+/// 1) pela ordem da tabela dos clubes ([0xae23b4], [0xae235c] clubes), os das divisões [0x9cf5c4] e [0x9cf5c8] (a segunda
+///    e a terceira divisões inglesas [inferência]);
+/// 2) o primeiro clube da divisão [0x9cf69c] (a Conference [inferência]) que veio da [0x9cf5c8] (+0x5b, a divisão da
+///    temporada anterior [inferência]): o rebaixado; ele é lembrado (`achado`) para não entrar de novo;
+/// 3) se a nação da copa ([+4] +0x5d) tem o bit 4 em +0x11c, os clubes da [0x9cf69c] que já estavam nela (+0x5b), pela
+///    categoria +0x5f (com sinal): primeiro os de 6 ou menos, depois 7, 8... até encher; senão, até 30 clubes da
+///    [0x9cf69c] (fora o achado) e, faltando, os clubes ingleses (+0x53 = [0x9cf2e4]) fora da divisão genérica [0x9cf764]
+///    (entre os [0xae235c] − 2 × [0xae2350] primeiros), até 30, ordenados pela reputação com os 3 × faltam primeiros
+///    embaralhados (comp_util_sort_and_shuffle_top_clubs 0x4afbd0: push faltam; push quantos; push lista; add esp, 0xc
+///    -> cdecl; sorteia), e deles os primeiros que faltam.
+/// Cheia, a lista é ordenada pela latitude da cidade do estádio (qsort 0x945333 com 0x53fd40) e cada metade (a do Norte e
+/// a do Sul [inferência]) pela reputação, da menor para a maior (qsort com 0x4b0810); devolve 1. Sem encher, 0.
+unsafe fn cqs5_selecao(this: usize) -> u32 {
+    cqs5_pd(this + 0xb6, 0x38);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let l = alocar(0xe0);
+    cqs5_pd(this + 0xb2, l);
+    if l == 0 {
+        aviso_em(0x9c4180, 0x24c);
+        return 0;
+    }
+    let base = cqs5_d(0xae23b4);
+    let n = cqs5_d(0xae235c) as i32;
+    let cheia = |k: i32| k == cqs5_d(this + 0xb6) as i32;
+    let mut k = 0i32;
+    // 1) a segunda e a terceira divisões
+    let mut i: i16 = 0;
+    if n > 0 {
+        loop {
+            let c = base + i as u16 as usize * 0x245;
+            if cqs5_na(c, 0x9cf5c4) || cqs5_na(c, 0x9cf5c8) {
+                cqs5_por(this, &mut k, c);
+            }
+            if cheia(k) {
+                break;
+            }
+            i = i.wrapping_add(1);
+            if i as i32 >= n {
+                break;
+            }
+        }
+    }
+    // 2) o rebaixado da terceira divisão para a Conference
+    // ponytail: sem rebaixado a original compara depois com uma dword da pilha sem valor; a cópia usa 0 (nenhum clube)
+    let mut achado = 0usize;
+    let mut i: i16 = 0;
+    if n > 0 {
+        loop {
+            let c = base + i as u16 as usize * 0x245;
+            let antes = cqs5_d(c + 0x5b);
+            if cqs5_na(c, 0x9cf69c) && antes != 0 && cqs5_d(antes) == cqs5_d(0x9cf5c8) {
+                crate::comparacao::ramo("cqs_5 rebaixado para a conference");
+                cqs5_por(this, &mut k, c); // cqs5: o rebaixado entra
+                achado = c;
+                break;
+            }
+            if cheia(k) {
+                break;
+            }
+            i = i.wrapping_add(1);
+            if i as i32 >= n {
+                break;
+            }
+        }
+    }
+    let nacao = cqs5_d(cqs5_d(this + 4) + 0x5d);
+    if *((nacao + 0x11c) as *const u8) & 4 != 0 {
+        // 3a) a Conference pela categoria
+        let mut cat: i8 = 6;
+        if k < cqs5_d(this + 0xb6) as i32 {
+            loop {
+                let mut i: i16 = 0;
+                if n > 0 {
+                    loop {
+                        if k >= cqs5_d(this + 0xb6) as i32 {
+                            break;
+                        }
+                        let c = base + i as u16 as usize * 0x245;
+                        let antes = cqs5_d(c + 0x5b);
+                        if antes != 0 && cqs5_d(antes) == cqs5_d(0x9cf69c) && cqs5_na(c, 0x9cf69c) {
+                            let v = *((c + 0x5f) as *const i8);
+                            if ((cat == 6 && v <= cat) || v == cat) && c != 0 && c != achado {
+                                cqs5_por(this, &mut k, c);
+                            }
+                        }
+                        i = i.wrapping_add(1);
+                        if i as i32 >= n {
+                            break;
+                        }
+                    }
+                }
+                cat = cat.wrapping_add(1);
+                if k >= cqs5_d(this + 0xb6) as i32 {
+                    break;
+                }
+            }
+        }
+    } else {
+        // 3b) até 30 da Conference e, faltando, ingleses fora da divisão genérica; embaralhados
+        let mut local = [0usize; 0x1e];
+        let mut m: i8 = 0;
+        let mut i: i16 = 0;
+        if n > 0 {
+            loop {
+                let c = base + i as u16 as usize * 0x245;
+                if cqs5_na(c, 0x9cf69c) && achado != c {
+                    local[m as u8 as usize] = c;
+                    m = m.wrapping_add(1);
+                    if m == 0x1e {
+                        break;
+                    }
+                }
+                i = i.wrapping_add(1);
+                if i as i32 >= n {
+                    break;
+                }
+            }
+        }
+        if (m as i32) < cqs5_d(this + 0xb6) as i32 - k {
+            let lim = n.wrapping_sub((cqs5_d(0xae2350) as i32).wrapping_mul(2));
+            let mut j: i16 = 0;
+            if lim > 0 {
+                loop {
+                    let c = base + j as u16 as usize * 0x245;
+                    let nac = cqs5_d(c + 0x53);
+                    if nac != 0 && cqs5_d(nac) == cqs5_d(0x9cf2e4) && !cqs5_na(c, 0x9cf764) {
+                        local[m as u8 as usize] = c;
+                        m = m.wrapping_add(1);
+                        if m == 0x1e {
+                            break;
+                        }
+                    }
+                    j = j.wrapping_add(1);
+                    if j as i32 >= lim {
+                        break;
+                    }
+                }
+            }
+        }
+        let embaralhar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(0x4afbd0usize);
+        // ponytail: a original empurra as duas palavras em dwords com lixo nos 16 bits altos; a 0x4afbd0 lê as palavras
+        embaralhar(local.as_mut_ptr() as usize, m as i16 as u16 as u32, (cqs5_w(this + 0xb6).wrapping_sub(k as i16)) as u16 as u32);
+        let mut a: i16 = 0;
+        while k < cqs5_d(this + 0xb6) as i32 {
+            cqs5_por(this, &mut k, local[a as u16 as usize]);
+            a = a.wrapping_add(1);
+        }
+    }
+    if k != cqs5_d(this + 0xb6) as i32 {
+        return 0;
+    }
+    crate::comparacao::ramo("cqs_5 chaves do trofeu da liga");
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    ordenar(cqs5_d(this + 0xb2), cqs5_d(this + 0xb6) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude
+    let metade = (cqs5_d(this + 0xb6) as i32) / 2;
+    ordenar(cqs5_d(this + 0xb2), metade as u32, 4, 0x4b0810);
+    let metade = (cqs5_d(this + 0xb6) as i32) / 2;
+    ordenar(cqs5_d(this + 0xb2) + metade as usize * 4, metade as u32, 4, 0x4b0810);
+    1
+}
+
+unsafe extern "thiscall" fn cqs5_trofeu_clubes(this: usize) -> u32 {
+    cqs5_selecao(this)
+}
+
+/// Lado a lado a partir do mesmo estado (o sorteador, +0xb6, [0xb67a34]); a original deixa a lista dela em +0xb2, a cópia
+/// faz a sua (sem contar os sorteios), comparada nas +0xb6 vagas e liberada. Quando a original não acha o rebaixado (o
+/// caso em que ela lê a dword sem valor da pilha), só a original.
+unsafe extern "thiscall" fn comparar_cqs5_trofeu_clubes(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2030);
+    let base = cqs5_d(0xae23b4);
+    let tem_rebaixado = (0..cqs5_d(0xae235c) as i32).any(|i| {
+        let c = base + i as usize * 0x245;
+        let antes = cqs5_d(c + 0x5b);
+        cqs5_na(c, 0x9cf69c) && antes != 0 && cqs5_d(antes) == cqs5_d(0x9cf5c8)
+    });
+    if !tem_rebaixado {
+        return o(this);
+    }
+    let antes = cqs5_d(this + 0xb2);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(this + 0xb6, 4usize), (0xb67a34, 4)]);
+    let lo = core::cell::Cell::new(0usize);
+    let lr = core::cell::Cell::new(0usize);
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+        let r = o(this);
+        lo.set(cqs5_d(this + 0xb2));
+        cqs5_pd(this + 0xb2, antes);
+        r
+    }, || {
+        let r = crate::aleatorio::sem_contar(|| cqs5_selecao(this));
+        lr.set(cqs5_d(this + 0xb2));
+        cqs5_pd(this + 0xb2, lo.get());
+        r
+    });
+    let (lo, lr) = (lo.get(), lr.get());
+    let k = 4 * cqs5_d(this + 0xb6).min(0x38);
+    let lista = if lo != 0 && lr != 0 && a == 1 {
+        core::slice::from_raw_parts(lo as *const u8, k) == core::slice::from_raw_parts(lr as *const u8, k)
+    } else {
+        true
+    };
+    if lr != 0 && lr != lo {
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        soltar(lr);
+    }
+    PLACAR.registrar(igual && a == b && lista, || format!("cqs5_trofeu_clubes({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    a
+}
+
+/// { 0x56bab0 } (thiscall, ret 0, eng_auto_cup.cpp; quadro SEH só para o new, sem destrutor): `EngAutoCup::
+/// create_section_stage()`: a fase das chaves (Norte e Sul) com os +0x3e clubes da lista +0xb2, na ordem: um vetor
+/// (0x944e46 de 4 × +0x3e; sem memória, a caixa da linha 0x2e9) com eles; as rodadas pelo método +0x3c (push 0; push
+/// &extra; push &rodadas; push 0; mov ecx -> thiscall, ret 0x10); a fase (0x944cf1(0xb2); Cup_Stage::Cup_Stage 0x522e00,
+/// thiscall, ret 0x3c: a copa, +0x3e (word), o vetor, as rodadas (word), +4, a tabela, o ano +0x40 (word), 0, 1, o extra
+/// (word), +0x51 (byte), 0, 0, 0, sem sementes; os words e bytes vão com lixo em cima, que o construtor não lê) em
+/// [+0xc][0]; o vetor e a tabela liberados (0x9452ca). Sem fase, a caixa da linha 0x300; com ela, +0x30 = 0.
+unsafe extern "thiscall" fn cqs5_trofeu_fase_das_chaves(this: usize) {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let times = alocar(((cqs5_w(this + 0x3e) as i32) << 2) as u32);
+    if times == 0 {
+        return aviso_em(0x9c4180, 0x2e9);
+    }
+    let mut i = 0i32;
+    while i < cqs5_w(this + 0x3e) as i32 {
+        cqs5_pd(times + i as usize * 4, cqs5_d(cqs5_d(this + 0xb2) + i as usize * 4)); // cqs5: a ordem das chaves
+        i += 1;
+    }
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqs5_d(cqs5_d(this) + 0x3c));
+    let (mut rodadas, mut extra) = (0i16, 0i16);
+    let tabela = rodadas_da_copa(this, 0, &mut rodadas, &mut extra, 0);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let p = novo(0xb2);
+    let f = if p != 0 {
+        #[allow(clippy::type_complexity)]
+        let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
+            core::mem::transmute(0x522e00usize);
+        construir(p, this, cqs5_w(this + 0x3e) as u16 as u32, times, rodadas as u16 as u32, cqs5_d(this + 4), tabela, cqs5_w(this + 0x40) as u16 as u32, 0, 1,
+            extra as u16 as u32, *((this + 0x51) as *const u8) as u32, 0, 0, 0, core::ptr::null())
+    } else {
+        0
+    };
+    cqs5_pd(cqs5_d(this + 0xc), f);
+    soltar(times);
+    soltar(tabela);
+    if cqs5_d(cqs5_d(this + 0xc)) == 0 {
+        return aviso_em(0x9c4180, 0x300);
+    }
+    crate::comparacao::ramo("cqs_5 fase das chaves do trofeu");
+    cqs5_pd(this + 0x30, 0);
+}
+
+/// Só a original (aloca a fase), conferindo o plano: a fase em [+0xc][0] e +0x30 = 0.
+unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_das_chaves(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2031);
+    o(this);
+    let f = cqs5_d(cqs5_d(this + 0xc));
+    PLACAR.registrar(f != 0 && cqs5_d(this + 0x30) == 0, || format!("cqs5_trofeu_fase_das_chaves({:#x}) fase {:#x} +0x30 {}", this, f, cqs5_d(this + 0x30) as i32));
+}
+
+/// { 0x56bc50 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual +0x28): `EngAutoCup::advance_stage()`: na última fase
+/// (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x314 e nada mais; senão +0x30 sobe um e, ao chegar a 1 (o fim das
+/// chaves), monta a final (EngAutoCup::create_final_stage 0x56bce0, call direto com o ecx da copa -> thiscall, ret 0).
+unsafe extern "thiscall" fn cqs5_trofeu_fase_seguinte(this: usize) {
+    let fase = cqs5_d(this + 0x30) as i32;
+    if fase >= (cqs5_d(this + 0x2c) as i32).wrapping_sub(1) {
+        return aviso_em(0x9c4180, 0x314);
+    }
+    let fase = fase + 1;
+    cqs5_pd(this + 0x30, fase as usize);
+    if fase == 1 {
+        crate::comparacao::ramo("cqs_5 final do trofeu");
+        let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x56bce0usize);
+        f(this);
+    }
+}
+
+/// Só a original (a final aloca e sorteia), conferindo o plano: +0x30 sobe um fora da última fase e fica na última.
+unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_seguinte(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2032);
+    let antes = cqs5_d(this + 0x30) as i32;
+    let ultima = antes >= (cqs5_d(this + 0x2c) as i32).wrapping_sub(1);
+    o(this);
+    let depois = cqs5_d(this + 0x30) as i32;
+    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("cqs5_trofeu_fase_seguinte({:#x}) fase {} -> {}", this, antes, depois));
+}
+
+// ---------- 283a leva: o Troféu da Liga inglesa (LDV Vans Trophy): a final entre os campeões das duas chaves e a classificação final da copa nas estatísticas (eng_auto_cup.cpp) ----------
+
+unsafe fn cqs6_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const u32) as usize
+}
+
+unsafe fn cqs6_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqs6_pd(a: usize, v: usize) {
+    core::ptr::write_unaligned(a as *mut u32, v as u32)
+}
+
+/// O primeiro clube da lista de inscritos `l` (entradas de 6 bytes: +0 o clube, +5 a situação) com a situação `s`, entre
+/// as `n` primeiras (n = +0x3e da copa, word com sinal); sem ele, None.
+unsafe fn cqs6_vivo(l: usize, n: i32, s: u8) -> Option<usize> {
+    (0..n.max(0) as usize).find(|&i| *((l + i * 6 + 5) as *const u8) == s).map(|i| cqs6_d(l + i * 6))
+}
+
+/// { 0x56bce0 } (thiscall, ret 0, eng_auto_cup.cpp; da fase seguinte, quadro SEH só para o new, sem destrutor):
+/// `EngAutoCup::create_final_stage()`: a final do Troféu: um vetor de 2 (0x944e46 de 8; sem memória, a caixa da linha
+/// 0x337) com o primeiro clube de situação 1 (o que segue vivo [inferência]) da lista da copa (+0xa7) e o primeiro de
+/// situação 1 da lista da fase das chaves ([+0xc][0] +0xa7), ambos entre os +0x3e primeiros (da copa); as rodadas pelo
+/// método +0x3c (push 0; push &extra; push &rodadas; push 1; mov ecx -> thiscall, ret 0x10); a fase (0x944cf1(0xb2);
+/// Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a copa, 2, o vetor, as rodadas (word), +4, a tabela, o ano +0x40
+/// (word), 1, 1, o extra (word), 0x14, 0, 0, 0, sem sementes) em [+0xc][1]; a tabela das rodadas liberada (0x9452ca). Sem
+/// fase, a caixa da linha 0x35a (o vetor fica, como na original). Com ela, o sorteio da rodada (Cup::draw_round 0x51c410:
+/// push 0; mov ecx, fase -> thiscall, ret 4) e o vetor liberado.
+unsafe extern "thiscall" fn cqs6_trofeu_final(this: usize) {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let l = alocar(8);
+    if l == 0 {
+        return aviso_em(0x9c4180, 0x337);
+    }
+    if let Some(c) = cqs6_vivo(cqs6_d(this + 0xa7), cqs6_w(this + 0x3e) as i32, 1) { // cqs6: o finalista da copa
+        cqs6_pd(l, c);
+    }
+    if let Some(c) = cqs6_vivo(cqs6_d(cqs6_d(cqs6_d(this + 0xc)) + 0xa7), cqs6_w(this + 0x3e) as i32, 1) { // cqs6: o finalista das chaves
+        cqs6_pd(l + 4, c);
+    }
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqs6_d(cqs6_d(this) + 0x3c));
+    let (mut rodadas, mut extra) = (0i16, 0i16);
+    let tabela = rodadas_da_copa(this, 1, &mut rodadas, &mut extra, 0);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let p = novo(0xb2);
+    let f = if p != 0 {
+        #[allow(clippy::type_complexity)]
+        let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
+            core::mem::transmute(0x522e00usize);
+        construir(p, this, 2, l, rodadas as u16 as u32, cqs6_d(this + 4), tabela, cqs6_w(this + 0x40) as u16 as u32, 1, 1, // cqs6: o ano da final
+             extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+    } else {
+        0
+    };
+    cqs6_pd(cqs6_d(this + 0xc) + 4, f);
+    soltar(tabela);
+    let f = cqs6_d(cqs6_d(this + 0xc) + 4);
+    if f == 0 {
+        return aviso_em(0x9c4180, 0x35a);
+    }
+    crate::comparacao::ramo("cqs_6 final do trofeu");
+    let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c410usize);
+    sortear(f, 0); // cqs6: o sorteio da final
+    soltar(l);
+}
+
+/// Só a original (aloca a fase e sorteia), conferindo o plano: a fase em [+0xc][1] (com o vetor dos dois finalistas
+/// achados antes, quando há fase).
+unsafe extern "thiscall" fn comparar_cqs6_trofeu_final(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2033);
+    o(this);
+    let f = cqs6_d(cqs6_d(this + 0xc) + 4);
+    PLACAR.registrar(f != 0, || format!("cqs6_trofeu_final({:#x}) sem a fase da final", this));
+}
+
+/// { 0x56c010 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual da classificação final, n = 1 até 2002-06-01): `EngAutoCup::
+/// rank_teams()`: a posição final de cada clube nas estatísticas da copa (+8, Comp_Stats; sem elas, a caixa da linha 0x3bb).
+/// Um vetor de 2 × +0x3e ponteiros (0x944e46; sem memória, a caixa da linha 0x3c3): na primeira metade os clubes da lista
+/// da copa (+0xa7, entradas de 6 bytes), na segunda os da fase das chaves ([+0xc][0] +0xa7); cada metade ordenada pela
+/// reputação (+0x80, word), da maior para a menor (qsort 0x945333 com 0x4b07d0). Os dois primeiros (o de maior reputação
+/// de cada metade): o de reputação maior (com sinal, estritamente) fica em 1º e o outro em 2º (Comp_Stats::
+/// set_club_final_position 0x4a2540: push posição; push clube; mov ecx, +8 -> thiscall, ret 8). Depois, para cada metade,
+/// da última rodada (+0x3c − 1) para a primeira, tantos clubes (os seguintes da metade, a partir do 2º) quantos a rodada
+/// tem em +0x1a da tabela das rodadas (+0xa3, 0x68 bytes por rodada), com as posições 3, 5, 7... (a original empurra o
+/// dword do byte da posição com lixo da pilha em cima; a 0x4a2540 só lê o byte). O vetor é liberado.
+unsafe extern "thiscall" fn cqs6_trofeu_classificacao(this: usize) {
+    if cqs6_d(this + 8) == 0 {
+        return aviso_em(0x9c4180, 0x3bb);
+    }
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let v = alocar(((cqs6_w(this + 0x3e) as i32) << 3) as u32);
+    if v == 0 {
+        return aviso_em(0x9c4180, 0x3c3);
+    }
+    let mut d: i16 = 0;
+    while d < cqs6_w(this + 0x3e) {
+        let e = d as i32 as usize * 6;
+        cqs6_pd(v + d as i32 as usize * 4, cqs6_d(cqs6_d(this + 0xa7) + e));
+        let n = cqs6_w(this + 0x3e) as i32;
+        cqs6_pd(v + (n + d as i32) as usize * 4, cqs6_d(cqs6_d(cqs6_d(cqs6_d(this + 0xc)) + 0xa7) + e));
+        d = d.wrapping_add(1);
+    }
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let n = cqs6_w(this + 0x3e) as i32;
+    ordenar(v, n as u32, 4, 0x4b07d0);
+    let n = cqs6_w(this + 0x3e) as i32;
+    ordenar(v + n as usize * 4, n as u32, 4, 0x4b07d0);
+    let posicao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4a2540usize);
+    let a = cqs6_d(v);
+    let b = cqs6_d(v + cqs6_w(this + 0x3e) as i32 as usize * 4);
+    crate::comparacao::ramo("cqs_6 classificacao do trofeu");
+    if cqs6_w(a + 0x80) > cqs6_w(b + 0x80) {
+        posicao(cqs6_d(this + 8), a, 1);
+        posicao(cqs6_d(this + 8), cqs6_d(v + cqs6_w(this + 0x3e) as i32 as usize * 4), 2);
+    } else {
+        posicao(cqs6_d(this + 8), a, 2);
+        posicao(cqs6_d(this + 8), cqs6_d(v + cqs6_w(this + 0x3e) as i32 as usize * 4), 1);
+    }
+    for lado in 0..2u8 {
+        let mut k: i16 = if lado == 0 { 1 } else { cqs6_w(this + 0x3e).wrapping_add(1) };
+        let mut pos: u8 = 3;
+        let ultima = cqs6_w(this + 0x3c).wrapping_sub(1);
+        if ultima < 0 {
+            continue;
+        }
+        let mut r = ultima as i32;
+        while r >= 0 {
+            let p = pos;
+            let mut j: i16 = 0;
+            while j < cqs6_w(cqs6_d(this + 0xa3) + r as usize * 0x68 + 0x1a) {
+                let c = cqs6_d(v + k as i32 as usize * 4);
+                k = k.wrapping_add(1);
+                posicao(cqs6_d(this + 8), c, p as u32);
+                pos = pos.wrapping_add(2);
+                j = j.wrapping_add(1);
+            }
+            r -= 1;
+        }
+    }
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    soltar(v);
+}
+
+// ponytail: grava nas estatísticas da copa (Comp_Stats, que acha ou acrescenta a entrada do clube: aloca); só a original
+unsafe extern "thiscall" fn comparar_cqs6_trofeu_classificacao(this: usize) {
+    orig::<unsafe extern "thiscall" fn(usize)>(2034)(this)
+}
+
+// ---------- 283a leva: a fase de mata-mata das copas (Cup_Stage): o construtor (a tabela das rodadas copiada, os times com as sementes e a árvore dos confrontos) e o destrutor (cup_stage.cpp) ----------
+
+unsafe fn cqs7_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const u32) as usize
+}
+
+unsafe fn cqs7_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqs7_pd(a: usize, v: usize) {
+    core::ptr::write_unaligned(a as *mut u32, v as u32)
+}
+
+unsafe fn cqs7_pw(a: usize, v: u16) {
+    core::ptr::write_unaligned(a as *mut u16, v)
+}
+
+unsafe fn cqs7_pb(a: usize, v: u8) {
+    *(a as *mut u8) = v
+}
+
+/// { 0x522e00 } (thiscall, ret 0x3c, cup_stage.cpp; quadro SEH sem destrutor no caminho normal): `Cup_Stage::Cup_Stage(pai,
+/// n, times, rodadas, a5, modelo, ano, fase, b2, id, b3, arvore, por_ordem, a14, sementes)`: a base (Cup::Cup 0x518640,
+/// mov ecx -> thiscall, ret 0); +4 = a5; +0x40 = o ano (word); +0x44 = a fase, +0x42 = b2 (bytes); +0x30 = +0x2c = −1;
+/// +0x51 = b3; a vtable 0x969468; +0x43 = 1; +0xb1 = +0xab = +0xac = 0; +0x3c = as rodadas e +0x3a = o id (words);
+/// +0x49 e +0x4a copiados do pai; +0x28 = a14. A tabela das rodadas (0x944e46 de rodadas × 0x68 em +0xa3; sem memória, a
+/// caixa da linha 0x48) copiada do modelo; +0x3e = n e a lista dos times (calloc 0x945501(n, 6) em +0xa7; sem memória, a
+/// caixa da linha 0x53): cada time com a situação (+5) 0 e a semente (+4): a do vetor `sementes`, ou, sem ele, a posição
+/// na lista se `por_ordem`, ou 0. Por fim a árvore dos confrontos: com `arvore`, Cup_Stage::map_fixture_tree (0x5241e0),
+/// senão Cup::map_fixture_tree (0x518790), as duas thiscall, ret 0 (sorteiam); negativa, a caixa da linha 0x62 ou 0x6a.
+/// Devolve this.
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn cqs7_fase_de_copa(this: usize, pai: usize, n: u32, times: usize, rodadas: u32, a5: u32, modelo: usize, ano: u32, fase: u32, b2: u32,
+    id: u32, b3: u32, arvore: u32, por_ordem: u32, a14: u32, sementes: usize) -> usize {
+    const F: usize = 0x9b5944;
+    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
+    base(this);
+    cqs7_pd(this + 4, a5 as usize);
+    cqs7_pw(this + 0x40, ano as u16); // cqs7: o ano da fase
+    cqs7_pb(this + 0x42, b2 as u8);
+    cqs7_pb(this + 0x44, fase as u8);
+    cqs7_pd(this + 0x30, usize::MAX);
+    cqs7_pd(this + 0x2c, usize::MAX);
+    cqs7_pb(this + 0x51, b3 as u8);
+    cqs7_pd(this, 0x969468);
+    cqs7_pb(this + 0x43, 1);
+    cqs7_pb(this + 0xb1, 0);
+    cqs7_pb(this + 0xab, 0);
+    cqs7_pb(this + 0xac, 0);
+    cqs7_pw(this + 0x3c, rodadas as u16);
+    cqs7_pw(this + 0x3a, id as u16);
+    cqs7_pb(this + 0x49, *((pai + 0x49) as *const u8));
+    cqs7_pb(this + 0x4a, *((pai + 0x4a) as *const u8));
+    cqs7_pd(this + 0x28, a14 as usize);
+    let tamanho = (rodadas as u16 as i16 as i32 * 0x68) as u32;
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let t = alocar(tamanho);
+    cqs7_pd(this + 0xa3, t);
+    if t == 0 {
+        aviso_em(F, 0x48);
+        return this;
+    }
+    core::ptr::copy_nonoverlapping(modelo as *const u8, t as *mut u8, tamanho as usize);
+    cqs7_pw(this + 0x3e, n as u16);
+    let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
+    let l = zerada(n as u16 as i16 as i32 as u32, 6);
+    cqs7_pd(this + 0xa7, l);
+    if l == 0 {
+        aviso_em(F, 0x53);
+        return this;
+    }
+    crate::comparacao::ramo("cqs_7 fase de copa");
+    let m = cqs7_w(this + 0x3e) as i32;
+    let mut i = 0i32;
+    while i < m {
+        let e = i as usize * 6;
+        cqs7_pd(cqs7_d(this + 0xa7) + e, cqs7_d(times + i as usize * 4)); // cqs7: o time i
+        cqs7_pb(cqs7_d(this + 0xa7) + e + 5, 0);
+        let s = if sementes != 0 {
+            *((sementes + i as usize) as *const u8) // cqs7: a semente do vetor
+        } else if por_ordem != 0 {
+            i as u8
+        } else {
+            0
+        };
+        cqs7_pb(cqs7_d(this + 0xa7) + e + 4, s);
+        i += 1;
+    }
+    let (mapa, linha) = if arvore != 0 { (0x5241e0usize, 0x62) } else { (0x518790usize, 0x6a) };
+    let mapa: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(mapa);
+    if mapa(this) < 0 {
+        aviso_em(F, linha);
+    }
+    this
+}
+
+/// Só a original (a base, as alocações e a árvore, que sorteia: não roda duas vezes), conferindo o plano feito antes: devolve
+/// this, +0x3e = n, +0x3c = as rodadas, +0x40 = o ano, as duas tabelas montadas e, na lista, os mesmos clubes.
+#[allow(clippy::too_many_arguments)]
+unsafe extern "thiscall" fn comparar_cqs7_fase_de_copa(this: usize, pai: usize, n: u32, times: usize, rodadas: u32, a5: u32, modelo: usize, ano: u32, fase: u32, b2: u32,
+    id: u32, b3: u32, arvore: u32, por_ordem: u32, a14: u32, sementes: usize) -> usize {
+    #[allow(clippy::type_complexity)]
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize>(2035);
+    let k = (n as u16 as i16).max(0) as usize;
+    let plano: Vec<(usize, u8)> = (0..k).map(|i| {
+        let s = if sementes != 0 { *((sementes + i) as *const u8) } else if por_ordem != 0 { i as u8 } else { 0 };
+        (cqs7_d(times + i * 4), s)
+    }).collect();
+    let tamanho = (rodadas as u16 as i16 as i32 * 0x68).max(0) as usize;
+    let modelo_antes: Vec<u8> = core::slice::from_raw_parts(modelo as *const u8, tamanho).to_vec();
+    let r = o(this, pai, n, times, rodadas, a5, modelo, ano, fase, b2, id, b3, arvore, por_ordem, a14, sementes);
+    let l = cqs7_d(this + 0xa7);
+    let t = cqs7_d(this + 0xa3);
+    // a árvore (chamada no fim) reescreve partes da tabela das rodadas e da lista (na comparação de 06/11 as duas
+    // diferiam do que o construtor grava): confere os campos fixos, a tabela montada e o conjunto dos clubes da lista
+    let _ = &modelo_antes;
+    let ok = r == this && cqs7_w(this + 0x3e) as u16 == n as u16 && cqs7_w(this + 0x3c) as u16 == rodadas as u16 && cqs7_w(this + 0x40) as u16 == ano as u16
+        && t != 0 && l != 0 && {
+            let mut a: Vec<usize> = (0..plano.len()).map(|i| cqs7_d(l + i * 6)).collect();
+            let mut b: Vec<usize> = plano.iter().map(|x| x.0).collect();
+            a.sort_unstable();
+            b.sort_unstable();
+            a == b
+        };
+    PLACAR.registrar(ok, || format!("cqs7_fase_de_copa({:#x}) n={} rodadas={} ano={}", this, n as u16 as i16, rodadas as u16 as i16, ano as u16));
+    r
+}
+
+/// { 0x523300 } (thiscall, ret 0, cup_stage.cpp; o destrutor, chamado pelo destrutor virtual): `Cup_Stage::~Cup_Stage()`:
+/// a vtable 0x969468; a lista dos times (+0xa7), a tabela das rodadas (+0xa3) e, com os confrontos (+0xad), cada vetor de
+/// confrontos das +0x3c rodadas e o próprio vetor liberados (0x9452ca, cdecl; os ponteiros ficam); por fim a base
+/// (Cup::~Cup 0x518690, mov ecx -> thiscall, ret 0), cujo eax ela devolve.
+unsafe extern "thiscall" fn cqs7_fim_da_fase_de_copa(this: usize) -> usize {
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    cqs7_pd(this, 0x969468);
+    if cqs7_d(this + 0xa7) != 0 {
+        soltar(cqs7_d(this + 0xa7));
+    }
+    if cqs7_d(this + 0xa3) != 0 {
+        soltar(cqs7_d(this + 0xa3));
+    }
+    if cqs7_d(this + 0xad) != 0 {
+        let mut i = 0i32;
+        while i < cqs7_w(this + 0x3c) as i32 {
+            let p = cqs7_d(cqs7_d(this + 0xad) + i as usize * 4);
+            if p != 0 {
+                soltar(p);
+            }
+            i += 1;
+        }
+        soltar(cqs7_d(this + 0xad));
+    }
+    crate::comparacao::ramo("cqs_7 fim da fase de copa");
+    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518690usize);
+    base(this)
+}
+
+// ponytail: libera as tabelas e destrói a base; não pode rodar duas vezes: só a original
+unsafe extern "thiscall" fn comparar_cqs7_fim_da_fase_de_copa(this: usize) -> usize {
+    orig::<unsafe extern "thiscall" fn(usize) -> usize>(2036)(this)
+}
+
+// ---------- 283a leva: os mata-matas da Libertadores e da Merconorte: os classificados dos grupos e a fase seguinte (conmebol_liber.cpp, con_merc_cup.cpp) ----------
+
+unsafe fn cqs10_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const u32) as usize
+}
+
+unsafe fn cqs10_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqs10_pd(a: usize, v: usize) {
+    core::ptr::write_unaligned(a as *mut u32, v as u32)
+}
+
+/// Os classificados por grupo (+0xbe, byte com sinal).
+unsafe fn cqs10_vagas(this: usize) -> i32 {
+    *((this + 0xbe) as *const i8) as i32
+}
+
+/// O clube da linha i da tabela do grupo 1 (a da própria copa: +0xb1, linhas de 0x3b bytes).
+unsafe fn cqs10_do_grupo_um(this: usize, i: usize) -> usize {
+    cqs10_d(cqs10_d(this + 0xb1) + i * 0x3b) // cqs10: a linha do grupo 1
+}
+
+/// O clube da posição j da fase f ([+0xc][f], um League_Stage): a linha pela 0x6826d0 (League::get_table_row: push j;
+/// mov ecx, fase -> thiscall, ret 4) e o clube no +0 dela.
+unsafe fn cqs10_da_fase(this: usize, f: usize, j: i32) -> usize {
+    let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x6826d0usize);
+    let fase = cqs10_d(cqs10_d(this + 0xc) + f * 4);
+    cqs10_d(linha(fase, j)) // cqs10: a posição j da fase
+}
+
+/// O mata-mata depois dos grupos (o mesmo molde na Libertadores e na Merconorte, conferido instrução a instrução: mudam
+/// o tamanho da lista, as fases de grupo, a fase do mata-mata, o fonte e as linhas das caixas). A lista (0x944e46(4 ×
+/// times): push; add esp, 4 -> cdecl; sem memória, a caixa `linha_sem_lista` e volta) com os +0xbe primeiros do grupo 1
+/// (na ordem das linhas) e, de cada fase de grupo 0..`fases` − 1, os +0xbe primeiros (posições 0, 1...); a tabela das
+/// rodadas pela virtual +0x3c (push 0; push &id; push &rodadas; push `mata`; mov ecx, this -> thiscall, ret 0x10); a
+/// fase (0x944cf1(0xb2) push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a copa, `times`,
+/// a lista, as rodadas, +4, a tabela, o ano +0x40, `mata`, 2, o id, 0x14, 0, 0, 0 e nenhuma semente; a original empurra
+/// as rodadas, o id e o ano com lixo nos 16 bits altos, que o construtor não lê) em [+0xc][`mata`]; a lista e a tabela
+/// liberadas (0x9452ca). Sem fase: a caixa `linha_sem_fase`. Com ela: o sorteio da rodada 0 (0x51c410 Cup::draw_round:
+/// push 0; mov ecx, fase -> thiscall, ret 4). O quadro SEH da original só cobre o construtor (sem destrutor).
+unsafe fn cqs10_mata_mata(this: usize, times: u32, fases: usize, mata: u32, arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, ramo: &'static str) {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c410usize);
+    let lista = alocar(times * 4);
+    if lista == 0 {
+        return aviso_em(arquivo, linha_sem_lista);
+    }
+    let mut n = 0usize;
+    let mut i = 0i32;
+    while i < cqs10_vagas(this) {
+        cqs10_pd(lista + n * 4, cqs10_do_grupo_um(this, i as usize));
+        n += 1;
+        i += 1;
+    }
+    for f in 0..fases {
+        let mut j = 0i32;
+        while j < cqs10_vagas(this) {
+            crate::comparacao::ramo(ramo);
+            cqs10_pd(lista + n * 4, cqs10_da_fase(this, f, j)); // cqs10: os classificados de cada fase
+            n += 1;
+            j += 1;
+        }
+    }
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqs10_d(cqs10_d(this) + 0x3c));
+    let (mut rodadas, mut id) = (0i16, 0i16);
+    let tabela = rodadas_da_copa(this, mata, &mut rodadas, &mut id, 0);
+    let p = novo(0xb2);
+    let fase = if p != 0 {
+        #[allow(clippy::type_complexity)]
+        let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
+            core::mem::transmute(0x522e00usize);
+        construir(p, this, times, lista, rodadas as u16 as u32, cqs10_d(this + 4), tabela, cqs10_w(this + 0x40) as u16 as u32, mata, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+    } else {
+        0
+    };
+    cqs10_pd(cqs10_d(this + 0xc) + mata as usize * 4, fase);
+    soltar(lista);
+    soltar(tabela);
+    let f = cqs10_d(cqs10_d(this + 0xc) + mata as usize * 4);
+    if f == 0 {
+        return aviso_em(arquivo, linha_sem_fase);
+    }
+    sortear(f, 0);
+}
+
+/// O plano do mata-mata (o comparador roda só a original: a lista, a tabela e a fase são alocadas e a rodada é
+/// sorteada): os classificados lidos antes (o grupo 1 nas linhas, as fases pelas linhas da tabela +0xb1 delas, como a
+/// 0x6826d0); depois a fase em [+0xc][`mata`] com +0x3e = `times`, o +4 da copa e os clubes da lista dela (+0xa7, 6
+/// bytes) iguais aos do plano como conjunto (o sorteio pode reordenar).
+unsafe fn cqs10_comparar_mata_mata(nome: &str, this: usize, times: usize, fases: usize, mata: usize, original: impl FnOnce()) {
+    let q = cqs10_vagas(this).max(0) as usize;
+    let mut plano: Vec<usize> = (0..q).map(|i| cqs10_d(cqs10_d(this + 0xb1) + i * 0x3b)).collect();
+    for f in 0..fases {
+        let fase = cqs10_d(cqs10_d(this + 0xc) + f * 4);
+        for j in 0..q {
+            plano.push(cqs10_d(cqs10_d(fase + 0xb1) + j * 0x3b));
+        }
+    }
+    original();
+    let fase = cqs10_d(cqs10_d(this + 0xc) + mata * 4);
+    if fase == 0 {
+        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", nome, this));
+        return;
+    }
+    let lista = cqs10_d(fase + 0xa7);
+    let mut achou: Vec<usize> = (0..times).map(|k| cqs10_d(lista + 6 * k)).collect();
+    let (pl, ac) = (plano.clone(), achou.clone());
+    plano.sort_unstable();
+    achou.sort_unstable();
+    let igual = plano == achou && cqs10_w(fase + 0x3e) as usize == times && cqs10_d(fase + 4) == cqs10_d(this + 4);
+    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqs10_w(fase + 0x3e)));
+}
+
+/// { 0x4c3d10 } (thiscall, ret 0, conmebol_liber.cpp): `ConmebolLiber::create_knockout_stage()`, o mata-mata da
+/// Libertadores: os 16 (os 2 primeiros do grupo 1 e das 7 fases de grupo) na fase 7; caixas nas linhas 0x24c (sem
+/// lista) e 0x26a (sem fase).
+unsafe extern "thiscall" fn cqs10_libertadores_mata_mata(this: usize) {
+    cqs10_mata_mata(this, 0x10, 7, 7, 0x9a7de4, 0x24c, 0x26a, "cqs_10 classificados da libertadores");
+}
+
+unsafe extern "thiscall" fn comparar_cqs10_libertadores_mata_mata(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2037);
+    cqs10_comparar_mata_mata("cqs10_libertadores_mata_mata", this, 0x10, 7, 7, || o(this))
+}
+
+/// { 0x4c2330 } (thiscall, ret 0, con_merc_cup.cpp): `ConMercCup::create_semi_final_stage()`, as semifinais da
+/// Merconorte: os 4 (o primeiro do grupo 1 e das 3 fases de grupo) na fase 3; caixas nas linhas 0x21d (sem lista) e
+/// 0x23b (sem fase).
+unsafe extern "thiscall" fn cqs10_merconorte_semifinais(this: usize) {
+    cqs10_mata_mata(this, 4, 3, 3, 0x9a7d6c, 0x21d, 0x23b, "cqs_10 classificados da merconorte");
+}
+
+unsafe extern "thiscall" fn comparar_cqs10_merconorte_semifinais(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2038);
+    cqs10_comparar_mata_mata("cqs10_merconorte_semifinais", this, 4, 3, 3, || o(this))
+}
+
+/// { 0x4c20b0 } (thiscall, ret 0, con_merc_cup.cpp; a virtual +0x28): `ConMercCup::advance_stage()`, a fase seguinte da
+/// Merconorte: na última fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x1c7; senão +0x30 sobe e, chegando a 3
+/// (depois dos grupos), as semifinais (0x4c2330: mov ecx, this -> thiscall, ret 0).
+unsafe extern "thiscall" fn cqs10_merconorte_fase_seguinte(this: usize) {
+    let f = cqs10_d(this + 0x30) as i32;
+    if f >= (cqs10_d(this + 0x2c) as i32).wrapping_sub(1) {
+        return aviso_em(0x9a7d6c, 0x1c7);
+    }
+    let f = f + 1;
+    cqs10_pd(this + 0x30, f as usize);
+    if f == 3 { // cqs10: as semifinais da Merconorte depois dos grupos
+        crate::comparacao::ramo("cqs_10 semifinais da merconorte");
+        let semifinais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4c2330usize);
+        semifinais(this);
+    }
+}
+
+// ponytail: as semifinais (0x4c2330) alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um
+// (fora da última fase, que dá a caixa e não muda nada).
+unsafe extern "thiscall" fn comparar_cqs10_merconorte_fase_seguinte(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2039);
+    let f = cqs10_d(this + 0x30) as i32;
+    let ultima = f >= (cqs10_d(this + 0x2c) as i32).wrapping_sub(1);
+    o(this);
+    let depois = cqs10_d(this + 0x30) as i32;
+    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("cqs10_merconorte_fase_seguinte({:#x}) fase {} -> {}", this, f, depois));
+}
+
+// ---------- 283a leva: os convidados da Merconorte e a fase seguinte da Mercosul e da Copa América (con_merc_cup.cpp, conmebol_merc.cpp, goldcup.cpp) ----------
+
+unsafe fn cqs11_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const u32) as usize
+}
+
+unsafe fn cqs11_pd(a: usize, v: usize) {
+    core::ptr::write_unaligned(a as *mut u32, v as u32)
+}
+
+/// Os clubes de uma nação para a Merconorte: até 30, na ordem da tabela de clubes.
+struct Cqs11Nacao {
+    clubes: [usize; 30],
+    n: u8,
+}
+
+impl Cqs11Nacao {
+    fn novo() -> Self {
+        Cqs11Nacao { clubes: [0; 30], n: 0 }
+    }
+
+    fn por(&mut self, c: usize) {
+        if self.n < 0x1e {
+            self.clubes[self.n as usize] = c;
+            self.n += 1;
+        }
+    }
+}
+
+/// { 0x4c2560 } (thiscall, ret 0, con_merc_cup.cpp): `ConMercCup::select_invited_clubs()`: +0xf2 = 16 e a lista +0xee
+/// (0x944e46(0x40): push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x262 e devolve 0). Os clubes da tabela
+/// ([0xae23b4], 0x245 bytes, [0xae235c] deles; a primeira seleção, 0x53b900 database_is_national_team: push clube; add
+/// esp, 4 -> cdecl, encerra a busca) com nação (+0x53) vão, pelo id da nação (+0 dela), para as listas do México
+/// ([0x9cf3d0]), da Colômbia ([0x9cf29c]), do Peru ([0x9cf428]) e da Bolívia ([0x9cf254]), até 30 em cada; os de outra
+/// nação cuja liga (+0x57) é a [0x9cf590] (a MLS) vão para a lista da liga americana, até 12. Cada lista é ordenada pela
+/// reputação e tem a faixa de cima embaralhada (0x4afbd0 comp_util_sort_and_shuffle_top_clubs: push quantos; push a
+/// conta (word); push lista; add esp, 0xc -> cdecl; sorteia): México 4, Colômbia 5, Peru 3, Bolívia 2, a liga americana 2.
+/// A lista: nas vagas 2..5 os 4 primeiros do México, 6..10 os 5 da Colômbia, 11..13 os 3 do Peru, 14..15 os 2 da
+/// Bolívia; nas vagas 0 e 1, sem a competição da liga americana ([[0xadadfc] + 4 × [0x9cf728]] = 0) os 2 primeiros da
+/// lista dela; com ela, o campeão do último registro da competição [0x9cf590] (0xae23d0 + 0x6b × id) e o da competição
+/// +4 dela (0x4afd80 comp_util_get_latest_placed_club: push lugar; push competição; add esp -> cdecl), e, se forem o
+/// mesmo clube, o vice da primeira na vaga 0. A lista embaralhada (0x4afb40(lista, 16): push; push; add esp, 8 -> cdecl;
+/// 3 × 16 trocas sorteadas). Devolve 1.
+/// A original guarda as listas na pilha sem zerá-las: com menos clubes que as vagas, ela lê sobra; a cópia lê zero
+/// [inferência: nesta carreira as quatro nações e a MLS têm clubes que bastam; o comparador confere a lista].
+unsafe fn cqs11_convidados(this: usize) -> u32 {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(0x4afbd0usize);
+    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
+    let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x4afb40usize);
+    cqs11_pd(this + 0xf2, 0x10);
+    let americana = cqs11_d(cqs11_d(0xadadfc) + cqs11_d(0x9cf728) * 4);
+    let lista = alocar(0x40);
+    cqs11_pd(this + 0xee, lista);
+    if lista == 0 {
+        aviso_em(0x9a7d6c, 0x262);
+        return 0;
+    }
+    let (mut mexico, mut colombia, mut peru, mut bolivia) = (Cqs11Nacao::novo(), Cqs11Nacao::novo(), Cqs11Nacao::novo(), Cqs11Nacao::novo());
+    let mut mls = [0usize; 12];
+    let mut n_mls = 0i8;
+    let mut i = 0i32;
+    let mut c = cqs11_d(0xae23b4);
+    while i < cqs11_d(0xae235c) as i32 {
+        if selecao(c) != 0 {
+            break;
+        }
+        let nacao = cqs11_d(c + 0x53);
+        if nacao != 0 {
+            let id = cqs11_d(nacao);
+            if id == cqs11_d(0x9cf3d0) {
+                mexico.por(c);
+            } else if id == cqs11_d(0x9cf29c) {
+                colombia.por(c);
+            } else if id == cqs11_d(0x9cf428) {
+                peru.por(c);
+            } else if id == cqs11_d(0x9cf254) {
+                bolivia.por(c);
+            } else {
+                let liga = cqs11_d(c + 0x57);
+                if liga != 0 && cqs11_d(liga) == cqs11_d(0x9cf590) && n_mls < 0xc {
+                    mls[n_mls as usize] = c;
+                    n_mls += 1;
+                }
+            }
+        }
+        i += 1;
+        c += 0x245;
+    }
+    crate::comparacao::ramo("cqs_11 convidados da merconorte");
+    ordenar(mexico.clubes.as_mut_ptr() as usize, mexico.n as u32, 4); // cqs11: os 4 do México
+    ordenar(colombia.clubes.as_mut_ptr() as usize, colombia.n as u32, 5);
+    ordenar(peru.clubes.as_mut_ptr() as usize, peru.n as u32, 3);
+    ordenar(bolivia.clubes.as_mut_ptr() as usize, bolivia.n as u32, 2);
+    ordenar(mls.as_mut_ptr() as usize, n_mls as i16 as u16 as u32, 2);
+    let vaga = |k: usize, v: usize| cqs11_pd(cqs11_d(this + 0xee) + k * 4, v);
+    vaga(2, mexico.clubes[0]);
+    vaga(3, mexico.clubes[1]);
+    vaga(4, mexico.clubes[2]);
+    vaga(5, mexico.clubes[3]);
+    for k in 0..5 {
+        vaga(6 + k, colombia.clubes[k]);
+    }
+    for k in 0..3 {
+        vaga(11 + k, peru.clubes[k]);
+    }
+    vaga(14, bolivia.clubes[0]);
+    vaga(15, bolivia.clubes[1]);
+    if americana == 0 {
+        vaga(0, mls[0]);
+        vaga(1, mls[1]);
+    } else {
+        let registro = cqs11_d(0xae23d0) + cqs11_d(0x9cf590) * 0x6b;
+        crate::comparacao::ramo("cqs_11 campeao da liga americana");
+        vaga(0, colocado(registro, 0)); // cqs11: o campeão da liga americana
+        vaga(1, colocado(cqs11_d(americana + 4), 0));
+        let l = cqs11_d(this + 0xee);
+        if cqs11_d(l) == cqs11_d(l + 4) {
+            vaga(0, colocado(registro, 1));
+        }
+    }
+    embaralhar(cqs11_d(this + 0xee), 0x10);
+    1
+}
+
+unsafe extern "thiscall" fn cqs11_merconorte_convidados(this: usize) -> u32 {
+    cqs11_convidados(this)
+}
+
+/// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
+/// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 16 vagas e liberada. Os sorteios das listas
+/// das nações ficam na pilha de cada uma: só a lista final e o sorteador contam.
+unsafe extern "thiscall" fn comparar_cqs11_merconorte_convidados(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2040);
+    let lo = core::cell::Cell::new(0usize);
+    let lr = core::cell::Cell::new(0usize);
+    let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
+    let reg = [(this + 0xf2, 4usize), (0xb67a34, 4), a_[0], a_[1]];
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+        let r = o(this);
+        lo.set(cqs11_d(this + 0xee));
+        r
+    }, || {
+        let r = crate::aleatorio::sem_contar(|| cqs11_convidados(this));
+        lr.set(cqs11_d(this + 0xee));
+        cqs11_pd(this + 0xee, lo.get());
+        r
+    });
+    let (lo, lr) = (lo.get(), lr.get());
+    let lista = if lo != 0 && lr != 0 {
+        core::slice::from_raw_parts(lo as *const u8, 0x40) == core::slice::from_raw_parts(lr as *const u8, 0x40)
+    } else {
+        lo == 0 && lr == 0
+    };
+    if lr != 0 && lr != lo {
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        soltar(lr);
+    }
+    PLACAR.registrar(igual && a == b && lista, || format!("cqs11_merconorte_convidados({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    a
+}
+
+/// A fase seguinte de um torneio com grupos e mata-mata (`advance_stage`, a virtual +0x28): na última fase (+0x30 ≥
+/// +0x2c − 1, com sinal), a caixa da linha e volta; senão +0x30 sobe e, chegando a `mata`, o mata-mata (call direto com
+/// o ecx da copa -> thiscall, ret 0).
+unsafe fn cqs11_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata: i32, rotina: usize, ramo: &'static str) {
+    let f = cqs11_d(this + 0x30) as i32;
+    if f >= (cqs11_d(this + 0x2c) as i32).wrapping_sub(1) {
+        return aviso_em(arquivo, linha);
+    }
+    let f = f + 1;
+    cqs11_pd(this + 0x30, f as usize);
+    if f == mata {
+        crate::comparacao::ramo(ramo);
+        let m: unsafe extern "thiscall" fn(usize) = core::mem::transmute(rotina);
+        m(this);
+    }
+}
+
+// ponytail: o mata-mata aloca e sorteia: não roda duas vezes. Só a original; o plano: +0x30 sobe um (fora da última
+// fase, que dá a caixa e não muda nada).
+unsafe fn cqs11_comparar_fase_seguinte(nome: &str, this: usize, original: impl FnOnce()) {
+    let f = cqs11_d(this + 0x30) as i32;
+    let ultima = f >= (cqs11_d(this + 0x2c) as i32).wrapping_sub(1);
+    original();
+    let depois = cqs11_d(this + 0x30) as i32;
+    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("{}({:#x}) fase {} -> {}", nome, this, f, depois));
+}
+
+/// { 0x4c5140 } (thiscall, ret 0, conmebol_merc.cpp; a virtual +0x28): `ConmebolMerc::advance_stage()`, a fase seguinte
+/// da Mercosul: a caixa da linha 0x1d9 na última; chegando a 4 (depois dos 4 grupos-fase), as quartas (0x4c53d0).
+unsafe extern "thiscall" fn cqs11_mercosul_fase_seguinte(this: usize) {
+    cqs11_fase_seguinte(this, 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
+}
+
+unsafe extern "thiscall" fn comparar_cqs11_mercosul_fase_seguinte(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2041);
+    cqs11_comparar_fase_seguinte("cqs11_mercosul_fase_seguinte", this, || o(this))
+}
+
+/// { 0x5e1620 } (thiscall, ret 0, goldcup.cpp; a virtual +0x28): `GoldCup::advance_stage()`, a fase seguinte da Copa
+/// América: a caixa da linha 0x29d na última; chegando a 2 (depois dos 2 grupos-fase), o mata-mata (0x5e18a0).
+unsafe extern "thiscall" fn cqs11_copa_america_fase_seguinte(this: usize) {
+    cqs11_fase_seguinte(this, 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
+}
+
+unsafe extern "thiscall" fn comparar_cqs11_copa_america_fase_seguinte(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2042);
+    cqs11_comparar_fase_seguinte("cqs11_copa_america_fase_seguinte", this, || o(this))
+}
+
+// ---------- 283a leva: a Copa América: as 12 seleções, as posições previstas e a temporada nova (goldcup.cpp) ----------
+
+unsafe fn cqs12_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const u32) as usize
+}
+
+unsafe fn cqs12_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqs12_pd(a: usize, v: usize) {
+    core::ptr::write_unaligned(a as *mut u32, v as u32)
+}
+
+/// A seleção (o clube da seleção principal) da nação de id [`global`]: 0x53b3d0 database_get_national_team (push nação;
+/// add esp -> cdecl) com a nação da tabela [0xae23a8] (0x122 bytes cada).
+unsafe fn cqs12_selecao(id: usize) -> usize {
+    let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
+    selecao(cqs12_d(0xae23a8) + id * 0x122)
+}
+
+/// As 12 da Copa América de 2001, na ordem da lista (os grupos intercalados: A nas vagas 0, 3, 6 e 9; B nas 1, 4, 7 e
+/// 10; C nas 2, 5, 8 e 11): os globais dos ids das nações.
+const CQS12_DE_2001: [usize; 12] = [
+    0x9cf29c, 0x9cf260, 0x9cf2a8, 0x9cf294, // cqs12: as vagas 0 a 3 (a Colômbia na 0)
+    0x9cf3d0, 0x9cf33c, 0x9cf2d4, 0x9cf428, // cqs12: as vagas 4 a 7 (o México na 4, o Peru na 7)
+    0x9cf4f4, 0x9cf504, 0x9cf420, 0x9cf254, // cqs12: as vagas 8 a 11 (a Bolívia na 11)
+];
+
+/// { 0x5e1cd0 } (thiscall, ret 0, goldcup.cpp): `GoldCup::set_up_team_list()`: +0xf2 = 12 e a lista +0xee (0x944e46(0x30):
+/// push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x37b e devolve 0). Em 2001 (+0x40 = 0x7d1): as 12 fixas
+/// (CQS12_DE_2001, cada uma pela 0x53b3d0) e devolve 1, sem ordenar. Nos outros anos: as sedes da Copa América
+/// ([0x9cf7a8]) no ano (0x5fa730 HostCountry::find_hosts em [0xb5e134]: push 1; push &segunda; push &primeira; push ano;
+/// push competição -> thiscall, ret 0x14; as duas começam em −1; devolve quantas, byte com sinal) na frente; depois,
+/// pela ordem das nações ([0xae23a8], [0xae2350] delas, i como palavra) e enquanto a lista não enche (+0xf2), as do
+/// continente [0x9cfa1c] (+0x71, o +0 dele) e as convidadas: em 1999 (0x7cf) a [0x9cf36c], nos outros anos a [0x9cf280];
+/// e sempre o México ([0x9cf3d0]); cada uma entra se não é a nação de uma sede (+0x53 da seleção). Sem 12: a caixa da
+/// linha 0x3bc e devolve 0; com 12, a lista ordenada pela reputação (qsort 0x945333 com 0x4b07d0: 4 pushes; add esp ->
+/// cdecl) e devolve 1.
+unsafe fn cqs12_selecoes(this: usize) -> u32 {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
+    cqs12_pd(this + 0xf2, 0xc);
+    let lista = alocar(0x30);
+    cqs12_pd(this + 0xee, lista);
+    if lista == 0 {
+        aviso_em(0x9cd640, 0x37b);
+        return 0;
+    }
+    let ano = cqs12_w(this + 0x40) as u16;
+    if ano == 0x7d1 {
+        crate::comparacao::ramo("cqs_12 selecoes de 2001");
+        for (k, &g) in CQS12_DE_2001.iter().enumerate() {
+            cqs12_pd(cqs12_d(this + 0xee) + k * 4, cqs12_selecao(cqs12_d(g)));
+        }
+        return 1;
+    }
+    let sedes: unsafe extern "thiscall" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u32 = core::mem::transmute(0x5fa730usize);
+    let mut ids = [-1i32; 2];
+    let (a, b) = ids.split_at_mut(1);
+    // ponytail: a original empurra o eax com o ano nos 16 bits baixos e sobra nos altos; a 0x5fa730 só lê o word
+    let quantas = sedes(cqs12_d(0xb5e134), cqs12_d(0x9cf7a8), ano as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as u8 as i8;
+    let mut k = 0i16;
+    while k < quantas as i16 {
+        cqs12_pd(cqs12_d(this + 0xee) + k as usize * 4, cqs12_selecao(ids[k as usize] as usize));
+        k += 1;
+    }
+    let mut i = 0i16;
+    let mut nacao = cqs12_d(0xae23a8);
+    while (i as i32) < cqs12_d(0xae2350) as i32 && (k as i32) < cqs12_d(this + 0xf2) as i32 {
+        let continente = cqs12_d(nacao + 0x71);
+        let id = cqs12_d(nacao);
+        let entra = (continente != 0 && cqs12_d(continente) == cqs12_d(0x9cfa1c))
+            || (ano == 0x7cf && id == cqs12_d(0x9cf36c))
+            || (ano != 0x7cf && id == cqs12_d(0x9cf280))
+            || id == cqs12_d(0x9cf3d0);
+        if entra {
+            let l = cqs12_d(this + 0xee);
+            let sede = (0..quantas.max(0) as usize).any(|j| cqs12_d(cqs12_d(l + j * 4) + 0x53) == nacao);
+            if !sede {
+                cqs12_pd(cqs12_d(this + 0xee) + k as usize * 4, selecao(nacao));
+                k += 1;
+            }
+        }
+        i = i.wrapping_add(1);
+        nacao += 0x122;
+    }
+    if k as i32 != cqs12_d(this + 0xf2) as i32 {
+        aviso_em(0x9cd640, 0x3bc);
+        return 0;
+    }
+    ordenar(cqs12_d(this + 0xee), k as i32 as u32, 4, 0x4b07d0);
+    1
+}
+
+unsafe extern "thiscall" fn cqs12_copa_america_selecoes(this: usize) -> u32 {
+    cqs12_selecoes(this)
+}
+
+/// Lado a lado: o +0xf2 e o [0xb67a34] a partir do mesmo estado (nada sorteia); a original deixa a lista dela em +0xee, a
+/// cópia faz a sua, comparada nas 12 vagas e liberada.
+unsafe extern "thiscall" fn comparar_cqs12_copa_america_selecoes(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2043);
+    let lo = core::cell::Cell::new(0usize);
+    let lr = core::cell::Cell::new(0usize);
+    let reg = [(this + 0xf2, 4usize), (0xb67a34, 4)];
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+        let r = o(this);
+        lo.set(cqs12_d(this + 0xee));
+        r
+    }, || {
+        let r = cqs12_selecoes(this);
+        lr.set(cqs12_d(this + 0xee));
+        cqs12_pd(this + 0xee, lo.get());
+        r
+    });
+    let (lo, lr) = (lo.get(), lr.get());
+    let lista = if lo != 0 && lr != 0 {
+        a == 0 || core::slice::from_raw_parts(lo as *const u8, 0x30) == core::slice::from_raw_parts(lr as *const u8, 0x30)
+    } else {
+        lo == 0 && lr == 0
+    };
+    if lr != 0 && lr != lo {
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        soltar(lr);
+    }
+    PLACAR.registrar(igual && a == b && lista, || format!("cqs12_copa_america_selecoes({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    a
+}
+
+/// As posições previstas da Copa América, pela ordem de reputação das 12.
+const CQS12_PREVISTAS: [u32; 12] = [1, 2, 3, 3, 5, 5, 5, 5, 9, 0xa, 0xa, 0xa];
+
+/// { 0x5e2340 } (thiscall, ret 0, goldcup.cpp; a virtual +0x5c): `GoldCup::set_predicted_positions()`: sem estatística
+/// (+8), a caixa da linha 0x419 e volta; uma cópia da lista (0x944e46(+0xf2 × 4); sem memória, a caixa da linha 0x421 e
+/// volta), ordenada pela reputação (qsort 0x945333 com 0x4b07d0, +0xf2 itens), e a posição prevista de cada uma na
+/// estatística (0x4a2540 Comp_Stats::set_club_final_position: push posição; push clube; mov ecx, [+8] -> thiscall,
+/// ret 8): 1, 2, 3, 3, quatro 5, 9 e três 10 (as 12 primeiras da cópia); a cópia liberada (0x9452ca).
+unsafe extern "thiscall" fn cqs12_copa_america_previstas(this: usize) {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let posicao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4a2540usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    if cqs12_d(this + 8) == 0 {
+        return aviso_em(0x9cd640, 0x419);
+    }
+    let v = alocar((cqs12_d(this + 0xf2) << 2) as u32);
+    if v == 0 {
+        return aviso_em(0x9cd640, 0x421);
+    }
+    let n = cqs12_d(this + 0xf2) << 2;
+    core::ptr::copy_nonoverlapping(cqs12_d(this + 0xee) as *const u8, v as *mut u8, n);
+    ordenar(v, cqs12_d(this + 0xf2) as u32, 4, 0x4b07d0);
+    crate::comparacao::ramo("cqs_12 previstas da copa america");
+    for (k, &p) in CQS12_PREVISTAS.iter().enumerate() {
+        posicao(cqs12_d(this + 8), cqs12_d(v + k * 4), p);
+    }
+    soltar(v);
+}
+
+// ponytail: a estatística acha ou cria a entrada de cada seleção (aloca): não roda duas vezes. Só a original; o plano:
+// a lista ordenada pela reputação antes, e depois a posição (+0x72 da entrada, 0x4a4850 Comp_Stats::find_club_entry) de
+// cada uma das 12 igual à da faixa.
+unsafe extern "thiscall" fn comparar_cqs12_copa_america_previstas(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2044);
+    if cqs12_d(this + 8) == 0 || cqs12_d(this + 0xee) == 0 || cqs12_d(this + 0xf2) != 0xc {
+        return o(this);
+    }
+    let ordenar: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
+    let mut v: Vec<usize> = (0..12).map(|i| cqs12_d(cqs12_d(this + 0xee) + i * 4)).collect();
+    ordenar(v.as_mut_ptr(), 12, 4, 0x4b07d0);
+    o(this);
+    let errado = (0..12).find(|&k| {
+        let e = if v[k] != 0 { achar(cqs12_d(this + 8), v[k]) } else { 0 };
+        e == 0 || *((e + 0x72) as *const u8) as u32 != CQS12_PREVISTAS[k]
+    });
+    PLACAR.registrar(errado.is_none(), || format!("cqs12_copa_america_previstas: a posição prevista da vaga {:?} não bate", errado));
+}
+
+/// { 0x5e1530 } (thiscall, ret 0, goldcup.cpp; a virtual +8): `GoldCup::start_new_season()`, a Copa América seguinte:
+/// +0x4c = 0, a tabela da copa liberada (0x687970 League::free_table: push 0; mov ecx, this -> thiscall, ret 4), a
+/// tabela das rodadas +0xba liberada (0x9452ca) e zerada, a temporada arquivada na estatística (0x4a1c50
+/// Comp_Stats::archive_season_and_reset: push 1; mov ecx, [+8] -> thiscall, ret 4), as fases 0..+0x30 destruídas (a
+/// virtual 0 de cada uma com 1: o destrutor que libera), o ano +0x40 sobe 2, +0x45 = 0, +0x30 = −1 e as regras de novo
+/// (a virtual +0x8c, thiscall, ret 0; 0: a caixa da linha 0x28b).
+unsafe extern "thiscall" fn cqs12_copa_america_temporada_nova(this: usize) {
+    let soltar_tabela: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x687970usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
+    cqs12_pd(this + 0x4c, 0);
+    soltar_tabela(this, 0);
+    if cqs12_d(this + 0xba) != 0 {
+        soltar(cqs12_d(this + 0xba));
+        cqs12_pd(this + 0xba, 0);
+    }
+    if cqs12_d(this + 8) != 0 {
+        arquivar(cqs12_d(this + 8), 1);
+    }
+    if (cqs12_d(this + 0x30) as i32) >= 0 {
+        let mut i = 0i32;
+        loop {
+            let f = cqs12_d(cqs12_d(this + 0xc) + i as usize * 4);
+            if f != 0 {
+                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(cqs12_d(cqs12_d(f)));
+                destruir(f, 1);
+            }
+            i += 1;
+            if i > cqs12_d(this + 0x30) as i32 {
+                break;
+            }
+        }
+    }
+    crate::comparacao::ramo("cqs_12 temporada nova da copa america");
+    core::ptr::write_unaligned((this + 0x40) as *mut i16, cqs12_w(this + 0x40).wrapping_add(2)); // cqs12: a Copa América a cada 2 anos
+    cqs12_pd(this + 0x45, 0);
+    cqs12_pd(this + 0x30, usize::MAX);
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqs12_d(cqs12_d(this) + 0x8c));
+    if regras(this) == 0 {
+        aviso_em(0x9cd640, 0x28b);
+    }
+}
+
+// ponytail: libera as tabelas e destrói as fases: não roda duas vezes. Só a original; o plano: o ano sobe 2, +0x45 = 0,
+// +0x30 = −1, +0xba = 0 e +0x4c = 0 (as regras gravam a tabela das rodadas de novo em +0xba: conferida só que existe
+// quando havia antes).
+unsafe extern "thiscall" fn comparar_cqs12_copa_america_temporada_nova(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2045);
+    let ano = cqs12_w(this + 0x40);
+    o(this);
+    let ok = cqs12_w(this + 0x40) == ano.wrapping_add(2) && cqs12_d(this + 0x45) == 0 && cqs12_d(this + 0x30) as i32 == -1 && cqs12_d(this + 0x4c) == 0;
+    PLACAR.registrar(ok, || format!("cqs12_copa_america_temporada_nova({:#x}): ano {} -> {}, +0x45 {}, +0x30 {}", this, ano, cqs12_w(this + 0x40), cqs12_d(this + 0x45), cqs12_d(this + 0x30) as i32));
+}
+
+// ---------- 283a leva: os construtores dos estaduais: Baiano, Centro-Oeste e Gaúcho (as regras, a tabela, os jogos, as estatísticas e as posições previstas na criação) (bra_reg_bahia.cpp, bra_reg_central.cpp, bra_reg_gaucho.cpp) ----------
+
+unsafe fn cqt1_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+/// Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
+/// final; o vetor [+0xc] = malloc de 4 × fases), as regras (thiscall, ret 0), a tabela (thiscall, ret 0), as posições
+/// previstas (thiscall, ret 0), o fonte e as linhas das caixas (regras, tabela, jogos, ordem, estatísticas).
+struct Cqt1Estadual {
+    vtabela: usize,
+    fases: u32,
+    regras: usize,
+    tabela: usize,
+    previstas: usize,
+    arquivo: usize,
+    linhas: [u32; 5],
+}
+
+/// O construtor de um estadual (o mesmo molde de 544 bytes nos doze, conferido instrução a instrução: só mudam a
+/// vtable, as fases, as três rotinas próprias, o fonte e as linhas). League::League (0x682200, thiscall, ret 0); +4 = o
+/// registro da competição; a vtable; o ano (+0x40, word) = `ano`; a regra de disciplina (+0x50) = 7. Se o estado
+/// salvo carrega (League::load_from_temp_file 0x687b10, thiscall(this, 1), ret 4; devolve ≠ 0), devolve this. Senão
+/// (a carreira nova): +0x51 = 0xf (a importância), +0x44 = 0xff, +0x30 = −1, +0x2c = as fases e o vetor delas (malloc
+/// 0x944e46, sem conferir); então, cada um com a sua caixa (e devolvendo this) se devolver 0: as regras, a tabela, os
+/// jogos (League::create_fixtures 0x6835c0, thiscall, ret 0) e a ordem (League::sort_table 0x6827d0, thiscall(this,
+/// 0), ret 4); as estatísticas (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo,
+/// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
+#[allow(clippy::too_many_arguments)]
+unsafe fn cqt1_construir(this: usize, ano: u32, registro: usize, e: &Cqt1Estadual, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
+    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
+    let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x687b10usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.regras);
+    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.tabela);
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
+    let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x6827d0usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let estatisticas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x49ee70usize);
+    let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.previstas);
+    base(this);
+    core::ptr::write_unaligned((this + 4) as *mut usize, registro);
+    core::ptr::write_unaligned(this as *mut usize, e.vtabela);
+    core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
+    *((this + 0x50) as *mut u8) = disciplina;
+    if carregar(this, 1) != 0 {
+        return this;
+    }
+    crate::comparacao::ramo(ramo);
+    *((this + 0x51) as *mut u8) = 0xf;
+    *((this + 0x44) as *mut u8) = 0xff;
+    core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
+    core::ptr::write_unaligned((this + 0x2c) as *mut u32, e.fases);
+    let v = alocar(e.fases * 4);
+    core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
+    if regras(this) == 0 {
+        aviso_em(e.arquivo, e.linhas[0]);
+        return this;
+    }
+    if tabela(this) == 0 {
+        aviso_em(e.arquivo, e.linhas[1]);
+        return this;
+    }
+    if jogos(this) == 0 {
+        aviso_em(e.arquivo, e.linhas[2]);
+        return this;
+    }
+    if ordenar(this, 0) == 0 {
+        aviso_em(e.arquivo, e.linhas[3]);
+        return this;
+    }
+    let n = novo(0x5ce);
+    let s = if n != 0 { estatisticas(n, this) } else { 0 };
+    core::ptr::write_unaligned((this + 8) as *mut usize, s);
+    if s == 0 {
+        aviso_em(e.arquivo, e.linhas[4]);
+        return this;
+    }
+    if previstas_sim {
+        previstas(this);
+    }
+    this
+}
+
+/// O comparador dos três: alocam e sorteiam os jogos: só a original, conferindo o que ela grava: a devolução, a
+/// vtable, o ano, o registro e a disciplina; na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c, o vetor das
+/// fases e a importância +0x51 = 0xf.
+unsafe fn cqt1_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt1Estadual, original: impl FnOnce() -> usize) -> usize {
+    let r = original();
+    let mut ok = r == this && cqt1_d(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
+        && cqt1_d(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
+    if *((this + 0x44) as *const u8) == 0xff && cqt1_d(this + 8) != 0 {
+        ok = ok && cqt1_d(this + 0x2c) == e.fases as usize && cqt1_d(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
+    }
+    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt1_d(this), cqt1_d(this + 0x2c), cqt1_d(this + 0xc), cqt1_d(this + 8)));
+    r
+}
+
+const CQT1_BAIANO: Cqt1Estadual = Cqt1Estadual {
+    vtabela: 0x967fb4,
+    fases: 1,
+    regras: 0x43bc70,
+    tabela: 0x42fd10,
+    previstas: 0x430340,
+    arquivo: 0x98acac,
+    linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
+};
+
+const CQT1_CENTRO_OESTE: Cqt1Estadual = Cqt1Estadual {
+    vtabela: 0x968068,
+    fases: 1,
+    regras: 0x430ff0,
+    tabela: 0x430ef0,
+    previstas: 0x431610,
+    arquivo: 0x98ae10,
+    linhas: [0x4c, 0x53, 0x59, 0x60, 0x67],
+};
+
+const CQT1_GAUCHO: Cqt1Estadual = Cqt1Estadual {
+    vtabela: 0x96811c,
+    fases: 1,
+    regras: 0x4322d0,
+    tabela: 0x4321d0,
+    previstas: 0x432980,
+    arquivo: 0x98ae50,
+    linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
+};
+
+/// { 0x42f2d0 } (thiscall, ret 8, bra_reg_bahia.cpp): `BraRegBahia::BraRegBahia(ano, registro)`: o Baiano (uma fase além da liga).
+unsafe extern "thiscall" fn cqt1_construir_baiano(this: usize, ano: u32, registro: usize) -> usize {
+    cqt1_construir(this, ano, registro, &CQT1_BAIANO, 7, true, "cqt_1 baiano novo") // cqt1: a disciplina e as posições previstas do Baiano
+}
+
+/// { 0x4304b0 } (thiscall, ret 8, bra_reg_central.cpp): `BraRegCentral::BraRegCentral(ano, registro)`: o Centro-Oeste (uma fase além da liga).
+unsafe extern "thiscall" fn cqt1_construir_centro_oeste(this: usize, ano: u32, registro: usize) -> usize {
+    cqt1_construir(this, ano, registro, &CQT1_CENTRO_OESTE, 7, true, "cqt_1 centro_oeste novo") // cqt1: a disciplina e as posições previstas do Centro-Oeste
+}
+
+/// { 0x4317c0 } (thiscall, ret 8, bra_reg_gaucho.cpp): `BraRegGaucho::BraRegGaucho(ano, registro)`: o Gaúcho (uma fase além da liga).
+unsafe extern "thiscall" fn cqt1_construir_gaucho(this: usize, ano: u32, registro: usize) -> usize {
+    cqt1_construir(this, ano, registro, &CQT1_GAUCHO, 7, true, "cqt_1 gaucho novo") // cqt1: a disciplina e as posições previstas do Gaúcho
+}
+
+unsafe extern "thiscall" fn comparar_cqt1_construir_baiano(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2046);
+    cqt1_comparar("cqt1_construir_baiano", this, ano, registro, &CQT1_BAIANO, || o(this, ano, registro))
+}
+
+unsafe extern "thiscall" fn comparar_cqt1_construir_centro_oeste(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2047);
+    cqt1_comparar("cqt1_construir_centro_oeste", this, ano, registro, &CQT1_CENTRO_OESTE, || o(this, ano, registro))
+}
+
+unsafe extern "thiscall" fn comparar_cqt1_construir_gaucho(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2048);
+    cqt1_comparar("cqt1_construir_gaucho", this, ano, registro, &CQT1_GAUCHO, || o(this, ano, registro))
+}
+
+// ---------- 283a leva: os construtores dos estaduais: Goiano, Mineiro e Norte (as regras, a tabela, os jogos, as estatísticas e as posições previstas na criação) (bra_reg_goias.cpp, bra_reg_minas_gerais.cpp, bra_reg_north.cpp) ----------
+
+unsafe fn cqt2_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+/// Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
+/// final; o vetor [+0xc] = malloc de 4 × fases), as regras (thiscall, ret 0), a tabela (thiscall, ret 0), as posições
+/// previstas (thiscall, ret 0), o fonte e as linhas das caixas (regras, tabela, jogos, ordem, estatísticas).
+struct Cqt2Estadual {
+    vtabela: usize,
+    fases: u32,
+    regras: usize,
+    tabela: usize,
+    previstas: usize,
+    arquivo: usize,
+    linhas: [u32; 5],
+}
+
+/// O construtor de um estadual (o mesmo molde de 544 bytes nos doze, conferido instrução a instrução: só mudam a
+/// vtable, as fases, as três rotinas próprias, o fonte e as linhas). League::League (0x682200, thiscall, ret 0); +4 = o
+/// registro da competição; a vtable; o ano (+0x40, word) = `ano`; a regra de disciplina (+0x50) = 7. Se o estado
+/// salvo carrega (League::load_from_temp_file 0x687b10, thiscall(this, 1), ret 4; devolve ≠ 0), devolve this. Senão
+/// (a carreira nova): +0x51 = 0xf (a importância), +0x44 = 0xff, +0x30 = −1, +0x2c = as fases e o vetor delas (malloc
+/// 0x944e46, sem conferir); então, cada um com a sua caixa (e devolvendo this) se devolver 0: as regras, a tabela, os
+/// jogos (League::create_fixtures 0x6835c0, thiscall, ret 0) e a ordem (League::sort_table 0x6827d0, thiscall(this,
+/// 0), ret 4); as estatísticas (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo,
+/// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
+#[allow(clippy::too_many_arguments)]
+unsafe fn cqt2_construir(this: usize, ano: u32, registro: usize, e: &Cqt2Estadual, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
+    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
+    let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x687b10usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.regras);
+    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.tabela);
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
+    let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x6827d0usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let estatisticas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x49ee70usize);
+    let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.previstas);
+    base(this);
+    core::ptr::write_unaligned((this + 4) as *mut usize, registro);
+    core::ptr::write_unaligned(this as *mut usize, e.vtabela);
+    core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
+    *((this + 0x50) as *mut u8) = disciplina;
+    if carregar(this, 1) != 0 {
+        return this;
+    }
+    crate::comparacao::ramo(ramo);
+    *((this + 0x51) as *mut u8) = 0xf;
+    *((this + 0x44) as *mut u8) = 0xff;
+    core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
+    core::ptr::write_unaligned((this + 0x2c) as *mut u32, e.fases);
+    let v = alocar(e.fases * 4);
+    core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
+    if regras(this) == 0 {
+        aviso_em(e.arquivo, e.linhas[0]);
+        return this;
+    }
+    if tabela(this) == 0 {
+        aviso_em(e.arquivo, e.linhas[1]);
+        return this;
+    }
+    if jogos(this) == 0 {
+        aviso_em(e.arquivo, e.linhas[2]);
+        return this;
+    }
+    if ordenar(this, 0) == 0 {
+        aviso_em(e.arquivo, e.linhas[3]);
+        return this;
+    }
+    let n = novo(0x5ce);
+    let s = if n != 0 { estatisticas(n, this) } else { 0 };
+    core::ptr::write_unaligned((this + 8) as *mut usize, s);
+    if s == 0 {
+        aviso_em(e.arquivo, e.linhas[4]);
+        return this;
+    }
+    if previstas_sim {
+        previstas(this);
+    }
+    this
+}
+
+/// O comparador dos três: alocam e sorteiam os jogos: só a original, conferindo o que ela grava: a devolução, a
+/// vtable, o ano, o registro e a disciplina; na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c, o vetor das
+/// fases e a importância +0x51 = 0xf.
+unsafe fn cqt2_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt2Estadual, original: impl FnOnce() -> usize) -> usize {
+    let r = original();
+    let mut ok = r == this && cqt2_d(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
+        && cqt2_d(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
+    if *((this + 0x44) as *const u8) == 0xff && cqt2_d(this + 8) != 0 {
+        ok = ok && cqt2_d(this + 0x2c) == e.fases as usize && cqt2_d(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
+    }
+    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt2_d(this), cqt2_d(this + 0x2c), cqt2_d(this + 0xc), cqt2_d(this + 8)));
+    r
+}
+
+const CQT2_GOIANO: Cqt2Estadual = Cqt2Estadual {
+    vtabela: 0x9681d0,
+    fases: 1,
+    regras: 0x433640,
+    tabela: 0x433540,
+    previstas: 0x433b40,
+    arquivo: 0x98ae90,
+    linhas: [0x4c, 0x53, 0x59, 0x60, 0x67],
+};
+
+const CQT2_MINEIRO: Cqt2Estadual = Cqt2Estadual {
+    vtabela: 0x968284,
+    fases: 3,
+    regras: 0x43a600,
+    tabela: 0x434810,
+    previstas: 0x434f80,
+    arquivo: 0x98aed0,
+    linhas: [0x4e, 0x55, 0x5b, 0x62, 0x69],
+};
+
+const CQT2_NORTE: Cqt2Estadual = Cqt2Estadual {
+    vtabela: 0x968338,
+    fases: 1,
+    regras: 0x439430,
+    tabela: 0x435d80,
+    previstas: 0x436280,
+    arquivo: 0x98af14,
+    linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
+};
+
+/// { 0x432b50 } (thiscall, ret 8, bra_reg_goias.cpp): `BraRegGoias::BraRegGoias(ano, registro)`: o Goiano (uma fase além da liga).
+unsafe extern "thiscall" fn cqt2_construir_goiano(this: usize, ano: u32, registro: usize) -> usize {
+    cqt2_construir(this, ano, registro, &CQT2_GOIANO, 7, true, "cqt_2 goiano novo") // cqt2: a disciplina e as posições previstas do Goiano
+}
+
+/// { 0x433d50 } (thiscall, ret 8, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::BraRegMinasGerais(ano, registro)`: o Mineiro (três fases além da liga).
+unsafe extern "thiscall" fn cqt2_construir_mineiro(this: usize, ano: u32, registro: usize) -> usize {
+    cqt2_construir(this, ano, registro, &CQT2_MINEIRO, 7, true, "cqt_2 mineiro novo") // cqt2: a disciplina e as posições previstas do Mineiro
+}
+
+/// { 0x435340 } (thiscall, ret 8, bra_reg_north.cpp): `BraRegNorth::BraRegNorth(ano, registro)`: o Norte (uma fase além da liga).
+unsafe extern "thiscall" fn cqt2_construir_norte(this: usize, ano: u32, registro: usize) -> usize {
+    cqt2_construir(this, ano, registro, &CQT2_NORTE, 7, true, "cqt_2 norte novo") // cqt2: a disciplina e as posições previstas do Norte
+}
+
+unsafe extern "thiscall" fn comparar_cqt2_construir_goiano(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2049);
+    cqt2_comparar("cqt2_construir_goiano", this, ano, registro, &CQT2_GOIANO, || o(this, ano, registro))
+}
+
+unsafe extern "thiscall" fn comparar_cqt2_construir_mineiro(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2050);
+    cqt2_comparar("cqt2_construir_mineiro", this, ano, registro, &CQT2_MINEIRO, || o(this, ano, registro))
+}
+
+unsafe extern "thiscall" fn comparar_cqt2_construir_norte(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2051);
+    cqt2_comparar("cqt2_construir_norte", this, ano, registro, &CQT2_NORTE, || o(this, ano, registro))
+}
+
+// ---------- 283a leva: os construtores dos estaduais: Nordeste, Paranaense e Pernambucano (as regras, a tabela, os jogos, as estatísticas e as posições previstas na criação) (bra_reg_northeast.cpp, bra_reg_parana.cpp, bra_reg_pern.cpp) ----------
+
+unsafe fn cqt3_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+/// Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
+/// final; o vetor [+0xc] = malloc de 4 × fases), as regras (thiscall, ret 0), a tabela (thiscall, ret 0), as posições
+/// previstas (thiscall, ret 0), o fonte e as linhas das caixas (regras, tabela, jogos, ordem, estatísticas).
+struct Cqt3Estadual {
+    vtabela: usize,
+    fases: u32,
+    regras: usize,
+    tabela: usize,
+    previstas: usize,
+    arquivo: usize,
+    linhas: [u32; 5],
+}
+
+/// O construtor de um estadual (o mesmo molde de 544 bytes nos doze, conferido instrução a instrução: só mudam a
+/// vtable, as fases, as três rotinas próprias, o fonte e as linhas). League::League (0x682200, thiscall, ret 0); +4 = o
+/// registro da competição; a vtable; o ano (+0x40, word) = `ano`; a regra de disciplina (+0x50) = 7. Se o estado
+/// salvo carrega (League::load_from_temp_file 0x687b10, thiscall(this, 1), ret 4; devolve ≠ 0), devolve this. Senão
+/// (a carreira nova): +0x51 = 0xf (a importância), +0x44 = 0xff, +0x30 = −1, +0x2c = as fases e o vetor delas (malloc
+/// 0x944e46, sem conferir); então, cada um com a sua caixa (e devolvendo this) se devolver 0: as regras, a tabela, os
+/// jogos (League::create_fixtures 0x6835c0, thiscall, ret 0) e a ordem (League::sort_table 0x6827d0, thiscall(this,
+/// 0), ret 4); as estatísticas (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo,
+/// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
+#[allow(clippy::too_many_arguments)]
+unsafe fn cqt3_construir(this: usize, ano: u32, registro: usize, e: &Cqt3Estadual, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
+    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
+    let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x687b10usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.regras);
+    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.tabela);
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
+    let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x6827d0usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let estatisticas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x49ee70usize);
+    let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.previstas);
+    base(this);
+    core::ptr::write_unaligned((this + 4) as *mut usize, registro);
+    core::ptr::write_unaligned(this as *mut usize, e.vtabela);
+    core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
+    *((this + 0x50) as *mut u8) = disciplina;
+    if carregar(this, 1) != 0 {
+        return this;
+    }
+    crate::comparacao::ramo(ramo);
+    *((this + 0x51) as *mut u8) = 0xf;
+    *((this + 0x44) as *mut u8) = 0xff;
+    core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
+    core::ptr::write_unaligned((this + 0x2c) as *mut u32, e.fases);
+    let v = alocar(e.fases * 4);
+    core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
+    if regras(this) == 0 {
+        aviso_em(e.arquivo, e.linhas[0]);
+        return this;
+    }
+    if tabela(this) == 0 {
+        aviso_em(e.arquivo, e.linhas[1]);
+        return this;
+    }
+    if jogos(this) == 0 {
+        aviso_em(e.arquivo, e.linhas[2]);
+        return this;
+    }
+    if ordenar(this, 0) == 0 {
+        aviso_em(e.arquivo, e.linhas[3]);
+        return this;
+    }
+    let n = novo(0x5ce);
+    let s = if n != 0 { estatisticas(n, this) } else { 0 };
+    core::ptr::write_unaligned((this + 8) as *mut usize, s);
+    if s == 0 {
+        aviso_em(e.arquivo, e.linhas[4]);
+        return this;
+    }
+    if previstas_sim {
+        previstas(this);
+    }
+    this
+}
+
+/// O comparador dos três: alocam e sorteiam os jogos: só a original, conferindo o que ela grava: a devolução, a
+/// vtable, o ano, o registro e a disciplina; na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c, o vetor das
+/// fases e a importância +0x51 = 0xf.
+unsafe fn cqt3_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt3Estadual, original: impl FnOnce() -> usize) -> usize {
+    let r = original();
+    let mut ok = r == this && cqt3_d(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
+        && cqt3_d(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
+    if *((this + 0x44) as *const u8) == 0xff && cqt3_d(this + 8) != 0 {
+        ok = ok && cqt3_d(this + 0x2c) == e.fases as usize && cqt3_d(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
+    }
+    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt3_d(this), cqt3_d(this + 0x2c), cqt3_d(this + 0xc), cqt3_d(this + 8)));
+    r
+}
+
+const CQT3_NORDESTE: Cqt3Estadual = Cqt3Estadual {
+    vtabela: 0x9683ec,
+    fases: 1,
+    regras: 0x4322d0,
+    tabela: 0x436d90,
+    previstas: 0x437290,
+    arquivo: 0x98af54,
+    linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
+};
+
+const CQT3_PARANAENSE: Cqt3Estadual = Cqt3Estadual {
+    vtabela: 0x9684a0,
+    fases: 3,
+    regras: 0x437fc0,
+    tabela: 0x437ec0,
+    previstas: 0x438590,
+    arquivo: 0x98af98,
+    linhas: [0x4e, 0x55, 0x5b, 0x62, 0x69],
+};
+
+const CQT3_PERNAMBUCANO: Cqt3Estadual = Cqt3Estadual {
+    vtabela: 0x968554,
+    fases: 1,
+    regras: 0x439430,
+    tabela: 0x439330,
+    previstas: 0x4398d0,
+    arquivo: 0x98afd8,
+    linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
+};
+
+/// { 0x4363f0 } (thiscall, ret 8, bra_reg_northeast.cpp): `BraRegNortheast::BraRegNortheast(ano, registro)`: o Nordeste (uma fase além da liga).
+unsafe extern "thiscall" fn cqt3_construir_nordeste(this: usize, ano: u32, registro: usize) -> usize {
+    cqt3_construir(this, ano, registro, &CQT3_NORDESTE, 7, true, "cqt_3 nordeste novo") // cqt3: a disciplina e as posições previstas do Nordeste
+}
+
+/// { 0x437400 } (thiscall, ret 8, bra_reg_parana.cpp): `BraRegParana::BraRegParana(ano, registro)`: o Paranaense (três fases além da liga).
+unsafe extern "thiscall" fn cqt3_construir_paranaense(this: usize, ano: u32, registro: usize) -> usize {
+    cqt3_construir(this, ano, registro, &CQT3_PARANAENSE, 7, true, "cqt_3 paranaense novo") // cqt3: a disciplina e as posições previstas do Paranaense
+}
+
+/// { 0x4388f0 } (thiscall, ret 8, bra_reg_pern.cpp): `BraRegPern::BraRegPern(ano, registro)`: o Pernambucano (uma fase além da liga).
+unsafe extern "thiscall" fn cqt3_construir_pernambucano(this: usize, ano: u32, registro: usize) -> usize {
+    cqt3_construir(this, ano, registro, &CQT3_PERNAMBUCANO, 7, true, "cqt_3 pernambucano novo") // cqt3: a disciplina e as posições previstas do Pernambucano
+}
+
+unsafe extern "thiscall" fn comparar_cqt3_construir_nordeste(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2052);
+    cqt3_comparar("cqt3_construir_nordeste", this, ano, registro, &CQT3_NORDESTE, || o(this, ano, registro))
+}
+
+unsafe extern "thiscall" fn comparar_cqt3_construir_paranaense(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2053);
+    cqt3_comparar("cqt3_construir_paranaense", this, ano, registro, &CQT3_PARANAENSE, || o(this, ano, registro))
+}
+
+unsafe extern "thiscall" fn comparar_cqt3_construir_pernambucano(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2054);
+    cqt3_comparar("cqt3_construir_pernambucano", this, ano, registro, &CQT3_PERNAMBUCANO, || o(this, ano, registro))
+}
+
+// ---------- 283a leva: os construtores dos estaduais: Carioca, Catarinense e Paulista (as regras, a tabela, os jogos, as estatísticas e as posições previstas na criação) e a média de público dos clubes no fim da temporada (bra_reg_rio.cpp, bra_reg_santa.cpp, bra_reg_sp.cpp, game.cpp) ----------
+
+unsafe fn cqt4_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+/// Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
+/// final; o vetor [+0xc] = malloc de 4 × fases), as regras (thiscall, ret 0), a tabela (thiscall, ret 0), as posições
+/// previstas (thiscall, ret 0), o fonte e as linhas das caixas (regras, tabela, jogos, ordem, estatísticas).
+struct Cqt4Estadual {
+    vtabela: usize,
+    fases: u32,
+    regras: usize,
+    tabela: usize,
+    previstas: usize,
+    arquivo: usize,
+    linhas: [u32; 5],
+}
+
+/// O construtor de um estadual (o mesmo molde de 544 bytes nos doze, conferido instrução a instrução: só mudam a
+/// vtable, as fases, as três rotinas próprias, o fonte e as linhas). League::League (0x682200, thiscall, ret 0); +4 = o
+/// registro da competição; a vtable; o ano (+0x40, word) = `ano`; a regra de disciplina (+0x50) = 7. Se o estado
+/// salvo carrega (League::load_from_temp_file 0x687b10, thiscall(this, 1), ret 4; devolve ≠ 0), devolve this. Senão
+/// (a carreira nova): +0x51 = 0xf (a importância), +0x44 = 0xff, +0x30 = −1, +0x2c = as fases e o vetor delas (malloc
+/// 0x944e46, sem conferir); então, cada um com a sua caixa (e devolvendo this) se devolver 0: as regras, a tabela, os
+/// jogos (League::create_fixtures 0x6835c0, thiscall, ret 0) e a ordem (League::sort_table 0x6827d0, thiscall(this,
+/// 0), ret 4); as estatísticas (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo,
+/// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
+#[allow(clippy::too_many_arguments)]
+unsafe fn cqt4_construir(this: usize, ano: u32, registro: usize, e: &Cqt4Estadual, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
+    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
+    let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x687b10usize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.regras);
+    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.tabela);
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
+    let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x6827d0usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let estatisticas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x49ee70usize);
+    let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.previstas);
+    base(this);
+    core::ptr::write_unaligned((this + 4) as *mut usize, registro);
+    core::ptr::write_unaligned(this as *mut usize, e.vtabela);
+    core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
+    *((this + 0x50) as *mut u8) = disciplina;
+    if carregar(this, 1) != 0 {
+        return this;
+    }
+    crate::comparacao::ramo(ramo);
+    *((this + 0x51) as *mut u8) = 0xf;
+    *((this + 0x44) as *mut u8) = 0xff;
+    core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
+    core::ptr::write_unaligned((this + 0x2c) as *mut u32, e.fases);
+    let v = alocar(e.fases * 4);
+    core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
+    if regras(this) == 0 {
+        aviso_em(e.arquivo, e.linhas[0]);
+        return this;
+    }
+    if tabela(this) == 0 {
+        aviso_em(e.arquivo, e.linhas[1]);
+        return this;
+    }
+    if jogos(this) == 0 {
+        aviso_em(e.arquivo, e.linhas[2]);
+        return this;
+    }
+    if ordenar(this, 0) == 0 {
+        aviso_em(e.arquivo, e.linhas[3]);
+        return this;
+    }
+    let n = novo(0x5ce);
+    let s = if n != 0 { estatisticas(n, this) } else { 0 };
+    core::ptr::write_unaligned((this + 8) as *mut usize, s);
+    if s == 0 {
+        aviso_em(e.arquivo, e.linhas[4]);
+        return this;
+    }
+    if previstas_sim {
+        previstas(this);
+    }
+    this
+}
+
+/// O comparador dos três: alocam e sorteiam os jogos: só a original, conferindo o que ela grava: a devolução, a
+/// vtable, o ano, o registro e a disciplina; na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c, o vetor das
+/// fases e a importância +0x51 = 0xf.
+unsafe fn cqt4_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt4Estadual, original: impl FnOnce() -> usize) -> usize {
+    let r = original();
+    let mut ok = r == this && cqt4_d(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
+        && cqt4_d(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
+    if *((this + 0x44) as *const u8) == 0xff && cqt4_d(this + 8) != 0 {
+        ok = ok && cqt4_d(this + 0x2c) == e.fases as usize && cqt4_d(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
+    }
+    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt4_d(this), cqt4_d(this + 0x2c), cqt4_d(this + 0xc), cqt4_d(this + 8)));
+    r
+}
+
+const CQT4_CARIOCA: Cqt4Estadual = Cqt4Estadual {
+    vtabela: 0x968608,
+    fases: 3,
+    regras: 0x43a600,
+    tabela: 0x43a500,
+    previstas: 0x43add0,
+    arquivo: 0x98b014,
+    linhas: [0x4e, 0x55, 0x5b, 0x62, 0x69],
+};
+
+const CQT4_CATARINENSE: Cqt4Estadual = Cqt4Estadual {
+    vtabela: 0x9686bc,
+    fases: 1,
+    regras: 0x43bc70,
+    tabela: 0x43bb70,
+    previstas: 0x43c110,
+    arquivo: 0x98b050,
+    linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
+};
+
+const CQT4_PAULISTA: Cqt4Estadual = Cqt4Estadual {
+    vtabela: 0x968770,
+    fases: 1,
+    regras: 0x4322d0,
+    tabela: 0x43cc40,
+    previstas: 0x43d140,
+    arquivo: 0x98b090,
+    linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
+};
+
+/// { 0x439a40 } (thiscall, ret 8, bra_reg_rio.cpp): `BraRegRio::BraRegRio(ano, registro)`: o Carioca (três fases além da liga).
+unsafe extern "thiscall" fn cqt4_construir_carioca(this: usize, ano: u32, registro: usize) -> usize {
+    cqt4_construir(this, ano, registro, &CQT4_CARIOCA, 7, true, "cqt_4 carioca novo") // cqt4: a disciplina e as posições previstas do Carioca
+}
+
+/// { 0x43b130 } (thiscall, ret 8, bra_reg_santa.cpp): `BraRegSanta::BraRegSanta(ano, registro)`: o Catarinense (uma fase além da liga).
+unsafe extern "thiscall" fn cqt4_construir_catarinense(this: usize, ano: u32, registro: usize) -> usize {
+    cqt4_construir(this, ano, registro, &CQT4_CATARINENSE, 7, true, "cqt_4 catarinense novo") // cqt4: a disciplina e as posições previstas do Catarinense
+}
+
+/// { 0x43c280 } (thiscall, ret 8, bra_reg_sp.cpp): `BraRegSp::BraRegSp(ano, registro)`: o Paulista (uma fase além da liga).
+unsafe extern "thiscall" fn cqt4_construir_paulista(this: usize, ano: u32, registro: usize) -> usize {
+    cqt4_construir(this, ano, registro, &CQT4_PAULISTA, 7, true, "cqt_4 paulista novo") // cqt4: a disciplina e as posições previstas do Paulista
+}
+
+unsafe extern "thiscall" fn comparar_cqt4_construir_carioca(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2055);
+    cqt4_comparar("cqt4_construir_carioca", this, ano, registro, &CQT4_CARIOCA, || o(this, ano, registro))
+}
+
+unsafe extern "thiscall" fn comparar_cqt4_construir_catarinense(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2056);
+    cqt4_comparar("cqt4_construir_catarinense", this, ano, registro, &CQT4_CATARINENSE, || o(this, ano, registro))
+}
+
+unsafe extern "thiscall" fn comparar_cqt4_construir_paulista(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2057);
+    cqt4_comparar("cqt4_construir_paulista", this, ano, registro, &CQT4_PAULISTA, || o(this, ano, registro))
+}
+
+unsafe fn cqt4_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqt4_i(a: usize) -> i32 {
+    core::ptr::read_unaligned(a as *const i32)
+}
+
+unsafe fn cqt4_pi(a: usize, v: i32) {
+    core::ptr::write_unaligned(a as *mut i32, v)
+}
+
+/// A reputação da competição de uma liga (+0x69 do registro +4, word).
+unsafe fn cqt4_rep(liga: usize) -> i32 {
+    cqt4_w(cqt4_d(liga + 4) + 0x69) as i32
+}
+
+/// O piso que sobe com a reputação `r` (dos ramos que puxam o público para cima): com r < 5, 250 × r × f; senão
+/// 750 × (r − 4) × f + 1000 (a original compara com a parte inteira + 1000 e grava a conta com 1000 somado antes do
+/// truncamento). Abaixo dele, o público vai a ele e o recorde (+0x7b) sobe até ele.
+unsafe fn cqt4_piso_pela_reputacao(c: usize, r: i32, f: f64) {
+    let lim = if r < 5 {
+        let lim = ftol((r.wrapping_mul(250)) as f64 * f);
+        if cqt4_i(c + 0x73) >= lim {
+            return;
+        }
+        lim
+    } else {
+        let x = (r.wrapping_sub(4).wrapping_mul(750)) as f64 * f;
+        if cqt4_i(c + 0x73) >= ftol(x).wrapping_add(1000) {
+            return;
+        }
+        ftol(x + 1000.0)
+    };
+    cqt4_pi(c + 0x73, lim);
+    if lim > cqt4_i(c + 0x7b) {
+        cqt4_pi(c + 0x7b, lim);
+    }
+}
+
+/// O teto `lim` do público: acima dele, o público cai a ele e o mínimo (+0x77) desce até ele.
+unsafe fn cqt4_teto(c: usize, lim: i32) {
+    if cqt4_i(c + 0x73) > lim {
+        cqt4_pi(c + 0x73, lim);
+        if lim < cqt4_i(c + 0x77) {
+            cqt4_pi(c + 0x77, lim);
+        }
+    }
+}
+
+/// { 0x5d6280 } (cdecl, game.cpp, sem nome no mapa): `atualizar_media_de_publico(liga)`, do laço das temporadas
+/// (0x5d5ae0, em 0x5d5cfb: push liga; call; add esp, 4), no fim da temporada de cada liga da nação (a de cima e as de
+/// baixo, pela +0x20). A média de público do clube (+0x73, Attendance) anda com o resultado da temporada, entre o
+/// mínimo (+0x77) e o recorde (+0x7b).
+/// O peso `f` vem da nação da competição (o primeiro dword de [+4]+0x5d): 0,1 em [0x9cf510], [0x9cf2dc], [0x9cf3e4],
+/// [0x9cf224]; 0,25 em [0x9cf2c0], [0x9cf2fc], [0x9cf408], [0x9cf4a8], [0x9cf4f8]; 0,5 em [0x9cf45c]; 1 nas outras.
+/// `r` = a reputação da competição (+0x69 do registro, word). A tabela final vem das estatísticas (Comp_Stats::
+/// get_sorted_team_table 0x4a4b20, thiscall(+8, 1, &n, 1000), ret 0xc: registros de 0x76 bytes, +0 o id do clube,
+/// +0x72 a posição prevista, +0x73 a final, +5 os jogos em casa [inferência], +6 o público somado [inferência]);
+/// para cada clube (os ramos na ordem da original, com as mesmas chamadas às virtuais +0x98 "tem acesso" e +0x9c "tem
+/// rebaixamento"; d = prevista − final + 1, word):
+/// - campeão sem acesso: + (r + max(d, 0)) × 200 × f (dono do estádio, +0x6d) ou × 100 × f;
+/// - 2º (ou posição 0) sem acesso: + (r + max(d, 0)) × 125 × f ou × 65 × f;
+/// - subiu (posição ≤ +0xbe): pela liga de cima ([0xadadfc][+0x1c]; sem ela, nada): v = +0x80 do clube (a reputação,
+///   word) × max(r de cima − r, 1) × f × 0,1, no mínimo 100; + v + sorteio(v) (dono) ou + v; e o piso pela reputação
+///   da liga de cima;
+/// - play-off de acesso (+0xbf ≠ 0 e posição ≤ +0xbf): com d − 1 > 0: + sorteio(r(d − 1) × 75 × f) + r(d − 1) × 75 × f
+///   (dono) ou + sorteio(r(d − 1) × 25 × f) + r(d − 1) × 10 × f; senão + sorteio(r × 50 × f ou r × 25 × f); com
+///   jogos em casa, a mistura com o público real: (público somado / jogos + 4 × média) × f × 0,2;
+/// - caiu (posição > +0x3e − +0xc1): pela liga de baixo (sem ela, nada): v = +0x80 × min(r de baixo − r, −1) × f × 0,2,
+///   no máximo −100 (sem rebaixamento na de baixo, +0x20 = −1: v = 2v − 250 − sorteio(750)); + v + sorteio(v); e o
+///   teto de 2000 (r de baixo ≤ 7) ou 3000 vezes a r de baixo, × f;
+/// - os outros: + sorteio(r × d × 5 × f), × 10 para o dono com d > 0 ou com +0x80 acima de 500 × r; a mistura com o
+///   público real (sem o peso f); o piso pela reputação; e o teto de 2000 r (r ≤ 7), 3000 r (r ≤ 12) ou 5000 r.
+/// No fim de cada um: no mínimo 500, e dentro de [+0x77, +0x7b]. A tabela é liberada (free 0x9452ca).
+unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
+    let tabela_c = cqt4_d(0xadadfc);
+    let cima = if cqt4_i(liga + 0x1c) == -1 { 0 } else { cqt4_d(tabela_c + 4 * cqt4_d(liga + 0x1c)) };
+    let baixo = if cqt4_i(liga + 0x20) == -1 { 0 } else { cqt4_d(tabela_c + 4 * cqt4_d(liga + 0x20)) };
+    let mut f = 1.0f64;
+    let reg = cqt4_d(liga + 4);
+    if reg != 0 && cqt4_d(reg + 0x5d) != 0 {
+        let n = cqt4_d(cqt4_d(reg + 0x5d));
+        let em = |gs: &[usize]| gs.iter().any(|&g| n == cqt4_d(g));
+        if em(&[0x9cf510, 0x9cf2dc, 0x9cf3e4, 0x9cf224]) {
+            f = f64::from_bits(0x3fb9_9999_9999_999a);
+        } else if em(&[0x9cf2c0, 0x9cf2fc, 0x9cf408, 0x9cf4a8, 0x9cf4f8]) {
+            f = 0.25;
+        } else if n == cqt4_d(0x9cf45c) {
+            f = 0.5;
+        }
+    }
+    let ordenada: unsafe extern "thiscall" fn(usize, u32, *mut i32, u32) -> usize = core::mem::transmute(0x4a4b20usize);
+    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let acesso = || {
+        let v: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqt4_d(cqt4_d(liga) + 0x98));
+        v(liga)
+    };
+    let rebaixamento = || {
+        let v: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqt4_d(cqt4_d(liga) + 0x9c));
+        v(liga)
+    };
+    let mut n = 0i32;
+    let t = ordenada(cqt4_d(liga + 8), 1, &mut n, 1000);
+    if t == 0 {
+        return;
+    }
+    let mut i = 0i32;
+    while i < n {
+        let e = t + 0x76 * i as usize;
+        let c = cqt4_d(0xae23b4) + 0x245 * cqt4_d(e);
+        let pos = *((e + 0x73) as *const u8);
+        let prevista = *((e + 0x72) as *const u8);
+        let dono = *((c + 0x6d) as *const u8) != 0;
+        let somar = |v: i32| cqt4_pi(c + 0x73, cqt4_i(c + 0x73).wrapping_add(v));
+        let d = (prevista as i16).wrapping_sub(pos as i16).wrapping_add(1);
+        if pos == 1 && acesso() == 0 {
+            let k = cqt4_rep(liga) + d.max(0) as i32;
+            let val = if dono { k.wrapping_mul(200) } else { k.wrapping_mul(100) };
+            somar(ftol(val as f64 * f));
+        } else if acesso() == 0 && pos < 3 {
+            let k = cqt4_rep(liga) + d.max(0) as i32;
+            let val = if dono { k.wrapping_mul(125) } else { k.wrapping_mul(65) };
+            somar(ftol(val as f64 * f));
+        } else if acesso() != 0 && pos as i32 <= *((liga + 0xbe) as *const i8) as i32 {
+            if cima != 0 {
+                let mut a = cqt4_w(cqt4_d(cima + 4) + 0x69).wrapping_sub(cqt4_w(cqt4_d(liga + 4) + 0x69));
+                if a < 1 {
+                    a = 1;
+                }
+                let v = ftol(cqt4_w(c + 0x80) as f64 * a as f64 * f * 0.1).max(100);
+                if dono {
+                    let r = sorteio(v);
+                    somar(r.wrapping_add(v));
+                } else {
+                    somar(v);
+                }
+                cqt4_piso_pela_reputacao(c, cqt4_rep(cima), f);
+                crate::comparacao::ramo("cqt_4 publico de quem subiu");
+            }
+        } else if *((liga + 0xbf) as *const i8) != 0 && pos as i32 <= *((liga + 0xbf) as *const i8) as i32 {
+            let a = (prevista as i16).wrapping_sub(pos as i16);
+            if a > 0 {
+                let s = a as i32;
+                if dono {
+                    let v = ftol(cqt4_rep(liga).wrapping_mul(s).wrapping_mul(75) as f64 * f);
+                    let r = sorteio(v);
+                    let w = ftol(cqt4_rep(liga).wrapping_mul(s).wrapping_mul(75) as f64 * f);
+                    somar(r.wrapping_add(w));
+                } else {
+                    let v = ftol(cqt4_rep(liga).wrapping_mul(s).wrapping_mul(25) as f64 * f);
+                    let r = sorteio(v);
+                    let w = ftol(cqt4_rep(liga).wrapping_mul(s).wrapping_mul(10) as f64 * f);
+                    somar(r.wrapping_add(w));
+                }
+            } else {
+                let r = cqt4_rep(liga);
+                let val = if dono { r.wrapping_mul(50) } else { r.wrapping_mul(25) };
+                let v = ftol(val as f64 * f);
+                somar(sorteio(v));
+            }
+            let jogos = *((e + 5) as *const u8);
+            if jogos != 0 {
+                let val = (cqt4_i(e + 6) / jogos as i32).wrapping_add(cqt4_i(c + 0x73).wrapping_mul(4));
+                cqt4_pi(c + 0x73, ftol(val as f64 * f * 0.2));
+            }
+        } else if rebaixamento() != 0
+            && pos as i32 > cqt4_w(liga + 0x3e) as i32 - *((liga + 0xc1) as *const i8) as i32
+        {
+            if baixo != 0 {
+                let mut a = cqt4_w(cqt4_d(baixo + 4) + 0x69).wrapping_sub(cqt4_w(cqt4_d(liga + 4) + 0x69));
+                if a > -1 {
+                    a = -1;
+                }
+                let mut v = ftol(cqt4_w(c + 0x80) as f64 * a as f64 * f * 0.2).min(-100);
+                if cqt4_i(baixo + 0x20) == -1 {
+                    let r = sorteio(0x2ee);
+                    v = v.wrapping_mul(2).wrapping_sub(0xfa).wrapping_sub(r);
+                }
+                let r = sorteio(v);
+                somar(r.wrapping_add(v));
+                let rb = cqt4_rep(baixo);
+                let lim = if rb > 7 { ftol(rb.wrapping_mul(3000) as f64 * f) } else { ftol(rb.wrapping_mul(2000) as f64 * f) };
+                cqt4_teto(c, lim);
+                crate::comparacao::ramo("cqt_4 publico de quem caiu");
+            }
+        } else {
+            let r16 = cqt4_w(cqt4_d(liga + 4) + 0x69);
+            let r = r16 as i32;
+            let val = if d <= 0 && cqt4_w(c + 0x80) <= r16.wrapping_mul(500) {
+                r.wrapping_mul(d as i32).wrapping_mul(5)
+            } else if dono {
+                r.wrapping_mul(d as i32).wrapping_mul(10)
+            } else {
+                r.wrapping_mul(d as i32).wrapping_mul(5)
+            };
+            let v = ftol(val as f64 * f);
+            somar(sorteio(v));
+            let jogos = *((e + 5) as *const u8);
+            if jogos != 0 {
+                let val = (cqt4_i(e + 6) / jogos as i32).wrapping_add(cqt4_i(c + 0x73).wrapping_mul(4));
+                cqt4_pi(c + 0x73, ftol(val as f64 * 0.2)); // cqt4: a mistura com o público real
+            }
+            crate::comparacao::ramo("cqt_4 publico do meio da tabela");
+            cqt4_piso_pela_reputacao(c, cqt4_rep(liga), f);
+            let r = cqt4_rep(liga);
+            let teto = if r > 12 { r.wrapping_mul(5000) } else if r > 7 { r.wrapping_mul(3000) } else { r.wrapping_mul(2000) };
+            cqt4_teto(c, teto);
+        }
+        if cqt4_i(c + 0x73) < 500 {
+            cqt4_pi(c + 0x73, 500);
+        }
+        let a = cqt4_i(c + 0x73);
+        if a < cqt4_i(c + 0x77) {
+            cqt4_pi(c + 0x73, cqt4_i(c + 0x77));
+        } else if a > cqt4_i(c + 0x7b) {
+            cqt4_pi(c + 0x73, cqt4_i(c + 0x7b));
+        }
+        i += 1;
+    }
+    soltar(t);
+}
+
+/// O comparador da média de público: lado a lado (a cópia sem contar os sorteios, com o estado do sorteador
+/// restaurado entre as duas) sobre a tabela dos clubes inteira (onde ficam +0x73, +0x77 e +0x7b) e o estado do
+/// sorteador; a tabela final (0x4a4b20) é alocada e liberada nas duas.
+unsafe extern "C" fn comparar_cqt4_atualizar_media_de_publico(liga: usize) {
+    let o = orig::<unsafe extern "C" fn(usize)>(2058);
+    let mut regioes = vec![(cqt4_d(0xae23b4), cqt4_d(0xae235c) * 0x245)];
+    regioes.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&regioes, || o(liga), || crate::aleatorio::sem_contar(|| cqt4_atualizar_media_de_publico(liga)));
+    PLACAR.registrar(igual, || format!("cqt4_atualizar_media_de_publico({:#x}): o público dos clubes não bate", liga));
+}
+
+// ---------- 283a leva: o Campeonato de Clubes da Oceania: o dia do sorteio e as tabelas dos grupos A e B (oceania_club_champ.cpp) ----------
+
+unsafe fn cqt10_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const u32) as usize
+}
+
+unsafe fn cqt10_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqt10_pd(a: usize, v: usize) {
+    core::ptr::write_unaligned(a as *mut u32, v as u32)
+}
+
+/// O clube k dos 8 escolhidos (+0xee, ponteiros: o grupo A nas vagas 0..3, o B nas 4..7), a que as duas tabelas leem.
+unsafe fn cqt10_escolhido(this: usize, k: usize) -> usize {
+    cqt10_d(cqt10_d(this + 0xee) + k * 4) // cqt10: o escolhido k
+}
+
+/// { 0x797b40 } (thiscall, ret 8, oceania_club_champ.cpp; a virtual +0x14; quadro SEH só das datas locais, sem
+/// destrutor): `OceaniaClubChamp::update_for_date(hoje, completo)`, o dia do Campeonato de Clubes da Oceania. A data do
+/// sorteio é a de 0x549ef0(+0xb6, +0xb8 + +0x40) (lea ecx, local; push ano; push dia -> thiscall, ret 8, pura). Antes
+/// dela (o ano de hoje menor, sem sinal; ou o mesmo ano e o dia de hoje menor, com sinal) a rotina volta 0 sem o dia de
+/// liga. No dia do sorteio, fora do sorteio feito (+0x45 = 0) e SEM `completo`: os 8 clubes (0x798220: mov ecx ->
+/// thiscall, ret 0), as posições previstas (a virtual +0x5c, thiscall, ret 0), a tabela do grupo A (0x7978c0, thiscall,
+/// ret 0; 0: a caixa da linha 0x21d), os jogos (0x6835c0 League::create_fixtures, thiscall, ret 0; 0: a caixa da linha
+/// 0x224), a tabela ordenada (0x6827d0 push 0; mov ecx -> thiscall, ret 4; 0: a caixa da linha 0x22b) (um erro volta 1,
+/// sem o dia de liga), a fase do grupo B (0x797e80, thiscall, ret 0), a lista +0xee liberada (0x9452ca: push; add esp,
+/// 4 -> cdecl) e zerada, +0xf2 = 0 e +0x45 = 1. Depois o dia de liga (0x6847c0: push completo; push hoje; mov ecx, this
+/// -> thiscall, ret 8), cuja devolução ela repassa.
+unsafe extern "thiscall" fn cqt10_oceania_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+    let clubes: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x798220usize);
+    let grupo_a: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x7978c0usize);
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
+    let grupo_b: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x797e80usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x6847c0usize);
+    let dia = cqt10_w(this + 0xb6) as u16;
+    let ano = (cqt10_w(this + 0xb8) as u16).wrapping_add(cqt10_w(this + 0x40) as u16);
+    let dia_de_hoje = core::ptr::read_unaligned(hoje as *const u16);
+    let ano_de_hoje = core::ptr::read_unaligned((hoje + 2) as *const u16);
+    // ponytail: nas voltas antes do sorteio e nos erros a original devolve só o al (0 ou 1; o resto do eax é sobra das
+    // chamadas de antes); quem chama lê o byte
+    if ano_de_hoje < ano || (ano_de_hoje == ano && (dia_de_hoje as i16) < dia as i16) {
+        return 0;
+    }
+    if ano_de_hoje == ano && dia_de_hoje == dia && cqt10_d(this + 0x45) == 0 && completo == 0 {
+        crate::comparacao::ramo("cqt_10 sorteio da oceania");
+        clubes(this);
+        let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqt10_d(cqt10_d(this) + 0x5c));
+        previstas(this);
+        if grupo_a(this) == 0 {
+            aviso_em(0xa6a068, 0x21d);
+            return 1;
+        }
+        if jogos(this) == 0 {
+            aviso_em(0xa6a068, 0x224);
+            return 1;
+        }
+        if ordenar(this, 0) == 0 {
+            aviso_em(0xa6a068, 0x22b);
+            return 1;
+        }
+        grupo_b(this);
+        soltar(cqt10_d(this + 0xee));
+        cqt10_pd(this + 0xee, 0);
+        cqt10_pd(this + 0xf2, 0);
+        cqt10_pd(this + 0x45, 1);
+    }
+    liga(this, hoje, completo)
+}
+
+// ponytail: os clubes, as previsões, as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
+// no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do grupo A e a fase do
+// grupo B criadas e a fase atual (+0x30) = 0.
+unsafe extern "thiscall" fn comparar_cqt10_oceania_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(2059);
+    let sorteia = cqt10_d(this + 0x45) == 0
+        && completo == 0
+        && (cqt10_w(this + 0xb8) as u16).wrapping_add(cqt10_w(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
+        && cqt10_w(this + 0xb6) as u16 == core::ptr::read_unaligned(hoje as *const u16);
+    let r = o(this, hoje, completo);
+    if sorteia {
+        let fases = cqt10_d(this + 0xc);
+        let ok = cqt10_d(this + 0x45) == 1
+            && cqt10_d(this + 0xee) == 0
+            && cqt10_d(this + 0xf2) == 0
+            && cqt10_d(this + 0xb1) != 0
+            && fases != 0
+            && cqt10_d(fases) != 0
+            && cqt10_d(this + 0x30) == 0;
+        PLACAR.registrar(ok, || format!("cqt10_oceania_dia({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqt10_d(this + 0x45), cqt10_d(this + 0x30) as i32));
+    }
+    r
+}
+
+/// { 0x7978c0 } (thiscall, ret 0, oceania_club_champ.cpp): `OceaniaClubChamp::create_group_a_table()`: 4 times (+0x3e), a
+/// tabela +0xb1 (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 linhas de 0x3b bytes; sem memória, a caixa da linha
+/// 0x182 e devolve 0), cada linha i com o escolhido i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push
+/// clube; push i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this ->
+/// thiscall, ret 0) e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
+unsafe extern "thiscall" fn cqt10_oceania_grupo_a(this: usize) -> u32 {
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 4);
+    let t = novo(0xec);
+    cqt10_pd(this + 0xb1, t);
+    if t == 0 {
+        aviso_em(0xa6a068, 0x182);
+        return 0;
+    }
+    let mut i = 0i8;
+    while (i as i16) < cqt10_w(this + 0x3e) {
+        crate::comparacao::ramo("cqt_10 linha do grupo a");
+        // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
+        linha(this, i as u8 as u32, cqt10_escolhido(this, i as usize), 0, 0); // cqt10: a linha i do grupo A
+        i = i.wrapping_add(1);
+    }
+    noticia(this);
+    1
+}
+
+// ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
+// original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o escolhido i com a posição i (+4).
+unsafe extern "thiscall" fn comparar_cqt10_oceania_grupo_a(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2060);
+    let lista = cqt10_d(this + 0xee);
+    if lista == 0 {
+        return o(this);
+    }
+    let previstos: [usize; 4] = core::array::from_fn(|i| cqt10_d(lista + i * 4));
+    let r = o(this);
+    let t = cqt10_d(this + 0xb1);
+    let mut lidos = [(0usize, 0u8); 4];
+    if t != 0 {
+        for (i, l) in lidos.iter_mut().enumerate() {
+            *l = (cqt10_d(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
+        }
+    }
+    let igual = r == 1 && cqt10_w(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
+    PLACAR.registrar(igual, || format!("cqt10_oceania_grupo_a({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    r
+}
+
+/// { 0x797e80 } (thiscall, ret 0, oceania_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
+/// normal): `OceaniaClubChamp::create_group_b_stage()`: os times num vetor de 4 ponteiros (0x944e46(0x10): push; add esp,
+/// 4 -> cdecl; sem memória, a caixa da linha 0x296 e 0): os escolhidos 4 a 7 (+0xee); a tabela das rodadas pela virtual
+/// +0x3c (push 0; push &id; push &rodadas; push 0; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xee) push; add
+/// esp, 4 -> cdecl; o construtor League_Stage 0x68b100, thiscall, ret 0x58, 22 argumentos: a copa, 4, o vetor, 1, +4, a
+/// tabela das rodadas, as rodadas (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, o ano +0x40 (word), 0, o id (word),
+/// +0x51, 2, 0, +0xd9 (word), −1, 0, 2; a original empurra os words e bytes com lixo nos bytes altos, que o construtor
+/// não lê: a cópia passa os valores limpos) em [+0xc][0]; o vetor e a tabela das rodadas liberados (0x9452ca). Sem fase:
+/// a caixa da linha 0x2ad e 0. Com ela: +0x30 = 0, a notícia do grupo (0x684230 na fase) e 1.
+unsafe extern "thiscall" fn cqt10_oceania_grupo_b(this: usize) -> u32 {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    #[allow(clippy::type_complexity)]
+    let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
+        core::mem::transmute(0x68b100usize);
+    let times = alocar(0x10);
+    if times == 0 {
+        aviso_em(0xa6a068, 0x296);
+        return 0;
+    }
+    for n in 0..4usize {
+        crate::comparacao::ramo("cqt_10 time do grupo b");
+        cqt10_pd(times + n * 4, cqt10_escolhido(this, 4 + n)); // cqt10: o time na vaga do grupo B
+    }
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqt10_d(cqt10_d(this) + 0x3c));
+    let (mut rodadas, mut id) = (0i16, 0i16);
+    let tabela = rodadas_da_copa(this, 0, &mut rodadas, &mut id, 0);
+    let p = novo(0xee);
+    let fase = if p != 0 {
+        let b = |d: usize| *((this + d) as *const u8) as u32;
+        construir(
+            p,
+            this,
+            4,
+            times,
+            1,
+            cqt10_d(this + 4),
+            tabela,
+            rodadas as u16 as u32,
+            b(0xc2),
+            b(0xc3),
+            b(0xc4),
+            this + 0xc5,
+            this + 0xbe,
+            cqt10_w(this + 0x40) as u16 as u32,
+            0,
+            id as u16 as u32,
+            b(0x51),
+            2,
+            0,
+            cqt10_w(this + 0xd9) as u16 as u32,
+            -1,
+            0,
+            2,
+        )
+    } else {
+        0
+    };
+    cqt10_pd(cqt10_d(this + 0xc), fase);
+    soltar(times);
+    soltar(tabela);
+    let f = cqt10_d(cqt10_d(this + 0xc));
+    if f == 0 {
+        aviso_em(0xa6a068, 0x2ad);
+        return 0;
+    }
+    cqt10_pd(this + 0x30, 0);
+    noticia(f);
+    1
+}
+
+// ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
+// fase em [+0xc][0], +0x30 = 0, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
+// escolhidos 4 a 7 (em qualquer ordem: o construtor ordena a tabela).
+unsafe extern "thiscall" fn comparar_cqt10_oceania_grupo_b(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2061);
+    let lista = cqt10_d(this + 0xee);
+    if lista == 0 {
+        return o(this);
+    }
+    let mut plano: Vec<usize> = (4..8).map(|k| cqt10_d(lista + k * 4)).collect();
+    let r = o(this);
+    if r == 1 {
+        let f = cqt10_d(cqt10_d(this + 0xc));
+        let t = if f != 0 { cqt10_d(f + 0xb1) } else { 0 };
+        let mut a: Vec<usize> = if t != 0 { (0..4).map(|k| cqt10_d(t + k * 0x3b)).collect() } else { Vec::new() };
+        a.sort_unstable();
+        plano.sort_unstable();
+        let ok = f != 0 && cqt10_d(this + 0x30) == 0 && cqt10_w(f + 0x3e) == 4 && cqt10_w(f + 0x40) == cqt10_w(this + 0x40) && a == plano;
+        PLACAR.registrar(ok, || format!("cqt10_oceania_grupo_b: a fase não bate com o plano ({:x?} lidos {:x?})", plano, a));
+    }
+    r
+}
+
+// ---------- 283a leva: o Campeonato de Clubes da Oceania: os 8 clubes, a fase seguinte e as semifinais (oceania_club_champ.cpp) ----------
+
+unsafe fn cqt11_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const u32) as usize
+}
+
+unsafe fn cqt11_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqt11_pd(a: usize, v: usize) {
+    core::ptr::write_unaligned(a as *mut u32, v as u32)
+}
+
+/// Os clubes de uma origem para a Oceania: até 20, na ordem da tabela de clubes.
+struct Cqt11Lista {
+    clubes: [usize; 20],
+    n: i16,
+}
+
+impl Cqt11Lista {
+    fn novo() -> Self {
+        Cqt11Lista { clubes: [0; 20], n: 0 }
+    }
+
+    /// Entra se cabe (a conta é palavra com sinal, < 20).
+    fn cabe(&self) -> bool {
+        self.n < 0x14
+    }
+
+    fn por(&mut self, c: usize) {
+        self.clubes[self.n as usize] = c;
+        self.n += 1;
+    }
+
+    /// Ordena pela reputação e embaralha a faixa de cima (0x4afbd0 comp_util_sort_and_shuffle_top_clubs: push quantos;
+    /// push a conta; push lista; add esp -> cdecl; sorteia).
+    unsafe fn ordenar(&mut self, quantos: u32) {
+        let f: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(0x4afbd0usize);
+        f(self.clubes.as_mut_ptr() as usize, self.n as u16 as u32, quantos);
+    }
+
+    /// O primeiro da lista e o primeiro depois dele de outra nação (+0x53), como a original: percorre as `n` vagas; vaga
+    /// vazia não conta como primeiro.
+    unsafe fn dois_de_nacoes_diferentes(&self) -> (usize, usize) {
+        let (mut a, mut b) = (0usize, 0usize);
+        for &c in self.clubes.iter().take(self.n.max(0) as usize) {
+            if a == 0 {
+                a = c;
+            } else if b == 0 && cqt11_d(c + 0x53) != cqt11_d(a + 0x53) {
+                b = c;
+            }
+        }
+        (a, b)
+    }
+}
+
+/// O par de um pote vai para os grupos A e B: com o sorteio de 2 (0x90cfc0(2): push 2; add esp -> cdecl) diferente de
+/// zero, o primeiro na vaga `k` (grupo A) e o segundo na `k` + 4 (grupo B); com zero, ao contrário.
+unsafe fn cqt11_par(this: usize, k: usize, primeiro: usize, segundo: usize, sorteio: i32) {
+    let l = cqt11_d(this + 0xee);
+    if sorteio != 0 {
+        cqt11_pd(l + k * 4, primeiro);
+        cqt11_pd(cqt11_d(this + 0xee) + (k + 4) * 4, segundo);
+    } else {
+        cqt11_pd(l + (k + 4) * 4, primeiro);
+        cqt11_pd(cqt11_d(this + 0xee) + k * 4, segundo);
+    }
+}
+
+/// { 0x798220 } (thiscall, ret 0, oceania_club_champ.cpp): `OceaniaClubChamp::select_qualified_clubs()`: +0xf2 = 8 e a
+/// lista +0xee (0x944e46(0x20): push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x307 e devolve 0). O campeão
+/// do último registro da liga australiana (0x4afd80 comp_util_get_latest_placed_club: push 0; push competição
+/// 0xae23d0 + 0x6b × [0x9cf89c]; add esp, 8 -> cdecl). Os clubes ([0xae23b4], 0x245 bytes, [0xae235c] − 2 × [0xae2350]
+/// deles) de nação da Oceania ([0x9cfa18]: +0x71 da nação, o +0 dele) vão, pelo id da nação, para as listas da Nova
+/// Zelândia ([0x9cf3f4]), da Austrália ([0x9cf224]), do Taiti ([0x9cf4b4]) e de Fiji ([0x9cf2f8]), até 20 em cada (a
+/// conta é palavra com sinal); os outros (ou com a lista cheia) para a melanésia (0x53d900 database_is_melanesian_nation:
+/// push nação; add esp -> cdecl; cheia, o clube fica de fora) ou, senão, a polinésia (0x53d940 com a nação de novo), até
+/// 20. Sem campeão, o melhor
+/// australiano (a lista com a faixa de 1 sorteada) no lugar. Os pares, cada um sorteado entre os grupos A (vagas 0..3)
+/// e B (4..7) por 0x90cfc0(2): o campeão e o melhor neozelandês (vagas 0/4); o melhor de Fiji e o do Taiti (1/5); os dois
+/// primeiros melanésios de nações diferentes (2/6, a faixa de 2); os dois polinésios (3/7). Devolve 1.
+/// A original guarda as listas na pilha sem zerá-las; com menos clubes que o lido ela lê sobra; a cópia lê zero
+/// [inferência: nesta carreira as listas têm clubes que bastam; o comparador confere a lista].
+unsafe fn cqt11_clubes(this: usize) -> u32 {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
+    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let melanesia: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53d900usize);
+    let polinesia: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53d940usize);
+    cqt11_pd(this + 0xf2, 8);
+    let lista = alocar(0x20);
+    cqt11_pd(this + 0xee, lista);
+    if lista == 0 {
+        aviso_em(0xa6a068, 0x307);
+        return 0;
+    }
+    let mut campeao = colocado(cqt11_d(0xae23d0) + cqt11_d(0x9cf89c) * 0x6b, 0);
+    let (mut nz, mut aus, mut tai, mut fij, mut mel, mut pol) =
+        (Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo());
+    let mut i = 0i32;
+    let mut c = cqt11_d(0xae23b4);
+    while i < (cqt11_d(0xae235c) as i32).wrapping_sub((cqt11_d(0xae2350) as i32).wrapping_mul(2)) {
+        let nacao = cqt11_d(c + 0x53);
+        if nacao != 0 && cqt11_d(nacao + 0x71) != 0 && cqt11_d(cqt11_d(nacao + 0x71)) == cqt11_d(0x9cfa18) {
+            let id = cqt11_d(nacao);
+            if id == cqt11_d(0x9cf3f4) && nz.cabe() {
+                nz.por(c);
+            } else if id == cqt11_d(0x9cf224) && aus.cabe() {
+                aus.por(c);
+            } else if id == cqt11_d(0x9cf4b4) && tai.cabe() {
+                tai.por(c);
+            } else if id == cqt11_d(0x9cf2f8) && fij.cabe() {
+                fij.por(c);
+            } else if melanesia(nacao) != 0 {
+                if mel.cabe() {
+                    mel.por(c);
+                }
+            } else if polinesia(cqt11_d(c + 0x53)) != 0 && pol.cabe() {
+                pol.por(c);
+            }
+        }
+        i += 1;
+        c += 0x245;
+    }
+    crate::comparacao::ramo("cqt_11 clubes da oceania");
+    if campeao == 0 {
+        aus.ordenar(1);
+        campeao = aus.clubes[0];
+    }
+    nz.ordenar(1);
+    cqt11_par(this, 0, campeao, nz.clubes[0], sorteio(2)); // cqt11: o campeão australiano e o neozelandês
+    fij.ordenar(1);
+    tai.ordenar(1);
+    cqt11_par(this, 1, fij.clubes[0], tai.clubes[0], sorteio(2)); // cqt11: Fiji e Taiti
+    mel.ordenar(2);
+    let (a, b) = mel.dois_de_nacoes_diferentes();
+    cqt11_par(this, 2, a, b, sorteio(2)); // cqt11: os dois melanésios
+    pol.ordenar(2);
+    let (a, b) = pol.dois_de_nacoes_diferentes();
+    cqt11_par(this, 3, a, b, sorteio(2));
+    1
+}
+
+unsafe extern "thiscall" fn cqt11_oceania_clubes(this: usize) -> u32 {
+    cqt11_clubes(this)
+}
+
+/// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
+/// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 8 vagas e liberada.
+unsafe extern "thiscall" fn comparar_cqt11_oceania_clubes(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2062);
+    let lo = core::cell::Cell::new(0usize);
+    let lr = core::cell::Cell::new(0usize);
+    let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
+    let reg = [(this + 0xf2, 4usize), (0xb67a34, 4), a_[0], a_[1]];
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+        let r = o(this);
+        lo.set(cqt11_d(this + 0xee));
+        r
+    }, || {
+        let r = crate::aleatorio::sem_contar(|| cqt11_clubes(this));
+        lr.set(cqt11_d(this + 0xee));
+        cqt11_pd(this + 0xee, lo.get());
+        r
+    });
+    let (lo, lr) = (lo.get(), lr.get());
+    let lista = if lo != 0 && lr != 0 {
+        core::slice::from_raw_parts(lo as *const u8, 0x20) == core::slice::from_raw_parts(lr as *const u8, 0x20)
+    } else {
+        lo == 0 && lr == 0
+    };
+    if lr != 0 && lr != lo {
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        soltar(lr);
+    }
+    PLACAR.registrar(igual && a == b && lista, || format!("cqt11_oceania_clubes({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    a
+}
+
+/// { 0x797df0 } (thiscall, ret 0, oceania_club_champ.cpp; a virtual +0x28): `OceaniaClubChamp::advance_stage()`: na
+/// última fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x274; senão +0x30 sobe e, chegando a 1 (depois dos
+/// grupos), as semifinais (0x798050: mov ecx, this -> thiscall, ret 0).
+unsafe extern "thiscall" fn cqt11_oceania_fase_seguinte(this: usize) {
+    let f = cqt11_d(this + 0x30) as i32;
+    if f >= (cqt11_d(this + 0x2c) as i32).wrapping_sub(1) {
+        return aviso_em(0xa6a068, 0x274);
+    }
+    let f = f + 1;
+    cqt11_pd(this + 0x30, f as usize);
+    if f == 1 {
+        crate::comparacao::ramo("cqt_11 semifinais da oceania");
+        let semifinais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x798050usize);
+        semifinais(this);
+    }
+}
+
+// ponytail: as semifinais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um (fora da
+// última fase, que dá a caixa e não muda nada).
+unsafe extern "thiscall" fn comparar_cqt11_oceania_fase_seguinte(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2063);
+    let f = cqt11_d(this + 0x30) as i32;
+    let ultima = f >= (cqt11_d(this + 0x2c) as i32).wrapping_sub(1);
+    o(this);
+    let depois = cqt11_d(this + 0x30) as i32;
+    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("cqt11_oceania_fase_seguinte({:#x}) fase {} -> {}", this, f, depois));
+}
+
+/// Os 4 das semifinais, na ordem da lista: o 1º do grupo A (a tabela da copa, +0xb1), o 2º do B (a tabela da fase
+/// [+0xc][0]), o 2º do A e o 1º do B (os cruzamentos: as chaves são os pares da lista).
+unsafe fn cqt11_semifinalistas(this: usize) -> [usize; 4] {
+    let a = |l: usize| cqt11_d(cqt11_d(this + 0xb1) + l * 0x3b);
+    let b = |l: usize| cqt11_d(cqt11_d(cqt11_d(cqt11_d(this + 0xc)) + 0xb1) + l * 0x3b);
+    [a(0), b(1), a(1), b(0)] // cqt11: 1º A × 2º B, 2º A × 1º B
+}
+
+/// { 0x798050 } (thiscall, ret 0, oceania_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
+/// normal): `OceaniaClubChamp::create_knockout_stage()`, as semifinais: a lista dos 4 (0x944e46(0x10): push; add esp, 4
+/// -> cdecl; sem memória, a caixa da linha 0x2cb e volta), os cruzamentos de cqt11_semifinalistas; a tabela das rodadas
+/// pela virtual +0x3c (push 0; push &id; push &rodadas; push 1; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xb2)
+/// push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a copa, 4, a lista, as rodadas, +4, a
+/// tabela, o ano +0x40, 1, 2, o id, 0x14, 0, 0, 0 e nenhuma semente; a original empurra as rodadas, o id e o ano com lixo
+/// nos 16 bits altos, que o construtor não lê) em [+0xc][1]; a tabela e a lista liberadas (0x9452ca). Sem fase: a caixa
+/// da linha 0x2e3 e volta. Com ela: a rodada montada (0x51c800 Cup::set_up_round: push 0; mov ecx, fase -> thiscall,
+/// ret 4).
+unsafe extern "thiscall" fn cqt11_oceania_semifinais(this: usize) {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
+    let lista = alocar(0x10);
+    if lista == 0 {
+        return aviso_em(0xa6a068, 0x2cb);
+    }
+    crate::comparacao::ramo("cqt_11 cruzamentos da oceania");
+    for (k, &c) in cqt11_semifinalistas(this).iter().enumerate() {
+        cqt11_pd(lista + k * 4, c);
+    }
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqt11_d(cqt11_d(this) + 0x3c));
+    let (mut rodadas, mut id) = (0i16, 0i16);
+    let tabela = rodadas_da_copa(this, 1, &mut rodadas, &mut id, 0);
+    let p = novo(0xb2);
+    let fase = if p != 0 {
+        #[allow(clippy::type_complexity)]
+        let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
+            core::mem::transmute(0x522e00usize);
+        construir(p, this, 4, lista, rodadas as u16 as u32, cqt11_d(this + 4), tabela, cqt11_w(this + 0x40) as u16 as u32, 1, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+    } else {
+        0
+    };
+    cqt11_pd(cqt11_d(this + 0xc) + 4, fase);
+    soltar(tabela);
+    soltar(lista);
+    let f = cqt11_d(cqt11_d(this + 0xc) + 4);
+    if f == 0 {
+        return aviso_em(0xa6a068, 0x2e3);
+    }
+    montar(f, 0);
+}
+
+// ponytail: aloca a fase e monta a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][1] com 4 times,
+// o +4 da copa e os 4 cruzados (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto: a rodada pode reordenar).
+unsafe extern "thiscall" fn comparar_cqt11_oceania_semifinais(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2064);
+    if cqt11_d(this + 0xb1) == 0 || cqt11_d(this + 0xc) == 0 || cqt11_d(cqt11_d(this + 0xc)) == 0 {
+        return o(this);
+    }
+    let mut plano = cqt11_semifinalistas(this).to_vec();
+    o(this);
+    let fase = cqt11_d(cqt11_d(this + 0xc) + 4);
+    if fase == 0 {
+        PLACAR.registrar(false, || format!("cqt11_oceania_semifinais({:#x}) sem fase", this));
+        return;
+    }
+    let lista = cqt11_d(fase + 0xa7);
+    let mut achou: Vec<usize> = (0..4).map(|k| cqt11_d(lista + 6 * k)).collect();
+    let (pl, ac) = (plano.clone(), achou.clone());
+    plano.sort_unstable();
+    achou.sort_unstable();
+    let igual = plano == achou && cqt11_w(fase + 0x3e) == 4 && cqt11_d(fase + 4) == cqt11_d(this + 4);
+    PLACAR.registrar(igual, || format!("cqt11_oceania_semifinais({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+}
+
+// ---------- 282a leva: os turnos do Carioca, do Mineiro, do Paranaense e da J1: a fase de pontos corridos de cada turno (bra_reg_rio.cpp, bra_reg_minas_gerais.cpp, bra_reg_parana.cpp, jap_j1.cpp) ----------
+
+unsafe fn cqr1_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+unsafe fn cqr1_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqr1_b(a: usize) -> u8 {
+    *(a as *const u8)
+}
+
+/// O turno `k` de uma liga de dois turnos (o slot create_half_season_stage; o mesmo molde nos três estaduais e na J1,
+/// conferido instrução a instrução: só mudam o fonte, a linha da caixa e o 20º argumento do construtor, 0xb nos
+/// estaduais e 0xf na J1). Chamado do resultado de cada jogo (0x43af20 e as irmãs: push dl = +0x30 + 1; mov ecx ->
+/// thiscall, ret 4; a original lê o argumento inteiro, usa o byte baixo e o empurra inteiro ao construtor).
+/// 1) Os clubes da tabela da liga (+0xb1, linhas de 0x3b bytes, as +0x3e linhas) num vetor (malloc 0x944e46 de
+///    4 × +0x3e; sem memória: a caixa e volta).
+/// 2) A fase: operator new 0x944cf1(0xee) e o construtor League_Stage 0x68b100 (thiscall, ret 0x58, 22 argumentos, na
+///    ordem da original: a liga, +0x3e (word), o vetor, 1, +4, 0, 0, os pontos por vitória +0xc2 (`pv`), por empate +0xc3, a
+///    categoria dos jogos +0xc4, &+0xc5 (os critérios de desempate), &{1,0,0,0} (uma vaga de cima: o campeão do
+///    turno), o ano +0x40 (word), k, o id 0x439 (primeiro turno) ou 0x43a (segundo), 0, 1, 0, 8, `vinte`, 0, 2; a
+///    original empurra os words e bytes com lixo nos bytes altos, que o construtor não lê: a cópia passa os valores
+///    limpos; o k vai inteiro, como chegou). Sem memória para a fase: 0 na vaga, sem caixa.
+/// 3) [+0xc][k] = a fase, +0x30 = k (o byte com sinal) e o vetor liberado (free 0x9452ca). O quadro SEH da original só
+///    cobre o construtor (sem destrutor no caminho normal).
+unsafe fn cqr1_turno(this: usize, k: u32, arquivo: usize, linha: u32, vinte: u32, pv: usize, ramo: &'static str) {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    #[allow(clippy::type_complexity)]
+    let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, u32, u32, u32, u32, u32, usize, *const u8, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
+        core::mem::transmute(0x68b100usize);
+    let vagas: [u8; 4] = [1, 0, 0, 0];
+    let n = cqr1_w(this + 0x3e);
+    let clubes = alocar(((n as i32) << 2) as u32);
+    if clubes == 0 {
+        return aviso_em(arquivo, linha);
+    }
+    let mut i: i16 = 0;
+    while i < cqr1_w(this + 0x3e) {
+        core::ptr::write_unaligned((clubes + 4 * i as usize) as *mut usize, cqr1_d(cqr1_d(this + 0xb1) + i as usize * 0x3b));
+        i += 1;
+    }
+    let id = 0x439 + (k as u8 != 0) as u32;
+    let p = novo(0xee);
+    let fase = if p != 0 {
+        construir(p, this, cqr1_w(this + 0x3e) as u16 as u32, clubes, 1, cqr1_d(this + 4), 0, 0,
+                  cqr1_b(this + pv) as u32,
+                  cqr1_b(this + 0xc3) as u32, cqr1_b(this + 0xc4) as u32, this + 0xc5, vagas.as_ptr(),
+                  cqr1_w(this + 0x40) as u16 as u32, k, id, 0, 1, 0, 8, vinte, 0, 2)
+    } else {
+        0
+    };
+    let k = k as u8 as i8 as i32;
+    core::ptr::write_unaligned((cqr1_d(this + 0xc) + 4 * k as usize) as *mut usize, fase);
+    core::ptr::write_unaligned((this + 0x30) as *mut i32, k);
+    crate::comparacao::ramo(ramo);
+    soltar(clubes);
+}
+
+/// O comparador de um turno: só a original (ponytail: aloca o vetor e a fase, que monta a tabela do turno), com o plano:
+/// depois, a vaga k tem a fase (o operator new não falha na carreira), +0x30 = k e a fase tem os +0x3e clubes da liga.
+unsafe fn cqr1_comparar(nome: &str, this: usize, k: u32, original: impl FnOnce()) {
+    original();
+    let kk = k as u8 as i8 as i32;
+    let fase = cqr1_d(cqr1_d(this + 0xc) + 4 * kk as usize);
+    let igual = fase != 0 && cqr1_d(this + 0x30) as i32 == kk && cqr1_w(fase + 0x3e) == cqr1_w(this + 0x3e);
+    PLACAR.registrar(igual, || format!("{}({:#x}, {}) fase={:#x} +0x30={}", nome, this, kk, fase, cqr1_d(this + 0x30) as i32));
+}
+
+/// { 0x43afa0 } (thiscall, ret 4, bra_reg_rio.cpp): `BraRegRio::create_half_season_stage(k)`, um turno do Carioca (os
+/// doze clubes; a caixa da linha 0x3d5).
+unsafe extern "thiscall" fn cqr1_turno_do_carioca(this: usize, k: u32) {
+    cqr1_turno(this, k, 0x98b014, 0x3d5, 0xb, 0xc2, "cqr_1 turno do carioca") // cqr1: os pontos por vitória no Carioca
+}
+
+/// { 0x4351b0 } (thiscall, ret 4, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_half_season_stage(k)`, um turno
+/// do Mineiro (a caixa da linha 0x3d5).
+unsafe extern "thiscall" fn cqr1_turno_do_mineiro(this: usize, k: u32) {
+    cqr1_turno(this, k, 0x98aed0, 0x3d5, 0xb, 0xc2, "cqr_1 turno do mineiro") // cqr1: os pontos por vitória no Mineiro
+}
+
+/// { 0x438760 } (thiscall, ret 4, bra_reg_parana.cpp): `BraRegParana::create_half_stage(k)`, um turno do Paranaense (a
+/// caixa da linha 0x3d5).
+unsafe extern "thiscall" fn cqr1_turno_do_paranaense(this: usize, k: u32) {
+    cqr1_turno(this, k, 0x98af98, 0x3d5, 0xb, 0xc2, "cqr_1 turno do paranaense") // cqr1: os pontos por vitória no Paranaense
+}
+
+/// { 0x663c20 } (thiscall, ret 4, jap_j1.cpp): `JapJ1::create_half_season_stage(k)`, um turno da J1 (a caixa da linha
+/// 0x278; o 20º argumento do construtor é 0xf).
+unsafe extern "thiscall" fn cqr1_turno_da_j1(this: usize, k: u32) {
+    cqr1_turno(this, k, 0x9eabc8, 0x278, 0xf, 0xc2, "cqr_1 turno da j1") // cqr1: os pontos por vitória na J1
+}
+
+unsafe extern "thiscall" fn comparar_cqr1_turno_do_carioca(this: usize, k: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1986);
+    cqr1_comparar("cqr1_turno_do_carioca", this, k, || o(this, k))
+}
+
+unsafe extern "thiscall" fn comparar_cqr1_turno_do_mineiro(this: usize, k: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1987);
+    cqr1_comparar("cqr1_turno_do_mineiro", this, k, || o(this, k))
+}
+
+unsafe extern "thiscall" fn comparar_cqr1_turno_do_paranaense(this: usize, k: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1988);
+    cqr1_comparar("cqr1_turno_do_paranaense", this, k, || o(this, k))
+}
+
+unsafe extern "thiscall" fn comparar_cqr1_turno_da_j1(this: usize, k: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1989);
+    cqr1_comparar("cqr1_turno_da_j1", this, k, || o(this, k))
+}
+
+// ---------- 282a leva: a virada da temporada do Carioca, do Mineiro e do Paranaense (bra_reg_rio.cpp, bra_reg_minas_gerais.cpp, bra_reg_parana.cpp) ----------
+
+unsafe fn cqr2_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+/// A virada da temporada de um estadual de dois turnos e final (`start_new_season`, slot 3, +0x08; o mesmo molde no
+/// Carioca, no Mineiro e no Paranaense: só mudam o fonte e a rotina da tabela, conferido instrução a instrução):
+/// +0x4c = 0 e a tabela liberada (League::free_table 0x687970, thiscall(this, 0), ret 4); a lista de +0xba liberada
+/// (free 0x9452ca) e zerada; com estatísticas (+8), Comp_Stats::archive_season_and_reset (0x4a1c50, thiscall(+8, 1),
+/// ret 4); com a fase atual ≥ 0, as fases 0..=+0x30 que existem destruídas (a virtual 0, o destrutor com 1: libera);
+/// o vetor das fases liberado (free) e trocado por um novo de três vagas (+0x2c = 3, malloc 0x944e46 de 0xc, sem
+/// conferir nem zerar: os turnos e a final o preenchem); o ano (+0x40, word) sobe `ano` (o contador `ramo`) e
+/// +0x30 = −1; então, cada um com a sua caixa (linhas 0x1d4, 0x1db, 0x1e1 e 0x1e8) se devolver 0: as regras da
+/// temporada (virtual +0x8c), a tabela com os doze clubes (`tabela`, thiscall, ret 0), os jogos (League::create_fixtures
+/// 0x6835c0, thiscall, ret 0) e a ordem da tabela (League::sort_table 0x6827d0, thiscall(this, 0), ret 4); por fim as
+/// posições previstas (virtual +0x5c) e a renovação dos árbitros (OfficialsManager::renew_officials 0x79cee0,
+/// thiscall([0xb74340], +4), ret 4), cujo eax ela devolve. Com caixa, a cópia devolve 0 (a original devolve o eax da
+/// caixa, que a virada do Brasil não lê).
+unsafe fn cqr2_virada(this: usize, tabela: usize, arquivo: usize, ano: i16, ramo: &'static str) -> u32 {
+    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x687970usize);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
+    liberar_tabela(this, 0);
+    let l = cqr2_d(this + 0xba);
+    if l != 0 {
+        liberar(l);
+        core::ptr::write_unaligned((this + 0xba) as *mut usize, 0);
+    }
+    let estatisticas = cqr2_d(this + 8);
+    if estatisticas != 0 {
+        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
+        arquivar(estatisticas, 1);
+    }
+    if (cqr2_d(this + 0x30) as i32) >= 0 {
+        let mut i = 0i32;
+        loop {
+            let f = cqr2_d(cqr2_d(this + 0xc) + 4 * i as usize);
+            if f != 0 {
+                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(cqr2_d(cqr2_d(f)));
+                destruir(f, 1);
+            }
+            i += 1;
+            if i > cqr2_d(this + 0x30) as i32 {
+                break;
+            }
+        }
+    }
+    liberar(cqr2_d(this + 0xc));
+    core::ptr::write_unaligned((this + 0x2c) as *mut u32, 3);
+    let v = alocar(0xc);
+    let a = core::ptr::read_unaligned((this + 0x40) as *const i16);
+    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
+    crate::comparacao::ramo(ramo);
+    core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
+    core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqr2_d(cqr2_d(this) + 0x8c));
+    if regras(this) == 0 {
+        aviso_em(arquivo, 0x1d4);
+        return 0;
+    }
+    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(tabela);
+    if tabela(this) == 0 {
+        aviso_em(arquivo, 0x1db);
+        return 0;
+    }
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
+    if jogos(this) == 0 {
+        aviso_em(arquivo, 0x1e1);
+        return 0;
+    }
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
+    if ordenar(this, 0) == 0 {
+        aviso_em(arquivo, 0x1e8);
+        return 0;
+    }
+    let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqr2_d(cqr2_d(this) + 0x5c));
+    previstas(this);
+    let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x79cee0usize);
+    renovar(cqr2_d(0xb74340), cqr2_d(this + 4))
+}
+
+/// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia os jogos e os
+/// árbitros; não pode rodar duas vezes), conferindo o que só ela garante: o ano (+0x40) sobe um, +0x2c = 3 e +0x30 = −1.
+unsafe fn cqr2_comparar(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
+    let antes = core::ptr::read_unaligned((this + 0x40) as *const i16);
+    let r = original();
+    let depois = core::ptr::read_unaligned((this + 0x40) as *const i16);
+    let igual = depois == antes.wrapping_add(1) && cqr2_d(this + 0x2c) == 3 && cqr2_d(this + 0x30) as i32 == -1;
+    PLACAR.registrar(igual, || format!("{}({:#x}) ano antes={} depois={} +0x2c={} +0x30={}", nome, this, antes, depois, cqr2_d(this + 0x2c), cqr2_d(this + 0x30) as i32));
+    r
+}
+
+/// { 0x43a6a0 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::start_new_season()`, a virada do Carioca (a tabela: 0x43a500).
+unsafe extern "thiscall" fn cqr2_virada_do_carioca(this: usize) -> u32 {
+    cqr2_virada(this, 0x43a500, 0x98b014, 1, "cqr_2 virada do carioca") // cqr2: o ano seguinte do Carioca
+}
+
+/// { 0x434910 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::start_new_season()`, a virada do Mineiro (a tabela: 0x434810).
+unsafe extern "thiscall" fn cqr2_virada_do_mineiro(this: usize) -> u32 {
+    cqr2_virada(this, 0x434810, 0x98aed0, 1, "cqr_2 virada do mineiro") // cqr2: o ano seguinte do Mineiro
+}
+
+/// { 0x438060 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::start_new_season()`, a virada do Paranaense (a tabela: 0x437ec0).
+unsafe extern "thiscall" fn cqr2_virada_do_paranaense(this: usize) -> u32 {
+    cqr2_virada(this, 0x437ec0, 0x98af98, 1, "cqr_2 virada do paranaense") // cqr2: o ano seguinte do Paranaense
+}
+
+unsafe extern "thiscall" fn comparar_cqr2_virada_do_carioca(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1990);
+    cqr2_comparar("cqr2_virada_do_carioca", this, || o(this))
+}
+
+unsafe extern "thiscall" fn comparar_cqr2_virada_do_mineiro(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1991);
+    cqr2_comparar("cqr2_virada_do_mineiro", this, || o(this))
+}
+
+unsafe extern "thiscall" fn comparar_cqr2_virada_do_paranaense(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1992);
+    cqr2_comparar("cqr2_virada_do_paranaense", this, || o(this))
+}
+
+// ---------- 282a leva: a NSL australiana: a fase seguinte, a série final dos seis primeiros e a grande final (aus_nsl.cpp) ----------
+
+unsafe fn cqr3_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+unsafe fn cqr3_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqr3_b(a: usize) -> u8 {
+    *(a as *const u8)
+}
+
+/// O clube da linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`.
+unsafe fn cqr3_linha(t: usize, i: usize) -> usize {
+    cqr3_d(cqr3_d(t + 0xb1) + i * 0x3b)
+}
+
+/// { 0x411f70 } (thiscall, ret 0, aus_nsl.cpp): `AusNsl::advance_stage()`, a fase seguinte da NSL (a temporada regular,
+/// a fase −1; a série final dos seis primeiros, a fase 0; a grande final, a fase 1). Na última fase (+0x30 ≥ +0x2c − 1,
+/// com sinal): a caixa de erro da linha 0x2f0 e nada mais. Senão +0x30 sobe um; ao chegar a 0 monta a série final
+/// (0x412010) e a 1, a grande final (0x4121c0), as duas em call direto com o ecx da liga.
+unsafe extern "thiscall" fn cqr3_fase_seguinte_da_nsl(this: usize) {
+    let fase = cqr3_d(this + 0x30) as i32;
+    if fase >= (cqr3_d(this + 0x2c) as i32).wrapping_sub(1) {
+        return aviso_em(0x987c20, 0x2f0);
+    }
+    let fase = fase + 1;
+    core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
+    if fase == 0 {
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x412010usize);
+        f(this);
+    } else if fase == 1 {
+        let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4121c0usize);
+        f(this);
+    }
+}
+
+/// { 0x412010 } (thiscall, ret 0, aus_nsl.cpp; quadro SEH só para o new): `AusNsl::create_finals_series_stage()`, a
+/// série final da NSL, do fim da temporada regular.
+/// 1) Os seis primeiros da tabela da liga (as linhas 0 a 5, na ordem) num vetor local de 6.
+/// 2) A tabela das rodadas pela virtual +0x3c (create_round_table: thiscall(this, 0, &rodadas, &extra, 0), ret 0x10).
+/// 3) A fase: operator new 0x944cf1(0xee) e o construtor League_Stage 0x68b100 (thiscall, ret 0x58, 22 argumentos, na
+///    ordem da original: a liga, 6, o vetor, 1, +4, a tabela das rodadas, as rodadas (word), os pontos +0xc2 e +0xc3,
+///    a categoria +0xc4, &+0xc5, &{2,0,0,0} (duas vagas de cima: os dois que vão à grande final), o ano +0x40 (word),
+///    0, o extra (word), +0x51, 1, 0, +0xd9 (word), −1, 0, 2; a original empurra os words e bytes com lixo nos bytes
+///    altos, que o construtor não lê: a cópia passa os valores limpos). Sem memória: 0.
+/// 4) [+0xc][0] = a fase e a tabela das rodadas liberada (free 0x9452ca). Sem fase: a caixa da linha 0x328 e 0. Com
+///    ela: a notícia do sorteio (0x684230 na fase, thiscall, ret 0), +0x30 = 0 e 1.
+/// [inferência] A série final é uma liga curta dos seis; os dois primeiros dela vão à grande final.
+unsafe extern "thiscall" fn cqr3_serie_final_da_nsl(this: usize) -> u32 {
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    #[allow(clippy::type_complexity)]
+    let construir: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, usize, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
+        core::mem::transmute(0x68b100usize);
+    let vagas: [u8; 4] = [2, 0, 0, 0];
+    let mut clubes = [0usize; 6];
+    for (i, c) in clubes.iter_mut().enumerate() {
+        *c = cqr3_linha(this, i); // cqr3: os seis primeiros da tabela
+    }
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqr3_d(cqr3_d(this) + 0x3c));
+    let (mut rodadas, mut extra) = (0i16, 0i16);
+    let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
+    let p = novo(0xee);
+    let fase = if p != 0 {
+        construir(p, this, 6, clubes.as_ptr(), 1, cqr3_d(this + 4), t, rodadas as u16 as u32, cqr3_b(this + 0xc2) as u32,
+                  cqr3_b(this + 0xc3) as u32, cqr3_b(this + 0xc4) as u32, this + 0xc5, vagas.as_ptr(), cqr3_w(this + 0x40) as u16 as u32, 0,
+                  extra as u16 as u32, cqr3_b(this + 0x51) as u32, 1, 0, cqr3_w(this + 0xd9) as u16 as u32, -1, 0, 2)
+    } else {
+        0
+    };
+    core::ptr::write_unaligned(cqr3_d(this + 0xc) as *mut usize, fase);
+    soltar(t);
+    let fase = cqr3_d(cqr3_d(this + 0xc));
+    if fase == 0 {
+        aviso_em(0x987c20, 0x328);
+        return 0;
+    }
+    crate::comparacao::ramo("cqr_3 serie final");
+    noticia(fase);
+    core::ptr::write_unaligned((this + 0x30) as *mut u32, 0);
+    1
+}
+
+/// { 0x4121c0 } (thiscall, ret 0, aus_nsl.cpp; quadro SEH só para o new): `AusNsl::create_grand_final_stage()`, a grande
+/// final da NSL, do fim da série final: os dois primeiros da tabela da série final ([+0xc][0], linhas 0 e 1, nessa
+/// ordem) numa lista de 2 (malloc 0x944e46 de 8; sem memória: a caixa da linha 0x348 e volta); a tabela das rodadas
+/// pela virtual +0x3c (thiscall(this, 1, &rodadas, &extra, 0), ret 0x10); a fase (operator new 0x944cf1(0xb2) e o
+/// construtor Cup_Stage 0x522e00, thiscall, ret 0x3c: a liga, 2, a lista, as rodadas, +4, a tabela, o ano +0x40, 1, 1,
+/// o extra, 0x14, 0, 0, 0 e sementes nulas; a cópia passa as words limpas) em [+0xc][1] e a tabela liberada (free
+/// 0x9452ca). Sem fase: a caixa da linha 0x35c e volta (sem liberar a lista). Com ela: Cup::set_up_round (0x51c800,
+/// thiscall(fase, 0), ret 4) e a lista liberada. A fase atual (+0x30 = 1) já foi gravada pela fase seguinte.
+/// [inferência] A grande final é um jogo só, com o primeiro da série final como mandante.
+unsafe extern "thiscall" fn cqr3_grande_final_da_nsl(this: usize) {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
+    #[allow(clippy::type_complexity)]
+    let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
+        core::mem::transmute(0x522e00usize);
+    let lista = alocar(8);
+    if lista == 0 {
+        return aviso_em(0x987c20, 0x348);
+    }
+    let serie = cqr3_d(cqr3_d(this + 0xc));
+    core::ptr::write_unaligned(lista as *mut usize, cqr3_linha(serie, 0)); // cqr3: o primeiro da série final
+    core::ptr::write_unaligned((lista + 4) as *mut usize, cqr3_linha(serie, 1)); // cqr3: o segundo da série final
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqr3_d(cqr3_d(this) + 0x3c));
+    let (mut rodadas, mut extra) = (0i16, 0i16);
+    let t = tabela(this, 1, &mut rodadas, &mut extra, 0);
+    let p = novo(0xb2);
+    let fase = if p != 0 {
+        construir(p, this, 2, lista, rodadas as u16 as u32, cqr3_d(this + 4), t, cqr3_w(this + 0x40) as u16 as u32, 1, 1,
+                  extra as u16 as u32, 0x14, 0, 0, 0, 0)
+    } else {
+        0
+    };
+    core::ptr::write_unaligned((cqr3_d(this + 0xc) + 4) as *mut usize, fase);
+    soltar(t);
+    let fase = cqr3_d(cqr3_d(this + 0xc) + 4);
+    if fase == 0 {
+        return aviso_em(0x987c20, 0x35c);
+    }
+    crate::comparacao::ramo("cqr_3 grande final");
+    montar(fase, 0);
+    soltar(lista);
+}
+
+unsafe extern "thiscall" fn comparar_cqr3_fase_seguinte_da_nsl(this: usize) {
+    let antes = cqr3_d(this + 0x30) as i32;
+    let ultima = antes >= (cqr3_d(this + 0x2c) as i32).wrapping_sub(1);
+    orig::<unsafe extern "thiscall" fn(usize)>(1993)(this);
+    let depois = cqr3_d(this + 0x30) as i32;
+    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("cqr3_fase_seguinte_da_nsl({:#x}) antes={} depois={}", this, antes, depois));
+}
+
+/// O comparador da série final: só a original (aloca a tabela das rodadas e a fase e manda a notícia), com o plano feito
+/// antes: os seis primeiros da tabela. Depois, a devolução 1, a fase na vaga 0 com +0x3e = 6, +4 = o +4 da liga e os
+/// seis na tabela dela (+0xb1, como conjunto), e +0x30 = 0.
+unsafe extern "thiscall" fn comparar_cqr3_serie_final_da_nsl(this: usize) -> u32 {
+    let mut seis = [0usize; 6];
+    for (i, c) in seis.iter_mut().enumerate() {
+        *c = cqr3_linha(this, i);
+    }
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1994)(this);
+    let fase = cqr3_d(cqr3_d(this + 0xc));
+    let igual = r == 1 && fase != 0 && cqr3_w(fase + 0x3e) == 6 && cqr3_d(fase + 4) == cqr3_d(this + 4) && cqr3_d(this + 0x30) == 0 && {
+        let mut nela = [0usize; 6];
+        for (i, c) in nela.iter_mut().enumerate() {
+            *c = cqr3_linha(fase, i);
+        }
+        let (mut a, mut b) = (seis, nela);
+        a.sort_unstable();
+        b.sort_unstable();
+        a == b
+    };
+    PLACAR.registrar(igual, || format!("cqr3_serie_final_da_nsl({:#x}) r={} fase={:#x} seis={:x?}", this, r, fase, seis));
+    r
+}
+
+/// O comparador da grande final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
+/// antes: os dois primeiros da série final. Depois, a fase da segunda vaga existe, com +0x3e = 2, +4 = o +4 da liga e
+/// os dois na lista dela (+0xa7, 6 bytes; como conjunto).
+unsafe extern "thiscall" fn comparar_cqr3_grande_final_da_nsl(this: usize) {
+    let serie = cqr3_d(cqr3_d(this + 0xc));
+    let (a, b) = (cqr3_linha(serie, 0), cqr3_linha(serie, 1));
+    orig::<unsafe extern "thiscall" fn(usize)>(1995)(this);
+    let fase = cqr3_d(cqr3_d(this + 0xc) + 4);
+    let igual = fase != 0 && {
+        let l = cqr3_d(fase + 0xa7);
+        let (x, y) = (cqr3_d(l), cqr3_d(l + 6));
+        cqr3_w(fase + 0x3e) == 2 && cqr3_d(fase + 4) == cqr3_d(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a))
+    };
+    PLACAR.registrar(igual, || format!("cqr3_grande_final_da_nsl({:#x}) finalistas={:#x},{:#x} fase={:#x}", this, a, b, fase));
+}
+
+// ---------- 282a leva: a MLS: a fase seguinte, o play-off dos oito e a final da MLS Cup (usa_mls.cpp) ----------
+
+unsafe fn cqr4_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+unsafe fn cqr4_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+/// A linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`: o clube (+0) e os pontos (+0x19, word).
+unsafe fn cqr4_linha(t: usize, i: usize) -> (usize, i16) {
+    let l = cqr4_d(t + 0xb1) + i * 0x3b;
+    (cqr4_d(l), cqr4_w(l + 0x19))
+}
+
+/// Grava o registro de 6 bytes `k` (clube, pontos) do vetor `r`.
+fn cqr4_por(r: &mut [u8], k: usize, (c, p): (usize, i16)) {
+    r[6 * k..6 * k + 4].copy_from_slice(&(c as u32).to_le_bytes());
+    r[6 * k + 4..6 * k + 6].copy_from_slice(&p.to_le_bytes());
+}
+
+/// O clube do registro de 6 bytes `k` do vetor `r`.
+fn cqr4_clube(r: &[u8], k: usize) -> usize {
+    u32::from_le_bytes([r[6 * k], r[6 * k + 1], r[6 * k + 2], r[6 * k + 3]]) as usize
+}
+
+/// { 0x909400 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::advance_stage()`, a fase seguinte da MLS (as fases 0 e 1 são
+/// as duas outras divisões, que correm junto com a liga; a 2, o play-off; a 3, a final). Na última fase (+0x30 ≥
+/// +0x2c − 1, com sinal): a caixa de erro da linha 0x55b e nada mais. Senão: da fase 1 vai à 2 e da 2 à 3 (de outra
+/// fase, +0x30 fica); então, na 2, monta o play-off (0x9094c0) e, na 3, a final (0x9097d0), em call direto com o ecx da
+/// liga.
+unsafe extern "thiscall" fn cqr4_fase_seguinte_da_mls(this: usize) {
+    let fase = cqr4_d(this + 0x30) as i32;
+    if fase >= (cqr4_d(this + 0x2c) as i32).wrapping_sub(1) {
+        return aviso_em(0xaa1fb4, 0x55b);
+    }
+    if fase == 1 {
+        core::ptr::write_unaligned((this + 0x30) as *mut u32, 2);
+    } else if fase == 2 {
+        core::ptr::write_unaligned((this + 0x30) as *mut u32, 3);
+    }
+    match cqr4_d(this + 0x30) {
+        2 => {
+            let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x9094c0usize);
+            f(this);
+        }
+        3 => {
+            let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x9097d0usize);
+            f(this);
+        }
+        _ => {}
+    }
+}
+
+/// { 0x9094c0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_playoff_stage()`, o play-off
+/// da MLS, da fase seguinte.
+/// 1) Uma lista de 8 (malloc 0x944e46 de 0x20; sem memória: a caixa da linha 0x58d e volta).
+/// 2) Os três campeões de divisão (o primeiro da tabela da liga, da fase 0 e da fase 1), em registros de 6 bytes (o
+///    clube e os pontos, +0x19 da linha), ordenados pelos pontos (qsort 0x945333 com 0x90a130: mais pontos primeiro),
+///    vão às vagas 1, 3 e 5 da lista.
+/// 3) Os outros: o segundo, o terceiro e o quarto de cada tabela (na ordem: liga, fase 0, fase 1, linha a linha), nove
+///    registros ordenados pelos pontos do mesmo jeito; os cinco melhores vão às vagas 7, 6, 4, 2 e 0 (o melhor na 7).
+///    Os pares do play-off: o melhor campeão contra o quinto melhor dos outros, o segundo campeão contra o quarto, o
+///    terceiro campeão contra o terceiro, e o melhor dos outros contra o segundo [inferência: os pares da lista].
+/// 4) A tabela das rodadas pela virtual +0x3c (thiscall(this, 2, &rodadas, &extra, 0), ret 0x10); a fase (operator
+///    new 0x944cf1(0xb2) e o construtor Cup_Stage 0x522e00, thiscall, ret 0x3c: a liga, 8, a lista, as rodadas, +4, a
+///    tabela, o ano +0x40, 2, 1, o extra, 0x12, 1, 0, 0 e sementes nulas; a cópia passa as words limpas) em [+0xc][2]
+///    e a tabela liberada (free 0x9452ca). Sem fase: a caixa da linha 0x5c4. Com ela: Cup::set_up_round (0x51c800,
+///    thiscall(fase, 0), ret 4). A lista não é liberada (a fase fica com ela; a original a deixa assim).
+unsafe extern "thiscall" fn cqr4_play_off_da_mls(this: usize) {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let ordenar: unsafe extern "C" fn(*mut u8, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
+    #[allow(clippy::type_complexity)]
+    let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
+        core::mem::transmute(0x522e00usize);
+    let (a, b) = (cqr4_d(cqr4_d(this + 0xc)), cqr4_d(cqr4_d(this + 0xc) + 4));
+    let lista = alocar(0x20);
+    if lista == 0 {
+        return aviso_em(0xaa1fb4, 0x58d);
+    }
+    let poe = |k: usize, c: usize| core::ptr::write_unaligned((lista + 4 * k) as *mut usize, c);
+    let mut r = [0u8; 54];
+    cqr4_por(&mut r, 0, cqr4_linha(this, 0));
+    cqr4_por(&mut r, 1, cqr4_linha(a, 0));
+    cqr4_por(&mut r, 2, cqr4_linha(b, 0));
+    ordenar(r.as_mut_ptr(), 3, 6, 0x90a130);
+    poe(1, cqr4_clube(&r, 0)); // cqr4: o melhor campeão de divisão
+    poe(3, cqr4_clube(&r, 1));
+    poe(5, cqr4_clube(&r, 2));
+    let mut k = 0usize;
+    for j in 1..4 {
+        for t in [this, a, b] {
+            cqr4_por(&mut r, k, cqr4_linha(t, j));
+            k += 1;
+        }
+    }
+    ordenar(r.as_mut_ptr(), 9, 6, 0x90a130);
+    poe(7, cqr4_clube(&r, 0));
+    poe(6, cqr4_clube(&r, 1));
+    poe(4, cqr4_clube(&r, 2));
+    poe(2, cqr4_clube(&r, 3));
+    poe(0, cqr4_clube(&r, 4)); // cqr4: o quinto melhor dos outros
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqr4_d(cqr4_d(this) + 0x3c));
+    let (mut rodadas, mut extra) = (0i16, 0i16);
+    let t = tabela(this, 2, &mut rodadas, &mut extra, 0);
+    let p = novo(0xb2);
+    let fase = if p != 0 {
+        construir(p, this, 8, lista, rodadas as u16 as u32, cqr4_d(this + 4), t, cqr4_w(this + 0x40) as u16 as u32, 2, 1,
+                  extra as u16 as u32, 0x12, 1, 0, 0, 0)
+    } else {
+        0
+    };
+    core::ptr::write_unaligned((cqr4_d(this + 0xc) + 8) as *mut usize, fase);
+    soltar(t);
+    let fase = cqr4_d(cqr4_d(this + 0xc) + 8);
+    if fase == 0 {
+        return aviso_em(0xaa1fb4, 0x5c4);
+    }
+    crate::comparacao::ramo("cqr_4 play-off");
+    montar(fase, 0);
+}
+
+/// { 0x9097d0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_final_stage()`, a final da MLS
+/// Cup, da fase seguinte: os dois primeiros times do play-off ([+0xc][2], os registros de 6 bytes de +0xa7, na ordem)
+/// com a marca de vencedor (+5 = 1) numa lista de 2 (malloc 0x944e46 de 8; sem memória: a caixa da linha 0x5e5 e
+/// volta); a tabela das rodadas pela virtual +0x3c (thiscall(this, 3, &rodadas, &extra, 0), ret 0x10); a fase
+/// (operator new 0x944cf1(0xb2) e o construtor Cup_Stage 0x522e00: a liga, 2, a lista, as rodadas, +4, a tabela, o ano,
+/// 3, 1, o extra, 0x14, 0, 0, 0 e sementes nulas) em [+0xc][3] e a tabela liberada. Sem fase: a caixa da linha 0x5fe e
+/// volta (sem liberar a lista). Com ela: Cup::set_up_round (thiscall(fase, 0)) e a lista liberada (free 0x9452ca).
+unsafe extern "thiscall" fn cqr4_final_da_mls(this: usize) {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
+    #[allow(clippy::type_complexity)]
+    let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
+        core::mem::transmute(0x522e00usize);
+    let po = cqr4_d(cqr4_d(this + 0xc) + 8);
+    let lista = alocar(8);
+    if lista == 0 {
+        return aviso_em(0xaa1fb4, 0x5e5);
+    }
+    let mut n = 0i8;
+    let mut i = 0i32;
+    while i < cqr4_w(po + 0x3e) as i32 && n < 2 {
+        let e = cqr4_d(po + 0xa7) + 6 * i as usize;
+        if *((e + 5) as *const u8) == 1 {
+            core::ptr::write_unaligned((lista + 4 * n as usize) as *mut usize, cqr4_d(e)); // cqr4: os finalistas
+            n += 1;
+        }
+        i += 1;
+    }
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqr4_d(cqr4_d(this) + 0x3c));
+    let (mut rodadas, mut extra) = (0i16, 0i16);
+    let t = tabela(this, 3, &mut rodadas, &mut extra, 0);
+    let p = novo(0xb2);
+    let fase = if p != 0 {
+        construir(p, this, 2, lista, rodadas as u16 as u32, cqr4_d(this + 4), t, cqr4_w(this + 0x40) as u16 as u32, 3, 1,
+                  extra as u16 as u32, 0x14, 0, 0, 0, 0)
+    } else {
+        0
+    };
+    core::ptr::write_unaligned((cqr4_d(this + 0xc) + 0xc) as *mut usize, fase);
+    soltar(t);
+    let fase = cqr4_d(cqr4_d(this + 0xc) + 0xc);
+    if fase == 0 {
+        return aviso_em(0xaa1fb4, 0x5fe);
+    }
+    crate::comparacao::ramo("cqr_4 final");
+    montar(fase, 0);
+    soltar(lista);
+}
+
+unsafe extern "thiscall" fn comparar_cqr4_fase_seguinte_da_mls(this: usize) {
+    let antes = cqr4_d(this + 0x30) as i32;
+    let ultima = antes >= (cqr4_d(this + 0x2c) as i32).wrapping_sub(1);
+    orig::<unsafe extern "thiscall" fn(usize)>(1996)(this);
+    let depois = cqr4_d(this + 0x30) as i32;
+    let esperado = if ultima { antes } else if antes == 1 || antes == 2 { antes + 1 } else { antes };
+    PLACAR.registrar(depois == esperado, || format!("cqr4_fase_seguinte_da_mls({:#x}) antes={} depois={}", this, antes, depois));
+}
+
+/// O comparador do play-off: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
+/// antes pela cópia da escolha (os mesmos registros e o mesmo qsort): a fase da terceira vaga existe, com +0x3e = 8, +4
+/// = o +4 da liga e os oito na lista dela (+0xa7, 6 bytes; como conjunto).
+unsafe extern "thiscall" fn comparar_cqr4_play_off_da_mls(this: usize) {
+    let ordenar: unsafe extern "C" fn(*mut u8, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let (a, b) = (cqr4_d(cqr4_d(this + 0xc)), cqr4_d(cqr4_d(this + 0xc) + 4));
+    let mut plano = [0usize; 8];
+    let mut r = [0u8; 54];
+    cqr4_por(&mut r, 0, cqr4_linha(this, 0));
+    cqr4_por(&mut r, 1, cqr4_linha(a, 0));
+    cqr4_por(&mut r, 2, cqr4_linha(b, 0));
+    ordenar(r.as_mut_ptr(), 3, 6, 0x90a130);
+    for k in 0..3 {
+        plano[k] = cqr4_clube(&r, k);
+    }
+    let mut k = 0usize;
+    for j in 1..4 {
+        for t in [this, a, b] {
+            cqr4_por(&mut r, k, cqr4_linha(t, j));
+            k += 1;
+        }
+    }
+    ordenar(r.as_mut_ptr(), 9, 6, 0x90a130);
+    for k in 0..5 {
+        plano[3 + k] = cqr4_clube(&r, k);
+    }
+    orig::<unsafe extern "thiscall" fn(usize)>(1997)(this);
+    let fase = cqr4_d(cqr4_d(this + 0xc) + 8);
+    let igual = fase != 0 && cqr4_w(fase + 0x3e) == 8 && cqr4_d(fase + 4) == cqr4_d(this + 4) && {
+        let mut nela = [0usize; 8];
+        for (i, c) in nela.iter_mut().enumerate() {
+            *c = cqr4_d(cqr4_d(fase + 0xa7) + 6 * i);
+        }
+        let mut p = plano;
+        p.sort_unstable();
+        nela.sort_unstable();
+        p == nela
+    };
+    PLACAR.registrar(igual, || format!("cqr4_play_off_da_mls({:#x}) fase={:#x} plano={:x?}", this, fase, plano));
+}
+
+/// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito antes:
+/// os dois primeiros vencedores do play-off. Depois, a fase da quarta vaga existe, com +0x3e = 2, +4 = o +4 da liga e
+/// os dois na lista dela (como conjunto).
+unsafe extern "thiscall" fn comparar_cqr4_final_da_mls(this: usize) {
+    let po = cqr4_d(cqr4_d(this + 0xc) + 8);
+    let mut v = [0usize; 2];
+    let mut n = 0usize;
+    let mut i = 0i32;
+    while i < cqr4_w(po + 0x3e) as i32 && n < 2 {
+        let e = cqr4_d(po + 0xa7) + 6 * i as usize;
+        if *((e + 5) as *const u8) == 1 {
+            v[n] = cqr4_d(e);
+            n += 1;
+        }
+        i += 1;
+    }
+    orig::<unsafe extern "thiscall" fn(usize)>(1998)(this);
+    let fase = cqr4_d(cqr4_d(this + 0xc) + 0xc);
+    // ponytail: com menos de dois vencedores a original lê vagas da lista sem valor; aí só a fase é conferida.
+    let igual = fase != 0 && n < 2 || fase != 0 && {
+        let l = cqr4_d(fase + 0xa7);
+        let (x, y) = (cqr4_d(l), cqr4_d(l + 6));
+        cqr4_w(fase + 0x3e) == 2 && cqr4_d(fase + 4) == cqr4_d(this + 4) && ((x, y) == (v[0], v[1]) || (x, y) == (v[1], v[0]))
+    };
+    PLACAR.registrar(igual, || format!("cqr4_final_da_mls({:#x}) finalistas={:x?} n={} fase={:#x}", this, v, n, fase));
+}
+
+// ---------- 282a leva: a virada das copas: a Copa do Brasil, a Copa do Imperador e a Copa da Liga japonesa (a temporada nova: as tabelas liberadas, o ano, os inscritos, as rodadas e a árvore) (bra_cup.cpp, jap_emp_cup.cpp, jap_j_cup.cpp) ----------
+
+unsafe fn cqr5_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const u32) as usize
+}
+
+unsafe fn cqr5_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+/// A virtual `o` da copa (thiscall, sem argumentos; mov edx, [esi]; mov ecx, esi; call [edx + o]).
+unsafe fn cqr5_virtual(this: usize, o: usize) -> i32 {
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(cqr5_d(cqr5_d(this) + o));
+    f(this)
+}
+
+/// A virada da temporada de uma copa de mata-mata (`start_new_season`, slot 3, +0x08; o mesmo molde nas copas, conferido
+/// instrução a instrução: só mudam o fonte das caixas, as linhas e a rotina dos inscritos): +0x4c = 0; a lista dos
+/// inscritos (+0xa7) e a das rodadas (+0xa3) liberadas (0x9452ca, cdecl) e zeradas; os confrontos por rodada (+0xad: um
+/// vetor por rodada, +0x3c rodadas, word com sinal) liberados e zerados um a um e o vetor liberado e zerado; com
+/// estatísticas (+8), Comp_Stats::archive_season_and_reset (0x4a1c50, push 1; mov ecx -> thiscall, ret 4); o ano (+0x40,
+/// word) sobe `ano` (1); +0xab = 0 e +0xb1 = 0 (bytes); então, cada um com a sua caixa se devolver negativo: os inscritos
+/// (`inscritos`, mov ecx, esi; call direto -> thiscall, ret 0), as rodadas (virtual +0x8c, create_round_table pela fase
+/// −1) e a árvore dos confrontos (virtual +0x94); por fim as posições previstas (virtual +0x5c), cujo eax ela devolve.
+unsafe fn cqr5_virada(this: usize, inscritos: usize, arquivo: usize, linhas: [u32; 3], ano: i16, ramo: &'static str) -> u32 {
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
+    for o in [0xa7usize, 0xa3] {
+        let l = cqr5_d(this + o);
+        if l != 0 {
+            soltar(l);
+            core::ptr::write_unaligned((this + o) as *mut u32, 0);
+        }
+    }
+    if cqr5_d(this + 0xad) != 0 {
+        let mut i = 0i32;
+        while i < cqr5_w(this + 0x3c) as i32 {
+            let p = cqr5_d(cqr5_d(this + 0xad) + i as usize * 4);
+            if p != 0 {
+                soltar(p);
+                core::ptr::write_unaligned((cqr5_d(this + 0xad) + i as usize * 4) as *mut u32, 0);
+            }
+            i += 1;
+        }
+        soltar(cqr5_d(this + 0xad));
+        core::ptr::write_unaligned((this + 0xad) as *mut u32, 0);
+    }
+    let e = cqr5_d(this + 8);
+    if e != 0 {
+        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
+        arquivar(e, 1);
+    }
+    let a = cqr5_w(this + 0x40);
+    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
+    crate::comparacao::ramo(ramo);
+    *((this + 0xab) as *mut u8) = 0;
+    *((this + 0xb1) as *mut u8) = 0;
+    let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(inscritos);
+    // ponytail: nas caixas a original sai com o eax da caixa (0x5e8290); quem chama a virada não lê a devolução
+    if inscritos(this) < 0 {
+        aviso_em(arquivo, linhas[0]);
+        return 0;
+    }
+    if cqr5_virtual(this, 0x8c) < 0 {
+        aviso_em(arquivo, linhas[1]);
+        return 0;
+    }
+    if cqr5_virtual(this, 0x94) < 0 {
+        aviso_em(arquivo, linhas[2]);
+        return 0;
+    }
+    cqr5_virtual(this, 0x5c) as u32
+}
+
+/// O comparador da virada: só a original (ponytail: libera as tabelas e refaz os inscritos, as rodadas e a árvore, que
+/// alocam e sorteiam; não pode rodar duas vezes), conferindo o que só ela garante: o ano (+0x40) sobe um.
+unsafe fn cqr5_comparar(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
+    let antes = cqr5_w(this + 0x40);
+    let r = original();
+    let depois = cqr5_w(this + 0x40);
+    PLACAR.registrar(depois == antes.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", nome, this, antes, depois));
+    r
+}
+
+/// { 0x427d10 } (thiscall, ret 0, bra_cup.cpp; a virtual +0x08 da Copa do Brasil): `BraCup::start_new_season()`, a
+/// virada (`cqr5_virada`) com os inscritos de BraCup::build_team_table (0x427c20) e as caixas do bra_cup.cpp nas linhas
+/// 0x189, 0x190 e 0x197.
+unsafe extern "thiscall" fn cqr5_virada_copa_do_brasil(this: usize) -> u32 {
+    cqr5_virada(this, 0x427c20, 0x98a3bc, [0x189, 0x190, 0x197], 1, "cqr_5 virada da copa do brasil") // cqr5: a Copa do Brasil
+}
+
+unsafe extern "thiscall" fn comparar_cqr5_virada_copa_do_brasil(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1999);
+    cqr5_comparar("cqr5_virada_copa_do_brasil", this, || o(this))
+}
+
+/// { 0x662950 } (thiscall, ret 0, jap_emp_cup.cpp; a virtual +0x08 da Copa do Imperador): `JapEmpCup::start_new_season()`,
+/// a virada (`cqr5_virada`) com os inscritos de JapEmpCup::collect_entrants (0x6624f0) e as caixas do jap_emp_cup.cpp nas
+/// linhas 0x217, 0x21e e 0x225.
+unsafe extern "thiscall" fn cqr5_virada_copa_do_imperador(this: usize) -> u32 {
+    cqr5_virada(this, 0x6624f0, 0x9eab90, [0x217, 0x21e, 0x225], 1, "cqr_5 virada da copa do imperador") // cqr5: a Copa do Imperador
+}
+
+unsafe extern "thiscall" fn comparar_cqr5_virada_copa_do_imperador(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2000);
+    cqr5_comparar("cqr5_virada_copa_do_imperador", this, || o(this))
+}
+
+/// { 0x665bc0 } (thiscall, ret 0, jap_j_cup.cpp; a virtual +0x08 da Copa da Liga japonesa): `JapJCup::start_new_season()`,
+/// a virada (`cqr5_virada`) com os inscritos de 0x665a00 (thiscall, ret 0) e as caixas do jap_j_cup.cpp nas linhas 0x1a3,
+/// 0x1aa e 0x1b1.
+unsafe extern "thiscall" fn cqr5_virada_copa_da_liga_japonesa(this: usize) -> u32 {
+    cqr5_virada(this, 0x665a00, 0x9eaf14, [0x1a3, 0x1aa, 0x1b1], 1, "cqr_5 virada da copa da liga japonesa") // cqr5: a Copa da Liga japonesa
+}
+
+unsafe extern "thiscall" fn comparar_cqr5_virada_copa_da_liga_japonesa(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2001);
+    cqr5_comparar("cqr5_virada_copa_da_liga_japonesa", this, || o(this))
+}
+
+// ---------- 282a leva: a virada das copas: a Supercopa japonesa, a Copa dos EUA e o Jogo das Estrelas da MLS (com os dois times das estrelas e o estádio sorteado) (jap_super.cpp, usa_open_cup.cpp, usa_mls_all_stars.cpp) ----------
+
+unsafe fn cqr6_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const u32) as usize
+}
+
+unsafe fn cqr6_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqr6_pd(a: usize, v: usize) {
+    core::ptr::write_unaligned(a as *mut u32, v as u32)
+}
+
+/// A virtual `o` da copa (thiscall, sem argumentos; mov edx, [esi]; mov ecx, esi; call [edx + o]).
+unsafe fn cqr6_virtual(this: usize, o: usize) -> i32 {
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(cqr6_d(cqr6_d(this) + o));
+    f(this)
+}
+
+/// A virada da temporada de uma copa (`start_new_season`, slot 3, +0x08; o molde das copas de mata-mata, conferido
+/// instrução a instrução: só mudam o fonte das caixas, as linhas e a rotina dos inscritos): +0x4c = 0; a lista dos
+/// inscritos (+0xa7) e a das rodadas (+0xa3) liberadas (0x9452ca, cdecl) e zeradas; os confrontos por rodada (+0xad: um
+/// vetor por rodada, +0x3c rodadas, word com sinal) liberados e zerados um a um e o vetor liberado e zerado; com
+/// estatísticas (+8), Comp_Stats::archive_season_and_reset (0x4a1c50, push 1; mov ecx -> thiscall, ret 4); o ano (+0x40,
+/// word) sobe `ano` (1); +0xab = 0 e +0xb1 = 0 (bytes); então, cada um com a sua caixa se devolver negativo: os inscritos
+/// (`inscritos`, mov ecx, esi; call direto -> thiscall, ret 0), as rodadas (virtual +0x8c) e a árvore dos confrontos
+/// (virtual +0x94); por fim, com `previstas`, as posições previstas (virtual +0x5c), cujo eax ela devolve (o Jogo das
+/// Estrelas não as tem: devolve o eax da árvore).
+unsafe fn cqr6_virada(this: usize, inscritos: usize, arquivo: usize, linhas: [u32; 3], ano: i16, previstas: bool, ramo: &'static str) -> u32 {
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    cqr6_pd(this + 0x4c, 0);
+    for o in [0xa7usize, 0xa3] {
+        let l = cqr6_d(this + o);
+        if l != 0 {
+            soltar(l);
+            cqr6_pd(this + o, 0);
+        }
+    }
+    if cqr6_d(this + 0xad) != 0 {
+        let mut i = 0i32;
+        while i < cqr6_w(this + 0x3c) as i32 {
+            let p = cqr6_d(cqr6_d(this + 0xad) + i as usize * 4);
+            if p != 0 {
+                soltar(p);
+                cqr6_pd(cqr6_d(this + 0xad) + i as usize * 4, 0);
+            }
+            i += 1;
+        }
+        soltar(cqr6_d(this + 0xad));
+        cqr6_pd(this + 0xad, 0);
+    }
+    let e = cqr6_d(this + 8);
+    if e != 0 {
+        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
+        arquivar(e, 1);
+    }
+    let a = cqr6_w(this + 0x40);
+    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
+    crate::comparacao::ramo(ramo);
+    *((this + 0xab) as *mut u8) = 0;
+    *((this + 0xb1) as *mut u8) = 0;
+    let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(inscritos);
+    // ponytail: nas caixas a original sai com o eax da caixa (0x5e8290); quem chama a virada não lê a devolução
+    if inscritos(this) < 0 {
+        aviso_em(arquivo, linhas[0]);
+        return 0;
+    }
+    if cqr6_virtual(this, 0x8c) < 0 {
+        aviso_em(arquivo, linhas[1]);
+        return 0;
+    }
+    let r = cqr6_virtual(this, 0x94);
+    if r < 0 {
+        aviso_em(arquivo, linhas[2]);
+        return 0;
+    }
+    if !previstas {
+        return r as u32;
+    }
+    cqr6_virtual(this, 0x5c) as u32
+}
+
+/// O comparador da virada: só a original (ponytail: libera as tabelas e refaz os inscritos, as rodadas e a árvore, que
+/// alocam e sorteiam; não pode rodar duas vezes), conferindo o que só ela garante: o ano (+0x40) sobe um.
+unsafe fn cqr6_comparar(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
+    let antes = cqr6_w(this + 0x40);
+    let r = original();
+    let depois = cqr6_w(this + 0x40);
+    PLACAR.registrar(depois == antes.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", nome, this, antes, depois));
+    r
+}
+
+/// { 0x6664e0 } (thiscall, ret 0, jap_super.cpp; a virtual +0x08 da Supercopa japonesa): `JapSuper::start_new_season()`,
+/// a virada (`cqr6_virada`) com os dois clubes de JapSuper::select_teams (0x666160) e as caixas do jap_super.cpp nas
+/// linhas 0x14b, 0x152 e 0x159.
+unsafe extern "thiscall" fn cqr6_virada_supercopa_japonesa(this: usize) -> u32 {
+    cqr6_virada(this, 0x666160, 0x9eaf4c, [0x14b, 0x152, 0x159], 1, true, "cqr_6 virada da supercopa japonesa") // cqr6: a Supercopa japonesa
+}
+
+unsafe extern "thiscall" fn comparar_cqr6_virada_supercopa_japonesa(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2002);
+    cqr6_comparar("cqr6_virada_supercopa_japonesa", this, || o(this))
+}
+
+/// { 0x90b790 } (thiscall, ret 0, usa_open_cup.cpp; a virtual +0x08 da Copa dos EUA): `UsaOpenCup::start_new_season()`,
+/// a virada (`cqr6_virada`) com os inscritos de UsaOpenCup::collect_entrants (0x90b530) e as caixas do usa_open_cup.cpp
+/// nas linhas 0x198, 0x19f e 0x1a6.
+unsafe extern "thiscall" fn cqr6_virada_copa_dos_eua(this: usize) -> u32 {
+    cqr6_virada(this, 0x90b530, 0xaa20e0, [0x198, 0x19f, 0x1a6], 1, true, "cqr_6 virada da copa dos eua") // cqr6: a Copa dos EUA
+}
+
+unsafe extern "thiscall" fn comparar_cqr6_virada_copa_dos_eua(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2003);
+    cqr6_comparar("cqr6_virada_copa_dos_eua", this, || o(this))
+}
+
+/// { 0x90a760 } (thiscall, ret 0, usa_mls_all_stars.cpp; a virtual +0x08 do Jogo das Estrelas): `UsaMlsAllStars::
+/// start_new_season()`, a virada (`cqr6_virada`) com os dois times de UsaMlsAllStars::set_up_teams (0x90a540) e as caixas
+/// do usa_mls_all_stars.cpp nas linhas 0x133, 0x13a e 0x141, sem as posições previstas.
+unsafe extern "thiscall" fn cqr6_virada_jogo_das_estrelas(this: usize) -> u32 {
+    cqr6_virada(this, 0x90a540, 0xaa20a0, [0x133, 0x13a, 0x141], 1, false, "cqr_6 virada do jogo das estrelas") // cqr6: o Jogo das Estrelas
+}
+
+unsafe extern "thiscall" fn comparar_cqr6_virada_jogo_das_estrelas(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2004);
+    cqr6_comparar("cqr6_virada_jogo_das_estrelas", this, || o(this))
+}
+
+/// O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
+unsafe fn cqr6_clube(i: usize) -> usize {
+    cqr6_d(0xae23b4).wrapping_add(i.wrapping_mul(0x245))
+}
+
+/// { 0x90a540 } (thiscall, ret 0, usa_mls_all_stars.cpp): `UsaMlsAllStars::set_up_teams()`, os dois times do Jogo das
+/// Estrelas: +0x3e = 2; a lista (0x944e46 de 0xc, cdecl; sem memória, a caixa da linha 0xc6 e −1) com os dois clubes das
+/// estrelas ([0x9d00a4] e [0x9d00a8], índices na tabela dos clubes): no ano ímpar (+0x40, com sinal) o de [0x9d00a4] é o
+/// primeiro (o mandante) e a conferência dos estádios é 0x413; no ano par o de [0x9d00a8] é o primeiro e a conferência é
+/// 0x414. Um sorteio de 0 a 5 (0x90cfc0(6), cdecl) escolhe o k-ésimo clube da MLS ([0x9cf590] na divisão do clube, +0x57)
+/// dessa conferência (usa_mls_get_club_division 0x909ec0, push clube; add esp -> cdecl, palavra com sinal), pela ordem
+/// da tabela: o primeiro time das estrelas fica com o estádio dele (+0x69) e +0x6d = 0 (sem o k-ésimo, nada muda). Os
+/// dois ficam com a nação [0xae23a8] + 0x122 × [0x9cf4f8] (+0x53, os EUA [inferência]) e os quatro bytes da lista (+4,
+/// +5, +0xa, +0xb) zerados. Devolve 1.
+unsafe fn cqr6_times(this: usize) -> i32 {
+    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 2);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let l = alocar(0xc);
+    cqr6_pd(this + 0xa7, l);
+    if l == 0 {
+        aviso_em(0xaa20a0, 0xc6);
+        return -1;
+    }
+    let (a, b) = (cqr6_d(0x9d00a4), cqr6_d(0x9d00a8));
+    let conferencia = if cqr6_w(this + 0x40) % 2 != 0 {
+        cqr6_pd(l, cqr6_clube(a));
+        cqr6_pd(cqr6_d(this + 0xa7) + 6, cqr6_clube(b));
+        0x413
+    } else {
+        cqr6_pd(l + 6, cqr6_clube(a));
+        cqr6_pd(cqr6_d(this + 0xa7), cqr6_clube(b));
+        0x414
+    };
+    let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
+    let mut k = sortear(6) as u8; // cqr6: o estádio sorteado entre 6
+    let divisao: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(0x909ec0usize);
+    let mut i = 0usize;
+    while (i as i32) < cqr6_d(0xae235c) as i32 {
+        let c = cqr6_clube(i);
+        let liga = cqr6_d(c + 0x57);
+        if liga != 0 && cqr6_d(liga) == cqr6_d(0x9cf590) && divisao(c) as i32 == conferencia {
+            if k == 0 {
+                crate::comparacao::ramo("cqr_6 estadio do jogo das estrelas");
+                let primeiro = cqr6_d(cqr6_d(this + 0xa7));
+                cqr6_pd(primeiro + 0x69, cqr6_d(c + 0x69)); // cqr6: o estádio do clube sorteado
+                *((cqr6_d(cqr6_d(this + 0xa7)) + 0x6d) as *mut u8) = 0;
+                break;
+            }
+            k = k.wrapping_sub(1);
+        }
+        i += 1;
+    }
+    let nacao = cqr6_d(0xae23a8).wrapping_add(cqr6_d(0x9cf4f8).wrapping_mul(0x122));
+    let l = cqr6_d(this + 0xa7);
+    cqr6_pd(cqr6_d(l + 6) + 0x53, nacao);
+    cqr6_pd(cqr6_d(l) + 0x53, cqr6_d(cqr6_d(l + 6) + 0x53));
+    for o in [4usize, 5, 0xa, 0xb] {
+        *((cqr6_d(this + 0xa7) + o) as *mut u8) = 0;
+    }
+    1
+}
+
+unsafe extern "thiscall" fn cqr6_times_do_jogo_das_estrelas(this: usize) -> i32 {
+    cqr6_times(this)
+}
+
+/// Lado a lado a partir do mesmo estado (o sorteador, +0x3e, os dois clubes das estrelas e [0xb67a34]); a original deixa
+/// a lista dela em +0xa7, a cópia faz a sua (sem contar o sorteio), comparada nos 12 bytes e liberada. A lista antiga
+/// (+0xa7 na entrada) não é liberada por nenhuma das duas (a virada já a liberou).
+unsafe extern "thiscall" fn comparar_cqr6_times_do_jogo_das_estrelas(this: usize) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(2005);
+    let antes = cqr6_d(this + 0xa7);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(this + 0x3e, 2usize), (0xb67a34, 4), (cqr6_clube(cqr6_d(0x9d00a4)), 0x245), (cqr6_clube(cqr6_d(0x9d00a8)), 0x245)]);
+    let lo = core::cell::Cell::new(0usize);
+    let lr = core::cell::Cell::new(0usize);
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+        let r = o(this);
+        lo.set(cqr6_d(this + 0xa7));
+        cqr6_pd(this + 0xa7, antes);
+        r
+    }, || {
+        let r = crate::aleatorio::sem_contar(|| cqr6_times(this));
+        lr.set(cqr6_d(this + 0xa7));
+        cqr6_pd(this + 0xa7, lo.get());
+        r
+    });
+    let (lo, lr) = (lo.get(), lr.get());
+    let lista = if lo != 0 && lr != 0 {
+        core::slice::from_raw_parts(lo as *const u8, 0xc) == core::slice::from_raw_parts(lr as *const u8, 0xc)
+    } else {
+        lo == lr
+    };
+    if lr != 0 && lr != lo {
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+        soltar(lr);
+    }
+    PLACAR.registrar(igual && a == b && lista, || format!("cqr6_times_do_jogo_das_estrelas({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    a
+}
+
+// ---------- 282a leva: a Libertadores: o dia do sorteio, a tabela do primeiro grupo e as fases dos outros grupos (conmebol_liber.cpp) ----------
+
+unsafe fn cqr10_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const u32) as usize
+}
+
+unsafe fn cqr10_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqr10_pd(a: usize, v: usize) {
+    core::ptr::write_unaligned(a as *mut u32, v as u32)
+}
+
+/// O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
+unsafe fn cqr10_sorteado(this: usize, k: usize) -> usize {
+    cqr10_d(cqr10_d(this + 0xee) + k * 4) // cqr10: o sorteado k
+}
+
+/// { 0x4c4410 } (thiscall, ret 8, conmebol_liber.cpp; a virtual +0x14): `update_for_date(hoje, completo)`, o dia de a Libertadores.
+/// Fora do sorteio feito (+0x45 = 0) e com `completo`, no dia do sorteio (a data de 0x549ef0(+0xb6, +0xb8 + +0x40): o
+/// dia do ano e o ano relativo; comparada com a de hoje, +0 o dia do ano e +2 o ano, sem sinal): os clubes (0x4c3f40:
+/// mov ecx, this -> thiscall, ret 0), a tabela do primeiro grupo (0x4c37a0, thiscall, ret 0; 0: a caixa da linha 0x365),
+/// os jogos (0x6835c0 League::create_fixtures, thiscall, ret 0; 0: a caixa da linha 0x36a), a tabela ordenada (0x6827d0
+/// push 0; mov ecx -> thiscall, ret 4; 0: a caixa da linha 0x370), as fases dos grupos 0..6 (0x4c3b10: push g; mov ecx
+/// -> thiscall, ret 4), as posições previstas (a virtual +0x5c, thiscall, ret 0), a lista +0xee liberada (0x9452ca:
+/// push; add esp, 4 -> cdecl) e zerada e +0x45 = 1. Um erro dá a caixa da linha e segue. Depois o dia de liga (0x6847c0: push completo; push
+/// hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela repassa.
+unsafe extern "thiscall" fn cqr10_libertadores_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+    let clubes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4c3f40usize);
+    let primeiro: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x4c37a0usize);
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
+    let fase: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(0x4c3b10usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x6847c0usize);
+    if cqr10_d(this + 0x45) == 0 && completo != 0 {
+        let dia = cqr10_w(this + 0xb6) as u16; // cqr10: o dia do sorteio
+        let ano = (cqr10_w(this + 0xb8) as u16).wrapping_add(cqr10_w(this + 0x40) as u16);
+        if ano == core::ptr::read_unaligned((hoje + 2) as *const u16) && dia == core::ptr::read_unaligned(hoje as *const u16) {
+            crate::comparacao::ramo("cqr_10 sorteio da libertadores");
+            clubes(this);
+            if primeiro(this) == 0 {
+                aviso_em(0x9a7de4, 0x365);
+            }
+            if jogos(this) == 0 {
+                aviso_em(0x9a7de4, 0x36a);
+            }
+            if ordenar(this, 0) == 0 {
+                aviso_em(0x9a7de4, 0x370);
+            }
+            for g in 0..7i32 {
+                fase(this, g);
+            }
+            let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqr10_d(cqr10_d(this) + 0x5c));
+            previstas(this);
+            soltar(cqr10_d(this + 0xee));
+            cqr10_pd(this + 0xee, 0);
+            cqr10_pd(this + 0x45, 1);
+        }
+    }
+    liga(this, hoje, completo)
+}
+
+// ponytail: os clubes (embaralhados), as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
+// no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 7 fases
+// criadas e a fase atual (+0x30) a última delas.
+unsafe extern "thiscall" fn comparar_cqr10_libertadores_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(2006);
+    let sorteia = cqr10_d(this + 0x45) == 0
+        && completo != 0
+        && (cqr10_w(this + 0xb8) as u16).wrapping_add(cqr10_w(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
+        && cqr10_w(this + 0xb6) as u16 == core::ptr::read_unaligned(hoje as *const u16);
+    let r = o(this, hoje, completo);
+    if sorteia {
+        let fases = cqr10_d(this + 0xc);
+        let ok = cqr10_d(this + 0x45) == 1
+            && cqr10_d(this + 0xee) == 0
+            && cqr10_d(this + 0xb1) != 0
+            && fases != 0
+            && (0..7).all(|g| cqr10_d(fases + g * 4) != 0)
+            && cqr10_d(this + 0x30) == 6;
+        PLACAR.registrar(ok, || format!("cqr10_libertadores_dia({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqr10_d(this + 0x45), cqr10_d(this + 0x30) as i32));
+    }
+    r
+}
+
+/// { 0x4c37a0 } (thiscall, ret 0, conmebol_liber.cpp): a tabela do primeiro grupo da Libertadores: 4 times (+0x3e), a tabela +0xb1
+/// (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 linhas de 0x3b bytes; sem memória, a caixa da linha 0x16f e
+/// devolve 0), cada linha i com o sorteado i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push clube; push
+/// i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0)
+/// e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
+unsafe extern "thiscall" fn cqr10_libertadores_primeiro_grupo(this: usize) -> u32 {
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 4);
+    let t = novo(0xec);
+    cqr10_pd(this + 0xb1, t);
+    if t == 0 {
+        aviso_em(0x9a7de4, 0x16f);
+        return 0;
+    }
+    let mut i = 0i8;
+    while (i as i16) < cqr10_w(this + 0x3e) {
+        crate::comparacao::ramo("cqr_10 linha do primeiro grupo");
+        // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
+        linha(this, i as u8 as u32, cqr10_sorteado(this, i as usize), 0, 0);
+        i = i.wrapping_add(1);
+    }
+    noticia(this);
+    1
+}
+
+// ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
+// original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
+unsafe extern "thiscall" fn comparar_cqr10_libertadores_primeiro_grupo(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2007);
+    let lista = cqr10_d(this + 0xee);
+    if lista == 0 {
+        return o(this);
+    }
+    let previstos: [usize; 4] = core::array::from_fn(|i| cqr10_d(lista + i * 4));
+    let r = o(this);
+    let t = cqr10_d(this + 0xb1);
+    let mut lidos = [(0usize, 0u8); 4];
+    if t != 0 {
+        for (i, l) in lidos.iter_mut().enumerate() {
+            *l = (cqr10_d(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
+        }
+    }
+    let igual = r == 1 && cqr10_w(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
+    PLACAR.registrar(igual, || format!("cqr10_libertadores_primeiro_grupo({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    r
+}
+
+/// { 0x4c3b10 } (thiscall, ret 4, conmebol_liber.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal): a fase
+/// do grupo g + 1 (g de 0 a 6, do dia do sorteio). Os times num vetor de +0x3e ponteiros (0x944e46(+0x3e << 2): push; add esp, 4 -> cdecl; sem
+/// memória, a caixa da linha 0x218 e 0): os sorteados 4g + 4 a 4g + 7 (+0xee); a tabela das rodadas pela virtual +0x3c
+/// (push 0; push &id; push &rodadas; push g; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xee) push; add
+/// esp, 4 -> cdecl; o construtor League_Stage 0x68b100, thiscall, ret 0x58, 22 argumentos: a copa, os times (+0x3e, word), o vetor,
+/// +0x3c (word), +4, a tabela das rodadas, as rodadas (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, o ano +0x40 (word),
+/// g, o id (word), +0x51, 2, 0, +0xd9 (word), −1, 0, 2; a original empurra os words e bytes com lixo nos bytes altos,
+/// que o construtor não lê: a cópia passa os valores limpos) em [+0xc][g]; o vetor e a tabela das rodadas liberados
+/// (0x9452ca). Sem fase: a caixa da linha 0x22e e 0. Com ela: a notícia do grupo (0x684230 na fase), +0x30 = g e 1.
+unsafe extern "thiscall" fn cqr10_libertadores_grupo(this: usize, g: i32) -> u32 {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    #[allow(clippy::type_complexity)]
+    let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
+        core::mem::transmute(0x68b100usize);
+    let times = alocar(((cqr10_w(this + 0x3e) as i32) << 2) as u32);
+    if times == 0 {
+        aviso_em(0x9a7de4, 0x218);
+        return 0;
+    }
+    let mut k = g * 4 + 4;
+    while k < g * 4 + 8 {
+        let n = (k - (g * 4 + 4)) as usize;
+        crate::comparacao::ramo("cqr_10 time do grupo");
+        cqr10_pd(times + n * 4, cqr10_sorteado(this, k as usize)); // cqr10: o time na vaga do grupo
+        k += 1;
+    }
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqr10_d(cqr10_d(this) + 0x3c));
+    let (mut rodadas, mut id) = (0i16, 0i16);
+    let tabela = rodadas_da_copa(this, g, &mut rodadas, &mut id, 0);
+    let p = novo(0xee);
+    let fase = if p != 0 {
+        let b = |d: usize| *((this + d) as *const u8) as u32;
+        construir(
+            p,
+            this,
+            cqr10_w(this + 0x3e) as u16 as u32,
+            times,
+            cqr10_w(this + 0x3c) as u16 as u32,
+            cqr10_d(this + 4),
+            tabela,
+            rodadas as u16 as u32,
+            b(0xc2),
+            b(0xc3),
+            b(0xc4),
+            this + 0xc5,
+            this + 0xbe,
+            cqr10_w(this + 0x40) as u16 as u32,
+            g as u32,
+            id as u16 as u32,
+            b(0x51),
+            2,
+            0,
+            cqr10_w(this + 0xd9) as u16 as u32,
+            -1,
+            0,
+            2,
+        )
+    } else {
+        0
+    };
+    cqr10_pd(cqr10_d(this + 0xc) + g as usize * 4, fase);
+    soltar(times);
+    soltar(tabela);
+    let f = cqr10_d(cqr10_d(this + 0xc) + g as usize * 4);
+    if f == 0 {
+        aviso_em(0x9a7de4, 0x22e);
+        return 0;
+    }
+    noticia(f);
+    cqr10_pd(this + 0x30, g as usize);
+    1
+}
+
+// ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
+// fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
+// sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
+unsafe extern "thiscall" fn comparar_cqr10_libertadores_grupo(this: usize, g: i32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(2008);
+    let lista = cqr10_d(this + 0xee);
+    if lista == 0 || !(0..7).contains(&g) {
+        return o(this, g);
+    }
+    let mut plano: Vec<usize> = (0..4).map(|k| cqr10_d(lista + (g as usize * 4 + 4 + k) * 4)).collect();
+    let r = o(this, g);
+    if r == 1 {
+        let f = cqr10_d(cqr10_d(this + 0xc) + g as usize * 4);
+        let t = if f != 0 { cqr10_d(f + 0xb1) } else { 0 };
+        let mut a: Vec<usize> = if t != 0 { (0..4).map(|k| cqr10_d(t + k * 0x3b)).collect() } else { Vec::new() };
+        a.sort_unstable();
+        plano.sort_unstable();
+        let ok = f != 0 && cqr10_d(this + 0x30) as i32 == g && cqr10_w(f + 0x3e) == 4 && cqr10_w(f + 0x40) == cqr10_w(this + 0x40) && a == plano;
+        PLACAR.registrar(ok, || format!("cqr10_libertadores_grupo({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
+    }
+    r
+}
+
+// ---------- 282a leva: a Mercosul: o dia do sorteio, a tabela do primeiro grupo e as fases dos outros grupos (conmebol_merc.cpp) ----------
+
+unsafe fn cqr11_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const u32) as usize
+}
+
+unsafe fn cqr11_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqr11_pd(a: usize, v: usize) {
+    core::ptr::write_unaligned(a as *mut u32, v as u32)
+}
+
+/// O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
+unsafe fn cqr11_sorteado(this: usize, k: usize) -> usize {
+    cqr11_d(cqr11_d(this + 0xee) + k * 4) // cqr11: o sorteado k
+}
+
+/// { 0x4c5c90 } (thiscall, ret 8, conmebol_merc.cpp; a virtual +0x14): `update_for_date(hoje, completo)`, o dia de a Mercosul.
+/// Primeiro a virada: no dia 1º de junho do ano de hoje (a data de 0x549f70(1, 5, ano, −1): lea ecx, local; push −1;
+/// push ano; push 5; push 1 -> thiscall, ret 0x10, pura: o dia do ano pelas tabelas dos meses, o mês contado de 0), se o ano da copa (+0x40,
+/// com sinal) não é o de hoje, a virtual +8 (a temporada nova: mov ecx, this -> thiscall, ret 0).
+/// Fora do sorteio feito (+0x45 = 0) e com `completo`, no dia do sorteio (a data de 0x549ef0(+0xb6, +0xb8 + +0x40): o
+/// dia do ano e o ano relativo; comparada com a de hoje, +0 o dia do ano e +2 o ano, sem sinal): os clubes (0x4c5850:
+/// mov ecx, this -> thiscall, ret 0), a tabela do primeiro grupo (0x4c4e60, thiscall, ret 0; 0: a caixa da linha 0x396),
+/// os jogos (0x6835c0 League::create_fixtures, thiscall, ret 0; 0: a caixa da linha 0x39b), a tabela ordenada (0x6827d0
+/// push 0; mov ecx -> thiscall, ret 4; 0: a caixa da linha 0x3a1), as fases dos grupos 0..3 (0x4c51d0: push g; mov ecx
+/// -> thiscall, ret 4), as posições previstas (a virtual +0x5c, thiscall, ret 0), a lista +0xee liberada (0x9452ca:
+/// push; add esp, 4 -> cdecl) e zerada e +0x45 = 1. Um erro dá a caixa da linha e segue. Depois o dia de liga (0x6847c0: push completo; push
+/// hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela repassa.
+unsafe extern "thiscall" fn cqr11_mercosul_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+    let clubes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4c5850usize);
+    let primeiro: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x4c4e60usize);
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
+    let fase: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(0x4c51d0usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x6847c0usize);
+    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> usize = core::mem::transmute(0x549f70usize);
+    let ano_de_hoje = core::ptr::read_unaligned((hoje + 2) as *const u16);
+    let mut junho = [0u8; 8];
+    data(junho.as_mut_ptr(), 1, 5, ano_de_hoje as u32, -1);
+    if core::ptr::read_unaligned(junho.as_ptr().add(2) as *const u16) == ano_de_hoje
+        && core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(hoje as *const u16)
+        && cqr11_w(this + 0x40) as i32 != ano_de_hoje as i32
+    {
+        let virada: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqr11_d(cqr11_d(this) + 8));
+        virada(this);
+    }
+    if cqr11_d(this + 0x45) == 0 && completo != 0 {
+        let dia = cqr11_w(this + 0xb6) as u16; // cqr11: o dia do sorteio
+        let ano = (cqr11_w(this + 0xb8) as u16).wrapping_add(cqr11_w(this + 0x40) as u16);
+        if ano == core::ptr::read_unaligned((hoje + 2) as *const u16) && dia == core::ptr::read_unaligned(hoje as *const u16) {
+            crate::comparacao::ramo("cqr_11 sorteio da mercosul");
+            clubes(this);
+            if primeiro(this) == 0 {
+                aviso_em(0x9a7e5c, 0x396);
+            }
+            if jogos(this) == 0 {
+                aviso_em(0x9a7e5c, 0x39b);
+            }
+            if ordenar(this, 0) == 0 {
+                aviso_em(0x9a7e5c, 0x3a1);
+            }
+            for g in 0..4i32 {
+                fase(this, g);
+            }
+            let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqr11_d(cqr11_d(this) + 0x5c));
+            previstas(this);
+            soltar(cqr11_d(this + 0xee));
+            cqr11_pd(this + 0xee, 0);
+            cqr11_pd(this + 0x45, 1);
+        }
+    }
+    liga(this, hoje, completo)
+}
+
+// ponytail: os clubes (embaralhados), as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
+// no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 4 fases
+// criadas e a fase atual (+0x30) a última delas.
+unsafe extern "thiscall" fn comparar_cqr11_mercosul_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(2009);
+    let sorteia = cqr11_d(this + 0x45) == 0
+        && completo != 0
+        && (cqr11_w(this + 0xb8) as u16).wrapping_add(cqr11_w(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
+        && cqr11_w(this + 0xb6) as u16 == core::ptr::read_unaligned(hoje as *const u16) && !cqr11_virada_hoje(this, hoje);
+    let r = o(this, hoje, completo);
+    if sorteia {
+        let fases = cqr11_d(this + 0xc);
+        let ok = cqr11_d(this + 0x45) == 1
+            && cqr11_d(this + 0xee) == 0
+            && cqr11_d(this + 0xb1) != 0
+            && fases != 0
+            && (0..4).all(|g| cqr11_d(fases + g * 4) != 0)
+            && cqr11_d(this + 0x30) == 3;
+        PLACAR.registrar(ok, || format!("cqr11_mercosul_dia({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqr11_d(this + 0x45), cqr11_d(this + 0x30) as i32));
+    }
+    r
+}
+
+/// O dia da virada (1º de junho do ano de hoje, com a copa de outro ano): o comparador não confere o sorteio nesse dia.
+unsafe fn cqr11_virada_hoje(this: usize, hoje: usize) -> bool {
+    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> usize = core::mem::transmute(0x549f70usize);
+    let ano_de_hoje = core::ptr::read_unaligned((hoje + 2) as *const u16);
+    let mut junho = [0u8; 8];
+    data(junho.as_mut_ptr(), 1, 5, ano_de_hoje as u32, -1);
+    core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(hoje as *const u16) && cqr11_w(this + 0x40) as i32 != ano_de_hoje as i32
+}
+
+/// { 0x4c4e60 } (thiscall, ret 0, conmebol_merc.cpp): a tabela do primeiro grupo da Mercosul: 4 times (+0x3e), a tabela +0xb1
+/// (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 linhas de 0x3b bytes; sem memória, a caixa da linha 0x155 e
+/// devolve 0), cada linha i com o sorteado i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push clube; push
+/// i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0)
+/// e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
+unsafe extern "thiscall" fn cqr11_mercosul_primeiro_grupo(this: usize) -> u32 {
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 4);
+    let t = novo(0xec);
+    cqr11_pd(this + 0xb1, t);
+    if t == 0 {
+        aviso_em(0x9a7e5c, 0x155);
+        return 0;
+    }
+    let mut i = 0i8;
+    while (i as i16) < cqr11_w(this + 0x3e) {
+        crate::comparacao::ramo("cqr_11 linha do primeiro grupo");
+        // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
+        linha(this, i as u8 as u32, cqr11_sorteado(this, i as usize), 0, 0);
+        i = i.wrapping_add(1);
+    }
+    noticia(this);
+    1
+}
+
+// ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
+// original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
+unsafe extern "thiscall" fn comparar_cqr11_mercosul_primeiro_grupo(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2010);
+    let lista = cqr11_d(this + 0xee);
+    if lista == 0 {
+        return o(this);
+    }
+    let previstos: [usize; 4] = core::array::from_fn(|i| cqr11_d(lista + i * 4));
+    let r = o(this);
+    let t = cqr11_d(this + 0xb1);
+    let mut lidos = [(0usize, 0u8); 4];
+    if t != 0 {
+        for (i, l) in lidos.iter_mut().enumerate() {
+            *l = (cqr11_d(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
+        }
+    }
+    let igual = r == 1 && cqr11_w(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
+    PLACAR.registrar(igual, || format!("cqr11_mercosul_primeiro_grupo({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    r
+}
+
+/// { 0x4c51d0 } (thiscall, ret 4, conmebol_merc.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal): a fase
+/// do grupo g + 1 (g de 0 a 3, do dia do sorteio). Os times num vetor de +0x3e ponteiros (0x944e46(+0x3e << 2): push; add esp, 4 -> cdecl; sem
+/// memória, a caixa da linha 0x1fb e 0): os sorteados 4g + 4 a 4g + 7 (+0xee); a tabela das rodadas pela virtual +0x3c
+/// (push 0; push &id; push &rodadas; push g; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xee) push; add
+/// esp, 4 -> cdecl; o construtor League_Stage 0x68b100, thiscall, ret 0x58, 22 argumentos: a copa, os times (+0x3e, word), o vetor,
+/// +0x3c (word), +4, a tabela das rodadas, as rodadas (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, o ano +0x40 (word),
+/// g, o id (word), +0x51, 2, 0, +0xd9 (word), −1, 0, 2; a original empurra os words e bytes com lixo nos bytes altos,
+/// que o construtor não lê: a cópia passa os valores limpos) em [+0xc][g]; o vetor e a tabela das rodadas liberados
+/// (0x9452ca). Sem fase: a caixa da linha 0x211 e 0. Com ela: a notícia do grupo (0x684230 na fase), +0x30 = g e 1.
+unsafe extern "thiscall" fn cqr11_mercosul_grupo(this: usize, g: i32) -> u32 {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    #[allow(clippy::type_complexity)]
+    let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
+        core::mem::transmute(0x68b100usize);
+    let times = alocar(((cqr11_w(this + 0x3e) as i32) << 2) as u32);
+    if times == 0 {
+        aviso_em(0x9a7e5c, 0x1fb);
+        return 0;
+    }
+    let mut k = g * 4 + 4;
+    while k < g * 4 + 8 {
+        let n = (k - (g * 4 + 4)) as usize;
+        crate::comparacao::ramo("cqr_11 time do grupo");
+        cqr11_pd(times + n * 4, cqr11_sorteado(this, k as usize)); // cqr11: o time na vaga do grupo
+        k += 1;
+    }
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqr11_d(cqr11_d(this) + 0x3c));
+    let (mut rodadas, mut id) = (0i16, 0i16);
+    let tabela = rodadas_da_copa(this, g, &mut rodadas, &mut id, 0);
+    let p = novo(0xee);
+    let fase = if p != 0 {
+        let b = |d: usize| *((this + d) as *const u8) as u32;
+        construir(
+            p,
+            this,
+            cqr11_w(this + 0x3e) as u16 as u32,
+            times,
+            cqr11_w(this + 0x3c) as u16 as u32,
+            cqr11_d(this + 4),
+            tabela,
+            rodadas as u16 as u32,
+            b(0xc2),
+            b(0xc3),
+            b(0xc4),
+            this + 0xc5,
+            this + 0xbe,
+            cqr11_w(this + 0x40) as u16 as u32,
+            g as u32,
+            id as u16 as u32,
+            b(0x51),
+            2,
+            0,
+            cqr11_w(this + 0xd9) as u16 as u32,
+            -1,
+            0,
+            2,
+        )
+    } else {
+        0
+    };
+    cqr11_pd(cqr11_d(this + 0xc) + g as usize * 4, fase);
+    soltar(times);
+    soltar(tabela);
+    let f = cqr11_d(cqr11_d(this + 0xc) + g as usize * 4);
+    if f == 0 {
+        aviso_em(0x9a7e5c, 0x211);
+        return 0;
+    }
+    noticia(f);
+    cqr11_pd(this + 0x30, g as usize);
+    1
+}
+
+// ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
+// fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
+// sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
+unsafe extern "thiscall" fn comparar_cqr11_mercosul_grupo(this: usize, g: i32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(2011);
+    let lista = cqr11_d(this + 0xee);
+    if lista == 0 || !(0..4).contains(&g) {
+        return o(this, g);
+    }
+    let mut plano: Vec<usize> = (0..4).map(|k| cqr11_d(lista + (g as usize * 4 + 4 + k) * 4)).collect();
+    let r = o(this, g);
+    if r == 1 {
+        let f = cqr11_d(cqr11_d(this + 0xc) + g as usize * 4);
+        let t = if f != 0 { cqr11_d(f + 0xb1) } else { 0 };
+        let mut a: Vec<usize> = if t != 0 { (0..4).map(|k| cqr11_d(t + k * 0x3b)).collect() } else { Vec::new() };
+        a.sort_unstable();
+        plano.sort_unstable();
+        let ok = f != 0 && cqr11_d(this + 0x30) as i32 == g && cqr11_w(f + 0x3e) == 4 && cqr11_w(f + 0x40) == cqr11_w(this + 0x40) && a == plano;
+        PLACAR.registrar(ok, || format!("cqr11_mercosul_grupo({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
+    }
+    r
+}
+
+// ---------- 282a leva: a Merconorte: o dia do sorteio, a tabela do primeiro grupo e as fases dos outros grupos (con_merc_cup.cpp) ----------
+
+unsafe fn cqr12_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const u32) as usize
+}
+
+unsafe fn cqr12_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqr12_pd(a: usize, v: usize) {
+    core::ptr::write_unaligned(a as *mut u32, v as u32)
+}
+
+/// O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
+unsafe fn cqr12_sorteado(this: usize, k: usize) -> usize {
+    cqr12_d(cqr12_d(this + 0xee) + k * 4) // cqr12: o sorteado k
+}
+
+/// { 0x4c2c90 } (thiscall, ret 8, con_merc_cup.cpp; a virtual +0x14): `update_for_date(hoje, completo)`, o dia de a Merconorte.
+/// Fora do sorteio feito (+0x45 = 0) e com `completo`, no dia do sorteio (a data de 0x549ef0(+0xb6, +0xb8 + +0x40): o
+/// dia do ano e o ano relativo; comparada com a de hoje, +0 o dia do ano e +2 o ano, sem sinal): os clubes (0x4c2560:
+/// mov ecx, this -> thiscall, ret 0), a tabela do primeiro grupo (0x4c1de0, thiscall, ret 0; 0: a caixa da linha 0x385),
+/// os jogos (0x6835c0 League::create_fixtures, thiscall, ret 0; 0: a caixa da linha 0x38b), a tabela ordenada (0x6827d0
+/// push 0; mov ecx -> thiscall, ret 4; 0: a caixa da linha 0x392), as fases dos grupos 0..2 (0x4c2140: push g; mov ecx
+/// -> thiscall, ret 4), as posições previstas (a virtual +0x5c, thiscall, ret 0), a lista +0xee liberada (0x9452ca:
+/// push; add esp, 4 -> cdecl) e zerada e +0x45 = 1. Um erro dá a caixa da linha e volta 0 sem o dia de liga. Depois o dia de liga (0x6847c0: push completo; push
+/// hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela repassa.
+unsafe extern "thiscall" fn cqr12_merconorte_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+    let clubes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4c2560usize);
+    let primeiro: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x4c1de0usize);
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
+    let fase: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(0x4c2140usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x6847c0usize);
+    if cqr12_d(this + 0x45) == 0 && completo != 0 {
+        let dia = cqr12_w(this + 0xb6) as u16; // cqr12: o dia do sorteio
+        let ano = (cqr12_w(this + 0xb8) as u16).wrapping_add(cqr12_w(this + 0x40) as u16);
+        if ano == core::ptr::read_unaligned((hoje + 2) as *const u16) && dia == core::ptr::read_unaligned(hoje as *const u16) {
+            crate::comparacao::ramo("cqr_12 sorteio da merconorte");
+            clubes(this);
+            if primeiro(this) == 0 {
+                aviso_em(0x9a7d6c, 0x385);
+                // ponytail: a original devolve só o al = 0 (o resto do eax é o que a caixa deixou); quem chama lê o byte
+                return 0;
+            }
+            if jogos(this) == 0 {
+                aviso_em(0x9a7d6c, 0x38b);
+                // ponytail: a original devolve só o al = 0 (o resto do eax é o que a caixa deixou); quem chama lê o byte
+                return 0;
+            }
+            if ordenar(this, 0) == 0 {
+                aviso_em(0x9a7d6c, 0x392);
+                // ponytail: a original devolve só o al = 0 (o resto do eax é o que a caixa deixou); quem chama lê o byte
+                return 0;
+            }
+            for g in 0..3i32 {
+                fase(this, g);
+            }
+            let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqr12_d(cqr12_d(this) + 0x5c));
+            previstas(this);
+            soltar(cqr12_d(this + 0xee));
+            cqr12_pd(this + 0xee, 0);
+            cqr12_pd(this + 0x45, 1);
+        }
+    }
+    liga(this, hoje, completo)
+}
+
+// ponytail: os clubes (embaralhados), as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
+// no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 3 fases
+// criadas e a fase atual (+0x30) a última delas.
+unsafe extern "thiscall" fn comparar_cqr12_merconorte_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(2012);
+    let sorteia = cqr12_d(this + 0x45) == 0
+        && completo != 0
+        && (cqr12_w(this + 0xb8) as u16).wrapping_add(cqr12_w(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
+        && cqr12_w(this + 0xb6) as u16 == core::ptr::read_unaligned(hoje as *const u16);
+    let r = o(this, hoje, completo);
+    if sorteia {
+        let fases = cqr12_d(this + 0xc);
+        let ok = cqr12_d(this + 0x45) == 1
+            && cqr12_d(this + 0xee) == 0
+            && cqr12_d(this + 0xb1) != 0
+            && fases != 0
+            && (0..3).all(|g| cqr12_d(fases + g * 4) != 0)
+            && cqr12_d(this + 0x30) == 2;
+        PLACAR.registrar(ok, || format!("cqr12_merconorte_dia({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqr12_d(this + 0x45), cqr12_d(this + 0x30) as i32));
+    }
+    r
+}
+
+/// { 0x4c1de0 } (thiscall, ret 0, con_merc_cup.cpp): a tabela do primeiro grupo da Merconorte: 4 times (+0x3e), a tabela +0xb1
+/// (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 linhas de 0x3b bytes; sem memória, a caixa da linha 0x145 e
+/// devolve 0), cada linha i com o sorteado i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push clube; push
+/// i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0)
+/// e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
+unsafe extern "thiscall" fn cqr12_merconorte_primeiro_grupo(this: usize) -> u32 {
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 4);
+    let t = novo(0xec);
+    cqr12_pd(this + 0xb1, t);
+    if t == 0 {
+        aviso_em(0x9a7d6c, 0x145);
+        return 0;
+    }
+    let mut i = 0i8;
+    while (i as i16) < cqr12_w(this + 0x3e) {
+        crate::comparacao::ramo("cqr_12 linha do primeiro grupo");
+        // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
+        linha(this, i as u8 as u32, cqr12_sorteado(this, i as usize), 0, 0);
+        i = i.wrapping_add(1);
+    }
+    noticia(this);
+    1
+}
+
+// ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
+// original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
+unsafe extern "thiscall" fn comparar_cqr12_merconorte_primeiro_grupo(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2013);
+    let lista = cqr12_d(this + 0xee);
+    if lista == 0 {
+        return o(this);
+    }
+    let previstos: [usize; 4] = core::array::from_fn(|i| cqr12_d(lista + i * 4));
+    let r = o(this);
+    let t = cqr12_d(this + 0xb1);
+    let mut lidos = [(0usize, 0u8); 4];
+    if t != 0 {
+        for (i, l) in lidos.iter_mut().enumerate() {
+            *l = (cqr12_d(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
+        }
+    }
+    let igual = r == 1 && cqr12_w(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
+    PLACAR.registrar(igual, || format!("cqr12_merconorte_primeiro_grupo({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    r
+}
+
+/// { 0x4c2140 } (thiscall, ret 4, con_merc_cup.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal): a fase
+/// do grupo g + 1 (g de 0 a 2, do dia do sorteio). Os times num vetor de 4 ponteiros (0x944e46(0x10): push; add esp, 4 -> cdecl; sem
+/// memória, a caixa da linha 0x1e9 e 0): os sorteados 4g + 4 a 4g + 7 (+0xee); a tabela das rodadas pela virtual +0x3c
+/// (push 0; push &id; push &rodadas; push g; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xee) push; add
+/// esp, 4 -> cdecl; o construtor League_Stage 0x68b100, thiscall, ret 0x58, 22 argumentos: a copa, os times (4), o vetor,
+/// +0x3c (word), +4, a tabela das rodadas, as rodadas (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, o ano +0x40 (word),
+/// g, o id (word), +0x51, 2, 0, +0xd9 (word), −1, 0, 2; a original empurra os words e bytes com lixo nos bytes altos,
+/// que o construtor não lê: a cópia passa os valores limpos) em [+0xc][g]; o vetor e a tabela das rodadas liberados
+/// (0x9452ca). Sem fase: a caixa da linha 0x1ff e 0. Com ela: a notícia do grupo (0x684230 na fase), +0x30 = g e 1.
+unsafe extern "thiscall" fn cqr12_merconorte_grupo(this: usize, g: i32) -> u32 {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    #[allow(clippy::type_complexity)]
+    let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
+        core::mem::transmute(0x68b100usize);
+    let times = alocar(0x10);
+    if times == 0 {
+        aviso_em(0x9a7d6c, 0x1e9);
+        return 0;
+    }
+    let mut k = g * 4 + 4;
+    while k < g * 4 + 8 {
+        let n = (k - (g * 4 + 4)) as usize;
+        crate::comparacao::ramo("cqr_12 time do grupo");
+        cqr12_pd(times + n * 4, cqr12_sorteado(this, k as usize)); // cqr12: o time na vaga do grupo
+        k += 1;
+    }
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqr12_d(cqr12_d(this) + 0x3c));
+    let (mut rodadas, mut id) = (0i16, 0i16);
+    let tabela = rodadas_da_copa(this, g, &mut rodadas, &mut id, 0);
+    let p = novo(0xee);
+    let fase = if p != 0 {
+        let b = |d: usize| *((this + d) as *const u8) as u32;
+        construir(
+            p,
+            this,
+            4,
+            times,
+            cqr12_w(this + 0x3c) as u16 as u32,
+            cqr12_d(this + 4),
+            tabela,
+            rodadas as u16 as u32,
+            b(0xc2),
+            b(0xc3),
+            b(0xc4),
+            this + 0xc5,
+            this + 0xbe,
+            cqr12_w(this + 0x40) as u16 as u32,
+            g as u32,
+            id as u16 as u32,
+            b(0x51),
+            2,
+            0,
+            cqr12_w(this + 0xd9) as u16 as u32,
+            -1,
+            0,
+            2,
+        )
+    } else {
+        0
+    };
+    cqr12_pd(cqr12_d(this + 0xc) + g as usize * 4, fase);
+    soltar(times);
+    soltar(tabela);
+    let f = cqr12_d(cqr12_d(this + 0xc) + g as usize * 4);
+    if f == 0 {
+        aviso_em(0x9a7d6c, 0x1ff);
+        return 0;
+    }
+    noticia(f);
+    cqr12_pd(this + 0x30, g as usize);
+    1
+}
+
+// ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
+// fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
+// sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
+unsafe extern "thiscall" fn comparar_cqr12_merconorte_grupo(this: usize, g: i32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(2014);
+    let lista = cqr12_d(this + 0xee);
+    if lista == 0 || !(0..3).contains(&g) {
+        return o(this, g);
+    }
+    let mut plano: Vec<usize> = (0..4).map(|k| cqr12_d(lista + (g as usize * 4 + 4 + k) * 4)).collect();
+    let r = o(this, g);
+    if r == 1 {
+        let f = cqr12_d(cqr12_d(this + 0xc) + g as usize * 4);
+        let t = if f != 0 { cqr12_d(f + 0xb1) } else { 0 };
+        let mut a: Vec<usize> = if t != 0 { (0..4).map(|k| cqr12_d(t + k * 0x3b)).collect() } else { Vec::new() };
+        a.sort_unstable();
+        plano.sort_unstable();
+        let ok = f != 0 && cqr12_d(this + 0x30) as i32 == g && cqr12_w(f + 0x3e) == 4 && cqr12_w(f + 0x40) == cqr12_w(this + 0x40) && a == plano;
+        PLACAR.registrar(ok, || format!("cqr12_merconorte_grupo({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
+    }
+    r
+}
+
+// ---------- 282a leva: a Copa América: o dia do sorteio, a tabela do primeiro grupo e as fases dos outros dois grupos (goldcup.cpp) ----------
+
+unsafe fn cqr13_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const u32) as usize
+}
+
+unsafe fn cqr13_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqr13_pd(a: usize, v: usize) {
+    core::ptr::write_unaligned(a as *mut u32, v as u32)
+}
+
+/// A seleção k da lista dos sorteados (+0xee, ponteiros: os 12 em grupos intercalados, o grupo j nas vagas j, j + 3,
+/// j + 6 e j + 9), a que o primeiro grupo e as fases dos outros leem.
+unsafe fn cqr13_sorteado(this: usize, k: usize) -> usize {
+    cqr13_d(cqr13_d(this + 0xee) + k * 4) // cqr13: o sorteado k
+}
+
+/// { 0x5e2120 } (thiscall, ret 8, goldcup.cpp; a virtual +0x14; quadro SEH só das datas locais, sem destrutor):
+/// `GoldCup::update_for_date(hoje, completo)`, o dia da Copa América. A data do sorteio é a de 0x549ef0(+0xb6, +0xb8 +
+/// +0x40) (lea ecx, local; push ano; push dia -> thiscall, ret 8, pura: o dia do ano e o ano). Antes dela (o ano de
+/// hoje menor, sem sinal; ou o mesmo ano e o dia de hoje menor, com sinal) a rotina volta 0 sem o dia de liga. No dia
+/// do sorteio, fora do sorteio feito (+0x45 = 0) e SEM `completo` (a original sorteia só na chamada com completo = 0):
+/// a lista das 12 seleções (0x5e1cd0: mov ecx -> thiscall, ret 0), as posições previstas (a virtual +0x5c, thiscall,
+/// ret 0), a tabela do primeiro grupo (0x5e11e0, thiscall, ret 0; 0: a caixa da linha 0x3e7), os jogos (0x6835c0
+/// League::create_fixtures, thiscall, ret 0; 0: a caixa da linha 0x3ed), a tabela ordenada (0x6827d0 push 0; mov ecx ->
+/// thiscall, ret 4; 0: a caixa da linha 0x3f4) (um erro volta 0 sem o dia de liga), as fases dos grupos 0 e 1 (0x5e16b0:
+/// push g; mov ecx -> thiscall, ret 4), a lista +0xee liberada (0x9452ca: push; add esp, 4 -> cdecl) e zerada, +0xf2 = 0
+/// e +0x45 = 1. Depois o dia de liga (0x6847c0: push completo; push hoje; mov ecx, this -> thiscall, ret 8), cuja
+/// devolução ela repassa.
+unsafe extern "thiscall" fn cqr13_copa_america_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+    let selecoes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5e1cd0usize);
+    let primeiro: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x5e11e0usize);
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
+    let fase: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(0x5e16b0usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x6847c0usize);
+    let dia = cqr13_w(this + 0xb6) as u16; // cqr13: o dia do sorteio
+    let ano = (cqr13_w(this + 0xb8) as u16).wrapping_add(cqr13_w(this + 0x40) as u16);
+    let dia_de_hoje = core::ptr::read_unaligned(hoje as *const u16);
+    let ano_de_hoje = core::ptr::read_unaligned((hoje + 2) as *const u16);
+    // ponytail: nas duas voltas antes do sorteio e nos erros a original devolve só o al = 0 (o resto do eax é sobra das
+    // chamadas de antes); quem chama lê o byte
+    if ano_de_hoje < ano || (ano_de_hoje == ano && (dia_de_hoje as i16) < dia as i16) {
+        return 0;
+    }
+    if ano_de_hoje == ano && dia_de_hoje == dia && cqr13_d(this + 0x45) == 0 && completo == 0 {
+        crate::comparacao::ramo("cqr_13 sorteio da copa america");
+        selecoes(this);
+        let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqr13_d(cqr13_d(this) + 0x5c));
+        previstas(this);
+        if primeiro(this) == 0 {
+            aviso_em(0x9cd640, 0x3e7);
+            return 0;
+        }
+        if jogos(this) == 0 {
+            aviso_em(0x9cd640, 0x3ed);
+            return 0;
+        }
+        if ordenar(this, 0) == 0 {
+            aviso_em(0x9cd640, 0x3f4);
+            return 0;
+        }
+        for g in 0..2i32 {
+            fase(this, g);
+        }
+        soltar(cqr13_d(this + 0xee));
+        cqr13_pd(this + 0xee, 0);
+        cqr13_pd(this + 0xf2, 0);
+        cqr13_pd(this + 0x45, 1);
+    }
+    liga(this, hoje, completo)
+}
+
+// ponytail: a lista, as previsões, as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano no
+// dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do primeiro grupo e as duas
+// fases criadas e a fase atual (+0x30) a última delas (1).
+unsafe extern "thiscall" fn comparar_cqr13_copa_america_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(2015);
+    let sorteia = cqr13_d(this + 0x45) == 0
+        && completo == 0
+        && (cqr13_w(this + 0xb8) as u16).wrapping_add(cqr13_w(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
+        && cqr13_w(this + 0xb6) as u16 == core::ptr::read_unaligned(hoje as *const u16);
+    let r = o(this, hoje, completo);
+    if sorteia {
+        let fases = cqr13_d(this + 0xc);
+        let ok = cqr13_d(this + 0x45) == 1
+            && cqr13_d(this + 0xee) == 0
+            && cqr13_d(this + 0xf2) == 0
+            && cqr13_d(this + 0xb1) != 0
+            && fases != 0
+            && (0..2).all(|g| cqr13_d(fases + g * 4) != 0)
+            && cqr13_d(this + 0x30) == 1;
+        PLACAR.registrar(ok, || format!("cqr13_copa_america_dia({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqr13_d(this + 0x45), cqr13_d(this + 0x30) as i32));
+    }
+    r
+}
+
+/// { 0x5e11e0 } (thiscall, ret 0, goldcup.cpp): `GoldCup::create_group_table()`, o grupo A da Copa América: 4 times
+/// (+0x3e), a tabela +0xb1 (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 linhas de 0x3b bytes; sem memória, a
+/// caixa da linha 0x1d4 e devolve 0), cada linha i com o sorteado 3i (+0xee: os grupos intercalados) (0x687430
+/// League::init_table_row: push 0; push 0; push seleção; push i; mov ecx, this -> thiscall, ret 0x10), a notícia do
+/// sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0) e devolve 1.
+unsafe extern "thiscall" fn cqr13_copa_america_primeiro_grupo(this: usize) -> u32 {
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 4);
+    let t = novo(0xec);
+    cqr13_pd(this + 0xb1, t);
+    if t == 0 {
+        aviso_em(0x9cd640, 0x1d4);
+        return 0;
+    }
+    let mut i = 0i8;
+    while (i as i16) < cqr13_w(this + 0x3e) {
+        crate::comparacao::ramo("cqr_13 linha do primeiro grupo");
+        // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
+        linha(this, i as u8 as u32, cqr13_sorteado(this, i as usize * 3), 0, 0);
+        i = i.wrapping_add(1);
+    }
+    noticia(this);
+    1
+}
+
+// ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
+// original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado 3i com a posição i (+4).
+unsafe extern "thiscall" fn comparar_cqr13_copa_america_primeiro_grupo(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2016);
+    let lista = cqr13_d(this + 0xee);
+    if lista == 0 {
+        return o(this);
+    }
+    let previstos: [usize; 4] = core::array::from_fn(|i| cqr13_d(lista + i * 12));
+    let r = o(this);
+    let t = cqr13_d(this + 0xb1);
+    let mut lidos = [(0usize, 0u8); 4];
+    if t != 0 {
+        for (i, l) in lidos.iter_mut().enumerate() {
+            *l = (cqr13_d(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
+        }
+    }
+    let igual = r == 1 && cqr13_w(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
+    PLACAR.registrar(igual, || format!("cqr13_copa_america_primeiro_grupo({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    r
+}
+
+/// { 0x5e16b0 } (thiscall, ret 4, goldcup.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal):
+/// `GoldCup::create_group_stage(g)`, a fase do grupo g + 1 (g = 0 e 1, do dia do sorteio). Os times num vetor de 4
+/// ponteiros (0x944e46(0x10): push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x2bf e 0): os sorteados g + 1,
+/// g + 4, g + 7 e g + 10 (+0xee); a tabela das rodadas pela virtual +0x3c (push 0; push &id; push &rodadas; push g; mov
+/// ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xee) push; add esp, 4 -> cdecl; o construtor League_Stage
+/// 0x68b100, thiscall, ret 0x58, 22 argumentos: a copa, 4, o vetor, 1, +4, a tabela das rodadas, as rodadas (word),
+/// +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, o ano +0x40 (word), g, o id (word), +0x51, 4, 0, +0xd9 (word), −1, 0, 2; a
+/// original empurra os words e bytes com lixo nos bytes altos, que o construtor não lê: a cópia passa os valores limpos)
+/// em [+0xc][g]; o vetor e a tabela das rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x2d6 e 0. Com ela:
+/// +0x30 = g, a notícia do grupo (0x684230 na fase) e 1.
+unsafe extern "thiscall" fn cqr13_copa_america_grupo(this: usize, g: i32) -> u32 {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
+    #[allow(clippy::type_complexity)]
+    let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
+        core::mem::transmute(0x68b100usize);
+    let times = alocar(0x10);
+    if times == 0 {
+        aviso_em(0x9cd640, 0x2bf);
+        return 0;
+    }
+    for n in 0..4usize {
+        crate::comparacao::ramo("cqr_13 time do grupo");
+        cqr13_pd(times + n * 4, cqr13_sorteado(this, (g + 1) as usize + n * 3)); // cqr13: o time na vaga do grupo
+    }
+    let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqr13_d(cqr13_d(this) + 0x3c));
+    let (mut rodadas, mut id) = (0i16, 0i16);
+    let tabela = rodadas_da_copa(this, g, &mut rodadas, &mut id, 0);
+    let p = novo(0xee);
+    let fase = if p != 0 {
+        let b = |d: usize| *((this + d) as *const u8) as u32;
+        construir(
+            p,
+            this,
+            4,
+            times,
+            1,
+            cqr13_d(this + 4),
+            tabela,
+            rodadas as u16 as u32,
+            b(0xc2),
+            b(0xc3),
+            b(0xc4),
+            this + 0xc5,
+            this + 0xbe,
+            cqr13_w(this + 0x40) as u16 as u32,
+            g as u32,
+            id as u16 as u32,
+            b(0x51),
+            4,
+            0,
+            cqr13_w(this + 0xd9) as u16 as u32,
+            -1,
+            0,
+            2,
+        )
+    } else {
+        0
+    };
+    cqr13_pd(cqr13_d(this + 0xc) + g as usize * 4, fase);
+    soltar(times);
+    soltar(tabela);
+    let f = cqr13_d(cqr13_d(this + 0xc) + g as usize * 4);
+    if f == 0 {
+        aviso_em(0x9cd640, 0x2d6);
+        return 0;
+    }
+    cqr13_pd(this + 0x30, g as usize);
+    noticia(f);
+    1
+}
+
+// ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
+// fase em [+0xc][g], +0x30 = g, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
+// sorteados g + 1, g + 4, g + 7 e g + 10 (em qualquer ordem: o construtor ordena a tabela).
+unsafe extern "thiscall" fn comparar_cqr13_copa_america_grupo(this: usize, g: i32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(2017);
+    let lista = cqr13_d(this + 0xee);
+    if lista == 0 || !(0..2).contains(&g) {
+        return o(this, g);
+    }
+    let mut plano: Vec<usize> = (0..4).map(|n| cqr13_d(lista + ((g + 1) as usize + n * 3) * 4)).collect();
+    let r = o(this, g);
+    if r == 1 {
+        let f = cqr13_d(cqr13_d(this + 0xc) + g as usize * 4);
+        let t = if f != 0 { cqr13_d(f + 0xb1) } else { 0 };
+        let mut a: Vec<usize> = if t != 0 { (0..4).map(|k| cqr13_d(t + k * 0x3b)).collect() } else { Vec::new() };
+        a.sort_unstable();
+        plano.sort_unstable();
+        let ok = f != 0 && cqr13_d(this + 0x30) as i32 == g && cqr13_w(f + 0x3e) == 4 && cqr13_w(f + 0x40) == cqr13_w(this + 0x40) && a == plano;
+        PLACAR.registrar(ok, || format!("cqr13_copa_america_grupo({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
+    }
+    r
+}
+
+// ---------- 282a leva: as três divisões da MLS: a tabela da primeira e as fases da segunda e da terceira (usa_mls.cpp) ----------
+
+unsafe fn cqs1_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+unsafe fn cqs1_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqs1_b(a: usize) -> u8 {
+    *(a as *const u8)
+}
+
+/// O código de divisão do clube `c` na MLS (usa_mls_get_club_division 0x909ec0: push c; call; add esp, 4 -> cdecl; a
+/// palavra baixa do eax: 0x413, 0x47b ou 0x414), se ele é da competição da liga (+0x57 do clube = +4 da liga).
+unsafe fn cqs1_da_divisao(this: usize, c: usize, codigo: i16) -> bool {
+    let divisao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x909ec0usize);
+    cqs1_d(c + 0x57) == cqs1_d(this + 4) && divisao(c) as u16 as i16 == codigo
+}
+
+/// { 0x908560 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::create_table()`, a tabela da MLS (a primeira divisão, código
+/// 0x413): +0x3e = 4; a tabela (malloc 0x944e46 de 0xec, 4 linhas de 0x3b; sem memória: a caixa da linha 0x2fe e 0)
+/// em +0xb1; na ordem do banco ([0xae23b4], [0xae235c] clubes de 0x245 bytes, contador i16), enquanto faltam linhas, cada
+/// clube da competição com o código 0x413 vai à linha seguinte (League::init_table_row 0x687430: push 0; push 0; push
+/// clube; push eax com a linha no byte baixo e o lixo do código em cima, que ela não lê; mov ecx -> thiscall, ret
+/// 0x10). Devolve 1 se encheu as 4 linhas.
+unsafe extern "thiscall" fn cqs1_tabela_da_mls(this: usize) -> u32 {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
+    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 4);
+    let t = alocar(0xec);
+    core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
+    if t == 0 {
+        aviso_em(0xaa1fb4, 0x2fe);
+        return 0;
+    }
+    let mut n: i16 = 0;
+    let base = cqs1_d(0xae23b4);
+    let mut i: i16 = 0;
+    while (i as i32) < cqs1_d(0xae235c) as i32 && n < cqs1_w(this + 0x3e) {
+        let c = base + i as u16 as usize * 0x245;
+        if cqs1_da_divisao(this, c, 0x413) {
+            iniciar(this, n as u8 as u32, c, 0, 0); // cqs1: a linha seguinte da primeira divisão
+            n += 1;
+        }
+        i = i.wrapping_add(1);
+    }
+    crate::comparacao::ramo("cqs_1 tabela da mls");
+    (n == cqs1_w(this + 0x3e)) as u32
+}
+
+/// A fase de uma das outras divisões da MLS (`create_second_division_stage` e `create_third_division_stage`; o mesmo
+/// molde, conferido instrução a instrução: só mudam o código da divisão, a vaga k, o fonte das caixas e as linhas).
+/// 1) Um vetor de +0x3e clubes (malloc 0x944e46 de 4 × +0x3e; sem memória: a caixa da linha `linhas[0]` e volta) com os
+///    clubes da competição com o `codigo`, na ordem do banco (contador i32), enquanto faltam vagas.
+/// 2) A tabela das rodadas pela virtual +0x3c (create_round_table: thiscall(this, −3, &rodadas, &extra, 0), ret 0x10).
+/// 3) A fase: operator new 0x944cf1(0xee) e o construtor League_Stage 0x68b100 (thiscall, ret 0x58, 22 argumentos, na
+///    ordem da original: a liga, +0x3e (word), o vetor, +0x3c (word, os turnos), +4, a tabela das rodadas, as rodadas
+///    (word), os pontos +0xc2 (`pv`) e +0xc3, a categoria +0xc4, &+0xc5, &+0xbe (as vagas da liga), o ano +0x40 (word),
+///    k, o extra (word), +0x51, 1, +0xab (word), +0xd9 (word), +0xa7 (word), 0, 2; a cópia passa os valores limpos).
+///    Sem memória: 0.
+/// 4) [+0xc][k] = a fase; o vetor e a tabela das rodadas liberados (free 0x9452ca, nessa ordem). Sem fase: a caixa da
+///    linha `linhas[1]`. Com ela: +0x30 = `atual` (a original grava k) e +0x3a da fase = o código da divisão.
+unsafe fn cqs1_divisao(this: usize, codigo: i16, k: u32, atual: u32, pv: usize, linhas: [u32; 2], ramo: &'static str) {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    #[allow(clippy::type_complexity)]
+    let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
+        core::mem::transmute(0x68b100usize);
+    let v = alocar(((cqs1_w(this + 0x3e) as i32) << 2) as u32);
+    if v == 0 {
+        return aviso_em(0xaa1fb4, linhas[0]);
+    }
+    let mut n: i16 = 0;
+    let base = cqs1_d(0xae23b4);
+    let mut i = 0i32;
+    while i < cqs1_d(0xae235c) as i32 && n < cqs1_w(this + 0x3e) {
+        let c = base + i as usize * 0x245;
+        if cqs1_da_divisao(this, c, codigo) {
+            core::ptr::write_unaligned((v + 4 * n as usize) as *mut usize, c);
+            n += 1;
+        }
+        i += 1;
+    }
+    let tabela: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqs1_d(cqs1_d(this) + 0x3c));
+    let (mut rodadas, mut extra) = (0i16, 0i16);
+    let t = tabela(this, -3, &mut rodadas, &mut extra, 0);
+    let p = novo(0xee);
+    let fase = if p != 0 {
+        construir(p, this, cqs1_w(this + 0x3e) as u16 as u32, v, cqs1_w(this + 0x3c) as u16 as u32, cqs1_d(this + 4), t, rodadas as u16 as u32,
+                  cqs1_b(this + pv) as u32, cqs1_b(this + 0xc3) as u32, cqs1_b(this + 0xc4) as u32, this + 0xc5, this + 0xbe,
+                  cqs1_w(this + 0x40) as u16 as u32, k, extra as u16 as u32, cqs1_b(this + 0x51) as u32, 1, cqs1_w(this + 0xab) as u16 as u32,
+                  cqs1_w(this + 0xd9) as u16 as u32, cqs1_w(this + 0xa7) as u16 as u32, 0, 2)
+    } else {
+        0
+    };
+    core::ptr::write_unaligned((cqs1_d(this + 0xc) + 4 * k as usize) as *mut usize, fase);
+    soltar(v);
+    soltar(t);
+    let fase = cqs1_d(cqs1_d(this + 0xc) + 4 * k as usize);
+    if fase == 0 {
+        return aviso_em(0xaa1fb4, linhas[1]);
+    }
+    core::ptr::write_unaligned((this + 0x30) as *mut u32, atual);
+    crate::comparacao::ramo(ramo);
+    core::ptr::write_unaligned((fase + 0x3a) as *mut i16, codigo);
+}
+
+/// { 0x908fc0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_second_division_stage()`, a
+/// segunda divisão da MLS (código 0x47b) na fase 0; caixas nas linhas 0x4e6 e 0x506.
+unsafe extern "thiscall" fn cqs1_segunda_divisao_da_mls(this: usize) {
+    cqs1_divisao(this, 0x47b, 0, 0, 0xc2, [0x4e6, 0x506], "cqs_1 segunda divisao") // cqs1: os pontos por vitória na segunda
+}
+
+/// { 0x9091e0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_third_division_stage()`, a
+/// terceira divisão da MLS (código 0x414) na fase 1; caixas nas linhas 0x524 e 0x544.
+unsafe extern "thiscall" fn cqs1_terceira_divisao_da_mls(this: usize) {
+    cqs1_divisao(this, 0x414, 1, 1, 0xc2, [0x524, 0x544], "cqs_1 terceira divisao") // cqs1: a fase atual depois da terceira
+}
+
+/// O comparador da tabela: só a original (ponytail: aloca a tabela e as listas das linhas), com o plano feito antes:
+/// os clubes da competição com o código 0x413, na ordem do banco, até 4. Depois, a devolução, +0x3e = 4 e as linhas.
+unsafe extern "thiscall" fn comparar_cqs1_tabela_da_mls(this: usize) -> u32 {
+    let mut plano = [0usize; 4];
+    let mut n = 0usize;
+    let base = cqs1_d(0xae23b4);
+    let mut i: i16 = 0;
+    while (i as i32) < cqs1_d(0xae235c) as i32 && n < 4 {
+        let c = base + i as u16 as usize * 0x245;
+        if cqs1_da_divisao(this, c, 0x413) {
+            plano[n] = c;
+            n += 1;
+        }
+        i = i.wrapping_add(1);
+    }
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2018)(this);
+    let t = cqs1_d(this + 0xb1);
+    let igual = r == (n == 4) as u32 && cqs1_w(this + 0x3e) == 4 && t != 0 && (0..n).all(|k| cqs1_d(t + k * 0x3b) == plano[k]);
+    PLACAR.registrar(igual, || format!("cqs1_tabela_da_mls({:#x}) r={} n={} plano={:x?}", this, r, n, plano));
+    r
+}
+
+/// O comparador de uma divisão: só a original (aloca o vetor, a tabela das rodadas e a fase), com o plano feito antes:
+/// os clubes do código, na ordem do banco. Depois, a fase na vaga k com +0x3e da liga, os clubes na tabela dela (como
+/// conjunto), +0x3a = o código e +0x30 = k.
+unsafe fn cqs1_comparar(nome: &str, this: usize, codigo: i16, k: usize, original: impl FnOnce()) {
+    let mut plano = [0usize; 8];
+    let mut n = 0usize;
+    let base = cqs1_d(0xae23b4);
+    let mut i = 0i32;
+    while i < cqs1_d(0xae235c) as i32 && (n as i16) < cqs1_w(this + 0x3e) && n < 8 {
+        let c = base + i as usize * 0x245;
+        if cqs1_da_divisao(this, c, codigo) {
+            plano[n] = c;
+            n += 1;
+        }
+        i += 1;
+    }
+    original();
+    let fase = cqs1_d(cqs1_d(this + 0xc) + 4 * k);
+    let igual = fase != 0 && cqs1_w(fase + 0x3a) == codigo && cqs1_d(this + 0x30) == k && cqs1_w(fase + 0x3e) == cqs1_w(this + 0x3e) && {
+        let mut nela = [0usize; 8];
+        for (j, c) in nela.iter_mut().enumerate().take(n) {
+            *c = cqs1_d(cqs1_d(fase + 0xb1) + j * 0x3b);
+        }
+        let (mut a, mut b) = (plano, nela);
+        a[..n].sort_unstable();
+        b[..n].sort_unstable();
+        a[..n] == b[..n]
+    };
+    PLACAR.registrar(igual, || format!("{}({:#x}) fase={:#x} n={} plano={:x?}", nome, this, fase, n, plano));
+}
+
+unsafe extern "thiscall" fn comparar_cqs1_segunda_divisao_da_mls(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2019);
+    cqs1_comparar("cqs1_segunda_divisao_da_mls", this, 0x47b, 0, || o(this))
+}
+
+unsafe extern "thiscall" fn comparar_cqs1_terceira_divisao_da_mls(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2020);
+    cqs1_comparar("cqs1_terceira_divisao_da_mls", this, 0x414, 1, || o(this))
+}
+
+// ---------- 282a leva: a MLS: a virada da temporada, as posições previstas e a lista dos doze clubes (usa_mls.cpp) ----------
+
+unsafe fn cqs2_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+unsafe fn cqs2_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+/// O clube da linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`.
+unsafe fn cqs2_linha(t: usize, i: usize) -> usize {
+    cqs2_d(cqs2_d(t + 0xb1) + i * 0x3b)
+}
+
+/// { 0x908e00 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::start_new_season()`, a virada da MLS: +0x4c = 0 e a tabela
+/// liberada (League::free_table 0x687970, thiscall(this, 0), ret 4); o calendário (+0xba) liberado (free 0x9452ca) e
+/// zerado; com a fase atual ≥ 0, as fases 0..=+0x30 que existem destruídas (a virtual 0, o destrutor com 1); +0x30 = −1;
+/// com estatísticas (+8), Comp_Stats::archive_season_and_reset (0x4a1c50, thiscall(+8, 1), ret 4); o ano (+0x40, word)
+/// sobe `ano` (o contador "cqs_2 virada da mls"); então, cada um com a sua caixa (linhas 0x4af, 0x4b6, 0x4bc e 0x4c3)
+/// se devolver 0: as regras (virtual +0x8c), a tabela da primeira divisão (0x908560), os jogos da temporada
+/// (UsaMls::create_season_fixtures 0x9086e0, que monta também as fases das outras duas divisões) e a ordem da tabela
+/// (League::sort_table 0x6827d0, thiscall(this, 0), ret 4); por fim as posições previstas (virtual +0x5c), as
+/// expectativas das diretorias (League::set_club_season_expectations 0x68aa80, thiscall, ret 0) e a renovação dos
+/// árbitros (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), cujo eax ela devolve. Com
+/// caixa, a cópia devolve 0 (a original devolve o eax da caixa; a virada é chamada pelo laço das viradas, que não o lê).
+/// O vetor das fases (+0xc) fica: as divisões e o play-off regravam as vagas.
+unsafe fn cqs2_virada(this: usize, ano: i16) -> u32 {
+    let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x687970usize);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
+    liberar_tabela(this, 0);
+    let l = cqs2_d(this + 0xba);
+    if l != 0 {
+        liberar(l);
+        core::ptr::write_unaligned((this + 0xba) as *mut usize, 0);
+    }
+    if (cqs2_d(this + 0x30) as i32) >= 0 {
+        let mut i = 0i32;
+        loop {
+            let f = cqs2_d(cqs2_d(this + 0xc) + 4 * i as usize);
+            if f != 0 {
+                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(cqs2_d(cqs2_d(f)));
+                destruir(f, 1);
+            }
+            i += 1;
+            if i > cqs2_d(this + 0x30) as i32 {
+                break;
+            }
+        }
+    }
+    core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
+    let estatisticas = cqs2_d(this + 8);
+    if estatisticas != 0 {
+        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
+        arquivar(estatisticas, 1);
+    }
+    let a = cqs2_w(this + 0x40);
+    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
+    crate::comparacao::ramo("cqs_2 virada da mls");
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqs2_d(cqs2_d(this) + 0x8c));
+    if regras(this) == 0 {
+        aviso_em(0xaa1fb4, 0x4af);
+        return 0;
+    }
+    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x908560usize);
+    if tabela(this) == 0 {
+        aviso_em(0xaa1fb4, 0x4b6);
+        return 0;
+    }
+    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x9086e0usize);
+    if jogos(this) == 0 {
+        aviso_em(0xaa1fb4, 0x4bc);
+        return 0;
+    }
+    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x6827d0usize);
+    if ordenar(this, 0) == 0 {
+        aviso_em(0xaa1fb4, 0x4c3);
+        return 0;
+    }
+    let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqs2_d(cqs2_d(this) + 0x5c));
+    previstas(this);
+    let expectativas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x68aa80usize);
+    expectativas(this);
+    let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x79cee0usize);
+    renovar(cqs2_d(0xb74340), cqs2_d(this + 4)) // cqs2: a renovação dos árbitros da MLS
+}
+
+/// { 0x908e00 } (thiscall, ret 0, usa_mls.cpp): a virada da MLS (acima), um ano adiante.
+unsafe extern "thiscall" fn cqs2_virada_da_mls(this: usize) -> u32 {
+    cqs2_virada(this, 1) // cqs2: o ano seguinte da MLS
+}
+
+/// { 0x909bb0 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::set_predicted_positions()`, as posições previstas da MLS. Sem
+/// estatísticas (+8): a caixa da linha 0x675 e volta. Um vetor de 3 × +0x3e clubes (malloc 0x944e46; sem memória: a
+/// caixa da linha 0x67d e volta): os da tabela da liga, os da fase 0 e os da fase 1 (as três divisões, linha a linha),
+/// cada bloco de +0x3e ordenado pela reputação (qsort 0x945333 com 0x4b07d0, a maior primeiro, nulos no fim). Os doze
+/// primeiros do vetor ganham, em cada divisão, as posições 1, 4, 7 e 10 (Comp_Stats::set_club_final_position 0x4a2540,
+/// thiscall(+8, clube, posição), ret 8; a ordem das doze chamadas é a do vetor); o vetor liberado (free 0x9452ca).
+/// [inferência] As três divisões se misturam na previsão: o favorito de cada uma é previsto em 1º, o segundo em 4º...
+unsafe extern "thiscall" fn cqs2_posicoes_previstas_da_mls(this: usize) {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let posicao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4a2540usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let n3 = cqs2_w(this + 0x3e).wrapping_mul(3);
+    if cqs2_d(this + 8) == 0 {
+        return aviso_em(0xaa1fb4, 0x675);
+    }
+    let v = alocar(((n3 as i32) << 2) as u32);
+    if v == 0 {
+        return aviso_em(0xaa1fb4, 0x67d);
+    }
+    let mut i: i16 = 0;
+    while i < cqs2_w(this + 0x3e) {
+        let n = cqs2_w(this + 0x3e) as i32;
+        let k = i as usize;
+        core::ptr::write_unaligned((v + 4 * k) as *mut usize, cqs2_linha(this, k));
+        core::ptr::write_unaligned((v + 4 * (k + n as usize)) as *mut usize, cqs2_linha(cqs2_d(cqs2_d(this + 0xc)), k));
+        core::ptr::write_unaligned((v + 4 * (k + 2 * n as usize)) as *mut usize, cqs2_linha(cqs2_d(cqs2_d(this + 0xc) + 4), k));
+        i += 1;
+    }
+    let n = cqs2_w(this + 0x3e) as i32;
+    ordenar(v, n as u32, 4, 0x4b07d0);
+    let n = cqs2_w(this + 0x3e) as i32;
+    ordenar(v + 4 * n as usize, n as u32, 4, 0x4b07d0);
+    let n = cqs2_w(this + 0x3e) as i32;
+    ordenar(v + 8 * n as usize, n as u32, 4, 0x4b07d0);
+    let lugares: [u32; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10]; // cqs2: as posições previstas das três divisões
+    for (k, p) in lugares.iter().enumerate() {
+        posicao(cqs2_d(this + 8), cqs2_d(v + 4 * k), *p);
+    }
+    crate::comparacao::ramo("cqs_2 posicoes previstas");
+    soltar(v);
+}
+
+/// { 0x909a40 } (thiscall, ret 8, usa_mls.cpp): `UsaMls::get_club_array(&lista, &n)`, a lista dos clubes da MLS: *n = 12
+/// (word); *lista = malloc 0x944e46 de 0x30 (sem memória: a caixa da linha 0x64c, *n = 0 e volta); os +0x3e clubes da
+/// tabela da liga, depois os da fase 0 (a partir de +0x3e) e os da fase 1 (a partir de 2 × +0x3e), linha a linha.
+unsafe extern "thiscall" fn cqs2_clubes_da_mls(this: usize, lista: *mut usize, n: *mut i16) {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    *n = 0xc;
+    let v = alocar(0x30);
+    *lista = v;
+    if v == 0 {
+        aviso_em(0xaa1fb4, 0x64c);
+        *n = 0;
+        return;
+    }
+    let mut i: i16 = 0;
+    while i < cqs2_w(this + 0x3e) {
+        core::ptr::write_unaligned((*lista + 4 * i as usize) as *mut usize, cqs2_linha(this, i as usize));
+        i += 1;
+    }
+    let mut i: i16 = 0;
+    while i < cqs2_w(this + 0x3e) {
+        let k = cqs2_w(this + 0x3e) as i32 + i as i32;
+        core::ptr::write_unaligned((*lista + 4 * k as usize) as *mut usize, cqs2_linha(cqs2_d(cqs2_d(this + 0xc)), i as usize));
+        i += 1;
+    }
+    let mut i: i16 = 0;
+    while i < cqs2_w(this + 0x3e) {
+        let k = 2 * cqs2_w(this + 0x3e) as i32 + i as i32;
+        core::ptr::write_unaligned((*lista + 4 * k as usize) as *mut usize, cqs2_linha(cqs2_d(cqs2_d(this + 0xc) + 4), i as usize));
+        i += 1;
+    }
+    crate::comparacao::ramo("cqs_2 clubes da mls");
+}
+
+/// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia os jogos e os
+/// árbitros; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1 e as três divisões montadas
+/// (+0x3e = 4 e as vagas 0 e 1 das fases).
+unsafe extern "thiscall" fn comparar_cqs2_virada_da_mls(this: usize) -> u32 {
+    let antes = cqs2_w(this + 0x40);
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2021)(this);
+    let depois = cqs2_w(this + 0x40);
+    let igual = depois == antes.wrapping_add(1) && cqs2_w(this + 0x3e) == 4 && cqs2_d(cqs2_d(this + 0xc)) != 0 && cqs2_d(cqs2_d(this + 0xc) + 4) != 0;
+    PLACAR.registrar(igual, || format!("cqs2_virada_da_mls({:#x}) ano antes={} depois={} +0x3e={}", this, antes, depois, cqs2_w(this + 0x3e)));
+    r
+}
+
+/// O comparador das posições previstas: só a original (ponytail: a 0x4a2540 acrescenta o registro de um clube que não
+/// tem; não pode rodar duas vezes), com o plano feito antes: os doze clubes das três tabelas, cada bloco ordenado pela
+/// mesma qsort numa cópia; depois, a posição (+0x72 do registro achado por 0x4a4850) de cada um.
+unsafe extern "thiscall" fn comparar_cqs2_posicoes_previstas_da_mls(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2022);
+    let n = cqs2_w(this + 0x3e) as usize;
+    if cqs2_d(this + 8) == 0 || n != 4 {
+        return o(this);
+    }
+    let ordenar: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
+    let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
+    let mut v = [0usize; 12];
+    for k in 0..4 {
+        v[k] = cqs2_linha(this, k);
+        v[4 + k] = cqs2_linha(cqs2_d(cqs2_d(this + 0xc)), k);
+        v[8 + k] = cqs2_linha(cqs2_d(cqs2_d(this + 0xc) + 4), k);
+    }
+    for b in 0..3 {
+        ordenar(v[4 * b..].as_mut_ptr(), 4, 4, 0x4b07d0);
+    }
+    o(this);
+    const LUGARES: [u8; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10];
+    let errado = (0..12).find(|&k| {
+        let e = if v[k] != 0 { achar(cqs2_d(this + 8), v[k]) } else { 0 };
+        e == 0 || *((e + 0x72) as *const u8) != LUGARES[k]
+    });
+    PLACAR.registrar(errado.is_none(), || format!("cqs2_posicoes_previstas_da_mls({:#x}): a posição da vaga {:?} não bate ({:x?})", this, errado, v));
+}
+
+/// O comparador da lista: só a original (aloca a lista, que fica com quem chamou), com o plano: n = 12 e os doze clubes
+/// das três tabelas na ordem.
+unsafe extern "thiscall" fn comparar_cqs2_clubes_da_mls(this: usize, lista: *mut usize, n: *mut i16) {
+    orig::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(2023)(this, lista, n);
+    let m = cqs2_w(this + 0x3e) as usize;
+    let igual = *n == 0xc && *lista != 0 && (0..m).all(|i| {
+        cqs2_d(*lista + 4 * i) == cqs2_linha(this, i)
+            && cqs2_d(*lista + 4 * (m + i)) == cqs2_linha(cqs2_d(cqs2_d(this + 0xc)), i)
+            && cqs2_d(*lista + 4 * (2 * m + i)) == cqs2_linha(cqs2_d(cqs2_d(this + 0xc) + 4), i)
+    });
+    PLACAR.registrar(igual, || format!("cqs2_clubes_da_mls({:#x}) n={}", this, *n));
+}
+
+// ---------- 282a leva: a Série C: os sete grupos da primeira fase, a segunda fase dos dezesseis e os dois grupos da terceira (bra_nat_third.cpp) ----------
+
+unsafe fn cqs3_d(a: usize) -> usize {
+    core::ptr::read_unaligned(a as *const usize)
+}
+
+unsafe fn cqs3_w(a: usize) -> i16 {
+    core::ptr::read_unaligned(a as *const i16)
+}
+
+unsafe fn cqs3_b(a: usize) -> u8 {
+    *(a as *const u8)
+}
+
+#[allow(clippy::type_complexity)]
+type Cqs3Fase = unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize;
+
+/// { 0x42ee80 } (thiscall, ret 4, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_group_stage(g)`, o
+/// grupo g (0 a 6) da primeira fase da Série C, da virada e do construtor (g de 0 a 6; a liga é o grupo de cima, e os
+/// sete grupos são as fases 0 a 6).
+/// 1) A tabela das rodadas pela virtual +0x3c (create_round_table: thiscall(this, g inteiro, &rodadas, &extra, 0), ret
+///    0x10).
+/// 2) Um vetor de 4 × +0x3e (malloc 0x944e46; sem memória: a caixa da linha 0x475 e volta) com os sete clubes do
+///    grupo: as vagas 7(g + 1) a 7(g + 1) + 6 da lista dos 56 (+0xee; as sete primeiras são da liga).
+/// 3) A fase: operator new 0x944cf1(0xee) e o construtor League_Stage 0x68b100 (thiscall, ret 0x58, 22 argumentos, na
+///    ordem da original: a liga, 7, o vetor, 2 (turnos: ida e volta), +4, a tabela das rodadas, as rodadas (word), os
+///    pontos +0xc2 (`pv`) e +0xc3, a categoria +0xc4, &+0xc5, &+0xbe (as vagas da liga), o ano +0x40 (word), g (o
+///    dword inteiro), o extra (word), +0x51, 1, 0, +0xd9 (word), −1, 0, 2; words e bytes limpos). Sem memória: 0.
+/// 4) [+0xc][g] = a fase. Sem fase: a caixa da linha 0x487 e volta (sem liberar o vetor nem a tabela). Com ela: o vetor
+///    e a tabela liberados (free 0x9452ca) e +0x30 = g (o byte com sinal).
+unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    let construir: Cqs3Fase = core::mem::transmute(0x68b100usize);
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqs3_d(cqs3_d(this) + 0x3c));
+    let (mut rodadas, mut extra) = (0i16, 0i16);
+    let t = tabela(this, g, &mut rodadas, &mut extra, 0);
+    let v = alocar(((cqs3_w(this + 0x3e) as i32) << 2) as u32);
+    if v == 0 {
+        return aviso_em(0x98aba4, 0x475);
+    }
+    let k = g as u8 as i8 as i32;
+    for j in 0..7usize {
+        core::ptr::write_unaligned((v + 4 * j) as *mut usize, cqs3_d(cqs3_d(this + 0xee) + 4 * (7 * (k + 1) as usize + j)));
+    }
+    let p = novo(0xee);
+    let fase = if p != 0 {
+        construir(p, this, 7, v, 2, cqs3_d(this + 4), t, rodadas as u16 as u32, cqs3_b(this + pv) as u32, cqs3_b(this + 0xc3) as u32,
+                  cqs3_b(this + 0xc4) as u32, this + 0xc5, this + 0xbe, cqs3_w(this + 0x40) as u16 as u32, g, extra as u16 as u32,
+                  cqs3_b(this + 0x51) as u32, 1, 0, cqs3_w(this + 0xd9) as u16 as u32, -1, 0, 2)
+    } else {
+        0
+    };
+    core::ptr::write_unaligned((cqs3_d(this + 0xc) + 4 * k as usize) as *mut usize, fase);
+    if cqs3_d(cqs3_d(this + 0xc) + 4 * k as usize) == 0 {
+        return aviso_em(0x98aba4, 0x487);
+    }
+    crate::comparacao::ramo("cqs_3 grupo");
+    soltar(v);
+    soltar(t);
+    core::ptr::write_unaligned((this + 0x30) as *mut i32, k);
+}
+
+/// { 0x42ee80 } (acima): o grupo g da primeira fase da Série C.
+unsafe extern "thiscall" fn cqs3_grupo_da_serie_c(this: usize, g: u32) {
+    cqs3_grupo(this, g, 0xc2) // cqs3: os pontos por vitória nos grupos
+}
+
+/// A ordem da segunda fase: o k-ésimo melhor (pelos pontos) vai à vaga `CQS3_SEMENTES[k]` da lista dos dezesseis.
+const CQS3_SEMENTES: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5, 3, 1]; // cqs3: as vagas da segunda fase
+
+/// { 0x42e430 } (thiscall, ret 0, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_second_round_stage()`,
+/// a segunda fase da Série C, do fim dos grupos.
+/// 1) Uma lista de 16 (malloc 0x944e46 de 0x40; sem memória: a caixa da linha 0x2e6 e volta).
+/// 2) Os dois primeiros de cada um dos oito grupos (a tabela da liga e as das fases 0 a 6, nessa ordem), em registros de
+///    6 bytes (o clube e os pontos, +0x19 da linha).
+/// 3) Dezesseis vezes: o registro de mais pontos (o primeiro, no empate) entre os que ainda têm clube sai (o clube vira
+///    0) e o clube vai à vaga `CQS3_SEMENTES[k]`: o melhor contra o 16º, o 2º contra o 15º... (sem nenhum: a caixa da
+///    linha 0x30b; a original lê então o endereço 0 e cai).
+/// 4) A tabela das rodadas pela virtual +0x3c (thiscall(this, 7, &rodadas, &extra, 0), ret 0x10); a fase (operator new
+///    0x944cf1(0xb2) e o construtor Cup_Stage 0x522e00, thiscall, ret 0x3c: a liga, 16, a lista, as rodadas, +4, a
+///    tabela, o ano, 7, 1, o extra, 0x14, 0, 0, 0, sementes nulas; words limpas) em [+0xc][7]. Sem fase: a caixa da
+///    linha 0x31b e volta. Com ela: a tabela e a lista liberadas (free 0x9452ca) e +0x30 = 7.
+unsafe extern "thiscall" fn cqs3_segunda_fase_da_serie_c(this: usize) {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    #[allow(clippy::type_complexity)]
+    let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
+        core::mem::transmute(0x522e00usize);
+    let lista = alocar(0x40);
+    if lista == 0 {
+        return aviso_em(0x98aba4, 0x2e6);
+    }
+    let mut r = [(0usize, 0i16); 16];
+    for (k, g) in (-1i32..7).enumerate() {
+        let t = cqs3_d(if g == -1 { this } else { cqs3_d(cqs3_d(this + 0xc) + 4 * g as usize) } + 0xb1);
+        r[2 * k] = (cqs3_d(t), cqs3_w(t + 0x19));
+        r[2 * k + 1] = (cqs3_d(t + 0x3b), cqs3_w(t + 0x54));
+    }
+    for k in 0..16 {
+        let mut melhor: Option<usize> = None;
+        for (i, e) in r.iter().enumerate() {
+            if melhor.map_or(true, |m| e.1 > r[m].1) && e.0 != 0 {
+                melhor = Some(i);
+            }
+        }
+        let c = match melhor {
+            Some(m) => {
+                let c = r[m].0;
+                r[m].0 = 0;
+                c
+            }
+            None => {
+                aviso_em(0x98aba4, 0x30b);
+                core::ptr::read_volatile(core::ptr::null::<usize>()) // ponytail: a original lê o endereço 0 aqui e cai
+            }
+        };
+        core::ptr::write_unaligned((lista + 4 * CQS3_SEMENTES[k] as usize) as *mut usize, c);
+    }
+    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqs3_d(cqs3_d(this) + 0x3c));
+    let (mut rodadas, mut extra) = (0i16, 0i16);
+    let t = tabela(this, 7, &mut rodadas, &mut extra, 0);
+    let p = novo(0xb2);
+    let fase = if p != 0 {
+        construir(p, this, 0x10, lista, rodadas as u16 as u32, cqs3_d(this + 4), t, cqs3_w(this + 0x40) as u16 as u32, 7, 1,
+                  extra as u16 as u32, 0x14, 0, 0, 0, 0)
+    } else {
+        0
+    };
+    core::ptr::write_unaligned((cqs3_d(this + 0xc) + 0x1c) as *mut usize, fase);
+    if cqs3_d(cqs3_d(this + 0xc) + 0x1c) == 0 {
+        return aviso_em(0x98aba4, 0x31b);
+    }
+    crate::comparacao::ramo("cqs_3 segunda fase");
+    soltar(t);
+    soltar(lista);
+    core::ptr::write_unaligned((this + 0x30) as *mut u32, 7);
+}
+
+/// { 0x42e700 } (thiscall, ret 0, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_third_round_groups()`,
+/// a terceira fase da Série C, do fim da segunda: os vencedores da segunda fase ([+0xc][7], os registros de 6 bytes de
+/// +0xa7 com +5 = 1, na ordem) numa lista local de 8, embaralhada (comp_util_shuffle_pointer_array 0x4afb40, cdecl(v,
+/// 8)); os quatro primeiros formam o grupo A (fase 8) e os outros quatro o grupo B (fase 9). Cada grupo: a tabela das
+/// rodadas pela virtual +0x3c (thiscall(this, 8 ou 9, &rodadas, &extra, 0)) e a fase (operator new 0x944cf1(0xee) e o
+/// construtor League_Stage 0x68b100: a liga, 4, a lista (ou a lista + 4), 2 (ida e volta), +4, a tabela, as rodadas
+/// (word), 3 pontos por vitória, 1 por empate, a categoria 5, &{1,2,4,0} (os critérios de desempate), &{2,0,0,0} (duas
+/// vagas de cima), o ano, 8 ou 9, o extra (word), 0x14, 1, 0, 2 (os bits de regra), −1, 0, 2) em [+0xc][8] ou [9];
+/// sem fase: a caixa da linha 0x353 ou 0x363 e volta; com ela, a tabela liberada (free 0x9452ca). Depois do segundo,
+/// +0x30 = 9. [inferência] Os dois primeiros de cada grupo sobem à Série B; os campeões dos grupos fazem a final.
+unsafe extern "thiscall" fn cqs3_terceira_fase_da_serie_c(this: usize) {
+    let embaralhar: unsafe extern "C" fn(*mut usize, u32) = core::mem::transmute(0x4afb40usize);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+    #[allow(clippy::type_complexity)]
+    let construir: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, *const u8, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
+        core::mem::transmute(0x68b100usize);
+    let vagas: [u8; 4] = [2, 0, 0, 0];
+    let desempate: [u8; 4] = [1, 2, 4, 0];
+    let mut v = [0usize; 8];
+    let segunda = cqs3_d(cqs3_d(this + 0xc) + 0x1c);
+    let mut n = 0usize;
+    let mut i = 0i32;
+    while i < cqs3_w(segunda + 0x3e) as i32 {
+        let e = cqs3_d(segunda + 0xa7) + 6 * i as usize;
+        // ponytail: a original grava sem limite numa lista de 8 na pilha; a fase tem 8 vencedores (a cópia para no 8º).
+        if cqs3_b(e + 5) == 1 && n < 8 {
+            v[n] = cqs3_d(e);
+            n += 1;
+        }
+        i += 1;
+    }
+    embaralhar(v.as_mut_ptr(), 8); // cqs3: os oito vencedores embaralhados
+    for (k, f) in [(8u32, 0x353u32), (9, 0x363)] {
+        let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqs3_d(cqs3_d(this) + 0x3c));
+        let (mut rodadas, mut extra) = (0i16, 0i16);
+        let t = tabela(this, k, &mut rodadas, &mut extra, 0);
+        let p = novo(0xee);
+        let fase = if p != 0 {
+            construir(p, this, 4, v[4 * (k as usize - 8)..].as_ptr(), 2, cqs3_d(this + 4), t, rodadas as u16 as u32, 3, 1, 5,
+                      desempate.as_ptr(), vagas.as_ptr(), cqs3_w(this + 0x40) as u16 as u32, k, extra as u16 as u32, 0x14, 1, 0, 2, -1, 0, 2)
+        } else {
+            0
+        };
+        core::ptr::write_unaligned((cqs3_d(this + 0xc) + 4 * k as usize) as *mut usize, fase);
+        if cqs3_d(cqs3_d(this + 0xc) + 4 * k as usize) == 0 {
+            return aviso_em(0x98aba4, f);
+        }
+        soltar(t);
+    }
+    crate::comparacao::ramo("cqs_3 terceira fase");
+    core::ptr::write_unaligned((this + 0x30) as *mut u32, 9);
+}
+
+/// O comparador de um grupo: só a original (aloca o vetor, a tabela das rodadas e a fase), com o plano feito antes: os
+/// sete clubes das vagas 7(g + 1).. da lista dos 56. Depois, a fase na vaga g com +0x3e = 7, os sete na tabela dela
+/// (como conjunto) e +0x30 = g.
+unsafe extern "thiscall" fn comparar_cqs3_grupo_da_serie_c(this: usize, g: u32) {
+    let k = g as u8 as i8 as i32;
+    let mut plano = [0usize; 7];
+    for (j, c) in plano.iter_mut().enumerate() {
+        *c = cqs3_d(cqs3_d(this + 0xee) + 4 * (7 * (k + 1) as usize + j));
+    }
+    orig::<unsafe extern "thiscall" fn(usize, u32)>(2024)(this, g);
+    let fase = cqs3_d(cqs3_d(this + 0xc) + 4 * k as usize);
+    let igual = fase != 0 && cqs3_w(fase + 0x3e) == 7 && cqs3_d(this + 0x30) as i32 == k && {
+        let mut nela = [0usize; 7];
+        for (j, c) in nela.iter_mut().enumerate() {
+            *c = cqs3_d(cqs3_d(fase + 0xb1) + j * 0x3b);
+        }
+        let mut a = plano;
+        a.sort_unstable();
+        nela.sort_unstable();
+        a == nela
+    };
+    PLACAR.registrar(igual, || format!("cqs3_grupo_da_serie_c({:#x}, {}) fase={:#x} plano={:x?}", this, k, fase, plano));
+}
+
+/// O comparador da segunda fase: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
+/// antes pela mesma escolha numa cópia dos registros: a fase da vaga 7 existe, com +0x3e = 16 e os dezesseis na ordem
+/// das vagas na lista dela (+0xa7, 6 bytes), e +0x30 = 7.
+unsafe extern "thiscall" fn comparar_cqs3_segunda_fase_da_serie_c(this: usize) {
+    let mut r = [(0usize, 0i16); 16];
+    for (k, g) in (-1i32..7).enumerate() {
+        let t = cqs3_d(if g == -1 { this } else { cqs3_d(cqs3_d(this + 0xc) + 4 * g as usize) } + 0xb1);
+        r[2 * k] = (cqs3_d(t), cqs3_w(t + 0x19));
+        r[2 * k + 1] = (cqs3_d(t + 0x3b), cqs3_w(t + 0x54));
+    }
+    let mut plano = [0usize; 16];
+    for k in 0..16 {
+        let mut melhor: Option<usize> = None;
+        for (i, e) in r.iter().enumerate() {
+            if melhor.map_or(true, |m| e.1 > r[m].1) && e.0 != 0 {
+                melhor = Some(i);
+            }
+        }
+        if let Some(m) = melhor {
+            plano[CQS3_SEMENTES[k] as usize] = r[m].0;
+            r[m].0 = 0;
+        }
+    }
+    orig::<unsafe extern "thiscall" fn(usize)>(2025)(this);
+    let fase = cqs3_d(cqs3_d(this + 0xc) + 0x1c);
+    let igual = fase != 0 && cqs3_w(fase + 0x3e) == 0x10 && cqs3_d(this + 0x30) == 7 && {
+        let mut nela = [0usize; 16];
+        for (j, c) in nela.iter_mut().enumerate() {
+            *c = cqs3_d(cqs3_d(fase + 0xa7) + 6 * j);
+        }
+        let (mut a, mut b) = (plano, nela);
+        a.sort_unstable();
+        b.sort_unstable();
+        a == b
+    };
+    PLACAR.registrar(igual, || format!("cqs3_segunda_fase_da_serie_c({:#x}) fase={:#x} plano={:x?}", this, fase, plano));
+}
+
+/// O comparador da terceira fase: só a original (embaralha: sorteia; aloca as tabelas e as fases), com o plano: os
+/// vencedores da segunda fase; depois, as fases 8 e 9 com 4 clubes cada, os oito juntos (como conjunto) e +0x30 = 9.
+unsafe extern "thiscall" fn comparar_cqs3_terceira_fase_da_serie_c(this: usize) {
+    let segunda = cqs3_d(cqs3_d(this + 0xc) + 0x1c);
+    let mut plano = [0usize; 8];
+    let mut n = 0usize;
+    let mut i = 0i32;
+    while i < cqs3_w(segunda + 0x3e) as i32 && n < 8 {
+        let e = cqs3_d(segunda + 0xa7) + 6 * i as usize;
+        if cqs3_b(e + 5) == 1 {
+            plano[n] = cqs3_d(e);
+            n += 1;
+        }
+        i += 1;
+    }
+    orig::<unsafe extern "thiscall" fn(usize)>(2026)(this);
+    let (a, b) = (cqs3_d(cqs3_d(this + 0xc) + 0x20), cqs3_d(cqs3_d(this + 0xc) + 0x24));
+    let igual = a != 0 && b != 0 && cqs3_w(a + 0x3e) == 4 && cqs3_w(b + 0x3e) == 4 && cqs3_d(this + 0x30) == 9 && {
+        let mut nela = [0usize; 8];
+        for j in 0..4 {
+            nela[j] = cqs3_d(cqs3_d(a + 0xb1) + j * 0x3b);
+            nela[4 + j] = cqs3_d(cqs3_d(b + 0xb1) + j * 0x3b);
+        }
+        let mut p = plano;
+        p.sort_unstable();
+        nela.sort_unstable();
+        p == nela
+    };
+    PLACAR.registrar(igual, || format!("cqs3_terceira_fase_da_serie_c({:#x}) n={} plano={:x?}", this, n, plano));
+}
 
 // ---------- 281a leva: o fim da temporada das ligas: a cadeia de acessos e rebaixamentos; as notícias do prêmio e da TV de uma competição (league.cpp, comp.cpp) ----------
 
@@ -168538,6 +174175,85 @@ pub unsafe fn instalar(comparando: bool) {
         cqq12_oceania_tabela as *const () as usize,
         cqq12_asia_clubes_times as *const () as usize,
         cqq12_asia_recopa_times as *const () as usize,
+        cqr1_turno_do_carioca as *const () as usize,
+        cqr1_turno_do_mineiro as *const () as usize,
+        cqr1_turno_do_paranaense as *const () as usize,
+        cqr1_turno_da_j1 as *const () as usize,
+        cqr2_virada_do_carioca as *const () as usize,
+        cqr2_virada_do_mineiro as *const () as usize,
+        cqr2_virada_do_paranaense as *const () as usize,
+        cqr3_fase_seguinte_da_nsl as *const () as usize,
+        cqr3_serie_final_da_nsl as *const () as usize,
+        cqr3_grande_final_da_nsl as *const () as usize,
+        cqr4_fase_seguinte_da_mls as *const () as usize,
+        cqr4_play_off_da_mls as *const () as usize,
+        cqr4_final_da_mls as *const () as usize,
+        cqr5_virada_copa_do_brasil as *const () as usize,
+        cqr5_virada_copa_do_imperador as *const () as usize,
+        cqr5_virada_copa_da_liga_japonesa as *const () as usize,
+        cqr6_virada_supercopa_japonesa as *const () as usize,
+        cqr6_virada_copa_dos_eua as *const () as usize,
+        cqr6_virada_jogo_das_estrelas as *const () as usize,
+        cqr6_times_do_jogo_das_estrelas as *const () as usize,
+        cqr10_libertadores_dia as *const () as usize,
+        cqr10_libertadores_primeiro_grupo as *const () as usize,
+        cqr10_libertadores_grupo as *const () as usize,
+        cqr11_mercosul_dia as *const () as usize,
+        cqr11_mercosul_primeiro_grupo as *const () as usize,
+        cqr11_mercosul_grupo as *const () as usize,
+        cqr12_merconorte_dia as *const () as usize,
+        cqr12_merconorte_primeiro_grupo as *const () as usize,
+        cqr12_merconorte_grupo as *const () as usize,
+        cqr13_copa_america_dia as *const () as usize,
+        cqr13_copa_america_primeiro_grupo as *const () as usize,
+        cqr13_copa_america_grupo as *const () as usize,
+        cqs1_tabela_da_mls as *const () as usize,
+        cqs1_segunda_divisao_da_mls as *const () as usize,
+        cqs1_terceira_divisao_da_mls as *const () as usize,
+        cqs2_virada_da_mls as *const () as usize,
+        cqs2_posicoes_previstas_da_mls as *const () as usize,
+        cqs2_clubes_da_mls as *const () as usize,
+        cqs3_grupo_da_serie_c as *const () as usize,
+        cqs3_segunda_fase_da_serie_c as *const () as usize,
+        cqs3_terceira_fase_da_serie_c as *const () as usize,
+        cqs4_final_da_serie_c as *const () as usize,
+        cqs4_virada_da_serie_c as *const () as usize,
+        cqs4_posicoes_previstas_da_serie_c as *const () as usize,
+        cqs5_trofeu_clubes as *const () as usize,
+        cqs5_trofeu_fase_das_chaves as *const () as usize,
+        cqs5_trofeu_fase_seguinte as *const () as usize,
+        cqs6_trofeu_final as *const () as usize,
+        cqs6_trofeu_classificacao as *const () as usize,
+        cqs7_fase_de_copa as *const () as usize,
+        cqs7_fim_da_fase_de_copa as *const () as usize,
+        cqs10_libertadores_mata_mata as *const () as usize,
+        cqs10_merconorte_semifinais as *const () as usize,
+        cqs10_merconorte_fase_seguinte as *const () as usize,
+        cqs11_merconorte_convidados as *const () as usize,
+        cqs11_mercosul_fase_seguinte as *const () as usize,
+        cqs11_copa_america_fase_seguinte as *const () as usize,
+        cqs12_copa_america_selecoes as *const () as usize,
+        cqs12_copa_america_previstas as *const () as usize,
+        cqs12_copa_america_temporada_nova as *const () as usize,
+        cqt1_construir_baiano as *const () as usize,
+        cqt1_construir_centro_oeste as *const () as usize,
+        cqt1_construir_gaucho as *const () as usize,
+        cqt2_construir_goiano as *const () as usize,
+        cqt2_construir_mineiro as *const () as usize,
+        cqt2_construir_norte as *const () as usize,
+        cqt3_construir_nordeste as *const () as usize,
+        cqt3_construir_paranaense as *const () as usize,
+        cqt3_construir_pernambucano as *const () as usize,
+        cqt4_construir_carioca as *const () as usize,
+        cqt4_construir_catarinense as *const () as usize,
+        cqt4_construir_paulista as *const () as usize,
+        cqt4_atualizar_media_de_publico as *const () as usize,
+        cqt10_oceania_dia as *const () as usize,
+        cqt10_oceania_grupo_a as *const () as usize,
+        cqt10_oceania_grupo_b as *const () as usize,
+        cqt11_oceania_clubes as *const () as usize,
+        cqt11_oceania_fase_seguinte as *const () as usize,
+        cqt11_oceania_semifinais as *const () as usize,
     ];
     let comp: [usize; N] = [
         comparar_tabela_a as *const () as usize,
@@ -170526,6 +176242,85 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_cqq12_oceania_tabela as *const () as usize,
         comparar_cqq12_asia_clubes_times as *const () as usize,
         comparar_cqq12_asia_recopa_times as *const () as usize,
+        comparar_cqr1_turno_do_carioca as *const () as usize,
+        comparar_cqr1_turno_do_mineiro as *const () as usize,
+        comparar_cqr1_turno_do_paranaense as *const () as usize,
+        comparar_cqr1_turno_da_j1 as *const () as usize,
+        comparar_cqr2_virada_do_carioca as *const () as usize,
+        comparar_cqr2_virada_do_mineiro as *const () as usize,
+        comparar_cqr2_virada_do_paranaense as *const () as usize,
+        comparar_cqr3_fase_seguinte_da_nsl as *const () as usize,
+        comparar_cqr3_serie_final_da_nsl as *const () as usize,
+        comparar_cqr3_grande_final_da_nsl as *const () as usize,
+        comparar_cqr4_fase_seguinte_da_mls as *const () as usize,
+        comparar_cqr4_play_off_da_mls as *const () as usize,
+        comparar_cqr4_final_da_mls as *const () as usize,
+        comparar_cqr5_virada_copa_do_brasil as *const () as usize,
+        comparar_cqr5_virada_copa_do_imperador as *const () as usize,
+        comparar_cqr5_virada_copa_da_liga_japonesa as *const () as usize,
+        comparar_cqr6_virada_supercopa_japonesa as *const () as usize,
+        comparar_cqr6_virada_copa_dos_eua as *const () as usize,
+        comparar_cqr6_virada_jogo_das_estrelas as *const () as usize,
+        comparar_cqr6_times_do_jogo_das_estrelas as *const () as usize,
+        comparar_cqr10_libertadores_dia as *const () as usize,
+        comparar_cqr10_libertadores_primeiro_grupo as *const () as usize,
+        comparar_cqr10_libertadores_grupo as *const () as usize,
+        comparar_cqr11_mercosul_dia as *const () as usize,
+        comparar_cqr11_mercosul_primeiro_grupo as *const () as usize,
+        comparar_cqr11_mercosul_grupo as *const () as usize,
+        comparar_cqr12_merconorte_dia as *const () as usize,
+        comparar_cqr12_merconorte_primeiro_grupo as *const () as usize,
+        comparar_cqr12_merconorte_grupo as *const () as usize,
+        comparar_cqr13_copa_america_dia as *const () as usize,
+        comparar_cqr13_copa_america_primeiro_grupo as *const () as usize,
+        comparar_cqr13_copa_america_grupo as *const () as usize,
+        comparar_cqs1_tabela_da_mls as *const () as usize,
+        comparar_cqs1_segunda_divisao_da_mls as *const () as usize,
+        comparar_cqs1_terceira_divisao_da_mls as *const () as usize,
+        comparar_cqs2_virada_da_mls as *const () as usize,
+        comparar_cqs2_posicoes_previstas_da_mls as *const () as usize,
+        comparar_cqs2_clubes_da_mls as *const () as usize,
+        comparar_cqs3_grupo_da_serie_c as *const () as usize,
+        comparar_cqs3_segunda_fase_da_serie_c as *const () as usize,
+        comparar_cqs3_terceira_fase_da_serie_c as *const () as usize,
+        comparar_cqs4_final_da_serie_c as *const () as usize,
+        comparar_cqs4_virada_da_serie_c as *const () as usize,
+        comparar_cqs4_posicoes_previstas_da_serie_c as *const () as usize,
+        comparar_cqs5_trofeu_clubes as *const () as usize,
+        comparar_cqs5_trofeu_fase_das_chaves as *const () as usize,
+        comparar_cqs5_trofeu_fase_seguinte as *const () as usize,
+        comparar_cqs6_trofeu_final as *const () as usize,
+        comparar_cqs6_trofeu_classificacao as *const () as usize,
+        comparar_cqs7_fase_de_copa as *const () as usize,
+        comparar_cqs7_fim_da_fase_de_copa as *const () as usize,
+        comparar_cqs10_libertadores_mata_mata as *const () as usize,
+        comparar_cqs10_merconorte_semifinais as *const () as usize,
+        comparar_cqs10_merconorte_fase_seguinte as *const () as usize,
+        comparar_cqs11_merconorte_convidados as *const () as usize,
+        comparar_cqs11_mercosul_fase_seguinte as *const () as usize,
+        comparar_cqs11_copa_america_fase_seguinte as *const () as usize,
+        comparar_cqs12_copa_america_selecoes as *const () as usize,
+        comparar_cqs12_copa_america_previstas as *const () as usize,
+        comparar_cqs12_copa_america_temporada_nova as *const () as usize,
+        comparar_cqt1_construir_baiano as *const () as usize,
+        comparar_cqt1_construir_centro_oeste as *const () as usize,
+        comparar_cqt1_construir_gaucho as *const () as usize,
+        comparar_cqt2_construir_goiano as *const () as usize,
+        comparar_cqt2_construir_mineiro as *const () as usize,
+        comparar_cqt2_construir_norte as *const () as usize,
+        comparar_cqt3_construir_nordeste as *const () as usize,
+        comparar_cqt3_construir_paranaense as *const () as usize,
+        comparar_cqt3_construir_pernambucano as *const () as usize,
+        comparar_cqt4_construir_carioca as *const () as usize,
+        comparar_cqt4_construir_catarinense as *const () as usize,
+        comparar_cqt4_construir_paulista as *const () as usize,
+        comparar_cqt4_atualizar_media_de_publico as *const () as usize,
+        comparar_cqt10_oceania_dia as *const () as usize,
+        comparar_cqt10_oceania_grupo_a as *const () as usize,
+        comparar_cqt10_oceania_grupo_b as *const () as usize,
+        comparar_cqt11_oceania_clubes as *const () as usize,
+        comparar_cqt11_oceania_fase_seguinte as *const () as usize,
+        comparar_cqt11_oceania_semifinais as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -170638,7 +176433,7 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
         "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
         "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito", "motor_zagueiros_do_lado_sem_conflito", "motor_construir_arbitro", "motor_destruir_jogador_da_partida", "motor_evento_na_frente", "motor_construir_fila_da_narracao", "motor_liberar_tabelas_de_eventos", "motor_ordem_das_partidas_do_dia", "motor_ordem_de_acao", "motor_variante_do_evento", "motor_combinar_com_o_anterior", "motor_comentario_de_contexto", "motor_construir_jogador_da_partida", "motor_proximo_evento", "motor_nome_do_jogador_na_narracao", "motor_habilidade_vista", "motor_cumprir_regra_do_elenco", "motor_nota_fora_da_partida", "motor_nota_para_a_vaga", "motor_pessoa_na_lista", "motor_ficha_de_contrato", "motor_desgaste_diario", "motor_registro_da_formacao", "motor_peso_da_competicao", "motor_gravar_dado_da_noticia", "motor_recuperar_lesao", "motor_pessoa_na_lista_de_transferencias", "motor_punicao_da_tabela", "motor_bits_do_registro", "motor_competicao_marcada", "motor_registro_da_liga", "motor_media_do_jogo", "motor_valor_do_contrato", "motor_nivel_para_a_selecao", "motor_oferta_de_contrato", "motor_oferta_acertada", "motor_oferta_fechada", "motor_rotulo_do_controle", "motor_fechar_tela_da_partida", "motor_abrir_tela_de_espera", "motor_noticia_com_resposta_2", "motor_tem_noticia", "motor_importancia_da_partida", "motor_abrir_ultimos_placares", "motor_montar_ultimos_placares", "motor_responder_ultimos_placares", "motor_abrir_detalhes_da_partida", "motor_responder_detalhes_da_partida", "motor_fechar_detalhes_da_partida", "motor_disciplina_temporada_nova", "motor_disciplina_do_dia", "motor_disciplina_gravar_vaga", "motor_marcar_contrato_acertado", "motor_desmarcar_contrato_acertado", "motor_vaga_da_oferta", "motor_abrir_tela_da_partida", "motor_responder_ultimos_placares_da_partida", "motor_responder_estatisticas_do_time", "motor_painel_dos_ultimos_placares", "motor_sem_tela_seguinte", "motor_cor_do_titulo", "motor_lista_de_observados", "motor_entrada_do_treino", "motor_gravar_carga_de_treino", "motor_e_competicao_do_amistoso", "motor_preencher_data_internacional", "motor_limpar_registro_de_tecnico", "motor_tirar_contrato_de_emprestimo", "motor_desmarcar_lances_pelo_jogador", "motor_tecnico_substituto", "motor_clube_do_contrato_acertado", "motor_registrar_jogo_pela_selecao", "motor_punicao_guardada", "motor_entrada_da_aposentadoria", "motor_registrar_competicoes_do_amistoso", "motor_vaga_da_noticia", "motor_tirar_percentual_da_proxima_venda", "motor_tirar_bonus_por_jogo", "motor_tirar_bonus_pela_selecao", "motor_tirar_reserva_de_tecnico", "motor_tirar_jogador_do_banco", "motor_premio_da_liga", "motor_ultima_nota_do_jogador", "motor_vaga_da_busca", "motor_tipo_da_lista_da_busca", "motor_ordem_do_confronto", "motor_atualizar_confronto_direto", "motor_marcar_termos_oferecidos", "motor_hora_das_ferias", "motor_escalacao_guardada", "motor_tecnico_da_busca", "motor_abrir_jogos_do_dia", "motor_responder_jogos_do_dia", "motor_vaga_do_mais_bem_avaliado", "motor_estatistica_da_liga_do_jogador", "motor_entrada_do_jogo_bate", "motor_balde_do_registro", "motor_atribuir_bloco_do_time", "motor_atribuir_linha_do_jogador", "motor_contar_placar_ao_vivo", "motor_responder_continuar_da_partida", "motor_abrir_escalacao_da_partida", "motor_responder_escalacao_da_partida", "motor_painel_das_estatisticas_do_time", "motor_painel_das_notas_dos_jogadores", "motor_painel_das_estatisticas_da_partida", "motor_valores_das_estatisticas_da_partida", "motor_valores_das_zonas_de_acao", "motor_valores_das_notas_dos_jogadores", "motor_painel_das_zonas_de_acao", "motor_painel_do_relatorio_da_partida", "motor_montar_jogos_do_dia", "motor_preencher_estatisticas_do_time", "motor_atualizar_ultimos_placares", "motor_esperar_os_outros_jogadores", "motor_ler_registro_da_partida", "motor_registrar_partida", "motor_gravar_registro_da_partida", "motor_desenhar_conferencia_da_escalacao", "motor_carregar_estatisticas_da_partida", "motor_salvar_estatisticas_da_partida", "motor_organizar_area", "motor_iniciar_area", "motor_desenhar_area", "motor_montar_tela_da_partida", "motor_responder_tela_da_partida", "motor_montar_detalhes_da_partida", "motor_atualizar_barra_da_posse", "motor_painel_da_visao_geral_da_partida", "motor_tabela_da_liga_ao_vivo", "motor_historia_punivel_do_jogador", "motor_escolher_tipo_de_lesao", "motor_categoria_da_noticia", "motor_apagar_repetidos_das_convocacoes", "motor_vaga_do_escalado", "motor_escolher_comentarista", "motor_regras_da_rodada_no_jogo", "motor_chave_do_jogo_na_copa", "motor_pais_da_excursao", "motor_fechar_propostas_da_oferta", "motor_enfileirar_transferencia_livre", "motor_negociacoes_de_troca_do_jogador", "motor_tirar_jogador_da_selecao", "motor_faixa_do_horario", "motor_teto_da_observacao", "motor_ofertas_pelo_jogador", "motor_reputacao_alvo_do_clube", "motor_gravar_jogo_na_noticia", "motor_preencher_registro_da_partida", "motor_ordem_dos_eventos", "motor_tirar_idioma_do_jogador", "motor_pode_contratar_jogador", "motor_trocas_oferecendo_o_jogador", "motor_noticias_nao_lidas", "motor_gravar_marca_da_noticia", "motor_clube_de_tecnico_humano", "motor_data_do_sorteio_da_rodada", "motor_data_do_jogo_da_rodada", "motor_tirar_clube_dos_amistosos", "motor_ordem_das_linhas_da_tabela", "motor_montar_grade_de_turnos", "motor_margem_do_ultimo_dia", "motor_partida_das_vagas_da_noticia", "motor_resultado_da_eliminatoria_na_noticia", "motor_dia_da_rodada_da_copa", "motor_mapa_de_casas_da_formacao", "motor_nota_do_clube_para_o_jovem", "motor_partida_assistida_pelo_humano", "motor_largar_partida_assistida", "motor_ficha_do_registro", "motor_liga_tem_rebaixamento", "motor_data_da_rodada_da_liga", "motor_importancia_do_jogo_da_liga", "motor_copiar_recordista", "motor_copiar_registro_de_partida", "motor_copiar_registro_de_sequencia", "motor_humano_assiste_a_partida", "motor_humano_deu_apelido", "motor_copiar_aposentadoria_pendente", "motor_montar_estatisticas_da_partida", "motor_desmontar_estatisticas_da_partida", "motor_casar_nome_com_padrao", "motor_id_do_conteiner", "motor_tamanho_dos_itens_do_padrao", "motor_empacotar_no_conteiner", "motor_desempacotar_do_conteiner", "motor_limpar_pasta_temporaria", "motor_ler_do_conteiner", "motor_gravar_no_conteiner", "motor_fechar_conteiner", "motor_filtro_do_jogo_salvo", "motor_filtro_do_inicio_rapido", "motor_versao_do_jogo_salvo_valida", "motor_gravar_regras_fifa", "motor_carregar_regras_fifa", "motor_montar_resumo_do_save", "motor_gravar_banco_no_save", "motor_carregar_banco_do_save", "motor_liberar_dados_do_jogo", "motor_criar_jogo_pela_configuracao", "motor_gravar_jogo", "motor_carregar_jogo", "motor_escopo_da_reputacao", "motor_reputacao_vista_por", "motor_pessoa_e_estrangeira", "motor_idade_da_pessoa", "motor_nacao_com_transferencia_livre", "motor_pessoa_e_comunitaria", "motor_pessoa_listada_para_transferencia", "motor_atributo_calculado_do_jogador", "motor_atributo_da_pessoa", "motor_ordem_do_historico_de_competicao", "motor_vetor_de_atributos_do_jogador", "motor_nacao_britanica_ou_irlanda", "motor_clube_basco", "motor_pessoa_listada_pelo_clube", "motor_pessoa_listada_para_emprestimo", "motor_pessoa_listada_a_pedido", "motor_nota_relativa_do_atributo", "motor_clube_pode_ter_reservas", "motor_primeiro_nome_da_nacao", "motor_segundo_nome_da_nacao", "motor_formatar_nome_da_pessoa", "motor_cores_do_uniforme_do_clube", "motor_tecnico_do_clube_ou_selecao", "motor_nome_ingles_do_clube", "motor_ajustar_moral_da_pessoa", "motor_vetor_de_atributos_do_nao_jogador", "motor_marcar_elenco_da_pessoa", "motor_contar_elenco_do_clube", "motor_reunir_elenco_do_clube", "motor_clube_pode_ser_dirigido", "motor_vetor_para_o_nao_jogador", "motor_vetor_para_o_jogador", "motor_normalizar_atributos_do_nao_jogador", "motor_familia_da_cor", "motor_cores_se_confundem", "motor_atributo_calculado_do_nao_jogador", "motor_forma_do_adjetivo", "motor_atributo_do_nao_jogador", "motor_nota_relativa_com_habilidade_reduzida", "motor_primeiro_nome_pelo_peso", "motor_cores_da_competicao", "motor_clube_tem_vaga_para_cargo", "motor_incluir_pessoa_no_clube", "motor_casar_chave_de_clube", "motor_remapear_chave_de_clube", "motor_casar_chave_de_nacao", "motor_casar_chave_de_competicao_de_clube", "motor_casar_chave_de_competicao_de_pessoa", "motor_ler_continentes", "motor_ler_nacoes", "motor_ler_cidades", "motor_ler_estadios", "motor_ler_pessoas_157", "motor_ler_historico_de_pessoas", "motor_ler_historicos_de_competicao", "motor_ler_competicoes_de_pessoal", "motor_ler_historico_de_competicoes_de_pessoal", "motor_ler_arbitros", "motor_ler_cores", "motor_ler_nomes", "motor_ler_clubes", "motor_ler_competicoes", "motor_ler_nao_jogadores", "motor_ler_jogadores", "motor_ler_pessoas_110", "motor_ler_preferencias", "motor_gravar_continentes", "motor_gravar_nacoes", "motor_gravar_cidades", "motor_gravar_estadios", "motor_gravar_clubes", "motor_gravar_pessoas_110", "motor_gravar_nao_jogadores", "motor_gravar_jogadores", "motor_gravar_preferencias", "motor_gravar_historico_de_pessoas", "motor_gravar_competicoes", "motor_gravar_historicos_de_competicao", "motor_gravar_competicoes_de_pessoal", "motor_gravar_arbitros", "motor_gravar_registros_58", "motor_gravar_nomes", "motor_abrir_arquivo_do_banco", "motor_criar_arquivo_do_banco", "motor_liberar_historico_de_pessoas", "motor_liberar_historico_de_premios", "motor_crescer_historico_de_competicoes", "motor_ordem_dos_clubes_pela_reputacao", "motor_ordem_do_elenco_pela_habilidade", "motor_ordem_do_elenco_pela_habilidade_atual", "motor_normalizar_atributos_fisicos_do_jogador", "motor_segundo_nome_pelo_peso", "motor_normalizar_atributos_do_jogador", "motor_ler_clubes_v1", "motor_ler_nao_jogadores_v1", "motor_ler_jogadores_v1", "motor_ler_competicoes_v1", "motor_nome_ingles_da_nacao", "motor_nome_curto_ingles_do_clube", "motor_cortar_elencos_de_a_e_b", "motor_juntar_o_time_b_ao_a", "motor_montar_indice_de_nomes", "motor_tirar_pessoa_do_clube", "motor_olheiros_do_clube", "motor_clube_em_temporada", "motor_clube_em_nacao_grande", "motor_nacao_grande", "motor_limpar_vinculos_de_opiniao", "motor_juntar_vinculo_de_opiniao", "motor_tirar_vinculo_de_opiniao", "motor_auxiliar_do_clube", "motor_treinadores_do_clube", "motor_contar_treinadores_do_clube", "motor_sigla_inglesa_da_nacao", "motor_nome_ingles_da_competicao", "motor_nome_ingles_da_competicao_de_pessoal", "motor_nome_ingles_do_estadio", "motor_arquivo_do_idioma_existe", "motor_liberar_tabelas_em_ingles", "motor_gerar_comissao_extra", "motor_cortar_tabela_de_clubes", "motor_podar_historico_de_competicoes", "motor_resolver_indices_do_banco", "motor_ordenar_clubes_pela_reputacao", "motor_clube_tem_defensores", "motor_clube_tem_meias", "motor_clube_tem_atacantes", "motor_clube_tem_esforcados", "motor_clube_tem_goleiro", "motor_clube_tem_meias_que_roubam", "motor_faltam_atacantes_pelo_alto", "motor_faltam_zagueiros_pelo_alto", "motor_faltam_zagueiros_rapidos", "motor_clube_tem_atacante_rapido", "motor_clube_tem_meias_criativos", "motor_faixa_de_forca_do_elenco", "motor_reputacao_do_clube_para_pessoa", "motor_contar_rejeitados_no_clube", "motor_contar_favoritos_no_clube", "motor_tirar_clube_favorito", "motor_clube_tirar_pessoa_favorita", "motor_tirar_pessoa_favorita", "motor_tirar_pessoa_rejeitada", "motor_pessoas_favoritas", "motor_clube_acrescentar_pessoa_favorita", "motor_clube_acrescentar_pessoa_rejeitada", "motor_acrescentar_pessoa_favorita", "motor_acrescentar_clube_rejeitado", "motor_esmaecer_relacoes", "motor_pessoas_rejeitadas", "motor_mascara_da_posicao_natural", "motor_contar_elenco_com_mascara", "motor_escolher_companheiro_favorito", "motor_clube_fora_da_argentina", "motor_clube_fora_de_argentina_franca_croacia", "motor_nacao_da_melanesia", "motor_nacao_da_polinesia", "motor_nome_do_cargo_de_treino", "motor_anos_entre_datas_em_texto", "motor_ordem_dos_clubes_pelo_nome_curto", "motor_ordem_das_pessoas_pelo_nome_completo", "motor_pessoa_confere_com_os_nomes", "motor_ordem_dos_clubes_pela_latitude", "motor_ordem_dos_clubes_pela_longitude", "motor_nome_por_ids", "motor_nome_oficial", "motor_texto_da_mascara_da_posicao", "motor_nome_da_posicao", "motor_descricao_do_jogador", "motor_melhor_candidato_a_favorito", "motor_forcas_do_jogador", "motor_fraquezas_do_jogador", "motor_contar_fisioterapeutas", "motor_clube_e_time_b", "motor_pessoas_fora_do_elenco", "motor_atributo_visivel", "motor_atributo_para_quem_ve", "motor_nome_do_atributo_de_tecnico", "motor_ordem_das_pessoas_pelo_sobrenome", "motor_ordem_dos_ponteiros_de_clube_pela_reputacao", "motor_nacao_do_clube_na_cee", "motor_regioes_pelo_nome", "motor_ordem_das_regioes_pelo_nome", "motor_pessoa_da_opiniao", "motor_nome_pelos_textos", "motor_nome_do_cargo", "motor_nome_do_idioma", "motor_nome_da_selecao", "motor_nome_do_atributo_do_jogador", "motor_texto_das_posicoes", "motor_nome_da_regiao", "motor_adjetivo_do_continente", "motor_definir_chaves_fixas", "motor_definir_chaves_fixas_1080", "motor_inicializar_jogadores", "motor_adjetivo_da_nacao", "motor_ordenar_tabela_da_liga", "motor_mini_tabela_do_confronto", "motor_liberar_tabela_da_liga", "motor_liga_completa", "motor_pagar_direitos_de_tv", "motor_registrar_honras_da_temporada", "motor_acrescentar_ao_historico", "motor_tipo_de_confronto_na_liga", "motor_forca_do_clube", "motor_clube_colocado_mais_recente", "motor_amistoso_do_clube", "motor_lista_da_data", "motor_proxima_partida", "motor_estadio_em_uso", "motor_data_do_amistoso_internacional", "motor_encerrar_convocacoes_da_competicao", "motor_encerrar_convocacoes_da_nacao", "motor_podar_registros_de_convocacao", "motor_por_no_elenco_da_selecao", "motor_tirar_do_elenco_da_selecao", "motor_dispensar_acima_da_idade_do_sub21", "motor_limpar_competicao_atual", "motor_liberar_competicoes_do_continente", "motor_convocar_substituto", "motor_montar_reservas_das_selecoes", "motor_ordem_das_reservas", "motor_ordem_pelo_clube", "motor_adversario_do_amistoso", "motor_adversario_da_excursao", "motor_aplicar_resultado_na_tabela", "motor_pontos_do_resultado", "motor_ordem_pela_posicao_do_confronto", "motor_ordem_das_datas_da_liga", "motor_linha_do_clube", "motor_liga_tem_o_clube", "motor_copiar_recorde_de_nota", "motor_copiar_recorde_de_melhor_em_campo", "motor_copiar_recorde_de_disciplina", "motor_copiar_recorde_de_contagem", "motor_copiar_recorde_do_torcedor", "motor_construir_recorde_de_ocorrencias", "motor_construir_recorde_de_contagem", "motor_copiar_recorde_de_valor", "motor_copiar_recorde_de_gols_na_partida", "motor_copiar_noticia", "motor_copiar_transferencia_passada", "motor_copiar_transferencia_futura", "motor_copiar_entrada_da_fila_de_regens", "motor_esta_na_lista_de_observados", "motor_escolher_doador_de_dados", "motor_copiar_registro_de_suspensao", "motor_salario_padrao_do_contrato", "motor_condicao_de_jogo_do_jogador", "motor_dias_ate_o_fim_do_contrato", "motor_limpar_todas_as_queixas", "motor_conferir_retirada_do_pedido", "motor_lugar_no_elenco", "motor_subir_para_o_principal", "motor_descer_para_os_reservas", "motor_copiar_contrato_de_pessoal", "motor_subir_moral_pela_partida", "motor_tirar_conversas_de_contrato", "motor_tirar_interesses_de_transferencia", "motor_tirar_pedido_de_observacao", "motor_tirar_apelido_de_todos", "motor_tirar_aposentadoria_pendente", "motor_aposentadoria_do_desempregado", "motor_oferta_precisa_de_permissao", "motor_atualizar_permissoes_de_trabalho", "motor_olheiro_da_busca", "motor_sequencia_atual_do_clube", "motor_construir_recordista", "motor_tecnico_rival_para_comentar", "motor_construir_recorde_de_valor_pago", "motor_construir_recorde_de_valor_recebido", "motor_construir_recorde_de_sequencia", "motor_construir_recorde_de_vitorias_seguidas", "motor_construir_recorde_de_derrotas_seguidas", "motor_construir_recorde_de_invencibilidade", "motor_construir_recorde_sem_vencer", "motor_construir_recorde_de_gols_na_partida", "motor_construir_recorde_do_mais_novo", "motor_texto_do_fim_do_prazo", "motor_pode_encerrar_emprestimo", "motor_pow_do_game", "motor_tirar_ofertas_guardadas", "motor_guardar_suspensoes_do_emprestado", "motor_preencher_vaga_da_comissao", "motor_noticia_para_os_tecnicos_da_nacao", "motor_missao_do_olheiro", "motor_copa_completa", "motor_construir_recorde_do_mais_velho", "motor_permissao_de_trabalho_de", "motor_passa_na_permissao", "motor_soltar_suspensoes_guardadas", "motor_tirar_ofertas_pendentes", "motor_marcar_decisao_da_transferencia", "motor_noticia_para_todos_os_tecnicos", "motor_noticia_para_os_tecnicos_da_divisao", "motor_noticia_para_os_tecnicos_do_pais", "motor_oferta_bate_o_recorde", "motor_condicao_do_jogador", "motor_limite_de_escalacao", "motor_limpar_partidas_assistidas", "motor_alvos_dos_olheiros_do_clube", "motor_trocar_olheiro_da_busca", "motor_diretoria_depois_da_partida", "motor_disciplina_da_partida", "motor_entradas_do_clube_na_shortlist", "motor_maior_oferta_pelo_jogador", "motor_recordes_de_sempre", "motor_recordes_da_temporada", "motor_guardar_noticia_de_recorde", "motor_acrescentar_reserva_de_tecnico", "motor_acrescentar_aposentadoria", "motor_guardar_vaga_para_regen", "motor_acionar_clausulas_de_rebaixamento", "motor_tirar_oferta_de_contrato", "motor_esta_suspenso", "motor_escopo_das_regras_da_partida", "motor_codigo_de_inelegibilidade", "motor_vaga_do_amistoso", "motor_noticia_para_os_tecnicos_do_continente", "motor_noticia_para_a_regiao_da_competicao", "motor_noticia_importante_para_a_pessoa", "motor_texto_do_dado_da_noticia", "motor_noticia_de_apuro_financeiro", "motor_olheiros_cobrem_a_nacao", "motor_fluencia_no_idioma", "motor_recomecar_historico_da_pessoa", "motor_posicao_na_formacao", "motor_clube_tem_oferta_pelo_jogador", "motor_oferta_do_clube_pelo_jogador", "motor_jogador_com_oferta_pendente", "motor_jogador_sob_oferta", "motor_clube_do_jogador_com_lei_bosman", "motor_veto_da_diretoria_na_oferta", "motor_guardar_transferencia_passada", "motor_dar_permissao_de_trabalho", "motor_guardar_premio_por_jogo_no_time", "motor_vaga_livre_de_contrato", "motor_acrescentar_contrato_da_pessoa", "motor_acrescentar_data_de_decisao", "motor_zerar_moral_do_contrato", "motor_contrato_pelo_atual", "motor_faixa_do_vencimento", "motor_registrar_historia_da_midia", "motor_expirar_historias_da_midia", "motor_historia_ja_registrada", "motor_acrescentar_interesse_de_transferencia", "motor_ordem_das_chaves_de_ids", "motor_ordem_das_historias", "motor_decidir_jogo_da_copa", "motor_decidir_confronto_da_copa", "motor_ordem_dos_cabecas_de_chave", "motor_iniciar_linha_da_tabela", "motor_vetor_dos_clubes_da_liga", "motor_gravar_posicoes_finais_da_liga", "motor_mudar_clube_de_divisao", "motor_embaralhar_ponteiros", "motor_ordenar_e_embaralhar_os_melhores", "motor_contar_jogo_da_suspensao", "motor_soltar_suspensao", "motor_apagar_historico_de_suspensoes", "motor_sortear_lesao_recorrente", "motor_recomecar_historico_de_lesoes", "motor_reiniciar_fisico_do_jogador", "motor_somar_totais_de_transferencia", "motor_recordes_de_carreira_no_clube", "motor_recorde_de_nota_da_temporada", "motor_competicao_na_data_do_amistoso", "motor_amistoso_perto_da_data", "motor_acrescentar_amistoso_planejado", "motor_noticia_pelo_alcance", "motor_noticia_ao_tecnico_do_clube", "motor_entregar_noticia_ao_tecnico", "motor_responder_todas_as_noticias", "motor_tecnico_tem_noticia_pendente", "motor_gravar_texto_na_noticia", "motor_nota_do_jogador_para_a_historia", "motor_texto_da_crise_financeira", "motor_noticias_da_caixa", "motor_aposentar_do_elenco", "motor_melhor_clube_para_o_jovem", "motor_clube_da_nacao_para_o_jovem", "motor_abrir_vagas_que_faltam", "motor_melhor_nota_de_candidato_a_tecnico", "motor_agendar_oferta", "motor_estatuto_no_elenco_pelo_clube", "motor_estimar_estatuto_no_elenco", "motor_liberar_alvos_da_lista_do_clube", "motor_busca_cobre_a_nacao", "motor_tirar_amistoso_marcado", "motor_iniciar_pares_proibidos_de_amistoso", "motor_avaliar_o_negocio_da_transferencia", "motor_confianca_da_diretoria_na_transferencia", "motor_resolver_o_ultimato_da_diretoria", "motor_tirar_o_contrato_principal", "motor_reenviar_ofertas_guardadas", "motor_mes_do_fim_da_temporada_do_clube", "motor_pontos_dos_tecnicos_no_dia", "motor_pontos_dos_tecnicos_no_fim_da_competicao", "motor_tecnico_do_mes_na_liga", "motor_saidas_pendentes_dos_tecnicos", "motor_tirar_jogador_do_elenco_do_clube", "motor_tirar_pessoa_do_cargo_no_clube", "motor_construir_noticia", "motor_ajustar_confianca_da_torcida", "motor_ajustar_confianca_da_diretoria", "motor_resposta_do_tecnico_da_maquina", "motor_marcar_noticia_lida", "motor_achar_noticia_pelo_id", "motor_noticia_de_gratidao_do_jogador", "motor_noticia_de_pedido_de_apoio", "motor_noticia_de_reacao_a_critica", "motor_montar_listas_de_posicao", "motor_ordenar_listas_de_posicao", "motor_clubes_interessados_no_jogador", "motor_acrescentar_na_lista_de_observacao", "motor_prever_resposta_do_vendedor", "motor_periodo_do_emprestimo", "motor_prazo_da_resposta_a_oferta", "motor_pagar_prestacoes_das_transferencias", "motor_tirar_oferta_de_transferencia", "motor_acrescentar_suspensao", "motor_tirar_suspensoes_de_fora_do_clube", "motor_restaurar_suspensoes_guardadas", "motor_acrescentar_idioma", "motor_melhorar_idioma", "motor_zerar_estatisticas_do_jogador", "motor_definir_competicao_da_selecao", "motor_marcar_clubes_com_jogo", "motor_tirar_jogador_da_disciplina", "motor_comparar_datas_de_decisao", "motor_decidir_as_datas_vencidas", "motor_ofertas_de_contrato_do_clube", "motor_assinar_contrato_de_emprestimo", "motor_encerrar_o_emprestimo", "motor_trocar_lugar_no_elenco", "motor_diretoria_do_tecnico_novo", "motor_motivo_da_saida_do_tecnico", "motor_registro_do_tecnico", "motor_serve_para_o_cargo", "motor_pode_assumir_o_cargo", "motor_baixar_moral_pela_partida", "motor_montar_vagas_da_formacao", "motor_refazer_lista_do_clube", "motor_suspender_clubes_que_miram_o_jogador", "motor_por_jogador_nas_listas_dos_clubes", "motor_por_jogador_a_venda", "motor_pagar_premio_por_jogos", "motor_clube_recusa_a_oferta", "motor_soltar_jogadores_da_oferta", "motor_montar_oferta_em_dinheiro", "motor_acrescentar_surto_de_doenca", "motor_espalhar_surtos_de_doenca", "motor_jogador_fora_da_temporada", "motor_forma_inicial_dos_elencos", "motor_registros_iniciais_de_lesao", "motor_listas_de_clubes_por_nacao", "motor_jogador_do_ano_da_torcida", "motor_arquivar_estatisticas_da_nacao", "motor_recordes_de_valor_de_transferencia", "motor_par_de_nacoes_sem_amistoso", "motor_ordem_das_nacoes_pela_reputacao", "motor_ordem_dos_amistosos_pela_data", "motor_pode_marcar_jogo_do_clube", "motor_ordem_das_convocacoes_pela_data", "motor_acrescentar_nacao_classificada", "motor_ordem_dos_cabecas_de_chave_decrescente", "motor_ordem_dos_cabecas_de_chave_crescente", "motor_teto_da_divisao_dos_clubes", "motor_pensar_em_demitir_o_tecnico", "motor_dar_o_ultimato_da_diretoria", "motor_tirar_o_tecnico_do_cargo", "motor_avaliar_a_selecao_na_competicao", "motor_clube_em_apuro_financeiro", "motor_faixa_da_confianca_da_diretoria", "motor_registrar_o_acesso", "motor_registrar_o_rebaixamento", "motor_registrar_a_classificacao_na_fase", "motor_registrar_a_transferencia", "motor_registrar_a_eliminacao", "motor_registrar_a_nao_classificacao", "motor_data_de_conclusao_da_oferta", "motor_primeiro_dia_permitido_da_oferta", "motor_janela_fixa_de_transferencias", "motor_compensacao_pela_pessoa", "motor_pagar_transferencia_e_clausulas", "motor_clube_vendedor_deve_aceitar", "motor_permissao_de_trabalho_na_mudanca", "motor_concluir_oferta_de_contrato_aceita", "motor_oferecer_contrato_ao_jogador_da_oferta", "motor_desfazer_oferta", "motor_fazer_oferta_de_emprestimo", "motor_concluir_transferencias_futuras", "motor_nota_do_doador_de_dados", "motor_ordem_das_aposentadorias", "motor_ordem_da_fila_de_regens", "motor_registro_da_categoria", "motor_criar_estatisticas", "motor_aposentadoria_marcada", "motor_copa_sortear_times_da_rodada", "motor_copa_separar_estadio_compartilhado", "motor_escala_pela_rodada", "motor_lado_do_jogo_para_o_clube", "motor_ordem_dos_coeficientes_das_nacoes", "motor_pedido_de_observacao", "motor_limpar_vaga_da_escalacao", "motor_marcar_batedor_de_bola_parada", "motor_restricoes_da_partida", "motor_limite_do_banco_do_dia", "motor_precisa_de_permissao_de_trabalho", "motor_clube_pode_chegar_ao_jogador", "motor_termos_ao_jogador_da_troca", "motor_fila_livre_do_clube", "motor_transferencia_futura_do_jogador", "motor_tirar_transferencia_futura", "motor_acrescentar_transferencia_futura", "motor_ofertas_abertas_pelos_jogadores_do_clube", "motor_desfazer_ofertas_pelo_jogador", "motor_guardar_percentual_da_proxima_venda", "motor_iniciar_diretorias_dos_clubes", "motor_apelacoes_de_suspensao", "motor_pode_ver_a_partida", "motor_aposentadoria_no_inicio", "motor_aposentadoria_por_idade", "motor_lista_inicial_de_aposentadorias", "motor_novas_aposentadorias", "motor_sair_dos_cargos", "motor_registrar_a_liberacao", "motor_estado_da_lesao", "motor_marcar_decisao_da_oferta", "motor_candidatos_a_tecnico_do_ano", "motor_projetar_posicoes_da_liga", "motor_ordem_da_projecao_pela_reputacao", "motor_ordem_da_projecao_pelos_pontos", "motor_achar_jogos_do_calendario", "motor_jogos_da_competicao_no_dia", "motor_competicao_tem_jogo_na_data", "motor_clube_livre_na_data", "motor_copa_tem_o_clube", "motor_nacao_parceira_do_clube", "motor_pedido_de_transferencia", "motor_cargo_com_contrato", "motor_fora_da_diretoria", "motor_iniciar_permissoes_de_trabalho", "motor_contagem_da_clausula", "motor_premio_por_jogo_do_jogador", "motor_fila_da_transferencia_livre", "motor_proxima_janela_aberta", "motor_emprestimo_negociado", "motor_oferta_com_clausula", "motor_motivo_da_recusa_vale", "motor_motivo_pelo_status_no_elenco", "motor_relacoes_do_elenco", "motor_atrito_com_o_tecnico", "motor_moral_pela_lideranca", "motor_faltas_ao_treino", "motor_competicoes_do_dia", "motor_mudar_confianca_da_diretoria", "motor_estadios_do_dia", "motor_reservar_estadio", "motor_estadio_livre_na_data", "motor_jogo_com_observado", "motor_na_lista_do_olheiro", "motor_registrar_a_primeira_convocacao", "motor_gols_na_carreira", "motor_registrar_o_emprestimo", "motor_ordem_da_volta_aos_treinos", "motor_gols_pelo_clube", "motor_registrar_a_selecao_do_ano", "motor_ordem_pelos_pontos_do_tecnico", "motor_jogo_guardado_igual", "motor_guardar_jogo_no_calendario", "motor_tirar_jogo_do_calendario", "motor_criar_amistosos_planejados", "motor_acrescentar_amistoso", "motor_planejar_amistoso_em_data_livre", "motor_atualizar_copa_no_dia", "motor_montar_rodada_da_copa", "motor_risco_de_doenca_na_viagem", "motor_jogos_da_selecao_no_periodo", "motor_atualizar_ranking_da_fifa", "motor_ordem_dos_resultados_por_pontos", "motor_resultado_no_historico", "motor_faixa_da_selecao", "motor_pontuacoes_do_ranking", "motor_nacao_chave_do_jogo", "motor_e_copa_do_mundo", "motor_e_torneio_internacional", "motor_indice_da_nacao_chave", "motor_ordem_do_ranking", "motor_ordem_das_pontuacoes", "motor_tempo_das_cidades", "motor_ler_regiao_do_clima", "motor_ler_periodo_do_clima", "motor_coeficientes_das_nacoes", "motor_dia_das_aposentadorias", "motor_soma_presa", "motor_nota_do_estadio_neutro", "motor_fator_da_distancia", "motor_ler_o_clima", "motor_fator_do_treinador", "motor_comissao_do_humano", "motor_carga_do_programa", "motor_aplicar_o_progresso", "motor_achar_o_treino_de_posicao", "motor_aprende_depressa", "motor_avancar_a_semana", "motor_tirar_a_ficha_reservada", "motor_lesao_que_volta", "motor_atualizar_amistosos_do_dia", "motor_planejar_pre_temporada_da_ia", "motor_janelas_da_pre_temporada", "motor_marcar_jogos_da_excursao", "motor_ordem_pela_faixa", "motor_ordem_pela_nacao_e_faixa", "motor_posicoes_previstas_da_copa", "motor_ordenar_clubes_pela_forca", "motor_gravar_posicao_do_clube", "motor_linha_da_nacao", "motor_linha_da_nacao_do_clube", "motor_ano_da_temporada_do_clube", "motor_clube_na_temporada", "motor_continente_principal", "motor_nacao_principal", "motor_estatistica_da_categoria", "motor_ordem_dos_idiomas", "motor_ordem_da_historia_por_clube", "motor_clausula_de_rescisao_ativa", "motor_periodo_protegido", "motor_tipo_de_bonus_permitido", "motor_adiar_pelo_clima", "motor_financas_do_clube", "motor_ordem_das_reservas_do_estadio", "motor_clima_da_partida", "motor_temperatura_do_jogo", "motor_gramado_do_jogo", "motor_faixa_de_riqueza", "motor_ordem_por_habilidade", "motor_ordem_pela_capacidade", "motor_programas_padrao", "motor_tipo_do_programa", "motor_programa_do_humano", "motor_fichas_de_treino_iniciais", "motor_guardar_jogador_no_banco", "motor_tem_reserva_de_tecnico", "motor_suspensao_do_vermelho", "motor_nova_temporada_do_orgao", "motor_compactar_disciplina_do_orgao", "motor_coordenada_da_casa", "motor_posicao_repetida_na_formacao", "motor_tipo_de_marcacao", "motor_sortear_ordem_dos_clubes", "motor_clubes_do_lado_do_jogo", "motor_clubes_possiveis_do_jogo", "motor_nota_alvo_do_clube", "motor_jogo_do_historico", "motor_gols_do_historico", "motor_passar_a_oferta_aos_clubes", "motor_noticia_da_oferta_aceita", "motor_noticia_do_emprestimo_oferecido", "motor_recusa_dos_termos", "motor_noticia_da_confianca_da_diretoria", "motor_noticia_das_expectativas_da_diretoria", "motor_ofertas_em_espera_na_janela", "motor_noticia_das_expectativas_da_federacao", "motor_noticia_do_protesto_da_torcida", "motor_guardar_a_negociacao", "motor_noticia_do_boato_do_tecnico", "motor_noticia_da_recusa_em_se_mudar", "motor_receita_do_merchandising", "motor_ingressos_da_temporada", "motor_melhorar_o_centro_de_treino", "motor_eventos_financeiros_da_semana", "motor_diretoria_paga_a_divida", "motor_injecao_de_dinheiro", "motor_teto_salarial_do_pessoal", "motor_pagar_os_bonus", "motor_ajustar_o_teto_salarial", "motor_efeitos_fisicos_da_partida", "motor_batida_do_jogador", "motor_jogador_de_ferias", "motor_contratar_o_regen", "motor_aposentar_pela_lesao", "motor_noticia_da_aposentadoria_anunciada", "motor_fim_da_lesao", "motor_noticia_do_pedido_de_desculpas", "motor_esvaziar_caixa_de_entrada", "motor_tirar_convocado_machucado", "motor_noticia_da_saida_do_convocado", "motor_noticia_do_pedido_de_substituto", "motor_pode_mudar_a_convocacao", "motor_esta_na_convocacao", "motor_marcar_adversario_do_amistoso", "motor_registrar_premio_do_mes", "motor_faixa_de_reputacao_do_amistoso", "motor_folga_do_amistoso", "motor_satisfacao_com_o_contrato", "motor_noticia_quer_contrato_novo", "motor_noticia_pedido_de_transferencia_retirado", "motor_confirmar_oferta_pelo_clube", "motor_tentar_concluir_oferta", "motor_acertar_clausulas_anteriores", "motor_tentar_emprestimo_pelo_jogador", "motor_noticia_contrato_acabando", "motor_noticia_saida_pela_lei_bosman", "motor_acrescentar_oferta_de_contrato", "motor_tirar_oferta_de_contrato_da_vaga", "motor_menor_salario_pedido", "motor_guardar_notas_da_partida", "motor_nota_do_jogador_no_mes", "motor_melhor_do_mes", "motor_premiar_o_melhor_do_mes", "motor_gravar_vencedor_do_mes", "motor_reputacao_do_premiado", "motor_fisico_do_dia", "motor_faixa_da_confianca_na_liga", "motor_gravar_notas_da_diretoria", "motor_dia_das_lesoes", "motor_noticias_de_volta_aos_treinos", "motor_um_cartao_da_suspensao", "motor_fila_de_regens", "motor_veiculo_pelo_clube", "motor_veiculo_pela_pessoa", "motor_somar_resultado_na_liga", "motor_copiar_tabela_da_liga", "motor_posicoes_previstas_da_liga", "motor_resultado_entre_selecoes", "motor_nome_do_elenco_da_selecao", "motor_rodada_com_jogos_conhecidos", "motor_registrar_convocados_por_clube", "motor_importancia_do_jogo_na_competicao", "motor_fase_da_competicao", "motor_faltas_do_dia", "motor_teve_falta_ao_treino", "motor_teve_incidente_de_forma", "motor_marcar_falta_ao_treino", "motor_fim_da_ausencia", "motor_marcas_do_contrato", "motor_recusar_oferta_de_transferencia", "motor_retirar_oferta_de_transferencia", "motor_noticia_oferta_recusada", "motor_desassossegar_pelo_lance", "motor_noticia_oferta_desfeita", "motor_noticia_premio_por_jogos", "motor_efetivar_transferencia", "motor_noticia_transferencia_concluida", "motor_noticia_transferencia_acertada", "motor_emprestimo_da_configuracao", "motor_noticia_fim_do_contrato", "motor_noticia_pedido_de_adiamento", "motor_tatica_do_clube", "motor_escolher_vaga_de_tatica", "motor_tatica_ativa_do_humano", "motor_tirar_da_escalacao", "motor_trocar_vagas_da_escalacao", "motor_tem_copia_da_escalacao", "motor_noticia_da_pressao", "motor_noticia_da_saida_do_tecnico", "motor_noticia_do_tecnico_novo", "motor_pagar_premios_da_liga", "motor_registros_pela_situacao_na_liga", "motor_anunciar_situacao_na_liga", "motor_registrar_partida_nas_estatisticas", "motor_recordes_de_posicao_na_liga", "motor_noticias_de_recordes", "motor_convocar_selecoes_para_o_jogo", "motor_noticia_do_convocado", "motor_noticia_do_desfecho_na_copa", "motor_contar_vagas_com_lance", "motor_tirar_da_lista_de_transferencias", "motor_tirar_da_lista_de_emprestimos", "motor_situacao_na_lista_de_observacao", "motor_por_na_lista_de_emprestimos", "motor_teto_de_preco_pelo_estatuto", "motor_distribuir_verba_de_transferencias", "motor_estatuto_permitido", "motor_nome_da_lista_do_olheiro", "motor_amistosos_internacionais_do_dia", "motor_lista_escolhida_do_tecnico", "motor_escolher_lista_do_tecnico", "motor_inscritos_da_liga_dos_campeoes", "motor_tabela_da_qualificacao_da_liga_dos_campeoes", "motor_proxima_fase_da_liga_dos_campeoes", "motor_processar_jogo_da_liga_dos_campeoes", "motor_progresso_do_clube_na_liga_dos_campeoes", "motor_conta_para_conflito_de_datas", "motor_escolher_arbitro_da_partida", "motor_limpar_arbitros_ocupados", "motor_renovar_arbitros", "motor_arbitros_sorteados", "motor_validar_arbitros", "motor_copiar_ficha_de_arbitro", "motor_registrar_premio_do_ano", "motor_vitoria_maior", "motor_derrota_maior", "motor_jogos_das_permissoes_e_clausulas", "motor_guardar_premio_por_jogos_na_selecao", "motor_noticia_transferencia_finalizada", "motor_veto_dos_fisios_e_da_diretoria", "motor_noticia_do_ultimato", "motor_texto_do_ultimato", "motor_liberar_sem_custo", "motor_ferias_do_humano", "motor_noticia_conversa_de_contrato", "motor_mata_mata_da_first", "motor_mata_mata_da_second", "motor_mata_mata_da_third", "motor_registros_pela_situacao_inglesa", "motor_situacao_na_first", "motor_situacao_na_third", "motor_posicoes_e_situacao_na_liga", "motor_fase_seguinte_da_first", "motor_fase_seguinte_da_second", "motor_registros_da_liga_dos_campeoes", "motor_sorteio_das_quartas", "motor_clubes_da_liga_dos_campeoes", "motor_registrar_resultado_da_tatica", "motor_capitao_guardado", "motor_escolher_capitao", "motor_selecao_que_tem_o_jogador", "motor_jogador_serve_a_selecao", "motor_juntar_competicoes_das_convocacoes", "motor_registro_da_partida_pelo_clube", "motor_referencia_ao_nome", "motor_codigo_do_resultado", "motor_mover_jogos_vizinhos_do_clube", "motor_remarcar_jogos_perto_da_data", "motor_noticia_do_jogo_remarcado", "motor_incidente_de_forma", "motor_noticia_reacao_a_multa", "motor_noticia_retorno_do_treinador", "motor_sortear_comentarista", "motor_nome_do_veiculo", "motor_noticia_queixa_a_federacao", "motor_folha_salarial_do_clube", "motor_refazer_todas_as_folhas", "motor_dias_ate_a_temporada", "motor_receber_venda_de_jogador", "motor_pagar_compra_de_jogador", "motor_pagar_luvas", "motor_receber_premio_em_dinheiro", "motor_receber_direitos_de_tv", "motor_pagar_salarios", "motor_copa_premio_da_rodada", "motor_copa_mandantes_da_rodada", "motor_copa_progresso_do_time", "motor_amistoso_responder_pedido", "motor_amistoso_enviar_pedido", "motor_amistoso_lista_das_nacoes", "motor_copa_sortear_rodada", "motor_nome_da_fase_e_rodada", "motor_clube_da_divisao_mais_alta", "motor_copa_registros_pelo_desfecho", "motor_copa_honras_da_temporada", "motor_copa_semifinalistas_para_a_uefa", "motor_recusar_oferta_de_emprestimo", "motor_vaga_no_elenco_para_a_oferta", "motor_percentual_da_proxima_venda_achado", "motor_jogador_na_busca", "motor_sincronizar_listas_dos_olheiros", "motor_vaga_do_jogador_observado", "motor_valor_do_jogador_para_o_clube", "motor_entrada_do_jogador_na_busca_do_clube", "motor_premio_de_jogos_na_selecao_achado", "motor_contratos_depois_do_jogo", "motor_moral_da_ficha", "motor_texto_da_moral", "motor_valor_do_jogador", "motor_diferenca_de_moral_em_texto", "motor_marcas_de_elenco_para_a_tela", "motor_jogadores_que_a_diretoria_cita", "motor_veredito_da_nota_na_partida", "motor_texto_da_diretoria_sobre_os_jogadores", "motor_resultado_nos_registros_dos_tecnicos", "motor_posicoes_no_fim_da_liga", "motor_jogador_do_ano_da_torcida_no_registro", "motor_vice_da_copa_nos_registros", "motor_terceiro_da_copa_nos_registros", "motor_troca_de_tecnico_nos_registros", "motor_reacoes_dos_elencos_a_transferencia", "motor_noticia_da_comemoracao_da_contratacao", "motor_noticia_do_companheiro_desassossegado", "motor_renda_da_partida", "motor_renda_do_estadio", "motor_pagar_multa_da_liga", "motor_impulso_das_financas", "motor_troca_do_presidente", "motor_pagar_outros_custos", "motor_tabela_das_datas_internacionais", "motor_resolver_datas_internacionais", "motor_torneio_do_clube_humano", "motor_amistosos_dos_clubes", "motor_acrescentar_torneio", "motor_convite_aberto_do_clube_humano", "motor_lesao_nova", "motor_noticia_da_lesao", "motor_ausente_sem_licenca", "motor_parte_dos_clubes_anteriores", "motor_percentual_da_proxima_venda_pago", "motor_noticia_do_percentual_da_venda", "motor_permissao_concedida", "motor_estatuto_pelo_motivo", "motor_vaga_da_negociacao", "motor_reacao_do_elenco_a_historia", "motor_aviso_ao_rival_de_posicao", "motor_rotulo_da_resposta_da_midia", "motor_cumprir_suspensoes_internacionais", "motor_recurso_da_suspensao", "motor_texto_da_vaga_da_suspensao", "motor_tirar_da_lista", "motor_esvaziar_lista", "motor_item_do_cursor", "motor_copa_sortear_pela_semente", "motor_copa_sortear_separando_nacoes", "motor_copa_comeco_da_temporada", "motor_nacao_chave_do_clube", "motor_nacao_chave_do_estadio", "motor_entrada_da_nacao_chave_ativa", "motor_conflito_de_jogos_no_mesmo_dia", "motor_primeiro_ano_com_jogos", "motor_ultimo_ano_com_jogos", "motor_gravar_financas", "motor_carregar_financas", "motor_gravar_gerente_de_elencos", "motor_gravar_sementes_da_uefa", "motor_gravar_sementes_da_conmebol", "motor_gravar_paises_anfitrioes", "motor_gravar_historico_dos_clubes", "motor_gravar_estatisticas_dos_arbitros", "motor_gravar_estatisticas_simuladas", "motor_gravar_datas_dos_clubes", "motor_carregar_datas_dos_clubes", "motor_gravar_conferencia_das_pernas", "motor_fim_de_temporada_da_nacao", "motor_fim_de_temporada_do_clube", "motor_noticia_do_dividendo", "motor_teto_salarial", "motor_noticia_das_obras", "motor_noticia_da_obra_recusada", "motor_conflitos_do_dia", "motor_conflitos_do_jogo", "motor_carregar_conferencia_das_pernas", "motor_nova_data_do_jogo", "motor_jogo_no_calendario", "motor_ano_do_calendario", "motor_copa_criar_jogos_do_confronto", "motor_copa_noticia_do_confronto_pendente", "motor_janelas_avisos_do_dia", "motor_copa_levar_jogos_as_datas", "motor_tirar_jogador_da_troca", "motor_permissoes_da_oferta", "motor_confianca_depois_da_partida", "motor_noticia_da_reacao_da_diretoria", "motor_noticia_da_avaliacao_da_federacao", "motor_expectativas_da_temporada", "motor_vaga_de_tecnico", "motor_noticia_da_oferta_de_emprego", "motor_boatos_de_transferencia", "motor_noticia_nao_vende", "motor_noticia_do_titulo", "motor_amistosos_entre_selecoes", "motor_convite_de_amistoso_valido", "motor_convite_de_torneio_valido", "motor_dia_das_selecoes", "motor_busca_atual_sem_clube", "motor_clube_nas_buscas_da_sessao", "motor_escolher_elenco_da_selecao", "motor_olheiros_na_partida", "motor_sessao_de_edicao", "motor_escolher_sessao_de_edicao", "motor_dia_das_transferencias", "motor_processar_oferta_vencida", "motor_restricoes_da_oferta", "motor_aceitar_lance", "motor_noticia_da_oferta_feita", "motor_pode_emprestar", "motor_liga_dia", "motor_liga_criar_tabela", "motor_liga_promover_e_rebaixar", "motor_calendario_dia", "motor_calendario_lista", "motor_calendario_carregar_ano", "motor_copa_arvore_dos_confrontos", "motor_competicao_primeira_fase_do_grupo", "motor_competicao_fase_atual", "motor_atualizar_o_treino_do_jogador", "motor_programa_de_treino_do_jogador", "motor_nivel_da_categoria_do_programa", "motor_tirar_ou_devolver_o_progresso", "motor_mudanca_do_atributo_pelo_treino", "motor_aptidao_para_a_posicao", "motor_aposentadorias_do_dia", "motor_noticia_da_aposentadoria", "motor_noticia_do_jovem_promovido", "motor_limpar_ausencia", "motor_limpar_falta_ao_treino", "motor_noticia_da_falta_ao_treino", "motor_troca_com_compensacao", "motor_ordem_das_vagas", "motor_marcar_sob_oferta", "motor_campeao_da_liga_nos_registros", "motor_campeao_da_copa_nos_registros", "motor_limpar_registro_do_humano", "motor_resposta_da_ia_ao_lance", "motor_negociacao_de_emprestimo", "motor_opcao_de_troca", "motor_agendar_fim_do_emprestimo", "motor_lances_do_clube", "motor_cqe4_interesse", "motor_cqe4_construir_contrato", "motor_cqe5_pode_emprestar", "motor_cqe5_registrar_emprestimo", "motor_cqe5_dia_das_regras", "motor_cqe6_periodo_inglaterra", "motor_cqe6_pode_emprestar_escocia", "motor_cqe6_periodo_escocia", "motor_cqe6_pode_emprestar_italia", "motor_cqe6_pode_emprestar_irlanda", "motor_cqe6_pode_emprestar_espanha", "motor_liga_jogos_para_a_tv", "motor_liga_noticia_dos_grupos", "motor_liga_noticia_da_tabela", "motor_por_oferta_de_transferencia", "motor_aceitar_emprestimo", "motor_termos_aceitos", "motor_noticia_de_jogador_listado", "motor_contrato_oferecido", "motor_mundial_sortear_grupos", "motor_mundial_sorteio_dos_grupos", "motor_mundial_dia", "motor_mundial_tabela_do_grupo_um", "motor_mundial_fase_do_grupo", "motor_mundial_posicoes_previstas", "motor_mundial_rodadas_da_fase", "motor_mundial_nacao_classificada", "motor_mundial_cabecas_de_chave", "motor_distribuir_os_treinadores", "motor_trocar_os_programas_do_elenco", "motor_nomes_padrao_dos_programas", "motor_historico_da_carreira", "motor_anos_desde_o_clube", "motor_ordem_do_historico_por_pessoa", "motor_lesao_pelo_nome", "motor_noticia_da_volta_aos_treinos", "motor_nome_da_categoria_da_lesao", "motor_cqf10_olheiro_no_jogo", "motor_cqf10_historico_do_clube_observado", "motor_cqf11_relatorio_da_selecao", "motor_cqf11_noticia_da_convocacao", "motor_cqf11_adversarios_da_selecao", "motor_cqf12_olheiros_do_dia", "motor_cqf12_relatorios_dos_olheiros", "motor_cqf12_noticia_do_relatorio", "motor_assinar_contrato", "motor_refazer_como_jovem", "motor_tirar_da_disputa", "motor_ler_formacao_do_disco", "motor_trocar_bytes_das_palavras", "motor_trocar_bytes_dos_dwords", "motor_montar_os_arbitros", "motor_ordem_das_vagas_de_competicao", "motor_cqg10_amistoso_cancelado", "motor_cqg10_jogo_da_selecao_cancelado", "motor_cqg10_torneio_cancelado", "motor_ordem_dos_arbitros_decrescente", "motor_ordem_dos_arbitros_crescente", "motor_arquivar_estatisticas", "motor_pessoa_pelo_nome", "motor_texto_entre_aspas", "motor_tipo_da_linha", "motor_campeoes_sortear_grupos", "motor_campeoes_ordem_dos_potes", "motor_campeoes_posicoes_previstas", "motor_campeoes_sortear_segunda_fase", "motor_campeoes_ordem_da_segunda_fase", "motor_grupo_da_fase", "motor_campeoes_rodadas_da_fase", "motor_liga_expectativas_da_temporada", "motor_liga_rebaixar_clube", "motor_competicao_todas_completas", "motor_competicao_lista_de_clubes", "motor_competicao_progresso_do_clube", "motor_uefa_rodar_coeficientes", "motor_uefa_vagas_por_nacao", "motor_uefa_enesimo_clube_da_nacao", "motor_uefa_juntar_clubes_europeus", "motor_uefa_vagas_liga_dos_campeoes", "motor_uefa_vagas_intertoto", "motor_uefa_vagas_copa_da_uefa", "motor_uefa_voluntario_ingles", "motor_uefa_virada_da_classificacao", "motor_conmebol_vagas_libertadores", "motor_conmebol_enesimo_clube_da_nacao", "motor_conmebol_convidado_da_mercosul", "motor_conmebol_juntar_clubes", "motor_conmebol_virada_do_ano", "motor_conmebol_campeao_dos_campeoes", "motor_sede_da_edicao", "motor_proxima_sede", "motor_calendario_das_sedes", "motor_regras_inglaterra", "motor_regras_eua", "motor_regras_australia", "motor_janelas_espanha", "motor_janelas_italia", "motor_janelas_franca", "motor_regras_brasil", "motor_janelas_alemanha", "motor_regras_escocia", "motor_cqi10_intertoto_dia", "motor_cqi10_intertoto_registros", "motor_cqi10_uefa_registros", "motor_cqi11_concacaf_classificados", "motor_cqi11_concacaf_dia", "motor_cqi11_concacaf_rodadas", "motor_cqi12_copa_italia_regras", "motor_cqi12_copa_c_regras", "motor_cqi12_copa_dos_campeoes_regras", "motor_cqj10_copa_africana_registros", "motor_cqj10_copa_america_registros", "motor_cqj10_eliminatoria_oceania_registros", "motor_cqj11_libertadores_regras", "motor_cqj11_merconorte_regras", "motor_cqj11_oceania_clubes_regras", "motor_cqj12_eliminatoria_europa_regras", "motor_cqj12_eliminatoria_sul_americana_regras", "motor_cqj12_eliminatoria_asia_regras", "motor_cqk10_copa_america_regras", "motor_cqk10_copa_africana_regras", "motor_cqk10_eliminatoria_oceania_regras", "motor_cqk11_libertadores_classificados", "motor_cqk11_libertadores_registros", "motor_cqk11_libertadores_fase_seguinte", "motor_cqk12_africana_fase_seguinte", "motor_cqk12_africana_grupo_a", "motor_cqk12_africana_historico", "motor_cqi7_regras_da_serie_a", "motor_cqi7_regras_da_serie_b", "motor_cqi7_regras_da_serie_c", "motor_cqi8_regras_do_centro_oeste", "motor_cqi8_regras_do_gaucho", "motor_cqi8_regras_do_catarinense", "motor_cqi9_regras_do_paranaense", "motor_cqi9_regras_do_pernambucano", "motor_cqi9_regras_do_carioca", "motor_cqj7_regras_do_goiano", "motor_cqj7_regras_da_j1", "motor_cqj7_regras_da_j2", "motor_cqj8_regras_da_nsl", "motor_cqj8_regras_da_mls", "motor_cqj8_historico_do_estadual", "motor_cqj8_historico_do_primeiro_estagio", "motor_cqj9_destino_na_serie_a", "motor_cqj9_destino_na_serie_c", "motor_cqj9_destino_no_baiano", "motor_cqk7_destino_no_centro_oeste", "motor_cqk7_destino_no_mineiro", "motor_cqk7_destino_na_nsl", "motor_cqk8_progresso_no_mineiro", "motor_cqk8_progresso_na_mls", "motor_cqk8_progresso_na_serie_c", "motor_cqk9_destino_na_mls", "motor_cqk9_resultado_na_mls", "motor_cqk9_conferencia_das_estrelas", "motor_regras_da_premier", "motor_regras_da_first", "motor_regras_da_second", "motor_regras_da_third", "motor_tabela_da_premier", "motor_tabela_da_second", "motor_tabela_da_third", "motor_tabela_da_first", "motor_regras_da_serie_a", "motor_regras_da_serie_b", "motor_regras_da_c1a", "motor_regras_da_c1b", "motor_tabela_da_serie_a", "motor_tabela_da_serie_b", "motor_tabela_da_c1a", "motor_tabela_da_c1b", "motor_regras_da_franca_1", "motor_regras_da_franca_2", "motor_regras_da_franca_3", "motor_tabela_da_franca_1", "motor_tabela_da_franca_2", "motor_tabela_da_franca_3", "motor_regras_da_primera", "motor_regras_da_segunda", "motor_regras_da_divisao_de_baixo", "motor_tabela_da_primera", "motor_registros_pela_situacao_na_c2a", "motor_situacao_na_primera", "motor_tabela_do_grupo_da_cfa", "motor_tabela_da_divisao_de_baixo_francesa", "motor_situacao_na_c1a", "motor_situacao_na_c1b", "motor_cql10_copa_da_liga_tabela", "motor_cql10_copa_da_inglaterra_tabela", "motor_cql10_supercopa_tabela", "motor_cql11_copa_da_franca_tabela", "motor_cql11_copa_da_liga_francesa_tabela", "motor_cql11_copa_do_rei_tabela", "motor_cql12_supercopa_da_franca_tabela", "motor_cql12_supercopa_da_espanha_tabela", "motor_cql12_supercopa_do_japao_tabela", "motor_cqm10_copa_da_liga_inscritos", "motor_cqm10_trofeu_inscritos", "motor_cqm10_supercopa_clubes", "motor_cqm11_copa_da_franca_inscritos", "motor_cqm11_copa_da_liga_inscritos", "motor_cqm11_supercopa_clubes", "motor_cqm12_supercopa_da_espanha_clubes", "motor_cqm12_supercopa_do_japao_clubes", "motor_cqm12_jogo_das_estrelas_tabela", "motor_cqn10_copa_da_liga_dia", "motor_cqn10_copa_da_inglaterra_dia", "motor_cqn10_jogo_das_estrelas_dia", "motor_cqn11_copa_da_liga_japonesa_tabela", "motor_cqn11_copa_do_imperador_tabela", "motor_cqn11_copa_dos_eua_tabela", "motor_cqn12_copa_da_liga_inscritos", "motor_cqn12_copa_dos_eua_inscritos", "motor_cqn12_copa_do_imperador_inscritos", "motor_numero_de_camisa", "motor_clube_usa_numeros", "motor_gravar_numero_de_camisa", "motor_dar_numero_de_camisa", "motor_numerar_elenco", "motor_numerar_no_comeco", "motor_numerar_liga", "motor_inscrever_na_europa", "motor_regras_holanda", "motor_regras_croacia", "motor_regras_irlanda", "motor_regras_noruega", "motor_regras_irlanda_do_norte", "motor_regras_pais_de_gales", "motor_regras_turquia", "motor_regras_polonia", "motor_regras_finlandia", "motor_janelas_argentina", "motor_janelas_portugal", "motor_regras_coreia", "motor_janelas_grecia", "motor_janelas_russia", "motor_janelas_belgica", "motor_inscricao_europeia", "motor_ranking_fifa_inicial", "motor_lista_de_estadios_neutros", "motor_cql7_tabela_da_serie_a", "motor_cql7_tabela_da_serie_b", "motor_cql7_tabela_da_serie_c", "motor_cql8_tabela_do_baiano", "motor_cql8_tabela_do_centro_oeste", "motor_cql8_tabela_do_gaucho", "motor_cql9_tabela_do_goiano", "motor_cql9_tabela_do_mineiro", "motor_cql9_tabela_do_norte", "motor_cqm7_tabela_do_nordeste", "motor_cqm7_tabela_do_paranaense", "motor_cqm7_tabela_do_pernambucano", "motor_cqm8_tabela_do_carioca", "motor_cqm8_tabela_do_catarinense", "motor_cqm8_tabela_do_paulista", "motor_cqm9_tabela_da_j1", "motor_cqm9_tabela_da_j2", "motor_cqm9_tabela_da_nsl", "motor_cqn7_mata_mata_do_baiano", "motor_cqn7_mata_mata_do_norte", "motor_cqn7_mata_mata_do_nordeste", "motor_cqn8_mata_mata_do_pernambucano", "motor_cqn8_mata_mata_do_catarinense", "motor_cqn8_mata_mata_do_paulista", "motor_cqn9_mata_mata_do_gaucho", "motor_cqn9_mata_mata_do_centro_oeste", "motor_cqn9_mata_mata_do_goiano", "motor_desempate_da_serie_a", "motor_desempate_da_serie_b", "motor_ordem_dos_empatados_na_italia", "motor_resultado_do_desempate_da_serie_a", "motor_fase_seguinte_da_c1a", "motor_fases_do_fim_da_c1a", "motor_fase_seguinte_da_c1b", "motor_fases_do_fim_da_c1b", "motor_fase_seguinte_da_third", "motor_construir_premier", "motor_construir_first", "motor_construir_second", "motor_construir_third", "motor_construir_serie_a", "motor_construir_serie_b", "motor_construir_c1a", "motor_construir_c1b", "motor_construir_franca_2", "motor_construir_franca_3", "motor_construir_segunda", "motor_construir_primera", "motor_construir_divisao_de_baixo_espanhola", "motor_tabela_da_segunda", "motor_tabela_da_divisao_de_baixo_espanhola", "motor_regras_da_cfa", "motor_construir_cfa", "motor_construir_divisao_de_baixo_francesa", "motor_destruir_cfa", "motor_destruir_divisao_de_baixo_francesa", "motor_calendario_fixo_da_serie_a", "motor_calendario_fixo_da_serie_b", "motor_calendario_fixo_da_c1a", "motor_calendario_fixo_da_c1b", "motor_toco_um_com_dois", "motor_toco_um_com_um", "motor_estadio_da_partida", "motor_estadio_neutro", "motor_publico_do_jogo", "motor_calendario_da_terceira_francesa", "motor_calendario_da_segunda_francesa", "motor_calendario_da_divisao_de_baixo_francesa", "motor_calendario_da_cfa", "motor_calendario_da_c1_a", "motor_calendario_da_c1_b", "motor_calendario_da_serie_a", "motor_calendario_da_serie_b", "motor_calendario_da_primeira_francesa", "motor_cqo7_fase_seguinte_do_mineiro", "motor_cqo7_final_do_mineiro", "motor_cqo7_fim_da_temporada_do_mineiro", "motor_cqo8_fase_seguinte_do_paranaense", "motor_cqo8_final_do_paranaense", "motor_cqo8_fim_da_temporada_do_paranaense", "motor_cqo9_fase_seguinte_do_carioca", "motor_cqo9_final_do_carioca", "motor_cqo9_fim_da_temporada_do_carioca", "motor_cqo10_copa_da_italia_tabela", "motor_cqo10_copa_c_tabela", "motor_cqo10_supercopa_tabela", "motor_cqo10_supercopa_c1_tabela", "motor_cqo11_copa_da_italia_inscritos", "motor_cqo11_copa_c_inscritos", "motor_cqo11_supercopa_clubes", "motor_cqo12_copa_do_brasil_tabela", "motor_cqo12_times_da_copa", "motor_cqo12_regras_da_copa", "motor_cqo13_libertadores_tabela", "motor_cqo13_mercosul_tabela", "motor_cqo13_mercosul_convidados", "motor_calendario_da_segunda_inglesa", "motor_calendario_da_terceira_inglesa", "motor_calendario_da_primeira_inglesa", "motor_calendario_da_premiership", "motor_calendario_da_primera", "motor_cqp7_virada_do_baiano", "motor_cqp7_fase_seguinte_do_baiano", "motor_cqp7_virada_do_centro_oeste", "motor_cqp7_fase_seguinte_do_centro_oeste", "motor_cqp7_virada_do_gaucho", "motor_cqp7_fase_seguinte_do_gaucho", "motor_cqp8_virada_do_goiano", "motor_cqp8_fase_seguinte_do_goiano", "motor_cqp8_virada_do_norte", "motor_cqp8_fase_seguinte_do_norte", "motor_cqp8_virada_do_nordeste", "motor_cqp8_fase_seguinte_do_nordeste", "motor_cqp9_virada_do_pernambucano", "motor_cqp9_fase_seguinte_do_pernambucano", "motor_cqp9_virada_do_catarinense", "motor_cqp9_fase_seguinte_do_catarinense", "motor_cqp9_virada_do_paulista", "motor_cqp9_fase_seguinte_do_paulista", "motor_calendario_da_segunda_espanhola", "motor_calendario_da_divisao_de_baixo_espanhola", "motor_construir_primeira_francesa", "motor_cqq7_fase_seguinte_da_serie_a", "motor_cqq7_play_off_da_serie_a", "motor_cqq7_fase_seguinte_da_serie_b", "motor_cqq7_play_off_da_serie_b", "motor_cqq8_virada_da_serie_a", "motor_cqq8_acesso_e_rebaixamento", "motor_cqq8_virada_da_serie_b", "motor_cqq9_fase_seguinte_da_j1", "motor_cqq9_final_da_j1", "motor_cqq9_virada_da_j1", "motor_tabela_das_sedes", "motor_noticia_das_sedes", "motor_carregar_sedes", "motor_cadeia_de_acessos", "motor_noticia_do_premio", "motor_noticia_da_tv", "motor_cqp10_copa_dos_campeoes_tabela", "motor_cqp10_merconorte_tabela", "motor_cqp10_supercopa_europeia_tabela", "motor_cqp10_supercopa_asiatica_tabela", "motor_cqp11_asia_clubes_tabela", "motor_cqp11_asia_recopa_tabela", "motor_cqp11_trofeu_tabela", "motor_cqp12_copa_america_tabela", "motor_cqp12_africana_tabela", "motor_cqp12_confed_tabela", "motor_cqp13_intertoto_tabela", "motor_cqp13_intercontinental_tabela", "motor_cqp13_interamericana_tabela", "motor_cqp13_concacaf_tabela", "motor_cqq10_uefa_tabela", "motor_cqq10_intertoto_inscritos", "motor_cqq10_intertoto_lista", "motor_cqq11_europeia_clubes", "motor_cqq11_asiatica_clubes", "motor_cqq11_c1_vagas", "motor_cqq12_oceania_tabela", "motor_cqq12_asia_clubes_times", "motor_cqq12_asia_recopa_times",
+        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito", "motor_zagueiros_do_lado_sem_conflito", "motor_construir_arbitro", "motor_destruir_jogador_da_partida", "motor_evento_na_frente", "motor_construir_fila_da_narracao", "motor_liberar_tabelas_de_eventos", "motor_ordem_das_partidas_do_dia", "motor_ordem_de_acao", "motor_variante_do_evento", "motor_combinar_com_o_anterior", "motor_comentario_de_contexto", "motor_construir_jogador_da_partida", "motor_proximo_evento", "motor_nome_do_jogador_na_narracao", "motor_habilidade_vista", "motor_cumprir_regra_do_elenco", "motor_nota_fora_da_partida", "motor_nota_para_a_vaga", "motor_pessoa_na_lista", "motor_ficha_de_contrato", "motor_desgaste_diario", "motor_registro_da_formacao", "motor_peso_da_competicao", "motor_gravar_dado_da_noticia", "motor_recuperar_lesao", "motor_pessoa_na_lista_de_transferencias", "motor_punicao_da_tabela", "motor_bits_do_registro", "motor_competicao_marcada", "motor_registro_da_liga", "motor_media_do_jogo", "motor_valor_do_contrato", "motor_nivel_para_a_selecao", "motor_oferta_de_contrato", "motor_oferta_acertada", "motor_oferta_fechada", "motor_rotulo_do_controle", "motor_fechar_tela_da_partida", "motor_abrir_tela_de_espera", "motor_noticia_com_resposta_2", "motor_tem_noticia", "motor_importancia_da_partida", "motor_abrir_ultimos_placares", "motor_montar_ultimos_placares", "motor_responder_ultimos_placares", "motor_abrir_detalhes_da_partida", "motor_responder_detalhes_da_partida", "motor_fechar_detalhes_da_partida", "motor_disciplina_temporada_nova", "motor_disciplina_do_dia", "motor_disciplina_gravar_vaga", "motor_marcar_contrato_acertado", "motor_desmarcar_contrato_acertado", "motor_vaga_da_oferta", "motor_abrir_tela_da_partida", "motor_responder_ultimos_placares_da_partida", "motor_responder_estatisticas_do_time", "motor_painel_dos_ultimos_placares", "motor_sem_tela_seguinte", "motor_cor_do_titulo", "motor_lista_de_observados", "motor_entrada_do_treino", "motor_gravar_carga_de_treino", "motor_e_competicao_do_amistoso", "motor_preencher_data_internacional", "motor_limpar_registro_de_tecnico", "motor_tirar_contrato_de_emprestimo", "motor_desmarcar_lances_pelo_jogador", "motor_tecnico_substituto", "motor_clube_do_contrato_acertado", "motor_registrar_jogo_pela_selecao", "motor_punicao_guardada", "motor_entrada_da_aposentadoria", "motor_registrar_competicoes_do_amistoso", "motor_vaga_da_noticia", "motor_tirar_percentual_da_proxima_venda", "motor_tirar_bonus_por_jogo", "motor_tirar_bonus_pela_selecao", "motor_tirar_reserva_de_tecnico", "motor_tirar_jogador_do_banco", "motor_premio_da_liga", "motor_ultima_nota_do_jogador", "motor_vaga_da_busca", "motor_tipo_da_lista_da_busca", "motor_ordem_do_confronto", "motor_atualizar_confronto_direto", "motor_marcar_termos_oferecidos", "motor_hora_das_ferias", "motor_escalacao_guardada", "motor_tecnico_da_busca", "motor_abrir_jogos_do_dia", "motor_responder_jogos_do_dia", "motor_vaga_do_mais_bem_avaliado", "motor_estatistica_da_liga_do_jogador", "motor_entrada_do_jogo_bate", "motor_balde_do_registro", "motor_atribuir_bloco_do_time", "motor_atribuir_linha_do_jogador", "motor_contar_placar_ao_vivo", "motor_responder_continuar_da_partida", "motor_abrir_escalacao_da_partida", "motor_responder_escalacao_da_partida", "motor_painel_das_estatisticas_do_time", "motor_painel_das_notas_dos_jogadores", "motor_painel_das_estatisticas_da_partida", "motor_valores_das_estatisticas_da_partida", "motor_valores_das_zonas_de_acao", "motor_valores_das_notas_dos_jogadores", "motor_painel_das_zonas_de_acao", "motor_painel_do_relatorio_da_partida", "motor_montar_jogos_do_dia", "motor_preencher_estatisticas_do_time", "motor_atualizar_ultimos_placares", "motor_esperar_os_outros_jogadores", "motor_ler_registro_da_partida", "motor_registrar_partida", "motor_gravar_registro_da_partida", "motor_desenhar_conferencia_da_escalacao", "motor_carregar_estatisticas_da_partida", "motor_salvar_estatisticas_da_partida", "motor_organizar_area", "motor_iniciar_area", "motor_desenhar_area", "motor_montar_tela_da_partida", "motor_responder_tela_da_partida", "motor_montar_detalhes_da_partida", "motor_atualizar_barra_da_posse", "motor_painel_da_visao_geral_da_partida", "motor_tabela_da_liga_ao_vivo", "motor_historia_punivel_do_jogador", "motor_escolher_tipo_de_lesao", "motor_categoria_da_noticia", "motor_apagar_repetidos_das_convocacoes", "motor_vaga_do_escalado", "motor_escolher_comentarista", "motor_regras_da_rodada_no_jogo", "motor_chave_do_jogo_na_copa", "motor_pais_da_excursao", "motor_fechar_propostas_da_oferta", "motor_enfileirar_transferencia_livre", "motor_negociacoes_de_troca_do_jogador", "motor_tirar_jogador_da_selecao", "motor_faixa_do_horario", "motor_teto_da_observacao", "motor_ofertas_pelo_jogador", "motor_reputacao_alvo_do_clube", "motor_gravar_jogo_na_noticia", "motor_preencher_registro_da_partida", "motor_ordem_dos_eventos", "motor_tirar_idioma_do_jogador", "motor_pode_contratar_jogador", "motor_trocas_oferecendo_o_jogador", "motor_noticias_nao_lidas", "motor_gravar_marca_da_noticia", "motor_clube_de_tecnico_humano", "motor_data_do_sorteio_da_rodada", "motor_data_do_jogo_da_rodada", "motor_tirar_clube_dos_amistosos", "motor_ordem_das_linhas_da_tabela", "motor_montar_grade_de_turnos", "motor_margem_do_ultimo_dia", "motor_partida_das_vagas_da_noticia", "motor_resultado_da_eliminatoria_na_noticia", "motor_dia_da_rodada_da_copa", "motor_mapa_de_casas_da_formacao", "motor_nota_do_clube_para_o_jovem", "motor_partida_assistida_pelo_humano", "motor_largar_partida_assistida", "motor_ficha_do_registro", "motor_liga_tem_rebaixamento", "motor_data_da_rodada_da_liga", "motor_importancia_do_jogo_da_liga", "motor_copiar_recordista", "motor_copiar_registro_de_partida", "motor_copiar_registro_de_sequencia", "motor_humano_assiste_a_partida", "motor_humano_deu_apelido", "motor_copiar_aposentadoria_pendente", "motor_montar_estatisticas_da_partida", "motor_desmontar_estatisticas_da_partida", "motor_casar_nome_com_padrao", "motor_id_do_conteiner", "motor_tamanho_dos_itens_do_padrao", "motor_empacotar_no_conteiner", "motor_desempacotar_do_conteiner", "motor_limpar_pasta_temporaria", "motor_ler_do_conteiner", "motor_gravar_no_conteiner", "motor_fechar_conteiner", "motor_filtro_do_jogo_salvo", "motor_filtro_do_inicio_rapido", "motor_versao_do_jogo_salvo_valida", "motor_gravar_regras_fifa", "motor_carregar_regras_fifa", "motor_montar_resumo_do_save", "motor_gravar_banco_no_save", "motor_carregar_banco_do_save", "motor_liberar_dados_do_jogo", "motor_criar_jogo_pela_configuracao", "motor_gravar_jogo", "motor_carregar_jogo", "motor_escopo_da_reputacao", "motor_reputacao_vista_por", "motor_pessoa_e_estrangeira", "motor_idade_da_pessoa", "motor_nacao_com_transferencia_livre", "motor_pessoa_e_comunitaria", "motor_pessoa_listada_para_transferencia", "motor_atributo_calculado_do_jogador", "motor_atributo_da_pessoa", "motor_ordem_do_historico_de_competicao", "motor_vetor_de_atributos_do_jogador", "motor_nacao_britanica_ou_irlanda", "motor_clube_basco", "motor_pessoa_listada_pelo_clube", "motor_pessoa_listada_para_emprestimo", "motor_pessoa_listada_a_pedido", "motor_nota_relativa_do_atributo", "motor_clube_pode_ter_reservas", "motor_primeiro_nome_da_nacao", "motor_segundo_nome_da_nacao", "motor_formatar_nome_da_pessoa", "motor_cores_do_uniforme_do_clube", "motor_tecnico_do_clube_ou_selecao", "motor_nome_ingles_do_clube", "motor_ajustar_moral_da_pessoa", "motor_vetor_de_atributos_do_nao_jogador", "motor_marcar_elenco_da_pessoa", "motor_contar_elenco_do_clube", "motor_reunir_elenco_do_clube", "motor_clube_pode_ser_dirigido", "motor_vetor_para_o_nao_jogador", "motor_vetor_para_o_jogador", "motor_normalizar_atributos_do_nao_jogador", "motor_familia_da_cor", "motor_cores_se_confundem", "motor_atributo_calculado_do_nao_jogador", "motor_forma_do_adjetivo", "motor_atributo_do_nao_jogador", "motor_nota_relativa_com_habilidade_reduzida", "motor_primeiro_nome_pelo_peso", "motor_cores_da_competicao", "motor_clube_tem_vaga_para_cargo", "motor_incluir_pessoa_no_clube", "motor_casar_chave_de_clube", "motor_remapear_chave_de_clube", "motor_casar_chave_de_nacao", "motor_casar_chave_de_competicao_de_clube", "motor_casar_chave_de_competicao_de_pessoa", "motor_ler_continentes", "motor_ler_nacoes", "motor_ler_cidades", "motor_ler_estadios", "motor_ler_pessoas_157", "motor_ler_historico_de_pessoas", "motor_ler_historicos_de_competicao", "motor_ler_competicoes_de_pessoal", "motor_ler_historico_de_competicoes_de_pessoal", "motor_ler_arbitros", "motor_ler_cores", "motor_ler_nomes", "motor_ler_clubes", "motor_ler_competicoes", "motor_ler_nao_jogadores", "motor_ler_jogadores", "motor_ler_pessoas_110", "motor_ler_preferencias", "motor_gravar_continentes", "motor_gravar_nacoes", "motor_gravar_cidades", "motor_gravar_estadios", "motor_gravar_clubes", "motor_gravar_pessoas_110", "motor_gravar_nao_jogadores", "motor_gravar_jogadores", "motor_gravar_preferencias", "motor_gravar_historico_de_pessoas", "motor_gravar_competicoes", "motor_gravar_historicos_de_competicao", "motor_gravar_competicoes_de_pessoal", "motor_gravar_arbitros", "motor_gravar_registros_58", "motor_gravar_nomes", "motor_abrir_arquivo_do_banco", "motor_criar_arquivo_do_banco", "motor_liberar_historico_de_pessoas", "motor_liberar_historico_de_premios", "motor_crescer_historico_de_competicoes", "motor_ordem_dos_clubes_pela_reputacao", "motor_ordem_do_elenco_pela_habilidade", "motor_ordem_do_elenco_pela_habilidade_atual", "motor_normalizar_atributos_fisicos_do_jogador", "motor_segundo_nome_pelo_peso", "motor_normalizar_atributos_do_jogador", "motor_ler_clubes_v1", "motor_ler_nao_jogadores_v1", "motor_ler_jogadores_v1", "motor_ler_competicoes_v1", "motor_nome_ingles_da_nacao", "motor_nome_curto_ingles_do_clube", "motor_cortar_elencos_de_a_e_b", "motor_juntar_o_time_b_ao_a", "motor_montar_indice_de_nomes", "motor_tirar_pessoa_do_clube", "motor_olheiros_do_clube", "motor_clube_em_temporada", "motor_clube_em_nacao_grande", "motor_nacao_grande", "motor_limpar_vinculos_de_opiniao", "motor_juntar_vinculo_de_opiniao", "motor_tirar_vinculo_de_opiniao", "motor_auxiliar_do_clube", "motor_treinadores_do_clube", "motor_contar_treinadores_do_clube", "motor_sigla_inglesa_da_nacao", "motor_nome_ingles_da_competicao", "motor_nome_ingles_da_competicao_de_pessoal", "motor_nome_ingles_do_estadio", "motor_arquivo_do_idioma_existe", "motor_liberar_tabelas_em_ingles", "motor_gerar_comissao_extra", "motor_cortar_tabela_de_clubes", "motor_podar_historico_de_competicoes", "motor_resolver_indices_do_banco", "motor_ordenar_clubes_pela_reputacao", "motor_clube_tem_defensores", "motor_clube_tem_meias", "motor_clube_tem_atacantes", "motor_clube_tem_esforcados", "motor_clube_tem_goleiro", "motor_clube_tem_meias_que_roubam", "motor_faltam_atacantes_pelo_alto", "motor_faltam_zagueiros_pelo_alto", "motor_faltam_zagueiros_rapidos", "motor_clube_tem_atacante_rapido", "motor_clube_tem_meias_criativos", "motor_faixa_de_forca_do_elenco", "motor_reputacao_do_clube_para_pessoa", "motor_contar_rejeitados_no_clube", "motor_contar_favoritos_no_clube", "motor_tirar_clube_favorito", "motor_clube_tirar_pessoa_favorita", "motor_tirar_pessoa_favorita", "motor_tirar_pessoa_rejeitada", "motor_pessoas_favoritas", "motor_clube_acrescentar_pessoa_favorita", "motor_clube_acrescentar_pessoa_rejeitada", "motor_acrescentar_pessoa_favorita", "motor_acrescentar_clube_rejeitado", "motor_esmaecer_relacoes", "motor_pessoas_rejeitadas", "motor_mascara_da_posicao_natural", "motor_contar_elenco_com_mascara", "motor_escolher_companheiro_favorito", "motor_clube_fora_da_argentina", "motor_clube_fora_de_argentina_franca_croacia", "motor_nacao_da_melanesia", "motor_nacao_da_polinesia", "motor_nome_do_cargo_de_treino", "motor_anos_entre_datas_em_texto", "motor_ordem_dos_clubes_pelo_nome_curto", "motor_ordem_das_pessoas_pelo_nome_completo", "motor_pessoa_confere_com_os_nomes", "motor_ordem_dos_clubes_pela_latitude", "motor_ordem_dos_clubes_pela_longitude", "motor_nome_por_ids", "motor_nome_oficial", "motor_texto_da_mascara_da_posicao", "motor_nome_da_posicao", "motor_descricao_do_jogador", "motor_melhor_candidato_a_favorito", "motor_forcas_do_jogador", "motor_fraquezas_do_jogador", "motor_contar_fisioterapeutas", "motor_clube_e_time_b", "motor_pessoas_fora_do_elenco", "motor_atributo_visivel", "motor_atributo_para_quem_ve", "motor_nome_do_atributo_de_tecnico", "motor_ordem_das_pessoas_pelo_sobrenome", "motor_ordem_dos_ponteiros_de_clube_pela_reputacao", "motor_nacao_do_clube_na_cee", "motor_regioes_pelo_nome", "motor_ordem_das_regioes_pelo_nome", "motor_pessoa_da_opiniao", "motor_nome_pelos_textos", "motor_nome_do_cargo", "motor_nome_do_idioma", "motor_nome_da_selecao", "motor_nome_do_atributo_do_jogador", "motor_texto_das_posicoes", "motor_nome_da_regiao", "motor_adjetivo_do_continente", "motor_definir_chaves_fixas", "motor_definir_chaves_fixas_1080", "motor_inicializar_jogadores", "motor_adjetivo_da_nacao", "motor_ordenar_tabela_da_liga", "motor_mini_tabela_do_confronto", "motor_liberar_tabela_da_liga", "motor_liga_completa", "motor_pagar_direitos_de_tv", "motor_registrar_honras_da_temporada", "motor_acrescentar_ao_historico", "motor_tipo_de_confronto_na_liga", "motor_forca_do_clube", "motor_clube_colocado_mais_recente", "motor_amistoso_do_clube", "motor_lista_da_data", "motor_proxima_partida", "motor_estadio_em_uso", "motor_data_do_amistoso_internacional", "motor_encerrar_convocacoes_da_competicao", "motor_encerrar_convocacoes_da_nacao", "motor_podar_registros_de_convocacao", "motor_por_no_elenco_da_selecao", "motor_tirar_do_elenco_da_selecao", "motor_dispensar_acima_da_idade_do_sub21", "motor_limpar_competicao_atual", "motor_liberar_competicoes_do_continente", "motor_convocar_substituto", "motor_montar_reservas_das_selecoes", "motor_ordem_das_reservas", "motor_ordem_pelo_clube", "motor_adversario_do_amistoso", "motor_adversario_da_excursao", "motor_aplicar_resultado_na_tabela", "motor_pontos_do_resultado", "motor_ordem_pela_posicao_do_confronto", "motor_ordem_das_datas_da_liga", "motor_linha_do_clube", "motor_liga_tem_o_clube", "motor_copiar_recorde_de_nota", "motor_copiar_recorde_de_melhor_em_campo", "motor_copiar_recorde_de_disciplina", "motor_copiar_recorde_de_contagem", "motor_copiar_recorde_do_torcedor", "motor_construir_recorde_de_ocorrencias", "motor_construir_recorde_de_contagem", "motor_copiar_recorde_de_valor", "motor_copiar_recorde_de_gols_na_partida", "motor_copiar_noticia", "motor_copiar_transferencia_passada", "motor_copiar_transferencia_futura", "motor_copiar_entrada_da_fila_de_regens", "motor_esta_na_lista_de_observados", "motor_escolher_doador_de_dados", "motor_copiar_registro_de_suspensao", "motor_salario_padrao_do_contrato", "motor_condicao_de_jogo_do_jogador", "motor_dias_ate_o_fim_do_contrato", "motor_limpar_todas_as_queixas", "motor_conferir_retirada_do_pedido", "motor_lugar_no_elenco", "motor_subir_para_o_principal", "motor_descer_para_os_reservas", "motor_copiar_contrato_de_pessoal", "motor_subir_moral_pela_partida", "motor_tirar_conversas_de_contrato", "motor_tirar_interesses_de_transferencia", "motor_tirar_pedido_de_observacao", "motor_tirar_apelido_de_todos", "motor_tirar_aposentadoria_pendente", "motor_aposentadoria_do_desempregado", "motor_oferta_precisa_de_permissao", "motor_atualizar_permissoes_de_trabalho", "motor_olheiro_da_busca", "motor_sequencia_atual_do_clube", "motor_construir_recordista", "motor_tecnico_rival_para_comentar", "motor_construir_recorde_de_valor_pago", "motor_construir_recorde_de_valor_recebido", "motor_construir_recorde_de_sequencia", "motor_construir_recorde_de_vitorias_seguidas", "motor_construir_recorde_de_derrotas_seguidas", "motor_construir_recorde_de_invencibilidade", "motor_construir_recorde_sem_vencer", "motor_construir_recorde_de_gols_na_partida", "motor_construir_recorde_do_mais_novo", "motor_texto_do_fim_do_prazo", "motor_pode_encerrar_emprestimo", "motor_pow_do_game", "motor_tirar_ofertas_guardadas", "motor_guardar_suspensoes_do_emprestado", "motor_preencher_vaga_da_comissao", "motor_noticia_para_os_tecnicos_da_nacao", "motor_missao_do_olheiro", "motor_copa_completa", "motor_construir_recorde_do_mais_velho", "motor_permissao_de_trabalho_de", "motor_passa_na_permissao", "motor_soltar_suspensoes_guardadas", "motor_tirar_ofertas_pendentes", "motor_marcar_decisao_da_transferencia", "motor_noticia_para_todos_os_tecnicos", "motor_noticia_para_os_tecnicos_da_divisao", "motor_noticia_para_os_tecnicos_do_pais", "motor_oferta_bate_o_recorde", "motor_condicao_do_jogador", "motor_limite_de_escalacao", "motor_limpar_partidas_assistidas", "motor_alvos_dos_olheiros_do_clube", "motor_trocar_olheiro_da_busca", "motor_diretoria_depois_da_partida", "motor_disciplina_da_partida", "motor_entradas_do_clube_na_shortlist", "motor_maior_oferta_pelo_jogador", "motor_recordes_de_sempre", "motor_recordes_da_temporada", "motor_guardar_noticia_de_recorde", "motor_acrescentar_reserva_de_tecnico", "motor_acrescentar_aposentadoria", "motor_guardar_vaga_para_regen", "motor_acionar_clausulas_de_rebaixamento", "motor_tirar_oferta_de_contrato", "motor_esta_suspenso", "motor_escopo_das_regras_da_partida", "motor_codigo_de_inelegibilidade", "motor_vaga_do_amistoso", "motor_noticia_para_os_tecnicos_do_continente", "motor_noticia_para_a_regiao_da_competicao", "motor_noticia_importante_para_a_pessoa", "motor_texto_do_dado_da_noticia", "motor_noticia_de_apuro_financeiro", "motor_olheiros_cobrem_a_nacao", "motor_fluencia_no_idioma", "motor_recomecar_historico_da_pessoa", "motor_posicao_na_formacao", "motor_clube_tem_oferta_pelo_jogador", "motor_oferta_do_clube_pelo_jogador", "motor_jogador_com_oferta_pendente", "motor_jogador_sob_oferta", "motor_clube_do_jogador_com_lei_bosman", "motor_veto_da_diretoria_na_oferta", "motor_guardar_transferencia_passada", "motor_dar_permissao_de_trabalho", "motor_guardar_premio_por_jogo_no_time", "motor_vaga_livre_de_contrato", "motor_acrescentar_contrato_da_pessoa", "motor_acrescentar_data_de_decisao", "motor_zerar_moral_do_contrato", "motor_contrato_pelo_atual", "motor_faixa_do_vencimento", "motor_registrar_historia_da_midia", "motor_expirar_historias_da_midia", "motor_historia_ja_registrada", "motor_acrescentar_interesse_de_transferencia", "motor_ordem_das_chaves_de_ids", "motor_ordem_das_historias", "motor_decidir_jogo_da_copa", "motor_decidir_confronto_da_copa", "motor_ordem_dos_cabecas_de_chave", "motor_iniciar_linha_da_tabela", "motor_vetor_dos_clubes_da_liga", "motor_gravar_posicoes_finais_da_liga", "motor_mudar_clube_de_divisao", "motor_embaralhar_ponteiros", "motor_ordenar_e_embaralhar_os_melhores", "motor_contar_jogo_da_suspensao", "motor_soltar_suspensao", "motor_apagar_historico_de_suspensoes", "motor_sortear_lesao_recorrente", "motor_recomecar_historico_de_lesoes", "motor_reiniciar_fisico_do_jogador", "motor_somar_totais_de_transferencia", "motor_recordes_de_carreira_no_clube", "motor_recorde_de_nota_da_temporada", "motor_competicao_na_data_do_amistoso", "motor_amistoso_perto_da_data", "motor_acrescentar_amistoso_planejado", "motor_noticia_pelo_alcance", "motor_noticia_ao_tecnico_do_clube", "motor_entregar_noticia_ao_tecnico", "motor_responder_todas_as_noticias", "motor_tecnico_tem_noticia_pendente", "motor_gravar_texto_na_noticia", "motor_nota_do_jogador_para_a_historia", "motor_texto_da_crise_financeira", "motor_noticias_da_caixa", "motor_aposentar_do_elenco", "motor_melhor_clube_para_o_jovem", "motor_clube_da_nacao_para_o_jovem", "motor_abrir_vagas_que_faltam", "motor_melhor_nota_de_candidato_a_tecnico", "motor_agendar_oferta", "motor_estatuto_no_elenco_pelo_clube", "motor_estimar_estatuto_no_elenco", "motor_liberar_alvos_da_lista_do_clube", "motor_busca_cobre_a_nacao", "motor_tirar_amistoso_marcado", "motor_iniciar_pares_proibidos_de_amistoso", "motor_avaliar_o_negocio_da_transferencia", "motor_confianca_da_diretoria_na_transferencia", "motor_resolver_o_ultimato_da_diretoria", "motor_tirar_o_contrato_principal", "motor_reenviar_ofertas_guardadas", "motor_mes_do_fim_da_temporada_do_clube", "motor_pontos_dos_tecnicos_no_dia", "motor_pontos_dos_tecnicos_no_fim_da_competicao", "motor_tecnico_do_mes_na_liga", "motor_saidas_pendentes_dos_tecnicos", "motor_tirar_jogador_do_elenco_do_clube", "motor_tirar_pessoa_do_cargo_no_clube", "motor_construir_noticia", "motor_ajustar_confianca_da_torcida", "motor_ajustar_confianca_da_diretoria", "motor_resposta_do_tecnico_da_maquina", "motor_marcar_noticia_lida", "motor_achar_noticia_pelo_id", "motor_noticia_de_gratidao_do_jogador", "motor_noticia_de_pedido_de_apoio", "motor_noticia_de_reacao_a_critica", "motor_montar_listas_de_posicao", "motor_ordenar_listas_de_posicao", "motor_clubes_interessados_no_jogador", "motor_acrescentar_na_lista_de_observacao", "motor_prever_resposta_do_vendedor", "motor_periodo_do_emprestimo", "motor_prazo_da_resposta_a_oferta", "motor_pagar_prestacoes_das_transferencias", "motor_tirar_oferta_de_transferencia", "motor_acrescentar_suspensao", "motor_tirar_suspensoes_de_fora_do_clube", "motor_restaurar_suspensoes_guardadas", "motor_acrescentar_idioma", "motor_melhorar_idioma", "motor_zerar_estatisticas_do_jogador", "motor_definir_competicao_da_selecao", "motor_marcar_clubes_com_jogo", "motor_tirar_jogador_da_disciplina", "motor_comparar_datas_de_decisao", "motor_decidir_as_datas_vencidas", "motor_ofertas_de_contrato_do_clube", "motor_assinar_contrato_de_emprestimo", "motor_encerrar_o_emprestimo", "motor_trocar_lugar_no_elenco", "motor_diretoria_do_tecnico_novo", "motor_motivo_da_saida_do_tecnico", "motor_registro_do_tecnico", "motor_serve_para_o_cargo", "motor_pode_assumir_o_cargo", "motor_baixar_moral_pela_partida", "motor_montar_vagas_da_formacao", "motor_refazer_lista_do_clube", "motor_suspender_clubes_que_miram_o_jogador", "motor_por_jogador_nas_listas_dos_clubes", "motor_por_jogador_a_venda", "motor_pagar_premio_por_jogos", "motor_clube_recusa_a_oferta", "motor_soltar_jogadores_da_oferta", "motor_montar_oferta_em_dinheiro", "motor_acrescentar_surto_de_doenca", "motor_espalhar_surtos_de_doenca", "motor_jogador_fora_da_temporada", "motor_forma_inicial_dos_elencos", "motor_registros_iniciais_de_lesao", "motor_listas_de_clubes_por_nacao", "motor_jogador_do_ano_da_torcida", "motor_arquivar_estatisticas_da_nacao", "motor_recordes_de_valor_de_transferencia", "motor_par_de_nacoes_sem_amistoso", "motor_ordem_das_nacoes_pela_reputacao", "motor_ordem_dos_amistosos_pela_data", "motor_pode_marcar_jogo_do_clube", "motor_ordem_das_convocacoes_pela_data", "motor_acrescentar_nacao_classificada", "motor_ordem_dos_cabecas_de_chave_decrescente", "motor_ordem_dos_cabecas_de_chave_crescente", "motor_teto_da_divisao_dos_clubes", "motor_pensar_em_demitir_o_tecnico", "motor_dar_o_ultimato_da_diretoria", "motor_tirar_o_tecnico_do_cargo", "motor_avaliar_a_selecao_na_competicao", "motor_clube_em_apuro_financeiro", "motor_faixa_da_confianca_da_diretoria", "motor_registrar_o_acesso", "motor_registrar_o_rebaixamento", "motor_registrar_a_classificacao_na_fase", "motor_registrar_a_transferencia", "motor_registrar_a_eliminacao", "motor_registrar_a_nao_classificacao", "motor_data_de_conclusao_da_oferta", "motor_primeiro_dia_permitido_da_oferta", "motor_janela_fixa_de_transferencias", "motor_compensacao_pela_pessoa", "motor_pagar_transferencia_e_clausulas", "motor_clube_vendedor_deve_aceitar", "motor_permissao_de_trabalho_na_mudanca", "motor_concluir_oferta_de_contrato_aceita", "motor_oferecer_contrato_ao_jogador_da_oferta", "motor_desfazer_oferta", "motor_fazer_oferta_de_emprestimo", "motor_concluir_transferencias_futuras", "motor_nota_do_doador_de_dados", "motor_ordem_das_aposentadorias", "motor_ordem_da_fila_de_regens", "motor_registro_da_categoria", "motor_criar_estatisticas", "motor_aposentadoria_marcada", "motor_copa_sortear_times_da_rodada", "motor_copa_separar_estadio_compartilhado", "motor_escala_pela_rodada", "motor_lado_do_jogo_para_o_clube", "motor_ordem_dos_coeficientes_das_nacoes", "motor_pedido_de_observacao", "motor_limpar_vaga_da_escalacao", "motor_marcar_batedor_de_bola_parada", "motor_restricoes_da_partida", "motor_limite_do_banco_do_dia", "motor_precisa_de_permissao_de_trabalho", "motor_clube_pode_chegar_ao_jogador", "motor_termos_ao_jogador_da_troca", "motor_fila_livre_do_clube", "motor_transferencia_futura_do_jogador", "motor_tirar_transferencia_futura", "motor_acrescentar_transferencia_futura", "motor_ofertas_abertas_pelos_jogadores_do_clube", "motor_desfazer_ofertas_pelo_jogador", "motor_guardar_percentual_da_proxima_venda", "motor_iniciar_diretorias_dos_clubes", "motor_apelacoes_de_suspensao", "motor_pode_ver_a_partida", "motor_aposentadoria_no_inicio", "motor_aposentadoria_por_idade", "motor_lista_inicial_de_aposentadorias", "motor_novas_aposentadorias", "motor_sair_dos_cargos", "motor_registrar_a_liberacao", "motor_estado_da_lesao", "motor_marcar_decisao_da_oferta", "motor_candidatos_a_tecnico_do_ano", "motor_projetar_posicoes_da_liga", "motor_ordem_da_projecao_pela_reputacao", "motor_ordem_da_projecao_pelos_pontos", "motor_achar_jogos_do_calendario", "motor_jogos_da_competicao_no_dia", "motor_competicao_tem_jogo_na_data", "motor_clube_livre_na_data", "motor_copa_tem_o_clube", "motor_nacao_parceira_do_clube", "motor_pedido_de_transferencia", "motor_cargo_com_contrato", "motor_fora_da_diretoria", "motor_iniciar_permissoes_de_trabalho", "motor_contagem_da_clausula", "motor_premio_por_jogo_do_jogador", "motor_fila_da_transferencia_livre", "motor_proxima_janela_aberta", "motor_emprestimo_negociado", "motor_oferta_com_clausula", "motor_motivo_da_recusa_vale", "motor_motivo_pelo_status_no_elenco", "motor_relacoes_do_elenco", "motor_atrito_com_o_tecnico", "motor_moral_pela_lideranca", "motor_faltas_ao_treino", "motor_competicoes_do_dia", "motor_mudar_confianca_da_diretoria", "motor_estadios_do_dia", "motor_reservar_estadio", "motor_estadio_livre_na_data", "motor_jogo_com_observado", "motor_na_lista_do_olheiro", "motor_registrar_a_primeira_convocacao", "motor_gols_na_carreira", "motor_registrar_o_emprestimo", "motor_ordem_da_volta_aos_treinos", "motor_gols_pelo_clube", "motor_registrar_a_selecao_do_ano", "motor_ordem_pelos_pontos_do_tecnico", "motor_jogo_guardado_igual", "motor_guardar_jogo_no_calendario", "motor_tirar_jogo_do_calendario", "motor_criar_amistosos_planejados", "motor_acrescentar_amistoso", "motor_planejar_amistoso_em_data_livre", "motor_atualizar_copa_no_dia", "motor_montar_rodada_da_copa", "motor_risco_de_doenca_na_viagem", "motor_jogos_da_selecao_no_periodo", "motor_atualizar_ranking_da_fifa", "motor_ordem_dos_resultados_por_pontos", "motor_resultado_no_historico", "motor_faixa_da_selecao", "motor_pontuacoes_do_ranking", "motor_nacao_chave_do_jogo", "motor_e_copa_do_mundo", "motor_e_torneio_internacional", "motor_indice_da_nacao_chave", "motor_ordem_do_ranking", "motor_ordem_das_pontuacoes", "motor_tempo_das_cidades", "motor_ler_regiao_do_clima", "motor_ler_periodo_do_clima", "motor_coeficientes_das_nacoes", "motor_dia_das_aposentadorias", "motor_soma_presa", "motor_nota_do_estadio_neutro", "motor_fator_da_distancia", "motor_ler_o_clima", "motor_fator_do_treinador", "motor_comissao_do_humano", "motor_carga_do_programa", "motor_aplicar_o_progresso", "motor_achar_o_treino_de_posicao", "motor_aprende_depressa", "motor_avancar_a_semana", "motor_tirar_a_ficha_reservada", "motor_lesao_que_volta", "motor_atualizar_amistosos_do_dia", "motor_planejar_pre_temporada_da_ia", "motor_janelas_da_pre_temporada", "motor_marcar_jogos_da_excursao", "motor_ordem_pela_faixa", "motor_ordem_pela_nacao_e_faixa", "motor_posicoes_previstas_da_copa", "motor_ordenar_clubes_pela_forca", "motor_gravar_posicao_do_clube", "motor_linha_da_nacao", "motor_linha_da_nacao_do_clube", "motor_ano_da_temporada_do_clube", "motor_clube_na_temporada", "motor_continente_principal", "motor_nacao_principal", "motor_estatistica_da_categoria", "motor_ordem_dos_idiomas", "motor_ordem_da_historia_por_clube", "motor_clausula_de_rescisao_ativa", "motor_periodo_protegido", "motor_tipo_de_bonus_permitido", "motor_adiar_pelo_clima", "motor_financas_do_clube", "motor_ordem_das_reservas_do_estadio", "motor_clima_da_partida", "motor_temperatura_do_jogo", "motor_gramado_do_jogo", "motor_faixa_de_riqueza", "motor_ordem_por_habilidade", "motor_ordem_pela_capacidade", "motor_programas_padrao", "motor_tipo_do_programa", "motor_programa_do_humano", "motor_fichas_de_treino_iniciais", "motor_guardar_jogador_no_banco", "motor_tem_reserva_de_tecnico", "motor_suspensao_do_vermelho", "motor_nova_temporada_do_orgao", "motor_compactar_disciplina_do_orgao", "motor_coordenada_da_casa", "motor_posicao_repetida_na_formacao", "motor_tipo_de_marcacao", "motor_sortear_ordem_dos_clubes", "motor_clubes_do_lado_do_jogo", "motor_clubes_possiveis_do_jogo", "motor_nota_alvo_do_clube", "motor_jogo_do_historico", "motor_gols_do_historico", "motor_passar_a_oferta_aos_clubes", "motor_noticia_da_oferta_aceita", "motor_noticia_do_emprestimo_oferecido", "motor_recusa_dos_termos", "motor_noticia_da_confianca_da_diretoria", "motor_noticia_das_expectativas_da_diretoria", "motor_ofertas_em_espera_na_janela", "motor_noticia_das_expectativas_da_federacao", "motor_noticia_do_protesto_da_torcida", "motor_guardar_a_negociacao", "motor_noticia_do_boato_do_tecnico", "motor_noticia_da_recusa_em_se_mudar", "motor_receita_do_merchandising", "motor_ingressos_da_temporada", "motor_melhorar_o_centro_de_treino", "motor_eventos_financeiros_da_semana", "motor_diretoria_paga_a_divida", "motor_injecao_de_dinheiro", "motor_teto_salarial_do_pessoal", "motor_pagar_os_bonus", "motor_ajustar_o_teto_salarial", "motor_efeitos_fisicos_da_partida", "motor_batida_do_jogador", "motor_jogador_de_ferias", "motor_contratar_o_regen", "motor_aposentar_pela_lesao", "motor_noticia_da_aposentadoria_anunciada", "motor_fim_da_lesao", "motor_noticia_do_pedido_de_desculpas", "motor_esvaziar_caixa_de_entrada", "motor_tirar_convocado_machucado", "motor_noticia_da_saida_do_convocado", "motor_noticia_do_pedido_de_substituto", "motor_pode_mudar_a_convocacao", "motor_esta_na_convocacao", "motor_marcar_adversario_do_amistoso", "motor_registrar_premio_do_mes", "motor_faixa_de_reputacao_do_amistoso", "motor_folga_do_amistoso", "motor_satisfacao_com_o_contrato", "motor_noticia_quer_contrato_novo", "motor_noticia_pedido_de_transferencia_retirado", "motor_confirmar_oferta_pelo_clube", "motor_tentar_concluir_oferta", "motor_acertar_clausulas_anteriores", "motor_tentar_emprestimo_pelo_jogador", "motor_noticia_contrato_acabando", "motor_noticia_saida_pela_lei_bosman", "motor_acrescentar_oferta_de_contrato", "motor_tirar_oferta_de_contrato_da_vaga", "motor_menor_salario_pedido", "motor_guardar_notas_da_partida", "motor_nota_do_jogador_no_mes", "motor_melhor_do_mes", "motor_premiar_o_melhor_do_mes", "motor_gravar_vencedor_do_mes", "motor_reputacao_do_premiado", "motor_fisico_do_dia", "motor_faixa_da_confianca_na_liga", "motor_gravar_notas_da_diretoria", "motor_dia_das_lesoes", "motor_noticias_de_volta_aos_treinos", "motor_um_cartao_da_suspensao", "motor_fila_de_regens", "motor_veiculo_pelo_clube", "motor_veiculo_pela_pessoa", "motor_somar_resultado_na_liga", "motor_copiar_tabela_da_liga", "motor_posicoes_previstas_da_liga", "motor_resultado_entre_selecoes", "motor_nome_do_elenco_da_selecao", "motor_rodada_com_jogos_conhecidos", "motor_registrar_convocados_por_clube", "motor_importancia_do_jogo_na_competicao", "motor_fase_da_competicao", "motor_faltas_do_dia", "motor_teve_falta_ao_treino", "motor_teve_incidente_de_forma", "motor_marcar_falta_ao_treino", "motor_fim_da_ausencia", "motor_marcas_do_contrato", "motor_recusar_oferta_de_transferencia", "motor_retirar_oferta_de_transferencia", "motor_noticia_oferta_recusada", "motor_desassossegar_pelo_lance", "motor_noticia_oferta_desfeita", "motor_noticia_premio_por_jogos", "motor_efetivar_transferencia", "motor_noticia_transferencia_concluida", "motor_noticia_transferencia_acertada", "motor_emprestimo_da_configuracao", "motor_noticia_fim_do_contrato", "motor_noticia_pedido_de_adiamento", "motor_tatica_do_clube", "motor_escolher_vaga_de_tatica", "motor_tatica_ativa_do_humano", "motor_tirar_da_escalacao", "motor_trocar_vagas_da_escalacao", "motor_tem_copia_da_escalacao", "motor_noticia_da_pressao", "motor_noticia_da_saida_do_tecnico", "motor_noticia_do_tecnico_novo", "motor_pagar_premios_da_liga", "motor_registros_pela_situacao_na_liga", "motor_anunciar_situacao_na_liga", "motor_registrar_partida_nas_estatisticas", "motor_recordes_de_posicao_na_liga", "motor_noticias_de_recordes", "motor_convocar_selecoes_para_o_jogo", "motor_noticia_do_convocado", "motor_noticia_do_desfecho_na_copa", "motor_contar_vagas_com_lance", "motor_tirar_da_lista_de_transferencias", "motor_tirar_da_lista_de_emprestimos", "motor_situacao_na_lista_de_observacao", "motor_por_na_lista_de_emprestimos", "motor_teto_de_preco_pelo_estatuto", "motor_distribuir_verba_de_transferencias", "motor_estatuto_permitido", "motor_nome_da_lista_do_olheiro", "motor_amistosos_internacionais_do_dia", "motor_lista_escolhida_do_tecnico", "motor_escolher_lista_do_tecnico", "motor_inscritos_da_liga_dos_campeoes", "motor_tabela_da_qualificacao_da_liga_dos_campeoes", "motor_proxima_fase_da_liga_dos_campeoes", "motor_processar_jogo_da_liga_dos_campeoes", "motor_progresso_do_clube_na_liga_dos_campeoes", "motor_conta_para_conflito_de_datas", "motor_escolher_arbitro_da_partida", "motor_limpar_arbitros_ocupados", "motor_renovar_arbitros", "motor_arbitros_sorteados", "motor_validar_arbitros", "motor_copiar_ficha_de_arbitro", "motor_registrar_premio_do_ano", "motor_vitoria_maior", "motor_derrota_maior", "motor_jogos_das_permissoes_e_clausulas", "motor_guardar_premio_por_jogos_na_selecao", "motor_noticia_transferencia_finalizada", "motor_veto_dos_fisios_e_da_diretoria", "motor_noticia_do_ultimato", "motor_texto_do_ultimato", "motor_liberar_sem_custo", "motor_ferias_do_humano", "motor_noticia_conversa_de_contrato", "motor_mata_mata_da_first", "motor_mata_mata_da_second", "motor_mata_mata_da_third", "motor_registros_pela_situacao_inglesa", "motor_situacao_na_first", "motor_situacao_na_third", "motor_posicoes_e_situacao_na_liga", "motor_fase_seguinte_da_first", "motor_fase_seguinte_da_second", "motor_registros_da_liga_dos_campeoes", "motor_sorteio_das_quartas", "motor_clubes_da_liga_dos_campeoes", "motor_registrar_resultado_da_tatica", "motor_capitao_guardado", "motor_escolher_capitao", "motor_selecao_que_tem_o_jogador", "motor_jogador_serve_a_selecao", "motor_juntar_competicoes_das_convocacoes", "motor_registro_da_partida_pelo_clube", "motor_referencia_ao_nome", "motor_codigo_do_resultado", "motor_mover_jogos_vizinhos_do_clube", "motor_remarcar_jogos_perto_da_data", "motor_noticia_do_jogo_remarcado", "motor_incidente_de_forma", "motor_noticia_reacao_a_multa", "motor_noticia_retorno_do_treinador", "motor_sortear_comentarista", "motor_nome_do_veiculo", "motor_noticia_queixa_a_federacao", "motor_folha_salarial_do_clube", "motor_refazer_todas_as_folhas", "motor_dias_ate_a_temporada", "motor_receber_venda_de_jogador", "motor_pagar_compra_de_jogador", "motor_pagar_luvas", "motor_receber_premio_em_dinheiro", "motor_receber_direitos_de_tv", "motor_pagar_salarios", "motor_copa_premio_da_rodada", "motor_copa_mandantes_da_rodada", "motor_copa_progresso_do_time", "motor_amistoso_responder_pedido", "motor_amistoso_enviar_pedido", "motor_amistoso_lista_das_nacoes", "motor_copa_sortear_rodada", "motor_nome_da_fase_e_rodada", "motor_clube_da_divisao_mais_alta", "motor_copa_registros_pelo_desfecho", "motor_copa_honras_da_temporada", "motor_copa_semifinalistas_para_a_uefa", "motor_recusar_oferta_de_emprestimo", "motor_vaga_no_elenco_para_a_oferta", "motor_percentual_da_proxima_venda_achado", "motor_jogador_na_busca", "motor_sincronizar_listas_dos_olheiros", "motor_vaga_do_jogador_observado", "motor_valor_do_jogador_para_o_clube", "motor_entrada_do_jogador_na_busca_do_clube", "motor_premio_de_jogos_na_selecao_achado", "motor_contratos_depois_do_jogo", "motor_moral_da_ficha", "motor_texto_da_moral", "motor_valor_do_jogador", "motor_diferenca_de_moral_em_texto", "motor_marcas_de_elenco_para_a_tela", "motor_jogadores_que_a_diretoria_cita", "motor_veredito_da_nota_na_partida", "motor_texto_da_diretoria_sobre_os_jogadores", "motor_resultado_nos_registros_dos_tecnicos", "motor_posicoes_no_fim_da_liga", "motor_jogador_do_ano_da_torcida_no_registro", "motor_vice_da_copa_nos_registros", "motor_terceiro_da_copa_nos_registros", "motor_troca_de_tecnico_nos_registros", "motor_reacoes_dos_elencos_a_transferencia", "motor_noticia_da_comemoracao_da_contratacao", "motor_noticia_do_companheiro_desassossegado", "motor_renda_da_partida", "motor_renda_do_estadio", "motor_pagar_multa_da_liga", "motor_impulso_das_financas", "motor_troca_do_presidente", "motor_pagar_outros_custos", "motor_tabela_das_datas_internacionais", "motor_resolver_datas_internacionais", "motor_torneio_do_clube_humano", "motor_amistosos_dos_clubes", "motor_acrescentar_torneio", "motor_convite_aberto_do_clube_humano", "motor_lesao_nova", "motor_noticia_da_lesao", "motor_ausente_sem_licenca", "motor_parte_dos_clubes_anteriores", "motor_percentual_da_proxima_venda_pago", "motor_noticia_do_percentual_da_venda", "motor_permissao_concedida", "motor_estatuto_pelo_motivo", "motor_vaga_da_negociacao", "motor_reacao_do_elenco_a_historia", "motor_aviso_ao_rival_de_posicao", "motor_rotulo_da_resposta_da_midia", "motor_cumprir_suspensoes_internacionais", "motor_recurso_da_suspensao", "motor_texto_da_vaga_da_suspensao", "motor_tirar_da_lista", "motor_esvaziar_lista", "motor_item_do_cursor", "motor_copa_sortear_pela_semente", "motor_copa_sortear_separando_nacoes", "motor_copa_comeco_da_temporada", "motor_nacao_chave_do_clube", "motor_nacao_chave_do_estadio", "motor_entrada_da_nacao_chave_ativa", "motor_conflito_de_jogos_no_mesmo_dia", "motor_primeiro_ano_com_jogos", "motor_ultimo_ano_com_jogos", "motor_gravar_financas", "motor_carregar_financas", "motor_gravar_gerente_de_elencos", "motor_gravar_sementes_da_uefa", "motor_gravar_sementes_da_conmebol", "motor_gravar_paises_anfitrioes", "motor_gravar_historico_dos_clubes", "motor_gravar_estatisticas_dos_arbitros", "motor_gravar_estatisticas_simuladas", "motor_gravar_datas_dos_clubes", "motor_carregar_datas_dos_clubes", "motor_gravar_conferencia_das_pernas", "motor_fim_de_temporada_da_nacao", "motor_fim_de_temporada_do_clube", "motor_noticia_do_dividendo", "motor_teto_salarial", "motor_noticia_das_obras", "motor_noticia_da_obra_recusada", "motor_conflitos_do_dia", "motor_conflitos_do_jogo", "motor_carregar_conferencia_das_pernas", "motor_nova_data_do_jogo", "motor_jogo_no_calendario", "motor_ano_do_calendario", "motor_copa_criar_jogos_do_confronto", "motor_copa_noticia_do_confronto_pendente", "motor_janelas_avisos_do_dia", "motor_copa_levar_jogos_as_datas", "motor_tirar_jogador_da_troca", "motor_permissoes_da_oferta", "motor_confianca_depois_da_partida", "motor_noticia_da_reacao_da_diretoria", "motor_noticia_da_avaliacao_da_federacao", "motor_expectativas_da_temporada", "motor_vaga_de_tecnico", "motor_noticia_da_oferta_de_emprego", "motor_boatos_de_transferencia", "motor_noticia_nao_vende", "motor_noticia_do_titulo", "motor_amistosos_entre_selecoes", "motor_convite_de_amistoso_valido", "motor_convite_de_torneio_valido", "motor_dia_das_selecoes", "motor_busca_atual_sem_clube", "motor_clube_nas_buscas_da_sessao", "motor_escolher_elenco_da_selecao", "motor_olheiros_na_partida", "motor_sessao_de_edicao", "motor_escolher_sessao_de_edicao", "motor_dia_das_transferencias", "motor_processar_oferta_vencida", "motor_restricoes_da_oferta", "motor_aceitar_lance", "motor_noticia_da_oferta_feita", "motor_pode_emprestar", "motor_liga_dia", "motor_liga_criar_tabela", "motor_liga_promover_e_rebaixar", "motor_calendario_dia", "motor_calendario_lista", "motor_calendario_carregar_ano", "motor_copa_arvore_dos_confrontos", "motor_competicao_primeira_fase_do_grupo", "motor_competicao_fase_atual", "motor_atualizar_o_treino_do_jogador", "motor_programa_de_treino_do_jogador", "motor_nivel_da_categoria_do_programa", "motor_tirar_ou_devolver_o_progresso", "motor_mudanca_do_atributo_pelo_treino", "motor_aptidao_para_a_posicao", "motor_aposentadorias_do_dia", "motor_noticia_da_aposentadoria", "motor_noticia_do_jovem_promovido", "motor_limpar_ausencia", "motor_limpar_falta_ao_treino", "motor_noticia_da_falta_ao_treino", "motor_troca_com_compensacao", "motor_ordem_das_vagas", "motor_marcar_sob_oferta", "motor_campeao_da_liga_nos_registros", "motor_campeao_da_copa_nos_registros", "motor_limpar_registro_do_humano", "motor_resposta_da_ia_ao_lance", "motor_negociacao_de_emprestimo", "motor_opcao_de_troca", "motor_agendar_fim_do_emprestimo", "motor_lances_do_clube", "motor_cqe4_interesse", "motor_cqe4_construir_contrato", "motor_cqe5_pode_emprestar", "motor_cqe5_registrar_emprestimo", "motor_cqe5_dia_das_regras", "motor_cqe6_periodo_inglaterra", "motor_cqe6_pode_emprestar_escocia", "motor_cqe6_periodo_escocia", "motor_cqe6_pode_emprestar_italia", "motor_cqe6_pode_emprestar_irlanda", "motor_cqe6_pode_emprestar_espanha", "motor_liga_jogos_para_a_tv", "motor_liga_noticia_dos_grupos", "motor_liga_noticia_da_tabela", "motor_por_oferta_de_transferencia", "motor_aceitar_emprestimo", "motor_termos_aceitos", "motor_noticia_de_jogador_listado", "motor_contrato_oferecido", "motor_mundial_sortear_grupos", "motor_mundial_sorteio_dos_grupos", "motor_mundial_dia", "motor_mundial_tabela_do_grupo_um", "motor_mundial_fase_do_grupo", "motor_mundial_posicoes_previstas", "motor_mundial_rodadas_da_fase", "motor_mundial_nacao_classificada", "motor_mundial_cabecas_de_chave", "motor_distribuir_os_treinadores", "motor_trocar_os_programas_do_elenco", "motor_nomes_padrao_dos_programas", "motor_historico_da_carreira", "motor_anos_desde_o_clube", "motor_ordem_do_historico_por_pessoa", "motor_lesao_pelo_nome", "motor_noticia_da_volta_aos_treinos", "motor_nome_da_categoria_da_lesao", "motor_cqf10_olheiro_no_jogo", "motor_cqf10_historico_do_clube_observado", "motor_cqf11_relatorio_da_selecao", "motor_cqf11_noticia_da_convocacao", "motor_cqf11_adversarios_da_selecao", "motor_cqf12_olheiros_do_dia", "motor_cqf12_relatorios_dos_olheiros", "motor_cqf12_noticia_do_relatorio", "motor_assinar_contrato", "motor_refazer_como_jovem", "motor_tirar_da_disputa", "motor_ler_formacao_do_disco", "motor_trocar_bytes_das_palavras", "motor_trocar_bytes_dos_dwords", "motor_montar_os_arbitros", "motor_ordem_das_vagas_de_competicao", "motor_cqg10_amistoso_cancelado", "motor_cqg10_jogo_da_selecao_cancelado", "motor_cqg10_torneio_cancelado", "motor_ordem_dos_arbitros_decrescente", "motor_ordem_dos_arbitros_crescente", "motor_arquivar_estatisticas", "motor_pessoa_pelo_nome", "motor_texto_entre_aspas", "motor_tipo_da_linha", "motor_campeoes_sortear_grupos", "motor_campeoes_ordem_dos_potes", "motor_campeoes_posicoes_previstas", "motor_campeoes_sortear_segunda_fase", "motor_campeoes_ordem_da_segunda_fase", "motor_grupo_da_fase", "motor_campeoes_rodadas_da_fase", "motor_liga_expectativas_da_temporada", "motor_liga_rebaixar_clube", "motor_competicao_todas_completas", "motor_competicao_lista_de_clubes", "motor_competicao_progresso_do_clube", "motor_uefa_rodar_coeficientes", "motor_uefa_vagas_por_nacao", "motor_uefa_enesimo_clube_da_nacao", "motor_uefa_juntar_clubes_europeus", "motor_uefa_vagas_liga_dos_campeoes", "motor_uefa_vagas_intertoto", "motor_uefa_vagas_copa_da_uefa", "motor_uefa_voluntario_ingles", "motor_uefa_virada_da_classificacao", "motor_conmebol_vagas_libertadores", "motor_conmebol_enesimo_clube_da_nacao", "motor_conmebol_convidado_da_mercosul", "motor_conmebol_juntar_clubes", "motor_conmebol_virada_do_ano", "motor_conmebol_campeao_dos_campeoes", "motor_sede_da_edicao", "motor_proxima_sede", "motor_calendario_das_sedes", "motor_regras_inglaterra", "motor_regras_eua", "motor_regras_australia", "motor_janelas_espanha", "motor_janelas_italia", "motor_janelas_franca", "motor_regras_brasil", "motor_janelas_alemanha", "motor_regras_escocia", "motor_cqi10_intertoto_dia", "motor_cqi10_intertoto_registros", "motor_cqi10_uefa_registros", "motor_cqi11_concacaf_classificados", "motor_cqi11_concacaf_dia", "motor_cqi11_concacaf_rodadas", "motor_cqi12_copa_italia_regras", "motor_cqi12_copa_c_regras", "motor_cqi12_copa_dos_campeoes_regras", "motor_cqj10_copa_africana_registros", "motor_cqj10_copa_america_registros", "motor_cqj10_eliminatoria_oceania_registros", "motor_cqj11_libertadores_regras", "motor_cqj11_merconorte_regras", "motor_cqj11_oceania_clubes_regras", "motor_cqj12_eliminatoria_europa_regras", "motor_cqj12_eliminatoria_sul_americana_regras", "motor_cqj12_eliminatoria_asia_regras", "motor_cqk10_copa_america_regras", "motor_cqk10_copa_africana_regras", "motor_cqk10_eliminatoria_oceania_regras", "motor_cqk11_libertadores_classificados", "motor_cqk11_libertadores_registros", "motor_cqk11_libertadores_fase_seguinte", "motor_cqk12_africana_fase_seguinte", "motor_cqk12_africana_grupo_a", "motor_cqk12_africana_historico", "motor_cqi7_regras_da_serie_a", "motor_cqi7_regras_da_serie_b", "motor_cqi7_regras_da_serie_c", "motor_cqi8_regras_do_centro_oeste", "motor_cqi8_regras_do_gaucho", "motor_cqi8_regras_do_catarinense", "motor_cqi9_regras_do_paranaense", "motor_cqi9_regras_do_pernambucano", "motor_cqi9_regras_do_carioca", "motor_cqj7_regras_do_goiano", "motor_cqj7_regras_da_j1", "motor_cqj7_regras_da_j2", "motor_cqj8_regras_da_nsl", "motor_cqj8_regras_da_mls", "motor_cqj8_historico_do_estadual", "motor_cqj8_historico_do_primeiro_estagio", "motor_cqj9_destino_na_serie_a", "motor_cqj9_destino_na_serie_c", "motor_cqj9_destino_no_baiano", "motor_cqk7_destino_no_centro_oeste", "motor_cqk7_destino_no_mineiro", "motor_cqk7_destino_na_nsl", "motor_cqk8_progresso_no_mineiro", "motor_cqk8_progresso_na_mls", "motor_cqk8_progresso_na_serie_c", "motor_cqk9_destino_na_mls", "motor_cqk9_resultado_na_mls", "motor_cqk9_conferencia_das_estrelas", "motor_regras_da_premier", "motor_regras_da_first", "motor_regras_da_second", "motor_regras_da_third", "motor_tabela_da_premier", "motor_tabela_da_second", "motor_tabela_da_third", "motor_tabela_da_first", "motor_regras_da_serie_a", "motor_regras_da_serie_b", "motor_regras_da_c1a", "motor_regras_da_c1b", "motor_tabela_da_serie_a", "motor_tabela_da_serie_b", "motor_tabela_da_c1a", "motor_tabela_da_c1b", "motor_regras_da_franca_1", "motor_regras_da_franca_2", "motor_regras_da_franca_3", "motor_tabela_da_franca_1", "motor_tabela_da_franca_2", "motor_tabela_da_franca_3", "motor_regras_da_primera", "motor_regras_da_segunda", "motor_regras_da_divisao_de_baixo", "motor_tabela_da_primera", "motor_registros_pela_situacao_na_c2a", "motor_situacao_na_primera", "motor_tabela_do_grupo_da_cfa", "motor_tabela_da_divisao_de_baixo_francesa", "motor_situacao_na_c1a", "motor_situacao_na_c1b", "motor_cql10_copa_da_liga_tabela", "motor_cql10_copa_da_inglaterra_tabela", "motor_cql10_supercopa_tabela", "motor_cql11_copa_da_franca_tabela", "motor_cql11_copa_da_liga_francesa_tabela", "motor_cql11_copa_do_rei_tabela", "motor_cql12_supercopa_da_franca_tabela", "motor_cql12_supercopa_da_espanha_tabela", "motor_cql12_supercopa_do_japao_tabela", "motor_cqm10_copa_da_liga_inscritos", "motor_cqm10_trofeu_inscritos", "motor_cqm10_supercopa_clubes", "motor_cqm11_copa_da_franca_inscritos", "motor_cqm11_copa_da_liga_inscritos", "motor_cqm11_supercopa_clubes", "motor_cqm12_supercopa_da_espanha_clubes", "motor_cqm12_supercopa_do_japao_clubes", "motor_cqm12_jogo_das_estrelas_tabela", "motor_cqn10_copa_da_liga_dia", "motor_cqn10_copa_da_inglaterra_dia", "motor_cqn10_jogo_das_estrelas_dia", "motor_cqn11_copa_da_liga_japonesa_tabela", "motor_cqn11_copa_do_imperador_tabela", "motor_cqn11_copa_dos_eua_tabela", "motor_cqn12_copa_da_liga_inscritos", "motor_cqn12_copa_dos_eua_inscritos", "motor_cqn12_copa_do_imperador_inscritos", "motor_numero_de_camisa", "motor_clube_usa_numeros", "motor_gravar_numero_de_camisa", "motor_dar_numero_de_camisa", "motor_numerar_elenco", "motor_numerar_no_comeco", "motor_numerar_liga", "motor_inscrever_na_europa", "motor_regras_holanda", "motor_regras_croacia", "motor_regras_irlanda", "motor_regras_noruega", "motor_regras_irlanda_do_norte", "motor_regras_pais_de_gales", "motor_regras_turquia", "motor_regras_polonia", "motor_regras_finlandia", "motor_janelas_argentina", "motor_janelas_portugal", "motor_regras_coreia", "motor_janelas_grecia", "motor_janelas_russia", "motor_janelas_belgica", "motor_inscricao_europeia", "motor_ranking_fifa_inicial", "motor_lista_de_estadios_neutros", "motor_cql7_tabela_da_serie_a", "motor_cql7_tabela_da_serie_b", "motor_cql7_tabela_da_serie_c", "motor_cql8_tabela_do_baiano", "motor_cql8_tabela_do_centro_oeste", "motor_cql8_tabela_do_gaucho", "motor_cql9_tabela_do_goiano", "motor_cql9_tabela_do_mineiro", "motor_cql9_tabela_do_norte", "motor_cqm7_tabela_do_nordeste", "motor_cqm7_tabela_do_paranaense", "motor_cqm7_tabela_do_pernambucano", "motor_cqm8_tabela_do_carioca", "motor_cqm8_tabela_do_catarinense", "motor_cqm8_tabela_do_paulista", "motor_cqm9_tabela_da_j1", "motor_cqm9_tabela_da_j2", "motor_cqm9_tabela_da_nsl", "motor_cqn7_mata_mata_do_baiano", "motor_cqn7_mata_mata_do_norte", "motor_cqn7_mata_mata_do_nordeste", "motor_cqn8_mata_mata_do_pernambucano", "motor_cqn8_mata_mata_do_catarinense", "motor_cqn8_mata_mata_do_paulista", "motor_cqn9_mata_mata_do_gaucho", "motor_cqn9_mata_mata_do_centro_oeste", "motor_cqn9_mata_mata_do_goiano", "motor_desempate_da_serie_a", "motor_desempate_da_serie_b", "motor_ordem_dos_empatados_na_italia", "motor_resultado_do_desempate_da_serie_a", "motor_fase_seguinte_da_c1a", "motor_fases_do_fim_da_c1a", "motor_fase_seguinte_da_c1b", "motor_fases_do_fim_da_c1b", "motor_fase_seguinte_da_third", "motor_construir_premier", "motor_construir_first", "motor_construir_second", "motor_construir_third", "motor_construir_serie_a", "motor_construir_serie_b", "motor_construir_c1a", "motor_construir_c1b", "motor_construir_franca_2", "motor_construir_franca_3", "motor_construir_segunda", "motor_construir_primera", "motor_construir_divisao_de_baixo_espanhola", "motor_tabela_da_segunda", "motor_tabela_da_divisao_de_baixo_espanhola", "motor_regras_da_cfa", "motor_construir_cfa", "motor_construir_divisao_de_baixo_francesa", "motor_destruir_cfa", "motor_destruir_divisao_de_baixo_francesa", "motor_calendario_fixo_da_serie_a", "motor_calendario_fixo_da_serie_b", "motor_calendario_fixo_da_c1a", "motor_calendario_fixo_da_c1b", "motor_toco_um_com_dois", "motor_toco_um_com_um", "motor_estadio_da_partida", "motor_estadio_neutro", "motor_publico_do_jogo", "motor_calendario_da_terceira_francesa", "motor_calendario_da_segunda_francesa", "motor_calendario_da_divisao_de_baixo_francesa", "motor_calendario_da_cfa", "motor_calendario_da_c1_a", "motor_calendario_da_c1_b", "motor_calendario_da_serie_a", "motor_calendario_da_serie_b", "motor_calendario_da_primeira_francesa", "motor_cqo7_fase_seguinte_do_mineiro", "motor_cqo7_final_do_mineiro", "motor_cqo7_fim_da_temporada_do_mineiro", "motor_cqo8_fase_seguinte_do_paranaense", "motor_cqo8_final_do_paranaense", "motor_cqo8_fim_da_temporada_do_paranaense", "motor_cqo9_fase_seguinte_do_carioca", "motor_cqo9_final_do_carioca", "motor_cqo9_fim_da_temporada_do_carioca", "motor_cqo10_copa_da_italia_tabela", "motor_cqo10_copa_c_tabela", "motor_cqo10_supercopa_tabela", "motor_cqo10_supercopa_c1_tabela", "motor_cqo11_copa_da_italia_inscritos", "motor_cqo11_copa_c_inscritos", "motor_cqo11_supercopa_clubes", "motor_cqo12_copa_do_brasil_tabela", "motor_cqo12_times_da_copa", "motor_cqo12_regras_da_copa", "motor_cqo13_libertadores_tabela", "motor_cqo13_mercosul_tabela", "motor_cqo13_mercosul_convidados", "motor_calendario_da_segunda_inglesa", "motor_calendario_da_terceira_inglesa", "motor_calendario_da_primeira_inglesa", "motor_calendario_da_premiership", "motor_calendario_da_primera", "motor_cqp7_virada_do_baiano", "motor_cqp7_fase_seguinte_do_baiano", "motor_cqp7_virada_do_centro_oeste", "motor_cqp7_fase_seguinte_do_centro_oeste", "motor_cqp7_virada_do_gaucho", "motor_cqp7_fase_seguinte_do_gaucho", "motor_cqp8_virada_do_goiano", "motor_cqp8_fase_seguinte_do_goiano", "motor_cqp8_virada_do_norte", "motor_cqp8_fase_seguinte_do_norte", "motor_cqp8_virada_do_nordeste", "motor_cqp8_fase_seguinte_do_nordeste", "motor_cqp9_virada_do_pernambucano", "motor_cqp9_fase_seguinte_do_pernambucano", "motor_cqp9_virada_do_catarinense", "motor_cqp9_fase_seguinte_do_catarinense", "motor_cqp9_virada_do_paulista", "motor_cqp9_fase_seguinte_do_paulista", "motor_calendario_da_segunda_espanhola", "motor_calendario_da_divisao_de_baixo_espanhola", "motor_construir_primeira_francesa", "motor_cqq7_fase_seguinte_da_serie_a", "motor_cqq7_play_off_da_serie_a", "motor_cqq7_fase_seguinte_da_serie_b", "motor_cqq7_play_off_da_serie_b", "motor_cqq8_virada_da_serie_a", "motor_cqq8_acesso_e_rebaixamento", "motor_cqq8_virada_da_serie_b", "motor_cqq9_fase_seguinte_da_j1", "motor_cqq9_final_da_j1", "motor_cqq9_virada_da_j1", "motor_tabela_das_sedes", "motor_noticia_das_sedes", "motor_carregar_sedes", "motor_cadeia_de_acessos", "motor_noticia_do_premio", "motor_noticia_da_tv", "motor_cqp10_copa_dos_campeoes_tabela", "motor_cqp10_merconorte_tabela", "motor_cqp10_supercopa_europeia_tabela", "motor_cqp10_supercopa_asiatica_tabela", "motor_cqp11_asia_clubes_tabela", "motor_cqp11_asia_recopa_tabela", "motor_cqp11_trofeu_tabela", "motor_cqp12_copa_america_tabela", "motor_cqp12_africana_tabela", "motor_cqp12_confed_tabela", "motor_cqp13_intertoto_tabela", "motor_cqp13_intercontinental_tabela", "motor_cqp13_interamericana_tabela", "motor_cqp13_concacaf_tabela", "motor_cqq10_uefa_tabela", "motor_cqq10_intertoto_inscritos", "motor_cqq10_intertoto_lista", "motor_cqq11_europeia_clubes", "motor_cqq11_asiatica_clubes", "motor_cqq11_c1_vagas", "motor_cqq12_oceania_tabela", "motor_cqq12_asia_clubes_times", "motor_cqq12_asia_recopa_times", "motor_cqr1_turno_do_carioca", "motor_cqr1_turno_do_mineiro", "motor_cqr1_turno_do_paranaense", "motor_cqr1_turno_da_j1", "motor_cqr2_virada_do_carioca", "motor_cqr2_virada_do_mineiro", "motor_cqr2_virada_do_paranaense", "motor_cqr3_fase_seguinte_da_nsl", "motor_cqr3_serie_final_da_nsl", "motor_cqr3_grande_final_da_nsl", "motor_cqr4_fase_seguinte_da_mls", "motor_cqr4_play_off_da_mls", "motor_cqr4_final_da_mls", "motor_cqr5_virada_copa_do_brasil", "motor_cqr5_virada_copa_do_imperador", "motor_cqr5_virada_copa_da_liga_japonesa", "motor_cqr6_virada_supercopa_japonesa", "motor_cqr6_virada_copa_dos_eua", "motor_cqr6_virada_jogo_das_estrelas", "motor_cqr6_times_do_jogo_das_estrelas", "motor_cqr10_libertadores_dia", "motor_cqr10_libertadores_primeiro_grupo", "motor_cqr10_libertadores_grupo", "motor_cqr11_mercosul_dia", "motor_cqr11_mercosul_primeiro_grupo", "motor_cqr11_mercosul_grupo", "motor_cqr12_merconorte_dia", "motor_cqr12_merconorte_primeiro_grupo", "motor_cqr12_merconorte_grupo", "motor_cqr13_copa_america_dia", "motor_cqr13_copa_america_primeiro_grupo", "motor_cqr13_copa_america_grupo", "motor_cqs1_tabela_da_mls", "motor_cqs1_segunda_divisao_da_mls", "motor_cqs1_terceira_divisao_da_mls", "motor_cqs2_virada_da_mls", "motor_cqs2_posicoes_previstas_da_mls", "motor_cqs2_clubes_da_mls", "motor_cqs3_grupo_da_serie_c", "motor_cqs3_segunda_fase_da_serie_c", "motor_cqs3_terceira_fase_da_serie_c", "motor_cqs4_final_da_serie_c", "motor_cqs4_virada_da_serie_c", "motor_cqs4_posicoes_previstas_da_serie_c", "motor_cqs5_trofeu_clubes", "motor_cqs5_trofeu_fase_das_chaves", "motor_cqs5_trofeu_fase_seguinte", "motor_cqs6_trofeu_final", "motor_cqs6_trofeu_classificacao", "motor_cqs7_fase_de_copa", "motor_cqs7_fim_da_fase_de_copa", "motor_cqs10_libertadores_mata_mata", "motor_cqs10_merconorte_semifinais", "motor_cqs10_merconorte_fase_seguinte", "motor_cqs11_merconorte_convidados", "motor_cqs11_mercosul_fase_seguinte", "motor_cqs11_copa_america_fase_seguinte", "motor_cqs12_copa_america_selecoes", "motor_cqs12_copa_america_previstas", "motor_cqs12_copa_america_temporada_nova", "motor_cqt1_construir_baiano", "motor_cqt1_construir_centro_oeste", "motor_cqt1_construir_gaucho", "motor_cqt2_construir_goiano", "motor_cqt2_construir_mineiro", "motor_cqt2_construir_norte", "motor_cqt3_construir_nordeste", "motor_cqt3_construir_paranaense", "motor_cqt3_construir_pernambucano", "motor_cqt4_construir_carioca", "motor_cqt4_construir_catarinense", "motor_cqt4_construir_paulista", "motor_cqt4_atualizar_media_de_publico", "motor_cqt10_oceania_dia", "motor_cqt10_oceania_grupo_a", "motor_cqt10_oceania_grupo_b", "motor_cqt11_oceania_clubes", "motor_cqt11_oceania_fase_seguinte", "motor_cqt11_oceania_semifinais",
     ];
     for i in 0..N {
         if DESLIGADAS.contains(&PROLOGOS[i].endereco) {

@@ -1,0 +1,1 @@
+comparação até 2001-10-01 (e a longa até 2002-03-15) 0 div; Rust x2 iguais e detector igual; mutações 2/3 (a da preliminar de 11 escapa: nenhum clube com coeficiente 10; o caminho de completar até 118 não roda com as 8 ligas)

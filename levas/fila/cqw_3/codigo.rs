@@ -1,0 +1,228 @@
+// ---------- %%LEVA%%a leva: os calendários Pernambucano, Carioca, Catarinense, Paulista (as datas e os jogos de cada rodada da fase de pontos corridos e do mata-mata) (bra_reg_pern.cpp, bra_reg_rio.cpp, bra_reg_santa.cpp, bra_reg_sp.cpp) ----------
+
+/// O Pernambucano, a liga: 18 rodadas (da 11/jan à 20/abr), 1170 bytes, 64 operações.
+const CQW3_PERNAMBUCANO_0: [Cqp11Op; 64] = [
+    Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
+    Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
+    Cqp11D(2, 0x15, 1, 0, 2, 2, 0), Cqp11L(2, 0, -1, -1, -1, 0), Cqp11D(3, 0x19, 1, 0, 6, 1, 0),
+    Cqp11L(3, 0, 5, 1, 1, 0), Cqp11L(3, 1, 5, 1, 1, 0), Cqp11L(3, 2, -1, -1, -1, 0), Cqp11D(4, 4, 2, 0, 6, 1, 0),
+    Cqp11L(4, 0, 5, 1, 1, 0), Cqp11L(4, 1, 5, 1, 1, 0), Cqp11L(4, 2, -1, -1, -1, 0), Cqp11D(5, 0xb, 2, 0, 6, 1, 0),
+    Cqp11L(5, 0, 5, 1, 1, 0), Cqp11L(5, 1, 5, 1, 1, 0), Cqp11L(5, 2, -1, -1, -1, 0), Cqp11D(6, 0xe, 2, 0, 2, 2, 0),
+    Cqp11L(6, 0, -1, -1, -1, 0), Cqp11D(7, 0x12, 2, 0, 6, 1, 0), Cqp11L(7, 0, 5, 1, 1, 0), Cqp11L(7, 1, 5, 1, 1, 0),
+    Cqp11L(7, 2, -1, -1, -1, 0), Cqp11D(8, 0x19, 2, 0, 6, 1, 0), Cqp11L(8, 0, 5, 1, 1, 0), Cqp11L(8, 1, 5, 1, 1, 0),
+    Cqp11L(8, 2, -1, -1, -1, 0), Cqp11D(9, 1, 3, 0, 6, 1, 0), Cqp11L(9, 0, 5, 1, 1, 0), Cqp11L(9, 1, 5, 1, 1, 0),
+    Cqp11L(9, 2, -1, -1, -1, 0), Cqp11D(0xa, 8, 3, 0, 6, 1, 0), Cqp11L(0xa, 0, 5, 1, 1, 0),
+    Cqp11L(0xa, 1, 5, 1, 1, 0), Cqp11L(0xa, 2, -1, -1, -1, 0), Cqp11D(0xb, 0xf, 3, 0, 6, 1, 0),
+    Cqp11L(0xb, 0, 5, 1, 1, 0), Cqp11L(0xb, 1, 5, 1, 1, 0), Cqp11L(0xb, 2, -1, -1, -1, 0),
+    Cqp11D(0xc, 0x16, 3, 0, 6, 1, 0), Cqp11L(0xc, 0, 5, 1, 1, 0), Cqp11L(0xc, 1, 5, 1, 1, 0),
+    Cqp11L(0xc, 2, -1, -1, -1, 0), Cqp11D(0xd, 0x1d, 3, 0, 6, 1, 0), Cqp11L(0xd, 0, 5, 1, 1, 0),
+    Cqp11L(0xd, 1, 5, 1, 1, 0), Cqp11L(0xd, 2, -1, -1, -1, 0), Cqp11D(0xe, 6, 4, 0, 6, 1, 0),
+    Cqp11L(0xe, 0, 5, 1, 1, 0), Cqp11L(0xe, 1, 5, 1, 1, 0), Cqp11L(0xe, 2, -1, -1, -1, 0),
+    Cqp11D(0xf, 0xd, 4, 0, 6, 1, 0), Cqp11L(0xf, 0, 5, 1, 1, 0), Cqp11L(0xf, 1, 5, 1, 1, 0),
+    Cqp11L(0xf, 2, -1, -1, -1, 0), Cqp11D(0x10, 0x10, 4, 0, 2, 2, 0), Cqp11L(0x10, 0, -1, -1, -1, 0),
+    Cqp11D(0x11, 0x14, 4, 0, 6, 1, 0), Cqp11L(0x11, 0, -1, -1, -1, 0),
+];
+
+/// O Pernambucano, a fase 0: 2 rodadas (da 21/abr à 10/mai), 208 bytes, 36 operações.
+const CQW3_PERNAMBUCANO_1: [Cqp11Op; 36] = [
+    Cqp11S(0, 0x15, 4, 0, 6), Cqp11J(0, 0x1b, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
+    Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 0x804),
+    Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
+    Cqp11X(0x64, 0), Cqp11S(1, 4, 5, 0, 0), Cqp11J(1, 0xa, 5, 0, 6, 1, 0), Cqp11W(0x71, 1), Cqp11W(0x82, 1),
+    Cqp11W(0x6f, 0x96), Cqp11W(0x73, 0), Cqp11W(0x75, 0), Cqp11B(0x7f, 8), Cqp11W(0x80, 2), Cqp11W(0x84, 0),
+    Cqp11W(0x77, 0x804), Cqp11W(0x86, 0), Cqp11B(0x88, 0), Cqp11B(0x89, 2), Cqp11B(0x8a, 7), Cqp11X(0xc4, 0),
+    Cqp11X(0xc8, 0x2ab98), Cqp11X(0xcc, 0x186a0),
+];
+
+/// As fases da tabela de rodadas do Pernambucano: a fase de pontos corridos (−1) (é liga): 18 rodadas, da 11/jan à 20/abr; a fase 0 (mata-mata ou fase final): 2 rodadas, da 21/abr à 10/mai.
+fn cqw3_pernambucano_fase(fase: u32) -> Option<Cqp11Fase> {
+    match fase as u8 as i8 {
+        -1 => Some(Cqp11Fase { liga: 1, rodadas: 18, extra: 0, extra_checa: false, tamanho: 0x492, linha: 0xa8,
+            ops: &CQW3_PERNAMBUCANO_0, nome: "cqw_3 pernambucano liga" }),
+        0 => Some(Cqp11Fase { liga: 0, rodadas: 2, extra: 0, extra_checa: false, tamanho: 0xd0, linha: 0x126,
+            ops: &CQW3_PERNAMBUCANO_1, nome: "cqw_3 pernambucano fase 0" }),
+        _ => None,
+    }
+}
+
+/// { 0x438bf0 } (thiscall, ret 0x10, bra_reg_pern.cpp; a virtual +0x3c): `BraRegPern::create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase
+/// de `cqw3_pernambucano_fase` (a máquina da cqp_11: as saídas, a tabela de 0x41 bytes por rodada e as datas e jogos de cada rodada).
+unsafe extern "thiscall" fn cqw3_calendario_pernambucano(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    cqp11_tabela(this, cqw3_pernambucano_fase(fase), rodadas, extra, liga, 0x98afd8)
+}
+
+unsafe extern "thiscall" fn comparar_cqw3_calendario_pernambucano(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
+    cqp11_comparar("cqw3_calendario_pernambucano", fase, cqw3_pernambucano_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+        |r, e, l| cqw3_calendario_pernambucano(this, fase, r, e, l))
+}
+
+/// O Carioca, a liga: 22 rodadas (da 11/jan à 3/mai), 1430 bytes, 78 operações.
+const CQW3_CARIOCA_0: [Cqp11Op; 78] = [
+    Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
+    Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
+    Cqp11D(2, 0x15, 1, 0, 2, 2, 0), Cqp11L(2, 0, -1, -1, -1, 0), Cqp11D(3, 0x19, 1, 0, 6, 1, 0),
+    Cqp11L(3, 0, 5, 1, 1, 0), Cqp11L(3, 1, 5, 1, 1, 0), Cqp11L(3, 2, -1, -1, -1, 0), Cqp11D(4, 4, 2, 0, 6, 1, 0),
+    Cqp11L(4, 0, 5, 1, 1, 0), Cqp11L(4, 1, 5, 1, 1, 0), Cqp11L(4, 2, -1, -1, -1, 0), Cqp11D(5, 0xb, 2, 0, 6, 1, 0),
+    Cqp11L(5, 0, 5, 1, 1, 0), Cqp11L(5, 1, 5, 1, 1, 0), Cqp11L(5, 2, -1, -1, -1, 0), Cqp11D(6, 0xe, 2, 0, 2, 2, 0),
+    Cqp11L(6, 0, -1, -1, -1, 0), Cqp11D(7, 0x12, 2, 0, 6, 1, 0), Cqp11L(7, 0, 5, 1, 1, 0), Cqp11L(7, 1, 5, 1, 1, 0),
+    Cqp11L(7, 2, -1, -1, -1, 0), Cqp11D(8, 0x19, 2, 0, 6, 1, 0), Cqp11L(8, 0, 5, 1, 1, 0), Cqp11L(8, 1, 5, 1, 1, 0),
+    Cqp11L(8, 2, -1, -1, -1, 0), Cqp11D(9, 1, 3, 0, 6, 1, 0), Cqp11L(9, 0, 5, 1, 1, 0), Cqp11L(9, 1, 5, 1, 1, 0),
+    Cqp11L(9, 2, -1, -1, -1, 0), Cqp11D(0xa, 4, 3, 0, 2, 2, 0), Cqp11L(0xa, 0, 5, 1, 1, 0),
+    Cqp11L(0xa, 1, 5, 1, 1, 0), Cqp11L(0xa, 2, -1, -1, -1, 0), Cqp11D(0xb, 8, 3, 0, 6, 1, 0),
+    Cqp11L(0xb, 0, 5, 1, 1, 0), Cqp11L(0xb, 1, 5, 1, 1, 0), Cqp11L(0xb, 2, -1, -1, -1, 0),
+    Cqp11D(0xc, 0xf, 3, 0, 6, 1, 0), Cqp11L(0xc, 0, 5, 1, 1, 0), Cqp11L(0xc, 1, 5, 1, 1, 0),
+    Cqp11L(0xc, 2, -1, -1, -1, 0), Cqp11D(0xd, 0x16, 3, 0, 6, 1, 0), Cqp11L(0xd, 0, 5, 1, 1, 0),
+    Cqp11L(0xd, 1, 5, 1, 1, 0), Cqp11L(0xd, 2, -1, -1, -1, 0), Cqp11D(0xe, 0x19, 3, 0, 2, 2, 0),
+    Cqp11L(0xe, 0, -1, -1, -1, 0), Cqp11D(0xf, 0x1d, 3, 0, 6, 1, 0), Cqp11L(0xf, 0, 5, 1, 1, 0),
+    Cqp11L(0xf, 1, 5, 1, 1, 0), Cqp11L(0xf, 2, -1, -1, -1, 0), Cqp11D(0x10, 6, 4, 0, 6, 1, 0),
+    Cqp11L(0x10, 0, 5, 1, 1, 0), Cqp11L(0x10, 1, 5, 1, 1, 0), Cqp11L(0x10, 2, -1, -1, -1, 0),
+    Cqp11D(0x11, 0xd, 4, 0, 6, 1, 0), Cqp11L(0x11, 0, 5, 1, 1, 0), Cqp11L(0x11, 1, 5, 1, 1, 0),
+    Cqp11L(0x11, 2, -1, -1, -1, 0), Cqp11D(0x12, 0x10, 4, 0, 2, 2, 0), Cqp11L(0x12, 0, -1, -1, -1, 0),
+    Cqp11D(0x13, 0x14, 4, 0, 6, 1, 0), Cqp11L(0x13, 0, 5, 1, 1, 0), Cqp11L(0x13, 1, 5, 1, 1, 0),
+    Cqp11L(0x13, 2, -1, -1, -1, 0), Cqp11D(0x14, 0x1b, 4, 0, 6, 1, 0), Cqp11L(0x14, 0, 5, 1, 1, 0),
+    Cqp11L(0x14, 1, 5, 1, 1, 0), Cqp11L(0x14, 2, -1, -1, -1, 0), Cqp11D(0x15, 3, 5, 0, 6, 1, 0),
+    Cqp11L(0x15, 0, -1, -1, -1, 0),
+];
+
+/// O Carioca, a fase 2: 1 rodadas (da 4/mai à 10/mai), 104 bytes, 18 operações.
+const CQW3_CARIOCA_1: [Cqp11Op; 18] = [
+    Cqp11S(0, 4, 5, 0, 0), Cqp11J(0, 0xa, 5, 0, 6, 1, 0), Cqp11W(0x18, 2), Cqp11W(0x1c, 2), Cqp11B(0x21, 2),
+    Cqp11W(0x7, 0x96), Cqp11W(0x9, 0), Cqp11W(0xb, 0), Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x1a, 1),
+    Cqp11W(0xf, 0x804), Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0xa4cb8),
+    Cqp11X(0x64, 0x3d090),
+];
+
+/// As fases da tabela de rodadas do Carioca: a fase de pontos corridos (−1) (é liga): 22 rodadas, da 11/jan à 3/mai; a fase 2 (mata-mata ou fase final): 1 rodadas, da 4/mai à 10/mai.
+fn cqw3_carioca_fase(fase: u32) -> Option<Cqp11Fase> {
+    match fase as u8 as i8 {
+        -1 => Some(Cqp11Fase { liga: 1, rodadas: 22, extra: 0, extra_checa: false, tamanho: 0x596, linha: 0xa6,
+            ops: &CQW3_CARIOCA_0, nome: "cqw_3 carioca liga" }),
+        2 => Some(Cqp11Fase { liga: 0, rodadas: 1, extra: 0, extra_checa: false, tamanho: 0x68, linha: 0x13a,
+            ops: &CQW3_CARIOCA_1, nome: "cqw_3 carioca fase 2" }),
+        _ => None,
+    }
+}
+
+/// { 0x439d40 } (thiscall, ret 0x10, bra_reg_rio.cpp; a virtual +0x3c): `BraRegRio::create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase
+/// de `cqw3_carioca_fase` (a máquina da cqp_11: as saídas, a tabela de 0x41 bytes por rodada e as datas e jogos de cada rodada).
+unsafe extern "thiscall" fn cqw3_calendario_carioca(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    cqp11_tabela(this, cqw3_carioca_fase(fase), rodadas, extra, liga, 0x98b014)
+}
+
+unsafe extern "thiscall" fn comparar_cqw3_calendario_carioca(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
+    cqp11_comparar("cqw3_calendario_carioca", fase, cqw3_carioca_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+        |r, e, l| cqw3_calendario_carioca(this, fase, r, e, l))
+}
+
+/// O Catarinense, a liga: 18 rodadas (da 11/jan à 20/abr), 1170 bytes, 64 operações.
+const CQW3_CATARINENSE_0: [Cqp11Op; 64] = [
+    Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
+    Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
+    Cqp11D(2, 0x15, 1, 0, 2, 2, 0), Cqp11L(2, 0, -1, -1, -1, 0), Cqp11D(3, 0x19, 1, 0, 6, 1, 0),
+    Cqp11L(3, 0, 5, 1, 1, 0), Cqp11L(3, 1, 5, 1, 1, 0), Cqp11L(3, 2, -1, -1, -1, 0), Cqp11D(4, 4, 2, 0, 6, 1, 0),
+    Cqp11L(4, 0, 5, 1, 1, 0), Cqp11L(4, 1, 5, 1, 1, 0), Cqp11L(4, 2, -1, -1, -1, 0), Cqp11D(5, 0xb, 2, 0, 6, 1, 0),
+    Cqp11L(5, 0, 5, 1, 1, 0), Cqp11L(5, 1, 5, 1, 1, 0), Cqp11L(5, 2, -1, -1, -1, 0), Cqp11D(6, 0xe, 2, 0, 2, 2, 0),
+    Cqp11L(6, 0, -1, -1, -1, 0), Cqp11D(7, 0x12, 2, 0, 6, 1, 0), Cqp11L(7, 0, 5, 1, 1, 0), Cqp11L(7, 1, 5, 1, 1, 0),
+    Cqp11L(7, 2, -1, -1, -1, 0), Cqp11D(8, 0x19, 2, 0, 6, 1, 0), Cqp11L(8, 0, 5, 1, 1, 0), Cqp11L(8, 1, 5, 1, 1, 0),
+    Cqp11L(8, 2, -1, -1, -1, 0), Cqp11D(9, 1, 3, 0, 6, 1, 0), Cqp11L(9, 0, 5, 1, 1, 0), Cqp11L(9, 1, 5, 1, 1, 0),
+    Cqp11L(9, 2, -1, -1, -1, 0), Cqp11D(0xa, 8, 3, 0, 6, 1, 0), Cqp11L(0xa, 0, 5, 1, 1, 0),
+    Cqp11L(0xa, 1, 5, 1, 1, 0), Cqp11L(0xa, 2, -1, -1, -1, 0), Cqp11D(0xb, 0xf, 3, 0, 6, 1, 0),
+    Cqp11L(0xb, 0, 5, 1, 1, 0), Cqp11L(0xb, 1, 5, 1, 1, 0), Cqp11L(0xb, 2, -1, -1, -1, 0),
+    Cqp11D(0xc, 0x16, 3, 0, 6, 1, 0), Cqp11L(0xc, 0, 5, 1, 1, 0), Cqp11L(0xc, 1, 5, 1, 1, 0),
+    Cqp11L(0xc, 2, -1, -1, -1, 0), Cqp11D(0xd, 0x1d, 3, 0, 6, 1, 0), Cqp11L(0xd, 0, 5, 1, 1, 0),
+    Cqp11L(0xd, 1, 5, 1, 1, 0), Cqp11L(0xd, 2, -1, -1, -1, 0), Cqp11D(0xe, 6, 4, 0, 6, 1, 0),
+    Cqp11L(0xe, 0, 5, 1, 1, 0), Cqp11L(0xe, 1, 5, 1, 1, 0), Cqp11L(0xe, 2, -1, -1, -1, 0),
+    Cqp11D(0xf, 0xd, 4, 0, 6, 1, 0), Cqp11L(0xf, 0, 5, 1, 1, 0), Cqp11L(0xf, 1, 5, 1, 1, 0),
+    Cqp11L(0xf, 2, -1, -1, -1, 0), Cqp11D(0x10, 0x10, 4, 0, 2, 2, 0), Cqp11L(0x10, 0, -1, -1, -1, 0),
+    Cqp11D(0x11, 0x14, 4, 0, 6, 1, 0), Cqp11L(0x11, 0, -1, -1, -1, 0),
+];
+
+/// O Catarinense, a fase 0: 2 rodadas (da 21/abr à 10/mai), 208 bytes, 36 operações.
+const CQW3_CATARINENSE_1: [Cqp11Op; 36] = [
+    Cqp11S(0, 0x15, 4, 0, 6), Cqp11J(0, 0x1b, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
+    Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 0x804),
+    Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
+    Cqp11X(0x64, 0), Cqp11S(1, 4, 5, 0, 0), Cqp11J(1, 0xa, 5, 0, 6, 1, 0), Cqp11W(0x71, 1), Cqp11W(0x82, 1),
+    Cqp11W(0x6f, 0x96), Cqp11W(0x73, 0), Cqp11W(0x75, 0), Cqp11B(0x7f, 8), Cqp11W(0x80, 2), Cqp11W(0x84, 0),
+    Cqp11W(0x77, 0x804), Cqp11W(0x86, 0), Cqp11B(0x88, 0), Cqp11B(0x89, 2), Cqp11B(0x8a, 7), Cqp11X(0xc4, 0),
+    Cqp11X(0xc8, 0x1e848), Cqp11X(0xcc, 0xc350),
+];
+
+/// As fases da tabela de rodadas do Catarinense: a fase de pontos corridos (−1) (é liga): 18 rodadas, da 11/jan à 20/abr; a fase 0 (mata-mata ou fase final): 2 rodadas, da 21/abr à 10/mai.
+fn cqw3_catarinense_fase(fase: u32) -> Option<Cqp11Fase> {
+    match fase as u8 as i8 {
+        -1 => Some(Cqp11Fase { liga: 1, rodadas: 18, extra: 0, extra_checa: false, tamanho: 0x492, linha: 0xa8,
+            ops: &CQW3_CATARINENSE_0, nome: "cqw_3 catarinense liga" }),
+        0 => Some(Cqp11Fase { liga: 0, rodadas: 2, extra: 0, extra_checa: false, tamanho: 0xd0, linha: 0x126,
+            ops: &CQW3_CATARINENSE_1, nome: "cqw_3 catarinense fase 0" }),
+        _ => None,
+    }
+}
+
+/// { 0x43b430 } (thiscall, ret 0x10, bra_reg_santa.cpp; a virtual +0x3c): `BraRegSanta::create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase
+/// de `cqw3_catarinense_fase` (a máquina da cqp_11: as saídas, a tabela de 0x41 bytes por rodada e as datas e jogos de cada rodada).
+unsafe extern "thiscall" fn cqw3_calendario_catarinense(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    cqp11_tabela(this, cqw3_catarinense_fase(fase), rodadas, extra, liga, 0x98b050)
+}
+
+unsafe extern "thiscall" fn comparar_cqw3_calendario_catarinense(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
+    cqp11_comparar("cqw3_calendario_catarinense", fase, cqw3_catarinense_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+        |r, e, l| cqw3_calendario_catarinense(this, fase, r, e, l))
+}
+
+/// O Paulista, a liga: 15 rodadas (da 18/jan à 20/abr), 975 bytes, 56 operações.
+const CQW3_PAULISTA_0: [Cqp11Op; 56] = [
+    Cqp11D(0, 0x12, 1, 0, 6, 2, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
+    Cqp11D(1, 0x19, 1, 0, 6, 1, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
+    Cqp11D(2, 4, 2, 0, 6, 1, 0), Cqp11L(2, 0, 5, 1, 1, 0), Cqp11L(2, 1, 5, 1, 1, 0), Cqp11L(2, 2, -1, -1, -1, 0),
+    Cqp11D(3, 0xb, 2, 0, 6, 1, 0), Cqp11L(3, 0, 5, 1, 1, 0), Cqp11L(3, 1, 5, 1, 1, 0), Cqp11L(3, 2, -1, -1, -1, 0),
+    Cqp11D(4, 0x12, 2, 0, 6, 1, 0), Cqp11L(4, 0, 5, 1, 1, 0), Cqp11L(4, 1, 5, 1, 1, 0), Cqp11L(4, 2, -1, -1, -1, 0),
+    Cqp11D(5, 0x19, 2, 0, 6, 1, 0), Cqp11L(5, 0, 5, 1, 1, 0), Cqp11L(5, 1, 5, 1, 1, 0), Cqp11L(5, 2, -1, -1, -1, 0),
+    Cqp11D(6, 1, 3, 0, 6, 1, 0), Cqp11L(6, 0, 5, 1, 1, 0), Cqp11L(6, 1, 5, 1, 1, 0), Cqp11L(6, 2, -1, -1, -1, 0),
+    Cqp11D(7, 8, 3, 0, 6, 1, 0), Cqp11L(7, 0, 5, 1, 1, 0), Cqp11L(7, 1, 5, 1, 1, 0), Cqp11L(7, 2, -1, -1, -1, 0),
+    Cqp11D(8, 0xf, 3, 0, 6, 1, 0), Cqp11L(8, 0, 5, 1, 1, 0), Cqp11L(8, 1, 5, 1, 1, 0), Cqp11L(8, 2, -1, -1, -1, 0),
+    Cqp11D(9, 0x16, 3, 0, 6, 1, 0), Cqp11L(9, 0, 5, 1, 1, 0), Cqp11L(9, 1, 5, 1, 1, 0), Cqp11L(9, 2, -1, -1, -1, 0),
+    Cqp11D(0xa, 0x19, 3, 0, 6, 1, 0), Cqp11L(0xa, 0, -1, -1, -1, 0), Cqp11D(0xb, 0x1d, 3, 0, 6, 1, 0),
+    Cqp11L(0xb, 0, 5, 1, 1, 0), Cqp11L(0xb, 1, 5, 1, 1, 0), Cqp11L(0xb, 2, -1, -1, -1, 0),
+    Cqp11D(0xc, 6, 4, 0, 6, 1, 0), Cqp11L(0xc, 0, 5, 1, 1, 0), Cqp11L(0xc, 1, 5, 1, 1, 0),
+    Cqp11L(0xc, 2, -1, -1, -1, 0), Cqp11D(0xd, 0xd, 4, 0, 6, 1, 0), Cqp11L(0xd, 0, 5, 1, 1, 0),
+    Cqp11L(0xd, 1, 5, 1, 1, 0), Cqp11L(0xd, 2, -1, -1, -1, 0), Cqp11D(0xe, 0x14, 4, 0, 6, 1, 0),
+    Cqp11L(0xe, 0, -1, -1, -1, 0),
+];
+
+/// O Paulista, a fase 0: 2 rodadas (da 21/abr à 10/mai), 208 bytes, 36 operações.
+const CQW3_PAULISTA_1: [Cqp11Op; 36] = [
+    Cqp11S(0, 0x15, 4, 0, 6), Cqp11J(0, 0x1b, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
+    Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 0x804),
+    Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
+    Cqp11X(0x64, 0), Cqp11S(1, 4, 5, 0, 0), Cqp11J(1, 0xa, 5, 0, 6, 1, 0), Cqp11W(0x71, 1), Cqp11W(0x82, 1),
+    Cqp11W(0x6f, 0x96), Cqp11W(0x73, 0), Cqp11W(0x75, 0), Cqp11B(0x7f, 8), Cqp11W(0x80, 2), Cqp11W(0x84, 0),
+    Cqp11W(0x77, 0x804), Cqp11W(0x86, 0), Cqp11B(0x88, 0), Cqp11B(0x89, 2), Cqp11B(0x8a, 7), Cqp11X(0xc4, 0),
+    Cqp11X(0xc8, 0xa4cb8), Cqp11X(0xcc, 0x2ab98),
+];
+
+/// As fases da tabela de rodadas do Paulista: a fase de pontos corridos (−1) (é liga): 15 rodadas, da 18/jan à 20/abr; a fase 0 (mata-mata ou fase final): 2 rodadas, da 21/abr à 10/mai.
+fn cqw3_paulista_fase(fase: u32) -> Option<Cqp11Fase> {
+    match fase as u8 as i8 {
+        -1 => Some(Cqp11Fase { liga: 1, rodadas: 15, extra: 0, extra_checa: false, tamanho: 0x3cf, linha: 0xa8,
+            ops: &CQW3_PAULISTA_0, nome: "cqw_3 paulista liga" }),
+        0 => Some(Cqp11Fase { liga: 0, rodadas: 2, extra: 0, extra_checa: false, tamanho: 0xd0, linha: 0x118,
+            ops: &CQW3_PAULISTA_1, nome: "cqw_3 paulista fase 0" }),
+        _ => None,
+    }
+}
+
+/// { 0x43c5a0 } (thiscall, ret 0x10, bra_reg_sp.cpp; a virtual +0x3c): `BraRegSp::create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase
+/// de `cqw3_paulista_fase` (a máquina da cqp_11: as saídas, a tabela de 0x41 bytes por rodada e as datas e jogos de cada rodada).
+unsafe extern "thiscall" fn cqw3_calendario_paulista(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    cqp11_tabela(this, cqw3_paulista_fase(fase), rodadas, extra, liga, 0x98b090)
+}
+
+unsafe extern "thiscall" fn comparar_cqw3_calendario_paulista(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I3%%);
+    cqp11_comparar("cqw3_calendario_paulista", fase, cqw3_paulista_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+        |r, e, l| cqw3_calendario_paulista(this, fase, r, e, l))
+}

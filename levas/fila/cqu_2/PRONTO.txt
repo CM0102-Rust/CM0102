@@ -1,0 +1,1 @@
+comparação de 8 ligas até 2002-04-30 (com os 12 itens do agente C, 45 rotinas; os construtores na criação da carreira) 0 div, 0 exceções; Rust x2 iguais (b690295afd222f6a) e detector de lixo igual; mutações 3/3 (2001-215, 2001-084, 2001-120)

@@ -1,4 +1,4 @@
-# Mutacoes (cqs_12), na lista fixa da Copa America de 2001 (julho de 2001): a Colombia (A) troca com a vaga 1 (B); o
+# Mutacoes (cqs_12), na lista fixa da Copa America de 2001 (julho de 2001): a Colombia (A) troca com o Brasil (B); o
 # Mexico (B) troca com a vaga 5 (C); a vaga 10 (B) troca com a Bolivia (C). Os grupos mudam. O contador fica no ramo de 2001.
 MUTACOES = [
     ('cqs12_colombia_no_grupo_b',

@@ -18,3 +18,4 @@ MUTACOES = [
      'core::ptr::write_unaligned((lista + 4 * (1 - n) as usize) as *mut usize, cqr4_d(e)); // mutacao: finalistas trocados',
      'cqr_4 final'),
 ]
+# Prova do agente (06/11, carreira Rust de 8 ligas ate 2002-06-01; base com os 12 itens cqr/cqs/cqt_1..4, impressao b690295afd222f6a): as tres ACUSADAS (o play-off em 2001-258, a final em 2001-287).

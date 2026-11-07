@@ -19,3 +19,4 @@ MUTACOES = [
      'cqs1_divisao(this, 0x414, 1, 0, 0xc2, /* mutacao: a fase atual fica 0 */',
      'cqs_1 terceira divisao'),
 ]
+# Prova do agente (06/11, carreira Rust de 8 ligas ate 2002-06-01; base com os 12 itens cqr/cqs/cqt_1..4, impressao b690295afd222f6a): as tres ACUSADAS (2001-081, 2001-197, 2001-085).

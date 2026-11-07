@@ -1,0 +1,1 @@
+comparação até 2002-03-01 (o grupo 1 em 2001-000, a fase seguinte em 2001-247) 0 div; Rust x2 iguais e detector igual; mutações 3/3 (a das linhas em ordem inversa derrubava o jogo: trocada pela troca dos dois primeiros)

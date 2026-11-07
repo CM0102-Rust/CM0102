@@ -23,3 +23,4 @@ MUTACOES = [
      'ftol(val as f64 * 0.25)); // mutacao: a mistura pesa mais',
      'cqt_4 publico do meio da tabela'),
 ]
+# Prova do agente (06/11, carreira Rust de 8 ligas ate 2002-06-01; base com os 12 itens cqr/cqs/cqt_1..4, impressao b690295afd222f6a): as quatro ACUSADAS (2001-014, 2001-055, 2001-021; a media de publico em 2002-012, no fim da temporada brasileira).
