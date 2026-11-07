@@ -1,13 +1,15 @@
+use super::*;
+
 // ---------- 273a leva: a classificação da Conmebol: as vagas da Libertadores, o n-ésimo clube da nação e os convidados da Mercosul (conmebol_seeding.cpp) ----------
 
 
 /// O clube de id `id` (registros de 0x245 bytes em [0xae23b4]).
-unsafe fn cqj1_clube(id: u32) -> usize {
+pub(crate) unsafe fn cqj1_clube(id: u32) -> usize {
     (read_u32(0xae23b4) as usize).wrapping_add((id as usize).wrapping_mul(0x245))
 }
 
 /// O clube `c` (não nulo e ainda sem vaga, +0x1db = −1) entra na Libertadores na fase `fase`. Devolve se entrou.
-unsafe fn cqj1_entra(c: usize, fase: u8) -> bool {
+pub(crate) unsafe fn cqj1_entra(c: usize, fase: u8) -> bool {
     if c == 0 || read_u32(c + 0x1db) != u32::MAX {
         return false;
     }
@@ -30,7 +32,7 @@ unsafe fn cqj1_entra(c: usize, fase: u8) -> bool {
 /// chaves 0x9d0274 e 0x9d026c); de 2003 em diante o campeão da Copa do Brasil (ou o vice, se o campeão já tem vaga) e o
 /// campeão da Copa dos Campeões (+0x71); e sempre o campeão e o vice do Brasileirão (0x9cf9ec); cada nação completa a
 /// cota com os primeiros da tabela ainda sem vaga (0x4c6730(.., 1, 1, 0)), uma tentativa por vaga.
-unsafe extern "thiscall" fn conmebol_vagas_libertadores(this: usize, clubes: usize, conta: u32) {
+pub(crate) unsafe extern "thiscall" fn conmebol_vagas_libertadores(this: usize, clubes: usize, conta: u32) {
     let campeao: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     let enesimo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CONMEBOLSEEDING_FIND_NTH_UNQUALIFIED_CLUB_OF_NATION);
     let linha = |chave: usize| (read_u32(0xae23d0) as usize).wrapping_add(read_u32(chave).wrapping_mul(0x6b) as usize);
@@ -84,13 +86,13 @@ unsafe extern "thiscall" fn conmebol_vagas_libertadores(this: usize, clubes: usi
 }
 
 /// As diferenças entre duas memórias (os 16 primeiros endereços).
-fn cqj1_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
+pub(crate) fn cqj1_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
     let (a, b) = (&mo.0, &mr.0);
     (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect()
 }
 
 /// Lado a lado: os clubes do jogo e a marca da caixa.
-unsafe extern "thiscall" fn comparar_conmebol_vagas_libertadores(this: usize, clubes: usize, conta: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_conmebol_vagas_libertadores(this: usize, clubes: usize, conta: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(1667);
     let n = (read_u32(0xae235c) as i32).max(0) as usize;
     // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
@@ -121,7 +123,7 @@ unsafe extern "thiscall" fn comparar_conmebol_vagas_libertadores(this: usize, cl
 /// que conta, pulando, se pedido, os que já têm vaga (+0x1db ≠ −1) e os de técnico humano (0x600a50(clube, 0, 1, 0, 0)).
 /// O último registro da tabela nunca é examinado pela volta (se ela chega nele com a conta zerada, ele é o escolhido sem
 /// os testes). Devolve o clube se for da nação, senão 0.
-unsafe extern "thiscall" fn conmebol_enesimo_clube_da_nacao(_this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn conmebol_enesimo_clube_da_nacao(_this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
     let busca: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let k = conta as u16 as i16 as i32;
@@ -169,7 +171,7 @@ unsafe extern "thiscall" fn conmebol_enesimo_clube_da_nacao(_this: usize, clubes
 }
 
 /// A devolução das duas (a rotina só lê).
-unsafe extern "thiscall" fn comparar_conmebol_enesimo_clube_da_nacao(this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_conmebol_enesimo_clube_da_nacao(this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(1668);
     let r = o(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
     let c = conmebol_enesimo_clube_da_nacao(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
@@ -180,7 +182,7 @@ unsafe extern "thiscall" fn comparar_conmebol_enesimo_clube_da_nacao(this: usize
 /// Os 20 clubes convidados da Copa Mercosul (as chaves fixas: River Plate, Boca Juniors, Independiente, San Lorenzo,
 /// Vélez Sarsfield, Cruzeiro, São Paulo, Palmeiras, Corinthians, Flamengo, Rosario Central, Vasco, Colo-Colo,
 /// Universidad de Chile, Universidad Católica, Peñarol, Nacional, Olimpia, Cerro Porteño e Grêmio), na ordem da original.
-const CQJ1_MERCOSUL: [usize; 20] = [
+pub(crate) const CQJ1_MERCOSUL: [usize; 20] = [
     0x9d00ac, 0x9d00d0, 0x9d00b4, 0x9d00d8, 0x9d00b0, 0x9d026c, 0x9d0270, 0x9d0274, 0x9d0278, 0x9d0358,
     0x9d00e0, 0x9d0354, 0x9d0280, 0x9d0284, 0x9d0288, 0x9d0298, 0x9d028c, 0x9d0290, 0x9d0294, 0x9d027c,
 ];
@@ -193,7 +195,7 @@ const CQJ1_MERCOSUL: [usize; 20] = [
 /// [pt] { 0x4c6890 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::is_mercosur_invited_club`; o this não é
 /// lido): 1 se o id do clube é um dos 20 convidados da Copa Mercosul (`CQJ1_MERCOSUL`), senão 0 (sem clube, devolve o 0
 /// do próprio ponteiro).
-unsafe extern "thiscall" fn conmebol_convidado_da_mercosul(_this: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn conmebol_convidado_da_mercosul(_this: usize, clube: usize) -> u32 {
     if clube == 0 {
         return 0;
     }
@@ -207,7 +209,7 @@ unsafe extern "thiscall" fn conmebol_convidado_da_mercosul(_this: usize, clube: 
 }
 
 /// A devolução das duas (a rotina só lê).
-unsafe extern "thiscall" fn comparar_conmebol_convidado_da_mercosul(this: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_conmebol_convidado_da_mercosul(this: usize, clube: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1669);
     let r = o(this, clube);
     let c = conmebol_convidado_da_mercosul(this, clube);
@@ -230,7 +232,7 @@ unsafe extern "thiscall" fn comparar_conmebol_convidado_da_mercosul(this: usize,
 /// id da nação, +8 a reputação +0x80 / 500, +9 o +0x69 da divisão +0x5b, +0xb o +0x5f; sem divisão −1 e 0x7f; com a
 /// divisão de uma competição sem o +0x11c, a divisão e o +0x5f do clube zeram). Ordena pela nação (qsort 0x945333 com
 /// 0x905ce0). Devolve o número de clubes (só os 16 bits baixos contam).
-unsafe extern "stdcall" fn conmebol_juntar_clubes(saida: *mut usize) -> u32 {
+pub(crate) unsafe extern "stdcall" fn conmebol_juntar_clubes(saida: *mut usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
@@ -289,20 +291,20 @@ unsafe extern "stdcall" fn conmebol_juntar_clubes(saida: *mut usize) -> u32 {
 }
 
 /// As diferenças entre duas memórias (os 16 primeiros endereços).
-fn cqj2_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
+pub(crate) fn cqj2_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
     let (a, b) = (&mo.0, &mr.0);
     (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect()
 }
 
 /// Os clubes do jogo, a marca da caixa e o histórico das competições (a 0x4afd80 o reordena: ver a cqj_1).
-unsafe fn cqj2_regioes_dos_clubes() -> Vec<(usize, usize)> {
+pub(crate) unsafe fn cqj2_regioes_dos_clubes() -> Vec<(usize, usize)> {
     let n = (read_u32(0xae235c) as i32).max(0) as usize;
     vec![(read_u32(0xae23b4) as usize, n * 0x245), (0xb67a34, 4), (read_u32(0xae23d4) as usize, (read_u32(0xae237c) as i32).max(0) as usize * 0x1a)]
 }
 
 /// Lado a lado: a original com a saída de quem chama, a cópia com uma saída própria (liberada depois); os clubes, a
 /// devolução e os registros das duas tabelas.
-unsafe extern "stdcall" fn comparar_conmebol_juntar_clubes(saida: *mut usize) -> u32 {
+pub(crate) unsafe extern "stdcall" fn comparar_conmebol_juntar_clubes(saida: *mut usize) -> u32 {
     let o = orig::<unsafe extern "stdcall" fn(*mut usize) -> u32>(1670);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut t2 = 0usize;
@@ -325,7 +327,7 @@ unsafe extern "stdcall" fn comparar_conmebol_juntar_clubes(saida: *mut usize) ->
 /// Libertadores e pela Mercosul; sem `pular` e com o ano do jogo ([0xae2c92]) outro que o +0x6f: grava o ano, monta a
 /// tabela dos clubes (0x4c6280; vazia, a caixa da linha 0x9b e volta sem soltar), dá as vagas da Libertadores (0x4c6430)
 /// e solta a tabela.
-unsafe extern "thiscall" fn conmebol_virada_do_ano(this: usize, pular: u32) {
+pub(crate) unsafe extern "thiscall" fn conmebol_virada_do_ano(this: usize, pular: u32) {
     if pular != 0 {
         return;
     }
@@ -349,7 +351,7 @@ unsafe extern "thiscall" fn conmebol_virada_do_ano(this: usize, pular: u32) {
 }
 
 /// Lado a lado: o ano gravado (+0x6f), os clubes e a marca da caixa (cada uma monta e solta a própria tabela).
-unsafe extern "thiscall" fn comparar_conmebol_virada_do_ano(this: usize, pular: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_conmebol_virada_do_ano(this: usize, pular: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1671);
     let mut reg = cqj2_regioes_dos_clubes();
     reg.push((this + 0x6f, 2));
@@ -362,12 +364,12 @@ unsafe extern "thiscall" fn comparar_conmebol_virada_do_ano(this: usize, pular: 
 ///
 /// [pt] { 0x4c6960 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::set_bra_champ_cup_winner`): guarda o id do
 /// campeão da Copa dos Campeões em +0x71 (a vaga dele na Libertadores, de 2003 em diante).
-unsafe extern "thiscall" fn conmebol_campeao_dos_campeoes(this: usize, clube: usize) {
+pub(crate) unsafe extern "thiscall" fn conmebol_campeao_dos_campeoes(this: usize, clube: usize) {
     core::ptr::write_unaligned((this + 0x71) as *mut u32, read_u32(clube));
 }
 
 /// Lado a lado: o +0x71.
-unsafe extern "thiscall" fn comparar_conmebol_campeao_dos_campeoes(this: usize, clube: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_conmebol_campeao_dos_campeoes(this: usize, clube: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1672);
     let reg = [(this + 0x71, 4)];
     let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, clube), || conmebol_campeao_dos_campeoes(this, clube));

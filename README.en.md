@@ -8,7 +8,7 @@ This repository keeps it playable on Windows 11 and prepares the rewrite of the 
 | Where | What it is | In git? |
 |---|---|---|
 | `JOGAR.bat` | Opens the game at native 1920×1080, in a resizable window, without the CD and without changing the Windows resolution. | yes |
-| `rust/` | Rust core, compiled as `ddraw.dll` (our own video layer; entry point for the hooks). | yes |
+| `rust/` | Rust core, compiled as `ddraw.dll` (our own video layer; entry point for the hooks). The rewritten game routines live in `rust/src/motor/`, one module per source file of the game; **how to read the code:** the header of [`rust/src/motor.rs`](rust/src/motor.rs). The DLLs' shared base is in `cm0102-base/`. | yes |
 | `save/` | Save-only DLL (saves above 2 GB, up to 4 GB), for modified exes (NickPatcher, CLZ): [`docs/SAVE_2GB.en.md`](docs/SAVE_2GB.en.md). | yes |
 | CM0102-Rust-Tweaks | The tweaks `ddraw.dll` for the community (saves above 2 GB, regen ages and regen distribution), in a separate repository, `CM0102-Rust/CM0102-Rust-Tweaks` (private until release); the original regen rule in [`docs/DISTRIBUICAO_DOS_REGENS.en.md`](docs/DISTRIBUICAO_DOS_REGENS.en.md). | separate |
 | `jogo/` | Playable installation: the originals `cm0102.exe` / `cm0102_GDI.exe` and the patched copies `*-portatil.exe`. | no |

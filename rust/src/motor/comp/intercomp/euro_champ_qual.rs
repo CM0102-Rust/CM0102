@@ -1,3 +1,5 @@
+use super::*;
+
 // ---------- 284a leva: as eliminatórias da Eurocopa: as regras e a data do sorteio, o tamanho de cada grupo, a situação de um clube e a tabela do grupo 1 (euro_champ_qual.cpp) ----------
 
 
@@ -11,7 +13,7 @@
 /// push 0xa; lea ecx, local -> thiscall, ret 0x10: 10 de março levado à sexta-feira [inferência]); +0xb8 = 0 (word); a
 /// tabela das rodadas pela virtual +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx -> thiscall, ret 0x10) em
 /// +0xba. Devolve 1.
-unsafe fn cqs8_regras(this: usize) -> u32 {
+pub(crate) unsafe fn cqs8_regras(this: usize) -> u32 {
     write_u8(this + 0xc2, 3);
     write_u8(this + 0x4a, 3);
     core::ptr::write_unaligned((this + 0x3c) as *mut i16, 2); // cqs8: dois turnos
@@ -40,13 +42,13 @@ unsafe fn cqs8_regras(this: usize) -> u32 {
     1
 }
 
-unsafe extern "thiscall" fn cqs8_eurocopa_regras(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqs8_eurocopa_regras(this: usize) -> u32 {
     cqs8_regras(this)
 }
 
 /// Lado a lado a partir do mesmo estado (os campos +0x3a..+0xc9 da copa, fora o ponteiro +0xba); a tabela das rodadas que
 /// cada lado aloca em +0xba (pela virtual +0x3c, original) só é conferida como montada, e a da cópia é liberada.
-unsafe extern "thiscall" fn comparar_cqs8_eurocopa_regras(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs8_eurocopa_regras(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2082);
     let antes = read_u32_as_usize(this + 0xba);
     let reg = [(this + 0x3a, 0x80usize), (this + 0xbe, 0xb)];
@@ -78,7 +80,7 @@ unsafe extern "thiscall" fn comparar_cqs8_eurocopa_regras(this: usize) -> u32 {
 /// { 0x57d9d0 } (thiscall, ret 4, euro_champ_qual.cpp): `EuroChampQual::get_group_team_count(g)`: com o formato +0xf6 = 1
 /// (9 grupos [inferência]), os grupos 0, 2 e 5 têm 6 seleções e os outros 5; com o formato 2 (10 grupos [inferência]), os
 /// grupos 0, 2, 5 e 7 têm 6 e os outros 5; outro formato, a caixa da linha 0x245 e 5. `g` é o byte do argumento.
-unsafe fn cqs8_tamanho(this: usize, g: u32) -> i16 {
+pub(crate) unsafe fn cqs8_tamanho(this: usize, g: u32) -> i16 {
     let g = g as u8;
     match *((this + 0xf6) as *const i8) {
         1 => if matches!(g, 0 | 2 | 5) { 6 } else { 5 }, // cqs8: os grupos de 6 no formato 1
@@ -90,11 +92,11 @@ unsafe fn cqs8_tamanho(this: usize, g: u32) -> i16 {
     }
 }
 
-unsafe extern "thiscall" fn cqs8_eurocopa_tamanho_do_grupo(this: usize, g: u32) -> i16 {
+pub(crate) unsafe extern "thiscall" fn cqs8_eurocopa_tamanho_do_grupo(this: usize, g: u32) -> i16 {
     cqs8_tamanho(this, g)
 }
 
-unsafe extern "thiscall" fn comparar_cqs8_eurocopa_tamanho_do_grupo(this: usize, g: u32) -> i16 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs8_eurocopa_tamanho_do_grupo(this: usize, g: u32) -> i16 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> i16>(2083);
     let r = o(this, g);
     if !matches!(*((this + 0xf6) as *const i8), 1 | 2) {
@@ -109,17 +111,17 @@ unsafe extern "thiscall" fn comparar_cqs8_eurocopa_tamanho_do_grupo(this: usize,
 /// get_qualification_status(clube)`: a estatística 0x12 do clube nas estatísticas da copa (Comp_Stats::get_club_stat
 /// 0x4a2e10: push 0x12; push clube; mov ecx, [this+8] -> thiscall, ret 8, devolve float), truncada (_ftol 0x945640): com o
 /// byte de baixo menor que 14 (com sinal), −2; senão −3 (word).
-unsafe fn cqs8_situacao(this: usize, clube: usize) -> i16 {
+pub(crate) unsafe fn cqs8_situacao(this: usize, clube: usize) -> i16 {
     let estatistica: unsafe extern "thiscall" fn(usize, usize, u32) -> f64 = core::mem::transmute(FN_COMP_STATS_GET_CLUB_STAT);
     let x = ftol(estatistica(read_u32_as_usize(this + 8), clube, 0x12));
     ((((x as u8 as i8) < 0xe) as i32) - 3) as i16 // cqs8: a situação pela estatística 0x12
 }
 
-unsafe extern "thiscall" fn cqs8_eurocopa_situacao(this: usize, clube: usize) -> i16 {
+pub(crate) unsafe extern "thiscall" fn cqs8_eurocopa_situacao(this: usize, clube: usize) -> i16 {
     cqs8_situacao(this, clube)
 }
 
-unsafe extern "thiscall" fn comparar_cqs8_eurocopa_situacao(this: usize, clube: usize) -> i16 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs8_eurocopa_situacao(this: usize, clube: usize) -> i16 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> i16>(2084);
     let r = o(this, clube);
     let n = cqs8_situacao(this, clube);
@@ -133,7 +135,7 @@ unsafe extern "thiscall" fn comparar_cqs8_eurocopa_situacao(this: usize, clube: 
 /// (+0x3e − 1) × +0x3c (words: as rodadas, ida e volta); cada seleção da lista +0xf7 (na ordem) na linha i
 /// (League::init_table_row 0x687430: push 0; push 0; push clube; push o dword do byte i com lixo em cima (só o byte é lido);
 /// mov ecx -> thiscall, ret 0x10); a notícia do grupo (0x684230, thiscall). Devolve 1.
-unsafe extern "thiscall" fn cqs8_eurocopa_grupo_um(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqs8_eurocopa_grupo_um(this: usize) -> u32 {
     let tamanho: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(FN_EUROCHAMPQUAL_GET_GROUP_TEAM_COUNT);
     let n = tamanho(this, 0xffff_ffff);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
@@ -167,7 +169,7 @@ unsafe extern "thiscall" fn cqs8_eurocopa_grupo_um(this: usize) -> u32 {
 /// Só a original (a 0x687430 aloca a forma e o confronto direto de cada linha e a notícia vai aos humanos), conferindo o
 /// plano feito antes: devolve 1, +0x3e = o tamanho do grupo −1, +0xa7 = (+0x3e − 1) × +0x3c e as seleções de +0xf7 nas
 /// linhas, na ordem.
-unsafe extern "thiscall" fn comparar_cqs8_eurocopa_grupo_um(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs8_eurocopa_grupo_um(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2085);
     let n = if matches!(*((this + 0xf6) as *const i8), 1 | 2) { 5i16 } else { return o(this) };
     let plano: Vec<usize> = (0..n as usize).map(|k| read_u32_as_usize(read_u32_as_usize(this + 0xf7) + k * 4)).collect();

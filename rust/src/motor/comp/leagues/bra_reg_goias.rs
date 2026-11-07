@@ -1,17 +1,19 @@
+use super::*;
+
 // ---------- 283a leva: os construtores dos estaduais: Goiano, Mineiro e Norte (as regras, a tabela, os jogos, as estatísticas e as posições previstas na criação) (bra_reg_goias.cpp, bra_reg_minas_gerais.cpp, bra_reg_north.cpp) ----------
 
 
 /// Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
 /// final; o vetor [+0xc] = malloc de 4 × fases), as regras (thiscall, ret 0), a tabela (thiscall, ret 0), as posições
 /// previstas (thiscall, ret 0), o fonte e as linhas das caixas (regras, tabela, jogos, ordem, estatísticas).
-struct Cqt2Estadual {
-    vtabela: usize,
-    fases: u32,
-    regras: usize,
-    tabela: usize,
-    previstas: usize,
-    arquivo: usize,
-    linhas: [u32; 5],
+pub(crate) struct Cqt2Estadual {
+    pub(crate) vtabela: usize,
+    pub(crate) fases: u32,
+    pub(crate) regras: usize,
+    pub(crate) tabela: usize,
+    pub(crate) previstas: usize,
+    pub(crate) arquivo: usize,
+    pub(crate) linhas: [u32; 5],
 }
 
 /// O construtor de um estadual (o mesmo molde de 544 bytes nos doze, conferido instrução a instrução: só mudam a
@@ -24,7 +26,7 @@ struct Cqt2Estadual {
 /// 0), ret 4); as estatísticas (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo,
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
-unsafe fn cqt2_construir(this: usize, ano: u32, registro: usize, e: &Cqt2Estadual, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
+pub(crate) unsafe fn cqt2_construir(this: usize, ano: u32, registro: usize, e: &Cqt2Estadual, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -82,7 +84,7 @@ unsafe fn cqt2_construir(this: usize, ano: u32, registro: usize, e: &Cqt2Estadua
 /// O comparador dos três: alocam e sorteiam os jogos: só a original, conferindo o que ela grava: a devolução, a
 /// vtable, o ano, o registro e a disciplina; na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c, o vetor das
 /// fases e a importância +0x51 = 0xf.
-unsafe fn cqt2_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt2Estadual, original: impl FnOnce() -> usize) -> usize {
+pub(crate) unsafe fn cqt2_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqt2Estadual, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this && read_usize(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && read_usize(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
@@ -93,7 +95,7 @@ unsafe fn cqt2_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &
     r
 }
 
-const CQT2_GOIANO: Cqt2Estadual = Cqt2Estadual {
+pub(crate) const CQT2_GOIANO: Cqt2Estadual = Cqt2Estadual {
     vtabela: 0x9681d0,
     fases: 1,
     regras: 0x433640,
@@ -103,7 +105,7 @@ const CQT2_GOIANO: Cqt2Estadual = Cqt2Estadual {
     linhas: [0x4c, 0x53, 0x59, 0x60, 0x67],
 };
 
-const CQT2_MINEIRO: Cqt2Estadual = Cqt2Estadual {
+pub(crate) const CQT2_MINEIRO: Cqt2Estadual = Cqt2Estadual {
     vtabela: 0x968284,
     fases: 3,
     regras: 0x43a600,
@@ -113,7 +115,7 @@ const CQT2_MINEIRO: Cqt2Estadual = Cqt2Estadual {
     linhas: [0x4e, 0x55, 0x5b, 0x62, 0x69],
 };
 
-const CQT2_NORTE: Cqt2Estadual = Cqt2Estadual {
+pub(crate) const CQT2_NORTE: Cqt2Estadual = Cqt2Estadual {
     vtabela: 0x968338,
     fases: 1,
     regras: 0x439430,
@@ -129,7 +131,7 @@ const CQT2_NORTE: Cqt2Estadual = Cqt2Estadual {
 /// Original: `BraRegGoias::BraRegGoias` (0x432b50, bra_reg_goias.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x432b50 } (thiscall, ret 8, bra_reg_goias.cpp): `BraRegGoias::BraRegGoias(ano, registro)`: o Goiano (uma fase além da liga).
-unsafe extern "thiscall" fn cqt2_construir_goiano(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn cqt2_construir_goiano(this: usize, ano: u32, registro: usize) -> usize {
     cqt2_construir(this, ano, registro, &CQT2_GOIANO, 7, true, "cqt_2 goiano novo") // cqt2: a disciplina e as posições previstas do Goiano
 }
 
@@ -139,7 +141,7 @@ unsafe extern "thiscall" fn cqt2_construir_goiano(this: usize, ano: u32, registr
 /// Original: `BraRegMinasGerais::BraRegMinasGerais` (0x433d50, bra_reg_minas_gerais.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x433d50 } (thiscall, ret 8, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::BraRegMinasGerais(ano, registro)`: o Mineiro (três fases além da liga).
-unsafe extern "thiscall" fn cqt2_construir_mineiro(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn cqt2_construir_mineiro(this: usize, ano: u32, registro: usize) -> usize {
     cqt2_construir(this, ano, registro, &CQT2_MINEIRO, 7, true, "cqt_2 mineiro novo") // cqt2: a disciplina e as posições previstas do Mineiro
 }
 
@@ -149,21 +151,21 @@ unsafe extern "thiscall" fn cqt2_construir_mineiro(this: usize, ano: u32, regist
 /// Original: `BraRegNorth::BraRegNorth` (0x435340, bra_reg_north.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x435340 } (thiscall, ret 8, bra_reg_north.cpp): `BraRegNorth::BraRegNorth(ano, registro)`: o Norte (uma fase além da liga).
-unsafe extern "thiscall" fn cqt2_construir_norte(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn cqt2_construir_norte(this: usize, ano: u32, registro: usize) -> usize {
     cqt2_construir(this, ano, registro, &CQT2_NORTE, 7, true, "cqt_2 norte novo") // cqt2: a disciplina e as posições previstas do Norte
 }
 
-unsafe extern "thiscall" fn comparar_cqt2_construir_goiano(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_cqt2_construir_goiano(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2049);
     cqt2_comparar("cqt2_construir_goiano", this, ano, registro, &CQT2_GOIANO, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_cqt2_construir_mineiro(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_cqt2_construir_mineiro(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2050);
     cqt2_comparar("cqt2_construir_mineiro", this, ano, registro, &CQT2_MINEIRO, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_cqt2_construir_norte(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_cqt2_construir_norte(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2051);
     cqt2_comparar("cqt2_construir_norte", this, ano, registro, &CQT2_NORTE, || o(this, ano, registro))
 }
@@ -181,7 +183,7 @@ unsafe extern "thiscall" fn comparar_cqt2_construir_norte(this: usize, ano: u32,
 /// (League::create_fixtures 0x6835c0, thiscall, ret 0) e a ordem da tabela (League::sort_table 0x6827d0, thiscall(this,
 /// 0), ret 4); por fim as posições previstas (virtual +0x5c) e a renovação dos árbitros do estadual
 /// (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), cujo eax ela devolve.
-unsafe fn cqp8_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 4], ano: i16, ramo: &'static str) -> u32 {
+pub(crate) unsafe fn cqp8_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 4], ano: i16, ramo: &'static str) -> u32 {
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
@@ -243,7 +245,7 @@ unsafe fn cqp8_virada(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 
 /// A fase seguinte de um estadual (`advance_stage`, slot 11, +0x28): na última fase (+0x30 ≥ +0x2c − 1, com sinal), a
 /// caixa de erro e nada mais; senão +0x30 sobe um e, ao chegar a 0 (o fim dos pontos corridos), monta o mata-mata
 /// (`mata_mata`, call direto com o ecx da liga -> thiscall, ret 0).
-unsafe fn cqp8_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata_mata: usize) {
+pub(crate) unsafe fn cqp8_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata_mata: usize) {
     let fase = read_usize(this + 0x30) as i32;
     if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(arquivo, linha);
@@ -258,7 +260,7 @@ unsafe fn cqp8_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata_mata:
 
 /// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia os jogos e os
 /// árbitros; não pode rodar duas vezes), conferindo o que só ela garante: o ano (+0x40) sobe um.
-unsafe fn cqp8_comparar_virada(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn cqp8_comparar_virada(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
     let antes = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let r = original();
     let depois = core::ptr::read_unaligned((this + 0x40) as *const i16);
@@ -268,7 +270,7 @@ unsafe fn cqp8_comparar_virada(nome: &str, this: usize, original: impl FnOnce() 
 
 /// O comparador da fase seguinte: só a original (ponytail: ao chegar a 0 monta o mata-mata, que aloca e sorteia), com o
 /// plano: na última fase, +0x30 igual; senão +0x30 + 1 (o mata-mata grava 0, o mesmo valor).
-unsafe fn cqp8_comparar_fase_seguinte(nome: &str, this: usize, original: impl FnOnce()) {
+pub(crate) unsafe fn cqp8_comparar_fase_seguinte(nome: &str, this: usize, original: impl FnOnce()) {
     let antes = read_usize(this + 0x30) as i32;
     let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original();
@@ -283,7 +285,7 @@ unsafe fn cqp8_comparar_fase_seguinte(nome: &str, this: usize, original: impl Fn
 ///
 /// [pt] { 0x4336f0 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::start_new_season()`, a virada da temporada do Goiano (a tabela:
 /// 0x433540; caixas nas linhas 0x1c3, 0x1ca, 0x1d0 e 0x1d7).
-unsafe extern "thiscall" fn cqp8_virada_do_goiano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqp8_virada_do_goiano(this: usize) -> u32 {
     cqp8_virada(this, 0x433540, 0x98ae90, [0x1c3, 0x1ca, 0x1d0, 0x1d7], 1, "cqp_8 virada do goiano") // cqp8: o ano seguinte do Goiano
 }
 
@@ -293,7 +295,7 @@ unsafe extern "thiscall" fn cqp8_virada_do_goiano(this: usize) -> u32 {
 ///
 /// [pt] { 0x4338a0 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::advance_stage()`, a fase seguinte do Goiano: no fim dos pontos corridos,
 /// o mata-mata de 8 (0x433930); a caixa da linha 0x1f1.
-unsafe extern "thiscall" fn cqp8_fase_seguinte_do_goiano(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqp8_fase_seguinte_do_goiano(this: usize) {
     cqp8_fase_seguinte(this, 0x98ae90, 0x1f1, 0x433930);
 }
 
@@ -304,7 +306,7 @@ unsafe extern "thiscall" fn cqp8_fase_seguinte_do_goiano(this: usize) {
 ///
 /// [pt] { 0x435e80 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::start_new_season()`, a virada da temporada do Norte (a tabela:
 /// 0x435d80; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
-unsafe extern "thiscall" fn cqp8_virada_do_norte(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqp8_virada_do_norte(this: usize) -> u32 {
     cqp8_virada(this, 0x435d80, 0x98af14, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_8 virada do norte") // cqp8: o ano seguinte do Norte
 }
 
@@ -314,7 +316,7 @@ unsafe extern "thiscall" fn cqp8_virada_do_norte(this: usize) -> u32 {
 ///
 /// [pt] { 0x436030 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::advance_stage()`, a fase seguinte do Norte: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x4360c0); a caixa da linha 0x1f8.
-unsafe extern "thiscall" fn cqp8_fase_seguinte_do_norte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqp8_fase_seguinte_do_norte(this: usize) {
     cqp8_fase_seguinte(this, 0x98af14, 0x1f8, 0x4360c0);
 }
 
@@ -325,7 +327,7 @@ unsafe extern "thiscall" fn cqp8_fase_seguinte_do_norte(this: usize) {
 ///
 /// [pt] { 0x436e90 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::start_new_season()`, a virada da temporada do Nordeste (a tabela:
 /// 0x436d90; caixas nas linhas 0x1bc, 0x1c3, 0x1c9 e 0x1d0).
-unsafe extern "thiscall" fn cqp8_virada_do_nordeste(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqp8_virada_do_nordeste(this: usize) -> u32 {
     cqp8_virada(this, 0x436d90, 0x98af54, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_8 virada do nordeste") // cqp8: o ano seguinte do Nordeste
 }
 
@@ -335,36 +337,36 @@ unsafe extern "thiscall" fn cqp8_virada_do_nordeste(this: usize) -> u32 {
 ///
 /// [pt] { 0x437040 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::advance_stage()`, a fase seguinte do Nordeste: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x4370d0); a caixa da linha 0x1ea.
-unsafe extern "thiscall" fn cqp8_fase_seguinte_do_nordeste(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqp8_fase_seguinte_do_nordeste(this: usize) {
     cqp8_fase_seguinte(this, 0x98af54, 0x1ea, 0x4370d0);
 }
 
-unsafe extern "thiscall" fn comparar_cqp8_virada_do_goiano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_goiano(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1932);
     cqp8_comparar_virada("cqp8_virada_do_goiano", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_goiano(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_goiano(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1933);
     cqp8_comparar_fase_seguinte("cqp8_fase_seguinte_do_goiano", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqp8_virada_do_norte(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_norte(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1934);
     cqp8_comparar_virada("cqp8_virada_do_norte", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_norte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_norte(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1935);
     cqp8_comparar_fase_seguinte("cqp8_fase_seguinte_do_norte", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqp8_virada_do_nordeste(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_nordeste(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1936);
     cqp8_comparar_virada("cqp8_virada_do_nordeste", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_nordeste(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_nordeste(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1937);
     cqp8_comparar_fase_seguinte("cqp8_fase_seguinte_do_nordeste", this, || o(this))
 }
@@ -375,7 +377,7 @@ unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_nordeste(this: usize)
 
 /// O clube é do estadual do global `g`: a divisão reserva do clube (+0x60, ReserveDivision, que no Brasil guarda o
 /// estadual) não é nula e o id do registro (+0) é o do global.
-unsafe fn cql9_do_estadual(clube: usize, g: usize) -> bool {
+pub(crate) unsafe fn cql9_do_estadual(clube: usize, g: usize) -> bool {
     let comp = read_usize(clube + 0x60);
     comp != 0 && read_usize(comp) == read_usize(g)
 }
@@ -385,7 +387,7 @@ unsafe fn cql9_do_estadual(clube: usize, g: usize) -> bool {
 /// [0xae23b4] (0x245 bytes, [0xae235c] deles) do estadual do global `g`, na ordem do banco, cada um na linha seguinte
 /// (League::init_table_row 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve 1 se encheu.
 /// `girar` é 0 (o original: a linha k recebe o k-ésimo clube); existe só para as mutações de cada estadual.
-unsafe fn cql9_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize, girar: u8, ramo: &'static str) -> u32 {
+pub(crate) unsafe fn cql9_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize, girar: u8, ramo: &'static str) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
@@ -425,7 +427,7 @@ unsafe fn cql9_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
 ///
 /// [pt] { 0x433540 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::create_table()`: o Goiano tem 14 clubes (divisão reserva +0x60 = [0x9cf9b4]).
 /// Fonte 0x98ae90, linha 0x160.
-unsafe extern "thiscall" fn cql9_tabela_do_goiano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cql9_tabela_do_goiano(this: usize) -> u32 {
     cql9_tabela(this, 0xe, 0x98ae90, 0x160, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, 0, "cql_9 goiano cheio")
 }
 
@@ -435,7 +437,7 @@ unsafe extern "thiscall" fn cql9_tabela_do_goiano(this: usize) -> u32 {
 ///
 /// [pt] { 0x434810 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_table()`: o Mineiro tem 12 clubes (divisão reserva +0x60 = [0x9cf9d4]).
 /// Fonte 0x98aed0, linha 0x169.
-unsafe extern "thiscall" fn cql9_tabela_do_mineiro(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cql9_tabela_do_mineiro(this: usize) -> u32 {
     cql9_tabela(this, 0xc, 0x98aed0, 0x169, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, 0, "cql_9 mineiro cheio")
 }
 
@@ -445,14 +447,14 @@ unsafe extern "thiscall" fn cql9_tabela_do_mineiro(this: usize) -> u32 {
 ///
 /// [pt] { 0x435d80 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::create_table()`: o Norte tem 10 clubes (divisão reserva +0x60 = [0x9cf994]).
 /// Fonte 0x98af14, linha 0x167.
-unsafe extern "thiscall" fn cql9_tabela_do_norte(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cql9_tabela_do_norte(this: usize) -> u32 {
     cql9_tabela(this, 0xa, 0x98af14, 0x167, KEY_CLUB_COMP_BRAZILIAN_NORTH_STATE_CHAMPIONSHIP, 0, "cql_9 norte cheio")
 }
 
 /// O comparador dos três: a original aloca a tabela (não roda duas vezes): só ela. O plano, feito antes: os clubes do
 /// estadual na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu (senão 0) e as linhas
 /// da tabela (+0 o clube, 0x3b bytes) com os clubes do plano, na ordem.
-unsafe fn cql9_comparar(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn cql9_comparar(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(0xae235c) as i32 && (plano.len() as i16) < n {
@@ -475,17 +477,17 @@ unsafe fn cql9_comparar(nome: &str, this: usize, n: i16, g: usize, original: imp
     r
 }
 
-unsafe extern "thiscall" fn comparar_cql9_tabela_do_goiano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cql9_tabela_do_goiano(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1831);
     cql9_comparar("cql9_tabela_do_goiano", this, 0xe, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cql9_tabela_do_mineiro(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cql9_tabela_do_mineiro(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1832);
     cql9_comparar("cql9_tabela_do_mineiro", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cql9_tabela_do_norte(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cql9_tabela_do_norte(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1833);
     cql9_comparar("cql9_tabela_do_norte", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_NORTH_STATE_CHAMPIONSHIP, || o(this))
 }
@@ -497,7 +499,7 @@ unsafe extern "thiscall" fn comparar_cql9_tabela_do_norte(this: usize) -> u32 {
 
 /// O calendário da fase principal pelo slot 16 da vtable (`create_schedule`, thiscall, ret 0x10, conferido nos três
 /// alvos: 0x432e50, 0x662e30, 0x664780): estágio -1, as saídas +0xa9 e +0x3a, sem a marca; o ponteiro vai para +0xba.
-unsafe fn cqj7_calendario(o: usize) {
+pub(crate) unsafe fn cqj7_calendario(o: usize) {
     let vt = *(o as *const usize);
     let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
     let r = f(o, -1, o + 0xa9, o + 0x3a, 0);
@@ -506,12 +508,12 @@ unsafe fn cqj7_calendario(o: usize) {
 
 /// O objeto da liga (0xee bytes) menos as saídas do calendário (+0x3a, +0xa9, +0xba): os três calendários não gravam
 /// nada no objeto além delas (nenhum `mov [edi+..]`).
-fn cqj7_regioes(o: usize) -> [(usize, usize); 4] {
+pub(crate) fn cqj7_regioes(o: usize) -> [(usize, usize); 4] {
     [(o, 0x3a), (o + 0x3c, 0xa9 - 0x3c), (o + 0xab, 0xba - 0xab), (o + 0xbe, 0xee - 0xbe)]
 }
 
 /// As regras do Goiano (o que a 0x433640 grava antes do calendário).
-unsafe fn cqj7_regras_goiano(o: usize) {
+pub(crate) unsafe fn cqj7_regras_goiano(o: usize) {
     write_u16_at(o, 0xab, 0);
     write_u16_at(o, 0xdb, 0);
     write_u8_at(o, 0xc7, 0);
@@ -534,7 +536,7 @@ unsafe fn cqj7_regras_goiano(o: usize) {
 }
 
 /// As regras da J1 (0x663620).
-unsafe fn cqj7_regras_j1(o: usize) {
+pub(crate) unsafe fn cqj7_regras_j1(o: usize) {
     write_u16_at(o, 0x3c, 2);
     write_u8_at(o, 0xc2, 3);
     write_u8_at(o, 0xc3, 1); // cqj7: os pontos por empate da J1
@@ -559,7 +561,7 @@ unsafe fn cqj7_regras_j1(o: usize) {
 }
 
 /// As regras da J2 (0x665140): não grava +0x52 nem a palavra +0xd9 (fica a de `League::League`).
-unsafe fn cqj7_regras_j2(o: usize) {
+pub(crate) unsafe fn cqj7_regras_j2(o: usize) {
     write_u16_at(o, 0x3c, 4); // quatro turnos
     write_u8_at(o, 0xc2, 3); // cqj7: os pontos por vitória da J2
     write_u8_at(o, 0xc3, 1);
@@ -588,7 +590,7 @@ unsafe fn cqj7_regras_j2(o: usize) {
 ///
 /// [pt] { 0x433640 } (thiscall, bra_reg_goias.cpp): `BraRegGoias::set_up_rules` (slot 36), as regras do Goiano e o
 /// calendário; devolve 1.
-unsafe extern "thiscall" fn cqj7_regras_do_goiano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqj7_regras_do_goiano(this: usize) -> u32 {
     cqj7_regras_goiano(this);
     crate::comparacao::ramo("cqj_7 regras do goiano");
     cqj7_calendario(this);
@@ -597,7 +599,7 @@ unsafe extern "thiscall" fn cqj7_regras_do_goiano(this: usize) -> u32 {
 
 /// Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
 /// saídas do calendário; a devolução.
-unsafe extern "thiscall" fn comparar_cqj7_regras_do_goiano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_do_goiano(this: usize) -> u32 {
     let reg = cqj7_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1721)(this), || {
         cqj7_regras_goiano(this);
@@ -615,7 +617,7 @@ unsafe extern "thiscall" fn comparar_cqj7_regras_do_goiano(this: usize) -> u32 {
 /// Original: `JapJ1::set_up_rules` (0x663620, jap_j1.cpp, thiscall).
 ///
 /// [pt] { 0x663620 } (thiscall, jap_j1.cpp): `JapJ1::set_up_rules`, as regras da J1 e o calendário; devolve 1.
-unsafe extern "thiscall" fn cqj7_regras_da_j1(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqj7_regras_da_j1(this: usize) -> u32 {
     cqj7_regras_j1(this);
     crate::comparacao::ramo("cqj_7 regras da j1");
     cqj7_calendario(this);
@@ -623,7 +625,7 @@ unsafe extern "thiscall" fn cqj7_regras_da_j1(this: usize) -> u32 {
 }
 
 /// Comparador: como o do Goiano.
-unsafe extern "thiscall" fn comparar_cqj7_regras_da_j1(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_da_j1(this: usize) -> u32 {
     let reg = cqj7_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1722)(this), || {
         cqj7_regras_j1(this);
@@ -639,7 +641,7 @@ unsafe extern "thiscall" fn comparar_cqj7_regras_da_j1(this: usize) -> u32 {
 /// Original: `JapJ2::set_up_rules` (0x665140, jap_j2.cpp, thiscall).
 ///
 /// [pt] { 0x665140 } (thiscall, jap_j2.cpp): `JapJ2::set_up_rules`, as regras da J2 e o calendário; devolve 1.
-unsafe extern "thiscall" fn cqj7_regras_da_j2(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqj7_regras_da_j2(this: usize) -> u32 {
     cqj7_regras_j2(this);
     crate::comparacao::ramo("cqj_7 regras da j2");
     cqj7_calendario(this);
@@ -647,7 +649,7 @@ unsafe extern "thiscall" fn cqj7_regras_da_j2(this: usize) -> u32 {
 }
 
 /// Comparador: como o do Goiano.
-unsafe extern "thiscall" fn comparar_cqj7_regras_da_j2(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_da_j2(this: usize) -> u32 {
     let reg = cqj7_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1723)(this), || {
         cqj7_regras_j2(this);

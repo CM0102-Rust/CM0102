@@ -1,15 +1,17 @@
+use super::*;
+
 // ---------- 279a leva: o calendário da segunda e da terceira divisões inglesas: as 46 rodadas com o Natal conforme o dia da semana e os play-offs de acesso (eng_second.cpp, eng_third.cpp) ----------
 
 
 /// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
-type Cqp4Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
+pub(crate) type Cqp4Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
 /// As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-unsafe fn cqp4_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqp4Rodada]) {
+pub(crate) unsafe fn cqp4_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqp4Rodada]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let faixa: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
@@ -24,7 +26,7 @@ unsafe fn cqp4_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqp4Rodada])
 /// Os bytes que a tabela de `n` rodadas tem gravados e que o jogo lê: de cada rodada, a data (+0..+4) e +0x3d..+0x40,
 /// e as faixas até a que termina a lista (a de dia −1 na tabela `guia`, a da original); o resto da memória alocada não
 /// é escrito.
-unsafe fn cqp4_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
+pub(crate) unsafe fn cqp4_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
     let mut v = Vec::new();
     for r in 0..n {
         let e = t + r * 0x41;
@@ -45,16 +47,16 @@ unsafe fn cqp4_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
 /// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
 /// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
 /// caso padrão (o oitavo); depois as do fim.
-struct Cqp4Natal {
-    comeco: &'static [Cqp4Rodada],
-    referencia: usize,
-    ajuste: i32,
-    casos: [&'static [Cqp4Rodada]; 8],
-    fim: &'static [Cqp4Rodada],
-    linha: u32,
+pub(crate) struct Cqp4Natal {
+    pub(crate) comeco: &'static [Cqp4Rodada],
+    pub(crate) referencia: usize,
+    pub(crate) ajuste: i32,
+    pub(crate) casos: [&'static [Cqp4Rodada]; 8],
+    pub(crate) fim: &'static [Cqp4Rodada],
+    pub(crate) linha: u32,
 }
 
-unsafe fn cqp4_natal(t: usize, ano: u32, n: &Cqp4Natal, arquivo: usize) {
+pub(crate) unsafe fn cqp4_natal(t: usize, ano: u32, n: &Cqp4Natal, arquivo: usize) {
     let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     cqp4_rodadas(t, ano, 0, n.comeco);
     let mut d = [0u16; 4];
@@ -75,7 +77,7 @@ unsafe fn cqp4_natal(t: usize, ano: u32, n: &Cqp4Natal, arquivo: usize) {
 /// Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
 /// `cqp4_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
-unsafe fn cqp4_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+pub(crate) unsafe fn cqp4_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
                        original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
@@ -102,7 +104,7 @@ unsafe fn cqp4_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i1
 }
 
 /// a segunda e a terceira divisões inglesas (as mesmas datas): as rodadas antes do Natal
-const CQP4_SEGUNDA_COMECO: [Cqp4Rodada; 23] = [
+pub(crate) const CQP4_SEGUNDA_COMECO: [Cqp4Rodada; 23] = [
     (12, 7, 0, 5, 1, &[(-1, -1, -1)]), // 0: 12/ago
     (19, 7, 0, 5, 1, &[(-1, -1, -1)]), // 1: 19/ago
     (26, 7, 0, 5, 1, &[(-1, -1, -1)]), // 2: 26/ago
@@ -129,7 +131,7 @@ const CQP4_SEGUNDA_COMECO: [Cqp4Rodada; 23] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 13/dez
-const CQP4_SEGUNDA_NATAL_0: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_SEGUNDA_NATAL_0: [Cqp4Rodada; 4] = [
     (20, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 20/dez
     (27, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 27/dez
     (30, 11, 0, -1, 2, &[(-1, -1, -1)]), // 25: 30/dez
@@ -137,7 +139,7 @@ const CQP4_SEGUNDA_NATAL_0: [Cqp4Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 14/dez
-const CQP4_SEGUNDA_NATAL_1: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_SEGUNDA_NATAL_1: [Cqp4Rodada; 4] = [
     (21, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 21/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (28, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 28/dez
@@ -145,7 +147,7 @@ const CQP4_SEGUNDA_NATAL_1: [Cqp4Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 15/dez
-const CQP4_SEGUNDA_NATAL_2: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_SEGUNDA_NATAL_2: [Cqp4Rodada; 4] = [
     (22, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 22/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (29, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 29/dez
@@ -153,7 +155,7 @@ const CQP4_SEGUNDA_NATAL_2: [Cqp4Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 16/dez
-const CQP4_SEGUNDA_NATAL_3: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_SEGUNDA_NATAL_3: [Cqp4Rodada; 4] = [
     (23, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 23/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (30, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 30/dez
@@ -161,7 +163,7 @@ const CQP4_SEGUNDA_NATAL_3: [Cqp4Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 17/dez
-const CQP4_SEGUNDA_NATAL_4: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_SEGUNDA_NATAL_4: [Cqp4Rodada; 4] = [
     (21, 11, 0, -1, 2, &[(-1, -1, -1)]), // 23: 21/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (31, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 31/dez
@@ -169,7 +171,7 @@ const CQP4_SEGUNDA_NATAL_4: [Cqp4Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 18/dez
-const CQP4_SEGUNDA_NATAL_5: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_SEGUNDA_NATAL_5: [Cqp4Rodada; 4] = [
     (22, 11, 0, -1, 2, &[(-1, -1, -1)]), // 23: 22/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (28, 11, 0, -1, 2, &[(-1, -1, -1)]), // 25: 28/dez
@@ -177,7 +179,7 @@ const CQP4_SEGUNDA_NATAL_5: [Cqp4Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 19/dez
-const CQP4_SEGUNDA_NATAL_6: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_SEGUNDA_NATAL_6: [Cqp4Rodada; 4] = [
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 26/dez
     (28, 11, 0, -1, 2, &[(-1, -1, -1)]), // 24: 28/dez
     (2, 0, 1, -1, 1, &[(-1, -1, -1)]), // 25: 2/jan (+1 ano)
@@ -185,7 +187,7 @@ const CQP4_SEGUNDA_NATAL_6: [Cqp4Rodada; 4] = [
 ];
 
 /// as rodadas do Natal no caso padrão (a rodada 22 fora de 13 a 19/dez: a caixa)
-const CQP4_SEGUNDA_NATAL_PADRAO: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_SEGUNDA_NATAL_PADRAO: [Cqp4Rodada; 4] = [
     (26, 11, 0, 5, 1, &[(-1, -1, -1)]), // 23: 26/dez
     (28, 11, 0, 0, 2, &[(-1, -1, -1)]), // 24: 28/dez
     (2, 0, 1, -1, 1, &[(-1, -1, -1)]), // 25: 2/jan (+1 ano)
@@ -193,7 +195,7 @@ const CQP4_SEGUNDA_NATAL_PADRAO: [Cqp4Rodada; 4] = [
 ];
 
 /// a segunda e a terceira divisões inglesas (as mesmas datas): as rodadas depois do Natal
-const CQP4_SEGUNDA_FIM: [Cqp4Rodada; 19] = [
+pub(crate) const CQP4_SEGUNDA_FIM: [Cqp4Rodada; 19] = [
     (13, 0, 1, 5, 1, &[(-1, -1, -1)]), // 27: 13/jan (+1 ano)
     (20, 0, 1, 5, 1, &[(-1, -1, -1)]), // 28: 20/jan (+1 ano)
     (3, 1, 1, 5, 1, &[(-1, -1, -1)]), // 29: 3/fev (+1 ano)
@@ -216,7 +218,7 @@ const CQP4_SEGUNDA_FIM: [Cqp4Rodada; 19] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 13/dez
-const CQP4_TERCEIRA_NATAL_0: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_TERCEIRA_NATAL_0: [Cqp4Rodada; 4] = [
     (20, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 20/dez
     (27, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 27/dez
     (30, 11, 0, -1, 2, &[(-1, -1, -1)]), // 25: 30/dez
@@ -224,7 +226,7 @@ const CQP4_TERCEIRA_NATAL_0: [Cqp4Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 14/dez
-const CQP4_TERCEIRA_NATAL_1: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_TERCEIRA_NATAL_1: [Cqp4Rodada; 4] = [
     (21, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 21/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (28, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 28/dez
@@ -232,7 +234,7 @@ const CQP4_TERCEIRA_NATAL_1: [Cqp4Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 15/dez
-const CQP4_TERCEIRA_NATAL_2: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_TERCEIRA_NATAL_2: [Cqp4Rodada; 4] = [
     (22, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 22/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (29, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 29/dez
@@ -240,7 +242,7 @@ const CQP4_TERCEIRA_NATAL_2: [Cqp4Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 16/dez
-const CQP4_TERCEIRA_NATAL_3: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_TERCEIRA_NATAL_3: [Cqp4Rodada; 4] = [
     (23, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 23/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (30, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 30/dez
@@ -248,7 +250,7 @@ const CQP4_TERCEIRA_NATAL_3: [Cqp4Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 17/dez
-const CQP4_TERCEIRA_NATAL_4: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_TERCEIRA_NATAL_4: [Cqp4Rodada; 4] = [
     (21, 11, 0, -1, 2, &[(-1, -1, -1)]), // 23: 21/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (31, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 31/dez
@@ -256,7 +258,7 @@ const CQP4_TERCEIRA_NATAL_4: [Cqp4Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 18/dez
-const CQP4_TERCEIRA_NATAL_5: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_TERCEIRA_NATAL_5: [Cqp4Rodada; 4] = [
     (22, 11, 0, -1, 2, &[(-1, -1, -1)]), // 23: 22/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (28, 11, 0, -1, 2, &[(-1, -1, -1)]), // 25: 28/dez
@@ -264,7 +266,7 @@ const CQP4_TERCEIRA_NATAL_5: [Cqp4Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 19/dez
-const CQP4_TERCEIRA_NATAL_6: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_TERCEIRA_NATAL_6: [Cqp4Rodada; 4] = [
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 26/dez
     (28, 11, 0, -1, 2, &[(-1, -1, -1)]), // 24: 28/dez
     (2, 0, 1, -1, 1, &[(-1, -1, -1)]), // 25: 2/jan (+1 ano)
@@ -272,19 +274,19 @@ const CQP4_TERCEIRA_NATAL_6: [Cqp4Rodada; 4] = [
 ];
 
 /// as rodadas do Natal no caso padrão (a rodada 22 fora de 13 a 19/dez: a caixa)
-const CQP4_TERCEIRA_NATAL_PADRAO: [Cqp4Rodada; 4] = [
+pub(crate) const CQP4_TERCEIRA_NATAL_PADRAO: [Cqp4Rodada; 4] = [
     (26, 11, 0, 5, 1, &[(-1, -1, -1)]), // 23: 26/dez
     (28, 11, 0, 0, 2, &[(-1, -1, -1)]), // 24: 28/dez
     (2, 0, 1, -1, 1, &[(-1, -1, -1)]), // 25: 2/jan (+1 ano)
     (5, 0, 1, -1, 2, &[(-1, -1, -1)]), // 26: 5/jan (+1 ano)
 ];
 
-const CQP4_SEGUNDA_NATAL: Cqp4Natal = Cqp4Natal { comeco: &CQP4_SEGUNDA_COMECO, referencia: 22, ajuste: 13, casos: [&CQP4_SEGUNDA_NATAL_0, &CQP4_SEGUNDA_NATAL_1, &CQP4_SEGUNDA_NATAL_2, &CQP4_SEGUNDA_NATAL_3, &CQP4_SEGUNDA_NATAL_4, &CQP4_SEGUNDA_NATAL_5, &CQP4_SEGUNDA_NATAL_6, &CQP4_SEGUNDA_NATAL_PADRAO], fim: &CQP4_SEGUNDA_FIM, linha: 0x15c };
-const CQP4_SEGUNDA_PLAYOFF_0: Cql10R = cql10r((7, 4, 1, 0), (0xc, 4, 1, 5, 1, 0), 0x82, (0, 0x204, 3), 5, (4, 2, 4, 0), (0, 2, 4), (0, 0, 0));
-const CQP4_SEGUNDA_PLAYOFF_1: Cql10R = cql10r((0x11, 4, 1, 3), (0x1b, 4, 1, 6, 1, 4), 0x96, (0, 3, 0), 5, (2, 1, 0, 0), (0, 1, 0), (0, 0, 0));
-const CQP4_TERCEIRA_NATAL: Cqp4Natal = Cqp4Natal { comeco: &CQP4_SEGUNDA_COMECO, referencia: 22, ajuste: 13, casos: [&CQP4_TERCEIRA_NATAL_0, &CQP4_TERCEIRA_NATAL_1, &CQP4_TERCEIRA_NATAL_2, &CQP4_TERCEIRA_NATAL_3, &CQP4_TERCEIRA_NATAL_4, &CQP4_TERCEIRA_NATAL_5, &CQP4_TERCEIRA_NATAL_6, &CQP4_TERCEIRA_NATAL_PADRAO], fim: &CQP4_SEGUNDA_FIM, linha: 0x161 };
-const CQP4_TERCEIRA_PLAYOFF_0: Cql10R = cql10r((7, 4, 1, 0), (0xc, 4, 1, 5, 1, 0), 0x82, (0, 0x204, 3), 5, (4, 2, 4, 0), (0, 2, 4), (0, 0, 0));
-const CQP4_TERCEIRA_PLAYOFF_1: Cql10R = cql10r((0x11, 4, 1, 3), (0x1a, 4, 1, 5, 1, 4), 0x96, (0, 3, 0), 5, (2, 1, 0, 0), (0, 1, 0), (0, 0, 0));
+pub(crate) const CQP4_SEGUNDA_NATAL: Cqp4Natal = Cqp4Natal { comeco: &CQP4_SEGUNDA_COMECO, referencia: 22, ajuste: 13, casos: [&CQP4_SEGUNDA_NATAL_0, &CQP4_SEGUNDA_NATAL_1, &CQP4_SEGUNDA_NATAL_2, &CQP4_SEGUNDA_NATAL_3, &CQP4_SEGUNDA_NATAL_4, &CQP4_SEGUNDA_NATAL_5, &CQP4_SEGUNDA_NATAL_6, &CQP4_SEGUNDA_NATAL_PADRAO], fim: &CQP4_SEGUNDA_FIM, linha: 0x15c };
+pub(crate) const CQP4_SEGUNDA_PLAYOFF_0: Cql10R = cql10r((7, 4, 1, 0), (0xc, 4, 1, 5, 1, 0), 0x82, (0, 0x204, 3), 5, (4, 2, 4, 0), (0, 2, 4), (0, 0, 0));
+pub(crate) const CQP4_SEGUNDA_PLAYOFF_1: Cql10R = cql10r((0x11, 4, 1, 3), (0x1b, 4, 1, 6, 1, 4), 0x96, (0, 3, 0), 5, (2, 1, 0, 0), (0, 1, 0), (0, 0, 0));
+pub(crate) const CQP4_TERCEIRA_NATAL: Cqp4Natal = Cqp4Natal { comeco: &CQP4_SEGUNDA_COMECO, referencia: 22, ajuste: 13, casos: [&CQP4_TERCEIRA_NATAL_0, &CQP4_TERCEIRA_NATAL_1, &CQP4_TERCEIRA_NATAL_2, &CQP4_TERCEIRA_NATAL_3, &CQP4_TERCEIRA_NATAL_4, &CQP4_TERCEIRA_NATAL_5, &CQP4_TERCEIRA_NATAL_6, &CQP4_TERCEIRA_NATAL_PADRAO], fim: &CQP4_SEGUNDA_FIM, linha: 0x161 };
+pub(crate) const CQP4_TERCEIRA_PLAYOFF_0: Cql10R = cql10r((7, 4, 1, 0), (0xc, 4, 1, 5, 1, 0), 0x82, (0, 0x204, 3), 5, (4, 2, 4, 0), (0, 2, 4), (0, 0, 0));
+pub(crate) const CQP4_TERCEIRA_PLAYOFF_1: Cql10R = cql10r((0x11, 4, 1, 3), (0x1a, 4, 1, 5, 1, 4), 0x96, (0, 3, 0), 5, (2, 1, 0, 0), (0, 1, 0), (0, 0, 0));
 
 /// the Division Two schedule: 46 rounds (24 clubs), from 12 August to 6 May, nearly all on the same weekday (5) and
 /// some midweek; at Christmas, four fixed-date rounds (20 December to 5 January) chosen by the day the 16 December
@@ -295,7 +297,7 @@ const CQP4_TERCEIRA_PLAYOFF_1: Cql10R = cql10r((0x11, 4, 1, 3), (0x1a, 4, 1, 5, 
 /// [pt] { 0x5757a0 } (thiscall, ret 0x10, eng_second.cpp, 3.692 bytes, método +0x3c): `EngSecond::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a fase −1, 46 rodadas (`CQP4_SEGUNDA_NATAL`); a fase 0, os play-offs (semifinais e
 /// final); as outras devolvem 0. Fonte 0x9c43e8.
-unsafe extern "thiscall" fn calendario_da_segunda_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn calendario_da_segunda_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match fase as u8 {
         0xff => {
@@ -335,7 +337,7 @@ unsafe extern "thiscall" fn calendario_da_segunda_inglesa(this: usize, fase: u32
     }
 }
 
-unsafe extern "thiscall" fn comparar_calendario_da_segunda_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_segunda_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1921);
     cqp4_comparar("calendario_da_segunda_inglesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_segunda_inglesa(this, fase, r, e, l))
 }
@@ -347,7 +349,7 @@ unsafe extern "thiscall" fn comparar_calendario_da_segunda_inglesa(this: usize, 
 ///
 /// [pt] { 0x5770e0 } (thiscall, ret 0x10, eng_third.cpp, 3.692 bytes, método +0x3c): `EngThird::create_schedule`: o mesmo
 /// código da segunda (as mesmas rodadas), com a data da final dos play-offs um dia antes. Fonte 0x9c4424.
-unsafe extern "thiscall" fn calendario_da_terceira_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn calendario_da_terceira_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match fase as u8 {
         0xff => {
@@ -387,7 +389,7 @@ unsafe extern "thiscall" fn calendario_da_terceira_inglesa(this: usize, fase: u3
     }
 }
 
-unsafe extern "thiscall" fn comparar_calendario_da_terceira_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_terceira_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1922);
     cqp4_comparar("calendario_da_terceira_inglesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_terceira_inglesa(this, fase, r, e, l))
 }
@@ -397,7 +399,7 @@ unsafe extern "thiscall" fn comparar_calendario_da_terceira_inglesa(this: usize,
 
 
 /// O registro de staff ([0xdd7f00]).
-unsafe fn cpz2_registros() -> usize {
+pub(crate) unsafe fn cpz2_registros() -> usize {
     read_usize(0xdd7f00)
 }
 
@@ -414,7 +416,7 @@ unsafe fn cpz2_registros() -> usize {
 /// rebaixamento (0x86a1c0, thiscall(registros, clube, comp), ret 8). No mata-mata (outra fase), na linha do clube da
 /// tabela (+0xb1, 0x3b bytes, +0x3e linhas): 1 (venceu a final), o acesso com peso 0x32, +0x37 = 0 e saiu = 1; 0
 /// (passou da rodada), a classificação (0xa0, 0x96, 0xf) e segue procurando; 0xff ou 2 (caiu), +0x37 = 0xfe.
-unsafe extern "thiscall" fn registros_pela_situacao_inglesa(this: usize, clube: usize, situacao: u32, fase: u32, saiu: usize, _a: u32, _b: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn registros_pela_situacao_inglesa(this: usize, clube: usize, situacao: u32, fase: u32, saiu: usize, _a: u32, _b: u32) -> u32 {
     let s = situacao as u8;
     let comp = read_usize(this + 4);
     if fase as u8 == 0xff {
@@ -475,7 +477,7 @@ unsafe extern "thiscall" fn registros_pela_situacao_inglesa(this: usize, clube: 
 /// (não rodam duas vezes): só a original. O plano, feito antes, no mata-mata: a primeira linha do clube decide o que a
 /// rotina grava (+0x37 = 0 e saiu = 1 com 1; +0x37 = 0xfe com 0xff ou 2; nada com 0, que segue procurando outra linha
 /// do mesmo clube); depois a linha e `saiu` têm de estar assim. Na liga a rotina não grava nada: a devolução.
-unsafe extern "thiscall" fn comparar_registros_pela_situacao_inglesa(this: usize, clube: usize, situacao: u32, fase: u32, saiu: usize, a: u32, b: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_registros_pela_situacao_inglesa(this: usize, clube: usize, situacao: u32, fase: u32, saiu: usize, a: u32, b: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(1383);
     let s = situacao as u8;
     let mut plano: Option<(usize, u8, bool)> = None;
@@ -513,7 +515,7 @@ unsafe extern "thiscall" fn comparar_registros_pela_situacao_inglesa(this: usize
 
 /// A entrada do clube nas estatísticas da competição (Comp_Stats::find_club_entry 0x4a4850: thiscall(+8, clube), ret 4;
 /// põe a tabela na ordem dos clubes se precisa e procura).
-unsafe fn cpz2_entrada(this: usize, clube: usize) -> usize {
+pub(crate) unsafe fn cpz2_entrada(this: usize, clube: usize) -> usize {
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     achar(read_usize(this + 8), clube)
 }
@@ -522,7 +524,7 @@ unsafe fn cpz2_entrada(this: usize, clube: usize) -> usize {
 /// (fase 0xff) a melhor e a pior de `baixo` a `alto` (as vagas do mata-mata) viram `baixo`, e com a pior nessa faixa a
 /// pior vira `alto`; no mata-mata (fase 0), 1, 2 e 3 viram `baixo`, `baixo` + 1 e `baixo` + 2 (a melhor, a pior e a
 /// fase); noutra fase, como vieram.
-unsafe fn cpz2_situacao(this: usize, clube: usize, fase: u8, atual: u8, melhor: u8, pior: u8, baixo: u8, alto: u8) {
+pub(crate) unsafe fn cpz2_situacao(this: usize, clube: usize, fase: u8, atual: u8, melhor: u8, pior: u8, baixo: u8, alto: u8) {
     let e = cpz2_entrada(this, clube);
     let (mut m, mut p, mut a) = (melhor, pior, atual);
     if fase == 0xff {
@@ -554,7 +556,7 @@ unsafe fn cpz2_situacao(this: usize, clube: usize, fase: u8, atual: u8, melhor: 
 ///
 /// [pt] { 0x573260 } (thiscall, ret 0x14, eng_first.cpp): `EngFirst::set_club_progress(clube, fase, atual, melhor, pior)`,
 /// a virtual +0x68 da First e da Second (da 0x684cd0 a cada linha da tabela): as vagas do mata-mata são 3 a 6.
-unsafe extern "thiscall" fn situacao_na_first(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+pub(crate) unsafe extern "thiscall" fn situacao_na_first(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     cpz2_situacao(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8, 3, 6)
 }
 
@@ -563,13 +565,13 @@ unsafe extern "thiscall" fn situacao_na_first(this: usize, clube: usize, fase: u
 ///
 /// [pt] { 0x578660 } (thiscall, ret 0x14, eng_third.cpp): `EngThird::set_club_progress(clube, fase, atual, melhor, pior)`,
 /// a virtual +0x68 da Third: as vagas do mata-mata são 4 a 7.
-unsafe extern "thiscall" fn situacao_na_third(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+pub(crate) unsafe extern "thiscall" fn situacao_na_third(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     cpz2_situacao(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8, 4, 7)
 }
 
 /// O comparador das duas: a entrada é achada antes (a original e a cópia acham a mesma; a ordem dos clubes já fica
 /// pronta) e as duas rodam lado a lado nos 3 bytes dela. Sem entrada (a original gravaria no nulo): só a original.
-unsafe fn cpz2_comparar(nome: &str, this: usize, clube: usize, original: impl FnOnce(), copia: impl FnOnce()) {
+pub(crate) unsafe fn cpz2_comparar(nome: &str, this: usize, clube: usize, original: impl FnOnce(), copia: impl FnOnce()) {
     let e = cpz2_entrada(this, clube);
     if e == 0 {
         return original();
@@ -578,12 +580,12 @@ unsafe fn cpz2_comparar(nome: &str, this: usize, clube: usize, original: impl Fn
     PLACAR.registrar(igual, || format!("{}({:#x}, {:#x}) original={:x?} rust={:x?}", nome, this, clube, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_situacao_na_first(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_situacao_na_first(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(1384);
     cpz2_comparar("situacao_na_first", this, clube, || o(this, clube, fase, atual, melhor, pior), || situacao_na_first(this, clube, fase, atual, melhor, pior))
 }
 
-unsafe extern "thiscall" fn comparar_situacao_na_third(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_situacao_na_third(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(1385);
     cpz2_comparar("situacao_na_third", this, clube, || o(this, clube, fase, atual, melhor, pior), || situacao_na_third(this, clube, fase, atual, melhor, pior))
 }

@@ -1,7 +1,9 @@
+use super::*;
+
 // ---------- 256a leva: o ranking da FIFA no mês: os jogos de uma seleção no período, a atualização do dia 18 e a ordem dos resultados por pontos (fifa_rankings.cpp) ----------
 
 
-unsafe fn cpt1_h(a: usize) -> i16 {
+pub(crate) unsafe fn cpt1_h(a: usize) -> i16 {
     core::ptr::read_unaligned(a as *const i16)
 }
 
@@ -15,7 +17,7 @@ unsafe fn cpt1_h(a: usize) -> i16 {
 /// 0x2c bytes na tabela [this]), o histórico (+4, entradas de 5 bytes: pontos, mês +2, ano +3; conta +0xa) do fim para o
 /// começo; ano × 12 + mês antes do começo do período para a busca, até o fim conta um. Em 16 bits. Chamada a cada
 /// permissão que chega aos jogos da seleção: sem contador.
-unsafe extern "thiscall" fn jogos_da_selecao_no_periodo(this: usize, nacao: usize, mes_de: u32, ano_de: u32, mes_ate: u32, ano_ate: u32) -> u16 {
+pub(crate) unsafe extern "thiscall" fn jogos_da_selecao_no_periodo(this: usize, nacao: usize, mes_de: u32, ano_de: u32, mes_ate: u32, ano_ate: u32) -> u16 {
     let de = (ano_de & 0xffff) as i32 * 12 + mes_de as u8 as i8 as i32;
     let ate = (ano_ate & 0xffff) as i32 * 12 + mes_ate as u8 as i8 as i32;
     let e = read_usize(this).wrapping_add((read_usize(nacao) as u32).wrapping_mul(0x2c) as usize);
@@ -36,7 +38,7 @@ unsafe extern "thiscall" fn jogos_da_selecao_no_periodo(this: usize, nacao: usiz
     n // cpt1: os jogos no periodo
 }
 
-unsafe extern "thiscall" fn comparar_jogos_da_selecao_no_periodo(this: usize, nacao: usize, mes_de: u32, ano_de: u32, mes_ate: u32, ano_ate: u32) -> u16 {
+pub(crate) unsafe extern "thiscall" fn comparar_jogos_da_selecao_no_periodo(this: usize, nacao: usize, mes_de: u32, ano_de: u32, mes_ate: u32, ano_ate: u32) -> u16 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u16>(1155)(this, nacao, mes_de, ano_de, mes_ate, ano_ate);
     let n = jogos_da_selecao_no_periodo(this, nacao, mes_de, ano_de, mes_ate, ano_ate);
     PLACAR.registrar(r == n, || format!("jogos_da_selecao_no_periodo(nação {}, {}/{} a {}/{}) original={} rust={}", read_usize(nacao), mes_de as u8, ano_de as u16, mes_ate as u8, ano_ate as u16, r, n));
@@ -54,7 +56,7 @@ unsafe extern "thiscall" fn comparar_jogos_da_selecao_no_periodo(this: usize, na
 /// histórico pelos pontos (qsort 0x945333 com 0x58e220). No mês guardado em +4, com o ano diferente do de [0xdd6ec8],
 /// os totais dos anos andam uma casa (+0x14 → +0x28) e +0x14 zera. Por fim as pontuações (0x58dfc0) e as posições:
 /// a ordem (0x58d610) dá a posição + 1 em +0x10, com a anterior em +0x12; o vetor da ordem é liberado (0x9452ca).
-unsafe extern "thiscall" fn atualizar_ranking_da_fifa(this: usize, data: usize) {
+pub(crate) unsafe extern "thiscall" fn atualizar_ranking_da_fifa(this: usize, data: usize) {
     let dia: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(FN_DATE_GET_DAY_OF_MONTH);
     let mes_de: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
@@ -114,7 +116,7 @@ unsafe extern "thiscall" fn atualizar_ranking_da_fifa(this: usize, data: usize) 
 
 /// Comparador: lado a lado pelo objeto (+0..+0xd), pela tabela das nações e por cada histórico (capacidade +8 × 5);
 /// a ordem é alocada e liberada pelas duas.
-unsafe extern "thiscall" fn comparar_atualizar_ranking_da_fifa(this: usize, data: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_atualizar_ranking_da_fifa(this: usize, data: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1156);
     let t = read_usize(this);
     let n = read_usize(0xae2350);
@@ -139,11 +141,11 @@ unsafe extern "thiscall" fn comparar_atualizar_ranking_da_fifa(this: usize, data
 ///
 /// [pt] { 0x58e220 } (cdecl, fifa_rankings.cpp): `compare_result_points_desc(a, b)`, a ordem do qsort dos históricos na
 /// atualização do ranking: os pontos (palavra +0, com sinal) de `b` menos os de `a`.
-unsafe extern "C" fn ordem_dos_resultados_por_pontos(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn ordem_dos_resultados_por_pontos(a: usize, b: usize) -> i32 {
     cpt1_h(b) as i32 - cpt1_h(a) as i32
 }
 
-unsafe extern "C" fn comparar_ordem_dos_resultados_por_pontos(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn comparar_ordem_dos_resultados_por_pontos(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(1157)(a, b);
     let n = ordem_dos_resultados_por_pontos(a, b);
     PLACAR.registrar(r == n, || format!("ordem_dos_resultados_por_pontos({}, {}) original={} rust={}", cpt1_h(a), cpt1_h(b), r, n));
@@ -153,18 +155,18 @@ unsafe extern "C" fn comparar_ordem_dos_resultados_por_pontos(a: usize, b: usize
 // ---------- 256a leva: o ranking da FIFA no jogo: o resultado no histórico da seleção, a faixa de força da seleção e as pontuações do ranking (fifa_rankings.cpp) ----------
 
 
-unsafe fn cpt2_h(a: usize) -> i16 {
+pub(crate) unsafe fn cpt2_h(a: usize) -> i16 {
     core::ptr::read_unaligned(a as *const i16)
 }
 
 
 /// A entrada da nação `nacao` (id em [nacao]) na tabela do ranking [this] (0x2c bytes cada).
-unsafe fn cpt2_entrada(this: usize, nacao: usize) -> usize {
+pub(crate) unsafe fn cpt2_entrada(this: usize, nacao: usize) -> usize {
     read_usize(this).wrapping_add((read_usize(nacao) as u32).wrapping_mul(0x2c) as usize)
 }
 
 /// O mês e o ano do jogo `partida`: a data (0x549ef0) do dia do ano (+0x2a) e do ano (+0x28), o mês dela (0x54cfb0).
-unsafe fn cpt2_mes_e_ano(partida: usize) -> (u8, u16) {
+pub(crate) unsafe fn cpt2_mes_e_ano(partida: usize) -> (u8, u16) {
     let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let mes_de: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
     let mut d = [0u8; 8];
@@ -180,7 +182,7 @@ unsafe fn cpt2_mes_e_ano(partida: usize) -> (u8, u16) {
 /// com a conta (+0xa) igual à capacidade (+8), a capacidade cresce 5 e o histórico (+4) é realocado (0x945667) ou
 /// alocado (0x944e46) com capacidade × 5 bytes. A entrada nova, no lugar da conta antiga: os pontos (16 bits), o mês do
 /// jogo (+2) e o ano (+3).
-unsafe extern "thiscall" fn resultado_no_historico(this: usize, nacao: usize, pontos: u32, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn resultado_no_historico(this: usize, nacao: usize, pontos: u32, partida: usize) {
     let e = cpt2_entrada(this, nacao);
     if read_u16(e + 0xa) == read_u16(e + 8) {
         *((e + 8) as *mut u16) = read_u16(e + 8).wrapping_add(5);
@@ -207,7 +209,7 @@ unsafe extern "thiscall" fn resultado_no_historico(this: usize, nacao: usize, po
 
 // ponytail: a original pode realocar o histórico (não roda duas vezes): o plano antes (conta, capacidade, pontos, mês e
 // ano), a original roda e a entrada nova é conferida; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_resultado_no_historico(this: usize, nacao: usize, pontos: u32, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_resultado_no_historico(this: usize, nacao: usize, pontos: u32, partida: usize) {
     let e = cpt2_entrada(this, nacao);
     let (conta, cap) = (cpt2_h(e + 0xa), cpt2_h(e + 8));
     let (mes, ano) = cpt2_mes_e_ano(partida);
@@ -225,7 +227,7 @@ unsafe extern "thiscall" fn comparar_resultado_no_historico(this: usize, nacao: 
 /// [pt] { 0x58e190 } (thiscall, ret 4, fifa_rankings.cpp): `FIFA_RANKINGS::get_nation_strength_tier(nação)` (duas vezes por
 /// resultado internacional 0x58cf70): reputação (+0x8e) abaixo de 3000 e posição (+0x10 da entrada) abaixo de 50: 3;
 /// reputação abaixo de 6000 e posição abaixo de 15: 2; senão pela posição: abaixo de 21, 1; de 61, 2; de 101, 3; 4.
-unsafe extern "thiscall" fn faixa_da_selecao(this: usize, nacao: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn faixa_da_selecao(this: usize, nacao: usize) -> u8 {
     let rep = cpt2_h(nacao + 0x8e);
     let pos = || cpt2_h(cpt2_entrada(this, nacao) + 0x10);
     if rep < 0xbb8 && pos() < 0x32 {
@@ -246,7 +248,7 @@ unsafe extern "thiscall" fn faixa_da_selecao(this: usize, nacao: usize) -> u8 {
     }
 }
 
-unsafe extern "thiscall" fn comparar_faixa_da_selecao(this: usize, nacao: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn comparar_faixa_da_selecao(this: usize, nacao: usize) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1159)(this, nacao);
     let n = faixa_da_selecao(this, nacao);
     PLACAR.registrar(r == n, || format!("faixa_da_selecao(nação {}) original={} rust={}", read_usize(nacao), r, n));
@@ -262,7 +264,7 @@ unsafe extern "thiscall" fn comparar_faixa_da_selecao(this: usize, nacao: usize)
 /// passa da de hoje menos 365 dias (0x54c8e0), com menos de nove resultados o total é (+0x18 + oito) / (conta + 8) × 8
 /// (sem resultados, o +0x18). A pontuação (+0xc, f32): (+0x14 + 5/6 de +0x18 + 4/6 de +0x1c + 3/6 de +0x20 + 2/6 de
 /// +0x24 + 1/6 de +0x28, cada parte truncada) × [0x96a350].
-unsafe extern "thiscall" fn pontuacoes_do_ranking(this: usize) {
+pub(crate) unsafe extern "thiscall" fn pontuacoes_do_ranking(this: usize) {
     let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
     let fator = core::ptr::read_unaligned(0x96a350 as *const f64);
     let mut i = 0i32;
@@ -319,7 +321,7 @@ unsafe extern "thiscall" fn pontuacoes_do_ranking(this: usize) {
     }
 }
 
-unsafe extern "thiscall" fn comparar_pontuacoes_do_ranking(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_pontuacoes_do_ranking(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1160);
     let reg = [(read_usize(this), read_usize(0xae2350) * 0x2c)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || pontuacoes_do_ranking(this));
@@ -343,7 +345,7 @@ unsafe extern "thiscall" fn comparar_pontuacoes_do_ranking(this: usize) {
 /// do Mundo e eliminatórias, 0; torneio de seleções (0x669ae0), 1; Copa do Mundo de Clubes e Mundial de Clubes da FIFA,
 /// 2; senão a linha de continente (nação 0) com o continente da competição (+0x59), ou 3. A original lê +0x5d antes de
 /// conferir a competição nula (o caso de erro nunca chega à caixa). Chamada a cada partida: sem contador.
-unsafe extern "C" fn indice_da_nacao_chave(comp: usize) -> u8 {
+pub(crate) unsafe extern "C" fn indice_da_nacao_chave(comp: usize) -> u8 {
     let nacao = read_usize(comp + 0x5d);
     if nacao != 0 {
         let linha = (0..0x23usize).find(|&k| read_usize(0xb63d60 + 72 * k) == nacao); // cpt4: a busca da nacao
@@ -373,7 +375,7 @@ unsafe extern "C" fn indice_da_nacao_chave(comp: usize) -> u8 {
     3
 }
 
-unsafe extern "C" fn comparar_indice_da_nacao_chave(comp: usize) -> u8 {
+pub(crate) unsafe extern "C" fn comparar_indice_da_nacao_chave(comp: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(1164)(comp);
     let n = indice_da_nacao_chave(comp);
     PLACAR.registrar(r == n, || format!("indice_da_nacao_chave(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
@@ -387,7 +389,7 @@ unsafe extern "C" fn comparar_indice_da_nacao_chave(comp: usize) -> u8 {
 /// dia 18 0x58d460 e pela tela do ranking): um vetor (0x944e46) de [0xae2350] ponteiros; sem ele, a caixa "Error"
 /// (linha 0x1e3) e 0, sem gravar a conta. As entradas da tabela (0x2c bytes) das nações com seleção (+0x71 da nação,
 /// registros de 0x122 bytes em [0xae23a8]), ordenadas pela pontuação (qsort 0x945333 com 0x58e240); a conta em `conta`.
-unsafe extern "thiscall" fn ordem_do_ranking(this: usize, conta: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn ordem_do_ranking(this: usize, conta: *mut i32) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let v = alocar((read_usize(0xae2350) as u32).wrapping_mul(4));
@@ -412,7 +414,7 @@ unsafe extern "thiscall" fn ordem_do_ranking(this: usize, conta: *mut i32) -> us
 
 // ponytail: as duas alocam o vetor; a original roda primeiro (o vetor dela volta ao chamador), a cópia depois, e o
 // vetor da cópia é liberado (0x9452ca) depois da conferência da conta e dos ponteiros.
-unsafe extern "thiscall" fn comparar_ordem_do_ranking(this: usize, conta: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_ordem_do_ranking(this: usize, conta: *mut i32) -> usize {
     let r = orig::<unsafe extern "thiscall" fn(usize, *mut i32) -> usize>(1165)(this, conta);
     if r == 0 {
         return r;
@@ -431,7 +433,7 @@ unsafe extern "thiscall" fn comparar_ordem_do_ranking(this: usize, conta: *mut i
 ///
 /// [pt] { 0x58e240 } (cdecl, fifa_rankings.cpp): `compare_ranking_score_desc(a, b)`, a ordem do qsort da 0x58d610: as
 /// pontuações (f32 +0xc das entradas apontadas): a menor que b (ou sem ordem), 1; iguais, 0; maior, −1.
-unsafe extern "C" fn ordem_das_pontuacoes(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn ordem_das_pontuacoes(a: usize, b: usize) -> i32 {
     let fa = *((read_usize(a) + 0xc) as *const f32);
     let fb = *((read_usize(b) + 0xc) as *const f32);
     if !(fa >= fb) {
@@ -443,7 +445,7 @@ unsafe extern "C" fn ordem_das_pontuacoes(a: usize, b: usize) -> i32 {
     }
 }
 
-unsafe extern "C" fn comparar_ordem_das_pontuacoes(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn comparar_ordem_das_pontuacoes(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(1166)(a, b);
     let n = ordem_das_pontuacoes(a, b);
     PLACAR.registrar(r == n, || format!("ordem_das_pontuacoes original={} rust={}", r, n));

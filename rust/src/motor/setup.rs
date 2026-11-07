@@ -1,8 +1,10 @@
+use super::*;
+
 // ---------- 221a leva: o save: carregar o jogo inteiro (load_game_data) (Setup.cpp) ----------
 
 /// A caixa "Error" da carga sem volta (memória para os dados de execução): `aviso_do_setup(linha)`,
 /// 0x5cc7d0, 0x5a8f60 e `exit(-1)` (0x945934).
-unsafe fn fatal_da_carga(linha: u32) -> ! {
+pub(crate) unsafe fn fatal_da_carga(linha: u32) -> ! {
     let fechar1: unsafe extern "C" fn() = core::mem::transmute(FN_GAME_FATAL_CLEANUP);
     let fechar2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let sair: unsafe extern "C" fn(i32) = core::mem::transmute(FN_CRT_EXIT);
@@ -15,7 +17,7 @@ unsafe fn fatal_da_carga(linha: u32) -> ! {
 
 /// A leitura do `general.dat` que falhou: a caixa "Load Game Error" com a linha e o texto (como a
 /// `caixa_do_save`) e o item fechado (0x932b00). Devolve 0, a resposta da carga.
-unsafe fn erro_na_carga(linha: u32, texto: usize, z: &mut usize) -> u32 {
+pub(crate) unsafe fn erro_na_carga(linha: u32, texto: usize, z: &mut usize) -> u32 {
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
     caixa_do_save(linha, texto, 0x9af3e0, 0x9af334);
     fechar_item(z);
@@ -29,7 +31,7 @@ unsafe fn erro_na_carga(linha: u32, texto: usize, z: &mut usize) -> u32 {
 /// 0x3e042): +0xd = 0 e o bit 1 de +0xc apagado; 0x27 (0x3e042..0x3e044): +0xd do antigo e o bit 1
 /// de +0xc do antigo. Os 5 pares (+0x12 + 5j = 0, +0xe + 5j = −1) e os dwords +0x27/+0x2b/+0x2f/
 /// +0x33/+0x37 (+0x14j, j = 0, 1) = −1.
-unsafe fn converter_dados_das_pessoas(fonte: usize, tam: usize, n: i32) {
+pub(crate) unsafe fn converter_dados_das_pessoas(fonte: usize, tam: usize, n: i32) {
     let d = || *(0xae2d0c as *const usize);
     let b = |o: usize| *((fonte + o) as *const u8);
     let mesclar = |base: u8, outro: u8, m: u8| base ^ ((base ^ outro) & m);
@@ -70,7 +72,7 @@ unsafe fn converter_dados_das_pessoas(fonte: usize, tam: usize, n: i32) {
 
 /// Como o construtor de um subsistema é chamado (thiscall, `this` = o `new`).
 #[derive(Clone, Copy)]
-enum ArgDaCarga {
+pub(crate) enum ArgDaCarga {
     /// (this, caminho do save)
     Caminho,
     /// (this)
@@ -88,13 +90,13 @@ enum ArgDaCarga {
 /// `Rotina(f, linha)`: cdecl() que dá erro na `linha` se devolver 0 (linha 0: sem conferência), ou
 /// `Objeto(tamanho do new, construtor, global, linha do erro se o global ficar 0, argumentos)`.
 #[derive(Clone, Copy)]
-enum PassoDaCarga {
+pub(crate) enum PassoDaCarga {
     Rotina(usize, u32),
     Objeto(u32, usize, usize, u32, ArgDaCarga),
 }
 
 /// Os passos 4..=0x2d da carga, na ordem da original, e o último (PunditList), que repete o 0x2d.
-const PASSOS_DA_CARGA: [PassoDaCarga; 0x2b] = [
+pub(crate) const PASSOS_DA_CARGA: [PassoDaCarga; 0x2b] = [
     PassoDaCarga::Rotina(0x539750, 0),                                      // 4
     PassoDaCarga::Rotina(0x667150, 0x2555),                                 // 5 nações-chave
     PassoDaCarga::Rotina(0x669140, 0x256c),                                 // 6
@@ -144,7 +146,7 @@ const PASSOS_DA_CARGA: [PassoDaCarga; 0x2b] = [
 /// `exigir` = a do começo (com os patches sem CD do cm0102-1080 lidos do exe: 0x82aac4 e 0x82ab07):
 /// devolve só quando acha (sem achar, a caixa "Insert CD" e de novo, para sempre). Sem `exigir` = a do fim
 /// (0x82e31d, sem patch nos dois exes): numa unidade de CD sem o exe, a caixa "CD Not Required" e para.
-unsafe fn cd_da_carga(exigir: bool) {
+pub(crate) unsafe fn cd_da_carga(exigir: bool) {
     let unidades: unsafe extern "system" fn(u32, *mut u8) -> u32 = core::mem::transmute(*(0x9670f8 as *const usize));
     let tipo: unsafe extern "system" fn(usize) -> u32 = core::mem::transmute(*(0x967100 as *const usize));
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -234,7 +236,7 @@ unsafe fn cd_da_carga(exigir: bool) {
 /// Os ramos da original para 0x3e042 ≤ |v| < 0x3e038 (registros de 0xd bytes) e 0x3e042 ≤ |v| <
 /// 0x3e034 (0xc) não são alcançáveis (as comparações estão encadeadas em `jge`): ficam de fora. O laço
 /// de duas voltas da original ([esp+0x24]; a 1ª só põe o total 0x2d) roda o corpo uma vez.
-unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
+pub(crate) unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
     let disco: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_OS_GET_FREE_DISK_SPACE_MB);
     let memoria: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_OS_GET_FREE_MEMORY_MB);
     let pasta: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
@@ -537,7 +539,7 @@ unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
 /// NationalTeams 0x775ba0, Staff_Records 0x86fb80/0x86fc70 (cada um com o global como está), os três
 /// nomes vazios, +0x10 = data(1, 0, 1966, −1) (0x54a130), +0x18 = 1966, +0x24 = +0x39 = 0 e 0x7ff990
 /// (gerente de telas, pessoa, −1).
-unsafe fn tecnicos_de_ferias_desfeitos() {
+pub(crate) unsafe fn tecnicos_de_ferias_desfeitos() {
     let u = |a: usize| *(a as *const usize);
     let um: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWS_CLEAR_INBOX);
     for i in 0..0x10usize {
@@ -571,7 +573,7 @@ unsafe fn tecnicos_de_ferias_desfeitos() {
 
 // ponytail: carrega o save inteiro (apaga e recria os subsistemas, desempacota a pasta temporária);
 // não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela carga da prova do save.
-unsafe extern "C" fn comparar_carregar_jogo(caminho: *const u8) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_carregar_jogo(caminho: *const u8) -> u32 {
     orig::<unsafe extern "C" fn(*const u8) -> u32>(576)(caminho)
 }
 
@@ -579,7 +581,7 @@ unsafe extern "C" fn comparar_carregar_jogo(caminho: *const u8) -> u32 {
 
 /// A caixa "Error" de Setup.cpp (`aviso_do_setup`) e o jogo para, como a original: 0x5cc7d0,
 /// 0x5a8f60 e `exit(-1)` (0x945934).
-unsafe fn erro_fatal_do_setup(linha: u32) -> ! {
+pub(crate) unsafe fn erro_fatal_do_setup(linha: u32) -> ! {
     let fechar1: unsafe extern "C" fn() = core::mem::transmute(FN_GAME_FATAL_CLEANUP);
     let fechar2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let sair: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
@@ -624,7 +626,7 @@ unsafe fn erro_fatal_do_setup(linha: u32) -> ! {
 ///   0x5fb810 e 0x5fd2f0(férias, 0) em [0xb63c98]; sorteia (0x90cfc0) clubes (0xae23b4, 0x245) até
 ///   um fora de seleção (0x53b900) com nação de liga de frente (bit 2) e aceito por 0x544820: a
 ///   nação dele em +0x1a, os nomes (0x539c60, 0x53a1b0) em +4 e +8, e 0x826f20(pessoa, clube). 1.
-unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst: *const u8) -> u32 {
+pub(crate) unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst: *const u8) -> u32 {
     let pasta: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let abrir: unsafe extern "C" fn(*const u8, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
@@ -893,7 +895,7 @@ unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst: *const u8
 // ponytail: cria o jogo inteiro (carrega o banco, sorteia, grava o .qst e libera tudo); não roda
 // duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save (o .qst) e pelas
 // carreiras (o auto_setup.cfg).
-unsafe extern "C" fn comparar_criar_jogo_pela_configuracao(cfg: *const u8, qst: *const u8) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_criar_jogo_pela_configuracao(cfg: *const u8, qst: *const u8) -> u32 {
     orig::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(574)(cfg, qst)
 }
 
@@ -903,7 +905,7 @@ unsafe extern "C" fn comparar_criar_jogo_pela_configuracao(cfg: *const u8, qst: 
 /// `linha`, `texto`) em 0xae24d0; o título `titulo` traduzido (0x66f4e0) em 0xae28bc, o corpo
 /// `corpo` (com o texto de 0xae24d0) traduzido em 0xae26c4 e a caixa 0x5e8290. O jogo segue
 /// ([0xb67a34] fica como está, ao contrário do `aviso_do_setup`).
-unsafe fn caixa_do_save(linha: u32, texto: usize, titulo: usize, corpo: usize) {
+pub(crate) unsafe fn caixa_do_save(linha: u32, texto: usize, titulo: usize, corpo: usize) {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -923,7 +925,7 @@ unsafe fn caixa_do_save(linha: u32, texto: usize, titulo: usize, corpo: usize) {
 /// [0xb6b7c8] (o de Media) e chama com [0xae2a60]. O passo 0x19 (0x6692f0, as competições) não
 /// tem global e devolve 0 quando falha.
 #[derive(Clone, Copy)]
-enum PassoDoSave {
+pub(crate) enum PassoDoSave {
     /// thiscall(this, caminho), ret 4
     Caminho(usize, usize),
     /// thiscall(this), sem argumento
@@ -938,7 +940,7 @@ enum PassoDoSave {
     Competicoes,
 }
 
-const PASSOS_DO_SAVE: [PassoDoSave; 0x23] = [
+pub(crate) const PASSOS_DO_SAVE: [PassoDoSave; 0x23] = [
     PassoDoSave::Caminho(0xb63c98, 0x5ff9e0), // 2 HUMAN_MANAGER
     PassoDoSave::Caminho(0xb74448, 0x7f8020), // 3 SCOUT_MANAGER
     PassoDoSave::Caminho(0xb7431c, 0x787c30), // 4 News
@@ -1005,7 +1007,7 @@ const PASSOS_DO_SAVE: [PassoDoSave; 0x23] = [
 /// fica de fora. O laço da original ([esp+0x11c] de 1 a 2) roda o corpo uma vez, com o total 0x25.
 /// O resumo é um buffer zerado aqui; na original, o que o 0x591f80 não escreve (o clube dos 16
 /// técnicos não humanos, o resto dos textos) é sobra da pilha dela, gravada no `general.dat`.
-unsafe extern "C" fn gravar_jogo(caminho: *const u8, a4: u32) -> u32 {
+pub(crate) unsafe extern "C" fn gravar_jogo(caminho: *const u8, a4: u32) -> u32 {
     let disco: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_OS_GET_FREE_DISK_SPACE_MB);
     let memoria: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_OS_GET_FREE_MEMORY_MB);
     let apagar: unsafe extern "C" fn(*const u8) -> i32 = core::mem::transmute(FN_CRT_REMOVE);
@@ -1227,7 +1229,7 @@ unsafe extern "C" fn gravar_jogo(caminho: *const u8, a4: u32) -> u32 {
 
 // ponytail: grava o save inteiro (apaga o antigo, cria o contêiner, empacota a pasta temporária);
 // não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save.
-unsafe extern "C" fn comparar_gravar_jogo(caminho: *const u8, a4: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_gravar_jogo(caminho: *const u8, a4: u32) -> u32 {
     orig::<unsafe extern "C" fn(*const u8, u32) -> u32>(575)(caminho, a4)
 }
 
@@ -1241,7 +1243,7 @@ unsafe extern "C" fn comparar_gravar_jogo(caminho: *const u8, a4: u32) -> u32 {
 /// dos jogos salvos: 1 se o contêiner tem o id 0x16 (`.sav`, 0x9331c0), senão 2. A original só
 /// acerta `ax`: os 16 bits altos de `eax` ficam os da resposta do id, como aqui. Caminho nulo é o
 /// erro de Setup.cpp 0x3a1b (caixa "Error"): a cópia chama a original.
-unsafe extern "C" fn filtro_do_jogo_salvo(caminho: usize) -> u32 {
+pub(crate) unsafe extern "C" fn filtro_do_jogo_salvo(caminho: usize) -> u32 {
     if caminho == 0 {
         return orig::<unsafe extern "C" fn(usize) -> u32>(565)(caminho);
     }
@@ -1252,7 +1254,7 @@ unsafe extern "C" fn filtro_do_jogo_salvo(caminho: usize) -> u32 {
 
 // O id só lê o arquivo e libera o que aloca: as duas rodam lado a lado. Caminho nulo (caixa de
 // erro) só a original.
-unsafe extern "C" fn comparar_filtro_do_jogo_salvo(caminho: usize) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_filtro_do_jogo_salvo(caminho: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize) -> u32>(565)(caminho);
     if caminho == 0 {
         return r;
@@ -1270,7 +1272,7 @@ unsafe extern "C" fn comparar_filtro_do_jogo_salvo(caminho: usize) -> u32 {
 /// do início rápido: 1 se o contêiner tem o id 0x17 (`.qst`) e a versão gravada é a do exe
 /// (0x838eb0), senão 2. Os 16 bits altos de `eax` são os da última chamada (o id, ou a versão).
 /// Caminho nulo: erro de Setup.cpp 0x3a6d, a cópia chama a original.
-unsafe extern "C" fn filtro_do_inicio_rapido(caminho: usize) -> u32 {
+pub(crate) unsafe extern "C" fn filtro_do_inicio_rapido(caminho: usize) -> u32 {
     if caminho == 0 {
         return orig::<unsafe extern "C" fn(usize) -> u32>(566)(caminho);
     }
@@ -1288,7 +1290,7 @@ unsafe extern "C" fn filtro_do_inicio_rapido(caminho: usize) -> u32 {
 // ponytail: a versão (0x838eb0) abre o general.dat e não o fecha quando dá certo (o ZFILE e o
 // arquivo ficam abertos, como na original): rodar duas vezes deixaria dois. Só a original; a cópia
 // leva o ramo e roda no modo Rust (só a caixa de arquivos chama).
-unsafe extern "C" fn comparar_filtro_do_inicio_rapido(caminho: usize) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_filtro_do_inicio_rapido(caminho: usize) -> u32 {
     orig::<unsafe extern "C" fn(usize) -> u32>(566)(caminho)
 }
 
@@ -1296,7 +1298,7 @@ unsafe extern "C" fn comparar_filtro_do_inicio_rapido(caminho: usize) -> u32 {
 /// 0x90d130, arquivo e extensão de Setup.cpp, linha, motivo) em 0xae24d0, o título traduzido em
 /// 0xae28bc, a mensagem traduzida (0x9af334) em 0xae26c4 e a caixa 0x5e8290. Ao contrário do
 /// `aviso_em`, não zera [0xb67a34].
-unsafe fn erro_de_carga_do_setup(linha: u32, motivo: usize) {
+pub(crate) unsafe fn erro_de_carga_do_setup(linha: u32, motivo: usize) {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -1324,7 +1326,7 @@ unsafe fn erro_de_carga_do_setup(linha: u32, motivo: usize) {
 /// Error" (Setup.cpp 0x3a36, 0x3a3d, 0x3a48, 0x3a55) e 0. Como a original, quando dá certo o item
 /// NÃO é fechado (o ZFILE e o arquivo ficam abertos). O quadro SEH da original só protege a data
 /// local (0x54a110, sem destrutor), que cai dentro do resumo (+0xf64) e é sobrescrita pela leitura.
-unsafe extern "C" fn versao_do_jogo_salvo_valida(caminho: usize) -> u32 {
+pub(crate) unsafe extern "C" fn versao_do_jogo_salvo_valida(caminho: usize) -> u32 {
     let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
     let ler_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZREAD);
@@ -1365,7 +1367,7 @@ unsafe extern "C" fn versao_do_jogo_salvo_valida(caminho: usize) -> u32 {
 // ponytail: abre o item e, quando dá certo, não o fecha (o ZFILE e o arquivo ficam abertos, como na
 // original); nos erros, a caixa. Não roda duas vezes: só a original; a cópia leva o ramo e roda no
 // modo Rust (só a caixa de arquivos, pelo filtro do início rápido, chama).
-unsafe extern "C" fn comparar_versao_do_jogo_salvo_valida(caminho: usize) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_versao_do_jogo_salvo_valida(caminho: usize) -> u32 {
     orig::<unsafe extern "C" fn(usize) -> u32>(567)(caminho)
 }
 
@@ -1374,7 +1376,7 @@ unsafe extern "C" fn comparar_versao_do_jogo_salvo_valida(caminho: usize) -> u32
 /// A caixa "Error" das regras FIFA: o texto "v%s %s.%s %d" (versão 0x90d130, arquivo e extensão de
 /// Setup.cpp, linha) em 0xae24d0, a caixa 0x5e8290 e [0xb67a34] = 0. Como o `aviso_em`, mas com os
 /// argumentos que o sprintf da original lê da pilha (nome, extensão e linha) passados explícitos.
-unsafe fn aviso_do_setup(linha: u32) {
+pub(crate) unsafe fn aviso_do_setup(linha: u32) {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -1396,7 +1398,7 @@ unsafe fn aviso_do_setup(linha: u32) {
 /// cabeçalho dele): 2 bytes, [0xae233c] e [0xa83608], e `zclose`. Caminho nulo, item que não abre
 /// ou escrita que falha: a caixa "Error" (Setup.cpp 0x3b24, 0x3b2c, 0x3b32, 0x3b38); nas escritas,
 /// depois da caixa o item é fechado. A original não devolve nada (`eax` sobra).
-unsafe extern "C" fn gravar_regras_fifa(save: usize) {
+pub(crate) unsafe extern "C" fn gravar_regras_fifa(save: usize) {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
     let gravar: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZWRITE);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
@@ -1425,7 +1427,7 @@ unsafe extern "C" fn gravar_regras_fifa(save: usize) {
 
 // ponytail: acrescenta um item ao contêiner; não roda duas vezes. Só a original; a cópia leva o
 // ramo e é provada pela prova do save (o .qst gravado com e sem a leva).
-unsafe extern "C" fn comparar_gravar_regras_fifa(save: usize) {
+pub(crate) unsafe extern "C" fn comparar_gravar_regras_fifa(save: usize) {
     orig::<unsafe extern "C" fn(usize)>(568)(save)
 }
 
@@ -1436,7 +1438,7 @@ unsafe extern "C" fn comparar_gravar_regras_fifa(save: usize) {
 /// `fifa_transfer_rules.zip` (0x9326e0 lendo) em [0xae233c] e [0xa83608]; se [0xae233c] = 1, a
 /// regra em vigor [0xa83608] vira 5. Fecha o item. Erros: a caixa "Error" (Setup.cpp 0x3b4f, 0x3b57,
 /// 0x3b5d, 0x3b63), como na gravação.
-unsafe extern "C" fn carregar_regras_fifa(save: usize) {
+pub(crate) unsafe extern "C" fn carregar_regras_fifa(save: usize) {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
     let ler_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZREAD);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
@@ -1468,18 +1470,18 @@ unsafe extern "C" fn carregar_regras_fifa(save: usize) {
 
 // ponytail: abre e lê o contêiner (aloca o ZFILE) e só roda na carga; segue a regra do bloco do save
 // (arquivo = só a original). A cópia leva o ramo; a etapa de carregar da prova do save a exercita.
-unsafe extern "C" fn comparar_carregar_regras_fifa(save: usize) {
+pub(crate) unsafe extern "C" fn comparar_carregar_regras_fifa(save: usize) {
     orig::<unsafe extern "C" fn(usize)>(569)(save)
 }
 
 /// O `strcat` da original (repne scasb + rep movs): `fonte` com o zero no fim de `destino`.
-unsafe fn emendar_texto(destino: *mut u8, fonte: *const u8) {
+pub(crate) unsafe fn emendar_texto(destino: *mut u8, fonte: *const u8) {
     let d = destino.add(core::ffi::CStr::from_ptr(destino as *const core::ffi::c_char).to_bytes().len());
     copiar_texto(d, fonte);
 }
 
 /// O `strcpy` da original, com o zero.
-unsafe fn copiar_texto(destino: *mut u8, fonte: *const u8) {
+pub(crate) unsafe fn copiar_texto(destino: *mut u8, fonte: *const u8) {
     let n = core::ffi::CStr::from_ptr(fonte as *const core::ffi::c_char).to_bytes_with_nul().len();
     core::ptr::copy(fonte, destino, n);
 }
@@ -1499,7 +1501,7 @@ unsafe fn copiar_texto(destino: *mut u8, fonte: *const u8) {
 ///   clube fica como estava no buffer do chamador);
 /// - +0xf64 a data do jogo (0x417c10 de 0xae2c90), +0x7d0 a versão (0x90d130), +0xf6c o tempo de
 ///   jogo ([0xdd7140] += time() − [0xdd7144]; [0xdd7144] = time()) e +0xf70 o time().
-unsafe extern "C" fn montar_resumo_do_save(resumo: *mut u8) {
+pub(crate) unsafe extern "C" fn montar_resumo_do_save(resumo: *mut u8) {
     let formatar: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let traduzir: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let nome_do: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
@@ -1566,7 +1568,7 @@ unsafe extern "C" fn montar_resumo_do_save(resumo: *mut u8) {
 // Lado a lado sobre o resumo inteiro (0xf74) e o relógio do tempo de jogo ([0xdd7140], [0xdd7144]),
 // restaurados entre as duas; compara só +0..+0xf6c: o tempo de jogo e o time() (+0xf6c, +0xf70) são
 // relógio (fixos só no modo simulação), como na prova do save.
-unsafe extern "C" fn comparar_montar_resumo_do_save(resumo: *mut u8) {
+pub(crate) unsafe extern "C" fn comparar_montar_resumo_do_save(resumo: *mut u8) {
     let regioes = [(resumo as usize, 0xf6c), (resumo as usize + 0xf6c, 8), (0xdd7140, 8)];
     let (_, _, _, mo, mr) = crate::comparacao::lado_a_lado(&regioes,
         || orig::<unsafe extern "C" fn(*mut u8)>(570)(resumo),

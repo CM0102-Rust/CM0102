@@ -1,9 +1,11 @@
+use super::*;
+
 // ---------- 267a leva: o fim da falta ao treino e da ausência sem licença e a notícia da falta ao treino (awol.cpp) ----------
 
 
 
 /// Os itens da lista (o ponteiro em +0 de cada nó, da cabeça +2 seguindo o +6), sem mexer no cursor.
-unsafe fn cqd11_itens(lista: usize) -> Vec<usize> {
+pub(crate) unsafe fn cqd11_itens(lista: usize) -> Vec<usize> {
     let mut v = Vec::new();
     if lista == 0 {
         return v;
@@ -20,7 +22,7 @@ unsafe fn cqd11_itens(lista: usize) -> Vec<usize> {
 /// `or bit` da original nunca dá zero) e, com a lista ([this + `lista`]), o cursor volta à cabeça e, entre os primeiros
 /// `conta` (+0, palavra com sinal) itens, o primeiro com o id da pessoa em +0 sai (0x68d1f0, que libera o nó). Uma lista
 /// que acaba antes da conta encerra.
-unsafe fn cqd11_tirar(this: usize, pessoa: usize, bit: u8, lista: usize, falta: bool) {
+pub(crate) unsafe fn cqd11_tirar(this: usize, pessoa: usize, bit: u8, lista: usize, falta: bool) {
     if pessoa == 0 {
         return;
     }
@@ -74,7 +76,7 @@ unsafe fn cqd11_tirar(this: usize, pessoa: usize, bit: u8, lista: usize, falta: 
 /// [pt] { 0x4196a0 } (thiscall, ret 4, awol.cpp): `AWOL::clear_awol(pessoa)`, pelo fim da ausência sem contrato (0x418f60),
 /// pelas aposentadorias (0x7a59e0) e pelas transferências (0x8c1af0, 0x8c2180, 0x8c9720). Pessoa e tabela de marcas
 /// ([this+0xc]) não nulas e o bit 1 da marca: troca o bit e tira o registro da pessoa da lista das ausências ([this]).
-unsafe extern "thiscall" fn limpar_ausencia(this: usize, pessoa: usize) {
+pub(crate) unsafe extern "thiscall" fn limpar_ausencia(this: usize, pessoa: usize) {
     cqd11_tirar(this, pessoa, 1, 0, false);
 }
 
@@ -85,13 +87,13 @@ unsafe extern "thiscall" fn limpar_ausencia(this: usize, pessoa: usize) {
 /// [pt] { 0x4197c0 } (thiscall, ret 4, awol.cpp): `AWOL::clear_missed_training(pessoa)`, pela falta ao treino de quem ficou
 /// sem contrato (0x418ff0, que os jogadores do dia consultam) e pelas aposentadorias (0x7a59e0). Pessoa e tabela de
 /// marcas não nulas e o bit 2 da marca: troca o bit e tira o registro da pessoa da lista das faltas ([this+4]).
-unsafe extern "thiscall" fn limpar_falta_ao_treino(this: usize, pessoa: usize) {
+pub(crate) unsafe extern "thiscall" fn limpar_falta_ao_treino(this: usize, pessoa: usize) {
     cqd11_tirar(this, pessoa, 2, 4, true);
 }
 
 /// O plano das duas: a marca depois e os itens que ficam na lista (o primeiro com o id da pessoa entre os `conta`
 /// primeiros sai). Sem nada a fazer: o estado de antes.
-unsafe fn cqd11_plano(this: usize, pessoa: usize, bit: u8, lista: usize) -> (Option<(usize, u8)>, usize, Vec<usize>) {
+pub(crate) unsafe fn cqd11_plano(this: usize, pessoa: usize, bit: u8, lista: usize) -> (Option<(usize, u8)>, usize, Vec<usize>) {
     let l = read_usize(this + lista);
     let itens = cqd11_itens(l);
     if pessoa == 0 || read_usize(this + 0xc) == 0 {
@@ -115,7 +117,7 @@ unsafe fn cqd11_plano(this: usize, pessoa: usize, bit: u8, lista: usize) -> (Opt
 
 /// Comparador das duas: a original tira e libera o nó da lista (não pode rodar duas vezes): só ela roda, com o plano
 /// montado antes (a marca e os itens que ficam, sem ler o item tirado depois).
-unsafe fn cqd11_comparar(this: usize, pessoa: usize, bit: u8, lista: usize, o: unsafe extern "thiscall" fn(usize, usize), nome: &str) {
+pub(crate) unsafe fn cqd11_comparar(this: usize, pessoa: usize, bit: u8, lista: usize, o: unsafe extern "thiscall" fn(usize, usize), nome: &str) {
     let (marca, l, fica) = cqd11_plano(this, pessoa, bit, lista);
     o(this, pessoa);
     let depois = cqd11_itens(l);
@@ -124,20 +126,20 @@ unsafe fn cqd11_comparar(this: usize, pessoa: usize, bit: u8, lista: usize, o: u
         nome, pessoa, marca, marca.map(|(p, _)| *(p as *const u8)), fica, depois));
 }
 
-unsafe extern "thiscall" fn comparar_limpar_ausencia(this: usize, pessoa: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_limpar_ausencia(this: usize, pessoa: usize) {
     cqd11_comparar(this, pessoa, 1, 0, orig::<unsafe extern "thiscall" fn(usize, usize)>(1570), "limpar_ausencia");
 }
 
-unsafe extern "thiscall" fn comparar_limpar_falta_ao_treino(this: usize, pessoa: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_limpar_falta_ao_treino(this: usize, pessoa: usize) {
     cqd11_comparar(this, pessoa, 2, 4, orig::<unsafe extern "thiscall" fn(usize, usize)>(1571), "limpar_falta_ao_treino");
 }
 
 /// O ensaio da notícia: os sorteios vêm da fita da original (n e resposta) e, em vez de entregar, a cópia anota o
 /// destino (1 o clube do jogador, 2 a nação do clube, 0 nenhum). A fita fica com o próximo e se algum n não bateu.
-static mut CQD11_FITA: Option<(Vec<(i32, i32)>, usize, bool)> = None;
-static mut CQD11_DESTINO: (u32, usize) = (0, 0);
+pub(crate) static mut CQD11_FITA: Option<(Vec<(i32, i32)>, usize, bool)> = None;
+pub(crate) static mut CQD11_DESTINO: (u32, usize) = (0, 0);
 
-unsafe fn cqd11_sortear(n: i32) -> i32 {
+pub(crate) unsafe fn cqd11_sortear(n: i32) -> i32 {
     let f = &mut *core::ptr::addr_of_mut!(CQD11_FITA);
     match f {
         Some((v, k, falhou)) => match v.get(*k) {
@@ -170,7 +172,7 @@ unsafe fn cqd11_sortear(n: i32) -> i32 {
 /// sorteio o auxiliar (+0xd3); sem ninguém (ou id −1), −1 nos quatro. Clube de humano (0x7875e0): ao clube do jogador
 /// (+0x39, 0x7861e0); senão, com nação (+0x53) e reputação do jogador (+0x61, +0xb) acima de 7250, às caixas da nação
 /// (0x7863f0).
-unsafe extern "thiscall" fn noticia_da_falta_ao_treino(this: usize, jogador: usize, clube: usize) {
+pub(crate) unsafe extern "thiscall" fn noticia_da_falta_ao_treino(this: usize, jogador: usize, clube: usize) {
     let _ = this;
     if jogador == 0 || read_usize(jogador + 0x61) == 0 || clube == 0 || read_usize(clube + 0xcf) == 0 { // cqd11: sem jogador ou técnico
         return;
@@ -257,7 +259,7 @@ unsafe extern "thiscall" fn noticia_da_falta_ao_treino(this: usize, jogador: usi
 /// Comparador: a original monta a notícia e a entrega (aloca na caixa): só ela roda, com os sorteios rastreados; depois
 /// a cópia em ensaio refaz o caminho com os sorteios da fita, sem entregar. Confere que os sorteios do ensaio são o
 /// começo da fita da original (o resto é da entrega) com os mesmos n, e anota o destino (a original não o expõe).
-unsafe extern "thiscall" fn comparar_noticia_da_falta_ao_treino(this: usize, jogador: usize, clube: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_noticia_da_falta_ao_treino(this: usize, jogador: usize, clube: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1572);
     let ((), fita) = crate::aleatorio::rastrear(|| o(this, jogador, clube));
     let n = fita.len();
@@ -277,45 +279,45 @@ unsafe extern "thiscall" fn comparar_noticia_da_falta_ao_treino(this: usize, jog
 // ---------- 260a leva: as faltas do dia: o dia das ausências, das faltas ao treino e dos atrasos, a falta ao treino marcada, o atraso registrado, marcar a falta, o fim da ausência e as marcas do contrato (awol.cpp, staff_contracts.cpp) ----------
 
 
-unsafe fn cpw7_i(a: usize) -> i32 {
+pub(crate) unsafe fn cpw7_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
 
 
 
-unsafe fn cpw7_sortear(n: i32) -> i32 {
+pub(crate) unsafe fn cpw7_sortear(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     f(n)
 }
 
 /// O byte com sinal `a` (atributo de 1 a 20) cai um com o sorteio dele: zero (`zero`) ou não zero, se for maior que 1.
-unsafe fn cpw7_cair(a: usize, zero: bool) {
+pub(crate) unsafe fn cpw7_cair(a: usize, zero: bool) {
     let v = read_u8(a) as i8;
     if v > 1 && (cpw7_sortear(v as i32) == 0) == zero {
         *(a as *mut i8) = v - 1;
     }
 }
 
-unsafe fn cpw7_proximo(lista: usize) -> usize {
+pub(crate) unsafe fn cpw7_proximo(lista: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     f(lista)
 }
 
 /// O cursor da lista volta ao primeiro nó (+0xa = +2).
-unsafe fn cpw7_inicio(lista: usize) {
+pub(crate) unsafe fn cpw7_inicio(lista: usize) {
     write_u32(lista + 0xa, read_usize(lista + 2) as u32);
 }
 
 /// A data `d` (dia com sinal em +0, ano sem sinal em +2) já passou: hoje ([0xae2c90]) é depois dela.
-unsafe fn cpw7_passou(d: usize) -> bool {
+pub(crate) unsafe fn cpw7_passou(d: usize) -> bool {
     let (dia, ano) = (read_i16(0xae2c90), read_i16(0xae2c92) as u16);
     let a = read_i16(d + 2) as u16;
     ano > a || (ano == a && dia > read_i16(d))
 }
 
 /// Uma semana depois da data `d` (0x54c770), já passou?
-unsafe fn cpw7_semana_passou(d: usize, semanas: u32) -> bool {
+pub(crate) unsafe fn cpw7_semana_passou(d: usize, semanas: u32) -> bool {
     let f: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_ADD_WEEKS);
     let mut t = [0u8; 8];
     cpw7_passou(f(d, &mut t, semanas))
@@ -323,7 +325,7 @@ unsafe fn cpw7_semana_passou(d: usize, semanas: u32) -> bool {
 
 /// O fim do caso de falta ao treino `r` (pessoa em +0): com o byte da pessoa na tabela de marcas ([this+0xc]) não zero,
 /// troca o bit 2 dele (o `or 2` da original nunca dá zero) e tira o registro da lista das faltas ([this+4], 0x68d1f0).
-unsafe fn cpw7_tirar_falta(this: usize, r: usize) {
+pub(crate) unsafe fn cpw7_tirar_falta(this: usize, r: usize) {
     let m = read_usize(this + 0xc).wrapping_add(cpw7_i(r) as usize) as *mut u8;
     if *m == 0 {
         return;
@@ -334,7 +336,7 @@ unsafe fn cpw7_tirar_falta(this: usize, r: usize) {
     tirar(read_usize(this + 4), r); // cpw7: tira o caso da lista
 }
 
-unsafe fn cpw7_faltou(this: usize, pessoa: usize) {
+pub(crate) unsafe fn cpw7_faltou(this: usize, pessoa: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_AWOL_MISS_TRAINING);
     f(this, pessoa);
 }
@@ -354,7 +356,7 @@ unsafe fn cpw7_faltou(this: usize, pessoa: usize) {
 /// clube (0x72c1f0 com 8); (3) atrasos ([this+8]): o primeiro com uma semana passada (+8) que vença os sorteios perde
 /// profissionalismo e temperamento ou moral. Cada caso resolvido sai da lista (0x68d1f0) e a marca do bit 2 troca. Uma
 /// lista que acaba antes da conta encerra o dia.
-unsafe extern "thiscall" fn faltas_do_dia(this: usize) {
+pub(crate) unsafe extern "thiscall" fn faltas_do_dia(this: usize) {
     // (1) as ausências
     let l = read_usize(this);
     if l != 0 {
@@ -456,7 +458,7 @@ unsafe extern "thiscall" fn faltas_do_dia(this: usize) {
 }
 
 /// A falta ao treino `r` com uma semana passada (o meio da lista (2) de `faltas_do_dia`).
-unsafe fn cpw7_resolver_falta(this: usize, r: usize) {
+pub(crate) unsafe fn cpw7_resolver_falta(this: usize, r: usize) {
     let pessoa = read_usize(0xae23bc).wrapping_add((cpw7_i(r) as usize).wrapping_mul(0x6e));
     if read_u8(r + 0xc) != 0 {
         // o caso repetido
@@ -532,7 +534,7 @@ unsafe fn cpw7_resolver_falta(this: usize, r: usize) {
 
 // ponytail: sorteia, tira e libera nós das listas (0x68d1f0), dá notícia de volta (0x419710) e de falta (0x41a360): só
 // a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_faltas_do_dia(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_faltas_do_dia(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(1308)(this)
 }
 
@@ -542,7 +544,7 @@ unsafe extern "thiscall" fn comparar_faltas_do_dia(this: usize) {
 /// [pt] { 0x418ff0 } (thiscall, ret 4, awol.cpp): `AWOL::has_missed_training(pessoa)`, pelos jogadores do dia (0x5a69b0) e
 /// pelas telas. Pessoa nula ou fora da conta [0xae2364]: falso. Com o bit 2 da marca dela ([this+0xc] + id) e sem
 /// contrato (0x4cf5a0, guardado em [0xae1080]), tira a falta (0x4197c0) antes. Devolve o bit 2 da marca.
-unsafe extern "thiscall" fn teve_falta_ao_treino(this: usize, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn teve_falta_ao_treino(this: usize, pessoa: usize) -> u32 {
     if pessoa == 0 {
         return 0;
     }
@@ -564,7 +566,7 @@ unsafe extern "thiscall" fn teve_falta_ao_treino(this: usize, pessoa: usize) -> 
 
 /// O comparador da falta ao treino: lado a lado pela devolução (byte baixo) e pelo [0xae1080]; sem contrato com o bit 2,
 /// só a original (a 0x4197c0 tira e libera o nó da lista).
-unsafe extern "thiscall" fn comparar_teve_falta_ao_treino(this: usize, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_teve_falta_ao_treino(this: usize, pessoa: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1309);
     if pessoa != 0 && cpw7_i(pessoa) < cpw7_i(0xae2364) && read_u8(read_usize(this + 0xc).wrapping_add(cpw7_i(pessoa) as usize)) & 2 != 0 {
         let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
@@ -585,7 +587,7 @@ unsafe extern "thiscall" fn comparar_teve_falta_ao_treino(this: usize, pessoa: u
 /// [pt] { 0x419070 } (thiscall, ret 4, awol.cpp): `AWOL::has_fitness_incident(pessoa)`, pelos jogadores do dia (0x5a69b0).
 /// Pessoa nula, fora da conta [0xae2364] ou sem a lista dos atrasos ([this+8]): falso; senão percorre a lista (cursor em
 /// +0xa) atrás do registro da pessoa (id em +0). Verdadeiro no byte baixo; os altos como a original deixa no registrador.
-unsafe extern "thiscall" fn teve_incidente_de_forma(this: usize, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn teve_incidente_de_forma(this: usize, pessoa: usize) -> u32 {
     if pessoa == 0 {
         return 0;
     }
@@ -619,7 +621,7 @@ unsafe extern "thiscall" fn teve_incidente_de_forma(this: usize, pessoa: usize) 
 }
 
 /// O comparador do atraso: lado a lado pela devolução (byte baixo) e pelo cursor da lista.
-unsafe extern "thiscall" fn comparar_teve_incidente_de_forma(this: usize, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_teve_incidente_de_forma(this: usize, pessoa: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1310);
     let l = read_usize(this + 8);
     let regioes: Vec<(usize, usize)> = if l != 0 { vec![(l + 0xa, 4)] } else { Vec::new() };
@@ -632,11 +634,11 @@ unsafe extern "thiscall" fn comparar_teve_incidente_de_forma(this: usize, pessoa
 
 /// O ensaio dos comparadores de `marcar_falta_ao_treino`, `fim_da_ausencia` e `marcas_do_contrato`: a cópia para antes
 /// das chamadas que alocam, dão notícia ou não podem rodar duas vezes e deixa em CPW7_DECISAO o que faria.
-static mut CPW7_ENSAIO: bool = false;
-static mut CPW7_DECISAO: u32 = 0;
+pub(crate) static mut CPW7_ENSAIO: bool = false;
+pub(crate) static mut CPW7_DECISAO: u32 = 0;
 
 /// O clube do contrato `k` (+4 id, [0xae23b4], 0x245 bytes), ou 0.
-unsafe fn cpw7_clube_do_contrato(k: usize) -> usize {
+pub(crate) unsafe fn cpw7_clube_do_contrato(k: usize) -> usize {
     if k == 0 {
         return 0;
     }
@@ -648,7 +650,7 @@ unsafe fn cpw7_clube_do_contrato(k: usize) -> usize {
 /// da original, pela faltas_ao_treino (0x5d6aa0), a chamada anterior que alcança essa altura é a 0x54cdb0 (dias desde a
 /// chegada), que guarda ali o seu `this`, a data do jogo 0xae2c90: o byte baixo é 0x90. A cópia usa esse valor (um caso
 /// repetido); o comparador não o compara (o da original é resíduo de verdade).
-const CPW7_BYTE_DO_CASO: u8 = 0x90;
+pub(crate) const CPW7_BYTE_DO_CASO: u8 = 0x90;
 
 /// the very unhappy player may go AWOL (0x419840); otherwise marks the miss, posts the news, lowers the condition,
 /// joins the missed training list (the case byte, unset in the original, goes 0x90) and the AI manager may fine him
@@ -663,7 +665,7 @@ const CPW7_BYTE_DO_CASO: u8 = 0x90;
 /// (pessoa, hoje, caso) entra na lista das faltas ([this+4], 0x68d0d0); clube da IA (0x600a50) com técnico (+0xcf, +0x69)
 /// e sorteio(+0x14 dele) não zero: a multa (0x5a5980, prazo 1 se sorteio(nota do técnico 0x544410 com o +0x19) passar
 /// de sorteio(5), senão 2; motivo 1).
-unsafe extern "thiscall" fn marcar_falta_ao_treino(this: usize, pessoa: usize) {
+pub(crate) unsafe extern "thiscall" fn marcar_falta_ao_treino(this: usize, pessoa: usize) {
     if pessoa == 0 || read_usize(pessoa + 0x61) == 0 || cpw7_i(pessoa) >= cpw7_i(0xae2364) {
         return;
     }
@@ -749,7 +751,7 @@ unsafe extern "thiscall" fn marcar_falta_ao_treino(this: usize, pessoa: usize) {
 /// a partir do mesmo estado (sorteio, marca da pessoa, [0xae1080]); a decisão da original sai da marca (bit 1 novo:
 /// sumiu; bit 2 novo: faltou). Sem decisão, o estado inteiro tem de bater (os mesmos sorteios). O byte do caso (+0xc do
 /// registro) não entra: na original é resíduo da pilha.
-unsafe extern "thiscall" fn comparar_marcar_falta_ao_treino(this: usize, pessoa: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_marcar_falta_ao_treino(this: usize, pessoa: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1311);
     if pessoa == 0 || read_usize(pessoa + 0x61) == 0 || cpw7_i(pessoa) >= cpw7_i(0xae2364) {
         return o(this, pessoa);
@@ -781,7 +783,7 @@ unsafe extern "thiscall" fn comparar_marcar_falta_ao_treino(this: usize, pessoa:
 /// da pessoa (+0 id; [this+0xc] + id) não zero: com contrato (0x4cf5a0, em [0xae1080]) num clube, a notícia da volta
 /// (0x419ad0 com o clube +0x39 da pessoa, 0 e −1); troca o bit 1 da marca (o `or 1` da original nunca dá zero) e tira o
 /// registro da lista das ausências ([this], 0x68d1f0). Não lê local sem valor.
-unsafe extern "thiscall" fn fim_da_ausencia(this: usize, r: usize) {
+pub(crate) unsafe extern "thiscall" fn fim_da_ausencia(this: usize, r: usize) {
     if r == 0 {
         return;
     }
@@ -814,7 +816,7 @@ unsafe extern "thiscall" fn fim_da_ausencia(this: usize, r: usize) {
 
 /// O comparador do fim da ausência, em ensaio: a cópia sem a notícia e sem tirar da lista; a marca da pessoa e, sem
 /// notícia, o [0xae1080] têm de bater com os da original.
-unsafe extern "thiscall" fn comparar_fim_da_ausencia(this: usize, r: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_fim_da_ausencia(this: usize, r: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1312);
     if r == 0 {
         return o(this, r);
@@ -846,7 +848,7 @@ unsafe extern "thiscall" fn comparar_fim_da_ausencia(this: usize, r: usize) {
 /// (0x8cca10 com 0), sem os bits 1 e 8 de +0x4e, fora da fila da transferência livre (0x8c1870) e com mais de 20 anos
 /// (+0x18) ou reputação atual (+0xb do jogador) acima de 4250: o pedido de transferência (0x4d8610 em [0xae1050]).
 /// Não lê local sem valor.
-unsafe extern "thiscall" fn marcas_do_contrato(c: usize, marcas: u32) {
+pub(crate) unsafe extern "thiscall" fn marcas_do_contrato(c: usize, marcas: u32) {
     if marcas as i32 > 0x1000 {
         // ponytail: a caixa "Error" (antes de qualquer gravação): a original inteira
         return orig::<unsafe extern "thiscall" fn(usize, u32)>(1313)(c, marcas);
@@ -887,7 +889,7 @@ unsafe extern "thiscall" fn marcas_do_contrato(c: usize, marcas: u32) {
 
 /// O comparador das marcas do contrato, em ensaio: a cópia sem o pedido de transferência e a original a partir do mesmo
 /// estado (marcas e sorteio); sem pedido, tudo tem de bater; com pedido (que sorteia e dá notícia), só as marcas.
-unsafe extern "thiscall" fn comparar_marcas_do_contrato(c: usize, marcas: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_marcas_do_contrato(c: usize, marcas: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1313);
     if marcas as i32 > 0x1000 {
         return o(c, marcas);

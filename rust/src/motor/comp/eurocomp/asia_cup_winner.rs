@@ -1,3 +1,5 @@
+use super::*;
+
 // ---------- 284a leva: os mata-matas da Copa Africana de Nações e da Recopa asiática: as quartas, a fase seguinte e as finais (african_nations.cpp, asia_cup_winner.cpp) ----------
 
 
@@ -5,7 +7,7 @@
 
 /// O grupo de onde sai cada vaga das quartas da Copa Africana (−1 = o grupo A, a tabela da própria copa; 0..2 = as fases
 /// dos grupos B a D) e a posição: as chaves são os pares da lista.
-const CQT13_QUARTAS: [(i32, i32); 8] = [
+pub(crate) const CQT13_QUARTAS: [(i32, i32); 8] = [
     (-1, 0), (0, 1), // cqt13: 1º A × 2º B
     (1, 0), (2, 1), // cqt13: 1º C × 2º D
     (1, 1), (2, 0), // cqt13: 2º C × 1º D
@@ -13,7 +15,7 @@ const CQT13_QUARTAS: [(i32, i32); 8] = [
 ];
 
 /// O clube da posição `p` do grupo `g` (pela 0x6826d0 League::get_table_row: push p; mov ecx, grupo -> thiscall, ret 4).
-unsafe fn cqt13_do_grupo(this: usize, g: i32, p: i32) -> usize {
+pub(crate) unsafe fn cqt13_do_grupo(this: usize, g: i32, p: i32) -> usize {
     let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
     let grupo = if g < 0 { this } else { read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4) };
     read_u32_as_usize(linha(grupo, p))
@@ -28,7 +30,7 @@ unsafe fn cqt13_do_grupo(this: usize, g: i32, p: i32) -> usize {
 /// id, 0x14, 0, 0, 0 e nenhuma semente; a original empurra as rodadas, o id e o ano com lixo nos 16 bits altos, que o
 /// construtor não lê) em [+0xc][3]; a lista e a tabela liberadas (0x9452ca). Sem fase: a caixa da linha 0x32c e volta.
 /// Com ela: a rodada montada (0x51c800 Cup::set_up_round: push 0; mov ecx, fase -> thiscall, ret 4) e +0x30 = 3.
-unsafe extern "thiscall" fn cqt13_africana_quartas(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqt13_africana_quartas(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -67,7 +69,7 @@ unsafe extern "thiscall" fn cqt13_africana_quartas(this: usize) {
 // ponytail: aloca a fase e monta a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][3] com 8 times,
 // o +4 da copa e os 8 cruzados (lidos antes pelas tabelas, +0xb1 de cada grupo) na lista dela (+0xa7, 6 bytes; como
 // conjunto) e +0x30 = 3.
-unsafe extern "thiscall" fn comparar_cqt13_africana_quartas(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqt13_africana_quartas(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2071);
     let fases = read_u32_as_usize(this + 0xc);
     if fases == 0 || (0..3).any(|g| read_u32_as_usize(fases + g * 4) == 0) || read_u32_as_usize(this + 0xb1) == 0 {
@@ -93,7 +95,7 @@ unsafe extern "thiscall" fn comparar_cqt13_africana_quartas(this: usize) {
 /// { 0x40dfa0 } (thiscall, ret 0, asia_cup_winner.cpp; a virtual +0x28): `AsiaCupWinner::advance_stage()`: na última
 /// fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x328; senão +0x30 sobe e, chegando a 1 (depois dos mata-matas
 /// das duas zonas), as finais (0x40e030: mov ecx, this -> thiscall, ret 0).
-unsafe extern "thiscall" fn cqt13_recopa_asiatica_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqt13_recopa_asiatica_fase_seguinte(this: usize) {
     let f = read_u32_as_usize(this + 0x30) as i32;
     if f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x987b60, 0x328);
@@ -109,7 +111,7 @@ unsafe extern "thiscall" fn cqt13_recopa_asiatica_fase_seguinte(this: usize) {
 
 // ponytail: as finais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um (fora da última
 // fase, que dá a caixa e não muda nada).
-unsafe extern "thiscall" fn comparar_cqt13_recopa_asiatica_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqt13_recopa_asiatica_fase_seguinte(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2072);
     let f = read_u32_as_usize(this + 0x30) as i32;
     let ultima = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
@@ -122,7 +124,7 @@ unsafe extern "thiscall" fn comparar_cqt13_recopa_asiatica_fase_seguinte(this: u
 /// copa, +0xa7) e depois os da segunda (a tabela +0xa7 da fase [+0xc][0]), até 4 ao todo, as duas buscas até o +0x3e da
 /// copa (palavra com sinal); o 2º e o 3º trocam de lugar (os cruzamentos: as chaves são os pares da lista). As vagas
 /// que sobrarem ficam 0 (a original as deixa com o que o malloc deu).
-unsafe fn cqt13_finalistas(this: usize) -> [usize; 4] {
+pub(crate) unsafe fn cqt13_finalistas(this: usize) -> [usize; 4] {
     let mut v = [0usize; 4];
     let mut n = 0i16;
     let times = read_i16(this + 0x3e);
@@ -150,7 +152,7 @@ unsafe fn cqt13_finalistas(this: usize) -> [usize; 4] {
 /// construtor não lê) em [+0xc][1]; a tabela liberada (0x9452ca). Sem fase: a caixa da linha 0x375 e volta (a lista não
 /// é liberada, como na original). Com ela: o sorteio da rodada 0 (0x51c410 Cup::draw_round: push 0; mov ecx, fase ->
 /// thiscall, ret 4) e a lista liberada.
-unsafe extern "thiscall" fn cqt13_recopa_asiatica_finais(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqt13_recopa_asiatica_finais(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -188,7 +190,7 @@ unsafe extern "thiscall" fn cqt13_recopa_asiatica_finais(this: usize) {
 
 // ponytail: aloca a fase e sorteia a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][1] com 4
 // times, o +4 da copa e os 4 finalistas (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto).
-unsafe extern "thiscall" fn comparar_cqt13_recopa_asiatica_finais(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqt13_recopa_asiatica_finais(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2073);
     if read_u32_as_usize(this + 0xa7) == 0 || read_u32_as_usize(this + 0xc) == 0 || read_u32_as_usize(read_u32_as_usize(this + 0xc)) == 0 {
         return o(this);

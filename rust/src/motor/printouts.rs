@@ -1,19 +1,21 @@
+use super::*;
+
 // ---------- 262a leva: os veículos da imprensa: o comentarista sorteado, o nome do veículo e a notícia da queixa do técnico à federação (printouts.cpp, media.cpp) ----------
 
 
-unsafe fn cpz10_u(a: usize) -> u32 {
+pub(crate) unsafe fn cpz10_u(a: usize) -> u32 {
     core::ptr::read_unaligned(a as *const u32)
 }
 
-unsafe fn cpz10_sw(a: usize) -> i32 {
+pub(crate) unsafe fn cpz10_sw(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i16) as i32
 }
 
-unsafe fn cpz10_inicio(l: usize) {
+pub(crate) unsafe fn cpz10_inicio(l: usize) {
     core::ptr::write_unaligned((l + 0xa) as *mut u32, cpz10_u(l + 2));
 }
 
-unsafe fn cpz10_proximo(l: usize) -> usize {
+pub(crate) unsafe fn cpz10_proximo(l: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     f(l)
 }
@@ -27,7 +29,7 @@ unsafe fn cpz10_proximo(l: usize) -> usize {
 /// notícias. Tipo 1 no domingo (0x54a3f0 = 6) vira 7. Tipos 2 e 4 (locais): os da lista [this+4] cujo +0xcb é o id de
 /// [[clube+0x69]+0x38] (sem eles: −1); os outros: os da lista [this] do tipo (+0xca) e da nação (+0xcf; −1 aceita
 /// qualquer). Até 20; nenhum: −1; senão o id (palavra +0, com sinal) de um deles por sorteio(n).
-unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: usize, tipo: u32, nacao: i32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: usize, tipo: u32, nacao: i32) -> i32 {
     let mut t = tipo as i8;
     if t == 1 {
         let semana: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
@@ -109,7 +111,7 @@ unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: usize, tipo
 }
 
 /// O comparador: lado a lado nos cabeçalhos das duas listas (o cursor) e no sorteio, e a devolução.
-unsafe extern "thiscall" fn comparar_sortear_comentarista(this: usize, clube: usize, tipo: u32, nacao: i32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_sortear_comentarista(this: usize, clube: usize, tipo: u32, nacao: i32) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32) -> i32>(1407);
     let mut regioes = Vec::new();
     for l in [read_usize(this), read_usize(this + 4)] {
@@ -129,7 +131,7 @@ unsafe extern "thiscall" fn comparar_sortear_comentarista(this: usize, clube: us
 
 /// O nome padrão do veículo pelo tipo (as três tabelas da original são iguais): 2 jornal local, 3 rádio, 4 rádio
 /// local, 5 revista; os outros, jornal nacional.
-fn cpz10_veiculo_padrao(tipo: i8) -> usize {
+pub(crate) fn cpz10_veiculo_padrao(tipo: i8) -> usize {
     match tipo {
         2 => 0xa24284,
         3 => 0xa794cc,
@@ -146,7 +148,7 @@ fn cpz10_veiculo_padrao(tipo: i8) -> usize {
 /// das notícias. Sem `nome`: marca 0. Id −1: o nome padrão do tipo e marca 0. Senão o comentarista do id (palavra +0)
 /// na lista [this+4] (tipos 2 e 4) ou [this]: o nome (+2, sprintf "%s" 0x944c9f) e a marca (+0xd3); sem ele, o nome
 /// padrão e marca 0.
-unsafe extern "thiscall" fn nome_do_veiculo(this: usize, tipo: u32, id: u32, nome: usize, marca: *mut u8) {
+pub(crate) unsafe extern "thiscall" fn nome_do_veiculo(this: usize, tipo: u32, id: u32, nome: usize, marca: *mut u8) {
     if nome == 0 {
         *marca = 0;
         return;
@@ -182,7 +184,7 @@ unsafe extern "thiscall" fn nome_do_veiculo(this: usize, tipo: u32, id: u32, nom
 
 /// O comparador: lado a lado no nome (até 0xd4 bytes: o nome do comentarista tem 0xd1 e o padrão menos), na marca e
 /// nos cabeçalhos das listas (o cursor).
-unsafe extern "thiscall" fn comparar_nome_do_veiculo(this: usize, tipo: u32, id: u32, nome: usize, marca: *mut u8) {
+pub(crate) unsafe extern "thiscall" fn comparar_nome_do_veiculo(this: usize, tipo: u32, id: u32, nome: usize, marca: *mut u8) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, usize, *mut u8)>(1408);
     let mut regioes = vec![(marca as usize, 1)];
     if nome != 0 {
@@ -206,7 +208,7 @@ unsafe extern "thiscall" fn comparar_nome_do_veiculo(this: usize, tipo: u32, id:
 /// (0x6a9e60, 0x6ab800). Clube com nação (+0x53) e técnico (+0xcf), e pessoa: a notícia 0x178e (o clube; o técnico, id
 /// e chaves, ou −1; o tipo; a pessoa, id e chaves; a; b; a nação ou −1; c) aos técnicos da nação (0x7863f0) se a
 /// reputação (+0x80) passar de 4750, senão ao clube (0x7861e0).
-unsafe extern "thiscall" fn noticia_queixa_a_federacao(this: usize, clube: usize, pessoa: usize, tipo: u32, a: u32, b: u32, c: u32) {
+pub(crate) unsafe extern "thiscall" fn noticia_queixa_a_federacao(this: usize, clube: usize, pessoa: usize, tipo: u32, a: u32, b: u32, c: u32) {
     let _ = this;
     if clube == 0 || read_usize(clube + 0x53) == 0 || read_usize(clube + 0xcf) == 0 || pessoa == 0 {
         return;
@@ -251,7 +253,7 @@ unsafe extern "thiscall" fn noticia_queixa_a_federacao(this: usize, clube: usize
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo. Sem notícia as duas não
 // fazem nada.
-unsafe extern "thiscall" fn comparar_noticia_queixa_a_federacao(this: usize, clube: usize, pessoa: usize, tipo: u32, a: u32, b: u32, c: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_noticia_queixa_a_federacao(this: usize, clube: usize, pessoa: usize, tipo: u32, a: u32, b: u32, c: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(1409)(this, clube, pessoa, tipo, a, b, c)
 }
 

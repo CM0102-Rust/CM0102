@@ -1,15 +1,17 @@
+use super::*;
+
 // ---------- 276a leva: as supercopas e o Jogo das Estrelas: os clubes da Supercopa da Espanha e do Japão e o calendário do Jogo das Estrelas da MLS (spa_super.cpp, jap_super.cpp, usa_mls_all_stars.cpp) ----------
 
 
 /// O clube que terminou em `lugar` (0 o campeão, 1 o vice) na última temporada da competição de id [id] (0x4afd80: push
 /// lugar; push competição do banco [0xae23d0] + 0x6b × id; add esp, 8 -> cdecl).
-unsafe fn cqm12_colocado(id: usize, lugar: u32) -> usize {
+pub(crate) unsafe fn cqm12_colocado(id: usize, lugar: u32) -> usize {
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     colocado(read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b)), lugar)
 }
 
 /// O começo comum: +0x3e = 2 e a lista de dois (0x944e46 de 0xc em +0xa7); sem memória, a caixa `linha` e None.
-unsafe fn cqm12_lista(this: usize, arquivo: usize, linha: u32) -> Option<usize> {
+pub(crate) unsafe fn cqm12_lista(this: usize, arquivo: usize, linha: u32) -> Option<usize> {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 2);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0xc);
@@ -22,7 +24,7 @@ unsafe fn cqm12_lista(this: usize, arquivo: usize, linha: u32) -> Option<usize> 
 }
 
 /// O fim comum: classe e situação 0 nos dois; devolve 1.
-unsafe fn cqm12_fim(l: usize) -> (i32, i32) {
+pub(crate) unsafe fn cqm12_fim(l: usize) -> (i32, i32) {
     *((l + 4) as *mut u8) = 0;
     *((l + 5) as *mut u8) = 0;
     *((l + 0xa) as *mut u8) = 0;
@@ -31,7 +33,7 @@ unsafe fn cqm12_fim(l: usize) -> (i32, i32) {
 }
 
 /// Grava o clube `c` na vaga `v` da lista; sem clube, a caixa `linha` (fonte `arquivo`) e falso.
-unsafe fn cqm12_vaga(l: usize, v: usize, c: usize, arquivo: usize, linha: u32) -> bool {
+pub(crate) unsafe fn cqm12_vaga(l: usize, v: usize, c: usize, arquivo: usize, linha: u32) -> bool {
     core::ptr::write_unaligned((l + 6 * v) as *mut u32, c as u32);
     if c == 0 {
         aviso_em(arquivo, linha);
@@ -43,7 +45,7 @@ unsafe fn cqm12_vaga(l: usize, v: usize, c: usize, arquivo: usize, linha: u32) -
 /// { 0x858aa0 } (thiscall, ret 0, spa_super.cpp): `SpaSuper::select_teams()`: a lista (sem memória, a caixa da linha
 /// 0xc2 e −1). O campeão da Copa do Rei ([0x9cf740]; sem ele, a caixa 0xcb e 0) e o da Liga ([0x9cf624]; sem ele, 0xd4
 /// e 0); se é o mesmo clube, o primeiro vira o vice da Copa do Rei (sem ele, 0xe0 e 0). Devolve 1.
-unsafe fn cqm12_espanha(this: usize) -> (i32, i32) {
+pub(crate) unsafe fn cqm12_espanha(this: usize) -> (i32, i32) {
     const F: usize = 0xa82a58;
     let l = match cqm12_lista(this, F, 0xc2) {
         Some(l) => l,
@@ -73,13 +75,13 @@ unsafe fn cqm12_espanha(this: usize) -> (i32, i32) {
 ///
 /// [pt] regra: a Supercopa da Espanha é entre o campeão da Copa do Rei (o mandante da ida [inferência]) e o campeão da Liga;
 /// se o mesmo clube ganhou as duas, entra o vice da Copa do Rei; sem algum deles, a caixa de erro
-unsafe extern "thiscall" fn cqm12_supercopa_da_espanha_clubes(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn cqm12_supercopa_da_espanha_clubes(this: usize) -> i32 {
     cqm12_espanha(this).0
 }
 
 /// Lado a lado para as rotinas que alocam a lista +0xa7 (como `cqm10_comparar`): o +0x3e e o [0xb67a34] a partir do
 /// mesmo estado; a lista da cópia é comparada nos 12 bytes (só com a devolução 1) e liberada.
-unsafe fn cqm12_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
+pub(crate) unsafe fn cqm12_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
@@ -108,7 +110,7 @@ unsafe fn cqm12_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: im
     a
 }
 
-unsafe extern "thiscall" fn comparar_cqm12_supercopa_da_espanha_clubes(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqm12_supercopa_da_espanha_clubes(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1787);
     cqm12_comparar("cqm12_supercopa_da_espanha_clubes", this, || o(this), || cqm12_espanha(this))
 }
@@ -118,7 +120,7 @@ unsafe extern "thiscall" fn comparar_cqm12_supercopa_da_espanha_clubes(this: usi
 /// Copa do Imperador ([0x9cf660]; sem ele, 0xe0 e 0) — sem nação, o vice (sem ele, 0xec e 0). Se é o mesmo clube, o
 /// segundo vira o vice da Copa do Imperador (sem ele, 0xf9 e 0) e, se ainda é o mesmo, o primeiro vira o vice da J1
 /// (sem ele, 0x105 e 0). Devolve 1.
-unsafe fn cqm12_japao(this: usize) -> (i32, i32) {
+pub(crate) unsafe fn cqm12_japao(this: usize) -> (i32, i32) {
     const F: usize = 0x9eaf4c;
     let l = match cqm12_lista(this, F, 0xc1) {
         Some(l) => l,
@@ -159,11 +161,11 @@ unsafe fn cqm12_japao(this: usize) -> (i32, i32) {
 /// [pt] regra: a Supercopa do Japão é entre o campeão da J1 e o da Copa do Imperador; um campeão sem nação (+0x53 = 0, clube
 /// que não existe mais [inferência]) dá a vaga ao vice; se é o mesmo clube, entra o vice da Copa do Imperador e, se
 /// ainda coincidir, o vice da J1; sem algum deles, a caixa de erro
-unsafe extern "thiscall" fn cqm12_supercopa_do_japao_clubes(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn cqm12_supercopa_do_japao_clubes(this: usize) -> i32 {
     cqm12_japao(this).0
 }
 
-unsafe extern "thiscall" fn comparar_cqm12_supercopa_do_japao_clubes(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqm12_supercopa_do_japao_clubes(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1788);
     cqm12_comparar("cqm12_supercopa_do_japao_clubes", this, || o(this), || cqm12_japao(this))
 }
@@ -179,7 +181,7 @@ unsafe extern "thiscall" fn comparar_cqm12_supercopa_do_japao_clubes(this: usize
 /// sorteio em 15 do mês 5 (junho) levado ao dia da semana 5, o jogo em 2 do mês 7 (agosto) levado ao dia 6, turno 1,
 /// mando 0 (0x521e60 e 0x521eb0, cdecl, com o ano +0x40); nome 0, +0xd = 0x20, categoria 8, 2 times, 1 jogo, 2 novos,
 /// 1 jogo por confronto, sem prêmio.
-unsafe extern "thiscall" fn cqm12_jogo_das_estrelas_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn cqm12_jogo_das_estrelas_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -222,7 +224,7 @@ unsafe extern "thiscall" fn cqm12_jogo_das_estrelas_tabela(this: usize, fase: u3
 }
 
 /// Os bytes que a original grava na rodada: +0..+0x10, +0x13..+0x22 e +0x5c..+0x67.
-unsafe fn cqm12_gravados(t: usize) -> Vec<u8> {
+pub(crate) unsafe fn cqm12_gravados(t: usize) -> Vec<u8> {
     let mut v = Vec::new();
     for &(a, b) in &[(0usize, 0x11usize), (0x13, 0x23), (0x5c, 0x68)] {
         v.extend_from_slice(core::slice::from_raw_parts((t + a) as *const u8, b - a));
@@ -233,7 +235,7 @@ unsafe fn cqm12_gravados(t: usize) -> Vec<u8> {
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam iguais, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). Fora da
 /// fase −1, só a original (nenhuma grava nada).
-unsafe extern "thiscall" fn comparar_cqm12_jogo_das_estrelas_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_cqm12_jogo_das_estrelas_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1789);
     if fase as u8 != 0xff {
         let a = o(this, fase, rodadas, extra, saida);

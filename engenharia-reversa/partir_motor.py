@@ -86,7 +86,9 @@ def main():
     pm = os.path.join(base, 'macros.rs')
     antes = open(pm, encoding='utf-8').read() if os.path.exists(pm) else \
         '// The match-engine macros (textual scope: included first). [pt] As macros do motor (escopo textual: incluídas primeiro).\n\n'
-    open(pm, 'w', encoding='utf-8').write(antes + ''.join('\n' + m for m in macros if m not in antes))
+    novas_macros = [m for m in macros if m not in antes]
+    if novas_macros or not os.path.exists(pm):  # sem macro nova, o arquivo fica como está
+        open(pm, 'w', encoding='utf-8').write(antes + ''.join('\n' + m for m in novas_macros))
     for alvo, lst in sorted(plano.items()):
         p = os.path.join(base, alvo)
         os.makedirs(os.path.dirname(p), exist_ok=True)
@@ -95,13 +97,16 @@ def main():
         texto = re.sub(r'include!\("(\w+\.rs)"\)', lambda m: 'include!("%s%s")' % (sobe, m.group(1)), ''.join(t for _, t in lst))
         with open(p, 'a', encoding='utf-8') as f:
             f.write(texto)
-    todos = sorted(os.path.relpath(os.path.join(d, f), base).replace('\\', '/') for d, _, fs in os.walk(base) for f in fs if f.endswith('.rs'))
-    inc = ['include!("motor/macros.rs");'] + ['include!("motor/%s");' % a for a in todos if a != 'macros.rs']
-    cabeca = re.sub(r'^// (?:\[pt\] O resto do motor|The rest of the engine)[^\n]*\n|^include!\("motor/[^"]+"\);\n', '', cabeca, flags=re.M).rstrip('\n') + '\n\n'
-    novo = cabeca + '// The rest of the engine, one file per source file of the game (stage 3 of the reorganisation, 07/11/2026).\n' \
-        '// [pt] O resto do motor, um arquivo por arquivo de origem do jogo (etapa 3 da reorganização, 07/11/2026).\n' + \
-        '\n'.join(inc) + '\n\n' + ''.join(fica)
+    # o cabeçalho sem a lista antiga (include! ou mod); a lista é refeita pelo modulos_motor.py (um módulo por arquivo)
+    cabeca = re.sub(r'^// (?:\[pt\] O resto do motor|The rest of the engine)[^\n]*\n|^include!\("motor/[^"]+"\);\n'
+                    r'|^#\[path = "motor/[^"]+"\]\npub\(crate\) mod \w+;\npub\(crate\) use self::\w+::\*;\n', '', cabeca, flags=re.M).rstrip('\n') + '\n\n'
+    novo = cabeca + '// The rest of the engine, one module per source file of the game (reorganisation, 07/11/2026).\n' \
+        '// [pt] O resto do motor, um módulo por arquivo de origem do jogo (reorganização, 07/11/2026).\n' + \
+        'include!("motor/macros.rs");\n\n' + ''.join(fica)
     open(os.path.join(SRC, 'motor.rs'), 'w', encoding='utf-8').write(novo)
+    import modulos_motor
+    sys.argv.append('--gravar')
+    modulos_motor.main()
     print('gravado: %d arquivos, %d macros' % (len(plano), len(macros)))
 
 

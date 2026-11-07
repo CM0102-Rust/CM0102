@@ -1,15 +1,17 @@
+use super::*;
+
 // ---------- 280a leva: o calendário da divisão de baixo espanhola (a Segunda B): as 42 rodadas, uma tabela para o ano par e outra para o ímpar, com a rodada do Natal (spa_lower.cpp) ----------
 
 
 /// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
-type Cqq5Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
+pub(crate) type Cqq5Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
 /// As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-unsafe fn cqq5_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqq5Rodada]) {
+pub(crate) unsafe fn cqq5_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqq5Rodada]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let faixa: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
@@ -24,7 +26,7 @@ unsafe fn cqq5_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqq5Rodada])
 /// Os bytes que a tabela de `n` rodadas tem gravados e que o jogo lê: de cada rodada, a data (+0..+4) e +0x3d..+0x40,
 /// e as faixas até a que termina a lista (a de dia −1 na tabela `guia`, a da original); o resto da memória alocada não
 /// é escrito.
-unsafe fn cqq5_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
+pub(crate) unsafe fn cqq5_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
     let mut v = Vec::new();
     for r in 0..n {
         let e = t + r * 0x41;
@@ -45,16 +47,16 @@ unsafe fn cqq5_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
 /// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
 /// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
 /// caso padrão (o oitavo); depois as do fim.
-struct Cqq5Natal {
-    comeco: &'static [Cqq5Rodada],
-    referencia: usize,
-    ajuste: i32,
-    casos: [&'static [Cqq5Rodada]; 8],
-    fim: &'static [Cqq5Rodada],
-    linha: u32,
+pub(crate) struct Cqq5Natal {
+    pub(crate) comeco: &'static [Cqq5Rodada],
+    pub(crate) referencia: usize,
+    pub(crate) ajuste: i32,
+    pub(crate) casos: [&'static [Cqq5Rodada]; 8],
+    pub(crate) fim: &'static [Cqq5Rodada],
+    pub(crate) linha: u32,
 }
 
-unsafe fn cqq5_natal(t: usize, ano: u32, n: &Cqq5Natal, arquivo: usize) {
+pub(crate) unsafe fn cqq5_natal(t: usize, ano: u32, n: &Cqq5Natal, arquivo: usize) {
     let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     cqq5_rodadas(t, ano, 0, n.comeco);
     let mut d = [0u16; 4];
@@ -75,7 +77,7 @@ unsafe fn cqq5_natal(t: usize, ano: u32, n: &Cqq5Natal, arquivo: usize) {
 /// Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
 /// `cqq5_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
-unsafe fn cqq5_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+pub(crate) unsafe fn cqq5_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
                        original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
@@ -102,7 +104,7 @@ unsafe fn cqq5_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i1
 }
 
 /// a divisão de baixo espanhola: as rodadas antes do Natal (ano par)
-const CQQ5_BAIXO_PAR_COMECO: [Cqq5Rodada; 17] = [
+pub(crate) const CQQ5_BAIXO_PAR_COMECO: [Cqq5Rodada; 17] = [
     (30, 7, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 0: 30/ago
     (6, 8, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 1: 6/set
     (13, 8, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 2: 13/set
@@ -123,47 +125,47 @@ const CQQ5_BAIXO_PAR_COMECO: [Cqq5Rodada; 17] = [
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 17/dez (ano par)
-const CQQ5_BAIXO_PAR_NATAL_0: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_PAR_NATAL_0: [Cqq5Rodada; 1] = [
     (26, 11, 0, -1, 2, &[(-1, -1, -1)]), // 17: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 18/dez (ano par)
-const CQQ5_BAIXO_PAR_NATAL_1: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_PAR_NATAL_1: [Cqq5Rodada; 1] = [
     (26, 11, 0, -1, 2, &[(-1, -1, -1)]), // 17: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 19/dez (ano par)
-const CQQ5_BAIXO_PAR_NATAL_2: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_PAR_NATAL_2: [Cqq5Rodada; 1] = [
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 17: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 20/dez (ano par)
-const CQQ5_BAIXO_PAR_NATAL_3: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_PAR_NATAL_3: [Cqq5Rodada; 1] = [
     (27, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 27/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 21/dez (ano par)
-const CQQ5_BAIXO_PAR_NATAL_4: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_PAR_NATAL_4: [Cqq5Rodada; 1] = [
     (28, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 28/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 22/dez (ano par)
-const CQQ5_BAIXO_PAR_NATAL_5: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_PAR_NATAL_5: [Cqq5Rodada; 1] = [
     (29, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 29/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 23/dez (ano par)
-const CQQ5_BAIXO_PAR_NATAL_6: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_PAR_NATAL_6: [Cqq5Rodada; 1] = [
     (30, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 30/dez
 ];
 
 /// as rodadas do Natal no caso padrão (a rodada 16 fora de 17 a 23/dez: a caixa) (ano par)
-const CQQ5_BAIXO_PAR_NATAL_PADRAO: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_PAR_NATAL_PADRAO: [Cqq5Rodada; 1] = [
     (27, 11, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 27/dez
 ];
 
 /// a divisão de baixo espanhola: as rodadas depois do Natal (ano par)
-const CQQ5_BAIXO_PAR_FIM: [Cqq5Rodada; 24] = [
+pub(crate) const CQQ5_BAIXO_PAR_FIM: [Cqq5Rodada; 24] = [
     (3, 0, 1, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 18: 3/jan (+1 ano)
     (10, 0, 1, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 19: 10/jan (+1 ano)
     (17, 0, 1, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 20: 17/jan (+1 ano)
@@ -191,7 +193,7 @@ const CQQ5_BAIXO_PAR_FIM: [Cqq5Rodada; 24] = [
 ];
 
 /// a divisão de baixo espanhola: as rodadas antes do Natal (ano impar)
-const CQQ5_BAIXO_IMPAR_COMECO: [Cqq5Rodada; 20] = [
+pub(crate) const CQQ5_BAIXO_IMPAR_COMECO: [Cqq5Rodada; 20] = [
     (16, 7, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 0: 16/ago
     (23, 7, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 1: 23/ago
     (26, 7, 0, 2, 2, &[(-1, -1, -1)]), // 2: 26/ago
@@ -215,47 +217,47 @@ const CQQ5_BAIXO_IMPAR_COMECO: [Cqq5Rodada; 20] = [
 ];
 
 /// as rodadas do Natal quando a rodada 19 (a de referência) cai em 17/dez (ano impar)
-const CQQ5_BAIXO_IMPAR_NATAL_0: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_0: [Cqq5Rodada; 1] = [
     (26, 11, 0, -1, 2, &[(-1, -1, -1)]), // 20: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 19 (a de referência) cai em 18/dez (ano impar)
-const CQQ5_BAIXO_IMPAR_NATAL_1: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_1: [Cqq5Rodada; 1] = [
     (26, 11, 0, -1, 2, &[(-1, -1, -1)]), // 20: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 19 (a de referência) cai em 19/dez (ano impar)
-const CQQ5_BAIXO_IMPAR_NATAL_2: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_2: [Cqq5Rodada; 1] = [
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 20: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 19 (a de referência) cai em 20/dez (ano impar)
-const CQQ5_BAIXO_IMPAR_NATAL_3: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_3: [Cqq5Rodada; 1] = [
     (27, 11, 0, -1, 1, &[(5, 1, 1), (-1, -1, -1)]), // 20: 27/dez
 ];
 
 /// as rodadas do Natal quando a rodada 19 (a de referência) cai em 21/dez (ano impar)
-const CQQ5_BAIXO_IMPAR_NATAL_4: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_4: [Cqq5Rodada; 1] = [
     (28, 11, 0, -1, 1, &[(5, 1, 1), (-1, -1, -1)]), // 20: 28/dez
 ];
 
 /// as rodadas do Natal quando a rodada 19 (a de referência) cai em 22/dez (ano impar)
-const CQQ5_BAIXO_IMPAR_NATAL_5: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_5: [Cqq5Rodada; 1] = [
     (29, 11, 0, -1, 1, &[(5, 1, 1), (-1, -1, -1)]), // 20: 29/dez
 ];
 
 /// as rodadas do Natal quando a rodada 19 (a de referência) cai em 23/dez (ano impar)
-const CQQ5_BAIXO_IMPAR_NATAL_6: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_6: [Cqq5Rodada; 1] = [
     (30, 11, 0, -1, 1, &[(5, 1, 1), (-1, -1, -1)]), // 20: 30/dez
 ];
 
 /// as rodadas do Natal no caso padrão (a rodada 19 fora de 17 a 23/dez: a caixa) (ano impar)
-const CQQ5_BAIXO_IMPAR_NATAL_PADRAO: [Cqq5Rodada; 1] = [
+pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_PADRAO: [Cqq5Rodada; 1] = [
     (27, 11, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 20: 27/dez
 ];
 
 /// a divisão de baixo espanhola: as rodadas depois do Natal (ano impar)
-const CQQ5_BAIXO_IMPAR_FIM: [Cqq5Rodada; 21] = [
+pub(crate) const CQQ5_BAIXO_IMPAR_FIM: [Cqq5Rodada; 21] = [
     (3, 0, 1, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 21: 3/jan (+1 ano)
     (10, 0, 1, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 22: 10/jan (+1 ano)
     (17, 0, 1, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 23: 17/jan (+1 ano)
@@ -279,8 +281,8 @@ const CQQ5_BAIXO_IMPAR_FIM: [Cqq5Rodada; 21] = [
     (16, 4, 1, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 41: 16/mai (+1 ano)
 ];
 
-const CQQ5_BAIXO_PAR_NATAL: Cqq5Natal = Cqq5Natal { comeco: &CQQ5_BAIXO_PAR_COMECO, referencia: 16, ajuste: 17, casos: [&CQQ5_BAIXO_PAR_NATAL_0, &CQQ5_BAIXO_PAR_NATAL_1, &CQQ5_BAIXO_PAR_NATAL_2, &CQQ5_BAIXO_PAR_NATAL_3, &CQQ5_BAIXO_PAR_NATAL_4, &CQQ5_BAIXO_PAR_NATAL_5, &CQQ5_BAIXO_PAR_NATAL_6, &CQQ5_BAIXO_PAR_NATAL_PADRAO], fim: &CQQ5_BAIXO_PAR_FIM, linha: 0x128 };
-const CQQ5_BAIXO_IMPAR_NATAL: Cqq5Natal = Cqq5Natal { comeco: &CQQ5_BAIXO_IMPAR_COMECO, referencia: 19, ajuste: 17, casos: [&CQQ5_BAIXO_IMPAR_NATAL_0, &CQQ5_BAIXO_IMPAR_NATAL_1, &CQQ5_BAIXO_IMPAR_NATAL_2, &CQQ5_BAIXO_IMPAR_NATAL_3, &CQQ5_BAIXO_IMPAR_NATAL_4, &CQQ5_BAIXO_IMPAR_NATAL_5, &CQQ5_BAIXO_IMPAR_NATAL_6, &CQQ5_BAIXO_IMPAR_NATAL_PADRAO], fim: &CQQ5_BAIXO_IMPAR_FIM, linha: 0x237 };
+pub(crate) const CQQ5_BAIXO_PAR_NATAL: Cqq5Natal = Cqq5Natal { comeco: &CQQ5_BAIXO_PAR_COMECO, referencia: 16, ajuste: 17, casos: [&CQQ5_BAIXO_PAR_NATAL_0, &CQQ5_BAIXO_PAR_NATAL_1, &CQQ5_BAIXO_PAR_NATAL_2, &CQQ5_BAIXO_PAR_NATAL_3, &CQQ5_BAIXO_PAR_NATAL_4, &CQQ5_BAIXO_PAR_NATAL_5, &CQQ5_BAIXO_PAR_NATAL_6, &CQQ5_BAIXO_PAR_NATAL_PADRAO], fim: &CQQ5_BAIXO_PAR_FIM, linha: 0x128 };
+pub(crate) const CQQ5_BAIXO_IMPAR_NATAL: Cqq5Natal = Cqq5Natal { comeco: &CQQ5_BAIXO_IMPAR_COMECO, referencia: 19, ajuste: 17, casos: [&CQQ5_BAIXO_IMPAR_NATAL_0, &CQQ5_BAIXO_IMPAR_NATAL_1, &CQQ5_BAIXO_IMPAR_NATAL_2, &CQQ5_BAIXO_IMPAR_NATAL_3, &CQQ5_BAIXO_IMPAR_NATAL_4, &CQQ5_BAIXO_IMPAR_NATAL_5, &CQQ5_BAIXO_IMPAR_NATAL_6, &CQQ5_BAIXO_IMPAR_NATAL_PADRAO], fim: &CQQ5_BAIXO_IMPAR_FIM, linha: 0x237 };
 
 /// the Spanish lower division schedule (background): 42 rounds, nearly all on Sunday (day 6); in odd years (2001/02)
 /// from 16 August to 16 May, in even years from 30 August to 6 June; in each, one fixed-date Christmas round chosen by
@@ -290,7 +292,7 @@ const CQQ5_BAIXO_IMPAR_NATAL: Cqq5Natal = Cqq5Natal { comeco: &CQQ5_BAIXO_IMPAR_
 /// [pt] { 0x851260 } (thiscall, ret 0x10, spa_lower.cpp, 8.495 bytes, método +0x3c): `SpaLower::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 42 rodadas, a tabela pela paridade do ano +0x40, cada uma com a rodada
 /// do Natal; as outras devolvem 0. Fonte 0xa82980.
-unsafe extern "thiscall" fn calendario_da_divisao_de_baixo_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn calendario_da_divisao_de_baixo_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match fase as u8 {
         0xff => {
@@ -317,7 +319,7 @@ unsafe extern "thiscall" fn calendario_da_divisao_de_baixo_espanhola(this: usize
     }
 }
 
-unsafe extern "thiscall" fn comparar_calendario_da_divisao_de_baixo_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_divisao_de_baixo_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1945);
     cqq5_comparar("calendario_da_divisao_de_baixo_espanhola", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_divisao_de_baixo_espanhola(this, fase, r, e, l))
 }
@@ -328,12 +330,12 @@ unsafe extern "thiscall" fn comparar_calendario_da_divisao_de_baixo_espanhola(th
 
 
 /// O registro de competição de id [g] (vetor [0xae23d0], 0x6b bytes).
-unsafe fn cqm6_registro(g: usize) -> usize {
+pub(crate) unsafe fn cqm6_registro(g: usize) -> usize {
     read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(g).wrapping_mul(0x6b))
 }
 
 /// A competição do clube (+0x57, o id no +0) é a de id [g]?
-unsafe fn cqm6_na(c: usize, g: usize) -> bool {
+pub(crate) unsafe fn cqm6_na(c: usize, g: usize) -> bool {
     let comp = read_u32_as_usize(c + 0x57);
     comp != 0 && read_u32_as_usize(comp) == read_u32_as_usize(g)
 }
@@ -349,7 +351,7 @@ unsafe fn cqm6_na(c: usize, g: usize) -> bool {
 /// senão, só a liga (+0x44 = 0xff, +0x30 = −1, +0x2c = 0), as regras (0x853790), a tabela (0x8533d0) e os jogos
 /// (League::create_fixtures 0x6835c0), todos mov ecx -> thiscall, ret 0; cada falha, a caixa da sua linha (0x3f,
 /// 0x46, 0x4d do fonte 0xa82880) e fim. Devolve this.
-unsafe extern "thiscall" fn construir_divisao_de_baixo_espanhola(this: usize, ano: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn construir_divisao_de_baixo_espanhola(this: usize, ano: u32) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_SPALOWER_SET_UP_RULES);
@@ -382,7 +384,7 @@ unsafe extern "thiscall" fn construir_divisao_de_baixo_espanhola(this: usize, an
 }
 
 /// Aloca e sorteia (pela tabela): só a original, conferindo a devolução, a vtable, o ano, a disciplina e o registro.
-unsafe extern "thiscall" fn comparar_construir_divisao_de_baixo_espanhola(this: usize, ano: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construir_divisao_de_baixo_espanhola(this: usize, ano: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(1873);
     let r = o(this, ano);
     let ok = r == this && read_u32_as_usize(this) == 0x96fb1c && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
@@ -393,7 +395,7 @@ unsafe extern "thiscall" fn comparar_construir_divisao_de_baixo_espanhola(this: 
 
 /// O clube de cima do clube `c` (club_get_linked_b_team 0x540a50: push 1; push &eh_a; push c; add esp, 0xc -> cdecl),
 /// se `c` é o time B dele (eh_a = 0) e ele está na competição de id [g].
-unsafe fn cqm6_time_b_de(c: usize, g: usize) -> bool {
+pub(crate) unsafe fn cqm6_time_b_de(c: usize, g: usize) -> bool {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut eh_a: u32 = 0;
     let p = parceiro(c, &mut eh_a, 1);
@@ -411,7 +413,7 @@ unsafe fn cqm6_time_b_de(c: usize, g: usize) -> bool {
 /// lixo da pilha em cima; a 0x687430 só lê o byte); mov ecx, this -> thiscall, ret 0x10); o time B de um clube da
 /// Primera ([0x9cf624]) leva o destino −4 (+0x37 = 0xfc: não pode subir). Cheia: o fundo de prêmios (+0x28 =
 /// League::calc_prize_fund 0x682f70: push 50000; mov ecx -> thiscall, ret 4), +0xe1 = 1 e 1; senão 0.
-unsafe extern "thiscall" fn tabela_da_segunda(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn tabela_da_segunda(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let premios: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
@@ -453,7 +455,7 @@ unsafe extern "thiscall" fn tabela_da_segunda(this: usize) -> u32 {
 
 /// Aloca: só a original. O plano, feito antes: os clubes da Segunda na ordem do banco (até 22) e a marca dos times B.
 /// Depois: a devolução, +0x3e e as linhas (o clube e o destino −4 dos marcados).
-unsafe extern "thiscall" fn comparar_tabela_da_segunda(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_segunda(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1874);
     let n = read_u32_as_usize(0xae235c) as i32;
     let base = read_u32_as_usize(0xae23b4);
@@ -484,7 +486,7 @@ unsafe extern "thiscall" fn comparar_tabela_da_segunda(this: usize) -> u32 {
 /// banco, até 100) das competições de id [0x9cf62c], [0x9cf630], [0x9cf634], [0x9cf638] [inferência: os 4 grupos da
 /// Segunda B] ou, se espanhóis, da de id [0x9cf764] [inferência: a divisão genérica de baixo], que não são time B nem
 /// time A de ninguém (club_get_linked_b_team devolve 0).
-unsafe fn cqm6_candidatos() -> Vec<usize> {
+pub(crate) unsafe fn cqm6_candidatos() -> Vec<usize> {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut v = Vec::new();
     let n = read_u32_as_usize(0xae235c) as i32;
@@ -512,7 +514,7 @@ unsafe fn cqm6_candidatos() -> Vec<usize> {
 /// Os times B espanhóis (fora da Primera e da Segunda) cujo clube de cima está na competição de id [g], na ordem do
 /// banco, até 22 linhas (`k` já usadas). Os últimos `2 × [0xae2350]` clubes do banco ficam de fora [inferência: os
 /// clubes criados depois, sem divisão].
-unsafe fn cqm6_times_b(g: usize, k: &mut u8, linhas: i16, mut por: impl FnMut(usize, bool)) {
+pub(crate) unsafe fn cqm6_times_b(g: usize, k: &mut u8, linhas: i16, mut por: impl FnMut(usize, bool)) {
     let n = (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
     let base = read_u32_as_usize(0xae23b4);
     let mut i: i16 = 0;
@@ -551,7 +553,7 @@ unsafe fn cqm6_times_b(g: usize, k: &mut u8, linhas: i16, mut por: impl FnMut(us
 /// cada um com +0x60 = o registro. As linhas: League::init_table_row 0x687430 (push 0; push 0; push clube; push eax
 /// (al = a linha, os bits de cima são lixo de outra conta; a 0x687430 só lê o byte); mov ecx, this -> thiscall, ret
 /// 0x10). Devolve se encheu.
-unsafe extern "thiscall" fn tabela_da_divisao_de_baixo_espanhola(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn tabela_da_divisao_de_baixo_espanhola(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let embaralhar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
@@ -609,7 +611,7 @@ unsafe extern "thiscall" fn tabela_da_divisao_de_baixo_espanhola(this: usize) ->
 /// Depois: +0x3e e o clube das primeiras linhas. O +0x60 não entra: a segunda passada (a dos times B da Segunda) zera o
 /// +0x60 de todo time espanhol que não entra nela, inclusive os da Primera que a primeira acabou de pôr na tabela
 /// (comportamento da original, que a cópia repete; achado pela comparação de 8 ligas, 05/11/2026).
-unsafe extern "thiscall" fn comparar_tabela_da_divisao_de_baixo_espanhola(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_divisao_de_baixo_espanhola(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1875);
     let mut plano: Vec<usize> = Vec::new();
     let mut k: u8 = 0;

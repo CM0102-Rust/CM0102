@@ -1,16 +1,36 @@
-//! Motor de partidas (`match_eng.cpp`, `match_pl.cpp`): primeiras rotinas em Rust.
+//! The game's routines rewritten in Rust, and how they replace the originals.
 //!
-//! Folhas escolhidas pela cobertura (`cobertura.py`, carreira com o motor ligado): acessores que
-//! so leem tabelas do motor. Devolvem so parte de eax (`al` ou `ax`); os bits altos sao lixo que
-//! nenhum chamador usa. Cada rotina reproduz exatamente a parte do retorno que o tipo dela define,
-//! e a comparacao lado a lado confere essa parte; a impressao digital da carreira pega qualquer
-//! chamador que dependesse de mais.
+//! # How a routine replaces the original
+//! The DLL is loaded by the untouched `cm0102.exe` (3.9.68). For each rewritten routine, `desvios.rs` writes a jump at
+//! the start of the original routine (a "detour"); the jump goes to our Rust copy. Before writing it, the DLL checks the
+//! first bytes of the original (`PROLOGOS`, one `Prologo { endereco, bytes }` per routine) and the hash of the whole
+//! routine (`assinaturas.rs`): if the exe was changed there (another patch), the routine stays original.
 //!
-//! O objeto do motor (`this`) tem, entre outros campos:
-//!   0x8eaf, 0x8eb0  bytes por lado
-//!   0x8ebc, 0x8ec4  ponteiros, um por lado, para tabelas de palavras indexadas por 0..=10
-//!   0x8ed8          palavra
-//! Tabela global de palavras 24 x N em 0xb67c30.
+//! The four tables in `instalar` are aligned by position: entry `i` of `PROLOGOS` is the original address, entry `i`
+//! of the `rust` list is our copy, entry `i` of the `comparar` list is its comparer, entry `i` of the names is its
+//! label. `orig::<F>(i)` calls the original routine `i` (through the bytes saved before the jump).
+//!
+//! # How to read a routine file
+//! `motor/<folder>/<file>.rs` holds the routines of the game's source file of the same name (`comp/leagues/eng_prm.rs`
+//! for `eng_prm.cpp`). Each rewritten routine has a header: what it does, then `Original: Class::method (address,
+//! source file, calling convention)`, then the Portuguese notes (`[pt]`). The vocabulary:
+//! - `comparar_<name>`: the comparer. In comparison mode (`CM_COMPARAR=1`) it runs the original and our copy side by
+//!   side (or the original only, checking the outcome it planned) and records any difference (`PLACAR`).
+//! - `ramo("...")`: a branch counter; the tests use it to know which paths a career went through.
+//! - `read_u32(a)`, `write_u8(a, v)` (`mem.rs`): unaligned access to the game's records; `rec + 0x40` is a field of a
+//!   record (see `docs/CAMPOS.en.md` for the known fields).
+//! - `KEY_*` (`keys.rs`): the address of a global that holds the pointer to a fixed nation, club... (`read_usize(KEY_..)`).
+//! - `FN_*` (`exe_fns.rs`): the address of an exe function the routine still calls (through `transmute`).
+//! - `aviso_em(file, line)`: the game's error box; `f64_em(addr)`: a float constant read from the exe; `ftol`: the
+//!   compiler's float-to-int conversion, as the original does it.
+//! - `[inferência]` / `[inference]`: something read from the code but not proven by a test.
+//! - Comments like `// cqi4: ...` mark the points the mutation tests change (`engenharia-reversa/mutacoes/`).
+//! - Prefixes like `cqi4_` are the work item a helper came from; they are being replaced by plain names.
+//!
+//! [pt] As rotinas do jogo reescritas em Rust e como elas substituem as originais. A DLL desvia o começo de cada rotina
+//! original para a cópia em Rust (`desvios.rs`), depois de conferir os primeiros bytes (`PROLOGOS`) e o hash da rotina
+//! inteira (`assinaturas.rs`). As quatro tabelas de `instalar` andam juntas pela posição; `orig::<F>(i)` chama a original
+//! `i`. Cada arquivo de `motor/` tem as rotinas do arquivo de origem do jogo de mesmo nome; o vocabulário está acima.
 
 use crate::comparacao::{Placar, Sorteio};
 use crate::desvios::{self, Prologo};
@@ -2399,138 +2419,396 @@ unsafe extern "thiscall" fn apontar(this: usize, a: i8, b: i8, c: i8, d: i8) {
     }
 }
 
-// The rest of the engine, one file per source file of the game (stage 3 of the reorganisation, 07/11/2026).
-// [pt] O resto do motor, um arquivo por arquivo de origem do jogo (etapa 3 da reorganização, 07/11/2026).
+// The rest of the engine, one module per source file of the game (reorganisation, 07/11/2026).
+// [pt] O resto do motor, um módulo por arquivo de origem do jogo (reorganização, 07/11/2026).
 include!("motor/macros.rs");
-include!("motor/mem.rs");
-include!("motor/keys.rs");
-include!("motor/exe_fns.rs");
-include!("motor/area.rs");
-include!("motor/award/month_award.rs");
-include!("motor/award/month_ratings.rs");
-include!("motor/awol.rs");
-include!("motor/cash.rs");
-include!("motor/club_history.rs");
-include!("motor/club_records.rs");
-include!("motor/comp/comp.rs");
-include!("motor/comp/comp_util.rs");
-include!("motor/comp/conmebol_seeding.rs");
-include!("motor/comp/cup.rs");
-include!("motor/comp/cups/bra_champ_cup.rs");
-include!("motor/comp/cups/bra_cup.rs");
-include!("motor/comp/cups/cup_stage.rs");
-include!("motor/comp/cups/eng_auto_cup.rs");
-include!("motor/comp/cups/eng_cc_cup.rs");
-include!("motor/comp/cups/fra_cup.rs");
-include!("motor/comp/cups/fra_super.rs");
-include!("motor/comp/cups/ita_cup.rs");
-include!("motor/comp/cups/jap_j_cup.rs");
-include!("motor/comp/cups/spa_cup.rs");
-include!("motor/comp/cups/spa_super.rs");
-include!("motor/comp/cups/usa_mls_all_stars.rs");
-include!("motor/comp/eurocomp/asia_club_champ.rs");
-include!("motor/comp/eurocomp/asia_cup_winner.rs");
-include!("motor/comp/eurocomp/con_champ.rs");
-include!("motor/comp/eurocomp/con_merc_cup.rs");
-include!("motor/comp/eurocomp/conmebol_liber.rs");
-include!("motor/comp/eurocomp/conmebol_merc.rs");
-include!("motor/comp/eurocomp/eur_super_cup.rs");
-include!("motor/comp/eurocomp/european_cup.rs");
-include!("motor/comp/eurocomp/intertoto_cup.rs");
-include!("motor/comp/eurocomp/oceania_club_champ.rs");
-include!("motor/comp/eurocomp/uefa_cup.rs");
-include!("motor/comp/fifa_rankings.rs");
-include!("motor/comp/fix_man.rs");
-include!("motor/comp/friendly.rs");
-include!("motor/comp/host_country.rs");
-include!("motor/comp/intercomp/african_nations.rs");
-include!("motor/comp/intercomp/euro_champ_qual.rs");
-include!("motor/comp/intercomp/goldcup.rs");
-include!("motor/comp/league.rs");
-include!("motor/comp/leagues/aus_nsl.rs");
-include!("motor/comp/leagues/bra_nat_first.rs");
-include!("motor/comp/leagues/bra_nat_third.rs");
-include!("motor/comp/leagues/bra_reg_bahia.rs");
-include!("motor/comp/leagues/bra_reg_central.rs");
-include!("motor/comp/leagues/bra_reg_gaucho.rs");
-include!("motor/comp/leagues/bra_reg_goias.rs");
-include!("motor/comp/leagues/bra_reg_minas_gerais.rs");
-include!("motor/comp/leagues/bra_reg_northeast.rs");
-include!("motor/comp/leagues/bra_reg_parana.rs");
-include!("motor/comp/leagues/bra_reg_pern.rs");
-include!("motor/comp/leagues/bra_reg_rio.rs");
-include!("motor/comp/leagues/eng_first.rs");
-include!("motor/comp/leagues/eng_prm.rs");
-include!("motor/comp/leagues/eng_second.rs");
-include!("motor/comp/leagues/fin_prm.rs");
-include!("motor/comp/leagues/fra_cfa.rs");
-include!("motor/comp/leagues/fra_first.rs");
-include!("motor/comp/leagues/fra_second.rs");
-include!("motor/comp/leagues/fra_third.rs");
-include!("motor/comp/leagues/ita_ser_a.rs");
-include!("motor/comp/leagues/ita_ser_c1a.rs");
-include!("motor/comp/leagues/jap_j1.rs");
-include!("motor/comp/leagues/spa_first.rs");
-include!("motor/comp/leagues/spa_lower.rs");
-include!("motor/comp/leagues/spa_second.rs");
-include!("motor/comp/leagues/usa_mls.rs");
-include!("motor/comp/squad_manager.rs");
-include!("motor/comp/stadium.rs");
-include!("motor/comp/uefa_seeding.rs");
-include!("motor/comp/worldcup/wc_europe_league.rs");
-include!("motor/comp/worldcup/world_cup.rs");
-include!("motor/contract_manager.rs");
-include!("motor/database.rs");
-include!("motor/db_files.rs");
-include!("motor/discipline.rs");
-include!("motor/fine.rs");
-include!("motor/fog_of_war.rs");
-include!("motor/formation.rs");
-include!("motor/game.rs");
-include!("motor/human_manager.rs");
-include!("motor/index.rs");
-include!("motor/injury.rs");
-include!("motor/key_nation.rs");
-include!("motor/main.rs");
-include!("motor/manager_manager.rs");
-include!("motor/match_day.rs");
-include!("motor/match_eng.rs");
-include!("motor/match_events.rs");
-include!("motor/match_man.rs");
-include!("motor/match_official.rs");
-include!("motor/match_pl.rs");
-include!("motor/match_screens.rs");
-include!("motor/media.rs");
-include!("motor/national_teams.rs");
-include!("motor/news.rs");
-include!("motor/officials_manager.rs");
-include!("motor/player_regen.rs");
-include!("motor/player_search.rs");
-include!("motor/player_stats.rs");
-include!("motor/printouts.rs");
-include!("motor/record_utils.rs");
-include!("motor/ruling_body/ruling_body.rs");
-include!("motor/scout_manager.rs");
-include!("motor/scrman.rs");
-include!("motor/setup.rs");
-include!("motor/shared.rs");
-include!("motor/shortlist_manager.rs");
-include!("motor/staff_contracts.rs");
-include!("motor/staff_records.rs");
-include!("motor/tactics.rs");
-include!("motor/training_manager.rs");
-include!("motor/transfer/argentina_rules.rs");
-include!("motor/transfer/brazil_rules.rs");
-include!("motor/transfer/england_rules.rs");
-include!("motor/transfer/greece_rules.rs");
-include!("motor/transfer/holland_rules.rs");
-include!("motor/transfer/norway_rules.rs");
-include!("motor/transfer/scotland_rules.rs");
-include!("motor/transfer/spain_rules.rs");
-include!("motor/transfer/turkey_rules.rs");
-include!("motor/transfer_manager.rs");
-include!("motor/weather.rs");
-include!("motor/zipdir.rs");
+#[path = "motor/area.rs"]
+pub(crate) mod area;
+pub(crate) use self::area::*;
+#[path = "motor/award/month_award.rs"]
+pub(crate) mod award_month_award;
+pub(crate) use self::award_month_award::*;
+#[path = "motor/award/month_ratings.rs"]
+pub(crate) mod award_month_ratings;
+pub(crate) use self::award_month_ratings::*;
+#[path = "motor/awol.rs"]
+pub(crate) mod awol;
+pub(crate) use self::awol::*;
+#[path = "motor/cash.rs"]
+pub(crate) mod cash;
+pub(crate) use self::cash::*;
+#[path = "motor/club_history.rs"]
+pub(crate) mod club_history;
+pub(crate) use self::club_history::*;
+#[path = "motor/club_records.rs"]
+pub(crate) mod club_records;
+pub(crate) use self::club_records::*;
+#[path = "motor/comp/comp.rs"]
+pub(crate) mod comp_comp;
+pub(crate) use self::comp_comp::*;
+#[path = "motor/comp/comp_util.rs"]
+pub(crate) mod comp_comp_util;
+pub(crate) use self::comp_comp_util::*;
+#[path = "motor/comp/conmebol_seeding.rs"]
+pub(crate) mod comp_conmebol_seeding;
+pub(crate) use self::comp_conmebol_seeding::*;
+#[path = "motor/comp/cup.rs"]
+pub(crate) mod comp_cup;
+pub(crate) use self::comp_cup::*;
+#[path = "motor/comp/cups/bra_champ_cup.rs"]
+pub(crate) mod comp_cups_bra_champ_cup;
+pub(crate) use self::comp_cups_bra_champ_cup::*;
+#[path = "motor/comp/cups/bra_cup.rs"]
+pub(crate) mod comp_cups_bra_cup;
+pub(crate) use self::comp_cups_bra_cup::*;
+#[path = "motor/comp/cups/cup_stage.rs"]
+pub(crate) mod comp_cups_cup_stage;
+pub(crate) use self::comp_cups_cup_stage::*;
+#[path = "motor/comp/cups/eng_auto_cup.rs"]
+pub(crate) mod comp_cups_eng_auto_cup;
+pub(crate) use self::comp_cups_eng_auto_cup::*;
+#[path = "motor/comp/cups/eng_cc_cup.rs"]
+pub(crate) mod comp_cups_eng_cc_cup;
+pub(crate) use self::comp_cups_eng_cc_cup::*;
+#[path = "motor/comp/cups/fra_cup.rs"]
+pub(crate) mod comp_cups_fra_cup;
+pub(crate) use self::comp_cups_fra_cup::*;
+#[path = "motor/comp/cups/fra_super.rs"]
+pub(crate) mod comp_cups_fra_super;
+pub(crate) use self::comp_cups_fra_super::*;
+#[path = "motor/comp/cups/ita_cup.rs"]
+pub(crate) mod comp_cups_ita_cup;
+pub(crate) use self::comp_cups_ita_cup::*;
+#[path = "motor/comp/cups/jap_j_cup.rs"]
+pub(crate) mod comp_cups_jap_j_cup;
+pub(crate) use self::comp_cups_jap_j_cup::*;
+#[path = "motor/comp/cups/spa_cup.rs"]
+pub(crate) mod comp_cups_spa_cup;
+pub(crate) use self::comp_cups_spa_cup::*;
+#[path = "motor/comp/cups/spa_super.rs"]
+pub(crate) mod comp_cups_spa_super;
+pub(crate) use self::comp_cups_spa_super::*;
+#[path = "motor/comp/cups/usa_mls_all_stars.rs"]
+pub(crate) mod comp_cups_usa_mls_all_stars;
+pub(crate) use self::comp_cups_usa_mls_all_stars::*;
+#[path = "motor/comp/eurocomp/asia_club_champ.rs"]
+pub(crate) mod comp_eurocomp_asia_club_champ;
+pub(crate) use self::comp_eurocomp_asia_club_champ::*;
+#[path = "motor/comp/eurocomp/asia_cup_winner.rs"]
+pub(crate) mod comp_eurocomp_asia_cup_winner;
+pub(crate) use self::comp_eurocomp_asia_cup_winner::*;
+#[path = "motor/comp/eurocomp/con_champ.rs"]
+pub(crate) mod comp_eurocomp_con_champ;
+pub(crate) use self::comp_eurocomp_con_champ::*;
+#[path = "motor/comp/eurocomp/con_merc_cup.rs"]
+pub(crate) mod comp_eurocomp_con_merc_cup;
+pub(crate) use self::comp_eurocomp_con_merc_cup::*;
+#[path = "motor/comp/eurocomp/conmebol_liber.rs"]
+pub(crate) mod comp_eurocomp_conmebol_liber;
+pub(crate) use self::comp_eurocomp_conmebol_liber::*;
+#[path = "motor/comp/eurocomp/conmebol_merc.rs"]
+pub(crate) mod comp_eurocomp_conmebol_merc;
+pub(crate) use self::comp_eurocomp_conmebol_merc::*;
+#[path = "motor/comp/eurocomp/eur_super_cup.rs"]
+pub(crate) mod comp_eurocomp_eur_super_cup;
+pub(crate) use self::comp_eurocomp_eur_super_cup::*;
+#[path = "motor/comp/eurocomp/european_cup.rs"]
+pub(crate) mod comp_eurocomp_european_cup;
+pub(crate) use self::comp_eurocomp_european_cup::*;
+#[path = "motor/comp/eurocomp/intertoto_cup.rs"]
+pub(crate) mod comp_eurocomp_intertoto_cup;
+pub(crate) use self::comp_eurocomp_intertoto_cup::*;
+#[path = "motor/comp/eurocomp/oceania_club_champ.rs"]
+pub(crate) mod comp_eurocomp_oceania_club_champ;
+pub(crate) use self::comp_eurocomp_oceania_club_champ::*;
+#[path = "motor/comp/eurocomp/uefa_cup.rs"]
+pub(crate) mod comp_eurocomp_uefa_cup;
+pub(crate) use self::comp_eurocomp_uefa_cup::*;
+#[path = "motor/comp/fifa_rankings.rs"]
+pub(crate) mod comp_fifa_rankings;
+pub(crate) use self::comp_fifa_rankings::*;
+#[path = "motor/comp/fix_man.rs"]
+pub(crate) mod comp_fix_man;
+pub(crate) use self::comp_fix_man::*;
+#[path = "motor/comp/friendly.rs"]
+pub(crate) mod comp_friendly;
+pub(crate) use self::comp_friendly::*;
+#[path = "motor/comp/host_country.rs"]
+pub(crate) mod comp_host_country;
+pub(crate) use self::comp_host_country::*;
+#[path = "motor/comp/intercomp/african_nations.rs"]
+pub(crate) mod comp_intercomp_african_nations;
+pub(crate) use self::comp_intercomp_african_nations::*;
+#[path = "motor/comp/intercomp/euro_champ_qual.rs"]
+pub(crate) mod comp_intercomp_euro_champ_qual;
+pub(crate) use self::comp_intercomp_euro_champ_qual::*;
+#[path = "motor/comp/intercomp/goldcup.rs"]
+pub(crate) mod comp_intercomp_goldcup;
+pub(crate) use self::comp_intercomp_goldcup::*;
+#[path = "motor/comp/league.rs"]
+pub(crate) mod comp_league;
+pub(crate) use self::comp_league::*;
+#[path = "motor/comp/leagues/aus_nsl.rs"]
+pub(crate) mod comp_leagues_aus_nsl;
+pub(crate) use self::comp_leagues_aus_nsl::*;
+#[path = "motor/comp/leagues/bra_nat_first.rs"]
+pub(crate) mod comp_leagues_bra_nat_first;
+pub(crate) use self::comp_leagues_bra_nat_first::*;
+#[path = "motor/comp/leagues/bra_nat_third.rs"]
+pub(crate) mod comp_leagues_bra_nat_third;
+pub(crate) use self::comp_leagues_bra_nat_third::*;
+#[path = "motor/comp/leagues/bra_reg_bahia.rs"]
+pub(crate) mod comp_leagues_bra_reg_bahia;
+pub(crate) use self::comp_leagues_bra_reg_bahia::*;
+#[path = "motor/comp/leagues/bra_reg_central.rs"]
+pub(crate) mod comp_leagues_bra_reg_central;
+pub(crate) use self::comp_leagues_bra_reg_central::*;
+#[path = "motor/comp/leagues/bra_reg_gaucho.rs"]
+pub(crate) mod comp_leagues_bra_reg_gaucho;
+pub(crate) use self::comp_leagues_bra_reg_gaucho::*;
+#[path = "motor/comp/leagues/bra_reg_goias.rs"]
+pub(crate) mod comp_leagues_bra_reg_goias;
+pub(crate) use self::comp_leagues_bra_reg_goias::*;
+#[path = "motor/comp/leagues/bra_reg_minas_gerais.rs"]
+pub(crate) mod comp_leagues_bra_reg_minas_gerais;
+pub(crate) use self::comp_leagues_bra_reg_minas_gerais::*;
+#[path = "motor/comp/leagues/bra_reg_northeast.rs"]
+pub(crate) mod comp_leagues_bra_reg_northeast;
+pub(crate) use self::comp_leagues_bra_reg_northeast::*;
+#[path = "motor/comp/leagues/bra_reg_parana.rs"]
+pub(crate) mod comp_leagues_bra_reg_parana;
+pub(crate) use self::comp_leagues_bra_reg_parana::*;
+#[path = "motor/comp/leagues/bra_reg_pern.rs"]
+pub(crate) mod comp_leagues_bra_reg_pern;
+pub(crate) use self::comp_leagues_bra_reg_pern::*;
+#[path = "motor/comp/leagues/bra_reg_rio.rs"]
+pub(crate) mod comp_leagues_bra_reg_rio;
+pub(crate) use self::comp_leagues_bra_reg_rio::*;
+#[path = "motor/comp/leagues/eng_first.rs"]
+pub(crate) mod comp_leagues_eng_first;
+pub(crate) use self::comp_leagues_eng_first::*;
+#[path = "motor/comp/leagues/eng_prm.rs"]
+pub(crate) mod comp_leagues_eng_prm;
+pub(crate) use self::comp_leagues_eng_prm::*;
+#[path = "motor/comp/leagues/eng_second.rs"]
+pub(crate) mod comp_leagues_eng_second;
+pub(crate) use self::comp_leagues_eng_second::*;
+#[path = "motor/comp/leagues/fin_prm.rs"]
+pub(crate) mod comp_leagues_fin_prm;
+pub(crate) use self::comp_leagues_fin_prm::*;
+#[path = "motor/comp/leagues/fra_cfa.rs"]
+pub(crate) mod comp_leagues_fra_cfa;
+pub(crate) use self::comp_leagues_fra_cfa::*;
+#[path = "motor/comp/leagues/fra_first.rs"]
+pub(crate) mod comp_leagues_fra_first;
+pub(crate) use self::comp_leagues_fra_first::*;
+#[path = "motor/comp/leagues/fra_second.rs"]
+pub(crate) mod comp_leagues_fra_second;
+pub(crate) use self::comp_leagues_fra_second::*;
+#[path = "motor/comp/leagues/fra_third.rs"]
+pub(crate) mod comp_leagues_fra_third;
+pub(crate) use self::comp_leagues_fra_third::*;
+#[path = "motor/comp/leagues/ita_ser_a.rs"]
+pub(crate) mod comp_leagues_ita_ser_a;
+pub(crate) use self::comp_leagues_ita_ser_a::*;
+#[path = "motor/comp/leagues/ita_ser_c1a.rs"]
+pub(crate) mod comp_leagues_ita_ser_c1a;
+pub(crate) use self::comp_leagues_ita_ser_c1a::*;
+#[path = "motor/comp/leagues/jap_j1.rs"]
+pub(crate) mod comp_leagues_jap_j1;
+pub(crate) use self::comp_leagues_jap_j1::*;
+#[path = "motor/comp/leagues/spa_first.rs"]
+pub(crate) mod comp_leagues_spa_first;
+pub(crate) use self::comp_leagues_spa_first::*;
+#[path = "motor/comp/leagues/spa_lower.rs"]
+pub(crate) mod comp_leagues_spa_lower;
+pub(crate) use self::comp_leagues_spa_lower::*;
+#[path = "motor/comp/leagues/spa_second.rs"]
+pub(crate) mod comp_leagues_spa_second;
+pub(crate) use self::comp_leagues_spa_second::*;
+#[path = "motor/comp/leagues/usa_mls.rs"]
+pub(crate) mod comp_leagues_usa_mls;
+pub(crate) use self::comp_leagues_usa_mls::*;
+#[path = "motor/comp/squad_manager.rs"]
+pub(crate) mod comp_squad_manager;
+pub(crate) use self::comp_squad_manager::*;
+#[path = "motor/comp/stadium.rs"]
+pub(crate) mod comp_stadium;
+pub(crate) use self::comp_stadium::*;
+#[path = "motor/comp/uefa_seeding.rs"]
+pub(crate) mod comp_uefa_seeding;
+pub(crate) use self::comp_uefa_seeding::*;
+#[path = "motor/comp/worldcup/wc_europe_league.rs"]
+pub(crate) mod comp_worldcup_wc_europe_league;
+pub(crate) use self::comp_worldcup_wc_europe_league::*;
+#[path = "motor/comp/worldcup/world_cup.rs"]
+pub(crate) mod comp_worldcup_world_cup;
+pub(crate) use self::comp_worldcup_world_cup::*;
+#[path = "motor/contract_manager.rs"]
+pub(crate) mod contract_manager;
+pub(crate) use self::contract_manager::*;
+#[path = "motor/database.rs"]
+pub(crate) mod database;
+pub(crate) use self::database::*;
+#[path = "motor/db_files.rs"]
+pub(crate) mod db_files;
+pub(crate) use self::db_files::*;
+#[path = "motor/discipline.rs"]
+pub(crate) mod discipline;
+pub(crate) use self::discipline::*;
+#[path = "motor/exe_fns.rs"]
+pub(crate) mod exe_fns;
+pub(crate) use self::exe_fns::*;
+#[path = "motor/fine.rs"]
+pub(crate) mod fine;
+pub(crate) use self::fine::*;
+#[path = "motor/fog_of_war.rs"]
+pub(crate) mod fog_of_war;
+pub(crate) use self::fog_of_war::*;
+#[path = "motor/formation.rs"]
+pub(crate) mod formation;
+pub(crate) use self::formation::*;
+#[path = "motor/game.rs"]
+pub(crate) mod game;
+pub(crate) use self::game::*;
+#[path = "motor/human_manager.rs"]
+pub(crate) mod human_manager;
+pub(crate) use self::human_manager::*;
+#[path = "motor/index.rs"]
+pub(crate) mod index;
+pub(crate) use self::index::*;
+#[path = "motor/injury.rs"]
+pub(crate) mod injury;
+pub(crate) use self::injury::*;
+#[path = "motor/key_nation.rs"]
+pub(crate) mod key_nation;
+pub(crate) use self::key_nation::*;
+#[path = "motor/keys.rs"]
+pub(crate) mod keys;
+pub(crate) use self::keys::*;
+#[path = "motor/main.rs"]
+pub(crate) mod main;
+pub(crate) use self::main::*;
+#[path = "motor/manager_manager.rs"]
+pub(crate) mod manager_manager;
+pub(crate) use self::manager_manager::*;
+#[path = "motor/match_day.rs"]
+pub(crate) mod match_day;
+pub(crate) use self::match_day::*;
+#[path = "motor/match_eng.rs"]
+pub(crate) mod match_eng;
+pub(crate) use self::match_eng::*;
+#[path = "motor/match_events.rs"]
+pub(crate) mod match_events;
+pub(crate) use self::match_events::*;
+#[path = "motor/match_man.rs"]
+pub(crate) mod match_man;
+pub(crate) use self::match_man::*;
+#[path = "motor/match_official.rs"]
+pub(crate) mod match_official;
+pub(crate) use self::match_official::*;
+#[path = "motor/match_pl.rs"]
+pub(crate) mod match_pl;
+pub(crate) use self::match_pl::*;
+#[path = "motor/match_screens.rs"]
+pub(crate) mod match_screens;
+pub(crate) use self::match_screens::*;
+#[path = "motor/media.rs"]
+pub(crate) mod media;
+pub(crate) use self::media::*;
+#[path = "motor/mem.rs"]
+pub(crate) mod mem;
+pub(crate) use self::mem::*;
+#[path = "motor/national_teams.rs"]
+pub(crate) mod national_teams;
+pub(crate) use self::national_teams::*;
+#[path = "motor/news.rs"]
+pub(crate) mod news;
+pub(crate) use self::news::*;
+#[path = "motor/officials_manager.rs"]
+pub(crate) mod officials_manager;
+pub(crate) use self::officials_manager::*;
+#[path = "motor/player_regen.rs"]
+pub(crate) mod player_regen;
+pub(crate) use self::player_regen::*;
+#[path = "motor/player_search.rs"]
+pub(crate) mod player_search;
+pub(crate) use self::player_search::*;
+#[path = "motor/player_stats.rs"]
+pub(crate) mod player_stats;
+pub(crate) use self::player_stats::*;
+#[path = "motor/printouts.rs"]
+pub(crate) mod printouts;
+pub(crate) use self::printouts::*;
+#[path = "motor/record_utils.rs"]
+pub(crate) mod record_utils;
+pub(crate) use self::record_utils::*;
+#[path = "motor/ruling_body/ruling_body.rs"]
+pub(crate) mod ruling_body_ruling_body;
+pub(crate) use self::ruling_body_ruling_body::*;
+#[path = "motor/scout_manager.rs"]
+pub(crate) mod scout_manager;
+pub(crate) use self::scout_manager::*;
+#[path = "motor/scrman.rs"]
+pub(crate) mod scrman;
+pub(crate) use self::scrman::*;
+#[path = "motor/setup.rs"]
+pub(crate) mod setup;
+pub(crate) use self::setup::*;
+#[path = "motor/shared.rs"]
+pub(crate) mod shared;
+pub(crate) use self::shared::*;
+#[path = "motor/shortlist_manager.rs"]
+pub(crate) mod shortlist_manager;
+pub(crate) use self::shortlist_manager::*;
+#[path = "motor/staff_contracts.rs"]
+pub(crate) mod staff_contracts;
+pub(crate) use self::staff_contracts::*;
+#[path = "motor/staff_records.rs"]
+pub(crate) mod staff_records;
+pub(crate) use self::staff_records::*;
+#[path = "motor/tactics.rs"]
+pub(crate) mod tactics;
+pub(crate) use self::tactics::*;
+#[path = "motor/training_manager.rs"]
+pub(crate) mod training_manager;
+pub(crate) use self::training_manager::*;
+#[path = "motor/transfer/argentina_rules.rs"]
+pub(crate) mod transfer_argentina_rules;
+pub(crate) use self::transfer_argentina_rules::*;
+#[path = "motor/transfer/brazil_rules.rs"]
+pub(crate) mod transfer_brazil_rules;
+pub(crate) use self::transfer_brazil_rules::*;
+#[path = "motor/transfer/england_rules.rs"]
+pub(crate) mod transfer_england_rules;
+pub(crate) use self::transfer_england_rules::*;
+#[path = "motor/transfer/greece_rules.rs"]
+pub(crate) mod transfer_greece_rules;
+pub(crate) use self::transfer_greece_rules::*;
+#[path = "motor/transfer/holland_rules.rs"]
+pub(crate) mod transfer_holland_rules;
+pub(crate) use self::transfer_holland_rules::*;
+#[path = "motor/transfer/norway_rules.rs"]
+pub(crate) mod transfer_norway_rules;
+pub(crate) use self::transfer_norway_rules::*;
+#[path = "motor/transfer/scotland_rules.rs"]
+pub(crate) mod transfer_scotland_rules;
+pub(crate) use self::transfer_scotland_rules::*;
+#[path = "motor/transfer/spain_rules.rs"]
+pub(crate) mod transfer_spain_rules;
+pub(crate) use self::transfer_spain_rules::*;
+#[path = "motor/transfer/turkey_rules.rs"]
+pub(crate) mod transfer_turkey_rules;
+pub(crate) use self::transfer_turkey_rules::*;
+#[path = "motor/transfer_manager.rs"]
+pub(crate) mod transfer_manager;
+pub(crate) use self::transfer_manager::*;
+#[path = "motor/weather.rs"]
+pub(crate) mod weather;
+pub(crate) use self::weather::*;
+#[path = "motor/zipdir.rs"]
+pub(crate) mod zipdir;
+pub(crate) use self::zipdir::*;
 
 // ---------- centesima sexagesima primeira leva: lista de observacao, codigo da posicao e criterio da comissao ----------
 

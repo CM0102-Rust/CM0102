@@ -1,3 +1,5 @@
+use super::*;
+
 // ---------- 218a leva: o contêiner do save: as consultas (o padrão do nome, o id e o tamanho dos itens) (zipdir.cpp) ----------
 
 /// matches a container item name against a pattern with `*` (`*.` goes to the last dot), case-insensitively; the "{
@@ -10,7 +12,7 @@
 /// (0x90c2f0, só o byte baixo). `*.` pula o nome até o último ponto; `*` seguido de outra coisa só
 /// casa se for o fim do padrão. Como a original, o padrão acabar antes do nome também casa ("abc"
 /// casa "abcdef").
-unsafe extern "C" fn casar_nome_com_padrao(padrao: *const u8, nome: *const u8) -> u32 {
+pub(crate) unsafe extern "C" fn casar_nome_com_padrao(padrao: *const u8, nome: *const u8) -> u32 {
     let maiuscula: unsafe extern "C" fn(u32) -> u8 = core::mem::transmute(FN_UTILS_CHAR_TO_LOWER);
     let achar: unsafe extern "C" fn(*const u8, i32) -> usize = core::mem::transmute(FN_946540);
     let texto = |p: *const u8| core::ffi::CStr::from_ptr(p as *const core::ffi::c_char).to_bytes();
@@ -52,7 +54,7 @@ unsafe extern "C" fn casar_nome_com_padrao(padrao: *const u8, nome: *const u8) -
     }
 }
 
-unsafe extern "C" fn comparar_casar_nome_com_padrao(padrao: *const u8, nome: *const u8) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_casar_nome_com_padrao(padrao: *const u8, nome: *const u8) -> u32 {
     let r = orig::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(556)(padrao, nome);
     let n = casar_nome_com_padrao(padrao, nome);
     PLACAR.registrar(r == n, || {
@@ -66,7 +68,7 @@ unsafe extern "C" fn comparar_casar_nome_com_padrao(padrao: *const u8, nome: *co
 /// 1/2, que viram 3/4) do contêiner aberto `f`, numa cópia `h` de 0x416ec bytes, como as consultas
 /// do zipdir.cpp fazem (cada uma tem a sua cópia do trecho). Se o cabeçalho não vier, `h` fica
 /// como estava (memória da alocação, sem zerar, como na original).
-unsafe fn ler_cabecalho_avulso(h: usize, f: usize) {
+pub(crate) unsafe fn ler_cabecalho_avulso(h: usize, f: usize) {
     let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
     if ler(h, 0xc, 1, f) == 0 {
         return;
@@ -90,7 +92,7 @@ unsafe fn ler_cabecalho_avulso(h: usize, f: usize) {
 /// [pt] { 0x9331c0 } (cdecl, zipdir.cpp): `zget_archive_id(caminho)`: o dword +4 do cabeçalho do
 /// contêiner (0x16 `.sav`, 0x17 `.qst`), ou 0x14 se não abrir ou o tipo não for 3/4. Sem memória,
 /// a caixa de erro (zipdir.cpp 592) e 0x14.
-unsafe extern "C" fn id_do_conteiner(caminho: usize) -> u32 {
+pub(crate) unsafe extern "C" fn id_do_conteiner(caminho: usize) -> u32 {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
@@ -118,7 +120,7 @@ unsafe extern "C" fn id_do_conteiner(caminho: usize) -> u32 {
 }
 
 // O id e o tamanho só leem o arquivo e liberam o que alocam: as duas rodam lado a lado.
-unsafe extern "C" fn comparar_id_do_conteiner(caminho: usize) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_id_do_conteiner(caminho: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize) -> u32>(557)(caminho);
     let n = id_do_conteiner(caminho);
     PLACAR.registrar(r == n, || format!("id_do_conteiner {:#x} x {:#x}", r, n));
@@ -134,7 +136,7 @@ unsafe extern "C" fn comparar_id_do_conteiner(caminho: usize) -> u32 {
 /// na original: acima de 2 GB dá negativo e a conferência de espaço do `load_game_data` passa
 /// sempre (corrigir é outra decisão, como o save acima de 2 GB). Sem memória, a caixa de erro
 /// (zipdir.cpp 849) e 0; contêiner que não abre ou de tipo estranho, 0.
-unsafe extern "C" fn tamanho_dos_itens_do_padrao(caminho: usize, padrao: usize) -> i32 {
+pub(crate) unsafe extern "C" fn tamanho_dos_itens_do_padrao(caminho: usize, padrao: usize) -> i32 {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
@@ -170,7 +172,7 @@ unsafe extern "C" fn tamanho_dos_itens_do_padrao(caminho: usize, padrao: usize) 
     soma
 }
 
-unsafe extern "C" fn comparar_tamanho_dos_itens_do_padrao(caminho: usize, padrao: usize) -> i32 {
+pub(crate) unsafe extern "C" fn comparar_tamanho_dos_itens_do_padrao(caminho: usize, padrao: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(558)(caminho, padrao);
     let n = tamanho_dos_itens_do_padrao(caminho, padrao);
     PLACAR.registrar(r == n, || format!("tamanho_dos_itens_do_padrao {} x {}", r, n));
@@ -180,13 +182,13 @@ unsafe extern "C" fn comparar_tamanho_dos_itens_do_padrao(caminho: usize, padrao
 // ---------- 218a leva: o contêiner do save: empacotar e desempacotar os arquivos da pasta e limpar a pasta temporária (zipdir.cpp, utils.cpp) ----------
 
 /// strcpy: copia o texto `origem` (com o zero) para `destino`.
-unsafe fn copiar_texto_c(destino: *mut u8, origem: *const u8) {
+pub(crate) unsafe fn copiar_texto_c(destino: *mut u8, origem: *const u8) {
     let t = core::ffi::CStr::from_ptr(origem as *const core::ffi::c_char).to_bytes_with_nul();
     core::ptr::copy(t.as_ptr(), destino, t.len());
 }
 
 /// strcat: acrescenta o texto `origem` ao fim de `destino`.
-unsafe fn juntar_texto_c(destino: *mut u8, origem: *const u8) {
+pub(crate) unsafe fn juntar_texto_c(destino: *mut u8, origem: *const u8) {
     let n = core::ffi::CStr::from_ptr(destino as *const core::ffi::c_char).to_bytes().len();
     copiar_texto_c(destino.add(n), origem);
 }
@@ -201,7 +203,7 @@ unsafe fn juntar_texto_c(destino: *mut u8, origem: *const u8) {
 /// `a4`/`tipo` se não existir) + `fread` em blocos de 0x30d40 no buffer de leitura do item (+0x41705)
 /// + `zwrite` (0x932e10) + `zclose` (0x932b00). 1 no fim; 0 se nada casa. Arquivo que não abre ou
 /// item recusado: a caixa de erro (zipdir.cpp 797 / 805) e 0, sem fechar a busca (como a original).
-unsafe extern "C" fn empacotar_no_conteiner(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
+pub(crate) unsafe extern "C" fn empacotar_no_conteiner(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
     let juntar_caminho: unsafe extern "C" fn(*mut u8, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
     let primeiro: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_FILE_FIND_FIRST);
     let proximo: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_FILE_FIND_NEXT);
@@ -251,7 +253,7 @@ unsafe extern "C" fn empacotar_no_conteiner(caminho: usize, pasta: usize, padrao
 
 // ponytail: cria itens no contêiner (e o arquivo, se não existir); não roda duas vezes. A prova do
 // save compara o .qst gravado com e sem a leva.
-unsafe extern "C" fn comparar_empacotar_no_conteiner(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_empacotar_no_conteiner(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
     orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(559)(caminho, pasta, padrao, a4, tipo)
 }
 
@@ -268,7 +270,7 @@ unsafe extern "C" fn comparar_empacotar_no_conteiner(caminho: usize, pasta: usiz
 /// ou de tipo estranho) ela fecha o item de uma variável local nunca escrita; aqui ela começa em 0.
 /// Sem memória para o índice, a caixa de erro (zipdir.cpp 642) escreve o nome "zipdir" por cima da
 /// resposta (a mesma casa da pilha) e a lista segue sem os nomes (memória da alocação).
-unsafe extern "C" fn desempacotar_do_conteiner(caminho: usize, pasta: usize, padrao: usize) -> u32 {
+pub(crate) unsafe extern "C" fn desempacotar_do_conteiner(caminho: usize, pasta: usize, padrao: usize) -> u32 {
     let reservar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
@@ -364,7 +366,7 @@ unsafe extern "C" fn desempacotar_do_conteiner(caminho: usize, pasta: usize, pad
 
 // ponytail: cria arquivos na pasta temporária e aloca; não roda duas vezes. A carga da prova do save
 // (--sav) passa por aqui; a gravação não.
-unsafe extern "C" fn comparar_desempacotar_do_conteiner(caminho: usize, pasta: usize, padrao: usize) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_desempacotar_do_conteiner(caminho: usize, pasta: usize, padrao: usize) -> u32 {
     orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(560)(caminho, pasta, padrao)
 }
 
@@ -375,7 +377,7 @@ unsafe extern "C" fn comparar_desempacotar_do_conteiner(caminho: usize, pasta: u
 /// temporária (a variável `CM3_TEMP` pela 0x90bc50 + "\", se houver, e o texto de [0xad9c64], copiado
 /// com limite pela 0x90cf20) e apaga (`remove` 0x94643a) os arquivos dela que casam com o padrão,
 /// em grupos de 100 nomes (a busca é fechada antes de apagar e refeita enquanto o grupo enche).
-unsafe extern "C" fn limpar_pasta_temporaria(padrao: usize) {
+pub(crate) unsafe extern "C" fn limpar_pasta_temporaria(padrao: usize) {
     let ambiente: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_UTILS_GET_FOLDER_FOR_KEY);
     let copiar_limitado: unsafe extern "C" fn(usize, *mut u8) = core::mem::transmute(FN_UTILS_COPY_PATH_LIMITED);
     let juntar_caminho: unsafe extern "C" fn(*mut u8, usize, *const u8, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
@@ -423,7 +425,7 @@ unsafe extern "C" fn limpar_pasta_temporaria(padrao: usize) {
 }
 
 // ponytail: apaga arquivos; não roda duas vezes. A gravação do .qst passa por aqui (create_game).
-unsafe extern "C" fn comparar_limpar_pasta_temporaria(padrao: usize) {
+pub(crate) unsafe extern "C" fn comparar_limpar_pasta_temporaria(padrao: usize) {
     orig::<unsafe extern "C" fn(usize)>(561)(padrao)
 }
 
@@ -437,18 +439,18 @@ unsafe extern "C" fn comparar_limpar_pasta_temporaria(padrao: usize) {
 // RLE: byte <= 0x80 sai como está; > 0x80 = (byte − 0x80) cópias do byte seguinte (1 a 0x7f).
 
 /// Lê um dword sem alinhamento no ZFILE.
-unsafe fn zf_u(z: usize, o: usize) -> i32 {
+pub(crate) unsafe fn zf_u(z: usize, o: usize) -> i32 {
     core::ptr::read_unaligned((z + o) as *const i32)
 }
 
 /// Grava um dword sem alinhamento no ZFILE.
-unsafe fn zf_por(z: usize, o: usize, v: i32) {
+pub(crate) unsafe fn zf_por(z: usize, o: usize, v: i32) {
     core::ptr::write_unaligned((z + o) as *mut i32, v)
 }
 
 /// O próximo byte comprimido do item: do buffer de leitura (+0x41705, cursor +0xa3185 até +0xa318d)
 /// ou, acabado, de um `fread` de 0x30d40 bytes (o primeiro byte do bloco novo, mesmo se veio vazio).
-unsafe fn zf_proximo_byte(z: usize) -> u8 {
+pub(crate) unsafe fn zf_proximo_byte(z: usize) -> u8 {
     let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> i32 = core::mem::transmute(FN_CRT_FREAD);
     let c = zf_u(z, 0xa3185);
     if c < zf_u(z, 0xa318d) {
@@ -472,7 +474,7 @@ unsafe fn zf_proximo_byte(z: usize) -> u8 {
 /// posição lógica. Tipo 3: `fread` direto de `pedido / tam` itens. Tipo 4: decodifica o RLE; uma
 /// repetição pode atravessar chamadas (+0x10 de +0x14). Devolve `pedido / tam` (divisão com sinal,
 /// como a original: `tam` 0 derruba as duas).
-unsafe extern "C" fn ler_do_conteiner(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
+pub(crate) unsafe extern "C" fn ler_do_conteiner(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
     let ler: unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32 = core::mem::transmute(FN_CRT_FREAD);
     if z == 0 || zf_u(z, 4) != 0 {
         return 0;
@@ -545,13 +547,13 @@ unsafe extern "C" fn ler_do_conteiner(buf: *mut u8, tam: i32, quantos: i32, z: u
 
 // ponytail: lê do arquivo e anda o cursor do FILE e do item; não roda duas vezes. A prova do save
 // (carga, --sav) e a gravação (o zseek relê pela zread) passam por aqui.
-unsafe extern "C" fn comparar_ler_do_conteiner(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
+pub(crate) unsafe extern "C" fn comparar_ler_do_conteiner(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
     orig::<unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32>(562)(buf, tam, quantos, z)
 }
 
 /// Um byte comprimido para o buffer de escrita (+0x72445, cursor +0xa3189); cheio, grava o buffer
 /// inteiro (`fwrite`) e o byte vai para o começo.
-unsafe fn zf_soltar(z: usize, b: u8) {
+pub(crate) unsafe fn zf_soltar(z: usize, b: u8) {
     let escrever: unsafe extern "C" fn(usize, u32, i32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
     let p = zf_u(z, 0xa3189);
     if p < 0x30d40 {
@@ -575,7 +577,7 @@ unsafe fn zf_soltar(z: usize, b: u8) {
 /// Tipo 3: `fwrite` direto (devolve o que ele devolver). Tipo 4: codifica o RLE byte a byte,
 /// guardando a repetição em +0x18/+0x14 entre as chamadas; byte diferente fecha a repetição (1 com
 /// byte <= 0x80 sai literal, senão o par 0x80 + n, byte); a 0x7f sai o par e recomeça. Devolve `quantos`.
-unsafe extern "C" fn gravar_no_conteiner(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
+pub(crate) unsafe extern "C" fn gravar_no_conteiner(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
     let escrever: unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32 = core::mem::transmute(FN_CRT_FWRITE);
     if z == 0 || zf_u(z, 4) != 1 {
         return 0;
@@ -621,7 +623,7 @@ unsafe extern "C" fn gravar_no_conteiner(buf: *const u8, tam: i32, quantos: i32,
 
 // ponytail: grava no arquivo (buffer e fwrite) e muda o índice; não roda duas vezes. A prova do save
 // compara o .qst tipo 4 gravado com e sem a leva.
-unsafe extern "C" fn comparar_gravar_no_conteiner(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
+pub(crate) unsafe extern "C" fn comparar_gravar_no_conteiner(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
     orig::<unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32>(563)(buf, tam, quantos, z)
 }
 
@@ -633,7 +635,7 @@ unsafe extern "C" fn comparar_gravar_no_conteiner(buf: *const u8, tam: i32, quan
 /// tem tamanho, no tipo 4 fecha a repetição pendente direto no arquivo (literal ou par, como no
 /// zwrite) e regrava cabeçalho + índice inteiros (0x416ec bytes) no começo (`fseek` 0). Lendo: zera
 /// os cursores de leitura. Fecha o FILE, libera o ZFILE e zera o ponteiro.
-unsafe extern "C" fn fechar_conteiner(zz: *mut usize) {
+pub(crate) unsafe extern "C" fn fechar_conteiner(zz: *mut usize) {
     let escrever: unsafe extern "C" fn(usize, u32, i32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
     let buscar: unsafe extern "C" fn(usize, i32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
     let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
@@ -675,7 +677,7 @@ unsafe extern "C" fn fechar_conteiner(zz: *mut usize) {
 }
 
 // ponytail: grava, fecha o arquivo e libera; efeito único. A prova do save compara o .qst gravado.
-unsafe extern "C" fn comparar_fechar_conteiner(zz: *mut usize) {
+pub(crate) unsafe extern "C" fn comparar_fechar_conteiner(zz: *mut usize) {
     orig::<unsafe extern "C" fn(*mut usize)>(564)(zz)
 }
 

@@ -1,33 +1,35 @@
+use super::*;
+
 // ---------- 279a leva: a escolha do estádio de um jogo: o estádio da partida e a busca do estádio neutro (stadium.cpp) ----------
 
 
 
 /// A nação `id` (registro de 0x122 bytes em [0xae23a8]).
-unsafe fn cqo1_nacao(id: usize) -> usize {
+pub(crate) unsafe fn cqo1_nacao(id: usize) -> usize {
     read_u32_as_usize(0xae23a8).wrapping_add(id.wrapping_mul(0x122))
 }
 
 /// O clube é uma seleção? (0x53b900, cdecl, já em Rust.)
-unsafe fn cqo1_selecao(clube: usize) -> bool {
+pub(crate) unsafe fn cqo1_selecao(clube: usize) -> bool {
     let f: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     f(clube) != 0
 }
 
 /// `Stadium::add_booking` (0x85de20, thiscall, ret 8, já em Rust): a reserva do estádio na data.
-unsafe fn cqo1_reservar(this: usize, estadio: usize, data: usize) {
+pub(crate) unsafe fn cqo1_reservar(this: usize, estadio: usize, data: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STADIUM_ADD_BOOKING);
     f(this, estadio, data)
 }
 
 /// `Stadium::is_stadium_free_on_date` (0x85ddb0, thiscall, ret 8, já em Rust).
-unsafe fn cqo1_livre(this: usize, estadio: usize, data: usize) -> bool {
+pub(crate) unsafe fn cqo1_livre(this: usize, estadio: usize, data: usize) -> bool {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_STADIUM_IS_STADIUM_FREE_ON_DATE);
     f(this, estadio, data) != 0
 }
 
 /// Os comparadores das listas (cdecl, (a, b) -> int): 0x85e2f0 pela nação (+0), 0x85e320 pelo continente (+4), os
 /// dois desempatando pelos lugares do estádio (+0xc → +0x3c, quando os dois têm estádio); 0x85e350 só pelos lugares.
-unsafe fn cqo1_cmp(f: usize, a: usize, b: usize) -> i32 {
+pub(crate) unsafe fn cqo1_cmp(f: usize, a: usize, b: usize) -> i32 {
     let f: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(f);
     f(a, b)
 }
@@ -50,7 +52,7 @@ unsafe fn cqo1_cmp(f: usize, a: usize, b: usize) -> i32 {
 /// clube cuja posição (contada) módulo 9 é a da marca (0x40 → 0, 0x80 → 1, 0x100 → 2 ... 0x4000 → 8), livre na data
 /// (ou na competição [0x9cf76c] sem conferir) é reservada e devolvida. Sem nada: com nação, marcas sem 2 e com
 /// 4/8/0x20, o estádio nacional dela (+0x80); senão 0.
-unsafe extern "thiscall" fn estadio_neutro(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn estadio_neutro(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let buscar: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let estado = (this + 0x18) as *mut u8;
@@ -197,7 +199,7 @@ unsafe extern "thiscall" fn estadio_neutro(this: usize, marcas: u32, cont: usize
 
 /// As regiões da escolha do estádio: o estado do sorteador, o cabeçalho (0x1c bytes), a lista dos estádios (a ordem muda) e as reservas com
 /// a vaga da nova. `None` quando uma reserva pode alocar (sem lista ou cheia): então só a original.
-unsafe fn cqo1_regioes(this: usize, extra: Option<(usize, usize)>) -> Option<([(usize, usize); 6], usize)> {
+pub(crate) unsafe fn cqo1_regioes(this: usize, extra: Option<(usize, usize)>) -> Option<([(usize, usize); 6], usize)> {
     let nr = read_u32_as_usize(this + 4);
     if read_u32_as_usize(this) == 0 || nr == read_u32_as_usize(this + 8) {
         return None;
@@ -226,7 +228,7 @@ unsafe fn cqo1_regioes(this: usize, extra: Option<(usize, usize)>) -> Option<([(
 }
 
 /// Lado a lado (a cópia sem contar os sorteios) pelas regiões de `cqo1_regioes` e pela devolução; com reserva que pode alocar, só a original.
-unsafe extern "thiscall" fn comparar_estadio_neutro(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_estadio_neutro(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize>(1888);
     let Some((r, m)) = cqo1_regioes(this, None) else {
         // ponytail: a reserva pode alocar a lista; só a original
@@ -266,7 +268,7 @@ unsafe extern "thiscall" fn comparar_estadio_neutro(this: usize, marcas: u32, co
 ///   sem nenhuma, a nação da competição (+0x5d). Com 0x20, a seleção joga no próprio país. Com 4, o estádio nacional
 ///   da nação (reservado); sem ele, 0x20 (seleção) ou 0x40. Depois a busca do estádio neutro (0x85c800) na nação e, sem
 ///   achar, na alternativa (marcas 0x40..0x200 → 0x400..0x2000).
-unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u32, partida: usize, estadio: u32) {
+pub(crate) unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u32, partida: usize, estadio: u32) {
     if partida == 0 {
         return aviso_em(0xa835b0, 0x1f0);
     }
@@ -450,7 +452,7 @@ unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u32, partida
 
 /// Lado a lado pela partida (0x44 bytes) e pelas regiões de `cqo1_regioes`; partida nula ou reserva que pode alocar:
 /// só a original.
-unsafe extern "thiscall" fn comparar_estadio_da_partida(this: usize, marcas: u32, partida: usize, estadio: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_estadio_da_partida(this: usize, marcas: u32, partida: usize, estadio: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, u32)>(1887);
     if partida == 0 {
         return o(this, marcas, partida, estadio);
@@ -466,21 +468,21 @@ unsafe extern "thiscall" fn comparar_estadio_da_partida(this: usize, marcas: u32
 // ---------- 279a leva: o público de um jogo (stadium.cpp) ----------
 
 
-unsafe fn cqo2_i(a: usize) -> i32 {
+pub(crate) unsafe fn cqo2_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
 
 
 /// O sorteio do jogo (0x90cfc0, cdecl): 0..n-1.
-unsafe fn cqo2_sortear(n: u32) -> i32 {
+pub(crate) unsafe fn cqo2_sortear(n: u32) -> i32 {
     let f: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     f(n)
 }
 
 /// A cidade (registro de 0x38 bytes em [0xae23ac]) do estádio `est` (+0x38); sem estádio ou sem cidade, uma sorteada
 /// entre as [0xae2354].
-unsafe fn cqo2_cidade(est: usize) -> usize {
+pub(crate) unsafe fn cqo2_cidade(est: usize) -> usize {
     if est != 0 && read_u32_as_usize(est + 0x38) != 0 {
         return read_u32_as_usize(est + 0x38);
     }
@@ -490,7 +492,7 @@ unsafe fn cqo2_cidade(est: usize) -> usize {
 
 /// O piso do fator de cada lado na competição de tipo `t` (+0x3a da partida), pelos limites +0x30/+0x32 da partida e
 /// pela reputação (/500) `rep` do clube do lado (0x109a = 4250, 0x1676 = 5750).
-unsafe fn cqo2_piso(jogo: usize, lado: u8, f: &mut [f64; 2]) {
+pub(crate) unsafe fn cqo2_piso(jogo: usize, lado: u8, f: &mut [f64; 2]) {
     let t = read_u8(jogo + 0x3a);
     let rep = |l: u8| read_i16(read_u32_as_usize(jogo + if l == 0 { 0x1c } else { 0x20 }) + 0x80);
     let k = lado as usize;
@@ -593,7 +595,7 @@ unsafe fn cqo2_piso(jogo: usize, lado: u8, f: &mut [f64; 2]) {
 /// do visitante × fator do mandante, 15%)) e o mandante o resto; neutro metade), sem estádio 40 mil e 25 mil; sem
 /// público, 1 a 50 e 1 a 15. Total = mandante + visitante − sorteio(50) (negativo: 45 a 194). Grava em `saida` o
 /// total, o mandante e o visitante e devolve o total.
-unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize, saida: *mut i32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize, saida: *mut i32) -> i32 {
     if jogo == 0 {
         return cqo2_i(0xa835ac);
     }
@@ -851,7 +853,7 @@ unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize, saida: *mu
 
 /// Lado a lado (a cópia sem contar os sorteios) pelo estado do sorteador, pela saída, pelos lugares do estádio (que
 /// ela pode subir para 1.500) e pela devolução.
-unsafe extern "thiscall" fn comparar_publico_do_jogo(this: usize, jogo: usize, saida: *mut i32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_publico_do_jogo(this: usize, jogo: usize, saida: *mut i32) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> i32>(1889);
     if jogo == 0 {
         return o(this, jogo, saida);
@@ -871,18 +873,18 @@ unsafe extern "thiscall" fn comparar_publico_do_jogo(this: usize, jogo: usize, s
 // ---------- 256a leva: o estádio neutro e o clima inicial: a nota do estádio para o jogo, o fator da distância no público e a leitura do weather.cfg (stadium.cpp, weather.cpp) ----------
 
 
-unsafe fn cpt7_i(a: usize) -> i32 {
+pub(crate) unsafe fn cpt7_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
 
-unsafe fn cpt7_sortear(n: i32) -> i32 {
+pub(crate) unsafe fn cpt7_sortear(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     f(n)
 }
 
 /// A distância entre duas cidades (x em +0x23, y em +0x2b, doubles) × 44,44, truncada (_ftol).
-unsafe fn cpt7_distancia(a: usize, b: usize) -> i32 {
+pub(crate) unsafe fn cpt7_distancia(a: usize, b: usize) -> i32 {
     let dx = (read_f64(a + 0x23) - read_f64(b + 0x23)).abs();
     let dy = (read_f64(a + 0x2b) - read_f64(b + 0x2b)).abs();
     ftol((dy * dy + dx * dx).sqrt() * f64_em(0x96fe40))
@@ -904,7 +906,7 @@ unsafe fn cpt7_distancia(a: usize, b: usize) -> i32 {
 ///   de 1,5× dele: / ((lugares − 1,5·esperado)·8,33e-5 + 1); abaixo de 0,3/0,5/0,7/0,9 dele: × 0,1/0,3/0,7/0,9;
 /// - senão, com marcas & 4: a nota é sorteio(lugares).
 /// No fim, nota × (sorteio(100) × 0,004 + 0,8), truncada.
-unsafe extern "thiscall" fn nota_do_estadio_neutro(_this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn nota_do_estadio_neutro(_this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
     let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let inglaterra = read_usize(0xae23a8).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(0x122));
     if est == read_usize(inglaterra + 0x80) && core::ptr::read_unaligned(0xae2c92 as *const u16) < 0x7d4 {
@@ -994,7 +996,7 @@ unsafe extern "thiscall" fn nota_do_estadio_neutro(_this: usize, est: usize, mar
 }
 
 // ponytail: sorteia (e, com a marca 4, sorteia os lugares): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_nota_do_estadio_neutro(this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_nota_do_estadio_neutro(this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, usize) -> i32>(1173)(this, est, marcas, casa, fora, jogo)
 }
 
@@ -1008,7 +1010,7 @@ unsafe extern "thiscall" fn comparar_nota_do_estadio_neutro(this: usize, est: us
 /// reputação R (byte +0x7e da nação +0x53 do clube de fora +0x20) acima de [0x9689a0]: F / (R + 1)². Com base acima de
 /// [0x969558], o mínimo 1 − ([0x968ea8] − base)·[0x968f20]; com +0x3a = 10, o mínimo 0,2; com os dois clubes da mesma
 /// nação, 0,05; e sempre [0x96d2c8]. Devolve o double no st0.
-unsafe extern "thiscall" fn fator_da_distancia(_this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
+pub(crate) unsafe extern "thiscall" fn fator_da_distancia(_this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
     let nacao = read_usize(read_usize(jogo + 0x20) + 0x53);
     let r = *((nacao + 0x7e) as *const i8) as i32 as f64;
     let dy = read_f64(cid_est + 0x2b) - read_f64(cid_clube + 0x2b);
@@ -1045,7 +1047,7 @@ unsafe extern "thiscall" fn fator_da_distancia(_this: usize, jogo: usize, cid_es
 }
 
 /// Comparador: pelo valor (os bits do double).
-unsafe extern "thiscall" fn comparar_fator_da_distancia(this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
+pub(crate) unsafe extern "thiscall" fn comparar_fator_da_distancia(this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64>(1174)(this, jogo, cid_est, cid_clube, base);
     let n = fator_da_distancia(this, jogo, cid_est, cid_clube, base);
     PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("fator_da_distancia(jogo {:x}, base {}) {} x {}", jogo, base, r, n));
@@ -1062,7 +1064,7 @@ unsafe extern "thiscall" fn comparar_fator_da_distancia(this: usize, jogo: usize
 /// [0xae2354] em +4); cada região pela 0x922c40 (a primeira que falha para o jogo; as outras só encerram a leitura);
 /// cada cidade sorteia as três medidas ((sorteio(100) + sorteio(100)) × 0,5) e o vento (sorteio(3)). Fecha o arquivo
 /// (0x945a09). Os erros (arquivo, linha, contagem, memória) são a caixa "Error" de weather.cpp e o jogo para.
-unsafe extern "thiscall" fn ler_o_clima(this: usize) {
+pub(crate) unsafe extern "thiscall" fn ler_o_clima(this: usize) {
     let pasta: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     let ler_linha: unsafe extern "C" fn(usize, *mut u8) -> i32 = core::mem::transmute(FN_UTILS_READ_CONFIG_LINE);
@@ -1117,7 +1119,7 @@ unsafe extern "thiscall" fn ler_o_clima(this: usize) {
 }
 
 // ponytail: abre o arquivo, aloca e sorteia: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_ler_o_clima(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_ler_o_clima(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(1175)(this)
 }
 
@@ -1127,22 +1129,22 @@ unsafe extern "thiscall" fn comparar_ler_o_clima(this: usize) {
 
 
 /// A nação da Inglaterra ([0x9cf2e4]; registros de 0x122 bytes em [0xae23a8]).
-unsafe fn cps7_inglaterra() -> usize {
+pub(crate) unsafe fn cps7_inglaterra() -> usize {
     read_usize(0xae23a8).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(0x122))
 }
 
 /// A seleção principal da nação (0x53b3d0).
-unsafe fn cps7_selecao(nacao: usize) -> usize {
+pub(crate) unsafe fn cps7_selecao(nacao: usize) -> usize {
     let f: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     f(nacao)
 }
 
 /// O estádio de id `id` (registros de 0x4e bytes em [0xae23b0]).
-unsafe fn cps7_estadio(id: usize) -> usize {
+pub(crate) unsafe fn cps7_estadio(id: usize) -> usize {
     read_usize(0xae23b0).wrapping_add(id.wrapping_mul(0x4e))
 }
 
-unsafe fn cps7_ordenar(lista: usize, n: u32) {
+pub(crate) unsafe fn cps7_ordenar(lista: usize, n: u32) {
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     qsort(lista, n, 0xc, 0x85e380);
 }
@@ -1159,7 +1161,7 @@ unsafe fn cps7_ordenar(lista: usize, n: u32) {
 /// +4, 12 bytes: id e data) antes de hoje saem: a original conta as k primeiras (ano sem sinal, dia com sinal), copia
 /// por cima delas, para a frente, as k que começam em n − k − 1 (não em n − k) e reordena as n − k (0x945333 com
 /// 0x85e380).
-unsafe extern "thiscall" fn estadios_do_dia(this: usize, hoje: usize) {
+pub(crate) unsafe extern "thiscall" fn estadios_do_dia(this: usize, hoje: usize) {
     if read_u16(hoje) == 0 {
         let refazer: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_STADIUM_BUILD_VENUE_LIST);
         refazer(this);
@@ -1231,7 +1233,7 @@ unsafe extern "thiscall" fn estadios_do_dia(this: usize, hoje: usize) {
 /// Comparador: no dia 0 do ano (refaz a lista dos estádios, aloca) só a original. Nos outros, lado a lado pelo cabeçalho
 /// (0x1c bytes), pelas reservas, por [0xa835a4], pelo estádio nacional da Inglaterra, pela casa da seleção e pelos
 /// lugares do estádio fechado.
-unsafe extern "thiscall" fn comparar_estadios_do_dia(this: usize, hoje: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_estadios_do_dia(this: usize, hoje: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1134);
     if read_u16(hoje) == 0 {
         return o(this, hoje);
@@ -1270,7 +1272,7 @@ unsafe extern "thiscall" fn comparar_estadios_do_dia(this: usize, hoje: usize) {
 /// estádio, cópia da data por 0x417c10) à lista (+0; conta +4, capacidade +8), que nasce com 30 (0x944e46, 0x168
 /// bytes) e cresce de 30 em 30 (0x945667), e reordena (0x945333 com 0x85e380). Estádio ou data nulos, ou sem memória: a
 /// caixa "Error" (linhas 0x810, 0x81b, 0x82b). Pela escolha do estádio (0x85c260, 0x85c800).
-unsafe extern "thiscall" fn reservar_estadio(this: usize, estadio: usize, data: usize) {
+pub(crate) unsafe extern "thiscall" fn reservar_estadio(this: usize, estadio: usize, data: usize) {
     if estadio == 0 || data == 0 {
         return aviso_em(0xa835b0, 0x810);
     }
@@ -1303,7 +1305,7 @@ unsafe extern "thiscall" fn reservar_estadio(this: usize, estadio: usize, data: 
 
 /// Comparador: com lista e vaga (não aloca), lado a lado pelo cabeçalho (0xc bytes) e pelas reservas com a nova; senão
 /// (aloca, realoca ou a caixa) só a original.
-unsafe extern "thiscall" fn comparar_reservar_estadio(this: usize, estadio: usize, data: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_reservar_estadio(this: usize, estadio: usize, data: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1135);
     let n = read_usize(this + 4);
     if estadio == 0 || data == 0 || read_usize(this) == 0 || n == read_usize(this + 8) {
@@ -1320,7 +1322,7 @@ unsafe extern "thiscall" fn comparar_reservar_estadio(this: usize, estadio: usiz
 /// [pt] { 0x85ddb0 } (thiscall, ret 8, stadium.cpp): `Stadium::is_stadium_free_on_date(estadio, data)`: 1 sem lista de
 /// reservas; senão 1 se a busca binária (0x946464 com 0x85e380) não acha a reserva (id do estádio, data copiada por
 /// 0x417c10). Pela escolha do estádio neutro (0x85c800).
-unsafe extern "thiscall" fn estadio_livre_na_data(this: usize, estadio: usize, data: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn estadio_livre_na_data(this: usize, estadio: usize, data: usize) -> u32 {
     if read_usize(this) == 0 {
         return 1;
     }
@@ -1336,7 +1338,7 @@ unsafe extern "thiscall" fn estadio_livre_na_data(this: usize, estadio: usize, d
 }
 
 /// Comparador: a original e a cópia (as duas só leem), pelo valor.
-unsafe extern "thiscall" fn comparar_estadio_livre_na_data(this: usize, estadio: usize, data: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_estadio_livre_na_data(this: usize, estadio: usize, data: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(1136)(this, estadio, data);
     let n = estadio_livre_na_data(this, estadio, data);
     PLACAR.registrar(r == n, || format!("estadio_livre_na_data(estadio {:x}) original={} rust={}", estadio, r, n));

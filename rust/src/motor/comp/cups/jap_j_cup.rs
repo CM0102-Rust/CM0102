@@ -1,3 +1,5 @@
+use super::*;
+
 // ---------- 276a leva: o calendário das copas do Japão e dos EUA: as rodadas da Copa da Liga japonesa, da Copa do Imperador e da Copa dos EUA (jap_j_cup.cpp, jap_emp_cup.cpp, usa_open_cup.cpp) ----------
 
 
@@ -8,27 +10,27 @@
 /// times, jogos, times novos e inscritos que já entraram, +0x20/+0x21/+0x22 replay, jogos por confronto e dias entre
 /// eles, +0x5c/+0x60/+0x64 os prêmios (chegar, vencer, perder).
 #[derive(Clone, Copy)]
-struct Cqn11R {
-    sorteio: (u32, u32, u32, u32),
-    jogo: (u32, u32, u32, u32, u32, u32),
-    codigo: u16,
-    bits: (u16, u16, u16),
-    categoria: u8,
-    times: (u16, u16, u16, u16),
-    confronto: (u8, u8, u8),
-    premios: (u32, u32, u32),
+pub(crate) struct Cqn11R {
+    pub(crate) sorteio: (u32, u32, u32, u32),
+    pub(crate) jogo: (u32, u32, u32, u32, u32, u32),
+    pub(crate) codigo: u16,
+    pub(crate) bits: (u16, u16, u16),
+    pub(crate) categoria: u8,
+    pub(crate) times: (u16, u16, u16, u16),
+    pub(crate) confronto: (u8, u8, u8),
+    pub(crate) premios: (u32, u32, u32),
 }
 
 /// A linha da tabela: (sorteio), (jogo), nome, (bits do sorteio, desempate, desempate de ida e volta), categoria,
 /// (times, jogos, novos, inscritos), (replay, jogos por confronto, dias entre eles), (prêmios).
-const fn cqn11r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, u32, u32, u32), codigo: u16, bits: (u16, u16, u16), categoria: u8,
+pub(crate) const fn cqn11r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, u32, u32, u32), codigo: u16, bits: (u16, u16, u16), categoria: u8,
     times: (u16, u16, u16, u16), confronto: (u8, u8, u8), premios: (u32, u32, u32)) -> Cqn11R {
     Cqn11R { sorteio, jogo, codigo, bits, categoria, times, confronto, premios }
 }
 
 /// Grava a rodada `i` da tabela `t` (ano-base `ano`, a palavra +0x40 da copa com sinal): as duas datas (0x521e60 e
 /// 0x521eb0, cdecl, 7 e 9 argumentos; add esp, 0x1c / 0x24) e os campos.
-unsafe fn cqn11_rodada(t: usize, i: u32, r: &Cqn11R, ano: u32) {
+pub(crate) unsafe fn cqn11_rodada(t: usize, i: u32, r: &Cqn11R, ano: u32) {
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
     let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
     sorteio(t, i, r.sorteio.0, r.sorteio.1, r.sorteio.2, r.sorteio.3, ano);
@@ -58,7 +60,7 @@ unsafe fn cqn11_rodada(t: usize, i: u32, r: &Cqn11R, ano: u32) {
 /// de uma fase só: fora da fase −1 (o byte), devolve 0 sem gravar nada. Na −1: saida (se pedida) = 0, rodadas = o
 /// tamanho da tabela, extra = 0; a tabela (0x944e46 de 0x68 × rodadas; sem memória, a caixa `linha` de `arquivo` e
 /// devolve 0) com cada rodada; devolve a tabela.
-unsafe fn cqn11_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32, tabela: &[Cqn11R], arquivo: usize, linha: u32, nome: &'static str) -> usize {
+pub(crate) unsafe fn cqn11_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32, tabela: &[Cqn11R], arquivo: usize, linha: u32, nome: &'static str) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -83,7 +85,7 @@ unsafe fn cqn11_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i1
 
 /// Os bytes que a original grava em cada rodada (o resto da memória alocada fica como veio): +0..+0x10 (as datas e os
 /// campos até o desempate de ida e volta), +0x13..+0x22 (o mando até os dias entre os jogos) e +0x5c..+0x67 (os prêmios).
-unsafe fn cqn11_gravados(t: usize, n: i16) -> Vec<u8> {
+pub(crate) unsafe fn cqn11_gravados(t: usize, n: i16) -> Vec<u8> {
     let mut v = Vec::new();
     for r in 0..n.max(0) as usize {
         let e = t + r * 0x68;
@@ -96,7 +98,7 @@ unsafe fn cqn11_gravados(t: usize, n: i16) -> Vec<u8> {
 
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada).
-unsafe fn cqn11_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32,
+pub(crate) unsafe fn cqn11_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if fase as u8 != 0xff {
         // ponytail: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
@@ -120,7 +122,7 @@ unsafe fn cqn11_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i
 
 /// A Copa da Liga japonesa (J League Cup): cinco rodadas de fevereiro a novembro, as quatro primeiras em ida e volta (7
 /// dias entre os jogos, desempate de ida e volta 0x83).
-const CQN11_COPA_DA_LIGA_JAPONESA: [Cqn11R; 5] = [
+pub(crate) const CQN11_COPA_DA_LIGA_JAPONESA: [Cqn11R; 5] = [
     cqn11r((0xa, 1, 0, 0xffff_ffff), (0xc, 3, 0, 2, 2, 0), 0xa, (0, 0, 0x83), 4, (0x18, 0xc, 0x18, 0), (0, 2, 7), (0, 0xffff_ffff, 0)), // cqn11: a 1ª rodada da Copa da Liga japonesa
     cqn11r((0x14, 3, 0, 3), (5, 6, 0, 2, 2, 0), 0x14, (0, 0, 0x83), 4, (0x10, 8, 4, 0x18), (0, 2, 7), (0, 0xffff_ffff, 0)),
     cqn11r((0xd, 6, 0, 3), (0x1e, 7, 0, 2, 2, 0), 0x78, (0, 0, 0x83), 4, (8, 4, 0, 0), (0, 2, 7), (0, 0xffff_ffff, 0)),
@@ -136,11 +138,11 @@ const CQN11_COPA_DA_LIGA_JAPONESA: [Cqn11R; 5] = [
 ///
 /// [pt] { 0x665640 } (thiscall, ret 0x10, jap_j_cup.cpp; a virtual +0x3c da Copa da Liga japonesa): `JapJCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0x9e sem memória.
-unsafe extern "thiscall" fn cqn11_copa_da_liga_japonesa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn cqn11_copa_da_liga_japonesa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cqn11_tabela(this, fase, rodadas, extra, saida, &CQN11_COPA_DA_LIGA_JAPONESA, 0x9eaf14, 0x9e, "cqn_11 tabela da copa da liga japonesa")
 }
 
-unsafe extern "thiscall" fn comparar_cqn11_copa_da_liga_japonesa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_cqn11_copa_da_liga_japonesa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1793);
     cqn11_comparar("cqn11_copa_da_liga_japonesa_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cqn11_copa_da_liga_japonesa_tabela(this, fase, r, e, s))
@@ -148,7 +150,7 @@ unsafe extern "thiscall" fn comparar_cqn11_copa_da_liga_japonesa_tabela(this: us
 
 /// A Copa do Imperador: sete rodadas em jogo único de novembro ao começo de janeiro do ano seguinte, sorteio por sementes
 /// com grupos separados (+0xd = 0x83).
-const CQN11_COPA_DO_IMPERADOR: [Cqn11R; 7] = [
+pub(crate) const CQN11_COPA_DO_IMPERADOR: [Cqn11R; 7] = [
     cqn11r((1, 0xa, 0, 6), (0x1d, 0xa, 0, 6, 1, 0), 0xa, (0, 0x83, 0), 4, (0x40, 0x20, 0x40, 0), (0, 1, 0), (0, 0xffff_ffff, 0)), // cqn11: a 1ª rodada da Copa do Imperador
     cqn11r((0x1e, 0xa, 0, 0), (6, 0xb, 0, 6, 1, 0), 0x14, (0, 0x83, 0), 4, (0x20, 0x10, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
     cqn11r((7, 0xb, 0, 0), (0xd, 0xb, 0, 6, 1, 0), 0x1e, (0, 0x83, 0), 4, (0x20, 0x10, 0x10, 0x40), (0, 1, 0), (0, 0xffff_ffff, 0)),
@@ -166,11 +168,11 @@ const CQN11_COPA_DO_IMPERADOR: [Cqn11R; 7] = [
 ///
 /// [pt] { 0x661ff0 } (thiscall, ret 0x10, jap_emp_cup.cpp; a virtual +0x3c da Copa do Imperador): `JapEmpCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa0 sem memória.
-unsafe extern "thiscall" fn cqn11_copa_do_imperador_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn cqn11_copa_do_imperador_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cqn11_tabela(this, fase, rodadas, extra, saida, &CQN11_COPA_DO_IMPERADOR, 0x9eab90, 0xa0, "cqn_11 tabela da copa do imperador")
 }
 
-unsafe extern "thiscall" fn comparar_cqn11_copa_do_imperador_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_cqn11_copa_do_imperador_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1794);
     cqn11_comparar("cqn11_copa_do_imperador_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cqn11_copa_do_imperador_tabela(this, fase, r, e, s))
@@ -178,7 +180,7 @@ unsafe extern "thiscall" fn comparar_cqn11_copa_do_imperador_tabela(this: usize,
 
 /// A Copa dos EUA (US Open Cup): cinco rodadas em jogo único de junho a outubro; na 1ª rodada o sorteio leva também o
 /// bit 0x400 (+0xd = 0x483).
-const CQN11_COPA_DOS_EUA: [Cqn11R; 5] = [
+pub(crate) const CQN11_COPA_DOS_EUA: [Cqn11R; 5] = [
     cqn11r((1, 5, 0, 3), (0xe, 5, 0, 2, 2, 0), 0x14, (0, 0x483, 0), 4, (0x20, 0x10, 0x20, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
     cqn11r((0xf, 5, 0, 3), (0x19, 5, 0, 6, 1, 0), 0x1e, (0, 0x83, 0), 4, (0x10, 8, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
     cqn11r((0x1a, 5, 0, 0), (9, 7, 0, 2, 2, 0), 0x78, (0, 0x83, 0), 6, (8, 4, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
@@ -194,11 +196,11 @@ const CQN11_COPA_DOS_EUA: [Cqn11R; 5] = [
 ///
 /// [pt] { 0x90b170 } (thiscall, ret 0x10, usa_open_cup.cpp; a virtual +0x3c da Copa dos EUA): `UsaOpenCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0x9c sem memória.
-unsafe extern "thiscall" fn cqn11_copa_dos_eua_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn cqn11_copa_dos_eua_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cqn11_tabela(this, fase, rodadas, extra, saida, &CQN11_COPA_DOS_EUA, 0xaa20e0, 0x9c, "cqn_11 tabela da copa dos eua")
 }
 
-unsafe extern "thiscall" fn comparar_cqn11_copa_dos_eua_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_cqn11_copa_dos_eua_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1795);
     cqn11_comparar("cqn11_copa_dos_eua_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cqn11_copa_dos_eua_tabela(this, fase, r, e, s))
@@ -208,18 +210,18 @@ unsafe extern "thiscall" fn comparar_cqn11_copa_dos_eua_tabela(this: usize, fase
 
 
 /// O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
-unsafe fn cqn12_clube(i: i32) -> usize {
+pub(crate) unsafe fn cqn12_clube(i: i32) -> usize {
     read_u32_as_usize(0xae23b4).wrapping_add((i as isize * 0x245) as usize)
 }
 
 /// O id da competição apontada por `c + o` (+0 do registro), ou None sem ela.
-unsafe fn cqn12_comp(c: usize, o: usize) -> Option<usize> {
+pub(crate) unsafe fn cqn12_comp(c: usize, o: usize) -> Option<usize> {
     let d = read_u32_as_usize(c + o);
     if d == 0 { None } else { Some(read_u32_as_usize(d)) }
 }
 
 /// Grava a inscrição `k` da lista (+0xa7, 6 bytes: o clube, +4 a classe, +5 a situação 0).
-unsafe fn cqn12_inscrever(this: usize, k: i32, clube: usize, classe: u8) {
+pub(crate) unsafe fn cqn12_inscrever(this: usize, k: i32, clube: usize, classe: u8) {
     let e = read_u32_as_usize(this + 0xa7) + k as usize * 6;
     core::ptr::write_unaligned(e as *mut u32, clube as u32);
     *((e + 4) as *mut u8) = classe;
@@ -227,14 +229,14 @@ unsafe fn cqn12_inscrever(this: usize, k: i32, clube: usize, classe: u8) {
 }
 
 /// O sorteio de 0 a n − 1 (0x90cfc0: push n; add esp, 4 -> cdecl).
-unsafe fn cqn12_sortear(n: i32) -> i32 {
+pub(crate) unsafe fn cqn12_sortear(n: i32) -> i32 {
     let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     sortear(n)
 }
 
 /// Ordena `n` clubes do vetor pela reputação e embaralha os melhores (0x4afbd0: push escolhas; push n; push vetor; add
 /// esp, 0xc -> cdecl; já em Rust).
-unsafe fn cqn12_embaralhar(v: *mut usize, n: i32, escolhas: u32) {
+pub(crate) unsafe fn cqn12_embaralhar(v: *mut usize, n: i32, escolhas: u32) {
     let f: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
     // ponytail: a original empurra a conta com lixo nos 16 bits altos; a 0x4afbd0 lê a palavra
     f(v as usize, n as i16 as u16 as u32, escolhas);
@@ -242,7 +244,7 @@ unsafe fn cqn12_embaralhar(v: *mut usize, n: i32, escolhas: u32) {
 
 /// O qsort de `n` inscritos a partir de `base` (0x945333 com 0x522190: push 0x522190; push 6; push n; push base; add
 /// esp, 0x10 -> cdecl; 0x522190 já em Rust).
-unsafe fn cqn12_ordenar(base: usize, n: u32) {
+pub(crate) unsafe fn cqn12_ordenar(base: usize, n: u32) {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     ordenar(base, n, 6, 0x522190);
 }
@@ -251,7 +253,7 @@ unsafe fn cqn12_ordenar(base: usize, n: u32) {
 /// +0xa7; sem memória, a caixa da linha 0x11a e −1). Os clubes da J2 ([0x9cf768]) enquanto cabem, classe 0; os da J1
 /// ([0x9cf65c]) enquanto cabem, cada um com a classe sorteada de 0 a 19 (0x90cfc0(20), depois de gravar o clube); o
 /// qsort (0x522190) das 16 inscrições a partir da 11ª (+0x42). Devolve 1 com a lista cheia, senão 0.
-unsafe fn cqn12_copa_da_liga(this: usize) -> (i32, i32) {
+pub(crate) unsafe fn cqn12_copa_da_liga(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x1c);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0xa8);
@@ -302,14 +304,14 @@ unsafe fn cqn12_copa_da_liga(this: usize) -> (i32, i32) {
 /// [pt] regra: entram na Copa da Liga japonesa 28 clubes: os da J2, classe 0, e os da J1, cada um com uma classe sorteada de
 /// 0 a 19 (a semente); as 16 inscrições a partir da 11ª vão ao qsort pela classe (no empate a reputação); com a lista
 /// incompleta, devolve 0
-unsafe extern "thiscall" fn cqn12_copa_da_liga_inscritos(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn cqn12_copa_da_liga_inscritos(this: usize) -> i32 {
     cqn12_copa_da_liga(this).0
 }
 
 /// Lado a lado para as rotinas que alocam a lista +0xa7 e sorteiam: o +0x3e, o [0xb67a34] e o estado do sorteador a
 /// partir do mesmo estado (a cópia sorteia sem contar); a original deixa a lista dela em +0xa7, a cópia faz a sua,
 /// comparada nos inscritos que ela gravou e liberada.
-unsafe fn cqn12_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
+pub(crate) unsafe fn cqn12_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
@@ -341,7 +343,7 @@ unsafe fn cqn12_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: im
     a
 }
 
-unsafe extern "thiscall" fn comparar_cqn12_copa_da_liga_inscritos(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqn12_copa_da_liga_inscritos(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1796);
     cqn12_comparar("cqn12_copa_da_liga_inscritos", this, || o(this), || cqn12_copa_da_liga(this))
 }
@@ -351,7 +353,7 @@ unsafe extern "thiscall" fn comparar_cqn12_copa_da_liga_inscritos(this: usize) -
 /// até 50 (a passada para quando os dois enchem); cada vetor é ordenado e embaralhado (0x4afbd0, 10 escolhas). A lista
 /// (0x945501, o calloc de +0x3e × 6, em +0xa7; sem memória, a caixa da linha 0x138 e −1) leva os 10 primeiros de cada
 /// vetor com a classe 2 e depois todos os clubes da MLS ([0x9cf590]) com a classe 1 (sem conferir o espaço). Devolve 1.
-unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
+pub(crate) unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x20);
     let comp = |id: usize| read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b));
     let (a, b) = (comp(KEY_CLUB_COMP_AMERICAN_A_LEAGUE), comp(KEY_CLUB_COMP_AMERICAN_USISL));
@@ -410,11 +412,11 @@ unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
 /// [pt] regra: entram na Copa dos EUA 32 clubes: 10 de cada uma das duas ligas de baixo ([0x9cf594] e [0x9cf598], até 50
 /// olhados em cada uma, ordenados pela reputação e embaralhados entre os melhores), com a classe 2, e todos os da MLS
 /// com a classe 1
-unsafe extern "thiscall" fn cqn12_copa_dos_eua_inscritos(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn cqn12_copa_dos_eua_inscritos(this: usize) -> i32 {
     cqn12_copa_dos_eua(this).0
 }
 
-unsafe extern "thiscall" fn comparar_cqn12_copa_dos_eua_inscritos(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqn12_copa_dos_eua_inscritos(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1797);
     cqn12_comparar("cqn12_copa_dos_eua_inscritos", this, || o(this), || cqn12_copa_dos_eua(this))
 }
@@ -427,7 +429,7 @@ unsafe extern "thiscall" fn comparar_cqn12_copa_dos_eua_inscritos(this: usize) -
 /// (0x4afbd0 com 47, 2, 3 e 1 escolhas); a lista leva os 47, os 2 e os 3 primeiros (o último vetor não entra), classe 0;
 /// depois os da J2 enquanto cabem (classe 0) e os da J1 enquanto cabem, com a classe = a posição da temporada anterior
 /// (+0x5f), até encher; o qsort (0x522190) das 16 últimas inscrições. Devolve 1 com a lista cheia, senão 0.
-unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
+pub(crate) unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x50);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0x1e0);
@@ -532,11 +534,11 @@ unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
 /// os sorteados dos clubes de outra divisão japonesa (até 6) não entram —, os da J2 (classe 0) e os da J1 com a classe
 /// = a posição da temporada anterior; as 16 últimas inscrições vão ao qsort pela classe; faltando clubes nas divisões
 /// de baixo, a caixa de erro
-unsafe extern "thiscall" fn cqn12_copa_do_imperador_inscritos(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn cqn12_copa_do_imperador_inscritos(this: usize) -> i32 {
     cqn12_copa_do_imperador(this).0
 }
 
-unsafe extern "thiscall" fn comparar_cqn12_copa_do_imperador_inscritos(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqn12_copa_do_imperador_inscritos(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1798);
     cqn12_comparar("cqn12_copa_do_imperador_inscritos", this, || o(this), || cqn12_copa_do_imperador(this))
 }

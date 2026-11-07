@@ -1,34 +1,36 @@
+use super::*;
+
 // ---------- 270a leva: os olheiros do dia, os relatórios deles e a notícia do relatório (scout_manager.cpp) ----------
 
 
-unsafe fn cqf12_i(a: usize) -> i32 {
+pub(crate) unsafe fn cqf12_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
 
 
-unsafe fn cqf12_pessoa(id: usize) -> usize {
+pub(crate) unsafe fn cqf12_pessoa(id: usize) -> usize {
     read_usize(0xae23bc).wrapping_add(id.wrapping_mul(0x6e))
 }
 
-unsafe fn cqf12_clube(id: usize) -> usize {
+pub(crate) unsafe fn cqf12_clube(id: usize) -> usize {
     read_usize(0xae23b4).wrapping_add(id.wrapping_mul(0x245))
 }
 
 /// `a` depois de `b` (datas: ano sem sinal em +2, dia com sinal em +0), como as comparações da original.
-unsafe fn cqf12_depois(dia: i16, ano: u16, data: usize) -> bool {
+pub(crate) unsafe fn cqf12_depois(dia: i16, ano: u16, data: usize) -> bool {
     let (d, a) = (read_i16(data), read_i16(data + 2) as u16);
     ano > a || (ano == a && dia > d)
 }
 
 /// O ensaio da 0x7f8750: a cópia só poda os pedidos (num vetor dela) e para antes dos relatórios.
-static mut CQF12_ENSAIO: bool = false;
+pub(crate) static mut CQF12_ENSAIO: bool = false;
 
 /// A poda de um pedido (0x11 bytes: +0 o clube, +4 o jogador, +8 a data, +0x10 quantos relatórios): devolve
 /// (tirar, processar). Sai o pedido de clube que não é humano, de jogador do próprio clube (o +0x39 ou o do contrato),
 /// com mais de um ano, com 3 relatórios, ou (depois de 30 dias) de jogador machucado (0x62c400 = 2); entre 30 dias e um
 /// ano o pedido é processado (e sai), salvo jogador sem nação ou de clube que joga nos 14 dias seguintes, que fica.
-unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool, usize, usize, usize) {
+pub(crate) unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool, usize, usize, usize) {
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
@@ -113,7 +115,7 @@ unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool, usize, usi
 /// registro (0x67 bytes) entra na lista local se o byte +0x66 ficou ≥ 0. Depois os relatórios (0x7f9890), a ordem dos
 /// pedidos (0x945333 com 0x7fc270) e uma busca (0x7b3e20) em cada uma das 10 listas dos técnicos humanos (as 16 últimas
 /// pessoas com +0x5f = 1). Devolve 1.
-unsafe extern "thiscall" fn cqf12_olheiros_do_dia(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqf12_olheiros_do_dia(this: usize) -> u32 {
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
@@ -200,7 +202,7 @@ unsafe extern "thiscall" fn cqf12_olheiros_do_dia(this: usize) -> u32 {
 /// Comparador da 0x7f8750: os relatórios sorteiam e alocam e as buscas mexem nas listas dos humanos: só a original
 /// roda. Antes, a cópia em ensaio poda uma cópia dos pedidos (sem os relatórios) e os põe na ordem da original; os
 /// pedidos que a original deixa (conta e os 0x11 bytes de cada) têm de ser esses.
-unsafe extern "thiscall" fn comparar_cqf12_olheiros_do_dia(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqf12_olheiros_do_dia(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1626);
     if read_u8(0xae2c88) != 2 {
         return o(this);
@@ -234,7 +236,7 @@ unsafe extern "thiscall" fn comparar_cqf12_olheiros_do_dia(this: usize) -> u32 {
 
 /// O registro das notícias de relatório que a 0x7f9a60 recebe (jogador, clube, quantos), ligado só no comparador da
 /// 0x7f9890 para conferir os grupos da original.
-static mut CQF12_GRUPOS: Option<Vec<(u32, u32, u8)>> = None;
+pub(crate) static mut CQF12_GRUPOS: Option<Vec<(u32, u32, u8)>> = None;
 
 /// copies the list records into an array, sorts it and sends one news item per run of the same player and club
 /// Original: `SCOUT_MANAGER::send_scout_reports` (0x7f9890, scout_manager.cpp, thiscall, ret 4).
@@ -244,7 +246,7 @@ static mut CQF12_GRUPOS: Option<Vec<(u32, u32, u8)>> = None;
 /// memória, a caixa da linha 0x7dd) com cópias dos registros, ordenado (0x945333 com 0x7fc2a0); cada grupo seguido do
 /// mesmo jogador (+0x2b) e do mesmo clube (+0x50) vira uma notícia de relatório (0x7f9a60 com o primeiro e quantos).
 /// Libera o vetor (0x9452ca). A lista fica com o cursor no começo.
-unsafe extern "thiscall" fn cqf12_relatorios_dos_olheiros(this: usize, lista: usize) {
+pub(crate) unsafe extern "thiscall" fn cqf12_relatorios_dos_olheiros(this: usize, lista: usize) {
     let conta = read_i16(lista);
     if conta == 0 {
         return;
@@ -305,7 +307,7 @@ unsafe extern "thiscall" fn cqf12_relatorios_dos_olheiros(this: usize, lista: us
 /// Comparador da 0x7f9890: a original entrega notícias (aloca nas caixas): só ela roda, com o registro das chamadas à
 /// 0x7f9a60 ligado; antes, a cópia em ensaio (sem a 0x7f9a60) diz os grupos (jogador, clube, quantos) em ordem, e as
 /// chamadas da original têm de ser essas.
-unsafe extern "thiscall" fn comparar_cqf12_relatorios_dos_olheiros(this: usize, lista: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqf12_relatorios_dos_olheiros(this: usize, lista: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1627);
     let cursor = read_usize(lista + 0xa);
     *core::ptr::addr_of_mut!(CQF12_GRUPOS) = Some(Vec::new());
@@ -328,7 +330,7 @@ unsafe extern "thiscall" fn comparar_cqf12_relatorios_dos_olheiros(this: usize, 
 /// 3), +0x66, o olheiro (0x7e5160 com +0x1f), +0x59, +0x5a, o clube +0x50, os dados do jogo (0x7e4de0), +0x5e, +0x62,
 /// +0x58, +0x54, de cada um dos registros (+0x37 + 0x67 × k) +0xc, +0, +4, +8 e +0x26 + 8 × +0x25, 0x420e9 e as forças
 /// do jogador (+0x2b) para o clube (0x546ab0); vai ao técnico do clube (0x7861e0).
-unsafe extern "thiscall" fn cqf12_noticia_do_relatorio(this: usize, r: usize, quantos: u32) {
+pub(crate) unsafe extern "thiscall" fn cqf12_noticia_do_relatorio(this: usize, r: usize, quantos: u32) {
     let _ = this;
     let n = (quantos as u8 as i8).min(3);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
@@ -379,7 +381,7 @@ unsafe extern "thiscall" fn cqf12_noticia_do_relatorio(this: usize, r: usize, qu
 
 /// Comparador da 0x7f9a60: a notícia é entregue (aloca na caixa do humano): só a original roda (ponytail: o efeito é a
 /// caixa de entrada; os grupos que chegam aqui são conferidos pela 0x7f9890). Com o registro ligado, anota a chamada.
-unsafe extern "thiscall" fn comparar_cqf12_noticia_do_relatorio(this: usize, r: usize, quantos: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqf12_noticia_do_relatorio(this: usize, r: usize, quantos: u32) {
     if let Some(g) = &mut *core::ptr::addr_of_mut!(CQF12_GRUPOS) {
         g.push((read_usize(r + 0x2b) as u32, read_usize(r + 0x50) as u32, quantos as u8));
     }
@@ -390,19 +392,19 @@ unsafe extern "thiscall" fn comparar_cqf12_noticia_do_relatorio(this: usize, r: 
 
 
 
-unsafe fn cqc12_uw(a: usize) -> u16 {
+pub(crate) unsafe fn cqc12_uw(a: usize) -> u16 {
     core::ptr::read_unaligned(a as *const u16)
 }
 
 
 /// A data `r` é a de hoje (o ano e o dia)?
-unsafe fn cqc12_e_hoje(r: usize, hoje: usize) -> bool {
+pub(crate) unsafe fn cqc12_e_hoje(r: usize, hoje: usize) -> bool {
     cqc12_uw(r + 2) == cqc12_uw(hoje + 2) && read_i16(r) == read_i16(hoje)
 }
 
 /// Marca os clubes com jogo na data `d` e nos dias vizinhos (0x7775c0 na data, na véspera e no dia seguinte; a data
 /// volta a ser a mesma no fim: 0x54c8e0/0x54c5b0 e 0x417c10).
-unsafe fn cqc12_marcar_tres_dias(this: usize, d: usize) {
+pub(crate) unsafe fn cqc12_marcar_tres_dias(this: usize, d: usize) {
     let marcar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_MARK_CLUBS_WITH_FIXTURES);
     let menos: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
@@ -424,7 +426,7 @@ unsafe fn cqc12_marcar_tres_dias(this: usize, d: usize) {
 /// 0x9cf78c, 0x9cf964), com mandante que não é a seleção B (0x5409b0) e a marca +0x40: os convocados por clube
 /// (0x7771c0) das duas seleções; com o bit 0x200 de +0x4d, também os das seleções B (0x53b4f0 da nação +0x53 de cada
 /// uma) e, sem ele e com o 0x100, os das duas com `b` = 1.
-unsafe fn cqc12_jogos(this: usize, l: usize) {
+pub(crate) unsafe fn cqc12_jogos(this: usize, l: usize) {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let convocar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_SELECT_SQUADS_FOR_FIXTURE);
     let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
@@ -475,7 +477,7 @@ unsafe fn cqc12_jogos(this: usize, l: usize) {
 /// com convocados se remarcam (0x7777e0). Da lista em +0 saem (0x68d1f0) os itens do dia de hoje (+0x10). Com o ranking
 /// (+0x1c), a atualização dele (0x58d460); no dia múltiplo de 70, a poda dos registros de convocação (0x7774b0); por fim
 /// as notícias dos classificados (0x7779e0).
-unsafe extern "thiscall" fn dia_das_selecoes(this: usize, hoje: usize) {
+pub(crate) unsafe extern "thiscall" fn dia_das_selecoes(this: usize, hoje: usize) {
     let semanas: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_WEEKS);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let dma: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
@@ -551,7 +553,7 @@ unsafe extern "thiscall" fn dia_das_selecoes(this: usize, hoje: usize) {
 }
 
 /// Quantos itens da lista em +0 são do dia `dia` (+0x10), percorrendo os nós sem mexer no cursor.
-unsafe fn cqc12_do_dia(this: usize, dia: i16) -> u32 {
+pub(crate) unsafe fn cqc12_do_dia(this: usize, dia: i16) -> u32 {
     let l = read_usize(this);
     if l == 0 {
         return 0;
@@ -570,7 +572,7 @@ unsafe fn cqc12_do_dia(this: usize, dia: i16) -> u32 {
 /// Comparador: a original convoca (0x76bab0: notícias, elencos), remarca jogos (0x7777e0), aloca a tabela (0x7775c0)
 /// e libera itens (0x68d1f0): não pode rodar duas vezes. Só ela roda, conferindo o plano do que a própria rotina grava:
 /// nenhum item do dia de hoje sobra na lista em +0.
-unsafe extern "thiscall" fn comparar_dia_das_selecoes(this: usize, hoje: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_dia_das_selecoes(this: usize, hoje: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1539);
     let dia = read_i16(hoje);
     let antes = cqc12_do_dia(this, dia);
@@ -581,7 +583,7 @@ unsafe extern "thiscall" fn comparar_dia_das_selecoes(this: usize, hoje: usize) 
 
 /// O índice (0..15) do técnico humano da vez ([0xb74c26 + 0x300 × [0xb77c7a]]) pela conta de um byte da original
 /// ((id − [0xae2364]) + 16 em 8 bits); Err(()) sem técnico, Ok(None) fora (a caixa).
-unsafe fn cqc12_indice() -> Result<Option<usize>, ()> {
+pub(crate) unsafe fn cqc12_indice() -> Result<Option<usize>, ()> {
     let t = read_usize(0xb74c26usize.wrapping_add((*(0xb77c7a as *const i16) as i32 as usize).wrapping_mul(0x300)));
     if t == 0 {
         return Err(());
@@ -591,7 +593,7 @@ unsafe fn cqc12_indice() -> Result<Option<usize>, ()> {
 }
 
 /// O registro de busca `k` (0x2b0 bytes) da sessão `s`.
-unsafe fn cqc12_busca(s: usize, k: i32) -> usize {
+pub(crate) unsafe fn cqc12_busca(s: usize, k: i32) -> usize {
     s.wrapping_add((k as usize).wrapping_mul(0x2b0))
 }
 
@@ -602,7 +604,7 @@ unsafe fn cqc12_busca(s: usize, k: i32) -> usize {
 /// buscas (0x482a9b). A sessão do técnico humano da vez ([this + 0xc + 4 × índice]): a busca atual (o byte com sinal
 /// em +0 da sessão) sem clube (+0x191 = −2). Sem técnico ou sem sessão: 0; índice fora: a caixa (linha 0x454; a
 /// original) e 0.
-unsafe extern "thiscall" fn busca_atual_sem_clube(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn busca_atual_sem_clube(this: usize) -> u32 {
     let i = match cqc12_indice() {
         Err(()) => return 0,
         Ok(None) => return orig::<unsafe extern "thiscall" fn(usize) -> u32>(1540)(this), // a caixa
@@ -616,7 +618,7 @@ unsafe extern "thiscall" fn busca_atual_sem_clube(this: usize) -> u32 {
 }
 
 /// Comparador: pelo valor (só lê); com a caixa, só a original.
-unsafe extern "thiscall" fn comparar_busca_atual_sem_clube(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_busca_atual_sem_clube(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1540);
     if matches!(cqc12_indice(), Ok(None)) {
         return o(this);
@@ -633,7 +635,7 @@ unsafe extern "thiscall" fn comparar_busca_atual_sem_clube(this: usize) -> u32 {
 /// [pt] { 0x7f8500 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::is_club_in_session_searches(clube)`, pelas telas
 /// (0x482aaf, 0x483040, 0x7b34e1). Alguma das 10 buscas da sessão do técnico humano da vez tem o clube (+0x191 = +0
 /// do clube): 1. Sem técnico ou sem sessão: 0; índice fora: a caixa (linha 0x480; a original) e 0.
-unsafe extern "thiscall" fn clube_nas_buscas_da_sessao(this: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn clube_nas_buscas_da_sessao(this: usize, clube: usize) -> u32 {
     let i = match cqc12_indice() {
         Err(()) => return 0,
         Ok(None) => return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1541)(this, clube), // a caixa
@@ -649,7 +651,7 @@ unsafe extern "thiscall" fn clube_nas_buscas_da_sessao(this: usize, clube: usize
 }
 
 /// Comparador: pelo valor (só lê); com a caixa, só a original.
-unsafe extern "thiscall" fn comparar_clube_nas_buscas_da_sessao(this: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_clube_nas_buscas_da_sessao(this: usize, clube: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1541);
     if matches!(cqc12_indice(), Ok(None)) {
         return o(this, clube);
@@ -675,7 +677,7 @@ unsafe extern "thiscall" fn comparar_clube_nas_buscas_da_sessao(this: usize, clu
 /// técnico (+0x39 = +0x1c ou +0x20 da partida), começa a observação (0x7ae9c0 com −1, −1, −1, 0, 1); e observa a
 /// partida (0x7b5be0, os relatórios na lista local). O vetor sai (0x9452ca). Por fim os relatórios vão (0x7f9890) e a
 /// lista é destruída. Devolve 1.
-unsafe extern "thiscall" fn olheiros_na_partida(this: usize, p: usize, resultado: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn olheiros_na_partida(this: usize, p: usize, resultado: usize) -> u32 {
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     let zerado: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
@@ -729,7 +731,7 @@ unsafe extern "thiscall" fn olheiros_na_partida(this: usize, p: usize, resultado
 /// Comparador: a observação (0x7b5be0, original) grava o que os olheiros sabem e os relatórios, a 0x7ae9c0 começa
 /// buscas e a 0x7f9890 entrega as notícias: não pode rodar duas vezes. Só a original roda (ponytail: ela mesma só grava
 /// o vetor e a lista locais, que saem); confere a devolução (1).
-unsafe extern "thiscall" fn comparar_olheiros_na_partida(this: usize, p: usize, resultado: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_olheiros_na_partida(this: usize, p: usize, resultado: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(1543)(this, p, resultado);
     PLACAR.registrar(r == 1, || format!("olheiros_na_partida(partida {:x}) original={}", p, r));
     r
@@ -737,7 +739,7 @@ unsafe extern "thiscall" fn comparar_olheiros_na_partida(this: usize, p: usize, 
 
 /// O índice (0..15) do técnico `tecnico` (nulo: o humano da vez, [0xb74c26 + 0x300 × [0xb77c7a]]) pela conta de um
 /// byte da original ((id − [0xae2364]) + 16 em 8 bits); None nos casos da caixa (sem técnico ou fora).
-unsafe fn cqc13_indice(tecnico: usize) -> Option<usize> {
+pub(crate) unsafe fn cqc13_indice(tecnico: usize) -> Option<usize> {
     let t = if tecnico != 0 {
         tecnico
     } else {
@@ -756,7 +758,7 @@ unsafe fn cqc13_indice(tecnico: usize) -> Option<usize> {
 /// [pt] { 0x7f6be0 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::get_edit_session(tecnico)`, pela montagem dos
 /// conhecidos da busca (0x7afeb7). A sessão de edição do técnico humano (+0xc + 4 × índice). Sem técnico ou índice
 /// fora: a caixa (linhas 0xde e 0xe8; a original) e 0.
-unsafe extern "thiscall" fn sessao_de_edicao(this: usize, tecnico: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn sessao_de_edicao(this: usize, tecnico: usize) -> usize {
     let Some(i) = cqc13_indice(tecnico) else {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(1544)(this, tecnico); // a caixa
     };
@@ -764,7 +766,7 @@ unsafe extern "thiscall" fn sessao_de_edicao(this: usize, tecnico: usize) -> usi
 }
 
 /// Comparador: pelo valor (só lê); com a caixa, só a original.
-unsafe extern "thiscall" fn comparar_sessao_de_edicao(this: usize, tecnico: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_sessao_de_edicao(this: usize, tecnico: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(1544);
     if cqc13_indice(tecnico).is_none() {
         return o(this, tecnico);
@@ -781,7 +783,7 @@ unsafe extern "thiscall" fn comparar_sessao_de_edicao(this: usize, tecnico: usiz
 /// [pt] { 0x7f6af0 } (thiscall, ret 8, scout_manager.cpp): `SCOUT_MANAGER::set_edit_session(sessao, tecnico)`, pelas telas
 /// das buscas (0x8085bc, 0x812d88...). Grava a sessão em +0xc + 4 × índice do técnico e devolve 1. Sem técnico ou
 /// índice fora: a caixa (linhas 0xb8 e 0xc2; a original) e 0.
-unsafe extern "thiscall" fn escolher_sessao_de_edicao(this: usize, sessao: usize, tecnico: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn escolher_sessao_de_edicao(this: usize, sessao: usize, tecnico: usize) -> u32 {
     let Some(i) = cqc13_indice(tecnico) else {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(1545)(this, sessao, tecnico); // a caixa
     };
@@ -790,7 +792,7 @@ unsafe extern "thiscall" fn escolher_sessao_de_edicao(this: usize, sessao: usize
 }
 
 /// Comparador: lado a lado pelas 16 sessões e a devolução; com a caixa, só a original.
-unsafe extern "thiscall" fn comparar_escolher_sessao_de_edicao(this: usize, sessao: usize, tecnico: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_escolher_sessao_de_edicao(this: usize, sessao: usize, tecnico: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(1545);
     if cqc13_indice(tecnico).is_none() {
         return o(this, sessao, tecnico);
@@ -808,11 +810,11 @@ unsafe extern "thiscall" fn comparar_escolher_sessao_de_edicao(this: usize, sess
 
 
 /// As datas estáticas da 0x54c770 (valor e guarda) e da 0x54c5b0, 0x54c8e0 e 0x54cdb0.
-const CPY4_ESTATICAS: [(usize, usize); 8] = [(0xae2420, 8), (0xae2469, 1), (0xae24c0, 8), (0xae249e, 1), (0xae2410, 8), (0xae2430, 1), (0xae2470, 8), (0xae2418, 1)];
+pub(crate) const CPY4_ESTATICAS: [(usize, usize); 8] = [(0xae2420, 8), (0xae2469, 1), (0xae24c0, 8), (0xae249e, 1), (0xae2410, 8), (0xae2430, 1), (0xae2470, 8), (0xae2418, 1)];
 
 /// O corpo da 0x5cbb00. No `ensaio` (o comparador), nada se grava e nada se chama além das consultas: devolve o par
 /// (primeira entrada, quantas) que iria à 0x5cbdf0, ou None se a original não a chamaria.
-unsafe fn cpy4_amistosos(this: usize, ensaio: bool) -> Option<(usize, u32)> {
+pub(crate) unsafe fn cpy4_amistosos(this: usize, ensaio: bool) -> Option<(usize, u32)> {
     // 0x54a110: thiscall(data) (lea ecx); 0x54c770: thiscall(0xae2c90, saída, 0xc) (mov ecx, 0xae2c90; 2 push);
     // 0x68d080: thiscall(lista) (mov ecx, lista; sem push); 0x945333: cdecl(vetor, conta, tamanho, comparação) (add esp,
     // 0x10); 0x5cbdd0: thiscall(entrada, ano) (mov ecx, entrada; 1 push); 0x417c10: thiscall(destino, saída, origem)
@@ -920,14 +922,14 @@ unsafe fn cpy4_amistosos(this: usize, ensaio: bool) -> Option<(usize, u32)> {
 /// data (0x5cc610). Depois, se a data de 0xdd6ec8 não passa de hoje + 12 semanas (0x54c770) e o dia não foi feito
 /// (+0x34f4), as entradas com a data de hoje + 12 semanas (bsearch e as vizinhas iguais) vão à 0x5cbdf0 e o dia fica
 /// marcado.
-unsafe extern "thiscall" fn amistosos_internacionais_do_dia(this: usize) {
+pub(crate) unsafe extern "thiscall" fn amistosos_internacionais_do_dia(this: usize) {
     cpy4_amistosos(this, false);
 }
 
 /// Comparador: no primeiro dia do ano (as listas se esvaziam, liberando) e quando há amistosos a marcar (a 0x5cbdf0
 /// cria jogos e sorteia), só a original, conferindo o plano: o dia marcado em +0x34f4. Nos outros dias, lado a lado
 /// pelo dia marcado e pelas datas estáticas.
-unsafe extern "thiscall" fn comparar_amistosos_internacionais_do_dia(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_amistosos_internacionais_do_dia(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1353);
     if read_u16(0xae2c90) == 0 {
         return o(this);
@@ -946,7 +948,7 @@ unsafe extern "thiscall" fn comparar_amistosos_internacionais_do_dia(this: usize
 
 /// O técnico (nulo: o humano da vez, [0xb74c26 + 0x300 × [0xb77c7a]]) e o índice dele entre os 16 humanos (id −
 /// [0xae2364] + 16), ou None nos casos de erro da original (sem técnico ou fora de 0..15).
-unsafe fn cpy4_indice(tecnico: usize) -> Option<usize> {
+pub(crate) unsafe fn cpy4_indice(tecnico: usize) -> Option<usize> {
     let t = if tecnico != 0 {
         tecnico
     } else {
@@ -968,7 +970,7 @@ unsafe fn cpy4_indice(tecnico: usize) -> Option<usize> {
 /// [pt] { 0x7f6e30 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::get_selected_list(tecnico)`, pelas telas de
 /// busca (0x804248). A lista escolhida pelo técnico humano (byte em +0x4c + índice). Sem técnico ou fora de 0..15: a
 /// original (caixa "Error", 0xff).
-unsafe extern "thiscall" fn lista_escolhida_do_tecnico(this: usize, tecnico: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn lista_escolhida_do_tecnico(this: usize, tecnico: usize) -> u8 {
     let Some(i) = cpy4_indice(tecnico) else {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1354)(this, tecnico); // caixa: só a original
     };
@@ -976,7 +978,7 @@ unsafe extern "thiscall" fn lista_escolhida_do_tecnico(this: usize, tecnico: usi
 }
 
 /// Comparador: a devolução (rotina pura); nos casos de erro, só a original (caixa).
-unsafe extern "thiscall" fn comparar_lista_escolhida_do_tecnico(this: usize, tecnico: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn comparar_lista_escolhida_do_tecnico(this: usize, tecnico: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1354);
     if cpy4_indice(tecnico).is_none() {
         return o(this, tecnico);
@@ -993,7 +995,7 @@ unsafe extern "thiscall" fn comparar_lista_escolhida_do_tecnico(this: usize, tec
 /// [pt] { 0x7f6f20 } (thiscall, ret 8, scout_manager.cpp): `SCOUT_MANAGER::set_selected_list(lista, tecnico)`, pelas telas
 /// de busca (0x804460). Grava a lista escolhida (byte) em +0x4c + índice do técnico humano e devolve 1. Sem técnico ou
 /// fora de 0..15: a original (caixa "Error", 0).
-unsafe extern "thiscall" fn escolher_lista_do_tecnico(this: usize, lista: u32, tecnico: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn escolher_lista_do_tecnico(this: usize, lista: u32, tecnico: usize) -> u32 {
     let Some(i) = cpy4_indice(tecnico) else {
         return orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> u32>(1355)(this, lista, tecnico); // caixa: só a original
     };
@@ -1002,7 +1004,7 @@ unsafe extern "thiscall" fn escolher_lista_do_tecnico(this: usize, lista: u32, t
 }
 
 /// Comparador: lado a lado pelos 16 bytes das listas escolhidas, e a devolução; nos casos de erro, só a original.
-unsafe extern "thiscall" fn comparar_escolher_lista_do_tecnico(this: usize, lista: u32, tecnico: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_escolher_lista_do_tecnico(this: usize, lista: u32, tecnico: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> u32>(1355);
     if cpy4_indice(tecnico).is_none() {
         return o(this, lista, tecnico);
@@ -1016,7 +1018,7 @@ unsafe extern "thiscall" fn comparar_escolher_lista_do_tecnico(this: usize, list
 // ---------- 255a leva: o jogo com jogador observado, a lista do olheiro do humano e o registro da primeira convocação (scout_manager.cpp, staff_records.cpp) ----------
 
 
-unsafe fn cps8_i(a: usize) -> i32 {
+pub(crate) unsafe fn cps8_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
@@ -1031,7 +1033,7 @@ unsafe fn cps8_i(a: usize) -> i32 {
 /// é um dos dois da partida (+0x1c primeiro, depois +0x20), que não está cedida (0x8c7560, fora de seleção 0x53b900),
 /// nem lesionada (0x62c400 = 2), nem suspensa (0x55d270), nem impedida (0x7757d0), e que ainda não jogou (0x8cf5e0
 /// = 0), dá 1. Senão 0.
-unsafe extern "thiscall" fn jogo_com_observado(this: usize, partida: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn jogo_com_observado(this: usize, partida: usize) -> u32 {
     let (c1, c2) = (read_u32_as_usize(partida + 0x1c), read_u32_as_usize(partida + 0x20));
     if cps8_i(partida) < 0 {
         crate::comparacao::ramo("cps_8 competicao negativa");
@@ -1092,7 +1094,7 @@ unsafe extern "thiscall" fn jogo_com_observado(this: usize, partida: usize) -> u
     0
 }
 
-unsafe extern "thiscall" fn comparar_jogo_com_observado(this: usize, partida: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_jogo_com_observado(this: usize, partida: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1137)(this, partida);
     let n = jogo_com_observado(this, partida);
     PLACAR.registrar(r == n, || format!("jogo_com_observado(partida {:x}) original={} rust={}", partida, r, n));
@@ -1100,7 +1102,7 @@ unsafe extern "thiscall" fn comparar_jogo_com_observado(this: usize, partida: us
 }
 
 /// O gerente do humano da vez ([0xb74c26 + 0x300 × (i16)[0xb77c7a]]).
-unsafe fn cps8_gerente_da_vez() -> usize {
+pub(crate) unsafe fn cps8_gerente_da_vez() -> usize {
     let k = core::ptr::read_unaligned(0xb77c7a as *const i16) as isize;
     read_u32_as_usize((0xb74c26isize + 0x300 * k) as usize)
 }
@@ -1113,7 +1115,7 @@ unsafe fn cps8_gerente_da_vez() -> usize {
 /// (linha 0x231) e 0; sem gerente, o do humano da vez (sem ele, a caixa da linha 0x23b e 0). A vaga do humano (byte
 /// +0 do gerente − byte de [0xae2364] + 16, com sinal, 0..15): com a edição aberta ([this + vaga × 4 + 0xc]), a
 /// resposta dela (0x804540); senão a primeira das 10 buscas (0x7f6cd0) de tipo 1 (+0xa) responde (0x7af600). Sem ela, 0.
-unsafe extern "thiscall" fn na_lista_do_olheiro(this: usize, pessoa: usize, gerente: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn na_lista_do_olheiro(this: usize, pessoa: usize, gerente: usize) -> u32 {
     if pessoa == 0 {
         aviso_em(0xa7b094, 0x231);
         return 0;
@@ -1146,7 +1148,7 @@ unsafe extern "thiscall" fn na_lista_do_olheiro(this: usize, pessoa: usize, gere
     0
 }
 
-unsafe extern "thiscall" fn comparar_na_lista_do_olheiro(this: usize, pessoa: usize, gerente: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_na_lista_do_olheiro(this: usize, pessoa: usize, gerente: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(1138);
     if pessoa == 0 || (gerente == 0 && cps8_gerente_da_vez() == 0) {
         return o(this, pessoa, gerente);
@@ -1164,7 +1166,7 @@ unsafe extern "thiscall" fn comparar_na_lista_do_olheiro(this: usize, pessoa: us
 /// `Staff_Records::add_first_cap_record(pessoa, adversário)` (pelo resultado internacional 0x76b600): o histórico da
 /// pessoa (tipo 6: o clube contratante +0x39 ou −1, o id do adversário na partida e a idade +0x18 com sinal), no arquivo (0x58e340).
 /// O clube é lido antes do teste da pessoa, como na original; pessoa nula: a caixa "Error" (linha 0x1010).
-unsafe extern "thiscall" fn registrar_a_primeira_convocacao(this: usize, pessoa: usize, adversario: usize) {
+pub(crate) unsafe extern "thiscall" fn registrar_a_primeira_convocacao(this: usize, pessoa: usize, adversario: usize) {
     crate::comparacao::ramo("cps_8 primeira convocacao");
     let mut e = cpq4_entrada();
     cpq4_datar(e.as_mut_ptr());
@@ -1181,7 +1183,7 @@ unsafe extern "thiscall" fn registrar_a_primeira_convocacao(this: usize, pessoa:
 
 // ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
 // cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_registrar_a_primeira_convocacao(this: usize, pessoa: usize, adversario: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_registrar_a_primeira_convocacao(this: usize, pessoa: usize, adversario: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1139)(this, pessoa, adversario)
 }
 
@@ -1194,7 +1196,7 @@ unsafe extern "thiscall" fn comparar_registrar_a_primeira_convocacao(this: usize
 /// humano `tecnico` (sem ele, o da vez em [0xb74c26 + 0x300 × [0xb77c7a]]): o índice (id −
 /// [0xae2364] + 16) × 10 + `qual`, até [this+8] − 1, com 0x2b0 bytes cada a partir de [this].
 /// `qual` fora, sem técnico ou índice fora: a original (caixa de erro).
-unsafe extern "thiscall" fn registro_do_observador(t: usize, qual: i8, tecnico: *const i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn registro_do_observador(t: usize, qual: i8, tecnico: *const i32) -> usize {
     let mut p = tecnico;
     if (0..=9).contains(&qual) && p.is_null() {
         let vez = *(0xb77c7a as *const i16) as isize;
@@ -1219,7 +1221,7 @@ unsafe extern "thiscall" fn registro_do_observador(t: usize, qual: i8, tecnico: 
 /// (+0xcf); sem `qualquer`, não pode ter as marcas +0x9ace (0x5fe040) nem +0x9a01 no registro de
 /// humanos [0xb63c98]; e então basta `forcar`, o clube ser seleção (0x53b900) ou a marca +0x9a05
 /// (0x5fd480). Clube nulo: a original (caixa de erro e 0).
-unsafe extern "C" fn humano_manda_no_clube(clube: usize, qualquer: u32, forcar: i8) -> u32 {
+pub(crate) unsafe extern "C" fn humano_manda_no_clube(clube: usize, qualquer: u32, forcar: i8) -> u32 {
     let tecnico_9ace: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_COMPUTER_CONTROLLED);
     let tecnico_9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_RESERVE_TEAM);
     let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
@@ -1269,7 +1271,7 @@ unsafe extern "C" fn humano_manda_no_clube(clube: usize, qualquer: u32, forcar: 
 /// `c`: sem ficha (+0x61), 7; sem contrato, 4; contrato de tipo 5 (+0x35 & 0x3f), 8; senão pela
 /// situação (+0x4f >> 4, 0..6; acima, 7), a satisfação (+0x3d, com sinal), a idade (+0x18), a
 /// ambição (+0x57) e a reputação da ficha (+0xb, +0xd).
-unsafe extern "stdcall" fn categoria_do_contrato(p: usize, c: usize) -> u8 {
+pub(crate) unsafe extern "stdcall" fn categoria_do_contrato(p: usize, c: usize) -> u8 {
     if p == 0 {
         return 7;
     }
@@ -1346,21 +1348,21 @@ unsafe extern "stdcall" fn categoria_do_contrato(p: usize, c: usize) -> u8 {
     }
 }
 
-unsafe extern "thiscall" fn comparar_registro_do_observador(t: usize, qual: i8, tecnico: *const i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_registro_do_observador(t: usize, qual: i8, tecnico: *const i32) -> usize {
     let r = orig::<unsafe extern "thiscall" fn(usize, i8, *const i32) -> usize>(370)(t, qual, tecnico);
     let n = registro_do_observador(t, qual, tecnico);
     PLACAR.registrar(r == n, || format!("registro_do_observador({:#x}, {}, {:p}) original={:#x} rust={:#x}", t, qual, tecnico, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_humano_manda_no_clube(clube: usize, qualquer: u32, forcar: i8) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_humano_manda_no_clube(clube: usize, qualquer: u32, forcar: i8) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize, u32, i8) -> u32>(371)(clube, qualquer, forcar);
     let n = humano_manda_no_clube(clube, qualquer, forcar);
     PLACAR.registrar(r == n, || format!("humano_manda_no_clube({:#x}, {}, {}) original={} rust={}", clube, qualquer, forcar, r, n));
     r
 }
 
-unsafe extern "stdcall" fn comparar_categoria_do_contrato(p: usize, c: usize) -> u8 {
+pub(crate) unsafe extern "stdcall" fn comparar_categoria_do_contrato(p: usize, c: usize) -> u8 {
     let r = orig::<unsafe extern "stdcall" fn(usize, usize) -> u8>(372)(p, c);
     let n = categoria_do_contrato(p, c);
     PLACAR.registrar(r == n, || format!("categoria_do_contrato({:#x}, {:#x}) original={} rust={}", p, c, r, n));

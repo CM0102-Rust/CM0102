@@ -1,3 +1,5 @@
+use super::*;
+
 // ---------- 270a leva: a Copa do Mundo: o sorteio dos grupos (com o laço da queda de 27/12), o sorteio feito no dia e o dia da Copa (world_cup.cpp) ----------
 
 
@@ -8,7 +10,7 @@
 
 /// As chaves das 32 nações do sorteio real de 2002 (os globais g_key_nation_*, índice na tabela de nações [0xae23a8],
 /// 0x122 bytes cada), na ordem em que a original as grava na lista: grupos A a H, quatro por grupo.
-const CQF4_SORTEIO_2002: [usize; 32] = [
+pub(crate) const CQF4_SORTEIO_2002: [usize; 32] = [
     KEY_NATION_FRANCE, KEY_NATION_SENEGAL, KEY_NATION_URUGUAY, KEY_NATION_DENMARK, // A: França, Senegal, Uruguai, Dinamarca
     KEY_NATION_SPAIN, KEY_NATION_SLOVENIA, KEY_NATION_PARAGUAY, KEY_NATION_SOUTH_AFRICA, // B: Espanha, Eslovênia, Paraguai, África do Sul
     KEY_NATION_BRAZIL, KEY_NATION_TURKEY, KEY_NATION_CHINA, KEY_NATION_COSTA_RICA, // C: Brasil, Turquia, China, Costa Rica
@@ -40,7 +42,7 @@ const CQF4_SORTEIO_2002: [usize; 32] = [
 ///    nações da Copa ([+0x14], 6 bytes: +0 o clube, +4 a situação) recebe os clubes com a situação 6, a França (detentora)
 ///    2, a Coreia e o Japão (sedes) 1; +0x36 (quantas) = 32.
 /// Devolve a lista.
-unsafe extern "thiscall" fn mundial_sortear_grupos(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn mundial_sortear_grupos(this: usize) -> usize {
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
@@ -118,7 +120,7 @@ unsafe extern "thiscall" fn mundial_sortear_grupos(this: usize) -> usize {
 /// Lado a lado: a original e a cópia (sem contar os sorteios) a partir do mesmo estado do sorteador, das vagas
 /// (+0xee, 0xa0 bytes), de +0x36, de [0xb67a34] e, na Copa de 2002, da tabela das nações ([+0x14], 32 × 6); as duas
 /// listas alocadas têm de ser iguais byte a byte (a da cópia é liberada, 0x9452ca).
-unsafe extern "thiscall" fn comparar_mundial_sortear_grupos(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_mundial_sortear_grupos(this: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(1603);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -151,7 +153,7 @@ unsafe extern "thiscall" fn comparar_mundial_sortear_grupos(this: usize) -> usiz
 /// a lista liberada (0x9452ca push; add esp -> cdecl), as posições previstas (método +0x5c, 0x92f680) e os cartões
 /// zerados no órgão da competição (0x7e9180 push 0; ecx = [[0xae28f0] + 4 × (char)+0x50] -> thiscall, ret 4).
 /// Num erro a lista não é liberada (como a original).
-unsafe extern "thiscall" fn mundial_sorteio_dos_grupos(this: usize) {
+pub(crate) unsafe extern "thiscall" fn mundial_sorteio_dos_grupos(this: usize) {
     let sortear: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_WORLDCUP_DRAW_GROUPS);
     let grupo_um: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_WORLDCUP_CREATE_GROUP_TABLE);
     let criar: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
@@ -185,7 +187,7 @@ unsafe extern "thiscall" fn mundial_sorteio_dos_grupos(this: usize) {
 
 /// Só a original (o sorteio, os jogos, as notícias e as previsões não rodam duas vezes), conferindo o que ela garante:
 /// terminada (+0x45 = 1), as sete fases dos grupos 2..8 existem e a fase atual (+0x30) é a última delas (6).
-unsafe extern "thiscall" fn comparar_mundial_sorteio_dos_grupos(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_mundial_sorteio_dos_grupos(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(1604)(this);
     if read_u32_as_usize(this + 0x45) == 1 {
         let fases = read_u32_as_usize(this + 0xc);
@@ -203,7 +205,7 @@ unsafe extern "thiscall" fn comparar_mundial_sorteio_dos_grupos(this: usize) {
 /// thiscall, ret 0); na data do sorteio (+0xb6, +0xb8: 27/12 do ano anterior), com `completo` e sem tabela ainda (+0xb1
 /// = 0), o sorteio (0x92e7f0 mov ecx -> thiscall, ret 0). Depois o dia de liga (0x6847c0 push completo; push hoje; mov
 /// ecx -> thiscall, ret 8), cuja devolução (eax) ela repassa. A data: +0 o dia do ano, +2 o ano (sem sinal).
-unsafe extern "thiscall" fn mundial_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn mundial_dia(this: usize, hoje: usize, completo: u32) -> u32 {
     let semear: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_WORLDCUP_SEED_TEAMS);
     let sortear: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_WORLDCUP_RUN_GROUP_DRAW);
     let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
@@ -222,7 +224,7 @@ unsafe extern "thiscall" fn mundial_dia(this: usize, hoje: usize, completo: u32)
 
 /// Só a original (a semeadura, o sorteio e o dia da liga não rodam duas vezes), conferindo o que ela garante: no dia do
 /// sorteio (a condição da cópia), a Copa sai com a tabela do grupo 1 (+0xb1) e +0x45 = 1.
-unsafe extern "thiscall" fn comparar_mundial_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_mundial_dia(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(1605);
     let ano = core::ptr::read_unaligned((hoje + 2) as *const u16) as i32;
     let dia = core::ptr::read_unaligned(hoje as *const u16);
@@ -242,7 +244,7 @@ unsafe extern "thiscall" fn comparar_mundial_dia(this: usize, hoje: usize, compl
 
 
 /// O clube da entrada `i` da lista do sorteio (5 bytes: +0 o id): 0xae23b4 + id × 0x245.
-unsafe fn cqf5_clube(lista: usize, i: usize) -> usize {
+pub(crate) unsafe fn cqf5_clube(lista: usize, i: usize) -> usize {
     read_u32_as_usize(0xae23b4).wrapping_add(read_u32_as_usize(lista + i * 5).wrapping_mul(0x245))
 }
 
@@ -257,7 +259,7 @@ unsafe fn cqf5_clube(lista: usize, i: usize) -> usize {
 /// a linha vai no cl e a original deixa lixo nos bytes altos do ecx, que a 0x687430 não lê: a cópia passa o byte
 /// limpo), até 4 linhas ou o fim das 32 entradas; depois a notícia dos grupos (0x684230 mov ecx, this -> thiscall).
 /// Devolve 1.
-unsafe extern "thiscall" fn mundial_tabela_do_grupo_um(this: usize, lista: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn mundial_tabela_do_grupo_um(this: usize, lista: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let linha_da_tabela: unsafe extern "thiscall" fn(usize, u32, usize, u32, usize) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
@@ -288,13 +290,13 @@ unsafe extern "thiscall" fn mundial_tabela_do_grupo_um(this: usize, lista: usize
 }
 
 /// Os clubes do grupo `g` (+4 = g) da lista, na ordem, até 4 (o que a 0x92d0f0 e a 0x92d540 põem nas linhas).
-unsafe fn cqf5_do_grupo(lista: usize, g: i32) -> Vec<usize> {
+pub(crate) unsafe fn cqf5_do_grupo(lista: usize, g: i32) -> Vec<usize> {
     (0..32usize).filter(|&i| read_u8(lista + i * 5 + 4) as i8 as i32 == g).map(|i| cqf5_clube(lista, i)).take(4).collect()
 }
 
 /// Só a original (aloca a tabela e manda a notícia dos grupos), conferindo o plano feito antes: devolve 1, +0x3e = 4 e
 /// as linhas da tabela (0x3b bytes, +0 o clube) com os clubes do grupo 1 da lista, na ordem.
-unsafe extern "thiscall" fn comparar_mundial_tabela_do_grupo_um(this: usize, lista: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_mundial_tabela_do_grupo_um(this: usize, lista: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1606);
     let plano = cqf5_do_grupo(lista, 1);
     let r = o(this, lista);
@@ -321,7 +323,7 @@ unsafe extern "thiscall" fn comparar_mundial_tabela_do_grupo_um(this: usize, lis
 /// altos, que o construtor não lê: a cópia passa os valores limpos) guardada em [+0xc][g]; o vetor e a tabela das
 /// rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x380 e 0. Com ela: +0x30 = g e a notícia do grupo
 /// (0x684230 na fase). Devolve 1.
-unsafe extern "thiscall" fn mundial_fase_do_grupo(this: usize, g: i32, lista: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn mundial_fase_do_grupo(this: usize, g: i32, lista: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -397,7 +399,7 @@ unsafe extern "thiscall" fn mundial_fase_do_grupo(this: usize, g: i32, lista: us
 /// fase com os times (+0x3e) da Copa, o ano dela e, na tabela da fase (+0xb1, linhas de 0x3b bytes), os clubes do
 /// grupo g+2 da lista (em qualquer ordem: na comparação de 02/11 as linhas da fase não
 /// saíram na ordem da lista [inferência: a fase ordena ou sorteia a tabela dela]).
-unsafe extern "thiscall" fn comparar_mundial_fase_do_grupo(this: usize, g: i32, lista: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_mundial_fase_do_grupo(this: usize, g: i32, lista: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(1607);
     let plano = cqf5_do_grupo(lista, g + 2);
     let r = o(this, g, lista);
@@ -432,7 +434,7 @@ unsafe extern "thiscall" fn comparar_mundial_fase_do_grupo(this: usize, g: i32, 
 /// ret 8): 1, 2, 3, 4, quatro 5, oito 9, oito 17 e oito 25 (as faixas das fases finais); depois a competição atual
 /// da nação de cada clube (+0x53) vira a Copa (0x775220 push [+4]; push nação; mov ecx, [0xb74318] -> thiscall, ret 8)
 /// e o vetor é liberado (0x9452ca).
-unsafe extern "thiscall" fn mundial_posicoes_previstas(this: usize) {
+pub(crate) unsafe extern "thiscall" fn mundial_posicoes_previstas(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
@@ -473,7 +475,7 @@ unsafe extern "thiscall" fn mundial_posicoes_previstas(this: usize) {
 /// Só a original (acrescenta registros à estatística e avisa o gerenciador dos técnicos), conferindo o plano feito
 /// antes: o vetor ordenado como ela ordena (a mesma qsort, numa cópia) e, depois, a posição prevista (+0x72 do registro
 /// achado por 0x4a4850) de cada um dos 32 primeiros.
-unsafe extern "thiscall" fn comparar_mundial_posicoes_previstas(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_mundial_posicoes_previstas(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1608);
     if read_u32_as_usize(this + 8) == 0 || read_i16(this + 0x36) < 0x20 || read_u32_as_usize(this + 0x14) == 0 {
         return o(this);
@@ -502,7 +504,7 @@ unsafe extern "thiscall" fn comparar_mundial_posicoes_previstas(this: usize) {
 
 /// Os jogos de cada fase de grupos na tabela das rodadas (0x68a1c0: rodada, jogo, a, b, c, valor), na ordem da
 /// original, pela fase + 1 (a tabela de saltos 0x92ccd0: −1 é a própria Copa, o grupo 1; 0..6 os grupos 2..8).
-const CQF6_JOGOS: [[(i32, i32, i32, i32, i32, u32); 6]; 8] = [
+pub(crate) const CQF6_JOGOS: [[(i32, i32, i32, i32, i32, u32); 6]; 8] = [
     [(0, 0, 2, 1, 3, 4), (0, 1, 2, 2, 3, 0x4000), (1, 0, 1, 1, 3, 0x1000), (1, 1, 1, 2, 3, 0x400), (2, 0, 1, 2, 3, 0x40), (2, 1, 1, 2, 3, 0x2000)],
     [(0, 0, 3, 1, 3, 0x1000), (0, 1, 3, 2, 3, 0x800), (1, 0, 2, 1, 3, 0x2000), (1, 1, 2, 2, 3, 0x4000), (2, 0, 1, 1, 3, 4), (2, 1, 1, 1, 3, 0x400)],
     [(0, 0, 4, 1, 3, 0x200), (0, 1, 4, 2, 3, 0x40), (1, 0, 3, 2, 3, 0x800), (1, 1, 3, 1, 3, 4), (2, 0, 2, 1, 3, 0x100), (2, 1, 2, 1, 3, 0x1000)],
@@ -524,7 +526,7 @@ const CQF6_JOGOS: [[(i32, i32, i32, i32, i32, u32); 6]; 8] = [
 /// do ano da Copa, levadas aos dias da semana 4, 4 e 2, código 1, valor 1), o jogo 2 de cada rodada vazio (−1) e os
 /// dois jogos de cada rodada da fase (`CQF6_JOGOS`). O mata-mata (fase 7, com as rotinas da copa) e as fases acima:
 /// a original. Devolve a tabela.
-unsafe extern "thiscall" fn mundial_rodadas_da_fase(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn mundial_rodadas_da_fase(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
     let f = fase as u8 as i8;
     if f >= 7 {
         return orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1609)(this, fase, rodadas, id, liga);
@@ -563,7 +565,7 @@ unsafe extern "thiscall" fn mundial_rodadas_da_fase(this: usize, fase: u32, roda
 
 /// Os bytes que a tabela das rodadas tem gravados (o resto da memória alocada não é escrito): de cada rodada, +0..+4 e
 /// +0x3d..+0x40; de cada um dos 3 jogos, +5..+0xb.
-unsafe fn cqf6_gravados(t: usize) -> Vec<u8> {
+pub(crate) unsafe fn cqf6_gravados(t: usize) -> Vec<u8> {
     let mut v = Vec::new();
     for r in 0..3usize {
         let e = t + r * 0x41;
@@ -579,7 +581,7 @@ unsafe fn cqf6_gravados(t: usize) -> Vec<u8> {
 /// Lado a lado nas fases de grupos: a original com as saídas de quem chama e a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas alocadas têm de ser iguais (a da cópia é liberada).
 /// O mata-mata: só a original.
-unsafe extern "thiscall" fn comparar_mundial_rodadas_da_fase(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_mundial_rodadas_da_fase(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1609);
     if fase as u8 as i8 >= 7 {
         return o(this, fase, rodadas, id, liga);
@@ -608,7 +610,7 @@ unsafe extern "thiscall" fn comparar_mundial_rodadas_da_fase(this: usize, fase: 
 /// (0x90f4f0, 0x911e10, 0x91538e, 0x9184c0, 0x91e200, 0x920500): com a lista das nações (+0x36) abaixo do máximo
 /// (+0x38), a vaga +0x36 da tabela [+0x14] (6 bytes) recebe a situação 6 e o clube, e +0x36 sobe; cheia, a caixa da
 /// linha 0x456.
-unsafe extern "thiscall" fn mundial_nacao_classificada(this: usize, clube: usize) {
+pub(crate) unsafe extern "thiscall" fn mundial_nacao_classificada(this: usize, clube: usize) {
     let n = read_i16(this + 0x36);
     if n >= read_i16(this + 0x38) {
         aviso_em(0xad5888, 0x456);
@@ -622,7 +624,7 @@ unsafe extern "thiscall" fn mundial_nacao_classificada(this: usize, clube: usize
 }
 
 /// Lado a lado (+0x36 e a vaga da tabela); lista cheia (a caixa): só a original.
-unsafe extern "thiscall" fn comparar_mundial_nacao_classificada(this: usize, clube: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_mundial_nacao_classificada(this: usize, clube: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1610);
     let n = read_i16(this + 0x36);
     if n >= read_i16(this + 0x38) || read_u32_as_usize(this + 0x14) == 0 {
@@ -649,7 +651,7 @@ unsafe extern "thiscall" fn comparar_mundial_nacao_classificada(this: usize, clu
 /// [0x9cfa18]/[0x9cfa0c]/[0x9cfa1c] pote 2, [0x9cfa08]/[0x9cfa14] pote 3; sem nação ou continente, a caixa da linha
 /// 0x61e) com o id do clube nas vagas +0xee (5 bytes); por fim as 24 da tabela (a partir da 9ª) e as vagas +0x116 são
 /// ordenadas pelo pote (0x92f660).
-unsafe extern "thiscall" fn mundial_cabecas_de_chave(this: usize) {
+pub(crate) unsafe extern "thiscall" fn mundial_cabecas_de_chave(this: usize) {
     if read_i16(this + 0x40) == 0x7d2 {
         crate::comparacao::ramo("cqf_6 sem cabeças de chave em 2002");
         return;
@@ -757,7 +759,7 @@ unsafe extern "thiscall" fn mundial_cabecas_de_chave(this: usize) {
 
 /// Na Copa de 2002 (volta sem gravar nada) lado a lado em +0x4b; nas outras, só a original (caixas, e as saídas da
 /// 0x5fa730 que a original pode deixar sem gravar).
-unsafe extern "thiscall" fn comparar_mundial_cabecas_de_chave(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_mundial_cabecas_de_chave(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1611);
     if read_i16(this + 0x40) != 0x7d2 {
         return o(this);

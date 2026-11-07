@@ -1,3 +1,5 @@
+use super::*;
+
 // ---------- 274a leva: as regras dos estaduais do Centro-Oeste, Gaúcho (Nordeste, Paulista), Baiano e Catarinense (bra_reg_central.cpp, bra_reg_gaucho.cpp, bra_reg_santa.cpp) ----------
 
 
@@ -7,7 +9,7 @@
 /// +0xbe e os rebaixados +0xc1): vitória 3, empate 1, categoria 2 (liga), clube nacional, desempates confronto
 /// direto e saldo, sem play-offs na tabela, sem liga acima nem abaixo, palavra de regras 8, 7 reservas e
 /// 3 substituições, e as palavras +0xab e +0xdb (copiadas em cada partida: +0x38 e +0x36) em 0.
-unsafe fn cqi8_regras(o: usize, turnos: u16, cima: u8, rebaixados: u8) {
+pub(crate) unsafe fn cqi8_regras(o: usize, turnos: u16, cima: u8, rebaixados: u8) {
     write_u16_at(o, 0xab, 0);
     write_u16_at(o, 0xdb, 0);
     write_u8_at(o, 0xc7, 0);
@@ -30,23 +32,23 @@ unsafe fn cqi8_regras(o: usize, turnos: u16, cima: u8, rebaixados: u8) {
 }
 
 /// O Centro-Oeste (0x430ff0): turno único, 8 vagas de cima (o mata-mata de 8), 3 rebaixados.
-unsafe fn cqi8_regras_centro(o: usize) {
+pub(crate) unsafe fn cqi8_regras_centro(o: usize) {
     cqi8_regras(o, 1, 8, 3); // cqi8: o Centro-Oeste
 }
 
 /// O Gaúcho (0x4322d0, também o Nordeste e o Paulista): turno único, 4 vagas de cima, 2 rebaixados.
-unsafe fn cqi8_regras_gaucho(o: usize) {
+pub(crate) unsafe fn cqi8_regras_gaucho(o: usize) {
     cqi8_regras(o, 1, 4, 2); // cqi8: o Gaúcho
 }
 
 /// O Catarinense (0x43bc70, também o Baiano): dois turnos, 4 vagas de cima, 1 rebaixado.
-unsafe fn cqi8_regras_catarinense(o: usize) {
+pub(crate) unsafe fn cqi8_regras_catarinense(o: usize) {
     cqi8_regras(o, 2, 4, 1); // cqi8: o Catarinense
 }
 
 /// O calendário da fase principal pelo slot 16 (`create_schedule`, thiscall, ret 0x10, conferido nos seis alvos das
 /// vtables destas rotinas): estágio -1, as saídas +0xa9 e +0x3a, sem a marca; o ponteiro vai para +0xba.
-unsafe fn cqi8_calendario(o: usize) {
+pub(crate) unsafe fn cqi8_calendario(o: usize) {
     let vt = *(o as *const usize);
     let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
     let r = f(o, -1, o + 0xa9, o + 0x3a, 0);
@@ -55,7 +57,7 @@ unsafe fn cqi8_calendario(o: usize) {
 
 /// O objeto da liga (0xee bytes) menos as saídas do calendário (+0x3a, +0xa9, +0xba): os calendários não gravam nada
 /// no objeto além delas (nenhum `mov [edi+..]` nos seis).
-fn cqi8_regioes(o: usize) -> [(usize, usize); 4] {
+pub(crate) fn cqi8_regioes(o: usize) -> [(usize, usize); 4] {
     [(o, 0x3a), (o + 0x3c, 0xa9 - 0x3c), (o + 0xab, 0xba - 0xab), (o + 0xbe, 0xee - 0xbe)]
 }
 
@@ -68,7 +70,7 @@ fn cqi8_regioes(o: usize) -> [(usize, usize); 4] {
 ///
 /// [pt] { 0x430ff0 } (thiscall, bra_reg_central.cpp): `BraRegCentral::set_up_rules` (slot 36), as regras e o calendário;
 /// devolve 1.
-unsafe extern "thiscall" fn cqi8_regras_do_centro_oeste(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_centro_oeste(this: usize) -> u32 {
     cqi8_regras_centro(this);
     crate::comparacao::ramo("cqi_8 regras do centro-oeste");
     cqi8_calendario(this);
@@ -77,7 +79,7 @@ unsafe extern "thiscall" fn cqi8_regras_do_centro_oeste(this: usize) -> u32 {
 
 /// Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
 /// saídas do calendário; a devolução.
-unsafe extern "thiscall" fn comparar_cqi8_regras_do_centro_oeste(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_centro_oeste(this: usize) -> u32 {
     let reg = cqi8_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1715)(this), || {
         cqi8_regras_centro(this);
@@ -96,7 +98,7 @@ unsafe extern "thiscall" fn comparar_cqi8_regras_do_centro_oeste(this: usize) ->
 ///
 /// [pt] { 0x4322d0 } (thiscall, bra_reg_gaucho.cpp): `BraRegGaucho::set_up_rules`, nas vtables do Gaúcho (0x96811c), do
 /// Nordeste (0x9683ec) e do Paulista (0x968770); devolve 1.
-unsafe extern "thiscall" fn cqi8_regras_do_gaucho(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_gaucho(this: usize) -> u32 {
     cqi8_regras_gaucho(this);
     crate::comparacao::ramo("cqi_8 regras do gaucho");
     cqi8_calendario(this);
@@ -104,7 +106,7 @@ unsafe extern "thiscall" fn cqi8_regras_do_gaucho(this: usize) -> u32 {
 }
 
 /// Comparador: como o do Centro-Oeste.
-unsafe extern "thiscall" fn comparar_cqi8_regras_do_gaucho(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_gaucho(this: usize) -> u32 {
     let reg = cqi8_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1716)(this), || {
         cqi8_regras_gaucho(this);
@@ -123,7 +125,7 @@ unsafe extern "thiscall" fn comparar_cqi8_regras_do_gaucho(this: usize) -> u32 {
 ///
 /// [pt] { 0x43bc70 } (thiscall, bra_reg_santa.cpp): `BraRegSanta::set_up_rules`, nas vtables do Baiano (0x967fb4) e do
 /// Catarinense (0x9686bc); devolve 1.
-unsafe extern "thiscall" fn cqi8_regras_do_catarinense(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_catarinense(this: usize) -> u32 {
     cqi8_regras_catarinense(this);
     crate::comparacao::ramo("cqi_8 regras do catarinense");
     cqi8_calendario(this);
@@ -131,7 +133,7 @@ unsafe extern "thiscall" fn cqi8_regras_do_catarinense(this: usize) -> u32 {
 }
 
 /// Comparador: como o do Centro-Oeste.
-unsafe extern "thiscall" fn comparar_cqi8_regras_do_catarinense(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_catarinense(this: usize) -> u32 {
     let reg = cqi8_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1717)(this), || {
         cqi8_regras_catarinense(this);
@@ -147,26 +149,26 @@ unsafe extern "thiscall" fn comparar_cqi8_regras_do_catarinense(this: usize) -> 
 
 /// Os registros de carreira (Staff_Records em [0xdd7f00], thiscall, já em Rust): 0x86bdd0 classificou-se (clube, comp,
 /// fase, rodada, peso; ret 0x14).
-unsafe fn cqk7_classificou(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
+pub(crate) unsafe fn cqk7_classificou(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
     f(read_u32_as_usize(0xdd7f00), clube, comp, fase, rodada, peso);
 }
 
 /// 0x86a1c0 rebaixado (clube, liga; ret 8).
-unsafe fn cqk7_rebaixado(clube: usize, comp: usize) {
+pub(crate) unsafe fn cqk7_rebaixado(clube: usize, comp: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
     f(read_u32_as_usize(0xdd7f00), clube, comp);
 }
 
 /// 0x868c50 campeão da liga (clube, liga; ret 8).
-unsafe fn cqk7_campeao(clube: usize, comp: usize) {
+pub(crate) unsafe fn cqk7_campeao(clube: usize, comp: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_LEAGUE_CHAMPIONS_RECORD);
     f(read_u32_as_usize(0xdd7f00), clube, comp);
 }
 
 /// A fase de pontos corridos (fase -1) dos estaduais: os classificados (6) ganham o registro de classificação (rodada
 /// 0x82, peso 0x32), os rebaixados (3) o de rebaixamento. Igual nas duas rotinas dos estaduais.
-unsafe fn cqk7_pontos_corridos(this: usize, clube: usize, st: u8, fazer: bool) {
+pub(crate) unsafe fn cqk7_pontos_corridos(this: usize, clube: usize, st: u8, fazer: bool) {
     let comp = read_u32_as_usize(this + 4);
     if st == 6 {
         if fazer {
@@ -182,7 +184,7 @@ unsafe fn cqk7_pontos_corridos(this: usize, clube: usize, st: u8, fazer: bool) {
 /// O mata-mata dos estaduais: a linha do clube na tabela (+0xb1, +0x3e linhas); o campeão (1) ganha o registro de
 /// campeão e o destino 5; os eliminados (2 ou -1), o registro de eliminação (0x86c000) com o peso da escala 0x4bf850
 /// (30 a 50 pela rodada do jogo em `rodadas`) e o destino -2. Devolve (linha gravada ou 0, destino).
-unsafe fn cqk7_mata_mata(this: usize, clube: usize, st: u8, jogo: usize, rodadas: u32, fazer: bool) -> (usize, u8) {
+pub(crate) unsafe fn cqk7_mata_mata(this: usize, clube: usize, st: u8, jogo: usize, rodadas: u32, fazer: bool) -> (usize, u8) {
     let comp = read_u32_as_usize(this + 4);
     let n = read_i16(this + 0x3e) as i32;
     let mut i = 0i32;
@@ -223,7 +225,7 @@ unsafe fn cqk7_mata_mata(this: usize, clube: usize, st: u8, jogo: usize, rodadas
 
 /// O Centro-Oeste e o Goiano (0x4314e0): a fase -1 de pontos corridos e o mata-mata na fase 0 (escala de 3 rodadas).
 /// `fazer` = falso: o ensaio do comparador. Devolve (devolução, linha gravada ou 0, destino).
-unsafe fn cqk7_centro(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
+pub(crate) unsafe fn cqk7_centro(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (situacao as u8, fase as u8);
     if fa == 0xff {
         cqk7_pontos_corridos(this, clube, st, fazer);
@@ -238,7 +240,7 @@ unsafe fn cqk7_centro(this: usize, clube: usize, situacao: u32, fase: u32, jogo:
 
 /// O Mineiro, o Paranaense e o Carioca (0x434d90): a fase -1 de pontos corridos; as fases 0 e 1 (os turnos) devolvem -1;
 /// o mata-mata na fase 2 (escala de 1 rodada: a média, 40); as outras, 0.
-unsafe fn cqk7_mineiro(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
+pub(crate) unsafe fn cqk7_mineiro(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (situacao as u8, fase as u8 as i8);
     if fa == -1 {
         cqk7_pontos_corridos(this, clube, st, fazer);
@@ -255,7 +257,7 @@ unsafe fn cqk7_mineiro(this: usize, clube: usize, situacao: u32, fase: u32, jogo
 }
 
 /// A NSL (0x411980). Devolve (devolução, 0, 0): não grava na tabela.
-unsafe fn cqk7_nsl(this: usize, clube: usize, situacao: u32, fase: u32, fazer: bool) -> (u32, usize, u8) {
+pub(crate) unsafe fn cqk7_nsl(this: usize, clube: usize, situacao: u32, fase: u32, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (situacao as u8, fase as u8);
     let comp = read_u32_as_usize(this + 4);
     if fa == 0xff {
@@ -304,14 +306,14 @@ unsafe fn cqk7_nsl(this: usize, clube: usize, situacao: u32, fase: u32, fazer: b
 /// [pt] { 0x4314e0 } (thiscall, ret 0x18, bra_reg_central.cpp): `BraRegCentral::update_staff_records_for_status` (slot 18
 /// do Centro-Oeste e do Goiano): os classificados e rebaixados dos pontos corridos; no mata-mata (fase 0), o campeão
 /// (destino 5) e os eliminados (destino -2, registro de eliminação com peso de 30 a 50 em 3 rodadas). Devolve 0.
-unsafe extern "thiscall" fn cqk7_destino_no_centro_oeste(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqk7_destino_no_centro_oeste(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
     cqk7_centro(this, clube, situacao, fase, jogo, true).0
 }
 
 /// Comparador: só a original (ponytail: os registros de carreira alocam e vão para o histórico; não rodam duas vezes),
 /// com o plano do ensaio (a cópia sem os registros nem a gravação, rodada antes): a devolução e o destino na linha.
-unsafe extern "thiscall" fn comparar_cqk7_destino_no_centro_oeste(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqk7_destino_no_centro_oeste(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let (n, l, dest) = cqk7_centro(this, clube, situacao, fase, jogo, false);
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1731)(this, clube, situacao, fase, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
@@ -327,13 +329,13 @@ unsafe extern "thiscall" fn comparar_cqk7_destino_no_centro_oeste(this: usize, c
 /// [pt] { 0x434d90 } (thiscall, ret 0x18, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::update_staff_records_for_status`
 /// (slot 18 do Mineiro, do Paranaense e do Carioca): os pontos corridos como no Centro-Oeste; os turnos (fases 0 e 1)
 /// devolvem -1; o mata-mata na fase 2 (peso pela escala de uma rodada só: 40). Devolve 0 ou -1.
-unsafe extern "thiscall" fn cqk7_destino_no_mineiro(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqk7_destino_no_mineiro(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
     cqk7_mineiro(this, clube, situacao, fase, jogo, true).0
 }
 
 /// Comparador: como o do Centro-Oeste.
-unsafe extern "thiscall" fn comparar_cqk7_destino_no_mineiro(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqk7_destino_no_mineiro(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let (n, l, dest) = cqk7_mineiro(this, clube, situacao, fase, jogo, false);
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1732)(this, clube, situacao, fase, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
@@ -350,13 +352,13 @@ unsafe extern "thiscall" fn comparar_cqk7_destino_no_mineiro(this: usize, clube:
 /// seis classificados (6) ganham o registro de classificação para a fase final (fase 0x435); os de fora (-2) devolvem
 /// -1; na fase final (fase 0), quem avança (6) ganha o registro (rodada 0x96) e quem cai (-2) o de não classificado
 /// (fase 0x435) e -1; depois, o campeão (1) ganha o registro de campeão. Devolve 0 ou -1.
-unsafe extern "thiscall" fn cqk7_destino_na_nsl(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqk7_destino_na_nsl(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let _ = (a4, a5, a6);
     cqk7_nsl(this, clube, situacao, fase, true).0
 }
 
 /// Comparador: só a original (os registros alocam) com a devolução prevista pelo ensaio.
-unsafe extern "thiscall" fn comparar_cqk7_destino_na_nsl(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqk7_destino_na_nsl(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let (n, _, _) = cqk7_nsl(this, clube, situacao, fase, false);
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(1733)(this, clube, situacao, fase, a4, a5, a6);
     PLACAR.registrar(r == n, || format!("cqk7_destino_na_nsl({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));

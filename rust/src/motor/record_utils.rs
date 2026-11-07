@@ -1,3 +1,5 @@
+use super::*;
+
 // ---------- 262a leva: os registros de partida e de nome: a partida vista por um clube, a referência ao nome da pessoa e o código do resultado (record_utils.cpp) ----------
 
 
@@ -13,7 +15,7 @@
 /// palavra +0x32, +0xe a +0x30, +0x10 o lado (0x4afa80, cdecl(clube, jogo)), +0x11 o id do clube, +0x1b o dword +8 do
 /// jogo; mandante (+0x1c): +0x15 o +0x10 do jogo e o placar (+0x19 pró, +0x1a contra) pelo da prorrogação (+0x47/+0x48)
 /// se ele não for negativo, senão o normal (+0x43/+0x44); visitante: +0x15 o +0xc e o placar ao contrário. Devolve 1.
-unsafe extern "C" fn registro_da_partida_pelo_clube(jogo: usize, clube: usize, saida: usize) -> u32 {
+pub(crate) unsafe extern "C" fn registro_da_partida_pelo_clube(jogo: usize, clube: usize, saida: usize) -> u32 {
     if jogo == 0 {
         aviso_em(0xa7a088, 0x29);
         return 0;
@@ -66,7 +68,7 @@ unsafe extern "C" fn registro_da_partida_pelo_clube(jogo: usize, clube: usize, s
 
 /// Comparador da 0x7e4750: lado a lado (leve) no registro de saída (0x1f bytes) e na devolução; ponteiro nulo: a caixa,
 /// só a original.
-unsafe extern "C" fn comparar_registro_da_partida_pelo_clube(jogo: usize, clube: usize, saida: usize) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_registro_da_partida_pelo_clube(jogo: usize, clube: usize, saida: usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(1398);
     if jogo == 0 || clube == 0 || saida == 0 {
         return o(jogo, clube, saida);
@@ -77,7 +79,7 @@ unsafe extern "C" fn comparar_registro_da_partida_pelo_clube(jogo: usize, clube:
 }
 
 /// O id do nome (+0x33 do registro de nome) ou −1 sem nome.
-unsafe fn cpz7_nome(p: u32) -> u32 {
+pub(crate) unsafe fn cpz7_nome(p: u32) -> u32 {
     if p != 0 { read_u32(p as usize + 0x33) } else { u32::MAX }
 }
 
@@ -88,7 +90,7 @@ unsafe fn cpz7_nome(p: u32) -> u32 {
 /// da notícia da suspensão, do prêmio e da busca de jogadores. Pessoa ou saída nulas: a caixa (linhas 0x80, 0x88) e 0.
 /// Senão +0, +4, +8 os ids dos nomes (+4, +8, +0xc da pessoa; −1 sem nome), +0xc o id da pessoa e +0x10 a data de
 /// nascimento (+0x10, 0x417c10); devolve 1.
-unsafe extern "C" fn referencia_ao_nome(pessoa: usize, saida: usize) -> u32 {
+pub(crate) unsafe extern "C" fn referencia_ao_nome(pessoa: usize, saida: usize) -> u32 {
     if pessoa == 0 {
         aviso_em(0xa7a088, 0x80);
         return 0;
@@ -108,7 +110,7 @@ unsafe extern "C" fn referencia_ao_nome(pessoa: usize, saida: usize) -> u32 {
 }
 
 /// Comparador da 0x7e4920: lado a lado (leve) na referência (0x18 bytes) e na devolução; ponteiro nulo: só a original.
-unsafe extern "C" fn comparar_referencia_ao_nome(pessoa: usize, saida: usize) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_referencia_ao_nome(pessoa: usize, saida: usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(1399);
     if pessoa == 0 || saida == 0 {
         return o(pessoa, saida);
@@ -124,7 +126,7 @@ unsafe extern "C" fn comparar_referencia_ao_nome(pessoa: usize, saida: usize) ->
 /// [pt] { 0x7e56d0 } (cdecl, record_utils.cpp): `match_record_result_code(registro)`, da estatística da competição
 /// (0x49f570, a cada partida). Registro nulo: a caixa (linha 0x25a) e 0. Pró (+0x19) > contra (+0x1a), com sinal: 3;
 /// empate com gols: 2; empate sem gols: 1; derrota: −3 (só o byte conta: quem chama lê al).
-unsafe extern "C" fn codigo_do_resultado(registro: usize) -> u8 {
+pub(crate) unsafe extern "C" fn codigo_do_resultado(registro: usize) -> u8 {
     if registro == 0 {
         aviso_em(0xa7a088, 0x25a);
         return 0;
@@ -142,7 +144,7 @@ unsafe extern "C" fn codigo_do_resultado(registro: usize) -> u8 {
 }
 
 /// Comparador da 0x7e56d0: pelo byte devolvido (só lê); registro nulo: só a original.
-unsafe extern "C" fn comparar_codigo_do_resultado(registro: usize) -> u8 {
+pub(crate) unsafe extern "C" fn comparar_codigo_do_resultado(registro: usize) -> u8 {
     let o = orig::<unsafe extern "C" fn(usize) -> u8>(1400);
     if registro == 0 {
         return o(registro);
@@ -158,7 +160,7 @@ unsafe extern "C" fn comparar_codigo_do_resultado(registro: usize) -> u8 {
 
 
 /// O corpo da 0x86c390; sem `gravar` (a cópia pelo comparador), sem a entrada no arquivo do histórico.
-unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32, gravar: bool) {
+pub(crate) unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32, gravar: bool) {
     let mut e = cpq4_entrada();
     cpq4_datar(e.as_mut_ptr());
     e[0xc] = 0x34;
@@ -242,7 +244,7 @@ unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u
 /// (0x849ce0), a renovação (0x4cda70); depois, só com o crédito 1, sem a marca +0x45 do contrato, com +0x59 acima de 15
 /// e +0x5b acima de 10, sorteio(+0x59) acima de 5: a notícia do agradecimento ao técnico (0x58a070). Sem pessoa ou sem
 /// prêmio: a original (caixa "Error").
-unsafe extern "thiscall" fn registrar_premio_do_ano(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
+pub(crate) unsafe extern "thiscall" fn registrar_premio_do_ano(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
     if p == 0 || premio == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(1368)(this, p, clube, premio, a4, a5, credito);
     }
@@ -252,7 +254,7 @@ unsafe extern "thiscall" fn registrar_premio_do_ano(this: usize, p: usize, clube
 /// Comparador: o técnico lado a lado pelo registro de pontos dele (criado antes pela 0x86f5b0, como a original faria;
 /// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
 /// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
-unsafe extern "thiscall" fn comparar_registrar_premio_do_ano(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_registrar_premio_do_ano(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(1368);
     if p == 0 || premio == 0 {
         return o(this, p, clube, premio, a4, a5, credito);
@@ -277,7 +279,7 @@ unsafe extern "thiscall" fn comparar_registrar_premio_do_ano(this: usize, p: usi
 /// [pt] { 0x7e4a30 } (cdecl, record_utils.cpp): `match_record_is_bigger_win(a, b)`, pelos recordes do clube depois de cada
 /// jogo (0x444930) e pelos da competição (0x49fb93): 1 se `a` é vitória (gols +0x19 > +0x1a, bytes com sinal) por
 /// diferença maior que a de `b`, ou igual com mais gols feitos. Registro nulo: a original (caixa "Error", 0).
-unsafe extern "C" fn vitoria_maior(a: usize, b: usize) -> u32 {
+pub(crate) unsafe extern "C" fn vitoria_maior(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
         return orig::<unsafe extern "C" fn(usize, usize) -> u32>(1369)(a, b);
     }
@@ -290,7 +292,7 @@ unsafe extern "C" fn vitoria_maior(a: usize, b: usize) -> u32 {
 }
 
 /// Comparador: pura; registro nulo (a caixa), só a original.
-unsafe extern "C" fn comparar_vitoria_maior(a: usize, b: usize) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_vitoria_maior(a: usize, b: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(1369)(a, b);
     if a == 0 || b == 0 {
         return r;
@@ -306,7 +308,7 @@ unsafe extern "C" fn comparar_vitoria_maior(a: usize, b: usize) -> u32 {
 /// [pt] { 0x7e4b00 } (cdecl, record_utils.cpp): `match_record_is_bigger_defeat(a, b)`, pelos recordes do clube depois de cada
 /// jogo (0x444930): 1 se `a` é derrota (+0x19 < +0x1a) por diferença maior que a de `b`, ou igual com mais gols
 /// sofridos. Registro nulo: a original (caixa "Error", 0).
-unsafe extern "C" fn derrota_maior(a: usize, b: usize) -> u32 {
+pub(crate) unsafe extern "C" fn derrota_maior(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
         return orig::<unsafe extern "C" fn(usize, usize) -> u32>(1370)(a, b);
     }
@@ -319,7 +321,7 @@ unsafe extern "C" fn derrota_maior(a: usize, b: usize) -> u32 {
 }
 
 /// Comparador: pura; registro nulo (a caixa), só a original.
-unsafe extern "C" fn comparar_derrota_maior(a: usize, b: usize) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_derrota_maior(a: usize, b: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(1370)(a, b);
     if a == 0 || b == 0 {
         return r;

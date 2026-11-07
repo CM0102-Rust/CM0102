@@ -1,10 +1,12 @@
+use super::*;
+
 // ---------- 282a leva: a NSL australiana: a fase seguinte, a série final dos seis primeiros e a grande final (aus_nsl.cpp) ----------
 
 
 
 
 /// O clube da linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`.
-unsafe fn cqr3_linha(t: usize, i: usize) -> usize {
+pub(crate) unsafe fn cqr3_linha(t: usize, i: usize) -> usize {
     read_usize(read_usize(t + 0xb1) + i * 0x3b)
 }
 
@@ -17,7 +19,7 @@ unsafe fn cqr3_linha(t: usize, i: usize) -> usize {
 /// a fase −1; a série final dos seis primeiros, a fase 0; a grande final, a fase 1). Na última fase (+0x30 ≥ +0x2c − 1,
 /// com sinal): a caixa de erro da linha 0x2f0 e nada mais. Senão +0x30 sobe um; ao chegar a 0 monta a série final
 /// (0x412010) e a 1, a grande final (0x4121c0), as duas em call direto com o ecx da liga.
-unsafe extern "thiscall" fn cqr3_fase_seguinte_da_nsl(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqr3_fase_seguinte_da_nsl(this: usize) {
     let fase = read_usize(this + 0x30) as i32;
     if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x987c20, 0x2f0);
@@ -50,7 +52,7 @@ unsafe extern "thiscall" fn cqr3_fase_seguinte_da_nsl(this: usize) {
 /// 4) [+0xc][0] = a fase e a tabela das rodadas liberada (free 0x9452ca). Sem fase: a caixa da linha 0x328 e 0. Com
 ///    ela: a notícia do sorteio (0x684230 na fase, thiscall, ret 0), +0x30 = 0 e 1.
 /// [inferência] A série final é uma liga curta dos seis; os dois primeiros dela vão à grande final.
-unsafe extern "thiscall" fn cqr3_serie_final_da_nsl(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqr3_serie_final_da_nsl(this: usize) -> u32 {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
@@ -99,7 +101,7 @@ unsafe extern "thiscall" fn cqr3_serie_final_da_nsl(this: usize) -> u32 {
 /// 0x9452ca). Sem fase: a caixa da linha 0x35c e volta (sem liberar a lista). Com ela: Cup::set_up_round (0x51c800,
 /// thiscall(fase, 0), ret 4) e a lista liberada. A fase atual (+0x30 = 1) já foi gravada pela fase seguinte.
 /// [inferência] A grande final é um jogo só, com o primeiro da série final como mandante.
-unsafe extern "thiscall" fn cqr3_grande_final_da_nsl(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqr3_grande_final_da_nsl(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -135,7 +137,7 @@ unsafe extern "thiscall" fn cqr3_grande_final_da_nsl(this: usize) {
     soltar(lista);
 }
 
-unsafe extern "thiscall" fn comparar_cqr3_fase_seguinte_da_nsl(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqr3_fase_seguinte_da_nsl(this: usize) {
     let antes = read_usize(this + 0x30) as i32;
     let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     orig::<unsafe extern "thiscall" fn(usize)>(1993)(this);
@@ -146,7 +148,7 @@ unsafe extern "thiscall" fn comparar_cqr3_fase_seguinte_da_nsl(this: usize) {
 /// O comparador da série final: só a original (aloca a tabela das rodadas e a fase e manda a notícia), com o plano feito
 /// antes: os seis primeiros da tabela. Depois, a devolução 1, a fase na vaga 0 com +0x3e = 6, +4 = o +4 da liga e os
 /// seis na tabela dela (+0xb1, como conjunto), e +0x30 = 0.
-unsafe extern "thiscall" fn comparar_cqr3_serie_final_da_nsl(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqr3_serie_final_da_nsl(this: usize) -> u32 {
     let mut seis = [0usize; 6];
     for (i, c) in seis.iter_mut().enumerate() {
         *c = cqr3_linha(this, i);
@@ -170,7 +172,7 @@ unsafe extern "thiscall" fn comparar_cqr3_serie_final_da_nsl(this: usize) -> u32
 /// O comparador da grande final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
 /// antes: os dois primeiros da série final. Depois, a fase da segunda vaga existe, com +0x3e = 2, +4 = o +4 da liga e
 /// os dois na lista dela (+0xa7, 6 bytes; como conjunto).
-unsafe extern "thiscall" fn comparar_cqr3_grande_final_da_nsl(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqr3_grande_final_da_nsl(this: usize) {
     let serie = read_usize(read_usize(this + 0xc));
     let (a, b) = (cqr3_linha(serie, 0), cqr3_linha(serie, 1));
     orig::<unsafe extern "thiscall" fn(usize)>(1995)(this);
@@ -189,7 +191,7 @@ unsafe extern "thiscall" fn comparar_cqr3_grande_final_da_nsl(this: usize) {
 
 
 /// As regras da NSL (o que a 0x411ce0 grava antes do calendário).
-unsafe fn cqj8_regras_nsl(o: usize) {
+pub(crate) unsafe fn cqj8_regras_nsl(o: usize) {
     write_u16_at(o, 0xab, 0);
     write_u8_at(o, 0xc8, 0);
     write_u8_at(o, 0xbf, 0);
@@ -213,7 +215,7 @@ unsafe fn cqj8_regras_nsl(o: usize) {
 }
 
 /// As regras da MLS (0x908660; sem calendário: os jogos da MLS são montados à mão pela 0x9086e0).
-unsafe fn cqj8_regras_mls(o: usize) {
+pub(crate) unsafe fn cqj8_regras_mls(o: usize) {
     write_u8_at(o, 0xc4, 2);
     write_u8_at(o, 0xc6, 2);
     write_u8_at(o, 0xc2, 3);
@@ -242,7 +244,7 @@ unsafe fn cqj8_regras_mls(o: usize) {
 /// [pt] { 0x411ce0 } (thiscall, aus_nsl.cpp): `AusNsl::set_up_rules` (slot 36), as regras da NSL e o calendário da fase
 /// principal pelo slot 16 (`create_schedule` 0x4111a0, thiscall, ret 0x10: estágio -1, as saídas +0xa9 e +0x3a, sem
 /// a marca; o ponteiro vai para +0xba); devolve 1.
-unsafe extern "thiscall" fn cqj8_regras_da_nsl(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqj8_regras_da_nsl(this: usize) -> u32 {
     cqj8_regras_nsl(this);
     crate::comparacao::ramo("cqj_8 regras da nsl");
     let vt = *(this as *const usize);
@@ -255,7 +257,7 @@ unsafe extern "thiscall" fn cqj8_regras_da_nsl(this: usize) -> u32 {
 /// Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto da liga
 /// (0xee) menos as saídas do calendário (+0x3a, +0xa9, +0xba; a 0x4111a0 não grava nada no objeto além delas); a
 /// devolução.
-unsafe extern "thiscall" fn comparar_cqj8_regras_da_nsl(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqj8_regras_da_nsl(this: usize) -> u32 {
     let o = this;
     let reg = [(o, 0x3a), (o + 0x3c, 0xa9 - 0x3c), (o + 0xab, 0xba - 0xab), (o + 0xbe, 0xee - 0xbe)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1724)(this), || {
@@ -274,14 +276,14 @@ unsafe extern "thiscall" fn comparar_cqj8_regras_da_nsl(this: usize) -> u32 {
 ///
 /// [pt] { 0x908660 } (thiscall, usa_mls.cpp): `UsaMls::set_up_rules`, as regras da MLS; devolve 1 (o eax que ela usa como
 /// valor).
-unsafe extern "thiscall" fn cqj8_regras_da_mls(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqj8_regras_da_mls(this: usize) -> u32 {
     cqj8_regras_mls(this);
     crate::comparacao::ramo("cqj_8 regras da mls");
     1
 }
 
 /// Comparador: lado a lado sobre o objeto da liga (0xee; só grava nele); a devolução.
-unsafe extern "thiscall" fn comparar_cqj8_regras_da_mls(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqj8_regras_da_mls(this: usize) -> u32 {
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0xee)], || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1725)(this), || cqj8_regras_da_mls(this));
     PLACAR.registrar(igual && r == n, || format!("cqj8_regras_da_mls({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
@@ -289,7 +291,7 @@ unsafe extern "thiscall" fn comparar_cqj8_regras_da_mls(this: usize) -> u32 {
 
 /// O histórico do primeiro estágio: o slot 13 (+0x30, `record_season_honours`, thiscall sem argumentos) do estágio
 /// [[this+0xc]].
-unsafe fn cqj8_historico_do_estagio(this: usize) -> u32 {
+pub(crate) unsafe fn cqj8_historico_do_estagio(this: usize) -> u32 {
     let e = *(*((this + 0xc) as *const usize) as *const usize);
     let vt = *(e as *const usize);
     let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(*((vt + 0x30) as *const usize));
@@ -304,7 +306,7 @@ unsafe fn cqj8_historico_do_estagio(this: usize) -> u32 {
 /// Centro-Oeste, Gaúcho, Goiano, Norte, Nordeste, Pernambucano, Catarinense e Paulista): o histórico do primeiro estágio
 /// e, em salto final, a 0x42bba0 (`bra_nat_first_fill_champions_cup_entrants`, cdecl sem argumentos: quando os doze
 /// estaduais terminam, põe os campeões na Copa dos Campeões); devolve o eax dela.
-unsafe extern "thiscall" fn cqj8_historico_do_estadual(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqj8_historico_do_estadual(this: usize) -> u32 {
     cqj8_historico_do_estagio(this); // cqj8: o histórico do estadual
     crate::comparacao::ramo("cqj_8 historico do estadual");
     let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_BRA_NAT_FIRST_FILL_CHAMPIONS_CUP_ENTRANTS);
@@ -314,7 +316,7 @@ unsafe extern "thiscall" fn cqj8_historico_do_estadual(this: usize) -> u32 {
 /// Comparador: só a original (ponytail: grava o histórico, aloca o registro dele e pode montar a Copa dos Campeões; não
 /// pode rodar duas vezes). A cópia roda no modo Rust (contador "cqj_8 historico do estadual") e é provada pelas
 /// mutações e pelas duas carreiras Rust.
-unsafe extern "thiscall" fn comparar_cqj8_historico_do_estadual(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqj8_historico_do_estadual(this: usize) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize) -> u32>(1726)(this)
 }
 
@@ -324,13 +326,13 @@ unsafe extern "thiscall" fn comparar_cqj8_historico_do_estadual(this: usize) -> 
 ///
 /// [pt] { 0x408eb0 } (thiscall, arg_second.cpp): `ArgSecond::record_season_honours` (slot 13 da segunda divisão argentina e
 /// das Séries A e B): só o histórico do primeiro estágio, em salto final; devolve o eax dele.
-unsafe extern "thiscall" fn cqj8_historico_do_primeiro_estagio(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqj8_historico_do_primeiro_estagio(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_8 historico do primeiro estagio");
     cqj8_historico_do_estagio(this)
 }
 
 /// Comparador: só a original (ponytail: grava o histórico e aloca o registro; não pode rodar duas vezes).
-unsafe extern "thiscall" fn comparar_cqj8_historico_do_primeiro_estagio(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqj8_historico_do_primeiro_estagio(this: usize) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize) -> u32>(1727)(this)
 }
 

@@ -1,10 +1,12 @@
+use super::*;
+
 // ---------- 284a leva: a Copa da UEFA: os inscritos (os clubes das vagas da classificação da UEFA, completados até 118 com clubes de nações fracas, e a lista dos que vêm da Intertoto) (uefa_cup.cpp) ----------
 
 
 
 
 /// Os inscritos menos a metade (truncada, com sinal) dos clubes da preliminar (+0xb2, byte com sinal).
-unsafe fn cqs9_conta(this: usize, k: i16) -> i32 {
+pub(crate) unsafe fn cqs9_conta(this: usize, k: i16) -> i32 {
     k as i32 - (*((this + 0xb2) as *const i8) as i32) / 2
 }
 
@@ -22,7 +24,7 @@ unsafe fn cqs9_conta(this: usize, k: i16) -> i32 {
 /// os inscritos + 27, a lista dos que vêm da Intertoto [inferência] (0x944e46 de +0x38 × 6 em +0x14; sem memória, a
 /// caixa da linha 0x21a e 0) com os inscritos de classe 1, cada um com a classe 3, contados em +0x36; +0x3e = +0x38;
 /// devolve 1. Com +0xb2 ímpar ou negativo, 0.
-unsafe fn cqs9_inscritos(this: usize) -> i32 {
+pub(crate) unsafe fn cqs9_inscritos(this: usize) -> i32 {
     const F: usize = 0xaa19e0;
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x91);
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
@@ -118,13 +120,13 @@ unsafe fn cqs9_inscritos(this: usize) -> i32 {
     1
 }
 
-unsafe extern "thiscall" fn cqs9_uefa_inscritos(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn cqs9_uefa_inscritos(this: usize) -> i32 {
     cqs9_inscritos(this)
 }
 
 /// Lado a lado a partir do mesmo estado: +0x14, +0x36..+0x39, +0x3e, +0xb2, [0xb67a34] e o +0x1db de cada clube; as duas
 /// listas (+0xa7 com 161 vagas e +0x14 com +0x38 vagas) de cada lado comparadas e as da cópia liberadas.
-unsafe extern "thiscall" fn comparar_cqs9_uefa_inscritos(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs9_uefa_inscritos(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(2086);
     let (a0, t0) = (read_u32_as_usize(this + 0xa7), read_u32_as_usize(this + 0x14));
     let base = read_u32_as_usize(0xae23b4);

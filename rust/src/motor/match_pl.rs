@@ -1,3 +1,5 @@
+use super::*;
+
 // ---------- ponto flutuante ----------
 //
 // O x87 do jogo roda em precisao dupla (padrao do Windows): cada operacao arredonda para 53 bits,
@@ -5,17 +7,17 @@
 // `fstp`+`fld` compara o valor ja arredondado; `fst` seguido de comparacao compara o de 53 bits.
 // As constantes sao lidas do proprio .rdata do jogo.
 
-unsafe fn f32_em(a: usize) -> f32 {
+pub(crate) unsafe fn f32_em(a: usize) -> f32 {
     *(a as *const f32)
 }
-unsafe fn f64_em(a: usize) -> f64 {
+pub(crate) unsafe fn f64_em(a: usize) -> f64 {
     *(a as *const f64)
 }
 
 /// { 0x6f56c0 } (match_pl.cpp): desgaste do jogador, float em 0x4d (nunca abaixo de zero).
 /// codigo -1: `x` x (12, 10, 8 ou 6 pela faixa do valor atual: acima de 9500, 8750, 7750) / 11.
 /// Outros codigos: (200 - 8,5 x float de 0xd5) x fator do codigo (switch do original).
-unsafe extern "thiscall" fn desgastar(this: usize, x: f32, codigo: i16) {
+pub(crate) unsafe extern "thiscall" fn desgastar(this: usize, x: f32, codigo: i16) {
     let campo = (this + 0x4d) as *mut f32;
     let v = *campo;
     let zero = f32_em(0x968970) as f64;
@@ -51,7 +53,7 @@ unsafe extern "thiscall" fn desgastar(this: usize, x: f32, codigo: i16) {
 
 /// `_ftol` { 0x945640 }: trunca para inteiro (64 bits; o jogo usa a parte baixa). Fora da faixa
 /// (infinito, NaN, |x| >= 2^63) o `fistp` do x87 grava o inteiro indefinido, de parte baixa 0.
-fn ftol(x: f64) -> i32 {
+pub(crate) fn ftol(x: f64) -> i32 {
     if x.is_finite() && x.abs() < 9.223372036854775808e18 {
         x as i64 as i32
     } else {
@@ -61,7 +63,7 @@ fn ftol(x: f64) -> i32 {
 
 /// { 0x6fa140 } (match_pl.cpp): o jogador esta virado para (a, b)? Compara a direcao dele (0x19a)
 /// com o angulo da tabela, com tolerancia de 0x10c x 2,25 + 45 graus.
-unsafe extern "thiscall" fn virado_para(this: usize, a: i8, b: i8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn virado_para(this: usize, a: i8, b: i8) -> u8 {
     let (dl, dc) = (a.wrapping_sub(byte(this, 0x102)), b.wrapping_sub(byte(this, 0x103)));
     if dl == 0 && dc == 0 {
         return 0;
@@ -83,14 +85,14 @@ unsafe extern "thiscall" fn virado_para(this: usize, a: i8, b: i8) -> u8 {
 
 /// Celula da tabela de distancias (0xa15e44, 9 por linha). Diferencas com o mesmo calculo do
 /// original: valor absoluto em 32 bits e depois o byte baixo com sinal.
-unsafe fn distancia_tabela(dl: i32, dc: i32) -> f32 {
+pub(crate) unsafe fn distancia_tabela(dl: i32, dc: i32) -> f32 {
     let lin = dl.abs() as i8 as isize;
     let col = dc.abs() as i8 as isize;
     *((0xa15e44 + 4 * (lin * 9 + col)) as *const f32)
 }
 
 /// { 0x6f09b0 } (match_pl.cpp): distancia (tabela) do jogador ao ponto (a, b).
-unsafe extern "thiscall" fn distancia_ao_ponto(this: usize, a: i8, b: i8) -> f32 {
+pub(crate) unsafe extern "thiscall" fn distancia_ao_ponto(this: usize, a: i8, b: i8) -> f32 {
     distancia_tabela(byte(this, 0x103) as i32 - b as i32, byte(this, 0x102) as i32 - a as i32)
 }
 
@@ -98,7 +100,7 @@ unsafe extern "thiscall" fn distancia_ao_ponto(this: usize, a: i8, b: i8) -> f32
 /// Original: `distance_to_goal` (0x6fa1e0, thiscall, `float` in st0).
 ///
 /// [pt] { 0x6fa1e0 } (match_pl.cpp): distancia ao gol que o jogador ataca (coluna 4; linha 11 do lado 0, 0 do outro).
-unsafe extern "thiscall" fn distancia_ao_gol(this: usize) -> f32 {
+pub(crate) unsafe extern "thiscall" fn distancia_ao_gol(this: usize) -> f32 {
     let alvo = if lado(this) == 0 { 0xb } else { 0 };
     distancia_tabela(byte(this, 0x103) as i32 - alvo, byte(this, 0x102) as i32 - 4)
 }
@@ -108,7 +110,7 @@ unsafe extern "thiscall" fn distancia_ao_gol(this: usize) -> f32 {
 /// colega ativo esta estritamente mais perto; senao 1. Limite: distancia dele ao gol + 0,5, e mais
 /// 1,0 fora da area (arredondado para float a cada passo, como o `fstp` do original). Os blocos
 /// de 20 jogadores de cada lado ficam em motor + 0x4796 + 8920 x lado, de 0x1be em 0x1be.
-unsafe extern "thiscall" fn mais_perto_do_gol(this: usize, j: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn mais_perto_do_gol(this: usize, j: usize) -> u8 {
     let f6f4650: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_CAN_SEE_OPPONENT_GOAL);
     let f70dfa0: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_OWN_HALF);
     let f6fa1e0: unsafe extern "thiscall" fn(usize) -> f32 = core::mem::transmute(FN_MATCH_PLAYER_DISTANCE_TO_OPPONENT_GOAL);
@@ -147,19 +149,19 @@ unsafe extern "thiscall" fn mais_perto_do_gol(this: usize, j: usize) -> u8 {
 // ---------- oitava leva: posicionamento ----------
 
 /// { 0x5b5270 }: marcas taticas (64 bits) de uma posicao: [this + 0x188b + 8 x posicao].
-unsafe extern "thiscall" fn marcas_da_posicao(this: usize, posicao: i8) -> u64 {
+pub(crate) unsafe extern "thiscall" fn marcas_da_posicao(this: usize, posicao: i8) -> u64 {
     *((this as isize + 0x188b + 8 * posicao as isize) as *const u64)
 }
 
 /// Marcas da posicao do jogador no bloco do lado dele (0x91e2 + 6371 x lado), por 0x5b5270.
-unsafe fn marcas_do_jogador(j: usize) -> u64 {
+pub(crate) unsafe fn marcas_do_jogador(j: usize) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, i8) -> u64 = core::mem::transmute(FN_FORMATION_GET_PLAYER_INSTRUCTIONS);
     let bloco = (*((j + 0x19e) as *const usize) as isize + 0x91e2 + 6371 * lado(j) as isize) as usize;
     f(bloco, byte(j, 0x19))
 }
 
 /// `tabela_a` do motor do jogador e 1 (pelo endereco do jogo); sem motor, nao.
-unsafe fn tabela_e_um(j: usize) -> bool {
+pub(crate) unsafe fn tabela_e_um(j: usize) -> bool {
     let motor = *((j + 0x19e) as *const usize);
     let f: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
     motor != 0 && f(motor, j) == 1
@@ -170,7 +172,7 @@ unsafe fn tabela_e_um(j: usize) -> bool {
 ///
 /// [pt] { 0x716270 } (match_pl.cpp): papel no ataque pelas marcas da posicao: 1 (marca 0x20000), 0 se
 /// `tabela_a` = 1, 2 (marca 0x40000000) ou 0.
-unsafe extern "thiscall" fn papel_no_ataque(j: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn papel_no_ataque(j: usize) -> u8 {
     if marcas_do_jogador(j) & 0x20000 != 0 {
         return 1;
     }
@@ -185,7 +187,7 @@ unsafe extern "thiscall" fn papel_no_ataque(j: usize) -> u8 {
 ///
 /// [pt] { 0x716310 } (match_pl.cpp): papel na defesa: 0 se `tabela_a` = 1; 3 (marca 0x80000000),
 /// 4 (marca 0x80000) ou 0.
-unsafe extern "thiscall" fn papel_na_defesa(j: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn papel_na_defesa(j: usize) -> u8 {
     if tabela_e_um(j) {
         return 0;
     }
@@ -204,7 +206,7 @@ unsafe extern "thiscall" fn papel_na_defesa(j: usize) -> u8 {
 /// tabela de formacao do lado (x no meio byte baixo, y no alto). Com 0x8eb1 > 0, a posicao atual
 /// quando o papel (ataque ou defesa) manda ficar, e tudo limitado a grade. Senao, ajustes pelas
 /// marcas do lado (0x9766 + 6371 x lado): um passo a frente ou atras, e acompanhar a linha da bola.
-unsafe extern "thiscall" fn posicionar(this: usize, j: usize, saida_x: *mut i8, saida_y: *mut i8, _a4: u32) {
+pub(crate) unsafe extern "thiscall" fn posicionar(this: usize, j: usize, saida_x: *mut i8, saida_y: *mut i8, _a4: u32) {
     let bola_x = byte(this, 0x8ea7);
     let bola_y = byte(this, 0x8ea8);
     let bx = if bola_x < 0 { 0 } else if bola_x >= 9 { 8 } else { bola_x };
@@ -308,7 +310,7 @@ unsafe extern "thiscall" fn posicionar(this: usize, j: usize, saida_x: *mut i8, 
 /// entre os ativos, partindo de 6, mais 1, em 0x8eaf. Lado 0: menor y, partindo de 5, menos 1, em
 /// 0x8eb0. Ativo: posicao >= 0 e `tabela_do_jogador` (pelo endereco) diferente de 1. O original tem
 /// os dois lacos de 20 jogadores desenrolados.
-unsafe extern "thiscall" fn linhas_defensivas(this: usize) {
+pub(crate) unsafe extern "thiscall" fn linhas_defensivas(this: usize) {
     let f717410: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(FN_MATCH_PLAYER_GET_POSITION);
     let ativos = |lado: usize| {
         (0..20).map(move |k| (this + 0x4796 + 8920 * lado + k * 0x1be) as usize).filter(move |&p| byte(p, 0x19) >= 0 && f717410(p) != 1)
@@ -333,7 +335,7 @@ unsafe extern "thiscall" fn linhas_defensivas(this: usize) {
 /// 1/75 a 1/1000, razoes em ponto flutuante entre atributos e o estado do lado (0xf5bd/0xf5f3).
 /// Transcrita bloco a bloco (enderecos do original nos comentarios); os finais compartilhados
 /// viram as funcoes locais `ate`.
-unsafe extern "thiscall" fn atualizar_jogador(this: usize) {
+pub(crate) unsafe extern "thiscall" fn atualizar_jogador(this: usize) {
     let u = |o: usize| *((this + o) as *const u8);
     let i = |o: usize| *((this + o) as *const i8);
     let w35 = (this + 0x35) as *mut i16;
@@ -666,18 +668,18 @@ gravador!(gravar_8ea8, 0x8ea8); // { 0x700370 }
 gravador!(gravar_8eaa, 0x8eaa); // { 0x700390 }
 
 /// { 0x7003a0 }: grava a palavra 0x8ed8.
-unsafe extern "thiscall" fn gravar_8ed8(this: usize, v: u16) {
+pub(crate) unsafe extern "thiscall" fn gravar_8ed8(this: usize, v: u16) {
     *((this + 0x8ed8) as *mut u16) = v;
 }
 
 /// { 0x700410 }: le o ponteiro 0x8f7a.
-unsafe extern "thiscall" fn ler_8f7a(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn ler_8f7a(this: usize) -> u32 {
     *((this + 0x8f7a) as *const u32)
 }
 
 /// { 0x7003b0 } (match_pl.cpp): registra o lado com a posse (0x8eab). Exceto -1, soma 1 ao
 /// contador do lado (0x8d46 + lado) e tira 10 do contador do outro (0x8d46 + (lado == 0)), se positivo.
-unsafe extern "thiscall" fn registrar_posse(this: usize, v: i8) {
+pub(crate) unsafe extern "thiscall" fn registrar_posse(this: usize, v: i8) {
     *((this + 0x8eab) as *mut i8) = v;
     if v == -1 {
         return;
@@ -691,7 +693,7 @@ unsafe extern "thiscall" fn registrar_posse(this: usize, v: i8) {
 }
 
 /// { 0x714c60 } (match_pl.cpp): o ponteiro esta na lista do objeto (0x1ae, quantidade em 0x101)?
-unsafe extern "thiscall" fn na_lista(this: usize, alvo: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn na_lista(this: usize, alvo: usize) -> u8 {
     let n = *((this + 0x101) as *const i8);
     (0..n.max(0) as usize).any(|k| *((this + 0x1ae + 4 * k) as *const usize) == alvo) as u8
 }
@@ -703,7 +705,7 @@ unsafe extern "thiscall" fn na_lista(this: usize, alvo: usize) -> u8 {
 /// [pt] { 0x6cd660 } (match_eng.cpp): os jogadores extremos de cada lado entre os ativos (posicao >= 0 e,
 /// em 0..=10, `tabela_a` diferente de 1): lado 0, menor y em 0xf58e e maior em 0xf596; lado 1,
 /// maior y em 0xf592 e menor em 0xf59a. Sem candidato, o valor anterior fica.
-unsafe extern "thiscall" fn guardar_extremos(this: usize) {
+pub(crate) unsafe extern "thiscall" fn guardar_extremos(this: usize) {
     for (lado_b, campo_menor, campo_maior) in [(0usize, 0xf58eusize, 0xf596usize), (1, 0xf59a, 0xf592)] {
         let (mut menor, mut maior) = (12i8, -1i8);
         for k in 0..20 {
@@ -731,12 +733,12 @@ unsafe extern "thiscall" fn guardar_extremos(this: usize) {
 /// Original: `direction` (0x6f4a30, thiscall, `ax`).
 ///
 /// [pt] { 0x6f4a30 } (match_pl.cpp): direcao do jogador (palavra 0x19a).
-unsafe extern "thiscall" fn direcao(this: usize) -> u16 {
+pub(crate) unsafe extern "thiscall" fn direcao(this: usize) -> u16 {
     *((this + 0x19a) as *const u16)
 }
 
 /// { 0x6ce0f0 } (match_eng.cpp): zera o guardado do lado (0xf59e para o lado 0, senao 0xf5a2).
-unsafe extern "thiscall" fn zerar_guardado(this: usize, lado_b: u8) {
+pub(crate) unsafe extern "thiscall" fn zerar_guardado(this: usize, lado_b: u8) {
     *((this + if lado_b == 0 { 0xf59e } else { 0xf5a2 }) as *mut u32) = 0;
 }
 
@@ -744,7 +746,7 @@ unsafe extern "thiscall" fn zerar_guardado(this: usize, lado_b: u8) {
 /// Original: `x_off_centre` (0x70df20, thiscall, `al`).
 ///
 /// [pt] { 0x70df20 } (match_pl.cpp): 1 com o x do jogador (0x102) fora de 2..=6.
-unsafe extern "thiscall" fn x_fora_do_meio(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn x_fora_do_meio(this: usize) -> u8 {
     !(2..=6).contains(&byte(this, 0x102)) as u8
 }
 
@@ -752,7 +754,7 @@ unsafe extern "thiscall" fn x_fora_do_meio(this: usize) -> u8 {
 /// Original: `is_the_stored` (0x7103c0, thiscall, `al`).
 ///
 /// [pt] { 0x7103c0 } (match_pl.cpp): o jogador e o guardado em 0xf582 do motor dele.
-unsafe extern "thiscall" fn e_o_guardado(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn e_o_guardado(this: usize) -> u8 {
     let motor = *((this + 0x19e) as *const usize);
     (this == *((motor + 0xf582) as *const usize)) as u8
 }
@@ -762,7 +764,7 @@ unsafe extern "thiscall" fn e_o_guardado(this: usize) -> u8 {
 ///
 /// [pt] { 0x6bba50 } (match_eng.cpp): lado 0 do jogador em 0x4761 (1 se lado 0, senao 0); 0xff sem
 /// lance (0x475a zerado) ou sem jogador.
-unsafe extern "thiscall" fn lado_do_lance(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn lado_do_lance(this: usize) -> u8 {
     let p = *((this + 0x4761) as *const usize);
     if byte(this, 0x475a) == 0 || p == 0 {
         return 0xff;
@@ -771,12 +773,12 @@ unsafe extern "thiscall" fn lado_do_lance(this: usize) -> u8 {
 }
 
 /// { 0x6c2fe0 } (match_eng.cpp): endereco do jogador `k` do bloco do `lado`.
-unsafe extern "thiscall" fn jogador_no_bloco(this: usize, lado_b: i8, k: i8) -> usize {
+pub(crate) unsafe extern "thiscall" fn jogador_no_bloco(this: usize, lado_b: i8, k: i8) -> usize {
     (this as isize + 0x4796 + 0x1be * (lado_b as isize * 20 + k as isize)) as usize
 }
 
 /// { 0x6c3920 } (match_eng.cpp): como `tabela_a`, pela posicao em 0x1a.
-unsafe extern "thiscall" fn tabela_a_1a(this: usize, jogador: usize) -> u16 {
+pub(crate) unsafe extern "thiscall" fn tabela_a_1a(this: usize, jogador: usize) -> u16 {
     let posicao = byte(jogador, 0x1a);
     if !(0..=10).contains(&posicao) {
         return 0;
@@ -790,31 +792,31 @@ unsafe extern "thiscall" fn tabela_a_1a(this: usize, jogador: usize) -> u16 {
 ///
 /// [pt] { 0x6d4250 } (match_eng.cpp): 1 com o momento (0x8ed4) fora de 0x1ef e 0x3de e o bit 0x80 do
 /// byte 0x38 da partida (0x4792) ligado.
-unsafe extern "thiscall" fn momento_marcado(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn momento_marcado(this: usize) -> u32 {
     let m = *((this + 0x8ed4) as *const u16);
     let partida = *((this + 0x4792) as *const usize);
     (m != 0x1ef && m != 0x3de && byte(partida, 0x38) as u8 & 0x80 != 0) as u32
 }
 
 /// { 0x6f4a40 } (match_pl.cpp): estado do proprio lado (lado 0: 0xf5bd; outros: 0xf5f3).
-unsafe extern "thiscall" fn estado_do_lado(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn estado_do_lado(this: usize) -> u8 {
     let motor = *((this + 0x19e) as *const usize);
     byte(motor, if lado(this) != 0 { 0xf5f3 } else { 0xf5bd }) as u8
 }
 
 /// { 0x6f4a70 } (match_pl.cpp): estado do outro lado.
-unsafe extern "thiscall" fn estado_do_adversario(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn estado_do_adversario(this: usize) -> u8 {
     let motor = *((this + 0x19e) as *const usize);
     byte(motor, if lado(this) != 0 { 0xf5bd } else { 0xf5f3 }) as u8
 }
 
 /// { 0x70a890 } (match_pl.cpp): grava 0x19c limitado a -200..=200.
-unsafe extern "thiscall" fn gravar_19c(this: usize, v: i16) {
+pub(crate) unsafe extern "thiscall" fn gravar_19c(this: usize, v: i16) {
     *((this + 0x19c) as *mut i16) = v.clamp(-200, 200);
 }
 
 /// { 0x70a8c0 } (match_pl.cpp, sem `this`): codigos 12, 13, 21, 37, 46 e 59.
-unsafe extern "stdcall" fn codigo_de_bola_parada(c: i16) -> u8 {
+pub(crate) unsafe extern "stdcall" fn codigo_de_bola_parada(c: i16) -> u8 {
     matches!(c, 12 | 13 | 21 | 37 | 46 | 59) as u8
 }
 
@@ -822,7 +824,7 @@ unsafe extern "stdcall" fn codigo_de_bola_parada(c: i16) -> u8 {
 /// Original: `near_goal` (0x70df70, side 1, thiscall, `al`).
 ///
 /// [pt] { 0x70df70 } (match_pl.cpp): perto do gol adversario (lado 1: y < 4; lado 0: y > 7).
-unsafe extern "thiscall" fn perto_do_gol(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn perto_do_gol(this: usize) -> u8 {
     let (l, y) = (lado(this), byte(this, 0x103));
     ((l == 1 && y < 4) || (l == 0 && y > 7)) as u8
 }
@@ -831,7 +833,7 @@ unsafe extern "thiscall" fn perto_do_gol(this: usize) -> u8 {
 /// Original: `clear_move` (0x6bba10, thiscall).
 ///
 /// [pt] { 0x6bba10 } (match_eng.cpp): limpa o lance (0x475a..=0x4769).
-unsafe extern "thiscall" fn limpar_lance(this: usize) {
+pub(crate) unsafe extern "thiscall" fn limpar_lance(this: usize) {
     *((this + 0x475f) as *mut u16) = 0xffff;
     *((this + 0x4761) as *mut u32) = 0;
     *((this + 0x4765) as *mut u32) = 0;
@@ -843,7 +845,7 @@ unsafe extern "thiscall" fn limpar_lance(this: usize) {
 }
 
 /// { 0x6cf710 } (match_eng.cpp): soma `delta` a disposicao (0x35) de todos os ativos do lado.
-unsafe extern "thiscall" fn somar_disposicao(this: usize, lado_b: i8, delta: i16) {
+pub(crate) unsafe extern "thiscall" fn somar_disposicao(this: usize, lado_b: i8, delta: i16) {
     for k in 0..20 {
         let p = jogador_do_bloco(this, lado_b, k);
         if byte(p, 0x19) >= 0 {
@@ -859,23 +861,23 @@ unsafe extern "thiscall" fn somar_disposicao(this: usize, lado_b: i8, delta: i16
 /// Original: `read_1bc` (0x717400, thiscall, `ax`).
 ///
 /// [pt] { 0x717400 }: palavra 0x1bc do jogador.
-unsafe extern "thiscall" fn ler_1bc(this: usize) -> u16 {
+pub(crate) unsafe extern "thiscall" fn ler_1bc(this: usize) -> u16 {
     *((this + 0x1bc) as *const u16)
 }
 
 /// { 0x7160d0 }: soma ao byte 0x2b do jogador.
-unsafe extern "thiscall" fn somar_2b(this: usize, v: u8) {
+pub(crate) unsafe extern "thiscall" fn somar_2b(this: usize, v: u8) {
     let b = (this + 0x2b) as *mut u8;
     *b = (*b).wrapping_add(v);
 }
 
 /// { 0x7160e0 }: grava o byte 0x2b do jogador.
-unsafe extern "thiscall" fn gravar_2b(this: usize, v: u8) {
+pub(crate) unsafe extern "thiscall" fn gravar_2b(this: usize, v: u8) {
     *((this + 0x2b) as *mut u8) = v;
 }
 
 /// Chama uma rotina (motor, jogador) do motor do jogador pelo endereco do jogo; sem motor, None.
-unsafe fn pelo_motor<R>(j: usize, rotina: usize) -> Option<R> {
+pub(crate) unsafe fn pelo_motor<R>(j: usize, rotina: usize) -> Option<R> {
     let motor = *((j + 0x19e) as *const usize);
     if motor == 0 {
         return None;
@@ -885,17 +887,17 @@ unsafe fn pelo_motor<R>(j: usize, rotina: usize) -> Option<R> {
 }
 
 /// { 0x717430 }: `tabela_a_1a` (0x6c3920) do motor do jogador, ou 0.
-unsafe extern "thiscall" fn tabela_a_1a_do_jogador(this: usize) -> u16 {
+pub(crate) unsafe extern "thiscall" fn tabela_a_1a_do_jogador(this: usize) -> u16 {
     pelo_motor(this, 0x6c3920).unwrap_or(0)
 }
 
 /// { 0x717450 }: `tabela_b` (0x6c38f0) do motor do jogador, ou 0.
-unsafe extern "thiscall" fn tabela_b_do_jogador(this: usize) -> u16 {
+pub(crate) unsafe extern "thiscall" fn tabela_b_do_jogador(this: usize) -> u16 {
     pelo_motor(this, 0x6c38f0).unwrap_or(0)
 }
 
 /// { 0x715f30 }: `diferenca_jogador` (0x6c4130) do motor do jogador, ou 0xff.
-unsafe extern "thiscall" fn diferenca_do_jogador(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn diferenca_do_jogador(this: usize) -> u8 {
     pelo_motor(this, 0x6c4130).unwrap_or(0xff)
 }
 
@@ -904,7 +906,7 @@ unsafe extern "thiscall" fn diferenca_do_jogador(this: usize) -> u8 {
 ///
 /// [pt] { 0x714d00 } (o prologo curto termina num jne relativo, refeito no trampolim: RELATIVAS em
 /// desvios.rs): bola (y em 0x8ea8) no campo de ataque do lado (lado 1: y >= 6; outros: y < 6).
-unsafe extern "thiscall" fn bola_no_ataque(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn bola_no_ataque(this: usize) -> u8 {
     let y = byte(*((this + 0x19e) as *const usize), 0x8ea8);
     (if lado(this) == 1 { y >= 6 } else { y < 6 }) as u8
 }
@@ -913,7 +915,7 @@ unsafe extern "thiscall" fn bola_no_ataque(this: usize) -> u8 {
 /// Original: `player_marks_rot` (0x7163c0, thiscall, `edx:eax`).
 ///
 /// [pt] { 0x7163c0 }: marcas taticas (0x5b5270) da posicao do jogador. Devolve edx:eax inteiro.
-unsafe extern "thiscall" fn marcas_do_jogador_rot(this: usize) -> u64 {
+pub(crate) unsafe extern "thiscall" fn marcas_do_jogador_rot(this: usize) -> u64 {
     marcas_do_jogador(this)
 }
 
@@ -922,7 +924,7 @@ unsafe extern "thiscall" fn marcas_do_jogador_rot(this: usize) -> u64 {
 ///
 /// [pt] { 0x7163f0 }: com o bit 0x1000 do bloco do lado (0x9766), o byte 6 + lado do motor; senao, o
 /// bit 0x800000 das marcas da posicao.
-unsafe extern "thiscall" fn marca_800000(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn marca_800000(this: usize) -> u8 {
     let l = lado(this) as isize;
     let motor = *((this + 0x19e) as *const usize) as isize;
     let bloco = motor + 6371 * l;
@@ -936,7 +938,7 @@ unsafe extern "thiscall" fn marca_800000(this: usize) -> u8 {
 /// Original: `near_own_goal` (0x70def0, side 0, thiscall, `al`).
 ///
 /// [pt] { 0x70def0 }: perto do proprio gol (lado 0: y < 3; lado 1: y > 8).
-unsafe extern "thiscall" fn perto_do_proprio_gol(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn perto_do_proprio_gol(this: usize) -> u8 {
     let (l, y) = (lado(this), byte(this, 0x103));
     ((l == 0 && y < 3) || (l == 1 && y > 8)) as u8
 }
@@ -945,7 +947,7 @@ unsafe extern "thiscall" fn perto_do_proprio_gol(this: usize) -> u8 {
 /// Original: `role_880` (0x717c70, thiscall, `al`).
 ///
 /// [pt] { 0x717c70 }: papel 0x880 em `tabela_a` e em `tabela_b` do jogador (sem motor, 0).
-unsafe extern "thiscall" fn papel_880(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn papel_880(this: usize) -> u8 {
     let a: u16 = pelo_motor(this, 0x6c38c0).unwrap_or(0);
     if a & 0x880 == 0 {
         return 0;
@@ -959,7 +961,7 @@ unsafe extern "thiscall" fn papel_880(this: usize) -> u8 {
 ///
 /// [pt] { 0x6f0970 }: solta a bola: zera 0x4786, 0xf582 e 0x1a7 do motor (0x8eae = 0xff) e as palavras
 /// 0x29 e 0x19c do jogador. O motor e relido a cada gravacao.
-unsafe extern "thiscall" fn soltar_bola(this: usize) {
+pub(crate) unsafe extern "thiscall" fn soltar_bola(this: usize) {
     let motor = || *((this + 0x19e) as *const usize);
     *((motor() + 0x4786) as *mut u32) = 0;
     *((motor() + 0x8eae) as *mut u8) = 0xff;
@@ -970,14 +972,14 @@ unsafe extern "thiscall" fn soltar_bola(this: usize) {
 }
 
 /// { 0x6e1cd0 }: o jogador (dos 20 a partir de [this + 0x23]) com a ficha dada, ou 0.
-unsafe extern "thiscall" fn jogador_pela_ficha(this: usize, ficha: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn jogador_pela_ficha(this: usize, ficha: usize) -> usize {
     let base = *((this + 0x23) as *const usize);
     (0..20).map(|k| base + 0x1be * k).find(|&p| *((p + 0x69) as *const usize) == ficha).unwrap_or(0)
 }
 
 /// { 0x6d5cd0 } (sem `this`): byte da tabela de 18 bytes por codigo em 0xb68788 (codigos
 /// 0x1f40..0x21e4, bit 15 ignorado); fora, 0.
-unsafe extern "stdcall" fn byte_do_codigo(c: u32) -> i32 {
+pub(crate) unsafe extern "stdcall" fn byte_do_codigo(c: u32) -> i32 {
     let i = ((c & 0x7fff) as i32 - 0x1f40) as i16;
     if !(0..0x2a5).contains(&i) {
         return 0;
@@ -990,7 +992,7 @@ unsafe extern "stdcall" fn byte_do_codigo(c: u32) -> i32 {
 /// { 0x715f50 }: valor ajustado pelo papel e pela pessoa (0x6d). Papel 1, ou 2 x 0x10a >=
 /// sorteio(21): o proprio `base`. Senao soma tres parcelas (cada uma `base`, ou um valor fixo por
 /// lado quando o atributo da pessoa vence sorteio(41) e o papel nao o impede) e divide por 3.
-unsafe extern "thiscall" fn nota_ajustada(this: usize, base: i8) -> i32 {
+pub(crate) unsafe extern "thiscall" fn nota_ajustada(this: usize, base: i8) -> i32 {
     let papel = || pelo_motor::<u16>(this, 0x6c38c0).unwrap_or(0);
     if papel() & 1 != 0 {
         return base as u8 as i32;
@@ -1013,7 +1015,7 @@ unsafe extern "thiscall" fn nota_ajustada(this: usize, base: i8) -> i32 {
 /// { 0x7172d0 }: ajusta o byte 0x17 do jogador por `delta` (com sorteios perto do limite 10), com
 /// piso pela disposicao (0x35 >= 7500) e faixa 1..=20; devolve se mudou. Com `delta` 0 e 0x477a
 /// do motor em -1, so age se a disposicao passar de 7500 e o byte estiver abaixo de 10.
-unsafe extern "thiscall" fn ajustar_17(this: usize, delta: i8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn ajustar_17(this: usize, delta: i8) -> u8 {
     let disp = *((this + 0x35) as *const i16);
     if delta == 0 {
         let motor = *((this + 0x19e) as *const usize);
@@ -1052,7 +1054,7 @@ unsafe extern "thiscall" fn ajustar_17(this: usize, delta: i8) -> u8 {
 /// contador 0x2 e disposicao + 0x6c/0x60/0x96/0x78 conforme papel e zona), registra o novo dono,
 /// a bola na casa dele, o lado com a posse (0x1a5 + lado) e a contagem de posse (0x8d46 + lado).
 /// O motor e relido a cada acesso, como no original.
-unsafe extern "thiscall" fn pegar_bola(this: usize) {
+pub(crate) unsafe extern "thiscall" fn pegar_bola(this: usize) {
     let m = || *((this + 0x19e) as *const usize);
     let b = |o: usize| (m() + o) as *mut u8;
     let w = |o: usize| (m() + o) as *mut u32;
@@ -1140,7 +1142,7 @@ unsafe extern "thiscall" fn pegar_bola(this: usize) {
 
 /// Sorteio da defesa: se sorteio(palavra 0x3b do goleiro) vence sorteio(285), sorteio(b x 0,7) +
 /// b x 0,3; senao sorteio(b).
-unsafe fn sorte_da_defesa(j: usize, b: i16) -> i32 {
+pub(crate) unsafe fn sorte_da_defesa(j: usize, b: i16) -> i32 {
     let r = sortear(*((j + 0x3b) as *const i16) as i32);
     if r > sortear(0x11d) {
         let x = b as f64;
@@ -1155,7 +1157,7 @@ unsafe fn sorte_da_defesa(j: usize, b: i16) -> i32 {
 /// para (a, b) com `codigo`. Base pela palavra 0x16a (com `a3`) ou 0x168, + 220; a distancia a bola
 /// (tabela 12 x 9) entra no fim. `saida`: 1 fora do lado, 3 fora da area, 2 sem alcance, 4 nos
 /// codigos 26/27; `rebote` quando o sorteio final perde. Devolve ftol(base / 6 + v x c + c').
-unsafe extern "thiscall" fn defesa_do_goleiro(this: usize, a: i8, b: i8, a3: u8, codigo: i8, saida: *mut u8, rebote: *mut u8) -> u16 {
+pub(crate) unsafe extern "thiscall" fn defesa_do_goleiro(this: usize, a: i8, b: i8, a3: u8, codigo: i8, saida: *mut u8, rebote: *mut u8) -> u16 {
     *saida = 0;
     *rebote = 0;
     let w = *((this + if a3 != 0 { 0x16a } else { 0x168 }) as *const i16);
@@ -1229,7 +1231,7 @@ unsafe extern "thiscall" fn defesa_do_goleiro(this: usize, a: i8, b: i8, a3: u8,
 
 /// Casa (x, y) da grade de ocupacao do motor: 90 bytes por casa, a partir de 0x215e; por lado,
 /// lista de 11 ponteiros (44 bytes) e a quantidade em 0x58 + lado.
-fn casa_da_grade(motor: usize, x: i8, y: i8) -> isize {
+pub(crate) fn casa_da_grade(motor: usize, x: i8, y: i8) -> isize {
     motor as isize + 0x215e + 90 * (12 * x as isize + y as isize)
 }
 
@@ -1238,7 +1240,7 @@ fn casa_da_grade(motor: usize, x: i8, y: i8) -> isize {
 /// se ele for o dono. Na mesma casa, nada. Estados impossiveis do original (lista vazia ao tirar,
 /// mais de 11 ao por) mostram erro (e, no segundo, encerram); aqui, o primeiro so volta e o segundo
 /// encerra como o original.
-unsafe extern "thiscall" fn mover_para(this: usize, x: i8, y: i8) {
+pub(crate) unsafe extern "thiscall" fn mover_para(this: usize, x: i8, y: i8) {
     if x == byte(this, 0x102) && y == byte(this, 0x103) {
         return;
     }
@@ -1287,7 +1289,7 @@ unsafe extern "thiscall" fn mover_para(this: usize, x: i8, y: i8) {
 // ---------- trigesima sexta leva: dominio do lance ----------
 
 /// O jogador do lado esta na propria area (x 2..=6; lado 1: y 10..=11; senao y 0..=1)?
-unsafe fn na_propria_area(j: usize) -> bool {
+pub(crate) unsafe fn na_propria_area(j: usize) -> bool {
     let (x, y) = (byte(j, 0x102), byte(j, 0x103));
     let area = if lado(j) == 1 { 10..=11 } else { 0..=1 };
     (2..=6).contains(&x) && area.contains(&y)
@@ -1299,7 +1301,7 @@ unsafe fn na_propria_area(j: usize) -> bool {
 /// 0x15/0x25, a distancia ao gol pode fazer perder na hora (-20). O goleiro na propria area troca
 /// o codigo (41, ou 1 com 0x8ea9 == 4); 19/33/34 com valor baixo viram 45 em metade das vezes.
 /// As saidas (`a`, `b`) dependem do codigo final.
-unsafe extern "thiscall" fn dominio_do_lance(this: usize, codigo: *mut i8, a: *mut u8, b: *mut u8) -> u16 {
+pub(crate) unsafe extern "thiscall" fn dominio_do_lance(this: usize, codigo: *mut i8, a: *mut u8, b: *mut u8) -> u16 {
     let motor = *((this + 0x19e) as *const usize);
     let c8ea9 = byte(motor, 0x8ea9);
     *a = 0;
@@ -1403,31 +1405,31 @@ unsafe extern "thiscall" fn dominio_do_lance(this: usize, codigo: *mut i8, a: *m
 // ---------- trigesima nona leva: comentarios (0x6d6f70) ----------
 
 /// Chamada a 0x6d6f70 (enfileirar um evento de comentario): (this, 7 argumentos).
-type ChamarComentario<'a> = &'a mut dyn FnMut(usize, [u32; 7]);
+pub(crate) type ChamarComentario<'a> = &'a mut dyn FnMut(usize, [u32; 7]);
 
 /// 0x6d6f70 pelo endereco do jogo.
-unsafe fn comentar(this: usize, a: [u32; 7]) {
+pub(crate) unsafe fn comentar(this: usize, a: [u32; 7]) {
     let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) = core::mem::transmute(FN_MATCH_EVENTS_ADD_EVENT);
     f(this, a[0], a[1], a[2], a[3], a[4], a[5], a[6])
 }
 
 /// { 0x7002f0 } (match_pl.cpp) com a chamada injetada: comentario com dois campos -1.
-unsafe fn comentario_a_com(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, chamar: ChamarComentario) {
+pub(crate) unsafe fn comentario_a_com(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, chamar: ChamarComentario) {
     chamar(this, [a1, a2, a3, a4, u32::MAX, u32::MAX, a5]);
 }
 
 /// { 0x7002f0 } (match_pl.cpp): enfileira um comentario (0x6d6f70) com dois campos -1.
-unsafe extern "thiscall" fn comentario_a(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) {
+pub(crate) unsafe extern "thiscall" fn comentario_a(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) {
     comentario_a_com(this, a1, a2, a3, a4, a5, &mut |t, a| comentar(t, a))
 }
 
 /// { 0x70a860 } (match_pl.cpp) com a chamada injetada: comentario com tres campos -1.
-unsafe fn comentario_b_com(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, chamar: ChamarComentario) {
+pub(crate) unsafe fn comentario_b_com(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, chamar: ChamarComentario) {
     chamar(this, [a1, a2, u32::MAX, a3, u32::MAX, u32::MAX, a4]);
 }
 
 /// { 0x70a860 } (match_pl.cpp): enfileira um comentario (0x6d6f70) com tres campos -1.
-unsafe extern "thiscall" fn comentario_b(this: usize, a1: u32, a2: u32, a3: u32, a4: u32) {
+pub(crate) unsafe extern "thiscall" fn comentario_b(this: usize, a1: u32, a2: u32, a3: u32, a4: u32) {
     comentario_b_com(this, a1, a2, a3, a4, &mut |t, a| comentar(t, a))
 }
 
@@ -1438,7 +1440,7 @@ unsafe extern "thiscall" fn comentario_b(this: usize, a1: u32, a2: u32, a3: u32,
 /// parada 7, penalti (5) ou falta (6), expulsao, cobrador, as narracoes de sempre, o desgaste do time
 /// e o cansaco; no fim `e` perde 25 de folego. `ramos`: penalti, expulsao, cobrador, vantagem.
 #[allow(clippy::too_many_arguments)]
-unsafe fn punir_desafiante_com(m: usize, e: usize, j: usize, mut tipo: u8, cartao: u8, grav: i8, arriscado: i8, vantagem: u8, lance: i8, ajustar_no_penalti: bool, ramos: &[&'static str; 4], chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn punir_desafiante_com(m: usize, e: usize, j: usize, mut tipo: u8, cartao: u8, grav: i8, arriscado: i8, vantagem: u8, lance: i8, ajustar_no_penalti: bool, ramos: &[&'static str; 4], chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let especial: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
     let punir: unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_DECIDE_FOUL_PUNISHMENT);
     let cobrador: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_PICK_RESTART_TAKER);
@@ -1582,7 +1584,7 @@ unsafe fn punir_desafiante_com(m: usize, e: usize, j: usize, mut tipo: u8, carta
 }
 
 /// Narracao da falta pelo lance em disputa (tabelas 0x71026c e 0x710328 da 0x70ec80).
-fn narracao_da_falta(lance: i8) -> u32 {
+pub(crate) fn narracao_da_falta(lance: i8) -> u32 {
     match lance {
         1 => 0x1ff1,
         0xc => 0x1ff4,
@@ -1627,7 +1629,7 @@ fn narracao_da_falta(lance: i8) -> u32 {
 /// (25 - +0x5d) x 2, maximo 100, 0x211d); conta a posse (+0x8eab, +0x8d46), +0x19c ganha ataque -
 /// nota (+-200), o desafiante soma o segundo byte; fora de bola parada e do lance 0x10 narra 0x2133
 /// (com `forte`), 0x216d (com desafiante), 0x21de ou 0x1f40, e zera +0x8ea9.
-unsafe fn dividida_com(j: usize, forte: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn dividida_com(j: usize, forte: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let aplicar_ao_lado: unsafe extern "thiscall" fn(usize, i8, f32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SCALE_SIDE_ANGER);
     let desafio: unsafe extern "thiscall" fn(usize, usize, i8, i8, *mut u8, *mut u8, *mut i16, *mut i8, *mut i8, u8) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_OPPOSITION_CHALLENGE);
     let falta: unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_JUDGE_TACKLE);
@@ -1852,7 +1854,7 @@ unsafe fn dividida_com(j: usize, forte: u8, chamar: &mut dyn FnMut(usize, usize,
 }
 
 /// Despacho real das chamadas injetadas da dividida (e das rotinas que ela leva junto).
-unsafe fn despachar_dividida(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
+pub(crate) unsafe fn despachar_dividida(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
     match rotina {
         // codigo | a7 << 16 (a7 com sinal), a5 | a6 << 8
         0x6d6f70 => comentar(this, [a[0] & 0xffff, a[1], a[2], a[3], a[4] & 0xff, (a[4] >> 8) & 0xff, (a[0] >> 16) as u8 as i8 as u32]),
@@ -1889,7 +1891,7 @@ unsafe fn despachar_dividida(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
 }
 
 /// { 0x70ec80 } (ret 4, match_pl.cpp): ver `dividida_com`.
-unsafe extern "thiscall" fn dividida(j: usize, forte: u32) {
+pub(crate) unsafe extern "thiscall" fn dividida(j: usize, forte: u32) {
     dividida_com(j, forte as u8, &mut |rotina, this, a| despachar_dividida(rotina, this, a))
 }
 
@@ -1903,12 +1905,12 @@ unsafe extern "thiscall" fn dividida(j: usize, forte: u32) {
 /// desgaste do time (0x6bb8d0) e o cansaco. Devolve se foi penalti.
 /// Sonda: enche 4 KB da pilha abaixo com 0xa5 (o lixo que uma rotina original chamada depois leria).
 #[inline(never)]
-fn sujar() {
+pub(crate) fn sujar() {
     let mut a = [0xa5u8; 65536];
     std::hint::black_box(&mut a);
 }
 
-unsafe fn punir_falta_de_quem_disputa_com(j: usize, mut t: u8, cartao: u8, grav: u8, codigo: i16, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> bool {
+pub(crate) unsafe fn punir_falta_de_quem_disputa_com(j: usize, mut t: u8, cartao: u8, grav: u8, codigo: i16, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> bool {
     let punir: unsafe extern "thiscall" fn(usize, usize, *mut u8, i8, i8, u8, *mut f32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_DECIDE_BOOKING);
     let ajustar: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_ADJUST_MORALE);
     let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(FN_MATCH_PLAYER_CALC_RATINGS);
@@ -2050,7 +2052,7 @@ unsafe fn punir_falta_de_quem_disputa_com(j: usize, mut t: u8, cartao: u8, grav:
 /// goleiro na area ou 0x1f5f, 0x6f0630, marca o lance, 0x21cd/0x21ce pela media de acertos); senao
 /// perde (0x20d4 do goleiro na area, ou 0x213e/0x1f71) e a bola espirra (0x6cd770). Com `conta`, +1
 /// em +0x12 e folego (+0x1c ou +10).
-unsafe fn responder_com(j: usize, forca: i16, tipo_in: i8, p4: f32, conta: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
+pub(crate) unsafe fn responder_com(j: usize, forca: i16, tipo_in: i8, p4: f32, conta: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
     let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
     let limite_: unsafe extern "stdcall" fn(u8, i8) -> u8 = core::mem::transmute(FN_IS_IN_ATTACKING_THIRD);
     let decidir: unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_CHECK_FOUL);
@@ -2333,7 +2335,7 @@ unsafe fn responder_com(j: usize, forca: i16, tipo_in: i8, p4: f32, conta: u8, c
 }
 
 /// { 0x6f5c30 } (ret 0x10, match_pl.cpp): ver `responder_com`.
-unsafe extern "thiscall" fn responder(j: usize, forca: u32, tipo: u32, p4: u32, conta: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn responder(j: usize, forca: u32, tipo: u32, p4: u32, conta: u32) -> u8 {
     responder_com(j, forca as i16, tipo as i8, f32::from_bits(p4), conta as u8, &mut |rotina, this, a| despachar_dividida(rotina, this, a))
 }
 
@@ -2363,7 +2365,7 @@ unsafe extern "thiscall" fn responder(j: usize, forca: u32, tipo: u32, p4: u32, 
 /// 0x216e (no 0xc) ou as narracoes do chute de longe (0x21cc, 0x21db, 0x21dc, 0x1f47), +0x19c ganha a
 /// nota - a do desafiante - 200 (+-200) e por sorteio(+0x19c) contra sorteio(200) 0x7103e0 (com
 /// +0x1a7 e +100 de posse). Fora da area de ataque, sorteio(+0x31) < -10 faz o jogador crescer (0x211d).
-unsafe fn chute_com(j: usize, forca_in: i16, x_in: i8, y_in: i8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn chute_com(j: usize, forca_in: i16, x_in: i8, y_in: i8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let dist_ponto: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(FN_MATCH_PLAYER_DISTANCE_TO_CELL);
     let caminho: unsafe extern "thiscall" fn(usize, usize, i8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_PATH_AHEAD_CLEAR);
     let apontar_: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) = core::mem::transmute(FN_MATCH_PLAYER_SET_FACING_DIRECTION);
@@ -2917,11 +2919,11 @@ unsafe fn chute_com(j: usize, forca_in: i16, x_in: i8, y_in: i8, chamar: &mut dy
 /// Original: `shot` (0x6f6c00, match_pl.cpp (12.7 KB, called only by 0x6b98c0 with power +0x8ed6 and target +0x1c8/+0x1c9), thiscall, ret 0xc).
 ///
 /// [pt] { 0x6f6c00 } (ret 0xc, match_pl.cpp): ver `chute_com`.
-unsafe extern "thiscall" fn chute(j: usize, forca: u32, x: u32, y: u32) {
+pub(crate) unsafe extern "thiscall" fn chute(j: usize, forca: u32, x: u32, y: u32) {
     chute_com(j, forca as i16, x as i8, y as i8, &mut |rotina, this, a| despachar_dividida(rotina, this, a))
 }
 
-unsafe extern "thiscall" fn comparar_chute(j: usize, forca: u32, x: u32, y: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_chute(j: usize, forca: u32, x: u32, y: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(301);
     if gravando_no_topo() {
         return o(j, forca, x, y);
@@ -2964,7 +2966,7 @@ unsafe extern "thiscall" fn comparar_chute(j: usize, forca: u32, x: u32, y: u32)
 /// lado; o placar +0xf5bd do outro lado, as narracoes da torcida), acima de 61 defesa com escanteio,
 /// acima de 51 defesa que sai pela linha (+0x8ea8, bola parada 3 e 0x1f75), senao defesa (0x6f0630);
 /// nas defesas, o destaque do goleiro (0x717470) escolhe a narracao.
-unsafe fn desfecho_do_chute_com(p: usize, f_in: f32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn desfecho_do_chute_com(p: usize, f_in: f32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let m = *((p + 0x19e) as *const usize);
     let u = |q: usize, o: usize| *((q + o) as *const usize);
     let bm = |o: usize| (m + o) as *mut u8;
@@ -3127,7 +3129,7 @@ unsafe fn desfecho_do_chute_com(p: usize, f_in: f32, chamar: &mut dyn FnMut(usiz
 
 /// O gol do desfecho (parte do chute acima de 71): ver `desfecho_do_chute_com`.
 #[allow(clippy::too_many_arguments)]
-unsafe fn desfecho_gol(m: usize, p: usize, g: usize, lado: i8, outro: u8, mut b10: i8, b11: i8, b12: u8, b13: u8, b14: u8, b15: u8, b16: u8, b17: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn desfecho_gol(m: usize, p: usize, g: usize, lado: i8, outro: u8, mut b10: i8, b11: i8, b12: u8, b13: u8, b14: u8, b15: u8, b16: u8, b17: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let _ = (b12, b14);
     let u = |q: usize, o: usize| *((q + o) as *const usize);
     let bm = |o: usize| (m + o) as *mut u8;
@@ -3271,7 +3273,7 @@ unsafe fn desfecho_gol(m: usize, p: usize, g: usize, lado: i8, outro: u8, mut b1
 
 /// O fim comum das narracoes do gol: a torcida (0x1fdc antes dos 80 com +0x15, fator 1,45) ou
 /// so o fator 1,25 no lado.
-unsafe fn torcida(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, m: usize, lado: i8, outro: u8, b15: u8, narrar: &dyn Fn(&mut dyn FnMut(usize, usize, [u32; 5]) -> u32, u32, u32, u8, i16)) {
+pub(crate) unsafe fn torcida(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, m: usize, lado: i8, outro: u8, b15: u8, narrar: &dyn Fn(&mut dyn FnMut(usize, usize, [u32; 5]) -> u32, u32, u32, u8, i16)) {
     let t = *((m + 0x8ed0) as *const i16) as i32 / 11;
     if b15 != 0 && t < 0x50 {
         narrar(chamar, 0x1fdc, u32::MAX, outro, 0);
@@ -3283,11 +3285,11 @@ unsafe fn torcida(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, m: usiz
 
 /// A narracao dos chutes: o ultimo argumento (a7) vai em 16 bits no alto do codigo (contagens de gols
 /// em palavra; a fita confere o byte baixo).
-unsafe fn narrar_chute(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, m: usize, codigo: u32, x: u32, y: u8, a7: i16) {
+pub(crate) unsafe fn narrar_chute(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, m: usize, codigo: u32, x: u32, y: u8, a7: i16) {
     chamar(0x6d6f70, *((m + 0x8f7a) as *const usize), [codigo | (a7 as u16 as u32) << 16, m as u32, x, y as u32, u32::MAX]);
 }
 
-unsafe fn despachar_chute(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
+pub(crate) unsafe fn despachar_chute(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
     if rotina == 0x6d6f70 {
         comentar(this, [a[0] & 0xffff, a[1], a[2], a[3], a[4] & 0xff, (a[4] >> 8) & 0xff, (a[0] >> 16) as u16 as i16 as i32 as u32]);
         return 0;
@@ -3300,11 +3302,11 @@ unsafe fn despachar_chute(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
 /// Original: `shot_outcome` (0x70c040, match_pl.cpp (5.1 KB), thiscall, ret 4).
 ///
 /// [pt] { 0x70c040 }: ver `desfecho_do_chute_com`.
-unsafe extern "thiscall" fn desfecho_do_chute(p: usize, f: f32) {
+pub(crate) unsafe extern "thiscall" fn desfecho_do_chute(p: usize, f: f32) {
     desfecho_do_chute_com(p, f, &mut |r, t, a| despachar_chute(r, t, a))
 }
 
-unsafe extern "thiscall" fn comparar_desfecho_do_chute(p: usize, f: f32) {
+pub(crate) unsafe extern "thiscall" fn comparar_desfecho_do_chute(p: usize, f: f32) {
     if gravando() {
         // unidade da fita de fora; por dentro, a propria comparacao (fita aninhada)
         chamar_gravando(0x70c040, p, [f.to_bits(), 0, 0, 0, 0], || {
@@ -3316,7 +3318,7 @@ unsafe extern "thiscall" fn comparar_desfecho_do_chute(p: usize, f: f32) {
     fita_do_desfecho(p, f);
 }
 
-unsafe fn fita_do_desfecho(p: usize, f: f32) {
+pub(crate) unsafe fn fita_do_desfecho(p: usize, f: f32) {
     use std::sync::atomic::Ordering::Relaxed;
     let o = orig::<unsafe extern "thiscall" fn(usize, f32)>(316);
     let m = *((p + 0x19e) as *const usize);
@@ -3358,7 +3360,7 @@ unsafe fn fita_do_desfecho(p: usize, f: f32) {
 /// narracoes do placar, o hat-trick (0x2011/0x1fd5) e as marcas da carreira (0x200a..0x2012 e o
 /// destaque 0x21b6, com a contagem como ultimo argumento); o placar +0xf5bd do lado. As defesas como
 /// na 0x70c040 (0x211c no lugar de 0x211b).
-unsafe fn chute_a_gol_com(p: usize, f_in: f32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn chute_a_gol_com(p: usize, f_in: f32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let m = *((p + 0x19e) as *const usize);
     let u = |q: usize, o: usize| *((q + o) as *const usize);
     let bm = |o: usize| (m + o) as *mut u8;
@@ -3699,11 +3701,11 @@ unsafe fn chute_a_gol_com(p: usize, f_in: f32, chamar: &mut dyn FnMut(usize, usi
 /// Original: `shot_on_goal` (0x70a910, match_pl.cpp (5.9 KB), thiscall, ret 4).
 ///
 /// [pt] { 0x70a910 }: ver `chute_a_gol_com`.
-unsafe extern "thiscall" fn chute_a_gol(p: usize, f: f32) {
+pub(crate) unsafe extern "thiscall" fn chute_a_gol(p: usize, f: f32) {
     chute_a_gol_com(p, f, &mut |r, t, a| despachar_chute(r, t, a))
 }
 
-unsafe extern "thiscall" fn comparar_chute_a_gol(p: usize, f: f32) {
+pub(crate) unsafe extern "thiscall" fn comparar_chute_a_gol(p: usize, f: f32) {
     if gravando() {
         // unidade da fita de fora; por dentro, a propria comparacao (fita aninhada)
         chamar_gravando(0x70a910, p, [f.to_bits(), 0, 0, 0, 0], || {
@@ -3718,20 +3720,20 @@ unsafe extern "thiscall" fn comparar_chute_a_gol(p: usize, f: f32) {
 // ---------- centesima quadragesima terceira leva: o movimento do jogador (0x6f09f0) ----------
 
 /// Unidades da fita do movimento: a 0x68d0d0 recebe o evento 0x82 montado na pilha (confere o conteudo).
-static GRAVAR_MOVIMENTO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub(crate) static GRAVAR_MOVIMENTO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-fn gravando_movimento() -> bool {
+pub(crate) fn gravando_movimento() -> bool {
     GRAVAR_MOVIMENTO.load(std::sync::atomic::Ordering::Relaxed) && gravando()
 }
 
 /// A area atacada pelo lado (colunas 2 a 6; linhas 10-11 para o lado 0, 0-1 para o lado 1).
-fn na_area_atacada(lado: i8, x: i8, y: i8) -> bool {
+pub(crate) fn na_area_atacada(lado: i8, x: i8, y: i8) -> bool {
     (2..=6).contains(&x) && if lado == 0 { (10..=11).contains(&y) } else { (0..=1).contains(&y) }
 }
 
 /// Os jogadores marcados por `p` (+0x101 deles em +0x1ae) que ainda podem ser escolhidos (0x6bce20)
 /// na casa dele saem do lugar (0x714d40) se +0x107 x +0x104 nao passar de sorteio(900) + 50.
-unsafe fn soltar_marcados(m: usize, p: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn soltar_marcados(m: usize, p: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let mut i = 0i8;
     while i < byte(p, 0x101) {
         let q = *((p + 0x1ae + i as usize * 4) as *const usize);
@@ -3747,7 +3749,7 @@ unsafe fn soltar_marcados(m: usize, p: usize, chamar: &mut dyn FnMut(usize, usiz
 }
 
 /// O passo de uma casa em direcao ao alvo.
-fn passo(de: i8, para: i8) -> i8 {
+pub(crate) fn passo(de: i8, para: i8) -> i8 {
     if de < para {
         de + 1
     } else if de > para {
@@ -3773,7 +3775,7 @@ fn passo(de: i8, para: i8) -> i8 {
 /// (+0x8ea7/+0x8ea8, fora 0x6cd490); sem ela, na bola livre a domina (0x1f46/0x2113/0x1f60). Por
 /// fim vira para um terco do caminho ate a bola.
 #[allow(clippy::cognitive_complexity)]
-unsafe fn mover_com(p: usize, x: i8, y: i8, codigo: i16, conduz_in: u8, modo: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn mover_com(p: usize, x: i8, y: i8, codigo: i16, conduz_in: u8, modo: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let m = *((p + 0x19e) as *const usize);
     let u = |q: usize, o: usize| *((q + o) as *const usize);
     let b = |q: usize, o: usize| (q + o) as *mut u8;
@@ -4043,7 +4045,7 @@ unsafe fn mover_com(p: usize, x: i8, y: i8, codigo: i16, conduz_in: u8, modo: u8
 /// As narracoes da acao de quem passa com a bola (0xf: 0x1f48/0x1f49; 0x11 e 0x12: pela area, pelo
 /// meio, pelas pontas, pelo marcado e pelo goleiro).
 #[allow(clippy::too_many_arguments)]
-unsafe fn narrar_a_acao_com(m: usize, p: usize, e: usize, codigo: i16, x: i8, y: i8, conduz_in: u8, modo: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn narrar_a_acao_com(m: usize, p: usize, e: usize, codigo: i16, x: i8, y: i8, conduz_in: u8, modo: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let u = |q: usize, o: usize| *((q + o) as *const usize);
     let ub = |q: usize, o: usize| *((q + o) as *const u8) as u32;
     let lado = byte(p, 0x27);
@@ -4176,7 +4178,7 @@ unsafe fn narrar_a_acao_com(m: usize, p: usize, e: usize, codigo: i16, x: i8, y:
 
 /// O desafiante `e` vence a disputa (como na dividida, com outras narracoes e o desgaste de `p`).
 #[allow(clippy::too_many_arguments)]
-unsafe fn desafiante_vence_com(m: usize, p: usize, e: usize, lance: i8, nota: i16, at: i16, vantagem: u8, penalti: bool, a: u8, conduz: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn desafiante_vence_com(m: usize, p: usize, e: usize, lance: i8, nota: i16, at: i16, vantagem: u8, penalti: bool, a: u8, conduz: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let b = |q: usize, o: usize| (q + o) as *mut u8;
     let w = |q: usize, o: usize| (q + o) as *mut i16;
     let ub = |q: usize, o: usize| *((q + o) as *const u8) as u32;
@@ -4323,7 +4325,7 @@ unsafe fn desafiante_vence_com(m: usize, p: usize, e: usize, lance: i8, nota: i1
 /// A falta de `e` sobre `p` punida no movimento (como `punir_desafiante_com`, com o evento 0x82 e a
 /// marca da bola parada no fim).
 #[allow(clippy::too_many_arguments)]
-unsafe fn punir_no_movimento_com(m: usize, e: usize, p: usize, mut tipo: u8, cartao: u8, grav: i8, arriscado: i8, vantagem: u8, lance: i8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn punir_no_movimento_com(m: usize, e: usize, p: usize, mut tipo: u8, cartao: u8, grav: i8, arriscado: i8, vantagem: u8, lance: i8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let b = |q: usize, o: usize| (q + o) as *mut u8;
     let w = |q: usize, o: usize| (q + o) as *mut i16;
     let ub = |q: usize, o: usize| *((q + o) as *const u8) as u32;
@@ -4491,7 +4493,7 @@ unsafe fn punir_no_movimento_com(m: usize, e: usize, p: usize, mut tipo: u8, car
 /// O passo na grade e o que vem depois: vagas da casa (+0x215e, 0x5a bytes por casa, 11 vagas por
 /// lado e a conta em +0x58), o mais adiantado, os marcados, o desgaste, a bola e a direcao.
 #[allow(clippy::too_many_arguments)]
-unsafe fn andar_com(m: usize, p: usize, ox: i8, oy: i8, nx: i8, ny: i8, perdeu: bool, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn andar_com(m: usize, p: usize, ox: i8, oy: i8, nx: i8, ny: i8, perdeu: bool, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let b = |q: usize, o: usize| (q + o) as *mut u8;
     let w = |q: usize, o: usize| (q + o) as *mut i16;
     let ub = |q: usize, o: usize| *((q + o) as *const u8) as u32;
@@ -4661,7 +4663,7 @@ unsafe fn andar_com(m: usize, p: usize, ox: i8, oy: i8, nx: i8, ny: i8, perdeu: 
 
 /// Despacho real das chamadas injetadas do movimento: as da dividida, o marcado que sai (0x714d40)
 /// e o evento 0x82 (0x68d0d0, o bloco pedido por ultimo).
-unsafe fn despachar_movimento(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
+pub(crate) unsafe fn despachar_movimento(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
     match rotina {
         0x714d40 => {
             let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_PLAYER_CHOOSE_DEFENSIVE_OFF_BALL_MOVE);
@@ -4682,12 +4684,12 @@ unsafe fn despachar_movimento(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
 /// Original: `player_move` (0x6f09f0, match_pl.cpp (9 KB), thiscall, ret 0x14).
 ///
 /// [pt] { 0x6f09f0 }: ver `mover_com`.
-unsafe extern "thiscall" fn mover_jogador(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn mover_jogador(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
     mover_com(p, a1 as u8 as i8, a2 as u8 as i8, a3 as u16 as i16, a4 as u8, a5 as u8, &mut |r, t, a| despachar_movimento(r, t, a));
     0
 }
 
-unsafe extern "thiscall" fn comparar_mover(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_mover(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
     if gravando() {
         // unidade da fita de fora; por dentro, a propria comparacao (fita aninhada)
         return chamar_gravando(0x6f09f0, p, [a1, a2, a3, a4, a5], || fita_do_movimento(p, a1, a2, a3, a4, a5));
@@ -4695,7 +4697,7 @@ unsafe extern "thiscall" fn comparar_mover(p: usize, a1: u32, a2: u32, a3: u32, 
     fita_do_movimento(p, a1, a2, a3, a4, a5)
 }
 
-unsafe fn fita_do_movimento(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
+pub(crate) unsafe fn fita_do_movimento(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
     use std::sync::atomic::Ordering::Relaxed;
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> u32>(318);
     let m = *((p + 0x19e) as *const usize);
@@ -4732,7 +4734,7 @@ unsafe fn fita_do_movimento(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u3
     r
 }
 
-unsafe fn fita_do_chute_a_gol(p: usize, f: f32) {
+pub(crate) unsafe fn fita_do_chute_a_gol(p: usize, f: f32) {
     use std::sync::atomic::Ordering::Relaxed;
     let o = orig::<unsafe extern "thiscall" fn(usize, f32)>(317);
     let m = *((p + 0x19e) as *const usize);
@@ -4767,20 +4769,20 @@ unsafe fn fita_do_chute_a_gol(p: usize, f: f32) {
 
 /// Unidades da fita da conducao: a copia de 0x68d0d0 vai para a lista na pilha (endereco diferente
 /// na copia Rust: grava sem o `this`) e a 0x702050 (o chute) entra como unidade.
-static GRAVAR_CONDUCAO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub(crate) static GRAVAR_CONDUCAO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Na metade de ataque do lado (lado 1: linhas abaixo de 6; lado 0: de 6 em diante; outro lado, sim).
-fn na_metade_de_ataque(lado: i8, y: i8) -> bool {
+pub(crate) fn na_metade_de_ataque(lado: i8, y: i8) -> bool {
     !((lado == 1 && y >= 6) || (lado == 0 && y < 6))
 }
 
 /// Na metade de defesa do lado (o contrario da de ataque, so para os lados 0 e 1).
-fn na_metade_de_defesa(lado: i8, y: i8) -> bool {
+pub(crate) fn na_metade_de_defesa(lado: i8, y: i8) -> bool {
     (lado == 1 && y >= 6) || (lado == 0 && y < 6)
 }
 
 /// Na propria area (a que o lado defende; lado 1: linhas 10-11, os outros 0-1).
-fn na_area_defendida(lado: i8, x: i8, y: i8) -> bool {
+pub(crate) fn na_area_defendida(lado: i8, x: i8, y: i8) -> bool {
     na_area_atacada((lado != 1) as i8, x, y)
 }
 
@@ -4795,7 +4797,7 @@ fn na_area_defendida(lado: i8, x: i8, y: i8) -> bool {
 /// passar (0x6fa250) ou conduzir (0x6f09f0) para a casa escolhida (0x6bce80). Modo 4: o goleiro na
 /// disputa de penaltis. Devolve 1 so quando conduz.
 #[allow(clippy::cognitive_complexity)]
-unsafe fn conduzir_com(p: usize, modo: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
+pub(crate) unsafe fn conduzir_com(p: usize, modo: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
     let u = |q: usize, o: usize| *((q + o) as *const usize);
     let b = |q: usize, o: usize| (q + o) as *mut u8;
     let w = |q: usize, o: usize| (q + o) as *mut i16;
@@ -5547,7 +5549,7 @@ unsafe fn conduzir_com(p: usize, modo: u8, chamar: &mut dyn FnMut(usize, usize, 
 /// A lista da pressao na pilha da conducao entra na fita sem o endereco (o da original e o da
 /// copia Rust diferem); o resto da copia (o bloco do jogador, 0x1be bytes) e conferido. Vale nas
 /// duas fases da comparacao (na da copia Rust a fita ja foi tirada).
-fn lista_gravada(l: usize, n: u32) -> usize {
+pub(crate) fn lista_gravada(l: usize, n: u32) -> usize {
     if GRAVAR_CONDUCAO.load(std::sync::atomic::Ordering::Relaxed) && n == 0x1be {
         0
     } else {
@@ -5557,7 +5559,7 @@ fn lista_gravada(l: usize, n: u32) -> usize {
 
 /// Modo Rust: as chamadas da conducao vao para o jogo (passe, lancamento, dividida e movimento pelos
 /// proprios desvios; o chute com a lista: a cabeca e o endereco).
-unsafe fn despachar_conducao(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
+pub(crate) unsafe fn despachar_conducao(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
     match rotina {
         0x6fa250 | 0x6f09f0 => {
             let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> u32 = core::mem::transmute(rotina);
@@ -5597,11 +5599,11 @@ unsafe fn despachar_conducao(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
 /// Original: `dribble` (0x7109f0, match_pl.cpp (13 KB), thiscall, ret 4).
 ///
 /// [pt] { 0x7109f0 } (ret 4, match_pl.cpp): ver `conduzir_com`.
-unsafe extern "thiscall" fn conduzir(p: usize, modo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn conduzir(p: usize, modo: u32) -> u32 {
     conduzir_com(p, modo as u8, &mut |r, t, a| despachar_conducao(r, t, a)) as u32
 }
 
-unsafe extern "thiscall" fn comparar_conduzir(p: usize, modo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_conduzir(p: usize, modo: u32) -> u32 {
     if gravando() {
         // unidade da fita de fora (penaltis, decisao do jogador); por dentro, a propria comparacao
         return chamar_gravando(0x7109f0, p, [modo, 0, 0, 0, 0], || fita_da_conducao(p, modo));
@@ -5609,7 +5611,7 @@ unsafe extern "thiscall" fn comparar_conduzir(p: usize, modo: u32) -> u32 {
     fita_da_conducao(p, modo)
 }
 
-unsafe fn fita_da_conducao(p: usize, modo: u32) -> u32 {
+pub(crate) unsafe fn fita_da_conducao(p: usize, modo: u32) -> u32 {
     use std::sync::atomic::Ordering::Relaxed;
     let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(319);
     let m = *((p + 0x19e) as *const usize);
@@ -5698,7 +5700,7 @@ unsafe fn fita_da_conducao(p: usize, modo: u32) -> u32 {
 /// A nota base do passe pelos marcadores da posicao (casos 6..=8 e 0x5e de 0x6fad40): na linha de
 /// fundo, com as marcas 0x880 nas duas tabelas (e 0x38 + a marca 4 da posicao), +0x4b/+0x3e/+0x2d
 /// conforme o clube humano (0x600a50); senao +0x19 no fundo ou o desconto de um terco do sorteio.
-unsafe fn nota_do_passe_pela_posicao(p: usize, base: i16, l20: i32, l14: i32) -> i16 {
+pub(crate) unsafe fn nota_do_passe_pela_posicao(p: usize, base: i16, l20: i32, l14: i32) -> i16 {
     let m = *((p + 0x19e) as *const usize);
     let ta = || if m != 0 { tabela_a(m, p) } else { 0 };
     let tb = || if m != 0 { tabela_b(m, p) } else { 0 };
@@ -5728,7 +5730,7 @@ unsafe fn nota_do_passe_pela_posicao(p: usize, base: i16, l20: i32, l14: i32) ->
 /// 1), ele domina (0x6f0630, +0x19c = nota - 400 em -200..=200), a bola espirra (0x6cd770) abaixo do
 /// limite do lance ou a media de acertos e narrada; os ganhos dele e o +0x2b do passador.
 #[allow(clippy::too_many_arguments)]
-unsafe fn passe_desarmado_com(m: usize, p: usize, e: usize, lance: i8, nota: i16, a: u8, vantagem: u8, penalti: bool, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn passe_desarmado_com(m: usize, p: usize, e: usize, lance: i8, nota: i16, a: u8, vantagem: u8, penalti: bool, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let b = |q: usize, o: usize| (q + o) as *mut u8;
     let w = |q: usize, o: usize| (q + o) as *mut i16;
     let ub = |q: usize, o: usize| *((q + o) as *const u8) as u32;
@@ -5850,7 +5852,7 @@ unsafe fn passe_desarmado_com(m: usize, p: usize, e: usize, lance: i8, nota: i16
 /// `punir_no_movimento_com`, mas a bola parada fica com o passador antes das narracoes, o penalti
 /// sorteia pela pessoa (+0x5a, sem o +6) e 10, e o evento 0x82 nao depende do cartao.
 #[allow(clippy::too_many_arguments)]
-unsafe fn falta_no_passe_com(m: usize, e: usize, p: usize, mut tipo: u8, cartao: u8, grav: i8, arriscado: i8, vantagem: u8, lance: i8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn falta_no_passe_com(m: usize, e: usize, p: usize, mut tipo: u8, cartao: u8, grav: i8, arriscado: i8, vantagem: u8, lance: i8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let b = |q: usize, o: usize| (q + o) as *mut u8;
     let w = |q: usize, o: usize| (q + o) as *mut i16;
     let ub = |q: usize, o: usize| *((q + o) as *const u8) as u32;
@@ -6019,7 +6021,7 @@ unsafe fn falta_no_passe_com(m: usize, e: usize, p: usize, mut tipo: u8, cartao:
 
 /// Os oito codigos de narracao pela direcao do passe (`bl` de 0x6fad40: 0x10 pela faixa, 0x20/0x40
 /// para a ponta, 2/4 de lado, 1 para frente, 8 para tras), na ordem 0x10, 0x20, 0x40, 2, 4, 1, 8.
-fn pela_direcao(bl: u8, c: [u32; 7], padrao: u32) -> u32 {
+pub(crate) fn pela_direcao(bl: u8, c: [u32; 7], padrao: u32) -> u32 {
     for (k, f) in [0x10u8, 0x20, 0x40, 2, 4, 1, 8].iter().enumerate() {
         if bl & f != 0 {
             return c[k];
@@ -6037,7 +6039,7 @@ fn pela_direcao(bl: u8, c: [u32; 7], padrao: u32) -> u32 {
 /// (+0x8ea9, +0x8eaa) e o tracado (0x6ccb60): pela tabela, chute (0x70c040/0x70a910) ou a bola em
 /// transito (+0x1c5..+0x1c9, +0x477e) e bola fora (0x6cd490). Devolve 1 se a bola segue em jogo.
 #[allow(clippy::too_many_arguments, clippy::cognitive_complexity)]
-unsafe fn executar_passe_com(p: usize, x: i8, y: i8, tipo_in: i8, saida: *mut u8, receptor: usize, tx_in: i8, ty_in: i8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
+pub(crate) unsafe fn executar_passe_com(p: usize, x: i8, y: i8, tipo_in: i8, saida: *mut u8, receptor: usize, tx_in: i8, ty_in: i8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
     let b = |q: usize, o: usize| (q + o) as *mut u8;
     let w = |q: usize, o: usize| (q + o) as *mut i16;
     let ub = |q: usize, o: usize| *((q + o) as *const u8) as u32;
@@ -6581,15 +6583,15 @@ unsafe fn executar_passe_com(p: usize, x: i8, y: i8, tipo_in: i8, saida: *mut u8
 }
 
 /// Unidades da fita do passe: o evento 0x82 vai para a lista montado na pilha (confere o conteudo).
-static GRAVAR_PASSE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub(crate) static GRAVAR_PASSE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-fn gravando_passe() -> bool {
+pub(crate) fn gravando_passe() -> bool {
     GRAVAR_PASSE.load(std::sync::atomic::Ordering::Relaxed) && gravando()
 }
 
 /// Modo Rust: as chamadas da execucao do passe vao para o jogo (o tracado com as coordenadas num
 /// dword, os chutes com a distancia em bits; o resto como na dividida e no movimento).
-unsafe fn despachar_passe(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
+pub(crate) unsafe fn despachar_passe(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
     match rotina {
         0x6ccb60 => {
             let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8, i8, u32, u32) -> u8 = core::mem::transmute(rotina);
@@ -6613,12 +6615,12 @@ unsafe fn despachar_passe(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
 ///
 /// [pt] { 0x6fad40 } (ret 0x1c, match_pl.cpp): ver `executar_passe_com`.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn executar_passe(p: usize, x: u32, y: u32, tipo: u32, saida: *mut u8, receptor: usize, tx: u32, ty: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn executar_passe(p: usize, x: u32, y: u32, tipo: u32, saida: *mut u8, receptor: usize, tx: u32, ty: u32) -> u8 {
     executar_passe_com(p, x as u8 as i8, y as u8 as i8, tipo as u8 as i8, saida, receptor, tx as u8 as i8, ty as u8 as i8, &mut |r, t, a| despachar_passe(r, t, a))
 }
 
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_executar_passe(p: usize, x: u32, y: u32, tipo: u32, saida: *mut u8, receptor: usize, tx: u32, ty: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn comparar_executar_passe(p: usize, x: u32, y: u32, tipo: u32, saida: *mut u8, receptor: usize, tx: u32, ty: u32) -> u8 {
     if gravando() {
         // unidade da fita de fora (passe, lancamento): a resposta com o byte da saida; por dentro, a propria comparacao
         let mut r = 0u8;
@@ -6632,7 +6634,7 @@ unsafe extern "thiscall" fn comparar_executar_passe(p: usize, x: u32, y: u32, ti
 }
 
 #[allow(clippy::too_many_arguments)]
-unsafe fn fita_do_passe(p: usize, x: u32, y: u32, tipo: u32, saida: *mut u8, receptor: usize, tx: u32, ty: u32) -> u8 {
+pub(crate) unsafe fn fita_do_passe(p: usize, x: u32, y: u32, tipo: u32, saida: *mut u8, receptor: usize, tx: u32, ty: u32) -> u8 {
     use std::sync::atomic::Ordering::Relaxed;
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, *mut u8, usize, u32, u32) -> u8>(321);
     let m = *((p + 0x19e) as *const usize);
@@ -6689,7 +6691,7 @@ unsafe fn fita_do_passe(p: usize, x: u32, y: u32, tipo: u32, saida: *mut u8, rec
 /// do clube em [[0xb67a44]] (linhas de 0x49 bytes); senao -75 em +0xa e +0xc (entre 1 e 10000).
 /// Os outros: por sorteio(+0x5a) < sorteio(15, 8 ou 6 pela idade +0x18 e +0x5b) o 0x40000, e a
 /// noticia com o tipo.
-unsafe fn eventos_do_pos_jogo_com(partida: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn eventos_do_pos_jogo_com(partida: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let marcas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_CONTRACT_GET_FLAGS);
     let protegido: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_MEDIA_HAS_STORY_FOR_PLAYER);
@@ -6837,7 +6839,7 @@ unsafe fn eventos_do_pos_jogo_com(partida: usize, chamar: &mut dyn FnMut(usize, 
 }
 
 /// { 0x70dfd0 } (ret 0x10, match_pl.cpp): ver `jogada_com`.
-unsafe extern "thiscall" fn jogada(j: usize, forca: u32, altura: u32, estilo: u32, forte: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn jogada(j: usize, forca: u32, altura: u32, estilo: u32, forte: u32) -> u8 {
     jogada_com(j, forca as i16, f32::from_bits(altura), estilo as i8, forte as u8, &mut |rotina, this, a| despachar_dividida(rotina, this, a))
 }
 
@@ -6851,7 +6853,7 @@ unsafe extern "thiscall" fn jogada(j: usize, forca: u32, altura: u32, estilo: u3
 /// 5,56 x +0x20 - 255,76 quando +0x20 (ou +0x21 se aquele for -1) fica entre 46 e 64; sem os dois,
 /// no banco o teto e o folego. Fora de jogo (+0x1c zero) e com pessoa, se a lesao (0x62c590,
 /// ate 6500) passar do teto, o teto vira 6500. Por fim o teto soma +0x59 e para em 10000.
-unsafe extern "thiscall" fn recuperar_folego(j: usize, teto: u8) {
+pub(crate) unsafe extern "thiscall" fn recuperar_folego(j: usize, teto: u8) {
     let lesao: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(FN_INJURY_GET_FATIGUE);
     let limite: unsafe extern "thiscall" fn(usize, usize, u32) -> i16 = core::mem::transmute(FN_INJURY_GET_CONDITION);
     let papel: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
@@ -6919,7 +6921,7 @@ unsafe extern "thiscall" fn recuperar_folego(j: usize, teto: u8) {
 /// (dentro) com sorteio(10), senao pode sair; o goleiro so e o chutador da linha de fundo se
 /// sorteio(200) der zero. Rebatendo, cansa (+0x35 - 250) e, com sorteio(30 x +0x5a da ficha +0x69 +
 /// 20) zero, perde sorteio(3) em +0x17 (0x7172d0) e o desempenho e refeito (0x6eecb0).
-unsafe fn defender_com(j: usize, forca: i16, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u32 {
+pub(crate) unsafe fn defender_com(j: usize, forca: i16, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u32 {
     let ajustar_17: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_ADJUST_MORALE);
     let desempenho: unsafe extern "thiscall" fn(usize, u8) = core::mem::transmute(FN_MATCH_PLAYER_CALC_RATINGS);
     let m = *((j + 0x19e) as *const usize);
@@ -6959,7 +6961,7 @@ unsafe fn defender_com(j: usize, forca: i16, chamar: &mut dyn FnMut(usize, usize
 }
 
 /// { 0x70d430 } (ret 4, match_pl.cpp): ver `defender_com`. A bola desviada vai com `cansa` 1.
-unsafe extern "thiscall" fn defender(j: usize, forca: i16) -> u32 {
+pub(crate) unsafe extern "thiscall" fn defender(j: usize, forca: i16) -> u32 {
     defender_com(j, forca, &mut |rotina, this, a| match rotina {
         0x6cd770 => {
             let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, i8, u8, u8, usize) = core::mem::transmute(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL);
@@ -6986,7 +6988,7 @@ unsafe extern "thiscall" fn defender(j: usize, forca: i16) -> u32 {
 /// gol, o alvo vai a meio caminho da ponta (coluna 1 ou 7, pela direcao) e da area (linha mais perto
 /// a ate 5, ou 3 no modo 4). Executa (0x6fad40, tipo, alvo); impedimento como 0x6fa250; bola fora da
 /// grade sem +0x8eb2: 0x6cd490.
-unsafe fn lancar_com(j: usize, modo: i8, refinar: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn lancar_com(j: usize, modo: i8, refinar: u8, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let impedido_de: unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_CHECK_OFFSIDE);
     let dist_ponto: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(FN_MATCH_PLAYER_DISTANCE_TO_CELL);
     let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SET_PENDING_FOUL);
@@ -7174,7 +7176,7 @@ unsafe fn lancar_com(j: usize, modo: i8, refinar: u8, chamar: &mut dyn FnMut(usi
 }
 
 /// { 0x6fa490 } (ret 8, match_pl.cpp): ver `lancar_com`.
-unsafe extern "thiscall" fn lancar(j: usize, modo: i8, refinar: u8) {
+pub(crate) unsafe extern "thiscall" fn lancar(j: usize, modo: i8, refinar: u8) {
     lancar_com(j, modo, refinar, &mut |rotina, this, a| match rotina {
         0x6fad40 => {
             let f: unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u8, usize, u32, u32) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_PASS);
@@ -7205,7 +7207,7 @@ unsafe extern "thiscall" fn lancar(j: usize, modo: i8, refinar: u8) {
 /// Senao registra o lance (0x6bb9a0, 8). Sem +0x8eb2 e com a saida do passe: o receptor e o batedor
 /// (+0xf57a), o lado conta a posse (+0x8d46: o dele sobe, o outro cai 10) e o receptor decide ja
 /// (0x7103e0) se sorteio(80) nao passar de +0x105 x +0x107.
-unsafe fn passar_com(j: usize, tipo: u8, receptor: usize, a4: u32, a5: u32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn passar_com(j: usize, tipo: u8, receptor: usize, a4: u32, a5: u32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let impedido_de: unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_CHECK_OFFSIDE);
     let dist_ponto: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(FN_MATCH_PLAYER_DISTANCE_TO_CELL);
     let registrar: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SET_PENDING_FOUL);
@@ -7266,7 +7268,7 @@ unsafe fn passar_com(j: usize, tipo: u8, receptor: usize, a4: u32, a5: u32, cham
 }
 
 /// { 0x6fa250 } (ret 0x14, match_pl.cpp): ver `passar_com`. O 3o argumento e a saida da 0x6fad40.
-unsafe extern "thiscall" fn passar(j: usize, tipo: u8, receptor: usize, mut a3: u32, a4: u32, a5: u32) {
+pub(crate) unsafe extern "thiscall" fn passar(j: usize, tipo: u8, receptor: usize, mut a3: u32, a4: u32, a5: u32) {
     passar_com(j, tipo, receptor, a4, a5, &mut |rotina, this, a| match rotina {
         0x6fad40 => {
             let f: unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32, usize, u32, u32) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_PASS);
@@ -7298,7 +7300,7 @@ unsafe extern "thiscall" fn passar(j: usize, tipo: u8, receptor: usize, mut a3: 
 /// podem ser escolhidos (0x6bce20) se mexem (0x714d40) se +0x107 x +0x104 nao passar de sorteio(900) +
 /// 50. O dono da bola conduz (0x7109f0) e pode decidir de novo (sorteio(+0x7d) contra sorteio(5));
 /// os outros vao a 0x713fc0 (bola com o lado dele, na faixa, em jogo) ou a 0x714d40.
-unsafe fn decidir_jogador_com(j: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn decidir_jogador_com(j: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let pode: unsafe extern "thiscall" fn(usize, usize, i8, i8) -> u32 = core::mem::transmute(FN_CM3_MATCH_ENGINE_CAN_MARKER_CHALLENGE);
     let faixa: unsafe extern "stdcall" fn(u8, i8, i8) -> u8 = core::mem::transmute(FN_IS_IN_OWN_PENALTY_AREA);
     let dist_ponto: unsafe extern "thiscall" fn(usize, i8, i8) -> f32 = core::mem::transmute(FN_MATCH_PLAYER_DISTANCE_TO_CELL);
@@ -7423,7 +7425,7 @@ unsafe fn decidir_jogador_com(j: usize, chamar: &mut dyn FnMut(usize, usize, [u3
 /// Original: `decide_player` (0x7103e0, match_pl.cpp, thiscall).
 ///
 /// [pt] { 0x7103e0 } (match_pl.cpp): ver `decidir_jogador_com`.
-unsafe extern "thiscall" fn decidir_jogador(j: usize) {
+pub(crate) unsafe extern "thiscall" fn decidir_jogador(j: usize) {
     decidir_jogador_com(j, &mut |rotina, this, _a| match rotina {
         0x713fc0 => {
             let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_MATCH_PLAYER_CHOOSE_ATTACKING_OFF_BALL_MOVE);
@@ -7463,7 +7465,7 @@ unsafe extern "thiscall" fn decidir_jogador(j: usize) {
 /// fora (0x78), avancam uma linha (0x6f5b80, 0x6b), sob o lado da bola vao a ela (0x100; nela,
 /// pegam e narram 0x1f46 ou 0x2113, ou 0x104), na area adversaria com um marcador sozinho ficam
 /// (0x104); fora isso a casa (0x68, ou 0x100 pressionando; ja nela 0x76).
-unsafe fn mover_sem_bola_com(j: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn mover_sem_bola_com(j: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let m = *((j + 0x19e) as *const usize);
     let dir = byte(j, 0x27);
     let bloco = (m as isize + 0x91e2 + 6371 * dir as isize) as usize;
@@ -7786,7 +7788,7 @@ unsafe fn mover_sem_bola_com(j: usize, chamar: &mut dyn FnMut(usize, usize, [u32
 /// Original: `move_off_ball` (0x714d40, match_pl.cpp, ~4.7 KB (outside the attacking band; inside it, with the ball in play, it is 0x713fc0), thiscall).
 ///
 /// [pt] { 0x714d40 } (match_pl.cpp): ver `mover_sem_bola_com`.
-unsafe extern "thiscall" fn mover_sem_bola(j: usize) {
+pub(crate) unsafe extern "thiscall" fn mover_sem_bola(j: usize) {
     mover_sem_bola_com(j, &mut |rotina, this, a| match rotina {
         0x6f46b0 => {
             let f: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL);
@@ -7831,7 +7833,7 @@ unsafe extern "thiscall" fn mover_sem_bola(j: usize) {
 /// Senao avanca uma linha (0x6f5b80, 0x6b) pela diferenca do jogador (0x6c4130); ja na casa: fica (0x76)
 /// ou procura casa livre (0x6a/0x69); fora dela, pelo sorteio de 0xe1 + c contra 0x109, procura casa
 /// livre ou vai (0x68). A original mostra uma caixa de erro se o marcado estiver fora (-5/-1).
-unsafe fn decidir_sem_bola_com(j: usize, chamar: &mut dyn FnMut(usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn decidir_sem_bola_com(j: usize, chamar: &mut dyn FnMut(usize, [u32; 5]) -> u32) {
     let m = *((j + 0x19e) as *const usize);
     let dir = byte(j, 0x27);
     let bloco = (m as isize + 0x91e2 + 6371 * dir as isize) as usize;
@@ -8043,7 +8045,7 @@ unsafe fn decidir_sem_bola_com(j: usize, chamar: &mut dyn FnMut(usize, [u32; 5])
 }
 
 /// { 0x713fc0 } (ret 4, match_pl.cpp): ver `decidir_sem_bola_com`. O argumento nao e lido.
-unsafe extern "thiscall" fn decidir_sem_bola(j: usize, _a: u32) {
+pub(crate) unsafe extern "thiscall" fn decidir_sem_bola(j: usize, _a: u32) {
     decidir_sem_bola_com(j, &mut |rotina, a| match rotina {
         0x6f46b0 => {
             let f: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL);
@@ -8067,7 +8069,7 @@ unsafe extern "thiscall" fn decidir_sem_bola(j: usize, _a: u32) {
 /// lado dele (+0x27 = 1 sobe ate 11, senao desce ate 0). Com `direto`, vai (0x6f46b0) para a coluna
 /// atual na linha da bola (+0x8eb0 + 1 ou +0x8eaf - 1 do motor); senao reposiciona (0x6f09f0) na
 /// nova linha com -1, 0, 0. Devolve o `eax` da chamada (os chamadores ignoram).
-unsafe fn avancar_linha_com(this: usize, direto: u8, chamar: &mut dyn FnMut(usize, [u32; 5]) -> u32) -> u32 {
+pub(crate) unsafe fn avancar_linha_com(this: usize, direto: u8, chamar: &mut dyn FnMut(usize, [u32; 5]) -> u32) -> u32 {
     let x = byte(this, 0x102);
     let mut y = byte(this, 0x103);
     let motor = *((this + 0x19e) as *const usize);
@@ -8087,7 +8089,7 @@ unsafe fn avancar_linha_com(this: usize, direto: u8, chamar: &mut dyn FnMut(usiz
 }
 
 /// { 0x6f5b80 } (ret 4, match_pl.cpp): ver `avancar_linha_com`.
-unsafe extern "thiscall" fn avancar_linha(this: usize, direto: u8) -> u32 {
+pub(crate) unsafe extern "thiscall" fn avancar_linha(this: usize, direto: u8) -> u32 {
     avancar_linha_com(this, direto, &mut |rotina, a| {
         if rotina == 0x6f46b0 {
             let f: unsafe extern "thiscall" fn(usize, i8, i8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL);
@@ -8110,7 +8112,7 @@ unsafe extern "thiscall" fn avancar_linha(this: usize, direto: u8) -> u32 {
 /// cai 1 se passar de (+0x100 / 2 + 10 + ficha +0x25) / 4; +0x4d soma +0x59 (que zera se era 1 e
 /// senao cai a metade); acima de 50 em +1, tira (+1 - 50)^1,25 / 4 (no maximo 25); +0x4d fica em
 /// 1..10000.
-unsafe extern "thiscall" fn evoluir_momento(this: usize) {
+pub(crate) unsafe extern "thiscall" fn evoluir_momento(this: usize) {
     let momento: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_PLAYER_ROLL_CURRENT_RATINGS);
     momento(this);
     if sortear(11) != 0 {
@@ -8148,7 +8150,7 @@ unsafe extern "thiscall" fn evoluir_momento(this: usize) {
 /// clube do tecnico (+0x39) esta nela (0x48db80); a de 0x9cf6f8 so na rodada 150 (0x4b0870 de +0x30);
 /// com nacao (+0x5d): clube do tecnico da mesma nacao e um dos dois clubes fora da divisao dela;
 /// senao pelas selecoes dos tecnicos ou pela competicao continental do grupo (0xae23a4, 0xc6 bytes).
-unsafe extern "C" fn partida_de_interesse(p: usize) -> u32 {
+pub(crate) unsafe extern "C" fn partida_de_interesse(p: usize) -> u32 {
     let g = |a: usize| *(a as *const i32);
     let comp = || *((p + 0x14) as *const usize);
     let id = *(comp() as *const i32);
@@ -8250,7 +8252,7 @@ unsafe extern "C" fn partida_de_interesse(p: usize) -> u32 {
 /// bytes de +0x10 a +0x1a da ficha; com `marcar`, conta no byte +0xaf do lado do motor), os bytes
 /// +0x10e..+0x117 e as palavras derivadas de +0x11a a +0x196 (63 delas ajustadas por +0x37 numa
 /// tabela de casos) e sorteia os atributos do momento (0x6f44a0).
-unsafe extern "thiscall" fn desempenho_na_partida(this: usize, marcar: u8) {
+pub(crate) unsafe extern "thiscall" fn desempenho_na_partida(this: usize, marcar: u8) {
     let q = |a: usize| f64_em(a);
     let f = |a: usize| f32_em(a) as f64;
     let rd = |o: usize| *((this + o) as *const f32) as f64;
@@ -8497,7 +8499,7 @@ unsafe extern "thiscall" fn desempenho_na_partida(this: usize, marcar: u8) {
 ///
 /// [pt] { 0x6ec010 } (match_pl.cpp, ~11 KB): atributos do jogador na partida (campos f32 de +0x7d a
 /// +0xf5 e a palavra +0x3b), pela nota do designado, idade, contrato, moral, cansaco e taticas.
-unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
+pub(crate) unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
     let q = |a: usize| f64_em(a);
     let f = |a: usize| f32_em(a) as f64;
     let rd = |o: usize| *((this + o) as *const f32) as f64;
@@ -9224,7 +9226,7 @@ unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
 /// (0x4cf5f0) x (1/75) + 0,5, ajustado pelo tipo (+0x4f >> 4); x = byte +0x22 da pessoa x 75 na
 /// selecao, senao os dias de vida (0x54cdb0); y = 1 + (x - 1000) x 0,000125 acima de 1000.
 /// Resultado: byte +0x2f da ficha x y - (n^2 + 5) x 0,1 + forma + c + 0,5, truncado.
-unsafe extern "thiscall" fn nota_do_jogador(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn nota_do_jogador(this: usize) -> i32 {
     let clube = || {
         let t = *((*((this + 0x19e) as *const usize) + 0x4792) as *const usize);
         *((t + if byte(this, 0x27) == 0 { 0x1c } else { 0x20 }) as *const usize)
@@ -9274,7 +9276,7 @@ unsafe extern "thiscall" fn nota_do_jogador(this: usize) -> i32 {
 /// limite 8 se `alvo` for o guardado em 0x1a6, senao 1. Codigo 1: sorteio(110 - condicao) < limite;
 /// 2 a 5: sorteio(K / v) < limite, K = 400 mil, 2, 4 e 8 milhoes (mais condicao, mais chance).
 /// Outros codigos: 0.
-unsafe extern "thiscall" fn teste_de_condicao(this: usize, codigo: i8, alvo: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn teste_de_condicao(this: usize, codigo: i8, alvo: usize) -> u8 {
     let limite: i32 = if alvo != 0 && alvo == *((this + 0x1a6) as *const usize) { 8 } else { 1 };
     let c = f32_em(this + 0x1a2) as f64;
     let v = ftol(pow_do_jogo(c, f64_em(0x968950))) as f64;
@@ -9293,7 +9295,7 @@ unsafe extern "thiscall" fn teste_de_condicao(this: usize, codigo: i8, alvo: usi
 
 /// pow da CRT do jogo (0x945ff0, `_CIpow`: base em st1, expoente em st0), para o resultado ser
 /// identico bit a bit ao do original.
-unsafe fn pow_do_jogo(base: f64, expoente: f64) -> f64 {
+pub(crate) unsafe fn pow_do_jogo(base: f64, expoente: f64) -> f64 {
     let mut v = [base, expoente, 0.0];
     core::arch::asm!(
         "fld qword ptr [edi]",
@@ -9309,12 +9311,12 @@ unsafe fn pow_do_jogo(base: f64, expoente: f64) -> f64 {
 }
 
 /// Valor da tabela 12 x 9 (0xa15e44) para as distancias |dy| e |dx| (cada uma truncada a byte).
-unsafe fn tabela_12x9(dy: i32, dx: i32) -> f32 {
+pub(crate) unsafe fn tabela_12x9(dy: i32, dx: i32) -> f32 {
     f32_em((0xa15e44 + 4 * ((dy.abs() as i8 as isize) * 9 + dx.abs() as i8 as isize)) as usize)
 }
 
 /// O jogador pode bater dali (0x6f9f90 para o centro do gol, salvo na pequena area central)?
-unsafe fn pode_bater(j: usize) -> bool {
+pub(crate) unsafe fn pode_bater(j: usize) -> bool {
     let (x, y) = (byte(j, 0x102), byte(j, 0x103));
     let fundo: i8 = if lado(j) == 0 { 0xb } else { 0 };
     if y == fundo && (3..=5).contains(&x) {
@@ -9325,7 +9327,7 @@ unsafe fn pode_bater(j: usize) -> bool {
 }
 
 /// `tabela_a` do jogador por 0x6c38c0 (o motor do proprio jogador; sem motor, None).
-unsafe fn papel_do(j: usize) -> Option<u16> {
+pub(crate) unsafe fn papel_do(j: usize) -> Option<u16> {
     pelo_motor::<u16>(j, 0x6c38c0)
 }
 
@@ -9333,7 +9335,7 @@ unsafe fn papel_do(j: usize) -> Option<u16> {
 /// `tipo` < 0) pela situacao e pelos atributos (palavras 0x146..0x154), calcula o valor (palavras
 /// por tipo em 0x11a + 2 x tipo, condicao fisica, goleiro adversario, angulo, distancia ao gol com
 /// pow 8 e 7) e grava em 0x39 a parte "de qualidade" e em `som` o comentario. Devolve o valor.
-unsafe extern "thiscall" fn valor_do_chute(this: usize, tipo: *mut i8, som: *mut u16) -> u16 {
+pub(crate) unsafe extern "thiscall" fn valor_do_chute(this: usize, tipo: *mut i8, som: *mut u16) -> u16 {
     let j = this;
     let w = |o: usize| *((j + o) as *const i16);
     let q39 = (j + 0x39) as *mut u16;
@@ -9684,7 +9686,7 @@ unsafe extern "thiscall" fn valor_do_chute(this: usize, tipo: *mut i8, som: *mut
 }
 
 /// `tabela_a` do motor do jogador (0 sem motor), pelo endereco do jogo: os bits do papel tatico.
-unsafe fn papel_word(motor: usize, j: usize) -> u16 {
+pub(crate) unsafe fn papel_word(motor: usize, j: usize) -> u16 {
     if motor == 0 {
         return 0;
     }
@@ -9692,7 +9694,7 @@ unsafe fn papel_word(motor: usize, j: usize) -> u16 {
     f(motor, j)
 }
 
-unsafe fn papel_por_endereco(endereco: usize, j: usize) -> u8 {
+pub(crate) unsafe fn papel_por_endereco(endereco: usize, j: usize) -> u8 {
     let f: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(endereco);
     f(j)
 }

@@ -1,24 +1,26 @@
+use super::*;
+
 // ---------- 273a leva: a Copa dos Campeões da CONCACAF: os oito classificados, o dia da copa e as rodadas (con_champ.cpp) ----------
 
 
 
 
 /// O registro da competição `id` no banco ([0xae23d0] + 0x6b × id).
-unsafe fn cqi11_comp(id: usize) -> usize {
+pub(crate) unsafe fn cqi11_comp(id: usize) -> usize {
     read_u32_as_usize(0xae23d0).wrapping_add(id.wrapping_mul(0x6b))
 }
 
 /// As quatro listas da 0x4c11a0, na ordem do banco de clubes ([0xae23b4], 0x245 bytes, [0xae235c] clubes; para no
 /// primeiro que é seleção, 0x53b900): (mexicanos, centro-americanos, caribenhos, da MLS) com as contagens.
-struct Cqi11Listas {
-    mex: [usize; 200],
-    centro: [usize; 200],
-    caribe: [usize; 200],
-    mls: [usize; 12],
-    n: [u32; 4],
+pub(crate) struct Cqi11Listas {
+    pub(crate) mex: [usize; 200],
+    pub(crate) centro: [usize; 200],
+    pub(crate) caribe: [usize; 200],
+    pub(crate) mls: [usize; 12],
+    pub(crate) n: [u32; 4],
 }
 
-unsafe fn cqi11_listas() -> Cqi11Listas {
+pub(crate) unsafe fn cqi11_listas() -> Cqi11Listas {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     // ponytail: as quatro listas começam zeradas na cópia (na original, sobra de pilha que só é lida quando falta clube;
     // o comparador manda esse caso para a original sozinha)
@@ -79,7 +81,7 @@ unsafe fn cqi11_listas() -> Cqi11Listas {
 /// caribenho; 0 e 1: sem o objeto da competição [0x9cf728], os dois primeiros da MLS; com ele, o último campeão da MLS
 /// (0x4afd80(competição [0x9cf590], 0): push 0; push comp; add esp, 8 -> cdecl) e o da [0x9cf728] (a mesma com +4 do
 /// objeto) e, se for o mesmo clube, o 0 passa ao último vice da MLS (lugar 1). Depois +4 e +5 de cada time zerados.
-unsafe extern "thiscall" fn cqi11_concacaf_classificados(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqi11_concacaf_classificados(this: usize) -> u32 {
     let ordenar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 8);
@@ -122,7 +124,7 @@ unsafe extern "thiscall" fn cqi11_concacaf_classificados(this: usize) -> u32 {
 /// Comparador da 0x4c11a0: lado a lado nos oito times (+0xa7, 48 bytes), em +0x3e e no estado do sorteador (a 0x4afbd0
 /// embaralha; a cópia sem contar). Quando falta clube numa lista (menos de 2 mexicanos, 3 centro-americanos, 1
 /// caribenho, ou 2 da MLS sem o objeto [0x9cf728]) a original lê sobra de pilha: só a original.
-unsafe extern "thiscall" fn comparar_cqi11_concacaf_classificados(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqi11_concacaf_classificados(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1688);
     let l = cqi11_listas();
     let outro = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
@@ -150,7 +152,7 @@ unsafe extern "thiscall" fn comparar_cqi11_concacaf_classificados(this: usize) -
 /// Com a tabela de times vazia (o clube do time 0 = 0) e fase ≠ 0: os classificados (0x4c11a0: mov ecx, this ->
 /// thiscall, ret 0; negativo, a caixa da linha 0x1ba e devolve 0) e as posições previstas (virtual +0x5c). Depois a
 /// atualização da copa (0x51f890: push fase; push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução sai.
-unsafe extern "thiscall" fn cqi11_concacaf_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqi11_concacaf_dia(this: usize, hoje: usize, fase: u32) -> u32 {
     if read_u32_as_usize(read_u32_as_usize(this + 0xa7)) == 0 && fase != 0 {
         let classificar: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CONCHAMP_SELECT_QUALIFIED_CLUBS);
         if classificar(this) < 0 {
@@ -169,7 +171,7 @@ unsafe extern "thiscall" fn cqi11_concacaf_dia(this: usize, hoje: usize, fase: u
 // ponytail: a atualização da copa (0x51f890) joga e sorteia: não roda duas vezes. Só a original roda; o plano: com a
 // tabela vazia e fase ≠ 0, a copa sai com 8 times e o time 0 preenchido (a 0x4c11a0 tem o seu comparador); senão +0x3e
 // não muda.
-unsafe extern "thiscall" fn comparar_cqi11_concacaf_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqi11_concacaf_dia(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(1689);
     if read_u32_as_usize(this + 0xa7) == 0 {
         return o(this, hoje, fase);
@@ -188,7 +190,7 @@ unsafe extern "thiscall" fn comparar_cqi11_concacaf_dia(this: usize, hoje: usize
 /// [pt] { 0x4c15f0 } (thiscall, ret 0, con_champ.cpp; a virtual +0x8c): `ConChamp::set_up_rounds()`; devolve 1. O fundo de
 /// prêmios (+0x28) de 2.000.000 e a tabela das rodadas (+0xa3) da virtual +0x3c (push 0; push &+0x3a; push &+0x3c;
 /// push −1; mov ecx, this -> thiscall, ret 0x10).
-unsafe extern "thiscall" fn cqi11_concacaf_rodadas(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqi11_concacaf_rodadas(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x28) as *mut u32, 0x1e8480);
     let tabela: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let t = tabela(this, 0xffff_ffff, this + 0x3c, this + 0x3a, 0);
@@ -198,7 +200,7 @@ unsafe extern "thiscall" fn cqi11_concacaf_rodadas(this: usize) -> u32 {
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere o fundo de
 // prêmios (+0x28 = 2.000.000) e a devolução 1.
-unsafe extern "thiscall" fn comparar_cqi11_concacaf_rodadas(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqi11_concacaf_rodadas(this: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1690)(this);
     PLACAR.registrar(r == 1 && read_u32_as_usize(this + 0x28) == 0x1e8480, || format!("cqi11_concacaf_rodadas({:#x}) devolveu {} prêmios {}", this, r, read_u32_as_usize(this + 0x28)));
     r

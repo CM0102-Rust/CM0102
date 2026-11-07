@@ -1,8 +1,10 @@
+use super::*;
+
 // ---------- vigesima quarta leva: lances de bola parada / arbitragem ----------
 
 /// { 0x6e9470 }: inicia o objeto (motor, pessoa, valor): sem pessoa, 5000; senao o primeiro de
 /// 7750, 7250, 6750, 6250, 5750 cuja palavra 0x1e da pessoa passa de sorteio(350, 300, ...), ou 5250.
-unsafe extern "thiscall" fn iniciar_rigor(this: usize, motor: u32, pessoa: usize) {
+pub(crate) unsafe extern "thiscall" fn iniciar_rigor(this: usize, motor: u32, pessoa: usize) {
     *(this as *mut u32) = motor;
     *((this + 4) as *mut u32) = pessoa as u32;
     let v = (this + 8) as *mut u16;
@@ -26,7 +28,7 @@ unsafe extern "thiscall" fn iniciar_rigor(this: usize, motor: u32, pessoa: usize
 /// [pt] { 0x6bab90 } (match_eng.cpp): o lance registrado continua valendo? 0 sem lance; com o dono da
 /// bola (0xf582) do outro lado que o jogador do lance, a bola passando a linha do lance (0x475c)
 /// encerra o lance (limpa e da 0); nos demais casos, 1.
-unsafe extern "thiscall" fn lance_valendo(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn lance_valendo(this: usize) -> u8 {
     let p = *((this + 0x4761) as *const usize);
     if byte(this, 0x475a) == 0 || p == 0 {
         return 0;
@@ -48,7 +50,7 @@ unsafe extern "thiscall" fn lance_valendo(this: usize) -> u8 {
 /// com papel 1 na area; a pessoa (0x4) pode anular (sorteio(0x28 + 15) == 0, -250 no valor 0x8);
 /// na area, 3 em 4 anula; senao +175 e, pelo codigo (0x25: 1 em 20; outros: 1 em 155 com 0x8ea9 > 1),
 /// grava 4 e sorteio(0x14 do jogador) + 1 nas saidas.
-unsafe extern "thiscall" fn decidir_falta(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn decidir_falta(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
     let motor = *(this as *const usize);
     let valendo: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_FOUL_PENDING);
     if valendo(motor) != 0 {
@@ -83,7 +85,7 @@ unsafe extern "thiscall" fn decidir_falta(this: usize, j: usize, codigo: u16, ti
 
 /// Cartao amarelo: o primeiro grava `x` em 0x25 (0x24 = 1, tipo 2, peso 2,0); o segundo, em 0x26
 /// (0x24 + 1, tipo 3, peso 3,5).
-unsafe fn amarelo(j: usize, tipo: *mut u8, x: i8, peso: *mut f32) {
+pub(crate) unsafe fn amarelo(j: usize, tipo: *mut u8, x: i8, peso: *mut f32) {
     let n = (j + 0x24) as *mut u8;
     if *n != 0 {
         *n = (*n).wrapping_add(1);
@@ -99,7 +101,7 @@ unsafe fn amarelo(j: usize, tipo: *mut u8, x: i8, peso: *mut f32) {
 }
 
 /// Desconto na disposicao pelo cartao: ftol(c x c') ou, com 0x8ed0 / 11 acima de 45, ftol(c'' / (0x8ed0 / 11) x c').
-unsafe fn desconto_do_cartao(motor: usize, j: usize) {
+pub(crate) unsafe fn desconto_do_cartao(motor: usize, j: usize) {
     let q = (*((motor + 0x8ed0) as *const i16) as i32 / 11) as i16;
     let base = if q > 0x2d { f32_em(0x96d64c) as f64 / q as f64 } else { f32_em(0x968e70) as f64 };
     let d = (j + 0x35) as *mut i16;
@@ -107,12 +109,12 @@ unsafe fn desconto_do_cartao(motor: usize, j: usize) {
 }
 
 /// Contador de faltas do lado no motor (0xf5c9 + 54 x lado).
-unsafe fn contar_falta(motor: usize, j: usize) {
+pub(crate) unsafe fn contar_falta(motor: usize, j: usize) {
     let c = (motor as isize + 0xf5c9 + 54 * lado(j) as isize) as *mut u8;
     *c = (*c).wrapping_add(1);
 }
 
-unsafe fn na_area_do_jogador(j: usize) -> bool {
+pub(crate) unsafe fn na_area_do_jogador(j: usize) -> bool {
     let f: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
     f(j, lado(j) as u8) as u8 != 0
 }
@@ -120,7 +122,7 @@ unsafe fn na_area_do_jogador(j: usize) -> bool {
 /// { 0x6e9630 }: punicao da falta (tipo 1): vermelho direto (-1000, tipo 4), amarelo pela
 /// severidade contra sorteios, ou so -25; com `flag` (ou papel 1), sorteio(3000): acima de 475
 /// vermelho (-750, tipo 6, 9 no registro), acima de 50 (ou na area) amarelo com -375.
-unsafe extern "thiscall" fn punir_falta(this: usize, j: usize, tipo: *mut u8, x: i8, severidade: i8, flag: u8, peso: *mut f32) {
+pub(crate) unsafe extern "thiscall" fn punir_falta(this: usize, j: usize, tipo: *mut u8, x: i8, severidade: i8, flag: u8, peso: *mut f32) {
     *peso = 1.5;
     let motor = *(this as *const usize);
     contar_falta(motor, j);
@@ -162,7 +164,7 @@ unsafe extern "thiscall" fn punir_falta(this: usize, j: usize, tipo: *mut u8, x:
 /// 1,25; com `flag`, sorteio(3000) acima de 375 e vermelho (tipo 5), senao amarelo com desconto
 /// (acima de 50, ou na area); sem `flag`, vermelho pela severidade (marca 0x16 com `expulsar`),
 /// amarelo contra sorteio(6) ou -25. Conta a falta no jogador e 0x15 no outro.
-unsafe extern "thiscall" fn punir_lance(this: usize, j: usize, outro: usize, tipo: *mut u8, x: i8, severidade: i8, flag: u8, peso: *mut f32, expulsar: u8) {
+pub(crate) unsafe extern "thiscall" fn punir_lance(this: usize, j: usize, outro: usize, tipo: *mut u8, x: i8, severidade: i8, flag: u8, peso: *mut f32, expulsar: u8) {
     *peso = 1.5;
     if byte(j, 0x19) < 0 {
         *peso = 10.0;
@@ -217,7 +219,7 @@ unsafe extern "thiscall" fn punir_lance(this: usize, j: usize, outro: usize, tip
 /// lado 0, 0x8eb0 para o 1); com `passador`, ele na area do outro lado e jogadores alem da linha.
 /// A pessoa do arbitro pode deixar passar (sorteio(0x29 + 25) == 0, -75). Por jogador, conforme a
 /// distancia a linha (2, 1, 0 casas ou alem), sorteios contra o byte 0x107.
-unsafe extern "thiscall" fn procurar_impedimento(this: usize, lado_b: i8, linha: i8, y: i8, passador: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn procurar_impedimento(this: usize, lado_b: i8, linha: i8, y: i8, passador: usize) -> usize {
     let motor = *(this as *const usize);
     let valendo: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_FOUL_PENDING);
     if valendo(motor) != 0 {
@@ -282,7 +284,7 @@ unsafe extern "thiscall" fn procurar_impedimento(this: usize, lado_b: i8, linha:
 }
 
 /// { 0x6cfd70 } (match_eng.cpp): `procurar_impedimento` do arbitro do motor (this + 0xf5b2).
-unsafe extern "thiscall" fn motor_procurar_impedimento(this: usize, lado_b: i8, linha: i8, y: i8, passador: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn motor_procurar_impedimento(this: usize, lado_b: i8, linha: i8, y: i8, passador: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize = core::mem::transmute(FN_MATCH_OFFICIAL_FIND_OFFSIDE_PLAYER);
     f(this + 0xf5b2, lado_b, linha, y, passador)
 }
@@ -291,7 +293,7 @@ unsafe extern "thiscall" fn motor_procurar_impedimento(this: usize, lado_b: i8, 
 
 /// Grava o codigo do cartao no registro do jogador: 0x25 com (0x23 + 0x24) == 1 (ou <= 1, `ate_um`),
 /// 0x26 com outro total diferente de zero.
-unsafe fn registrar_cartao(j: usize, codigo: u8, ate_um: bool) {
+pub(crate) unsafe fn registrar_cartao(j: usize, codigo: u8, ate_um: bool) {
     let t = byte(j, 0x23) as i32 + byte(j, 0x24) as i32;
     if t == 1 || (ate_um && t <= 1) {
         *((j + 0x25) as *mut u8) = codigo;
@@ -305,7 +307,7 @@ unsafe fn registrar_cartao(j: usize, codigo: u8, ate_um: bool) {
 /// 0x24; vermelho (-1000, tipo 4) contra sorteio(15) + 7; senao amarelo (desconto, tipo 2/3) contra
 /// sorteio(3 x 0x24 + 5) + 2, ou so tipo 9. O codigo do registro fica no lugar do argumento `j`
 /// (sem gravidade conhecida, o byte baixo do ponteiro).
-unsafe extern "thiscall" fn cartao_pela_gravidade(this: usize, j: usize, tipo: *mut u8, gravidade: u8, flag: u8) {
+pub(crate) unsafe extern "thiscall" fn cartao_pela_gravidade(this: usize, j: usize, tipo: *mut u8, gravidade: u8, flag: u8) {
     let mut nota = sortear(byte(j, 0x14) as u8 as i32) as u8;
     let pessoa = *((this + 4) as *const usize);
     if pessoa != 0 {
@@ -358,7 +360,7 @@ unsafe extern "thiscall" fn cartao_pela_gravidade(this: usize, j: usize, tipo: *
 }
 
 /// { 0x6cfd40 } (match_eng.cpp): `cartao_pela_gravidade` do arbitro do motor (this + 0xf5b2).
-unsafe extern "thiscall" fn motor_cartao_pela_gravidade(this: usize, j: usize, tipo: *mut u8, gravidade: u8, flag: u8) {
+pub(crate) unsafe extern "thiscall" fn motor_cartao_pela_gravidade(this: usize, j: usize, tipo: *mut u8, gravidade: u8, flag: u8) {
     let f: unsafe extern "thiscall" fn(usize, usize, *mut u8, u8, u8) = core::mem::transmute(FN_MATCH_OFFICIAL_DECIDE_CARD);
     f(this + 0xf5b2, j, tipo, gravidade, flag)
 }
@@ -374,7 +376,7 @@ unsafe extern "thiscall" fn motor_cartao_pela_gravidade(this: usize, j: usize, t
 /// jogador (+0x14) e cai pelo minuto (0x8ed0 / 11). Com 0x6cb650, aplica a gravidade em `outro`
 /// (0x716450, 0x7164b0) e guarda `j` em +0x1a6 dele.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn decisao_da_falta(
+pub(crate) unsafe extern "thiscall" fn decisao_da_falta(
     this: usize,
     j: usize,
     outro: usize,

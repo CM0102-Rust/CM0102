@@ -1,9 +1,11 @@
+use super::*;
+
 // ---------- 280a leva: a J1: a fase seguinte, a final entre os campeões dos dois turnos e a virada da temporada (jap_j1.cpp) ----------
 
 
 
 /// O campeão de um turno: o clube da primeira linha da tabela (+0xb1) da fase `k` ([+0xc][k], um League_Stage).
-unsafe fn cqq9_campeao_do_turno(this: usize, k: usize) -> usize {
+pub(crate) unsafe fn cqq9_campeao_do_turno(this: usize, k: usize) -> usize {
     read_usize(read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1))
 }
 
@@ -14,7 +16,7 @@ unsafe fn cqq9_campeao_do_turno(this: usize, k: usize) -> usize {
 /// [pt] { 0x6639c0 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::advance_stage()`, a fase seguinte da J1 (dois turnos, as fases 0
 /// e 1, e a final, a fase 2). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa da linha 0x223 e nada mais. Senão
 /// +0x30 sobe um e, ao chegar a 2, monta a final (0x663a50, call direto com o ecx da liga).
-unsafe extern "thiscall" fn cqq9_fase_seguinte_da_j1(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqq9_fase_seguinte_da_j1(this: usize) {
     let fase = read_usize(this + 0x30) as i32;
     if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x9eabc8, 0x223);
@@ -41,7 +43,7 @@ unsafe extern "thiscall" fn cqq9_fase_seguinte_da_j1(this: usize) {
 /// (free 0x9452ca, nessa ordem); Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4) chamada com a fase da terceira
 /// vaga mesmo nula (como na original); sem fase, a caixa da linha 0x25c; com ela, +0x30 = 2. O quadro SEH da original
 /// só cobre o construtor (sem destrutor).
-unsafe extern "thiscall" fn cqq9_final_da_j1(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqq9_final_da_j1(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let lista = alocar(8);
@@ -93,7 +95,7 @@ unsafe extern "thiscall" fn cqq9_final_da_j1(this: usize) {
 /// thiscall(this, 0), 0x1d2); depois a virada da J2 (a virtual +8 da competição de id [0x9cf768]), as posições previstas
 /// (virtual +0x5c), as expectativas das diretorias (League::set_club_season_expectations 0x68aa80) e a renovação dos
 /// árbitros (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), cujo eax ela devolve.
-unsafe extern "thiscall" fn cqq9_virada_da_j1(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqq9_virada_da_j1(this: usize) -> u32 {
     let virtual_ = |c: usize, desl: usize| -> u32 {
         let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(c) + desl));
         f(c)
@@ -171,7 +173,7 @@ unsafe extern "thiscall" fn cqq9_virada_da_j1(this: usize) -> u32 {
 
 /// O comparador da fase seguinte: só a original (ponytail: ao chegar a 2 monta a final, que aloca e sorteia), com o
 /// plano: na última fase, +0x30 igual; senão +0x30 + 1 (a final grava 2, o mesmo valor).
-unsafe extern "thiscall" fn comparar_cqq9_fase_seguinte_da_j1(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqq9_fase_seguinte_da_j1(this: usize) {
     let antes = read_usize(this + 0x30) as i32;
     let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     orig::<unsafe extern "thiscall" fn(usize)>(1954)(this);
@@ -182,7 +184,7 @@ unsafe extern "thiscall" fn comparar_cqq9_fase_seguinte_da_j1(this: usize) {
 /// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito antes:
 /// os campeões dos turnos. Depois, a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os dois campeões
 /// na lista dela (+0xa7, 6 bytes; como conjunto), e +0x30 = 2.
-unsafe extern "thiscall" fn comparar_cqq9_final_da_j1(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqq9_final_da_j1(this: usize) {
     let (a, b) = (cqq9_campeao_do_turno(this, 0), cqq9_campeao_do_turno(this, 1));
     orig::<unsafe extern "thiscall" fn(usize)>(1955)(this);
     let fase = read_usize(read_usize(this + 0xc) + 8);
@@ -196,7 +198,7 @@ unsafe extern "thiscall" fn comparar_cqq9_final_da_j1(this: usize) {
 
 /// O comparador da virada: só a original (ponytail: libera e aloca tabelas e fases, sorteia jogos e árbitros e vira a
 /// J2; não pode rodar duas vezes), conferindo o que só ela garante: o ano sobe um e +0x2c = 3.
-unsafe extern "thiscall" fn comparar_cqq9_virada_da_j1(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqq9_virada_da_j1(this: usize) -> u32 {
     let antes = read_i16(this + 0x40);
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1956)(this);
     let depois = read_i16(this + 0x40);
@@ -209,14 +211,14 @@ unsafe extern "thiscall" fn comparar_cqq9_virada_da_j1(this: usize) -> u32 {
 
 
 /// O clube é da divisão do global `g`: a divisão do clube (+0x57) não é nula e o id do registro (+0) é o do global.
-unsafe fn cqm9_da_divisao(clube: usize, g: usize) -> bool {
+pub(crate) unsafe fn cqm9_da_divisao(clube: usize, g: usize) -> bool {
     let comp = read_usize(clube + 0x57);
     comp != 0 && read_usize(comp) == read_usize(g)
 }
 
 /// +0x3e = `n` e a tabela (malloc 0x944e46 de n × 0x3b, em +0xb1; sem memória: a caixa do fonte `arquivo` na linha
 /// `linha`). Devolve a tabela (0 sem memória).
-unsafe fn cqm9_alocar(this: usize, n: i16, arquivo: usize, linha: u32) -> usize {
+pub(crate) unsafe fn cqm9_alocar(this: usize, n: i16, arquivo: usize, linha: u32) -> usize {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
@@ -230,7 +232,7 @@ unsafe fn cqm9_alocar(this: usize, n: i16, arquivo: usize, linha: u32) -> usize 
 /// League::init_table_row (0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10). `girar` é 0 (o original: a linha
 /// k); existe só para as mutações de cada liga. ponytail: a original empurra a linha no eax com bits de cima de sobra;
 /// a 0x687430 só lê o byte.
-unsafe fn cqm9_linha(this: usize, k: u8, n: i16, girar: u8, clube: usize) {
+pub(crate) unsafe fn cqm9_linha(this: usize, k: u8, n: i16, girar: u8, clube: usize) {
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     iniciar(this, (k as u32 + girar as u32) % n as u32, clube, 0, 0);
 }
@@ -238,7 +240,7 @@ unsafe fn cqm9_linha(this: usize, k: u8, n: i16, girar: u8, clube: usize) {
 /// O laço do Japão: percorre todos os clubes de [0xae23b4] (0x245 bytes, [0xae235c] deles); cada clube da divisão do
 /// global `g`, na ordem do banco, entra na linha seguinte enquanto houver linha; os que sobram perdem a divisão
 /// (+0x57 = 0). Devolve 1 se a tabela encheu.
-unsafe fn cqm9_japao(this: usize, g: usize, girar: u8, ramo: &'static str) -> u32 {
+pub(crate) unsafe fn cqm9_japao(this: usize, g: usize, girar: u8, ramo: &'static str) -> u32 {
     let mut k: u8 = 0;
     let mut i: i16 = 0;
     let mut clube = read_usize(0xae23b4);
@@ -270,7 +272,7 @@ unsafe fn cqm9_japao(this: usize, g: usize, girar: u8, ramo: &'static str) -> u3
 /// 0x186a0; mov ecx, edi -> thiscall, ret 4) em +0x28, +0xe1 = 1, a TV 3.000.000 a cada clube (League::pay_tv_rights
 /// 0x683010: push 0; push 0x2dc6c0; mov ecx, edi -> thiscall, ret 8; manda a notícia da TV) e 1. Fonte 0x9eabc8, linha
 /// 0x148.
-unsafe extern "thiscall" fn cqm9_tabela_da_j1(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqm9_tabela_da_j1(this: usize) -> u32 {
     if cqm9_alocar(this, 0x10, 0x9eabc8, 0x148) == 0 {
         return 0;
     }
@@ -292,7 +294,7 @@ unsafe extern "thiscall" fn cqm9_tabela_da_j1(this: usize) -> u32 {
 ///
 /// [pt] { 0x665030 } (thiscall, ret 0, jap_j2.cpp): `JapJ2::create_table()`: a J2 tem 12 clubes (+0x57 = [0x9cf768]; os que
 /// sobram perdem a divisão), sem fundo de prêmios nem TV. Fonte 0x9eaedc, linha 0x13a. Devolve 1 se encheu.
-unsafe extern "thiscall" fn cqm9_tabela_da_j2(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqm9_tabela_da_j2(this: usize) -> u32 {
     if cqm9_alocar(this, 0xc, 0x9eaedc, 0x13a) == 0 {
         return 0;
     }
@@ -306,7 +308,7 @@ unsafe extern "thiscall" fn cqm9_tabela_da_j2(this: usize) -> u32 {
 /// [pt] { 0x411b70 } (thiscall, ret 0, aus_nsl.cpp): `AusNsl::create_table()`: a NSL tem 13 clubes (+0x57 = [0x9cf89c]), na
 /// ordem do banco, até encher (o contador num int, comparado no word); sem encher: a caixa da linha 0x252 e 0; cheia: 1,
 /// sem fundo de prêmios nem TV. Fonte 0x987c20 (a caixa de memória na linha 0x241).
-unsafe extern "thiscall" fn cqm9_tabela_da_nsl(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqm9_tabela_da_nsl(this: usize) -> u32 {
     if cqm9_alocar(this, 0xd, 0x987c20, 0x241) == 0 {
         return 0;
     }
@@ -336,7 +338,7 @@ unsafe extern "thiscall" fn cqm9_tabela_da_nsl(this: usize) -> u32 {
 /// clubes da divisão na ordem do banco (todos). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu (senão 0), as
 /// linhas da tabela (+0 o clube, 0x3b bytes) com os primeiros `n` do plano, na ordem; no Japão (`limpar`), os que
 /// sobram do plano com a divisão zerada; na J1 cheia, +0xe1 = 1 e +0x28 = o fundo da cota.
-unsafe fn cqm9_comparar(nome: &str, this: usize, n: i16, g: usize, limpar: bool, cota: i32, original: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn cqm9_comparar(nome: &str, this: usize, n: i16, g: usize, limpar: bool, cota: i32, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(0xae235c) as i32 {
@@ -367,17 +369,17 @@ unsafe fn cqm9_comparar(nome: &str, this: usize, n: i16, g: usize, limpar: bool,
     r
 }
 
-unsafe extern "thiscall" fn comparar_cqm9_tabela_da_j1(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqm9_tabela_da_j1(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1840);
     cqm9_comparar("cqm9_tabela_da_j1", this, 0x10, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, true, 0x186a0, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqm9_tabela_da_j2(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqm9_tabela_da_j2(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1841);
     cqm9_comparar("cqm9_tabela_da_j2", this, 0xc, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, true, 0, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqm9_tabela_da_nsl(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqm9_tabela_da_nsl(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1842);
     cqm9_comparar("cqm9_tabela_da_nsl", this, 0xd, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE, false, 0, || o(this))
 }

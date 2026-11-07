@@ -1,8 +1,10 @@
+use super::*;
+
 // ---------- septuagesima quinta leva: nevoa de guerra (o que o clube humano sabe dos jogadores) ----------
 
 /// { 0x544410 }: x = (palavra +4 da pessoa + 2 x `nivel`) x 0,05 + 10; (x + 0,1 x^2) x (1/3) + 0,5,
 /// limitado a 1..20 (NaN vira 1) e truncado.
-unsafe extern "C" fn chance_de_conhecer(pessoa: usize, nivel: i8) -> i32 {
+pub(crate) unsafe extern "C" fn chance_de_conhecer(pessoa: usize, nivel: i8) -> i32 {
     let x = (*((pessoa + 4) as *const i16) as f64 + (nivel as f64 + nivel as f64)) * 0.05 + 10.0;
     let y = (x * x * 0.1 + x) * f64_em(0x968a80) + 0.5;
     ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y })
@@ -12,7 +14,7 @@ unsafe extern "C" fn chance_de_conhecer(pessoa: usize, nivel: i8) -> i32 {
 /// pelo id): grava a data de hoje (0xae2c90) em +1; sem observador (`fonte` +0x69) o nivel (+0)
 /// vai a 3. Com ele e nivel abaixo de 3: c = 0x544410(observador, byte +0x17), sorteio(c) (byte);
 /// c < 15 e sorteio 0: nivel + 1; senao nivel 0 e sorteio < 6: 2; senao 3.
-unsafe extern "thiscall" fn conhecer_pessoa(this: usize, pessoa: usize, fonte: usize) {
+pub(crate) unsafe extern "thiscall" fn conhecer_pessoa(this: usize, pessoa: usize, fonte: usize) {
     if pessoa == 0 || *(pessoa as *const i32) >= *(0xae2364 as *const i32) {
         return;
     }
@@ -45,7 +47,7 @@ unsafe extern "thiscall" fn conhecer_pessoa(this: usize, pessoa: usize, fonte: u
 /// +0x1c) controlado por humano (0x600a50) com tecnico e quadro de conhecimento (0xae2a60, pelo
 /// id do tecnico): as 20 vagas da escalacao (`dados` + lado x 0x625 + 0x190, 0x49 bytes cada) com
 /// pessoa e +4 validos (reservas, da 11a em diante, so com +0x32 != 0xff) ficam conhecidas (0x5b09d0).
-unsafe extern "stdcall" fn nevoa_apos_partida(partida: usize, dados: usize) {
+pub(crate) unsafe extern "stdcall" fn nevoa_apos_partida(partida: usize, dados: usize) {
     let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let conhecer: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_FOG_OF_WAR_MAP_RAISE_KNOWLEDGE);
     let n = || *(0xae2364 as *const i32);

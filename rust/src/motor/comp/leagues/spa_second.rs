@@ -1,15 +1,17 @@
+use super::*;
+
 // ---------- 280a leva: o calendário da Segunda espanhola: as 42 rodadas, uma tabela para o ano par e outra para o ímpar (spa_second.cpp) ----------
 
 
 /// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
-type Cqq4Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
+pub(crate) type Cqq4Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
 /// As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-unsafe fn cqq4_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqq4Rodada]) {
+pub(crate) unsafe fn cqq4_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqq4Rodada]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let faixa: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
@@ -24,7 +26,7 @@ unsafe fn cqq4_rodadas(t: usize, ano: u32, primeira: i32, tabela: &[Cqq4Rodada])
 /// Os bytes que a tabela de `n` rodadas tem gravados e que o jogo lê: de cada rodada, a data (+0..+4) e +0x3d..+0x40,
 /// e as faixas até a que termina a lista (a de dia −1 na tabela `guia`, a da original); o resto da memória alocada não
 /// é escrito.
-unsafe fn cqq4_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
+pub(crate) unsafe fn cqq4_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
     let mut v = Vec::new();
     for r in 0..n {
         let e = t + r * 0x41;
@@ -45,16 +47,16 @@ unsafe fn cqq4_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
 /// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
 /// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
 /// caso padrão (o oitavo); depois as do fim.
-struct Cqq4Natal {
-    comeco: &'static [Cqq4Rodada],
-    referencia: usize,
-    ajuste: i32,
-    casos: [&'static [Cqq4Rodada]; 8],
-    fim: &'static [Cqq4Rodada],
-    linha: u32,
+pub(crate) struct Cqq4Natal {
+    pub(crate) comeco: &'static [Cqq4Rodada],
+    pub(crate) referencia: usize,
+    pub(crate) ajuste: i32,
+    pub(crate) casos: [&'static [Cqq4Rodada]; 8],
+    pub(crate) fim: &'static [Cqq4Rodada],
+    pub(crate) linha: u32,
 }
 
-unsafe fn cqq4_natal(t: usize, ano: u32, n: &Cqq4Natal, arquivo: usize) {
+pub(crate) unsafe fn cqq4_natal(t: usize, ano: u32, n: &Cqq4Natal, arquivo: usize) {
     let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     cqq4_rodadas(t, ano, 0, n.comeco);
     let mut d = [0u16; 4];
@@ -75,7 +77,7 @@ unsafe fn cqq4_natal(t: usize, ano: u32, n: &Cqq4Natal, arquivo: usize) {
 /// Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
 /// `cqq4_gravados`; nas outras as de copa, `cql10_gravados`); a tabela da cópia é solta (0x9452ca, cdecl).
-unsafe fn cqq4_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+pub(crate) unsafe fn cqq4_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
                        original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
@@ -102,7 +104,7 @@ unsafe fn cqq4_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i1
 }
 
 /// a Segunda espanhola: as rodadas antes do Natal (ano par)
-const CQQ4_SEGUNDA_PAR_COMECO: [Cqq4Rodada; 17] = [
+pub(crate) const CQQ4_SEGUNDA_PAR_COMECO: [Cqq4Rodada; 17] = [
     (30, 7, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 0: 30/ago
     (6, 8, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 1: 6/set
     (13, 8, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 2: 13/set
@@ -123,47 +125,47 @@ const CQQ4_SEGUNDA_PAR_COMECO: [Cqq4Rodada; 17] = [
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 17/dez (ano par)
-const CQQ4_SEGUNDA_PAR_NATAL_0: [Cqq4Rodada; 1] = [
+pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_0: [Cqq4Rodada; 1] = [
     (26, 11, 0, -1, 2, &[(-1, -1, -1)]), // 17: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 18/dez (ano par)
-const CQQ4_SEGUNDA_PAR_NATAL_1: [Cqq4Rodada; 1] = [
+pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_1: [Cqq4Rodada; 1] = [
     (26, 11, 0, -1, 2, &[(-1, -1, -1)]), // 17: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 19/dez (ano par)
-const CQQ4_SEGUNDA_PAR_NATAL_2: [Cqq4Rodada; 1] = [
+pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_2: [Cqq4Rodada; 1] = [
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 17: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 20/dez (ano par)
-const CQQ4_SEGUNDA_PAR_NATAL_3: [Cqq4Rodada; 1] = [
+pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_3: [Cqq4Rodada; 1] = [
     (27, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 27/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 21/dez (ano par)
-const CQQ4_SEGUNDA_PAR_NATAL_4: [Cqq4Rodada; 1] = [
+pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_4: [Cqq4Rodada; 1] = [
     (28, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 28/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 22/dez (ano par)
-const CQQ4_SEGUNDA_PAR_NATAL_5: [Cqq4Rodada; 1] = [
+pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_5: [Cqq4Rodada; 1] = [
     (29, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 29/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 23/dez (ano par)
-const CQQ4_SEGUNDA_PAR_NATAL_6: [Cqq4Rodada; 1] = [
+pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_6: [Cqq4Rodada; 1] = [
     (30, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 30/dez
 ];
 
 /// as rodadas do Natal no caso padrão (a rodada 16 fora de 17 a 23/dez: a caixa) (ano par)
-const CQQ4_SEGUNDA_PAR_NATAL_PADRAO: [Cqq4Rodada; 1] = [
+pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_PADRAO: [Cqq4Rodada; 1] = [
     (27, 11, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 27/dez
 ];
 
 /// a Segunda espanhola: as rodadas depois do Natal (ano par)
-const CQQ4_SEGUNDA_PAR_FIM: [Cqq4Rodada; 24] = [
+pub(crate) const CQQ4_SEGUNDA_PAR_FIM: [Cqq4Rodada; 24] = [
     (3, 0, 1, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 18: 3/jan (+1 ano)
     (10, 0, 1, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 19: 10/jan (+1 ano)
     (17, 0, 1, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 20: 17/jan (+1 ano)
@@ -191,7 +193,7 @@ const CQQ4_SEGUNDA_PAR_FIM: [Cqq4Rodada; 24] = [
 ];
 
 /// a Segunda espanhola (impar)
-const CQQ4_SEGUNDA_IMPAR_TODAS: [Cqq4Rodada; 42] = [
+pub(crate) const CQQ4_SEGUNDA_IMPAR_TODAS: [Cqq4Rodada; 42] = [
     (22, 7, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 0: 22/ago
     (29, 7, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 1: 29/ago
     (5, 8, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 2: 5/set
@@ -236,7 +238,7 @@ const CQQ4_SEGUNDA_IMPAR_TODAS: [Cqq4Rodada; 42] = [
     (4, 5, 1, 6, 1, &[(-1, -1, -1)]), // 41: 4/jun (+1 ano)
 ];
 
-const CQQ4_SEGUNDA_PAR_NATAL: Cqq4Natal = Cqq4Natal { comeco: &CQQ4_SEGUNDA_PAR_COMECO, referencia: 16, ajuste: 17, casos: [&CQQ4_SEGUNDA_PAR_NATAL_0, &CQQ4_SEGUNDA_PAR_NATAL_1, &CQQ4_SEGUNDA_PAR_NATAL_2, &CQQ4_SEGUNDA_PAR_NATAL_3, &CQQ4_SEGUNDA_PAR_NATAL_4, &CQQ4_SEGUNDA_PAR_NATAL_5, &CQQ4_SEGUNDA_PAR_NATAL_6, &CQQ4_SEGUNDA_PAR_NATAL_PADRAO], fim: &CQQ4_SEGUNDA_PAR_FIM, linha: 0x146 };
+pub(crate) const CQQ4_SEGUNDA_PAR_NATAL: Cqq4Natal = Cqq4Natal { comeco: &CQQ4_SEGUNDA_PAR_COMECO, referencia: 16, ajuste: 17, casos: [&CQQ4_SEGUNDA_PAR_NATAL_0, &CQQ4_SEGUNDA_PAR_NATAL_1, &CQQ4_SEGUNDA_PAR_NATAL_2, &CQQ4_SEGUNDA_PAR_NATAL_3, &CQQ4_SEGUNDA_PAR_NATAL_4, &CQQ4_SEGUNDA_PAR_NATAL_5, &CQQ4_SEGUNDA_PAR_NATAL_6, &CQQ4_SEGUNDA_PAR_NATAL_PADRAO], fim: &CQQ4_SEGUNDA_PAR_FIM, linha: 0x146 };
 
 /// the Segunda schedule: 42 rounds (22 clubs), nearly all on Sunday (day 6); in odd years (2001/02) a fixed table from
 /// 22 August to 4 June, with one TV slot; in even years, from 30 August to 6 June, with three TV slots and one
@@ -246,7 +248,7 @@ const CQQ4_SEGUNDA_PAR_NATAL: Cqq4Natal = Cqq4Natal { comeco: &CQQ4_SEGUNDA_PAR_
 /// [pt] { 0x853c90 } (thiscall, ret 0x10, spa_second.cpp, 7.827 bytes, método +0x3c): `SpaSecond::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 42 rodadas, a tabela pela paridade do ano +0x40 (no ano par com a rodada
 /// do Natal; no ímpar sem); as outras devolvem 0. Fonte 0xa829bc.
-unsafe extern "thiscall" fn calendario_da_segunda_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn calendario_da_segunda_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match fase as u8 {
         0xff => {
@@ -273,7 +275,7 @@ unsafe extern "thiscall" fn calendario_da_segunda_espanhola(this: usize, fase: u
     }
 }
 
-unsafe extern "thiscall" fn comparar_calendario_da_segunda_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_segunda_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1944);
     cqq4_comparar("calendario_da_segunda_espanhola", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_segunda_espanhola(this, fase, r, e, l))
 }

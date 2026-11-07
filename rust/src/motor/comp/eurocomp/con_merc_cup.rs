@@ -1,21 +1,23 @@
+use super::*;
+
 // ---------- 283a leva: os mata-matas da Libertadores e da Merconorte: os classificados dos grupos e a fase seguinte (conmebol_liber.cpp, con_merc_cup.cpp) ----------
 
 
 
 
 /// Os classificados por grupo (+0xbe, byte com sinal).
-unsafe fn cqs10_vagas(this: usize) -> i32 {
+pub(crate) unsafe fn cqs10_vagas(this: usize) -> i32 {
     *((this + 0xbe) as *const i8) as i32
 }
 
 /// O clube da linha i da tabela do grupo 1 (a da própria copa: +0xb1, linhas de 0x3b bytes).
-unsafe fn cqs10_do_grupo_um(this: usize, i: usize) -> usize {
+pub(crate) unsafe fn cqs10_do_grupo_um(this: usize, i: usize) -> usize {
     read_u32_as_usize(read_u32_as_usize(this + 0xb1) + i * 0x3b) // cqs10: a linha do grupo 1
 }
 
 /// O clube da posição j da fase f ([+0xc][f], um League_Stage): a linha pela 0x6826d0 (League::get_table_row: push j;
 /// mov ecx, fase -> thiscall, ret 4) e o clube no +0 dela.
-unsafe fn cqs10_da_fase(this: usize, f: usize, j: i32) -> usize {
+pub(crate) unsafe fn cqs10_da_fase(this: usize, f: usize, j: i32) -> usize {
     let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
     let fase = read_u32_as_usize(read_u32_as_usize(this + 0xc) + f * 4);
     read_u32_as_usize(linha(fase, j)) // cqs10: a posição j da fase
@@ -31,7 +33,7 @@ unsafe fn cqs10_da_fase(this: usize, f: usize, j: i32) -> usize {
 /// as rodadas, o id e o ano com lixo nos 16 bits altos, que o construtor não lê) em [+0xc][`mata`]; a lista e a tabela
 /// liberadas (0x9452ca). Sem fase: a caixa `linha_sem_fase`. Com ela: o sorteio da rodada 0 (0x51c410 Cup::draw_round:
 /// push 0; mov ecx, fase -> thiscall, ret 4). O quadro SEH da original só cobre o construtor (sem destrutor).
-unsafe fn cqs10_mata_mata(this: usize, times: u32, fases: usize, mata: u32, arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, ramo: &'static str) {
+pub(crate) unsafe fn cqs10_mata_mata(this: usize, times: u32, fases: usize, mata: u32, arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, ramo: &'static str) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -82,7 +84,7 @@ unsafe fn cqs10_mata_mata(this: usize, times: u32, fases: usize, mata: u32, arqu
 /// sorteada): os classificados lidos antes (o grupo 1 nas linhas, as fases pelas linhas da tabela +0xb1 delas, como a
 /// 0x6826d0); depois a fase em [+0xc][`mata`] com +0x3e = `times`, o +4 da copa e os clubes da lista dela (+0xa7, 6
 /// bytes) iguais aos do plano como conjunto (o sorteio pode reordenar).
-unsafe fn cqs10_comparar_mata_mata(nome: &str, this: usize, times: usize, fases: usize, mata: usize, original: impl FnOnce()) {
+pub(crate) unsafe fn cqs10_comparar_mata_mata(nome: &str, this: usize, times: usize, fases: usize, mata: usize, original: impl FnOnce()) {
     let q = cqs10_vagas(this).max(0) as usize;
     let mut plano: Vec<usize> = (0..q).map(|i| read_u32_as_usize(read_u32_as_usize(this + 0xb1) + i * 0x3b)).collect();
     for f in 0..fases {
@@ -114,11 +116,11 @@ unsafe fn cqs10_comparar_mata_mata(nome: &str, this: usize, times: usize, fases:
 /// [pt] { 0x4c3d10 } (thiscall, ret 0, conmebol_liber.cpp): `ConmebolLiber::create_knockout_stage()`, o mata-mata da
 /// Libertadores: os 16 (os 2 primeiros do grupo 1 e das 7 fases de grupo) na fase 7; caixas nas linhas 0x24c (sem
 /// lista) e 0x26a (sem fase).
-unsafe extern "thiscall" fn cqs10_libertadores_mata_mata(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqs10_libertadores_mata_mata(this: usize) {
     cqs10_mata_mata(this, 0x10, 7, 7, 0x9a7de4, 0x24c, 0x26a, "cqs_10 classificados da libertadores");
 }
 
-unsafe extern "thiscall" fn comparar_cqs10_libertadores_mata_mata(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs10_libertadores_mata_mata(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2037);
     cqs10_comparar_mata_mata("cqs10_libertadores_mata_mata", this, 0x10, 7, 7, || o(this))
 }
@@ -130,11 +132,11 @@ unsafe extern "thiscall" fn comparar_cqs10_libertadores_mata_mata(this: usize) {
 /// [pt] { 0x4c2330 } (thiscall, ret 0, con_merc_cup.cpp): `ConMercCup::create_semi_final_stage()`, as semifinais da
 /// Merconorte: os 4 (o primeiro do grupo 1 e das 3 fases de grupo) na fase 3; caixas nas linhas 0x21d (sem lista) e
 /// 0x23b (sem fase).
-unsafe extern "thiscall" fn cqs10_merconorte_semifinais(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqs10_merconorte_semifinais(this: usize) {
     cqs10_mata_mata(this, 4, 3, 3, 0x9a7d6c, 0x21d, 0x23b, "cqs_10 classificados da merconorte");
 }
 
-unsafe extern "thiscall" fn comparar_cqs10_merconorte_semifinais(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs10_merconorte_semifinais(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2038);
     cqs10_comparar_mata_mata("cqs10_merconorte_semifinais", this, 4, 3, 3, || o(this))
 }
@@ -146,7 +148,7 @@ unsafe extern "thiscall" fn comparar_cqs10_merconorte_semifinais(this: usize) {
 /// [pt] { 0x4c20b0 } (thiscall, ret 0, con_merc_cup.cpp; a virtual +0x28): `ConMercCup::advance_stage()`, a fase seguinte da
 /// Merconorte: na última fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x1c7; senão +0x30 sobe e, chegando a 3
 /// (depois dos grupos), as semifinais (0x4c2330: mov ecx, this -> thiscall, ret 0).
-unsafe extern "thiscall" fn cqs10_merconorte_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqs10_merconorte_fase_seguinte(this: usize) {
     let f = read_u32_as_usize(this + 0x30) as i32;
     if f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x9a7d6c, 0x1c7);
@@ -162,7 +164,7 @@ unsafe extern "thiscall" fn cqs10_merconorte_fase_seguinte(this: usize) {
 
 // ponytail: as semifinais (0x4c2330) alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um
 // (fora da última fase, que dá a caixa e não muda nada).
-unsafe extern "thiscall" fn comparar_cqs10_merconorte_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs10_merconorte_fase_seguinte(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2039);
     let f = read_u32_as_usize(this + 0x30) as i32;
     let ultima = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
@@ -176,9 +178,9 @@ unsafe extern "thiscall" fn comparar_cqs10_merconorte_fase_seguinte(this: usize)
 
 
 /// Os clubes de uma nação para a Merconorte: até 30, na ordem da tabela de clubes.
-struct Cqs11Nacao {
-    clubes: [usize; 30],
-    n: u8,
+pub(crate) struct Cqs11Nacao {
+    pub(crate) clubes: [usize; 30],
+    pub(crate) n: u8,
 }
 
 impl Cqs11Nacao {
@@ -210,7 +212,7 @@ impl Cqs11Nacao {
 /// 3 × 16 trocas sorteadas). Devolve 1.
 /// A original guarda as listas na pilha sem zerá-las: com menos clubes que as vagas, ela lê sobra; a cópia lê zero
 /// [inferência: nesta carreira as quatro nações e a MLS têm clubes que bastam; o comparador confere a lista].
-unsafe fn cqs11_convidados(this: usize) -> u32 {
+pub(crate) unsafe fn cqs11_convidados(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let ordenar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
@@ -301,14 +303,14 @@ unsafe fn cqs11_convidados(this: usize) -> u32 {
 /// lista ordenada pela reputação, com a faixa de cima embaralhada: 3 vezes as vagas) e 2 da liga americana (com a
 /// competição dela: o campeão do último registro da MLS e o da outra competição dela, e o vice da MLS se forem o mesmo;
 /// sem ela, os 2 melhores clubes da MLS); a lista final é embaralhada (3 × 16 trocas) antes dos grupos
-unsafe extern "thiscall" fn cqs11_merconorte_convidados(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqs11_merconorte_convidados(this: usize) -> u32 {
     cqs11_convidados(this)
 }
 
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 16 vagas e liberada. Os sorteios das listas
 /// das nações ficam na pilha de cada uma: só a lista final e o sorteador contam.
-unsafe extern "thiscall" fn comparar_cqs11_merconorte_convidados(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs11_merconorte_convidados(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2040);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -341,7 +343,7 @@ unsafe extern "thiscall" fn comparar_cqs11_merconorte_convidados(this: usize) ->
 /// A fase seguinte de um torneio com grupos e mata-mata (`advance_stage`, a virtual +0x28): na última fase (+0x30 ≥
 /// +0x2c − 1, com sinal), a caixa da linha e volta; senão +0x30 sobe e, chegando a `mata`, o mata-mata (call direto com
 /// o ecx da copa -> thiscall, ret 0).
-unsafe fn cqs11_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata: i32, rotina: usize, ramo: &'static str) {
+pub(crate) unsafe fn cqs11_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata: i32, rotina: usize, ramo: &'static str) {
     let f = read_u32_as_usize(this + 0x30) as i32;
     if f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(arquivo, linha);
@@ -357,7 +359,7 @@ unsafe fn cqs11_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata: i32
 
 // ponytail: o mata-mata aloca e sorteia: não roda duas vezes. Só a original; o plano: +0x30 sobe um (fora da última
 // fase, que dá a caixa e não muda nada).
-unsafe fn cqs11_comparar_fase_seguinte(nome: &str, this: usize, original: impl FnOnce()) {
+pub(crate) unsafe fn cqs11_comparar_fase_seguinte(nome: &str, this: usize, original: impl FnOnce()) {
     let f = read_u32_as_usize(this + 0x30) as i32;
     let ultima = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     original();
@@ -371,11 +373,11 @@ unsafe fn cqs11_comparar_fase_seguinte(nome: &str, this: usize, original: impl F
 ///
 /// [pt] { 0x4c5140 } (thiscall, ret 0, conmebol_merc.cpp; a virtual +0x28): `ConmebolMerc::advance_stage()`, a fase seguinte
 /// da Mercosul: a caixa da linha 0x1d9 na última; chegando a 4 (depois dos 4 grupos-fase), as quartas (0x4c53d0).
-unsafe extern "thiscall" fn cqs11_mercosul_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqs11_mercosul_fase_seguinte(this: usize) {
     cqs11_fase_seguinte(this, 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
 }
 
-unsafe extern "thiscall" fn comparar_cqs11_mercosul_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs11_mercosul_fase_seguinte(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2041);
     cqs11_comparar_fase_seguinte("cqs11_mercosul_fase_seguinte", this, || o(this))
 }
@@ -386,11 +388,11 @@ unsafe extern "thiscall" fn comparar_cqs11_mercosul_fase_seguinte(this: usize) {
 ///
 /// [pt] { 0x5e1620 } (thiscall, ret 0, goldcup.cpp; a virtual +0x28): `GoldCup::advance_stage()`, a fase seguinte da Copa
 /// América: a caixa da linha 0x29d na última; chegando a 2 (depois dos 2 grupos-fase), o mata-mata (0x5e18a0).
-unsafe extern "thiscall" fn cqs11_copa_america_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqs11_copa_america_fase_seguinte(this: usize) {
     cqs11_fase_seguinte(this, 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
 }
 
-unsafe extern "thiscall" fn comparar_cqs11_copa_america_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs11_copa_america_fase_seguinte(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2042);
     cqs11_comparar_fase_seguinte("cqs11_copa_america_fase_seguinte", this, || o(this))
 }
@@ -401,7 +403,7 @@ unsafe extern "thiscall" fn comparar_cqs11_copa_america_fase_seguinte(this: usiz
 
 
 /// O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
-unsafe fn cqr12_sorteado(this: usize, k: usize) -> usize {
+pub(crate) unsafe fn cqr12_sorteado(this: usize, k: usize) -> usize {
     read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4) // cqr12: o sorteado k
 }
 
@@ -422,7 +424,7 @@ unsafe fn cqr12_sorteado(this: usize, k: usize) -> usize {
 /// -> thiscall, ret 4), as posições previstas (a virtual +0x5c, thiscall, ret 0), a lista +0xee liberada (0x9452ca:
 /// push; add esp, 4 -> cdecl) e zerada e +0x45 = 1. Um erro dá a caixa da linha e volta 0 sem o dia de liga. Depois o dia de liga (0x6847c0: push completo; push
 /// hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela repassa.
-unsafe extern "thiscall" fn cqr12_merconorte_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqr12_merconorte_dia(this: usize, hoje: usize, completo: u32) -> u32 {
     let clubes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CONMERCCUP_SELECT_INVITED_CLUBS);
     let primeiro: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_CONMERCCUP_CREATE_FIRST_GROUP_TABLE);
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
@@ -467,7 +469,7 @@ unsafe extern "thiscall" fn cqr12_merconorte_dia(this: usize, hoje: usize, compl
 // ponytail: os clubes (embaralhados), as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 3 fases
 // criadas e a fase atual (+0x30) a última delas.
-unsafe extern "thiscall" fn comparar_cqr12_merconorte_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqr12_merconorte_dia(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(2012);
     let sorteia = read_u32_as_usize(this + 0x45) == 0
         && completo != 0
@@ -496,7 +498,7 @@ unsafe extern "thiscall" fn comparar_cqr12_merconorte_dia(this: usize, hoje: usi
 /// devolve 0), cada linha i com o sorteado i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push clube; push
 /// i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0)
 /// e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
-unsafe extern "thiscall" fn cqr12_merconorte_primeiro_grupo(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqr12_merconorte_primeiro_grupo(this: usize) -> u32 {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
@@ -520,7 +522,7 @@ unsafe extern "thiscall" fn cqr12_merconorte_primeiro_grupo(this: usize) -> u32 
 
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
-unsafe extern "thiscall" fn comparar_cqr12_merconorte_primeiro_grupo(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqr12_merconorte_primeiro_grupo(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2013);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 {
@@ -553,7 +555,7 @@ unsafe extern "thiscall" fn comparar_cqr12_merconorte_primeiro_grupo(this: usize
 /// g, o id (word), +0x51, 2, 0, +0xd9 (word), −1, 0, 2; a original empurra os words e bytes com lixo nos bytes altos,
 /// que o construtor não lê: a cópia passa os valores limpos) em [+0xc][g]; o vetor e a tabela das rodadas liberados
 /// (0x9452ca). Sem fase: a caixa da linha 0x1ff e 0. Com ela: a notícia do grupo (0x684230 na fase), +0x30 = g e 1.
-unsafe extern "thiscall" fn cqr12_merconorte_grupo(this: usize, g: i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqr12_merconorte_grupo(this: usize, g: i32) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -623,7 +625,7 @@ unsafe extern "thiscall" fn cqr12_merconorte_grupo(this: usize, g: i32) -> u32 {
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
-unsafe extern "thiscall" fn comparar_cqr12_merconorte_grupo(this: usize, g: i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqr12_merconorte_grupo(this: usize, g: i32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(2014);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 || !(0..3).contains(&g) {

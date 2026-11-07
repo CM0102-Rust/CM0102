@@ -1,19 +1,21 @@
+use super::*;
+
 // ---------- 278a leva: os construtores da segunda e da terceira divisões francesas e da Primera e da Segunda espanholas (as regras, a tabela, os jogos, as estatísticas, as posições previstas e a divisão de baixo espanhola na criação) (fra_second.cpp, fra_third.cpp, spa_second.cpp, spa_first.cpp) ----------
 
 
 
 /// O que muda de uma divisão para outra no construtor.
-struct Cqm5Divisao {
-    vtabela: usize,
+pub(crate) struct Cqm5Divisao {
+    pub(crate) vtabela: usize,
     /// a regra de disciplina (+0x50): 0xc a francesa, 0x1a a espanhola
-    disciplina: u8,
-    regras: usize,
-    tabela: usize,
-    arquivo: usize,
+    pub(crate) disciplina: u8,
+    pub(crate) regras: usize,
+    pub(crate) tabela: usize,
+    pub(crate) arquivo: usize,
     /// as caixas: regras, tabela, jogos, ordem, estatísticas
-    linhas: [u32; 5],
+    pub(crate) linhas: [u32; 5],
     /// a Primera cria no fim a divisão de baixo espanhola (+0xee)
-    baixo: bool,
+    pub(crate) baixo: bool,
 }
 
 /// O corpo dos quatro construtores (thiscall(this, ano, registro), ret 8, quadro SEH só para os operator new): a base
@@ -27,7 +29,7 @@ struct Cqm5Divisao {
 /// ([+4]+0x5d) não tem o bit 4 de +0x11c [inferência: a divisão de baixo jogável], a divisão de baixo espanhola
 /// (operator new de 0xee; SpaLower::SpaLower 0x851020: push ano; mov ecx, novo -> thiscall, ret 4) vai para +0xee
 /// (0 sem memória); com o bit, +0xee = 0. Devolve this.
-unsafe fn cqm5_construir(this: usize, ano: u32, registro: usize, p: &Cqm5Divisao) -> usize {
+pub(crate) unsafe fn cqm5_construir(this: usize, ano: u32, registro: usize, p: &Cqm5Divisao) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.regras);
@@ -91,7 +93,7 @@ unsafe fn cqm5_construir(this: usize, ano: u32, registro: usize, p: &Cqm5Divisao
     this
 }
 
-const CQM5_FRANCA_2: Cqm5Divisao = Cqm5Divisao {
+pub(crate) const CQM5_FRANCA_2: Cqm5Divisao = Cqm5Divisao {
     vtabela: 0x96ac2c,
     disciplina: 0xc, // cqm5: a regra de disciplina francesa
     regras: 0x5bf0a0,
@@ -100,7 +102,7 @@ const CQM5_FRANCA_2: Cqm5Divisao = Cqm5Divisao {
     linhas: [0x43, 0x4a, 0x51, 0x5a, 0x61],
     baixo: false,
 };
-const CQM5_FRANCA_3: Cqm5Divisao = Cqm5Divisao {
+pub(crate) const CQM5_FRANCA_3: Cqm5Divisao = Cqm5Divisao {
     vtabela: 0x96ad80,
     disciplina: 0xc,
     regras: 0x5c0700,
@@ -109,7 +111,7 @@ const CQM5_FRANCA_3: Cqm5Divisao = Cqm5Divisao {
     linhas: [0x42, 0x49, 0x50, 0x59, 0x60],
     baixo: false,
 };
-const CQM5_SEGUNDA: Cqm5Divisao = Cqm5Divisao {
+pub(crate) const CQM5_SEGUNDA: Cqm5Divisao = Cqm5Divisao {
     vtabela: 0x96fbd0,
     disciplina: 0x1a, // cqm5: a regra de disciplina espanhola
     regras: 0x855cc0,
@@ -118,7 +120,7 @@ const CQM5_SEGUNDA: Cqm5Divisao = Cqm5Divisao {
     linhas: [0x46, 0x4d, 0x54, 0x5b, 0x62],
     baixo: false,
 };
-const CQM5_PRIMERA: Cqm5Divisao = Cqm5Divisao {
+pub(crate) const CQM5_PRIMERA: Cqm5Divisao = Cqm5Divisao {
     vtabela: 0x96fa68,
     disciplina: 0x1a,
     regras: 0x84fdf0,
@@ -134,7 +136,7 @@ const CQM5_PRIMERA: Cqm5Divisao = Cqm5Divisao {
 ///
 /// [pt] { 0x5be330 } (thiscall, ret 8, fra_second.cpp): `FraSecond::FraSecond(ano, registro)`: a segunda divisão francesa
 /// (a Division 2), disciplina 0xc, só a liga.
-unsafe extern "thiscall" fn construir_franca_2(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construir_franca_2(this: usize, ano: u32, registro: usize) -> usize {
     cqm5_construir(this, ano, registro, &CQM5_FRANCA_2)
 }
 
@@ -143,7 +145,7 @@ unsafe extern "thiscall" fn construir_franca_2(this: usize, ano: u32, registro: 
 ///
 /// [pt] { 0x5bfb40 } (thiscall, ret 8, fra_third.cpp): `FraThird::FraThird(ano, registro)`: a terceira divisão francesa (o
 /// National), disciplina 0xc, só a liga.
-unsafe extern "thiscall" fn construir_franca_3(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construir_franca_3(this: usize, ano: u32, registro: usize) -> usize {
     cqm5_construir(this, ano, registro, &CQM5_FRANCA_3)
 }
 
@@ -152,7 +154,7 @@ unsafe extern "thiscall" fn construir_franca_3(this: usize, ano: u32, registro: 
 ///
 /// [pt] { 0x8539a0 } (thiscall, ret 8, spa_second.cpp): `SpaSecond::SpaSecond(ano, registro)`: a Segunda espanhola,
 /// disciplina 0x1a, só a liga.
-unsafe extern "thiscall" fn construir_segunda(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construir_segunda(this: usize, ano: u32, registro: usize) -> usize {
     cqm5_construir(this, ano, registro, &CQM5_SEGUNDA)
 }
 
@@ -162,14 +164,14 @@ unsafe extern "thiscall" fn construir_segunda(this: usize, ano: u32, registro: u
 ///
 /// [pt] { 0x84e130 } (thiscall, ret 8, spa_first.cpp, 606 bytes): `SpaFirst::SpaFirst(ano, registro)`: a Primera,
 /// disciplina 0x1a, só a liga, e a divisão de baixo espanhola em +0xee.
-unsafe extern "thiscall" fn construir_primera(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construir_primera(this: usize, ano: u32, registro: usize) -> usize {
     cqm5_construir(this, ano, registro, &CQM5_PRIMERA)
 }
 
 /// O comparador dos quatro: alocam: só a original, conferindo a devolução, a vtable, o ano, o registro e a disciplina;
 /// na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c = 0 e +0xc = 0; na Primera, a divisão de baixo em +0xee
 /// conforme o bit 4 da nação.
-unsafe fn cqm5_comparar(nome: &str, this: usize, ano: u32, registro: usize, p: &Cqm5Divisao, original: impl FnOnce() -> usize) -> usize {
+pub(crate) unsafe fn cqm5_comparar(nome: &str, this: usize, ano: u32, registro: usize, p: &Cqm5Divisao, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && read_u32_as_usize(this + 4) == registro && *((this + 0x50) as *const u8) == p.disciplina;
@@ -185,22 +187,22 @@ unsafe fn cqm5_comparar(nome: &str, this: usize, ano: u32, registro: usize, p: &
     r
 }
 
-unsafe extern "thiscall" fn comparar_construir_franca_2(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construir_franca_2(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1869);
     cqm5_comparar("construir_franca_2", this, ano, registro, &CQM5_FRANCA_2, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construir_franca_3(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construir_franca_3(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1870);
     cqm5_comparar("construir_franca_3", this, ano, registro, &CQM5_FRANCA_3, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construir_segunda(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construir_segunda(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1871);
     cqm5_comparar("construir_segunda", this, ano, registro, &CQM5_SEGUNDA, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construir_primera(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construir_primera(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1872);
     cqm5_comparar("construir_primera", this, ano, registro, &CQM5_PRIMERA, || o(this, ano, registro))
 }

@@ -1,16 +1,18 @@
+use super::*;
+
 // ---------- 280a leva: o construtor da primeira divisão francesa: as duas competições-marcador, os clubes da CFA e da divisão de baixo levados à divisão genérica e as duas ligas de fundo montadas e soltas (fra_first.cpp) ----------
 
 
 
 /// O registro de competição de id [g] (vetor [0xae23d0], 0x6b bytes; a original faz id × 3 × 9 × 4 − id).
-unsafe fn cqq6_registro(g: usize) -> usize {
+pub(crate) unsafe fn cqq6_registro(g: usize) -> usize {
     read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(g).wrapping_mul(0x6b))
 }
 
 /// Uma competição-marcador (operator new 0x944cf1 de 0xa3: push; add esp, 4 -> cdecl; sem memória: 0): Comp::Comp
 /// (0x48c580: mov ecx -> thiscall, ret 0), a vtable `vtabela`, +0x42 = 1, o registro de id [g] em +4 e sem disciplina
 /// (+0x50 = 0xff).
-unsafe fn cqq6_marcador(vtabela: usize, g: usize) -> usize {
+pub(crate) unsafe fn cqq6_marcador(vtabela: usize, g: usize) -> usize {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let comp: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_COMP_COMP);
     let c = novo(0xa3);
@@ -48,7 +50,7 @@ unsafe fn cqq6_marcador(vtabela: usize, g: usize) -> usize {
 /// 0x83) e encerra. Por fim, as duas ligas de fundo: a CFA (operator new de 0xee; FraCfa::FraCfa 0x5b91c0: push ano;
 /// mov ecx -> thiscall, ret 4) e a divisão de baixo (0x5bd600, o mesmo), que deixam os seus jogos no calendário do jogo,
 /// e são destruídas (a virtual 0 com 1: push 1; mov ecx -> thiscall, ret 4). Devolve this.
-unsafe extern "thiscall" fn construir_primeira_francesa(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construir_primeira_francesa(this: usize, ano: u32, registro: usize) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FRAFIRST_SET_UP_RULES);
@@ -140,7 +142,7 @@ unsafe extern "thiscall" fn construir_primeira_francesa(this: usize, ano: u32, r
 /// Sorteia (as ligas de fundo), aloca e mexe nos clubes: só a original, conferindo a devolução, a vtable, o ano, o
 /// registro, a disciplina e os dois marcadores (vtable e registro) e, na liga nova, os campos do começo e as
 /// estatísticas.
-unsafe extern "thiscall" fn comparar_construir_primeira_francesa(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construir_primeira_francesa(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1946);
     let r = o(this, ano, registro);
     let marcador = |m: usize, vt: usize, g: usize| m == 0 || (read_u32_as_usize(m) == vt && read_u32_as_usize(m + 4) == cqq6_registro(g) && *((m + 0x50) as *const u8) == 0xff);
@@ -159,7 +161,7 @@ unsafe extern "thiscall" fn comparar_construir_primeira_francesa(this: usize, an
 
 
 /// Quantos jogos a liga tem: (clubes +0x3e / 2, com sinal, para zero) × rodadas +0xa9.
-unsafe fn cqn6_jogos(liga: usize) -> i32 {
+pub(crate) unsafe fn cqn6_jogos(liga: usize) -> i32 {
     let clubes = core::ptr::read_unaligned((liga + 0x3e) as *const i16) as i32;
     let rodadas = core::ptr::read_unaligned((liga + 0xa9) as *const i16) as i32;
     (clubes / 2).wrapping_mul(rodadas)
@@ -176,7 +178,7 @@ unsafe fn cqn6_jogos(liga: usize) -> i32 {
 /// vetor é destruído (`eh vector destructor iterator` 0x9462bb: push 0x5a53c0; push conta; push 0x10; push vetor ->
 /// stdcall, ret 0x10; operator delete 0x944c94 do bloco: push; add esp, 4 -> cdecl) e +0xea = 0: a liga volta ao
 /// calendário sorteado.
-unsafe fn cqn6_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: usize, linha: u32) {
+pub(crate) unsafe fn cqn6_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: usize, linha: u32) {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let construir: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
     let destruir: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_VECTOR_DESTRUCTOR_ITERATOR);
@@ -224,7 +226,7 @@ unsafe fn cqn6_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: u
 ///
 /// [pt] { 0x64be90 } (thiscall, ret 0, ita_ser_c1a.cpp, 11.650 bytes): `ItaSerC1a::set_up_fixed_fixtures()`: os 306 jogos
 /// da C1/A 2001/02 (34 rodadas de 9). Fonte 0x9ea474, linha 0x3fd.
-unsafe extern "thiscall" fn calendario_fixo_da_c1a(this: usize) {
+pub(crate) unsafe extern "thiscall" fn calendario_fixo_da_c1a(this: usize) {
     cqn6_fixos(this, &CQN6_C1A, 0x9ea474, 0x3fd)
 }
 
@@ -233,12 +235,12 @@ unsafe extern "thiscall" fn calendario_fixo_da_c1a(this: usize) {
 ///
 /// [pt] { 0x650100 } (thiscall, ret 0, ita_ser_c1b.cpp, 11.650 bytes): `ItaSerC1b::set_up_fixed_fixtures()`: os 306 jogos
 /// da C1/B 2001/02. Fonte 0x9ea558, linha 0x404.
-unsafe extern "thiscall" fn calendario_fixo_da_c1b(this: usize) {
+pub(crate) unsafe extern "thiscall" fn calendario_fixo_da_c1b(this: usize) {
     cqn6_fixos(this, &CQN6_C1B, 0x9ea558, 0x404)
 }
 /// O comparador das duas: alocam: só a original, conferindo o que ela garante: ou a lista ficou (+0xea com a conta n e
 /// cada jogo com os dois clubes achados), ou foi derrubada (+0xea = 0).
-unsafe fn cqn6_comparar(nome: &str, this: usize, original: impl FnOnce()) {
+pub(crate) unsafe fn cqn6_comparar(nome: &str, this: usize, original: impl FnOnce()) {
     original();
     let v = read_u32_as_usize(this + 0xea);
     let n = cqn6_jogos(this);
@@ -246,12 +248,12 @@ unsafe fn cqn6_comparar(nome: &str, this: usize, original: impl FnOnce()) {
     PLACAR.registrar(ok, || format!("{}({:#x}): a lista dos jogos fixos (+0xea = {:#x}) fora do esperado", nome, this, v));
 }
 
-unsafe extern "thiscall" fn comparar_calendario_fixo_da_c1a(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_calendario_fixo_da_c1a(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1883);
     cqn6_comparar("calendario_fixo_da_c1a", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_calendario_fixo_da_c1b(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_calendario_fixo_da_c1b(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1884);
     cqn6_comparar("calendario_fixo_da_c1b", this, || o(this))
 }
@@ -261,7 +263,7 @@ unsafe extern "thiscall" fn comparar_calendario_fixo_da_c1b(this: usize) {
 ///
 /// [pt] { 0x5bb540 } (thiscall, ret 8, fra_first.cpp, 8 bytes): `stub_return_one_ret8(a, b)`, o toco das competições que não
 /// jogam partidas no lugar do add_result (o slot +4): ignora os dois e devolve 1.
-unsafe extern "thiscall" fn toco_um_com_dois(_this: usize, _a: u32, _b: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn toco_um_com_dois(_this: usize, _a: u32, _b: u32) -> u32 {
     1 // cqn6: o toco devolve 1
 }
 
@@ -270,19 +272,19 @@ unsafe extern "thiscall" fn toco_um_com_dois(_this: usize, _a: u32, _b: u32) -> 
 ///
 /// [pt] { 0x5bb550 } (thiscall, ret 4, fra_first.cpp, 8 bytes): `stub_return_one_ret4(a)`, o padrão do slot 25 das
 /// competições e do slot 6 do órgão disciplinar: ignora o argumento e devolve 1.
-unsafe extern "thiscall" fn toco_um_com_um(_this: usize, _a: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn toco_um_com_um(_this: usize, _a: u32) -> u32 {
     1
 }
 
 /// Os dois tocos: compara a devolução.
-unsafe extern "thiscall" fn comparar_toco_um_com_dois(this: usize, a: u32, b: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_toco_um_com_dois(this: usize, a: u32, b: u32) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(1885)(this, a, b);
     let n = toco_um_com_dois(this, a, b);
     PLACAR.registrar(r == n, || format!("toco_um_com_dois: original={} rust={}", r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_toco_um_com_um(this: usize, a: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_toco_um_com_um(this: usize, a: u32) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(1886)(this, a);
     let n = toco_um_com_um(this, a);
     PLACAR.registrar(r == n, || format!("toco_um_com_um: original={} rust={}", r, n));
@@ -291,7 +293,7 @@ unsafe extern "thiscall" fn comparar_toco_um_com_um(this: usize, a: u32) -> u32 
 
 /// Os jogos fixos (dia, mês com 0 = janeiro, ano, o 5º argumento (casa, pelo mapa), o 6º (fora)), os nomes no .rdata do
 /// exe; na ordem da original (extraídos da desmontagem e conferidos: os lugares do vetor vão de 16 em 16).
-const CQN6_C1A: [(u8, u8, u16, u32, u32); 306] = [
+pub(crate) const CQN6_C1A: [(u8, u8, u16, u32, u32); 306] = [
     (2, 8, 2001, 0x9ea540, 0x9ea54c), // Albinoleffe × Carrarese
     (2, 8, 2001, 0x9ea530, 0x9ea538), // Alzano × Arezzo
     (2, 8, 2001, 0x9ea520, 0x9ea528), // Cesena × Livorno
@@ -600,7 +602,7 @@ const CQN6_C1A: [(u8, u8, u16, u32, u32); 306] = [
     (5, 4, 2002, 0x9ea54c, 0x9ea4b0), // Carrarese × Varese
 ];
 
-const CQN6_C1B: [(u8, u8, u16, u32, u32); 306] = [
+pub(crate) const CQN6_C1B: [(u8, u8, u16, u32, u32); 306] = [
     (2, 8, 2001, 0x9ea638, 0x9ea640), // Ascoli × Castel di Sangro
     (2, 8, 2001, 0x9ea620, 0x9ea62c), // Avellino × L'Aquila
     (2, 8, 2001, 0x9ea60c, 0x9ea614), // Catania × Benevento
@@ -913,12 +915,12 @@ const CQN6_C1B: [(u8, u8, u16, u32, u32); 306] = [
 
 
 /// No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
-static mut CQJ5_ENSAIO: bool = false;
+pub(crate) static mut CQJ5_ENSAIO: bool = false;
 
 /// Grava as regras na liga (deslocamento, tamanho 1/2/4, valor), na ordem da lista, e monta a tabela de rodadas da
 /// fase principal: a virtual +0x3c (create_schedule: thiscall(liga, −1, &+0xa9, &+0x3a, 0), ret 0x10) com o
 /// resultado em +0xba. Devolve 1.
-unsafe fn cqj5_regras(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
+pub(crate) unsafe fn cqj5_regras(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
     for &(d, t, v) in escritas {
         match t {
             1 => *((this + d) as *mut u8) = v as u8,
@@ -935,7 +937,7 @@ unsafe fn cqj5_regras(this: usize, escritas: &[(usize, u8, u32)]) -> u32 {
 }
 
 /// A temporada 2001 (+0x40, o ano da liga, = 0x7d1): a última com 18 clubes na primeira divisão.
-unsafe fn cqj5_em_2001(this: usize) -> bool {
+pub(crate) unsafe fn cqj5_em_2001(this: usize) -> bool {
     core::ptr::read_unaligned((this + 0x40) as *const u16) == 0x7d1
 }
 
@@ -943,7 +945,7 @@ unsafe fn cqj5_em_2001(this: usize) -> bool {
 /// = 1), os desempates 1, 2 e 3 (+0xc5..+0xc7), nenhum play-off (+0xbf = +0xc0 = 0), os bits de regra +0xd9 = 0x83
 /// (a liga tem campeão, as vagas de cima são de acesso e a ordem das rodadas dividida ao meio) e 3 substituições
 /// (+0x4a).
-fn cqj5_comuns() -> Vec<(usize, u8, u32)> {
+pub(crate) fn cqj5_comuns() -> Vec<(usize, u8, u32)> {
     vec![(0xc3, 1, 1), (0xc4, 1, 2), (0x42, 1, 1), (0xc5, 1, 1), (0xc6, 1, 2), (0xc7, 1, 3), (0xbf, 1, 0), (0xc0, 1, 0), (0xd9, 2, 0x83), (0x4a, 1, 3)]
 }
 
@@ -955,12 +957,12 @@ fn cqj5_comuns() -> Vec<(usize, u8, u32)> {
 /// [pt] { 0x5bc410 } (thiscall, ret 0, fra_first.cpp): `FraFirst::set_up_rules()`. A primeira divisão: as comuns, 2
 /// turnos, 3 pontos, +0xab e +0xdb = 0, ninguém sobe (+0xbe = 0), caem 2 em 2001 e 3 depois (+0xc1), 5 reservas
 /// (+0x49), nenhuma liga acima (+0x1c = −1), +0x52 = 2 [sem nome] e a segunda abaixo (+0x20 = [0x9cf5d0]).
-unsafe extern "thiscall" fn regras_da_franca_1(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn regras_da_franca_1(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_5 regras da primeira");
     cqj5_regras(this, &cqj5_primeira(this))
 }
 
-unsafe fn cqj5_primeira(this: usize) -> Vec<(usize, u8, u32)> {
+pub(crate) unsafe fn cqj5_primeira(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = cqj5_comuns();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3), (0xab, 2, 0), (0xdb, 2, 0), (0xbe, 1, 0)]);
     let caem = if cqj5_em_2001(this) { 2 } else { 3 }; // cqj5: a primeira rebaixa 2 em 2001
@@ -974,12 +976,12 @@ unsafe fn cqj5_primeira(this: usize) -> Vec<(usize, u8, u32)> {
 /// [pt] { 0x5bf0a0 } (thiscall, ret 0, fra_second.cpp): `FraSecond::set_up_rules()`. A segunda: as comuns, 2 turnos, 3
 /// pontos; em 2001 sobem 4 (+0xbe) e caem 2 (+0xc1), depois sobem 3 e caem 3; a primeira acima ([0x9cf5cc]), a
 /// terceira abaixo ([0x9cf5d4]), +0x52 = 2 e 5 reservas.
-unsafe extern "thiscall" fn regras_da_franca_2(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn regras_da_franca_2(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_5 regras da segunda");
     cqj5_regras(this, &cqj5_segunda(this))
 }
 
-unsafe fn cqj5_segunda(this: usize) -> Vec<(usize, u8, u32)> {
+pub(crate) unsafe fn cqj5_segunda(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = cqj5_comuns();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqj5: a segunda dá 3 pontos pela vitória
     let (sobem, caem) = if cqj5_em_2001(this) { (4, 2) } else { (3, 3) };
@@ -994,12 +996,12 @@ unsafe fn cqj5_segunda(this: usize) -> Vec<(usize, u8, u32)> {
 /// [pt] { 0x5c0700 } (thiscall, ret 0, fra_third.cpp): `FraThird::set_up_rules()`. O National: as comuns, 2 turnos, 3
 /// pontos; sobem 4 em 2001 e 3 depois (+0xbe), caem 4 (+0xc1); a segunda acima ([0x9cf5d0]), nenhuma abaixo (+0x20
 /// = −1), +0xa7 (os jogos da temporada) = −1 (recalculado pela 0x687430) e 3 reservas (+0x49).
-unsafe extern "thiscall" fn regras_da_franca_3(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn regras_da_franca_3(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_5 regras do national");
     cqj5_regras(this, &cqj5_terceira(this))
 }
 
-unsafe fn cqj5_terceira(this: usize) -> Vec<(usize, u8, u32)> {
+pub(crate) unsafe fn cqj5_terceira(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = cqj5_comuns();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqj5: o National joga 2 turnos
     let sobem = if cqj5_em_2001(this) { 4 } else { 3 };
@@ -1010,7 +1012,7 @@ unsafe fn cqj5_terceira(this: usize) -> Vec<(usize, u8, u32)> {
 /// O comparador das três (ensaio, como o da cqi_4): a original roda inteira; a faixa +0x1c..+0xec volta e a cópia
 /// grava as regras sem a virtual +0x3c; os campos que a cópia grava saem iguais aos da original, e a devolução 1; no
 /// fim fica a faixa da original.
-unsafe fn cqj5_comparar(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn cqj5_comparar(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
     let faixa = [(this + 0x1c, 0xd0)];
     let antes = crate::comparacao::Memoria::ler(&faixa);
     let r = original();
@@ -1034,17 +1036,17 @@ unsafe fn cqj5_comparar(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>
     r
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_franca_1(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_regras_da_franca_1(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1756);
     cqj5_comparar("regras_da_franca_1", this, cqj5_primeira(this), || o(this), || regras_da_franca_1(this))
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_franca_2(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_regras_da_franca_2(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1757);
     cqj5_comparar("regras_da_franca_2", this, cqj5_segunda(this), || o(this), || regras_da_franca_2(this))
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_franca_3(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_regras_da_franca_3(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1758);
     cqj5_comparar("regras_da_franca_3", this, cqj5_terceira(this), || o(this), || regras_da_franca_3(this))
 }
@@ -1054,19 +1056,19 @@ unsafe extern "thiscall" fn comparar_regras_da_franca_3(this: usize) -> u32 {
 
 
 /// O registro de competição (0x6b bytes em [0xae23d0]) do id guardado no global `g`.
-unsafe fn cqj6_registro(g: usize) -> usize {
+pub(crate) unsafe fn cqj6_registro(g: usize) -> usize {
     read_usize(0xae23d0).wrapping_add((read_usize(g) as i32 as usize).wrapping_mul(0x6b))
 }
 
 /// League::pay_tv_rights (0x683010: thiscall(liga, valor, filtro), ret 8).
-unsafe fn cqj6_pagar(this: usize, valor: i32, filtro: usize) {
+pub(crate) unsafe fn cqj6_pagar(this: usize, valor: i32, filtro: usize) {
     let pagar: unsafe extern "thiscall" fn(usize, i32, usize) = core::mem::transmute(FN_LEAGUE_PAY_TV_RIGHTS);
     pagar(this, valor, filtro);
 }
 
 /// O fundo de prêmios (+0x28 = League::calc_prize_fund 0x682f70: thiscall(liga, cota), ret 4) e +0xe1 = 1 (pago pela
 /// tabela no fim da liga, 0x682e10).
-unsafe fn cqj6_fundo(this: usize, cota: i32) {
+pub(crate) unsafe fn cqj6_fundo(this: usize, cota: i32) {
     let premio: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
     let f = premio(this, cota);
     core::ptr::write_unaligned((this + 0x28) as *mut i32, f);
@@ -1077,7 +1079,7 @@ unsafe fn cqj6_fundo(this: usize, cota: i32) {
 /// `arquivo` na linha `linha` e None); os clubes de [0xae23b4] (0x245 bytes, [0xae235c] deles) cuja competição
 /// (+0x57, o id no +0) é a do global `g`, na ordem do banco, cada um na linha seguinte (League::init_table_row
 /// 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve se encheu.
-unsafe fn cqj6_encher(this: usize, arquivo: usize, linha: u32, g: usize) -> Option<bool> {
+pub(crate) unsafe fn cqj6_encher(this: usize, arquivo: usize, linha: u32, g: usize) -> Option<bool> {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar((read_i16(this + 0x3e) as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
@@ -1114,7 +1116,7 @@ unsafe fn cqj6_encher(this: usize, arquivo: usize, linha: u32, g: usize) -> Opti
 /// [pt] { 0x5bc2b0 } (thiscall, ret 0, fra_first.cpp): `FraFirst::create_table()`: 18 clubes na temporada 2001 (+0x40 =
 /// 0x7d1) e 20 depois ([0x9cf5cc]), +0xa7 = −1; cheia, o fundo pela cota de 200.000 e a TV de 6.000.000 a cada clube;
 /// 1 (0 sem encher). Fonte 0x9ccb5c, linha 0x1d3.
-unsafe extern "thiscall" fn tabela_da_franca_1(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn tabela_da_franca_1(this: usize) -> u32 {
     let n: i16 = if core::ptr::read_unaligned((this + 0x40) as *const u16) == 0x7d1 { 0x12 } else { 0x14 };
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
     core::ptr::write_unaligned((this + 0xa7) as *mut u16, 0xffff);
@@ -1135,7 +1137,7 @@ unsafe extern "thiscall" fn tabela_da_franca_1(this: usize) -> u32 {
 /// fundo (+0x28 = 0, +0xe1 = 2: nada a pagar no fim) e a TV pela divisão de onde o clube veio (+0x5b): 2.000.000 aos
 /// que caíram da primeira ([0x9cf5cc]), 1.500.000 aos que ficaram ([0x9cf5d0]) e 1.500.000 aos que subiram do
 /// National ([0x9cf5d4]); 1. Fonte 0x9ccc0c, linha 0x171.
-unsafe extern "thiscall" fn tabela_da_franca_2(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn tabela_da_franca_2(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);
     if cqj6_encher(this, 0x9ccc0c, 0x171, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION) != Some(true) {
         return 0;
@@ -1154,7 +1156,7 @@ unsafe extern "thiscall" fn tabela_da_franca_2(this: usize) -> u32 {
 ///
 /// [pt] { 0x5c05d0 } (thiscall, ret 0, fra_third.cpp): `FraThird::create_table()`: 20 clubes ([0x9cf5d4]); cheia, o fundo
 /// pela cota de 20.000 e a TV de 200.000 a cada clube; 1. Fonte 0x9ccc80, linha 0x15d.
-unsafe extern "thiscall" fn tabela_da_franca_3(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn tabela_da_franca_3(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);
     if cqj6_encher(this, 0x9ccc80, 0x15d, KEY_CLUB_COMP_FRENCH_NATIONAL) != Some(true) {
         return 0;
@@ -1168,7 +1170,7 @@ unsafe extern "thiscall" fn tabela_da_franca_3(this: usize) -> u32 {
 /// clubes da divisão na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu, as linhas
 /// com os clubes do plano na ordem e, cheia, +0xe1 e +0x28 como a rotina grava (`cota`: o fundo da cota e 1; None: 0
 /// e 2).
-unsafe fn cqj6_comparar(nome: &str, this: usize, n: i16, g: usize, cota: Option<i32>, original: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn cqj6_comparar(nome: &str, this: usize, n: i16, g: usize, cota: Option<i32>, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(0xae235c) as i32 && (plano.len() as i16) < n {
@@ -1203,18 +1205,18 @@ unsafe fn cqj6_comparar(nome: &str, this: usize, n: i16, g: usize, cota: Option<
     r
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_franca_1(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_franca_1(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1759);
     let n: i16 = if core::ptr::read_unaligned((this + 0x40) as *const u16) == 0x7d1 { 0x12 } else { 0x14 };
     cqj6_comparar("tabela_da_franca_1", this, n, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, Some(0x30d40), || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_franca_2(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_franca_2(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1760);
     cqj6_comparar("tabela_da_franca_2", this, 0x14, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION, None, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_franca_3(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_franca_3(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1761);
     cqj6_comparar("tabela_da_franca_3", this, 0x14, KEY_CLUB_COMP_FRENCH_NATIONAL, Some(0x4e20), || o(this))
 }

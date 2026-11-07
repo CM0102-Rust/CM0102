@@ -1,9 +1,11 @@
+use super::*;
+
 // ---------- 283a leva: a Série C: a final, a virada da temporada e as posições previstas (bra_nat_third.cpp) ----------
 
 
 
 /// O clube da primeira linha da tabela (+0xb1) da fase `k` da liga (k = −1: a própria liga).
-unsafe fn cqs4_primeiro(this: usize, k: i32) -> usize {
+pub(crate) unsafe fn cqs4_primeiro(this: usize, k: i32) -> usize {
     let t = if k == -1 { this } else { read_usize(read_usize(this + 0xc) + 4 * k as usize) };
     read_usize(read_usize(t + 0xb1))
 }
@@ -20,7 +22,7 @@ unsafe fn cqs4_primeiro(this: usize, k: i32) -> usize {
 /// extra, 0x14, 0, 0, 0, sementes nulas; words limpas) em [+0xc][10]. Sem fase: a caixa da linha 0x392 e volta (sem
 /// liberar a tabela). Com ela: a tabela liberada (free 0x9452ca) e +0x30 = 10. [inferência] A final decide o campeão
 /// da Série C, em ida e volta.
-unsafe extern "thiscall" fn cqs4_final_da_serie_c(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqs4_final_da_serie_c(this: usize) {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     #[allow(clippy::type_complexity)]
@@ -66,7 +68,7 @@ unsafe extern "thiscall" fn cqs4_final_da_serie_c(this: usize) {
 /// grupos da primeira fase (0x42ee80(g), thiscall, ret 4, g de 0 a 6), as posições previstas (virtual +0x5c) e a lista
 /// dos 56 (+0xee) liberada (se houver) e zerada. Com caixa, a cópia devolve 0 (a original devolve o eax da caixa, que
 /// a virada do Brasil não lê); no fim, o eax do free ou o +0xee (a cópia devolve 0: ninguém lê).
-unsafe extern "thiscall" fn cqs4_virada_da_serie_c(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqs4_virada_da_serie_c(this: usize) -> u32 {
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -144,9 +146,9 @@ unsafe extern "thiscall" fn cqs4_virada_da_serie_c(this: usize) -> u32 {
 
 /// As posições previstas da Série C, na ordem da lista dos 56 depois de ordenada: 1, 2, 3, 3, 5, 5, 7, 7, oito vezes 9
 /// (as faixas do mata-mata) e, para os outros quarenta, a faixa de oito em oito: 16, 24, 32, 40 e 48.
-const CQS4_LUGARES: [u8; 16] = [1, 2, 3, 3, 5, 5, 7, 7, 9, 9, 9, 9, 9, 9, 9, 9]; // cqs4: as posições previstas do mata-mata
+pub(crate) const CQS4_LUGARES: [u8; 16] = [1, 2, 3, 3, 5, 5, 7, 7, 9, 9, 9, 9, 9, 9, 9, 9]; // cqs4: as posições previstas do mata-mata
 
-fn cqs4_lugar(k: usize) -> u8 {
+pub(crate) fn cqs4_lugar(k: usize) -> u8 {
     if k < 16 { CQS4_LUGARES[k] } else { (16 + 8 * ((k - 16) / 8)) as u8 }
 }
 
@@ -161,7 +163,7 @@ fn cqs4_lugar(k: usize) -> u8 {
 /// fim) e cada clube, na ordem, ganha a posição prevista de `cqs4_lugar` (Comp_Stats::set_club_final_position 0x4a2540,
 /// thiscall(+8, clube, posição), ret 8; a original empurra a faixa dos quarenta num dword com o byte da faixa e lixo
 /// da pilha em cima; a 0x4a2540 só lê o byte: a cópia passa o byte limpo).
-unsafe extern "thiscall" fn cqs4_posicoes_previstas_da_serie_c(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqs4_posicoes_previstas_da_serie_c(this: usize) {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     if read_usize(this + 8) == 0 {
@@ -177,7 +179,7 @@ unsafe extern "thiscall" fn cqs4_posicoes_previstas_da_serie_c(this: usize) {
 /// O comparador da final: só a original (aloca a tabela e a fase e sorteia a rodada), com o plano feito antes: os
 /// campeões dos grupos da terceira fase. Depois, a fase da vaga 10 existe, com +0x3e = 2, os dois na lista dela (como
 /// conjunto) e +0x30 = 10.
-unsafe extern "thiscall" fn comparar_cqs4_final_da_serie_c(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs4_final_da_serie_c(this: usize) {
     let (a, b) = (cqs4_primeiro(this, 8), cqs4_primeiro(this, 9));
     orig::<unsafe extern "thiscall" fn(usize)>(2027)(this);
     let fase = read_usize(read_usize(this + 0xc) + 0x28);
@@ -192,7 +194,7 @@ unsafe extern "thiscall" fn comparar_cqs4_final_da_serie_c(this: usize) {
 /// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia jogos, árbitros e
 /// grupos; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1, os sete grupos nas vagas 0 a 6 e a
 /// lista dos 56 zerada.
-unsafe extern "thiscall" fn comparar_cqs4_virada_da_serie_c(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs4_virada_da_serie_c(this: usize) -> u32 {
     let antes = read_i16(this + 0x40);
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2028)(this);
     let depois = read_i16(this + 0x40);
@@ -204,7 +206,7 @@ unsafe extern "thiscall" fn comparar_cqs4_virada_da_serie_c(this: usize) -> u32 
 /// O comparador das posições previstas: só a original (a 0x4a2540 acrescenta o registro de um clube que não tem; não
 /// pode rodar duas vezes), com o plano feito antes: a lista dos 56 ordenada pela mesma qsort numa cópia; depois, a
 /// lista da liga na mesma ordem e a posição (+0x72 do registro achado por 0x4a4850) de cada clube.
-unsafe extern "thiscall" fn comparar_cqs4_posicoes_previstas_da_serie_c(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs4_posicoes_previstas_da_serie_c(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2029);
     if read_usize(this + 8) == 0 || read_usize(this + 0xee) == 0 {
         return o(this);
@@ -230,7 +232,7 @@ unsafe extern "thiscall" fn comparar_cqs4_posicoes_previstas_da_serie_c(this: us
 
 
 #[allow(clippy::type_complexity)]
-type Cqs3Fase = unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize;
+pub(crate) type Cqs3Fase = unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize;
 
 /// { 0x42ee80 } (thiscall, ret 4, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_group_stage(g)`, o
 /// grupo g (0 a 6) da primeira fase da Série C, da virada e do construtor (g de 0 a 6; a liga é o grupo de cima, e os
@@ -245,7 +247,7 @@ type Cqs3Fase = unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize
 ///    dword inteiro), o extra (word), +0x51, 1, 0, +0xd9 (word), −1, 0, 2; words e bytes limpos). Sem memória: 0.
 /// 4) [+0xc][g] = a fase. Sem fase: a caixa da linha 0x487 e volta (sem liberar o vetor nem a tabela). Com ela: o vetor
 ///    e a tabela liberados (free 0x9452ca) e +0x30 = g (o byte com sinal).
-unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
+pub(crate) unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -285,12 +287,12 @@ unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
 /// Original: `BraNatThird::create_group_stage` (0x42ee80, bra_nat_third.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x42ee80 } (acima): o grupo g da primeira fase da Série C.
-unsafe extern "thiscall" fn cqs3_grupo_da_serie_c(this: usize, g: u32) {
+pub(crate) unsafe extern "thiscall" fn cqs3_grupo_da_serie_c(this: usize, g: u32) {
     cqs3_grupo(this, g, 0xc2) // cqs3: os pontos por vitória nos grupos
 }
 
 /// A ordem da segunda fase: o k-ésimo melhor (pelos pontos) vai à vaga `CQS3_SEMENTES[k]` da lista dos dezesseis.
-const CQS3_SEMENTES: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5, 3, 1]; // cqs3: as vagas da segunda fase
+pub(crate) const CQS3_SEMENTES: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5, 3, 1]; // cqs3: as vagas da segunda fase
 
 /// The Series C second round: the sixteen (the top two of each group) seeded by first-round points (ties go to the
 /// earlier one: the league, then groups 0 to 6, first before second), in a knockout where the best meets the 16th, the
@@ -309,7 +311,7 @@ const CQS3_SEMENTES: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5,
 ///    0x944cf1(0xb2) e o construtor Cup_Stage 0x522e00, thiscall, ret 0x3c: a liga, 16, a lista, as rodadas, +4, a
 ///    tabela, o ano, 7, 1, o extra, 0x14, 0, 0, 0, sementes nulas; words limpas) em [+0xc][7]. Sem fase: a caixa da
 ///    linha 0x31b e volta. Com ela: a tabela e a lista liberadas (free 0x9452ca) e +0x30 = 7.
-unsafe extern "thiscall" fn cqs3_segunda_fase_da_serie_c(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqs3_segunda_fase_da_serie_c(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -381,7 +383,7 @@ unsafe extern "thiscall" fn cqs3_segunda_fase_da_serie_c(this: usize) {
 /// vagas de cima), o ano, 8 ou 9, o extra (word), 0x14, 1, 0, 2 (os bits de regra), −1, 0, 2) em [+0xc][8] ou [9];
 /// sem fase: a caixa da linha 0x353 ou 0x363 e volta; com ela, a tabela liberada (free 0x9452ca). Depois do segundo,
 /// +0x30 = 9. [inferência] Os dois primeiros de cada grupo sobem à Série B; os campeões dos grupos fazem a final.
-unsafe extern "thiscall" fn cqs3_terceira_fase_da_serie_c(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqs3_terceira_fase_da_serie_c(this: usize) {
     let embaralhar: unsafe extern "C" fn(*mut usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -428,7 +430,7 @@ unsafe extern "thiscall" fn cqs3_terceira_fase_da_serie_c(this: usize) {
 /// O comparador de um grupo: só a original (aloca o vetor, a tabela das rodadas e a fase), com o plano feito antes: os
 /// sete clubes das vagas 7(g + 1).. da lista dos 56. Depois, a fase na vaga g com +0x3e = 7, os sete na tabela dela
 /// (como conjunto) e +0x30 = g.
-unsafe extern "thiscall" fn comparar_cqs3_grupo_da_serie_c(this: usize, g: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs3_grupo_da_serie_c(this: usize, g: u32) {
     let k = g as u8 as i8 as i32;
     let mut plano = [0usize; 7];
     for (j, c) in plano.iter_mut().enumerate() {
@@ -452,7 +454,7 @@ unsafe extern "thiscall" fn comparar_cqs3_grupo_da_serie_c(this: usize, g: u32) 
 /// O comparador da segunda fase: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
 /// antes pela mesma escolha numa cópia dos registros: a fase da vaga 7 existe, com +0x3e = 16 e os dezesseis na ordem
 /// das vagas na lista dela (+0xa7, 6 bytes), e +0x30 = 7.
-unsafe extern "thiscall" fn comparar_cqs3_segunda_fase_da_serie_c(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs3_segunda_fase_da_serie_c(this: usize) {
     let mut r = [(0usize, 0i16); 16];
     for (k, g) in (-1i32..7).enumerate() {
         let t = read_usize(if g == -1 { this } else { read_usize(read_usize(this + 0xc) + 4 * g as usize) } + 0xb1);
@@ -489,7 +491,7 @@ unsafe extern "thiscall" fn comparar_cqs3_segunda_fase_da_serie_c(this: usize) {
 
 /// O comparador da terceira fase: só a original (embaralha: sorteia; aloca as tabelas e as fases), com o plano: os
 /// vencedores da segunda fase; depois, as fases 8 e 9 com 4 clubes cada, os oito juntos (como conjunto) e +0x30 = 9.
-unsafe extern "thiscall" fn comparar_cqs3_terceira_fase_da_serie_c(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs3_terceira_fase_da_serie_c(this: usize) {
     let segunda = read_usize(read_usize(this + 0xc) + 0x1c);
     let mut plano = [0usize; 8];
     let mut n = 0usize;

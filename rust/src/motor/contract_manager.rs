@@ -1,9 +1,11 @@
+use super::*;
+
 // ---------- septuagesima quarta leva: contrato da pessoa com o clube ----------
 
 /// { 0x4cf5f0 } (ret 8): o contrato (registros de 80 bytes em [this]) da pessoa com o clube. A
 /// pessoa tem ate dois indices (tabela 0xae2d0c, 79 bytes por pessoa, +0 e +4); vale o registro
 /// cujo +4 e o id do clube. Sem nenhum, tenta o clube parceiro (0x540a50) quando ele e o time A.
-unsafe extern "thiscall" fn contrato_com_clube(this: usize, pessoa: usize, clube: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn contrato_com_clube(this: usize, pessoa: usize, clube: usize) -> usize {
     if pessoa == 0 || clube == 0 {
         return 0;
     }
@@ -54,7 +56,7 @@ unsafe extern "thiscall" fn contrato_com_clube(this: usize, pessoa: usize, clube
 /// { 0x53ce90 }: (byte +0x4f do contrato da pessoa com o clube (0x4cf5f0 sobre [0xae1050]) & 0xf)
 /// - 10, para clube que nao e selecao (id abaixo de clubes - 2 x nacoes) e pessoa valida. Senao o
 /// byte baixo zerado (o resto do registro fica como estava: o clube, ou 0).
-unsafe extern "C" fn nivel_do_contrato(pessoa: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn nivel_do_contrato(pessoa: usize, clube: usize) -> u32 {
     if clube == 0 {
         return 0;
     }
@@ -74,7 +76,7 @@ unsafe extern "C" fn nivel_do_contrato(pessoa: usize, clube: usize) -> u32 {
 
 
 
-unsafe fn cqg1_u(a: usize) -> u16 {
+pub(crate) unsafe fn cqg1_u(a: usize) -> u16 {
     core::ptr::read_unaligned(a as *const u16)
 }
 
@@ -82,18 +84,18 @@ unsafe fn cqg1_u(a: usize) -> u16 {
 
 
 
-unsafe fn cqg1_clube(id: usize) -> usize {
+pub(crate) unsafe fn cqg1_clube(id: usize) -> usize {
     read_u32_as_usize(0xae23b4).wrapping_add(id.wrapping_mul(0x245))
 }
 
 /// O registro de 79 bytes da pessoa `id` em [0xae2d0c] (+0 o índice do contrato no vetor).
-unsafe fn cqg1_registro(id: usize) -> usize {
+pub(crate) unsafe fn cqg1_registro(id: usize) -> usize {
     read_u32_as_usize(0xae2d0c).wrapping_add(id.wrapping_mul(0x4f))
 }
 
 /// A cópia do contrato de 0x50 bytes de `o` para `d`, campo a campo como a original (as datas +0x25 e +0x2d pela
 /// 0x417c10; os campos de bits de +0x35 e o nibble de +0x4f, mesclados em passos, acabam iguais à origem).
-unsafe fn cqg1_copiar(d: usize, o: usize) {
+pub(crate) unsafe fn cqg1_copiar(d: usize, o: usize) {
     let copiar_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     for k in (0..0x1c).step_by(4) {
         write_u32_from_usize(d + k, read_u32_as_usize(o + k));
@@ -128,7 +130,7 @@ unsafe fn cqg1_copiar(d: usize, o: usize) {
 
 /// O tipo do contrato (+0x3d) pelo cargo (nibble alto de +0x4f): 1 → 75, 2 → 50, 3 → 40, 4, 5, 6 e 8 → 0; os outros
 /// não mexem (a tabela de saltos da original).
-unsafe fn cqg1_tipo_pelo_cargo(c: usize) {
+pub(crate) unsafe fn cqg1_tipo_pelo_cargo(c: usize) {
     match read_u8(c + 0x4f) >> 4 {
         1 => write_u8(c + 0x3d, 0x4b),
         2 => write_u8(c + 0x3d, 0x32),
@@ -159,7 +161,7 @@ unsafe fn cqg1_tipo_pelo_cargo(c: usize) {
 /// 0x945667 ou malloc 0x944e46; sem memória, a caixa 0x1637). Depois: o valor (+0xc) em +0x4e da pessoa, a moral (+0x14,
 /// 0x544710) no tipo 2 com ficha, a folha (0x598370), e com cargo novo a saída do clube atual (0x53c190) e a entrada no
 /// do contrato (0x53bd10); falhou: a caixa (0x1672, 0x167a) e 0.
-unsafe extern "thiscall" fn assinar_contrato(this: usize, contrato: usize, cargo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn assinar_contrato(this: usize, contrato: usize, cargo: u32) -> u32 {
     let incluir: unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32 = core::mem::transmute(FN_DATABASE_ADD_STAFF_TO_CLUB);
     let tem_vaga: unsafe extern "C" fn(usize, u32, usize) -> u32 = core::mem::transmute(FN_DATABASE_CLUB_HAS_ROOM_FOR_JOB);
     let noticia_sem_vaga: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_POST_OFFER_CANCELLED_NO_SPACE_NEWS);
@@ -331,14 +333,14 @@ unsafe extern "thiscall" fn assinar_contrato(this: usize, contrato: usize, cargo
 
 /// Comparador da 0x4cf720: só a original (inclui e tira a pessoa dos clubes, realoca o vetor dos contratos, entrega
 /// notícias, sorteia a segunda nacionalidade, recalcula a folha).
-unsafe extern "thiscall" fn comparar_assinar_contrato(this: usize, contrato: usize, cargo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_assinar_contrato(this: usize, contrato: usize, cargo: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(1629)(this, contrato, cargo) // ponytail: só a original
 }
 
 // ---------- 270a leva: o contrato que o clube oferece a uma pessoa (contract_manager.cpp) ----------
 
 
-unsafe fn cqf3_i(a: usize) -> i32 {
+pub(crate) unsafe fn cqf3_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
@@ -348,7 +350,7 @@ unsafe fn cqf3_i(a: usize) -> i32 {
 
 
 /// Os três bônus do contrato (+0x10, +0x14, +0x18): os que não são −1 (> −1) × `f`, truncados.
-unsafe fn cqf3_bonus(c: usize, f: f64) {
+pub(crate) unsafe fn cqf3_bonus(c: usize, f: f64) {
     for k in 0..3 {
         let a = c + 0x10 + 4 * k;
         let v = cqf3_i(a);
@@ -384,7 +386,7 @@ unsafe fn cqf3_bonus(c: usize, f: f64) {
 /// os bônus × valor / max(teto, 1) e o valor = teto. As queixas limpas (0x867520). Com `saida`: copia o contrato e 1;
 /// senão, no modo 2, ou com contrato atual no modo 1 que acaba antes de hoje + 150 dias, a proposta (0x4cc490); 1.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn contrato_oferecido(this: usize, pessoa: usize, clube_arg: usize, saida: usize, vaga: i32, fator: f64, modo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn contrato_oferecido(this: usize, pessoa: usize, clube_arg: usize, saida: usize, vaga: i32, fator: f64, modo: u32) -> u32 {
     let construir: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_STAFF_CONTRACT_STAFF_CONTRACT);
     let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let tipo_11_15: unsafe extern "C" fn(i8) -> u32 = core::mem::transmute(FN_DATABASE_IS_PLAYER_JOB);
@@ -649,7 +651,7 @@ unsafe extern "thiscall" fn contrato_oferecido(this: usize, pessoa: usize, clube
 /// Comparador da 0x4cda70: com `saida`, lado a lado (a saída, [0xae1080] e o estado do sorteador; a cópia sem contar os
 /// sorteios); sem `saida` (pode propor o contrato, que aloca), só a original.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_contrato_oferecido(this: usize, pessoa: usize, clube: usize, saida: usize, vaga: i32, fator: f64, modo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_contrato_oferecido(this: usize, pessoa: usize, clube: usize, saida: usize, vaga: i32, fator: f64, modo: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, i32, f64, u32) -> u32>(1602);
     if saida == 0 {
         return o(this, pessoa, clube, saida, vaga, fator, modo); // ponytail: só a original
@@ -680,7 +682,7 @@ unsafe extern "thiscall" fn comparar_contrato_oferecido(this: usize, pessoa: usi
 // ---------- 263a leva: os contratos depois do jogo (os bônus, a felicidade, a moral e a evolução de quem ficou de fora), a moral da ficha e o texto dela (contract_manager.cpp) ----------
 
 
-unsafe fn cqa8_i(a: usize) -> i32 {
+pub(crate) unsafe fn cqa8_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
@@ -688,20 +690,20 @@ unsafe fn cqa8_i(a: usize) -> i32 {
 
 /// Soma `delta` ao byte (felicidade +0x3d, moral +0x44 do contrato) entre −100 e 100, como a original: a soma em 32
 /// bits decide o teto e o piso; dentro deles, a soma do byte.
-unsafe fn cqa8_somar(a: usize, delta: i32) {
+pub(crate) unsafe fn cqa8_somar(a: usize, delta: i32) {
     let v = read_i8(a);
     let s = v as i32 + delta;
     *(a as *mut i8) = if s > 100 { 100 } else if s < -100 { -100 } else { v.wrapping_add(delta as i8) };
 }
 
 /// Os dois clubes do jogo (+0x1c mandante, +0x20 visitante): o do lado e o outro.
-unsafe fn cqa8_clubes(jogo: usize, lado: usize) -> (usize, usize) {
+pub(crate) unsafe fn cqa8_clubes(jogo: usize, lado: usize) -> (usize, usize) {
     if lado == 0 { (read_usize(jogo + 0x1c), read_usize(jogo + 0x20)) } else { (read_usize(jogo + 0x20), read_usize(jogo + 0x1c)) }
 }
 
 /// Com o byte +0x3a do jogo = 1, o lado fica de fora quando a reputação do outro clube (+0x80) fica abaixo do maior
 /// entre a dele × [0x968928] e a dele + 1500 (x87 em dupla, como a original).
-unsafe fn cqa8_pula_lado(jogo: usize, lado: usize) -> bool {
+pub(crate) unsafe fn cqa8_pula_lado(jogo: usize, lado: usize) -> bool {
     if read_i8(jogo + 0x3a) != 1 {
         return false;
     }
@@ -715,7 +717,7 @@ unsafe fn cqa8_pula_lado(jogo: usize, lado: usize) -> bool {
 
 /// A pessoa da vaga do resumo (id em +0 e +4 diferente de −1; registro de 0x6e bytes em [0xae23bc]), ou None quando a
 /// original pula a vaga. A pessoa nula (base 0) passa, como na original.
-unsafe fn cqa8_pessoa_da_vaga(vaga: usize) -> Option<usize> {
+pub(crate) unsafe fn cqa8_pessoa_da_vaga(vaga: usize) -> Option<usize> {
     let id = cqa8_i(vaga);
     if id == -1 || cqa8_i(vaga + 4) == -1 {
         return None;
@@ -730,7 +732,7 @@ unsafe fn cqa8_pessoa_da_vaga(vaga: usize) -> Option<usize> {
 /// Os três bônus do contrato pela vaga (Finance::pay_bonuses 0x599960): +0x21 × +0x10, +0x27 × +0x14 e, com a palavra
 /// do resumo = 1 e +0x22, +0x27 × +0x18 (a original usa o +0x27 de novo); cada um só com o byte e o valor positivos.
 /// Sem bônus no amistoso (0x5c6710), no jogo da competição [0x9cf684] e nos contratos de tipo 5 e 6.
-unsafe fn cqa8_bonus(jogo: usize, contrato: usize, vaga: usize, palavra: i16) -> [Option<i32>; 3] {
+pub(crate) unsafe fn cqa8_bonus(jogo: usize, contrato: usize, vaga: usize, palavra: i16) -> [Option<i32>; 3] {
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     let comp = read_usize(jogo + 0x14);
     if comp != 0 && (amistoso(read_usize(0xae2c74), comp) != 0 || read_usize(jogo) == read_usize(KEY_CLUB_COMP_RESERVE)) {
@@ -765,7 +767,7 @@ unsafe fn cqa8_bonus(jogo: usize, contrato: usize, vaga: usize, palavra: i16) ->
 /// elenco. Depois, quem ficou na cópia (com ficha, contrato, sem suspensão 0x55d270, lesão 0x62c400, seleção 0x7757d0
 /// nem empréstimo) evolui (0x6d26b0 com a nota média [0xb74350] − 1), +0x3e conta e, a partir de 8 (14 com parceiro),
 /// fora do humano e do parceiro, sai do principal (0x4cbb60 2 ou 4 → 0x4cbd20); a felicidade cai 8 e a moral cai.
-unsafe extern "thiscall" fn contratos_depois_do_jogo(this: usize, jogo: usize, resumo: usize) {
+pub(crate) unsafe extern "thiscall" fn contratos_depois_do_jogo(this: usize, jogo: usize, resumo: usize) {
     if read_i8(jogo + 0x40) == 0 || read_i8(jogo + 0x41) == 0 {
         return;
     }
@@ -954,7 +956,7 @@ unsafe extern "thiscall" fn contratos_depois_do_jogo(this: usize, jogo: usize, r
 /// elenco (0x4cbd20) sorteiam e alocam (não podem rodar duas vezes): só a original roda. Confere o que a rotina garante
 /// antes de qualquer sorteio: os bônus que cada clube paga (+0x138 das finanças soma o total previsto pelas mesmas
 /// regras da cópia, calculado antes). A cópia é provada pelos ramos e pelas mutações na carreira.
-unsafe extern "thiscall" fn comparar_contratos_depois_do_jogo(this: usize, jogo: usize, resumo: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_contratos_depois_do_jogo(this: usize, jogo: usize, resumo: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1440);
     if read_i8(jogo + 0x40) == 0 || read_i8(jogo + 0x41) == 0 {
         return o(this, jogo, resumo);
@@ -1001,11 +1003,11 @@ unsafe extern "thiscall" fn comparar_contratos_depois_do_jogo(this: usize, jogo:
 ///
 /// [pt] { 0x4cc2d0 } (stdcall, ret 4, contract_manager.cpp): `contract_manager_get_player_morale(pessoa)`: o byte +0x45 da
 /// ficha (+0x61), pelas telas. O eax leva os bytes altos da pessoa, como na original.
-unsafe extern "stdcall" fn moral_da_ficha(pessoa: usize) -> u32 {
+pub(crate) unsafe extern "stdcall" fn moral_da_ficha(pessoa: usize) -> u32 {
     (pessoa as u32 & 0xffff_ff00) | *((read_usize(pessoa + 0x61) + 0x45) as *const u8) as u32
 }
 
-unsafe extern "stdcall" fn comparar_moral_da_ficha(pessoa: usize) -> u32 {
+pub(crate) unsafe extern "stdcall" fn comparar_moral_da_ficha(pessoa: usize) -> u32 {
     let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(1441)(pessoa);
     let n = moral_da_ficha(pessoa);
     PLACAR.registrar(r == n, || format!("moral_da_ficha({:x}) original={:#x} rust={:#x}", pessoa, r, n));
@@ -1013,7 +1015,7 @@ unsafe extern "stdcall" fn comparar_moral_da_ficha(pessoa: usize) -> u32 {
 }
 
 /// O texto terminado em zero em `a` (até 0x400 bytes), para os comparadores dos textos.
-unsafe fn cqa8_texto(a: usize) -> Vec<u8> {
+pub(crate) unsafe fn cqa8_texto(a: usize) -> Vec<u8> {
     let s = core::slice::from_raw_parts(a as *const u8, 0x400);
     s[..s.iter().position(|&c| c == 0).unwrap_or(0x400)].to_vec()
 }
@@ -1024,7 +1026,7 @@ unsafe fn cqa8_texto(a: usize) -> Vec<u8> {
 /// [pt] { 0x4cc2e0 } (stdcall, ret 0xc, contract_manager.cpp): `contract_manager_write_morale_text(pessoa, saída, _)`: a
 /// palavra da moral (+0x45 da ficha: abaixo de 4 "Very Low", 8 "Low", 12 "Ok", 15 "Good", 18 "Very Good", senão
 /// "Superb") na saída (0x66f4e0 com 0xad9c64), pelas telas.
-unsafe extern "stdcall" fn texto_da_moral(pessoa: usize, saida: usize, _x: u32) {
+pub(crate) unsafe extern "stdcall" fn texto_da_moral(pessoa: usize, saida: usize, _x: u32) {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let m = read_i8(read_usize(pessoa + 0x61) + 0x45);
     let f = if m < 4 {
@@ -1045,7 +1047,7 @@ unsafe extern "stdcall" fn texto_da_moral(pessoa: usize, saida: usize, _x: u32) 
 
 /// Comparador: a original escreve a palavra; a cópia escreve de novo (o texto se sobrescreve) e as duas têm de bater;
 /// fica o texto da original.
-unsafe extern "stdcall" fn comparar_texto_da_moral(pessoa: usize, saida: usize, x: u32) {
+pub(crate) unsafe extern "stdcall" fn comparar_texto_da_moral(pessoa: usize, saida: usize, x: u32) {
     orig::<unsafe extern "stdcall" fn(usize, usize, u32)>(1442)(pessoa, saida, x);
     let r = cqa8_texto(saida);
     texto_da_moral(pessoa, saida, x);
@@ -1061,13 +1063,13 @@ unsafe extern "stdcall" fn comparar_texto_da_moral(pessoa: usize, saida: usize, 
 
 
 /// O clube de id `id` ([0xae23b4], 0x245 bytes).
-unsafe fn cqa9_clube(id: usize) -> usize {
+pub(crate) unsafe fn cqa9_clube(id: usize) -> usize {
     read_usize(0xae23b4).wrapping_add(id.wrapping_mul(0x245))
 }
 
 /// O contrato principal da pessoa (índice +0 do registro de 79 bytes em [0xae2d0c], registros de 0x50 bytes em
 /// [[0xae1050]]), ou 0: sem pessoa, fora das pessoas ([0xae2364]) ou sem índice.
-unsafe fn cqa9_contrato_principal(pessoa: usize) -> usize {
+pub(crate) unsafe fn cqa9_contrato_principal(pessoa: usize) -> usize {
     if pessoa == 0 || read_usize(pessoa) as i32 >= read_usize(0xae2364) as i32 {
         return 0;
     }
@@ -1076,7 +1078,7 @@ unsafe fn cqa9_contrato_principal(pessoa: usize) -> usize {
 }
 
 /// O mínimo com a cláusula de rescisão (+0x21 do contrato, se 0x867b50 a diz ativa) e o truncamento (_ftol).
-unsafe fn cqa9_fim(contrato: usize, w: f64) -> i32 {
+pub(crate) unsafe fn cqa9_fim(contrato: usize, w: f64) -> i32 {
     let clausula: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_CONTRACT_HAS_ACTIVE_RELEASE_CLAUSE);
     if contrato != 0 && clausula(contrato) != 0 {
         let cl = core::ptr::read_unaligned((contrato + 0x21) as *const i32) as f64;
@@ -1101,7 +1103,7 @@ unsafe fn cqa9_fim(contrato: usize, w: f64) -> i32 {
 /// do clube (+0x53: +0x7e e +0x85 ou a divisão +0x69; sem clube, sorteio(3) + 1), com piso. `modo`: a nação [0x9cf434]
 /// e a cláusula. Senão: os dias de contrato (com a lei Bosman 0x8d0a70) e as nações [0x9cf434], [0x9cf300], [0x9cf484];
 /// no fim a cláusula de rescisão ativa (0x867b50) limita.
-unsafe extern "thiscall" fn valor_do_jogador(this: usize, pessoa: usize, clube: usize, modo: u32, habilidade: u32, _x: u32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn valor_do_jogador(this: usize, pessoa: usize, clube: usize, modo: u32, habilidade: u32, _x: u32) -> i32 {
     let c1080 = cqa9_contrato_principal(pessoa);
     *(0xae1080 as *mut usize) = c1080;
     let clube_do_contrato = if c1080 == 0 { 0 } else { cqa9_clube(read_usize(c1080 + 4)) };
@@ -1338,14 +1340,14 @@ unsafe extern "thiscall" fn valor_do_jogador(this: usize, pessoa: usize, clube: 
 
 /// As estáticas das datas (CPQ6_ESTATICAS) e o contrato guardado em [0xae1080]: o que a original e as chamadas dela
 /// gravam, com o estado do sorteador (na pilha: a rotina é quente).
-fn cqa9_regioes() -> [(usize, usize); 11] {
+pub(crate) fn cqa9_regioes() -> [(usize, usize); 11] {
     let (e, c) = (crate::aleatorio::REGIOES_DO_ESTADO, CPQ6_ESTATICAS);
     [e[0], e[1], (0xae1080, 4), c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]]
 }
 
 /// Comparador: lado a lado (sem alocar) com o estado do sorteador (sem clube, sorteio(3)), o [0xae1080] e as estáticas
 /// das datas da compensação; a cópia sem contar os sorteios. Quente (5,6 milhões de chamadas): sem contador.
-unsafe extern "thiscall" fn comparar_valor_do_jogador(this: usize, pessoa: usize, clube: usize, modo: u32, habilidade: u32, x: u32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_valor_do_jogador(this: usize, pessoa: usize, clube: usize, modo: u32, habilidade: u32, x: u32) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> i32>(1443);
     let regioes = cqa9_regioes();
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, pessoa, clube, modo, habilidade, x),
@@ -1361,7 +1363,7 @@ unsafe extern "thiscall" fn comparar_valor_do_jogador(this: usize, pessoa: usize
 /// _)`: a diferença das morais (+0x45 das fichas, a − b, em byte) vira "Superior" (até −14 e desde 13), "Better" (−13 a
 /// −8 e 7 a 12), "Marginal" (−7 a −4 e 3 a 6) ou "Same" (−3 a 2) na saída (0x66f4e0 com 0xad9c64); devolve a diferença
 /// (o jogo lê o al), pela tela de comparação.
-unsafe extern "stdcall" fn diferenca_de_moral_em_texto(a: usize, b: usize, saida: usize, _x: u32) -> u8 {
+pub(crate) unsafe extern "stdcall" fn diferenca_de_moral_em_texto(a: usize, b: usize, saida: usize, _x: u32) -> u8 {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let dif = read_i8(read_usize(a + 0x61) + 0x45).wrapping_sub(read_i8(read_usize(b + 0x61) + 0x45));
     let f = if dif < -13 {
@@ -1384,14 +1386,14 @@ unsafe extern "stdcall" fn diferenca_de_moral_em_texto(a: usize, b: usize, saida
 }
 
 /// O texto terminado em zero em `a` (até 0x400 bytes).
-unsafe fn cqa9_texto(a: usize) -> Vec<u8> {
+pub(crate) unsafe fn cqa9_texto(a: usize) -> Vec<u8> {
     let s = core::slice::from_raw_parts(a as *const u8, 0x400);
     s[..s.iter().position(|&c| c == 0).unwrap_or(0x400)].to_vec()
 }
 
 /// Comparador: a original escreve; a cópia escreve de novo (sobrescreve) e o texto e a diferença têm de bater; fica o
 /// texto da original.
-unsafe extern "stdcall" fn comparar_diferenca_de_moral_em_texto(a: usize, b: usize, saida: usize, x: u32) -> u8 {
+pub(crate) unsafe extern "stdcall" fn comparar_diferenca_de_moral_em_texto(a: usize, b: usize, saida: usize, x: u32) -> u8 {
     let r = orig::<unsafe extern "stdcall" fn(usize, usize, usize, u32) -> u8>(1444)(a, b, saida, x);
     let tr = cqa9_texto(saida);
     let n = diferenca_de_moral_em_texto(a, b, saida, x);
@@ -1410,7 +1412,7 @@ unsafe extern "stdcall" fn comparar_diferenca_de_moral_em_texto(a: usize, b: usi
 /// emprestada (segundo contrato, +4 do registro de 79 bytes) a outro clube que não o `clube` nem o parceiro dele
 /// (0x540a50): com parceiro, 1; senão 2 com o bit 0x40 de +0x35 do contrato principal, 1 sem. Sem clube, a caixa
 /// "Error" (a original). O jogo lê o al.
-unsafe extern "thiscall" fn marcas_de_elenco_para_a_tela(this: usize, pessoa: usize, clube: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn marcas_de_elenco_para_a_tela(this: usize, pessoa: usize, clube: usize) -> u8 {
     if clube == 0 || pessoa == 0 {
         // ponytail: sem clube a caixa de erro; sem pessoa a original lê [0x5e] e cai: as duas ficam com a original
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(1445)(this, pessoa, clube);
@@ -1445,7 +1447,7 @@ unsafe extern "thiscall" fn marcas_de_elenco_para_a_tela(this: usize, pessoa: us
     (*((c0 + 0x35) as *const u8) & 0x40 != 0) as u8 + 1
 }
 
-unsafe extern "thiscall" fn comparar_marcas_de_elenco_para_a_tela(this: usize, pessoa: usize, clube: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn comparar_marcas_de_elenco_para_a_tela(this: usize, pessoa: usize, clube: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(1445);
     if clube == 0 || pessoa == 0 {
         return o(this, pessoa, clube);
@@ -1462,18 +1464,18 @@ unsafe extern "thiscall" fn comparar_marcas_de_elenco_para_a_tela(this: usize, p
 
 
 /// O registro de clube de id `id` ([0xae23b4], 0x245 bytes).
-unsafe fn cpw1_clube(id: usize) -> usize {
+pub(crate) unsafe fn cpw1_clube(id: usize) -> usize {
     read_usize(0xae23b4).wrapping_add(id.wrapping_mul(0x245))
 }
 
 /// A pessoa de id `id` ([0xae23bc], 0x6e bytes).
-unsafe fn cpw1_pessoa(id: usize) -> usize {
+pub(crate) unsafe fn cpw1_pessoa(id: usize) -> usize {
     read_usize(0xae23bc).wrapping_add(id.wrapping_mul(0x6e))
 }
 
 /// O valor de um contrato para a pessoa (STAFF_CONTRACT::calc_contract_value 0x866830: thiscall(contrato, pessoa,
 /// oferta), ret 8).
-unsafe fn cpw1_valor(contrato: usize, pessoa: usize, oferta: usize) -> i32 {
+pub(crate) unsafe fn cpw1_valor(contrato: usize, pessoa: usize, oferta: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_STAFF_CONTRACT_CALC_CONTRACT_VALUE);
     f(contrato, pessoa, oferta)
 }
@@ -1489,7 +1491,7 @@ unsafe fn cpw1_valor(contrato: usize, pessoa: usize, oferta: usize) -> i32 {
 /// do contrato, −1, a situação e 0xb) e a razão 100 × valor do contrato atual (0x866830, em f32) / valor do desejado
 /// (valor zero: razão 0). Contratado há menos de 15 × adaptabilidade (+0x59) + 100 dias (de +0x25, teto 500): razão +
 /// 50 + 7,5 × adaptabilidade − dias / 2. Razão abaixo de 50: 1; abaixo de 80: 3; senão 2.
-unsafe extern "thiscall" fn satisfacao_com_o_contrato(this: usize, pessoa: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn satisfacao_com_o_contrato(this: usize, pessoa: usize) -> u8 {
     if pessoa == 0 {
         return 1;
     }
@@ -1540,7 +1542,7 @@ unsafe extern "thiscall" fn satisfacao_com_o_contrato(this: usize, pessoa: usize
 
 /// Comparador: a original e a cópia a partir do mesmo estado (o sorteio, o último contrato pedido [0xae1080] que a
 /// 0x85fc50 grava e o contrato); a devolução e a memória.
-unsafe extern "thiscall" fn comparar_satisfacao_com_o_contrato(this: usize, pessoa: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn comparar_satisfacao_com_o_contrato(this: usize, pessoa: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1272);
     let mut regioes = vec![(0xae1080usize, 4usize), (this, 0x50)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
@@ -1556,7 +1558,7 @@ unsafe extern "thiscall" fn comparar_satisfacao_com_o_contrato(this: usize, pess
 }
 
 /// Os dados da pessoa numa notícia: o id na vaga 2 e as três chaves (+0x33 de +4, +8 e +0xc) nas vagas 3 a 5.
-unsafe fn cpw1_dados_da_pessoa(n: usize, p: usize) {
+pub(crate) unsafe fn cpw1_dados_da_pessoa(n: usize, p: usize) {
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     gravar(n, 2, read_usize(p) as u32);
     gravar(n, 3, read_usize(read_usize(p + 4) + 0x33) as u32);
@@ -1574,7 +1576,7 @@ unsafe fn cpw1_dados_da_pessoa(n: usize, p: usize) {
 /// nada. Senão a notícia 0xbc2 ao técnico do clube do contrato (0x7861e0): o clube, a pessoa, a situação no elenco (+0x4f
 /// >> 4), 0, o fim do contrato (+0x2d dia com sinal, +0x2f ano), o salário (+0xc) e, na vaga 11, 1 se a adaptabilidade
 /// (+0x59) for menor que 10, a +0x5b menor que 5 e a reputação da ficha (+0xd) passar de 4750.
-unsafe extern "thiscall" fn noticia_quer_contrato_novo(this: usize, contrato: usize) {
+pub(crate) unsafe extern "thiscall" fn noticia_quer_contrato_novo(this: usize, contrato: usize) {
     let _ = this;
     if contrato == 0 {
         return aviso_em(0x9a8190, 0x2d91);
@@ -1609,7 +1611,7 @@ unsafe extern "thiscall" fn noticia_quer_contrato_novo(this: usize, contrato: us
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_quer_contrato_novo(this: usize, contrato: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_noticia_quer_contrato_novo(this: usize, contrato: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(1273)(this, contrato)
 }
 
@@ -1620,7 +1622,7 @@ unsafe extern "thiscall" fn comparar_noticia_quer_contrato_novo(this: usize, con
 /// post_transfer_request_withdrawn_news(contrato, motivo)`. Sem contrato: a caixa "Error" (linha 0x2ba6). Senão a
 /// notícia 0xbc0 ao técnico do clube do contrato (0x7861e0): o clube, a pessoa, o motivo e, na vaga 7, 1 se +0x3f do
 /// contrato passar de 1.
-unsafe extern "thiscall" fn noticia_pedido_de_transferencia_retirado(this: usize, contrato: usize, motivo: u32) {
+pub(crate) unsafe extern "thiscall" fn noticia_pedido_de_transferencia_retirado(this: usize, contrato: usize, motivo: u32) {
     let _ = this;
     if contrato == 0 {
         return aviso_em(0x9a8190, 0x2ba6);
@@ -1642,7 +1644,7 @@ unsafe extern "thiscall" fn noticia_pedido_de_transferencia_retirado(this: usize
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_pedido_de_transferencia_retirado(this: usize, contrato: usize, motivo: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_noticia_pedido_de_transferencia_retirado(this: usize, contrato: usize, motivo: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(1274)(this, contrato, motivo)
 }
 
@@ -1652,34 +1654,34 @@ unsafe extern "thiscall" fn comparar_noticia_pedido_de_transferencia_retirado(th
 
 
 /// O registro de clube de id `id` ([0xae23b4], 0x245 bytes).
-unsafe fn cpw3_clube(id: usize) -> usize {
+pub(crate) unsafe fn cpw3_clube(id: usize) -> usize {
     read_usize(0xae23b4).wrapping_add(id.wrapping_mul(0x245))
 }
 
 /// A pessoa de id `id` ([0xae23bc], 0x6e bytes).
-unsafe fn cpw3_pessoa(id: usize) -> usize {
+pub(crate) unsafe fn cpw3_pessoa(id: usize) -> usize {
     read_usize(0xae23bc).wrapping_add(id.wrapping_mul(0x6e))
 }
 
 /// O contrato principal da pessoa (0x4cf5a0).
-unsafe fn cpw3_contrato(p: usize) -> usize {
+pub(crate) unsafe fn cpw3_contrato(p: usize) -> usize {
     let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     contrato_de(read_usize(0xae1050), p)
 }
 
 /// O interesse da pessoa em ir para o clube (Shortlist_Manager::staff_interest_in_joining_club 0x846920: thiscall(lista,
 /// pessoa, clube, salário, modo, situação, motivos), ret 0x18, float no st0).
-unsafe fn cpw3_interesse(lista: usize, pessoa: usize, clube: usize, salario: u32, modo: u32, situacao: u32) -> f64 {
+pub(crate) unsafe fn cpw3_interesse(lista: usize, pessoa: usize, clube: usize, salario: u32, modo: u32, situacao: u32) -> f64 {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, usize) -> f64 = core::mem::transmute(FN_SHORTLIST_MANAGER_STAFF_INTEREST_IN_JOINING_CLUB);
     f(lista, pessoa, clube, salario, modo, situacao, 0)
 }
 
 /// O ensaio do comparador: a cópia roda sem a oferta de empréstimo (0x8bed60) nem a atualização da lista (0x843e10),
 /// que alocam e mexem nas listas; devolve −2 onde faria a oferta e −3 onde atualizaria a lista.
-static mut CPW3_ENSAIO: bool = false;
+pub(crate) static mut CPW3_ENSAIO: bool = false;
 
 /// A data (dia i16, ano u16) de 8 bytes em `a`, como a original a compara (o ano sem sinal, o dia com sinal).
-unsafe fn cpw3_antes(a: usize, b: usize) -> bool {
+pub(crate) unsafe fn cpw3_antes(a: usize, b: usize) -> bool {
     let (aa, ab) = (read_i16(a + 2) as u16, read_i16(b + 2) as u16);
     aa < ab || (aa == ab && read_i16(a) < read_i16(b))
 }
@@ -1698,7 +1700,7 @@ unsafe fn cpw3_antes(a: usize, b: usize) -> bool {
 /// do contrato, antes de 4 semanas do começo da janela da nação-chave (0x669360, [0xb63d8a]) ou a menos de 3 semanas de
 /// hoje: −1. A porcentagem do salário (100 com reputação 2500 acima do dono, 0 com 1500 abaixo, senão 50) e a oferta
 /// (0x8bed60).
-unsafe extern "thiscall" fn tentar_emprestimo_pelo_jogador(this: usize, jogador: usize, clube: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn tentar_emprestimo_pelo_jogador(this: usize, jogador: usize, clube: usize) -> i32 {
     let entrada_da_lista: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_FIND_CLUB_SHORTLIST_ENTRY);
     let entrada = entrada_da_lista(this, clube, jogador, 0, 0);
     let c = cpw3_contrato(jogador);
@@ -1805,7 +1807,7 @@ unsafe extern "thiscall" fn tentar_emprestimo_pelo_jogador(this: usize, jogador:
 /// O comparador: a cópia em ensaio e a original a partir do mesmo estado ([0xae1080], o sorteio e as estáticas das
 /// operações de data). A cópia recusou (−1): a original também, com a mesma memória. A cópia atualizaria a lista (−3):
 /// a original devolve −1. A cópia faria a oferta (−2): a original não devolve −1.
-unsafe extern "thiscall" fn comparar_tentar_emprestimo_pelo_jogador(this: usize, jogador: usize, clube: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_tentar_emprestimo_pelo_jogador(this: usize, jogador: usize, clube: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(1278);
     let mut regioes = vec![(0xae1080usize, 4usize)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
@@ -1828,7 +1830,7 @@ unsafe extern "thiscall" fn comparar_tentar_emprestimo_pelo_jogador(this: usize,
 }
 
 /// Os dados da pessoa numa notícia: o id na vaga 2 e as três chaves (+0x33 de +4, +8 e +0xc) nas vagas 3 a 5.
-unsafe fn cpw3_dados_da_pessoa(n: usize, p: usize) {
+pub(crate) unsafe fn cpw3_dados_da_pessoa(n: usize, p: usize) {
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     gravar(n, 2, read_usize(p) as u32);
     gravar(n, 3, read_usize(read_usize(p + 4) + 0x33) as u32);
@@ -1837,7 +1839,7 @@ unsafe fn cpw3_dados_da_pessoa(n: usize, p: usize) {
 }
 
 /// A nação está ativa (0x544670, cdecl)?
-unsafe fn cpw3_nacao_ativa(nacao: usize) -> bool {
+pub(crate) unsafe fn cpw3_nacao_ativa(nacao: usize) -> bool {
     let f: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_NATION_ALLOWS_FREE_TRANSFERS);
     f(nacao) != 0
 }
@@ -1851,7 +1853,7 @@ unsafe fn cpw3_nacao_ativa(nacao: usize) -> bool {
 /// sinal), `bosman` e, na vaga 8, se a pessoa tem ficha (+0x61). Com `avisar_interessados` (anulado se a nação do clube,
 /// +0x53, não estiver ativa, 0x544670): os clubes interessados no jogador (0x842180 numa LLIST local, com 1, 1, 0) de
 /// outra nação ativa também a recebem.
-unsafe extern "thiscall" fn noticia_contrato_acabando(this: usize, contrato: usize, periodo: u32, bosman: u32, avisar: u32) {
+pub(crate) unsafe extern "thiscall" fn noticia_contrato_acabando(this: usize, contrato: usize, periodo: u32, bosman: u32, avisar: u32) {
     let _ = this;
     if contrato == 0 {
         return aviso_em(0x9a8190, 0x24f0);
@@ -1900,7 +1902,7 @@ unsafe extern "thiscall" fn noticia_contrato_acabando(this: usize, contrato: usi
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_contrato_acabando(this: usize, contrato: usize, periodo: u32, bosman: u32, avisar: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_noticia_contrato_acabando(this: usize, contrato: usize, periodo: u32, bosman: u32, avisar: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(1279)(this, contrato, periodo, bosman, avisar)
 }
 
@@ -1910,7 +1912,7 @@ unsafe extern "thiscall" fn comparar_noticia_contrato_acabando(this: usize, cont
 /// [pt] { 0x4d6d70 } (thiscall, ret 8, contract_manager.cpp, quadro SEH da notícia local): `CONTRACT_MANAGER::
 /// post_bosman_departure_news(contrato, destino)`. Sem contrato: a caixa "Error" (linha 0x2611). Senão a notícia 0xbbe ao
 /// técnico do clube (0x7861e0): o clube, a pessoa e o clube de destino (−1 sem ele).
-unsafe extern "thiscall" fn noticia_saida_pela_lei_bosman(this: usize, contrato: usize, destino: usize) {
+pub(crate) unsafe extern "thiscall" fn noticia_saida_pela_lei_bosman(this: usize, contrato: usize, destino: usize) {
     let _ = this;
     if contrato == 0 {
         return aviso_em(0x9a8190, 0x2611);
@@ -1931,7 +1933,7 @@ unsafe extern "thiscall" fn noticia_saida_pela_lei_bosman(this: usize, contrato:
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_saida_pela_lei_bosman(this: usize, contrato: usize, destino: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_noticia_saida_pela_lei_bosman(this: usize, contrato: usize, destino: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1280)(this, contrato, destino)
 }
 
@@ -1941,12 +1943,12 @@ unsafe extern "thiscall" fn comparar_noticia_saida_pela_lei_bosman(this: usize, 
 
 
 /// O contador de ofertas de contrato da pessoa (byte +8 do registro de 79 bytes em [0xae2d0c]).
-unsafe fn cpw4_contador(pessoa: usize) -> usize {
+pub(crate) unsafe fn cpw4_contador(pessoa: usize) -> usize {
     read_usize(0xae2d0c).wrapping_add(read_usize(pessoa).wrapping_mul(0x4f)).wrapping_add(8)
 }
 
 /// A atribuição de data (0x417c10: thiscall(destino, temporária, origem)).
-unsafe fn cpw4_copiar_data(destino: usize, origem: usize) {
+pub(crate) unsafe fn cpw4_copiar_data(destino: usize, origem: usize) {
     let copia: unsafe extern "thiscall" fn(usize, *mut [u32; 2], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u32; 2];
     copia(destino, &mut t, origem);
@@ -1954,7 +1956,7 @@ unsafe fn cpw4_copiar_data(destino: usize, origem: usize) {
 
 /// A oferta de contrato da pessoa (id em +0) pelo clube (id em +4) na lista `l` (nós: +0 o item, +6 o próximo), sem
 /// mexer no cursor; nenhuma: 0.
-unsafe fn cpw4_achar(l: usize, id: usize, clube: usize) -> usize {
+pub(crate) unsafe fn cpw4_achar(l: usize, id: usize, clube: usize) -> usize {
     let mut no = read_usize(l + 2);
     let mut n = 0;
     while no != 0 && n < 100000 {
@@ -1970,7 +1972,7 @@ unsafe fn cpw4_achar(l: usize, id: usize, clube: usize) -> usize {
 
 /// O ensaio do comparador: a cópia não cria nem acrescenta à lista (0x944cf1, 0x68d020, 0x68d0d0) e não chama o que vem
 /// depois (0x8c1f80, 0x8c2060, 0x4cd230), que alocam, sorteiam e mexem nas ofertas.
-static mut CPW4_ENSAIO: bool = false;
+pub(crate) static mut CPW4_ENSAIO: bool = false;
 
 /// updates the same club's offer to the person or adds a new one to the list (the offer count goes up); marks the terms
 /// as offered on the transfer offer and, if asked, schedules the decision
@@ -1986,7 +1988,7 @@ static mut CPW4_ENSAIO: bool = false;
 /// original o deixa) e entra na lista (criada se faltar; 0x68d0d0), e o contador sobe. Com vaga, a oferta (0x8c61e0) do
 /// mesmo jogador marca os termos oferecidos (0x8c1f80), senão o jogador da troca (0x8c2060); com `decidir`, agenda a
 /// decisão (0x4cd230).
-unsafe extern "thiscall" fn acrescentar_oferta_de_contrato(this: usize, termos: usize, vaga: i32, valor: u32, marca: u32, a5: u32, decidir: u32, acertado: u32) {
+pub(crate) unsafe extern "thiscall" fn acrescentar_oferta_de_contrato(this: usize, termos: usize, vaga: i32, valor: u32, marca: u32, a5: u32, decidir: u32, acertado: u32) {
     let _ = a5;
     let mais: unsafe extern "thiscall" fn(usize, *mut [u32; 2], u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let construir: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_STAFF_CONTRACT_STAFF_CONTRACT);
@@ -2076,13 +2078,13 @@ unsafe extern "thiscall" fn acrescentar_oferta_de_contrato(this: usize, termos: 
 }
 
 /// O registro que a cópia em ensaio acrescentaria à lista.
-static mut CPW4_REGISTRO: [u8; 0x6f] = [0; 0x6f];
+pub(crate) static mut CPW4_REGISTRO: [u8; 0x6f] = [0; 0x6f];
 
 /// Comparador. Oferta já na lista (achada antes, sem mexer no cursor): a cópia em ensaio e a original a partir do mesmo
 /// estado, comparando a oferta (0x63 bytes), o contador e a cabeça da lista (o cursor). Oferta nova (acrescentada, aloca):
 /// a cópia em ensaio monta o registro; a original acrescenta, e o nó novo (o último do jogador pelo clube) tem de ter os
 /// mesmos 0x63 primeiros bytes, com o contador + 1.
-unsafe extern "thiscall" fn comparar_acrescentar_oferta_de_contrato(this: usize, termos: usize, vaga: i32, valor: u32, marca: u32, a5: u32, decidir: u32, acertado: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_acrescentar_oferta_de_contrato(this: usize, termos: usize, vaga: i32, valor: u32, marca: u32, a5: u32, decidir: u32, acertado: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32, u32, u32)>(1281);
     let id = read_usize(termos);
     let clube = read_usize(termos + 4);
@@ -2138,7 +2140,7 @@ unsafe extern "thiscall" fn comparar_acrescentar_oferta_de_contrato(this: usize,
 /// ofertas de contrato (+0x34; cursor recomeçado) a da pessoa com a vaga (+0x59). Achada: com +0x63 marcado, a original
 /// 0x7a81a0 de [0xb7434c] com +0x63, +0x67 e +0x6b; acertada (+0x50 = 2), desliga a marca de contrato acertado (0x8c5430);
 /// tira da lista (0x68d1f0) e o contador de ofertas da pessoa (+8 do registro de 79 bytes) desce.
-unsafe extern "thiscall" fn tirar_oferta_de_contrato_da_vaga(this: usize, pessoa: usize, vaga: i32) {
+pub(crate) unsafe extern "thiscall" fn tirar_oferta_de_contrato_da_vaga(this: usize, pessoa: usize, vaga: i32) {
     let l = read_usize(this + 0x34);
     if l == 0 {
         return;
@@ -2172,7 +2174,7 @@ unsafe extern "thiscall" fn tirar_oferta_de_contrato_da_vaga(this: usize, pessoa
 
 /// Comparador: a original tira o item da lista (libera): só ela, conferindo o plano feito antes: com a oferta da pessoa
 /// pela vaga na lista, o contador desce 1; sem ela, fica.
-unsafe extern "thiscall" fn comparar_tirar_oferta_de_contrato_da_vaga(this: usize, pessoa: usize, vaga: i32) {
+pub(crate) unsafe extern "thiscall" fn comparar_tirar_oferta_de_contrato_da_vaga(this: usize, pessoa: usize, vaga: i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32)>(1282);
     let l = read_usize(this + 0x34);
     let mut achou = false;
@@ -2202,7 +2204,7 @@ unsafe extern "thiscall" fn comparar_tirar_oferta_de_contrato_da_vaga(this: usiz
 /// [pt] { 0x4ce450 } (stdcall, ret 8, contract_manager.cpp, quadro SEH sem destrutor): o menor salário que a pessoa pede ao
 /// clube: num contrato local (0x85e410), o desejado (0x85fc50 com −1, a situação 1 e depois 2, 0xb), no máximo 10 milhões.
 /// Pela tela do contrato.
-unsafe extern "stdcall" fn menor_salario_pedido(pessoa: usize, clube: usize) -> i32 {
+pub(crate) unsafe extern "stdcall" fn menor_salario_pedido(pessoa: usize, clube: usize) -> i32 {
     let construir: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_STAFF_CONTRACT_STAFF_CONTRACT);
     let desejado: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, u32, u32, u32) -> i32 = core::mem::transmute(FN_STAFF_CONTRACT_SET_TO_DESIRED_CONTRACT);
     let mut local = [0u8; 0x50];
@@ -2219,7 +2221,7 @@ unsafe extern "stdcall" fn menor_salario_pedido(pessoa: usize, clube: usize) -> 
 
 /// Comparador: a original e a cópia a partir do mesmo estado (o sorteio e o último contrato pedido [0xae1080]); a
 /// devolução e a memória.
-unsafe extern "stdcall" fn comparar_menor_salario_pedido(pessoa: usize, clube: usize) -> i32 {
+pub(crate) unsafe extern "stdcall" fn comparar_menor_salario_pedido(pessoa: usize, clube: usize) -> i32 {
     let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> i32>(1283);
     let mut regioes = vec![(0xae1080usize, 4usize)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
@@ -2244,7 +2246,7 @@ unsafe extern "stdcall" fn comparar_menor_salario_pedido(pessoa: usize, clube: u
 /// (+0x4e: tira o bit 2 e liga o 8; moral +12 em 0x544710; as listas dos clubes 0x842c00; 0x4d71b0). Senão um sorteio
 /// pela força do pedido (+0x44) e pelo ânimo (+0x59) contra outro de 50 dá a queixa 0x10000 (0x867700); a moral cai 12
 /// e a força do pedido sobe ânimo × 5 + 56, presa em ±100.
-unsafe extern "thiscall" fn pedido_de_transferencia(this: usize, contrato: usize) {
+pub(crate) unsafe extern "thiscall" fn pedido_de_transferencia(this: usize, contrato: usize) {
     if contrato == 0 {
         return aviso_em(0x9a8190, 0x2999);
     }
@@ -2311,7 +2313,7 @@ unsafe extern "thiscall" fn pedido_de_transferencia(this: usize, contrato: usize
 ///
 /// [pt] { 0x4cbb20 } (stdcall, ret 4, contract_manager.cpp): `is_contract_staff_job(cargo)`: 1 para os cargos (byte) 0, 6 a
 /// 0xd e 0xf, os que têm contrato pelo gerente de contratos; senão 0.
-unsafe extern "stdcall" fn cargo_com_contrato(cargo: u32) -> u32 {
+pub(crate) unsafe extern "stdcall" fn cargo_com_contrato(cargo: u32) -> u32 {
     matches!(cargo as u8, 0 | 6..=0xd | 0xf) as u32
 }
 
@@ -2320,7 +2322,7 @@ unsafe extern "stdcall" fn cargo_com_contrato(cargo: u32) -> u32 {
 ///
 /// [pt] { 0x4cb960 } (stdcall, ret 4, contract_manager.cpp): `staff_is_not_board_member(pessoa)`: 0 se o cargo (+0x3d) é de
 /// diretoria (1 a 4) num clube (+0x39); senão 1.
-unsafe extern "stdcall" fn fora_da_diretoria(pessoa: usize) -> u32 {
+pub(crate) unsafe extern "stdcall" fn fora_da_diretoria(pessoa: usize) -> u32 {
     let cargo = read_u8(pessoa + 0x3d);
     if (1..=4).contains(&cargo) && read_usize(pessoa + 0x39) != 0 {
         return 0;
@@ -2330,12 +2332,12 @@ unsafe extern "stdcall" fn fora_da_diretoria(pessoa: usize) -> u32 {
 
 // ponytail: sorteia (0x90cfc0), põe na lista (0x842c00, 0x4d71b0), muda moral e queixas (que podem chamar o pedido de
 // novo): só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_pedido_de_transferencia(this: usize, contrato: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_pedido_de_transferencia(this: usize, contrato: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(1116)(this, contrato)
 }
 
 /// Comparador: pelo valor.
-unsafe extern "stdcall" fn comparar_cargo_com_contrato(cargo: u32) -> u32 {
+pub(crate) unsafe extern "stdcall" fn comparar_cargo_com_contrato(cargo: u32) -> u32 {
     let r = orig::<unsafe extern "stdcall" fn(u32) -> u32>(1117)(cargo);
     let n = cargo_com_contrato(cargo);
     PLACAR.registrar(r == n, || format!("cargo_com_contrato({}) original={} rust={}", cargo as u8, r, n));
@@ -2343,7 +2345,7 @@ unsafe extern "stdcall" fn comparar_cargo_com_contrato(cargo: u32) -> u32 {
 }
 
 /// Comparador: pelo valor.
-unsafe extern "stdcall" fn comparar_fora_da_diretoria(pessoa: usize) -> u32 {
+pub(crate) unsafe extern "stdcall" fn comparar_fora_da_diretoria(pessoa: usize) -> u32 {
     let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(1118)(pessoa);
     let n = fora_da_diretoria(pessoa);
     PLACAR.registrar(r == n, || format!("fora_da_diretoria(pessoa {}, cargo {}) original={} rust={}", read_usize(pessoa), read_u8(pessoa + 0x3d), r, n));
@@ -2355,7 +2357,7 @@ unsafe extern "stdcall" fn comparar_fora_da_diretoria(pessoa: usize) -> u32 {
 
 
 /// As comparações de data do jogo (thiscall na data `a`, a outra por valor): 0x456740 `>`, 0x456770 `<`, 0x4a7f20 `==`.
-unsafe fn cpp1_data(f: usize, a: usize, b: usize) -> u32 {
+pub(crate) unsafe fn cpp1_data(f: usize, a: usize, b: usize) -> u32 {
     let g: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(f);
     g(a, read_u32(b), read_u32(b + 4))
 }
@@ -2366,7 +2368,7 @@ unsafe fn cpp1_data(f: usize, a: usize, b: usize) -> u32 {
 /// [pt] { 0x4dc910 } (cdecl, contract_manager.cpp): `compare_decision_dates(a, b)`: a ordem do qsort das datas de decisão
 /// (entradas de 14 bytes: +0 pessoa, +4 data, +0xc fatia do dia, +0xd tipo): a data de `a` antes (0x456770): −1;
 /// depois (0x456740): 1; no mesmo dia, a fatia de `a` menos a de `b` (com sinal). Quente (o qsort): sem contador.
-unsafe extern "C" fn comparar_datas_de_decisao(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn comparar_datas_de_decisao(a: usize, b: usize) -> i32 {
     if cpp1_data(0x456770, a + 4, b + 4) != 0 {
         return -1; // a antes de b
     }
@@ -2376,7 +2378,7 @@ unsafe extern "C" fn comparar_datas_de_decisao(a: usize, b: usize) -> i32 {
     read_u8(a + 0xc) as i8 as i32 - read_u8(b + 0xc) as i8 as i32
 }
 
-unsafe extern "C" fn comparar_comparar_datas_de_decisao(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn comparar_comparar_datas_de_decisao(a: usize, b: usize) -> i32 {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> i32>(1006);
     let r = o(a, b);
     let n = comparar_datas_de_decisao(a, b);
@@ -2395,7 +2397,7 @@ unsafe extern "C" fn comparar_comparar_datas_de_decisao(a: usize, b: usize) -> i
 /// 0x4dc910): para na primeira data depois de `data` (0x456740) ou, no mesmo dia (0x4a7f20), com a fatia da entrada
 /// maior que `fatia`. Cada entrada vencida com pessoa (+0 ≠ −1) fica com −1 e, sendo do tipo 3 (+0xd), a pessoa decide
 /// as ofertas de contrato (0x4ce4e0). O índice +0x18 sobe a cada entrada (relido depois da decisão).
-unsafe extern "thiscall" fn decidir_as_datas_vencidas(this: usize, data: usize, fatia: u32) {
+pub(crate) unsafe extern "thiscall" fn decidir_as_datas_vencidas(this: usize, data: usize, fatia: u32) {
     let n = |c: usize| read_u32(c) as i32;
     if n(this + 0x18) >= n(this + 0x14) {
         return;
@@ -2429,7 +2431,7 @@ unsafe extern "thiscall" fn decidir_as_datas_vencidas(this: usize, data: usize, 
 /// Comparador: a decisão das ofertas (0x4ce4e0) mexe nos contratos, nas ofertas e no próprio vetor: o plano (as datas
 /// lidas antes, sem rodar nada) diz se alguma entrada do tipo 3 com pessoa vence; com ela, só a original. Sem ela (o
 /// caso de todo dia), lado a lado pelo índice +0x18 e pelas entradas que vencem (ficam com −1).
-unsafe extern "thiscall" fn comparar_decidir_as_datas_vencidas(this: usize, data: usize, fatia: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_decidir_as_datas_vencidas(this: usize, data: usize, fatia: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(1007);
     let (i0, n) = (read_u32(this + 0x18) as i32, read_u32(this + 0x14) as i32);
     let mut i = i0;
@@ -2464,7 +2466,7 @@ unsafe extern "thiscall" fn comparar_decidir_as_datas_vencidas(this: usize, data
 /// com a capacidade em byte com sinal). Grava o vetor em `saida` e devolve quantas (byte). A original confere a lista
 /// (+0x34), não o vetor, depois do realloc: só com a lista nula vai à caixa "cannot allocate memory" (linha 0x64c) e
 /// devolve 0 com a saída nula. Quem a chama (0x598a06, o orçamento de transferências) libera o vetor.
-unsafe extern "thiscall" fn ofertas_de_contrato_do_clube(this: usize, clube: usize, saida: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn ofertas_de_contrato_do_clube(this: usize, clube: usize, saida: usize) -> u8 {
     let mut n: i8 = 0;
     let mut cap: i8 = 0;
     let mut vetor: usize = 0;
@@ -2499,7 +2501,7 @@ unsafe extern "thiscall" fn ofertas_de_contrato_do_clube(this: usize, clube: usi
 
 /// Comparador: a original aloca o vetor que quem chama libera: roda só ela e confere o plano feito antes (as ofertas
 /// do clube lidas da lista, sem alocar): a conta e os 111 bytes de cada uma, na ordem.
-unsafe extern "thiscall" fn comparar_ofertas_de_contrato_do_clube(this: usize, clube: usize, saida: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn comparar_ofertas_de_contrato_do_clube(this: usize, clube: usize, saida: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(1008);
     let lista = read_u32(this + 0x34) as usize;
     if lista == 0 || clube == 0 || saida == 0 {
@@ -2527,33 +2529,33 @@ unsafe extern "thiscall" fn comparar_ofertas_de_contrato_do_clube(this: usize, c
 // ---------- 252a leva: os empréstimos e o lugar no elenco: assinar o contrato de empréstimo, encerrar o empréstimo e trocar o lugar no elenco (contract_manager.cpp) ----------
 
 
-unsafe fn cpp2_b(a: usize) -> u8 {
+pub(crate) unsafe fn cpp2_b(a: usize) -> u8 {
     // ponytail: leitura volátil porque a original lê [0 + 0x35] quando o contrato principal falta (cai como ela)
     core::ptr::read_volatile(a as *const u8)
 }
 
-unsafe fn cpp2_por(a: usize, v: u32) {
+pub(crate) unsafe fn cpp2_por(a: usize, v: u32) {
     core::ptr::write_unaligned(a as *mut u32, v);
 }
 
 /// O registro de 79 bytes da pessoa em [0xae2d0c] (+0 o contrato principal, +4 o de empréstimo; −1 sem).
-unsafe fn cpp2_vaga(pessoa: usize) -> usize {
+pub(crate) unsafe fn cpp2_vaga(pessoa: usize) -> usize {
     (read_u32(0xae2d0c) as usize).wrapping_add((read_u32(pessoa) as usize).wrapping_mul(0x4f))
 }
 
 /// A entrada `k` (0x50 bytes) do vetor de contratos que começa em `vetor`.
-fn cpp2_contrato(vetor: u32, k: i32) -> usize {
+pub(crate) fn cpp2_contrato(vetor: u32, k: i32) -> usize {
     (vetor as usize).wrapping_add((k as usize).wrapping_mul(0x50))
 }
 
 /// O clube de id `id` (registro de 0x245 bytes em [0xae23b4]).
-unsafe fn cpp2_clube(id: u32) -> usize {
+pub(crate) unsafe fn cpp2_clube(id: u32) -> usize {
     (read_u32(0xae23b4) as usize).wrapping_add((id as usize).wrapping_mul(0x245))
 }
 
 /// O contrato principal da pessoa no CONTRACT_MANAGER global ([[0xae1050]]), como as originais o refazem: pessoa fora
 /// da faixa (id ≥ [0xae2364]) ou sem contrato principal: 0. Grava em [0xae1080] (a ficha global).
-unsafe fn cpp2_ficha(pessoa: usize) -> usize {
+pub(crate) unsafe fn cpp2_ficha(pessoa: usize) -> usize {
     let c = if read_u32(pessoa) as i32 >= read_u32(0xae2364) as i32 {
         0
     } else {
@@ -2567,7 +2569,7 @@ unsafe fn cpp2_ficha(pessoa: usize) -> usize {
 /// A caixa "Error" do contract_manager.cpp na `linha`: "v%s %s.%s %d" em 0xae24d0 (0x944cff separa o caminho 0x9a8190,
 /// 0x90d130 a versão; a original não desempilha os argumentos dela, que são o resto do formato), a caixa 0x5e8290 e
 /// [0xb67a34] = 0. O jogo segue.
-unsafe fn cpp2_erro(linha: u32) {
+pub(crate) unsafe fn cpp2_erro(linha: u32) {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -2581,41 +2583,41 @@ unsafe fn cpp2_erro(linha: u32) {
 }
 
 // As rotinas do banco que as três chamam (pelo endereço; as portadas passam pelo desvio).
-unsafe fn cpp2_parceiro(clube: usize, eh_a: *mut u32) -> usize {
+pub(crate) unsafe fn cpp2_parceiro(clube: usize, eh_a: *mut u32) -> usize {
     let f: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     f(clube, eh_a, 1)
 }
-unsafe fn cpp2_marcar(pessoa: usize, elenco: u32) {
+pub(crate) unsafe fn cpp2_marcar(pessoa: usize, elenco: u32) {
     let f: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_STAFF_SET_SQUAD_FLAGS);
     f(pessoa, elenco);
 }
-unsafe fn cpp2_tatica(clube: usize, pessoa: usize, a: u32, b: u32) {
+pub(crate) unsafe fn cpp2_tatica(clube: usize, pessoa: usize, a: u32, b: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_TACTICS_REMOVE_PLAYER_FROM_SELECTION);
     f(read_u32(0xde1d08) as usize, clube, pessoa, a, b);
 }
-unsafe fn cpp2_listas(pessoa: usize, a4: u32, clube: i32) {
+pub(crate) unsafe fn cpp2_listas(pessoa: usize, a4: u32, clube: i32) {
     let f: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, i32, u32) = core::mem::transmute(FN_PLAYERSTATS_ARCHIVE_PLAYER_STATS);
     f(read_u32(0xb74350) as usize, pessoa, -1, 0, a4, clube, 0);
 }
-unsafe fn cpp2_tirar(clube: usize, pessoa: usize, data: usize, desligar: u32, como_jogador: u32) {
+pub(crate) unsafe fn cpp2_tirar(clube: usize, pessoa: usize, data: usize, desligar: u32, como_jogador: u32) {
     let f: unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_DATABASE_REMOVE_STAFF_FROM_CLUB);
     f(clube, pessoa, data, desligar, como_jogador);
 }
-unsafe fn cpp2_por_no_clube(clube: usize, pessoa: usize, cargo: u32, data: usize, reduzir: u32, gravar: u32) {
+pub(crate) unsafe fn cpp2_por_no_clube(clube: usize, pessoa: usize, cargo: u32, data: usize, reduzir: u32, gravar: u32) {
     let f: unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32 = core::mem::transmute(FN_DATABASE_ADD_STAFF_TO_CLUB);
     f(clube, pessoa, cargo, data, reduzir, gravar);
 }
-unsafe fn cpp2_reservas(clube: usize) -> u32 {
+pub(crate) unsafe fn cpp2_reservas(clube: usize) -> u32 {
     let f: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_CLUB_HAS_RESERVE_SQUAD);
     f(clube)
 }
 /// Refaz a folha de salários (0x598370) das finanças do clube (0x5a0590 em [0xae2a38]; a original chama mesmo sem).
-unsafe fn cpp2_folha(clube: usize) {
+pub(crate) unsafe fn cpp2_folha(clube: usize) {
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
     let folha: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_FINANCE_UPDATE_WAGE_BILL);
     folha(financas(read_u32(0xae2a38) as usize, clube));
 }
-unsafe fn cpp2_data(destino: usize, origem: usize) {
+pub(crate) unsafe fn cpp2_data(destino: usize, origem: usize) {
     let copiar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut ret = [0u8; 8];
     copiar(destino, &mut ret, origem);
@@ -2637,7 +2639,7 @@ unsafe fn cpp2_data(destino: usize, origem: usize) {
 /// que ela já tem; senão na primeira livre (−1) do vetor, que fica com o índice (e aí a original sai sem refazer as
 /// folhas); senão no fim (cheio: +100 vagas, realloc 0x945667 ou malloc 0x944e46; sem memória, caixa da linha 0x1708
 /// e segue), pelo STAFF_CONTRACT::operator= 0x4cc810. Por fim refaz as folhas de salários do clube dono e do novo.
-unsafe extern "thiscall" fn assinar_contrato_de_emprestimo(this: usize, contrato: usize) {
+pub(crate) unsafe extern "thiscall" fn assinar_contrato_de_emprestimo(this: usize, contrato: usize) {
     let mut guardada = [0u8; 8];
     let construir: unsafe extern "thiscall" fn(*mut [u8; 8]) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     construir(&mut guardada);
@@ -2722,7 +2724,7 @@ unsafe extern "thiscall" fn assinar_contrato_de_emprestimo(this: usize, contrato
     cpp2_folha(novo);
 }
 
-unsafe extern "thiscall" fn comparar_assinar_contrato_de_emprestimo(this: usize, contrato: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_assinar_contrato_de_emprestimo(this: usize, contrato: usize) {
     // ponytail: mexe no elenco, nas táticas, nas listas e realoca o vetor: só a original; a cópia prova no modo Rust
     orig::<unsafe extern "thiscall" fn(usize, usize)>(1009)(this, contrato)
 }
@@ -2740,7 +2742,7 @@ unsafe extern "thiscall" fn comparar_assinar_contrato_de_emprestimo(this: usize,
 /// volta ao dono (+0x39) e às marcas de elenco (0x540980): com time reserva (0x542740), 2 se o contrato principal tem o
 /// bit 0x40 de +0x35, senão 1; senão 1 e, com clube parceiro, fica no parceiro se está nas 50 vagas dele. A situação
 /// +0x6d 0x10 vira 4.
-unsafe extern "thiscall" fn encerrar_o_emprestimo(this: usize, pessoa: usize) {
+pub(crate) unsafe extern "thiscall" fn encerrar_o_emprestimo(this: usize, pessoa: usize) {
     let mut clube = read_u32(pessoa + 0x39) as usize;
     if clube == 0 {
         cpp2_erro(0x1729);
@@ -2804,7 +2806,7 @@ unsafe extern "thiscall" fn encerrar_o_emprestimo(this: usize, pessoa: usize) {
     }
 }
 
-unsafe extern "thiscall" fn comparar_encerrar_o_emprestimo(this: usize, pessoa: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_encerrar_o_emprestimo(this: usize, pessoa: usize) {
     // ponytail: mexe no elenco, nas táticas, nas listas e nas disputas (0x556570 libera itens): só a original
     orig::<unsafe extern "thiscall" fn(usize, usize)>(1010)(this, pessoa)
 }
@@ -2821,7 +2823,7 @@ unsafe extern "thiscall" fn comparar_encerrar_o_emprestimo(this: usize, pessoa: 
 /// 0. Emprestada a este clube: sai das listas, do elenco e das táticas do outro e entra no destino com o cargo; com
 /// contrato de empréstimo de outro clube: troca o bit 0x40 e passa ao destino como jogador (0xb); senão como o
 /// emprestado, sem gravar. Devolve 1 (clube nulo também). Sem contrato principal a original lê [0x35] e cai.
-unsafe extern "thiscall" fn trocar_lugar_no_elenco(this: usize, pessoa: usize, clube: usize, saida: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn trocar_lugar_no_elenco(this: usize, pessoa: usize, clube: usize, saida: usize) -> u32 {
     if clube == 0 {
         return 1;
     }
@@ -2903,7 +2905,7 @@ unsafe extern "thiscall" fn trocar_lugar_no_elenco(this: usize, pessoa: usize, c
     1
 }
 
-unsafe extern "thiscall" fn comparar_trocar_lugar_no_elenco(this: usize, pessoa: usize, clube: usize, saida: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_trocar_lugar_no_elenco(this: usize, pessoa: usize, clube: usize, saida: usize) -> u32 {
     // ponytail: mexe no elenco, nas táticas e nas listas: só a original; a cópia prova no modo Rust
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(1011)(this, pessoa, clube, saida)
 }
@@ -2912,7 +2914,7 @@ unsafe extern "thiscall" fn comparar_trocar_lugar_no_elenco(this: usize, pessoa:
 
 
 
-unsafe fn cpp4_b(a: usize) -> u8 {
+pub(crate) unsafe fn cpp4_b(a: usize) -> u8 {
     // ponytail: volátil porque a original lê [0 + 0x53] quando falta o clube do contrato (cai como ela)
     core::ptr::read_volatile(a as *const u8)
 }
@@ -2920,7 +2922,7 @@ unsafe fn cpp4_b(a: usize) -> u8 {
 /// A reputação "vista" de um clube para o técnico: com nação (+0x53), o peso dela (+0x85) × reputação (+0x80) × 0,05
 /// (0x967888); sem, a reputação × 0,65 (0x96a5d0); truncadas (16 bits) e, acima de 0x203a, 0x203a − (excesso × −1,1
 /// truncado).
-unsafe fn cpp4_reputacao_vista(clube: usize) -> i16 {
+pub(crate) unsafe fn cpp4_reputacao_vista(clube: usize) -> i16 {
     let r = read_i16(clube + 0x80) as i32;
     let nacao = read_u32(clube + 0x53) as usize;
     let v = if nacao != 0 {
@@ -2952,7 +2954,7 @@ unsafe fn cpp4_reputacao_vista(clube: usize) -> i16 {
 /// clube nem seleção; seleção da nação dele com reputação abaixo de 6750, sem clube, ou com o clube dele mais fraco
 /// (abaixo de 7750 e 750 abaixo da seleção) há tempo; clube acima de 7750 com a reputação vista acima da do clube dele
 /// + 25 × +0x59 + 250. Senão, o interesse dele no cargo (0x844780, float) não abaixo de `nota_minima`.
-unsafe extern "thiscall" fn serve_para_o_cargo(_this: usize, pessoa: usize, clube: usize, nota_minima: f64) -> u8 {
+pub(crate) unsafe extern "thiscall" fn serve_para_o_cargo(_this: usize, pessoa: usize, clube: usize, nota_minima: f64) -> u8 {
     let ficha = read_u32(pessoa + 0x69) as usize;
     if ficha == 0 || clube == 0 {
         return 0;
@@ -3072,7 +3074,7 @@ unsafe extern "thiscall" fn serve_para_o_cargo(_this: usize, pessoa: usize, club
 }
 
 /// Comparador: a rotina só lê (o interesse 0x844780 sem a saída das razões): pela devolução.
-unsafe extern "thiscall" fn comparar_serve_para_o_cargo(this: usize, pessoa: usize, clube: usize, nota_minima: f64) -> u8 {
+pub(crate) unsafe extern "thiscall" fn comparar_serve_para_o_cargo(this: usize, pessoa: usize, clube: usize, nota_minima: f64) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, f64) -> u8>(1015)(this, pessoa, clube, nota_minima);
     let n = serve_para_o_cargo(this, pessoa, clube, nota_minima);
     PLACAR.registrar(r == n, || format!("serve_para_o_cargo(pessoa {:x}, clube {:x}, {}) original={} rust={}", pessoa, clube, nota_minima, r, n));
@@ -3088,7 +3090,7 @@ unsafe extern "thiscall" fn comparar_serve_para_o_cargo(this: usize, pessoa: usi
 /// jogador 12 ou mais: 1; senão, não jogador no cargo 8, 6 ou 5. 8: de 30 anos, não jogador ou acima de 36 ou (+0x2f ≥ 12
 /// e +0x57 < 10) fora dos cargos 5 e 10: 1; senão como o 6. 9: não jogador no cargo 9. 10: não jogador no cargo 10 ou com
 /// +0x28 = 10. 11: jogador (+0x61). 13 e 15: jogador e não jogador, ou acima de 34, ou de 30 anos com +0x2f ≥ 12.
-unsafe extern "stdcall" fn pode_assumir_o_cargo(cargo: u32, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "stdcall" fn pode_assumir_o_cargo(cargo: u32, pessoa: usize) -> u32 {
     let k = (cargo as u8 as i8 as i32).wrapping_sub(6);
     if k as u32 > 9 || k == 1 || k == 6 || k == 8 {
         return 0;
@@ -3139,7 +3141,7 @@ unsafe extern "stdcall" fn pode_assumir_o_cargo(cargo: u32, pessoa: usize) -> u3
     r as u32
 }
 
-unsafe extern "stdcall" fn comparar_pode_assumir_o_cargo(cargo: u32, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "stdcall" fn comparar_pode_assumir_o_cargo(cargo: u32, pessoa: usize) -> u32 {
     let r = orig::<unsafe extern "stdcall" fn(u32, usize) -> u32>(1016)(cargo, pessoa);
     let n = pode_assumir_o_cargo(cargo, pessoa);
     PLACAR.registrar(r == n, || format!("pode_assumir_o_cargo(cargo {}, pessoa {:x}) original={} rust={}", cargo as u8 as i8, pessoa, r, n));
@@ -3147,7 +3149,7 @@ unsafe extern "stdcall" fn comparar_pode_assumir_o_cargo(cargo: u32, pessoa: usi
 }
 
 /// Os dias (0..400) desde a data (dia +0, ano +2 sem sinal) até hoje ([0xae2c90]), com o ano de 365 dias.
-unsafe fn cpp4_dias_desde(dia: usize, ano: usize) -> i32 {
+pub(crate) unsafe fn cpp4_dias_desde(dia: usize, ano: usize) -> i32 {
     let hoje = core::ptr::read_unaligned(0xae2c92 as *const u16) as i32;
     let a = core::ptr::read_unaligned(ano as *const u16) as i32;
     let d = (hoje - a) * 365 - read_i16(dia) as i32 + read_i16(0xae2c90) as i32;
@@ -3161,7 +3163,7 @@ unsafe fn cpp4_dias_desde(dia: usize, ano: usize) -> i32 {
 /// e menos de 32 anos: + 250 × +0x57 + 25 × +0x22 + 2500; senão pela faixa do contrato (+0x4f >> 4): 1: + 250 × +0x57 +
 /// 5000; 2: + 125 × +0x57 + 2500; 3: + 1000 × +0x3e; nesses casos no máximo 15000. y = 1 − x × (6,667e-4 se x < 0, senão
 /// 6e-5), entre 0,1 e 10; m = ftol((+0x3e + 4) / y + 0,5) (byte). Dupla precisão; as constantes do .rdata.
-unsafe fn cpp4_queda_da_moral(pessoa: usize, clube: usize, contrato: usize) -> Option<i8> {
+pub(crate) unsafe fn cpp4_queda_da_moral(pessoa: usize, clube: usize, contrato: usize) -> Option<i8> {
     if contrato == 0 || clube == 0 || pessoa == 0 {
         return None;
     }
@@ -3202,7 +3204,7 @@ unsafe fn cpp4_queda_da_moral(pessoa: usize, clube: usize, contrato: usize) -> O
 }
 
 /// A moral (+0x44) menos `m`, entre −100 e 100 (a soma em byte quando cabe).
-fn cpp4_moral_nova(moral: i8, m: i8) -> i8 {
+pub(crate) fn cpp4_moral_nova(moral: i8, m: i8) -> i8 {
     let menos = m.wrapping_neg();
     let s = moral as i32 + menos as i32;
     if s > 100 {
@@ -3216,7 +3218,7 @@ fn cpp4_moral_nova(moral: i8, m: i8) -> i8 {
 
 /// O contrato principal da pessoa no CONTRACT_MANAGER global e o clube dele, como a original os refaz (a ficha
 /// [0xae1080] gravada); sem contrato o clube é nulo.
-unsafe fn cpp4_clube_do_contrato(pessoa: usize) -> usize {
+pub(crate) unsafe fn cpp4_clube_do_contrato(pessoa: usize) -> usize {
     let c = if read_u32(pessoa) as i32 >= read_u32(0xae2364) as i32 {
         0
     } else {
@@ -3230,7 +3232,7 @@ unsafe fn cpp4_clube_do_contrato(pessoa: usize) -> usize {
 /// A janela de transferências aberta para o clube do contrato da pessoa: o índice da nação-chave (0x669340 da nação do
 /// clube; sem nação, o byte baixo do ponteiro do clube que a original lê da vaga do argumento) dá as duas datas da
 /// tabela 0xb63d8a (72 bytes por nação): hoje depois da primeira e antes da segunda.
-unsafe fn cpp4_janela_aberta(pessoa: usize, clube: usize) -> bool {
+pub(crate) unsafe fn cpp4_janela_aberta(pessoa: usize, clube: usize) -> bool {
     let c1 = cpp4_clube_do_contrato(pessoa);
     let k = if read_u32(c1 + 0x53) != 0 {
         let c2 = cpp4_clube_do_contrato(pessoa);
@@ -3265,7 +3267,7 @@ unsafe fn cpp4_janela_aberta(pessoa: usize, clube: usize) -> bool {
 /// a queixa 4 (0x8674e0 e 0x867700 com 4); no principal (0x4cbb60 = 1), nota acima de 1250, mais de 23 anos e
 /// sorteio(+0x59 + 5) = 0: a queixa 0x10; até 21 anos, no principal com sorteio(+0x57) > 5, mais forte que o clube e
 /// acima de 1250: a queixa 0x10. Por fim a felicidade no contrato (+0x44) cai m, entre −100 e 100.
-unsafe extern "thiscall" fn baixar_moral_pela_partida(this: usize, pessoa: usize, clube: usize, contrato: usize) {
+pub(crate) unsafe extern "thiscall" fn baixar_moral_pela_partida(this: usize, pessoa: usize, clube: usize, contrato: usize) {
     let Some(m) = cpp4_queda_da_moral(pessoa, clube, contrato) else {
         return;
     };
@@ -3330,7 +3332,7 @@ unsafe extern "thiscall" fn baixar_moral_pela_partida(this: usize, pessoa: usize
 
 /// Comparador: as queixas (0x867700) sorteiam e podem abrir pedido de transferência: só a original; o plano (a queda
 /// `m`, calculada antes, sem efeito) diz a moral +0x44 que ela deixa (as queixas não a gravam) ou que ela não mexe.
-unsafe extern "thiscall" fn comparar_baixar_moral_pela_partida(this: usize, pessoa: usize, clube: usize, contrato: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_baixar_moral_pela_partida(this: usize, pessoa: usize, clube: usize, contrato: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(1017);
     if contrato == 0 {
         return o(this, pessoa, clube, contrato);
@@ -3351,16 +3353,16 @@ unsafe extern "thiscall" fn comparar_baixar_moral_pela_partida(this: usize, pess
 // ---------- 251a leva: os contratos: tirar o contrato principal, reenviar as ofertas guardadas e o mês do fim da temporada do clube (contract_manager.cpp) ----------
 
 
-unsafe fn cpo2_i(a: usize) -> i32 {
+pub(crate) unsafe fn cpo2_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
-unsafe fn cpo2_por(a: usize, v: usize) {
+pub(crate) unsafe fn cpo2_por(a: usize, v: usize) {
     core::ptr::write_unaligned(a as *mut usize, v);
 }
 
 /// A vaga do contrato principal da pessoa: o registro de 79 bytes dela em [0xae2d0c] (+0 o índice do contrato, −1 sem).
-unsafe fn cpo2_vaga(pessoa: usize) -> usize {
+pub(crate) unsafe fn cpo2_vaga(pessoa: usize) -> usize {
     read_usize(0xae2d0c).wrapping_add(read_usize(pessoa).wrapping_mul(0x4f))
 }
 
@@ -3372,7 +3374,7 @@ unsafe fn cpo2_vaga(pessoa: usize) -> usize {
 /// principal (índice no registro de 79 bytes da pessoa), libera a entrada dele (+0 = −1 no vetor de 0x50 bytes do
 /// CONTRACT_MANAGER), põe −1 na vaga da pessoa e refaz a folha de salários (0x598370) das finanças (0x5a0590) do clube
 /// do contrato (+4). Sem contrato: nada.
-unsafe extern "thiscall" fn tirar_o_contrato_principal(this: usize, pessoa: usize) {
+pub(crate) unsafe extern "thiscall" fn tirar_o_contrato_principal(this: usize, pessoa: usize) {
     let indice = cpo2_i(cpo2_vaga(pessoa));
     if indice == -1 {
         return;
@@ -3401,7 +3403,7 @@ unsafe extern "thiscall" fn tirar_o_contrato_principal(this: usize, pessoa: usiz
 /// transferência, o clube, o byte +0x61, 1, 1, 0); sem transferência (+0x59 = −1) reenvia com −1, −1. Tira a oferta da
 /// lista (0x68d1f0) e conta. O byte +0x61 vai empurrado no registrador inteiro (os bits de cima do que estava nele:
 /// o ponteiro lido ou −1). Devolve quantas.
-unsafe extern "thiscall" fn reenviar_ofertas_guardadas(this: usize, id: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn reenviar_ofertas_guardadas(this: usize, id: usize) -> u32 {
     let lista = read_usize(this + 0x38);
     if lista == 0 {
         return 0;
@@ -3446,7 +3448,7 @@ unsafe extern "thiscall" fn reenviar_ofertas_guardadas(this: usize, id: usize) -
 /// [pt] { 0x4d45f0 } (stdcall, ret 4, contract_manager.cpp, quadro SEH sem destrutor no caminho normal):
 /// `contract_manager_season_end_month(clube)`: a data do fim da temporada do clube (Data() 0x54a110 e 0x669bd0 com 0),
 /// mais 10 dias (0x54c5b0), e o mês dela (0x54cfb0). Devolve o eax da 0x54cfb0 (o mês 0..11).
-unsafe extern "stdcall" fn mes_do_fim_da_temporada_do_clube(clube: usize) -> u32 {
+pub(crate) unsafe extern "stdcall" fn mes_do_fim_da_temporada_do_clube(clube: usize) -> u32 {
     let mut d1 = [0u32; 2];
     let mut d2 = [0u32; 2];
     let construir: unsafe extern "thiscall" fn(*mut u32) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
@@ -3461,7 +3463,7 @@ unsafe extern "stdcall" fn mes_do_fim_da_temporada_do_clube(clube: usize) -> u32
 
 /// Comparador: lado a lado pela vaga da pessoa e pela entrada do contrato (a folha 0x598370 refeita duas vezes dá o
 /// mesmo, pelo contrato já tirado).
-unsafe extern "thiscall" fn comparar_tirar_o_contrato_principal(this: usize, pessoa: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_tirar_o_contrato_principal(this: usize, pessoa: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(970);
     let vaga = cpo2_vaga(pessoa);
     let indice = cpo2_i(vaga);
@@ -3476,7 +3478,7 @@ unsafe extern "thiscall" fn comparar_tirar_o_contrato_principal(this: usize, pes
 
 /// Comparador: a original reenvia (0x4cc490, ofertas e transferências) e tira as ofertas da lista (libera): roda só ela
 /// e confere o plano feito antes: devolve quantas ofertas da pessoa havia na lista.
-unsafe extern "thiscall" fn comparar_reenviar_ofertas_guardadas(this: usize, id: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_reenviar_ofertas_guardadas(this: usize, id: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(971);
     let lista = read_usize(this + 0x38);
     if lista == 0 {
@@ -3499,7 +3501,7 @@ unsafe extern "thiscall" fn comparar_reenviar_ofertas_guardadas(this: usize, id:
 }
 
 /// Comparador: pelo valor (datas e a 0x669bd0 só calculam).
-unsafe extern "stdcall" fn comparar_mes_do_fim_da_temporada_do_clube(clube: usize) -> u32 {
+pub(crate) unsafe extern "stdcall" fn comparar_mes_do_fim_da_temporada_do_clube(clube: usize) -> u32 {
     let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(972)(clube);
     let n = mes_do_fim_da_temporada_do_clube(clube);
     PLACAR.registrar(r == n, || format!("mes_do_fim_da_temporada_do_clube({:x}) original={} rust={}", clube, r, n));
@@ -3509,7 +3511,7 @@ unsafe extern "stdcall" fn comparar_mes_do_fim_da_temporada_do_clube(clube: usiz
 // ---------- 248a leva: os contratos da comissão e as datas de decisão: achar a vaga de contrato, dar o contrato à pessoa nova e marcar a data da decisão (contract_manager.cpp) ----------
 
 
-unsafe fn cpl4_por(a: usize, v: usize) {
+pub(crate) unsafe fn cpl4_por(a: usize, v: usize) {
     core::ptr::write_unaligned(a as *mut usize, v);
 }
 
@@ -3517,7 +3519,7 @@ unsafe fn cpl4_por(a: usize, v: usize) {
 /// contract_manager.cpp 0x9a8190, `linha`, `texto`) em 0xae24d0; o título "Memory Allocation Error" (0x9a8108)
 /// traduzido (0x66f4e0) em 0xae28bc, o corpo 0x9a7ff8 com o texto em 0xae26c4 e a caixa 0x5e8290. O jogo segue
 /// ([0xb67a34] fica como está).
-unsafe fn cpl4_sem_espaco(linha: u32, texto: usize) {
+pub(crate) unsafe fn cpl4_sem_espaco(linha: u32, texto: usize) {
     let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
     let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32, usize) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -3541,7 +3543,7 @@ unsafe fn cpl4_sem_espaco(linha: u32, texto: usize) {
 /// primeira vaga vazia (pessoa +0 = −1); senão (ou sem vaga vazia) a do fim: cheio, cresce de 200 em 200 (realloc
 /// 0x945667, ou malloc 0x944e46 sem vetor; sem memória, caixa 0x175 e −1) e a conta sobe. Devolve o índice. Os dois
 /// chamadores (a criação dos contratos 0x4c7560 e a 0x4c7950) passam 1.
-unsafe extern "thiscall" fn vaga_livre_de_contrato(this: usize, so_no_fim: u32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn vaga_livre_de_contrato(this: usize, so_no_fim: u32) -> i32 {
     if so_no_fim == 0 {
         let n = read_usize(this + 8) as i32;
         let p = read_usize(this);
@@ -3584,7 +3586,7 @@ unsafe extern "thiscall" fn vaga_livre_de_contrato(this: usize, so_no_fim: u32) 
 /// [0xae2d0c]), põe o id dela no contrato (+0) e gera o contrato inicial (0x85e960 com o valor). Pela contratação
 /// de técnico (0x68f9c0, MANAGER_MANAGER::daily_update) e pelo regen que assina com um clube (0x7a6f10). Devolve o
 /// eax da original (o da 0x85e960, ou o índice negativo); os chamadores não o leem.
-unsafe extern "thiscall" fn acrescentar_contrato_da_pessoa(this: usize, pessoa: usize, valor: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn acrescentar_contrato_da_pessoa(this: usize, pessoa: usize, valor: u32) -> u32 {
     let vaga: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_FREE_STAFF_CONTRACT_SPACE);
     let i = vaga(this, 1);
     if i < 0 {
@@ -3603,7 +3605,7 @@ unsafe extern "thiscall" fn acrescentar_contrato_da_pessoa(this: usize, pessoa: 
 /// inline: sem contrato a original lê o endereço 0x44 e cai, como aqui); L ≤ 0x50 sem lembrete; L > 0x96 um a
 /// L × 90 / 200 dias antes; e um a L / 4 dias antes (sem o registro de jogador, L = 100). As datas pela
 /// Date::sub_days (0x54c8e0), na ordem da original.
-unsafe fn cpl4_lembretes(this: usize, pessoa: usize, data: usize, tipo: u8) -> ([[u8; 8]; 2], usize) {
+pub(crate) unsafe fn cpl4_lembretes(this: usize, pessoa: usize, data: usize, tipo: u8) -> ([[u8; 8]; 2], usize) {
     let mut v = [[0u8; 8]; 2];
     let mut k = 0usize;
     if tipo != 1 {
@@ -3647,7 +3649,7 @@ unsafe fn cpl4_lembretes(this: usize, pessoa: usize, data: usize, tipo: u8) -> (
 /// (id da pessoa +0, data +4, fatia do dia +0xc, tipo +0xd). O tipo 1 leva antes os lembretes de tipo 2
 /// (`cpl4_lembretes`), sem fatia (+0xc fica como está). Pelas propostas: a decisão da pessoa (0x4cd230, 0x4ce4e0).
 /// As cópias das datas (0x417c10, sem outro efeito) viram cópias de 8 bytes.
-unsafe extern "thiscall" fn acrescentar_data_de_decisao(this: usize, pessoa: usize, data: usize, fatia: u32, tipo: u32) {
+pub(crate) unsafe extern "thiscall" fn acrescentar_data_de_decisao(this: usize, pessoa: usize, data: usize, fatia: u32, tipo: u32) {
     crate::comparacao::ramo("cpl_4 data de decisao");
     if read_usize(this + 0x14) as i32 > (read_usize(this + 0x10) as i32).wrapping_sub(4) {
         let cap = read_usize(this + 0x10).wrapping_add(100);
@@ -3688,7 +3690,7 @@ unsafe extern "thiscall" fn acrescentar_data_de_decisao(this: usize, pessoa: usi
 // o plano antes, roda só a original e confere; o modo Rust e a carreira provam as cópias.
 
 /// Comparador: a vaga esperada (a primeira vazia, ou a do fim com a conta + 1 e a capacidade + 200 se cheio).
-unsafe extern "thiscall" fn comparar_vaga_livre_de_contrato(this: usize, so_no_fim: u32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_vaga_livre_de_contrato(this: usize, so_no_fim: u32) -> i32 {
     let (n, cap, p) = (read_usize(this + 8), read_usize(this + 4), read_usize(this));
     let mut livre = -1i32;
     if so_no_fim == 0 {
@@ -3712,7 +3714,7 @@ unsafe extern "thiscall" fn comparar_vaga_livre_de_contrato(this: usize, so_no_f
 }
 
 /// Comparador: a vaga é a do fim (a conta de antes); confere a ligação da pessoa, o id no contrato e a conta.
-unsafe extern "thiscall" fn comparar_acrescentar_contrato_da_pessoa(this: usize, pessoa: usize, valor: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_acrescentar_contrato_da_pessoa(this: usize, pessoa: usize, valor: u32) -> u32 {
     let n = read_usize(this + 8);
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(914)(this, pessoa, valor);
     if read_usize(this) == 0 {
@@ -3729,7 +3731,7 @@ unsafe extern "thiscall" fn comparar_acrescentar_contrato_da_pessoa(this: usize,
 }
 
 /// Comparador: os lembretes e a entrada esperados antes da original; confere a conta e cada entrada nova.
-unsafe extern "thiscall" fn comparar_acrescentar_data_de_decisao(this: usize, pessoa: usize, data: usize, fatia: u32, tipo: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_acrescentar_data_de_decisao(this: usize, pessoa: usize, data: usize, fatia: u32, tipo: u32) {
     let n = read_usize(this + 0x14);
     let (lembretes, k) = cpl4_lembretes(this, pessoa, data, tipo as u8);
     let d = core::ptr::read_unaligned(data as *const [u8; 8]);
@@ -3758,7 +3760,7 @@ unsafe extern "thiscall" fn comparar_acrescentar_data_de_decisao(this: usize, pe
 
 /// O contrato (registro de 80 bytes em [this], pelo índice +0 do registro de 79 bytes em [0xae2d0c]) da pessoa `p`
 /// com o clube `clube` (+4 = id do clube) e a cláusula de rebaixamento ainda por acionar (+0x1f = 1); senão 0.
-unsafe fn cpk3_clausula(this: usize, clube: usize, p: usize) -> usize {
+pub(crate) unsafe fn cpk3_clausula(this: usize, clube: usize, p: usize) -> usize {
     if p == 0 || read_usize(p) as i32 >= read_usize(0xae2364) as i32 {
         return 0;
     }
@@ -3775,7 +3777,7 @@ unsafe fn cpk3_clausula(this: usize, clube: usize, p: usize) -> usize {
 
 /// O clube e o parceiro (time A/B, 0x540a50 ativo): o clube B não aciona (o A cuida dos dois). Clube nulo ou B:
 /// nenhum.
-unsafe fn cpk3_clubes(clube: usize) -> [usize; 2] {
+pub(crate) unsafe fn cpk3_clubes(clube: usize) -> [usize; 2] {
     if clube == 0 {
         return [0, 0];
     }
@@ -3796,7 +3798,7 @@ unsafe fn cpk3_clubes(clube: usize) -> [usize; 2] {
 /// liga)`: no clube rebaixado e no parceiro (time A/B), cada um dos 50 da comissão e elenco (+0xd7) com a cláusula de
 /// rebaixamento por acionar no contrato com o clube (+0x1f = 1) passa a 2 e sai a notícia (0x8e3db0 sobre
 /// [0xde1f54] com o tipo 3).
-unsafe extern "thiscall" fn acionar_clausulas_de_rebaixamento(this: usize, clube: usize, liga: usize) {
+pub(crate) unsafe extern "thiscall" fn acionar_clausulas_de_rebaixamento(this: usize, clube: usize, liga: usize) {
     let noticia: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_POST_RELEASE_CLAUSE_ACTIVATED_NEWS);
     for c in cpk3_clubes(clube) {
         if c == 0 {
@@ -3815,7 +3817,7 @@ unsafe extern "thiscall" fn acionar_clausulas_de_rebaixamento(this: usize, clube
 }
 
 /// A primeira oferta de contrato da lista `l` (sem mexer no cursor) da pessoa `p` (+0) ao clube `c` (+4).
-unsafe fn cpk3_oferta(l: usize, p: usize, c: usize) -> Option<usize> {
+pub(crate) unsafe fn cpk3_oferta(l: usize, p: usize, c: usize) -> Option<usize> {
     cpd1_itens(l).into_iter().find(|&e| read_usize(e) == p && read_usize(e + 4) == c)
 }
 
@@ -3827,7 +3829,7 @@ unsafe fn cpk3_oferta(l: usize, p: usize, c: usize) -> Option<usize> {
 /// primeira oferta da lista (+0x34) da pessoa ao clube (ids): devolve a reserva de registro (+0x63 ≠ −1: 0x7a81a0
 /// sobre [0xb7434c] com +0x67, +0x6b), tira a marca de contrato acertado se ela estava acertada (+0x50 = 2: 0x8c5430),
 /// sai da lista (0x68d1f0) e as pendentes da pessoa (+8 do registro de 79 bytes em [0xae2d0c]) descem uma.
-unsafe extern "thiscall" fn tirar_oferta_de_contrato(this: usize, pessoa: *const u32, clube: *const u32) {
+pub(crate) unsafe extern "thiscall" fn tirar_oferta_de_contrato(this: usize, pessoa: *const u32, clube: *const u32) {
     let (c, p) = (*clube as usize, *pessoa as usize);
     let l = read_usize(this + 0x34);
     if l == 0 {
@@ -3867,7 +3869,7 @@ unsafe extern "thiscall" fn tirar_oferta_de_contrato(this: usize, pessoa: *const
 /// Suspenso pelo tribunal geral ([[this]], 0x7e85b0 com 1): 1. Senão, pelo tribunal da competição (+0x50, ≠ −1, com
 /// 0): 1, e se o clube dele (+0x39) é de humano (0x600a50 com 0, 1, 0, 0), ele sai da vaga que ocupa entre as 20 de
 /// +0x1e0. Senão 0.
-unsafe extern "thiscall" fn esta_suspenso(this: usize, jogador: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn esta_suspenso(this: usize, jogador: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
     if jogador != 0 && read_usize(jogador) as i32 >= read_usize(0xae2364) as i32 {
         return 0;
     }
@@ -3907,7 +3909,7 @@ unsafe extern "thiscall" fn esta_suspenso(this: usize, jogador: usize, comp: *co
 
 /// Comparador: os contratos que a cópia acionaria (antes); a original aciona e dá as notícias (não roda duas vezes);
 /// confere que todos ficaram com 2.
-unsafe extern "thiscall" fn comparar_acionar_clausulas_de_rebaixamento(this: usize, clube: usize, liga: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_acionar_clausulas_de_rebaixamento(this: usize, clube: usize, liga: usize) {
     let mut alvos = Vec::new();
     for c in cpk3_clubes(clube) {
         if c != 0 {
@@ -3921,7 +3923,7 @@ unsafe extern "thiscall" fn comparar_acionar_clausulas_de_rebaixamento(this: usi
 
 /// Comparador: a lista esperada (sem a primeira oferta da pessoa ao clube) e as pendentes antes; a original tira (e
 /// libera o item: nada dele é lido depois); confere os itens e o byte.
-unsafe extern "thiscall" fn comparar_tirar_oferta_de_contrato(this: usize, pessoa: *const u32, clube: *const u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_tirar_oferta_de_contrato(this: usize, pessoa: *const u32, clube: *const u32) {
     let l = read_usize(this + 0x34);
     if l == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, *const u32, *const u32)>(890)(this, pessoa, clube);
@@ -3936,7 +3938,7 @@ unsafe extern "thiscall" fn comparar_tirar_oferta_de_contrato(this: usize, pesso
 }
 
 /// Comparador: lado a lado pelas 20 vagas (+0x1e0) do clube do jogador (a 0x7e85b0 e a 0x600a50 só leem).
-unsafe extern "thiscall" fn comparar_esta_suspenso(this: usize, jogador: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_esta_suspenso(this: usize, jogador: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32, usize) -> u32>(891);
     let clube = if jogador != 0 { read_usize(jogador + 0x39) } else { 0 };
     let regioes: &[(usize, usize)] = if clube != 0 { &[(clube + 0x1e0, 80)] } else { &[] };
@@ -3948,18 +3950,18 @@ unsafe extern "thiscall" fn comparar_esta_suspenso(this: usize, jogador: usize, 
 // ---------- 246a leva: as listas de pendências: soltar as suspensões guardadas, tirar as ofertas pendentes da pessoa e marcar a decisão depois da transferência acertada ----------
 
 
-unsafe fn cpj2_proximo(l: usize) -> usize {
+pub(crate) unsafe fn cpj2_proximo(l: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     f(l)
 }
 
-unsafe fn cpj2_tirar(l: usize, e: usize) {
+pub(crate) unsafe fn cpj2_tirar(l: usize, e: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
     f(l, e);
 }
 
 /// O contador de suspensões guardadas (+0x1c) do registro de 29 bytes do id `id` em [this+0x14].
-unsafe fn cpj2_guardadas(this: usize, id: usize) -> *mut i8 {
+pub(crate) unsafe fn cpj2_guardadas(this: usize, id: usize) -> *mut i8 {
     (read_usize(this + 0x14).wrapping_add(id.wrapping_mul(29)) + 0x1c) as *mut i8
 }
 
@@ -3969,7 +3971,7 @@ unsafe fn cpj2_guardadas(this: usize, id: usize) -> *mut i8 {
 /// [pt] { 0x5567d0 } (thiscall, ret 4, discipline.cpp): `Discipline::drop_held_bans(pessoa)`: da lista das suspensões
 /// guardadas (+0x1c; o cursor +0xa volta ao começo +2), tira (0x68d1f0) cada item do id `*pessoa` enquanto o contador
 /// do registro dele (+0x1c, com sinal) for positivo, descontando um a cada item.
-unsafe extern "thiscall" fn soltar_suspensoes_guardadas(this: usize, pessoa: *const u32) {
+pub(crate) unsafe extern "thiscall" fn soltar_suspensoes_guardadas(this: usize, pessoa: *const u32) {
     let l = this + 0x1c;
     let n = cpj2_guardadas(this, *pessoa as usize);
     core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2));
@@ -3984,7 +3986,7 @@ unsafe extern "thiscall" fn soltar_suspensoes_guardadas(this: usize, pessoa: *co
 }
 
 /// O byte de ofertas pendentes (+8) do registro de 79 bytes da pessoa em [0xae2d0c].
-unsafe fn cpj2_pendentes(id: usize) -> *mut u8 {
+pub(crate) unsafe fn cpj2_pendentes(id: usize) -> *mut u8 {
     (read_usize(0xae2d0c).wrapping_add(id.wrapping_mul(79)) + 8) as *mut u8
 }
 
@@ -3996,7 +3998,7 @@ unsafe fn cpj2_pendentes(id: usize) -> *mut u8 {
 /// com a lista das ofertas (+0x34) e ofertas pendentes no registro da pessoa (+8 do de 79 bytes em [0xae2d0c]): tira
 /// a marca de contrato acertado (0x8c5430 sobre [0xde1f54]) e, do começo da lista, cada oferta da pessoa (0x68d1f0),
 /// descontando o byte, até ele zerar.
-unsafe extern "thiscall" fn tirar_ofertas_pendentes(this: usize, pessoa: *const u32) {
+pub(crate) unsafe extern "thiscall" fn tirar_ofertas_pendentes(this: usize, pessoa: *const u32) {
     let l = read_usize(this + 0x34);
     if l == 0 || *cpj2_pendentes(*pessoa as usize) == 0 {
         return;
@@ -4020,13 +4022,13 @@ unsafe extern "thiscall" fn tirar_ofertas_pendentes(this: usize, pessoa: *const 
 
 /// A primeira oferta da lista `l` (sem mexer no cursor) da pessoa (+0) e do clube (+4) da oferta de transferência e
 /// ainda sem decisão (+0x62 = 0).
-unsafe fn cpj2_oferta_a_marcar(l: usize, oferta: usize) -> Option<usize> {
+pub(crate) unsafe fn cpj2_oferta_a_marcar(l: usize, oferta: usize) -> Option<usize> {
     cpd1_itens(l).into_iter().find(|&e| read_usize(e) == read_usize(oferta + 0xc) && read_usize(e + 4) == read_usize(oferta + 8) && *((e + 0x62) as *const u8) == 0)
 }
 
 /// Habilidade (palavra +0xb do registro de jogador +0x61 da pessoa +0xc) / 500 acima da reputação (+0x80) do clube
 /// (+8) da oferta?
-unsafe fn cpj2_acima_do_clube(oferta: usize) -> u32 {
+pub(crate) unsafe fn cpj2_acima_do_clube(oferta: usize) -> u32 {
     let pessoa = read_usize(0xae23bc).wrapping_add(read_usize(oferta + 0xc).wrapping_mul(0x6e));
     let hab = *((read_usize(pessoa + 0x61) + 0xb) as *const i16) as i32 / 500;
     let clube = read_usize(0xae23b4).wrapping_add(read_usize(oferta + 8).wrapping_mul(0x245));
@@ -4041,7 +4043,7 @@ unsafe fn cpj2_acima_do_clube(oferta: usize) -> u32 {
 /// a primeira oferta de contrato da lista (+0x34) da pessoa (+0xc) e do clube (+8) da oferta de transferência ainda
 /// sem decisão (+0x62) fica marcada (1) e a decisão da pessoa é agendada (0x4cd230 com a vaga +0x20). Devolve se a
 /// habilidade da pessoa / 500 passa a reputação do clube.
-unsafe extern "thiscall" fn marcar_decisao_da_transferencia(this: usize, oferta: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn marcar_decisao_da_transferencia(this: usize, oferta: usize) -> u32 {
     let l = read_usize(this + 0x34);
     core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2));
     let mut e = cpj2_proximo(l);
@@ -4059,7 +4061,7 @@ unsafe extern "thiscall" fn marcar_decisao_da_transferencia(this: usize, oferta:
 
 /// Comparador: o plano da cópia (os itens do id que saem até o contador zerar) antes; a original tira; confere os
 /// itens que ficaram e o contador.
-unsafe extern "thiscall" fn comparar_soltar_suspensoes_guardadas(this: usize, pessoa: *const u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_soltar_suspensoes_guardadas(this: usize, pessoa: *const u32) {
     let l = this + 0x1c;
     let n = cpj2_guardadas(this, *pessoa as usize);
     let antes = cpd1_itens(l);
@@ -4078,7 +4080,7 @@ unsafe extern "thiscall" fn comparar_soltar_suspensoes_guardadas(this: usize, pe
 }
 
 /// Comparador: o mesmo plano pelo byte de pendentes; a original tira (e desmarca); confere os itens e o byte.
-unsafe extern "thiscall" fn comparar_tirar_ofertas_pendentes(this: usize, pessoa: *const u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_tirar_ofertas_pendentes(this: usize, pessoa: *const u32) {
     let l = read_usize(this + 0x34);
     if l == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, *const u32)>(868)(this, pessoa);
@@ -4101,7 +4103,7 @@ unsafe extern "thiscall" fn comparar_tirar_ofertas_pendentes(this: usize, pessoa
 
 /// Comparador: a oferta que a cópia marcaria antes; a original marca e agenda (a 0x4cd230 pode acrescentar na lista
 /// das decisões); confere a marca e o valor.
-unsafe extern "thiscall" fn comparar_marcar_decisao_da_transferencia(this: usize, oferta: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_marcar_decisao_da_transferencia(this: usize, oferta: usize) -> u32 {
     let alvo = cpj2_oferta_a_marcar(read_usize(this + 0x34), oferta);
     let n = cpj2_acima_do_clube(oferta);
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(869)(this, oferta);
@@ -4119,7 +4121,7 @@ unsafe extern "thiscall" fn comparar_marcar_decisao_da_transferencia(this: usize
 /// [pt] { 0x4cf560 } (thiscall, ret 4, contract_manager.cpp): `CONTRACT_MANAGER::remove_held_offers(pessoa)`: da lista das
 /// ofertas guardadas (+0x38; o cursor +0xa volta ao começo +2), tira (0x68d1f0) cada item cujo +0 é o id `pessoa`
 /// (0x68d1b0 percorre). Sem lista: nada.
-unsafe extern "thiscall" fn tirar_ofertas_guardadas(this: usize, pessoa: u32) {
+pub(crate) unsafe extern "thiscall" fn tirar_ofertas_guardadas(this: usize, pessoa: u32) {
     let l = read_usize(this + 0x38);
     if l == 0 {
         return;
@@ -4139,7 +4141,7 @@ unsafe extern "thiscall" fn tirar_ofertas_guardadas(this: usize, pessoa: u32) {
 /// A suspensão do tipo `t` (vetor de tipos [this], 4 bytes cada) vale no clube do empréstimo? Pela competição do tipo
 /// (+0x17, −1 = nenhuma) igual à nação do clube (+0x53, id em +0); sem competição, pelo +0x1b (−1: vale) igual ao
 /// [+0x71] da nação. Clube sem nação: não vale.
-unsafe fn cpi5_vale_no_clube(this: usize, t: i8, clube: usize) -> bool {
+pub(crate) unsafe fn cpi5_vale_no_clube(this: usize, t: i8, clube: usize) -> bool {
     let tipo = read_usize(read_usize(this).wrapping_add((t as isize as usize).wrapping_mul(4)));
     let nacao = read_usize(clube + 0x53);
     let comp = read_usize(tipo + 0x17) as i32;
@@ -4160,7 +4162,7 @@ unsafe fn cpi5_vale_no_clube(this: usize, t: i8, clube: usize) -> bool {
 /// O clube do empréstimo (+4 da ficha de contrato, clubes de 0x245 bytes em [0xae23b4]) e o registro de suspensões
 /// do jogador (29 bytes em [this+0x14]); as vagas (5 bytes: tipo e o resto) que não valem lá, menos a 4ª (índice 3,
 /// que o original pula).
-unsafe fn cpi5_vagas_a_guardar(this: usize, ficha: usize, jogador: usize) -> (usize, Vec<u8>) {
+pub(crate) unsafe fn cpi5_vagas_a_guardar(this: usize, ficha: usize, jogador: usize) -> (usize, Vec<u8>) {
     let clube = read_usize(0xae23b4).wrapping_add(read_usize(ficha + 4).wrapping_mul(0x245));
     let reg = read_usize(this + 0x14).wrapping_add(read_usize(jogador).wrapping_mul(29));
     let mut v = Vec::new();
@@ -4184,7 +4186,7 @@ unsafe fn cpi5_vagas_a_guardar(this: usize, ficha: usize, jogador: usize) -> (us
 /// do jogador (0x4cf6d0 sobre [0xae1050]), cada suspensão do registro dele (vagas 0 a 2) que não vale no clube do
 /// empréstimo vai para a lista das guardadas (+0x1c, 0x68d0d0 com 10 bytes: o id, a vaga e os 5 bytes dela), a vaga
 /// fica −1 e o contador +0x1c do registro sobe. Sem ficha: a original (caixa "Error").
-unsafe extern "thiscall" fn guardar_suspensoes_do_emprestado(this: usize, jogador: usize) {
+pub(crate) unsafe extern "thiscall" fn guardar_suspensoes_do_emprestado(this: usize, jogador: usize) {
     let ficha_de: unsafe extern "thiscall" fn(usize, *const i32) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let ficha = ficha_de(read_usize(0xae1050), jogador as *const i32);
     if ficha == 0 {
@@ -4207,7 +4209,7 @@ unsafe extern "thiscall" fn guardar_suspensoes_do_emprestado(this: usize, jogado
 
 /// O cargo que a vaga `cargo` (byte com sinal) procura: 6, 8, 9 e 10 o mesmo; 13 procura 6 e 15 procura 8 (o byte do
 /// argumento é trocado); os outros, nenhum.
-fn cpi5_cargo_procurado(cargo: u32) -> Option<u32> {
+pub(crate) fn cpi5_cargo_procurado(cargo: u32) -> Option<u32> {
     match cargo as u8 as i8 {
         6 | 8 | 9 | 10 => Some(cargo),
         13 => Some((cargo & !0xff) | 6),
@@ -4218,7 +4220,7 @@ fn cpi5_cargo_procurado(cargo: u32) -> Option<u32> {
 
 /// A primeira pessoa (de [0xae23bc], 0x6e bytes, [0xae2364] delas) sem clube (+0x39), no cargo (+0x3d), com registro
 /// (+0x69) e da nação (+0x1a) do clube (+0x53).
-unsafe fn cpi5_desempregado(clube: usize, cargo: u8) -> Option<usize> {
+pub(crate) unsafe fn cpi5_desempregado(clube: usize, cargo: u8) -> Option<usize> {
     let n = read_usize(0xae2364) as i32;
     let base = read_usize(0xae23bc);
     (0..n.max(0) as usize).map(|i| base + i * 0x6e).find(|&p| {
@@ -4234,7 +4236,7 @@ unsafe fn cpi5_desempregado(clube: usize, cargo: u8) -> Option<usize> {
 /// que ficou livre é preenchida pela primeira pessoa desempregada da nação do clube no cargo procurado (6, 8, 9 e 10;
 /// 13 procura 6, 15 procura 8): 0x53bd10 com o cargo (o dword do argumento), a data de hoje [0xae2c90], gravar e sem
 /// reduzir. Clube nulo: a original (caixa "Error").
-unsafe extern "stdcall" fn preencher_vaga_da_comissao(clube: usize, cargo: u32) {
+pub(crate) unsafe extern "stdcall" fn preencher_vaga_da_comissao(clube: usize, cargo: u32) {
     if clube == 0 {
         return orig::<unsafe extern "stdcall" fn(usize, u32)>(860)(clube, cargo); // caixa: só a original
     }
@@ -4247,7 +4249,7 @@ unsafe extern "stdcall" fn preencher_vaga_da_comissao(clube: usize, cargo: u32) 
 
 /// Comparador: o plano antes (a 0x68d1f0 libera o item tirado, que não pode mais ser lido); a original tira; confere
 /// que ficaram os itens de antes menos os da pessoa, na mesma ordem.
-unsafe extern "thiscall" fn comparar_tirar_ofertas_guardadas(this: usize, pessoa: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_tirar_ofertas_guardadas(this: usize, pessoa: u32) {
     let l = read_usize(this + 0x38);
     let antes: Vec<usize> = if l != 0 { cpd1_itens(l) } else { Vec::new() };
     let esperado: Vec<usize> = antes.iter().copied().filter(|&e| read_usize(e) as u32 != pessoa).collect();
@@ -4258,7 +4260,7 @@ unsafe extern "thiscall" fn comparar_tirar_ofertas_guardadas(this: usize, pessoa
 
 /// Comparador: o plano da cópia (as vagas que não valem no clube do empréstimo) antes; a original guarda; confere o
 /// registro do jogador: as vagas do plano em −1, as outras iguais e o contador somado.
-unsafe extern "thiscall" fn comparar_guardar_suspensoes_do_emprestado(this: usize, jogador: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_guardar_suspensoes_do_emprestado(this: usize, jogador: usize) {
     let ficha_de: unsafe extern "thiscall" fn(usize, *const i32) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let ficha = ficha_de(read_usize(0xae1050), jogador as *const i32);
     if ficha == 0 {
@@ -4278,7 +4280,7 @@ unsafe extern "thiscall" fn comparar_guardar_suspensoes_do_emprestado(this: usiz
 /// Comparador: a escolha da cópia antes; sem ninguém, só a original. Com a pessoa, original e cópia lado a lado no
 /// clube (0x245 bytes) e na pessoa (0x6e), que é tudo o que a 0x53bd10 grava: ela pode recusar (casa ocupada, faixa
 /// dos humanos; com mais ligas acontece) ou gravar na seleção (+0x24), e a pessoa não fica em +0x39.
-unsafe extern "stdcall" fn comparar_preencher_vaga_da_comissao(clube: usize, cargo: u32) {
+pub(crate) unsafe extern "stdcall" fn comparar_preencher_vaga_da_comissao(clube: usize, cargo: u32) {
     let o = orig::<unsafe extern "stdcall" fn(usize, u32)>(860);
     let escolhida = if clube != 0 { cpi5_cargo_procurado(cargo).and_then(|c| cpi5_desempregado(clube, c as u8)) } else { None };
     let Some(p) = escolhida else {
@@ -4298,7 +4300,7 @@ unsafe extern "stdcall" fn comparar_preencher_vaga_da_comissao(clube: usize, car
 
 /// O contrato da pessoa como a 0x4cbb60 acha por dentro (sem chamar a 0x4cf5a0): pessoa não nula, id abaixo de
 /// [0xae2364], índice da tabela [0xae2d0c] (79 bytes por pessoa) não negativo; registro de 80 bytes em [objeto].
-unsafe fn cph2_contrato(objeto: usize, pessoa: usize) -> usize {
+pub(crate) unsafe fn cph2_contrato(objeto: usize, pessoa: usize) -> usize {
     if pessoa == 0 {
         return 0;
     }
@@ -4326,7 +4328,7 @@ unsafe fn cph2_contrato(objeto: usize, pessoa: usize) -> usize {
 /// contrato, que não é o próprio nem o parceiro já visto; com o bit 6 de +0x35 do contrato (achado de novo em [this]):
 /// no `clube` com reservas, 1 com o bit e 2 sem; ou com o parceiro (0x540a50) sendo o `clube` (ou o do contrato o
 /// `clube`), 3 com o bit e 4 sem. O jogo lê só o al.
-unsafe extern "thiscall" fn lugar_no_elenco(this: usize, pessoa: usize, clube: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn lugar_no_elenco(this: usize, pessoa: usize, clube: usize) -> u8 {
     let tipo = *((pessoa + 0x3d) as *const i8);
     let tipo_de_jogador: unsafe extern "C" fn(i8) -> u32 = core::mem::transmute(FN_DATABASE_IS_PLAYER_JOB);
     if tipo == 12 || tipo_de_jogador(tipo) == 0 {
@@ -4375,7 +4377,7 @@ unsafe extern "thiscall" fn lugar_no_elenco(this: usize, pessoa: usize, clube: u
 }
 
 /// A 0x4cbb60 pelo endereço (passa pelo desvio) e a troca 0x4cbd20 (com 0 na saída do novo clube).
-unsafe fn cph2_mover(this: usize, pessoa: usize, clube: usize, de: [u8; 2]) -> u32 {
+pub(crate) unsafe fn cph2_mover(this: usize, pessoa: usize, clube: usize, de: [u8; 2]) -> u32 {
     let lugar: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_SQUAD_PLACEMENT);
     let l = lugar(this, pessoa, clube);
     if l != de[0] && l != de[1] {
@@ -4390,7 +4392,7 @@ unsafe fn cph2_mover(this: usize, pessoa: usize, clube: usize, de: [u8; 2]) -> u
 ///
 /// [pt] { 0x4cc0b0 } (thiscall, ret 8, contract_manager.cpp): `CONTRACT_MANAGER::move_to_first_team(pessoa, clube)`: nos
 /// reservas (1) ou no time B (3), troca (0x4cbd20) e devolve o que ela devolve; senão 0.
-unsafe extern "thiscall" fn subir_para_o_principal(this: usize, pessoa: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn subir_para_o_principal(this: usize, pessoa: usize, clube: usize) -> u32 {
     cph2_mover(this, pessoa, clube, [1, 3]) // reservas ou time B
 }
 
@@ -4399,12 +4401,12 @@ unsafe extern "thiscall" fn subir_para_o_principal(this: usize, pessoa: usize, c
 ///
 /// [pt] { 0x4cc0f0 } (thiscall, ret 8, contract_manager.cpp): `CONTRACT_MANAGER::move_to_reserves(pessoa, clube)`: no
 /// principal (2) ou no clube com time B (4), troca (0x4cbd20) e devolve o que ela devolve; senão 0.
-unsafe extern "thiscall" fn descer_para_os_reservas(this: usize, pessoa: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn descer_para_os_reservas(this: usize, pessoa: usize, clube: usize) -> u32 {
     cph2_mover(this, pessoa, clube, [2, 4]) // principal ou clube com time B
 }
 
 /// Comparador: lado a lado pela ficha [0xae1080] (a vaga da saída é o argumento na pilha de cada uma).
-unsafe extern "thiscall" fn comparar_lugar_no_elenco(this: usize, pessoa: usize, clube: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn comparar_lugar_no_elenco(this: usize, pessoa: usize, clube: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(829);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, pessoa, clube), || lugar_no_elenco(this, pessoa, clube));
     PLACAR.registrar(igual && r == n, || format!("lugar_no_elenco({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
@@ -4413,7 +4415,7 @@ unsafe extern "thiscall" fn comparar_lugar_no_elenco(this: usize, pessoa: usize,
 
 /// Comparador das duas trocas: o lugar (0x4cbb60, pelo desvio) decide antes; fora dos lugares da troca, lado a lado
 /// pela ficha [0xae1080] (as duas devolvem 0); nos lugares da troca, só a original (a 0x4cbd20 mexe no elenco).
-unsafe fn cph2_comparar(i: usize, nome: &str, this: usize, pessoa: usize, clube: usize, de: [u8; 2]) -> u32 {
+pub(crate) unsafe fn cph2_comparar(i: usize, nome: &str, this: usize, pessoa: usize, clube: usize, de: [u8; 2]) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(i);
     let lugar: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_SQUAD_PLACEMENT);
     let ficha = read_u32(0xae1080);
@@ -4427,11 +4429,11 @@ unsafe fn cph2_comparar(i: usize, nome: &str, this: usize, pessoa: usize, clube:
     r
 }
 
-unsafe extern "thiscall" fn comparar_subir_para_o_principal(this: usize, pessoa: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_subir_para_o_principal(this: usize, pessoa: usize, clube: usize) -> u32 {
     cph2_comparar(830, "subir_para_o_principal", this, pessoa, clube, [1, 3])
 }
 
-unsafe extern "thiscall" fn comparar_descer_para_os_reservas(this: usize, pessoa: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_descer_para_os_reservas(this: usize, pessoa: usize, clube: usize) -> u32 {
     cph2_comparar(831, "descer_para_os_reservas", this, pessoa, clube, [2, 4])
 }
 
@@ -4440,7 +4442,7 @@ unsafe extern "thiscall" fn comparar_descer_para_os_reservas(this: usize, pessoa
 
 
 /// Date::operator= (0x417c10): copia a data de `origem` para `destino`, com o retorno numa local (gravada pela própria).
-unsafe fn cph3_data(destino: usize, origem: usize) {
+pub(crate) unsafe fn cph3_data(destino: usize, origem: usize) {
     let copiar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut local = [0u8; 8];
     copiar(destino, &mut local, origem);
@@ -4455,7 +4457,7 @@ unsafe fn cph3_data(destino: usize, origem: usize) {
 /// (+0x2d) pela 0x417c10, o byte de campos de bits +0x35 em três passos (6 bits, o 7º, o 8º: no fim é o de `origem`),
 /// +0x36, +0x3a, +0x3b, +0x3d, +0x3e, +0x3f, +0x40, +0x44, +0x45, +0x49, +0x4a, +0x4e e o +0x4f em dois passos (nibble
 /// baixo e depois o resto). Devolve `this`.
-unsafe extern "thiscall" fn copiar_contrato_de_pessoal(this: usize, origem: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn copiar_contrato_de_pessoal(this: usize, origem: usize) -> usize {
     let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, read_u32(origem + o));
     let w = |o: usize| core::ptr::write_unaligned((this + o) as *mut u16, core::ptr::read_unaligned((origem + o) as *const u16));
     let b = |o: usize| *((this + o) as *mut u8) = read_u8(origem + o);
@@ -4508,7 +4510,7 @@ unsafe extern "thiscall" fn copiar_contrato_de_pessoal(this: usize, origem: usiz
 /// para baixo. A moral (+0x44) soma o ganho entre −100 e 100 e fica no teto. Sem +0x49: com ganho > 5 e moral + ganho
 /// > 0, ou felicidade (+0x3d) ≥ 75 − ganho, apaga as queixas 4 e 0x10 (0x8674e0). Por fim confere a retirada do pedido
 /// (0x867240 com 0). Constantes do .rdata; o x87 em dupla precisão, como as outras do contrato.
-unsafe extern "stdcall" fn subir_moral_pela_partida(pessoa: usize, clube: usize, contrato: usize) {
+pub(crate) unsafe extern "stdcall" fn subir_moral_pela_partida(pessoa: usize, clube: usize, contrato: usize) {
     if contrato == 0 || clube == 0 || pessoa == 0 {
         return;
     }
@@ -4576,7 +4578,7 @@ unsafe extern "stdcall" fn subir_moral_pela_partida(pessoa: usize, clube: usize,
 /// clube)`: no vetor de conversas ([this+0x28], [this+0x2c] registros de 21 bytes), cada um da pessoa (+0 = id) e,
 /// quando dados, do clube (+4) e do técnico (+8) recebe por cima o último (5 duplas e um byte), a contagem desce e o
 /// mesmo lugar é visto de novo. Sobrando algum, reordena (qsort 0x945333 com 0x4dc970).
-unsafe extern "thiscall" fn tirar_conversas_de_contrato(this: usize, pessoa: usize, tecnico: usize, clube: usize) {
+pub(crate) unsafe extern "thiscall" fn tirar_conversas_de_contrato(this: usize, pessoa: usize, tecnico: usize, clube: usize) {
     let n = (this + 0x2c) as *mut i32;
     let mut i = 0i32;
     let mut off = 0usize;
@@ -4607,7 +4609,7 @@ unsafe extern "thiscall" fn tirar_conversas_de_contrato(this: usize, pessoa: usi
     }
 }
 
-unsafe extern "thiscall" fn comparar_copiar_contrato_de_pessoal(this: usize, origem: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_copiar_contrato_de_pessoal(this: usize, origem: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(832);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x50)], || o(this, origem), || copiar_contrato_de_pessoal(this, origem));
     PLACAR.registrar(igual && r == n, || format!("copiar_contrato_de_pessoal {:x?} x {:x?}", mo, mr));
@@ -4617,11 +4619,11 @@ unsafe extern "thiscall" fn comparar_copiar_contrato_de_pessoal(this: usize, ori
 /// Comparador: a 0x8674e0 e a 0x867240 mexem nas queixas, nos vínculos e na transferência (não podem rodar duas
 /// vezes): só a original; a prova é a carreira e o ramo da cópia no modo Rust.
 // ponytail: só a original (153.222 chamadas); comparar pedia separar a moral das chamadas do fim.
-unsafe extern "stdcall" fn comparar_subir_moral_pela_partida(pessoa: usize, clube: usize, contrato: usize) {
+pub(crate) unsafe extern "stdcall" fn comparar_subir_moral_pela_partida(pessoa: usize, clube: usize, contrato: usize) {
     orig::<unsafe extern "stdcall" fn(usize, usize, usize)>(833)(pessoa, clube, contrato)
 }
 
-unsafe extern "thiscall" fn comparar_tirar_conversas_de_contrato(this: usize, pessoa: usize, tecnico: usize, clube: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_tirar_conversas_de_contrato(this: usize, pessoa: usize, tecnico: usize, clube: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(834);
     let n = (*((this + 0x2c) as *const i32)).max(0) as usize;
     let reg = [(this + 0x28, 8), (read_u32(this + 0x28) as usize, n * 21)];
@@ -4632,7 +4634,7 @@ unsafe extern "thiscall" fn comparar_tirar_conversas_de_contrato(this: usize, pe
 // ---------- 190a leva: o contrato de empréstimo, as marcas de lance da lista de observados e o técnico substituto (contract_manager.cpp, shortlist_manager.cpp, human_manager.cpp) ----------
 
 /// A entrada de 79 bytes da pessoa `*id` na tabela [0xae2d0c] (em +4 a vaga do empréstimo, −1 sem).
-unsafe fn entrada_do_emprestimo(id: *const i32) -> usize {
+pub(crate) unsafe fn entrada_do_emprestimo(id: *const i32) -> usize {
     (*(0xae2d0c as *const usize) as isize + *id as isize * 79) as usize
 }
 
@@ -4641,7 +4643,7 @@ unsafe fn entrada_do_emprestimo(id: *const i32) -> usize {
 ///
 /// [pt] { 0x4d0bd0 } (thiscall, ret 4, contract_manager.cpp): libera a vaga do contrato de empréstimo da
 /// pessoa, se ela tiver uma: −1 no começo da vaga (80 bytes cada, em [gerente]) e na entrada da pessoa.
-unsafe extern "thiscall" fn tirar_contrato_de_emprestimo(gerente: usize, id: *const i32) {
+pub(crate) unsafe extern "thiscall" fn tirar_contrato_de_emprestimo(gerente: usize, id: *const i32) {
     let e = entrada_do_emprestimo(id);
     let vaga = core::ptr::read_unaligned((e + 4) as *const i32);
     if vaga != -1 {
@@ -4651,7 +4653,7 @@ unsafe extern "thiscall" fn tirar_contrato_de_emprestimo(gerente: usize, id: *co
 }
 
 /// A lista de observados do clube `*clube` (9 bytes por clube em [gerente+0xdc]: +0 as vagas, +4 a marca).
-unsafe fn lista_do_clube(gerente: usize, clube: *const i32) -> usize {
+pub(crate) unsafe fn lista_do_clube(gerente: usize, clube: *const i32) -> usize {
     (*((gerente + 0xdc) as *const usize) as isize + *clube as isize * 9) as usize
 }
 
@@ -4660,7 +4662,7 @@ unsafe fn lista_do_clube(gerente: usize, clube: *const i32) -> usize {
 ///
 /// [pt] { 0x84aeb0 } (thiscall, ret 8, shortlist_manager.cpp): com a lista do clube ativa (marca 1), tira a
 /// marca de lance (+0x17 = −1) das 40 vagas (0x25 bytes cada) cujo alvo (+0xf) é o jogador `*jogador`.
-unsafe extern "thiscall" fn desmarcar_lances_pelo_jogador(gerente: usize, clube: *const i32, jogador: *const i32) {
+pub(crate) unsafe extern "thiscall" fn desmarcar_lances_pelo_jogador(gerente: usize, clube: *const i32, jogador: *const i32) {
     let l = lista_do_clube(gerente, clube);
     if *((l + 4) as *const u8) != 1 {
         return;
@@ -4679,7 +4681,7 @@ unsafe extern "thiscall" fn desmarcar_lances_pelo_jogador(gerente: usize, clube:
 /// [pt] { 0x600e90 } (cdecl, human_manager.cpp): quem responde pelo técnico do clube: o auxiliar (+0xd3)
 /// se houver; senão, dos cinco da comissão (+0x19f) com dados (+0x69), o de maior reputação (+0xa,
 /// ficando o primeiro no empate); 0 se nenhum.
-unsafe extern "C" fn tecnico_substituto(clube: usize) -> usize {
+pub(crate) unsafe extern "C" fn tecnico_substituto(clube: usize) -> usize {
     let auxiliar = core::ptr::read_unaligned((clube + 0xd3) as *const usize);
     if auxiliar != 0 {
         return auxiliar;
@@ -4698,7 +4700,7 @@ unsafe extern "C" fn tecnico_substituto(clube: usize) -> usize {
     melhor
 }
 
-unsafe extern "thiscall" fn comparar_tirar_contrato_de_emprestimo(gerente: usize, id: *const i32) {
+pub(crate) unsafe extern "thiscall" fn comparar_tirar_contrato_de_emprestimo(gerente: usize, id: *const i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, *const i32)>(442);
     let e = entrada_do_emprestimo(id);
     let mut reg = vec![(e + 4, 4)];
@@ -4710,7 +4712,7 @@ unsafe extern "thiscall" fn comparar_tirar_contrato_de_emprestimo(gerente: usize
     PLACAR.registrar(igual, || format!("tirar_contrato_de_emprestimo({}) {:x?} x {:x?}", *id, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_desmarcar_lances_pelo_jogador(gerente: usize, clube: *const i32, jogador: *const i32) {
+pub(crate) unsafe extern "thiscall" fn comparar_desmarcar_lances_pelo_jogador(gerente: usize, clube: *const i32, jogador: *const i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, *const i32, *const i32)>(443);
     let l = lista_do_clube(gerente, clube);
     let reg = if *((l + 4) as *const u8) == 1 { vec![(core::ptr::read_unaligned(l as *const usize), 40 * 0x25)] } else { vec![(l, 9)] };
@@ -4718,7 +4720,7 @@ unsafe extern "thiscall" fn comparar_desmarcar_lances_pelo_jogador(gerente: usiz
     PLACAR.registrar(igual, || format!("desmarcar_lances_pelo_jogador({}, {}) {:x?} x {:x?}", *clube, *jogador, mo, mr));
 }
 
-unsafe extern "C" fn comparar_tecnico_substituto(clube: usize) -> usize {
+pub(crate) unsafe extern "C" fn comparar_tecnico_substituto(clube: usize) -> usize {
     let r = orig::<unsafe extern "C" fn(usize) -> usize>(444)(clube);
     let n = tecnico_substituto(clube);
     PLACAR.registrar(r == n, || format!("tecnico_substituto({:#x}) original={:#x} rust={:#x}", clube, r, n));
@@ -4729,7 +4731,7 @@ unsafe extern "C" fn comparar_tecnico_substituto(clube: usize) -> usize {
 
 /// Percorre a lista do gerente de contratos (+0x34, cursor em +0xa voltando ao começo +2, 0x68d1b0)
 /// até a oferta que `achou` aceita; 0 sem lista ou sem nenhuma.
-unsafe fn procurar_oferta(gerente: usize, achou: impl Fn(usize) -> bool) -> usize {
+pub(crate) unsafe fn procurar_oferta(gerente: usize, achou: impl Fn(usize) -> bool) -> usize {
     let lista = *((gerente + 0x34) as *const usize);
     if lista == 0 {
         return 0;
@@ -4749,7 +4751,7 @@ unsafe fn procurar_oferta(gerente: usize, achou: impl Fn(usize) -> bool) -> usiz
 ///
 /// [pt] { 0x4cc9e0 } (thiscall, ret 8, contract_manager.cpp): a oferta de contrato da pessoa `pessoa`
 /// (+0) para o clube `clube` (+4), ou 0.
-unsafe extern "thiscall" fn oferta_de_contrato(gerente: usize, pessoa: i32, clube: i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn oferta_de_contrato(gerente: usize, pessoa: i32, clube: i32) -> usize {
     procurar_oferta(gerente, |o| *(o as *const i32) == pessoa && *((o + 4) as *const i32) == clube)
 }
 
@@ -4757,7 +4759,7 @@ unsafe extern "thiscall" fn oferta_de_contrato(gerente: usize, pessoa: i32, club
 /// Original: `agreed_contract_offer` (0x4cca30, contract_manager.cpp, thiscall).
 ///
 /// [pt] { 0x4cca30 } (thiscall, ret 4, contract_manager.cpp): a oferta acertada (+0x50 = 2) da pessoa, ou 0.
-unsafe extern "thiscall" fn oferta_acertada(gerente: usize, pessoa: i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn oferta_acertada(gerente: usize, pessoa: i32) -> usize {
     procurar_oferta(gerente, |o| *(o as *const i32) == pessoa && *((o + 0x50) as *const u8) == 2)
 }
 
@@ -4766,7 +4768,7 @@ unsafe extern "thiscall" fn oferta_acertada(gerente: usize, pessoa: i32) -> usiz
 ///
 /// [pt] { 0x8d0d90 } (stdcall, transfer_offer.cpp): a oferta de transferência está encerrada? Estados
 /// (+0x2c) 2, 3, 4, 0x10 e 0x14 sim; 0xf só com +0x2e a partir de 3; os demais não.
-unsafe extern "system" fn oferta_fechada(o: usize) -> u32 {
+pub(crate) unsafe extern "system" fn oferta_fechada(o: usize) -> u32 {
     match *((o + 0x2c) as *const u8) {
         2 | 3 | 4 | 0x10 | 0x14 => 1,
         0xf => (*((o + 0x2e) as *const u8) >= 3) as u32,
@@ -4775,12 +4777,12 @@ unsafe extern "system" fn oferta_fechada(o: usize) -> u32 {
 }
 
 /// As regiões que as buscas mexem: o cursor da lista do gerente.
-unsafe fn regioes_da_lista(gerente: usize) -> Vec<(usize, usize)> {
+pub(crate) unsafe fn regioes_da_lista(gerente: usize) -> Vec<(usize, usize)> {
     let lista = *((gerente + 0x34) as *const usize);
     if lista == 0 { Vec::new() } else { vec![(lista, 0xe)] }
 }
 
-unsafe extern "thiscall" fn comparar_oferta_de_contrato(gerente: usize, pessoa: i32, clube: i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_oferta_de_contrato(gerente: usize, pessoa: i32, clube: i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32) -> usize>(409);
     let reg = regioes_da_lista(gerente);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(gerente, pessoa, clube), || oferta_de_contrato(gerente, pessoa, clube));
@@ -4788,7 +4790,7 @@ unsafe extern "thiscall" fn comparar_oferta_de_contrato(gerente: usize, pessoa: 
     r
 }
 
-unsafe extern "thiscall" fn comparar_oferta_acertada(gerente: usize, pessoa: i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_oferta_acertada(gerente: usize, pessoa: i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> usize>(410);
     let reg = regioes_da_lista(gerente);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(gerente, pessoa), || oferta_acertada(gerente, pessoa));
@@ -4796,7 +4798,7 @@ unsafe extern "thiscall" fn comparar_oferta_acertada(gerente: usize, pessoa: i32
     r
 }
 
-unsafe extern "system" fn comparar_oferta_fechada(o: usize) -> u32 {
+pub(crate) unsafe extern "system" fn comparar_oferta_fechada(o: usize) -> u32 {
     let r = orig::<unsafe extern "system" fn(usize) -> u32>(411)(o);
     let n = oferta_fechada(o);
     PLACAR.registrar(r == n, || format!("oferta_fechada(estado {:#x}, {:#x}) original={} rust={}", *((o + 0x2c) as *const u8), *((o + 0x2e) as *const u8), r, n));

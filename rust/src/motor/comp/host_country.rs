@@ -1,3 +1,5 @@
+use super::*;
+
 // ---------- 280a leva: as sedes dos torneios: a tabela padrão, a notícia das candidaturas e a carga do HostCountry.tmp (host_country.cpp) ----------
 
 
@@ -6,7 +8,7 @@
 
 /// As datas de referência das decisões (Date::set 0x54a130: dia do mês, mês a partir de 0, ano 1997, sem dia da
 /// semana): o dia do ano delas vai ao +0x1f das entradas do laço seguinte.
-const CQO3_DATAS: [[u32; 4]; 7] = [
+pub(crate) const CQO3_DATAS: [[u32; 4]; 7] = [
     [0xa, 0x6, 0x7cd, 0xffffffff], // cqo3: 10 de julho, a Copa do Mundo
     [0x14, 0x6, 0x7cd, 0xffffffff],
     [0x14, 0x6, 0x7cd, 0xffffffff],
@@ -21,7 +23,7 @@ const CQO3_DATAS: [[u32; 4]; 7] = [
 /// 2000..2028), a Copa Africana ([0x9cf7ac], 2000..2014 de 2 em 2), as Olimpíadas ([0x9cf7a0], 2000..2028), a Copa
 /// América ([0x9cf7a8], 1999..2009 de 2 em 2), [0x9cf95c] (1999..2004, ano a ano) e a Copa da Ásia ([0x9cf790],
 /// 2000..2016) [inferência: os nomes pelos endereços da comunidade, docs/ENDERECOS_COMUNIDADE.md].
-const CQO3_LACOS: [(u16, u8, u32, u16, u16, u8); 7] = [
+pub(crate) const CQO3_LACOS: [(u16, u8, u32, u16, u16, u8); 7] = [
     (0x0, 8, KEY_CLUB_COMP_FIFA_WORLD_CUP as u32, 1998, 4, 0x20),
     (0x110, 8, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP as u32, 2000, 4, 0x20), // cqo3: a Eurocopa
     (0x220, 8, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS as u32, 2000, 2, 0x10), // cqo3: a Copa Africana
@@ -36,7 +38,7 @@ const CQO3_LACOS: [(u16, u8, u32, u16, u16, u8); 7] = [
 /// byte (o +0x1e de cada entrada: 0/1 a candidatura escolhida, −1 votação aberta, −2 fechada, −3 a sede padrão
 /// fixa), 3 = word 0 (ano 0 e dia 0 das entradas sem edição), 4 = a data `CQO3_DATAS[valor]`, 5 = o laço
 /// `CQO3_LACOS[valor]`.
-const CQO3_TABELA: [(u16, u8, u32); 281] = [
+pub(crate) const CQO3_TABELA: [(u16, u8, u32); 281] = [
     (0x0, 4, 0x0), (0x0, 5, 0x0), (0x6, 0, KEY_NATION_FRANCE as u32), (0xa, 1, 0xffffffff), (0xe, 0, KEY_NATION_SPAIN as u32), (0x12, 1, 0xffffffff),
     (0x16, 0, KEY_NATION_PORTUGAL as u32), (0x1a, 1, 0xffffffff), (0x1e, 2, 0x0), (0x28, 0, KEY_NATION_SOUTH_KOREA as u32), (0x2c, 0, KEY_NATION_JAPAN as u32), (0x30, 0, KEY_NATION_ENGLAND as u32),
     (0x34, 1, 0xffffffff), (0x38, 0, KEY_NATION_ITALY as u32), (0x3c, 1, 0xffffffff), (0x40, 2, 0x0), (0x4a, 0, KEY_NATION_GERMANY as u32), (0x4e, 1, 0xffffffff),
@@ -99,7 +101,7 @@ const CQO3_TABELA: [(u16, u8, u32); 281] = [
 /// +0x1e a escolhida, +0x1f o dia da decisão, +0x21 o intervalo entre edições), pelas gravações de `CQO3_TABELA`;
 /// depois o dia da decisão de cada entrada anda um sorteio de −35 a +34 (0x90cfc0(70)); a entrada que não é padrão
 /// fixa (−3) e tem segunda ou terceira candidatura completa leva a caixa (linha 0x226) e perde as duas.
-unsafe extern "thiscall" fn tabela_das_sedes(this: usize) {
+pub(crate) unsafe extern "thiscall" fn tabela_das_sedes(this: usize) {
     let definir: unsafe extern "thiscall" fn(*mut crate::data::Data, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_SET);
     let mut d = crate::data::Data { dia: 40, ano: 1972, bissexto: 1 };
     for &(off, t, v) in CQO3_TABELA.iter() {
@@ -149,7 +151,7 @@ unsafe extern "thiscall" fn tabela_das_sedes(this: usize) {
 
 /// Lado a lado (a cópia sem contar os sorteios) pela tabela (conta +4 × 0x22 bytes), pelo estado do sorteador e por
 /// [0xb67a34].
-unsafe extern "thiscall" fn comparar_tabela_das_sedes(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_tabela_das_sedes(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1957);
     let n = read_u16(this + 4) as i16;
     if read_u32_as_usize(this) == 0 || n <= 0 {
@@ -173,7 +175,7 @@ unsafe extern "thiscall" fn comparar_tabela_das_sedes(this: usize) {
 /// notícia 4 (as candidaturas: competição, ano e as seis nações); senão a notícia 5 (a escolhida: competição, ano e as
 /// duas sedes dela, a primeira na padrão fixa), montadas por 0x77bbe0/0x785790 e entregues aos técnicos do continente
 /// da competição (tabela [0xae23d0], 0x6b bytes, +0x59; 0x786640) ou a todos (0x786780).
-unsafe extern "thiscall" fn noticia_das_sedes(_this: usize, lista: usize) {
+pub(crate) unsafe extern "thiscall" fn noticia_das_sedes(_this: usize, lista: usize) {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let dado: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
@@ -224,7 +226,7 @@ unsafe extern "thiscall" fn noticia_das_sedes(_this: usize, lista: usize) {
 }
 
 // ponytail: entrega notícias (aloca); só a original. A cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_das_sedes(this: usize, lista: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_noticia_das_sedes(this: usize, lista: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(1958)(this, lista)
 }
 
@@ -236,7 +238,7 @@ unsafe extern "thiscall" fn comparar_noticia_das_sedes(this: usize, lista: usize
 /// HostCountry.tmp da pasta CM3_TEMP (0x90bde0, fopen 0x945b00 "rb"): a conta (word, +4) e as entradas de 0x22 bytes
 /// num bloco novo ([this], 0x944e46); falhando a leitura, a caixa (linhas 0x448/0x452/0x45c), fecha (0x945a09) e, com
 /// o bloco, o solta (0x9452ca). Devolve 1 com tudo lido, 0 sem o arquivo ou com erro.
-unsafe extern "thiscall" fn carregar_sedes(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn carregar_sedes(this: usize) -> u32 {
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
@@ -273,7 +275,7 @@ unsafe extern "thiscall" fn carregar_sedes(this: usize) -> u32 {
 }
 
 // ponytail: abre o arquivo e aloca; só a original. A cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_carregar_sedes(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_carregar_sedes(this: usize) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize) -> u32>(1959)(this)
 }
 
@@ -285,7 +287,7 @@ unsafe extern "thiscall" fn comparar_carregar_sedes(this: usize) -> u32 {
 /// (+0xa), +6 + 8 × k as candidaturas k = 0..2 (sede e segunda), +0x1e a escolhida (0..2; −3 a padrão fixa, −1 a
 /// votação aberta, −2 a votação ainda fechada), +0x1f o dia do ano das decisões, +0x21 o intervalo em anos) pela
 /// candidatura `k` (a padrão com `k` < 0): grava as duas e devolve quantas valem (≠ −1).
-unsafe fn cqj3_sedes(e: usize, k: i8, a: *mut u32, b: *mut u32) -> u8 {
+pub(crate) unsafe fn cqj3_sedes(e: usize, k: i8, a: *mut u32, b: *mut u32) -> u8 {
     let off = if k >= 0 { k as i32 * 8 } else { 0 } as usize;
     *a = read_u32(e + 6 + off);
     let segunda = read_u32(e + 0xa + off);
@@ -301,7 +303,7 @@ unsafe fn cqj3_sedes(e: usize, k: i8, a: *mut u32, b: *mut u32) -> u8 {
 /// `ano` (short): a primeira entrada da competição com o ano (ou ano 0) que já tem a candidatura escolhida (as duas
 /// sedes dela), a padrão fixa ou a votação aberta (a sede padrão), ou, com `padrao`, a votação ainda fechada (a padrão).
 /// Grava as duas e devolve quantas valem; sem entrada, 0 sem gravar.
-unsafe extern "thiscall" fn sede_da_edicao(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn sede_da_edicao(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
     let n = read_u16(this + 4) as i16;
     let mut e = read_u32(this) as usize;
     let mut i = 0i16;
@@ -327,7 +329,7 @@ unsafe extern "thiscall" fn sede_da_edicao(this: usize, comp: u32, ano: u32, a: 
 }
 
 /// A devolução (o al) e as duas saídas (a rotina só lê).
-unsafe extern "thiscall" fn comparar_sede_da_edicao(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_sede_da_edicao(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, *mut u32, *mut u32, u32) -> u32>(1673);
     let (va, vb) = (*a, *b);
     let r = o(this, comp, ano, a, b, padrao);
@@ -344,7 +346,7 @@ unsafe extern "thiscall" fn comparar_sede_da_edicao(this: usize, comp: u32, ano:
 /// [pt] { 0x5fa7d0 } (thiscall, ret 0xc, host_country.cpp, `HostCountry::find_next_hosts`): as sedes da próxima edição da
 /// competição `comp`: a primeira entrada dela com a candidatura escolhida (as duas sedes) ou com a padrão fixa (a
 /// padrão). Grava as duas e devolve quantas valem; sem entrada, 0 sem gravar.
-unsafe extern "thiscall" fn proxima_sede(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn proxima_sede(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
     let n = read_u16(this + 4) as i16;
     let mut e = read_u32(this) as usize;
     let mut i = 0i16;
@@ -366,7 +368,7 @@ unsafe extern "thiscall" fn proxima_sede(this: usize, comp: u32, a: *mut u32, b:
 }
 
 /// A devolução (o al) e as duas saídas (a rotina só lê).
-unsafe extern "thiscall" fn comparar_proxima_sede(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_proxima_sede(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32) -> u32>(1674);
     let (va, vb) = (*a, *b);
     let r = o(this, comp, a, b);
@@ -378,7 +380,7 @@ unsafe extern "thiscall" fn comparar_proxima_sede(this: usize, comp: u32, a: *mu
 }
 
 /// A chave da busca (a 0x5fb3f0 compara o ano +4 e depois o dia +0x1f, sem sinal).
-fn cqj3_compara(e: usize, ano: u16, dia: u16) -> i32 {
+pub(crate) fn cqj3_compara(e: usize, ano: u16, dia: u16) -> i32 {
     unsafe {
         let ae = read_u16(e + 4);
         if ae != ano {
@@ -391,7 +393,7 @@ fn cqj3_compara(e: usize, ano: u16, dia: u16) -> i32 {
 
 /// A primeira entrada (de `inicio` a `fim`, ordenadas por ano e dia) com o ano e o dia da chave (bsearch 0x946464 com a
 /// 0x5fb3f0 e o recuo até a primeira igual), ou 0.
-unsafe fn cqj3_primeira(inicio: usize, n: i16, ano: u16, dia: u16) -> usize {
+pub(crate) unsafe fn cqj3_primeira(inicio: usize, n: i16, ano: u16, dia: u16) -> usize {
     let busca: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let mut chave = [0u8; 0x22];
     chave[4..6].copy_from_slice(&ano.to_le_bytes());
@@ -419,7 +421,7 @@ unsafe fn cqj3_primeira(inicio: usize, n: i16, ano: u16, dia: u16) -> usize {
 /// a candidatura vencedora é sorteada (0x90cfc0(3)). No 1º de janeiro, as entradas de anos passados (≠ 0) andam o
 /// intervalo (+0x21) e, fora da padrão fixa, a votação fecha (−2); a tabela é reordenada (qsort 0x945333 com 0x5fb3f0).
 /// Por fim a notícia das entradas da lista (0x5faec0).
-unsafe extern "thiscall" fn calendario_das_sedes(this: usize, hoje: usize) {
+pub(crate) unsafe extern "thiscall" fn calendario_das_sedes(this: usize, hoje: usize) {
     let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     let por: unsafe extern "thiscall" fn(usize, *const usize, u32) = core::mem::transmute(FN_LLIST_ADD_TAIL);
@@ -490,7 +492,7 @@ unsafe extern "thiscall" fn calendario_das_sedes(this: usize, hoje: usize) {
 }
 
 /// Só a original (sorteia, monta a lista local e entrega notícias); a cópia leva os contadores.
-unsafe extern "thiscall" fn comparar_calendario_das_sedes(this: usize, hoje: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_calendario_das_sedes(this: usize, hoje: usize) {
     // ponytail: entrega notícias pela 0x5faec0 e mexe na lista: não dá para rodar duas vezes
     orig::<unsafe extern "thiscall" fn(usize, usize)>(1675)(this, hoje)
 }

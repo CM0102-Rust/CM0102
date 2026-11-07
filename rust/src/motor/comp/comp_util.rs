@@ -1,9 +1,11 @@
+use super::*;
+
 // ---------- septuagesima oitava leva: competicao com rodada a disputar, comparacoes de ordenacao (comp_util.cpp) ----------
 
 /// { 0x4b0700 } (comp_util.cpp): a competicao `id` conta? As tres de 0x9cf6b0, 0x9cf5d8 e 0x9cf548
 /// sim; sem o +0x5d do registro (0xae23d0, 107 bytes) nao; senao so a do objeto em 0xadadfc com
 /// fase 2 (+0x43), rodadas (+0x3e) e a primeira rodada (+0xb1) com o clube +4 em +0x57 ou +0x60.
-unsafe extern "C" fn competicao_conta(id: i32) -> u32 {
+pub(crate) unsafe extern "C" fn competicao_conta(id: i32) -> u32 {
     let g = |a: usize| *(a as *const i32);
     if id == g(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) || id == g(KEY_CLUB_COMP_FRENCH_CFA) || id == g(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION) {
         return 1;
@@ -25,19 +27,19 @@ unsafe extern "C" fn competicao_conta(id: i32) -> u32 {
 }
 
 /// { 0x4b0780 } (comparacao do qsort): byte +0x5f do segundo menos o do primeiro (nulo vale 0).
-unsafe extern "C" fn ordem_por_5f(a: *const usize, b: *const usize) -> i32 {
+pub(crate) unsafe extern "C" fn ordem_por_5f(a: *const usize, b: *const usize) -> i32 {
     let v = |p: usize| if p == 0 { 0 } else { *((p + 0x5f) as *const i8) as i32 };
     v(*b) - v(*a)
 }
 
 /// { 0x4b07b0 } (comparacao do qsort): palavra +0x80 do segundo menos a do primeiro.
-unsafe extern "C" fn ordem_por_80(a: *const usize, b: *const usize) -> i32 {
+pub(crate) unsafe extern "C" fn ordem_por_80(a: *const usize, b: *const usize) -> i32 {
     *((*b + 0x80) as *const i16) as i32 - *((*a + 0x80) as *const i16) as i32
 }
 
 /// { 0x4b07d0 } (comparacao do qsort): como 0x4b07b0, com os nulos no fim (primeiro nulo: 1 se o
 /// segundo nao for; segundo nulo: -1).
-unsafe extern "C" fn ordem_por_80_desc(a: *const usize, b: *const usize) -> i32 {
+pub(crate) unsafe extern "C" fn ordem_por_80_desc(a: *const usize, b: *const usize) -> i32 {
     let (x, y) = (*a, *b);
     if x == 0 {
         return (y != 0) as i32;
@@ -49,7 +51,7 @@ unsafe extern "C" fn ordem_por_80_desc(a: *const usize, b: *const usize) -> i32 
 }
 
 /// { 0x4b0810 } (comparacao do qsort): como 0x4b07d0, em ordem crescente.
-unsafe extern "C" fn ordem_por_80_cresc(a: *const usize, b: *const usize) -> i32 {
+pub(crate) unsafe extern "C" fn ordem_por_80_cresc(a: *const usize, b: *const usize) -> i32 {
     let (x, y) = (*a, *b);
     if x == 0 {
         return (y != 0) as i32;
@@ -63,7 +65,7 @@ unsafe extern "C" fn ordem_por_80_cresc(a: *const usize, b: *const usize) -> i32
 // ---------- quadragesima oitava leva: folhas de outros modulos ----------
 
 /// { 0x4b0850 } (comp_util.cpp): algarismo das unidades de `n` (abaixo de 1000; senao 0).
-unsafe extern "C" fn unidades(n: i32) -> u8 {
+pub(crate) unsafe extern "C" fn unidades(n: i32) -> u8 {
     if n < 1000 {
         (n % 10) as u8
     } else {
@@ -73,7 +75,7 @@ unsafe extern "C" fn unidades(n: i32) -> u8 {
 
 /// { 0x5c6710 } (friendly.cpp): a competicao e amistosa? E a guardada em +4 do objeto, ou o id dela
 /// (+0) esta entre as 127 ultimas competicoes de clubes (quantidade em 0xae2378).
-unsafe extern "thiscall" fn e_amistoso(this: usize, comp: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn e_amistoso(this: usize, comp: usize) -> u32 {
     if comp == *((this + 4) as *const usize) {
         return 1;
     }
@@ -83,7 +85,7 @@ unsafe extern "thiscall" fn e_amistoso(this: usize, comp: usize) -> u32 {
 /// { 0x4cf5a0 } (contract_manager.cpp): contrato da pessoa (registros de 80 bytes a partir de +0
 /// do objeto), pelo indice na tabela 0xae2d0c (79 bytes por pessoa; quantidade em 0xae2364).
 /// Sem pessoa, id fora da tabela ou indice negativo: 0.
-unsafe extern "thiscall" fn contrato_de(this: usize, pessoa: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn contrato_de(this: usize, pessoa: usize) -> usize {
     if pessoa == 0 {
         return 0;
     }
@@ -102,7 +104,7 @@ unsafe extern "thiscall" fn contrato_de(this: usize, pessoa: usize) -> usize {
 /// { 0x53b900 } (Database.cpp): o clube e uma selecao? Os ids das selecoes vem depois dos clubes
 /// (total de clubes em 0xae235c menos 2 x nacoes em 0xae2350). Clube nulo: o original mostra uma
 /// caixa de erro, zera 0xb67a34 e devolve 0 (aqui, sem a caixa).
-unsafe extern "C" fn e_selecao(clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn e_selecao(clube: usize) -> u32 {
     if clube == 0 {
         *(0xb67a34 as *mut u32) = 0;
         return 0;
@@ -118,7 +120,7 @@ unsafe extern "C" fn e_selecao(clube: usize) -> u32 {
 /// O núcleo da 0x4c08f0 sobre os `n` clubes em `v` e as chaves em `k`: a chave de cada clube é a força
 /// (0x4c0720; clube nulo, 0); depois, para cada i, todo j > i com chave maior troca de lugar com i (chave e clube),
 /// com sinal.
-unsafe fn cpt13_ordenar_com(v: *mut u32, k: *mut i32, n: i32) {
+pub(crate) unsafe fn cpt13_ordenar_com(v: *mut u32, k: *mut i32, n: i32) {
     let forca: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_COMP_UTIL_GET_CLUB_STRENGTH_SCORE);
     for i in 0..n.max(0) as usize {
         let c = *v.add(i);
@@ -142,7 +144,7 @@ unsafe fn cpt13_ordenar_com(v: *mut u32, k: *mut i32, n: i32) {
 /// [pt] { 0x4c08f0 } (cdecl, comp_util.cpp): `comp_util_sort_clubs_by_strength(clubes, n)`: ordena o vetor de `n` clubes
 /// pela força (0x4c0720), a maior primeiro, com as chaves num vetor temporário (0x944e46 / 0x9452ca; a original o
 /// enche de 0x60 antes, tudo sobrescrito). Sem memória: a caixa (linha 0x292d) e nada.
-unsafe extern "C" fn ordenar_clubes_pela_forca(v: usize, n: i32) {
+pub(crate) unsafe extern "C" fn ordenar_clubes_pela_forca(v: usize, n: i32) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let k = alocar((n as u32).wrapping_mul(4));
@@ -162,7 +164,7 @@ unsafe extern "C" fn ordenar_clubes_pela_forca(v: usize, n: i32) {
 /// [pt] { 0x4a2540 } (thiscall, ret 8, comp_stats.cpp): `Comp_Stats::set_club_final_position(clube, posição)`: acha
 /// (0x4a4850) ou acrescenta (0x4aceb0) o registro do clube na estatística da competição e grava a posição (byte) em
 /// +0x72; devolve o registro. Clube nulo: a caixa (linha 0x680).
-unsafe extern "thiscall" fn gravar_posicao_do_clube(this: usize, clube: usize, pos: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn gravar_posicao_do_clube(this: usize, clube: usize, pos: u32) -> usize {
     if clube == 0 {
         aviso_em(0x99ca94, 0x680);
         return 0; // ponytail: a original devolve o eax da caixa; quem chama não lê
@@ -182,7 +184,7 @@ unsafe extern "thiscall" fn gravar_posicao_do_clube(this: usize, clube: usize, p
 /// (+0x3c − 2) para trás ([+0xa3] + r × 0x68, a conta de quem sai em +0x1a), até um clube nulo no começo da rodada.
 /// Na primeira rodada vista, os que saem nela ganham todos a posição 1 (sem olhar nulos); em cada rodada, os seguintes
 /// ganham a posição do contador (que sobe a cada vaga, nula ou não), pulando os nulos. `gravar` = 0 só monta a lista.
-unsafe fn cpt13_posicoes(this: usize, v: *const u32, gravar: usize) -> Vec<(usize, u8)> {
+pub(crate) unsafe fn cpt13_posicoes(this: usize, v: *const u32, gravar: usize) -> Vec<(usize, u8)> {
     let gravar_posicao: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     let mut chamadas: Vec<(usize, u8)> = Vec::new();
     let mut s: i16 = 0; // o índice no vetor (bp com sinal)
@@ -235,7 +237,7 @@ unsafe fn cpt13_posicoes(this: usize, v: *const u32, gravar: usize) -> Vec<(usiz
 /// bytes, +0x3e deles) para um vetor (0x944e46), ordena pela força (0x4c08f0) e dá a cada um a posição prevista pela
 /// rodada em que sai (0x4a2540 na estatística [+8]); libera o vetor (0x9452ca). Sem estatística: a caixa (linha
 /// 0x1827); sem memória: a original (a caixa da falta de memória e o fim do jogo).
-unsafe extern "thiscall" fn posicoes_previstas_da_copa(this: usize) {
+pub(crate) unsafe extern "thiscall" fn posicoes_previstas_da_copa(this: usize) {
     if read_u32_as_usize(this + 8) == 0 {
         return aviso_em(0x9b55ac, 0x1827);
     }
@@ -258,7 +260,7 @@ unsafe extern "thiscall" fn posicoes_previstas_da_copa(this: usize) {
 /// Comparador: grava e pode realocar a estatística (não roda duas vezes): antes da original, as posições são
 /// planejadas sobre uma cópia ordenada do vetor (as chaves num Vec); depois, o registro de cada clube planejado tem
 /// de ter em +0x72 a última posição dele.
-unsafe extern "thiscall" fn comparar_posicoes_previstas_da_copa(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_posicoes_previstas_da_copa(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1191);
     let n = read_i16(this + 0x3e) as i32;
     if read_u32_as_usize(this + 8) == 0 || n <= 0 {
@@ -287,7 +289,7 @@ unsafe extern "thiscall" fn comparar_posicoes_previstas_da_copa(this: usize) {
 
 /// Comparador: ordena no lugar (aloca e libera o temporário): o esperado sai do núcleo sobre uma cópia (chaves num
 /// Vec) antes da original; depois, o vetor tem de ser igual.
-unsafe extern "C" fn comparar_ordenar_clubes_pela_forca(v: usize, n: i32) {
+pub(crate) unsafe extern "C" fn comparar_ordenar_clubes_pela_forca(v: usize, n: i32) {
     let o = orig::<unsafe extern "C" fn(usize, i32)>(1192);
     if v == 0 || n <= 1 {
         return o(v, n);
@@ -302,7 +304,7 @@ unsafe extern "C" fn comparar_ordenar_clubes_pela_forca(v: usize, n: i32) {
 
 /// Comparador: acha ou acrescenta o registro (não roda duas vezes): o registro visto antes (se havia) tem de ser o
 /// devolvido, com a posição em +0x72.
-unsafe extern "thiscall" fn comparar_gravar_posicao_do_clube(this: usize, clube: usize, pos: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_gravar_posicao_do_clube(this: usize, clube: usize, pos: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(1193);
     if clube == 0 {
         return o(this, clube, pos); // ponytail: a caixa, só a original
@@ -318,7 +320,7 @@ unsafe extern "thiscall" fn comparar_gravar_posicao_do_clube(this: usize, clube:
 // ---------- 253a leva: o lado do jogo, a ordem dos coeficientes das nações e o pedido de observação (comp_util.cpp, scout_manager.cpp) ----------
 
 
-unsafe fn cpq12_us(a: usize) -> usize {
+pub(crate) unsafe fn cpq12_us(a: usize) -> usize {
     read_u32(a) as usize
 }
 
@@ -331,7 +333,7 @@ unsafe fn cpq12_us(a: usize) -> usize {
 /// senão 1 para o mandante e 2 para o outro. Seleção (0x53b900): 1 se a nação do campo (+0x38, +0x1f) é a do clube
 /// (+0x53), 2 se é a do adversário, senão 3. Clube: o campo é o estádio do clube e não o do adversário, 1; dos dois,
 /// 1 para o mandante e 2 para o outro; só do adversário, 2; de nenhum, 3. Quem chama lê só o al.
-unsafe extern "C" fn lado_do_jogo_para_o_clube(clube: usize, jogo: usize) -> u8 {
+pub(crate) unsafe extern "C" fn lado_do_jogo_para_o_clube(clube: usize, jogo: usize) -> u8 {
     let campo = read_u32(jogo + 0x18);
     let casa = cpq12_us(jogo + 0x1c);
     if campo == 0 {
@@ -367,7 +369,7 @@ unsafe extern "C" fn lado_do_jogo_para_o_clube(clube: usize, jogo: usize) -> u8 
 }
 
 /// Comparador: pura (consulta 0x53b900, sem efeitos): pelo lado.
-unsafe extern "C" fn comparar_lado_do_jogo_para_o_clube(clube: usize, jogo: usize) -> u8 {
+pub(crate) unsafe extern "C" fn comparar_lado_do_jogo_para_o_clube(clube: usize, jogo: usize) -> u8 {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> u8>(1078);
     let r = o(clube, jogo);
     let n = lado_do_jogo_para_o_clube(clube, jogo);
@@ -382,7 +384,7 @@ unsafe extern "C" fn comparar_lado_do_jogo_para_o_clube(clube: usize, jogo: usiz
 /// entrada, o coeficiente em double em +4) da game_update_nation_coefficients 0x5d6187 (no dia do mês da tabela
 /// 0x9cd200): maior antes (−1); menor ou sem ordem (NaN, a flag C0 do fcomp), 1; igual, 0. Quente (o qsort): sem
 /// contador. A original ordena e libera o vetor logo depois: a ordem não chega ao jogo (só o comparando acusa).
-unsafe extern "C" fn ordem_dos_coeficientes_das_nacoes(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn ordem_dos_coeficientes_das_nacoes(a: usize, b: usize) -> i32 {
     let x = core::ptr::read_unaligned((a + 4) as *const f64);
     let y = core::ptr::read_unaligned((b + 4) as *const f64);
     if x > y {
@@ -394,7 +396,7 @@ unsafe extern "C" fn ordem_dos_coeficientes_das_nacoes(a: usize, b: usize) -> i3
     0
 }
 
-unsafe extern "C" fn comparar_ordem_dos_coeficientes_das_nacoes(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn comparar_ordem_dos_coeficientes_das_nacoes(a: usize, b: usize) -> i32 {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> i32>(1079);
     let r = o(a, b);
     let n = ordem_dos_coeficientes_das_nacoes(a, b);
@@ -412,7 +414,7 @@ unsafe extern "C" fn comparar_ordem_dos_coeficientes_das_nacoes(a: usize, b: usi
 /// com menos de 3 relatórios (+0x10, com sinal); com `so_vencidos`, só se a data do pedido (+8: dia, +0xa: ano) é
 /// anterior a hoje ([0xae2c90], ano sem sinal, dia com sinal). Devolve 1 ou 0. Jogador nulo: a original (caixa da
 /// linha 0x5da). A data local da original (0x54a110) só ocupa a chave depois do par.
-unsafe extern "thiscall" fn pedido_de_observacao(this: usize, jogador: usize, clube: usize, so_vencidos: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn pedido_de_observacao(this: usize, jogador: usize, clube: usize, so_vencidos: u32) -> u32 {
     if jogador == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(1080)(this, jogador, clube, so_vencidos);
     }
@@ -460,7 +462,7 @@ unsafe extern "thiscall" fn pedido_de_observacao(this: usize, jogador: usize, cl
 }
 
 /// Comparador: consulta pura (a busca binária e a data local): pelo valor; jogador nulo só a original (a caixa).
-unsafe extern "thiscall" fn comparar_pedido_de_observacao(this: usize, jogador: usize, clube: usize, so_vencidos: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_pedido_de_observacao(this: usize, jogador: usize, clube: usize, so_vencidos: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(1080);
     if jogador == 0 {
         return o(this, jogador, clube, so_vencidos);
@@ -474,7 +476,7 @@ unsafe extern "thiscall" fn comparar_pedido_de_observacao(this: usize, jogador: 
 // ---------- 249a leva: a mudança de divisão do clube e os embaralhamentos das listas de clubes (league.cpp, comp_util.cpp) ----------
 
 
-unsafe fn cpm3_sorteio(n: i32) -> i32 {
+pub(crate) unsafe fn cpm3_sorteio(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     f(n)
 }
@@ -491,7 +493,7 @@ unsafe fn cpm3_sorteio(n: i32) -> i32 {
 /// [0xb67a44]); numa divisão de liga (+0x43 = 2 na competição [0xadadfc][id]) com estádio mínimo (+0xe2 ≠ −1) e ficha
 /// do estádio (+0x69), a obra do estádio (0x599e00 nas finanças 0x5a0590 de [0xae2a38], lugares +0xe4 e +0xe2); e,
 /// com a competição carregada, a situação +0x64 = 3 passa a 2.
-unsafe extern "thiscall" fn mudar_clube_de_divisao(_this: usize, clube: usize, divisao: usize, vaga: u32) {
+pub(crate) unsafe extern "thiscall" fn mudar_clube_de_divisao(_this: usize, clube: usize, divisao: usize, vaga: u32) {
     crate::comparacao::ramo("cpm_3 mudar de divisao");
     let usa_numeros: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_SQUAD_MANAGER_CLUB_USES_SQUAD_NUMBERS);
     let limpar_clausulas: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_RESET_DIVISION_CLAUSES);
@@ -529,13 +531,13 @@ unsafe extern "thiscall" fn mudar_clube_de_divisao(_this: usize, clube: usize, d
     }
 }
 
-unsafe fn cpm3_por(a: usize, v: usize) {
+pub(crate) unsafe fn cpm3_por(a: usize, v: usize) {
     core::ptr::write_unaligned(a as *mut usize, v);
 }
 
 /// As trocas de `vezes` pares sorteados (0x90cfc0(n) duas vezes; a primeira dá o índice que recebe o item do segundo)
 /// no vetor de ponteiros `itens`, como as duas originais (índices de 16 bits com sinal).
-unsafe fn cpm3_trocar(itens: usize, n: i32) {
+pub(crate) unsafe fn cpm3_trocar(itens: usize, n: i32) {
     let a = cpm3_sorteio(n) as i16 as isize;
     let b = cpm3_sorteio(n) as i16 as isize;
     let pa = (itens as isize + 4 * a) as usize;
@@ -550,7 +552,7 @@ unsafe fn cpm3_trocar(itens: usize, n: i32) {
 ///
 /// [pt] { 0x4afb40 } (cdecl, comp_util.cpp): `comp_util_shuffle_pointer_array(itens, n)`: embaralha o vetor de `n` (curto)
 /// ponteiros com 3 × n trocas de pares sorteados (0x90cfc0(n) duas vezes cada).
-unsafe extern "C" fn embaralhar_ponteiros(itens: usize, n: u32) {
+pub(crate) unsafe extern "C" fn embaralhar_ponteiros(itens: usize, n: u32) {
     let n = n as u16 as i16 as i32;
     if 3 * n <= 0 {
         return;
@@ -573,7 +575,7 @@ unsafe extern "C" fn embaralhar_ponteiros(itens: usize, n: u32) {
 /// clubes pela reputação, maior primeiro e nulos no fim (qsort 0x945333 com 0x4b07d0), e embaralha os m = min(3 ×
 /// escolhas, n) primeiros com m trocas de pares sorteados entre eles. `n` negativo ou menor que `escolhas`: caixa
 /// "Error" (a original); `escolhas` < 1: nada.
-unsafe extern "C" fn ordenar_e_embaralhar_os_melhores(clubes: usize, n: u32, escolhas: u32) {
+pub(crate) unsafe extern "C" fn ordenar_e_embaralhar_os_melhores(clubes: usize, n: u32, escolhas: u32) {
     let (nn, e) = (n as u16 as i16, escolhas as u16 as i16);
     if nn < 0 || nn < e {
         return orig::<unsafe extern "C" fn(usize, u32, u32)>(933)(clubes, n, escolhas); // a caixa
@@ -598,13 +600,13 @@ unsafe extern "C" fn ordenar_e_embaralhar_os_melhores(clubes: usize, n: u32, esc
 
 /// Comparador: a mudança chama as notícias, a vaga de técnico e a obra (não podem rodar duas vezes): só a original (a
 /// prova é a carreira e o modo Rust).
-unsafe extern "thiscall" fn comparar_mudar_clube_de_divisao(this: usize, clube: usize, divisao: usize, vaga: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_mudar_clube_de_divisao(this: usize, clube: usize, divisao: usize, vaga: u32) {
     crate::comparacao::ramo("mudar_clube_de_divisao");
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(931)(this, clube, divisao, vaga)
 }
 
 /// Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio e pelo vetor, a cópia em sem_contar.
-unsafe extern "C" fn comparar_embaralhar_ponteiros(itens: usize, n: u32) {
+pub(crate) unsafe extern "C" fn comparar_embaralhar_ponteiros(itens: usize, n: u32) {
     let o = orig::<unsafe extern "C" fn(usize, u32)>(932);
     let k = (n as u16 as i16).max(0) as usize;
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -618,7 +620,7 @@ unsafe extern "C" fn comparar_embaralhar_ponteiros(itens: usize, n: u32) {
 
 /// Comparador: ordena (qsort, determinístico) e sorteia: lado a lado pelo estado do sorteio e pelos `n` clubes, a cópia
 /// em sem_contar. Caixa (`n` negativo ou menor que `escolhas`): só a original.
-unsafe extern "C" fn comparar_ordenar_e_embaralhar_os_melhores(clubes: usize, n: u32, escolhas: u32) {
+pub(crate) unsafe extern "C" fn comparar_ordenar_e_embaralhar_os_melhores(clubes: usize, n: u32, escolhas: u32) {
     let o = orig::<unsafe extern "C" fn(usize, u32, u32)>(933);
     let (nn, e) = (n as u16 as i16, escolhas as u16 as i16);
     if nn < 0 || nn < e {
@@ -639,7 +641,7 @@ unsafe extern "C" fn comparar_ordenar_e_embaralhar_os_melhores(clubes: usize, n:
 
 /// A nota de um clube na estatística da liga (0x4b02e0): pesos 1 nos 4 atributos (+0x72..+0x75; +0x75 e +0x74 com
 /// o peso [0x968968]) ou, com menos de 25 jogos (+4), proporcionais aos jogos; a média ponderada, na ordem do x87.
-unsafe fn cpa3_nota(e: usize, b73: f64) -> f64 {
+pub(crate) unsafe fn cpa3_nota(e: usize, b73: f64) -> f64 {
     let (mut p, mut k73, mut k72) = (f64_em(0x968968), 1.0f64, 1.0f64);
     let jogos = read_u8(e + 4);
     if jogos < 0x19 {
@@ -663,7 +665,7 @@ unsafe fn cpa3_nota(e: usize, b73: f64) -> f64 {
 /// do +0x74 do outro); 3 = briga na zona (+0x98 ≠ 0, as duas até 0,2 × clubes + +0xbe, ou com +0xbf até 0,2 × clubes
 /// + +0xbe + +0xbf, e o mesmo cruzamento do +0x74); senão 0. Devolve só `al`. Sem SEH, sem sorteio; a virtual +0x98
 /// é chamada até três vezes, como na original.
-unsafe extern "C" fn tipo_de_confronto_na_liga(a: usize, b: usize) -> u8 {
+pub(crate) unsafe extern "C" fn tipo_de_confronto_na_liga(a: usize, b: usize) -> u8 {
     let comp = read_usize(a + 0x57);
     if comp == 0 || comp != read_usize(b + 0x57) {
         return 0;
@@ -725,7 +727,7 @@ unsafe extern "C" fn tipo_de_confronto_na_liga(a: usize, b: usize) -> u8 {
 
 // ponytail: ~4 milhões de chamadas na carreira: comparação só do valor, sem regiões (a rotina só lê; a 0x4a4850 pode
 // reordenar a estatística, e a original já deixa ordenada para a cópia).
-unsafe extern "C" fn comparar_tipo_de_confronto_na_liga(a: usize, b: usize) -> u8 {
+pub(crate) unsafe extern "C" fn comparar_tipo_de_confronto_na_liga(a: usize, b: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(780)(a, b);
     let n = tipo_de_confronto_na_liga(a, b);
     PLACAR.registrar(r == n, || format!("tipo_de_confronto_na_liga({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -742,7 +744,7 @@ unsafe extern "C" fn comparar_tipo_de_confronto_na_liga(a: usize, b: usize) -> u
 /// 3 × 0x204, 0x810, 0x90, 3 × 0x210, 4 × 0x40) entre os jogadores (+0x61) do elenco (0x541f90). Clube nulo:
 /// −10.000.000. Sem SEH, sem sorteio próprio. A original empurra o número de jogadores como dword com só o byte de
 /// baixo gravado (o resto é sobra de pilha); a 0x6e2000 só lê o byte, e a cópia passa o byte estendido.
-unsafe extern "C" fn forca_do_clube(clube: usize) -> i32 {
+pub(crate) unsafe extern "C" fn forca_do_clube(clube: usize) -> i32 {
     if clube == 0 {
         return -10_000_000;
     }
@@ -784,7 +786,7 @@ unsafe extern "C" fn forca_do_clube(clube: usize) -> i32 {
 
 // ponytail: 1.117 chamadas; só o valor. A escalação e as notas têm comparadores próprios, e o físico que a nota
 // atualiza uma vez (0x62ed70, com sorteio) a original já deixa pronto para a cópia.
-unsafe extern "C" fn comparar_forca_do_clube(clube: usize) -> i32 {
+pub(crate) unsafe extern "C" fn comparar_forca_do_clube(clube: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize) -> i32>(781)(clube);
     let n = forca_do_clube(clube);
     PLACAR.registrar(r == n, || format!("forca_do_clube({:x}) original={} rust={}", clube, r, n));
@@ -800,7 +802,7 @@ unsafe extern "C" fn comparar_forca_do_clube(clube: usize) -> i32 {
 /// primeira linha dela e devolve o clube do `lugar` (0 campeão +0xa, 1 vice +0xe, 2 terceiro +0x12); não achou: 0.
 /// Outro lugar: a original (a caixa do comp_util.cpp). A chave na pilha da original só tem +4 e +8 gravados, e a
 /// 0x540780 só lê esses dois; a cópia zera o resto.
-unsafe extern "C" fn clube_colocado_mais_recente(comp: usize, lugar: u32) -> usize {
+pub(crate) unsafe extern "C" fn clube_colocado_mais_recente(comp: usize, lugar: u32) -> usize {
     let lugar = lugar as u8;
     if lugar > 2 {
         return orig::<unsafe extern "C" fn(usize, u32) -> usize>(782)(comp, lugar as u32); // caixa: só a original
@@ -827,7 +829,7 @@ unsafe extern "C" fn clube_colocado_mais_recente(comp: usize, lugar: u32) -> usi
     read_usize(p + [0xa, 0xe, 0x12][lugar as usize]) // campeão, vice, terceiro
 }
 
-unsafe extern "C" fn comparar_clube_colocado_mais_recente(comp: usize, lugar: u32) -> usize {
+pub(crate) unsafe extern "C" fn comparar_clube_colocado_mais_recente(comp: usize, lugar: u32) -> usize {
     let o = orig::<unsafe extern "C" fn(usize, u32) -> usize>(782);
     if lugar as u8 > 2 {
         return o(comp, lugar);
@@ -849,7 +851,7 @@ unsafe extern "C" fn comparar_clube_colocado_mais_recente(comp: usize, lugar: u3
 /// +4 o estádio, +0 a competição, +0x42, +0x32, +0x30, +0x43/+0x44, +0x4b/+0x4c e +0x47/+0x48 os
 /// placares, +0x2a, +0x28 e +8. Depois os ponteiros: clubes (0xae23b4, 0x245 bytes) em +0x1c/+0x20,
 /// estádio (0xae23b0, 0x4e) em +0x18 e competição (0xae23d0, 0x6b) em +0x14; id −1: 0.
-unsafe extern "C" fn partida_das_vagas_da_noticia(noticia: usize, partida: usize, cursor: *mut u8) {
+pub(crate) unsafe extern "C" fn partida_das_vagas_da_noticia(noticia: usize, partida: usize, cursor: *mut u8) {
     // ponytail: a original empilha o eax inteiro (resto da vaga anterior nos bits altos); a 0x785830 só lê o byte
     let vaga: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_SLOT);
     let mut v = *cursor;
@@ -899,7 +901,7 @@ unsafe extern "C" fn partida_das_vagas_da_noticia(noticia: usize, partida: usize
 /// primeiro sem 0xff) do lado do clube (da casa = +0x1c) e as reputações (+0x80 / 500) dos clubes.
 /// 1 goleada, 2 e 3 vitórias contra mais fortes, 4 comum, 5 e 7 derrotas para mais fracos, 6
 /// zebra. Só o al é fiel (quem chama usa al).
-unsafe extern "C" fn resultado_da_eliminatoria_na_noticia(clube: usize, partida: usize) -> u8 {
+pub(crate) unsafe extern "C" fn resultado_da_eliminatoria_na_noticia(clube: usize, partida: usize) -> u8 {
     let casa = *((partida + 0x1c) as *const usize);
     let fora = *((partida + 0x20) as *const usize);
     let h = (core::ptr::read_unaligned((casa + 0x80) as *const i16) as i32 / 500) as i8 as i32;
@@ -973,7 +975,7 @@ unsafe extern "C" fn resultado_da_eliminatoria_na_noticia(clube: usize, partida:
 /// [pt] { 0x521f10 } (cdecl, Cup.cpp): o dia `vaga` (0 a 7) da rodada `rodada` (registros de 104 bytes):
 /// em 7 bytes a partir de +0x23, o mando (4 bytes), o dia da semana (−1 a 6), o horário (−1 a 2) e o
 /// código (−1 a 3). Fora da faixa: a original (caixa de erro e fim do jogo). Devolve o mando.
-unsafe extern "C" fn dia_da_rodada_da_copa(rodadas: usize, rodada: i16, vaga: i16, semana: i16, hora: i8, codigo: i8, mando: u32) -> u32 {
+pub(crate) unsafe extern "C" fn dia_da_rodada_da_copa(rodadas: usize, rodada: i16, vaga: i16, semana: i16, hora: i8, codigo: i8, mando: u32) -> u32 {
     if !(0..8).contains(&vaga) || !(-1..=6).contains(&semana) || !(-1..3).contains(&hora) || !(-1..=3).contains(&codigo) {
         return orig::<unsafe extern "C" fn(usize, i16, i16, i16, i8, i8, u32) -> u32>(539)(rodadas, rodada, vaga, semana, hora, codigo, mando);
     }
@@ -985,21 +987,21 @@ unsafe extern "C" fn dia_da_rodada_da_copa(rodadas: usize, rodada: i16, vaga: i1
     mando
 }
 
-unsafe extern "C" fn comparar_partida_das_vagas_da_noticia(noticia: usize, partida: usize, cursor: *mut u8) {
+pub(crate) unsafe extern "C" fn comparar_partida_das_vagas_da_noticia(noticia: usize, partida: usize, cursor: *mut u8) {
     let o = orig::<unsafe extern "C" fn(usize, usize, *mut u8)>(537);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(partida, 0x4d), (cursor as usize, 1)],
         || o(noticia, partida, cursor), || partida_das_vagas_da_noticia(noticia, partida, cursor));
     PLACAR.registrar(igual, || format!("partida_das_vagas_da_noticia {:x?} x {:x?}", mo, mr));
 }
 
-unsafe extern "C" fn comparar_resultado_da_eliminatoria_na_noticia(clube: usize, partida: usize) -> u8 {
+pub(crate) unsafe extern "C" fn comparar_resultado_da_eliminatoria_na_noticia(clube: usize, partida: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(538)(clube, partida);
     let n = resultado_da_eliminatoria_na_noticia(clube, partida);
     PLACAR.registrar(r == n, || format!("resultado_da_eliminatoria_na_noticia original={} rust={}", r, n));
     r
 }
 
-unsafe extern "C" fn comparar_dia_da_rodada_da_copa(rodadas: usize, rodada: i16, vaga: i16, semana: i16, hora: i8, codigo: i8, mando: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_dia_da_rodada_da_copa(rodadas: usize, rodada: i16, vaga: i16, semana: i16, hora: i8, codigo: i8, mando: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, i16, i16, i16, i8, i8, u32) -> u32>(539);
     if !(0..8).contains(&vaga) || !(-1..=6).contains(&semana) || !(-1..3).contains(&hora) || !(-1..=3).contains(&codigo) {
         return o(rodadas, rodada, vaga, semana, hora, codigo, mando);

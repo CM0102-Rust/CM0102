@@ -1,3 +1,5 @@
+use super::*;
+
 // ---------- 276a leva: o calendário das supercopas: o jogo da Supercopa da França, da Espanha e do Japão (fra_super.cpp, spa_super.cpp, jap_super.cpp) ----------
 
 
@@ -8,27 +10,27 @@
 /// times, jogos, times novos e inscritos que já entraram, +0x20/+0x21/+0x22 replay, jogos por confronto e dias entre
 /// eles, +0x5c/+0x60/+0x64 os prêmios (chegar, vencer, perder).
 #[derive(Clone, Copy)]
-struct Cql12R {
-    sorteio: (u32, u32, u32, u32),
-    jogo: (u32, u32, u32, u32, u32, u32),
-    codigo: u16,
-    bits: (u16, u16, u16),
-    categoria: u8,
-    times: (u16, u16, u16, u16),
-    confronto: (u8, u8, u8),
-    premios: (u32, u32, u32),
+pub(crate) struct Cql12R {
+    pub(crate) sorteio: (u32, u32, u32, u32),
+    pub(crate) jogo: (u32, u32, u32, u32, u32, u32),
+    pub(crate) codigo: u16,
+    pub(crate) bits: (u16, u16, u16),
+    pub(crate) categoria: u8,
+    pub(crate) times: (u16, u16, u16, u16),
+    pub(crate) confronto: (u8, u8, u8),
+    pub(crate) premios: (u32, u32, u32),
 }
 
 /// A linha da tabela: (sorteio), (jogo), nome, (bits do sorteio, desempate, desempate de ida e volta), categoria,
 /// (times, jogos, novos, inscritos), (replay, jogos por confronto, dias entre eles), (prêmios).
-const fn cql12r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, u32, u32, u32), codigo: u16, bits: (u16, u16, u16), categoria: u8,
+pub(crate) const fn cql12r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, u32, u32, u32), codigo: u16, bits: (u16, u16, u16), categoria: u8,
     times: (u16, u16, u16, u16), confronto: (u8, u8, u8), premios: (u32, u32, u32)) -> Cql12R {
     Cql12R { sorteio, jogo, codigo, bits, categoria, times, confronto, premios }
 }
 
 /// Grava a rodada `i` da tabela `t` (ano-base `ano`, a palavra +0x40 da copa com sinal): as duas datas (0x521e60 e
 /// 0x521eb0, cdecl, 7 e 9 argumentos; add esp, 0x1c / 0x24) e os campos.
-unsafe fn cql12_rodada(t: usize, i: u32, r: &Cql12R, ano: u32) {
+pub(crate) unsafe fn cql12_rodada(t: usize, i: u32, r: &Cql12R, ano: u32) {
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
     let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
     sorteio(t, i, r.sorteio.0, r.sorteio.1, r.sorteio.2, r.sorteio.3, ano);
@@ -59,7 +61,7 @@ unsafe fn cql12_rodada(t: usize, i: u32, r: &Cql12R, ano: u32) {
 /// tamanho da tabela, extra = 0; a tabela (0x944e46 de 0x68 × rodadas; sem memória, a caixa `linha` de `arquivo` e
 /// devolve 0) com cada rodada; devolve a tabela. `ajuste` mexe na primeira rodada depois da alocação (o mando sorteado da
 /// Supercopa francesa).
-unsafe fn cql12_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32, tabela: &[Cql12R], arquivo: usize, linha: u32, nome: &'static str,
+pub(crate) unsafe fn cql12_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32, tabela: &[Cql12R], arquivo: usize, linha: u32, nome: &'static str,
     ajuste: impl FnOnce(&mut Cql12R)) -> usize {
     if fase as u8 != 0xff {
         return 0;
@@ -87,7 +89,7 @@ unsafe fn cql12_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i1
 
 /// Os bytes que a original grava em cada rodada (o resto da memória alocada fica como veio): +0..+0x10 (as datas e os
 /// campos até o desempate de ida e volta), +0x13..+0x22 (o mando até os dias entre os jogos) e +0x5c..+0x67 (os prêmios).
-unsafe fn cql12_gravados(t: usize, n: i16) -> Vec<u8> {
+pub(crate) unsafe fn cql12_gravados(t: usize, n: i16) -> Vec<u8> {
     let mut v = Vec::new();
     for r in 0..n.max(0) as usize {
         let e = t + r * 0x68;
@@ -100,7 +102,7 @@ unsafe fn cql12_gravados(t: usize, n: i16) -> Vec<u8> {
 
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada).
-unsafe fn cql12_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32,
+pub(crate) unsafe fn cql12_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if fase as u8 != 0xff {
         // ponytail: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
@@ -123,13 +125,13 @@ unsafe fn cql12_comparar(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i
 }
 
 /// A Supercopa da França: um jogo em julho; o prêmio de 60 mil por chegar. O mando vem à parte (`cql12_mando_da_franca`).
-const CQL12_SUPERCOPA_DA_FRANCA: [Cql12R; 1] = [
+pub(crate) const CQL12_SUPERCOPA_DA_FRANCA: [Cql12R; 1] = [
     cql12r((5, 6, 0, 5), (0x18, 6, 0, 5, 2, 0x400), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0xea60, 0, 0)), // cql12: o jogo da Supercopa da França
 ];
 
 /// O mando da Supercopa da França: 0x400 em 2001 (+0x40 = 0x7d1); nos outros anos, um dos seis (0x200, 0x400, 0x800,
 /// 0x1000, 0x2000, 0x4000) pela 0x90cfc0 (push 6; add esp, 4 -> cdecl, o sorteio de 0 a 5).
-unsafe fn cql12_mando_da_franca(this: usize) -> u32 {
+pub(crate) unsafe fn cql12_mando_da_franca(this: usize) -> u32 {
     if core::ptr::read_unaligned((this + 0x40) as *const i16) == 0x7d1 {
         return 0x400;
     }
@@ -148,13 +150,13 @@ unsafe fn cql12_mando_da_franca(this: usize) -> u32 {
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única com o mando de
 /// `cql12_mando_da_franca` (a original sorteia depois da data do sorteio, que não sorteia: a cópia sorteia logo antes);
 /// a caixa da linha 0x97 sem memória.
-unsafe extern "thiscall" fn cql12_supercopa_da_franca_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn cql12_supercopa_da_franca_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql12_tabela(this, fase, rodadas, extra, saida, &CQL12_SUPERCOPA_DA_FRANCA, 0x9ccc48, 0x97, "cql_12 tabela da supercopa da franca",
         |r| r.jogo.5 = cql12_mando_da_franca(this))
 }
 
 // ponytail: fora de 2001 a original sorteia o mando (0x90cfc0): só ela roda nesse caso.
-unsafe extern "thiscall" fn comparar_cql12_supercopa_da_franca_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_cql12_supercopa_da_franca_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1778);
     if core::ptr::read_unaligned((this + 0x40) as *const i16) != 0x7d1 {
         return o(this, fase, rodadas, extra, saida);
@@ -165,7 +167,7 @@ unsafe extern "thiscall" fn comparar_cql12_supercopa_da_franca_tabela(this: usiz
 
 /// A Supercopa da Espanha: ida e volta (7 dias entre os jogos) em agosto, sem sorteio (+0xd = 0x200), desempate de ida e
 /// volta 1.
-const CQL12_SUPERCOPA_DA_ESPANHA: [Cql12R; 1] = [
+pub(crate) const CQL12_SUPERCOPA_DA_ESPANHA: [Cql12R; 1] = [
     cql12r((5, 6, 0, 5), (0x14, 7, 0, 6, 1, 0), 0, (0, 0x200, 1), 6, (2, 1, 2, 0), (0, 2, 7), (0, 0, 0)), // cql12: a ida da Supercopa da Espanha
 ];
 
@@ -176,18 +178,18 @@ const CQL12_SUPERCOPA_DA_ESPANHA: [Cql12R; 1] = [
 ///
 /// [pt] { 0x858960 } (thiscall, ret 0x10, spa_super.cpp; a virtual +0x3c da Supercopa da Espanha): `SpaSuper::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
-unsafe extern "thiscall" fn cql12_supercopa_da_espanha_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn cql12_supercopa_da_espanha_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql12_tabela(this, fase, rodadas, extra, saida, &CQL12_SUPERCOPA_DA_ESPANHA, 0xa82a58, 0x99, "cql_12 tabela da supercopa da espanha", |_| {})
 }
 
-unsafe extern "thiscall" fn comparar_cql12_supercopa_da_espanha_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_cql12_supercopa_da_espanha_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1779);
     cql12_comparar("cql12_supercopa_da_espanha_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cql12_supercopa_da_espanha_tabela(this, fase, r, e, s))
 }
 
 /// A Supercopa do Japão: um jogo em março no estádio neutro, 150 mil por vencer.
-const CQL12_SUPERCOPA_DO_JAPAO: [Cql12R; 1] = [
+pub(crate) const CQL12_SUPERCOPA_DO_JAPAO: [Cql12R; 1] = [
     cql12r((1, 1, 0, 5), (4, 2, 0, 5, 1, 4), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0x249f0, 0)), // cql12: o jogo da Supercopa do Japão
 ];
 
@@ -198,11 +200,11 @@ const CQL12_SUPERCOPA_DO_JAPAO: [Cql12R; 1] = [
 ///
 /// [pt] { 0x666020 } (thiscall, ret 0x10, jap_super.cpp; a virtual +0x3c da Supercopa do Japão): `JapSuper::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x98 sem memória.
-unsafe extern "thiscall" fn cql12_supercopa_do_japao_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn cql12_supercopa_do_japao_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql12_tabela(this, fase, rodadas, extra, saida, &CQL12_SUPERCOPA_DO_JAPAO, 0x9eaf4c, 0x98, "cql_12 tabela da supercopa do japao", |_| {})
 }
 
-unsafe extern "thiscall" fn comparar_cql12_supercopa_do_japao_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_cql12_supercopa_do_japao_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1780);
     cql12_comparar("cql12_supercopa_do_japao_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cql12_supercopa_do_japao_tabela(this, fase, r, e, s))

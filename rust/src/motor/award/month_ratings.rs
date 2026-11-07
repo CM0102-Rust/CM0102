@@ -1,14 +1,16 @@
+use super::*;
+
 // ---------- 259a leva: as notas do mês: as notas da partida, a nota do jogador no mês e o melhor do mês (month_ratings.cpp) ----------
 
 
-unsafe fn cpw5_i(a: usize) -> i32 {
+pub(crate) unsafe fn cpw5_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
 
 
 /// A pessoa `id` da tabela de pessoas ([0xae23bc], 0x6e bytes cada).
-unsafe fn cpw5_pessoa(id: i32) -> usize {
+pub(crate) unsafe fn cpw5_pessoa(id: i32) -> usize {
     read_usize(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e))
 }
 
@@ -20,7 +22,7 @@ unsafe fn cpw5_pessoa(id: i32) -> usize {
 /// 0x7683a0 a cada partida das ligas com prêmio do mês. Os dois lados da partida (+0x190 e +0x190 + 0x625), 20 vagas de
 /// 0x49 bytes cada: fora a vaga marcada 0xfb em +0x1d e, da 12ª em diante, a reserva que não entrou (+0x32 = 0xff), a
 /// pessoa (id em +0) abaixo da conta de pessoas [0xae2364] vai para as notas do mês (0x767fa0).
-unsafe extern "thiscall" fn guardar_notas_da_partida(this: usize, jogo: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn guardar_notas_da_partida(this: usize, jogo: usize, partida: usize) {
     let _ = jogo;
     let nota: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_MONTH_RATINGS_ADD_PLAYER_RATING);
     let mut lado = partida.wrapping_add(0x190);
@@ -48,7 +50,7 @@ unsafe extern "thiscall" fn guardar_notas_da_partida(this: usize, jogo: usize, p
 
 /// O comparador das notas da partida: lado a lado (cabeçalho e as vagas da tabela que podem mudar) quando cabem as 40
 /// vagas sem crescer a tabela; senão só a original (a 0x767fa0 realoca e a original não pode rodar duas vezes).
-unsafe extern "thiscall" fn comparar_guardar_notas_da_partida(this: usize, jogo: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_guardar_notas_da_partida(this: usize, jogo: usize, partida: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1284);
     let (tab, n, cap) = (read_usize(this), cpw5_i(this + 4), cpw5_i(this + 8));
     if tab == 0 || n < 0 || cap.wrapping_sub(n) < 40 {
@@ -62,7 +64,7 @@ unsafe extern "thiscall" fn comparar_guardar_notas_da_partida(this: usize, jogo:
 
 /// A nota da partida (+0x35 da vaga, sem sinal) soma na palavra +8 do registro de 12 bytes e o byte +0xa conta mais um
 /// jogo.
-unsafe fn cpw5_somar(r: usize, e: usize) {
+pub(crate) unsafe fn cpw5_somar(r: usize, e: usize) {
     let s = (r + 8) as *mut u16;
     core::ptr::write_unaligned(s, core::ptr::read_unaligned(s).wrapping_add(read_u8(e + 0x35) as u16));
     *((r + 0xa) as *mut u8) = read_u8(r + 0xa).wrapping_add(1);
@@ -76,7 +78,7 @@ unsafe fn cpw5_somar(r: usize, e: usize) {
 /// (conta em +4, capacidade em +8) tem registros de 12 bytes: +0 pessoa, +4 liga do clube (ou −1), +8 soma das notas,
 /// +0xa jogos, +0xb idade. Acha a pessoa da vaga (+0) ou acrescenta (cresce 300 com malloc 0x944e46 ou realloc
 /// 0x945667 quando cheia; a liga pelo clube +0x39 da pessoa e o +0x57 dele; a idade pelo +0x18 da pessoa) e soma a nota.
-unsafe extern "thiscall" fn nota_do_jogador_no_mes(this: usize, e: usize) {
+pub(crate) unsafe extern "thiscall" fn nota_do_jogador_no_mes(this: usize, e: usize) {
     let id = cpw5_i(e);
     let n = cpw5_i(this + 4);
     let mut tab = read_usize(this);
@@ -127,7 +129,7 @@ unsafe extern "thiscall" fn nota_do_jogador_no_mes(this: usize, e: usize) {
 
 /// O comparador da nota do mês: lado a lado (cabeçalho e os registros até o novo) quando a tabela não precisa crescer;
 /// senão só a original (realloc).
-unsafe extern "thiscall" fn comparar_nota_do_jogador_no_mes(this: usize, e: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_nota_do_jogador_no_mes(this: usize, e: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1285);
     let (tab, n, cap) = (read_usize(this), cpw5_i(this + 4), cpw5_i(this + 8));
     let achou = tab != 0 && (0..n.max(0) as usize).any(|k| cpw5_i(tab + k * 12) == cpw5_i(e));
@@ -150,7 +152,7 @@ unsafe extern "thiscall" fn comparar_nota_do_jogador_no_mes(this: usize, e: usiz
 /// devolve o primeiro registro da liga (−1: qualquer) com pelo menos 3 jogos (depois 2, 1 e 0); com idade (não 0xff),
 /// os acima dela só contam e o mais novo só vale depois de 3 contados; com liga, a liga atual do clube da pessoa (+0x39,
 /// +0x57) também tem de ser a pedida. Nenhum: 0.
-unsafe extern "thiscall" fn melhor_do_mes(this: usize, liga: i32, idade: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn melhor_do_mes(this: usize, liga: i32, idade: u32) -> usize {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     crate::comparacao::ramo("cpw_5 ordenou as notas");
     ordenar(read_usize(this), read_usize(this + 4) as u32, 0xc, 0x768200); // cpw5: ordena pela média
@@ -196,7 +198,7 @@ unsafe extern "thiscall" fn melhor_do_mes(this: usize, liga: i32, idade: u32) ->
 }
 
 /// O comparador do melhor do mês: lado a lado pela tabela ordenada e pelo registro devolvido.
-unsafe extern "thiscall" fn comparar_melhor_do_mes(this: usize, liga: i32, idade: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_melhor_do_mes(this: usize, liga: i32, idade: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, u32) -> usize>(1286);
     let (tab, n) = (read_usize(this), cpw5_i(this + 4));
     let regioes: Vec<(usize, usize)> = if tab != 0 && n > 0 { vec![(tab, n as usize * 12)] } else { Vec::new() };

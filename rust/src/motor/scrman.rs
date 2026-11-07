@@ -1,3 +1,5 @@
+use super::*;
+
 // ---------- 187a leva: as telas da partida (5): o painel dos últimos placares, a tela seguinte e a cor do título (match_screens.cpp, scrman.cpp, Setup.cpp) ----------
 
 /// the screen manager has no next screen to go forward to
@@ -5,7 +7,7 @@
 ///
 /// [pt] { 0x7febb0 } (thiscall, scrman.cpp): o gerente de telas não tem para onde avançar? (o bloco de
 /// parâmetros da tela atual sem a tela seguinte em +0x1f8). Sem bloco: a original (caixa de erro e saída).
-unsafe extern "thiscall" fn sem_tela_seguinte(gerente: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn sem_tela_seguinte(gerente: usize) -> u32 {
     let vaga = *((gerente + 0x382a) as *const i16) as isize;
     let bloco = core::ptr::read_unaligned((gerente as isize + 0x7e2 + vaga * 0x300) as *const usize);
     if bloco == 0 {
@@ -19,13 +21,13 @@ unsafe extern "thiscall" fn sem_tela_seguinte(gerente: usize) -> u32 {
 ///
 /// [pt] { 0x839590 } (cdecl, Setup.cpp): a cor do título: [0xae3184] com `x` ≠ 0, senão [0xae31a8]. A
 /// original só troca `ax`: os 16 bits de cima da devolução são os de `x`.
-unsafe extern "C" fn cor_do_titulo(x: u32) -> u32 {
+pub(crate) unsafe extern "C" fn cor_do_titulo(x: u32) -> u32 {
     let c = if x != 0 { *(0xae3184 as *const u16) } else { *(0xae31a8 as *const u16) };
     (x & 0xffff_0000) | c as u32
 }
 
 /// Copia o texto C de `origem` (com o zero) para o texto de trabalho 0xde1f64.
-unsafe fn copiar_para_o_texto(origem: usize) {
+pub(crate) unsafe fn copiar_para_o_texto(origem: usize) {
     let mut i = 0;
     loop {
         let b = *((origem + i) as *const u8);
@@ -40,7 +42,7 @@ unsafe fn copiar_para_o_texto(origem: usize) {
 /// O nome da competição do registro `c` (107 bytes) no texto 0xde1f64 do jeito do painel: "Friendlies"
 /// e "Reserves" para as dos amistosos ([0x9cf668]) e reservas ([0x9cf684]) com mais de uma rodada
 /// (+8 > +4 de `rodadas`); senão o nome (+0x38).
-unsafe fn nome_da_competicao_no_painel(c: usize, rodadas: usize) {
+pub(crate) unsafe fn nome_da_competicao_no_painel(c: usize, rodadas: usize) {
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let mais_de_uma = core::ptr::read_unaligned((rodadas + 8) as *const i32) > core::ptr::read_unaligned((rodadas + 4) as *const i32);
     let chave = *(c as *const usize);
@@ -65,7 +67,7 @@ unsafe fn nome_da_competicao_no_painel(c: usize, rodadas: usize) {
 /// Continental ou o nome da nação) e uma linha por partida (0x55f990). Depois a tabela de 4 colunas
 /// com as linhas que cabem (0x5e5cd0, a altura da fonte 3; quantas no parâmetro 0xf, o primeiro item no 0x10),
 /// os três botões do alto (0x804030, 6 a 8) e o redesenho dos placares (0x724520).
-unsafe extern "C" fn painel_dos_ultimos_placares(topo: *mut i32, base: *mut i32) {
+pub(crate) unsafe extern "C" fn painel_dos_ultimos_placares(topo: *mut i32, base: *mut i32) {
     crate::comparacao::ramo("telas painel dos ultimos placares");
     type T9 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
     type T11 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
@@ -198,14 +200,14 @@ unsafe extern "C" fn painel_dos_ultimos_placares(topo: *mut i32, base: *mut i32)
     redesenhar();
 }
 
-unsafe extern "thiscall" fn comparar_sem_tela_seguinte(gerente: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_sem_tela_seguinte(gerente: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(434)(gerente);
     let n = sem_tela_seguinte(gerente);
     PLACAR.registrar(r == n, || format!("sem_tela_seguinte original={} rust={}", r, n));
     r
 }
 
-unsafe extern "C" fn comparar_cor_do_titulo(x: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_cor_do_titulo(x: u32) -> u32 {
     let r = orig::<unsafe extern "C" fn(u32) -> u32>(435)(x);
     let n = cor_do_titulo(x);
     PLACAR.registrar(r == n, || format!("cor_do_titulo({:#x}) original={:#x} rust={:#x}", x, r, n));
@@ -215,7 +217,7 @@ unsafe extern "C" fn comparar_cor_do_titulo(x: u32) -> u32 {
 /// O painel é comparado de verdade: as duas desenham a partir do mesmo estado e o gerente de telas, o
 /// `Display` da tela atual, os parâmetros (menos o 0x14, a hora que o redesenho 0x724520 grava), o
 /// `*topo` e o texto 0xde1f64 têm de sair iguais.
-unsafe extern "C" fn comparar_painel_dos_ultimos_placares(topo: *mut i32, base: *mut i32) {
+pub(crate) unsafe extern "C" fn comparar_painel_dos_ultimos_placares(topo: *mut i32, base: *mut i32) {
     let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(433);
     let mut reg = regioes_da_tela();
     let vaga = *((GERENTE_DE_TELAS + 0x382a) as *const i16) as isize;

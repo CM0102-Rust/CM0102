@@ -1,3 +1,5 @@
+use super::*;
+
 // ---------- 284a leva: a Copa Africana de Nações: o dia do sorteio, o sorteio dos 16 e as fases dos grupos B a D (african_nations.cpp) ----------
 
 
@@ -15,7 +17,7 @@
 /// 4, g = 0..2), a lista +0xee liberada (0x9452ca: push; add esp, 4 -> cdecl) e zerada, +0xf2 (palavra) = 0 e +0x45 =
 /// 1. Depois o dia de liga (0x6847c0: push completo; push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela
 /// repassa.
-unsafe extern "thiscall" fn cqs13_africana_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqs13_africana_dia(this: usize, hoje: usize, completo: u32) -> u32 {
     let sortear: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_AFRICANNATIONS_DRAW_FINALISTS);
     let grupo_a: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_AFRICANNATIONS_INIT_GROUP_A_TABLE);
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
@@ -66,7 +68,7 @@ unsafe extern "thiscall" fn cqs13_africana_dia(this: usize, hoje: usize, complet
 // ponytail: o sorteio, as previsões, as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do grupo A e as três fases
 // criadas e a fase atual (+0x30) a última delas (2).
-unsafe extern "thiscall" fn comparar_cqs13_africana_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs13_africana_dia(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(2068);
     let sorteia = completo != 0
         && read_u32_as_usize(this + 0x45) == 0
@@ -99,7 +101,7 @@ unsafe extern "thiscall" fn comparar_cqs13_africana_dia(this: usize, hoje: usize
 /// devolve 0): para cada grupo j (0..3) e pote p (0..3), um sorteado (0x90cfc0(4): push 4; add esp -> cdecl; o byte com
 /// sinal; de novo enquanto a vaga do pote já saiu) entre os 4 do pote (a lista nas vagas 4p a 4p + 3) vai para a vaga 4j
 /// + p dos grupos e sai do pote (zerado). A lista liberada (0x9452ca) e +0xee = os grupos. Devolve 1.
-unsafe fn cqs13_sorteio(this: usize) -> u32 {
+pub(crate) unsafe fn cqs13_sorteio(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
@@ -166,14 +168,14 @@ unsafe fn cqs13_sorteio(this: usize) -> u32 {
     1
 }
 
-unsafe extern "thiscall" fn cqs13_africana_sorteio(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqs13_africana_sorteio(this: usize) -> u32 {
     cqs13_sorteio(this)
 }
 
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa os grupos dela em +0xee, a cópia faz os seus, comparados nas 16 vagas e liberados (sem os 16, as listas
 /// de 50 comparadas nas 16 primeiras vagas).
-unsafe extern "thiscall" fn comparar_cqs13_africana_sorteio(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs13_africana_sorteio(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2069);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -213,7 +215,7 @@ unsafe extern "thiscall" fn comparar_cqs13_africana_sorteio(this: usize) -> u32 
 /// original empurra os words e bytes com lixo nos bytes altos, que o construtor não lê: a cópia passa os valores limpos)
 /// em [+0xc][g]; o vetor e a tabela das rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x2f2 e 0. Com ela:
 /// +0x30 = g, a notícia do grupo (0x684230 na fase) e 1.
-unsafe extern "thiscall" fn cqs13_africana_grupo(this: usize, g: i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqs13_africana_grupo(this: usize, g: i32) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -280,7 +282,7 @@ unsafe extern "thiscall" fn cqs13_africana_grupo(this: usize, g: i32) -> u32 {
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][g], +0x30 = g, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
-unsafe extern "thiscall" fn comparar_cqs13_africana_grupo(this: usize, g: i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs13_africana_grupo(this: usize, g: i32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(2070);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 || !(0..3).contains(&g) {
@@ -311,7 +313,7 @@ unsafe extern "thiscall" fn comparar_cqs13_africana_grupo(this: usize, g: i32) -
 /// [pt] { 0x401e10 } (thiscall, ret 0, african_nations.cpp; a virtual +0x28): `AfricanNations::advance_stage()`: na última
 /// fase (+0x30 ≥ +0x2c − 1), a caixa da linha 0x2ba; senão +0x30 sobe e, chegando a 3 (depois dos grupos), o mata-mata
 /// (0x402090: mov ecx, this -> thiscall, ret 0).
-unsafe extern "thiscall" fn cqk12_africana_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqk12_africana_fase_seguinte(this: usize) {
     let f = read_u32_as_usize(this + 0x30) as i32;
     if f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
         aviso_em(0x9870f8, 0x2ba);
@@ -328,7 +330,7 @@ unsafe extern "thiscall" fn cqk12_africana_fase_seguinte(this: usize) {
 
 // ponytail: o mata-mata (0x402090) aloca a fase e sorteia: não roda duas vezes. Só a original; o plano: +0x30 sobe um
 // (fora da última fase, que dá a caixa).
-unsafe extern "thiscall" fn comparar_cqk12_africana_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqk12_africana_fase_seguinte(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1709);
     let f = read_u32_as_usize(this + 0x30) as i32;
     if f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
@@ -347,7 +349,7 @@ unsafe extern "thiscall" fn comparar_cqk12_africana_fase_seguinte(this: usize) {
 /// da linha 0x1f1 e devolve 0), cada linha i com a seleção i da lista dos sorteados (+0xee) (0x687430: push 0; push 0;
 /// push seleção; push i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this
 /// -> thiscall, ret 0) e devolve 1.
-unsafe extern "thiscall" fn cqk12_africana_grupo_a(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqk12_africana_grupo_a(this: usize) -> u32 {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
@@ -374,7 +376,7 @@ unsafe extern "thiscall" fn cqk12_africana_grupo_a(this: usize) -> u32 {
 // ponytail: a tabela é alocada (e cada linha aloca o histórico de posições) e a notícia vai aos técnicos: não roda duas
 // vezes. Só a original; o plano: 4 times, a tabela, e em cada linha i a seleção i dos sorteados (+0xee) com a posição i
 // (+4 da linha, 0x3b bytes).
-unsafe extern "thiscall" fn comparar_cqk12_africana_grupo_a(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqk12_africana_grupo_a(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1710);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 {
@@ -399,7 +401,7 @@ unsafe extern "thiscall" fn comparar_cqk12_africana_grupo_a(this: usize) -> u32 
 ///
 /// [pt] { 0x401b90 } (thiscall, ret 0, african_nations.cpp; a virtual +0x30): `AfricanNations::record_season_honours()`: o
 /// histórico vem do mata-mata: salta para a virtual +0x30 da fase 3 ([+0xc] + 0xc; jmp, sem quadro).
-unsafe extern "thiscall" fn cqk12_africana_historico(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqk12_africana_historico(this: usize) {
     let fase = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 0xc);
     let h: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(fase) + 0x30));
     h(fase);
@@ -407,7 +409,7 @@ unsafe extern "thiscall" fn cqk12_africana_historico(this: usize) {
 
 // ponytail: o histórico (a virtual +0x30 do mata-mata, a 0x519a90 já em Rust com o seu comparador) não roda duas vezes;
 // a rotina não grava nada além do salto. Só a original.
-unsafe extern "thiscall" fn comparar_cqk12_africana_historico(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqk12_africana_historico(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(1711)(this)
 }
 
@@ -417,7 +419,7 @@ unsafe extern "thiscall" fn comparar_cqk12_africana_historico(this: usize) {
 
 /// Os registros de final (0x86a800 campeão, 0x86b0b0 vice, 0x86b710 terceiro: push a6; push jogo; push clube; mov ecx,
 /// [0xdd7f00] -> thiscall, ret 0xc).
-unsafe fn cqj10_final(f: usize, clube: usize, jogo: usize, a6: u32) {
+pub(crate) unsafe fn cqj10_final(f: usize, clube: usize, jogo: usize, a6: u32) {
     let g: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(f);
     g(cpz4_registros(), clube, jogo, a6);
 }
@@ -428,7 +430,7 @@ unsafe fn cqj10_final(f: usize, clube: usize, jogo: usize, a6: u32) {
 /// a fase [+0xc][grupos]): 0, a classificação com a fase +0x32 do jogo, o +0x6f da rodada do jogo (+0x34) na tabela de
 /// rodadas da fase (+0xa3, 0x68 bytes) e o peso 0x4bf850(0x28, 0x64, rodada, 3); 0xff, a eliminação (0x86c000) com
 /// +0x32, +0x30 e o mesmo peso; 1, 2 e 3, os registros de campeão, vice e terceiro. Devolve 0.
-unsafe fn cqj10_selecao(nome: u8, this: usize, clube: usize, desfecho: u32, fase: u32, jogo: usize, a6: u32, grupos: i8) -> u32 {
+pub(crate) unsafe fn cqj10_selecao(nome: u8, this: usize, clube: usize, desfecho: u32, fase: u32, jogo: usize, a6: u32, grupos: i8) -> u32 {
     let (d, f) = (desfecho as u8, fase as u8 as i8);
     let comp = read_u32_as_usize(this + 4);
     if f < grupos {
@@ -480,13 +482,13 @@ unsafe fn cqj10_selecao(nome: u8, this: usize, clube: usize, desfecho: u32, fase
 /// [pt] { 0x401ba0 } (thiscall, ret 0x18, african_nations.cpp; a virtual +0x44): `AfricanNations::
 /// update_staff_records_for_status(seleção, desfecho, fase, _, jogo, a6)`: cqj10_selecao com 3 fases de grupos (o
 /// mata-mata na fase 3); o desfecho 4 não faz nada.
-unsafe extern "thiscall" fn cqj10_copa_africana_registros(this: usize, clube: usize, desfecho: u32, fase: u32, _a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqj10_copa_africana_registros(this: usize, clube: usize, desfecho: u32, fase: u32, _a4: u32, jogo: usize, a6: u32) -> u32 {
     cqj10_selecao(0, this, clube, desfecho, fase, jogo, a6, 3)
 }
 
 // ponytail: os registros vão para o histórico dos técnicos e encerram as convocações: não rodam duas vezes, e a rotina
 // não grava nada além deles. Só a original; o plano confere a devolução 0.
-unsafe extern "thiscall" fn comparar_cqj10_copa_africana_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqj10_copa_africana_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1694)(this, clube, desfecho, fase, a4, jogo, a6);
     PLACAR.registrar(r == 0, || format!("cqj10_copa_africana_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
     r
@@ -498,19 +500,19 @@ unsafe extern "thiscall" fn comparar_cqj10_copa_africana_registros(this: usize, 
 /// [pt] { 0x5e13b0 } (thiscall, ret 0x18, goldcup.cpp; a virtual +0x44 da Copa América): `GoldCup::
 /// update_staff_records_for_status(seleção, desfecho, fase, _, jogo, a6)`: cqj10_selecao com 2 fases de grupos (o
 /// mata-mata na fase 2).
-unsafe extern "thiscall" fn cqj10_copa_america_registros(this: usize, clube: usize, desfecho: u32, fase: u32, _a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqj10_copa_america_registros(this: usize, clube: usize, desfecho: u32, fase: u32, _a4: u32, jogo: usize, a6: u32) -> u32 {
     cqj10_selecao(1, this, clube, desfecho, fase, jogo, a6, 2)
 }
 
 // ponytail: como a da Copa Africana: só a original, a devolução 0.
-unsafe extern "thiscall" fn comparar_cqj10_copa_america_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqj10_copa_america_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1695)(this, clube, desfecho, fase, a4, jogo, a6);
     PLACAR.registrar(r == 0, || format!("cqj10_copa_america_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
     r
 }
 
 /// A competição atual da seleção acaba (0x775000 em [0xb74318]: push nação; mov ecx -> thiscall, ret 4).
-unsafe fn cqj10_fim_da_competicao(clube: usize) {
+pub(crate) unsafe fn cqj10_fim_da_competicao(clube: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_CLEAR_CURRENT_COMPETITION);
     f(read_u32_as_usize(0xb74318), read_u32_as_usize(clube + 0x53));
 }
@@ -530,7 +532,7 @@ unsafe fn cqj10_fim_da_competicao(clube: usize) {
 /// a Copa do Mundo (a competição [0xae23d0] + 0x6b × [0x9cf79c], 0, 0, 0x64), a vaga nela (0x92e740 no objeto
 /// [[0xadadfc] + 4 × [0x9cf79c]]: push seleção -> thiscall, ret 4) e *saida = 4; 2, a eliminação (peso 0x64) e a
 /// competição acaba.
-unsafe extern "thiscall" fn cqj10_eliminatoria_oceania_registros(this: usize, clube: usize, desfecho: u32, fase: u32, saida: usize, jogo: usize, _a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqj10_eliminatoria_oceania_registros(this: usize, clube: usize, desfecho: u32, fase: u32, saida: usize, jogo: usize, _a6: u32) -> u32 {
     let (d, f) = (desfecho as u8, fase as u8 as i8);
     let comp = read_u32_as_usize(this + 4);
     let eliminar = |peso: u32| {
@@ -568,7 +570,7 @@ unsafe extern "thiscall" fn cqj10_eliminatoria_oceania_registros(this: usize, cl
 
 // ponytail: os registros, o fim da competição da seleção e a vaga na Copa do Mundo não rodam duas vezes. Só a original;
 // o plano: a devolução 0 e, na repescagem ganha, *saida = 4 e a lista da Copa do Mundo (+0x36) um a mais (se cabia).
-unsafe extern "thiscall" fn comparar_cqj10_eliminatoria_oceania_registros(this: usize, clube: usize, desfecho: u32, fase: u32, saida: usize, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqj10_eliminatoria_oceania_registros(this: usize, clube: usize, desfecho: u32, fase: u32, saida: usize, jogo: usize, a6: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, usize, u32) -> u32>(1696);
     let vaga = fase as u8 == 2 && desfecho as u8 == 1 && saida != 0;
     let mundial = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP).wrapping_mul(4)));

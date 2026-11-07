@@ -1,3 +1,5 @@
+use super::*;
+
 // ---------- 267a leva: o calendário: o dia do calendário, a lista dos jogos do dia e a carga dos jogos do ano (fix_man.cpp) ----------
 
 
@@ -5,12 +7,12 @@
 
 
 /// O registro do clube `i` (0x245 bytes em [0xae23b4]; a original calcula base + i + 580·i).
-unsafe fn cqd6_clube(i: usize) -> usize {
+pub(crate) unsafe fn cqd6_clube(i: usize) -> usize {
     read_u32_as_usize(0xae23b4).wrapping_add(i).wrapping_add(i.wrapping_mul(0x244))
 }
 
 /// O clube tem técnico humano (0x600a50: push 0; push 0; push 1; push 1; push clube; add esp, 0x14 -> cdecl).
-unsafe fn cqd6_humano(clube: usize) -> bool {
+pub(crate) unsafe fn cqd6_humano(clube: usize) -> bool {
     let f: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     f(clube, 1, 1, 0, 0) != 0
 }
@@ -34,7 +36,7 @@ unsafe fn cqd6_humano(clube: usize) -> bool {
 /// 4. a lista das conferências das pernas ([0xae2a48]): cada entrada cuja copa (ou fase +4 dela) tem +0x43 = 1 rotula
 ///    os jogos seguintes da rodada (0x522c70: push +0xb; push +7; push rodada; ecx = a copa -> thiscall, ret 0xc); a
 ///    lista é esvaziada (0x68d080).
-unsafe extern "thiscall" fn calendario_dia(this: usize) {
+pub(crate) unsafe extern "thiscall" fn calendario_dia(this: usize) {
     let semana: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let menos: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
@@ -143,7 +145,7 @@ unsafe extern "thiscall" fn calendario_dia(this: usize) {
 /// O comparador do dia do calendário: só a original (ponytail: as notícias vão aos técnicos, os nós dos amistosos e
 /// das filas são liberados e os jogos de reservas entram no calendário: não roda duas vezes). Confere o que a rotina
 /// garante: a fila das notícias some ([+0x1128] = 0 se havia) e a lista das conferências fica vazia.
-unsafe extern "thiscall" fn comparar_calendario_dia(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_calendario_dia(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1555);
     let havia = read_u32_as_usize(this + 0x1128);
     let antes = read_i16(0xae2a48);
@@ -164,7 +166,7 @@ unsafe extern "thiscall" fn comparar_calendario_dia(this: usize) {
 /// é do ano, ele é trocado para o ano (0x5aa2d0: push ano; ecx = o outro -> thiscall, ret 4); sem o outro, um bloco
 /// novo (0x944cf1, 0x1184 bytes; 0x5a9cf0: push 0; push this; push ano; ecx = o novo -> thiscall, ret 0xc) entra em
 /// +0x112c; sem memória, a caixa da linha 0x681 e 0. A lista: [[bloco + (dia·3 + fatia)·4] + tipo·4].
-unsafe extern "thiscall" fn calendario_lista(this: usize, ano: u32, dia: u32, fatia: u32, tipo: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn calendario_lista(this: usize, ano: u32, dia: u32, fatia: u32, tipo: u32) -> usize {
     let trocar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_SET_YEAR);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let construir: unsafe extern "thiscall" fn(usize, u32, usize, u32) -> usize = core::mem::transmute(FN_FIXTURE_MANAGER_FIXTURE_MANAGER);
@@ -190,7 +192,7 @@ unsafe extern "thiscall" fn calendario_lista(this: usize, ano: u32, dia: u32, fa
 
 /// O comparador da lista do dia: com o ano no bloco ou no outro bloco, as duas (só leem) e a mesma lista; senão só a
 /// original (ponytail: troca o bloco do outro ano, que grava e lê o arquivo, ou aloca um bloco novo).
-unsafe extern "thiscall" fn comparar_calendario_lista(this: usize, ano: u32, dia: u32, fatia: u32, tipo: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_calendario_lista(this: usize, ano: u32, dia: u32, fatia: u32, tipo: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize>(1556);
     let outro = read_u32_as_usize(this + 0x112c);
     let direto = read_i16(this + 0x1130) == ano as i16 || (outro != 0 && read_i16(outro + 0x1130) == ano as i16);
@@ -217,7 +219,7 @@ unsafe extern "thiscall" fn comparar_calendario_lista(this: usize, ano: u32, dia
 /// 0x4f; push &jogo; ecx = a lista -> thiscall, ret 8; falhando, o jogo para, 0x785) na lista do dia (+0x2a), fatia
 /// (+0x3f) e nação-chave do jogo (0x48dd70: push &jogo; push competição; add esp, 8 -> cdecl). No fim, fclose
 /// (0x945a09).
-unsafe extern "thiscall" fn calendario_carregar_ano(this: usize) {
+pub(crate) unsafe extern "thiscall" fn calendario_carregar_ano(this: usize) {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
@@ -287,7 +289,7 @@ unsafe extern "thiscall" fn calendario_carregar_ano(this: usize) {
 
 /// O comparador da carga dos jogos do ano: só a original (ponytail: lê o arquivo e aloca os nós das listas; não roda
 /// duas vezes). Confere o nome gravado em +0x1133.
-unsafe extern "thiscall" fn comparar_calendario_carregar_ano(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_calendario_carregar_ano(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(1557)(this);
     let esperado = format!("fixtures_{}.tmp", read_i16(this + 0x1130) as u16);
     let s = core::slice::from_raw_parts((this + 0x1133) as *const u8, esperado.len() + 1);
@@ -298,7 +300,7 @@ unsafe extern "thiscall" fn comparar_calendario_carregar_ano(this: usize) {
 // ---------- 266a leva: os conflitos de calendário: os conflitos de um jogo nos dias em volta, os conflitos de um dia e a carga da conferência das pernas (fix_man.cpp) ----------
 
 
-unsafe fn cqc3_i(a: usize) -> i32 {
+pub(crate) unsafe fn cqc3_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
@@ -306,12 +308,12 @@ unsafe fn cqc3_i(a: usize) -> i32 {
 
 /// O ensaio do comparador dos conflitos de um dia: a cópia não acrescenta (0x68d0d0 aloca o nó e a cópia do jogo) e
 /// guarda os jogos que acrescentaria, na ordem.
-static mut CQC3_ENSAIO: bool = false;
-static mut CQC3_ACRESCIMOS: Vec<usize> = Vec::new();
+pub(crate) static mut CQC3_ENSAIO: bool = false;
+pub(crate) static mut CQC3_ACRESCIMOS: Vec<usize> = Vec::new();
 
 /// Acrescenta a cópia dos 0x4f bytes do jogo no fim da lista (0x68d0d0: ecx = lista; push 0x4f; push jogo -> thiscall,
 /// ret 8); no ensaio, só guarda o jogo.
-unsafe fn cqc3_acrescentar(lista: usize, jogo: usize) {
+pub(crate) unsafe fn cqc3_acrescentar(lista: usize, jogo: usize) {
     if CQC3_ENSAIO {
         CQC3_ACRESCIMOS.push(jogo);
         return;
@@ -321,7 +323,7 @@ unsafe fn cqc3_acrescentar(lista: usize, jogo: usize) {
 }
 
 /// Os dados dos nós da lista (cabeça em +2, o próximo em +6 do nó, o dado em +0), na ordem.
-unsafe fn cqc3_itens(lista: usize) -> Vec<usize> {
+pub(crate) unsafe fn cqc3_itens(lista: usize) -> Vec<usize> {
     let mut v = Vec::new();
     if lista == 0 {
         return v;
@@ -335,7 +337,7 @@ unsafe fn cqc3_itens(lista: usize) -> Vec<usize> {
 }
 
 /// O conteúdo (0x4f bytes por jogo) de uma sequência de jogos.
-unsafe fn cqc3_conteudo(jogos: &[usize]) -> Vec<u8> {
+pub(crate) unsafe fn cqc3_conteudo(jogos: &[usize]) -> Vec<u8> {
     let mut v = Vec::new();
     for &j in jogos {
         v.extend_from_slice(core::slice::from_raw_parts(j as *const u8, 0x4f));
@@ -345,7 +347,7 @@ unsafe fn cqc3_conteudo(jogos: &[usize]) -> Vec<u8> {
 
 /// A data (dia do mês, mês 0..11) do ano dado (0x549f70: lea ecx, local; push −1; push ano; push mês; push dia ->
 /// thiscall, ret 0x10): (dia do ano, ano).
-unsafe fn cqc3_dma(dia: u32, mes: u32, ano: u32) -> (u16, u16) {
+pub(crate) unsafe fn cqc3_dma(dia: u32, mes: u32, ano: u32) -> (u16, u16) {
     let f: unsafe extern "thiscall" fn(*mut [u8; 8], u32, u32, u32, u32) -> *mut [u8; 8] = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut t = [0u8; 8];
     let r = f(&mut t, dia, mes, ano, 0xffff_ffff);
@@ -353,14 +355,14 @@ unsafe fn cqc3_dma(dia: u32, mes: u32, ano: u32) -> (u16, u16) {
 }
 
 /// O jogo `x` está na liga de id [0x9cf590] por um dos clubes (+0x57 → +0).
-unsafe fn cqc3_na_liga(clube: usize, id: i32) -> bool {
+pub(crate) unsafe fn cqc3_na_liga(clube: usize, id: i32) -> bool {
     let l = read_usize(clube + 0x57);
     l != 0 && cqc3_i(l) == id
 }
 
 /// A regra de conflito da competição (método +0x60 da competição [0xadadfc][id]: push b; push a; ecx = comp ->
 /// thiscall): 0 sem a tabela ou sem a competição.
-unsafe fn cqc3_regra(id_de: usize, a: usize, b: usize) -> u32 {
+pub(crate) unsafe fn cqc3_regra(id_de: usize, a: usize, b: usize) -> u32 {
     let tab = read_usize(0xadadfc);
     if tab == 0 {
         return 0;
@@ -374,7 +376,7 @@ unsafe fn cqc3_regra(id_de: usize, a: usize, b: usize) -> u32 {
 }
 
 /// O jogo `x` entra (0x16 se já foi jogado, +0x43 diferente de 0xff) e a gravidade sobe ao tipo dele (+0x3a).
-unsafe fn cqc3_entra_pelo_tipo(grav: *mut i32, lista: usize, x: usize, conferir_jogado: bool) {
+pub(crate) unsafe fn cqc3_entra_pelo_tipo(grav: *mut i32, lista: usize, x: usize, conferir_jogado: bool) {
     if conferir_jogado && read_u8(x + 0x43) != 0xff {
         *grav = 0x16;
         return;
@@ -387,7 +389,7 @@ unsafe fn cqc3_entra_pelo_tipo(grav: *mut i32, lista: usize, x: usize, conferir_
 }
 
 /// O fim comum dos ramos do mesmo clube e do mesmo estádio (0x5adf91/0x5ae060): sem gravidade, 0x14 (`vinte`) ou 1.
-unsafe fn cqc3_sem_gravidade(grav: *mut i32, vinte: bool) {
+pub(crate) unsafe fn cqc3_sem_gravidade(grav: *mut i32, vinte: bool) {
     if *grav == 0 {
         *grav = if vinte { 0x14 } else { 1 };
     }
@@ -412,7 +414,7 @@ unsafe fn cqc3_sem_gravidade(grav: *mut i32, vinte: bool) {
 /// push; add esp, 4 -> cdecl) e os clubes de reputação acima de 5000 pela regra da competição (+0x60); os jogos da
 /// competição de [0x9cf690] com clube da liga de [0x9cf590] dão 19; jogo já jogado (+0x43) dá 0x16. Clube ausente: a
 /// caixa e o fim do jogo (a original).
-unsafe extern "thiscall" fn conflitos_do_dia(this: usize, jogo: usize, grav: *mut i32, lista: usize, nacoes: usize, n: u32, data: usize, desloc: u32) {
+pub(crate) unsafe extern "thiscall" fn conflitos_do_dia(this: usize, jogo: usize, grav: *mut i32, lista: usize, nacoes: usize, n: u32, data: usize, desloc: u32) {
     // 0x53b900 (push; add esp, 4 -> cdecl), 0x53b3d0 (push; add esp, 4 -> cdecl)
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
@@ -573,7 +575,7 @@ unsafe extern "thiscall" fn conflitos_do_dia(this: usize, jogo: usize, grav: *mu
 /// O comparador dos conflitos de um dia: a cópia em ensaio (guarda os jogos em vez de acrescentar, com uma gravidade
 /// própria) e a original a partir do mesmo estado; confere a gravidade e os nós novos no fim da lista (os 0x4f bytes de
 /// cada jogo, na ordem). As listas dos dias (0x5abf10) têm o cursor refeito nas duas.
-unsafe extern "thiscall" fn comparar_conflitos_do_dia(this: usize, jogo: usize, grav: *mut i32, lista: usize, nacoes: usize, n: u32, data: usize, desloc: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_conflitos_do_dia(this: usize, jogo: usize, grav: *mut i32, lista: usize, nacoes: usize, n: u32, data: usize, desloc: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(1515);
     if jogo == 0 || lista == 0 || grav.is_null() || read_usize(jogo + 0x1c) == 0 || read_usize(jogo + 0x20) == 0 {
         return o(this, jogo, grav, lista, nacoes, n, data, desloc);
@@ -610,7 +612,7 @@ unsafe extern "thiscall" fn comparar_conflitos_do_dia(this: usize, jogo: usize, 
 /// o seguinte; de novo os dois antes com a marca. Sem conflito: a lista destruída e liberada (0x68d040: ecx = lista ->
 /// thiscall; 0x944c94: push; add esp, 4 -> cdecl), 0x15 na saída se a seleção não deixa (0x776fc0: ecx = [0xb74318];
 /// push jogo -> thiscall, ret 4) e 0. Senão a gravidade na saída e a lista.
-unsafe extern "thiscall" fn conflitos_do_jogo(this: usize, jogo: usize, saida: *mut i32, dois_dias: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn conflitos_do_jogo(this: usize, jogo: usize, saida: *mut i32, dois_dias: u32) -> usize {
     if jogo == 0 || saida.is_null() {
         return orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(1516)(this, jogo, saida, dois_dias); // a caixa
     }
@@ -707,7 +709,7 @@ unsafe extern "thiscall" fn conflitos_do_jogo(this: usize, jogo: usize, saida: *
 /// (a original não muda o jogo: só cria a lista e mexe nos cursores das listas dos dias, que as duas refazem); confere a
 /// devolução (lista ou 0), a saída e os jogos das duas listas (0x4f bytes cada, na ordem), e destrói e libera a lista
 /// da cópia como o calendário faz (0x68d040, 0x944c94).
-unsafe extern "thiscall" fn comparar_conflitos_do_jogo(this: usize, jogo: usize, saida: *mut i32, dois_dias: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_conflitos_do_jogo(this: usize, jogo: usize, saida: *mut i32, dois_dias: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(1516);
     if jogo == 0 || saida.is_null() {
         return o(this, jogo, saida, dois_dias);
@@ -736,7 +738,7 @@ unsafe extern "thiscall" fn comparar_conflitos_do_jogo(this: usize, jogo: usize,
 /// lista -> thiscall) e a refaz com os registros de 15 bytes do check_fixture_legs.tmp da pasta temporária (0x90bde0:
 /// 2 pushes; add esp, 8 -> cdecl; fopen 0x945b00 "rb", fread 0x945bfe, fclose 0x945a09: cdecl), pela conta de 16 bits
 /// do começo; registro curto: a caixa (linha 0x10b9) e entra o que ficou no registro (0x68d0d0).
-unsafe extern "C" fn carregar_conferencia_das_pernas() {
+pub(crate) unsafe extern "C" fn carregar_conferencia_das_pernas() {
     let esvaziar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_CLEAR);
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
@@ -766,7 +768,7 @@ unsafe extern "C" fn carregar_conferencia_das_pernas() {
 
 /// O comparador da carga das conferências: só a original (ponytail: lê o arquivo e aloca os nós da lista; não pode rodar
 /// duas vezes).
-unsafe extern "C" fn comparar_carregar_conferencia_das_pernas() {
+pub(crate) unsafe extern "C" fn comparar_carregar_conferencia_das_pernas() {
     orig::<unsafe extern "C" fn()>(1517)()
 }
 
@@ -776,10 +778,10 @@ unsafe extern "C" fn comparar_carregar_conferencia_das_pernas() {
 
 
 
-type Cqc4Data = [u8; 8];
+pub(crate) type Cqc4Data = [u8; 8];
 
 /// `a` depois de `b` como a original compara as datas: o ano (+2) sem sinal, depois o dia (+0) com sinal.
-unsafe fn cqc4_depois(a: usize, b: usize) -> bool {
+pub(crate) unsafe fn cqc4_depois(a: usize, b: usize) -> bool {
     let (ya, yb) = (read_u16(a + 2), read_u16(b + 2));
     ya > yb || (ya == yb && (read_u16(a) as i16) > (read_u16(b) as i16))
 }
@@ -788,20 +790,20 @@ unsafe fn cqc4_depois(a: usize, b: usize) -> bool {
 /// 0x549ef0 a data (dia, ano) (push ano; push dia), 0x417c10 a atribuição (push fonte; push ret), 0x54c5b0 + dias,
 /// 0x54c8e0 − dias, 0x54c770 + semanas (push n; push ret), 0x54a2d0 o dia da semana alvo (push dest; push alvo),
 /// 0x54a3f0 o dia da semana (sem pushes).
-unsafe fn cqc4_padrao(d: &mut Cqc4Data) {
+pub(crate) unsafe fn cqc4_padrao(d: &mut Cqc4Data) {
     let f: unsafe extern "thiscall" fn(*mut Cqc4Data) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     f(d);
 }
-unsafe fn cqc4_nova(d: &mut Cqc4Data, dia: u16, ano: u16) -> usize {
+pub(crate) unsafe fn cqc4_nova(d: &mut Cqc4Data, dia: u16, ano: u16) -> usize {
     let f: unsafe extern "thiscall" fn(*mut Cqc4Data, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     f(d, dia as u32, ano as u32)
 }
-unsafe fn cqc4_atribuir(d: &mut Cqc4Data, fonte: usize) {
+pub(crate) unsafe fn cqc4_atribuir(d: &mut Cqc4Data, fonte: usize) {
     let f: unsafe extern "thiscall" fn(*mut Cqc4Data, *mut Cqc4Data, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut ret = [0u8; 8];
     f(d, &mut ret, fonte);
 }
-unsafe fn cqc4_op(rotina: usize, d: usize, n: u32) -> usize {
+pub(crate) unsafe fn cqc4_op(rotina: usize, d: usize, n: u32) -> usize {
     let f: unsafe extern "thiscall" fn(usize, *mut Cqc4Data, u32) -> usize = core::mem::transmute(rotina);
     let mut ret = [0u8; 8];
     // ponytail: a original passa um ret na pilha dela; as três escrevem nele ou na estática e devolvem o ponteiro,
@@ -813,25 +815,25 @@ unsafe fn cqc4_op(rotina: usize, d: usize, n: u32) -> usize {
     }
     r
 }
-static mut CQC4_RET: Cqc4Data = [0; 8];
-unsafe fn cqc4_semana(d: usize) -> i32 {
+pub(crate) static mut CQC4_RET: Cqc4Data = [0; 8];
+pub(crate) unsafe fn cqc4_semana(d: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
     f(d)
 }
-unsafe fn cqc4_alvo(d: usize, alvo: u32, dest: &mut Cqc4Data) {
+pub(crate) unsafe fn cqc4_alvo(d: usize, alvo: u32, dest: &mut Cqc4Data) {
     let f: unsafe extern "thiscall" fn(usize, u32, *mut Cqc4Data) -> u32 = core::mem::transmute(FN_DATE_GET_NEAREST_WEEKDAY);
     f(d, alvo, dest);
 }
 
 /// A faixa de horário (0x5af2f0: mov ecx, gerenciador; push dia; push comp -> thiscall, ret 8).
-unsafe fn cqc4_faixa(this: usize, comp: usize, dia: u32) -> u8 {
+pub(crate) unsafe fn cqc4_faixa(this: usize, comp: usize, dia: u32) -> u8 {
     let f: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_FIXTURE_MANAGER_GET_TIME_SLICE);
     f(this, comp, dia)
 }
 
 /// Os conflitos do jogo (0x5ad780: mov ecx, gerenciador; push marca; push &gravidade; push jogo -> thiscall, ret
 /// 0xc): a lista (ou 0) e a gravidade.
-unsafe fn cqc4_conflitos(this: usize, jogo: usize, dois: u32) -> (usize, i32) {
+pub(crate) unsafe fn cqc4_conflitos(this: usize, jogo: usize, dois: u32) -> (usize, i32) {
     let f: unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURE_CLASHES);
     let mut g: i32 = 0;
     let l = f(this, jogo, &mut g, dois);
@@ -839,7 +841,7 @@ unsafe fn cqc4_conflitos(this: usize, jogo: usize, dois: u32) -> (usize, i32) {
 }
 
 /// Destrói e libera a lista (0x68d040: mov ecx, lista -> thiscall; 0x944c94: push; add esp, 4 -> cdecl).
-unsafe fn cqc4_liberar(l: usize) {
+pub(crate) unsafe fn cqc4_liberar(l: usize) {
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     destruir(l);
@@ -861,7 +863,7 @@ unsafe fn cqc4_liberar(l: usize) {
 /// 6, 0, 3, 4, de 4 em 4 dias da janela: o dia alvo (0x54a2d0) a partir de 2 dias depois de hoje e dentro da janela
 /// vira a data (+0x28, +0x2a) e a faixa (+0x3f, 0x5af2f0); sem conflito (0x5ad780), com gravidade 1 ou abaixo do tipo,
 /// fica. Sem achar: 2 dias depois da data do jogo (ou de hoje, se já passou).
-unsafe extern "thiscall" fn nova_data_do_jogo(this: usize, jogo: usize) {
+pub(crate) unsafe extern "thiscall" fn nova_data_do_jogo(this: usize, jogo: usize) {
     if jogo == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize)>(1518)(this, jogo); // a caixa
     }
@@ -971,7 +973,7 @@ unsafe extern "thiscall" fn nova_data_do_jogo(this: usize, jogo: usize) {
 
 /// O comparador da nova data: lado a lado no jogo (0x4f bytes); os conflitos de dentro (0x5ad780) criam e destroem a
 /// lista deles. Só a original quando o jogo entra na lista de conferência das pernas (aloca o nó).
-unsafe extern "thiscall" fn comparar_nova_data_do_jogo(this: usize, jogo: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_nova_data_do_jogo(this: usize, jogo: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1518);
     let unidades: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_ROUND_VARIANT);
     // a caixa da janela sem data (+0x24, tipo 2) apareceria duas vezes: só a original
@@ -1001,7 +1003,7 @@ unsafe extern "thiscall" fn comparar_nova_data_do_jogo(this: usize, jogo: usize)
 /// a nação-chave (0x48dd70), a ordem (0x5ab3c0), os jogos de seleções (0x7e6720 em [0xb74434], 0x76bab0 em [0xb74318]),
 /// os vizinhos (0x5ae9d0, chave 3 ou 5); se não entrou, na lista do dia, fatia e chave (0x68d0d0). Fora do ano, no
 /// bloco do outro ano (+0x112c: 0x5aa2d0 para o ano, ou novo de 0x1184 bytes, 0x5a9cf0; sem memória, a caixa e 0).
-unsafe extern "thiscall" fn jogo_no_calendario(this: usize, jogo: usize, zerar: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn jogo_no_calendario(this: usize, jogo: usize, zerar: u32) -> u32 {
     let fase: unsafe extern "C" fn(usize) = core::mem::transmute(FN_FIX_MAN_RECORD_CLUB_FIXTURE_YEARS);
     let nova_data: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_NEW_FIXTURE_DATE);
     let entrar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_ADD_FIXTURE);
@@ -1191,7 +1193,7 @@ unsafe extern "thiscall" fn jogo_no_calendario(this: usize, jogo: usize, zerar: 
 /// O comparador da entrada no calendário: só a original (ponytail: grava nas listas do calendário, aloca nós e o
 /// bloco do outro ano, remarca e entrega notícias; não pode rodar duas vezes). A cópia segue no modo Rust, com os
 /// contadores.
-unsafe extern "thiscall" fn comparar_jogo_no_calendario(this: usize, jogo: usize, zerar: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_jogo_no_calendario(this: usize, jogo: usize, zerar: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(1519)(this, jogo, zerar)
 }
 
@@ -1208,7 +1210,7 @@ unsafe extern "thiscall" fn comparar_jogo_no_calendario(this: usize, jogo: usize
 /// ano novo, bissexto em +0x1132 (0x54cfe0: push ano; add esp, 4 -> cdecl), as listas novas (new 0xe: 0x944cf1, push;
 /// add esp, 4 -> cdecl; 0x68d020: ecx = bloco -> thiscall; sem memória, a caixa e 0) e a carga dos jogos do ano
 /// (0x5ac3b0: ecx = bloco -> thiscall). Devolve 1.
-unsafe extern "thiscall" fn ano_do_calendario(this: usize, ano: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn ano_do_calendario(this: usize, ano: u32) -> u32 {
     let a = ano as u16;
     if a == read_u16(this + 0x1130) {
         return 1;
@@ -1291,24 +1293,24 @@ unsafe extern "thiscall" fn ano_do_calendario(this: usize, ano: u32) -> u32 {
 
 /// O comparador do ano do calendário: só a original (ponytail: grava e lê os arquivos dos jogos do ano e refaz todas
 /// as listas; não pode rodar duas vezes).
-unsafe extern "thiscall" fn comparar_ano_do_calendario(this: usize, ano: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_ano_do_calendario(this: usize, ano: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(1520)(this, ano)
 }
 // ---------- 265a leva: o save do calendário: gravar e carregar as datas dos clubes e gravar a conferência das pernas (fix_man.cpp) ----------
 
 
-unsafe fn cpy7_clubes() -> u32 {
+pub(crate) unsafe fn cpy7_clubes() -> u32 {
     *(0xae235c as *const u32)
 }
 
 /// Abre `nome` em CM3_TEMP (0x90bde0: cdecl(pasta, nome); fopen 0x945b00: cdecl(caminho, modo)).
-unsafe fn cpy7_abrir(nome: usize, modo: usize) -> usize {
+pub(crate) unsafe fn cpy7_abrir(nome: usize, modo: usize) -> usize {
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     abrir(caminho(0x987da0, nome), modo)
 }
 
-unsafe fn cpy7_fechar(f: usize) {
+pub(crate) unsafe fn cpy7_fechar(f: usize) {
     let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     fechar(f);
 }
@@ -1321,7 +1323,7 @@ unsafe fn cpy7_fechar(f: usize) {
 /// 0x5ac060, 0x5ac394): sem a tabela das datas dos clubes ([0xae2a5c]), a caixa da linha 0x1011. Grava em
 /// CM3_TEMP\club_dates.tmp ("wb") uma palavra por clube ([0xae235c] delas, fwrite 0x945ce6); gravação curta: a caixa
 /// da linha 0x101b; fecha. Sem abrir: nada.
-unsafe extern "C" fn gravar_datas_dos_clubes() {
+pub(crate) unsafe extern "C" fn gravar_datas_dos_clubes() {
     let escrever: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
     if read_usize(0xae2a5c) == 0 {
         return aviso_em(0x9cc208, 0x1011);
@@ -1338,7 +1340,7 @@ unsafe extern "C" fn gravar_datas_dos_clubes() {
 }
 
 /// Comparador da 0x5af040: só a original.
-unsafe extern "C" fn comparar_gravar_datas_dos_clubes() {
+pub(crate) unsafe extern "C" fn comparar_gravar_datas_dos_clubes() {
     // ponytail: grava o arquivo do save (não pode rodar duas vezes); a cópia é provada pela prova do save (o .qst
     // gravado no modo rust com e sem a leva, item a item: club_dates.tmp)
     orig::<unsafe extern "C" fn()>(1506)()
@@ -1353,7 +1355,7 @@ unsafe extern "C" fn comparar_gravar_datas_dos_clubes() {
 /// palavra por clube (malloc 0x944e46 de 2 × [0xae235c]; sem memória, a caixa da linha 0xfec); lê de
 /// CM3_TEMP\club_dates.tmp ("rb", fread 0x945bfe; leitura curta: a caixa da linha 0xff6) e fecha; sem o arquivo (a
 /// carreira nova), zera a tabela.
-unsafe extern "C" fn carregar_datas_dos_clubes() {
+pub(crate) unsafe extern "C" fn carregar_datas_dos_clubes() {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
     if read_usize(0xae2a5c) != 0 {
@@ -1378,7 +1380,7 @@ unsafe extern "C" fn carregar_datas_dos_clubes() {
 }
 
 /// Comparador da 0x5aee90: só a original.
-unsafe extern "C" fn comparar_carregar_datas_dos_clubes() {
+pub(crate) unsafe extern "C" fn comparar_carregar_datas_dos_clubes() {
     // ponytail: aloca a tabela global e lê o arquivo (não pode rodar duas vezes); a cópia é provada pela carga do
     // save de férias na prova do save (levas/N/CARGA) e, sem o arquivo, pela carreira nova
     orig::<unsafe extern "C" fn()>(1507)()
@@ -1392,7 +1394,7 @@ unsafe extern "C" fn comparar_carregar_datas_dos_clubes() {
 /// lista de conferência das pernas ([0xae2a48], LLIST) vazia (a palavra da conta zero), nada. Grava em
 /// CM3_TEMP\check_fixture_legs.tmp ("wb") a conta (2 bytes) e, do começo da lista (o cursor +0xa ← a cabeça +2), cada
 /// item de 15 bytes (0x68d1b0; gravação curta: a caixa da linha 0x10e0, e segue); fecha. Sem abrir: nada.
-unsafe extern "C" fn gravar_conferencia_das_pernas() {
+pub(crate) unsafe extern "C" fn gravar_conferencia_das_pernas() {
     let escrever: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let conta = read_usize(0xae2a48);
@@ -1419,7 +1421,7 @@ unsafe extern "C" fn gravar_conferencia_das_pernas() {
 }
 
 /// Comparador da 0x5af4a0: só a original.
-unsafe extern "C" fn comparar_gravar_conferencia_das_pernas() {
+pub(crate) unsafe extern "C" fn comparar_gravar_conferencia_das_pernas() {
     // ponytail: grava o arquivo do save e anda o cursor da lista; a cópia é provada pela prova do save
     orig::<unsafe extern "C" fn()>(1508)()
 }
@@ -1427,7 +1429,7 @@ unsafe extern "C" fn comparar_gravar_conferencia_das_pernas() {
 // ---------- 264a leva: o calendário: o conflito de dois jogos no mesmo dia e os anos de jogos de um clube (fix_man.cpp) ----------
 
 /// Modo de ensaio da 0x5ae380 (o comparador): a cópia para na decisão, antes de mexer no calendário.
-static mut CQB13_ENSAIO: bool = false;
+pub(crate) static mut CQB13_ENSAIO: bool = false;
 
 
 
@@ -1449,7 +1451,7 @@ static mut CQB13_ENSAIO: bool = false;
 /// (0x5aa680); senão sai o novo. O que sai ganha a data nova; com conflito nela (0x5ad780, a lista destruída e
 /// liberada: 0x68d040, 0x944c94), jogo fixo (+0x3a = 1) devolve 0, senão 0x5ab510 acha outra data; entra no calendário
 /// (0x5aa680) com a notícia da remarcação (0x5aac70, causada pelo outro). Devolve 1.
-unsafe extern "thiscall" fn conflito_de_jogos_no_mesmo_dia(this: usize, jogo: usize, conflitos: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn conflito_de_jogos_no_mesmo_dia(this: usize, jogo: usize, conflitos: usize) -> u32 {
     // as datas: ecx = a data, sem pushes -> thiscall (0x54a110, 0x54a3f0); 0x549ef0: push [+0x28]; push [+0x2a];
     // 0x417c10: push ret; push &tmp; 0x54a2d0: push &b; push alvo -> thiscall
     let padrao: unsafe extern "thiscall" fn(*mut [u8; 8]) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
@@ -1545,7 +1547,7 @@ unsafe extern "thiscall" fn conflito_de_jogos_no_mesmo_dia(this: usize, jogo: us
 /// chamadas do calendário (tirar, juntar, conflitos que alocam a lista, a notícia), que não podem rodar duas vezes.
 /// A cópia roda em ensaio (para na decisão, sem a caixa) e a original depois, a partir do mesmo estado: lado a lado no
 /// cabeçalho da lista (+2 começo, +0xa cursor). Sem o jogo ou o primeiro da lista: só a original (a caixa).
-unsafe extern "thiscall" fn comparar_conflito_de_jogos_no_mesmo_dia(this: usize, jogo: usize, conflitos: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_conflito_de_jogos_no_mesmo_dia(this: usize, jogo: usize, conflitos: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(1494);
     let cabeca = read_usize(conflitos + 2);
     if jogo == 0 || cabeca == 0 || read_usize(cabeca) == 0 {
@@ -1570,7 +1572,7 @@ unsafe extern "thiscall" fn comparar_conflito_de_jogos_no_mesmo_dia(this: usize,
 /// [pt] { 0x5aee40 } (thiscall, ret 4, fix_man.cpp; o this não é lido): `FIXTURE_MANAGER::get_club_first_fixture_year(&id)`:
 /// o primeiro ano com jogos do clube `[id]`: 2001, ou 2002 com o bit 0 da palavra dele em [0xae2a5c]. Devolve `ax`
 /// (o chamador da tela compara 16 bits).
-unsafe extern "thiscall" fn primeiro_ano_com_jogos(_this: usize, id: usize) -> u16 {
+pub(crate) unsafe extern "thiscall" fn primeiro_ano_com_jogos(_this: usize, id: usize) -> u16 {
     let b = *((read_usize(0xae2a5c) as isize).wrapping_add((*(id as *const i32) as isize).wrapping_mul(2)) as *const u8);
     0x7d1 + (b & 1) as u16
 }
@@ -1581,7 +1583,7 @@ unsafe extern "thiscall" fn primeiro_ano_com_jogos(_this: usize, id: usize) -> u
 /// [pt] { 0x5aee60 } (thiscall, ret 4, fix_man.cpp; o this não é lido): `FIXTURE_MANAGER::get_club_last_fixture_year(&id)`:
 /// o último ano com jogos do clube: a palavra dele em [0xae2a5c] sem o bit 0 (metade); sem ano, o ano corrente
 /// [0xae2c92]. Devolve `ax` (o chamador da tela guarda 16 bits).
-unsafe extern "thiscall" fn ultimo_ano_com_jogos(_this: usize, id: usize) -> u16 {
+pub(crate) unsafe extern "thiscall" fn ultimo_ano_com_jogos(_this: usize, id: usize) -> u16 {
     let w = core::ptr::read_unaligned((read_usize(0xae2a5c) as isize).wrapping_add((*(id as *const i32) as isize).wrapping_mul(2)) as *const u16);
     if w & 0xfffe != 0 { w >> 1 } else { *(0xae2c92 as *const u16) }
 }
@@ -1592,69 +1594,69 @@ comparar_valor!(comparar_ultimo_ano_com_jogos, ultimo_ano_com_jogos, 1496, (id: 
 // ---------- 262a leva: os jogos remarcados: os jogos vizinhos do clube movidos um dia, os jogos perto da data da seleção e a notícia do jogo remarcado (fix_man.cpp) ----------
 
 
-unsafe fn cpz8_u(a: usize) -> u32 {
+pub(crate) unsafe fn cpz8_u(a: usize) -> u32 {
     core::ptr::read_unaligned(a as *const u32)
 }
 
 
-unsafe fn cpz8_sw(a: usize) -> i32 {
+pub(crate) unsafe fn cpz8_sw(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i16) as i32
 }
 
-unsafe fn cpz8_sb(a: usize) -> i32 {
+pub(crate) unsafe fn cpz8_sb(a: usize) -> i32 {
     *(a as *const i8) as i32
 }
 
 /// LLIST (0xe bytes: +0 conta i16, +2 cabeça, +6 cauda, +0xa cursor; nó: +0 dados, +6 próximo): o construtor
 /// (0x68d020), o destrutor (0x68d040), o esvaziar (0x68d080), o cursor na cabeça e o próximo (0x68d1b0).
-unsafe fn cpz8_lista_nova(l: usize) {
+pub(crate) unsafe fn cpz8_lista_nova(l: usize) {
     let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
     f(l);
 }
 
-unsafe fn cpz8_lista_fim(l: usize) {
+pub(crate) unsafe fn cpz8_lista_fim(l: usize) {
     let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     f(l);
 }
 
-unsafe fn cpz8_lista_limpar(l: usize) {
+pub(crate) unsafe fn cpz8_lista_limpar(l: usize) {
     let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_CLEAR);
     f(l);
 }
 
-unsafe fn cpz8_inicio(l: usize) {
+pub(crate) unsafe fn cpz8_inicio(l: usize) {
     core::ptr::write_unaligned((l + 0xa) as *mut u32, cpz8_u(l + 2));
 }
 
-unsafe fn cpz8_proximo(l: usize) -> usize {
+pub(crate) unsafe fn cpz8_proximo(l: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     f(l)
 }
 
 /// A competição do jogo é amistosa? (0x5c6710: thiscall em [0xae2c74], 1 argumento.)
-unsafe fn cpz8_amistosa(comp: u32) -> bool {
+pub(crate) unsafe fn cpz8_amistosa(comp: u32) -> bool {
     let f: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     f(read_usize(0xae2c74), comp) != 0
 }
 
 /// As datas (Date, 8 bytes): construir por (dia, ano) (0x549ef0), menos e mais n dias (0x54c8e0, 0x54c5b0: thiscall
 /// (data, saída, n), devolvem a saída) e a atribuição (0x417c10: thiscall(destino, temporária, origem)).
-unsafe fn cpz8_data(d: *mut u8, dia: u32, ano: u32) -> usize {
+pub(crate) unsafe fn cpz8_data(d: *mut u8, dia: u32, ano: u32) -> usize {
     let f: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     f(d as usize, dia, ano)
 }
 
-unsafe fn cpz8_menos(d: usize, saida: *mut u8, n: u32) -> usize {
+pub(crate) unsafe fn cpz8_menos(d: usize, saida: *mut u8, n: u32) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
     f(d, saida as usize, n)
 }
 
-unsafe fn cpz8_mais(d: usize, saida: *mut u8, n: u32) -> usize {
+pub(crate) unsafe fn cpz8_mais(d: usize, saida: *mut u8, n: u32) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     f(d, saida as usize, n)
 }
 
-unsafe fn cpz8_atribuir(destino: *mut u8, origem: usize) {
+pub(crate) unsafe fn cpz8_atribuir(destino: *mut u8, origem: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut temporaria = [0u8; 8];
     f(destino as usize, temporaria.as_mut_ptr() as usize, origem);
@@ -1662,31 +1664,31 @@ unsafe fn cpz8_atribuir(destino: *mut u8, origem: usize) {
 
 /// Os jogos do clube entre duas datas (0x5acbe0, thiscall, 9 argumentos): a original empurra os dwords em +0 e +2 de
 /// cada data (só a palavra baixa conta), o clube, a lista, comp −1, tipo −2 e lado 1.
-unsafe fn cpz8_achar(this: usize, a: *const u8, b: *const u8, clube: u32, lista: usize) -> u32 {
+pub(crate) unsafe fn cpz8_achar(this: usize, a: *const u8, b: *const u8, clube: u32, lista: usize) -> u32 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
     let (a, b) = (a as usize, b as usize);
     f(this, cpz8_u(a), cpz8_u(a + 2), cpz8_u(b), cpz8_u(b + 2), clube, lista, u32::MAX, 0xffff_fffe, 1)
 }
 
 /// Tirar o jogo do calendário (0x5abc30), gravar a data (0x5ab510), juntar (0x5aa680) e a notícia (0x5aac70).
-unsafe fn cpz8_tirar(this: usize, jogo: usize) -> u32 {
+pub(crate) unsafe fn cpz8_tirar(this: usize, jogo: usize) -> u32 {
     let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_REMOVE_FIXTURE);
     f(this, jogo)
 }
 
-unsafe fn cpz8_juntar(this: usize, jogo: usize, zerar: u32) {
+pub(crate) unsafe fn cpz8_juntar(this: usize, jogo: usize, zerar: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_ADD_FIXTURE);
     f(this, jogo, zerar);
 }
 
-unsafe fn cpz8_noticia(this: usize, jogo: usize, causa: usize, velha: usize) {
+pub(crate) unsafe fn cpz8_noticia(this: usize, jogo: usize, causa: usize, velha: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(FN_FIXTURE_MANAGER_QUEUE_FIXTURE_MOVED_NEWS);
     f(this, jogo, causa, velha);
 }
 
 /// A data nova do jogo `f2` tem outro jogo? (0x5ad780: thiscall(jogo, &gravidade, 0) devolve uma LLIST alocada;
 /// percorre e acha um item com bytes diferentes do jogo original `f1`; depois destrói e libera, 0x944c94.)
-unsafe fn cpz8_conflito(this: usize, f2: *mut u8, f1: *const u8) -> bool {
+pub(crate) unsafe fn cpz8_conflito(this: usize, f2: *mut u8, f1: *const u8) -> bool {
     let achar: unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURE_CLASHES);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     let mut gravidade = 0i32;
@@ -1712,7 +1714,7 @@ unsafe fn cpz8_conflito(this: usize, f2: *mut u8, f1: *const u8) -> bool {
 }
 
 /// O primeiro jogo da lista copiado para `f1` e `f2` (0x4f bytes).
-unsafe fn cpz8_primeiro(l: usize, f1: &mut [u8; 0x4f], f2: &mut [u8; 0x4f]) {
+pub(crate) unsafe fn cpz8_primeiro(l: usize, f1: &mut [u8; 0x4f], f2: &mut [u8; 0x4f]) {
     cpz8_inicio(l);
     let p = cpz8_proximo(l);
     core::ptr::copy_nonoverlapping(p as *const u8, f1.as_mut_ptr(), 0x4f);
@@ -1730,7 +1732,7 @@ unsafe fn cpz8_primeiro(l: usize, f1: &mut [u8; 0x4f], f2: &mut [u8; 0x4f]) {
 /// antes (0x5acbe0, lado 1), não amistoso e com +0x43 = 0xff, vai para um dia antes dele; o primeiro jogo dois dias
 /// depois, não amistoso, vai para um dia depois. Só se a data nova não tiver outro jogo (0x5ad780): tira (0x5abc30),
 /// junta (0x5aa680, 0) e dá a notícia do jogo remarcado (0x5aac70, com o jogo como causa).
-unsafe extern "thiscall" fn mover_jogos_vizinhos_do_clube(this: usize, jogo: usize) {
+pub(crate) unsafe extern "thiscall" fn mover_jogos_vizinhos_do_clube(this: usize, jogo: usize) {
     let iniciar_data: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     let mut d = [0u8; 8];
     iniciar_data(d.as_mut_ptr() as usize);
@@ -1805,7 +1807,7 @@ unsafe extern "thiscall" fn mover_jogos_vizinhos_do_clube(this: usize, jogo: usi
 }
 
 // ponytail: move jogos no calendário (tira, junta, aloca e libera listas, notícia): só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_mover_jogos_vizinhos_do_clube(this: usize, jogo: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_mover_jogos_vizinhos_do_clube(this: usize, jogo: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(1401)(this, jogo)
 }
 
@@ -1818,7 +1820,7 @@ unsafe extern "thiscall" fn comparar_mover_jogos_vizinhos_do_clube(this: usize, 
 /// convocados). Os jogos do clube (o id em `*clube`) de um dia antes a um dia depois da data (0x5acbe0, lado 1); cada
 /// um que sai do calendário (0x5abc30) ganha data nova (0x5ab510), volta (0x5aa680, 1) e dá a notícia com a data velha
 /// (0x5aac70, sem causa).
-unsafe extern "thiscall" fn remarcar_jogos_perto_da_data(this: usize, clube: usize, data: usize) {
+pub(crate) unsafe extern "thiscall" fn remarcar_jogos_perto_da_data(this: usize, clube: usize, data: usize) {
     let gravar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_NEW_FIXTURE_DATE);
     let mut l = [0u8; 0xe];
     let lp = l.as_mut_ptr() as usize;
@@ -1847,22 +1849,22 @@ unsafe extern "thiscall" fn remarcar_jogos_perto_da_data(this: usize, clube: usi
 }
 
 // ponytail: move jogos no calendário e dá a notícia (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_remarcar_jogos_perto_da_data(this: usize, clube: usize, data: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_remarcar_jogos_perto_da_data(this: usize, clube: usize, data: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1402)(this, clube, data)
 }
 
 /// O ensaio da notícia: a cópia monta a notícia nova aqui em vez de pô-la na fila (e não cria a fila).
-static mut CPZ8_ENSAIO: bool = false;
-static mut CPZ8_NOTICIA: [u8; 0xe0] = [0; 0xe0];
-static mut CPZ8_MONTADA: bool = false;
+pub(crate) static mut CPZ8_ENSAIO: bool = false;
+pub(crate) static mut CPZ8_NOTICIA: [u8; 0xe0] = [0; 0xe0];
+pub(crate) static mut CPZ8_MONTADA: bool = false;
 
-unsafe fn cpz8_dado(n: usize, k: u32) -> u32 {
+pub(crate) unsafe fn cpz8_dado(n: usize, k: u32) -> u32 {
     let f: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_SLOT);
     f(n, k)
 }
 
 /// A notícia já na fila para o mesmo jogo (dados 0, 1, 2, 0xe e 0xf: +0xc, +0x10, +0, +0x40 e +0x41 do jogo).
-unsafe fn cpz8_na_fila(l: usize, f: usize) -> usize {
+pub(crate) unsafe fn cpz8_na_fila(l: usize, f: usize) -> usize {
     cpz8_inicio(l);
     loop {
         let it = cpz8_proximo(l);
@@ -1889,7 +1891,7 @@ unsafe fn cpz8_na_fila(l: usize, f: usize) -> usize {
 /// primeira vez: 0x944cf1 e 0x68d020): se já há a notícia do mesmo jogo, só troca a data nova (dados 5 e 6); senão a
 /// notícia 1: o jogo (+0xc, +0x10, +0, +0x32, +0x30, a data nova +0x2a/+0x28, +0x40, +0x41) e a causa (os mesmos
 /// campos dela nos dados 7 a 0xd) ou, sem causa, −1 e a data velha (dados 0xc e 0xd); entra na fila (0x68d0d0, 0xdf).
-unsafe extern "thiscall" fn noticia_do_jogo_remarcado(this: usize, f: usize, causa: usize, velha: usize) {
+pub(crate) unsafe extern "thiscall" fn noticia_do_jogo_remarcado(this: usize, f: usize, causa: usize, velha: usize) {
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     if read_usize(this + 0x1128) == 0 && !CPZ8_ENSAIO {
@@ -1946,7 +1948,7 @@ unsafe extern "thiscall" fn noticia_do_jogo_remarcado(this: usize, f: usize, cau
 /// Nova: a cópia monta a notícia sem pô-la na fila e a original roda; a fila tem de crescer um e o último item (a cauda,
 /// +6, nó +0) ser a notícia da cópia nos 0xde bytes que o construtor (0x77bbe0) grava; o último dos 0xdf copiados é
 /// sobra de pilha na original (a cópia leva zero).
-unsafe extern "thiscall" fn comparar_noticia_do_jogo_remarcado(this: usize, f: usize, causa: usize, velha: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_noticia_do_jogo_remarcado(this: usize, f: usize, causa: usize, velha: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(1403);
     let l = read_usize(this + 0x1128);
     let alvo = if l != 0 { cpz8_na_fila(l, f) } else { 0 };
@@ -1987,7 +1989,7 @@ unsafe extern "thiscall" fn comparar_noticia_do_jogo_remarcado(this: usize, f: u
 /// 0x5ab230 e 0x5abc30): o bloco seguinte (+0x112c) de outro ano é levado ao ano pedido (0x5aa2d0 set_year); sem
 /// seguinte, um bloco novo (0x944cf1, 0x1184 bytes; 0x5a9cf0 com o ano, o bloco de antes e 0) entra na corrente. 0 se
 /// faltou memória (a corrente fica com 0 em +0x112c, como na original).
-unsafe fn cps11_bloco_do_ano(fm: usize, f: usize) -> usize {
+pub(crate) unsafe fn cps11_bloco_do_ano(fm: usize, f: usize) -> usize {
     let mudar_ano: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_SET_YEAR);
     let novo: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let construir: unsafe extern "thiscall" fn(usize, u32, usize, u32) -> usize = core::mem::transmute(FN_FIXTURE_MANAGER_FIXTURE_MANAGER);
@@ -2019,7 +2021,7 @@ unsafe fn cps11_bloco_do_ano(fm: usize, f: usize) -> usize {
 
 /// A lista do dia, fatia (+0x3f) e nação-chave do jogo `f` no bloco `b`: [[b + (dia +0x2a × 3 + fatia) × 4] + nação × 4],
 /// a nação pela 0x48dd70 (competição +0x14, o jogo), com sinal.
-unsafe fn cps11_lista_no_bloco(b: usize, f: usize) -> usize {
+pub(crate) unsafe fn cps11_lista_no_bloco(b: usize, f: usize) -> usize {
     let nacao: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_FIXTURE);
     let n = nacao(read_u32_as_usize(f + 0x14), f) as u8 as i8 as isize;
     let k = read_u16(f + 0x2a) as usize * 3 + *((f + 0x3f) as *const u8) as usize;
@@ -2027,7 +2029,7 @@ unsafe fn cps11_lista_no_bloco(b: usize, f: usize) -> usize {
 }
 
 /// O próximo item da lista (0x68d1b0: o cursor +0xa anda).
-unsafe fn cps11_proximo(l: usize) -> usize {
+pub(crate) unsafe fn cps11_proximo(l: usize) -> usize {
     let prox: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     prox(l)
 }
@@ -2040,7 +2042,7 @@ unsafe fn cps11_proximo(l: usize) -> usize {
 /// calendário cujos 0x4f bytes são iguais aos do jogo, na lista do dia, fatia e nação-chave dele (o bloco do ano pela
 /// corrente; o cursor da lista volta ao começo e anda). Jogo nulo ou nenhum igual: 0; sem memória para o bloco do ano:
 /// a caixa (linha 0x7cf) e 0.
-unsafe extern "thiscall" fn jogo_guardado_igual(this: usize, f: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn jogo_guardado_igual(this: usize, f: usize) -> usize {
     if f == 0 {
         return 0;
     }
@@ -2069,7 +2071,7 @@ unsafe extern "thiscall" fn jogo_guardado_igual(this: usize, f: usize) -> usize 
 /// [pt] { 0x5ab230 } (thiscall, ret 4, fix_man.cpp): `FIXTURE_MANAGER::insert_fixture(jogo)`: acrescenta uma cópia dos 0x4f
 /// bytes do jogo (0x68d0d0) à lista do dia, fatia e nação-chave dele no bloco do ano (pela corrente). Sem memória para o
 /// bloco: a caixa (linha 0x3ff); a cópia que falha: a caixa (linha 0x3eb).
-unsafe extern "thiscall" fn guardar_jogo_no_calendario(this: usize, f: usize) {
+pub(crate) unsafe extern "thiscall" fn guardar_jogo_no_calendario(this: usize, f: usize) {
     let b = cps11_bloco_do_ano(this, f);
     if b == 0 {
         return aviso_em(0x9cc208, 0x3ff);
@@ -2088,7 +2090,7 @@ unsafe extern "thiscall" fn guardar_jogo_no_calendario(this: usize, f: usize) {
 /// [pt] { 0x5abc30 } (thiscall, ret 4, fix_man.cpp): `FIXTURE_MANAGER::remove_fixture(jogo)`: tira da lista do dia, fatia e
 /// nação-chave do jogo (no bloco do ano, pela corrente) o primeiro item com os mesmos bytes (0x68d1f0). Devolve 1 se
 /// tirou, 0 se não; sem memória para o bloco: a caixa (linha 0x5ef) e 0.
-unsafe extern "thiscall" fn tirar_jogo_do_calendario(this: usize, f: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn tirar_jogo_do_calendario(this: usize, f: usize) -> u32 {
     let b = cps11_bloco_do_ano(this, f);
     if b == 0 {
         aviso_em(0x9cc208, 0x5ef);
@@ -2104,14 +2106,14 @@ unsafe extern "thiscall" fn tirar_jogo_do_calendario(this: usize, f: usize) -> u
 
 /// A lista do jogo no calendário, achada antes da original (o laço da corrente faz o mesmo que ela faria: depois dele
 /// a original acha o bloco do ano de primeira); 0 sem memória.
-unsafe fn cps11_lista_antes(fm: usize, f: usize) -> usize {
+pub(crate) unsafe fn cps11_lista_antes(fm: usize, f: usize) -> usize {
     let b = cps11_bloco_do_ano(fm, f);
     if b == 0 { 0 } else { cps11_lista_no_bloco(b, f) }
 }
 
 /// Comparador: a original e a cópia só andam o cursor da lista (e a primeira pode criar o bloco do ano, que a segunda
 /// acha pronto): pela devolução.
-unsafe extern "thiscall" fn comparar_jogo_guardado_igual(this: usize, f: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_jogo_guardado_igual(this: usize, f: usize) -> usize {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(1146)(this, f);
     let n = jogo_guardado_igual(this, f);
     PLACAR.registrar(r == n, || format!("jogo_guardado_igual(jogo {:x}) original={:x} rust={:x}", f, r, n));
@@ -2120,7 +2122,7 @@ unsafe extern "thiscall" fn comparar_jogo_guardado_igual(this: usize, f: usize) 
 
 /// Comparador: acrescenta à lista (não roda duas vezes): a lista é achada antes pela cópia, a original guarda e a conta
 /// tem de subir 1 com a cauda nova igual aos 0x4f bytes do jogo.
-unsafe extern "thiscall" fn comparar_guardar_jogo_no_calendario(this: usize, f: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_guardar_jogo_no_calendario(this: usize, f: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1147);
     let l = cps11_lista_antes(this, f);
     if l == 0 {
@@ -2136,7 +2138,7 @@ unsafe extern "thiscall" fn comparar_guardar_jogo_no_calendario(this: usize, f: 
 
 /// Comparador: tira da lista (não roda duas vezes): antes da original, a cópia acha a lista e vê se algum item tem os
 /// bytes do jogo (o tamanho guardado em +4, como a 0x68d1f0); a original tira e devolve: a devolução e a conta.
-unsafe extern "thiscall" fn comparar_tirar_jogo_do_calendario(this: usize, f: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_tirar_jogo_do_calendario(this: usize, f: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1148);
     let l = cps11_lista_antes(this, f);
     if l == 0 {
@@ -2163,38 +2165,38 @@ unsafe extern "thiscall" fn comparar_tirar_jogo_do_calendario(this: usize, f: us
 
 /// A lista dos jogos de um ano, dia, fatia e nação-chave no calendário `fm` (0x5abf10; cria o bloco do ano se a
 /// corrente não o tem). A original compara o ano como palavra e mascara o dia, a fatia e a nação.
-unsafe fn cpr12_lista(fm: usize, ano: u32, dia: u32, fatia: u32, nacao: u32) -> usize {
+pub(crate) unsafe fn cpr12_lista(fm: usize, ano: u32, dia: u32, fatia: u32, nacao: u32) -> usize {
     let lista: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_FIXTURE_MANAGER_GET_FIXTURE_LIST);
     lista(fm, ano, dia, fatia, nacao)
 }
 
 /// O próximo item da lista (0x68d1b0: o cursor +0xa anda).
-unsafe fn cpr12_proximo(l: usize) -> usize {
+pub(crate) unsafe fn cpr12_proximo(l: usize) -> usize {
     let prox: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     prox(l)
 }
 
 /// Põe o cursor da lista no começo (+0xa = +2) e devolve o primeiro item.
-unsafe fn cpr12_primeiro(l: usize) -> usize {
+pub(crate) unsafe fn cpr12_primeiro(l: usize) -> usize {
     core::ptr::write_unaligned((l + 0xa) as *mut u32, read_u32(l + 2));
     cpr12_proximo(l)
 }
 
 /// Acrescenta à lista `l` uma cópia dos 0x4f bytes do jogo `f` (0x68d0d0); 0 se falhou.
-unsafe fn cpr12_copiar(l: usize, f: usize) -> usize {
+pub(crate) unsafe fn cpr12_copiar(l: usize, f: usize) -> usize {
     let copiar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     copiar(l, f, 0x4f)
 }
 
 /// A nação-chave ativa da competição `comp` (0x48dd70 sobre o registro [0xae23d0] + 0x6b × comp, sem jogo).
-unsafe fn cpr12_nacao_da_competicao(comp: u32) -> u8 {
+pub(crate) unsafe fn cpr12_nacao_da_competicao(comp: u32) -> u8 {
     let nacao: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_FIXTURE);
     nacao((read_u32(0xae23d0).wrapping_add(comp.wrapping_mul(0x6b))) as usize, 0) as u8
 }
 
 /// O jogo `f` passa nos filtros da 0x5acbe0: tipo (+0x42; 0xfe qualquer), clube em casa (+0xc) ou fora (+0x10; −1
 /// qualquer) com o lado dele (+0x40 em casa, +0x41 fora; 0xff qualquer) e a competição (+0; −1 qualquer).
-unsafe fn cpr12_passa(f: usize, clube: u32, comp: u32, tipo: u8, lado: u8) -> bool {
+pub(crate) unsafe fn cpr12_passa(f: usize, clube: u32, comp: u32, tipo: u8, lado: u8) -> bool {
     if tipo != 0xfe && tipo != *((f + 0x42) as *const u8) {
         return false;
     }
@@ -2225,7 +2227,7 @@ unsafe fn cpr12_passa(f: usize, clube: u32, comp: u32, tipo: u8, lado: u8) -> bo
 /// competição (−1 qualquer). Devolve a conta (palavra); a cópia que falha mostra a caixa (linha 0x93b) e para ali.
 /// Quente (288 mil chamadas até 2002-06-01): sem contador.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn achar_jogos_do_calendario(this: usize, dia0: u32, ano0: u32, dia1: u32, ano1: u32, clube: u32,
+pub(crate) unsafe extern "thiscall" fn achar_jogos_do_calendario(this: usize, dia0: u32, ano0: u32, dia1: u32, ano1: u32, clube: u32,
                                                       lista: usize, comp: u32, tipo: u32, lado: u32) -> u32 {
     let (tipo, lado) = (tipo as u8, lado as u8);
     let mut nacoes = [0xffu8; 8];
@@ -2300,7 +2302,7 @@ unsafe extern "thiscall" fn achar_jogos_do_calendario(this: usize, dia0: u32, an
 /// competição (+0; −1 qualquer), da rodada (+0x34, palavra; −1 qualquer) e do tipo (+0x42; 0xfe qualquer). Devolve
 /// quantos (palavra); a cópia que falha mostra a caixa (linha 0x634) e para ali.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn jogos_da_competicao_no_dia(this: usize, ano: u32, dia: u32, fatia: u32, comp: u32, rodada: u32,
+pub(crate) unsafe extern "thiscall" fn jogos_da_competicao_no_dia(this: usize, ano: u32, dia: u32, fatia: u32, comp: u32, rodada: u32,
                                                        tipo: u32, lista: usize) -> u32 {
     let tipo = tipo as u8;
     // ponytail: a original empurra o local da nação com bytes altos de sobra de pilha; a 0x5abf10 só lê o byte
@@ -2339,7 +2341,7 @@ unsafe extern "thiscall" fn jogos_da_competicao_no_dia(this: usize, ano: u32, di
 /// `fix_man_comp_has_fixture_on_date(data, comp)` (das eliminatórias da Eurocopa 0x57fd60): 1 se a competição tem
 /// jogo (+0 = comp) na data em alguma das três fatias do calendário [0xae2a58], na lista da nação-chave dela
 /// (0x48dd70). Competição −1 ou abaixo: 0; data nula: a caixa (linha 0xe89) e 0.
-unsafe extern "stdcall" fn competicao_tem_jogo_na_data(data: usize, comp: u32) -> u8 {
+pub(crate) unsafe extern "stdcall" fn competicao_tem_jogo_na_data(data: usize, comp: u32) -> u8 {
     if (comp as i32) <= -1 {
         return 0;
     }
@@ -2371,7 +2373,7 @@ unsafe extern "stdcall" fn competicao_tem_jogo_na_data(data: usize, comp: u32) -
 
 /// Os itens que a original acrescentou à `lista` (depois da cauda de antes) são os da lista provisória `nova`, na
 /// mesma ordem, 0x4f bytes cada?
-unsafe fn cpr12_mesmos_itens(lista: usize, conta_antes: u16, cauda_antes: u32, nova: usize) -> bool {
+pub(crate) unsafe fn cpr12_mesmos_itens(lista: usize, conta_antes: u16, cauda_antes: u32, nova: usize) -> bool {
     let acrescentados = (*(lista as *const u16)).wrapping_sub(conta_antes);
     if acrescentados != *(nova as *const u16) {
         return false;
@@ -2394,7 +2396,7 @@ unsafe fn cpr12_mesmos_itens(lista: usize, conta_antes: u16, cauda_antes: u32, n
 
 /// Roda a cópia com uma lista provisória (0x68d020; destruída pela 0x68d040) e confere os itens contra os que a
 /// original acrescentou à lista real.
-unsafe fn cpr12_com_lista_nova(lista: usize, conta_antes: u16, cauda_antes: u32, copia: impl FnOnce(usize) -> u32) -> (u32, bool) {
+pub(crate) unsafe fn cpr12_com_lista_nova(lista: usize, conta_antes: u16, cauda_antes: u32, copia: impl FnOnce(usize) -> u32) -> (u32, bool) {
     let criar: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     let mut nova = [0u8; 0x10];
@@ -2409,7 +2411,7 @@ unsafe fn cpr12_com_lista_nova(lista: usize, conta_antes: u16, cauda_antes: u32,
 /// Comparador: sem lista, pela devolução (a original e a cópia só andam os cursores das listas do calendário). Com
 /// lista, a original enche a lista real e a cópia uma provisória: a conta (palavra) e os itens acrescentados.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_achar_jogos_do_calendario(this: usize, dia0: u32, ano0: u32, dia1: u32, ano1: u32, clube: u32,
+pub(crate) unsafe extern "thiscall" fn comparar_achar_jogos_do_calendario(this: usize, dia0: u32, ano0: u32, dia1: u32, ano1: u32, clube: u32,
                                                                lista: usize, comp: u32, tipo: u32, lado: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32>(1110);
     if lista == 0 {
@@ -2430,7 +2432,7 @@ unsafe extern "thiscall" fn comparar_achar_jogos_do_calendario(this: usize, dia0
 
 /// Comparador: a original enche a lista real e a cópia uma provisória: a conta (palavra) e os itens acrescentados.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_jogos_da_competicao_no_dia(this: usize, ano: u32, dia: u32, fatia: u32, comp: u32, rodada: u32,
+pub(crate) unsafe extern "thiscall" fn comparar_jogos_da_competicao_no_dia(this: usize, ano: u32, dia: u32, fatia: u32, comp: u32, rodada: u32,
                                                                 tipo: u32, lista: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, usize) -> u32>(1111);
     let (conta, cauda) = (*(lista as *const u16), read_u32(lista + 6));
@@ -2443,7 +2445,7 @@ unsafe extern "thiscall" fn comparar_jogos_da_competicao_no_dia(this: usize, ano
 }
 
 /// Comparador: pela devolução (só anda os cursores das listas do calendário).
-unsafe extern "stdcall" fn comparar_competicao_tem_jogo_na_data(data: usize, comp: u32) -> u8 {
+pub(crate) unsafe extern "stdcall" fn comparar_competicao_tem_jogo_na_data(data: usize, comp: u32) -> u8 {
     let r = orig::<unsafe extern "stdcall" fn(usize, u32) -> u8>(1112)(data, comp);
     let n = competicao_tem_jogo_na_data(data, comp);
     PLACAR.registrar(r == n, || format!("competicao_tem_jogo_na_data(data {:x}, comp {}) original={} rust={}", data, comp as i32, r, n));
@@ -2454,7 +2456,7 @@ unsafe extern "stdcall" fn comparar_competicao_tem_jogo_na_data(data: usize, com
 
 /// A lista das partidas de (ano, dia, fatia, grupo) no gerenciador `this` (0x5abf10, thiscall ret 0x10, original:
 /// carrega o ano se preciso), com o cursor voltado ao começo (+0xa = +2), como as duas originais fazem; nula: 0.
-unsafe fn cpc1_lista(this: usize, ano: u32, dia: u32, fatia: u32, grupo: u32) -> usize {
+pub(crate) unsafe fn cpc1_lista(this: usize, ano: u32, dia: u32, fatia: u32, grupo: u32) -> usize {
     let lista: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_FIXTURE_MANAGER_GET_FIXTURE_LIST);
     let l = lista(this, ano, dia, fatia, grupo);
     if l != 0 {
@@ -2464,14 +2466,14 @@ unsafe fn cpc1_lista(this: usize, ano: u32, dia: u32, fatia: u32, grupo: u32) ->
 }
 
 /// O próximo item da lista `l` (0x68d1b0, proximo_da_lista), ou 0.
-unsafe fn cpc1_proximo(l: usize) -> usize {
+pub(crate) unsafe fn cpc1_proximo(l: usize) -> usize {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     proximo(l)
 }
 
 /// A partida `f` passa pelo filtro da find_next_fixture? Cada filtro em -1 deixa passar: a competição (+0), a fase
 /// (+0x34, curto com sinal) e os dois clubes (cada um o mandante +0xc ou o visitante +0x10).
-unsafe fn cpc1_passa(f: usize, comp: i32, fase: i32, clube_a: i32, clube_b: i32) -> bool {
+pub(crate) unsafe fn cpc1_passa(f: usize, comp: i32, fase: i32, clube_a: i32, clube_b: i32) -> bool {
     let d = |o: usize| core::ptr::read_unaligned((f + o) as *const i32);
     let clube = |c: i32| c == -1 || c == d(0xc) || c == d(0x10);
     (comp == -1 || comp == d(0)) // a competição
@@ -2494,7 +2496,7 @@ unsafe fn cpc1_passa(f: usize, comp: i32, fase: i32, clube_a: i32, clube_b: i32)
 /// à 0x5abf10 ano, dia e fatia com a metade alta de locais nunca escritas (lixo), mas ela e o que chama (0x5aa2d0,
 /// 0x5a9cf0, 0x54cfe0) só usam a palavra/o byte: a cópia passa zero. Nos sorteios de copa (Cup.cpp 0x519d90,
 /// 0x51a150, 0x522c70). Sem SEH, sem caixa (a da 0x5abf10 só sem memória).
-unsafe extern "thiscall" fn proxima_partida(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
+pub(crate) unsafe extern "thiscall" fn proxima_partida(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
     comp: i32, fase: i32, clube_a: i32, clube_b: i32, _a9: u32, _a10: u32, _a11: u32) -> usize {
     let grupo_de: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_FIXTURE);
     let tabela = *(0xae23d0 as *const usize);
@@ -2559,7 +2561,7 @@ unsafe extern "thiscall" fn proxima_partida(this: usize, pano: *mut u16, pdia: *
     f
 }
 
-unsafe extern "thiscall" fn comparar_proxima_partida(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
+pub(crate) unsafe extern "thiscall" fn comparar_proxima_partida(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
     comp: i32, fase: i32, clube_a: i32, clube_b: i32, a9: u32, a10: u32, a11: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, *mut u16, *mut u16, *mut u8, u32, i32, i32, i32, i32, u32, u32, u32) -> usize>(785);
     let antes = (*pano, *pdia, *pfatia);
@@ -2582,7 +2584,7 @@ unsafe extern "thiscall" fn comparar_proxima_partida(this: usize, pano: *mut u16
 /// 0x5abf10 no byte baixo do argumento do ano (a original guarda o laço lá: os 3 bytes altos são os do ano). Estádio
 /// nulo: 0. Na marcação dos amistosos (friendly.cpp 0x5c6f00, 0x5c75a0) e em 0x7e6380, 0x7e6720. Sem SEH, sem locais
 /// sem valor.
-unsafe extern "thiscall" fn estadio_em_uso(this: usize, estadio: usize, dia: u32, ano: u32, fatia: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn estadio_em_uso(this: usize, estadio: usize, dia: u32, ano: u32, fatia: u32) -> u32 {
     if estadio == 0 {
         return 0;
     }
@@ -2633,7 +2635,7 @@ comparar_valor!(comparar_estadio_em_uso, estadio_em_uso, 786, (estadio: usize, d
 /// ano (metade alta do dia), o eax é o ano também no único chamador (0x5cbc18, `push eax; call`; metade alta do mês e
 /// do dia da semana). O eax devolvido é lixo: o endereço de pilha do temporário que a 0x417c10 copia no fim da 0x54a2d0
 /// (muda com a profundidade da pilha), e o chamador o descarta (0x5cbc1d `mov eax, [esp+14h]`); só a data (+3..+0xb) conta.
-unsafe extern "thiscall" fn data_do_amistoso_internacional(this: usize, ano: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn data_do_amistoso_internacional(this: usize, ano: u32) -> u32 {
     let acertar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_DATE_SET);
     let b = |o: usize| *((this + o) as *const i8) as i16 as u16 as u32;
     let alto = ano & 0xffff_0000;
@@ -2643,7 +2645,7 @@ unsafe extern "thiscall" fn data_do_amistoso_internacional(this: usize, ano: u32
 }
 
 /// A original (ret 4) com eax = ano, como no único chamador.
-unsafe fn cpc1_data_original(o: usize, this: usize, ano: u32) -> u32 {
+pub(crate) unsafe fn cpc1_data_original(o: usize, this: usize, ano: u32) -> u32 {
     let r: u32;
     core::arch::asm!(
         "push {a}",
@@ -2657,7 +2659,7 @@ unsafe fn cpc1_data_original(o: usize, this: usize, ano: u32) -> u32 {
     r
 }
 
-unsafe extern "thiscall" fn comparar_data_do_amistoso_internacional(this: usize, ano: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_data_do_amistoso_internacional(this: usize, ano: u32) -> u32 {
     let o = orig::<usize>(787);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 11)], || cpc1_data_original(o, this, ano),
         || data_do_amistoso_internacional(this, ano));

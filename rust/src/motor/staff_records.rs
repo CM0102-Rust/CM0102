@@ -1,26 +1,28 @@
+use super::*;
+
 // ---------- 267a leva: os registros do campeão da liga e da copa e o registro do técnico humano zerado (staff_records.cpp) ----------
 
 
-unsafe fn cqd13_i(a: usize) -> i32 {
+pub(crate) unsafe fn cqd13_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
 
-unsafe fn cqd13_pi(a: usize, v: i32) {
+pub(crate) unsafe fn cqd13_pi(a: usize, v: i32) {
     core::ptr::write_unaligned(a as *mut i32, v);
 }
 
 /// O ensaio dos comparadores: as cópias sem os históricos (arquivo), sem as notícias (0x75c390), sem acabar as
 /// convocações (0x774f30) e sem a renovação (0x4cda70), anotando os contratos que a renovação mexeria.
-static mut CQD13_ENSAIO: bool = false;
-static mut CQD13_RENOVADOS: Vec<usize> = Vec::new();
+pub(crate) static mut CQD13_ENSAIO: bool = false;
+pub(crate) static mut CQD13_RENOVADOS: Vec<usize> = Vec::new();
 /// Depois da última conta de dias (0x54cdb0) da cópia, o ensaio pulou uma chamada da original que também conta dias
 /// e deixa a data de rascunho estática dela (0xae2470) noutro ano: a renovação (0x4cda70, pela idade), o fim das
 /// convocações (0x774f30) ou a notícia do elogio (0x75c390). Essa data então fica fora da conta.
-static mut CQD13_DATA_SOLTA: bool = false;
+pub(crate) static mut CQD13_DATA_SOLTA: bool = false;
 
 /// A reputação do clube (+0x80) sobe até peso × 500, no máximo 750 de uma vez (entre 1 e 10000; soma em 16 bits).
-unsafe fn cqd13_reputacao(clube: usize, peso: i16, campeao_da_liga: bool) {
+pub(crate) unsafe fn cqd13_reputacao(clube: usize, peso: i16, campeao_da_liga: bool) {
     let alvo = (peso as i32).wrapping_mul(500);
     let rep = read_i16(clube + 0x80) as i32;
     if rep < alvo {
@@ -38,7 +40,7 @@ unsafe fn cqd13_reputacao(clube: usize, peso: i16, campeao_da_liga: bool) {
 }
 
 /// O moral do contrato (+0x44, byte com sinal) sobe `d`, preso em −100..100.
-unsafe fn cqd13_moral(k: usize, d: i32) {
+pub(crate) unsafe fn cqd13_moral(k: usize, d: i32) {
     let c = *((k + 0x44) as *const i8);
     let x = c as i32 + d;
     *((k + 0x44) as *mut i8) = if x > 100 { 100 } else if x < -100 { -100 } else { c.wrapping_add(d as i8) };
@@ -47,7 +49,7 @@ unsafe fn cqd13_moral(k: usize, d: i32) {
 /// A renovação oferecida ao jogador do próprio clube (0x4cda70 com 1,0 e submeter): com o gerente de transferências
 /// ([0xde1f54]), mais de 300 dias desde a data do contrato (+0x25; 0x54cdb0) e a vaga dele na lista do clube (0x849ce0
 /// com 0, 0; +0xf o id). No ensaio, só anota o contrato.
-unsafe fn cqd13_renovar(clube: usize, p: usize, k: usize) {
+pub(crate) unsafe fn cqd13_renovar(clube: usize, p: usize, k: usize) {
     if read_usize(0xde1f54) == 0 {
         return;
     }
@@ -74,7 +76,7 @@ unsafe fn cqd13_renovar(clube: usize, p: usize, k: usize) {
 
 /// Os históricos da entrada `e` para o técnico (já feito por quem chama), o presidente (+0xbf) e os 20 da escalação
 /// (+0x190 do lado, 0x49 bytes, −1 vazio; pessoas válidas e fora o técnico; nula: a caixa da linha 0x1010).
-unsafe fn cqd13_escalacao(this: usize, clube: usize, escalacao: usize, e: &[u8; 0x40]) {
+pub(crate) unsafe fn cqd13_escalacao(this: usize, clube: usize, escalacao: usize, e: &[u8; 0x40]) {
     for j in 0..0x14usize {
         let id = cqd13_i(escalacao + 0x49 * j);
         if id == -1 {
@@ -96,7 +98,7 @@ unsafe fn cqd13_escalacao(this: usize, clube: usize, escalacao: usize, e: &[u8; 
 }
 
 /// O histórico do clube (tipo no +8, a competição no +9).
-unsafe fn cqd13_historico_do_clube(this: usize, clube: usize, tipo: u8, comp: usize) {
+pub(crate) unsafe fn cqd13_historico_do_clube(this: usize, clube: usize, tipo: u8, comp: usize) {
     let mut e = cpq4_entrada();
     cpq4_datar(e.as_mut_ptr());
     e[8] = tipo;
@@ -109,7 +111,7 @@ unsafe fn cqd13_historico_do_clube(this: usize, clube: usize, tipo: u8, comp: us
 }
 
 /// A notícia do elogio do título (0x75c390 em [0xb6b7c8]; fora do ensaio).
-unsafe fn cqd13_elogio(clube: usize, comp: usize, marca: u32) {
+pub(crate) unsafe fn cqd13_elogio(clube: usize, comp: usize, marca: u32) {
     if CQD13_ENSAIO {
         CQD13_DATA_SOLTA = true;
         return;
@@ -121,7 +123,7 @@ unsafe fn cqd13_elogio(clube: usize, comp: usize, marca: u32) {
 
 /// As notas k1/k2 do técnico pela fase: na competição de fase 1 ([0xadadfc] + 4 × id, +0x42 = 1) 200 na terceira e 200
 /// na segunda se o técnico for estrangeiro (0x53d980 com a nação +0x53 e 1), senão 400.
-unsafe fn cqd13_notas(t: usize, clube: usize, id_comp: usize) -> (i32, i32) {
+pub(crate) unsafe fn cqd13_notas(t: usize, clube: usize, id_comp: usize) -> (i32, i32) {
     let c = read_usize(read_usize(0xadadfc).wrapping_add(4 * id_comp));
     if *((c + 0x42) as *const i8) != 1 {
         (400, 400)
@@ -149,7 +151,7 @@ unsafe fn cqd13_notas(t: usize, clube: usize, id_comp: usize) -> (i32, i32) {
 /// 6,5) acima do limiar dá o histórico, moral +20 (0x544710) e +100 no contrato (0x4cf5f0) com a renovação; senão moral
 /// +10 e +50 no contrato. O histórico do clube (tipo 5); com a mídia ([0xb6b7c8]) e peso acima de 3, o elogio (0x75c390
 /// com 1) e, acima de 12, com 3.
-unsafe extern "thiscall" fn campeao_da_liga_nos_registros(this: usize, clube: usize, comp: usize) {
+pub(crate) unsafe extern "thiscall" fn campeao_da_liga_nos_registros(this: usize, clube: usize, comp: usize) {
     if clube == 0 || comp == 0 {
         return aviso_em(0xa83b78, 0x21c);
     }
@@ -260,7 +262,7 @@ unsafe extern "thiscall" fn campeao_da_liga_nos_registros(this: usize, clube: us
 /// moral +15 (0x544710) e +100 no contrato; com a situação do contrato (+0x4f >> 4) 1-3 ou 5, a renovação. As
 /// convocações da competição guardada (0x76d940) acabam (0x774f30); o histórico do clube (tipo 0); com a mídia e peso
 /// acima de 10, o elogio (0x75c390 com 1) e, com peso acima de 12 ou reputação abaixo de 2500, com 3.
-unsafe extern "thiscall" fn campeao_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn campeao_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
     if clube == 0 || jogo == 0 || partida == 0 {
         return aviso_em(0xa83b78, 0x51e);
     }
@@ -356,7 +358,7 @@ unsafe extern "thiscall" fn campeao_da_copa_nos_registros(this: usize, clube: us
 /// e conta dias (0x54cdb0): o moral das fichas depois do primeiro renovado fica fora da igualdade e é conferido pela
 /// faixa da 0x544710; a data estática fica fora quando o ensaio pulou, depois da última conta de dias da cópia, uma
 /// chamada da original que conta dias (CQD13_DATA_SOLTA). Visto na ENG em maio de 2002 e na auditoria das 8 ligas.
-unsafe fn cqd13_comparar(nome: &str, this: usize, clube: usize, notas: (usize, usize), liga: bool, original: impl FnOnce(), copia: impl FnOnce()) {
+pub(crate) unsafe fn cqd13_comparar(nome: &str, this: usize, clube: usize, notas: (usize, usize), liga: bool, original: impl FnOnce(), copia: impl FnOnce()) {
     let mut fixas: Vec<(usize, usize)> = vec![(clube + 0x80, 2), (0xae2470, 8), notas];
     let t = read_usize(clube + 0xcf);
     if t != 0 {
@@ -420,7 +422,7 @@ unsafe fn cqd13_comparar(nome: &str, this: usize, clube: usize, notas: (usize, u
         nome, clube, renovados.len(), corte, fichas.len(), !na_faixa, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_campeao_da_liga_nos_registros(this: usize, clube: usize, comp: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_campeao_da_liga_nos_registros(this: usize, clube: usize, comp: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1576);
     if clube == 0 || comp == 0 || read_usize(read_usize(0xadadfc).wrapping_add(4 * read_usize(comp))) == 0 {
         return o(this, clube, comp);
@@ -431,7 +433,7 @@ unsafe extern "thiscall" fn comparar_campeao_da_liga_nos_registros(this: usize, 
         || campeao_da_liga_nos_registros(this, clube, comp));
 }
 
-unsafe extern "thiscall" fn comparar_campeao_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_campeao_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(1577);
     if clube == 0 || jogo == 0 || partida == 0 {
         return o(this, clube, jogo, partida);
@@ -448,7 +450,7 @@ unsafe extern "thiscall" fn comparar_campeao_da_copa_nos_registros(this: usize, 
 /// aposentadoria do técnico humano (0x6b2b40) e pelo setup (0x82b9xx). Pessoa entre os 16 humanos (id de [0xae2364] − 16
 /// até [0xae2364]): o registro dele no vetor +8 (vaga id − [0xae2364] + [0xae2368] + 16, 0xd2 bytes); senão, como a
 /// original, a própria pessoa. Zera os 0xd2 bytes e põe −1 em +0x86, +0xc2, +0xc6, +0x4a, +0x5e e +0x72.
-unsafe extern "thiscall" fn limpar_registro_do_humano(this: usize, pessoa: usize) {
+pub(crate) unsafe extern "thiscall" fn limpar_registro_do_humano(this: usize, pessoa: usize) {
     let id = cqd13_i(pessoa);
     let lim = cqd13_i(0xae2364);
     let r = if id >= lim.wrapping_sub(0x10) && id < lim {
@@ -464,7 +466,7 @@ unsafe extern "thiscall" fn limpar_registro_do_humano(this: usize, pessoa: usize
 }
 
 /// Comparador: lado a lado pelo registro (os 0xd2 bytes que a rotina zera).
-unsafe extern "thiscall" fn comparar_limpar_registro_do_humano(this: usize, pessoa: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_limpar_registro_do_humano(this: usize, pessoa: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1578);
     let id = cqd13_i(pessoa);
     let lim = cqd13_i(0xae2364);
@@ -482,31 +484,31 @@ unsafe extern "thiscall" fn comparar_limpar_registro_do_humano(this: usize, pess
 // ---------- 263a leva: os registros dos técnicos: o resultado de cada jogo, a posição no fim da liga e o jogador do ano da torcida (staff_records.cpp) ----------
 
 
-unsafe fn cqa11_i(a: usize) -> i32 {
+pub(crate) unsafe fn cqa11_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
 
 /// O byte com sinal em `a`.
-unsafe fn cqa11_c(a: usize) -> i32 {
+pub(crate) unsafe fn cqa11_c(a: usize) -> i32 {
     *(a as *const i8) as i32
 }
 
-unsafe fn cqa11_somar(a: usize, v: i32) {
+pub(crate) unsafe fn cqa11_somar(a: usize, v: i32) {
     core::ptr::write_unaligned(a as *mut i32, cqa11_i(a).wrapping_add(v));
 }
 
-unsafe fn cqa11_mais1(a: usize) {
+pub(crate) unsafe fn cqa11_mais1(a: usize) {
     core::ptr::write_unaligned(a as *mut i16, read_i16(a).wrapping_add(1));
 }
 
-unsafe fn cqa11_sortear(n: i32) -> i32 {
+pub(crate) unsafe fn cqa11_sortear(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     f(n)
 }
 
 /// O registro de pontos do técnico do clube (+0xcf, lido sem conferir o clube; 0x86f5b0 com criar), ou 0 sem técnico.
-unsafe fn cqa11_registro(this: usize, clube: usize) -> usize {
+pub(crate) unsafe fn cqa11_registro(this: usize, clube: usize) -> usize {
     let t = read_usize(clube + 0xcf);
     if t == 0 {
         return 0;
@@ -516,7 +518,7 @@ unsafe fn cqa11_registro(this: usize, clube: usize) -> usize {
 }
 
 /// Os pontos de um lado na partida `m`: ((a + b) × 5 + (c − b, em 8 bits)) × 2 + d, vezes 5 (bytes com sinal).
-unsafe fn cqa11_pontos(m: usize, a: usize, b: usize, c: usize, d: usize) -> i32 {
+pub(crate) unsafe fn cqa11_pontos(m: usize, a: usize, b: usize, c: usize, d: usize) -> i32 {
     let x = cqa11_c(m + a).wrapping_add(cqa11_c(m + b));
     let y = (*((m + c) as *const u8)).wrapping_sub(*((m + b) as *const u8)) as i8 as i32;
     let x = x.wrapping_mul(5).wrapping_add(y);
@@ -526,7 +528,7 @@ unsafe fn cqa11_pontos(m: usize, a: usize, b: usize, c: usize, d: usize) -> i32 
 /// A nota do jogo para o técnico: a importância (0x48e190 da competição do jogo, com `lado` e a saída em `saida`; só o
 /// byte, com sinal) × (reputação do adversário / 500) × o peso da competição (+0x69 de [+0x14]) × (pontos + bônus) × 50,
 /// dividido por 100000 (divisões com sinal truncadas, como as multiplicações mágicas da original; produtos em 32 bits).
-unsafe fn cqa11_nota(p: usize, lado: u32, saida: &mut u32, adversario: usize, pontos: i32) -> i32 {
+pub(crate) unsafe fn cqa11_nota(p: usize, lado: u32, saida: &mut u32, adversario: usize, pontos: i32) -> i32 {
     let comp = read_usize(read_usize(0xadadfc).wrapping_add(4 * read_usize(p)));
     let importancia: unsafe extern "thiscall" fn(usize, usize, u32, *mut u32) -> u32 = core::mem::transmute(FN_COMP_GET_FIXTURE_MATCH_IMPORTANCE);
     let i = importancia(comp, p, lado, saida as *mut u32) as u8 as i8 as i32;
@@ -551,7 +553,7 @@ unsafe fn cqa11_nota(p: usize, lado: u32, saida: &mut u32, adversario: usize, po
 /// partida em +0x11f.. / +0x744..) vai para +0xb6 e +0xca; na liga do clube (+0x57 ou +0x60 = a competição +0x14) também
 /// para os pontos do mês (+0xce); na seleção (0x53b900) para +0xbe, senão +0xba. Defeito da original, reproduzido: no
 /// visitante, +0xbe/+0xba recebem o [esp+0x10] da rotina, que é a nota do mandante (ou o bônus dele, sem registro).
-unsafe extern "thiscall" fn resultado_nos_registros_dos_tecnicos(this: usize, p: usize, m: usize) {
+pub(crate) unsafe extern "thiscall" fn resultado_nos_registros_dos_tecnicos(this: usize, p: usize, m: usize) {
     if *((p + 0x3a) as *const u8) == 1 {
         return;
     }
@@ -642,7 +644,7 @@ unsafe extern "thiscall" fn resultado_nos_registros_dos_tecnicos(this: usize, p:
 
 /// Comparador lado a lado nos dois registros (0xd2 bytes), criados antes pela 0x86f5b0 como a original faria (a segunda
 /// chamada acha o mesmo registro). Jogo não disputado: só a original (não cria nada).
-unsafe extern "thiscall" fn comparar_resultado_nos_registros_dos_tecnicos(this: usize, p: usize, m: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_resultado_nos_registros_dos_tecnicos(this: usize, p: usize, m: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1449);
     if *((p + 0x3a) as *const u8) == 1 {
         return o(this, p, m);
@@ -666,7 +668,7 @@ unsafe extern "thiscall" fn comparar_resultado_nos_registros_dos_tecnicos(this: 
 /// liga)`, pela liga completa (0x689ad0), no fim da liga. Para cada linha da tabela (0x6826d0, até +0x3e), o histórico do
 /// técnico do clube (+0xcf; tipo 0xa: o id do clube, a competição de +4, o ano +0x3a e a posição k + 1), no arquivo
 /// (0x58e340).
-unsafe extern "thiscall" fn posicoes_no_fim_da_liga(this: usize, liga: usize) {
+pub(crate) unsafe extern "thiscall" fn posicoes_no_fim_da_liga(this: usize, liga: usize) {
     crate::comparacao::ramo("cqa_11 fim da liga");
     let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
     let mut e = cpq4_entrada();
@@ -688,12 +690,12 @@ unsafe extern "thiscall" fn posicoes_no_fim_da_liga(this: usize, liga: usize) {
 }
 
 // ponytail: só grava o histórico no arquivo (não roda duas vezes): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_posicoes_no_fim_da_liga(this: usize, liga: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_posicoes_no_fim_da_liga(this: usize, liga: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(1450)(this, liga)
 }
 
 /// O ensaio do comparador da 0x86dc30: a cópia sem o histórico (arquivo).
-static mut CQA11_ENSAIO: bool = false;
+pub(crate) static mut CQA11_ENSAIO: bool = false;
 
 /// the supporters' player of the year in his history and, by a draw, the favourite link between him and the club
 /// Original: `Staff_Records::add_supporters_player_of_year_record` (0x86dc30, staff_records.cpp, thiscall).
@@ -703,7 +705,7 @@ static mut CQA11_ENSAIO: bool = false;
 /// da pessoa (tipo 0x35: o id do clube, `a` em 16 bits sem sinal e `b`), no arquivo (0x58e340); depois, se sorteio(21 −
 /// +0x59 da pessoa) < sorteio(10), a pessoa gosta do clube (0x547d90 com sorteio(2)) e o clube dela (0x547870 com
 /// sorteio(2)). Pessoa nula: a original (a caixa e a leitura de +0x59 da pessoa nula).
-unsafe extern "thiscall" fn jogador_do_ano_da_torcida_no_registro(this: usize, pessoa: usize, clube: usize, a: u32, b: u32) {
+pub(crate) unsafe extern "thiscall" fn jogador_do_ano_da_torcida_no_registro(this: usize, pessoa: usize, clube: usize, a: u32, b: u32) {
     if pessoa == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(1451)(this, pessoa, clube, a, b);
     }
@@ -727,7 +729,7 @@ unsafe extern "thiscall" fn jogador_do_ano_da_torcida_no_registro(this: usize, p
 /// Comparador em ensaio: a cópia sem o histórico e a original a partir do mesmo estado (sorteio, as pessoas favoritas e
 /// rejeitadas do clube +0x9b e os clubes favoritos e rejeitados da pessoa, preferências +0x65: +4..+0x18). Pessoa nula:
 /// só a original.
-unsafe extern "thiscall" fn comparar_jogador_do_ano_da_torcida_no_registro(this: usize, pessoa: usize, clube: usize, a: u32, b: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_jogador_do_ano_da_torcida_no_registro(this: usize, pessoa: usize, clube: usize, a: u32, b: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(1451);
     if pessoa == 0 || clube == 0 {
         return o(this, pessoa, clube, a, b);
@@ -752,22 +754,22 @@ unsafe extern "thiscall" fn comparar_jogador_do_ano_da_torcida_no_registro(this:
 // ---------- 263a leva: os registros das copas e da troca de técnico: o vice, o terceiro e a passagem do técnico pelo clube (staff_records.cpp) ----------
 
 
-unsafe fn cqa12_i(a: usize) -> i32 {
+pub(crate) unsafe fn cqa12_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
 
 
-unsafe fn cqa12_pi(a: usize, v: i32) {
+pub(crate) unsafe fn cqa12_pi(a: usize, v: i32) {
     core::ptr::write_unaligned(a as *mut i32, v);
 }
 
 /// O ensaio dos comparadores: as cópias sem o histórico (arquivo) e sem acabar as convocações.
-static mut CQA12_ENSAIO: bool = false;
+pub(crate) static mut CQA12_ENSAIO: bool = false;
 
 /// A entrada `e` no fim da lista do clube `id` no arquivo do histórico dos clubes (FILE_LLIST [this+4], 0x58e340; o
 /// começo e o fim em [this+0x10] + id × 8). No ensaio, nada.
-unsafe fn cqa12_historico_do_clube(this: usize, id: usize, e: &[u8; 0x40]) {
+pub(crate) unsafe fn cqa12_historico_do_clube(this: usize, id: usize, e: &[u8; 0x40]) {
     if CQA12_ENSAIO {
         return;
     }
@@ -778,7 +780,7 @@ unsafe fn cqa12_historico_do_clube(this: usize, id: usize, e: &[u8; 0x40]) {
 
 /// Uma nota do lado do clube na partida (palavra em `a`): soma ftol(peso × k × [0x96ff88]) (produto em 32 bits) e fica
 /// no piso peso × k (16 bits) quando está abaixo dele, senão no máximo 10000 (comparações com sinal em 16 bits).
-unsafe fn cqa12_subir(a: usize, peso: i16, k: i32) {
+pub(crate) unsafe fn cqa12_subir(a: usize, peso: i16, k: i32) {
     let soma = ftol((peso as i32).wrapping_mul(k) as f64 * f64_em(0x96ff88));
     let x = read_i16(a).wrapping_add(soma as i16);
     write_i16(a, x);
@@ -794,7 +796,7 @@ unsafe fn cqa12_subir(a: usize, peso: i16, k: i32) {
 /// tipo, id do clube, competição): do técnico, do presidente (+0xbf) e dos 20 da escalação do lado (+0x190, 0x49 bytes,
 /// −1 vazio; pessoas válidas e fora o técnico); no terceiro, as convocações acabam nas competições guardadas (0x76d940,
 /// 0x774f90 com os dois clubes); por fim o histórico do clube (tipo no +8, competição no +9).
-unsafe fn cqa12_colocado(this: usize, clube: usize, jogo: usize, partida: usize, tipo: u8) {
+pub(crate) unsafe fn cqa12_colocado(this: usize, clube: usize, jogo: usize, partida: usize, tipo: u8) {
     let (limiar, teto, k, metade) = if tipo == 1 { (500, 350, 300, 150) } else { (500, 200, 200, 100) };
     let comp = read_usize(jogo + 0x14);
     let peso = read_i16(comp + 0x69);
@@ -879,7 +881,7 @@ unsafe fn cqa12_colocado(this: usize, clube: usize, jogo: usize, partida: usize,
 /// [pt] { 0x86b0b0 } (thiscall, ret 0xc, staff_records.cpp, SEH só das datas locais): `Staff_Records::
 /// add_cup_runners_up_record(clube, jogo, partida)`, pela final das copas (Cup 0x519890, Liga dos Campeões 0x584ae0 e
 /// as copas de cada nação): `cqa12_colocado` com o tipo 1. Clube, jogo ou partida nulos: a caixa (linha 0x5f6).
-unsafe extern "thiscall" fn vice_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn vice_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
     if clube == 0 || jogo == 0 || partida == 0 {
         return aviso_em(0xa83b78, 0x5f6);
     }
@@ -893,7 +895,7 @@ unsafe extern "thiscall" fn vice_da_copa_nos_registros(this: usize, clube: usize
 /// [pt] { 0x86b710 } (thiscall, ret 0xc, staff_records.cpp, SEH só das datas locais): `Staff_Records::
 /// add_cup_third_place_record(clube, jogo, partida)`, pelas copas com disputa de terceiro: `cqa12_colocado` com o tipo
 /// 2. Nulos: a caixa (linha 0x67b).
-unsafe extern "thiscall" fn terceiro_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn terceiro_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
     if clube == 0 || jogo == 0 || partida == 0 {
         return aviso_em(0xa83b78, 0x67b);
     }
@@ -902,7 +904,7 @@ unsafe extern "thiscall" fn terceiro_da_copa_nos_registros(this: usize, clube: u
 
 /// Comparador em ensaio dos colocados: a cópia sem os históricos e sem acabar as convocações, e a original a partir do
 /// mesmo estado (a reputação do clube e as três notas do lado dele na partida). Nulos: só a original.
-unsafe fn cqa12_comparar_colocado(nome: &str, clube: usize, jogo: usize, partida: usize, original: impl FnOnce(), copia: impl FnOnce()) {
+pub(crate) unsafe fn cqa12_comparar_colocado(nome: &str, clube: usize, jogo: usize, partida: usize, original: impl FnOnce(), copia: impl FnOnce()) {
     if clube == 0 || jogo == 0 || partida == 0 {
         return original();
     }
@@ -918,27 +920,27 @@ unsafe fn cqa12_comparar_colocado(nome: &str, clube: usize, jogo: usize, partida
     PLACAR.registrar(mo == mr, || format!("{}(clube {:#x}, jogo {:#x}) original={:x?} rust={:x?}", nome, clube, jogo, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_vice_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_vice_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(1452);
     cqa12_comparar_colocado("vice_da_copa_nos_registros", clube, jogo, partida, || o(this, clube, jogo, partida),
         || vice_da_copa_nos_registros(this, clube, jogo, partida))
 }
 
-unsafe extern "thiscall" fn comparar_terceiro_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_terceiro_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(1453);
     cqa12_comparar_colocado("terceiro_da_copa_nos_registros", clube, jogo, partida, || o(this, clube, jogo, partida),
         || terceiro_da_copa_nos_registros(this, clube, jogo, partida))
 }
 
 /// A data em `src` copiada para `dst` (0x417c10; a cópia de retorno vai para uma data local).
-unsafe fn cqa12_copiar(dst: usize, src: usize) {
+pub(crate) unsafe fn cqa12_copiar(dst: usize, src: usize) {
     let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u8; 8];
     copia(dst, t.as_mut_ptr(), src);
 }
 
 /// Os dias da data `a` menos a `b` (0x54cdb0, `b` por valor; grava a data estática 0xae2470).
-unsafe fn cqa12_dias(a: usize, b: usize) -> i32 {
+pub(crate) unsafe fn cqa12_dias(a: usize, b: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     f(a, read_usize(b) as u32, read_usize(b + 4) as u32)
 }
@@ -957,7 +959,7 @@ unsafe fn cqa12_dias(a: usize, b: usize) -> i32 {
 /// +0x56 = 13/11/1975 da 0x549f70) e +1 em +0xb4. Na seleção, contratado = 1: +1 em +0xb5. Os históricos: do técnico
 /// (tipo 0x96: clube, contratado), do presidente do clube (+0xbf; tipo 0x97 com o técnico e as três chaves) e do clube
 /// (tipo 0x96 no +8, o técnico, as chaves e contratado). Técnico ou clube nulos: a caixa (linha 0x3b1).
-unsafe extern "thiscall" fn troca_de_tecnico_nos_registros(this: usize, tecnico: usize, clube: usize, contratado: u32) {
+pub(crate) unsafe extern "thiscall" fn troca_de_tecnico_nos_registros(this: usize, tecnico: usize, clube: usize, contratado: u32) {
     if clube == 0 || tecnico == 0 {
         return aviso_em(0xa83b78, 0x3b1);
     }
@@ -1044,7 +1046,7 @@ unsafe extern "thiscall" fn troca_de_tecnico_nos_registros(this: usize, tecnico:
 /// Comparador em ensaio: o registro do técnico criado antes (0x86f5b0, como a original faria nos dois caminhos que o
 /// pedem), a cópia sem os históricos e a original a partir do mesmo estado (o registro, 0xd2 bytes, e a data estática da
 /// 0x54cdb0). Nulos: só a original.
-unsafe extern "thiscall" fn comparar_troca_de_tecnico_nos_registros(this: usize, tecnico: usize, clube: usize, contratado: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_troca_de_tecnico_nos_registros(this: usize, tecnico: usize, clube: usize, contratado: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(1454);
     if clube == 0 || tecnico == 0 {
         return o(this, tecnico, clube, contratado);
@@ -1071,7 +1073,7 @@ unsafe extern "thiscall" fn comparar_troca_de_tecnico_nos_registros(this: usize,
 // ---------- 255a leva: os gols do jogador pelo clube, o registro da seleção do ano e a ordem dos clubes pelos pontos do técnico (player_stats.cpp, staff_records.cpp) ----------
 
 
-unsafe fn cps10_i(a: usize) -> i32 {
+pub(crate) unsafe fn cps10_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
@@ -1085,7 +1087,7 @@ unsafe fn cps10_i(a: usize) -> i32 {
 /// [0xb74350]: entradas de 0x2b bytes, seis por temporada e clube) e a soma, em 16 bits, do byte +0xdf dos grupos cujo
 /// clube (+0xd9, com sinal, não negativo) é o id do `clube`; a tabela é liberada (0x9452ca, também quando nula).
 /// Quente (cada jogador de cada partida): sem contador.
-unsafe extern "stdcall" fn gols_pelo_clube(pessoa: usize, clube: usize) -> u16 {
+pub(crate) unsafe extern "stdcall" fn gols_pelo_clube(pessoa: usize, clube: usize) -> u16 {
     if pessoa == 0 {
         aviso_em(0xa78310, 0xb04);
         return 0;
@@ -1122,7 +1124,7 @@ unsafe extern "stdcall" fn gols_pelo_clube(pessoa: usize, clube: usize) -> u16 {
 }
 
 /// Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
-unsafe extern "stdcall" fn comparar_gols_pelo_clube(pessoa: usize, clube: usize) -> u16 {
+pub(crate) unsafe extern "stdcall" fn comparar_gols_pelo_clube(pessoa: usize, clube: usize) -> u16 {
     let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> u16>(1143);
     if pessoa == 0 || clube == 0 || (cps10_i(pessoa) < cps10_i(0xae2364) && read_u32_as_usize(pessoa + 0x61) == 0) {
         return o(pessoa, clube);
@@ -1140,7 +1142,7 @@ unsafe extern "stdcall" fn comparar_gols_pelo_clube(pessoa: usize, clube: usize)
 /// `Staff_Records::add_team_of_year_record(pessoa, clube, prêmio, a, b)` (pela TEAM_AWARD::record_winners 0x8affb0):
 /// pessoa ou prêmio nulos, a caixa "Error" (linha 0x7ee). Senão o histórico da pessoa (tipo 0x32: o id do clube ou −1,
 /// o id do prêmio, `a` em 16 bits sem sinal e `b` como byte com sinal), no arquivo (0x58e340).
-unsafe extern "thiscall" fn registrar_a_selecao_do_ano(this: usize, pessoa: usize, clube: usize, premio: usize, a: u32, b: u32) {
+pub(crate) unsafe extern "thiscall" fn registrar_a_selecao_do_ano(this: usize, pessoa: usize, clube: usize, premio: usize, a: u32, b: u32) {
     crate::comparacao::ramo("cps_10 selecao do ano");
     if pessoa == 0 || premio == 0 {
         aviso_em(0xa83b78, 0x7ee);
@@ -1158,12 +1160,12 @@ unsafe extern "thiscall" fn registrar_a_selecao_do_ano(this: usize, pessoa: usiz
 
 // ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
 // cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_registrar_a_selecao_do_ano(this: usize, pessoa: usize, clube: usize, premio: usize, a: u32, b: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_registrar_a_selecao_do_ano(this: usize, pessoa: usize, clube: usize, premio: usize, a: u32, b: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32)>(1144)(this, pessoa, clube, premio, a, b)
 }
 
 /// O registro de pontos do técnico do clube (+0xcf; 0x86f5b0 do [0xdd7f00], criando), ou 0 sem técnico.
-unsafe fn cps10_registro(clube: usize) -> usize {
+pub(crate) unsafe fn cps10_registro(clube: usize) -> usize {
     let tecnico = read_u32_as_usize(clube + 0xcf);
     if tecnico == 0 {
         return 0;
@@ -1179,7 +1181,7 @@ unsafe fn cps10_registro(clube: usize) -> usize {
 /// candidatos a técnico do ano (0x86fab0): os registros dos técnicos dos dois clubes (cps10_registro); sem os dois, 0;
 /// só sem o de `a`, 1; só sem o de `b`, −1; com os dois, os pontos da temporada na liga (+0xba) de `b` menos os de
 /// `a` (mais pontos primeiro).
-unsafe extern "C" fn ordem_pelos_pontos_do_tecnico(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn ordem_pelos_pontos_do_tecnico(a: usize, b: usize) -> i32 {
     let (ca, cb) = (read_u32_as_usize(a), read_u32_as_usize(b));
     let ra = cps10_registro(ca);
     let rb = cps10_registro(cb);
@@ -1194,7 +1196,7 @@ unsafe extern "C" fn ordem_pelos_pontos_do_tecnico(a: usize, b: usize) -> i32 {
 }
 
 // ponytail: a 0x86f5b0 cria o registro que falta; a original roda antes e a cópia só acha os que ela criou.
-unsafe extern "C" fn comparar_ordem_pelos_pontos_do_tecnico(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn comparar_ordem_pelos_pontos_do_tecnico(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(1145)(a, b);
     let n = ordem_pelos_pontos_do_tecnico(a, b);
     PLACAR.registrar(r == n, || format!("ordem_pelos_pontos_do_tecnico(clubes {:x}, {:x}) original={} rust={}", read_u32_as_usize(a), read_u32_as_usize(b), r, n));
@@ -1204,30 +1206,30 @@ unsafe extern "C" fn comparar_ordem_pelos_pontos_do_tecnico(a: usize, b: usize) 
 // ---------- 253a leva: os registros de carreira: o acesso, o rebaixamento e a classificação para a fase seguinte (staff_records.cpp) ----------
 
 
-unsafe fn cpq3_i(a: usize) -> i32 {
+pub(crate) unsafe fn cpq3_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
 
 
 
-unsafe fn cpq3_pi(a: usize, v: i32) {
+pub(crate) unsafe fn cpq3_pi(a: usize, v: i32) {
     core::ptr::write_unaligned(a as *mut i32, v);
 }
 
-unsafe fn cpq3_somar(a: usize, v: i32) {
+pub(crate) unsafe fn cpq3_somar(a: usize, v: i32) {
     cpq3_pi(a, cpq3_i(a).wrapping_add(v));
 }
 
 /// A constante double do exe em `a`.
-unsafe fn cpq3_k(a: usize) -> f64 {
+pub(crate) unsafe fn cpq3_k(a: usize) -> f64 {
     core::ptr::read_unaligned(a as *const f64)
 }
 
 /// Uma entrada de histórico na pilha: a data (0x54a110) com a data do jogo copiada (0x417c10).
 /// ponytail: os bytes que a original não grava (lixo da pilha dela) saem zerados aqui; só vão para o arquivo do
 /// histórico (FILE_LLIST), que a carreira não lê de volta.
-unsafe fn cpq3_entrada() -> [u8; 0x40] {
+pub(crate) unsafe fn cpq3_entrada() -> [u8; 0x40] {
     let mut e = [0u8; 0x40];
     let nova: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     let copia: unsafe extern "thiscall" fn(*mut u8, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
@@ -1237,13 +1239,13 @@ unsafe fn cpq3_entrada() -> [u8; 0x40] {
     e
 }
 
-unsafe fn cpq3_por(e: &mut [u8; 0x40], o: usize, v: u32) {
+pub(crate) unsafe fn cpq3_por(e: &mut [u8; 0x40], o: usize, v: u32) {
     e[o..o + 4].copy_from_slice(&v.to_le_bytes());
 }
 
 /// A entrada `e` no fim da lista do arquivo `arq` (FILE_LLIST, 0x58e340) da pessoa ou do clube `id` (o começo e o fim
 /// em `base` + id × 8). Sem `gravar` (a cópia pelo comparador, depois da original), nada.
-unsafe fn cpq3_historico(gravar: bool, arq: usize, base: usize, id: usize, e: &[u8; 0x40]) {
+pub(crate) unsafe fn cpq3_historico(gravar: bool, arq: usize, base: usize, id: usize, e: &[u8; 0x40]) {
     if !gravar {
         return;
     }
@@ -1253,12 +1255,12 @@ unsafe fn cpq3_historico(gravar: bool, arq: usize, base: usize, id: usize, e: &[
 }
 
 /// O histórico da pessoa (o arquivo [this], as listas em [this+0xc]).
-unsafe fn cpq3_da_pessoa(gravar: bool, this: usize, pessoa: usize, e: &[u8; 0x40]) {
+pub(crate) unsafe fn cpq3_da_pessoa(gravar: bool, this: usize, pessoa: usize, e: &[u8; 0x40]) {
     cpq3_historico(gravar, read_usize(this), read_usize(this + 0xc), read_usize(pessoa), e);
 }
 
 /// O histórico do clube (o arquivo [this+4], as listas em [this+0x10]) com o tipo e a competição.
-unsafe fn cpq3_do_clube(gravar: bool, this: usize, clube: usize, tipo: u8, comp: usize) {
+pub(crate) unsafe fn cpq3_do_clube(gravar: bool, this: usize, clube: usize, tipo: u8, comp: usize) {
     let mut e = cpq3_entrada();
     e[8] = tipo;
     cpq3_por(&mut e, 9, read_usize(comp) as u32);
@@ -1266,7 +1268,7 @@ unsafe fn cpq3_do_clube(gravar: bool, this: usize, clube: usize, tipo: u8, comp:
 }
 
 /// A entrada da pessoa: o clube (+8), o tipo (+0xc) e a competição (+0xd).
-unsafe fn cpq3_entrada_do_clube(clube: usize, tipo: u8, comp: u32) -> [u8; 0x40] {
+pub(crate) unsafe fn cpq3_entrada_do_clube(clube: usize, tipo: u8, comp: u32) -> [u8; 0x40] {
     let mut e = cpq3_entrada();
     cpq3_por(&mut e, 8, read_usize(clube) as u32);
     e[0xc] = tipo;
@@ -1276,7 +1278,7 @@ unsafe fn cpq3_entrada_do_clube(clube: usize, tipo: u8, comp: u32) -> [u8; 0x40]
 
 /// Os jogadores do elenco (50 vagas em +0xd7) que contam nos registros: com registro de jogador (+0x61), id abaixo de
 /// [0xae2364] e que não são o técnico.
-unsafe fn cpq3_elenco(clube: usize) -> impl Iterator<Item = usize> {
+pub(crate) unsafe fn cpq3_elenco(clube: usize) -> impl Iterator<Item = usize> {
     (0..50usize).filter_map(move |k| {
         let p = read_usize(clube + 0xd7 + 4 * k);
         if p == 0 || read_usize(p + 0x61) == 0 || cpq3_i(p) >= cpq3_i(0xae2364) || p == read_usize(clube + 0xcf) {
@@ -1287,14 +1289,14 @@ unsafe fn cpq3_elenco(clube: usize) -> impl Iterator<Item = usize> {
     })
 }
 
-unsafe fn cpq3_contrato(p: usize, clube: usize) -> usize {
+pub(crate) unsafe fn cpq3_contrato(p: usize, clube: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     f(read_usize(0xae1050), p, clube)
 }
 
 /// O contrato `c` do jogador `p` vai a renovação (a 0x4cda70 roda): com o gerente de transferências, o contrato com
 /// mais de 300 dias (desde +0x25) e o jogador na lista do clube (0x849ce0, item +0xf = id dele). Só leitura.
-unsafe fn cpq3_vai_renovar(clube: usize, p: usize, c: usize) -> bool {
+pub(crate) unsafe fn cpq3_vai_renovar(clube: usize, p: usize, c: usize) -> bool {
     let gt = read_usize(0xde1f54);
     if gt == 0 {
         return false;
@@ -1310,19 +1312,19 @@ unsafe fn cpq3_vai_renovar(clube: usize, p: usize, c: usize) -> bool {
 
 /// A oferta de renovação do contrato (0x4cda70 do gerente de contratos: o jogador, sem clube nem termos, vaga −1,
 /// fator 1,0, modo 1).
-unsafe fn cpq3_renovar(p: usize) {
+pub(crate) unsafe fn cpq3_renovar(p: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, u32, u32, u32) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_OFFER_CONTRACT);
     f(read_usize(0xae1050), p, 0, 0, -1, 0, 0x3ff0_0000, 1);
 }
 
-unsafe fn cpq3_moral(p: usize, delta: i32) {
+pub(crate) unsafe fn cpq3_moral(p: usize, delta: i32) {
     let f: unsafe extern "C" fn(usize, i32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
     f(p, delta, 1);
 }
 
 /// A nota do não jogador em `a` sobe ftol(x × peso × 10/61) e fica no máximo entre x × peso (16 bits) e ela mesma,
 /// presa a 10000.
-unsafe fn cpq3_nota_do_acesso(a: usize, x: i32, peso: i32) {
+pub(crate) unsafe fn cpq3_nota_do_acesso(a: usize, x: i32, peso: i32) {
     write_i16(a, read_i16(a).wrapping_add(ftol(x.wrapping_mul(peso) as f64 * cpq3_k(0x96ff88)) as i16));
     let minimo = (x as i16).wrapping_mul(peso as i16);
     let v = read_i16(a);
@@ -1330,7 +1332,7 @@ unsafe fn cpq3_nota_do_acesso(a: usize, x: i32, peso: i32) {
 }
 
 /// O acesso; `gravar` falso só na cópia pelo comparador (sem os históricos em arquivo).
-unsafe fn cpq3_acesso(this: usize, clube: usize, comp: usize, peso: u32, gravar: bool) {
+pub(crate) unsafe fn cpq3_acesso(this: usize, clube: usize, comp: usize, peso: u32, gravar: bool) {
     if clube == 0 || comp == 0 {
         aviso_em(0xa83b78, 0x301);
         return;
@@ -1412,7 +1414,7 @@ unsafe fn cpq3_acesso(this: usize, clube: usize, comp: usize, peso: u32, gravar:
 /// × peso × 25), o moral +15 de cada jogador do elenco (0x544710), o vínculo do contrato (+0x44) +75 (−100..100) e a
 /// renovação (0x4cda70) dos contratos dos tipos 1, 2, 3 e 5 que vencem; por fim o histórico do clube (tipo 8). Clube ou
 /// competição nulos: a caixa "Error" (linha 0x301).
-unsafe extern "thiscall" fn registrar_o_acesso(this: usize, clube: usize, comp: usize, peso: u32) {
+pub(crate) unsafe extern "thiscall" fn registrar_o_acesso(this: usize, clube: usize, comp: usize, peso: u32) {
     crate::comparacao::ramo("cpq_3 acesso");
     cpq3_acesso(this, clube, comp, peso, true)
 }
@@ -1421,7 +1423,7 @@ unsafe extern "thiscall" fn registrar_o_acesso(this: usize, clube: usize, comp: 
 /// o não jogador do técnico, o registro de pontos dele (criado antes, como a original faria), o moral (+0x45) e as
 /// reputações (+9..+0xe) de cada jogador do elenco e o vínculo (+0x44) do contrato dele. `None` se algum contrato vai a
 /// renovação (a 0x4cda70 faz a oferta: não roda duas vezes; no acesso os tipos 1, 2, 3 e 5, no rebaixamento 1 e 2).
-unsafe fn cpq3_regioes(this: usize, clube: usize, acesso: bool) -> Option<Vec<(usize, usize)>> {
+pub(crate) unsafe fn cpq3_regioes(this: usize, clube: usize, acesso: bool) -> Option<Vec<(usize, usize)>> {
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((clube, 0x245));
     let tec = read_usize(clube + 0xcf);
@@ -1455,7 +1457,7 @@ unsafe fn cpq3_regioes(this: usize, clube: usize, acesso: bool) -> Option<Vec<(u
 
 /// Comparador: lado a lado pelas regiões (a cópia sem os históricos em arquivo, que a original já gravou, e sem contar
 /// os sorteios); com renovação de contrato ou clube/competição nulos, só a original.
-unsafe extern "thiscall" fn comparar_registrar_o_acesso(this: usize, clube: usize, comp: usize, peso: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_registrar_o_acesso(this: usize, clube: usize, comp: usize, peso: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(1051);
     let reg = if clube != 0 && comp != 0 { cpq3_regioes(this, clube, true) } else { None };
     let reg = match reg {
@@ -1468,20 +1470,20 @@ unsafe extern "thiscall" fn comparar_registrar_o_acesso(this: usize, clube: usiz
 }
 
 /// A nota do não jogador em `a` soma `v` (16 bits) e fica presa a 1..10000.
-unsafe fn cpq3_nota_do_rebaixamento(a: usize, v: i16) {
+pub(crate) unsafe fn cpq3_nota_do_rebaixamento(a: usize, v: i16) {
     write_i16(a, read_i16(a).wrapping_add(v));
     let n = read_i16(a);
     write_i16(a, if n < 1 { 1 } else if n > 0x2710 { 0x2710 } else { n });
 }
 
 /// As reputações (+0xb atual, +9 na nação, +0xd mundial) do registro de jogador `j` × `k`.
-unsafe fn cpq3_reputacoes(j: usize, k: f64) {
+pub(crate) unsafe fn cpq3_reputacoes(j: usize, k: f64) {
     for o in [0xb, 9, 0xd] {
         write_i16(j + o, ftol(read_i16(j + o) as i32 as f64 * k) as i16);
     }
 }
 
-unsafe fn cpq3_rebaixamento(this: usize, clube: usize, comp: usize, gravar: bool) {
+pub(crate) unsafe fn cpq3_rebaixamento(this: usize, clube: usize, comp: usize, gravar: bool) {
     if clube == 0 || comp == 0 {
         aviso_em(0xa83b78, 0x476);
         return;
@@ -1547,13 +1549,13 @@ unsafe fn cpq3_rebaixamento(this: usize, clube: usize, comp: usize, gravar: bool
 /// técnico e do presidente (tipo 9). Cada jogador do elenco: moral −15 (0x544710) e, pelo tipo do contrato (+0x4f >> 4):
 /// 1 e 2, reputações × 0,9 e a renovação (0x4cda70) se vence; 3 a 5, reputações × 0,95. Por fim o histórico do clube
 /// (tipo 9). Clube ou competição nulos: a caixa "Error" (linha 0x476).
-unsafe extern "thiscall" fn registrar_o_rebaixamento(this: usize, clube: usize, comp: usize) {
+pub(crate) unsafe extern "thiscall" fn registrar_o_rebaixamento(this: usize, clube: usize, comp: usize) {
     crate::comparacao::ramo("cpq_3 rebaixamento");
     cpq3_rebaixamento(this, clube, comp, true)
 }
 
 /// Comparador: como o do acesso (sem o registro de pontos, que o rebaixamento não usa).
-unsafe extern "thiscall" fn comparar_registrar_o_rebaixamento(this: usize, clube: usize, comp: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_registrar_o_rebaixamento(this: usize, clube: usize, comp: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1052);
     let reg = if clube != 0 && comp != 0 { cpq3_regioes(this, clube, false) } else { None };
     let reg = match reg {
@@ -1565,7 +1567,7 @@ unsafe extern "thiscall" fn comparar_registrar_o_rebaixamento(this: usize, clube
     PLACAR.registrar(igual, || format!("registrar_o_rebaixamento(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
 }
 
-unsafe fn cpq3_classificacao(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32, gravar: bool) {
+pub(crate) unsafe fn cpq3_classificacao(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32, gravar: bool) {
     if clube == 0 {
         aviso_em(0xa83b78, 0x703);
         return;
@@ -1606,13 +1608,13 @@ unsafe fn cpq3_classificacao(this: usize, clube: usize, comp: usize, fase: u32, 
 /// clube, comp, fase, rodada, peso)`: com técnico (+0xcf), o histórico dele (tipo 3: clube, competição ou −1, a fase com
 /// sinal e a rodada base 0x4b0870) e os pontos (0x86f5b0): importância² × peso somados em +0xb6, +0xca e, na seleção
 /// (0x53b900), +0xbe, ou no clube +0xba. Clube nulo: a caixa "Error" (linha 0x703).
-unsafe extern "thiscall" fn registrar_a_classificacao_na_fase(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
+pub(crate) unsafe extern "thiscall" fn registrar_a_classificacao_na_fase(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
     cpq3_classificacao(this, clube, comp, fase, rodada, peso, true)
 }
 
 /// Comparador: lado a lado pelo registro de pontos do técnico (criado antes, como a original faria), a cópia sem o
 /// histórico em arquivo; sem clube ou sem técnico, só a original.
-unsafe extern "thiscall" fn comparar_registrar_a_classificacao_na_fase(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_registrar_a_classificacao_na_fase(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(1053);
     if clube == 0 || read_usize(clube + 0xcf) == 0 {
         return o(this, clube, comp, fase, rodada, peso);
@@ -1630,34 +1632,34 @@ unsafe extern "thiscall" fn comparar_registrar_a_classificacao_na_fase(this: usi
 // ---------- 253a leva: os registros de carreira: a transferência, a eliminação e a não classificação (staff_records.cpp) ----------
 
 
-unsafe fn cpq4_i(a: usize) -> i32 {
+pub(crate) unsafe fn cpq4_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
 
 
-unsafe fn cpq4_pi(a: usize, v: i32) {
+pub(crate) unsafe fn cpq4_pi(a: usize, v: i32) {
     core::ptr::write_unaligned(a as *mut i32, v);
 }
 
 
 /// O inteiro de 64 bits em `a` somado de `v` (estendido com sinal: cdq, add, adc).
-unsafe fn cpq4_somar64(a: usize, v: i32) {
+pub(crate) unsafe fn cpq4_somar64(a: usize, v: i32) {
     let x = core::ptr::read_unaligned(a as *const i64);
     core::ptr::write_unaligned(a as *mut i64, x.wrapping_add(v as i64));
 }
 
-unsafe fn cpq4_por(e: &mut [u8; 0x40], o: usize, v: i32) {
+pub(crate) unsafe fn cpq4_por(e: &mut [u8; 0x40], o: usize, v: i32) {
     e[o..o + 4].copy_from_slice(&v.to_le_bytes());
 }
 
 /// A pessoa do id (0x6e bytes em [0xae23bc]).
-unsafe fn cpq4_pessoa(id: usize) -> usize {
+pub(crate) unsafe fn cpq4_pessoa(id: usize) -> usize {
     read_usize(0xae23bc).wrapping_add(id.wrapping_mul(0x6e))
 }
 
 /// A data do jogo copiada (0x417c10) em `a` (a cópia também vai para uma data local).
-unsafe fn cpq4_datar(a: *mut u8) {
+pub(crate) unsafe fn cpq4_datar(a: *mut u8) {
     let copia: unsafe extern "thiscall" fn(*mut u8, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u8; 8];
     copia(a, t.as_mut_ptr(), 0xae2c90);
@@ -1666,7 +1668,7 @@ unsafe fn cpq4_datar(a: *mut u8) {
 /// Uma entrada de histórico na pilha com a data construída (0x54a110).
 /// ponytail: os bytes que a original não grava (lixo da pilha dela) saem zerados aqui; só vão para o arquivo do
 /// histórico (FILE_LLIST), que a carreira não lê de volta.
-unsafe fn cpq4_entrada() -> [u8; 0x40] {
+pub(crate) unsafe fn cpq4_entrada() -> [u8; 0x40] {
     let mut e = [0u8; 0x40];
     let nova: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     nova(e.as_mut_ptr());
@@ -1675,7 +1677,7 @@ unsafe fn cpq4_entrada() -> [u8; 0x40] {
 
 /// A entrada `e` no fim da lista da pessoa `id` no arquivo do histórico das pessoas (FILE_LLIST [this], 0x58e340; o
 /// começo e o fim em [this+0xc] + id × 8). Sem `gravar` (a cópia pelo comparador), nada.
-unsafe fn cpq4_historico(gravar: bool, this: usize, id: usize, e: &[u8; 0x40]) {
+pub(crate) unsafe fn cpq4_historico(gravar: bool, this: usize, id: usize, e: &[u8; 0x40]) {
     if !gravar {
         return;
     }
@@ -1685,7 +1687,7 @@ unsafe fn cpq4_historico(gravar: bool, this: usize, id: usize, e: &[u8; 0x40]) {
 }
 
 /// O id do clube contratante da pessoa (+0x39), ou −1.
-unsafe fn cpq4_clube_de(pessoa: usize) -> i32 {
+pub(crate) unsafe fn cpq4_clube_de(pessoa: usize) -> i32 {
     let c = read_usize(pessoa + 0x39);
     if c == 0 {
         -1
@@ -1694,7 +1696,7 @@ unsafe fn cpq4_clube_de(pessoa: usize) -> i32 {
     }
 }
 
-unsafe fn cpq4_id_ou_menos_1(p: usize) -> i32 {
+pub(crate) unsafe fn cpq4_id_ou_menos_1(p: usize) -> i32 {
     if p == 0 {
         -1
     } else {
@@ -1703,7 +1705,7 @@ unsafe fn cpq4_id_ou_menos_1(p: usize) -> i32 {
 }
 
 /// O id da pessoa e os de +4, +8 e +0xc dela (+0x33 de cada) em `e` a partir de `o`.
-unsafe fn cpq4_quem(e: &mut [u8; 0x40], o: usize, p: usize) {
+pub(crate) unsafe fn cpq4_quem(e: &mut [u8; 0x40], o: usize, p: usize) {
     cpq4_por(e, o, cpq4_i(p));
     for k in 0..3usize {
         cpq4_por(e, o + 4 + 4 * k, cpq4_i(read_usize(p + 4 + 4 * k) + 0x33));
@@ -1711,7 +1713,7 @@ unsafe fn cpq4_quem(e: &mut [u8; 0x40], o: usize, p: usize) {
 }
 
 /// Os itens da lista da troca (LLIST em +4 da transferência, relida a cada passo; o cursor reposto antes), na ordem.
-unsafe fn cpq4_troca(t: usize, mut f: impl FnMut(usize)) {
+pub(crate) unsafe fn cpq4_troca(t: usize, mut f: impl FnMut(usize)) {
     let l = read_usize(t + 4);
     if l == 0 {
         return;
@@ -1726,18 +1728,18 @@ unsafe fn cpq4_troca(t: usize, mut f: impl FnMut(usize)) {
 }
 
 /// O tipo do cargo é de jogador (0x53b620: 11, 12, 13 ou 15)?
-unsafe fn cpq4_jogador(cargo: u8) -> bool {
+pub(crate) unsafe fn cpq4_jogador(cargo: u8) -> bool {
     let f: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_PLAYER_JOB);
     f(cargo as u32) != 0 // ponytail: a original empurra o registro com o byte no al; a 0x53b620 lê só o byte
 }
 
-unsafe fn cpq4_registro(this: usize, tec: usize) -> usize {
+pub(crate) unsafe fn cpq4_registro(this: usize, tec: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
     f(this, tec, 1)
 }
 
 /// Os lados da transferência: (pessoa, contrato da pessoa 0x4cf5a0, vendedor ou 0, comprador).
-unsafe fn cpq4_lados(t: usize) -> (usize, usize, usize, usize) {
+pub(crate) unsafe fn cpq4_lados(t: usize) -> (usize, usize, usize, usize) {
     let pessoa = cpq4_pessoa(read_usize(t + 0xc));
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let c = contrato(read_usize(0xae1050), pessoa);
@@ -1749,7 +1751,7 @@ unsafe fn cpq4_lados(t: usize) -> (usize, usize, usize, usize) {
     (pessoa, c, vendedor, read_usize(0xae23b4).wrapping_add(read_usize(t + 8).wrapping_mul(0x245)))
 }
 
-unsafe fn cpq4_transferencia(this: usize, t: usize, gravar: bool) {
+pub(crate) unsafe fn cpq4_transferencia(this: usize, t: usize, gravar: bool) {
     let (pessoa, c, vendedor, comprador) = cpq4_lados(t);
     *(0xae1080 as *mut usize) = c;
     let mut e = cpq4_entrada();
@@ -1883,14 +1885,14 @@ unsafe fn cpq4_transferencia(this: usize, t: usize, gravar: bool) {
 /// da pessoa (+0x3d): a maior venda (+0x25..+0x49 se passa +0x3d), as vendas (+0xa2), a receita (+0xac), os recebidos
 /// (+0xa0) e o valor deles (+0xa4). Os históricos (tipos 0x64 compra, 0x65 venda, 0x66 transferência) do técnico do
 /// comprador, do vendedor, da pessoa e dos jogadores da troca, no arquivo (0x58e340).
-unsafe extern "thiscall" fn registrar_a_transferencia(this: usize, t: usize) {
+pub(crate) unsafe extern "thiscall" fn registrar_a_transferencia(this: usize, t: usize) {
     cpq4_transferencia(this, t, true)
 }
 
 /// Comparador: lado a lado pela global [0xae1080], o estado do sorteador (o valor da oferta pode pedir a avaliação), a
 /// lista da troca (o cursor) e os registros dos dois técnicos (criados antes só quando a original os pede); a cópia
 /// sem os históricos em arquivo, que a original já gravou, e sem contar os sorteios.
-unsafe extern "thiscall" fn comparar_registrar_a_transferencia(this: usize, t: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_registrar_a_transferencia(this: usize, t: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1054);
     let (pessoa, _, vendedor, comprador) = cpq4_lados(t);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -1912,7 +1914,7 @@ unsafe extern "thiscall" fn comparar_registrar_a_transferencia(this: usize, t: u
 }
 
 /// A entrada da pessoa: o clube (+8), o tipo (+0xc), a competição ou −1 (+0xd) e a fase com sinal (+0x11).
-unsafe fn cpq4_entrada_da_fase(clube: usize, tipo: u8, comp: usize, fase: u32) -> [u8; 0x40] {
+pub(crate) unsafe fn cpq4_entrada_da_fase(clube: usize, tipo: u8, comp: usize, fase: u32) -> [u8; 0x40] {
     let mut e = cpq4_entrada();
     cpq4_datar(e.as_mut_ptr());
     cpq4_por(&mut e, 8, cpq4_i(clube));
@@ -1923,7 +1925,7 @@ unsafe fn cpq4_entrada_da_fase(clube: usize, tipo: u8, comp: usize, fase: u32) -
 }
 
 /// Na competição de seleção guardada (0x76d940 de [0xb74318]), as convocações da seleção para ela acabam (0x774f90).
-unsafe fn cpq4_fim_das_convocacoes(clube: usize, comp: usize) {
+pub(crate) unsafe fn cpq4_fim_das_convocacoes(clube: usize, comp: usize) {
     let especial: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
     if especial(read_usize(0xb74318), comp) != 0 {
         crate::comparacao::ramo("cpq_4 fim das convocacoes");
@@ -1939,7 +1941,7 @@ unsafe fn cpq4_fim_das_convocacoes(clube: usize, comp: usize) {
 /// [pt] { 0x86c000 } (thiscall, ret 0x14, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_knocked_out_record(clube,
 /// comp, fase, rodada, _)`: o histórico do técnico (+0xcf; tipo 4: clube, competição ou −1, a fase com sinal e a rodada
 /// base 0x4b0870) e o fim das convocações da seleção na competição guardada. Clube nulo: a caixa "Error" (linha 0x73b).
-unsafe extern "thiscall" fn registrar_a_eliminacao(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, _x: u32) {
+pub(crate) unsafe extern "thiscall" fn registrar_a_eliminacao(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, _x: u32) {
     if clube == 0 {
         return aviso_em(0xa83b78, 0x73b);
     }
@@ -1955,7 +1957,7 @@ unsafe extern "thiscall" fn registrar_a_eliminacao(this: usize, clube: usize, co
 
 // ponytail: o histórico vai para o arquivo e as convocações acabam (não rodam duas vezes) e a cópia sem eles não mexe
 // em nada: só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_registrar_a_eliminacao(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, x: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_registrar_a_eliminacao(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, x: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(1055)(this, clube, comp, fase, rodada, x)
 }
 
@@ -1965,7 +1967,7 @@ unsafe extern "thiscall" fn comparar_registrar_a_eliminacao(this: usize, clube: 
 /// [pt] { 0x86c1d0 } (thiscall, ret 0x10, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_failed_to_qualify_record(
 /// clube, comp, fase, _)`: o histórico do técnico (tipo 7: clube, competição ou −1, a fase com sinal) e o fim das
 /// convocações da seleção na competição guardada. Clube nulo: a caixa "Error" (linha 0x768).
-unsafe extern "thiscall" fn registrar_a_nao_classificacao(this: usize, clube: usize, comp: usize, fase: u32, _x: u32) {
+pub(crate) unsafe extern "thiscall" fn registrar_a_nao_classificacao(this: usize, clube: usize, comp: usize, fase: u32, _x: u32) {
     if clube == 0 {
         return aviso_em(0xa83b78, 0x768);
     }
@@ -1978,42 +1980,42 @@ unsafe extern "thiscall" fn registrar_a_nao_classificacao(this: usize, clube: us
 }
 
 // ponytail: como a eliminação: só a original.
-unsafe extern "thiscall" fn comparar_registrar_a_nao_classificacao(this: usize, clube: usize, comp: usize, fase: u32, x: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_registrar_a_nao_classificacao(this: usize, clube: usize, comp: usize, fase: u32, x: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(1056)(this, clube, comp, fase, x)
 }
 
 // ---------- 251a leva: os pontos dos técnicos: a virada do mês e do ano, o fim da temporada da competição e o técnico do mês (staff_records.cpp) ----------
 
 
-unsafe fn cpo3_i(a: usize) -> i32 {
+pub(crate) unsafe fn cpo3_i(a: usize) -> i32 {
     core::ptr::read_unaligned(a as *const i32)
 }
 
 
-unsafe fn cpo3_por(a: usize, v: usize) {
+pub(crate) unsafe fn cpo3_por(a: usize, v: usize) {
     core::ptr::write_unaligned(a as *mut usize, v);
 }
 
 /// O registro de pontos de cada técnico (Staff_Records +8): 0xd2 bytes por pessoa que não é jogador ([0xae2368]) e
 /// pelos 16 humanos. +0x86 id da pessoa (−1 vazio), +0xb6 pontos do ano, +0xba/+0xbe pontos na liga e na copa (+0xc2 e
 /// +0xc6 as competições deles, −1 sem), +0xca/+0xce os do mês.
-const CPO3_REGISTRO: usize = 0xd2;
+pub(crate) const CPO3_REGISTRO: usize = 0xd2;
 
-unsafe fn cpo3_quantos() -> i32 {
+pub(crate) unsafe fn cpo3_quantos() -> i32 {
     cpo3_i(0xae2368).wrapping_add(0x10)
 }
 
-unsafe fn cpo3_registro(this: usize, k: i32) -> usize {
+pub(crate) unsafe fn cpo3_registro(this: usize, k: i32) -> usize {
     read_usize(this + 8).wrapping_add((k as usize).wrapping_mul(CPO3_REGISTRO))
 }
 
 /// A pessoa pelo id (registro de 0x6e bytes em [0xae23bc]; −1 dá o registro antes da tabela, como na original).
-unsafe fn cpo3_pessoa(id: usize) -> usize {
+pub(crate) unsafe fn cpo3_pessoa(id: usize) -> usize {
     read_usize(0xae23bc).wrapping_add(id.wrapping_mul(0x6e))
 }
 
 /// O mês da data (0x54cfb0, o al com sinal).
-unsafe fn cpo3_mes(data: usize) -> i16 {
+pub(crate) unsafe fn cpo3_mes(data: usize) -> i16 {
     let mes: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_DATE_GET_MONTH);
     mes(data) as u8 as i8 as i16
 }
@@ -2026,7 +2028,7 @@ unsafe fn cpo3_mes(data: usize) -> i16 {
 /// (+2) da data não são os guardados (+0x14 mês, +0x16 ano), zera os pontos do mês (+0xca, +0xce) de todos os
 /// registros e guarda o mês e o ano novos. No primeiro dia do ano (dia +0 = 0) passa os pontos do ano (+0xb6) de cada
 /// registro com pessoa (+0x86) ao hall da fama (0x5ef270 em [0xb5ded8]) e os zera.
-unsafe extern "thiscall" fn pontos_dos_tecnicos_no_dia(this: usize, data: usize) {
+pub(crate) unsafe extern "thiscall" fn pontos_dos_tecnicos_no_dia(this: usize, data: usize) {
     if cpo3_mes(data) as i32 != read_i16(this + 0x14) as u16 as i32 || read_i16(data + 2) != read_i16(this + 0x16) {
         crate::comparacao::ramo("cpo_3 virada do mes");
         let base = read_usize(this + 8);
@@ -2065,7 +2067,7 @@ unsafe extern "thiscall" fn pontos_dos_tecnicos_no_dia(this: usize, data: usize)
 /// registro: liga (+0xc2) da competição: soma a copa (+0xbe) se ela também é dessa competição (+0xc6 = −1, +0xbe = 0),
 /// passa os pontos (+0xba) ao hall da fama (0x5ef330) se a competição guarda (+0x11c), zera e +0xc2 = −1; só a copa da
 /// competição: passa +0xbe, zera e +0xc6 = −1.
-unsafe extern "thiscall" fn pontos_dos_tecnicos_no_fim_da_competicao(this: usize, entrada: usize) {
+pub(crate) unsafe extern "thiscall" fn pontos_dos_tecnicos_no_fim_da_competicao(this: usize, entrada: usize) {
     let p = read_usize(entrada + 4);
     let pela_global = p != 0 && read_usize(p) == read_usize(KEY_CONTINENT_EUROPE);
     if !pela_global && read_usize(entrada) == 0 {
@@ -2112,7 +2114,7 @@ unsafe extern "thiscall" fn pontos_dos_tecnicos_no_fim_da_competicao(this: usize
 /// bytes, conta +0x3e) com técnico (+0xcf) no clube (+0x39) desde duas semanas atrás (0x54cab0 da data do jogo; ano
 /// +0x40 sem sinal, dia +0x3e com sinal), o de mais pontos no mês (+0xce do registro 0x86f5b0, criado se falta), só
 /// acima de 0. Devolve o técnico ou 0.
-unsafe extern "thiscall" fn tecnico_do_mes_na_liga(this: usize, indice: i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn tecnico_do_mes_na_liga(this: usize, indice: i32) -> usize {
     let liga = read_usize(read_usize(0xadadfc).wrapping_add((indice as usize).wrapping_mul(4)));
     if *((liga + 0x43) as *const u8) != 2 {
         aviso_em(0xa83b78, 0x104e);
@@ -2154,7 +2156,7 @@ unsafe extern "thiscall" fn tecnico_do_mes_na_liga(this: usize, indice: i32) -> 
 
 /// Comparador: os pontos vão ao hall da fama (0x5ef270, soma): roda só a original e confere o plano: na virada, os pontos
 /// do mês zerados e o mês e o ano guardados; no primeiro dia do ano, os pontos do ano zerados.
-unsafe extern "thiscall" fn comparar_pontos_dos_tecnicos_no_dia(this: usize, data: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_pontos_dos_tecnicos_no_dia(this: usize, data: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(973);
     let virada = cpo3_mes(data) as i32 != read_i16(this + 0x14) as u16 as i32 || read_i16(data + 2) != read_i16(this + 0x16);
     let ano = read_i16(data) == 0;
@@ -2178,7 +2180,7 @@ unsafe extern "thiscall" fn comparar_pontos_dos_tecnicos_no_dia(this: usize, dat
 
 /// Comparador: os pontos vão ao hall da fama (0x5ef330, soma): roda só a original e confere o plano feito antes: os
 /// quatro campos (+0xba, +0xbe, +0xc2, +0xc6) de cada registro.
-unsafe extern "thiscall" fn comparar_pontos_dos_tecnicos_no_fim_da_competicao(this: usize, entrada: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_pontos_dos_tecnicos_no_fim_da_competicao(this: usize, entrada: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(974);
     let p = read_usize(entrada + 4);
     if !(p != 0 && read_usize(p) == read_usize(KEY_CONTINENT_EUROPE)) && read_usize(entrada) == 0 {
@@ -2213,7 +2215,7 @@ unsafe extern "thiscall" fn comparar_pontos_dos_tecnicos_no_fim_da_competicao(th
 }
 
 /// Comparador: pelo valor (o registro 0x86f5b0 criado pela original já existe para a cópia).
-unsafe extern "thiscall" fn comparar_tecnico_do_mes_na_liga(this: usize, indice: i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_tecnico_do_mes_na_liga(this: usize, indice: i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> usize>(975);
     let liga = read_usize(read_usize(0xadadfc).wrapping_add((indice as usize).wrapping_mul(4)));
     if *((liga + 0x43) as *const u8) != 2 {

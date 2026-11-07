@@ -1,3 +1,5 @@
+use super::*;
+
 // Unaligned memory access for the game's records, one function per type (stage 4 of the reorganisation:
 // they replace the copies each batch item used to carry).
 // [pt] Acesso à memória dos registros do jogo, sem alinhamento, uma função por tipo (etapa 4 da reorganização:

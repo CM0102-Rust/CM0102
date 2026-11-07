@@ -1,17 +1,19 @@
+use super::*;
+
 // ---------- 265a leva: o save dos históricos: o histórico dos clubes, as estatísticas dos árbitros e as estatísticas simuladas (club_history.cpp, officials_manager.cpp, simulated_stats.cpp) ----------
 
 
-unsafe fn cpx7_abrir(save: usize, nome: usize) -> usize {
+pub(crate) unsafe fn cpx7_abrir(save: usize, nome: usize) -> usize {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
     abrir_item(save, nome, 1, 0x16, 4)
 }
 
-unsafe fn cpx7_gravar(dados: usize, tamanho: u32, quantos: u32, z: usize) -> u32 {
+pub(crate) unsafe fn cpx7_gravar(dados: usize, tamanho: u32, quantos: u32, z: usize) -> u32 {
     let gravar_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
     gravar_item(dados, tamanho, quantos, z)
 }
 
-unsafe fn cpx7_fechar(z: &mut usize) {
+pub(crate) unsafe fn cpx7_fechar(z: &mut usize) {
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
     fechar_item(z);
 }
@@ -23,7 +25,7 @@ unsafe fn cpx7_fechar(z: &mut usize) {
 /// [pt] { 0x443f50 } (thiscall, ret 4, club_history.cpp): `Club_History::save(save)`: grava no item `club history.dat` a
 /// quantidade (+0xc, u32) e os registros de 0x10 bytes de [+8], e devolve 1. Sem contêiner: a caixa "Error"
 /// (club_history.cpp 0x329) e 0; erro ao abrir ou gravar: a caixa (0x331, 0x338, 0x340) e o jogo para (`erro_em`).
-unsafe extern "thiscall" fn gravar_historico_dos_clubes(this: usize, save: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn gravar_historico_dos_clubes(this: usize, save: usize) -> u32 {
     const FONTE: usize = 0x98b644;
     crate::comparacao::ramo("cpx_7 gravar historico dos clubes");
     if save == 0 {
@@ -45,13 +47,13 @@ unsafe extern "thiscall" fn gravar_historico_dos_clubes(this: usize, save: usize
 }
 
 /// Comparador da 0x443f50: só a original.
-unsafe extern "thiscall" fn comparar_gravar_historico_dos_clubes(this: usize, save: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_gravar_historico_dos_clubes(this: usize, save: usize) -> u32 {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
     orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1503)(this, save)
 }
 
 /// A caixa de erro do officials_manager.cpp na linha `linha`, fechando o item; devolve 0.
-unsafe fn cpx7_falha_dos_arbitros(linha: u32, z: &mut usize) -> u8 {
+pub(crate) unsafe fn cpx7_falha_dos_arbitros(linha: u32, z: &mut usize) -> u8 {
     aviso_em(0xa6a22c, linha);
     cpx7_fechar(z);
     0
@@ -67,7 +69,7 @@ unsafe fn cpx7_falha_dos_arbitros(linha: u32, z: &mut usize) -> u8 {
 /// nações [0xae2350], os registros de 0x102 bytes de [+0xc] (um por nação) e um byte por árbitro de [+8]; devolve 1
 /// (no byte baixo). Sem contêiner ou erro ao abrir: a caixa "Error" (officials_manager.cpp 0x142, 0x14a) e 0; sem
 /// árbitros ou erro ao gravar: a caixa (0x150, 0x156, 0x15c, 0x164, 0x16c, 0x174), fecha o item e 0.
-unsafe extern "thiscall" fn gravar_estatisticas_dos_arbitros(this: usize, save: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn gravar_estatisticas_dos_arbitros(this: usize, save: usize) -> u8 {
     const FONTE: usize = 0xa6a22c;
     let arbitros = || *(0xae2390 as *const u32);
     let nacoes = || *(0xae2350 as *const u32);
@@ -104,7 +106,7 @@ unsafe extern "thiscall" fn gravar_estatisticas_dos_arbitros(this: usize, save: 
 }
 
 /// Comparador da 0x79bb80: só a original.
-unsafe extern "thiscall" fn comparar_gravar_estatisticas_dos_arbitros(this: usize, save: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn comparar_gravar_estatisticas_dos_arbitros(this: usize, save: usize) -> u8 {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
     orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1504)(this, save)
 }
@@ -116,7 +118,7 @@ unsafe extern "thiscall" fn comparar_gravar_estatisticas_dos_arbitros(this: usiz
 /// [pt] { 0x84c680 } (thiscall, ret 4, simulated_stats.cpp): `SimulatedStats::save(save)`: grava no item
 /// `simulated_stats.dat` a quantidade (+0, u32) e os registros de 0x44 bytes de [+4]. Erro ao abrir ou gravar: a caixa
 /// "Error" (simulated_stats.cpp 0x209, 0x210, 0x218), sem fechar o item. Não confere o contêiner nulo.
-unsafe extern "thiscall" fn gravar_estatisticas_simuladas(this: usize, save: usize) {
+pub(crate) unsafe extern "thiscall" fn gravar_estatisticas_simuladas(this: usize, save: usize) {
     const FONTE: usize = 0xa8278c;
     crate::comparacao::ramo("cpx_7 gravar estatisticas simuladas");
     let mut z = cpx7_abrir(save, 0xa827c0);
@@ -136,7 +138,7 @@ unsafe extern "thiscall" fn gravar_estatisticas_simuladas(this: usize, save: usi
 }
 
 /// Comparador da 0x84c680: só a original.
-unsafe extern "thiscall" fn comparar_gravar_estatisticas_simuladas(this: usize, save: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_gravar_estatisticas_simuladas(this: usize, save: usize) {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
     orig::<unsafe extern "thiscall" fn(usize, usize)>(1505)(this, save)
 }

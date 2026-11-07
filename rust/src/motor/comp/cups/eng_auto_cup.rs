@@ -1,16 +1,18 @@
+use super::*;
+
 // ---------- 283a leva: o Troféu da Liga inglesa (LDV Vans Trophy): os 56 clubes das duas chaves (Norte e Sul), a fase das chaves e a fase seguinte (eng_auto_cup.cpp) ----------
 
 
 
 
 /// O clube `c` está na competição de id [`g`] (+0x57 a divisão, ponteiro para o registro; +0 o id)?
-unsafe fn cqs5_na(c: usize, g: usize) -> bool {
+pub(crate) unsafe fn cqs5_na(c: usize, g: usize) -> bool {
     let l = read_u32_as_usize(c + 0x57);
     l != 0 && read_u32_as_usize(l) == read_u32_as_usize(g)
 }
 
 /// Põe o clube `c` na vaga `k` da lista (+0xb2, relida a cada vez) e conta.
-unsafe fn cqs5_por(this: usize, k: &mut i32, c: usize) {
+pub(crate) unsafe fn cqs5_por(this: usize, k: &mut i32, c: usize) {
     *k += 1;
     write_u32_from_usize(read_u32_as_usize(this + 0xb2) + (*k as usize - 1) * 4, c);
 }
@@ -30,7 +32,7 @@ unsafe fn cqs5_por(this: usize, k: &mut i32, c: usize) {
 ///    -> cdecl; sorteia), e deles os primeiros que faltam.
 /// Cheia, a lista é ordenada pela latitude da cidade do estádio (qsort 0x945333 com 0x53fd40) e cada metade (a do Norte e
 /// a do Sul [inferência]) pela reputação, da menor para a maior (qsort com 0x4b0810); devolve 1. Sem encher, 0.
-unsafe fn cqs5_selecao(this: usize) -> u32 {
+pub(crate) unsafe fn cqs5_selecao(this: usize) -> u32 {
     write_u32_from_usize(this + 0xb6, 0x38);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0xe0);
@@ -191,14 +193,14 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
 /// nela pela categoria, 6 ou menos primeiro; senão até 30 da Conference ou outros ingleses fora da divisão genérica,
 /// ordenados pela reputação e com os melhores embaralhados); a lista é dividida em Norte e Sul pela latitude da cidade
 /// do estádio e cada metade vai da menor reputação para a maior
-unsafe extern "thiscall" fn cqs5_trofeu_clubes(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cqs5_trofeu_clubes(this: usize) -> u32 {
     cqs5_selecao(this)
 }
 
 /// Lado a lado a partir do mesmo estado (o sorteador, +0xb6, [0xb67a34]); a original deixa a lista dela em +0xb2, a cópia
 /// faz a sua (sem contar os sorteios), comparada nas +0xb6 vagas e liberada. Quando a original não acha o rebaixado (o
 /// caso em que ela lê a dword sem valor da pilha), só a original.
-unsafe extern "thiscall" fn comparar_cqs5_trofeu_clubes(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs5_trofeu_clubes(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2030);
     let base = read_u32_as_usize(0xae23b4);
     let tem_rebaixado = (0..read_u32_as_usize(0xae235c) as i32).any(|i| {
@@ -251,7 +253,7 @@ unsafe extern "thiscall" fn comparar_cqs5_trofeu_clubes(this: usize) -> u32 {
 /// thiscall, ret 0x3c: a copa, +0x3e (word), o vetor, as rodadas (word), +4, a tabela, o ano +0x40 (word), 0, 1, o extra
 /// (word), +0x51 (byte), 0, 0, 0, sem sementes; os words e bytes vão com lixo em cima, que o construtor não lê) em
 /// [+0xc][0]; o vetor e a tabela liberados (0x9452ca). Sem fase, a caixa da linha 0x300; com ela, +0x30 = 0.
-unsafe extern "thiscall" fn cqs5_trofeu_fase_das_chaves(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqs5_trofeu_fase_das_chaves(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let times = alocar(((read_i16(this + 0x3e) as i32) << 2) as u32);
@@ -288,7 +290,7 @@ unsafe extern "thiscall" fn cqs5_trofeu_fase_das_chaves(this: usize) {
 }
 
 /// Só a original (aloca a fase), conferindo o plano: a fase em [+0xc][0] e +0x30 = 0.
-unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_das_chaves(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_das_chaves(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2031);
     o(this);
     let f = read_u32_as_usize(read_u32_as_usize(this + 0xc));
@@ -302,7 +304,7 @@ unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_das_chaves(this: usize) {
 /// [pt] { 0x56bc50 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual +0x28): `EngAutoCup::advance_stage()`: na última fase
 /// (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x314 e nada mais; senão +0x30 sobe um e, ao chegar a 1 (o fim das
 /// chaves), monta a final (EngAutoCup::create_final_stage 0x56bce0, call direto com o ecx da copa -> thiscall, ret 0).
-unsafe extern "thiscall" fn cqs5_trofeu_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqs5_trofeu_fase_seguinte(this: usize) {
     let fase = read_u32_as_usize(this + 0x30) as i32;
     if fase >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x9c4180, 0x314);
@@ -317,7 +319,7 @@ unsafe extern "thiscall" fn cqs5_trofeu_fase_seguinte(this: usize) {
 }
 
 /// Só a original (a final aloca e sorteia), conferindo o plano: +0x30 sobe um fora da última fase e fica na última.
-unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_seguinte(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2032);
     let antes = read_u32_as_usize(this + 0x30) as i32;
     let ultima = antes >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
@@ -333,7 +335,7 @@ unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_seguinte(this: usize) {
 
 /// O primeiro clube da lista de inscritos `l` (entradas de 6 bytes: +0 o clube, +5 a situação) com a situação `s`, entre
 /// as `n` primeiras (n = +0x3e da copa, word com sinal); sem ele, None.
-unsafe fn cqs6_vivo(l: usize, n: i32, s: u8) -> Option<usize> {
+pub(crate) unsafe fn cqs6_vivo(l: usize, n: i32, s: u8) -> Option<usize> {
     (0..n.max(0) as usize).find(|&i| *((l + i * 6 + 5) as *const u8) == s).map(|i| read_u32_as_usize(l + i * 6))
 }
 
@@ -351,7 +353,7 @@ unsafe fn cqs6_vivo(l: usize, n: i32, s: u8) -> Option<usize> {
 /// (word), 1, 1, o extra (word), 0x14, 0, 0, 0, sem sementes) em [+0xc][1]; a tabela das rodadas liberada (0x9452ca). Sem
 /// fase, a caixa da linha 0x35a (o vetor fica, como na original). Com ela, o sorteio da rodada (Cup::draw_round 0x51c410:
 /// push 0; mov ecx, fase -> thiscall, ret 4) e o vetor liberado.
-unsafe extern "thiscall" fn cqs6_trofeu_final(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqs6_trofeu_final(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let l = alocar(8);
@@ -392,7 +394,7 @@ unsafe extern "thiscall" fn cqs6_trofeu_final(this: usize) {
 
 /// Só a original (aloca a fase e sorteia), conferindo o plano: a fase em [+0xc][1] (com o vetor dos dois finalistas
 /// achados antes, quando há fase).
-unsafe extern "thiscall" fn comparar_cqs6_trofeu_final(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs6_trofeu_final(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(2033);
     o(this);
     let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4);
@@ -414,7 +416,7 @@ unsafe extern "thiscall" fn comparar_cqs6_trofeu_final(this: usize) {
 /// da última rodada (+0x3c − 1) para a primeira, tantos clubes (os seguintes da metade, a partir do 2º) quantos a rodada
 /// tem em +0x1a da tabela das rodadas (+0xa3, 0x68 bytes por rodada), com as posições 3, 5, 7... (a original empurra o
 /// dword do byte da posição com lixo da pilha em cima; a 0x4a2540 só lê o byte). O vetor é liberado.
-unsafe extern "thiscall" fn cqs6_trofeu_classificacao(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cqs6_trofeu_classificacao(this: usize) {
     if read_u32_as_usize(this + 8) == 0 {
         return aviso_em(0x9c4180, 0x3bb);
     }
@@ -473,7 +475,7 @@ unsafe extern "thiscall" fn cqs6_trofeu_classificacao(this: usize) {
 }
 
 // ponytail: grava nas estatísticas da copa (Comp_Stats, que acha ou acrescenta a entrada do clube: aloca); só a original
-unsafe extern "thiscall" fn comparar_cqs6_trofeu_classificacao(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_cqs6_trofeu_classificacao(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(2034)(this)
 }
 
