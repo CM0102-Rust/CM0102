@@ -4,7 +4,8 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 
 - **Responda sempre em português (Brasil).**
 - **Wiki primeiro:** leia `wiki/index.md` antes de trabalhar; ao fim da sessão, atualize `wiki/index.md` (estado) e registre em `wiki/log.md`.
-- **Documentação bilíngue:** todo `.md` do projeto tem a versão em inglês ao lado (`.en.md`). Ao criar ou mudar um, atualize o par no mesmo commit. O português é o original; o código e os comentários no código seguem em português.
+- **Documentação bilíngue:** todo `.md` do projeto tem a versão em inglês ao lado (`.en.md`). Ao criar ou mudar um, atualize o par no mesmo commit. O português é o original.
+- **Língua do código (07/11/2026, Lucas):** o código que vai ser público fica em inglês (Rust, scripts, README; commits em inglês daqui em diante). O cabeçalho de cada rotina e de cada módulo é bilíngue (inglês primeiro, `[pt]` embaixo), gerado do `DOCS` como fonte única; os comentários curtos no corpo, só em inglês. Os `.md` seguem bilíngues com o português original; wiki, log e conversa em português. O código antigo e as levas pendentes entram como estão e são traduzidos na reorganização (etapa 4). Itens novos da fila: [docs/COMO_ESCREVER_UM_ITEM.md](docs/COMO_ESCREVER_UM_ITEM.md).
 - **Documentação em dia a cada commit:** o estado (README, wiki, PROJETO, PLACAR, ROTINAS) e as instruções (este arquivo, a estrutura, as ferramentas) acompanham cada leva; nada fica falando de uma leva antiga.
 - Leitura obrigatória: `docs/DESCOMPILACAO.md` (tudo o que se sabe do binário) e `docs/COMO_CONTINUAR.md` (o ciclo de uma leva do motor).
 

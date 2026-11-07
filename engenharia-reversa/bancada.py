@@ -45,7 +45,7 @@ def sincronizar(k):
     if not os.path.isdir(os.path.join(b, 'jogo_testes')):
         # a cópia limpa do jogo de testes, sem os arquivos de trabalho (game.cfg conferido pelo simular.py)
         espelhar(os.path.join(RAIZ, 'jogo_testes'), os.path.join(b, 'jogo_testes'))
-    print('bancada %d sincronizada: %s' % (k, b))
+    print('bancada %d sincronizada: %s' % (k, b), flush=True)
 
 
 def cadeia(k, n, data=None):
@@ -54,19 +54,20 @@ def cadeia(k, n, data=None):
     # as levas ainda não integradas na principal (até a N, em ordem): integra só na bancada (a primeira rotina de cada
     # uma já no motor = integrada); assim a N+1 roda antes de a N ser publicada
     import re
-    for k in range(n - 5, n + 1):
-        p = os.path.join(b, 'levas', str(k), 'integrar.py')
+    for lv in range(n - 5, n + 1):  # lv, não k: k é a bancada
+        p = os.path.join(b, 'levas', str(lv), 'integrar.py')
         if not os.path.exists(p):
             continue
         src = open(os.path.join(b, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
         primeira = re.search(r"\('\w+', (\d+), \[", open(p, encoding='utf-8').read())
         if primeira and ('endereco: %#x,' % int(primeira.group(1))) not in src:
-            print('integrando a %d' % k, flush=True)
+            print('integrando a %d' % lv, flush=True)
             subprocess.run([sys.executable, p], check=True)
     r = subprocess.run(['cargo', 'build', '--release'], cwd=os.path.join(b, 'rust'), capture_output=True, text=True)
     if r.returncode:
         sys.exit('cargo falhou na bancada %d:\n%s' % (k, r.stderr[-1500:]))
     shutil.copy2(os.path.join(b, 'rust', 'target', 'i686-pc-windows-msvc', 'release', 'ddraw.dll'), os.path.join(b, 'jogo_testes'))
+    print('cadeia da %d rodando: acompanhe %s' % (n, os.path.join(b, 'levas', str(n), 'cadeia.txt')), flush=True)
     amb = dict(os.environ, CM_VAGAS=os.environ.get('CM_VAGAS', '2'))
     subprocess.run([BASH, os.path.join(b, 'engenharia-reversa', 'cadeia.sh').replace('\\', '/'), str(n)] + ([data] if data else []), env=amb)
     shutil.copy2(os.path.join(b, 'levas', str(n), 'cadeia.txt'), os.path.join(RAIZ, 'levas', str(n), 'cadeia.txt'))

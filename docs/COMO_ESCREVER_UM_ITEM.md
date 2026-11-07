@@ -1,0 +1,47 @@
+*[English version](COMO_ESCREVER_UM_ITEM.en.md).*
+
+# Como escrever um item da fila
+
+Um item é um pacote de até 3 rotinas portadas, escrito antes da hora em `levas/fila/<prefixo>_<n>/` e juntado numa leva pelo `fila.py` (o formato dos arquivos está no cabeçalho de [`engenharia-reversa/fila.py`](../engenharia-reversa/fila.py); o ciclo da leva, em [COMO_CONTINUAR.md](COMO_CONTINUAR.md)). Este guia junta as lições dos briefs dos agentes (outubro e novembro de 2026), para não ter de reescrevê-las a cada rodada.
+
+## Escolher
+
+- **Onde procurar:** `python engenharia-reversa/candidatos.py` (`--simulacao`, `--competicoes`), `docs/cobertura_*.txt`, `docs/MAPA_COMPETICOES.md` e `docs/PLACAR_ARQUIVOS.md`. Prefira rotinas que só chamam o que já é Rust (falta 0 ou 1).
+- **Só o que a carreira de teste exercita, com efeito até 2002-06-01.** Rotina que não roda (contador 0), torneio passageiro (nada lido depois depende dos jogos dele) ou registro que ninguém lê até junho não tem mutação que acuse: o item fica de fora. Item a menos é melhor que item que não roda.
+- **Sem repetir:** nada do `motor.rs` nem de `levas/fila/*`. Reserve criando a pasta com um `rotinas.py` mínimo assim que escolher.
+- **Mapa da comunidade** (`referencias/cm0102-function-map`): entradas "fragment" ou "not a function" são pedaços de outra rotina, não rotinas. Não leia o código da NickDLL do  (licença); só [.md](.md).
+- **Mesmo slot em várias ligas:** juntar o mesmo slot de 3 ligas num item é bom; um ajudante comum com os parâmetros de cada uma serve, desde que cada endereço tenha o seu `Prologo` e seja fiel byte a byte.
+
+## Portar
+
+- **Convenções conferidas no ponto de chamada** (thiscall/stdcall/cdecl, `ret N`); `engenharia-reversa/aridade.py` ajuda. Anote no `rotinas.py`.
+- **Tamanho do que se grava:** a 0x549ef0 grava 8 bytes (a data e o ano bissexto); um local de 4 bytes corrompe a pilha. Use o tamanho que a original escreve.
+- **Embaralhamento e contagens:** confira o número exato de vagas (uma cópia embaralhava 9 e a original 8).
+- **Ordem que a original supõe:** a `init_table_row` portada (0x687430) supõe as linhas em ordem; não a inverta.
+- **Rótulos de campo:** confira em [CAMPOS.md](CAMPOS.md); o que não estiver provado leva "[inferência]".
+- **DOCS:** em cada rotina, a regra em palavras (quantos sobem e descem, datas, vagas, desempate), em português e inglês. É a fonte do glossário e dos cabeçalhos.
+
+## Comparar
+
+- O comparador confere **só o que a rotina garante na saída**. Campo que outra rotina reescreve depois (ex.: a 0x6827d0 reescreve +0xa7) acusa à toa.
+- Quando a rotina não pode rodar duas vezes, roda só a original e o plano é conferido depois (o modelo das `cqt`/`cqk`); os calendários vão lado a lado (a máquina da `cqp_11`: `Cqp11Op`, `cqp11_tabela`, `cqp11_comparar`).
+- Pedir de novo a tabela de rodadas de uma copa mostra a caixa "Cup.cpp 1278": não refaça o plano na comparação.
+
+## Provar (na sua cópia, nunca nas bancadas)
+
+- **Comparação** com `simular.py --modo comparar` (com `--ligas "ENG ESP ITA FRA BRA JPN AUS USA"` nos itens de competições) até a data em que a rotina roda; qualquer `DIVERGENCIA` ou `EXCECAO` barra o item.
+- **Carreiras Rust ×2** com `--repetir 2 --detector` até 2002-06-01: iguais e "detector de lixo: igual".
+- **Mutações** pela carreira até 2002-06-01, com o motor de lances ligado (como o `mutacoes.py` da cadeia; use `--limite 3000`, porque a de 8 ligas passa de 900 s):
+  - mude **quem joga, quem passa ou quem entra**, não só quando;
+  - mutação de data muda **7 dias**: o jogo leva as rodadas ao dia da semana, e 1 ou 2 dias caem no mesmo lugar;
+  - evite a mutação que trava ou derruba o jogo (só é acusada no limite e atrasa a cadeia);
+  - mutação de caminho que não roda nas ligas do teste não serve;
+  - a que escapa da carreira mas é pega pelo comparador da rotina conta como acusada; as outras precisam de explicação, ou o item sai.
+- Testes pesados só pelo `simular.py` (trava do laboratório, `CM_VAGAS`); nunca dois jogos na mesma pasta.
+
+## Entregar
+
+- `PRONTO.txt` com uma linha de prova (ex.: "comparação até 2001-10-01 0 div; Rust x2 iguais; mutações 3/3"). Depois dele, não mexa mais no item.
+- Item que não passa: `FORA.md` dizendo por quê (a próxima rodada lê antes de reaproveitar).
+- Relatório por item: endereços, nomes, comparador, convenções, a regra em uma linha, a prova e as mutações que escaparam.
+- Sem commit; sem mexer em `rust/src` da principal, `levas/<N>`, `ordem.txt` ou `copias/bancada*`. Apague a cópia do jogo e o `target` ao terminar.

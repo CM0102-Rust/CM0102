@@ -6,7 +6,8 @@ Lucas's personal project: Championship Manager 01/02 (3.9.68) reverse-engineered
 
 - **Always answer in Portuguese (Brazil).**
 - **Wiki first:** read `wiki/index.md` before working; at the end of the session, update `wiki/index.md` (state) and record it in `wiki/log.md`.
-- **Bilingual documentation:** every project `.md` has an English version next to it (`.en.md`). When creating or changing one, update its pair in the same commit. Portuguese is the original; the code and the comments in the code stay in Portuguese.
+- **Bilingual documentation:** every project `.md` has an English version next to it (`.en.md`). When creating or changing one, update its pair in the same commit. Portuguese is the original.
+- **Language of the code (07/11/2026, Lucas):** the code that will be public is in English (Rust, scripts, README; commits in English from now on). Each routine's and each module's header is bilingual (English first, `[pt]` below), generated from `DOCS` as the single source; short comments in the body, English only. The `.md` files stay bilingual with Portuguese as the original; wiki, log and conversation in Portuguese. The old code and the pending batches go in as they are and are translated in the reorganisation (stage 4). New queue items: [docs/COMO_ESCREVER_UM_ITEM.en.md](docs/COMO_ESCREVER_UM_ITEM.en.md).
 - **Documentation up to date on every commit:** the state (README, wiki, PROJETO, PLACAR, ROTINAS) and the instructions (this file, the structure, the tools) follow each batch; nothing keeps talking about an old batch.
 - Mandatory reading: `docs/DESCOMPILACAO.md` (everything known about the binary) and `docs/COMO_CONTINUAR.md` (the cycle of a match engine batch).
 

@@ -353,6 +353,16 @@ PALAVRAS = [
 ]
 
 
+# os nomes que faltam vêm do DOCS dos itens da fila (levas/fila/*/rotinas.py): (nome, nome original, ...)
+import glob  # noqa: E402
+import runpy  # noqa: E402
+for _f in sorted(glob.glob(os.path.join(RAIZ, 'levas', 'fila', '*', 'rotinas.py'))):
+    try:
+        for _t in runpy.run_path(_f).get('DOCS', (None, None, []))[2]:
+            EN.setdefault(_t[0], _t[1])
+    except Exception as _e:  # item quebrado não para o glossário
+        print('aviso: DOCS ilegível em', _f, _e)
+
 def gerar(en):
     L = []
     if en:
