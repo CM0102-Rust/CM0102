@@ -185,8 +185,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_team_progress(cup: usize, 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_RECORD_TEAM_PROGRESS);
     let stats = read_usize(cup + 8);
     let club = read_usize(team_entry(cup, team as i16 as i32));
-    let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    let reg = if stats != 0 && club != 0 { search(stats, club) } else { 0 };
+    let reg = if stats != 0 && club != 0 { exe::comp_stats_find_club_entry(stats, club) } else { 0 };
     if reg == 0 {
         return o(cup, team, round); // simplification: no record to look at, original only
     }
@@ -564,12 +563,10 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
         return o(this, data, round);
     }
     let id = read_u32_as_usize(read_u32_as_usize(this + 4));
-    let create: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
-    let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut list = [0u8; 0x10];
     let l = list.as_mut_ptr() as usize;
-    create(l);
+    exe::llist_llist(l);
     let mut expected = [0u8; 8];
     for k in 0..8 {
         expected[k] = read_u8(e + k * 7 + 0x29);
@@ -588,7 +585,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
             f = next(l);
         }
     }
-    destroy(l);
+    exe::llist_destructor_llist(l);
     o(this, data, round);
     if read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + id * 4) == 0 {
         return; // simplification: the cup has left the game; nothing to check
@@ -661,13 +658,12 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_rank_teams(this: usize) {
     v.extend(core::iter::repeat(0).take(0x100));
     let plan = set_final_positions_by_round(this, v.as_ptr(), 0);
     o(this);
-    let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let mut erros = Vec::new();
     for (i, &(c, p)) in plan.iter().enumerate() {
         if c == 0 || plan[i + 1..].iter().any(|x| x.0 == c) {
             continue;
         }
-        let e = search(read_u32_as_usize(this + 8), c);
+        let e = exe::comp_stats_find_club_entry(read_u32_as_usize(this + 8), c);
         if e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != p {
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + comp_stats_club::DANGER_POSITION) as *const u8) as i32 }));
         }

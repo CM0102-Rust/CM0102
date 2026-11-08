@@ -76,8 +76,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_regen_sign_for_club(person:
         SCOREBOARD.record(r == 0, || format!("player_regen_sign_for_club({:x}, {:x}) sem vaga original={}", person, club, r));
         return r;
     }
-    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
+    let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
     let ok = r == 1 && read_i32(club + club::SQUAD + 4 * k) == person as i32 && read_i32(person + staff::CLUB_JOB) == club as i32 && (c == 0 || *((c + 0x3a) as *const u8) == 0);
     SCOREBOARD.record(ok, || format!("player_regen_sign_for_club({:x}, {:x}) vaga {} original={}", person, club, k, r));
     r

@@ -109,9 +109,6 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
 /// órgão (0x55cb60 pela vaga +4) com o mesmo +5 fica com −1 em +6; sem ela, grava a vaga (0x55cb20, tipo +5, −1); o id
 /// da entrada vira −1. No fim compacta as entradas (0x7e9050, nesta leva).
 pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize) {
-    let stored: unsafe extern "thiscall" fn(usize, i32, i8) -> usize = core::mem::transmute(FN_DISCIPLINE_FIND_HELD_BAN);
-    let write: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(FN_DISCIPLINE_SET_SLOT);
-    let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DISCIPLINE_RELEASE_BAN);
     crate::comparison::branch("cpu_10 nova temporada");
     let mut e = read_u32_as_usize(this + 0xb);
     let mut i = 0i32;
@@ -128,7 +125,7 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
                 if *(G_CURRENT_DATE_YEAR as *const u16) as i32 - year >= years {
                     crate::comparison::branch("cpu_10 suspensao velha");
                     // simplification: the original pushes the index with the high 16 bits of the previous edx; 0x556d00 reads only the word.
-                    soltar(read_u32_as_usize(G_DISCIPLINE), id as u32, s as u16 as u32);
+                    exe::discipline_release_ban(read_u32_as_usize(G_DISCIPLINE), id as u32, s as u16 as u32);
                     true
                 } else {
                     false
@@ -136,11 +133,11 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
             };
             if free {
                 let id = read_i32(e);
-                let g = stored(read_u32_as_usize(G_DISCIPLINE), id, *((this + 4) as *const i8));
+                let g = exe::discipline_find_held_ban(read_u32_as_usize(G_DISCIPLINE), id, *((this + 4) as *const i8));
                 if g != 0 && *((g + 5) as *const u8) == *((this + 5) as *const u8) {
                     *((g + 6) as *mut u32) = 0xffff_ffff;
                 } else {
-                    write(read_u32_as_usize(G_DISCIPLINE), read_i32(e), *((this + 4) as *const i8), *((this + 5) as *const u8), 0xffff_ffff);
+                    exe::discipline_set_slot(read_u32_as_usize(G_DISCIPLINE), read_i32(e), *((this + 4) as *const i8), *((this + 5) as *const u8), 0xffff_ffff);
                 }
                 *(e as *mut u32) = 0xffff_ffff;
             } else {
@@ -154,8 +151,7 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
         i += 1;
         e += 0xe;
     }
-    let compactar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_RULINGBODY_COMPACT_ENTRIES);
-    compactar(this);
+    exe::rulingbody_compact_entries(this);
 }
 
 /// Comparador: a original solta suspensões e realoca (não pode rodar duas vezes): só ela roda.
@@ -177,8 +173,6 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
 /// o índice). Conta +0x13 = n, capacidade +0xf = n + 100 e realoca (0x945667) com (n + 100) × 14 bytes; sem memória, a
 /// caixa (linha 0x594) e segue.
 pub(crate) unsafe extern "thiscall" fn compact_entries(this: usize) {
-    let stored: unsafe extern "thiscall" fn(usize, i32, i8) -> usize = core::mem::transmute(FN_DISCIPLINE_FIND_HELD_BAN);
-    let write: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(FN_DISCIPLINE_SET_SLOT);
     let mut target = read_u32_as_usize(this + 0xb);
     let mut source = target;
     let mut n = 0u32;
@@ -187,11 +181,11 @@ pub(crate) unsafe extern "thiscall" fn compact_entries(this: usize) {
         if read_i32(source) != -1 {
             if source != target {
                 core::ptr::copy(source as *const u8, target as *mut u8, 0xe);
-                let g = stored(read_u32_as_usize(G_DISCIPLINE), read_i32(source), *((this + 4) as *const i8));
+                let g = exe::discipline_find_held_ban(read_u32_as_usize(G_DISCIPLINE), read_i32(source), *((this + 4) as *const i8));
                 if g != 0 && *((g + 5) as *const u8) == *((this + 5) as *const u8) {
                     *((g + 6) as *mut u32) = n;
                 } else {
-                    write(read_u32_as_usize(G_DISCIPLINE), read_i32(source), *((this + 4) as *const i8), *((this + 5) as *const u8), n);
+                    exe::discipline_set_slot(read_u32_as_usize(G_DISCIPLINE), read_i32(source), *((this + 4) as *const i8), *((this + 5) as *const u8), n);
                 }
             }
             target += 0xe;

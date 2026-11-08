@@ -14,8 +14,7 @@ pub(crate) unsafe fn zip_write(data: usize, size: u32, how_many: u32, z: usize) 
 
 /// Closes an open archive item (FN_ZCLOSE).
 pub(crate) unsafe fn zip_close(z: &mut usize) {
-    let close_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
-    close_item(z);
+    exe::zclose(z);
 }
 
 /// writes the count (+0xc) and the 0x10-byte records from [+8] into the "club history.dat" item and returns 1; no

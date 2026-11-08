@@ -22,12 +22,11 @@ pub(crate) type FraCfaScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
 pub(crate) unsafe fn fra_cfa_set_league_rounds(t: usize, year: u32, first: i32, table: &[FraCfaScheduleRound]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
-    let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in table.iter().enumerate() {
         let i = first + k as i32;
         data(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, year, 0);
         for (j, &(a, b, c)) in faixas.iter().enumerate() {
-            band(t, i, j as i32, a as i32, b as i32, c as i32, 0);
+            exe::league_round_set_match_slot(t, i, j as i32, a as i32, b as i32, c as i32, 0);
         }
     }
 }
@@ -79,7 +78,6 @@ pub(crate) unsafe fn create_cfa_schedule(this: usize, fase: u32, rodadas: *mut i
 /// saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada: 0x9452ca, cdecl).
 pub(crate) unsafe fn compare_cfa_schedule(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32,
                        original: impl FnOnce() -> usize, copy: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
     let pl2 = if league.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
@@ -92,7 +90,7 @@ pub(crate) unsafe fn compare_cfa_schedule(name: &str, stage: u32, rounds: *mut i
         a == 0 && b == 0
     };
     if b != 0 {
-        soltar(b);
+        exe::crt_free(b);
     }
     SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
     a
@@ -109,7 +107,6 @@ pub(crate) unsafe fn compare_cfa_schedule(name: &str, stage: u32, rounds: *mut i
 /// `written_league_round_bytes`; nas outras as de copa, `eng_cc_cup_written_round_bytes`); a tabela da cópia é solta (0x9452ca, cdecl).
 pub(crate) unsafe fn compare_c1_schedule(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32,
                              original: impl FnOnce() -> usize, copy: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
     let pl2 = if league.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
@@ -127,7 +124,7 @@ pub(crate) unsafe fn compare_c1_schedule(name: &str, stage: u32, rounds: *mut i1
         a == 0 && b == 0
     };
     if b != 0 {
-        soltar(b);
+        exe::crt_free(b);
     }
     SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
     a
@@ -391,13 +388,10 @@ pub(crate) struct BackgroundLeague {
 /// liga segue sem tabela. A lista é um registro local de 72 ou 40 ponteiros; a cópia usa um vetor zerado (a carreira
 /// enche a lista; a original leria lixo da pilha sem clubes bastantes).
 pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &BackgroundLeague) -> usize {
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
-    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FRACFA_SET_UP_RULES);
     let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     let tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(p.tabela);
-    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
     let soltar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
-    base(this);
+    exe::league_league(this);
     write_u32_from_usize(this, p.vtabela);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
     write_u32_from_usize(this + league::STAGE_COUNT, 0);
@@ -405,7 +399,7 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
     write_u32_from_usize(this + 4, comp_record_of_key(p.competicao));
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
     write_u32_from_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
-    if regras(this) == 0 {
+    if exe::fracfa_set_up_rules(this) == 0 {
         show_error_at(p.arquivo, p.linhas[0]);
         return this;
     }
@@ -454,7 +448,7 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
             show_error_at(p.arquivo, p.linhas[1]);
             return this;
         }
-        if jogos(this) == 0 {
+        if exe::league_create_fixtures(this) == 0 {
             show_error_at(p.arquivo, p.linhas[2]);
             return this;
         }
@@ -532,13 +526,11 @@ pub(crate) unsafe fn compare_construct_group_league(name: &str, this: usize, yea
 /// League::~League (0x682300: mov ecx -> thiscall, ret 0).
 pub(crate) unsafe fn destroy_group_league(this: usize, vtabela: usize) {
     let release_table: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let base: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_DESTRUCTOR_LEAGUE);
     write_u32_from_usize(this, vtabela);
     release_table(this, 0);
     let g = read_u32_as_usize(this + league::ROUND_DATES);
     if g != 0 {
-        soltar(g);
+        exe::crt_free(g);
         write_u32_from_usize(this + league::ROUND_DATES, 0);
     }
     if (read_u32_as_usize(this + league::CURRENT_STAGE) as i32) >= 0 {
@@ -557,10 +549,10 @@ pub(crate) unsafe fn destroy_group_league(this: usize, vtabela: usize) {
     }
     let v = read_u32_as_usize(this + league::STAGES);
     if v != 0 {
-        soltar(v);
+        exe::crt_free(v);
         write_u32_from_usize(this + league::STAGES, 0);
     }
-    base(this);
+    exe::league_destructor_league(this);
 }
 
 /// frees the table, the schedule, the stages and their vector and destroys the league
@@ -666,8 +658,7 @@ pub(crate) unsafe fn compare_french_table(name: &str, this: usize, clubs: usize,
 /// vira 14; a pior de 2 a 5 vira 5 e de 14 a 17 vira 17. No play-off (fase 0): as três + 1. No play-out (fase 1): a
 /// melhor 1 vira 14 e 2 vira 16. Noutra fase, como vieram.
 pub(crate) unsafe fn set_c1_club_progress(this: usize, club: usize, stage: u8, current: u8, best: u8, worst: u8) {
-    let find: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    let e = find(read_usize(this + 8), club);
+    let e = exe::comp_stats_find_club_entry(read_usize(this + 8), club);
     let (mut a, mut m, mut p) = (current, best, worst);
     if stage == 0xff {
         m = match m {
@@ -705,8 +696,7 @@ pub(crate) unsafe fn set_c1_club_progress(this: usize, club: usize, stage: u8, c
 /// [pt] O comparador das duas: a entrada é achada antes (a original e a cópia acham a mesma) e as duas rodam lado a lado
 /// nos 3 bytes dela. Sem entrada (a original gravaria no nulo): só a original.
 pub(crate) unsafe fn compare_c1_club_progress(name: &str, this: usize, club: usize, original: impl FnOnce(), copy: impl FnOnce()) {
-    let find: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    let e = find(read_usize(this + 8), club);
+    let e = exe::comp_stats_find_club_entry(read_usize(this + 8), club);
     if e == 0 {
         return original();
     }

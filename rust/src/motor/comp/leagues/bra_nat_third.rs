@@ -31,7 +31,6 @@ pub(crate) unsafe fn stage_leader(this: usize, k: i32) -> usize {
 /// da Série C, em ida e volta.
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: usize) {
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
@@ -53,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: us
         return show_error_at(0x98aba4, 0x392);
     }
     crate::comparison::branch("cqs_4 final");
-    soltar(t);
+    exe::crt_free(t);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 10);
 }
 
@@ -93,19 +92,17 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: us
 /// a virada do Brasil não lê); no fim, o eax do free ou o +0xee (a cópia devolve 0: ninguém lê).
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usize) -> u32 {
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
     liberar_tabela(this, 0);
     let l = read_usize(this + league::ROUND_DATES);
     if l != 0 {
-        free(l);
+        exe::crt_free(l);
         core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut usize, 0);
     }
     let stats = read_usize(this + 8);
     if stats != 0 {
-        let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
-        archive(stats, 1);
+        exe::comp_stats_archive_season_and_reset(stats, 1);
     }
     if (read_usize(this + league::CURRENT_STAGE) as i32) >= 0 {
         let mut i = 0i32;
@@ -122,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
         }
     }
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, -1);
-    free(read_usize(this + league::STAGES));
+    exe::crt_free(read_usize(this + league::STAGES));
     let n = read_usize(this + league::STAGE_COUNT) as i32;
     let a = read_i16(this + league::YEAR);
     core::ptr::write_unaligned((this + league::YEAR) as *mut i16, a.wrapping_add(1));
@@ -134,13 +131,11 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
         show_error_at(0x98aba4, 0x202);
         return 0;
     }
-    let table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_BRANATTHIRD_CREATE_TABLE);
-    if table(this) == 0 {
+    if exe::branatthird_create_table(this) == 0 {
         show_error_at(0x98aba4, 0x209);
         return 0;
     }
-    let games: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
-    if games(this) == 0 {
+    if exe::league_create_fixtures(this) == 0 {
         show_error_at(0x98aba4, 0x20f);
         return 0;
     }
@@ -151,17 +146,15 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
     }
     let expectations: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectations(this);
-    let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
-    renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)); // cqs4: the renewal of the Serie C referees
-    let group: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_BRANATTHIRD_CREATE_GROUP_STAGE);
+    exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)); // cqs4: the renewal of the Serie C referees
     for g in 0..7 {
-        group(this, g);
+        exe::branatthird_create_group_stage(this, g);
     }
     let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
     predicted(this);
     let l = read_usize(this + bra_nat_third::CLUB_LIST);
     if l != 0 {
-        free(l);
+        exe::crt_free(l);
     }
     core::ptr::write_unaligned((this + bra_nat_third::CLUB_LIST) as *mut usize, 0);
     0
@@ -251,7 +244,6 @@ pub(crate) type LeagueStageCtorFn = unsafe extern "thiscall" fn(usize, usize, u3
 pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g: u32, pv: usize) {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let construct: LeagueStageCtorFn = core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -277,8 +269,8 @@ pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g:
         return show_error_at(0x98aba4, 0x487);
     }
     crate::comparison::branch("cqs_3 grupo");
-    soltar(v);
-    soltar(t);
+    exe::crt_free(v);
+    exe::crt_free(t);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, k);
 }
 
@@ -332,7 +324,6 @@ pub(crate) const SECOND_ROUND_SEEDS: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 
 pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
@@ -381,8 +372,8 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
         return show_error_at(0x98aba4, 0x31b);
     }
     crate::comparison::branch("cqs_3 segunda fase");
-    soltar(t);
-    soltar(list);
+    exe::crt_free(t);
+    exe::crt_free(list);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 7);
 }
 
@@ -415,7 +406,6 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
 pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
     let shuffle: unsafe extern "C" fn(*mut usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, *const u8, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -450,7 +440,7 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
         if read_usize(read_usize(this + league::STAGES) + 4 * k as usize) == 0 {
             return show_error_at(0x98aba4, f);
         }
-        soltar(t);
+        exe::crt_free(t);
     }
     crate::comparison::branch("cqs_3 terceira fase");
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 9);
@@ -478,13 +468,12 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
 /// linhas 0..6 (0x687430, a linha num dword limpo). Fonte 0x98aba4. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -> u32 {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let shuffle: unsafe extern "C" fn(usize, i32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 7);
     let old = read_usize(this + bra_nat_third::CLUB_LIST);
     if old != 0 {
-        soltar(old);
+        exe::crt_free(old);
     }
     let list = alloc(0xe0);
     core::ptr::write_unaligned((this + bra_nat_third::CLUB_LIST) as *mut usize, list);

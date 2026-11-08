@@ -46,7 +46,6 @@ pub(crate) unsafe extern "thiscall" fn compare_reassign_squad_schedules(this: us
     if novo != 0 && !(0..0x10).contains(&k) {
         return o(this, manager, old, novo);
     }
-    let squad: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
     let les = read_u32_as_usize(read_u32_as_usize(G_INJURY));
     let mut reg = Vec::new();
     for (clube, antigo_) in [(old, true), (novo, false)] {
@@ -55,7 +54,7 @@ pub(crate) unsafe extern "thiscall" fn compare_reassign_squad_schedules(this: us
         }
         reg.push((clube + club::HAS_LINKED_CLUB, 1));
         let mut v = [0usize; 50];
-        squad(clube, v.as_mut_ptr(), 0);
+        exe::database_collect_club_squad(clube, v.as_mut_ptr(), 0);
         for &p in &v {
             if p == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
                 continue;
@@ -101,10 +100,8 @@ pub(crate) unsafe extern "thiscall" fn compare_update_player_training(this: usiz
     if p == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) || read_u32_as_usize(p + staff::PLAYER) == 0 {
         return o(this, p, skip);
     }
-    let programa: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_PLAYER_SCHEDULE);
-    let find: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(FN_TRAINING_MANAGER_FIND_POSITION_TRAINING);
     let mut q = 0usize;
-    if programa(this, p) == 0 || find(this, p, &mut q) > 0 {
+    if exe::training_manager_get_player_schedule(this, p) == 0 || exe::training_manager_find_position_training(this, p, &mut q) > 0 {
         return o(this, p, skip);
     }
     let f = read_u32_as_usize(p + staff::PLAYER);

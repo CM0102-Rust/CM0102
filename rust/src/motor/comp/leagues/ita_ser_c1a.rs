@@ -114,7 +114,6 @@ pub(crate) const PLAYOUT_ROWS: [usize; 4] = [16, 13, 15, 14]; // cql5: the play-
 pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows: [u32; 3], lista_primeiro: bool) {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let stage_of_cup: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
@@ -152,7 +151,7 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
         return;
     }
     sortear(read_u32_as_usize(read_u32_as_usize(this + league::STAGES)), 0);
-    soltar(gabarito);
+    exe::crt_free(gabarito);
     let (mut rodadas, mut extra) = (0u32, 0u32);
     let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let gabarito = calendario(this, 1, &mut rodadas, &mut extra, 0);
@@ -166,11 +165,11 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
     }
     write_u32_from_usize(read_u32_as_usize(this + league::STAGES) + 4, stage);
     if lista_primeiro {
-        soltar(list);
-        soltar(gabarito);
+        exe::crt_free(list);
+        exe::crt_free(gabarito);
     } else {
-        soltar(gabarito);
-        soltar(list);
+        exe::crt_free(gabarito);
+        exe::crt_free(list);
     }
     if read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + 4) == 0 {
         show_error_at(file, rows[2]);

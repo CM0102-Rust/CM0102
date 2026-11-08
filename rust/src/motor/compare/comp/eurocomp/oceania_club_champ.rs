@@ -94,8 +94,7 @@ pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_select_qualifi
         lo == 0 && lr == 0
     };
     if lr != 0 && lr != lo {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(lr);
+        exe::crt_free(lr);
     }
     SCOREBOARD.record(igual && a == b && list, || format!("oceania_club_champ_select_qualified_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
     a

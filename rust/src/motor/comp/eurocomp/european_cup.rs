@@ -80,15 +80,11 @@ pub(crate) unsafe fn club_nation(club: usize) -> usize {
 ///    europeia do clube (+0x1db) = [0x9cf6f0]; depois as posições previstas da UEFA (método +0x5c dela).
 pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let points: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_UEFASEEDING_ADD_NATION_POINTS);
-    let finances: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
-    let prize: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_FINANCE_ADD_PRIZE_MONEY);
     let send_prize_money_news: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(FN_COMP_SEND_PRIZE_MONEY_NEWS);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let news_of_group: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, *const u8, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -121,7 +117,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
     if n < 0x20 {
         show_error_at(0x9c4900, 0x4ee);
         write_u32_from_usize(this + cup::CURRENT_STAGE, usize::MAX);
-        soltar(list);
+        exe::crt_free(list);
         write_u8(this + cup::RUN_BY_STAGES, 0);
         return;
     }
@@ -211,7 +207,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
         base += 8;
         pote += 1;
     }
-    soltar(list);
+    exe::crt_free(list);
     for metade in 0..2i32 {
         let (start, fim) = (metade * 4, metade * 4 + 4);
         for p in 0..4i32 {
@@ -244,7 +240,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
             points(read_u32_as_usize(G_UEFA_SEEDING), club_nation(c), 1);
             let value = 1_800_000i32; // cqg4: the group stage prize
             crate::comparison::branch("cqg_4 prêmio da fase de grupos");
-            prize(finances(read_u32_as_usize(G_FINANCE_TABLE), c), value);
+            exe::finance_add_prize_money(exe::financetable_get_club_finance(read_u32_as_usize(G_FINANCE_TABLE), c), value);
             send_prize_money_news(this, c, value, 0, -1, 0x449, 0, -2);
         }
         let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
@@ -285,11 +281,11 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
             show_error_at(0x9c4900, 0x5c9);
             return;
         }
-        soltar(table);
+        exe::crt_free(table);
         write_u32_from_usize(this + cup::CURRENT_STAGE, g as usize);
-        news_of_group(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + g as usize * 4));
+        exe::league_send_group_draw_news(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + g as usize * 4));
     }
-    soltar(groups);
+    exe::crt_free(groups);
     let uefa = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) * 4);
     if uefa == 0 {
         show_error_at(0x9c4900, 0x5d8);
@@ -447,7 +443,6 @@ pub(crate) unsafe fn planned_final_positions(this: usize, knockout: usize, nm: i
 /// nos outros, e a 0x4a2540 só grava o byte: a cópia passa o byte limpo) no plano de `planned_final_positions`; o vetor liberado.
 pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let sort: unsafe extern "C" fn(usize, i32) = core::mem::transmute(FN_COMP_UTIL_SORT_CLUBS_BY_STRENGTH);
     let position: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     if read_u32_as_usize(this + 8) == 0 {
@@ -472,14 +467,14 @@ pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
     let (plano, n_mata) = planned_final_positions(this, knockout, nm);
     for (j, &(k, p)) in plano.iter().enumerate() {
         if j == n_mata {
-            soltar(knockout);
+            exe::crt_free(knockout);
         }
         position(read_u32_as_usize(this + 8), read_u32_as_usize(v + k as usize * 4), p as u32);
     }
     if n_mata == plano.len() {
-        soltar(knockout);
+        exe::crt_free(knockout);
     }
-    soltar(v);
+    exe::crt_free(v);
 }
 
 /// Copies a 7-byte group entry (club, same-nation count, first-stage group, winner/runner-up) as the original does.
@@ -553,17 +548,12 @@ pub(crate) unsafe fn copy_group_entry(para: usize, de: usize) {
 pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: u32) {
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let row: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
-    let cards: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_RULINGBODY_RESET_BOOKINGS_FOR_CLUB);
     let points: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_UEFASEEDING_ADD_NATION_POINTS);
-    let finances: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
-    let prize: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_FINANCE_ADD_PRIZE_MONEY);
     let send_prize_money_news: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(FN_COMP_SEND_PRIZE_MONEY_NEWS);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let news_of_group: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, *const u8, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -598,7 +588,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
     sort(w, 0x10, 7, 0x5871e0);
     for i in 0..16 {
         let body = read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(G_DISCIPLINE)).wrapping_add((read_u8(this + cup::DISCIPLINE_INDEX) as i8 as i32 * 4) as usize));
-        cards(body, read_u32_as_usize(e7(w, i)));
+        exe::rulingbody_reset_bookings_for_club(body, read_u32_as_usize(e7(w, i)));
     }
     let r = zerada(0x10, 7);
     if r == 0 {
@@ -679,11 +669,10 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
         }
         if (attempt as u8 as i8) < 0x14 {
             crate::comparison::branch("cqg_6 sorteio de novo");
-            soltar(g);
-            soltar(r);
-            soltar(w);
-            let of_new: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_EUROPEANCUP_DRAW_PHASE2_GROUPS);
-            of_new(this, (attempt as u8).wrapping_add(1) as u32);
+            exe::crt_free(g);
+            exe::crt_free(r);
+            exe::crt_free(w);
+            exe::europeancup_draw_phase2_groups(this, (attempt as u8).wrapping_add(1) as u32);
             return;
         }
         if let Some(v) = (0..16).map(|j| e7(g, j)).find(|&v| read_u32_as_usize(v) == 0) {
@@ -700,7 +689,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
             points(read_u32_as_usize(G_UEFA_SEEDING), club_nation(c), 1);
             let value = 1_200_000i32; // cqg6: the second stage prize
             crate::comparison::branch("cqg_6 prêmio da segunda fase");
-            prize(finances(read_u32_as_usize(G_FINANCE_TABLE), c), value);
+            exe::finance_add_prize_money(exe::financetable_get_club_finance(read_u32_as_usize(G_FINANCE_TABLE), c), value);
             send_prize_money_news(this, c, value, 0, -1, 0x44a, 0, -2);
         }
         let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
@@ -742,14 +731,14 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
             show_error_at(0x9c4900, 0x715);
             return;
         }
-        soltar(table);
+        exe::crt_free(table);
         write_u32_from_usize(this + cup::CURRENT_STAGE, (h + 8) as usize);
-        news_of_group(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + (h + 8) as usize * 4));
+        exe::league_send_group_draw_news(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + (h + 8) as usize * 4));
     }
-    soltar(w);
-    soltar(g);
-    soltar(r);
-    soltar(t);
+    exe::crt_free(w);
+    exe::crt_free(g);
+    exe::crt_free(r);
+    exe::crt_free(t);
     let uefa = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) * 4);
     if uefa == 0 {
         show_error_at(0x9c4900, 0x729);
@@ -818,9 +807,8 @@ pub(crate) unsafe extern "C" fn european_cup_compare_phase2_draw_entries(a: usiz
 ///
 /// [pt] comp_util_scale_by_round (0x4bf850, cdecl(baixo, alto, rodada, rodadas)): a faixa pela rodada, de 0 a 100.
 pub(crate) unsafe fn scale_by_round(low: u32, high: u32, round: i16, rounds: u32) -> u32 {
-    let f: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
     // simplification: the original pushes the round in a register with garbage in the high 16 bits; 0x4bf850 only reads the word.
-    f(low, high, round as u16 as u32, rounds)
+    exe::comp_util_scale_by_round(low, high, round as u16 as u32, rounds)
 }
 
 /// Staff_Records add_qualified_for_round_record for the club.
@@ -828,24 +816,21 @@ pub(crate) unsafe fn scale_by_round(low: u32, high: u32, round: i16, rounds: u32
 /// [pt] Staff_Records::add_qualified_for_round_record (0x86bdd0: thiscall(registros, clube, comp, fase, rodada, peso),
 /// ret 0x14).
 pub(crate) unsafe fn european_cup_add_qualified_record(club: usize, comp: usize, stage: u32, round: u32, weight: u32) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
-    f(eng_second_staff_records(), club, comp, stage, round, weight);
+    exe::staff_records_add_qualified_for_round_record(eng_second_staff_records(), club, comp, stage, round, weight);
 }
 
 /// Staff_Records add_failed_to_qualify_record for the club.
 ///
 /// [pt] Staff_Records::add_failed_to_qualify_record (0x86c1d0: thiscall(registros, clube, comp, fase, _), ret 0x10).
 pub(crate) unsafe fn european_cup_add_failed_to_qualify_record(club: usize, comp: usize, stage: u32, x: u32) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_FAILED_TO_QUALIFY_RECORD);
-    f(eng_second_staff_records(), club, comp, stage, x);
+    exe::staff_records_add_failed_to_qualify_record(eng_second_staff_records(), club, comp, stage, x);
 }
 
 /// Staff_Records add_knocked_out_record for the club.
 ///
 /// [pt] Staff_Records::add_knocked_out_record (0x86c000: thiscall(registros, clube, comp, fase, rodada, _), ret 0x14).
 pub(crate) unsafe fn european_cup_add_knocked_out_record(club: usize, comp: usize, stage: u32, round: u32, x: u32) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
-    f(eng_second_staff_records(), club, comp, stage, round, x);
+    exe::staff_records_add_knocked_out_record(eng_second_staff_records(), club, comp, stage, round, x);
 }
 
 /// Removes the club from its European competition this season (EURO_FLAG +0x1db = -1).
@@ -939,13 +924,11 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
     } else if f == 0xc {
         match d {
             1 => {
-                let title: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_CUP_WINNERS_RECORD);
-                title(eng_second_staff_records(), club, game, end);
+                exe::staff_records_add_cup_winners_record(eng_second_staff_records(), club, game, end);
                 leave_euro_competition(club);
             }
             2 => {
-                let runner_up: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_CUP_RUNNERS_UP_RECORD);
-                runner_up(eng_second_staff_records(), club, game, end);
+                exe::staff_records_add_cup_runners_up_record(eng_second_staff_records(), club, game, end);
                 leave_euro_competition(club);
             }
             0 => {
@@ -1036,10 +1019,9 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     for (k, &(g, l)) in order.iter().enumerate() {
         core::ptr::write_unaligned((list + 4 * k) as *mut usize, second_stage_group_club(this, g, l));
     }
-    let tv: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_RULINGBODY_RESET_BOOKINGS_FOR_CLUB);
     for k in 0..8 {
         let obj = read_usize(read_usize(read_usize(G_DISCIPLINE)) + 4 * (read_u8(this + cup::DISCIPLINE_INDEX) as i8 as i32 as usize));
-        tv(obj, read_usize(list + 4 * k));
+        exe::rulingbody_reset_bookings_for_club(obj, read_usize(list + 4 * k));
     }
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -1056,9 +1038,8 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
         0
     };
     core::ptr::write_unaligned((read_usize(this + cup::STAGES) + 0x30) as *mut usize, stage);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    free(list);
-    free(t);
+    exe::crt_free(list);
+    exe::crt_free(t);
     let stage = read_usize(read_usize(this + cup::STAGES) + 0x30);
     if stage == 0 {
         return show_error_at(0x9c4900, 0x78a);
@@ -1118,8 +1099,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_collect_club_list(this: usiz
         2 => (0x7cf, false),
         3 if core::ptr::read_unaligned((this + cup::CURRENT_STAGE) as *const i32) == 0xb => (0x7e9, false),
         _ => {
-            let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_COMP_COLLECT_CLUB_LIST);
-            return base(this, out, 0);
+            return exe::comp_collect_club_list(this, out, 0);
         }
     };
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -1232,8 +1212,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_collect_entrants(this: usize
     *((this + cup::ENTRANT_CAPACITY) as *mut i16) = 0x47;
     let old = read_usize(this + cup::ENTRANT_BOOK);
     if old != 0 {
-        let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        free(old);
+        exe::crt_free(old);
     }
     let t = european_cup_malloc((read_i16(this + cup::ENTRANT_COUNT) as i32).wrapping_mul(6) as u32);
     core::ptr::write_unaligned((this + cup::ENTRANT_BOOK) as *mut usize, t);
@@ -1338,16 +1317,14 @@ pub(crate) unsafe extern "thiscall" fn european_cup_advance_stage(this: usize) {
 ///
 /// [pt] O registro de finanças do clube (0x5a0590: thiscall(tabela [0xae2a38], clube), ret 4).
 pub(crate) unsafe fn european_cup_club_finance(club: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
-    f(read_usize(G_FINANCE_TABLE), club)
+    exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club)
 }
 
 /// Adds prize money to the finance record (balance, +0xa8 and +0x148).
 ///
 /// [pt] Soma no saldo, em +0xa8 e em +0x148 (0x5999a0: thiscall(finanças, valor), ret 4).
 pub(crate) unsafe fn european_cup_add_prize_money(fin: usize, value: i32) {
-    let f: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_FINANCE_ADD_PRIZE_MONEY);
-    f(fin, value)
+    exe::finance_add_prize_money(fin, value)
 }
 
 /// Adds coefficient points for the nation (UEFASEEDING add_nation_points).
@@ -1425,8 +1402,7 @@ pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize,
     if EUROPEAN_CUP_FIXTURE_DRY_RUN {
         return;
     }
-    let base: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_CUP_PROCESS_FIXTURE);
-    base(this, game, arg);
+    exe::cup_process_fixture(this, game, arg);
 }
 
 /// Address of the club nation's UEFA coefficient word ([G_UEFA_SEEDING] + 18 x national-team +0x1df + 0xf); 0 if
@@ -1440,8 +1416,7 @@ pub(crate) unsafe fn nation_coefficient_word(club: usize) -> usize {
     if table == 0 || nation == 0 {
         return 0;
     }
-    let national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
-    let s = national_team(nation);
+    let s = exe::database_get_national_team(nation);
     if s == 0 {
         return 0;
     }
@@ -1465,8 +1440,7 @@ pub(crate) unsafe fn nation_coefficient_word(club: usize) -> usize {
 /// sinal): 1 e 2 → 1 (p3: 0xd), 3 → 0x11, 4 → 0x19; abaixo de 12: 1 e 2 → 1 (p3: 7), 3 → 9, 4 → 0xd; os outros
 /// códigos e as fases de 12 em diante passam como estão.
 pub(crate) unsafe extern "thiscall" fn european_cup_set_club_progress(this: usize, club: usize, stage: u32, p1: u32, p2: u32, p3: u32) {
-    let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    let e = search(read_usize(this + 8), club);
+    let e = exe::comp_stats_find_club_entry(read_usize(this + 8), club);
     let (stage, p1, p2, p3) = (stage as u8 as i8, p1 as u8, p2 as u8, p3 as u8);
     let (c73, c74, c75) = if stage == -1 {
         let m = |p: u8, um: u8| match p {
@@ -1533,7 +1507,6 @@ pub(crate) unsafe extern "thiscall" fn european_cup_create_round_table(this: usi
     }
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
-    let game: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     if !league.is_null() {
         *league = 1;
     }
@@ -1563,7 +1536,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_create_round_table(this: usi
         data(t, i, dia, mes, anos, semana, 2, year, 0);
     }
     for r in 0..6 {
-        game(t, r, 0, -1, -1, -1, 0);
+        exe::league_round_set_match_slot(t, r, 0, -1, -1, -1, 0);
     }
     t
 }

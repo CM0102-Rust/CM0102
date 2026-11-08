@@ -13,7 +13,7 @@ MUTACOES = [
     ('cql6_first_sem_playoff', 'extra_stages: 1, // cql6: the First Division play-off', 'extra_stages: 0, // mutacao: sem o play-off', 'cql_6 divisao inglesa nova'),
     ('cql6_second_sem_playoff', 'extra_stages: 1, // cql6: the Second Division play-off', 'extra_stages: 0, // mutacao: sem o play-off', 'cql_6 divisao inglesa nova'),
     ('cqm4_outra_disciplina', '*((this + league::DISCIPLINE_RULE) as *mut u8) = 0x11; // cqm4: the discipline rule of the Italian leagues', '*((this + league::DISCIPLINE_RULE) as *mut u8) = 0; // mutacao: outra regra de disciplina', 'cqm_4 divisao italiana nova'),
-    ('cqm4_sem_posicoes_previstas', 'previstas(this); // cqm4: the expected positions', 'let _ = previstas; // mutacao: sem as posicoes previstas', 'cqm_4 divisao italiana nova'),
+    ('cqm4_sem_posicoes_previstas', 'exe::league_set_predicted_positions(this); // cqm4: the expected positions', 'let _ = previstas; // mutacao: sem as posicoes previstas', 'cqm_4 divisao italiana nova'),
     ('cqm4_historico_sem_marca', 'write_u32_from_usize(this + league::SEASON_CLOSED, 1); // cqm4: the history mark of A and B', 'write_u32_from_usize(this + league::SEASON_CLOSED, 0); // mutacao: sem a marca', 'cqm_4 divisao italiana nova'),
     ('cqm5_outra_disciplina_francesa', 'disciplina: 0xc, // cqm5: the French discipline rule', 'disciplina: 0, // mutacao: outra regra', 'cqm_5 divisao nova'),
     ('cqm5_outra_disciplina_espanhola', 'disciplina: 0x1a, // cqm5: the Spanish discipline rule', 'disciplina: 0, // mutacao: outra regra', 'cqm_5 divisao nova'),

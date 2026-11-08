@@ -177,9 +177,8 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, club: usize, prize: u
     if read_usize(G_TRANSFER_MANAGER) != 0 {
         let days: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
         if days(G_CURRENT_DATE, read_usize(k + contract::DATE_STARTED), read_usize(k + 0x29)) > 0x12c { // cpy10: mais de 300 dias
-            let entry: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_FIND_CLUB_SHORTLIST_ENTRY);
             let owner = contract_club_except_type5(p);
-            let x = entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), owner, p, 0, 0);
+            let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), owner, p, 0, 0);
             if x != 0 && read_usize(x + 0xf) == read_usize(p) {
                 crate::comparison::branch("cpy_10 renovação");
                 offer_renewal(p);
@@ -204,8 +203,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, club: usize, prize: u
     if random(v59 as i32) <= 5 {
         return;
     }
-    let agradece: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_POST_PLAYER_CREDITS_MANAGER_FOR_AWARD);
-    agradece(p, club, prize);
+    exe::news_post_player_credits_manager_for_award(p, club, prize);
 }
 
 /// Tells whether the match record is a win by a larger margin than the other one, or the same margin with more goals

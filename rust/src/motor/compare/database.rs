@@ -1150,8 +1150,7 @@ pub(crate) unsafe extern "C" fn compare_database_remove_staff_from_club(club: us
     let (id, n, nacoes) = (*(club as *const i32), *(G_CLUB_COUNT as *const i32), *(G_NATION_COUNT as *const i32));
     let nation = core::ptr::read_unaligned((club + club::NATION) as *const usize);
     if id >= n.wrapping_sub(nacoes.wrapping_mul(2)) && id < n.wrapping_sub(nacoes) && nation != 0 {
-        let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
-        let s = sub21(nation);
+        let s = exe::database_get_national_u21_team(nation);
         if s != club {
             regions.push((s, 581));
         }

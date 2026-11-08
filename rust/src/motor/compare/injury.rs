@@ -48,9 +48,8 @@ pub(crate) unsafe extern "thiscall" fn compare_post_recovery_news(this: usize, p
     if read_u32_as_usize(p + staff::PLAYER) != 0 {
         reg.push((read_u32_as_usize(p + staff::PLAYER), 0x46));
     }
-    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let before_1080 = read_u32_as_usize(G_CONTRACT_LOOKUP_RESULT);
-    let c = contract_of(read_u32_as_usize(G_CONTRACT_MANAGER), p);
+    let c = exe::contract_manager_get_contract(read_u32_as_usize(G_CONTRACT_MANAGER), p);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = before_1080;
     if c != 0 {
         reg.push((c, 0x4f));

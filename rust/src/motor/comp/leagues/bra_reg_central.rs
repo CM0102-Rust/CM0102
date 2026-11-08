@@ -111,11 +111,9 @@ pub(crate) unsafe fn record_state_knockout(this: usize, club: usize, st: u8, gam
                 if fazer {
                     // simplification: the original pushes eax (caller garbage above the word) and whole ecx/edx; the
                     // 0x4bf850 and 0x86c000 only read the words: the words are passed.
-                    let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
                     crate::comparison::branch("cqk_7 eliminado do estadual");
-                    let weight = escala(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, rounds);
-                    let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
-                    elim(read_u32_as_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight); // cqk7: the eliminated club record
+                    let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, rounds);
+                    exe::staff_records_add_knocked_out_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight); // cqk7: the eliminated club record
                 }
                 let l = read_u32_as_usize(this + league::TABLE) + 0x3b * i as usize;
                 if fazer {
@@ -199,8 +197,7 @@ pub(crate) unsafe fn nsl_end_of_stage(this: usize, club: usize, status: u32, sta
         }
         if st == 0xfe {
             if fazer {
-                let not: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_FAILED_TO_QUALIFY_RECORD);
-                not(read_u32_as_usize(G_STAFF_RECORDS), club, comp, 0x435, 0x28);
+                exe::staff_records_add_failed_to_qualify_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp, 0x435, 0x28);
             }
             return (u32::MAX, 0, 0);
         }

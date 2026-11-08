@@ -33,8 +33,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_stat
     if f == 0xff {
         match s {
             5 => {
-                let title: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_LEAGUE_CHAMPIONS_RECORD);
-                title(eng_second_staff_records(), club, comp);
+                exe::staff_records_add_league_champions_record(eng_second_staff_records(), club, comp);
             }
             0 => {
                 let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
@@ -42,8 +41,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_stat
             }
             1 => {
                 crate::comparison::branch("cqk_5 vaga no play-off da c2a");
-                let slot: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
-                slot(eng_second_staff_records(), club, comp, 0xa0, 0x82, 0x28);
+                exe::staff_records_add_qualified_for_round_record(eng_second_staff_records(), club, comp, 0xa0, 0x82, 0x28);
             }
             3 => {
                 crate::comparison::branch("cqk_5 rebaixamento na c2a");
@@ -71,12 +69,10 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_stat
                         return 0;
                     }
                     2 | 0xff => {
-                        let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
-                        let weight = escala(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, 2);
+                        let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, 2);
                         // simplification: the original pushes the match’s stage (+0x32) and round (+0x30) as words in
                         // registers with garbage in the high 16 bits; 0x86c000 only reads the words.
-                        let away: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
-                        away(eng_second_staff_records(), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
+                        exe::staff_records_add_knocked_out_record(eng_second_staff_records(), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
                         *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
                         return 0;
                     }

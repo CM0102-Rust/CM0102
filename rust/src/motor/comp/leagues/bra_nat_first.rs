@@ -26,7 +26,6 @@ use super::*;
 /// cobre o construtor (sem destrutor).
 pub(crate) unsafe fn create_play_off_stage(this: usize, rows: &[usize; 4], file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let list = alocar(0x10);
     if list == 0 {
         return show_error_at(file, row_without_list);
@@ -50,17 +49,17 @@ pub(crate) unsafe fn create_play_off_stage(this: usize, rows: &[usize; 4], file:
         0
     };
     core::ptr::write_unaligned(read_usize(this + league::STAGES) as *mut usize, stage);
-    free(t);
+    exe::crt_free(t);
     let stage = read_usize(read_usize(this + league::STAGES));
     if stage == 0 {
         show_error_at(file, row_without_stage);
-        free(list);
+        exe::crt_free(list);
         return;
     }
     crate::comparison::branch(ramo);
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     build(stage, 0);
-    free(list);
+    exe::crt_free(list);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 0);
 }
 
@@ -171,17 +170,15 @@ pub(crate) unsafe fn bra_nat_first_call_virtual_no_args(c: usize, deslocamento: 
 /// 0), ret 4); por fim as posições previstas (virtual +0x5c). Devolve falso depois de uma caixa.
 pub(crate) unsafe fn rebuild_season(this: usize, table: usize, file: usize, rows: [u32; 4], year: i16) -> bool {
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     liberar_tabela(this, 0);
     let l = read_usize(this + league::ROUND_DATES);
     if l != 0 {
-        free(l);
+        exe::crt_free(l);
         core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut usize, 0);
     }
     let stats = read_usize(this + 8);
     if stats != 0 {
-        let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
-        archive(stats, 1);
+        exe::comp_stats_archive_season_and_reset(stats, 1);
     }
     if (read_usize(this + league::CURRENT_STAGE) as i32) >= 0 {
         let mut i = 0i32;
@@ -209,8 +206,7 @@ pub(crate) unsafe fn rebuild_season(this: usize, table: usize, file: usize, rows
         show_error_at(file, rows[1]);
         return false;
     }
-    let games: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
-    if games(this) == 0 {
+    if exe::league_create_fixtures(this) == 0 {
         show_error_at(file, rows[2]);
         return false;
     }
@@ -233,8 +229,7 @@ pub(crate) unsafe fn rebuild_season(this: usize, table: usize, file: usize, rows
 pub(crate) unsafe fn set_expectations_and_renew_officials(this: usize) -> u32 {
     let expectations: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectations(this);
-    let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
-    renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) // cqq8: os árbitros
+    exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) // cqq8: os árbitros
 }
 
 /// The season turnovers of the other fourteen competitions in Brazil, in the original routine's order.
@@ -273,9 +268,8 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_start_new_season(this: usiz
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(f);
         f(this);
     }
-    let level: unsafe extern "thiscall" fn(usize, u32, u32, i32, u32) = core::mem::transmute(FN_LEAGUE_LIMIT_CLUB_DIVISION_TIER);
-    level(this, 1, 3, -3, 1);
-    level(comp_by_global(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION), 1, 3, -3, 1);
+    exe::league_limit_club_division_tier(this, 1, 3, -3, 1);
+    exe::league_limit_club_division_tier(comp_by_global(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION), 1, 3, -3, 1);
     if !rebuild_season(this, 0x42a480, 0x98aa30, [0x223, 0x22a, 0x230, 0x237], 1) {
         return 0;
     }
@@ -391,8 +385,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_table(this: usize) -
     if create_division_table(this, 0x1c, 0x98aa30, 0x1a1, 0x57, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, 0, "cql_7 serie a cheia") == 0 {
         return 0;
     }
-    let pay: unsafe extern "thiscall" fn(usize, i32, usize) = core::mem::transmute(FN_LEAGUE_PAY_TV_RIGHTS);
-    pay(this, 0x249f0, 0);
+    exe::league_pay_tv_rights(this, 0x249f0, 0);
     1
 }
 
@@ -553,40 +546,35 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_set_up_rules(this: usize) -
 /// [pt] Os registros de carreira (Staff_Records em [0xdd7f00], thiscall, todos já em Rust):
 /// 0x86bdd0 classificou-se (clube, comp, fase, rodada, peso; ret 0x14).
 pub(crate) unsafe fn bra_nat_first_add_qualified_record(club: usize, comp: usize, stage: u32, round: u32, weight: u32) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
-    f(read_u32_as_usize(G_STAFF_RECORDS), club, comp, stage, round, weight);
+    exe::staff_records_add_qualified_for_round_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp, stage, round, weight);
 }
 
 /// Staff_Records add_relegation_record (club, league).
 ///
 /// [pt] 0x86a1c0 rebaixado (clube, liga; ret 8).
 pub(crate) unsafe fn bra_nat_first_add_relegation_record(club: usize, comp: usize) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
-    f(read_u32_as_usize(G_STAFF_RECORDS), club, comp);
+    exe::staff_records_add_relegation_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp);
 }
 
 /// Staff_Records add_league_champions_record (club, league).
 ///
 /// [pt] 0x868c50 campeão da liga (clube, liga; ret 8).
 pub(crate) unsafe fn add_champions_record(club: usize, comp: usize) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_LEAGUE_CHAMPIONS_RECORD);
-    f(read_u32_as_usize(G_STAFF_RECORDS), club, comp);
+    exe::staff_records_add_league_champions_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp);
 }
 
 /// Staff_Records add_promotion_record (club, league, weight).
 ///
 /// [pt] 0x869480 promovido (clube, liga, peso; ret 0xc).
 pub(crate) unsafe fn bra_nat_first_add_promotion_record(club: usize, comp: usize, weight: u32) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
-    f(read_u32_as_usize(G_STAFF_RECORDS), club, comp, weight);
+    exe::staff_records_add_promotion_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp, weight);
 }
 
 /// League::find_club_row(club, 0): the club's row in the league table.
 ///
 /// [pt] 0x68ab70 `League::find_club_row(clube, 0)` (thiscall, ret 8): a linha do clube na tabela da liga.
 pub(crate) unsafe fn bra_nat_first_find_club_row(league: usize, club: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_LEAGUE_FIND_CLUB_ROW);
-    f(league, club, 0)
+    exe::league_find_club_row(league, club, 0)
 }
 
 /// Série A update_staff_records_for_status (0x42abc0); fazer = false is the comparer's dry run → (return, row written,
@@ -743,10 +731,8 @@ pub(crate) unsafe fn baiano_staff_records(this: usize, club: usize, status: u32,
                     // simplification: the original pushes the whole registers (eax with the caller’s garbage above the
                     // word, ecx with the upper half of the table pointer); 0x4bf850 and 0x86c000 only read the
                     // words (0x4b0870 / `as u16`): the words go.
-                    let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
-                    let weight = escala(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, 2);
-                    let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
-                    elim(read_u32_as_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
+                    let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, 2);
+                    exe::staff_records_add_knocked_out_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
                 }
                 let l = read_u32_as_usize(this + league::TABLE) + 0x3b * i as usize;
                 if fazer {

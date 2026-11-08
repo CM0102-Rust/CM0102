@@ -64,7 +64,6 @@ pub(crate) unsafe extern "thiscall" fn compare_update_after_match(this: usize, g
     let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let with_club: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let finances: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
     let mut plan: [(usize, i32, i32); 2] = [(0, 0, 0); 2];
     let mut eh_a = 0u32;
     for (lado, pl) in plan.iter_mut().enumerate() {
@@ -72,7 +71,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_after_match(this: usize, g
         if (partner(club, &mut eh_a, 1) != 0 && eh_a == 0) || skip_side_by_reputation(game, lado) || national_team(club) != 0 {
             continue;
         }
-        let fin = finances(read_usize(G_FINANCE_TABLE), club);
+        let fin = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club);
         let base = summary + lado * 0x625;
         let mut total = 0i32;
         for k in 0..20usize {

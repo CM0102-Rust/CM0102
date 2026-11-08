@@ -21,12 +21,11 @@ pub(crate) unsafe extern "thiscall" fn slot_code(this: usize, slot: i8, second: 
 /// [pt] { 0x4bff70 } (comp_util.cpp): com a palavra baixa de `b` (ou, sem ela, a de `a`), o resultado
 /// de 0x4ba8f0(palavra, 0); senao o byte +0x37 (`tipo` 1) ou +0x52 do registro; sem registro, 1.
 pub(crate) unsafe extern "C" fn competition_criterion(record: usize, a: u32, b: u32, kind: u8) -> u8 {
-    let text: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_STAGE_NAME_GENDER);
     if b as u16 != 0 {
-        return text(b, 0);
+        return exe::comp_util_get_stage_name_gender(b, 0);
     }
     if a as u16 != 0 {
-        return text(a, 0);
+        return exe::comp_util_get_stage_name_gender(a, 0);
     }
     if record == 0 {
         return 1;
@@ -73,9 +72,8 @@ pub(crate) unsafe extern "thiscall" fn manager_table(this: usize, manager: usize
 /// (0x5b73a0) e o bit 0x200; sem ela, 0. Sem `jogadores`, 1; senao 1 se algum dos 20 (+0x19, ou
 /// +0x1a com 0xfe em +0x19) esta naquela vaga.
 pub(crate) unsafe extern "thiscall" fn sector_slot_taken(this: usize, mask: u32, players: usize) -> u32 {
-    let split: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(FN_FORMATION_SPLIT_POSITION_CODE);
     let (mut setor, mut lado) = (0u16, 0u16);
-    split(mask, &mut setor, &mut lado);
+    exe::formation_split_position_code(mask, &mut setor, &mut lado);
     let home = |k: usize| core::ptr::read_unaligned((this + 0x12d + 2 * k) as *const u16);
     let k = match (0..11usize).find(|&k| home(k) & setor != 0 && home(k) & 0x200 != 0) {
         Some(k) => k as u8,
@@ -316,9 +314,8 @@ pub(crate) unsafe extern "C" fn pitch_cell(mask: u32, attack: i8, band: u32, out
     if !(0..=1).contains(&attack) || !(0..=2).contains(&low) || !(0..=3).contains(&high) {
         return original_fn::<unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32>(IDX_PITCH_CELL)(mask, attack, band, out);
     }
-    let split: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(FN_FORMATION_SPLIT_POSITION_CODE);
     let (mut setor, mut lado) = (0u16, 0u16);
-    split(mask, &mut setor, &mut lado);
+    exe::formation_split_position_code(mask, &mut setor, &mut lado);
     let a = high as usize;
     let throw_in = lado & 0x80 != 0 || lado & 0x800 != 0;
     let at = attack != 0;
@@ -486,8 +483,6 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(IDX_SET_SLOT_COORDINATE)(this, home, stage, band, coord);
     }
     let home_in: unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32 = core::mem::transmute(FN_FORMATION_GET_DEFAULT_COORDINATE);
-    let split: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(FN_FORMATION_SPLIT_POSITION_CODE);
-    let mask: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FORMATION_UPDATE_SHAPE_CODE);
     let su = s as usize;
     let cel = this + 0x164 + 4 * (zy as usize + 4 * (zx as usize + 3 * (f as usize + 2 * su)));
     crate::comparison::branch("cpu_11 coordenada gravada");
@@ -552,7 +547,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
     let new = cand[(sf as i32 * 11 + si as i32) as usize];
     if read_i16(general) as u16 != new {
         write_u16(general, new);
-        mask(this);
+        exe::formation_update_shape_code(this);
         *((this + 0x143 + su) as *mut u8) = 1;
         for k in 0..11i8 {
             if k != s && read_i16(this + 0x12d + k as usize * 2) as u16 == new {
@@ -573,8 +568,8 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
     // simplification: the outputs of 0x5b73a0 are uninitialized in the original if it fails (position without a side); here 0
     let (mut setor, mut lado_c, mut lado_a) = (0u16, 0u16, 0u16);
     for b in 0..no.max(0) as i32 {
-        split(cand[(o + b) as usize] as u32, &mut setor, &mut lado_c);
-        split(read_i16(general) as u16 as u32, &mut setor, &mut lado_a);
+        exe::formation_split_position_code(cand[(o + b) as usize] as u32, &mut setor, &mut lado_c);
+        exe::formation_split_position_code(read_i16(general) as u16 as u32, &mut setor, &mut lado_a);
         if lado_c == lado_a {
             write_u16(extra, cand[(o + b) as usize]);
             return 1;
@@ -842,8 +837,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
         }
         return 0;
     }
-    let marker: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_UTILS_READ_FILE_FORMAT_MARKER);
-    let nativo = marker(f) != 0xf1ff_fff1;
+    let nativo = exe::utils_read_file_format_marker(f) != 0xf1ff_fff1;
     let mut id_ = [0u8; 4];
     if crt_fread_one(id_.as_mut_ptr() as usize, 4, f) != 1 {
         return fail_read(quieto, 0x8ea, f);
@@ -881,7 +875,6 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     if crt_fread_one(this + 0x65, 200, f) != 1 {
         return fail_read(quieto, 0x915, f);
     }
-    let troca16: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_SWAP_BYTES_16_ARRAY);
     if id >= 0x98ec5a {
         if crt_fread_one(this + 0x187b, 4, f) != 1 {
             return fail_read(quieto, 0x920, f);
@@ -896,10 +889,9 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
         return fail_read(quieto, 0x930, f);
     }
     if !nativo {
-        troca16(this + 0x12d, 0xb);
+        exe::swap_bytes_16_array(this + 0x12d, 0xb);
     }
-    let mask: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FORMATION_UPDATE_SHAPE_CODE);
-    mask(this);
+    exe::formation_update_shape_code(this);
     if id >= 0x98ec5c {
         if crt_fread_one(this + 0x143, 0xb, f) != 1 {
             return fail_read(quieto, 0x940, f);
@@ -911,13 +903,13 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
         return fail_read(quieto, 0x94f, f);
     }
     if !nativo {
-        troca16(this + 0x14e, 0xb);
+        exe::swap_bytes_16_array(this + 0x14e, 0xb);
     }
     if crt_fread_one(this + 0x164, 0x420, f) != 1 {
         return fail_read(quieto, 0x959, f);
     }
     if !nativo {
-        troca16(this + 0x164, 0x210);
+        exe::swap_bytes_16_array(this + 0x164, 0x210);
     }
     if id == 0x98ec59 || id == 0x98ec5a {
         let mut descarte = [0u8; 0x108];
@@ -925,7 +917,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
             return fail_read(quieto, 0x968, f);
         }
         if !nativo {
-            troca16(descarte.as_mut_ptr() as usize, 0x84);
+            exe::swap_bytes_16_array(descarte.as_mut_ptr() as usize, 0x84);
         }
     }
     let team = this + 0x584;
@@ -942,8 +934,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
         let mut v = [0u32; 11];
         if crt_fread_one(v.as_mut_ptr() as usize, 0x2c, f) == 1 {
             if !nativo {
-                let troca32: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_SWAP_BYTES_32_ARRAY);
-                troca32(v.as_mut_ptr() as usize, 0xb);
+                exe::swap_bytes_32_array(v.as_mut_ptr() as usize, 0xb);
             }
         } else if quieto == 0 {
             formation_error_box(0x97b);
@@ -955,8 +946,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
         crate::comparison::branch("cqg_8 instructions antigas");
     } else if crt_fread_one(this + 0x188b, 0x58, f) == 1 {
         if !nativo {
-            let troca64: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_SWAP_BYTES_64_ARRAY);
-            troca64(this + 0x188b, 0xb);
+            exe::swap_bytes_64_array(this + 0x188b, 0xb);
         }
     } else if quieto == 0 {
         formation_error_box(0x988);
@@ -973,18 +963,15 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     if id < 0x98ec5d {
         write_u32(team, read_u32(team) | 0x20000);
     }
-    let stored: unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32 = core::mem::transmute(FN_FORMATION_GET_SLOT_COORDINATE);
-    let redo: unsafe extern "thiscall" fn(usize, i32, i32, u32, u32) -> u32 = core::mem::transmute(FN_FORMATION_SET_SLOT_COORDINATE);
     let mut c = 0u32;
     for vaga in 0..0xbi32 {
-        stored(this, vaga as i8, 0, 0, &mut c); // cqg8: the stored home side of stage 0
+        exe::formation_get_slot_coordinate(this, vaga as i8, 0, 0, &mut c); // cqg8: the stored home side of stage 0
         crate::comparison::branch("cqg_8 posicoes refeitas");
-        redo(this, vaga, 0, 0, c); // cqg8: the positions redone by home side
+        exe::formation_set_slot_coordinate(this, vaga, 0, 0, c); // cqg8: the positions redone by home side
     }
     let split: unsafe extern "C" fn(usize, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_STRTOK);
     split(path, 0, 0, this, 0);
-    let map: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FORMATION_BUILD_POSITION_LOOKUP);
-    map(this);
+    exe::formation_build_position_lookup(this);
     write_u32(this + 0x187f, 1);
     write_u32(this + 0x1883, (*((this + 0x33) as *const u8) != 0) as u32);
     write_u32(this + 0x1887, 1);
@@ -1056,8 +1043,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
     let extra_of_home = this + 0x14e + 2 * s;
     if extra == 0 && read_i16(general) != p {
         core::ptr::write_unaligned(general as *mut i16, p);
-        let mask: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FORMATION_UPDATE_SHAPE_CODE);
-        mask(this);
+        exe::formation_update_shape_code(this);
         *((this + 0x143 + s) as *mut u8) = 1;
         for j in 0..11usize {
             if j != s && read_i16(this + 0x12d + 2 * j) == p {
@@ -1068,7 +1054,6 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
     core::ptr::write_unaligned(extra_of_home as *mut i16, p);
     // 0x5b7e60 and 0x5b73a0 only read the low word of the mask (the original pushes eax with whatever high part it has)
     let pitch_cell: unsafe extern "C" fn(u32, u32, u32, *mut u32) -> u32 = core::mem::transmute(FN_FORMATION_GET_DEFAULT_COORDINATE);
-    let split: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(FN_FORMATION_SPLIT_POSITION_CODE);
     // the outputs carry over from one iteration to the next, like the original’s locals (uninitialized only if 0x5b73a0 fails
     // right on the first one: zero here)
     let (mut setor_geral, mut setor_extra, mut lado, mut saida) = (0u16, 0u16, 0u16, 0u32);
@@ -1086,8 +1071,8 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
             let (a, b) = if g == e {
                 (g, g) // the same position with and without the ball
             } else {
-                split(g, &mut setor_geral, &mut lado);
-                split(e, &mut setor_extra, &mut lado);
+                exe::formation_split_position_code(g, &mut setor_geral, &mut lado);
+                exe::formation_split_position_code(e, &mut setor_extra, &mut lado);
                 if (setor_extra as i16) < (setor_geral as i16) { // the rearmost extra
                     (e, g)
                 } else {

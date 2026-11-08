@@ -26,12 +26,11 @@ use super::*;
 /// (virtual +0x94); por fim, com `previstas`, as posições previstas (virtual +0x5c), cujo eax ela devolve (o Jogo das
 /// Estrelas não as tem: devolve o eax da árvore).
 pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, entrants: usize, file: usize, rows: [u32; 3], year: i16, predicted: bool, ramo: &'static str) -> u32 {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     write_u32_from_usize(this + cup::SEASON_CLOSED, 0);
     for o in [0xa7usize, 0xa3] {
         let l = read_u32_as_usize(this + o);
         if l != 0 {
-            soltar(l);
+            exe::crt_free(l);
             write_u32_from_usize(this + o, 0);
         }
     }
@@ -40,18 +39,17 @@ pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, entrant
         while i < read_i16(this + cup::ROUND_COUNT) as i32 {
             let p = read_u32_as_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4);
             if p != 0 {
-                soltar(p);
+                exe::crt_free(p);
                 write_u32_from_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4, 0);
             }
             i += 1;
         }
-        soltar(read_u32_as_usize(this + cup::TIE_TABLES));
+        exe::crt_free(read_u32_as_usize(this + cup::TIE_TABLES));
         write_u32_from_usize(this + cup::TIE_TABLES, 0);
     }
     let e = read_u32_as_usize(this + 8);
     if e != 0 {
-        let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
-        archive(e, 1);
+        exe::comp_stats_archive_season_and_reset(e, 1);
     }
     let a = read_i16(this + cup::YEAR);
     core::ptr::write_unaligned((this + cup::YEAR) as *mut i16, a.wrapping_add(year));
@@ -201,8 +199,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: u
     let d = make_date_dword(0x1a, 6, year, 6); // cqn10: the All-Star Game call-up
     if stage != 0 && is_date_today(d, today) {
         crate::comparison::branch("cqn_10 convocacao do jogo das estrelas");
-        let convocar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_USAMLSALLSTARS_SELECT_SQUADS);
-        convocar(this);
+        exe::usamlsallstars_select_squads(this);
     }
     eng_cc_cup_cup_update_for_date(this, today, stage)
 }
@@ -241,10 +238,8 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
     }
     crate::comparison::branch("cqm_12 tabela do jogo das estrelas");
     let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
-    let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
-    let game: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
-    sorteio(t, 0, 0xf, 5, 0, 5, year);
-    game(t, 0, 2, 7, 0, 6, 1, year, 0); // cqm12: the All-Star Game on 2 August
+    exe::cup_set_round_draw_date(t, 0, 0xf, 5, 0, 5, year);
+    exe::cup_set_round_match_date(t, 0, 2, 7, 0, 6, 1, year, 0); // cqm12: the All-Star Game on 2 August
     let w = |o: usize, v: u16| core::ptr::write_unaligned((t + o) as *mut u16, v);
     let d = |o: usize, v: u32| core::ptr::write_unaligned((t + o) as *mut u32, v);
     w(0x18, 2);

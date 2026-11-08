@@ -30,8 +30,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: usize, n: u32, teams: usize, rounds: u32, a5: u32, template: usize, year: u32, stage: u32, b2: u32,
     id: u32, b3: u32, arvore: u32, by_order: u32, a14: u32, seeds: usize) -> usize {
     const F: usize = 0x9b5944;
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CUP_CUP);
-    base(this);
+    exe::cup_cup(this);
     write_u32_from_usize(this + 4, a5 as usize);
     write_u16(this + cup::YEAR, year as u16); // cqs7: the stage year
     write_u8(this + cup::CLUB_SIDES, b2 as u8);
@@ -104,28 +103,26 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
 /// confrontos das +0x3c rodadas e o próprio vetor liberados (0x9452ca, cdecl; os ponteiros ficam); por fim a base
 /// (Cup::~Cup 0x518690, mov ecx -> thiscall, ret 0), cujo eax ela devolve.
 pub(crate) unsafe extern "thiscall" fn destroy_cup_stage(this: usize) -> usize {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     write_u32_from_usize(this, 0x969468);
     if read_u32_as_usize(this + cup::TEAM_TABLE) != 0 {
-        soltar(read_u32_as_usize(this + cup::TEAM_TABLE));
+        exe::crt_free(read_u32_as_usize(this + cup::TEAM_TABLE));
     }
     if read_u32_as_usize(this + cup::ROUND_TABLE) != 0 {
-        soltar(read_u32_as_usize(this + cup::ROUND_TABLE));
+        exe::crt_free(read_u32_as_usize(this + cup::ROUND_TABLE));
     }
     if read_u32_as_usize(this + cup::TIE_TABLES) != 0 {
         let mut i = 0i32;
         while i < read_i16(this + cup::ROUND_COUNT) as i32 {
             let p = read_u32_as_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4);
             if p != 0 {
-                soltar(p);
+                exe::crt_free(p);
             }
             i += 1;
         }
-        soltar(read_u32_as_usize(this + cup::TIE_TABLES));
+        exe::crt_free(read_u32_as_usize(this + cup::TIE_TABLES));
     }
     crate::comparison::branch("cqs_7 fim da fase de copa");
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CUP_DESTRUCTOR_CUP);
-    base(this)
+    exe::cup_destructor_cup(this)
 }
 
 // simplification: frees the tables and destroys the database; cannot run twice: original only

@@ -52,7 +52,6 @@ pub(crate) unsafe extern "thiscall" fn compare_is_mercosur_invited_club(this: us
 /// devolução e os registros das duas tabelas.
 pub(crate) unsafe extern "stdcall" fn compare_collect_conmebol_clubs(out: *mut usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(*mut usize) -> u32>(IDX_COLLECT_CONMEBOL_CLUBS);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut t2 = 0usize;
     let reg = club_seeding_regions();
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(out), || collect_conmebol_clubs(&mut t2));
@@ -60,7 +59,7 @@ pub(crate) unsafe extern "stdcall" fn compare_collect_conmebol_clubs(out: *mut u
     let t1 = *out;
     let table = n == m && (n <= 0 || t1 == 0 || t2 == 0 || core::slice::from_raw_parts(t1 as *const u8, n as usize * 12) == core::slice::from_raw_parts(t2 as *const u8, n as usize * 12));
     if t2 != 0 {
-        soltar(t2);
+        exe::crt_free(t2);
     }
     SCOREBOARD.record(igual && table, || format!("collect_conmebol_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, table, memory_diff_addresses(&mo, &mr)));
     a

@@ -304,8 +304,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
     if cup.iter().any(|&g| read_usize(g) == id) {
         return 0;
     }
-    let internacional: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_IS_INTERNATIONAL_COMP);
-    if internacional(comp) != 0 {
+    if exe::key_nation_is_international_comp(comp) != 0 {
         return 1;
     }
     if id == read_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP) || id == read_usize(KEY_CLUB_COMP_FIFA_CLUB_WORLD_CHAMPIONSHIP) {

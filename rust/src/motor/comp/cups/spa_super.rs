@@ -110,8 +110,7 @@ pub(crate) unsafe fn compare_team_list(name: &str, this: usize, o: impl FnOnce()
         lo == 0 && lr == 0
     };
     if lr != 0 && lr != lo {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(lr);
+        exe::crt_free(lr);
     }
     SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this, a, b, igual, list));
     a

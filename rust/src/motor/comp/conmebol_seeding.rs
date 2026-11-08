@@ -28,10 +28,8 @@ pub(crate) unsafe fn enter_libertadores(c: usize, stage: u8) -> bool {
 /// campeão da Copa dos Campeões (+0x71); e sempre o campeão e o vice do Brasileirão (0x9cf9ec); cada nação completa a
 /// cota com os primeiros da tabela ainda sem vaga (0x4c6730(.., 1, 1, 0)), uma tentativa por vaga.
 pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, clubs: usize, count: u32) {
-    let champion: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
-    let enesimo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CONMEBOLSEEDING_FIND_NTH_UNQUALIFIED_CLUB_OF_NATION);
     let row = |key: usize| (read_u32(G_CLUB_COMP_TABLE) as usize).wrapping_add(read_u32(key).wrapping_mul(0x6b) as usize);
-    let h = champion(row(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES), 0);
+    let h = exe::comp_util_get_latest_placed_club(row(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES), 0);
     if h != 0 && read_u32(h + club::CONTINENTAL_COMP_ID) == u32::MAX {
         *((h + club::EURO_SEEDING) as *mut u8) = 1;
         *((h + club::CONTINENTAL_COMP_ID) as *mut u32) = read_u32(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES);
@@ -43,9 +41,9 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
         let mut n = 0u8;
         if read_u32(e) == read_u32(KEY_NATION_BRAZIL) {
             if *(G_CURRENT_DATE_YEAR as *const u16) > 0x7d2 {
-                let mut c = champion(row(KEY_CLUB_COMP_BRAZILIAN_CUP), 0);
+                let mut c = exe::comp_util_get_latest_placed_club(row(KEY_CLUB_COMP_BRAZILIAN_CUP), 0);
                 if c == 0 || read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
-                    c = champion(row(KEY_CLUB_COMP_BRAZILIAN_CUP), 1);
+                    c = exe::comp_util_get_latest_placed_club(row(KEY_CLUB_COMP_BRAZILIAN_CUP), 1);
                 }
                 if enter_libertadores(c, 2) {
                     n = 1;
@@ -64,13 +62,13 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
                 }
             }
             for lugar in [0u32, 1] {
-                if enter_libertadores(champion(row(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION), lugar), 2) {
+                if enter_libertadores(exe::comp_util_get_latest_placed_club(row(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION), lugar), 2) {
                     n = n.wrapping_add(1);
                 }
             }
         }
         while (n as i8) < *((e + 8) as *const i8) {
-            let c = enesimo(this, clubs, count, read_u32(e), 1, 1, 0);
+            let c = exe::conmebolseeding_find_nth_unqualified_club_of_nation(this, clubs, count, read_u32(e), 1, 1, 0);
             if c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
                 crate::comparison::branch("cqj_1 cota da nacao");
                 enter_libertadores(c, 2); // cqj1: the quota slot
@@ -284,17 +282,14 @@ pub(crate) unsafe extern "thiscall" fn update_for_new_season(this: usize, skip: 
     }
     crate::comparison::branch("cqj_2 virada do ano");
     core::ptr::write_unaligned((this + 0x6f) as *mut u16, year);
-    let join: unsafe extern "stdcall" fn(*mut usize) -> u32 = core::mem::transmute(FN_COLLECT_CONMEBOL_CLUBS);
-    let slots: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_CONMEBOLSEEDING_ASSIGN_LIBERTADORES_PLACES);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut t = 0usize;
-    let n = join(&mut t);
+    let n = exe::collect_conmebol_clubs(&mut t);
     if n as u16 == 0 {
         show_error_at(0x9a7ed8, 0x9b);
         return;
     }
-    slots(this, t, n);
-    soltar(t);
+    exe::conmebolseeding_assign_libertadores_places(this, t, n);
+    exe::crt_free(t);
 }
 
 /// stores the Copa dos Campeões winner: from 2003 on it gets a Libertadores place

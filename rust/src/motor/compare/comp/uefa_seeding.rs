@@ -41,7 +41,6 @@ pub(crate) unsafe extern "thiscall" fn compare_uefa_find_nth_unplaced_club_of_na
 /// linha de cada um em [0xae2d14], a devolução e os registros das duas tabelas.
 pub(crate) unsafe extern "thiscall" fn compare_collect_european_clubs(this: usize, out: *mut usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize) -> u32>(IDX_COLLECT_EUROPEAN_CLUBS);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut t2 = 0usize;
     let reg = club_regions();
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, out), || collect_european_clubs(this, &mut t2));
@@ -49,7 +48,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_european_clubs(this: usiz
     let t1 = *out;
     let table = n == m && (n <= 0 || t1 == 0 || t2 == 0 || core::slice::from_raw_parts(t1 as *const u8, n as usize * 12) == core::slice::from_raw_parts(t2 as *const u8, n as usize * 12));
     if t2 != 0 {
-        soltar(t2);
+        exe::crt_free(t2);
     }
     SCOREBOARD.record(igual && table, || format!("collect_european_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, table, memory_diff_addresses(&mo, &mr)));
     a

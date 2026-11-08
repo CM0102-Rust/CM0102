@@ -27,13 +27,12 @@ pub(crate) unsafe extern "thiscall" fn compare_all_stages_complete(this: usize) 
 /// e os clubes das duas listas iguais (a da cópia é liberada).
 pub(crate) unsafe extern "thiscall" fn compare_comp_collect_club_list(this: usize, list: *mut usize, x: u32) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(IDX_COMP_COLLECT_CLUB_LIST);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut l2 = 0usize;
     let reg = [(0xb67a34usize, 4usize)];
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, list, x), || comp_collect_club_list(this, &mut l2, x));
     let mesmas = a == b && (*list == 0) == (l2 == 0) && (*list == 0 || core::slice::from_raw_parts(*list as *const u32, a as usize) == core::slice::from_raw_parts(l2 as *const u32, b as usize));
     if l2 != 0 {
-        soltar(l2);
+        exe::crt_free(l2);
     }
     SCOREBOARD.record(igual && mesmas, || format!("comp_collect_club_list: conta original={} rust={}", a, b));
     a

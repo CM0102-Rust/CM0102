@@ -12,8 +12,7 @@ pub(crate) unsafe fn crt_fread_one(buf: usize, size: u32, f: usize) -> u32 {
 ///
 /// [pt] fclose (0x945a09, cdecl).
 pub(crate) unsafe fn cash_crt_fclose(f: usize) {
-    let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
-    fclose(f);
+    exe::crt_fclose(f);
 }
 
 /// Error box of formation.cpp at the given line.

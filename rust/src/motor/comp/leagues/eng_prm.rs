@@ -54,17 +54,12 @@ pub(crate) struct EnglishDivision {
 /// (League::set_predicted_positions 0x68a850: mov ecx -> thiscall, ret 0). Cada passo que falha mostra a caixa da
 /// sua linha e encerra. Devolve this.
 pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro: usize, p: &EnglishDivision) -> usize {
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
-    let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let set_up_rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.set_up_rules);
     let create_table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.create_table);
-    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let estatisticas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_COMP_STATS);
-    let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_PREDICTED_POSITIONS);
-    base(this);
+    exe::league_league(this);
     write_u32_from_usize(this + 4, registro);
     write_u32_from_usize(this, p.vtable);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
@@ -73,7 +68,7 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
         core::ptr::write_unaligned((this + league::REQUIRED_CAPACITY) as *mut u16, capacidade);
         core::ptr::write_unaligned((this + league::REQUIRED_SEATS) as *mut u16, sentados);
     }
-    if carregar(this, 1) != 0 {
+    if exe::league_load_from_temp_file(this, 1) != 0 {
         return this;
     }
     crate::comparison::branch("cql_6 divisao inglesa nova");
@@ -94,7 +89,7 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
         show_error_at(p.source_file, p.box_lines[1]);
         return this;
     }
-    if jogos(this) == 0 {
+    if exe::league_create_fixtures(this) == 0 {
         show_error_at(p.source_file, p.box_lines[2]);
         return this;
     }
@@ -103,13 +98,13 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
         return this;
     }
     let e = novo(0x5ce);
-    let s = if e != 0 { estatisticas(e, this) } else { 0 };
+    let s = if e != 0 { exe::comp_stats_comp_stats(e, this) } else { 0 };
     write_u32_from_usize(this + 8, s);
     if s == 0 {
         show_error_at(p.source_file, p.box_lines[4]);
         return this;
     }
-    previstas(this);
+    exe::league_set_predicted_positions(this);
     this
 }
 
@@ -327,8 +322,7 @@ pub(crate) unsafe fn is_after_1999() -> bool {
 /// [pt] League::pay_tv_rights (0x683010: thiscall(liga, valor, filtro), ret 8): o valor a cada clube da tabela, ou só aos
 /// que vieram da competição `filtro` (+0x5b do clube).
 pub(crate) unsafe fn eng_prm_pay_tv_rights(this: usize, value: i32, filtro: usize) {
-    let pay: unsafe extern "thiscall" fn(usize, i32, usize) = core::mem::transmute(FN_LEAGUE_PAY_TV_RIGHTS);
-    pay(this, value, filtro);
+    exe::league_pay_tv_rights(this, value, filtro);
 }
 
 /// The common table body: allocates the table and fills it with the division's clubs; when full, sets the prize fund,

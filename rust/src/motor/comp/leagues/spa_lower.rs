@@ -22,12 +22,11 @@ pub(crate) type SpaLowerLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
 pub(crate) unsafe fn spa_lower_set_league_rounds(t: usize, year: u32, first: i32, table: &[SpaLowerLeagueRound]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
-    let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in table.iter().enumerate() {
         let i = first + k as i32;
         data(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, year, 0);
         for (j, &(a, b, c)) in faixas.iter().enumerate() {
-            band(t, i, j as i32, a as i32, b as i32, c as i32, 0);
+            exe::league_round_set_match_slot(t, i, j as i32, a as i32, b as i32, c as i32, 0);
         }
     }
 }
@@ -324,32 +323,27 @@ pub(crate) unsafe fn spa_lower_is_in_comp(c: usize, g: usize) -> bool {
 /// (League::create_fixtures 0x6835c0), todos mov ecx -> thiscall, ret 0; cada falha, a caixa da sua linha (0x3f,
 /// 0x46, 0x4d do fonte 0xa82880) e fim. Devolve this.
 pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, year: u32) -> usize {
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
-    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_SPALOWER_SET_UP_RULES);
-    let table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_SPALOWER_CREATE_TABLE);
-    let games: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
-    base(this);
+    exe::league_league(this);
     write_u32_from_usize(this, 0x96fb1c);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, year as u16);
     *((this + league::DISCIPLINE_RULE) as *mut u8) = 0xff;
     write_u32_from_usize(this + 4, comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION));
-    if load(this, 1) != 0 {
+    if exe::league_load_from_temp_file(this, 1) != 0 {
         return this;
     }
     crate::comparison::branch("cqm_6 divisao de baixo nova");
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
     write_u32_from_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
     write_u32_from_usize(this + league::STAGE_COUNT, 0);
-    if rules(this) == 0 {
+    if exe::spalower_set_up_rules(this) == 0 {
         show_error_at(0xa82880, 0x3f);
         return this;
     }
-    if table(this) == 0 {
+    if exe::spalower_create_table(this) == 0 {
         show_error_at(0xa82880, 0x46);
         return this;
     }
-    if games(this) == 0 {
+    if exe::league_create_fixtures(this) == 0 {
         show_error_at(0xa82880, 0x4d);
     }
     this
@@ -450,7 +444,6 @@ pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mu
 pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
-    let shuffle: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x16);
     let t = alloc(0x512);
     write_u32_from_usize(this + league::TABLE, t);
@@ -489,7 +482,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     let how_many = list.len() as u16 as u32;
     let missing = (read_i16(this + league::CLUB_COUNT) as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam
     list.resize(100, 0);
-    shuffle(list.as_mut_ptr() as usize, how_many, missing);
+    exe::comp_util_sort_and_shuffle_top_clubs(list.as_mut_ptr() as usize, how_many, missing);
     let mut j: i16 = 0;
     while j < how_many as u16 as i16 && (k as i8 as i16) < read_i16(this + league::CLUB_COUNT) {
         let c = list[j as usize];

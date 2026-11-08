@@ -109,10 +109,8 @@ pub(crate) unsafe extern "thiscall" fn compare_find_fixture_clashes(this: usize,
     let same = (r == 0) == (nr == 0) && go == gr && lo == lr;
     SCOREBOARD.record(same, || format!("find_fixture_clashes(jogo {:x}) original={:x} saida={} jogos={} rust={:x} saida={} jogos={}", game, r, go, lo.len() / 0x4f, nr, gr, lr.len() / 0x4f));
     if nr != 0 {
-        let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
-        let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
-        destroy(nr);
-        free(nr);
+        exe::llist_destructor_llist(nr);
+        exe::crt_operator_delete(nr);
     }
     r
 }
@@ -131,9 +129,8 @@ pub(crate) unsafe extern "C" fn compare_fix_man_load_fixture_leg_checks() {
 /// lista deles. Só a original quando o jogo entra na lista de conferência das pernas (aloca o nó).
 pub(crate) unsafe extern "thiscall" fn compare_find_new_fixture_date(this: usize, game: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FIND_NEW_FIXTURE_DATE);
-    let units_digit: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_ROUND_VARIANT);
     // the window box without a date (+0x24, type 2) would appear twice: original only
-    if game == 0 || matches!(units_digit(read_u16(game + fixture::ROUND_NAME) as i16 as i32), 3 | 4) || (read_u8(game + fixture::CATEGORY) == 2 && read_u16(game + fixture::NEXT_ROUND_YEAR) == 0) {
+    if game == 0 || matches!(exe::comp_util_get_round_variant(read_u16(game + fixture::ROUND_NAME) as i16 as i32), 3 | 4) || (read_u8(game + fixture::CATEGORY) == 2 && read_u16(game + fixture::NEXT_ROUND_YEAR) == 0) {
         return o(this, game);
     }
     let reg = [(game, 0x4f)];

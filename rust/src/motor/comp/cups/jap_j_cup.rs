@@ -122,8 +122,7 @@ pub(crate) unsafe fn compare_cup_round_table(name: &str, stage: u32, rounds: *mu
     let outs = *rounds == r2 && *extra == e2 && (out.is_null() || *out == s2);
     let table = if a != 0 && b != 0 { eng_cc_cup_written_round_bytes(a, *rounds) == eng_cc_cup_written_round_bytes(b, r2) } else { a == 0 && b == 0 };
     if b != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(b);
+        exe::crt_free(b);
     }
     SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
@@ -196,9 +195,8 @@ pub(crate) unsafe fn jap_j_cup_random(n: i32) -> i32 {
 /// [pt] Ordena `n` clubes do vetor pela reputação e embaralha os melhores (0x4afbd0: push escolhas; push n; push vetor; add
 /// esp, 0xc -> cdecl; já em Rust).
 pub(crate) unsafe fn sort_and_shuffle_top_clubs(v: *mut usize, n: i32, escolhas: u32) {
-    let f: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
     // simplification: the original pushes the count with garbage in the high 16 bits; 0x4afbd0 reads the word
-    f(v as usize, n as i16 as u16 as u32, escolhas);
+    exe::comp_util_sort_and_shuffle_top_clubs(v as usize, n as i16 as u16 as u32, escolhas);
 }
 
 /// CRT qsort of n 6-byte entrants with comparator 0x522190.
@@ -308,8 +306,7 @@ pub(crate) unsafe fn jap_j_cup_compare_entrant_list(name: &str, this: usize, o: 
         lo == 0 && lr == 0
     };
     if lr != 0 && lr != lo {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(lr);
+        exe::crt_free(lr);
     }
     SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", name, this, a, b, igual, list, k));
     a

@@ -81,8 +81,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     let mut width = read_i32_at(area, 8).wrapping_sub(2 * lado).wrapping_sub(read_i32_at(area, 0)).wrapping_add(1);
     let height = (-2 * cima).wrapping_sub(read_i32_at(area, 4)).wrapping_add(read_i32_at(area, 0xc)).wrapping_add(1);
     if read_i32_at(area, 0x14).wrapping_add(1) > rows as i32 {
-        let bar: unsafe extern "thiscall" fn(usize, i32, i32) = core::mem::transmute(FN_AREA_SETUP_SCROLLBAR);
-        bar(area, lado, cima);
+        exe::area_setup_scrollbar(area, lado, cima);
         width = width.wrapping_sub(0x16);
     }
     // columns: +0x1c start and +0x10c end, by weights +0xbad
@@ -272,29 +271,25 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW)(area, redraw);
     }
     crate::comparison::branch("telas desenhar a area");
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_GUI_FREE_IMAGE);
-    let store: unsafe extern "C" fn(i32, i32, i32, i32, usize) -> usize = core::mem::transmute(FN_GUI_SAVE_SCREEN_IMAGE);
     let imagem = (area + 0x200) as *mut usize;
     if redraw != 0 && *imagem != 0 {
-        free(*imagem);
+        exe::gui_free_image(*imagem);
         *imagem = 0;
     }
     if core::ptr::read_unaligned((area + 0x20e) as *const i16) != -1 && *imagem == 0 {
-        *imagem = store(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), 0);
+        *imagem = exe::gui_save_screen_image(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), 0);
     }
     // simplification: the original pushes edx with the colour in dx and, on top, leftovers from earlier calls
     // (unpredictable); the color is u16 for the panel, here zero-extended
-    let panel: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32, u32) = core::mem::transmute(FN_GUI_DRAW_PANEL);
     let colour = core::ptr::read_unaligned((area + 0x20c) as *const u16) as u32;
-    panel(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), *((area + 0x18) as *const u32), colour, 0);
+    exe::gui_draw_panel(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), *((area + 0x18) as *const u32), colour, 0);
     if *((area + 0x18) as *const u32) & 0x80000 != 0 {
-        let row: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32) = core::mem::transmute(FN_GRAPHICS_DRAW_LINE);
         let mut k: i16 = 1;
         while *((area + 0xbac) as *const u8) > 1 && k < *((area + 0xbac) as *const u8) as i16 {
             let y1 = read_i32_at(area, 4);
             let y = read_i32_at(area, 0xc).wrapping_sub(y1).wrapping_add(1).wrapping_mul(k as i32) / *((area + 0xbac) as *const u8) as i32;
             let y = y.wrapping_add(y1);
-            row(read_i32_at(area, 0), y, read_i32_at(area, 8), y, 2, *(G_GUI_COLOUR_GREY as *const u16) as u32);
+            exe::graphics_draw_line(read_i32_at(area, 0), y, read_i32_at(area, 8), y, 2, *(G_GUI_COLOUR_GREY as *const u16) as u32);
             k = k.wrapping_add(1);
         }
         let mut k: i16 = 1;
@@ -302,15 +297,14 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
             let x1 = read_i32_at(area, 0);
             let x = read_i32_at(area, 8).wrapping_sub(x1).wrapping_add(1).wrapping_mul(k as i32) / *((area + 0xbab) as *const u8) as i32;
             let x = x.wrapping_add(x1);
-            row(x, read_i32_at(area, 4), x, read_i32_at(area, 0xc), 2, *(G_GUI_COLOUR_GREY as *const u16) as u32);
+            exe::graphics_draw_line(x, read_i32_at(area, 4), x, read_i32_at(area, 0xc), 2, *(G_GUI_COLOUR_GREY as *const u16) as u32);
             k = k.wrapping_add(1);
         }
         return;
     }
     if read_i32_at(area, 0xbed) != 0 && *imagem == 0 {
-        *imagem = store(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8).wrapping_sub(0x16), read_i32_at(area, 0xc), 0);
+        *imagem = exe::gui_save_screen_image(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8).wrapping_sub(0x16), read_i32_at(area, 0xc), 0);
     }
-    let desenhar_item: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_GUIO_DRAW);
     let total = || core::ptr::read_unaligned((area + 0xb74) as *const i16);
     let mut i = core::ptr::read_unaligned((area + 0xb76) as *const i16);
     let mut parar = false;
@@ -322,13 +316,12 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
             parar = true;
         } else {
             position_area_item(area, item, d);
-            desenhar_item(area_list_item(area, i), redraw);
+            exe::guio_draw(area_list_item(area, i), redraw);
         }
         i = i.wrapping_add(1);
     }
     if read_i32_at(area, 0xbed) != 0 {
-        let bar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_AREA_DRAW_SCROLLBAR);
-        bar(area);
+        exe::area_draw_scrollbar(area);
     }
 }
 

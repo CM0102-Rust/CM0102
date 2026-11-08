@@ -3105,6 +3105,9 @@ pub(crate) use self::discipline::*;
 #[path = "motor/dispute.rs"]
 pub(crate) mod dispute;
 pub(crate) use self::dispute::*;
+#[path = "motor/exe_calls.rs"]
+pub(crate) mod exe_calls;
+pub(crate) use self::exe_calls::*;
 #[path = "motor/exe_fns.rs"]
 pub(crate) mod exe_fns;
 pub(crate) use self::exe_fns::*;
@@ -8218,9 +8221,8 @@ unsafe fn diag_sample(c: usize, qual: &str) {
     if !DIAG_CALLS.is_power_of_two() {
         return;
     }
-    let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add(DIAG_PERSON.wrapping_mul(110));
-    let k = achar(*(G_CONTRACT_MANAGER as *const usize), p);
+    let k = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), p);
     linha(&format!("diag {} chamada {}: contrato da vez +0 {} +4 {}; contrato da pessoa {}: {}", qual, DIAG_CALLS,
         core::ptr::read_unaligned(c as *const i32), core::ptr::read_unaligned((c + 4) as *const i32), DIAG_PERSON,
         if k == 0 { "nenhum".to_string() } else { format!("+0 {} +4 {} {}", core::ptr::read_unaligned(k as *const i32), core::ptr::read_unaligned((k + 4) as *const i32), diag_contract(k)) }));
@@ -8244,8 +8246,7 @@ unsafe extern "thiscall" fn diag_complaint(c: usize, f: u32, z: u32) -> u32 {
     if !FORCED {
         if let Some(q) = std::env::var("CM_DIAG_FORCAR").ok().and_then(|v| u32::from_str_radix(v.trim_start_matches("0x"), 16).ok()) {
             FORCED = true;
-            let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-            let k = achar(*(G_CONTRACT_MANAGER as *const usize), (*(G_STAFF_TABLE as *const usize)).wrapping_add(DIAG_PERSON.wrapping_mul(110)));
+            let k = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), (*(G_STAFF_TABLE as *const usize)).wrapping_add(DIAG_PERSON.wrapping_mul(110)));
             if k != 0 {
                 linha(&format!("diag queixa forcada {:#x} pessoa {} antes: {}", q, DIAG_PERSON, diag_contract(k)));
                 let r2 = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_COMPLAINT)(k, q, 0);

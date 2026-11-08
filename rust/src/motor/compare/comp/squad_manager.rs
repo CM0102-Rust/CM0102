@@ -70,13 +70,12 @@ pub(crate) unsafe extern "thiscall" fn compare_club_uses_squad_numbers(this: usi
 /// sem pessoa ou sem clube: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_set_squad_number(this: usize, p: usize, c: usize, n: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_SET_SQUAD_NUMBER);
-    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     if p == 0 || c == 0 || !(-50..=50).contains(&(n as u8 as i8)) {
         return o(this, p, c, n);
     }
     let mut reg = Vec::new();
-    for k in [contract(read_u32(G_CONTRACT_MANAGER) as usize, p), loan(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
+    for k in [exe::contract_manager_get_contract(read_u32(G_CONTRACT_MANAGER) as usize, p), loan(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
         if k != 0 {
             reg.push((k + 0x3a, 1));
         }
@@ -158,15 +157,13 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_league_squad_numbers(this:
     }
     let partner: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
-    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let clubs: unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16 = core::mem::transmute(read_u32(read_u32(league) as usize + 0x58) as usize);
     let mut list = 0usize;
     let n = clubs(league, &mut list, 0) as i16 as i32;
     let cs: Vec<usize> = (0..n.max(0) as usize).map(|i| read_u32(list + 4 * i) as usize).collect();
     if list != 0 {
-        soltar(list);
+        exe::crt_free(list);
     }
     if automatico == 0 && cs.iter().any(|&c| human(read_u32(G_NEWS) as usize, c) != 0) {
         return o(this, league, initial, automatico);
@@ -183,7 +180,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_league_squad_numbers(this:
                 if p == 0 {
                     continue;
                 }
-                for ct in [contract(read_u32(G_CONTRACT_MANAGER) as usize, p), loan(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
+                for ct in [exe::contract_manager_get_contract(read_u32(G_CONTRACT_MANAGER) as usize, p), loan(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
                     if ct != 0 && !reg.contains(&(ct + 0x3a, 1)) {
                         reg.push((ct + 0x3a, 1));
                     }
@@ -204,9 +201,8 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_league_squad_numbers(this:
 /// e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_select_euro_registered_players(this: usize, c: usize, etapa: u32, mark: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u8>(IDX_SELECT_EURO_REGISTERED_PLAYERS);
-    let squad: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
     let mut sq = [0usize; 50];
-    squad(c, sq.as_mut_ptr(), 0);
+    exe::database_collect_club_squad(c, sq.as_mut_ptr(), 0);
     let mut reg = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     for &p in sq.iter() {
         if p != 0 && !reg.contains(&(p + staff::SQUAD_SELECTED_FOR, 1)) {

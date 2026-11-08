@@ -179,9 +179,8 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
                 }
             }
         }
-        let shuffle: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
         // simplification: the original pushes the two words in dwords with garbage in the high 16 bits; 0x4afbd0 reads the words
-        shuffle(local.as_mut_ptr() as usize, m as i16 as u16 as u32, (read_i16(this + eng_auto_cup::SELECTED_COUNT).wrapping_sub(k as i16)) as u16 as u32);
+        exe::comp_util_sort_and_shuffle_top_clubs(local.as_mut_ptr() as usize, m as i16 as u16 as u32, (read_i16(this + eng_auto_cup::SELECTED_COUNT).wrapping_sub(k as i16)) as u16 as u32);
         let mut a: i16 = 0;
         while k < read_u32_as_usize(this + eng_auto_cup::SELECTED_COUNT) as i32 {
             push_section_club(this, &mut k, local[a as u16 as usize]);
@@ -239,7 +238,6 @@ pub(crate) unsafe extern "thiscall" fn select_section_clubs(this: usize) -> u32 
 /// [+0xc][0]; o vetor e a tabela liberados (0x9452ca). Sem fase, a caixa da linha 0x300; com ela, +0x30 = 0.
 pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let teams = alloc(((read_i16(this + cup::TEAM_COUNT) as i32) << 2) as u32);
     if teams == 0 {
         return show_error_at(0x9c4180, 0x2e9);
@@ -264,8 +262,8 @@ pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
         0
     };
     write_u32_from_usize(read_u32_as_usize(this + cup::STAGES), f);
-    soltar(teams);
-    soltar(table);
+    exe::crt_free(teams);
+    exe::crt_free(table);
     if read_u32_as_usize(read_u32_as_usize(this + cup::STAGES)) == 0 {
         return show_error_at(0x9c4180, 0x300);
     }
@@ -293,8 +291,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
     write_u32_from_usize(this + cup::CURRENT_STAGE, stage as usize);
     if stage == 1 {
         crate::comparison::branch("cqs_5 final do trofeu");
-        let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_ENGAUTOCUP_CREATE_FINAL_STAGE);
-        f(this);
+        exe::engautocup_create_final_stage(this);
     }
 }
 
@@ -331,7 +328,6 @@ pub(crate) unsafe fn first_entrant_with_status(l: usize, n: i32, s: u8) -> Optio
 /// push 0; mov ecx, fase -> thiscall, ret 4) e o vetor liberado.
 pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usize) {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let l = alloc(8);
     if l == 0 {
         return show_error_at(0x9c4180, 0x337);
@@ -357,7 +353,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
         0
     };
     write_u32_from_usize(read_u32_as_usize(this + cup::STAGES) + 4, f);
-    soltar(table);
+    exe::crt_free(table);
     let f = read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + 4);
     if f == 0 {
         return show_error_at(0x9c4180, 0x35a);
@@ -365,7 +361,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
     crate::comparison::branch("cqs_6 final do trofeu");
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_DRAW_ROUND);
     sortear(f, 0); // cqs6: the draw of the final
-    soltar(l);
+    exe::crt_free(l);
 }
 
 /// Writes the Trophy final ranking into the cup statistics: the highest-reputation club of each half takes 1st and 2nd;
@@ -448,8 +444,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
             r -= 1;
         }
     }
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    soltar(v);
+    exe::crt_free(v);
 }
 
 // simplification: writes to the cup statistics (Comp_Stats, which finds or appends the club’s entry: allocates); original only

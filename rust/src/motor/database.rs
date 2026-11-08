@@ -83,9 +83,6 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-    let favourite: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_FAVOURS_STAFF);
-    let rejeitado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_DISLIKES_STAFF);
-    let not_likes: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_DISLIKES_CLUB);
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_FAVOURS_CLUB);
     let d = |p: usize, o: usize| *((p + o) as *const usize);
     let w = |p: usize, o: usize| *((p + o) as *const i16);
@@ -243,12 +240,12 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                     if [0xb3, 0xb7, 0xbb].iter().any(|&o| d(meu, o) == outro) {
                         x += 10;
                     }
-                    if rejeitado(person, outro) != 0 {
+                    if exe::club_dislikes_staff(person, outro) != 0 {
                         x += 10;
-                    } else if favourite(person, outro) != 0 {
+                    } else if exe::club_favours_staff(person, outro) != 0 {
                         x -= 10;
                     }
-                    if not_likes(person, outro) != 0 {
+                    if exe::staff_dislikes_club(person, outro) != 0 {
                         x += 10;
                     } else if gosta(person, outro) != 0 {
                         x -= 20;
@@ -393,8 +390,7 @@ pub(crate) unsafe extern "C" fn type_11_to_15(kind: i8) -> u32 {
 /// [pt] { 0x76d780 } (stdcall, national_teams.cpp): com `flag`, 1; sem ela, 2 para a segunda selecao
 /// (0x5409b0) e 0 para as outras.
 pub(crate) unsafe extern "stdcall" fn national_side_class(club: usize, flag: u32) -> u8 {
-    let second: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
-    let and_second = second(club) != 0;
+    let and_second = exe::club_is_national_team(club) != 0;
     if flag != 0 {
         1
     } else if and_second {
@@ -545,8 +541,7 @@ pub(crate) unsafe extern "C" fn partner_club(club: usize, eh_a: *mut u32, active
 pub(crate) unsafe extern "thiscall" fn foul_in_engine(
     m: usize, j: usize, other: usize, kind: i8, who: i8, card: *mut u8, grav: *mut i8, advantage: *mut u8,
 ) -> u8 {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8 = core::mem::transmute(FN_MATCH_OFFICIAL_JUDGE_TACKLE);
-    f(m + engine::REFEREE, j, other, kind, who, card, grav, advantage)
+    exe::match_official_judge_tackle(m + engine::REFEREE, j, other, kind, who, card, grav, advantage)
 }
 
 /// Returns holiday option `i` (byte +0x9b23 + i) of the human manager record for the person (or the current human
@@ -660,8 +655,7 @@ pub(crate) unsafe extern "thiscall" fn aggregate_score(this: usize, side_b: i8, 
     *este = byte(this, engine::SCORE);
     *outro = byte(this, engine::SCORE_SIDE1);
     let partida = *((this + engine::MATCH) as *const usize);
-    let units: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_ROUND_VARIANT);
-    if units(*((partida + fixture::ROUND_NAME) as *const i16) as i32) == 3 {
+    if exe::comp_util_get_round_variant(*((partida + fixture::ROUND_NAME) as *const i16) as i32) == 3 {
         *fase3 = 1;
     }
     let first_leg_home = byte(partida, fixture::HOME_AGGREGATE);
@@ -853,14 +847,6 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
     let fix: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32) -> usize = core::mem::transmute(FN_DATE_SET);
     let weeks_before: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_WEEKS);
     let community: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_EU_NATIONAL);
-    let vet_j: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8, *mut u8) -> usize = core::mem::transmute(FN_DATABASE_PLAYER_TO_ATTRIBUTE_VECTOR);
-    let vet_nj: unsafe extern "C" fn(usize, usize, usize, *mut u8) -> u32 = core::mem::transmute(FN_DATABASE_NON_PLAYER_TO_ATTRIBUTE_VECTOR);
-    let de_vet_j: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_ATTRIBUTE_VECTOR_TO_PLAYER);
-    let de_vet_nj: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_ATTRIBUTE_VECTOR_TO_NON_PLAYER);
-    let name_and: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_STAFF_NAME_EQUALS);
-    let norm_fisicos: unsafe extern "C" fn(usize) = core::mem::transmute(FN_STAFF_NORMALISE_PLAYER_PHYSICAL_ATTRIBUTES);
-    let norm_jogador: unsafe extern "C" fn(usize) = core::mem::transmute(FN_STAFF_NORMALISE_PLAYER_ATTRIBUTES);
-    let norm_nao_jogador: unsafe extern "C" fn(usize) = core::mem::transmute(FN_STAFF_NORMALISE_NON_PLAYER_ATTRIBUTES);
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16);
@@ -1220,7 +1206,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
             ww(j + player_sheet::WORLD_REPUTATION, e34.wrapping_mul(50));
             wb(rd(G_STAFF_STATE_TABLE).wrapping_add((gi(p) as usize).wrapping_mul(0x4f)) + 9, 0x9c);
             // ---- the positions (cells 0..8) and the sides (9..11) ----
-            vet_j(j, p, v1.as_mut_ptr() as usize, &mut e19, &mut e05, &mut e11);
+            exe::database_player_to_attribute_vector(j, p, v1.as_mut_ptr() as usize, &mut e19, &mut e05, &mut e11);
             if attr_cell_value(&v1, 0) > 0xf && attr_cell_value(&v1, 0) < 0x14 {
                 set_attr_cell_value(&mut v1, 0, 0x14);
                 for k in [1isize, 2, 3, 4, 5, 6, 10, 11, 9] {
@@ -1440,8 +1426,8 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                             clear_attr_vector(0xae2114);
                             wb(0x9b59b8, 0);
                         }
-                        vet_j(j, p, 0xae2044, &mut e1a, core::ptr::null_mut(), core::ptr::null_mut());
-                        vet_j(cj, q, 0xae2114, core::ptr::null_mut(), core::ptr::null_mut(), core::ptr::null_mut());
+                        exe::database_player_to_attribute_vector(j, p, 0xae2044, &mut e1a, core::ptr::null_mut(), core::ptr::null_mut());
+                        exe::database_player_to_attribute_vector(cj, q, 0xae2114, core::ptr::null_mut(), core::ptr::null_mut(), core::ptr::null_mut());
                         let dif = (w(j + player_sheet::CURRENT_ABILITY) as i32 - w(cj + 5) as i32).abs();
                         let mut esc = ftol(dif as f64 * read_f64_at(0x968e18)); // 0x968e18 = 2.5
                         let g0 = w(G_PLAYER_INIT_ATTRIBUTE_VECTOR_A);
@@ -1507,7 +1493,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                         k += 1;
                     }
                 } else {
-                    vet_j(molde, p, v2.as_mut_ptr() as usize, core::ptr::null_mut(), core::ptr::null_mut(), core::ptr::null_mut());
+                    exe::database_player_to_attribute_vector(molde, p, v2.as_mut_ptr() as usize, core::ptr::null_mut(), core::ptr::null_mut(), core::ptr::null_mut());
                     let mut hj = w(j + player_sheet::CURRENT_ABILITY);
                     if !in_range(hj, 1, 200) {
                         hj = s16(100).wrapping_add(1);
@@ -1564,7 +1550,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                     }
                 }
             }
-            de_vet_j(j, p, v1.as_mut_ptr() as usize);
+            exe::database_attribute_vector_to_player(j, p, v1.as_mut_ptr() as usize);
             if b(j + player_sheet::GOALKEEPER) == 0x14 && signed_byte_at(j + player_sheet::JUMPING) < 8 {
                 wb(j + player_sheet::JUMPING, (sorteio(6) as u8).wrapping_add(5));
             }
@@ -1675,7 +1661,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 wb(nj + non_player::DIRECTNESS, v);
             }
             // ---- attributes outside 1..20: from the template ----
-            vet_nj(nj, p, v1.as_mut_ptr() as usize, core::ptr::null_mut());
+            exe::database_non_player_to_attribute_vector(nj, p, v1.as_mut_ptr() as usize, core::ptr::null_mut());
             let mut away = false;
             if attr_cell_value(&v1, 0) != -0x7f {
                 let mut k = 0isize;
@@ -1737,8 +1723,8 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                             clear_attr_vector(0xae2238);
                             wb(0x9b59b9, 0);
                         }
-                        vet_nj(nj, p, 0xae18bc, core::ptr::null_mut());
-                        vet_nj(cn, q, 0xae2238, core::ptr::null_mut());
+                        exe::database_non_player_to_attribute_vector(nj, p, 0xae18bc, core::ptr::null_mut());
+                        exe::database_non_player_to_attribute_vector(cn, q, 0xae2238, core::ptr::null_mut());
                         let dif = (w(nj + non_player::CURRENT_ABILITY) as i32 - w(cn + 4) as i32).abs();
                         let mut esc = ftol(dif as f64 * read_f64_at(0x968e18)); // 0x968e18 = 2.5
                         if w(G_NON_PLAYER_ATTRIBUTE_VECTOR) != -0x7f {
@@ -1772,7 +1758,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 }
                 e10 = best;
                 if molde != 0 {
-                    vet_nj(molde, p, v2.as_mut_ptr() as usize, core::ptr::null_mut());
+                    exe::database_non_player_to_attribute_vector(molde, p, v2.as_mut_ptr() as usize, core::ptr::null_mut());
                     let mut hn = w(nj + non_player::CURRENT_ABILITY);
                     if !in_range(hn, 1, 200) {
                         hn = s16(100).wrapping_add(1);
@@ -1818,7 +1804,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                     }
                 }
             }
-            de_vet_nj(nj, p, v1.as_mut_ptr() as usize);
+            exe::database_attribute_vector_to_non_player(nj, p, v1.as_mut_ptr() as usize);
             // ---- o cargo: olheiro (9), fisioterapeuta (8), treinador (10) ----
             let ate = |o: usize, max: i8, n: i32, base: u8| {
                 if signed_byte_at(nj + o) > max {
@@ -1855,7 +1841,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 }
             }
             // ---- the famous names (+0x43) ----
-            let name = |s: usize| name_and(p, s) != 0;
+            let name = |s: usize| exe::staff_name_equals(p, s) != 0;
             if name(0x9b63e0) {
                 wb(nj + non_player::FORMATION, 3);
                 wb(nj + non_player::DIRECTNESS, 7);
@@ -1910,7 +1896,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
         if jj != 0 {
             clear_attr_vector(v3.as_mut_ptr() as usize);
             let (mut fim_l, mut fim_p, mut fim_q) = (0u8, 0u8, 0u8);
-            vet_j(jj, q, v3.as_mut_ptr() as usize, &mut fim_l, &mut fim_p, &mut fim_q);
+            exe::database_player_to_attribute_vector(jj, q, v3.as_mut_ptr() as usize, &mut fim_l, &mut fim_p, &mut fim_q);
             let a = fim_l.wrapping_add(2) as i8;
             let f = fim_q as i8;
             if a < f {
@@ -1920,14 +1906,14 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                     set_attr_cell_value(&mut v3, c, (x as i32 / 2) as i16);
                 }
             }
-            de_vet_j(jj, q, v3.as_mut_ptr() as usize);
-            norm_fisicos(q);
-            norm_jogador(q);
+            exe::database_attribute_vector_to_player(jj, q, v3.as_mut_ptr() as usize);
+            exe::staff_normalise_player_physical_attributes(q);
+            exe::staff_normalise_player_attributes(q);
         }
         if nn != 0 {
             clear_attr_vector(v3.as_mut_ptr() as usize);
             let mut end = 0u8;
-            vet_nj(nn, q, v3.as_mut_ptr() as usize, &mut end);
+            exe::database_non_player_to_attribute_vector(nn, q, v3.as_mut_ptr() as usize, &mut end);
             let mut c = end as i8;
             while attr_cell_value(&v3, c as isize) != -0x7f {
                 let x = attr_cell_value(&v3, c as isize).wrapping_mul(10).wrapping_sub(w(nn + 4));
@@ -1935,8 +1921,8 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 set_attr_cell_value(&mut v3, c as isize, (x as i32 / 2) as i16);
                 c = c.wrapping_add(1);
             }
-            de_vet_nj(nn, q, v3.as_mut_ptr() as usize);
-            norm_nao_jogador(q);
+            exe::database_attribute_vector_to_non_player(nn, q, v3.as_mut_ptr() as usize);
+            exe::staff_normalise_non_player_attributes(q);
         }
         k += 1;
         q += 110;
@@ -2517,7 +2503,6 @@ pub(crate) unsafe extern "C" fn database_format_name_from_ids(name: i32, sobreno
     let deu_apelido: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_HAS_NICKNAME);
     let checks: unsafe extern "C" fn(usize, i32, i32, i32, u32) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
     let apelido: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_HUMAN_MANAGER_GET_NICKNAME);
-    let format: unsafe extern "C" fn(usize, usize, usize, usize, u32, u32, i32) -> u32 = core::mem::transmute(FN_DATABASE_FORMAT_NAME_FROM_STRINGS);
     let record = |table: usize, i: i32| if i > -1 { read_usize(table).wrapping_add((i as usize).wrapping_mul(60)) } else { 0 };
     let (n, s) = (record(G_FIRST_NAME_TABLE, name), record(G_SECOND_NAME_TABLE, sobrenome));
     let apelidos = read_usize(G_HUMAN_MANAGER);
@@ -2529,7 +2514,7 @@ pub(crate) unsafe extern "C" fn database_format_name_from_ids(name: i32, sobreno
         }
     }
     let c = terceiro.unwrap_or_else(|| record(G_COMMON_NAME_TABLE, common)); // o nome comum
-    format(n, s, c, text, size, form, -1)
+    exe::database_format_name_from_strings(n, s, c, text, size, form, -1)
 }
 
 /// `database_format_official_name(official, text, size, style)`: the official's name (first name +4, surname +8) in
@@ -3225,7 +3210,6 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
     let slot_of: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u8 = core::mem::transmute(FN_TACTICS_FIND_SELECTION_SLOT);
     let formation_of: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTIC);
     let home_of: unsafe extern "thiscall" fn(usize, u32, u32) -> u16 = core::mem::transmute(FN_FORMATION_GET_SLOT_POSITION);
-    let rating: unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32 = core::mem::transmute(FN_MATCH_MAN_SCORE_PLAYER_FOR_SELECTION);
     let j = || read_usize(person + staff::PLAYER);
     let b = |k: usize| signed_byte_at(j(), k);
     let m = |kind: u32, attribute: u32| player_stat_average(person, kind, attribute);
@@ -3253,7 +3237,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
     if (slot as i8) > -1 && (slot as i8) < 11 {
         let formation = formation_of(tactic, club, 0);
         let home = home_of(formation, (club as u32 & !0xff) | slot as u32, 0); // the argument with the slot byte
-        let x = rating(person, home as u32, 0x800, 0, -1, 0);
+        let x = exe::match_man_score_player_for_selection(person, home as u32, 0x800, 0, -1, 0);
         if x < random(40) + 150 {
             f += 4;
         }
@@ -3480,13 +3464,11 @@ pub(crate) unsafe extern "C" fn staff_is_player_attribute_visible(who_ve: usize,
     if who_ve == 0 || person == 0 || table == 0 || *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) == 0 {
         return 1;
     }
-    let sheet: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FOG_OF_WAR_GET_MANAGER_MAP);
-    let conhecimento: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_FOG_OF_WAR_MAP_GET_KNOWLEDGE_LEVEL);
-    let f = sheet(table, who_ve);
+    let f = exe::fog_of_war_get_manager_map(table, who_ve);
     if f == 0 {
         return 1;
     }
-    let k = conhecimento(f, person);
+    let k = exe::fog_of_war_map_get_knowledge_level(f, person);
     if k == 3 {
         return 1;
     }
@@ -3531,9 +3513,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_attribute_for_viewer(who_ve: us
     let calcular: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_STAFF_COMPUTE_PLAYER_ATTRIBUTE);
     let player = core::ptr::read_unaligned((person + staff::PLAYER) as *const usize);
     if *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0 {
-        let sheet: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FOG_OF_WAR_GET_MANAGER_MAP);
-        let visivel: unsafe extern "C" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_STAFF_IS_PLAYER_ATTRIBUTE_VISIBLE);
-        if sheet(*(G_FOG_OF_WAR as *const usize), who_ve) != 0 && visivel(who_ve, person, attribute) == 0 {
+        if exe::fog_of_war_get_manager_map(*(G_FOG_OF_WAR as *const usize), who_ve) != 0 && exe::staff_is_player_attribute_visible(who_ve, person, attribute) == 0 {
             return 0xf9; // desconhecido (dbt)
         }
     }
@@ -3696,12 +3676,11 @@ pub(crate) unsafe extern "C" fn compare_region_names(a: usize, b: usize) -> i32 
     if b == 0 {
         return -1;
     }
-    let name: unsafe extern "C" fn(u32, usize, u32, u32) -> u32 = core::mem::transmute(FN_GET_REGION_NAME);
     let language = *(G_REGION_NAME_FORM as *const u8) as u32;
     let mut na = [0u8; 0xc8];
     let mut nb = [0u8; 0xc8];
-    name(*(a as *const u8) as u32, na.as_mut_ptr() as usize, 0xc8, language);
-    name(*(b as *const u8) as u32, nb.as_mut_ptr() as usize, 0xc8, language);
+    exe::get_region_name(*(a as *const u8) as u32, na.as_mut_ptr() as usize, 0xc8, language);
+    exe::get_region_name(*(b as *const u8) as u32, nb.as_mut_ptr() as usize, 0xc8, language);
     compare_text_nocase(na.as_ptr(), nb.as_ptr()) // (dbt)
 }
 
@@ -4028,11 +4007,10 @@ pub(crate) unsafe extern "C" fn staff_get_natural_position_mask(person: usize) -
 /// (+0xd7) com jogador (+0x61) têm a máscara da posição natural (0x5481a0, pelo endereço do jogo) igual a `mascara`.
 /// Só `al` (os três chamadores, 0x758010 e 0x758200, leem o byte). Na mídia.
 pub(crate) unsafe extern "C" fn club_count_squad_with_position_mask(club: usize, mask: u32) -> u8 {
-    let mask_of: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_GET_NATURAL_POSITION_MASK);
     let mut n = 0u8;
     for k in 0..50 {
         let p = read_usize(club + club::SQUAD + 4 * k);
-        if p != 0 && read_usize(p + staff::PLAYER) != 0 && mask_of(p) == mask { // the equal ones
+        if p != 0 && read_usize(p + staff::PLAYER) != 0 && exe::staff_get_natural_position_mask(p) == mask { // the equal ones
             n = n.wrapping_add(1);
         }
     }
@@ -4079,7 +4057,6 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
         return 0;
     }
     let age: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-    let mask_of: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_GET_NATURAL_POSITION_MASK);
     let contract_of: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let away: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
     let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
@@ -4105,7 +4082,7 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
         if pref != 0 && (0..3).any(|j| read_usize(pref + preferences::STAFF_DISLIKED_STAFF1 + 4 * j) == o) {
             continue;
         }
-        if read_i8(o + staff::PRESSURE) < 11 && mask_of(o) == mask_of(person) {
+        if read_i8(o + staff::PRESSURE) < 11 && exe::staff_get_natural_position_mask(o) == exe::staff_get_natural_position_mask(person) {
             continue;
         }
         let contract = contract_of(read_usize(G_CONTRACT_MANAGER), o, club);
@@ -4479,7 +4456,6 @@ pub(crate) unsafe extern "C" fn database_compare_clubs_by_longitude(a: usize, b:
 /// original (a 0x62c400 só é chamada para os da posição). Contador de 8 bits (no máximo 50).
 pub(crate) unsafe fn count_squad_above_ability(club: usize, limit: i32, position: impl Fn(usize) -> bool) -> u8 {
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    let injury: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
     let mut n = 0u8;
     for k in 0..50 {
         let p = rd(club + club::SQUAD + 4 * k);
@@ -4487,7 +4463,7 @@ pub(crate) unsafe fn count_squad_above_ability(club: usize, limit: i32, position
             continue;
         }
         let j = rd(p + staff::PLAYER);
-        if j == 0 || !position(j) || injury(rd(G_INJURY), p) == 2 {
+        if j == 0 || !position(j) || exe::injury_get_player_injury_status(rd(G_INJURY), p) == 2 {
             continue;
         }
         if core::ptr::read_unaligned(p as *const i32) >= *(G_STAFF_COUNT as *const i32) {
@@ -4529,8 +4505,7 @@ pub(crate) unsafe fn club_goals_per_game(club: usize, field: usize) -> Option<i3
     if c == 0 || rd(c + 8) == 0 {
         return None;
     }
-    let estatistica: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    let e = estatistica(rd(c + 8), club);
+    let e = exe::comp_stats_find_club_entry(rd(c + 8), club);
     if e == 0 {
         return None;
     }
@@ -4614,7 +4589,6 @@ pub(crate) unsafe extern "C" fn club_has_enough_strikers(club: usize) -> u8 {
 /// posição). Contador de 8 bits (no máximo 50).
 pub(crate) unsafe fn count_squad_above_ability_with(club: usize, limit: i32, position: impl Fn(usize) -> bool, extra: impl Fn(usize) -> bool) -> u8 {
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    let injury: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
     let mut n = 0u8;
     for k in 0..50 {
         let p = rd(club + club::SQUAD + 4 * k);
@@ -4622,7 +4596,7 @@ pub(crate) unsafe fn count_squad_above_ability_with(club: usize, limit: i32, pos
             continue;
         }
         let j = rd(p + staff::PLAYER);
-        if j == 0 || !position(j) || injury(rd(G_INJURY), p) == 2 {
+        if j == 0 || !position(j) || exe::injury_get_player_injury_status(rd(G_INJURY), p) == 2 {
             continue;
         }
         if core::ptr::read_unaligned(p as *const i32) >= *(G_STAFF_COUNT as *const i32) {
@@ -4677,14 +4651,13 @@ pub(crate) unsafe extern "C" fn club_has_fit_goalkeeper(club: usize) -> u8 {
         return 0;
     }
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    let injury: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
     for k in 0..50 {
         let p = rd(club + club::SQUAD + 4 * k);
         if p == 0 {
             continue;
         }
         let j = rd(p + staff::PLAYER);
-        if j == 0 || *((j + player_sheet::GOALKEEPER) as *const u8) != 20 || injury(rd(G_INJURY), p) == 2 {
+        if j == 0 || *((j + player_sheet::GOALKEEPER) as *const u8) != 20 || exe::injury_get_player_injury_status(rd(G_INJURY), p) == 2 {
             continue;
         }
         if core::ptr::read_unaligned(p as *const i32) < *(G_STAFF_COUNT as *const i32) {
@@ -4730,7 +4703,6 @@ pub(crate) unsafe extern "C" fn club_has_ball_winning_midfielders(club: usize) -
 /// `teto`). Reputação: +0x80 do clube, curto com sinal. Na ordem da original. Contador de 8 bits (no máximo 50).
 pub(crate) unsafe fn count_natural_at_position(club: usize, position: usize, attribute: usize, ceiling: i32) -> u8 {
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    let injury: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
     let rep = core::ptr::read_unaligned((club + club::REPUTATION) as *const i16) as i32;
     let limit = (rep / 75 + 25).clamp(40, 0x87);
     let a = (rep / 500 + 5).min(ceiling);
@@ -4741,7 +4713,7 @@ pub(crate) unsafe fn count_natural_at_position(club: usize, position: usize, att
             continue;
         }
         let j = rd(p + staff::PLAYER);
-        if j == 0 || *((j + position) as *const u8) != 20 || injury(rd(G_INJURY), p) == 2 {
+        if j == 0 || *((j + position) as *const u8) != 20 || exe::injury_get_player_injury_status(rd(G_INJURY), p) == 2 {
             continue;
         }
         if core::ptr::read_unaligned(p as *const i32) >= *(G_STAFF_COUNT as *const i32) {
@@ -4809,7 +4781,6 @@ pub(crate) unsafe extern "C" fn club_lacks_fast_defenders(club: usize) -> u8 {
 /// Reputação: +0x80 do clube, curto com sinal. Na ordem da original. Contador de 8 bits (no máximo 50).
 pub(crate) unsafe fn count_squad_by_rep_thresholds(club: usize, ceiling: i32, position: impl Fn(usize) -> bool, extra: impl Fn(usize, i32) -> bool) -> u8 {
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    let injury: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
     let rep = core::ptr::read_unaligned((club + club::REPUTATION) as *const i16) as i32;
     let limit = (rep / 75 + 25).clamp(40, 0x87);
     let a = (rep / 500 + 5).min(ceiling);
@@ -4820,7 +4791,7 @@ pub(crate) unsafe fn count_squad_by_rep_thresholds(club: usize, ceiling: i32, po
             continue;
         }
         let j = rd(p + staff::PLAYER);
-        if j == 0 || !position(j) || injury(rd(G_INJURY), p) == 2 {
+        if j == 0 || !position(j) || exe::injury_get_player_injury_status(rd(G_INJURY), p) == 2 {
             continue;
         }
         if core::ptr::read_unaligned(p as *const i32) >= *(G_STAFF_COUNT as *const i32) {
@@ -5030,8 +5001,7 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
     let division = read_i16(comp + competition::REPUTATION);
     let high = (division as i32).wrapping_mul(500);
     if league != 0 && high > rep as i32 {
-        let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-        let e = search(read_usize(league + 8), club);
+        let e = exe::comp_stats_find_club_entry(read_usize(league + 8), club);
         if e == 0 {
             return 0;
         }
@@ -5716,8 +5686,7 @@ pub(crate) unsafe fn for_each_english_table(t: usize, mut soltar: impl FnMut(usi
 /// não nulas, de +0x20 a +0x3c (os ponteiros ficam; quem chama, `load_database` 0x528503 e a troca de idioma
 /// 0x533aa6, apaga a tabela com `delete` 0x944c94 e zera [0xae2408]).
 pub(crate) unsafe extern "thiscall" fn eng_lng_free_tables(t: usize) {
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    for_each_english_table(t, |p| free(p));
+    for_each_english_table(t, |p| exe::crt_free(p));
 }
 
 /// Comparador: soltar duas vezes soltaria os mesmos blocos duas vezes.
@@ -5784,12 +5753,11 @@ pub(crate) unsafe fn database_error_box(row: u32) {
     let split: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
     let version: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_GUI_SHOW_MESSAGE_BOX);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
     split(0x9b5ac8, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
     let s = version(nome.as_mut_ptr(), ext.as_mut_ptr(), row);
     format(0xae24d0, 0x9870e8, s);
-    caixa(0x9870e0, 0xae24d0, 0);
+    exe::gui_show_message_box(0x9870e0, 0xae24d0, 0);
     *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
 }
 
@@ -5797,11 +5765,10 @@ pub(crate) unsafe fn database_error_box(row: u32) {
 ///
 /// [pt] A caixa do Database.cpp seguida do fim do jogo (0x5cc7d0, 0x5a8f60 e exit(−1)), como a original sem memória.
 pub(crate) unsafe fn database_fatal_error(row: u32) -> ! {
-    let before: unsafe extern "C" fn() = core::mem::transmute(FN_GAME_FATAL_CLEANUP);
     let after: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     database_error_box(row);
-    before();
+    exe::game_fatal_cleanup();
     after();
     exit(-1)
 }
@@ -6021,12 +5988,9 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
     crate::comparison::branch("criação cortar a tabela de clubes");
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-    let erase: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let remapear: unsafe extern "C" fn(i32, i32) -> u32 = core::mem::transmute(FN_REMAP_CLUB_KEY_ID);
     let gi = |a: usize| read_i32(a);
     let rd = |a: usize| read_usize(a);
     let wi = |a: usize, v: i32| core::ptr::write_unaligned(a as *mut i32, v);
@@ -6093,7 +6057,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
         }
         k += 1;
     }
-    free(nations);
+    exe::crt_free(nations);
     let mut s = rd(G_STAFF_TABLE);
     let end = s.wrapping_add((gi(0xae2364) as usize).wrapping_mul(110)).wrapping_sub(110);
     while s <= end {
@@ -6140,7 +6104,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
     let mut c = table;
     while c <= last {
         let id = gi(c);
-        let fica = if remapear(id, (target.wrapping_sub(table) as i32) / 581) != 0
+        let fica = if exe::remap_club_key_id(id, (target.wrapping_sub(table) as i32) / 581) != 0
             || gi(marcados.wrapping_add((id as usize).wrapping_mul(4))) != 0
             || id >= gi(0xae235c) - 2 * gi(0xae2350)
         {
@@ -6158,7 +6122,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
         }
         c += 581;
     }
-    free(marcados);
+    exe::crt_free(marcados);
     // the club pointers by the new ones (the old id is at +0 of the target, still in the old place)
     let swap = |field: usize| {
         let p = rd(field);
@@ -6184,7 +6148,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
     let ids = alloc((ficam as u32) << 2);
     *(G_CLUB_ENGLISH_NAME_INDEX_TABLE as *mut usize) = ids;
     if ids == 0 {
-        erase(novos);
+        exe::crt_operator_delete(novos);
         return;
     }
     let mut row = 0i32;
@@ -6204,7 +6168,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
     if r != rd(G_CLUB_TABLE) {
         database_fatal_error(0x4ca);
     }
-    erase(novos);
+    exe::crt_operator_delete(novos);
     format(0xde1f64, 0x9b5af4, gi(0xae235c));
 }
 
@@ -6519,8 +6483,7 @@ pub(crate) unsafe fn free_database_table(table: usize) {
         let global_free: unsafe extern "system" fn(usize) -> usize = core::mem::transmute(*(0x9670f4 as *const usize));
         global_free(table);
     } else {
-        let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        free(table);
+        exe::crt_free(table);
     }
 }
 
@@ -6698,8 +6661,7 @@ pub(crate) unsafe extern "C" fn compare_staff_by_player_ability_desc(a: usize, b
 pub(crate) unsafe fn remove_or_restore_training(person: usize, devolver: u32) {
     let manager = *(G_TRAINING_MANAGER as *const usize);
     if manager != 0 {
-        let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_TRAINING_MANAGER_REMOVE_OR_RESTORE_TRAINING_PROGRESS);
-        f(manager, person, devolver);
+        exe::training_manager_remove_or_restore_training_progress(manager, person, devolver);
     }
 }
 
@@ -6814,9 +6776,8 @@ pub(crate) unsafe fn rebalance_attr_vector(v: *mut u8, start: i8, end: i8, playe
 ///
 /// [pt] O vetor de atributos do `jogador` (0x53a610) com os fins de grupo (lados, posições, ponderados).
 pub(crate) unsafe fn player_attr_vector(player: usize, person: usize, v: *mut u8) -> (u8, u8) {
-    let fill: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8, *mut u8) -> usize = core::mem::transmute(FN_DATABASE_PLAYER_TO_ATTRIBUTE_VECTOR);
     let (mut lados, mut posicoes, mut ponderados) = (0u8, 0u8, 0u8);
-    fill(player, person, v as usize, &mut lados, &mut posicoes, &mut ponderados);
+    exe::database_player_to_attribute_vector(player, person, v as usize, &mut lados, &mut posicoes, &mut ponderados);
     (lados, ponderados)
 }
 
@@ -6877,8 +6838,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(perso
     let (lados, ponderados) = player_attr_vector(player, person, v);
     rebalance_attr_vector(v, (lados as i8).wrapping_add(2), ponderados as i8, player, target, &[0x1e, 0x18],
         |x| 2 * x as i32);
-    let devolver: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_ATTRIBUTE_VECTOR_TO_PLAYER);
-    devolver(player, person, v as usize);
+    exe::database_attribute_vector_to_player(player, person, v as usize);
     if *((player + player_sheet::GOALKEEPER) as *const i8) == 0x14 {
         subtract_mean_2a_3a(player);
         let terco = ((b(player_sheet::ANTICIPATION) + b(player_sheet::DECISIONS) + b(player_sheet::POSITIONING)) / 3) as u8;
@@ -6953,8 +6913,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_attributes(person: usize)
     let (lados, ponderados) = player_attr_vector(player, person, v);
     rebalance_attr_vector(v, (lados as i8).wrapping_add(2), ponderados as i8, player, -20, &[],
         |x| ftol(x as f64 * read_f64_at(0x968f98))); // 0x968f98 = 1.75
-    let devolver: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_ATTRIBUTE_VECTOR_TO_PLAYER);
-    devolver(player, person, v as usize);
+    exe::database_attribute_vector_to_player(player, person, v as usize);
     if *((player + player_sheet::GOALKEEPER) as *const i8) >= 0xf {
         subtract_mean_2a_3a(player);
     }
@@ -7126,9 +7085,7 @@ pub unsafe fn autoteste_dbj_2() {
 /// a local `eh_a` só é lida quando 0x540a50 devolve parceiro (e então ela foi gravada).
 pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
     let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
-    let reunir: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let remove: unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_DATABASE_REMOVE_STAFF_FROM_CLUB);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let goalkeeper = |q: usize| {
         let j = rd(q + staff::PLAYER);
@@ -7145,7 +7102,7 @@ pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
             *((club + club::HAS_LINKED_CLUB) as *mut u8) = 1;
             if eh_a != 0 {
                 let mut v = [0usize; 100];
-                reunir(club, v.as_mut_ptr(), 1);
+                exe::database_collect_club_squad(club, v.as_mut_ptr(), 1);
                 sort(v.as_mut_ptr() as usize, 100, 4, 0x5402f0);
                 let (mut total, mut goleiros) = (0i8, 0i8);
                 for &q in v.iter() {
@@ -7165,7 +7122,7 @@ pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
                             if g {
                                 goleiros -= 1;
                             }
-                            remove(rd(q + staff::CLUB_JOB), q, 0, 1, 0);
+                            exe::database_remove_staff_from_club(rd(q + staff::CLUB_JOB), q, 0, 1, 0);
                             total -= 1;
                         }
                     }
@@ -7203,8 +7160,6 @@ pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
 pub(crate) unsafe extern "C" fn database_merge_b_team_staff() {
     let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let remove: unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_DATABASE_REMOVE_STAFF_FROM_CLUB);
-    let incluir: unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32 = core::mem::transmute(FN_DATABASE_ADD_STAFF_TO_CLUB);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let valida = |p: usize| p != 0 && *(p as *const i32) < *(G_STAFF_COUNT as *const i32);
     let contar = |c: usize, d: usize, k: usize| (0..k).filter(|&j| valida(rd(c + d + 4 * j))).count() as i32;
@@ -7221,7 +7176,7 @@ pub(crate) unsafe extern "C" fn database_merge_b_team_staff() {
                 if valida(p) {
                     n += 1;
                     if n > 50 {
-                        remove(b, p, 0, 1, 0);
+                        exe::database_remove_staff_from_club(b, p, 0, 1, 0);
                     }
                 }
             }
@@ -7230,23 +7185,23 @@ pub(crate) unsafe extern "C" fn database_merge_b_team_staff() {
                 for j in 0..k {
                     let p = rd(b + d + 4 * j);
                     if valida(p) {
-                        remove(b, p, 0, 1, 0);
+                        exe::database_remove_staff_from_club(b, p, 0, 1, 0);
                         if n < k as i32 { // the B team’s staff go to the A team
                             n += 1;
-                            incluir(club, p, cargo, G_CURRENT_DATE, 1, 0);
+                            exe::database_add_staff_to_club(club, p, cargo, G_CURRENT_DATE, 1, 0);
                         }
                     }
                 }
             }
             let tb = rd(b + club::MANAGER);
             if rd(club + club::MANAGER) != 0 && tb != 0 {
-                remove(b, tb, 0, 1, 0);
+                exe::database_remove_staff_from_club(b, tb, 0, 1, 0);
             } else if tb != 0 {
-                remove(b, tb, 0, 1, 0);
-                incluir(club, tb, *((tb + staff::JOB_FOR_CLUB) as *const u8) as u32, 0, 1, 0);
+                exe::database_remove_staff_from_club(b, tb, 0, 1, 0);
+                exe::database_add_staff_to_club(club, tb, *((tb + staff::JOB_FOR_CLUB) as *const u8) as u32, 0, 1, 0);
             }
             if rd(club + club::ASSISTANT_MANAGER) != 0 && rd(b + club::ASSISTANT_MANAGER) != 0 {
-                remove(b, rd(b + club::ASSISTANT_MANAGER), 0, 1, 0);
+                exe::database_remove_staff_from_club(b, rd(b + club::ASSISTANT_MANAGER), 0, 1, 0);
             }
         }
         i += 1;
@@ -7441,8 +7396,7 @@ pub(crate) unsafe extern "C" fn database_remove_staff_from_club(club: usize, per
             let id = gi(club);
             let n = gi(0xae235c);
             if ok && id >= n.wrapping_sub(gi(0xae2350).wrapping_mul(2)) && id < n.wrapping_sub(gi(0xae2350)) {
-                let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
-                let s = sub21(rd(0x53));
+                let s = exe::database_get_national_u21_team(rd(0x53));
                 if core::ptr::read_unaligned((s + club::MANAGER) as *const usize) == person {
                     core::ptr::write_unaligned((s + club::MANAGER) as *mut usize, 0); // the U21 coach
                 }
@@ -7570,9 +7524,8 @@ pub(crate) unsafe extern "C" fn staff_get_non_player_attribute(person: usize, at
     if person == 0 || !(1..=12).contains(&a) {
         return original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_STAFF_GET_NON_PLAYER_ATTRIBUTE)(person, attribute);
     }
-    let calcular: unsafe extern "C" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_STAFF_COMPUTE_NON_PLAYER_ATTRIBUTE);
     let not_player = core::ptr::read_unaligned((person + staff::NON_PLAYER) as *const usize);
-    calcular(person, not_player, attribute)
+    exe::staff_compute_non_player_attribute(person, not_player, attribute)
 }
 
 /// the 1-to-20 rating of 2 × value + current ability × 0.1 (0x544380 with the ability scaled down)
@@ -7863,7 +7816,6 @@ pub(crate) unsafe extern "C" fn database_count_club_squad(club: usize, mode: u32
         return original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u8>(IDX_DATABASE_COUNT_CLUB_SQUAD)(club, mode, filtro);
     }
     let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
-    let tem_reservas: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_CLUB_HAS_RESERVE_SQUAD);
     let sheet: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let mode = mode as u8;
@@ -7895,7 +7847,7 @@ pub(crate) unsafe extern "C" fn database_count_club_squad(club: usize, mode: u32
     let mut eh_a = 0u32;
     let p = partner(club, &mut eh_a, 1);
     if p == 0 {
-        if tem_reservas(club) != 0 {
+        if exe::database_club_has_reserve_squad(club) != 0 {
             return count(club, mode);
         }
         return count(club, 0);
@@ -8068,15 +8020,13 @@ pub(crate) unsafe extern "C" fn staff_normalise_non_player_attributes(person: us
     if nj == 0 {
         return;
     }
-    let fill: unsafe extern "C" fn(usize, usize, usize, *mut u8) -> u32 = core::mem::transmute(FN_DATABASE_NON_PLAYER_TO_ATTRIBUTE_VECTOR);
-    let devolver: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_ATTRIBUTE_VECTOR_TO_NON_PLAYER);
     let mut array = [0u8; 63 * 3];
     for c in array.chunks_exact_mut(3) {
         c.copy_from_slice(&[0x81, 0xff, 0x81]);
     }
     let v = array.as_mut_ptr();
     let mut end = 0u8;
-    fill(nj, person, v as usize, &mut end);
+    exe::database_non_player_to_attribute_vector(nj, person, v as usize, &mut end);
     let w = |i: i8| core::ptr::read_unaligned(v.add(3 * i as usize) as *const i16);
     let pw = |i: i8, x: i16| core::ptr::write_unaligned(v.add(3 * i as usize) as *mut i16, x);
     let end = end as i8;
@@ -8162,7 +8112,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_non_player_attributes(person: us
             }
         }
     }
-    devolver(nj, person, v as usize);
+    exe::database_attribute_vector_to_non_player(nj, person, v as usize);
 }
 
 /// The fixed colours (index.cpp keys at 0x9cf178..0x9cf1fc, ids) and the family of each one, in the order of the
@@ -8207,9 +8157,8 @@ pub(crate) unsafe extern "C" fn database_get_colour_family(colour: usize) -> u8 
 /// primeiro): iguais; 8 com 9; 8 com 7; 6 com 7, salvo quando a da família 6 está contra a cor com o id
 /// da chave [0x9cf1dc] (exceção: não se confundem).
 pub(crate) unsafe extern "C" fn database_colours_clash(a: usize, b: usize) -> u8 {
-    let familia: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_DATABASE_GET_COLOUR_FAMILY);
-    let fa = familia(a);
-    let fb = familia(b);
+    let fa = exe::database_get_colour_family(a);
+    let fb = exe::database_get_colour_family(b);
     let par = |x: u8, y: u8| (fa == x && fb == y) || (fb == x && fa == y);
     let key = *(KEY_COLOUR_PURPLE_3 as *const u32);
     if fa == fb || par(8, 9) || par(8, 7) {
@@ -8269,8 +8218,7 @@ pub(crate) unsafe extern "C" fn staff_compute_non_player_attribute(person: usize
 /// [pt] rand() da CRT (0x946a04) escalado a `n`: rand × n / 0x8000. As rotinas de nomes fazem a conta em
 /// 64 bits (0x945e40 multiplica, 0x945e80 divide com sinal) e ficam com os 32 bits de baixo.
 pub(crate) unsafe fn scaled_crt_rand(n: i32) -> i32 {
-    let rand: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_CRT_RAND);
-    ((rand() as i64 * n as i64) / 0x8000) as i32
+    ((exe::crt_rand() as i64 * n as i64) / 0x8000) as i32
 }
 
 /// Name count in the global at `a` (first or second names), capped at 0x7fff.
@@ -8608,7 +8556,6 @@ pub(crate) unsafe extern "C" fn database_get_club_kit_colours(club: usize, kit: 
 /// ou vindo da 0x53b3d0): a original com nulo (caixa "Error" e 0).
 pub(crate) unsafe extern "C" fn database_get_club_manager(club: usize) -> usize {
     let partner: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
-    let national_team_of_nation: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     let manager = |c: usize| core::ptr::read_unaligned((c + club::MANAGER) as *const usize);
     let mut c = club;
     loop {
@@ -8626,7 +8573,7 @@ pub(crate) unsafe extern "C" fn database_get_club_manager(club: usize) -> usize 
         if *(c as *const i32) < (*(G_CLUB_COUNT as *const i32)).wrapping_sub(*(G_NATION_COUNT as *const i32)) {
             return 0;
         }
-        c = national_team_of_nation(core::ptr::read_unaligned((c + club::NATION) as *const usize));
+        c = exe::database_get_national_team(core::ptr::read_unaligned((c + club::NATION) as *const usize));
     }
 }
 
@@ -8879,11 +8826,10 @@ pub(crate) unsafe extern "C" fn database_is_basque_club(club: usize) -> u32 {
 /// (0x4cf5a0, guardado em [0xae1080]; contrato +4 = id na tabela [0xae23b4], 581 bytes por clube).
 /// Sem contrato ou clube: (0, 0). Comum a 0x5444a0 e 0x544590 (e 0x544520, 0x544600).
 pub(crate) unsafe fn contract_link_for_club(person: usize, club: usize) -> (usize, usize) {
-    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let contract_bond: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let mut club = club;
     if club == 0 {
-        let c = contract_of(*(G_CONTRACT_MANAGER as *const usize), person);
+        let c = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), person);
         *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
         if c == 0 {
             return (0, 0);
@@ -8942,14 +8888,13 @@ pub(crate) unsafe extern "C" fn staff_is_loan_listed(person: usize, club: usize)
 /// lista de transferências a pedido (vínculo +0x4e, bit 8). Sem clube, o do contrato (0x4cf5a0,
 /// guardado em [0xae1080]; contrato +4 = id na tabela [0xae23b4], 581 bytes por clube).
 pub(crate) unsafe extern "C" fn staff_is_listed_by_request(person: usize, club: usize) -> u32 {
-    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let contract_bond: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     if person == 0 {
         return 0;
     }
     let mut club = club;
     if club == 0 {
-        let c = contract_of(*(G_CONTRACT_MANAGER as *const usize), person);
+        let c = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), person);
         *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
         if c == 0 {
             return 0;
@@ -9097,8 +9042,7 @@ pub(crate) unsafe extern "C" fn database_get_reputation_scope(person: usize, who
 /// 3 → metade da mundial + metade da atual, outro → metade da nacional + metade da atual (divisões
 /// truncadas). Só o ax é devolvido.
 pub(crate) unsafe extern "C" fn database_get_staff_reputation_for_viewer(person: usize, who_ve: usize, not_player: u32) -> u16 {
-    let escopo: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_DATABASE_GET_REPUTATION_SCOPE);
-    let e = escopo(person, who_ve);
+    let e = exe::database_get_reputation_scope(person, who_ve);
     let (dados, atual) = if not_player != 0 {
         (core::ptr::read_unaligned((person + staff::NON_PLAYER) as *const usize), 8)
     } else {
@@ -9130,7 +9074,6 @@ pub(crate) unsafe extern "C" fn database_get_staff_reputation_for_viewer(person:
 /// (0x4cf5a0) que começou até 1/1/1998 (Date 0x549f70; contrato +0x25 dia, +0x27 ano).
 pub(crate) unsafe extern "C" fn database_is_staff_foreign(person: usize, nation: usize, groups: u32) -> u32 {
     let community: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_EU_NATIONAL);
-    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let construct: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let read = |p: usize, d: usize| core::ptr::read_unaligned((p + d) as *const usize);
     let g = |a: usize| *(a as *const u32);
@@ -9169,7 +9112,7 @@ pub(crate) unsafe extern "C" fn database_is_staff_foreign(person: usize, nation:
         return 0;
     }
     if id == g(KEY_NATION_PORTUGAL) && community(person, 0) == 0 {
-        let contract = contract_of(*(G_CONTRACT_MANAGER as *const usize), person);
+        let contract = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), person);
         if contract != 0 {
             let mut d = [0u16; 4];
             let data = construct(&mut d, 1, 0, 0x7ce, 0xffff_ffff) as *const u16; // 1/1/1998
@@ -9288,14 +9231,13 @@ pub(crate) unsafe extern "C" fn database_is_staff_eu_national(person: usize, nat
 /// contrato (0x4cf5a0, guardado em [0xae1080]; contrato +4 = id do clube na tabela [0xae23b4], 581
 /// bytes por clube).
 pub(crate) unsafe extern "C" fn staff_is_transfer_listed_or_requested(person: usize, club: usize) -> u32 {
-    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let contract_bond: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     if person == 0 {
         return 0;
     }
     let mut club = club;
     if club == 0 {
-        let c = contract_of(*(G_CONTRACT_MANAGER as *const usize), person);
+        let c = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), person);
         *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
         if c == 0 {
             return 0;
@@ -9349,7 +9291,6 @@ pub(crate) unsafe extern "C" fn staff_compute_player_attribute(person: usize, pl
     }
     // simplification: the original pushes the whole register with the byte at the bottom; both only read the byte
     let relativo: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(FN_PLAYER_ATTRIBUTE_RATING);
-    let relativo_goleiro: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(FN_PLAYER_ATTRIBUTE_RATING_WITH_SCALED_ABILITY);
     let b = |d: usize| *((player + d) as *const i8);
     let byte = |d: usize| b(d) as u8;
     let ability = core::ptr::read_unaligned((player + 5) as *const i16) as i32;
@@ -9368,7 +9309,7 @@ pub(crate) unsafe extern "C" fn staff_compute_player_attribute(person: usize, pl
         9 => rating(0x24),
         10 => *((person + staff::DETERMINATION) as *const u8),
         11 => if goalkeeper == 20 { rating_h(0x26) } else { rating(0x26) },
-        12 => if goalkeeper == 20 { relativo_goleiro(player, byte(0x27) as u32) } else { relativo(player, byte(0x27) as u32) },
+        12 => if goalkeeper == 20 { exe::player_attribute_rating_with_scaled_ability(player, byte(0x27) as u32) } else { relativo(player, byte(0x27) as u32) },
         13 => byte(0x28),
         14 => if goalkeeper < 15 { rating_h(0x2a) } else { rating(0x2a) },
         15 => rating(0x2b),
@@ -9420,9 +9361,8 @@ pub(crate) unsafe extern "C" fn staff_get_player_attribute(person: usize, attrib
 /// locais sem valor (lixo de ponteiro, a partir de +0x5cb); chamado desta cópia ele roda na pilha
 /// particular e o lixo gravado muda (prova do save da 219a). Voltou com o critério novo.
 pub(crate) unsafe extern "C" fn save_database_for_game(save: usize, a4: u32, kind: u32) -> u32 {
-    let write_bench: unsafe extern "C" fn(usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_SAVE_DATABASE);
     crate::comparison::branch("save gravar banco");
-    write_bench(save, 1, a4, kind)
+    exe::save_database(save, 1, a4, kind)
 }
 
 // simplification: writes the database tables into the container; it does not run twice. Original only; the copy
@@ -9435,9 +9375,8 @@ pub(crate) unsafe extern "C" fn save_database_for_game(save: usize, a4: u32, kin
 /// do `load_game_data`: `load_database(save, compartilhado, 1)` (0x528540, do contêiner), devolvendo
 /// a resposta dela (1 = certo).
 pub(crate) unsafe extern "C" fn load_database_from_stream(save: usize, compartilhado: u32) -> u32 {
-    let load_bench: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_LOAD_DATABASE);
     crate::comparison::branch("save carregar banco");
-    load_bench(save, compartilhado, 1)
+    exe::load_database(save, compartilhado, 1)
 }
 
 // simplification: loads the whole database from the container (allocates the tables); does not run twice. Only the

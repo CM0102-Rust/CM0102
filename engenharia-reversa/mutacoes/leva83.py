@@ -5,7 +5,7 @@ MUTACOES = [
     ('p_sinal', "    *((person_block(this, person, k) + 0x44) as *const i8) as i32", "    *((person_block(this, person, k) + 0x44) as *const u8) as i32"),
     ('p_3a', "    person_block(this, person, k) + 0x3a", "    person_block(this, person, k) + 0x3c"),
     ('c_ff', "    if national_team == 0 {\n        return 0xff;", "    if national_team == 0 {\n        return 0;"),
-    ('c_2', "    if second(national_team) != 0 {\n        return 2;", "    if second(national_team) != 0 {\n        return 1;"),
+    ('c_2', "    if exe::club_is_national_team(national_team) != 0 {\n        return 2;", "    if exe::club_is_national_team(national_team) != 0 {\n        return 1;"),
     ('c_bit', "    (*((person + staff::PLAYING_SQUAD) as *const u8) >> 3) & 1", "    (*((person + staff::PLAYING_SQUAD) as *const u8) >> 2) & 1"),
     ('g_9b', "    *(G_DATABASE_NAMES_LANGUAGE as *const u32)\n}", "    *(G_PLAYER_INIT_LEVEL_BASE_TABLE as *const u32)\n}"),
 ]

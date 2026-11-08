@@ -58,7 +58,6 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, f
 /// pessoa e +4 validos (reservas, da 11a em diante, so com +0x32 != 0xff) ficam conhecidas (0x5b09d0).
 pub(crate) unsafe extern "stdcall" fn fog_after_match(partida: usize, data: usize) {
     let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let conhecer: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_FOG_OF_WAR_MAP_RAISE_KNOWLEDGE);
     let n = || *(G_STAFF_COUNT as *const i32);
     for lado in 0..2usize {
         let club = *((partida + if lado == 0 { 0x20 } else { 0x1c }) as *const usize);
@@ -82,7 +81,7 @@ pub(crate) unsafe extern "stdcall" fn fog_after_match(partida: usize, data: usiz
             }
             let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(staff::SIZE));
             if p == 0 || *(p as *const i32) < n() {
-                conhecer(obj, p, 0);
+                exe::fog_of_war_map_raise_knowledge(obj, p, 0);
             }
         }
     }

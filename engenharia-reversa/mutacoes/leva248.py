@@ -4,7 +4,7 @@ MUTACOES = [
     ('cpl_oferta_do_clube', 'if read_usize(o + offer::BUYER_CLUB_ID) == read_usize(club) { // the club’s offer', 'if o != 0 { // mutacao: a primeira de qualquer clube', 'cpl_1 oferta do clube'),
     ('cpl_oferta_pendente', 'if matches!(*((o + offer::STATUS) as *const u8), 0 | 1 | 5 | 6) { // the pending status', 'if matches!(*((o + offer::STATUS) as *const u8), 0 | 5 | 6) { // mutacao: sem a 1', 'cpl_1 oferta pendente'),
     ('cpl_sob_oferta_marca', 'return mark(); // a marca "sob oferta"', 'return 0; // mutacao: ninguem sob oferta'),
-    ('cpl_bosman_invertida', 'free(read_usize(club + club::NATION)) // the club’s nation', '(free(read_usize(club + 0x53)) == 0) as u32 // mutacao: invertida'),
+    ('cpl_bosman_invertida', 'exe::nation_allows_free_transfers(read_usize(club + club::NATION)) // the club’s nation', '(exe::nation_allows_free_transfers(read_usize(club + 0x53)) == 0) as u32 // mutacao: invertida'),
     ('cpl_veto_valores', 'core::ptr::write_unaligned(p, ftol(core::ptr::read_unaligned(p) as f64 * read_f64_at(0x9689d8)) as i16); // 90%', 'let _ = p; // mutacao: sem cortar', 'cpl_2 veto da diretoria valores'),
     ('cpl_passada_conta', 'write_usize(this + transfer_manager_fields::PAST_TRANSFER_COUNT, n.wrapping_add(1)); // the count of past transfers', 'write_usize(this + transfer_manager_fields::PAST_TRANSFER_COUNT, n); // mutacao: a conta nao sobe', 'cpl_3 transferencia passada'),
     ('cpl_permissao_marca', '*mark |= 0x20; // the permission flag', '*mark |= 0; // mutacao: sem a marca', 'cpl_3 permissao de trabalho'),

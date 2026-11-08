@@ -8,12 +8,11 @@ use super::*;
 /// (+0x50 = 0xff).
 pub(crate) unsafe fn new_marker_comp(vtabela: usize, g: usize) -> usize {
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let comp: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_COMP_COMP);
     let c = new(0xa3);
     if c == 0 {
         return 0;
     }
-    comp(c);
+    exe::comp_comp(c);
     write_u32_from_usize(c, vtabela);
     *((c + 0x42) as *mut u8) = 1;
     write_u32_from_usize(c + 4, comp_record_of_key(g));
@@ -66,18 +65,9 @@ pub(crate) unsafe fn new_marker_comp(vtabela: usize, g: usize) -> usize {
 /// mov ecx -> thiscall, ret 4) e a divisão de baixo (0x5bd600, o mesmo), que deixam os seus jogos no calendário do jogo,
 /// e são destruídas (a virtual 0 com 1: push 1; mov ecx -> thiscall, ret 4). Devolve this.
 pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u32, record: usize) -> usize {
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
-    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FRAFIRST_SET_UP_RULES);
-    let table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FRAFIRST_CREATE_TABLE);
-    let games: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
     let sort: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let stats: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_COMP_STATS);
-    let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_PREDICTED_POSITIONS);
-    let cfa: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_FRACFA_FRACFA);
-    let low: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_FRALOWER_FRALOWER);
-    base(this);
+    exe::league_league(this);
     write_u32_from_usize(this, 0x96aa24);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, year as u16);
     write_u32_from_usize(this + 4, record);
@@ -86,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
     write_u32_from_usize(this + fra_first::CFA_MARKER, m);
     let m = new_marker_comp(0x96a904, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION);
     write_u32_from_usize(this + fra_first::LOWER_MARKER, m);
-    if load(this, 1) != 0 {
+    if exe::league_load_from_temp_file(this, 1) != 0 {
         return this;
     }
     crate::comparison::branch("cqq_6 primeira francesa nova");
@@ -116,15 +106,15 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
     write_u32_from_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
     write_u32_from_usize(this + league::STAGE_COUNT, 0);
     write_u32_from_usize(this + league::STAGES, 0);
-    if rules(this) == 0 {
+    if exe::frafirst_set_up_rules(this) == 0 {
         show_error_at(0x9ccb5c, 0x65);
         return this;
     }
-    if table(this) == 0 {
+    if exe::frafirst_create_table(this) == 0 {
         show_error_at(0x9ccb5c, 0x6c);
         return this;
     }
-    if games(this) == 0 {
+    if exe::league_create_fixtures(this) == 0 {
         show_error_at(0x9ccb5c, 0x73);
         return this;
     }
@@ -133,18 +123,18 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
         return this;
     }
     let e = new(0x5ce);
-    let s = if e != 0 { stats(e, this) } else { 0 };
+    let s = if e != 0 { exe::comp_stats_comp_stats(e, this) } else { 0 };
     write_u32_from_usize(this + 8, s);
     if s == 0 {
         show_error_at(0x9ccb5c, 0x83);
         return this;
     }
-    predicted(this);
+    exe::league_set_predicted_positions(this);
     let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
     let a = new(0xee);
-    let ligas_cfa = if a != 0 { cfa(a, year) } else { 0 };
+    let ligas_cfa = if a != 0 { exe::fracfa_fracfa(a, year) } else { 0 };
     let b = new(0xee);
-    let ligas_baixo = if b != 0 { low(b, year) } else { 0 };
+    let ligas_baixo = if b != 0 { exe::fralower_fralower(b, year) } else { 0 };
     for l in [ligas_cfa, ligas_baixo] {
         if l != 0 {
             let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(l)));
@@ -187,8 +177,6 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let construct: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
     let destroy: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_VECTOR_DESTRUCTOR_ITERATOR);
-    let erase: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
-    let game: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) = core::mem::transmute(FN_FIXED_FIXTURE_SET_BY_CLUB_NAMES);
     let n = league_match_count(this);
     let block = new((n as u32).wrapping_mul(16).wrapping_add(4));
     let array = if block != 0 {
@@ -204,7 +192,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
         return;
     }
     for (k, &(dia, mes, ano, casa, fora)) in table.iter().enumerate() {
-        game(read_u32_as_usize(this + league::FIXED_FIXTURES) + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn6: cada jogo fixo
+        exe::fixed_fixture_set_by_club_names(read_u32_as_usize(this + league::FIXED_FIXTURES) + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn6: cada jogo fixo
     }
     crate::comparison::branch("cqn_6 calendario fixo");
     let n = league_match_count(this);
@@ -217,7 +205,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
         if read_u32_as_usize(f + 8) == 0xffff_ffff || read_u32_as_usize(f + 0xc) == 0xffff_ffff { // cqn6: a club not found drops the list
             if v != 0 {
                 destroy(v, 0x10, read_u32_as_usize(v - 4) as u32, 0x5a53c0);
-                erase(v - 4);
+                exe::crt_operator_delete(v - 4);
             }
             write_u32_from_usize(this + league::FIXED_FIXTURES, 0);
             return;

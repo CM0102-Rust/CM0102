@@ -228,8 +228,6 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_manager(this: usize, 
         return;
     }
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let marks: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_CONTRACT_GET_FLAGS);
     let mut sobra = 0u32;
     if national_team(club) == 0 {
         for k in 0..50usize {
@@ -237,10 +235,10 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_manager(this: usize, 
             if p == 0 || read_usize(p + staff::PLAYER) == 0 {
                 continue;
             }
-            let ct = contract(read_usize(G_CONTRACT_MANAGER), p);
+            let ct = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
             if ct != 0 {
                 // 0x10000000 is read at +0x40 (0x8676f0) and cleared at +0x45 (0x8674e0): cannot be checked
-                sobra |= (marks(ct) & 0x180) | (read_usize(ct + 0x45) as u32 & 0x889_2608);
+                sobra |= (exe::staff_contract_get_flags(ct) & 0x180) | (read_usize(ct + 0x45) as u32 & 0x889_2608);
             }
         }
     }

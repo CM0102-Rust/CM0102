@@ -41,8 +41,7 @@ pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_collect_entrants(th
         lo == lr || k == 0
     };
     if lr != 0 && lr != lo && lr != before {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(lr);
+        exe::crt_free(lr);
     }
     SCOREBOARD.record(igual && a == b && list, || format!("intertoto_cup_collect_entrants({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
     a
@@ -64,8 +63,7 @@ pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_collect_club_list(t
         lo == 0 && s2 == 0
     };
     if s2 != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(s2);
+        exe::crt_free(s2);
     }
     SCOREBOARD.record(igual && a == b && list, || format!("intertoto_cup_collect_club_list({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, list));
     a

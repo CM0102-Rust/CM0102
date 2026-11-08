@@ -45,22 +45,18 @@ pub(crate) struct BraRegRioStateChampionship {
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: usize, ano: u32, registro: usize, e: &BraRegRioStateChampionship, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
-    let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.regras);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.tabela);
-    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let estatisticas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_COMP_STATS);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.previstas);
-    base(this);
+    exe::league_league(this);
     core::ptr::write_unaligned((this + 4) as *mut usize, registro);
     core::ptr::write_unaligned(this as *mut usize, e.vtabela);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
     *((this + league::DISCIPLINE_RULE) as *mut u8) = disciplina;
-    if carregar(this, 1) != 0 {
+    if exe::league_load_from_temp_file(this, 1) != 0 {
         return this;
     }
     crate::comparison::branch(ramo);
@@ -78,7 +74,7 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: usize, ano: u32, r
         show_error_at(e.arquivo, e.linhas[1]);
         return this;
     }
-    if jogos(this) == 0 {
+    if exe::league_create_fixtures(this) == 0 {
         show_error_at(e.arquivo, e.linhas[2]);
         return this;
     }
@@ -87,7 +83,7 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: usize, ano: u32, r
         return this;
     }
     let n = novo(0x5ce);
-    let s = if n != 0 { estatisticas(n, this) } else { 0 };
+    let s = if n != 0 { exe::comp_stats_comp_stats(n, this) } else { 0 };
     core::ptr::write_unaligned((this + 8) as *mut usize, s);
     if s == 0 {
         show_error_at(e.arquivo, e.linhas[4]);
@@ -286,9 +282,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             f = 0.5;
         }
     }
-    let ordenada: unsafe extern "thiscall" fn(usize, u32, *mut i32, u32) -> usize = core::mem::transmute(FN_COMP_STATS_GET_SORTED_TEAM_TABLE);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let promotion = || {
         let v: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(league) + 0x98));
         v(league)
@@ -298,7 +292,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
         v(league)
     };
     let mut n = 0i32;
-    let t = ordenada(read_usize(league + 8), 1, &mut n, 1000);
+    let t = exe::comp_stats_get_sorted_team_table(read_usize(league + 8), 1, &mut n, 1000);
     if t == 0 {
         return;
     }
@@ -415,7 +409,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
         }
         i += 1;
     }
-    soltar(t);
+    exe::crt_free(t);
 }
 
 /// Creates half-season stage `k` of a two-half league (the create_half_season_stage slot; the same template in the
@@ -455,7 +449,6 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
 pub(crate) unsafe fn create_half_season_stage(this: usize, k: u32, file: usize, row: u32, vinte: u32, pv: usize, ramo: &'static str) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, u32, u32, u32, u32, u32, usize, *const u8, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -484,7 +477,7 @@ pub(crate) unsafe fn create_half_season_stage(this: usize, k: u32, file: usize, 
     core::ptr::write_unaligned((read_usize(this + league::STAGES) + 4 * k as usize) as *mut usize, stage);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, k);
     crate::comparison::branch(ramo);
-    soltar(clubs);
+    exe::crt_free(clubs);
 }
 
 /// Comparer for a half-season stage: only the original runs; checks that slot k has the stage, +0x30 = k and the stage
@@ -549,19 +542,17 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_half_season_stage(this
 /// caixa, que a virada do Brasil não lê).
 pub(crate) unsafe fn start_new_season_two_halves(this: usize, table: usize, file: usize, year: i16, ramo: &'static str) -> u32 {
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
     liberar_tabela(this, 0);
     let l = read_usize(this + league::ROUND_DATES);
     if l != 0 {
-        free(l);
+        exe::crt_free(l);
         core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut usize, 0);
     }
     let stats = read_usize(this + 8);
     if stats != 0 {
-        let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
-        archive(stats, 1);
+        exe::comp_stats_archive_season_and_reset(stats, 1);
     }
     if (read_usize(this + league::CURRENT_STAGE) as i32) >= 0 {
         let mut i = 0i32;
@@ -577,7 +568,7 @@ pub(crate) unsafe fn start_new_season_two_halves(this: usize, table: usize, file
             }
         }
     }
-    free(read_usize(this + league::STAGES));
+    exe::crt_free(read_usize(this + league::STAGES));
     core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, 3);
     let v = alocar(0xc);
     let a = core::ptr::read_unaligned((this + league::YEAR) as *const i16);
@@ -595,8 +586,7 @@ pub(crate) unsafe fn start_new_season_two_halves(this: usize, table: usize, file
         show_error_at(file, 0x1db);
         return 0;
     }
-    let games: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
-    if games(this) == 0 {
+    if exe::league_create_fixtures(this) == 0 {
         show_error_at(file, 0x1e1);
         return 0;
     }
@@ -607,8 +597,7 @@ pub(crate) unsafe fn start_new_season_two_halves(this: usize, table: usize, file
     }
     let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
     predicted(this);
-    let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
-    renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
+    exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
 }
 
 /// Comparer for the season change: only the original runs; checks year +1, +0x2c = 3 and +0x30 = −1.
@@ -652,8 +641,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_advance_stage(this: usize) {
     let stage = stage + 1;
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, stage);
     if stage == 2 {
-        let final_: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_BRAREGRIO_CREATE_FINAL_STAGE);
-        final_(this); // cqo9: the final after the second stage
+        exe::braregrio_create_final_stage(this); // cqo9: the final after the second stage
     }
 }
 
@@ -742,9 +730,8 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
     crate::comparison::branch("cqo_9 final");
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     build(stage, 0);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    free(t);
-    free(list);
+    exe::crt_free(t);
+    exe::crt_free(list);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 2);
 }
 
@@ -775,26 +762,23 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
 ///   thiscall, ret 4) e na notícia do prêmio (0x48e3e0 Comp::send_prize_money_news: thiscall(this, clube, valor em 64
 ///   bits, posição 1 ou 2, rodada 0, partida 0, tipo −2), ret 0x1c); depois a 0x42bba0, como acima.
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: usize) -> u32 {
-    let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_BRA_NAT_FIRST_FILL_CHAMPIONS_CUP_ENTRANTS);
     if read_usize(this + league::CURRENT_STAGE) == 2 {
         let f = read_usize(read_usize(this + league::STAGES) + 8);
         let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x30));
         history(f);
         crate::comparison::branch("cqo_9 historico da final");
-        return campeoes();
+        return exe::bra_nat_first_fill_champions_cup_entrants();
     }
     let history: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_RECORD_SEASON_HONOURS);
     history(this);
-    let finances: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
-    let prize: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_FINANCE_ADD_PRIZE_MONEY);
     let news: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(FN_COMP_SEND_PRIZE_MONEY_NEWS);
     for (linha, valor, posicao) in [(0usize, 675000i32, 1i32), (0x3b, 250000, 2)] {
         let c = read_usize(read_usize(this + league::TABLE) + linha);
-        prize(finances(read_usize(G_FINANCE_TABLE), c), valor);
+        exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), valor);
         news(this, read_usize(read_usize(this + league::TABLE) + linha), valor, 0, posicao, 0, 0, -2);
     }
     crate::comparison::branch("cqo_9 premios");
-    campeoes()
+    exe::bra_nat_first_fill_champions_cup_entrants()
 }
 
 /// the Rio league has 12 clubs: those with it as their reserve division in the database (the field that holds the state

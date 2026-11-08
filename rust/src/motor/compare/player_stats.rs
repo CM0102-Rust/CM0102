@@ -86,8 +86,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_career_history(this: usize,
         format!("build_career_history(pessoa {:x}) conta original={} rust={}, primeira entrada diferente {:?}", p, *count, n, dif)
     });
     if t != 0 {
-        let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        free(t);
+        exe::crt_free(t);
     }
     r
 }

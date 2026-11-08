@@ -26,6 +26,7 @@ Um item é um pacote de até 3 rotinas portadas, escrito antes da hora em `levas
 
 - Código em inglês: a rotina com o nome do método original (o mapa de maxevans60, como em `docs/NOMES.csv`), os auxiliares com nome em inglês e sem prefixo de item, as constantes em MAIÚSCULAS em inglês.
 - Cabeçalho bilíngue em cada rotina: o resumo em inglês, a linha `Original: Classe::metodo (endereço, arquivo.cpp, convenção)`, uma linha `///` e as notas em português com `[pt]`. O inglês é o texto completo (tudo o que o `[pt]` diz: condições, deslocamentos, defeitos do original), não um resumo: quem lê o código público não lê português.
+- Função do exe chamada pela cópia: `exe::nome(...)` (o invólucro tipado em `rust/src/motor/exe_calls.rs`, gerado pelo `involucros_exe.py`), não `let f: unsafe extern "thiscall" fn(..) = core::mem::transmute(FN_X);` repetido.
 - Campos com nome também nas variáveis de uma letra: `p + staff::NATION`, não `p + 0x..`, quando a variável guarda um registro do docs/FORMATOS.md a função inteira (o `aplicar_tipos_variaveis.py` faz isso depois, mas o item já pode vir assim).
 - Use o que já tem nome: `read_u32`/`write_u8` (`mem.rs`), `KEY_*` (`keys.rs`), `G_*` (`globals.rs`), `club::DIVISION` e `club::SIZE` (`fields.rs`), `FN_*` (`exe_fns.rs`) e `original_fn::<F>(IDX_<NOME>)`; constante de ponto flutuante lida do exe com o valor em comentário.
 - O `DOCS` do `rotinas.py` continua em português e inglês (é a fonte do ROTINAS e do glossário).

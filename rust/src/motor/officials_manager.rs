@@ -55,10 +55,9 @@ pub(crate) unsafe fn official_record(i: i32) -> usize {
 /// e exit(−1) (0x945934).
 pub(crate) unsafe fn officials_out_of_memory(row: u32) -> ! {
     show_error_at(0xa6a22c, row);
-    let f1: unsafe extern "C" fn() = core::mem::transmute(FN_GAME_FATAL_CLEANUP);
     let f2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
-    f1();
+    exe::game_fatal_cleanup();
     f2();
     exit(-1)
 }
@@ -83,8 +82,7 @@ pub(crate) unsafe fn crt_calloc(n: u32, size: u32) -> usize {
 ///
 /// [pt] free (0x9452ca, cdecl).
 pub(crate) unsafe fn crt_free(p: usize) {
-    let f: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    f(p);
+    exe::crt_free(p);
 }
 
 /// Sets up the referees on a new game: reviews them, sorts them by nation and quality, keeps 6 per nation (61 in some
@@ -113,8 +111,7 @@ pub(crate) unsafe fn crt_free(p: usize) {
 /// 5, sorteia até o +0x8e da nação (1..5). Os índices (+0), o primeiro de cada nação e, por nação, as vagas ordenadas
 /// (qsort 0x79d410) com a parte de cada uma; this+4 a conta e this+8 as marcas (calloc).
 pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
-    let rever: unsafe extern "C" fn() = core::mem::transmute(FN_OFFICIALS_MANAGER_VALIDATE_OFFICIALS);
-    rever();
+    exe::officials_manager_validate_officials();
     officials_manager_crt_qsort(read_u32_as_usize(G_OFFICIAL_TABLE), read_i32(G_OFFICIAL_COUNT) as u32, 0x2b, 0x79d4e0);
     let n = read_i32(G_OFFICIAL_COUNT);
     let marks = crt_calloc(n as u32, 1);
@@ -147,11 +144,10 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
     }
     let new = crt_calloc(ficam as u32, 0x2b);
     let mut dst = new;
-    let copy: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_OFFICIAL_OPERATOR_3D);
     let mut i = 0i32;
     while i < read_i32(G_OFFICIAL_COUNT) {
         if *((marks + i as usize) as *const u8) != 0 {
-            copy(dst, official_record(i));
+            exe::official_operator_3d(dst, official_record(i));
             dst += 0x2b;
         }
         i += 1;
@@ -210,7 +206,6 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
         let b = blocos.wrapping_add((read_i32(read_u32_as_usize(official_record(i) + 0x16)) as isize * 0x102) as usize);
         write_u32(b + officials_nation_block::REFEREE_COUNT, read_u32_as_usize(b + officials_nation_block::REFEREE_COUNT).wrapping_add(1) as u32);
     }
-    let novos: unsafe extern "stdcall" fn(i32, usize) = core::mem::transmute(FN_OFFICIALS_MANAGER_ADD_RANDOM_OFFICIALS);
     for k in 0..read_i32(G_NATION_COUNT).max(0) {
         let b = blocos + k as usize * 0x102;
         let nation = read_u32_as_usize(G_NATION_TABLE).wrapping_add(k as usize * nation::SIZE);
@@ -218,14 +213,14 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
         if c > 0 {
             write_u32(b + officials_nation_block::DEMAND, (c as i32).wrapping_mul(read_i32(b + officials_nation_block::DEMAND)) as u32);
             if read_i32(b + officials_nation_block::DEMAND) > read_i32(b + officials_nation_block::REFEREE_COUNT) {
-                novos(read_i32(b + officials_nation_block::DEMAND) - read_i32(b + officials_nation_block::REFEREE_COUNT), nation);
+                exe::officials_manager_add_random_officials(read_i32(b + officials_nation_block::DEMAND) - read_i32(b + officials_nation_block::REFEREE_COUNT), nation);
                 write_u32(b + officials_nation_block::REFEREE_COUNT, read_u32_as_usize(b + officials_nation_block::DEMAND) as u32);
             }
         } else if read_i32(b + officials_nation_block::REFEREE_COUNT) < 5 {
             if read_i16(nation + nation::REPUTATION) == 0 {
                 write_i16(nation + nation::REPUTATION, 1);
             }
-            novos((read_i16(nation + nation::REPUTATION) as i32).min(5), nation);
+            exe::officials_manager_add_random_officials((read_i16(nation + nation::REPUTATION) as i32).min(5), nation);
             write_u32(b + officials_nation_block::REFEREE_COUNT, (read_i16(read_u32_as_usize(G_NATION_TABLE).wrapping_add(k as usize * nation::SIZE) + 0x8e) as i32).min(5) as u32);
         }
     }
@@ -641,10 +636,8 @@ pub(crate) unsafe fn random_byte_plus(n: i32, k: u8) -> u8 {
 /// 1960 + sorteio(10) e o dia (+0xc) sorteio(300) + 1. Não grava +0, +0x10..+0x15 (a original deixa o que o realloc
 /// trouxe).
 pub(crate) unsafe fn generate_official(r: usize, nation: usize) {
-    let first: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_PICK_FIRST_NAME_BY_WEIGHT);
-    let second: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_PICK_SECOND_NAME_BY_WEIGHT);
-    write_usize(r + 4, first(nation));
-    write_usize(r + 8, second(nation));
+    write_usize(r + 4, exe::database_pick_first_name_by_weight(nation));
+    write_usize(r + 8, exe::database_pick_second_name_by_weight(nation));
     write_usize(r + official::NATION, nation);
     write_i16(r + official::RATING, random_byte_plus(0x50, 1) as i8 as i16); // cpy9: a nota +0x22
     write_i16(r + official::CURRENT_ABILITY, random_byte_plus(0x50, 0x28) as i8 as i16);

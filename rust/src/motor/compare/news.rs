@@ -320,7 +320,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_inbox_items(this: usize, mana
     let e = read_usize(this + news_fields::HUMAN_INBOXES) + (read_i32(manager).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10)) as usize * 12;
     let mut ids = Vec::new();
     if read_i32(e) != -1 {
-        let kind: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_CATEGORY);
         let mut k = read_i32(e + 4) - 1;
         loop {
             if k < read_i32(e) {
@@ -330,7 +329,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_inbox_items(this: usize, mana
             if read_usize(slot + news_item::ID) == 0 {
                 break;
             }
-            if category as u8 == 0 || kind(slot) as u8 == category as u8 {
+            if category as u8 == 0 || exe::newsitem_get_category(slot) as u8 == category as u8 {
                 ids.push(read_usize(slot + news_item::ID));
             }
             k -= 1;

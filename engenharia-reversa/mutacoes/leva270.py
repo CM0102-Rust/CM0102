@@ -1,10 +1,10 @@
 # Mutações da 270a leva (itens cqf_1, cqf_2, cqf_3, cqf_4, cqf_5, cqf_6, cqf_7, cqf_8, cqf_9, cqf_10, cqf_11, cqf_12). Uso: python mutacoes.py mutacoes\leva270.py --carreira 2002-06-01
 MUTACOES = [
     ('cqf1_sem_rivais', 'if rival != -1 { // cqf1: the rival links the offers', 'if rival != -1 && false { // mutacao: sem ligar as rivais', 'cqf_1 ofertas rivais ligadas'),
-    ('cqf1_prazo_mais_tres', 'schedule(this, read_u32_as_usize(slot(vaga)), dias as u32, fatias as u32); // cqf1: the offer deadline', 'schedule(this, read_u32_as_usize(slot(vaga)), dias as u32 + 3, fatias as u32); // mutacao: 3 dias a mais', 'cqf_1 agenda pelo prazo'),
+    ('cqf1_prazo_mais_tres', 'exe::transfer_manager_schedule_offer(this, read_u32_as_usize(slot(vaga)), dias as u32, fatias as u32); // cqf1: the offer deadline', 'exe::transfer_manager_schedule_offer(this, read_u32_as_usize(slot(vaga)), dias as u32 + 3, fatias as u32); // mutacao: 3 dias a mais', 'cqf_1 agenda pelo prazo'),
     ('cqf1_sem_mesma_vaga', 'vaga = i; // cqf1: the offer slot of the same buyer', '// mutacao: sem a vaga do mesmo comprador', 'cqf_1 mesma vaga'),
-    ('cqf2_sem_seguir', 'follow(this, offer); // cqf2: a oferta segue', '// mutacao: a oferta nao segue', 'cqf_2 seguir a oferta'),
-    ('cqf2_emprestimo_em_9_dias', 'schedule(this, offer, 5, 0); // cqf2: the loan completed in 5 days', 'schedule(this, offer, 9, 0); // mutacao: 9 dias', 'cqf_2 empréstimo na hora'),
+    ('cqf2_sem_seguir', 'exe::transfer_manager_advance_offer_to_club_approval(this, offer); // cqf2: a oferta segue', '// mutacao: a oferta nao segue', 'cqf_2 seguir a oferta'),
+    ('cqf2_emprestimo_em_9_dias', 'exe::transfer_manager_schedule_offer(this, offer, 5, 0); // cqf2: the loan completed in 5 days', 'exe::transfer_manager_schedule_offer(this, offer, 9, 0); // mutacao: 9 dias', 'cqf_2 empréstimo na hora'),
     ('cqf2_sem_sorteio_do_dado_12', 'let s = sorteio(2); // cqf2: the random draw of die 12', 'let s = 0; // mutacao: sem o sorteio', 'cqf_2 notícia do listado'),
     ('cqf3_fim_em_dois_anos', 'write_u16(c + 0x2f, year.wrapping_add(1)); // cqf3: the end next year', 'write_u16(c + 0x2f, year.wrapping_add(2)); // mutacao: 2 anos', 'cqf_3 fim no ano que vem'),
     ('cqf3_valor_abaixo_do_teto', 'write_u32(c + contract::WAGE, ftol(ceiling) as u32); // cqf3: the value at the cap', 'write_u32(c + contract::WAGE, ftol(ceiling * 0.9) as u32); // mutacao: 90% do teto', 'cqf_3 acima do teto'),

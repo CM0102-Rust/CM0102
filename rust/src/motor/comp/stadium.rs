@@ -11,16 +11,14 @@ pub(crate) unsafe fn nation_by_id(id: usize) -> usize {
 ///
 /// [pt] `Stadium::add_booking` (0x85de20, thiscall, ret 8, já em Rust): a reserva do estádio na data.
 pub(crate) unsafe fn add_stadium_booking(this: usize, stadium: usize, data: usize) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STADIUM_ADD_BOOKING);
-    f(this, stadium, data)
+    exe::stadium_add_booking(this, stadium, data)
 }
 
 /// Calls Stadium::is_stadium_free_on_date (0x85ddb0).
 ///
 /// [pt] `Stadium::is_stadium_free_on_date` (0x85ddb0, thiscall, ret 8, já em Rust).
 pub(crate) unsafe fn is_stadium_free(this: usize, stadium: usize, data: usize) -> bool {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_STADIUM_IS_STADIUM_FREE_ON_DATE);
-    f(this, stadium, data) != 0
+    exe::stadium_is_stadium_free_on_date(this, stadium, data) != 0
 }
 
 /// Calls a cdecl list comparer (0x85e2f0 by nation, 0x85e320 by continent, 0x85e350 by capacity) on (a, b).
@@ -161,8 +159,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
                     if !is_stadium_free(this, read_u32_as_usize(e + 0xc), data) {
                         break 'vaga;
                     }
-                    let rating: unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, usize) -> i32 = core::mem::transmute(FN_STADIUM_SCORE_VENUE_FOR_FIXTURE);
-                    let n = rating(this, read_u32_as_usize(e + 0xc), marks, home, away, partida);
+                    let n = exe::stadium_score_venue_for_fixture(this, read_u32_as_usize(e + 0xc), marks, home, away, partida);
                     if n > best {
                         best = n; // cqo1: a melhor nota
                         escolhida = e;
@@ -708,13 +705,12 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
         let c_est = stadium_city(est);
         let c_home = stadium_city(read_u32_as_usize(home + club::STADIUM));
         let c_away = stadium_city(read_u32_as_usize(away + club::STADIUM));
-        let factor: unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64 = core::mem::transmute(FN_STADIUM_GET_TRAVEL_DISTANCE_FACTOR);
-        let mut d = factor(this, game, c_est, c_home, f[0]);
+        let mut d = exe::stadium_get_travel_distance_factor(this, game, c_est, c_home, f[0]);
         if d < read_f64_at(0x968f20) { // 0x968f20 = 0.15
             d = read_f64_at(0x968f20); // 0x968f20 = 0.15
         }
         pc = ftol(read_i32(home + club::ATTENDANCE) as f64 * f[0] * d);
-        let mut d = factor(this, game, c_est, c_away, f[1]);
+        let mut d = exe::stadium_get_travel_distance_factor(this, game, c_est, c_away, f[1]);
         if d < read_f64_at(0x968f20) { // 0x968f20 = 0.15
             d = read_f64_at(0x968f20); // 0x968f20 = 0.15
         }
@@ -723,8 +719,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
         if comp != 0 && home != 0 && read_u32_as_usize(home + club::DIVISION) == comp {
             let league = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(comp) * 4);
             if league != 0 && read_u32_as_usize(league + 8) != 0 {
-                let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-                let p = search(read_u32_as_usize(league + 8), home);
+                let p = exe::comp_stats_find_club_entry(read_u32_as_usize(league + 8), home);
                 if p != 0 {
                     let n = read_i16(comp + competition::REPUTATION) as i32;
                     let v = read_i32(p + 0x19);
@@ -1078,8 +1073,7 @@ pub(crate) unsafe fn england_nation() -> usize {
 ///
 /// [pt] A seleção principal da nação (0x53b3d0).
 pub(crate) unsafe fn nation_national_team(nation: usize) -> usize {
-    let f: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
-    f(nation)
+    exe::database_get_national_team(nation)
 }
 
 /// Returns stadium id's record ([G_STADIUM_TABLE] + id × 0x4e).
@@ -1117,8 +1111,7 @@ pub(crate) unsafe fn sort_stadium_list(list: usize, n: u32) {
 /// 0x85e380).
 pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, today: usize) {
     if read_u16(today) == 0 {
-        let redo: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_STADIUM_BUILD_VENUE_LIST);
-        redo(this);
+        exe::stadium_build_venue_list(this);
     }
     if read_u16(today + 2) < 0x7d3 {
         let nation = england_nation();
@@ -1259,10 +1252,9 @@ pub(crate) unsafe extern "thiscall" fn is_stadium_free_on_date(this: usize, stad
 /// 0x85ba1b, 0x85c4ba, 0x85ddf3, 0x85df26): pela data (+4, Date::operator< 0x456770 e > 0x456740), depois pelo id do
 /// estádio (+0).
 pub(crate) unsafe extern "C" fn stadium_compare_bookings(a: usize, b: usize) -> i32 {
-    let before: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3C);
     let after: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     let (d0, d1) = (read_usize(b + 4) as u32, read_usize(b + 8) as u32);
-    if before(a + 4, d0, d1) != 0 {
+    if exe::date_operator_3c(a + 4, d0, d1) != 0 {
         return -1;
     }
     if after(a + 4, d0, d1) != 0 {
@@ -1299,14 +1291,12 @@ pub(crate) unsafe extern "C" fn stadium_compare_bookings(a: usize, b: usize) -> 
 /// realloc 0x945667; sem memória, as caixas das linhas 0x89c e 0x8ac, e para). No fim é ordenada (qsort com a
 /// 0x85e2f0) e +0x18 = 1.
 pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let sedes: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32) -> u8 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_NEXT_HOSTS);
     let (lista, conta, cap) = ((this + stadium_obj::VENUES) as *mut usize, (this + stadium_obj::VENUE_COUNT) as *mut i32, (this + stadium_obj::VENUE_CAPACITY) as *mut i32);
     if *lista != 0 {
-        soltar(*lista);
+        exe::crt_free(*lista);
         *lista = 0;
         *cap = 0;
         *conta = 0;
@@ -1317,9 +1307,9 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
     } else {
         // the venues: only found (the original does not use them afterwards); the outputs overlap as in the original
         let mut s = [0u32; 8];
-        let mut b = sedes(hc, read_u32(KEY_CLUB_COMP_FIFA_WORLD_CUP), s.as_mut_ptr(), s.as_mut_ptr().add(1)) as i8;
-        b = b.wrapping_add(sedes(hc, read_u32(KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP), s.as_mut_ptr().add(b as usize), s.as_mut_ptr().add(b as usize + 1)) as i8);
-        sedes(hc, read_u32(KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS), s.as_mut_ptr().add(b as usize), s.as_mut_ptr().add(b as usize + 1));
+        let mut b = exe::hostcountry_find_next_hosts(hc, read_u32(KEY_CLUB_COMP_FIFA_WORLD_CUP), s.as_mut_ptr(), s.as_mut_ptr().add(1)) as i8;
+        b = b.wrapping_add(exe::hostcountry_find_next_hosts(hc, read_u32(KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP), s.as_mut_ptr().add(b as usize), s.as_mut_ptr().add(b as usize + 1)) as i8);
+        exe::hostcountry_find_next_hosts(hc, read_u32(KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS), s.as_mut_ptr().add(b as usize), s.as_mut_ptr().add(b as usize + 1));
     }
     let mut k = 0i32;
     while k < read_u32(G_STADIUM_COUNT) as i32 {

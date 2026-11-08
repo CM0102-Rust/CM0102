@@ -30,7 +30,7 @@ MUTACOES = [
     ('cpt10_virada_um_dia_depois', 'if rest == 0 { // cpt10: o sétimo dia', 'if rest == 1 { // mutacao: a virada um dia depois', 'cpt_10 semana'),
     ('cpt10_duas_semanas', '*s = (*s).wrapping_add(1); // cpt10: mais uma semana', '*s = (*s).wrapping_add(2); // mutacao: duas semanas', 'cpt_10 semana'),
     ('cpt10_semana_de_6_dias', 'let rest = v % 7; // cpt10: the 7-day week', 'let rest = v % 6; // mutacao: a semana de 6 dias', 'cpt_10 semana'),
-    ('cpt11_sem_plano', 'planejar(this); // cpt11: planejar', '// mutacao: nao planeja', 'cpt_11 planejou a pré-temporada'),
+    ('cpt11_sem_plano', 'exe::friendly_plan_ai_preseason_friendlies(this); // cpt11: planejar', '// mutacao: nao planeja', 'cpt_11 planejou a pré-temporada'),
     ('cpt11_faixa_250', 'let band = (rep / 500) as u8; // cpt11: a faixa', 'let faixa = (rep / 250) as u8; // mutacao: faixa pela metade', 'cpt_11 candidato da pré-temporada'),
     ('cpt11_janela_curta', 'let mut start = end.wrapping_sub(18); // cpt11: the window start', 'let mut start = end.wrapping_sub(11); // mutacao: janela curta', 'cpt_11 janela gravada'),
     ('cpt12_largura', 'let width = (n as u8).wrapping_mul(2).wrapping_add(1) as i8 as i16; // cpt12: the tour width', 'let width = (n as u8).wrapping_mul(2).wrapping_add(3) as i8 as i16; // mutacao: mais larga', 'cpt_12 janela da excursão'),

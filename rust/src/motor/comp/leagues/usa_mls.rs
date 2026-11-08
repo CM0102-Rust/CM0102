@@ -99,7 +99,6 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let sort: unsafe extern "C" fn(*mut u8, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
@@ -142,7 +141,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
         0
     };
     core::ptr::write_unaligned((read_usize(this + league::STAGES) + 8) as *mut usize, stage);
-    soltar(t);
+    exe::crt_free(t);
     let stage = read_usize(read_usize(this + league::STAGES) + 8);
     if stage == 0 {
         return show_error_at(0xaa1fb4, 0x5c4);
@@ -173,7 +172,6 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
 pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
@@ -204,14 +202,14 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
         0
     };
     core::ptr::write_unaligned((read_usize(this + league::STAGES) + 0xc) as *mut usize, stage);
-    soltar(t);
+    exe::crt_free(t);
     let stage = read_usize(read_usize(this + league::STAGES) + 0xc);
     if stage == 0 {
         return show_error_at(0xaa1fb4, 0x5fe);
     }
     crate::comparison::branch("cqr_4 final");
     build(stage, 0);
-    soltar(list);
+    exe::crt_free(list);
 }
 
 /// True if club c is in this league's competition and its MLS division code matches.
@@ -301,7 +299,6 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_table(this: usize) -> u32 
 pub(crate) unsafe fn create_division_stage(this: usize, code: i16, k: u32, current: u32, pv: usize, rows: [u32; 2], ramo: &'static str) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -333,8 +330,8 @@ pub(crate) unsafe fn create_division_stage(this: usize, code: i16, k: u32, curre
         0
     };
     core::ptr::write_unaligned((read_usize(this + league::STAGES) + 4 * k as usize) as *mut usize, stage);
-    soltar(v);
-    soltar(t);
+    exe::crt_free(v);
+    exe::crt_free(t);
     let stage = read_usize(read_usize(this + league::STAGES) + 4 * k as usize);
     if stage == 0 {
         return show_error_at(0xaa1fb4, rows[1]);
@@ -433,12 +430,11 @@ pub(crate) unsafe fn compare_division_stage(name: &str, this: usize, code: i16, 
 /// O vetor das fases (+0xc) fica: as divisões e o play-off regravam as vagas.
 pub(crate) unsafe fn mls_start_new_season(this: usize, year: i16) -> u32 {
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
     liberar_tabela(this, 0);
     let l = read_usize(this + league::ROUND_DATES);
     if l != 0 {
-        free(l);
+        exe::crt_free(l);
         core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut usize, 0);
     }
     if (read_usize(this + league::CURRENT_STAGE) as i32) >= 0 {
@@ -458,8 +454,7 @@ pub(crate) unsafe fn mls_start_new_season(this: usize, year: i16) -> u32 {
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, -1);
     let stats = read_usize(this + 8);
     if stats != 0 {
-        let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
-        archive(stats, 1);
+        exe::comp_stats_archive_season_and_reset(stats, 1);
     }
     let a = read_i16(this + league::YEAR);
     core::ptr::write_unaligned((this + league::YEAR) as *mut i16, a.wrapping_add(year));
@@ -469,13 +464,11 @@ pub(crate) unsafe fn mls_start_new_season(this: usize, year: i16) -> u32 {
         show_error_at(0xaa1fb4, 0x4af);
         return 0;
     }
-    let table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_USAMLS_CREATE_TABLE);
-    if table(this) == 0 {
+    if exe::usamls_create_table(this) == 0 {
         show_error_at(0xaa1fb4, 0x4b6);
         return 0;
     }
-    let games: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_USAMLS_CREATE_SEASON_FIXTURES);
-    if games(this) == 0 {
+    if exe::usamls_create_season_fixtures(this) == 0 {
         show_error_at(0xaa1fb4, 0x4bc);
         return 0;
     }
@@ -488,8 +481,7 @@ pub(crate) unsafe fn mls_start_new_season(this: usize, year: i16) -> u32 {
     predicted(this);
     let expectations: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectations(this);
-    let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
-    renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) // cqs2: the renewal of the MLS referees
+    exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) // cqs2: the renewal of the MLS referees
 }
 
 /// The MLS turnover: clears the table, the schedule and the stages (the other two divisions, the play-off and the
@@ -527,7 +519,6 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usi
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let position: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let n3 = read_i16(this + league::CLUB_COUNT).wrapping_mul(3);
     if read_usize(this + 8) == 0 {
         return show_error_at(0xaa1fb4, 0x675);
@@ -556,7 +547,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usi
         position(read_usize(this + 8), read_usize(v + 4 * k), *p);
     }
     crate::comparison::branch("cqs_2 posicoes previstas");
-    soltar(v);
+    exe::crt_free(v);
 }
 
 /// The list of the twelve MLS clubs: the four of the first division, then the four of the second and the four of the
@@ -600,16 +591,14 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, list:
 ///
 /// [pt] 0x86c1d0 Staff_Records::add_failed_to_qualify_record (thiscall em [0xdd7f00], ret 0x10; já em Rust).
 pub(crate) unsafe fn usa_mls_add_failed_to_qualify_record(club: usize, comp: usize, stage: u32, weight: u32) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_FAILED_TO_QUALIFY_RECORD);
-    f(read_u32_as_usize(G_STAFF_RECORDS), club, comp, stage, weight);
+    exe::staff_records_add_failed_to_qualify_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp, stage, weight);
 }
 
 /// comp_util_scale_by_round: weight 50..70 by the match round.
 ///
 /// [pt] 0x4bf850 comp_util_scale_by_round (cdecl): o peso de 50 a 70 pela rodada do jogo, em 2 rodadas.
 pub(crate) unsafe fn weight_by_round(game: usize) -> u32 {
-    let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
-    escala(0x32, 0x46, read_i16(game + 0x34) as u16 as u32, 2)
+    exe::comp_util_scale_by_round(0x32, 0x46, read_i16(game + 0x34) as u16 as u32, 2)
 }
 
 /// The MLS stage-end outcome (0x908200): qualified, failed or knocked-out records by situation and phase; dry run
@@ -653,8 +642,7 @@ pub(crate) unsafe fn mls_stage_outcome(this: usize, club: usize, status: u32, st
         } else if st == 0xff || st == 2 {
             if fazer {
                 let weight = weight_by_round(game);
-                let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
-                elim(read_u32_as_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
+                exe::staff_records_add_knocked_out_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
             }
         }
         return 0;
@@ -698,8 +686,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usi
     if (*((game + 0x42) as *const i8)) < 2 {
         *((game + 0x42) as *mut u8) = 0xff;
     }
-    let general: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_ADD_RESULT);
-    general(this, game, stats);
+    exe::league_add_result(this, game, stats);
     if read_u32_as_usize(this + league::CURRENT_STAGE) != 1 {
         return 1;
     }

@@ -42,7 +42,6 @@ pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, 
         BraChampCupStagePlan::Nada => 0,
         BraChampCupStagePlan::Grupos(grupos, id, linha, nome) => {
             let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
-            let game: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
             if !league.is_null() {
                 *league = 1;
             }
@@ -59,7 +58,7 @@ pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, 
             let year = core::ptr::read_unaligned((this + cup::YEAR) as *const u16) as u32;
             for (r, &(dia, mes, semana, codigo)) in grupos.iter().enumerate() {
                 data(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, year, 0);
-                game(t, r as i32, 0, -1, -1, -1, 0);
+                exe::league_round_set_match_slot(t, r as i32, 0, -1, -1, -1, 0);
             }
             t
         }
@@ -139,8 +138,7 @@ pub(crate) unsafe fn compare_stage_schedule(name: &str, stage: u32, f: BraChampC
     let outs = *rounds == r2 && *extra == e2 && (league.is_null() || *league == l2);
     let table = if a != 0 && b != 0 { written_schedule_bytes(f, a, *rounds) == written_schedule_bytes(f, b, r2) } else { a == 0 && b == 0 };
     if b != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(b);
+        exe::crt_free(b);
     }
     SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a

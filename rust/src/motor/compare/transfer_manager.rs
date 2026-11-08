@@ -78,7 +78,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_loan_negotiation(this: usize,
 pub(crate) unsafe extern "thiscall" fn compare_make_exchange_option(this: usize, buyer: usize, target: usize, offer: usize, out: *mut usize, atracao: *mut i8, value: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut usize, *mut i8, i32) -> u32>(IDX_MAKE_EXCHANGE_OPTION);
     let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_TRANSFER_OFFER_DESTRUCTOR_TRANSFER_OFFER);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     let est = crate::rng::STATE_REGIONS;
     let regions = [(G_CONTRACT_LOOKUP_RESULT, 4usize), (out as usize, 4), (atracao as usize, 1), est[0], est[1]];
     let before = crate::comparison::MemorySnapshot::read(&regions);
@@ -93,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn compare_make_exchange_option(this: usize,
     if n != 0 && *out != 0 {
         let s = *out;
         destroy(s);
-        free(s);
+        exe::crt_operator_delete(s);
     }
     after.write_back();
     SCOREBOARD.record(r == n && ao == an && e_o == e_n && fo == fn_, || format!(
@@ -931,14 +930,11 @@ pub(crate) unsafe extern "thiscall" fn compare_collapse_offers_for_player(this: 
     if read_u8(read_usize(this + transfer_manager_fields::PERSON_FLAGS).wrapping_add(read_usize(person).wrapping_mul(8)) + 1) == 0 {
         return o(this, person);
     }
-    let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
-    let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
-    let offers: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_OFFERS_FOR_PLAYER);
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut list = [0u8; 0x10];
     let l = list.as_mut_ptr() as usize;
-    nova(l);
-    offers(this, person, l, 0);
+    exe::llist_llist(l);
+    exe::transfer_manager_get_offers_for_player(this, person, l, 0);
     let mut target = Vec::new();
     write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
     let mut e = next(l);
@@ -946,7 +942,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collapse_offers_for_player(this: 
         target.push(read_usize(read_usize(this).wrapping_add(read_usize(e).wrapping_mul(4))));
         e = next(l);
     }
-    soltar(l);
+    exe::llist_destructor_llist(l);
     o(this, person);
     let ok = target.iter().all(|&of| read_u8(of + offer::STATUS) == 0xf && read_u8(of + offer::RESPONSE_ROUND) == 3);
     SCOREBOARD.record(ok, || format!("collapse_offers_for_player(pessoa {}): {} ofertas, estados {:x?}", read_usize(person), target.len(), target.iter().map(|&of| (read_u8(of + offer::STATUS), read_u8(of + offer::RESPONSE_ROUND))).collect::<Vec<_>>()));
@@ -1288,8 +1284,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_fixture_rules_scope(this: usi
 /// a marca de quem está sem clube e a segunda chamada veria outro estado).
 pub(crate) unsafe extern "thiscall" fn compare_get_ineligibility_code(this: usize, player: usize, partida: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_GET_INELIGIBILITY_CODE);
-    let ausente: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_AWOL_IS_PLAYER_AWOL);
-    if ausente(read_usize(G_AWOL), player, 1) != 0 {
+    if exe::awol_is_player_awol(read_usize(G_AWOL), player, 1) != 0 {
         return o(this, player, partida);
     }
     let r = o(this, player, partida);

@@ -182,8 +182,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_international_date_table(th
         return o(this); // simplification: without memory in the copy, original only
     }
     let mr = crate::comparison::MemorySnapshot::read(&[(t, 0x898), (this + friendly::INTL_DATE_COUNT, 6)]);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    free(t);
+    exe::crt_free(t);
     fields.write_back();
     o(this);
     let t = read_usize(this + friendly::INTL_DATE_TABLE);
@@ -220,8 +219,7 @@ pub(crate) unsafe extern "thiscall" fn compare_plan_club_friendlies(this: usize,
     if p == 0 {
         return; // out of memory: the message box
     }
-    let order: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_COMPARE_CALL_UP_RECORDS_BY_DATE);
-    let ordenado = (1..n.max(0) as usize).all(|i| order(p + (i - 1) * 0x14, p + i * 0x14) <= 0);
+    let ordenado = (1..n.max(0) as usize).all(|i| exe::compare_call_up_records_by_date(p + (i - 1) * 0x14, p + i * 0x14) <= 0);
     SCOREBOARD.record(n >= 0 && cap >= n && z == 0 && ordenado, || format!("plan_club_friendlies: plano {:#x} conta {} capacidade {} +0x34dc {} em ordem {}", p, n, cap, z, ordenado));
 }
 

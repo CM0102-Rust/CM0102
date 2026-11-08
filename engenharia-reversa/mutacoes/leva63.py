@@ -7,5 +7,5 @@ MUTACOES = [
     ('h_forcar', "                if force != 0 || any != 0 {", "                if any != 0 {"),
     ('h_selecao', "let sim = if is_national_team(club) != 0 {", "let sim = if is_national_team(club) == 0 {"),
     ('h_segunda', "        any = 0;\n", ""),
-    ('h_volta', "        if second(club) == 0 {\n            return 0;\n        }", "        if second(club) == 0 || true {\n            return 0;\n        }"),
+    ('h_volta', "        if exe::club_is_national_team(club) == 0 {\n            return 0;\n        }", "        if exe::club_is_national_team(club) == 0 || true {\n            return 0;\n        }"),
 ]

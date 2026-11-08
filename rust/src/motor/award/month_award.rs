@@ -38,8 +38,7 @@ pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, note
             -1
         }
     };
-    let best: unsafe extern "thiscall" fn(usize, i32, u32) -> usize = core::mem::transmute(FN_MONTH_RATINGS_FIND_BEST_PLAYER);
-    let r = best(notes, league, age);
+    let r = exe::month_ratings_find_best_player(notes, league, age);
     if r == 0 {
         return;
     }
@@ -49,11 +48,10 @@ pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, note
     let club = read_usize(month_ratings_staff_by_id(id) + 0x39);
     let year = (table & 0xffff0000) | read_i16(notes + 0xd) as u16 as u32;
     let month = read_u8(notes + 0xc) as u32;
-    let write: unsafe extern "thiscall" fn(usize, i32, i32, u32, u32) = core::mem::transmute(FN_MONTH_AWARD_SET_WINNER);
     if club != 0 {
-        write(this, id, read_i32(club), (year & 0xffffff00) | month, year);
+        exe::month_award_set_winner(this, id, read_i32(club), (year & 0xffffff00) | month, year);
     } else {
-        write(this, id, -1, month, year);
+        exe::month_award_set_winner(this, id, -1, month, year);
     }
 }
 
@@ -67,8 +65,7 @@ pub(crate) unsafe fn raise_winner_reputation(person: usize, club: usize, nation:
     if MONTH_AWARD_DRY_RUN {
         return award_raise_winner_reputation(person, club, nation, mundo, player);
     }
-    let f: unsafe extern "C" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_AWARD_RAISE_WINNER_REPUTATION);
-    f(person, club, nation, mundo, player);
+    exe::award_raise_winner_reputation(person, club, nation, mundo, player);
 }
 
 /// Finds the month slot, stores the person and the club, raises the winner's reputation, sends the news and records the
@@ -111,12 +108,10 @@ pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, club_id:
     if MONTH_AWARD_DRY_RUN {
         return;
     }
-    let news: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_MONTH_AWARD_POST_WINNER_NEWS);
-    news(this, (this as u32 & 0xffffff00) | k as u32);
+    exe::month_award_post_winner_news(this, (this as u32 & 0xffffff00) | k as u32);
     let cid = read_i32(v + 0x21);
     let club = if cid != -1 { month_award_club_by_id(cid) } else { 0 };
-    let record: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_MONTH_AWARD_RECORD);
-    record(read_usize(G_STAFF_RECORDS), month_ratings_staff_by_id(read_i32(v + 0x1d)), club, read_usize(this + 5) as u32, month, year);
+    exe::staff_records_add_month_award_record(read_usize(G_STAFF_RECORDS), month_ratings_staff_by_id(read_i32(v + 0x1d)), club, read_usize(this + 5) as u32, month, year);
 }
 
 /// Adds the regions the winner's reputation writes: player record +9..+0xe, non-player record +8..+0xd and the club's

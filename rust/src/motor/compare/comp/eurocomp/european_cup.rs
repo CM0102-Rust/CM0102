@@ -57,8 +57,6 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usi
         return o(this);
     }
     let sort: unsafe extern "C" fn(*mut u32, i32) = core::mem::transmute(FN_COMP_UTIL_SORT_CLUBS_BY_STRENGTH);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let n = read_i16(this + cup::ENTRANT_COUNT) as usize;
     let mut v: Vec<u32> = (0..n).map(|i| read_u32_as_usize(read_u32_as_usize(this + cup::ENTRANT_BOOK) + i * 6) as u32).collect();
     sort(v.as_mut_ptr(), n as i32);
@@ -66,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usi
     let (mut nm, mut id) = (0i16, 0i16);
     let knockout = rounds_of_cup(this, 0xc, &mut nm, &mut id, 0);
     let plan = if knockout != 0 { planned_final_positions(this, knockout, nm).0 } else { Vec::new() };
-    soltar(knockout);
+    exe::crt_free(knockout);
     o(this);
     if plan.iter().any(|&(k, _)| k as usize >= n) {
         return; // the original reads past the vector: no check
@@ -74,7 +72,7 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usi
     let errado = plan.iter().find(|&&(k, p)| {
         let c = v[k as usize] as usize;
         c != 0 && {
-            let e = achar(read_u32_as_usize(this + 8), c);
+            let e = exe::comp_stats_find_club_entry(read_u32_as_usize(this + 8), c);
             e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != p
         }
     });
@@ -311,8 +309,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_fixture(this: usize, game
 /// cai), só a original.
 pub(crate) unsafe extern "thiscall" fn compare_european_cup_set_club_progress(this: usize, club: usize, stage: u32, p1: u32, p2: u32, p3: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_EUROPEAN_CUP_SET_CLUB_PROGRESS);
-    let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    let e = search(read_usize(this + 8), club);
+    let e = exe::comp_stats_find_club_entry(read_usize(this + 8), club);
     if e == 0 {
         return o(this, club, stage, p1, p2, p3); // simplification: without a record, original only
     }
@@ -340,7 +337,6 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_create_round_table(t
     if f == -1 || f >= 0xc {
         return o(this, stage, rounds, id, league);
     }
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut i2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
     let (a, b, igual, _, _) = crate::comparison::side_by_side(
@@ -351,7 +347,7 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_create_round_table(t
     let outs = *rounds == r2 && *id == i2 && (league.is_null() || *league == l2);
     let table = if a != 0 && b != 0 { league_written_table_bytes(a) == league_written_table_bytes(b) } else { a == 0 && b == 0 };
     if b != 0 {
-        soltar(b);
+        exe::crt_free(b);
     }
     SCOREBOARD.record(igual && outs && table, || format!("european_cup_create_round_table({}): saídas {} tabela {}", f, outs, table));
     a

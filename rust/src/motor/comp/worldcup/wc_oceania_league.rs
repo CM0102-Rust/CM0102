@@ -41,8 +41,7 @@ pub(crate) unsafe extern "thiscall" fn wc_oceania_league_update_staff_records_fo
             crate::comparison::branch("cqj_10 oceania na copa do mundo");
             let id = read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP);
             european_cup_add_qualified_record(club, read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)), 0, 0, 0x64);
-            let slot: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_WORLDCUP_ADD_QUALIFIED_TEAM);
-            slot(read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(id.wrapping_mul(4))), club);
+            exe::worldcup_add_qualified_team(read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(id.wrapping_mul(4))), club);
             *(out as *mut u8) = 4;
         } else if d == 2 {
             eliminar(0x64);

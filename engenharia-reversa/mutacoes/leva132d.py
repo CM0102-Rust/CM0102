@@ -4,7 +4,7 @@
 MUTACOES = [
     ('e_1e_sem', 'adjust(club, 0xc, 0x4b);', 'adjust(club, 0xc, 0x4c);', 'eventos 0x1e sem tecnico'),
     ('e_1e_sem2', 'adjust(club, 0xc, 0x4b);', 'adjust(club, 0xc, -0x4b);', 'eventos 0x1e sem tecnico'),
-    ('e_0a_sorteio', 'let b = random(5);\n                        if a < b || protegido', 'let b = random(6);\n                        if a < b || protegido', 'eventos 0x0a'),
+    ('e_0a_sorteio', 'let b = random(5);\n                        if a < b || exe::media_has_story_for_player', 'let b = random(6);\n                        if a < b || exe::media_has_story_for_player', 'eventos 0x0a'),
     ('e_0a_limite', 'let r = random(2000) + 0x1194;', 'let r = random(2000) + 0x1000;', 'eventos 0x0a'),
     ('j_n34', 'if r as f64 * 0.1 + m + 0.5 < nota11 {', 'if r as f64 * 0.1 + m + 0.4 < nota11 {', 'jogadores noticia 0x34'),
 ]

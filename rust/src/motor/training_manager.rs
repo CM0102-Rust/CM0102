@@ -68,12 +68,10 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
     }
     let manager = if tecnico == 0 { read_u32_as_usize(club + club::MANAGER) } else { tecnico };
     let staff: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACH_ASSIGNMENTS);
-    let auxiliar: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_CLUB_ASSISTANT);
-    let treinadores: unsafe extern "C" fn(usize, *mut usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_CLUB_COACHES);
     let t = staff(this, manager);
-    let aux = auxiliar(club);
+    let aux = exe::database_get_club_assistant(club);
     let mut tr = [0usize; 5];
-    treinadores(club, tr.as_mut_ptr());
+    exe::database_get_club_coaches(club, tr.as_mut_ptr());
     let candidate = |k: i32| if k < 0 { aux } else { tr[k as usize] };
     for v in 0..6 {
         let e = t + 9 * v;
@@ -184,17 +182,15 @@ pub(crate) unsafe fn training_entry_of_player_data(this: usize, f: usize) -> usi
 /// a vaga 1, com a carga do programa (0x8b4f60) na ficha de forma; por fim a comissão (0x8b2880 com o clube novo e o
 /// técnico).
 pub(crate) unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, manager: usize, old: usize, new: usize) {
-    let squad: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
-    let gravar_carga: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_INJURY_SET_TRAINING_LOAD);
     let (mut gol, mut geral) = (-1i8, -1i8);
     if old != 0 {
         let mut v = [0usize; 50];
-        squad(old, v.as_mut_ptr(), 0);
+        exe::database_collect_club_squad(old, v.as_mut_ptr(), 0);
         for &p in &v {
             if p == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
-            gravar_carga(read_u32_as_usize(G_INJURY), p, 0x32);
+            exe::injury_set_training_load(read_u32_as_usize(G_INJURY), p, 0x32);
             let f = read_u32_as_usize(p + staff::PLAYER);
             if f == 0 {
                 show_error_at(0xa8ccd0, 0x34c);
@@ -214,8 +210,7 @@ pub(crate) unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, man
         }
     }
     let mut v = [0usize; 50];
-    squad(new, v.as_mut_ptr(), 0);
-    let carga: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_TRAINING_SCHEDULE_GET_TRAINING_LOAD);
+    exe::database_collect_club_squad(new, v.as_mut_ptr(), 0);
     for &p in &v {
         if p == 0 {
             continue;
@@ -233,8 +228,8 @@ pub(crate) unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, man
             1
         };
         crate::comparison::branch("cqf_7 programa do elenco novo");
-        let c = carga(human_training_schedule(this, manager, *e));
-        gravar_carga(read_u32_as_usize(G_INJURY), p, c as u32);
+        let c = exe::training_schedule_get_training_load(human_training_schedule(this, manager, *e));
+        exe::injury_set_training_load(read_u32_as_usize(G_INJURY), p, c as u32);
     }
     let staff: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_TRAINING_MANAGER_UPDATE_COACH_ASSIGNMENTS);
     staff(this, new, manager);
@@ -246,9 +241,8 @@ pub(crate) unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, man
 /// [pt] { 0x8b2230 } (thiscall, ret 0, training_manager.cpp): os nomes padrão dos 167 programas de treino (0x8b50f0 em cada
 /// um, de 0x9b em 0x9b bytes), pela criação dos programas padrão (0x8b3930).
 pub(crate) unsafe extern "thiscall" fn training_manager_cpp_0x8b2230(this: usize) {
-    let name: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_TRAINING_SCHEDULE_SET_DEFAULT_NAME);
     for k in 0..0xa7 {
-        name(this + k * 0x9b);
+        exe::training_schedule_set_default_name(this + k * 0x9b);
     }
 }
 
@@ -264,8 +258,7 @@ pub(crate) unsafe fn training_entry_of_staff(this: usize, p: usize) -> usize {
 /// [pt] O contrato da pessoa (CONTRACT_MANAGER 0x4cf5a0, thiscall no gerente [0xae1050]), guardado em [0xae1080] como a
 /// original faz a cada consulta.
 pub(crate) unsafe fn training_manager_get_contract_stored(p: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = f(read_u32_as_usize(G_CONTRACT_MANAGER), p);
+    let c = exe::contract_manager_get_contract(read_u32_as_usize(G_CONTRACT_MANAGER), p);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     c
 }
@@ -346,14 +339,11 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
     }
     let mut d = [0i8; 8]; // the progress of the five categories (the original clears a dword and a byte)
     let e = training_entry_of_staff(this, p);
-    let programa: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_PLAYER_SCHEDULE);
-    let prog = programa(this, p);
+    let prog = exe::training_manager_get_player_schedule(this, p);
     if prog == 0 {
         show_error_at(0xa8ccd0, 0x1a3);
         return;
     }
-    let gravar_carga: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_INJURY_SET_TRAINING_LOAD);
-    let find: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(FN_TRAINING_MANAGER_FIND_POSITION_TRAINING);
     let mark = (e + 5) as *mut u8;
     if *mark & 0x20 == 0 {
         let c = training_manager_get_contract_stored(p);
@@ -377,10 +367,9 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                 1
             };
             *(e as *mut i8) = slot;
-            let carga: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_TRAINING_SCHEDULE_GET_TRAINING_LOAD);
-            let v = carga(human_training_schedule(this, manager, slot));
+            let v = exe::training_schedule_get_training_load(human_training_schedule(this, manager, slot));
             crate::comparison::branch("cqd_8 programa do humano");
-            gravar_carga(read_u32_as_usize(G_INJURY), p, v as u32);
+            exe::injury_set_training_load(read_u32_as_usize(G_INJURY), p, v as u32);
         }
     }
     let mut weeks = read_u16(this + 0x688d).wrapping_sub(read_u16(e + 1));
@@ -395,16 +384,15 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         if !ainda {
             crate::comparison::branch("cqd_8 saiu do clube humano");
             *mark &= 0xdf;
-            gravar_carga(read_u32_as_usize(G_INJURY), p, 0x32);
+            exe::injury_set_training_load(read_u32_as_usize(G_INJURY), p, 0x32);
             let f = read_u32_as_usize(p + staff::PLAYER);
             *(training_entry_of_staff(this, p) as *mut u8) = if read_i8(f + player_sheet::GOALKEEPER) >= 0xf { 6 } else { 1 };
             let mut q = 0usize;
-            let n = find(this, p, &mut q);
-            let parar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_TRAINING_MANAGER_SET_POSITION_TRAINING_RATE);
+            let n = exe::training_manager_find_position_training(this, p, &mut q);
             let mut k = 0i8;
             if n > 0 {
                 loop {
-                    parar(this, q.wrapping_add((k as isize * 8) as usize), 0);
+                    exe::training_manager_set_position_training_rate(this, q.wrapping_add((k as isize * 8) as usize), 0);
                     k = k.wrapping_add(1);
                     if k as i32 >= n {
                         break;
@@ -418,19 +406,17 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
     }
     core::ptr::write_unaligned((e + 1) as *mut u16, read_u16(this + 0x688d));
     let mut q = 0usize;
-    let npos = find(this, p, &mut q);
+    let npos = exe::training_manager_find_position_training(this, p, &mut q);
     if *mark & 0x10 != 0 && npos == 0 {
         *mark &= 0xef;
     }
-    let level: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_TRAINING_SCHEDULE_GET_CATEGORY_LEVEL);
-    let factor: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACHING_FACTOR);
     for k in 0..5usize {
         // simplification: the original pushes the category in a dword whose upper bytes are stack leftovers; 0x8b4f50 and
         // 0x8b41d0 leem o byte
-        let lv = level(prog, k as u32) as u8 as i8;
+        let lv = exe::training_schedule_get_category_level(prog, k as u32) as u8 as i8;
         let base = (lv as i16).wrapping_mul(2).wrapping_add(0x3c); // cqd8: the level weight
         let club = training_manager_club_of_contract(training_manager_get_contract_stored(p));
-        let fa = factor(this, club, k as u32) as u16 as i16 as i32;
+        let fa = exe::training_manager_get_coaching_factor(this, club, k as u32) as u16 as i16 as i32;
         let x = base.wrapping_add(((fa - 100) / 5) as i16);
         let weight: i16 = if x < 0 { 0 } else if x > 200 { 200 } else { x };
         let floor = ((read_i8(p + staff::PROFESSIONALISM) as i32 / 3) as i8).wrapping_sub(6);
@@ -476,10 +462,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
     }
     let mut acabou = false;
     if npos > 0 {
-        let aptidao: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRAINING_MANAGER_GET_POSITION_APTITUDE);
-        let state: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
         let reclamar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_APPLY_EVENT_FLAGS);
-        let infeliz: unsafe extern "C" fn(usize) = core::mem::transmute(FN_NEWS_POST_PLAYER_UNHAPPY_WITH_TRAINING);
         let mut k = 0i8;
         let mut it = q + 7; // the item’s fee (+7); the rating at +6, the mask at +4
         loop {
@@ -494,18 +477,18 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                     if c != 0 && read_u32_as_usize(c + 0x45) & 0x8000 == 0 {
                         // simplification: the original pushes the mask in ecx with the leftover upper 16 bits; 0x8b4770
                         // reads the word
-                        let apt = aptidao(this, p, read_u16(it - 3) as u32) as u8 as i8;
+                        let apt = exe::training_manager_get_position_aptitude(this, p, read_u16(it - 3) as u32) as u8 as i8;
                         let t = read_i8(it);
                         let quer = (t > 0x32 && friendly_random(100 - t as i32) < 10) || (apt < 0xc && friendly_random(apt as i32) < 2);
                         let a = read_i8(p + staff::PROFESSIONALISM);
                         if quer && a < 0xf && friendly_random(a as i32) < 10 && read_u32_as_usize(G_INJURY) != 0
-                            && state(read_u32_as_usize(G_INJURY), p) == 0 {
+                            && exe::injury_get_player_injury_status(read_u32_as_usize(G_INJURY), p) == 0 {
                             crate::comparison::branch("cqd_8 reclama do treino de posicao");
                             reclamar(c, 0x8000, 0);
                             let m = (c + 0x44) as *mut i8;
                             let v = *m as i32 - 5;
                             *m = if v > 100 { 100 } else if v < -100 { -100 } else { (*m).wrapping_sub(5) };
-                            infeliz(p);
+                            exe::news_post_player_unhappy_with_training(p);
                             contract_of_club = 0;
                         }
                     }
@@ -526,8 +509,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             }
         }
     }
-    let apply: unsafe extern "thiscall" fn(usize, usize, *const i8) = core::mem::transmute(FN_TRAINING_MANAGER_APPLY_TRAINING_PROGRESS);
-    apply(this, p, d.as_ptr());
+    exe::training_manager_apply_training_progress(this, p, d.as_ptr());
     if acabou {
         crate::comparison::branch("cqd_8 treino de posicao acabou");
         let n0 = read_i32(this + 0x6525);
@@ -577,12 +559,11 @@ pub(crate) unsafe extern "thiscall" fn get_player_schedule(this: usize, p: usize
         show_error_at(0xa8ccd0, 0x6ad);
         return 0;
     }
-    let state: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
     let c = training_manager_get_contract_stored(p);
     if c != 0 && training_manager_club_of_contract(c) != 0 {
         let manager = read_u32_as_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf);
         if manager != 0 && is_human_manager_id(manager) {
-            if state(read_u32_as_usize(G_INJURY), p) == 2 {
+            if exe::injury_get_player_injury_status(read_u32_as_usize(G_INJURY), p) == 2 {
                 let k = read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)).wrapping_sub(1);
                 if !(0..0x10).contains(&k) {
                     show_error_at(0xa8ccd0, 0x68f);
@@ -593,7 +574,7 @@ pub(crate) unsafe extern "thiscall" fn get_player_schedule(this: usize, p: usize
             return human_training_schedule(this, manager, *(training_entry_of_staff(this, p) as *const i8));
         }
     }
-    if state(read_u32_as_usize(G_INJURY), p) == 2 {
+    if exe::injury_get_player_injury_status(read_u32_as_usize(G_INJURY), p) == 2 {
         return this;
     }
     this.wrapping_add((*(training_entry_of_staff(this, p) as *const i8) as isize * 0x9b) as usize)
@@ -635,8 +616,7 @@ pub(crate) unsafe fn training_nibble(e: usize, k: usize) -> i8 {
 
 /// TRAINING_MANAGER apply_training_progress(person, deltas).
 pub(crate) unsafe fn training_manager_apply_training_progress(this: usize, p: usize, d: &[i8; 8]) {
-    let f: unsafe extern "thiscall" fn(usize, usize, *const i8) = core::mem::transmute(FN_TRAINING_MANAGER_APPLY_TRAINING_PROGRESS);
-    f(this, p, d.as_ptr());
+    exe::training_manager_apply_training_progress(this, p, d.as_ptr());
 }
 
 /// `TRAINING_MANAGER::remove_or_restore_training_progress(person, restore)`: takes the progress stored in the training
@@ -861,27 +841,24 @@ pub(crate) unsafe fn human_schedule_slot(this: usize, person: usize, slot: usize
 /// [0xae23bc]), os dez programas: vagas 0 a 5 calculadas aqui (tipos −1, 0, 1, 2, 3, 4), 6 a 9 pela 0x8b3930 (tipos
 /// 5, 6, 7, 7). No fim os nomes padrão (0x8b2230). Chamadas pelo endereço (0x8b4e50 e 0x8b3930 nesta leva).
 pub(crate) unsafe extern "thiscall" fn set_default_schedules(this: usize) {
-    let kind: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(FN_TRAINING_SCHEDULE_SET_TYPE);
-    let human: unsafe extern "thiscall" fn(usize, usize, i8) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_MANAGER_SCHEDULE);
-    kind(this, 0, 0);
+    exe::training_schedule_set_type(this, 0, 0);
     crate::comparison::branch("cpu_8 programas padrao");
-    kind(this + 0x9b, 1, 1); // cpu8: the general computer programme
+    exe::training_schedule_set_type(this + 0x9b, 1, 1); // cpu8: the general computer programme
     for k in 2..7i8 {
-        kind(this + 0x9b * k as usize, k, k);
+        exe::training_schedule_set_type(this + 0x9b * k as usize, k, k);
     }
     for h in 0..0x10i32 {
         let id = read_i32(G_STAFF_COUNT).wrapping_sub(h).wrapping_sub(1);
         let person = (*(G_STAFF_TABLE as *const usize)).wrapping_add((id as u32).wrapping_mul(0x6e) as usize);
         for (vaga, t) in [(0usize, -1i8), (1, 0), (2, 1), (3, 2), (4, 3), (5, 4)] {
-            kind(human_schedule_slot(this, person, vaga), vaga as i8, t);
+            exe::training_schedule_set_type(human_schedule_slot(this, person, vaga), vaga as i8, t);
         }
         // simplification: the original pushes slots 8 and 9 in a single dword with only the low byte written; both calls read the byte.
         for (vaga, t) in [(6i8, 5i8), (7, 6), (8, 7), (9, 7)] {
-            kind(human(this, person, vaga), vaga, t);
+            exe::training_schedule_set_type(exe::training_manager_get_manager_schedule(this, person, vaga), vaga, t);
         }
     }
-    let nomes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_TRAINING_MANAGER_SET_DEFAULT_SCHEDULE_NAMES);
-    nomes(this);
+    exe::training_manager_set_default_schedule_names(this);
 }
 
 /// `TRAINING_MANAGER::get_manager_schedule(manager, slot)`: returns the human manager's schedule for the slot (0..=9;
@@ -942,8 +919,7 @@ pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, club: us
     if read_i32(t) < read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
         return (t as u32 & 0xffff_0000) | 100; // cpt8: técnico do computador
     }
-    let staff: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACH_ASSIGNMENTS);
-    let s = staff(this, t);
+    let s = exe::training_manager_get_coach_assignments(this, t);
     let (mut n, mut soma) = (0i8, 0i16);
     for k in 0..6usize {
         let e = s + 9 * k;
@@ -1165,9 +1141,8 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         add_low_nibble(e + 5, k);
     }
     // position training
-    let find: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(FN_TRAINING_MANAGER_FIND_POSITION_TRAINING);
     let mut p = 0usize;
-    let n = find(this, person, &mut p);
+    let n = exe::training_manager_find_position_training(this, person, &mut p);
     if n <= 0 {
         return;
     }
@@ -1268,9 +1243,8 @@ pub(crate) unsafe extern "thiscall" fn find_position_training(this: usize, perso
 /// diário das pessoas (game_daily_staff_update 0x5ce2d0): 1 se algum item do treino de posição da pessoa (0x8b4b20) tem
 /// aprendizado (+7) acima de 50; senão 0.
 pub(crate) unsafe extern "thiscall" fn has_fast_position_training(this: usize, person: usize) -> u32 {
-    let find: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(FN_TRAINING_MANAGER_FIND_POSITION_TRAINING);
     let mut p = 0usize;
-    let n = find(this, person, &mut p);
+    let n = exe::training_manager_find_position_training(this, person, &mut p);
     for j in 0..n.max(0) as usize {
         if read_i8(p + 8 * j + 7) > 0x32 {
             return 1;

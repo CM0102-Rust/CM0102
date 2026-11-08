@@ -61,9 +61,6 @@ pub(crate) unsafe extern "thiscall" fn update_rankings(this: usize, data: usize)
     let month_of: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let pontuar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_FIFA_RANKINGS_RECALCULATE_SCORES);
-    let order: unsafe extern "thiscall" fn(usize, *mut i32) -> usize = core::mem::transmute(FN_FIFA_RANKINGS_COLLECT_RANKED_ORDER);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     if day(data) != 0x12 {
         return;
     }
@@ -100,10 +97,10 @@ pub(crate) unsafe extern "thiscall" fn update_rankings(this: usize, data: usize)
             i += 1;
         }
     }
-    pontuar(this);
+    exe::fifa_rankings_recalculate_scores(this);
     // the original keeps the count in the argument’s place (the date): without the vector, the count stays as the pointer
     let mut n = data as i32;
-    let v = order(this, &mut n);
+    let v = exe::fifa_rankings_collect_ranked_order(this, &mut n);
     let mut k = 0i32;
     while k < n {
         let r = read_usize(v + k as usize * 4);
@@ -111,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn update_rankings(this: usize, data: usize)
         *((r + 0x10) as *mut u16) = (k + 1) as u16;
         k += 1;
     }
-    free(v);
+    exe::crt_free(v);
 }
 
 /// qsort order of the histories: the points of b minus those of a (highest first)
@@ -364,8 +361,6 @@ pub(crate) unsafe extern "C" fn compare_ranking_score_desc(a: usize, b: usize) -
 /// das nações com continente) dá a posição: +0x12 = a posição de antes (+0x10) e +0x10 = 1, 2, 3...; a lista é solta.
 pub(crate) unsafe extern "thiscall" fn create_default_table(this: usize) {
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
-    let order: unsafe extern "thiscall" fn(usize, *mut i32) -> usize = core::mem::transmute(FN_FIFA_RANKINGS_COLLECT_RANKED_ORDER);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let t = calloc(read_u32(G_NATION_COUNT), 0x2c);
     *(this as *mut usize) = t;
     if t == 0 {
@@ -387,12 +382,12 @@ pub(crate) unsafe extern "thiscall" fn create_default_table(this: usize) {
         k += 1;
     }
     let mut n = 0i32;
-    let l = order(this, &mut n);
+    let l = exe::fifa_rankings_collect_ranked_order(this, &mut n);
     for i in 0..n.max(0) as usize {
         let r = read_u32(l + 4 * i) as usize;
         *((r + 0x12) as *mut u16) = *((r + 0x10) as *const u16);
         *((r + 0x10) as *mut u16) = (i + 1) as u16;
     }
-    soltar(l);
+    exe::crt_free(l);
 }
 

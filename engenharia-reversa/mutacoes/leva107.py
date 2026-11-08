@@ -1,6 +1,6 @@
 # Mutacoes da leva107 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva107.py --jogo 2001-08-20
 MUTACOES = [
-    ('u_choca', "        if any || (y != 0 && x != 0 && choca(y, colour_other) == 0) {", "        if any || (y != 0 && x != 0 && choca(x, colour_other) == 0) {"),
+    ('u_choca', "        if any || (y != 0 && x != 0 && exe::database_colours_clash(y, colour_other) == 0) {", "        if any || (y != 0 && x != 0 && exe::database_colours_clash(x, colour_other) == 0) {"),
     ('u_par2', "                (x, y) = if k == 1 { (u(club::FORE_COLOUR2), u(club::BACK_COLOUR2)) } else { (u(club::FORE_COLOUR3), u(club::BACK_COLOUR3)) };", "                (x, y) = if k == 1 { (u(club::FORE_COLOUR3), u(club::BACK_COLOUR3)) } else { (u(club::FORE_COLOUR2), u(club::BACK_COLOUR2)) };"),
     ('u_fim', "    if x == 0 || y == 0 { 1 } else { k }", "    if x == 0 || y == 0 { 1 } else { k + 1 }"),
     ('u_nenhum', "            _ => return 1,", "            _ => return 3,"),

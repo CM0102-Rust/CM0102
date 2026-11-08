@@ -14,7 +14,6 @@ use super::*;
 /// listas alocadas têm de ser iguais byte a byte (a da cópia é liberada, 0x9452ca).
 pub(crate) unsafe extern "thiscall" fn compare_draw_groups(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_DRAW_GROUPS);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend_from_slice(&[(this + 0xee, 0xa0), (this + league::ENTRANT_COUNT, 2), (0xb67a34, 4)]);
     if read_i16(this + league::YEAR) == 0x7d2 && read_u32_as_usize(this + league::ENTRANT_BOOK) != 0 {
@@ -27,7 +26,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_groups(this: usize) -> usize
         a == 0 && b == 0
     };
     if b != 0 {
-        soltar(b);
+        exe::crt_free(b);
     }
     SCOREBOARD.record(igual && same, || format!("draw_groups: memória igual={} lista igual={}", igual, same));
     a
@@ -127,14 +126,13 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_set_predicted_positions
         return o(this);
     }
     let sort: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let n = read_i16(this + league::ENTRANT_COUNT) as usize;
     let mut v: Vec<usize> = (0..n).map(|i| read_u32_as_usize(read_u32_as_usize(this + league::ENTRANT_BOOK) + i * 6)).collect();
     sort(v.as_mut_ptr(), n as u32, 4, 0x4b07d0);
     o(this);
     const FAIXAS: [u8; 32] = [1, 2, 3, 4, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19];
     let errado = (0..32).find(|&k| {
-        let e = if v[k] != 0 { achar(read_u32_as_usize(this + 8), v[k]) } else { 0 };
+        let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_u32_as_usize(this + 8), v[k]) } else { 0 };
         e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != FAIXAS[k]
     });
     SCOREBOARD.record(errado.is_none(), || format!("world_cup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
@@ -156,7 +154,6 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_schedule(this: u
     if stage as u8 as i8 >= 7 {
         return o(this, stage, rounds, id, league);
     }
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut i2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
     let (a, b, igual, _, _) = crate::comparison::side_by_side(
@@ -167,7 +164,7 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_schedule(this: u
     let outs = *rounds == r2 && *id == i2 && (league.is_null() || *league == l2);
     let table = if a != 0 && b != 0 { written_group_round_bytes(a) == written_group_round_bytes(b) } else { a == 0 && b == 0 };
     if b != 0 {
-        soltar(b);
+        exe::crt_free(b);
     }
     SCOREBOARD.record(igual && outs && table, || format!("world_cup_create_schedule({}): saídas {} tabela {}", stage as u8 as i8, outs, table));
     a

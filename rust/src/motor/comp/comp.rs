@@ -111,12 +111,10 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
         return;
     }
     crate::comparison::branch("cqp_1 noticia do premio");
-    let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let given: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let mut n = [0u8; 0xe8];
     let p = n.as_mut_ptr() as usize;
-    construct(p, 0x1a, 0);
+    exe::newsitem_newsitem(p, 0x1a, 0);
     given(p, 0, read_u32_as_usize(read_u32_as_usize(this + 4)) as u32);
     given(p, 1, lo);
     given(p, 2, read_u32_as_usize(club) as u32);
@@ -137,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
         false
     };
     given(p, 6, venceu as u32);
-    deliver(read_u32_as_usize(G_NEWS), p, club);
+    exe::news_send_to_club_manager(read_u32_as_usize(G_NEWS), p, club);
 }
 
 // simplification: delivers the news (allocates); original only. The copy takes the branch.
@@ -157,17 +155,15 @@ pub(crate) unsafe extern "thiscall" fn send_tv_rights_news(this: usize, club: us
         return;
     }
     crate::comparison::branch("cqp_1 noticia da tv");
-    let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let given: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let mut n = [0u8; 0xe8];
     let p = n.as_mut_ptr() as usize;
-    construct(p, 0x1f, 0);
+    exe::newsitem_newsitem(p, 0x1f, 0);
     given(p, 0, read_u32_as_usize(club) as u32);
     given(p, 1, read_u32_as_usize(read_u32_as_usize(this + 4)) as u32);
     given(p, 2, value);
     given(p, 3, *((this + league::YEAR) as *const i16) as i32 as u32);
-    deliver(read_u32_as_usize(G_NEWS), p, club);
+    exe::news_send_to_club_manager(read_u32_as_usize(G_NEWS), p, club);
 }
 
 // simplification: delivers the news (allocates); original only. The copy takes the branch.
@@ -354,13 +350,12 @@ pub(crate) unsafe fn comp_stage(comp: usize, k: i32) -> usize {
 /// (0x4947a0): da fase `k` para trás, enquanto as fases têm o mesmo grupo (0x4b01d0 do id +0x3a: push id; add esp, 4 ->
 /// cdecl) e o índice é maior que −1, o índice da primeira delas (o próprio k sem grupo).
 pub(crate) unsafe extern "thiscall" fn get_first_stage_of_group(this: usize, k: i32) -> i32 {
-    let group: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_COMP_UTIL_GET_PARENT_STAGE_ID);
     let mut e = k;
-    let g = group(read_i16(comp_stage(this, e) + 0x3a) as i32);
+    let g = exe::comp_util_get_parent_stage_id(read_i16(comp_stage(this, e) + 0x3a) as i32);
     if g > -1 && e > -1 {
         loop {
             let f = comp_stage(this, e - 1);
-            if group(read_i16(f + 0x3a) as i32) != g {
+            if exe::comp_util_get_parent_stage_id(read_i16(f + 0x3a) as i32) != g {
                 break;
             }
             e -= 1;
@@ -388,15 +383,13 @@ pub(crate) unsafe extern "thiscall" fn get_first_stage_of_group(this: usize, k: 
 /// this -> thiscall, ret 4). Todas acabadas: o começo do grupo da última. Fase inválida no fim: a caixa da linha 0x36e
 /// e a própria competição; fase nula: a própria.
 pub(crate) unsafe extern "thiscall" fn get_current_stage(this: usize) -> usize {
-    let group: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_COMP_UTIL_GET_PARENT_STAGE_ID);
-    let stage: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_COMP_GET_STAGE);
     let go_back = |s0: i32| -> i32 {
         let mut s = s0;
-        let g = group(read_i16(comp_stage(this, s) + 0x3a) as i32);
+        let g = exe::comp_util_get_parent_stage_id(read_i16(comp_stage(this, s) + 0x3a) as i32);
         if g > -1 && s > -1 {
             loop {
-                let f = stage(this, s - 1);
-                if group(read_i16(f + 0x3a) as i32) != g {
+                let f = exe::comp_get_stage(this, s - 1);
+                if exe::comp_util_get_parent_stage_id(read_i16(f + 0x3a) as i32) != g {
                     break;
                 }
                 s -= 1;
@@ -694,16 +687,13 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
             None => 3,
         };
     }
-    let cup: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_IS_WORLD_CUP_COMP);
-    let internacional: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_IS_INTERNATIONAL_COMP);
-    let index: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_COMP);
-    if cup(comp) != 0 {
+    if exe::key_nation_is_world_cup_comp(comp) != 0 {
         return 0; // cpt3: Copa do Mundo e eliminatorias
     }
-    if internacional(comp) != 0 {
+    if exe::key_nation_is_international_comp(comp) != 0 {
         return 1; // cpt3: torneio internacional
     }
-    index(comp)
+    exe::key_nation_index_of_comp(comp)
 }
 
 /// Tells whether a round's fixtures are known: the stage is a league, or the round is before the current one, or it is
@@ -756,7 +746,6 @@ pub(crate) unsafe extern "thiscall" fn are_round_fixtures_known(this: usize, sta
 /// competições, do conflito de datas 0x5adba0): 1 se o algarismo das unidades (0x4b0850) da rodada (+0x30, com sinal)
 /// é 0 (rodada de 1000 em diante também dá 0), senão 0. `outro` não é lido.
 pub(crate) unsafe extern "thiscall" fn counts_for_fixture_clash(_this: usize, game: usize, other: usize) -> u32 {
-    let units_digit: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_ROUND_VARIANT);
-    (units_digit(read_i16(game + 0x30) as i32) == 0) as u32
+    (exe::comp_util_get_round_variant(read_i16(game + 0x30) as i32) == 0) as u32
 }
 

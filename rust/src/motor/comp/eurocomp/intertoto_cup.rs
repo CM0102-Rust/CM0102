@@ -146,8 +146,7 @@ pub(crate) unsafe fn collect_intertoto_entrants(this: usize) -> (i32, i32) {
     }
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     sort(read_u32_as_usize(this + cup::TEAM_TABLE), read_i16(this + cup::TEAM_COUNT) as i32 as u32, 6, 0x522190);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    soltar(v);
+    exe::crt_free(v);
     ((k == read_i16(this + cup::TEAM_COUNT) as i32) as i32, read_i16(this + cup::TEAM_COUNT) as i32)
 }
 

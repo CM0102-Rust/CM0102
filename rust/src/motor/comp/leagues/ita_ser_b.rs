@@ -27,10 +27,8 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_create_schedule(this: usize, st
 /// ret 4); havendo algum, a fase do desempate (+0x2c = 1, +0xc = malloc de 4, virtual +0x28). Sem nenhum: +0xdd = 0,
 /// +0xe6 = 0 e a virtual +0x94.
 pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, today: usize, full: u32) -> u32 {
-    let day: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
-    let sort: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_ITA_LEAGUE_SORT_CLUBS_LEVEL_ON_POINTS);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let r = day(this, today, full);
+    let r = exe::league_update_for_date(this, today, full);
     if read_u32_as_usize(this + league::COMPLETE) == 0 || read_u32_as_usize(this + league::STAGE_COUNT) != 0 || full == 0 || read_u32_as_usize(this + league::TIEBREAK_MATCHES) == 0 {
         return r;
     }
@@ -44,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, to
         let points = read_i16(l + 0x19);
         if points == read_i16(l + 0x54) && z[(i as usize).min(63)] != z[(i as usize + 1).min(63)] { // cql4: the Serie B pair at the boundary
             found = true;
-            sort(this, points as u16 as u32);
+            exe::ita_league_sort_clubs_level_on_points(this, points as u16 as u32);
         }
         i = i.wrapping_add(1);
     }
@@ -78,9 +76,8 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, to
 /// pelos pontos), ordena o bloco pela comparação do confronto (qsort 0x945333 com 0x683410, linhas de 0x3b: push;
 /// add esp, 0x10 -> cdecl; sem linha, o qsort recebe 0 e 0) e renumera a posição (+4) de todas as linhas.
 pub(crate) unsafe extern "thiscall" fn ita_league_sort_clubs_level_on_points(this: usize, points: u32) {
-    let tie: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_RANK_BY_HEAD_TO_HEAD);
     let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    tie(this, read_u32_as_usize(this + league::TABLE));
+    exe::league_rank_by_head_to_head(this, read_u32_as_usize(this + league::TABLE));
     let n = read_i16(this + league::CLUB_COUNT);
     let mut first = 0usize;
     let mut how_many: u32 = 0;

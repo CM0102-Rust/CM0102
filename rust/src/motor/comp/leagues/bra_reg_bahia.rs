@@ -48,22 +48,18 @@ pub(crate) struct BraRegBahiaStateChampionship {
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: usize, ano: u32, registro: usize, e: &BraRegBahiaStateChampionship, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
-    let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.regras);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.tabela);
-    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let estatisticas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_COMP_STATS);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.previstas);
-    base(this);
+    exe::league_league(this);
     core::ptr::write_unaligned((this + 4) as *mut usize, registro);
     core::ptr::write_unaligned(this as *mut usize, e.vtabela);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
     *((this + league::DISCIPLINE_RULE) as *mut u8) = disciplina;
-    if carregar(this, 1) != 0 {
+    if exe::league_load_from_temp_file(this, 1) != 0 {
         return this;
     }
     crate::comparison::branch(ramo);
@@ -81,7 +77,7 @@ pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: usize, ano: u32,
         show_error_at(e.arquivo, e.linhas[1]);
         return this;
     }
-    if jogos(this) == 0 {
+    if exe::league_create_fixtures(this) == 0 {
         show_error_at(e.arquivo, e.linhas[2]);
         return this;
     }
@@ -90,7 +86,7 @@ pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: usize, ano: u32,
         return this;
     }
     let n = novo(0x5ce);
-    let s = if n != 0 { estatisticas(n, this) } else { 0 };
+    let s = if n != 0 { exe::comp_stats_comp_stats(n, this) } else { 0 };
     core::ptr::write_unaligned((this + 8) as *mut usize, s);
     if s == 0 {
         show_error_at(e.arquivo, e.linhas[4]);
@@ -189,18 +185,16 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_bahia(this: usize, year
 /// (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), cujo eax ela devolve.
 pub(crate) unsafe fn state_league_new_season(this: usize, table: usize, file: usize, rows: [u32; 4], year: i16, ramo: &'static str) -> u32 {
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
     liberar_tabela(this, 0);
     let l = read_usize(this + league::ROUND_DATES);
     if l != 0 {
-        free(l);
+        exe::crt_free(l);
         core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut usize, 0);
     }
     let stats = read_usize(this + 8);
     if stats != 0 {
-        let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
-        archive(stats, 1);
+        exe::comp_stats_archive_season_and_reset(stats, 1);
     }
     if (read_usize(this + league::CURRENT_STAGE) as i32) >= 0 {
         let mut i = 0i32;
@@ -230,8 +224,7 @@ pub(crate) unsafe fn state_league_new_season(this: usize, table: usize, file: us
         show_error_at(file, rows[1]);
         return 0;
     }
-    let games: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
-    if games(this) == 0 {
+    if exe::league_create_fixtures(this) == 0 {
         show_error_at(file, rows[2]);
         return 0;
     }
@@ -242,8 +235,7 @@ pub(crate) unsafe fn state_league_new_season(this: usize, table: usize, file: us
     }
     let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
     predicted(this);
-    let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
-    renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
+    exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
 }
 
 /// The next stage of a state league (`advance_stage`, slot 11, +0x28).

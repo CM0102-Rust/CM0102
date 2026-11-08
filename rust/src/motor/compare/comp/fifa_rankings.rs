@@ -84,10 +84,9 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_ranked_order(this: usize,
     }
     let mut c = 0i32;
     let v = collect_ranked_order(this, &mut c);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let same = v != 0 && c == *count && (0..c as usize).all(|k| read_usize(r + k * 4) == read_usize(v + k * 4));
     SCOREBOARD.record(same, || format!("collect_ranked_order conta original={} rust={}", *count, c));
-    free(v);
+    exe::crt_free(v);
     r
 }
 
@@ -105,7 +104,6 @@ pub(crate) unsafe extern "C" fn compare_compare_ranking_score_desc(a: usize, b: 
 /// (aloca a dela); iguais as duas tabelas inteiras (a do rascunho é solta).
 pub(crate) unsafe extern "thiscall" fn compare_create_default_table(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_DEFAULT_TABLE);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     o(this);
     let mut s = [0usize; 1];
     create_default_table(s.as_mut_ptr() as usize);
@@ -122,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_default_table(this: usize)
         (0..n).find(|&i| *((ta + i) as *const u8) != *((tb + i) as *const u8))
     };
     if tb != 0 {
-        soltar(tb);
+        exe::crt_free(tb);
     }
     SCOREBOARD.record(same, || format!("create_default_table: a primeira diferença na nação {:?}", dif.map(|i| (i / 0x2c, i % 0x2c))));
 }

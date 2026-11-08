@@ -88,8 +88,7 @@ pub(crate) unsafe extern "C" fn compare_build_match_screen() {
         // simplification: freeing, commentary with sound and allocating do not run twice; these cases are proven in Rust mode
         return o();
     }
-    let sheet: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_GET_HUMAN_MANAGER_RECORD);
-    let f = sheet(0);
+    let f = exe::get_human_manager_record(0);
     let mut extra = Vec::new();
     if current_human_display() != 0 {
         extra.push((current_human_display() + 0x12f4fe, 3));
@@ -588,9 +587,8 @@ pub(crate) unsafe fn compare_resposta(name: &str, item: u32, o: unsafe extern "C
 
 /// Comparer for `match_screens_handle_latest_scores_cycle`.
 pub(crate) unsafe extern "C" fn compare_match_screens_handle_latest_scores_cycle(item: u32) -> i32 {
-    let now: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
     // 1 s of slack: the time may roll over between the two sides
-    let redesenha = now().wrapping_add(1000) >= (get_screen_param(0x14) as u32).wrapping_add(5000);
+    let redesenha = exe::utils_get_time_ms().wrapping_add(1000) >= (get_screen_param(0x14) as u32).wrapping_add(5000);
     compare_resposta("match_screens_handle_latest_scores_cycle", item, original_fn(431), match_screens_handle_latest_scores_cycle, redesenha)
 }
 

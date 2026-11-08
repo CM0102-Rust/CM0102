@@ -106,17 +106,14 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_TRANSFER_FEE_RECORDS);
     let person = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(t + offer::TARGET_STAFF_ID) as usize).wrapping_mul(staff::SIZE));
     let buyer = injury_club_by_index(read_i32(t + offer::BUYER_CLUB_ID));
-    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let contract = contract_of(read_usize(G_CONTRACT_MANAGER), person);
+    let contract = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     let seller = if contract != 0 { injury_club_by_index(read_i32(contract + contract::CLUB)) } else { 0 };
     if seller == 0 {
         let r = o(this, t);
         SCOREBOARD.record(r == 1 && read_usize(G_CONTRACT_LOOKUP_RESULT) == 0, || format!("update_transfer_fee_records sem vendedor: {} [G_CONTRACT_LOOKUP_RESULT]={:x}", r, read_usize(G_CONTRACT_LOOKUP_RESULT)));
         return r;
     }
-    let season: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
-    let always: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
-    let records = || [season(this, buyer, 1), always(this, buyer, 1), season(this, seller, 1), always(this, seller, 1)];
+    let records = || [exe::club_records_get_season_record(this, buyer, 1), exe::club_records_get_all_time_record(this, buyer, 1), exe::club_records_get_season_record(this, seller, 1), exe::club_records_get_all_time_record(this, seller, 1)];
     let value = read_i32(t + offer::FEE);
     let rg = records();
     // (value, club) of each record: paid in the season and all-time by the buyer, received by the seller
@@ -170,11 +167,9 @@ pub(crate) unsafe extern "thiscall" fn compare_add_transfer_totals(this: usize, 
     if buyer == 0 || seller == 0 || (read_usize(this + club_records_fields::NEWS_QUEUE_CAPACITY).wrapping_sub(read_usize(this + club_records_fields::NEWS_QUEUE_COUNT)) as i32) < 2 {
         return o(this, value, buyer, seller); // simplification: with queue realloc, original only
     }
-    let season: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
-    let always: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
-    let _ = [season(this, seller, 1), always(this, seller, 1), season(this, buyer, 1), always(this, buyer, 1)];
+    let _ = [exe::club_records_get_season_record(this, seller, 1), exe::club_records_get_all_time_record(this, seller, 1), exe::club_records_get_season_record(this, buyer, 1), exe::club_records_get_all_time_record(this, buyer, 1)];
     // creating the buyer’s record may reallocate the vector and move the seller’s: fetch all four again (now it only finds)
-    let regs = [season(this, seller, 1), always(this, seller, 1), season(this, buyer, 1), always(this, buyer, 1)];
+    let regs = [exe::club_records_get_season_record(this, seller, 1), exe::club_records_get_all_time_record(this, seller, 1), exe::club_records_get_season_record(this, buyer, 1), exe::club_records_get_all_time_record(this, buyer, 1)];
     let queue = read_usize(this + club_records_fields::NEWS_QUEUE).wrapping_add(read_usize(this + club_records_fields::NEWS_QUEUE_COUNT).wrapping_mul(6));
     let reg = [(regs[0] + 0x365, 12), (regs[1] + 0x365, 12), (regs[2] + 0x365, 12), (regs[3] + 0x365, 12), (this + club_records_fields::NEWS_QUEUE_COUNT, 4), (queue, 12)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, value, buyer, seller), || add_transfer_totals(this, value, buyer, seller));
@@ -191,8 +186,7 @@ pub(crate) unsafe extern "thiscall" fn compare_club_records_update_career_record
     if player == 0 || club == 0 {
         return o(this, player, club, games, goals);
     }
-    let always: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
-    let reg = always(this, club, 1);
+    let reg = exe::club_records_get_all_time_record(this, club, 1);
     if reg == 0 {
         return o(this, player, club, games, goals);
     }
@@ -209,8 +203,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_season_rating_record(this:
     if club == 0 {
         return o(this, club);
     }
-    let season: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
-    let t = season(this, club, 0);
+    let t = exe::club_records_get_season_record(this, club, 0);
     let reg: &[(usize, usize)] = if t == 0 { &[] } else { &[(t + club_record::SEASON_RATING, 0x1f)] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(this, club), || update_season_rating_record(this, club));
     SCOREBOARD.record(igual && r == n, || format!("update_season_rating_record({}) original={} rust={} {:x?} x {:x?}", read_usize(club), r, n, mo, mr));

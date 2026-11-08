@@ -234,8 +234,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
     if (club_id as i32) > -1 || (value as i32) > -1 {
         core::ptr::write_unaligned((reg + player_stats_entry::CLUB_LEAGUE_GAMES) as *mut u16, 0);
         core::ptr::write_unaligned((reg + player_stats_entry::CLUB_LEAGUE_GOALS) as *mut u16, 0);
-        let nos: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_FILE_LLIST_GET_NODES);
-        let list = nos(read_u32_as_usize(this), read_u32_as_usize(reg + player_stats_entry::HISTORY_START) as u32, read_u32_as_usize(reg + player_stats_entry::HISTORY_LAST) as u32);
+        let list = exe::file_llist_get_nodes(read_u32_as_usize(this), read_u32_as_usize(reg + player_stats_entry::HISTORY_START) as u32, read_u32_as_usize(reg + player_stats_entry::HISTORY_LAST) as u32);
         if list != 0 {
             core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, read_u32_as_usize(list + llist::HEAD) as u32);
             let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
@@ -250,10 +249,8 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
                 }
                 no = next(list);
             }
-            let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
-            let erase: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
-            destroy(list);
-            erase(list);
+            exe::llist_destructor_llist(list);
+            exe::crt_operator_delete(list);
         }
         if ARCHIVE_STATS_DRY_RUN {
             let a = (reg + player_stats_entry::CLUB_LEAGUE_GAMES) as *mut u16;
@@ -355,7 +352,6 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
     let malloc: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let realloc: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_REALLOC);
     let year_of_club: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(FN_KEY_NATION_GET_CLUB_SEASON_YEAR);
-    let category: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_GET_CATEGORY_RECORD);
     *count = 0;
     if p == 0 {
         show_player_stats_error(0xb98);
@@ -382,7 +378,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
         let id = if club == 0 { 0xffff_ffff } else { read_u32_as_usize(club) as u32 }; // cqf8: the club of the current season
         crate::comparison::branch("cqf_8 temporada atual");
         let mut r = PlayerStatsEntry::nova(year, id, cat, 0xffff_ffff);
-        let c = category(this, f, cat as u32);
+        let c = exe::playerstats_get_category_record(this, f, cat as u32);
         if c != 0 {
             core::ptr::copy_nonoverlapping(c as *const u8, r.0.as_mut_ptr().add(6), 32);
         }
@@ -394,12 +390,10 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
     let mut club_current = u32::from_le_bytes([last.0[2], last.0[3], last.0[4], last.0[5]]);
     let mut kind_current: u8 = 0xff;
     let reg_sheet = read_u32_as_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add((read_i32(f) as isize * 0x27) as usize);
-    let nos: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_FILE_LLIST_GET_NODES);
-    let list = nos(read_u32_as_usize(this), read_u32_as_usize(reg_sheet + player_stats_entry::HISTORY_START) as u32, read_u32_as_usize(reg_sheet + player_stats_entry::HISTORY_LAST) as u32);
+    let list = exe::file_llist_get_nodes(read_u32_as_usize(this), read_u32_as_usize(reg_sheet + player_stats_entry::HISTORY_START) as u32, read_u32_as_usize(reg_sheet + player_stats_entry::HISTORY_LAST) as u32);
     if list != 0 {
-        let previous: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_PREV);
         write_u32(list + llist::CURSOR, read_u32_as_usize(list + llist::TAIL) as u32);
-        let mut no = previous(list);
+        let mut no = exe::llist_get_prev(list);
         while no != 0 {
             let kind = read_u8(no + career_entry::KIND);
             if !(read_u16(no) == year_current && read_u32_as_usize(no + career_entry::CLUB_ID) as u32 == club_current && kind & 7 == kind_current) {
@@ -462,12 +456,10 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
                 }
             }
             core::ptr::copy_nonoverlapping(no as *const u8, history_entry_at(buf, *count, (kind >> 3) as i32) as *mut u8, HISTORY_ENTRY_SIZE);
-            no = previous(list);
+            no = exe::llist_get_prev(list);
         }
-        let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
-        let erase: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
-        destroy(list);
-        erase(list);
+        exe::llist_destructor_llist(list);
+        exe::crt_operator_delete(list);
     }
     *count += 6;
     // (3) the transfer and the type move down from the next group
@@ -607,10 +599,8 @@ pub(crate) unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize,
         show_player_stats_error(0x135f);
         return -1;
     }
-    let build: unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize = core::mem::transmute(FN_PLAYERSTATS_BUILD_CAREER_HISTORY);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut n = 0i32;
-    let t = build(read_u32_as_usize(G_PLAYER_STATS), p, &mut n);
+    let t = exe::playerstats_build_career_history(read_u32_as_usize(G_PLAYER_STATS), p, &mut n);
     let mut greater = 0x7b3i32;
     if t != 0 {
         let mut i = 0i32;
@@ -624,7 +614,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize,
             e += 0x102;
         }
     }
-    free(t);
+    exe::crt_free(t);
     if greater == 0x7b3 {
         return -1;
     }
@@ -698,9 +688,8 @@ pub(crate) unsafe extern "thiscall" fn get_stat(this: usize, player: usize, cate
     if read_usize(player) as i32 >= read_usize(G_PLAYER_DATA_COUNT) as i32 {
         return 0.0;
     }
-    let record: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_GET_CATEGORY_RECORD);
     if which as u8 != 0x13 && category as u8 as i8 <= 6 {
-        let r = record(this, player, category);
+        let r = exe::playerstats_get_category_record(this, player, category);
         if r != 0 {
             let value: unsafe extern "stdcall" fn(usize, u32, u32) -> f64 = core::mem::transmute(FN_PLAYER_STATS_GET_RECORD_VALUE);
             return value(r, which, default.to_bits()); // cpu3: the record value
@@ -711,12 +700,12 @@ pub(crate) unsafe extern "thiscall" fn get_stat(this: usize, player: usize, cate
         return 0.0; // cpu3: sem registro, zero
     }
     let (mut n, mut t) = (0u8, 0i16);
-    let r2 = record(this, player, 2);
+    let r2 = exe::playerstats_get_category_record(this, player, 2);
     if r2 != 0 {
         n = *(r2 as *const u8);
         t = read_i16(r2 + player_category_stats::RATING_TOTAL);
     }
-    let r3 = record(this, player, 3);
+    let r3 = exe::playerstats_get_category_record(this, player, 3);
     if r3 != 0 {
         n = n.wrapping_add(*(r3 as *const u8));
         t = t.wrapping_add(read_i16(r3 + player_category_stats::RATING_TOTAL));
@@ -728,14 +717,14 @@ pub(crate) unsafe extern "thiscall" fn get_stat(this: usize, player: usize, cate
     };
     // simplification: without record 4 the original reads the slot of byte n with the 3 upper bytes without a value; the copy uses zero
     let mut c4 = f32::from_bits(n as u32);
-    let r4 = record(this, player, 4);
+    let r4 = exe::playerstats_get_category_record(this, player, 4);
     if r4 != 0 {
         let k = *(r4 as *const u8);
         let v = read_i16(r4 + player_category_stats::RATING_TOTAL) as f64;
         c4 = if k < 8 { (((8 - k as i32) as f64 * 3.0 + v) * 0.125) as f32 } else { (v / k as f64) as f32 };
     }
     let mut c5 = 0.0f64; // simplification: without record 5, the original loads an uninitialized slot; the copy uses zero
-    let r5 = record(this, player, 5);
+    let r5 = exe::playerstats_get_category_record(this, player, 5);
     if r5 != 0 {
         let k = *(r5 as *const u8);
         let v = read_i16(r5 + player_category_stats::RATING_TOTAL) as f64;
@@ -835,10 +824,8 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_career_goals(person: usiz
         show_error_at(0xa78310, 0xb5d);
         return 0;
     }
-    let build: unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize = core::mem::transmute(FN_PLAYERSTATS_BUILD_CAREER_HISTORY);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut n = 0i32;
-    let t = build(read_u32_as_usize(G_PLAYER_STATS), person, &mut n);
+    let t = exe::playerstats_build_career_history(read_u32_as_usize(G_PLAYER_STATS), person, &mut n);
     let mut s = 0u16;
     if t != 0 {
         let mut i = 0i32; // cps9: do primeiro grupo
@@ -847,7 +834,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_career_goals(person: usiz
             i += 6;
         }
     }
-    free(t);
+    exe::crt_free(t);
     s // cps9: the career goals
 }
 
@@ -880,14 +867,13 @@ pub(crate) unsafe fn show_stats_memory_error(row: u32, text: usize) {
     let version: unsafe extern "C" fn(*mut u8, *mut u8, u32, usize) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let translate: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_GUI_SHOW_MESSAGE_BOX);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
     split(0xa78310, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
     let s = version(nome.as_mut_ptr(), ext.as_mut_ptr(), row, text);
     format(0xae24d0, 0x9a8120, s, nome.as_ptr(), ext.as_ptr(), row, text);
     translate(0xae28bc, 0x9a8108);
     translate(0xae26c4, 0x9a7ff8, 0xae24d0usize);
-    caixa(0xae28bc, 0xae26c4, 0);
+    exe::gui_show_message_box(0xae28bc, 0xae26c4, 0);
 }
 
 /// Returns the 0x20-byte record of the player's category (1..6), through the index in the 39-byte entry of his id; 0
@@ -1045,14 +1031,13 @@ pub(crate) unsafe extern "thiscall" fn add_language(this: usize, person: usize, 
 /// ordenar)`: sem tabela, ou sem o registro da pessoa no idioma (`find_language_record`), acrescenta-o com a fluência
 /// `aumento` (0x7c6a30); com ele, soma o aumento à fluência (byte), no máximo 10 (com sinal).
 pub(crate) unsafe extern "thiscall" fn improve_language(this: usize, person: usize, language: u32, aumento: u32, sort: u32) {
-    let append: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_PLAYERSTATS_ADD_LANGUAGE);
     if read_u32_as_usize(this + player_stats_fields::LANGUAGES) == 0 {
-        append(this, person, language, aumento, sort);
+        exe::playerstats_add_language(this, person, language, aumento, sort);
         return;
     }
     let r = find_language_record(this, person, language as u8);
     if r == 0 {
-        append(this, person, language, aumento, sort);
+        exe::playerstats_add_language(this, person, language, aumento, sort);
         return;
     }
     crate::comparison::branch("cpo_12 idioma melhorado");
@@ -1194,7 +1179,6 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
     if p == 0 || game == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PLAYER_STATS_RECORD_MATCH)(this, p, game); // the boxes
     }
-    let create: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_CREATE_STATS);
     let sheet: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let count: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(FN_COMP_UTIL_IS_LEAGUE_DIVISION);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
@@ -1228,7 +1212,7 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
             for c in stats_categories_for(cat).into_iter().flatten() {
                 let mut r = player_category_record(this, dados, c);
                 if r == 0 {
-                    r = create(this, dados, c as u32);
+                    r = exe::playerstats_create_stats(this, dados, c as u32);
                 }
                 add_u8_at(r, 1); // cpx12: o jogo
                 if k > 10 {
@@ -1453,10 +1437,8 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(person: us
         show_error_at(0xa78310, 0xb1e);
         return 0;
     }
-    let build: unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize = core::mem::transmute(FN_PLAYERSTATS_BUILD_CAREER_HISTORY);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut n = 0i32;
-    let t = build(read_u32_as_usize(G_PLAYER_STATS), person, &mut n);
+    let t = exe::playerstats_build_career_history(read_u32_as_usize(G_PLAYER_STATS), person, &mut n);
     let mut s = 0u16;
     if t != 0 {
         let mut i = 0i32;
@@ -1469,7 +1451,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(person: us
             i += 6;
         }
     }
-    free(t);
+    exe::crt_free(t);
     s // cps10: the goals for the club
 }
 

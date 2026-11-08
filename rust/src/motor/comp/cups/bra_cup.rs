@@ -32,12 +32,11 @@ pub(crate) unsafe fn call_cup_virtual(this: usize, o: usize) -> i32 {
 /// (`inscritos`, mov ecx, esi; call direto -> thiscall, ret 0), as rodadas (virtual +0x8c, create_round_table pela fase
 /// −1) e a árvore dos confrontos (virtual +0x94); por fim as posições previstas (virtual +0x5c), cujo eax ela devolve.
 pub(crate) unsafe fn start_new_cup_season(this: usize, entrants: usize, file: usize, rows: [u32; 3], year: i16, ramo: &'static str) -> u32 {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     core::ptr::write_unaligned((this + cup::SEASON_CLOSED) as *mut u32, 0);
     for o in [0xa7usize, 0xa3] {
         let l = read_u32_as_usize(this + o);
         if l != 0 {
-            soltar(l);
+            exe::crt_free(l);
             core::ptr::write_unaligned((this + o) as *mut u32, 0);
         }
     }
@@ -46,18 +45,17 @@ pub(crate) unsafe fn start_new_cup_season(this: usize, entrants: usize, file: us
         while i < read_i16(this + cup::ROUND_COUNT) as i32 {
             let p = read_u32_as_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4);
             if p != 0 {
-                soltar(p);
+                exe::crt_free(p);
                 core::ptr::write_unaligned((read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4) as *mut u32, 0);
             }
             i += 1;
         }
-        soltar(read_u32_as_usize(this + cup::TIE_TABLES));
+        exe::crt_free(read_u32_as_usize(this + cup::TIE_TABLES));
         core::ptr::write_unaligned((this + cup::TIE_TABLES) as *mut u32, 0);
     }
     let e = read_u32_as_usize(this + 8);
     if e != 0 {
-        let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
-        archive(e, 1);
+        exe::comp_stats_archive_season_and_reset(e, 1);
     }
     let a = read_i16(this + cup::YEAR);
     core::ptr::write_unaligned((this + cup::YEAR) as *mut i16, a.wrapping_add(year));

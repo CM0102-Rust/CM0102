@@ -17,8 +17,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_advance_stage(this: usize)
     let stage = stage + 1;
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, stage);
     if stage == 2 {
-        let final_: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_BRAREGPARANA_CREATE_FINAL_STAGE);
-        final_(this); // cqo8: the final after the second stage
+        exe::braregparana_create_final_stage(this); // cqo8: the final after the second stage
     }
 }
 
@@ -108,9 +107,8 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
     crate::comparison::branch("cqo_8 final");
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     build(stage, 0);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    free(t);
-    free(list);
+    exe::crt_free(t);
+    exe::crt_free(list);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 2);
 }
 
@@ -142,26 +140,23 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
 ///   thiscall, ret 4) e na notícia do prêmio (0x48e3e0 Comp::send_prize_money_news: thiscall(this, clube, valor em 64
 ///   bits, posição 1 ou 2, rodada 0, partida 0, tipo −2), ret 0x1c); depois a 0x42bba0, como acima.
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this: usize) -> u32 {
-    let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_BRA_NAT_FIRST_FILL_CHAMPIONS_CUP_ENTRANTS);
     if read_usize(this + league::CURRENT_STAGE) == 2 {
         let f = read_usize(read_usize(this + league::STAGES) + 8);
         let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x30));
         history(f);
         crate::comparison::branch("cqo_8 historico da final");
-        return campeoes();
+        return exe::bra_nat_first_fill_champions_cup_entrants();
     }
     let history: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_RECORD_SEASON_HONOURS);
     history(this);
-    let finances: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
-    let prize: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_FINANCE_ADD_PRIZE_MONEY);
     let news: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(FN_COMP_SEND_PRIZE_MONEY_NEWS);
     for (linha, valor, posicao) in [(0usize, 175000i32, 1i32), (0x3b, 100000, 2)] {
         let c = read_usize(read_usize(this + league::TABLE) + linha);
-        prize(finances(read_usize(G_FINANCE_TABLE), c), valor);
+        exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), valor);
         news(this, read_usize(read_usize(this + league::TABLE) + linha), valor, 0, posicao, 0, 0, -2);
     }
     crate::comparison::branch("cqo_8 premios");
-    campeoes()
+    exe::bra_nat_first_fill_champions_cup_entrants()
 }
 
 /// Writes the rule set common to these Brazilian state leagues, with the top places (+0xbe) and the relegated (+0xc1)

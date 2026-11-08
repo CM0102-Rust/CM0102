@@ -22,12 +22,11 @@ pub(crate) type SpaFirstLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
 pub(crate) unsafe fn spa_first_write_league_rounds(t: usize, year: u32, first: i32, table: &[SpaFirstLeagueRound]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
-    let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in table.iter().enumerate() {
         let i = first + k as i32;
         data(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, year, 0);
         for (j, &(a, b, c)) in faixas.iter().enumerate() {
-            band(t, i, j as i32, a as i32, b as i32, c as i32, 0);
+            exe::league_round_set_match_slot(t, i, j as i32, a as i32, b as i32, c as i32, 0);
         }
     }
 }
@@ -86,7 +85,6 @@ pub(crate) unsafe fn write_rounds_winter_break(t: usize, year: u32, n: &SpaFirst
 /// `written_league_round_bytes`; nas outras as de copa, `eng_cc_cup_written_round_bytes`); a tabela da cópia é solta (0x9452ca, cdecl).
 pub(crate) unsafe fn compare_league_round_table(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32,
                        original: impl FnOnce() -> usize, copy: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
     let pl2 = if league.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
@@ -104,7 +102,7 @@ pub(crate) unsafe fn compare_league_round_table(name: &str, stage: u32, rounds: 
         a == 0 && b == 0
     };
     if b != 0 {
-        soltar(b);
+        exe::crt_free(b);
     }
     SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
     a
@@ -504,8 +502,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
     let f = prize(this, 0x3d090); // cqk5: the Primera quota
     core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, f);
     *((this + league::PRIZE_MODE) as *mut u8) = 1; // cqk5: the table prize at the end of the league
-    let pay: unsafe extern "thiscall" fn(usize, i32, usize) = core::mem::transmute(FN_LEAGUE_PAY_TV_RIGHTS);
-    pay(this, 0x4c4b40, 0); // cqk5: the Primera TV money
+    exe::league_pay_tv_rights(this, 0x4c4b40, 0); // cqk5: the Primera TV money
     1
 }
 
@@ -525,8 +522,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
 /// 17 e 18 viram 16) e a pior (+0x75; 17 e 18 viram 19): a faixa de 17 a 18 da Primera não conta como faixa própria
 /// [inferência: as posições de 17 a 18 juntam-se à vizinha de cima na melhor e à de baixo na pior].
 pub(crate) unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
-    let find: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    let e = find(read_usize(this + 8), club);
+    let e = exe::comp_stats_find_club_entry(read_usize(this + 8), club);
     let m = match best as u8 {
         0x11 | 0x12 => 0x10,
         v => v,

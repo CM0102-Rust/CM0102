@@ -117,8 +117,7 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
     }
     *((t + cup_tie::FIXTURE_STATE) as *mut u8) = 3;
     if read_i16(t) == -1 || read_i16(t + cup_tie::AWAY_TEAM) == -1 {
-        let pendente: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_CUP_POST_DRAW_NEWS);
-        pendente(this, round, k);
+        exe::cup_post_draw_news(this, round, k);
         return 1;
     }
     let mut buf = [0u8; 0x50];
@@ -195,10 +194,8 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
     if (cup_has_human_manager(home) || cup_has_human_manager(away)) && read_i16(round_entry(this, ri) + 0xd) as u16 & 0x100 == 0 {
         let mut news = [0u32; 0x38];
         let n = news.as_mut_ptr() as usize;
-        let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
         let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-        let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
-        construct(n, 0x14, 0);
+        exe::newsitem_newsitem(n, 0x14, 0);
         write(n, 0, read_u32_as_usize(read_u32_as_usize(this + 4)) as u32);
         write(n, 1, read_i16(this + cup::STAGE_LABEL) as i32 as u32);
         write(n, 2, read_i16(round_entry(this, ri) + 7) as i32 as u32);
@@ -213,8 +210,8 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
             write(n, 3, read_u32_as_usize(p + fixture::AWAY_CLUB_ID) as u32);
             write(n, 4, read_u32_as_usize(p + fixture::HOME_CLUB_ID) as u32);
         }
-        deliver(read_u32_as_usize(G_NEWS), n, home);
-        deliver(read_u32_as_usize(G_NEWS), n, away);
+        exe::news_send_to_club_manager(read_u32_as_usize(G_NEWS), n, home);
+        exe::news_send_to_club_manager(read_u32_as_usize(G_NEWS), n, away);
     }
     let e = round_entry(this, ri);
     if read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + id * 4) == 0 || read_u8(e + cup_round::LEGS) != 2 {
@@ -355,10 +352,8 @@ pub(crate) unsafe extern "thiscall" fn post_draw_news(this: usize, round: u32, t
     crate::comparison::branch("cqc_5 confronto pendente");
     let mut noticia = [0u32; 0x38];
     let n = noticia.as_mut_ptr() as usize;
-    let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
-    construct(n, 0x26, 0);
+    exe::newsitem_newsitem(n, 0x26, 0);
     write(n, 0, read_u32_as_usize(read_u32_as_usize(this + 4)) as u32);
     write(n, 1, read_i16(this + cup::STAGE_LABEL) as i32 as u32);
     write(n, 2, read_i16(round_entry(this, ri) + 7) as i32 as u32);
@@ -378,23 +373,23 @@ pub(crate) unsafe extern "thiscall" fn post_draw_news(this: usize, round: u32, t
     }
     let news = read_u32_as_usize(G_NEWS);
     if casa != 0 {
-        deliver(news, n, casa);
+        exe::news_send_to_club_manager(news, n, casa);
     } else {
         if a1 != 0 {
-            deliver(news, n, a1);
+            exe::news_send_to_club_manager(news, n, a1);
         }
         if a2 != 0 {
-            deliver(news, n, a2);
+            exe::news_send_to_club_manager(news, n, a2);
         }
     }
     if away != 0 {
-        deliver(news, n, away);
+        exe::news_send_to_club_manager(news, n, away);
     } else {
         if b1 != 0 {
-            deliver(news, n, b1);
+            exe::news_send_to_club_manager(news, n, b1);
         }
         if b2 != 0 {
-            deliver(news, n, b2);
+            exe::news_send_to_club_manager(news, n, b2);
         }
     }
 }
@@ -530,7 +525,6 @@ pub(crate) unsafe fn next_tie_step(cup: usize, r: i32, cur: &mut i32, start: i16
 pub(crate) unsafe extern "thiscall" fn sort_round_teams(cup: usize, round: u32) {
     let r = round as i16 as i32;
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let sort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     // the four: push n; add esp, 4 (malloc and random roll) / push p; add esp, 4 (free) / 4 pushes; add esp, 0x10 (qsort) -> cdecl
@@ -585,14 +579,14 @@ pub(crate) unsafe extern "thiscall" fn sort_round_teams(cup: usize, round: u32) 
             }
             if !next_tie_step(cup, r, &mut cur, start, &mut second, &mut nation) {
                 show_error_at(0x9b55ac, 0xcff);
-                free(array);
+                exe::crt_free(array);
                 return;
             }
         };
         place_team_in_tie(cup, r, round, e, cur, home);
         j = j.wrapping_add(1);
     }
-    free(array);
+    exe::crt_free(array);
 }
 
 /// The round draw that keeps nations apart (round rule 4 without `0x400`): each team's level becomes how many teams of
@@ -628,7 +622,6 @@ pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(cup: usize, 
     let r = round as i16 as i32;
     let zerado: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let sort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     // calloc: push 1; push [0xae2350]; add esp, 8 -> cdecl (n, 1); free and qsort: add esp, 0x14 covers both -> cdecl
@@ -664,7 +657,7 @@ pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(cup: usize, 
             e += 7;
         }
     }
-    free(contas);
+    exe::crt_free(contas);
     sort(array, n as i32, 7, 0x51ebc0);
     let mut second = false;
     let mut j: i16 = 0;
@@ -726,14 +719,14 @@ pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(cup: usize, 
             }
             if !next_tie_step(cup, r, &mut cur, start, &mut second, &mut rule) {
                 show_error_at(0x9b55ac, 0xe5c);
-                free(array);
+                exe::crt_free(array);
                 return;
             }
         };
         place_team_in_tie(cup, r, round, e, cur, mandante); // cqb11: a entrada vai ao confronto sorteado
         j = j.wrapping_add(1);
     }
-    free(array);
+    exe::crt_free(array);
 }
 
 /// the base cup season start: clears byte +0xb1
@@ -1193,8 +1186,7 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
         sorteio(0x51e220); // cqa3: o sorteio livre
     }
     // push −1; push rodada; ecx = a copa -> thiscall, ret 8
-    let mandantes: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_CUP_SET_HOME_TEAMS_FOR_ROUND);
-    mandantes(cup, round, u32::MAX);
+    exe::cup_set_home_teams_for_round(cup, round, u32::MAX);
     if read_u8(round_record_by_dword(cup, round) + 0x21) == 2 {
         sorteio(0x522610);
     }
@@ -1218,11 +1210,9 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
     }
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
-    let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let human: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
-    construct(n, 0x27, 0); // push 0; push 0x27; ecx = a local -> thiscall, ret 8
+    exe::newsitem_newsitem(n, 0x27, 0); // push 0; push 0x27; ecx = a local -> thiscall, ret 8
     write(n, 0, read_usize(read_usize(cup + 4)) as u32); // push valor; push k; ecx = a local -> thiscall, ret 8
     write(n, 1, read_i16(cup + cup::STAGE_LABEL) as i32 as u32);
     write(n, 2, read_i16(round_record_by_dword(cup, round) + 7) as i32 as u32);
@@ -1241,7 +1231,7 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
         }
         write(n, 3, read_usize(read_usize(read_usize(cup + cup::TEAM_TABLE) + 6 * i)) as u32);
         // push clube; push &local; ecx = [0xb7431c]; sem add esp -> thiscall, ret 8
-        deliver(read_usize(G_NEWS), n, read_usize(read_usize(cup + cup::TEAM_TABLE) + 6 * i));
+        exe::news_send_to_club_manager(read_usize(G_NEWS), n, read_usize(read_usize(cup + cup::TEAM_TABLE) + 6 * i));
     }
     1
 }
@@ -1300,8 +1290,7 @@ pub(crate) unsafe fn cup_is_friendly_comp(comp: usize) -> bool {
 ///
 /// [pt] O índice da nação dona da competição na tabela das chaves (0x669470: push comp; add esp, 4 -> cdecl; devolve o byte).
 pub(crate) unsafe fn cup_key_nation_index_of_comp(comp: usize) -> u8 {
-    let f: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_COMP);
-    f(comp)
+    exe::key_nation_index_of_comp(comp)
 }
 
 /// True when the competition is its nation's stored main cup ([0xb63d7e + 72 × index]).
@@ -1470,11 +1459,10 @@ pub(crate) unsafe fn season_honours(cup: usize) -> (usize, usize, usize, usize) 
     let comp = read_usize(cup + 4);
     let object = || read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(read_usize(cup + 4)) as isize * 4) as usize));
     if comp != 0 && read_i32(comp) == read_i32(KEY_CLUB_COMP_WELSH_PREMIER_CUP) {
-        let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
         let mut j = 0i16;
         while j < read_i16(cup + cup::TEAM_COUNT) {
             let c = club_of_team(cup, j as i32);
-            if read_u8(search(read_usize(object() + 8), c) + 0x73) == 3 {
+            if read_u8(exe::comp_stats_find_club_entry(read_usize(object() + 8), c) + 0x73) == 3 {
                 terceiro = c;
                 break;
             }
@@ -1489,13 +1477,12 @@ pub(crate) unsafe fn season_honours(cup: usize) -> (usize, usize, usize, usize) 
         let find: unsafe extern "thiscall" fn(usize, i32, u32, *mut i32, *mut i32, u32) -> u8 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
         // simplification: the year goes in a register with garbage in the high 16 bits; 0x5fa730 receives a short
         let k = find(read_usize(G_HOST_COUNTRY), read_i32(read_usize(cup + 4)), read_i16(cup + cup::YEAR) as u16 as u32, &mut a, &mut b, 0);
-        let national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
         let nation = |x: i32| read_usize(G_NATION_TABLE).wrapping_add((x as isize * 0x122) as usize);
         if k == 2 {
             let (na, nb) = (nation(a), nation(b));
-            anfitria = if read_i16(na + nation::REPUTATION) < read_i16(nb + nation::REPUTATION) { national_team(nb) } else { national_team(na) };
+            anfitria = if read_i16(na + nation::REPUTATION) < read_i16(nb + nation::REPUTATION) { exe::database_get_national_team(nb) } else { exe::database_get_national_team(na) };
         } else if k != 0 {
-            anfitria = national_team(nation(a));
+            anfitria = exe::database_get_national_team(nation(a));
         }
     }
     (campeao, vice, terceiro, anfitria)
@@ -1516,12 +1503,10 @@ pub(crate) unsafe fn season_honours(cup: usize) -> (usize, usize, usize, usize) 
 /// semifinalistas para a UEFA (0x519fc0: ecx = a copa -> thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn cup_record_season_honours(cup: usize) {
     let (campeao, vice, terceiro, anfitria) = season_honours(cup);
-    let history: unsafe extern "C" fn(usize, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_COMP_UTIL_ADD_HISTORY_RECORD);
-    history(cup, campeao, vice, terceiro, anfitria);
+    exe::comp_util_add_history_record(cup, campeao, vice, terceiro, anfitria);
     let comp = read_usize(cup + 4);
     if !cup_is_friendly_comp(comp) && is_main_national_cup(comp) {
-        let semi: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CUP_REGISTER_SEMI_FINAL_LOSERS_FOR_UEFA);
-        semi(cup);
+        exe::cup_register_semi_final_losers_for_uefa(cup);
     }
 }
 
@@ -1597,8 +1582,7 @@ pub(crate) unsafe fn semi_final_losers(cup: usize) -> Option<(i32, i32)> {
 /// [0xde1f58]; sem add esp -> thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn register_semi_final_losers_for_uefa(cup: usize) {
     if let Some((a, b)) = semi_final_losers(cup) {
-        let f: unsafe extern "thiscall" fn(usize, i32, i32, i32) = core::mem::transmute(FN_UEFASEEDING_RECORD_CUP_SEMI_FINAL_LOSERS);
-        f(read_usize(G_UEFA_SEEDING), read_i32(read_usize(cup + 4)), a, b);
+        exe::uefaseeding_record_cup_semi_final_losers(read_usize(G_UEFA_SEEDING), read_i32(read_usize(cup + 4)), a, b);
     }
 }
 
@@ -1703,7 +1687,6 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_side_teams(this: usize, round
     if round < 0 || round > read_i16(this + cup::ROUND_COUNT) as i32 || read_u32_as_usize(this + cup::TEAM_TABLE) == 0 || game == -1 {
         return original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, u32, *mut i16) -> i32>(IDX_GET_FIXTURE_SIDE_TEAMS)(this, round, game, side, out);
     }
-    let coletar: unsafe extern "thiscall" fn(usize, i32, i32, *mut i16, *mut i32) -> i32 = core::mem::transmute(FN_CUP_COLLECT_POSSIBLE_TEAMS);
     let count = G_CUP_POSSIBLE_TEAM_COUNT as *mut i32;
     *count = 0;
     let reg = read_u32_as_usize(read_u32_as_usize(this + cup::TIE_TABLES) + round as usize * 4) + (game as usize).wrapping_mul(0x35);
@@ -1713,7 +1696,7 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_side_teams(this: usize, round
         *count = 1;
         return 1;
     }
-    coletar(this, read_i16(r) as i32, read_i16(j) as i32, out, count);
+    exe::cup_collect_possible_teams(this, read_i16(r) as i32, read_i16(j) as i32, out, count);
     if *count == 0 {
         show_error_at(0x9b55ac, 0x157f);
     }
@@ -1815,8 +1798,7 @@ pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, today: u
             if (read_u32_as_usize(this + cup::CURRENT_STAGE) as i32) < (read_u32_as_usize(this + cup::STAGE_COUNT) as i32).wrapping_sub(1) {
                 cup_call_virtual_no_args(this, 0x28); // a fase seguinte
             } else if read_u32_as_usize(this + cup::SEASON_CLOSED) == 0 {
-                let history: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_HISTORY_RECORD_COMP_SEASON);
-                history(read_u32_as_usize(G_CLUB_HISTORY), this);
+                exe::club_history_record_comp_season(read_u32_as_usize(G_CLUB_HISTORY), this);
                 cup_call_virtual_no_args(this, 0x30);
                 if read_u32_as_usize(this + 8) != 0 {
                     let recordes: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_STATS_UPDATE_SEASON_END_RECORDS);
@@ -1998,15 +1980,14 @@ pub(crate) unsafe extern "thiscall" fn set_up_round(this: usize, round: u32) -> 
         }
         return 1;
     }
-    let create: unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_CUP_CREATE_TIE_FIXTURES);
     let mut i = 0i32;
     while n > 0 && i < *((read_u32_as_usize(this + cup::ROUND_TABLE) as isize + off + 0x1a) as *const i16) as i32 {
         let mark = |i: i32| read_u8(read_u32_as_usize((read_u32_as_usize(this + cup::TIE_TABLES) as isize + current * 4) as usize) + i as usize * 0x35 + 0x34);
         if mark(i) == 1 {
-            create(this, current as i32 as u32, i as u32, 1);
+            exe::cup_create_tie_fixtures(this, current as i32 as u32, i as u32, 1);
         }
         if mark(i) == 2 {
-            create(this, current as i32 as u32, i as u32, 0);
+            exe::cup_create_tie_fixtures(this, current as i32 as u32, i as u32, 0);
             if !active() {
                 return 1;
             }
@@ -2025,12 +2006,10 @@ pub(crate) unsafe extern "thiscall" fn set_up_round(this: usize, round: u32) -> 
     } else {
         0
     };
-    let levar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CUP_MOVE_ROUND_FIXTURES_TO_SET_DATES);
     crate::comparison::branch("cps_13 jogos da rodada");
-    levar(this, data, current as i32 as u32);
+    exe::cup_move_round_fixtures_to_set_dates(this, data, current as i32 as u32);
     if data != 0 {
-        let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
-        free(data);
+        exe::crt_operator_delete(data);
     }
     if !active() {
         return 1;
@@ -2129,8 +2108,6 @@ pub(crate) unsafe fn fatal_memory_error_box(row: u32, text: usize) -> ! {
     let version: unsafe extern "C" fn(*mut u8, *mut u8, u32, usize) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let translate: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_GUI_SHOW_MESSAGE_BOX);
-    let fechar1: unsafe extern "C" fn() = core::mem::transmute(FN_GAME_FATAL_CLEANUP);
     let fechar2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
@@ -2139,9 +2116,9 @@ pub(crate) unsafe fn fatal_memory_error_box(row: u32, text: usize) -> ! {
     format(0xae24d0, 0x9a8120, s, nome.as_ptr(), ext.as_ptr(), row, text);
     translate(0xae28bc, 0x9a8108);
     translate(0xae26c4, 0x9a7ff8, 0xae24d0usize);
-    caixa(0xae28bc, 0xae26c4, 0);
+    exe::gui_show_message_box(0xae28bc, 0xae26c4, 0);
     *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
-    fechar1();
+    exe::game_fatal_cleanup();
     fechar2();
     exit(-1)
 }
@@ -2184,7 +2161,6 @@ pub(crate) unsafe fn fatal_memory_error_box(row: u32, text: usize) -> ! {
 pub(crate) unsafe extern "thiscall" fn randomize_round_teams(cup: usize, round: u32) {
     let r = round as i16 as i32;
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let slots = read_i16(round_entry(cup, r) + 0x18) as i32;
     let array = alloc(slots.wrapping_mul(7) as u32);
@@ -2263,7 +2239,7 @@ pub(crate) unsafe extern "thiscall" fn randomize_round_teams(cup: usize, round: 
             if s == start {
                 if second_return {
                     show_error_at(0x9b55ac, 0xf4c);
-                    free(array);
+                    exe::crt_free(array);
                     return;
                 }
                 second_return = true;
@@ -2282,7 +2258,7 @@ pub(crate) unsafe extern "thiscall" fn randomize_round_teams(cup: usize, round: 
             write_u16(v + cup_tie::FEEDER_SIDE, home as u16);
         }
     }
-    free(array);
+    exe::crt_free(array);
 }
 
 /// Swaps the word pairs 0x522610 swaps in tie t: home/away (+0/+2), +0xe/+0x10 and +0xa/+0xc.
@@ -2945,12 +2921,7 @@ pub(crate) unsafe extern "thiscall" fn cup_match_importance(cup: usize, partida:
 /// região da competição (0x786860); senão ao técnico do clube (0x7861e0). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: usize, outcome: u32, a3: u32, p: usize, a5: u32) -> u32 {
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-    let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let category: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_CLASSIFY_TIE_RESULT_FOR_NEWS);
-    let save_game_data: unsafe extern "C" fn(usize, usize, *mut u8) -> u32 = core::mem::transmute(FN_COMP_UTIL_WRITE_FIXTURE_TO_NEWS_SLOTS);
-    let to_club: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
-    let region: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_COMP_REGION);
     let by_reach: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_NEWS_SEND_BY_SCOPE);
     // simplification: the original writes only the output byte into a stack dword and pushes the dword; 0x786090 reads the byte
     let mut out: u32 = 0xff;
@@ -2966,15 +2937,15 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     crate::comparison::branch("cpx_13 noticia do desfecho");
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
-    construct(n, 0x10, 0);
+    exe::newsitem_newsitem(n, 0x10, 0);
     write(n, 0, read_usize(club) as u32);
     write(n, 1, read_usize(read_usize(cup + 4)) as u32);
     write(n, 2, outcome as u8 as i8 as i32 as u32);
-    write(n, 3, category(club, p) as i8 as i32 as u32);
+    write(n, 3, exe::comp_util_classify_tie_result_for_news(club, p) as i8 as i32 as u32);
     write(n, 4, r as u32);
     // simplification: the cursor is a stack dword with 5 in the low byte (the rest is leftover); only the low byte counts
     let mut cursor = [5u8, 0, 0, 0];
-    save_game_data(p, n, cursor.as_mut_ptr());
+    exe::comp_util_write_fixture_to_news_slots(p, n, cursor.as_mut_ptr());
     let k = read_i16(p + fixture::ROUND_NUMBER) as i32;
     let proxima = if k < read_i16(cup + cup::ROUND_COUNT) as i32 - 1 {
         let v = read_i16(read_usize(cup + cup::ROUND_TABLE).wrapping_add((k as usize).wrapping_mul(0x68)) + 0x6f);
@@ -2992,9 +2963,9 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     }
     let round = read_i16(p + fixture::ROUND_NAME);
     if (outcome as u8 == 1 && round == 0x96) || (outcome as u8 == 3 && round == 0x8c) {
-        region(news, n, read_usize(cup + 4));
+        exe::news_send_to_comp_region(news, n, read_usize(cup + 4));
     } else {
-        to_club(news, n, club);
+        exe::news_send_to_club_manager(news, n, club);
     }
     1
 }
@@ -3062,23 +3033,19 @@ pub(crate) unsafe extern "thiscall" fn cup_check_complete(this: usize, stages: u
 /// 0xff. Com ou sem a mudança, a notícia 0x14 vai aos clubes se um é de técnico humano. Sem vaga (fim das vagas ou
 /// vaga vazia): só a notícia, com os dados do jogo.
 pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: usize, round: u32) {
-    let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let mut news = [0u32; 0x38];
     let n1 = news.as_mut_ptr() as usize;
-    construct(n1, 0x14, 0);
+    exe::newsitem_newsitem(n1, 0x14, 0);
     let id = read_u32_as_usize(read_u32_as_usize(this + 4));
     let e = cup_round_entry(this, round);
     if read_i16(e + cup_round::TIE_RULES) as u16 & 0x100 == 0 || read_u8(e + cup_round::SLOT_CODE) == 0xff {
         return;
     }
-    let create: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
-    let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut list = [0u8; 0x10];
     let l = list.as_mut_ptr() as usize;
-    create(l);
+    exe::llist_llist(l);
     if collect_round_fixtures(this, data, round, l) != 0 {
         write(n1, 0, read_u32_as_usize(read_u32_as_usize(this + 4)) as u32);
         write(n1, 1, read_i16(this + cup::STAGE_LABEL) as i32 as u32);
@@ -3097,8 +3064,8 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                 write(n1, 6, est as u32);
                 write(n1, 7, day as u32);
                 write(n1, 8, year as u32);
-                deliver(read_u32_as_usize(G_NEWS), n1, c1);
-                deliver(read_u32_as_usize(G_NEWS), n1, c2);
+                exe::news_send_to_club_manager(read_u32_as_usize(G_NEWS), n1, c1);
+                exe::news_send_to_club_manager(read_u32_as_usize(G_NEWS), n1, c2);
             }
         };
         write_u32_from_usize(l + llist::CURSOR, read_u32_as_usize(l + llist::HEAD));
@@ -3126,7 +3093,7 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                         if read_u8(cup_round_entry(this, round) + j + 0x29) != 3 {
                             let mut noticia2 = [0u32; 0x38];
                             let n2 = noticia2.as_mut_ptr() as usize;
-                            construct(n2, 3, 0);
+                            exe::newsitem_newsitem(n2, 3, 0);
                             write(n2, 0, read_u32_as_usize(r + fixture::HOME_CLUB_ID) as u32);
                             write(n2, 1, read_u32_as_usize(r + fixture::AWAY_CLUB_ID) as u32);
                             write(n2, 2, read_u32_as_usize(r) as u32);
@@ -3139,8 +3106,8 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                             write(n2, 9, read_i16(pt + 2) as u16 as u32);
                             write(n2, 10, read_u8(cup_round_entry(this, round) + j + 0x28) as i8 as i32 as u32);
                             write(n2, 11, read_u8(cup_round_entry(this, round) + j + 0x29) as i8 as i32 as u32);
-                            deliver(read_u32_as_usize(G_NEWS), n2, read_u32_as_usize(r + fixture::HOME_CLUB));
-                            deliver(read_u32_as_usize(G_NEWS), n2, read_u32_as_usize(r + fixture::AWAY_CLUB));
+                            exe::news_send_to_club_manager(read_u32_as_usize(G_NEWS), n2, read_u32_as_usize(r + fixture::HOME_CLUB));
+                            exe::news_send_to_club_manager(read_u32_as_usize(G_NEWS), n2, read_u32_as_usize(r + fixture::AWAY_CLUB));
                         }
                         let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_REMOVE_FIXTURE);
                         remove(read_u32_as_usize(G_FIXTURE_MANAGER), r);
@@ -3155,11 +3122,10 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                         let join: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_ADD_FIXTURE);
                         join(read_u32_as_usize(G_FIXTURE_MANAGER), r, 1);
                         if dp != 0 {
-                            let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
-                            free(dp);
+                            exe::crt_operator_delete(dp);
                         }
                         if read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + id * 4) == 0 {
-                            destroy(l);
+                            exe::llist_destructor_llist(l);
                             return;
                         }
                         write_u8(cup_round_entry(this, round) + j + 0x29, 0xff);
@@ -3175,7 +3141,7 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
             f = next(l);
         }
     }
-    destroy(l);
+    exe::llist_destructor_llist(l);
 }
 
 /// Builds the cup's fixture tree: allocates the ties of each round, clears them, links each tie to a slot in the next
@@ -3218,7 +3184,6 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
 /// = 1. Por fim o número do primeiro confronto de cada rodada (+0x5b), de trás para a frente. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
     let reservar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let t = reservar((read_i16(this + cup::ROUND_COUNT) as i32 as u32) << 2);
     write_u32_from_usize(this + cup::TIE_TABLES, t);
@@ -3393,7 +3358,7 @@ pub(crate) unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
             k += 1;
         }
         if order != 0 {
-            soltar(order);
+            exe::crt_free(order);
         }
         r += 1;
     }
@@ -3532,7 +3497,6 @@ pub(crate) unsafe extern "thiscall" fn cup_rank_teams(this: usize) {
         return show_error_at(0x9b55ac, 0x1827);
     }
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let sort: unsafe extern "C" fn(usize, i32) = core::mem::transmute(FN_COMP_UTIL_SORT_CLUBS_BY_STRENGTH);
     let n = read_i16(this + cup::TEAM_COUNT) as i32;
     let v = alloc((n << 2) as u32);
@@ -3544,7 +3508,7 @@ pub(crate) unsafe extern "thiscall" fn cup_rank_teams(this: usize) {
     }
     sort(v, n);
     set_final_positions_by_round(this, v as *const u32, 1);
-    free(v);
+    exe::crt_free(v);
 }
 
 /// Stores one of the eight cup round match days: the venue flags, the weekday, the time slot and the code. Returns the

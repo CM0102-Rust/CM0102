@@ -4,7 +4,7 @@ MUTACOES = [
     ('c_excl', "        if kind == 5 && excluidos != 0 && *((excluidos as isize + i) as *const u8) != 0 {", "        if kind == 4 && excluidos != 0 && *((excluidos as isize + i) as *const u8) != 0 {"),
     ('c_guard', "                1 | 2 | 3 | 8 => continue,", "                1 | 3 | 8 => continue,"),
     ('c_10', "        if byte(j, match_player::POSITION) > 10 || d32(j, match_player::PLAYER) == 0 {", "        if byte(j, match_player::POSITION) > 11 || d32(j, match_player::PLAYER) == 0 {"),
-    ('c_e9', "1 | 2 => ftol(f(j, if kind == 1 { 0xdd } else { 0xe9 }) - 2.0 * dist(j, a7, a8) as f64) as i16,", "1 | 2 => ftol(f(j, if kind == 1 { 0xdd } else { 0xdd }) - 2.0 * dist(j, a7, a8) as f64) as i16,"),
+    ('c_e9', "1 | 2 => ftol(f(j, if kind == 1 { 0xdd } else { 0xe9 }) - 2.0 * exe::match_player_distance_to_cell(j, a7, a8) as f64) as i16,", "1 | 2 => ftol(f(j, if kind == 1 { 0xdd } else { 0xdd }) - 2.0 * exe::match_player_distance_to_cell(j, a7, a8) as f64) as i16,"),
     ('c_2x', "1 | 2 => ftol(f(j, if kind == 1 { 0xdd } else { 0xe9 }) - 2.0 *", "1 | 2 => ftol(f(j, if kind == 1 { 0xdd } else { 0xe9 }) - 1.0 *"),
     ('c_t4', "            4 => if table_a(this, j) == 1 { 100 } else { 0 },", "            4 => if table_a(this, j) & 1 != 0 { 100 } else { 0 },"),
     ('c_lista_sel', "                        || is_national_team(d32(partida, if side == 0 { 0x1c } else { 0x20 })) != 0", "                        || is_national_team(d32(partida, if side == 0 { 0x20 } else { 0x1c })) != 0"),
@@ -17,6 +17,6 @@ MUTACOES = [
     ('c_0b', "                        s = ftol((*((d32(j, match_player::PLAYER) + 0xb) as *const i16) as f64 * read_f64_at(0x96d240)", "                        s = ftol((*((d32(j, match_player::PLAYER) + 0xd) as *const i16) as f64 * read_f64_at(0x96d240)"),
     ('c_longe', "            ftol(f(j, match_player::FREE_KICKS) - g2 as f64 * g1 as f64) as i16", "            ftol(f(j, match_player::FREE_KICKS) - g2 as f64) as i16"),
     ('c_z', "                } else if table_ball() < read_f64_at(0x96d310) {", "                } else if table_ball() < read_f64_at(0x96d428) {"),
-    ('c_8', "            8 => ftol(read_f32_at(0x968960) as f64 - dist(j, a7, a8) as f64) as i16,", "            8 => ftol(read_f32_at(0x968960) as f64 + dist(j, a7, a8) as f64) as i16,"),
+    ('c_8', "            8 => ftol(read_f32_at(0x968960) as f64 - exe::match_player_distance_to_cell(j, a7, a8) as f64) as i16,", "            8 => ftol(read_f32_at(0x968960) as f64 + exe::match_player_distance_to_cell(j, a7, a8) as f64) as i16,"),
     ('c_maior', "        if melhor == 0 || v > melhor_v {", "        if melhor == 0 || v >= melhor_v {"),
 ]

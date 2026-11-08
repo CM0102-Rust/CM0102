@@ -45,8 +45,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     if player == 0 {
         return;
     }
-    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let k = contract_of(read_usize(G_CONTRACT_MANAGER), player);
+    let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), player);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = k;
     if k == 0 {
         return;
@@ -69,12 +68,10 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
         FINE_NEWS_WOULD_BUILD = true;
         return;
     }
-    let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
-    let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let future: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
-    construct(nt, 0xbc6, 0);
+    exe::newsitem_newsitem(nt, 0xbc6, 0);
     set_news_person_slots(nt, 0, player);
     set_news_slot(nt, 4, reason as i8 as u32);
     set_news_slot(nt, 5, reacao as i8 as u32);
@@ -91,7 +88,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     set_news_slot(nt, 0xb, efeitos as i8 as u32);
     let game = (read_i8_as_i32(player + staff::AGE) > 0x17 && kind == 0x10) || kind == 0x20;
     set_news_slot(nt, 0xc, game as u32);
-    deliver(read_usize(G_NEWS), nt, club);
+    exe::news_send_to_club_manager(read_usize(G_NEWS), nt, club);
 }
 
 /// Posts the coach's feedback on a fine: with player and coach both having a record and a nation, and the player having
@@ -115,17 +112,15 @@ pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(player: usiz
         return;
     }
     crate::comparison::branch("cpz_9 noticia do retorno do treinador");
-    let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
-    let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
-    construct(nt, 0x1394, 0);
+    exe::newsitem_newsitem(nt, 0x1394, 0);
     set_news_person_slots(nt, 0, player);
     set_news_person_slots(nt, 4, coach);
     set_news_slot(nt, 8, outcome as i8 as u32);
     let r = friendly_random(5);
     set_news_slot(nt, 9, r as u32);
-    deliver(read_usize(G_NEWS), nt, read_usize(player + staff::CLUB_JOB));
+    exe::news_send_to_club_manager(read_usize(G_NEWS), nt, read_usize(player + staff::CLUB_JOB));
 }
 
 // simplification: the news rolls and goes to the managers’ inboxes (allocates): original only, with the copy taking the branch; without

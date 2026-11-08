@@ -1,9 +1,9 @@
 # Mutações da 250a leva (itens cpn_1, cpn_2, cpn_3, cpn_4, cpn_5, cpn_6, cpn_7). Uso: python mutacoes.py mutacoes\leva250.py --carreira 2002-06-01
 MUTACOES = [
-    ('cpn_resposta_do_clube', 'respond(slot(current), manager, read_usize(manager + staff::CLUB_JOB)); // o clube', '// mutacao: sem a resposta automatica pelo clube', 'cpn_1 resposta automatica'),
+    ('cpn_resposta_do_clube', 'exe::newsitem_auto_respond(slot(current), manager, read_usize(manager + staff::CLUB_JOB)); // o clube', '// mutacao: sem a resposta automatica pelo clube', 'cpn_1 resposta automatica'),
     ('cpn_alcance_clube', 'crate::comparison::branch("cpn_1 alcance do clube");', 'crate::comparison::branch("cpn_1 alcance do clube"); return 0; // mutacao: o alcance do clube sem entrega', 'cpn_1 alcance do clube'),
     ('cpn_tecnico_do_clube', 'let manager = read_usize(club + club::MANAGER);\n    *((news + news_item::REACH) as *mut u8) = 0;', 'let manager = read_usize(club + club::ASSISTANT_MANAGER); // mutacao: o auxiliar\n    *((news + news_item::REACH) as *mut u8) = 0;', 'cpn_1 noticia ao tecnico humano'),
-    ('cpn_responder_todas', 'respond(slot, manager, club); // the automatic reply', '// mutacao: sem a resposta automatica', 'cpn_2 responder todas'),
+    ('cpn_responder_todas', 'exe::newsitem_auto_respond(slot, manager, club); // the automatic reply', '// mutacao: sem a resposta automatica', 'cpn_2 responder todas'),
     ('cpn_responder_so_a_nova', 'k -= 1;\n        if k == read_i32(e + 4) - 1 {\n            return 1;', 'k -= 1;\n        if true { // mutacao: so a mais nova\n            return 1;', 'cpn_2 respond todas'),
     ('cpn_proximo_campo', '*next = p; // the next free field', '*next = p.wrapping_add(1); // mutacao: um campo adiante', 'cpn_2 proximo campo do texto'),
     ('cpn_poucas_partidas', 'r = r * s1f as f64 * (1.0f32 / 12.0) as f64; // fewer than 12 matches', 'r = r * s1f as f64 * (1.0f32 / 6.0) as f64; // mutacao: s1/6', 'cpn_3 poucas partidas'),

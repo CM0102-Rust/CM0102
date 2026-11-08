@@ -52,7 +52,6 @@ pub(crate) unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], mark: &m
 pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
     let malloc: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let qsort: unsafe extern "C" fn(usize, usize, usize, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     if read_u8(G_NATION_COEFFICIENT_HISTORY_NEEDS_INIT) != 0 {
         if (read_usize(G_NATION_COUNT) as i32) > 0 {
             let mut p = read_usize(G_NATION_TABLE) + 0xd0;
@@ -109,7 +108,7 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
         }
     }
     qsort(array, n as usize, 0xc, 0x4afba0);
-    free(array);
+    exe::crt_free(array);
 }
 
 /// Returns 1 on days 0, 80, 173 and 250 of the year (the retirement scan days), otherwise 0.
@@ -154,8 +153,7 @@ pub(crate) unsafe extern "C" fn clamp_char_sum(a: u32, b: u32, min: u32, max: u3
 ///
 /// [pt] O contrato da pessoa (0x4cf5a0), guardado em [0xae1080] como a original faz a cada chamada.
 pub(crate) unsafe fn game_get_contract_and_store(p: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = f(read_usize(G_CONTRACT_MANAGER), p);
+    let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c);
     c
 }
@@ -183,8 +181,7 @@ pub(crate) unsafe fn game_contract_for_club(p: usize, club: usize) -> usize {
 ///
 /// [pt] `pessoa` não gosta de `alvo` (0x547840)?
 pub(crate) unsafe fn is_disliked_by(target: usize, person: usize) -> u32 {
-    let f: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_DISLIKED_BY);
-    f(target, person)
+    exe::staff_is_disliked_by(target, person)
 }
 
 /// The shared end of the friction routines (0x5d6d10 and 0x5d7190): finds a squad mate the person dislikes and, on the
@@ -219,7 +216,6 @@ pub(crate) unsafe fn dressing_room_friction(p: usize, club: usize, k: usize) {
         return;
     }
     crate::comparison::branch("cps_5 atrito com o tecnico");
-    let queixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_NEWS_POST_DRESSING_ROOM_UNREST);
     let mark: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_APPLY_EVENT_FLAGS);
     let (tipo, marca) = if q == read_usize(club + club::MANAGER) {
         (0, 0x2000)
@@ -228,7 +224,7 @@ pub(crate) unsafe fn dressing_room_friction(p: usize, club: usize, k: usize) {
     } else {
         (2, 0x800)
     };
-    queixa(p, q, tipo);
+    exe::news_post_dressing_room_unrest(p, q, tipo);
     mark(k, marca, 0);
 }
 
@@ -257,10 +253,6 @@ pub(crate) unsafe fn dressing_room_friction(p: usize, club: usize, k: usize) {
 /// filtram; a soma de cinco atributos menos 3, 5, 15, 15 por sorteios zerados e 5 se a reputação do jogador (+0xb)
 /// passa de 4500 e da do clube (+0x80) dá o sorteio que, zerado, leva ao atrito com o técnico.
 pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
-    let tirar_rejeitada: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_STAFF_REMOVE_DISLIKED_STAFF);
-    let briga: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_NEWS_POST_FEUD_SETTLED);
-    let rejeitar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_STAFF_ADD_DISLIKED_STAFF);
-    let favorecer: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_STAFF_ADD_FAVOURED_STAFF);
     let tirar_favorita: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_STAFF_REMOVE_FAVOURED_STAFF);
     for _ in 0..10 {
         let club = club_record(friendly_random(read_usize(G_CLUB_COUNT) as i32) as usize);
@@ -273,7 +265,7 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
             continue;
         }
         if is_disliked_by(b, a) != 0 {
-            tirar_rejeitada(a, b);
+            exe::staff_remove_disliked_staff(a, b);
             let c = game_get_contract_and_store(a);
             if c == 0 || game_club_of_contract(c) == 0 {
                 continue;
@@ -287,20 +279,19 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
             if k == 0 || read_usize(k + 0x45) & 0x800 == 0 {
                 continue;
             }
-            briga(a, b);
+            exe::news_post_feud_settled(a, b);
         } else if friendly_random(3) == 0 {
-            rejeitar(a, b, 1);
+            exe::staff_add_disliked_staff(a, b, 1);
         } else if friendly_random(3) == 0 {
-            favorecer(a, b, 1);
+            exe::staff_add_favoured_staff(a, b, 1);
         } else {
             tirar_favorita(a, b);
         }
     }
     if (read_i16(G_CURRENT_DATE) as i32) % 0x32 == 0 {
-        let atrito: unsafe extern "C" fn(usize) = core::mem::transmute(FN_GAME_CHECK_CLUB_DRESSING_ROOM_UNREST);
         let mut i = 0i32;
         while i < read_usize(G_CLUB_COUNT) as i32 / 100 {
-            atrito(club_record(friendly_random(read_usize(G_CLUB_COUNT) as i32) as usize));
+            exe::game_check_club_dressing_room_unrest(club_record(friendly_random(read_usize(G_CLUB_COUNT) as i32) as usize));
             i += 1;
         }
         return;
@@ -523,13 +514,7 @@ pub(crate) unsafe fn days_since_staff_date(p: usize) -> i32 {
 /// < 30, < 90, < 180) zerado é falta. (2) Senão, com +0x5b < 10 e vínculo com o clube: as marcas do vínculo (+0x45:
 /// 0x8000, 0x30000; com +0x5b < 5, 0x7800) dão sorteios(+0x5b) que, zerados, são falta. A falta: 0x41a360.
 pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
-    let ausente: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_AWOL_IS_PLAYER_AWOL);
-    let treino: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_PLAYER_SCHEDULE);
-    let injury: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
-    let not_likes: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_DISLIKED_BY);
-    let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_FAVOURED_BY);
     let contract_bond: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let foul: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_AWOL_MISS_TRAINING);
     let n = read_usize(G_STAFF_COUNT) as i32;
     let q = n / 250;
     crate::comparison::branch("cps_6 faltas do dia");
@@ -549,14 +534,14 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
         if club == 0 {
             continue;
         }
-        if ausente(read_usize(G_AWOL), p, 0) != 0 {
+        if exe::awol_is_player_awol(read_usize(G_AWOL), p, 0) != 0 {
             continue;
         }
-        let t = treino(read_usize(G_TRAINING_MANAGER), p);
+        let t = exe::training_manager_get_player_schedule(read_usize(G_TRAINING_MANAGER), p);
         if t == 0 || read_u8(t + 0x15) == 0 {
             continue;
         }
-        if injury(read_usize(G_INJURY), p) == 2 {
+        if exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 2 {
             continue;
         }
         let jog = read_usize(p + staff::PLAYER);
@@ -569,10 +554,10 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
         if dl == 1 {
             bl = bl.wrapping_add(0xfb);
         }
-        if not_likes(read_usize(club + club::MANAGER), p) != 0 {
+        if exe::staff_is_disliked_by(read_usize(club + club::MANAGER), p) != 0 {
             bl = bl.wrapping_add(0xfb);
         }
-        if gosta(read_usize(club + club::MANAGER), p) != 0 {
+        if exe::staff_is_favoured_by(read_usize(club + club::MANAGER), p) != 0 {
             bl = bl.wrapping_add(2);
         }
         let mut and_foul = false;
@@ -614,7 +599,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
         }
         if and_foul {
             crate::comparison::branch("cps_6 falta ao treino");
-            foul(read_usize(G_AWOL), p); // cps6: a falta
+            exe::awol_miss_training(read_usize(G_AWOL), p); // cps6: a falta
         }
     }
 }
@@ -645,8 +630,7 @@ pub(crate) unsafe extern "C" fn game_update_comps_for_date(mark: u32) {
     }
     if m != 0 {
         crate::comparison::branch("cps_6 competicoes do dia");
-        let next: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_FIXTURE_MANAGER_DAILY_UPDATE);
-        next(read_usize(G_FIXTURE_MANAGER));
+        exe::fixture_manager_daily_update(read_usize(G_FIXTURE_MANAGER));
     }
 }
 

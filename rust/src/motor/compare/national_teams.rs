@@ -505,8 +505,7 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player_from
 /// só a original.
 pub(crate) unsafe extern "thiscall" fn compare_release_overage_u21_players(this: usize, nation: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_RELEASE_OVERAGE_U21_PLAYERS);
-    let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
-    let team = sub21(nation);
+    let team = exe::database_get_national_u21_team(nation);
     if team == 0 {
         return o(this, nation);
     }

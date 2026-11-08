@@ -86,15 +86,13 @@ pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
 /// (0x4afd80(competição [0x9cf590], 0): push 0; push comp; add esp, 8 -> cdecl) e o da [0x9cf728] (a mesma com +4 do
 /// objeto) e, se for o mesmo clube, o 0 passa ao último vice da MLS (lugar 1). Depois +4 e +5 de cada time zerados.
 pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: usize) -> u32 {
-    let sort: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
-    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 8);
     let other = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
     let mut l = concacaf_club_lists();
-    sort(l.mex.as_mut_ptr() as usize, l.n[0], 2);
-    sort(l.centro.as_mut_ptr() as usize, l.n[1], 3); // cqi11: três centro-americanos
-    sort(l.caribe.as_mut_ptr() as usize, l.n[2], 1);
-    sort(l.mls.as_mut_ptr() as usize, l.n[3], 1);
+    exe::comp_util_sort_and_shuffle_top_clubs(l.mex.as_mut_ptr() as usize, l.n[0], 2);
+    exe::comp_util_sort_and_shuffle_top_clubs(l.centro.as_mut_ptr() as usize, l.n[1], 3); // cqi11: três centro-americanos
+    exe::comp_util_sort_and_shuffle_top_clubs(l.caribe.as_mut_ptr() as usize, l.n[2], 1);
+    exe::comp_util_sort_and_shuffle_top_clubs(l.mls.as_mut_ptr() as usize, l.n[3], 1);
     let t = |k: usize| read_u32_as_usize(this + cup::TEAM_TABLE).wrapping_add(k * 6);
     let pd = |a: usize, v: usize| core::ptr::write_unaligned(a as *mut u32, v as u32);
     crate::comparison::branch("cqi_11 classificados");
@@ -110,10 +108,10 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
     } else {
         crate::comparison::branch("cqi_11 campeao da mls");
         let mls = club_comp_record(read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE));
-        pd(t(0), colocado(mls, 0));
-        pd(t(1), colocado(read_u32_as_usize(other + 4), 0));
+        pd(t(0), exe::comp_util_get_latest_placed_club(mls, 0));
+        pd(t(1), exe::comp_util_get_latest_placed_club(read_u32_as_usize(other + 4), 0));
         if read_u32_as_usize(t(0)) == read_u32_as_usize(t(1)) { // cqi11: the champion of both gives the slot to the MLS runner-up
-            pd(t(0), colocado(mls, 1));
+            pd(t(0), exe::comp_util_get_latest_placed_club(mls, 1));
         }
     }
     let mut i = 0i32;
@@ -140,8 +138,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
 /// atualização da copa (0x51f890: push fase; push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução sai.
 pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     if read_u32_as_usize(read_u32_as_usize(this + cup::TEAM_TABLE)) == 0 && stage != 0 {
-        let classificar: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CONCHAMP_SELECT_QUALIFIED_CLUBS);
-        if classificar(this) < 0 {
+        if exe::conchamp_select_qualified_clubs(this) < 0 {
             // simplification: 0x4c11a0 always returns 1; the error case stays with the box and the original’s 0
             show_error_at(0x9a7d30, 0x1ba);
             return 0;
@@ -150,8 +147,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, to
         let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
         prever(this);
     }
-    let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_FOR_DATE);
-    base(this, today, stage)
+    exe::cup_update_for_date(this, today, stage)
 }
 
 // simplification: the cup update (0x51f890) plays and draws: does not run twice. Only the original runs; the plan: with the
@@ -208,12 +204,11 @@ pub(crate) unsafe extern "thiscall" fn con_champ_create_round_table(this: usize,
         return 0;
     }
     crate::comparison::branch("cqp_13 tabela da concacaf");
-    let elo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) -> u32 = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DAY);
     let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
     for (i, r) in CONCACAF_CHAMPIONS_CUP_ROUNDS.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
         if i < 2 {
-            elo(t, i as i32, 0, -1, -1, -1, 0);
+            exe::cup_set_round_match_day(t, i as i32, 0, -1, -1, -1, 0);
         }
     }
     t

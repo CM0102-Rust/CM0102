@@ -58,13 +58,11 @@ pub(crate) unsafe extern "thiscall" fn move_counts(this: usize) -> u8 {
 /// grava 4 e sorteio(0x14 do jogador) + 1 nas saidas.
 pub(crate) unsafe extern "thiscall" fn decide_foul(this: usize, j: usize, code: u16, kind: *mut u8, value: *mut u8) -> u8 {
     let engine = *(this as *const usize);
-    let valendo: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_FOUL_PENDING);
-    if valendo(engine) != 0 {
+    if exe::cm3_match_engine_is_foul_pending(engine) != 0 {
         return 0;
     }
-    let table: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
     let in_the_box: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
-    if table(engine, j) & 1 != 0 && in_the_box(j, side_of_player(j) as u8) as u8 != 0 {
+    if exe::cm3_match_engine_get_player_position(engine, j) & 1 != 0 && in_the_box(j, side_of_player(j) as u8) as u8 != 0 {
         return 0;
     }
     let person = *((this + 4) as *const usize);
@@ -147,8 +145,7 @@ pub(crate) unsafe extern "thiscall" fn punish_foul(this: usize, j: usize, kind: 
         return;
     }
     let d = (j + match_player::MATCH_RATING) as *mut i16;
-    let table: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
-    if flag == 0 && table(engine, j) & 1 == 0 {
+    if flag == 0 && exe::cm3_match_engine_get_player_position(engine, j) & 1 == 0 {
         if severidade as i32 > random(0xf) + 9 {
             *d = (*d).wrapping_add(-1000);
             *kind = 4;
@@ -245,8 +242,7 @@ pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other:
 /// distancia a linha (2, 1, 0 casas ou alem), sorteios contra o byte 0x107.
 pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8, row: i8, y: i8, passador: usize) -> usize {
     let engine = *(this as *const usize);
-    let valendo: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_FOUL_PENDING);
-    if valendo(engine) != 0 {
+    if exe::cm3_match_engine_is_foul_pending(engine) != 0 {
         return 0;
     }
     let (l0, l1) = (byte(engine, engine::OFFSIDE_LINE), byte(engine, engine::OFFSIDE_LINE_SIDE1));
@@ -256,8 +252,7 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
         _ => {}
     }
     if passador != 0 {
-        let alem: unsafe extern "thiscall" fn(usize, i8, i8, i8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_COUNT_PLAYERS_AHEAD_OF_ROW);
-        if alem(engine, row, side_b, 0) == 0 {
+        if exe::cm3_match_engine_count_players_ahead_of_row(engine, row, side_b, 0) == 0 {
             return 0;
         }
     }
@@ -312,8 +307,7 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
 ///
 /// [pt] { 0x6cfd70 } (match_eng.cpp): `look_for_offside` do arbitro do motor (this + 0xf5b2).
 pub(crate) unsafe extern "thiscall" fn engine_look_for_offside(this: usize, side_b: i8, row: i8, y: i8, passador: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize = core::mem::transmute(FN_MATCH_OFFICIAL_FIND_OFFSIDE_PLAYER);
-    f(this + engine::REFEREE, side_b, row, y, passador)
+    exe::match_official_find_offside_player(this + engine::REFEREE, side_b, row, y, passador)
 }
 
 /// Writes the card code in the player's record: +0x25 when the card total is 1 (or ≤ 1), else +0x26 when non-zero.
@@ -396,8 +390,7 @@ pub(crate) unsafe extern "thiscall" fn card_by_severity(this: usize, j: usize, k
 ///
 /// [pt] { 0x6cfd40 } (match_eng.cpp): `card_by_severity` do arbitro do motor (this + 0xf5b2).
 pub(crate) unsafe extern "thiscall" fn engine_card_by_severity(this: usize, j: usize, kind: *mut u8, severity: u8, flag: u8) {
-    let f: unsafe extern "thiscall" fn(usize, usize, *mut u8, u8, u8) = core::mem::transmute(FN_MATCH_OFFICIAL_DECIDE_CARD);
-    f(this + engine::REFEREE, j, kind, severity, flag)
+    exe::match_official_decide_card(this + engine::REFEREE, j, kind, severity, flag)
 }
 
 /// Referee: judges foul type `tipo` by player `j` on `outro`. Returns 1 or 7 (card given; 0 = nothing) and writes the
@@ -430,8 +423,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     if m == 0 {
         return 0;
     }
-    let parado: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_FOUL_PENDING);
-    if parado(m) != 0 {
+    if exe::cm3_match_engine_is_foul_pending(m) != 0 {
         return 0;
     }
     let paciencia = (this + 8) as *mut u16;
@@ -675,12 +667,10 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     }
     let aplica: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
     if aplica(m, kind) != 0 {
-        let multiplicar: unsafe extern "thiscall" fn(usize, f32) = core::mem::transmute(FN_MATCH_PLAYER_SCALE_ANGER);
-        let test: unsafe extern "thiscall" fn(usize, i8, usize) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_PASSES_ANGER_CHECK);
-        multiplicar(other, (*grav as f64 * read_f64_at(0x968918) + read_f64_at(0x967890)) as f32); // 0x968918 = 0.2, 0x967890 = 1
-        if test(other, 1, 0) != 0 {
+        exe::match_player_scale_anger(other, (*grav as f64 * read_f64_at(0x968918) + read_f64_at(0x967890)) as f32); // 0x968918 = 0.2, 0x967890 = 1
+        if exe::match_player_passes_anger_check(other, 1, 0) != 0 {
             *((other + match_player::ANGER) as *mut u8) = (*((other + match_player::ANGER) as *const u8)).wrapping_add(1);
-            if test(other, 1, 0) != 0 {
+            if exe::match_player_passes_anger_check(other, 1, 0) != 0 {
                 *((other + match_player::LAST_FOULED_BY) as *mut usize) = j;
             }
         }

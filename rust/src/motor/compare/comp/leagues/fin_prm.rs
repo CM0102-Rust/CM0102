@@ -22,8 +22,7 @@ use super::*;
 /// (o B que usa o registro do A, o estádio dividido); conferir todos pede o plano dessas exceções.
 pub(crate) unsafe extern "thiscall" fn compare_fin_prm_end_season_for_nation(this: usize, entry: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FIN_PRM_END_SEASON_FOR_NATION);
-    let after: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3C);
-    if entry == 0 || after(G_CURRENT_DATE, read_usize(G_GAME_START_DATE) as u32, read_usize(G_GAME_START_DATE_FLAGS) as u32) != 0 {
+    if entry == 0 || exe::date_operator_3c(G_CURRENT_DATE, read_usize(G_GAME_START_DATE) as u32, read_usize(G_GAME_START_DATE_FLAGS) as u32) != 0 {
         return o(this, entry);
     }
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);

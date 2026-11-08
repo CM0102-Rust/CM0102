@@ -50,7 +50,6 @@ pub(crate) unsafe fn group_table_club(this: usize, g: i32, p: i32) -> usize {
 pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(this: usize) {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     let list = alloc(0x20);
     if list == 0 {
@@ -73,8 +72,8 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(thi
         0
     };
     write_u32_from_usize(read_u32_as_usize(this + league::STAGES) + 0xc, stage);
-    soltar(list);
-    soltar(table);
+    exe::crt_free(list);
+    exe::crt_free(table);
     let f = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + 0xc);
     if f == 0 {
         return show_error_at(0x9870f8, 0x32c);
@@ -102,8 +101,7 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_advance_stage(this: usize
     write_u32_from_usize(this + cup::CURRENT_STAGE, f as usize);
     if f == 1 {
         crate::comparison::branch("cqt_13 finais da recopa asiatica");
-        let finais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_ASIACUPWINNER_CREATE_FINALS_STAGE);
-        finais(this);
+        exe::asiacupwinner_create_finals_stage(this);
     }
 }
 
@@ -170,7 +168,6 @@ pub(crate) unsafe fn asian_cup_winners_finalists(this: usize) -> [usize; 4] {
 pub(crate) unsafe extern "thiscall" fn create_finals_stage(this: usize) {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_DRAW_ROUND);
     let list = alloc(0x10);
     if list == 0 {
@@ -194,13 +191,13 @@ pub(crate) unsafe extern "thiscall" fn create_finals_stage(this: usize) {
         0
     };
     write_u32_from_usize(read_u32_as_usize(this + cup::STAGES) + 4, stage);
-    soltar(table);
+    exe::crt_free(table);
     let f = read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + 4);
     if f == 0 {
         return show_error_at(0x987b60, 0x375);
     }
     sortear(f, 0);
-    soltar(list);
+    exe::crt_free(list);
 }
 
 // simplification: allocates the stage and draws the round: it does not run twice. Original only; the plan: the stage in [+0xc][1] with 4

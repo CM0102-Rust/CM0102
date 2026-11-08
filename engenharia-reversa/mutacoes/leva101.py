@@ -7,5 +7,5 @@ MUTACOES = [
     ('g_dentro', "    let (dentro, chutador) = if random(10) != 0 { (1u32, 0usize) }", "    let (dentro, chutador) = if random(11) != 0 { (1u32, 0usize) }"),
     ('g_espalhar', "    let espalhar = if espalma { 3 } else { 1 };", "    let espalhar = if espalma { 2 } else { 1 };"),
     ('g_cansa', "    *w35 = (*w35).wrapping_add(0xff06);", "    *w35 = (*w35).wrapping_add(0xff07);"),
-    ('g_17', "        if adjust_17(j, r.wrapping_neg()) != 0 {", "        if adjust_17(j, r) != 0 {"),
+    ('g_17', "        if exe::match_player_adjust_morale(j, r.wrapping_neg()) != 0 {", "        if exe::match_player_adjust_morale(j, r) != 0 {"),
 ]

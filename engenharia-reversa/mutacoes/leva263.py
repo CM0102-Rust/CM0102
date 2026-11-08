@@ -23,7 +23,7 @@ MUTACOES = [
     ('cqa7_idade_com_09', '(dd * read_f64(0x968e80) + read_f64(0x9689b0)); // cqa7: the age above the divisor', '(dd * read_f64(0x968e80) + 0.9); // mutacao: a idade com 0,9', 'cqa_7 idade'),
     ('cqa8_vencedor_sem_sorteio', '                let r = sorteio(0x15 - read_i8(person + staff::AMBITION) as i32); // cqa8: the winner random draw', '                let r = 4; // mutacao: sem o sorteio do vencedor', 'cqa_8 moral do vencedor'),
     ('cqa8_moral_sem_sorteio', '                    let r1 = sorteio(0x1e); // cqa8: the first morale random draw', '                    let r1 = 15; // mutacao: sem o primeiro sorteio da moral', 'cqa_8 testa a moral'),
-    ('cqa8_fora_sem_evoluir', '            evoluir(0, person, club, outro, game, (rating - read_f64_at(0x967888)) as f32, 0, 0);', '            let _ = (evoluir, rating);', 'cqa_8 evolui quem ficou de fora'),
+    ('cqa8_fora_sem_evoluir', '            exe::update_player_reputation_after_match(0, person, club, outro, game, (rating - read_f64_at(0x967888)) as f32, 0, 0);', '            let _ = (evoluir, rating);', 'cqa_8 evolui quem ficou de fora'),
     ('cqa9_auge_da_frente', '        (13_000_000.0, 0x1c) // cqa9: the base of those who play up front', '        (13_000_000.0, 0x1b) // mutacao: o auge de quem joga na frente'),
     ('cqa9_contrato_curto', '            if days < 0x15e { // cqa9: o contrato curto', '            if days < 0x12c { // mutacao: o contrato curto'),
     ('cqa9_indice_da_idade', '    let mut i = auge.wrapping_sub(age_ef).wrapping_add(10); // cqa9: the table index by age', '    let mut i = auge.wrapping_sub(age_ef).wrapping_add(9); // mutacao: o índice da tabela pela idade'),

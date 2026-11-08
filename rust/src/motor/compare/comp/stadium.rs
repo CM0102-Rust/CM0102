@@ -162,7 +162,6 @@ pub(crate) unsafe extern "C" fn compare_stadium_compare_bookings(a: usize, b: us
 /// solta). Sem o HostCountry (a caixa), só a original.
 pub(crate) unsafe extern "thiscall" fn compare_build_venue_list(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BUILD_VENUE_LIST);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     if read_u32(G_HOST_COUNTRY) == 0 {
         return o(this);
     }
@@ -182,7 +181,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_venue_list(this: usize) {
         la == lb
     };
     if lb != 0 {
-        soltar(lb);
+        exe::crt_free(lb);
     }
     SCOREBOARD.record(fields && lists, || format!("build_venue_list: campos {} listas {} (contas {} e {})", fields, lists, read_u32(this + stadium_obj::VENUE_COUNT) as i32, read_u32(r + stadium_obj::VENUE_COUNT) as i32));
 }

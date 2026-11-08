@@ -29,8 +29,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_club_final_position(this: usi
     if club == 0 {
         return o(this, club, pos); // simplification: the box, original only
     }
-    let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    let before = search(this, club);
+    let before = exe::comp_stats_find_club_entry(this, club);
     let r = o(this, club, pos);
     let same = r != 0 && (before == 0 || r == before) && *((r + comp_stats_club::DANGER_POSITION) as *const u8) == pos as u8;
     SCOREBOARD.record(same, || format!("set_club_final_position(clube {:x}, {}) antes={:x} original={:x}", club, pos as u8, before, r));

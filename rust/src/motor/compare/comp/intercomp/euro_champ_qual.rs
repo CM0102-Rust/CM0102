@@ -29,8 +29,7 @@ pub(crate) unsafe extern "thiscall" fn compare_euro_champ_qual_set_up_rules(this
     // checks only that both sides built it
     let table = to != 0 && tr != 0;
     if tr != 0 && tr != to {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(tr);
+        exe::crt_free(tr);
     }
     SCOREBOARD.record(igual && a == b && table, || format!("euro_champ_qual_set_up_rules({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, table));
     a

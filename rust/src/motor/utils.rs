@@ -13,8 +13,6 @@ use super::*;
 /// com limite pela 0x90cf20) e apaga (`remove` 0x94643a) os arquivos dela que casam com o padrão,
 /// em grupos de 100 nomes (a busca é fechada antes de apagar e refeita enquanto o grupo enche).
 pub(crate) unsafe extern "C" fn utils_clear_temp_folder(default: usize) {
-    let ambiente: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_UTILS_GET_FOLDER_FOR_KEY);
-    let copiar_limitado: unsafe extern "C" fn(usize, *mut u8) = core::mem::transmute(FN_UTILS_COPY_PATH_LIMITED);
     let join_path: unsafe extern "C" fn(*mut u8, usize, *const u8, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
     let first: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> i32 = core::mem::transmute(FN_FILE_FIND_FIRST);
     let next: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(FN_FILE_FIND_NEXT);
@@ -23,9 +21,9 @@ pub(crate) unsafe extern "C" fn utils_clear_temp_folder(default: usize) {
     crate::comparison::branch("save limpar temporarios");
     let global = 0xde279c as *mut u8;
     *global = 0;
-    let variavel = ambiente(0x987da0);
+    let variavel = exe::utils_get_folder_for_key(0x987da0);
     let mut sufixo = [0u8; 0x100];
-    copiar_limitado(0xad9c64, sufixo.as_mut_ptr());
+    exe::utils_copy_path_limited(0xad9c64, sufixo.as_mut_ptr());
     if variavel != 0 && *(variavel as *const u8) != 0 {
         zipdir_c_strcpy(global, variavel as *const u8);
         zipdir_c_strcat(global, 0x9c3730 as *const u8);

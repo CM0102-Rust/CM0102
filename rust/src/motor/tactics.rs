@@ -46,8 +46,7 @@ pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, club: usize, ki
         return person;
     }
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let contract_bond: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONALTEAMS_IS_NATIONAL_OR_ALL_STAR_TEAM);
-    if national_team(club) != 0 || contract_bond(*(G_NATIONAL_TEAMS as *const usize), club) != 0 {
+    if national_team(club) != 0 || exe::nationalteams_is_national_or_all_star_team(*(G_NATIONAL_TEAMS as *const usize), club) != 0 {
         crate::comparison::branch("batedor de fora do clube");
         return person;
     }
@@ -780,8 +779,7 @@ pub(crate) unsafe extern "thiscall" fn row_person(this: usize, club: usize, whic
 pub(crate) unsafe extern "stdcall" fn tactics_row(club: usize, human: u32) -> i32 {
     let and_human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     if and_human(club, 1, 1, 0, 0) != 0 && human != 0 {
-        let second: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
-        if second(club) != 0 {
+        if exe::club_is_national_team(club) != 0 {
             return -1;
         }
         let manager = *((club + club::MANAGER) as *const usize);
@@ -1058,7 +1056,6 @@ pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize,
         // simplification: the original pushes the type and the side with leftovers in the high bytes (the row offset and the stack);
         // the calls read only the low byte, and the copy passes clean values
         let batedor: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_TACTICS_GET_SET_PIECE_TAKER);
-        let mark: unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_TACTICS_SET_SET_PIECE_TAKER);
         for qual in 0..2u32 {
             if of_row(this, club, qual, team) == person {
                 extra(this, club, qual, 0, team);
@@ -1068,7 +1065,7 @@ pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize,
             for lado in 0..2u32 {
                 if batedor(this, club, tipo, lado, team) == person {
                     crate::comparison::branch("cpx_9 batedor tirado");
-                    mark(this, club, tipo, lado, 0, team);
+                    exe::tactics_set_set_piece_taker(this, club, tipo, lado, 0, team);
                     found = 1;
                 }
             }
@@ -1318,10 +1315,9 @@ pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize,
         let option: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_GET_HOLIDAY_OPTION);
         if t9a01(manager, read_usize(club + club::MANAGER)) == 0 || option(manager, 2, read_usize(club + club::MANAGER)) != 0 {
             let choose: unsafe extern "thiscall" fn(usize, u32, usize, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SELECT_TACTIC_SLOT);
-            let active: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_HUMAN_MANAGER_GET_ACTIVE_TACTIC);
             crate::comparison::branch("cpx_8 tatica do humano");
             choose(manager, team, club, read_usize(club + club::MANAGER)); // cpx8: the slot by team
-            return active(manager, read_usize(club + club::MANAGER));
+            return exe::human_manager_get_active_tactic(manager, read_usize(club + club::MANAGER));
         }
     }
     let id = read_i32(club);

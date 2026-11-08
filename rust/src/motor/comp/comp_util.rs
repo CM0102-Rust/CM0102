@@ -145,10 +145,9 @@ pub(crate) unsafe extern "C" fn is_national_team(club: usize) -> u32 {
 /// (0x4c0720; clube nulo, 0); depois, para cada i, todo j > i com chave maior troca de lugar com i (chave e clube),
 /// com sinal.
 pub(crate) unsafe fn sort_clubs_by_strength(v: *mut u32, k: *mut i32, n: i32) {
-    let strength: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_COMP_UTIL_GET_CLUB_STRENGTH_SCORE);
     for i in 0..n.max(0) as usize {
         let c = *v.add(i);
-        *k.add(i) = if c != 0 { strength(c as usize) } else { 0 };
+        *k.add(i) = if c != 0 { exe::comp_util_get_club_strength_score(c as usize) } else { 0 };
     }
     let mut i = 0usize;
     while (i as i32) < n - 1 {
@@ -174,7 +173,6 @@ pub(crate) unsafe fn sort_clubs_by_strength(v: *mut u32, k: *mut i32, n: i32) {
 /// enche de 0x60 antes, tudo sobrescrito). Sem memória: a caixa (linha 0x292d) e nada.
 pub(crate) unsafe extern "C" fn comp_util_sort_clubs_by_strength(v: usize, n: i32) {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let k = alloc((n as u32).wrapping_mul(4));
     if k == 0 {
         return show_error_at(0x99ec20, 0x292d);
@@ -183,7 +181,7 @@ pub(crate) unsafe extern "C" fn comp_util_sort_clubs_by_strength(v: usize, n: i3
     if n > 1 {
         crate::comparison::branch("cpt_13 clubes ordenados");
     }
-    free(k);
+    exe::crt_free(k);
 }
 
 /// Finds or adds the club's record in the competition statistics and stores the position at +0x72.
@@ -201,11 +199,9 @@ pub(crate) unsafe extern "thiscall" fn set_club_final_position(this: usize, club
         show_error_at(0x99ca94, 0x680);
         return 0; // simplification: the original returns the box’s eax; the caller does not read it
     }
-    let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    let append: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_ADD_CLUB_ENTRY);
-    let mut e = search(this, club);
+    let mut e = exe::comp_stats_find_club_entry(this, club);
     if e == 0 {
-        e = append(this, club);
+        e = exe::comp_stats_add_club_entry(this, club);
     }
     crate::comparison::branch("cpt_13 posição gravada");
     core::ptr::write_volatile((e + 0x72) as *mut u8, pos as u8); // cpt13: the position
@@ -464,9 +460,8 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     if league == 0 || read_usize(league + 8) == 0 {
         return 0;
     }
-    let find: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    let ea = find(read_usize(league + 8), a);
-    let eb = find(read_usize(league + 8), b);
+    let ea = exe::comp_stats_find_club_entry(read_usize(league + 8), a);
+    let eb = exe::comp_stats_find_club_entry(read_usize(league + 8), b);
     if ea == 0 || eb == 0 || read_usize(league + league::CURRENT_STAGE) as i32 != -1 || read_u8(league + league::COMP_TYPE) != 2 {
         return 0;
     }
@@ -540,8 +535,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(club: usize) -
     if finances == 0 {
         strength = core::ptr::read_unaligned((club + club::CASH) as *const i32) / 400;
     } else {
-        let get_club_finance: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
-        let f = get_club_finance(finances, club);
+        let f = exe::financetable_get_club_finance(finances, club);
         if f != 0 {
             strength = (core::ptr::read_unaligned(f as *const i64) / 300) as i32;
         }
@@ -551,8 +545,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(club: usize) -
     let mut players = [0usize; 50];
     let mut escalados = [0usize; 15];
     let codes: [u16; 15] = [1, 0x804, 0x84, 0x204, 0x204, 0x204, 0x810, 0x90, 0x210, 0x210, 0x210, 0x40, 0x40, 0x40, 0x40];
-    let reunir: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
-    reunir(club, squad.as_mut_ptr(), 0);
+    exe::database_collect_club_squad(club, squad.as_mut_ptr(), 0);
     let mut k: i8 = 0;
     for &p in squad.iter() {
         if p != 0 && read_usize(p + staff::PLAYER) != 0 {
@@ -562,10 +555,9 @@ pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(club: usize) -
     }
     let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
     pick(players.as_ptr() as usize, k as u8 as u32, codes.as_ptr() as usize, 0xf, 0, escalados.as_mut_ptr() as usize, 0x840, club, 0, 0, 0, 0, 0, 0, 0);
-    let rating: unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32 = core::mem::transmute(FN_MATCH_MAN_SCORE_PLAYER_FOR_SELECTION);
     for (j, &p) in escalados.iter().enumerate() {
         if p != 0 {
-            strength = strength.wrapping_add(rating(p, codes[j] as u32, 0x840, club, -1, 0));
+            strength = strength.wrapping_add(exe::match_man_score_player_for_selection(p, codes[j] as u32, 0x840, club, -1, 0));
         }
     }
     strength
@@ -596,7 +588,6 @@ pub(crate) unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, pl
     }
     let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let search: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-    let comparar: unsafe extern "C" fn(*const u8, usize) -> i32 = core::mem::transmute(FN_DATABASE_COMPARE_COMP_HISTORY_ROWS);
     qsort(*(G_CLUB_COMP_HISTORY_TABLE as *const usize), *(G_CLUB_COMP_HISTORY_COUNT as *const i32), 0x1a, 0x540780);
     let mut key = [0u8; 0x1a];
     key[4..8].copy_from_slice(&comp.to_le_bytes());
@@ -608,7 +599,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, pl
     let t = *(G_CLUB_COMP_HISTORY_TABLE as *const usize);
     while p > t {
         p -= 0x1a;
-        if comparar(key.as_ptr(), p) != 0 {
+        if exe::database_compare_comp_history_rows(key.as_ptr(), p) != 0 {
             p += 0x1a;
             break;
         }
@@ -809,14 +800,13 @@ pub(crate) unsafe extern "C" fn comp_util_format_stage_round_name(stage: u32, ro
     }
     // 0x4b4850: 4 pushes (style, id, size, output); add esp -> cdecl; 0x4ba8f0: push style; push id -> cdecl
     let name: unsafe extern "C" fn(*mut u8, i32, u32, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_STAGE_NAME);
-    let gender: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_STAGE_NAME_GENDER);
     *out = 0;
     if stage != 0 && round != 0 {
         let (mut a, mut b) = ([0u8; 0x64], [0u8; 0x64]);
         name(a.as_mut_ptr(), 0x64, stage, estilo);
-        let ga = gender(stage, estilo) as i8 as i32 as u32;
+        let ga = exe::comp_util_get_stage_name_gender(stage, estilo) as i8 as i32 as u32;
         name(b.as_mut_ptr(), 0x64, round, estilo);
-        let gb = gender(round, estilo) as i8 as i32 as u32;
+        let gb = exe::comp_util_get_stage_name_gender(round, estilo) as i8 as i32 as u32;
         // 0x66f4e0: 8 pushes; add esp, 0x20 -> cdecl (output, template, ga, ga, gb, gb, &a, &b)
         let text: unsafe extern "C" fn(*mut u8, usize, u32, u32, u32, u32, *const u8, *const u8) -> usize = core::mem::transmute(FN_LANGLIB_SPRINTF);
         text(out, 0x9a7cfc, ga, ga, gb, gb, a.as_ptr(), b.as_ptr());
@@ -873,8 +863,7 @@ pub(crate) unsafe extern "C" fn comp_util_add_history_record(league: usize, a: u
     let mut r = free_comp_history_row();
     if r == 0 {
         crate::comparison::branch("histórico de competições crescer");
-        let crescer: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(FN_DATABASE_GROW_COMP_HISTORY_TABLE);
-        if crescer(0x14) == 0 {
+        if exe::database_grow_comp_history_table(0x14) == 0 {
             return 0;
         }
         let n = *(G_CLUB_COMP_HISTORY_COUNT as *const i32);

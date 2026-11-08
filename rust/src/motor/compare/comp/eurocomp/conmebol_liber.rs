@@ -88,7 +88,6 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_select_qualified_c
     if libertadores_entrants(this, 0x20, &mut v) != 0x20 {
         return o(this); // simplification: the error boxes: original only
     }
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let (ee, f2) = (read_u32_as_usize(this + conmebol_liber::DRAWN_CLUBS), read_u32_as_usize(this + conmebol_liber::DRAWN_CLUB_COUNT));
     let r = o(this);
@@ -102,7 +101,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_select_qualified_c
     let b: [u32; 32] = if lb != 0 { core::ptr::read_unaligned(lb as *const [u32; 32]) } else { [0; 32] };
     let same_state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS) == depois;
     if lb != 0 && lb != la {
-        soltar(lb);
+        exe::crt_free(lb);
     }
     core::ptr::write_unaligned((this + conmebol_liber::DRAWN_CLUBS) as *mut u32, la as u32);
     core::ptr::write_unaligned((this + conmebol_liber::DRAWN_CLUB_COUNT) as *mut u32, 0x20);

@@ -5,5 +5,5 @@ MUTACOES = [
     ('g_desc', "    *desc.add(2) = numero as u32;\n", "    *desc.add(2) = 0;\n"),
     ('l_numero', "        if numero as u32 == *desc.add(2) {", "        if numero as u32 != *desc.add(2) {"),
     ('r_gols', "    if byte(engine, engine::SCORE) as i32 > *((summary + match_summary::SIDES) as *const u8) as i32 {", "    if byte(engine, engine::SCORE) as i32 >= *((summary + match_summary::SIDES) as *const u8) as i32 {"),
-    ('r_passo', "        let r = laco(engine, 1) as u8;", "        let r = laco(engine, 2) as u8;"),
+    ('r_passo', "        let r = exe::cm3_match_engine_run_match_steps(engine, 1) as u8;", "        let r = exe::cm3_match_engine_run_match_steps(engine, 2) as u8;"),
 ]

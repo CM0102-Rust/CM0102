@@ -45,22 +45,18 @@ pub(crate) struct BraRegGoiasStateChampionship {
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: usize, ano: u32, registro: usize, e: &BraRegGoiasStateChampionship, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
-    let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.regras);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.tabela);
-    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let estatisticas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_COMP_STATS);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.previstas);
-    base(this);
+    exe::league_league(this);
     core::ptr::write_unaligned((this + 4) as *mut usize, registro);
     core::ptr::write_unaligned(this as *mut usize, e.vtabela);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
     *((this + league::DISCIPLINE_RULE) as *mut u8) = disciplina;
-    if carregar(this, 1) != 0 {
+    if exe::league_load_from_temp_file(this, 1) != 0 {
         return this;
     }
     crate::comparison::branch(ramo);
@@ -78,7 +74,7 @@ pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: usize, ano: u32,
         show_error_at(e.arquivo, e.linhas[1]);
         return this;
     }
-    if jogos(this) == 0 {
+    if exe::league_create_fixtures(this) == 0 {
         show_error_at(e.arquivo, e.linhas[2]);
         return this;
     }
@@ -87,7 +83,7 @@ pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: usize, ano: u32,
         return this;
     }
     let n = novo(0x5ce);
-    let s = if n != 0 { estatisticas(n, this) } else { 0 };
+    let s = if n != 0 { exe::comp_stats_comp_stats(n, this) } else { 0 };
     core::ptr::write_unaligned((this + 8) as *mut usize, s);
     if s == 0 {
         show_error_at(e.arquivo, e.linhas[4]);

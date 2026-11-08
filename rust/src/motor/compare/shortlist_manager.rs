@@ -166,8 +166,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_staff_status(this: usize, 
 /// [pt] Comparador: lado a lado pelo byte +0x4e do contrato, e a devolução.
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_add_to_loan_list(person: usize) -> usize {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> usize>(IDX_SHORTLIST_MANAGER_ADD_TO_LOAN_LIST);
-    let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = f(read_usize(G_CONTRACT_MANAGER), person);
+    let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     let reg = if c != 0 { vec![(c + contract::TRANSFER_STATUS, 1)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(person), || shortlist_manager_add_to_loan_list(person));
     SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_add_to_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", person, r, n, mo, mr));
@@ -224,15 +223,12 @@ pub(crate) unsafe extern "thiscall" fn compare_update_club_shortlist(this: usize
 pub(crate) unsafe extern "thiscall" fn compare_suspend_clubs_shortlisting_player(this: usize, player: usize, clear: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u8)>(IDX_SUSPEND_CLUBS_SHORTLISTING_PLAYER);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let list_new: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
     let interested: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_SHORTLIST_MANAGER_COLLECT_INTERESTED_CLUBS);
-    let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     let p = novo(0xe);
     if p == 0 {
         return o(this, player, clear);
     }
-    let list = list_new(p);
+    let list = exe::llist_llist(p);
     interested(this, player, list, 1, 3, 0);
     // the items (8 bytes: player id, club id) through the nodes (+2 the first; node: +0 the data, +6 the next)
     let mut reg: Vec<(usize, usize)> = Vec::new();
@@ -245,8 +241,8 @@ pub(crate) unsafe extern "thiscall" fn compare_suspend_clubs_shortlisting_player
         }
         no = read_usize(no + llist_node::NEXT);
     }
-    destroy(list);
-    free(list);
+    exe::llist_destructor_llist(list);
+    exe::crt_operator_delete(list);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, player, clear), || suspend_clubs_shortlisting_player(this, player, clear));
     SCOREBOARD.record(igual, || format!("suspend_clubs_shortlisting_player(jogador {:x}, limpar {}, {} regiões) primeira diferença {:x?}", read_usize(player), clear, reg.len(), first_memory_diff(&mo, &mr)));
 }
@@ -275,7 +271,6 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_list_player(this: usize,
 /// Comparer for `build_position_lists`.
 pub(crate) unsafe extern "thiscall" fn compare_build_position_lists(this: usize, not_used: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_BUILD_POSITION_LISTS)(this, not_used);
-    let serve: unsafe extern "stdcall" fn(usize, u32) -> u8 = core::mem::transmute(FN_SHORTLIST_STAFF_FITS_SLOT_POSITION);
     let mut ruim = None;
     'f: for vaga in 0..16usize {
         let n = read_i32(this + shortlist_manager_fields::POSITION_LIST_COUNTS + vaga * 4);
@@ -285,7 +280,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_position_lists(this: usize,
         }
         for j in 0..n.max(0) as usize {
             let (a, b) = (read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_PERSON + vaga * 4) + j * 12, read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_KEY + vaga * 4) + j * 12);
-            if read_usize(a) != read_usize(b) || serve(staff_records_staff_by_id(read_usize(a)), vaga as u32) == 0 {
+            if read_usize(a) != read_usize(b) || exe::shortlist_staff_fits_slot_position(staff_records_staff_by_id(read_usize(a)), vaga as u32) == 0 {
                 ruim = Some((vaga, j as i32));
                 break 'f;
             }
@@ -321,14 +316,12 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_interested_clubs(this: us
     if out == 0 {
         return;
     }
-    let create: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
-    let clear: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_CLEAR);
     let mut new = [0u8; 0x10];
     let l = new.as_mut_ptr() as usize;
-    create(l);
+    exe::llist_llist(l);
     collect_interested_clubs(this, player, l, ignore, mode, so_humanos);
     let (a, b) = (llist_pairs(out), llist_pairs(l));
-    clear(l);
+    exe::llist_clear(l);
     SCOREBOARD.record(a == b, || format!("collect_interested_clubs({:#x}) original={:x?} rust={:x?}", player, a, b));
 }
 

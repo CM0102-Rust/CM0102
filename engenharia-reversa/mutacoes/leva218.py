@@ -1,7 +1,7 @@
 # Mutações da 218a leva (itens save_s1_a, save_s1_b, save_s1_c). Uso: python mutacoes.py mutacoes\leva218.py --prova-save 218
 MUTACOES = [
-    ('sv_padrao_letra', '            if maiuscula(c as u32) != n {', '            if maiuscula(c as u32 + 1) != n {'),
-    ('sv_padrao_ponto', "                if *name.add(j) == b'.' && find(name.add(j + 1), b'.' as i32) == 0 {", "                if *name.add(j) == b'.' && find(name.add(j + 1), b'.' as i32) != 0 {"),
+    ('sv_padrao_letra', '            if exe::utils_char_to_lower(c as u32) != n {', '            if exe::utils_char_to_lower(c as u32 + 1) != n {'),
+    ('sv_padrao_ponto', "                if *name.add(j) == b'.' && exe::at_946540(name.add(j + 1), b'.' as i32) == 0 {", "                if *name.add(j) == b'.' && exe::at_946540(name.add(j + 1), b'.' as i32) != 0 {"),
     ('sv_padrao_fim', '        if *default.add(i) == 0 {\n            return 1;', '        if *default.add(i) == 0 {\n            return 0;'),
     ('sv_emp_bloco', '            write(z + 0x41705, 1, n, z);', '            write(z + 0x41705, 1, n - 1, z);'),
     ('sv_emp_resto', '        let mut n = read(z + 0x41705, 1, 0x30d40, f);\n        while n > 0 {', '        let mut n = read(z + 0x41705, 1, 0x30d40, f);\n        while n > 0x1000 {'),

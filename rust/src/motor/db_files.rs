@@ -765,8 +765,7 @@ pub(crate) unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32,
     let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
     if version == 1 {
         crate::comparison::branch("banco ler clubes versão 1");
-        let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(FN_DB_FILES_READ_CLUBS_V1);
-        return converter(stream, use_zip, records, n);
+        return exe::db_files_read_clubs_v1(stream, use_zip, records, n);
     }
     if version != 2 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_CLUBS)(stream, use_zip, records, entry);
@@ -817,8 +816,7 @@ pub(crate) unsafe extern "C" fn db_files_read_comps(stream: usize, use_zip: i32,
     let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
     if version == 1 {
         crate::comparison::branch("banco ler competições versão 1");
-        let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(FN_DB_FILES_READ_COMPS_V1);
-        return converter(stream, use_zip, records, n);
+        return exe::db_files_read_comps_v1(stream, use_zip, records, n);
     }
     if version != 2 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_COMPS)(stream, use_zip, records, entry);
@@ -861,8 +859,7 @@ pub(crate) unsafe extern "C" fn db_files_read_players(stream: usize, use_zip: i3
     let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
     if version == 1 {
         crate::comparison::branch("banco ler não jogadores versão 1");
-        let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(FN_DB_FILES_READ_PLAYERS_V1);
-        return converter(stream, use_zip, records, n);
+        return exe::db_files_read_players_v1(stream, use_zip, records, n);
     }
     if version != 2 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_PLAYERS)(stream, use_zip, records, entry);
@@ -905,8 +902,7 @@ pub(crate) unsafe extern "C" fn db_files_read_non_players(stream: usize, use_zip
     let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
     if version == 1 {
         crate::comparison::branch("banco ler jogadores versão 1");
-        let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(FN_DB_FILES_READ_NON_PLAYERS_V1);
-        return converter(stream, use_zip, records, n);
+        return exe::db_files_read_non_players_v1(stream, use_zip, records, n);
     }
     if version != 2 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_NON_PLAYERS)(stream, use_zip, records, entry);

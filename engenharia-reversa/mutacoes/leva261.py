@@ -1,6 +1,6 @@
 # Mutações da 261a leva (itens cpx_13, cpy_1, cpy_2, cpy_3, cpy_4, cpy_5, cpy_6, cpy_8, cpy_9, cpy_10, cpy_11, cpy_12, cpy_13). Uso: python mutacoes.py mutacoes\leva261.py --carreira 2002-06-01
 MUTACOES = [
-    ('cpx13_sem_elenco', 'choose(this, read_usize(club + club::NATION), kind, G_CURRENT_DATE, p, 0); // cpx13: o elenco', 'let _ = choose; // mutacao: sem pedir elenco', 'cpx_13 elenco pedido'),
+    ('cpx13_sem_elenco', 'exe::nationalteams_select_squad(this, read_usize(club + club::NATION), kind, G_CURRENT_DATE, p, 0); // cpx13: o elenco', 'let _ = choose; // mutacao: sem pedir elenco', 'cpx_13 elenco pedido'),
     ('cpx13_elenco_de_60_dias', 'if d <= 0xe && read_u8(base + 0x11) != 0 && extra() {', 'if d <= 60 && read_u8(base + 0x11) != 0 && extra() { // mutacao: o elenco vale 60 dias', 'cpx_13 elenco pedido'),
     ('cpx13_janela_de_uma_semana', 'let q = weeks_before(game.as_mut_ptr(), r.as_mut_ptr(), 2); // cpx13: a janela', 'let q = weeks_before(game.as_mut_ptr(), r.as_mut_ptr(), 1); // mutacao: a janela de uma semana', 'cpx_13 elenco pedido'),
     ('cpy1_conta_alvo_sem_lance', '            continue; // cpy1: a target without a bid does not count', '            // mutacao: o alvo sem lance conta', 'cpy_1 alvo sem lance'),
@@ -12,7 +12,7 @@ MUTACOES = [
     ('cpy3_verba_de_titular_por_tres', '                        Some(a * 2) // cpy3: the budget of the starter slot', '                        Some(a * 3) // mutacao: abertas x 3', 'cpy_3 verba da vaga de titular'),
     ('cpy3_sem_reducao_pela_sobra', '                write_i32(v + 7, e.wrapping_sub(x)); // cpy3: the slot reduction by the surplus', '                let _ = (e, x); // mutacao: sem a reducao', 'cpy_3 reducao pela sobra'),
     ('cpy3_vaga_sem_preencher', '            fill(this, v, club, 0); // cpy3: the slot is filled', '            let _ = fill; // mutacao: a vaga fica sem alvo', 'cpy_3 vaga preenchida'),
-    ('cpy4_sem_marcar_amistosos', '    mark(this, first, how_many); // cpy4: schedule the friendlies of the date', '    let _ = mark; // mutacao: os amistosos nao sao marcados', 'cpy_4 amistosos marcados'),
+    ('cpy4_sem_marcar_amistosos', '    exe::friendly_arrange_international_friendlies(this, first, how_many); // cpy4: schedule the friendlies of the date', '    let _ = mark; // mutacao: os amistosos nao sao marcados', 'cpy_4 amistosos marcados'),
     ('cpy4_onze_semanas', '    weeks(G_CURRENT_DATE, &mut lim, 0xc); // cpy4: hoje + 12 semanas', '    weeks(G_CURRENT_DATE, &mut lim, 0xb); // mutacao: hoje + 11 semanas', 'cpy_4 amistosos marcados'),
     ('cpy4_nacoes_sem_ordem', '        sort(read_usize(this + friendly::SORTED_NATIONS), read_usize(this + friendly::SORTED_NATION_COUNT) as u32, 4, 0x5cc5f0); // cpy4: the nations by reputation', '        // mutacao: as nacoes ficam fora da ordem de reputacao', 'cpy_4 virada do ano'),
     ('cpy5_banda2_na_rodada_0xd', 'european_cup_write_entrant(t + 0x60 + o2, c, 8); // cpy5: band 2 enters in round 8', 'european_cup_write_entrant(t + 0x60 + o2, c, 0xd); // mutacao: a banda 2 entra com a 3', 'cpy_5 entrada da banda 2'),
@@ -36,7 +36,7 @@ MUTACOES = [
     ('cpy12_ultimato_sem_sorteio', '    write(nt, 7, sorteio(5) as u32); // cpy12: the ultimatum random draw', '    write(nt, 7, 0); // mutacao: sem o sorteio do ultimato', 'cpy_12 noticia do ultimato'),
     ('cpy12_verba_sem_veto', '    if value as i64 > orcamento.wrapping_mul(12) / 10 { // cpy12: the board budget', '    if false && value as i64 > orcamento.wrapping_mul(12) / 10 { // mutacao: a verba não veta', 'cpy_12 diretoria sem verba'),
     ('cpy12_fisio_sem_sorteio', '                let r = sorteio(200); // cpy12: the severity random draw', '                let r: i32 = 200; // mutacao: sem o sorteio da gravidade', 'cpy_12 fisioterapeuta avalia'),
-    ('cpy13_sem_compensacao', '        pay(fin, comp); // cpy13: the compensation to the club', '        pay(fin, 0); // mutacao: sem a compensação', 'cpy_13 compensacao paga'),
+    ('cpy13_sem_compensacao', '        exe::finance_pay_wages(fin, comp); // cpy13: the compensation to the club', '        exe::finance_pay_wages(fin, 0); // mutacao: sem a compensação', 'cpy_13 compensacao paga'),
     ('cpy13_fica_na_escalacao', '            escalacao(read_usize(G_TACTICS), read_usize(p + staff::CLUB_JOB), p, 1, 1); // cpy13: the line-ups', '            let _ = escalacao; // mutacao: fica na escalação do time principal', 'cpy_13 sai do clube atual'),
     ('cpy13_sem_listas', '        lists(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), p, club, 4, 2); // cpy13: the status in the scouting lists', '        let _ = lists; // mutacao: sem a situação nas listas', 'cpy_13 liberado'),
 ]

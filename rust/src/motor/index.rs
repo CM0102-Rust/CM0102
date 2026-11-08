@@ -56,9 +56,8 @@ include!("../fixed_keys.rs");
 /// [pt] Uma cadeia de _stricmp (0x951c50) em linha (cores, continentes): o primeiro texto igual ao `nome` grava `linha` na
 /// global dele e a cadeia acaba.
 pub(crate) unsafe fn match_key_name_chain(name: usize, pairs: &[(u32, u32)], row: u32) {
-    let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     for &(texto, global) in pairs {
-        if stricmp(name, texto as usize) == 0 {
+        if exe::crt_stricmp(name, texto as usize) == 0 {
             *(global as *mut u32) = row;
             return;
         }
@@ -86,8 +85,6 @@ pub(crate) unsafe fn index_fatal_error(row: u32, mark: u32) -> ! {
     let split: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
     let version: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_GUI_SHOW_MESSAGE_BOX);
-    let antes_de_sair1: unsafe extern "C" fn() = core::mem::transmute(FN_GAME_FATAL_CLEANUP);
     let antes_de_sair2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(u32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
@@ -95,9 +92,9 @@ pub(crate) unsafe fn index_fatal_error(row: u32, mark: u32) -> ! {
     let v = version(nome.as_mut_ptr(), ext.as_mut_ptr(), row);
     // the original does not pop the arguments of 0x90d130: they are the rest of ”v%s %s.%s %d”
     format(0xae24d0, 0x9870e8, v, nome.as_ptr(), ext.as_ptr(), row);
-    caixa(0x9870e0, 0xae24d0, 0);
+    exe::gui_show_message_box(0x9870e0, 0xae24d0, 0);
     *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
-    antes_de_sair1();
+    exe::game_fatal_cleanup();
     antes_de_sair2();
     exit(mark)
 }
@@ -137,10 +134,6 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const u32);
     let em = |base: u32, i: i32, step_towards: u32| base.wrapping_add((i as u32).wrapping_mul(step_towards)) as usize;
-    let club: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_CLUB_KEY_ID);
-    let nation: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_NATION_KEY_ID);
-    let competition: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_CLUB_COMP_KEY_ID);
-    let prize: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_STAFF_COMP_KEY_ID);
     let mut mark = mark_entry;
     if key_ids_loop(|| gi(0xae2394), |i| match_key_name_chain(em(rd(G_COLOUR_TABLE), i, 0x3a) + 4, &CORES_DAS_CHAVES, i as u32)) {
         mark = u32::MAX;
@@ -149,13 +142,10 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
     let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     let f = if gi(0x9b5984) != 0 { open(path(0x987da0, 0x9b632c), 0x98f928) } else { 0 }; // CM3_TEMP\eng.lng, "rb"
     if f != 0 {
-        let version: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_UTILS_READ_FILE_FORMAT_MARKER);
         let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-        let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         let skip: unsafe extern "C" fn(usize, u32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
-        let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
-        let inverter = version(f) == 0xf1fffff1;
+        let inverter = exe::utils_read_file_format_marker(f) == 0xf1fffff1;
         let mut c = [0i32; 8];
         read(c.as_mut_ptr() as usize, 0x20, 1, f);
         if inverter {
@@ -169,7 +159,7 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
             if b != 0 {
                 read(b, step_towards, n as u32, f);
                 f_(b as u32);
-                free(b);
+                exe::crt_free(b);
             } else {
                 skip(f, (n as u32).wrapping_mul(step_towards), 1);
             }
@@ -182,7 +172,7 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
                     break;
                 }
                 let row = if list != 0 { em(b, gi(em(list, i, 4)), 0x4f) } else { em(b, i, 0x4f) };
-                club(row, i as u32);
+                exe::match_club_key_id(row, i as u32);
                 i += 1;
             }
         });
@@ -190,10 +180,10 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
             key_ids_loop(|| c[1], |i| match_key_name_chain(em(b, i, 0xba), &CONTINENTES_DAS_CHAVES, i as u32)); // continents from eng.lng
         });
         table(c[2], 0x53, &mut |b| {
-            key_ids_loop(|| c[2], |i| { competition(em(b, i, 0x53), c[5].wrapping_add(i) as u32); }); // eng.lng competitions after the c5
+            key_ids_loop(|| c[2], |i| { exe::match_club_comp_key_id(em(b, i, 0x53), c[5].wrapping_add(i) as u32); }); // eng.lng competitions after the c5
         });
         table(c[3], 0x6d, &mut |b| {
-            key_ids_loop(|| c[3], |i| { nation(em(b, i, 0x6d), i as u32); }); // eng.lng nations
+            key_ids_loop(|| c[3], |i| { exe::match_nation_key_id(em(b, i, 0x6d), i as u32); }); // eng.lng nations
         });
         // the prizes: the memory before skipping the two 0x34 tables
         let b = alloc((c[7] as u32).wrapping_mul(0x4f));
@@ -201,31 +191,30 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
         skip(f, (c[4] as u32).wrapping_mul(0x34), 1);
         if b != 0 {
             read(b, 0x4f, c[7] as u32, f);
-            key_ids_loop(|| c[7], |i| { prize(em(b as u32, i, 0x4f), i as u32); }); // eng.lng awards
-            free(b);
+            key_ids_loop(|| c[7], |i| { exe::match_staff_comp_key_id(em(b as u32, i, 0x4f), i as u32); }); // eng.lng awards
+            exe::crt_free(b);
         } else {
             skip(f, (c[7] as u32).wrapping_mul(0x4f), 1);
         }
         table(c[5], 0x53, &mut |b| {
-            key_ids_loop(|| c[5], |i| { competition(em(b, i, 0x53), i as u32); }); // eng.lng competitions
+            key_ids_loop(|| c[5], |i| { exe::match_club_comp_key_id(em(b, i, 0x53), i as u32); }); // eng.lng competitions
         });
-        close(f);
+        exe::crt_fclose(f);
         mark = u32::MAX;
     } else {
-        let mut rodou = key_ids_loop(|| gi(0xae2350), |i| { nation(em(rd(G_NATION_TABLE), i, 0x122) + 4, i as u32); });
-        rodou |= key_ids_loop(|| gi(0xae2378).wrapping_sub(0x7f), |i| { competition(em(rd(G_CLUB_COMP_TABLE), i, 0x6b) + 4, i as u32); });
+        let mut rodou = key_ids_loop(|| gi(0xae2350), |i| { exe::match_nation_key_id(em(rd(G_NATION_TABLE), i, 0x122) + 4, i as u32); });
+        rodou |= key_ids_loop(|| gi(0xae2378).wrapping_sub(0x7f), |i| { exe::match_club_comp_key_id(em(rd(G_CLUB_COMP_TABLE), i, 0x6b) + 4, i as u32); });
         rodou |= key_ids_loop(|| gi(0xae234c), |i| {
             let name = em(rd(G_CONTINENT_TABLE), i, 0xc6) + 4;
             match_key_name_chain(name, &CONTINENTES_DAS_CHAVES, i as u32); // continents of the database
         });
-        rodou |= key_ids_loop(|| gi(0xae2388), |i| { prize(em(rd(G_STAFF_COMP_TABLE), i, 0x65) + 4, i as u32); });
-        rodou |= key_ids_loop(|| gi(0xae235c), |i| { club(em(rd(G_CLUB_TABLE), i, 0x245) + 4, i as u32); }); // database clubs
+        rodou |= key_ids_loop(|| gi(0xae2388), |i| { exe::match_staff_comp_key_id(em(rd(G_STAFF_COMP_TABLE), i, 0x65) + 4, i as u32); });
+        rodou |= key_ids_loop(|| gi(0xae235c), |i| { exe::match_club_key_id(em(rd(G_CLUB_TABLE), i, 0x245) + 4, i as u32); }); // database clubs
         if rodou {
             mark = u32::MAX;
         }
     }
     if relatar {
-        let relato: unsafe extern "C" fn(usize) = core::mem::transmute(FN_REPORT_MISSING_KEY_ID);
         for &(chave, name, tipo, nacao_da_chave, row) in RELATO_DAS_CHAVES.iter() {
             if rd(chave as usize) != mark {
                 continue;
@@ -236,7 +225,7 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
                     index_fatal_error(row as u32, mark);
                 }
             }
-            relato(name as usize); // types 0 and 1 (1 is the body of 0x60d780 inlined)
+            exe::report_missing_key_id(name as usize); // types 0 and 1 (1 is the body of 0x60d780 inlined)
         }
     }
     1
@@ -1399,11 +1388,10 @@ pub(crate) static CLUB_KEYS_SWAP_ORDER: &[u32] = &[
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
 pub(crate) unsafe extern "C" fn match_club_key_id(name: usize, row: u32) -> u32 {
-    let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
     for cadeia in CLUB_KEYS.iter() {
         for &(texto, global) in cadeia.iter() {
-            r = stricmp(name, texto as usize);
+            r = exe::crt_stricmp(name, texto as usize);
             if r == 0 {
                 *(global as *mut u32) = row; // club key
                 break;
@@ -1445,11 +1433,10 @@ pub(crate) unsafe extern "C" fn remap_club_key_id(old: u32, new: u32) -> u32 {
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
 pub(crate) unsafe extern "C" fn match_nation_key_id(name: usize, row: u32) -> u32 {
-    let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
     for cadeia in NATION_KEYS.iter() {
         for &(texto, global) in cadeia.iter() {
-            r = stricmp(name, texto as usize);
+            r = exe::crt_stricmp(name, texto as usize);
             if r == 0 {
                 *(global as *mut u32) = row; // nation key
                 break;
@@ -2320,13 +2307,12 @@ pub(crate) static PERSON_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
 pub(crate) unsafe extern "C" fn match_club_comp_key_id(name: usize, row: u32) -> u32 {
-    let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
     for cadeia in CLUB_COMPETITION_KEYS.iter() {
         let mut i = 0;
         while i < cadeia.len() {
             let (texto, global) = cadeia[i];
-            r = stricmp(name, texto as usize);
+            r = exe::crt_stricmp(name, texto as usize);
             if r == 0 {
                 *(global as *mut u32) = row; // club competition key
                 // the extra writes of the same deal (text 0)
@@ -2359,11 +2345,10 @@ pub(crate) unsafe extern "C" fn match_club_comp_key_id(name: usize, row: u32) ->
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
 pub(crate) unsafe extern "C" fn match_staff_comp_key_id(name: usize, row: u32) -> u32 {
-    let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
     for cadeia in PERSON_COMPETITION_KEYS.iter() {
         for &(texto, global) in cadeia.iter() {
-            r = stricmp(name, texto as usize);
+            r = exe::crt_stricmp(name, texto as usize);
             if r == 0 {
                 *(global as *mut u32) = row; // person competition key
                 break;

@@ -22,12 +22,11 @@ pub(crate) type EngSecondScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8,
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
 pub(crate) unsafe fn eng_second_set_league_rounds(t: usize, year: u32, first: i32, table: &[EngSecondScheduleRound]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
-    let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in table.iter().enumerate() {
         let i = first + k as i32;
         data(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, year, 0);
         for (j, &(a, b, c)) in faixas.iter().enumerate() {
-            band(t, i, j as i32, a as i32, b as i32, c as i32, 0);
+            exe::league_round_set_match_slot(t, i, j as i32, a as i32, b as i32, c as i32, 0);
         }
     }
 }
@@ -345,8 +344,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
     if stage as u8 == 0xff {
         match s {
             5 => {
-                let title: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_LEAGUE_CHAMPIONS_RECORD);
-                title(eng_second_staff_records(), club, comp);
+                exe::staff_records_add_league_champions_record(eng_second_staff_records(), club, comp);
             }
             0 => {
                 crate::comparison::branch("cpz_2 acesso na tabela");
@@ -360,8 +358,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
             }
             3 => {
                 crate::comparison::branch("cpz_2 rebaixamento na tabela");
-                let cair: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
-                cair(eng_second_staff_records(), club, comp); // cpz2: relegation by the table
+                exe::staff_records_add_relegation_record(eng_second_staff_records(), club, comp); // cpz2: relegation by the table
             }
             _ => {}
         }
@@ -401,8 +398,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
 /// [pt] A entrada do clube nas estatísticas da competição (Comp_Stats::find_club_entry 0x4a4850: thiscall(+8, clube), ret 4;
 /// põe a tabela na ordem dos clubes se precisa e procura).
 pub(crate) unsafe fn eng_second_comp_stats_club_entry(this: usize, club: usize) -> usize {
-    let find: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    find(read_usize(this + 8), club)
+    exe::comp_stats_find_club_entry(read_usize(this + 8), club)
 }
 
 /// Writes the club's situation in the competition stats (+0x73 the stage, +0x74 the best, +0x75 the worst), common to

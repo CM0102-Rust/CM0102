@@ -30,7 +30,6 @@ pub(crate) unsafe fn set_transfer_windows(this: usize, n: u8, t: &[[u8; 6]], fil
 /// [pt] Lado a lado à mão: a original no objeto de quem chama; a cópia num objeto de rascunho com o mesmo conteúdo de antes
 /// (os 0x19 bytes das regras); iguais os campos (fora o ponteiro +4) e as janelas alocadas (a do rascunho é solta).
 pub(crate) unsafe fn compare_transfer_rules_ctor(name: &str, this: usize, o: impl FnOnce(), c: impl FnOnce(usize)) {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut s = [0u8; 0x20];
     core::ptr::copy_nonoverlapping(this as *const u8, s.as_mut_ptr(), 0x19);
     o();
@@ -46,7 +45,7 @@ pub(crate) unsafe fn compare_transfer_rules_ctor(name: &str, this: usize, o: imp
         ja == jb
     };
     if jb != 0 {
-        soltar(jb);
+        exe::crt_free(jb);
     }
     SCOREBOARD.record(fields && windows, || format!("{}: campos {} janelas {}", name, fields, windows));
 }
@@ -316,8 +315,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize
     if read_i16(G_CURRENT_DATE) > read_i16(d.as_ptr() as usize) && (read_u8(player + staff::AGE) as i8) < 0x18 { // cqe6: abaixo de 24 anos
         crate::comparison::branch("cqe_6 inglaterra periodo da base");
         // 0x8e8bd0: the same 7 arguments pushed again; mov ecx, esi (this) -> thiscall, ret 0x1c
-        let base: unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize) = core::mem::transmute(FN_TRANSFER_RULES_GET_LOAN_PERIOD);
-        base(this, club, a2, start_month, start_year, end_month, end_year, player);
+        exe::transfer_rules_get_loan_period(this, club, a2, start_month, start_year, end_month, end_year, player);
         return;
     }
     // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0 (today’s month)

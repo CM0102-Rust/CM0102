@@ -432,8 +432,7 @@ pub(crate) unsafe fn eng_cc_cup_compare_entrant_list(name: &str, this: usize, re
         lo == 0 && lr == 0
     };
     if lr != 0 && lr != lo {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(lr);
+        exe::crt_free(lr);
     }
     SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", name, this, a, b, igual, list, k));
     a
@@ -478,8 +477,7 @@ pub(crate) unsafe fn collect_auto_cup_entrants(this: usize) -> (i32, i32) {
 /// [pt] O clube que terminou em `lugar` (0 o campeão, 1 o vice) na última temporada da competição de id [id] (a competição do
 /// banco: [0xae23d0] + 0x6b × id; 0x4afd80: push lugar; push competição; add esp, 8 -> cdecl).
 pub(crate) unsafe fn latest_placed_club(id: usize, place: u32) -> usize {
-    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
-    colocado(read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b)), place)
+    exe::comp_util_get_latest_placed_club(read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b)), place)
 }
 
 /// `EngCharity::select_teams()` (`0x56d780`, thiscall, ret 0, `eng_charity.cpp`): picks the Premier League champion and
@@ -561,23 +559,22 @@ pub(crate) unsafe fn is_date_today(d: u32, today: usize) -> bool {
 /// por rodada (+0xad, um vetor por rodada, +0x3c rodadas), cada um se existe (0x9452ca, cdecl). Os ponteiros ficam como
 /// estão (as rotinas seguintes os refazem).
 pub(crate) unsafe fn free_season_tables(this: usize) {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     if read_u32_as_usize(this + cup::TEAM_TABLE) != 0 {
-        soltar(read_u32_as_usize(this + cup::TEAM_TABLE));
+        exe::crt_free(read_u32_as_usize(this + cup::TEAM_TABLE));
     }
     if read_u32_as_usize(this + cup::ROUND_TABLE) != 0 {
-        soltar(read_u32_as_usize(this + cup::ROUND_TABLE));
+        exe::crt_free(read_u32_as_usize(this + cup::ROUND_TABLE));
     }
     if read_u32_as_usize(this + cup::TIE_TABLES) != 0 {
         let mut i = 0i32;
         while i < read_i16(this + cup::ROUND_COUNT) as i32 {
             let p = read_u32_as_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4);
             if p != 0 {
-                soltar(p);
+                exe::crt_free(p);
             }
             i += 1;
         }
-        soltar(read_u32_as_usize(this + cup::TIE_TABLES));
+        exe::crt_free(read_u32_as_usize(this + cup::TIE_TABLES));
     }
 }
 
@@ -585,8 +582,7 @@ pub(crate) unsafe fn free_season_tables(this: usize) {
 ///
 /// [pt] A atualização da copa (0x51f890: push fase; push hoje; mov ecx, copa -> thiscall, ret 8), cuja devolução sai.
 pub(crate) unsafe fn eng_cc_cup_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
-    let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_FOR_DATE);
-    base(this, today, stage)
+    exe::cup_update_for_date(this, today, stage)
 }
 
 /// rule: the English League Cup is rebuilt once per season (+0x45), on the first day the game year reaches the cup
@@ -604,9 +600,8 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, t
         free_season_tables(this);
         crate::comparison::branch("cqn_10 virada da copa da liga");
         core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1); // cqn10: the League Cup redone once
-        let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGCCCUP_COLLECT_ENTRANTS);
         // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the caller reads the byte
-        if entrants(this) < 0 {
+        if exe::engcccup_collect_entrants(this) < 0 {
             show_error_at(0x9c4224, 0x161);
             return 0;
         }

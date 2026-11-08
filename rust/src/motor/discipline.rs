@@ -47,14 +47,11 @@ pub(crate) unsafe fn nation_index_range(this: usize, team: usize) -> (usize, usi
 /// a contagem pode soltar a suspensão e reordenar o índice) e, para cada uma, um jogo cumprido na regra 0
 /// (0x556e90 com 0 e 1). No fim a lista é destruída.
 pub(crate) unsafe extern "thiscall" fn serve_international_bans(this: usize, team: usize) {
-    let new: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
-    let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     let por: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    let count: unsafe extern "thiscall" fn(usize, u32, u32, u32) = core::mem::transmute(FN_DISCIPLINE_UPDATE_BAN_PROGRESS);
     let mut l = [0u8; 14];
     let list = l.as_mut_ptr() as usize;
-    new(list);
+    exe::llist_llist(list);
     let (ini, fim) = nation_index_range(this, team);
     if ini != 0 {
         let mut e = ini;
@@ -67,11 +64,11 @@ pub(crate) unsafe extern "thiscall" fn serve_international_bans(this: usize, tea
         let mut p = next(list);
         while p != 0 {
             crate::comparison::branch("cqb_9 jogo cumprido");
-            count(this, read_usize(p) as u32, 0, 1); // cqb9: the match served under rule 0
+            exe::discipline_update_ban_progress(this, read_usize(p) as u32, 0, 1); // cqb9: the match served under rule 0
             p = next(list);
         }
     }
-    soltar(list);
+    exe::llist_destructor_llist(list);
 }
 
 /// O plano do recurso: a entrada da pessoa no órgão da `regra` (0x7e82e0 sem criar), a suspensão (20 bytes em
@@ -88,9 +85,8 @@ pub(crate) struct AppealPlan {
 /// Plan of a discipline appeal for person id under a rule: finds the entry and ban, computes reduced matches/days and
 /// whether the ban is lifted.
 pub(crate) unsafe fn appeal_plan(this: usize, id: u32, regra: u32, reduz: u32, menos_jogos: u32, menos_dias: u32, novo: u32, dias_fixo: u32) -> AppealPlan {
-    let achar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_RULINGBODY_FIND_OR_ADD_DISCIPLINE_ENTRY);
     let orgao = read_usize(read_usize(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4)));
-    let entrada = achar(orgao, id, 0);
+    let entrada = exe::rulingbody_find_or_add_discipline_entry(orgao, id, 0);
     let mut r = AppealPlan { orgao, entrada, suspensao: 0, jogos: 0, dias: 0, solta: false };
     if entrada == 0 || read_i16(entrada + ruling_body_entry::BAN_INDEX) == -1 {
         return r;
@@ -146,21 +142,19 @@ pub(crate) unsafe fn appeal_plan(this: usize, id: u32, regra: u32, reduz: u32, m
 /// solta se ficar até o contador (+1), senão solta; por dias: `dias_fixo` ≠ −1 tira `menos_dias` (até 0: zera e solta),
 /// senão `reduz` tira e solta até 0, senão solta. Soltar: 0x556d00 com o índice.
 pub(crate) unsafe extern "thiscall" fn apply_appeal_result(this: usize, id: u32, rule: u32, reduz: u32, minus_games: u32, minus_days: u32, new: u32, dias_fixo: u32, _x: u32) {
-    let tirar_pendentes: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_RULINGBODY_REMOVE_PENDING_BANS);
-    let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DISCIPLINE_RELEASE_BAN);
     let r = appeal_plan(this, id, rule, reduz, minus_games, minus_days, new, dias_fixo);
     if r.suspensao == 0 {
         return;
     }
     crate::comparison::branch("cqb_9 recurso");
-    tirar_pendentes(r.orgao, id);
+    exe::rulingbody_remove_pending_bans(r.orgao, id);
     let s = r.suspensao;
     *(s as *mut u8) = r.jogos;
     core::ptr::write_unaligned((s + ban_record::DAYS) as *mut i16, r.dias);
     if r.solta {
         // simplification: the original pushes the register with the index in the low word (the high part is leftover); 0x556d00 only reads
         // a palavra
-        soltar(this, id, read_i16(r.entrada + ruling_body_entry::BAN_INDEX) as u16 as u32);
+        exe::discipline_release_ban(this, id, read_i16(r.entrada + ruling_body_entry::BAN_INDEX) as u16 as u32);
     }
 }
 
@@ -196,8 +190,7 @@ pub(crate) unsafe extern "thiscall" fn get_slot_text(this: usize, person: usize,
     if rule == 0xff {
         return 0;
     }
-    let text: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_RULINGBODY_GET_BAN_TEXT);
-    text(read_usize(read_usize(this).wrapping_add((rule as i8 as isize as usize).wrapping_mul(4))), person, out, size)
+    exe::rulingbody_get_ban_text(read_usize(read_usize(this).wrapping_add((rule as i8 as isize as usize).wrapping_mul(4))), person, out, size)
 }
 
 /// Ruling body of rule (signed byte): [[this] + 4 x rule].
@@ -242,8 +235,7 @@ pub(crate) unsafe fn ruling_body_covers_club(body: usize, club: usize) -> bool {
 pub(crate) unsafe fn release_entry_ban(this: usize, id: u32, e: usize) {
     let i = read_i16(e + ruling_body_entry::BAN_INDEX);
     if i > -1 {
-        let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DISCIPLINE_RELEASE_BAN);
-        soltar(this, id, (e as u32 & 0xffff_0000) | i as u16 as u32);
+        exe::discipline_release_ban(this, id, (e as u32 & 0xffff_0000) | i as u16 as u32);
     }
 }
 
@@ -299,14 +291,13 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
         }
         *((ban + ban_record::FLAGS) as *mut u8) &= 0xfe;
     }
-    let copy: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_BANRECORD_OPERATOR_3D);
     let n = read_i16(this + discipline_fields::BAN_COUNT);
     let mut slot: i16 = -1;
     for i in 0..n.max(0) {
         let s = read_u32_as_usize(this + discipline_fields::BANS).wrapping_add(i as usize * 20);
         if *(s as *const u8) == 0xff && read_i16(s + ban_record::DAYS) == -1 {
             slot = i;
-            copy(s, ban);
+            exe::banrecord_operator_3d(s, ban);
             break;
         }
     }
@@ -315,7 +306,7 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
         let cap = read_i16(this + discipline_fields::BAN_CAPACITY);
         if count < cap {
             write_u16(this + discipline_fields::BAN_COUNT, count.wrapping_add(1) as u16);
-            copy(read_u32_as_usize(this + discipline_fields::BANS).wrapping_add((count as i32 as usize).wrapping_mul(20)), ban);
+            exe::banrecord_operator_3d(read_u32_as_usize(this + discipline_fields::BANS).wrapping_add((count as i32 as usize).wrapping_mul(20)), ban);
             slot = read_i16(this + discipline_fields::BAN_COUNT).wrapping_sub(1);
         } else {
             if cap >= 0x7d00 {
@@ -339,7 +330,7 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
             }
             slot = read_i16(this + discipline_fields::BAN_COUNT);
             write_u16(this + discipline_fields::BAN_COUNT, slot.wrapping_add(1) as u16);
-            copy(p.wrapping_add((slot as i32 as usize).wrapping_mul(20)), ban);
+            exe::banrecord_operator_3d(p.wrapping_add((slot as i32 as usize).wrapping_mul(20)), ban);
             let mut i = read_i16(this + discipline_fields::BAN_COUNT);
             while i < read_i16(this + discipline_fields::BAN_CAPACITY) {
                 let s = read_u32_as_usize(this + discipline_fields::BANS).wrapping_add((i as i32 as usize).wrapping_mul(20));
@@ -350,11 +341,10 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
         }
     }
     crate::comparison::branch("cpo_11 suspensao nova");
-    let ligar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_RULINGBODY_ATTACH_BAN);
     for k in 0..4usize {
         let rule = *((ban + ban_record::RULES + k) as *const u8);
         if rule != 0xff {
-            ligar(ruling_body_of_rule(this, rule), id, slot as u16 as u32); // links the rule to the suspension
+            exe::rulingbody_attach_ban(ruling_body_of_rule(this, rule), id, slot as u16 as u32); // links the rule to the suspension
         }
     }
     if *((ban + ban_record::NATION_RULE) as *const u8) == 0xff {
@@ -436,8 +426,7 @@ pub(crate) struct ContractReturnPlan {
 pub(crate) unsafe fn return_bans_plan(this: usize, person: usize) -> ContractReturnPlan {
     let id = read_u32_as_usize(person) as u32;
     let r = discipline_record(this, id);
-    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let contrato = contract_of(read_u32_as_usize(G_CONTRACT_MANAGER), person);
+    let contrato = exe::contract_manager_get_contract(read_u32_as_usize(G_CONTRACT_MANAGER), person);
     let clube = if contrato == 0 { 0 } else { read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(contrato + contract::CLUB).wrapping_mul(club::SIZE)) };
     let mut p = ContractReturnPlan { contrato, clube, guardadas: Vec::new(), resto: *((r + discipline_record::HELD_BAN_COUNT) as *const u8), soltas: Vec::new() };
     let list = this + discipline_fields::HELD_BANS;
@@ -494,8 +483,7 @@ pub(crate) unsafe fn return_bans_plan(this: usize, person: usize) -> ContractRet
 pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: usize) {
     let id = read_u32_as_usize(person) as u32;
     let r = discipline_record(this, id);
-    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let contract = contract_of(read_u32_as_usize(G_CONTRACT_MANAGER), person);
+    let contract = exe::contract_manager_get_contract(read_u32_as_usize(G_CONTRACT_MANAGER), person);
     write_u32(G_CONTRACT_LOOKUP_RESULT, contract as u32);
     let club = if contract == 0 { 0 } else { read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(contract + contract::CLUB).wrapping_mul(club::SIZE)) };
     let list = this + discipline_fields::HELD_BANS;
@@ -601,8 +589,7 @@ pub(crate) unsafe fn ruling_body_for_rule(this: usize, rule: u8) -> usize {
 ///
 /// [pt] A entrada (14 bytes; +6 o índice da suspensão, −1 sem) da pessoa no órgão: 0x7e82e0 sem criar (só lê).
 pub(crate) unsafe fn ruling_body_entry(body: usize, id: u32) -> usize {
-    let find: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_RULINGBODY_FIND_OR_ADD_DISCIPLINE_ENTRY);
-    find(body, id, 0)
+    exe::rulingbody_find_or_add_discipline_entry(body, id, 0)
 }
 
 /// Person's item (id, nation) in the discipline nation index by bsearch on his nation, then on his second nation; 0 if
@@ -707,9 +694,8 @@ pub(crate) unsafe extern "thiscall" fn update_ban_progress(this: usize, id: u32,
     let r = person_discipline_record(this, id as usize);
     let history: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> usize = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
     let g = history(read_usize(this + discipline_fields::BAN_HISTORY), r + discipline_record::HISTORY_START, r + discipline_record::HISTORY_LAST, j.suspensao);
-    let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DISCIPLINE_RELEASE_BAN);
     // the index goes in ax; the high part of eax is that of 0x58e340’s return (0x556d00 only reads the word)
-    soltar(this, id, (g as u32 & 0xffff_0000) | read_i16(j.entrada + ruling_body_entry::BAN_INDEX) as u16 as u32);
+    exe::discipline_release_ban(this, id, (g as u32 & 0xffff_0000) | read_i16(j.entrada + ruling_body_entry::BAN_INDEX) as u16 as u32);
 }
 
 /// Releases a ban: each ruling body of the ban's 4 rules forgets it; on the fourth rule, the person's item leaves the
@@ -729,14 +715,13 @@ pub(crate) unsafe extern "thiscall" fn update_ban_progress(this: usize, id: u32,
 /// Devolve a suspensão.
 pub(crate) unsafe extern "thiscall" fn release_ban(this: usize, id: u32, index: u32) -> usize {
     let s = read_usize(this + discipline_fields::BANS).wrapping_add((index as u16 as i16 as i32 as usize).wrapping_mul(20));
-    let esquecer: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_RULINGBODY_DETACH_BAN);
     for k in 0..4usize {
         let rule = *((s + ban_record::RULES + k) as *const u8);
         if rule == 0xff {
             continue;
         }
         crate::comparison::branch("cpm_4 soltar do orgao");
-        esquecer(ruling_body_for_rule(this, rule), id); // the ruling body forgets the suspension
+        exe::rulingbody_detach_ban(ruling_body_for_rule(this, rule), id); // the ruling body forgets the suspension
         if k != 3 {
             continue;
         }
@@ -887,9 +872,8 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
     if c == 0 {
         return 0;
     }
-    let julgar: unsafe extern "thiscall" fn(usize, usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_RULINGBODY_IS_PLAYER_BANNED);
     let tribunais = read_usize(this);
-    if julgar(read_usize(tribunais), player, 1, extra, partida) != 0 {
+    if exe::rulingbody_is_player_banned(read_usize(tribunais), player, 1, extra, partida) != 0 {
         return 1; // the general suspension
     }
     let t = *((c + league::DISCIPLINE_RULE) as *const i8);
@@ -897,7 +881,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
         return 0;
     }
     let b = read_usize(tribunais.wrapping_add((t as isize as usize).wrapping_mul(4)));
-    if b == 0 || julgar(b, player, 0, extra, partida) == 0 { // without the competition suspension
+    if b == 0 || exe::rulingbody_is_player_banned(b, player, 0, extra, partida) == 0 { // without the competition suspension
         return 0;
     }
     crate::comparison::branch("cpk_3 suspenso pela competicao");
@@ -999,8 +983,7 @@ pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pers
     if o == 0 {
         return 0;
     }
-    let perguntar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_RULINGBODY_CHECK_ONE_BOOKING_FROM_BAN);
-    perguntar(o, read_usize(person) as u32, 0, 0, read_usize(comp + 4) as u32)
+    exe::rulingbody_check_one_booking_from_ban(o, read_usize(person) as u32, 0, 0, read_usize(comp + 4) as u32)
 }
 
 /// the penalty at the table row and column, if the type matches
@@ -1033,11 +1016,10 @@ pub(crate) unsafe extern "thiscall" fn table_penalty(t: usize, row: i32, column:
 /// com +0x14) ou na competição [0x9cf684]: o tribunal da liga (+0x57) do mandante (+0x1c, com 1, 0, 0) e o do
 /// visitante (+0x20, com 0, 1, 0). Devolve o que o primeiro tribunal devolve (os outros caminhos, 0; ninguém lê).
 pub(crate) unsafe extern "thiscall" fn process_match(this: usize, partida: usize, result: u32) -> u32 {
-    let julgar: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_RULINGBODY_PROCESS_MATCH);
     let id = read_usize(partida) as i32;
     if id > -1 {
         if let Some(b) = comp_tribunal(this, id) {
-            return julgar(b, partida, result, 1, 1, 1);
+            return exe::rulingbody_process_match(b, partida, result, 1, 1, 1);
         }
     }
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
@@ -1050,7 +1032,7 @@ pub(crate) unsafe extern "thiscall" fn process_match(this: usize, partida: usize
             continue;
         }
         if let Some(t) = comp_tribunal(this, read_usize(league) as i32) { // the tribunal of the club’s league
-            julgar(t, partida, result, a, b, 0);
+            exe::rulingbody_process_match(t, partida, result, a, b, 0);
         }
     }
     0
@@ -1071,8 +1053,7 @@ pub(crate) unsafe extern "thiscall" fn process_match(this: usize, partida: usize
 /// (0x68d1f0, enquanto a conta +0x1c > 0) e o registro fica 0xff com a conta 0.
 pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id: u32) {
     let r = read_u32_as_usize(this + discipline_fields::PERSON_RECORDS).wrapping_add((id as usize).wrapping_mul(29));
-    let erase: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_DISCIPLINE_CLEAR_BAN_HISTORY);
-    erase(this, read_u32_as_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
+    exe::discipline_clear_ban_history(this, read_u32_as_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
     for k in 0..4usize {
         let rule = *((r + k * 5) as *const u8);
         if rule == 0xff {
@@ -1086,8 +1067,7 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
         let i = core::ptr::read_unaligned((e + ruling_body_entry::BAN_INDEX) as *const i16);
         if i > -1 {
             // the index in ax; the high part of eax is that of the entry pointer (0x556d00 only reads the word)
-            let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DISCIPLINE_RELEASE_BAN);
-            soltar(this, id, (e as u32 & 0xffff_0000) | i as u16 as u32);
+            exe::discipline_release_ban(this, id, (e as u32 & 0xffff_0000) | i as u16 as u32);
         }
         let v = read_u32_as_usize(this + discipline_fields::PERSON_RECORDS).wrapping_add((id as usize).wrapping_mul(29) + k * 5);
         *(v as *mut u8) = 0xff;

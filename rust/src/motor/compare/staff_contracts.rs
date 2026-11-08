@@ -52,8 +52,7 @@ pub(crate) unsafe extern "thiscall" fn compare_reset_morale_state(this: usize, p
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn compare_init_from_current_contract(this: usize, person: usize, club: usize, end: usize, write_percent_pair: u32, without_promotion: u32, multa: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(IDX_INIT_FROM_CURRENT_CONTRACT);
-    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    if contract_of(read_usize(G_CONTRACT_MANAGER), person) == 0 {
+    if exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person) == 0 {
         return o(this, person, club, end, write_percent_pair, without_promotion, multa);
     }
     let regions = morale_reset_regions(this, read_usize(person));

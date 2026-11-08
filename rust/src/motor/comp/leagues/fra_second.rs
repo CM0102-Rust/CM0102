@@ -46,22 +46,17 @@ pub(crate) struct LeagueDivision {
 /// (operator new de 0xee; SpaLower::SpaLower 0x851020: push ano; mov ecx, novo -> thiscall, ret 4) vai para +0xee
 /// (0 sem memória); com o bit, +0xee = 0. Devolve this.
 pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: usize, p: &LeagueDivision) -> usize {
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
-    let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.regras);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.tabela);
-    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let estatisticas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_COMP_STATS);
-    let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_PREDICTED_POSITIONS);
     let baixo: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_SPALOWER_SPALOWER);
-    base(this);
+    exe::league_league(this);
     write_u32_from_usize(this + 4, registro);
     write_u32_from_usize(this, p.vtabela);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
     *((this + league::DISCIPLINE_RULE) as *mut u8) = p.disciplina;
-    if carregar(this, 1) != 0 {
+    if exe::league_load_from_temp_file(this, 1) != 0 {
         return this;
     }
     crate::comparison::branch("cqm_5 divisao nova");
@@ -77,7 +72,7 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
         show_error_at(p.arquivo, p.linhas[1]);
         return this;
     }
-    if jogos(this) == 0 {
+    if exe::league_create_fixtures(this) == 0 {
         show_error_at(p.arquivo, p.linhas[2]);
         return this;
     }
@@ -86,13 +81,13 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
         return this;
     }
     let e = novo(0x5ce);
-    let s = if e != 0 { estatisticas(e, this) } else { 0 };
+    let s = if e != 0 { exe::comp_stats_comp_stats(e, this) } else { 0 };
     write_u32_from_usize(this + 8, s);
     if s == 0 {
         show_error_at(p.arquivo, p.linhas[4]);
         return this;
     }
-    previstas(this);
+    exe::league_set_predicted_positions(this);
     if p.baixo {
         let nacao = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
         if *((nacao + nation::LEAGUE_SELECTED) as *const u8) & 4 == 0 { // cqm5: the Spanish lower division

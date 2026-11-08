@@ -64,8 +64,6 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_advance_stage(this: usize) {
 /// [inferência] A série final é uma liga curta dos seis; os dois primeiros dela vão à grande final.
 pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -> u32 {
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, usize, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -86,14 +84,14 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
         0
     };
     core::ptr::write_unaligned(read_usize(this + league::STAGES) as *mut usize, stage);
-    soltar(t);
+    exe::crt_free(t);
     let stage = read_usize(read_usize(this + league::STAGES));
     if stage == 0 {
         show_error_at(0x987c20, 0x328);
         return 0;
     }
     crate::comparison::branch("cqr_3 serie final");
-    news(stage);
+    exe::league_send_group_draw_news(stage);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 0);
     1
 }
@@ -125,7 +123,6 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
 pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
@@ -148,14 +145,14 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
         0
     };
     core::ptr::write_unaligned((read_usize(this + league::STAGES) + 4) as *mut usize, stage);
-    soltar(t);
+    exe::crt_free(t);
     let stage = read_usize(read_usize(this + league::STAGES) + 4);
     if stage == 0 {
         return show_error_at(0x987c20, 0x35c);
     }
     crate::comparison::branch("cqr_3 grande final");
     build(stage, 0);
-    soltar(list);
+    exe::crt_free(list);
 }
 
 /// Writes the NSL rule fields (3 rounds, points, tiebreaks, 6 finalists...) before the schedule.

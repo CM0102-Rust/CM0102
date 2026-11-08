@@ -44,8 +44,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_up_teams(this: usize) -> i32 
         lo == lr
     };
     if lr != 0 && lr != lo {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(lr);
+        exe::crt_free(lr);
     }
     SCOREBOARD.record(igual && a == b && list, || format!("set_up_teams({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
     a
@@ -80,8 +79,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_all_stars_create_round_ta
     let outs = *rounds == r2 && *extra == e2 && (out.is_null() || *out == s2);
     let table = if a != 0 && b != 0 { spa_super_written_round_bytes(a) == spa_super_written_round_bytes(b) } else { a == 0 && b == 0 };
     if b != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(b);
+        exe::crt_free(b);
     }
     SCOREBOARD.record(igual && outs && table, || format!("usa_mls_all_stars_create_round_table: saídas {} tabela {}", outs, table));
     a

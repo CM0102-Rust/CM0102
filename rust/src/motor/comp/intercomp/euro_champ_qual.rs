@@ -97,8 +97,7 @@ pub(crate) unsafe extern "thiscall" fn get_group_team_count(this: usize, g: u32)
 /// 0x4a2e10: push 0x12; push clube; mov ecx, [this+8] -> thiscall, ret 8, devolve float), truncada (_ftol 0x945640): com o
 /// byte de baixo menor que 14 (com sinal), −2; senão −3 (word).
 pub(crate) unsafe fn qualification_status(this: usize, club: usize) -> i16 {
-    let estatistica: unsafe extern "thiscall" fn(usize, usize, u32) -> f64 = core::mem::transmute(FN_COMP_STATS_GET_CLUB_STAT);
-    let x = ftol(estatistica(read_u32_as_usize(this + 8), club, 0x12));
+    let x = ftol(exe::comp_stats_get_club_stat(read_u32_as_usize(this + 8), club, 0x12));
     ((((x as u8 as i8) < 0xe) as i32) - 3) as i16 // cqs8: the situation by statistic 0x12
 }
 
@@ -120,8 +119,7 @@ pub(crate) unsafe extern "thiscall" fn get_qualification_status(this: usize, clu
 /// (League::init_table_row 0x687430: push 0; push 0; push clube; push o dword do byte i com lixo em cima (só o byte é lido);
 /// mov ecx -> thiscall, ret 0x10); a notícia do grupo (0x684230, thiscall). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 {
-    let size: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(FN_EUROCHAMPQUAL_GET_GROUP_TEAM_COUNT);
-    let n = size(this, 0xffff_ffff);
+    let n = exe::eurochampqual_get_group_team_count(this, 0xffff_ffff);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alloc((n as i32 * 0x3b) as u32);
@@ -145,8 +143,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 
             }
         }
     }
-    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
-    news(this);
+    exe::league_send_group_draw_news(this);
     1
 }
 

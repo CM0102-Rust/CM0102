@@ -24,7 +24,6 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
     let write: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
     let search: unsafe extern "C" fn(usize, i32, u32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
     let position: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CRT_FTELL);
-    let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     if desc.is_null() {
         return 0;
     }
@@ -44,7 +43,7 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
         numero = ids[k];
         if versao != 1 {
             show_error_at(0xa159b0, if k == 0 { 0xb5c } else { 0xb7b });
-            close(f);
+            exe::crt_fclose(f);
             return 0;
         }
         if quantos < 0x9c4 {
@@ -52,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
             aberto = f;
             break;
         }
-        close(f);
+        exe::crt_fclose(f);
     }
     let f = if aberto != 0 {
         aberto
@@ -84,7 +83,7 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
     quantos += 1;
     search(f, 8, 0);
     write(&quantos as *const i32 as usize, 4, 1, f);
-    close(f);
+    exe::crt_fclose(f);
     (r != 0) as u8
 }
 
@@ -104,7 +103,6 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
     let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
     let search: unsafe extern "C" fn(usize, i32, u32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
-    let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     if desc.is_null() {
         return 0;
     }
@@ -130,10 +128,10 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
             search(f, *desc as i32, 0);
             let r = read(e + 0x720, 0xe, *desc.add(1), f);
             *((e + 6) as *mut u16) = *desc.add(1) as u16;
-            close(f);
+            exe::crt_fclose(f);
             return (r != 0) as u8;
         }
-        close(f);
+        exe::crt_fclose(f);
     }
     0
 }
@@ -145,11 +143,10 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
 ///
 /// [pt] Como `show_error_at`, e o jogo para (como a original: 0x5cc7d0, 0x5a8f60 e sai com -1).
 pub(crate) unsafe fn fatal_error_at(file: usize, row: u32) -> ! {
-    let fechar1: unsafe extern "C" fn() = core::mem::transmute(FN_GAME_FATAL_CLEANUP);
     let fechar2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     show_error_at(file, row);
-    fechar1();
+    exe::game_fatal_cleanup();
     fechar2();
     exit(-1)
 }
@@ -180,20 +177,14 @@ pub(crate) unsafe fn fatal_error_at(file: usize, row: u32) -> ! {
 /// Le pelo `fgetc` do jogo e usa o buffer [0xde1f64], como a original.
 pub(crate) unsafe extern "C" fn read_events_cfg() {
     let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
-    let clear: unsafe extern "C" fn() = core::mem::transmute(FN_MATCH_EVENTS_FREE_EVENT_TABLES);
     let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
-    let read: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_9469E0);
-    let number: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_947311);
-    let numero_curto: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_94739C);
     let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let procurar: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_STRSTR);
     let existe: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_UTILS_FILE_EXISTS);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let format_text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_GUI_SHOW_MESSAGE_BOX);
     const FONTE: usize = 0xa159b0; // match_events.cpp
     const TABELA: usize = 0xb68788;
     const FIM: usize = 0xb6b723;
@@ -204,7 +195,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
     let weight = |e: usize| (e + event_type::TOTAL_WEIGHT) as *mut i32;
 
     if *(G_MATCH_EVENTS_CONFIG_LANGUAGE as *const i32) != language() {
-        clear();
+        exe::match_events_free_event_tables();
     }
     if *(FIM as *const u8) != 0 {
         return;
@@ -250,9 +241,9 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
 
     let end_of_file = || *((f + 0xc) as *const u8) & 0x10 != 0;
     let pula_brancos_e_le = || {
-        let mut c = read(f);
+        let mut c = exe::at_9469e0(f);
         while (c == 0x20 || c == 0xd) && c != -1 {
-            c = read(f);
+            c = exe::at_9469e0(f);
         }
         c
     };
@@ -263,7 +254,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
         while c != 0x2c && c != 0xa && c != -1 {
             *((BUF + n) as *mut u8) = c as u8;
             n += 1;
-            c = read(f);
+            c = exe::at_9469e0(f);
         }
         *((BUF + n) as *mut u8) = 0;
         c
@@ -275,7 +266,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
         while c != 0xa && c != -1 {
             *((BUF + n) as *mut u8) = c as u8;
             n += 1;
-            c = read(f);
+            c = exe::at_9469e0(f);
         }
         *((BUF + n) as *mut u8) = 0;
         let t = alloc(n as u32 + 1);
@@ -299,7 +290,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
 
     let mut current = -1i32;
     while !end_of_file() {
-        let c = read(f);
+        let c = exe::at_9469e0(f);
         if c == -1 {
             continue;
         }
@@ -322,7 +313,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                     }
                 }
                 field();
-                current = number(BUF);
+                current = exe::at_947311(BUF);
                 if !(0..=0x2a4).contains(&current) {
                     format(BUF, 0xa15aa0, current);
                     fatal_error_at(FONTE, 0xcfb);
@@ -331,7 +322,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                 let mut c = 0;
                 for o in 0..7usize {
                     c = field();
-                    let v = numero_curto(BUF) as u8;
+                    let v = exe::at_94739c(BUF) as u8;
                     *((e + o) as *mut u8) = v;
                     if o == 4 {
                         let b = (e + 4) as *mut i8;
@@ -344,7 +335,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                     }
                 }
                 while c != 0xa && c != -1 {
-                    c = read(f);
+                    c = exe::at_9469e0(f);
                 }
                 if *((e + 2) as *const u8) != 0 && *(e as *const u8) == 0 {
                     format(BUF, 0xa15bf0, current);
@@ -364,26 +355,26 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                 core::ptr::write_unaligned((e + event_type::VARIANTS) as *mut usize, new);
                 let s = new + 0x110 * how_many(e) as usize;
                 field();
-                *(s as *mut i16) = numero_curto(BUF) as i16;
+                *(s as *mut i16) = exe::at_94739c(BUF) as i16;
                 let p = (*(s as *const i16) as i32).max(*weight(e));
                 core::ptr::write_unaligned(weight(e), p);
                 field();
-                *((s + 2) as *mut i16) = numero_curto(BUF) as i16;
-                let mut c = read(f);
+                *((s + 2) as *mut i16) = exe::at_94739c(BUF) as i16;
+                let mut c = exe::at_9469e0(f);
                 *((s + 4) as *mut u8) = 0;
                 while (c == 0x20 || c == 0xd) && c != -1 {
-                    c = read(f);
+                    c = exe::at_9469e0(f);
                 }
                 let mut n = 0usize;
                 while c != 0xa && c != -1 {
                     n += 1;
                     *((s + 3 + n) as *mut u8) = c as u8;
-                    c = read(f);
+                    c = exe::at_9469e0(f);
                 }
                 *((s + 4 + n) as *mut u8) = 0;
                 if procurar(0xae2c98, 0xa15be0) != 0 && n != 0 && existe(path(0x9c382c, s + 4)) == 0 {
                     format(BUF, 0xa15bac, path(0x9c382c, s + 4));
-                    caixa(0x9870e0, BUF, 0);
+                    exe::gui_show_message_box(0x9870e0, BUF, 0);
                 }
                 core::ptr::write_unaligned((s + 0x108) as *mut usize, 0);
                 core::ptr::write_unaligned((s + 0x10c) as *mut usize, 0);
@@ -414,7 +405,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
             _ => {
                 let mut c = c;
                 while c != 0xa && c != -1 {
-                    c = read(f);
+                    c = exe::at_9469e0(f);
                 }
             }
         }
@@ -440,7 +431,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
             core::ptr::write_unaligned(weight(e), sum);
         }
     }
-    close(f);
+    exe::crt_fclose(f);
 }
 
 // simplification: reads a file, allocates the texts and writes the global table; no comparison of its own, validated
@@ -478,14 +469,8 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
     const TEMP: usize = 0xb67dd8;
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let format_text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let name_of_player: unsafe extern "C" fn(usize, i32, i32, *mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_MATCH_EVENTS_FORMAT_PLAYER_NAME);
-    let compor: unsafe extern "C" fn(usize, *const u8, *const u8, u32, u32) -> usize = core::mem::transmute(FN_LANGLIB_APPLY_GRAMMAR_MODIFIER);
-    let maiuscula: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(FN_UTILS_CHAR_TO_UPPER);
     let por_extenso: unsafe extern "C" fn(i32, i32) -> usize = core::mem::transmute(FN_UTILS_FORMAT_ORDINAL);
     let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
-    let name_of_referee: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_OFFICIAL_NAME);
-    let stage: unsafe extern "C" fn(usize, u32, u32, u32, *mut u8, u32) = core::mem::transmute(FN_COMP_UTIL_FORMAT_COMP_STAGE_ROUND_LABEL);
-    let criterio: unsafe extern "C" fn(u32, u32, u32, u32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_LABEL_GENDER);
     if ev == 0 || ctx == 0 {
         return 0;
     }
@@ -574,7 +559,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
     let em_maiusculas = |out: i16, r: usize| {
         let mut j: i16 = 0;
         while *((r as isize + j as isize) as *const u8) != 0 {
-            let c = maiuscula(*((r as isize + j as isize) as *const u8) as i32);
+            let c = exe::utils_char_to_upper(*((r as isize + j as isize) as *const u8) as i32);
             *(dest(out + j) as *mut u8) = c;
             j += 1;
         }
@@ -618,9 +603,9 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                     b'P' | b'p' => {
                         let (lado, idx) = if t(pos + 2) == b'1' && b(5) != 0xff { (b(5), b(6)) } else { (b(7), b(8)) };
                         if lado != 0xff {
-                            name_of_player(ctx, lado as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, 0, 0, 1);
+                            exe::match_events_format_player_name(ctx, lado as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, 0, 0, 1);
                             sufixo(pos + 3, &mut suf);
-                            let r = compor(name.as_ptr() as usize, 0xad9c64 as *const u8, suf.as_ptr(), 0x64, 0x64);
+                            let r = exe::langlib_apply_grammar_modifier(name.as_ptr() as usize, 0xad9c64 as *const u8, suf.as_ptr(), 0x64, 0x64);
                             if t(pos + 3) == b'C' || t(pos + 3) == b'c' {
                                 em_maiusculas(out, r);
                             } else {
@@ -636,7 +621,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                         prefixo(pos, &mut pre);
                         sufixo(pos + 2, &mut suf);
                         let g = *((club + club::SHORT_GENDER_NAME) as *const u8) as u32;
-                        let r = compor(club + club::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g);
+                        let r = exe::langlib_apply_grammar_modifier(club + club::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g);
                         if t(pos + 2) == b'C' || t(pos + 2) == b'c' {
                             em_maiusculas(out, r);
                         } else {
@@ -650,11 +635,11 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                             sufixo(pos + 2, &mut suf);
                             let r = if x as u8 == b'C' || x as u8 == b'c' {
                                 let g = *((cp + competition::SHORT_GENDER_NAME) as *const u8) as u32;
-                                compor(cp + competition::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g)
+                                exe::langlib_apply_grammar_modifier(cp + competition::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g)
                             } else {
-                                stage(cp, 0, 0x96, 3, text_stage.as_mut_ptr(), 0x7d0);
-                                let g = criterio(0, 0, 0x96, 3) as u32;
-                                compor(text_stage.as_ptr() as usize, pre.as_ptr(), suf.as_ptr(), g, g)
+                                exe::comp_util_format_comp_stage_round_label(cp, 0, 0x96, 3, text_stage.as_mut_ptr(), 0x7d0);
+                                let g = exe::comp_util_get_label_gender(0, 0, 0x96, 3) as u32;
+                                exe::langlib_apply_grammar_modifier(text_stage.as_ptr() as usize, pre.as_ptr(), suf.as_ptr(), g, g)
                             };
                             write(out, r);
                         }
@@ -687,11 +672,11 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                                 };
                                 match mode {
                                     1 => {
-                                        name_of_referee(sheet, arb.as_mut_ptr(), 0xc8, 1);
+                                        exe::database_format_official_name(sheet, arb.as_mut_ptr(), 0xc8, 1);
                                         format_text(TEMP, 0xa15a20, arb.as_ptr());
                                     }
                                     5 => {
-                                        name_of_referee(sheet, arb.as_mut_ptr(), 0xc8, 5);
+                                        exe::database_format_official_name(sheet, arb.as_mut_ptr(), 0xc8, 5);
                                         format_text(TEMP, 0xa159ec, arb.as_ptr());
                                     }
                                     _ => {
@@ -773,30 +758,18 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
 /// (+0x2d6c, +0x2dac = peso x volume / 100).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, panel: u32, width: i32, quebrar: u32, font: usize, mode: u32) -> u32 {
-    let tocando: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_SOUND_PLAYING);
     let parar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_SCREENMANAGER_STOP_SOUND);
-    let tocar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_PLAY_SOUND);
     let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let width_of_text: unsafe extern "C" fn(usize, *const u8) -> i32 = core::mem::transmute(FN_FONT_TEXT_WIDTH);
     let colours_of_club: unsafe extern "C" fn(usize, u32, *mut u8, *mut u8) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let format_text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let name_of_player: unsafe extern "C" fn(usize, i32, i32, *mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_MATCH_EVENTS_FORMAT_PLAYER_NAME);
-    let compor: unsafe extern "C" fn(usize, *const u8, *const u8, u32, u32) -> usize = core::mem::transmute(FN_LANGLIB_APPLY_GRAMMAR_MODIFIER);
-    let maiuscula: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(FN_UTILS_CHAR_TO_UPPER);
     let por_extenso: unsafe extern "C" fn(i32, i32) -> usize = core::mem::transmute(FN_UTILS_FORMAT_ORDINAL);
     let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
-    let name_of_referee: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_OFFICIAL_NAME);
-    let stage: unsafe extern "C" fn(usize, u32, u32, u32, *mut u8, u32) = core::mem::transmute(FN_COMP_UTIL_FORMAT_COMP_STAGE_ROUND_LABEL);
-    let criterio: unsafe extern "C" fn(u32, u32, u32, u32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_LABEL_GENDER);
-    let quebrar_linha: unsafe extern "C" fn(*mut u8, u32, u32) = core::mem::transmute(FN_UTILS_BREAK_LINE_NEAR_MIDDLE);
-    let colour_of_bottom: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_COLOUR);
     let font_of_panel: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_FONT);
-    let colour_of_text: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT_COLOUR);
     let text_of_panel: unsafe extern "thiscall" fn(usize, u32, *const u8) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
     let margin: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_STYLE);
     let mostrar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_FLAGS);
-    let clock: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
     const SOM: usize = G_SCREEN_MANAGER;
     const TABELA: isize = 0xb68788;
 
@@ -805,13 +778,13 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
     }
     let eu = || *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
     let goal_crowd_reaction = |n: usize| ((n as isize) + eu() + 0x20) as *mut u8;
-    if *goal_crowd_reaction(nar) != 0xff && tocando(SOM, *goal_crowd_reaction(nar) as u32) == 0 {
+    if *goal_crowd_reaction(nar) != 0xff && exe::screenmanager_is_sound_playing(SOM, *goal_crowd_reaction(nar) as u32) == 0 {
         parar(SOM, *goal_crowd_reaction(nar) as u32);
         *goal_crowd_reaction(nar) = 0xff;
     }
     if *goal_crowd_reaction(nar) == 0xff {
         let p = path(0x9c382c, 0xa159a0);
-        tocar(SOM, goal_crowd_reaction(nar) as usize, 2, p, 1);
+        exe::screenmanager_play_sound(SOM, goal_crowd_reaction(nar) as usize, 2, p, 1);
     }
     let b = |o: usize| *((ev + o) as *const u8);
     let k = ((*(ev as *const u16) & 0x7fff) as i32 - 0x1f40) as i16;
@@ -904,7 +877,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         let em_maiusculas = |out: i16, r: usize| {
             let mut j: i16 = 0;
             while *((r as isize + j as isize) as *const u8) != 0 {
-                let c = maiuscula(*((r as isize + j as isize) as *const u8) as i32);
+                let c = exe::utils_char_to_upper(*((r as isize + j as isize) as *const u8) as i32);
                 *(dest(out + j) as *mut u8) = c;
                 j += 1;
             }
@@ -960,9 +933,9 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                 }
                                 inteiro[n] = 0;
                                 let curto = (width_of_text(font, inteiro.as_ptr()) as i16) < 0x12c;
-                                name_of_player(ctx, lado_j as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, curto as u32, mode, 1);
+                                exe::match_events_format_player_name(ctx, lado_j as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, curto as u32, mode, 1);
                                 sufixo(pos + 3, &mut suf);
-                                let r = compor(name.as_ptr() as usize, 0xad9c64 as *const u8, suf.as_ptr(), 0x64, 0x64);
+                                let r = exe::langlib_apply_grammar_modifier(name.as_ptr() as usize, 0xad9c64 as *const u8, suf.as_ptr(), 0x64, 0x64);
                                 if t(pos + 3) == b'C' || t(pos + 3) == b'c' {
                                     em_maiusculas(out, r);
                                 } else {
@@ -978,7 +951,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                             prefixo(pos, &mut pre);
                             sufixo(pos + 2, &mut suf);
                             let g = *((club + club::SHORT_GENDER_NAME) as *const u8) as u32;
-                            let r = compor(club + club::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g);
+                            let r = exe::langlib_apply_grammar_modifier(club + club::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g);
                             if t(pos + 2) == b'C' || t(pos + 2) == b'c' {
                                 em_maiusculas(out, r);
                             } else {
@@ -992,11 +965,11 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                 sufixo(pos + 2, &mut suf);
                                 let r = if x == b'C' || x == b'c' {
                                     let g = *((cp + competition::SHORT_GENDER_NAME) as *const u8) as u32;
-                                    compor(cp + competition::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g)
+                                    exe::langlib_apply_grammar_modifier(cp + competition::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g)
                                 } else {
-                                    stage(cp, 0, 0x96, 3, text_stage.as_mut_ptr(), 0x7d0);
-                                    let g = criterio(0, 0, 0x96, 3) as u32;
-                                    compor(text_stage.as_ptr() as usize, pre.as_ptr(), suf.as_ptr(), g, g)
+                                    exe::comp_util_format_comp_stage_round_label(cp, 0, 0x96, 3, text_stage.as_mut_ptr(), 0x7d0);
+                                    let g = exe::comp_util_get_label_gender(0, 0, 0x96, 3) as u32;
+                                    exe::langlib_apply_grammar_modifier(text_stage.as_ptr() as usize, pre.as_ptr(), suf.as_ptr(), g, g)
                                 };
                                 write(out, r);
                             }
@@ -1050,11 +1023,11 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                     };
                                     match mode_name {
                                         1 => {
-                                            name_of_referee(sheet, arb.as_mut_ptr(), 0xc8, 1);
+                                            exe::database_format_official_name(sheet, arb.as_mut_ptr(), 0xc8, 1);
                                             format_text(0xb67dd8, 0xa15a20, arb.as_ptr());
                                         }
                                         5 => {
-                                            name_of_referee(sheet, arb.as_mut_ptr(), 0xc8, 5);
+                                            exe::database_format_official_name(sheet, arb.as_mut_ptr(), 0xc8, 5);
                                             format_text(0xb67dd8, 0xa159ec, arb.as_ptr());
                                         }
                                         _ => {
@@ -1104,7 +1077,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
             }
             let mut si = n as i16;
             if quebrar as u8 != 0 {
-                quebrar_linha(dest(si / 5) as *mut u8, 0, 1);
+                exe::utils_break_line_near_middle(dest(si / 5) as *mut u8, 0, 1);
             } else {
                 loop {
                     si -= 1;
@@ -1141,9 +1114,9 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                 }
             }
         }
-        colour_of_bottom(SOM, panel, core::ptr::read_unaligned(cor2.as_ptr() as *const u32));
+        exe::screenmanager_set_widget_colour(SOM, panel, core::ptr::read_unaligned(cor2.as_ptr() as *const u32));
         font_of_panel(SOM, panel, font);
-        colour_of_text(SOM, panel, core::ptr::read_unaligned(cor1.as_ptr() as *const u32));
+        exe::screenmanager_set_widget_text_colour(SOM, panel, core::ptr::read_unaligned(cor1.as_ptr() as *const u32));
         text_of_panel(SOM, panel, row.as_ptr());
         margin(SOM, panel, 0x30);
         mostrar(SOM, panel, if *((e + 3) as *const u8) != 0 { 0x1001 } else { 1 });
@@ -1164,11 +1137,11 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                     _ => 2,
                 };
                 let p = path(0x9c382c, sound + 4);
-                tocar(SOM, *(G_MATCH_EVENTS_CURRENT_SLOT_PTR as *const usize), side, p, 0);
+                exe::screenmanager_play_sound(SOM, *(G_MATCH_EVENTS_CURRENT_SLOT_PTR as *const usize), side, p, 0);
             }
         }
     }
-    let now = clock();
+    let now = exe::utils_get_time_ms();
     core::ptr::write_unaligned(((nar as isize) + eu() * 4 + 0x2d6c) as *mut u32, now);
     let weight = *((sons() as isize + which() * 0x110 + 2) as *const i16) as i32;
     let volume = *((nar + commentary_queue::VOLUME) as *const u8) as i32;
@@ -1299,12 +1272,11 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, si
     }
     crate::comparison::branch("narracao nome curto");
     name(d(0x198), d(0x19c), d(0x1a0), buf, size, 5, d(0x190));
-    let list: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
     let textos: unsafe extern "C" fn(*const u8, *const u8, i32, u32) -> i32 = core::mem::transmute(FN_UTILS_STRING_COMPARE);
     for k in 0..2 {
         let club = *((pt + 4 * k) as *const u32) as usize;
         let mut l = [0usize; 100];
-        list(*(G_CLUB_TABLE as *const usize) + club * club::SIZE, l.as_mut_ptr(), 1);
+        exe::database_collect_club_squad(*(G_CLUB_TABLE as *const usize) + club * club::SIZE, l.as_mut_ptr(), 1);
         for &q in l.iter() {
             if q == 0 {
                 continue;
@@ -1820,8 +1792,7 @@ pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal
     *(G_MATCH_EVENT_DEFAULT_VARIANT_TEXT as *mut u8) = 0;
     *(0xb68778 as *mut u32) = 0xad9c64;
     *(0xb6877c as *mut u32) = 0xad9c64;
-    let read_events_cfg: unsafe extern "C" fn() = core::mem::transmute(FN_MATCH_EVENTS_READ_CONFIG);
-    read_events_cfg();
+    exe::match_events_read_config();
     for k in 0..16 {
         b(0x10 + k, 0xff);
         b(0x20 + k, 0xff);
@@ -1829,10 +1800,9 @@ pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal
     }
     if goal_crowd_reaction != 0 {
         let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-        let tocar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_PLAY_SOUND);
         let side = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
         let name = path(0x9c382c, 0xa159a0);
-        tocar(G_SCREEN_MANAGER, (t as isize + 0x20 + side) as usize, 2, name, 1);
+        exe::screenmanager_play_sound(G_SCREEN_MANAGER, (t as isize + 0x20 + side) as usize, 2, name, 1);
     }
     t
 }
@@ -1849,7 +1819,6 @@ pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal
 /// 0xb68670), os dois textos (+0x108, +0x10c) de cada registro de 0x110 bytes e a tabela; depois
 /// zera 0xb6b723 e põe −1 em 0xa1599c.
 pub(crate) unsafe extern "C" fn free_event_tables() {
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut e = 0xb68790usize;
     while e < G_MATCH_EVENT_TABLE_END_MARKER {
         let table = core::ptr::read_unaligned(e as *const usize);
@@ -1860,12 +1829,12 @@ pub(crate) unsafe extern "C" fn free_event_tables() {
                 for o in [0x108, 0x10c] {
                     let p = core::ptr::read_unaligned((r + o) as *const usize);
                     if p != 0 {
-                        free(p);
+                        exe::crt_free(p);
                     }
                 }
                 k += 1;
             }
-            free(table);
+            exe::crt_free(table);
             core::ptr::write_unaligned(e as *mut usize, 0);
         }
         e += 0x12;
@@ -1891,10 +1860,8 @@ pub(crate) unsafe extern "C" fn free_event_tables() {
 /// 0xb74450) segura; o que acabou e parado (0x802a50) e liberado. Devolve 1 so se todos os marcados
 /// ja passaram da janela (+0x2d6c + 4k ate + [+0x2dac], pelo relogio 0x90c510).
 pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const u32) -> u8 {
-    let clock: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
-    let tocando: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_SOUND_PLAYING);
     let parar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_SCREENMANAGER_STOP_SOUND);
-    let now = clock();
+    let now = exe::utils_get_time_ms();
     crate::comparison::branch("sons dos eventos");
     for k in 0..16usize {
         if *ativos.add(k) == 0 {
@@ -1908,7 +1875,7 @@ pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const 
             if *canal == 0xfe {
                 return 0;
             }
-            if tocando(G_SCREEN_MANAGER, (start & !0xff) | *canal as u32) != 0 {
+            if exe::screenmanager_is_sound_playing(G_SCREEN_MANAGER, (start & !0xff) | *canal as u32) != 0 {
                 return 0;
             }
             parar(G_SCREEN_MANAGER, *canal as u32);

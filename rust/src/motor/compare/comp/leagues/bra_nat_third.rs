@@ -55,7 +55,6 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_predicted_posit
         return o(this);
     }
     let sort: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let mut v = [0usize; 0x38];
     for (k, c) in v.iter_mut().enumerate() {
         *c = read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k);
@@ -63,7 +62,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_predicted_posit
     sort(v.as_mut_ptr(), 0x38, 4, 0x4b07d0);
     o(this);
     let errado = (0..0x38).find(|&k| {
-        let e = if v[k] != 0 { achar(read_usize(this + 8), v[k]) } else { 0 };
+        let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };
         read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k) != v[k] || e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != place_for_index(k)
     });
     SCOREBOARD.record(errado.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a vaga {:?} não bate", this, errado));

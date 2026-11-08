@@ -62,9 +62,8 @@ pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], see
     }
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     build(stage, 0);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    free(t);
-    free(list);
+    exe::crt_free(t);
+    exe::crt_free(list);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 0);
 }
 
@@ -94,8 +93,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_create_knockout_stage(this
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this: usize) -> u32 {
     record_first_stage_honours(this); // cqj8: the state championship history
     crate::comparison::branch("cqj_8 historico do estadual");
-    let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_BRA_NAT_FIRST_FILL_CHAMPIONS_CUP_ENTRANTS);
-    campeoes()
+    exe::bra_nat_first_fill_champions_cup_entrants()
 }
 
 /// The Rio Grande do Sul state league at career creation: the year and the database competition, disciplinary rule 7

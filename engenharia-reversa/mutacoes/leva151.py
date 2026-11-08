@@ -2,7 +2,7 @@
 MUTACOES = [
     ('i_decidida', "            if byte(p, day_match::HOME_GOALS) != -2\n", "            if byte(p, day_match::HOME_GOALS) != -3\n"),
     ('i_volta', "        *((dia + 0x33) as *mut u8) = 2;\n        por(0x2f, -1);", "        *((dia + 0x33) as *mut u8) = 2;\n        por(0x2f, 0);"),
-    ('i_rapida', "                    prepare(engine, p + day_match::FIXTURE_COPY, r, 0, 0);", "                    prepare(engine, p + day_match::FIXTURE_COPY, 1, 0, 0);"),
+    ('i_rapida', "                    exe::cm3_match_engine_init_match(engine, p + day_match::FIXTURE_COPY, r, 0, 0);", "                    exe::cm3_match_engine_init_match(engine, p + day_match::FIXTURE_COPY, 1, 0, 0);"),
     ('a_passo', "        step_towards(1);\n", "        step_towards(2);\n"),
     ('a_conta', "            *((day + match_day_fields::FINISHED_COUNT) as *mut i32) += 1;", "            *((day + match_day_fields::FINISHED_COUNT) as *mut i32) += 2;"),
     ('a_fim', "    let end = |e: u8| e == 2 || e == 8;", "    let end = |e: u8| e == 2;"),

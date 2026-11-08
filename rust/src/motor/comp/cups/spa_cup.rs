@@ -14,10 +14,9 @@ use super::*;
 /// copa (0x51f890: push fase; push hoje; mov ecx -> thiscall, ret 8), cuja devolução sai.
 pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     if read_u32_as_usize(this + cup::SEASON_SET_UP) == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + cup::YEAR) as i32 && stage != 0 { // cqt5: the Copa del Rey year
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         for o in [0xa7usize, 0xa3] {
             if read_u32_as_usize(this + o) != 0 {
-                soltar(read_u32_as_usize(this + o));
+                exe::crt_free(read_u32_as_usize(this + o));
             }
         }
         if read_u32_as_usize(this + cup::TIE_TABLES) != 0 {
@@ -25,17 +24,16 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
             while i < read_i16(this + cup::ROUND_COUNT) as i32 {
                 let p = read_u32_as_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4);
                 if p != 0 {
-                    soltar(p);
+                    exe::crt_free(p);
                 }
                 i += 1;
             }
-            soltar(read_u32_as_usize(this + cup::TIE_TABLES));
+            exe::crt_free(read_u32_as_usize(this + cup::TIE_TABLES));
         }
         crate::comparison::branch("cqt_5 copa do rei refeita");
         core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1); // cqt5: the Copa del Rey redone once
-        let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_SPACUP_COLLECT_ENTRANTS);
         // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the caller reads the byte
-        if entrants(this) < 0 {
+        if exe::spacup_collect_entrants(this) < 0 {
             show_error_at(0xa82810, 0x161);
             return 0;
         }
@@ -49,8 +47,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
         }
         call_cup_virtual(this, 0x5c);
     }
-    let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_FOR_DATE);
-    base(this, today, stage)
+    exe::cup_update_for_date(this, today, stage)
 }
 
 // simplification: the season turn frees and rebuilds the tables and the cup update plays and draws: they do not run twice. Only the

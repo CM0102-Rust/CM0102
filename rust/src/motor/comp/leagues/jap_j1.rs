@@ -15,8 +15,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_advance_stage(this: usize) {
     let stage = stage + 1;
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, stage);
     if stage == 2 {
-        let final_: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_JAPJ1_CREATE_CHAMPIONSHIP_FINAL_STAGE);
-        final_(this);
+        exe::japj1_create_championship_final_stage(this);
     }
 }
 
@@ -45,7 +44,6 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_advance_stage(this: usize) {
 /// só cobre o construtor (sem destrutor).
 pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usize) {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let list = alloc(8);
     if list == 0 {
         return show_error_at(0x9eabc8, 0x245);
@@ -68,8 +66,8 @@ pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usi
         0
     };
     core::ptr::write_unaligned((read_usize(this + league::STAGES) + 8) as *mut usize, stage);
-    free(list);
-    free(t);
+    exe::crt_free(list);
+    exe::crt_free(t);
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     build(read_usize(read_usize(this + league::STAGES) + 8), 0);
     if read_usize(read_usize(this + league::STAGES) + 8) == 0 {
@@ -114,7 +112,6 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
         let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(c) + desl));
         f(c)
     };
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
     let cadeia: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0xb0));
     cadeia(this, 1);
@@ -122,13 +119,12 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     liberar_tabela(this, 0);
     let l = read_usize(this + league::ROUND_DATES);
     if l != 0 {
-        free(l);
+        exe::crt_free(l);
         core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut usize, 0);
     }
     let stats = read_usize(this + 8);
     if stats != 0 {
-        let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
-        archive(stats, 1);
+        exe::comp_stats_archive_season_and_reset(stats, 1);
     }
     if (read_usize(this + league::CURRENT_STAGE) as i32) >= 0 {
         let mut i = 0i32;
@@ -144,7 +140,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
             }
         }
     }
-    free(read_usize(this + league::STAGES));
+    exe::crt_free(read_usize(this + league::STAGES));
     core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, 3);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let v = alloc(0xc);
@@ -155,8 +151,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
             let f: unsafe extern "C" fn() = core::mem::transmute(f);
             f();
         }
-        let exit: unsafe extern "C" fn(i32) = core::mem::transmute(FN_CRT_EXIT);
-        exit(-1);
+        exe::crt_exit(-1);
     }
     let a = core::ptr::read_unaligned((this + league::YEAR) as *const i16);
     core::ptr::write_unaligned((this + league::YEAR) as *mut i16, a.wrapping_add(1)); // cqq9: the next year of the J1
@@ -181,8 +176,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     virtual_(this, 0x5c);
     let expectations: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectations(this);
-    let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
-    renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
+    exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
 }
 
 /// True if the club's division (+0x57) is non-null and its id equals the competition id in global g.
@@ -273,11 +267,10 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_create_table(this: usize) -> u32 {
         return 0;
     }
     let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-    let pay: unsafe extern "thiscall" fn(usize, i32, usize) = core::mem::transmute(FN_LEAGUE_PAY_TV_RIGHTS);
     let f = prize(this, 0x186a0);
     core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, f);
     *((this + league::PRIZE_MODE) as *mut u8) = 1;
-    pay(this, 0x2dc6c0, 0);
+    exe::league_pay_tv_rights(this, 0x2dc6c0, 0);
     1
 }
 

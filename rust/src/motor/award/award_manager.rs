@@ -52,8 +52,7 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clu
         clamp_word(p + player_sheet::CURRENT_REPUTATION, nation);
         let lists = read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856);
         if lists != 0 && !MONTH_AWARD_DRY_RUN {
-            let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_SHORTLIST_MANAGER_ADD_PLAYER_TO_CLUB_SHORTLISTS);
-            f(lists, person, 1);
+            exe::shortlist_manager_add_player_to_club_shortlists(lists, person, 1);
         }
         return;
     }

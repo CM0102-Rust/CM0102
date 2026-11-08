@@ -46,9 +46,6 @@ pub(crate) unsafe fn postpone_if_draw_nonzero(n: i32) -> u8 {
 /// (até 15000 lugares) e 9 (pelo vento 4 e por 10000 lugares): uma cadeia de sorteios que devolve 0, 5 ou 6.
 pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usize) -> u8 {
     let key: unsafe extern "C" fn(usize) -> i8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
-    let finances: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
-    let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_FINANCE_GET_WEALTH_BAND);
-    let clima: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_WEATHER_GET_MATCH_WEATHER);
     let est = read_usize(game + fixture::STADIUM);
     if est == 0 || read_usize(est + stadium::CITY) == 0 || read_usize(est + stadium::CAPACITY) == 0 || read_usize(game + fixture::COMPETITION) == 0 {
         return 0;
@@ -76,9 +73,9 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
         }
     }
     if read_u8(game + fixture::TIME_SLICE) == 2 { // cpu5: the night slice
-        let fin = finances(read_usize(G_FINANCE_TABLE), home);
+        let fin = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), home);
         if fin != 0 {
-            let f = band(fin) as i8;
+            let f = exe::finance_get_wealth_band(fin) as i8;
             let n = if f == -2 {
                 1000
             } else if f == -1 && (read_u8(fin + 0x166) as i8) > 0xf {
@@ -95,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
     // simplification: the original writes the weather into the slot of its own argument; if the weather is not written (no regions), what remains are the
     // bytes of the game pointer, as here.
     let mut cl = game as u32;
-    clima(this, &mut cl as *mut u32 as usize, game);
+    exe::weather_get_match_weather(this, &mut cl as *mut u32 as usize, game);
     let [vento, chuva, temp, _] = cl.to_le_bytes();
     let temp = temp as i8;
     let est = read_usize(game + fixture::STADIUM);
@@ -243,7 +240,6 @@ pub(crate) unsafe fn weather_region(this: usize, city: usize) -> Option<usize> {
 /// Sem cidade: saida[3], [0] e [1] = 0 e a faixa 2. saida[2] = a temperatura (0x9232c0); abaixo de zero, a chuva vira
 /// neve/gelo: 1 → 6, 2 e 3 → 6/7/8 e 5 → 8/7/9 pelo vento da cidade 0/1/outro.
 pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8, game: usize) {
-    let temperatura: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(FN_WEATHER_GET_TEMPERATURE);
     if read_usize(this) == 0 || read_usize(this + 8) == 0 {
         return;
     }
@@ -364,7 +360,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
             3
         }
     };
-    let t = temperatura(this, band, game) as i8;
+    let t = exe::weather_get_temperature(this, band, game) as i8;
     *s.add(2) = t as u8;
     if t >= 0 {
         return;
@@ -514,8 +510,7 @@ pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: 
 ///
 /// [pt] A linha seguinte do arquivo (0x90cba0: FILE*, buffer), 0 no fim.
 pub(crate) unsafe fn read_config_line(f: usize, buf: *mut u8) -> i32 {
-    let read: unsafe extern "C" fn(usize, *mut u8) -> i32 = core::mem::transmute(FN_UTILS_READ_CONFIG_LINE);
-    read(f, buf)
+    exe::utils_read_config_line(f, buf)
 }
 
 /// Updates each city's weather daily: the three readings become (reading + random(100)) × 0.5, clamped to 0..100; one
@@ -577,7 +572,6 @@ pub(crate) unsafe extern "thiscall" fn update_city_weather(this: usize) {
 /// períodos (0x922d20) em +0x1e, +0x31, +0x44 e +0x57. Devolve 1 se leu tudo (só o al, como a original).
 pub(crate) unsafe extern "thiscall" fn read_region(this: usize, f: usize, region: usize) -> u8 {
     let read: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
-    let period: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_WEATHER_READ_REGION_PERIOD);
     crate::comparison::branch("cpt_5 regiao do clima");
     let mut row = [0u8; 2000];
     if read_config_line(f, row.as_mut_ptr()) == 0 {
@@ -587,7 +581,7 @@ pub(crate) unsafe extern "thiscall" fn read_region(this: usize, f: usize, region
         return 0;
     }
     for k in [0x1e, 0x31, 0x44, 0x57] {
-        if period(this, f, region + k) == 0 {
+        if exe::weather_read_region_period(this, f, region + k) == 0 {
             return 0;
         }
     }
@@ -659,17 +653,14 @@ pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize
 pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
     let folder: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let read_row: unsafe extern "C" fn(usize, *mut u8) -> i32 = core::mem::transmute(FN_UTILS_READ_CONFIG_LINE);
     let read: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
     let malloc: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let region: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_WEATHER_READ_REGION);
-    let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     let f = open(folder(0x9b5348, 0xad4e18), 0x9899fc);
     if f == 0 {
         fatal_error_at(0xad4dec, 0x68);
     }
     let mut row = [0u8; 1000];
-    if read_row(f, row.as_mut_ptr()) == 0 {
+    if exe::utils_read_config_line(f, row.as_mut_ptr()) == 0 {
         fatal_error_at(0xad4dec, 0x6f);
     }
     if read(row.as_ptr(), 0x98c11c, this + 8) != 1 {
@@ -687,7 +678,7 @@ pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
     }
     let mut i = 0i32;
     while i < read_i32(this + 8) {
-        if region(this, f, read_usize(this) + i as usize * 0x6e) == 0 {
+        if exe::weather_read_region(this, f, read_usize(this) + i as usize * 0x6e) == 0 {
             if i == 0 {
                 fatal_error_at(0xad4dec, 0x92);
             }
@@ -707,6 +698,6 @@ pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
         *((read_usize(this + 4) + k * 4 + 3) as *mut u8) = v as u8;
         k += 1;
     }
-    close(f);
+    exe::crt_fclose(f);
 }
 

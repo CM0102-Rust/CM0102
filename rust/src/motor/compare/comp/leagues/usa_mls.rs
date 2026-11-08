@@ -164,7 +164,6 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_predicted_positions(t
         return o(this);
     }
     let sort: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let mut v = [0usize; 12];
     for k in 0..4 {
         v[k] = aus_nsl_table_row_club(this, k);
@@ -177,7 +176,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_predicted_positions(t
     o(this);
     const LUGARES: [u8; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10];
     let errado = (0..12).find(|&k| {
-        let e = if v[k] != 0 { achar(read_usize(this + 8), v[k]) } else { 0 };
+        let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };
         e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != LUGARES[k]
     });
     SCOREBOARD.record(errado.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a posição da vaga {:?} não bate ({:x?})", this, errado, v));

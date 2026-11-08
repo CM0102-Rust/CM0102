@@ -49,15 +49,12 @@ pub(crate) unsafe extern "thiscall" fn compare_move_fixtures_for_tv(this: usize,
         }
         block += 1;
     }
-    let create: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
-    let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
-    let games: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_COLLECT_COMP_FIXTURES_ON_DAY);
     let mut list = [0u8; 0x10];
     let l = list.as_mut_ptr() as usize;
-    create(l);
-    let n = games(read_u32_as_usize(G_FIXTURE_MANAGER), read_i16(data + 2) as u16 as u32, read_i16(data) as u16 as u32, read_u8(e + 4) as u32,
+    exe::llist_llist(l);
+    let n = exe::fixture_manager_collect_comp_fixtures_on_day(read_u32_as_usize(G_FIXTURE_MANAGER), read_i16(data + 2) as u16 as u32, read_i16(data) as u16 as u32, read_u8(e + 4) as u32,
         read_u32_as_usize(read_u32_as_usize(this + 4)) as u32, u32::MAX, read_u8(this + league::STAGE_INDEX) as u32, l) as usize & 0xffff;
-    destroy(l);
+    exe::llist_destructor_llist(l);
     o(this, data);
     let expected = if n == 0 { 0 } else { validas.min(n) };
     let movidas = (0..block).filter(|k| read_u8(e + k * 7 + 0xb) == 0xff).count();
@@ -326,14 +323,13 @@ pub(crate) unsafe extern "thiscall" fn compare_league_set_predicted_positions(le
     let mut k = vec![0i32; n as usize];
     sort_clubs_by_strength(v.as_mut_ptr(), k.as_mut_ptr(), n);
     o(league);
-    let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let mut erros = Vec::new();
     for (i, &c) in v.iter().enumerate() {
         if c == 0 || v[i + 1..].contains(&c) {
             continue;
         }
         let p = (i as u8).wrapping_add(1);
-        let e = search(read_usize(league + 8), c as usize);
+        let e = exe::comp_stats_find_club_entry(read_usize(league + 8), c as usize);
         if e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != p {
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + comp_stats_club::DANGER_POSITION) as *const u8) as i32 }));
         }
@@ -376,8 +372,7 @@ pub(crate) unsafe extern "C" fn compare_compare_projection_by_points_desc(a: usi
 pub(crate) unsafe extern "thiscall" fn compare_update_projected_positions(this: usize, club: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_PROJECTED_POSITIONS);
     let stats = read_usize(this + 8);
-    let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    let reg = if stats != 0 { search(stats, club) } else { 0 };
+    let reg = if stats != 0 { exe::comp_stats_find_club_entry(stats, club) } else { 0 };
     if reg == 0 {
         return o(this, club); // simplification: no record to look at, original only
     }
@@ -533,8 +528,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_tv_rights(league: usize, valu
     if finances == 0 || clubs.contains(&0) {
         return o(league, value, filtro);
     }
-    let get_club_finance: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
-    let reg: Vec<(usize, usize)> = clubs.iter().map(|&c| (get_club_finance(finances, c), 0x167)).collect();
+    let reg: Vec<(usize, usize)> = clubs.iter().map(|&c| (exe::financetable_get_club_finance(finances, c), 0x167)).collect();
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(league, value, filtro), || pay_tv_money(league, value, filtro, false));
     SCOREBOARD.record(igual, || format!("pay_tv_rights({:x}, {}, {:x}) {:x?} x {:x?}", league, value, filtro, mo, mr));
 }

@@ -199,7 +199,6 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(
         }
         core::ptr::write_unaligned((club + club::CONTINENTAL_COMP_ID) as *mut i32, -1); // cqi10: whoever finishes in the UEFA leaves the European competition
     }
-    let base: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
-    base(this, club, outcome, a3, a4, game, a6)
+    exe::cup_update_staff_records_for_status(this, club, outcome, a3, a4, game, a6)
 }
 

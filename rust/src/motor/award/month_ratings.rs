@@ -21,7 +21,6 @@ pub(crate) unsafe fn month_ratings_staff_by_id(id: i32) -> usize {
 /// pessoa (id em +0) abaixo da conta de pessoas [0xae2364] vai para as notas do mês (0x767fa0).
 pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: usize, partida: usize) {
     let _ = game;
-    let rating: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_MONTH_RATINGS_ADD_PLAYER_RATING);
     let mut side = partida.wrapping_add(0x190);
     for l in 0..2 { // cpw5: os dois lados
         for k in 0..0x14usize {
@@ -39,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: u
             if l == 1 {
                 crate::comparison::branch("cpw_5 notas do visitante");
             }
-            rating(this, e);
+            exe::month_ratings_add_player_rating(this, e);
         }
         side += 0x625;
     }

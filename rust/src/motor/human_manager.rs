@@ -15,12 +15,9 @@ use super::*;
 pub(crate) unsafe extern "C" fn human_club(club: usize, without_tactic: u32, any: u8, person: usize, force: u32) -> u32 {
     let h = *(G_HUMAN_MANAGER as *const usize);
     let (mut club, mut any, mut person) = (club, any, person);
-    let t9ace: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_COMPUTER_CONTROLLED);
     let t9a06: unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_ALL_NATIONAL_TEAMS);
     let t9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_RESERVE_TEAM);
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let second: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
-    let main: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     loop {
         if club == 0 {
             return original_fn::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(IDX_HUMAN_CLUB)(0, without_tactic, any, person, force);
@@ -31,7 +28,7 @@ pub(crate) unsafe extern "C" fn human_club(club: usize, without_tactic: u32, any
         let manager = *((club + club::MANAGER) as *const usize);
         if manager != 0 && person == manager && *(person as *const i32) >= (*(G_STAFF_COUNT as *const i32)).wrapping_sub(16) {
             let tactic = without_tactic == 0
-                && (t9ace(h, person) != 0 || matches!(human_manager_record_checked(h, person), Ok(r) if *((r + 0x9a01) as *const u32) != 0));
+                && (exe::human_manager_is_computer_controlled(h, person) != 0 || matches!(human_manager_record_checked(h, person), Ok(r) if *((r + 0x9a01) as *const u32) != 0));
             if !tactic {
                 if force != 0 || any != 0 {
                     return 1;
@@ -42,11 +39,11 @@ pub(crate) unsafe extern "C" fn human_club(club: usize, without_tactic: u32, any
                 }
             }
         }
-        if second(club) == 0 {
+        if exe::club_is_national_team(club) == 0 {
             return 0;
         }
         any = 0;
-        club = main(*((club + club::NATION) as *const usize));
+        club = exe::database_get_national_team(*((club + club::NATION) as *const usize));
     }
 }
 
@@ -283,9 +280,8 @@ pub(crate) unsafe extern "thiscall" fn select_tactic_slot(this: usize, reserve: 
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(IDX_SELECT_TACTIC_SLOT)(this, reserve, club, manager); // message box: original only
     };
     let club = if club != 0 { club } else { read_usize(t + staff::CLUB_JOB) };
-    let second: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let slot: u8 = if club != 0 && second(club) != 0 {
+    let slot: u8 = if club != 0 && exe::club_is_national_team(club) != 0 {
         4
     } else if reserve != 0 && club != 0 && national_team(club) != 0 {
         3
@@ -316,14 +312,13 @@ pub(crate) unsafe fn human_manager_watched_match_record(this: usize, i: usize) -
 /// técnicos humanos (os últimos 16 de [0xae23bc]) ativo (+0x5f ≠ 0) que não pode mais ver a partida assistida dele
 /// (0x5fe700), zera os 79 bytes dela. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn clear_invalid_watched_fixtures(this: usize) -> u32 {
-    let can_ver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CAN_WATCH_FIXTURE);
     for i in 0..0x10usize {
         let p = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(staff::SIZE));
         if *((p + staff::CLASSIFICATION) as *const u8) == 0 {
             continue;
         }
         let f = human_manager_watched_match_record(this, i);
-        if can_ver(this, f, p) == 0 {
+        if exe::human_manager_can_watch_fixture(this, f, p) == 0 {
             core::ptr::write_bytes(f as *mut u8, 0, 79); // a partida sai
         }
     }
@@ -359,11 +354,10 @@ pub(crate) unsafe extern "thiscall" fn is_fixture_watched(this: usize, partida: 
     if partida == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_FIXTURE_WATCHED)(this, partida);
     }
-    let assiste: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_WATCHING_FIXTURE);
     for k in 0..16i32 {
         let i = k.wrapping_add(*(G_STAFF_COUNT as *const i32)).wrapping_sub(0x10);
         let h = (*(G_STAFF_TABLE as *const usize)).wrapping_add((i as isize * 110) as usize);
-        if *((h + staff::CLASSIFICATION) as *const u8) != 0 && assiste(this, partida, h) != 0 {
+        if *((h + staff::CLASSIFICATION) as *const u8) != 0 && exe::human_manager_is_watching_fixture(this, partida, h) != 0 {
             return 1;
         }
     }
@@ -660,11 +654,8 @@ pub(crate) unsafe extern "thiscall" fn remove_nickname_from_all(this: usize, id:
 /// humanos [0xb63c98]; e então basta `forcar`, o clube ser seleção (0x53b900) ou a marca +0x9a05
 /// (0x5fd480). Clube nulo: a original (caixa de erro e 0).
 pub(crate) unsafe extern "C" fn human_runs_club(club: usize, any: u32, force: i8) -> u32 {
-    let manager_9ace: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_COMPUTER_CONTROLLED);
     let manager_9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_RESERVE_TEAM);
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let is_second_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
-    let main_national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     let mut c = club;
     loop {
         if c == 0 {
@@ -679,7 +670,7 @@ pub(crate) unsafe extern "C" fn human_runs_club(club: usize, any: u32, force: i8
             }
             let humanos = *(G_HUMAN_MANAGER as *const usize);
             if any == 0 {
-                if manager_9ace(humanos, human) != 0 {
+                if exe::human_manager_is_computer_controlled(humanos, human) != 0 {
                     break 'proximo;
                 }
                 let i = (*(human as *const i32)).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
@@ -695,10 +686,10 @@ pub(crate) unsafe extern "C" fn human_runs_club(club: usize, any: u32, force: i8
                 return 1;
             }
         }
-        if is_second_national_team(c) == 0 {
+        if exe::club_is_national_team(c) == 0 {
             return 0;
         }
-        c = main_national_team(core::ptr::read_unaligned((c + club::NATION) as *const usize));
+        c = exe::database_get_national_team(core::ptr::read_unaligned((c + club::NATION) as *const usize));
     }
 }
 
@@ -785,8 +776,7 @@ pub(crate) unsafe extern "thiscall" fn set_on_holiday(this: usize, holiday: u32,
     }
     let day = read_usize(G_MATCH_DAY);
     if day != 0 {
-        let interest: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_MATCH_DAY_REFRESH_HUMAN_INTEREST_FLAGS);
-        interest(day);
+        exe::match_day_refresh_human_interest_flags(day);
     }
 }
 

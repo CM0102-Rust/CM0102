@@ -38,8 +38,7 @@ pub(crate) unsafe fn create_first_group_table(this: usize, n: i16, file: usize, 
         core::ptr::write_unaligned((read_u32_as_usize(this + 0xee) + i as isize as usize * 4) as *mut u32, 0); // cqr7: the group 1 slot leaves the list
         i = i.wrapping_add(1);
     }
-    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
-    news(this);
+    exe::league_send_group_draw_news(this);
     1
 }
 
@@ -171,8 +170,6 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_advance_stage_63d950(this: usize)
 pub(crate) unsafe fn ita_cup_create_group_stage_cqr8_fase_do_grupo(this: usize, g: u32, file: usize, rows: [u32; 2], ramo: &'static str) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -232,14 +229,14 @@ pub(crate) unsafe fn ita_cup_create_group_stage_cqr8_fase_do_grupo(this: usize, 
         0
     };
     write_u32_from_usize(read_u32_as_usize(this + league::STAGES) + g as usize * 4, stage);
-    soltar(teams);
-    soltar(table);
+    exe::crt_free(teams);
+    exe::crt_free(table);
     let f = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + g as usize * 4);
     if f == 0 {
         show_error_at(file, rows[1]);
         return 0;
     }
-    news(f);
+    exe::league_send_group_draw_news(f);
     write_u32_from_usize(this + league::CURRENT_STAGE, g as usize);
     1
 }
@@ -364,7 +361,6 @@ pub(crate) unsafe fn take_direct_entrants(this: usize, teams: usize, mut k: usiz
 /// lê) em [+0xc][fase]; o vetor e a tabela das rodadas liberados (0x9452ca, cdecl; nesta ordem). Sem fase, a caixa da
 /// `linha`; com ela, o sorteio da primeira rodada (Cup::draw_round 0x51c410: push 0; mov ecx, fase -> thiscall, ret 4).
 pub(crate) unsafe fn create_knockout_stage(this: usize, n: u32, teams: usize, stage: u32, seeds: *const u8, file: usize, row: u32) {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let table = rounds_of_cup(this, stage, &mut rodadas, &mut extra, 0);
@@ -379,8 +375,8 @@ pub(crate) unsafe fn create_knockout_stage(this: usize, n: u32, teams: usize, st
         0
     };
     write_u32_from_usize(read_u32_as_usize(this + league::STAGES) + stage as usize * 4, f);
-    soltar(teams);
-    soltar(table);
+    exe::crt_free(teams);
+    exe::crt_free(table);
     let f = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + stage as usize * 4);
     if f == 0 {
         return show_error_at(file, row);
@@ -567,7 +563,6 @@ pub(crate) unsafe fn create_schedule(this: usize, stage: u32, rounds: *mut i16, 
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     if f < limit {
         let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
-        let game: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
         if !league.is_null() {
             *league = 1;
         }
@@ -584,7 +579,7 @@ pub(crate) unsafe fn create_schedule(this: usize, stage: u32, rounds: *mut i16, 
         let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
         for (r, &(dia, mes, semana, codigo)) in groups.iter().enumerate() {
             data(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, year, 0);
-            game(t, r as i32, 0, -1, -1, -1, 0);
+            exe::league_round_set_match_slot(t, r as i32, 0, -1, -1, -1, 0);
         }
         return t;
     }
@@ -653,8 +648,7 @@ pub(crate) unsafe fn ita_cup_compare_schedule(name: &str, stage: u32, rounds: *m
         a == 0 && b == 0
     };
     if b != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(b);
+        exe::crt_free(b);
     }
     SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
@@ -966,8 +960,7 @@ pub(crate) unsafe fn compare_select_entrants(name: &str, this: usize, o: impl Fn
     let ver = |l: usize| if l == 0 { Vec::new() } else { core::slice::from_raw_parts(l as *const u32, k / 4).to_vec() };
     let (vo, vr) = (ver(lo), ver(lr));
     if lr != 0 && lr != lo {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(lr);
+        exe::crt_free(lr);
     }
     SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} {:x?} x {:x?} lista {} ({} bytes) {:x?} x {:x?}", name, this, a, b, igual, mo, mr, list, k, vo, vr));
     a

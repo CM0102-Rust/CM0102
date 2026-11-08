@@ -182,7 +182,6 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
 /// da competição (tabela [0xae23d0], 0x6b bytes, +0x59; 0x786640) ou a todos (0x786780).
 pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize) {
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let given: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let continent: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_CONTINENT_MANAGERS);
     let all: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
@@ -200,14 +199,14 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
             let mut n = [0u8; 0xe8];
             let p = n.as_mut_ptr() as usize;
             if k == -1 {
-                construct(p, 4, 0);
+                exe::newsitem_newsitem(p, 4, 0);
                 given(p, 0, read_u32_as_usize(read_u32_as_usize(it)) as u32);
                 given(p, 1, read_u16(read_u32_as_usize(it) + 4) as u32);
                 for (i, off) in [6usize, 0xa, 0xe, 0x12, 0x16, 0x1a].iter().enumerate() {
                     given(p, 2 + i as u32, read_u32_as_usize(read_u32_as_usize(it) + off) as u32);
                 }
             } else {
-                construct(p, 5, 0);
+                exe::newsitem_newsitem(p, 5, 0);
                 let mut b = *((read_u32_as_usize(it) + 0x1e) as *const i8);
                 if b == -3 {
                     b = 0;
@@ -248,9 +247,7 @@ pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
     let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-    let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let f = open(path(0x987da0, 0x9cf10c), 0x98f928);
     if f == 0 {
         crate::comparison::branch("cqo_3 sem o arquivo");
@@ -258,7 +255,7 @@ pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
     }
     if read(this + 4, 2, 1, f) != 1 {
         show_error_at(0x9cf0d8, 0x448);
-        close(f);
+        exe::crt_fclose(f);
         return 0;
     }
     let n = read_u16(this + 4) as i16 as i32;
@@ -266,17 +263,17 @@ pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
     write_u32(this, b as u32);
     if b == 0 {
         show_error_at(0x9cf0d8, 0x452);
-        close(f);
+        exe::crt_fclose(f);
         return 0;
     }
     let n = read_u16(this + 4) as i16 as i32 as u32;
     if read(b, 0x22, n, f) != read_u16(this + 4) as i16 as i32 as u32 {
         show_error_at(0x9cf0d8, 0x45c);
-        close(f);
-        soltar(read_u32_as_usize(this));
+        exe::crt_fclose(f);
+        exe::crt_free(read_u32_as_usize(this));
         return 0;
     }
-    close(f);
+    exe::crt_fclose(f);
     1
 }
 
@@ -415,27 +412,23 @@ pub(crate) unsafe fn first_entry_for_date(start: usize, n: i16, year: u16, day: 
 /// intervalo (+0x21) e, fora da padrão fixa, a votação fecha (−2); a tabela é reordenada (qsort 0x945333 com 0x5fb3f0).
 /// Por fim a notícia das entradas da lista (0x5faec0).
 pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, today: usize) {
-    let list_new: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
-    let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     let por: unsafe extern "thiscall" fn(usize, *const usize, u32) = core::mem::transmute(FN_LLIST_ADD_TAIL);
     let data: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> *const [u16; 4] = core::mem::transmute(FN_DATE_DATE_549F70);
-    let europeias: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_HOSTCOUNTRY_PICK_EUROPEAN_FINAL_HOSTS);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let sort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let news: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_HOSTCOUNTRY_POST_HOST_NEWS);
     let n = read_u16(this + 4) as i16;
     let start = read_u32(this) as usize;
     let end = start.wrapping_add((n as i32 * 0x22 - 0x22) as usize);
     let mut list = [0u8; 0x10];
     let l = list.as_mut_ptr() as usize;
-    list_new(l);
+    exe::llist_llist(l);
     let year = read_u16(today + 2);
     let day = read_u16(today);
     if year != 0x7d1 {
         let mut d = [0u16; 4];
         let r = *data(&mut d, 1, 6, year as u32, u32::MAX);
         if r[1] == year && r[0] == day {
-            europeias(this);
+            exe::hostcountry_pick_european_final_hosts(this);
         }
     }
     let mut p = first_entry_for_date(start, n, year.wrapping_add(8), day);
@@ -480,8 +473,8 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
         }
         sort(read_u32(this) as usize, read_u16(this + 4) as i16 as i32, 0x22, 0x5fb3f0);
     }
-    news(this, l);
-    destroy(l);
+    exe::hostcountry_post_host_news(this, l);
+    exe::llist_destructor_llist(l);
 }
 
 /// writes CM3_TEMP\HostCountry.tmp: the count (+4, u16) and 0x22 bytes per host from [+0], without checking the writes;

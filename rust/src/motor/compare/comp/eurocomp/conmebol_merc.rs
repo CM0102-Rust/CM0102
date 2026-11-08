@@ -103,8 +103,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_select_invited_club
         lo == 0 && lr == 0
     };
     if lr != 0 && lr != lo {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(lr);
+        exe::crt_free(lr);
     }
     SCOREBOARD.record(igual && a == b && list, || format!("conmebol_merc_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", this, a, b, igual, list, k));
     a

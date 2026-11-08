@@ -54,8 +54,7 @@ pub(crate) unsafe extern "thiscall" fn compare_awol_daily_update(this: usize) {
 pub(crate) unsafe extern "thiscall" fn compare_has_missed_training(this: usize, person: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HAS_MISSED_TRAINING);
     if person != 0 && read_i32(person) < read_i32(G_STAFF_COUNT) && read_u8(read_usize(this + awol_fields::PERSON_FLAGS).wrapping_add(read_i32(person) as usize)) & 2 != 0 {
-        let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-        let k = contract_of(read_usize(G_CONTRACT_MANAGER), person);
+        let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
         if k == 0 || read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(club::SIZE)) == 0 {
             // simplification: removes the foul from the list (frees the node): original only
             return o(this, person);
