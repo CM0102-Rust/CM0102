@@ -160,15 +160,15 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
 /// notícia 4 (as candidaturas: competição, ano e as seis nações); senão a notícia 5 (a escolhida: competição, ano e as
 /// duas sedes dela, a primeira na padrão fixa), montadas por 0x77bbe0/0x785790 e entregues aos técnicos do continente
 /// da competição (tabela [0xae23d0], 0x6b bytes, +0x59; 0x786640) ou a todos (0x786780).
-pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, lista: usize) {
-    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
-    let dado: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let continente: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_CONTINENT_MANAGERS);
-    let todos: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
+pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize) {
+    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
+    let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let given: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
+    let continent: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_CONTINENT_MANAGERS);
+    let all: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
     crate::comparacao::ramo("cqo_3 noticia das sedes");
-    write_u32(lista + 0xa, read_u32_as_usize(lista + 2) as u32);
-    let mut it = proximo(lista);
+    write_u32(list + 0xa, read_u32_as_usize(list + 2) as u32);
+    let mut it = next(list);
     while it != 0 {
         let e = read_u32_as_usize(it);
         let k = *((e + 0x1e) as *const i8);
@@ -180,33 +180,33 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, lista: usize
             let mut n = [0u8; 0xe8];
             let p = n.as_mut_ptr() as usize;
             if k == -1 {
-                construir(p, 4, 0);
-                dado(p, 0, read_u32_as_usize(read_u32_as_usize(it)) as u32);
-                dado(p, 1, read_u16(read_u32_as_usize(it) + 4) as u32);
+                construct(p, 4, 0);
+                given(p, 0, read_u32_as_usize(read_u32_as_usize(it)) as u32);
+                given(p, 1, read_u16(read_u32_as_usize(it) + 4) as u32);
                 for (i, off) in [6usize, 0xa, 0xe, 0x12, 0x16, 0x1a].iter().enumerate() {
-                    dado(p, 2 + i as u32, read_u32_as_usize(read_u32_as_usize(it) + off) as u32);
+                    given(p, 2 + i as u32, read_u32_as_usize(read_u32_as_usize(it) + off) as u32);
                 }
             } else {
-                construir(p, 5, 0);
+                construct(p, 5, 0);
                 let mut b = *((read_u32_as_usize(it) + 0x1e) as *const i8);
                 if b == -3 {
                     b = 0;
                 }
-                dado(p, 0, read_u32_as_usize(read_u32_as_usize(it)) as u32);
-                dado(p, 1, read_u16(read_u32_as_usize(it) + 4) as u32);
+                given(p, 0, read_u32_as_usize(read_u32_as_usize(it)) as u32);
+                given(p, 1, read_u16(read_u32_as_usize(it) + 4) as u32);
                 let o = (b as i32 * 8) as usize;
-                dado(p, 2, read_u32_as_usize(read_u32_as_usize(it).wrapping_add(o) + 6) as u32);
-                dado(p, 3, read_u32_as_usize(read_u32_as_usize(it).wrapping_add(o) + 0xa) as u32);
+                given(p, 2, read_u32_as_usize(read_u32_as_usize(it).wrapping_add(o) + 6) as u32);
+                given(p, 3, read_u32_as_usize(read_u32_as_usize(it).wrapping_add(o) + 0xa) as u32);
             }
             let id = read_u32_as_usize(read_u32_as_usize(it));
             let c = read_u32_as_usize(read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)) + 0x59);
             if c != 0 {
-                continente(read_u32_as_usize(G_NEWS), p, c);
+                continent(read_u32_as_usize(G_NEWS), p, c);
             } else {
-                todos(read_u32_as_usize(G_NEWS), p);
+                all(read_u32_as_usize(G_NEWS), p);
             }
         }
-        it = proximo(lista);
+        it = next(list);
     }
 }
 
@@ -221,20 +221,20 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, lista: usize
 /// num bloco novo ([this], 0x944e46); falhando a leitura, a caixa (linhas 0x448/0x452/0x45c), fecha (0x945a09) e, com
 /// o bloco, o solta (0x9452ca). Devolve 1 com tudo lido, 0 sem o arquivo ou com erro.
 pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
-    let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
+    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
+    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
+    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
+    let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let f = abrir(caminho(0x987da0, 0x9cf10c), 0x98f928);
+    let f = open(path(0x987da0, 0x9cf10c), 0x98f928);
     if f == 0 {
         crate::comparacao::ramo("cqo_3 sem o arquivo");
         return 0;
     }
-    if ler(this + 4, 2, 1, f) != 1 {
+    if read(this + 4, 2, 1, f) != 1 {
         show_error_at(0x9cf0d8, 0x448);
-        fechar(f);
+        close(f);
         return 0;
     }
     let n = read_u16(this + 4) as i16 as i32;
@@ -242,17 +242,17 @@ pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
     write_u32(this, b as u32);
     if b == 0 {
         show_error_at(0x9cf0d8, 0x452);
-        fechar(f);
+        close(f);
         return 0;
     }
     let n = read_u16(this + 4) as i16 as i32 as u32;
-    if ler(b, 0x22, n, f) != read_u16(this + 4) as i16 as i32 as u32 {
+    if read(b, 0x22, n, f) != read_u16(this + 4) as i16 as i32 as u32 {
         show_error_at(0x9cf0d8, 0x45c);
-        fechar(f);
+        close(f);
         soltar(read_u32_as_usize(this));
         return 0;
     }
-    fechar(f);
+    close(f);
     1
 }
 
@@ -269,9 +269,9 @@ pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
 pub(crate) unsafe fn host_pair(e: usize, k: i8, a: *mut u32, b: *mut u32) -> u8 {
     let off = if k >= 0 { k as i32 * 8 } else { 0 } as usize;
     *a = read_u32(e + 6 + off);
-    let segunda = read_u32(e + 0xa + off);
-    *b = segunda;
-    (*a != u32::MAX) as u8 + (segunda != u32::MAX) as u8
+    let second = read_u32(e + 0xa + off);
+    *b = second;
+    (*a != u32::MAX) as u8 + (second != u32::MAX) as u8
 }
 
 /// the host (and the second host, for co-hosted editions) of a competition in a year: the winning bid, or the default
@@ -282,19 +282,19 @@ pub(crate) unsafe fn host_pair(e: usize, k: i8, a: *mut u32, b: *mut u32) -> u8 
 /// `ano` (short): a primeira entrada da competição com o ano (ou ano 0) que já tem a candidatura escolhida (as duas
 /// sedes dela), a padrão fixa ou a votação aberta (a sede padrão), ou, com `padrao`, a votação ainda fechada (a padrão).
 /// Grava as duas e devolve quantas valem; sem entrada, 0 sem gravar.
-pub(crate) unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, year: u32, a: *mut u32, b: *mut u32, default: u32) -> u32 {
     let n = read_u16(this + 4) as i16;
     let mut e = read_u32(this) as usize;
     let mut i = 0i16;
     while i < n {
         if read_u32(e) == comp {
             let ae = read_u16(e + 4);
-            if ae == ano as u16 || ae == 0 {
+            if ae == year as u16 || ae == 0 {
                 let k = *((e + 0x1e) as *const i8);
                 if k > -1 {
                     return host_pair(e, k, a, b) as u32;
                 }
-                if k == -3 || k == -1 || padrao != 0 {
+                if k == -3 || k == -1 || default != 0 {
                     crate::comparacao::ramo("cqj_3 sede padrao");
                     return host_pair(e, -1, a, b) as u32; // cqj3: a sede padrão
                 }
@@ -339,13 +339,13 @@ pub(crate) unsafe extern "thiscall" fn find_next_hosts(this: usize, comp: u32, a
 /// Search key compare: year (+4) then day (+0x1f), unsigned.
 ///
 /// [pt] A chave da busca (a 0x5fb3f0 compara o ano +4 e depois o dia +0x1f, sem sinal).
-pub(crate) fn compare_year_day(e: usize, ano: u16, dia: u16) -> i32 {
+pub(crate) fn compare_year_day(e: usize, year: u16, day: u16) -> i32 {
     unsafe {
         let ae = read_u16(e + 4);
-        if ae != ano {
-            ae as i32 - ano as i32
+        if ae != year {
+            ae as i32 - year as i32
         } else {
-            read_u16(e + 0x1f) as i32 - dia as i32
+            read_u16(e + 0x1f) as i32 - day as i32
         }
     }
 }
@@ -354,16 +354,16 @@ pub(crate) fn compare_year_day(e: usize, ano: u16, dia: u16) -> i32 {
 ///
 /// [pt] A primeira entrada (de `inicio` a `fim`, ordenadas por ano e dia) com o ano e o dia da chave (bsearch 0x946464 com a
 /// 0x5fb3f0 e o recuo até a primeira igual), ou 0.
-pub(crate) unsafe fn first_entry_for_date(inicio: usize, n: i16, ano: u16, dia: u16) -> usize {
-    let busca: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-    let mut chave = [0u8; 0x22];
-    chave[4..6].copy_from_slice(&ano.to_le_bytes());
-    chave[0x1f..0x21].copy_from_slice(&dia.to_le_bytes());
-    let mut p = busca(chave.as_ptr(), inicio, n as i32, 0x22, 0x5fb3f0);
+pub(crate) unsafe fn first_entry_for_date(start: usize, n: i16, year: u16, day: u16) -> usize {
+    let search: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
+    let mut key = [0u8; 0x22];
+    key[4..6].copy_from_slice(&year.to_le_bytes());
+    key[0x1f..0x21].copy_from_slice(&day.to_le_bytes());
+    let mut p = search(key.as_ptr(), start, n as i32, 0x22, 0x5fb3f0);
     if p == 0 {
         return 0;
     }
-    while p > inicio && compare_year_day(p - 0x22, ano, dia) == 0 {
+    while p > start && compare_year_day(p - 0x22, year, day) == 0 {
         p -= 0x22;
     }
     p
@@ -382,33 +382,33 @@ pub(crate) unsafe fn first_entry_for_date(inicio: usize, n: i16, ano: u16, dia: 
 /// a candidatura vencedora é sorteada (0x90cfc0(3)). No 1º de janeiro, as entradas de anos passados (≠ 0) andam o
 /// intervalo (+0x21) e, fora da padrão fixa, a votação fecha (−2); a tabela é reordenada (qsort 0x945333 com 0x5fb3f0).
 /// Por fim a notícia das entradas da lista (0x5faec0).
-pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, hoje: usize) {
-    let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
-    let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
+pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, today: usize) {
+    let list_new: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
+    let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
     let por: unsafe extern "thiscall" fn(usize, *const usize, u32) = core::mem::transmute(FN_LLIST_ADD_TAIL);
     let data: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> *const [u16; 4] = core::mem::transmute(FN_DATE_DATE_549F70);
     let europeias: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_HOSTCOUNTRY_PICK_EUROPEAN_FINAL_HOSTS);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let sort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let noticia: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_HOSTCOUNTRY_POST_HOST_NEWS);
     let n = read_u16(this + 4) as i16;
-    let inicio = read_u32(this) as usize;
-    let fim = inicio.wrapping_add((n as i32 * 0x22 - 0x22) as usize);
-    let mut lista = [0u8; 0x10];
-    let l = lista.as_mut_ptr() as usize;
-    lista_nova(l);
-    let ano = read_u16(hoje + 2);
-    let dia = read_u16(hoje);
-    if ano != 0x7d1 {
+    let start = read_u32(this) as usize;
+    let end = start.wrapping_add((n as i32 * 0x22 - 0x22) as usize);
+    let mut list = [0u8; 0x10];
+    let l = list.as_mut_ptr() as usize;
+    list_new(l);
+    let year = read_u16(today + 2);
+    let day = read_u16(today);
+    if year != 0x7d1 {
         let mut d = [0u16; 4];
-        let r = *data(&mut d, 1, 6, ano as u32, u32::MAX);
-        if r[1] == ano && r[0] == dia {
+        let r = *data(&mut d, 1, 6, year as u32, u32::MAX);
+        if r[1] == year && r[0] == day {
             europeias(this);
         }
     }
-    let mut p = first_entry_for_date(inicio, n, ano.wrapping_add(8), dia);
+    let mut p = first_entry_for_date(start, n, year.wrapping_add(8), day);
     if p != 0 {
-        while p <= fim && compare_year_day(p, ano.wrapping_add(8), dia) == 0 {
+        while p <= end && compare_year_day(p, year.wrapping_add(8), day) == 0 {
             let k = (p + 0x1e) as *mut u8;
             if *k == 0xfe {
                 *k = 0xff; // cqj3: a votação abre
@@ -420,9 +420,9 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, ho
             p += 0x22;
         }
     }
-    let mut p = first_entry_for_date(inicio, n, ano.wrapping_add(5), dia);
+    let mut p = first_entry_for_date(start, n, year.wrapping_add(5), day);
     if p != 0 {
-        while p <= fim && compare_year_day(p, ano.wrapping_add(5), dia) == 0 {
+        while p <= end && compare_year_day(p, year.wrapping_add(5), day) == 0 {
             por(l, &p, 4);
             let k = (p + 0x1e) as *mut u8;
             if *k == 0xff || *k == 0xfe {
@@ -432,12 +432,12 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, ho
             p += 0x22;
         }
     }
-    if dia == 0 {
+    if day == 0 {
         let mut i = 0i16;
         while i < read_u16(this + 4) as i16 {
             let e = (read_u32(this) as usize).wrapping_add(i as i32 as usize * 0x22);
             let ae = read_u16(e + 4);
-            if ae < ano && ae != 0 {
+            if ae < year && ae != 0 {
                 crate::comparacao::ramo("cqj_3 edicao seguinte");
                 core::ptr::write_unaligned((e + 4) as *mut u16, ae.wrapping_add(*((e + 0x21) as *const i8) as i16 as u16)); // cqj3: o intervalo
                 if *((e + 0x1e) as *const u8) != 0xfd {
@@ -446,10 +446,10 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, ho
             }
             i += 1;
         }
-        ordenar(read_u32(this) as usize, read_u16(this + 4) as i16 as i32, 0x22, 0x5fb3f0);
+        sort(read_u32(this) as usize, read_u16(this + 4) as i16 as i32, 0x22, 0x5fb3f0);
     }
     noticia(this, l);
-    destruir(l);
+    destroy(l);
 }
 
 

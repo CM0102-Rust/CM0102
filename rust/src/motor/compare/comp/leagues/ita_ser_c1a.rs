@@ -34,15 +34,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_play_off_stages(this: usi
 }
 
 /// Comparer for `ita_ser_c1a_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ITA_SER_C1A_CREATE_SCHEDULE);
-    compare_c1_schedule("ita_ser_c1a_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| ita_ser_c1a_create_schedule(this, fase, r, e, l))
+    compare_c1_schedule("ita_ser_c1a_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| ita_ser_c1a_create_schedule(this, stage, r, e, l))
 }
 
 /// Comparer for `ita_ser_c1a_set_club_progress` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_club_progress(this: usize, clube: usize, stage: u32, current: u32, best: u32, worst: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_ITA_SER_C1A_SET_CLUB_PROGRESS);
-    compare_c1_club_progress("ita_ser_c1a_set_club_progress", this, clube, || o(this, clube, fase, atual, melhor, pior), || ita_ser_c1a_set_club_progress(this, clube, fase, atual, melhor, pior))
+    compare_c1_club_progress("ita_ser_c1a_set_club_progress", this, clube, || o(this, clube, stage, current, best, worst), || ita_ser_c1a_set_club_progress(this, clube, stage, current, best, worst))
 }
 
 /// Comparer for `ita_ser_c1a_set_up_fixed_fixtures` (comparison mode: see the header of motor.rs).
@@ -52,9 +52,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_up_fixed_fixture
 }
 
 /// Comparer for `construct_ita_ser_c1a` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_c1a(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_c1a(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_SER_C1A);
-    compare_italian_constructor("construct_ita_ser_c1a", this, ano, registro, &SERIE_C1A_DIVISION, || o(this, ano, registro))
+    compare_italian_constructor("construct_ita_ser_c1a", this, year, record, &SERIE_C1A_DIVISION, || o(this, year, record))
 }
 
 /// Comparer for `ita_ser_c1a_set_up_rules` (comparison mode: see the header of motor.rs).

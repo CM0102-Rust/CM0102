@@ -21,7 +21,7 @@ pub(crate) unsafe fn call_cup_virtual(this: usize, o: usize) -> i32 {
 /// word) sobe `ano` (1); +0xab = 0 e +0xb1 = 0 (bytes); então, cada um com a sua caixa se devolver negativo: os inscritos
 /// (`inscritos`, mov ecx, esi; call direto -> thiscall, ret 0), as rodadas (virtual +0x8c, create_round_table pela fase
 /// −1) e a árvore dos confrontos (virtual +0x94); por fim as posições previstas (virtual +0x5c), cujo eax ela devolve.
-pub(crate) unsafe fn start_new_cup_season(this: usize, inscritos: usize, arquivo: usize, linhas: [u32; 3], ano: i16, ramo: &'static str) -> u32 {
+pub(crate) unsafe fn start_new_cup_season(this: usize, inscritos: usize, file: usize, rows: [u32; 3], year: i16, ramo: &'static str) -> u32 {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     for o in [0xa7usize, 0xa3] {
@@ -50,22 +50,22 @@ pub(crate) unsafe fn start_new_cup_season(this: usize, inscritos: usize, arquivo
         arquivar(e, 1);
     }
     let a = read_i16(this + 0x40);
-    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
+    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(year));
     crate::comparacao::ramo(ramo);
     *((this + 0xab) as *mut u8) = 0;
     *((this + 0xb1) as *mut u8) = 0;
     let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(inscritos);
     // simplification: nas caixas a original sai com o eax da caixa (0x5e8290); quem chama a virada não lê a devolução
     if inscritos(this) < 0 {
-        show_error_at(arquivo, linhas[0]);
+        show_error_at(file, rows[0]);
         return 0;
     }
     if call_cup_virtual(this, 0x8c) < 0 {
-        show_error_at(arquivo, linhas[1]);
+        show_error_at(file, rows[1]);
         return 0;
     }
     if call_cup_virtual(this, 0x94) < 0 {
-        show_error_at(arquivo, linhas[2]);
+        show_error_at(file, rows[2]);
         return 0;
     }
     call_cup_virtual(this, 0x5c) as u32
@@ -75,11 +75,11 @@ pub(crate) unsafe fn start_new_cup_season(this: usize, inscritos: usize, arquivo
 ///
 /// [pt] O comparador da virada: só a original (simplification: libera as tabelas e refaz os inscritos, as rodadas e a árvore, que
 /// alocam e sorteiam; não pode rodar duas vezes), conferindo o que só ela garante: o ano (+0x40) sobe um.
-pub(crate) unsafe fn compare_cup_new_season(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
-    let antes = read_i16(this + 0x40);
+pub(crate) unsafe fn compare_cup_new_season(name: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
+    let before = read_i16(this + 0x40);
     let r = original();
-    let depois = read_i16(this + 0x40);
-    PLACAR.registrar(depois == antes.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", nome, this, antes, depois));
+    let after = read_i16(this + 0x40);
+    PLACAR.registrar(after == before.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", name, this, before, after));
     r
 }
 
@@ -133,8 +133,8 @@ pub(crate) const COPA_DO_BRASIL_ROUNDS: [EngCcCupCupRound; 7] = [
 ///
 /// [pt] { 0x427700 } (thiscall, ret 0x10, bra_cup.cpp; a virtual +0x3c da Copa do Brasil): `BraCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa4 sem memória.
-pub(crate) unsafe extern "thiscall" fn bra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &COPA_DO_BRASIL_ROUNDS, 0x98a3bc, 0xa4, "cqo_12 tabela da copa do brasil")
+pub(crate) unsafe extern "thiscall" fn bra_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+    eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &COPA_DO_BRASIL_ROUNDS, 0x98a3bc, 0xa4, "cqo_12 tabela da copa do brasil")
 }
 
 
@@ -192,8 +192,8 @@ pub(crate) unsafe fn set_up_brazil_cup_rounds(this: usize) -> i32 {
     *((this + 0x49) as *mut u8) = 7;
     *((this + 0x4a) as *mut u8) = 3; // cqo12: as substituições da Copa do Brasil
     core::ptr::write_unaligned((this + 0x28) as *mut u32, 0x7a120);
-    let tabela: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
-    let t = tabela(this, 0xffff_ffff, this + 0x3c, this + 0x3a, 0);
+    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
+    let t = table(this, 0xffff_ffff, this + 0x3c, this + 0x3a, 0);
     core::ptr::write_unaligned((this + 0xa3) as *mut u32, t as u32);
     1
 }

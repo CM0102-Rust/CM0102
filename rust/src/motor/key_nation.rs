@@ -27,8 +27,8 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nacao: usize) -> u8 {
 /// (+0x71), ou 3 (sem nação, 3). Pelas aposentadorias 0x7a7310, pelo adiamento pelo tempo 0x923630, pelos dias até a
 /// temporada 0x59b4c0, pelo contrato desejado 0x85fc50, pelo ano da temporada 0x669950 e outras. Sem contador.
 pub(crate) unsafe extern "C" fn key_nation_index_of_club(clube: usize) -> u8 {
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    if selecao(clube) == 0 {
+    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    if national_team(clube) == 0 {
         let nacao = read_usize(clube + club::NATION);
         if nacao != 0 && *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 {
             for k in 0..0x23usize {
@@ -40,7 +40,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(clube: usize) -> u8 {
             return 0;
         }
     }
-    if selecao(clube) != 0 {
+    if national_team(clube) != 0 {
         return 1;
     }
     let nacao = read_usize(clube + club::NATION); // cpu1: a nacao do continente
@@ -56,9 +56,9 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(clube: usize) -> u8 {
 ///
 /// [pt] Se o clube cai na caixa "Error" da 0x669360 (não é seleção, nação escolhida fora da tabela).
 pub(crate) unsafe fn hits_key_nation_error(clube: usize) -> bool {
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let nacao = read_usize(clube + club::NATION);
-    selecao(clube) == 0
+    national_team(clube) == 0
         && nacao != 0
         && *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0
         && !(0..0x23usize).any(|k| read_usize(G_LEAGUE_TABLE + 72 * k) == nacao)
@@ -74,18 +74,18 @@ pub(crate) unsafe fn hits_key_nation_error(clube: usize) -> bool {
 /// original devolve só os 16 bits baixos com sentido (os altos são a sobra da vaga empurrada). Pelos registros do clube
 /// 0x444930/0x447430/0x448ad0 e pela história do jogador 0x7c3e40/0x7c5fe0.
 pub(crate) unsafe extern "C" fn key_nation_get_club_season_year(clube: usize) -> u16 {
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let linha: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
-    let ano = *(G_CURRENT_DATE_YEAR as *const u16);
-    if clube != 0 && selecao(clube) == 0 {
-        let k = linha(clube) as i8 as isize;
+    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let row: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
+    let year = *(G_CURRENT_DATE_YEAR as *const u16);
+    if clube != 0 && national_team(clube) == 0 {
+        let k = row(clube) as i8 as isize;
         let e = (0xb63d60isize + 72 * k) as usize;
-        let inicio = core::ptr::read_unaligned((e + 0x15) as *const u16);
-        if (read_usize(e + 0x17) != 0 || inicio < 0x3c) && (*(G_CURRENT_DATE as *const i16) as i32) < inicio as i32 {
-            return ano.wrapping_sub(1); // cpu1: o ano anterior
+        let start = core::ptr::read_unaligned((e + 0x15) as *const u16);
+        if (read_usize(e + 0x17) != 0 || start < 0x3c) && (*(G_CURRENT_DATE as *const i16) as i32) < start as i32 {
+            return year.wrapping_sub(1); // cpu1: o ano anterior
         }
     }
-    ano
+    year
 }
 
 
@@ -94,13 +94,13 @@ pub(crate) unsafe extern "C" fn key_nation_get_club_season_year(clube: usize) ->
 /// Writes to dst (if not null) the date built by 0x549ef0 from day and year (with leap flag).
 ///
 /// [pt] Grava em `dst` (se não nulo) a data (dia, ano) montada pela 0x549ef0 (com o bissexto), como a cópia 0x417c10.
-pub(crate) unsafe fn write_date(dst: usize, dia: i16, ano: u16) {
+pub(crate) unsafe fn write_date(dst: usize, day: i16, year: u16) {
     if dst == 0 {
         return;
     }
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let mut b = [0u8; 8];
-    data(b.as_mut_ptr(), dia as u16 as u32, ano as u32);
+    data(b.as_mut_ptr(), day as u16 as u32, year as u32);
     core::ptr::copy_nonoverlapping(b.as_ptr(), dst as *mut u8, 8);
 }
 
@@ -118,48 +118,48 @@ pub(crate) unsafe fn write_date(dst: usize, dia: i16, ano: u16) {
 /// datas vão para `início` e `fim` quando não nulos. Pelo clube na temporada 0x547770, pela forma física 0x62a920,
 /// 0x62c680 e 0x62ce30, pelo mês do fim da temporada 0x4d45f0 e pela data da transferência 0x8cee70. TapeCall a cada
 /// jogador: sem contador.
-pub(crate) unsafe extern "C" fn key_nation_club_in_season(clube: usize, inicio: usize, fim: usize) -> u32 {
-    let mut linha = G_LEAGUE_EUROPE_NATION;
+pub(crate) unsafe extern "C" fn key_nation_club_in_season(clube: usize, start: usize, end: usize) -> u32 {
+    let mut row = G_LEAGUE_EUROPE_NATION;
     let mut c: i16 = 0x28;
     let nacao = read_usize(clube + club::NATION);
     if nacao != 0 {
         if let Some(k) = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nacao) {
-            linha = 0xb63d60 + 72 * k;
-            c = read_i16(linha + 0x39);
+            row = 0xb63d60 + 72 * k;
+            c = read_i16(row + 0x39);
         }
     }
-    let a = read_i16(linha + 0x2a);
+    let a = read_i16(row + 0x2a);
     let t = *(G_CURRENT_DATE as *const i16);
     let y = *(G_CURRENT_DATE_YEAR as *const u16);
     if a > c {
         if t > a {
-            write_date(inicio, a, y);
-            if fim != 0 {
-                write_date(fim, c, y.wrapping_add(1)); // cpu2: o fim no ano seguinte
+            write_date(start, a, y);
+            if end != 0 {
+                write_date(end, c, y.wrapping_add(1)); // cpu2: o fim no ano seguinte
             }
             return 1;
         }
         if t < c {
-            write_date(inicio, a, y.wrapping_sub(1));
-            write_date(fim, c, y);
+            write_date(start, a, y.wrapping_sub(1));
+            write_date(end, c, y);
             return 1; // cpu2: antes do fim, na temporada
         }
-        write_date(inicio, a, y);
-        write_date(fim, c, y);
+        write_date(start, a, y);
+        write_date(end, c, y);
         return 0; // cpu2: entre o fim e o inicio, fora
     }
     if t < a {
-        write_date(inicio, a, y);
-        write_date(fim, c, y);
+        write_date(start, a, y);
+        write_date(end, c, y);
         return 0;
     }
     if t > c {
-        write_date(inicio, a, y.wrapping_add(1));
-        write_date(fim, c, y.wrapping_add(1));
+        write_date(start, a, y.wrapping_add(1));
+        write_date(end, c, y.wrapping_add(1));
         return 1;
     }
-    write_date(inicio, a, y);
-    write_date(fim, c, y);
+    write_date(start, a, y);
+    write_date(end, c, y);
     1 // cpu2: entre o inicio e o fim do ano
 }
 
@@ -258,15 +258,15 @@ pub(crate) unsafe extern "C" fn key_nation_is_international_comp(comp: usize) ->
 pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
     let nacao = read_usize(comp + competition::CLUB_COMP_NATION);
     if nacao != 0 {
-        let linha = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nacao); // cpt4: a busca da nacao
-        return match linha {
+        let row = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nacao); // cpt4: a busca da nacao
+        return match row {
             Some(k) => k as u8, // cpt4: a linha da nacao
             None => 4,
         };
     }
     let id = read_usize(comp);
-    let copa = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_CONCACAF_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_EUROPEAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_SOUTH_AMERICAN_QUALIFYING_SECT]; // cpt4: a Copa e as eliminatorias
-    if copa.iter().any(|&g| read_usize(g) == id) {
+    let cup = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_CONCACAF_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_EUROPEAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_SOUTH_AMERICAN_QUALIFYING_SECT]; // cpt4: a Copa e as eliminatorias
+    if cup.iter().any(|&g| read_usize(g) == id) {
         return 0;
     }
     let internacional: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_IS_INTERNATIONAL_COMP);

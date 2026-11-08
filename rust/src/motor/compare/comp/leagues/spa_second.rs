@@ -4,15 +4,15 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/leagues/spa_second.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `spa_second_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_spa_second_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_spa_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SPA_SECOND_CREATE_SCHEDULE);
-    spa_second_compare_schedule_all_stages("spa_second_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| spa_second_create_schedule(this, fase, r, e, l))
+    spa_second_compare_schedule_all_stages("spa_second_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| spa_second_create_schedule(this, stage, r, e, l))
 }
 
 /// Comparer for `construct_spa_second` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_spa_second(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_spa_second(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_SPA_SECOND);
-    compare_division_league_ctor("construct_spa_second", this, ano, registro, &SPANISH_SEGUNDA, || o(this, ano, registro))
+    compare_division_league_ctor("construct_spa_second", this, year, record, &SPANISH_SEGUNDA, || o(this, year, record))
 }
 
 /// Comparer for `spa_second_set_up_rules` (comparison mode: see the header of motor.rs).
@@ -29,25 +29,25 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_second_create_table(this: us
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_SECOND_CREATE_TABLE);
     let n = read_u32_as_usize(G_CLUB_COUNT) as i32;
     let base = read_u32_as_usize(G_CLUB_TABLE);
-    let mut plano: Vec<(usize, bool)> = Vec::new();
+    let mut plan: Vec<(usize, bool)> = Vec::new();
     for i in 0..n.max(0) as usize {
         let c = base + i * club::SIZE;
         if spa_lower_is_in_comp(c, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
-            plano.push((c, is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION)));
-            if plano.len() == 0x16 {
+            plan.push((c, is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION)));
+            if plan.len() == 0x16 {
                 break;
             }
         }
     }
     let r = o(this);
     let t = read_u32_as_usize(this + 0xb1);
-    let mut ok = r == (plano.len() == 0x16) as u32 && read_i16(this + 0x3e) == 0x16 && t != 0;
+    let mut ok = r == (plan.len() == 0x16) as u32 && read_i16(this + 0x3e) == 0x16 && t != 0;
     if ok {
-        for (k, &(c, b)) in plano.iter().enumerate() {
+        for (k, &(c, b)) in plan.iter().enumerate() {
             let l = t + k * 0x3b;
             ok = ok && read_u32_as_usize(l) == c && (!b || *((l + 0x37) as *const u8) == 0xfc);
         }
     }
-    PLACAR.registrar(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plano));
+    PLACAR.registrar(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plan));
     r
 }

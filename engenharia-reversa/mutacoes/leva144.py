@@ -2,10 +2,10 @@
 MUTACOES = [
     ('c_canto', "x = if byte(m, 0x8ea7) == 0 { sortear(4) as i8 } else { 8 - sortear(4) as i8 };", "x = if byte(m, 0x8ea7) == 0 { sortear(4) as i8 } else { 7 - sortear(4) as i8 };", "conducao corner sem companheiro"),
     ('c_lateral', "x = 7 - sortear(7) as i8;", "x = 6 - sortear(7) as i8;", "conducao throw_in sorteada"),
-    ('c_falta', "y = if lado == 0 { byte(m, 0x8eaf).wrapping_sub(2) }", "y = if lado == 0 { byte(m, 0x8eaf).wrapping_sub(3) }", "conducao falta na area"),
+    ('c_falta', "y = if side == 0 { byte(m, 0x8eaf).wrapping_sub(2) }", "y = if side == 0 { byte(m, 0x8eaf).wrapping_sub(3) }", "conducao falta na area"),
     ('c_penalti', "let a4 = if sortear(100) == 0 { 5 } else { 1 };", "let a4 = if sortear(100) == 0 { 4 } else { 1 };", "conducao penalty"),
     ('c_pressao', "l58 = match_pl_ftol(-(k as f64 * read_f64_at(0x969040)));", "l58 = match_pl_ftol(-(k as f64 * read_f64_at(0x969040) * 1.1));"),
-    ('c_passe', "l30 = (l49 as i32 + l27 as i32 + soma).wrapping_mul(l28) / 5;", "l30 = (l49 as i32 + l27 as i32 + soma).wrapping_mul(l28) / 6;"),
+    ('c_passe', "l30 = (l49 as i32 + l27 as i32 + sum).wrapping_mul(l28) / 5;", "l30 = (l49 as i32 + l27 as i32 + sum).wrapping_mul(l28) / 6;"),
     ('c_avancar', "l14 = 4000 - l30;", "l14 = 4100 - l30;", "conducao instrucao de avancar"),
     ('c_perto', "+ *w(p, 0x29) as f64 * read_f64_at(0x968978));", "+ *w(p, 0x29) as f64 * read_f64_at(0x968978) * 1.1);"),
     ('c_longe', "let n = bl / 7 + sortear(3) + 3;", "let n = bl / 7 + sortear(3) + 4;"),
@@ -21,7 +21,7 @@ MUTACOES = [
     ('c_acao', "acao = if sortear(if *w(p, 0x198) != 0x10 { 2 } else { 10 }) != 0 { 4 } else { 2 };", "acao = if sortear(if *w(p, 0x198) != 0x10 { 3 } else { 10 }) != 0 { 4 } else { 2 };"),
     ('c_vira', "if y0() < 9 { y0() + 3 } else { 0xb }", "if y0() < 9 { y0() + 2 } else { 0xb }", "conducao vira para o gol"),
     ('c_tabela', "(*w(p, 0x29) as i32 / 3 + 0x113) as i16);", "(*w(p, 0x29) as i32 / 3 + 0x114) as i16);", "conducao tabela devolvida"),
-    ('c_narra', "chamar(FN_MATCH_EVENTS_ADD_EVENT, u(m, 0x8f7a), [0x1f44,", "chamar(FN_MATCH_EVENTS_ADD_EVENT, u(m, 0x8f7a), [0x1f45,"),
+    ('c_narra', "call(FN_MATCH_EVENTS_ADD_EVENT, u(m, 0x8f7a), [0x1f44,", "call(FN_MATCH_EVENTS_ADD_EVENT, u(m, 0x8f7a), [0x1f45,"),
     ('c_media', "v / 2 + la4 / 2", "v / 2 + la4 / 3"),
     ('c_ponta', "nc += 500;", "nc += 600;"),
 ]

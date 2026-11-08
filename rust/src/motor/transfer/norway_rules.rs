@@ -6,11 +6,11 @@ use super::*;
 ///
 /// [pt] O construtor das regras de uma nação: a base (0x8e84a0, original, thiscall com os 5 argumentos de quem chama), a
 /// vtable da nação e as janelas.
-pub(crate) unsafe fn construct_nation_rules(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], arquivo: usize, linha: u32) {
+pub(crate) unsafe fn construct_nation_rules(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], file: usize, row: u32) {
     let base: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_TRANSFER_RULES_TRANSFER_RULES);
     base(this, a[0], a[1], a[2], a[3], a[4]);
     core::ptr::write_unaligned(this as *mut u32, vtable);
-    set_transfer_windows(this, n, t, arquivo, linha);
+    set_transfer_windows(this, n, t, file, row);
 }
 
 

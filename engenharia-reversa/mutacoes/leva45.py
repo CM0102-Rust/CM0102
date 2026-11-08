@@ -1,7 +1,7 @@
 # Mutacoes da leva45 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva45.py
 MUTACOES = [
     ('t_limite', "{ 8 } else { 1 };", "{ 7 } else { 1 };"),
-    ('t_alvo0', "let limit: i32 = if alvo != 0 && alvo == ", "let limit: i32 = if alvo == "),
+    ('t_alvo0', "let limit: i32 = if target != 0 && target == ", "let limit: i32 = if target == "),
     ('t_110', "1 => 0x6e - match_pl_ftol(c) as i8 as i32,", "1 => 0x6f - match_pl_ftol(c) as i8 as i32,"),
     ('t_i8', "1 => 0x6e - match_pl_ftol(c) as i8 as i32,", "1 => 0x6e - match_pl_ftol(c),"),
     ('t_k2', "2 => match_pl_ftol(read_f64_at(0x96d860) / v),", "2 => match_pl_ftol(read_f64_at(0x96aff8) / v),"),

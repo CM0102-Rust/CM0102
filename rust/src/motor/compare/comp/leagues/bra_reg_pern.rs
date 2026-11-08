@@ -58,9 +58,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_create_semi_final_s
 }
 
 /// Comparer for `construct_bra_reg_pern` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_pern(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_pern(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_PERN);
-    bra_reg_northeast_compare_state_league_ctor("construct_bra_reg_pern", this, ano, registro, &PERNAMBUCANO_STATE_CHAMPIONSHIP, || o(this, ano, registro))
+    bra_reg_northeast_compare_state_league_ctor("construct_bra_reg_pern", this, year, record, &PERNAMBUCANO_STATE_CHAMPIONSHIP, || o(this, year, record))
 }
 
 /// Comparer for `bra_reg_pern_create_table` (comparison mode: see the header of motor.rs).

@@ -8,11 +8,11 @@ use super::*;
 /// [pt] O comparador da fase seguinte: só a original (simplification: ao chegar a 2 monta a final, que aloca e sorteia), com o
 /// plano: na última fase, +0x30 igual; senão +0x30 + 1 (a final grava 2, o mesmo valor).
 pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_advance_stage(this: usize) {
-    let antes = read_usize(this + 0x30) as i32;
-    let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
+    let before = read_usize(this + 0x30) as i32;
+    let last = before >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_JAP_J1_ADVANCE_STAGE)(this);
-    let depois = read_usize(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
+    let after = read_usize(this + 0x30) as i32;
+    PLACAR.registrar(after == if last { before } else { before + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this, before, after));
 }
 
 /// Comparer for `create_championship_final_stage` (comparison mode: see the header of motor.rs).
@@ -23,13 +23,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_advance_stage(this: usize
 pub(crate) unsafe extern "thiscall" fn comparar_create_championship_final_stage(this: usize) {
     let (a, b) = (half_champion(this, 0), half_champion(this, 1));
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_CHAMPIONSHIP_FINAL_STAGE)(this);
-    let fase = read_usize(read_usize(this + 0xc) + 8);
-    let igual = fase != 0 && {
-        let l = read_usize(fase + 0xa7);
+    let stage = read_usize(read_usize(this + 0xc) + 8);
+    let same = stage != 0 && {
+        let l = read_usize(stage + 0xa7);
         let (x, y) = (read_usize(l), read_usize(l + 6));
-        read_i16(fase + 0x3e) == 2 && read_usize(fase + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + 0x30) == 2
+        read_i16(stage + 0x3e) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + 0x30) == 2
     };
-    PLACAR.registrar(igual, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, fase, read_usize(this + 0x30)));
+    PLACAR.registrar(same, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, stage, read_usize(this + 0x30)));
 }
 
 /// Comparer for `jap_j1_start_new_season` (comparison mode: see the header of motor.rs).
@@ -37,10 +37,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_championship_final_stage(
 /// [pt] O comparador da virada: só a original (simplification: libera e aloca tabelas e fases, sorteia jogos e árbitros e vira a
 /// J2; não pode rodar duas vezes), conferindo o que só ela garante: o ano sobe um e +0x2c = 3.
 pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_start_new_season(this: usize) -> u32 {
-    let antes = read_i16(this + 0x40);
+    let before = read_i16(this + 0x40);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J1_START_NEW_SEASON)(this);
-    let depois = read_i16(this + 0x40);
-    PLACAR.registrar(depois == antes.wrapping_add(1) && read_usize(this + 0x2c) == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this, antes, depois, read_usize(this + 0x2c)));
+    let after = read_i16(this + 0x40);
+    PLACAR.registrar(after == before.wrapping_add(1) && read_usize(this + 0x2c) == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this, before, after, read_usize(this + 0x2c)));
     r
 }
 

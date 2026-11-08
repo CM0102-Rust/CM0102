@@ -30,15 +30,15 @@ pub(crate) unsafe fn set_up_rules(this: usize) -> u32 {
     write_u8(this + 0xc1, 0);
     write_u8(this + 0x49, 7);
     core::ptr::write_unaligned((this + 0xa7) as *mut u16, 0xffff);
-    let construir: unsafe extern "thiscall" fn(*mut [u32; 2], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
+    let construct: unsafe extern "thiscall" fn(*mut [u32; 2], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut data = [0u32; 2];
     // simplification: a original empurra o ano no ecx com os 16 bits altos do ponteiro da copa; a 0x549f70 lê a palavra
-    construir(&mut data, 0xa, 2, read_i16(this + 0x40) as u16 as u32, 5); // cqs8: a data do sorteio
+    construct(&mut data, 0xa, 2, read_i16(this + 0x40) as u16 as u32, 5); // cqs8: a data do sorteio
     core::ptr::write_unaligned((this + 0xb6) as *mut u16, data[0] as u16);
     core::ptr::write_unaligned((this + 0xb8) as *mut u16, 0);
     crate::comparacao::ramo("cqs_8 regras da eurocopa");
-    let rodadas: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
-    let t = rodadas(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
+    let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
+    let t = rounds(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
     core::ptr::write_unaligned((this + 0xba) as *mut u32, t as u32);
     1
 }
@@ -105,8 +105,8 @@ pub(crate) unsafe extern "thiscall" fn get_qualification_status(this: usize, clu
 /// (League::init_table_row 0x687430: push 0; push 0; push clube; push o dword do byte i com lixo em cima (só o byte é lido);
 /// mov ecx -> thiscall, ret 0x10); a notícia do grupo (0x684230, thiscall). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 {
-    let tamanho: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(FN_EUROCHAMPQUAL_GET_GROUP_TEAM_COUNT);
-    let n = tamanho(this, 0xffff_ffff);
+    let size: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(FN_EUROCHAMPQUAL_GET_GROUP_TEAM_COUNT);
+    let n = size(this, 0xffff_ffff);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar((n as i32 * 0x3b) as u32);

@@ -32,18 +32,18 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_central_set_up_rules_43b
 ///
 /// [pt] Comparador: só a original (simplification: os registros de carreira alocam e vão para o histórico; não rodam duas vezes),
 /// com o plano do ensaio (a cópia sem os registros nem a gravação, rodada antes): a devolução e o destino na linha.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_central_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let (n, l, dest) = centro_oeste_end_of_stage(this, clube, situacao, fase, jogo, false);
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_BRA_REG_CENTRAL_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, jogo, a6);
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_central_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+    let (n, l, dest) = centro_oeste_end_of_stage(this, clube, status, stage, jogo, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_BRA_REG_CENTRAL_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, status, stage, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
-    PLACAR.registrar(r == n && gravado == dest, || format!("bra_reg_central_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
+    PLACAR.registrar(r == n && gravado == dest, || format!("bra_reg_central_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
 }
 
 /// Comparer for `construct_bra_reg_central` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_central(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_central(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_CENTRAL);
-    bra_reg_bahia_compare_state_league_ctor("construct_bra_reg_central", this, ano, registro, &CENTRO_OESTE_STATE_CHAMPIONSHIP, || o(this, ano, registro))
+    bra_reg_bahia_compare_state_league_ctor("construct_bra_reg_central", this, year, record, &CENTRO_OESTE_STATE_CHAMPIONSHIP, || o(this, year, record))
 }
 
 /// Comparer for `bra_reg_central_start_new_season` (comparison mode: see the header of motor.rs).

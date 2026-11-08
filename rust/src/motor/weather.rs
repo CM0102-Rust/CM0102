@@ -41,38 +41,38 @@ pub(crate) unsafe fn postpone_if_draw_nonzero(n: i32) -> u8 {
 /// graus, estádio descoberto (+0x4d) de até 20000 lugares: sorteio por lugares e mandante (+0x64), zero = 9; chuva 8
 /// (até 15000 lugares) e 9 (pelo vento 4 e por 10000 lugares): uma cadeia de sorteios que devolve 0, 5 ou 6.
 pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usize) -> u8 {
-    let chave: unsafe extern "C" fn(usize) -> i8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
-    let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
+    let key: unsafe extern "C" fn(usize) -> i8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
+    let finances: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
     let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_FINANCE_GET_WEALTH_BAND);
     let clima: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_WEATHER_GET_MATCH_WEATHER);
     let est = read_usize(jogo + 0x18);
     if est == 0 || read_usize(est + 0x38) == 0 || read_usize(est + 0x3c) == 0 || read_usize(jogo + 0x14) == 0 {
         return 0;
     }
-    let casa = read_usize(jogo + 0x1c);
-    if read_usize(casa + 0x57) == 0 {
+    let home = read_usize(jogo + 0x1c);
+    if read_usize(home + 0x57) == 0 {
         return 0;
     }
-    let k: i8 = if casa != 0 { chave(casa) } else { -1 };
-    if read_usize(jogo + 0x14) != read_usize(casa + 0x57) || read_u8(est + 0x4c) != 0 {
+    let k: i8 = if home != 0 { key(home) } else { -1 };
+    if read_usize(jogo + 0x14) != read_usize(home + 0x57) || read_u8(est + 0x4c) != 0 {
         return 0;
     }
     if (0..0x23).contains(&k) {
         let e = k as usize * 0x48;
-        let fim = core::ptr::read_unaligned((G_LEAGUE_WORLD_CUP_END_DATE + e) as *const i16);
-        let ano = core::ptr::read_unaligned((0xb63d9b + e) as *const u16);
-        let dia = core::ptr::read_unaligned(G_CURRENT_DATE as *const i16);
-        let ano_atual = core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16);
-        if fim > 0x3c {
-            if ano == ano_atual && (fim as i32 - 0x3c) < dia as i32 {
+        let end = core::ptr::read_unaligned((G_LEAGUE_WORLD_CUP_END_DATE + e) as *const i16);
+        let year = core::ptr::read_unaligned((0xb63d9b + e) as *const u16);
+        let day = core::ptr::read_unaligned(G_CURRENT_DATE as *const i16);
+        let year_current = core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16);
+        if end > 0x3c {
+            if year == year_current && (end as i32 - 0x3c) < day as i32 {
                 return 0;
             }
-        } else if ano == ano_atual && dia > 0x154 {
+        } else if year == year_current && day > 0x154 {
             return 0;
         }
     }
     if read_u8(jogo + 0x3f) == 2 { // cpu5: a fatia da noite
-        let fin = financas(read_usize(G_FINANCE_TABLE), casa);
+        let fin = finances(read_usize(G_FINANCE_TABLE), home);
         if fin != 0 {
             let f = band(fin) as i8;
             let n = if f == -2 {
@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usi
     let [vento, chuva, temp, _] = cl.to_le_bytes();
     let temp = temp as i8;
     let est = read_usize(jogo + 0x18);
-    let casa = read_usize(jogo + 0x1c);
+    let home = read_usize(jogo + 0x1c);
     match chuva {
         5 => {
             if !(1..0xe).contains(&temp) || read_u8(est + 0x4d) != 0 {
@@ -105,7 +105,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usi
             if cap > 0x4e20 {
                 return 0;
             }
-            let mandante = read_u8(casa + 0x64) == 1;
+            let mandante = read_u8(home + 0x64) == 1;
             let n = if cap > 0x30d4 {
                 0xfa
             } else if cap > 0x1388 {
@@ -130,7 +130,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usi
             if cap > 0x3a98 {
                 return 0;
             }
-            let mandante = read_u8(casa + 0x64) == 1;
+            let mandante = read_u8(home + 0x64) == 1;
             if cap > 0x1d4c && mandante {
                 if friendly_random(4) != 0 {
                     return 5;
@@ -187,10 +187,10 @@ pub(crate) unsafe extern "thiscall" fn get_club_finance(this: usize, clube: usiz
     if clube == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_CLUB_FINANCE)(this, clube);
     }
-    let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
+    let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut eh_a: u32 = 0;
     let mut c = clube;
-    let p = parceiro(clube, &mut eh_a, 1);
+    let p = partner(clube, &mut eh_a, 1);
     if p != 0 && eh_a == 0 {
         c = p;
     }
@@ -243,13 +243,13 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
         }
     }
     if cid == 0 {
-        let casa = read_usize(jogo + 0x1c);
-        if casa != 0 {
-            let c = read_usize(casa + 0x69);
+        let home = read_usize(jogo + 0x1c);
+        if home != 0 {
+            let c = read_usize(home + 0x69);
             if c != 0 && read_usize(c + 0x38) != 0 {
                 cid = read_usize(c + 0x38);
             } else {
-                let n = read_usize(casa + 0x53);
+                let n = read_usize(home + 0x53);
                 if n != 0 && read_usize(n + 0x7a) != 0 {
                     cid = read_usize(n + 0x7a);
                 }
@@ -277,19 +277,19 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
     } else {
         *s.add(3) = 0;
     }
-    let dia = if jogo != 0 {
+    let day = if jogo != 0 {
         core::ptr::read_unaligned((jogo + 0x2a) as *const i16)
     } else {
         core::ptr::read_unaligned(G_CURRENT_DATE as *const i16)
     };
     let limit = |o: usize| core::ptr::read_unaligned((reg + o) as *const i16);
-    let p: usize = if dia < limit(0x1e) {
+    let p: usize = if day < limit(0x1e) {
         3
-    } else if dia < limit(0x31) {
+    } else if day < limit(0x31) {
         0
-    } else if dia < limit(0x44) {
+    } else if day < limit(0x44) {
         1
-    } else if dia < limit(0x57) {
+    } else if day < limit(0x57) {
         2
     } else {
         3
@@ -429,31 +429,31 @@ pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: 
     if est == 0 || *((est + 0x4c) as *const u8) != 0 {
         return 0;
     }
-    let soma = (core::ptr::read_unaligned((jogo + 0x2a) as *const u16) as i32)
+    let sum = (core::ptr::read_unaligned((jogo + 0x2a) as *const u16) as i32)
         .wrapping_add(read_i32(jogo + 0x10))
         .wrapping_add(read_i32(jogo + 0xc))
         .wrapping_add(read_i32(jogo));
-    let h = soma % 20;
+    let h = sum % 20;
     let chuva = *clima.add(1);
     let t = *clima.add(2) as i8;
-    let marca = *((est + 0x4d) as *const u8) != 0;
+    let mark = *((est + 0x4d) as *const u8) != 0;
     let lugares = read_i32(est + 0x3c);
     let morno = (1..0x1d).contains(&t);
     if chuva == 5 && morno {
-        if marca {
+        if mark {
             return if lugares > 0x6b6c { 2 } else { 1 };
         }
         return if lugares <= 0x445c { 8 } else { 1 };
     }
     if chuva == 1 && morno {
-        if !marca {
+        if !mark {
             return 2;
         }
         let corte = if lugares > 0x6b6c { 4 } else { 6 };
         return if h >= corte { 0 } else { 2 };
     }
     if (chuva == 2 || chuva == 3) && morno {
-        if marca {
+        if mark {
             if lugares <= 0x6b6c {
                 return if h >= 4 { 0 } else { 2 };
             }
@@ -462,7 +462,7 @@ pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: 
         return if h >= 3 { 0 } else { 2 };
     }
     if chuva == 4 && morno {
-        if marca {
+        if mark {
             if lugares <= 0x6b6c {
                 return 2;
             }
@@ -471,13 +471,13 @@ pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: 
         return if lugares > 0x445c { 2 } else { 1 };
     }
     if t < 1 && (chuva == 1 || chuva == 8) {
-        if marca || lugares > 0xafc8 {
+        if mark || lugares > 0xafc8 {
             return 2;
         }
         return if lugares <= 0x30d4 { 0x10 } else { 1 };
     }
     if chuva == 9 {
-        if marca {
+        if mark {
             return if lugares > 0x7530 { 2 } else { 1 };
         }
         return if lugares <= 0x4e20 { 0x20 } else { 1 };
@@ -495,8 +495,8 @@ pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: 
 ///
 /// [pt] A linha seguinte do arquivo (0x90cba0: FILE*, buffer), 0 no fim.
 pub(crate) unsafe fn read_config_line(f: usize, buf: *mut u8) -> i32 {
-    let ler: unsafe extern "C" fn(usize, *mut u8) -> i32 = core::mem::transmute(FN_UTILS_READ_CONFIG_LINE);
-    ler(f, buf)
+    let read: unsafe extern "C" fn(usize, *mut u8) -> i32 = core::mem::transmute(FN_UTILS_READ_CONFIG_LINE);
+    read(f, buf)
 }
 
 /// each city: the three readings become (reading + random(100)) × 0.5, clamped to 0..100; one time in ten (random(10)
@@ -548,14 +548,14 @@ pub(crate) unsafe extern "thiscall" fn update_city_weather(this: usize) {
 /// buffer de 2000) com "%ld %s" (0xad4e24) no id (+0) e no nome (+4) da região (0x6e bytes); depois os quatro
 /// períodos (0x922d20) em +0x1e, +0x31, +0x44 e +0x57. Devolve 1 se leu tudo (só o al, como a original).
 pub(crate) unsafe extern "thiscall" fn read_region(this: usize, f: usize, regiao: usize) -> u8 {
-    let ler: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
+    let read: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
     let periodo: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_WEATHER_READ_REGION_PERIOD);
     crate::comparacao::ramo("cpt_5 regiao do clima");
-    let mut linha = [0u8; 2000];
-    if read_config_line(f, linha.as_mut_ptr()) == 0 {
+    let mut row = [0u8; 2000];
+    if read_config_line(f, row.as_mut_ptr()) == 0 {
         return 0;
     }
-    if ler(linha.as_ptr(), 0xad4e24, regiao, regiao + 4) != 2 {
+    if read(row.as_ptr(), 0xad4e24, regiao, regiao + 4) != 2 {
         return 0;
     }
     for k in [0x1e, 0x31, 0x44, 0x57] {
@@ -577,21 +577,21 @@ pub(crate) unsafe extern "thiscall" fn read_region(this: usize, f: usize, regiao
 /// cinco W, cinco P e sete H); com os 19 lidos, o período (0x13 bytes) recebe o dia (palavra em +0) e os 17 bytes
 /// seguintes (+2..+0x12). Devolve 1 se leu (só o al).
 pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize, periodo: usize) -> u8 {
-    let ler: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
+    let read: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
     if f == 0 {
         show_error_at(0xad4dec, 0xea);
         return 0;
     }
     crate::comparacao::ramo("cpt_5 periodo do clima");
-    let mut linha = [0u8; 2000];
-    if read_config_line(f, linha.as_mut_ptr()) == 0 {
+    let mut row = [0u8; 2000];
+    if read_config_line(f, row.as_mut_ptr()) == 0 {
         return 0;
     }
     // simplification: o nome tem 200 bytes na original; aqui 2000 para o %s não estourar (com os nomes do arquivo, igual).
-    let mut nome = [0u8; 2000];
+    let mut name = [0u8; 2000];
     let mut v = [0i32; 18];
     let p = v.as_mut_ptr();
-    let n = ler(linha.as_ptr(), 0xad4e2c, nome.as_mut_ptr(), p, p.add(1), p.add(2), p.add(3), p.add(4), p.add(5),
+    let n = read(row.as_ptr(), 0xad4e2c, name.as_mut_ptr(), p, p.add(1), p.add(2), p.add(3), p.add(4), p.add(5),
                 p.add(6), p.add(7), p.add(8), p.add(9), p.add(10), p.add(11), p.add(12), p.add(13), p.add(14),
                 p.add(15), p.add(16), p.add(17));
     if n != 0x13 {
@@ -617,22 +617,22 @@ pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize
 /// cada cidade sorteia as três medidas ((sorteio(100) + sorteio(100)) × 0,5) e o vento (sorteio(3)). Fecha o arquivo
 /// (0x945a09). Os erros (arquivo, linha, contagem, memória) são a caixa "Error" de weather.cpp e o jogo para.
 pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
-    let pasta: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let ler_linha: unsafe extern "C" fn(usize, *mut u8) -> i32 = core::mem::transmute(FN_UTILS_READ_CONFIG_LINE);
-    let ler: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
+    let folder: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
+    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
+    let read_row: unsafe extern "C" fn(usize, *mut u8) -> i32 = core::mem::transmute(FN_UTILS_READ_CONFIG_LINE);
+    let read: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
     let malloc: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let regiao: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_WEATHER_READ_REGION);
-    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
-    let f = abrir(pasta(0x9b5348, 0xad4e18), 0x9899fc);
+    let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
+    let f = open(folder(0x9b5348, 0xad4e18), 0x9899fc);
     if f == 0 {
         fatal_error_at(0xad4dec, 0x68);
     }
-    let mut linha = [0u8; 1000];
-    if ler_linha(f, linha.as_mut_ptr()) == 0 {
+    let mut row = [0u8; 1000];
+    if read_row(f, row.as_mut_ptr()) == 0 {
         fatal_error_at(0xad4dec, 0x6f);
     }
-    if ler(linha.as_ptr(), 0x98c11c, this + 8) != 1 {
+    if read(row.as_ptr(), 0x98c11c, this + 8) != 1 {
         fatal_error_at(0xad4dec, 0x75);
     }
     let r = malloc(read_usize(this + 8).wrapping_mul(0x6e));
@@ -667,6 +667,6 @@ pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
         *((read_usize(this + 4) + k * 4 + 3) as *mut u8) = v as u8;
         k += 1;
     }
-    fechar(f);
+    close(f);
 }
 

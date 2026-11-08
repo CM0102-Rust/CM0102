@@ -4,21 +4,21 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../fog_of_war.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `chance_to_know` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_chance_to_know(pessoa: usize, nivel: i8) -> i32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, i8) -> i32>(IDX_CHANCE_TO_KNOW)(pessoa, nivel);
-    let v = chance_to_know(pessoa, nivel);
-    PLACAR.registrar(r == v, || format!("chance_to_know({}, {}) original={} rust={}", *((pessoa + 4) as *const i16), nivel, r, v));
+pub(crate) unsafe extern "C" fn comparar_chance_to_know(person: usize, level: i8) -> i32 {
+    let r = original_fn::<unsafe extern "C" fn(usize, i8) -> i32>(IDX_CHANCE_TO_KNOW)(person, level);
+    let v = chance_to_know(person, level);
+    PLACAR.registrar(r == v, || format!("chance_to_know({}, {}) original={} rust={}", *((person + 4) as *const i16), level, r, v));
     r
 }
 
 /// Comparer for `know_person` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_know_person(this: usize, pessoa: usize, fonte: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_know_person(this: usize, person: usize, fonte: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_KNOW_PERSON);
     let mut reg: Vec<(usize, usize)> = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    if pessoa != 0 && *(pessoa as *const i32) < *(G_STAFF_COUNT as *const i32) {
-        reg.push(((*(this as *const usize)).wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(9)), 9));
+    if person != 0 && *(person as *const i32) < *(G_STAFF_COUNT as *const i32) {
+        reg.push(((*(this as *const usize)).wrapping_add((*(person as *const i32) as usize).wrapping_mul(9)), 9));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, fonte), || crate::aleatorio::sem_contar(|| know_person(this, pessoa, fonte)));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, person, fonte), || crate::aleatorio::sem_contar(|| know_person(this, person, fonte)));
     PLACAR.registrar(igual, || format!("know_person original={:x?} rust={:x?}", mo, mr));
 }
 
@@ -26,12 +26,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_know_person(this: usize, pessoa:
 pub(crate) unsafe extern "stdcall" fn comparar_fog_after_match(partida: usize, dados: usize) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize)>(IDX_FOG_AFTER_MATCH);
     // os registros que a rotina pode mexer (mesmos testes, sem o 0x32 das reservas: sobra nao atrapalha)
-    let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let n = *(G_STAFF_COUNT as *const i32);
     let mut reg: Vec<(usize, usize)> = Vec::new();
     for lado in 0..2usize {
         let clube = *((partida + 0x20 - 4 * lado) as *const usize);
-        if humano(clube, 0, 1, 0, 0) == 0 || *((clube + club::MANAGER) as *const usize) == 0 {
+        if human(clube, 0, 1, 0, 0) == 0 || *((clube + club::MANAGER) as *const usize) == 0 {
             continue;
         }
         let q = *((clube + club::MANAGER) as *const usize);

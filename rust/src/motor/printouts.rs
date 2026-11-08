@@ -14,11 +14,11 @@ use super::*;
 /// notícias. Tipo 1 no domingo (0x54a3f0 = 6) vira 7. Tipos 2 e 4 (locais): os da lista [this+4] cujo +0xcb é o id de
 /// [[clube+0x69]+0x38] (sem eles: −1); os outros: os da lista [this] do tipo (+0xca) e da nação (+0xcf; −1 aceita
 /// qualquer). Até 20; nenhum: −1; senão o id (palavra +0, com sinal) de um deles por sorteio(n).
-pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: usize, tipo: u32, nacao: i32) -> i32 {
-    let mut t = tipo as i8;
+pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: usize, kind: u32, nacao: i32) -> i32 {
+    let mut t = kind as i8;
     if t == 1 {
-        let semana: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
-        if semana(G_CURRENT_DATE) as i16 == 6 {
+        let week: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
+        if week(G_CURRENT_DATE) as i16 == 6 {
             t = 7;
         }
     }
@@ -100,8 +100,8 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: us
 ///
 /// [pt] O nome padrão do veículo pelo tipo (as três tabelas da original são iguais): 2 jornal local, 3 rádio, 4 rádio
 /// local, 5 revista; os outros, jornal nacional.
-pub(crate) fn default_media_name(tipo: i8) -> usize {
-    match tipo {
+pub(crate) fn default_media_name(kind: i8) -> usize {
+    match kind {
         2 => 0xa24284,
         3 => 0xa794cc,
         4 => 0xa241f4,
@@ -117,13 +117,13 @@ pub(crate) fn default_media_name(tipo: i8) -> usize {
 /// das notícias. Sem `nome`: marca 0. Id −1: o nome padrão do tipo e marca 0. Senão o comentarista do id (palavra +0)
 /// na lista [this+4] (tipos 2 e 4) ou [this]: o nome (+2, sprintf "%s" 0x944c9f) e a marca (+0xd3); sem ele, o nome
 /// padrão e marca 0.
-pub(crate) unsafe extern "thiscall" fn get_pundit_name(this: usize, tipo: u32, id: u32, nome: usize, marca: *mut u8) {
-    if nome == 0 {
-        *marca = 0;
+pub(crate) unsafe extern "thiscall" fn get_pundit_name(this: usize, kind: u32, id: u32, name: usize, mark: *mut u8) {
+    if name == 0 {
+        *mark = 0;
         return;
     }
     let sprintf: unsafe extern "C" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let t = tipo as i8;
+    let t = kind as i8;
     let id = id as i16;
     if id != -1 {
         let l = read_usize(this + if t == 2 || t == 4 { 4 } else { 0 });
@@ -136,8 +136,8 @@ pub(crate) unsafe extern "thiscall" fn get_pundit_name(this: usize, tipo: u32, i
                     break;
                 }
                 if read_i16_as_i32(p) as i16 == id {
-                    sprintf(nome, 0x991944, p + 2);
-                    *marca = *((p + 0xd3) as *const u8);
+                    sprintf(name, 0x991944, p + 2);
+                    *mark = *((p + 0xd3) as *const u8);
                     return;
                 }
                 i += 1;
@@ -147,8 +147,8 @@ pub(crate) unsafe extern "thiscall" fn get_pundit_name(this: usize, tipo: u32, i
             }
         }
     }
-    sprintf(nome, 0x991944, default_media_name(t));
-    *marca = 0;
+    sprintf(name, 0x991944, default_media_name(t));
+    *mark = 0;
 }
 
 

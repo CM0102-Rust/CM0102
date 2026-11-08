@@ -13,10 +13,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_semi_final_s
 pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CON_MERC_CUP_ADVANCE_STAGE);
     let f = read_u32_as_usize(this + 0x30) as i32;
-    let ultima = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
+    let last = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
-    let depois = read_u32_as_usize(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("con_merc_cup_advance_stage({:#x}) fase {} -> {}", this, f, depois));
+    let after = read_u32_as_usize(this + 0x30) as i32;
+    PLACAR.registrar(after == if last { f } else { f + 1 }, || format!("con_merc_cup_advance_stage({:#x}) fase {} -> {}", this, f, after));
 }
 
 /// Comparer for `con_merc_cup_select_invited_clubs` (comparison mode: see the header of motor.rs).
@@ -41,7 +41,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_club
         r
     });
     let (lo, lr) = (lo.get(), lr.get());
-    let lista = if lo != 0 && lr != 0 {
+    let list = if lo != 0 && lr != 0 {
         core::slice::from_raw_parts(lo as *const u8, 0x40) == core::slice::from_raw_parts(lr as *const u8, 0x40)
     } else {
         lo == 0 && lr == 0
@@ -50,25 +50,25 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_club
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("con_merc_cup_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.registrar(igual && a == b && list, || format!("con_merc_cup_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
     a
 }
 
 /// Comparer for `con_merc_cup_update_for_date` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CON_MERC_CUP_UPDATE_FOR_DATE);
     let sorteia = read_u32_as_usize(this + 0x45) == 0
-        && completo != 0
-        && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
-        && read_i16(this + 0xb6) as u16 == core::ptr::read_unaligned(hoje as *const u16);
-    let r = o(this, hoje, completo);
+        && full != 0
+        && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((today + 2) as *const u16)
+        && read_i16(this + 0xb6) as u16 == core::ptr::read_unaligned(today as *const u16);
+    let r = o(this, today, full);
     if sorteia {
-        let fases = read_u32_as_usize(this + 0xc);
+        let stages = read_u32_as_usize(this + 0xc);
         let ok = read_u32_as_usize(this + 0x45) == 1
             && read_u32_as_usize(this + 0xee) == 0
             && read_u32_as_usize(this + 0xb1) != 0
-            && fases != 0
-            && (0..3).all(|g| read_u32_as_usize(fases + g * 4) != 0)
+            && stages != 0
+            && (0..3).all(|g| read_u32_as_usize(stages + g * 4) != 0)
             && read_u32_as_usize(this + 0x30) == 2;
         PLACAR.registrar(ok, || format!("con_merc_cup_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
     }
@@ -78,50 +78,50 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_update_for_date(thi
 /// Comparer for `con_merc_cup_create_first_group_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_first_group_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_MERC_CUP_CREATE_FIRST_GROUP_TABLE);
-    let lista = read_u32_as_usize(this + 0xee);
-    if lista == 0 {
+    let list = read_u32_as_usize(this + 0xee);
+    if list == 0 {
         return o(this);
     }
-    let previstos: [usize; 4] = core::array::from_fn(|i| read_u32_as_usize(lista + i * 4));
+    let previstos: [usize; 4] = core::array::from_fn(|i| read_u32_as_usize(list + i * 4));
     let r = o(this);
     let t = read_u32_as_usize(this + 0xb1);
-    let mut lidos = [(0usize, 0u8); 4];
+    let mut read = [(0usize, 0u8); 4];
     if t != 0 {
-        for (i, l) in lidos.iter_mut().enumerate() {
+        for (i, l) in read.iter_mut().enumerate() {
             *l = (read_u32_as_usize(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
         }
     }
-    let igual = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.registrar(igual, || format!("con_merc_cup_create_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    let same = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| read[i] == (previstos[i], i as u8));
+    PLACAR.registrar(same, || format!("con_merc_cup_create_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
     r
 }
 
 /// Comparer for `con_merc_cup_create_group_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_group_stage(this: usize, g: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CON_MERC_CUP_CREATE_GROUP_STAGE);
-    let lista = read_u32_as_usize(this + 0xee);
-    if lista == 0 || !(0..3).contains(&g) {
+    let list = read_u32_as_usize(this + 0xee);
+    if list == 0 || !(0..3).contains(&g) {
         return o(this, g);
     }
-    let mut plano: Vec<usize> = (0..4).map(|k| read_u32_as_usize(lista + (g as usize * 4 + 4 + k) * 4)).collect();
+    let mut plan: Vec<usize> = (0..4).map(|k| read_u32_as_usize(list + (g as usize * 4 + 4 + k) * 4)).collect();
     let r = o(this, g);
     if r == 1 {
         let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4);
         let t = if f != 0 { read_u32_as_usize(f + 0xb1) } else { 0 };
         let mut a: Vec<usize> = if t != 0 { (0..4).map(|k| read_u32_as_usize(t + k * 0x3b)).collect() } else { Vec::new() };
         a.sort_unstable();
-        plano.sort_unstable();
-        let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plano;
-        PLACAR.registrar(ok, || format!("con_merc_cup_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
+        plan.sort_unstable();
+        let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plan;
+        PLACAR.registrar(ok, || format!("con_merc_cup_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
     }
     r
 }
 
 /// Comparer for `con_merc_cup_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CON_MERC_CUP_CREATE_SCHEDULE);
-    compare_stage_schedule("con_merc_cup_create_schedule", fase, merconorte_stage(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| con_merc_cup_create_schedule(this, fase, r, e, l))
+    compare_stage_schedule("con_merc_cup_create_schedule", stage, merconorte_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| con_merc_cup_create_schedule(this, stage, r, e, l))
 }
 
 /// Comparer for `con_merc_cup_set_up_rules` (comparison mode: see the header of motor.rs).

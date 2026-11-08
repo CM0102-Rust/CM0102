@@ -13,13 +13,13 @@ use super::*;
 /// erro da linha 0x202 e nada mais. Senão +0x30 sobe um e, ao chegar a 2 (o fim do segundo turno), monta a final
 /// (0x4382c0, call direto com o ecx da liga).
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_advance_stage(this: usize) {
-    let fase = read_usize(this + 0x30) as i32;
-    if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
+    let stage = read_usize(this + 0x30) as i32;
+    if stage >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return show_error_at(0x98af98, 0x202);
     }
-    let fase = fase + 1;
-    core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
-    if fase == 2 {
+    let stage = stage + 1;
+    core::ptr::write_unaligned((this + 0x30) as *mut i32, stage);
+    if stage == 2 {
         let final_: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_BRAREGPARANA_CREATE_FINAL_STAGE);
         final_(this); // cqo8: a final depois do segundo turno
     }
@@ -46,14 +46,14 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_advance_stage(this: usize)
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: usize) {
     let sementes: [u8; 4] = [0, 1, 0, 0];
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let lista = alocar(8);
-    if lista == 0 {
+    let list = alocar(8);
+    if list == 0 {
         return show_error_at(0x98af98, 0x226);
     }
     let a = half_champion(this, 0);
-    core::ptr::write_unaligned(lista as *mut usize, a);
+    core::ptr::write_unaligned(list as *mut usize, a);
     let b = half_champion(this, 1);
-    core::ptr::write_unaligned((lista + 4) as *mut usize, b);
+    core::ptr::write_unaligned((list + 4) as *mut usize, b);
     if a == b {
         crate::comparacao::ramo("cqo_8 mesmo campeao");
         core::ptr::write_unaligned((this + 0x30) as *mut u32, 1);
@@ -63,41 +63,41 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
         }
         let mut i: i16 = 0;
         while i < read_i16(this + 0x3e) {
-            let linha = read_usize(this + 0xb1) + i as usize * 0x3b;
-            if read_usize(linha) == read_usize(lista) {
-                *((linha + 0x37) as *mut u8) = 5;
+            let row = read_usize(this + 0xb1) + i as usize * 0x3b;
+            if read_usize(row) == read_usize(list) {
+                *((row + 0x37) as *mut u8) = 5;
             }
             i += 1;
         }
         // simplification: a lista de 8 bytes fica sem liberar, como na original.
         return;
     }
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = tabela(this, 2, &mut rodadas, &mut extra, 0);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let p = novo(0xb2);
+    let t = table(this, 2, &mut rodadas, &mut extra, 0);
+    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let p = new(0xb2);
     // simplification: a original empurra as rodadas, o extra e o ano em dwords com lixo nos 16 bits altos (as saídas da
     // virtual são words na pilha; o ano vai no dx); o construtor só lê as palavras.
-    let fase = if p != 0 {
+    let stage = if p != 0 {
         #[allow(clippy::type_complexity)]
-        let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
+        let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construir(p, this, 2, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 1, 0, sementes.as_ptr())
+        construct(p, this, 2, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 1, 0, sementes.as_ptr())
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + 0xc) + 8) as *mut usize, fase);
-    let fase = read_usize(read_usize(this + 0xc) + 8);
-    if fase == 0 {
+    core::ptr::write_unaligned((read_usize(this + 0xc) + 8) as *mut usize, stage);
+    let stage = read_usize(read_usize(this + 0xc) + 8);
+    if stage == 0 {
         return show_error_at(0x98af98, 0x250);
     }
     crate::comparacao::ramo("cqo_8 final");
-    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    montar(fase, 0);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    liberar(t);
-    liberar(lista);
+    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
+    build(stage, 0);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    free(t);
+    free(list);
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 2);
 }
 
@@ -119,19 +119,19 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this
     let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_BRA_NAT_FIRST_FILL_CHAMPIONS_CUP_ENTRANTS);
     if read_usize(this + 0x30) == 2 {
         let f = read_usize(read_usize(this + 0xc) + 8);
-        let historico: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x30));
-        historico(f);
+        let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x30));
+        history(f);
         crate::comparacao::ramo("cqo_8 historico da final");
         return campeoes();
     }
-    let historico: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_RECORD_SEASON_HONOURS);
-    historico(this);
-    let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
-    let premio: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_FINANCE_ADD_PRIZE_MONEY);
+    let history: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_RECORD_SEASON_HONOURS);
+    history(this);
+    let finances: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
+    let prize: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_FINANCE_ADD_PRIZE_MONEY);
     let noticia: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(FN_COMP_SEND_PRIZE_MONEY_NEWS);
     for (linha, valor, posicao) in [(0usize, 175000i32, 1i32), (0x3b, 100000, 2)] {
         let c = read_usize(read_usize(this + 0xb1) + linha);
-        premio(financas(read_usize(G_FINANCE_TABLE), c), valor);
+        prize(finances(read_usize(G_FINANCE_TABLE), c), valor);
         noticia(this, read_usize(read_usize(this + 0xb1) + linha), valor, 0, posicao, 0, 0, -2);
     }
     crate::comparacao::ramo("cqo_8 premios");
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this
 /// rebaixados +0xc1; os três têm dois turnos): vitória 3, empate 1, categoria 2 (liga), clube nacional, desempates
 /// confronto direto e saldo, sem play-offs na tabela, sem liga acima nem abaixo, palavra de regras 8, 7 reservas e
 /// 3 substituições, e as palavras +0xab e +0xdb em 0.
-pub(crate) unsafe fn bra_reg_parana_set_state_league_rules(o: usize, cima: u8, rebaixados: u8) {
+pub(crate) unsafe fn bra_reg_parana_set_state_league_rules(o: usize, cima: u8, relegated: u8) {
     write_u16_at(o, 0x3c, 2);
     write_u8_at(o, 0xc4, 2);
     write_u16_at(o, 0xab, 0);
@@ -166,7 +166,7 @@ pub(crate) unsafe fn bra_reg_parana_set_state_league_rules(o: usize, cima: u8, r
     write_u8_at(o, 0xc3, 1);
     write_u8_at(o, 0x42, 1);
     write_u8_at(o, 0xc6, 1);
-    write_u8_at(o, 0xc1, rebaixados);
+    write_u8_at(o, 0xc1, relegated);
     write_u32_at(o, 0x1c, 0xffff_ffff);
     write_u32_at(o, 0x20, 0xffff_ffff);
     write_u8_at(o, 0x49, 7);
@@ -219,8 +219,8 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_set_up_rules(this: usize) 
 /// Original: `BraRegParana::BraRegParana` (0x437400, bra_reg_parana.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x437400 } (thiscall, ret 8, bra_reg_parana.cpp): `BraRegParana::BraRegParana(ano, registro)`: o Paranaense (três fases além da liga).
-pub(crate) unsafe extern "thiscall" fn construct_bra_reg_parana(this: usize, ano: u32, registro: usize) -> usize {
-    bra_reg_northeast_construct_state_league(this, ano, registro, &PARANA_CHAMPIONSHIP, 7, true, "cqt_3 paranaense novo") // cqt3: a disciplina e as posições previstas do Paranaense
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_parana(this: usize, year: u32, record: usize) -> usize {
+    bra_reg_northeast_construct_state_league(this, year, record, &PARANA_CHAMPIONSHIP, 7, true, "cqt_3 paranaense novo") // cqt3: a disciplina e as posições previstas do Paranaense
 }
 
 

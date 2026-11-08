@@ -4,8 +4,8 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../match_events.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `record_events` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_record_events(e: usize, desc: *mut u32, humano: u8) -> u8 {
-    original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, u8) -> u8>(IDX_RECORD_EVENTS)(e, desc, humano)
+pub(crate) unsafe extern "thiscall" fn comparar_record_events(e: usize, desc: *mut u32, human: u8) -> u8 {
+    original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, u8) -> u8>(IDX_RECORD_EVENTS)(e, desc, human)
 }
 
 /// Ler os eventos so le arquivo (sem efeito fora do registro): a original e a copia leem os mesmos
@@ -45,30 +45,30 @@ pub(crate) unsafe extern "stdcall" fn comparar_event_text(ev: usize, ctx: usize,
 
 /// Comparer for `commentate_on_panel` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, painel: u32, largura: i32, quebrar: u32, fonte: usize, modo: u32) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, i32, u32, usize, u32) -> u32>(IDX_COMMENTATE_ON_PANEL)(nar, ev, ctx, comp, painel, largura, quebrar, fonte, modo)
+pub(crate) unsafe extern "thiscall" fn comparar_commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, painel: u32, largura: i32, quebrar: u32, fonte: usize, mode: u32) -> u32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, i32, u32, usize, u32) -> u32>(IDX_COMMENTATE_ON_PANEL)(nar, ev, ctx, comp, painel, largura, quebrar, fonte, mode)
 }
 
 /// Comparer for `next_event` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_next_event(t: usize, saida: *mut usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_next_event(t: usize, out: *mut usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize) -> usize>(IDX_NEXT_EVENT);
     let mut reg = vec![(t, 0x2db4)];
-    if !saida.is_null() {
-        reg.push((saida as usize, 4));
+    if !out.is_null() {
+        reg.push((out as usize, 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, saida), || next_event(t, saida));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, out), || next_event(t, out));
     PLACAR.registrar(igual && r == n, || format!("next_event({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", t, r, n, mo, mr));
     r
 }
 
 /// Comparer for `commentary_player_name` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "C" fn comparar_commentary_player_name(pt: usize, jogador: i8, lado: i8, buf: *mut u8, tam: u32, curto: u8, x: u32, longa: u32) {
+pub(crate) unsafe extern "C" fn comparar_commentary_player_name(pt: usize, player: i8, side: i8, buf: *mut u8, size: u32, curto: u8, x: u32, longa: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i8, i8, *mut u8, u32, u8, u32, u32)>(IDX_COMMENTARY_PLAYER_NAME);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.push((buf as usize, tam as usize));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pt, jogador, lado, buf, tam, curto, x, longa), || crate::aleatorio::sem_contar(|| commentary_player_name(pt, jogador, lado, buf, tam, curto, x, longa)));
-    PLACAR.registrar(igual, || format!("commentary_player_name({}, {}) {:x?} x {:x?}", jogador, lado, mo, mr));
+    reg.push((buf as usize, size as usize));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pt, player, side, buf, size, curto, x, longa), || crate::aleatorio::sem_contar(|| commentary_player_name(pt, player, side, buf, size, curto, x, longa)));
+    PLACAR.registrar(igual, || format!("commentary_player_name({}, {}) {:x?} x {:x?}", player, side, mo, mr));
 }
 
 /// Comparer for `combine_with_previous` (comparison mode: see the header of motor.rs).
@@ -105,13 +105,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_sounds_finished(e: usize, ativos
 }
 
 /// Comparer for `event_variant` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "system" fn comparar_event_variant(e: *const i16, lados: u32, tipo: u8) -> i16 {
+pub(crate) unsafe extern "system" fn comparar_event_variant(e: *const i16, lados: u32, kind: u8) -> i16 {
     let o = original_fn::<unsafe extern "system" fn(*const i16, u32, u8) -> i16>(IDX_EVENT_VARIANT);
     if is_recording_top_level() {
-        return o(e, lados, tipo);
+        return o(e, lados, kind);
     }
     let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(e, lados, tipo), || crate::aleatorio::sem_contar(|| event_variant(e, lados, tipo)));
-    PLACAR.registrar(igual && r == n, || format!("event_variant({:#x}, {:#x}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", *e, lados, tipo, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(e, lados, kind), || crate::aleatorio::sem_contar(|| event_variant(e, lados, kind)));
+    PLACAR.registrar(igual && r == n, || format!("event_variant({:#x}, {:#x}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", *e, lados, kind, r, n, mo, mr));
     r
 }

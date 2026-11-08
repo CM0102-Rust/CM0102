@@ -54,31 +54,31 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_knockout_stage_63
 }
 
 /// Comparer for `ita_cup_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ITA_CUP_CREATE_SCHEDULE);
-    ita_cup_compare_schedule("ita_cup_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| ita_cup_create_schedule(this, fase, r, e, l), 7)
+    ita_cup_compare_schedule("ita_cup_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| ita_cup_create_schedule(this, stage, r, e, l), 7)
 }
 
 /// Comparer for `ita_cup_create_schedule_63cf90` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_schedule_63cf90(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_schedule_63cf90(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ITA_CUP_CREATE_SCHEDULE_63CF90);
-    ita_cup_compare_schedule("ita_cup_create_schedule_63cf90", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| ita_cup_create_schedule_63cf90(this, fase, r, e, l), 0xf)
+    ita_cup_compare_schedule("ita_cup_create_schedule_63cf90", stage, rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| ita_cup_create_schedule_63cf90(this, stage, r, e, l), 0xf)
 }
 
 /// Comparer for `ita_cup_create_round_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ITA_CUP_CREATE_ROUND_TABLE);
-    eng_cc_cup_compare_round_table("ita_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| ita_cup_create_round_table(this, fase, r, e, s))
+    eng_cc_cup_compare_round_table("ita_cup_create_round_table", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
+        |r, e, s| ita_cup_create_round_table(this, stage, r, e, s))
 }
 
 /// Comparer for `ita_cup_create_round_table_63c890` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_round_table_63c890(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_round_table_63c890(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ITA_CUP_CREATE_ROUND_TABLE_63C890);
-    eng_cc_cup_compare_round_table("ita_cup_create_round_table_63c890", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| ita_cup_create_round_table_63c890(this, fase, r, e, s))
+    eng_cc_cup_compare_round_table("ita_cup_create_round_table_63c890", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
+        |r, e, s| ita_cup_create_round_table_63c890(this, stage, r, e, s))
 }
 
 /// Comparer for `ita_cup_select_entrants` (comparison mode: see the header of motor.rs).

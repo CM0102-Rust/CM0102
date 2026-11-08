@@ -6,16 +6,16 @@ use super::*;
 /// Comparer for `find_available_venue` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Lado a lado (a cópia sem contar os sorteios) pelas regiões de `stadium_choice_regions` e pela devolução; com reserva que pode alocar, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_find_available_venue(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_find_available_venue(this: usize, marks: u32, cont: usize, nacao: usize, data: usize, home: usize, away: usize, partida: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize>(IDX_FIND_AVAILABLE_VENUE);
     let Some((r, m)) = stadium_choice_regions(this, None) else {
         // simplification: a reserva pode alocar a lista; só a original
-        return o(this, marcas, cont, nacao, data, casa, fora, partida);
+        return o(this, marks, cont, nacao, data, home, away, partida);
     };
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&r[..m], || o(this, marcas, cont, nacao, data, casa, fora, partida), || {
-        crate::aleatorio::sem_contar(|| find_available_venue(this, marcas, cont, nacao, data, casa, fora, partida))
+    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&r[..m], || o(this, marks, cont, nacao, data, home, away, partida), || {
+        crate::aleatorio::sem_contar(|| find_available_venue(this, marks, cont, nacao, data, home, away, partida))
     });
-    PLACAR.registrar(igual && ro == rr, || format!("find_available_venue(marcas {:x}, nacao {:x}, cont {:x}): original {:x} rust {:x} {:x?} x {:x?}", marcas, nacao, cont, ro, rr, mo, mr));
+    PLACAR.registrar(igual && ro == rr, || format!("find_available_venue(marcas {:x}, nacao {:x}, cont {:x}): original {:x} rust {:x} {:x?} x {:x?}", marks, nacao, cont, ro, rr, mo, mr));
     ro
 }
 
@@ -23,51 +23,51 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_available_venue(this: usize
 ///
 /// [pt] Lado a lado pela partida (0x44 bytes) e pelas regiões de `stadium_choice_regions`; partida nula ou reserva que pode alocar:
 /// só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_set_fixture_venue(this: usize, marcas: u32, partida: usize, estadio: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_set_fixture_venue(this: usize, marks: u32, partida: usize, estadio: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, u32)>(IDX_SET_FIXTURE_VENUE);
     if partida == 0 {
-        return o(this, marcas, partida, estadio);
+        return o(this, marks, partida, estadio);
     }
     let Some((r, m)) = stadium_choice_regions(this, Some((partida, 0x44))) else {
         // simplification: a reserva pode alocar a lista; só a original
-        return o(this, marcas, partida, estadio);
+        return o(this, marks, partida, estadio);
     };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&r[..m], || o(this, marcas, partida, estadio), || crate::aleatorio::sem_contar(|| set_fixture_venue(this, marcas, partida, estadio)));
-    PLACAR.registrar(igual, || format!("set_fixture_venue(marcas {:x}, comp {:x}): {:x?} x {:x?}", marcas, read_u32_as_usize(partida), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&r[..m], || o(this, marks, partida, estadio), || crate::aleatorio::sem_contar(|| set_fixture_venue(this, marks, partida, estadio)));
+    PLACAR.registrar(igual, || format!("set_fixture_venue(marcas {:x}, comp {:x}): {:x?} x {:x?}", marks, read_u32_as_usize(partida), mo, mr));
 }
 
 /// Comparer for `calculate_match_attendance` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Lado a lado (a cópia sem contar os sorteios) pelo estado do sorteador, pela saída, pelos lugares do estádio (que
 /// ela pode subir para 1.500) e pela devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_calculate_match_attendance(this: usize, jogo: usize, saida: *mut i32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_calculate_match_attendance(this: usize, jogo: usize, out: *mut i32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> i32>(IDX_CALCULATE_MATCH_ATTENDANCE);
     if jogo == 0 {
-        return o(this, jogo, saida);
+        return o(this, jogo, out);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    if !saida.is_null() {
-        reg.push((saida as usize, 12));
+    if !out.is_null() {
+        reg.push((out as usize, 12));
     }
     if read_u32_as_usize(jogo + 0x18) != 0 {
         reg.push((read_u32_as_usize(jogo + 0x18) + 0x3c, 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, saida), || crate::aleatorio::sem_contar(|| calculate_match_attendance(this, jogo, saida)));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, out), || crate::aleatorio::sem_contar(|| calculate_match_attendance(this, jogo, out)));
     PLACAR.registrar(igual && r == n, || format!("calculate_match_attendance(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", read_u32_as_usize(jogo), read_u8(jogo + 0x3a), r, n, mo, mr));
     r
 }
 
 /// Comparer for `score_venue_for_fixture` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_score_venue_for_fixture(this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, usize) -> i32>(IDX_SCORE_VENUE_FOR_FIXTURE)(this, est, marcas, casa, fora, jogo)
+pub(crate) unsafe extern "thiscall" fn comparar_score_venue_for_fixture(this: usize, est: usize, marks: u32, home: usize, away: usize, jogo: usize) -> i32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, usize) -> i32>(IDX_SCORE_VENUE_FOR_FIXTURE)(this, est, marks, home, away, jogo)
 }
 
 /// Comparer for `get_travel_distance_factor` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pelo valor (os bits do double).
-pub(crate) unsafe extern "thiscall" fn comparar_get_travel_distance_factor(this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64>(IDX_GET_TRAVEL_DISTANCE_FACTOR)(this, jogo, cid_est, cid_clube, base);
-    let n = get_travel_distance_factor(this, jogo, cid_est, cid_clube, base);
+pub(crate) unsafe extern "thiscall" fn comparar_get_travel_distance_factor(this: usize, jogo: usize, cid_est: usize, cid_club: usize, base: f64) -> f64 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64>(IDX_GET_TRAVEL_DISTANCE_FACTOR)(this, jogo, cid_est, cid_club, base);
+    let n = get_travel_distance_factor(this, jogo, cid_est, cid_club, base);
     PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("get_travel_distance_factor(jogo {:x}, base {}) {} x {}", jogo, base, r, n));
     r
 }
@@ -77,36 +77,36 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_travel_distance_factor(this:
 /// [pt] Comparador: no dia 0 do ano (refaz a lista dos estádios, aloca) só a original. Nos outros, lado a lado pelo cabeçalho
 /// (0x1c bytes), pelas reservas, por [0xa835a4], pelo estádio nacional da Inglaterra, pela casa da seleção e pelos
 /// lugares do estádio fechado.
-pub(crate) unsafe extern "thiscall" fn comparar_stadium_daily_update(this: usize, hoje: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_stadium_daily_update(this: usize, today: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_STADIUM_DAILY_UPDATE);
-    if read_u16(hoje) == 0 {
-        return o(this, hoje);
+    if read_u16(today) == 0 {
+        return o(this, today);
     }
-    let mut regioes = [(0usize, 0usize); 6];
+    let mut regions = [(0usize, 0usize); 6];
     let mut m = 0;
-    regioes[m] = (this, 0x1c);
+    regions[m] = (this, 0x1c);
     m += 1;
     let n = read_usize(this + 4) as i32;
     if read_usize(this) != 0 && n > 0 {
-        regioes[m] = (read_usize(this), n as usize * 12);
+        regions[m] = (read_usize(this), n as usize * 12);
         m += 1;
     }
-    regioes[m] = (0xa835a4, 4);
+    regions[m] = (0xa835a4, 4);
     m += 1;
     let nacao = england_nation();
-    regioes[m] = (nacao + nation::NATIONAL_STADIUM, 4);
+    regions[m] = (nacao + nation::NATIONAL_STADIUM, 4);
     m += 1;
     let s = nation_national_team(nacao);
     if s != 0 {
-        regioes[m] = (s + 0x69, 4);
+        regions[m] = (s + 0x69, 4);
         m += 1;
     }
     if read_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
-        regioes[m] = (stadium_by_id(read_usize(G_STADIUM_STASHED_VENUE_ID)) + 0x3c, 8);
+        regions[m] = (stadium_by_id(read_usize(G_STADIUM_STASHED_VENUE_ID)) + 0x3c, 8);
         m += 1;
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes[..m], || o(this, hoje), || stadium_daily_update(this, hoje));
-    PLACAR.registrar(igual, || format!("stadium_daily_update(dia {}, ano {}) {:x?} x {:x?}", read_u16(hoje) as i16, read_u16(hoje + 2), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions[..m], || o(this, today), || stadium_daily_update(this, today));
+    PLACAR.registrar(igual, || format!("stadium_daily_update(dia {}, ano {}) {:x?} x {:x?}", read_u16(today) as i16, read_u16(today + 2), mo, mr));
 }
 
 /// Comparer for `add_booking` (comparison mode: see the header of motor.rs).
@@ -119,8 +119,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_booking(this: usize, estadio
     if estadio == 0 || data == 0 || read_usize(this) == 0 || n == read_usize(this + 8) {
         return o(this, estadio, data);
     }
-    let regioes = [(this, 0xc), (read_usize(this), (n + 1) * 12)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, estadio, data), || add_booking(this, estadio, data));
+    let regions = [(this, 0xc), (read_usize(this), (n + 1) * 12)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, estadio, data), || add_booking(this, estadio, data));
     PLACAR.registrar(igual, || format!("add_booking(estadio {:x}, reservas {}) {:x?} x {:x?}", estadio, n, mo, mr));
 }
 

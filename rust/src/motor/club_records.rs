@@ -19,9 +19,9 @@ pub(crate) unsafe fn add_f64_at(a: usize, v: f64) {
 }
 
 /// PLAYERSTATS get_category_record(player, category).
-pub(crate) unsafe fn player_category_record(this: usize, jogador: usize, cat: u8) -> usize {
+pub(crate) unsafe fn player_category_record(this: usize, player: usize, cat: u8) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_GET_CATEGORY_RECORD);
-    f(this, jogador, cat as u32)
+    f(this, player, cat as u32)
 }
 
 
@@ -33,13 +33,13 @@ pub(crate) unsafe fn player_category_record(this: usize, jogador: usize, cat: u8
 /// ([0x9cf684], [0x9cf798], [0x9cf794]) ou o clube do lado sem a marca +0x40 (mandante) / +0x41 (visitante): 1. Pelo
 /// tipo (+0x42) da competição ([0xadadfc] pelo id +0): 4 → 5, 2 → 4, 1 → 2 se ela conta (0x4b0700), senão 3. Sem a
 /// competição ou outro tipo: a caixa (linhas 0x103a, 0x105d; só com `avisar`), `erro` e 2.
-pub(crate) unsafe fn match_stats_category(p: usize, lado: i32, avisar: bool, erro: &mut bool) -> u8 {
-    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let conta: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(FN_COMP_UTIL_IS_LEAGUE_DIVISION);
-    let clube = read_usize(p + if lado == 0 { 0x1c } else { 0x20 });
-    if amistoso(read_usize(G_FRIENDLY), read_usize(p + 0x14)) != 0 {
-        return if selecao(read_usize(p + 0x1c)) != 0 { 5 } else { 1 };
+pub(crate) unsafe fn match_stats_category(p: usize, side: i32, warn: bool, error: &mut bool) -> u8 {
+    let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
+    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let count: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(FN_COMP_UTIL_IS_LEAGUE_DIVISION);
+    let clube = read_usize(p + if side == 0 { 0x1c } else { 0x20 });
+    if friendly(read_usize(G_FRIENDLY), read_usize(p + 0x14)) != 0 {
+        return if national_team(read_usize(p + 0x1c)) != 0 { 5 } else { 1 };
     }
     let id = read_usize(read_usize(p + 0x14));
     if id == read_usize(KEY_CLUB_COMP_RESERVE) || id == read_usize(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) || id == read_usize(KEY_CLUB_COMP_B_INTERNATIONAL) {
@@ -53,8 +53,8 @@ pub(crate) unsafe fn match_stats_category(p: usize, lado: i32, avisar: bool, err
     }
     let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(p).wrapping_mul(4)));
     if comp == 0 {
-        *erro = true;
-        if avisar {
+        *error = true;
+        if warn {
             show_error_at(0xa78310, 0x103a);
         }
         return 2;
@@ -63,14 +63,14 @@ pub(crate) unsafe fn match_stats_category(p: usize, lado: i32, avisar: bool, err
         4 => 5,
         2 => 4,
         1 => {
-            if avisar {
+            if warn {
                 crate::comparacao::ramo("cpx_12 categoria da liga");
             }
-            if conta(read_usize(p) as i32) != 0 { 2 } else { 3 } // cpx12: a categoria da liga
+            if count(read_usize(p) as i32) != 0 { 2 } else { 3 } // cpx12: a categoria da liga
         }
         _ => {
-            *erro = true;
-            if avisar {
+            *error = true;
+            if warn {
                 show_error_at(0xa78310, 0x105d);
             }
             2
@@ -84,8 +84,8 @@ pub(crate) unsafe fn match_stats_category(p: usize, lado: i32, avisar: bool, err
 /// [pt] A linha `k` (0..20, 0x49 bytes; 11.. reservas) do lado `lado` do jogo conta: reserva que entrou (+0x32 ≠ 0xff),
 /// pessoa (+0) e jogador (+4) ≠ −1 e a pessoa na tabela ([0xae23bc], 0x6e; id abaixo de [0xae2364]). Devolve
 /// (linha, pessoa, dados do jogador em [0xae23c4], 0x46).
-pub(crate) unsafe fn match_lineup_row(jogo: usize, lado: usize, k: usize) -> Option<(usize, usize, usize)> {
-    let e = jogo + 0x625 * lado + 0x190 + 0x49 * k;
+pub(crate) unsafe fn match_lineup_row(jogo: usize, side: usize, k: usize) -> Option<(usize, usize, usize)> {
+    let e = jogo + 0x625 * side + 0x190 + 0x49 * k;
     if k > 10 && read_u8(e + 0x32) == 0xff {
         return None;
     }
@@ -93,11 +93,11 @@ pub(crate) unsafe fn match_lineup_row(jogo: usize, lado: usize, k: usize) -> Opt
     if sid == -1 || pid == -1 {
         return None;
     }
-    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((sid as usize).wrapping_mul(staff::SIZE));
-    if pessoa != 0 && read_usize(pessoa) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
+    let person = read_usize(G_STAFF_TABLE).wrapping_add((sid as usize).wrapping_mul(staff::SIZE));
+    if person != 0 && read_usize(person) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return None;
     }
-    Some((e, pessoa, read_usize(G_PLAYER_DATA_TABLE).wrapping_add((pid as usize).wrapping_mul(0x46))))
+    Some((e, person, read_usize(G_PLAYER_DATA_TABLE).wrapping_add((pid as usize).wrapping_mul(0x46))))
 }
 
 /// Categories updated per pass: the match's and the overall 6 (skipped for club and national friendlies).
@@ -114,15 +114,15 @@ pub(crate) fn stats_categories_for(cat: u8) -> [Option<u8>; 2] {
 pub(crate) static mut POSITION_RECORDS_DRY_RUN: bool = false;
 
 /// CLUB_RECORDS get_season_record(club, create).
-pub(crate) unsafe fn club_season_record(this: usize, clube: usize, criar: u32) -> usize {
+pub(crate) unsafe fn club_season_record(this: usize, clube: usize, create: u32) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
-    f(this, clube, criar)
+    f(this, clube, create)
 }
 
 /// CLUB_RECORDS get_all_time_record(club, create).
-pub(crate) unsafe fn club_all_time_record(this: usize, clube: usize, criar: u32) -> usize {
+pub(crate) unsafe fn club_all_time_record(this: usize, clube: usize, create: u32) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
-    f(this, clube, criar)
+    f(this, clube, create)
 }
 
 /// Reputation (+0x69, i16) of competition id (0x6b-byte records in G_CLUB_COMP_TABLE).
@@ -137,25 +137,25 @@ pub(crate) unsafe fn competition_reputation(id: i32) -> i16 {
 ///
 /// [pt] O recorde de sempre mudou: clube humano (0x600a50) ou seleção (0x53b900) com 5 temporadas ou mais (+0x68 do
 /// resumo) e o recorde (id, tipo) ainda fora da fila (+0x24, 6 bytes, conta +0x2c): entra na fila (0x452cb0).
-pub(crate) unsafe fn club_records_queue_record_news(this: usize, clube: usize, resumo: usize, tipo: u8) {
-    let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let guardar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CLUB_RECORDS_QUEUE_RECORD_NEWS);
-    if humano(clube, 0, 1, 0, 0) == 0 && selecao(clube) == 0 {
+pub(crate) unsafe fn club_records_queue_record_news(this: usize, clube: usize, summary: usize, kind: u8) {
+    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
+    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let store: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CLUB_RECORDS_QUEUE_RECORD_NEWS);
+    if human(clube, 0, 1, 0, 0) == 0 && national_team(clube) == 0 {
         return;
     }
-    if read_i16(resumo + 0x68) < 5 {
+    if read_i16(summary + 0x68) < 5 {
         return;
     }
     let n = read_usize(this + 0x2c) as i32;
     let mut e = read_usize(this + 0x24);
     for _ in 0..n.max(0) {
-        if read_usize(e) == read_usize(clube) && read_u8(e + 4) == tipo {
+        if read_usize(e) == read_usize(clube) && read_u8(e + 4) == kind {
             return;
         }
         e += 6;
     }
-    guardar(this, read_usize(clube), tipo as u32);
+    store(this, read_usize(clube), kind as u32);
 }
 
 /// The league and its following type-2 stages with the same number of rows (+0x3e).
@@ -163,20 +163,20 @@ pub(crate) unsafe fn club_records_queue_record_news(this: usize, clube: usize, r
 /// [pt] As ligas da cadeia da 0x447430: a liga e, enquanto houver, a fase seguinte (0x48d200 da primeira, índice +0x44 + 1
 /// até +0x30) do tipo 2 (+0x43) com as mesmas +0x3e linhas.
 pub(crate) unsafe fn league_stage_chain(liga0: usize) -> Vec<usize> {
-    let fase: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_COMP_GET_STAGE);
+    let stage: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_COMP_GET_STAGE);
     let mut v = vec![liga0];
-    let mut liga = liga0;
+    let mut league = liga0;
     loop {
-        let k = read_u8(liga + 0x44) as i8 as i32;
+        let k = read_u8(league + 0x44) as i8 as i32;
         if k >= read_usize(liga0 + 0x30) as i32 {
             return v;
         }
-        let f = fase(liga0, k + 1);
-        if read_u8(f + 0x43) != 2 || read_i16(f + 0x3e) != read_i16(liga + 0x3e) {
+        let f = stage(liga0, k + 1);
+        if read_u8(f + 0x43) != 2 || read_i16(f + 0x3e) != read_i16(league + 0x3e) {
             return v;
         }
         v.push(f);
-        liga = f;
+        league = f;
     }
 }
 
@@ -195,28 +195,28 @@ pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usiz
     if liga0 == 0 || read_u8(liga0 + 0x44) != 0xff {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_UPDATE_LEAGUE_POSITION_RECORDS)(this, liga0, sempre); // as caixas
     }
-    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
+    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let aplica: unsafe extern "stdcall" fn(u32, usize, u32) -> u32 = core::mem::transmute(FN_CLUB_RECORDS_RECORD_TYPE_APPLIES);
-    let ano_da_temporada: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(FN_KEY_NATION_GET_CLUB_SEASON_YEAR);
+    let year_of_season: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(FN_KEY_NATION_GET_CLUB_SEASON_YEAR);
     let comp = read_usize(read_usize(liga0 + 4)) as i32;
     for liga in league_stage_chain(liga0) {
         if !POSITION_RECORDS_DRY_RUN {
-            ordenar(liga, 0);
+            sort(liga, 0);
         }
         let mut i = 0i32;
         while i < read_i16(liga + 0x3e) as i32 {
-            let linha = read_usize(liga + 0xb1).wrapping_add(0x3b * i as usize);
-            let clube = read_usize(linha);
+            let row = read_usize(liga + 0xb1).wrapping_add(0x3b * i as usize);
+            let clube = read_usize(row);
             i += 1;
-            if read_u8(linha + 0x11) == 0 || clube == 0 {
+            if read_u8(row + 0x11) == 0 || clube == 0 {
                 continue;
             }
             let t = club_season_record(this, clube, 1);
             let s = club_all_time_record(this, clube, 1);
-            let resumo = read_usize(this + 0x1c).wrapping_add(read_usize(clube).wrapping_mul(0x6a));
-            let ano = ano_da_temporada(clube) as u16;
-            let pos = read_u8(linha + 4);
-            let fora = |v: i32| v < 0 || v > read_usize(G_CLUB_COMP_COUNT) as i32;
+            let summary = read_usize(this + 0x1c).wrapping_add(read_usize(clube).wrapping_mul(0x6a));
+            let year = year_of_season(clube) as u16;
+            let pos = read_u8(row + 4);
+            let away = |v: i32| v < 0 || v > read_usize(G_CLUB_COMP_COUNT) as i32;
             if aplica(1, clube, 1) != 0 {
                 let v = read_usize(t + 1) as i32;
                 if v < 0 || competition_reputation(comp) > competition_reputation(v) || (comp == v && pos < read_u8(t)) {
@@ -225,12 +225,12 @@ pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usiz
                     core::ptr::write_unaligned((t + 5) as *mut u16, 0);
                 }
                 let v = read_usize(s + 1) as i32;
-                if sempre != 0 && (fora(v) || competition_reputation(comp) > competition_reputation(v) || (comp == v && pos < read_u8(s))) {
+                if sempre != 0 && (away(v) || competition_reputation(comp) > competition_reputation(v) || (comp == v && pos < read_u8(s))) {
                     crate::comparacao::ramo("cpx_12 melhor posicao de sempre");
                     *(s as *mut u8) = pos;
                     core::ptr::write_unaligned((s + 1) as *mut i32, comp);
-                    core::ptr::write_unaligned((s + 5) as *mut u16, ano);
-                    club_records_queue_record_news(this, clube, resumo, 1);
+                    core::ptr::write_unaligned((s + 5) as *mut u16, year);
+                    club_records_queue_record_news(this, clube, summary, 1);
                 }
             }
             if aplica(2, clube, 1) != 0 {
@@ -241,11 +241,11 @@ pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usiz
                     core::ptr::write_unaligned((t + 0xc) as *mut u16, 0);
                 }
                 let v = read_usize(s + 8) as i32;
-                if sempre != 0 && (fora(v) || competition_reputation(comp) < competition_reputation(v) || (comp == v && pos > read_u8(s + 7))) {
+                if sempre != 0 && (away(v) || competition_reputation(comp) < competition_reputation(v) || (comp == v && pos > read_u8(s + 7))) {
                     *((s + 7) as *mut u8) = pos;
                     core::ptr::write_unaligned((s + 8) as *mut i32, comp);
-                    core::ptr::write_unaligned((s + 0xc) as *mut u16, ano);
-                    club_records_queue_record_news(this, clube, resumo, 2);
+                    core::ptr::write_unaligned((s + 0xc) as *mut u16, year);
+                    club_records_queue_record_news(this, clube, summary, 2);
                 }
             }
         }
@@ -271,42 +271,42 @@ pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
     if read_usize(this + 0x24) == 0 {
         return 1;
     }
-    let humano: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
-    let preencher: unsafe extern "C" fn(usize, usize, u32, usize) -> u32 = core::mem::transmute(FN_CLUB_RECORDS_WRITE_RECORD_NEWS_FIELDS);
+    let human: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
+    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let fill: unsafe extern "C" fn(usize, usize, u32, usize) -> u32 = core::mem::transmute(FN_CLUB_RECORDS_WRITE_RECORD_NEWS_FIELDS);
     let a_nacao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_NATION_MANAGERS);
-    let ao_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let to_club: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut i = 0i32;
     while i < read_usize(this + 0x2c) as i32 {
         let e = read_usize(this + 0x24) + 6 * i as usize;
         i += 1;
         let id = read_usize(e);
-        let tipo = read_u8(e + 4);
+        let kind = read_u8(e + 4);
         let clube = read_usize(G_CLUB_TABLE).wrapping_add(id).wrapping_add(id.wrapping_mul(0x244));
-        if humano(clube) == 0 && selecao(clube) == 0 {
+        if human(clube) == 0 && national_team(clube) == 0 {
             continue;
         }
         crate::comparacao::ramo("cpx_12 noticia de recorde");
         let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
         let n = local.as_mut_ptr() as usize;
-        construir(n, 0x3e8, 0);
+        construct(n, 0x3e8, 0);
         let reg = if read_u8(e + 5) == 2 { club_season_record(this, clube, 0) } else { club_all_time_record(this, clube, 0) };
         if RECORD_NEWS_DRY_RUN {
             continue;
         }
         // simplification: a original empurra o dword da local com o tipo no byte baixo (o resto é sobra); a 0x453120 lê o byte
-        preencher(id, reg, tipo as u32, n);
-        if selecao(clube) != 0 {
+        fill(id, reg, kind as u32, n);
+        if national_team(clube) != 0 {
             a_nacao(read_usize(G_NEWS), n, read_usize(clube + club::NATION));
         } else {
-            ao_clube(read_usize(G_NEWS), n, clube);
+            to_club(read_usize(G_NEWS), n, clube);
         }
     }
     if read_usize(this + 0x28) as i32 >= 100 {
         if !RECORD_NEWS_DRY_RUN {
-            liberar(read_usize(this + 0x24));
+            free(read_usize(this + 0x24));
         }
         core::ptr::write_unaligned((this + 0x24) as *mut usize, 0);
         core::ptr::write_unaligned((this + 0x28) as *mut usize, 0);
@@ -333,22 +333,22 @@ pub(crate) unsafe fn fan_rating(p: usize, clube: usize, st: usize) -> f64 {
     let favorito: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_FAVOURS_STAFF);
     let desafeto: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_DISLIKES_STAFF);
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_FAVOURS_CLUB);
-    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_DISLIKES_CLUB);
-    let media = read_i16(st + 0xe) as i32 as f64 / read_u8(st) as i32 as f64;
-    let mut nota = media + read_u8(st + 2) as i32 as f64 * read_f64(0x967878);
-    nota = nota + read_u8(st + 6) as i32 as f64 * read_f64(0x968958);
+    let not_likes: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_DISLIKES_CLUB);
+    let average = read_i16(st + 0xe) as i32 as f64 / read_u8(st) as i32 as f64;
+    let mut rating = average + read_u8(st + 2) as i32 as f64 * read_f64(0x967878);
+    rating = rating + read_u8(st + 6) as i32 as f64 * read_f64(0x968958);
     if favorito(p, clube) != 0 {
         crate::comparacao::ramo("cpp_10 favorito do clube");
-        nota = nota + read_f64(0x968918); // o clube gosta dele
+        rating = rating + read_f64(0x968918); // o clube gosta dele
     } else if desafeto(p, clube) != 0 {
-        nota = nota - read_f64(0x968950);
+        rating = rating - read_f64(0x968950);
     }
     if gosta(p, clube) != 0 {
-        nota + read_f64(0x968918)
-    } else if nao_gosta(p, clube) != 0 {
-        nota - read_f64(0x968940)
+        rating + read_f64(0x968918)
+    } else if not_likes(p, clube) != 0 {
+        rating - read_f64(0x968940)
     } else {
-        nota
+        rating
     }
 }
 
@@ -362,50 +362,50 @@ pub(crate) unsafe fn fan_rating(p: usize, clube: usize, st: usize) -> f64 {
 /// (_ftol); dos 50 do elenco (+0xd7) jogadores (+0x61, id abaixo de [0xae2364]) do clube (+0x39) com a estatística 6
 /// (0x7c3920 sobre [0xb74350]) de jogos acima de 0 e do mínimo (16 bits com sinal), o de maior nota
 /// (`fan_rating`, acima de −1000). Ninguém: 0; senão a referência dele (0x7e4920) em registro +0x371 e 1.
-pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clube: usize, registro: usize) -> u32 {
-    let jogos_do_clube = || read_u8(read_usize(this + 0x1c).wrapping_add((read_i32(clube) as usize).wrapping_mul(106)) + 0x10) as i8;
-    if jogos_do_clube() == 0 && read_i16(clube + club::REPUTATION) < 0xbb8 {
+pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clube: usize, record: usize) -> u32 {
+    let games_of_club = || read_u8(read_usize(this + 0x1c).wrapping_add((read_i32(clube) as usize).wrapping_mul(106)) + 0x10) as i8;
+    if games_of_club() == 0 && read_i16(clube + club::REPUTATION) < 0xbb8 {
         return 0;
     }
     let estatistica: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_GET_CATEGORY_RECORD);
-    let mut fator = 0.6f64;
-    let mut melhor = -1000.0f64;
-    let mut escolhido = 0usize;
-    while escolhido == 0 {
-        let minimo = match_pl_ftol(jogos_do_clube() as i32 as f64 * fator) as i16;
+    let mut factor = 0.6f64;
+    let mut best = -1000.0f64;
+    let mut chosen = 0usize;
+    while chosen == 0 {
+        let minimum = match_pl_ftol(games_of_club() as i32 as f64 * factor) as i16;
         for s in 0..50usize {
             let p = read_usize(clube + club::SQUAD + 4 * s);
             if p == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
-            let jogador = read_usize(p + 0x61);
-            if jogador == 0 || read_usize(p + 0x39) != clube {
+            let player = read_usize(p + 0x61);
+            if player == 0 || read_usize(p + 0x39) != clube {
                 continue;
             }
-            let st = estatistica(read_usize(G_PLAYER_STATS), jogador, 6);
+            let st = estatistica(read_usize(G_PLAYER_STATS), player, 6);
             if st == 0 {
                 continue;
             }
-            let jogos = read_u8(st);
-            if (jogos as i16) < minimo || jogos == 0 {
+            let games = read_u8(st);
+            if (games as i16) < minimum || games == 0 {
                 continue;
             }
-            let nota = fan_rating(p, clube, st);
-            if nota > melhor {
-                melhor = nota;
-                escolhido = p;
+            let rating = fan_rating(p, clube, st);
+            if rating > best {
+                best = rating;
+                chosen = p;
             }
         }
-        fator -= read_f64(0x967880);
-        if !(fator > read_f64(0x968918)) {
+        factor -= read_f64(0x967880);
+        if !(factor > read_f64(0x968918)) {
             break;
         }
     }
-    if escolhido == 0 {
+    if chosen == 0 {
         return 0;
     }
     let referencia: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_FILL_STAFF_NAME_REF);
-    referencia(escolhido, registro + 0x371);
+    referencia(chosen, record + 0x371);
     1
 }
 
@@ -413,30 +413,30 @@ pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clu
 /// Transfer record (club id, type) is already in the news queue at [this+0x24] (count +0x2c).
 ///
 /// [pt] O recorde de transferência já está na fila de notícias (6 bytes: id do clube, tipo) de [this+0x24], conta +0x2c?
-pub(crate) unsafe fn record_news_queued(this: usize, id: usize, tipo: u8) -> bool {
-    let fila = read_usize(this + 0x24);
-    (0..read_i32(this + 0x2c).max(0) as usize).any(|k| read_usize(fila + 6 * k) == id && read_u8(fila + 6 * k + 4) == tipo)
+pub(crate) unsafe fn record_news_queued(this: usize, id: usize, kind: u8) -> bool {
+    let queue = read_usize(this + 0x24);
+    (0..read_i32(this + 0x2c).max(0) as usize).any(|k| read_usize(queue + 6 * k) == id && read_u8(queue + 6 * k + 4) == kind)
 }
 
 /// Transfer value >= 1000 x (club reputation + 300).
 ///
 /// [pt] A transferência de recorde do clube passa de 1000 × (reputação (+0x80) + 300)?
-pub(crate) unsafe fn is_big_transfer(valor: i32, clube: usize) -> bool {
-    valor >= (read_i16(clube + club::REPUTATION) as i32 + 300).wrapping_mul(1000)
+pub(crate) unsafe fn is_big_transfer(value: i32, clube: usize) -> bool {
+    value >= (read_i16(clube + club::REPUTATION) as i32 + 300).wrapping_mul(1000)
 }
 
 /// Copies the record block at offset d from o to a (value, 0x18-byte reference, club, dates, flag).
 ///
 /// [pt] Copia o bloco de recorde de `o` (+`d`: valor, a referência de 0x18 bytes, o clube, a data, a marca) para `a`.
 pub(crate) unsafe fn copy_transfer_record(a: usize, o: usize, d: usize) {
-    let copiar: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+    let copy: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut rascunho = [0u8; 8];
     for k in 0..5 {
         core::ptr::write_unaligned((a + d + 4 * k) as *mut usize, read_usize(o + d + 4 * k));
     }
-    copiar(a + d + 0x14, rascunho.as_mut_ptr(), o + d + 0x14);
+    copy(a + d + 0x14, rascunho.as_mut_ptr(), o + d + 0x14);
     core::ptr::write_unaligned((a + d + 0x1c) as *mut usize, read_usize(o + d + 0x1c));
-    copiar(a + d + 0x20, rascunho.as_mut_ptr(), o + d + 0x20);
+    copy(a + d + 0x20, rascunho.as_mut_ptr(), o + d + 0x20);
     *((a + d + 0x28) as *mut u8) = read_u8(o + d + 0x28);
 }
 
@@ -453,58 +453,58 @@ pub(crate) unsafe fn copy_transfer_record(a: usize, o: usize, d: usize) {
 /// 300): o recorde na fila de notícias (0x452cb0, 0x1c, se ainda não está) e o técnico (+0xbf) passa a gostar da pessoa
 /// (0x547a10, forçado). O mesmo para o vendedor no recorde recebido (+0x33c; a fila com 0x1d, sem o gostar). 1.
 pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -> u32 {
-    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(t + 0xc) as usize).wrapping_mul(staff::SIZE));
-    let comprador = injury_club_by_index(read_i32(t + 8));
+    let person = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(t + 0xc) as usize).wrapping_mul(staff::SIZE));
+    let buyer = injury_club_by_index(read_i32(t + 8));
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let contrato = contract_of(read_usize(G_CONTRACT_MANAGER), pessoa);
+    let contrato = contract_of(read_usize(G_CONTRACT_MANAGER), person);
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, contrato);
-    let vendedor = if contrato != 0 { injury_club_by_index(read_i32(contrato + 4)) } else { 0 };
-    let temporada: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
+    let seller = if contrato != 0 { injury_club_by_index(read_i32(contrato + 4)) } else { 0 };
+    let season: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
     let sempre: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
     let referencia: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_FILL_STAFF_NAME_REF);
-    let copiar: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+    let copy: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let noticia: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_CLUB_RECORDS_QUEUE_RECORD_NEWS);
     let mut rascunho = [0u8; 8];
-    let s = temporada(this, comprador, 1);
-    let a = sempre(this, comprador, 1);
-    if vendedor == 0 {
+    let s = season(this, buyer, 1);
+    let a = sempre(this, buyer, 1);
+    if seller == 0 {
         return 1;
     }
-    let valor = read_i32(t + 0x1b);
-    if valor != 0 && valor > read_i32(s + 0x313) {
+    let value = read_i32(t + 0x1b);
+    if value != 0 && value > read_i32(s + 0x313) {
         crate::comparacao::ramo("cpp_10 recorde pago");
-        core::ptr::write_unaligned((s + 0x313) as *mut i32, valor);
-        referencia(pessoa, s + 0x317);
-        core::ptr::write_unaligned((s + 0x32f) as *mut usize, read_usize(vendedor));
-        copiar(s + 0x333, rascunho.as_mut_ptr(), G_CURRENT_DATE);
+        core::ptr::write_unaligned((s + 0x313) as *mut i32, value);
+        referencia(person, s + 0x317);
+        core::ptr::write_unaligned((s + 0x32f) as *mut usize, read_usize(seller));
+        copy(s + 0x333, rascunho.as_mut_ptr(), G_CURRENT_DATE);
         *((s + 0x33b) as *mut u8) = (read_usize(t + 4) != 0) as u8;
         if read_i32(t + 0x1b) > read_i32(a + 0x313) {
             copy_transfer_record(a, s, 0x313);
-            if is_big_transfer(read_i32(a + 0x313), comprador) {
+            if is_big_transfer(read_i32(a + 0x313), buyer) {
                 crate::comparacao::ramo("cpp_10 transferencia grande");
-                if !record_news_queued(this, read_usize(comprador), 0x1c) {
-                    noticia(this, read_usize(comprador) as u32, 0x1c);
+                if !record_news_queued(this, read_usize(buyer), 0x1c) {
+                    noticia(this, read_usize(buyer) as u32, 0x1c);
                 }
                 let gostar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_STAFF_ADD_FAVOURED_STAFF);
-                gostar(read_usize(comprador + 0xbf), pessoa, 1); // forçado
+                gostar(read_usize(buyer + 0xbf), person, 1); // forçado
             }
         }
     }
-    let s = temporada(this, vendedor, 1);
-    let a = sempre(this, vendedor, 1);
-    let valor = read_i32(t + 0x1b);
-    if valor == 0 || valor <= read_i32(s + 0x33c) {
+    let s = season(this, seller, 1);
+    let a = sempre(this, seller, 1);
+    let value = read_i32(t + 0x1b);
+    if value == 0 || value <= read_i32(s + 0x33c) {
         return 1;
     }
-    core::ptr::write_unaligned((s + 0x33c) as *mut i32, valor);
-    referencia(pessoa, s + 0x340);
-    core::ptr::write_unaligned((s + 0x358) as *mut usize, read_usize(comprador));
-    copiar(s + 0x35c, rascunho.as_mut_ptr(), G_CURRENT_DATE);
+    core::ptr::write_unaligned((s + 0x33c) as *mut i32, value);
+    referencia(person, s + 0x340);
+    core::ptr::write_unaligned((s + 0x358) as *mut usize, read_usize(buyer));
+    copy(s + 0x35c, rascunho.as_mut_ptr(), G_CURRENT_DATE);
     *((s + 0x364) as *mut u8) = (read_usize(t + 4) != 0) as u8;
     if read_i32(t + 0x1b) > read_i32(a + 0x33c) {
         copy_transfer_record(a, s, 0x33c);
-        if is_big_transfer(read_i32(a + 0x33c), vendedor) && !record_news_queued(this, read_usize(vendedor), 0x1d) {
-            noticia(this, read_usize(vendedor) as u32, 0x1d);
+        if is_big_transfer(read_i32(a + 0x33c), seller) && !record_news_queued(this, read_usize(seller), 0x1d) {
+            noticia(this, read_usize(seller) as u32, 0x1d);
         }
     }
     1
@@ -520,10 +520,10 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
 /// Record news (club id, type) is already in the 6-byte vector [this+0x24] (count +0x2c).
 ///
 /// [pt] A notícia de recorde (id do clube, tipo) já está no vetor de 6 bytes [this+0x24] (conta +0x2c)?
-pub(crate) unsafe fn is_record_news_queued(this: usize, id: usize, tipo: u8) -> bool {
+pub(crate) unsafe fn is_record_news_queued(this: usize, id: usize, kind: u8) -> bool {
     let n = read_usize(this + 0x2c) as i32;
     let v = read_usize(this + 0x24);
-    (0..n.max(0) as usize).any(|k| read_usize(v + 6 * k) == id && *((v + 6 * k + 4) as *const u8) == tipo)
+    (0..n.max(0) as usize).any(|k| read_usize(v + 6 * k) == id && *((v + 6 * k + 4) as *const u8) == kind)
 }
 
 /// adds the fee to the seller's season income and the buyer's season spending, raises the all-time records and queues
@@ -537,48 +537,48 @@ pub(crate) unsafe fn is_record_news_queued(this: usize, id: usize, tipo: u8) -> 
 /// 1000 e o ano diferente do recorde, a notícia de recorde 0x1f (0x452cb0) se ainda não está na fila. O comprador, o
 /// mesmo pelo gasto (+0x365, ano +0x369, notícia 0x1e), mas o mínimo é conferido com o recorde ANTIGO e sem o ano. Os
 /// registros são criados se faltarem (o segundo argumento 1). Comprador ou vendedor nulo: nada, 1. Devolve 1.
-pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, valor: i32, comprador: usize, vendedor: usize) -> u32 {
-    if comprador == 0 || vendedor == 0 {
+pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i32, buyer: usize, seller: usize) -> u32 {
+    if buyer == 0 || seller == 0 {
         return 1;
     }
-    let temporada: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
+    let season: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
     let sempre: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
-    let ano_do_clube: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_GET_CLUB_SEASON_YEAR);
+    let year_of_club: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_GET_CLUB_SEASON_YEAR);
     let noticia: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_CLUB_RECORDS_QUEUE_RECORD_NEWS);
-    let somar = |campo: usize| {
-        let v = read_usize(campo) as i32;
-        write_usize(campo, if v == -1 { valor } else { v.wrapping_add(valor) } as usize);
+    let add = |field: usize| {
+        let v = read_usize(field) as i32;
+        write_usize(field, if v == -1 { value } else { v.wrapping_add(value) } as usize);
     };
     // o vendedor: o recebido
-    let t = temporada(this, vendedor, 1);
-    let s = sempre(this, vendedor, 1);
-    somar(t + 0x36b);
+    let t = season(this, seller, 1);
+    let s = sempre(this, seller, 1);
+    add(t + 0x36b);
     write_i16(t + 0x36f, 0);
-    let ano = ano_do_clube(vendedor) as i16;
+    let year = year_of_club(seller) as i16;
     if (read_usize(s + 0x36b) as i32) < read_usize(t + 0x36b) as i32 {
-        let minimo = (read_i16(vendedor + 0x80) as i32 + 500).wrapping_mul(1000);
-        if read_usize(t + 0x36b) as i32 >= minimo && ano != read_i16(s + 0x36f) && !is_record_news_queued(this, read_usize(vendedor), 0x1f) {
+        let minimum = (read_i16(seller + 0x80) as i32 + 500).wrapping_mul(1000);
+        if read_usize(t + 0x36b) as i32 >= minimum && year != read_i16(s + 0x36f) && !is_record_news_queued(this, read_usize(seller), 0x1f) {
             crate::comparacao::ramo("cpm_6 noticia de recorde recebido");
-            noticia(this, read_usize(vendedor) as u32, 0x1f); // recorde de valor recebido
+            noticia(this, read_usize(seller) as u32, 0x1f); // recorde de valor recebido
         }
         write_usize(s + 0x36b, read_usize(t + 0x36b));
-        write_i16(s + 0x36f, ano);
+        write_i16(s + 0x36f, year);
     }
     // o comprador: o gasto
-    let t = temporada(this, comprador, 1);
-    let s = sempre(this, comprador, 1);
-    somar(t + 0x365);
+    let t = season(this, buyer, 1);
+    let s = sempre(this, buyer, 1);
+    add(t + 0x365);
     write_i16(t + 0x369, 0);
-    let ano = ano_do_clube(comprador) as i16;
+    let year = year_of_club(buyer) as i16;
     if (read_usize(t + 0x365) as i32) > read_usize(s + 0x365) as i32 {
-        let minimo = (read_i16(comprador + 0x80) as i32 + 500).wrapping_mul(1000);
+        let minimum = (read_i16(buyer + 0x80) as i32 + 500).wrapping_mul(1000);
         // a original confere o mínimo com o recorde antigo (o ecx que ainda tem o de sempre)
-        if read_usize(s + 0x365) as i32 >= minimo && !is_record_news_queued(this, read_usize(comprador), 0x1e) {
+        if read_usize(s + 0x365) as i32 >= minimum && !is_record_news_queued(this, read_usize(buyer), 0x1e) {
             crate::comparacao::ramo("cpm_6 noticia de recorde pago");
-            noticia(this, read_usize(comprador) as u32, 0x1e); // recorde de valor pago
+            noticia(this, read_usize(buyer) as u32, 0x1e); // recorde de valor pago
         }
         write_usize(s + 0x365, read_usize(t + 0x365));
-        write_i16(s + 0x369, ano);
+        write_i16(s + 0x369, year);
     }
     1
 }
@@ -592,8 +592,8 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, valor: i
 /// e os `jogos` passam o recorde (+0x247; −1 = sem recorde), o recorde = `jogos` e a referência do jogador em +0x249
 /// (0x7e4920); o mesmo com o tipo 0x18 e os `gols` (+0x261, referência +0x263). Devolve 1. Jogador ou clube nulo, ou
 /// sem registro: a caixa "Error" (linhas 0x6fa e 0x702) e 0.
-pub(crate) unsafe extern "thiscall" fn club_records_update_career_records(this: usize, jogador: usize, clube: usize, jogos: u32, gols: u32) -> u32 {
-    if jogador == 0 || clube == 0 {
+pub(crate) unsafe extern "thiscall" fn club_records_update_career_records(this: usize, player: usize, clube: usize, games: u32, goals: u32) -> u32 {
+    if player == 0 || clube == 0 {
         show_error_at(0x98b6a0, 0x6fa);
         return 0;
     }
@@ -605,12 +605,12 @@ pub(crate) unsafe extern "thiscall" fn club_records_update_career_records(this: 
     }
     let vale: unsafe extern "stdcall" fn(u32, usize, u32) -> u32 = core::mem::transmute(FN_CLUB_RECORDS_RECORD_TYPE_APPLIES);
     let referencia: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_FILL_STAFF_NAME_REF);
-    for (tipo, campo, n) in [(0x17u32, 0x247usize, jogos as i16), (0x18, 0x261, gols as i16)] {
+    for (tipo, campo, n) in [(0x17u32, 0x247usize, games as i16), (0x18, 0x261, goals as i16)] {
         if vale(tipo, clube, 1) != 0 {
             let v = read_i16(r + campo);
             if v == -1 || n > v {
                 write_i16(r + campo, n);
-                referencia(jogador, r + campo + 2);
+                referencia(player, r + campo + 2);
             }
         }
     }
@@ -633,22 +633,22 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
     if clube == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_SEASON_RATING_RECORD)(this, clube); // caixa: só a original
     }
-    let entrada = read_usize(this + 0x1c).wrapping_add(read_usize(clube).wrapping_mul(0x6a));
-    if *((entrada + 0x10) as *const u8) == 0 {
+    let entry = read_usize(this + 0x1c).wrapping_add(read_usize(clube).wrapping_mul(0x6a));
+    if *((entry + 0x10) as *const u8) == 0 {
         return 0;
     }
-    let temporada: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
-    let r = temporada(this, clube, 0);
+    let season: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
+    let r = season(this, clube, 0);
     if r == 0 {
         return 0;
     }
     let ligado: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
-    let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_GET_CATEGORY_RECORD);
+    let record: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_GET_CATEGORY_RECORD);
     let estatistica: unsafe extern "stdcall" fn(usize, u32, f32) -> f64 = core::mem::transmute(FN_PLAYER_STATS_GET_RECORD_VALUE);
     let referencia: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_FILL_STAFF_NAME_REF);
-    let nota = (r + 0x1f1) as *mut f32;
+    let rating = (r + 0x1f1) as *mut f32;
     write_usize(r + 0x1f1, 0xbf800000); // −1.0f
-    let mut achou = 0;
+    let mut found = 0;
     for k in 0..50usize {
         let p = read_usize(clube + club::SQUAD + 4 * k);
         if p == 0 {
@@ -661,26 +661,26 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
         if read_usize(p + 0x39) != clube && read_usize(p + 0x39) != ligado(clube, 0, 1) {
             continue;
         }
-        let reg = registro(read_usize(G_PLAYER_STATS), est, 6);
+        let reg = record(read_usize(G_PLAYER_STATS), est, 6);
         if reg == 0 {
             continue;
         }
         let jogou = match_pl_ftol(estatistica(reg, 1, 6.5)) as u8;
-        if (jogou as i32) < *((entrada + 0x10) as *const i8) as i32 / 2 { // menos da metade dos jogos
+        if (jogou as i32) < *((entry + 0x10) as *const i8) as i32 / 2 { // menos da metade dos jogos
             continue;
         }
-        let media = estatistica(reg, 0x11, 6.5);
+        let average = estatistica(reg, 0x11, 6.5);
         // fcomp com o −1.0 (double) e fcom com o float guardado: passa só com a média maior
-        if *nota as f64 == read_f64_at(0x968948) || media > *nota as f64 { // 0x968948 = -1
+        if *rating as f64 == read_f64_at(0x968948) || average > *rating as f64 { // 0x968948 = -1
             crate::comparacao::ramo("cpm_6 recorde de nota da temporada");
-            *nota = media as f32;
+            *rating = average as f32;
             *((r + 0x20d) as *mut u8) = jogou;
             referencia(p, r + 0x1f5);
             write_i16(r + 0x20e, 0);
-            achou = 1;
+            found = 1;
         }
     }
-    achou
+    found
 }
 
 
@@ -699,8 +699,8 @@ pub(crate) unsafe fn club_records_entry(this: usize, clube: usize) -> usize {
 /// club_records.cpp out-of-memory: shows the box at `linha` and exits fatally.
 ///
 /// [pt] A falta de memória das tabelas dos recordes (club_records.cpp, linha `linha`): caixa e fim, como a original.
-pub(crate) unsafe fn records_out_of_memory(linha: u32) -> ! {
-    show_error_at(0x98b6a0, linha);
+pub(crate) unsafe fn records_out_of_memory(row: u32) -> ! {
+    show_error_at(0x98b6a0, row);
     fatal_exit()
 }
 
@@ -713,18 +713,18 @@ pub(crate) unsafe fn records_out_of_memory(linha: u32) -> ! {
 /// índice (−1) e com `criar`: o índice novo é a conta (+0xc, que sobe), o vetor cresce de 50 em 50 (capacidade +8,
 /// realloc 0x945667; sem memória, caixa 0x1694 e fim) e o registro é reiniciado (0x452fe0). Devolve o registro, ou 0
 /// sem índice. Clube nulo: a original (caixa 0x1680, 0).
-pub(crate) unsafe extern "thiscall" fn get_all_time_record(this: usize, clube: usize, criar: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn get_all_time_record(this: usize, clube: usize, create: u32) -> usize {
     if clube == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_ALL_TIME_RECORD)(this, clube, criar);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_ALL_TIME_RECORD)(this, clube, create);
     }
     let e = club_records_entry(this, clube);
-    if read_usize(e) as i32 == -1 && criar != 0 {
+    if read_usize(e) as i32 == -1 && create != 0 {
         crate::comparacao::ramo("cpk_1 recordes de sempre novos");
         if read_usize(this + 0xc) == read_usize(this + 8) {
             let cap = read_usize(this + 8).wrapping_add(50);
             write_usize(this + 8, cap);
-            let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-            let p = realocar(read_usize(this + 4), cap.wrapping_mul(0x38b) as u32);
+            let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
+            let p = realloc(read_usize(this + 4), cap.wrapping_mul(0x38b) as u32);
             write_usize(this + 4, p);
             if p == 0 {
                 records_out_of_memory(0x1694);
@@ -749,18 +749,18 @@ pub(crate) unsafe extern "thiscall" fn get_all_time_record(this: usize, clube: u
 /// [pt] { 0x4528d0 } (thiscall, ret 8, club_records.cpp): `Club_Records::get_season_record(clube, criar)`: o mesmo para os
 /// recordes da temporada: índice +4 da entrada, vetor [this+0x10], capacidade +0x14, conta +0x18 (sem memória, caixa
 /// 0x16c9 e fim). Clube nulo: a original (caixa 0x16b5, 0).
-pub(crate) unsafe extern "thiscall" fn get_season_record(this: usize, clube: usize, criar: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn get_season_record(this: usize, clube: usize, create: u32) -> usize {
     if clube == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_SEASON_RECORD)(this, clube, criar);
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_SEASON_RECORD)(this, clube, create);
     }
     let e = club_records_entry(this, clube) + 4;
-    if read_usize(e) as i32 == -1 && criar != 0 {
+    if read_usize(e) as i32 == -1 && create != 0 {
         crate::comparacao::ramo("cpk_1 recordes da temporada novos");
         if read_usize(this + 0x18) == read_usize(this + 0x14) {
             let cap = read_usize(this + 0x14).wrapping_add(50);
             write_usize(this + 0x14, cap);
-            let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-            let p = realocar(read_usize(this + 0x10), cap.wrapping_mul(0x38b) as u32);
+            let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
+            let p = realloc(read_usize(this + 0x10), cap.wrapping_mul(0x38b) as u32);
             write_usize(this + 0x10, p);
             if p == 0 {
                 records_out_of_memory(0x16c9);
@@ -787,13 +787,13 @@ pub(crate) unsafe extern "thiscall" fn get_season_record(this: usize, clube: usi
 /// clube +0, tipo do recorde +4; o byte +5 fica como está) ao vetor de 6 bytes [this+0x24] das notícias de recorde,
 /// lidas pela 0x448e30. Cheio (conta +0x2c = capacidade +0x28): cresce de 5 em 5 (realloc 0x945667); sem memória,
 /// caixa 0x174f e devolve 0 (o jogo segue, sem o vetor). Devolve 1.
-pub(crate) unsafe extern "thiscall" fn queue_record_news(this: usize, id: u32, tipo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn queue_record_news(this: usize, id: u32, kind: u32) -> u32 {
     crate::comparacao::ramo("cpk_1 noticia de recorde");
     if read_usize(this + 0x2c) == read_usize(this + 0x28) {
         let cap = read_usize(this + 0x28).wrapping_add(5);
         write_usize(this + 0x28, cap);
-        let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-        let p = realocar(read_usize(this + 0x24), cap.wrapping_mul(6) as u32);
+        let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
+        let p = realloc(read_usize(this + 0x24), cap.wrapping_mul(6) as u32);
         write_usize(this + 0x24, p);
         if p == 0 {
             show_error_at(0x98b6a0, 0x174f);
@@ -803,7 +803,7 @@ pub(crate) unsafe extern "thiscall" fn queue_record_news(this: usize, id: u32, t
     let n = read_usize(this + 0x2c);
     let item = read_usize(this + 0x24).wrapping_add(n.wrapping_mul(6));
     core::ptr::write_unaligned(item as *mut u32, id);
-    *((item + 4) as *mut u8) = tipo as u8;
+    *((item + 4) as *mut u8) = kind as u8;
     write_usize(this + 0x2c, n.wrapping_add(1)); // mais uma notícia
     1
 }
@@ -812,10 +812,10 @@ pub(crate) unsafe extern "thiscall" fn queue_record_news(this: usize, id: u32, t
 ///
 /// [pt] O plano dos recordes (de sempre ou da temporada) antes da original: o índice esperado (o novo é a conta), a conta
 /// esperada e se o registro é novo.
-pub(crate) unsafe fn record_index_plan(e: usize, conta: usize, criar: u32) -> (i32, usize, bool) {
+pub(crate) unsafe fn record_index_plan(e: usize, count: usize, create: u32) -> (i32, usize, bool) {
     let i = read_usize(e) as i32;
-    let n = read_usize(conta);
-    if i == -1 && criar != 0 { (n as i32, n.wrapping_add(1), true) } else { (i, n, false) }
+    let n = read_usize(count);
+    if i == -1 && create != 0 { (n as i32, n.wrapping_add(1), true) } else { (i, n, false) }
 }
 
 /// Checks the original's result against the plan (index, count, returned record, reset markers of a new one) and
@@ -823,13 +823,13 @@ pub(crate) unsafe fn record_index_plan(e: usize, conta: usize, criar: u32) -> (i
 ///
 /// [pt] Confere o resultado da original com o plano: o índice da entrada, a conta, o registro devolvido e, se novo, as
 /// marcas da 0x452fe0 (−1.0f em +0x1f1, −1 em +0x313).
-pub(crate) unsafe fn check_record_plan(nome: &str, clube: usize, e: usize, conta: usize, vetor: usize, plano: (i32, usize, bool), r: usize) {
-    let (i, n, novo) = plano;
-    let esperado = if i <= -1 { 0 } else { read_usize(vetor).wrapping_add((i as usize).wrapping_mul(0x38b)) };
+pub(crate) unsafe fn check_record_plan(name: &str, clube: usize, e: usize, count: usize, array: usize, plan: (i32, usize, bool), r: usize) {
+    let (i, n, novo) = plan;
+    let expected = if i <= -1 { 0 } else { read_usize(array).wrapping_add((i as usize).wrapping_mul(0x38b)) };
     let reiniciado = !novo || (r != 0 && read_usize(r + 0x1f1) == 0xbf800000 && read_usize(r + 0x313) as i32 == -1);
-    PLACAR.registrar(r == esperado && read_usize(e) as i32 == i && read_usize(conta) == n && reiniciado, || {
+    PLACAR.registrar(r == expected && read_usize(e) as i32 == i && read_usize(count) == n && reiniciado, || {
         format!("{}(clube {}) índice {} (esperava {}), conta {} (esperava {}), registro {:x} (esperava {:x}), novo={} reiniciado={}",
-            nome, read_usize(clube), read_usize(e) as i32, i, read_usize(conta), n, r, esperado, novo, reiniciado)
+            name, read_usize(clube), read_usize(e) as i32, i, read_usize(count), n, r, expected, novo, reiniciado)
     });
 }
 
@@ -845,25 +845,25 @@ pub(crate) unsafe fn check_record_plan(nome: &str, clube: usize, e: usize, conta
 /// da oferta (+0x1b) bate o recorde de valor pago do clube comprador (+8; os recordes de sempre pela 0x452710, criando
 /// se preciso)? Tem de ser ao menos 50 × reputação (+0x80) + 500.000; com `exigir`, também ao menos reputação² × a
 /// constante 0x967880 (_ftol); e acima de zero e do recorde (+0x313). Oferta nula: 0.
-pub(crate) unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, oferta: usize, exigir: u32) -> u8 {
-    if oferta == 0 {
+pub(crate) unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, offer: usize, exigir: u32) -> u8 {
+    if offer == 0 {
         return 0;
     }
-    let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(oferta + 8).wrapping_mul(club::SIZE));
+    let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(offer + 8).wrapping_mul(club::SIZE));
     let recordes: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
     let rec = recordes(this, clube, 1);
     if rec == 0 || clube == 0 {
         return 0;
     }
     let rep = *((clube + club::REPUTATION) as *const i16) as i32;
-    let valor = read_usize(oferta + 0x1b) as i32;
-    if valor < rep.wrapping_mul(25).wrapping_add(250_000).wrapping_mul(2) {
+    let value = read_usize(offer + 0x1b) as i32;
+    if value < rep.wrapping_mul(25).wrapping_add(250_000).wrapping_mul(2) {
         return 0; // abaixo do mínimo pela reputação
     }
-    if exigir != 0 && valor < match_pl_ftol(rep as f64 * rep as f64 * read_f64_at(0x967880)) { // 0x967880 = 0.1
+    if exigir != 0 && value < match_pl_ftol(rep as f64 * rep as f64 * read_f64_at(0x967880)) { // 0x967880 = 0.1
         return 0;
     }
-    (valor != 0 && valor > read_usize(rec + 0x313) as i32) as u8
+    (value != 0 && value > read_usize(rec + 0x313) as i32) as u8
 }
 
 
@@ -1005,9 +1005,9 @@ pub(crate) unsafe extern "thiscall" fn oldest_player_record_construct(this: usiz
 /// Copies the 0x18-byte record holder from `origem` to `destino` (record_holder_assign 0x448490).
 ///
 /// [pt] O recordista (0x18 bytes) de `origem` em `destino`, pela 0x448490 (`record_holder_assign`, já em Rust).
-pub(crate) unsafe fn assign_record_holder(destino: usize, origem: usize) {
-    let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_RECORD_HOLDER_ASSIGN);
-    copiar(destino, origem);
+pub(crate) unsafe fn assign_record_holder(target: usize, source: usize) {
+    let copy: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_RECORD_HOLDER_ASSIGN);
+    copy(target, source);
 }
 
 /// copies the rating record (0x1f bytes): the rating (+0), the holder (+4, through 0x448490), +0x1c and +0x1d
@@ -1015,11 +1015,11 @@ pub(crate) unsafe fn assign_record_holder(destino: usize, origem: usize) {
 ///
 /// [pt] { 0x448230 } (thiscall, ret 4, club_records.cpp): `rating_record_assign`: copia o recorde de nota (0x1f bytes) de
 /// `origem`: a nota (+0, dupla), o recordista em +4, o byte +0x1c e a palavra +0x1d. Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn rating_record_assign(this: usize, origem: usize) -> usize {
-    core::ptr::write_unaligned(this as *mut u32, core::ptr::read_unaligned(origem as *const u32)); // a nota
-    assign_record_holder(this + 4, origem + 4);
-    *((this + 0x1c) as *mut u8) = *((origem + 0x1c) as *const u8); // o byte do recorde de nota
-    core::ptr::write_unaligned((this + 0x1d) as *mut u16, core::ptr::read_unaligned((origem + 0x1d) as *const u16));
+pub(crate) unsafe extern "thiscall" fn rating_record_assign(this: usize, source: usize) -> usize {
+    core::ptr::write_unaligned(this as *mut u32, core::ptr::read_unaligned(source as *const u32)); // a nota
+    assign_record_holder(this + 4, source + 4);
+    *((this + 0x1c) as *mut u8) = *((source + 0x1c) as *const u8); // o byte do recorde de nota
+    core::ptr::write_unaligned((this + 0x1d) as *mut u16, core::ptr::read_unaligned((source + 0x1d) as *const u16));
     this
 }
 
@@ -1028,10 +1028,10 @@ pub(crate) unsafe extern "thiscall" fn rating_record_assign(this: usize, origem:
 ///
 /// [pt] { 0x4484d0 } (thiscall, ret 4, club_records.cpp): `man_of_match_record_assign`: copia o recorde de melhor em campo
 /// (0x1b bytes) de `origem`: as vezes (+0, byte), o recordista em +1 e o ano da temporada (+0x19). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn man_of_match_record_assign(this: usize, origem: usize) -> usize {
-    *(this as *mut u8) = *(origem as *const u8); // as vezes de melhor em campo
-    assign_record_holder(this + 1, origem + 1);
-    core::ptr::write_unaligned((this + 0x19) as *mut u16, core::ptr::read_unaligned((origem + 0x19) as *const u16));
+pub(crate) unsafe extern "thiscall" fn man_of_match_record_assign(this: usize, source: usize) -> usize {
+    *(this as *mut u8) = *(source as *const u8); // as vezes de melhor em campo
+    assign_record_holder(this + 1, source + 1);
+    core::ptr::write_unaligned((this + 0x19) as *mut u16, core::ptr::read_unaligned((source + 0x19) as *const u16));
     this
 }
 
@@ -1040,11 +1040,11 @@ pub(crate) unsafe extern "thiscall" fn man_of_match_record_assign(this: usize, o
 ///
 /// [pt] { 0x448500 } (thiscall, ret 4, club_records.cpp): `discipline_record_assign`: copia o recorde de disciplina (0x1c
 /// bytes) de `origem`: os amarelos (+0) e vermelhos (+1), o recordista em +2 e o ano da temporada (+0x1a). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn discipline_record_assign(this: usize, origem: usize) -> usize {
-    *(this as *mut u8) = *(origem as *const u8);
-    *((this + 1) as *mut u8) = *((origem + 1) as *const u8); // os vermelhos
-    assign_record_holder(this + 2, origem + 2);
-    core::ptr::write_unaligned((this + 0x1a) as *mut u16, core::ptr::read_unaligned((origem + 0x1a) as *const u16));
+pub(crate) unsafe extern "thiscall" fn discipline_record_assign(this: usize, source: usize) -> usize {
+    *(this as *mut u8) = *(source as *const u8);
+    *((this + 1) as *mut u8) = *((source + 1) as *const u8); // os vermelhos
+    assign_record_holder(this + 2, source + 2);
+    core::ptr::write_unaligned((this + 0x1a) as *mut u16, core::ptr::read_unaligned((source + 0x1a) as *const u16));
     this
 }
 
@@ -1056,10 +1056,10 @@ pub(crate) unsafe extern "thiscall" fn discipline_record_assign(this: usize, ori
 ///
 /// [pt] { 0x448530 } (thiscall, ret 4, club_records.cpp): `count_record_assign`: copia o recorde de contagem (0x1a bytes) de
 /// `origem`: a contagem (+0, palavra) e o recordista em +2 (pela 0x448490, já em Rust). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn count_record_assign(this: usize, origem: usize) -> usize {
-    core::ptr::write_unaligned(this as *mut u16, core::ptr::read_unaligned(origem as *const u16)); // a contagem
-    let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_RECORD_HOLDER_ASSIGN);
-    copiar(this + 2, origem + 2);
+pub(crate) unsafe extern "thiscall" fn count_record_assign(this: usize, source: usize) -> usize {
+    core::ptr::write_unaligned(this as *mut u16, core::ptr::read_unaligned(source as *const u16)); // a contagem
+    let copy: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_RECORD_HOLDER_ASSIGN);
+    copy(this + 2, source + 2);
     this
 }
 
@@ -1068,10 +1068,10 @@ pub(crate) unsafe extern "thiscall" fn count_record_assign(this: usize, origem: 
 ///
 /// [pt] { 0x4485b0 } (thiscall, ret 4, club_records.cpp): `fans_player_record_assign`: copia o recorde de jogador da
 /// torcida (0x1a bytes) de `origem`: o recordista em +0 (pela 0x448490) e o ano da temporada (+0x18). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn fans_player_record_assign(this: usize, origem: usize) -> usize {
-    let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_RECORD_HOLDER_ASSIGN);
-    copiar(this, origem);
-    core::ptr::write_unaligned((this + 0x18) as *mut u16, core::ptr::read_unaligned((origem + 0x18) as *const u16)); // o ano do torcedor
+pub(crate) unsafe extern "thiscall" fn fans_player_record_assign(this: usize, source: usize) -> usize {
+    let copy: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_RECORD_HOLDER_ASSIGN);
+    copy(this, source);
+    core::ptr::write_unaligned((this + 0x18) as *mut u16, core::ptr::read_unaligned((source + 0x18) as *const u16)); // o ano do torcedor
     this
 }
 
@@ -1079,8 +1079,8 @@ pub(crate) unsafe extern "thiscall" fn fans_player_record_assign(this: usize, or
 ///
 /// [pt] A data do recordista em `a` pela 0x54a110 (o construtor da data: dia 40, ano 1972, +4 = 1).
 pub(crate) unsafe fn init_default_date(a: usize) {
-    let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
-    data_padrao(a);
+    let data_default: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
+    data_default(a);
 }
 
 /// constructs the tally record: the holder date at +0x11 (0x54a110)
@@ -1115,15 +1115,15 @@ pub(crate) unsafe extern "thiscall" fn count_record_construct(this: usize) -> us
 /// [pt] { 0x448550 } (thiscall, ret 4, club_records.cpp): `transfer_fee_record_assign`: copia o recorde de valor de
 /// transferência (0x29 bytes) de `origem`: cinco duplas (+0..+0x10: o valor, o jogador, o outro clube...), a data em
 /// +0x14, a dupla +0x1c, a data em +0x20 e a marca de troca (+0x28). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn transfer_fee_record_assign(this: usize, origem: usize) -> usize {
-    let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((origem + o) as *const u32));
+pub(crate) unsafe extern "thiscall" fn transfer_fee_record_assign(this: usize, source: usize) -> usize {
+    let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((source + o) as *const u32));
     for o in [0, 4, 8, 0xc, 0x10] {
         d(o); // o valor e os ids
     }
-    copy_record_date(this + 0x14, origem + 0x14);
+    copy_record_date(this + 0x14, source + 0x14);
     d(0x1c);
-    copy_record_date(this + 0x20, origem + 0x20);
-    *((this + 0x28) as *mut u8) = *((origem + 0x28) as *const u8); // a marca de troca
+    copy_record_date(this + 0x20, source + 0x20);
+    *((this + 0x28) as *mut u8) = *((source + 0x28) as *const u8); // a marca de troca
     this
 }
 
@@ -1133,12 +1133,12 @@ pub(crate) unsafe extern "thiscall" fn transfer_fee_record_assign(this: usize, o
 /// [pt] { 0x451570 } (thiscall, ret 4, club_records.cpp): `goals_in_match_record_assign`: copia o recorde de gols numa
 /// partida (0x38 bytes) de `origem`: os gols (+0, byte), o recordista em +1 (0x448490) e o registro da partida em +0x19
 /// (0x448110, ambos já em Rust). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn goals_in_match_record_assign(this: usize, origem: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn goals_in_match_record_assign(this: usize, source: usize) -> usize {
     let recordista: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_RECORD_HOLDER_ASSIGN);
     let partida: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_MATCH_RECORD_ASSIGN);
-    *(this as *mut u8) = *(origem as *const u8); // os gols
-    recordista(this + 1, origem + 1);
-    partida(this + 0x19, origem + 0x19);
+    *(this as *mut u8) = *(source as *const u8); // os gols
+    recordista(this + 1, source + 1);
+    partida(this + 0x19, source + 0x19);
     this
 }
 
@@ -1147,10 +1147,10 @@ pub(crate) unsafe extern "thiscall" fn goals_in_match_record_assign(this: usize,
 /// Copies a date from `origem` to `destino` (Date::operator=).
 ///
 /// [pt] Date::operator= (0x417c10): copia a data de `origem` para `destino`, com o retorno numa local.
-pub(crate) unsafe fn copy_record_date(destino: usize, origem: usize) {
-    let copiar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+pub(crate) unsafe fn copy_record_date(target: usize, source: usize) {
+    let copy: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut local = [0u8; 8];
-    copiar(destino, &mut local, origem);
+    copy(target, &mut local, source);
 }
 
 /// copies the record holder: four identity fields and the date
@@ -1158,13 +1158,13 @@ pub(crate) unsafe fn copy_record_date(destino: usize, origem: usize) {
 ///
 /// [pt] { 0x448490 } (thiscall, ret 4, club_records.cpp): copia o recordista (0x18 bytes) de `origem`:
 /// quatro palavras duplas de identificação (+0..+0xc) e a data em +0x10. Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn record_holder_assign(this: usize, origem: usize) -> usize {
-    let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((origem + o) as *const u32));
+pub(crate) unsafe extern "thiscall" fn record_holder_assign(this: usize, source: usize) -> usize {
+    let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((source + o) as *const u32));
     d(0); // identificação
     d(4);
     d(8);
     d(0xc);
-    copy_record_date(this + 0x10, origem + 0x10);
+    copy_record_date(this + 0x10, source + 0x10);
     this
 }
 
@@ -1174,11 +1174,11 @@ pub(crate) unsafe extern "thiscall" fn record_holder_assign(this: usize, origem:
 /// [pt] { 0x448110 } (thiscall, ret 4, club_records.cpp): copia o registro de partida (0x1f bytes) de
 /// `origem`: a data em +0, depois +8 (dupla), +0xc e +0xe (palavras), +0x10 (byte), +0x11 e +0x15
 /// (duplas), +0x19 e +0x1a (bytes) e +0x1b (dupla). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn match_record_assign(this: usize, origem: usize) -> usize {
-    let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((origem + o) as *const u32));
-    let w = |o: usize| core::ptr::write_unaligned((this + o) as *mut u16, core::ptr::read_unaligned((origem + o) as *const u16));
-    let b = |o: usize| *((this + o) as *mut u8) = *((origem + o) as *const u8);
-    copy_record_date(this, origem);
+pub(crate) unsafe extern "thiscall" fn match_record_assign(this: usize, source: usize) -> usize {
+    let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((source + o) as *const u32));
+    let w = |o: usize| core::ptr::write_unaligned((this + o) as *mut u16, core::ptr::read_unaligned((source + o) as *const u16));
+    let b = |o: usize| *((this + o) as *mut u8) = *((source + o) as *const u8);
+    copy_record_date(this, source);
     d(8); // adversário
     w(0xc);
     w(0xe);
@@ -1196,10 +1196,10 @@ pub(crate) unsafe extern "thiscall" fn match_record_assign(this: usize, origem: 
 ///
 /// [pt] { 0x448170 } (thiscall, ret 4, club_records.cpp): copia o registro de sequência (0x14 bytes) de
 /// `origem`: o número de jogos (+0) e as datas de início (+4) e fim (+0xc). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn run_record_assign(this: usize, origem: usize) -> usize {
-    *(this as *mut u32) = *(origem as *const u32); // jogos
-    copy_record_date(this + 4, origem + 4);
-    copy_record_date(this + 0xc, origem + 0xc);
+pub(crate) unsafe extern "thiscall" fn run_record_assign(this: usize, source: usize) -> usize {
+    *(this as *mut u32) = *(source as *const u32); // jogos
+    copy_record_date(this + 4, source + 4);
+    copy_record_date(this + 0xc, source + 0xc);
     this
 }
 
@@ -1242,8 +1242,8 @@ pub(crate) unsafe extern "C" fn reset_records(r: usize) -> u32 {
 /// [pt] { 0x450d40 } (thiscall, club_records.cpp): `record_holder_construct`: constrói o recordista: só a data em +0x10
 /// (0x54a110). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn record_holder_construct(this: usize) -> usize {
-    let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
-    padrao(this + 0x10); // a data do recordista
+    let default: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
+    default(this + 0x10); // a data do recordista
     this
 }
 

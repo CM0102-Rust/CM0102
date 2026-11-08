@@ -4,9 +4,9 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/leagues/fra_second.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `construct_fra_second` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_second(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_second(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_SECOND);
-    compare_division_league_ctor("construct_fra_second", this, ano, registro, &FRENCH_SECOND_DIVISION, || o(this, ano, registro))
+    compare_division_league_ctor("construct_fra_second", this, year, record, &FRENCH_SECOND_DIVISION, || o(this, year, record))
 }
 
 /// Comparer for `fra_second_set_up_rules` (comparison mode: see the header of motor.rs).
@@ -22,7 +22,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_second_create_table(this: us
 }
 
 /// Comparer for `fra_second_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_second_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_fra_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_SECOND_CREATE_SCHEDULE);
-    compare_league_schedule("fra_second_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_second_create_schedule(this, fase, r, e, l))
+    compare_league_schedule("fra_second_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| fra_second_create_schedule(this, stage, r, e, l))
 }

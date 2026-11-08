@@ -36,17 +36,17 @@ pub(crate) unsafe extern "C" fn comparar_key_nation_get_club_season_year(clube: 
 }
 
 /// Comparer for `key_nation_club_in_season` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_key_nation_club_in_season(clube: usize, inicio: usize, fim: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_KEY_NATION_CLUB_IN_SEASON)(clube, inicio, fim);
+pub(crate) unsafe extern "C" fn comparar_key_nation_club_in_season(clube: usize, start: usize, end: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_KEY_NATION_CLUB_IN_SEASON)(clube, start, end);
     let (mut i, mut f) = ([0u8; 8], [0u8; 8]);
     let n = key_nation_club_in_season(
         clube,
-        if inicio != 0 { i.as_mut_ptr() as usize } else { 0 },
-        if fim != 0 { f.as_mut_ptr() as usize } else { 0 },
+        if start != 0 { i.as_mut_ptr() as usize } else { 0 },
+        if end != 0 { f.as_mut_ptr() as usize } else { 0 },
     );
-    let ler = |p: usize| if p != 0 { *(p as *const [u8; 8]) } else { [0u8; 8] };
-    let (oi, of) = (ler(inicio), ler(fim));
-    let ok = r == n && (inicio == 0 || oi == i) && (fim == 0 || of == f);
+    let read = |p: usize| if p != 0 { *(p as *const [u8; 8]) } else { [0u8; 8] };
+    let (oi, of) = (read(start), read(end));
+    let ok = r == n && (start == 0 || oi == i) && (end == 0 || of == f);
     PLACAR.registrar(ok, || {
         format!("key_nation_club_in_season(clube {:x}) original={} {:02x?} {:02x?} rust={} {:02x?} {:02x?}", clube, r, oi, of, n, i, f)
     });

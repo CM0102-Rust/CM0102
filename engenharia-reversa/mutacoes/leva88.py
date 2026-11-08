@@ -5,7 +5,7 @@ MUTACOES = [
     ('m_metade', "        *f(0x59) = (*f(0x59) as f64 * read_f64_at(0x968968)) as f32;", "        *f(0x59) = (*f(0x59) as f64 * read_f64_at(0x969040)) as f32;"),
     ('m_50', "    if b1 > 50 {", "    if b1 > 60 {"),
     ('m_teto', "    } else if *f(0x4d) as f64 > read_f64_at(0x968910) { // 0x968910 = 10000\n        *f(0x4d) = 10000.0;", "    } else if *f(0x4d) as f64 > read_f64_at(0x968910) {\n        *f(0x4d) = 9000.0;"),
-    ('i_amistoso', "            if byte(t, 0x5f) == 1 && u(t + 0x39) != 0 && na_competicao(objeto(), u(t + 0x39)) != 0 {", "            if byte(t, 0x5f) == 1 && u(t + 0x39) != 0 && na_competicao(objeto(), u(t + 0x39)) == 0 {"),
-    ('i_principal', "        if na_competicao(objeto(), principal(u(t + 0x1a))) != 0 {", "        if na_competicao(objeto(), u(t + 0x1a)) != 0 {"),
-    ('i_16', "    for s in 0..16 {\n        let t = tecnico(s);\n        if byte(t, 0x5f) != 1 {", "    for s in 0..15 {\n        let t = tecnico(s);\n        if byte(t, 0x5f) != 1 {"),
+    ('i_amistoso', "            if byte(t, 0x5f) == 1 && u(t + 0x39) != 0 && in_competition(objeto(), u(t + 0x39)) != 0 {", "            if byte(t, 0x5f) == 1 && u(t + 0x39) != 0 && in_competition(objeto(), u(t + 0x39)) == 0 {"),
+    ('i_principal', "        if in_competition(objeto(), principal(u(t + 0x1a))) != 0 {", "        if in_competition(objeto(), u(t + 0x1a)) != 0 {"),
+    ('i_16', "    for s in 0..16 {\n        let t = manager(s);\n        if byte(t, 0x5f) != 1 {", "    for s in 0..15 {\n        let t = manager(s);\n        if byte(t, 0x5f) != 1 {"),
 ]

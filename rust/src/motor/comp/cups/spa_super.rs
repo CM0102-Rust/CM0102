@@ -6,13 +6,13 @@ use super::*;
 /// memory.
 ///
 /// [pt] O começo comum: +0x3e = 2 e a lista de dois (0x944e46 de 0xc em +0xa7); sem memória, a caixa `linha` e None.
-pub(crate) unsafe fn alloc_two_team_list(this: usize, arquivo: usize, linha: u32) -> Option<usize> {
+pub(crate) unsafe fn alloc_two_team_list(this: usize, file: usize, row: u32) -> Option<usize> {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 2);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alocar(0xc);
     core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
     if l == 0 {
-        show_error_at(arquivo, linha);
+        show_error_at(file, row);
         return None;
     }
     Some(l)
@@ -32,10 +32,10 @@ pub(crate) unsafe fn finish_two_team_list(l: usize) -> (i32, i32) {
 /// Writes club c into slot v of the list; with no club shows the error box and returns false.
 ///
 /// [pt] Grava o clube `c` na vaga `v` da lista; sem clube, a caixa `linha` (fonte `arquivo`) e falso.
-pub(crate) unsafe fn set_team_slot(l: usize, v: usize, c: usize, arquivo: usize, linha: u32) -> bool {
+pub(crate) unsafe fn set_team_slot(l: usize, v: usize, c: usize, file: usize, row: u32) -> bool {
     core::ptr::write_unaligned((l + 6 * v) as *mut u32, c as u32);
     if c == 0 {
-        show_error_at(arquivo, linha);
+        show_error_at(file, row);
         return false;
     }
     true
@@ -85,7 +85,7 @@ pub(crate) unsafe extern "thiscall" fn spa_super_select_teams(this: usize) -> i3
 ///
 /// [pt] Lado a lado para as rotinas que alocam a lista +0xa7 (como `eng_cc_cup_compare_entrant_list`): o +0x3e e o [0xb67a34] a partir do
 /// mesmo estado; a lista da cópia é comparada nos 12 bytes (só com a devolução 1) e liberada.
-pub(crate) unsafe fn compare_team_list(nome: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
+pub(crate) unsafe fn compare_team_list(name: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
@@ -101,7 +101,7 @@ pub(crate) unsafe fn compare_team_list(nome: &str, this: usize, o: impl FnOnce()
     });
     let (lo, lr) = (lo.get(), lr.get());
     let k = if a == 1 { 12 } else { 0 };
-    let lista = if lo != 0 && lr != 0 {
+    let list = if lo != 0 && lr != 0 {
         core::slice::from_raw_parts(lo as *const u8, k) == core::slice::from_raw_parts(lr as *const u8, k)
     } else {
         lo == 0 && lr == 0
@@ -110,7 +110,7 @@ pub(crate) unsafe fn compare_team_list(nome: &str, this: usize, o: impl FnOnce()
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", nome, this, a, b, igual, lista));
+    PLACAR.registrar(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this, a, b, igual, list));
     a
 }
 
@@ -188,7 +188,7 @@ pub(crate) unsafe fn spa_super_written_round_bytes(t: usize) -> Vec<u8> {
 ///
 /// [pt] { 0x858960 } (thiscall, ret 0x10, spa_super.cpp; a virtual +0x3c da Supercopa da Espanha): `SpaSuper::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
-pub(crate) unsafe extern "thiscall" fn spa_super_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    fra_super_create_single_stage_round_table(this, fase, rodadas, extra, saida, &SPANISH_SUPER_CUP, 0xa82a58, 0x99, "cql_12 tabela da supercopa da espanha", |_| {})
+pub(crate) unsafe extern "thiscall" fn spa_super_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+    fra_super_create_single_stage_round_table(this, stage, rounds, extra, out, &SPANISH_SUPER_CUP, 0xa82a58, 0x99, "cql_12 tabela da supercopa da espanha", |_| {})
 }
 

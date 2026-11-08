@@ -4,15 +4,15 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/leagues/bra_reg_goias.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `construct_bra_reg_goias` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_goias(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_goias(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_GOIAS);
-    bra_reg_goias_compare_state_league_ctor("construct_bra_reg_goias", this, ano, registro, &GOIANO_STATE_CHAMPIONSHIP, || o(this, ano, registro))
+    bra_reg_goias_compare_state_league_ctor("construct_bra_reg_goias", this, year, record, &GOIANO_STATE_CHAMPIONSHIP, || o(this, year, record))
 }
 
 /// Comparer for `construct_bra_reg_north` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_north(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_north(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_NORTH);
-    bra_reg_goias_compare_state_league_ctor("construct_bra_reg_north", this, ano, registro, &NORTH_CHAMPIONSHIP, || o(this, ano, registro))
+    bra_reg_goias_compare_state_league_ctor("construct_bra_reg_north", this, year, record, &NORTH_CHAMPIONSHIP, || o(this, year, record))
 }
 
 /// Comparer for `bra_reg_goias_start_new_season` (comparison mode: see the header of motor.rs).

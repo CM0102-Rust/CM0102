@@ -6,9 +6,9 @@ use super::*;
 ///
 /// [pt] Os jogos de suspensão pelo código da falta (9 a 12) e pela escala do órgão (+6), na tabela de saltos 0x7e9028;
 /// None quando não há suspensão (escala abaixo de 3 nos códigos 9 e 10, código fora de 9..=12).
-pub(crate) fn ban_matches(codigo: i32, e: i8) -> Option<u8> {
+pub(crate) fn ban_matches(code: i32, e: i8) -> Option<u8> {
     let x = e as i32;
-    Some(match codigo {
+    Some(match code {
         9 if e < 3 => return None,
         9 if e < 8 => 1,
         9 => 2 + (e >= 0xf) as u8,
@@ -26,9 +26,9 @@ pub(crate) fn ban_matches(codigo: i32, e: i8) -> Option<u8> {
 /// Days of ban (same steps in weeks) by foul code and scale; None when no ban.
 ///
 /// [pt] Os dias de suspensão (tabela 0x7e9038): os mesmos degraus em semanas.
-pub(crate) fn ban_days(codigo: i32, e: i8) -> Option<u16> {
+pub(crate) fn ban_days(code: i32, e: i8) -> Option<u16> {
     let x = e as i32;
-    Some(match codigo {
+    Some(match code {
         9 if e < 3 => return None,
         9 if e < 8 => 7,
         9 => if e >= 0xf { 21 } else { 14 },
@@ -53,20 +53,20 @@ pub(crate) fn ban_days(codigo: i32, e: i8) -> Option<u16> {
 /// 0xffff) ou os dias (os jogos ficam 0xff) da suspensão. No registro: +0 jogos, +1 = 0, +2 dias, +4 a data de hoje
 /// ([0xae2c90], 0x417c10), +0x10 = 3, +0x1c o id do jogador (+0), +0x6f = (+0x48 do jogador == 0). Devolve 1; sem
 /// suspensão, 0 sem gravar nada.
-pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, por_jogos: u32) -> u32 {
-    let codigo = match *((j + 0x2c) as *const u8) {
+pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, by_games: u32) -> u32 {
+    let code = match *((j + 0x2c) as *const u8) {
         0 => *((j + 0x2e) as *const i8) as i32, // cpu10: a falta do primeiro tipo
         1 => *((j + 0x2f) as *const i8) as i32,
         _ => return 0,
     };
     let escala = *((this + 6) as *const i8);
-    let (jogos, dias) = if por_jogos != 0 {
-        match ban_matches(codigo, escala) {
+    let (jogos, dias) = if by_games != 0 {
+        match ban_matches(code, escala) {
             Some(n) => (n, 0xffffu16),
             None => return 0,
         }
     } else {
-        match ban_days(codigo, escala) {
+        match ban_days(code, escala) {
             Some(n) => (0xffu8, n),
             None => return 0,
         }
@@ -75,9 +75,9 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
     *(r as *mut u8) = jogos; // cpu10: os jogos da suspensão
     *((r + 1) as *mut u8) = 0;
     *((r + 2) as *mut u16) = dias;
-    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    let mut hoje = [0u32; 2];
-    copiar(r + 4, hoje.as_mut_ptr() as usize, G_CURRENT_DATE);
+    let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+    let mut today = [0u32; 2];
+    copy(r + 4, today.as_mut_ptr() as usize, G_CURRENT_DATE);
     *((r + 0x10) as *mut u8) = 3;
     *((r + 0x1c) as *mut u32) = read_u32_as_usize(j) as u32;
     *((r + 0x6f) as *mut u8) = (*((j + 0x48) as *const u8) == 0) as u8;
@@ -98,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
 /// da entrada vira −1. No fim compacta as entradas (0x7e9050, nesta leva).
 pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize) {
     let guardada: unsafe extern "thiscall" fn(usize, i32, i8) -> usize = core::mem::transmute(FN_DISCIPLINE_FIND_HELD_BAN);
-    let gravar: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(FN_DISCIPLINE_SET_SLOT);
+    let write: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(FN_DISCIPLINE_SET_SLOT);
     let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DISCIPLINE_RELEASE_BAN);
     crate::comparacao::ramo("cpu_10 nova temporada");
     let mut e = read_u32_as_usize(this + 0xb);
@@ -107,13 +107,13 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
         let id = read_i32(e);
         if id != -1 {
             let s = *((e + 6) as *const i16);
-            let liberar = if s == -1 {
+            let free = if s == -1 {
                 true
             } else {
                 let ban = read_u32_as_usize(read_u32_as_usize(G_DISCIPLINE) + 4).wrapping_add((s as i32 as usize).wrapping_mul(20));
-                let anos = if read_i32(this + 0x17) == -1 && read_i32(this + 0x1b) == -1 { 4 } else { 2 };
-                let ano = *((ban + 6) as *const u16) as i32;
-                if *(G_CURRENT_DATE_YEAR as *const u16) as i32 - ano >= anos {
+                let years = if read_i32(this + 0x17) == -1 && read_i32(this + 0x1b) == -1 { 4 } else { 2 };
+                let year = *((ban + 6) as *const u16) as i32;
+                if *(G_CURRENT_DATE_YEAR as *const u16) as i32 - year >= years {
                     crate::comparacao::ramo("cpu_10 suspensao velha");
                     // simplification: a original empurra o índice com os 16 bits altos do edx de antes; a 0x556d00 lê só a palavra.
                     soltar(read_u32_as_usize(G_DISCIPLINE), id as u32, s as u16 as u32);
@@ -122,13 +122,13 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
                     false
                 }
             };
-            if liberar {
+            if free {
                 let id = read_i32(e);
                 let g = guardada(read_u32_as_usize(G_DISCIPLINE), id, *((this + 4) as *const i8));
                 if g != 0 && *((g + 5) as *const u8) == *((this + 5) as *const u8) {
                     *((g + 6) as *mut u32) = 0xffff_ffff;
                 } else {
-                    gravar(read_u32_as_usize(G_DISCIPLINE), read_i32(e), *((this + 4) as *const i8), *((this + 5) as *const u8), 0xffff_ffff);
+                    write(read_u32_as_usize(G_DISCIPLINE), read_i32(e), *((this + 4) as *const i8), *((this + 5) as *const u8), 0xffff_ffff);
                 }
                 *(e as *mut u32) = 0xffff_ffff;
             } else {
@@ -160,32 +160,32 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
 /// caixa (linha 0x594) e segue.
 pub(crate) unsafe extern "thiscall" fn compact_entries(this: usize) {
     let guardada: unsafe extern "thiscall" fn(usize, i32, i8) -> usize = core::mem::transmute(FN_DISCIPLINE_FIND_HELD_BAN);
-    let gravar: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(FN_DISCIPLINE_SET_SLOT);
-    let mut destino = read_u32_as_usize(this + 0xb);
-    let mut origem = destino;
+    let write: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(FN_DISCIPLINE_SET_SLOT);
+    let mut target = read_u32_as_usize(this + 0xb);
+    let mut source = target;
     let mut n = 0u32;
     let mut i = 0i32;
     while i < read_i32(this + 0x13) {
-        if read_i32(origem) != -1 {
-            if origem != destino {
-                core::ptr::copy(origem as *const u8, destino as *mut u8, 0xe);
-                let g = guardada(read_u32_as_usize(G_DISCIPLINE), read_i32(origem), *((this + 4) as *const i8));
+        if read_i32(source) != -1 {
+            if source != target {
+                core::ptr::copy(source as *const u8, target as *mut u8, 0xe);
+                let g = guardada(read_u32_as_usize(G_DISCIPLINE), read_i32(source), *((this + 4) as *const i8));
                 if g != 0 && *((g + 5) as *const u8) == *((this + 5) as *const u8) {
                     *((g + 6) as *mut u32) = n;
                 } else {
-                    gravar(read_u32_as_usize(G_DISCIPLINE), read_i32(origem), *((this + 4) as *const i8), *((this + 5) as *const u8), n);
+                    write(read_u32_as_usize(G_DISCIPLINE), read_i32(source), *((this + 4) as *const i8), *((this + 5) as *const u8), n);
                 }
             }
-            destino += 0xe;
+            target += 0xe;
             n += 1;
         }
         i += 1;
-        origem += 0xe;
+        source += 0xe;
     }
     *((this + 0x13) as *mut u32) = n;
     *((this + 0xf) as *mut u32) = n + 100;
-    let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-    let p = realocar(read_u32_as_usize(this + 0xb), (n + 100) * 14);
+    let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
+    let p = realloc(read_u32_as_usize(this + 0xb), (n + 100) * 14);
     *((this + 0xb) as *mut u32) = p as u32;
     if p == 0 {
         show_error_at(0xa7a858, 0x594);

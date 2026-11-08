@@ -12,12 +12,12 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_sort_clubs_by_strength(v: usi
     if v == 0 || n <= 1 {
         return o(v, n);
     }
-    let mut esperado = core::slice::from_raw_parts(v as *const u32, n as usize).to_vec();
+    let mut expected = core::slice::from_raw_parts(v as *const u32, n as usize).to_vec();
     let mut k = vec![0i32; n as usize];
-    sort_clubs_by_strength(esperado.as_mut_ptr(), k.as_mut_ptr(), n);
+    sort_clubs_by_strength(expected.as_mut_ptr(), k.as_mut_ptr(), n);
     o(v, n);
     let obtido = core::slice::from_raw_parts(v as *const u32, n as usize);
-    PLACAR.registrar(obtido == &esperado[..], || format!("comp_util_sort_clubs_by_strength(n {}) original={:x?} rust={:x?}", n, obtido, esperado));
+    PLACAR.registrar(obtido == &expected[..], || format!("comp_util_sort_clubs_by_strength(n {}) original={:x?} rust={:x?}", n, obtido, expected));
 }
 
 /// Comparer for `set_club_final_position` (comparison mode: see the header of motor.rs).
@@ -29,11 +29,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_club_final_position(this: us
     if clube == 0 {
         return o(this, clube, pos); // simplification: a caixa, só a original
     }
-    let buscar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    let antes = buscar(this, clube);
+    let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
+    let before = search(this, clube);
     let r = o(this, clube, pos);
-    let igual = r != 0 && (antes == 0 || r == antes) && *((r + 0x72) as *const u8) == pos as u8;
-    PLACAR.registrar(igual, || format!("set_club_final_position(clube {:x}, {}) antes={:x} original={:x}", clube, pos as u8, antes, r));
+    let same = r != 0 && (before == 0 || r == before) && *((r + 0x72) as *const u8) == pos as u8;
+    PLACAR.registrar(same, || format!("set_club_final_position(clube {:x}, {}) antes={:x} original={:x}", clube, pos as u8, before, r));
     r
 }
 
@@ -76,18 +76,18 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_shuffle_pointer_array(itens: 
 ///
 /// [pt] Comparador: ordena (qsort, determinístico) e sorteia: lado a lado pelo estado do sorteio e pelos `n` clubes, a cópia
 /// em sem_contar. Caixa (`n` negativo ou menor que `escolhas`): só a original.
-pub(crate) unsafe extern "C" fn comparar_comp_util_sort_and_shuffle_top_clubs(clubes: usize, n: u32, escolhas: u32) {
+pub(crate) unsafe extern "C" fn comparar_comp_util_sort_and_shuffle_top_clubs(clubs: usize, n: u32, escolhas: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32)>(IDX_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
     let (nn, e) = (n as u16 as i16, escolhas as u16 as i16);
     if nn < 0 || nn < e {
-        return o(clubes, n, escolhas);
+        return o(clubs, n, escolhas);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     if nn > 0 {
-        reg.push((clubes, 4 * nn as usize));
+        reg.push((clubs, 4 * nn as usize));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clubes, n, escolhas),
-        || crate::aleatorio::sem_contar(|| comp_util_sort_and_shuffle_top_clubs(clubes, n, escolhas)));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clubs, n, escolhas),
+        || crate::aleatorio::sem_contar(|| comp_util_sort_and_shuffle_top_clubs(clubs, n, escolhas)));
     PLACAR.registrar(igual, || format!("comp_util_sort_and_shuffle_top_clubs({}, {}) {:x?} x {:x?}", nn, e, mo, mr));
 }
 
@@ -108,15 +108,15 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_get_club_strength_score(clube
 }
 
 /// Comparer for `comp_util_get_latest_placed_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_comp_util_get_latest_placed_club(comp: usize, lugar: u32) -> usize {
+pub(crate) unsafe extern "C" fn comparar_comp_util_get_latest_placed_club(comp: usize, place: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_COMP_UTIL_GET_LATEST_PLACED_CLUB);
-    if lugar as u8 > 2 {
-        return o(comp, lugar);
+    if place as u8 > 2 {
+        return o(comp, place);
     }
     let n = (*(G_CLUB_COMP_HISTORY_COUNT as *const i32)).max(0) as usize;
     let reg = [(*(G_CLUB_COMP_HISTORY_TABLE as *const usize), 0x1a * n)];
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(comp, lugar), || comp_util_get_latest_placed_club(comp, lugar));
-    PLACAR.registrar(igual && r == x, || format!("comp_util_get_latest_placed_club({:x}, {}) {:x}/{:x} {:x?} x {:x?}", comp, lugar as u8, r, x, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(comp, place), || comp_util_get_latest_placed_club(comp, place));
+    PLACAR.registrar(igual && r == x, || format!("comp_util_get_latest_placed_club({:x}, {}) {:x}/{:x} {:x?} x {:x?}", comp, place as u8, r, x, mo, mr));
     r
 }
 
@@ -153,40 +153,40 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_write_fixture_to_news_slots(j
 /// Comparer for `comp_util_format_stage_round_name` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador da 0x4bffc0: lado a lado na saída (até o tamanho, no máximo 0x400 bytes) e na devolução.
-pub(crate) unsafe extern "C" fn comparar_comp_util_format_stage_round_name(fase: u32, rodada: u32, saida: *mut u8, tamanho: i32, estilo: u32) -> i32 {
+pub(crate) unsafe extern "C" fn comparar_comp_util_format_stage_round_name(stage: u32, round: u32, out: *mut u8, size: i32, estilo: u32) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32, *mut u8, i32, u32) -> i32>(IDX_COMP_UTIL_FORMAT_STAGE_ROUND_NAME);
-    if saida.is_null() || tamanho < 0xc8 {
-        return o(fase, rodada, saida, tamanho, estilo); // a caixa: só a original
+    if out.is_null() || size < 0xc8 {
+        return o(stage, round, out, size, estilo); // a caixa: só a original
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida as usize, (tamanho as usize).min(0x400))],
-        || o(fase, rodada, saida, tamanho, estilo), || comp_util_format_stage_round_name(fase, rodada, saida, tamanho, estilo));
-    PLACAR.registrar(igual && r == n, || format!("comp_util_format_stage_round_name({}, {}) {} x {} {:x?} x {:x?}", fase as i16, rodada as i16, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(out as usize, (size as usize).min(0x400))],
+        || o(stage, round, out, size, estilo), || comp_util_format_stage_round_name(stage, round, out, size, estilo));
+    PLACAR.registrar(igual && r == n, || format!("comp_util_format_stage_round_name({}, {}) {} x {} {:x?} x {:x?}", stage as i16, round as i16, r, n, mo, mr));
     r
 }
 
 /// Comparer for `comp_util_scale_by_round` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pura (pelo eax inteiro). Fora da faixa (a caixa de erro) só a original.
-pub(crate) unsafe extern "C" fn comparar_comp_util_scale_by_round(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_comp_util_scale_by_round(low: u32, high: u32, round: u32, rounds: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(IDX_COMP_UTIL_SCALE_BY_ROUND);
-    if !(0..=100).contains(&interpolate_by_round(baixo, alto, rodada, rodadas).1) {
-        return o(baixo, alto, rodada, rodadas);
+    if !(0..=100).contains(&interpolate_by_round(low, high, round, rounds).1) {
+        return o(low, high, round, rounds);
     }
-    let r = o(baixo, alto, rodada, rodadas);
-    let n = comp_util_scale_by_round(baixo, alto, rodada, rodadas);
+    let r = o(low, high, round, rounds);
+    let n = comp_util_scale_by_round(low, high, round, rounds);
     PLACAR.registrar(r == n, || format!("comp_util_scale_by_round({}, {}, {}, {}) original={:x} rust={:x}",
-        baixo as u8 as i8, alto as u8 as i8, rodada as u16 as i16, rodadas as u16 as i16, r, n));
+        low as u8 as i8, high as u8 as i8, round as u16 as i16, rounds as u16 as i16, r, n));
     r
 }
 
 /// Comparer for `comp_util_add_history_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_comp_util_add_history_record(liga: usize, a: u32, b: u32, c: u32, d: u32) -> usize {
+pub(crate) unsafe extern "C" fn comparar_comp_util_add_history_record(league: usize, a: u32, b: u32, c: u32, d: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, u32) -> usize>(IDX_COMP_UTIL_ADD_HISTORY_RECORD);
     if free_comp_history_row() == 0 {
-        return o(liga, a, b, c, d); // cresce (realloc): só a original
+        return o(league, a, b, c, d); // cresce (realloc): só a original
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&comp_history_regions(), || o(liga, a, b, c, d), || comp_util_add_history_record(liga, a, b, c, d));
-    PLACAR.registrar(igual && r == n, || format!("comp_util_add_history_record({:x}, {:x}, {:x}, {:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", liga, a, b, c, d, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&comp_history_regions(), || o(league, a, b, c, d), || comp_util_add_history_record(league, a, b, c, d));
+    PLACAR.registrar(igual && r == n, || format!("comp_util_add_history_record({:x}, {:x}, {:x}, {:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", league, a, b, c, d, r, n, mo, mr));
     r
 }
 

@@ -46,34 +46,34 @@ pub(crate) unsafe fn write_i32_at(area: usize, desl: isize, v: i32) {
 /// quando os itens passam das linhas e reparte a largura e a altura pelos pesos. Mais de 30 colunas
 /// ou linhas: a original (caixa de erro, Area.cpp 497 e 507).
 pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
-    let marcas = *((area + 0x18) as *const u32);
+    let marks = *((area + 0x18) as *const u32);
     let colunas = *((area + 0xbab) as *const u8);
-    let linhas = *((area + 0xbac) as *const u8);
-    if marcas & 0x80000 == 0 && colunas != 0 && (colunas > 30 || (linhas != 0 && linhas > 30)) {
+    let rows = *((area + 0xbac) as *const u8);
+    if marks & 0x80000 == 0 && colunas != 0 && (colunas > 30 || (rows != 0 && rows > 30)) {
         // simplification: a original grava o dono e o +0xb76 antes do erro; repetir é inofensivo (mesmos valores)
         return original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AREA_LAYOUT)(area);
     }
     crate::comparacao::ramo("telas organizar a area");
-    let dono = core::ptr::read_unaligned((area + 0x20e) as *const i16);
-    if dono != -1 {
+    let owner = core::ptr::read_unaligned((area + 0x20e) as *const i16);
+    if owner != -1 {
         *((area + 0xbe9) as *mut u32) = 0;
-        let item = area_item_at(*((area + 0x208) as *const usize), dono);
+        let item = area_item_at(*((area + 0x208) as *const usize), owner);
         core::ptr::write_unaligned((item + 0x7c) as *mut u16, core::ptr::read_unaligned((area + 0xb72) as *const u16));
     }
     core::ptr::write_unaligned((area + 0xb76) as *mut i16, 0);
-    if marcas & 0x80000 != 0 || colunas == 0 || linhas == 0 {
+    if marks & 0x80000 != 0 || colunas == 0 || rows == 0 {
         return;
     }
-    let (lado, cima): (i32, i32) = if marcas & 1 != 0 {
+    let (lado, cima): (i32, i32) = if marks & 1 != 0 {
         (0, 0)
-    } else if marcas & 0x10 != 0 || linhas == 1 {
+    } else if marks & 0x10 != 0 || rows == 1 {
         (2, 2)
     } else {
         (2, 8)
     };
     let mut largura = read_i32_at(area, 8).wrapping_sub(2 * lado).wrapping_sub(read_i32_at(area, 0)).wrapping_add(1);
     let altura = (-2 * cima).wrapping_sub(read_i32_at(area, 4)).wrapping_add(read_i32_at(area, 0xc)).wrapping_add(1);
-    if read_i32_at(area, 0x14).wrapping_add(1) > linhas as i32 {
+    if read_i32_at(area, 0x14).wrapping_add(1) > rows as i32 {
         let barra: unsafe extern "thiscall" fn(usize, i32, i32) = core::mem::transmute(FN_AREA_SETUP_SCROLLBAR);
         barra(area, lado, cima);
         largura = largura.wrapping_sub(0x16);
@@ -81,7 +81,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     // colunas: +0x1c início e +0x10c fim, pelos pesos +0xbad
     let pesos = |desl: usize, n: usize| (0..n).map(|k| *((area + desl + k) as *const u8) as i32).fold(0i32, |a, b| a.wrapping_add(b));
     let n = *((area + 0xbab) as *const u8) as i32 - 1;
-    let soma = pesos(0xbad, (n + 1) as usize);
+    let sum = pesos(0xbad, (n + 1) as usize);
     let mut acumulado = 0i32;
     let mut c = 0i32;
     while c <= n {
@@ -92,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
             write_i32_at(area, c as isize * 4 + 0x1c, read_i32_at(area, c as isize * 4 + 0x108).wrapping_add(2));
         }
         if c < *((area + 0xbab) as *const u8) as i32 - 1 {
-            write_i32_at(area, c as isize * 4 + 0x10c, acumulado.wrapping_mul(largura).wrapping_div(soma).wrapping_add(lado - 1));
+            write_i32_at(area, c as isize * 4 + 0x10c, acumulado.wrapping_mul(largura).wrapping_div(sum).wrapping_add(lado - 1));
         } else {
             write_i32_at(area, c as isize * 4 + 0x10c, largura.wrapping_add(lado - 1));
         }
@@ -103,7 +103,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     }
     // linhas: +0x94 início e +0x184 fim, pelos pesos +0xbcb
     let n = *((area + 0xbac) as *const u8) as i32 - 1;
-    let soma = pesos(0xbcb, (n + 1) as usize);
+    let sum = pesos(0xbcb, (n + 1) as usize);
     let mut acumulado = 0i32;
     let mut l = 0i32;
     while l <= n {
@@ -113,12 +113,12 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
         } else {
             write_i32_at(area, l as isize * 4 + 0x94, read_i32_at(area, l as isize * 4 + 0x180).wrapping_add(2));
         }
-        let fim = if l < *((area + 0xbac) as *const u8) as i32 - 1 {
-            acumulado.wrapping_mul(altura).wrapping_div(soma).wrapping_add(cima - 1)
+        let end = if l < *((area + 0xbac) as *const u8) as i32 - 1 {
+            acumulado.wrapping_mul(altura).wrapping_div(sum).wrapping_add(cima - 1)
         } else {
             altura.wrapping_add(cima - 1)
         };
-        write_i32_at(area, l as isize * 4 + 0x184, fim);
+        write_i32_at(area, l as isize * 4 + 0x184, end);
         l += 1;
         if l > *((area + 0xbac) as *const u8) as i32 - 1 {
             break;
@@ -140,13 +140,13 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn init(
     area: usize, areas: usize, itens: usize, indice: u32, x1: i32, y1: i32, x2: i32, y2: i32, colunas: u32,
-    pesos_colunas: usize, linhas: u32, pesos_linhas: usize, marcas: u32, cor: u32, dono: u32,
+    pesos_colunas: usize, rows: u32, pesos_linhas: usize, marks: u32, colour: u32, owner: u32,
 ) {
     crate::comparacao::ramo("telas iniciar a area");
-    let linhas = cap_area_rows(linhas);
+    let rows = cap_area_rows(rows);
     let (mut x1, mut y1, mut x2, mut y2) = (x1, y1, x2, y2);
-    let (mut colunas, mut pesos_colunas, mut linhas, mut pesos_linhas) = (colunas as u8, pesos_colunas, linhas as u8, pesos_linhas);
-    if dono as u16 as i16 != -1 {
+    let (mut colunas, mut pesos_colunas, mut rows, mut pesos_linhas) = (colunas as u8, pesos_colunas, rows as u8, pesos_linhas);
+    if owner as u16 as i16 != -1 {
         core::ptr::write_bytes((area + 0xbad) as *mut u8, 1, 30);
         core::ptr::write_bytes((area + 0xbcb) as *mut u8, 1, 30);
         x1 = 0;
@@ -154,50 +154,50 @@ pub(crate) unsafe extern "thiscall" fn init(
         x2 = 0;
         y2 = 0;
         colunas = 1;
-        linhas = 0;
+        rows = 0;
         pesos_colunas = 0;
         pesos_linhas = 0;
     } else {
-        let trocar: unsafe extern "C" fn(*mut i32, *mut i32, u32) = core::mem::transmute(FN_UTILS_SWAP_BYTES);
+        let swap: unsafe extern "C" fn(*mut i32, *mut i32, u32) = core::mem::transmute(FN_UTILS_SWAP_BYTES);
         if x1 > x2 {
-            trocar(&mut x1, &mut x2, 4);
+            swap(&mut x1, &mut x2, 4);
         }
         if y1 > y2 {
-            trocar(&mut y1, &mut y2, 4);
+            swap(&mut y1, &mut y2, 4);
         }
     }
     let x1 = if x1 > 0 { x1 } else { 0 };
     let y1 = if y1 > 0 { y1 } else { 0 };
     // os limites da tela: imediatos de `cmp edx, imm` e `mov edx, imm` (0x402b7c) e `mov esi, imm` (0x402b8d)
     let x2 = if x2 >= core::ptr::read_unaligned(0x402b7e as *const i32) { core::ptr::read_unaligned(0x402b85 as *const i32) } else { x2 };
-    let teto_y = core::ptr::read_unaligned(0x402b8e as *const i32);
-    let y2 = if y2 >= teto_y { teto_y } else { y2 };
+    let ceiling_y = core::ptr::read_unaligned(0x402b8e as *const i32);
+    let y2 = if y2 >= ceiling_y { ceiling_y } else { y2 };
     write_i32_at(area, 0, x1);
     write_i32_at(area, 4, y1);
     write_i32_at(area, 8, x2);
     write_i32_at(area, 0xc, y2);
-    *((area + 0xbac) as *mut u8) = linhas;
+    *((area + 0xbac) as *mut u8) = rows;
     *((area + 0xbab) as *mut u8) = colunas;
     write_i32_at(area, 0x10, 0x7fffffff);
     write_i32_at(area, 0x14, 0);
     core::ptr::write_bytes((area + 0xb7a) as *mut u8, 0, 0x31);
-    core::ptr::write_unaligned((area + 0x20e) as *mut u16, dono as u16);
+    core::ptr::write_unaligned((area + 0x20e) as *mut u16, owner as u16);
     core::ptr::write_unaligned((area + 0x204) as *mut usize, areas);
     core::ptr::write_unaligned((area + 0x208) as *mut usize, itens);
     core::ptr::write_unaligned((area + 0xb72) as *mut u16, indice as u16);
-    core::ptr::write_unaligned((area + 0x20c) as *mut u16, cor as u16);
+    core::ptr::write_unaligned((area + 0x20c) as *mut u16, colour as u16);
     write_i32_at(area, 0xbed, 0);
     write_i32_at(area, 0x200, 0);
     write_i32_at(area, 0xba6, 0);
     core::ptr::write_unaligned((area + 0x210) as *mut i16, -1);
     write_i32_at(area, 0xbe9, 1);
     core::ptr::write_unaligned((area + 0xb76) as *mut i16, -1);
-    core::ptr::write_unaligned((area + 0x18) as *mut u32, marcas);
+    core::ptr::write_unaligned((area + 0x18) as *mut u32, marks);
     write_i32_at(area, 0x1fc, -1);
-    if marcas & 0x80000 != 0 {
+    if marks & 0x80000 != 0 {
         return;
     }
-    for (n, pesos, desl) in [(colunas, pesos_colunas, 0xbad), (linhas, pesos_linhas, 0xbcb)] {
+    for (n, pesos, desl) in [(colunas, pesos_colunas, 0xbad), (rows, pesos_linhas, 0xbcb)] {
         if pesos != 0 && n != 0 && n < 30 {
             core::ptr::copy(pesos as *const u8, (area + desl) as *mut u8, n as usize);
         } else {
@@ -217,12 +217,12 @@ pub(crate) unsafe extern "thiscall" fn init(
 // resolução de verdade fica para a modernização (PLANO_LIMITE.md); a original e a cópia recebem a trava
 // igual no comparador, então a comparação segue valendo
 /// Caps an area grid's row count (low byte) at 30, the fixed array size; extra rows go to the scroll bar.
-pub(crate) fn cap_area_rows(linhas: u32) -> u32 {
-    if linhas & 0xff > 30 {
+pub(crate) fn cap_area_rows(rows: u32) -> u32 {
+    if rows & 0xff > 30 {
         crate::comparacao::ramo("telas linhas da area travadas em 30");
-        (linhas & !0xff) | 30
+        (rows & !0xff) | 30
     } else {
-        linhas
+        rows
     }
 }
 
@@ -242,29 +242,29 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redesenhar: u32) {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW)(area, redesenhar);
     }
     crate::comparacao::ramo("telas desenhar a area");
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_GUI_FREE_IMAGE);
-    let guardar: unsafe extern "C" fn(i32, i32, i32, i32, usize) -> usize = core::mem::transmute(FN_GUI_SAVE_SCREEN_IMAGE);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_GUI_FREE_IMAGE);
+    let store: unsafe extern "C" fn(i32, i32, i32, i32, usize) -> usize = core::mem::transmute(FN_GUI_SAVE_SCREEN_IMAGE);
     let imagem = (area + 0x200) as *mut usize;
     if redesenhar != 0 && *imagem != 0 {
-        liberar(*imagem);
+        free(*imagem);
         *imagem = 0;
     }
     if core::ptr::read_unaligned((area + 0x20e) as *const i16) != -1 && *imagem == 0 {
-        *imagem = guardar(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), 0);
+        *imagem = store(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), 0);
     }
     // simplification: a original empurra edx com a cor em dx e, em cima, sobra de chamadas anteriores
     // (imprevisível); a cor é u16 para o painel, aqui estendida com zero
     let painel: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32, u32) = core::mem::transmute(FN_GUI_DRAW_PANEL);
-    let cor = core::ptr::read_unaligned((area + 0x20c) as *const u16) as u32;
-    painel(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), *((area + 0x18) as *const u32), cor, 0);
+    let colour = core::ptr::read_unaligned((area + 0x20c) as *const u16) as u32;
+    painel(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), *((area + 0x18) as *const u32), colour, 0);
     if *((area + 0x18) as *const u32) & 0x80000 != 0 {
-        let linha: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32) = core::mem::transmute(FN_GRAPHICS_DRAW_LINE);
+        let row: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32) = core::mem::transmute(FN_GRAPHICS_DRAW_LINE);
         let mut k: i16 = 1;
         while *((area + 0xbac) as *const u8) > 1 && k < *((area + 0xbac) as *const u8) as i16 {
             let y1 = read_i32_at(area, 4);
             let y = read_i32_at(area, 0xc).wrapping_sub(y1).wrapping_add(1).wrapping_mul(k as i32) / *((area + 0xbac) as *const u8) as i32;
             let y = y.wrapping_add(y1);
-            linha(read_i32_at(area, 0), y, read_i32_at(area, 8), y, 2, *(G_GUI_COLOUR_GREY as *const u16) as u32);
+            row(read_i32_at(area, 0), y, read_i32_at(area, 8), y, 2, *(G_GUI_COLOUR_GREY as *const u16) as u32);
             k = k.wrapping_add(1);
         }
         let mut k: i16 = 1;
@@ -272,13 +272,13 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redesenhar: u32) {
             let x1 = read_i32_at(area, 0);
             let x = read_i32_at(area, 8).wrapping_sub(x1).wrapping_add(1).wrapping_mul(k as i32) / *((area + 0xbab) as *const u8) as i32;
             let x = x.wrapping_add(x1);
-            linha(x, read_i32_at(area, 4), x, read_i32_at(area, 0xc), 2, *(G_GUI_COLOUR_GREY as *const u16) as u32);
+            row(x, read_i32_at(area, 4), x, read_i32_at(area, 0xc), 2, *(G_GUI_COLOUR_GREY as *const u16) as u32);
             k = k.wrapping_add(1);
         }
         return;
     }
     if read_i32_at(area, 0xbed) != 0 && *imagem == 0 {
-        *imagem = guardar(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8).wrapping_sub(0x16), read_i32_at(area, 0xc), 0);
+        *imagem = store(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8).wrapping_sub(0x16), read_i32_at(area, 0xc), 0);
     }
     let desenhar_item: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_GUIO_DRAW);
     let total = || core::ptr::read_unaligned((area + 0xb74) as *const i16);
@@ -286,8 +286,8 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redesenhar: u32) {
     let mut parar = false;
     while i < total() && !parar {
         let item = area_list_item(area, i);
-        let primeiro = area_list_item(area, core::ptr::read_unaligned((area + 0xb76) as *const i16));
-        let d = read_i32_at(item, 0x24).wrapping_sub(read_i32_at(primeiro, 0x24));
+        let first = area_list_item(area, core::ptr::read_unaligned((area + 0xb76) as *const i16));
+        let d = read_i32_at(item, 0x24).wrapping_sub(read_i32_at(first, 0x24));
         if d > *((area + 0xbac) as *const u8) as i32 - 1 {
             parar = true;
         } else {

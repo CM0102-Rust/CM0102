@@ -17,34 +17,34 @@ include!("../adjetivos_nacao.rs");
 /// texto: em cada cadeia a primeira chave igual ao id (+0) copia a fonte da forma (0..4, as outras pela 6ª coluna; 0
 /// não copia, 1 é o nome) e passa à cadeia seguinte; no fim, com o texto vazio, o nome (nos idiomas 4 e 5 não: fica
 /// vazio). Nos outros idiomas (o inglês, 0), o nome. Devolve 1. Sem SEH, sem locais, sem sorteio.
-pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
-    core::ptr::write_volatile(texto as *mut u8, 0); // antes dos testes, como a original (texto nulo: a mesma falha)
-    if nacao == 0 || texto == 0 || (tamanho as u16 as i16) < 50 {
+pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nacao: usize, text: usize, size: u32, genero: u32) -> u32 {
+    core::ptr::write_volatile(text as *mut u8, 0); // antes dos testes, como a original (texto nulo: a mesma falha)
+    if nacao == 0 || text == 0 || (size as u16 as i16) < 50 {
         return 0;
     }
-    let nome = nacao + nation::NATIONALITY; // o nome da nação
+    let name = nacao + nation::NATIONALITY; // o nome da nação
     if genero as u8 != 0 {
-        let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
-        let i = idioma();
+        let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
+        let i = language();
         if let Some(&(_, nome_se_vazio, cadeias)) = ADJETIVOS_DA_NACAO.iter().find(|x| x.0 == i) {
-            let forma: unsafe extern "C" fn(u32, i32) -> u32 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
-            let f = forma(genero, i) as u8 as usize;
+            let form: unsafe extern "C" fn(u32, i32) -> u32 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
+            let f = form(genero, i) as u8 as usize;
             let id = core::ptr::read_unaligned(nacao as *const i32);
             for cadeia in cadeias {
                 if let Some((_, fontes)) = cadeia.iter().find(|e| *(e.0 as *const i32) == id) {
                     match fontes[f.min(5)] { // as formas 5..255 pela última coluna
                         0 => {}
-                        1 => copy_c_string(texto, nome),
-                        t => copy_c_string(texto, t as usize),
+                        1 => copy_c_string(text, name),
+                        t => copy_c_string(text, t as usize),
                     }
                 }
             }
-            if !nome_se_vazio || *(texto as *const u8) != 0 {
+            if !nome_se_vazio || *(text as *const u8) != 0 {
                 return 1;
             }
         }
     }
-    copy_c_string(texto, nome);
+    copy_c_string(text, name);
     1
 }
 
@@ -56,11 +56,11 @@ include!("../chaves_fixas.rs");
 ///
 /// [pt] Uma cadeia de _stricmp (0x951c50) em linha (cores, continentes): o primeiro texto igual ao `nome` grava `linha` na
 /// global dele e a cadeia acaba.
-pub(crate) unsafe fn match_key_name_chain(nome: usize, pares: &[(u32, u32)], linha: u32) {
+pub(crate) unsafe fn match_key_name_chain(name: usize, pares: &[(u32, u32)], row: u32) {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     for &(texto, global) in pares {
-        if stricmp(nome, texto as usize) == 0 {
-            *(global as *mut u32) = linha;
+        if stricmp(name, texto as usize) == 0 {
+            *(global as *mut u32) = row;
             return;
         }
     }
@@ -83,24 +83,24 @@ pub(crate) unsafe fn key_ids_loop(limit: impl Fn() -> i32, mut f: impl FnMut(i32
 ///
 /// [pt] A caixa fatal do relato (index.cpp, `linha`): "v%s %s.%s %d" em 0xae24d0 (0x90d130 com o nome e a extensão do
 /// index.cpp), a caixa "Error" (0x5e8290), [0xb67a34] = 0, 0x5cc7d0, 0x5a8f60 e exit(marca). Não volta.
-pub(crate) unsafe fn index_fatal_error(linha: u32, marca: u32) -> ! {
-    let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
-    let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+pub(crate) unsafe fn index_fatal_error(row: u32, mark: u32) -> ! {
+    let split: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
+    let version: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
+    let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let caixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_GUI_SHOW_MESSAGE_BOX);
     let antes_de_sair1: unsafe extern "C" fn() = core::mem::transmute(FN_GAME_FATAL_CLEANUP);
     let antes_de_sair2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
-    let sair: unsafe extern "C" fn(u32) -> ! = core::mem::transmute(FN_CRT_EXIT);
+    let exit: unsafe extern "C" fn(u32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
-    separar(0x9d93cc, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
-    let v = versao(nome.as_mut_ptr(), ext.as_mut_ptr(), linha);
+    split(0x9d93cc, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
+    let v = version(nome.as_mut_ptr(), ext.as_mut_ptr(), row);
     // a original não desempilha os argumentos da 0x90d130: são o resto do "v%s %s.%s %d"
-    formatar(0xae24d0, 0x9870e8, v, nome.as_ptr(), ext.as_ptr(), linha);
+    format(0xae24d0, 0x9870e8, v, nome.as_ptr(), ext.as_ptr(), row);
     caixa(0x9870e0, 0xae24d0, 0);
     *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
     antes_de_sair1();
     antes_de_sair2();
-    sair(marca)
+    exit(mark)
 }
 
 /// Core of set_key_ids: resolves the fixed key ids (colours, clubs, continents, competitions, nations, awards) from
@@ -117,66 +117,66 @@ pub(crate) unsafe fn index_fatal_error(linha: u32, marca: u32) -> ! {
 /// base: nações (0x60d810), competições de clube até [0xae2378] − 0x7f (0x60efd0), continentes, prêmios (0x6115e0) e
 /// clubes (0x6146b0). 4) O relato (RELATO_DAS_CHAVES): a 0x60d780 (a caixa "Unable to find the %s index"); as 7
 /// fatais saem do jogo se a nação da chave tiver o byte +0x11c.
-pub(crate) unsafe fn set_fixed_key_ids(marca_entrada: u32, relatar: bool) -> u32 {
+pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const u32);
     let em = |base: u32, i: i32, step_towards: u32| base.wrapping_add((i as u32).wrapping_mul(step_towards)) as usize;
     let clube: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_CLUB_KEY_ID);
     let nacao: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_NATION_KEY_ID);
     let competicao: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_CLUB_COMP_KEY_ID);
-    let premio: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_STAFF_COMP_KEY_ID);
-    let mut marca = marca_entrada;
+    let prize: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_STAFF_COMP_KEY_ID);
+    let mut mark = mark_entry;
     if key_ids_loop(|| gi(0xae2394), |i| match_key_name_chain(em(rd(G_COLOUR_TABLE), i, 0x3a) + 4, &CORES_DAS_CHAVES, i as u32)) {
-        marca = u32::MAX;
+        mark = u32::MAX;
     }
-    let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let f = if gi(0x9b5984) != 0 { abrir(caminho(0x987da0, 0x9b632c), 0x98f928) } else { 0 }; // CM3_TEMP\eng.lng, "rb"
+    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
+    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
+    let f = if gi(0x9b5984) != 0 { open(path(0x987da0, 0x9b632c), 0x98f928) } else { 0 }; // CM3_TEMP\eng.lng, "rb"
     if f != 0 {
-        let versao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_UTILS_READ_FILE_FORMAT_MARKER);
-        let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
+        let version: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_UTILS_READ_FILE_FORMAT_MARKER);
+        let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-        let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+        let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         let pular: unsafe extern "C" fn(usize, u32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
-        let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
-        let inverter = versao(f) == 0xf1fffff1;
+        let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
+        let inverter = version(f) == 0xf1fffff1;
         let mut c = [0i32; 8];
-        ler(c.as_mut_ptr() as usize, 0x20, 1, f);
+        read(c.as_mut_ptr() as usize, 0x20, 1, f);
         if inverter {
             for x in c.iter_mut() {
                 *x = x.swap_bytes();
             }
         }
         // a tabela de `n` linhas de `passo` bytes: lida e entregue a `f` (o fseek por cima se a memória faltar)
-        let tabela = |n: i32, step_towards: u32, f_: &mut dyn FnMut(u32)| {
+        let table = |n: i32, step_towards: u32, f_: &mut dyn FnMut(u32)| {
             let b = alocar((n as u32).wrapping_mul(step_towards));
             if b != 0 {
-                ler(b, step_towards, n as u32, f);
+                read(b, step_towards, n as u32, f);
                 f_(b as u32);
-                liberar(b);
+                free(b);
             } else {
                 pular(f, (n as u32).wrapping_mul(step_towards), 1);
             }
         };
-        tabela(c[0], 0x4f, &mut |b| {
+        table(c[0], 0x4f, &mut |b| {
             let mut i = 0i32;
             loop {
-                let lista = rd(G_CLUB_ENGLISH_NAME_INDEX_TABLE); // a lista de clubes da base
-                if i >= if lista != 0 { gi(0xae235c) } else { c[0] } {
+                let list = rd(G_CLUB_ENGLISH_NAME_INDEX_TABLE); // a lista de clubes da base
+                if i >= if list != 0 { gi(0xae235c) } else { c[0] } {
                     break;
                 }
-                let linha = if lista != 0 { em(b, gi(em(lista, i, 4)), 0x4f) } else { em(b, i, 0x4f) };
-                clube(linha, i as u32);
+                let row = if list != 0 { em(b, gi(em(list, i, 4)), 0x4f) } else { em(b, i, 0x4f) };
+                clube(row, i as u32);
                 i += 1;
             }
         });
-        tabela(c[1], 0xba, &mut |b| {
+        table(c[1], 0xba, &mut |b| {
             key_ids_loop(|| c[1], |i| match_key_name_chain(em(b, i, 0xba), &CONTINENTES_DAS_CHAVES, i as u32)); // continentes do eng.lng
         });
-        tabela(c[2], 0x53, &mut |b| {
+        table(c[2], 0x53, &mut |b| {
             key_ids_loop(|| c[2], |i| { competicao(em(b, i, 0x53), c[5].wrapping_add(i) as u32); }); // competições do eng.lng depois das c5
         });
-        tabela(c[3], 0x6d, &mut |b| {
+        table(c[3], 0x6d, &mut |b| {
             key_ids_loop(|| c[3], |i| { nacao(em(b, i, 0x6d), i as u32); }); // nações do eng.lng
         });
         // os prêmios: a memória antes de pular as duas tabelas de 0x34
@@ -184,43 +184,43 @@ pub(crate) unsafe fn set_fixed_key_ids(marca_entrada: u32, relatar: bool) -> u32
         pular(f, (c[6] as u32).wrapping_mul(0x34), 1);
         pular(f, (c[4] as u32).wrapping_mul(0x34), 1);
         if b != 0 {
-            ler(b, 0x4f, c[7] as u32, f);
-            key_ids_loop(|| c[7], |i| { premio(em(b as u32, i, 0x4f), i as u32); }); // prêmios do eng.lng
-            liberar(b);
+            read(b, 0x4f, c[7] as u32, f);
+            key_ids_loop(|| c[7], |i| { prize(em(b as u32, i, 0x4f), i as u32); }); // prêmios do eng.lng
+            free(b);
         } else {
             pular(f, (c[7] as u32).wrapping_mul(0x4f), 1);
         }
-        tabela(c[5], 0x53, &mut |b| {
+        table(c[5], 0x53, &mut |b| {
             key_ids_loop(|| c[5], |i| { competicao(em(b, i, 0x53), i as u32); }); // competições do eng.lng
         });
-        fechar(f);
-        marca = u32::MAX;
+        close(f);
+        mark = u32::MAX;
     } else {
         let mut rodou = key_ids_loop(|| gi(0xae2350), |i| { nacao(em(rd(G_NATION_TABLE), i, 0x122) + 4, i as u32); });
         rodou |= key_ids_loop(|| gi(0xae2378).wrapping_sub(0x7f), |i| { competicao(em(rd(G_CLUB_COMP_TABLE), i, 0x6b) + 4, i as u32); });
         rodou |= key_ids_loop(|| gi(0xae234c), |i| {
-            let nome = em(rd(G_CONTINENT_TABLE), i, 0xc6) + 4;
-            match_key_name_chain(nome, &CONTINENTES_DAS_CHAVES, i as u32); // continentes da base
+            let name = em(rd(G_CONTINENT_TABLE), i, 0xc6) + 4;
+            match_key_name_chain(name, &CONTINENTES_DAS_CHAVES, i as u32); // continentes da base
         });
-        rodou |= key_ids_loop(|| gi(0xae2388), |i| { premio(em(rd(G_STAFF_COMP_TABLE), i, 0x65) + 4, i as u32); });
+        rodou |= key_ids_loop(|| gi(0xae2388), |i| { prize(em(rd(G_STAFF_COMP_TABLE), i, 0x65) + 4, i as u32); });
         rodou |= key_ids_loop(|| gi(0xae235c), |i| { clube(em(rd(G_CLUB_TABLE), i, 0x245) + 4, i as u32); }); // clubes da base
         if rodou {
-            marca = u32::MAX;
+            mark = u32::MAX;
         }
     }
     if relatar {
         let relato: unsafe extern "C" fn(usize) = core::mem::transmute(FN_REPORT_MISSING_KEY_ID);
-        for &(chave, nome, tipo, nacao_da_chave, linha) in RELATO_DAS_CHAVES.iter() {
-            if rd(chave as usize) != marca {
+        for &(chave, name, tipo, nacao_da_chave, row) in RELATO_DAS_CHAVES.iter() {
+            if rd(chave as usize) != mark {
                 continue;
             }
             if tipo == 2 {
                 let n = em(rd(G_NATION_TABLE), gi(nacao_da_chave as usize), 0x122);
                 if *((n as u32).wrapping_add(0x11c) as *const u8) != 0 {
-                    index_fatal_error(linha as u32, marca);
+                    index_fatal_error(row as u32, mark);
                 }
             }
-            relato(nome as usize); // tipos 0 e 1 (o 1 é o corpo da 0x60d780 em linha)
+            relato(name as usize); // tipos 0 e 1 (o 1 é o corpo da 0x60d780 em linha)
         }
     }
     1
@@ -308,47 +308,47 @@ pub(crate) const REGION_NAMES: [(usize, usize); 14] = [
 /// 0xff) ou de regionalidade, com o vazio 0xad9c64. Devolve 1. Texto nulo, região fora da faixa ou tamanho (curto
 /// com sinal) < 100: a original (caixa). Na ordem das regiões (0x545dc0, em Rust), na busca de jogadores
 /// (player_search, search_screens) e em telas sem módulo (0x7db360, 0x7e13d0, 0x7e29e0).
-pub(crate) unsafe extern "C" fn get_region_name(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
+pub(crate) unsafe extern "C" fn get_region_name(regiao: u32, text: usize, size: u32, form: u32) -> u32 {
     let r = regiao as u8 as i8;
-    if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
-        return original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME)(regiao, texto, tamanho, forma);
+    if text == 0 || !(1..=14).contains(&r) || (size as u16 as i16) < 100 {
+        return original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME)(regiao, text, size, form);
     }
-    let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
+    let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     let adjetivo: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
-    let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    *(texto as *mut u8) = 0;
+    let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    *(text as *mut u8) = 0;
     let r = r as i32;
-    let fb = forma as u8;
-    let i = idioma(); // a original relê [0x9eb2dc] a cada pergunta (o mesmo valor)
+    let fb = form as u8;
+    let i = language(); // a original relê [0x9eb2dc] a cada pergunta (o mesmo valor)
     if fb != 0xff {
         // (tabela, linha) do idioma: as tabelas do exe, lidas pelo endereço
-        let tabela = match i {
+        let table = match i {
             4 => Some((0x9d0518usize, 4)),
             5 => Some((0x9d06d4usize, 5)),
             9 => Some((0x9d05f8usize, 4)),
             _ => None,
         };
-        if let Some((base, linha)) = tabela {
-            let f = adjetivo(forma, i as u32) as i8 as i32;
+        if let Some((base, linha)) = table {
+            let f = adjetivo(form, i as u32) as i8 as i32;
             let k = r.wrapping_mul(linha).wrapping_add(f);
-            copy_c_string(texto, read_usize(base.wrapping_add((k as usize).wrapping_mul(4))));
+            copy_c_string(text, read_usize(base.wrapping_add((k as usize).wrapping_mul(4))));
             return 1;
         }
     }
-    let grupo = i == 5 || i == 2 || i == 4 || i == 9;
+    let group = i == 5 || i == 2 || i == 4 || i == 9;
     if r == 3 {
-        if grupo {
-            formatar(texto, 0x9e1f94); // Caribbean
+        if group {
+            format(text, 0x9e1f94); // Caribbean
         } else if fb == 0xff {
-            formatar(texto, 0x9e2054, 0xad9c64usize); // Caribbean<%s COMMENT Region as in Europe>
+            format(text, 0x9e2054, 0xad9c64usize); // Caribbean<%s COMMENT Region as in Europe>
         } else {
-            formatar(texto, 0x9e2080, 0xad9c64usize); // Caribbean<%s COMMENT Regionality as in European>
+            format(text, 0x9e2080, 0xad9c64usize); // Caribbean<%s COMMENT Regionality as in European>
         }
     } else {
         let (adj, nome) = REGION_NAMES[r as usize - 1];
         // nos idiomas do grupo o adjetivo vem com a forma 0xff; nos outros, com as outras formas
-        let usa_adjetivo = if grupo { fb == 0xff } else { fb != 0xff }; // (dbu)
-        formatar(texto, if usa_adjetivo { adj } else { nome });
+        let usa_adjetivo = if group { fb == 0xff } else { fb != 0xff }; // (dbu)
+        format(text, if usa_adjetivo { adj } else { nome });
     }
     1
 }
@@ -392,34 +392,34 @@ pub(crate) const CONTINENT_NAMES_LANGUAGE_4: [[usize; 5]; 6] = [
 /// +0 comparado às chaves [0x9cfa08..0x9cfa18], nessa ordem) e pela forma do adjetivo (0x545a60, já em Rust, pelo
 /// endereço do jogo). Devolve 1. Continente ou texto nulos ou tamanho (curto com sinal) < 50: a original (0). Na
 /// busca (find_screens), no Menubar, nos jogos do dia (0x717cc0, em Rust) e em 0x7dd400.
-pub(crate) unsafe extern "C" fn get_continent_adjective(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
-        return original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_GET_CONTINENT_ADJECTIVE)(continente, texto, tamanho, forma);
+pub(crate) unsafe extern "C" fn get_continent_adjective(continent: usize, text: usize, size: u32, form: u32) -> u32 {
+    if continent == 0 || text == 0 || (size as u16 as i16) < 0x32 {
+        return original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_GET_CONTINENT_ADJECTIVE)(continent, text, size, form);
     }
-    let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
+    let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     let adjetivo: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
-    *(texto as *mut u8) = 0;
-    let proprio = continente + 0x23; // o adjetivo do registro (dbu)
-    let tabela = if forma as u8 == 0 {
+    *(text as *mut u8) = 0;
+    let own = continent + 0x23; // o adjetivo do registro (dbu)
+    let table = if form as u8 == 0 {
         None
     } else {
-        match idioma() {
+        match language() {
             9 => Some((&CONTINENT_ADJECTIVES, 9)),
             5 => Some((&CONTINENT_ADJECTIVES_LANG5, 5)),
             4 => Some((&CONTINENT_NAMES_LANGUAGE_4, 4)),
             _ => None,
         }
     };
-    let s = match tabela {
-        None => proprio,
+    let s = match table {
+        None => own,
         Some((t, i)) => {
-            let f = adjetivo(forma, i) as i8;
-            let id = read_usize(continente);
-            let linha = [KEY_CONTINENT_AFRICA, KEY_CONTINENT_ASIA, KEY_CONTINENT_EUROPE, KEY_CONTINENT_NORTH_AMERICA, KEY_CONTINENT_OCEANIA].iter().position(|&g| read_usize(g) == id).unwrap_or(5);
-            t[linha][if (0..=3).contains(&f) { f as usize } else { 4 }]
+            let f = adjetivo(form, i) as i8;
+            let id = read_usize(continent);
+            let row = [KEY_CONTINENT_AFRICA, KEY_CONTINENT_ASIA, KEY_CONTINENT_EUROPE, KEY_CONTINENT_NORTH_AMERICA, KEY_CONTINENT_OCEANIA].iter().position(|&g| read_usize(g) == id).unwrap_or(5);
+            t[row][if (0..=3).contains(&f) { f as usize } else { 4 }]
         }
     };
-    copy_c_string(texto, s);
+    copy_c_string(text, s);
     1
 }
 
@@ -1365,14 +1365,14 @@ pub(crate) static CLUB_KEYS_SWAP_ORDER: &[u32] = &[
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
-pub(crate) unsafe extern "C" fn match_club_key_id(nome: usize, linha: u32) -> u32 {
+pub(crate) unsafe extern "C" fn match_club_key_id(name: usize, row: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
     for cadeia in CLUB_KEYS.iter() {
         for &(texto, global) in cadeia.iter() {
-            r = stricmp(nome, texto as usize);
+            r = stricmp(name, texto as usize);
             if r == 0 {
-                *(global as *mut u32) = linha; // chave de clube
+                *(global as *mut u32) = row; // chave de clube
                 break;
             }
         }
@@ -1386,10 +1386,10 @@ pub(crate) unsafe extern "C" fn match_club_key_id(nome: usize, linha: u32) -> u3
 /// [pt] { 0x60ba80 } (cdecl, index.cpp, remap_club_key_id): depois do corte da tabela de clubes pelo
 /// tamanho da base (0x5267c0), a primeira chave de clube (na ordem de CLUB_KEYS_SWAP_ORDER) que
 /// guarda o id `antigo` passa a guardar `novo` e devolve 1; nenhuma: 0.
-pub(crate) unsafe extern "C" fn remap_club_key_id(antigo: u32, novo: u32) -> u32 {
+pub(crate) unsafe extern "C" fn remap_club_key_id(old: u32, new: u32) -> u32 {
     for &g in CLUB_KEYS_SWAP_ORDER.iter() {
-        if *(g as *const u32) == antigo {
-            *(g as *mut u32) = novo; // chave remapeada
+        if *(g as *const u32) == old {
+            *(g as *mut u32) = new; // chave remapeada
             return 1;
         }
     }
@@ -1404,14 +1404,14 @@ pub(crate) unsafe extern "C" fn remap_club_key_id(antigo: u32, novo: u32) -> u32
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
-pub(crate) unsafe extern "C" fn match_nation_key_id(nome: usize, linha: u32) -> u32 {
+pub(crate) unsafe extern "C" fn match_nation_key_id(name: usize, row: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
     for cadeia in NATION_KEYS.iter() {
         for &(texto, global) in cadeia.iter() {
-            r = stricmp(nome, texto as usize);
+            r = stricmp(name, texto as usize);
             if r == 0 {
-                *(global as *mut u32) = linha; // chave de nação
+                *(global as *mut u32) = row; // chave de nação
                 break;
             }
         }
@@ -2274,20 +2274,20 @@ pub(crate) static PERSON_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
-pub(crate) unsafe extern "C" fn match_club_comp_key_id(nome: usize, linha: u32) -> u32 {
+pub(crate) unsafe extern "C" fn match_club_comp_key_id(name: usize, row: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
     for cadeia in CLUB_COMPETITION_KEYS.iter() {
         let mut i = 0;
         while i < cadeia.len() {
             let (texto, global) = cadeia[i];
-            r = stricmp(nome, texto as usize);
+            r = stricmp(name, texto as usize);
             if r == 0 {
-                *(global as *mut u32) = linha; // chave de competição de clube
+                *(global as *mut u32) = row; // chave de competição de clube
                 // as gravações extras do mesmo acerto (texto 0)
                 while i + 1 < cadeia.len() && cadeia[i + 1].0 == 0 {
                     i += 1;
-                    *(cadeia[i].1 as *mut u32) = linha;
+                    *(cadeia[i].1 as *mut u32) = row;
                 }
                 break;
             }
@@ -2308,14 +2308,14 @@ pub(crate) unsafe extern "C" fn match_club_comp_key_id(nome: usize, linha: u32) 
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
-pub(crate) unsafe extern "C" fn match_staff_comp_key_id(nome: usize, linha: u32) -> u32 {
+pub(crate) unsafe extern "C" fn match_staff_comp_key_id(name: usize, row: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
     for cadeia in PERSON_COMPETITION_KEYS.iter() {
         for &(texto, global) in cadeia.iter() {
-            r = stricmp(nome, texto as usize);
+            r = stricmp(name, texto as usize);
             if r == 0 {
-                *(global as *mut u32) = linha; // chave de competição de pessoa
+                *(global as *mut u32) = row; // chave de competição de pessoa
                 break;
             }
         }
@@ -2323,17 +2323,17 @@ pub(crate) unsafe extern "C" fn match_staff_comp_key_id(nome: usize, linha: u32)
     r as u32 // o eax do último _stricmp (chave de competição de pessoa)
 }
 
-pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao: usize, text: usize, size: u32, genero: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_NATION_GET_NATIONALITY_ADJECTIVE);
-    if texto == 0 {
-        return o(nacao, texto, tamanho, genero);
+    if text == 0 {
+        return o(nacao, text, size, genero);
     }
     // o texto produzido (até o tamanho dado, de 1 a 128 bytes; abaixo de 50 só o zero do começo)
-    let n = ((tamanho as u16 as i16).max(1) as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(nacao, texto, tamanho, genero),
-        || nation_get_nationality_adjective(nacao, texto, tamanho, genero));
+    let n = ((size as u16 as i16).max(1) as usize).min(128);
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, n)], || o(nacao, text, size, genero),
+        || nation_get_nationality_adjective(nacao, text, size, genero));
     PLACAR.registrar(igual && r == x, || format!("nation_get_nationality_adjective({:x}, tamanho {}, genero {}) original={} rust={} {:x?} x {:x?}",
-        nacao, tamanho as u16 as i16, genero as u8, r, x, mo, mr));
+        nacao, size as u16 as i16, genero as u8, r, x, mo, mr));
     r
 }
 
@@ -2360,85 +2360,85 @@ pub(crate) unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
 }
 
 /// Comparer for `get_region_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_get_region_name(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_get_region_name(regiao: u32, text: usize, size: u32, form: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME);
     let r = regiao as u8 as i8;
-    if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
-        return o(regiao, texto, tamanho, forma); // caixa: só a original
+    if text == 0 || !(1..=14).contains(&r) || (size as u16 as i16) < 100 {
+        return o(regiao, text, size, form); // caixa: só a original
     }
     // os 100 primeiros bytes (o tamanho mínimo aceito)
-    let (x, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 100)], || o(regiao, texto, tamanho, forma),
-        || get_region_name(regiao, texto, tamanho, forma));
-    PLACAR.registrar(igual && x == n, || format!("get_region_name({}, forma {}) original={} rust={} {:x?} x {:x?}", r, forma as u8, x, n, mo, mr));
+    let (x, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, 100)], || o(regiao, text, size, form),
+        || get_region_name(regiao, text, size, form));
+    PLACAR.registrar(igual && x == n, || format!("get_region_name({}, forma {}) original={} rust={} {:x?} x {:x?}", r, form as u8, x, n, mo, mr));
     x
 }
 
 /// Comparer for `get_continent_adjective` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_get_continent_adjective(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_get_continent_adjective(continent: usize, text: usize, size: u32, form: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_GET_CONTINENT_ADJECTIVE);
-    if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
-        return o(continente, texto, tamanho, forma);
+    if continent == 0 || text == 0 || (size as u16 as i16) < 0x32 {
+        return o(continent, text, size, form);
     }
     // os 50 primeiros bytes (o tamanho mínimo aceito)
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 50)], || o(continente, texto, tamanho, forma),
-        || get_continent_adjective(continente, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == n, || format!("get_continent_adjective({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continente, forma as u8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, 50)], || o(continent, text, size, form),
+        || get_continent_adjective(continent, text, size, form));
+    PLACAR.registrar(igual && r == n, || format!("get_continent_adjective({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continent, form as u8, r, n, mo, mr));
     r
 }
 
 /// Comparer for `match_club_key_id` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_club_key_id(nome: usize, linha: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_match_club_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_KEY_ID);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_club_key_id(nome, linha));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(name, row), || match_club_key_id(name, row));
     PLACAR.registrar(igual && r == n, || {
-        let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
-        format!("match_club_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, describe_key_diffs(&mo, &mr))
+        let t = std::ffi::CStr::from_ptr(name as *const std::os::raw::c_char).to_string_lossy();
+        format!("match_club_key_id(\"{}\", {}) original={} rust={} {}", t, row, r as i32, n as i32, describe_key_diffs(&mo, &mr))
     });
     r
 }
 
 /// Comparer for `remap_club_key_id` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_remap_club_key_id(antigo: u32, novo: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_remap_club_key_id(old: u32, new: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_REMAP_CLUB_KEY_ID);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(antigo, novo), || remap_club_key_id(antigo, novo));
-    PLACAR.registrar(igual && r == n, || format!("remap_club_key_id({}, {}) original={} rust={} {}", antigo as i32, novo as i32, r, n, describe_key_diffs(&mo, &mr)));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(old, new), || remap_club_key_id(old, new));
+    PLACAR.registrar(igual && r == n, || format!("remap_club_key_id({}, {}) original={} rust={} {}", old as i32, new as i32, r, n, describe_key_diffs(&mo, &mr)));
     r
 }
 
 /// Comparer for `match_nation_key_id` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_nation_key_id(nome: usize, linha: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_match_nation_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_NATION_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_NATION_AFGHANISTAN, 0x348)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_nation_key_id(nome, linha));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(name, row), || match_nation_key_id(name, row));
     PLACAR.registrar(igual && r == n, || {
-        let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
-        format!("match_nation_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, describe_key_diffs(&mo, &mr))
+        let t = std::ffi::CStr::from_ptr(name as *const std::os::raw::c_char).to_string_lossy();
+        format!("match_nation_key_id(\"{}\", {}) original={} rust={} {}", t, row, r as i32, n as i32, describe_key_diffs(&mo, &mr))
     });
     r
 }
 
 /// Comparer for `match_club_comp_key_id` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_club_comp_key_id(nome: usize, linha: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_match_club_comp_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_COMP_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION, 0x4c0)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_club_comp_key_id(nome, linha));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(name, row), || match_club_comp_key_id(name, row));
     PLACAR.registrar(igual && r == n, || {
-        let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
-        format!("match_club_comp_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, describe_key_diffs(&mo, &mr))
+        let t = std::ffi::CStr::from_ptr(name as *const std::os::raw::c_char).to_string_lossy();
+        format!("match_club_comp_key_id(\"{}\", {}) original={} rust={} {}", t, row, r as i32, n as i32, describe_key_diffs(&mo, &mr))
     });
     r
 }
 
 /// Comparer for `match_staff_comp_key_id` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_staff_comp_key_id(nome: usize, linha: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_match_staff_comp_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_STAFF_COMP_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_STAFF_COMP_FIFA_WORLD_PLAYER_OF_THE_YEAR, 0x684)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_staff_comp_key_id(nome, linha));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(name, row), || match_staff_comp_key_id(name, row));
     PLACAR.registrar(igual && r == n, || {
-        let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
-        format!("match_staff_comp_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, describe_key_diffs(&mo, &mr))
+        let t = std::ffi::CStr::from_ptr(name as *const std::os::raw::c_char).to_string_lossy();
+        format!("match_staff_comp_key_id(\"{}\", {}) original={} rust={} {}", t, row, r as i32, n as i32, describe_key_diffs(&mo, &mr))
     });
     r
 }

@@ -7,6 +7,6 @@ MUTACOES = [
     ('dq5_listada', '*((v + 0x4e) as *const u8) & 1 == 0', '*((v + 0x4e) as *const u8) & 2 == 0'),
     ('dq5_emprestimo', '*((v + 0x4e) as *const u8) & 2 != 0) as u32', '*((v + 0x4e) as *const u8) & 1 != 0) as u32'),
     ('dq6_pedido', '*((v + 0x4e) as *const u8) & 8 != 0', '*((v + 0x4e) as *const u8) & 9 != 0'),
-    ('dq6_nota', '(habilidade + 2 * (valor as u8 as i8 as i32))', '(habilidade + 3 * (valor as u8 as i8 as i32))'),
+    ('dq6_nota', '(ability + 2 * (value as u8 as i8 as i32))', '(ability + 3 * (value as u8 as i8 as i32))'),
     ('dq6_reservas', '    1 // pode', '    0 // pode'),
 ]

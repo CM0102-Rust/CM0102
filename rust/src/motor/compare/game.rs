@@ -10,11 +10,11 @@ use super::*;
 pub(crate) unsafe extern "C" fn comparar_game_update_nation_coefficients() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_GAME_UPDATE_NATION_COEFFICIENTS);
     let iniciar = read_u8(G_NATION_COEFFICIENT_HISTORY_NEEDS_INIT) != 0;
-    let hoje = read_usize(G_CURRENT_DATE) as i16;
-    let dez = read_i16(G_NATION_COEFFICIENT_UPDATE_DAY_TABLE + (current_month() * 2) as usize) == hoje && read_i16(G_NATION_COEFFICIENT_UPDATE_DAY_DECEMBER) == hoje;
+    let today = read_usize(G_CURRENT_DATE) as i16;
+    let dez = read_i16(G_NATION_COEFFICIENT_UPDATE_DAY_TABLE + (current_month() * 2) as usize) == today && read_i16(G_NATION_COEFFICIENT_UPDATE_DAY_DECEMBER) == today;
     let n = read_usize(G_NATION_COUNT) as i32;
     let base = read_usize(G_NATION_TABLE);
-    let mut plano = Vec::new();
+    let mut plan = Vec::new();
     for k in 0..n.max(0) as usize {
         let na = base + k * 0x122;
         let mut h = nation_coefficient_history(na);
@@ -24,35 +24,35 @@ pub(crate) unsafe extern "C" fn comparar_game_update_nation_coefficients() {
                 *x = v;
             }
         }
-        let mut marca = read_u8(na + 0x121);
+        let mut mark = read_u8(na + 0x121);
         if dez {
-            roll_coefficient_year(na, &mut h, &mut marca);
+            roll_coefficient_year(na, &mut h, &mut mark);
         }
-        plano.push((h, marca));
+        plan.push((h, mark));
     }
     o();
-    let mut erro = None;
-    for (k, (h, marca)) in plano.iter().enumerate() {
+    let mut error = None;
+    for (k, (h, mark)) in plan.iter().enumerate() {
         let na = base + k * 0x122;
         let g = nation_coefficient_history(na);
-        if (0..6).any(|j| g[j].to_bits() != h[j].to_bits()) || read_u8(na + 0x121) != *marca {
-            erro = Some(format!("nação {} ({:x}): {:?}/{} x plano {:?}/{}", k, na, g, read_u8(na + 0x121), h, marca));
+        if (0..6).any(|j| g[j].to_bits() != h[j].to_bits()) || read_u8(na + 0x121) != *mark {
+            error = Some(format!("nação {} ({:x}): {:?}/{} x plano {:?}/{}", k, na, g, read_u8(na + 0x121), h, mark));
             break;
         }
     }
     if read_u8(G_NATION_COEFFICIENT_HISTORY_NEEDS_INIT) != 0 {
-        erro = Some(format!("[0x9cd218] = {}", read_u8(G_NATION_COEFFICIENT_HISTORY_NEEDS_INIT)));
+        error = Some(format!("[0x9cd218] = {}", read_u8(G_NATION_COEFFICIENT_HISTORY_NEEDS_INIT)));
     }
-    PLACAR.registrar(erro.is_none(), || format!("game_update_nation_coefficients(dezembro {}): {}", dez, erro.clone().unwrap_or_default()));
+    PLACAR.registrar(error.is_none(), || format!("game_update_nation_coefficients(dezembro {}): {}", dez, error.clone().unwrap_or_default()));
 }
 
 /// Comparer for `is_player_regen_day` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pelo al (o único byte que os chamadores leem).
-pub(crate) unsafe extern "C" fn comparar_is_player_regen_day(dia: u32) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(IDX_IS_PLAYER_REGEN_DAY)(dia);
-    let n = is_player_regen_day(dia);
-    PLACAR.registrar(r as u8 == n as u8, || format!("is_player_regen_day({}) {} x {}", dia as u16, r as u8, n as u8));
+pub(crate) unsafe extern "C" fn comparar_is_player_regen_day(day: u32) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(IDX_IS_PLAYER_REGEN_DAY)(day);
+    let n = is_player_regen_day(day);
+    PLACAR.registrar(r as u8 == n as u8, || format!("is_player_regen_day({}) {} x {}", day as u16, r as u8, n as u8));
     r
 }
 
@@ -87,8 +87,8 @@ pub(crate) unsafe extern "C" fn comparar_game_check_players_missing_training() {
 }
 
 /// Comparer for `game_update_comps_for_date` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_game_update_comps_for_date(marca: u32) {
-    original_fn::<unsafe extern "C" fn(u32)>(IDX_GAME_UPDATE_COMPS_FOR_DATE)(marca)
+pub(crate) unsafe extern "C" fn comparar_game_update_comps_for_date(mark: u32) {
+    original_fn::<unsafe extern "C" fn(u32)>(IDX_GAME_UPDATE_COMPS_FOR_DATE)(mark)
 }
 
 /// Comparer for `manager_manager_adjust_board_confidence` (comparison mode: see the header of motor.rs).
@@ -105,26 +105,26 @@ pub(crate) unsafe extern "thiscall" fn comparar_manager_manager_adjust_board_con
 }
 
 /// Comparer for `transfer_manager_get_shortlist_manager` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_transfer_manager_get_shortlist_manager(gerente: usize) -> usize {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_TRANSFER_MANAGER_GET_SHORTLIST_MANAGER)(gerente);
-    let n = transfer_manager_get_shortlist_manager(gerente);
+pub(crate) unsafe extern "thiscall" fn comparar_transfer_manager_get_shortlist_manager(manager: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_TRANSFER_MANAGER_GET_SHORTLIST_MANAGER)(manager);
+    let n = transfer_manager_get_shortlist_manager(manager);
     PLACAR.registrar(r == n, || format!("transfer_manager_get_shortlist_manager original={:#x} rust={:#x}", r, n));
     r
 }
 
 /// Comparer for `training_manager_get_player_entry` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_training_manager_get_player_entry(treino: usize, jogador: usize) -> usize {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_TRAINING_MANAGER_GET_PLAYER_ENTRY)(treino, jogador);
-    let n = training_manager_get_player_entry(treino, jogador);
+pub(crate) unsafe extern "thiscall" fn comparar_training_manager_get_player_entry(treino: usize, player: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_TRAINING_MANAGER_GET_PLAYER_ENTRY)(treino, player);
+    let n = training_manager_get_player_entry(treino, player);
     PLACAR.registrar(r == n, || format!("training_manager_get_player_entry original={:#x} rust={:#x}", r, n));
     r
 }
 
 /// Comparer for `game_average` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_game_average(t: usize, segunda: u8) -> f64 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u8) -> f64>(IDX_GAME_AVERAGE)(t, segunda);
-    let n = game_average(t, segunda);
-    PLACAR.registrar(o.to_bits() == n.to_bits(), || format!("game_average({:#x}, {}) original={} rust={}", t, segunda, o, n));
+pub(crate) unsafe extern "thiscall" fn comparar_game_average(t: usize, second: u8) -> f64 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u8) -> f64>(IDX_GAME_AVERAGE)(t, second);
+    let n = game_average(t, second);
+    PLACAR.registrar(o.to_bits() == n.to_bits(), || format!("game_average({:#x}, {}) original={} rust={}", t, second, o, n));
     o
 }
 

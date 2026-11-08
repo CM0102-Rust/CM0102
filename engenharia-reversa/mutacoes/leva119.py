@@ -1,7 +1,7 @@
 # Mutacoes da leva119 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva119.py --jogo 2001-08-20
 MUTACOES = [
-    ('f_duas', "            let soma = a.wrapping_add(b);", "            let soma = a.wrapping_add(a);"),
-    ('f_metade', "            tab[g * 5 + s] = if n < 11 && g == 6 { soma / 2 } else { soma };", "            tab[g * 5 + s] = if n < 11 && g == 5 { soma / 2 } else { soma };"),
+    ('f_duas', "            let sum = a.wrapping_add(b);", "            let sum = a.wrapping_add(a);"),
+    ('f_metade', "            table[g * 5 + s] = if n < 11 && g == 6 { sum / 2 } else { sum };", "            table[g * 5 + s] = if n < 11 && g == 5 { sum / 2 } else { sum };"),
     ('f_tempo', "        let mut x = ((3000.0 - t as f64) * 5.0 + v * t as f64) * 0.005;", "        let mut x = ((3000.0 - t as f64) * 5.0 + v * t as f64) * 0.006;"),
     ('f_favorita', "            x *= if !favorita {\n                0.1", "            x *= if !favorita {\n                0.2"),
     ('f_goleiro', "            if p1 & 1 != 0 {\n                band = 2;", "            if p1 & 1 != 0 {\n                band = 1;"),

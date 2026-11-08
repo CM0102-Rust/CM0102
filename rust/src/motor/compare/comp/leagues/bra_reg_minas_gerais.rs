@@ -9,12 +9,12 @@ use super::*;
 /// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
 /// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_advance_stage(this: usize) {
-    let antes = read_usize(this + 0x30) as i32;
-    let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
+    let before = read_usize(this + 0x30) as i32;
+    let last = before >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_MINAS_GERAIS_ADVANCE_STAGE)(this);
-    let depois = read_usize(this + 0x30) as i32;
-    let igual = if ultima { depois == antes } else if antes + 1 == 2 { depois == 2 || depois == 1 } else { depois == antes + 1 };
-    PLACAR.registrar(igual, || format!("bra_reg_minas_gerais_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
+    let after = read_usize(this + 0x30) as i32;
+    let same = if last { after == before } else if before + 1 == 2 { after == 2 || after == 1 } else { after == before + 1 };
+    PLACAR.registrar(same, || format!("bra_reg_minas_gerais_advance_stage({:#x}) antes={} depois={}", this, before, after));
 }
 
 /// Comparer for `bra_reg_minas_gerais_create_final_stage` (comparison mode: see the header of motor.rs).
@@ -26,24 +26,24 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_advance_sta
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_final_stage(this: usize) {
     let (a, b) = (half_champion(this, 0), half_champion(this, 1));
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_MINAS_GERAIS_CREATE_FINAL_STAGE)(this);
-    let igual = if a == b {
-        let marca = |k: usize| *((read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
-        let na_liga = (0..read_i16(this + 0x3e).max(0) as usize).all(|i| {
-            let linha = read_usize(this + 0xb1) + i * 0x3b;
-            read_usize(linha) != a || *((linha + 0x37) as *const u8) == 5
+    let same = if a == b {
+        let mark = |k: usize| *((read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
+        let in_league = (0..read_i16(this + 0x3e).max(0) as usize).all(|i| {
+            let row = read_usize(this + 0xb1) + i * 0x3b;
+            read_usize(row) != a || *((row + 0x37) as *const u8) == 5
         });
-        read_usize(this + 0x30) == 1 && read_usize(this + 0x2c) == 2 && marca(0) && marca(1) && na_liga
+        read_usize(this + 0x30) == 1 && read_usize(this + 0x2c) == 2 && mark(0) && mark(1) && in_league
     } else {
-        let fase = read_usize(read_usize(this + 0xc) + 8);
-        if fase == 0 {
+        let stage = read_usize(read_usize(this + 0xc) + 8);
+        if stage == 0 {
             false
         } else {
-            let l = read_usize(fase + 0xa7);
+            let l = read_usize(stage + 0xa7);
             let (x, y) = (read_usize(l), read_usize(l + 6));
-            read_i16(fase + 0x3e) == 2 && read_usize(fase + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + 0x30) == 2
+            read_i16(stage + 0x3e) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + 0x30) == 2
         }
     };
-    PLACAR.registrar(igual, || format!("bra_reg_minas_gerais_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
+    PLACAR.registrar(same, || format!("bra_reg_minas_gerais_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
 }
 
 /// Comparer for `bra_reg_minas_gerais_record_season_honours` (comparison mode: see the header of motor.rs).
@@ -59,26 +59,26 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_record_seas
 ///
 /// [pt] Comparador: lado a lado pela entrada do clube (+0x73..+0x75), achada antes (a 0x4a4850 ordena na primeira vez e só
 /// busca depois; a original e a cópia a chamam de novo); a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_set_club_progress(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_set_club_progress(this: usize, clube: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
     let e = bra_reg_minas_gerais_comp_stats_club_entry(this, clube);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_REG_MINAS_GERAIS_SET_CLUB_PROGRESS)(this, clube, fase, a, b, c), || bra_reg_minas_gerais_set_club_progress(this, clube, fase, a, b, c));
-    PLACAR.registrar(igual && r == n, || format!("bra_reg_minas_gerais_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_REG_MINAS_GERAIS_SET_CLUB_PROGRESS)(this, clube, stage, a, b, c), || bra_reg_minas_gerais_set_club_progress(this, clube, stage, a, b, c));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_minas_gerais_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, stage as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
     r
 }
 
 /// Comparador: como o do Centro-Oeste.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let (n, l, dest) = mineiro_end_of_stage(this, clube, situacao, fase, jogo, false);
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_BRA_REG_MINAS_GERAIS_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, jogo, a6);
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+    let (n, l, dest) = mineiro_end_of_stage(this, clube, status, stage, jogo, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_BRA_REG_MINAS_GERAIS_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, status, stage, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
-    PLACAR.registrar(r == n && gravado == dest, || format!("bra_reg_minas_gerais_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
+    PLACAR.registrar(r == n && gravado == dest, || format!("bra_reg_minas_gerais_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
 }
 
 /// Comparer for `construct_bra_reg_minas_gerais` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_minas_gerais(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_minas_gerais(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_MINAS_GERAIS);
-    bra_reg_goias_compare_state_league_ctor("construct_bra_reg_minas_gerais", this, ano, registro, &MINEIRO_STATE_LEAGUE, || o(this, ano, registro))
+    bra_reg_goias_compare_state_league_ctor("construct_bra_reg_minas_gerais", this, year, record, &MINEIRO_STATE_LEAGUE, || o(this, year, record))
 }
 
 /// Comparer for `bra_reg_minas_gerais_create_table` (comparison mode: see the header of motor.rs).

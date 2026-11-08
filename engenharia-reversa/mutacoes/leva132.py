@@ -10,7 +10,7 @@ MUTACOES = [
     ('c_59', "|| byte(p, 0x59) <= 0xf {", "|| byte(p, 0x59) <= 0xe {", "clube segue"),
     ('c_57', "if byte(p, 0x57) <= (r as u8).wrapping_add(10) as i8", "if byte(p, 0x57) <= (r as u8).wrapping_add(0) as i8", "clube jovem"),
     ('c_ficha', "|| w(g(p + 0x61) + 0xb) >= 0x109a {", "|| w(g(p + 0x61) + 0xb) >= 0x2000 {", "clube jovem"),
-    ('c_lado', "let lado = (ler(clube) != ler(t)) as usize;", "let lado = (ler(clube) == ler(t)) as usize;", "clube segue"),
+    ('c_lado', "let side = (read(clube) != read(t)) as usize;", "let side = (read(clube) == read(t)) as usize;", "clube segue"),
     ('c_n', "                && n > 2\n", "                && n > 0\n", "clube elenco"),
     ('c_elenco57', "&& byte(s, 0x57) > 0xf", "&& byte(s, 0x57) > 0x5", "clube elenco"),
     ('c_acao', "f547d90(p, clube, 1);", "f547d90(p, clube, 0);", "clube 547d90"),

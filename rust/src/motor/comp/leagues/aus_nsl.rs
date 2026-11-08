@@ -20,16 +20,16 @@ pub(crate) unsafe fn aus_nsl_table_row_club(t: usize, i: usize) -> usize {
 /// com sinal): a caixa de erro da linha 0x2f0 e nada mais. Senão +0x30 sobe um; ao chegar a 0 monta a série final
 /// (0x412010) e a 1, a grande final (0x4121c0), as duas em call direto com o ecx da liga.
 pub(crate) unsafe extern "thiscall" fn aus_nsl_advance_stage(this: usize) {
-    let fase = read_usize(this + 0x30) as i32;
-    if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
+    let stage = read_usize(this + 0x30) as i32;
+    if stage >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return show_error_at(0x987c20, 0x2f0);
     }
-    let fase = fase + 1;
-    core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
-    if fase == 0 {
+    let stage = stage + 1;
+    core::ptr::write_unaligned((this + 0x30) as *mut i32, stage);
+    if stage == 0 {
         let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_AUSNSL_CREATE_FINALS_SERIES_STAGE);
         f(this);
-    } else if fase == 1 {
+    } else if stage == 1 {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_AUSNSL_CREATE_GRAND_FINAL_STAGE);
         f(this);
     }
@@ -53,37 +53,37 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_advance_stage(this: usize) {
 ///    ela: a notícia do sorteio (0x684230 na fase, thiscall, ret 0), +0x30 = 0 e 1.
 /// [inferência] A série final é uma liga curta dos seis; os dois primeiros dela vão à grande final.
 pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -> u32 {
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
-    let construir: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, usize, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
+    let construct: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, usize, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let vagas: [u8; 4] = [2, 0, 0, 0];
-    let mut clubes = [0usize; 6];
-    for (i, c) in clubes.iter_mut().enumerate() {
+    let slots: [u8; 4] = [2, 0, 0, 0];
+    let mut clubs = [0usize; 6];
+    for (i, c) in clubs.iter_mut().enumerate() {
         *c = aus_nsl_table_row_club(this, i); // cqr3: os seis primeiros da tabela
     }
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
-    let p = novo(0xee);
-    let fase = if p != 0 {
-        construir(p, this, 6, clubes.as_ptr(), 1, read_usize(this + 4), t, rodadas as u16 as u32, read_u8(this + 0xc2) as u32,
-                  read_u8(this + 0xc3) as u32, read_u8(this + 0xc4) as u32, this + 0xc5, vagas.as_ptr(), read_i16(this + 0x40) as u16 as u32, 0,
+    let t = table(this, 0, &mut rodadas, &mut extra, 0);
+    let p = new(0xee);
+    let stage = if p != 0 {
+        construct(p, this, 6, clubs.as_ptr(), 1, read_usize(this + 4), t, rodadas as u16 as u32, read_u8(this + 0xc2) as u32,
+                  read_u8(this + 0xc3) as u32, read_u8(this + 0xc4) as u32, this + 0xc5, slots.as_ptr(), read_i16(this + 0x40) as u16 as u32, 0,
                   extra as u16 as u32, read_u8(this + 0x51) as u32, 1, 0, read_i16(this + 0xd9) as u16 as u32, -1, 0, 2)
     } else {
         0
     };
-    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, fase);
+    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, stage);
     soltar(t);
-    let fase = read_usize(read_usize(this + 0xc));
-    if fase == 0 {
+    let stage = read_usize(read_usize(this + 0xc));
+    if stage == 0 {
         show_error_at(0x987c20, 0x328);
         return 0;
     }
     crate::comparacao::ramo("cqr_3 serie final");
-    noticia(fase);
+    noticia(stage);
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 0);
     1
 }
@@ -103,38 +103,38 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
 /// [inferência] A grande final é um jogo só, com o primeiro da série final como mandante.
 pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
+    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     #[allow(clippy::type_complexity)]
-    let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
+    let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-    let lista = alocar(8);
-    if lista == 0 {
+    let list = alocar(8);
+    if list == 0 {
         return show_error_at(0x987c20, 0x348);
     }
     let serie = read_usize(read_usize(this + 0xc));
-    core::ptr::write_unaligned(lista as *mut usize, aus_nsl_table_row_club(serie, 0)); // cqr3: o primeiro da série final
-    core::ptr::write_unaligned((lista + 4) as *mut usize, aus_nsl_table_row_club(serie, 1)); // cqr3: o segundo da série final
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    core::ptr::write_unaligned(list as *mut usize, aus_nsl_table_row_club(serie, 0)); // cqr3: o primeiro da série final
+    core::ptr::write_unaligned((list + 4) as *mut usize, aus_nsl_table_row_club(serie, 1)); // cqr3: o segundo da série final
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = tabela(this, 1, &mut rodadas, &mut extra, 0);
-    let p = novo(0xb2);
-    let fase = if p != 0 {
-        construir(p, this, 2, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 1, 1,
+    let t = table(this, 1, &mut rodadas, &mut extra, 0);
+    let p = new(0xb2);
+    let stage = if p != 0 {
+        construct(p, this, 2, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 1, 1,
                   extra as u16 as u32, 0x14, 0, 0, 0, 0)
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + 0xc) + 4) as *mut usize, fase);
+    core::ptr::write_unaligned((read_usize(this + 0xc) + 4) as *mut usize, stage);
     soltar(t);
-    let fase = read_usize(read_usize(this + 0xc) + 4);
-    if fase == 0 {
+    let stage = read_usize(read_usize(this + 0xc) + 4);
+    if stage == 0 {
         return show_error_at(0x987c20, 0x35c);
     }
     crate::comparacao::ramo("cqr_3 grande final");
-    montar(fase, 0);
-    soltar(lista);
+    build(stage, 0);
+    soltar(list);
 }
 
 
@@ -248,9 +248,9 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_record_season_honours(this: usize
 /// seis classificados (6) ganham o registro de classificação para a fase final (fase 0x435); os de fora (-2) devolvem
 /// -1; na fase final (fase 0), quem avança (6) ganha o registro (rodada 0x96) e quem cai (-2) o de não classificado
 /// (fase 0x435) e -1; depois, o campeão (1) ganha o registro de campeão. Devolve 0 ou -1.
-pub(crate) unsafe extern "thiscall" fn aus_nsl_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn aus_nsl_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let _ = (a4, a5, a6);
-    nsl_end_of_stage(this, clube, situacao, fase, true).0
+    nsl_end_of_stage(this, clube, status, stage, true).0
 }
 
 

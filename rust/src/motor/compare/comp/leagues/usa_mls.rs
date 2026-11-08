@@ -5,12 +5,12 @@ use super::*;
 
 /// Comparer for `usa_mls_advance_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_advance_stage(this: usize) {
-    let antes = read_usize(this + 0x30) as i32;
-    let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
+    let before = read_usize(this + 0x30) as i32;
+    let last = before >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_ADVANCE_STAGE)(this);
-    let depois = read_usize(this + 0x30) as i32;
-    let esperado = if ultima { antes } else if antes == 1 || antes == 2 { antes + 1 } else { antes };
-    PLACAR.registrar(depois == esperado, || format!("usa_mls_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
+    let after = read_usize(this + 0x30) as i32;
+    let expected = if last { before } else if before == 1 || before == 2 { before + 1 } else { before };
+    PLACAR.registrar(after == expected, || format!("usa_mls_advance_stage({:#x}) antes={} depois={}", this, before, after));
 }
 
 /// Comparer for `usa_mls_create_playoff_stage` (comparison mode: see the header of motor.rs).
@@ -19,16 +19,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_advance_stage(this: usiz
 /// antes pela cópia da escolha (os mesmos registros e o mesmo qsort): a fase da terceira vaga existe, com +0x3e = 8, +4
 /// = o +4 da liga e os oito na lista dela (+0xa7, 6 bytes; como conjunto).
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_create_playoff_stage(this: usize) {
-    let ordenar: unsafe extern "C" fn(*mut u8, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let sort: unsafe extern "C" fn(*mut u8, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let (a, b) = (read_usize(read_usize(this + 0xc)), read_usize(read_usize(this + 0xc) + 4));
-    let mut plano = [0usize; 8];
+    let mut plan = [0usize; 8];
     let mut r = [0u8; 54];
     put_club_points_record(&mut r, 0, table_row_club_points(this, 0));
     put_club_points_record(&mut r, 1, table_row_club_points(a, 0));
     put_club_points_record(&mut r, 2, table_row_club_points(b, 0));
-    ordenar(r.as_mut_ptr(), 3, 6, 0x90a130);
+    sort(r.as_mut_ptr(), 3, 6, 0x90a130);
     for k in 0..3 {
-        plano[k] = club_of_record(&r, k);
+        plan[k] = club_of_record(&r, k);
     }
     let mut k = 0usize;
     for j in 1..4 {
@@ -37,23 +37,23 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_create_playoff_stage(thi
             k += 1;
         }
     }
-    ordenar(r.as_mut_ptr(), 9, 6, 0x90a130);
+    sort(r.as_mut_ptr(), 9, 6, 0x90a130);
     for k in 0..5 {
-        plano[3 + k] = club_of_record(&r, k);
+        plan[3 + k] = club_of_record(&r, k);
     }
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_CREATE_PLAYOFF_STAGE)(this);
-    let fase = read_usize(read_usize(this + 0xc) + 8);
-    let igual = fase != 0 && read_i16(fase + 0x3e) == 8 && read_usize(fase + 4) == read_usize(this + 4) && {
+    let stage = read_usize(read_usize(this + 0xc) + 8);
+    let same = stage != 0 && read_i16(stage + 0x3e) == 8 && read_usize(stage + 4) == read_usize(this + 4) && {
         let mut nela = [0usize; 8];
         for (i, c) in nela.iter_mut().enumerate() {
-            *c = read_usize(read_usize(fase + 0xa7) + 6 * i);
+            *c = read_usize(read_usize(stage + 0xa7) + 6 * i);
         }
-        let mut p = plano;
+        let mut p = plan;
         p.sort_unstable();
         nela.sort_unstable();
         p == nela
     };
-    PLACAR.registrar(igual, || format!("usa_mls_create_playoff_stage({:#x}) fase={:#x} plano={:x?}", this, fase, plano));
+    PLACAR.registrar(same, || format!("usa_mls_create_playoff_stage({:#x}) fase={:#x} plano={:x?}", this, stage, plan));
 }
 
 /// Comparer for `usa_mls_create_final_stage` (comparison mode: see the header of motor.rs).
@@ -75,14 +75,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_create_final_stage(this:
         i += 1;
     }
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_CREATE_FINAL_STAGE)(this);
-    let fase = read_usize(read_usize(this + 0xc) + 0xc);
+    let stage = read_usize(read_usize(this + 0xc) + 0xc);
     // simplification: com menos de dois vencedores a original lê vagas da lista sem valor; aí só a fase é conferida.
-    let igual = fase != 0 && n < 2 || fase != 0 && {
-        let l = read_usize(fase + 0xa7);
+    let same = stage != 0 && n < 2 || stage != 0 && {
+        let l = read_usize(stage + 0xa7);
         let (x, y) = (read_usize(l), read_usize(l + 6));
-        read_i16(fase + 0x3e) == 2 && read_usize(fase + 4) == read_usize(this + 4) && ((x, y) == (v[0], v[1]) || (x, y) == (v[1], v[0]))
+        read_i16(stage + 0x3e) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (v[0], v[1]) || (x, y) == (v[1], v[0]))
     };
-    PLACAR.registrar(igual, || format!("usa_mls_create_final_stage({:#x}) finalistas={:x?} n={} fase={:#x}", this, v, n, fase));
+    PLACAR.registrar(same, || format!("usa_mls_create_final_stage({:#x}) finalistas={:x?} n={} fase={:#x}", this, v, n, stage));
 }
 
 /// Comparer for `usa_mls_create_table` (comparison mode: see the header of motor.rs).
@@ -90,22 +90,22 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_create_final_stage(this:
 /// [pt] O comparador da tabela: só a original (simplification: aloca a tabela e as listas das linhas), com o plano feito antes:
 /// os clubes da competição com o código 0x413, na ordem do banco, até 4. Depois, a devolução, +0x3e = 4 e as linhas.
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_create_table(this: usize) -> u32 {
-    let mut plano = [0usize; 4];
+    let mut plan = [0usize; 4];
     let mut n = 0usize;
     let base = read_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 && n < 4 {
         let c = base + i as u16 as usize * club::SIZE;
         if is_in_mls_division(this, c, 0x413) {
-            plano[n] = c;
+            plan[n] = c;
             n += 1;
         }
         i = i.wrapping_add(1);
     }
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_CREATE_TABLE)(this);
     let t = read_usize(this + 0xb1);
-    let igual = r == (n == 4) as u32 && read_i16(this + 0x3e) == 4 && t != 0 && (0..n).all(|k| read_usize(t + k * 0x3b) == plano[k]);
-    PLACAR.registrar(igual, || format!("usa_mls_create_table({:#x}) r={} n={} plano={:x?}", this, r, n, plano));
+    let same = r == (n == 4) as u32 && read_i16(this + 0x3e) == 4 && t != 0 && (0..n).all(|k| read_usize(t + k * 0x3b) == plan[k]);
+    PLACAR.registrar(same, || format!("usa_mls_create_table({:#x}) r={} n={} plano={:x?}", this, r, n, plan));
     r
 }
 
@@ -127,11 +127,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_third_division_stage(this
 /// árbitros; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1 e as três divisões montadas
 /// (+0x3e = 4 e as vagas 0 e 1 das fases).
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_start_new_season(this: usize) -> u32 {
-    let antes = read_i16(this + 0x40);
+    let before = read_i16(this + 0x40);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_START_NEW_SEASON)(this);
-    let depois = read_i16(this + 0x40);
-    let igual = depois == antes.wrapping_add(1) && read_i16(this + 0x3e) == 4 && read_usize(read_usize(this + 0xc)) != 0 && read_usize(read_usize(this + 0xc) + 4) != 0;
-    PLACAR.registrar(igual, || format!("usa_mls_start_new_season({:#x}) ano antes={} depois={} +0x3e={}", this, antes, depois, read_i16(this + 0x3e)));
+    let after = read_i16(this + 0x40);
+    let same = after == before.wrapping_add(1) && read_i16(this + 0x3e) == 4 && read_usize(read_usize(this + 0xc)) != 0 && read_usize(read_usize(this + 0xc) + 4) != 0;
+    PLACAR.registrar(same, || format!("usa_mls_start_new_season({:#x}) ano antes={} depois={} +0x3e={}", this, before, after, read_i16(this + 0x3e)));
     r
 }
 
@@ -146,7 +146,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_set_predicted_positions(
     if read_usize(this + 8) == 0 || n != 4 {
         return o(this);
     }
-    let ordenar: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let sort: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let mut v = [0usize; 12];
     for k in 0..4 {
@@ -155,7 +155,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_set_predicted_positions(
         v[8 + k] = aus_nsl_table_row_club(read_usize(read_usize(this + 0xc) + 4), k);
     }
     for b in 0..3 {
-        ordenar(v[4 * b..].as_mut_ptr(), 4, 4, 0x4b07d0);
+        sort(v[4 * b..].as_mut_ptr(), 4, 4, 0x4b07d0);
     }
     o(this);
     const LUGARES: [u8; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10];
@@ -170,25 +170,25 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_set_predicted_positions(
 ///
 /// [pt] O comparador da lista: só a original (aloca a lista, que fica com quem chamou), com o plano: n = 12 e os doze clubes
 /// das três tabelas na ordem.
-pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_get_club_array(this: usize, lista: *mut usize, n: *mut i16) {
-    original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(IDX_USA_MLS_GET_CLUB_ARRAY)(this, lista, n);
+pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_get_club_array(this: usize, list: *mut usize, n: *mut i16) {
+    original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(IDX_USA_MLS_GET_CLUB_ARRAY)(this, list, n);
     let m = read_i16(this + 0x3e) as usize;
-    let igual = *n == 0xc && *lista != 0 && (0..m).all(|i| {
-        read_usize(*lista + 4 * i) == aus_nsl_table_row_club(this, i)
-            && read_usize(*lista + 4 * (m + i)) == aus_nsl_table_row_club(read_usize(read_usize(this + 0xc)), i)
-            && read_usize(*lista + 4 * (2 * m + i)) == aus_nsl_table_row_club(read_usize(read_usize(this + 0xc) + 4), i)
+    let same = *n == 0xc && *list != 0 && (0..m).all(|i| {
+        read_usize(*list + 4 * i) == aus_nsl_table_row_club(this, i)
+            && read_usize(*list + 4 * (m + i)) == aus_nsl_table_row_club(read_usize(read_usize(this + 0xc)), i)
+            && read_usize(*list + 4 * (2 * m + i)) == aus_nsl_table_row_club(read_usize(read_usize(this + 0xc) + 4), i)
     });
-    PLACAR.registrar(igual, || format!("usa_mls_get_club_array({:#x}) n={}", this, *n));
+    PLACAR.registrar(same, || format!("usa_mls_get_club_array({:#x}) n={}", this, *n));
 }
 
 /// Comparer for `usa_mls_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: só a original (os registros alocam e vão para o histórico do técnico; não rodam duas vezes) com a
 /// devolução prevista pelo ensaio.
-pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let n = mls_stage_outcome(this, clube, situacao, fase, jogo, false);
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_USA_MLS_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, jogo, a6);
-    PLACAR.registrar(r == n, || format!("usa_mls_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));
+pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+    let n = mls_stage_outcome(this, clube, status, stage, jogo, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_USA_MLS_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, status, stage, a4, jogo, a6);
+    PLACAR.registrar(r == n, || format!("usa_mls_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, clube, status as u8 as i8, stage as u8 as i8, r as i32, n as i32));
     r
 }
 
@@ -196,13 +196,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_update_staff_records_for
 ///
 /// [pt] Comparador: só a original (simplification: o resultado entra nas tabelas; não roda duas vezes), com o plano: a devolução
 /// 1, a marca +0x42 do jogo (1 no estágio 1; senão -1 se estava abaixo de 2) e o bloco +8 devolvido.
-pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_add_result(this: usize, jogo: usize, estat: u32) -> u32 {
-    let marca = *((jogo + 0x42) as *const i8);
-    let bloco = read_u32_as_usize(this + 8);
-    let esperada = if read_u32_as_usize(this + 0x30) == 1 { 1 } else if marca < 2 { -1 } else { marca };
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ADD_RESULT)(this, jogo, estat);
+pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_add_result(this: usize, jogo: usize, stats: u32) -> u32 {
+    let mark = *((jogo + 0x42) as *const i8);
+    let block = read_u32_as_usize(this + 8);
+    let esperada = if read_u32_as_usize(this + 0x30) == 1 { 1 } else if mark < 2 { -1 } else { mark };
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ADD_RESULT)(this, jogo, stats);
     let (m, b) = (*((jogo + 0x42) as *const i8), read_u32_as_usize(this + 8));
-    PLACAR.registrar(r == 1 && m == esperada && b == bloco, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this, jogo, r, m, esperada, b, bloco));
+    PLACAR.registrar(r == 1 && m == esperada && b == block, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this, jogo, r, m, esperada, b, block));
     r
 }
 
@@ -230,9 +230,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_set_up_rules(this: usize
 }
 
 /// Comparador: como o do Mineiro.
-pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_set_club_progress(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_set_club_progress(this: usize, clube: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
     let e = bra_reg_minas_gerais_comp_stats_club_entry(this, clube);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_USA_MLS_SET_CLUB_PROGRESS)(this, clube, fase, a, b, c), || usa_mls_set_club_progress(this, clube, fase, a, b, c));
-    PLACAR.registrar(igual && r == n, || format!("usa_mls_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_USA_MLS_SET_CLUB_PROGRESS)(this, clube, stage, a, b, c), || usa_mls_set_club_progress(this, clube, stage, a, b, c));
+    PLACAR.registrar(igual && r == n, || format!("usa_mls_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, stage as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
     r
 }

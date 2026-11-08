@@ -57,12 +57,12 @@ pub(crate) unsafe extern "C" fn comparar_officials_manager_compare_nation_then_q
 /// Comparer for `choose_match_official` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pela palavra de saída e pelo estado do sorteio, e pela devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_choose_match_official(this: usize, jogo: usize, saida: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_choose_match_official(this: usize, jogo: usize, out: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CHOOSE_MATCH_OFFICIAL);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.push((saida, 2));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, saida),
-        || crate::aleatorio::sem_contar(|| choose_match_official(this, jogo, saida)));
+    reg.push((out, 2));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, out),
+        || crate::aleatorio::sem_contar(|| choose_match_official(this, jogo, out)));
     PLACAR.registrar(igual && r == n, || format!("choose_match_official(jogo {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", jogo, r, mo, n, mr));
     r
 }
@@ -109,22 +109,22 @@ pub(crate) unsafe extern "thiscall" fn comparar_renew_officials(this: usize, com
 /// que é reposto; depois roda a original. Confere o estado final do sorteio, a conta nova ([0xae2390] + conta) e que
 /// cada ficha do ensaio esteja na tabela ordenada (campos que a original grava). Conta não positiva ou nação sem
 /// continente: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_add_random_officials(this: usize, conta: i32, nacao: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_add_random_officials(this: usize, count: i32, nacao: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize)>(IDX_OFFICIALS_MANAGER_ADD_RANDOM_OFFICIALS);
-    if conta <= 0 || (nacao != 0 && read_usize(nacao + nation::CONTINENT) == 0) {
-        return o(this, conta, nacao);
+    if count <= 0 || (nacao != 0 && read_usize(nacao + nation::CONTINENT) == 0) {
+        return o(this, count, nacao);
     }
-    let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let mut novas = vec![[0u8; 0x2b]; conta as usize];
+    let state = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
+    let mut novas = vec![[0u8; 0x2b]; count as usize];
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| {
         for g in novas.iter_mut() {
             generate_official(g.as_mut_ptr() as usize, nacao);
         }
     }));
     let estado_rust = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
-    estado.escrever();
-    let antes = read_i32(G_OFFICIAL_COUNT);
-    o(this, conta, nacao);
+    state.escrever();
+    let before = read_i32(G_OFFICIAL_COUNT);
+    o(this, count, nacao);
     let estado_orig = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     let total = read_i32(G_OFFICIAL_COUNT);
     let t = read_usize(G_OFFICIAL_TABLE);
@@ -136,9 +136,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_add_random_off
             None => faltam.push(k),
         }
     }
-    let igual = estado_orig == estado_rust && total == antes.wrapping_add(conta) && faltam.is_empty();
-    PLACAR.registrar(igual, || format!("officials_manager_add_random_officials(conta {}, nacao {:#x}) total {} (antes {}), sorteio igual {}, fichas da copia ausentes {:?}",
-        conta, nacao, total, antes, estado_orig == estado_rust, faltam));
+    let same = estado_orig == estado_rust && total == before.wrapping_add(count) && faltam.is_empty();
+    PLACAR.registrar(same, || format!("officials_manager_add_random_officials(conta {}, nacao {:#x}) total {} (antes {}), sorteio igual {}, fichas da copia ausentes {:?}",
+        count, nacao, total, before, estado_orig == estado_rust, faltam));
 }
 
 /// Comparer for `officials_manager_validate_officials` (comparison mode: see the header of motor.rs).

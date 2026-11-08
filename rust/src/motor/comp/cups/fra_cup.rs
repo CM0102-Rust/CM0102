@@ -30,11 +30,11 @@ pub(crate) const fn cql11r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, 
 ///
 /// [pt] Grava a rodada `i` da tabela `t` (ano-base `ano`, a palavra +0x40 da copa com sinal): as duas datas (0x521e60 e
 /// 0x521eb0, cdecl, 7 e 9 argumentos; add esp, 0x1c / 0x24) e os campos.
-pub(crate) unsafe fn fra_cup_write_cup_round(t: usize, i: u32, r: &FraCupCupRound, ano: u32) {
+pub(crate) unsafe fn fra_cup_write_cup_round(t: usize, i: u32, r: &FraCupCupRound, year: u32) {
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
     let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
-    sorteio(t, i, r.sorteio.0, r.sorteio.1, r.sorteio.2, r.sorteio.3, ano);
-    jogo(t, i, r.jogo.0, r.jogo.1, r.jogo.2, r.jogo.3, r.jogo.4, ano, r.jogo.5);
+    sorteio(t, i, r.sorteio.0, r.sorteio.1, r.sorteio.2, r.sorteio.3, year);
+    jogo(t, i, r.jogo.0, r.jogo.1, r.jogo.2, r.jogo.3, r.jogo.4, year, r.jogo.5);
     let e = t + i as usize * 0x68;
     let w = |o: usize, v: u16| core::ptr::write_unaligned((e + o) as *mut u16, v);
     let d = |o: usize, v: u32| core::ptr::write_unaligned((e + o) as *mut u32, v);
@@ -63,25 +63,25 @@ pub(crate) unsafe fn fra_cup_write_cup_round(t: usize, i: u32, r: &FraCupCupRoun
 /// de uma fase só: fora da fase −1 (o byte), devolve 0 sem gravar nada. Na −1: saida (se pedida) = 0, rodadas = o
 /// tamanho da tabela, extra = 0; a tabela (0x944e46 de 0x68 × rodadas; sem memória, a caixa `linha` de `arquivo` e
 /// devolve 0) com cada rodada; devolve a tabela.
-pub(crate) unsafe fn single_stage_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32, tabela: &[FraCupCupRound], arquivo: usize, linha: u32, nome: &'static str) -> usize {
-    if fase as u8 != 0xff {
+pub(crate) unsafe fn single_stage_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32, table: &[FraCupCupRound], file: usize, row: u32, name: &'static str) -> usize {
+    if stage as u8 != 0xff {
         return 0;
     }
-    if !saida.is_null() {
-        *saida = 0;
+    if !out.is_null() {
+        *out = 0;
     }
-    *rodadas = tabela.len() as i16;
+    *rounds = table.len() as i16;
     *extra = 0;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(tabela.len() as u32 * 0x68);
+    let t = alocar(table.len() as u32 * 0x68);
     if t == 0 {
-        show_error_at(arquivo, linha);
+        show_error_at(file, row);
         return 0;
     }
-    crate::comparacao::ramo(nome);
-    let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
-    for (i, r) in tabela.iter().enumerate() {
-        fra_cup_write_cup_round(t, i as u32, r, ano);
+    crate::comparacao::ramo(name);
+    let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+    for (i, r) in table.iter().enumerate() {
+        fra_cup_write_cup_round(t, i as u32, r, year);
     }
     t
 }
@@ -92,25 +92,25 @@ pub(crate) unsafe fn single_stage_round_table(this: usize, fase: u32, rodadas: *
 ///
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada).
-pub(crate) unsafe fn compare_single_stage_round_table(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32,
+pub(crate) unsafe fn compare_single_stage_round_table(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    if fase as u8 != 0xff {
+    if stage as u8 != 0xff {
         // simplification: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
         let a = o();
-        PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, fase as u8 as i8, a));
+        PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
         return a;
     }
-    let (mut r2, mut e2) = (*rodadas, *extra);
-    let mut s2 = if saida.is_null() { 0 } else { *saida };
+    let (mut r2, mut e2) = (*rounds, *extra);
+    let mut s2 = if out.is_null() { 0 } else { *out };
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if saida.is_null() { core::ptr::null_mut() } else { &mut s2 }));
-    let saidas = *rodadas == r2 && *extra == e2 && (saida.is_null() || *saida == s2);
-    let tabela = if a != 0 && b != 0 { eng_cc_cup_written_round_bytes(a, *rodadas) == eng_cc_cup_written_round_bytes(b, r2) } else { a == 0 && b == 0 };
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if out.is_null() { core::ptr::null_mut() } else { &mut s2 }));
+    let outs = *rounds == r2 && *extra == e2 && (out.is_null() || *out == s2);
+    let table = if a != 0 && b != 0 { eng_cc_cup_written_round_bytes(a, *rounds) == eng_cc_cup_written_round_bytes(b, r2) } else { a == 0 && b == 0 };
     if b != 0 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, fase as u8 as i8, saidas, *rodadas, r2, tabela));
+    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 
@@ -139,8 +139,8 @@ pub(crate) const FRENCH_CUP_ROUNDS: [FraCupCupRound; 9] = [
 ///
 /// [pt] { 0x5ba3f0 } (thiscall, ret 0x10, fra_cup.cpp; a virtual +0x3c da Copa da França): `FraCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 9 rodadas; a caixa da linha 0xa6 sem memória.
-pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    single_stage_round_table(this, fase, rodadas, extra, saida, &FRENCH_CUP_ROUNDS, 0x9ccb28, 0xa6, "cql_11 tabela da copa da franca")
+pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+    single_stage_round_table(this, stage, rounds, extra, out, &FRENCH_CUP_ROUNDS, 0x9ccb28, 0xa6, "cql_11 tabela da copa da franca")
 }
 
 
@@ -163,8 +163,8 @@ pub(crate) const FRENCH_LEAGUE_CUP_ROUNDS: [FraCupCupRound; 7] = [
 ///
 /// [pt] { 0x5bcc40 } (thiscall, ret 0x10, fra_lge_cup.cpp; a virtual +0x3c da Copa da Liga francesa): `FraLgeCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa2 sem memória.
-pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table_5bcc40(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    single_stage_round_table(this, fase, rodadas, extra, saida, &FRENCH_LEAGUE_CUP_ROUNDS, 0x9ccb98, 0xa2, "cql_11 tabela da copa da liga francesa")
+pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table_5bcc40(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+    single_stage_round_table(this, stage, rounds, extra, out, &FRENCH_LEAGUE_CUP_ROUNDS, 0x9ccb98, 0xa2, "cql_11 tabela da copa da liga francesa")
 }
 
 
@@ -254,18 +254,18 @@ pub(crate) unsafe fn french_cup_collect_entrants(this: usize) -> (i32, i32) {
         return (-1, 0);
     }
     let mut n = 0i32;
-    let todos = || read_u32_as_usize(G_CLUB_COUNT) as i32;
-    enter_clubs_pass(this, &mut n, todos, false, |c, _| comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)));
-    enter_clubs_pass(this, &mut n, todos, true, |c, n| {
+    let all = || read_u32_as_usize(G_CLUB_COUNT) as i32;
+    enter_clubs_pass(this, &mut n, all, false, |c, _| comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)));
+    enter_clubs_pass(this, &mut n, all, true, |c, n| {
         comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) && comp_id_at(c, 0x60) == Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_CFA)) && n < french_cup_amateur_limit(this)
     });
-    enter_clubs_pass(this, &mut n, todos, true, |c, n| {
+    enter_clubs_pass(this, &mut n, all, true, |c, n| {
         comp_id_at(c, 0x53) == Some(read_u32_as_usize(KEY_NATION_FRANCE)) && comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) && read_u32_as_usize(c + 0x60) == 0
             && n < french_cup_amateur_limit(this)
     });
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     enter_clubs_pass(this, &mut n, || read_u32_as_usize(G_CLUB_COUNT) as i32 - 2 * read_u32_as_usize(G_NATION_COUNT) as i32, true, |c, n| {
-        read_u32_as_usize(c + 0x53) != 0 && selecao(c) == 0 && read_u32_as_usize(c + 0x57) == 0 && comp_id_at(c, 0x53) == Some(read_u32_as_usize(KEY_NATION_FRANCE))
+        read_u32_as_usize(c + 0x53) != 0 && national_team(c) == 0 && read_u32_as_usize(c + 0x57) == 0 && comp_id_at(c, 0x53) == Some(read_u32_as_usize(KEY_NATION_FRANCE))
             && n < french_cup_amateur_limit(this)
     });
     crate::comparacao::ramo("cqm_11 inscritos da copa da franca");
@@ -311,9 +311,9 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i3
         return (-1, 0);
     }
     let mut n = 0i32;
-    let todos = || read_u32_as_usize(G_CLUB_COUNT) as i32;
+    let all = || read_u32_as_usize(G_CLUB_COUNT) as i32;
     let limit = if read_i16(this + 0x40) == 0x7d1 { 0x10 } else { 0xe };
-    enter_clubs_pass(this, &mut n, todos, true, |c, n| {
+    enter_clubs_pass(this, &mut n, all, true, |c, n| {
         comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)) && read_u32_as_usize(c + 0x5b) != 0 && comp_id_at(c, 0x5b) != Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_CFA)) && n < limit
     });
     // a original testa o tamanho antes de cada clube: a passada para quando a lista chega a 16

@@ -15,8 +15,8 @@ pub(crate) unsafe fn select_european_super_cup_teams(this: usize) -> (i32, i32) 
     if !set_team_slot(l, 0, a, F, 0xca) {
         return (0, 0);
     }
-    let copa = if core::ptr::read_unaligned((this + 0x40) as *const i16) == 0x7cf { KEY_CLUB_COMP_EUROPEAN_CUP_WINNERS_CUP } else { KEY_CLUB_COMP_UEFA_CUP };
-    let b = latest_placed_club(copa, 0); // cqq11: o campeão da Copa da UEFA
+    let cup = if core::ptr::read_unaligned((this + 0x40) as *const i16) == 0x7cf { KEY_CLUB_COMP_EUROPEAN_CUP_WINNERS_CUP } else { KEY_CLUB_COMP_UEFA_CUP };
+    let b = latest_placed_club(cup, 0); // cqq11: o campeão da Copa da UEFA
     if !set_team_slot(l, 1, b, F, 0xd5) {
         return (0, 0);
     }
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn eur_super_cup_init_team_list(this: usize)
 ///
 /// [pt] { 0x57a3c0 } (thiscall, ret 0x10, eur_super_cup.cpp; a virtual +0x3c da Supercopa Europeia): `EurSuperCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x98 sem memória.
-pub(crate) unsafe extern "thiscall" fn eur_super_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &EUROPEAN_SUPER_CUP_ROUNDS, 0x9c45f8, 0x98, "cqp_10 tabela da supercopa europeia")
+pub(crate) unsafe extern "thiscall" fn eur_super_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+    eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &EUROPEAN_SUPER_CUP_ROUNDS, 0x9c45f8, 0x98, "cqp_10 tabela da supercopa europeia")
 }
 

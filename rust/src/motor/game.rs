@@ -20,8 +20,8 @@ pub(crate) unsafe fn nation_coefficient_history(na: usize) -> [f64; 6] {
 ///
 /// [pt] O mês da data do jogo (0x54cfb0 sobre 0xae2c90, o al com sinal).
 pub(crate) unsafe fn current_month() -> i32 {
-    let mes: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_DATE_GET_MONTH);
-    mes(G_CURRENT_DATE) as u8 as i8 as i32
+    let month: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_DATE_GET_MONTH);
+    month(G_CURRENT_DATE) as u8 as i8 as i32
 }
 
 /// December step: adds the reputation bonus if the mark is below 12, shifts the coefficient history one year and zeroes
@@ -29,11 +29,11 @@ pub(crate) unsafe fn current_month() -> i32 {
 ///
 /// [pt] Dezembro na história `h` da nação `na` (`marca` = +0x121): com marca < 12, o ano corrente ganha
 /// reputação (+0x8e) × 0,05 × (12 − marca) × 3; a história anda um ano, o ano corrente e a marca zeram.
-pub(crate) unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], marca: &mut u8) {
+pub(crate) unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], mark: &mut u8) {
     crate::comparacao::ramo("cpt_6 dezembro");
-    if (*marca as i8) < 0xc {
+    if (*mark as i8) < 0xc {
         crate::comparacao::ramo("cpt_6 bonus de dezembro");
-        h[5] = read_i16(na + 0x8e) as i32 as f64 * read_f64_at(0x967888) * (0xc - *marca as i8 as i32) as f64 * read_f64_at(0x968930) + h[5]; // cpt6: o bônus de dezembro; 0x967888 = 0.05, 0x968930 = 3
+        h[5] = read_i16(na + 0x8e) as i32 as f64 * read_f64_at(0x967888) * (0xc - *mark as i8 as i32) as f64 * read_f64_at(0x968930) + h[5]; // cpt6: o bônus de dezembro; 0x967888 = 0.05, 0x968930 = 3
     }
     h[0] = h[1];
     h[1] = h[2];
@@ -41,7 +41,7 @@ pub(crate) unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], marca: &
     h[3] = h[4];
     h[4] = h[5];
     h[5] = 0.0; // cpt6: o ano corrente zerado
-    *marca = 0;
+    *mark = 0;
 }
 
 /// the first time, each nation history gets the coefficient at +0xa8; on the table day of the month, the weighted
@@ -76,12 +76,12 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
         }
         *(G_NATION_COEFFICIENT_HISTORY_NEEDS_INIT as *mut u8) = 0;
     }
-    let hoje = read_usize(G_CURRENT_DATE) as i16;
-    if read_i16(G_NATION_COEFFICIENT_UPDATE_DAY_TABLE + (current_month() * 2) as usize) != hoje {
+    let today = read_usize(G_CURRENT_DATE) as i16;
+    if read_i16(G_NATION_COEFFICIENT_UPDATE_DAY_TABLE + (current_month() * 2) as usize) != today {
         return;
     }
-    let vetor = malloc(read_usize(G_NATION_COUNT).wrapping_mul(0xc));
-    if vetor == 0 {
+    let array = malloc(read_usize(G_NATION_COUNT).wrapping_mul(0xc));
+    if array == 0 {
         show_error_at(0x9cd2a4, 0x156d);
         return;
     }
@@ -91,19 +91,19 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
         let mut na = read_usize(G_NATION_TABLE);
         let mut i = 0i16;
         loop {
-            let e = vetor + i as i32 as usize * 0xc;
+            let e = array + i as i32 as usize * 0xc;
             *(e as *mut usize) = na;
             let s = read_f64(na + 0xc0) * read_f64_at(0x968e48) + read_f64(na + 0xb8) * read_f64_at(0x968e00) + read_f64(na + 0xb0) * read_f64_at(0x968918) // 0x968e48 = 0.6, 0x968e00 = 0.4, 0x968918 = 0.2
                 + read_f64(na + 0xc8) * read_f64_at(0x9689b0) + read_f64(na + 0xd8) + read_f64(na + 0xd0); // 0x9689b0 = 0.8
             write_f64(e + 4, s);
             if dez {
                 let mut h = nation_coefficient_history(na);
-                let mut marca = read_u8(na + 0x121);
-                roll_coefficient_year(na, &mut h, &mut marca);
+                let mut mark = read_u8(na + 0x121);
+                roll_coefficient_year(na, &mut h, &mut mark);
                 for (k, x) in h.iter().enumerate() {
                     write_f64(na + 0xb0 + k * 8, *x);
                 }
-                *((na + 0x121) as *mut u8) = marca;
+                *((na + 0x121) as *mut u8) = mark;
             }
             i = i.wrapping_add(1);
             na += 0x122;
@@ -113,8 +113,8 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
             }
         }
     }
-    qsort(vetor, n as usize, 0xc, 0x4afba0);
-    free(vetor);
+    qsort(array, n as usize, 0xc, 0x4afba0);
+    free(array);
 }
 
 
@@ -124,8 +124,8 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
 /// [pt] { 0x5d6250 } (cdecl, game.cpp): `is_player_regen_day(dia)`: 1 nos dias 0, 80, 173 e 250 do ano (a busca das
 /// aposentadorias), senão 0. Pelo laço do dia do jogo (0x5cda97, com a data inteira: o dia é a palavra baixa).
 /// A original só devolve o al (o ah fica com o byte alto do dia).
-pub(crate) unsafe extern "C" fn is_player_regen_day(dia: u32) -> u32 {
-    let d = dia as u16;
+pub(crate) unsafe extern "C" fn is_player_regen_day(day: u32) -> u32 {
+    let d = day as u16;
     (d == 0 || d == 0x50 || d == 0xad || d == 0xfa) as u32
 }
 
@@ -187,9 +187,9 @@ pub(crate) unsafe fn game_contract_for_club(p: usize, clube: usize) -> usize {
 /// staff_is_disliked_by (0x547840): does `pessoa` dislike `alvo`.
 ///
 /// [pt] `pessoa` não gosta de `alvo` (0x547840)?
-pub(crate) unsafe fn is_disliked_by(alvo: usize, pessoa: usize) -> u32 {
+pub(crate) unsafe fn is_disliked_by(target: usize, person: usize) -> u32 {
     let f: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_DISLIKED_BY);
-    f(alvo, pessoa)
+    f(target, person)
 }
 
 /// Shared end of 0x5d6d10/0x5d7190: finds a squad mate the person dislikes and, on the rare date condition, posts
@@ -220,7 +220,7 @@ pub(crate) unsafe fn dressing_room_friction(p: usize, clube: usize, k: usize) {
     }
     crate::comparacao::ramo("cps_5 atrito com o tecnico");
     let queixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_NEWS_POST_DRESSING_ROOM_UNREST);
-    let marcar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_APPLY_EVENT_FLAGS);
+    let mark: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_APPLY_EVENT_FLAGS);
     let (tipo, marca) = if q == read_usize(clube + club::MANAGER) {
         (0, 0x2000)
     } else if q == read_usize(clube + club::ASSISTANT_MANAGER) {
@@ -229,7 +229,7 @@ pub(crate) unsafe fn dressing_room_friction(p: usize, clube: usize, k: usize) {
         (2, 0x800)
     };
     queixa(p, q, tipo);
-    marcar(k, marca, 0);
+    mark(k, marca, 0);
 }
 
 /// ten random pairs of team-mates: a disliked one stops being disliked and may fight (0x5888a0); otherwise becomes
@@ -296,9 +296,9 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
         return;
     }
     let base = read_usize(G_STAFF_TABLE);
-    let fim = base.wrapping_add((read_usize(G_STAFF_COUNT).wrapping_sub(17)).wrapping_mul(staff::SIZE));
+    let end = base.wrapping_add((read_usize(G_STAFF_COUNT).wrapping_sub(17)).wrapping_mul(staff::SIZE));
     let mut p = base;
-    while p < fim {
+    while p < end {
         player_vs_manager_check(p);
         p += 0x6e;
     }
@@ -404,16 +404,16 @@ pub(crate) unsafe fn is_club_squad_player(p: usize, clube: usize) -> bool {
 /// negativo, sorteio(s) < sorteio(−5) baixa o moral (0x544710 com −1); positivo, sorteio(s) > sorteio(5) sobe (+1).
 pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let moral: unsafe extern "C" fn(usize, i32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
+    let morale: unsafe extern "C" fn(usize, i32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
     let n = read_usize(G_CLUB_COUNT);
     let mut clube = read_usize(G_CLUB_TABLE);
-    let fim = clube.wrapping_add(n.wrapping_mul(club::SIZE));
-    while clube < fim {
-        let vagas = clube + club::SQUAD;
+    let end = clube.wrapping_add(n.wrapping_mul(club::SIZE));
+    while clube < end {
+        let slots = clube + club::SQUAD;
         if is_national_team(clube) == 0 && friendly_random(7) == 0 {
             let (mut soma, mut lideranca, mut q) = (0i32, 0i32, 0i32);
             for i in 0..0x32usize {
-                let p = read_usize(vagas + i * 4);
+                let p = read_usize(slots + i * 4);
                 if !is_club_squad_player(p, clube) {
                     continue;
                 }
@@ -433,7 +433,7 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                 if lideranca == 0 {
                     break;
                 }
-                let p = read_usize(vagas + i * 4);
+                let p = read_usize(slots + i * 4);
                 if !is_club_squad_player(p, clube) {
                     continue;
                 }
@@ -447,13 +447,13 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                 if s < 0 {
                     let e = friendly_random(s as i32);
                     if e < friendly_random(-5) {
-                        moral(p, -1, 1);
+                        morale(p, -1, 1);
                     }
                 } else if s > 0 {
                     let e = friendly_random(s as i32);
                     if e > friendly_random(5) {
                         crate::comparacao::ramo("cps_5 moral sobe");
-                        moral(p, 1, 1); // cps5: sobe o moral
+                        morale(p, 1, 1); // cps5: sobe o moral
                     }
                 }
             }
@@ -506,18 +506,18 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
     let ausente: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_AWOL_IS_PLAYER_AWOL);
     let treino: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_PLAYER_SCHEDULE);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
-    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_DISLIKED_BY);
+    let not_likes: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_DISLIKED_BY);
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_FAVOURED_BY);
     let contract_bond: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let falta: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_AWOL_MISS_TRAINING);
+    let foul: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_AWOL_MISS_TRAINING);
     let n = read_usize(G_STAFF_COUNT) as i32;
     let q = n / 250;
     crate::comparacao::ramo("cps_6 faltas do dia");
     let r = friendly_random(n - q - 1); // cps6: a primeira pessoa
-    let mut atual = read_usize(G_STAFF_TABLE).wrapping_add((r as usize).wrapping_mul(staff::SIZE));
+    let mut current = read_usize(G_STAFF_TABLE).wrapping_add((r as usize).wrapping_mul(staff::SIZE));
     for _ in 0..q {
-        let p = atual;
-        atual = atual.wrapping_add(0x6e);
+        let p = current;
+        current = current.wrapping_add(0x6e);
         if read_usize(p + 0x61) == 0 || read_u8(p + 0x3d) != 0xb {
             continue;
         }
@@ -549,13 +549,13 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
         if dl == 1 {
             bl = bl.wrapping_add(0xfb);
         }
-        if nao_gosta(read_usize(clube + club::MANAGER), p) != 0 {
+        if not_likes(read_usize(clube + club::MANAGER), p) != 0 {
             bl = bl.wrapping_add(0xfb);
         }
         if gosta(read_usize(clube + club::MANAGER), p) != 0 {
             bl = bl.wrapping_add(2);
         }
-        let mut e_falta = false;
+        let mut and_foul = false;
         let a = read_u8(p + 0x5b);
         if (a as i8) < 8 && (read_u8(read_usize(p + 0x61) + 0x2f) as i8) < 8 && (bl as i8) < 0x2b {
             let mut s = a;
@@ -568,10 +568,10 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
             }
             crate::comparacao::ramo("cps_6 falta pela soma");
             if friendly_random(s as i8 as i32) == 0 { // cps6: o sorteio da soma
-                e_falta = true;
+                and_foul = true;
             }
         }
-        if !e_falta {
+        if !and_foul {
             if read_i8_as_i32(p + 0x5b) >= 0xa {
                 continue;
             }
@@ -581,20 +581,20 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
                 continue;
             }
             if read_usize(v + 0x45) & 0x8000 != 0 && friendly_random(read_i8_as_i32(p + 0x5b)) == 0 {
-                e_falta = true;
+                and_foul = true;
             } else if read_usize(v + 0x45) & 0x30000 != 0 && friendly_random(read_i8_as_i32(p + 0x5b)) == 0 {
-                e_falta = true;
+                and_foul = true;
             } else {
                 let a = read_i8_as_i32(p + 0x5b);
                 if a >= 5 || read_usize(v + 0x45) & 0x7800 == 0 || friendly_random(a) != 0 {
                     continue;
                 }
-                e_falta = true;
+                and_foul = true;
             }
         }
-        if e_falta {
+        if and_foul {
             crate::comparacao::ramo("cps_6 falta ao treino");
-            falta(read_usize(G_AWOL), p); // cps6: a falta
+            foul(read_usize(G_AWOL), p); // cps6: a falta
         }
     }
 }
@@ -608,21 +608,21 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
 /// [pt] { 0x5ce060 } (cdecl, game.cpp): `game_update_comps_for_date(marca)`: cada competição da lista ([0xadadfc], conta
 /// [0xadadf8] relida a cada volta) recebe o dia (virtual +0x14 com a data do jogo 0xae2c90 e a marca); com a marca, o
 /// passo seguinte do [0xae2a58] (0x5aaf00, que a original chama em salto de cauda). Pelo laço do dia do jogo (com 1).
-pub(crate) unsafe extern "C" fn game_update_comps_for_date(marca: u32) {
-    let m = marca as u8 as i8;
+pub(crate) unsafe extern "C" fn game_update_comps_for_date(mark: u32) {
+    let m = mark as u8 as i8;
     let mut i = 0i32;
     while i < read_usize(G_COMP_OBJECT_COUNT) as i32 {
         let c = read_usize(read_usize(G_COMP_OBJECT_TABLE) + i as usize * 4);
         if c != 0 {
-            let dia: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(read_usize(read_usize(c) + 0x14));
-            dia(c, G_CURRENT_DATE, m as i32);
+            let day: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(read_usize(read_usize(c) + 0x14));
+            day(c, G_CURRENT_DATE, m as i32);
         }
         i += 1;
     }
     if m != 0 {
         crate::comparacao::ramo("cps_6 competicoes do dia");
-        let seguinte: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_FIXTURE_MANAGER_DAILY_UPDATE);
-        seguinte(read_usize(G_FIXTURE_MANAGER));
+        let next: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_FIXTURE_MANAGER_DAILY_UPDATE);
+        next(read_usize(G_FIXTURE_MANAGER));
     }
 }
 
@@ -661,8 +661,8 @@ pub(crate) unsafe extern "thiscall" fn manager_manager_adjust_board_confidence(t
 ///
 /// [pt] { 0x5d5ab0 } (thiscall, game.cpp): o gerente da lista de observados guardado em +0x856 do gerente
 /// de transferências.
-pub(crate) unsafe extern "thiscall" fn transfer_manager_get_shortlist_manager(gerente: usize) -> usize {
-    core::ptr::read_unaligned((gerente + 0x856) as *const usize)
+pub(crate) unsafe extern "thiscall" fn transfer_manager_get_shortlist_manager(manager: usize) -> usize {
+    core::ptr::read_unaligned((manager + 0x856) as *const usize)
 }
 
 /// the player's 6-byte entry in the training table
@@ -670,10 +670,10 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_get_shortlist_manager(ge
 ///
 /// [pt] { 0x5d5ac0 } (thiscall, ret 4, game.cpp): a entrada de 6 bytes do jogador na tabela do treino
 /// ([treino+0x651d]), pelo id dos dados do jogador ([[jogador+0x61]]).
-pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(treino: usize, jogador: usize) -> usize {
-    let tabela = core::ptr::read_unaligned((treino + 0x651d) as *const usize);
-    let id = *(core::ptr::read_unaligned((jogador + 0x61) as *const usize) as *const i32);
-    (tabela as isize + id as isize * 6) as usize
+pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(treino: usize, player: usize) -> usize {
+    let table = core::ptr::read_unaligned((treino + 0x651d) as *const usize);
+    let id = *(core::ptr::read_unaligned((player + 0x61) as *const usize) as *const i32);
+    (table as isize + id as isize * 6) as usize
 }
 
 /// Pointer to the training load byte (+0x1e) of a player's 31-byte condition record.
@@ -692,9 +692,9 @@ pub(crate) unsafe fn training_load_byte(lesoes: usize, id: *const i32) -> *mut u
 ///
 /// [pt] { 0x5d5a60 } (thiscall, ret 4, game.cpp): a média +0x20/+0x28 (com `segunda`) ou +0x10/+0x18 (f64,
 /// como a original deixa no x87); com divisor zero (ou não comparável), 6.8.
-pub(crate) unsafe extern "thiscall" fn game_average(t: usize, segunda: u8) -> f64 {
+pub(crate) unsafe extern "thiscall" fn game_average(t: usize, second: u8) -> f64 {
     let d = |o: usize| core::ptr::read_unaligned((t + o) as *const f64);
-    let (n, q) = if segunda != 0 { (d(0x20), d(0x28)) } else { (d(0x10), d(0x18)) };
+    let (n, q) = if second != 0 { (d(0x20), d(0x28)) } else { (d(0x10), d(0x18)) };
     if q == read_f64_at(0x9689a0) || q.is_nan() { // 0x9689a0 = 0
         return read_f64_at(0x968998); // 0x968998 = 6.8
     }

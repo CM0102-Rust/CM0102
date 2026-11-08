@@ -19,9 +19,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_record_season_hon
 }
 
 /// Comparer for `construct_bra_reg_gaucho` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_gaucho(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_gaucho(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_GAUCHO);
-    bra_reg_bahia_compare_state_league_ctor("construct_bra_reg_gaucho", this, ano, registro, &GAUCHO_STATE_LEAGUE, || o(this, ano, registro))
+    bra_reg_bahia_compare_state_league_ctor("construct_bra_reg_gaucho", this, year, record, &GAUCHO_STATE_LEAGUE, || o(this, year, record))
 }
 
 /// Comparer for `bra_reg_gaucho_start_new_season` (comparison mode: see the header of motor.rs).

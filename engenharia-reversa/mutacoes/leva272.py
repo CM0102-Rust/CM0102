@@ -2,8 +2,8 @@
 MUTACOES = [
     ('cqg4_sem_parceiro_de_um_lado', 'write_u32_from_usize(e + 4, read_u32_as_usize(o)); // cqg4: o parceiro da mesma nação', 'write_u32_from_usize(e + 4, 0); // mutacao: sem o parceiro deste lado', 'cqg_4 parceiro da mesma nação'),
     ('cqg4_sorteio_a_mais_no_pote', 'let mut s = sorteio(8).wrapping_add(base); // cqg4: o clube sorteado do pote', 'let mut s = { sorteio(8); sorteio(8) }.wrapping_add(base); // mutacao: um sorteio a mais', 'cqg_4 clube sorteado'),
-    ('cqg4_premio_pela_metade', 'let valor = 1_800_000i32; // cqg4: o prêmio da fase de grupos', 'let valor = 900_000i32; // mutacao: a metade do premio', 'cqg_4 prêmio da fase de grupos'),
-    ('cqg6_premio_pela_metade', 'let valor = 1_200_000i32; // cqg6: o prêmio da segunda fase', 'let valor = 600_000i32; // mutacao: a metade do premio', 'cqg_6 prêmio da segunda fase'),
+    ('cqg4_premio_pela_metade', 'let value = 1_800_000i32; // cqg4: o prêmio da fase de grupos', 'let value = 900_000i32; // mutacao: a metade do premio', 'cqg_4 prêmio da fase de grupos'),
+    ('cqg6_premio_pela_metade', 'let value = 1_200_000i32; // cqg6: o prêmio da segunda fase', 'let value = 600_000i32; // mutacao: a metade do premio', 'cqg_6 prêmio da segunda fase'),
     ('cqg6_sorteio_a_mais_na_troca', 'let b = sorteio(4) as i8 as usize; // cqg6: a troca da ordem dos grupos', 'let b = { sorteio(4); sorteio(4) } as i8 as usize; // mutacao: um sorteio a mais', 'cqg_6 troca da ordem'),
     ('cqg6_nacao_nao_impede', 'if read_u8(v + 5) == read_u8(p + 5) || club_nation(clube) == club_nation(read_u32_as_usize(p)) { // cqg6: mesmo grupo ou nação', 'if read_u8(v + 5) == read_u8(p + 5) { // mutacao: so o grupo da primeira fase', 'cqg_6 grupo escolhido'),
     ('cqh4_primeira_rodada_a_d_depois', '[(0, 0xc, 8, 0, 1), (1, 0x14, 8, 0, 2), (2, 0x1b, 8, 0, 2), (3, 0x11, 9, 0, 1), (4, 0x19, 9, 0, 2), (5, 7, 0xa, 0, 1)], // cqh4: a primeira fase, grupos A a D', '[(0, 0x13, 8, 0, 1), (1, 0x14, 8, 0, 2), (2, 0x1b, 8, 0, 2), (3, 0x11, 9, 0, 1), (4, 0x19, 9, 0, 2), (5, 7, 0xa, 0, 1)], // mutacao: uma semana depois', 'cqh_4 tabela das rodadas'),

@@ -1,6 +1,6 @@
 # Mutações da 233a leva (itens dbl_1, dbl_2, dbl_3, dbm_1, dbm_2, dbn_1, dbn_2). Uso: python mutacoes.py mutacoes\leva233.py --prova-save 233
 MUTACOES = [
-    ('dbl_clube_em_temporada', '    temporada(clube, 0, 0) // a temporada da nação do clube', '    (temporada(clube, 0, 0) == 0) as u32 // mutacao: a resposta invertida'),
+    ('dbl_clube_em_temporada', '    season(clube, 0, 0) // a temporada da nação do clube', '    (season(clube, 0, 0) == 0) as u32 // mutacao: a resposta invertida'),
     ('dbl_clube_em_nacao_grande', 'KEY_NATION_SPAIN, KEY_NATION_HOLLAND]; // Holanda (clube)', '0x9cf488, 0x9cf488]; // mutacao: sem a Holanda (clube)'),
     ('dbl_nacao_grande', 'KEY_NATION_SPAIN, KEY_NATION_HOLLAND]; // Holanda (nação)', '0x9cf488, 0x9cf488]; // mutacao: sem a Holanda (nação)'),
     ('dbl_limpar_vinculos', '            write_state_i32(c, k + 0x37, -1); // o valor do vínculo vazio', '            write_state_i32(c, k + 0x37, -2); // mutacao: o valor do vínculo vazio -2'),
@@ -10,15 +10,15 @@ MUTACOES = [
     ('dbl_treinadores', '        let t = rd(p + 0x19f + 4 * j); // os treinadores do parceiro', '        let t = rd(clube + 0x19f + 4 * j); // mutacao: os treinadores do proprio clube no lugar dos do parceiro'),
     ('dbl_contar_treinadores', '        n = n.wrapping_add(contar(p)); // e os do parceiro', '        // mutacao: sem os treinadores do parceiro'),
     ('dbm1_sigla', '.wrapping_add(0x4f) // sigla na linha', '.wrapping_add(0x4e) // sigla na linha'),
-    ('dbm1_competicao', 'if id >= de_clube {', 'if id > de_clube {'),
+    ('dbm1_competicao', 'if id >= of_club {', 'if id > of_club {'),
     ('dbm1_pessoal', '.wrapping_mul(79)) // competição de pessoal na tabela', '.wrapping_mul(78)) // competição de pessoal na tabela'),
     ('dbm2_estadio', '.wrapping_mul(52)) // estádio na tabela', '.wrapping_mul(51)) // estádio na tabela'),
     ('dbm2_lng', '0x9b6314, 0x9b631c, 0x9b6304', '0x9b6314, 0x9b632c, 0x9b6304'),
     ('dbm2_soltar', '(t + 0x20 + 4 * k) as *const usize); // linha da tabela em inglês', '(t + 0x20 + 4 * (k ^ 1)) as *const usize); // linha da tabela em inglês'),
-    ('dbn1_nascimento', '    let ano = sorteio(0x1a) + 0x794; // 1940 + até 25', '    let ano = sorteio(0x1a) + 0x795; // mutacao: 1941 + ate 25'),
-    ('dbn1_comissao_alvo', '            let alvo = ((rep(c) + 500) * k as i32 / 10000).clamp(1, k as i32); // a comissão pela reputação', '            let alvo = ((rep(c) + 500) * k as i32 / 10000).clamp(2, k as i32); // mutacao: no minimo 2'),
+    ('dbn1_nascimento', '    let year = sorteio(0x1a) + 0x794; // 1940 + até 25', '    let year = sorteio(0x1a) + 0x795; // mutacao: 1941 + ate 25'),
+    ('dbn1_comissao_alvo', '            let target = ((rep(c) + 500) * k as i32 / 10000).clamp(1, k as i32); // a comissão pela reputação', '            let target = ((rep(c) + 500) * k as i32 / 10000).clamp(2, k as i32); // mutacao: no minimo 2'),
     ('dbn1_cortar_pessoas', '        for &d in &[0x39usize, 0x24] { // o clube e a seleção da pessoa ficam', '        for &d in &[0x24usize] { // mutacao: o clube da pessoa nao a segura'),
     ('dbn1_podar', '            if nac == 0 || *((nac + 0x11c) as *const u8) != 0 { // a linha fica', '            if nac == 0 || nac != 0 { // mutacao: fica tambem a linha de nacao nao escolhida'),
     ('dbn2_cidade_sem_nacao', '        a(e + 0x1f, G_NATION_TABLE, 0x122); // a nação da cidade', '        wr(e + 0x1f, 0); // mutacao: a cidade sem nacao'),
-    ('dbn2_ordenar', '    ordenar(rd(G_CLUB_REPUTATION_ORDER), gi(0xae235c) as u32, 4, 0x540020); // todos os clubes pela reputação', '    ordenar(rd(G_CLUB_REPUTATION_ORDER), (gi(0xae235c) - 1) as u32, 4, 0x540020); // mutacao: o ultimo clube fica fora da ordem'),
+    ('dbn2_ordenar', '    sort(rd(G_CLUB_REPUTATION_ORDER), gi(0xae235c) as u32, 4, 0x540020); // todos os clubes pela reputação', '    sort(rd(G_CLUB_REPUTATION_ORDER), (gi(0xae235c) - 1) as u32, 4, 0x540020); // mutacao: o ultimo clube fica fora da ordem'),
 ]

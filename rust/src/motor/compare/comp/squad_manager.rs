@@ -10,20 +10,20 @@ use super::*;
 /// original.
 pub(crate) unsafe extern "thiscall" fn comparar_process_euro_registration(this: usize, etapa: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_PROCESS_EURO_REGISTRATION);
-    let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
-    let mut tem_humano = false;
+    let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
+    let mut has_human = false;
     for &chave in EUROPEAN_REGISTRATION_CUPS.iter() {
         let id = read_u32(chave);
         let comp = read_u32(read_u32(G_COMP_OBJECT_TABLE) as usize + 4 * id as usize) as usize;
         if comp != 0 {
             for_each_comp_club(comp, etapa, |c| {
-                if c != 0 && read_u32(c + 0x1db) == id && humano(read_u32(G_NEWS) as usize, c) != 0 {
-                    tem_humano = true;
+                if c != 0 && read_u32(c + 0x1db) == id && human(read_u32(G_NEWS) as usize, c) != 0 {
+                    has_human = true;
                 }
             });
         }
     }
-    if tem_humano {
+    if has_human {
         return o(this, etapa);
     }
     let n = (read_u32(G_STAFF_COUNT) as i32).max(0) as usize;
@@ -53,14 +53,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_squad_number(this: usize, p:
 /// Comparer for `club_uses_squad_numbers` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] A devolução das duas (a rotina só lê); sem clube, só a original (a caixa não roda duas vezes).
-pub(crate) unsafe extern "thiscall" fn comparar_club_uses_squad_numbers(this: usize, c: usize, outra: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_club_uses_squad_numbers(this: usize, c: usize, other: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CLUB_USES_SQUAD_NUMBERS);
     if c == 0 {
-        return o(this, c, outra);
+        return o(this, c, other);
     }
-    let r = o(this, c, outra);
-    let n = club_uses_squad_numbers(this, c, outra);
-    PLACAR.registrar(r == n, || format!("club_uses_squad_numbers(clube {:x}, outra {:x}): original {} rust {}", c, outra, r, n));
+    let r = o(this, c, other);
+    let n = club_uses_squad_numbers(this, c, other);
+    PLACAR.registrar(r == n, || format!("club_uses_squad_numbers(clube {:x}, outra {:x}): original {} rust {}", c, other, r, n));
     r
 }
 
@@ -71,12 +71,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_club_uses_squad_numbers(this: us
 pub(crate) unsafe extern "thiscall" fn comparar_set_squad_number(this: usize, p: usize, c: usize, n: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_SET_SQUAD_NUMBER);
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
+    let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     if p == 0 || c == 0 || !(-50..=50).contains(&(n as u8 as i8)) {
         return o(this, p, c, n);
     }
     let mut reg = Vec::new();
-    for k in [contrato(read_u32(G_CONTRACT_MANAGER) as usize, p), emprestimo(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
+    for k in [contrato(read_u32(G_CONTRACT_MANAGER) as usize, p), loan(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
         if k != 0 {
             reg.push((k + 0x3a, 1));
         }
@@ -106,9 +106,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_allocate_squad_number(this: usiz
 /// rotina e a 0x85a470 numeram) e a marca da caixa.
 pub(crate) unsafe extern "thiscall" fn comparar_assign_club_squad_numbers(this: usize, c: usize, manter: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_CLUB_SQUAD_NUMBERS);
-    let parceiro: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
+    let partner: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut ps: Vec<usize> = (0..50).map(|k| read_u32(c + 0xd7 + 4 * k) as usize).collect();
-    let l = parceiro(c, 0, 1);
+    let l = partner(c, 0, 1);
     if l != 0 {
         ps.extend((0..50).map(|k| read_u32(l + 0xd7 + 4 * k) as usize));
     }
@@ -127,13 +127,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_club_squad_numbers(this: 
 /// 0x859e20) e o +0 zerado.
 pub(crate) unsafe extern "thiscall" fn comparar_init_new_game(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_INIT_NEW_GAME);
-    let mut plano = Vec::new();
-    for_each_numbered_league(|c| plano.push(c));
+    let mut plan = Vec::new();
+    for_each_numbered_league(|c| plan.push(c));
     SQUAD_NUMBERS_PLAN = Some(Vec::new());
     o(this);
-    let feito = SQUAD_NUMBERS_PLAN.take().unwrap_or_default();
+    let done = SQUAD_NUMBERS_PLAN.take().unwrap_or_default();
     let zerado = *(this as *const u16) == 0;
-    PLACAR.registrar(feito == plano && zerado, || format!("init_new_game: plano {:x?} original {:x?} ano zerado {}", plano, feito, zerado));
+    PLACAR.registrar(done == plan && zerado, || format!("init_new_game: plano {:x?} original {:x?} ano zerado {}", plan, done, zerado));
 }
 
 /// Comparer for `assign_league_squad_numbers` (comparison mode: see the header of motor.rs).
@@ -141,29 +141,29 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_new_game(this: usize) {
 /// [pt] Lado a lado: o +0x3a dos contratos (o do clube e o de empréstimo) de quem está no elenco de cada clube da liga e
 /// no do clube ligado, e a marca da caixa. Com algum clube de técnico humano sem `automatico` (a notícia do pedido não
 /// roda duas vezes), só a original. A lista dos clubes vem do mesmo método +0x58 (solta depois).
-pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this: usize, liga: usize, inicial: u32, automatico: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this: usize, league: usize, inicial: u32, automatico: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(IDX_ASSIGN_LEAGUE_SQUAD_NUMBERS);
     if let Some(v) = (*core::ptr::addr_of_mut!(SQUAD_NUMBERS_PLAN)).as_mut() {
-        v.push(liga);
+        v.push(league);
     }
-    let parceiro: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
-    let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
+    let partner: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
+    let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
+    let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let clubes: unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16 = core::mem::transmute(read_u32(read_u32(liga) as usize + 0x58) as usize);
-    let mut lista = 0usize;
-    let n = clubes(liga, &mut lista, 0) as i16 as i32;
-    let cs: Vec<usize> = (0..n.max(0) as usize).map(|i| read_u32(lista + 4 * i) as usize).collect();
-    if lista != 0 {
-        soltar(lista);
+    let clubs: unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16 = core::mem::transmute(read_u32(read_u32(league) as usize + 0x58) as usize);
+    let mut list = 0usize;
+    let n = clubs(league, &mut list, 0) as i16 as i32;
+    let cs: Vec<usize> = (0..n.max(0) as usize).map(|i| read_u32(list + 4 * i) as usize).collect();
+    if list != 0 {
+        soltar(list);
     }
-    if automatico == 0 && cs.iter().any(|&c| humano(read_u32(G_NEWS) as usize, c) != 0) {
-        return o(this, liga, inicial, automatico);
+    if automatico == 0 && cs.iter().any(|&c| human(read_u32(G_NEWS) as usize, c) != 0) {
+        return o(this, league, inicial, automatico);
     }
     let mut reg = vec![(0xb67a34usize, 4usize)];
     for &c in &cs {
-        let l = parceiro(c, 0, 1);
+        let l = partner(c, 0, 1);
         for q in [c, l] {
             if q == 0 {
                 continue;
@@ -173,7 +173,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this
                 if p == 0 {
                     continue;
                 }
-                for ct in [contrato(read_u32(G_CONTRACT_MANAGER) as usize, p), emprestimo(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
+                for ct in [contrato(read_u32(G_CONTRACT_MANAGER) as usize, p), loan(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
                     if ct != 0 && !reg.contains(&(ct + 0x3a, 1)) {
                         reg.push((ct + 0x3a, 1));
                     }
@@ -181,10 +181,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this
             }
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, liga, inicial, automatico), || assign_league_squad_numbers(this, liga, inicial, automatico));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, league, inicial, automatico), || assign_league_squad_numbers(this, league, inicial, automatico));
     PLACAR.registrar(igual, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
-        format!("assign_league_squad_numbers(liga {:x}, {} {}): {}", liga, inicial, automatico, d.join(", "))
+        format!("assign_league_squad_numbers(liga {:x}, {} {}): {}", league, inicial, automatico, d.join(", "))
     });
 }
 
@@ -192,21 +192,21 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this
 ///
 /// [pt] Lado a lado: a marca de inscrição (+0x6d) de quem está no elenco (a mesma 0x541f90), o contrato achado [0xae1080]
 /// e a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_select_euro_registered_players(this: usize, c: usize, etapa: u32, marca: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn comparar_select_euro_registered_players(this: usize, c: usize, etapa: u32, mark: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u8>(IDX_SELECT_EURO_REGISTERED_PLAYERS);
-    let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
+    let squad: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
     let mut sq = [0usize; 50];
-    elenco(c, sq.as_mut_ptr(), 0);
+    squad(c, sq.as_mut_ptr(), 0);
     let mut reg = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     for &p in sq.iter() {
         if p != 0 && !reg.contains(&(p + 0x6d, 1)) {
             reg.push((p + 0x6d, 1));
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, c, etapa, marca), || select_euro_registered_players(this, c, etapa, marca));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, c, etapa, mark), || select_euro_registered_players(this, c, etapa, mark));
     PLACAR.registrar(igual && r == n, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
-        format!("select_euro_registered_players(clube {:x}, etapa {}, marca {}): original {} rust {} {}", c, etapa as u8, marca, r, n, d.join(", "))
+        format!("select_euro_registered_players(clube {:x}, etapa {}, marca {}): original {} rust {} {}", c, etapa as u8, mark, r, n, d.join(", "))
     });
     r
 }

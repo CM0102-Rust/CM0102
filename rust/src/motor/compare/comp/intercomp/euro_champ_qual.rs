@@ -9,14 +9,14 @@ use super::*;
 /// cada lado aloca em +0xba (pela virtual +0x3c, original) só é conferida como montada, e a da cópia é liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_euro_champ_qual_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_EURO_CHAMP_QUAL_SET_UP_RULES);
-    let antes = read_u32_as_usize(this + 0xba);
+    let before = read_u32_as_usize(this + 0xba);
     let reg = [(this + 0x3a, 0x80usize), (this + 0xbe, 0xb)];
     let to = core::cell::Cell::new(0usize);
     let tr = core::cell::Cell::new(0usize);
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
         let r = o(this);
         to.set(read_u32_as_usize(this + 0xba));
-        core::ptr::write_unaligned((this + 0xba) as *mut u32, antes as u32);
+        core::ptr::write_unaligned((this + 0xba) as *mut u32, before as u32);
         r
     }, || {
         let r = set_up_rules(this);
@@ -27,12 +27,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_euro_champ_qual_set_up_rules(thi
     let (to, tr) = (to.get(), tr.get());
     // a tabela é montada pela virtual +0x3c (original nos dois lados) e tem bytes que ela não grava (sobra do malloc):
     // confere só que os dois lados a montaram
-    let tabela = to != 0 && tr != 0;
+    let table = to != 0 && tr != 0;
     if tr != 0 && tr != to {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(tr);
     }
-    PLACAR.registrar(igual && a == b && tabela, || format!("euro_champ_qual_set_up_rules({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
+    PLACAR.registrar(igual && a == b && table, || format!("euro_champ_qual_set_up_rules({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, table));
     a
 }
 
@@ -65,11 +65,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_qualification_status(this: u
 pub(crate) unsafe extern "thiscall" fn comparar_init_group_one_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_INIT_GROUP_ONE_TABLE);
     let n = if matches!(*((this + 0xf6) as *const i8), 1 | 2) { 5i16 } else { return o(this) };
-    let plano: Vec<usize> = (0..n as usize).map(|k| read_u32_as_usize(read_u32_as_usize(this + 0xf7) + k * 4)).collect();
+    let plan: Vec<usize> = (0..n as usize).map(|k| read_u32_as_usize(read_u32_as_usize(this + 0xf7) + k * 4)).collect();
     let r = o(this);
     let t = read_u32_as_usize(this + 0xb1);
     let ok = r == 1 && read_i16(this + 0x3e) == n && read_i16(this + 0xa7) == (n - 1).wrapping_mul(read_i16(this + 0x3c)) && t != 0
-        && plano.iter().enumerate().all(|(k, &c)| read_u32_as_usize(t + k * 0x3b) == c);
-    PLACAR.registrar(ok, || format!("init_group_one_table({:#x}) devolveu {}; plano {:x?}", this, r, plano));
+        && plan.iter().enumerate().all(|(k, &c)| read_u32_as_usize(t + k * 0x3b) == c);
+    PLACAR.registrar(ok, || format!("init_group_one_table({:#x}) devolveu {}; plano {:x?}", this, r, plan));
     r
 }

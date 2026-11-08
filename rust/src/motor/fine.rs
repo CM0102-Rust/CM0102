@@ -38,12 +38,12 @@ pub(crate) static mut FINE_NEWS_WOULD_BUILD: bool = false;
 /// personalidade (+0x5d + +0x5b abaixo de 12, +0x59 abaixo de 6 e reputação +0xb acima de 5250), prazo 1, o contrato
 /// de tipo 7 (+0x4f), a transferência futura (0x8cca10), os efeitos e o jogo pelo tipo (+0x4f 1 com mais de 23 anos,
 /// ou 2).
-pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, motivo: u32, reacao: u32, prazo: u32, efeitos: u32) {
-    if jogador == 0 {
+pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, reason: u32, reacao: u32, prazo: u32, efeitos: u32) {
+    if player == 0 {
         return;
     }
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let k = contract_of(read_usize(G_CONTRACT_MANAGER), jogador);
+    let k = contract_of(read_usize(G_CONTRACT_MANAGER), player);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = k;
     if k == 0 {
         return;
@@ -53,12 +53,12 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, mo
         return;
     }
     let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let c = contrato(read_usize(G_CONTRACT_MANAGER), jogador, clube);
+    let c = contrato(read_usize(G_CONTRACT_MANAGER), player, clube);
     if c == 0 {
         return;
     }
-    let atual = read_usize(jogador + 0x39);
-    if atual != 0 && !club_has_human_manager(atual) {
+    let current = read_usize(player + 0x39);
+    if current != 0 && !club_has_human_manager(current) {
         return;
     }
     crate::comparacao::ramo("cpz_9 noticia da reacao a multa");
@@ -66,29 +66,29 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, mo
         FINE_NEWS_WOULD_BUILD = true;
         return;
     }
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
-    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
+    let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let futura: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
-    construir(nt, 0xbc6, 0);
-    set_news_person_slots(nt, 0, jogador);
-    set_news_slot(nt, 4, motivo as i8 as u32);
+    construct(nt, 0xbc6, 0);
+    set_news_person_slots(nt, 0, player);
+    set_news_slot(nt, 4, reason as i8 as u32);
     set_news_slot(nt, 5, reacao as i8 as u32);
     let r = friendly_random(2);
     set_news_slot(nt, 6, r as u32);
-    let p = read_i8_as_i32(jogador + 0x5d) + read_i8_as_i32(jogador + 0x5b) < 0xc
-        && read_i8_as_i32(jogador + 0x59) < 6
-        && core::ptr::read_unaligned((read_usize(jogador + 0x61) + 0xb) as *const i16) > 0x1482;
+    let p = read_i8_as_i32(player + 0x5d) + read_i8_as_i32(player + 0x5b) < 0xc
+        && read_i8_as_i32(player + 0x59) < 6
+        && core::ptr::read_unaligned((read_usize(player + 0x61) + 0xb) as *const i16) > 0x1482;
     set_news_slot(nt, 7, p as u32);
     set_news_slot(nt, 8, (prazo as u8 == 1) as u32);
-    let tipo = *((c + 0x4f) as *const u8) & 0xf0;
-    set_news_slot(nt, 9, (tipo == 0x70) as u32);
-    set_news_slot(nt, 0xa, (futura(read_usize(G_TRANSFER_MANAGER), jogador, 0) != 0) as u32);
+    let kind = *((c + 0x4f) as *const u8) & 0xf0;
+    set_news_slot(nt, 9, (kind == 0x70) as u32);
+    set_news_slot(nt, 0xa, (futura(read_usize(G_TRANSFER_MANAGER), player, 0) != 0) as u32);
     set_news_slot(nt, 0xb, efeitos as i8 as u32);
-    let jogo = (read_i8_as_i32(jogador + 0x18) > 0x17 && tipo == 0x10) || tipo == 0x20;
+    let jogo = (read_i8_as_i32(player + 0x18) > 0x17 && kind == 0x10) || kind == 0x20;
     set_news_slot(nt, 0xc, jogo as u32);
-    entregar(read_usize(G_NEWS), nt, clube);
+    deliver(read_usize(G_NEWS), nt, clube);
 }
 
 
@@ -99,25 +99,25 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, mo
 /// (jogador, treinador, desfecho)`, pelo diário das multas (0x5a5820: o retorno marcado vencido, mais de 30 dias de
 /// casa e sem lesão grave; a original deixa o Fine em ecx). Os dois com ficha (+0x61) e nação (+0x1a), o jogador com
 /// clube (+0x39): a notícia 0x1394 (o jogador e o treinador, id e chaves; o desfecho; sorteio(5)) ao clube do jogador.
-pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(jogador: usize, treinador: usize, desfecho: u32) {
-    if jogador == 0 || read_usize(jogador + 0x61) == 0 || read_usize(jogador + 0x1a) == 0 || read_usize(jogador + 0x39) == 0 {
+pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(player: usize, coach: usize, outcome: u32) {
+    if player == 0 || read_usize(player + 0x61) == 0 || read_usize(player + 0x1a) == 0 || read_usize(player + 0x39) == 0 {
         return;
     }
-    if treinador == 0 || read_usize(treinador + 0x61) == 0 || read_usize(treinador + 0x1a) == 0 {
+    if coach == 0 || read_usize(coach + 0x61) == 0 || read_usize(coach + 0x1a) == 0 {
         return;
     }
     crate::comparacao::ramo("cpz_9 noticia do retorno do treinador");
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
-    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
+    let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
-    construir(nt, 0x1394, 0);
-    set_news_person_slots(nt, 0, jogador);
-    set_news_person_slots(nt, 4, treinador);
-    set_news_slot(nt, 8, desfecho as i8 as u32);
+    construct(nt, 0x1394, 0);
+    set_news_person_slots(nt, 0, player);
+    set_news_person_slots(nt, 4, coach);
+    set_news_slot(nt, 8, outcome as i8 as u32);
     let r = friendly_random(5);
     set_news_slot(nt, 9, r as u32);
-    entregar(read_usize(G_NEWS), nt, read_usize(jogador + 0x39));
+    deliver(read_usize(G_NEWS), nt, read_usize(player + 0x39));
 }
 
 // simplification: a notícia sorteia e vai às caixas dos técnicos (aloca): só a original, com a cópia levando o ramo; sem

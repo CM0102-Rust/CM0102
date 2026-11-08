@@ -10,7 +10,7 @@ use super::*;
 /// +0xbe e os rebaixados +0xc1): vitória 3, empate 1, categoria 2 (liga), clube nacional, desempates confronto
 /// direto e saldo, sem play-offs na tabela, sem liga acima nem abaixo, palavra de regras 8, 7 reservas e
 /// 3 substituições, e as palavras +0xab e +0xdb (copiadas em cada partida: +0x38 e +0x36) em 0.
-pub(crate) unsafe fn bra_reg_central_set_state_league_rules(o: usize, turnos: u16, cima: u8, rebaixados: u8) {
+pub(crate) unsafe fn bra_reg_central_set_state_league_rules(o: usize, turnos: u16, cima: u8, relegated: u8) {
     write_u16_at(o, 0xab, 0);
     write_u16_at(o, 0xdb, 0);
     write_u8_at(o, 0xc7, 0);
@@ -18,7 +18,7 @@ pub(crate) unsafe fn bra_reg_central_set_state_league_rules(o: usize, turnos: u1
     write_u8_at(o, 0xc0, 0);
     write_u8_at(o, 0xc2, 3);
     write_u8_at(o, 0xc5, 3);
-    write_u8_at(o, 0xc1, rebaixados);
+    write_u8_at(o, 0xc1, relegated);
     write_u8_at(o, 0x4a, 3);
     write_u8_at(o, 0xbe, cima);
     write_u16_at(o, 0xd9, 8);
@@ -120,7 +120,7 @@ pub(crate) unsafe fn record_state_league_stage(this: usize, clube: usize, st: u8
 /// [pt] O mata-mata dos estaduais: a linha do clube na tabela (+0xb1, +0x3e linhas); o campeão (1) ganha o registro de
 /// campeão e o destino 5; os eliminados (2 ou -1), o registro de eliminação (0x86c000) com o peso da escala 0x4bf850
 /// (30 a 50 pela rodada do jogo em `rodadas`) e o destino -2. Devolve (linha gravada ou 0, destino).
-pub(crate) unsafe fn record_state_knockout(this: usize, clube: usize, st: u8, jogo: usize, rodadas: u32, fazer: bool) -> (usize, u8) {
+pub(crate) unsafe fn record_state_knockout(this: usize, clube: usize, st: u8, jogo: usize, rounds: u32, fazer: bool) -> (usize, u8) {
     let comp = read_u32_as_usize(this + 4);
     let n = read_i16(this + 0x3e) as i32;
     let mut i = 0i32;
@@ -143,9 +143,9 @@ pub(crate) unsafe fn record_state_knockout(this: usize, clube: usize, st: u8, jo
                     // 0x4bf850 e a 0x86c000 só leem as palavras: vão as palavras.
                     let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
                     crate::comparacao::ramo("cqk_7 eliminado do estadual");
-                    let peso = escala(0x1e, 0x32, read_i16(jogo + 0x34) as u16 as u32, rodadas);
+                    let weight = escala(0x1e, 0x32, read_i16(jogo + 0x34) as u16 as u32, rounds);
                     let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
-                    elim(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, peso); // cqk7: o registro do eliminado
+                    elim(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight); // cqk7: o registro do eliminado
                 }
                 let l = read_u32_as_usize(this + 0xb1) + 0x3b * i as usize;
                 if fazer {
@@ -164,8 +164,8 @@ pub(crate) unsafe fn record_state_knockout(this: usize, clube: usize, st: u8, jo
 ///
 /// [pt] O Centro-Oeste e o Goiano (0x4314e0): a fase -1 de pontos corridos e o mata-mata na fase 0 (escala de 3 rodadas).
 /// `fazer` = falso: o ensaio do comparador. Devolve (devolução, linha gravada ou 0, destino).
-pub(crate) unsafe fn centro_oeste_end_of_stage(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
-    let (st, fa) = (situacao as u8, fase as u8);
+pub(crate) unsafe fn centro_oeste_end_of_stage(this: usize, clube: usize, status: u32, stage: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
+    let (st, fa) = (status as u8, stage as u8);
     if fa == 0xff {
         record_state_league_stage(this, clube, st, fazer);
         return (0, 0, 0);
@@ -182,8 +182,8 @@ pub(crate) unsafe fn centro_oeste_end_of_stage(this: usize, clube: usize, situac
 ///
 /// [pt] O Mineiro, o Paranaense e o Carioca (0x434d90): a fase -1 de pontos corridos; as fases 0 e 1 (os turnos) devolvem -1;
 /// o mata-mata na fase 2 (escala de 1 rodada: a média, 40); as outras, 0.
-pub(crate) unsafe fn mineiro_end_of_stage(this: usize, clube: usize, situacao: u32, fase: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
-    let (st, fa) = (situacao as u8, fase as u8 as i8);
+pub(crate) unsafe fn mineiro_end_of_stage(this: usize, clube: usize, status: u32, stage: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
+    let (st, fa) = (status as u8, stage as u8 as i8);
     if fa == -1 {
         record_state_league_stage(this, clube, st, fazer);
         return (0, 0, 0);
@@ -202,8 +202,8 @@ pub(crate) unsafe fn mineiro_end_of_stage(this: usize, clube: usize, situacao: u
 /// champion record; returns (result, 0, 0).
 ///
 /// [pt] A NSL (0x411980). Devolve (devolução, 0, 0): não grava na tabela.
-pub(crate) unsafe fn nsl_end_of_stage(this: usize, clube: usize, situacao: u32, fase: u32, fazer: bool) -> (u32, usize, u8) {
-    let (st, fa) = (situacao as u8, fase as u8);
+pub(crate) unsafe fn nsl_end_of_stage(this: usize, clube: usize, status: u32, stage: u32, fazer: bool) -> (u32, usize, u8) {
+    let (st, fa) = (status as u8, stage as u8);
     let comp = read_u32_as_usize(this + 4);
     if fa == 0xff {
         // a temporada regular
@@ -229,8 +229,8 @@ pub(crate) unsafe fn nsl_end_of_stage(this: usize, clube: usize, situacao: u32, 
         }
         if st == 0xfe {
             if fazer {
-                let nao: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_FAILED_TO_QUALIFY_RECORD);
-                nao(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, 0x435, 0x28);
+                let not: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_FAILED_TO_QUALIFY_RECORD);
+                not(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, 0x435, 0x28);
             }
             return (u32::MAX, 0, 0);
         }
@@ -251,9 +251,9 @@ pub(crate) unsafe fn nsl_end_of_stage(this: usize, clube: usize, situacao: u32, 
 /// [pt] { 0x4314e0 } (thiscall, ret 0x18, bra_reg_central.cpp): `BraRegCentral::update_staff_records_for_status` (slot 18
 /// do Centro-Oeste e do Goiano): os classificados e rebaixados dos pontos corridos; no mata-mata (fase 0), o campeão
 /// (destino 5) e os eliminados (destino -2, registro de eliminação com peso de 30 a 50 em 3 rodadas). Devolve 0.
-pub(crate) unsafe extern "thiscall" fn bra_reg_central_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_central_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
-    centro_oeste_end_of_stage(this, clube, situacao, fase, jogo, true).0
+    centro_oeste_end_of_stage(this, clube, status, stage, jogo, true).0
 }
 
 
@@ -263,8 +263,8 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_central_update_staff_records_for_
 /// Original: `BraRegCentral::BraRegCentral` (0x4304b0, bra_reg_central.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x4304b0 } (thiscall, ret 8, bra_reg_central.cpp): `BraRegCentral::BraRegCentral(ano, registro)`: o Centro-Oeste (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn construct_bra_reg_central(this: usize, ano: u32, registro: usize) -> usize {
-    bra_reg_bahia_construct_state_league(this, ano, registro, &CENTRO_OESTE_STATE_CHAMPIONSHIP, 7, true, "cqt_1 centro_oeste novo") // cqt1: a disciplina e as posições previstas do Centro-Oeste
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_central(this: usize, year: u32, record: usize) -> usize {
+    bra_reg_bahia_construct_state_league(this, year, record, &CENTRO_OESTE_STATE_CHAMPIONSHIP, 7, true, "cqt_1 centro_oeste novo") // cqt1: a disciplina e as posições previstas do Centro-Oeste
 }
 
 

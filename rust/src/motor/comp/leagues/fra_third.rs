@@ -10,12 +10,12 @@ pub(crate) type FraThirdLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-pub(crate) unsafe fn fra_third_write_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[FraThirdLeagueRound]) {
+pub(crate) unsafe fn fra_third_write_league_rounds(t: usize, year: u32, first: i32, table: &[FraThirdLeagueRound]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
-    for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
-        let i = primeira + k as i32;
-        data(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, ano, 0);
+    for (k, &(dia, mes, anos, semana, codigo, faixas)) in table.iter().enumerate() {
+        let i = first + k as i32;
+        data(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, year, 0);
         for (j, &(a, b, c)) in faixas.iter().enumerate() {
             band(t, i, j as i32, a as i32, b as i32, c as i32, 0);
         }
@@ -85,16 +85,16 @@ pub(crate) unsafe fn create_league_schedule(this: usize, fase: u32, rodadas: *mu
 ///
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do mesmo [0xb67a34]; as
 /// saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada: 0x9452ca, cdecl).
-pub(crate) unsafe fn compare_league_schedule(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
-                       original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
+pub(crate) unsafe fn compare_league_schedule(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32,
+                       original: impl FnOnce() -> usize, copy: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
-    let pl2 = if liga.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copia(&mut r2, &mut e2, pl2));
-    let saidas = fase as u8 != 0xff || (*rodadas == r2 && *extra == e2 && (liga.is_null() || *liga == l2));
-    let tabela = if a != 0 && b != 0 {
-        let n = *rodadas as usize;
+    let pl2 = if league.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copy(&mut r2, &mut e2, pl2));
+    let outs = stage as u8 != 0xff || (*rounds == r2 && *extra == e2 && (league.is_null() || *league == l2));
+    let table = if a != 0 && b != 0 {
+        let n = *rounds as usize;
         written_league_round_bytes(a, a, n) == written_league_round_bytes(b, a, n)
     } else {
         a == 0 && b == 0
@@ -102,7 +102,7 @@ pub(crate) unsafe fn compare_league_schedule(nome: &str, fase: u32, rodadas: *mu
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} tabela {}", nome, fase as u8 as i8, saidas, tabela));
+    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
     a
 }
 
@@ -242,8 +242,8 @@ pub(crate) const LOWER_DIVISION_LEAGUE: FraThirdSingleStageLeague = FraThirdSing
 ///
 /// [pt] { 0x5bfe30 } (thiscall, ret 0x10, fra_third.cpp, 1.948 bytes, método +0x3c): `FraThird::create_schedule(fase, &rodadas, &extra,
 /// &é_liga)`: o National, 38 rodadas (`FRENCH_THIRD_DIVISION_ROUNDS`). Fonte 0x9ccc80, linha 0xa6.
-pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_league_schedule(this, fase, rodadas, extra, liga, &FRENCH_THIRD_LEAGUE)
+pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_league_schedule(this, stage, rounds, extra, league, &FRENCH_THIRD_LEAGUE)
 }
 
 
@@ -255,8 +255,8 @@ pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule(this: usize, fa
 ///
 /// [pt] { 0x5bd920 } (thiscall, ret 0x10, fra_lower.cpp, 2.311 bytes, método +0x3c): `FraLower::create_schedule`: a divisão de
 /// baixo, 38 rodadas (`LOWER_DIVISION_ROUNDS`). Fonte 0x9ccbd0, linha 0xa9.
-pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule_5bd920(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_league_schedule(this, fase, rodadas, extra, liga, &LOWER_DIVISION_LEAGUE)
+pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule_5bd920(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_league_schedule(this, stage, rounds, extra, league, &LOWER_DIVISION_LEAGUE)
 }
 
 
@@ -294,7 +294,7 @@ pub(crate) unsafe extern "thiscall" fn fra_third_create_table(this: usize) -> u3
 ///
 /// [pt] { 0x5bfb40 } (thiscall, ret 8, fra_third.cpp): `FraThird::FraThird(ano, registro)`: a terceira divisão francesa (o
 /// National), disciplina 0xc, só a liga.
-pub(crate) unsafe extern "thiscall" fn construct_fra_third(this: usize, ano: u32, registro: usize) -> usize {
-    construct_division_league(this, ano, registro, &FRENCH_THIRD_DIVISION)
+pub(crate) unsafe extern "thiscall" fn construct_fra_third(this: usize, year: u32, record: usize) -> usize {
+    construct_division_league(this, year, record, &FRENCH_THIRD_DIVISION)
 }
 

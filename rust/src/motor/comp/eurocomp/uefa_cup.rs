@@ -89,8 +89,8 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
         write_u32_from_usize(read_u32_as_usize(this + 0xa7) + k as i32 as usize * 6 - 6, 0);
         k = k.wrapping_sub(1);
     }
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    ordenar(read_u32_as_usize(this + 0xa7), k as i32 as u32, 6, 0x522190);
+    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    sort(read_u32_as_usize(this + 0xa7), k as i32 as u32, 6, 0x522190);
     let b2 = *((this + 0xb2) as *const i8);
     if b2 < 0 || b2 % 2 != 0 {
         return 0;
@@ -141,14 +141,14 @@ pub(crate) unsafe extern "thiscall" fn build_entrants(this: usize) -> i32 {
 /// &rodadas, &extra, &saida)`: na fase −1, saida (se pedida) = 0, rodadas = 9, extra = 0; a tabela (0x944e46 de 0x3a8;
 /// sem memória, a caixa da linha 0xe0 e 0) com as rodadas de `uefa_cup_rounds` e rodadas = as gravadas. Fora da −1,
 /// 0.
-pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    if fase as u8 != 0xff {
+pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+    if stage as u8 != 0xff {
         return 0;
     }
-    if !saida.is_null() {
-        *saida = 0;
+    if !out.is_null() {
+        *out = 0;
     }
-    *rodadas = 9;
+    *rounds = 9;
     *extra = 0;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar(0x3a8);
@@ -157,12 +157,12 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, 
         return 0;
     }
     crate::comparacao::ramo("cqq_10 tabela da uefa");
-    let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+    let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     let (tab, n) = uefa_cup_rounds(*((this + 0xb2) as *const i8));
     for (i, r) in tab[..n].iter().enumerate() {
-        eng_cc_cup_write_cup_round(t, i as u32, r, ano);
+        eng_cc_cup_write_cup_round(t, i as u32, r, year);
     }
-    *rodadas = n as i16;
+    *rounds = n as i16;
     t
 }
 
@@ -176,8 +176,8 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, 
 /// update_staff_records_for_status(clube, desfecho, a3, a4, jogo, a6)`: com o desfecho (byte) 1, 2 ou 0xff (campeão,
 /// vice ou eliminado) o clube sai da competição europeia (+0x1db = −1); depois os registros da base (0x519890: os seis
 /// argumentos como chegaram, o desfecho como dword; mov ecx, this -> thiscall, ret 0x18), cuja devolução sai.
-pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let d = desfecho as u8;
+pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(this: usize, clube: usize, outcome: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+    let d = outcome as u8;
     if d == 1 || d == 2 || d == 0xff {
         if d == 0xff {
             crate::comparacao::ramo("cqi_10 caiu na uefa");
@@ -185,6 +185,6 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(
         core::ptr::write_unaligned((clube + club::EURO_FLAG) as *mut i32, -1); // cqi10: quem termina na UEFA sai da competição europeia
     }
     let base: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
-    base(this, clube, desfecho, a3, a4, jogo, a6)
+    base(this, clube, outcome, a3, a4, jogo, a6)
 }
 

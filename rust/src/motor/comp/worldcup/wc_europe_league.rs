@@ -18,11 +18,11 @@ pub(crate) unsafe fn wc_europe_league_write_rule_fields(this: usize, campos: &[(
 ///
 /// [pt] A primeira palavra da Date(dia, mês, ano da competição +0x40, dia da semana) (0x549f70: push semana; push ano; push
 /// mês; push dia; lea ecx, local -> thiscall, ret 0x10).
-pub(crate) unsafe fn comp_date_word(this: usize, dia: u32, mes: u32, semana: u32) -> u16 {
+pub(crate) unsafe fn comp_date_word(this: usize, day: u32, month: u32, week: u32) -> u16 {
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     // simplification: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
-    data(d.as_mut_ptr(), dia, mes, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32, semana);
+    data(d.as_mut_ptr(), day, month, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32, week);
     core::ptr::read_unaligned(d.as_ptr() as *const u16)
 }
 
@@ -30,12 +30,12 @@ pub(crate) unsafe fn comp_date_word(this: usize, dia: u32, mes: u32, semana: u32
 ///
 /// [pt] O fim comum: +0xb6 = a palavra da data, +0xb8 = `b8`, e a tabela das rodadas da virtual +0x3c (push 0; push &+0x3a;
 /// push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba. Devolve 1.
-pub(crate) unsafe fn finish_rules_setup(this: usize, palavra: u16, b8: u16) -> u32 {
-    core::ptr::write_unaligned((this + 0xb6) as *mut u16, palavra);
+pub(crate) unsafe fn finish_rules_setup(this: usize, word: u16, b8: u16) -> u32 {
+    core::ptr::write_unaligned((this + 0xb6) as *mut u16, word);
     core::ptr::write_unaligned((this + 0xb8) as *mut u16, b8);
     let vt = core::ptr::read_unaligned(this as *const usize);
-    let tabela: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(core::ptr::read_unaligned((vt + 0x3c) as *const usize));
-    let t = tabela(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
+    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(core::ptr::read_unaligned((vt + 0x3c) as *const usize));
+    let t = table(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
     core::ptr::write_unaligned((this + 0xba) as *mut u32, t as u32);
     1
 }
@@ -43,8 +43,8 @@ pub(crate) unsafe fn finish_rules_setup(this: usize, palavra: u16, b8: u16) -> u
 /// Comparer: runs the original and checks fields, +0xb6 date, +0xb8 and return 1.
 ///
 /// [pt] O plano: os campos, +0xb6 (a data, calculada antes), +0xb8 e a devolução 1, lidos depois da original `o`.
-pub(crate) unsafe fn check_qualifier_rules(nome: &str, this: usize, campos: &[(usize, u8, u32)], data: (u32, u32, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
-    let palavra = comp_date_word(this, data.0, data.1, data.2);
+pub(crate) unsafe fn check_qualifier_rules(name: &str, this: usize, campos: &[(usize, u8, u32)], data: (u32, u32, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
+    let word = comp_date_word(this, data.0, data.1, data.2);
     let r = o();
     let mut errados: [(usize, u32); 4] = [(0, 0); 4];
     let mut k = 0;
@@ -57,7 +57,7 @@ pub(crate) unsafe fn check_qualifier_rules(nome: &str, this: usize, campos: &[(u
     }
     let b6 = core::ptr::read_unaligned((this + 0xb6) as *const u16);
     let lido8 = core::ptr::read_unaligned((this + 0xb8) as *const u16);
-    PLACAR.registrar(r == 1 && k == 0 && b6 == palavra && lido8 == b8, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {}", nome, this, r, &errados[..k], b6, palavra, lido8));
+    PLACAR.registrar(r == 1 && k == 0 && b6 == word && lido8 == b8, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {}", name, this, r, &errados[..k], b6, word, lido8));
     r
 }
 
@@ -79,9 +79,9 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize
     wc_europe_league_write_rule_fields(this, &EUROPE_RULE_FIELDS);
     *((this + 0xc2) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias europeias
     *((this + 0xc4) as *mut u8) = 0xa; // cqj12: a categoria dos jogos das eliminatórias europeias
-    let dia = 0x19; // cqj12: o dia do começo das eliminatórias europeias
-    let palavra = comp_date_word(this, dia, 2, 5);
-    finish_rules_setup(this, palavra, 0)
+    let day = 0x19; // cqj12: o dia do começo das eliminatórias europeias
+    let word = comp_date_word(this, day, 2, 5);
+    finish_rules_setup(this, word, 0)
 }
 
 // simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
@@ -101,9 +101,9 @@ pub(crate) const SOUTH_AMERICA_QUALIFIER_RULE_FIELDS: [(usize, u8, u32); 16] = [
 /// desempates (1, 2, 3), vagas diretas 4 − +0xef − +0xee (as isentas saem das quatro), uma de repescagem, seleções, 7 no
 /// banco e 3 substituições, +0xa7 = −1, +0xab = +0xdb = 0, começo em 25 do mês 0 num dia da semana 5.
 pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules_921040(this: usize) -> u32 {
-    let lista = core::ptr::read_unaligned(G_COMP_OBJECT_TABLE as *const usize);
-    if lista != 0 {
-        let o = core::ptr::read_unaligned((lista + core::ptr::read_unaligned(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION as *const usize).wrapping_mul(4)) as *const usize);
+    let list = core::ptr::read_unaligned(G_COMP_OBJECT_TABLE as *const usize);
+    if list != 0 {
+        let o = core::ptr::read_unaligned((list + core::ptr::read_unaligned(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION as *const usize).wrapping_mul(4)) as *const usize);
         if o != 0 {
             *((this + 0xef) as *mut u8) = *((o + 0xee) as *const u8);
         }
@@ -112,9 +112,9 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules_921040(this
     wc_europe_league_write_rule_fields(this, &SOUTH_AMERICA_QUALIFIER_RULE_FIELDS);
     *((this + 0xc2) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias sul-americanas
     *((this + 0xbe) as *mut u8) = 4u8.wrapping_sub(*((this + 0xef) as *const u8)).wrapping_sub(*((this + 0xee) as *const u8)); // cqj12: as vagas diretas da América do Sul
-    let dia = 0x19; // cqj12: o dia do começo da eliminatória sul-americana
-    let palavra = comp_date_word(this, dia, 0, 5);
-    finish_rules_setup(this, palavra, 0)
+    let day = 0x19; // cqj12: o dia do começo da eliminatória sul-americana
+    let word = comp_date_word(this, day, 0, 5);
+    finish_rules_setup(this, word, 0)
 }
 
 // simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras e
@@ -133,9 +133,9 @@ pub(crate) const ASIA_QUALIFIER_RULE_FIELDS: [(usize, u8, u32); 12] = [(0xc2, 1,
 pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules_912eb0(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_12 regras da asia");
     wc_europe_league_write_rule_fields(this, &ASIA_QUALIFIER_RULE_FIELDS);
-    let dia = 0x19; // cqj12: o dia do começo das eliminatórias asiáticas
-    let palavra = comp_date_word(this, dia, 2, 5);
-    finish_rules_setup(this, palavra, 1)
+    let day = 0x19; // cqj12: o dia do começo das eliminatórias asiáticas
+    let word = comp_date_word(this, day, 2, 5);
+    finish_rules_setup(this, word, 1)
 }
 
 // simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.

@@ -4,15 +4,15 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/leagues/eng_prm.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `construct_eng_prm` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_prm(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_prm(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_PRM);
-    compare_english_constructor("construct_eng_prm", this, ano, registro, &PREMIER_DIVISION, || o(this, ano, registro))
+    compare_english_constructor("construct_eng_prm", this, year, record, &PREMIER_DIVISION, || o(this, year, record))
 }
 
 /// Comparer for `construct_eng_third` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_third(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_third(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_THIRD);
-    compare_english_constructor("construct_eng_third", this, ano, registro, &THIRD_DIVISION, || o(this, ano, registro))
+    compare_english_constructor("construct_eng_third", this, year, record, &THIRD_DIVISION, || o(this, year, record))
 }
 
 /// Comparer for `eng_prm_set_up_rules` (comparison mode: see the header of motor.rs).
@@ -40,7 +40,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_create_table_577f70(this
 }
 
 /// Comparer for `eng_prm_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_PRM_CREATE_SCHEDULE);
-    eng_first_compare_round_table("eng_prm_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| eng_prm_create_schedule(this, fase, r, e, l))
+    eng_first_compare_round_table("eng_prm_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| eng_prm_create_schedule(this, stage, r, e, l))
 }

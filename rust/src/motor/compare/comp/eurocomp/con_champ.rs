@@ -9,34 +9,34 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn comparar_con_champ_select_qualified_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_CHAMP_SELECT_QUALIFIED_CLUBS);
     let l = concacaf_club_lists();
-    let outro = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
-    if l.n[0] < 2 || l.n[1] < 3 || l.n[2] < 1 || (outro == 0 && l.n[3] < 2) || read_u32_as_usize(this + 0xa7) == 0 {
+    let other = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
+    if l.n[0] < 2 || l.n[1] < 3 || l.n[2] < 1 || (other == 0 && l.n[3] < 2) || read_u32_as_usize(this + 0xa7) == 0 {
         return o(this); // simplification: lista curta (a original lê sobra de pilha) ou sem tabela: só a original
     }
-    let mut regioes = vec![(this + 0x3e, 2), (read_u32_as_usize(this + 0xa7), 48)];
-    regioes.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
+    let mut regions = vec![(this + 0x3e, 2), (read_u32_as_usize(this + 0xa7), 48)];
+    regions.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
     // a 0x4afd80 reordena o histórico de competições ([0xae23d4], [0xae237c] linhas de 0x1a bytes) a cada chamada; com
     // empate, a ordem que a original deixou muda o campeão que a cópia acharia: o histórico entra nas regiões
-    let historico = read_u32_as_usize(G_CLUB_COMP_HISTORY_TABLE);
-    if historico != 0 {
-        regioes.push((historico, read_u32_as_usize(G_CLUB_COMP_HISTORY_COUNT).wrapping_mul(0x1a)));
+    let history = read_u32_as_usize(G_CLUB_COMP_HISTORY_TABLE);
+    if history != 0 {
+        regions.push((history, read_u32_as_usize(G_CLUB_COMP_HISTORY_COUNT).wrapping_mul(0x1a)));
     }
-    let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this), || crate::aleatorio::sem_contar(|| con_champ_select_qualified_clubs(this)));
+    let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this), || crate::aleatorio::sem_contar(|| con_champ_select_qualified_clubs(this)));
     PLACAR.registrar(igual && r == rr, || format!("con_champ_select_qualified_clubs({:#x}) listas {:?} original={:x?} rust={:x?}", this, l.n, mo, mr));
     r
 }
 
 /// Comparer for `con_champ_update_for_date` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_con_champ_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_con_champ_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CON_CHAMP_UPDATE_FOR_DATE);
     if read_u32_as_usize(this + 0xa7) == 0 {
-        return o(this, hoje, fase);
+        return o(this, today, stage);
     }
-    let seleciona = read_u32_as_usize(read_u32_as_usize(this + 0xa7)) == 0 && fase != 0;
+    let seleciona = read_u32_as_usize(read_u32_as_usize(this + 0xa7)) == 0 && stage != 0;
     let n = read_i16(this + 0x3e);
-    let r = o(this, hoje, fase);
-    let igual = if seleciona { read_i16(this + 0x3e) == 8 } else { read_i16(this + 0x3e) == n };
-    PLACAR.registrar(igual, || format!("con_champ_update_for_date({:#x}, fase {}) seleciona={} times {} -> {}", this, fase, seleciona, n, read_i16(this + 0x3e)));
+    let r = o(this, today, stage);
+    let same = if seleciona { read_i16(this + 0x3e) == 8 } else { read_i16(this + 0x3e) == n };
+    PLACAR.registrar(same, || format!("con_champ_update_for_date({:#x}, fase {}) seleciona={} times {} -> {}", this, stage, seleciona, n, read_i16(this + 0x3e)));
     r
 }
 
@@ -48,10 +48,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_champ_set_up_rounds(this: us
 }
 
 /// Comparer for `con_champ_create_round_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_con_champ_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_con_champ_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CON_CHAMP_CREATE_ROUND_TABLE);
-    let a = eng_cc_cup_compare_round_table("con_champ_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| con_champ_create_round_table(this, fase, r, e, s));
+    let a = eng_cc_cup_compare_round_table("con_champ_create_round_table", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
+        |r, e, s| con_champ_create_round_table(this, stage, r, e, s));
     // simplification: a eng_cc_cup_compare_round_table não olha os dias dos confrontos (+0x23..); o dia 0 das duas primeiras rodadas é
     // conferido aqui contra o valor fixo que a cópia grava
     if a != 0 {

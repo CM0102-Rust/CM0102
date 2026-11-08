@@ -21,11 +21,11 @@ pub(crate) unsafe fn month_ratings_staff_by_id(id: i32) -> usize {
 /// pessoa (id em +0) abaixo da conta de pessoas [0xae2364] vai para as notas do mês (0x767fa0).
 pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, jogo: usize, partida: usize) {
     let _ = jogo;
-    let nota: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_MONTH_RATINGS_ADD_PLAYER_RATING);
-    let mut lado = partida.wrapping_add(0x190);
+    let rating: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_MONTH_RATINGS_ADD_PLAYER_RATING);
+    let mut side = partida.wrapping_add(0x190);
     for l in 0..2 { // cpw5: os dois lados
         for k in 0..0x14usize {
-            let e = lado + k * 0x49;
+            let e = side + k * 0x49;
             if read_u8(e + 0x1d) == 0xfb {
                 continue;
             }
@@ -39,9 +39,9 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, jogo: u
             if l == 1 {
                 crate::comparacao::ramo("cpw_5 notas do visitante");
             }
-            nota(this, e);
+            rating(this, e);
         }
-        lado += 0x625;
+        side += 0x625;
     }
 }
 
@@ -67,44 +67,44 @@ pub(crate) unsafe fn add_match_rating(r: usize, e: usize) {
 pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) {
     let id = read_i32(e);
     let n = read_i32(this + 4);
-    let mut tab = read_usize(this);
+    let mut table = read_usize(this);
     for k in 0..n.max(0) as usize {
-        let r = tab + k * 12;
+        let r = table + k * 12;
         if read_i32(r) == id {
             return add_match_rating(r, e);
         }
     }
     let cap = read_i32(this + 8);
     if n == cap {
-        let novo = cap.wrapping_add(300);
-        write_u32(this + 8, novo as u32);
-        let bytes = (novo as u32).wrapping_mul(12);
-        tab = if tab == 0 {
+        let new = cap.wrapping_add(300);
+        write_u32(this + 8, new as u32);
+        let bytes = (new as u32).wrapping_mul(12);
+        table = if table == 0 {
             let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
             malloc(bytes)
         } else {
             let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-            realloc(tab, bytes)
+            realloc(table, bytes)
         };
-        if tab == 0 {
+        if table == 0 {
             // simplification: sem memória (a caixa "Error" da original): volta a capacidade e deixa a original refazer
             write_u32(this + 8, cap as u32);
             return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_PLAYER_RATING)(this, e);
         }
-        write_u32(this, tab as u32);
+        write_u32(this, table as u32);
     }
     let p = month_ratings_staff_by_id(id);
     let clube = read_usize(p + 0x39);
-    let mut liga = -1i32;
+    let mut league = -1i32;
     if clube != 0 {
         let l = read_usize(clube + club::DIVISION);
         if l != 0 {
-            liga = read_i32(l);
+            league = read_i32(l);
         }
     }
-    let r = tab + (n as usize) * 12;
+    let r = table + (n as usize) * 12;
     write_u32(r, id as u32);
-    write_u32(r + 4, liga as u32);
+    write_u32(r + 4, league as u32);
     core::ptr::write_unaligned((r + 8) as *mut u16, 0);
     *((r + 0xb) as *mut u8) = read_u8(p + 0x18);
     crate::comparacao::ramo("cpw_5 jogador novo no mes");
@@ -123,26 +123,26 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
 /// devolve o primeiro registro da liga (−1: qualquer) com pelo menos 3 jogos (depois 2, 1 e 0); com idade (não 0xff),
 /// os acima dela só contam e o mais novo só vale depois de 3 contados; com liga, a liga atual do clube da pessoa (+0x39,
 /// +0x57) também tem de ser a pedida. Nenhum: 0.
-pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, liga: i32, idade: u32) -> usize {
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, league: i32, age: u32) -> usize {
+    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     crate::comparacao::ramo("cpw_5 ordenou as notas");
-    ordenar(read_usize(this), read_usize(this + 4) as u32, 0xc, 0x768200); // cpw5: ordena pela média
-    let tab = read_usize(this);
+    sort(read_usize(this), read_usize(this + 4) as u32, 0xc, 0x768200); // cpw5: ordena pela média
+    let table = read_usize(this);
     let n = read_i32(this + 4);
-    let idade = idade as u8;
+    let age = age as u8;
     let mut contados = 0i32;
-    let mut minimo = 3i8;
+    let mut minimum = 3i8;
     loop {
         for k in 0..n.max(0) as usize {
-            let r = tab + k * 12;
-            if liga != -1 && read_i32(r + 4) != liga {
+            let r = table + k * 12;
+            if league != -1 && read_i32(r + 4) != league {
                 continue;
             }
-            if (read_u8(r + 0xa) as i8) < minimo {
+            if (read_u8(r + 0xa) as i8) < minimum {
                 continue;
             }
-            if idade != 0xff {
-                if read_u8(r + 0xb) as i8 > idade as i8 {
+            if age != 0xff {
+                if read_u8(r + 0xb) as i8 > age as i8 {
                     contados += 1;
                     continue;
                 }
@@ -150,19 +150,19 @@ pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, liga: i32, 
                     continue;
                 }
             }
-            if liga == -1 {
+            if league == -1 {
                 return r;
             }
             let c = read_usize(month_ratings_staff_by_id(read_i32(r)) + 0x39);
             if c != 0 {
                 let l = read_usize(c + 0x57);
-                if l != 0 && read_i32(l) == liga {
+                if l != 0 && read_i32(l) == league {
                     return r;
                 }
             }
         }
-        minimo -= 1;
-        if minimo < 0 {
+        minimum -= 1;
+        if minimum < 0 {
             return 0;
         }
     }

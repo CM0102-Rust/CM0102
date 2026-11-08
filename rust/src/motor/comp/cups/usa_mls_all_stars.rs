@@ -16,7 +16,7 @@ use super::*;
 /// (`inscritos`, mov ecx, esi; call direto -> thiscall, ret 0), as rodadas (virtual +0x8c) e a árvore dos confrontos
 /// (virtual +0x94); por fim, com `previstas`, as posições previstas (virtual +0x5c), cujo eax ela devolve (o Jogo das
 /// Estrelas não as tem: devolve o eax da árvore).
-pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, inscritos: usize, arquivo: usize, linhas: [u32; 3], ano: i16, previstas: bool, ramo: &'static str) -> u32 {
+pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, inscritos: usize, file: usize, rows: [u32; 3], year: i16, predicted: bool, ramo: &'static str) -> u32 {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     write_u32_from_usize(this + 0x4c, 0);
     for o in [0xa7usize, 0xa3] {
@@ -45,26 +45,26 @@ pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, inscrit
         arquivar(e, 1);
     }
     let a = read_i16(this + 0x40);
-    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
+    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(year));
     crate::comparacao::ramo(ramo);
     *((this + 0xab) as *mut u8) = 0;
     *((this + 0xb1) as *mut u8) = 0;
     let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(inscritos);
     // simplification: nas caixas a original sai com o eax da caixa (0x5e8290); quem chama a virada não lê a devolução
     if inscritos(this) < 0 {
-        show_error_at(arquivo, linhas[0]);
+        show_error_at(file, rows[0]);
         return 0;
     }
     if call_cup_virtual(this, 0x8c) < 0 {
-        show_error_at(arquivo, linhas[1]);
+        show_error_at(file, rows[1]);
         return 0;
     }
     let r = call_cup_virtual(this, 0x94);
     if r < 0 {
-        show_error_at(arquivo, linhas[2]);
+        show_error_at(file, rows[2]);
         return 0;
     }
-    if !previstas {
+    if !predicted {
         return r as u32;
     }
     call_cup_virtual(this, 0x5c) as u32
@@ -148,16 +148,16 @@ pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
     };
     let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let mut k = sortear(6) as u8; // cqr6: o estádio sorteado entre 6
-    let divisao: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(FN_USA_MLS_GET_CLUB_DIVISION);
+    let division: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(FN_USA_MLS_GET_CLUB_DIVISION);
     let mut i = 0usize;
     while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = usa_mls_all_stars_club_by_index(i);
-        let liga = read_u32_as_usize(c + 0x57);
-        if liga != 0 && read_u32_as_usize(liga) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && divisao(c) as i32 == conferencia {
+        let league = read_u32_as_usize(c + 0x57);
+        if league != 0 && read_u32_as_usize(league) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && division(c) as i32 == conferencia {
             if k == 0 {
                 crate::comparacao::ramo("cqr_6 estadio do jogo das estrelas");
-                let primeiro = read_u32_as_usize(read_u32_as_usize(this + 0xa7));
-                write_u32_from_usize(primeiro + 0x69, read_u32_as_usize(c + 0x69)); // cqr6: o estádio do clube sorteado
+                let first = read_u32_as_usize(read_u32_as_usize(this + 0xa7));
+                write_u32_from_usize(first + 0x69, read_u32_as_usize(c + 0x69)); // cqr6: o estádio do clube sorteado
                 *((read_u32_as_usize(read_u32_as_usize(this + 0xa7)) + 0x6d) as *mut u8) = 0;
                 break;
             }
@@ -198,16 +198,16 @@ pub(crate) unsafe extern "thiscall" fn set_up_teams(this: usize) -> i32 {
 /// local, sem destrutor): `UsaMlsAllStars::update_for_date(hoje, fase)`: com a fase diferente de 0, no dia de Date(26, 6,
 /// ano de hoje, dia da semana 6) (o sábado de 26 de julho em diante [inferência]), a convocação das duas seleções
 /// (0x90a980, mov ecx -> thiscall, ret 0); depois a atualização da copa.
-pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     // simplification: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
-    let ano = read_i16(hoje + 2) as u16 as u32;
-    let d = make_date_dword(0x1a, 6, ano, 6); // cqn10: a convocação do Jogo das Estrelas
-    if fase != 0 && is_date_today(d, hoje) {
+    let year = read_i16(today + 2) as u16 as u32;
+    let d = make_date_dword(0x1a, 6, year, 6); // cqn10: a convocação do Jogo das Estrelas
+    if stage != 0 && is_date_today(d, today) {
         crate::comparacao::ramo("cqn_10 convocacao do jogo das estrelas");
         let convocar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_USAMLSALLSTARS_SELECT_SQUADS);
         convocar(this);
     }
-    eng_cc_cup_cup_update_for_date(this, hoje, fase)
+    eng_cc_cup_cup_update_for_date(this, today, stage)
 }
 
 
@@ -222,14 +222,14 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: u
 /// sorteio em 15 do mês 5 (junho) levado ao dia da semana 5, o jogo em 2 do mês 7 (agosto) levado ao dia 6, turno 1,
 /// mando 0 (0x521e60 e 0x521eb0, cdecl, com o ano +0x40); nome 0, +0xd = 0x20, categoria 8, 2 times, 1 jogo, 2 novos,
 /// 1 jogo por confronto, sem prêmio.
-pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    if fase as u8 != 0xff {
+pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+    if stage as u8 != 0xff {
         return 0;
     }
-    if !saida.is_null() {
-        *saida = 0;
+    if !out.is_null() {
+        *out = 0;
     }
-    *rodadas = 1;
+    *rounds = 1;
     *extra = 0;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar(0x68);
@@ -238,11 +238,11 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
         return 0;
     }
     crate::comparacao::ramo("cqm_12 tabela do jogo das estrelas");
-    let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+    let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
     let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
-    sorteio(t, 0, 0xf, 5, 0, 5, ano);
-    jogo(t, 0, 2, 7, 0, 6, 1, ano, 0); // cqm12: o Jogo das Estrelas em 2 de agosto
+    sorteio(t, 0, 0xf, 5, 0, 5, year);
+    jogo(t, 0, 2, 7, 0, 6, 1, year, 0); // cqm12: o Jogo das Estrelas em 2 de agosto
     let w = |o: usize, v: u16| core::ptr::write_unaligned((t + o) as *mut u16, v);
     let d = |o: usize, v: u32| core::ptr::write_unaligned((t + o) as *mut u32, v);
     w(0x18, 2);

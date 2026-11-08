@@ -8,17 +8,17 @@ use super::*;
 /// [pt] Comparador da 0x5c6570: a original entrega notícias, cancela torneios e tira jogos do calendário (libera): só ela
 /// roda. Antes, a cópia acha a vaga do amistoso (0x5c6740, só leitura); depois a vaga tem de estar livre (+0x10 = 0 e
 /// +0x18 = 0).
-pub(crate) unsafe extern "thiscall" fn comparar_on_friendly_fixture_cancelled(this: usize, jogo: usize, quem: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_on_friendly_fixture_cancelled(this: usize, jogo: usize, who: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ON_FRIENDLY_FIXTURE_CANCELLED);
-    let mut vaga = 0usize;
+    let mut slot = 0usize;
     if read_usize(jogo + 0x14) == read_usize(this + 4) && read_usize(this + 0x34cc) != 0 {
-        let vaga_de: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_FRIENDLY_FIND_SCHEDULED_FRIENDLY_SLOT);
-        vaga = vaga_de(this, replace_low_word(read_usize(jogo + 0x1c), read_i16(jogo + 0x2a)), replace_low_word(read_usize(jogo + 0x14), read_i16(jogo + 0x28)),
+        let slot_of: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_FRIENDLY_FIND_SCHEDULED_FRIENDLY_SLOT);
+        slot = slot_of(this, replace_low_word(read_usize(jogo + 0x1c), read_i16(jogo + 0x2a)), replace_low_word(read_usize(jogo + 0x14), read_i16(jogo + 0x28)),
             read_usize(jogo + 0x20) as u32, read_usize(jogo + 0x1c) as u32);
     }
-    o(this, jogo, quem);
-    let livre = vaga == 0 || (read_usize(vaga + 0x10) == 0 && read_u8(vaga + 0x18) == 0);
-    PLACAR.registrar(livre, || format!("on_friendly_fixture_cancelled(jogo {:#x}) a vaga {:#x} não ficou livre", jogo, vaga));
+    o(this, jogo, who);
+    let free = slot == 0 || (read_usize(slot + 0x10) == 0 && read_u8(slot + 0x18) == 0);
+    PLACAR.registrar(free, || format!("on_friendly_fixture_cancelled(jogo {:#x}) a vaga {:#x} não ficou livre", jogo, slot));
 }
 
 /// Comparer for `friendly_cancel_national_fixture` (comparison mode: see the header of motor.rs).
@@ -34,31 +34,31 @@ pub(crate) unsafe extern "thiscall" fn comparar_friendly_cancel_national_fixture
 /// [pt] Comparador da 0x5c8260: a original entrega notícias, tira jogos do calendário e destrói a competição: só ela roda,
 /// com o plano conferido depois: o dono (+0) e a competição (+0x65) zerados, a vaga da tabela de competições zerada e
 /// o torneio fora da lista dos pendentes.
-pub(crate) unsafe extern "thiscall" fn comparar_cancel_tournament(this: usize, torneio: usize, sem_o_dono: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_cancel_tournament(this: usize, tournament: usize, without_owner: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_CANCEL_TOURNAMENT);
-    if torneio == 0 {
-        o(this, torneio, sem_o_dono);
+    if tournament == 0 {
+        o(this, tournament, without_owner);
         return;
     }
-    let k = (read_i16(this + 0xaf) as i32 + read_u8(torneio + 0x64) as i8 as i32) as usize;
-    let vaga = read_usize(G_COMP_OBJECT_TABLE).wrapping_add(k.wrapping_mul(4));
-    o(this, torneio, sem_o_dono);
+    let k = (read_i16(this + 0xaf) as i32 + read_u8(tournament + 0x64) as i8 as i32) as usize;
+    let slot = read_usize(G_COMP_OBJECT_TABLE).wrapping_add(k.wrapping_mul(4));
+    o(this, tournament, without_owner);
     let mut in_list = false;
     let p = read_usize(this + 0x34d0);
     if p != 0 {
         let mut no = read_usize(p + 2);
         let mut n = 0;
         while no != 0 && n < 0x10000 {
-            if read_usize(read_usize(no)) == torneio {
+            if read_usize(read_usize(no)) == tournament {
                 in_list = true;
             }
             no = read_usize(no + 6);
             n += 1;
         }
     }
-    let ok = read_usize(torneio) == 0 && read_usize(torneio + 0x65) == 0 && read_usize(vaga) == 0 && !in_list;
+    let ok = read_usize(tournament) == 0 && read_usize(tournament + 0x65) == 0 && read_usize(slot) == 0 && !in_list;
     PLACAR.registrar(ok, || format!("cancel_tournament(torneio {:#x}) dono {:#x} competição {:#x} vaga {:#x} na lista {}",
-        torneio, read_usize(torneio), read_usize(torneio + 0x65), read_usize(vaga), in_list));
+        tournament, read_usize(tournament), read_usize(tournament + 0x65), read_usize(slot), in_list));
 }
 
 /// Comparer for `arrange_international_friendlies` (comparison mode: see the header of motor.rs).
@@ -114,15 +114,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_arrange_international_friendlies
 /// [pt] Comparador: lado a lado pelo texto e a devolução (as listas locais nascem e morrem nas duas); com a caixa, só a
 /// original.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_friendly_check_match_invitation(this: usize, a: usize, b: usize, clube: usize, dia: u32,
-    ano: u32, data: usize, texto: usize, tamanho: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_friendly_check_match_invitation(this: usize, a: usize, b: usize, clube: usize, day: u32,
+    year: u32, data: usize, text: usize, size: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, usize, usize, u32) -> u32>(IDX_FRIENDLY_CHECK_MATCH_INVITATION);
-    if texto != 0 && (tamanho as i16) < 100 {
-        return o(this, a, b, clube, dia, ano, data, texto, tamanho);
+    if text != 0 && (size as i16) < 100 {
+        return o(this, a, b, clube, day, year, data, text, size);
     }
-    let reg = news_text_regions(texto, tamanho);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, a, b, clube, dia, ano, data, texto, tamanho),
-        || friendly_check_match_invitation(this, a, b, clube, dia, ano, data, texto, tamanho));
+    let reg = news_text_regions(text, size);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, a, b, clube, day, year, data, text, size),
+        || friendly_check_match_invitation(this, a, b, clube, day, year, data, text, size));
     PLACAR.registrar(igual && r == n, || format!("friendly_check_match_invitation(a {:x}, b {:x}, clube {:x}, data {:x}) original={} rust={} {:x?} x {:x?}",
         a, b, clube, data, r, n, mo, mr));
     r
@@ -131,16 +131,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_friendly_check_match_invitation(
 /// Comparer for `friendly_check_tournament_invitation` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pelo texto e a devolução; com a caixa, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_friendly_check_tournament_invitation(this: usize, clube: usize, torneio: usize, texto: usize, tamanho: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_friendly_check_tournament_invitation(this: usize, clube: usize, tournament: usize, text: usize, size: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> u32>(IDX_FRIENDLY_CHECK_TOURNAMENT_INVITATION);
-    if texto != 0 && (tamanho as i16) < 100 {
-        return o(this, clube, torneio, texto, tamanho);
+    if text != 0 && (size as i16) < 100 {
+        return o(this, clube, tournament, text, size);
     }
-    let reg = news_text_regions(texto, tamanho);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, torneio, texto, tamanho),
-        || friendly_check_tournament_invitation(this, clube, torneio, texto, tamanho));
+    let reg = news_text_regions(text, size);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, tournament, text, size),
+        || friendly_check_tournament_invitation(this, clube, tournament, text, size));
     PLACAR.registrar(igual && r == n, || format!("friendly_check_tournament_invitation(clube {:x}, torneio {:x}) original={} rust={} {:x?} x {:x?}",
-        clube, torneio, r, n, mo, mr));
+        clube, tournament, r, n, mo, mr));
     r
 }
 
@@ -187,8 +187,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_resolve_international_dates(this
 /// [pt] Comparador da 0x5c4770: só a original (simplification: ela libera e aloca o plano, e a 0x5c4380 aloca as listas de datas e
 /// de adversários dos candidatos; não roda duas vezes), conferindo o plano que ela deixa: o plano alocado, a capacidade
 /// (+0x34e4) não menor que a conta (+0x34e0), o +0x34dc zerado e o plano em ordem de data (a 0x778e90 entre vizinhos).
-pub(crate) unsafe extern "thiscall" fn comparar_plan_club_friendlies(this: usize, entradas: usize, ordenados: usize, conta: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_PLAN_CLUB_FRIENDLIES)(this, entradas, ordenados, conta);
+pub(crate) unsafe extern "thiscall" fn comparar_plan_club_friendlies(this: usize, entradas: usize, ordenados: usize, count: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_PLAN_CLUB_FRIENDLIES)(this, entradas, ordenados, count);
     let (p, n, cap, z) = (read_usize(this + 0x34d8), read_i32(this + 0x34e0), read_i32(this + 0x34e4), read_i32(this + 0x34dc));
     if p == 0 {
         return; // sem memória: a caixa
@@ -201,15 +201,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_plan_club_friendlies(this: usize
 /// Comparer for `add_tournament` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador da 0x5c6e00: lado a lado no torneio livre (0x69 bytes, mais o que um nome comprido passar) e a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_add_tournament(this: usize, anfitriao: usize, tipo: u32, inicio: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, nome: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_add_tournament(this: usize, anfitriao: usize, kind: u32, start: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, name: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32, u32, u32, usize, usize) -> usize>(IDX_ADD_TOURNAMENT);
     let t = free_tournament_slot(this);
-    let mut tam = 0usize;
-    while nome != 0 && *((nome + tam) as *const u8) != 0 {
-        tam += 1;
+    let mut size = 0usize;
+    while name != 0 && *((name + size) as *const u8) != 0 {
+        size += 1;
     }
-    let reg = if t != 0 { vec![(t, 0x69usize.max(0x31 + tam + 1))] } else { Vec::new() };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, anfitriao, tipo, inicio, a, b, c, d, e, convidados, nome), || add_tournament(this, anfitriao, tipo, inicio, a, b, c, d, e, convidados, nome));
+    let reg = if t != 0 { vec![(t, 0x69usize.max(0x31 + size + 1))] } else { Vec::new() };
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, anfitriao, kind, start, a, b, c, d, e, convidados, name), || add_tournament(this, anfitriao, kind, start, a, b, c, d, e, convidados, name));
     PLACAR.registrar(igual && r == n, || format!("add_tournament(anfitriao {:x}) original={:#x} {:x?} rust={:#x} {:x?}", anfitriao, r, mo, n, mr));
     r
 }
@@ -219,8 +219,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_tournament(this: usize, anfi
 /// [pt] Comparador da 0x5c68b0: lado a lado no cursor da lista (+0xa) e a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_find_human_club_open_invitation(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_FIND_HUMAN_CLUB_OPEN_INVITATION);
-    let lista = read_usize(this + 0x34c8);
-    let reg = if lista != 0 { vec![(lista + 0xa, 4)] } else { Vec::new() };
+    let list = read_usize(this + 0x34c8);
+    let reg = if list != 0 { vec![(list + 0xa, 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || find_human_club_open_invitation(this));
     PLACAR.registrar(igual && r == n, || format!("find_human_club_open_invitation original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
     r
@@ -236,13 +236,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_friendly_reply(this: usi
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_FRIENDLY_REPLY);
     LAST_FRIENDLY_REPLY = m;
     let a = if m != 0 { read_usize(m + 0xc) } else { 0 };
-    let outro = if m != 0 { other_friendly_club(m) } else { 0 };
-    if a == 0 || (outro != 0 && (read_usize(a + 0x53) == 0 || read_usize(outro + 0x53) == 0)) {
+    let other = if m != 0 { other_friendly_club(m) } else { 0 };
+    if a == 0 || (other != 0 && (read_usize(a + 0x53) == 0 || read_usize(other + 0x53) == 0)) {
         return o(this, m, forcar); // simplification: sem quem pede ou sem nação, só a original
     }
     let s = if friendly_needs_decision(m, forcar) { friendly_reply(m, false) } else { read_u8(m + 0x18) };
-    let vaga: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize = core::mem::transmute(FN_FRIENDLY_FIND_SCHEDULED_FRIENDLY_SLOT);
-    let v = if s == 3 || s == 4 { vaga(this, read_i16(m) as u16 as u32, read_i16(m + 2) as u16 as u32, read_usize(m + 0x14), read_usize(m + 0x10)) } else { 0 };
+    let slot: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize = core::mem::transmute(FN_FRIENDLY_FIND_SCHEDULED_FRIENDLY_SLOT);
+    let v = if s == 3 || s == 4 { slot(this, read_i16(m) as u16 as u32, read_i16(m + 2) as u16 as u32, read_usize(m + 0x14), read_usize(m + 0x10)) } else { 0 };
     o(this, m, forcar);
     let ok = if s == 3 || s == 4 {
         // o pedido foi liberado: só a vaga
@@ -262,9 +262,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_friendly_reply(this: usi
 /// com os nós de antes) e pode ter sido liberado (a situação não se lê).
 pub(crate) unsafe extern "thiscall" fn comparar_send_friendly_request(this: usize, m: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEND_FRIENDLY_REQUEST);
-    let outro = other_friendly_club(m);
-    let antes = list_len(read_usize(this + 0x34d4));
-    let s = if outro != 0 && read_u8(m + 0x18) == 1 && club_has_human_manager(outro) { 2 } else { read_u8(m + 0x18) };
+    let other = other_friendly_club(m);
+    let before = list_len(read_usize(this + 0x34d4));
+    let s = if other != 0 && read_u8(m + 0x18) == 1 && club_has_human_manager(other) { 2 } else { read_u8(m + 0x18) };
     LAST_FRIENDLY_REPLY = 0;
     o(this, m);
     let l = read_usize(this + 0x34d4);
@@ -273,11 +273,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_friendly_request(this: usiz
         crate::comparacao::ramo("cqa_2 pedido respondido pelo assistente");
     }
     let ok = l == 0 || if respondido {
-        list_len(l) == antes && !list_holds(l, m)
+        list_len(l) == before && !list_holds(l, m)
     } else {
-        list_len(l) == antes + 1 && list_holds(l, m) && read_u8(m + 0x18) == s
+        list_len(l) == before + 1 && list_holds(l, m) && read_u8(m + 0x18) == s
     };
-    PLACAR.registrar(ok, || format!("send_friendly_request(pedido {:x}) nós {} -> {} situação {} prevista {}", m, antes, list_len(l), read_u8(m + 0x18), s));
+    PLACAR.registrar(ok, || format!("send_friendly_request(pedido {:x}) nós {} -> {} situação {} prevista {}", m, before, list_len(l), read_u8(m + 0x18), s));
 }
 
 /// Comparer for `build_nation_list` (comparison mode: see the header of motor.rs).
@@ -286,13 +286,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_friendly_request(this: usiz
 /// mesma ordem: a conta (+0x34fe) e as nações, na ordem.
 pub(crate) unsafe extern "thiscall" fn comparar_build_nation_list(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BUILD_NATION_LIST);
-    let mut plano = nations_with_continent();
-    sort_by_reputation(plano.as_mut_ptr() as usize, plano.len() as u32);
+    let mut plan = nations_with_continent();
+    sort_by_reputation(plan.as_mut_ptr() as usize, plan.len() as u32);
     o(this);
     let p = read_usize(this + 0x34fa);
     let n = read_i32(this + 0x34fe);
-    let ok = p == 0 || (n as usize == plano.len() && (0..plano.len()).all(|k| read_usize(p + 4 * k) == plano[k]));
-    PLACAR.registrar(ok, || format!("build_nation_list: conta {} prevista {}", n, plano.len()));
+    let ok = p == 0 || (n as usize == plan.len() && (0..plan.len()).all(|k| read_usize(p + 4 * k) == plan[k]));
+    PLACAR.registrar(ok, || format!("build_nation_list: conta {} prevista {}", n, plan.len()));
 }
 
 /// Comparador: pura.
@@ -306,22 +306,22 @@ pub(crate) unsafe extern "stdcall" fn comparar_friendly_club_reputation_tier(clu
 /// Comparer for `friendly_get_rest_days_for_kind` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pura; os tipos da caixa, só a original.
-pub(crate) unsafe extern "stdcall" fn comparar_friendly_get_rest_days_for_kind(tipo: u32) -> u8 {
-    let r = original_fn::<unsafe extern "stdcall" fn(u32) -> u8>(IDX_FRIENDLY_GET_REST_DAYS_FOR_KIND)(tipo);
-    if !matches!(tipo as u8 as i8, 0..=4 | 10 | 11) {
+pub(crate) unsafe extern "stdcall" fn comparar_friendly_get_rest_days_for_kind(kind: u32) -> u8 {
+    let r = original_fn::<unsafe extern "stdcall" fn(u32) -> u8>(IDX_FRIENDLY_GET_REST_DAYS_FOR_KIND)(kind);
+    if !matches!(kind as u8 as i8, 0..=4 | 10 | 11) {
         return r;
     }
-    let n = friendly_get_rest_days_for_kind(tipo);
-    PLACAR.registrar(r == n, || format!("friendly_get_rest_days_for_kind({}) original={} rust={}", tipo as u8 as i8, r, n));
+    let n = friendly_get_rest_days_for_kind(kind);
+    PLACAR.registrar(r == n, || format!("friendly_get_rest_days_for_kind({}) original={} rust={}", kind as u8 as i8, r, n));
     r
 }
 
 /// Comparer for `friendly_update_for_date` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: anda o calendário e planeja (aloca, sorteia): só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_friendly_update_for_date(this: usize, hoje: usize, ativo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_friendly_update_for_date(this: usize, today: usize, active: u32) -> u32 {
     // simplification: cancela torneios, tira pedidos e cria amistosos (não roda duas vezes); a cópia se prova pela carreira
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_FRIENDLY_UPDATE_FOR_DATE)(this, hoje, ativo)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_FRIENDLY_UPDATE_FOR_DATE)(this, today, active)
 }
 
 /// Comparer for `plan_ai_preseason_friendlies` (comparison mode: see the header of motor.rs).
@@ -337,9 +337,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_plan_ai_preseason_friendlies(thi
 /// [pt] Comparador: grava as janelas e cria listas (não roda duas vezes): o plano antes (sem gravar), a original grava;
 /// cada candidato planejado tem de ter a janela e, quando é a ponta da tabela, uma lista em +0x12.
 pub(crate) unsafe extern "thiscall" fn comparar_set_preseason_windows(this: usize, ptrs: usize, n: i32) {
-    let plano = set_friendly_windows(ptrs, n, false);
+    let plan = set_friendly_windows(ptrs, n, false);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(IDX_SET_PRESEASON_WINDOWS)(this, ptrs, n);
-    let erros: Vec<String> = plano.iter()
+    let erros: Vec<String> = plan.iter()
         .filter(|&&(c, ini, fim, nova)| {
             core::ptr::read_unaligned((c + 0xe) as *const i16) != ini || core::ptr::read_unaligned((c + 0x10) as *const i16) != fim
                 || (nova && read_u32_as_usize(c + 0x12) == 0)
@@ -347,7 +347,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_preseason_windows(this: usiz
         .map(|&(c, ini, fim, nova)| format!("candidato {:x}: esperado {}..{} lista {} obtido {}..{} lista {:x}", c, ini, fim, nova,
             core::ptr::read_unaligned((c + 0xe) as *const i16), core::ptr::read_unaligned((c + 0x10) as *const i16), read_u32_as_usize(c + 0x12)))
         .collect();
-    PLACAR.registrar(erros.is_empty(), || format!("set_preseason_windows(n {}) {} candidatos: {}", n, plano.len(), erros.join("; ")));
+    PLACAR.registrar(erros.is_empty(), || format!("set_preseason_windows(n {}) {} candidatos: {}", n, plan.len(), erros.join("; ")));
 }
 
 /// Comparer for `schedule_tour_matches` (comparison mode: see the header of motor.rs).
@@ -388,36 +388,36 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_due_planned_friendlies(th
 /// [pt] Comparador: aloca e acrescenta à lista (não roda duas vezes): a original faz e a cópia confere o resultado com o
 /// estádio de quem joga em casa visto antes (0x5ae870, só lê): ocupado → 0; senão o amistoso devolvido tem a data,
 /// +0xc o clube, +8 = 0, +0x18 = 1 e o mandante e o visitante pelo `em_casa`.
-pub(crate) unsafe extern "thiscall" fn comparar_add_friendly_match(this: usize, clube: usize, data: usize, adversario: usize, em_casa: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_add_friendly_match(this: usize, clube: usize, data: usize, opponent: usize, in_home: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> usize>(IDX_ADD_FRIENDLY_MATCH);
-    let ocupada = home_stadium_busy_on(clube, data, adversario, em_casa);
+    let ocupada = home_stadium_busy_on(clube, data, opponent, in_home);
     let (dia, ano) = (read_u16(data), read_u16(data + 2));
-    let r = o(this, clube, data, adversario, em_casa);
-    let (casa, fora) = if em_casa != 0 { (clube, adversario) } else { (adversario, clube) };
-    let igual = if ocupada {
+    let r = o(this, clube, data, opponent, in_home);
+    let (casa, fora) = if in_home != 0 { (clube, opponent) } else { (opponent, clube) };
+    let same = if ocupada {
         r == 0
     } else {
         // simplification: r = 0 sem estar ocupada só sem memória (a caixa já saiu): não confere
         r == 0 || (read_u16(r) == dia && read_u16(r + 2) == ano && read_u32_as_usize(r + 0xc) == clube && read_u32_as_usize(r + 8) == 0
             && *((r + 0x18) as *const u8) == 1 && read_u32_as_usize(r + 0x10) == casa && read_u32_as_usize(r + 0x14) == fora)
     };
-    PLACAR.registrar(igual, || format!("add_friendly_match(clube {:x}, {}/{}, adversario {:x}, em casa {}) ocupada {} original={:x}",
-        clube, dia, ano, adversario, em_casa, ocupada, r));
+    PLACAR.registrar(same, || format!("add_friendly_match(clube {:x}, {}/{}, adversario {:x}, em casa {}) ocupada {} original={:x}",
+        clube, dia, ano, opponent, in_home, ocupada, r));
     r
 }
 
 /// Comparer for `plan_friendly_on_free_date` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_plan_friendly_on_free_date(this: usize, anfitriao: usize, casa: usize, fora: usize) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(IDX_PLAN_FRIENDLY_ON_FREE_DATE)(this, anfitriao, casa, fora)
+pub(crate) unsafe extern "thiscall" fn comparar_plan_friendly_on_free_date(this: usize, anfitriao: usize, home: usize, away: usize) -> u32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(IDX_PLAN_FRIENDLY_ON_FREE_DATE)(this, anfitriao, home, away)
 }
 
 /// Comparer for `friendly_is_club_free_on_date` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a cópia roda com a lista provisória dela, como a original: pela devolução.
-pub(crate) unsafe extern "stdcall" fn comparar_friendly_is_club_free_on_date(data: usize, clube: usize, tipo: u32) -> u32 {
-    let r = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32) -> u32>(IDX_FRIENDLY_IS_CLUB_FREE_ON_DATE)(data, clube, tipo);
-    let n = friendly_is_club_free_on_date(data, clube, tipo);
-    PLACAR.registrar(r == n, || format!("friendly_is_club_free_on_date(data {:x}, clube {:x}, tipo {}) original={} rust={}", data, clube, tipo as u8 as i8, r, n));
+pub(crate) unsafe extern "stdcall" fn comparar_friendly_is_club_free_on_date(data: usize, clube: usize, kind: u32) -> u32 {
+    let r = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32) -> u32>(IDX_FRIENDLY_IS_CLUB_FREE_ON_DATE)(data, clube, kind);
+    let n = friendly_is_club_free_on_date(data, clube, kind);
+    PLACAR.registrar(r == n, || format!("friendly_is_club_free_on_date(data {:x}, clube {:x}, tipo {}) original={} rust={}", data, clube, kind as u8 as i8, r, n));
     r
 }
 
@@ -456,10 +456,10 @@ pub(crate) unsafe extern "C" fn comparar_compare_fixture_records_by_date(a: usiz
 /// [pt] Comparador: a 0x68d1f0 libera o que tira: o plano antes (os itens que ficam nas duas listas e a vaga do amistoso);
 /// a original roda; confere as listas, o cursor da +0x34d4 no começo e a vaga zerada. Jogo nulo ou sem a lista
 /// +0x34c8: só a original (a caixa).
-pub(crate) unsafe extern "thiscall" fn comparar_remove_friendly_match(this: usize, jogo: usize, limpar_vaga: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_remove_friendly_match(this: usize, jogo: usize, clear_slot: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_REMOVE_FRIENDLY_MATCH);
     if jogo == 0 || read_usize(this + 0x34c8) == 0 {
-        return o(this, jogo, limpar_vaga);
+        return o(this, jogo, clear_slot);
     }
     // simplification: a 0x68d1f0 acha o nó pelo conteúdo do item; o plano supõe itens de conteúdo distinto (o normal)
     let l4 = read_usize(this + 0x34d4);
@@ -468,13 +468,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_friendly_match(this: usiz
     if let Some(k) = esperado8.iter().position(|&e| e == jogo) {
         esperado8.remove(k);
     }
-    let v = if limpar_vaga != 0 {
-        let vaga: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize = core::mem::transmute(FN_FRIENDLY_FIND_SCHEDULED_FRIENDLY_SLOT);
-        vaga(this, *(jogo as *const u16) as u32, *((jogo + 2) as *const u16) as u32, read_usize(jogo + 0x14), read_usize(jogo + 0x10))
+    let v = if clear_slot != 0 {
+        let slot: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize = core::mem::transmute(FN_FRIENDLY_FIND_SCHEDULED_FRIENDLY_SLOT);
+        slot(this, *(jogo as *const u16) as u32, *((jogo + 2) as *const u16) as u32, read_usize(jogo + 0x14), read_usize(jogo + 0x10))
     } else {
         0
     };
-    let r = o(this, jogo, limpar_vaga);
+    let r = o(this, jogo, clear_slot);
     let l4 = read_usize(this + 0x34d4);
     let itens4 = if l4 != 0 { list_items_capped(l4) } else { Vec::new() };
     let itens8 = list_items_capped(read_usize(this + 0x34c8));
@@ -482,7 +482,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_friendly_match(this: usiz
         && (l4 == 0 || read_usize(l4 + 0xa) == read_usize(l4 + 2))
         && itens8 == esperado8
         && (v == 0 || (read_usize(v + 0x10) == 0 && read_u8(v + 0x18) == 0));
-    PLACAR.registrar(ok, || format!("remove_friendly_match({:#x}, {}) itens {} e {} (esperava {} e {}), vaga {:#x}", jogo, limpar_vaga, itens4.len(), itens8.len(), esperado4.len(), esperado8.len(), v));
+    PLACAR.registrar(ok, || format!("remove_friendly_match({:#x}, {}) itens {} e {} (esperava {} e {}), vaga {:#x}", jogo, clear_slot, itens4.len(), itens8.len(), esperado4.len(), esperado8.len(), v));
     r
 }
 
@@ -495,8 +495,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_banned_nation_pairs(this: u
     let ok = if v == 0 {
         read_u8(this + 0x3506) == 0
     } else {
-        let esperado = [read_usize(KEY_NATION_IRAN), read_usize(KEY_NATION_UNITED_STATES), read_usize(KEY_NATION_IRAQ), usize::MAX, read_usize(KEY_NATION_VIETNAM), read_usize(KEY_NATION_UNITED_STATES), read_usize(KEY_NATION_NORTH_KOREA), read_usize(KEY_NATION_SOUTH_KOREA)];
-        read_u8(this + 0x3506) == 4 && (0..8).all(|k| read_usize(v + 4 * k) == esperado[k])
+        let expected = [read_usize(KEY_NATION_IRAN), read_usize(KEY_NATION_UNITED_STATES), read_usize(KEY_NATION_IRAQ), usize::MAX, read_usize(KEY_NATION_VIETNAM), read_usize(KEY_NATION_UNITED_STATES), read_usize(KEY_NATION_NORTH_KOREA), read_usize(KEY_NATION_SOUTH_KOREA)];
+        read_u8(this + 0x3506) == 4 && (0..8).all(|k| read_usize(v + 4 * k) == expected[k])
     };
     PLACAR.registrar(ok, || format!("init_banned_nation_pairs: conta {} vetor {:#x}", read_u8(this + 0x3506), v));
 }
@@ -527,29 +527,29 @@ pub(crate) unsafe extern "thiscall" fn comparar_candidate_has_nearby_date(this: 
 ///
 /// [pt] Comparador: a original acrescenta (pode realocar, não roda duas vezes): o plano antes (a conta, os ids e a data),
 /// a original roda, confere o item novo e a conta.
-pub(crate) unsafe extern "thiscall" fn comparar_add_planned_friendly(this: usize, anfitriao: usize, mandante: usize, visitante: usize, data: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_add_planned_friendly(this: usize, anfitriao: usize, home: usize, away: usize, data: usize) {
     let n = read_usize(this + 0x34e0);
-    let esperado = [read_usize(data), read_usize(data + 4), 0, read_usize(anfitriao), read_usize(mandante), read_usize(visitante)];
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(IDX_ADD_PLANNED_FRIENDLY)(this, anfitriao, mandante, visitante, data);
+    let expected = [read_usize(data), read_usize(data + 4), 0, read_usize(anfitriao), read_usize(home), read_usize(away)];
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(IDX_ADD_PLANNED_FRIENDLY)(this, anfitriao, home, away, data);
     let v = read_usize(this + 0x34d8);
     if v == 0 {
         return; // sem memória: a caixa já saiu
     }
     let item = v.wrapping_add(n.wrapping_mul(0x14));
-    let feito = [read_usize(item), read_usize(item + 4), 0, read_usize(item + 8), read_usize(item + 0xc), read_usize(item + 0x10)];
-    PLACAR.registrar(feito == esperado && read_usize(this + 0x34e0) == n.wrapping_add(1), || {
-        format!("add_planned_friendly conta {} -> {}, item {:x?} (esperava {:x?})", n, read_usize(this + 0x34e0), feito, esperado)
+    let done = [read_usize(item), read_usize(item + 4), 0, read_usize(item + 8), read_usize(item + 0xc), read_usize(item + 0x10)];
+    PLACAR.registrar(done == expected && read_usize(this + 0x34e0) == n.wrapping_add(1), || {
+        format!("add_planned_friendly conta {} -> {}, item {:x?} (esperava {:x?})", n, read_usize(this + 0x34e0), done, expected)
     });
 }
 
 /// Comparer for `find_friendly_opponent` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_find_friendly_opponent(this: usize, clube: usize, lista: usize, n: u32, band: u32, excluir: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_find_friendly_opponent(this: usize, clube: usize, list: usize, n: u32, band: u32, excluir: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize>(IDX_FIND_FRIENDLY_OPPONENT);
-    let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| lista + 0x16 * i));
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, lista, n, band, excluir),
-        || crate::aleatorio::sem_contar(|| find_friendly_opponent(this, clube, lista, n, band, excluir)));
+    let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| list + 0x16 * i));
+    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, list, n, band, excluir),
+        || crate::aleatorio::sem_contar(|| find_friendly_opponent(this, clube, list, n, band, excluir)));
     PLACAR.registrar(igual && r == m, || format!("find_friendly_opponent({:x}, {:x}, n {}, band {}) original={:x} rust={:x} {:x?} x {:x?}",
-        clube, lista, n, band as i8, r, m, mo, mr));
+        clube, list, n, band as i8, r, m, mo, mr));
     r
 }
 
@@ -565,42 +565,42 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_tour_opponent(this: usize, 
 }
 
 /// Comparer for `is_own_comp_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_is_own_comp_record(amistoso: usize, competicao: usize) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_OWN_COMP_RECORD)(amistoso, competicao);
-    let n = is_own_comp_record(amistoso, competicao);
+pub(crate) unsafe extern "thiscall" fn comparar_is_own_comp_record(friendly: usize, competicao: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_OWN_COMP_RECORD)(friendly, competicao);
+    let n = is_own_comp_record(friendly, competicao);
     PLACAR.registrar(r == n, || format!("is_own_comp_record({:#x}) original={} rust={}", competicao, r, n));
     r
 }
 
 /// Comparer for `friendly_international_date_set` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_friendly_international_date_set(data: usize, dia: u8, mes: u8, duracao: u8, ano: u8, continente: u32, competicao: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_friendly_international_date_set(data: usize, day: u8, month: u8, duracao: u8, year: u8, continent: u32, competicao: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8, u8, u8, u8, u32, u32)>(IDX_FRIENDLY_INTERNATIONAL_DATE_SET);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(data, 0x14)], || o(data, dia, mes, duracao, ano, continente, competicao),
-        || friendly_international_date_set(data, dia, mes, duracao, ano, continente, competicao));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(data, 0x14)], || o(data, day, month, duracao, year, continent, competicao),
+        || friendly_international_date_set(data, day, month, duracao, year, continent, competicao));
     PLACAR.registrar(igual, || format!("friendly_international_date_set {:x?} x {:x?}", mo, mr));
 }
 
 /// Comparer for `schedule_assign_opponent` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pelas vagas da agenda (até a última possível, 25 · (n + 1) + 4 bytes).
-pub(crate) unsafe extern "thiscall" fn comparar_schedule_assign_opponent(this: usize, agenda: usize, adversario: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_schedule_assign_opponent(this: usize, agenda: usize, opponent: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_SCHEDULE_ASSIGN_OPPONENT);
     let n = read_u8(agenda + 8) as i8;
     if n <= 0 {
-        return o(this, agenda, adversario);
+        return o(this, agenda, opponent);
     }
     let reg = [(agenda, 25 * (n as usize + 1) + 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, agenda, adversario), || schedule_assign_opponent(this, agenda, adversario));
-    PLACAR.registrar(igual, || format!("schedule_assign_opponent({:x}, {:x}) {:x?} x {:x?}", agenda, adversario, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, agenda, opponent), || schedule_assign_opponent(this, agenda, opponent));
+    PLACAR.registrar(igual, || format!("schedule_assign_opponent({:x}, {:x}) {:x?} x {:x?}", agenda, opponent, mo, mr));
 }
 
 /// Comparer for `register_comp_objects` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_register_comp_objects(amistoso: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_register_comp_objects(friendly: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_REGISTER_COMP_OBJECTS);
-    let tabela = *(G_COMP_OBJECT_TABLE as *const usize) as isize;
-    let base = core::ptr::read_unaligned((amistoso + 0xaf) as *const i16) as isize;
-    let reg = [((tabela + *(KEY_CLUB_COMP_FRIENDLY as *const i32) as isize * 4) as usize, 4), ((tabela + base * 4) as usize, 0x7f * 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(amistoso), || register_comp_objects(amistoso));
+    let table = *(G_COMP_OBJECT_TABLE as *const usize) as isize;
+    let base = core::ptr::read_unaligned((friendly + 0xaf) as *const i16) as isize;
+    let reg = [((table + *(KEY_CLUB_COMP_FRIENDLY as *const i32) as isize * 4) as usize, 4), ((table + base * 4) as usize, 0x7f * 4)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(friendly), || register_comp_objects(friendly));
     PLACAR.registrar(igual, || format!("register_comp_objects {:x?} x {:x?}", mo, mr));
 }
 
@@ -616,8 +616,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_international_friendlies(
     }
     if let Some((primeira, quantas)) = update_friendlies_body(this, true) {
         o(this);
-        let dia = read_u16(this + 0x34f4);
-        PLACAR.registrar(dia == read_u16(G_CURRENT_DATE), || format!("update_international_friendlies(primeira {:x}, quantas {}) dia marcado={} hoje={}", primeira, quantas, dia, read_u16(G_CURRENT_DATE)));
+        let day = read_u16(this + 0x34f4);
+        PLACAR.registrar(day == read_u16(G_CURRENT_DATE), || format!("update_international_friendlies(primeira {:x}, quantas {}) dia marcado={} hoje={}", primeira, quantas, day, read_u16(G_CURRENT_DATE)));
         return;
     }
     let mut reg = SCOUT_MANAGER_DATE_STATICS.to_vec();
@@ -629,38 +629,38 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_international_friendlies(
 /// Comparer for `find_scheduled_friendly_slot` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pelo valor (as duas voltam o cursor da lista ao começo e param no mesmo registro).
-pub(crate) unsafe extern "thiscall" fn comparar_find_scheduled_friendly_slot(this: usize, dia: u32, ano: u32, clube: usize, adversario: usize) -> usize {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize>(IDX_FIND_SCHEDULED_FRIENDLY_SLOT)(this, dia, ano, clube, adversario);
-    let n = find_scheduled_friendly_slot(this, dia, ano, clube, adversario);
-    PLACAR.registrar(r == n, || format!("find_scheduled_friendly_slot({}/{}, {:x}, {:x}) original={:#x} rust={:#x}", dia as u16, ano as u16, clube, adversario, r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_find_scheduled_friendly_slot(this: usize, day: u32, year: u32, clube: usize, opponent: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize>(IDX_FIND_SCHEDULED_FRIENDLY_SLOT)(this, day, year, clube, opponent);
+    let n = find_scheduled_friendly_slot(this, day, year, clube, opponent);
+    PLACAR.registrar(r == n, || format!("find_scheduled_friendly_slot({}/{}, {:x}, {:x}) original={:#x} rust={:#x}", day as u16, year as u16, clube, opponent, r, n));
     r
 }
 
 /// Comparer for `remove_club_from_ai_plans` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_remove_club_from_ai_plans(amistosos: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_CLUB_FROM_AI_PLANS);
-    let mut regioes = vec![];
-    let vetor = *((amistosos + 0x34d8) as *const usize);
+    let mut regions = vec![];
+    let array = *((amistosos + 0x34d8) as *const usize);
     let n = *((amistosos + 0x34e0) as *const i32);
-    if vetor != 0 && n > 0 {
-        regioes.push((vetor, n as usize * 0x14));
+    if array != 0 && n > 0 {
+        regions.push((array, n as usize * 0x14));
     }
-    let lista = *((amistosos + 0x34c8) as *const usize);
-    if lista != 0 {
+    let list = *((amistosos + 0x34c8) as *const usize);
+    if list != 0 {
         // o cursor e o ponteiro +0xc de cada amistoso da lista (percorrida aqui antes; as duas
         // rotinas reiniciam o cursor)
-        regioes.push((lista + 0xa, 4));
-        let prox: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-        core::ptr::write_unaligned((lista + 0xa) as *mut u32, core::ptr::read_unaligned((lista + 2) as *const u32));
+        regions.push((list + 0xa, 4));
+        let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
+        core::ptr::write_unaligned((list + 0xa) as *mut u32, core::ptr::read_unaligned((list + 2) as *const u32));
         loop {
-            let e = prox(lista);
+            let e = next(list);
             if e == 0 {
                 break;
             }
-            regioes.push((e + 0xc, 4));
+            regions.push((e + 0xc, 4));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(amistosos, clube),
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(amistosos, clube),
         || remove_club_from_ai_plans(amistosos, clube));
     PLACAR.registrar(igual, || format!("remove_club_from_ai_plans({:#x}) {:x?} x {:x?}", clube, mo, mr));
 }
@@ -676,11 +676,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_pick_tour_nation(this: usize, cl
 }
 
 /// Comparer for `friendly_international_date_resolve` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_friendly_international_date_resolve(this: usize, ano: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_friendly_international_date_resolve(this: usize, year: u32) -> u32 {
     let o = original_fn::<usize>(IDX_FRIENDLY_INTERNATIONAL_DATE_RESOLVE);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 11)], || call_original_with_year(o, this, ano),
-        || friendly_international_date_resolve(this, ano));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 11)], || call_original_with_year(o, this, year),
+        || friendly_international_date_resolve(this, year));
     PLACAR.registrar(igual /* o eax é lixo de pilha: só a memória */, || format!("friendly_international_date_resolve({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}",
-        this, ano, r, n, mo, mr));
+        this, year, r, n, mo, mr));
     r
 }

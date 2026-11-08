@@ -5,7 +5,7 @@ MUTACOES = [
     ('a_guardada', "    if comp == *((this + 4) as *const usize) {\n        return 1;", "    if comp == *((this + 4) as *const usize) {\n        return 0;"),
     ('a_127', "wrapping_sub(0x7f)) as u32", "wrapping_sub(0x7e)) as u32"),
     ('c_maior', "    if id >= *(G_STAFF_COUNT as *const i32) {", "    if id > *(G_STAFF_COUNT as *const i32) {"),
-    ('c_79', "(tabela as isize + 79 * id as isize)", "(tabela as isize + 80 * id as isize)"),
+    ('c_79', "(table as isize + 79 * id as isize)", "(table as isize + 80 * id as isize)"),
     ('c_neg', "    if i < 0 {\n        return 0;\n    }\n    (*(this", "    if i < -1 {\n        return 0;\n    }\n    (*(this"),
     ('c_80', "wrapping_add((80 * i) as usize)", "wrapping_add((79 * i) as usize)"),
     ('s_2', "wrapping_mul(2));", "wrapping_mul(3));"),

@@ -14,8 +14,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_match_ratings(this: usize
         // simplification: a tabela pode crescer (realloc): só a original; a 0x767fa0 compara cada nota
         return o(this, jogo, partida);
     }
-    let regioes = [(this, 12), (tab, (n as usize + 40) * 12)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, jogo, partida), || record_match_ratings(this, jogo, partida));
+    let regions = [(this, 12), (tab, (n as usize + 40) * 12)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, jogo, partida), || record_match_ratings(this, jogo, partida));
     PLACAR.registrar(igual, || format!("record_match_ratings(this {:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
@@ -26,25 +26,25 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_match_ratings(this: usize
 pub(crate) unsafe extern "thiscall" fn comparar_add_player_rating(this: usize, e: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_PLAYER_RATING);
     let (tab, n, cap) = (read_usize(this), read_i32(this + 4), read_i32(this + 8));
-    let achou = tab != 0 && (0..n.max(0) as usize).any(|k| read_i32(tab + k * 12) == read_i32(e));
-    if tab == 0 || n < 0 || (n >= cap && !achou) {
+    let found = tab != 0 && (0..n.max(0) as usize).any(|k| read_i32(tab + k * 12) == read_i32(e));
+    if tab == 0 || n < 0 || (n >= cap && !found) {
         // simplification: a tabela cresce (malloc/realloc): só a original
         return o(this, e);
     }
-    let vagas = if n < cap { n as usize + 1 } else { n as usize };
-    let regioes = [(this, 12), (tab, vagas * 12)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, e), || add_player_rating(this, e));
+    let slots = if n < cap { n as usize + 1 } else { n as usize };
+    let regions = [(this, 12), (tab, slots * 12)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, e), || add_player_rating(this, e));
     PLACAR.registrar(igual, || format!("add_player_rating(pessoa {}) original={:x?} rust={:x?}", read_i32(e), mo, mr));
 }
 
 /// Comparer for `find_best_player` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] O comparador do melhor do mês: lado a lado pela tabela ordenada e pelo registro devolvido.
-pub(crate) unsafe extern "thiscall" fn comparar_find_best_player(this: usize, liga: i32, idade: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_find_best_player(this: usize, league: i32, age: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, u32) -> usize>(IDX_FIND_BEST_PLAYER);
     let (tab, n) = (read_usize(this), read_i32(this + 4));
-    let regioes: Vec<(usize, usize)> = if tab != 0 && n > 0 { vec![(tab, n as usize * 12)] } else { Vec::new() };
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, liga, idade), || find_best_player(this, liga, idade));
-    PLACAR.registrar(igual && r == m, || format!("find_best_player(liga {}, idade {}) original={:#x} {:x?} rust={:#x} {:x?}", liga, idade as u8 as i8, r, mo, m, mr));
+    let regions: Vec<(usize, usize)> = if tab != 0 && n > 0 { vec![(tab, n as usize * 12)] } else { Vec::new() };
+    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, league, age), || find_best_player(this, league, age));
+    PLACAR.registrar(igual && r == m, || format!("find_best_player(liga {}, idade {}) original={:#x} {:x?} rust={:#x} {:x?}", league, age as u8 as i8, r, mo, m, mr));
     r
 }

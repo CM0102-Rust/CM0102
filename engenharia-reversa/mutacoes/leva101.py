@@ -1,6 +1,6 @@
 # Mutacoes da leva101 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva101.py --jogo 2001-08-20
 MUTACOES = [
-    ('g_1000', "    let pega = forca <= 1000 && {", "    let pega = forca <= 999 && {"),
+    ('g_1000', "    let pega = strength <= 1000 && {", "    let pega = strength <= 999 && {"),
     ('g_20', "        sortear(n) < sortear(0x14)", "        sortear(n) < sortear(0x15)"),
     ('g_espalma', "    let espalma = byte(j, 0x106) as i32 > sortear(8);", "    let espalma = byte(j, 0x106) as i32 >= sortear(8);"),
     ('g_2b', "    *b2 = (*b2).wrapping_add(sortear(if espalma { 2 } else { 3 }) as i8);", "    *b2 = (*b2).wrapping_add(sortear(if espalma { 3 } else { 3 }) as i8);"),

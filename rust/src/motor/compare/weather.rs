@@ -27,8 +27,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_club_finance(this: usize, cl
 /// [pt] Comparador: lado a lado nos 4 bytes da saída.
 pub(crate) unsafe extern "thiscall" fn comparar_get_match_weather(this: usize, s: *mut u8, jogo: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u8, usize)>(IDX_GET_MATCH_WEATHER);
-    let regioes = [(s as usize, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, s, jogo), || get_match_weather(this, s, jogo));
+    let regions = [(s as usize, 4)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regions, || o(this, s, jogo), || get_match_weather(this, s, jogo));
     PLACAR.registrar(igual, || format!("get_match_weather(jogo {:#x}) {:x?} x {:x?}", jogo, mo.0, mr.0));
 }
 

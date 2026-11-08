@@ -1,9 +1,9 @@
 # Mutações da 268a leva (itens cqe_1, cqe_2, cqe_3, cqe_4, cqe_5, cqe_6). Uso: python mutacoes.py mutacoes\leva268.py --carreira 2002-06-01
 MUTACOES = [
-    ('cqe1_aceita_menos', 'if v as f64 * read_f64_at(0x969520) < pedido_f && troca_recusada == 0 { // cqe1: a opção × 0,85 abaixo do pedido', 'if v as f64 * 1.2 < pedido_f && troca_recusada == 0 { // mutacao: a opção × 1,2 abaixo do pedido', 'cqe_1 aceita'),
-    ('cqe1_sem_contraproposta', 'if v as f64 * read_f64_at(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 { // cqe1: a contraproposta', 'if v as f64 * read_f64_at(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 && false { // mutacao: sem contraproposta', 'cqe_1 contraproposta'),
-    ('cqe1_preco_sempre_o_piso', 'let preco = if k > piso { // cqe1: o preço pelo valor k', 'let preco = if k > piso && false { // mutacao: sempre o piso', 'cqe_1 preço pelo k'),
-    ('cqe2_preco_pela_metade', 'write_u32_from_usize(nova + 0x1b, valor as u32 as usize); // cqe2: o preço da opção', 'write_u32_from_usize(nova + 0x1b, (valor / 2) as u32 as usize); // mutacao: a metade', 'cqe_2 opção montada'),
+    ('cqe1_aceita_menos', 'if v as f64 * read_f64_at(0x969520) < request_f && troca_recusada == 0 { // cqe1: a opção × 0,85 abaixo do pedido', 'if v as f64 * 1.2 < request_f && troca_recusada == 0 { // mutacao: a opção × 1,2 abaixo do pedido', 'cqe_1 aceita'),
+    ('cqe1_sem_contraproposta', 'if v as f64 * read_f64_at(0x969040) < request_f && kind != 1 && kind != 2 && ensaio == 0 { // cqe1: a contraproposta', 'if v as f64 * read_f64_at(0x969040) < request_f && kind != 1 && kind != 2 && ensaio == 0 && false { // mutacao: sem contraproposta', 'cqe_1 contraproposta'),
+    ('cqe1_preco_sempre_o_piso', 'let preco = if k > floor { // cqe1: o preço pelo valor k', 'let preco = if k > floor && false { // mutacao: sempre o piso', 'cqe_1 preço pelo k'),
+    ('cqe2_preco_pela_metade', 'write_u32_from_usize(new + 0x1b, value as u32 as usize); // cqe2: o preço da opção', 'write_u32_from_usize(new + 0x1b, (value / 2) as u32 as usize); // mutacao: a metade', 'cqe_2 opção montada'),
     ('cqe2_lista_do_vendedor_invertida', 'if read_u8(reg + 4) == 0 { // cqe2: o vendedor sem lista de observação ativa', 'if read_u8(reg + 4) != 0 { // mutacao: invertido', 'cqe_2 opção montada'),
     ('cqe2_so_o_alvo', 'if id <= -1 { // cqe2: a vaga sem alvo', 'if true { // mutacao: so o alvo', 'cqe_2 vaga com alvo'),
     ('cqe3_lance_mais_dificil', 'let r1 = sorteio((read_i16(clube + club::REPUTATION) as i32).wrapping_mul(2).wrapping_add(1000)); // cqe3: o sorteio do lance', 'let r1 = sorteio((read_i16(clube + 0x80) as i32).wrapping_mul(2).wrapping_add(2000)); // mutacao: + 2000', 'cqe_3 sorteio do lance'),
@@ -13,9 +13,9 @@ MUTACOES = [
     ('cqe4_fator_reputacao_dobrado', 'let mut e0 = dv * k(0x96f960) + k(0x967890); // cqe4: o fator da reputação comparada', 'let mut e0 = dv * k(0x96f960) * 2.0 + k(0x967890); // mutacao: o dobro da inclinacao', 'cqe_4 fator da reputacao'),
     ('cqe4_pedida_maior', 'let mut q = k(0x968e38) / base; // cqe4: a pedida pelo interesse', 'let mut q = k(0x968e38) * 1.5 / base; // mutacao: pedida 50% maior', 'cqe_4 salario'),
     ('cqe5_um_ao_mesmo_tempo', 'if n > 1 { // cqe5: dois ao mesmo tempo', 'if n > 0 { // mutacao: um ao mesmo tempo', 'cqe_5 dois ao mesmo tempo'),
-    ('cqe5_mesma_divisao_qualquer', 'if comp == read_usize(dono + 0x57) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {', 'if comp == read_usize(dono + 0x57) && comp != 0 { // mutacao: qualquer divisao', 'cqe_5 mesma divisao'),
+    ('cqe5_mesma_divisao_qualquer', 'if comp == read_usize(owner + 0x57) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {', 'if comp == read_usize(owner + 0x57) && comp != 0 { // mutacao: qualquer divisao', 'cqe_5 mesma divisao'),
     ('cqe5_conta_tres', '*(p as *mut u8) = read_u8(p).wrapping_add(1); // cqe5: a conta da temporada', '*(p as *mut u8) = read_u8(p).wrapping_add(3); // mutacao: soma 3', 'cqe_5 emprestimo contado'),
-    ('cqe6_quatro_meses', '*fim_mes = (*ini_mes).wrapping_add(3); // cqe6: três meses', '*fim_mes = (*ini_mes).wrapping_add(4); // mutacao: quatro meses', 'cqe_6 inglaterra tres meses'),
-    ('cqe6_comeco_dois_meses', '*ini_mes = (mes(G_CURRENT_DATE) as i8).wrapping_add(1); // cqe6: o mês seguinte (Inglaterra)', '*ini_mes = (mes(G_CURRENT_DATE) as i8).wrapping_add(2); // mutacao: dois meses adiante', 'cqe_6 inglaterra tres meses'),
+    ('cqe6_quatro_meses', '*end_month = (*ini_month).wrapping_add(3); // cqe6: três meses', '*end_month = (*ini_month).wrapping_add(4); // mutacao: quatro meses', 'cqe_6 inglaterra tres meses'),
+    ('cqe6_comeco_dois_meses', '*ini_month = (month(G_CURRENT_DATE) as i8).wrapping_add(1); // cqe6: o mês seguinte (Inglaterra)', '*ini_month = (month(G_CURRENT_DATE) as i8).wrapping_add(2); // mutacao: dois meses adiante', 'cqe_6 inglaterra tres meses'),
     ('cqe6_base_abaixo_de_21', '< 0x18 { // cqe6: abaixo de 24 anos', '< 0x15 { // mutacao: abaixo de 21 anos', 'cqe_6 inglaterra periodo da base'),
 ]

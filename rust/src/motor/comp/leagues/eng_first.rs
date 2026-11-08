@@ -11,12 +11,12 @@ pub(crate) type EngFirstScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, 
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-pub(crate) unsafe fn eng_first_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[EngFirstScheduleRound]) {
+pub(crate) unsafe fn eng_first_set_league_rounds(t: usize, year: u32, first: i32, table: &[EngFirstScheduleRound]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
-    for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
-        let i = primeira + k as i32;
-        data(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, ano, 0);
+    for (k, &(dia, mes, anos, semana, codigo, faixas)) in table.iter().enumerate() {
+        let i = first + k as i32;
+        data(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, year, 0);
         for (j, &(a, b, c)) in faixas.iter().enumerate() {
             band(t, i, j as i32, a as i32, b as i32, c as i32, 0);
         }
@@ -40,22 +40,22 @@ pub(crate) struct EngFirstChristmasSchedule {
 
 /// Sets the rounds around Christmas: start rounds, the middle block chosen by the weekday of the reference date, and
 /// end rounds.
-pub(crate) unsafe fn eng_first_set_christmas_rounds(t: usize, ano: u32, n: &EngFirstChristmasSchedule, arquivo: usize) {
-    let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
-    eng_first_set_league_rounds(t, ano, 0, n.comeco);
+pub(crate) unsafe fn eng_first_set_christmas_rounds(t: usize, year: u32, n: &EngFirstChristmasSchedule, file: usize) {
+    let construct: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
+    eng_first_set_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
-    construir(&mut d, 1, 0xb, ano, 0xffff_ffff);
-    let dia = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
-    let k = (dia.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
+    construct(&mut d, 1, 0xb, year, 0xffff_ffff);
+    let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
+    let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
     let caso = if k as u32 > 6 {
-        show_error_at(arquivo, n.linha);
+        show_error_at(file, n.linha);
         7
     } else {
         k as usize
     };
-    let meio = n.casos[caso];
-    eng_first_set_league_rounds(t, ano, n.comeco.len() as i32, meio);
-    eng_first_set_league_rounds(t, ano, (n.comeco.len() + meio.len()) as i32, n.fim);
+    let middle = n.casos[caso];
+    eng_first_set_league_rounds(t, year, n.comeco.len() as i32, middle);
+    eng_first_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.fim);
 }
 
 /// Side-by-side comparer of a round table: outputs and written bytes must match; frees the copy's table.
@@ -63,21 +63,21 @@ pub(crate) unsafe fn eng_first_set_christmas_rounds(t: usize, ano: u32, n: &EngF
 /// [pt] Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
 /// `written_league_round_bytes`; nas outras as de copa, `eng_cc_cup_written_round_bytes`); a tabela da cópia é solta (0x9452ca, cdecl).
-pub(crate) unsafe fn eng_first_compare_round_table(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
-                       original: impl FnOnce() -> usize, copia: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
+pub(crate) unsafe fn eng_first_compare_round_table(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32,
+                       original: impl FnOnce() -> usize, copy: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
-    let pl2 = if liga.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copia(&mut r2, &mut e2, pl2));
+    let pl2 = if league.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copy(&mut r2, &mut e2, pl2));
     let gravou = a != 0 || b != 0;
-    let saidas = !gravou || (*rodadas == r2 && *extra == e2 && (liga.is_null() || *liga == l2));
-    let tabela = if a != 0 && b != 0 {
-        if fase as u8 == 0xff {
-            let n = *rodadas as usize;
+    let outs = !gravou || (*rounds == r2 && *extra == e2 && (league.is_null() || *league == l2));
+    let table = if a != 0 && b != 0 {
+        if stage as u8 == 0xff {
+            let n = *rounds as usize;
             written_league_round_bytes(a, a, n) == written_league_round_bytes(b, a, n)
         } else {
-            eng_cc_cup_written_round_bytes(a, *rodadas) == eng_cc_cup_written_round_bytes(b, *rodadas)
+            eng_cc_cup_written_round_bytes(a, *rounds) == eng_cc_cup_written_round_bytes(b, *rounds)
         }
     } else {
         a == 0 && b == 0
@@ -85,7 +85,7 @@ pub(crate) unsafe fn eng_first_compare_round_table(nome: &str, fase: u32, rodada
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} tabela {}", nome, fase as u8 as i8, saidas, tabela));
+    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
     a
 }
 
@@ -323,14 +323,14 @@ pub(crate) const PREMIERSHIP_CHRISTMAS: EngFirstChristmasSchedule = EngFirstChri
 /// [pt] { 0x571980 } (thiscall, ret 0x10, eng_first.cpp, 4.688 bytes, método +0x3c): `EngFirst::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a fase −1, 46 rodadas (`DIVISION_ONE_CHRISTMAS`, as datas da segunda com faixas de TV);
 /// a fase 0, os play-offs; as outras devolvem 0. Fonte 0x9c4374.
-pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    match fase as u8 {
+    match stage as u8 {
         0xff => {
-            if !liga.is_null() {
-                *liga = 1;
+            if !league.is_null() {
+                *league = 1;
             }
-            *rodadas = 46;
+            *rounds = 46;
             *extra = 0;
             let t = alocar(0xbae);
             if t == 0 {
@@ -338,15 +338,15 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, fa
                 return 0;
             }
             crate::comparacao::ramo("cqp_5 calendario da primeira inglesa");
-            let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
-            eng_first_set_christmas_rounds(t, ano, &DIVISION_ONE_CHRISTMAS, 0x9c4374);
+            let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+            eng_first_set_christmas_rounds(t, year, &DIVISION_ONE_CHRISTMAS, 0x9c4374);
             t
         }
         0 => {
-            if !liga.is_null() {
-                *liga = 0;
+            if !league.is_null() {
+                *league = 0;
             }
-            *rodadas = 2;
+            *rounds = 2;
             *extra = 0xa0;
             let t = alocar(0xd0);
             if t == 0 {
@@ -354,9 +354,9 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, fa
                 return 0;
             }
             crate::comparacao::ramo("cqp_5 play-offs da primeira inglesa");
-            let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
-            eng_cc_cup_write_cup_round(t, 0, &DIVISION_ONE_PLAYOFF_0, ano);
-            eng_cc_cup_write_cup_round(t, 1, &FIRST_DIVISION_PLAYOFF_1, ano);
+            let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+            eng_cc_cup_write_cup_round(t, 0, &DIVISION_ONE_PLAYOFF_0, year);
+            eng_cc_cup_write_cup_round(t, 1, &FIRST_DIVISION_PLAYOFF_1, year);
             t
         }
         _ => 0,
@@ -372,8 +372,8 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, fa
 /// Club of row k of the league table (+0xb1, 0x3b bytes).
 ///
 /// [pt] O clube da linha `k` da tabela da liga (+0xb1, linhas de 0x3b bytes; o clube no +0).
-pub(crate) unsafe fn eng_first_league_row_club(liga: usize, k: usize) -> usize {
-    read_usize(read_usize(liga + 0xb1) + k * 0x3b)
+pub(crate) unsafe fn eng_first_league_row_club(league: usize, k: usize) -> usize {
+    read_usize(read_usize(league + 0xb1) + k * 0x3b)
 }
 
 /// Creates the play-off stage from 4 table rows: club list, round table, Cup_Stage in the first stage slot, then
@@ -388,42 +388,42 @@ pub(crate) unsafe fn eng_first_league_row_club(liga: usize, k: usize) -> usize {
 /// `a10` (ou o extra da virtual), 0x14, 0, 0, 0, 0) vai para a primeira vaga de fases ([+0xc]); a lista e a tabela de
 /// rodadas são liberadas (free 0x9452ca). Sem fase: a caixa `linha_sem_fase`; senão Cup::set_up_round (0x51c800,
 /// thiscall(fase, 0), ret 4). O quadro SEH da original só cobre o construtor (sem destrutor).
-pub(crate) unsafe fn create_playoff_stage(this: usize, linhas: [usize; 4], arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, a10: Option<u32>, nome: &'static str) {
+pub(crate) unsafe fn create_playoff_stage(this: usize, rows: [usize; 4], file: usize, row_without_list: u32, row_without_stage: u32, a10: Option<u32>, name: &'static str) {
     let n = read_u8(this + 0xbf) as i8 as i32;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let lista = alocar((n << 2) as u32);
-    if lista == 0 {
-        return show_error_at(arquivo, linha_sem_lista);
+    let list = alocar((n << 2) as u32);
+    if list == 0 {
+        return show_error_at(file, row_without_list);
     }
-    for (k, &l) in linhas.iter().enumerate() {
-        core::ptr::write_unaligned((lista + 4 * k) as *mut usize, eng_first_league_row_club(this, l));
+    for (k, &l) in rows.iter().enumerate() {
+        core::ptr::write_unaligned((list + 4 * k) as *mut usize, eng_first_league_row_club(this, l));
     }
-    crate::comparacao::ramo(nome);
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    crate::comparacao::ramo(name);
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let p = novo(0xb2);
+    let t = table(this, 0, &mut rodadas, &mut extra, 0);
+    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let p = new(0xb2);
     // simplification: a original empurra a conta, as rodadas e a palavra +0x40 em registradores inteiros com lixo nos 16 bits
     // altos; o construtor só lê as palavras ([esp+0x230], [esp+0x238], [esp+0x244] e [esp+0x250] com mov ax/dx).
-    let fase = if p != 0 {
-        let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
+    let stage = if p != 0 {
+        let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
         let a10 = a10.unwrap_or(extra as u16 as u32);
-        construir(p, this, n as u16 as u32, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, a10, 0x14, 0, 0, 0, 0)
+        construct(p, this, n as u16 as u32, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, a10, 0x14, 0, 0, 0, 0)
     } else {
         0
     };
-    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, fase);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    liberar(lista);
-    liberar(t);
-    let fase = read_usize(read_usize(this + 0xc));
-    if fase == 0 {
-        return show_error_at(arquivo, linha_sem_fase);
+    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, stage);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    free(list);
+    free(t);
+    let stage = read_usize(read_usize(this + 0xc));
+    if stage == 0 {
+        return show_error_at(file, row_without_stage);
     }
-    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    montar(fase, 0);
+    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
+    build(stage, 0);
 }
 
 /// builds the play-off stage with the 6th, 3rd, 5th and 4th of the table (ties 6th v 3rd and 5th v 4th), the round
@@ -455,28 +455,28 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_play_off_stage(this: usi
 /// plano, feito antes: os clubes das 4 linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = a conta
 /// (+0xbf), +4 = o +4 da liga e os 4 primeiros clubes da lista dela (+0xa7, 6 bytes) iguais aos do plano (como
 /// conjunto: o sorteio da rodada 0x51c800 pode reordenar as chaves).
-pub(crate) unsafe fn compare_playoff_stage(nome: &str, this: usize, linhas: [usize; 4], original: impl FnOnce()) {
-    let mut plano: [usize; 4] = [0; 4];
-    for (k, &l) in linhas.iter().enumerate() {
-        plano[k] = eng_first_league_row_club(this, l);
+pub(crate) unsafe fn compare_playoff_stage(name: &str, this: usize, rows: [usize; 4], original: impl FnOnce()) {
+    let mut plan: [usize; 4] = [0; 4];
+    for (k, &l) in rows.iter().enumerate() {
+        plan[k] = eng_first_league_row_club(this, l);
     }
     let n = read_u8(this + 0xbf) as i8 as i16;
     original();
-    let fase = read_usize(read_usize(this + 0xc));
-    if fase == 0 {
-        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", nome, this));
+    let stage = read_usize(read_usize(this + 0xc));
+    if stage == 0 {
+        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", name, this));
         return;
     }
-    let lista = read_usize(fase + 0xa7);
-    let mut achou: [usize; 4] = [0; 4];
-    for (k, a) in achou.iter_mut().enumerate() {
-        *a = read_usize(lista + 6 * k);
+    let list = read_usize(stage + 0xa7);
+    let mut found: [usize; 4] = [0; 4];
+    for (k, a) in found.iter_mut().enumerate() {
+        *a = read_usize(list + 6 * k);
     }
-    let (mut x, mut y) = (plano, achou);
+    let (mut x, mut y) = (plan, found);
     x.sort_unstable();
     y.sort_unstable();
-    let igual = x == y && read_i16(fase + 0x3e) == n && read_usize(fase + 4) == read_usize(this + 4);
-    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", nome, this, plano, fase, achou, read_i16(fase + 0x3e), n));
+    let same = x == y && read_i16(stage + 0x3e) == n && read_usize(stage + 4) == read_usize(this + 4);
+    PLACAR.registrar(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", name, this, plan, stage, found, read_i16(stage + 0x3e), n));
 }
 
 
@@ -498,8 +498,8 @@ pub(crate) unsafe extern "thiscall" fn eng_first_advance_stage(this: usize) {
 ///
 /// [pt] { 0x571680 } (thiscall, ret 8, eng_first.cpp): `EngFirst::EngFirst(ano, registro)`. A First Division: 1 fase além da
 /// liga (o play-off de acesso), sem estádio mínimo.
-pub(crate) unsafe extern "thiscall" fn construct_eng_first(this: usize, ano: u32, registro: usize) -> usize {
-    construct_english_division(this, ano, registro, &FIRST_DIVISION)
+pub(crate) unsafe extern "thiscall" fn construct_eng_first(this: usize, year: u32, record: usize) -> usize {
+    construct_english_division(this, year, record, &FIRST_DIVISION)
 }
 
 
@@ -545,7 +545,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_table(this: usize) -> u3
 ///
 /// [pt] { 0x573260 } (thiscall, ret 0x14, eng_first.cpp): `EngFirst::set_club_progress(clube, fase, atual, melhor, pior)`,
 /// a virtual +0x68 da First e da Second (da 0x684cd0 a cada linha da tabela): as vagas do mata-mata são 3 a 6.
-pub(crate) unsafe extern "thiscall" fn eng_first_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    set_club_stage_status(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8, 3, 6)
+pub(crate) unsafe extern "thiscall" fn eng_first_set_club_progress(this: usize, clube: usize, stage: u32, current: u32, best: u32, worst: u32) {
+    set_club_stage_status(this, clube, stage as u8, current as u8, best as u8, worst as u8, 3, 6)
 }
 

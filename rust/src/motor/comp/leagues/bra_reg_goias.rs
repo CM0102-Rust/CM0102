@@ -88,14 +88,14 @@ pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: usize, ano: u32,
 /// [pt] O comparador dos três: alocam e sorteiam os jogos: só a original, conferindo o que ela grava: a devolução, a
 /// vtable, o ano, o registro e a disciplina; na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c, o vetor das
 /// fases e a importância +0x51 = 0xf.
-pub(crate) unsafe fn bra_reg_goias_compare_state_league_ctor(nome: &str, this: usize, ano: u32, registro: usize, e: &BraRegGoiasStateChampionship, original: impl FnOnce() -> usize) -> usize {
+pub(crate) unsafe fn bra_reg_goias_compare_state_league_ctor(name: &str, this: usize, year: u32, record: usize, e: &BraRegGoiasStateChampionship, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && read_usize(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && read_usize(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
+    let mut ok = r == this && read_usize(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == year as u16
+        && read_usize(this + 4) == record && *((this + 0x50) as *const u8) == 7;
     if *((this + 0x44) as *const u8) == 0xff && read_usize(this + 8) != 0 {
         ok = ok && read_usize(this + 0x2c) == e.fases as usize && read_usize(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, read_usize(this), read_usize(this + 0x2c), read_usize(this + 0xc), read_usize(this + 8)));
+    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_usize(this), read_usize(this + 0x2c), read_usize(this + 0xc), read_usize(this + 8)));
     r
 }
 
@@ -135,8 +135,8 @@ pub(crate) const NORTH_CHAMPIONSHIP: BraRegGoiasStateChampionship = BraRegGoiasS
 /// Original: `BraRegGoias::BraRegGoias` (0x432b50, bra_reg_goias.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x432b50 } (thiscall, ret 8, bra_reg_goias.cpp): `BraRegGoias::BraRegGoias(ano, registro)`: o Goiano (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn construct_bra_reg_goias(this: usize, ano: u32, registro: usize) -> usize {
-    bra_reg_goias_construct_state_league(this, ano, registro, &GOIANO_STATE_CHAMPIONSHIP, 7, true, "cqt_2 goiano novo") // cqt2: a disciplina e as posições previstas do Goiano
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_goias(this: usize, year: u32, record: usize) -> usize {
+    bra_reg_goias_construct_state_league(this, year, record, &GOIANO_STATE_CHAMPIONSHIP, 7, true, "cqt_2 goiano novo") // cqt2: a disciplina e as posições previstas do Goiano
 }
 
 
@@ -146,8 +146,8 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_goias(this: usize, ano:
 /// Original: `BraRegNorth::BraRegNorth` (0x435340, bra_reg_north.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x435340 } (thiscall, ret 8, bra_reg_north.cpp): `BraRegNorth::BraRegNorth(ano, registro)`: o Norte (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn construct_bra_reg_north(this: usize, ano: u32, registro: usize) -> usize {
-    bra_reg_goias_construct_state_league(this, ano, registro, &NORTH_CHAMPIONSHIP, 7, true, "cqt_2 norte novo") // cqt2: a disciplina e as posições previstas do Norte
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_north(this: usize, year: u32, record: usize) -> usize {
+    bra_reg_goias_construct_state_league(this, year, record, &NORTH_CHAMPIONSHIP, 7, true, "cqt_2 norte novo") // cqt2: a disciplina e as posições previstas do Norte
 }
 
 
@@ -219,13 +219,13 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_goias_advance_stage_436030(this: 
 /// [0xae23b4] (0x245 bytes, [0xae235c] deles) do estadual do global `g`, na ordem do banco, cada um na linha seguinte
 /// (League::init_table_row 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve 1 se encheu.
 /// `girar` é 0 (o original: a linha k recebe o k-ésimo clube); existe só para as mutações de cada estadual.
-pub(crate) unsafe fn bra_reg_goias_create_state_league_table(this: usize, n: i16, arquivo: usize, linha: u32, g: usize, girar: u8, ramo: &'static str) -> u32 {
+pub(crate) unsafe fn bra_reg_goias_create_state_league_table(this: usize, n: i16, file: usize, row: u32, g: usize, girar: u8, ramo: &'static str) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
-        show_error_at(arquivo, linha);
+        show_error_at(file, row);
         return 0;
     }
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
@@ -280,26 +280,26 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_goias_create_table_435d80(this: u
 /// [pt] O comparador dos três: a original aloca a tabela (não roda duas vezes): só ela. O plano, feito antes: os clubes do
 /// estadual na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu (senão 0) e as linhas
 /// da tabela (+0 o clube, 0x3b bytes) com os clubes do plano, na ordem.
-pub(crate) unsafe fn bra_reg_goias_compare_state_league_table(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
-    let mut plano: Vec<usize> = Vec::new();
+pub(crate) unsafe fn bra_reg_goias_compare_state_league_table(name: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
+    let mut plan: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
-    while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
+    while i < read_usize(G_CLUB_COUNT) as i32 && (plan.len() as i16) < n {
         let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
         if is_in_state_league(clube, g) {
-            plano.push(clube);
+            plan.push(clube);
         }
         i += 1;
     }
     let r = original();
     let t = read_usize(this + 0xb1);
-    let esperado = (plano.len() as i16 == n) as u32;
-    let mut igual = r == esperado && read_i16(this + 0x3e) == n && t != 0;
-    let mut achou: Vec<usize> = Vec::new();
-    if igual {
-        achou = (0..plano.len()).map(|k| read_usize(t + k * 0x3b)).collect();
-        igual = achou == plano;
+    let expected = (plan.len() as i16 == n) as u32;
+    let mut same = r == expected && read_i16(this + 0x3e) == n && t != 0;
+    let mut found: Vec<usize> = Vec::new();
+    if same {
+        found = (0..plan.len()).map(|k| read_usize(t + k * 0x3b)).collect();
+        same = found == plan;
     }
-    PLACAR.registrar(igual, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", nome, this, r, plano, achou));
+    PLACAR.registrar(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
 

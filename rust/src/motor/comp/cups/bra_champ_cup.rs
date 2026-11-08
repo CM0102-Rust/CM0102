@@ -20,48 +20,48 @@ pub(crate) enum BraChampCupStagePlan {
 /// grupos: é_liga (se pedido) = 1, rodadas, extra; a tabela de 0x41 bytes por rodada (0x944e46; sem memória, a caixa e
 /// 0) com as datas, o ano +0x40 em 16 bits. No mata-mata: é_liga = 0, rodadas, extra = 0; a tabela de 0x68 bytes por
 /// rodada (sem memória, a caixa e 0), as rodadas pela `eng_cc_cup_write_cup_round` com o ano +0x40 com sinal e as palavras a mais.
-pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
+pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, rounds: *mut i16, extra: *mut i16, league: *mut i32, file: usize) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match f {
         BraChampCupStagePlan::Nada => 0,
         BraChampCupStagePlan::Grupos(grupos, id, linha, nome) => {
             let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
             let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
-            if !liga.is_null() {
-                *liga = 1;
+            if !league.is_null() {
+                *league = 1;
             }
-            *rodadas = grupos.len() as i16;
+            *rounds = grupos.len() as i16;
             *extra = id;
             let t = alocar(grupos.len() as u32 * 0x41);
             if t == 0 {
-                show_error_at(arquivo, linha);
+                show_error_at(file, linha);
                 return 0;
             }
             crate::comparacao::ramo(nome);
             // o ano vai com lixo nos bytes altos na original (o registrador de antes com a palavra +0x40 por cima); a
             // 0x68a160 só usa os 16 bits de baixo: a cópia passa o ano limpo
-            let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+            let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
             for (r, &(dia, mes, semana, codigo)) in grupos.iter().enumerate() {
-                data(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, ano, 0);
+                data(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, year, 0);
                 jogo(t, r as i32, 0, -1, -1, -1, 0);
             }
             t
         }
         BraChampCupStagePlan::Mata(mata, a_mais, linha, nome) => {
-            if !liga.is_null() {
-                *liga = 0;
+            if !league.is_null() {
+                *league = 0;
             }
-            *rodadas = mata.len() as i16;
+            *rounds = mata.len() as i16;
             *extra = 0;
             let t = alocar(mata.len() as u32 * 0x68);
             if t == 0 {
-                show_error_at(arquivo, linha);
+                show_error_at(file, linha);
                 return 0;
             }
             crate::comparacao::ramo(nome);
-            let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+            let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
             for (i, r) in mata.iter().enumerate() {
-                eng_cc_cup_write_cup_round(t, i as u32, r, ano);
+                eng_cc_cup_write_cup_round(t, i as u32, r, year);
             }
             for &(r, o, v) in a_mais {
                 core::ptr::write_unaligned((t + r * 0x68 + o) as *mut u16, v);
@@ -104,24 +104,24 @@ pub(crate) unsafe fn written_schedule_bytes(f: BraChampCupStagePlan, t: usize, n
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais; a tabela da cópia é
 /// liberada (0x9452ca). Na fase sem tabela só a original (nenhuma grava nada; as saídas podem nem existir).
-pub(crate) unsafe fn compare_stage_schedule(nome: &str, fase: u32, f: BraChampCupStagePlan, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+pub(crate) unsafe fn compare_stage_schedule(name: &str, stage: u32, f: BraChampCupStagePlan, rounds: *mut i16, extra: *mut i16, league: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if let BraChampCupStagePlan::Nada = f {
         let a = o();
-        PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, fase as u8 as i8, a));
+        PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
         return a;
     }
-    let (mut r2, mut e2) = (*rodadas, *extra);
-    let mut l2 = if liga.is_null() { 0 } else { *liga };
+    let (mut r2, mut e2) = (*rounds, *extra);
+    let mut l2 = if league.is_null() { 0 } else { *league };
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }));
-    let saidas = *rodadas == r2 && *extra == e2 && (liga.is_null() || *liga == l2);
-    let tabela = if a != 0 && b != 0 { written_schedule_bytes(f, a, *rodadas) == written_schedule_bytes(f, b, r2) } else { a == 0 && b == 0 };
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if league.is_null() { core::ptr::null_mut() } else { &mut l2 }));
+    let outs = *rounds == r2 && *extra == e2 && (league.is_null() || *league == l2);
+    let table = if a != 0 && b != 0 { written_schedule_bytes(f, a, *rounds) == written_schedule_bytes(f, b, r2) } else { a == 0 && b == 0 };
     if b != 0 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, fase as u8 as i8, saidas, *rodadas, r2, tabela));
+    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 
@@ -142,8 +142,8 @@ pub(crate) const CHAMPIONS_CUP_KNOCKOUT_ROUNDS: [EngCcCupCupRound; 2] = [
 ///
 /// [pt] A fase da Copa dos Campeões pelo byte com sinal: −1 a preliminar (extra 0xe6, caixa 0xaa), abaixo de 2 os grupos
 /// (extra = fase + 0x3fd, caixa 0xcd), 2 em diante o mata-mata (caixa 0xed).
-pub(crate) fn champions_cup_stage(fase: u32) -> BraChampCupStagePlan {
-    let f = fase as u8 as i8;
+pub(crate) fn champions_cup_stage(stage: u32) -> BraChampCupStagePlan {
+    let f = stage as u8 as i8;
     if f == -1 {
         BraChampCupStagePlan::Grupos(&CHAMPIONS_CUP_PRELIMINARY_ROUNDS, 0xe6, 0xaa, "cqp_10 preliminar da copa dos campeoes")
     } else if f < 2 {
@@ -162,8 +162,8 @@ pub(crate) fn champions_cup_stage(fase: u32) -> BraChampCupStagePlan {
 ///
 /// [pt] { 0x425c10 } (thiscall, ret 0x10, bra_champ_cup.cpp; a virtual +0x3c da Copa dos Campeões): `BraChampCup::
 /// create_schedule(fase, &rodadas, &extra, &é_liga)`: a preliminar, os grupos ou o mata-mata (`champions_cup_stage`).
-pub(crate) unsafe extern "thiscall" fn bra_champ_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    build_stage_schedule(this, champions_cup_stage(fase), rodadas, extra, liga, 0x98a1e8)
+pub(crate) unsafe extern "thiscall" fn bra_champ_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    build_stage_schedule(this, champions_cup_stage(stage), rounds, extra, league, 0x98a1e8)
 }
 
 
@@ -180,8 +180,8 @@ pub(crate) const MERCONORTE_KNOCKOUT_ROUNDS: [EngCcCupCupRound; 2] = [
 ///
 /// [pt] A fase da Merconorte: abaixo de 3 os grupos (extra = fase + 0x3e9, caixa 0x9b), 3 o mata-mata (caixa 0xc1), acima
 /// nada.
-pub(crate) fn merconorte_stage(fase: u32) -> BraChampCupStagePlan {
-    let f = fase as u8 as i8;
+pub(crate) fn merconorte_stage(stage: u32) -> BraChampCupStagePlan {
+    let f = stage as u8 as i8;
     if f < 3 {
         BraChampCupStagePlan::Grupos(&MERCONORTE_GROUP_ROUNDS, (f as i16).wrapping_add(0x3e9), 0x9b, "cqp_10 grupos da merconorte")
     } else if f == 3 {
@@ -211,8 +211,8 @@ pub(crate) const ASIAN_SUPER_CUP: [EngCcCupCupRound; 1] = [
 ///
 /// [pt] { 0x410910 } (thiscall, ret 0x10, asia_super_cup.cpp; a virtual +0x3c da Supercopa Asiática): `AsiaSuperCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x97 sem memória.
-pub(crate) unsafe extern "thiscall" fn bra_champ_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &ASIAN_SUPER_CUP, 0x987be0, 0x97, "cqp_10 tabela da supercopa asiatica")
+pub(crate) unsafe extern "thiscall" fn bra_champ_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+    eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &ASIAN_SUPER_CUP, 0x987be0, 0x97, "cqp_10 tabela da supercopa asiatica")
 }
 
 

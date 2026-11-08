@@ -12,5 +12,5 @@ MUTACOES = [
     ('k_dy', "let dy = if sai == 0 { 11i8.wrapping_sub(y) }", "let dy = if sai == 0 { 10i8.wrapping_sub(y) }"),
     ('k_8ed8', "*((this + 0x8ed8) as *const u16)" + chr(10) + "    } else {", "*((this + 0x8ed8) as *const u16) >> 8" + chr(10) + "    } else {"),
     ('k_campo', "{ (0xf572, 0xa6) } else { (0xf56e, 0x9e) };", "{ (0xf572, 0xa6) } else { (0xf56e, 0x9d) };"),
-    ('k_sx', "*((escolhido + 0x19a) as *mut i16) = v as u8 as i8 as i16;", "*((escolhido + 0x19a) as *mut i16) = v as i16;"),
+    ('k_sx', "*((chosen + 0x19a) as *mut i16) = v as u8 as i8 as i16;", "*((chosen + 0x19a) as *mut i16) = v as i16;"),
 ]

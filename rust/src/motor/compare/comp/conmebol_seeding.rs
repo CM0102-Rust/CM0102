@@ -4,12 +4,12 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/conmebol_seeding.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Lado a lado: os clubes do jogo e a marca da caixa.
-pub(crate) unsafe extern "thiscall" fn comparar_assign_libertadores_places(this: usize, clubes: usize, conta: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_assign_libertadores_places(this: usize, clubs: usize, count: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_LIBERTADORES_PLACES);
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
     // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
     let reg = [(read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || assign_libertadores_places(this, clubes, conta));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubs, count), || assign_libertadores_places(this, clubs, count));
     PLACAR.registrar(igual, || {
         let base = read_u32(G_CLUB_TABLE) as usize;
         let l: Vec<String> = memory_diff_addresses(&mo, &mr).iter().map(|&a| {
@@ -27,11 +27,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_libertadores_places(this:
 /// Comparer for `find_nth_unqualified_club_of_nation` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] A devolução das duas (a rotina só lê).
-pub(crate) unsafe extern "thiscall" fn comparar_find_nth_unqualified_club_of_nation(this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_find_nth_unqualified_club_of_nation(this: usize, clubs: usize, count: u32, nacao: u32, n: u32, without_slot: u32, without_human: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(IDX_FIND_NTH_UNQUALIFIED_CLUB_OF_NATION);
-    let r = o(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
-    let c = find_nth_unqualified_club_of_nation(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
-    PLACAR.registrar(r == c, || format!("find_nth_unqualified_club_of_nation(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nacao, n as u8, sem_vaga, sem_humano, r, c));
+    let r = o(this, clubs, count, nacao, n, without_slot, without_human);
+    let c = find_nth_unqualified_club_of_nation(this, clubs, count, nacao, n, without_slot, without_human);
+    PLACAR.registrar(r == c, || format!("find_nth_unqualified_club_of_nation(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nacao, n as u8, without_slot, without_human, r, c));
     r
 }
 
@@ -50,19 +50,19 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_mercosur_invited_club(this: u
 ///
 /// [pt] Lado a lado: a original com a saída de quem chama, a cópia com uma saída própria (liberada depois); os clubes, a
 /// devolução e os registros das duas tabelas.
-pub(crate) unsafe extern "stdcall" fn comparar_collect_conmebol_clubs(saida: *mut usize) -> u32 {
+pub(crate) unsafe extern "stdcall" fn comparar_collect_conmebol_clubs(out: *mut usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(*mut usize) -> u32>(IDX_COLLECT_CONMEBOL_CLUBS);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut t2 = 0usize;
     let reg = club_seeding_regions();
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(saida), || collect_conmebol_clubs(&mut t2));
+    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(out), || collect_conmebol_clubs(&mut t2));
     let (n, m) = (a as u16 as i16, b as u16 as i16);
-    let t1 = *saida;
-    let tabela = n == m && (n <= 0 || t1 == 0 || t2 == 0 || core::slice::from_raw_parts(t1 as *const u8, n as usize * 12) == core::slice::from_raw_parts(t2 as *const u8, n as usize * 12));
+    let t1 = *out;
+    let table = n == m && (n <= 0 || t1 == 0 || t2 == 0 || core::slice::from_raw_parts(t1 as *const u8, n as usize * 12) == core::slice::from_raw_parts(t2 as *const u8, n as usize * 12));
     if t2 != 0 {
         soltar(t2);
     }
-    PLACAR.registrar(igual && tabela, || format!("collect_conmebol_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, memory_diff_addresses(&mo, &mr)));
+    PLACAR.registrar(igual && table, || format!("collect_conmebol_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, table, memory_diff_addresses(&mo, &mr)));
     a
 }
 

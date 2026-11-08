@@ -4,73 +4,73 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/leagues/ita_ser_a.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `ita_ser_a_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ITA_SER_A_CREATE_SCHEDULE);
-    ita_ser_a_compare_schedule_all_stages("ita_ser_a_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| ita_ser_a_create_schedule(this, fase, r, e, l))
+    ita_ser_a_compare_schedule_all_stages("ita_ser_a_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| ita_ser_a_create_schedule(this, stage, r, e, l))
 }
 
 /// Comparer for `ita_ser_a_create_schedule_645af0` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_create_schedule_645af0(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_create_schedule_645af0(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ITA_SER_A_CREATE_SCHEDULE_645AF0);
-    ita_ser_a_compare_schedule_all_stages("ita_ser_a_create_schedule_645af0", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| ita_ser_a_create_schedule_645af0(this, fase, r, e, l))
+    ita_ser_a_compare_schedule_all_stages("ita_ser_a_create_schedule_645af0", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| ita_ser_a_create_schedule_645af0(this, stage, r, e, l))
 }
 
 /// Comparer for `ita_ser_a_update_for_date` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ITA_SER_A_UPDATE_FOR_DATE);
-    compare_league_day("ita_ser_a_update_for_date", this, completo, || serie_a_zones(this), || o(this, hoje, completo))
+    compare_league_day("ita_ser_a_update_for_date", this, full, || serie_a_zones(this), || o(this, today, full))
 }
 
 /// Comparer for `ita_ser_a_update_for_date_647050` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_update_for_date_647050(this: usize, hoje: usize, completo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_update_for_date_647050(this: usize, today: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ITA_SER_A_UPDATE_FOR_DATE_647050);
-    compare_league_day("ita_ser_a_update_for_date_647050", this, completo, serie_b_zones, || o(this, hoje, completo))
+    compare_league_day("ita_ser_a_update_for_date_647050", this, full, serie_b_zones, || o(this, today, full))
 }
 
 /// Comparer for `ita_league_sort_clubs_level_on_points` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Lado a lado na tabela inteira (a 0x682b30 grava +4 de cada linha e solta a sua minitabela; o qsort só mexe no
 /// bloco).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_league_sort_clubs_level_on_points(this: usize, pontos: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_ita_league_sort_clubs_level_on_points(this: usize, points: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_ITA_LEAGUE_SORT_CLUBS_LEVEL_ON_POINTS);
     let t = read_u32_as_usize(this + 0xb1);
     let n = read_i16(this + 0x3e).max(0) as usize;
     if t == 0 || n == 0 {
-        return o(this, pontos);
+        return o(this, points);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(t, n * 0x3b)], || o(this, pontos), || ita_league_sort_clubs_level_on_points(this, pontos));
-    PLACAR.registrar(igual, || format!("ita_league_sort_clubs_level_on_points({:#x}, {}) original={:x?} rust={:x?}", this, pontos as u16 as i16, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(t, n * 0x3b)], || o(this, points), || ita_league_sort_clubs_level_on_points(this, points));
+    PLACAR.registrar(igual, || format!("ita_league_sort_clubs_level_on_points({:#x}, {}) original={:x?} rust={:x?}", this, points as u16 as i16, mo, mr));
 }
 
 /// Comparer for `ita_ser_a_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Na liga e no desempate com a situação 1 há chamadas que não rodam duas vezes (os registros da base, a ordenação, as
 /// virtuais): só a original. Nas outras situações a cópia só devolve −1: compara a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_ITA_SER_A_UPDATE_STAFF_RECORDS_FOR_STATUS);
-    let r = o(this, clube, situacao, fase, a4, jogo, a6);
-    if fase as u8 != 0xff && situacao as u8 != 1 {
+    let r = o(this, clube, status, stage, a4, jogo, a6);
+    if stage as u8 != 0xff && status as u8 != 1 {
         PLACAR.registrar(r == 0xffff_ffff, || format!("ita_ser_a_update_staff_records_for_status: devolveu {:#x}", r));
     }
     r
 }
 
 /// Comparer for `construct_ita_ser_a` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_a(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_a(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_SER_A);
-    compare_italian_constructor("construct_ita_ser_a", this, ano, registro, &SERIE_A, || o(this, ano, registro))
+    compare_italian_constructor("construct_ita_ser_a", this, year, record, &SERIE_A, || o(this, year, record))
 }
 
 /// Comparer for `construct_ita_ser_b` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_b(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_b(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_SER_B);
-    compare_italian_constructor("construct_ita_ser_b", this, ano, registro, &SERIE_B_DIVISION, || o(this, ano, registro))
+    compare_italian_constructor("construct_ita_ser_b", this, year, record, &SERIE_B_DIVISION, || o(this, year, record))
 }
 
 /// Comparer for `construct_ita_ser_c1b` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_c1b(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_c1b(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_SER_C1B);
-    compare_italian_constructor("construct_ita_ser_c1b", this, ano, registro, &SERIE_C1B_DIVISION, || o(this, ano, registro))
+    compare_italian_constructor("construct_ita_ser_c1b", this, year, record, &SERIE_C1B_DIVISION, || o(this, year, record))
 }
 
 /// Comparer for `create_fixed_fixtures` (comparison mode: see the header of motor.rs).

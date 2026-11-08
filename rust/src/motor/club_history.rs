@@ -2,21 +2,21 @@ use super::*;
 
 
 /// Opens an item named nome in the save archive (FN_ZOPEN with 1, 0x16, 4).
-pub(crate) unsafe fn zip_open_item(save: usize, nome: usize) -> usize {
-    let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
-    abrir_item(save, nome, 1, 0x16, 4)
+pub(crate) unsafe fn zip_open_item(save: usize, name: usize) -> usize {
+    let open_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
+    open_item(save, name, 1, 0x16, 4)
 }
 
 /// Writes count items of size bytes to an open archive item (FN_ZWRITE).
-pub(crate) unsafe fn zip_write(dados: usize, tamanho: u32, quantos: u32, z: usize) -> u32 {
-    let gravar_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-    gravar_item(dados, tamanho, quantos, z)
+pub(crate) unsafe fn zip_write(dados: usize, size: u32, how_many: u32, z: usize) -> u32 {
+    let write_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
+    write_item(dados, size, how_many, z)
 }
 
 /// Closes an open archive item (FN_ZCLOSE).
 pub(crate) unsafe fn zip_close(z: &mut usize) {
-    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
-    fechar_item(z);
+    let close_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
+    close_item(z);
 }
 
 /// writes the count (+0xc) and the 0x10-byte records from [+8] into the "club history.dat" item and returns 1; no
@@ -51,8 +51,8 @@ pub(crate) unsafe extern "thiscall" fn club_history_save(this: usize, save: usiz
 /// Shows the officials_manager.cpp error box at the line, closes the item and returns 0.
 ///
 /// [pt] A caixa de erro do officials_manager.cpp na linha `linha`, fechando o item; devolve 0.
-pub(crate) unsafe fn officials_save_error(linha: u32, z: &mut usize) -> u8 {
-    show_error_at(0xa6a22c, linha);
+pub(crate) unsafe fn officials_save_error(row: u32, z: &mut usize) -> u8 {
+    show_error_at(0xa6a22c, row);
     zip_close(z);
     0
 }

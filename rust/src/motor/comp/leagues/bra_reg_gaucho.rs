@@ -17,45 +17,45 @@ use super::*;
 /// primeira vaga de fases ([+0xc]). Sem fase: a caixa `linha_sem_fase` e volta (sem liberar). Com ela:
 /// Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela de rodadas e a lista liberadas (free 0x9452ca,
 /// nessa ordem) e +0x30 = 0. O quadro SEH da original só cobre o construtor (sem destrutor).
-pub(crate) unsafe fn create_knockout_from_table(this: usize, linhas: &[usize], sementes: &[u8], arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, ramo: &'static str) {
-    let n = linhas.len();
+pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], sementes: &[u8], file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
+    let n = rows.len();
     // as sementes: a original grava os bytes na pilha antes de alocar (iguais às linhas, mas constantes à parte)
     let mut s = [0u8; 8];
     s[..sementes.len()].copy_from_slice(sementes);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let lista = alocar((n * 4) as u32);
-    if lista == 0 {
-        return show_error_at(arquivo, linha_sem_lista);
+    let list = alocar((n * 4) as u32);
+    if list == 0 {
+        return show_error_at(file, row_without_list);
     }
-    for (k, &l) in linhas.iter().enumerate() {
-        core::ptr::write_unaligned((lista + 4 * k) as *mut usize, bra_reg_bahia_table_row_club(this, l));
+    for (k, &l) in rows.iter().enumerate() {
+        core::ptr::write_unaligned((list + 4 * k) as *mut usize, bra_reg_bahia_table_row_club(this, l));
     }
     crate::comparacao::ramo(ramo);
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let p = novo(0xb2);
+    let t = table(this, 0, &mut rodadas, &mut extra, 0);
+    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let p = new(0xb2);
     // simplification: a original empurra as rodadas, o extra e o ano em dwords com lixo nos 16 bits altos (as saídas da
     // virtual são words na pilha; o ano vai no cx); o construtor só lê as palavras.
-    let fase = if p != 0 {
+    let stage = if p != 0 {
         #[allow(clippy::type_complexity)]
-        let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
+        let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construir(p, this, n as u32, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
+        construct(p, this, n as u32, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
     } else {
         0
     };
-    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, fase);
-    let fase = read_usize(read_usize(this + 0xc));
-    if fase == 0 {
-        return show_error_at(arquivo, linha_sem_fase);
+    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, stage);
+    let stage = read_usize(read_usize(this + 0xc));
+    if stage == 0 {
+        return show_error_at(file, row_without_stage);
     }
-    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    montar(fase, 0);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    liberar(t);
-    liberar(lista);
+    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
+    build(stage, 0);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    free(t);
+    free(list);
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 0);
 }
 
@@ -77,21 +77,21 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_create_knockout_stage(this
 /// plano, feito antes: os clubes das linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = n, +4 = o +4 da
 /// liga e os n primeiros clubes da lista dela (+0xa7, 6 bytes) iguais aos do plano (como conjunto: o sorteio da rodada
 /// 0x51c800 pode reordenar as chaves), e +0x30 = 0.
-pub(crate) unsafe fn bra_reg_gaucho_compare_knockout_from_table(nome: &str, this: usize, linhas: &[usize], original: impl FnOnce()) {
-    let mut plano: Vec<usize> = linhas.iter().map(|&l| bra_reg_bahia_table_row_club(this, l)).collect();
+pub(crate) unsafe fn bra_reg_gaucho_compare_knockout_from_table(name: &str, this: usize, rows: &[usize], original: impl FnOnce()) {
+    let mut plan: Vec<usize> = rows.iter().map(|&l| bra_reg_bahia_table_row_club(this, l)).collect();
     original();
-    let fase = read_usize(read_usize(this + 0xc));
-    if fase == 0 {
-        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", nome, this));
+    let stage = read_usize(read_usize(this + 0xc));
+    if stage == 0 {
+        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", name, this));
         return;
     }
-    let lista = read_usize(fase + 0xa7);
-    let mut achou: Vec<usize> = (0..linhas.len()).map(|k| read_usize(lista + 6 * k)).collect();
-    let (pl, ac) = (plano.clone(), achou.clone());
-    plano.sort_unstable();
-    achou.sort_unstable();
-    let igual = plano == achou && read_i16(fase + 0x3e) as usize == linhas.len() && read_usize(fase + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0;
-    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
+    let list = read_usize(stage + 0xa7);
+    let mut found: Vec<usize> = (0..rows.len()).map(|k| read_usize(list + 6 * k)).collect();
+    let (pl, ac) = (plan.clone(), found.clone());
+    plan.sort_unstable();
+    found.sort_unstable();
+    let same = plan == found && read_i16(stage + 0x3e) as usize == rows.len() && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0;
+    PLACAR.registrar(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + 0x3e)));
 }
 
 
@@ -117,8 +117,8 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this
 /// Original: `BraRegGaucho::BraRegGaucho` (0x4317c0, bra_reg_gaucho.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x4317c0 } (thiscall, ret 8, bra_reg_gaucho.cpp): `BraRegGaucho::BraRegGaucho(ano, registro)`: o Gaúcho (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn construct_bra_reg_gaucho(this: usize, ano: u32, registro: usize) -> usize {
-    bra_reg_bahia_construct_state_league(this, ano, registro, &GAUCHO_STATE_LEAGUE, 7, true, "cqt_1 gaucho novo") // cqt1: a disciplina e as posições previstas do Gaúcho
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_gaucho(this: usize, year: u32, record: usize) -> usize {
+    bra_reg_bahia_construct_state_league(this, year, record, &GAUCHO_STATE_LEAGUE, 7, true, "cqt_1 gaucho novo") // cqt1: a disciplina e as posições previstas do Gaúcho
 }
 
 

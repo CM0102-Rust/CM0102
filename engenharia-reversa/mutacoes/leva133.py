@@ -2,10 +2,10 @@
 MUTACOES = [
     ('s_flag', "    if g(0xdd7118) == 0 {\n        return 1;", "    if g(0xdd7118) == 0 {\n        return 0;"),
     ('s_humano', "humano(c1, 1, 1, 0, 0) != 0 || humano(c2, 1, 1, 0, 0) != 0 {\n        return 0;", "humano(c1, 1, 0, 0, 0) != 0 || humano(c2, 1, 1, 0, 0) != 0 {\n        return 0;"),
-    ('s_ligado', "humano(ligado(c, 0, 1), 1, 1, 0, 0) != 0", "humano(ligado(c, 0, 1), 1, 0, 0, 0) != 0", "sem humano clube ligado"),
-    ('s_comp1', "if comp == ler(KEY_CLUB_COMP_FIFA_CLUB_WORLD_CHAMPIONSHIP) ||", "if comp == ler(KEY_CLUB_COMP_PORTUGUESE_SECOND_DIVISION_B) ||"),
+    ('s_ligado', "human(ligado(c, 0, 1), 1, 1, 0, 0) != 0", "human(ligado(c, 0, 1), 1, 0, 0, 0) != 0", "sem humano clube ligado"),
+    ('s_comp1', "if comp == read(KEY_CLUB_COMP_FIFA_CLUB_WORLD_CHAMPIONSHIP) ||", "if comp == read(KEY_CLUB_COMP_PORTUGUESE_SECOND_DIVISION_B) ||"),
     ('s_958', "k as isize * 0x122 + 0x11c", "k as isize * 0x122 + 0x11d"),
-    ('s_684', "if comp == ler(KEY_CLUB_COMP_RESERVE) && humano(c1", "if comp == ler(KEY_CLUB_COMP_ARGENTINE_THIRD_DIVISION) && humano(c1", "sem humano competicao direta"),
+    ('s_684', "if comp == read(KEY_CLUB_COMP_RESERVE) && human(c1", "if comp == read(KEY_CLUB_COMP_ARGENTINE_THIRD_DIVISION) && human(c1", "sem humano competicao direta"),
     ('s_16', "for k in 0..16isize {", "for k in 0..15isize {", "sem humano tecnico da nacao"),
     ('s_5f', "*((pe + 0x5f) as *const u8) == 1", "*((pe + 0x5f) as *const u8) == 0", "sem humano tecnico da nacao"),
     ('s_80', "> 0x2ee0 { 0 } else { final_() }", "> 0x2000 { 0 } else { final_() }", "sem humano pela injury_word_0c"),

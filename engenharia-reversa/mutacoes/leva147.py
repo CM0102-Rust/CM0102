@@ -7,7 +7,7 @@ MUTACOES = [
     ('k_alto', "        if l38 as i16 > 0x177 {\n            l1a = true;", "        if l38 as i16 > 0x178 {\n            l1a = true;"),
     ('k_registra', "if sortear(0x32) == 0 && modo != 4 && l84 == 0 {", "if sortear(0x31) == 0 && modo != 4 && l84 == 0 {", "shot falta so registra"),
     ('k_passa', "            *b(e, 0x2b) = (*b(e, 0x2b)).wrapping_add(l4d);", "            *b(e, 0x2b) = (*b(e, 0x2b)).wrapping_add(l4d + 1);", "shot passa pelo desafiante"),
-    ('k_desarme', "write_19c(e, (nota as i32).wrapping_sub(v).wrapping_sub(200) as i16);", "write_19c(e, (nota as i32).wrapping_sub(v).wrapping_sub(201) as i16);", "shot desarmado"),
+    ('k_desarme', "write_19c(e, (rating as i32).wrapping_sub(v).wrapping_sub(200) as i16);", "write_19c(e, (rating as i32).wrapping_sub(v).wrapping_sub(201) as i16);", "shot desarmado"),
     ('k_aproxima', "} else if sortear(10) == 0 && (0x14..=0x23).contains(&l1b)", "} else if sortear(11) == 0 && (0x14..=0x23).contains(&l1b)"),
     ('k_bloqueio', "        let s1 = sortear(2000);\n        let s2 = sortear(1000);", "        let s1 = sortear(2000);\n        let s2 = sortear(1001);", "shot bloqueado"),
     ('k_classe', "        if sortear(v as i16 as i32) < 10 { 0xe + tem as u8 } else { 1 }", "        if sortear(v as i16 as i32) < 11 { 0xe + tem as u8 } else { 1 }"),

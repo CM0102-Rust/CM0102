@@ -4,13 +4,13 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/comp.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `send_prize_money_news` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_send_prize_money_news(this: usize, clube: usize, lo: u32, hi: i32, posicao: u32, rodada: u32, partida: usize, tipo: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, usize, u32)>(IDX_SEND_PRIZE_MONEY_NEWS)(this, clube, lo, hi, posicao, rodada, partida, tipo)
+pub(crate) unsafe extern "thiscall" fn comparar_send_prize_money_news(this: usize, clube: usize, lo: u32, hi: i32, position: u32, round: u32, partida: usize, kind: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, usize, u32)>(IDX_SEND_PRIZE_MONEY_NEWS)(this, clube, lo, hi, position, round, partida, kind)
 }
 
 /// Comparer for `send_tv_rights_news` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_send_tv_rights_news(this: usize, clube: usize, valor: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_SEND_TV_RIGHTS_NEWS)(this, clube, valor)
+pub(crate) unsafe extern "thiscall" fn comparar_send_tv_rights_news(this: usize, clube: usize, value: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_SEND_TV_RIGHTS_NEWS)(this, clube, value)
 }
 
 /// Comparer for `all_stages_complete` (comparison mode: see the header of motor.rs).
@@ -25,13 +25,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_all_stages_complete(this: usize)
 ///
 /// [pt] Lado a lado: a original com a saída de quem chama, a cópia com saída própria, a partir do mesmo [0xb67a34]; a conta
 /// e os clubes das duas listas iguais (a da cópia é liberada).
-pub(crate) unsafe extern "thiscall" fn comparar_comp_collect_club_list(this: usize, lista: *mut usize, x: u32) -> u16 {
+pub(crate) unsafe extern "thiscall" fn comparar_comp_collect_club_list(this: usize, list: *mut usize, x: u32) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(IDX_COMP_COLLECT_CLUB_LIST);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut l2 = 0usize;
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, lista, x), || comp_collect_club_list(this, &mut l2, x));
-    let mesmas = a == b && (*lista == 0) == (l2 == 0) && (*lista == 0 || core::slice::from_raw_parts(*lista as *const u32, a as usize) == core::slice::from_raw_parts(l2 as *const u32, b as usize));
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, list, x), || comp_collect_club_list(this, &mut l2, x));
+    let mesmas = a == b && (*list == 0) == (l2 == 0) && (*list == 0 || core::slice::from_raw_parts(*list as *const u32, a as usize) == core::slice::from_raw_parts(l2 as *const u32, b as usize));
     if l2 != 0 {
         soltar(l2);
     }
@@ -42,12 +42,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_comp_collect_club_list(this: usi
 /// Comparer for `find_club_progress` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Lado a lado nas três saídas (a original e a cópia com saídas próprias, começando dos valores de quem chama).
-pub(crate) unsafe extern "thiscall" fn comparar_find_club_progress(this: usize, clube: usize, fase_id: *mut i16, rodada: *mut i16, situacao: *mut u8) {
-    let (mut f2, mut r2, mut s2) = (*fase_id, *rodada, *situacao);
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i16, *mut i16, *mut u8)>(IDX_FIND_CLUB_PROGRESS)(this, clube, fase_id, rodada, situacao);
+pub(crate) unsafe extern "thiscall" fn comparar_find_club_progress(this: usize, clube: usize, stage_id: *mut i16, round: *mut i16, status: *mut u8) {
+    let (mut f2, mut r2, mut s2) = (*stage_id, *round, *status);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i16, *mut i16, *mut u8)>(IDX_FIND_CLUB_PROGRESS)(this, clube, stage_id, round, status);
     find_club_progress(this, clube, &mut f2, &mut r2, &mut s2);
-    let ok = f2 == *fase_id && r2 == *rodada && s2 == *situacao;
-    PLACAR.registrar(ok, || format!("find_club_progress: original ({}, {}, {}) rust ({}, {}, {})", *fase_id, *rodada, *situacao, f2, r2, s2));
+    let ok = f2 == *stage_id && r2 == *round && s2 == *status;
+    PLACAR.registrar(ok, || format!("find_club_progress: original ({}, {}, {}) rust ({}, {}, {})", *stage_id, *round, *status, f2, r2, s2));
 }
 
 /// Comparer for `get_first_stage_of_group` (comparison mode: see the header of motor.rs).
@@ -92,14 +92,14 @@ pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_stadium(estad
 /// Comparer for `comp_key_nation_entry_from_active_index` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: rotina pura; compara a entrada devolvida. Sem entrada (a caixa): só a original.
-pub(crate) unsafe extern "C" fn comparar_comp_key_nation_entry_from_active_index(ativo: i8) -> i32 {
+pub(crate) unsafe extern "C" fn comparar_comp_key_nation_entry_from_active_index(active: i8) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(i8) -> i32>(IDX_COMP_KEY_NATION_ENTRY_FROM_ACTIVE_INDEX);
-    if key_nation_by_active_index(ativo).is_none() {
-        return o(ativo); // simplification: a caixa não roda duas vezes
+    if key_nation_by_active_index(active).is_none() {
+        return o(active); // simplification: a caixa não roda duas vezes
     }
-    let r = o(ativo);
-    let n = comp_key_nation_entry_from_active_index(ativo);
-    PLACAR.registrar(r == n, || format!("comp_key_nation_entry_from_active_index({}) original={} rust={}", ativo, r, n));
+    let r = o(active);
+    let n = comp_key_nation_entry_from_active_index(active);
+    PLACAR.registrar(r == n, || format!("comp_key_nation_entry_from_active_index({}) original={} rust={}", active, r, n));
     r
 }
 
@@ -138,21 +138,21 @@ pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_fixture(comp:
 /// Comparer for `are_round_fixtures_known` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pelo valor (só lê). A caixa: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_are_round_fixtures_known(this: usize, fase: i32, rodada: i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_are_round_fixtures_known(this: usize, stage: i32, round: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(IDX_ARE_ROUND_FIXTURES_KNOWN);
-    if fase < -1 && fase <= read_usize(this + 0x30) as i32 {
-        return o(this, fase, rodada); // simplification: a caixa, só a original
+    if stage < -1 && stage <= read_usize(this + 0x30) as i32 {
+        return o(this, stage, round); // simplification: a caixa, só a original
     }
-    let r = o(this, fase, rodada);
-    let n = are_round_fixtures_known(this, fase, rodada);
-    PLACAR.registrar(r == n, || format!("are_round_fixtures_known({:x}, {}, {}) original={} rust={}", this, fase, rodada, r, n));
+    let r = o(this, stage, round);
+    let n = are_round_fixtures_known(this, stage, round);
+    PLACAR.registrar(r == n, || format!("are_round_fixtures_known({:x}, {}, {}) original={} rust={}", this, stage, round, r, n));
     r
 }
 
 /// Comparer for `counts_for_fixture_clash` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_counts_for_fixture_clash(this: usize, jogo: usize, outro: usize) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_COUNTS_FOR_FIXTURE_CLASH)(this, jogo, outro);
-    let n = counts_for_fixture_clash(this, jogo, outro);
+pub(crate) unsafe extern "thiscall" fn comparar_counts_for_fixture_clash(this: usize, jogo: usize, other: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_COUNTS_FOR_FIXTURE_CLASH)(this, jogo, other);
+    let n = counts_for_fixture_clash(this, jogo, other);
     PLACAR.registrar(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", read_i16(jogo + 0x30), r, n));
     r
 }

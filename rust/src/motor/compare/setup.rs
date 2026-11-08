@@ -4,8 +4,8 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../setup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `load_game_data` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_load_game_data(caminho: *const u8) -> u32 {
-    original_fn::<unsafe extern "C" fn(*const u8) -> u32>(IDX_LOAD_GAME_DATA)(caminho)
+pub(crate) unsafe extern "C" fn comparar_load_game_data(path: *const u8) -> u32 {
+    original_fn::<unsafe extern "C" fn(*const u8) -> u32>(IDX_LOAD_GAME_DATA)(path)
 }
 
 /// Comparer for `create_game_from_setup_file` (comparison mode: see the header of motor.rs).
@@ -14,29 +14,29 @@ pub(crate) unsafe extern "C" fn comparar_create_game_from_setup_file(cfg: *const
 }
 
 /// Comparer for `save_game_data` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_save_game_data(caminho: *const u8, a4: u32) -> u32 {
-    original_fn::<unsafe extern "C" fn(*const u8, u32) -> u32>(IDX_SAVE_GAME_DATA)(caminho, a4)
+pub(crate) unsafe extern "C" fn comparar_save_game_data(path: *const u8, a4: u32) -> u32 {
+    original_fn::<unsafe extern "C" fn(*const u8, u32) -> u32>(IDX_SAVE_GAME_DATA)(path, a4)
 }
 
 /// Comparer for `check_saved_game_file` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_check_saved_game_file(caminho: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CHECK_SAVED_GAME_FILE)(caminho);
-    if caminho == 0 {
+pub(crate) unsafe extern "C" fn comparar_check_saved_game_file(path: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CHECK_SAVED_GAME_FILE)(path);
+    if path == 0 {
         return r;
     }
-    let n = check_saved_game_file(caminho);
+    let n = check_saved_game_file(path);
     PLACAR.registrar(r == n, || format!("check_saved_game_file {:#x} x {:#x}", r, n));
     r
 }
 
 /// Comparer for `check_quick_start_file` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_check_quick_start_file(caminho: usize) -> u32 {
-    original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CHECK_QUICK_START_FILE)(caminho)
+pub(crate) unsafe extern "C" fn comparar_check_quick_start_file(path: usize) -> u32 {
+    original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CHECK_QUICK_START_FILE)(path)
 }
 
 /// Comparer for `valid_saved_game_version` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_valid_saved_game_version(caminho: usize) -> u32 {
-    original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_VALID_SAVED_GAME_VERSION)(caminho)
+pub(crate) unsafe extern "C" fn comparar_valid_saved_game_version(path: usize) -> u32 {
+    original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_VALID_SAVED_GAME_VERSION)(path)
 }
 
 /// Comparer for `save_fifa_transfer_rules` (comparison mode: see the header of motor.rs).
@@ -50,11 +50,11 @@ pub(crate) unsafe extern "C" fn comparar_load_fifa_transfer_rules(save: usize) {
 }
 
 /// Comparer for `build_save_game_summary` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_build_save_game_summary(resumo: *mut u8) {
-    let regioes = [(resumo as usize, 0xf6c), (resumo as usize + 0xf6c, 8), (0xdd7140, 8)];
-    let (_, _, _, mo, mr) = crate::comparacao::lado_a_lado(&regioes,
-        || original_fn::<unsafe extern "C" fn(*mut u8)>(IDX_BUILD_SAVE_GAME_SUMMARY)(resumo),
-        || build_save_game_summary(resumo));
+pub(crate) unsafe extern "C" fn comparar_build_save_game_summary(summary: *mut u8) {
+    let regions = [(summary as usize, 0xf6c), (summary as usize + 0xf6c, 8), (0xdd7140, 8)];
+    let (_, _, _, mo, mr) = crate::comparacao::lado_a_lado(&regions,
+        || original_fn::<unsafe extern "C" fn(*mut u8)>(IDX_BUILD_SAVE_GAME_SUMMARY)(summary),
+        || build_save_game_summary(summary));
     PLACAR.registrar(mo.0[0] == mr.0[0], || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let k = (0..a.len()).find(|&k| a[k] != b[k]).unwrap_or(0);

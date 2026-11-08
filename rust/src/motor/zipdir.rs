@@ -10,43 +10,43 @@ use super::*;
 /// (0x90c2f0, só o byte baixo). `*.` pula o nome até o último ponto; `*` seguido de outra coisa só
 /// casa se for o fim do padrão. Como a original, o padrão acabar antes do nome também casa ("abc"
 /// casa "abcdef").
-pub(crate) unsafe extern "C" fn zipdir_match_filename_pattern(padrao: *const u8, nome: *const u8) -> u32 {
+pub(crate) unsafe extern "C" fn zipdir_match_filename_pattern(default: *const u8, name: *const u8) -> u32 {
     let maiuscula: unsafe extern "C" fn(u32) -> u8 = core::mem::transmute(FN_UTILS_CHAR_TO_LOWER);
-    let achar: unsafe extern "C" fn(*const u8, i32) -> usize = core::mem::transmute(FN_946540);
-    let texto = |p: *const u8| core::ffi::CStr::from_ptr(p as *const core::ffi::c_char).to_bytes();
-    if texto(nome) == texto(0xad6ad8 as *const u8) {
+    let find: unsafe extern "C" fn(*const u8, i32) -> usize = core::mem::transmute(FN_946540);
+    let text = |p: *const u8| core::ffi::CStr::from_ptr(p as *const core::ffi::c_char).to_bytes();
+    if text(name) == text(0xad6ad8 as *const u8) {
         return 0;
     }
-    if texto(nome) == texto(padrao) || *padrao == 0 {
+    if text(name) == text(default) || *default == 0 {
         return 1;
     }
     let (mut i, mut j) = (0usize, 0usize);
     loop {
-        let c = *padrao.add(i);
+        let c = *default.add(i);
         if c == b'*' {
-            if *padrao.add(i + 1) != b'.' {
-                return (*padrao.add(i + 1) == 0) as u32;
+            if *default.add(i + 1) != b'.' {
+                return (*default.add(i + 1) == 0) as u32;
             }
             // o último ponto do nome (strchr 0x946540 sem outro ponto depois)
             loop {
-                if *nome.add(j) == b'.' && achar(nome.add(j + 1), b'.' as i32) == 0 {
+                if *name.add(j) == b'.' && find(name.add(j + 1), b'.' as i32) == 0 {
                     break;
                 }
-                if *nome.add(j) == 0 {
+                if *name.add(j) == 0 {
                     return 0;
                 }
                 j += 1;
             }
             i += 1;
         } else {
-            let n = maiuscula(*nome.add(j) as u32);
+            let n = maiuscula(*name.add(j) as u32);
             if maiuscula(c as u32) != n {
                 return 0;
             }
         }
         i += 1;
         j += 1;
-        if *padrao.add(i) == 0 {
+        if *default.add(i) == 0 {
             return 1;
         }
     }
@@ -61,21 +61,21 @@ pub(crate) unsafe extern "C" fn zipdir_match_filename_pattern(padrao: *const u8,
 /// do zipdir.cpp fazem (cada uma tem a sua cópia do trecho). Se o cabeçalho não vier, `h` fica
 /// como estava (memória da alocação, sem zerar, como na original).
 pub(crate) unsafe fn read_header_copy(h: usize, f: usize) {
-    let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-    if ler(h, 0xc, 1, f) == 0 {
+    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
+    if read(h, 0xc, 1, f) == 0 {
         return;
     }
-    let tipo = h as *mut u32;
-    let mut antigo = false;
-    if *tipo == 1 {
-        *tipo = 3;
-        antigo = true;
+    let kind = h as *mut u32;
+    let mut old = false;
+    if *kind == 1 {
+        *kind = 3;
+        old = true;
     }
-    if *tipo == 2 {
-        *tipo = 4;
-        antigo = true;
+    if *kind == 2 {
+        *kind = 4;
+        old = true;
     }
-    ler(h + 0xc, 0x10c, if antigo { 0xfa } else { 0x3e8 }, f);
+    read(h + 0xc, 0x10c, if old { 0xfa } else { 0x3e8 }, f);
 }
 
 /// reads the container header and returns dword +4 (0x16 .sav, 0x17 .qst; 0x14 on failure)
@@ -84,30 +84,30 @@ pub(crate) unsafe fn read_header_copy(h: usize, f: usize) {
 /// [pt] { 0x9331c0 } (cdecl, zipdir.cpp): `zget_archive_id(caminho)`: o dword +4 do cabeçalho do
 /// contêiner (0x16 `.sav`, 0x17 `.qst`), ou 0x14 se não abrir ou o tipo não for 3/4. Sem memória,
 /// a caixa de erro (zipdir.cpp 592) e 0x14.
-pub(crate) unsafe extern "C" fn zget_archive_id(caminho: usize) -> u32 {
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
-    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
-    let h = novo(0x416ec);
+pub(crate) unsafe extern "C" fn zget_archive_id(path: usize) -> u32 {
+    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
+    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
+    let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
+    let h = new(0x416ec);
     if h == 0 {
         show_error_at(0xad6ab0, 0x250);
         return 0x14;
     }
-    let f = abrir(caminho, 0x98f928);
+    let f = open(path, 0x98f928);
     if f == 0 {
-        liberar(h);
+        free(h);
         return 0x14;
     }
     read_header_copy(h, f);
-    fechar(f);
-    let tipo = *(h as *const u32);
-    if tipo != 3 && tipo != 4 {
-        liberar(h);
+    close(f);
+    let kind = *(h as *const u32);
+    if kind != 3 && kind != 4 {
+        free(h);
         return 0x14;
     }
     let id = *((h + 4) as *const u32);
-    liberar(h);
+    free(h);
     id
 }
 
@@ -122,57 +122,57 @@ pub(crate) unsafe extern "C" fn zget_archive_id(caminho: usize) -> u32 {
 /// na original: acima de 2 GB dá negativo e a conferência de espaço do `load_game_data` passa
 /// sempre (corrigir é outra decisão, como o save acima de 2 GB). Sem memória, a caixa de erro
 /// (zipdir.cpp 849) e 0; contêiner que não abre ou de tipo estranho, 0.
-pub(crate) unsafe extern "C" fn zget_matching_size(caminho: usize, padrao: usize) -> i32 {
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
-    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
+pub(crate) unsafe extern "C" fn zget_matching_size(path: usize, default: usize) -> i32 {
+    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
+    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
+    let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     let casar: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_ZIPDIR_MATCH_FILENAME_PATTERN);
-    let h = novo(0x416ec);
+    let h = new(0x416ec);
     if h == 0 {
         show_error_at(0xad6ab0, 0x351);
         return 0;
     }
-    let f = abrir(caminho, 0x98f928);
+    let f = open(path, 0x98f928);
     if f == 0 {
-        liberar(h);
+        free(h);
         return 0;
     }
     read_header_copy(h, f);
-    fechar(f);
-    let tipo = *(h as *const u32);
-    if tipo != 3 && tipo != 4 {
-        liberar(h);
+    close(f);
+    let kind = *(h as *const u32);
+    if kind != 3 && kind != 4 {
+        free(h);
         return 0;
     }
-    let mut soma = 0i32;
+    let mut sum = 0i32;
     let mut i = 0i32;
     while i < *((h + 8) as *const i32) {
         let item = h + 0xc + 0x10c * i as usize;
-        if casar(padrao, item + 8) != 0 {
-            soma = soma.wrapping_add(*((item + 4) as *const i32));
+        if casar(default, item + 8) != 0 {
+            sum = sum.wrapping_add(*((item + 4) as *const i32));
         }
         i += 1;
     }
-    liberar(h);
-    soma
+    free(h);
+    sum
 }
 
 
 /// strcpy: copies C string origem (with terminator) to destino.
 ///
 /// [pt] strcpy: copia o texto `origem` (com o zero) para `destino`.
-pub(crate) unsafe fn zipdir_c_strcpy(destino: *mut u8, origem: *const u8) {
-    let t = core::ffi::CStr::from_ptr(origem as *const core::ffi::c_char).to_bytes_with_nul();
-    core::ptr::copy(t.as_ptr(), destino, t.len());
+pub(crate) unsafe fn zipdir_c_strcpy(target: *mut u8, source: *const u8) {
+    let t = core::ffi::CStr::from_ptr(source as *const core::ffi::c_char).to_bytes_with_nul();
+    core::ptr::copy(t.as_ptr(), target, t.len());
 }
 
 /// strcat: appends C string origem to destino.
 ///
 /// [pt] strcat: acrescenta o texto `origem` ao fim de `destino`.
-pub(crate) unsafe fn zipdir_c_strcat(destino: *mut u8, origem: *const u8) {
-    let n = core::ffi::CStr::from_ptr(destino as *const core::ffi::c_char).to_bytes().len();
-    zipdir_c_strcpy(destino.add(n), origem);
+pub(crate) unsafe fn zipdir_c_strcat(target: *mut u8, source: *const u8) {
+    let n = core::ffi::CStr::from_ptr(target as *const core::ffi::c_char).to_bytes().len();
+    zipdir_c_strcpy(target.add(n), source);
 }
 
 /// each folder file matching the pattern (FindFirstFile) becomes a container item: zopen for writing, fread/zwrite in
@@ -185,51 +185,51 @@ pub(crate) unsafe fn zipdir_c_strcat(destino: *mut u8, origem: *const u8) {
 /// `a4`/`tipo` se não existir) + `fread` em blocos de 0x30d40 no buffer de leitura do item (+0x41705)
 /// + `zwrite` (0x932e10) + `zclose` (0x932b00). 1 no fim; 0 se nada casa. Arquivo que não abre ou
 /// item recusado: a caixa de erro (zipdir.cpp 797 / 805) e 0, sem fechar a busca (como a original).
-pub(crate) unsafe extern "C" fn zadd_matching_files(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
-    let juntar_caminho: unsafe extern "C" fn(*mut u8, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
-    let primeiro: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_FILE_FIND_FIRST);
-    let proximo: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_FILE_FIND_NEXT);
+pub(crate) unsafe extern "C" fn zadd_matching_files(path: usize, folder: usize, default: usize, a4: u32, kind: u32) -> u32 {
+    let join_path: unsafe extern "C" fn(*mut u8, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
+    let first: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_FILE_FIND_FIRST);
+    let next: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_FILE_FIND_NEXT);
     let encerrar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_FILE_FIND_CLOSE);
-    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
-    let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> i32 = core::mem::transmute(FN_CRT_FREAD);
-    let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
-    let gravar: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZWRITE);
-    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
+    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
+    let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
+    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> i32 = core::mem::transmute(FN_CRT_FREAD);
+    let open_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
+    let write: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZWRITE);
+    let close_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
     crate::comparacao::ramo("save empacotar");
     // a busca (alça +0, nome +0x10, filtro +0x110) e o caminho montado
-    let mut achado = [0u8; 0x114];
-    let mut busca = [0u8; 0x104];
-    let achado_p = achado.as_mut_ptr() as usize;
-    juntar_caminho(busca.as_mut_ptr(), 0, pasta, padrao, 0);
-    if primeiro(busca.as_mut_ptr() as usize, achado_p, 0) != 0 {
+    let mut found = [0u8; 0x114];
+    let mut search = [0u8; 0x104];
+    let found_p = found.as_mut_ptr() as usize;
+    join_path(search.as_mut_ptr(), 0, folder, default, 0);
+    if first(search.as_mut_ptr() as usize, found_p, 0) != 0 {
         return 0;
     }
     loop {
-        juntar_caminho(busca.as_mut_ptr(), 0, pasta, achado_p + 0x10, 0);
-        let f = abrir(busca.as_mut_ptr() as usize, 0x98f928);
+        join_path(search.as_mut_ptr(), 0, folder, found_p + 0x10, 0);
+        let f = open(search.as_mut_ptr() as usize, 0x98f928);
         if f == 0 {
             show_error_at(0xad6ab0, 0x31d);
             return 0;
         }
-        let mut z = abrir_item(caminho, achado_p + 0x10, 1, a4, tipo);
+        let mut z = open_item(path, found_p + 0x10, 1, a4, kind);
         if z == 0 {
             show_error_at(0xad6ab0, 0x325);
-            fechar(f);
+            close(f);
             return 0;
         }
-        let mut n = ler(z + 0x41705, 1, 0x30d40, f);
+        let mut n = read(z + 0x41705, 1, 0x30d40, f);
         while n > 0 {
-            gravar(z + 0x41705, 1, n, z);
-            n = ler(z + 0x41705, 1, 0x30d40, f);
+            write(z + 0x41705, 1, n, z);
+            n = read(z + 0x41705, 1, 0x30d40, f);
         }
-        fechar(f);
-        fechar_item(&mut z);
-        if proximo(achado_p) != 0 {
+        close(f);
+        close_item(&mut z);
+        if next(found_p) != 0 {
             break;
         }
     }
-    encerrar(achado_p);
+    encerrar(found_p);
     1
 }
 
@@ -249,98 +249,98 @@ pub(crate) unsafe extern "C" fn zadd_matching_files(caminho: usize, pasta: usize
 /// ou de tipo estranho) ela fecha o item de uma variável local nunca escrita; aqui ela começa em 0.
 /// Sem memória para o índice, a caixa de erro (zipdir.cpp 642) escreve o nome "zipdir" por cima da
 /// resposta (a mesma casa da pilha) e a lista segue sem os nomes (memória da alocação).
-pub(crate) unsafe extern "C" fn zextract_matching_files(caminho: usize, pasta: usize, padrao: usize) -> u32 {
+pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usize, default: usize) -> u32 {
     let reservar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
-    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
-    let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-    let escrever: unsafe extern "C" fn(usize, u32, i32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-    let juntar_caminho: unsafe extern "C" fn(*mut u8, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
+    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
+    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
+    let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
+    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
+    let write: unsafe extern "C" fn(usize, u32, i32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
+    let join_path: unsafe extern "C" fn(*mut u8, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
     let casar: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_ZIPDIR_MATCH_FILENAME_PATTERN);
-    let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
-    let ler_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZREAD);
-    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
+    let open_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
+    let read_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZREAD);
+    let close_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
     crate::comparacao::ramo("save desempacotar");
     let mut z = 0usize;
-    let mut resposta = 0u32;
-    let erro = |nomes: usize, z: &mut usize| {
+    let mut reply = 0u32;
+    let error = |nomes: usize, z: &mut usize| {
         if nomes != 0 {
             soltar(nomes);
         }
         if *z != 0 {
-            fechar_item(z);
+            close_item(z);
         }
         0u32
     };
     let nomes = reservar(0x3f7a0);
     if nomes == 0 {
-        return erro(0, &mut z);
+        return error(0, &mut z);
     }
-    let h = novo(0x416ec);
+    let h = new(0x416ec);
     if h == 0 {
         show_error_at(0xad6ab0, 0x282);
         // simplification: o nome do fonte que a 0x944cff separa cai na casa da resposta
-        resposta = u32::from_le_bytes(*b"zipd");
+        reply = u32::from_le_bytes(*b"zipd");
     } else {
-        let f = abrir(caminho, 0x98f928);
+        let f = open(path, 0x98f928);
         if f == 0 {
-            liberar(h);
-            return erro(nomes, &mut z);
+            free(h);
+            return error(nomes, &mut z);
         }
-        if ler(h, 0xc, 1, f) != 0 {
-            let tipo = h as *mut u32;
-            let mut antigo = false;
-            if *tipo == 1 {
-                *tipo = 3;
-                antigo = true;
+        if read(h, 0xc, 1, f) != 0 {
+            let kind = h as *mut u32;
+            let mut old = false;
+            if *kind == 1 {
+                *kind = 3;
+                old = true;
             }
-            if *tipo == 2 {
-                *tipo = 4;
-                antigo = true;
+            if *kind == 2 {
+                *kind = 4;
+                old = true;
             }
-            ler(h + 0xc, 0x10c, if antigo { 0xfa } else { 0x3e8 }, f);
+            read(h + 0xc, 0x10c, if old { 0xfa } else { 0x3e8 }, f);
         }
-        fechar(f);
-        let tipo = *(h as *const u32);
-        if tipo != 3 && tipo != 4 {
-            liberar(h);
-            return erro(nomes, &mut z);
+        close(f);
+        let kind = *(h as *const u32);
+        if kind != 3 && kind != 4 {
+            free(h);
+            return error(nomes, &mut z);
         }
         for i in 0..0x3e8usize {
-            let origem = if (i as i32) < *((h + 8) as *const i32) { h + 0x14 + 0x10c * i } else { 0xad6ad8 };
-            zipdir_c_strcpy((nomes + 0x104 * i) as *mut u8, origem as *const u8);
+            let source = if (i as i32) < *((h + 8) as *const i32) { h + 0x14 + 0x10c * i } else { 0xad6ad8 };
+            zipdir_c_strcpy((nomes + 0x104 * i) as *mut u8, source as *const u8);
         }
-        liberar(h);
+        free(h);
     }
-    let mut destino = [0u8; 0x104];
+    let mut target = [0u8; 0x104];
     for i in 0..0x3e8usize {
-        let nome = nomes + 0x104 * i;
-        if casar(padrao, nome) == 0 {
+        let name = nomes + 0x104 * i;
+        if casar(default, name) == 0 {
             continue;
         }
-        z = abrir_item(caminho, nome, 0, 0x15, 4);
+        z = open_item(path, name, 0, 0x15, 4);
         if z == 0 {
             continue;
         }
-        resposta = 1;
-        juntar_caminho(destino.as_mut_ptr(), 0, pasta, nome, 0);
-        let g = abrir(destino.as_mut_ptr() as usize, 0x9a7f28);
+        reply = 1;
+        join_path(target.as_mut_ptr(), 0, folder, name, 0);
+        let g = open(target.as_mut_ptr() as usize, 0x9a7f28);
         if g == 0 {
-            return erro(nomes, &mut z);
+            return error(nomes, &mut z);
         }
-        let mut n = ler_item(z + 0x72445, 1, 0x30d40, z);
+        let mut n = read_item(z + 0x72445, 1, 0x30d40, z);
         while n > 0 {
-            escrever(z + 0x72445, 1, n, g);
-            n = ler_item(z + 0x72445, 1, 0x30d40, z);
+            write(z + 0x72445, 1, n, g);
+            n = read_item(z + 0x72445, 1, 0x30d40, z);
         }
-        fechar(g);
-        fechar_item(&mut z);
+        close(g);
+        close_item(&mut z);
     }
     soltar(nomes);
-    resposta
+    reply
 }
 
 // simplification: cria arquivos na pasta temporária e aloca; não roda duas vezes. A carga da prova do save
@@ -353,14 +353,14 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(caminho: usize, pasta: u
 /// temporária (a variável `CM3_TEMP` pela 0x90bc50 + "\", se houver, e o texto de [0xad9c64], copiado
 /// com limite pela 0x90cf20) e apaga (`remove` 0x94643a) os arquivos dela que casam com o padrão,
 /// em grupos de 100 nomes (a busca é fechada antes de apagar e refeita enquanto o grupo enche).
-pub(crate) unsafe extern "C" fn utils_clear_temp_folder(padrao: usize) {
+pub(crate) unsafe extern "C" fn utils_clear_temp_folder(default: usize) {
     let ambiente: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_UTILS_GET_FOLDER_FOR_KEY);
     let copiar_limitado: unsafe extern "C" fn(usize, *mut u8) = core::mem::transmute(FN_UTILS_COPY_PATH_LIMITED);
-    let juntar_caminho: unsafe extern "C" fn(*mut u8, usize, *const u8, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
-    let primeiro: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> i32 = core::mem::transmute(FN_FILE_FIND_FIRST);
-    let proximo: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(FN_FILE_FIND_NEXT);
+    let join_path: unsafe extern "C" fn(*mut u8, usize, *const u8, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
+    let first: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> i32 = core::mem::transmute(FN_FILE_FIND_FIRST);
+    let next: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(FN_FILE_FIND_NEXT);
     let encerrar: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(FN_FILE_FIND_CLOSE);
-    let apagar: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(FN_CRT_REMOVE);
+    let erase: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(FN_CRT_REMOVE);
     crate::comparacao::ramo("save limpar temporarios");
     let global = 0xde279c as *mut u8;
     *global = 0;
@@ -372,27 +372,27 @@ pub(crate) unsafe extern "C" fn utils_clear_temp_folder(padrao: usize) {
         zipdir_c_strcat(global, 0x9c3730 as *const u8);
     }
     zipdir_c_strcat(global, sufixo.as_ptr());
-    let mut pasta = [0u8; 0x104];
-    zipdir_c_strcpy(pasta.as_mut_ptr(), global);
-    let mut busca = [0u8; 0x104];
-    let mut achado = [0u8; 0x114];
+    let mut folder = [0u8; 0x104];
+    zipdir_c_strcpy(folder.as_mut_ptr(), global);
+    let mut search = [0u8; 0x104];
+    let mut found = [0u8; 0x114];
     let mut nomes = [0u8; 0x6400];
     loop {
-        juntar_caminho(busca.as_mut_ptr(), 0, pasta.as_ptr(), padrao, 0);
+        join_path(search.as_mut_ptr(), 0, folder.as_ptr(), default, 0);
         let mut n = 0usize;
-        if primeiro(busca.as_mut_ptr(), achado.as_mut_ptr(), 0) == 0 {
+        if first(search.as_mut_ptr(), found.as_mut_ptr(), 0) == 0 {
             loop {
-                zipdir_c_strcpy(nomes.as_mut_ptr().add(0x100 * n), achado.as_ptr().add(0x10));
+                zipdir_c_strcpy(nomes.as_mut_ptr().add(0x100 * n), found.as_ptr().add(0x10));
                 n += 1;
-                if n == 100 || proximo(achado.as_mut_ptr()) != 0 {
+                if n == 100 || next(found.as_mut_ptr()) != 0 {
                     break;
                 }
             }
         }
-        encerrar(achado.as_mut_ptr());
+        encerrar(found.as_mut_ptr());
         for k in 0..n {
-            juntar_caminho(busca.as_mut_ptr(), 0, pasta.as_ptr(), nomes.as_ptr().add(0x100 * k) as usize, 0);
-            apagar(busca.as_mut_ptr());
+            join_path(search.as_mut_ptr(), 0, folder.as_ptr(), nomes.as_ptr().add(0x100 * k) as usize, 0);
+            erase(search.as_mut_ptr());
         }
         if n != 100 {
             break;
@@ -429,7 +429,7 @@ pub(crate) unsafe fn zf_write_i32(z: usize, o: usize, v: i32) {
 /// [pt] O próximo byte comprimido do item: do buffer de leitura (+0x41705, cursor +0xa3185 até +0xa318d)
 /// ou, acabado, de um `fread` de 0x30d40 bytes (o primeiro byte do bloco novo, mesmo se veio vazio).
 pub(crate) unsafe fn zf_next_byte(z: usize) -> u8 {
-    let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> i32 = core::mem::transmute(FN_CRT_FREAD);
+    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> i32 = core::mem::transmute(FN_CRT_FREAD);
     let c = zf_read_i32(z, 0xa3185);
     if c < zf_read_i32(z, 0xa318d) {
         let b = *((z + 0x41705 + c as usize) as *const u8);
@@ -438,7 +438,7 @@ pub(crate) unsafe fn zf_next_byte(z: usize) -> u8 {
     }
     // simplification: o ramo marca o bloco, nao cada chamada (a zread roda milhoes de vezes na carga)
     crate::comparacao::ramo("save zread bloco");
-    zf_write_i32(z, 0xa318d, ler(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize));
+    zf_write_i32(z, 0xa318d, read(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize));
     let b = *((z + 0x41705) as *const u8);
     zf_write_i32(z, 0xa3185, 1);
     b
@@ -452,36 +452,36 @@ pub(crate) unsafe fn zf_next_byte(z: usize) -> u8 {
 /// posição lógica. Tipo 3: `fread` direto de `pedido / tam` itens. Tipo 4: decodifica o RLE; uma
 /// repetição pode atravessar chamadas (+0x10 de +0x14). Devolve `pedido / tam` (divisão com sinal,
 /// como a original: `tam` 0 derruba as duas).
-pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
-    let ler: unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32 = core::mem::transmute(FN_CRT_FREAD);
+pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: i32, z: usize) -> i32 {
+    let read: unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32 = core::mem::transmute(FN_CRT_FREAD);
     if z == 0 || zf_read_i32(z, 4) != 0 {
         return 0;
     }
-    let tamanho_do_item = zf_read_i32(z, 0x29 + 0x10c * zf_read_i32(z, 0xc) as usize);
-    let mut pedido = tam.wrapping_mul(quantos);
+    let size_of_item = zf_read_i32(z, 0x29 + 0x10c * zf_read_i32(z, 0xc) as usize);
+    let mut request = size.wrapping_mul(how_many);
     let pos = zf_read_i32(z, 8);
-    if pos > tamanho_do_item.wrapping_sub(pedido) {
-        pedido = tamanho_do_item.wrapping_sub(pos);
-        if pedido <= 0 {
+    if pos > size_of_item.wrapping_sub(request) {
+        request = size_of_item.wrapping_sub(pos);
+        if request <= 0 {
             return 0;
         }
     }
-    let fim = zf_read_i32(z, 8).wrapping_add(pedido);
-    zf_write_i32(z, 8, fim);
+    let end = zf_read_i32(z, 8).wrapping_add(request);
+    zf_write_i32(z, 8, end);
     if zf_read_i32(z, 0x19) != 4 {
         crate::comparacao::ramo("save zread tipo 3");
-        let q = pedido / tam;
-        zf_write_i32(z, 8, tam.wrapping_mul(q).wrapping_sub(pedido).wrapping_add(fim));
-        return ler(buf, tam, q, zf_read_i32(z, 0) as usize);
+        let q = request / size;
+        zf_write_i32(z, 8, size.wrapping_mul(q).wrapping_sub(request).wrapping_add(end));
+        return read(buf, size, q, zf_read_i32(z, 0) as usize);
     }
     let mut k = 0i32;
-    if pedido > 0 {
+    if request > 0 {
         'fora: loop {
             // o resto da repetição pendente
             let n = zf_read_i32(z, 0x14);
             if n != 0 && zf_read_i32(z, 0x10) < n {
                 loop {
-                    if k >= pedido {
+                    if k >= request {
                         break 'fora;
                     }
                     *buf.add(k as usize) = *((z + 0x18) as *const u8);
@@ -493,7 +493,7 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, tam: i32, quantos: i3
                     }
                 }
             }
-            if k >= pedido {
+            if k >= request {
                 break;
             }
             zf_write_i32(z, 0x14, 0);
@@ -508,19 +508,19 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, tam: i32, quantos: i3
                     *((z + 0x18) as *mut u8) = zf_next_byte(z);
                 }
                 if zf_read_i32(z, 0x14) == 0 {
-                    if k >= pedido {
+                    if k >= request {
                         break 'fora;
                     }
                     continue;
                 }
-                if k < pedido {
+                if k < request {
                     continue 'fora;
                 }
                 break 'fora;
             }
         }
     }
-    pedido / tam
+    request / size
 }
 
 // simplification: lê do arquivo e anda o cursor do FILE e do item; não roda duas vezes. A prova do save
@@ -531,7 +531,7 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, tam: i32, quantos: i3
 /// [pt] Um byte comprimido para o buffer de escrita (+0x72445, cursor +0xa3189); cheio, grava o buffer
 /// inteiro (`fwrite`) e o byte vai para o começo.
 pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
-    let escrever: unsafe extern "C" fn(usize, u32, i32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
+    let write: unsafe extern "C" fn(usize, u32, i32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
     let p = zf_read_i32(z, 0xa3189);
     if p < 0x30d40 {
         *((z + 0x72445 + p as usize) as *mut u8) = b;
@@ -540,7 +540,7 @@ pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
     }
     // simplification: o ramo marca o bloco, nao cada chamada (a zwrite roda milhoes de vezes no save)
     crate::comparacao::ramo("save zwrite bloco");
-    escrever(z + 0x72445, 1, p, zf_read_i32(z, 0) as usize);
+    write(z + 0x72445, 1, p, zf_read_i32(z, 0) as usize);
     zf_write_i32(z, 0xa3189, 1);
     *((z + 0x72445) as *mut u8) = b;
 }
@@ -554,18 +554,18 @@ pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
 /// Tipo 3: `fwrite` direto (devolve o que ele devolver). Tipo 4: codifica o RLE byte a byte,
 /// guardando a repetição em +0x18/+0x14 entre as chamadas; byte diferente fecha a repetição (1 com
 /// byte <= 0x80 sai literal, senão o par 0x80 + n, byte); a 0x7f sai o par e recomeça. Devolve `quantos`.
-pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
-    let escrever: unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32 = core::mem::transmute(FN_CRT_FWRITE);
+pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_many: i32, z: usize) -> i32 {
+    let write: unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32 = core::mem::transmute(FN_CRT_FWRITE);
     if z == 0 || zf_read_i32(z, 4) != 1 {
         return 0;
     }
     let item = 0x29 + 0x10c * zf_read_i32(z, 0xc) as usize;
-    let total = tam.wrapping_mul(quantos);
+    let total = size.wrapping_mul(how_many);
     zf_write_i32(z, item, zf_read_i32(z, item).wrapping_add(total));
     zf_write_i32(z, 8, zf_read_i32(z, 8).wrapping_add(total));
     if zf_read_i32(z, 0x19) != 4 {
         crate::comparacao::ramo("save zwrite tipo 3");
-        return escrever(buf, tam, quantos, zf_read_i32(z, 0) as usize);
+        return write(buf, size, how_many, zf_read_i32(z, 0) as usize);
     }
     let repetido = (z + 0x18) as *mut u8;
     let mut k = 0i32;
@@ -595,7 +595,7 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, tam: i32, quantos:
         *repetido = *buf.add(k as usize);
         k += 1;
     }
-    quantos
+    how_many
 }
 
 // simplification: grava no arquivo (buffer e fwrite) e muda o índice; não roda duas vezes. A prova do save
@@ -610,10 +610,10 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, tam: i32, quantos:
 /// zwrite) e regrava cabeçalho + índice inteiros (0x416ec bytes) no começo (`fseek` 0). Lendo: zera
 /// os cursores de leitura. Fecha o FILE, libera o ZFILE e zera o ponteiro.
 pub(crate) unsafe extern "C" fn zclose(zz: *mut usize) {
-    let escrever: unsafe extern "C" fn(usize, u32, i32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-    let buscar: unsafe extern "C" fn(usize, i32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
-    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
+    let write: unsafe extern "C" fn(usize, u32, i32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
+    let search: unsafe extern "C" fn(usize, i32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
+    let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     let z = *zz;
     if z == 0 {
         return;
@@ -623,7 +623,7 @@ pub(crate) unsafe extern "C" fn zclose(zz: *mut usize) {
     if zf_read_i32(z, 4) == 1 {
         let n = zf_read_i32(z, 0xa3189);
         if n > 0 {
-            escrever(z + 0x72445, 1, n, f());
+            write(z + 0x72445, 1, n, f());
             zf_write_i32(z, 0xa3189, 0);
         }
     } else {
@@ -634,19 +634,19 @@ pub(crate) unsafe extern "C" fn zclose(zz: *mut usize) {
         let n = zf_read_i32(z, 0x14);
         if zf_read_i32(z, 0x19) == 4 && n != 0 {
             if n <= 1 && *((z + 0x18) as *const u8) <= 0x80 {
-                escrever(z + 0x18, 1, 1, f());
+                write(z + 0x18, 1, 1, f());
             } else {
-                let marca = (n as u8).wrapping_add(0x80);
-                escrever(&marca as *const u8 as usize, 1, 1, f());
-                escrever(z + 0x18, 1, 1, f());
+                let mark = (n as u8).wrapping_add(0x80);
+                write(&mark as *const u8 as usize, 1, 1, f());
+                write(z + 0x18, 1, 1, f());
             }
         }
-        buscar(f(), 0, 0);
-        escrever(z + 0x19, 0x416ec, 1, f());
+        search(f(), 0, 0);
+        write(z + 0x19, 0x416ec, 1, f());
     }
-    fechar(f());
+    close(f());
     zf_write_i32(z, 0, 0);
-    liberar(z);
+    free(z);
     *zz = 0;
 }
 

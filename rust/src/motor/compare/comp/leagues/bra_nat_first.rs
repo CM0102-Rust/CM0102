@@ -90,10 +90,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_set_up_rules_42cb7
 ///
 /// [pt] Comparador: só a original (simplification: os registros de carreira alocam e vão para o histórico; não rodam duas vezes),
 /// com o plano do ensaio (a cópia sem os registros nem a gravação): a devolução e o destino gravado na linha.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
-    let (n, l, dest) = serie_a_staff_records(this, clube, situacao, fase, false);
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_FIRST_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, a5, a6);
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+    let (n, l, dest) = serie_a_staff_records(this, clube, status, stage, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_FIRST_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, status, stage, a4, a5, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
-    PLACAR.registrar(r == n && gravado == dest, || format!("bra_nat_first_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
+    PLACAR.registrar(r == n && gravado == dest, || format!("bra_nat_first_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
 }

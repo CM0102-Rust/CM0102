@@ -40,17 +40,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_australia_rules(this: usize, a1:
 }
 
 /// Comparer for `england_rules_can_loan_player` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_england_rules_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    england_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_ENGLAND_RULES_CAN_LOAN_PLAYER), england_rules_can_loan_player, "england_rules_can_loan_player", this, clube, jogador, msg, motivo)
+pub(crate) unsafe extern "thiscall" fn comparar_england_rules_can_loan_player(this: usize, clube: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
+    england_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_ENGLAND_RULES_CAN_LOAN_PLAYER), england_rules_can_loan_player, "england_rules_can_loan_player", this, clube, player, msg, reason)
 }
 
 /// Comparador: lado a lado no byte da conta do clube da oferta.
-pub(crate) unsafe extern "thiscall" fn comparar_record_loan(this: usize, oferta: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_record_loan(this: usize, offer: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_RECORD_LOAN);
-    let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(oferta + 8).wrapping_mul(club::SIZE));
-    let regioes = [(season_loans_entry(clube), 1usize)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, oferta), || record_loan(this, oferta));
-    PLACAR.registrar(igual, || format!("record_loan(oferta {:#x}) original={:x?} rust={:x?}", oferta, mo, mr));
+    let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(offer + 8).wrapping_mul(club::SIZE));
+    let regions = [(season_loans_entry(clube), 1usize)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, offer), || record_loan(this, offer));
+    PLACAR.registrar(igual, || format!("record_loan(oferta {:#x}) original={:x?} rust={:x?}", offer, mo, mr));
 }
 
 /// Comparer for `england_rules_daily_update` (comparison mode: see the header of motor.rs).
@@ -67,17 +67,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_england_rules_daily_update(this:
         return;
     }
     let n = (read_usize(G_CLUB_COUNT) as i32).max(0) as usize;
-    let regioes = [(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c), n * 16)];
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&regioes, || o(this, data), || england_rules_daily_update(this, data));
+    let regions = [(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c), n * 16)];
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&regions, || o(this, data), || england_rules_daily_update(this, data));
     PLACAR.registrar(igual, || format!("england_rules_daily_update(regras {:#x}) tabela diverge", this));
 }
 
 /// Comparer for `england_rules_get_loan_period` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado nas quatro saídas e em [0xae1080] (a regra base pode consultar contratos).
-pub(crate) unsafe extern "thiscall" fn comparar_england_rules_get_loan_period(this: usize, clube: usize, a2: u32, ini_mes: *mut i8, ini_ano: *mut i16, fim_mes: *mut i8, fim_ano: *mut i16, jogador: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_england_rules_get_loan_period(this: usize, clube: usize, a2: u32, ini_month: *mut i8, ini_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize)>(IDX_ENGLAND_RULES_GET_LOAN_PERIOD);
-    let regioes = [(ini_mes as usize, 1usize), (ini_ano as usize, 2), (fim_mes as usize, 1), (fim_ano as usize, 2), (G_CONTRACT_LOOKUP_RESULT, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, clube, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador), || england_rules_get_loan_period(this, clube, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador));
-    PLACAR.registrar(igual, || format!("england_rules_get_loan_period(regras {:#x}, clube {:#x}, jogador {:#x}) original={:x?} rust={:x?}", this, clube, jogador, mo, mr));
+    let regions = [(ini_month as usize, 1usize), (ini_year as usize, 2), (end_month as usize, 1), (end_year as usize, 2), (G_CONTRACT_LOOKUP_RESULT, 4)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, clube, a2, ini_month, ini_year, end_month, end_year, player), || england_rules_get_loan_period(this, clube, a2, ini_month, ini_year, end_month, end_year, player));
+    PLACAR.registrar(igual, || format!("england_rules_get_loan_period(regras {:#x}, clube {:#x}, jogador {:#x}) original={:x?} rust={:x?}", this, clube, player, mo, mr));
 }

@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_groups(this: usize) -> usiz
         reg.push((read_u32_as_usize(this + 0x14), 0xc0));
     }
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| draw_groups(this)));
-    let mesma = if a != 0 && b != 0 {
+    let same = if a != 0 && b != 0 {
         core::slice::from_raw_parts(a as *const u8, 0xa0) == core::slice::from_raw_parts(b as *const u8, 0xa0)
     } else {
         a == 0 && b == 0
@@ -25,7 +25,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_groups(this: usize) -> usiz
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && mesma, || format!("draw_groups: memória igual={} lista igual={}", igual, mesma));
+    PLACAR.registrar(igual && same, || format!("draw_groups: memória igual={} lista igual={}", igual, same));
     a
 }
 
@@ -36,8 +36,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_groups(this: usize) -> usiz
 pub(crate) unsafe extern "thiscall" fn comparar_run_group_draw(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RUN_GROUP_DRAW)(this);
     if read_u32_as_usize(this + 0x45) == 1 {
-        let fases = read_u32_as_usize(this + 0xc);
-        let ok = fases != 0 && (0..7).all(|g| read_u32_as_usize(fases + g * 4) != 0) && read_u32_as_usize(this + 0x30) == 6;
+        let stages = read_u32_as_usize(this + 0xc);
+        let ok = stages != 0 && (0..7).all(|g| read_u32_as_usize(stages + g * 4) != 0) && read_u32_as_usize(this + 0x30) == 6;
         PLACAR.registrar(ok, || format!("run_group_draw: fases dos grupos ou +0x30 ({}) fora do esperado", read_u32_as_usize(this + 0x30) as i32));
     }
 }
@@ -46,12 +46,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_run_group_draw(this: usize) {
 ///
 /// [pt] Só a original (a semeadura, o sorteio e o dia da liga não rodam duas vezes), conferindo o que ela garante: no dia do
 /// sorteio (a condição da cópia), a Copa sai com a tabela do grupo 1 (+0xb1) e +0x45 = 1.
-pub(crate) unsafe extern "thiscall" fn comparar_world_cup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_world_cup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_WORLD_CUP_UPDATE_FOR_DATE);
-    let ano = core::ptr::read_unaligned((hoje + 2) as *const u16) as i32;
-    let dia = core::ptr::read_unaligned(hoje as *const u16);
-    let sorteia = read_i16(this + 0xb6) as u16 == dia && read_i16(this + 0xb8) as i32 + read_i16(this + 0x40) as i32 == ano && completo != 0 && read_u32_as_usize(this + 0xb1) == 0;
-    let r = o(this, hoje, completo);
+    let year = core::ptr::read_unaligned((today + 2) as *const u16) as i32;
+    let day = core::ptr::read_unaligned(today as *const u16);
+    let sorteia = read_i16(this + 0xb6) as u16 == day && read_i16(this + 0xb8) as i32 + read_i16(this + 0x40) as i32 == year && full != 0 && read_u32_as_usize(this + 0xb1) == 0;
+    let r = o(this, today, full);
     if sorteia {
         PLACAR.registrar(read_u32_as_usize(this + 0xb1) != 0 && read_u32_as_usize(this + 0x45) == 1, || format!("world_cup_update_for_date: dia do sorteio sem a tabela (+0xb1 = {:#x}, +0x45 = {})", read_u32_as_usize(this + 0xb1), read_u32_as_usize(this + 0x45)));
     }
@@ -62,14 +62,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_update_for_date(this: 
 ///
 /// [pt] Só a original (aloca a tabela e manda a notícia dos grupos), conferindo o plano feito antes: devolve 1, +0x3e = 4 e
 /// as linhas da tabela (0x3b bytes, +0 o clube) com os clubes do grupo 1 da lista, na ordem.
-pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_group_table(this: usize, lista: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_group_table(this: usize, list: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_WORLD_CUP_CREATE_GROUP_TABLE);
-    let plano = group_clubs(lista, 1);
-    let r = o(this, lista);
+    let plan = group_clubs(list, 1);
+    let r = o(this, list);
     if r == 1 {
         let t = read_u32_as_usize(this + 0xb1);
-        let ok = read_i16(this + 0x3e) == 4 && plano.iter().enumerate().all(|(k, &c)| read_u32_as_usize(t + k * 0x3b) == c);
-        PLACAR.registrar(ok, || format!("world_cup_create_group_table: as linhas não têm os clubes do grupo 1 ({:x?})", plano));
+        let ok = read_i16(this + 0x3e) == 4 && plan.iter().enumerate().all(|(k, &c)| read_u32_as_usize(t + k * 0x3b) == c);
+        PLACAR.registrar(ok, || format!("world_cup_create_group_table: as linhas não têm os clubes do grupo 1 ({:x?})", plan));
     }
     r
 }
@@ -80,10 +80,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_group_table(thi
 /// fase com os times (+0x3e) da Copa, o ano dela e, na tabela da fase (+0xb1, linhas de 0x3b bytes), os clubes do
 /// grupo g+2 da lista (em qualquer ordem: na comparação de 02/11 as linhas da fase não
 /// saíram na ordem da lista [inferência: a fase ordena ou sorteia a tabela dela]).
-pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_group_stage(this: usize, g: i32, lista: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_group_stage(this: usize, g: i32, list: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_WORLD_CUP_CREATE_GROUP_STAGE);
-    let plano = group_clubs(lista, g + 2);
-    let r = o(this, g, lista);
+    let plan = group_clubs(list, g + 2);
+    let r = o(this, g, list);
     if r == 1 {
         let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4);
         let t = read_u32_as_usize(f + 0xb1);
@@ -92,13 +92,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_group_stage(thi
             && read_i16(f + 0xa9) == 3 && read_i16(f + 0x3a) as i32 == 0x420 + g
             && (t == 0 || {
                 // as linhas da fase não seguem a ordem da lista: confere o conjunto dos clubes
-                let mut a: Vec<usize> = (0..plano.len()).map(|k| read_u32_as_usize(t + k * 0x3b)).collect();
-                let mut b = plano.clone();
+                let mut a: Vec<usize> = (0..plan.len()).map(|k| read_u32_as_usize(t + k * 0x3b)).collect();
+                let mut b = plan.clone();
                 a.sort_unstable();
                 b.sort_unstable();
                 a == b
             });
-        PLACAR.registrar(ok, || format!("world_cup_create_group_stage({}): a fase não bate com o plano ({:x?})", g, plano));
+        PLACAR.registrar(ok, || format!("world_cup_create_group_stage({}): a fase não bate com o plano ({:x?})", g, plan));
     }
     r
 }
@@ -113,11 +113,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_set_predicted_position
     if read_u32_as_usize(this + 8) == 0 || read_i16(this + 0x36) < 0x20 || read_u32_as_usize(this + 0x14) == 0 {
         return o(this);
     }
-    let ordenar: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let sort: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let n = read_i16(this + 0x36) as usize;
     let mut v: Vec<usize> = (0..n).map(|i| read_u32_as_usize(read_u32_as_usize(this + 0x14) + i * 6)).collect();
-    ordenar(v.as_mut_ptr(), n as u32, 4, 0x4b07d0);
+    sort(v.as_mut_ptr(), n as u32, 4, 0x4b07d0);
     o(this);
     const FAIXAS: [u8; 32] = [1, 2, 3, 4, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19];
     let errado = (0..32).find(|&k| {
@@ -132,25 +132,25 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_set_predicted_position
 /// [pt] Lado a lado nas fases de grupos: a original com as saídas de quem chama e a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas alocadas têm de ser iguais (a da cópia é liberada).
 /// O mata-mata: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, id: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_WORLD_CUP_CREATE_SCHEDULE);
-    if fase as u8 as i8 >= 7 {
-        return o(this, fase, rodadas, id, liga);
+    if stage as u8 as i8 >= 7 {
+        return o(this, stage, rounds, id, league);
     }
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut i2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(
         &reg,
-        || o(this, fase, rodadas, id, liga),
-        || world_cup_create_schedule(this, fase, &mut r2, &mut i2, if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }),
+        || o(this, stage, rounds, id, league),
+        || world_cup_create_schedule(this, stage, &mut r2, &mut i2, if league.is_null() { core::ptr::null_mut() } else { &mut l2 }),
     );
-    let saidas = *rodadas == r2 && *id == i2 && (liga.is_null() || *liga == l2);
-    let tabela = if a != 0 && b != 0 { written_group_round_bytes(a) == written_group_round_bytes(b) } else { a == 0 && b == 0 };
+    let outs = *rounds == r2 && *id == i2 && (league.is_null() || *league == l2);
+    let table = if a != 0 && b != 0 { written_group_round_bytes(a) == written_group_round_bytes(b) } else { a == 0 && b == 0 };
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("world_cup_create_schedule({}): saídas {} tabela {}", fase as u8 as i8, saidas, tabela));
+    PLACAR.registrar(igual && outs && table, || format!("world_cup_create_schedule({}): saídas {} tabela {}", stage as u8 as i8, outs, table));
     a
 }
 

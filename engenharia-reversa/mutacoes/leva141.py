@@ -7,7 +7,7 @@ MUTACOES = [
     ('l_folego', 'local = sortear(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968))) as f32;', 'local = sortear(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968)) + 1) as f32;'),
     ('l_59', '*((p + 0x59) as *mut f32) = r as f32;', '*((p + 0x59) as *mut f32) = (r + 1) as f32;'),
     ('l_d5', '*d5 = (*d5 as f64 * read_f32_at(0x968f18) as f64) as f32;', '*d5 = (*d5 as f64 * read_f32_at(0x968f18) as f64 * 1.01) as f32;'),
-    ('l_forca', 'let v = (byte(pessoa, 0x2d) as i32 * 25) as f64 + read_f64_at(0x96d458);', 'let v = (byte(pessoa, 0x2d) as i32 * 26) as f64 + read_f64_at(0x96d458);'),
+    ('l_forca', 'let v = (byte(person, 0x2d) as i32 * 25) as f64 + read_f64_at(0x96d458);', 'let v = (byte(person, 0x2d) as i32 * 26) as f64 + read_f64_at(0x96d458);'),
     ('l_conta', '    if *b(m, 0x8eb5) != 0 {\n        *w(0xf639) = (*w(0xf639)).wrapping_add(1);', '    if *b(m, 0x8eb5) != 0 {\n        *w(0xf639) = (*w(0xf639)).wrapping_add(2);'),
     ('r_soma', '*g = if *chance as i8 as i32 + *g as i8 as i32 > 0x64 { 0x64 }', '*g = if *chance as i8 as i32 + *g as i8 as i32 > 0x63 { 0x63 }', 'lesao agravada'),
     ('r_grave', '} else if *chance as i8 > *g as i8 {\n        crate::comparacao::ramo("lesao mais grave");', '} else if *chance as i8 >= *g as i8 + 3 {\n        crate::comparacao::ramo("lesao mais grave");', 'lesao mais grave'),

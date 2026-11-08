@@ -138,8 +138,8 @@ pub(crate) const SPAIN_PRIMERA_DIVISION: LeagueDivision = LeagueDivision {
 ///
 /// [pt] { 0x5be330 } (thiscall, ret 8, fra_second.cpp): `FraSecond::FraSecond(ano, registro)`: a segunda divisão francesa
 /// (a Division 2), disciplina 0xc, só a liga.
-pub(crate) unsafe extern "thiscall" fn construct_fra_second(this: usize, ano: u32, registro: usize) -> usize {
-    construct_division_league(this, ano, registro, &FRENCH_SECOND_DIVISION)
+pub(crate) unsafe extern "thiscall" fn construct_fra_second(this: usize, year: u32, record: usize) -> usize {
+    construct_division_league(this, year, record, &FRENCH_SECOND_DIVISION)
 }
 
 
@@ -151,19 +151,19 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_second(this: usize, ano: u3
 /// [pt] O comparador dos quatro: alocam: só a original, conferindo a devolução, a vtable, o ano, o registro e a disciplina;
 /// na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c = 0 e +0xc = 0; na Primera, a divisão de baixo em +0xee
 /// conforme o bit 4 da nação.
-pub(crate) unsafe fn compare_division_league_ctor(nome: &str, this: usize, ano: u32, registro: usize, p: &LeagueDivision, original: impl FnOnce() -> usize) -> usize {
+pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: usize, year: u32, record: usize, p: &LeagueDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && read_u32_as_usize(this + 4) == registro && *((this + 0x50) as *const u8) == p.disciplina;
+    let mut ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == year as u16
+        && read_u32_as_usize(this + 4) == record && *((this + 0x50) as *const u8) == p.disciplina;
     if *((this + 0x44) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
         ok = ok && read_u32_as_usize(this + 0x2c) == 0 && read_u32_as_usize(this + 0xc) == 0;
         if p.baixo {
             let nacao = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
-            let tem = read_u32_as_usize(this + 0xee) != 0;
-            ok = ok && tem == (*((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 == 0);
+            let has = read_u32_as_usize(this + 0xee) != 0;
+            ok = ok && has == (*((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 == 0);
         }
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", nome, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0x2c), read_u32_as_usize(this + 8)));
+    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", name, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0x2c), read_u32_as_usize(this + 8)));
     r
 }
 
@@ -209,7 +209,7 @@ pub(crate) unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u
 ///
 /// [pt] { 0x5be620 } (thiscall, ret 0x10, fra_second.cpp, 2.275 bytes, método +0x3c): `FraSecond::create_schedule`: a segunda divisão,
 /// 38 rodadas (`SECOND_DIVISION_ROUNDS`). Fonte 0x9ccc0c, linha 0xa7.
-pub(crate) unsafe extern "thiscall" fn fra_second_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_league_schedule(this, fase, rodadas, extra, liga, &FRENCH_SECOND_DIVISION_LEAGUE)
+pub(crate) unsafe extern "thiscall" fn fra_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_league_schedule(this, stage, rounds, extra, league, &FRENCH_SECOND_DIVISION_LEAGUE)
 }
 

@@ -4,15 +4,15 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/leagues/fra_cfa.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `fra_cfa_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CFA_CREATE_SCHEDULE);
-    compare_cfa_schedule("fra_cfa_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_cfa_create_schedule(this, fase, r, e, l))
+    compare_cfa_schedule("fra_cfa_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| fra_cfa_create_schedule(this, stage, r, e, l))
 }
 
 /// Comparer for `fra_cfa_create_schedule_64ef30` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_schedule_64ef30(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_schedule_64ef30(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CFA_CREATE_SCHEDULE_64EF30);
-    compare_c1_schedule("fra_cfa_create_schedule_64ef30", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_cfa_create_schedule_64ef30(this, fase, r, e, l))
+    compare_c1_schedule("fra_cfa_create_schedule_64ef30", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| fra_cfa_create_schedule_64ef30(this, stage, r, e, l))
 }
 
 /// Comparer for `fra_cfa_set_up_rules` (comparison mode: see the header of motor.rs).
@@ -31,15 +31,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_set_up_rules(this: usize
 }
 
 /// Comparer for `construct_fra_cfa` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_cfa(this: usize, ano: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_cfa(this: usize, year: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_FRA_CFA);
-    compare_construct_group_league("construct_fra_cfa", this, ano, &FRA_CFA_CFA_LEAGUE, || o(this, ano))
+    compare_construct_group_league("construct_fra_cfa", this, year, &FRA_CFA_CFA_LEAGUE, || o(this, year))
 }
 
 /// Comparer for `construct_fra_lower` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_lower(this: usize, ano: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_lower(this: usize, year: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_FRA_LOWER);
-    compare_construct_group_league("construct_fra_lower", this, ano, &FRENCH_LOWER_DIVISION, || o(this, ano))
+    compare_construct_group_league("construct_fra_lower", this, year, &FRENCH_LOWER_DIVISION, || o(this, year))
 }
 
 /// Comparer for `destroy_fra_cfa` (comparison mode: see the header of motor.rs).
@@ -55,19 +55,19 @@ pub(crate) unsafe extern "thiscall" fn comparar_destroy_fra_lower(this: usize) {
 }
 
 /// Comparer for `fra_cfa_create_group_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_group_table(this: usize, clubes: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_group_table(this: usize, clubs: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FRA_CFA_CREATE_GROUP_TABLE);
-    compare_french_table("fra_cfa_create_group_table", this, clubes, 0x12, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION], || o(this, clubes))
+    compare_french_table("fra_cfa_create_group_table", this, clubs, 0x12, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION], || o(this, clubs))
 }
 
 /// Comparer for `fra_cfa_create_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_table(this: usize, clubes: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_table(this: usize, clubs: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FRA_CFA_CREATE_TABLE);
-    compare_french_table("fra_cfa_create_table", this, clubes, 0x14, &[KEY_CLUB_COMP_FRENCH_NATIONAL], || o(this, clubes))
+    compare_french_table("fra_cfa_create_table", this, clubs, 0x14, &[KEY_CLUB_COMP_FRENCH_NATIONAL], || o(this, clubs))
 }
 
 /// Comparer for `fra_cfa_set_club_progress` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_set_club_progress(this: usize, clube: usize, stage: u32, current: u32, best: u32, worst: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_FRA_CFA_SET_CLUB_PROGRESS);
-    compare_c1_club_progress("fra_cfa_set_club_progress", this, clube, || o(this, clube, fase, atual, melhor, pior), || fra_cfa_set_club_progress(this, clube, fase, atual, melhor, pior))
+    compare_c1_club_progress("fra_cfa_set_club_progress", this, clube, || o(this, clube, stage, current, best, worst), || fra_cfa_set_club_progress(this, clube, stage, current, best, worst))
 }

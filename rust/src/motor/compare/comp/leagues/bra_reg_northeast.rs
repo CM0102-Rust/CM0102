@@ -4,9 +4,9 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/leagues/bra_reg_northeast.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `construct_bra_reg_northeast` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_northeast(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_northeast(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_NORTHEAST);
-    bra_reg_northeast_compare_state_league_ctor("construct_bra_reg_northeast", this, ano, registro, &NORDESTE_STATE_LEAGUE, || o(this, ano, registro))
+    bra_reg_northeast_compare_state_league_ctor("construct_bra_reg_northeast", this, year, record, &NORDESTE_STATE_LEAGUE, || o(this, year, record))
 }
 
 /// Comparer for `bra_reg_northeast_create_table` (comparison mode: see the header of motor.rs).

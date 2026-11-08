@@ -29,8 +29,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i
         r
     });
     let ((ao, to), (ar, tr)) = (lo.get(), lr.get());
-    let igual_em = |x: usize, y: usize, n: usize| (x == 0 && y == 0) || (x != 0 && y != 0 && core::slice::from_raw_parts(x as *const u8, n) == core::slice::from_raw_parts(y as *const u8, n));
-    let listas = igual_em(ao, ar, 0xa1 * 6) && (a != 1 || igual_em(to, tr, read_i16(this + 0x36).max(0) as usize * 6));
+    let same_in = |x: usize, y: usize, n: usize| (x == 0 && y == 0) || (x != 0 && y != 0 && core::slice::from_raw_parts(x as *const u8, n) == core::slice::from_raw_parts(y as *const u8, n));
+    let listas = same_in(ao, ar, 0xa1 * 6) && (a != 1 || same_in(to, tr, read_i16(this + 0x36).max(0) as usize * 6));
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     if ar != 0 && ar != ao {
         soltar(ar);
@@ -43,23 +43,23 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i
 }
 
 /// Comparer for `uefa_cup_create_round_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_UEFA_CUP_CREATE_ROUND_TABLE);
-    eng_cc_cup_compare_round_table("uefa_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| uefa_cup_create_round_table(this, fase, r, e, s))
+    eng_cc_cup_compare_round_table("uefa_cup_create_round_table", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
+        |r, e, s| uefa_cup_create_round_table(this, stage, r, e, s))
 }
 
 /// Comparer for `uefa_cup_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_update_staff_records_for_status(this: usize, clube: usize, outcome: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_UEFA_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     if clube == 0 {
-        return o(this, clube, desfecho, a3, a4, jogo, a6);
+        return o(this, clube, outcome, a3, a4, jogo, a6);
     }
-    let d = desfecho as u8;
-    let antes = read_u32_as_usize(clube + club::EURO_FLAG);
-    let previsto = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { antes };
-    let r = o(this, clube, desfecho, a3, a4, jogo, a6);
-    let depois = read_u32_as_usize(clube + club::EURO_FLAG);
-    PLACAR.registrar(r == 0 && depois == previsto, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, d, antes, depois, previsto, r));
+    let d = outcome as u8;
+    let before = read_u32_as_usize(clube + club::EURO_FLAG);
+    let previsto = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { before };
+    let r = o(this, clube, outcome, a3, a4, jogo, a6);
+    let after = read_u32_as_usize(clube + club::EURO_FLAG);
+    PLACAR.registrar(r == 0 && after == previsto, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, d, before, after, previsto, r));
     r
 }

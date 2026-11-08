@@ -7,9 +7,9 @@ MUTACOES = [
     ('e_k7c', "            k7c = k7c.wrapping_mul(k7c).wrapping_add(1);", "            k7c = k7c.wrapping_mul(k7c).wrapping_add(2);"),
     ('e_zera', "            if v < read_f64_at(0x9689a0) || v.is_nan() { // 0x9689a0 = 0\n                *v1c = v1c.wrapping_add(match_pl_ftol(*d58 as f64 * *d58 as f64 * k as f64));", "            if (*d58 as f64) < read_f64_at(0x9689a0) || v.is_nan() {\n                *v1c = v1c.wrapping_add(match_pl_ftol(*d58 as f64 * *d58 as f64 * k as f64));"),
     ('e_100', "        v1c = v1c.wrapping_add(match_pl_ftol(d58 as f64 * d58 as f64 * read_f32_at(0x968960) as f64));", "        v1c = v1c.wrapping_add(match_pl_ftol(d58 as f64 * d58 as f64 * read_f32_at(0x969560) as f64));"),
-    ('e_4d', "                tipo = 0x3d;\n                nota = base;", "                tipo = 0x3e;\n                nota = base;"),
-    ('e_tipo1e', "                    nota = v30b;\n                    tipo = 0x1e;", "                    nota = v30b + 1;\n                    tipo = 0x1e;"),
+    ('e_4d', "                kind = 0x3d;\n                rating = base;", "                kind = 0x3e;\n                rating = base;"),
+    ('e_tipo1e', "                    rating = v30b;\n                    kind = 0x1e;", "                    rating = v30b + 1;\n                    kind = 0x1e;"),
     ('e_movimento', "                    tx = x78;\n                    ty = y77;\n                    moveu = 1;", "                    tx = x78;\n                    ty = y77;\n                    moveu = 2;"),
     ('e_gosta', "                base = base.wrapping_add(1000);\n            }\n        }", "                base = base.wrapping_add(999);\n            }\n        }"),
-    ('e_preferido', "        if ficha_p == preferido(tabela, clube_p, 0, (marca_p == 0) as u32) {\n            v1c = v1c.wrapping_add(1000);", "        if ficha_p == preferido(tabela, clube_p, 0, (marca_p == 0) as u32) {\n            v1c = v1c.wrapping_add(900);"),
+    ('e_preferido', "        if sheet_p == preferido(table, clube_p, 0, (marca_p == 0) as u32) {\n            v1c = v1c.wrapping_add(1000);", "        if sheet_p == preferido(table, clube_p, 0, (marca_p == 0) as u32) {\n            v1c = v1c.wrapping_add(900);"),
 ]

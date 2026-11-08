@@ -23,25 +23,25 @@ pub(crate) unsafe fn stage_leader(this: usize, k: i32) -> usize {
 /// liberar a tabela). Com ela: a tabela liberada (free 0x9452ca) e +0x30 = 10. [inferência] A final decide o campeão
 /// da Série C, em ida e volta.
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: usize) {
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     #[allow(clippy::type_complexity)]
-    let construir: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
+    let construct: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-    let mut lista = [0usize; 2];
-    lista[0] = stage_leader(this, 8); // cqs4: o campeão do grupo A
-    lista[1] = stage_leader(this, 9);
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let mut list = [0usize; 2];
+    list[0] = stage_leader(this, 8); // cqs4: o campeão do grupo A
+    list[1] = stage_leader(this, 9);
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = tabela(this, 10, &mut rodadas, &mut extra, 0);
-    let p = novo(0xb2);
-    let fase = if p != 0 {
-        construir(p, this, 2, lista.as_ptr(), rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 10, 1,
+    let t = table(this, 10, &mut rodadas, &mut extra, 0);
+    let p = new(0xb2);
+    let stage = if p != 0 {
+        construct(p, this, 2, list.as_ptr(), rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 10, 1,
                   extra as u16 as u32, 0x14, 0, 0, 0, 0)
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + 0xc) + 0x28) as *mut usize, fase);
+    core::ptr::write_unaligned((read_usize(this + 0xc) + 0x28) as *mut usize, stage);
     if read_usize(read_usize(this + 0xc) + 0x28) == 0 {
         return show_error_at(0x98aba4, 0x392);
     }
@@ -70,27 +70,27 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: us
 /// a virada do Brasil não lê); no fim, o eax do free ou o +0xee (a cópia devolve 0: ninguém lê).
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usize) -> u32 {
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     liberar_tabela(this, 0);
     let l = read_usize(this + 0xba);
     if l != 0 {
-        liberar(l);
+        free(l);
         core::ptr::write_unaligned((this + 0xba) as *mut usize, 0);
     }
-    let estatisticas = read_usize(this + 8);
-    if estatisticas != 0 {
+    let stats = read_usize(this + 8);
+    if stats != 0 {
         let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
-        arquivar(estatisticas, 1);
+        arquivar(stats, 1);
     }
     if (read_usize(this + 0x30) as i32) >= 0 {
         let mut i = 0i32;
         loop {
             let f = read_usize(read_usize(this + 0xc) + 4 * i as usize);
             if f != 0 {
-                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
-                destruir(f, 1);
+                let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
+                destroy(f, 1);
             }
             i += 1;
             if i > read_usize(this + 0x30) as i32 {
@@ -99,30 +99,30 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
         }
     }
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
-    liberar(read_usize(this + 0xc));
+    free(read_usize(this + 0xc));
     let n = read_usize(this + 0x2c) as i32;
     let a = read_i16(this + 0x40);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(1));
     crate::comparacao::ramo("cqs_4 virada da serie c");
     let v = if n > 0 { alocar((n * 4) as u32) } else { 0 };
     core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
-    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
-    if regras(this) == 0 {
+    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
+    if rules(this) == 0 {
         show_error_at(0x98aba4, 0x202);
         return 0;
     }
-    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_BRANATTHIRD_CREATE_TABLE);
-    if tabela(this) == 0 {
+    let table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_BRANATTHIRD_CREATE_TABLE);
+    if table(this) == 0 {
         show_error_at(0x98aba4, 0x209);
         return 0;
     }
-    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
-    if jogos(this) == 0 {
+    let games: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
+    if games(this) == 0 {
         show_error_at(0x98aba4, 0x20f);
         return 0;
     }
-    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    if ordenar(this, 0) == 0 {
+    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
+    if sort(this, 0) == 0 {
         show_error_at(0x98aba4, 0x216);
         return 0;
     }
@@ -130,15 +130,15 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
     expectativas(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
     renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)); // cqs4: a renovação dos árbitros da Série C
-    let grupo: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_BRANATTHIRD_CREATE_GROUP_STAGE);
+    let group: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_BRANATTHIRD_CREATE_GROUP_STAGE);
     for g in 0..7 {
-        grupo(this, g);
+        group(this, g);
     }
-    let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
-    previstas(this);
+    let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
+    predicted(this);
     let l = read_usize(this + 0xee);
     if l != 0 {
-        liberar(l);
+        free(l);
     }
     core::ptr::write_unaligned((this + 0xee) as *mut usize, 0);
     0
@@ -165,14 +165,14 @@ pub(crate) fn place_for_index(k: usize) -> u8 {
 /// thiscall(+8, clube, posição), ret 8; a original empurra a faixa dos quarenta num dword com o byte da faixa e lixo
 /// da pilha em cima; a 0x4a2540 só lê o byte: a cópia passa o byte limpo).
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(this: usize) {
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let posicao: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
+    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    let position: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     if read_usize(this + 8) == 0 {
         return show_error_at(0x98aba4, 0x4a2);
     }
-    ordenar(read_usize(this + 0xee), 0x38, 4, 0x4b07d0); // cqs4: a lista dos 56 pela reputação
+    sort(read_usize(this + 0xee), 0x38, 4, 0x4b07d0); // cqs4: a lista dos 56 pela reputação
     for k in 0..0x38usize {
-        posicao(read_usize(this + 8), read_usize(read_usize(this + 0xee) + 4 * k), place_for_index(k) as u32);
+        position(read_usize(this + 8), read_usize(read_usize(this + 0xee) + 4 * k), place_for_index(k) as u32);
     }
     crate::comparacao::ramo("cqs_4 posicoes previstas");
 }
@@ -203,12 +203,12 @@ pub(crate) type LeagueStageCtorFn = unsafe extern "thiscall" fn(usize, usize, u3
 ///    e a tabela liberados (free 0x9452ca) e +0x30 = g (o byte com sinal).
 pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g: u32, pv: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let construir: LeagueStageCtorFn = core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let construct: LeagueStageCtorFn = core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = tabela(this, g, &mut rodadas, &mut extra, 0);
+    let t = table(this, g, &mut rodadas, &mut extra, 0);
     let v = alocar(((read_i16(this + 0x3e) as i32) << 2) as u32);
     if v == 0 {
         return show_error_at(0x98aba4, 0x475);
@@ -217,15 +217,15 @@ pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g:
     for j in 0..7usize {
         core::ptr::write_unaligned((v + 4 * j) as *mut usize, read_usize(read_usize(this + 0xee) + 4 * (7 * (k + 1) as usize + j)));
     }
-    let p = novo(0xee);
-    let fase = if p != 0 {
-        construir(p, this, 7, v, 2, read_usize(this + 4), t, rodadas as u16 as u32, read_u8(this + pv) as u32, read_u8(this + 0xc3) as u32,
+    let p = new(0xee);
+    let stage = if p != 0 {
+        construct(p, this, 7, v, 2, read_usize(this + 4), t, rodadas as u16 as u32, read_u8(this + pv) as u32, read_u8(this + 0xc3) as u32,
                   read_u8(this + 0xc4) as u32, this + 0xc5, this + 0xbe, read_i16(this + 0x40) as u16 as u32, g, extra as u16 as u32,
                   read_u8(this + 0x51) as u32, 1, 0, read_i16(this + 0xd9) as u16 as u32, -1, 0, 2)
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + 0xc) + 4 * k as usize) as *mut usize, fase);
+    core::ptr::write_unaligned((read_usize(this + 0xc) + 4 * k as usize) as *mut usize, stage);
     if read_usize(read_usize(this + 0xc) + 4 * k as usize) == 0 {
         return show_error_at(0x98aba4, 0x487);
     }
@@ -267,13 +267,13 @@ pub(crate) const SECOND_ROUND_SEEDS: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 
 ///    linha 0x31b e volta. Com ela: a tabela e a lista liberadas (free 0x9452ca) e +0x30 = 7.
 pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     #[allow(clippy::type_complexity)]
-    let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
+    let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-    let lista = alocar(0x40);
-    if lista == 0 {
+    let list = alocar(0x40);
+    if list == 0 {
         return show_error_at(0x98aba4, 0x2e6);
     }
     let mut r = [(0usize, 0i16); 16];
@@ -283,13 +283,13 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
         r[2 * k + 1] = (read_usize(t + 0x3b), read_i16(t + 0x54));
     }
     for k in 0..16 {
-        let mut melhor: Option<usize> = None;
+        let mut best: Option<usize> = None;
         for (i, e) in r.iter().enumerate() {
-            if melhor.map_or(true, |m| e.1 > r[m].1) && e.0 != 0 {
-                melhor = Some(i);
+            if best.map_or(true, |m| e.1 > r[m].1) && e.0 != 0 {
+                best = Some(i);
             }
         }
-        let c = match melhor {
+        let c = match best {
             Some(m) => {
                 let c = r[m].0;
                 r[m].0 = 0;
@@ -300,25 +300,25 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
                 core::ptr::read_volatile(core::ptr::null::<usize>()) // simplification: a original lê o endereço 0 aqui e cai
             }
         };
-        core::ptr::write_unaligned((lista + 4 * SECOND_ROUND_SEEDS[k] as usize) as *mut usize, c);
+        core::ptr::write_unaligned((list + 4 * SECOND_ROUND_SEEDS[k] as usize) as *mut usize, c);
     }
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = tabela(this, 7, &mut rodadas, &mut extra, 0);
-    let p = novo(0xb2);
-    let fase = if p != 0 {
-        construir(p, this, 0x10, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 7, 1,
+    let t = table(this, 7, &mut rodadas, &mut extra, 0);
+    let p = new(0xb2);
+    let stage = if p != 0 {
+        construct(p, this, 0x10, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 7, 1,
                   extra as u16 as u32, 0x14, 0, 0, 0, 0)
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + 0xc) + 0x1c) as *mut usize, fase);
+    core::ptr::write_unaligned((read_usize(this + 0xc) + 0x1c) as *mut usize, stage);
     if read_usize(read_usize(this + 0xc) + 0x1c) == 0 {
         return show_error_at(0x98aba4, 0x31b);
     }
     crate::comparacao::ramo("cqs_3 segunda fase");
     soltar(t);
-    soltar(lista);
+    soltar(list);
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 7);
 }
 
@@ -339,19 +339,19 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
 /// +0x30 = 9. [inferência] Os dois primeiros de cada grupo sobem à Série B; os campeões dos grupos fazem a final.
 pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
     let embaralhar: unsafe extern "C" fn(*mut usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     #[allow(clippy::type_complexity)]
-    let construir: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, *const u8, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
+    let construct: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, *const u8, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let vagas: [u8; 4] = [2, 0, 0, 0];
+    let slots: [u8; 4] = [2, 0, 0, 0];
     let desempate: [u8; 4] = [1, 2, 4, 0];
     let mut v = [0usize; 8];
-    let segunda = read_usize(read_usize(this + 0xc) + 0x1c);
+    let second = read_usize(read_usize(this + 0xc) + 0x1c);
     let mut n = 0usize;
     let mut i = 0i32;
-    while i < read_i16(segunda + 0x3e) as i32 {
-        let e = read_usize(segunda + 0xa7) + 6 * i as usize;
+    while i < read_i16(second + 0x3e) as i32 {
+        let e = read_usize(second + 0xa7) + 6 * i as usize;
         // simplification: a original grava sem limite numa lista de 8 na pilha; a fase tem 8 vencedores (a cópia para no 8º).
         if read_u8(e + 5) == 1 && n < 8 {
             v[n] = read_usize(e);
@@ -361,17 +361,17 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
     }
     embaralhar(v.as_mut_ptr(), 8); // cqs3: os oito vencedores embaralhados
     for (k, f) in [(8u32, 0x353u32), (9, 0x363)] {
-        let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+        let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
         let (mut rodadas, mut extra) = (0i16, 0i16);
-        let t = tabela(this, k, &mut rodadas, &mut extra, 0);
-        let p = novo(0xee);
-        let fase = if p != 0 {
-            construir(p, this, 4, v[4 * (k as usize - 8)..].as_ptr(), 2, read_usize(this + 4), t, rodadas as u16 as u32, 3, 1, 5,
-                      desempate.as_ptr(), vagas.as_ptr(), read_i16(this + 0x40) as u16 as u32, k, extra as u16 as u32, 0x14, 1, 0, 2, -1, 0, 2)
+        let t = table(this, k, &mut rodadas, &mut extra, 0);
+        let p = new(0xee);
+        let stage = if p != 0 {
+            construct(p, this, 4, v[4 * (k as usize - 8)..].as_ptr(), 2, read_usize(this + 4), t, rodadas as u16 as u32, 3, 1, 5,
+                      desempate.as_ptr(), slots.as_ptr(), read_i16(this + 0x40) as u16 as u32, k, extra as u16 as u32, 0x14, 1, 0, 2, -1, 0, 2)
         } else {
             0
         };
-        core::ptr::write_unaligned((read_usize(this + 0xc) + 4 * k as usize) as *mut usize, fase);
+        core::ptr::write_unaligned((read_usize(this + 0xc) + 4 * k as usize) as *mut usize, stage);
         if read_usize(read_usize(this + 0xc) + 4 * k as usize) == 0 {
             return show_error_at(0x98aba4, f);
         }
@@ -406,9 +406,9 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
     if velha != 0 {
         soltar(velha);
     }
-    let lista = alocar(0xe0);
-    core::ptr::write_unaligned((this + 0xee) as *mut usize, lista);
-    if lista == 0 {
+    let list = alocar(0xe0);
+    core::ptr::write_unaligned((this + 0xee) as *mut usize, list);
+    if list == 0 {
         show_error_at(0x98aba4, 0x18f);
         return 1;
     }
@@ -466,9 +466,9 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_up_rules(this: usize) -
 /// no quadrangular (fases 8 e 9), os que sobem (0) ganham os registros de acesso e de classificação e o destino 0 na
 /// primeira tabela que os tiver (a liga ou os estágios 0..6); na final (10), o campeão (1) ganha o registro de campeão.
 /// Devolve 0, ou -1 nas situações que a fase não espera.
-pub(crate) unsafe extern "thiscall" fn bra_nat_third_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_nat_third_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let _ = (a4, a5, a6);
-    serie_c_staff_records(this, clube, situacao, fase, true).0
+    serie_c_staff_records(this, clube, status, stage, true).0
 }
 
 
@@ -481,9 +481,9 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_update_staff_records_for_st
 /// grupos (fase < 7), a e b: 1, 2 → 1, 3 → 0x11 ... 7 → 0x31; c: 1, 2 → 9, depois igual; nas fases 7 em diante, os
 /// códigos como vêm (o trecho das fases 1 a 3 que a original tem depois do teste `fase >= 7` nunca roda). Devolve a
 /// entrada.
-pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_club_progress(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_club_progress(this: usize, clube: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
     let e = bra_reg_minas_gerais_comp_stats_club_entry(this, clube);
-    let (fa, a, b, c) = (fase as u8 as i8, a as u8, b as u8, c as u8);
+    let (fa, a, b, c) = (stage as u8 as i8, a as u8, b as u8, c as u8);
     if fa < 7 {
         let (a, c) = (serie_c_progress_code(a, 1), serie_c_progress_code(c, 9));
         let b2 = serie_c_progress_code(b, 1);

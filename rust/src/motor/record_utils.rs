@@ -13,7 +13,7 @@ use super::*;
 /// palavra +0x32, +0xe a +0x30, +0x10 o lado (0x4afa80, cdecl(clube, jogo)), +0x11 o id do clube, +0x1b o dword +8 do
 /// jogo; mandante (+0x1c): +0x15 o +0x10 do jogo e o placar (+0x19 pró, +0x1a contra) pelo da prorrogação (+0x47/+0x48)
 /// se ele não for negativo, senão o normal (+0x43/+0x44); visitante: +0x15 o +0xc e o placar ao contrário. Devolve 1.
-pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, clube: usize, saida: usize) -> u32 {
+pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, clube: usize, out: usize) -> u32 {
     if jogo == 0 {
         show_error_at(0xa7a088, 0x29);
         return 0;
@@ -22,22 +22,22 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, club
         show_error_at(0xa7a088, 0x31);
         return 0;
     }
-    if saida == 0 {
+    if out == 0 {
         show_error_at(0xa7a088, 0x39);
         return 0;
     }
-    let data_nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
-    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    let lado: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
+    let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
+    let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+    let side: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
     let (mut t0, mut t1) = ([0u8; 8], [0u8; 8]);
     let (p0, p1) = (t0.as_mut_ptr() as usize, t1.as_mut_ptr() as usize);
-    let d = data_nova(p0, read_u16(jogo + 0x2a) as u32, read_u16(jogo + 0x28) as u32);
-    copiar(saida, p1, d);
-    let s = |o: usize| (saida + o) as *mut u8;
+    let d = data_new(p0, read_u16(jogo + 0x2a) as u32, read_u16(jogo + 0x28) as u32);
+    copy(out, p1, d);
+    let s = |o: usize| (out + o) as *mut u8;
     core::ptr::write_unaligned(s(8) as *mut u32, read_u32(jogo));
     core::ptr::write_unaligned(s(0xc) as *mut u16, read_u16(jogo + 0x32));
     core::ptr::write_unaligned(s(0xe) as *mut u16, read_u16(jogo + 0x30));
-    *s(0x10) = lado(clube, jogo);
+    *s(0x10) = side(clube, jogo);
     core::ptr::write_unaligned(s(0x11) as *mut u32, read_u32(clube));
     core::ptr::write_unaligned(s(0x1b) as *mut u32, read_u32(jogo + 8));
     if clube as u32 == read_u32(jogo + 0x1c) { // cpz7: o clube é o mandante
@@ -79,22 +79,22 @@ pub(crate) unsafe fn name_id(p: u32) -> u32 {
 /// da notícia da suspensão, do prêmio e da busca de jogadores. Pessoa ou saída nulas: a caixa (linhas 0x80, 0x88) e 0.
 /// Senão +0, +4, +8 os ids dos nomes (+4, +8, +0xc da pessoa; −1 sem nome), +0xc o id da pessoa e +0x10 a data de
 /// nascimento (+0x10, 0x417c10); devolve 1.
-pub(crate) unsafe extern "C" fn fill_staff_name_ref(pessoa: usize, saida: usize) -> u32 {
-    if pessoa == 0 {
+pub(crate) unsafe extern "C" fn fill_staff_name_ref(person: usize, out: usize) -> u32 {
+    if person == 0 {
         show_error_at(0xa7a088, 0x80);
         return 0;
     }
-    if saida == 0 {
+    if out == 0 {
         show_error_at(0xa7a088, 0x88);
         return 0;
     }
     for k in 0..3 {
-        core::ptr::write_unaligned((saida + 4 * k) as *mut u32, name_id(read_u32(pessoa + 4 + 4 * k)));
+        core::ptr::write_unaligned((out + 4 * k) as *mut u32, name_id(read_u32(person + 4 + 4 * k)));
     }
-    core::ptr::write_unaligned((saida + 0xc) as *mut u32, read_u32(pessoa));
-    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+    core::ptr::write_unaligned((out + 0xc) as *mut u32, read_u32(person));
+    let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u8; 8];
-    copiar(saida + 0x10, t.as_mut_ptr() as usize, pessoa + staff::DATE_OF_BIRTH);
+    copy(out + 0x10, t.as_mut_ptr() as usize, person + staff::DATE_OF_BIRTH);
     1
 }
 
@@ -105,12 +105,12 @@ pub(crate) unsafe extern "C" fn fill_staff_name_ref(pessoa: usize, saida: usize)
 /// [pt] { 0x7e56d0 } (cdecl, record_utils.cpp): `match_record_result_code(registro)`, da estatística da competição
 /// (0x49f570, a cada partida). Registro nulo: a caixa (linha 0x25a) e 0. Pró (+0x19) > contra (+0x1a), com sinal: 3;
 /// empate com gols: 2; empate sem gols: 1; derrota: −3 (só o byte conta: quem chama lê al).
-pub(crate) unsafe extern "C" fn match_record_result_code(registro: usize) -> u8 {
-    if registro == 0 {
+pub(crate) unsafe extern "C" fn match_record_result_code(record: usize) -> u8 {
+    if record == 0 {
         show_error_at(0xa7a088, 0x25a);
         return 0;
     }
-    let (p, c) = (read_u8(registro + 0x19) as i8, read_u8(registro + 0x1a) as i8);
+    let (p, c) = (read_u8(record + 0x19) as i8, read_u8(record + 0x1a) as i8);
     if p > c {
         3
     } else if p == c && p > 0 {
@@ -129,16 +129,16 @@ pub(crate) unsafe extern "C" fn match_record_result_code(registro: usize) -> u8 
 /// entry.
 ///
 /// [pt] O corpo da 0x86c390; sem `gravar` (a cópia pelo comparador), sem a entrada no arquivo do histórico.
-pub(crate) unsafe fn add_year_award(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32, gravar: bool) {
+pub(crate) unsafe fn add_year_award(this: usize, p: usize, clube: usize, prize: usize, a4: u32, a5: u32, credito: u32, write: bool) {
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x34;
     put_i32(&mut e, 8, if clube != 0 { read_usize(clube) as i32 } else { -1 });
-    put_i32(&mut e, 0xd, read_usize(premio) as i32);
+    put_i32(&mut e, 0xd, read_usize(prize) as i32);
     put_i32(&mut e, 0x11, (a4 & 0xffff) as i32);
     put_i32(&mut e, 0x15, a5 as u8 as i8 as i32);
     put_i32(&mut e, 0x19, credito as u8 as i8 as i32);
-    append_person_history_by_id(gravar, this, read_usize(p), &e);
+    append_person_history_by_id(write, this, read_usize(p), &e);
     let (t3d, t28) = (read_u8(p + 0x3d), read_u8(p + 0x28));
     if t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc {
         let r = staff_records_manager_record(this, p);
@@ -161,17 +161,17 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, clube: usize, premio:
     if read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(club::SIZE)) == 0 {
         return;
     }
-    let do_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let k = do_clube(read_usize(G_CONTRACT_MANAGER), p, contract_club_except_type5(p));
+    let of_club: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
+    let k = of_club(read_usize(G_CONTRACT_MANAGER), p, contract_club_except_type5(p));
     if k == 0 {
         return;
     }
     if read_usize(G_TRANSFER_MANAGER) != 0 {
-        let dias: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-        if dias(G_CURRENT_DATE, read_usize(k + 0x25), read_usize(k + 0x29)) > 0x12c { // cpy10: mais de 300 dias
-            let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_FIND_CLUB_SHORTLIST_ENTRY);
-            let dono = contract_club_except_type5(p);
-            let x = entrada(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), dono, p, 0, 0);
+        let days: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
+        if days(G_CURRENT_DATE, read_usize(k + 0x25), read_usize(k + 0x29)) > 0x12c { // cpy10: mais de 300 dias
+            let entry: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_FIND_CLUB_SHORTLIST_ENTRY);
+            let owner = contract_club_except_type5(p);
+            let x = entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), owner, p, 0, 0);
             if x != 0 && read_usize(x + 0xf) == read_usize(p) {
                 crate::comparacao::ramo("cpy_10 renovação");
                 offer_renewal(p);
@@ -197,7 +197,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, clube: usize, premio:
         return;
     }
     let agradece: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_POST_PLAYER_CREDITS_MANAGER_FOR_AWARD);
-    agradece(p, clube, premio);
+    agradece(p, clube, prize);
 }
 
 

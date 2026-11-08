@@ -15,8 +15,8 @@ use super::*;
 /// collect_entrants 0x84d910, thiscall), as rodadas (virtual +0x8c) e a árvore (virtual +0x94) — uma devolução negativa
 /// dá a caixa (linhas 0x161, 0x168, 0x16f) e 0 — e as posições previstas (virtual +0x5c). Sempre, no fim, a atualização da
 /// copa (0x51f890: push fase; push hoje; mov ecx -> thiscall, ret 8), cuja devolução sai.
-pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
-    if read_u32_as_usize(this + 0x45) == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && fase != 0 { // cqt5: o ano da Copa do Rei
+pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
+    if read_u32_as_usize(this + 0x45) == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && stage != 0 { // cqt5: o ano da Copa do Rei
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         for o in [0xa7usize, 0xa3] {
             if read_u32_as_usize(this + o) != 0 {
@@ -53,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, hoje
         call_cup_virtual(this, 0x5c);
     }
     let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_FOR_DATE);
-    base(this, hoje, fase)
+    base(this, today, stage)
 }
 
 // simplification: a virada libera e refaz as tabelas e a atualização da copa joga e sorteia: não rodam duas vezes. Só a
@@ -65,8 +65,8 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, hoje
 /// edx, [ecx]; jmp [edx+0x30]): a virtual +0x30 da fase [+0xc][o/4] (a última fase da copa: a final), com o eax dela.
 pub(crate) unsafe fn record_season_honours(this: usize, o: usize, ramo: &'static str) -> i32 {
     crate::comparacao::ramo(ramo);
-    let fase = read_u32_as_usize(read_u32_as_usize(this + 0xc) + o);
-    call_cup_virtual(fase, 0x30)
+    let stage = read_u32_as_usize(read_u32_as_usize(this + 0xc) + o);
+    call_cup_virtual(stage, 0x30)
 }
 
 /// EuropeanCup::record_season_honours(): records the season's honours by calling the honours routine of the cup's final
@@ -117,7 +117,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_record_season_honours_63d770(this
 ///
 /// [pt] { 0x84d220 } (thiscall, ret 0x10, spa_cup.cpp; a virtual +0x3c da Copa do Rei): `SpaCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa8 sem memória.
-pub(crate) unsafe extern "thiscall" fn spa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    single_stage_round_table(this, fase, rodadas, extra, saida, &COPA_DEL_REY_ROUNDS, 0xa82810, 0xa8, "cql_11 tabela da copa do rei")
+pub(crate) unsafe extern "thiscall" fn spa_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+    single_stage_round_table(this, stage, rounds, extra, out, &COPA_DEL_REY_ROUNDS, 0xa82810, 0xa8, "cql_11 tabela da copa do rei")
 }
 

@@ -31,11 +31,11 @@ pub(crate) const fn cqn11r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, 
 ///
 /// [pt] Grava a rodada `i` da tabela `t` (ano-base `ano`, a palavra +0x40 da copa com sinal): as duas datas (0x521e60 e
 /// 0x521eb0, cdecl, 7 e 9 argumentos; add esp, 0x1c / 0x24) e os campos.
-pub(crate) unsafe fn jap_j_cup_write_cup_round(t: usize, i: u32, r: &JapJCupCupRound, ano: u32) {
+pub(crate) unsafe fn jap_j_cup_write_cup_round(t: usize, i: u32, r: &JapJCupCupRound, year: u32) {
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
     let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
-    sorteio(t, i, r.sorteio.0, r.sorteio.1, r.sorteio.2, r.sorteio.3, ano);
-    jogo(t, i, r.jogo.0, r.jogo.1, r.jogo.2, r.jogo.3, r.jogo.4, ano, r.jogo.5);
+    sorteio(t, i, r.sorteio.0, r.sorteio.1, r.sorteio.2, r.sorteio.3, year);
+    jogo(t, i, r.jogo.0, r.jogo.1, r.jogo.2, r.jogo.3, r.jogo.4, year, r.jogo.5);
     let e = t + i as usize * 0x68;
     let w = |o: usize, v: u16| core::ptr::write_unaligned((e + o) as *mut u16, v);
     let d = |o: usize, v: u32| core::ptr::write_unaligned((e + o) as *mut u32, v);
@@ -64,25 +64,25 @@ pub(crate) unsafe fn jap_j_cup_write_cup_round(t: usize, i: u32, r: &JapJCupCupR
 /// de uma fase só: fora da fase −1 (o byte), devolve 0 sem gravar nada. Na −1: saida (se pedida) = 0, rodadas = o
 /// tamanho da tabela, extra = 0; a tabela (0x944e46 de 0x68 × rodadas; sem memória, a caixa `linha` de `arquivo` e
 /// devolve 0) com cada rodada; devolve a tabela.
-pub(crate) unsafe fn build_single_stage_cup_rounds(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32, tabela: &[JapJCupCupRound], arquivo: usize, linha: u32, nome: &'static str) -> usize {
-    if fase as u8 != 0xff {
+pub(crate) unsafe fn build_single_stage_cup_rounds(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32, table: &[JapJCupCupRound], file: usize, row: u32, name: &'static str) -> usize {
+    if stage as u8 != 0xff {
         return 0;
     }
-    if !saida.is_null() {
-        *saida = 0;
+    if !out.is_null() {
+        *out = 0;
     }
-    *rodadas = tabela.len() as i16;
+    *rounds = table.len() as i16;
     *extra = 0;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(tabela.len() as u32 * 0x68);
+    let t = alocar(table.len() as u32 * 0x68);
     if t == 0 {
-        show_error_at(arquivo, linha);
+        show_error_at(file, row);
         return 0;
     }
-    crate::comparacao::ramo(nome);
-    let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
-    for (i, r) in tabela.iter().enumerate() {
-        jap_j_cup_write_cup_round(t, i as u32, r, ano);
+    crate::comparacao::ramo(name);
+    let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+    for (i, r) in table.iter().enumerate() {
+        jap_j_cup_write_cup_round(t, i as u32, r, year);
     }
     t
 }
@@ -93,25 +93,25 @@ pub(crate) unsafe fn build_single_stage_cup_rounds(this: usize, fase: u32, rodad
 ///
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada).
-pub(crate) unsafe fn compare_cup_round_table(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32,
+pub(crate) unsafe fn compare_cup_round_table(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    if fase as u8 != 0xff {
+    if stage as u8 != 0xff {
         // simplification: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
         let a = o();
-        PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, fase as u8 as i8, a));
+        PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
         return a;
     }
-    let (mut r2, mut e2) = (*rodadas, *extra);
-    let mut s2 = if saida.is_null() { 0 } else { *saida };
+    let (mut r2, mut e2) = (*rounds, *extra);
+    let mut s2 = if out.is_null() { 0 } else { *out };
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if saida.is_null() { core::ptr::null_mut() } else { &mut s2 }));
-    let saidas = *rodadas == r2 && *extra == e2 && (saida.is_null() || *saida == s2);
-    let tabela = if a != 0 && b != 0 { eng_cc_cup_written_round_bytes(a, *rodadas) == eng_cc_cup_written_round_bytes(b, r2) } else { a == 0 && b == 0 };
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if out.is_null() { core::ptr::null_mut() } else { &mut s2 }));
+    let outs = *rounds == r2 && *extra == e2 && (out.is_null() || *out == s2);
+    let table = if a != 0 && b != 0 { eng_cc_cup_written_round_bytes(a, *rounds) == eng_cc_cup_written_round_bytes(b, r2) } else { a == 0 && b == 0 };
     if b != 0 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, fase as u8 as i8, saidas, *rodadas, r2, tabela));
+    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 
@@ -133,8 +133,8 @@ pub(crate) const J_LEAGUE_CUP_ROUNDS: [JapJCupCupRound; 5] = [
 ///
 /// [pt] { 0x665640 } (thiscall, ret 0x10, jap_j_cup.cpp; a virtual +0x3c da Copa da Liga japonesa): `JapJCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0x9e sem memória.
-pub(crate) unsafe extern "thiscall" fn jap_j_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    build_single_stage_cup_rounds(this, fase, rodadas, extra, saida, &J_LEAGUE_CUP_ROUNDS, 0x9eaf14, 0x9e, "cqn_11 tabela da copa da liga japonesa")
+pub(crate) unsafe extern "thiscall" fn jap_j_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+    build_single_stage_cup_rounds(this, stage, rounds, extra, out, &J_LEAGUE_CUP_ROUNDS, 0x9eaf14, 0x9e, "cqn_11 tabela da copa da liga japonesa")
 }
 
 
@@ -158,8 +158,8 @@ pub(crate) const EMPERORS_CUP_ROUNDS: [JapJCupCupRound; 7] = [
 ///
 /// [pt] { 0x661ff0 } (thiscall, ret 0x10, jap_emp_cup.cpp; a virtual +0x3c da Copa do Imperador): `JapEmpCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa0 sem memória.
-pub(crate) unsafe extern "thiscall" fn jap_j_cup_create_round_table_661ff0(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    build_single_stage_cup_rounds(this, fase, rodadas, extra, saida, &EMPERORS_CUP_ROUNDS, 0x9eab90, 0xa0, "cqn_11 tabela da copa do imperador")
+pub(crate) unsafe extern "thiscall" fn jap_j_cup_create_round_table_661ff0(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+    build_single_stage_cup_rounds(this, stage, rounds, extra, out, &EMPERORS_CUP_ROUNDS, 0x9eab90, 0xa0, "cqn_11 tabela da copa do imperador")
 }
 
 
@@ -181,8 +181,8 @@ pub(crate) const US_OPEN_CUP_ROUNDS: [JapJCupCupRound; 5] = [
 ///
 /// [pt] { 0x90b170 } (thiscall, ret 0x10, usa_open_cup.cpp; a virtual +0x3c da Copa dos EUA): `UsaOpenCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0x9c sem memória.
-pub(crate) unsafe extern "thiscall" fn jap_j_cup_create_round_table_90b170(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    build_single_stage_cup_rounds(this, fase, rodadas, extra, saida, &US_OPEN_CUP_ROUNDS, 0xaa20e0, 0x9c, "cqn_11 tabela da copa dos eua")
+pub(crate) unsafe extern "thiscall" fn jap_j_cup_create_round_table_90b170(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+    build_single_stage_cup_rounds(this, stage, rounds, extra, out, &US_OPEN_CUP_ROUNDS, 0xaa20e0, 0x9c, "cqn_11 tabela da copa dos eua")
 }
 
 
@@ -219,8 +219,8 @@ pub(crate) unsafe fn sort_and_shuffle_top_clubs(v: *mut usize, n: i32, escolhas:
 /// [pt] O qsort de `n` inscritos a partir de `base` (0x945333 com 0x522190: push 0x522190; push 6; push n; push base; add
 /// esp, 0x10 -> cdecl; 0x522190 já em Rust).
 pub(crate) unsafe fn sort_entrants(base: usize, n: u32) {
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    ordenar(base, n, 6, 0x522190);
+    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
+    sort(base, n, 6, 0x522190);
 }
 
 /// JapJCup::collect_entrants (0x665a00): 28 entrants, J2 clubs with class 0 then J1 clubs with a random class 0..19,
@@ -291,7 +291,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j_cup_collect_entrants(this: usize) -
 /// [pt] Lado a lado para as rotinas que alocam a lista +0xa7 e sorteiam: o +0x3e, o [0xb67a34] e o estado do sorteador a
 /// partir do mesmo estado (a cópia sorteia sem contar); a original deixa a lista dela em +0xa7, a cópia faz a sua,
 /// comparada nos inscritos que ela gravou e liberada.
-pub(crate) unsafe fn jap_j_cup_compare_entrant_list(nome: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
+pub(crate) unsafe fn jap_j_cup_compare_entrant_list(name: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
@@ -310,7 +310,7 @@ pub(crate) unsafe fn jap_j_cup_compare_entrant_list(nome: &str, this: usize, o: 
     });
     let (lo, lr) = (lo.get(), lr.get());
     let k = nr.get().max(0) as usize * 6;
-    let lista = if lo != 0 && lr != 0 {
+    let list = if lo != 0 && lr != 0 {
         core::slice::from_raw_parts(lo as *const u8, k) == core::slice::from_raw_parts(lr as *const u8, k)
     } else {
         lo == 0 && lr == 0
@@ -319,7 +319,7 @@ pub(crate) unsafe fn jap_j_cup_compare_entrant_list(nome: &str, this: usize, o: 
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("{}({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", nome, this, a, b, igual, lista, k));
+    PLACAR.registrar(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", name, this, a, b, igual, list, k));
     a
 }
 

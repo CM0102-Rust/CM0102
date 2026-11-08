@@ -12,56 +12,56 @@ pub(crate) unsafe extern "thiscall" fn comparar_has_active_release_clause(c: usi
 }
 
 /// Comparer for `check_fifa_protected_period` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_check_fifa_protected_period(c: usize, x: usize, no_limite: *mut u32, anos: *mut u8) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_check_fifa_protected_period(c: usize, x: usize, no_limite: *mut u32, years: *mut u8) -> u32 {
     // as saídas como estavam antes: a cópia parte delas (a original só grava `anos` no período)
-    let (mut nl, mut na) = (if no_limite.is_null() { 0 } else { *no_limite }, if anos.is_null() { 0 } else { *anos });
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32, *mut u8) -> u32>(IDX_CHECK_FIFA_PROTECTED_PERIOD)(c, x, no_limite, anos);
-    let (ol, oa) = (if no_limite.is_null() { 0 } else { *no_limite }, if anos.is_null() { 0 } else { *anos });
+    let (mut nl, mut na) = (if no_limite.is_null() { 0 } else { *no_limite }, if years.is_null() { 0 } else { *years });
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32, *mut u8) -> u32>(IDX_CHECK_FIFA_PROTECTED_PERIOD)(c, x, no_limite, years);
+    let (ol, oa) = (if no_limite.is_null() { 0 } else { *no_limite }, if years.is_null() { 0 } else { *years });
     let n = check_fifa_protected_period(
         c,
         x,
         if no_limite.is_null() { core::ptr::null_mut() } else { &mut nl },
-        if anos.is_null() { core::ptr::null_mut() } else { &mut na },
+        if years.is_null() { core::ptr::null_mut() } else { &mut na },
     );
-    let ok = r == n && (no_limite.is_null() || ol == nl) && (anos.is_null() || oa == na);
+    let ok = r == n && (no_limite.is_null() || ol == nl) && (years.is_null() || oa == na);
     PLACAR.registrar(ok, || format!("check_fifa_protected_period({:x}) original={} {} {} rust={} {} {}", c, r, ol, oa, n, nl, na));
     r
 }
 
 /// Comparer for `staff_contract_is_bonus_type_allowed` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_contract_is_bonus_type_allowed(pessoa: usize, tipo: u32) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_STAFF_CONTRACT_IS_BONUS_TYPE_ALLOWED)(pessoa, tipo);
-    let n = staff_contract_is_bonus_type_allowed(pessoa, tipo);
-    PLACAR.registrar(r == n, || format!("staff_contract_is_bonus_type_allowed({:x}, {}) original={} rust={}", pessoa, tipo as u8, r, n));
+pub(crate) unsafe extern "C" fn comparar_staff_contract_is_bonus_type_allowed(person: usize, kind: u32) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_STAFF_CONTRACT_IS_BONUS_TYPE_ALLOWED)(person, kind);
+    let n = staff_contract_is_bonus_type_allowed(person, kind);
+    PLACAR.registrar(r == n, || format!("staff_contract_is_bonus_type_allowed({:x}, {}) original={} rust={}", person, kind as u8, r, n));
     r
 }
 
 /// Comparer for `reset_morale_state` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado no contrato e nos vínculos da pessoa (o idioma 0x7c6830 só lê).
-pub(crate) unsafe extern "thiscall" fn comparar_reset_morale_state(this: usize, pessoa: usize, clube: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_reset_morale_state(this: usize, person: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RESET_MORALE_STATE);
-    let regioes = morale_reset_regions(this, read_usize(this));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, pessoa, clube), || reset_morale_state(this, pessoa, clube));
-    PLACAR.registrar(igual, || format!("reset_morale_state(pessoa {}) {:x?} x {:x?}", read_usize(pessoa), mo, mr));
+    let regions = morale_reset_regions(this, read_usize(this));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, person, clube), || reset_morale_state(this, person, clube));
+    PLACAR.registrar(igual, || format!("reset_morale_state(pessoa {}) {:x?} x {:x?}", read_usize(person), mo, mr));
 }
 
 /// Comparer for `init_from_current_contract` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado no contrato e nos vínculos da pessoa; sem contrato atual (a caixa), só a original.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_init_from_current_contract(this: usize, pessoa: usize, clube: usize, fim: usize, write_percent_pair: u32, sem_acesso: u32, multa: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_init_from_current_contract(this: usize, person: usize, clube: usize, end: usize, write_percent_pair: u32, without_promotion: u32, multa: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(IDX_INIT_FROM_CURRENT_CONTRACT);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    if contract_of(read_usize(G_CONTRACT_MANAGER), pessoa) == 0 {
-        return o(this, pessoa, clube, fim, write_percent_pair, sem_acesso, multa);
+    if contract_of(read_usize(G_CONTRACT_MANAGER), person) == 0 {
+        return o(this, person, clube, end, write_percent_pair, without_promotion, multa);
     }
-    let regioes = morale_reset_regions(this, read_usize(pessoa));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes,
-        || o(this, pessoa, clube, fim, write_percent_pair, sem_acesso, multa),
-        || init_from_current_contract(this, pessoa, clube, fim, write_percent_pair, sem_acesso, multa));
+    let regions = morale_reset_regions(this, read_usize(person));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions,
+        || o(this, person, clube, end, write_percent_pair, without_promotion, multa),
+        || init_from_current_contract(this, person, clube, end, write_percent_pair, without_promotion, multa));
     PLACAR.registrar(igual, || {
-        format!("init_from_current_contract(pessoa {}, write_percent_pair {}, {}, {}) {:x?} x {:x?}", read_usize(pessoa), write_percent_pair as u8 as i8, sem_acesso as u8, multa as u8, mo, mr)
+        format!("init_from_current_contract(pessoa {}, write_percent_pair {}, {}, {}) {:x?} x {:x?}", read_usize(person), write_percent_pair as u8 as i8, without_promotion as u8, multa as u8, mo, mr)
     });
 }
 
@@ -99,9 +99,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_all_grievances(this: usize
 /// bytes); quando retira, só a original (a 0x4d9460 mexe na transferência e a 0x867240 se chama de novo).
 pub(crate) unsafe extern "thiscall" fn comparar_check_transfer_request_withdrawal(this: usize, ctx: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CHECK_TRANSFER_REQUEST_WITHDRAWAL);
-    let ficha = read_u32(G_CONTRACT_LOOKUP_RESULT);
+    let sheet = read_u32(G_CONTRACT_LOOKUP_RESULT);
     let retira = should_withdraw_transfer_request(this).is_some();
-    *(G_CONTRACT_LOOKUP_RESULT as *mut u32) = ficha;
+    *(G_CONTRACT_LOOKUP_RESULT as *mut u32) = sheet;
     if retira {
         return o(this, ctx);
     }
@@ -113,42 +113,42 @@ pub(crate) unsafe extern "thiscall" fn comparar_check_transfer_request_withdrawa
 ///
 /// [pt] O comparador das marcas do contrato, em ensaio: a cópia sem o pedido de transferência e a original a partir do mesmo
 /// estado (marcas e sorteio); sem pedido, tudo tem de bater; com pedido (que sorteia e dá notícia), só as marcas.
-pub(crate) unsafe extern "thiscall" fn comparar_set_flags(c: usize, marcas: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_set_flags(c: usize, marks: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SET_FLAGS);
-    if marcas as i32 > 0x1000 {
-        return o(c, marcas);
+    if marks as i32 > 0x1000 {
+        return o(c, marks);
     }
-    let mut regioes = vec![(c + 0x40, 4)];
-    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let mut regions = vec![(c + 0x40, 4)];
+    regions.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let before = crate::comparacao::Memoria::ler(&regions);
     MISS_TRAINING_DRY_RUN = true;
     MISS_TRAINING_DECISION = 0;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| set_flags(c, marcas)));
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| set_flags(c, marks)));
     MISS_TRAINING_DRY_RUN = false;
     let pediu = MISS_TRAINING_DECISION != 0;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
-    o(c, marcas);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
-    let igual = if pediu { mo.0[0] == mr.0[0] } else { mo == mr };
-    PLACAR.registrar(igual, || format!("set_flags({:#x}, {:#x}) pediu={} original={:x?} rust={:x?}", c, marcas, pediu, mo, mr));
+    let mr = crate::comparacao::Memoria::ler(&regions);
+    before.escrever();
+    o(c, marks);
+    let mo = crate::comparacao::Memoria::ler(&regions);
+    let same = if pediu { mo.0[0] == mr.0[0] } else { mo == mr };
+    PLACAR.registrar(same, || format!("set_flags({:#x}, {:#x}) pediu={} original={:x?} rust={:x?}", c, marks, pediu, mo, mr));
 }
 
 /// Comparer for `get_contract_satisfaction` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a original e a cópia a partir do mesmo estado (o sorteio, o último contrato pedido [0xae1080] que a
 /// 0x85fc50 grava e o contrato); a devolução e a memória.
-pub(crate) unsafe extern "thiscall" fn comparar_get_contract_satisfaction(this: usize, pessoa: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn comparar_get_contract_satisfaction(this: usize, person: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_CONTRACT_SATISFACTION);
-    let mut regioes = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize), (this, 0x50)];
-    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let mut regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize), (this, 0x50)];
+    regions.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
-        &regioes,
-        || o(this, pessoa),
-        || crate::aleatorio::sem_contar(|| get_contract_satisfaction(this, pessoa)),
+        &regions,
+        || o(this, person),
+        || crate::aleatorio::sem_contar(|| get_contract_satisfaction(this, person)),
     );
     PLACAR.registrar(igual && r == n, || {
-        format!("get_contract_satisfaction(pessoa {:#x}) original={} {:x?} rust={} {:x?}", if pessoa != 0 { read_usize(pessoa) } else { 0 }, r, mo, n, mr)
+        format!("get_contract_satisfaction(pessoa {:#x}) original={} {:x?} rust={} {:x?}", if person != 0 { read_usize(person) } else { 0 }, r, mo, n, mr)
     });
     r
 }
@@ -156,10 +156,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_contract_satisfaction(this: 
 /// Comparer for `set_default_wage` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pelo salário (+0xc). A 0x862720 grava a mesma ficha em [0xae1080] nas duas vezes.
-pub(crate) unsafe extern "thiscall" fn comparar_set_default_wage(this: usize, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_set_default_wage(this: usize, person: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SET_DEFAULT_WAGE);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0xc, 4)], || o(this, pessoa), || set_default_wage(this, pessoa));
-    PLACAR.registrar(igual && r == n, || format!("set_default_wage({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0xc, 4)], || o(this, person), || set_default_wage(this, person));
+    PLACAR.registrar(igual && r == n, || format!("set_default_wage({:x}) original={} rust={} {:x?} x {:x?}", person, r, n, mo, mr));
     r
 }
 

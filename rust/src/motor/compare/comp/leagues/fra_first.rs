@@ -8,13 +8,13 @@ use super::*;
 /// [pt] Sorteia (as ligas de fundo), aloca e mexe nos clubes: só a original, conferindo a devolução, a vtable, o ano, o
 /// registro, a disciplina e os dois marcadores (vtable e registro) e, na liga nova, os campos do começo e as
 /// estatísticas.
-pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_first(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_first(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_FIRST);
-    let r = o(this, ano, registro);
-    let marcador = |m: usize, vt: usize, g: usize| m == 0 || (read_u32_as_usize(m) == vt && read_u32_as_usize(m + 4) == comp_record_of_key(g) && *((m + 0x50) as *const u8) == 0xff);
-    let mut ok = r == this && read_u32_as_usize(this) == 0x96aa24 && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && read_u32_as_usize(this + 4) == registro && *((this + 0x50) as *const u8) == 0xc
-        && marcador(read_u32_as_usize(this + 0xee), 0x96a994, KEY_CLUB_COMP_FRENCH_CFA) && marcador(read_u32_as_usize(this + 0xf2), 0x96a904, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION);
+    let r = o(this, year, record);
+    let marker = |m: usize, vt: usize, g: usize| m == 0 || (read_u32_as_usize(m) == vt && read_u32_as_usize(m + 4) == comp_record_of_key(g) && *((m + 0x50) as *const u8) == 0xff);
+    let mut ok = r == this && read_u32_as_usize(this) == 0x96aa24 && core::ptr::read_unaligned((this + 0x40) as *const u16) == year as u16
+        && read_u32_as_usize(this + 4) == record && *((this + 0x50) as *const u8) == 0xc
+        && marker(read_u32_as_usize(this + 0xee), 0x96a994, KEY_CLUB_COMP_FRENCH_CFA) && marker(read_u32_as_usize(this + 0xf2), 0x96a904, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION);
     if *((this + 0x44) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
         ok = ok && read_u32_as_usize(this + 0x2c) == 0 && read_u32_as_usize(this + 0xc) == 0;
     }
@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_first_create_table(this: usi
 }
 
 /// Comparer for `fra_first_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_first_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_fra_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_FIRST_CREATE_SCHEDULE);
-    ita_ser_a_compare_schedule("fra_first_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_first_create_schedule(this, fase, r, e, l))
+    ita_ser_a_compare_schedule("fra_first_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| fra_first_create_schedule(this, stage, r, e, l))
 }

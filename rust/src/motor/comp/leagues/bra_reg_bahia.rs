@@ -88,14 +88,14 @@ pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: usize, ano: u32,
 /// [pt] O comparador dos três: alocam e sorteiam os jogos: só a original, conferindo o que ela grava: a devolução, a
 /// vtable, o ano, o registro e a disciplina; na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c, o vetor das
 /// fases e a importância +0x51 = 0xf.
-pub(crate) unsafe fn bra_reg_bahia_compare_state_league_ctor(nome: &str, this: usize, ano: u32, registro: usize, e: &BraRegBahiaStateChampionship, original: impl FnOnce() -> usize) -> usize {
+pub(crate) unsafe fn bra_reg_bahia_compare_state_league_ctor(name: &str, this: usize, year: u32, record: usize, e: &BraRegBahiaStateChampionship, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && read_usize(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && read_usize(this + 4) == registro && *((this + 0x50) as *const u8) == 7;
+    let mut ok = r == this && read_usize(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == year as u16
+        && read_usize(this + 4) == record && *((this + 0x50) as *const u8) == 7;
     if *((this + 0x44) as *const u8) == 0xff && read_usize(this + 8) != 0 {
         ok = ok && read_usize(this + 0x2c) == e.fases as usize && read_usize(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, read_usize(this), read_usize(this + 0x2c), read_usize(this + 0xc), read_usize(this + 8)));
+    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_usize(this), read_usize(this + 0x2c), read_usize(this + 0xc), read_usize(this + 8)));
     r
 }
 
@@ -135,8 +135,8 @@ pub(crate) const GAUCHO_STATE_LEAGUE: BraRegBahiaStateChampionship = BraRegBahia
 /// Original: `BraRegBahia::BraRegBahia` (0x42f2d0, bra_reg_bahia.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x42f2d0 } (thiscall, ret 8, bra_reg_bahia.cpp): `BraRegBahia::BraRegBahia(ano, registro)`: o Baiano (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn construct_bra_reg_bahia(this: usize, ano: u32, registro: usize) -> usize {
-    bra_reg_bahia_construct_state_league(this, ano, registro, &BAHIA_CHAMPIONSHIP, 7, true, "cqt_1 baiano novo") // cqt1: a disciplina e as posições previstas do Baiano
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_bahia(this: usize, year: u32, record: usize) -> usize {
+    bra_reg_bahia_construct_state_league(this, year, record, &BAHIA_CHAMPIONSHIP, 7, true, "cqt_1 baiano novo") // cqt1: a disciplina e as posições previstas do Baiano
 }
 
 
@@ -158,28 +158,28 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_bahia(this: usize, ano:
 /// (League::create_fixtures 0x6835c0, thiscall, ret 0) e a ordem da tabela (League::sort_table 0x6827d0, thiscall(this,
 /// 0), ret 4); por fim as posições previstas (virtual +0x5c) e a renovação dos árbitros do estadual
 /// (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), cujo eax ela devolve.
-pub(crate) unsafe fn state_league_new_season(this: usize, tabela: usize, arquivo: usize, linhas: [u32; 4], ano: i16, ramo: &'static str) -> u32 {
+pub(crate) unsafe fn state_league_new_season(this: usize, table: usize, file: usize, rows: [u32; 4], year: i16, ramo: &'static str) -> u32 {
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     liberar_tabela(this, 0);
     let l = read_usize(this + 0xba);
     if l != 0 {
-        liberar(l);
+        free(l);
         core::ptr::write_unaligned((this + 0xba) as *mut usize, 0);
     }
-    let estatisticas = read_usize(this + 8);
-    if estatisticas != 0 {
+    let stats = read_usize(this + 8);
+    if stats != 0 {
         let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
-        arquivar(estatisticas, 1);
+        arquivar(stats, 1);
     }
     if (read_usize(this + 0x30) as i32) >= 0 {
         let mut i = 0i32;
         loop {
             let f = read_usize(read_usize(this + 0xc) + 4 * i as usize);
             if f != 0 {
-                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
-                destruir(f, 1);
+                let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
+                destroy(f, 1);
             }
             i += 1;
             if i > read_usize(this + 0x30) as i32 {
@@ -188,31 +188,31 @@ pub(crate) unsafe fn state_league_new_season(this: usize, tabela: usize, arquivo
         }
     }
     let a = core::ptr::read_unaligned((this + 0x40) as *const i16);
-    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
+    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(year));
     crate::comparacao::ramo(ramo);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
-    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
-    if regras(this) == 0 {
-        show_error_at(arquivo, linhas[0]);
+    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
+    if rules(this) == 0 {
+        show_error_at(file, rows[0]);
         return 0;
     }
-    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(tabela);
-    if tabela(this) == 0 {
-        show_error_at(arquivo, linhas[1]);
+    let table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(table);
+    if table(this) == 0 {
+        show_error_at(file, rows[1]);
         return 0;
     }
-    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
-    if jogos(this) == 0 {
-        show_error_at(arquivo, linhas[2]);
+    let games: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
+    if games(this) == 0 {
+        show_error_at(file, rows[2]);
         return 0;
     }
-    let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    if ordenar(this, 0) == 0 {
-        show_error_at(arquivo, linhas[3]);
+    let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
+    if sort(this, 0) == 0 {
+        show_error_at(file, rows[3]);
         return 0;
     }
-    let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
-    previstas(this);
+    let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
+    predicted(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
     renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
 }
@@ -223,14 +223,14 @@ pub(crate) unsafe fn state_league_new_season(this: usize, tabela: usize, arquivo
 /// [pt] A fase seguinte de um estadual (`advance_stage`, slot 11, +0x28): na última fase (+0x30 ≥ +0x2c − 1, com sinal), a
 /// caixa de erro e nada mais; senão +0x30 sobe um e, ao chegar a 0 (o fim dos pontos corridos), monta o mata-mata
 /// (`mata_mata`, call direto com o ecx da liga -> thiscall, ret 0).
-pub(crate) unsafe fn state_league_advance_stage(this: usize, arquivo: usize, linha: u32, mata_mata: usize) {
-    let fase = read_usize(this + 0x30) as i32;
-    if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
-        return show_error_at(arquivo, linha);
+pub(crate) unsafe fn state_league_advance_stage(this: usize, file: usize, row: u32, mata_mata: usize) {
+    let stage = read_usize(this + 0x30) as i32;
+    if stage >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
+        return show_error_at(file, row);
     }
-    let fase = fase + 1;
-    core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
-    if fase == 0 {
+    let stage = stage + 1;
+    core::ptr::write_unaligned((this + 0x30) as *mut i32, stage);
+    if stage == 0 {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(mata_mata);
         f(this);
     }
@@ -240,11 +240,11 @@ pub(crate) unsafe fn state_league_advance_stage(this: usize, arquivo: usize, lin
 ///
 /// [pt] O comparador da virada: só a original (simplification: libera tabelas e fases, aloca as novas, sorteia os jogos e os
 /// árbitros; não pode rodar duas vezes), conferindo o que só ela garante: o ano (+0x40) sobe um.
-pub(crate) unsafe fn compare_state_league_new_season(nome: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
-    let antes = core::ptr::read_unaligned((this + 0x40) as *const i16);
+pub(crate) unsafe fn compare_state_league_new_season(name: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
+    let before = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let r = original();
-    let depois = core::ptr::read_unaligned((this + 0x40) as *const i16);
-    PLACAR.registrar(depois == antes.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", nome, this, antes, depois));
+    let after = core::ptr::read_unaligned((this + 0x40) as *const i16);
+    PLACAR.registrar(after == before.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", name, this, before, after));
     r
 }
 
@@ -252,12 +252,12 @@ pub(crate) unsafe fn compare_state_league_new_season(nome: &str, this: usize, or
 ///
 /// [pt] O comparador da fase seguinte: só a original (simplification: ao chegar a 0 monta o mata-mata, que aloca e sorteia), com o
 /// plano: na última fase, +0x30 igual; senão +0x30 + 1 (o mata-mata grava 0, o mesmo valor).
-pub(crate) unsafe fn compare_state_league_advance_stage(nome: &str, this: usize, original: impl FnOnce()) {
-    let antes = read_usize(this + 0x30) as i32;
-    let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
+pub(crate) unsafe fn compare_state_league_advance_stage(name: &str, this: usize, original: impl FnOnce()) {
+    let before = read_usize(this + 0x30) as i32;
+    let last = before >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original();
-    let depois = read_usize(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) antes={} depois={}", nome, this, antes, depois));
+    let after = read_usize(this + 0x30) as i32;
+    PLACAR.registrar(after == if last { before } else { before + 1 }, || format!("{}({:#x}) antes={} depois={}", name, this, before, after));
 }
 
 /// The Bahia turnover: archives the season in the statistics, clears the previous table and stages, moves to the next
@@ -310,13 +310,13 @@ pub(crate) unsafe fn is_in_state_league(clube: usize, g: usize) -> bool {
 /// [0xae23b4] (0x245 bytes, [0xae235c] deles) do estadual do global `g`, na ordem do banco, cada um na linha seguinte
 /// (League::init_table_row 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve 1 se encheu.
 /// `girar` é 0 (o original: a linha k recebe o k-ésimo clube); existe só para as mutações de cada estadual.
-pub(crate) unsafe fn fill_state_league_table(this: usize, n: i16, arquivo: usize, linha: u32, g: usize, girar: u8, ramo: &'static str) -> u32 {
+pub(crate) unsafe fn fill_state_league_table(this: usize, n: i16, file: usize, row: u32, g: usize, girar: u8, ramo: &'static str) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
     if t == 0 {
-        show_error_at(arquivo, linha);
+        show_error_at(file, row);
         return 0;
     }
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
@@ -362,26 +362,26 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_table(this: usize) -
 /// [pt] O comparador dos três: a original aloca a tabela (não roda duas vezes): só ela. O plano, feito antes: os clubes do
 /// estadual na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu (senão 0) e as linhas
 /// da tabela (+0 o clube, 0x3b bytes) com os clubes do plano, na ordem.
-pub(crate) unsafe fn bra_reg_bahia_compare_state_league_table(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
-    let mut plano: Vec<usize> = Vec::new();
+pub(crate) unsafe fn bra_reg_bahia_compare_state_league_table(name: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
+    let mut plan: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
-    while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
+    while i < read_usize(G_CLUB_COUNT) as i32 && (plan.len() as i16) < n {
         let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
         if is_in_state_league(clube, g) {
-            plano.push(clube);
+            plan.push(clube);
         }
         i += 1;
     }
     let r = original();
     let t = read_usize(this + 0xb1);
-    let esperado = (plano.len() as i16 == n) as u32;
-    let mut igual = r == esperado && read_i16(this + 0x3e) == n && t != 0;
-    let mut achou: Vec<usize> = Vec::new();
-    if igual {
-        achou = (0..plano.len()).map(|k| read_usize(t + k * 0x3b)).collect();
-        igual = achou == plano;
+    let expected = (plan.len() as i16 == n) as u32;
+    let mut same = r == expected && read_i16(this + 0x3e) == n && t != 0;
+    let mut found: Vec<usize> = Vec::new();
+    if same {
+        found = (0..plan.len()).map(|k| read_usize(t + k * 0x3b)).collect();
+        same = found == plan;
     }
-    PLACAR.registrar(igual, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", nome, this, r, plano, achou));
+    PLACAR.registrar(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
 
@@ -393,8 +393,8 @@ pub(crate) unsafe fn bra_reg_bahia_compare_state_league_table(nome: &str, this: 
 /// Club of row l of the league table (+0xb1, 0x3b-byte rows).
 ///
 /// [pt] O clube da linha `l` da tabela (+0xb1, linhas de 0x3b bytes, +0 o clube).
-pub(crate) unsafe fn bra_reg_bahia_table_row_club(liga: usize, l: usize) -> usize {
-    read_usize(read_usize(liga + 0xb1) + l * 0x3b)
+pub(crate) unsafe fn bra_reg_bahia_table_row_club(league: usize, l: usize) -> usize {
+    read_usize(read_usize(league + 0xb1) + l * 0x3b)
 }
 
 /// Builds the knockout stage from given table rows: entrant list, round table (virtual +0x3c), Cup_Stage with seeds,
@@ -411,45 +411,45 @@ pub(crate) unsafe fn bra_reg_bahia_table_row_club(liga: usize, l: usize) -> usiz
 /// primeira vaga de fases ([+0xc]). Sem fase: a caixa `linha_sem_fase` e volta (sem liberar). Com ela:
 /// Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela de rodadas e a lista liberadas (free 0x9452ca,
 /// nessa ordem) e +0x30 = 0. O quadro SEH da original só cobre o construtor (sem destrutor).
-pub(crate) unsafe fn bra_reg_bahia_build_knockout_from_table(this: usize, linhas: &[usize], sementes: &[u8], arquivo: usize, linha_sem_lista: u32, linha_sem_fase: u32, ramo: &'static str) {
-    let n = linhas.len();
+pub(crate) unsafe fn bra_reg_bahia_build_knockout_from_table(this: usize, rows: &[usize], sementes: &[u8], file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
+    let n = rows.len();
     // as sementes: a original grava os bytes na pilha antes de alocar (iguais às linhas, mas constantes à parte)
     let mut s = [0u8; 8];
     s[..sementes.len()].copy_from_slice(sementes);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let lista = alocar((n * 4) as u32);
-    if lista == 0 {
-        return show_error_at(arquivo, linha_sem_lista);
+    let list = alocar((n * 4) as u32);
+    if list == 0 {
+        return show_error_at(file, row_without_list);
     }
-    for (k, &l) in linhas.iter().enumerate() {
-        core::ptr::write_unaligned((lista + 4 * k) as *mut usize, bra_reg_bahia_table_row_club(this, l));
+    for (k, &l) in rows.iter().enumerate() {
+        core::ptr::write_unaligned((list + 4 * k) as *mut usize, bra_reg_bahia_table_row_club(this, l));
     }
     crate::comparacao::ramo(ramo);
-    let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let p = novo(0xb2);
+    let t = table(this, 0, &mut rodadas, &mut extra, 0);
+    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let p = new(0xb2);
     // simplification: a original empurra as rodadas, o extra e o ano em dwords com lixo nos 16 bits altos (as saídas da
     // virtual são words na pilha; o ano vai no cx); o construtor só lê as palavras.
-    let fase = if p != 0 {
+    let stage = if p != 0 {
         #[allow(clippy::type_complexity)]
-        let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
+        let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construir(p, this, n as u32, lista, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
+        construct(p, this, n as u32, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
     } else {
         0
     };
-    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, fase);
-    let fase = read_usize(read_usize(this + 0xc));
-    if fase == 0 {
-        return show_error_at(arquivo, linha_sem_fase);
+    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, stage);
+    let stage = read_usize(read_usize(this + 0xc));
+    if stage == 0 {
+        return show_error_at(file, row_without_stage);
     }
-    let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    montar(fase, 0);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    liberar(t);
-    liberar(lista);
+    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
+    build(stage, 0);
+    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    free(t);
+    free(list);
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 0);
 }
 
@@ -481,21 +481,21 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_semi_final_stage_436
 /// plano, feito antes: os clubes das linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = n, +4 = o +4 da
 /// liga e os n primeiros clubes da lista dela (+0xa7, 6 bytes) iguais aos do plano (como conjunto: o sorteio da rodada
 /// 0x51c800 pode reordenar as chaves), e +0x30 = 0.
-pub(crate) unsafe fn bra_reg_bahia_compare_knockout_from_table(nome: &str, this: usize, linhas: &[usize], original: impl FnOnce()) {
-    let mut plano: Vec<usize> = linhas.iter().map(|&l| bra_reg_bahia_table_row_club(this, l)).collect();
+pub(crate) unsafe fn bra_reg_bahia_compare_knockout_from_table(name: &str, this: usize, rows: &[usize], original: impl FnOnce()) {
+    let mut plan: Vec<usize> = rows.iter().map(|&l| bra_reg_bahia_table_row_club(this, l)).collect();
     original();
-    let fase = read_usize(read_usize(this + 0xc));
-    if fase == 0 {
-        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", nome, this));
+    let stage = read_usize(read_usize(this + 0xc));
+    if stage == 0 {
+        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", name, this));
         return;
     }
-    let lista = read_usize(fase + 0xa7);
-    let mut achou: Vec<usize> = (0..linhas.len()).map(|k| read_usize(lista + 6 * k)).collect();
-    let (pl, ac) = (plano.clone(), achou.clone());
-    plano.sort_unstable();
-    achou.sort_unstable();
-    let igual = plano == achou && read_i16(fase + 0x3e) as usize == linhas.len() && read_usize(fase + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0;
-    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
+    let list = read_usize(stage + 0xa7);
+    let mut found: Vec<usize> = (0..rows.len()).map(|k| read_usize(list + 6 * k)).collect();
+    let (pl, ac) = (plan.clone(), found.clone());
+    plan.sort_unstable();
+    found.sort_unstable();
+    let same = plan == found && read_i16(stage + 0x3e) as usize == rows.len() && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0;
+    PLACAR.registrar(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + 0x3e)));
 }
 
 
@@ -511,8 +511,8 @@ pub(crate) unsafe fn bra_reg_bahia_compare_knockout_from_table(nome: &str, this:
 /// classificados (6) ganham o registro de classificação (rodada 0x82, peso 0x32) e os rebaixados (3) o de rebaixamento;
 /// no mata-mata (fase 0), o campeão (1) ganha o registro de campeão e o destino 5; os eliminados (2 ou -1), o registro
 /// de eliminação com o peso da rodada (0x4bf850: de 30 a 50 pela rodada do jogo) e o destino -2. Devolve 0.
-pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
-    baiano_staff_records(this, clube, situacao, fase, jogo, true).0
+    baiano_staff_records(this, clube, status, stage, jogo, true).0
 }
 

@@ -9,21 +9,21 @@ use super::*;
 /// deslocamento + 2k (a original lê o byte num argumento da própria pilha, já usado, e grava o u16 antes da
 /// leitura seguinte). A primeira leitura que não vem dá 0 (o que já veio fica no registro); tudo, 1. Os
 /// bytes que o arquivo não traz (buracos do registro) ficam como estavam.
-pub(crate) unsafe fn convert_v1_records(stream: usize, use_zip: i32, registros: usize, n: u32, tamanho: usize,
+pub(crate) unsafe fn convert_v1_records(stream: usize, use_zip: i32, records: usize, n: u32, size: usize,
                        campos: &[(usize, u32, usize)], injury_word_0c: fn(u8) -> u16) -> i32 {
-    let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 =
+    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 =
         core::mem::transmute(if use_zip != 0 { 0x932c30usize } else { 0x945bfeusize });
     for i in 0..n as usize {
-        let r = registros + i * tamanho;
+        let r = records + i * size;
         for &(o, t, q) in campos {
             for k in 0..q {
                 if t == 0 {
                     let mut b = 0u8;
-                    if ler(&mut b as *mut u8 as usize, 1, 1, stream) == 0 {
+                    if read(&mut b as *mut u8 as usize, 1, 1, stream) == 0 {
                         return 0;
                     }
                     ((r + o + 2 * k) as *mut u16).write_unaligned(injury_word_0c(b));
-                } else if ler(r + o + k * t as usize, t, 1, stream) == 0 {
+                } else if read(r + o + k * t as usize, t, 1, stream) == 0 {
                     return 0;
                 }
             }
@@ -59,9 +59,9 @@ pub(crate) const PLAYER_V1_FIELDS: [(usize, u32, usize); 5] = [(0, 4, 1), (4, 1,
 /// versão 1 campo a campo (`CLUB_V1_LAYOUT`); a reputação lida num byte, 0 vira 1, × 500 (u16, como o `imul ax`).
 /// Chamado por `db_files_read_clubs` 0x54db50 com a versão da entrada igual a 1; a base de fábrica e o save
 /// são versão 2. Sem SEH e sem variável local lida sem valor.
-pub(crate) unsafe extern "C" fn db_files_read_clubs_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_read_clubs_v1(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco ler clubes v1");
-    convert_v1_records(stream, use_zip, registros, n, 581, &CLUB_V1_LAYOUT, |b| (b.max(1) as u16).wrapping_mul(500))
+    convert_v1_records(stream, use_zip, records, n, 581, &CLUB_V1_LAYOUT, |b| (b.max(1) as u16).wrapping_mul(500))
 }
 
 /// reads the version 1 non-player table (id 9; the community map calls it players) field by field (65 bytes on file for
@@ -71,9 +71,9 @@ pub(crate) unsafe extern "C" fn db_files_read_clubs_v1(stream: usize, use_zip: i
 /// [pt] { 0x54e9a0 } (cdecl, Db_files.cpp): `db_files_read_players_v1(stream, use_zip, registros, n)` (o mapa da
 /// comunidade troca os nomes: é a tabela id 9, a dos não jogadores, 68 bytes): campo a campo
 /// (`NON_PLAYER_V1_LAYOUT`); as reputações lidas em bytes, sem conta. Chamado por 0x54e880 com a versão 1.
-pub(crate) unsafe extern "C" fn db_files_read_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_read_players_v1(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco ler não jogadores v1");
-    convert_v1_records(stream, use_zip, registros, n, 68, &NON_PLAYER_V1_LAYOUT, |b| b as u16)
+    convert_v1_records(stream, use_zip, records, n, 68, &NON_PLAYER_V1_LAYOUT, |b| b as u16)
 }
 
 /// reads the version 1 player table (id 10; the community map calls it non_players) field by field (67 bytes on file
@@ -83,9 +83,9 @@ pub(crate) unsafe extern "C" fn db_files_read_players_v1(stream: usize, use_zip:
 /// [pt] { 0x54f150 } (cdecl, Db_files.cpp): `db_files_read_non_players_v1(stream, use_zip, registros, n)` (o mapa
 /// troca os nomes: é a tabela id 10, a dos jogadores, 70 bytes): campo a campo (`PLAYER_V1_FIELDS`); as reputações
 /// lidas em bytes, sem conta. Chamado por 0x54f030 com a versão 1.
-pub(crate) unsafe extern "C" fn db_files_read_non_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_read_non_players_v1(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco ler jogadores v1");
-    convert_v1_records(stream, use_zip, registros, n, 70, &PLAYER_V1_FIELDS, |b| b as u16)
+    convert_v1_records(stream, use_zip, records, n, 70, &PLAYER_V1_FIELDS, |b| b as u16)
 }
 
 pub(crate) type V1Converter = unsafe extern "C" fn(usize, i32, usize, u32) -> i32;
@@ -142,14 +142,14 @@ pub unsafe fn autoteste_dbj_1() {
 /// [pt] { 0x54fe50 } (cdecl, Db_files.cpp): `db_files_write_staff_history(stream, use_zip, registros, n)`: grava de uma vez `n`
 /// registros de 17 bytes (staff_history.dat, id 17) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
-pub(crate) unsafe extern "C" fn db_files_write_staff_history(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_staff_history(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar histórico de pessoas");
     let escritos = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 17, n, stream)
+        zwrite(records, 17, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 17, n, stream)
+        fwrite(records, 17, n, stream)
     };
     (escritos == n) as i32 // gravar histórico de pessoas
 }
@@ -164,14 +164,14 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_history(stream: usize, use_
 /// [pt] { 0x5501d0 } (cdecl, Db_files.cpp): `db_files_write_comps(stream, use_zip, registros, n)`: grava de uma vez `n`
 /// registros de 107 bytes (club_comp.dat em duas chamadas, as competições e as 127 de reserva, e nation_comp.dat; ids 12 e 16) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
-pub(crate) unsafe extern "C" fn db_files_write_comps(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_comps(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar competições");
     let escritos = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 107, n, stream)
+        zwrite(records, 107, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 107, n, stream)
+        fwrite(records, 107, n, stream)
     };
     (escritos == n) as i32 // gravar competições
 }
@@ -186,14 +186,14 @@ pub(crate) unsafe extern "C" fn db_files_write_comps(stream: usize, use_zip: i32
 /// [pt] { 0x550320 } (cdecl, Db_files.cpp): `db_files_write_comp_history(stream, use_zip, registros, n)`: grava de uma vez `n`
 /// registros de 26 bytes (club_comp_history.dat e nation_comp_history.dat, ids 19 e 20) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
-pub(crate) unsafe extern "C" fn db_files_write_comp_history(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_comp_history(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar históricos de competição");
     let escritos = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 26, n, stream)
+        zwrite(records, 26, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 26, n, stream)
+        fwrite(records, 26, n, stream)
     };
     (escritos == n) as i32 // gravar históricos de competição
 }
@@ -208,14 +208,14 @@ pub(crate) unsafe extern "C" fn db_files_write_comp_history(stream: usize, use_z
 /// [pt] { 0x550470 } (cdecl, Db_files.cpp): `db_files_write_staff_comps(stream, use_zip, registros, n)`: grava de uma vez `n`
 /// registros de 101 bytes (staff_comp.dat, id 11) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
-pub(crate) unsafe extern "C" fn db_files_write_staff_comps(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_staff_comps(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar competições de pessoal");
     let escritos = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 101, n, stream)
+        zwrite(records, 101, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 101, n, stream)
+        fwrite(records, 101, n, stream)
     };
     (escritos == n) as i32 // gravar competições de pessoal
 }
@@ -230,14 +230,14 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_comps(stream: usize, use_zi
 /// [pt] { 0x5506b0 } (cdecl, Db_files.cpp): `db_files_write_officials(stream, use_zip, registros, n)`: grava de uma vez `n`
 /// registros de 43 bytes (officials.dat, id 7) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
-pub(crate) unsafe extern "C" fn db_files_write_officials(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_officials(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar árbitros");
     let escritos = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 43, n, stream)
+        zwrite(records, 43, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 43, n, stream)
+        fwrite(records, 43, n, stream)
     };
     (escritos == n) as i32 // gravar árbitros
 }
@@ -252,14 +252,14 @@ pub(crate) unsafe extern "C" fn db_files_write_officials(stream: usize, use_zip:
 /// [pt] { 0x550800 } (cdecl, Db_files.cpp): `db_files_write_records_0x3a(stream, use_zip, registros, n)`: grava de uma vez `n`
 /// registros de 58 bytes (colour.dat, id 2, e staff_comp_history.dat, id 18: a mesma rotina para os dois) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
-pub(crate) unsafe extern "C" fn db_files_write_records_0x3a(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_records_0x3a(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar registros de 58 bytes");
     let escritos = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 58, n, stream)
+        zwrite(records, 58, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 58, n, stream)
+        fwrite(records, 58, n, stream)
     };
     (escritos == n) as i32 // gravar registros de 58 bytes
 }
@@ -274,14 +274,14 @@ pub(crate) unsafe extern "C" fn db_files_write_records_0x3a(stream: usize, use_z
 /// [pt] { 0x550950 } (cdecl, Db_files.cpp): `db_files_write_or_read_records_0x3c(stream, use_zip, registros, n)`: grava de uma vez `n`
 /// registros de 60 bytes (first_names.dat, second_names.dat e common_names.dat, ids 13 a 15: a mesma rotina para os três) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
-pub(crate) unsafe extern "C" fn db_files_write_or_read_records_0x3c(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_or_read_records_0x3c(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar nomes");
     let escritos = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 60, n, stream)
+        zwrite(records, 60, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 60, n, stream)
+        fwrite(records, 60, n, stream)
     };
     (escritos == n) as i32 // gravar nomes
 }
@@ -294,21 +294,21 @@ pub(crate) unsafe extern "C" fn db_files_write_or_read_records_0x3c(stream: usiz
 /// [pt] O caminho de um .dat: `_makepath(destino, 0, pasta, nome, 0)` (0x945b13 da CRT do jogo): a pasta, a barra
 /// se faltar e o nome. Sem efeito fora de `destino`: o comparador de abrir/criar refaz o caminho num buffer
 /// próprio.
-pub(crate) unsafe fn database_path(destino: usize, pasta: usize, nome: usize) {
-    let juntar: unsafe extern "C" fn(usize, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
-    juntar(destino, 0, pasta, nome, 0);
+pub(crate) unsafe fn database_path(target: usize, folder: usize, name: usize) {
+    let join: unsafe extern "C" fn(usize, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
+    join(target, 0, folder, name, 0);
 }
 
 /// Compares the path the original built at 0xde1f64 with the copy's, rebuilt in a local buffer.
 ///
 /// [pt] Compara o caminho que a original montou em 0xde1f64 com o da cópia (num buffer próprio).
-pub(crate) unsafe fn check_database_path(rotina: &str, pasta: usize, nome: usize) {
+pub(crate) unsafe fn check_database_path(routine: &str, folder: usize, name: usize) {
     let mut c = [0u8; 0x400];
-    database_path(c.as_mut_ptr() as usize, pasta, nome);
+    database_path(c.as_mut_ptr() as usize, folder, name);
     let o = core::slice::from_raw_parts(0xde1f64 as *const u8, 0x400);
-    let fim = |s: &[u8]| s.iter().position(|&b| b == 0).unwrap_or(s.len());
-    let (a, b) = (&o[..fim(o)], &c[..fim(&c)]);
-    PLACAR.registrar(a == b, || format!("{} caminho {:?} x {:?}", rotina, String::from_utf8_lossy(a), String::from_utf8_lossy(b)));
+    let end = |s: &[u8]| s.iter().position(|&b| b == 0).unwrap_or(s.len());
+    let (a, b) = (&o[..end(o)], &c[..end(&c)]);
+    PLACAR.registrar(a == b, || format!("{} caminho {:?} x {:?}", routine, String::from_utf8_lossy(a), String::from_utf8_lossy(b)));
 }
 
 /// builds folder + name at 0xde1f64 (_makepath) and returns fopen(path, "rb"); the comparator checks the path
@@ -317,9 +317,9 @@ pub(crate) unsafe fn check_database_path(rotina: &str, pasta: usize, nome: usize
 /// [pt] { 0x54d580 } (cdecl, Db_files.cpp): `db_files_open_for_read(pasta, nome)`: monta o caminho em 0xde1f64
 /// (`_makepath`, ver `database_path`) e devolve `fopen(0xde1f64, "rb")` (0x945b00; "rb" em 0x98f928). Na
 /// criação do jogo, `load_database` abre assim o index.dat e cada tabela da pasta Data.
-pub(crate) unsafe extern "C" fn db_files_open_for_read(pasta: usize, nome: usize) -> usize {
+pub(crate) unsafe extern "C" fn db_files_open_for_read(folder: usize, name: usize) -> usize {
     crate::comparacao::ramo("banco abrir .dat");
-    database_path(0xde1f64, pasta, nome); // abrir (rb)
+    database_path(0xde1f64, folder, name); // abrir (rb)
     let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     fopen(0xde1f64, 0x98f928)
 }
@@ -332,9 +332,9 @@ pub(crate) unsafe extern "C" fn db_files_open_for_read(pasta: usize, nome: usize
 /// [pt] { 0x54d5b0 } (cdecl, Db_files.cpp): `db_files_open_for_write(pasta, nome)`: o mesmo caminho em 0xde1f64 e
 /// `fopen(0xde1f64, "wb")` ("wb" em 0x9a7f28). Só `save_database(…, 0, …)` (gravar a base na pasta) chama:
 /// no save (use_zip ≠ 0) as tabelas vão por `zopen` 0x9326e0.
-pub(crate) unsafe extern "C" fn db_files_open_for_write(pasta: usize, nome: usize) -> usize {
+pub(crate) unsafe extern "C" fn db_files_open_for_write(folder: usize, name: usize) -> usize {
     crate::comparacao::ramo("banco criar .dat");
-    database_path(0xde1f64, pasta, nome);
+    database_path(0xde1f64, folder, name);
     let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     fopen(0xde1f64, 0x9a7f28) // criar (wb)
 }
@@ -348,14 +348,14 @@ pub(crate) unsafe extern "C" fn db_files_open_for_write(pasta: usize, nome: usiz
 /// `quantidade` registros de 198 bytes (continent.dat (id 3)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
-pub(crate) unsafe extern "C" fn db_files_write_continents(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_continents(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar continentes");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 198, n, stream)
+        zwrite(records, 198, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 198, n, stream)
+        fwrite(records, 198, n, stream)
     };
     (gravados == n) as i32
 }
@@ -371,14 +371,14 @@ pub(crate) unsafe extern "C" fn db_files_write_continents(stream: usize, use_zip
 /// `quantidade` registros de 290 bytes (nation.dat (id 4)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
-pub(crate) unsafe extern "C" fn db_files_write_nations(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_nations(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar nações");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 290, n, stream)
+        zwrite(records, 290, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 290, n, stream)
+        fwrite(records, 290, n, stream)
     };
     (gravados == n) as i32
 }
@@ -394,14 +394,14 @@ pub(crate) unsafe extern "C" fn db_files_write_nations(stream: usize, use_zip: i
 /// `quantidade` registros de 56 bytes (city.dat (id 21)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
-pub(crate) unsafe extern "C" fn db_files_write_cities(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_cities(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar cidades");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 56, n, stream)
+        zwrite(records, 56, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 56, n, stream)
+        fwrite(records, 56, n, stream)
     };
     (gravados == n) as i32
 }
@@ -417,14 +417,14 @@ pub(crate) unsafe extern "C" fn db_files_write_cities(stream: usize, use_zip: i3
 /// `quantidade` registros de 78 bytes (stadium.dat) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
-pub(crate) unsafe extern "C" fn db_files_write_stadiums(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_stadiums(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar estádios");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 78, n, stream)
+        zwrite(records, 78, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 78, n, stream)
+        fwrite(records, 78, n, stream)
     };
     (gravados == n) as i32
 }
@@ -440,14 +440,14 @@ pub(crate) unsafe extern "C" fn db_files_write_stadiums(stream: usize, use_zip: 
 /// `quantidade` registros de 581 bytes (club.dat e nat_club.dat (ids 0, 1)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
-pub(crate) unsafe extern "C" fn db_files_write_clubs(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_clubs(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar clubes");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 581, n, stream)
+        zwrite(records, 581, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 581, n, stream)
+        fwrite(records, 581, n, stream)
     };
     (gravados == n) as i32
 }
@@ -463,14 +463,14 @@ pub(crate) unsafe extern "C" fn db_files_write_clubs(stream: usize, use_zip: i32
 /// `quantidade` registros de 110 bytes (staff.dat (pessoas, 110 bytes; id 6)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
-pub(crate) unsafe extern "C" fn db_files_write_staff(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_staff(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar pessoas 110");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 110, n, stream)
+        zwrite(records, 110, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 110, n, stream)
+        fwrite(records, 110, n, stream)
     };
     (gravados == n) as i32
 }
@@ -486,14 +486,14 @@ pub(crate) unsafe extern "C" fn db_files_write_staff(stream: usize, use_zip: i32
 /// `quantidade` registros de 68 bytes (dos não jogadores do staff.dat (id 9; o mapa da comunidade a chama de players)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
-pub(crate) unsafe extern "C" fn db_files_write_players(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_players(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar não jogadores");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 68, n, stream)
+        zwrite(records, 68, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 68, n, stream)
+        fwrite(records, 68, n, stream)
     };
     (gravados == n) as i32
 }
@@ -509,14 +509,14 @@ pub(crate) unsafe extern "C" fn db_files_write_players(stream: usize, use_zip: i
 /// `quantidade` registros de 70 bytes (dos jogadores do staff.dat (id 10; o mapa da comunidade a chama de non_players)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
-pub(crate) unsafe extern "C" fn db_files_write_non_players(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_non_players(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar jogadores");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 70, n, stream)
+        zwrite(records, 70, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 70, n, stream)
+        fwrite(records, 70, n, stream)
     };
     (gravados == n) as i32
 }
@@ -532,14 +532,14 @@ pub(crate) unsafe extern "C" fn db_files_write_non_players(stream: usize, use_zi
 /// `quantidade` registros de 52 bytes (das preferências das pessoas (id 22)) por `zwrite` 0x932e10 (use_zip ≠ 0: o save; já em Rust,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
-pub(crate) unsafe extern "C" fn db_files_write_staff_extra(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_write_staff_extra(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco gravar preferências");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(registros, 52, n, stream)
+        zwrite(records, 52, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(registros, 52, n, stream)
+        fwrite(records, 52, n, stream)
     };
     (gravados == n) as i32
 }
@@ -556,21 +556,21 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_extra(stream: usize, use_zi
 /// (officials.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-pub(crate) unsafe extern "C" fn db_files_read_officials(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao != 1 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_OFFICIALS)(stream, use_zip, registros, entrada);
+pub(crate) unsafe extern "C" fn db_files_read_officials(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version != 1 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_OFFICIALS)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler árbitros");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 43, n, stream)
+        zread(records, 43, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 43, n, stream)
+        fread(records, 43, n, stream)
     };
-    (lidos == n) as i32 // árbitros
+    (read == n) as i32 // árbitros
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -585,21 +585,21 @@ pub(crate) unsafe extern "C" fn db_files_read_officials(stream: usize, use_zip: 
 /// (colour.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-pub(crate) unsafe extern "C" fn db_files_read_colours(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao != 1 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_COLOURS)(stream, use_zip, registros, entrada);
+pub(crate) unsafe extern "C" fn db_files_read_colours(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version != 1 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_COLOURS)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler cores");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 58, n, stream)
+        zread(records, 58, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 58, n, stream)
+        fread(records, 58, n, stream)
     };
-    (lidos == n) as i32 // cores
+    (read == n) as i32 // cores
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -615,21 +615,21 @@ pub(crate) unsafe extern "C" fn db_files_read_colours(stream: usize, use_zip: i3
 /// (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio tudo. Outra versão: a caixa "Error"
 /// (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro de 0x200 da original só serve ao
 /// caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-pub(crate) unsafe extern "C" fn db_files_read_names(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao != 1 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_NAMES)(stream, use_zip, registros, entrada);
+pub(crate) unsafe extern "C" fn db_files_read_names(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version != 1 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_NAMES)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler nomes");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 60, n, stream)
+        zread(records, 60, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 60, n, stream)
+        fread(records, 60, n, stream)
     };
-    (lidos == n) as i32 // nomes
+    (read == n) as i32 // nomes
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -647,30 +647,30 @@ pub(crate) unsafe extern "C" fn db_files_read_names(stream: usize, use_zip: i32,
 /// conversor campo a campo 0x54dc90 (stream, use_zip, registros, quantidade), pelo endereço, e a resposta
 /// dele (sem a troca da reputação: o conversor faz a sua, ×500). Outra versão: a caixa "Error" (Db_files.cpp)
 /// e a saída do jogo; a cópia chama a original. O quadro de 0x200 da original só serve ao caminho da caixa.
-pub(crate) unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao == 1 {
+pub(crate) unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version == 1 {
         crate::comparacao::ramo("banco ler clubes versão 1");
         let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(FN_DB_FILES_READ_CLUBS_V1);
-        return converter(stream, use_zip, registros, n);
+        return converter(stream, use_zip, records, n);
     }
-    if versao != 2 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_CLUBS)(stream, use_zip, registros, entrada);
+    if version != 2 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_CLUBS)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler clubes");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 581, n, stream)
+        zread(records, 581, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 581, n, stream)
+        fread(records, 581, n, stream)
     };
-    if lidos != n {
+    if read != n {
         return 0;
     }
     for i in 0..n as usize {
-        let p = (registros + i * 581 + 0x80) as *mut u16;
+        let p = (records + i * 581 + 0x80) as *mut u16;
         if p.read_unaligned() == 0 {
             p.write_unaligned(1);
         }
@@ -692,26 +692,26 @@ pub(crate) unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32,
 /// Data); 1 se veio tudo. Versão 1: o conversor campo a campo 0x54ffd0 (stream, use_zip, registros,
 /// quantidade), pelo endereço, e a resposta dele. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do
 /// jogo; a cópia chama a original. O quadro de 0x200 da original só serve ao caminho da caixa.
-pub(crate) unsafe extern "C" fn db_files_read_comps(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao == 1 {
+pub(crate) unsafe extern "C" fn db_files_read_comps(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version == 1 {
         crate::comparacao::ramo("banco ler competições versão 1");
         let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(FN_DB_FILES_READ_COMPS_V1);
-        return converter(stream, use_zip, registros, n);
+        return converter(stream, use_zip, records, n);
     }
-    if versao != 2 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_COMPS)(stream, use_zip, registros, entrada);
+    if version != 2 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_COMPS)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler competições");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 107, n, stream)
+        zread(records, 107, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 107, n, stream)
+        fread(records, 107, n, stream)
     };
-    (lidos == n) as i32 // competições de clube
+    (read == n) as i32 // competições de clube
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -729,26 +729,26 @@ pub(crate) unsafe extern "C" fn db_files_read_comps(stream: usize, use_zip: i32,
 /// campo 0x54e9a0 (stream, use_zip, registros, quantidade), pelo endereço, e a resposta dele. Outra versão: a
 /// caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro de 0x200 da original só
 /// serve ao caminho da caixa.
-pub(crate) unsafe extern "C" fn db_files_read_players(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao == 1 {
+pub(crate) unsafe extern "C" fn db_files_read_players(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version == 1 {
         crate::comparacao::ramo("banco ler não jogadores versão 1");
         let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(FN_DB_FILES_READ_PLAYERS_V1);
-        return converter(stream, use_zip, registros, n);
+        return converter(stream, use_zip, records, n);
     }
-    if versao != 2 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_PLAYERS)(stream, use_zip, registros, entrada);
+    if version != 2 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_PLAYERS)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler não jogadores");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 68, n, stream)
+        zread(records, 68, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 68, n, stream)
+        fread(records, 68, n, stream)
     };
-    (lidos == n) as i32 // não jogadores
+    (read == n) as i32 // não jogadores
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -766,26 +766,26 @@ pub(crate) unsafe extern "C" fn db_files_read_players(stream: usize, use_zip: i3
 /// campo 0x54f150 (stream, use_zip, registros, quantidade), pelo endereço, e a resposta dele. Outra versão: a
 /// caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro de 0x200 da original só
 /// serve ao caminho da caixa.
-pub(crate) unsafe extern "C" fn db_files_read_non_players(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao == 1 {
+pub(crate) unsafe extern "C" fn db_files_read_non_players(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version == 1 {
         crate::comparacao::ramo("banco ler jogadores versão 1");
         let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(FN_DB_FILES_READ_NON_PLAYERS_V1);
-        return converter(stream, use_zip, registros, n);
+        return converter(stream, use_zip, records, n);
     }
-    if versao != 2 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_NON_PLAYERS)(stream, use_zip, registros, entrada);
+    if version != 2 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_NON_PLAYERS)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler jogadores");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 70, n, stream)
+        zread(records, 70, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 70, n, stream)
+        fread(records, 70, n, stream)
     };
-    (lidos == n) as i32 // jogadores
+    (read == n) as i32 // jogadores
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -802,21 +802,21 @@ pub(crate) unsafe extern "C" fn db_files_read_non_players(stream: usize, use_zip
 /// `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio tudo. Outra versão: a
 /// caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro de 0x200 da original só
 /// serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-pub(crate) unsafe extern "C" fn db_files_read_staff(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao != 2 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF)(stream, use_zip, registros, entrada);
+pub(crate) unsafe extern "C" fn db_files_read_staff(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version != 2 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler pessoas 110");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 110, n, stream)
+        zread(records, 110, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 110, n, stream)
+        fread(records, 110, n, stream)
     };
-    (lidos == n) as i32 // pessoas 110
+    (read == n) as i32 // pessoas 110
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -832,21 +832,21 @@ pub(crate) unsafe extern "C" fn db_files_read_staff(stream: usize, use_zip: i32,
 /// pessoas de 157 bytes) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se
 /// veio tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O
 /// quadro de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-pub(crate) unsafe extern "C" fn db_files_read_staff_extra(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao != 1 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_EXTRA)(stream, use_zip, registros, entrada);
+pub(crate) unsafe extern "C" fn db_files_read_staff_extra(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version != 1 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_EXTRA)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler preferências");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 52, n, stream)
+        zread(records, 52, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 52, n, stream)
+        fread(records, 52, n, stream)
     };
-    (lidos == n) as i32 // preferências
+    (read == n) as i32 // preferências
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -861,21 +861,21 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_extra(stream: usize, use_zip
 /// (continent.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-pub(crate) unsafe extern "C" fn db_files_read_continents(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao != 1 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_CONTINENTS)(stream, use_zip, registros, entrada);
+pub(crate) unsafe extern "C" fn db_files_read_continents(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version != 1 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_CONTINENTS)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler continentes");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 198, n, stream)
+        zread(records, 198, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 198, n, stream)
+        fread(records, 198, n, stream)
     };
-    (lidos == n) as i32 // continentes
+    (read == n) as i32 // continentes
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -890,21 +890,21 @@ pub(crate) unsafe extern "C" fn db_files_read_continents(stream: usize, use_zip:
 /// (nation.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-pub(crate) unsafe extern "C" fn db_files_read_nations(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao != 2 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_NATIONS)(stream, use_zip, registros, entrada);
+pub(crate) unsafe extern "C" fn db_files_read_nations(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version != 2 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_NATIONS)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler nações");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 290, n, stream)
+        zread(records, 290, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 290, n, stream)
+        fread(records, 290, n, stream)
     };
-    (lidos == n) as i32 // nações
+    (read == n) as i32 // nações
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -919,21 +919,21 @@ pub(crate) unsafe extern "C" fn db_files_read_nations(stream: usize, use_zip: i3
 /// (city.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-pub(crate) unsafe extern "C" fn db_files_read_cities(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao <= 0 || versao > 2 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_CITIES)(stream, use_zip, registros, entrada);
+pub(crate) unsafe extern "C" fn db_files_read_cities(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version <= 0 || version > 2 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_CITIES)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler cidades");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 56, n, stream)
+        zread(records, 56, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 56, n, stream)
+        fread(records, 56, n, stream)
     };
-    (lidos == n) as i32 // cidades
+    (read == n) as i32 // cidades
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -948,21 +948,21 @@ pub(crate) unsafe extern "C" fn db_files_read_cities(stream: usize, use_zip: i32
 /// (stadium.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-pub(crate) unsafe extern "C" fn db_files_read_stadiums(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao != 1 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STADIUMS)(stream, use_zip, registros, entrada);
+pub(crate) unsafe extern "C" fn db_files_read_stadiums(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version != 1 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STADIUMS)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler estádios");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 78, n, stream)
+        zread(records, 78, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 78, n, stream)
+        fread(records, 78, n, stream)
     };
-    (lidos == n) as i32 // estádios
+    (read == n) as i32 // estádios
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -977,21 +977,21 @@ pub(crate) unsafe extern "C" fn db_files_read_stadiums(stream: usize, use_zip: i
 /// (staff.dat (pessoas, versão de arquivo de 157 bytes)) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-pub(crate) unsafe extern "C" fn db_files_read_staff_v1(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao != 1 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_V1)(stream, use_zip, registros, entrada);
+pub(crate) unsafe extern "C" fn db_files_read_staff_v1(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version != 1 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_V1)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler pessoas 157");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 157, n, stream)
+        zread(records, 157, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 157, n, stream)
+        fread(records, 157, n, stream)
     };
-    (lidos == n) as i32 // pessoas 157
+    (read == n) as i32 // pessoas 157
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -1006,21 +1006,21 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_v1(stream: usize, use_zip: i
 /// (staff_history.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-pub(crate) unsafe extern "C" fn db_files_read_staff_history(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao != 1 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_HISTORY)(stream, use_zip, registros, entrada);
+pub(crate) unsafe extern "C" fn db_files_read_staff_history(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version != 1 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_HISTORY)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler histórico de pessoas");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 17, n, stream)
+        zread(records, 17, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 17, n, stream)
+        fread(records, 17, n, stream)
     };
-    (lidos == n) as i32 // histórico de pessoas
+    (read == n) as i32 // histórico de pessoas
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -1035,21 +1035,21 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_history(stream: usize, use_z
 /// (club_comp_history.dat e nation_comp_history.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-pub(crate) unsafe extern "C" fn db_files_read_comp_history(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao != 1 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_COMP_HISTORY)(stream, use_zip, registros, entrada);
+pub(crate) unsafe extern "C" fn db_files_read_comp_history(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version != 1 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_COMP_HISTORY)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler históricos de competição");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 26, n, stream)
+        zread(records, 26, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 26, n, stream)
+        fread(records, 26, n, stream)
     };
-    (lidos == n) as i32 // históricos de competição
+    (read == n) as i32 // históricos de competição
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -1064,21 +1064,21 @@ pub(crate) unsafe extern "C" fn db_files_read_comp_history(stream: usize, use_zi
 /// (staff_comp.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-pub(crate) unsafe extern "C" fn db_files_read_staff_comps(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao != 2 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_COMPS)(stream, use_zip, registros, entrada);
+pub(crate) unsafe extern "C" fn db_files_read_staff_comps(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version != 2 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_COMPS)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler competições de pessoal");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 101, n, stream)
+        zread(records, 101, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 101, n, stream)
+        fread(records, 101, n, stream)
     };
-    (lidos == n) as i32 // competições de pessoal
+    (read == n) as i32 // competições de pessoal
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -1093,21 +1093,21 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_comps(stream: usize, use_zip
 /// (staff_comp_history.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-pub(crate) unsafe extern "C" fn db_files_read_staff_comp_history(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
-    let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
-    if versao != 1 {
-        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_COMP_HISTORY)(stream, use_zip, registros, entrada);
+pub(crate) unsafe extern "C" fn db_files_read_staff_comp_history(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
+    let n = core::ptr::read_unaligned((entry + 0x37) as *const u32);
+    let version = core::ptr::read_unaligned((entry + 0x3f) as *const i32);
+    if version != 1 {
+        return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_COMP_HISTORY)(stream, use_zip, records, entry);
     }
     crate::comparacao::ramo("banco ler histórico de competições de pessoal");
-    let lidos = if use_zip != 0 {
+    let read = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(registros, 58, n, stream)
+        zread(records, 58, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(registros, 58, n, stream)
+        fread(records, 58, n, stream)
     };
-    (lidos == n) as i32 // histórico de competições de pessoal
+    (read == n) as i32 // histórico de competições de pessoal
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
@@ -1123,21 +1123,21 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_comp_history(stream: usize, 
 /// própria pilha, já usado) vira u16 sem conta. A primeira leitura que não vem dá 0 (o que já veio fica); tudo,
 /// 1. Chamado por `db_files_read_comps` 0x54feb0 com a versão da entrada igual a 1; a base de fábrica e o save
 /// são versão 2. Sem SEH e sem variável local lida sem valor.
-pub(crate) unsafe extern "C" fn db_files_read_comps_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+pub(crate) unsafe extern "C" fn db_files_read_comps_v1(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco ler competições v1");
-    let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 =
+    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 =
         core::mem::transmute(if use_zip != 0 { 0x932c30usize } else { 0x945bfeusize });
     for i in 0..n as usize {
-        let r = registros + i * 107;
+        let r = records + i * 107;
         for &(o, t, q) in &COMPETITION_V1_LAYOUT {
             for k in 0..q {
                 if t == 0 {
                     let mut b = 0u8;
-                    if ler(&mut b as *mut u8 as usize, 1, 1, stream) == 0 {
+                    if read(&mut b as *mut u8 as usize, 1, 1, stream) == 0 {
                         return 0;
                     }
                     ((r + o) as *mut u16).write_unaligned(b as u16); // reputação da competição
-                } else if ler(r + o + k * t as usize, t, 1, stream) == 0 {
+                } else if read(r + o + k * t as usize, t, 1, stream) == 0 {
                     return 0;
                 }
             }
